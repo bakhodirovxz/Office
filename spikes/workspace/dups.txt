@@ -1,0 +1,1306 @@
+base64 v0.22.1
+├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla)
+│   ├── craft-pdf v0.1.0 (https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320)
+│   │   └── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf)
+│   │       └── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine)
+│   │           ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   │           ├── deckcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-cli)
+│   │           ├── deckcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\mcp)
+│   │           │   └── deckcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-cli)
+│   │           ├── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui)
+│   │           │   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   │           │   └── deckcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-web)
+│   │           └── deckcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-web)
+│   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   └── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf)
+│       └── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine)
+│           ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│           ├── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│           ├── wordcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\mcp)
+│           │   └── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│           ├── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui)
+│           │   ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│           │   └── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+│           ├── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+│           └── wordcraft-zotero v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\zotero)
+│               ├── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│               └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation)
+│   └── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign)
+│   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine)
+│       ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│       ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│       ├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+│       └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui)
+│           ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│           └── pdfcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-web)
+├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa)
+│   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   └── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact)
+│       └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+├── usvg v0.45.1
+│   └── resvg v0.45.1
+│       └── egui_extras v0.36.2
+│           └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+└── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx)
+    └── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+
+base64 v0.23.1
+├── ureq v3.4.2
+│   └── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+└── ureq-proto v0.6.4
+    └── ureq v3.4.2 (*)
+
+bitflags v1.3.2
+├── flatbuffers v24.12.23
+│   ├── rten v0.26.0
+│   │   ├── ocrs v0.13.1
+│   │   │   └── pdfcraft-ocr v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ocr)
+│   │   │       └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   └── pdfcraft-ocr v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ocr) (*)
+│   └── rten-model-file v0.26.0
+│       └── rten v0.26.0 (*)
+├── png v0.17.16
+│   └── tiny-skia v0.11.4
+│       └── resvg v0.45.1 (*)
+└── symphonia-core v0.5.5
+    ├── symphonia v0.5.5
+    │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media)
+    │       ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+    │       ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+    │       └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+    ├── symphonia-bundle-flac v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-bundle-mp3 v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-codec-aac v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-codec-adpcm v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-codec-alac v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-codec-pcm v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-codec-vorbis v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-format-caf v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-format-isomp4 v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-format-mkv v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-format-ogg v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-format-riff v0.5.5
+    │   └── symphonia v0.5.5 (*)
+    ├── symphonia-metadata v0.5.5
+    │   ├── symphonia v0.5.5 (*)
+    │   ├── symphonia-bundle-flac v0.5.5 (*)
+    │   ├── symphonia-bundle-mp3 v0.5.5 (*)
+    │   ├── symphonia-format-caf v0.5.5 (*)
+    │   ├── symphonia-format-isomp4 v0.5.5 (*)
+    │   ├── symphonia-format-mkv v0.5.5 (*)
+    │   ├── symphonia-format-ogg v0.5.5 (*)
+    │   ├── symphonia-format-riff v0.5.5 (*)
+    │   └── symphonia-utils-xiph v0.5.5
+    │       ├── symphonia-bundle-flac v0.5.5 (*)
+    │       ├── symphonia-codec-vorbis v0.5.5 (*)
+    │       ├── symphonia-format-isomp4 v0.5.5 (*)
+    │       ├── symphonia-format-mkv v0.5.5 (*)
+    │       └── symphonia-format-ogg v0.5.5 (*)
+    └── symphonia-utils-xiph v0.5.5 (*)
+
+bitflags v2.13.2
+├── boa_ast v0.22.0
+│   ├── boa_engine v0.22.0
+│   │   └── pdfcraft-js v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\js)
+│   │       └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   └── boa_parser v0.22.0
+│       └── boa_engine v0.22.0 (*)
+├── boa_engine v0.22.0 (*)
+├── boa_parser v0.22.0 (*)
+├── egui v0.36.2
+│   ├── craft-quit v0.1.0 (https://github.com/storytold/craft-libs?rev=f58bc1a3df490992d633393d0898af0588ce882c#f58bc1a3)
+│   │   └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51)
+│   │   └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5)
+│   │   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui)
+│   │   │   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   │   │   └── gridcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-web)
+│   │   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   ├── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── deckcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-web)
+│   ├── eframe v0.36.2
+│   │   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   │   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   │   ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│   │   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   │   ├── pdfcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-web)
+│   │   └── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   ├── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu)
+│   │   └── eframe v0.36.2 (*)
+│   ├── egui-winit v0.36.2
+│   │   └── eframe v0.36.2 (*)
+│   ├── egui_extras v0.36.2 (*)
+│   ├── egui_glow v0.36.2
+│   │   └── eframe v0.36.2 (*)
+│   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   ├── gridcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-web)
+│   ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── pdfcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-web)
+│   ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   ├── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   └── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+├── glutin v0.32.3
+│   ├── eframe v0.36.2 (*)
+│   └── glutin-winit v0.5.0
+│       └── eframe v0.36.2 (*)
+├── harfrust v0.12.0
+│   ├── epaint v0.36.2
+│   │   ├── egui v0.36.2 (*)
+│   │   └── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+│   └── pdfcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\fonts)
+│       ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y)
+│       │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       ├── pdfcraft-annot v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\annot)
+│       │   ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit)
+│       │   │   ├── pdfcraft-audit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\audit)
+│       │   │   │   ├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+│       │   │   │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   │   └── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│       │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure)
+│       │   │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize)
+│       │   │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│       │   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│       │   └── pdfcraft-xfdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfdf)
+│       │       └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create)
+│       │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+│       ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       ├── pdfcraft-forms v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\forms)
+│       │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│       │   └── pdfcraft-xfdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfdf) (*)
+│       ├── pdfcraft-ocr v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ocr) (*)
+│       ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│       ├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render)
+│       │   ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│       │   ├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+│       │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       │   └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│       ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│       ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│       └── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+├── harfrust v0.13.3
+│   ├── deckcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\fonts)
+│   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render)
+│   │   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   │   ├── deckcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\mcp) (*)
+│   │   │   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   │   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   │   ├── deckcraft-text v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\text)
+│   │   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   │   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   │   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   └── wordcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\fonts)
+│       ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│       ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│       ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout)
+│       │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│       │   ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│       │   ├── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render)
+│       │   │   ├── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│       │   │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│       │   │   ├── wordcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\mcp) (*)
+│       │   │   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│       │   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│       ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│       ├── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+│       ├── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│       └── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret)
+│   └── hayro v0.7.1 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro)
+│       └── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf)
+│   └── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+├── naga v30.0.1
+│   ├── wgpu-core v30.0.1
+│   │   └── wgpu v30.0.1
+│   │       └── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+│   ├── wgpu-hal v30.0.1
+│   │   ├── wgpu v30.0.1 (*)
+│   │   ├── wgpu-core v30.0.1 (*)
+│   │   └── wgpu-core-deps-windows-linux-android v30.0.1
+│   │       └── wgpu-core v30.0.1 (*)
+│   └── wgpu-naga-bridge v30.0.1
+│       ├── wgpu-core v30.0.1 (*)
+│       └── wgpu-hal v30.0.1 (*)
+├── pdf-writer v0.15.0
+│   ├── hayro-write v0.7.0
+│   │   └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+├── png v0.18.1
+│   ├── glifo v0.3.0
+│   │   └── vello_cpu v0.2.0
+│   │       ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │       └── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+│   ├── image v0.25.10
+│   │   ├── arboard v3.7.0
+│   │   │   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   │   │   ├── egui-winit v0.36.2 (*)
+│   │   │   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   │   │   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   │   │   └── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   │   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   ├── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│   │   ├── deckcraft-metafile v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\metafile)
+│   │   │   └── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   ├── eframe v0.36.2 (*)
+│   │   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   │   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine)
+│   │   │   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   │   │   ├── gridcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-cli)
+│   │   │   ├── gridcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\mcp)
+│   │   │   │   └── gridcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-cli)
+│   │   │   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   │   │   └── gridcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-web)
+│   │   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   │   ├── hayro v0.7.1 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro) (*)
+│   │   ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+│   │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize) (*)
+│   │   ├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+│   │   ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin)
+│   │   │   └── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   │   ├── wordcraft-formats v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\formats)
+│   │   │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   │   │   └── wordcraft-zotero v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\zotero) (*)
+│   │   ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+│   │   ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│   │   ├── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+│   │   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│   ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+│   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+│   ├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common)
+│   │   └── vello_cpu v0.0.8
+│   │       └── hayro v0.7.1 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro) (*)
+│   ├── vello_common v0.2.0
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   ├── glifo v0.3.0 (*)
+│   │   └── vello_cpu v0.2.0 (*)
+│   ├── vello_cpu v0.0.8 (*)
+│   └── vello_cpu v0.2.0 (*)
+├── ron v0.12.2
+│   ├── eframe v0.36.2 (*)
+│   └── egui v0.36.2 (*)
+├── rustls-cng v0.7.1
+│   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+├── rustybuzz v0.20.1
+│   └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+├── spirv v0.4.0+sdk-1.4.341.0
+│   └── naga v30.0.1 (*)
+├── wgpu v30.0.1 (*)
+├── wgpu-core v30.0.1 (*)
+├── wgpu-hal v30.0.1 (*)
+├── wgpu-types v30.0.1
+│   ├── wgpu v30.0.1 (*)
+│   ├── wgpu-core v30.0.1 (*)
+│   ├── wgpu-hal v30.0.1 (*)
+│   └── wgpu-naga-bridge v30.0.1 (*)
+└── winit v0.30.13 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\winit)
+    ├── accesskit_winit v0.32.2
+    │   └── egui-winit v0.36.2 (*)
+    ├── eframe v0.36.2 (*)
+    ├── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+    ├── egui-winit v0.36.2 (*)
+    └── glutin-winit v0.5.0 (*)
+
+craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=666c358065261a2816b376fa3bb10538dbf53040#666c3580)
+└── pdfcraft-print v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\print)
+    └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+
+craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5)
+├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+└── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+
+craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51) (*)
+
+craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5) (*)
+
+fastrand v2.5.0
+├── phf_generator v0.13.1
+│   └── phf_macros v0.13.1 (proc-macro)
+│       └── phf v0.13.1
+│           └── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+└── phf_generator v0.14.0
+    └── phf_macros v0.14.0 (proc-macro)
+        └── phf v0.14.0
+            └── boa_interner v0.22.0
+                ├── boa_ast v0.22.0 (*)
+                ├── boa_engine v0.22.0 (*)
+                └── boa_parser v0.22.0 (*)
+
+fastrand v2.5.0
+├── futures-lite v2.6.1
+│   ├── boa_engine v0.22.0 (*)
+│   └── futures-concurrency v7.7.1
+│       └── boa_engine v0.22.0 (*)
+└── tempfile v3.27.0
+    ├── craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=666c358065261a2816b376fa3bb10538dbf53040#666c3580) (*)
+    ├── craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5) (*)
+    ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+    └── uds_windows v1.2.1
+        └── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+
+font-types v0.11.3
+├── read-fonts v0.39.2
+│   ├── skrifa v0.42.1
+│   │   ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   │   └── subsetter v0.2.6
+│   │       └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   └── write-fonts v0.48.1
+│       └── subsetter v0.2.6 (*)
+└── write-fonts v0.48.1 (*)
+
+font-types v0.12.6
+├── epaint v0.36.2 (*)
+├── read-fonts v0.41.0
+│   ├── harfrust v0.12.0 (*)
+│   └── skrifa v0.44.0
+│       ├── epaint v0.36.2 (*)
+│       ├── glifo v0.3.0 (*)
+│       ├── pdfcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\fonts) (*)
+│       └── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+├── read-fonts v0.43.3
+│   └── harfrust v0.13.3 (*)
+└── read-fonts v0.44.0
+    └── skrifa v0.47.0
+        ├── deckcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\fonts) (*)
+        ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+        ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+        ├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+        └── wordcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\fonts) (*)
+
+getrandom v0.2.17
+└── ring v0.17.14
+    ├── rustls v0.23.46
+    │   ├── rustls-cng v0.7.1 (*)
+    │   └── ureq v3.4.2 (*)
+    └── rustls-webpki v0.103.15
+        └── rustls v0.23.46 (*)
+
+getrandom v0.3.4
+├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+└── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+
+getrandom v0.4.3
+├── crypto-bigint v0.7.5
+│   ├── crypto-primes v0.7.2
+│   │   └── rsa v0.10.0-rc.18
+│   │       └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   ├── elliptic-curve v0.14.1
+│   │   ├── bp256 v0.14.0
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── bp384 v0.14.0
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── ecdsa v0.17.0
+│   │   │   ├── bp256 v0.14.0 (*)
+│   │   │   ├── bp384 v0.14.0 (*)
+│   │   │   ├── p256 v0.14.0
+│   │   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── p384 v0.14.0
+│   │   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── p521 v0.14.0
+│   │   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── p256 v0.14.0 (*)
+│   │   ├── p384 v0.14.0 (*)
+│   │   ├── p521 v0.14.0 (*)
+│   │   └── primeorder v0.14.0
+│   │       ├── bp256 v0.14.0 (*)
+│   │       ├── bp384 v0.14.0 (*)
+│   │       ├── p256 v0.14.0 (*)
+│   │       ├── p384 v0.14.0 (*)
+│   │       └── p521 v0.14.0 (*)
+│   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   ├── primefield v0.14.0
+│   │   ├── bp256 v0.14.0 (*)
+│   │   ├── bp384 v0.14.0 (*)
+│   │   ├── p256 v0.14.0 (*)
+│   │   ├── p384 v0.14.0 (*)
+│   │   ├── p521 v0.14.0 (*)
+│   │   ├── primeorder v0.14.0 (*)
+│   │   └── wnaf v0.14.1
+│   │       └── primeorder v0.14.0 (*)
+│   ├── rfc6979 v0.6.0
+│   │   └── ecdsa v0.17.0 (*)
+│   └── rsa v0.10.0-rc.18 (*)
+├── crypto-common v0.2.2
+│   ├── cipher v0.5.2
+│   │   ├── aes v0.9.3
+│   │   │   ├── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx)
+│   │   │   │   └── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   │   ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   │   │   ├── pdfcraft-crypt v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\crypt)
+│   │   │   │   └── pdfcraft-cos v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\cos)
+│   │   │   │       ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y) (*)
+│   │   │   │       ├── pdfcraft-annot v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\annot) (*)
+│   │   │   │       ├── pdfcraft-audit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\audit) (*)
+│   │   │   │       ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│   │   │   │       ├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+│   │   │   │       ├── pdfcraft-content v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\content)
+│   │   │   │       │   ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y) (*)
+│   │   │   │       │   ├── pdfcraft-audit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\audit) (*)
+│   │   │   │       │   ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+│   │   │   │       │   ├── pdfcraft-forms v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\forms) (*)
+│   │   │   │       │   ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure) (*)
+│   │   │   │       │   ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize) (*)
+│   │   │   │       │   ├── pdfcraft-organize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\organize)
+│   │   │   │       │   │   ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│   │   │   │       │   │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │   │       │   ├── pdfcraft-preflight v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\preflight)
+│   │   │   │       │   │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │   │       │   ├── pdfcraft-print v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\print) (*)
+│   │   │   │       │   └── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│   │   │   │       ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+│   │   │   │       ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+│   │   │   │       ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │   │       ├── pdfcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\fonts) (*)
+│   │   │   │       ├── pdfcraft-forms v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\forms) (*)
+│   │   │   │       ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure) (*)
+│   │   │   │       ├── pdfcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\model)
+│   │   │   │       │   ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y) (*)
+│   │   │   │       │   ├── pdfcraft-annot v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\annot) (*)
+│   │   │   │       │   ├── pdfcraft-audit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\audit) (*)
+│   │   │   │       │   ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+│   │   │   │       │   ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+│   │   │   │       │   ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │   │       │   ├── pdfcraft-forms v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\forms) (*)
+│   │   │   │       │   ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure) (*)
+│   │   │   │       │   ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize) (*)
+│   │   │   │       │   ├── pdfcraft-preflight v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\preflight) (*)
+│   │   │   │       │   ├── pdfcraft-print v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\print) (*)
+│   │   │   │       │   ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│   │   │   │       │   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   │   │   │       │   └── pdfcraft-xfdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfdf) (*)
+│   │   │   │       ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize) (*)
+│   │   │   │       ├── pdfcraft-organize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\organize) (*)
+│   │   │   │       ├── pdfcraft-preflight v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\preflight) (*)
+│   │   │   │       ├── pdfcraft-print v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\print) (*)
+│   │   │   │       ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│   │   │   │       ├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+│   │   │   │       ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   │       ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   │   │   │       ├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+│   │   │   │       └── pdfcraft-xfdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfdf) (*)
+│   │   │   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   └── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── cbc v0.2.1
+│   │   │   ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── des v0.9.0
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── ecb v0.2.1
+│   │   │   └── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   │   └── rc2 v0.9.0
+│   │       └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   ├── digest v0.11.3
+│   │   ├── curve25519-dalek v5.0.0
+│   │   │   └── ed25519-dalek v3.0.0
+│   │   │       └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── ecdsa v0.17.0 (*)
+│   │   ├── elliptic-curve v0.14.1 (*)
+│   │   ├── hmac v0.13.0
+│   │   │   ├── pbkdf2 v0.13.0
+│   │   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── rfc6979 v0.6.0 (*)
+│   │   │   └── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── md-5 v0.11.0
+│   │   │   ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   │   │   └── pdfcraft-crypt v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\crypt) (*)
+│   │   ├── pbkdf2 v0.13.0 (*)
+│   │   ├── ripemd v0.2.0
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   ├── rsa v0.10.0-rc.18 (*)
+│   │   ├── sha1 v0.11.0
+│   │   │   ├── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│   │   │   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+│   │   │   └── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── sha2 v0.11.1
+│   │   │   ├── ed25519-dalek v3.0.0 (*)
+│   │   │   ├── gridcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\model)
+│   │   │   │   ├── gridcraft-calc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\calc)
+│   │   │   │   │   ├── gridcraft-chart v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\chart)
+│   │   │   │   │   │   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   │   │   │   │   └── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   │   │   │   │   └── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   │   │   ├── gridcraft-chart v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\chart) (*)
+│   │   │   │   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   │   │   └── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│   │   │   ├── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│   │   │   ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   │   │   ├── p256 v0.14.0 (*)
+│   │   │   ├── p384 v0.14.0 (*)
+│   │   │   ├── p521 v0.14.0 (*)
+│   │   │   ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│   │   │   ├── pdfcraft-crypt v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\crypt) (*)
+│   │   │   ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   │   ├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+│   │   │   └── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── sha3 v0.12.0
+│   │   │   └── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│   │   └── signature v3.0.0
+│   │       ├── ecdsa v0.17.0 (*)
+│   │       ├── ed25519 v3.0.0
+│   │       │   └── ed25519-dalek v3.0.0 (*)
+│   │       └── rsa v0.10.0-rc.18 (*)
+│   ├── elliptic-curve v0.14.1 (*)
+│   └── primefield v0.14.0 (*)
+├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+├── rand v0.10.3
+│   ├── boa_engine v0.22.0 (*)
+│   └── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+└── tempfile v3.27.0 (*)
+
+harfrust v0.12.0 (*)
+
+harfrust v0.13.3 (*)
+
+hashbrown v0.14.5
+└── dashmap v6.2.1
+    └── boa_engine v0.22.0 (*)
+
+hashbrown v0.16.1
+├── accesskit_consumer v0.35.0
+│   └── accesskit_windows v0.32.1
+│       └── accesskit_winit v0.32.2 (*)
+├── accesskit_windows v0.32.1 (*)
+└── gpu-allocator v0.28.0
+    └── wgpu-hal v30.0.1 (*)
+
+hashbrown v0.17.1
+├── boa_engine v0.22.0 (*)
+├── boa_gc v0.22.0
+│   ├── boa_engine v0.22.0 (*)
+│   └── boa_interner v0.22.0 (*)
+├── boa_interner v0.22.0 (*)
+├── glifo v0.3.0 (*)
+├── indexmap v2.14.2
+│   ├── boa_ast v0.22.0 (*)
+│   ├── boa_engine v0.22.0 (*)
+│   ├── boa_interner v0.22.0 (*)
+│   ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│   ├── naga v30.0.1 (*)
+│   ├── naga-types v30.0.1
+│   │   ├── naga v30.0.1 (*)
+│   │   ├── wgpu-core v30.0.1 (*)
+│   │   ├── wgpu-hal v30.0.1 (*)
+│   │   └── wgpu-types v30.0.1 (*)
+│   ├── toml_edit v0.25.17+spec-1.1.0
+│   │   └── proc-macro-crate v3.5.0
+│   │       ├── fmt-derive-proc v0.1.2 (proc-macro)
+│   │       │   └── fmt-derive v0.1.2
+│   │       │       └── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba)
+│   │       │           └── craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=666c358065261a2816b376fa3bb10538dbf53040#666c3580) (*)
+│   │       └── num_enum_derive v0.7.6 (proc-macro)
+│   │           └── num_enum v0.7.6
+│   │               └── boa_engine v0.22.0 (*)
+│   ├── wgpu-core v30.0.1 (*)
+│   ├── write-fonts v0.48.1 (*)
+│   └── zip v3.0.0
+│       ├── deckcraft-format v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\format)
+│       │   └── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│       ├── deckcraft-pptx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pptx)
+│       │   └── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│       ├── gridcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-cli)
+│       ├── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│       ├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│       └── wordcraft-formats v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\formats) (*)
+├── naga v30.0.1 (*)
+├── naga-types v30.0.1 (*)
+├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+├── vello_cpu v0.0.8 (*)
+├── vello_cpu v0.1.0
+│   └── epaint v0.36.2 (*)
+├── vello_cpu v0.2.0 (*)
+├── wgpu v30.0.1 (*)
+├── wgpu-core v30.0.1 (*)
+└── wgpu-hal v30.0.1 (*)
+
+imagesize v0.13.0
+└── usvg v0.45.1 (*)
+
+imagesize v0.14.0
+└── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+
+kurbo v0.11.3
+├── svgtypes v0.15.3
+│   ├── resvg v0.45.1 (*)
+│   └── usvg v0.45.1 (*)
+└── usvg v0.45.1 (*)
+
+kurbo v0.13.1
+├── deckcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\fonts) (*)
+├── deckcraft-geom v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\geom)
+│   ├── deckcraft-anim v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\anim)
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   ├── deckcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\model)
+│   │   ├── deckcraft-anim v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\anim) (*)
+│   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   ├── deckcraft-format v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\format) (*)
+│   │   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   │   ├── deckcraft-pptx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pptx) (*)
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   ├── deckcraft-text v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\text) (*)
+│   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── deckcraft-pptx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pptx) (*)
+│   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   ├── deckcraft-text v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\text) (*)
+│   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+├── deckcraft-metafile v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\metafile) (*)
+├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+├── hayro v0.7.1 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro) (*)
+├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+├── peniko v0.6.1
+│   ├── glifo v0.3.0 (*)
+│   ├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+│   ├── vello_common v0.1.0
+│   │   └── vello_cpu v0.1.0 (*)
+│   └── vello_common v0.2.0 (*)
+├── subsetter v0.2.6 (*)
+├── wordcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\fonts) (*)
+├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+├── wordcraft-metafile v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\metafile)
+│   ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│   └── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+└── write-fonts v0.48.1 (*)
+
+miniz_oxide v0.8.9
+├── craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=666c358065261a2816b376fa3bb10538dbf53040#666c3580) (*)
+├── png v0.17.16 (*)
+├── png v0.18.1 (*)
+├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+└── wordcraft-proof v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\proof)
+    ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+    ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+    └── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+
+miniz_oxide v0.9.1
+└── flate2 v1.1.10
+    ├── hayro-syntax v0.7.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-syntax)
+    │   ├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+    │   ├── hayro-write v0.7.0 (*)
+    │   └── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+    ├── hayro-write v0.7.0 (*)
+    ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+    ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+    ├── pdfcraft-export v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\export)
+    │   └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+    ├── pdfcraft-filters v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\filters)
+    │   ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y) (*)
+    │   └── pdfcraft-cos v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\cos) (*)
+    ├── png v0.17.16 (*)
+    ├── png v0.18.1 (*)
+    ├── tiff v0.11.3
+    │   ├── image v0.25.10 (*)
+    │   └── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+    ├── usvg v0.45.1 (*)
+    ├── wuff v0.2.9
+    │   └── wordcraft-fonts v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\fonts) (*)
+    └── zip v3.0.0 (*)
+
+phf v0.13.1 (*)
+
+phf v0.14.0 (*)
+
+phf_generator v0.13.1 (*)
+
+phf_generator v0.14.0 (*)
+
+phf_macros v0.13.1 (proc-macro) (*)
+
+phf_macros v0.14.0 (proc-macro) (*)
+
+phf_shared v0.13.1
+├── phf v0.13.1 (*)
+├── phf_generator v0.13.1 (*)
+└── phf_macros v0.13.1 (proc-macro) (*)
+
+phf_shared v0.14.0
+├── phf v0.14.0 (*)
+├── phf_generator v0.14.0 (*)
+└── phf_macros v0.14.0 (proc-macro) (*)
+
+png v0.17.16 (*)
+
+png v0.18.1 (*)
+
+pollster v0.4.0
+└── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+
+pollster v1.0.1
+├── eframe v0.36.2 (*)
+├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+└── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+
+read-fonts v0.39.2 (*)
+
+read-fonts v0.41.0 (*)
+
+read-fonts v0.43.3 (*)
+
+read-fonts v0.44.0 (*)
+
+rustc-hash v1.1.0
+├── naga v30.0.1 (*)
+├── naga-types v30.0.1 (*)
+└── wgpu-core v30.0.1 (*)
+
+rustc-hash v2.1.3
+├── boa_ast v0.22.0 (*)
+├── boa_engine v0.22.0 (*)
+├── boa_interner v0.22.0 (*)
+├── boa_parser v0.22.0 (*)
+├── boa_string v0.22.0
+│   ├── boa_ast v0.22.0 (*)
+│   ├── boa_engine v0.22.0 (*)
+│   └── boa_gc v0.22.0 (*)
+├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+├── hayro-syntax v0.7.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-syntax) (*)
+├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+├── rten v0.26.0 (*)
+├── subsetter v0.2.6 (*)
+└── type-map v0.5.1
+    └── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+
+serde_core v1.0.229
+├── bitflags v2.13.2 (*)
+├── serde v1.0.229
+│   ├── accesskit v0.24.1
+│   │   ├── accesskit_consumer v0.35.0 (*)
+│   │   ├── accesskit_windows v0.32.1 (*)
+│   │   ├── accesskit_winit v0.32.2 (*)
+│   │   └── egui v0.36.2 (*)
+│   ├── ahash v0.8.12
+│   │   ├── eframe v0.36.2 (*)
+│   │   ├── egui v0.36.2 (*)
+│   │   ├── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+│   │   ├── egui_extras v0.36.2 (*)
+│   │   └── epaint v0.36.2 (*)
+│   ├── boa_engine v0.22.0 (*)
+│   ├── craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51) (*)
+│   ├── deckcraft-anim v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\anim) (*)
+│   ├── deckcraft-color v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\color)
+│   │   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   │   ├── deckcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\model) (*)
+│   │   ├── deckcraft-pptx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pptx) (*)
+│   │   ├── deckcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\render) (*)
+│   │   ├── deckcraft-text v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\text) (*)
+│   │   └── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   ├── deckcraft-format v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\format) (*)
+│   ├── deckcraft-geom v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\geom) (*)
+│   ├── deckcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\model) (*)
+│   ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│   ├── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── ecolor v0.36.2
+│   │   └── epaint v0.36.2 (*)
+│   ├── eframe v0.36.2 (*)
+│   ├── egui v0.36.2 (*)
+│   ├── egui-winit v0.36.2 (*)
+│   ├── emath v0.36.2
+│   │   ├── ecolor v0.36.2 (*)
+│   │   ├── egui v0.36.2 (*)
+│   │   └── epaint v0.36.2 (*)
+│   ├── epaint v0.36.2 (*)
+│   ├── font-types v0.12.6 (*)
+│   ├── gridcraft-chart v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\chart) (*)
+│   ├── gridcraft-core v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\core)
+│   │   ├── gridcraft-calc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\calc) (*)
+│   │   ├── gridcraft-chart v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\chart) (*)
+│   │   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   ├── gridcraft-formula v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\formula)
+│   │   │   ├── gridcraft-calc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\calc) (*)
+│   │   │   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   │   ├── gridcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\model) (*)
+│   │   │   └── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│   │   ├── gridcraft-functions v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\functions)
+│   │   │   ├── gridcraft-calc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\calc) (*)
+│   │   │   └── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   ├── gridcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\model) (*)
+│   │   ├── gridcraft-numfmt v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\numfmt)
+│   │   │   ├── gridcraft-calc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\calc) (*)
+│   │   │   ├── gridcraft-chart v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\chart) (*)
+│   │   │   └── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   │   └── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   ├── gridcraft-formula v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\formula) (*)
+│   ├── gridcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\model) (*)
+│   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   ├── kurbo v0.13.1 (*)
+│   ├── num-bigint v0.5.1
+│   │   ├── boa_ast v0.22.0 (*)
+│   │   ├── boa_engine v0.22.0 (*)
+│   │   └── boa_parser v0.22.0 (*)
+│   ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure) (*)
+│   ├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+│   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── ron v0.12.2 (*)
+│   ├── smallvec v1.16.3
+│   │   ├── egui v0.36.2 (*)
+│   │   ├── epaint v0.36.2 (*)
+│   │   ├── futures-concurrency v7.7.1 (*)
+│   │   ├── glifo v0.3.0 (*)
+│   │   ├── harfrust v0.12.0 (*)
+│   │   ├── harfrust v0.13.3 (*)
+│   │   ├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+│   │   ├── hayro-syntax v0.7.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-syntax) (*)
+│   │   ├── icu_normalizer v2.3.0
+│   │   │   ├── boa_engine v0.22.0 (*)
+│   │   │   └── idna_adapter v1.2.2
+│   │   │       └── idna v1.1.0
+│   │   │           ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │           └── url v2.5.8
+│   │   │               ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   │   │               └── webbrowser v1.2.4
+│   │   │                   └── egui-winit v0.36.2 (*)
+│   │   ├── idna v1.1.0 (*)
+│   │   ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   │   ├── kurbo v0.11.3 (*)
+│   │   ├── kurbo v0.13.1 (*)
+│   │   ├── parking_lot_core v0.9.12
+│   │   │   ├── dashmap v6.2.1 (*)
+│   │   │   └── parking_lot v0.12.5
+│   │   │       ├── eframe v0.36.2 (*)
+│   │   │       ├── epaint v0.36.2 (*)
+│   │   │       ├── wgpu v30.0.1 (*)
+│   │   │       ├── wgpu-core v30.0.1 (*)
+│   │   │       └── wgpu-hal v30.0.1 (*)
+│   │   ├── peniko v0.6.1 (*)
+│   │   ├── rten v0.26.0 (*)
+│   │   ├── rten-shape-inference v0.26.0
+│   │   │   └── rten v0.26.0 (*)
+│   │   ├── rten-tensor v0.26.0
+│   │   │   ├── ocrs v0.13.1 (*)
+│   │   │   ├── rten v0.26.0 (*)
+│   │   │   ├── rten-gemm v0.26.0
+│   │   │   │   └── rten v0.26.0 (*)
+│   │   │   ├── rten-imageproc v0.26.0
+│   │   │   │   └── ocrs v0.13.1 (*)
+│   │   │   └── rten-shape-inference v0.26.0 (*)
+│   │   ├── rustybuzz v0.20.1 (*)
+│   │   ├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+│   │   ├── vello_common v0.1.0 (*)
+│   │   ├── vello_common v0.2.0 (*)
+│   │   ├── wgpu v30.0.1 (*)
+│   │   ├── wgpu-core v30.0.1 (*)
+│   │   └── wgpu-hal v30.0.1 (*)
+│   ├── wordcraft-doc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\doc)
+│   │   ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   │   ├── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│   │   ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+│   │   ├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   │   ├── wordcraft-formats v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\formats) (*)
+│   │   ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+│   │   ├── wordcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\mcp) (*)
+│   │   ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│   │   ├── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+│   │   ├── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   │   ├── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+│   │   └── wordcraft-zotero v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\zotero) (*)
+│   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   ├── wordcraft-geom v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\geom)
+│   │   ├── wordcraft-doc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\doc) (*)
+│   │   ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+│   │   ├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│   │   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   │   ├── wordcraft-formats v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\formats) (*)
+│   │   ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+│   │   ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│   │   ├── wordcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\render) (*)
+│   │   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+│   └── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+├── serde_json v1.0.154
+│   ├── boa_engine v0.22.0 (*)
+│   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   ├── deckcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-cli)
+│   ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│   ├── deckcraft-format v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\format) (*)
+│   ├── deckcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\mcp) (*)
+│   ├── deckcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\model) (*)
+│   ├── deckcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\ui-egui) (*)
+│   ├── deckcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft-web)
+│   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   ├── gridcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-cli)
+│   ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│   ├── gridcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\mcp) (*)
+│   ├── gridcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\ui-egui) (*)
+│   ├── gridcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft-web)
+│   ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│   ├── pdfcraft-automation v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\automation) (*)
+│   ├── pdfcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft-cli)
+│   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   ├── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   ├── wordcraft-cli v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-cli)
+│   ├── wordcraft-doc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\doc) (*)
+│   ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│   ├── wordcraft-layout v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\layout) (*)
+│   ├── wordcraft-mcp v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\mcp) (*)
+│   ├── wordcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\ui-egui) (*)
+│   ├── wordcraft-web v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft-web)
+│   └── wordcraft-zotero v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\zotero) (*)
+└── uuid v1.28.0
+    ├── accesskit v0.24.1 (*)
+    └── cfb v0.15.0
+        ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+        ├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+        └── wordcraft-formats v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\formats) (*)
+
+serde_core v1.0.229
+└── toml_datetime v1.1.2+spec-1.1.0
+    └── toml_edit v0.25.17+spec-1.1.0 (*)
+
+skrifa v0.42.1 (*)
+
+skrifa v0.44.0 (*)
+
+skrifa v0.47.0 (*)
+
+syn v1.0.109
+└── proc-macro-error v1.0.4
+    └── fmt-derive-proc v0.1.2 (proc-macro) (*)
+
+syn v2.0.119
+├── curve25519-dalek-derive v0.1.1 (proc-macro)
+│   └── curve25519-dalek v5.0.0 (*)
+├── dynify-macros v0.1.2 (proc-macro)
+│   └── dynify v0.1.2
+│       └── boa_engine v0.22.0 (*)
+├── enum-map-derive v0.17.0 (proc-macro)
+│   └── enum-map v2.7.3
+│       └── egui_extras v0.36.2 (*)
+├── enumn v0.1.14 (proc-macro)
+│   └── accesskit v0.24.1 (*)
+├── equator-macro v0.4.2 (proc-macro)
+│   └── equator v0.4.2
+│       └── aligned-vec v0.6.4
+│           └── boa_engine v0.22.0 (*)
+├── fmt-derive-proc v0.1.2 (proc-macro) (*)
+├── num_enum_derive v0.7.6 (proc-macro) (*)
+├── phf_macros v0.13.1 (proc-macro) (*)
+├── phf_macros v0.14.0 (proc-macro) (*)
+├── pin-project-internal v1.1.13 (proc-macro)
+│   └── pin-project v1.1.13
+│       └── futures-concurrency v7.7.1 (*)
+├── strum_macros v0.28.0 (proc-macro)
+│   └── strum v0.28.0
+│       ├── boa_ast v0.22.0 (*)
+│       └── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba) (*)
+├── windows-implement v0.60.2 (proc-macro)
+│   ├── windows-core v0.62.2
+│   │   ├── accesskit_windows v0.32.1 (*)
+│   │   ├── wgpu-hal v30.0.1 (*)
+│   │   ├── windows v0.62.2
+│   │   │   ├── accesskit_windows v0.32.1 (*)
+│   │   │   ├── gpu-allocator v0.28.0 (*)
+│   │   │   ├── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+│   │   │   ├── wgpu-hal v30.0.1 (*)
+│   │   │   ├── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba) (*)
+│   │   │   └── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+│   │   ├── windows-collections v0.3.2
+│   │   │   └── windows v0.62.2 (*)
+│   │   ├── windows-future v0.3.2
+│   │   │   └── windows v0.62.2 (*)
+│   │   ├── windows-numerics v0.3.1
+│   │   │   └── windows v0.62.2 (*)
+│   │   └── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba) (*)
+│   └── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba) (*)
+├── windows-interface v0.59.3 (proc-macro)
+│   └── windows-core v0.62.2 (*)
+└── zerocopy-derive v0.8.63 (proc-macro)
+    └── zerocopy v0.8.63
+        ├── ahash v0.8.12 (*)
+        └── half v2.7.1
+            ├── naga v30.0.1 (*)
+            └── tiff v0.11.3 (*)
+
+syn v3.0.9
+├── boa_macros v0.22.0 (proc-macro)
+│   ├── boa_ast v0.22.0 (*)
+│   ├── boa_engine v0.22.0 (*)
+│   ├── boa_gc v0.22.0 (*)
+│   ├── boa_interner v0.22.0 (*)
+│   └── boa_parser v0.22.0 (*)
+├── bytemuck_derive v1.12.1 (proc-macro)
+│   └── bytemuck v1.25.2
+│       ├── boa_engine v0.22.0 (*)
+│       ├── color v0.3.3
+│       │   └── peniko v0.6.1 (*)
+│       ├── ecolor v0.36.2 (*)
+│       ├── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+│       ├── egui-winit v0.36.2 (*)
+│       ├── egui_glow v0.36.2 (*)
+│       ├── emath v0.36.2 (*)
+│       ├── epaint v0.36.2 (*)
+│       ├── font-types v0.11.3 (*)
+│       ├── font-types v0.12.6 (*)
+│       ├── glifo v0.3.0 (*)
+│       ├── harfrust v0.12.0 (*)
+│       ├── harfrust v0.13.3 (*)
+│       ├── hayro v0.7.1 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro) (*)
+│       ├── image v0.25.10 (*)
+│       ├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+│       ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│       ├── peniko v0.6.1 (*)
+│       ├── read-fonts v0.39.2 (*)
+│       ├── read-fonts v0.41.0 (*)
+│       ├── read-fonts v0.43.3 (*)
+│       ├── read-fonts v0.44.0 (*)
+│       ├── rgb v0.8.53
+│       │   └── resvg v0.45.1 (*)
+│       ├── rustybuzz v0.20.1 (*)
+│       ├── skrifa v0.42.1 (*)
+│       ├── skrifa v0.44.0 (*)
+│       ├── skrifa v0.47.0 (*)
+│       ├── symphonia-core v0.5.5 (*)
+│       ├── tiny-skia v0.11.4 (*)
+│       ├── tiny-skia-path v0.11.4
+│       │   ├── tiny-skia v0.11.4 (*)
+│       │   └── usvg v0.45.1 (*)
+│       ├── tiny-skia-path v0.12.0
+│       │   └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│       ├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+│       ├── vello_common v0.1.0 (*)
+│       ├── vello_common v0.2.0 (*)
+│       ├── vello_cpu v0.0.8 (*)
+│       ├── vello_cpu v0.1.0 (*)
+│       ├── vello_cpu v0.2.0 (*)
+│       ├── wgpu v30.0.1 (*)
+│       ├── wgpu-core v30.0.1 (*)
+│       ├── wgpu-hal v30.0.1 (*)
+│       └── wgpu-types v30.0.1 (*)
+├── displaydoc v0.2.7 (proc-macro)
+│   ├── icu_collections v2.3.0
+│   │   ├── icu_normalizer v2.3.0 (*)
+│   │   └── icu_properties v2.3.0
+│   │       ├── boa_parser v0.22.0 (*)
+│   │       ├── idna_adapter v1.2.2 (*)
+│   │       └── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│   ├── icu_locale_core v2.3.0
+│   │   ├── icu_properties v2.3.0 (*)
+│   │   └── icu_provider v2.3.1
+│   │       ├── icu_normalizer v2.3.0 (*)
+│   │       └── icu_properties v2.3.0 (*)
+│   ├── icu_properties v2.3.0 (*)
+│   ├── icu_provider v2.3.1 (*)
+│   ├── tinystr v0.8.4
+│   │   └── icu_locale_core v2.3.0 (*)
+│   └── zerotrie v0.2.5
+│       ├── icu_properties v2.3.0 (*)
+│       └── icu_provider v2.3.1 (*)
+├── serde_derive v1.0.229 (proc-macro)
+│   ├── ron v0.12.2 (*)
+│   └── serde v1.0.229 (*)
+├── synstructure v0.14.0
+│   ├── boa_macros v0.22.0 (proc-macro) (*)
+│   ├── yoke-derive v0.8.4 (proc-macro)
+│   │   └── yoke v0.8.3
+│   │       ├── hayro-interpret v0.7.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\hayro-interpret) (*)
+│   │       ├── icu_collections v2.3.0 (*)
+│   │       ├── icu_provider v2.3.1 (*)
+│   │       ├── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+│   │       ├── zerotrie v0.2.5 (*)
+│   │       └── zerovec v0.11.8
+│   │           ├── icu_collections v2.3.0 (*)
+│   │           ├── icu_locale_core v2.3.0 (*)
+│   │           ├── icu_normalizer v2.3.0 (*)
+│   │           ├── icu_properties v2.3.0 (*)
+│   │           ├── icu_provider v2.3.1 (*)
+│   │           ├── potential_utf v0.1.6
+│   │           │   └── icu_collections v2.3.0 (*)
+│   │           └── tinystr v0.8.4 (*)
+│   └── zerofrom-derive v0.1.8 (proc-macro)
+│       └── zerofrom v0.1.8
+│           ├── icu_collections v2.3.0 (*)
+│           ├── icu_provider v2.3.1 (*)
+│           ├── yoke v0.8.3 (*)
+│           ├── zerotrie v0.2.5 (*)
+│           └── zerovec v0.11.8 (*)
+├── thiserror-impl v2.0.21 (proc-macro)
+│   └── thiserror v2.0.21
+│       ├── boa_engine v0.22.0 (*)
+│       ├── craft-pdf v0.1.0 (https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320) (*)
+│       ├── deckcraft-av1 v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\av1)
+│       │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── deckcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\engine) (*)
+│       ├── deckcraft-format v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\format) (*)
+│       ├── deckcraft-h264 v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\h264)
+│       │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── deckcraft-hevc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\hevc)
+│       │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── deckcraft-isobmff v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\isobmff)
+│       │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── deckcraft-metafile v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\metafile) (*)
+│       ├── deckcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\model) (*)
+│       ├── deckcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pdf) (*)
+│       ├── deckcraft-pptx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\pptx) (*)
+│       ├── deckcraft-vp9 v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\vp9)
+│       │   └── deckcraft-media v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\crates\media) (*)
+│       ├── egui-wgpu v0.36.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\egui-wgpu) (*)
+│       ├── gpu-allocator v0.28.0 (*)
+│       ├── gridcraft-core v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\core) (*)
+│       ├── gridcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\engine) (*)
+│       ├── gridcraft-formula v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\formula) (*)
+│       ├── gridcraft-model v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\model) (*)
+│       ├── gridcraft-xlsx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\crates\xlsx) (*)
+│       ├── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+│       ├── naga v30.0.1 (*)
+│       ├── naga-types v30.0.1 (*)
+│       ├── ocrs v0.13.1 (*)
+│       ├── pdfcraft-a11y v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\a11y) (*)
+│       ├── pdfcraft-annot v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\annot) (*)
+│       ├── pdfcraft-audit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\audit) (*)
+│       ├── pdfcraft-cos v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\cos) (*)
+│       ├── pdfcraft-create v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\create) (*)
+│       ├── pdfcraft-crypt v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\crypt) (*)
+│       ├── pdfcraft-edit v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\edit) (*)
+│       ├── pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\engine) (*)
+│       ├── pdfcraft-filters v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\filters) (*)
+│       ├── pdfcraft-forms v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\forms) (*)
+│       ├── pdfcraft-measure v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\measure) (*)
+│       ├── pdfcraft-ocr v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ocr) (*)
+│       ├── pdfcraft-optimize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\optimize) (*)
+│       ├── pdfcraft-organize v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\organize) (*)
+│       ├── pdfcraft-print v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\print) (*)
+│       ├── pdfcraft-redact v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\redact) (*)
+│       ├── pdfcraft-render v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\render) (*)
+│       ├── pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\sign) (*)
+│       ├── pdfcraft-xfa v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfa) (*)
+│       ├── pdfcraft-xfdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\xfdf) (*)
+│       ├── vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+│       ├── vello_common v0.1.0 (*)
+│       ├── vello_common v0.2.0 (*)
+│       ├── wgpu-core v30.0.1 (*)
+│       ├── wgpu-hal v30.0.1 (*)
+│       ├── winprint v0.2.1 (https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9ba) (*)
+│       ├── wordcraft-doc v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\doc) (*)
+│       ├── wordcraft-docbin v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docbin) (*)
+│       ├── wordcraft-docx v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\docx) (*)
+│       ├── wordcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\engine) (*)
+│       ├── wordcraft-metafile v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\metafile) (*)
+│       ├── wordcraft-pdf v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\pdf) (*)
+│       └── wordcraft-zotero v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\crates\zotero) (*)
+├── yoke-derive v0.8.4 (proc-macro) (*)
+├── zerofrom-derive v0.1.8 (proc-macro) (*)
+└── zerovec-derive v0.11.6 (proc-macro)
+    └── zerovec v0.11.8 (*)
+
+time-core v0.1.9
+└── time-macros v0.2.32 (proc-macro)
+    └── time v0.3.55
+        └── boa_engine v0.22.0 (*)
+
+time-core v0.1.9
+└── time v0.3.55 (*)
+
+tiny-skia-path v0.11.4 (*)
+
+tiny-skia-path v0.12.0 (*)
+
+vello_common v0.0.8 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\vello_common) (*)
+
+vello_common v0.1.0 (*)
+
+vello_common v0.2.0 (*)
+
+vello_cpu v0.0.8 (*)
+
+vello_cpu v0.1.0 (*)
+
+vello_cpu v0.2.0 (*)
+
+weezl v0.1.12
+├── gif v0.14.2
+│   ├── image v0.25.10 (*)
+│   └── krilla v0.8.2 (C:\Users\uge226\Desktop\office\spikes\workspace\src\craft-libs\vendor\krilla) (*)
+└── tiff v0.11.3 (*)
+
+weezl v0.2.1
+└── lopdf v0.45.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\lopdf) (*)
+
+windows v0.54.0
+└── cpal v0.16.0
+    └── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+
+windows v0.62.2 (*)
+
+windows-core v0.54.0
+└── windows v0.54.0 (*)
+
+windows-core v0.62.2 (*)
+
+windows-result v0.1.2
+└── windows-core v0.54.0 (*)
+
+windows-result v0.4.1
+├── wgpu-hal v30.0.1 (*)
+└── windows-core v0.62.2 (*)
+
+windows-sys v0.52.0
+├── glutin v0.32.3 (*)
+├── glutin_egl_sys v0.7.1
+│   └── glutin v0.32.3 (*)
+└── winit v0.30.13 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\vendor\winit) (*)
+
+windows-sys v0.61.2
+├── arboard v3.7.0 (*)
+├── eframe v0.36.2 (*)
+├── rfd v0.17.2
+│   ├── deckcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\deckcraft\apps\deckcraft)
+│   ├── gridcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\gridcraft\apps\gridcraft)
+│   ├── pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\crates\ui-egui) (*)
+│   └── wordcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\wordcraft\apps\wordcraft)
+├── rustls-cng v0.7.1 (*)
+├── schannel v0.1.29
+│   └── rustls-native-certs v0.8.5
+│       └── pdfcraft v0.8.0 (C:\Users\uge226\Desktop\office\spikes\workspace\src\pdfcraft\apps\pdfcraft)
+├── tempfile v3.27.0 (*)
+└── uds_windows v1.2.1 (*)

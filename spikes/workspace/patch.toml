@@ -1,0 +1,13 @@
+# [patch] is honoured only at the workspace root, so the four apps share one set.
+# pdfcraft's vendored forks (hayro*, lopdf, winit, egui-wgpu, vello_common) now apply to ALL apps.
+[patch.crates-io]
+hayro-interpret = { path = "src/pdfcraft/vendor/hayro-interpret" }
+hayro = { path = "src/pdfcraft/vendor/hayro" }
+hayro-syntax = { path = "src/pdfcraft/vendor/hayro-syntax" }
+hayro-jbig2 = { path = "src/pdfcraft/vendor/hayro-jbig2" }
+lopdf = { path = "src/pdfcraft/vendor/lopdf" }
+winit = { path = "src/pdfcraft/vendor/winit" }
+egui-wgpu = { path = "src/pdfcraft/vendor/egui-wgpu" }
+vello_common = { path = "src/pdfcraft/vendor/vello_common" }
+# deckcraft patched krilla to craft-libs git; craft-libs itself patches it to its vendor/krilla.
+krilla = { path = "src/craft-libs/vendor/krilla" }
