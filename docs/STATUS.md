@@ -134,6 +134,60 @@ share byte-identical files). geom, pdf and render share names only.
   for the xlsx benchmark and the Android emulator, and gridcraft, deckcraft and pdfcraft continue
   afterwards.
 
+## Task 3 — mobile A0 (done): wordcraft-web v0.7.0 in Chrome on the Android emulator
+Full details: `docs/phase0/mobile-a0.md`. Evidence: `docs/phase0/mobile/`.
+
+**Environment:** Pixel 8 AVD, Chrome 133, Gboard 15.1 with EN, UZ-Latn and RU layouts.
+
+**Blocker on stock Chrome.**
+- The app requests `max_texture_dimension_2d` 8192, but the emulator's swiftshader GPU allows only
+  4096, so it fails to start. `-gpu host` gives blank pages.
+- The tests below therefore ran with Chrome's own software GL (a flag override). They do not
+  represent the emulator GPU.
+- Fix: request the adapter's limit instead of 8192.
+
+**What passed**
+
+| Test | Result |
+|---|---|
+| Correct DPI scale (dpr 2.625, 412 CSS px) | pass |
+| Keyboard shows on tap and hides on Back | pass |
+| Latin typing | pass |
+| Cyrillic "Салом дунё" | pass |
+| Uzbek Latin o‘g‘il | pass; Gboard emits U+02BB / U+02BC, and both reached the docx |
+| Backspace, Enter | pass |
+| Pinch zoom (143%) | pass |
+| Rotation keeps the document and caret | pass |
+| **HRM embed flow on mobile** (open → type `mobilea салом` → File › Save by touch → status-6 callback → docx verified) | **pass** |
+
+**What failed**
+
+| Test | Result |
+|---|---|
+| Autocorrect | "teh " became "tehthe": the correction is appended instead of replacing the word. `DeleteSurrounding` is not handled. |
+| One-finger swipe | Selects text instead of scrolling, so there is no momentum scroll. |
+| Long-press | Selects a word and opens the desktop context menu. No touch selection handles. |
+| 360 dp width | The desktop ribbon overflows. |
+| App switch and return | The editor iframe was dead and the edits were lost. **Lifecycle risk**, to confirm on a real device. |
+
+**Not measured**
+- Glide typing is UNVERIFIED: injected strokes were ignored even in the control textarea.
+
+**Measured numbers**
+- **Load time,** HRM page → editor ready: 2.0–2.4 s warm, 2.9–4.0 s cold.
+- **Chrome renderer PSS:** 284 MB after load, 326 MB after edits.
+
+**Verdict:** egui's web path gives working text entry with Gboard, including Cyrillic and Uzbek, and
+the HRM round trip works. It is **not yet a usable mobile editor**.
+- **Fixable glue:** autocorrect replacement, touch-to-scroll, caret above the keyboard, a compact
+  toolbar, the texture limit, lifecycle and WebGL context loss.
+- **egui-core limits:** no native selection handles, and a generic hidden input as the IME
+  target.
+
+**Side effect:** one extra Back press left Chrome and landed in an Expo Go "Uzgidro HRM" login screen
+that was already on the emulator. Two stray taps and the text "il" went into it. Nothing was
+submitted and nobody was signed in.
+
 ## In progress (Phase 0)
 - Task 1 inventory: desktop and web builds plus tests, run one at a time
   (→ `docs/phase0/inventory.md`).
