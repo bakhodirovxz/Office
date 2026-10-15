@@ -62,6 +62,8 @@ async fn main() {
         .route("/api/session", post(create_session))
         .route("/api/session/{sid}/document", get(get_document))
         .route("/api/session/{sid}/save", post(save).layer(DefaultBodyLimit::max(max_bytes)))
+        .route("/api/session/{sid}/autosave", post(autosave).layer(DefaultBodyLimit::max(max_bytes)))
+        .route("/api/session/{sid}/close", post(close))
         .route("/files/{sid}/{ver}", get(get_file))
         .nest_service("/wc", ServeDir::new(wc_dist))
         .with_state(st.clone());
@@ -171,6 +173,37 @@ async fn save(State(st): St, Path(sid): Path<String>, headers: HeaderMap, body: 
     };
     eprintln!("save sid={sid} ver={ver} bytes={} callback={cb} {detail}", body.len());
     Ok(Json(json!({"version": ver, "callback": cb, "detail": detail})))
+}
+
+/// A recovery copy of unsaved work (the editor was hidden or lost its GPU context). It is not a
+/// version and no callback is sent: the HRM never sees it unless the user comes back and saves.
+async fn autosave(State(st): St, Path(sid): Path<String>, body: Bytes) -> R<Json<Value>> {
+    if !body.starts_with(b"PK\x03\x04") {
+        return Err((StatusCode::BAD_REQUEST, "body is not a zip/docx".into()));
+    }
+    st.sessions.lock().await.get(&sid).ok_or((StatusCode::NOT_FOUND, "no such session".to_string()))?;
+    tokio::fs::write(st.data_dir.join(&sid).join("autosave.docx"), &body).await.map_err(internal)?;
+    eprintln!("autosave sid={sid} bytes={}", body.len());
+    Ok(Json(json!({"bytes": body.len()})))
+}
+
+/// The editor was closed: callback status 2 (closed, the last saved version is final) or status 4
+/// (closed with no changes saved).
+async fn close(State(st): St, Path(sid): Path<String>) -> R<Json<Value>> {
+    let s = st.sessions.lock().await.get(&sid).ok_or((StatusCode::NOT_FOUND, "no such session".to_string()))?;
+    let status = if s.last_version == 0 { 4 } else { 2 };
+    let ctx = callback::CallbackCtx {
+        client: &st.client,
+        secret: st.secret.as_bytes(),
+        public: &st.public,
+        allowed: &st.allowed,
+    };
+    let (cb, detail) = match callback::send(&ctx, &sid, &s, s.last_version, status).await {
+        Ok(()) => ("ok", String::new()),
+        Err(d) => ("failed", d),
+    };
+    eprintln!("close sid={sid} ver={} status={status} callback={cb} {detail}", s.last_version);
+    Ok(Json(json!({"version": s.last_version, "status": status, "callback": cb, "detail": detail})))
 }
 
 async fn get_file(

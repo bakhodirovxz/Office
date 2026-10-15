@@ -12,21 +12,103 @@
 <body>
 <iframe id="wc" title="editor"></iframe>
 <script>
-// Wrapper (spike 4). Adapter "shim": drives the STOCK wordcraft-web dist through a synthetic
-// drop event (open) and a replaced window.showSaveFilePicker (save). Same-origin parent only.
+// Wrapper (spike 4). Two adapters, chosen by ?adapter= (default shim):
+//  - "shim": drives the STOCK wordcraft-web dist through a synthetic drop event (open) and a
+//    replaced window.showSaveFilePicker (save). Same-origin parent only.
+//  - "bridge": talks to a wordcraft-web built with the host-bridge patch (?host=parent) through
+//    wordcraft:* postMessages: open, requestSave, save, dirty, opened, autosave, failed.
 (function () {
   const wc = document.getElementById('wc');
   const ADAPTER = new URLSearchParams(location.search).get('adapter') || 'shim';
-  const post = (event, data) => parent.postMessage({ type: 'docs:event', event, data: data || {} }, '*');
+  const post = (event, data) => parent.postMessage({ type: 'docs:event', event, data: data === undefined ? {} : data }, '*');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const raf = () => new Promise((r) => requestAnimationFrame(() => r()));
   let sid = null, name = 'document.docx', started = false;
+  // Bridge state.
+  let dirty = false, lastAutosave = null, saveWaiters = [], openedWaiter = null, readyWaiter = null, recovering = false;
 
   function toU8(d, w) {
     if (d instanceof Uint8Array || (w && d instanceof w.Uint8Array)) return new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
     if (d && d.buffer && d.byteLength !== undefined) return new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
     if (d instanceof ArrayBuffer || (w && d instanceof w.ArrayBuffer)) return new Uint8Array(d.slice(0));
     throw new Error('unsupported write chunk');
+  }
+
+  // ---- bridge adapter ----
+  const toWc = (msg, transfer) => wc.contentWindow.postMessage(msg, location.origin, transfer || []);
+
+  async function bridgeUpload(bytes) {
+    // One save at a time; every waiter of requestSave() settles when the upload ends.
+    const waiters = saveWaiters; saveWaiters = [];
+    try { await upload(bytes); waiters.forEach((w) => w.res()); } catch (e) { post('onError', { message: String(e.message || e) }); waiters.forEach((w) => w.rej(e)); }
+  }
+
+  function requestSave() {
+    if (ADAPTER !== 'bridge') return Promise.resolve();
+    return new Promise((res, rej) => { saveWaiters.push({ res, rej }); toWc({ type: 'wordcraft:requestSave' }); });
+  }
+
+  async function close() {
+    if (ADAPTER === 'bridge' && dirty) await requestSave();
+    const r = await fetch('/api/session/' + sid + '/close', { method: 'POST' });
+    const j = await r.json();
+    post('onClosed', j);
+  }
+
+  async function uploadAutosave(bytes) {
+    try {
+      const r = await fetch('/api/session/' + sid + '/autosave', { method: 'POST', body: bytes });
+      post('onAutosave', { bytes: bytes.length, stored: r.ok });
+    } catch (e) { post('onAutosave', { bytes: bytes.length, stored: false, error: String(e) }); }
+  }
+
+  function onBridgeMessage(ev) {
+    if (ev.source !== wc.contentWindow || ev.origin !== location.origin) return;
+    const m = ev.data;
+    if (!m || typeof m.type !== 'string' || !m.type.startsWith('wordcraft:')) return;
+    if (m.type === 'wordcraft:ready' && readyWaiter) { readyWaiter(); readyWaiter = null; }
+    else if (m.type === 'wordcraft:opened' && openedWaiter) { openedWaiter(); openedWaiter = null; }
+    else if (m.type === 'wordcraft:dirty') { dirty = !!m.dirty; post('onDocumentStateChange', m.dirty); }
+    else if (m.type === 'wordcraft:save') bridgeUpload(new Uint8Array(m.bytes));
+    else if (m.type === 'wordcraft:autosave') { lastAutosave = new Uint8Array(m.bytes); uploadAutosave(lastAutosave); }
+    else if (m.type === 'wordcraft:failed') {
+      post('onError', { message: String(m.error) });
+      // A lost WebGL context cannot be redrawn: reload the editor on the last copy we hold.
+      if (/context/i.test(String(m.error))) recover();
+    }
+  }
+
+  async function openInBridge(bytes) {
+    const opened = new Promise((res) => { openedWaiter = res; });
+    const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    toWc({ type: 'wordcraft:open', name, bytes: buf }, [buf]);
+    await opened;
+  }
+
+  async function loadBridgeFrame() {
+    const ready = new Promise((res) => { readyWaiter = res; });
+    const url = '/wc/index.html?webgl&host=parent';
+    if (wc.getAttribute('src')) wc.contentWindow.location.replace(url); else wc.src = url;
+    await ready;
+  }
+
+  async function recover() {
+    if (recovering) return;
+    recovering = true;
+    try {
+      const source = lastAutosave || (dirty ? null : new Uint8Array(await (await fetch('/api/session/' + sid + '/document')).arrayBuffer()));
+      if (!source) { post('onError', { message: 'context lost and no copy of the unsaved work' }); return; }
+      await loadBridgeFrame();
+      await openInBridge(source);
+      post('onRecovered', { bytes: source.length, fromAutosave: !!lastAutosave });
+    } finally { recovering = false; }
+  }
+
+  async function startBridge(bytes) {
+    window.addEventListener('message', onBridgeMessage);
+    await loadBridgeFrame();
+    await openInBridge(bytes);
+    post('onDocumentReady', { sid, name, adapter: ADAPTER });
   }
 
   async function upload(bytes) {
@@ -85,6 +167,7 @@
       const dr = await fetch('/api/session/' + sid + '/document');
       if (!dr.ok) { post('onError', { status: dr.status, message: 'document fetch failed' }); return; }
       const bytes = new Uint8Array(await dr.arrayBuffer());
+      if (ADAPTER === 'bridge') { await startBridge(bytes); return; }
       await new Promise((res) => { wc.addEventListener('load', res, { once: true }); wc.src = '/wc/index.html?webgl'; });
       const w = wc.contentWindow;
       await waitEditorStarted(w);
@@ -104,6 +187,8 @@
   addEventListener('message', (ev) => {
     if (ev.source !== parent) return;
     if (ev.data && ev.data.type === 'docs:config') start(ev.data.config);
+    else if (ev.data && ev.data.type === 'docs:requestSave') requestSave().catch(() => {});
+    else if (ev.data && ev.data.type === 'docs:close') close().catch((e) => post('onError', { message: String(e.message || e) }));
   });
   parent.postMessage({ type: 'docs:ready' }, '*');
 })();
