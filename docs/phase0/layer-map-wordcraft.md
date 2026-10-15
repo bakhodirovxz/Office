@@ -11,9 +11,11 @@ and IME) is the main piece that lives only in the UI.
   `crates/engine/src`, counted with grep. The README (`README.md:98`) and `docs/architecture.md`
   say 422, so they are out of date. The count will be cross-checked with `wordcraft-cli commands
   --json` once the build is done.
-- **`docs/HOSTING.md` does not exist.** It is not in any of the six repos and not in wordcraft's git
-  history (`git log --diff-filter=D`). The "13 / 5 MB" figure the brief quotes from it cannot be
-  traced. The real wasm size will be measured in `inventory.md`.
+- **`HOSTING.md` is not in the source repo, but it ships inside the release zip**
+  (`wordcraft-web-0.7.0.zip` → `HOSTING.md:10,28`). It says the wasm is "about 13 MB, or 5 MB
+  compressed". The measured release wasm is 39,785,016 B = 37.9 MiB raw and 14.3 MiB gzip, so that
+  claim is **outdated**, as the brief says. (An earlier note here, "HOSTING.md does not exist",
+  was wrong and has been corrected.)
 
 ## 1. Crates
 

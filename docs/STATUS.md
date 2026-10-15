@@ -16,6 +16,24 @@
 | Toolchain floor | edition 2024 everywhere; rust-version 1.90 (wordcraft, gridcraft) / 1.95 (deckcraft, pdfcraft, craft-libs) | `Cargo.toml` |
 | UI framework | egui/eframe 0.36 in all four apps | `Cargo.toml` `[workspace.dependencies]` |
 
+## Web release sizes (official upstream release zips, SHA256 verified, measured 2026-10-15)
+Brotli is `-q 11`; gzip is `-9`. 1 MiB = 1,048,576 B.
+
+| App (release) | wasm raw | gzip -9 | brotli -q 11 | zip |
+|---|---|---|---|---|
+| wordcraft-web 0.7.0 | 39,785,016 B (37.9 MiB) | 14,947,589 B (14.3 MiB) | 8,878,074 B (8.5 MiB) | 15.0 MB |
+| pdfcraft-web 0.8.0 | 38,059,629 B (36.3 MiB) | 14,064,441 B (13.4 MiB) | 9,215,527 B (8.8 MiB) | 14.1 MB |
+| deckcraft-web 0.7.0 | 25,537,284 B (24.4 MiB) | 9,345,258 B (8.9 MiB) | 5,953,603 B (5.7 MiB) | 9.4 MB |
+| gridcraft-web 0.7.0 | 18,886,586 B (18.0 MiB) | 7,045,299 B (6.7 MiB) | 4,732,751 B (4.5 MiB) | 7.1 MB |
+
+- **The brief's wordcraft figure is confirmed:** 37.9 / 14.3, measured in MiB.
+- **Brotli shrinks wordcraft another 41% beyond gzip**, so brotli precompression should be part of
+  hosting.
+- **Each editor is one wasm module.** A lazy-loaded shell would download 4.5–8.8 MiB (brotli) on
+  first use of each editor.
+- **These are release builds of tag v0.7.0/v0.8.0,** not HEAD. HEAD sizes will come from the
+  inventory build.
+
 ## Task 2 — layer maps (done, static read)
 Files: `docs/phase0/layer-map-{wordcraft,gridcraft,deckcraft,pdfcraft-craftlibs}.md`.
 
@@ -28,8 +46,8 @@ Files: `docs/phase0/layer-map-{wordcraft,gridcraft,deckcraft,pdfcraft-craftlibs}
 
 Brief corrections:
 - wordcraft has 629 command ids, not 433. The docs say 422 and are stale.
-- `HOSTING.md` does not exist in any repo or in wordcraft's git history. The "13 / 5 MB" claim
-  cannot be traced.
+- `HOSTING.md` is not in the source repo but ships inside the release zip. Its "about 13 / 5 MB"
+  is outdated; the measured size is below. (Corrected: an earlier note said the file did not exist.)
 
 Cross-cutting findings:
 - Every app enforces "nothing below the UI layer depends on egui" with `xtask layers`.
