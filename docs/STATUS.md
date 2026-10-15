@@ -174,6 +174,51 @@ Spike consequences:
   - domain/GPO or manual installation;
   - whether VBA macros or Outlook are in use. **Macros are not supported** by the Craft apps.
 
+## Owner acceptance criteria: Windows 10/11 and Office 2010+ files (stated 2026-10-15)
+
+### Requirements
+- The desktop suite runs on **Windows 10 and Windows 11**.
+- It opens, edits and saves files created in **Microsoft Office 2010 and later**. Office 2010+ saves
+  OOXML by default, and users can still save the legacy 97–2003 binary formats.
+
+### Format support, checked in upstream source
+
+| Format | Open | Save | Evidence |
+|---|---|---|---|
+| .docx .docm .dotx .dotm | yes | yes | `wordcraft/crates/engine/src/io.rs:11-15, 183` |
+| .doc .dot (97–2003) | yes (import) | no, saves as .docx | `wordcraft/crates/engine/src/io.rs:192` |
+| .xlsx .xlsm .xltx .xltm | yes | yes; the VBA project is kept in .xlsm/.xltm | `gridcraft/crates/engine/src/io.rs:24, 200-203` |
+| .xls .xlt (97–2003), .xlsb, .ods | yes (import) | **no** (refused) | `gridcraft/crates/engine/src/io.rs:204-208` |
+| .pptx .potx .ppsx | yes | yes | `deckcraft/crates/engine/src/cmd/file.rs:263, 340` |
+| **.ppt .pot .pps (97–2003)** | **no** | **no** | `deckcraft/docs/file-format-parity.md:23` ("owner decision") |
+
+### Gaps against the requirement
+- **No legacy PowerPoint (.ppt).** Options:
+  - (a) a converter sidecar (LibreOffice headless as a separate process; clean-room, nothing linked);
+  - (b) contribute a .ppt importer upstream, which is large.
+  - The owner should say how common .ppt files are.
+- **.xls and .doc cannot be saved back in their own format.** The user must be told clearly, and
+  they get .xlsx or .docx instead.
+- **Macros are never executed.** gridcraft only carries the VBA project through on save.
+- **Office 2010–2019 vs 365 fidelity is not measured yet.** The corpus must include files saved by
+  several Office versions (2010, 2013, 2016/2019, 365).
+
+### Windows 10/11 and old PCs
+- **Graphics fallback.** All four desktop apps choose DirectX 12 when a capable hardware adapter
+  exists. Otherwise they fall back to OpenGL, and then to WARP, Microsoft's software rasteriser.
+  - Evidence: `wordcraft/apps/wordcraft/src/graphics.rs:38-53`,
+    `gridcraft/apps/gridcraft/src/graphics.rs`, `deckcraft/apps/deckcraft/src/graphics.rs`,
+    `pdfcraft/apps/pdfcraft/src/main.rs`.
+  - This should cover old office PCs and RDP sessions. It is **still to be measured**, because WARP
+    draws every frame on the CPU.
+- **Windows 10:** this machine (Win10 Pro 19045) can test it.
+- **Windows 11:** no machine is available, so it is **UNVERIFIED** until the owner provides a Win11
+  PC or VM.
+- **To measure in Phase 0:**
+  - startup time and memory of each exe on this Win10 PC;
+  - behaviour over RDP or with `WGPU_BACKEND=gl`;
+  - open → save → reopen on Office 2010+ files from the corpus.
+
 ## Task 4 — document-server spike S0–S7 (done)
 Details: `docs/phase0/docserver-results.md`. The spike ran against wordcraft-web release v0.7.0.
 
