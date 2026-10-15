@@ -1,0 +1,19 @@
+[package]
+name = "gc-probe"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+gridcraft-core = { path = "C:/Users/uge226/Desktop/office/upstream/gridcraft/crates/core" }
+gridcraft-formula = { path = "C:/Users/uge226/Desktop/office/upstream/gridcraft/crates/formula" }
+gridcraft-model = { path = "C:/Users/uge226/Desktop/office/upstream/gridcraft/crates/model" }
+gridcraft-calc = { path = "C:/Users/uge226/Desktop/office/upstream/gridcraft/crates/calc" }
+gridcraft-xlsx = { path = "C:/Users/uge226/Desktop/office/upstream/gridcraft/crates/xlsx" }
+
+[profile.dev]
+opt-level = 1
+debug = 0
+incremental = false
+
+[workspace]
