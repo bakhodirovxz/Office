@@ -1,0 +1,4 @@
+'HRM fixture paragraph o\u02bbg\u02bbil o\u02bcg\u02bcil \u0441\u0430\u043b\u043e\u043c \u0434\u0443\u043d\u0451 hello world tehthe wolrdwor'
+['U+02BB', 'U+02BB', 'U+02BC', 'U+02BC', 'U+0441', 'U+0430', 'U+043B', 'U+043E', 'U+043C', 'U+0434', 'U+0443', 'U+043D', 'U+0451']
+'ok'
+[]
