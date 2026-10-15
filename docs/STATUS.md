@@ -11,6 +11,45 @@
 | What | Value | How |
 |---|---|---|
 | Upstream HEADs reachable | all 6 | `git ls-remote`, 2026-10-15 |
+| Upstream velocity (commits in last 7 days) | wordcraft 701, gridcraft 993, deckcraft 859, pdfcraft 823 (≈100–140/day each) | `git log --since='7 days ago'` |
+| Total commits | wordcraft 727, gridcraft 1015, deckcraft 884, pdfcraft 1165, craft-libs 116, craft-fonts 10 | `git rev-list --count HEAD` |
+| Toolchain floor | edition 2024 everywhere; rust-version 1.90 (wordcraft, gridcraft) / 1.95 (deckcraft, pdfcraft, craft-libs) | `Cargo.toml` |
+| UI framework | egui/eframe 0.36 in all four apps | `Cargo.toml` `[workspace.dependencies]` |
+
+## Task 2 — layer maps (done, static read)
+Files: `docs/phase0/layer-map-{wordcraft,gridcraft,deckcraft,pdfcraft-craftlibs}.md`.
+
+| App | UI replaceable | Command surface | Renderer w/o egui | Input/IME location | i18n |
+|---|---|---|---|---|---|
+| wordcraft | 4/5 | 629 ids, `Session::run(id, json)` | yes, display list → RGBA | hit-test in layout; **pointer→selection + IME in ui-egui** | TSV catalogs, 23 langs (ui-egui) |
+| gridcraft | 3/5 | ~340 `cmd!`, `Session::execute(id, json)` | charts yes, **grid no** | **editor, hit-test, keys in ui-egui** | Rust tables, 11 langs (ui-egui) |
+| deckcraft | 4/5 | 320, `Session::execute(id, json)` | yes, vello_cpu → RGBA | **engine** (keys, pointer, IME compose) | none |
+| pdfcraft | 4/5 | 200 static ids + ~229 JSON automation tools; `Edit` enum not serialisable | yes, hayro → RGBA | ui-egui | `tl!` catalogs, 23 langs (ui-egui) |
+
+Brief corrections:
+- wordcraft has 629 command ids, not 433. The docs say 422 and are stale.
+- `HOSTING.md` does not exist in any repo or in wordcraft's git history. The "13 / 5 MB" claim
+  cannot be traced.
+
+Cross-cutting findings:
+- Every app enforces "nothing below the UI layer depends on egui" with `xtask layers`.
+- No app has an FFI or wasm-bindgen API over the engine. Remote access is limited to stdio MCP and a
+  TCP JSON-lines control channel.
+- pdfcraft-web already supports `?file=<url>` fetch and a postMessage host bridge for Nextcloud
+  embedding. gridcraft-web has `?host=parent`. wordcraft-web and deckcraft-web have neither.
+- craft-libs is a git dependency pinned to **5 different revs** across the apps.
+  craft-settings, craft-atomic and craft-cms are unused, and the apps re-implement atomic writes
+  locally.
+- deckcraft always compiles 8 video and audio codecs and symphonia into the engine, wasm included.
+  There is no feature gate.
+- The i18n mechanisms differ in 3 apps, and deckcraft has none.
+- gridcraft PDF export uses only the standard-14 fonts. This is a Cyrillic fidelity risk to measure.
+
+## In progress (Phase 0)
+- Task 1 inventory: desktop/web builds and tests, run one at a time (→ `docs/phase0/inventory.md`).
+- Task 1 one-workspace conflict spike (→ `docs/phase0/workspace-conflicts.md`, `spikes/workspace/`).
+- Pending: task 3 mobile spike, task 4 document-server spike (after builds), task 5 fidelity
+  baseline (blocked on `corpus/`), task 6 ADR.
 
 Upstream HEADs at start of Phase 0:
 
