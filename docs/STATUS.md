@@ -97,6 +97,22 @@ Duplicated crate names (2+ versions in the tree):
 Of the crates that share a role across apps, only `metafile` is a real copy (wordcraft and deckcraft
 share byte-identical files). geom, pdf and render share names only.
 
+## Task 1 — inventory, wordcraft at HEAD fd0bb2f (measured on this PC, windows-gnu, cold builds)
+
+| Step | Result | Wall time |
+|---|---|---|
+| Desktop GUI `cargo build --release` | OK | 556 s |
+| CLI build | OK | 262 s |
+| Web `trunk build --release` | OK | 897 s |
+| `cargo test --workspace --release` | exit 101 | 3784 s |
+
+- **Tests:** 2145 passed and 2 failed before cargo stopped. This is **partial**: cargo stops at the
+  first failing test binary. A `--no-fail-fast` rerun is needed for the full count.
+- **Details** go to `docs/phase0/inventory.md`, written by the inventory agent.
+- **Inventory paused after wordcraft.** The gate is `E:/office-target/PAUSE` in `run.sh`. It frees RAM
+  for the xlsx benchmark and the Android emulator, and gridcraft, deckcraft and pdfcraft continue
+  afterwards.
+
 ## In progress (Phase 0)
 - Task 1 inventory: desktop and web builds plus tests, run one at a time
   (→ `docs/phase0/inventory.md`).
