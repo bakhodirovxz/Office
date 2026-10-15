@@ -224,8 +224,33 @@ Spike consequences:
 | **External workbook links** | **"never followed or refreshed"**: kept on save with their cached values. **This blocks the owner's workflow.** | `gridcraft/docs/file-format-parity.md:25` |
 | **Large files** | **"100 MB files fail (#175)"**; the owner's files are 80 MB and growing | `gridcraft/docs/file-format-parity.md:25` |
 
-Benchmark in progress: synthetic 10/40/80/120 MB workbooks, an append test and an external-link test
-against gridcraft 0.7.0. Results will go to `docs/phase0/xlsx-bench.md`.
+**External-link test: done and MEASURED, gridcraft-cli 0.7.0, 2026-10-15.**
+Test files: a hand-built ECMA-376 §18.14 `linked.xlsx` with a same-folder link and an absolute-path
+link (built by `spikes/xlsx-bench/ext.py`).
+- **Open.** Works, with the warning "links to external workbooks were kept; they are not followed
+  or refreshed".
+- **Source workbook changed.** Reopening `linked.xlsx` still shows the old cached values
+  (10, 21, 150, 7). The new values are **not picked up**.
+- **No update-links command.** `data.refreshAll` refreshes PivotTables only and returns
+  `refreshed: 0`.
+- **Recalculation.** `formulas.calculateNow` leaves the external cells frozen.
+- **New links cannot be created.** Typing `='[source.xlsx]Data'!B2` gives `#REF!`.
+- **Save round trip.** The externalLink parts, their relationships (including the absolute path),
+  the formulas and the cached values all survive. Whether Excel opens the saved file without a
+  repair prompt is unchecked (Excel is not available).
+
+**Verdict:** gridcraft 0.7.0 cannot serve a workload that pulls live data from other workbooks.
+It needs an upstreamable feature: resolve external links, recalculate, offer "Edit Links / Update
+Values", and let users type link formulas.
+
+**Size benchmark: NOT measured yet.**
+- **Why it is blocked.** Free RAM stayed at 0.6–1.1 GB while 12 rustc processes from the inventory
+  build were running, so the harness aborted the runs.
+- **Reruns** are scheduled for after the inventory finishes.
+- **Upstream's own position:** `gridcraft/docs/architecture.md:64` says "XLSX reader builds the
+  whole workbook in memory; no streaming (#175)", and `docs/gaps.md` adds "no threading in
+  crates/calc".
+- **Scripts:** `spikes/xlsx-bench/`.
 
 ### Windows 10/11 and old PCs
 - **Graphics fallback.** All four desktop apps choose DirectX 12 when a capable hardware adapter
