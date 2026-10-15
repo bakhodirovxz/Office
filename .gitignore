@@ -8,3 +8,4 @@ node_modules/
 # Spike scratch: copied upstream sources and raw cargo error dumps
 /spikes/workspace/src/
 /spikes/workspace/err*.txt
+spikes/docserver/e2e/test-results/
