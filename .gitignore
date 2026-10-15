@@ -1,0 +1,7 @@
+# Upstream clones are reference checkouts in Phase 0 (pinned SHAs recorded in docs/STATUS.md).
+/upstream/
+# Owner-provided anonymised HRM documents: never commit.
+/corpus/
+target/
+*.log
+node_modules/
