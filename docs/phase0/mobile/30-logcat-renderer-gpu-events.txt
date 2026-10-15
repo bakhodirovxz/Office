@@ -1,0 +1,9 @@
+10-15 14:12:08.391 W/chromium( 3420): [WARNING:gpu_process_host.cc(1384)] The GPU process has crashed 1 time(s)
+10-15 14:12:08.695 W/chromium( 3420): [WARNING:gpu_process_host.cc(975)] Reinitialized the GPU process after a crash. The reported initialization time was 124 ms
+10-15 14:12:51.604 I/ActivityManager(  697): Process com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:13 (pid 7902) has died: fg +1 BTOP
+10-15 14:16:11.392 W/chromium( 8713): [WARNING:gpu_process_host.cc(1384)] The GPU process has crashed 1 time(s)
+10-15 14:16:11.894 W/chromium( 8713): [WARNING:gpu_process_host.cc(975)] Reinitialized the GPU process after a crash. The reported initialization time was 298 ms
+10-15 14:18:15.965 I/ActivityManager(  697): Process com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:3 (pid 10617) has died: vis BTOP
+10-15 14:18:31.960 I/ActivityManager(  697): Process com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:4 (pid 10711) has died: vis BTOP
+10-15 14:19:01.227 W/chromium( 8905): [WARNING:gpu_process_host.cc(1384)] The GPU process has crashed 1 time(s)
+10-15 14:19:01.780 W/chromium( 8905): [WARNING:gpu_process_host.cc(975)] Reinitialized the GPU process after a crash. The reported initialization time was 248 ms

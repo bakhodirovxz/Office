@@ -1,0 +1,5 @@
+pid=8905 [com.android.chrome ] TOTAL PSS: 115662 TOTAL RSS: 316472 TOTAL SWAP PSS: 1 NativeHeapPSS=24839 Graphics=0 GLmtrack=
+pid=12280 [com.android.chrome:privileged_process3 ] TOTAL PSS: 65308 TOTAL RSS: 223488 TOTAL SWAP PSS: 1 NativeHeapPSS=23230 Graphics=0 GLmtrack=
+pid=14541 [com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:18 ] TOTAL PSS: 326385 TOTAL RSS: 529104 TOTAL SWAP PSS: 8 NativeHeapPSS=1615 Graphics=0 GLmtrack=
+        TOTAL   112898    56140    28044        1   313680    56254    34610    17617
+           TOTAL PSS:   112898            TOTAL RSS:   313680       TOTAL SWAP PSS:        1
