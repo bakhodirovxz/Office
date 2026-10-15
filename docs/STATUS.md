@@ -234,8 +234,8 @@ Report: `docs/phase0/gridcraft-templates-spike.md`. Patches: `spikes/gridcraft-p
   idle machine.
 - **Save peaks:** w40 922 MB; w120 2,635 MB.
 - **RAM ratio:** about 64 MB per file-MB before, about 19–20 MB per file-MB after (Excel: about 11).
-- **Open time** improved only modestly (w10 11.3 → 8.7 s, w40 42.7 → 36.6 s). Parsing formulas once
-  per run would save another 1–2 days of work's worth of time on open.
+- **Open time** improved only modestly (w10 11.3 → 8.7 s, w40 42.7 → 36.6 s). Parsing each run's
+  formula once on load (about 1–2 more engineer-days) should speed up open further. Not measured.
 
 **Correctness:**
 - All values on w10, c10 and w40 are bit-identical to the baseline.
