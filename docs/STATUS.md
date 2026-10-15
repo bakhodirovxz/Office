@@ -125,6 +125,23 @@ Upstream HEADs at start of Phase 0:
 - Not installed: LibreOffice (`soffice`), wasm-pack/trunk/wasm-opt (to be added as needed or run
   in Docker).
 
+## Owner requirement (re-stated 2026-10-15)
+Everything must work on **mobile, web and desktop**, with editing on all three, not only viewing.
+This applies to the editors, the document-server embed (HRM web and the HRM mobile app),
+the converter and transliteration.
+
+For the ADR this is a hard selection criterion: an architecture that passes on desktop and web but
+fails the Android touch and keyboard tests is rejected.
+
+Spike consequences:
+- **Mobile A0 also covers the HRM embed.** After Spike 4, the fake-HRM page → editor → save →
+  callback flow is run in Chrome on the Android emulator, not only in desktop Chromium.
+- **Each approach is scored on all three platforms,** from one UI codebase where possible:
+  - A: egui everywhere, i.e. eframe on desktop, web and Android.
+  - B: a web UI over the engine; wasm on web, Tauri on desktop, WebView or Tauri on Android.
+- **iOS cannot be tested on this machine** (no macOS). The ADR will state it as UNVERIFIED and not
+  claim it.
+
 ## Open risks / blockers
 - `corpus/` is **missing** → fidelity baseline (task 5) blocked until the owner provides it.
 - `vendor-notes/` (`merge_lines.py`, `uz-translit-onlyoffice/`) is **missing** → not needed for
