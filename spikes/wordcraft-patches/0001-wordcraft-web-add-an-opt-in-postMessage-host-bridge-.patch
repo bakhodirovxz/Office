@@ -1,0 +1,341 @@
+From 2a180b1181cd2a849008b88721d87d27e7fe0660 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Thu, 15 Oct 2026 19:50:07 +0500
+Subject: [PATCH 1/5] wordcraft-web: add an opt-in postMessage host bridge
+ (?host=parent)
+
+A page that frames WordCraft in an <iframe> can now open a document in it,
+ask it to save, and hear about unsaved changes, the way the GridCraft and
+PDFCraft web apps already allow for their embedders.
+
+Messages are plain objects with a `type`:
+  wordcraft:ready       (to host)   {version}
+  wordcraft:open        (from host) {name, bytes}
+  wordcraft:opened      (to host)   {name}
+  wordcraft:requestSave (from host)
+  wordcraft:save        (to host)   {name, bytes}, bytes transferred
+  wordcraft:dirty       (to host)   {dirty}
+  wordcraft:failed      (to host)   {error}
+
+Only the parent window is heard or answered, and only on its origin: the
+page's own, or the one named by &parent_origin=. Without ?host=parent, or
+without a parent, nothing changes. In host mode the page starts with an
+empty document instead of File > Home.
+---
+ apps/wordcraft-web/Cargo.toml      |   2 +-
+ apps/wordcraft-web/src/main.rs     |   1 +
+ apps/wordcraft-web/src/web.rs      |  43 +++++--
+ apps/wordcraft-web/src/web/host.rs | 175 +++++++++++++++++++++++++++++
+ 4 files changed, 213 insertions(+), 8 deletions(-)
+ create mode 100644 apps/wordcraft-web/src/web/host.rs
+
+diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
+index d9b44aa..36242e7 100644
+--- a/apps/wordcraft-web/Cargo.toml
++++ b/apps/wordcraft-web/Cargo.toml
+@@ -29,4 +29,4 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "MessageEvent", "UrlSearchParams"] }
+diff --git a/apps/wordcraft-web/src/main.rs b/apps/wordcraft-web/src/main.rs
+index 2f4283d..d0253bb 100644
+--- a/apps/wordcraft-web/src/main.rs
++++ b/apps/wordcraft-web/src/main.rs
+@@ -7,6 +7,7 @@
+ //! Differences from the desktop app: no TCP control channel; Open and Insert › Pictures use the
+ //! browser file picker (bytes arrive through `Services::inbox`); Save and Export download.
+ //! URL flags: `?webgl` forces WebGL2; `?sample` opens the sample document.
++//! `?host=parent` (inside an `<iframe>`) talks to the embedding page by `postMessage` (`web/host.rs`).
+ #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+ 
+ #[cfg(target_arch = "wasm32")]
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 0e40099..55fa229 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -13,6 +13,7 @@ const DOC_EXTS: &[&str] = &["docx", "docm", "dotx", "dotm", "doc", "dot", "odt",
+ const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "wmf", "emf"];
+ const RECIPIENT_EXTS: &[&str] = wordcraft_engine::cmd::mailings::RECIPIENT_EXTENSIONS;
+ mod font_store;
++mod host;
+ const CANVAS_ID: &str = "wordcraft_canvas";
+ const LOADING_ID: &str = "wordcraft_loading";
+ 
+@@ -29,15 +30,23 @@ pub fn start() {
+         };
+         let dirty = Rc::new(Cell::new(false));
+         let saves = AsyncSaves::default();
+-        if let Err(e) = guard_unload(dirty.clone(), saves.clone()) {
+-            log::error!("no unsaved-changes guard: {e}");
+-        }
+         let mut options = eframe::WebOptions::default();
+         if query().contains("webgl")
+             && let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup
+         {
+             create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
+         }
++        // `?host=parent`: a page framing WordCraft (a document server, say) opens documents in it
++        // and stores what it saves (`host`).
++        let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
++        // A framing page guards leaving itself (and reloads this frame to recover, which a guard here
++        // would turn into a prompt).
++        if bridge.is_none()
++            && let Err(e) = guard_unload(dirty.clone(), saves.clone())
++        {
++            log::error!("no unsaved-changes guard: {e}");
++        }
++        let app_bridge = bridge.clone();
+         let result = eframe::WebRunner::new()
+             .start(
+                 canvas,
+@@ -56,23 +65,34 @@ pub fn start() {
+                     // The browser's locale picks the new document's paper, the units and the
+                     // decimal separator (#838).
+                     let region = wordcraft_ui_egui::i18n::system_region();
+-                    let sample = query().contains("sample");
++                    let sample = app_bridge.is_none() && query().contains("sample");
+                     let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+                     let mut session = Session::new(doc);
+                     session.system_region = region;
+                     let messages = Rc::new(RefCell::new(Vec::new()));
+-                    let mut app = WordApp::new(session, services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone()));
++                    let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
++                    if let Some(bridge) = &app_bridge {
++                        bridge.connect(&mut services, inbox.clone(), cc.egui_ctx.clone());
++                    }
++                    let mut app = WordApp::new(session, services);
+                     // Pasted pictures wait apart from dropped files: the app inserts one only when the page is the edit target (#1349).
+                     app.services.pasted = Some(pasted);
+                     app.autosave = false;
+                     // No document to show: start on File › Home, as the desktop app does (#766).
+-                    if !sample {
++                    // In host mode the parent sends the document to edit.
++                    if !sample && app_bridge.is_none() {
+                         app.start_screen();
+                     }
+-                    Ok(Box::new(WebShell { app, inbox, messages }))
++                    if let Some(bridge) = &app_bridge {
++                        bridge.post_ready();
++                    }
++                    Ok(Box::new(WebShell { app, inbox, messages, bridge: app_bridge }))
+                 }),
+             )
+             .await;
++        if let (Err(e), Some(bridge)) = (&result, &bridge) {
++            bridge.post_failed(&format!("{e:?}"));
++        }
+         if let Some(el) = document.get_element_by_id(LOADING_ID) {
+             match result {
+                 Ok(()) => el.remove(),
+@@ -86,12 +106,18 @@ fn query() -> String {
+     web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
+ }
+ 
++/// The value of the URL's `?key=` parameter.
++fn query_param(key: &str) -> Option<String> {
++    web_sys::UrlSearchParams::new_with_str(&query()).ok()?.get(key)
++}
++
+ /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
+ /// and feed them through the inbox.
+ struct WebShell {
+     app: WordApp,
+     inbox: Inbox,
+     messages: Rc<RefCell<Vec<String>>>,
++    bridge: Option<host::Bridge>,
+ }
+ 
+ impl eframe::App for WebShell {
+@@ -116,6 +142,9 @@ impl eframe::App for WebShell {
+             self.app.status(msg);
+         }
+         self.app.logic(ctx);
++        if let Some(bridge) = &self.bridge {
++            bridge.sync(ctx, &mut self.app);
++        }
+     }
+ 
+     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+new file mode 100644
+index 0000000..943434c
+--- /dev/null
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -0,0 +1,175 @@
++//! The `postMessage` bridge to a parent page (`?host=parent`), for pages that embed WordCraft in
++//! an `<iframe>` (a document server, a Nextcloud app). Messages are plain objects with a `type`:
++//!
++//! - `wordcraft:ready` (to the parent): `{ version }`, the app is listening; send a document now.
++//! - `wordcraft:open` (from the parent): `{ name, bytes }`, bytes an `ArrayBuffer` or
++//!   `Uint8Array`. It opens like a document picked with File › Open or dropped on the window.
++//! - `wordcraft:opened` (to the parent): `{ name }`, a document has replaced the one shown.
++//! - `wordcraft:requestSave` (from the parent): save now, as File › Save does.
++//! - `wordcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
++//!   file WordCraft would otherwise download: Save, Save As and the exports. The parent stores it
++//!   and reports failures itself.
++//! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
++//! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save.
++//!
++//! Only the parent window is heard or answered, and only on its origin: the page's own unless
++//! `&parent_origin=` names another. In host mode the page starts with an empty document and the
++//! parent guards leaving the page.
++
++use std::cell::{Cell, RefCell};
++use std::rc::Rc;
++
++use serde_json::json;
++use wasm_bindgen::JsCast as _;
++use wasm_bindgen::JsValue;
++use wasm_bindgen::closure::Closure;
++use wordcraft_ui_egui::{Inbox, Services, WordApp};
++
++/// The name a document gets when the parent opened none.
++const DEFAULT_NAME: &str = "document.docx";
++
++#[derive(Clone)]
++pub struct Bridge {
++    window: web_sys::Window,
++    parent: web_sys::Window,
++    origin: String,
++    /// The parent asked for a save since the last frame.
++    save_requested: Rc<Cell<bool>>,
++    /// The unsaved-changes state last reported to the parent.
++    reported: Rc<Cell<Option<bool>>>,
++    /// The document shown when the parent was last told (`wordcraft:opened`).
++    document: Rc<Cell<Option<u64>>>,
++    /// The name of the document the parent opened last.
++    name: Rc<RefCell<String>>,
++}
++
++impl Bridge {
++    /// `None` when the page isn't framed (there is no parent to talk to).
++    pub fn new(parent_origin: Option<String>) -> Option<Self> {
++        let window = web_sys::window()?;
++        let parent = window.parent().ok().flatten()?;
++        if js_sys::Object::is(&parent, &window) {
++            return None;
++        }
++        let origin = match parent_origin.filter(|o| !o.is_empty()) {
++            Some(origin) => origin,
++            None => window.location().origin().ok()?,
++        };
++        Some(Self {
++            window,
++            parent,
++            origin,
++            save_requested: Rc::default(),
++            reported: Rc::default(),
++            document: Rc::default(),
++            name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
++        })
++    }
++
++    /// Send saved and exported files to the parent instead of downloading them, tell it when
++    /// unsaved changes appear, and hear documents and save requests from it.
++    pub fn connect(&self, services: &mut Services, inbox: Inbox, ctx: egui::Context) {
++        self.listen(inbox, ctx);
++        let bridge = self.clone();
++        services.download = Some(Box::new(move |name: &str, bytes: &[u8]| bridge.post_save(name, bytes)));
++        // Keep the hook the web shell installed (the leave-page guard reads it).
++        let bridge = self.clone();
++        let previous = services.on_dirty.take();
++        services.on_dirty = Some(Box::new(move |dirty| {
++            if let Some(previous) = &previous {
++                previous(dirty);
++            }
++            if bridge.reported.get() != Some(dirty) && bridge.send(&[("type", "wordcraft:dirty".into()), ("dirty", dirty.into())]) {
++                bridge.reported.set(Some(dirty));
++            }
++        }));
++    }
++
++    pub fn post_ready(&self) {
++        self.send(&[("type", "wordcraft:ready".into()), ("version", env!("CARGO_PKG_VERSION").into())]);
++    }
++
++    pub fn post_failed(&self, error: &str) {
++        self.send(&[("type", "wordcraft:failed".into()), ("error", error.into())]);
++    }
++
++    /// After each frame: run a save the parent asked for, and tell it when another document is
++    /// shown.
++    pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp) {
++        let id = app.session.document_id();
++        if self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
++            self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
++        }
++        if self.save_requested.replace(false) {
++            if let Err(e) = app.run("file.save", json!({})) {
++                self.post_failed(&e);
++            }
++            // The saved document is clean now: a frame reports it (`Services::on_dirty`).
++            ctx.request_repaint();
++        }
++    }
++
++    fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
++        let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
++        let buffer = js_sys::Uint8Array::from(bytes).buffer();
++        let message = message(&[("type", "wordcraft:save".into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
++            .ok_or_else(|| "couldn't build the message".to_string())?;
++        self.parent
++            .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))
++            .map_err(|e| e.as_string().unwrap_or_else(|| format!("{e:?}")))
++    }
++
++    fn listen(&self, inbox: Inbox, ctx: egui::Context) {
++        let bridge = self.clone();
++        let on_message = Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |event: web_sys::MessageEvent| {
++            if event.origin() != bridge.origin || !event.source().is_some_and(|s| js_sys::Object::is(&s, &bridge.parent)) {
++                return;
++            }
++            let data = event.data();
++            match string(&data, "type").as_deref() {
++                Some("wordcraft:open") => {
++                    let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
++                    let Some(bytes) = bytes(&data) else { return };
++                    *bridge.name.borrow_mut() = name.clone();
++                    inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
++                }
++                Some("wordcraft:requestSave") => bridge.save_requested.set(true),
++                _ => return,
++            }
++            ctx.request_repaint();
++        });
++        if self.window.add_event_listener_with_callback("message", on_message.as_ref().unchecked_ref()).is_ok() {
++            // The listener lives as long as the page.
++            on_message.forget();
++        }
++    }
++
++    /// Post a message to the parent; false if it couldn't be sent.
++    fn send(&self, fields: &[(&str, JsValue)]) -> bool {
++        message(fields).is_some_and(|m| self.parent.post_message(&m, &self.origin).is_ok())
++    }
++}
++
++fn message(fields: &[(&str, JsValue)]) -> Option<js_sys::Object> {
++    let m = js_sys::Object::new();
++    for (key, value) in fields {
++        js_sys::Reflect::set(&m, &JsValue::from_str(key), value).ok()?;
++    }
++    Some(m)
++}
++
++fn string(data: &JsValue, key: &str) -> Option<String> {
++    js_sys::Reflect::get(data, &JsValue::from_str(key)).ok()?.as_string()
++}
++
++/// `bytes` as an `ArrayBuffer` or `Uint8Array`.
++fn bytes(data: &JsValue) -> Option<Vec<u8>> {
++    let bytes = js_sys::Reflect::get(data, &JsValue::from_str("bytes")).ok()?;
++    if let Some(array) = bytes.dyn_ref::<js_sys::Uint8Array>() {
++        Some(array.to_vec())
++    } else if bytes.is_instance_of::<js_sys::ArrayBuffer>() {
++        Some(js_sys::Uint8Array::new(&bytes).to_vec())
++    } else {
++        None
++    }
++}

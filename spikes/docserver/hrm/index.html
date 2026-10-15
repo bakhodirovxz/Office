@@ -11,6 +11,7 @@
   #banner { padding: 4px 10px; border-radius: 4px; background: #666; }
   body[data-state="ready"] #banner { background: #2e7d32; }
   body[data-state="saved"] #banner { background: #0d47a1; }
+  body[data-state="closed"] #banner { background: #4e342e; }
   body[data-state="error"] #banner { background: #b71c1c; }
   #ph { flex: 1; min-height: 0; }
 </style>
@@ -42,10 +43,14 @@
     cfg.events = {
       onDocumentReady: function () { window.__readyMs = Math.round(performance.now() - window.__t0); setState('ready', 'ready in ' + window.__readyMs + ' ms'); },
       onDocumentStateChange: function (e) { log.push({ t: Math.round(performance.now()), dirty: e.data }); },
+      onClosed: function (e) { setState('closed', 'closed status ' + e.data.status); },
+      onAutosave: function (e) { log.push({ t: Math.round(performance.now()), autosave: e.data }); },
+      onRecovered: function (e) { log.push({ t: Math.round(performance.now()), recovered: e.data }); },
       onSaved: function (e) { window.__savedAt = performance.now(); setState('saved', 'saved v' + e.data.version); },
       onError: function (e) { window.__error = e.data; setState('error', (e.data.status || '') + ' ' + (e.data.message || '')); },
     };
-    new DocsAPI.DocEditor('ph', cfg);
+    if (qs.get('adapter')) cfg.adapter = qs.get('adapter');
+    window.__editor = new DocsAPI.DocEditor('ph', cfg);
   };
   s.onerror = function () { setState('error', 'api.js failed to load'); };
   document.head.appendChild(s);

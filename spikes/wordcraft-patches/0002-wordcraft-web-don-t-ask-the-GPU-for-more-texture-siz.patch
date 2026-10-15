@@ -1,0 +1,46 @@
+From d03cf5415430d3a278f9a643eac43fe2434583f0 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Thu, 15 Oct 2026 19:50:12 +0500
+Subject: [PATCH 2/5] wordcraft-web: don't ask the GPU for more texture size
+ than it offers
+
+egui-wgpu's default device descriptor requires max_texture_dimension_2d =
+8192. A WebGL2 context that reports less (4096 in the Android emulator's
+Chrome, and on some phones) makes requestDevice fail, so the app shows
+"Limit 'max_texture_dimension_2d' value 8192 is better than allowed 4096"
+and never starts.
+
+Wrap egui-wgpu's descriptor and lower the requested size to what the
+adapter reports, keeping every other limit as egui-wgpu sets it.
+---
+ apps/wordcraft-web/src/web.rs | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 55fa229..a46c92f 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -31,10 +31,19 @@ pub fn start() {
+         let dirty = Rc::new(Cell::new(false));
+         let saves = AsyncSaves::default();
+         let mut options = eframe::WebOptions::default();
+-        if query().contains("webgl")
+-            && let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup
+-        {
+-            create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
++        if let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
++            if query().contains("webgl") {
++                create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
++            }
++            // egui-wgpu requires 8192 texels per side, which WebGL2 contexts that report 4096
++            // (Android emulators, some phones) refuse: ask for what the adapter offers, up to that.
++            let egui_descriptor = create.device_descriptor.clone();
++            create.device_descriptor = std::sync::Arc::new(move |adapter| {
++                let mut descriptor = egui_descriptor(adapter);
++                let offered = adapter.limits().max_texture_dimension_2d;
++                descriptor.required_limits.max_texture_dimension_2d = descriptor.required_limits.max_texture_dimension_2d.min(offered);
++                descriptor
++            });
+         }
+         // `?host=parent`: a page framing WordCraft (a document server, say) opens documents in it
+         // and stores what it saves (`host`).

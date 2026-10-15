@@ -1,0 +1,80 @@
+From 7197576d14df527580edb4e26d9cd9dc94630619 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Thu, 15 Oct 2026 19:50:40 +0500
+Subject: [PATCH 3/5] ui-egui: handle ImeEvent::DeleteSurrounding so Android
+ autocorrect replaces the word
+
+eframe's web text agent reports a keyboard that deletes text around the
+caret (Gboard autocorrect and completion: "teh " becomes "the ", "tex"
+becomes "Texas") as ImeEvent::DeleteSurrounding followed by the new text.
+canvas_events ignored the delete, so the corrected word was appended to
+the misspelt one ("tehthe").
+
+Delete before_chars characters back and after_chars forward, in the
+document and in an equation being edited. Adds a unit test.
+---
+ crates/ui-egui/src/keys.rs | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/crates/ui-egui/src/keys.rs b/crates/ui-egui/src/keys.rs
+index 8723b5a..012180d 100644
+--- a/crates/ui-egui/src/keys.rs
++++ b/crates/ui-egui/src/keys.rs
+@@ -301,6 +301,15 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
+                     }
+                     continue;
+                 }
++                egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars }) => {
++                    for _ in 0..*before_chars {
++                        let _ = app.run("equation.backspace", json!({}));
++                    }
++                    for _ in 0..*after_chars {
++                        let _ = app.run("equation.delete", json!({}));
++                    }
++                    continue;
++                }
+                 egui::Event::Paste(t) => {
+                     let _ = app.run("equation.type", json!({"text": t}));
+                     continue;
+@@ -328,6 +337,16 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
+                     let _ = app.run("text.insert", json!({"text": text}));
+                 }
+             }
++            // A keyboard replacing a word (Android autocorrect, completion: "teh " becomes "the ")
++            // first deletes the text around the caret, then sends the new text.
++            egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars }) => {
++                for _ in 0..before_chars {
++                    let _ = app.run("text.backspace", json!({}));
++                }
++                for _ in 0..after_chars {
++                    let _ = app.run("text.delete", json!({}));
++                }
++            }
+             egui::Event::Paste(t) => {
+                 // Mod+Alt+V arrives as a paste too (the shell reads the clipboard): Paste Special.
+                 let m = ctx.input(|i| i.modifiers);
+@@ -713,6 +732,24 @@ mod tests {
+         assert_eq!(a.ui.keytips, crate::keytips::Phase::Tabs);
+     }
+ 
++    /// An Android keyboard's autocorrect deletes the word it replaces, then sends the new one:
++    /// "teh " becomes "the ", not "tehthe ".
++    #[test]
++    fn ime_delete_surrounding_replaces_the_word() {
++        let (ctx, mut a) = alt_frame_app();
++        let text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end().to_string();
++        alt_frame(&ctx, &mut a, vec![egui::Event::Text("teh ".into())]);
++        assert_eq!(text(&a), "teh");
++        let delete = |before_chars, after_chars| egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars });
++        alt_frame(&ctx, &mut a, vec![delete(4, 0), egui::Event::Text("the ".into())]);
++        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "the");
++        // Characters after the caret go too.
++        alt_frame(&ctx, &mut a, vec![egui::Event::Text("xyz".into())]);
++        let _ = a.run("caret.left", json!({}));
++        alt_frame(&ctx, &mut a, vec![delete(1, 1)]);
++        assert_eq!(text(&a), "the x");
++    }
++
+     fn alt_frame_app() -> (egui::Context, WordApp) {
+         let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+         (egui::Context::default(), a)
