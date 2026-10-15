@@ -104,10 +104,31 @@ share byte-identical files). geom, pdf and render share names only.
 | Desktop GUI `cargo build --release` | OK | 556 s |
 | CLI build | OK | 262 s |
 | Web `trunk build --release` | OK | 897 s |
-| `cargo test --workspace --release` | exit 101 | 3784 s |
+| `cargo test --workspace --release` | exit 101, stopped at the first failing crate | 3784 s |
+| `cargo test --no-fail-fast` rerun | **2750 passed, 5 failed, 2 ignored** | 205 s (cached) |
 
-- **Tests:** 2145 passed and 2 failed before cargo stopped. This is **partial**: cargo stops at the
-  first failing test binary. A `--no-fail-fast` rerun is needed for the full count.
+| Artefact | Size |
+|---|---|
+| `wordcraft.exe` | 82,316,979 B |
+| `wordcraft-cli.exe` | 46,369,937 B |
+| HEAD wasm, raw | 42,597,532 B |
+| HEAD wasm, gzip -9 | 15,849,354 B |
+| HEAD wasm, brotli -q 11 | 9,441,597 B |
+| JS glue, raw / brotli | 168,690 / 20,555 B |
+
+- **The HEAD wasm is 2.8 MB (+7%) larger than the v0.7.0 release built the day before.** CI size
+  budgets have to track upstream growth.
+- **Failing tests.** All look environment-related; none is confirmed yet.
+  - 2 × `render` colour-emoji tests: a font-environment difference.
+  - 2 × `ui-egui` "Breaks" menu tests: no node labelled "Breaks" was found.
+  - `ui-egui keys::alt_numpad_code_types_its_character_without_keytips`: expected "é", got
+    "й". **This PC has a Cyrillic Windows locale**, so Alt+numpad codes follow the OEM/ANSI code
+    page. The behaviour matters for our users and must be checked on uz/ru Windows.
+- **CLI smoke test passed:** save, reopen, text, docx→PDF (valid), render to PNG, and
+  docx→odt→docx. PDF import is not supported.
+- **Local workaround:** `CARGO_HTTP_CHECK_REVOKE=false`, because of
+  `CRYPT_E_NO_REVOCATION_CHECK` on this network.
+- **Tools:** trunk 0.21.14 (`cargo install` took 14m38s), wasm-bindgen 0.2.129, wasm-opt v123.
 - **Details** go to `docs/phase0/inventory.md`, written by the inventory agent.
 - **Inventory paused after wordcraft.** The gate is `E:/office-target/PAUSE` in `run.sh`. It frees RAM
   for the xlsx benchmark and the Android emulator, and gridcraft, deckcraft and pdfcraft continue
