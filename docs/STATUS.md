@@ -203,6 +203,30 @@ Spike consequences:
 - **Office 2010–2019 vs 365 fidelity is not measured yet.** The corpus must include files saved by
   several Office versions (2010, 2013, 2016/2019, 365).
 
+### Owner workload details (2026-10-15)
+
+**Word: users rely on Show/Hide ¶ to find stray spaces and empty paragraphs.**
+- Upstream has it: the `view.marks` command, labelled "Show/Hide ¶"
+  (`wordcraft/crates/engine/src/cmd/view.rs:18`).
+- It draws ¶ · → ↵ marks and has an "always show these marks" option
+  (`wordcraft/crates/layout/src/display.rs:92, 125-155`).
+- This must be easy to find in the simplified toolbar.
+
+**Excel: heavy formulas, many sheets, links to other workbooks, files over 80 MB that keep growing.**
+
+| Area | Upstream state | Source |
+|---|---|---|
+| Formulas | 505 of 523 Excel functions present, 496 working (94.8%); every function up to Excel 2010 that matters is present | `gridcraft/docs/function-parity.md` |
+| Formula functions in the release CLI | 514 listed | `gridcraft-cli functions` |
+| Missing functions | GETPIVOTDATA, IMAGE, RTD, TRIMRANGE, PERCENTOF, STOCKHISTORY, CUBE* (stubs) | `function-parity.md` |
+| Known calc bugs | 15-digit equality; spill updates after structural edits | `gridcraft/docs/gaps.md:62` |
+| Sheet limits | 1,048,576 rows × 16,384 columns, the same as Excel | `gridcraft/crates/core/src/addr.rs:10-11` |
+| **External workbook links** | **"never followed or refreshed"**: kept on save with their cached values. **This blocks the owner's workflow.** | `gridcraft/docs/file-format-parity.md:25` |
+| **Large files** | **"100 MB files fail (#175)"**; the owner's files are 80 MB and growing | `gridcraft/docs/file-format-parity.md:25` |
+
+Benchmark in progress: synthetic 10/40/80/120 MB workbooks, an append test and an external-link test
+against gridcraft 0.7.0. Results will go to `docs/phase0/xlsx-bench.md`.
+
 ### Windows 10/11 and old PCs
 - **Graphics fallback.** All four desktop apps choose DirectX 12 when a capable hardware adapter
   exists. Otherwise they fall back to OpenGL, and then to WARP, Microsoft's software rasteriser.
