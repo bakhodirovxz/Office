@@ -56,4 +56,6 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
   Not on the Bash PATH by default: `export PATH="$HOME/.cargo/bin:$PATH"`.
 - C: has ~34 GB free; build output goes to E: (`CARGO_TARGET_DIR=E:/office-target/<repo>`).
 - Android SDK at `%LOCALAPPDATA%\Android\Sdk`, NDK 27.1, AVDs `HRM_Dev_33`, `HRM_Pixel_8`.
+- cargo git deps (craft-libs) need `CARGO_NET_GIT_FETCH_WITH_CLI=true` and
+  `CARGO_HTTP_CHECK_REVOKE=false` on this machine.
 - Docker 29 available (for LibreOffice / ONLYOFFICE x2t reference renders and sidecars).

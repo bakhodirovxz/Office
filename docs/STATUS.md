@@ -45,9 +45,44 @@ Cross-cutting findings:
 - The i18n mechanisms differ in 3 apps, and deckcraft has none.
 - gridcraft PDF export uses only the standard-14 fonts. This is a Cyrillic fidelity risk to measure.
 
+## Task 1b — one-workspace spike (done; resolve only, no compile)
+Details: `docs/phase0/workspace-conflicts.md` and `spikes/workspace/`.
+
+**Verdict: feasible with explicit pins, but each app's root `[workspace]` has to be removed.**
+- Upstream crates cannot join a parent workspace while their own root `Cargo.toml` declares one
+  ("member of the wrong workspace").
+- That rules out plain git submodules plus one root workspace unless each root manifest is patched
+  or deleted.
+- Result: 97 members and 923 packages in the lockfile. Nothing was compiled, so API breakage after
+  the version unification is **not yet verified**.
+
+Conflicts:
+- **Version mismatch.** pdfcraft is at 0.8.0, the others at 0.7.0.
+- **Two incompatible hayro forks.** pdfcraft's vendored copy and craft-libs' vendored copy differ in
+  2, 15 and 10 files across three crates. Only one fork can win a shared `[patch]`.
+- **pdfcraft's `[patch]` set** (winit, egui-wgpu, vello_common, lopdf) would apply to all four apps.
+- **krilla** comes from three different sources.
+- **craft-libs** is pinned to 3–4 different revs.
+- **Smaller ones.** skrifa 0.44 vs 0.47; one shared lint set and one shared profile set; rust-version
+  1.90 → 1.95.
+
+Duplicated crate names (2+ versions in the tree):
+
+| Scope | Count |
+|---|---|
+| merged workspace | 32 |
+| wordcraft alone | 15 |
+| gridcraft alone | 7 |
+| deckcraft alone | 17 |
+| pdfcraft alone | 27 |
+
+Of the crates that share a role across apps, only `metafile` is a real copy (wordcraft and deckcraft
+share byte-identical files). geom, pdf and render share names only.
+
 ## In progress (Phase 0)
-- Task 1 inventory: desktop/web builds and tests, run one at a time (→ `docs/phase0/inventory.md`).
-- Task 1 one-workspace conflict spike (→ `docs/phase0/workspace-conflicts.md`, `spikes/workspace/`).
+- Task 1 inventory: desktop and web builds plus tests, run one at a time
+  (→ `docs/phase0/inventory.md`).
+- Spike design for tasks 3 and 4 by architect/opus (→ `docs/phase0/spike-plans.md`).
 - Pending: task 3 mobile spike, task 4 document-server spike (after builds), task 5 fidelity
   baseline (blocked on `corpus/`), task 6 ADR.
 
