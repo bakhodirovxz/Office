@@ -143,6 +143,17 @@ async fn latest(st: &AppState, sid: &str) -> R<(Session, Vec<u8>)> {
     Ok((s, b))
 }
 
+/// The session must exist and must not be read-only (view mode or `permissions.edit == false`).
+/// Session routes are authorised by the unguessable session id alone (a capability URL); a
+/// per-request session token is a Phase 5 requirement.
+async fn writable(st: &AppState, sid: &str) -> R<()> {
+    let s = st.sessions.lock().await.get(sid).ok_or((StatusCode::NOT_FOUND, "no such session".to_string()))?;
+    if s.readonly {
+        return Err((StatusCode::FORBIDDEN, "session is read-only".into()));
+    }
+    Ok(())
+}
+
 async fn get_document(State(st): St, Path(sid): Path<String>) -> R<Response> {
     let (_, b) = latest(&st, &sid).await?;
     Ok(([(header::CONTENT_TYPE, DOCX_MIME)], b).into_response())
@@ -153,6 +164,7 @@ async fn save(State(st): St, Path(sid): Path<String>, headers: HeaderMap, body: 
         return Err((StatusCode::BAD_REQUEST, "body is not a zip/docx".into()));
     }
     let _ = headers.get("x-file-name"); // informational; the session name is authoritative
+    writable(&st, &sid).await?;
     let ver = st
         .sessions
         .lock()
@@ -181,7 +193,7 @@ async fn autosave(State(st): St, Path(sid): Path<String>, body: Bytes) -> R<Json
     if !body.starts_with(b"PK\x03\x04") {
         return Err((StatusCode::BAD_REQUEST, "body is not a zip/docx".into()));
     }
-    st.sessions.lock().await.get(&sid).ok_or((StatusCode::NOT_FOUND, "no such session".to_string()))?;
+    writable(&st, &sid).await?;
     tokio::fs::write(st.data_dir.join(&sid).join("autosave.docx"), &body).await.map_err(internal)?;
     eprintln!("autosave sid={sid} bytes={}", body.len());
     Ok(Json(json!({"bytes": body.len()})))

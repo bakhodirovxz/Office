@@ -217,6 +217,16 @@ flags**.
   650 lines in 5 small, upstreamable patches. This weakens the case that approach A (egui on web)
   is unworkable on mobile. Native selection handles and a mobile toolbar are still open.
 
+## Security notes carried into Phase 5 (from the spike review)
+- **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
+  are authorised only by the UUIDv4 session id. Phase 5 needs:
+  - a per-request session token, bound to the user and the permissions (JWT on every call, as the
+    brief requires);
+  - session ids kept out of logs.
+- **Read-only sessions could save. Fixed in the spike** (`writable()` in
+  `spikes/docserver/src/main.rs`): save and autosave now return 403 for view-mode sessions or
+  `permissions.edit == false`.
+
 ## In progress (Phase 0)
 - Task 1 inventory: desktop and web builds plus tests, run one at a time
   (→ `docs/phase0/inventory.md`).
