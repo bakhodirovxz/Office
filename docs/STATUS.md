@@ -142,6 +142,70 @@ Spike consequences:
 - **iOS cannot be tested on this machine** (no macOS). The ADR will state it as UNVERIFIED and not
   claim it.
 
+## Owner requirement: replace Microsoft Office on office PCs (stated 2026-10-15)
+- **A Windows desktop installer (.exe/.msi) is required.** The suite is meant to replace MS Office on
+  the office PCs, which raises the priority of desktop fidelity, Windows integration and mass
+  deployment.
+- **What upstream already ships** (official releases, SHA256 verified, run on this machine):
+  - Windows x64/x86/arm64 MSI and portable zips.
+  - Every portable zip contains a GUI exe and a CLI exe. All four CLIs print `--version` correctly.
+
+| App (release) | GUI exe | CLI exe |
+|---|---|---|
+| wordcraft 0.7.0 | 102.4 MB | 75.4 MB |
+| gridcraft 0.7.0 | 32.6 MB | 14.2 MB |
+| deckcraft 0.7.0 | 86.5 MB | 67.9 MB |
+| pdfcraft 0.8.0 | 92.8 MB | 66.6 MB |
+
+- **The exes are MSVC-built.** They import only system DLLs: dxgi, opengl32, imm32,
+  uiautomationcore and similar.
+- **Gap: file associations.** The upstream MSI registers `.docx` and the others only under
+  `OpenWithProgids`, and by design never becomes the default handler
+  (`wordcraft/packaging/windows/wordcraft.wxs:79-98`).
+  - Replacing MS Office needs a default-association option. Choices are a per-machine MSI property,
+    or a GPO "default app associations" XML for domain PCs.
+  - It also needs one suite installer rather than four.
+- **Fonts.** Office documents use Calibri, Cambria, Times New Roman and Arial.
+  - deckcraft ships the metric-compatible Carlito, Caladea and Liberation (OFL).
+  - On Windows the system fonts exist, so the desktop is less affected than web and mobile.
+  - Still to be measured on the corpus.
+- **Open questions for the owner:**
+  - number of PCs and Windows versions;
+  - domain/GPO or manual installation;
+  - whether VBA macros or Outlook are in use. **Macros are not supported** by the Craft apps.
+
+## Task 4 — document-server spike S0–S7 (done)
+Details: `docs/phase0/docserver-results.md`. The spike ran against wordcraft-web release v0.7.0.
+
+All S0–S7 steps passed: JWT-signed config, the server fetching the document by URL, the edit, the
+save callback, and the HRM receiving the .docx.
+
+| Run | Page load → editor ready | Ctrl+S → callback received |
+|---|---|---|
+| 1 | 4.9 s | 0.33 s |
+| 2 | 1.9 s | 0.45 s |
+| 3 | 2.2 s | 0.15 s |
+
+- **Content check:** the saved .docx contained the typed `SPIKE4-<ts> Салом` marker in every run.
+- **Negative tests:**
+  - tampered token: 401;
+  - SSRF to 169.254.169.254: 403;
+  - wrong callback secret: no file accepted, and the error was surfaced.
+- **Not done yet (S8–S9):** the host-bridge patch (dirty events, host-initiated save, `/close`).
+  The stock v0.7.0 UI also still shows the upstream Discord, Share and Zotero chrome.
+
+## HRM test server (read-only analysis in progress)
+- **Owner statement:** <test-server> (`vds-test`) is the test server. Access is read-only, code only:
+  no database, MinIO or document files are opened.
+- **Observed:**
+  - The HRM backend is `<server-path>` (Python).
+  - The frontends are `hr-frontend-sandbox` (v1 and v2) and `hrm-admin-frontend`.
+  - The mobile app is `hrm-mobile-uz` (Expo).
+  - **ONLYOFFICE Docs 9.3.1 already runs there.**
+- **Note:** the Traefik dynamic config on this host contains public <hrm-domain> and <other-domain> routes.
+  Their target services (`hr-api`, `hr-onlyoffice`) are not running on this host, so this is
+  probably a copy of the production config. The owner should confirm.
+
 ## Open risks / blockers
 - `corpus/` is **missing** → fidelity baseline (task 5) blocked until the owner provides it.
 - `vendor-notes/` (`merge_lines.py`, `uz-translit-onlyoffice/`) is **missing** → not needed for
