@@ -1,7 +1,7 @@
 # Status
 
 **Current phase:** 0 — Evidence and architecture decision (branch `phase-0`)
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-16
 
 ## Done
 - Repo initialised; `CLAUDE.md`, `docs/BRIEF.md`, `docs/STATUS.md` created.
@@ -216,6 +216,46 @@ flags**.
 - **Takeaway for the ADR:** the A0 failures that looked like "fixable glue" were fixed with about
   650 lines in 5 small, upstreamable patches. This weakens the case that approach A (egui on web)
   is unworkable on mobile. Native selection handles and a mobile toolbar are still open.
+
+## Spike: gridcraft shared formula trees + run-based dependency graph (done; MEASURED)
+Report: `docs/phase0/gridcraft-templates-spike.md`. Patches: `spikes/gridcraft-patches/0001-0008`
+(+865/−106 production lines; branch `spike/formula-templates` from e6b6b34).
+
+**Peak RAM at open** (deterministic):
+
+| File | 0.7.0 | Patched | Excel 16 (32-bit) |
+|---|---|---|---|
+| w10 | 635 MB | **194 MB** | 220 MB |
+| w40 | 2,525 MB | **751 MB** | 515 MB |
+| w80 | aborted >4 GB | **1,496 MB** | 916 MB |
+| w120 | aborted >4 GB | **2,421 MB** | 1,298 MB |
+
+- **Independent re-check by the orchestrator:** w80 opened with a **1,505 MB** peak in 73.7 s on an
+  idle machine.
+- **Save peaks:** w40 922 MB; w120 2,635 MB.
+- **RAM ratio:** about 64 MB per file-MB before, about 19–20 MB per file-MB after (Excel: about 11).
+- **Open time** improved only modestly (w10 11.3 → 8.7 s, w40 42.7 → 36.6 s). Parsing formulas once
+  per run would save another 1–2 days of work's worth of time on open.
+
+**Correctness:**
+- All values on w10, c10 and w40 are bit-identical to the baseline.
+- 5.18M row values on w120 match the Python expectations.
+- A 35-step structural-edit script gives identical results.
+- Excel reads the same formulas and values in every cell.
+- The touched crates' suites pass, plus 25 new tests.
+- 300 fuzz seeds give the same outcomes as the baseline. The two failing seeds also fail on the
+  unpatched build, so they are upstream bugs.
+
+**Not done:**
+- `cargo xtask ci`, because rustfmt and clippy are not installed;
+- Excel checks on the largest files;
+- a longer fuzz soak.
+
+**Revised estimate for steps 1–2:** **5–9 engineer-days to production** (the earlier plan said
+14–27), plus upstream review time.
+
+**ADR impact:** the biggest Excel risk is now a contained, upstreamable change with measured
+benefit. The external-links work (17–25 days) remains.
 
 ## Security notes carried into Phase 5 (from the spike review)
 - **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
