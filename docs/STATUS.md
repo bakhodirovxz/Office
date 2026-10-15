@@ -188,6 +188,35 @@ the HRM round trip works. It is **not yet a usable mobile editor**.
 that was already on the emulator. Two stray taps and the text "il" went into it. Nothing was
 submitted and nobody was signed in.
 
+## Spike: wordcraft-web fixes (done; Spike 4 S8–S9 + the mobile glue)
+Report: `docs/phase0/wordcraft-patches.md`. Patches: `spikes/wordcraft-patches/0001-0005`.
+Evidence: `docs/phase0/mobile-fixes/`. Branch `spike/bridge-mobile` in the worktree
+E:/office-work/wordcraft-spike, based on fd0bb2f.
+
+Verified on desktop Chromium (Playwright) and on the Android emulator in **stock Chrome 133 with no
+flags**.
+
+| Patch | Size | Before → after (measured) |
+|---|---|---|
+| 1. postMessage host bridge `?host=parent` | +213/−8 | No bridge → spec green with adapter=bridge 3/3. `requestSave`, dirty events and `/close` (status 2) work. The shim adapter still passes, so nothing regressed. |
+| 2. Texture limit | +13/−4 | Stock Chrome refused to start ("8192 > 4096"; `egui-wgpu-0.36.2/src/setup.rs:272`) → starts. |
+| 3. IME DeleteSurrounding | +37 | Gboard "teh " → "tehthe" before; "the " after; "wolrd " → "the world". A unit test was added. |
+| 4. One-finger touch scroll | +328/−7 (≈190 non-test lines) | Swipe selected text → swipe scrolls with momentum; tap places the caret; long-press selects. Mouse behaviour is unchanged. |
+| 5. Lifecycle autosave | +65/−4 | App switch lost edits → the host holds the unsaved docx about 4 s after hiding. After WebGL context loss the editor reloads with the autosaved text in about 2.7 s. |
+
+- **wasm size change:** +20.7 KB raw, +9.3 KB brotli (9,441,597 → 9,450,860 B).
+- **Native tests:** 554 passed, 1 failed. The failure is the known Alt+numpad "é" vs "й" test,
+  which depends on the code page.
+- **Remaining limits:**
+  - The soft keyboard reappears after a swipe.
+  - A finger cannot drag pictures, table handles or ruler markers.
+  - A recovered document shows as clean.
+  - A failed host upload still marks the document saved.
+  - Not re-tested: ribbon overflow, the caret hidden by the keyboard, glide typing.
+- **Takeaway for the ADR:** the A0 failures that looked like "fixable glue" were fixed with about
+  650 lines in 5 small, upstreamable patches. This weakens the case that approach A (egui on web)
+  is unworkable on mobile. Native selection handles and a mobile toolbar are still open.
+
 ## In progress (Phase 0)
 - Task 1 inventory: desktop and web builds plus tests, run one at a time
   (→ `docs/phase0/inventory.md`).
