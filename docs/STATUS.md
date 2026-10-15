@@ -371,7 +371,62 @@ A full 30-sheet comparison is still pending.
 **Needed for the MS Office replacement:** memory-efficient cell storage plus a streaming XLSX
 reader. This is an upstream engine change, **not a thin layer**, and it is a key risk for the ADR.
 
-Still pending: the append test, the GUI check and the full write-up in `docs/phase0/xlsx-bench.md`.
+**Append and GUI (measured on w40).**
+- **Append:** adding 10,000 rows took 70 s with a 2.7 GB peak. On reopen the rows were present and
+  the SUM over the extended range was correct.
+- **GUI:** the window was responsive after 43.6 s with a 2.8 GB peak.
+- The full report is in `docs/phase0/xlsx-bench.md`.
+
+**Memory breakdown and fix plan.** Source: `docs/phase0/gridcraft-scaling-and-links.md`. It was
+measured on w10 with a counting-allocator probe.
+
+Where the memory goes:
+
+| Part | Share of peak | Notes |
+|---|---|---|
+| **Formula ASTs** | **51%** | about 678 B each; Excel shared formulas are expanded per cell (`sheet_read.rs:462-480`) |
+| Calc dependency graph | 25% | |
+| Values | 16% | |
+| Recalc | 9% | |
+| XML buffering | <0.5% | |
+
+- **Variants of w10:**
+
+| Variant | Peak RAM | Open time |
+|---|---|---|
+| Numbers only | 88 MB | 1.7 s |
+| + text | 103 MB | 1.8 s |
+| + 432k formulas | 635 MB | 10.7 s |
+
+- **Upstream's #175 plan (a streaming reader) would save only about 2%.** The formula
+  representation is the real problem.
+- **A 1 GiB cap on uncompressed size** (`package.rs:13`) would block files above about 150 MB on
+  disk whatever the RAM. This is projected.
+
+Fix plan:
+
+| Step | Change | Effort (engineer-days) |
+|---|---|---|
+| 0 | Measure the real files; raise the size cap | 1–1.5 |
+| 1 | Shared formula templates (the biggest, riskiest win) | 10–15 |
+| 2 | Compact dependency graph | 4–6 |
+| 3 | Streaming writer; bounded undo | 3.5–6.5 |
+| 4 | Compact recalc state | 2–4 |
+| 5 | Streaming zip | 3–5 |
+| | **Total** | **≈23–36** |
+
+- **Projected peak after the fixes:** 80 MB → about 1.4 GB, 120 MB → about 1.8–2.1 GB. 32-bit Excel
+  uses 1.3 GB on 120 MB. These are projections, not runs.
+
+**External links: ≈17–25 engineer-days, an upstream engine change.**
+- The stored `[1]Sheet!A1` form does not parse, so those cells never recalculate.
+- Mixed external and local formulas freeze silently. This comes from the code and was not run.
+- Our own layer would hold only file access, the consent prompts and the Edit Links dialog.
+
+**Verdict.**
+- Replacing Excel for this workload in v1.0 is feasible **only with about 40–60 engineer-days of
+  upstream engine work accepted upstream**.
+- **Fallback:** keep Excel for the heaviest and linked workbooks during the migration, gated per file.
 
 ### Windows 10/11 and old PCs
 - **Graphics fallback.** All four desktop apps choose DirectX 12 when a capable hardware adapter
