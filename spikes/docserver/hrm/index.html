@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake HRM</title>
+<style>
+  html, body { margin: 0; height: 100%; font: 14px system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { padding: 8px 12px; background: #1f3a5f; color: #fff; display: flex; gap: 16px; align-items: center; }
+  #banner { padding: 4px 10px; border-radius: 4px; background: #666; }
+  body[data-state="ready"] #banner { background: #2e7d32; }
+  body[data-state="saved"] #banner { background: #0d47a1; }
+  body[data-state="error"] #banner { background: #b71c1c; }
+  #ph { flex: 1; min-height: 0; }
+</style>
+</head>
+<body data-state="loading">
+<header><strong>Fake HRM</strong><span id="banner">loading</span><span id="detail"></span></header>
+<div id="ph"></div>
+<script>
+  // Query flags (test hooks): ?doc=<name> ?url=<override document.url, still signed> ?tamper=1
+  var qs = new URLSearchParams(location.search);
+  var log = window.__hrmLog = [];
+  function setState(s, detail) {
+    document.body.dataset.state = s;
+    document.getElementById('banner').textContent = s;
+    document.getElementById('detail').textContent = detail || '';
+    log.push({ t: Math.round(performance.now()), state: s, detail: detail || '' });
+  }
+  window.__t0 = performance.now();
+  var s = document.createElement('script');
+  s.src = '{{DOCSERVER}}/api.js';
+  s.onload = async function () {
+    var name = qs.get('doc') || 'sample.docx';
+    var cq = qs.get('url') ? '?url=' + encodeURIComponent(qs.get('url')) : '';
+    var cfg = await (await fetch('/config/' + name + cq)).json();
+    if (qs.get('tamper')) {
+      var t = cfg.token, i = t.length - 5;
+      cfg.token = t.slice(0, i) + (t[i] === 'A' ? 'B' : 'A') + t.slice(i + 1);
+    }
+    cfg.events = {
+      onDocumentReady: function () { window.__readyMs = Math.round(performance.now() - window.__t0); setState('ready', 'ready in ' + window.__readyMs + ' ms'); },
+      onDocumentStateChange: function (e) { log.push({ t: Math.round(performance.now()), dirty: e.data }); },
+      onSaved: function (e) { window.__savedAt = performance.now(); setState('saved', 'saved v' + e.data.version); },
+      onError: function (e) { window.__error = e.data; setState('error', (e.data.status || '') + ' ' + (e.data.message || '')); },
+    };
+    new DocsAPI.DocEditor('ph', cfg);
+  };
+  s.onerror = function () { setState('error', 'api.js failed to load'); };
+  document.head.appendChild(s);
+</script>
+</body>
+</html>

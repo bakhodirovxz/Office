@@ -1,0 +1,6 @@
+{"at":"2026-10-15T12:41:42.933Z","test":"S6","run":1,"readyMs":4931,"saveToCallbackMs":327,"wasmBytes":39785016,"wasmVia":"content-length","savedDocxBytes":6355,"fixtureBytes":6527,"marker":"SPIKE4-1792068096637"}
+{"at":"2026-10-15T12:41:58.167Z","test":"S6","run":2,"readyMs":1927,"saveToCallbackMs":446,"wasmBytes":39785016,"wasmVia":"content-length","savedDocxBytes":6353,"fixtureBytes":6527,"marker":"SPIKE4-1792068111201"}
+{"at":"2026-10-15T12:42:11.393Z","test":"S6","run":3,"readyMs":2164,"saveToCallbackMs":147,"wasmBytes":39785016,"wasmVia":"content-length","savedDocxBytes":6355,"fixtureBytes":6527,"marker":"SPIKE4-1792068125633"}
+{"at":"2026-10-15T12:42:12.841Z","test":"S7i","httpStatus":401,"onError":{"status":401,"message":"invalid token: BadSignature"}}
+{"at":"2026-10-15T12:42:13.512Z","test":"S7ii","httpStatus":403,"onError":{"status":403,"message":"host not allowed: 169.254.169.254:80"}}
+{"at":"2026-10-15T12:42:24.843Z","test":"S7iii","saveResponse":{"status":200,"body":{"callback":"failed","detail":"callback receiver answered 401 Unauthorized: {\"error\":1}","version":1}},"onError":{"message":"callback failed: callback receiver answered 401 Unauthorized: {\"error\":1}"},"hrmRejected":[{"key":"sample.docx-1792068134105","reason":"bearer BadSignature","ts":1792068143}]}

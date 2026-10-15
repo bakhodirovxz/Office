@@ -1,0 +1,30 @@
+[package]
+name = "docserver-spike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Phase 0 spike 4: ONLYOFFICE-shaped document server + fake HRM (throwaway)"
+
+# Own workspace: never joins another workspace.
+[workspace]
+
+[[bin]]
+name = "docserver"
+path = "src/main.rs"
+
+[[bin]]
+name = "fake_hrm"
+path = "src/bin/fake_hrm.rs"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "fs", "time"] }
+tower-http = { version = "0.6", features = ["fs", "limit"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+url = "2"
+sha2 = "0.10"
+hmac = "0.12"
+base64 = "0.22"
