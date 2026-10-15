@@ -1,0 +1,35 @@
+sheet.activate {"sheet": "S03"}
+cell.set {"cell": "C5", "input": "999"}
+sheet.activate {"sheet": "Lookup"}
+cell.set {"cell": "B2", "input": "7.5"}
+sheet.activate {"sheet": "S05"}
+home.insertRows {"rows": "100:102"}
+home.deleteRows {"rows": "200:201"}
+cell.set {"cell": "C150", "input": "777"}
+sheet.activate {"sheet": "S07"}
+data.sortDescending {"range": "A2:I4801", "column": "C"}
+cell.set {"cell": "D3", "input": "12"}
+sheet.activate {"sheet": "S09"}
+edit.fillDown {"range": "G4801:I4900"}
+cell.set {"cell": "C4850", "input": "600"}
+cell.set {"cell": "D4850", "input": "3"}
+sheet.activate {"sheet": "S11"}
+cell.set {"cell": "G10", "input": "=C10*1000"}
+cell.set {"cell": "C11", "input": "501"}
+sheet.activate {"sheet": "S12"}
+edit.cut {"range": "G100:I110"}
+edit.paste {"at": "K100"}
+cell.set {"cell": "C105", "input": "888"}
+sheet.rename {"sheet": "S02", "name": "Second"}
+sheet.activate {"sheet": "Second"}
+cell.set {"cell": "D20", "input": "40"}
+sheet.activate {"sheet": "S13"}
+home.deleteCells {"range": "G50:G60", "shift": "up"}
+cell.set {"cell": "C55", "input": "950"}
+sheet.activate {"sheet": "S14"}
+cell.set {"cell": "C2", "input": "100000"}
+home.insertColumns {"cols": "B:B"}
+cell.set {"cell": "D2", "input": "900"}
+edit.undo {}
+edit.undo {}
+edit.redo {}

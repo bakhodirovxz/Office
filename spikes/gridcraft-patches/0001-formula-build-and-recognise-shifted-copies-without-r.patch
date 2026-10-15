@@ -1,0 +1,230 @@
+From ab9add11ff8c8c566e1108d307e520ec6012a40d Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 02:25:26 +0500
+Subject: [PATCH 1/8] formula: build and recognise shifted copies without
+ rebuilding the tree
+
+Adds three primitives next to `shift_relative`, each defined to agree with it exactly:
+
+- `shifted(e, dr, dc)`: `shift_relative(e.clone(), dr, dc)` in one pass over a borrowed tree (the
+  clone-then-map path allocates every node twice);
+- `is_shifted_copy(base, dr, dc, other)`: whether `other` is `base` copied (dr, dc) away, i.e.
+  the two cells hold the same formula in R1C1 terms, compared without building the copy;
+- `shift_stays_on_sheet(e, dr, dc)`: whether that copy keeps every reference on the sheet.
+
+They are what a shared formula representation needs: build a cell's tree on demand, find runs
+of copies, and tell when two moves compose into one.
+---
+ crates/formula/src/adjust.rs | 116 +++++++++++++++++++++++++++++++++--
+ crates/formula/src/tests.rs  |  62 ++++++++++++++++++-
+ 2 files changed, 173 insertions(+), 5 deletions(-)
+
+diff --git a/crates/formula/src/adjust.rs b/crates/formula/src/adjust.rs
+index d4881aa..3753c30 100644
+--- a/crates/formula/src/adjust.rs
++++ b/crates/formula/src/adjust.rs
+@@ -60,14 +60,122 @@ fn shift_line(v: u32, abs: bool, d: i64, max: u32) -> Option<u32> {
+     if (0..max as i64).contains(&n) { Some(n as u32) } else { None }
+ }
+ 
+-fn shift_ref(r: &Reference, dr: i64, dc: i64) -> Option<Reference> {
+-    let kind = match &r.kind {
++fn shift_kind(k: &RefKind, dr: i64, dc: i64) -> Option<RefKind> {
++    Some(match k {
+         RefKind::Cell(a) => RefKind::Cell(shift_anchor(a, dr, dc)?),
+         RefKind::Range(a, b) => RefKind::Range(shift_anchor(a, dr, dc)?, shift_anchor(b, dr, dc)?),
+         RefKind::Rows(r0, a0, r1, a1) => RefKind::Rows(shift_line(*r0, *a0, dr, MAX_ROWS)?, *a0, shift_line(*r1, *a1, dr, MAX_ROWS)?, *a1),
+         RefKind::Cols(c0, a0, c1, a1) => RefKind::Cols(shift_line(*c0, *a0, dc, MAX_COLS)?, *a0, shift_line(*c1, *a1, dc, MAX_COLS)?, *a1),
+-    };
+-    Some(Reference { sheet: r.sheet.clone(), kind })
++    })
++}
++
++fn shift_ref(r: &Reference, dr: i64, dc: i64) -> Option<Reference> {
++    Some(Reference { sheet: r.sheet.clone(), kind: shift_kind(&r.kind, dr, dc)? })
++}
++
++/// [`shift_relative`] of a borrowed tree, built in one pass:
++/// `shifted(e, dr, dc) == shift_relative(e.clone(), dr, dc)`.
++pub fn shifted(e: &Expr, dr: i64, dc: i64) -> Expr {
++    let sub = |x: &Expr| Box::new(shifted(x, dr, dc));
++    let list = |xs: &[Expr]| xs.iter().map(|x| shifted(x, dr, dc)).collect::<Vec<_>>();
++    match e {
++        Expr::Ref(r) => match shift_ref(r, dr, dc) {
++            Some(r) => Expr::Ref(r),
++            None => Expr::Error(CellError::Ref),
++        },
++        Expr::Binary(..) => {
++            // The left spine without recursion, as the printer walks it: `1+1+...` nests one
++            // level per operator.
++            let mut rest: Vec<(BinOp, &Expr)> = Vec::new();
++            let mut first = e;
++            while let Expr::Binary(op, a, b) = first {
++                rest.push((*op, b));
++                first = a;
++            }
++            let mut acc = shifted(first, dr, dc);
++            for (op, b) in rest.into_iter().rev() {
++                acc = Expr::Binary(op, Box::new(acc), sub(b));
++            }
++            acc
++        }
++        Expr::Array(rows) => Expr::Array(rows.iter().map(|r| list(r)).collect()),
++        Expr::Unary(op, x) => Expr::Unary(*op, sub(x)),
++        Expr::Paren(x) => Expr::Paren(sub(x)),
++        Expr::Call(n, args) => Expr::Call(n.clone(), list(args)),
++        Expr::Invoke(c, args) => Expr::Invoke(sub(c), list(args)),
++        other => other.clone(),
++    }
++}
++
++/// Whether `other` is `base` moved by `(dr, dc)` the way copy and fill move a formula, i.e.
++/// `shift_relative(base.clone(), dr, dc) == *other`, without building the moved tree. This holds
++/// exactly when the two cells hold the same formula in R1C1 terms (a reference the move pushes
++/// off the sheet counting as `#REF!`, as copying gives).
++pub fn is_shifted_copy(base: &Expr, dr: i64, dc: i64, other: &Expr) -> bool {
++    let mut stack: Vec<(&Expr, &Expr)> = vec![(base, other)];
++    while let Some((a, b)) = stack.pop() {
++        let same = match (a, b) {
++            (Expr::Ref(r), _) => match (shift_kind(&r.kind, dr, dc), b) {
++                (Some(k), Expr::Ref(o)) => o.sheet == r.sheet && o.kind == k,
++                (None, Expr::Error(CellError::Ref)) => true,
++                _ => false,
++            },
++            (Expr::Number(x), Expr::Number(y)) => x == y,
++            (Expr::Text(x), Expr::Text(y)) => x == y,
++            (Expr::Bool(x), Expr::Bool(y)) => x == y,
++            (Expr::Error(x), Expr::Error(y)) => x == y,
++            (Expr::Name(x), Expr::Name(y)) => x == y,
++            (Expr::Struct(x), Expr::Struct(y)) => x == y,
++            (Expr::Missing, Expr::Missing) => true,
++            (Expr::Array(x), Expr::Array(y)) => {
++                let fits = x.len() == y.len() && x.iter().zip(y).all(|(p, q)| p.len() == q.len());
++                if fits {
++                    stack.extend(x.iter().flatten().zip(y.iter().flatten()));
++                }
++                fits
++            }
++            (Expr::Unary(p, x), Expr::Unary(q, y)) => {
++                stack.push((x, y));
++                p == q
++            }
++            (Expr::Paren(x), Expr::Paren(y)) => {
++                stack.push((x, y));
++                true
++            }
++            (Expr::Binary(p, x1, x2), Expr::Binary(q, y1, y2)) => {
++                stack.push((x1, y1));
++                stack.push((x2, y2));
++                p == q
++            }
++            (Expr::Call(n, xs), Expr::Call(m, ys)) => {
++                stack.extend(xs.iter().zip(ys));
++                n == m && xs.len() == ys.len()
++            }
++            (Expr::Invoke(c, xs), Expr::Invoke(d, ys)) => {
++                stack.push((c, d));
++                stack.extend(xs.iter().zip(ys));
++                xs.len() == ys.len()
++            }
++            _ => false,
++        };
++        if !same {
++            return false;
++        }
++    }
++    true
++}
++
++/// Whether moving `e` by `(dr, dc)` keeps every reference on the sheet (no `#REF!` from the move).
++pub fn shift_stays_on_sheet(e: &Expr, dr: i64, dc: i64) -> bool {
++    let mut ok = true;
++    e.walk(&mut |x| {
++        if let Expr::Ref(r) = x
++            && shift_kind(&r.kind, dr, dc).is_none()
++        {
++            ok = false;
++        }
++    });
++    ok
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+diff --git a/crates/formula/src/tests.rs b/crates/formula/src/tests.rs
+index 103a26b..c68ba93 100644
+--- a/crates/formula/src/tests.rs
++++ b/crates/formula/src/tests.rs
+@@ -1,5 +1,5 @@
+ use super::*;
+-use crate::adjust::{Axis, Edit, adjust, rename_sheet, shift_relative};
++use crate::adjust::{Axis, Edit, adjust, is_shifted_copy, rename_sheet, shift_relative, shift_stays_on_sheet, shifted};
+ 
+ fn rt(src: &str) -> String {
+     print(&parse(src).unwrap_or_else(|e| panic!("{src}: {e}")))
+@@ -156,6 +156,66 @@ fn copy_shift() {
+     assert_eq!(print(&shift_relative(e, 5, 1)), "SUM(B:B)");
+ }
+ 
++/// Formulas covering every node and reference kind, for the shifted-copy checks.
++const SHIFT_CASES: &[&str] = &[
++    "A1+$A1+A$1+$A$1+SUM(B2:C3)",
++    "IF(C2>500,C2*D2,0)",
++    "VLOOKUP(F2,Lookup!$A$2:$B$21,2,FALSE)",
++    "SUM(A:A)+SUM($B:C)+SUM(3:$4)+SUM('My Sheet'!A1:B2)+SUM(Sheet1:Sheet3!C5)",
++    "{1,2;3,4}+-A1%+@B2:B4+A1#+SUM(A1.:.B9)",
++    "LET(x,A1,LAMBDA(y,y*x+B$2)(C3))",
++    "Table1[@Col]+Name1+\"text\"&TRUE&#N/A",
++    "SUM((A1:B2 B1:C3),(D4,E5))",
++    "1+1+1+1+1+A1+1+1",
++];
++
++#[test]
++fn shifted_matches_shift_relative() {
++    for src in SHIFT_CASES {
++        let e = parse(src).unwrap_or_else(|err| panic!("{src}: {err}"));
++        for (dr, dc) in [(0, 0), (1, 0), (0, 1), (5, 3), (-1, 0), (0, -1), (1_048_575, 0), (0, 16_383), (-3, -3)] {
++            let plain = shift_relative(e.clone(), dr, dc);
++            assert_eq!(shifted(&e, dr, dc), plain, "{src} by ({dr},{dc})");
++            assert!(is_shifted_copy(&e, dr, dc, &plain), "{src} by ({dr},{dc}) is a shifted copy");
++            assert_eq!(shift_stays_on_sheet(&e, dr, dc), !print(&plain).contains("#REF!") || src.contains("#REF!"), "{src} by ({dr},{dc})");
++        }
++    }
++}
++
++#[test]
++fn shifted_copies_are_r1c1_equal() {
++    use gridcraft_core::CellRef;
++    // Same R1C1 text at the two cells <=> shifted copy, for formulas that stay on the sheet.
++    let cells = [(1, 6), (2, 6), (4799, 6), (1, 7), (10, 2)];
++    for a in SHIFT_CASES {
++        for b in SHIFT_CASES {
++            let (ea, eb) = (parse(a).unwrap(), parse(b).unwrap());
++            for &(ra, ca) in &cells {
++                for &(rb, cb) in &cells {
++                    let (dr, dc) = (rb as i64 - ra as i64, cb as i64 - ca as i64);
++                    let moved = shift_relative(ea.clone(), dr, dc);
++                    let same_r1c1 = print_r1c1(&ea, CellRef::new(ra, ca)) == print_r1c1(&moved, CellRef::new(rb, cb));
++                    assert!(same_r1c1 || !shift_stays_on_sheet(&ea, dr, dc));
++                    let other_at_b = shift_relative(eb.clone(), dr, dc);
++                    assert_eq!(is_shifted_copy(&ea, dr, dc, &other_at_b), a == b, "{a} vs {b}");
++                }
++            }
++        }
++    }
++    // Not a copy: one reference differs, an anchor differs, a function differs.
++    let base = parse("IF(C2>500,C2*D2,0)").unwrap();
++    assert!(is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D5,0)").unwrap()));
++    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D6,0)").unwrap()));
++    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*$D5,0)").unwrap()));
++    assert!(!is_shifted_copy(&base, 3, 0, &parse("IFS(C5>500,C5*D5,0)").unwrap()));
++    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>501,C5*D5,0)").unwrap()));
++    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D5)").unwrap()));
++    // Off the sheet: the copy reads `#REF!`.
++    let up = parse("A1+1").unwrap();
++    assert!(is_shifted_copy(&up, -1, 0, &parse("#REF!+1").unwrap()));
++    assert!(!is_shifted_copy(&up, -1, 0, &parse("A1+1").unwrap()));
++}
++
+ #[test]
+ fn insert_delete() {
+     let ins = Edit::Insert { axis: Axis::Rows, at: 2, count: 2 };
