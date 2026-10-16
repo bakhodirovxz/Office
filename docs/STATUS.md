@@ -555,6 +555,11 @@ save callback, and the HRM receiving the .docx.
 - **Not done yet (S8–S9):** the host-bridge patch (dirty events, host-initiated save, `/close`).
   The stock v0.7.0 UI also still shows the upstream Discord, Share and Zotero chrome.
 
+## Owner decision 2026-10-16: the HRM integration target is **hr-backend**
+The target is `<server-path>` (`bakhodirovxz/hr-backend`), the repo that already embeds
+ONLYOFFICE 9.3. It replaces the sandbox. A standalone prompt for its backend agent is being written to
+`docs/phase0/hr-backend-prompt.md`.
+
 ## HRM test server (read-only analysis in progress)
 - **Owner statement:** <test-server> (`vds-test`) is the test server. Access is read-only, code only:
   no database, MinIO or document files are opened.
