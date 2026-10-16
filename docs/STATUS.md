@@ -97,7 +97,44 @@ Duplicated crate names (2+ versions in the tree):
 Of the crates that share a role across apps, only `metafile` is a real copy (wordcraft and deckcraft
 share byte-identical files). geom, pdf and render share names only.
 
-## Task 1 — inventory, wordcraft at HEAD fd0bb2f (measured on this PC, windows-gnu, cold builds)
+## Task 1 — inventory (DONE; all four apps at HEAD, this PC, windows-gnu)
+Full report: `docs/phase0/inventory.md`.
+
+| | wordcraft | gridcraft | deckcraft | pdfcraft* |
+|---|---|---|---|---|
+| GUI build (cold) | 556 s | 323 s | 612 s | 2636 s |
+| GUI exe | 82.3 MB | 42.0 MB | 92.4 MB | 69.2 MB |
+| CLI build | 262 s | 130 s | 301 s | 1400 s |
+| CLI exe | 46.4 MB | 17.6 MB | 65.4 MB | 41.8 MB |
+| Web build | 897 s | 420 s | 867 s | 1341 s |
+| wasm raw | 42.6 MB | 19.0 MB | 35.1 MB | 39.1 MB |
+| wasm gzip -9 | 15.8 MB | 7.0 MB | 13.9 MB | 14.4 MB |
+| wasm brotli -q 11 | 9.4 MB | 4.7 MB | 9.3 MB | 9.4 MB |
+| Tests pass / fail / ignored | 2750 / 5 / 2 | 1597 / 0 / 1 | 1669 / 1 / 6, plus an intermittent crash | 3466 / 14 / 16 |
+| CLI smoke test | OK | OK | OK | OK |
+
+\* pdfcraft times are upper bounds: other builds overlapped.
+
+**Test failures:**
+- **Environment- or locale-related:**
+  - wordcraft: 2 colour-emoji font tests; Alt+numpad gives "й" instead of "é" (Cyrillic code page);
+    2 "Breaks" menu label tests.
+  - deckcraft: the replace-fonts ribbon test (label not found).
+- **deckcraft crash:**
+  - The `ui-egui` lib test binary crashes intermittently with STATUS_ACCESS_VIOLATION.
+  - It happens only with concurrent tests: 1 of 8 runs; 0 of 4 runs with one thread.
+  - A wgpu race in `egui_kittest` is suspected but unconfirmed.
+- **Upstream bugs in pdfcraft:**
+  - a password-length mismatch in a signing test;
+  - 3 zh-hant duplicate catalog keys;
+  - 3 Vietnamese catalog keys missing;
+  - a duplicate key in the parity TOML;
+  - 4 failures of unknown cause;
+  - JetBrainsMono lacks "ѝ".
+- **Test time:** almost all of it is compiling test binaries in release mode. The CI design should
+  use debug tests, sccache and per-crate runs.
+
+## Task 1 — inventory, wordcraft at HEAD fd0bb2f (detail) (measured on this PC, windows-gnu, cold builds)
 
 | Step | Result | Wall time |
 |---|---|---|
