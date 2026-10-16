@@ -1,0 +1,36 @@
+# Spike 3, approach B (hybrid): a thin binding over the wordcraft engine for non-egui shells.
+# Its own workspace (not part of wordcraft's); upstream crates by path into the worktree
+# E:/office-work/wordcraft-b (branch spike/mobile-b, from fd0bb2f). Cargo.lock is seeded from
+# wordcraft's so versions match.
+[workspace]
+
+[package]
+name = "wordcraft-bind"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wordcraft-engine = { path = "E:/office-work/wordcraft-b/crates/engine" }
+wordcraft-doc = { path = "E:/office-work/wordcraft-b/crates/doc" }
+wordcraft-layout = { path = "E:/office-work/wordcraft-b/crates/layout" }
+wordcraft-render = { path = "E:/office-work/wordcraft-b/crates/render" }
+serde_json = "1"
+vello_cpu = "0.2"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "=0.2.129"
+js-sys = "0.3"
+
+[dev-dependencies]
+zip = { version = "3", default-features = false, features = ["deflate"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 16
+debug = 0

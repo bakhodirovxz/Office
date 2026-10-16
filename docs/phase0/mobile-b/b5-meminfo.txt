@@ -1,0 +1,9 @@
+Total PSS by process:
+    235,880K: system (pid 703)
+    148,276K: com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 5044)
+    106,061K: com.office.mobileb (pid 5019 / activities)
+    104,733K: com.android.systemui (pid 2126)
+     99,307K: com.google.android.tts (pid 2762)
+     92,514K: com.google.android.as (pid 1536)
+     91,080K: com.google.android.googlequicksearchbox:search (pid 1472)
+     75,598K: com.google.android.gms (pid 1773)

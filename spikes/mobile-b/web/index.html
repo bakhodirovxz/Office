@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- no user-scalable=no: native pinch must work. resizes-content: the layout viewport shrinks with the keyboard, so the fixed toolbar stays above it. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <title>wordcraft-bind spike</title>
+  <link data-trunk rel="rust" href="../bind/Cargo.toml" data-wasm-opt="z" data-weak-refs data-bindgen-target="web" />
+  <link data-trunk rel="copy-file" href="../fixtures/long.docx" />
+  <link data-trunk rel="copy-file" href="../fixtures/sample.docx" />
+  <link data-trunk rel="copy-file" href="app.js" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #cfcfcf; font: 14px system-ui, sans-serif; overscroll-behavior: none; }
+    #scroller { position: fixed; left: 0; right: 0; top: 0; bottom: 52px; overflow: auto; background: #cfcfcf;
+      overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; -webkit-tap-highlight-color: transparent; }
+    #pages { width: max-content; min-width: 100%; padding: 8px 0; box-sizing: border-box; position: relative; }
+    .page { position: relative; margin: 0 auto 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); overflow: hidden; }
+    .page canvas { position: absolute; display: block; pointer-events: none; }
+    .ov { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+    .sel { position: absolute; background: rgba(40,120,255,.32); }
+    .caret { position: absolute; background: #1a5fe0; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .pre { position: absolute; background: #fff; text-decoration: underline; white-space: pre; color: #000; font-family: system-ui, sans-serif; }
+    #ime { position: absolute; width: 2px; height: 20px; margin: 0; padding: 0; border: 0; outline: 0; resize: none; overflow: hidden;
+      opacity: 0.01; color: transparent; background: transparent; caret-color: transparent; font-size: 16px; line-height: 20px; white-space: pre; }
+    #bar { position: fixed; left: 0; right: 0; bottom: 0; height: 52px; display: flex; background: #20242b; z-index: 5; }
+    #bar button { flex: 1; border: 0; margin: 0; background: transparent; color: #fff; font-size: 15px; border-right: 1px solid #3a4049; }
+    #bar button.on { background: #36507a; }
+    #hud { position: fixed; right: 4px; top: 4px; background: rgba(0,0,0,.6); color: #9f9; font: 11px monospace; padding: 2px 5px; z-index: 6; pointer-events: none; white-space: pre; }
+  </style>
+</head>
+<body>
+  <div id="scroller"><div id="pages"></div></div>
+  <div id="hud">loading…</div>
+  <div id="bar">
+    <button id="bBold">Bold</button><button id="bUndo">Undo</button><button id="bSave">Save</button><button id="bZoom">Zoom</button>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+{
+ "dpr": 2.625,
+ "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML",
+ "full": [
+  {
+   "scale": "fit",
+   "rs": 1.698,
+   "page": 0,
+   "px": "1040x1346",
+   "mpx": 1.4,
+   "first_ms": 72.2,
+   "median_ms": 46,
+   "max_ms": 72.2
+  },
+  {
+   "scale": "fit",
+   "rs": 1.698,
+   "page": 1,
+   "px": "1040x1346",
+   "mpx": 1.4,
+   "first_ms": 42.1,
+   "median_ms": 44.7,
+   "max_ms": 75.2
+  },
+  {
+   "scale": "fit",
+   "rs": 1.698,
+   "page": 3,
+   "px": "1040x1346",
+   "mpx": 1.4,
+   "first_ms": 44.5,
+   "median_ms": 41,
+   "max_ms": 44.5
+  },
+  {
+   "scale": "css100",
+   "rs": 3.5,
+   "page": 0,
+   "px": "2142x2772",
+   "mpx": 5.94,
+   "first_ms": 183.6,
+   "median_ms": 117.9,
+   "max_ms": 183.6
+  },
+  {
+   "scale": "css100",
+   "rs": 3.5,
+   "page": 1,
+   "px": "2142x2772",
+   "mpx": 5.94,
+   "first_ms": 91.8,
+   "median_ms": 97.2,
+   "max_ms": 130.1
+  },
+  {
+   "scale": "css100",
+   "rs": 3.5,
+   "page": 3,
+   "px": "2142x2772",
+   "mpx": 5.94,
+   "first_ms": 92.1,
+   "median_ms": 90,
+   "max_ms": 111.5
+  }
+ ],
+ "tile": [
+  {
+   "scale": "fit",
+   "tile": "1024x1024",
+   "median_ms": 39.1,
+   "max_ms": 87.1
+  },
+  {
+   "scale": "css100",
+   "tile": "1024x1024",
+   "median_ms": 22,
+   "max_ms": 28.6
+  }
+ ],
+ "text_context_ms": 0.1,
+ "caret_ms": 0.018
+}

@@ -1,0 +1,5 @@
+android-webview/app/src/main/assets/
+android-webview/build/
+android-webview/app/build/
+android-webview/.gradle/
+android-webview/local.properties

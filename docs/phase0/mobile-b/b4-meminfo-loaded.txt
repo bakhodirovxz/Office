@@ -1,0 +1,15 @@
+== com.android.chrome
+  Native Heap    16285    16248        0        0    20028    30292    22505     3314
+           Java Heap:     5648                          44432
+         Native Heap:    16248                          20028
+            Graphics:        0                              0
+== com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+  Native Heap     1638     1556        4        4     5808    12240     5167     2064
+           Java Heap:      616                          40212
+         Native Heap:     1556                           5808
+            Graphics:        0                              0
+== com.android.chrome:privileged_process0
+  Native Heap    14964    14924        0        0    18844    30464    23797     1851
+           Java Heap:     1912                          41396
+         Native Heap:    14924                          18844
+            Graphics:        0                              0
