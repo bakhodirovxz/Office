@@ -1,0 +1,9 @@
+g of main
+ 10800 10817 I probe   : main:   86.66 winit> Key Backspace up rep=false
+ 10800 10817 I probe   : main:   86.66 GTI text="The hello world world ab" sel=(24, 24) comp=None
+ 10800 10817 I probe   : main:   86.66 shim> Ime DeleteSurrounding { before_chars: 1, after_chars: 0 }
+ 10800 10817 I probe   : main:   87.13 GTI text="The hello world world a" sel=(23, 23) comp=None
+ 10800 10817 I probe   : main:   87.13 shim> Ime DeleteSurrounding { before_chars: 1, after_chars: 0 }
+ 10800 10817 I probe   : main:   87.70 winit> Key Backspace up rep=false
+ 10800 10817 I probe   : main:   87.70 GTI text="The hello world world " sel=(22, 22) comp=None
+ 10800 10817 I probe   : main:   87.70 shim> Ime DeleteSurrounding { before_chars: 1, after_chars: 0 }

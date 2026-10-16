@@ -1,0 +1,23 @@
+g of main
+ 10800 10817 I probe   : main:   66.98 GTI text="The h" sel=(5, 5) comp=None
+ 10800 10817 I probe   : main:   66.98 shim> Ime Commit("h")
+ 10800 10817 I probe   : main:   67.37 GTI text="The he" sel=(6, 6) comp=None
+ 10800 10817 I probe   : main:   67.37 shim> Ime Commit("e")
+ 10800 10817 I probe   : main:   67.72 GTI text="The hel" sel=(7, 7) comp=None
+ 10800 10817 I probe   : main:   67.72 shim> Ime Commit("l")
+ 10800 10817 I probe   : main:   68.08 GTI text="The hell" sel=(8, 8) comp=None
+ 10800 10817 I probe   : main:   68.11 shim> Ime Commit("l")
+ 10800 10817 I probe   : main:   68.48 GTI text="The hello" sel=(9, 9) comp=None
+ 10800 10817 I probe   : main:   68.48 shim> Ime Commit("o")
+ 10800 10817 I probe   : main:   68.81 GTI text="The hello " sel=(10, 10) comp=None
+ 10800 10817 I probe   : main:   68.81 shim> Ime Commit(" ")
+ 10800 10817 I probe   : main:   69.32 GTI text="The hello w" sel=(11, 11) comp=None
+ 10800 10817 I probe   : main:   69.32 shim> Ime Commit("w")
+ 10800 10817 I probe   : main:   69.79 GTI text="The hello wo" sel=(12, 12) comp=None
+ 10800 10817 I probe   : main:   69.79 shim> Ime Commit("o")
+ 10800 10817 I probe   : main:   70.14 GTI text="The hello wor" sel=(13, 13) comp=None
+ 10800 10817 I probe   : main:   70.14 shim> Ime Commit("r")
+ 10800 10817 I probe   : main:   70.49 GTI text="The hello worl" sel=(14, 14) comp=None
+ 10800 10817 I probe   : main:   70.49 shim> Ime Commit("l")
+ 10800 10817 I probe   : main:   70.88 GTI text="The hello world" sel=(15, 15) comp=None
+ 10800 10817 I probe   : main:   70.89 shim> Ime Commit("d")

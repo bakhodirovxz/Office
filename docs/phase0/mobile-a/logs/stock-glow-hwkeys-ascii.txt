@@ -1,0 +1,18 @@
+g of main
+ 12540 12558 I probe   : main:   11.06 GTI text="h" sel=(1, 1) comp=None
+ 12540 12558 I probe   : main:   11.12 winit> Key H up rep=false
+ 12540 12558 I probe   : main:   11.12 winit> Key E up rep=false
+ 12540 12558 I probe   : main:   11.12 GTI text="hel" sel=(3, 3) comp=None
+ 12540 12558 I probe   : main:   11.16 winit> Key L up rep=false
+ 12540 12558 I probe   : main:   11.16 winit> Key L up rep=false
+ 12540 12558 I probe   : main:   11.16 GTI text="hell" sel=(4, 4) comp=None
+ 12540 12558 I probe   : main:   11.20 winit> Key O up rep=false
+ 12540 12558 I probe   : main:   11.20 GTI text="hello" sel=(5, 5) comp=None
+ 12540 12558 I probe   : main:   13.02 winit> Key S up rep=false
+ 12540 12558 I probe   : main:   13.02 winit> Key A up rep=false
+ 12540 12558 I probe   : main:   13.02 GTI text="hellosa" sel=(7, 7) comp=None
+ 12540 12558 I probe   : main:   13.07 winit> Key L up rep=false
+ 12540 12558 I probe   : main:   13.07 winit> Key O up rep=false
+ 12540 12558 I probe   : main:   13.07 GTI text="hellosalo" sel=(9, 9) comp=None
+ 12540 12558 I probe   : main:   13.12 winit> Key M up rep=false
+ 12540 12558 I probe   : main:   13.12 GTI text="hellosalom" sel=(10, 10) comp=None

@@ -1,0 +1,3 @@
+g of main
+ 10800 10817 I probe   : main:   79.04 GTI text="The hello world world" sel=(21, 21) comp=None
+ 10800 10817 I probe   : main:   79.04 shim> Ime Commit(" world")

@@ -1,0 +1,12 @@
+g of main
+ 11707 11724 I probe   : main:   79.54 GTI text="the h" sel=(5, 5) comp=None
+ 11707 11724 I probe   : main:   79.96 GTI text="the he" sel=(6, 6) comp=None
+ 11707 11724 I probe   : main:   80.42 GTI text="the hel" sel=(7, 7) comp=None
+ 11707 11724 I probe   : main:   80.83 GTI text="the hell" sel=(8, 8) comp=None
+ 11707 11724 I probe   : main:   81.14 GTI text="the hello" sel=(9, 9) comp=None
+ 11707 11724 I probe   : main:   81.76 GTI text="the hello " sel=(10, 10) comp=None
+ 11707 11724 I probe   : main:   81.97 GTI text="the hello w" sel=(11, 11) comp=None
+ 11707 11724 I probe   : main:   82.43 GTI text="the hello wo" sel=(12, 12) comp=None
+ 11707 11724 I probe   : main:   82.77 GTI text="the hello wor" sel=(13, 13) comp=None
+ 11707 11724 I probe   : main:   83.17 GTI text="the hello worl" sel=(14, 14) comp=None
+ 11707 11724 I probe   : main:   83.55 GTI text="the hello world" sel=(15, 15) comp=None

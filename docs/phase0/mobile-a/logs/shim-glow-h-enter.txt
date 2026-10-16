@@ -1,0 +1,8 @@
+g of main
+ 10800 10817 I probe   : main:   92.69 GTI text="The hello world world \n" sel=(23, 23) comp=None
+ 10800 10817 I probe   : main:   92.69 shim> Key Enter down rep=false
+ 10800 10817 I probe   : main:   92.69 shim> Key Enter up rep=false
+ 10800 10817 I probe   : main:   94.41 GTI text="The hello world world \nO" sel=(24, 24) comp=None
+ 10800 10817 I probe   : main:   94.41 shim> Ime Commit("O")
+ 10800 10817 I probe   : main:   94.79 GTI text="The hello world world \nOk" sel=(25, 25) comp=None
+ 10800 10817 I probe   : main:   94.79 shim> Ime Commit("k")

@@ -1,0 +1,6 @@
+g of main
+ 11707 11724 I probe   : main:   99.30 GTI text="the hello world world ab" sel=(24, 24) comp=None
+ 11707 11724 I probe   : main:   99.36 winit> Key Backspace up rep=false
+ 11707 11724 I probe   : main:   99.81 winit> Key Backspace up rep=false
+ 11707 11724 I probe   : main:   99.81 GTI text="the hello world world a" sel=(23, 23) comp=None
+ 11707 11724 I probe   : main:  100.41 GTI text="the hello world world " sel=(22, 22) comp=None
