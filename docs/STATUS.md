@@ -385,6 +385,31 @@ charter requires. Arial, Times and Courier keep the standard-14 fonts for Latin-
   `3500000.0`.
   - Locale-aware number display for the uz and ru locales must be checked and fixed.
 
+## Task 3 — mobile approach-A kill test (done): native eframe 0.36.2 on Android
+Report: `docs/phase0/mobile-a-kill.md`. Evidence: `docs/phase0/mobile-a/`. Code:
+`spikes/mobile-a/probe/`.
+
+Tests: (a) keyboard shows/hides, (b) Latin, (c) Cyrillic, (d) oʻgʻil, (e) autocorrect, (f) glide,
+(g) backspace, (h) Enter.
+
+| | Stock EditText (control) | Stock eframe/winit | eframe + GameActivity text-state shim (about 170 lines, public APIs only) |
+|---|---|---|---|
+| Result | a–h pass | **only a passes; b–h fail** | **a–h all pass** |
+
+- **Why stock eframe fails:** winit drops GameTextInput text, so egui receives no Text or Ime events.
+  The upstream fix locations are in the report (winit 0.30.13 `android/mod.rs:476`, `event.rs:774`;
+  android-activity UTF-16 offsets).
+- **Renderers:** glow works. wgpu's default Vulkan backend fails on the emulator
+  (`max_uniform_buffer_binding_size`). wgpu with the GL backend works.
+- **Probe numbers:** startup 1.6–1.7 s (`am start -W` median); idle PSS 54–57 MB; APK 13.5 MB;
+  `.so` 10.3 MB stripped.
+- **Risks found:**
+  - An activity destroy or relaunch hangs stock eframe (ANR).
+  - The preedit path is untested: Gboard reported no composing region.
+  - Glide typing works only with touches injected through the emulator console.
+- **Verdict:** approach A is **not killed** on keyboard grounds. It still needs the shim, the ANR fix
+  and all the mobile UI work. The web path (A0 + patches) passes the same tests with less new code.
+
 ## Security notes carried into Phase 5 (from the spike review)
 - **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
   are authorised only by the UUIDv4 session id. Phase 5 needs:
