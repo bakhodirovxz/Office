@@ -1,7 +1,7 @@
 # Status
 
-**Current phase:** 0 — Evidence and architecture decision (branch `phase-0`)
-**Last updated:** 2026-10-16
+**Current phase:** 0 — Evidence and architecture decision (branch `phase-0`). **Work complete; waiting at the Phase 0 exit gate for the owner's decisions** (ADR Appendix B, B-1…B-15).
+**Last updated:** 2026-10-16 (gate report sent)
 
 ## Done
 - Repo initialised; `CLAUDE.md`, `docs/BRIEF.md`, `docs/STATUS.md` created.
