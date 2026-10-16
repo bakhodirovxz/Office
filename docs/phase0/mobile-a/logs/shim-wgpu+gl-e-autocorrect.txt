@@ -1,0 +1,10 @@
+g of main
+ 12714 12732 I probe   : main:   64.48 GTI text="T" sel=(1, 1) comp=None
+ 12714 12732 I probe   : main:   64.48 shim> Ime Commit("T")
+ 12714 12732 I probe   : main:   64.92 GTI text="Te" sel=(2, 2) comp=None
+ 12714 12732 I probe   : main:   64.92 shim> Ime Commit("e")
+ 12714 12732 I probe   : main:   65.32 GTI text="Teh" sel=(3, 3) comp=None
+ 12714 12732 I probe   : main:   65.32 shim> Ime Commit("h")
+ 12714 12732 I probe   : main:   65.70 GTI text="The " sel=(4, 4) comp=None
+ 12714 12732 I probe   : main:   65.70 shim> Ime DeleteSurrounding { before_chars: 2, after_chars: 0 }
+ 12714 12732 I probe   : main:   65.70 shim> Ime Commit("he ")

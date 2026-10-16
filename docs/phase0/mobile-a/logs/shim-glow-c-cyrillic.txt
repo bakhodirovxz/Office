@@ -1,0 +1,23 @@
+g of main
+ 10800 10817 I probe   : main:  129.61 GTI text="The hello world world \nOk oʻgʻil " sel=(33, 33) comp=None
+ 10800 10817 I probe   : main:  129.62 shim> Ime Commit(" ")
+ 10800 10817 I probe   : main:  130.47 GTI text="The hello world world \nOk oʻgʻil С" sel=(34, 34) comp=None
+ 10800 10817 I probe   : main:  130.47 shim> Ime Commit("С")
+ 10800 10817 I probe   : main:  130.90 GTI text="The hello world world \nOk oʻgʻil Са" sel=(35, 35) comp=None
+ 10800 10817 I probe   : main:  130.90 shim> Ime Commit("а")
+ 10800 10817 I probe   : main:  131.26 GTI text="The hello world world \nOk oʻgʻil Сал" sel=(36, 36) comp=None
+ 10800 10817 I probe   : main:  131.26 shim> Ime Commit("л")
+ 10800 10817 I probe   : main:  131.66 GTI text="The hello world world \nOk oʻgʻil Сало" sel=(37, 37) comp=None
+ 10800 10817 I probe   : main:  131.66 shim> Ime Commit("о")
+ 10800 10817 I probe   : main:  131.99 GTI text="The hello world world \nOk oʻgʻil Салом" sel=(38, 38) comp=None
+ 10800 10817 I probe   : main:  132.00 shim> Ime Commit("м")
+ 10800 10817 I probe   : main:  132.32 GTI text="The hello world world \nOk oʻgʻil Салом " sel=(39, 39) comp=None
+ 10800 10817 I probe   : main:  132.32 shim> Ime Commit(" ")
+ 10800 10817 I probe   : main:  132.64 GTI text="The hello world world \nOk oʻgʻil Салом д" sel=(40, 40) comp=None
+ 10800 10817 I probe   : main:  132.65 shim> Ime Commit("д")
+ 10800 10817 I probe   : main:  133.04 GTI text="The hello world world \nOk oʻgʻil Салом ду" sel=(41, 41) comp=None
+ 10800 10817 I probe   : main:  133.04 shim> Ime Commit("у")
+ 10800 10817 I probe   : main:  133.42 GTI text="The hello world world \nOk oʻgʻil Салом дун" sel=(42, 42) comp=None
+ 10800 10817 I probe   : main:  133.42 shim> Ime Commit("н")
+ 10800 10817 I probe   : main:  135.81 GTI text="The hello world world \nOk oʻgʻil Салом дунё" sel=(43, 43) comp=None
+ 10800 10817 I probe   : main:  135.83 shim> Ime Commit("ё")

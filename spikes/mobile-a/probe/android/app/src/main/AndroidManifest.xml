@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:label="IME Probe"
+        android:debuggable="true"
+        android:supportsRtl="true"
+        android:theme="@style/ActivityTheme">
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|keyboard|navigation|density|uiMode|locale|layoutDirection|fontScale|colorMode|touchscreen"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data android:name="android.app.lib_name" android:value="main" />
+        </activity>
+        <activity
+            android:name=".ControlActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|keyboard|navigation|density|uiMode|locale|layoutDirection|fontScale|colorMode|touchscreen"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true" />
+    </application>
+
+</manifest>

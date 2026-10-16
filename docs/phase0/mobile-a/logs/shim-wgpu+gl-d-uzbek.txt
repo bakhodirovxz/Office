@@ -1,0 +1,11 @@
+g of main
+ 12714 12732 I probe   : main:  110.70 GTI text="The hello world world \nOk " sel=(26, 26) comp=None
+ 12714 12732 I probe   : main:  110.70 shim> Ime Commit(" ")
+ 12714 12732 I probe   : main:  111.18 GTI text="The hello world world \nOk oʻ" sel=(28, 28) comp=None
+ 12714 12732 I probe   : main:  111.18 shim> Ime Commit("oʻ")
+ 12714 12732 I probe   : main:  111.46 GTI text="The hello world world \nOk oʻgʻ" sel=(30, 30) comp=None
+ 12714 12732 I probe   : main:  111.46 shim> Ime Commit("gʻ")
+ 12714 12732 I probe   : main:  111.93 GTI text="The hello world world \nOk oʻgʻi" sel=(31, 31) comp=None
+ 12714 12732 I probe   : main:  111.93 shim> Ime Commit("i")
+ 12714 12732 I probe   : main:  112.33 GTI text="The hello world world \nOk oʻgʻil" sel=(32, 32) comp=None
+ 12714 12732 I probe   : main:  112.33 shim> Ime Commit("l")

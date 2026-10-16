@@ -1,0 +1,30 @@
+[package]
+name = "ime-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Spike 3 A2/A3: eframe on Android IME kill test (throwaway)"
+
+[lib]
+name = "main"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Versions match upstream/wordcraft/Cargo.lock (eframe 0.36.2, winit 0.30.13, wgpu 30.0.1).
+eframe = { version = "=0.36.2", default-features = false, features = [
+    "android-game-activity",
+    "wgpu",
+    "glow",
+    "default_fonts",
+] }
+android-activity = { version = "=0.6.1", features = ["game-activity"] }
+log = "0.4"
+android_logger = "0.14"
+
+[workspace]
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = false

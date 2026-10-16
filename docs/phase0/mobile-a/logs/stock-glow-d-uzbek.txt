@@ -1,0 +1,6 @@
+g of main
+ 11707 11724 I probe   : main:  136.39 GTI text="the hello world world ok " sel=(25, 25) comp=None
+ 11707 11724 I probe   : main:  136.74 GTI text="the hello world world ok oʻ" sel=(27, 27) comp=None
+ 11707 11724 I probe   : main:  137.20 GTI text="the hello world world ok oʻgʻ" sel=(29, 29) comp=None
+ 11707 11724 I probe   : main:  137.59 GTI text="the hello world world ok oʻgʻi" sel=(30, 30) comp=None
+ 11707 11724 I probe   : main:  138.01 GTI text="the hello world world ok oʻgʻil" sel=(31, 31) comp=None

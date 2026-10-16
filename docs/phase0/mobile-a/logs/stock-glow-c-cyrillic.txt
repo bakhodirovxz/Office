@@ -1,0 +1,12 @@
+g of main
+ 11707 11724 I probe   : main:  154.24 GTI text="the hello world world ok oʻgʻil " sel=(32, 32) comp=None
+ 11707 11724 I probe   : main:  155.04 GTI text="the hello world world ok oʻgʻil С" sel=(33, 33) comp=None
+ 11707 11724 I probe   : main:  155.51 GTI text="the hello world world ok oʻgʻil Са" sel=(34, 34) comp=None
+ 11707 11724 I probe   : main:  155.84 GTI text="the hello world world ok oʻgʻil Сал" sel=(35, 35) comp=None
+ 11707 11724 I probe   : main:  156.26 GTI text="the hello world world ok oʻgʻil Сало" sel=(36, 36) comp=None
+ 11707 11724 I probe   : main:  156.61 GTI text="the hello world world ok oʻgʻil Салом" sel=(37, 37) comp=None
+ 11707 11724 I probe   : main:  156.98 GTI text="the hello world world ok oʻgʻil Салом " sel=(38, 38) comp=None
+ 11707 11724 I probe   : main:  157.36 GTI text="the hello world world ok oʻgʻil Салом д" sel=(39, 39) comp=None
+ 11707 11724 I probe   : main:  157.70 GTI text="the hello world world ok oʻgʻil Салом ду" sel=(40, 40) comp=None
+ 11707 11724 I probe   : main:  158.06 GTI text="the hello world world ok oʻgʻil Салом дун" sel=(41, 41) comp=None
+ 11707 11724 I probe   : main:  160.46 GTI text="the hello world world ok oʻgʻil Салом дунё" sel=(42, 42) comp=None

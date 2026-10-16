@@ -1,0 +1,2 @@
+g of main
+ 11707 11724 I probe   : main:   92.45 GTI text="the hello world world" sel=(21, 21) comp=None

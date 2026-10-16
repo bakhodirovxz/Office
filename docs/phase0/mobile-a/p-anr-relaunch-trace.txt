@@ -1,0 +1,169 @@
+Drop box contents: 89 entries
+Max entries: 1000
+Low priority rate limit period: 2000 ms
+Low priority tags: {data_app_wtf, keymaster, system_server_wtf, system_app_strictmode, system_app_wtf, system_server_strictmode, data_app_strictmode, netstats}
+Searching for: data_app_anr
+
+========================================
+2026-10-16 06:58:25 data_app_anr (compressed text, 11842 bytes)
+SystemUptimeMs: 154354
+Process: com.office.probe
+PID: 2257
+UID: 10218
+Frozen: false
+Timestamp: 2026-10-16 06:58:16.102+0000
+Flags: 0x20c8be46
+Package: com.office.probe v1 (1.0)
+Foreground: Yes
+Process-Runtime: 67359
+Activity: com.office.probe/.MainActivity
+ErrorId: 81a4596f-f4cb-4590-a1a5-4ee081e2a851
+Build: google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.D1/13818094:user/release-keys
+Loading-Progress: 1.0
+Dropped-Count: 0
+
+----- Output from /proc/pressure/memory -----
+some avg10=26.53 avg60=8.30 avg300=2.16 total=7150564
+full avg10=13.96 avg60=3.27 avg300=0.71 total=2324379
+----- End output from /proc/pressure/memory -----
+----- Output from /proc/pressure/cpu -----
+some avg10=81.72 avg60=71.49 avg300=27.91 total=100513347
+"main" prio=5 tid=1 Native
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x723d8f98 self=0x70828bba67b0
+  | sysTid=2257 nice=-10 cgrp=top-app sched=0/0 handle=0x708549564088
+  | state=S schedstat=( 1169408339 1029266749 816 ) utm=29 stm=87 core=1 HZ=100
+  | stack=0x7fff28170000-0x7fff28172000 stackSize=8188KB
+  | held mutexes=
+  native: #00 pc 0008f806  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+22) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  native: #01 pc 0006c91b  /apex/com.android.runtime/lib64/bionic/libc.so (__futex_wait_ex+155) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  native: #02 pc 00079e88  /apex/com.android.runtime/lib64/bionic/libc.so (pthread_cond_wait+56) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  native: #03 pc 0094c96d  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (onDestroy+95)
+  native: #04 pc 00949b3f  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (NativeCode::~NativeCode+17)
+  native: #05 pc 0094947f  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (terminateNativeCode_native+16)
+  native: #06 pc 0022c8cb  /apex/com.android.art/lib64/libart.so (art_quick_generic_jni_trampoline+219) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #07 pc 00211e94  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #08 pc 004621c5  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke+181) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #09 pc 005fa142  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2402) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #10 pc 00233611  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+10625) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #11 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #12 pc 001cdfb0  <anonymous:708200472000> (com.google.androidgamesdk.GameActivity.onDestroy)
+  native: #13 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #14 pc 005f9396  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge+102) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #15 pc 005fa128  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2376) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #16 pc 00233611  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+10625) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #17 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #18 pc 001fae80  /system/framework/framework.jar (offset 7000) (android.app.Activity.performDestroy)
+  native: #19 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #20 pc 005f9396  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge+102) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #21 pc 005fa128  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2376) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #22 pc 00233611  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+10625) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #23 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #24 pc 00277220  /system/framework/framework.jar (offset 7000) (android.app.Instrumentation.callActivityOnDestroy)
+  native: #25 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #26 pc 009a861b  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+907) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #27 pc 0022ca5c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #28 pc 002097ed  /apex/com.android.art/lib64/libart.so (nterp_helper+3837) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #29 pc 001f2cb8  /system/framework/framework.jar (offset 7000) (android.app.ActivityThread.performDestroyActivity+216)
+  native: #30 pc 00209788  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #31 pc 001ef8cc  /system/framework/framework.jar (offset 7000) (android.app.ActivityThread.handleDestroyActivity)
+  native: #32 pc 00209788  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #33 pc 001f0c4e  /system/framework/framework.jar (offset 7000) (android.app.ActivityThread.handleRelaunchActivityInner+42)
+  native: #34 pc 00211e94  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #35 pc 004621c5  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke+181) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #36 pc 005faf29  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<true>+2345) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #37 pc 0023482d  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+15261) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #38 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #39 pc 001f0a50  /system/framework/framework.jar (offset 7000) (android.app.ActivityThread.handleRelaunchActivity)
+  native: #40 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #41 pc 005f9396  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge+102) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #42 pc 005fa128  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2376) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #43 pc 00233611  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+10625) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #44 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #45 pc 00322c3c  /system/framework/framework.jar (offset 7000) (android.app.servertransaction.ActivityRelaunchItem.execute)
+  native: #46 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #47 pc 009a861b  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+907) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #48 pc 0022ca5c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #49 pc 00264d28  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.app.servertransaction.ActivityTransactionItem.execute+184)
+  native: #50 pc 0016155b  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem+651)
+  native: #51 pc 00160aef  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.app.servertransaction.TransactionExecutor.executeTransactionItems+335)
+  native: #52 pc 001607e0  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.app.servertransaction.TransactionExecutor.execute+192)
+  native: #53 pc 0007e6f0  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.app.ActivityThread$H.handleMessage+1584)
+  native: #54 pc 0007dfd8  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.os.Handler.dispatchMessage+344)
+  native: #55 pc 0007c635  [anon_shmem:dalvik-jit-code-cache] (offset 2000000) (android.os.Looper.loopOnce+1349)
+  native: #56 pc 002121f6  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #57 pc 0046220c  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke+252) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #58 pc 005fa142  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2402) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #59 pc 00234b05  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+15989) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #60 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #61 pc 0027d360  /system/framework/framework.jar (offset 1286000) (android.os.Looper.loop)
+  native: #62 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #63 pc 005f9396  /apex/com.android.art/lib64/libart.so (art::interpreter::ArtInterpreterToInterpreterBridge+102) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #64 pc 005fa128  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2376) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #65 pc 00234b05  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+15989) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #66 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #67 pc 001f2a4c  /system/framework/framework.jar (offset 7000) (android.app.ActivityThread.main)
+  native: #68 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #69 pc 009a861b  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+907) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #70 pc 0022ca5c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #71 pc 002121f6  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #72 pc 0046220c  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke+252) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #73 pc 0089ba20  /apex/com.android.art/lib64/libart.so (_jobject* art::InvokeMethod<8>+2240) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #74 pc 007e3a5a  /apex/com.android.art/lib64/libart.so (art::Method_invoke +42) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #75 pc 0022c8cb  /apex/com.android.art/lib64/libart.so (art_quick_generic_jni_trampoline+219) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #76 pc 00211e94  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #77 pc 004621c5  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke+181) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #78 pc 005fa142  /apex/com.android.art/lib64/libart.so (bool art::interpreter::DoCall<false>+2402) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #79 pc 00233611  /apex/com.android.art/lib64/libart.so (void art::interpreter::ExecuteSwitchImplCpp<false>+10625) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #80 pc 00210915  /apex/com.android.art/lib64/libart.so (ExecuteSwitchImplAsm+5) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #81 pc 00288864  /system/framework/framework.jar (offset 2454000) (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run)
+  native: #82 pc 005f2082  /apex/com.android.art/lib64/libart.so (art::interpreter::Execute +466) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #83 pc 009a861b  /apex/com.android.art/lib64/libart.so (artQuickToInterpreterBridge+907) (BuildId: 108a321dc93c20580e74b855c407e975)
+  native: #84 pc 0022ca5c  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+140) (BuildId: 108a321dc93c20580e74b855c407e975)
+  at com.google.androidgamesdk.GameActivity.terminateNativeCode(Native method)
+  at com.google.androidgamesdk.GameActivity.onDestroy(GameActivity.java:436)
+  at android.app.Activity.performDestroy(Activity.java:9460)
+  at android.app.Instrumentation.callActivityOnDestroy(Instrumentation.java:1556)
+  at android.app.ActivityThread.performDestroyActivity(ActivityThread.java:6256)
+  at android.app.ActivityThread.handleDestroyActivity(ActivityThread.java:6301)
+  at android.app.ActivityThread.handleRelaunchActivityInner(ActivityThread.java:6586)
+  at android.app.ActivityThread.handleRelaunchActivity(ActivityThread.java:6501)
+  at android.app.servertransaction.ActivityRelaunchItem.execute(ActivityRelaunchItem.java:106)
+  at android.app.servertransaction.ActivityTransactionItem.execute(ActivityTransactionItem.java:63)
+  at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+  at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+  at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+  at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2823)
+  at android.os.Handler.dispatchMessage(Handler.java:110)
+  at android.os.Looper.loopOnce(Looper.java:248)
+  at android.os.Looper.loop(Looper.java:338)
+  at android.app.ActivityThread.main(ActivityThread.java:9067)
+  at java.lang.reflect.Method.invoke(Native method)
+  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
+DumpLatencyMs: 5.6416
+
+"android_main" prio=5 tid=15 Native
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x20727b0 self=0x70828bbdc5e0
+  | sysTid=2349 nice=0 cgrp=top-app sched=0/0 handle=0x7082001f4690
+  | state=S schedstat=( 5200006775 16044026537 2396 ) utm=15 stm=504 core=1 HZ=100
+  | stack=0x7082000fd000-0x7082000ff000 stackSize=989KB
+  | held mutexes=
+  native: #00 pc 000ddbea  /apex/com.android.runtime/lib64/bionic/libc.so (__epoll_pwait+10) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  native: #01 pc 0001707d  /system/lib64/libutils.so (android::Looper::pollOnce+413) (BuildId: 5cc628b071d29c54b7d93955e6a5c990)
+  native: #02 pc 00025831  /system/lib64/libandroid.so (ALooper_pollOnce+97) (BuildId: cf198c1c3e77327977197f502bbba038)
+  native: #03 pc 00404673  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<android_activity::activity_impl::AndroidAppInner>::poll_events::<<winit::platform_impl::android::EventLoop<eframe::native::wini
+  native: #04 pc 00403db1  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<android_activity::AndroidApp>::poll_events::<<winit::platform_impl::android::EventLoop<eframe::native::winit_integration::UserE
+  native: #05 pc 00403ae2  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<winit::platform_impl::android::EventLoop<eframe::native::winit_integration::UserEvent>>::poll_events_with_timeout::<&mut &mut <
+  native: #06 pc 003fe2e6  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<winit::platform_impl::android::EventLoop<eframe::native::winit_integration::UserEvent>>::pump_events::<&mut <winit::event_loop:
+  native: #07 pc 003fa583  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<std::thread::local::LocalKey<core::cell::RefCell<core::option::Option<winit::event_loop::EventLoop<eframe::native::winit_integr
+  native: #08 pc 0041429a  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (eframe::run_native_ext+933)
+  native: #09 pc 00590668  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (android_main+1275)
+  native: #10 pc 003cf2d8  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (android_activity::activity_impl::_rust_glue_entry::{closure#0}::{closure#0}+364)
+  native: #11 pc 003c8901  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<jni::env::Env>::with_local_frame::<android_activity::activity_impl::_rust_glue_entry::{closure#0}::{closure#0}, , jni::errors::
+  native: #12 pc 003c583f  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (<jni::vm::java_vm::JavaVM>::attach_current_thread_with_config::<android_activity::activity_impl::_rust_glue_entry::{closure#0}::
+  native: #13 pc 003d44f3  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (_rust_glue_entry+116)
+  native: #14 pc 0094d4ad  /data/app/~~VOTz5yE5nINskQ_meDTR4w==/com.office.probe-_yhJKWrTXiHsuyWsD2fUqA==/base.apk (offset 298000) (android_app_entry+425)
+  native: #15 pc 0007ac5f  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start+63) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  native: #16 pc 0006d94d  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+61) (BuildId: fcb82240218d1473de1e3d2137c0be35)
+  (no managed stack frames)
+DumpLatencyMs: 4455.97

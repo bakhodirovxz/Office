@@ -1,0 +1,5 @@
+g of main
+ 11707 11724 I probe   : main:   73.17 GTI text="t" sel=(1, 1) comp=None
+ 11707 11724 I probe   : main:   73.75 GTI text="te" sel=(2, 2) comp=None
+ 11707 11724 I probe   : main:   74.00 GTI text="teh" sel=(3, 3) comp=None
+ 11707 11724 I probe   : main:   74.36 GTI text="the " sel=(4, 4) comp=None

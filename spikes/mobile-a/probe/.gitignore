@@ -1,0 +1,7 @@
+android/app/src/main/jniLibs/
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+*.so
+Cargo.lock.bak

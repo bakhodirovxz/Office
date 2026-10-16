@@ -9,3 +9,10 @@ node_modules/
 /spikes/workspace/src/
 /spikes/workspace/err*.txt
 spikes/docserver/e2e/test-results/
+# Android spike build outputs
+spikes/mobile-a/probe/android/.gradle/
+spikes/mobile-a/probe/android/build/
+spikes/mobile-a/probe/android/app/build/
+spikes/mobile-a/probe/android/app/src/main/jniLibs/
+spikes/mobile-a/probe/android/local.properties
+spikes/mobile-a/probe/android/.idea/
