@@ -291,7 +291,12 @@ def main():
     ap.add_argument("--reference", default="office", choices=["office"])
     ap.add_argument("--force", action="store_true", help="recompute everything")
     ap.add_argument("--worst", type=int, default=6)
+    ap.add_argument("--excel-exe", help="use this gridcraft-cli.exe for the Excel apps in every selected build (A/B tests of a patched CLI)")
+    ap.add_argument("--no-reopen", action="store_true", help="skip step 3 (Office COM reopen/inspect of Craft-saved files); reuse existing ref.* from --out")
     a = ap.parse_args()
+    if a.excel_exe:
+        for b in EXE:
+            EXE[b]["excel"] = Path(a.excel_exe)
 
     inp, out = Path(a.input).resolve(), Path(a.out).resolve()
     if not str(out).upper().startswith("E:"):
@@ -359,7 +364,7 @@ def main():
 
     # ---- 3. Office reopen + structure of Craft-saved files
     for b in builds:
-        for app in apps:
+        for app in ([] if a.no_reopen else apps):
             cs = [c for c in cases if c["app"] == app and c["variants"][b]["roundtrip"]["save_ok"]]
             todo = [c for c in cs if True]
             if not todo:

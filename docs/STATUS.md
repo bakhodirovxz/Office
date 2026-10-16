@@ -353,6 +353,38 @@ image, the text box, the landscape section, and the `_hrm_desc_` bookmark in 4/4
 **Running it on the corpus:** `python -I spikes/fidelity/run.py --input corpus/ --out
 E:/office-target/fidelity-corpus`. Outputs are ids only, and they stay under E:.
 
+## Spike: gridcraft PDF export with embedded fonts (done; MEASURED)
+Sources:
+- report: `docs/phase0/gridcraft-pdf-fonts.md`;
+- patches: `spikes/gridcraft-pdf-patches/0001-0003`;
+- evidence: `docs/phase0/fidelity-pdf-fix/`.
+
+**Approach.** The patch subsets installed TrueType fonts as Identity-H CID fonts with ToUnicode, using
+real advance widths. It stays inside gridcraft's dependency-free `crates/pdf`, as upstream's
+charter requires. Arial, Times and Courier keep the standard-14 fonts for Latin-1 text.
+
+**Result.**
+- Excel PDFs no longer show `?` or `####`. Checked by the orchestrator on
+  `hrm_staff_xlsx_p02_before_after.png`.
+- Text similarity rose from 0.415 to 0.754.
+- Pixel diff is unchanged (3.8% → 3.9%). What remains is anti-aliasing, borders and layout.
+- **wasm cost:** +66 KB raw, +8.5 KB gzip.
+- **Tests:** engine 294 and pdf 23 pass. fmt/clippy were not run.
+
+**Limits.**
+- PDFs are 3–10× larger: there is no FlateDecode yet.
+- No RTL, shaping, CJK (CFF) or emoji.
+
+**New findings from this spike (affect Phase 1):**
+- **Ubuntu Light, egui's default UI font, lacks U+02BB `ʻ`, the Uzbek oʻ/gʻ letter.** On a machine
+  with no installed font covering it, the letter prints as a blank box, and the same gap exists in
+  the web GUI.
+  - Phase 1 must bundle a UI and document fallback font that covers U+02BB, U+02BC and Cyrillic, and
+    test it on every platform.
+- **Decimal separator.** Excel on this Russian-locale Windows shows `3500000,0`; gridcraft shows
+  `3500000.0`.
+  - Locale-aware number display for the uz and ru locales must be checked and fixed.
+
 ## Security notes carried into Phase 5 (from the spike review)
 - **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
   are authorised only by the UUIDv4 session id. Phase 5 needs:
