@@ -16,3 +16,9 @@ spikes/mobile-a/probe/android/app/build/
 spikes/mobile-a/probe/android/app/src/main/jniLibs/
 spikes/mobile-a/probe/android/local.properties
 spikes/mobile-a/probe/android/.idea/
+spikes/mobile-b/android-webview/.gradle/
+spikes/mobile-b/android-webview/build/
+spikes/mobile-b/android-webview/app/build/
+spikes/mobile-b/android-webview/app/src/main/assets/*.wasm
+spikes/mobile-b/android-webview/app/src/main/assets/*.js
+spikes/mobile-b/android-webview/local.properties

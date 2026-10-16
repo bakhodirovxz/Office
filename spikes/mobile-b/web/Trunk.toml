@@ -1,0 +1,6 @@
+# Build: trunk build --release   (CARGO_TARGET_DIR=E:/office-target/mobile-b, dist below)
+[build]
+target = "index.html"
+dist = "E:/office-target/mobile-b/dist"
+public_url = "./"
+filehash = false

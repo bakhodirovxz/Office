@@ -1,0 +1,18 @@
+Total RSS by process:
+    338,580K: com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6153)
+    300,428K: com.android.chrome (pid 6113 / activities)
+    194,756K: com.android.chrome:privileged_process0 (pid 6181)
+     95,748K: com.android.chrome_zygote (pid 2528)
+         95,748K: com.android.chrome_zygote (pid 2528)
+        338,580K: com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6153)
+        300,428K: com.android.chrome (pid 6113 / activities)
+        194,756K: com.android.chrome:privileged_process0 (pid 6181)
+Total PSS by process:
+    148,347K: com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6153)
+    109,294K: com.android.chrome (pid 6113 / activities)
+     45,666K: com.android.chrome:privileged_process0 (pid 6181)
+      4,646K: com.android.chrome_zygote (pid 2528)
+          4,646K: com.android.chrome_zygote (pid 2528)
+        148,347K: com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 (pid 6153)
+        109,294K: com.android.chrome (pid 6113 / activities)
+         45,666K: com.android.chrome:privileged_process0 (pid 6181)

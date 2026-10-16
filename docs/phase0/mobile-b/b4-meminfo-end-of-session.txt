@@ -1,0 +1,7 @@
+Total PSS by process:
+    226,839K: system (pid 704)
+    226,163K: com.android.chrome:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:7 (pid 6832)
+    170,889K: com.google.android.inputmethod.latin (pid 7697)
+    130,381K: com.android.chrome (pid 6113 / activities)
+    114,376K: com.google.android.tts (pid 3298)
+     97,437K: com.android.systemui (pid 1956)
