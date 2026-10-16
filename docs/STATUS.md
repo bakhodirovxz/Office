@@ -410,6 +410,52 @@ Tests: (a) keyboard shows/hides, (b) Latin, (c) Cyrillic, (d) oʻgʻil, (e) auto
 - **Verdict:** approach A is **not killed** on keyboard grounds. It still needs the shim, the ANR fix
   and all the mobile UI work. The web path (A0 + patches) passes the same tests with less new code.
 
+## Task 3 — mobile approach B (hybrid) spike (done)
+Sources:
+- report: `docs/phase0/mobile-b.md`;
+- evidence: `docs/phase0/mobile-b/`;
+- code: `spikes/mobile-b/`.
+
+**What was built.** A thin wordcraft binding (281 lines) plus a web shell (400 lines of JS):
+- one native `overflow:auto` canvas per page;
+- a hidden-textarea IME bridge;
+- a 4-button toolbar;
+- also wrapped as a plain Android WebView APK.
+
+**Upstream patches needed:** none.
+
+| Test (emulator Chrome, real Gboard) | B | A-web (A0 + 5 patches) | A-native (+ shim) |
+|---|---|---|---|
+| Fit, scale, 360 dp | PASS | FAIL (desktop ribbon) | not tested |
+| Keyboard; Latin / Cyrillic / Uzbek; backspace; Enter | PASS | PASS | PASS |
+| Autocorrect | PASS, no patch | PASS (patch) | PASS (shim) |
+| Glide | PASS (Latin) | UNVERIFIED | PASS |
+| Swipe with momentum; pinch | PASS, native | PASS (190-line patch) | not tested |
+| Long-press selection | PARTIAL, no handles | PARTIAL | not tested |
+| App switch | PASS, no code | PASS (autosave patch) | destroy ANR |
+
+| Number | B | A-web |
+|---|---|---|
+| wasm brotli | 5.8 MB | 9.45 MB |
+| Renderer PSS after load | 148 MB | 284–326 MB |
+
+More numbers for B:
+- **Rendering:** a full-page render at DPR 2.625 takes 90–118 ms; a 1024² tile 22–39 ms.
+- **Keystroke to repaint:** p50 41–46 ms, p95 87–135 ms.
+- **WebView APK:** 11.2 MB; startup about 1.7–1.8 s.
+
+**Cost.** A credible phone editor on B is estimated at **7–11 engineer-months**, because the whole
+UI has to be rebuilt (about 51k lines of ui-egui). This is an estimate, not a measurement.
+
+**Risks:**
+- The engine has no composition API, and the preedit overlay was never exercised.
+- Single-threaded wasm rendering is untested on a real phone.
+
+**Verdict:**
+- **B** wins on memory, size, robustness and native touch behaviour.
+- **A-web** with its patches is far cheaper, because it keeps the existing desktop-grade UI.
+- This is the owner's mobile-approach decision at the Phase 0 gate.
+
 ## Security notes carried into Phase 5 (from the spike review)
 - **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
   are authorised only by the UUIDv4 session id. Phase 5 needs:
