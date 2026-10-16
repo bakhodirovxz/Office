@@ -130,7 +130,19 @@ share byte-identical files). geom, pdf and render share names only.
   `CRYPT_E_NO_REVOCATION_CHECK` on this network.
 - **Tools:** trunk 0.21.14 (`cargo install` took 14m38s), wasm-bindgen 0.2.129, wasm-opt v123.
 - **Details** go to `docs/phase0/inventory.md`, written by the inventory agent.
-- **Inventory paused after wordcraft.** The gate is `E:/office-target/PAUSE` in `run.sh`. It frees RAM
+- **Queue progress, measured cold builds on this PC (2026-10-16):**
+
+| App | GUI | CLI | Web | Tests |
+|---|---|---|---|---|
+| gridcraft | 323 s | 130 s | 420 s | 7962 s; **1597 passed, 0 failed, 1 ignored** |
+| deckcraft | 612 s | 301 s | 867 s | 3213 s, **crashed** |
+| pdfcraft | 2636 s | in progress | — | — |
+
+- **deckcraft test crash.** The `deckcraft-ui-egui` lib test binary died with
+  `STATUS_ACCESS_VIOLATION` (0xc0000005). 1418 tests had passed (0 failed, 2 ignored) before it
+  stopped. The crashing test is not yet identified; it needs a `--test-threads=1 --no-fail-fast`
+  rerun.
+- **Earlier note (superseded):** the inventory was paused after wordcraft. The gate is `E:/office-target/PAUSE` in `run.sh`. It frees RAM
   for the xlsx benchmark and the Android emulator, and gridcraft, deckcraft and pdfcraft continue
   afterwards.
 

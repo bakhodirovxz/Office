@@ -31,3 +31,20 @@ Failing tests (probably environment-related, not verified):
 - `wordcraft-ui-egui` tests/breaks_menu `page_break_from_the_menu_adds_a_page`, `section_break_from_the_menu_splits_sections`: `No nodes found matching the query: label "Breaks"` (ribbon label probably localized to the system language).
 
 Smoke test (`wordcraft-cli`, with `WORDCRAFT_NO_PREFS=1`, log `E:/office-target/logs/wordcraft-smoke.log`): `--help` lists convert, info, text, inspect, render, run, commands (629 commands), parity, mcp, zotero. No sample docx ships in the repo, so one was generated: `run --template sample --cmd 'select.text={"text":"Membership"}' --cmd format.bold --save out.docx` OK (2 pages, 41 paragraphs); `run --file out.docx --save out2.docx` (re-open + save) OK; `text` OK; `convert out2.docx out.pdf` OK (75,932 B, valid %PDF); `render ... p1.png` OK (1224x1584); docx -> odt -> docx OK. PDF import is unsupported: `unsupported format .pdf`. (layoutMs 4115 for first doc was measured while another test build was running.)
+
+## gridcraft (v0.7.0)
+
+Commands: `cargo build --release -p gridcraft`, `-p gridcraft-cli`; web `cd apps/gridcraft-web && trunk build --release` (README); `cargo test --workspace --release`.
+
+| Item | Result |
+|---|---|
+| Desktop GUI build (cold for this repo) | OK, 323 s; `gridcraft.exe` 41,962,136 B |
+| CLI build (after GUI) | OK, 130 s; `gridcraft-cli.exe` 17,574,860 B |
+| Web `trunk build --release` | OK, 420 s |
+| wasm raw / gzip -9 / brotli -q 11 | 18,973,730 / 7,041,161 / 4,731,289 B |
+| JS glue raw / gzip / brotli | 164,096 / 23,947 / 20,036 B |
+| `dist/web` total | 19,166,345 B (4 files) |
+| Docs size claim | none found in README / packaging/web |
+| Tests `cargo test --workspace --release` | OK (exit 0), 7962 s wall (cargo reports "Finished release in 130m 05s", i.e. almost all of it is compiling the test binaries in release; test execution itself was short). 91 result lines: **1597 passed, 0 failed, 1 ignored** |
+
+Smoke test (`gridcraft-cli`, log `E:/office-target/logs/gridcraft-smoke.log`): `--help` lists info, convert, eval, cat, check, run, commands (341), functions (514), mcp, send, version. No sample workbook in the repo, so `run --sample sales --out out.xlsx` produced one (11,163 B, table + 2 charts). `info` OK; `cat --range A1:D5 --csv` OK; `check out.xlsx` (calc oracle + XLSX round-trip): 22 formulas, 22 matched, round trip equal; `convert` xlsx -> csv -> xlsx OK; `eval '=SUM(1,2,3)'` = 6. PDF output is unsupported: `unknown output format (use .xlsx, .csv, .tsv, .json or .html)`. (Passing a bogus `--cmd x=1` correctly errors `unknown command x`.)
