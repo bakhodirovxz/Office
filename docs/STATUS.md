@@ -269,6 +269,53 @@ Report: `docs/phase0/gridcraft-templates-spike.md`. Patches: `spikes/gridcraft-p
 **ADR impact:** the biggest Excel risk is now a contained, upstreamable change with measured
 benefit. The external-links work (17–25 days) remains.
 
+## Task 5 — fidelity baseline on a SYNTHETIC set (done; the corpus run is pending)
+Sources:
+- report: `docs/phase0/fidelity-baseline.md`;
+- harness: `spikes/fidelity/`;
+- worst-page images: `docs/phase0/fidelity/`.
+
+Method:
+- The 10 files were generated **by MS Office 16** via COM: HRM-like orders, letters, a staff list and a
+  timesheet, in Uzbek Cyrillic and Latin and in Russian. Each is saved as docx/doc, xlsx/xls and
+  pptx/ppt.
+- **Reference:** Office's own PDF export.
+- **Candidate:** the Craft 0.7.0 release CLIs.
+- Both PDFs are rasterised by pdfcraft-cli 0.8.0.
+
+| App | Saved file reopens in Office | Page count matches | Text similarity | Mean pixel diff |
+|---|---|---|---|---|
+| Word, 4 files | 4/4 | 4/4 | 0.958 | 6.2% |
+| Excel, 4 files | 4/4 | 3/4 | **0.415** | 3.8% |
+| PowerPoint, 2 files | 1/2 | 1/2 | 0.989 | 0.6% |
+
+**What survives in Word:** tables, merged cells, numbering, the footnote, PAGE/NUMPAGES fields, the
+image, the text box, the landscape section, and the `_hrm_desc_` bookmark in 4/4 files.
+
+**Top losses:**
+1. **gridcraft PDF export renders Cyrillic as `?`, and wide numbers as `####`.** Verified by eye
+   (`docs/phase0/fidelity/hrm_staff_xlsx_*`).
+   - **Cause:** gridcraft's own PDF writer supports only the standard-14 fonts
+     (`gridcraft/docs/gaps.md`).
+   - **Severity:** a **blocker** for printing HRM tables.
+   - **Fix direction:** embed TrueType fonts in the PDF. The other apps already do this through
+     krilla/craft-pdf. This is an upstream patch.
+2. **Legacy formats:**
+   - `.ppt` does not open at all.
+   - `.xls` import drops charts and conditional formatting.
+   - The `.doc` round trip loses comments and tracked changes.
+3. **Word layout:** pages match, but 5–11% of pixels differ. The body sits about 10 px lower,
+   probably from font and line-height metrics.
+
+**Not done yet:**
+- HEAD builds;
+- LibreOffice and x2t references (Docker is down);
+- Excel silent auto-repair detection;
+- PowerPoint chart survival.
+
+**Running it on the corpus:** `python -I spikes/fidelity/run.py --input corpus/ --out
+E:/office-target/fidelity-corpus`. Outputs are ids only, and they stay under E:.
+
 ## Security notes carried into Phase 5 (from the spike review)
 - **Session routes rely on a capability URL.** `/api/session/{sid}/{document,save,autosave,close}`
   are authorised only by the UUIDv4 session id. Phase 5 needs:
