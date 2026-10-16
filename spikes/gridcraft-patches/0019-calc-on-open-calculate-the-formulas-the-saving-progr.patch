@@ -1,0 +1,74 @@
+From 3884ffac384426016ec2a492bb1f7d2b06ab1c52 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 18:44:10 +0500
+Subject: [PATCH 19/19] calc: on open, calculate the formulas the saving
+ program couldn't
+
+A file's values come from the program that saved it. One without a
+function gridcraft has caches `#NAME?` for it: Excel 2019 saving a
+workbook that uses XLOOKUP, as an Excel 16 does on the test machine. Kept
+as they are, those cells would show `#NAME?` where gridcraft can give the
+value.
+
+When a calculated file is opened, formulas whose value is `#NAME?` are
+calculated, with what depends on them; the other values are kept. On the
+Excel-saved copy of the bench workbook, the 30 XLOOKUPs of its summary
+were the only values that differed from gridcraft's own calculation of
+the 432,120 formulas.
+---
+ crates/calc/src/recalc.rs |  9 ++++++++-
+ crates/calc/src/tests.rs  | 17 +++++++++++++++++
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index 63b2ec1..654eccf 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -1270,11 +1270,18 @@ impl Calc {
+     /// kept, the way Excel opens such a file: only the graph is built. They are calculated anyway
+     /// (as [`Calc::recalc_all`] does) when a formula has no value, or is volatile or has
+     /// references only known while calculating (the graph's dynamic formulas), whose values
+-    /// could be different now. Returns whether the file's values were kept.
++    /// could be different now. A formula whose value is `#NAME?` (the program that saved the
++    /// file didn't have one of its functions, as Excel 2019 hasn't XLOOKUP) is calculated, with
++    /// what depends on it. Returns whether the file's values were kept.
+     pub fn open(&mut self, wb: &mut Workbook, calculated: bool) -> bool {
+         self.rebuild(wb);
+         if calculated && self.graph.dynamic.is_empty() && values_are_current(wb) {
++            let unknown: Vec<Key> = self.graph.keys().filter(|k| wb.sheet(k.0).and_then(|s| s.value_ref(k.1)) == Some(&Value::Error(CellError::Name))).collect();
+             self.last_recalc_cells = 0;
++            if !unknown.is_empty() {
++                let dirty = self.dirty_closure(wb, &unknown);
++                self.run(wb, dirty, false);
++            }
+             return true;
+         }
+         self.calculate_built(wb);
+diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
+index 1c9ab63..12a61a3 100644
+--- a/crates/calc/src/tests.rs
++++ b/crates/calc/src/tests.rs
+@@ -1341,3 +1341,20 @@ fn open_keeps_calculated_values_unless_a_formula_needs_calculating() {
+     Calc::new().open(&mut opened, false);
+     assert_eq!(opened, fresh, "an untrusted open is a full calculation");
+ }
++
++/// A calculated file's `#NAME?` (a function the program that saved it didn't have) is calculated
++/// on open, with its dependents; the other values are kept.
++#[test]
++fn open_calculates_what_the_saving_program_could_not() {
++    let mut wb = Workbook::new();
++    let sh = wb.sheet_mut(0).unwrap();
++    sh.cells.set(c("A1"), Cell::value(Value::Number(2.0)));
++    sh.cells.set(c("B1"), Cell { value: Value::Error(CellError::Name), ..Cell::formula(Formula::new("=XLOOKUP(2,A1:A1,A1:A1)*3")) });
++    sh.cells.set(c("C1"), Cell { value: Value::Error(CellError::Name), ..Cell::formula(Formula::new("=B1+1")) });
++    // A stale value nothing above feeds: kept.
++    sh.cells.set(c("D1"), Cell { value: Value::Number(9.0), ..Cell::formula(Formula::new("=A1*2")) });
++    let mut calc = Calc::new();
++    assert!(calc.open(&mut wb, true));
++    let v = |a: &str| wb.sheet(0).unwrap().value(c(a));
++    assert_eq!((v("B1"), v("C1"), v("D1")), (Value::Number(6.0), Value::Number(7.0), Value::Number(9.0)));
++}
+-- 
+2.52.0.windows.1
+

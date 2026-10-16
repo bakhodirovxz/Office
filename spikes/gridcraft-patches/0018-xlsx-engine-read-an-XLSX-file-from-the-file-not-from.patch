@@ -1,0 +1,193 @@
+From 5dd5c18a4c8d40b4570a7a02e1e8d9ca12cec506 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 17:50:44 +0500
+Subject: [PATCH 18/19] xlsx, engine: read an XLSX file from the file, not from
+ its bytes
+
+Opening held the whole file in memory while the workbook was built:
+79 MB for an 80 MB workbook, 160 MB for a 120 MB one saved by Excel, at
+the time opening needs the most memory once the recalculation on open
+is smaller (or skipped).
+
+`Package` now reads its parts from any `Read + Seek` source
+(`read_xlsx_reader`); `read_xlsx` reads from the bytes as before. When
+file.open's bytes sniff as XLSX, it frees them and reads the package from
+the file (`io::open_xlsx_file`), checking that the file still has the
+size it had. Other formats, base64 input and encrypted workbooks are read
+from their bytes as before.
+---
+ crates/engine/src/cmd/file.rs            | 20 ++++++++++++++++----
+ crates/engine/src/io.rs                  | 21 +++++++++++++++++++++
+ crates/xlsx/src/lib.rs                   |  8 +++++++-
+ crates/xlsx/src/package.rs               | 16 +++++++++++++---
+ crates/xlsx/src/read.rs                  |  3 +--
+ crates/xlsx/src/tests/shared_formulas.rs | 18 ++++++++++++++++++
+ 6 files changed, 76 insertions(+), 10 deletions(-)
+
+diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
+index 5df91b9..c30de6b 100644
+--- a/crates/engine/src/cmd/file.rs
++++ b/crates/engine/src/cmd/file.rs
+@@ -57,10 +57,22 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+     };
+     let sniffed = gridcraft_xlsx::sniff(&bytes);
+     let encrypted = sniffed == gridcraft_xlsx::Format::Encrypted;
+-    let (mut wb, warnings, calculated) = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
+-    // The file's bytes are not needed past reading: freed before the first recalculation, which is
+-    // where opening needs the most memory.
+-    drop(bytes);
++    let (mut wb, warnings, calculated) = match (str_param(p, "base64"), str_param(p, "path")) {
++        // An XLSX file is read from the file itself, its bytes freed first: they are never held
++        // while the workbook is built.
++        (None, Some(path)) if sniffed == gridcraft_xlsx::Format::Xlsx => {
++            let len = bytes.len();
++            drop(bytes);
++            crate::io::open_xlsx_file(&name, path, len)?
++        }
++        _ => {
++            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
++            // The file's bytes are not needed past reading: freed before the first
++            // recalculation, which is where opening needs the most memory.
++            drop(bytes);
++            opened
++        }
++    };
+     wb.source_dir = str_param(p, "path").and_then(crate::io::source_dir);
+     let imported =
+         matches!(crate::io::FileKind::from_path(&name), Some(crate::io::FileKind::Ods | crate::io::FileKind::Xlsb | crate::io::FileKind::Xls))
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index 80c632b..aa2b03b 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -415,6 +415,27 @@ pub fn read_file(path: &str) -> Result<Vec<u8>> {
+     std::fs::read(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+ }
+ 
++/// [`open_bytes_calculated`] for an XLSX file on disk (its bytes sniffed as
++/// [`gridcraft_xlsx::Format::Xlsx`], `len` of them), read from the file as its parts are needed
++/// rather than from its bytes in memory: opening a large workbook then never holds the file's bytes
++/// and the workbook being built at the same time.
++#[cfg(not(target_arch = "wasm32"))]
++pub fn open_xlsx_file(name: &str, path: &str, len: usize) -> Result<(Workbook, Vec<String>, bool)> {
++    let file = std::fs::File::open(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
++    if file.metadata().map_err(|e| EngineError::Other(format!("{path}: {e}")))?.len() != len as u64 {
++        return Err(EngineError::Other(format!("We can't open '{name}': it changed while it was being opened.")));
++    }
++    let (mut wb, report) =
++        gridcraft_xlsx::read_xlsx_reader(std::io::BufReader::new(file)).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
++    fit_imported_rows(&mut wb);
++    Ok((wb, report.warnings, report.calculated))
++}
++
++#[cfg(target_arch = "wasm32")]
++pub fn open_xlsx_file(_name: &str, path: &str, _len: usize) -> Result<(Workbook, Vec<String>, bool)> {
++    Err(EngineError::Other(format!("{path}: no file system in the browser")))
++}
++
+ #[cfg(target_arch = "wasm32")]
+ pub fn read_file(path: &str) -> Result<Vec<u8>> {
+     Err(EngineError::Other(format!("{path}: no file system in the browser")))
+diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
+index 8216be8..c5122dc 100644
+--- a/crates/xlsx/src/lib.rs
++++ b/crates/xlsx/src/lib.rs
+@@ -86,7 +86,13 @@ impl ReadReport {
+ /// Reads an `.xlsx` / `.xlsm` / `.xltx` / `.xltm` package (the workbook part is found through the
+ /// package relationships, so every main-part content type is accepted).
+ pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
+-    read::read_xlsx(bytes)
++    read::read_xlsx(package::Package::open(bytes)?)
++}
++
++/// [`read_xlsx`] from a reader (an open file), which is read as parts are needed: the package's
++/// bytes are not all held in memory while the workbook is built.
++pub fn read_xlsx_reader(source: impl std::io::Read + std::io::Seek) -> Result<(Workbook, ReadReport), IoError> {
++    read::read_xlsx(package::Package::open_reader(source)?)
+ }
+ 
+ /// Which member of the SpreadsheetML family a package is saved as. Only the content type of the
+diff --git a/crates/xlsx/src/package.rs b/crates/xlsx/src/package.rs
+index 9a28999..3e184ea 100644
+--- a/crates/xlsx/src/package.rs
++++ b/crates/xlsx/src/package.rs
+@@ -2,7 +2,7 @@
+ //! resolution; writing a zip package deterministically.
+ 
+ use std::collections::HashMap;
+-use std::io::{Cursor, Read, Write};
++use std::io::{Cursor, Read, Seek, Write};
+ 
+ use crate::IoError;
+ use crate::xml::{self, El};
+@@ -14,8 +14,12 @@ pub const MAX_TOTAL: u64 = 1024 * 1024 * 1024;
+ /// Most entries accepted in the zip directory.
+ pub const MAX_ENTRIES: usize = 200_000;
+ 
++/// What a package is read from: its bytes in memory, or the file itself.
++pub trait Source: Read + Seek {}
++impl<T: Read + Seek> Source for T {}
++
+ pub struct Package<'a> {
+-    zip: zip::ZipArchive<Cursor<&'a [u8]>>,
++    zip: zip::ZipArchive<Box<dyn Source + 'a>>,
+     /// Lower-case normalized part name → zip index.
+     names: HashMap<String, usize>,
+     total: u64,
+@@ -39,7 +43,13 @@ pub fn normalize(name: &str) -> String {
+ 
+ impl<'a> Package<'a> {
+     pub fn open(bytes: &'a [u8]) -> Result<Package<'a>, IoError> {
+-        let zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| IoError::Zip(e.to_string()))?;
++        Package::open_reader(Cursor::new(bytes))
++    }
++
++    /// A package whose parts are read from `source` as they are needed (an open file, so no copy
++    /// of the whole package is held while it is read).
++    pub fn open_reader(source: impl Source + 'a) -> Result<Package<'a>, IoError> {
++        let zip = zip::ZipArchive::new(Box::new(source) as Box<dyn Source + 'a>).map_err(|e| IoError::Zip(e.to_string()))?;
+         if zip.len() > MAX_ENTRIES {
+             return Err(IoError::TooLarge(format!("{} zip entries", zip.len())));
+         }
+diff --git a/crates/xlsx/src/read.rs b/crates/xlsx/src/read.rs
+index d193052..af2dc76 100644
+--- a/crates/xlsx/src/read.rs
++++ b/crates/xlsx/src/read.rs
+@@ -66,8 +66,7 @@ pub fn find_rel<'r>(rels: &'r [Rel], kind: &str) -> Option<&'r Rel> {
+     rels.iter().find(|r| r.kind == kind)
+ }
+ 
+-pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
+-    let pkg = Package::open(bytes)?;
++pub fn read_xlsx(pkg: Package<'_>) -> Result<(Workbook, ReadReport), IoError> {
+     let mut cx = Ctx {
+         pkg,
+         report: ReadReport::default(),
+diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
+index 86dd9d2..334d7a2 100644
+--- a/crates/xlsx/src/tests/shared_formulas.rs
++++ b/crates/xlsx/src/tests/shared_formulas.rs
+@@ -165,3 +165,21 @@ fn a_workbook_calculated_on_save_is_reported_as_calculated() {
+     wb.sheet_mut(0).unwrap().cells.set(at("C1"), Cell::formula(Formula::new("=B1+1")));
+     assert!(!read_xlsx(&write_xlsx(&wb).unwrap()).unwrap().1.calculated);
+ }
++
++#[test]
++fn reading_from_a_reader_gives_what_reading_the_bytes_gives() {
++    let mut wb = Workbook::new();
++    let sh = wb.sheet_mut(0).unwrap();
++    for r in 0..300u32 {
++        sh.cells.set(CellRef::new(r, 0), Cell::value(Value::Number(f64::from(r))));
++        sh.cells.set(CellRef::new(r, 1), Cell::value(Value::from(if r % 3 == 0 { "K07" } else { "Приход" })));
++        sh.cells.set(CellRef::new(r, 2), Cell { value: Value::Number(f64::from(r) * 2.0), ..Cell::formula(Formula::new(&format!("=A{}*2", r + 1))) });
++    }
++    let excel = r#"<sheetData><row r="1"><c r="A1"><v>1</v></c><c r="B1"><f t="shared" ref="B1:B3" si="0">A1*2</f><v>2</v></c></row><row r="2"><c r="B2"><f t="shared" si="0"/><v>0</v></c></row></sheetData>"#;
++    for bytes in [write_xlsx(&wb).unwrap(), minimal(excel, &[], "", r#"<calcPr calcId="191029"/>"#)] {
++        let from_bytes = read_xlsx(&bytes).unwrap();
++        let from_reader = crate::read_xlsx_reader(std::io::Cursor::new(&bytes)).unwrap();
++        assert_eq!(from_reader.0, from_bytes.0);
++        assert_eq!(from_reader.1, from_bytes.1);
++    }
++}
+-- 
+2.52.0.windows.1
+

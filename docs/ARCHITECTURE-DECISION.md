@@ -333,13 +333,63 @@ All peaks are the CLI (`info` = read + full recalc), in MiB. The RAM guard kille
 - **Scope of the memory patches.** They change the xlsx reader only. The `.xls`, `.xlsb` and `.ods` readers still
   build one tree per formula until §6 item 8 of [gridcraft-templates-spike] is done (counted inside steps 1–2).
 
-#### 2.3.1 gridcraft memory, round 2 (pending)
+#### 2.3.1 gridcraft memory, round 2 (MEASURED)
 
-<!-- R2: fill from docs/phase0/gridcraft-memory-r2.md -->
+Source: [gridcraft-memory-r2] (`docs/phase0/gridcraft-memory-r2.md`); patches `spikes/gridcraft-patches/0009–0019`,
+branch `spike/memory-r2` @ 3884ffa.
 
-> **Placeholder.** Round 2 is running in another agent, and its report will be `docs/phase0/gridcraft-memory-r2.md`.
-> The round 1 numbers above are final. Round 2 may refine steps 3–5, the breakdown of the remaining memory, and the
-> GUI and save peaks. Until it lands, the totals in this section stand as written.
+**Correction to the owner's premise ("Office needs 300 MB").** Measured with the counter Task Manager shows (private
+working set), Excel 16 32-bit needs **742 MB** for the 80 MB bench file w80 (medians of 3). Real-world files with fewer
+formulas need less, in both apps.
+
+Desktop app vs Excel, private working set in MB, medians of 3. The cells give steady / peak / after F9:
+
+| File | Excel 16 | gridcraft, round 1 | **gridcraft, round 2** |
+|---|---|---|---|
+| w40 | 389 / 479 / 389 | 904 / 985 / 1,218 | **566 / 646 / 566** |
+| w80 | 742 / 851 / 742 | 1,401 / 1,499 / 2,026 | **903 / 984 / 905** |
+| w120 | 1,090 / 1,222 / 1,090 | 1,897 / 2,425 / 2,836 | **1,240 / 1,321 / 1,241** |
+
+**What the numbers show**
+- **Engine without a window.** It now peaks below Excel: 817 MB vs 851 MB on w80 ([gridcraft-memory-r2]).
+  - Orchestrator re-check: **828 MB** PeakWorkingSet on w80 in 67 s on an idle PC, against 1,505 MB in round 1.
+- **The document itself costs the same as in Excel.** Above each app's empty baseline it takes 677 MB vs Excel's 709 MB
+  on w80.
+- **The remaining GUI gap is a fixed start-up cost**, not per-document memory. The empty app takes 226 MB (406 MB before
+  round 2) vs Excel's 33 MB:
+  - about 57 MB of font files, 46 MB of them CJK;
+  - about 92 MB for the DirectX 12 renderer;
+  - the rest is egui and the program.
+- **Excel-saved copy of the bench file (x80):** 724 / 1,389 / 928. Round 2 opens it faster than Excel: 40 s vs 44 s.
+
+**Biggest wins**
+- F9 no longer copies the workbook: −625 MB after F9 on w80.
+- Compact recalculation state: −285 MB peak.
+- The per-band cell store: −106 MB.
+- 16-byte formula cells: −105 MB.
+- wgpu small memory blocks: −180 MB off the empty app.
+
+**Correctness**
+- Values are bit-identical to the unpatched build on w10, c10 and w40.
+- w80 and w120 rows match the Python expectations.
+- The 35-step edit script matches.
+- Excel opens the saved files with identical formulas and values.
+- All touched crates' tests pass, with 12 new ones; ui-egui and the app pass 698 tests in 49 suites.
+- The fuzz outcomes match round 1.
+- rustfmt/clippy were not run.
+
+**Caveats**
+- During round 2 an accidental GUI AutoSave overwrote w80.xlsx. The file was regenerated, and every w80 measurement was
+  rerun on the new copy. The regenerated file is 1 byte larger on disk (79,174,574 vs 79,174,573 B). The agent reports
+  its cell contents as identical; the orchestrator did not re-verify that.
+- Excels that lack XLOOKUP leave `#NAME?` as the cached value. Commit 0019 recalculates such cells on open.
+
+**Effort, updating steps 3–5 above:**
+- round 2 to production: **5–8 days**;
+- closing the GUI baseline gap (fonts on demand, renderer, allocator): **3–4.5 days, an ESTIMATE that is not verified**,
+  plus 4–14 optional days.
+- Most of the round-2 changes fall inside the step 3–5 rows above, so the 14.5–26-day memory subtotal remains a valid
+  upper envelope.
 
 ### 2.4 Document server and HRM integration
 

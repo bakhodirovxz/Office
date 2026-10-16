@@ -1,0 +1,19 @@
+[package]
+name = "gc-probe-r2"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+gridcraft-core = { path = "E:/office-work/gridcraft-spike/crates/core" }
+gridcraft-formula = { path = "E:/office-work/gridcraft-spike/crates/formula" }
+gridcraft-model = { path = "E:/office-work/gridcraft-spike/crates/model" }
+gridcraft-calc = { path = "E:/office-work/gridcraft-spike/crates/calc" }
+gridcraft-xlsx = { path = "E:/office-work/gridcraft-spike/crates/xlsx" }
+
+[profile.release]
+opt-level = 2
+debug = 0
+incremental = false
+
+[workspace]
