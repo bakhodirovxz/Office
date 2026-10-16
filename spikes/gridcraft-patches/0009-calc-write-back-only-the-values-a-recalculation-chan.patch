@@ -1,0 +1,96 @@
+From d5d4c69cba9ba5e747bdb48397107ca30e9473eb Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 11:35:08 +0500
+Subject: [PATCH 09/19] calc: write back only the values a recalculation
+ changed
+
+A recalculation pass wrote every result through `CellStore::get_mut`,
+which copies the cell's band (`Arc::make_mut`) whenever a snapshot shares
+it, before comparing the value. The saved state always shares the bands,
+so Calculate Now (F9) on an unchanged workbook copied every band that
+holds a formula, and kept the copies for as long as the snapshot lived:
+the workbook's cell store twice over.
+
+Compare first and take the band (and the sheet) for writing only when the
+value differs. Values are the same as before; a recalculation that changes
+nothing now leaves every sheet shared with its snapshots.
+---
+ crates/calc/src/recalc.rs | 15 +++++++++------
+ crates/calc/src/tests.rs  | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 6 deletions(-)
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index 4d31b83..6252486 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -1326,21 +1326,24 @@ impl Calc {
+             // Write back.
+             let mut spill_changes: Vec<Key> = Vec::new();
+             let mut freed: Vec<(usize, RangeRef)> = Vec::new();
++            // Only values that changed are written: a write copies the cell's band (and the sheet)
++            // out of every snapshot that shares them (the undo history, the saved state), so a
++            // recalculation that rewrote unchanged values would duplicate every band of formulas.
+             for (k, v) in results {
+-                let Some(sheet) = wb.sheet_mut(k.0) else { continue };
+-                if let Some(cell) = sheet.cells.get_mut(k.1)
+-                    && cell.value != v
+-                {
++                if wb.sheet(k.0).and_then(|s| s.cell(k.1)).is_none_or(|cell| cell.value == v) {
++                    continue;
++                }
++                if let Some(cell) = wb.sheet_mut(k.0).and_then(|s| s.cells.get_mut(k.1)) {
+                     cell.value = v;
+                 }
+             }
+             for k in &dirty {
+                 let new = spills.get(k);
+-                let Some(sheet) = wb.sheet_mut(k.0) else { continue };
+-                let old = sheet.spill_ranges.get(&k.1).copied();
++                let Some(old) = wb.sheet(k.0).map(|s| s.spill_ranges.get(&k.1).copied()) else { continue };
+                 if old.is_none() && new.is_none() {
+                     continue;
+                 }
++                let Some(sheet) = wb.sheet_mut(k.0) else { continue };
+                 if let Some(r) = old {
+                     for c in r.iter() {
+                         sheet.spill.remove(&c);
+diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
+index 196c57d..f0b8dbf 100644
+--- a/crates/calc/src/tests.rs
++++ b/crates/calc/src/tests.rs
+@@ -1266,3 +1266,32 @@ fn offset_extreme_arguments_return_ref() {
+         assert_eq!(crate::evaluate(&wb, 0, c("D1"), formula), Value::Number(expected), "{formula}");
+     }
+ }
++
++/// A recalculation writes only the values that changed, so it never copies sheets (or their bands
++/// of cells) out of a snapshot sharing them, like an undo entry or the saved state, when nothing
++/// changed; and a change copies only the sheet it is on.
++#[test]
++fn recalculation_keeps_unchanged_sheets_shared_with_snapshots() {
++    let mut t = T::new();
++    t.wb.sheets.push(std::sync::Arc::new(gridcraft_model::Sheet::new("Sheet2")));
++    for r in 1..=300 {
++        t.set(&format!("A{r}"), &r.to_string());
++        t.set(&format!("B{r}"), &format!("=A{r}*2"));
++    }
++    t.wb.sheet_mut(1).unwrap().cells.set(c("A1"), Cell::formula(Formula::new("=Sheet1!B300+1")));
++    t.calc.recalc_all(&mut t.wb);
++    assert_eq!(t.wb.sheet(1).unwrap().value(c("A1")), Value::Number(601.0));
++    let snapshot = t.wb.clone();
++    t.calc.recalc_all(&mut t.wb);
++    assert!(t.wb.sheets.iter().zip(&snapshot.sheets).all(|(a, b)| std::sync::Arc::ptr_eq(a, b)));
++    // A change on Sheet2 alone leaves Sheet1 shared.
++    let snapshot = t.wb.clone();
++    t.wb.sheet_mut(1).unwrap().cells.set(c("B1"), Cell::value(Value::Number(5.0)));
++    t.wb.sheet_mut(1).unwrap().cells.set(c("C1"), Cell::formula(Formula::new("=B1+1")));
++    t.calc.cells_changed(&mut t.wb, &[(1, c("B1")), (1, c("C1"))]);
++    assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
++    assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
++    t.calc.recalc_all(&mut t.wb);
++    assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
++    assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
++}
+-- 
+2.52.0.windows.1
+

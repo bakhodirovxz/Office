@@ -353,6 +353,22 @@ image, the text box, the landscape section, and the `_hrm_desc_` bookmark in 4/4
 **Running it on the corpus:** `python -I spikes/fidelity/run.py --input corpus/ --out
 E:/office-target/fidelity-corpus`. Outputs are ids only, and they stay under E:.
 
+## Spike: gridcraft memory round 2 (done; MEASURED)
+Report: `docs/phase0/gridcraft-memory-r2.md`. Patches 0009–0019.
+
+Desktop app vs Excel 16, private working set (MB), medians of 3:
+
+| File | Excel steady / peak | gridcraft round 2 steady / peak |
+|---|---|---|
+| w80 | 742 / 851 | 903 / 984 |
+| w120 | 1,090 / 1,222 | 1,240 / 1,321 |
+
+- **Engine (CLI) on w80:** 817 MB peak. The orchestrator re-check gave **828 MB**, against 1,505 MB in round 1.
+- **Remaining GUI gap:** the fixed 226 MB empty-app baseline (Excel: 33 MB) — fonts 57 MB, DX12 renderer 92 MB.
+- **Values** are bit-identical; the tests and Excel round trip pass.
+- **Estimates:** 5–8 days to production, plus 3–4.5 days (unverified estimate) to close the GUI gap.
+- **Owner premise ("Excel needs 300 MB") vs measurement:** Excel needs 742 MB on this 80 MB bench file.
+
 ## Spike: gridcraft PDF export with embedded fonts (done; MEASURED)
 Sources:
 - report: `docs/phase0/gridcraft-pdf-fonts.md`;
