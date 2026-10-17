@@ -5,13 +5,32 @@ use std::fs;
 use std::path::Path;
 
 pub const HEADER: [&str; 14] = [
-    "id", "context", "source_en", "uz_latn", "uz_latn_status", "uz_cyrl", "uz_cyrl_status", "ru", "ru_status", "ru_apps", "priority", "apps",
-    "where", "note",
+    "id",
+    "context",
+    "source_en",
+    "uz_latn",
+    "uz_latn_status",
+    "uz_cyrl",
+    "uz_cyrl_status",
+    "ru",
+    "ru_status",
+    "ru_apps",
+    "priority",
+    "apps",
+    "where",
+    "note",
 ];
 
 pub const APPS: [&str; 4] = ["wordcraft", "gridcraft", "pdfcraft", "deckcraft"];
 /// Catalog files, in load order. `glossary` and `shared` are scopes of their own.
-pub const SCOPES: [&str; 6] = ["glossary", "shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"];
+pub const SCOPES: [&str; 6] = [
+    "glossary",
+    "shared",
+    "wordcraft",
+    "gridcraft",
+    "pdfcraft",
+    "deckcraft",
+];
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Row {
@@ -58,14 +77,19 @@ impl Row {
     }
     /// `P1` (all apps of the row), `P1:app+app` (P1 only in the listed apps), or `P2`.
     pub fn is_p1(&self, app: &str) -> bool {
-        self.priority == "P1" || self.priority.strip_prefix("P1:").is_some_and(|l| l.split('+').any(|a| a == app))
+        self.priority == "P1"
+            || self
+                .priority
+                .strip_prefix("P1:")
+                .is_some_and(|l| l.split('+').any(|a| a == app))
     }
     pub fn has_app(&self, app: &str) -> bool {
         self.apps.split(',').any(|a| a == app)
     }
     /// Whether the `ru` value of this row belongs to `app` (see `ru_apps`).
     pub fn ru_in_app(&self, app: &str) -> bool {
-        !self.ru.is_empty() && (self.ru_apps.is_empty() || self.ru_apps.split(',').any(|a| a == app))
+        !self.ru.is_empty()
+            && (self.ru_apps.is_empty() || self.ru_apps.split(',').any(|a| a == app))
     }
 }
 
@@ -89,7 +113,9 @@ pub enum Mode {
 pub fn exportable(status: &str, mode: Mode) -> bool {
     match mode {
         Mode::Release => is_trusted(status),
-        Mode::Review => is_trusted(status) || state(status) == "draft" || state(status) == "reviewed",
+        Mode::Review => {
+            is_trusted(status) || state(status) == "draft" || state(status) == "reviewed"
+        }
     }
 }
 
@@ -129,7 +155,13 @@ pub fn unescape(text: &str) -> Result<String, String> {
 
 /// SHA-1 (RFC 3174), for stable row ids. Not used for security.
 pub fn sha1(data: &[u8]) -> [u8; 20] {
-    let mut h: [u32; 5] = [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476, 0xC3D2_E1F0];
+    let mut h: [u32; 5] = [
+        0x6745_2301,
+        0xEFCD_AB89,
+        0x98BA_DCFE,
+        0x1032_5476,
+        0xC3D2_E1F0,
+    ];
     let mut msg = data.to_vec();
     msg.push(0x80);
     while msg.len() % 64 != 56 {
@@ -152,7 +184,12 @@ pub fn sha1(data: &[u8]) -> [u8; 20] {
                 40..=59 => ((b & c) | (b & d) | (c & d), 0x8F1B_BCDC),
                 _ => (b ^ c ^ d, 0xCA62_C1D6u32),
             };
-            let t = a.rotate_left(5).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(*wi);
+            let t = a
+                .rotate_left(5)
+                .wrapping_add(f)
+                .wrapping_add(e)
+                .wrapping_add(k)
+                .wrapping_add(*wi);
             (e, d, c, b, a) = (d, c, b.rotate_left(30), a, t);
         }
         for (x, y) in h.iter_mut().zip([a, b, c, d, e]) {
@@ -184,8 +221,12 @@ impl Catalog {
         for scope in SCOPES {
             let path = dir.join(format!("{scope}.tsv"));
             if path.exists() {
-                let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-                cat.scopes.insert(scope.to_string(), parse_rows(&text).map_err(|e| format!("{}: {e}", path.display()))?);
+                let text =
+                    fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+                cat.scopes.insert(
+                    scope.to_string(),
+                    parse_rows(&text).map_err(|e| format!("{}: {e}", path.display()))?,
+                );
             }
         }
         Ok(cat)
@@ -196,7 +237,8 @@ impl Catalog {
         for (scope, rows) in &self.scopes {
             let mut rows = rows.clone();
             rows.sort_by(|a, b| a.id.cmp(&b.id));
-            fs::write(dir.join(format!("{scope}.tsv")), write_rows(&rows)).map_err(|e| e.to_string())?;
+            fs::write(dir.join(format!("{scope}.tsv")), write_rows(&rows))
+                .map_err(|e| e.to_string())?;
         }
         Ok(())
     }
@@ -204,8 +246,15 @@ impl Catalog {
     /// The rows an app uses: its own scope and the shared rows that list it. Obsolete rows are left out.
     pub fn app_rows<'a>(&'a self, app: &str) -> Vec<&'a Row> {
         let own = self.scopes.get(app).into_iter().flatten();
-        let shared = self.scopes.get("shared").into_iter().flatten().filter(|r| r.has_app(app));
-        own.chain(shared).filter(|r| r.priority != "obsolete").collect()
+        let shared = self
+            .scopes
+            .get("shared")
+            .into_iter()
+            .flatten()
+            .filter(|r| r.has_app(app));
+        own.chain(shared)
+            .filter(|r| r.priority != "obsolete")
+            .collect()
     }
 }
 
@@ -223,7 +272,12 @@ pub fn parse_rows(text: &str) -> Result<Vec<Row>, String> {
         }
         let cells: Vec<&str> = line.split('\t').collect();
         if cells.len() != HEADER.len() {
-            return Err(format!("line {}: {} cells, expected {}", n + 1, cells.len(), HEADER.len()));
+            return Err(format!(
+                "line {}: {} cells, expected {}",
+                n + 1,
+                cells.len(),
+                HEADER.len()
+            ));
         }
         let u = |i: usize| unescape(cells[i]).map_err(|e| format!("line {}: {e}", n + 1));
         rows.push(Row {
@@ -299,7 +353,10 @@ mod tests {
     #[test]
     fn sha1_known_vectors() {
         let hex = |d: [u8; 20]| d.iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(hex(sha1(b"abc")), "a9993e364706816aba3e25717850c26c9cd0d89d");
+        assert_eq!(
+            hex(sha1(b"abc")),
+            "a9993e364706816aba3e25717850c26c9cd0d89d"
+        );
         assert_eq!(hex(sha1(b"")), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
         assert_eq!(row_id("s", "", "x").len(), 12);
     }
@@ -329,8 +386,14 @@ mod tests {
 
     #[test]
     fn plural_adaptation() {
-        assert_eq!(adapt_plural("{n} a|{n} b", 2).as_deref(), Some("{n} a|{n} b"));
-        assert_eq!(adapt_plural("{n} страница|{n} страницы|{n} страниц", 2).as_deref(), Some("{n} страница|{n} страниц"));
+        assert_eq!(
+            adapt_plural("{n} a|{n} b", 2).as_deref(),
+            Some("{n} a|{n} b")
+        );
+        assert_eq!(
+            adapt_plural("{n} страница|{n} страницы|{n} страниц", 2).as_deref(),
+            Some("{n} страница|{n} страниц")
+        );
         assert_eq!(adapt_plural("a|b", 3), None);
         assert_eq!(plural_forms("a|b|c"), 3);
     }
