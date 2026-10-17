@@ -2,12 +2,24 @@
 //! No tool in here ever writes or alters Uzbek text on its own: import only records the owner's verdict
 //! and the owner's own text.
 
-use super::catalog::{row_id, sha1, state, Catalog, Row, APPS};
+use super::catalog::{APPS, Catalog, Row, row_id, sha1, state};
 use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write as _;
 
 pub const COLUMNS: [&str; 13] = [
-    "key", "context", "en", "ru", "uz-Latn draft", "uz-Cyrl draft", "status", "owner comment", "scope", "where", "pass", "en_hash", "glossary terms",
+    "key",
+    "context",
+    "en",
+    "ru",
+    "uz-Latn draft",
+    "uz-Cyrl draft",
+    "status",
+    "owner comment",
+    "scope",
+    "where",
+    "pass",
+    "en_hash",
+    "glossary terms",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -43,7 +55,11 @@ impl Pass {
 }
 
 pub fn en_hash(source: &str) -> String {
-    sha1(source.as_bytes()).iter().take(4).map(|b| format!("{b:02x}")).collect()
+    sha1(source.as_bytes())
+        .iter()
+        .take(4)
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 fn csv_cell(s: &str, delim: char) -> String {
@@ -57,7 +73,12 @@ fn csv_cell(s: &str, delim: char) -> String {
 pub fn write_csv(records: &[Vec<String>]) -> String {
     let mut out = String::from("\u{feff}");
     for r in records {
-        out.push_str(&r.iter().map(|c| csv_cell(c, ',')).collect::<Vec<_>>().join(","));
+        out.push_str(
+            &r.iter()
+                .map(|c| csv_cell(c, ','))
+                .collect::<Vec<_>>()
+                .join(","),
+        );
         out.push_str("\r\n");
     }
     out
@@ -67,7 +88,10 @@ pub fn write_csv(records: &[Vec<String>]) -> String {
 pub fn read_csv(text: &str) -> Vec<Vec<String>> {
     let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let first = text.lines().next().unwrap_or("");
-    let delim = [',', ';', '\t'].into_iter().max_by_key(|d| first.matches(*d).count()).unwrap_or(',');
+    let delim = [',', ';', '\t']
+        .into_iter()
+        .max_by_key(|d| first.matches(*d).count())
+        .unwrap_or(',');
     let mut rows = Vec::new();
     let (mut row, mut cell) = (Vec::new(), String::new());
     let (mut quoted, mut chars) = (false, text.chars().peekable());
@@ -121,19 +145,32 @@ fn display_status(r: &Row, pass: Pass) -> &'static str {
 
 fn has_uzbek(r: &Row) -> bool {
     matches!(state(&r.uz_latn_status), "draft" | "reviewed" | "rejected") && !r.uz_latn.is_empty()
-        || matches!(state(&r.uz_cyrl_status), "draft" | "reviewed" | "rejected") && !r.uz_cyrl.is_empty()
+        || matches!(state(&r.uz_cyrl_status), "draft" | "reviewed" | "rejected")
+            && !r.uz_cyrl.is_empty()
 }
 
 /// How visible a string is to a user: lower tier first. Menus and ribbon labels come before dialogs, panes, then
 /// validation messages, credits and keyboard hints. A string that is exactly a glossary term (File, Save, Open) is tier 0.
-fn visibility(scope: &str, r: &Row, glossary_en: &HashSet<String>) -> (u8, std::cmp::Reverse<usize>, usize, String) {
-    let file = r.where_.split(':').next().unwrap_or("").rsplit('/').next().unwrap_or("");
+fn visibility(
+    scope: &str,
+    r: &Row,
+    glossary_en: &HashSet<String>,
+) -> (u8, std::cmp::Reverse<usize>, usize, String) {
+    let file = r
+        .where_
+        .split(':')
+        .next()
+        .unwrap_or("")
+        .rsplit('/')
+        .next()
+        .unwrap_or("");
     let mut tier: u8 = match file {
         "menus.rs" | "qat.rs" => 0,
         "backstage.rs" | "ribbon.rs" | "lib.rs" | "chrome.rs" | "commands.rs" => 1,
         "i18n.rs" if scope == "gridcraft" => 1,
         "dialogs.rs" | "i18n.rs" => 2,
-        "dates.rs" | "bulk_fields.rs" | "equation.rs" | "outline.rs" | "caret.rs" | "catalog.rs" | "keytips.rs" => 4,
+        "dates.rs" | "bulk_fields.rs" | "equation.rs" | "outline.rs" | "caret.rs"
+        | "catalog.rs" | "keytips.rs" => 4,
         "pdf.rs" | "credits.rs" => 5,
         _ => 3,
     };
@@ -147,28 +184,72 @@ fn visibility(scope: &str, r: &Row, glossary_en: &HashSet<String>) -> (u8, std::
         tier = (tier + 2).min(6);
     }
     let apps = r.apps.split(',').filter(|a| !a.is_empty()).count().max(1);
-    (tier, std::cmp::Reverse(apps), r.source.chars().count(), r.source.to_lowercase())
+    (
+        tier,
+        std::cmp::Reverse(apps),
+        r.source.chars().count(),
+        r.source.to_lowercase(),
+    )
 }
 
 /// Rows in review order: glossary (batch 0); then every P1 row with a draft, most visible first (see `visibility`);
 /// then P2 rows with a draft by scope and English text.
 pub fn ordered_rows(cat: &Catalog, batch: usize) -> Vec<(String, &Row)> {
     if batch == 0 {
-        let mut v: Vec<_> = cat.scopes.get("glossary").into_iter().flatten().map(|r| ("glossary".to_string(), r)).collect();
-        v.sort_by(|a, b| a.1.priority.cmp(&b.1.priority).then(a.1.source.to_lowercase().cmp(&b.1.source.to_lowercase())));
+        let mut v: Vec<_> = cat
+            .scopes
+            .get("glossary")
+            .into_iter()
+            .flatten()
+            .map(|r| ("glossary".to_string(), r))
+            .collect();
+        v.sort_by(|a, b| {
+            a.1.priority
+                .cmp(&b.1.priority)
+                .then(a.1.source.to_lowercase().cmp(&b.1.source.to_lowercase()))
+        });
         return v;
     }
-    let glossary_en: HashSet<String> = cat.scopes.get("glossary").into_iter().flatten().map(|g| g.source.clone()).collect();
+    let glossary_en: HashSet<String> = cat
+        .scopes
+        .get("glossary")
+        .into_iter()
+        .flatten()
+        .map(|g| g.source.clone())
+        .collect();
     let mut v: Vec<(String, &Row)> = Vec::new();
     let mut p1: Vec<(String, &Row)> = Vec::new();
     for scope in ["shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"] {
-        p1.extend(cat.scopes.get(scope).into_iter().flatten().filter(|r| r.priority.starts_with("P1") && has_uzbek(r)).map(|r| (scope.to_string(), r)));
+        p1.extend(
+            cat.scopes
+                .get(scope)
+                .into_iter()
+                .flatten()
+                .filter(|r| r.priority.starts_with("P1") && has_uzbek(r))
+                .map(|r| (scope.to_string(), r)),
+        );
     }
-    p1.sort_by(|a, b| visibility(&a.0, a.1, &glossary_en).cmp(&visibility(&b.0, b.1, &glossary_en)).then(a.0.cmp(&b.0)).then(a.1.id.cmp(&b.1.id)));
+    p1.sort_by(|a, b| {
+        visibility(&a.0, a.1, &glossary_en)
+            .cmp(&visibility(&b.0, b.1, &glossary_en))
+            .then(a.0.cmp(&b.0))
+            .then(a.1.id.cmp(&b.1.id))
+    });
     v.extend(p1);
     for scope in ["shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"] {
-        let mut rows: Vec<_> = cat.scopes.get(scope).into_iter().flatten().filter(|r| r.priority.starts_with("P2") && has_uzbek(r)).collect();
-        rows.sort_by(|a, b| a.source.to_lowercase().cmp(&b.source.to_lowercase()).then(a.id.cmp(&b.id)));
+        let mut rows: Vec<_> = cat
+            .scopes
+            .get(scope)
+            .into_iter()
+            .flatten()
+            .filter(|r| r.priority.starts_with("P2") && has_uzbek(r))
+            .collect();
+        rows.sort_by(|a, b| {
+            a.source
+                .to_lowercase()
+                .cmp(&b.source.to_lowercase())
+                .then(a.id.cmp(&b.id))
+        });
         v.extend(rows.into_iter().map(|r| (scope.to_string(), r)));
     }
     v
@@ -183,12 +264,23 @@ pub fn batch_range(batch: usize, sizes: &[usize], total: usize) -> (usize, usize
 
 /// Build the CSV for batch `batch`. Batch 0 is the glossary; batch N (>= 1) is the N-th chunk of `size` rows.
 #[cfg(test)]
-pub fn review_export(cat: &Catalog, batch: usize, pass: Pass, size: usize) -> Result<(String, usize), String> {
+pub fn review_export(
+    cat: &Catalog,
+    batch: usize,
+    pass: Pass,
+    size: usize,
+) -> Result<(String, usize), String> {
     review_export_with(cat, batch, pass, &[size], &BTreeMap::new())
 }
 
 /// Like `review_export`, with per-batch sizes and the glossary terms each row uses (column "glossary terms").
-pub fn review_export_with(cat: &Catalog, batch: usize, pass: Pass, sizes: &[usize], terms: &BTreeMap<(String, String), Vec<String>>) -> Result<(String, usize), String> {
+pub fn review_export_with(
+    cat: &Catalog,
+    batch: usize,
+    pass: Pass,
+    sizes: &[usize],
+    terms: &BTreeMap<(String, String), Vec<String>>,
+) -> Result<(String, usize), String> {
     let all = ordered_rows(cat, batch);
     let chunk: Vec<_> = if batch == 0 {
         all
@@ -197,7 +289,10 @@ pub fn review_export_with(cat: &Catalog, batch: usize, pass: Pass, sizes: &[usiz
         all.into_iter().skip(a).take(b - a).collect()
     };
     if chunk.is_empty() {
-        return Err(format!("batch {batch} is empty: no rows with an Uzbek draft{}", if batch == 0 { " in glossary.tsv" } else { "" }));
+        return Err(format!(
+            "batch {batch} is empty: no rows with an Uzbek draft{}",
+            if batch == 0 { " in glossary.tsv" } else { "" }
+        ));
     }
     let mut records = vec![COLUMNS.iter().map(|s| s.to_string()).collect::<Vec<_>>()];
     for (scope, r) in chunk {
@@ -217,7 +312,10 @@ pub fn review_export_with(cat: &Catalog, batch: usize, pass: Pass, sizes: &[usiz
             r.where_.clone(),
             pass.name().to_string(),
             en_hash(&r.source),
-            terms.get(&(scope, r.id.clone())).map(|t| t.join("; ")).unwrap_or_default(),
+            terms
+                .get(&(scope, r.id.clone()))
+                .map(|t| t.join("; "))
+                .unwrap_or_default(),
         ]);
     }
     let n = records.len() - 1;
@@ -229,9 +327,16 @@ pub fn lint_uz_latn(text: &str) -> Option<String> {
     let chars: Vec<char> = text.chars().collect();
     for (i, c) in chars.iter().enumerate() {
         if matches!(c, '\'' | '\u{2018}' | '\u{2019}' | '`' | '\u{00b4}') {
-            let near_letter = |j: Option<usize>| j.and_then(|j| chars.get(j)).is_some_and(|x| x.is_alphabetic());
-            if near_letter(i.checked_sub(1)) && near_letter(Some(i + 1)) || near_letter(i.checked_sub(1)) && matches!(chars.get(i + 1), None | Some(' ')) {
-                return Some(format!("apostrophe {c:?} at {i}: use U+02BB (o\u{2bb}, g\u{2bb}) or U+02BC (tutuq belgisi)"));
+            let near_letter = |j: Option<usize>| {
+                j.and_then(|j| chars.get(j))
+                    .is_some_and(|x| x.is_alphabetic())
+            };
+            if near_letter(i.checked_sub(1)) && near_letter(Some(i + 1))
+                || near_letter(i.checked_sub(1)) && matches!(chars.get(i + 1), None | Some(' '))
+            {
+                return Some(format!(
+                    "apostrophe {c:?} at {i}: use U+02BB (o\u{2bb}, g\u{2bb}) or U+02BC (tutuq belgisi)"
+                ));
             }
         }
     }
@@ -252,17 +357,37 @@ pub struct ImportStats {
 pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportStats, String> {
     let records = read_csv(csv);
     let header = records.first().ok_or("empty file")?;
-    let col = |name: &str| header.iter().position(|h| h.trim().eq_ignore_ascii_case(name)).ok_or(format!("missing column {name:?}"));
-    let (c_key, c_lat, c_cyr, c_st, c_cm) = (col("key")?, col("uz-Latn draft")?, col("uz-Cyrl draft")?, col("status")?, col("owner comment")?);
+    let col = |name: &str| {
+        header
+            .iter()
+            .position(|h| h.trim().eq_ignore_ascii_case(name))
+            .ok_or(format!("missing column {name:?}"))
+    };
+    let (c_key, c_lat, c_cyr, c_st, c_cm) = (
+        col("key")?,
+        col("uz-Latn draft")?,
+        col("uz-Cyrl draft")?,
+        col("status")?,
+        col("owner comment")?,
+    );
     let (c_scope, c_pass, c_hash) = (col("scope")?, col("pass")?, col("en_hash")?);
     let mut st = ImportStats::default();
     for rec in &records[1..] {
-        let get = |i: usize| rec.get(i).map(String::as_str).unwrap_or("").trim_end_matches('\r');
+        let get = |i: usize| {
+            rec.get(i)
+                .map(String::as_str)
+                .unwrap_or("")
+                .trim_end_matches('\r')
+        };
         let (key, scope) = (get(c_key).trim(), get(c_scope).trim());
         if key.is_empty() {
             continue;
         }
-        let Some(row) = cat.scopes.get_mut(scope).and_then(|rows| rows.iter_mut().find(|r| r.id == key)) else {
+        let Some(row) = cat
+            .scopes
+            .get_mut(scope)
+            .and_then(|rows| rows.iter_mut().find(|r| r.id == key))
+        else {
             st.unknown.push(format!("{scope}/{key}"));
             continue;
         };
@@ -283,7 +408,8 @@ pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportS
         }
         let mut touched = false;
         for loc in pass.locales() {
-            let cell = super::catalog::unescape(get(if *loc == "uz-latn" { c_lat } else { c_cyr })).map_err(|e| format!("{scope}/{key}: {e}"))?;
+            let cell = super::catalog::unescape(get(if *loc == "uz-latn" { c_lat } else { c_cyr }))
+                .map_err(|e| format!("{scope}/{key}: {e}"))?;
             if cell.is_empty() {
                 continue;
             }
@@ -294,7 +420,11 @@ pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportS
                 st.rejected += 1;
                 touched = true;
             } else if reviewed || changed {
-                let lint = if *loc == "uz-latn" { lint_uz_latn(&cell) } else { None };
+                let lint = if *loc == "uz-latn" {
+                    lint_uz_latn(&cell)
+                } else {
+                    None
+                };
                 match lint {
                     Some(msg) => {
                         // Owner text is kept as written; it just does not become trusted.
@@ -307,7 +437,11 @@ pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportS
                     }
                     None if reviewed => {
                         row.set(loc, cell, format!("reviewed:owner:{date}"));
-                        if changed { st.edited_reviewed += 1 } else { st.reviewed += 1 }
+                        if changed {
+                            st.edited_reviewed += 1
+                        } else {
+                            st.reviewed += 1
+                        }
                     }
                     None => row.set(loc, cell, format!("draft:owner-fix:{date}")),
                 }
@@ -337,11 +471,21 @@ pub fn log_line(file: &str, st: &ImportStats, date: &str) -> String {
 
 /// `keys K, P1 K1, todo T, draft D, reviewed R` for each app and Uzbek locale, plus upstream ru coverage.
 pub fn coverage(cat: &Catalog) -> String {
-    let mut out = String::from("app        keys   P1   ru(upstream) | uz-Latn todo/draft/reviewed (P1 reviewed) | uz-Cyrl todo/draft/reviewed (P1 reviewed)\n");
+    let mut out = String::from(
+        "app        keys   P1   ru(upstream) | uz-Latn todo/draft/reviewed (P1 reviewed) | uz-Cyrl todo/draft/reviewed (P1 reviewed)\n",
+    );
     for app in APPS {
         let rows = cat.app_rows(app);
-        let p1: Vec<&Row> = rows.iter().copied().filter(|r| r.is_p1(app) && !r.context.starts_with("date.")).collect();
-        let ui: Vec<&Row> = rows.iter().copied().filter(|r| !r.context.starts_with("date.")).collect();
+        let p1: Vec<&Row> = rows
+            .iter()
+            .copied()
+            .filter(|r| r.is_p1(app) && !r.context.starts_with("date."))
+            .collect();
+        let ui: Vec<&Row> = rows
+            .iter()
+            .copied()
+            .filter(|r| !r.context.starts_with("date."))
+            .collect();
         let ru = ui.iter().filter(|r| r.ru_in_app(app)).count();
         let count = |loc: &str, rows: &[&Row]| {
             let (mut t, mut d, mut r) = (0, 0, 0);
@@ -356,10 +500,31 @@ pub fn coverage(cat: &Catalog) -> String {
         };
         let (l, c) = (count("uz-latn", &ui), count("uz-cyrl", &ui));
         let (lp, cp) = (count("uz-latn", &p1).2, count("uz-cyrl", &p1).2);
-        let _ = writeln!(out, "{app:<10} {:>5} {:>4} {:>8}     | {}/{}/{} ({lp}/{}) | {}/{}/{} ({cp}/{})", ui.len(), p1.len(), ru, l.0, l.1, l.2, p1.len(), c.0, c.1, c.2, p1.len());
+        let _ = writeln!(
+            out,
+            "{app:<10} {:>5} {:>4} {:>8}     | {}/{}/{} ({lp}/{}) | {}/{}/{} ({cp}/{})",
+            ui.len(),
+            p1.len(),
+            ru,
+            l.0,
+            l.1,
+            l.2,
+            p1.len(),
+            c.0,
+            c.1,
+            c.2,
+            p1.len()
+        );
     }
     if let Some(g) = cat.scopes.get("glossary") {
-        let _ = writeln!(out, "glossary   {} terms ({} draft)", g.len(), g.iter().filter(|r| state(&r.uz_latn_status) == "draft").count());
+        let _ = writeln!(
+            out,
+            "glossary   {} terms ({} draft)",
+            g.len(),
+            g.iter()
+                .filter(|r| state(&r.uz_latn_status) == "draft")
+                .count()
+        );
     }
     out
 }
@@ -367,10 +532,17 @@ pub fn coverage(cat: &Catalog) -> String {
 pub fn check_ids(cat: &Catalog) -> Vec<String> {
     let mut bad = Vec::new();
     for (scope, rows) in &cat.scopes {
-        let sc = if scope == "shared" { "shared" } else { scope.as_str() };
+        let sc = if scope == "shared" {
+            "shared"
+        } else {
+            scope.as_str()
+        };
         for r in rows {
             if r.id != row_id(sc, &r.context, &r.source) {
-                bad.push(format!("{scope}/{}: id does not match scope+context+source", r.id));
+                bad.push(format!(
+                    "{scope}/{}: id does not match scope+context+source",
+                    r.id
+                ));
             }
         }
     }
@@ -397,18 +569,35 @@ mod tests {
 
     fn cat() -> Catalog {
         let mut c = Catalog::default();
-        c.scopes.insert("glossary".into(), vec![draft_row("File", "Fayl"), draft_row("Save, as \"x\"\nnow", "Saqlash")]);
+        c.scopes.insert(
+            "glossary".into(),
+            vec![
+                draft_row("File", "Fayl"),
+                draft_row("Save, as \"x\"\nnow", "Saqlash"),
+            ],
+        );
         c
     }
 
     #[test]
     fn csv_round_trip_with_quotes_newlines_and_bom() {
-        let recs = vec![vec!["a,b".to_string(), "q\"uote".into(), "line1\nline2".into(), "".into()], vec!["x".into(), "y".into(), "z".into(), "w".into()]];
+        let recs = vec![
+            vec![
+                "a,b".to_string(),
+                "q\"uote".into(),
+                "line1\nline2".into(),
+                "".into(),
+            ],
+            vec!["x".into(), "y".into(), "z".into(), "w".into()],
+        ];
         let text = write_csv(&recs);
         assert!(text.starts_with('\u{feff}'));
         assert_eq!(read_csv(&text), recs);
         // semicolon-delimited (Excel in some locales)
-        assert_eq!(read_csv("a;b;c\r\n1;\"2;x\";3\r\n"), vec![vec!["a", "b", "c"], vec!["1", "2;x", "3"]]);
+        assert_eq!(
+            read_csv("a;b;c\r\n1;\"2;x\";3\r\n"),
+            vec![vec!["a", "b", "c"], vec!["1", "2;x", "3"]]
+        );
     }
 
     #[test]
@@ -416,7 +605,19 @@ mod tests {
         let (csv, n) = review_export(&cat(), 0, Pass::Both, 400).unwrap();
         assert_eq!(n, 2);
         let recs = read_csv(&csv);
-        assert_eq!(&recs[0][..8], ["key", "context", "en", "ru", "uz-Latn draft", "uz-Cyrl draft", "status", "owner comment"]);
+        assert_eq!(
+            &recs[0][..8],
+            [
+                "key",
+                "context",
+                "en",
+                "ru",
+                "uz-Latn draft",
+                "uz-Cyrl draft",
+                "status",
+                "owner comment"
+            ]
+        );
         assert_eq!(recs[1][6], "draft-unreviewed");
         assert!(review_export(&cat(), 1, Pass::Both, 400).is_err());
     }
@@ -428,7 +629,10 @@ mod tests {
         let mut recs = read_csv(&csv);
         let fa = recs.iter().position(|r| r[2] == "File").unwrap();
         recs[fa][6] = "reviewed".into();
-        let sv = recs.iter().position(|r| r[2] != "File" && r[2] != "en").unwrap();
+        let sv = recs
+            .iter()
+            .position(|r| r[2] != "File" && r[2] != "en")
+            .unwrap();
         recs[sv][4] = "Saqla'sh".into(); // owner edit that fails the apostrophe lint
         recs[sv][6] = "reviewed".into();
         recs[sv][7] = "prefer this".into();
@@ -436,7 +640,10 @@ mod tests {
         assert_eq!((st.reviewed, st.lint_failed), (3, 1)); // File: latn + cyrl; the second row: cyrl reviewed, latn lint-failed
         let g = &c.scopes["glossary"];
         let file = g.iter().find(|r| r.source == "File").unwrap();
-        assert_eq!((file.uz_latn_status.as_str(), file.uz_cyrl_status.as_str()), ("reviewed:owner:2026-10-20", "reviewed:owner:2026-10-20"));
+        assert_eq!(
+            (file.uz_latn_status.as_str(), file.uz_cyrl_status.as_str()),
+            ("reviewed:owner:2026-10-20", "reviewed:owner:2026-10-20")
+        );
         let other = g.iter().find(|r| r.source != "File").unwrap();
         assert_eq!(other.uz_latn, "Saqla'sh"); // never silently fixed
         assert_eq!(other.uz_latn_status, "draft:owner-fix:2026-10-20");
@@ -475,7 +682,10 @@ mod tests {
         assert!(lint_uz_latn("o\u{2018}zbek").is_some());
         assert!(lint_uz_latn("O\u{2bb}zbek, ma\u{2bc}lumot").is_none());
         assert!(lint_uz_latn("\"quoted\" text").is_none());
-        assert!(lint_uz_latn("'text'").is_some(), "a closing apostrophe after a letter is flagged too: the owner decides");
+        assert!(
+            lint_uz_latn("'text'").is_some(),
+            "a closing apostrophe after a letter is flagged too: the owner decides"
+        );
     }
 
     #[test]

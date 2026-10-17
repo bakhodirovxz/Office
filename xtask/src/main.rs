@@ -35,18 +35,33 @@ fn main() -> ExitCode {
 
 /// The repository root: the parent of the xtask crate directory.
 fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).parent().expect("xtask has a parent directory").to_path_buf()
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("xtask has a parent directory")
+        .to_path_buf()
 }
 
 const COLUMNS: [&str; 11] = [
-    "id", "file", "subject", "files / +/\u{2212}", "category", "why", "measured effect", "upstream PR", "carried since", "last rebase",
+    "id",
+    "file",
+    "subject",
+    "files / +/\u{2212}",
+    "category",
+    "why",
+    "measured effect",
+    "upstream PR",
+    "carried since",
+    "last rebase",
     "drop when",
 ];
-const CATEGORIES: [&str; 8] = ["mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "parked"];
+const CATEGORIES: [&str; 8] = [
+    "mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "parked",
+];
 
 /// Every `patches/<repo>/NNNN-*.patch` must have exactly one row in `patches/REGISTER.md` and the other way round.
 fn register_check(root: &Path) -> Result<String, String> {
-    let text = fs::read_to_string(root.join("patches/REGISTER.md")).map_err(|e| format!("patches/REGISTER.md: {e}"))?;
+    let text = fs::read_to_string(root.join("patches/REGISTER.md"))
+        .map_err(|e| format!("patches/REGISTER.md: {e}"))?;
     let mut rows: Vec<Vec<String>> = Vec::new();
     let mut header_seen = false;
     for (i, line) in text.lines().enumerate() {
@@ -54,27 +69,50 @@ fn register_check(root: &Path) -> Result<String, String> {
         if !line.starts_with('|') {
             continue;
         }
-        let cells: Vec<String> = line.trim_matches('|').split('|').map(|c| c.trim().to_string()).collect();
-        if cells.iter().all(|c| c.chars().all(|ch| ch == '-' || ch == ':') && !c.is_empty()) {
+        let cells: Vec<String> = line
+            .trim_matches('|')
+            .split('|')
+            .map(|c| c.trim().to_string())
+            .collect();
+        if cells
+            .iter()
+            .all(|c| c.chars().all(|ch| ch == '-' || ch == ':') && !c.is_empty())
+        {
             continue; // separator row
         }
         if !header_seen {
             if cells.len() != COLUMNS.len() || cells[0] != "id" {
-                return Err(format!("REGISTER.md:{}: header must have the {} fixed columns", i + 1, COLUMNS.len()));
+                return Err(format!(
+                    "REGISTER.md:{}: header must have the {} fixed columns",
+                    i + 1,
+                    COLUMNS.len()
+                ));
             }
             header_seen = true;
             continue;
         }
         if cells.len() != COLUMNS.len() {
-            return Err(format!("REGISTER.md:{}: {} cells, expected {}", i + 1, cells.len(), COLUMNS.len()));
+            return Err(format!(
+                "REGISTER.md:{}: {} cells, expected {}",
+                i + 1,
+                cells.len(),
+                COLUMNS.len()
+            ));
         }
         for (c, name) in cells.iter().zip(COLUMNS) {
             if c.is_empty() {
-                return Err(format!("REGISTER.md:{}: empty cell in column '{name}'", i + 1));
+                return Err(format!(
+                    "REGISTER.md:{}: empty cell in column '{name}'",
+                    i + 1
+                ));
             }
         }
         if !CATEGORIES.contains(&cells[4].as_str()) {
-            return Err(format!("REGISTER.md:{}: unknown category '{}'", i + 1, cells[4]));
+            return Err(format!(
+                "REGISTER.md:{}: unknown category '{}'",
+                i + 1,
+                cells[4]
+            ));
         }
         rows.push(cells);
     }
@@ -86,13 +124,22 @@ fn register_check(root: &Path) -> Result<String, String> {
     let mut row_files = BTreeSet::new();
     for r in &rows {
         let file = r[1].trim_matches('`').to_string();
-        let Some((repo, num)) = r[0].split_once('/') else { return Err(format!("row id '{}' must be <repo>/<NNNN>", r[0])) };
+        let Some((repo, num)) = r[0].split_once('/') else {
+            return Err(format!("row id '{}' must be <repo>/<NNNN>", r[0]));
+        };
         if !file.starts_with(num) {
-            return Err(format!("row '{}': file '{file}' does not start with its number", r[0]));
+            return Err(format!(
+                "row '{}': file '{file}' does not start with its number",
+                r[0]
+            ));
         }
         let rel = format!("{repo}/{file}");
         let path = root.join("patches").join(&rel);
-        let path = if path.exists() { path } else { root.join("patches").join(repo).join("parked").join(&file) };
+        let path = if path.exists() {
+            path
+        } else {
+            root.join("patches").join(repo).join("parked").join(&file)
+        };
         if !path.exists() {
             return Err(format!("row '{}' has no file: patches/{rel}", r[0]));
         }
@@ -111,10 +158,14 @@ fn register_check(root: &Path) -> Result<String, String> {
         }
         let rn = repo.file_name().to_string_lossy().to_string();
         for dir in [repo.path(), repo.path().join("parked")] {
-            let Ok(entries) = fs::read_dir(&dir) else { continue };
+            let Ok(entries) = fs::read_dir(&dir) else {
+                continue;
+            };
             for e in entries.flatten() {
                 let n = e.file_name().to_string_lossy().to_string();
-                let numbered = n.len() > 5 && n[..4].chars().all(|c| c.is_ascii_digit()) && n.as_bytes()[4] == b'-';
+                let numbered = n.len() > 5
+                    && n[..4].chars().all(|c| c.is_ascii_digit())
+                    && n.as_bytes()[4] == b'-';
                 if numbered && n.ends_with(".patch") {
                     files.insert(format!("{rn}/{n}"));
                 }

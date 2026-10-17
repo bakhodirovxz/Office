@@ -14,7 +14,10 @@ use std::path::{Path, PathBuf};
 const APPS: [&str; 4] = ["docs", "sheets", "slides", "pdf"];
 
 fn overlay_root() -> PathBuf {
-    PathBuf::from(std::env::var("OFFICE_OVERLAY_ROOT").unwrap_or_else(|_| "E:/office-target/p1/overlay".into()))
+    PathBuf::from(
+        std::env::var("OFFICE_OVERLAY_ROOT")
+            .unwrap_or_else(|_| "E:/office-target/p1/overlay".into()),
+    )
 }
 
 fn load(root: &Path) -> Result<Brand, String> {
@@ -37,7 +40,11 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
 
 fn overlay(root: &Path, which: &str) -> Result<String, String> {
     let b = load(root)?;
-    let apps: Vec<&str> = if which == "all" { APPS.to_vec() } else { vec![which] };
+    let apps: Vec<&str> = if which == "all" {
+        APPS.to_vec()
+    } else {
+        vec![which]
+    };
     let mut msgs = Vec::new();
     for a in apps {
         msgs.push(b.write_overlay(a, &root.join("assets/fonts"), &overlay_root().join(a))?);
@@ -62,7 +69,10 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 fn rel(root: &Path, p: &Path) -> String {
-    p.strip_prefix(root).unwrap_or(p).to_string_lossy().replace('\\', "/")
+    p.strip_prefix(root)
+        .unwrap_or(p)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 fn is_word_char(c: char) -> bool {
@@ -75,7 +85,10 @@ fn has_word(text: &str, word: &str) -> bool {
     while let Some(i) = text[from..].find(word) {
         let s = from + i;
         let e = s + word.len();
-        let before = text[..s].chars().next_back().is_none_or(|c| !is_word_char(c));
+        let before = text[..s]
+            .chars()
+            .next_back()
+            .is_none_or(|c| !is_word_char(c));
         let after = text[e..].chars().next().is_none_or(|c| !is_word_char(c));
         if before && after {
             return true;
@@ -104,18 +117,29 @@ fn brand_grep(root: &Path) -> Result<String, String> {
             let r = rel(root, &f);
             // i18n/review/ carries the names to the owner by design; domains/*/apps/*-web/index.html is rendered from
             // index.html.in by scripts/build.sh (and git-ignored).
-            if r.starts_with("i18n/review/") || (r.starts_with("domains/") && r.ends_with("/index.html")) {
+            if r.starts_with("i18n/review/")
+                || (r.starts_with("domains/") && r.ends_with("/index.html"))
+            {
                 continue;
             }
             let ext = f.extension().and_then(|e| e.to_str()).unwrap_or("");
-            if !["rs", "toml", "sh", "md", "html", "in", "json", "tsv", "patch", "yml", "txt", "env"].contains(&ext) {
+            if ![
+                "rs", "toml", "sh", "md", "html", "in", "json", "tsv", "patch", "yml", "txt", "env",
+            ]
+            .contains(&ext)
+            {
                 continue;
             }
-            let Ok(text) = fs::read_to_string(&f) else { continue };
+            let Ok(text) = fs::read_to_string(&f) else {
+                continue;
+            };
             scanned += 1;
             for (i, line) in text.lines().enumerate() {
                 if let Some(n) = names.iter().find(|n| has_word(line, n)) {
-                    hits.push(format!("{r}:{}: working name '{n}' outside brand.toml [rule W]", i + 1));
+                    hits.push(format!(
+                        "{r}:{}: working name '{n}' outside brand.toml [rule W]",
+                        i + 1
+                    ));
                 }
             }
         }
@@ -127,8 +151,13 @@ fn brand_grep(root: &Path) -> Result<String, String> {
         walk(&root.join(dir), &mut files);
     }
     let marker = ["docs", "brand"].join("/");
-    for f in files.iter().filter(|f| f.extension().and_then(|e| e.to_str()) == Some("rs")) {
-        let Ok(text) = fs::read_to_string(f) else { continue };
+    for f in files
+        .iter()
+        .filter(|f| f.extension().and_then(|e| e.to_str()) == Some("rs"))
+    {
+        let Ok(text) = fs::read_to_string(f) else {
+            continue;
+        };
         if !text.contains(&marker) {
             continue;
         }
@@ -136,16 +165,24 @@ fn brand_grep(root: &Path) -> Result<String, String> {
         for (i, l) in lines.iter().enumerate() {
             if l.contains(&marker) && (l.contains("include_bytes!") || l.contains("include_str!")) {
                 let from = i.saturating_sub(15);
-                let gated = lines[from..i].iter().any(|p| p.contains("cfg(not(office_overlay))"));
+                let gated = lines[from..i]
+                    .iter()
+                    .any(|p| p.contains("cfg(not(office_overlay))"));
                 if !gated {
-                    hits.push(format!("{}:{}: brand mark included without cfg(not(office_overlay)) [rule M]", rel(root, f), i + 1));
+                    hits.push(format!(
+                        "{}:{}: brand mark included without cfg(not(office_overlay)) [rule M]",
+                        rel(root, f),
+                        i + 1
+                    ));
                 }
             }
         }
     }
 
     if hits.is_empty() {
-        Ok(format!("brand-grep: {scanned} files scanned (rule W), rule M checked, 0 unallowlisted hits"))
+        Ok(format!(
+            "brand-grep: {scanned} files scanned (rule W), rule M checked, 0 unallowlisted hits"
+        ))
     } else {
         for h in &hits {
             eprintln!("{h}");
@@ -178,14 +215,22 @@ fn count_split(hay: &[u8], needle: &[u8]) -> (usize, usize) {
     let (mut code, mut catalog) = (0, 0);
     let mut i = 0;
     while i + needle.len() <= hay.len() {
-        let Some(p) = hay[i..].windows(needle.len()).position(|w| w == needle) else { break };
+        let Some(p) = hay[i..].windows(needle.len()).position(|w| w == needle) else {
+            break;
+        };
         let at = i + p;
         // A catalog record is a short line holding a tab; anything else (a literal in rodata) is code.
         const RECORD: usize = 1500;
-        let before = hay[at.saturating_sub(RECORD)..at].iter().rposition(|&b| b == b'\n');
-        let after = hay[at..(at + RECORD).min(hay.len())].iter().position(|&b| b == b'\n');
+        let before = hay[at.saturating_sub(RECORD)..at]
+            .iter()
+            .rposition(|&b| b == b'\n');
+        let after = hay[at..(at + RECORD).min(hay.len())]
+            .iter()
+            .position(|&b| b == b'\n');
         let is_record = match (before, after) {
-            (Some(bf), Some(af)) => hay[at.saturating_sub(RECORD) + bf + 1..at + af].contains(&b'\t'),
+            (Some(bf), Some(af)) => {
+                hay[at.saturating_sub(RECORD) + bf + 1..at + af].contains(&b'\t')
+            }
             _ => false,
         };
         if is_record {
@@ -199,7 +244,9 @@ fn count_split(hay: &[u8], needle: &[u8]) -> (usize, usize) {
 }
 
 fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
-    let target = PathBuf::from(std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into()));
+    let target = PathBuf::from(
+        std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into()),
+    );
     let mut list: Vec<PathBuf> = files.iter().map(PathBuf::from).collect();
     if list.is_empty() {
         let b = load(root)?;
@@ -210,7 +257,10 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
             }
             let mut dist = Vec::new();
             walk(&target.join("dist").join(format!("{d}-web")), &mut dist);
-            list.extend(dist.into_iter().filter(|p| p.extension().and_then(|e| e.to_str()) == Some("wasm")));
+            list.extend(
+                dist.into_iter()
+                    .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("wasm")),
+            );
         }
         let _ = b;
     }
@@ -221,9 +271,15 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
     let mut sigs: Vec<(String, Vec<u8>)> = Vec::new();
     let mut svgs = Vec::new();
     for r in ["wordcraft", "gridcraft", "deckcraft", "pdfcraft"] {
-        walk(&root.join("upstream").join(r).join("docs").join("brand"), &mut svgs);
+        walk(
+            &root.join("upstream").join(r).join("docs").join("brand"),
+            &mut svgs,
+        );
     }
-    for s in svgs.iter().filter(|p| p.extension().and_then(|e| e.to_str()) == Some("svg")) {
+    for s in svgs
+        .iter()
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("svg"))
+    {
         if let Ok(bytes) = fs::read(s) {
             if bytes.len() > 160 {
                 let mid = bytes.len() / 2;
@@ -231,8 +287,20 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
             }
         }
     }
-    let forbidden = ["discord.gg", "getartcraft", "github.com/storytold", "api.github.com/repos/storytold", "storyteller.ai"];
-    let info = ["WordCraft", "GridCraft", "DeckCraft", "PdfCraft", "ArtCraft"];
+    let forbidden = [
+        "discord.gg",
+        "getartcraft",
+        "github.com/storytold",
+        "api.github.com/repos/storytold",
+        "storyteller.ai",
+    ];
+    let info = [
+        "WordCraft",
+        "GridCraft",
+        "DeckCraft",
+        "PdfCraft",
+        "ArtCraft",
+    ];
     let mut fails = 0;
     let mut out = Vec::new();
     for f in &list {
@@ -254,15 +322,24 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
                 line.push_str(&format!(" LEAK mark {name};"));
             }
         }
-        let infos: Vec<String> = info.iter().map(|t| format!("{t}={}", count(&bytes, t.as_bytes()))).collect();
+        let infos: Vec<String> = info
+            .iter()
+            .map(|t| format!("{t}={}", count(&bytes, t.as_bytes())))
+            .collect();
         line.push_str(&format!(" info[{}]", infos.join(" ")));
         out.push(line);
     }
     let report = out.join("\n");
     if fails > 0 {
         eprintln!("{report}");
-        Err(format!("brand-scan-bin: {fails} leak(s) in {} file(s)", list.len()))
+        Err(format!(
+            "brand-scan-bin: {fails} leak(s) in {} file(s)",
+            list.len()
+        ))
     } else {
-        Ok(format!("{report}\nbrand-scan-bin: 0 leaks in {} file(s)", list.len()))
+        Ok(format!(
+            "{report}\nbrand-scan-bin: 0 leaks in {} file(s)",
+            list.len()
+        ))
     }
 }

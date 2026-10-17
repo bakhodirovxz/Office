@@ -61,7 +61,10 @@ pub fn lex(src: &str) -> Vec<Token> {
                     i += 1;
                 }
             }
-        } else if ch == 'r' && matches!(c.get(i + 1), Some('"') | Some('#')) && raw_start(&c, i + 1).is_some() {
+        } else if ch == 'r'
+            && matches!(c.get(i + 1), Some('"') | Some('#'))
+            && raw_start(&c, i + 1).is_some()
+        {
             let (hashes, body) = raw_start(&c, i + 1).unwrap_or((0, i + 1));
             let start_line = line;
             let mut j = body;
@@ -77,7 +80,10 @@ pub fn lex(src: &str) -> Vec<Token> {
                 text.push(c[j]);
                 j += 1;
             }
-            out.push(Token { tok: Tok::Lit(text), line: start_line });
+            out.push(Token {
+                tok: Tok::Lit(text),
+                line: start_line,
+            });
             i = j;
         } else if ch == '"' {
             let start_line = line;
@@ -93,7 +99,9 @@ pub fn lex(src: &str) -> Vec<Token> {
                         Some('0') => text.push('\0'),
                         Some('x') => {
                             let hex: String = c[i + 1..(i + 3).min(c.len())].iter().collect();
-                            if let Some(ch) = u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
+                            if let Some(ch) =
+                                u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32)
+                            {
                                 text.push(ch);
                             }
                             i += 2;
@@ -110,7 +118,9 @@ pub fn lex(src: &str) -> Vec<Token> {
                                     j += 1;
                                 }
                             }
-                            if let Some(ch) = u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
+                            if let Some(ch) =
+                                u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32)
+                            {
                                 text.push(ch);
                             }
                             i = j;
@@ -137,7 +147,10 @@ pub fn lex(src: &str) -> Vec<Token> {
                 }
             }
             i += 1;
-            out.push(Token { tok: Tok::Lit(text), line: start_line });
+            out.push(Token {
+                tok: Tok::Lit(text),
+                line: start_line,
+            });
         } else if ch == '\'' {
             if c.get(i + 1) == Some(&'\\') {
                 i += 2;
@@ -158,9 +171,15 @@ pub fn lex(src: &str) -> Vec<Token> {
             while i < c.len() && (c[i].is_alphanumeric() || c[i] == '_') {
                 i += 1;
             }
-            out.push(Token { tok: Tok::Ident(c[s..i].iter().collect()), line });
+            out.push(Token {
+                tok: Tok::Ident(c[s..i].iter().collect()),
+                line,
+            });
         } else {
-            out.push(Token { tok: Tok::Punct(ch), line });
+            out.push(Token {
+                tok: Tok::Punct(ch),
+                line,
+            });
             i += 1;
         }
     }
@@ -194,7 +213,8 @@ pub fn strip_tests_and_attrs(toks: Vec<Token>) -> Vec<Token> {
                 j += 1;
             }
             let attr = &toks[i + 2..j.saturating_sub(1)];
-            let is_cfg_test = attr.len() == 4 && attr[0].is_ident("cfg") && attr[2].is_ident("test");
+            let is_cfg_test =
+                attr.len() == 4 && attr[0].is_ident("cfg") && attr[2].is_ident("test");
             if is_cfg_test && toks.get(j).is_some_and(|t| t.is_ident("mod")) {
                 let mut k = j;
                 while k < toks.len() && !toks[k].is_punct('{') && !toks[k].is_punct(';') {
@@ -232,18 +252,23 @@ mod tests {
     use super::*;
 
     fn lits(src: &str) -> Vec<String> {
-        lex(src).iter().filter_map(|t| t.lit().map(str::to_string)).collect()
+        lex(src)
+            .iter()
+            .filter_map(|t| t.lit().map(str::to_string))
+            .collect()
     }
 
     #[test]
     fn decodes_escapes_and_skips_comments() {
-        let src = "// \"no\"\nlet a = \"Top\\nAlign\"; /* \"no\" */ let b = \"q\\\"x\\u{2026}\\\\\";";
+        let src =
+            "// \"no\"\nlet a = \"Top\\nAlign\"; /* \"no\" */ let b = \"q\\\"x\\u{2026}\\\\\";";
         assert_eq!(lits(src), vec!["Top\nAlign", "q\"x\u{2026}\\"]);
     }
 
     #[test]
     fn raw_strings_chars_and_lifetimes() {
-        let src = "fn f<'a>(x: &'a str) { let c = '\"'; let r = r#\"a \"b\"\"#; let d = '\\''; \"z\" }";
+        let src =
+            "fn f<'a>(x: &'a str) { let c = '\"'; let r = r#\"a \"b\"\"#; let d = '\\''; \"z\" }";
         assert_eq!(lits(src), vec!["a \"b\"", "z"]);
     }
 

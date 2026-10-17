@@ -74,7 +74,13 @@ impl Canvas<'_> {
         }
         pb.close();
         if let Some(path) = pb.finish() {
-            self.pm.fill_path(&path, &paint(c), FillRule::Winding, Transform::identity(), None);
+            self.pm.fill_path(
+                &path,
+                &paint(c),
+                FillRule::Winding,
+                Transform::identity(),
+                None,
+            );
         }
     }
 
@@ -88,14 +94,19 @@ impl Canvas<'_> {
             }
             Pictogram::Grid if self.snap => {
                 // Small sizes: whole-pixel cells with a one-pixel gap, centred.
-                let cell = (((self.size * self.scale * 0.52) as u32).saturating_sub(2) / 3).max(1) as f32;
+                let cell =
+                    (((self.size * self.scale * 0.52) as u32).saturating_sub(2) / 3).max(1) as f32;
                 let span = cell * 3.0 + 2.0;
                 let start = ((self.size - span) / 2.0).floor();
                 for r in 0..3 {
                     for c in 0..3 {
-                        let (x, y) = (start + (cell + 1.0) * c as f32, start + (cell + 1.0) * r as f32);
+                        let (x, y) = (
+                            start + (cell + 1.0) * c as f32,
+                            start + (cell + 1.0) * r as f32,
+                        );
                         if let Some(rc) = Rect::from_ltrb(x, y, x + cell, y + cell) {
-                            self.pm.fill_rect(rc, &paint(fg), Transform::identity(), None);
+                            self.pm
+                                .fill_rect(rc, &paint(fg), Transform::identity(), None);
                         }
                     }
                 }
@@ -118,7 +129,16 @@ impl Canvas<'_> {
                 self.rect(0.34, 0.76, 0.66, 0.82, fg);
             }
             Pictogram::Page => {
-                self.polygon(&[(0.30, 0.20), (0.58, 0.20), (0.72, 0.34), (0.72, 0.80), (0.30, 0.80)], fg);
+                self.polygon(
+                    &[
+                        (0.30, 0.20),
+                        (0.58, 0.20),
+                        (0.72, 0.34),
+                        (0.72, 0.80),
+                        (0.30, 0.80),
+                    ],
+                    fg,
+                );
                 self.polygon(&[(0.58, 0.20), (0.58, 0.34), (0.72, 0.34)], bg);
             }
         }
@@ -140,7 +160,13 @@ fn rounded_square(pm: &mut Pixmap, size: f32, c: [u8; 3]) {
     pb.cubic_to(0.0, r - k, r - k, 0.0, r, 0.0);
     pb.close();
     if let Some(path) = pb.finish() {
-        pm.fill_path(&path, &paint(c), FillRule::Winding, Transform::identity(), None);
+        pm.fill_path(
+            &path,
+            &paint(c),
+            FillRule::Winding,
+            Transform::identity(),
+            None,
+        );
     }
 }
 
@@ -148,7 +174,12 @@ fn rounded_square(pm: &mut Pixmap, size: f32, c: [u8; 3]) {
 pub fn render_icon(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pixmap {
     let mut pm = Pixmap::new(size, size).expect("icon size is non-zero");
     rounded_square(&mut pm, size as f32, accent);
-    let mut cv = Canvas { pm: &mut pm, size: size as f32, scale: 1.0, snap: size <= 32 };
+    let mut cv = Canvas {
+        pm: &mut pm,
+        size: size as f32,
+        scale: 1.0,
+        snap: size <= 32,
+    };
     cv.pictogram(p, fg, accent);
     pm
 }
@@ -156,8 +187,15 @@ pub fn render_icon(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pix
 /// Full-bleed accent background, pictogram inside the central 80 % (maskable icons keep a safe zone).
 pub fn render_maskable(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pixmap {
     let mut pm = Pixmap::new(size, size).expect("icon size is non-zero");
-    pm.fill(tiny_skia::Color::from_rgba8(accent[0], accent[1], accent[2], 255));
-    let mut cv = Canvas { pm: &mut pm, size: size as f32, scale: 0.8, snap: false };
+    pm.fill(tiny_skia::Color::from_rgba8(
+        accent[0], accent[1], accent[2], 255,
+    ));
+    let mut cv = Canvas {
+        pm: &mut pm,
+        size: size as f32,
+        scale: 0.8,
+        snap: false,
+    };
     cv.pictogram(p, fg, accent);
     pm
 }
@@ -177,11 +215,20 @@ pub fn png_bytes(pm: &Pixmap) -> Result<Vec<u8>, String> {
 }
 
 /// An `.ico` with one image per size: 32-bit BMP below 64 px (old shells), PNG from 64 px.
-pub fn ico_bytes(p: Pictogram, sizes: &[u32], accent: [u8; 3], fg: [u8; 3]) -> Result<Vec<u8>, String> {
+pub fn ico_bytes(
+    p: Pictogram,
+    sizes: &[u32],
+    accent: [u8; 3],
+    fg: [u8; 3],
+) -> Result<Vec<u8>, String> {
     let mut images: Vec<(u32, Vec<u8>)> = Vec::new();
     for &s in sizes {
         let pm = render_icon(p, s, accent, fg);
-        let data = if s >= 64 { png_bytes(&pm)? } else { bmp_dib(&pm) };
+        let data = if s >= 64 {
+            png_bytes(&pm)?
+        } else {
+            bmp_dib(&pm)
+        };
         images.push((s, data));
     }
     let mut out = vec![0, 0, 1, 0];

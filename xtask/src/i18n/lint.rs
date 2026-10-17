@@ -5,16 +5,31 @@
 //! length over 1.4x the English text in ribbon/menu contexts, and uz-Latn/uz-Cyrl pairs that do not agree under the
 //! letter mapping. The lint reports; it never changes a value.
 
-use super::catalog::{state, Catalog, Row};
+use super::catalog::{Catalog, Row, state};
 use super::review::lint_uz_latn;
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 /// Upstream product tokens that `rebrand` replaces after lookup (design 4.3): a translation keeps them as often as the English does.
-pub const PRODUCT_TOKENS: [&str; 5] = ["WordCraft", "GridCraft", "DeckCraft", "PdfCraft", "ArtCraft"];
+pub const PRODUCT_TOKENS: [&str; 5] = [
+    "WordCraft",
+    "GridCraft",
+    "DeckCraft",
+    "PdfCraft",
+    "ArtCraft",
+];
 
 /// Source files whose strings are ribbon, menu or backstage labels (length matters there).
-const LABEL_FILES: [&str; 8] = ["ribbon.rs", "menus.rs", "backstage.rs", "qat.rs", "keytips.rs", "commands.rs", "i18n.rs", "chrome.rs"];
+const LABEL_FILES: [&str; 8] = [
+    "ribbon.rs",
+    "menus.rs",
+    "backstage.rs",
+    "qat.rs",
+    "keytips.rs",
+    "commands.rs",
+    "i18n.rs",
+    "chrome.rs",
+];
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Level {
@@ -52,7 +67,9 @@ pub fn placeholders(s: &str) -> Vec<String> {
             '%' => {
                 // %s %d %i %f %x %% %1$s
                 let mut j = i + 1;
-                while j < chars.len() && (chars[j].is_ascii_digit() || chars[j] == '$' || chars[j] == '.') {
+                while j < chars.len()
+                    && (chars[j].is_ascii_digit() || chars[j] == '$' || chars[j] == '.')
+                {
                     j += 1;
                 }
                 if j < chars.len() && matches!(chars[j], 's' | 'd' | 'i' | 'f' | 'x' | '%' | 'u') {
@@ -71,7 +88,10 @@ pub fn placeholders(s: &str) -> Vec<String> {
 /// `&X` menu accelerators: an ampersand directly followed by a letter or digit.
 fn accelerators(s: &str) -> usize {
     let chars: Vec<char> = s.chars().collect();
-    chars.windows(2).filter(|w| w[0] == '&' && w[1].is_alphanumeric()).count()
+    chars
+        .windows(2)
+        .filter(|w| w[0] == '&' && w[1].is_alphanumeric())
+        .count()
 }
 
 fn count_char(s: &str, c: char) -> usize {
@@ -80,21 +100,34 @@ fn count_char(s: &str, c: char) -> usize {
 
 fn ends(s: &str) -> (bool, bool, bool, bool) {
     let t = s.trim_end();
-    (t.ends_with('…'), t.ends_with(':'), s.starts_with(char::is_whitespace), s.ends_with(char::is_whitespace))
+    (
+        t.ends_with('…'),
+        t.ends_with(':'),
+        s.starts_with(char::is_whitespace),
+        s.ends_with(char::is_whitespace),
+    )
 }
 
 /// Parity between the English source and one Uzbek value. Returns the problems found.
 pub fn parity(en: &str, uz: &str) -> Vec<String> {
     let mut p = Vec::new();
     if placeholders(en) != placeholders(uz) {
-        p.push(format!("placeholders differ: en {:?}, uz {:?}", placeholders(en), placeholders(uz)));
+        p.push(format!(
+            "placeholders differ: en {:?}, uz {:?}",
+            placeholders(en),
+            placeholders(uz)
+        ));
     }
     if accelerators(en) != accelerators(uz) {
         p.push("accelerator (&X) count differs".to_string());
     }
     for (c, name) in [('\n', "line breaks"), ('\t', "tabs")] {
         if count_char(en, c) != count_char(uz, c) {
-            p.push(format!("{name} differ: en {}, uz {}", count_char(en, c), count_char(uz, c)));
+            p.push(format!(
+                "{name} differ: en {}, uz {}",
+                count_char(en, c),
+                count_char(uz, c)
+            ));
         }
     }
     let (e, u) = (ends(en), ends(uz));
@@ -135,10 +168,18 @@ pub fn apostrophes(latn: bool, uz: &str) -> Vec<String> {
         }
     } else {
         for (i, c) in chars.iter().enumerate() {
-            if matches!(c, '\u{02bb}' | '\u{02bc}' | '\'' | '\u{2018}' | '\u{2019}' | '`') {
-                let near = |j: Option<usize>| j.and_then(|j| chars.get(j)).is_some_and(|x| x.is_alphabetic());
+            if matches!(
+                c,
+                '\u{02bb}' | '\u{02bc}' | '\'' | '\u{2018}' | '\u{2019}' | '`'
+            ) {
+                let near = |j: Option<usize>| {
+                    j.and_then(|j| chars.get(j))
+                        .is_some_and(|x| x.is_alphabetic())
+                };
                 if near(i.checked_sub(1)) || near(Some(i + 1)) {
-                    p.push(format!("{c:?} at {i} in Cyrillic text: use the letters ў ғ and ъ"));
+                    p.push(format!(
+                        "{c:?} at {i} in Cyrillic text: use the letters ў ғ and ъ"
+                    ));
                 }
             }
         }
@@ -195,7 +236,9 @@ pub fn script_purity(latn: bool, en: &str, uz: &str) -> Vec<String> {
         let en_words = latin_words(en);
         for w in latin_words(uz) {
             if !en_words.contains(&w) && !is_kept_token(&w) {
-                p.push(format!("Latin word {w:?} in the Cyrillic text (not in the English source)"));
+                p.push(format!(
+                    "Latin word {w:?} in the Cyrillic text (not in the English source)"
+                ));
             }
         }
     }
@@ -210,10 +253,41 @@ fn cyrl_to_latn_skeleton(s: &str) -> String {
     let mut out = String::new();
     for c in s.to_lowercase().chars() {
         let m = match c {
-            'а' => "a", 'б' => "b", 'в' => "v", 'г' => "g", 'д' => "d", 'е' | 'э' => "e", 'ё' => "yo", 'ж' => "j", 'з' => "z",
-            'и' | 'ы' => "i", 'й' => "y", 'к' => "k", 'л' => "l", 'м' => "m", 'н' => "n", 'о' => "o", 'п' => "p", 'р' => "r",
-            'с' => "s", 'т' => "t", 'у' => "u", 'ф' => "f", 'х' => "x", 'ц' => "ts", 'ч' => "ch", 'ш' => "sh", 'щ' => "shch",
-            'ъ' => "\u{02bc}", 'ь' => "", 'ю' => "yu", 'я' => "ya", 'ў' => "o\u{02bb}", 'қ' => "q", 'ғ' => "g\u{02bb}", 'ҳ' => "h",
+            'а' => "a",
+            'б' => "b",
+            'в' => "v",
+            'г' => "g",
+            'д' => "d",
+            'е' | 'э' => "e",
+            'ё' => "yo",
+            'ж' => "j",
+            'з' => "z",
+            'и' | 'ы' => "i",
+            'й' => "y",
+            'к' => "k",
+            'л' => "l",
+            'м' => "m",
+            'н' => "n",
+            'о' => "o",
+            'п' => "p",
+            'р' => "r",
+            'с' => "s",
+            'т' => "t",
+            'у' => "u",
+            'ф' => "f",
+            'х' => "x",
+            'ц' => "ts",
+            'ч' => "ch",
+            'ш' => "sh",
+            'щ' => "shch",
+            'ъ' => "\u{02bc}",
+            'ь' => "",
+            'ю' => "yu",
+            'я' => "ya",
+            'ў' => "o\u{02bb}",
+            'қ' => "q",
+            'ғ' => "g\u{02bb}",
+            'ҳ' => "h",
             c => {
                 out.push(c);
                 continue;
@@ -226,7 +300,11 @@ fn cyrl_to_latn_skeleton(s: &str) -> String {
 
 /// Both scripts reduced to one comparable form: lower case, stem exceptions, `ye` = `e`, and `ts` = `s` (Russian loans differ here).
 fn skeleton(s: &str, from_cyrl: bool) -> String {
-    let mut t = if from_cyrl { cyrl_to_latn_skeleton(s) } else { s.to_lowercase() };
+    let mut t = if from_cyrl {
+        cyrl_to_latn_skeleton(s)
+    } else {
+        s.to_lowercase()
+    };
     if !from_cyrl {
         for (lat, cyr) in STEM_PAIRS {
             t = t.replace(lat, cyr);
@@ -234,7 +312,9 @@ fn skeleton(s: &str, from_cyrl: bool) -> String {
     }
     t = t.replace("ye", "e").replace("ts", "s");
     // drop everything that is not a letter, so spacing and punctuation never decide
-    t.chars().filter(|c| c.is_alphanumeric() || *c == '\u{02bb}' || *c == '\u{02bc}').collect()
+    t.chars()
+        .filter(|c| c.is_alphanumeric() || *c == '\u{02bb}' || *c == '\u{02bc}')
+        .collect()
 }
 
 /// Do the Latin and the Cyrillic text say the same under the letter mapping?
@@ -257,7 +337,14 @@ pub fn pair_consistent(latn: &str, cyrl: &str) -> bool {
 }
 
 fn label_context(row: &Row) -> bool {
-    let file = row.where_.split(':').next().unwrap_or("").rsplit('/').next().unwrap_or("");
+    let file = row
+        .where_
+        .split(':')
+        .next()
+        .unwrap_or("")
+        .rsplit('/')
+        .next()
+        .unwrap_or("");
     LABEL_FILES.contains(&file)
 }
 
@@ -282,42 +369,107 @@ pub fn lint(cat: &Catalog) -> Vec<Finding> {
                 continue;
             }
             let mut add = |level: Level, code: &'static str, detail: String| {
-                f.push(Finding { level, code, scope: scope.clone(), id: r.id.clone(), source: r.source.clone(), detail });
+                f.push(Finding {
+                    level,
+                    code,
+                    scope: scope.clone(),
+                    id: r.id.clone(),
+                    source: r.source.clone(),
+                    detail,
+                });
             };
             let p1 = r.priority.starts_with("P1");
-            let (lat, cyr) = (has_draft(&r.uz_latn_status, &r.uz_latn), has_draft(&r.uz_cyrl_status, &r.uz_cyrl));
+            let (lat, cyr) = (
+                has_draft(&r.uz_latn_status, &r.uz_latn),
+                has_draft(&r.uz_cyrl_status, &r.uz_cyrl),
+            );
             if p1 && !exempt(r) && !(lat && cyr) {
-                add(Level::Error, "missing-p1", format!("P1 row without a {} draft", if !lat && !cyr { "uz-Latn or uz-Cyrl" } else if !lat { "uz-Latn" } else { "uz-Cyrl" }));
+                add(
+                    Level::Error,
+                    "missing-p1",
+                    format!(
+                        "P1 row without a {} draft",
+                        if !lat && !cyr {
+                            "uz-Latn or uz-Cyrl"
+                        } else if !lat {
+                            "uz-Latn"
+                        } else {
+                            "uz-Cyrl"
+                        }
+                    ),
+                );
             }
-            for (loc, value, status, is_latn) in [("uz-Latn", &r.uz_latn, &r.uz_latn_status, true), ("uz-Cyrl", &r.uz_cyrl, &r.uz_cyrl_status, false)] {
+            for (loc, value, status, is_latn) in [
+                ("uz-Latn", &r.uz_latn, &r.uz_latn_status, true),
+                ("uz-Cyrl", &r.uz_cyrl, &r.uz_cyrl_status, false),
+            ] {
                 if value.is_empty() {
                     continue;
                 }
                 if !matches!(state(status), "draft" | "reviewed" | "rejected") {
-                    add(Level::Error, "status", format!("{loc}: value present but status is {status:?}"));
+                    add(
+                        Level::Error,
+                        "status",
+                        format!("{loc}: value present but status is {status:?}"),
+                    );
                 }
                 let mut errs: Vec<(&'static str, String)> = Vec::new();
                 errs.extend(parity(&r.source, value).into_iter().map(|m| ("parity", m)));
-                errs.extend(apostrophes(is_latn, value).into_iter().map(|m| ("apostrophe", m)));
-                errs.extend(script_purity(is_latn, &r.source, value).into_iter().map(|m| ("script", m)));
+                errs.extend(
+                    apostrophes(is_latn, value)
+                        .into_iter()
+                        .map(|m| ("apostrophe", m)),
+                );
+                errs.extend(
+                    script_purity(is_latn, &r.source, value)
+                        .into_iter()
+                        .map(|m| ("script", m)),
+                );
                 for tok in PRODUCT_TOKENS {
                     if r.source.matches(tok).count() != value.matches(tok).count() {
-                        errs.push(("product-token", format!("{tok} appears {} times in English, {} in the translation", r.source.matches(tok).count(), value.matches(tok).count())));
+                        errs.push((
+                            "product-token",
+                            format!(
+                                "{tok} appears {} times in English, {} in the translation",
+                                r.source.matches(tok).count(),
+                                value.matches(tok).count()
+                            ),
+                        ));
                     }
                 }
                 if r.context == "@plural" && (value.split('|').count() != 2) {
-                    errs.push(("plural", format!("{} plural forms, Uzbek needs 2 (one|other)", value.split('|').count())));
+                    errs.push((
+                        "plural",
+                        format!(
+                            "{} plural forms, Uzbek needs 2 (one|other)",
+                            value.split('|').count()
+                        ),
+                    ));
                 }
                 for (code, m) in errs {
                     add(Level::Error, code, format!("{loc}: {m}"));
                 }
                 let (el, ul) = (visible_len(&r.source), visible_len(value));
                 if is_latn && label_context(r) && el > 0 && (ul as f64) > 1.4 * (el as f64) {
-                    add(Level::Warn, "length", format!("{loc}: {ul} characters against {el} in English ({:.1}x)", ul as f64 / el as f64));
+                    add(
+                        Level::Warn,
+                        "length",
+                        format!(
+                            "{loc}: {ul} characters against {el} in English ({:.1}x)",
+                            ul as f64 / el as f64
+                        ),
+                    );
                 }
             }
             if lat && cyr && !pair_consistent(&r.uz_latn, &r.uz_cyrl) {
-                add(Level::Warn, "script-mismatch", format!("Latin {:?} and Cyrillic {:?} disagree under the letter mapping", r.uz_latn, r.uz_cyrl));
+                add(
+                    Level::Warn,
+                    "script-mismatch",
+                    format!(
+                        "Latin {:?} and Cyrillic {:?} disagree under the letter mapping",
+                        r.uz_latn, r.uz_cyrl
+                    ),
+                );
             }
         }
     }
@@ -328,19 +480,30 @@ pub fn lint(cat: &Catalog) -> Vec<Finding> {
 pub fn summary(findings: &[Finding]) -> String {
     let mut by: BTreeMap<(u8, &str), usize> = BTreeMap::new();
     for x in findings {
-        *by.entry((matches!(x.level, Level::Warn) as u8, x.code)).or_default() += 1;
+        *by.entry((matches!(x.level, Level::Warn) as u8, x.code))
+            .or_default() += 1;
     }
     let mut out = String::new();
     for ((w, code), n) in by {
-        let _ = writeln!(out, "  {} {code}: {n}", if w == 1 { "warning" } else { "ERROR  " });
+        let _ = writeln!(
+            out,
+            "  {} {code}: {n}",
+            if w == 1 { "warning" } else { "ERROR  " }
+        );
     }
     out
 }
 
 /// The markdown report: every finding, errors first.
 pub fn report(findings: &[Finding], rows_checked: usize) -> String {
-    let mut out = String::from("# i18n lint report (WP9e)\n\nGenerated by `cargo xt i18n lint --report`. Errors fail the command; warnings are flags for the owner's review.\n\n");
-    let _ = writeln!(out, "Rows with an Uzbek draft checked: {rows_checked}.\n\n```\n{}```\n", summary(findings));
+    let mut out = String::from(
+        "# i18n lint report (WP9e)\n\nGenerated by `cargo xt i18n lint --report`. Errors fail the command; warnings are flags for the owner's review.\n\n",
+    );
+    let _ = writeln!(
+        out,
+        "Rows with an Uzbek draft checked: {rows_checked}.\n\n```\n{}```\n",
+        summary(findings)
+    );
     for (title, level) in [("Errors", Level::Error), ("Warnings", Level::Warn)] {
         let list: Vec<&Finding> = findings.iter().filter(|x| x.level == level).collect();
         let _ = writeln!(out, "## {title} ({})\n", list.len());
@@ -351,9 +514,22 @@ pub fn report(findings: &[Finding], rows_checked: usize) -> String {
         out.push_str("| code | scope | id | English | detail |\n|---|---|---|---|---|\n");
         let esc = |s: &str| s.replace('|', "\\|").replace('\n', " ");
         let mut list = list;
-        list.sort_by(|a, b| a.code.cmp(b.code).then(a.scope.cmp(&b.scope)).then(a.id.cmp(&b.id)));
+        list.sort_by(|a, b| {
+            a.code
+                .cmp(b.code)
+                .then(a.scope.cmp(&b.scope))
+                .then(a.id.cmp(&b.id))
+        });
         for x in list {
-            let _ = writeln!(out, "| {} | {} | {} | {} | {} |", x.code, x.scope, x.id, esc(&x.source), esc(&x.detail));
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} | {} |",
+                x.code,
+                x.scope,
+                x.id,
+                esc(&x.source),
+                esc(&x.detail)
+            );
         }
         out.push('\n');
     }
@@ -362,7 +538,11 @@ pub fn report(findings: &[Finding], rows_checked: usize) -> String {
 
 /// Rows that carry at least one Uzbek draft (the number the report quotes).
 pub fn rows_with_uzbek(cat: &Catalog) -> usize {
-    cat.scopes.values().flatten().filter(|r| r.priority != "obsolete" && (!r.uz_latn.is_empty() || !r.uz_cyrl.is_empty())).count()
+    cat.scopes
+        .values()
+        .flatten()
+        .filter(|r| r.priority != "obsolete" && (!r.uz_latn.is_empty() || !r.uz_cyrl.is_empty()))
+        .count()
 }
 
 #[cfg(test)]
@@ -389,12 +569,20 @@ mod tests {
     }
 
     fn codes(c: &Catalog) -> Vec<&'static str> {
-        lint(c).into_iter().filter(|f| f.level == Level::Error).map(|f| f.code).collect()
+        lint(c)
+            .into_iter()
+            .filter(|f| f.level == Level::Error)
+            .map(|f| f.code)
+            .collect()
     }
 
     #[test]
     fn a_clean_pair_passes() {
-        let c = cat_of(vec![row("Page {page} of {pages}", "{pages} sahifadan {page}-sahifa", "{pages} саҳифадан {page}-саҳифа")]);
+        let c = cat_of(vec![row(
+            "Page {page} of {pages}",
+            "{pages} sahifadan {page}-sahifa",
+            "{pages} саҳифадан {page}-саҳифа",
+        )]);
         assert!(lint(&c).is_empty(), "{:?}", lint(&c));
     }
 
@@ -417,7 +605,10 @@ mod tests {
         assert!(apostrophes(true, "O\u{02bb}zbek ma\u{02bc}lumot").is_empty());
         assert!(!apostrophes(true, "O'zbek").is_empty());
         assert!(!apostrophes(true, "ko\u{2018}rish").is_empty());
-        assert!(!apostrophes(true, "ba\u{02bb}za").is_empty(), "U+02BB only after o or g");
+        assert!(
+            !apostrophes(true, "ba\u{02bb}za").is_empty(),
+            "U+02BB only after o or g"
+        );
         assert!(apostrophes(false, "Ўзбек маълумот").is_empty());
         assert!(!apostrophes(false, "ма'лумот").is_empty());
         let c = cat_of(vec![row("Go", "Bor'ish", "Бориш")]);
@@ -426,10 +617,24 @@ mod tests {
 
     #[test]
     fn script_purity_rules() {
-        assert!(script_purity(true, "Open", "Ochиsh").iter().any(|m| m.contains("Cyrillic")));
-        assert!(script_purity(false, "Export PDF", "PDF экспорт").is_empty(), "all-caps token stays Latin");
-        assert!(script_purity(false, "Open", "Ochish").iter().any(|m| m.contains("Latin")));
-        assert!(script_purity(false, "Insert Word", "Word киритиш").is_empty(), "word taken from the English source");
+        assert!(
+            script_purity(true, "Open", "Ochиsh")
+                .iter()
+                .any(|m| m.contains("Cyrillic"))
+        );
+        assert!(
+            script_purity(false, "Export PDF", "PDF экспорт").is_empty(),
+            "all-caps token stays Latin"
+        );
+        assert!(
+            script_purity(false, "Open", "Ochish")
+                .iter()
+                .any(|m| m.contains("Latin"))
+        );
+        assert!(
+            script_purity(false, "Insert Word", "Word киритиш").is_empty(),
+            "word taken from the English source"
+        );
         assert!(!script_purity(false, "Insert", "Kiritиш").is_empty());
     }
 
@@ -443,14 +648,26 @@ mod tests {
         assert!(pair_consistent("Yoʻq", "Йўқ"));
         assert!(!pair_consistent("Fayl", "Файллар"));
         let c = cat_of(vec![row("File", "Fayl", "Файллар")]);
-        assert!(lint(&c).iter().any(|f| f.code == "script-mismatch" && f.level == Level::Warn));
+        assert!(
+            lint(&c)
+                .iter()
+                .any(|f| f.code == "script-mismatch" && f.level == Level::Warn)
+        );
     }
 
     #[test]
     fn product_tokens_and_plural_forms() {
-        let c = cat_of(vec![row("About PdfCraft", "Dastur haqida", "Дастур ҳақида")]);
+        let c = cat_of(vec![row(
+            "About PdfCraft",
+            "Dastur haqida",
+            "Дастур ҳақида",
+        )]);
         assert!(codes(&c).contains(&"product-token"));
-        let ok = cat_of(vec![row("About PdfCraft", "PdfCraft haqida", "PdfCraft ҳақида")]);
+        let ok = cat_of(vec![row(
+            "About PdfCraft",
+            "PdfCraft haqida",
+            "PdfCraft ҳақида",
+        )]);
         assert!(lint(&ok).is_empty(), "{:?}", lint(&ok));
         let mut r = row("{n} page|{n} pages", "{n} ta sahifa", "{n} та саҳифа");
         r.context = "@plural".into();
@@ -469,7 +686,10 @@ mod tests {
     #[test]
     fn length_is_a_warning_in_label_contexts_only() {
         let mut r = row("Cut", "Kesib olish", "Кесиб олиш");
-        assert!(lint(&cat_of(vec![r.clone()])).is_empty(), "no source file known: not a label context");
+        assert!(
+            lint(&cat_of(vec![r.clone()])).is_empty(),
+            "no source file known: not a label context"
+        );
         r.where_ = "crates/ui-egui/src/ribbon.rs:10".into();
         let f = lint(&cat_of(vec![r]));
         assert_eq!(f.len(), 1);

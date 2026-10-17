@@ -2,7 +2,7 @@
 //! at export time (design section 5): the app only ever sees one catalog and keeps its own
 //! "missing means English" behaviour. The exporter never writes English text into a locale column.
 
-use super::catalog::{adapt_plural, escape, exportable, plural_forms, Catalog, Mode, Row};
+use super::catalog::{Catalog, Mode, Row, adapt_plural, escape, exportable, plural_forms};
 use super::extract::{parse_rust_table, read_upstream_tsv, split_grid_key};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -18,7 +18,11 @@ pub struct Chains(pub BTreeMap<String, Vec<String>>);
 impl Default for Chains {
     fn default() -> Self {
         let mut m = BTreeMap::new();
-        for (k, v) in [("uz-latn", vec!["uz-latn", "en"]), ("uz-cyrl", vec!["uz-cyrl", "ru", "en"]), ("ru", vec!["ru", "en"])] {
+        for (k, v) in [
+            ("uz-latn", vec!["uz-latn", "en"]),
+            ("uz-cyrl", vec!["uz-cyrl", "ru", "en"]),
+            ("ru", vec!["ru", "en"]),
+        ] {
             m.insert(k.to_string(), v.into_iter().map(String::from).collect());
         }
         Chains(m)
@@ -27,12 +31,19 @@ impl Default for Chains {
 
 impl Chains {
     pub fn parse(text: &str) -> Result<Chains, String> {
-        let doc = text.parse::<DocumentMut>().map_err(|e| format!("config.toml: {e}"))?;
+        let doc = text
+            .parse::<DocumentMut>()
+            .map_err(|e| format!("config.toml: {e}"))?;
         let mut chains = Chains::default();
         if let Some(t) = doc.get("chains").and_then(|c| c.as_table()) {
             for (loc, v) in t.iter() {
-                let arr = v.as_array().ok_or_else(|| format!("config.toml: chains.{loc} must be an array"))?;
-                let list: Vec<String> = arr.iter().filter_map(|x| x.as_str().map(String::from)).collect();
+                let arr = v
+                    .as_array()
+                    .ok_or_else(|| format!("config.toml: chains.{loc} must be an array"))?;
+                let list: Vec<String> = arr
+                    .iter()
+                    .filter_map(|x| x.as_str().map(String::from))
+                    .collect();
                 if list.first().map(String::as_str) != Some(loc) {
                     return Err(format!("config.toml: chains.{loc} must start with {loc}"));
                 }
@@ -48,7 +59,10 @@ impl Chains {
         }
     }
     pub fn of(&self, locale: &str) -> Vec<String> {
-        self.0.get(locale).cloned().unwrap_or_else(|| vec![locale.to_string(), "en".into()])
+        self.0
+            .get(locale)
+            .cloned()
+            .unwrap_or_else(|| vec![locale.to_string(), "en".into()])
     }
 }
 
@@ -85,13 +99,22 @@ pub struct Built {
 }
 
 /// The value a row gives to `locale` through its chain: (value, supplying locale).
-pub fn resolve(row: &Row, app: &str, locale: &str, chains: &Chains, mode: Mode) -> Option<(String, String, bool)> {
+pub fn resolve(
+    row: &Row,
+    app: &str,
+    locale: &str,
+    chains: &Chains,
+    mode: Mode,
+) -> Option<(String, String, bool)> {
     for step in chains.of(locale) {
         if step == "en" {
             return None; // the app falls back to English by itself
         }
         let v = row.value(&step);
-        if v.is_empty() || !exportable(row.status(&step), mode) || (step == "ru" && !row.ru_in_app(app)) {
+        if v.is_empty()
+            || !exportable(row.status(&step), mode)
+            || (step == "ru" && !row.ru_in_app(app))
+        {
             continue;
         }
         let v = if row.context == "@plural" && step != locale {
@@ -112,7 +135,13 @@ pub fn resolve(row: &Row, app: &str, locale: &str, chains: &Chains, mode: Mode) 
 }
 
 fn sort_entries(entries: &mut [Entry]) {
-    entries.sort_by(|a, b| a.source.to_lowercase().cmp(&b.source.to_lowercase()).then_with(|| a.source.cmp(&b.source)).then_with(|| a.context.cmp(&b.context)));
+    entries.sort_by(|a, b| {
+        a.source
+            .to_lowercase()
+            .cmp(&b.source.to_lowercase())
+            .then_with(|| a.source.cmp(&b.source))
+            .then_with(|| a.context.cmp(&b.context))
+    });
 }
 
 pub fn build_locale(cat: &Catalog, app: &str, locale: &str, chains: &Chains, mode: Mode) -> Built {
@@ -128,10 +157,18 @@ pub fn build_locale(cat: &Catalog, app: &str, locale: &str, chains: &Chains, mod
             continue;
         };
         if step == locale {
-            if reviewed { b.own_reviewed += 1 } else { b.own_draft += 1 }
+            if reviewed {
+                b.own_reviewed += 1
+            } else {
+                b.own_draft += 1
+            }
         }
         *b.from.entry(step).or_default() += 1;
-        b.entries.push(Entry { context: row.context.clone(), source: row.source.clone(), value });
+        b.entries.push(Entry {
+            context: row.context.clone(),
+            source: row.source.clone(),
+            value,
+        });
     }
     sort_entries(&mut b.entries);
     b
@@ -142,7 +179,11 @@ fn header(app: &str, locale: &str, mode: Mode) -> String {
         Mode::Review => "REVIEW build: includes unreviewed DRAFT translations",
         Mode::Release => "RELEASE build: reviewed or upstream rows only",
     };
-    let cols = if app == "gridcraft" { "key (`context|label`, or the label) <TAB> translation" } else { "context <TAB> English source <TAB> translation" };
+    let cols = if app == "gridcraft" {
+        "key (`context|label`, or the label) <TAB> translation"
+    } else {
+        "context <TAB> English source <TAB> translation"
+    };
     format!(
         "# {locale} interface catalog for {app}, generated by `cargo xt i18n export` from i18n/*.tsv. Do not edit.\n# {label}.\n# Columns, separated by a TAB: {cols}.\n# Escapes: \\n \\t \\\\ . Lines starting with # and blank lines are ignored. A missing entry shows in English.\n# Clean room: every entry was written from the plain meaning of the English label; no proprietary localisation was consulted.\n\n"
     )
@@ -153,10 +194,19 @@ pub fn render(app: &str, locale: &str, entries: &[Entry], mode: Mode) -> String 
     let mut out = header(app, locale, mode);
     for e in entries {
         if app == "gridcraft" {
-            let key = if e.context.is_empty() { e.source.clone() } else { format!("{}|{}", e.context, e.source) };
+            let key = if e.context.is_empty() {
+                e.source.clone()
+            } else {
+                format!("{}|{}", e.context, e.source)
+            };
             out.push_str(&format!("{}\t{}\n", escape(&key), escape(&e.value)));
         } else {
-            out.push_str(&format!("{}\t{}\t{}\n", escape(&e.context), escape(&e.source), escape(&e.value)));
+            out.push_str(&format!(
+                "{}\t{}\t{}\n",
+                escape(&e.context),
+                escape(&e.source),
+                escape(&e.value)
+            ));
         }
     }
     out
@@ -180,31 +230,64 @@ pub fn rust_literal(s: &str) -> String {
 
 /// What gridcraft's `build_office.rs` generates from the overlay TSV: a `match` shaped like upstream's tables.
 pub fn rust_match_fn(name: &str, entries: &[Entry]) -> String {
-    let mut out = format!("pub(super) fn {name}(text: &str) -> Option<&'static str> {{\n    Some(match text {{\n");
+    let mut out = format!(
+        "pub(super) fn {name}(text: &str) -> Option<&'static str> {{\n    Some(match text {{\n"
+    );
     for e in entries {
-        let key = if e.context.is_empty() { e.source.clone() } else { format!("{}|{}", e.context, e.source) };
-        out.push_str(&format!("        {} => {},\n", rust_literal(&key), rust_literal(&e.value)));
+        let key = if e.context.is_empty() {
+            e.source.clone()
+        } else {
+            format!("{}|{}", e.context, e.source)
+        };
+        out.push_str(&format!(
+            "        {} => {},\n",
+            rust_literal(&key),
+            rust_literal(&e.value)
+        ));
     }
     out.push_str("        _ => return None,\n    })\n}\n");
     out
 }
 
 /// `dates-<code>.tsv`: 12 months, 12 short months, 7 days, 7 short days. All 38 or nothing.
-pub fn build_dates(cat: &Catalog, locale: &str, chains: &Chains, mode: Mode) -> Result<String, String> {
-    let rows: Vec<&Row> = cat.app_rows("pdfcraft").into_iter().filter(|r| r.context.starts_with("date.")).collect();
+pub fn build_dates(
+    cat: &Catalog,
+    locale: &str,
+    chains: &Chains,
+    mode: Mode,
+) -> Result<String, String> {
+    let rows: Vec<&Row> = cat
+        .app_rows("pdfcraft")
+        .into_iter()
+        .filter(|r| r.context.starts_with("date."))
+        .collect();
     let mut found: Vec<(String, u32, String, String)> = Vec::new();
     for r in &rows {
         if let Some((v, _, _)) = resolve(r, "pdfcraft", locale, chains, mode) {
             let mut parts = r.context.rsplitn(2, '.');
-            let n = parts.next().and_then(|n| n.parse::<u32>().ok()).unwrap_or(0);
-            found.push((parts.next().unwrap_or("").to_string(), n, r.source.clone(), v));
+            let n = parts
+                .next()
+                .and_then(|n| n.parse::<u32>().ok())
+                .unwrap_or(0);
+            found.push((
+                parts.next().unwrap_or("").to_string(),
+                n,
+                r.source.clone(),
+                v,
+            ));
         }
     }
     if rows.len() != 38 || found.len() != 38 {
-        return Err(format!("{}/{} of 38 date rows available for {locale} (need all 38)", found.len(), rows.len()));
+        return Err(format!(
+            "{}/{} of 38 date rows available for {locale} (need all 38)",
+            found.len(),
+            rows.len()
+        ));
     }
     found.sort();
-    let mut out = String::from("# Month and weekday names for Preferences > Date format, generated by `cargo xt i18n export`.\n# kind.index <TAB> English <TAB> name\n\n");
+    let mut out = String::from(
+        "# Month and weekday names for Preferences > Date format, generated by `cargo xt i18n export`.\n# kind.index <TAB> English <TAB> name\n\n",
+    );
     for (kind, n, en, v) in found {
         out.push_str(&format!("{kind}.{n}\t{}\t{}\n", escape(&en), escape(&v)));
     }
@@ -215,15 +298,34 @@ pub fn overlay_root() -> Result<PathBuf, String> {
     if let Ok(v) = std::env::var("OFFICE_OVERLAY_ROOT") {
         return Ok(PathBuf::from(v));
     }
-    std::env::var("OFFICE_TARGET").map(|t| PathBuf::from(t).join("overlay")).map_err(|_| "set OFFICE_OVERLAY_ROOT or OFFICE_TARGET (source scripts/env.sh), or pass --out".to_string())
+    std::env::var("OFFICE_TARGET")
+        .map(|t| PathBuf::from(t).join("overlay"))
+        .map_err(|_| {
+            "set OFFICE_OVERLAY_ROOT or OFFICE_TARGET (source scripts/env.sh), or pass --out"
+                .to_string()
+        })
 }
 
 /// Export one app. Returns report lines.
-pub fn export_app(cat: &Catalog, app: &str, mode: Mode, chains: &Chains, out_root: &Path, with_ru: bool) -> Result<Vec<String>, String> {
+pub fn export_app(
+    cat: &Catalog,
+    app: &str,
+    mode: Mode,
+    chains: &Chains,
+    out_root: &Path,
+    with_ru: bool,
+) -> Result<Vec<String>, String> {
     let dir = out_root.join(app);
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let mut report = Vec::new();
-    let mut meta = vec![format!("MODE={}", if mode == Mode::Review { "review" } else { "release" })];
+    let mut meta = vec![format!(
+        "MODE={}",
+        if mode == Mode::Review {
+            "review"
+        } else {
+            "release"
+        }
+    )];
     let mut locales: Vec<&str> = EXPORT_LOCALES.to_vec();
     if with_ru {
         locales.push("ru");
@@ -231,23 +333,40 @@ pub fn export_app(cat: &Catalog, app: &str, mode: Mode, chains: &Chains, out_roo
     for loc in locales {
         let b = build_locale(cat, app, loc, chains, mode);
         let path = dir.join(format!("catalog-{loc}.tsv"));
-        fs::write(&path, render(app, loc, &b.entries, mode)).map_err(|e| format!("{}: {e}", path.display()))?;
+        fs::write(&path, render(app, loc, &b.entries, mode))
+            .map_err(|e| format!("{}: {e}", path.display()))?;
         let from: Vec<String> = b.from.iter().map(|(k, v)| format!("{k}={v}")).collect();
-        report.push(format!("{app} {loc}: {} entries ({}) -> {}", b.entries.len(), from.join(", "), path.display()));
+        report.push(format!(
+            "{app} {loc}: {} entries ({}) -> {}",
+            b.entries.len(),
+            from.join(", "),
+            path.display()
+        ));
         let key = loc.to_uppercase().replace('-', "_");
         meta.push(format!("{key}_REVIEWED={}", b.own_reviewed));
         meta.push(format!("{key}_DRAFT={}", b.own_draft));
-        meta.push(format!("{key}_FILLED={}", b.entries.len() - b.own_reviewed - b.own_draft));
+        meta.push(format!(
+            "{key}_FILLED={}",
+            b.entries.len() - b.own_reviewed - b.own_draft
+        ));
         if let Some((name, draft)) = picker_name(loc) {
             // The language picker shows the name in its own script; a draft marker follows while any row is unreviewed.
-            meta.push(format!("NAME_{key}={name}{}", if b.own_draft > 0 { format!(" ({draft})") } else { String::new() }));
+            meta.push(format!(
+                "NAME_{key}={name}{}",
+                if b.own_draft > 0 {
+                    format!(" ({draft})")
+                } else {
+                    String::new()
+                }
+            ));
         }
     }
     if app == "pdfcraft" {
         for loc in EXPORT_LOCALES {
             match build_dates(cat, loc, chains, mode) {
                 Ok(text) => {
-                    fs::write(dir.join(format!("dates-{loc}.tsv")), text).map_err(|e| e.to_string())?;
+                    fs::write(dir.join(format!("dates-{loc}.tsv")), text)
+                        .map_err(|e| e.to_string())?;
                     report.push(format!("pdfcraft dates-{loc}.tsv: 38 rows"));
                 }
                 Err(e) => report.push(format!("pdfcraft dates-{loc}.tsv NOT written: {e}")),
@@ -259,7 +378,12 @@ pub fn export_app(cat: &Catalog, app: &str, mode: Mode, chains: &Chains, out_roo
 }
 
 /// Round trip: extract -> export `ru` with no Uzbek -> compare with upstream's own ru catalog.
-pub fn roundtrip(root: &Path, cat: &Catalog, chains: &Chains, out_root: &Path) -> Result<Vec<String>, String> {
+pub fn roundtrip(
+    root: &Path,
+    cat: &Catalog,
+    chains: &Chains,
+    out_root: &Path,
+) -> Result<Vec<String>, String> {
     let mut report = Vec::new();
     let mut failed = false;
     for app in ["wordcraft", "gridcraft", "pdfcraft"] {
@@ -270,17 +394,32 @@ pub fn roundtrip(root: &Path, cat: &Catalog, chains: &Chains, out_root: &Path) -
         fs::write(dir.join("catalog-ru.tsv"), &text).map_err(|e| e.to_string())?;
         let base = root.join("upstream").join(app).join("crates/ui-egui/src");
         // upstream ru as (context, source, value) in file order
-        let (up, up_text_lines): (Vec<(String, String, String)>, Vec<String>) = if app == "gridcraft" {
-            let src = fs::read_to_string(base.join("i18n/ru.rs")).map_err(|e| e.to_string())?;
-            let (pairs, _) = parse_rust_table(&src, None);
-            let entries = pairs.iter().map(|(k, v)| { let (c, l) = split_grid_key(k); (c, l, v.clone()) }).collect();
-            (entries, Vec::new())
-        } else {
-            let t = fs::read_to_string(base.join("i18n/ru.tsv")).map_err(|e| e.to_string())?;
-            let lines = t.lines().filter(|l| !l.trim().is_empty() && !l.starts_with('#')).map(String::from).collect();
-            (read_upstream_tsv(&t).0, lines)
-        };
-        let ours: BTreeSet<(String, String, String)> = built.entries.iter().map(|e| (e.context.clone(), e.source.clone(), e.value.clone())).collect();
+        let (up, up_text_lines): (Vec<(String, String, String)>, Vec<String>) =
+            if app == "gridcraft" {
+                let src = fs::read_to_string(base.join("i18n/ru.rs")).map_err(|e| e.to_string())?;
+                let (pairs, _) = parse_rust_table(&src, None);
+                let entries = pairs
+                    .iter()
+                    .map(|(k, v)| {
+                        let (c, l) = split_grid_key(k);
+                        (c, l, v.clone())
+                    })
+                    .collect();
+                (entries, Vec::new())
+            } else {
+                let t = fs::read_to_string(base.join("i18n/ru.tsv")).map_err(|e| e.to_string())?;
+                let lines = t
+                    .lines()
+                    .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+                    .map(String::from)
+                    .collect();
+                (read_upstream_tsv(&t).0, lines)
+            };
+        let ours: BTreeSet<(String, String, String)> = built
+            .entries
+            .iter()
+            .map(|e| (e.context.clone(), e.source.clone(), e.value.clone()))
+            .collect();
         let theirs: BTreeSet<(String, String, String)> = up.iter().cloned().collect();
         let semantic = ours == theirs && built.entries.len() == up.len();
         // Re-read our own file with the same parser upstream-compatible readers use.
@@ -296,7 +435,11 @@ pub fn roundtrip(root: &Path, cat: &Catalog, chains: &Chains, out_root: &Path) -
             read_upstream_tsv(&text).0.into_iter().collect()
         };
         let reparse_ok = reparsed == theirs;
-        let mut mine: Vec<String> = text.lines().filter(|l| !l.trim().is_empty() && !l.starts_with('#')).map(String::from).collect();
+        let mut mine: Vec<String> = text
+            .lines()
+            .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+            .map(String::from)
+            .collect();
         let (lines_equal_sorted, bytes_in_order) = if app == "gridcraft" {
             (false, false)
         } else {
@@ -334,7 +477,17 @@ mod tests {
     use crate::i18n::catalog::Row;
 
     fn row(ctx: &str, src: &str) -> Row {
-        Row { id: src.into(), context: ctx.into(), source: src.into(), apps: "pdfcraft,wordcraft".into(), priority: "P1".into(), uz_latn_status: "todo".into(), uz_cyrl_status: "todo".into(), ru_status: "todo".into(), ..Row::default() }
+        Row {
+            id: src.into(),
+            context: ctx.into(),
+            source: src.into(),
+            apps: "pdfcraft,wordcraft".into(),
+            priority: "P1".into(),
+            uz_latn_status: "todo".into(),
+            uz_cyrl_status: "todo".into(),
+            ru_status: "todo".into(),
+            ..Row::default()
+        }
     }
 
     fn cat_of(rows: Vec<Row>) -> Catalog {
@@ -359,11 +512,18 @@ mod tests {
         let cat = cat_of(vec![a, b, c]);
         let chains = Chains::default();
         let cyrl = build_locale(&cat, "wordcraft", "uz-cyrl", &chains, Mode::Release);
-        let got: Vec<_> = cyrl.entries.iter().map(|e| (e.source.as_str(), e.value.as_str())).collect();
+        let got: Vec<_> = cyrl
+            .entries
+            .iter()
+            .map(|e| (e.source.as_str(), e.value.as_str()))
+            .collect();
         assert_eq!(got, vec![("Copy", "Нусхалаш"), ("Paste", "Вставить")]); // own reviewed first, ru fills, draft Latn never leaks
         assert_eq!(cyrl.from.get("ru"), Some(&1));
         let latn = build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Release);
-        assert!(latn.entries.is_empty(), "release: a draft is not exported and en is never written");
+        assert!(
+            latn.entries.is_empty(),
+            "release: a draft is not exported and en is never written"
+        );
         let latn = build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Review);
         assert_eq!(latn.entries.len(), 1);
         assert_eq!(latn.own_draft, 1);
@@ -375,9 +535,24 @@ mod tests {
         a.ru = "Вставить".into();
         a.ru_status = "upstream".into();
         let cat = cat_of(vec![a]);
-        assert!(build_locale(&cat, "wordcraft", "uz-latn", &Chains::default(), Mode::Release).entries.is_empty());
+        assert!(
+            build_locale(
+                &cat,
+                "wordcraft",
+                "uz-latn",
+                &Chains::default(),
+                Mode::Release
+            )
+            .entries
+            .is_empty()
+        );
         let chains = Chains::parse("[chains]\nuz-latn = [\"uz-latn\", \"ru\", \"en\"]\n").unwrap();
-        assert_eq!(build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Release).entries.len(), 1);
+        assert_eq!(
+            build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Release)
+                .entries
+                .len(),
+            1
+        );
         assert!(Chains::parse("[chains]\nuz-latn = [\"ru\"]\n").is_err());
     }
 
@@ -388,8 +563,18 @@ mod tests {
         a.ru_status = "upstream".into();
         a.ru_apps = "wordcraft".into();
         let cat = cat_of(vec![a]);
-        assert_eq!(build_locale(&cat, "wordcraft", "ru", &Chains::default(), Mode::Release).entries.len(), 1);
-        assert_eq!(build_locale(&cat, "pdfcraft", "ru", &Chains::default(), Mode::Release).entries.len(), 0);
+        assert_eq!(
+            build_locale(&cat, "wordcraft", "ru", &Chains::default(), Mode::Release)
+                .entries
+                .len(),
+            1
+        );
+        assert_eq!(
+            build_locale(&cat, "pdfcraft", "ru", &Chains::default(), Mode::Release)
+                .entries
+                .len(),
+            0
+        );
     }
 
     #[test]
@@ -416,26 +601,52 @@ mod tests {
     #[test]
     fn native_formats_and_rust_table_round_trip() {
         let entries = vec![
-            Entry { context: String::new(), source: "Top\nAlign".into(), value: "Yuqori\nsafga".into() },
-            Entry { context: "Page Layout".into(), source: "Orientation".into(), value: "Y\"o\u{2018}nalish\\".into() },
+            Entry {
+                context: String::new(),
+                source: "Top\nAlign".into(),
+                value: "Yuqori\nsafga".into(),
+            },
+            Entry {
+                context: "Page Layout".into(),
+                source: "Orientation".into(),
+                value: "Y\"o\u{2018}nalish\\".into(),
+            },
         ];
         let tsv = render("wordcraft", "uz-latn", &entries, Mode::Review);
         let (back, bad) = read_upstream_tsv(&tsv);
         assert_eq!(bad, 0);
         assert_eq!(back.len(), 2);
-        assert_eq!(back[0], (String::new(), "Top\nAlign".to_string(), "Yuqori\nsafga".to_string()));
+        assert_eq!(
+            back[0],
+            (
+                String::new(),
+                "Top\nAlign".to_string(),
+                "Yuqori\nsafga".to_string()
+            )
+        );
         let grid = render("gridcraft", "uz-latn", &entries, Mode::Review);
         assert!(grid.contains("Page Layout|Orientation\t"));
         let rs = rust_match_fn("translate_uz_latn", &entries);
         let (pairs, anomalies) = parse_rust_table(&rs, None);
         assert_eq!(anomalies, 0);
-        assert_eq!(pairs[1], ("Page Layout|Orientation".to_string(), "Y\"o\u{2018}nalish\\".to_string()));
+        assert_eq!(
+            pairs[1],
+            (
+                "Page Layout|Orientation".to_string(),
+                "Y\"o\u{2018}nalish\\".to_string()
+            )
+        );
     }
 
     #[test]
     fn dates_need_all_38_rows() {
         let mut rows = Vec::new();
-        for (kind, n) in [("date.month", 12), ("date.monthShort", 12), ("date.day", 7), ("date.dayShort", 7)] {
+        for (kind, n) in [
+            ("date.month", 12),
+            ("date.monthShort", 12),
+            ("date.day", 7),
+            ("date.dayShort", 7),
+        ] {
             for i in 1..=n {
                 let mut r = row(&format!("{kind}.{i}"), &format!("{kind}{i}"));
                 r.apps = "pdfcraft".into();
@@ -449,7 +660,14 @@ mod tests {
         let chains = Chains::default();
         assert!(build_dates(&cat, "uz-latn", &chains, Mode::Release).is_err());
         let ok = build_dates(&cat, "uz-cyrl", &chains, Mode::Release).unwrap();
-        assert_eq!(ok.lines().filter(|l| !l.starts_with('#') && !l.is_empty()).count(), 38);
-        assert!(ok.contains("date.month.2\t") && ok.find("date.month.2\t") < ok.find("date.month.10\t"));
+        assert_eq!(
+            ok.lines()
+                .filter(|l| !l.starts_with('#') && !l.is_empty())
+                .count(),
+            38
+        );
+        assert!(
+            ok.contains("date.month.2\t") && ok.find("date.month.2\t") < ok.find("date.month.10\t")
+        );
     }
 }
