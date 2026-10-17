@@ -92,6 +92,20 @@ pub fn set_default_face(data: Vec<u8>) -> bool {
     true
 }
 
+/// [`set_default_face`] with a second face behind `data` for the characters it lacks (the first successful call wins).
+pub fn set_default_face_with_fallback(data: Vec<u8>, fallback: Vec<u8>) -> bool {
+    if with_state(|s| s.default.is_some_and(|d| d.is_some())) {
+        return true;
+    }
+    let behind = register_face(fallback, 0, None);
+    let Some(font) = register_face(data, 0, behind) else { return false };
+    with_state(|s| {
+        s.default = Some(Some(font));
+        s.cache.clear();
+    });
+    true
+}
+
 /// The face compiled in with the `bundled-pdf-font` feature (and in this crate's tests).
 fn bundled() -> Option<Font> {
     #[cfg(any(test, feature = "bundled-pdf-font"))]

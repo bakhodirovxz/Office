@@ -225,7 +225,7 @@ fn icon() -> Option<egui::IconData> {
     let bytes = include_bytes!("../../../assets/app-icon/gridcraft-macos-512.png");
     #[cfg(not(target_os = "macos"))]
     let bytes = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.gridcraft.png");
-    let img = image::load_from_memory(bytes).ok()?.to_rgba8();
+    let img = image::load_from_memory(gridcraft_ui_egui::office_overlay::icon_png().unwrap_or(bytes)).ok()?.to_rgba8();
     Some(egui::IconData { width: img.width(), height: img.height(), rgba: img.into_raw() })
 }
 
@@ -252,7 +252,7 @@ fn main() -> eframe::Result<()> {
     }));
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("GridCraft {}", env!("CARGO_PKG_VERSION"));
+        println!("{} {}", gridcraft_ui_egui::office_overlay::app_name(), gridcraft_ui_egui::office_overlay::VERSION);
         return Ok(());
     }
     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
@@ -309,7 +309,7 @@ fn main() -> eframe::Result<()> {
         app.open_path(f);
     }
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("GridCraft")
+        .with_title(gridcraft_ui_egui::office_overlay::app_name())
         .with_inner_size([1440.0, 900.0])
         .with_min_inner_size([640.0, 420.0])
         .with_app_id("ai.storyteller.gridcraft")

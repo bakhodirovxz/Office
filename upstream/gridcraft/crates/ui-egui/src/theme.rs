@@ -390,7 +390,11 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
     // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
     // has Latin, Greek and Cyrillic). Only the first call has an effect.
     if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
-        gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec());
+        match crate::office_overlay::FALLBACK_FONTS.first() {
+            // The overlay's face leads, so U+02BB and Uzbek Cyrillic print; Ubuntu Light stays behind it for Greek.
+            Some((_, sans)) => gridcraft_engine::pdf_fonts::set_default_face_with_fallback(sans.to_vec(), ubuntu.font.to_vec()),
+            None => gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec()),
+        };
     }
     let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
     let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
@@ -439,6 +443,7 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
     if let Some(ui) = fonts.families.get(&FontFamily::Name(UI.into())).cloned() {
         fonts.families.insert(FontFamily::Proportional, ui);
     }
+    crate::office_overlay::append_fallback_fonts(&mut fonts);
     drop_unparseable_fonts(&mut fonts);
     // Only families egui still has data for count as bound (a dropped face can empty a chain).
     bound.retain(|f| fonts.families.get(&FontFamily::Name(f.as_str().into())).is_some_and(|c| !c.is_empty()));

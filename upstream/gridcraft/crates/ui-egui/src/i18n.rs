@@ -130,7 +130,7 @@ impl Language {
             Self::Fr => fr::translate(text),
             Self::Sr => sr::translate(text),
         };
-        translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label))
+        crate::office_overlay::rebrand(translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label)))
     }
 }
 
@@ -170,6 +170,7 @@ pub fn current(ctx: &egui::Context) -> Language {
 
 /// Sets the language for the current frame; call once per frame before anything is drawn.
 pub fn set_current(ctx: &egui::Context, language: Language) {
+    crate::office_overlay::set_lang(language.code());
     ctx.data_mut(|d| d.insert_temp(lang_key(), language));
 }
 

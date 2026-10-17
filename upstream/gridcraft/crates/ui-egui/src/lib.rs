@@ -22,6 +22,9 @@ pub mod i18n;
 pub mod icons;
 pub mod keymap;
 pub mod keytips;
+pub mod office_overlay;
+#[cfg(test)]
+mod office_overlay_tests;
 pub mod outline;
 pub mod panes;
 pub mod paper_view;
