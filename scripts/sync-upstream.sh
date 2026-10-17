@@ -11,6 +11,7 @@
 #               edit, `git add`, and the script runs `git am --continue` itself and records the minutes.
 #   --survey    dry-run only: do not stop at the first conflict; commit the conflict markers and carry on, so the
 #               report lists every conflicting patch with file:line. Patches after the first conflict may cascade.
+#   --fmt       after the rebase, rustfmt the .rs files of every patch (rebase --exec, amend); reformatted patches are listed.
 #   --to <sha>  new BASE (only with one repo). Default: the newest tag newer than BASE, else origin/HEAD.
 #   --gates     quick = verify-queue + gen-check + lockdiff + deny + cargo check per domain (native + wasm);
 #               full  = quick + release desktop and web builds in scratch (+ nextest when ci/nextest.toml exists).
@@ -27,10 +28,10 @@ MAIN="$OFFICE_ROOT"
 cd "$MAIN" || exit 2
 
 ALL="wordcraft gridcraft deckcraft pdfcraft craft-libs"
-MODE=dry GATES=quick RESOLVE=0 SURVEY=0 TO="" RESOLVER="-" REPOS=""
+MODE=dry GATES=quick RESOLVE=0 SURVEY=0 FMT=0 TO="" RESOLVER="-" REPOS=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --dry-run) MODE=dry;; --apply) MODE=apply;; --resolve) RESOLVE=1;; --survey) SURVEY=1;;
+    --dry-run) MODE=dry;; --apply) MODE=apply;; --resolve) RESOLVE=1;; --survey) SURVEY=1;; --fmt) FMT=1;;
     --resolver) RESOLVER="$2"; shift;; --to) TO="$2"; shift;; --gates) GATES="$2"; shift;;
     -h|--help) sed -n 2,22p "$0"; exit 0;;
     all) REPOS="$ALL";; -*) echo "unknown option $1" >&2; exit 2;;
@@ -179,6 +180,14 @@ for r in $REPOS; do
     /^ *[0-9]+: +[0-9a-f]+ [=!<>] +[0-9-]+: / { n=$1; sub(":","",n); cur=n+0; cnt[cur]=0; next }
     cur && /^    [+-]/ { s=substr($0,6); if (s !~ /^(@@|index |diff --git|--- |\+\+\+ |new file|deleted file|Metadata)/) cnt[cur]++ }
     END { for (k in cnt) print k "\t" cnt[k] }' | sort -n > "$WORK/$r.interdiff"
+  # keep every patch rustfmt-clean (CI lint): rebase --exec rustfmt on the files each patch touches
+  if [ $FMT = 1 ] && [ "${UNRES[$r]}" -eq 0 ]; then
+    ed=$(awk -F'"' '/^edition *=/{print $2; exit}' "$WN/Cargo.toml"); ed=${ed:-2021}
+    before=$(git -C "$WN" rev-parse HEAD)
+    git -C "$WN" rebase -q -x "f=\$(git diff-tree --no-commit-id --name-only -r HEAD | grep '[.]rs\$'); [ -z \"\$f\" ] || { rustfmt --edition $ed \$f && git commit -q -a --amend --no-edit; }" "$n" >"$WORK/$r.fmt.log" 2>&1       || say "WARN: fmt pass failed for $r, see $WORK/$r.fmt.log"
+    git -C "$WN" range-diff --no-color "$n..$before" "$n..HEAD" 2>/dev/null | awk '/^ *[0-9]+: +[0-9a-f]+ [=!<>] +[0-9-]+: /{ if ($3=="!") printf "%s ", $1 }' | sed 's/:/ /g' > "$WORK/$r.fmtpatches"
+    say "- $r: rustfmt (edition $ed) changed patches: $(cat "$WORK/$r.fmtpatches" 2>/dev/null | tr -s ' ' | sed 's/ *$//;s/^$/none/')"
+  fi
   # regenerate the queue
   rm -rf "$WORK/$r.patches"; mkdir -p "$WORK/$r.patches"
   nh=$(git -C "$WN" rev-parse HEAD)
