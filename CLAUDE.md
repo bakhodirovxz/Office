@@ -9,6 +9,8 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 - **Product name: deferred.** Use the neutral working name from the one brand config. Never hard-code a name.
 - **Repo layout:** W2 build domains. Upstream is a vendored pristine snapshot plus a patch queue in `patches/`.
   Never hand-edit `upstream/`.
+- **Single licence exception: MPL-2.0 for the symphonia crates only** (deckcraft audio). They stay unmodified, and
+  NOTICE lists them with a source link. Any other non-permissive licence needs a new owner decision.
 - **No upstream PRs for now.** All upstream changes are carried patches, registered in `patches/REGISTER.md`.
 - **Mobile:** A-web for v1, conditionally (re-decided at the Phase 4 gate).
 - **Priority:** fidelity → mobile → co-editing.
