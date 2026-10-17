@@ -2,6 +2,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 00292d00d8cf		Fixed what could be fixed; 1 problem remains		todo		todo	Исправлено всё, что можно; осталась 1 проблема	upstream		P2	pdfcraft	crates/ui-egui/src/standards_ui.rs:40	
 00e947a3a318		Low resolution		todo		todo	Низкое разрешение	upstream		P2	pdfcraft	crates/ui-egui/src/dialogs.rs:310	
 01170902fc16		Checkmark	Belgi	draft:agent-sonnet:2026-10-17	Белги	draft:agent-sonnet:2026-10-17	Галочка	upstream		P1	pdfcraft	crates/ui-egui/src/comments_panel.rs:625	
+0122290e337b		You are viewing revision {rev} of “{from}”. It is a snapshot: changes here won't affect the original.		todo		todo	Вы просматриваете ревизию {rev} документа «{from}». Это снимок: изменения здесь не затронут оригинал.	upstream		P2	pdfcraft	crates/ui-egui/src/canvas.rs:4283	
 0138b37ff816		Page background		todo		todo	Фон страницы	upstream		P2	pdfcraft	crates/ui-egui/src/js_ui.rs:448	
 01439fa4e4d0		Squiggly underline text	Toʻlqinli tagiga chizilgan matn	draft:agent-sonnet:2026-10-17	Тўлқинли тагига чизилган матн	draft:agent-sonnet:2026-10-17	Волнистое подчеркивание	upstream		P1	pdfcraft	crates/engine/src/commands.rs:242	
 014a1dd348ec		Done adding text		todo		todo	Завершить добавление текста	upstream		P2	pdfcraft	crates/ui-egui/src/content_ui.rs:559	
@@ -1528,6 +1529,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 9e552b02fad2		There are no redaction marks to apply		todo		todo	Нет меток сокрытия для применения	upstream		P2	pdfcraft	crates/ui-egui/src/commands.rs:478	
 9e5c0febacdb		Console	Konsol	draft:agent-sonnet:2026-10-17	Консол	draft:agent-sonnet:2026-10-17	Консоль	upstream		P1	pdfcraft	crates/engine/src/catalog.rs:522	
 9e64180f6da3		View	Koʻrinish	draft:agent-sonnet:2026-10-17	Кўриниш	draft:agent-sonnet:2026-10-17	Просмотр	upstream		P1	pdfcraft	crates/ui-egui/src/chrome.rs:543	
+9eab79a21606		You are viewing the signed version of “{from}” (revision {rev}). It is a snapshot: changes here won't affect the original.		todo		todo	Вы просматриваете подписанную версию документа «{from}» (ревизия {rev}). Это снимок: изменения здесь не затронут оригинал.	upstream		P2	pdfcraft	crates/ui-egui/src/canvas.rs:4278	
 9eb7103401bc		Rotate view clockwise		todo		todo	Повернуть вид по часовой стрелке	upstream		P2	pdfcraft	crates/ui-egui/src/chrome.rs:574	
 9eb8b776cc24		Set to current page ({n})		todo		todo	Установить текущей страницей ({n})	upstream		P2	pdfcraft	crates/ui-egui/src/panels.rs:1012	
 9ee3041259c1		Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).		todo		todo		todo		P2	pdfcraft		

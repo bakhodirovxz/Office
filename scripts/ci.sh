@@ -10,7 +10,7 @@
 #   gen-check                cargo xt gen-domain --check all; lockdiff x4
 #   deny                     cargo-deny x5 (root + 4 domains), one config each
 #   brand                    cargo xt brand-grep + logo-include check
-#   i18n                     cargo xt i18n lint (stub until WP9)
+#   i18n                     cargo xt i18n lint + roundtrip + check-stale
 #   test <app|all>           upstream-workspace debug tests: nextest + quarantine, overlay ON; doctests
 #   test-ours                root workspace tests + domain crates
 #   check <domain|all>       cargo check desktop + wasm32 web
@@ -233,7 +233,13 @@ job_brand() {
 }
 
 job_i18n() {
-  if xt_has i18n; then bstep i18n-lint cargo xt i18n lint; else note "stub until WP9: cargo xt i18n lint not implemented"; fi
+  local rc=0
+  if xt_has i18n; then
+    bstep i18n-lint cargo xt i18n lint || rc=1
+    bstep i18n-roundtrip cargo xt i18n roundtrip || rc=1   # every canonical catalog re-exports to upstream's own ru catalog
+    bstep i18n-check-stale cargo xt i18n check-stale || rc=1   # an upstream catalog changed without a catalog merge
+  else note "stub until WP9: cargo xt i18n lint not implemented"; fi
+  return $rc
 }
 
 apps_arg() { # all|<app>|<domain> -> app list

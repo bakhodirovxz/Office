@@ -173,7 +173,7 @@ pub fn row_id(scope: &str, context: &str, source: &str) -> String {
 }
 
 /// All catalog files of the tree: scope name -> rows (sorted by id on write).
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Catalog {
     pub scopes: BTreeMap<String, Vec<Row>>,
 }

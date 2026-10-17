@@ -41,7 +41,7 @@ What the script does (PLAN 5.1):
    lock re-seeding (upstream lock copied into `domains/<d>/Cargo.lock`, `cargo metadata` adds our path packages), REGISTER last-rebase cells,
    `patches/rebase-log.tsv` rows.
 5. Gates (separate target dirs `$OFFICE_TARGET/sync/target-*`, build lock, RAM gate 3 GB, no foreign rustc.exe): verify-queue, register check,
-   gen-check, lockdiff (must read `0 version changes ... 0 foreign additions`), cargo-deny, `cargo check` native (desktop + cli) and wasm32 (web, sccache off).
+   **i18n** (below), gen-check, lockdiff (must read `0 version changes ... 0 foreign additions`), cargo-deny, `cargo check` native (desktop + cli) and wasm32 (web, sccache off).
    `full` is a stub: run `scripts/build.sh <d> all --release` and the app tests after an apply.
 6. `--dry-run` deletes the scratch worktree and branch. `--apply` (all gates PASS, no unresolved patch) commits the report to
    `docs/phase1/sync-reports/` and fast-forwards the monorepo. A failed gate leaves the pin where it is.
@@ -53,6 +53,19 @@ Reports: `$OFFICE_TARGET/sync/reports/<date>.md` and `<date>-rebase-log.tsv`.
    markers, `cargo fmt` the touched files if the repo is rustfmt-clean at that spot, then `git -C <path> add <files>`.
 3. The script runs `git am --continue` itself and records the wall time and the conflicted files.
 4. Do not run `git am --continue` or `--abort` yourself while the script waits.
+## The i18n gate (catalog resync)
+Our canonical catalogs (`i18n/*.tsv`, keyed by English) are extracted from the upstream catalogs and source in `upstream/`, so every sync can make them stale.
+- `cargo xt i18n check-stale` re-extracts in memory and compares: keys added, keys removed (now `obsolete`), English changed, upstream `ru` changed. It exits 1 with a list
+  of the keys and the fix when any exists; `where` (file:line) drift alone is not stale. `scripts/ci.sh i18n` runs it with `lint` and `roundtrip`.
+- `scripts/sync-upstream.sh` runs it as gate `i18n-stale` after the import, then `i18n-roundtrip` and `i18n-lint`. A **dry run fails** the gate (with the key list in the
+  report) when an upstream catalog changed; **`--apply` runs the merge** (`cargo xt i18n extract`), puts the key list in the report, re-checks, and commits `i18n/` with the sync.
+- The merge keeps every uz and ru value and status and each row's placement. New keys arrive as `todo` (ru `upstream` where upstream has one). Keys that disappeared are
+  marked `obsolete`, never deleted. Upstream `ru` replaces ours only where our `ru` is still `upstream`/`todo`. A key whose English changed is a new id (the id hashes
+  the English): the old row's Uzbek is carried to the closest new row of the same scope and context (within 20% edit distance) as `draft:carried:<date>`, with a note
+  `carried from <old id>; English changed: "<old>" -> "<new>"`. An old `reviewed:owner` status never survives: the row shows up as `draft-unreviewed` in the next review batch,
+  and release exports skip it. `where` line numbers are refreshed only with `--refresh-where` (or when the file changed), so a sync does not rewrite every row.
+- By hand: `cargo xt i18n extract --dry-run` (report only), `cargo xt i18n extract [--date YYYY-MM-DD]`, then `lint`, `roundtrip`, and commit `i18n/*.tsv`.
+
 To work by hand instead: `git -C E:/office-upstream/<repo> worktree add --detach <dir> <new>` then `git am -3 patches/<repo>/*.patch`,
 `git am --continue` after each fix, `git format-patch --zero-commit --binary --no-signature`.
 
