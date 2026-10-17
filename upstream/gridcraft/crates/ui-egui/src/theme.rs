@@ -387,6 +387,11 @@ pub fn font_definitions_for_language(language: crate::i18n::Language) -> FontDef
 /// families are recorded in [`crate::fonts`] so [`cell_family`] only names a family egui has.
 pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -> FontDefinitions {
     let mut fonts = FontDefinitions::default();
+    // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
+    // has Latin, Greek and Cyrillic). Only the first call has an effect.
+    if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
+        gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec());
+    }
     let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
     let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
     let mut bound: Vec<String> = Vec::new();

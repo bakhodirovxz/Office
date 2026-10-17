@@ -74,7 +74,7 @@ index 0f9cfb0..5301a14 100644
                                      });
                                  (hidden, nested)
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index 82dbe0b..fd3bba4 100644
+index c69bac2..9d5d5f0 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
 @@ -155,7 +155,7 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
@@ -710,7 +710,7 @@ index 7f1ad87..4105648 100644
      }
      String::new()
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index 97b787e..af220e4 100644
+index 00e0c18..93170f4 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
 @@ -529,7 +529,7 @@ fn display_text(

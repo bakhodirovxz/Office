@@ -1,7 +1,7 @@
 repo=gridcraft
 url=https://github.com/storytold/gridcraft
-sha=e6b6b349708ab4978cb3f061f6bd6ecbc25667cb
-tree=53ce3a619d86dd8d0d205dc7b75fc27c481c099c
-date=2026-10-15T05:16:03+02:00
-describe=v0.7.0-1-ge6b6b34
+sha=f1894c6da64d4326022ae644c767581816a23c2c
+tree=91b2a00de21aa561097802e63d1163539163453e
+date=2026-10-15T21:26:45-06:00
+describe=v0.7.0-7-gf1894c6
 synced=2026-10-17
