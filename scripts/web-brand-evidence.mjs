@@ -1,8 +1,9 @@
-// Playwright evidence for a built web app (WP7/WP8): page title, a screenshot, and optionally the font test string.
-//   node scripts/web-brand-evidence.mjs <docs|sheets|slides|pdf> <outdir> [--dist <dir>] [--font] [--tag <name>]
+// Playwright evidence for a built web app (WP7/WP8): page title, About dialog, the font test string, console errors.
+//   node scripts/web-brand-evidence.mjs <docs|sheets|slides|pdf> <outdir> [--dist <dir>] [--tag <prefix>]
 // The dist is served from $OFFICE_TARGET/dist/<d>-web (or --dist). Headless Chromium with SwiftShader (as the e2e spikes).
-// Output: <outdir>/<tag>-<d>-web.png (the page after start) and, with --font, <outdir>/font-<d>-web.png with the test string typed
-// into the app's own text field. Prints one JSON line with the title and the console errors.
+// Output in <outdir>: <prefix>-<d>-web.png (the page after start), <prefix>-<d>-web-about.png (About dialog) and
+// font-<d>-web.png (the test string typed into the app's own field). Prints one JSON line with the page title.
+// The step lists below are the click paths of each app (window 1100x680, locale en-US); they are evidence helpers, not tests.
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -17,9 +18,28 @@ const outdir = path.resolve(args[1]);
 const opt = (name, dflt) => (args.includes(name) ? args[args.indexOf(name) + 1] : dflt);
 const dist = path.resolve(opt('--dist', path.join(process.env.OFFICE_TARGET || 'E:/office-target/p1', 'dist', `${d}-web`)));
 const tag = opt('--tag', 'brand');
-const font = args.includes('--font');
 const TEXT = 'Oʻzbekiston gʻoya maʼno Ўзбекистон қўғирчоқ ғоя ҳа ₽ №';
 fs.mkdirSync(outdir, { recursive: true });
+
+// [op, a, b]: click x y | key K | insert (the test text) | text T | wait ms | shot name
+const STEPS = {
+  pdf: [
+    ['wait', 500], ['shot', `${tag}-pdf-web`],
+    ['key', 'Control+K'], ['wait', 1000], ['text', 'About'], ['wait', 1000], ['key', 'Enter'], ['wait', 2000], ['shot', `${tag}-pdf-web-about`],
+    ['key', 'Escape'], ['wait', 500], ['key', 'Control+K'], ['wait', 1000], ['insert'], ['wait', 1500], ['shot', 'font-pdf-web'],
+  ],
+  docs: [
+    ['wait', 500], ['shot', `${tag}-docs-web`],
+    ['click', 60, 652], ['wait', 2500], ['shot', `${tag}-docs-web-about`],
+    ['key', 'Escape'], ['wait', 500], ['click', 315, 180], ['wait', 3000], ['click', 600, 300], ['insert'], ['wait', 1500], ['shot', 'font-docs-web'],
+  ],
+  sheets: [
+    ['wait', 500], ['shot', `${tag}-sheets-web`],
+    ['click', 300, 200], ['insert'], ['key', 'Enter'], ['wait', 1500], ['shot', 'font-sheets-web'],
+  ],
+  slides: [['wait', 500], ['shot', `${tag}-slides-web`]],
+};
+if (process.env.STEPS_FILE) STEPS[d] = JSON.parse(fs.readFileSync(process.env.STEPS_FILE, 'utf8'));
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.ico': 'image/x-icon', '.png': 'image/png', '.css': 'text/css' };
 const server = http.createServer((req, res) => {
@@ -33,34 +53,26 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(file).pipe(res);
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
-const port = server.address().port;
 
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
-const page = await browser.newPage({ viewport: { width: 1100, height: 680 } });
+const ctx = await browser.newContext({ viewport: { width: 1100, height: 680 }, locale: 'en-US' });
+const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-await page.goto(`http://127.0.0.1:${port}/`);
-const loading = page.locator('[id$="_loading"]');
-await page.waitForFunction(() => !document.querySelector('[id$="_loading"]'), null, { timeout: 120000 }).catch(() => errors.push('loading element still present'));
-await page.waitForTimeout(4000);
+await page.goto(`http://127.0.0.1:${server.address().port}/`);
+await page.waitForFunction(() => !document.querySelector('[id$="_loading"]'), null, { timeout: Number(process.env.START_TIMEOUT || 240000) }).catch(() => errors.push('start screen not reached'));
+await page.waitForTimeout(3000);
 const title = await page.title();
-await page.screenshot({ path: path.join(outdir, `${tag}-${d}-web.png`) });
-let fontShot = null;
-if (font) {
-  // Each app's own text field: the command palette (Ctrl+K), or the formula bar for the sheet.
-  await page.mouse.click(550, 400);
-  if (d === 'sheets') {
-    await page.keyboard.press('F2');
-  } else {
-    await page.keyboard.press('Control+K');
-  }
-  await page.waitForTimeout(1500);
-  await page.keyboard.insertText(TEXT);
-  await page.waitForTimeout(2000);
-  fontShot = path.join(outdir, `font-${d}-web.png`);
-  await page.screenshot({ path: fontShot });
+const shots = [];
+for (const [op, a, b] of STEPS[d]) {
+  if (op === 'click') await page.mouse.click(a, b);
+  else if (op === 'key') await page.keyboard.press(a);
+  else if (op === 'insert') await page.keyboard.insertText(TEXT);
+  else if (op === 'text') await page.keyboard.insertText(a);
+  else if (op === 'wait') await page.waitForTimeout(a);
+  else if (op === 'shot') { await page.screenshot({ path: path.join(outdir, `${a}.png`) }); shots.push(`${a}.png`); }
 }
-console.log(JSON.stringify({ app: d, dist, title, errors: errors.slice(0, 5), screenshot: `${tag}-${d}-web.png`, font: fontShot && path.basename(fontShot) }));
+console.log(JSON.stringify({ app: d, dist, title, errors: errors.slice(0, 5), shots }));
 await browser.close();
 server.close();

@@ -41,11 +41,11 @@ try:
         return json.loads(f.readline())
 
     shot = lambda name: call("ui.screenshot", {"path": os.path.abspath(os.path.join(outdir, name))})
-    r1 = shot(f"{app}-desktop.png")
+    r1 = shot(f"brand-{app}-desktop.png")
     method, params = about
     r2 = call(method, params)
     time.sleep(2)
-    r3 = shot(f"{app}-desktop-about.png")
+    r3 = shot(f"brand-{app}-desktop-about.png")
     state = call("ui.inspect")
     print(json.dumps({"app": app, "exe": exe, "window_title": title, "main": r1.get("ok"), "about_cmd": r2.get("ok", r2.get("error")), "about": r3.get("ok"), "dialog": json.dumps(state.get("result", {}).get("dialog"))[:120]}))
 finally:
