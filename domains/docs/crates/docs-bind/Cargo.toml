@@ -1,0 +1,31 @@
+# WP13: approach B's binding layer (ADR 2.2.1 step 2), moved here from spikes/mobile-b/bind (the spike copy stays). Our crate:
+# a thin shell-neutral binding over the wordcraft engine, with upstream crates by path into the committed snapshot.
+# Part of the docs domain workspace (domains/docs/domain.toml: crates/* is a member glob once this directory exists).
+[package]
+name = "docs-bind"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Shell-neutral binding over the wordcraft engine for non-egui shells (WebView, native FFI)"
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
+wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+wordcraft-render = { path = "../../../../upstream/wordcraft/crates/render" }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+vello_cpu = "0.2"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "=0.2.129"
+js-sys = "0.3"
+
+[dev-dependencies]
+zip = { version = "3", default-features = false, features = ["deflate"] }

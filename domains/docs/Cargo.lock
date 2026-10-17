@@ -968,6 +968,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "docs-bind"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "serde_json",
+ "vello_cpu 0.2.0",
+ "wasm-bindgen",
+ "wordcraft-doc",
+ "wordcraft-engine",
+ "wordcraft-render",
+ "zip",
+]
+
+[[package]]
 name = "docs-cli"
 version = "0.1.0"
 dependencies = [

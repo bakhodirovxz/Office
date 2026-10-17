@@ -14,6 +14,7 @@
 #   test <app|all>           upstream-workspace debug tests: nextest + quarantine, overlay ON; doctests
 #   test-ours                root workspace tests + domain crates
 #   check <domain|all>       cargo check desktop + wasm32 web
+#   bind                     docs-bind (WP13, approach B binding layer): cargo check + test, native and wasm32
 #   build <domain|all> <desktop|web|cli|all>   release builds via scripts/build.sh
 #   sizes [--baseline] [--measure-base]        brotli/gzip of dist/<domain>-web vs web/budgets.toml
 #   web-smoke                Playwright smoke over every dist
@@ -40,7 +41,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny brand i18n test test-ours check build sizes web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
+JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -290,6 +291,20 @@ job_check() {
   return $rc
 }
 
+# WP13: keep approach B's binding layer (domains/docs/crates/docs-bind) compiling and tested against the current wordcraft snapshot.
+# Native: check + test. wasm32: check + build (the cdylib the WebView shell loads) + the tests compiled but not run (no wasm
+# test runner; its two tests are plain #[test]). The wasm steps run without sccache (it cannot spawn rustc there on Windows).
+job_bind() {
+  local rc=0 m=domains/docs/Cargo.toml t; t="$(target_dir_domain docs)"
+  [ -f domains/docs/crates/docs-bind/Cargo.toml ] || { note "docs-bind: domains/docs/crates/docs-bind missing"; return 2; }
+  bstep bind-check-native env CARGO_TARGET_DIR="$t" cargo check --locked -j 6 --manifest-path "$m" -p docs-bind || rc=1
+  bstep bind-test-native env CARGO_TARGET_DIR="$t" cargo test --locked -j 6 --manifest-path "$m" -p docs-bind || rc=1
+  bstep bind-check-wasm32 env -u RUSTC_WRAPPER CARGO_TARGET_DIR="$t" cargo check --locked -j 6 --manifest-path "$m" -p docs-bind --target wasm32-unknown-unknown || rc=1
+  bstep bind-build-wasm32 env -u RUSTC_WRAPPER CARGO_TARGET_DIR="$t" cargo build --locked -j 6 --manifest-path "$m" -p docs-bind --target wasm32-unknown-unknown || rc=1
+  bstep bind-test-wasm32-compile env -u RUSTC_WRAPPER CARGO_TARGET_DIR="$t" cargo test --locked -j 6 --manifest-path "$m" -p docs-bind --target wasm32-unknown-unknown --no-run || rc=1
+  return $rc
+}
+
 job_build() {
   local rc=0 d k kinds="${2:-all}"
   [ "$kinds" = all ] && kinds="desktop web cli"
@@ -384,11 +399,12 @@ profile_jobs() { # prints "job args" lines
   local p="$1" d a aff
   printf '%s\n' queue lint gen-check deny brand i18n
   case "$p" in
-    quick) for d in $(affected_domains); do echo "check $d"; echo "test $(app_of "$d")"; done;;
+    quick) for d in $(affected_domains); do echo "check $d"; echo "test $(app_of "$d")"; [ "$d" = docs ] && echo bind; done;;
     full|nightly)
       echo "test-ours"
       for a in $APPS; do echo "test $a"; done
       for d in $DOMAINS; do echo "check $d"; done
+      echo bind
       for d in $DOMAINS; do echo "build $d all"; done
       echo sizes; echo web-smoke; echo actionlint
       if [ "$p" = nightly ]; then echo release-tests; echo fidelity; echo xlsx-bench; fi;;
@@ -407,6 +423,7 @@ dispatch() { # <job> [args]
     test) run_job "test${1:+ $1}" job_test "$@";;
     test-ours) run_job test-ours job_test_ours;;
     check) run_job "check${1:+ $1}" job_check "$@";;
+    bind) run_job bind job_bind;;
     build) run_job "build${1:+ $1}" job_build "$@";;
     sizes) run_job sizes job_sizes "$@";;
     web-smoke) run_job web-smoke job_web_smoke;;

@@ -155,6 +155,22 @@ jobs:
           cache-key: ${{ hashFiles(format('domains/{0}/Cargo.lock', matrix.domain)) }}
       - run: scripts/ci.sh check ${{ matrix.domain }}
 
+  bind:
+    # WP13: docs-bind (approach B's binding layer): check + test, native and wasm32
+    needs: [queue]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('domains/docs/Cargo.lock') }}
+      - run: scripts/ci.sh bind
+
   build:
     if: ${{ inputs.profile != 'quick' }}
     needs: [check]
