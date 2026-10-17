@@ -524,6 +524,52 @@ Upstream HEADs at start of Phase 0:
 - Not installed: LibreOffice (`soffice`), wasm-pack/trunk/wasm-opt (to be added as needed or run
   in Docker).
 
+## Phase 1 progress (2026-10-17)
+
+**Work packages**
+- **WP0–WP2 done.** Tools are pinned. Pristine snapshots are byte-identical to upstream (tree-hash check). The 27-patch
+  queue and its register are in place.
+- **WP3 done: W2 is GO.** All 12 targets (desktop, CLI and web × 4 apps) build from our domains.
+  - lockdiff shows 0 version changes.
+  - CLIs and dists were verified by the orchestrator.
+  - sccache works for native builds but breaks wasm, so it is off for web.
+  - Details: `docs/phase1/domain-build.md`.
+- **WP6a done.**
+  - CI script and GitHub workflow (disabled).
+  - cargo-deny ×5, all green, with the MPL exception for symphonia only.
+  - Size budgets.
+  - Quarantine of 21 known upstream test failures.
+- **WP7a/WP8/WP9a designs done.**
+  - The font is Noto Sans + Noto Sans Mono, with cmap-verified coverage of ʻ ʼ ўқғҳ ₽.
+  - No telemetry was found in any app.
+- **WP9b done.**
+  - The i18n catalogs and the extract/export/review tooling work.
+  - Round trip: semantically equal.
+  - Glossary batch 0 (150 terms) was sent to the owner for review.
+- **WP12 done.** Sizing is in `docs/phase1/SIZING.md`.
+
+**WP5 sync: all five repos are at the fresh BASE, 2026-10-17**
+
+| Repo | Fresh BASE |
+|---|---|
+| wordcraft | eae2421 |
+| gridcraft | f1894c6 |
+| deckcraft | 1dc6972 |
+| pdfcraft | 924c4da |
+| craft-libs | 15ed713 |
+
+- All 27 patches applied clean: 0 conflicts and 0 3-way merges. The quick gates pass.
+- **Measured rebase cost (2-day distance):** wordcraft 5 patches in about 3 s; gridcraft 22 patches in about 0.3 s each.
+- **Upstream velocity dropped sharply.** Only 4–18 commits per repo landed between 2026-10-15 and 2026-10-17, against
+  700–1000 per week in Phase 0. Watch this before re-estimating risk 1.
+- **Script bug found and fixed.**
+  - What went wrong: the `--fmt` pass reformats whole files. That made patch 0017 conflict after patch 0014's reformat,
+    and the script then exported a partial (16-patch) queue. The gate caught it, and nothing was applied.
+  - Fix: on a fmt conflict the script now aborts and keeps the full unformatted queue. It also uses a unique scratch
+    branch per run.
+- **Open:** gridcraft-patched files are not rustfmt-clean. Plan: add one trailing "rustfmt" patch at the end of the
+  queue, so it cannot conflict. To do in WP6 final.
+
 ## Owner requirement (re-stated 2026-10-15)
 Everything must work on **mobile, web and desktop**, with editing on all three, not only viewing.
 This applies to the editors, the document-server embed (HRM web and the HRM mobile app),
