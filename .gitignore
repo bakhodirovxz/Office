@@ -1,5 +1,6 @@
-# Upstream clones are reference checkouts in Phase 0 (pinned SHAs recorded in docs/STATUS.md).
-/upstream/
+# craft-fonts is fetched by scripts/fetch-fonts.sh (pinned in patches/craft-fonts/BASE); other upstream trees are committed.
+/upstream/craft-fonts/
+/target/
 # Owner-provided anonymised HRM documents: never commit.
 /corpus/
 target/
