@@ -1,0 +1,104 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 11:56:00 +0500
+Subject: [PATCH 13/22] xlsx: share one string among inline-string cells with
+ the same short text
+
+Cells of the shared-string table share their string; inline-string cells
+(as openpyxl and other producers write them) each got their own, so a
+category column held one allocation per row. Pool the short texts of a
+sheet's inline-string and formula-string cells (up to 64 bytes, at most
+65,536 distinct ones), so cells with the same text share it.
+---
+ crates/xlsx/src/sheet_read.rs            | 38 +++++++++++++++++++++---
+ crates/xlsx/src/tests/shared_formulas.rs | 24 +++++++++++++++
+ 2 files changed, 58 insertions(+), 4 deletions(-)
+
+diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
+index c2fb34a..5a5016d 100644
+--- a/crates/xlsx/src/sheet_read.rs
++++ b/crates/xlsx/src/sheet_read.rs
+@@ -37,6 +37,34 @@ struct RowState {
+     dynamic: Vec<RangeRef>,
+     dropped: u64,
+     rows: u64,
++    /// Short texts of inline-string cells read so far.
++    texts: TextPool,
++}
++
++/// Cells holding the same short text (a category, a status, a code) share one string, as cells
++/// of the shared-string table do; files written with inline strings would otherwise hold a
++/// string per cell. Bounded: a long text, or a new one once the pool is full, gets a string of
++/// its own.
++#[derive(Default)]
++struct TextPool(std::collections::HashSet<Arc<str>>);
++
++impl TextPool {
++    const MAX_LEN: usize = 64;
++    const MAX_TEXTS: usize = 1 << 16;
++
++    fn value(&mut self, s: String) -> Value {
++        if s.len() > Self::MAX_LEN {
++            return Value::text(s);
++        }
++        if let Some(t) = self.0.get(s.as_str()) {
++            return Value::Text(t.clone());
++        }
++        let t: Arc<str> = Arc::from(s);
++        if self.0.len() < Self::MAX_TEXTS {
++            self.0.insert(t.clone());
++        }
++        Value::Text(t)
++    }
+ }
+ 
+ const MAX_HYPERLINK_CELLS: u64 = 10_000;
+@@ -405,10 +433,12 @@ fn read_cell(cx: &mut Ctx<'_>, sheet: &mut Sheet, st: &mut RowState, c: &El, pos
+             },
+             None => Value::Empty,
+         },
+-        "str" => v.map(|v| Value::text(xml::decode_xstring(v))).unwrap_or(Value::Empty),
+-        "inlineStr" => {
+-            c.child("is").map(|is| Value::text(xml::rich_text(is))).or_else(|| v.map(|v| Value::text(xml::decode_xstring(v)))).unwrap_or(Value::Empty)
+-        }
++        "str" => v.map(|v| st.texts.value(xml::decode_xstring(v))).unwrap_or(Value::Empty),
++        "inlineStr" => c
++            .child("is")
++            .map(|is| st.texts.value(xml::rich_text(is)))
++            .or_else(|| v.map(|v| st.texts.value(xml::decode_xstring(v))))
++            .unwrap_or(Value::Empty),
+         "b" => v.map(|v| Value::Bool(matches!(v.trim(), "1" | "true" | "TRUE"))).unwrap_or(Value::Empty),
+         "e" => v.map(|v| Value::Error(CellError::parse(v.trim()).unwrap_or(CellError::Value))).unwrap_or(Value::Empty),
+         "d" => match v.and_then(|v| parse_iso_datetime(v.trim(), cx.date_system)) {
+diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
+index aee82f0..3d435bd 100644
+--- a/crates/xlsx/src/tests/shared_formulas.rs
++++ b/crates/xlsx/src/tests/shared_formulas.rs
+@@ -115,3 +115,27 @@ fn runs_are_written_as_shared_formulas() {
+     }
+     assert!(Arc::ptr_eq(&tree(&back, "B1"), &tree(&back, "B6")));
+ }
++
++#[test]
++fn inline_strings_with_the_same_short_text_share_one_string() {
++    let long = "x".repeat(65);
++    let mut rows = String::new();
++    for r in 1..=4 {
++        let code = if r % 2 == 0 { "K07" } else { "Приход" };
++        rows.push_str(&format!(
++            r#"<row r="{r}"><c r="A{r}" t="inlineStr"><is><t>{code}</t></is></c><c r="B{r}" t="inlineStr"><is><t>{long}</t></is></c><c r="C{r}" t="str"><f>A{r}</f><v>{code}</v></c></row>"#
++        ));
++    }
++    let (wb, _) = read_xlsx(&minimal(&format!("<sheetData>{rows}</sheetData>"), &[], "", "")).unwrap();
++    let s = wb.sheet(0).unwrap();
++    let text = |a: &str| match &s.cell(at(a)).unwrap().value {
++        Value::Text(t) => t.clone(),
++        v => panic!("{a}: {v:?}"),
++    };
++    assert_eq!((&*text("A1"), &*text("A2"), &*text("C4")), ("Приход", "K07", "K07"));
++    assert!(Arc::ptr_eq(&text("A1"), &text("A3")) && Arc::ptr_eq(&text("A2"), &text("A4")) && Arc::ptr_eq(&text("A2"), &text("C2")));
++    assert!(!Arc::ptr_eq(&text("A1"), &text("A2")));
++    // Long texts are not pooled.
++    assert_eq!(&*text("B1"), long);
++    assert!(!Arc::ptr_eq(&text("B1"), &text("B2")));
++}

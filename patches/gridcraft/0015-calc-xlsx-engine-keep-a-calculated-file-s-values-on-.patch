@@ -1,0 +1,434 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 12:02:06 +0500
+Subject: [PATCH 15/22] calc, xlsx, engine: keep a calculated file's values on
+ open, as Excel does
+
+Every workbook was fully calculated when it opened. Excel doesn't: a file
+whose values come from a full calculation (a calcPr without
+fullCalcOnLoad, as Excel and gridcraft write it once every formula has a
+value) opens with its values as they are. For Excel-saved workbooks that
+was most of the open time and of its peak memory.
+
+The XLSX reader reports such a file (`ReadReport::calculated`; not when
+spilled values had to be left out), file.open passes it on
+(`io::open_bytes_calculated`, `DocState::open`), and `Calc::open` builds
+the graph and keeps the values, unless a formula has no value or is
+dynamic (volatile, or references only known while calculating): then
+everything is calculated, as before. Calculate Now still calculates
+everything. Files with fullCalcOnLoad (openpyxl, xlsxwriter) and other
+formats are calculated on open as before.
+---
+ crates/calc/src/recalc.rs                | 30 ++++++++++
+ crates/calc/src/tests.rs                 | 46 +++++++++++++++
+ crates/engine/src/cmd/file.rs            |  4 +-
+ crates/engine/src/io.rs                  | 31 ++++++----
+ crates/engine/src/lib.rs                 | 11 +++-
+ crates/engine/tests/open_calculated.rs   | 75 ++++++++++++++++++++++++
+ crates/xlsx/src/lib.rs                   |  4 ++
+ crates/xlsx/src/read.rs                  |  1 +
+ crates/xlsx/src/sheet_read.rs            |  5 ++
+ crates/xlsx/src/tests/shared_formulas.rs | 26 ++++++++
+ 10 files changed, 217 insertions(+), 16 deletions(-)
+ create mode 100644 crates/engine/tests/open_calculated.rs
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index f731db1..63b2ec1 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -1262,6 +1262,27 @@ impl Calc {
+     /// Recalculates every formula (F9 / Ctrl+Alt+F9, and after loading).
+     pub fn recalc_all(&mut self, wb: &mut Workbook) {
+         self.rebuild(wb);
++        self.calculate_built(wb);
++    }
++
++    /// Prepares a workbook just read from a file. When `calculated` (the file's values come from
++    /// a full calculation and it asks for none on open, as a workbook Excel saved), its values are
++    /// kept, the way Excel opens such a file: only the graph is built. They are calculated anyway
++    /// (as [`Calc::recalc_all`] does) when a formula has no value, or is volatile or has
++    /// references only known while calculating (the graph's dynamic formulas), whose values
++    /// could be different now. Returns whether the file's values were kept.
++    pub fn open(&mut self, wb: &mut Workbook, calculated: bool) -> bool {
++        self.rebuild(wb);
++        if calculated && self.graph.dynamic.is_empty() && values_are_current(wb) {
++            self.last_recalc_cells = 0;
++            return true;
++        }
++        self.calculate_built(wb);
++        false
++    }
++
++    /// Every formula of a just-built graph calculated.
++    fn calculate_built(&mut self, wb: &mut Workbook) {
+         // Spills are laid out again from the formulas where they are now (a structural edit moves
+         // or deletes the formulas, not the values they spilled).
+         for i in 0..wb.sheets.len() {
+@@ -1526,6 +1547,15 @@ impl Calc {
+     }
+ }
+ 
++/// Whether every formula of `wb` holds a value, and no spill has to be laid out again (spilled
++/// values aren't stored). Volatile formulas and those with references only known while
++/// calculating are the graph's dynamic ones, which [`Calc::open`] checks.
++fn values_are_current(wb: &Workbook) -> bool {
++    wb.sheets.iter().all(|sheet| {
++        sheet.spill_ranges.is_empty() && sheet.cells.iter().all(|(_, cell)| cell.formula.is_none() || !cell.value.is_empty())
++    })
++}
++
+ /// Current date-time as a serial (1900 system), from the system clock (browser clock on wasm).
+ /// UTC; the local offset isn't available without platform calls. Falls back to a fixed date only
+ /// when no clock is available.
+diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
+index 53050d5..1c9ab63 100644
+--- a/crates/calc/src/tests.rs
++++ b/crates/calc/src/tests.rs
+@@ -1295,3 +1295,49 @@ fn recalculation_keeps_unchanged_sheets_shared_with_snapshots() {
+     assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
+     assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
+ }
++
++/// Opening a calculated file keeps its values (as Excel does), unless a formula has none or is
++/// volatile; anything else calculates everything, as before.
++#[test]
++fn open_keeps_calculated_values_unless_a_formula_needs_calculating() {
++    let book = |extra: Option<&str>| {
++        let mut wb = Workbook::new();
++        let sh = wb.sheet_mut(0).unwrap();
++        sh.cells.set(c("A1"), Cell::value(Value::Number(2.0)));
++        // A cached value a calculation would not give: kept only when the file is trusted.
++        sh.cells.set(c("B1"), Cell { value: Value::Number(5.0), ..Cell::formula(Formula::new("=A1*2")) });
++        for r in 2..=40 {
++            sh.cells.set(c(&format!("B{r}")), Cell { value: Value::Number(1.0), ..Cell::formula(Formula::new(&format!("=A{r}+1"))) });
++        }
++        if let Some(f) = extra {
++            sh.cells.set(c("C1"), Cell { value: Value::Number(7.0), ..Cell::formula(Formula::new(f)) });
++        }
++        wb
++    };
++    let b1 = |wb: &Workbook| wb.sheet(0).unwrap().value(c("B1"));
++    let mut wb = book(None);
++    let mut calc = Calc::new();
++    assert!(calc.open(&mut wb, true));
++    assert_eq!(b1(&wb), Value::Number(5.0));
++    // The graph is built: an edit recalculates what depends on it.
++    wb.sheet_mut(0).unwrap().cells.set(c("A1"), Cell::value(Value::Number(3.0)));
++    calc.cells_changed(&mut wb, &[(0, c("A1"))]);
++    assert_eq!(b1(&wb), Value::Number(6.0));
++    assert_eq!(wb.sheet(0).unwrap().value(c("B2")), Value::Number(1.0), "not a dependent: kept");
++    // Not trusted, a formula without a value, a volatile formula: everything is calculated.
++    for (extra, calculated) in [(None, false), (Some("=A1+"), true), (Some("=NOW()*0+A1"), true), (Some("=INDIRECT(\"A1\")"), true)] {
++        let mut wb = book(extra);
++        if extra == Some("=A1+") {
++            // Doesn't parse and has no value.
++            wb.sheet_mut(0).unwrap().cells.set(c("C1"), Cell::formula(Formula::new("=A1+")));
++        }
++        assert!(!Calc::new().open(&mut wb, calculated), "{extra:?}");
++        assert_eq!(b1(&wb), Value::Number(4.0), "{extra:?}");
++        assert_eq!(wb.sheet(0).unwrap().value(c("B2")), Value::Number(1.0));
++    }
++    let mut fresh = book(None);
++    Calc::new().recalc_all(&mut fresh);
++    let mut opened = book(None);
++    Calc::new().open(&mut opened, false);
++    assert_eq!(opened, fresh, "an untrusted open is a full calculation");
++}
+diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
+index 1bc7022..5df91b9 100644
+--- a/crates/engine/src/cmd/file.rs
++++ b/crates/engine/src/cmd/file.rs
+@@ -57,7 +57,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+     };
+     let sniffed = gridcraft_xlsx::sniff(&bytes);
+     let encrypted = sniffed == gridcraft_xlsx::Format::Encrypted;
+-    let (mut wb, warnings) = crate::io::open_bytes_with_password(&name, &bytes, str_param(p, "password"))?;
++    let (mut wb, warnings, calculated) = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
+     // The file's bytes are not needed past reading: freed before the first recalculation, which is
+     // where opening needs the most memory.
+     drop(bytes);
+@@ -80,7 +80,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+     {
+         s.close_document(0);
+     }
+-    let mut doc = DocState::new(wb, path, title);
++    let mut doc = DocState::open(wb, path, title, calculated);
+     if crate::io::FileKind::from_path(&name).is_none() && sniffed == gridcraft_xlsx::Format::Xlsx {
+         doc.content_kind = Some(crate::io::FileKind::Xlsx);
+     }
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index 3e84036..80c632b 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -55,10 +55,17 @@ pub fn open_bytes(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+ /// [`open_bytes`], first decrypting a password-protected workbook with `password`. Errors never
+ /// quote the password.
+ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>)> {
++    open_bytes_calculated(name, bytes, password).map(|(wb, warnings, _)| (wb, warnings))
++}
++
++/// [`open_bytes_with_password`], also telling whether the workbook's values come from a full
++/// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
++/// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
++pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
+     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
+-        let (mut wb, warnings) = open_plain(name, bytes)?;
++        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
+         fit_imported_rows(&mut wb);
+-        return Ok((wb, warnings));
++        return Ok((wb, warnings, calculated));
+     }
+     // A scheme no password opens is said straight away, rather than after asking for one.
+     let decrypt_error = |e: gridcraft_xlsx::DecryptError| EngineError::Other(decrypt_message(name, e));
+@@ -70,10 +77,10 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
+     if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
+         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
+     }
+-    let (mut wb, mut warnings) = open_plain(name, &plain)?;
++    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
+     fit_imported_rows(&mut wb);
+     warnings.insert(0, DECRYPTED_NOTICE.into());
+-    Ok((wb, warnings))
++    Ok((wb, warnings, calculated))
+ }
+ 
+ /// Excel auto-fits rows to their tallest font when opening a file: rows without a user-set
+@@ -111,13 +118,13 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
+     }
+ }
+ 
+-/// Parses bytes that aren't encrypted.
+-fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
++/// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
++fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
+     let kind = FileKind::from_path(name);
+     let sniffed = gridcraft_xlsx::sniff(bytes);
+     if sniffed == gridcraft_xlsx::Format::Xls {
+         let (wb, report) = gridcraft_xlsx::read_xls(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
+-        return Ok((wb, report.warnings));
++        return Ok((wb, report.warnings, false));
+     }
+     if sniffed == gridcraft_xlsx::Format::LegacyBinary {
+         return Err(EngineError::Other(format!(
+@@ -136,12 +143,12 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+     if let Some(import) = import {
+         let read = if import == FileKind::Ods { gridcraft_xlsx::read_ods } else { gridcraft_xlsx::read_xlsb };
+         let (wb, report) = read(bytes).map_err(|e| EngineError::Other(format!("We can't import '{name}': {e}")))?;
+-        return Ok((wb, report.warnings));
++        return Ok((wb, report.warnings, false));
+     }
+     // Text named `.xlsx` is read as text.
+     if sniffed == gridcraft_xlsx::Format::Xlsx || (kind == Some(FileKind::Xlsx) && sniffed != gridcraft_xlsx::Format::Csv) {
+         let (wb, report) = gridcraft_xlsx::read_xlsx(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
+-        return Ok((wb, report.warnings));
++        return Ok((wb, report.warnings, report.calculated));
+     }
+     match kind {
+         Some(FileKind::Json) => {
+@@ -150,7 +157,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+             if wb.sheets.is_empty() {
+                 wb = Workbook::new();
+             }
+-            Ok((wb, vec![]))
++            Ok((wb, vec![], false))
+         }
+         Some(FileKind::Tsv) => {
+             let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
+@@ -158,13 +165,13 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+             // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
+             wb.csv_delimiter = None;
+             rename_first_sheet(&mut wb, name);
+-            Ok((wb, vec![]))
++            Ok((wb, vec![], false))
+         }
+         _ => {
+             let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
+             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+             rename_first_sheet(&mut wb, name);
+-            Ok((wb, vec![]))
++            Ok((wb, vec![], false))
+         }
+     }
+ }
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 2ac1ef1..06b1091 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -118,10 +118,17 @@ static NEXT_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::ne
+ const UNDO_LIMIT: usize = 100;
+ 
+ impl DocState {
+-    pub fn new(mut wb: Workbook, path: Option<String>, title: String) -> DocState {
++    pub fn new(wb: Workbook, path: Option<String>, title: String) -> DocState {
++        DocState::open(wb, path, title, false)
++    }
++    /// [`DocState::new`] for a workbook just read from a file. When `calculated` (its values come
++    /// from a full calculation and it asks for none on open: [`io::open_bytes_calculated`]), its
++    /// values are kept as the file has them, as Excel opens such a file; formulas are calculated
++    /// on open only when needed ([`Calc::open`]).
++    pub fn open(mut wb: Workbook, path: Option<String>, title: String, calculated: bool) -> DocState {
+         wb.shrink_to_fit();
+         let mut calc = Calc::new();
+-        calc.recalc_all(&mut wb);
++        calc.open(&mut wb, calculated);
+         let wb = Arc::new(wb);
+         let sel = Selection::at(wb.active().map(|s| s.view_active).unwrap_or_default());
+         DocState {
+diff --git a/crates/engine/tests/open_calculated.rs b/crates/engine/tests/open_calculated.rs
+new file mode 100644
+index 0000000..5d75295
+--- /dev/null
++++ b/crates/engine/tests/open_calculated.rs
+@@ -0,0 +1,75 @@
++//! A workbook whose values come from a full calculation (an XLSX file with a `calcPr` that asks
++//! for no calculation on open, as Excel saves it) opens with its values as they are, the way Excel
++//! opens it; Calculate Now (F9) calculates everything. A file that asks for a calculation on open
++//! (`fullCalcOnLoad`) is calculated when it opens, as before.
++
++use gridcraft_core::{CellRef, Value};
++use gridcraft_engine::Session;
++use gridcraft_engine::model::{Cell, Formula, Workbook};
++use serde_json::json;
++
++fn at(a: &str) -> CellRef {
++    CellRef::parse(a).unwrap()
++}
++
++fn value(s: &Session, a: &str) -> Value {
++    s.active().unwrap().wb.sheet(0).unwrap().value(at(a))
++}
++
++/// The bytes of a workbook with A1 = 2 and B1 = A1*2 whose cached value is `cached`.
++fn file(cached: f64, full_calc_on_load: bool) -> Vec<u8> {
++    let mut wb = Workbook::new();
++    let sh = wb.sheet_mut(0).unwrap();
++    sh.cells.set(at("A1"), Cell::value(Value::Number(2.0)));
++    sh.cells.set(at("B1"), Cell { value: Value::Number(cached), ..Cell::formula(Formula::new("=A1*2")) });
++    let bytes = gridcraft_engine::io::save_bytes(&wb, "book.xlsx").unwrap();
++    if !full_calc_on_load {
++        return bytes;
++    }
++    // The same package with `fullCalcOnLoad` in its `calcPr`.
++    let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
++    let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
++    for i in 0..z.len() {
++        let mut f = z.by_index(i).unwrap();
++        let name = f.name().to_string();
++        let mut data = Vec::new();
++        std::io::Read::read_to_end(&mut f, &mut data).unwrap();
++        if name == "xl/workbook.xml" {
++            let text = String::from_utf8(data).unwrap();
++            assert!(text.contains("<calcPr ") && !text.contains("fullCalcOnLoad"), "{text}");
++            data = text.replacen("<calcPr ", "<calcPr fullCalcOnLoad=\"1\" ", 1).into_bytes();
++        }
++        out.start_file(name, zip::write::SimpleFileOptions::default()).unwrap();
++        std::io::Write::write_all(&mut out, &data).unwrap();
++    }
++    out.finish().unwrap().into_inner()
++}
++
++fn open(bytes: &[u8], name: &str) -> Session {
++    let path = std::env::temp_dir().join(format!("gridcraft-open-calculated-{}-{name}", std::process::id()));
++    std::fs::write(&path, bytes).unwrap();
++    let mut s = Session::new();
++    s.execute("file.open", json!({"path": path.to_str().unwrap()})).unwrap();
++    let _ = std::fs::remove_file(&path);
++    s
++}
++
++#[test]
++fn a_calculated_file_opens_with_its_values() {
++    // A stale cached value shows it: the file's 5 is kept where a calculation gives 4.
++    let mut s = open(&file(5.0, false), "kept.xlsx");
++    assert_eq!(value(&s, "B1"), Value::Number(5.0));
++    assert!(!s.active().unwrap().is_dirty());
++    // Edits recalculate their dependents, as after any open.
++    s.execute("cell.set", json!({"cell": "A1", "input": "3"})).unwrap();
++    assert_eq!(value(&s, "B1"), Value::Number(6.0));
++    let mut s = open(&file(5.0, false), "f9.xlsx");
++    s.execute("formulas.calculateNow", json!({})).unwrap();
++    assert_eq!(value(&s, "B1"), Value::Number(4.0));
++}
++
++#[test]
++fn a_file_that_asks_for_a_calculation_is_calculated_on_open() {
++    let s = open(&file(5.0, true), "full.xlsx");
++    assert_eq!(value(&s, "B1"), Value::Number(4.0));
++}
+diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
+index 3300f97..8216be8 100644
+--- a/crates/xlsx/src/lib.rs
++++ b/crates/xlsx/src/lib.rs
+@@ -68,6 +68,10 @@ pub enum IoError {
+ #[derive(Clone, Debug, Default, PartialEq)]
+ pub struct ReadReport {
+     pub warnings: Vec<String>,
++    /// The cells' values come from a full calculation: the workbook asks for none when it opens
++    /// (it has a `calcPr` without `fullCalcOnLoad`, as Excel writes it) and no spilled values had
++    /// to be left out. Its formulas then need not be calculated on open, as Excel doesn't.
++    pub calculated: bool,
+ }
+ 
+ impl ReadReport {
+diff --git a/crates/xlsx/src/read.rs b/crates/xlsx/src/read.rs
+index 1a47908..d193052 100644
+--- a/crates/xlsx/src/read.rs
++++ b/crates/xlsx/src/read.rs
+@@ -176,6 +176,7 @@ pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
+     }
+     wb.date_system = cx.date_system;
+     if let Some(c) = wb_xml.child("calcPr") {
++        cx.report.calculated = !c.flag("fullCalcOnLoad", false);
+         wb.calc.mode = match c.attr("calcMode") {
+             Some("manual") => CalcMode::Manual,
+             Some("autoNoTable") => CalcMode::AutomaticExceptTables,
+diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
+index 35b8f3b..b81756b 100644
+--- a/crates/xlsx/src/sheet_read.rs
++++ b/crates/xlsx/src/sheet_read.rs
+@@ -88,6 +88,11 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
+     if st.dropped > 0 {
+         cx.warn(format!("sheet \"{name}\": {} cells or rows outside the 1,048,576 × 16,384 grid were dropped", st.dropped));
+     }
++    // Spilled values are not kept (the formulas lay them out again), so the file's values are
++    // only complete after a calculation.
++    if !st.dynamic.is_empty() {
++        cx.report.calculated = false;
++    }
+     drop(bytes);
+     // Rows were filled cell by cell: give back the room kept for more.
+     sheet.cells.shrink_to_fit();
+diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
+index 3d435bd..86dd9d2 100644
+--- a/crates/xlsx/src/tests/shared_formulas.rs
++++ b/crates/xlsx/src/tests/shared_formulas.rs
+@@ -139,3 +139,29 @@ fn inline_strings_with_the_same_short_text_share_one_string() {
+     assert_eq!(&*text("B1"), long);
+     assert!(!Arc::ptr_eq(&text("B1"), &text("B2")));
+ }
++
++#[test]
++fn a_workbook_calculated_on_save_is_reported_as_calculated() {
++    let body = r#"<sheetData><row r="1"><c r="A1"><v>2</v></c><c r="B1"><f>A1*2</f><v>4</v></c></row></sheetData>"#;
++    let spill = r#"<sheetData><row r="1"><c r="A1" cm="1"><f t="array" ref="A1:A2">SEQUENCE(2)</f><v>1</v></c></row><row r="2"><c r="A2"><v>2</v></c></row></sheetData>"#;
++    for (sheet, wb_extra, calculated) in [
++        (body, r#"<calcPr calcId="191029"/>"#, true),
++        (body, r#"<calcPr calcId="124519" fullCalcOnLoad="1"/>"#, false),
++        // No calcPr: no word on how the values were made.
++        (body, "", false),
++        // Spilled values are left out on read, so the file's values are incomplete.
++        (spill, r#"<calcPr calcId="191029"/>"#, false),
++    ] {
++        let (wb, report) = read_xlsx(&minimal(sheet, &[], "", wb_extra)).unwrap();
++        assert_eq!(report.calculated, calculated, "{wb_extra} {sheet}");
++        assert!(wb.sheet(0).unwrap().cell(at("A1")).is_some());
++    }
++    // gridcraft's own files: calculated when every formula has its value.
++    let mut wb = Workbook::new();
++    let sh = wb.sheet_mut(0).unwrap();
++    sh.cells.set(at("A1"), Cell::value(Value::Number(2.0)));
++    sh.cells.set(at("B1"), Cell { value: Value::Number(4.0), ..Cell::formula(Formula::new("=A1*2")) });
++    assert!(read_xlsx(&write_xlsx(&wb).unwrap()).unwrap().1.calculated);
++    wb.sheet_mut(0).unwrap().cells.set(at("C1"), Cell::formula(Formula::new("=B1+1")));
++    assert!(!read_xlsx(&write_xlsx(&wb).unwrap()).unwrap().1.calculated);
++}

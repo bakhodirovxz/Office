@@ -1,0 +1,756 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 11:55:38 +0500
+Subject: [PATCH 12/22] model: keep shifted copies of formulas to 16 bytes
+
+Most formula cells of a large sheet hold a shifted copy of a shared tree:
+the tree's pointer and an offset. `Formula` still had room for an own
+text, tree and legacy array range, 56 bytes, so each such cell cost a
+72-byte allocation.
+
+A formula of its own now keeps those in a box; a shifted copy is the
+pointer and the offset, so `Formula` is 16 bytes and a shifted copy's
+allocation 32. The legacy array range becomes `array()` /
+`set_array()` / `with_array()`: a shifted copy is never an array formula,
+and one made an array formula gets a text and tree of its own.
+---
+ crates/calc/src/recalc.rs                    |   2 +-
+ crates/calc/src/tests.rs                     |   2 +-
+ crates/engine/src/cmd/edit.rs                |  12 +-
+ crates/engine/src/cmd/formulas.rs            |   2 +-
+ crates/engine/src/cmd/insert.rs              |   2 +-
+ crates/engine/src/cmd/mod.rs                 |   4 +-
+ crates/engine/src/tests.rs                   |   2 +-
+ crates/engine/tests/command_sequence_fuzz.rs |   4 +-
+ crates/engine/tests/formula_templates.rs     |   8 +-
+ crates/model/src/cell.rs                     | 112 ++++++++++++++-----
+ crates/model/src/workbook.rs                 |   2 +-
+ crates/ui-egui/src/formula_bar.rs            |   2 +-
+ crates/xlsx/src/sheet_read.rs                |   2 +-
+ crates/xlsx/src/sheet_write.rs               |  10 +-
+ crates/xlsx/src/tests/array_export.rs        |  12 +-
+ crates/xlsx/src/tests/fixtures.rs            |   4 +-
+ crates/xlsx/src/tests/richdata_tests.rs      |   4 +-
+ crates/xlsx/src/tests/roundtrip.rs           |   8 +-
+ crates/xlsx/src/tests/shared_formulas.rs     |   4 +-
+ crates/xlsx/src/tests/xls_tests.rs           |   2 +-
+ crates/xlsx/src/xls/mod.rs                   |   4 +-
+ 21 files changed, 133 insertions(+), 71 deletions(-)
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index fe40b40..f731db1 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -911,7 +911,7 @@ impl PassHost<'_> {
+             ev.value(&expr)
+         };
+         // A legacy array formula fills the range it was entered in.
+-        let legacy = self.wb.sheet(k.0).and_then(|s| s.cell(k.1)).and_then(|c| c.formula.as_ref()).and_then(|f| f.array);
++        let legacy = self.wb.sheet(k.0).and_then(|s| s.cell(k.1)).and_then(|c| c.formula.as_ref()).and_then(|f| f.array());
+         let v = match legacy {
+             Some(range) => fit_to_range(v, range),
+             None => v,
+diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
+index f0b8dbf..53050d5 100644
+--- a/crates/calc/src/tests.rs
++++ b/crates/calc/src/tests.rs
+@@ -664,7 +664,7 @@ fn legacy_array_formulas_fill_their_range() {
+     t.set("A2", "2");
+     let cse = |t: &mut T, at: &str, formula: &str, range: &str| {
+         let mut f = Formula::new(formula);
+-        f.array = gridcraft_core::RangeRef::parse(range);
++        f.set_array(gridcraft_core::RangeRef::parse(range));
+         t.wb.sheet_mut(0).unwrap().cells.set(c(at), Cell::formula(f));
+         t.calc.cells_changed(&mut t.wb, &[(0, c(at))]);
+     };
+diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
+index 18182fa..bf527c5 100644
+--- a/crates/engine/src/cmd/edit.rs
++++ b/crates/engine/src/cmd/edit.rs
+@@ -243,7 +243,7 @@ fn cell_set(s: &mut Session, p: &Json) -> Result<Json> {
+             }
+             let mut cell = input_to_cell(&input, sheet, range.start, &mut cx.wb)?.unwrap_or_default();
+             if let Some(f) = cell.formula.as_mut() {
+-                std::sync::Arc::make_mut(f).array = Some(range);
++                std::sync::Arc::make_mut(f).set_array(Some(range));
+             }
+             let sh = cx.sheet_mut(sheet)?;
+             // The array takes the whole range: other cells in it lose their contents.
+@@ -1000,7 +1000,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
+                                 };
+                                 // The array range moves with its formula.
+                                 let (dr, dc) = (dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
+-                                moved.array = f.array.and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?)));
++                                moved.set_array(f.array().and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?))));
+                                 return Some(std::sync::Arc::new(moved));
+                             }
+                             Some(std::sync::Arc::new(f.copied(dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64)?))
+@@ -1198,15 +1198,15 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
+             let Some(expr) = f.expr() else { continue };
+             let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
+             let text = gridcraft_formula::print(&new);
+-            let array = match f.array {
++            let array = match f.array() {
+                 Some(a) if on_target => super::sheet::map_range(a, e),
+                 a => a,
+             };
+-            if (text != f.text() || array != f.array)
++            if (text != f.text() || array != f.array())
+                 && let Some(cell) = sheet.cells.get_mut(c)
+             {
+                 let mut nf = runs.formula(c, new);
+-                nf.array = array;
++                nf.set_array(array);
+                 cell.formula = Some(std::sync::Arc::new(nf));
+             } else {
+                 runs.keep(c, &f);
+@@ -1636,7 +1636,7 @@ mod tests {
+         s.execute("cell.set", json!({"cell": "H5", "input": "=1+1", "array": true})).unwrap();
+         let sh = s.doc().unwrap().wb.active().unwrap();
+         let f = sh.cell(CellRef::parse("H5").unwrap()).and_then(|c| c.formula.clone()).unwrap();
+-        assert_eq!(f.array, Some(RangeRef::parse("H5").unwrap()));
++        assert_eq!(f.array(), Some(RangeRef::parse("H5").unwrap()));
+         assert_eq!(sh.value(CellRef::parse("K20").unwrap()), Value::text("keep"));
+     }
+ 
+diff --git a/crates/engine/src/cmd/formulas.rs b/crates/engine/src/cmd/formulas.rs
+index 9cb14e9..c988f22 100644
+--- a/crates/engine/src/cmd/formulas.rs
++++ b/crates/engine/src/cmd/formulas.rs
+@@ -347,7 +347,7 @@ fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_sc
+         for (c, f) in formulas {
+             let Some(e) = f.expr().and_then(rename) else { continue };
+             let mut nf = Formula::from_expr(e);
+-            nf.array = f.array;
++            nf.set_array(f.array());
+             if let Some(cell) = sh.cells.get_mut(c) {
+                 cell.formula = Some(std::sync::Arc::new(nf));
+             }
+diff --git a/crates/engine/src/cmd/insert.rs b/crates/engine/src/cmd/insert.rs
+index edbdf36..54d0795 100644
+--- a/crates/engine/src/cmd/insert.rs
++++ b/crates/engine/src/cmd/insert.rs
+@@ -234,7 +234,7 @@ fn insert_table(s: &mut Session, p: &Json) -> Result<Json> {
+         return Err(EngineError::Other("A table can't overlap another table.".into()));
+     }
+     let arrays = |sh: &gridcraft_model::Sheet| {
+-        sh.cells.iter().any(|(_, x)| x.formula.as_ref().and_then(|f| f.array).is_some_and(|a| !a.is_single() && a.intersects(&r)))
++        sh.cells.iter().any(|(_, x)| x.formula.as_ref().and_then(|f| f.array()).is_some_and(|a| !a.is_single() && a.intersects(&r)))
+     };
+     if d.wb.sheet(sheet).is_some_and(arrays) {
+         return Err(EngineError::Other("Multi-cell array formulas aren't allowed in tables.".into()));
+diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
+index e2aa24a..bdd1b45 100644
+--- a/crates/engine/src/cmd/mod.rs
++++ b/crates/engine/src/cmd/mod.rs
+@@ -430,7 +430,7 @@ fn check_arrays(old: &Workbook, new: &Workbook) -> Result<()> {
+             }
+             let in_array = sh.spill_ranges.keys().any(|&anchor| {
+                 anchor != c
+-                    && after.cell(anchor).and_then(|x| x.formula.as_ref()).and_then(|f| f.array).is_some_and(|a| a.start == anchor && a.contains(c))
++                    && after.cell(anchor).and_then(|x| x.formula.as_ref()).and_then(|f| f.array()).is_some_and(|a| a.start == anchor && a.contains(c))
+             });
+             if in_array {
+                 return Err(EngineError::Other("You can't change part of an array.".into()));
+@@ -445,7 +445,7 @@ fn same_content(a: Option<&gridcraft_model::Cell>, b: Option<&gridcraft_model::C
+     let empty = |c: Option<&gridcraft_model::Cell>| c.is_none_or(|c| c.formula.is_none() && c.value.is_empty());
+     match (a, b) {
+         (Some(a), Some(b)) => match (&a.formula, &b.formula) {
+-            (Some(x), Some(y)) => x.text() == y.text() && x.array == y.array,
++            (Some(x), Some(y)) => x.text() == y.text() && x.array() == y.array(),
+             (None, None) => a.value == b.value,
+             _ => false,
+         },
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 92c1e3b..1c2d857 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -1450,7 +1450,7 @@ fn row_and_column_inserts_move_legacy_array_ranges() {
+     s.execute("home.insertRows", json!({"rows": "1:1"})).unwrap();
+     let d = s.doc().unwrap();
+     let f = d.wb.sheet(0).unwrap().cell(CellRef::new(3, 3)).and_then(|x| x.formula.clone()).unwrap();
+-    assert_eq!(f.array, Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
++    assert_eq!(f.array(), Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
+     assert_eq!(v(&s, "E4"), Value::Number(14.0));
+     reopen(&mut s);
+     assert_eq!(v(&s, "E4"), Value::Number(14.0));
+diff --git a/crates/engine/tests/command_sequence_fuzz.rs b/crates/engine/tests/command_sequence_fuzz.rs
+index 7c06e93..13c9e05 100644
+--- a/crates/engine/tests/command_sequence_fuzz.rs
++++ b/crates/engine/tests/command_sequence_fuzz.rs
+@@ -386,7 +386,7 @@ fn structure_problem(wb: &Workbook, sel: &gridcraft_engine::Selection) -> Option
+         }
+         // A legacy array formula lives in the top-left cell of its range.
+         for (c, cell) in sh.cells.iter() {
+-            if let Some(a) = cell.formula.as_ref().and_then(|f| f.array)
++            if let Some(a) = cell.formula.as_ref().and_then(|f| f.array())
+                 && (a.start != c || !on_sheet(&a))
+             {
+                 return Some(format!("{}!{c}: array formula covers {a}", sh.name));
+@@ -453,7 +453,7 @@ fn recalc_diff(wb: &Workbook) -> Result<(), String> {
+ 
+ fn normalized_formula(f: &Formula) -> String {
+     let text = Formula::new(&f.text()).text().into_owned();
+-    if f.array.is_some() { format!("{{={text}}}") } else { format!("={text}") }
++    if f.array().is_some() { format!("{{={text}}}") } else { format!("={text}") }
+ }
+ 
+ /// Save to XLSX, reload (recalculating like opening does) and compare sheets, formulas and values.
+diff --git a/crates/engine/tests/formula_templates.rs b/crates/engine/tests/formula_templates.rs
+index 422de02..86b77a6 100644
+--- a/crates/engine/tests/formula_templates.rs
++++ b/crates/engine/tests/formula_templates.rs
+@@ -50,7 +50,7 @@ fn source() -> Workbook {
+         data.set_cell(CellRef::new(1, c), Cell::formula(Formula::new(&format!("{col}2*2"))));
+     }
+     let mut arr = Formula::new("C2:C4*2");
+-    arr.array = Some(gridcraft_core::RangeRef::parse("P2:P4").unwrap());
++    arr.set_array(Some(gridcraft_core::RangeRef::parse("P2:P4").unwrap()));
+     data.set_cell(at("P2"), Cell::formula(arr));
+     let mut summary = Sheet::new("Summary");
+     summary.set_cell(at("A1"), Cell::formula(Formula::new("SUM(Data!E2:E31)")));
+@@ -76,7 +76,7 @@ fn unshared(wb: &Workbook) -> Workbook {
+                 Some(e) => Formula::from_expr(e),
+                 None => (*f).clone(),
+             };
+-            own.array = f.array;
++            own.set_array(f.array());
+             assert!(own.template().is_none_or(|(_, dr, dc)| (dr, dc) == (0, 0)));
+             if let Some(cell) = sheet.cells.get_mut(c) {
+                 cell.formula = Some(Arc::new(own));
+@@ -116,7 +116,7 @@ fn cells(wb: &Workbook) -> Vec<(String, CellRef, Value, Option<String>, Option<g
+     for sheet in &wb.sheets {
+         for (c, cell) in sheet.cells.iter() {
+             let formula = cell.formula.as_ref();
+-            v.push((sheet.name.clone(), c, cell.value.clone(), formula.map(|f| f.text().into_owned()), formula.and_then(|f| f.array)));
++            v.push((sheet.name.clone(), c, cell.value.clone(), formula.map(|f| f.text().into_owned()), formula.and_then(|f| f.array())));
+         }
+     }
+     v
+@@ -164,7 +164,7 @@ fn reading_shares_runs_and_evaluates_the_same() {
+     let wb = &s.doc().unwrap().wb;
+     let data = wb.sheet(1).unwrap();
+     assert_eq!(data.cell(at("E31")).unwrap().formula.as_ref().unwrap().text(), "IF(C31>5,C31*D31,0)");
+-    assert_eq!(data.cell(at("P2")).unwrap().formula.as_ref().unwrap().array, gridcraft_core::RangeRef::parse("P2:P4"));
++    assert_eq!(data.cell(at("P2")).unwrap().formula.as_ref().unwrap().array(), gridcraft_core::RangeRef::parse("P2:P4"));
+     // A run of 30 cells is one tree; the filled-right row one more.
+     let (shifted, trees) = sharing(wb);
+     assert!(trees < 20, "{trees} trees for {shifted} shifted copies");
+diff --git a/crates/model/src/cell.rs b/crates/model/src/cell.rs
+index e606002..f10de44 100644
+--- a/crates/model/src/cell.rs
++++ b/crates/model/src/cell.rs
+@@ -20,24 +20,36 @@ use crate::style::StyleId;
+ /// one per cell; a shifted copy makes its text and tree on demand. Either way a formula means the
+ /// same wherever its cell is stored: the offset is from the shared tree, not from the cell, so
+ /// moving cells (sort, insert, cut) never changes it.
++///
++/// A shifted copy is all that most formula cells of a large sheet hold, so it is kept small: 16
++/// bytes, the shared tree's pointer and the offset. A formula of its own keeps its text, tree and
++/// legacy array range in a box of their own.
+ #[derive(Clone, Debug, Serialize, Deserialize)]
+ #[serde(from = "FormulaData", into = "FormulaData")]
+ pub struct Formula {
+     repr: Repr,
+-    /// Legacy array formula (Ctrl+Shift+Enter) covering this range; the formula lives in the
+-    /// top-left cell.
+-    pub array: Option<RangeRef>,
+ }
+ 
+ #[derive(Clone, Debug)]
+ enum Repr {
+-    /// Text (canonical when it parses) and tree (`None`: it doesn't parse, or it was deserialized).
+-    Own { text: String, expr: Option<Arc<Expr>> },
+-    /// `base` moved by (`dr`, `dc`) as [`gridcraft_formula::adjust::shift_relative`] moves it.
++    /// Text (canonical when it parses), tree (`None`: it doesn't parse, or it was deserialized)
++    /// and legacy array range.
++    Own(Box<Own>),
++    /// `base` moved by (`dr`, `dc`) as [`gridcraft_formula::adjust::shift_relative`] moves it. A
++    /// shifted copy is never a legacy array formula.
+     Shifted { base: Arc<Expr>, dr: i32, dc: i32 },
+ }
+ 
+-/// The serialized form (the same as when text and tree were plain fields).
++#[derive(Clone, Debug)]
++struct Own {
++    text: Box<str>,
++    expr: Option<Arc<Expr>>,
++    /// Legacy array formula (Ctrl+Shift+Enter) covering this range; the formula lives in the
++    /// top-left cell.
++    array: Option<RangeRef>,
++}
++
++/// The serialized form (the same as when text, tree and array range were plain fields).
+ #[derive(Serialize, Deserialize)]
+ struct FormulaData {
+     text: String,
+@@ -46,24 +58,24 @@ struct FormulaData {
+ 
+ impl From<FormulaData> for Formula {
+     fn from(d: FormulaData) -> Self {
+-        Formula { repr: Repr::Own { text: d.text, expr: None }, array: d.array }
++        Formula::own(d.text.into(), None, d.array)
+     }
+ }
+ 
+ impl From<Formula> for FormulaData {
+     fn from(f: Formula) -> Self {
+-        FormulaData { text: f.text().into_owned(), array: f.array }
++        FormulaData { text: f.text().into_owned(), array: f.array() }
+     }
+ }
+ 
+ impl PartialEq for Formula {
+     fn eq(&self, other: &Self) -> bool {
+-        if self.array != other.array {
++        if self.array() != other.array() {
+             return false;
+         }
+         match (&self.repr, &other.repr) {
+             (Repr::Shifted { base: a, dr: r1, dc: c1 }, Repr::Shifted { base: b, dr: r2, dc: c2 }) if Arc::ptr_eq(a, b) => r1 == r2 && c1 == c2,
+-            (Repr::Own { text: t1, expr: e1 }, Repr::Own { text: t2, expr: e2 }) => t1 == t2 && e1 == e2,
++            (Repr::Own(a), Repr::Own(b)) => a.text == b.text && a.expr == b.expr,
+             // By meaning: the same text and tree however each one is stored.
+             _ => self.text() == other.text() && self.stored_expr() == other.stored_expr(),
+         }
+@@ -71,13 +83,16 @@ impl PartialEq for Formula {
+ }
+ 
+ impl Formula {
++    fn own(text: Box<str>, expr: Option<Arc<Expr>>, array: Option<RangeRef>) -> Formula {
++        Formula { repr: Repr::Own(Box::new(Own { text, expr, array })) }
++    }
+     /// Parses `text` (with or without `=`). Unparseable formulas keep their text and evaluate to
+     /// `#NAME?`.
+     pub fn new(text: &str) -> Formula {
+         let body = text.strip_prefix('=').unwrap_or(text);
+         match gridcraft_formula::parse(body) {
+             Ok(e) => Formula::from_expr(e),
+-            Err(_) => Formula { repr: Repr::Own { text: body.to_string(), expr: None }, array: None },
++            Err(_) => Formula::own(body.into(), None, None),
+         }
+     }
+     pub fn from_expr(e: Expr) -> Formula {
+@@ -85,13 +100,13 @@ impl Formula {
+     }
+     /// A formula holding (and sharing) the tree `e`.
+     pub fn from_arc(e: Arc<Expr>) -> Formula {
+-        Formula { repr: Repr::Own { text: gridcraft_formula::print(&e), expr: Some(e) }, array: None }
++        Formula::own(gridcraft_formula::print(&e).into(), Some(e), None)
+     }
+     /// `base` with its relative references moved by (`dr`, `dc`), sharing `base`'s tree. The same
+     /// formula as `Formula::from_expr(shift_relative((*base).clone(), dr, dc))`.
+     pub fn shifted(base: Arc<Expr>, dr: i64, dc: i64) -> Formula {
+         match (i32::try_from(dr), i32::try_from(dc)) {
+-            (Ok(dr), Ok(dc)) => Formula { repr: Repr::Shifted { base, dr, dc }, array: None },
++            (Ok(dr), Ok(dc)) => Formula { repr: Repr::Shifted { base, dr, dc } },
+             // Further than any sheet reaches: every relative reference is off the sheet.
+             _ => Formula::from_expr(shifted(&base, dr, dc)),
+         }
+@@ -102,8 +117,10 @@ impl Formula {
+     /// it can (`None` when the formula doesn't parse; the legacy array range is not copied).
+     pub fn copied(&self, dr: i64, dc: i64) -> Option<Formula> {
+         Some(match &self.repr {
+-            Repr::Own { expr: Some(e), .. } => Formula::shifted(e.clone(), dr, dc),
+-            Repr::Own { text, expr: None } => Formula::shifted(Arc::new(gridcraft_formula::parse(text).ok()?), dr, dc),
++            Repr::Own(own) => match &own.expr {
++                Some(e) => Formula::shifted(e.clone(), dr, dc),
++                None => Formula::shifted(Arc::new(gridcraft_formula::parse(&own.text).ok()?), dr, dc),
++            },
+             // Two moves compose into one only when the first kept every reference on the sheet
+             // (a `#REF!` doesn't come back).
+             Repr::Shifted { base, dr: r, dc: c } if shift_stays_on_sheet(base, i64::from(*r), i64::from(*c)) => {
+@@ -115,22 +132,47 @@ impl Formula {
+     /// The canonical formula text (without `=`).
+     pub fn text(&self) -> Cow<'_, str> {
+         match &self.repr {
+-            Repr::Own { text, .. } => Cow::Borrowed(text),
++            Repr::Own(own) => Cow::Borrowed(&own.text),
+             Repr::Shifted { base, dr: 0, dc: 0 } => Cow::Owned(gridcraft_formula::print(base)),
+             Repr::Shifted { base, dr, dc } => Cow::Owned(gridcraft_formula::print(&shifted(base, i64::from(*dr), i64::from(*dc)))),
+         }
+     }
++    /// The legacy array formula (Ctrl+Shift+Enter) range this formula covers; the formula lives in
++    /// the range's top-left cell.
++    pub fn array(&self) -> Option<RangeRef> {
++        match &self.repr {
++            Repr::Own(own) => own.array,
++            Repr::Shifted { .. } => None,
++        }
++    }
++    /// Makes this a legacy array formula covering `range` (or an ordinary formula: `None`). A
++    /// shifted copy made an array formula gets a text and tree of its own.
++    pub fn set_array(&mut self, range: Option<RangeRef>) {
++        match &mut self.repr {
++            Repr::Own(own) => own.array = range,
++            Repr::Shifted { .. } if range.is_none() => {}
++            Repr::Shifted { base, dr, dc } => {
++                let e = Arc::new(shifted(base, i64::from(*dr), i64::from(*dc)));
++                *self = Formula::own(gridcraft_formula::print(&e).into(), Some(e), range);
++            }
++        }
++    }
++    /// This formula as a legacy array formula covering `range` (see [`Formula::set_array`]).
++    pub fn with_array(mut self, range: Option<RangeRef>) -> Formula {
++        self.set_array(range);
++        self
++    }
+     /// Whether the formula text parses (one that doesn't evaluates to `#NAME?`).
+     pub fn is_parsed(&self) -> bool {
+         match &self.repr {
+-            Repr::Own { expr, .. } => expr.is_some(),
++            Repr::Own(own) => own.expr.is_some(),
+             Repr::Shifted { .. } => true,
+         }
+     }
+     /// The parsed expression, re-parsing after deserialization.
+     pub fn expr(&self) -> Option<Expr> {
+         match &self.repr {
+-            Repr::Own { text, expr } => expr.as_deref().cloned().or_else(|| gridcraft_formula::parse(text).ok()),
++            Repr::Own(own) => own.expr.as_deref().cloned().or_else(|| gridcraft_formula::parse(&own.text).ok()),
+             Repr::Shifted { base, dr, dc } => Some(shifted(base, i64::from(*dr), i64::from(*dc))),
+         }
+     }
+@@ -138,7 +180,7 @@ impl Formula {
+     /// deserialization; builds a shifted copy's tree).
+     pub fn expr_arc(&self) -> Option<Arc<Expr>> {
+         match &self.repr {
+-            Repr::Own { text, expr } => expr.clone().or_else(|| gridcraft_formula::parse(text).ok().map(Arc::new)),
++            Repr::Own(own) => own.expr.clone().or_else(|| gridcraft_formula::parse(&own.text).ok().map(Arc::new)),
+             Repr::Shifted { base, dr: 0, dc: 0 } => Some(base.clone()),
+             Repr::Shifted { base, dr, dc } => Some(Arc::new(shifted(base, i64::from(*dr), i64::from(*dc)))),
+         }
+@@ -148,7 +190,7 @@ impl Formula {
+     /// where their relative references point.
+     pub fn template(&self) -> Option<(&Arc<Expr>, i64, i64)> {
+         match &self.repr {
+-            Repr::Own { expr, .. } => expr.as_ref().map(|e| (e, 0, 0)),
++            Repr::Own(own) => own.expr.as_ref().map(|e| (e, 0, 0)),
+             Repr::Shifted { base, dr, dc } => Some((base, i64::from(*dr), i64::from(*dc))),
+         }
+     }
+@@ -156,7 +198,7 @@ impl Formula {
+     /// built.
+     fn stored_expr(&self) -> Option<Cow<'_, Expr>> {
+         match &self.repr {
+-            Repr::Own { expr, .. } => expr.as_deref().map(Cow::Borrowed),
++            Repr::Own(own) => own.expr.as_deref().map(Cow::Borrowed),
+             Repr::Shifted { base, dr, dc } => Some(Cow::Owned(shifted(base, i64::from(*dr), i64::from(*dc)))),
+         }
+     }
+@@ -267,7 +309,7 @@ impl Cell {
+     /// legacy array formula in braces (`{=A1:A2*2}`).
+     pub fn bar_text(&self) -> String {
+         match &self.formula {
+-            Some(f) if f.array.is_some() => format!("{{={}}}", f.text()),
++            Some(f) if f.array().is_some() => format!("{{={}}}", f.text()),
+             _ => self.input_text(),
+         }
+     }
+@@ -347,11 +389,31 @@ mod tests {
+     #[test]
+     fn copies_drop_the_legacy_array_range() {
+         let mut f = Formula::new("A1:A2*2");
+-        f.array = Some(RangeRef::parse("B1:B2").unwrap());
+-        assert_eq!(f.copied(0, 0).unwrap().array, None);
++        f.set_array(Some(RangeRef::parse("B1:B2").unwrap()));
++        assert_eq!(f.copied(0, 0).unwrap().array(), None);
+         assert_ne!(f.copied(0, 0).unwrap(), f);
+     }
+ 
++    #[test]
++    fn shifted_copies_are_small_and_array_ranges_live_in_own_formulas() {
++        #[cfg(target_pointer_width = "64")]
++        assert_eq!(std::mem::size_of::<Formula>(), 16);
++        let plain = Formula::new("A3*2");
++        let mut s = Formula::new("A1*2").copied(2, 0).unwrap();
++        s.set_array(None);
++        assert!(matches!(s.repr, Repr::Shifted { .. }), "no array range: still a shifted copy");
++        let r = RangeRef::parse("C3:C4");
++        s.set_array(r);
++        assert_eq!((s.array(), s.text().as_ref()), (r, "A3*2"));
++        assert_eq!(s, plain.clone().with_array(r));
++        assert_ne!(s, plain);
++        s.set_array(None);
++        assert_eq!(s, plain);
++        let json = serde_json::to_string(&plain.clone().with_array(r)).unwrap();
++        assert_eq!(json, r#"{"text":"A3*2","array":{"start":{"row":2,"col":2},"end":{"row":3,"col":2}}}"#);
++        assert_eq!(serde_json::from_str::<Formula>(&json).unwrap().array(), r);
++    }
++
+     #[test]
+     fn runs_share_trees_down_columns_and_across_rows() {
+         let mut runs = FormulaRuns::default();
+diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
+index 1f8d2f5..8003d34 100644
+--- a/crates/model/src/workbook.rs
++++ b/crates/model/src/workbook.rs
+@@ -221,7 +221,7 @@ impl Workbook {
+                     let ne = spell_calls(e.clone(), &lambdas);
+                     (ne != e).then(|| {
+                         let mut nf = Formula::from_expr(ne);
+-                        nf.array = f.array;
++                        nf.set_array(f.array());
+                         (c, nf)
+                     })
+                 })
+diff --git a/crates/ui-egui/src/formula_bar.rs b/crates/ui-egui/src/formula_bar.rs
+index 4105648..5d532bc 100644
+--- a/crates/ui-egui/src/formula_bar.rs
++++ b/crates/ui-egui/src/formula_bar.rs
+@@ -76,7 +76,7 @@ fn active_input(app: &SheetApp) -> String {
+         return if let Some(f) = &c.formula {
+             let shown = crate::formula_locale::display(&c.input_text(), app.ui.language.formula_locale(), &d.wb, d.wb.active_sheet);
+             // A legacy array formula shows in braces (`{=A1:A2*2}`), as `Cell::bar_text` does.
+-            if f.array.is_some() { format!("{{{shown}}}") } else { shown }
++            if f.array().is_some() { format!("{{{shown}}}") } else { shown }
+         } else {
+             gridcraft_engine::display::edit_text(&d.wb, sh, a)
+         };
+diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
+index 9241555..c2fb34a 100644
+--- a/crates/xlsx/src/sheet_read.rs
++++ b/crates/xlsx/src/sheet_read.rs
+@@ -498,7 +498,7 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
+                 st.dynamic.push(range);
+             }
+             if !dynamic {
+-                fm.array = Some(range);
++                fm.set_array(Some(range));
+             }
+             Some(fm)
+         }
+diff --git a/crates/xlsx/src/sheet_write.rs b/crates/xlsx/src/sheet_write.rs
+index c4d1466..8d8948e 100644
+--- a/crates/xlsx/src/sheet_write.rs
++++ b/crates/xlsx/src/sheet_write.rs
+@@ -119,11 +119,11 @@ fn shared_formulas(
+     for (c, cell) in sheet.cells.iter() {
+         let Some(f) = cell.formula.as_ref() else { continue };
+         let spills = dynamic.contains_key(&c);
+-        let needs_array = f.array.is_none() && !spills && crate::array_formula::needs_array(wb, si, c, f);
++        let needs_array = f.array().is_none() && !spills && crate::array_formula::needs_array(wb, si, c, f);
+         if needs_array {
+             implicit.insert(c);
+         }
+-        let plain = f.array.is_none() && !spills && !needs_array && !overrides.contains_key(&c) && !sheet.cell_pictures.contains_key(&c);
++        let plain = f.array().is_none() && !spills && !needs_array && !overrides.contains_key(&c) && !sheet.cell_pictures.contains_key(&c);
+         let base = f
+             .template()
+             .filter(|(b, dr, dc)| plain && gridcraft_formula::adjust::shift_stays_on_sheet(b, *dr, *dc) && excel_can_share(b))
+@@ -190,7 +190,7 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
+     let dynamic: BTreeMap<CellRef, RangeRef> = sheet
+         .spill_ranges
+         .iter()
+-        .filter(|(a, r)| !r.is_single() && sheet.cells.get(**a).is_some_and(|c| c.formula.as_ref().is_some_and(|f| f.array.is_none())))
++        .filter(|(a, r)| !r.is_single() && sheet.cells.get(**a).is_some_and(|c| c.formula.as_ref().is_some_and(|f| f.array().is_none())))
+         .map(|(a, r)| (*a, *r))
+         .collect();
+     let mut extra: BTreeMap<CellRef, Value> = BTreeMap::new();
+@@ -762,7 +762,7 @@ fn write_cell(
+         v => v,
+     };
+     // A non-spilling formula may still need array evaluation to avoid implicit intersection.
+-    if dynamic.is_some() && formula.is_some_and(|f| f.array.is_none()) {
++    if dynamic.is_some() && formula.is_some_and(|f| f.array().is_none()) {
+         s.push_str(" cm=\"1\"");
+         out.dynamic_arrays = true;
+     }
+@@ -776,7 +776,7 @@ fn write_cell(
+         s.push_str(t);
+         s.push('>');
+         let text = || esc(&crate::fmla::to_file(f));
+-        match (f.array, dynamic, shared) {
++        match (f.array(), dynamic, shared) {
+             (Some(r), _, _) => {
+                 let _ = write!(s, "<f t=\"array\" ref=\"{}\">{}</f>", r.a1(), text());
+             }
+diff --git a/crates/xlsx/src/tests/array_export.rs b/crates/xlsx/src/tests/array_export.rs
+index adfdace..d931211 100644
+--- a/crates/xlsx/src/tests/array_export.rs
++++ b/crates/xlsx/src/tests/array_export.rs
+@@ -90,7 +90,7 @@ fn nonspilling_formulas_preserve_array_evaluation_and_metadata() {
+         let c = results.cell(at(address)).unwrap();
+         let f = c.formula.as_ref().unwrap();
+         assert_eq!(f.text(), text);
+-        assert_eq!(f.array, None, "dynamic formula must not become legacy CSE");
++        assert_eq!(f.array(), None, "dynamic formula must not become legacy CSE");
+         assert_eq!(c.value, Value::Number(value));
+     }
+     assert_eq!(results.value(at("C107")), Value::text("neighbor"));
+@@ -101,7 +101,7 @@ fn dynamic_spills_and_legacy_cse_keep_distinct_ranges() {
+     let mut wb = Workbook::new();
+     let sh = wb.sheet_mut(0).unwrap();
+     let mut legacy = Formula::new("ROW(A1:A2)");
+-    legacy.array = Some(range("A1:A2"));
++    legacy.set_array(Some(range("A1:A2")));
+     sh.cells.set(at("A1"), Cell::formula(legacy));
+     sh.cells.set(at("A2"), Cell::value(Value::Number(2.0)));
+     sh.cells.set(at("B1"), formula("SEQUENCE(3)", 1.0));
+@@ -123,10 +123,10 @@ fn dynamic_spills_and_legacy_cse_keep_distinct_ranges() {
+ 
+     let (back, _) = read_xlsx(&bytes).unwrap();
+     let sh = back.sheet(0).unwrap();
+-    assert_eq!(sh.cell(at("A1")).unwrap().formula.as_ref().unwrap().array, Some(range("A1:A2")));
++    assert_eq!(sh.cell(at("A1")).unwrap().formula.as_ref().unwrap().array(), Some(range("A1:A2")));
+     // A legacy array's cached values are dropped on read: the formula fills its range on recalc (#156).
+     assert!(sh.cell(at("A2")).is_none());
+-    assert_eq!(sh.cell(at("B1")).unwrap().formula.as_ref().unwrap().array, None);
++    assert_eq!(sh.cell(at("B1")).unwrap().formula.as_ref().unwrap().array(), None);
+     assert!(sh.cell(at("B2")).is_none());
+     assert!(sh.cell(at("B3")).is_none());
+     assert_eq!(sh.value(at("C1")), Value::Number(6.0));
+@@ -144,7 +144,7 @@ fn scalar_formulas_constants_and_legacy_cse_do_not_require_dynamic_metadata() {
+     for legacy in [false, true] {
+         if legacy {
+             let mut f = Formula::new("SUM(A1:A2)");
+-            f.array = Some(range("B1"));
++            f.set_array(Some(range("B1")));
+             wb.sheet_mut(0).unwrap().cells.set(at("B1"), Cell::formula(f));
+         }
+         let bytes = write_xlsx(&wb).unwrap();
+@@ -205,7 +205,7 @@ fn calculated_table_column_keeps_formula_and_cell_value() {
+     let (back, _) = read_xlsx(&bytes).unwrap();
+     let sh = back.sheet(0).unwrap();
+     assert_eq!(sh.tables[0].columns[1].formula.as_deref(), Some("A2*2"));
+-    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().array, None);
++    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().array(), None);
+     assert_eq!(sh.value(at("B2")), Value::Number(6.0));
+ }
+ 
+diff --git a/crates/xlsx/src/tests/fixtures.rs b/crates/xlsx/src/tests/fixtures.rs
+index bd511cb..54bff43 100644
+--- a/crates/xlsx/src/tests/fixtures.rs
++++ b/crates/xlsx/src/tests/fixtures.rs
+@@ -34,10 +34,10 @@ fn shared_formulas_and_value_types() {
+     assert_eq!(s.value(at("C4")), Value::text("ab"));
+     assert_eq!(s.value(at("D4")), Value::Number(45292.5));
+     let a5 = s.cell(at("A5")).unwrap().formula.clone().unwrap();
+-    assert_eq!(a5.array, Some(RangeRef::parse("A5:B6").unwrap()));
++    assert_eq!(a5.array(), Some(RangeRef::parse("A5:B6").unwrap()));
+     assert!(s.cell(at("B5")).is_none() && s.cell(at("A6")).is_none(), "a legacy array's cached values are dropped too");
+     let c5 = s.cell(at("C5")).unwrap().formula.clone().unwrap();
+-    assert_eq!(c5.array, None, "dynamic arrays are not legacy CSE arrays");
++    assert_eq!(c5.array(), None, "dynamic arrays are not legacy CSE arrays");
+     assert_eq!(c5.text(), "SEQUENCE(3)");
+     assert!(s.cell(at("C6")).is_none(), "spilled cached values are dropped so the formula can spill");
+     // Rows/cells without r continue from the previous position.
+diff --git a/crates/xlsx/src/tests/richdata_tests.rs b/crates/xlsx/src/tests/richdata_tests.rs
+index 9b90032..545d1b7 100644
+--- a/crates/xlsx/src/tests/richdata_tests.rs
++++ b/crates/xlsx/src/tests/richdata_tests.rs
+@@ -146,7 +146,7 @@ fn reads_independent_indices_reordered_keys_and_both_relationship_layouts() {
+         assert_eq!(sheet.cell_pictures.get(&at("A1")).map(Arc::as_ref), Some(&picture(png(), "image/png", "green & <image>")));
+         assert_eq!(cell.value, Value::Error(CellError::Value));
+         assert!(cell.formula.is_none());
+-        assert!(sheet.cells.get(at("B1")).unwrap().formula.as_ref().unwrap().array.is_none());
++        assert!(sheet.cells.get(at("B1")).unwrap().formula.as_ref().unwrap().array().is_none());
+         assert!(sheet.cells.get(at("B2")).is_none());
+     }
+ }
+@@ -182,7 +182,7 @@ fn pictures_roundtrip_across_sheets_with_and_without_dynamic_arrays() {
+         if dynamic {
+             let f = loaded.sheet(0).unwrap().cells.get(at("E1")).unwrap().formula.as_ref().unwrap();
+             assert_eq!(f.text(), "SEQUENCE(2)");
+-            assert!(f.array.is_none());
++            assert!(f.array().is_none());
+         }
+         let rels = package.rels("xl/workbook.xml").unwrap();
+         assert!(rels.iter().any(|r| r.kind == "rdRichValue"));
+diff --git a/crates/xlsx/src/tests/roundtrip.rs b/crates/xlsx/src/tests/roundtrip.rs
+index 3e9be85..18cbf48 100644
+--- a/crates/xlsx/src/tests/roundtrip.rs
++++ b/crates/xlsx/src/tests/roundtrip.rs
+@@ -90,7 +90,7 @@ fn sample() -> Workbook {
+     s.cells.set(at("E4"), f);
+     s.cells.set(at("F4"), Cell::formula(Formula::new("NOW()")));
+     let mut arr = Formula::new("B2:B3*2");
+-    arr.array = Some(rr("G2:G3"));
++    arr.set_array(Some(rr("G2:G3")));
+     let mut c = Cell::formula(arr);
+     c.value = Value::Number(2469.0);
+     s.cells.set(at("G2"), c);
+@@ -481,7 +481,7 @@ fn full_roundtrip() {
+     for (c, cell) in a.cells.iter() {
+         let got = b.cell(c).unwrap_or_else(|| panic!("missing {c}"));
+         assert_eq!(got.value, cell.value, "value at {c}");
+-        let formula = |x: &Cell| x.formula.as_ref().map(|f| (f.text().into_owned(), f.array));
++        let formula = |x: &Cell| x.formula.as_ref().map(|f| (f.text().into_owned(), f.array()));
+         assert_eq!(formula(got), formula(cell), "formula at {c}");
+         assert_eq!(back.styles.get(got.style), wb.styles.get(cell.style), "style at {c}");
+     }
+@@ -880,7 +880,7 @@ fn implicit_intersection_is_written_as_single() {
+     let (back, _) = read_xlsx(&bytes).unwrap();
+     let sh = back.sheet(0).unwrap();
+     assert_eq!(sh.cell(at("D3")).and_then(|c| c.formula.as_ref()).map(|f| f.text().into_owned()).as_deref(), Some("@A1:A3*2"));
+-    assert_eq!(sh.cell(at("D3")).and_then(|c| c.formula.as_ref()).and_then(|f| f.array), None);
++    assert_eq!(sh.cell(at("D3")).and_then(|c| c.formula.as_ref()).and_then(|f| f.array()), None);
+ }
+ 
+ #[test]
+@@ -958,7 +958,7 @@ fn let_lambda_parameters_drop_xlpm_on_read() {
+     s.cells.set(at("A1"), Cell { value: Value::Number(2.0), ..Cell::formula(Formula::new("LET(x,1,x+1)")) });
+     s.cells.set(at("A2"), Cell { value: Value::Number(6.0), ..Cell::formula(Formula::new("LAMBDA(a,a*2)(3)")) });
+     let mut arr = Formula::new("MAP(B1:B2,LAMBDA(v,v+1))");
+-    arr.array = Some(rr("C1:C2"));
++    arr.set_array(Some(rr("C1:C2")));
+     s.cells.set(at("C1"), Cell::formula(arr));
+     let bytes = write_xlsx(&wb).unwrap();
+     let (xml, _) = sheet1_xml(&bytes);
+diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
+index 7f96cb5..aee82f0 100644
+--- a/crates/xlsx/src/tests/shared_formulas.rs
++++ b/crates/xlsx/src/tests/shared_formulas.rs
+@@ -95,7 +95,7 @@ fn runs_are_written_as_shared_formulas() {
+         sh.cells.set(at("C3"), Cell::formula(master.copied(1, 1).unwrap()));
+         // A legacy array formula is written on its own.
+         let mut arr = master.copied(10, 0).unwrap();
+-        arr.array = Some(gridcraft_core::RangeRef::parse("B11:B11").unwrap());
++        arr.set_array(Some(gridcraft_core::RangeRef::parse("B11:B11").unwrap()));
+         sh.cells.set(at("B11"), Cell::formula(arr));
+     }
+     let bytes = write_xlsx(&wb).unwrap();
+@@ -110,7 +110,7 @@ fn runs_are_written_as_shared_formulas() {
+     let (back, _) = read_xlsx(&bytes).unwrap();
+     for (c, cell) in wb.sheet(0).unwrap().cells.iter() {
+         let got = back.sheet(0).unwrap().cell(c).unwrap();
+-        let formula = |x: &Cell| x.formula.as_ref().map(|f| (f.text().into_owned(), f.array));
++        let formula = |x: &Cell| x.formula.as_ref().map(|f| (f.text().into_owned(), f.array()));
+         assert_eq!(formula(got), formula(cell), "{}", c.a1());
+     }
+     assert!(Arc::ptr_eq(&tree(&back, "B1"), &tree(&back, "B6")));
+diff --git a/crates/xlsx/src/tests/xls_tests.rs b/crates/xlsx/src/tests/xls_tests.rs
+index 3aeeb4f..fa19e85 100644
+--- a/crates/xlsx/src/tests/xls_tests.rs
++++ b/crates/xlsx/src/tests/xls_tests.rs
+@@ -333,7 +333,7 @@ fn reads_values_formulas_formats_and_layout() {
+         // Array formula: the anchor holds it; the other cell's cached result is dropped so that
+         // the formula fills the range on recalculation (as when an .xlsx is read, #156).
+         let c5 = wb.sheets[0].cell(CellRef::parse("C5").unwrap()).unwrap().formula.clone().unwrap();
+-        assert_eq!((c5.text().as_ref(), c5.array), ("A5:A6*2", Some(RangeRef::parse("C5:C6").unwrap())));
++        assert_eq!((c5.text().as_ref(), c5.array()), ("A5:A6*2", Some(RangeRef::parse("C5:C6").unwrap())));
+         assert_eq!(ftext(&wb, "C6"), None);
+         assert_eq!(v(&wb, 0, "C6"), Value::Empty);
+         // Number formats, merges, sizes, names, print area; embedded chart records ignored.
+diff --git a/crates/xlsx/src/xls/mod.rs b/crates/xlsx/src/xls/mod.rs
+index e04bcdc..e7226bb 100644
+--- a/crates/xlsx/src/xls/mod.rs
++++ b/crates/xlsx/src/xls/mod.rs
+@@ -459,7 +459,7 @@ impl SheetState<'_> {
+                     self.unsupported("syntax GridCraft can't parse yet");
+                     return;
+                 }
+-                f.array = array.filter(|r| !r.is_single());
++                f.set_array(array.filter(|r| !r.is_single()));
+                 if let Some(cell) = self.sheet.cells.get_mut(pos) {
+                     cell.formula = Some(Arc::new(f));
+                 } else {
+@@ -546,7 +546,7 @@ fn worksheet(
+     // .xlsx is read, so that the formula fills its range on recalculation. If the formula itself
+     // couldn't be imported, they keep their values.
+     for p in &pending {
+-        let filled = st.sheet.cell(p.anchor).and_then(|c| c.formula.as_ref()).and_then(|f| f.array).is_some_and(|r| r.contains(p.pos));
++        let filled = st.sheet.cell(p.anchor).and_then(|c| c.formula.as_ref()).and_then(|f| f.array()).is_some_and(|r| r.contains(p.pos));
+         if p.pos != p.anchor && filled {
+             let style = st.sheet.style_id(p.pos);
+             st.sheet.cells.set(p.pos, Cell { value: Value::Empty, formula: None, style });

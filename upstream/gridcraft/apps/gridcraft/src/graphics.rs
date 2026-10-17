@@ -7,11 +7,14 @@
 //! DirectX 12 shaders are compiled with FXC (`d3dcompiler_47.dll`, part of Windows), never with
 //! whichever `dxcompiler.dll` the DLL search path happens to find (#339, #354): see
 //! [`dx12_compiler`].
+//!
+//! The device asks wgpu for small GPU memory blocks ([`MemoryHints::MemoryUsage`]): see
+//! [`configure_backends`].
 
 use eframe::{
     NativeOptions,
     egui_wgpu::WgpuSetup,
-    wgpu::{Backends, DeviceType, Dx12Compiler},
+    wgpu::{Backends, DeviceDescriptor, DeviceType, Dx12Compiler, MemoryHints},
 };
 
 /// What the start-up probe learned about one DirectX 12 adapter.
@@ -88,6 +91,13 @@ pub fn configure_backends(options: &mut NativeOptions, backends: Backends) {
         // instance avoids it. This matches the verified WGPU_BACKEND=dx12 workaround without
         // mutating process environment variables.
         create.instance_descriptor.backends = backends;
+        // egui needs a few textures and buffers. With wgpu's default (performance) hints the
+        // DirectX 12 allocator reserves GPU memory in blocks of 128 MiB (device) and 64 MiB
+        // (host) up front; on an integrated GPU that memory is system RAM charged to the app,
+        // more than the rest of the app takes before a workbook is opened. Small blocks instead.
+        let descriptor = create.device_descriptor.clone();
+        create.device_descriptor =
+            std::sync::Arc::new(move |adapter| DeviceDescriptor { memory_hints: MemoryHints::MemoryUsage, ..descriptor(adapter) });
     }
 }
 

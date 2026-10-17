@@ -1,0 +1,114 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 02:25:27 +0500
+Subject: [PATCH 04/22] calc: keep shifted copies unbuilt during a
+ recalculation pass
+
+The pass held the tree of every formula it evaluates (`expr_arc`), which for shifted copies would
+build all their trees at once and give back the memory they save. It now holds the formula and
+builds a shifted copy's tree only while that formula is evaluated.
+---
+ crates/calc/src/recalc.rs | 45 ++++++++++++++++++++++++++++++++-------
+ 1 file changed, 37 insertions(+), 8 deletions(-)
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index b391821..a63954f 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -42,7 +42,7 @@ type HashSet<K> = std::collections::HashSet<K, BuildHasherDefault<FxHasher>>;
+ 
+ use gridcraft_core::{Array, CellError, CellRef, RangeRef, Value};
+ use gridcraft_formula::Expr;
+-use gridcraft_model::{CalcMode, Workbook};
++use gridcraft_model::{CalcMode, Formula, Workbook};
+ 
+ use crate::eval::{Area, Evaluator, Host, precedents};
+ 
+@@ -379,9 +379,39 @@ impl Default for Calc {
+     }
+ }
+ 
++/// A formula of a recalculation pass: its tree, or a shifted copy of a shared tree, whose own tree
++/// is built only while it is evaluated (a pass over a run of formulas then holds one tree, not one
++/// per cell).
++#[derive(Clone, Debug)]
++enum PassExpr {
++    Tree(std::sync::Arc<Expr>),
++    Shifted(std::sync::Arc<Formula>),
++}
++
++impl PassExpr {
++    fn of(f: &std::sync::Arc<Formula>) -> Option<PassExpr> {
++        match f.template() {
++            Some((_, dr, dc)) if (dr, dc) != (0, 0) => Some(PassExpr::Shifted(f.clone())),
++            _ => f.expr_arc().map(PassExpr::Tree),
++        }
++    }
++    fn tree(&self) -> Option<std::sync::Arc<Expr>> {
++        match self {
++            PassExpr::Tree(e) => Some(e.clone()),
++            PassExpr::Shifted(f) => f.expr_arc(),
++        }
++    }
++}
++
++impl From<std::sync::Arc<Expr>> for PassExpr {
++    fn from(e: std::sync::Arc<Expr>) -> Self {
++        PassExpr::Tree(e)
++    }
++}
++
+ struct PassHost<'a> {
+     wb: &'a Workbook,
+-    exprs: &'a HashMap<Key, std::sync::Arc<Expr>>,
++    exprs: &'a HashMap<Key, PassExpr>,
+     results: HashMap<Key, Value>,
+     pending: HashSet<Key>,
+     in_progress: HashSet<Key>,
+@@ -411,7 +441,7 @@ struct PassHost<'a> {
+ }
+ 
+ impl<'a> PassHost<'a> {
+-    fn new(wb: &'a Workbook, exprs: &'a HashMap<Key, std::sync::Arc<Expr>>, rng: &'a mut u64, now: f64) -> Self {
++    fn new(wb: &'a Workbook, exprs: &'a HashMap<Key, PassExpr>, rng: &'a mut u64, now: f64) -> Self {
+         PassHost {
+             wb,
+             exprs,
+@@ -465,7 +495,7 @@ impl PassHost<'_> {
+             }
+             return v;
+         }
+-        let Some(expr) = self.exprs.get(&k) else {
++        let Some(expr) = self.exprs.get(&k).and_then(PassExpr::tree) else {
+             return self.wb.sheet(k.0).map(|s| s.value(k.1)).unwrap_or_default();
+         };
+         if self.in_progress.contains(&k) || self.depth > 2000 {
+@@ -482,7 +512,6 @@ impl PassHost<'_> {
+         if self.iterate {
+             self.stack.push(k);
+         }
+-        let expr = std::sync::Arc::clone(expr);
+         let v = {
+             let mut ev = Evaluator::new(self, k.0, k.1);
+             ev.value(&expr)
+@@ -956,9 +985,9 @@ impl Calc {
+             }
+             // Row-major order is a good topological guess; on-demand evaluation fixes the rest.
+             dirty.sort_by_key(|(s, c)| (*s, c.row, c.col));
+-            let mut exprs: HashMap<Key, std::sync::Arc<Expr>> = HashMap::with_capacity_and_hasher(dirty.len(), Default::default());
++            let mut exprs: HashMap<Key, PassExpr> = HashMap::with_capacity_and_hasher(dirty.len(), Default::default());
+             for k in &dirty {
+-                if let Some(e) = wb.sheet(k.0).and_then(|s| s.cell(k.1)).and_then(|c| c.formula.as_ref()).and_then(|f| f.expr_arc()) {
++                if let Some(e) = wb.sheet(k.0).and_then(|s| s.cell(k.1)).and_then(|c| c.formula.as_ref()).and_then(PassExpr::of) {
+                     exprs.insert(*k, e);
+                 }
+             }
+@@ -1329,7 +1358,7 @@ pub(crate) mod tests {
+         let mut exprs = HashMap::default();
+         for (at, formula) in pending {
+             let expr = gridcraft_formula::parse(formula.strip_prefix('=').unwrap_or(formula)).ok()?;
+-            exprs.insert((0, CellRef::parse(at)?), std::sync::Arc::new(expr));
++            exprs.insert((0, CellRef::parse(at)?), std::sync::Arc::new(expr).into());
+         }
+ 
+         // A cell in `pending` is calculated the first time something reads it, which is the state

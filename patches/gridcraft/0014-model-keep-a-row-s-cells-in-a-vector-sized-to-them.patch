@@ -1,0 +1,781 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 11:58:49 +0500
+Subject: [PATCH 14/22] model: keep a row's cells in a vector sized to them
+
+A row's cells were a B-tree map, whose every node has room for eleven
+cells: 496 bytes for a row of one cell to eleven. Keep them in a vector
+sorted by column instead: the row costs its cells. A row filled cell by
+cell grows by half its length (2, 4, 6, 9, 13...), and readers give the
+spare room back once a sheet is read (`CellStore::shrink_to_fit`,
+`Workbook::shrink_to_fit`, called by the XLSX reader and on open).
+
+Moving cells (shift_rows, shift_cols, shift_cols_in_rows) works on whole
+rows and row ends instead of cell by cell, which a vector would make
+quadratic. Every operation behaves as before: a differential test runs
+random sets, removals, shifts, range takes and snapshots against the old
+B-tree store and compares cells, counts, ranges, diffs and JSON, which is
+unchanged.
+---
+ crates/engine/src/lib.rs      |   1 +
+ crates/model/src/store.rs     | 592 +++++++++++++++++++++++++++++++---
+ crates/model/src/workbook.rs  |  10 +
+ crates/xlsx/src/sheet_read.rs |   2 +
+ 4 files changed, 557 insertions(+), 48 deletions(-)
+
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 258a1cb..2ac1ef1 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -119,6 +119,7 @@ const UNDO_LIMIT: usize = 100;
+ 
+ impl DocState {
+     pub fn new(mut wb: Workbook, path: Option<String>, title: String) -> DocState {
++        wb.shrink_to_fit();
+         let mut calc = Calc::new();
+         calc.recalc_all(&mut wb);
+         let wb = Arc::new(wb);
+diff --git a/crates/model/src/store.rs b/crates/model/src/store.rs
+index d6a9c45..e500ffd 100644
+--- a/crates/model/src/store.rs
++++ b/crates/model/src/store.rs
+@@ -1,13 +1,15 @@
+ //! Copy-on-write sparse cell storage.
+ //!
+ //! Cells live in bands of 64 rows, each band behind an `Arc`. Cloning a store (an undo snapshot)
+-//! copies only the band pointers; editing a cell copies just its band.
++//! copies only the band pointers; editing a cell copies just its band. A row keeps its cells in a
++//! vector sorted by column, sized to them once a workbook is loaded ([`CellStore::shrink_to_fit`]):
++//! a row of a few cells costs those cells, not a tree node of eleven.
+ 
+ use std::collections::BTreeMap;
+ use std::sync::Arc;
+ 
+ use gridcraft_core::{CellRef, RangeRef};
+-use serde::{Deserialize, Serialize};
++use serde::{Deserialize, Deserializer, Serialize, Serializer};
+ 
+ use crate::cell::Cell;
+ 
+@@ -16,7 +18,77 @@ const BAND: u32 = 64;
+ #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+ struct Band {
+     /// row → (col → cell)
+-    rows: BTreeMap<u32, BTreeMap<u32, Cell>>,
++    rows: BTreeMap<u32, Row>,
++}
++
++/// The cells of one row: (column, cell), sorted by column, columns unique. Never empty in a
++/// store. Serialized as a map from column to cell (as it was when rows were maps).
++#[derive(Clone, Debug, Default, PartialEq)]
++struct Row(Vec<(u32, Cell)>);
++
++impl Serialize for Row {
++    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
++        s.collect_map(self.0.iter().map(|(c, cell)| (c, cell)))
++    }
++}
++
++impl<'de> Deserialize<'de> for Row {
++    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Row, D::Error> {
++        Ok(Row(BTreeMap::<u32, Cell>::deserialize(d)?.into_iter().collect()))
++    }
++}
++
++impl Row {
++    fn find(&self, col: u32) -> Result<usize, usize> {
++        self.0.binary_search_by_key(&col, |(c, _)| *c)
++    }
++    fn get(&self, col: u32) -> Option<&Cell> {
++        self.find(col).ok().and_then(|i| self.0.get(i)).map(|(_, cell)| cell)
++    }
++    fn get_mut(&mut self, col: u32) -> Option<&mut Cell> {
++        let i = self.find(col).ok()?;
++        self.0.get_mut(i).map(|(_, cell)| cell)
++    }
++    fn contains(&self, col: u32) -> bool {
++        self.find(col).is_ok()
++    }
++    /// Stores `cell` at `col`, returning the cell it replaces.
++    fn insert(&mut self, col: u32, cell: Cell) -> Option<Cell> {
++        match self.find(col) {
++            Ok(i) => self.0.get_mut(i).map(|slot| std::mem::replace(&mut slot.1, cell)),
++            Err(i) => {
++                // Grows by half (not double) its length: a row filled cell by cell, as a reader
++                // fills it, ends close to its size.
++                if self.0.len() == self.0.capacity() {
++                    self.0.reserve_exact((self.0.len() / 2).max(2));
++                }
++                self.0.insert(i, (col, cell));
++                None
++            }
++        }
++    }
++    fn remove(&mut self, col: u32) -> Option<Cell> {
++        let i = self.find(col).ok()?;
++        Some(self.0.remove(i).1)
++    }
++    /// Index range of the columns `c0..=c1`.
++    fn span(&self, c0: u32, c1: u32) -> std::ops::Range<usize> {
++        let a = self.0.partition_point(|(c, _)| *c < c0);
++        let b = self.0.partition_point(|(c, _)| *c <= c1).max(a);
++        a..b
++    }
++    fn range(&self, c0: u32, c1: u32) -> impl Iterator<Item = (u32, &Cell)> + '_ {
++        self.0.get(self.span(c0, c1)).unwrap_or_default().iter().map(|(c, cell)| (*c, cell))
++    }
++    fn iter(&self) -> impl DoubleEndedIterator<Item = (u32, &Cell)> + '_ {
++        self.0.iter().map(|(c, cell)| (*c, cell))
++    }
++    fn is_empty(&self) -> bool {
++        self.0.is_empty()
++    }
++    fn len(&self) -> usize {
++        self.0.len()
++    }
+ }
+ 
+ #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+@@ -36,15 +108,15 @@ impl CellStore {
+         self.len == 0
+     }
+     pub fn get(&self, c: CellRef) -> Option<&Cell> {
+-        self.bands.get(&(c.row / BAND))?.rows.get(&c.row)?.get(&c.col)
++        self.bands.get(&(c.row / BAND))?.rows.get(&c.row)?.get(c.col)
+     }
+     /// Mutable access (copies the band if shared).
+     pub fn get_mut(&mut self, c: CellRef) -> Option<&mut Cell> {
+         let band = self.bands.get_mut(&(c.row / BAND))?;
+-        if !band.rows.get(&c.row).is_some_and(|r| r.contains_key(&c.col)) {
++        if !band.rows.get(&c.row).is_some_and(|r| r.contains(c.col)) {
+             return None;
+         }
+-        Arc::make_mut(band).rows.get_mut(&c.row)?.get_mut(&c.col)
++        Arc::make_mut(band).rows.get_mut(&c.row)?.get_mut(c.col)
+     }
+     /// Stores a cell; a default (empty, unstyled) cell is removed instead.
+     pub fn set(&mut self, c: CellRef, cell: Cell) {
+@@ -60,12 +132,12 @@ impl CellStore {
+     pub fn remove(&mut self, c: CellRef) -> Option<Cell> {
+         let key = c.row / BAND;
+         let band = self.bands.get_mut(&key)?;
+-        if !band.rows.get(&c.row).is_some_and(|r| r.contains_key(&c.col)) {
++        if !band.rows.get(&c.row).is_some_and(|r| r.contains(c.col)) {
+             return None;
+         }
+         let b = Arc::make_mut(band);
+         let row = b.rows.get_mut(&c.row)?;
+-        let old = row.remove(&c.col);
++        let old = row.remove(c.col);
+         if row.is_empty() {
+             b.rows.remove(&c.row);
+         }
+@@ -77,23 +149,33 @@ impl CellStore {
+         }
+         old
+     }
++    /// Gives back the room rows keep for cells added later (rows filled cell by cell, as readers
++    /// fill them, may keep up to half their size again). Bands shared with a snapshot are left as
++    /// they are, so this never copies one.
++    pub fn shrink_to_fit(&mut self) {
++        for band in self.bands.values_mut() {
++            if let Some(b) = Arc::get_mut(band) {
++                for row in b.rows.values_mut() {
++                    row.0.shrink_to_fit();
++                }
++            }
++        }
++    }
+     /// Cells in `r`, row-major. Efficient for sparse data: skips empty bands and rows.
+     pub fn iter_range(&self, r: RangeRef) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
+         let (b0, b1) = (r.start.row / BAND, r.end.row / BAND);
+         self.bands.range(b0..=b1).flat_map(move |(_, band)| {
+             band.rows
+                 .range(r.start.row..=r.end.row)
+-                .flat_map(move |(row, cols)| cols.range(r.start.col..=r.end.col).map(move |(col, cell)| (CellRef::new(*row, *col), cell)))
++                .flat_map(move |(row, cols)| cols.range(r.start.col, r.end.col).map(move |(col, cell)| (CellRef::new(*row, col), cell)))
+         })
+     }
+     pub fn iter(&self) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
+-        self.bands
+-            .values()
+-            .flat_map(|band| band.rows.iter().flat_map(|(row, cols)| cols.iter().map(move |(col, cell)| (CellRef::new(*row, *col), cell))))
++        self.bands.values().flat_map(|band| band.rows.iter().flat_map(|(row, cols)| cols.iter().map(move |(col, cell)| (CellRef::new(*row, col), cell))))
+     }
+     /// Cells of one row in `c0..=c1`.
+     pub fn row(&self, row: u32, c0: u32, c1: u32) -> impl Iterator<Item = (u32, &Cell)> + '_ {
+-        self.bands.get(&(row / BAND)).and_then(|b| b.rows.get(&row)).into_iter().flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
++        self.bands.get(&(row / BAND)).and_then(|b| b.rows.get(&row)).into_iter().flat_map(move |cols| cols.range(c0, c1))
+     }
+     /// Smallest range containing every stored cell, `None` when empty.
+     pub fn used_range(&self) -> Option<RangeRef> {
+@@ -105,7 +187,7 @@ impl CellStore {
+         let mut c1 = 0;
+         for band in self.bands.values() {
+             for cols in band.rows.values() {
+-                if let (Some(a), Some(b)) = (cols.keys().next(), cols.keys().next_back()) {
++                if let (Some((a, _)), Some((b, _))) = (cols.0.first(), cols.0.last()) {
+                     c0 = c0.min(*a);
+                     c1 = c1.max(*b);
+                 }
+@@ -138,73 +220,166 @@ impl CellStore {
+             }
+             let (a, b) = (a.map_or(&empty, |x| x), b.map_or(&empty, |x| x));
+             for (row, cols) in &a.rows {
+-                for (col, cell) in cols {
++                for (col, cell) in cols.iter() {
+                     if b.rows.get(row).and_then(|r| r.get(col)) != Some(cell) {
+-                        out.push(CellRef::new(*row, *col));
++                        out.push(CellRef::new(*row, col));
+                     }
+                 }
+             }
+             for (row, cols) in &b.rows {
+-                for col in cols.keys() {
+-                    if !a.rows.get(row).is_some_and(|r| r.contains_key(col)) {
+-                        out.push(CellRef::new(*row, *col));
++                for (col, _) in cols.iter() {
++                    if !a.rows.get(row).is_some_and(|r| r.contains(col)) {
++                        out.push(CellRef::new(*row, col));
+                     }
+                 }
+             }
+         }
+         out
+     }
+-    /// Removes every cell in `r` and returns them.
++    /// Removes every cell in `r` and returns them (row-major).
+     pub fn take_range(&mut self, r: RangeRef) -> Vec<(CellRef, Cell)> {
+-        let keys: Vec<CellRef> = self.iter_range(r).map(|(c, _)| c).collect();
+-        keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect()
++        let mut out = Vec::new();
++        let (b0, b1) = (r.start.row / BAND, r.end.row / BAND);
++        // Only bands holding a cell of `r` are touched (copied when shared).
++        let hit: Vec<u32> = self
++            .bands
++            .range(b0..=b1)
++            .filter(|(_, band)| band.rows.range(r.start.row..=r.end.row).any(|(_, cols)| !cols.span(r.start.col, r.end.col).is_empty()))
++            .map(|(k, _)| *k)
++            .collect();
++        for k in hit {
++            let Some(band) = self.bands.get_mut(&k) else { continue };
++            let b = Arc::make_mut(band);
++            let rows: Vec<u32> = b.rows.range(r.start.row..=r.end.row).map(|(row, _)| *row).collect();
++            for row in rows {
++                let Some(cols) = b.rows.get_mut(&row) else { continue };
++                let span = cols.span(r.start.col, r.end.col);
++                out.extend(cols.0.drain(span).map(|(col, cell)| (CellRef::new(row, col), cell)));
++                if cols.is_empty() {
++                    b.rows.remove(&row);
++                }
++            }
++            if b.rows.is_empty() {
++                self.bands.remove(&k);
++            }
++        }
++        self.len -= out.len();
++        out
++    }
++    /// Stores moved cells, each as [`CellStore::set`] would, in order.
++    fn set_all(&mut self, cells: impl IntoIterator<Item = (CellRef, Cell)>) {
++        for (c, cell) in cells {
++            self.set(c, cell);
++        }
++    }
++    /// Removes the rows `from..` whole and returns them, ascending.
++    fn take_rows_from(&mut self, from: u32) -> Vec<(u32, Row)> {
++        let mut out = Vec::new();
++        let keys: Vec<u32> = self.bands.range(from / BAND..).map(|(k, _)| *k).collect();
++        for k in keys {
++            let Some(band) = self.bands.get_mut(&k) else { continue };
++            if band.rows.range(from..).next().is_none() {
++                continue;
++            }
++            let b = Arc::make_mut(band);
++            let tail = b.rows.split_off(&from);
++            self.len -= tail.values().map(Row::len).sum::<usize>();
++            out.extend(tail);
++            if b.rows.is_empty() {
++                self.bands.remove(&k);
++            }
++        }
++        out
++    }
++    /// Stores a row moved whole to `row`: into an empty row it goes as it is; over a row with
++    /// cells, cell by cell, as [`CellStore::set`] would.
++    fn put_row(&mut self, row: u32, cells: Row) {
++        let band = self.bands.get(&(row / BAND));
++        if band.is_some_and(|b| b.rows.contains_key(&row)) || cells.0.iter().any(|(_, cell)| cell.is_blank()) {
++            self.set_all(cells.0.into_iter().map(|(col, cell)| (CellRef::new(row, col), cell)));
++            return;
++        }
++        if cells.is_empty() {
++            return;
++        }
++        self.len += cells.len();
++        Arc::make_mut(self.bands.entry(row / BAND).or_default()).rows.insert(row, cells);
+     }
+     /// Rows strictly greater than or equal to `from` moved by `delta` (positive = down). Rows that
+     /// would land before `from`... callers delete the vacated block first.
+     pub fn shift_rows(&mut self, from: u32, delta: i64) {
+-        let moved: Vec<(CellRef, Cell)> = {
+-            let keys: Vec<CellRef> = self.iter().filter(|(c, _)| c.row >= from).map(|(c, _)| c).collect();
+-            keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect()
+-        };
+-        for (c, cell) in moved {
+-            let nr = c.row as i64 + delta;
++        // The same as taking every cell of rows `from..` out and storing each one again `delta`
++        // rows away (in row-major order), moving whole rows.
++        for (row, cells) in self.take_rows_from(from) {
++            let nr = row as i64 + delta;
+             if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
+-                self.set(CellRef::new(nr as u32, c.col), cell);
++                self.put_row(nr as u32, cells);
+             }
+         }
+     }
+     pub fn shift_cols(&mut self, from: u32, delta: i64) {
+-        let keys: Vec<CellRef> = self.iter().filter(|(c, _)| c.col >= from).map(|(c, _)| c).collect();
+-        let moved: Vec<(CellRef, Cell)> = keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect();
+-        for (c, cell) in moved {
+-            let nc = c.col as i64 + delta;
+-            if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
+-                self.set(CellRef::new(c.row, nc as u32), cell);
+-            }
+-        }
++        self.shift_cols_in_rows(0, u32::MAX, from, delta);
+     }
+     /// Shifts cells within rows `r0..=r1` and columns `>= from` horizontally (Insert/Delete Cells
+     /// with shift right/left).
+     pub fn shift_cols_in_rows(&mut self, r0: u32, r1: u32, from: u32, delta: i64) {
+-        let range = RangeRef::new(CellRef::new(r0, from), CellRef::new(r1, gridcraft_core::MAX_COLS - 1));
+-        let moved = self.take_range(range);
+-        for (c, cell) in moved {
+-            let nc = c.col as i64 + delta;
+-            if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
+-                self.set(CellRef::new(c.row, nc as u32), cell);
++        // The cells of a row from `from` on are the end of its vector: they are taken off it and
++        // stored again `delta` columns away, as `set` stores them, in column order.
++        let (b0, b1) = (r0 / BAND, r1 / BAND);
++        let hit: Vec<u32> = self
++            .bands
++            .range(b0..=b1)
++            .filter(|(_, band)| band.rows.range(r0..=r1).any(|(_, cols)| cols.0.last().is_some_and(|(c, _)| *c >= from)))
++            .map(|(k, _)| *k)
++            .collect();
++        for k in hit {
++            let Some(band) = self.bands.get_mut(&k) else { continue };
++            let b = Arc::make_mut(band);
++            let (mut removed, mut added) = (0, 0);
++            let mut emptied = Vec::new();
++            for (row, cols) in b.rows.range_mut(r0..=r1) {
++                let at = cols.0.partition_point(|(c, _)| *c < from);
++                if at == cols.0.len() {
++                    continue;
++                }
++                let moved = cols.0.split_off(at);
++                removed += moved.len();
++                for (col, cell) in moved {
++                    let nc = col as i64 + delta;
++                    if !(0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
++                        continue;
++                    }
++                    let nc = nc as u32;
++                    if cell.is_blank() {
++                        // `set` removes instead.
++                        if cols.remove(nc).is_some() {
++                            removed += 1;
++                        }
++                    } else if cols.insert(nc, cell).is_none() {
++                        added += 1;
++                    }
++                }
++                if cols.is_empty() {
++                    emptied.push(*row);
++                }
++            }
++            for row in emptied {
++                b.rows.remove(&row);
+             }
++            if b.rows.is_empty() {
++                self.bands.remove(&k);
++            }
++            self.len = (self.len + added).saturating_sub(removed);
+         }
+     }
+     /// Shifts cells within columns `c0..=c1` and rows `>= from` vertically.
+     pub fn shift_rows_in_cols(&mut self, c0: u32, c1: u32, from: u32, delta: i64) {
+         let range = RangeRef::new(CellRef::new(from, c0), CellRef::new(gridcraft_core::MAX_ROWS - 1, c1));
+         let moved = self.take_range(range);
+-        for (c, cell) in moved {
++        self.set_all(moved.into_iter().filter_map(|(c, cell)| {
+             let nr = c.row as i64 + delta;
+-            if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
+-                self.set(CellRef::new(nr as u32, c.col), cell);
+-            }
+-        }
++            (0..gridcraft_core::MAX_ROWS as i64).contains(&nr).then(|| (CellRef::new(nr as u32, c.col), cell))
++        }));
+     }
+ }
+ 
+@@ -280,4 +455,325 @@ mod tests {
+         s.shift_cols(0, 1);
+         assert!(s.get(c(7, 1)).is_some());
+     }
++
++    /// The store as it was with a B-tree map per row: the reference the vector rows are tested
++    /// against.
++    #[allow(dead_code)]
++    mod reference {
++        use std::collections::BTreeMap;
++        use std::sync::Arc;
++
++        use gridcraft_core::{CellRef, RangeRef};
++        use serde::{Deserialize, Serialize};
++
++        use crate::cell::Cell;
++
++        const BAND: u32 = 64;
++
++        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++        struct OldBand {
++            rows: BTreeMap<u32, BTreeMap<u32, Cell>>,
++        }
++
++        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++        pub struct OldStore {
++            bands: BTreeMap<u32, Arc<OldBand>>,
++            len: usize,
++        }
++
++        impl OldStore {
++            pub fn new() -> Self {
++                Self::default()
++            }
++            pub fn len(&self) -> usize {
++                self.len
++            }
++            pub fn is_empty(&self) -> bool {
++                self.len == 0
++            }
++            pub fn get(&self, c: CellRef) -> Option<&Cell> {
++                self.bands.get(&(c.row / BAND))?.rows.get(&c.row)?.get(&c.col)
++            }
++            pub fn get_mut(&mut self, c: CellRef) -> Option<&mut Cell> {
++                let band = self.bands.get_mut(&(c.row / BAND))?;
++                if !band.rows.get(&c.row).is_some_and(|r| r.contains_key(&c.col)) {
++                    return None;
++                }
++                Arc::make_mut(band).rows.get_mut(&c.row)?.get_mut(&c.col)
++            }
++            pub fn set(&mut self, c: CellRef, cell: Cell) {
++                if cell.is_blank() {
++                    self.remove(c);
++                    return;
++                }
++                let band = Arc::make_mut(self.bands.entry(c.row / BAND).or_default());
++                if band.rows.entry(c.row).or_default().insert(c.col, cell).is_none() {
++                    self.len += 1;
++                }
++            }
++            pub fn remove(&mut self, c: CellRef) -> Option<Cell> {
++                let key = c.row / BAND;
++                let band = self.bands.get_mut(&key)?;
++                if !band.rows.get(&c.row).is_some_and(|r| r.contains_key(&c.col)) {
++                    return None;
++                }
++                let b = Arc::make_mut(band);
++                let row = b.rows.get_mut(&c.row)?;
++                let old = row.remove(&c.col);
++                if row.is_empty() {
++                    b.rows.remove(&c.row);
++                }
++                if b.rows.is_empty() {
++                    self.bands.remove(&key);
++                }
++                if old.is_some() {
++                    self.len -= 1;
++                }
++                old
++            }
++            pub fn iter_range(&self, r: RangeRef) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
++                let (b0, b1) = (r.start.row / BAND, r.end.row / BAND);
++                self.bands.range(b0..=b1).flat_map(move |(_, band)| {
++                    band.rows
++                        .range(r.start.row..=r.end.row)
++                        .flat_map(move |(row, cols)| cols.range(r.start.col..=r.end.col).map(move |(col, cell)| (CellRef::new(*row, *col), cell)))
++                })
++            }
++            pub fn iter(&self) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
++                self.bands
++                    .values()
++                    .flat_map(|band| band.rows.iter().flat_map(|(row, cols)| cols.iter().map(move |(col, cell)| (CellRef::new(*row, *col), cell))))
++            }
++            pub fn row(&self, row: u32, c0: u32, c1: u32) -> impl Iterator<Item = (u32, &Cell)> + '_ {
++                self.bands.get(&(row / BAND)).and_then(|b| b.rows.get(&row)).into_iter().flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
++            }
++            pub fn used_range(&self) -> Option<RangeRef> {
++                let first_band = self.bands.values().next()?;
++                let last_band = self.bands.values().next_back()?;
++                let r0 = *first_band.rows.keys().next()?;
++                let r1 = *last_band.rows.keys().next_back()?;
++                let mut c0 = u32::MAX;
++                let mut c1 = 0;
++                for band in self.bands.values() {
++                    for cols in band.rows.values() {
++                        if let (Some(a), Some(b)) = (cols.keys().next(), cols.keys().next_back()) {
++                            c0 = c0.min(*a);
++                            c1 = c1.max(*b);
++                        }
++                    }
++                }
++                if c0 == u32::MAX {
++                    return None;
++                }
++                Some(RangeRef::new(CellRef::new(r0, c0), CellRef::new(r1, c1)))
++            }
++            pub fn has(&self, c: CellRef) -> bool {
++                self.get(c).is_some_and(|cell| !cell.value.is_empty() || cell.formula.is_some())
++            }
++            pub fn diff(&self, other: &OldStore) -> Vec<CellRef> {
++                let empty = OldBand::default();
++                let mut keys: Vec<u32> = self.bands.keys().chain(other.bands.keys()).copied().collect();
++                keys.sort_unstable();
++                keys.dedup();
++                let mut out = Vec::new();
++                for k in keys {
++                    let (a, b) = (self.bands.get(&k), other.bands.get(&k));
++                    if let (Some(a), Some(b)) = (a, b)
++                        && Arc::ptr_eq(a, b)
++                    {
++                        continue;
++                    }
++                    let (a, b) = (a.map_or(&empty, |x| x), b.map_or(&empty, |x| x));
++                    for (row, cols) in &a.rows {
++                        for (col, cell) in cols {
++                            if b.rows.get(row).and_then(|r| r.get(col)) != Some(cell) {
++                                out.push(CellRef::new(*row, *col));
++                            }
++                        }
++                    }
++                    for (row, cols) in &b.rows {
++                        for col in cols.keys() {
++                            if !a.rows.get(row).is_some_and(|r| r.contains_key(col)) {
++                                out.push(CellRef::new(*row, *col));
++                            }
++                        }
++                    }
++                }
++                out
++            }
++            pub fn take_range(&mut self, r: RangeRef) -> Vec<(CellRef, Cell)> {
++                let keys: Vec<CellRef> = self.iter_range(r).map(|(c, _)| c).collect();
++                keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect()
++            }
++            pub fn shift_rows(&mut self, from: u32, delta: i64) {
++                let moved: Vec<(CellRef, Cell)> = {
++                    let keys: Vec<CellRef> = self.iter().filter(|(c, _)| c.row >= from).map(|(c, _)| c).collect();
++                    keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect()
++                };
++                for (c, cell) in moved {
++                    let nr = c.row as i64 + delta;
++                    if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
++                        self.set(CellRef::new(nr as u32, c.col), cell);
++                    }
++                }
++            }
++            pub fn shift_cols(&mut self, from: u32, delta: i64) {
++                let keys: Vec<CellRef> = self.iter().filter(|(c, _)| c.col >= from).map(|(c, _)| c).collect();
++                let moved: Vec<(CellRef, Cell)> = keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect();
++                for (c, cell) in moved {
++                    let nc = c.col as i64 + delta;
++                    if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
++                        self.set(CellRef::new(c.row, nc as u32), cell);
++                    }
++                }
++            }
++            pub fn shift_cols_in_rows(&mut self, r0: u32, r1: u32, from: u32, delta: i64) {
++                let range = RangeRef::new(CellRef::new(r0, from), CellRef::new(r1, gridcraft_core::MAX_COLS - 1));
++                let moved = self.take_range(range);
++                for (c, cell) in moved {
++                    let nc = c.col as i64 + delta;
++                    if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
++                        self.set(CellRef::new(c.row, nc as u32), cell);
++                    }
++                }
++            }
++            pub fn shift_rows_in_cols(&mut self, c0: u32, c1: u32, from: u32, delta: i64) {
++                let range = RangeRef::new(CellRef::new(from, c0), CellRef::new(gridcraft_core::MAX_ROWS - 1, c1));
++                let moved = self.take_range(range);
++                for (c, cell) in moved {
++                    let nr = c.row as i64 + delta;
++                    if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
++                        self.set(CellRef::new(nr as u32, c.col), cell);
++                    }
++                }
++            }
++        }
++    }
++
++    struct Rng(u64);
++    impl Rng {
++        fn next(&mut self) -> u64 {
++            self.0 ^= self.0 << 13;
++            self.0 ^= self.0 >> 7;
++            self.0 ^= self.0 << 17;
++            self.0
++        }
++        fn below(&mut self, n: u64) -> u64 {
++            self.next() % n
++        }
++        fn delta(&mut self) -> i64 {
++            self.below(13) as i64 - 6
++        }
++    }
++
++    fn cells(s: &CellStore) -> Vec<(CellRef, Cell)> {
++        s.iter().map(|(c, x)| (c, x.clone())).collect()
++    }
++    fn old_cells(s: &reference::OldStore) -> Vec<(CellRef, Cell)> {
++        s.iter().map(|(c, x)| (c, x.clone())).collect()
++    }
++
++    /// Every operation, on random cells (some of them blank cells left by `get_mut`), gives what
++    /// the B-tree store gives: the same cells, count, ranges, diffs against snapshots and JSON.
++    #[test]
++    fn vector_rows_behave_like_the_b_tree_store() {
++        let style = crate::StyleId(3);
++        for seed in 1..=40u64 {
++            let mut rng = Rng(seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1);
++            let (mut new, mut old) = (CellStore::new(), reference::OldStore::new());
++            let (mut snap_new, mut snap_old) = (new.clone(), old.clone());
++            for step in 0..400 {
++                let at = c(rng.below(200) as u32, rng.below(24) as u32);
++                match rng.below(14) {
++                    0..=4 => {
++                        let cell = match rng.below(6) {
++                            0 => Cell::default(),
++                            1 => Cell { value: Value::Empty, formula: None, style },
++                            _ => Cell::value(Value::Number(rng.below(1000) as f64)),
++                        };
++                        new.set(at, cell.clone());
++                        old.set(at, cell);
++                    }
++                    5 => assert_eq!(new.remove(at), old.remove(at)),
++                    6 => {
++                        // A cell made blank in place stays stored until it moves.
++                        let blank = rng.below(2) == 0;
++                        if let Some(x) = new.get_mut(at) {
++                            x.value = if blank { Value::Empty } else { Value::Number(7.0) };
++                            x.style = crate::StyleId::DEFAULT;
++                        }
++                        if let Some(x) = old.get_mut(at) {
++                            x.value = if blank { Value::Empty } else { Value::Number(7.0) };
++                            x.style = crate::StyleId::DEFAULT;
++                        }
++                    }
++                    7 => {
++                        let (from, d) = (rng.below(220) as u32, rng.delta());
++                        new.shift_rows(from, d);
++                        old.shift_rows(from, d);
++                    }
++                    8 => {
++                        let (from, d) = (rng.below(26) as u32, rng.delta());
++                        new.shift_cols(from, d);
++                        old.shift_cols(from, d);
++                    }
++                    9 => {
++                        let (r0, from, d) = (rng.below(200) as u32, rng.below(26) as u32, rng.delta());
++                        let r1 = r0 + rng.below(80) as u32;
++                        new.shift_cols_in_rows(r0, r1, from, d);
++                        old.shift_cols_in_rows(r0, r1, from, d);
++                    }
++                    10 => {
++                        let (c0, from, d) = (rng.below(24) as u32, rng.below(220) as u32, rng.delta());
++                        let c1 = c0 + rng.below(6) as u32;
++                        new.shift_rows_in_cols(c0, c1, from, d);
++                        old.shift_rows_in_cols(c0, c1, from, d);
++                    }
++                    11 => {
++                        let r = RangeRef::new(at, c(at.row + rng.below(70) as u32, at.col + rng.below(8) as u32));
++                        assert_eq!(new.take_range(r), old.take_range(r));
++                    }
++                    12 => {
++                        snap_new = new.clone();
++                        snap_old = old.clone();
++                    }
++                    _ => new.shrink_to_fit(),
++                }
++                let ctx = format!("seed {seed} step {step}");
++                assert_eq!(cells(&new), old_cells(&old), "{ctx}");
++                assert_eq!(new.len(), old.len(), "{ctx}");
++                assert_eq!(new.used_range(), old.used_range(), "{ctx}");
++                assert_eq!(new.diff(&snap_new), old.diff(&snap_old), "{ctx}");
++                let r = RangeRef::new(at, c(at.row + rng.below(40) as u32, at.col + rng.below(10) as u32));
++                let a: Vec<_> = new.iter_range(r).map(|(c, x)| (c, x.clone())).collect();
++                let b: Vec<_> = old.iter_range(r).map(|(c, x)| (c, x.clone())).collect();
++                assert_eq!(a, b, "{ctx}");
++                let a: Vec<_> = new.row(at.row, at.col.saturating_sub(3), at.col + 3).map(|(c, x)| (c, x.clone())).collect();
++                let b: Vec<_> = old.row(at.row, at.col.saturating_sub(3), at.col + 3).map(|(c, x)| (c, x.clone())).collect();
++                assert_eq!(a, b, "{ctx}");
++                assert_eq!((new.get(at), new.has(at)), (old.get(at), old.has(at)), "{ctx}");
++            }
++            let json = serde_json::to_string(&new).unwrap();
++            assert_eq!(json, serde_json::to_string(&old).unwrap(), "seed {seed}: the same JSON");
++            assert_eq!(serde_json::from_str::<CellStore>(&json).unwrap(), new);
++        }
++    }
++
++    #[test]
++    fn rows_filled_cell_by_cell_end_close_to_their_size() {
++        let mut s = CellStore::new();
++        for col in 0..9 {
++            s.set(c(5, col), Cell::value(Value::Number(col as f64)));
++        }
++        let cap = |s: &CellStore| s.bands.get(&0).and_then(|b| b.rows.get(&5)).map(|r| r.0.capacity());
++        assert_eq!(cap(&s), Some(9), "2, 4, 6, 9");
++        s.set(c(5, 9), Cell::value(Value::Number(9.0)));
++        assert_eq!(cap(&s), Some(13));
++        s.shrink_to_fit();
++        assert_eq!(cap(&s), Some(10));
++        // A band shared with a snapshot is left as it is.
++        let snap = s.clone();
++        s.shrink_to_fit();
++        assert!(Arc::ptr_eq(&s.bands[&0], &snap.bands[&0]));
++    }
+ }
+diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
+index 8003d34..be9391c 100644
+--- a/crates/model/src/workbook.rs
++++ b/crates/model/src/workbook.rs
+@@ -204,6 +204,16 @@ impl Workbook {
+     pub fn name_call_case(&self, e: Expr) -> Expr {
+         spell_calls(e, &self.lambda_names())
+     }
++    /// Gives back the room the sheets' cell rows keep for cells added later
++    /// ([`CellStore::shrink_to_fit`](crate::CellStore::shrink_to_fit)), after reading a file. Sheets
++    /// shared with a snapshot are left as they are.
++    pub fn shrink_to_fit(&mut self) {
++        for sheet in &mut self.sheets {
++            if let Some(sheet) = Arc::get_mut(sheet) {
++                sheet.cells.shrink_to_fit();
++            }
++        }
++    }
+     /// [`Workbook::name_call_case`] for every cell formula and defined name (after reading a
+     /// file).
+     pub fn apply_name_call_case(&mut self) {
+diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
+index 5a5016d..35b8f3b 100644
+--- a/crates/xlsx/src/sheet_read.rs
++++ b/crates/xlsx/src/sheet_read.rs
+@@ -89,6 +89,8 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
+         cx.warn(format!("sheet \"{name}\": {} cells or rows outside the 1,048,576 × 16,384 grid were dropped", st.dropped));
+     }
+     drop(bytes);
++    // Rows were filled cell by cell: give back the room kept for more.
++    sheet.cells.shrink_to_fit();
+ 
+     let mut fit_to_page = false;
+     cx.cf_ext_ids.clear();

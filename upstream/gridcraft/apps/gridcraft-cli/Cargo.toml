@@ -14,7 +14,8 @@ name = "gridcraft-cli"
 path = "src/main.rs"
 
 [dependencies]
-gridcraft-engine = { workspace = true }
+# The headless CLI has no egui to lend it a default PDF face, so it carries one.
+gridcraft-engine = { workspace = true, features = ["bundled-pdf-font"] }
 gridcraft-mcp = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }

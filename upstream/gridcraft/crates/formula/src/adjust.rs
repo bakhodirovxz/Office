@@ -60,14 +60,122 @@ fn shift_line(v: u32, abs: bool, d: i64, max: u32) -> Option<u32> {
     if (0..max as i64).contains(&n) { Some(n as u32) } else { None }
 }
 
-fn shift_ref(r: &Reference, dr: i64, dc: i64) -> Option<Reference> {
-    let kind = match &r.kind {
+fn shift_kind(k: &RefKind, dr: i64, dc: i64) -> Option<RefKind> {
+    Some(match k {
         RefKind::Cell(a) => RefKind::Cell(shift_anchor(a, dr, dc)?),
         RefKind::Range(a, b) => RefKind::Range(shift_anchor(a, dr, dc)?, shift_anchor(b, dr, dc)?),
         RefKind::Rows(r0, a0, r1, a1) => RefKind::Rows(shift_line(*r0, *a0, dr, MAX_ROWS)?, *a0, shift_line(*r1, *a1, dr, MAX_ROWS)?, *a1),
         RefKind::Cols(c0, a0, c1, a1) => RefKind::Cols(shift_line(*c0, *a0, dc, MAX_COLS)?, *a0, shift_line(*c1, *a1, dc, MAX_COLS)?, *a1),
-    };
-    Some(Reference { sheet: r.sheet.clone(), kind })
+    })
+}
+
+fn shift_ref(r: &Reference, dr: i64, dc: i64) -> Option<Reference> {
+    Some(Reference { sheet: r.sheet.clone(), kind: shift_kind(&r.kind, dr, dc)? })
+}
+
+/// [`shift_relative`] of a borrowed tree, built in one pass:
+/// `shifted(e, dr, dc) == shift_relative(e.clone(), dr, dc)`.
+pub fn shifted(e: &Expr, dr: i64, dc: i64) -> Expr {
+    let sub = |x: &Expr| Box::new(shifted(x, dr, dc));
+    let list = |xs: &[Expr]| xs.iter().map(|x| shifted(x, dr, dc)).collect::<Vec<_>>();
+    match e {
+        Expr::Ref(r) => match shift_ref(r, dr, dc) {
+            Some(r) => Expr::Ref(r),
+            None => Expr::Error(CellError::Ref),
+        },
+        Expr::Binary(..) => {
+            // The left spine without recursion, as the printer walks it: `1+1+...` nests one
+            // level per operator.
+            let mut rest: Vec<(BinOp, &Expr)> = Vec::new();
+            let mut first = e;
+            while let Expr::Binary(op, a, b) = first {
+                rest.push((*op, b));
+                first = a;
+            }
+            let mut acc = shifted(first, dr, dc);
+            for (op, b) in rest.into_iter().rev() {
+                acc = Expr::Binary(op, Box::new(acc), sub(b));
+            }
+            acc
+        }
+        Expr::Array(rows) => Expr::Array(rows.iter().map(|r| list(r)).collect()),
+        Expr::Unary(op, x) => Expr::Unary(*op, sub(x)),
+        Expr::Paren(x) => Expr::Paren(sub(x)),
+        Expr::Call(n, args) => Expr::Call(n.clone(), list(args)),
+        Expr::Invoke(c, args) => Expr::Invoke(sub(c), list(args)),
+        other => other.clone(),
+    }
+}
+
+/// Whether `other` is `base` moved by `(dr, dc)` the way copy and fill move a formula, i.e.
+/// `shift_relative(base.clone(), dr, dc) == *other`, without building the moved tree. This holds
+/// exactly when the two cells hold the same formula in R1C1 terms (a reference the move pushes
+/// off the sheet counting as `#REF!`, as copying gives).
+pub fn is_shifted_copy(base: &Expr, dr: i64, dc: i64, other: &Expr) -> bool {
+    let mut stack: Vec<(&Expr, &Expr)> = vec![(base, other)];
+    while let Some((a, b)) = stack.pop() {
+        let same = match (a, b) {
+            (Expr::Ref(r), _) => match (shift_kind(&r.kind, dr, dc), b) {
+                (Some(k), Expr::Ref(o)) => o.sheet == r.sheet && o.kind == k,
+                (None, Expr::Error(CellError::Ref)) => true,
+                _ => false,
+            },
+            (Expr::Number(x), Expr::Number(y)) => x == y,
+            (Expr::Text(x), Expr::Text(y)) => x == y,
+            (Expr::Bool(x), Expr::Bool(y)) => x == y,
+            (Expr::Error(x), Expr::Error(y)) => x == y,
+            (Expr::Name(x), Expr::Name(y)) => x == y,
+            (Expr::Struct(x), Expr::Struct(y)) => x == y,
+            (Expr::Missing, Expr::Missing) => true,
+            (Expr::Array(x), Expr::Array(y)) => {
+                let fits = x.len() == y.len() && x.iter().zip(y).all(|(p, q)| p.len() == q.len());
+                if fits {
+                    stack.extend(x.iter().flatten().zip(y.iter().flatten()));
+                }
+                fits
+            }
+            (Expr::Unary(p, x), Expr::Unary(q, y)) => {
+                stack.push((x, y));
+                p == q
+            }
+            (Expr::Paren(x), Expr::Paren(y)) => {
+                stack.push((x, y));
+                true
+            }
+            (Expr::Binary(p, x1, x2), Expr::Binary(q, y1, y2)) => {
+                stack.push((x1, y1));
+                stack.push((x2, y2));
+                p == q
+            }
+            (Expr::Call(n, xs), Expr::Call(m, ys)) => {
+                stack.extend(xs.iter().zip(ys));
+                n == m && xs.len() == ys.len()
+            }
+            (Expr::Invoke(c, xs), Expr::Invoke(d, ys)) => {
+                stack.push((c, d));
+                stack.extend(xs.iter().zip(ys));
+                xs.len() == ys.len()
+            }
+            _ => false,
+        };
+        if !same {
+            return false;
+        }
+    }
+    true
+}
+
+/// Whether moving `e` by `(dr, dc)` keeps every reference on the sheet (no `#REF!` from the move).
+pub fn shift_stays_on_sheet(e: &Expr, dr: i64, dc: i64) -> bool {
+    let mut ok = true;
+    e.walk(&mut |x| {
+        if let Expr::Ref(r) = x
+            && shift_kind(&r.kind, dr, dc).is_none()
+        {
+            ok = false;
+        }
+    });
+    ok
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

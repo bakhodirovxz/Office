@@ -1,0 +1,187 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 02:25:27 +0500
+Subject: [PATCH 03/22] xlsx: read shared formulas and filled-down runs as
+ shared trees
+
+The cells of an Excel shared formula (`<f t="shared" si=..>`) now hold shifted copies of the
+master's tree instead of a re-printed, re-parsed formula each. Ordinary formulas that are the
+formula above or to the left moved to their cell (most producers other than Excel write a
+filled-down column that way) share its tree too: each is compared with `is_shifted_copy`, so a
+run is only ever formed from formulas that are exactly copies, and a follower is not printed.
+
+On a 10 MB generated workbook (432,120 formulas, written without shared formulas) the open peak
+goes from 635 to 352 MB (40 MB workbook: 2,525 to 1,390 MB), with the evaluator unchanged and
+every computed value identical.
+---
+ crates/xlsx/src/sheet_read.rs            | 34 ++++++++++---
+ crates/xlsx/src/tests/mod.rs             |  1 +
+ crates/xlsx/src/tests/shared_formulas.rs | 61 ++++++++++++++++++++++++
+ 3 files changed, 89 insertions(+), 7 deletions(-)
+ create mode 100644 crates/xlsx/src/tests/shared_formulas.rs
+
+diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
+index 0194d22..9241555 100644
+--- a/crates/xlsx/src/sheet_read.rs
++++ b/crates/xlsx/src/sheet_read.rs
+@@ -7,8 +7,8 @@ use gridcraft_core::date::{serial_from_ymd, time_fraction};
+ use gridcraft_core::{CellError, CellRef, DateSystem, MAX_COLS, MAX_ROWS, RangeRef, Value};
+ use gridcraft_formula::Expr;
+ use gridcraft_model::{
+-    AutoFilter, Cell, CfOperator, CfRule, CfValueKind, Comment, CondFormat, EditRange, ErrorStyle, FilterCriterion, Formula, Hyperlink, LineInfo,
+-    Orientation, PasswordHash, Sheet, SheetProtection, Sparkline, SparklineKind, Table, TableColumn, TotalsFn, Validation, ValidationKind,
++    AutoFilter, Cell, CfOperator, CfRule, CfValueKind, Comment, CondFormat, EditRange, ErrorStyle, FilterCriterion, Formula, FormulaRuns, Hyperlink,
++    LineInfo, Orientation, PasswordHash, Sheet, SheetProtection, Sparkline, SparklineKind, Table, TableColumn, TotalsFn, Validation, ValidationKind,
+     XmlColumnPr,
+ };
+ 
+@@ -22,7 +22,7 @@ use crate::xml::{self, El};
+ 
+ struct Shared {
+     anchor: CellRef,
+-    expr: Option<Expr>,
++    expr: Option<Arc<Expr>>,
+     text: String,
+ }
+ 
+@@ -30,6 +30,8 @@ struct Shared {
+ struct RowState {
+     next_row: u32,
+     shared: HashMap<u32, Shared>,
++    /// Ordinary formulas that are the same in R1C1 terms share one tree.
++    runs: FormulaRuns,
+     /// Dynamic-array spill ranges and legacy array ranges: cached values inside them (other than
+     /// the anchor) are not stored, so the formula can fill them again.
+     dynamic: Vec<RangeRef>,
+@@ -462,9 +464,15 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
+         "shared" => {
+             let si = f.attr_u32("si")?;
+             if !text.is_empty() {
+-                let expr = gridcraft_formula::parse(text).ok();
++                let master = Formula::new(text);
++                // The cells of the group share the master's tree (or the tree its text parses to
++                // when that differs, as for text with a leading `=`).
++                let expr = gridcraft_formula::parse(text).ok().map(|e| match master.template() {
++                    Some((m, _, _)) if **m == e => m.clone(),
++                    _ => Arc::new(e),
++                });
+                 st.shared.insert(si, Shared { anchor: pos, expr, text: text.to_string() });
+-                Some(Formula::new(text))
++                Some(master)
+             } else {
+                 let Some(sh) = st.shared.get(&si) else {
+                     cx.warn("a shared formula refers to a missing master cell; kept the cached value");
+@@ -474,7 +482,7 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
+                     Some(e) => {
+                         let dr = pos.row as i64 - sh.anchor.row as i64;
+                         let dc = pos.col as i64 - sh.anchor.col as i64;
+-                        Formula::from_expr(gridcraft_formula::adjust::shift_relative(e.clone(), dr, dc))
++                        Formula::shifted(e.clone(), dr, dc)
+                     }
+                     None => Formula::new(&sh.text),
+                 })
+@@ -502,12 +510,24 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
+             if text.is_empty() {
+                 None
+             } else {
+-                Some(Formula::new(text))
++                Some(ordinary_formula(st, text, pos))
+             }
+         }
+     }
+ }
+ 
++/// An ordinary (not shared, not array) formula: the same as `Formula::new(text)`, sharing the
++/// tree of the formula above it or to its left when it is that formula moved to `pos`, as in a
++/// filled-down column or a filled-right row. Files written without shared formulas (by most
++/// producers other than Excel) then cost one tree per run rather than one per cell.
++fn ordinary_formula(st: &mut RowState, text: &str, pos: CellRef) -> Formula {
++    let body = text.strip_prefix('=').unwrap_or(text);
++    match gridcraft_formula::parse(body) {
++        Ok(e) => st.runs.formula(pos, e),
++        Err(_) => Formula::new(text),
++    }
++}
++
+ /// `2024-03-15`, `2024-03-15T10:30:00Z`, `10:30:00` → serial.
+ pub fn parse_iso_datetime(s: &str, sys: DateSystem) -> Option<f64> {
+     let s = s.trim_end_matches('Z');
+diff --git a/crates/xlsx/src/tests/mod.rs b/crates/xlsx/src/tests/mod.rs
+index 517113d..b8731e8 100644
+--- a/crates/xlsx/src/tests/mod.rs
++++ b/crates/xlsx/src/tests/mod.rs
+@@ -13,6 +13,7 @@ mod passthrough_tests;
+ mod pivot_tests;
+ mod richdata_tests;
+ mod roundtrip;
++mod shared_formulas;
+ mod sheet_names;
+ mod smooth_roundtrip;
+ mod trendline_roundtrip;
+diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
+new file mode 100644
+index 0000000..8e67b98
+--- /dev/null
++++ b/crates/xlsx/src/tests/shared_formulas.rs
+@@ -0,0 +1,61 @@
++//! Formulas sharing a tree: Excel shared formulas and filled-down runs are read as shifted copies
++//! of one tree.
++
++use std::sync::Arc;
++
++use gridcraft_core::CellRef;
++use gridcraft_model::Workbook;
++
++use super::minimal;
++use crate::read_xlsx;
++
++fn at(a: &str) -> CellRef {
++    CellRef::parse(a).unwrap()
++}
++
++fn text(wb: &Workbook, a: &str) -> String {
++    wb.sheet(0).unwrap().cell(at(a)).unwrap().formula.as_ref().unwrap().text().into_owned()
++}
++
++fn tree(wb: &Workbook, a: &str) -> Arc<gridcraft_formula::Expr> {
++    wb.sheet(0).unwrap().cell(at(a)).unwrap().formula.as_ref().unwrap().template().unwrap().0.clone()
++}
++
++#[test]
++fn excel_shared_formulas_share_the_masters_tree() {
++    let body = r#"<sheetData>
++        <row r="1"><c r="A1"><v>1</v></c><c r="B1"><f t="shared" ref="B1:C3" si="0">A1*2+$A$1</f></c><c r="C1"><f t="shared" si="0"/></c></row>
++        <row r="2"><c r="A2"><v>2</v></c><c r="B2"><f t="shared" si="0"/></c></row>
++        <row r="3"><c r="A3"><v>3</v></c><c r="B3"><f t="shared" si="0"/></c><c r="C3"><f t="shared" si="0"/></c></row>
++        </sheetData>"#;
++    let (wb, _) = read_xlsx(&minimal(body, &[], "", "")).unwrap();
++    assert_eq!(text(&wb, "B1"), "A1*2+$A$1");
++    assert_eq!(text(&wb, "C1"), "B1*2+$A$1");
++    assert_eq!(text(&wb, "B3"), "A3*2+$A$1");
++    assert_eq!(text(&wb, "C3"), "B3*2+$A$1");
++    for a in ["C1", "B2", "B3", "C3"] {
++        assert!(Arc::ptr_eq(&tree(&wb, "B1"), &tree(&wb, a)), "{a}");
++    }
++}
++
++#[test]
++fn filled_down_formulas_share_a_tree() {
++    let mut rows = String::new();
++    for r in 1..=6 {
++        // Column B is filled down; C alternates between two formulas; D is the same text (all
++        // absolute) in every row.
++        let c = if r % 2 == 0 { format!("A{r}+1") } else { format!("A{r}-1") };
++        let cells = format!(r#"<c r="B{r}"><f>A{r}*2</f></c><c r="C{r}"><f>{c}</f></c><c r="D{r}"><f>SUM($A$1:$A$6)</f></c>"#);
++        rows.push_str(&format!(r#"<row r="{r}"><c r="A{r}"><v>{r}</v></c>{cells}</row>"#));
++    }
++    let (wb, _) = read_xlsx(&minimal(&format!("<sheetData>{rows}</sheetData>"), &[], "", "")).unwrap();
++    for r in 2..=6 {
++        assert!(Arc::ptr_eq(&tree(&wb, "B1"), &tree(&wb, &format!("B{r}"))));
++        assert!(Arc::ptr_eq(&tree(&wb, "D1"), &tree(&wb, &format!("D{r}"))));
++        assert_eq!(text(&wb, &format!("B{r}")), format!("B{r}").replace('B', "A") + "*2");
++    }
++    // Different formulas never share.
++    assert!(!Arc::ptr_eq(&tree(&wb, "C1"), &tree(&wb, "C2")));
++    assert_eq!(text(&wb, "C2"), "A2+1");
++    assert_eq!(text(&wb, "C3"), "A3-1");
++}
