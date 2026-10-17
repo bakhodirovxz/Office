@@ -13,6 +13,7 @@ ADR Appendix C:
 ## Phase 1 progress
 - WP0 done (2026-10-17): `scripts/{env.sh,bootstrap.sh,tools.lock,lib/lock.sh}`. Shared toolchain changed: rustup components `rustfmt` and `clippy` added.
   Tools in `E:/office-tools/bin`: cargo-deny 0.20.2, cargo-nextest 0.9.148, sccache 0.18.0, actionlint 1.7.12 (trunk 0.21.14 already there).
+- WP1 done (2026-10-17): upstream clones moved to `E:/office-upstream/<repo>` (cache clones; spike branches and worktrees intact). Pristine snapshots committed at the Phase 0 BASEs (tree hashes equal upstream's); BASE lives in `patches/<repo>/BASE`. craft-fonts is fetched (`scripts/fetch-fonts.sh`, 31 files verified).
 
 ## Done
 - Repo initialised; `CLAUDE.md`, `docs/BRIEF.md`, `docs/STATUS.md` created.
