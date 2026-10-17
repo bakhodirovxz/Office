@@ -10,9 +10,13 @@
 
 use std::fmt::Write as _;
 
+#[path = "build_office.rs"]
+mod build_office;
+
 use serde_json::Value;
 
 fn main() {
+    build_office::run();
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contributors");
     let json = read(&dir.join("contributors.json"), "the About window shows no contributors", |t| {
         serde_json::from_str::<Value>(t).map_err(|e| e.to_string())

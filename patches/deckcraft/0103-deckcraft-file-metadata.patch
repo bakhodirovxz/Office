@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 19:51:08 +0500
+Subject: [PATCH] engine, pdf, pptx, format: name the overlay product in the
+ files we write, not upstream
+
+The sample deck text (the web app opens it first), the PDF creator and producer, the pptx Application
+property and the .deckcraft generator string use OFFICE_PRODUCT_NAME (set by scripts/build.sh from the
+overlay) when it is set at build time; without it every string is upstream own.
+---
+ crates/engine/src/sample.rs  | 12 ++++++++++--
+ crates/format/src/lib.rs     |  2 +-
+ crates/pdf/src/lib.rs        |  4 ++--
+ crates/pptx/src/write/mod.rs |  2 +-
+ 4 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/crates/engine/src/sample.rs b/crates/engine/src/sample.rs
+index 80c11ca..eb7cd29 100644
+--- a/crates/engine/src/sample.rs
++++ b/crates/engine/src/sample.rs
+@@ -21,7 +21,11 @@ pub fn open_sample(s: &mut Session) -> Result<()> {
+     let sub = st.current_slide().and_then(|x| x.shapes.get(1)).map(|x| x.id.0).unwrap_or(0);
+     run(s, "text.set", json!({"id": title, "text": "Northern Lights"}))?;
+     run(s, "text.set", json!({"id": sub, "text": "A short tour of the aurora — where it comes from, when to look, and how to photograph it"}))?;
+-    run(s, "slide.notes", json!({"text": "Welcome everyone. This deck was made in DeckCraft."}))?;
++    run(
++        s,
++        "slide.notes",
++        json!({"text": format!("Welcome everyone. This deck was made in {}.", option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft"))}),
++    )?;
+     // Decorative bands on the title slide.
+     let b = run(s, "shape.insert", json!({"preset": "rect", "rect": [0, 470, 960, 70]}))?;
+     run(s, "shape.fill", json!({"id": last_id(&b), "gradient": {"stops": [[0, "accent1"], [0.5, "accent4"], [1, "accent2"]], "angle": 0}}))?;
+@@ -114,7 +118,11 @@ pub fn open_sample(s: &mut Session) -> Result<()> {
+     run(s, "transition.set", json!({"kind": "split"}))?;
+ 
+     // Closing.
+-    run(s, "slide.new", json!({"layout": "title", "title": "Clear skies!", "body": "Made with DeckCraft — free and open source"}))?;
++    run(
++        s,
++        "slide.new",
++        json!({"layout": "title", "title": "Clear skies!", "body": format!("Made with {} — free and open source", option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft"))}),
++    )?;
+     let moon = run(s, "shape.insert", json!({"preset": "moon", "rect": [820, 40, 80, 120]}))?;
+     run(s, "shape.fill", json!({"id": last_id(&moon), "color": "accent6"}))?;
+     run(s, "shape.line", json!({"id": last_id(&moon), "none": true}))?;
+diff --git a/crates/format/src/lib.rs b/crates/format/src/lib.rs
+index a9db66e..70cb71d 100644
+--- a/crates/format/src/lib.rs
++++ b/crates/format/src/lib.rs
+@@ -65,7 +65,7 @@ pub fn save(p: &Presentation) -> Result<Vec<u8>> {
+         let m = Manifest {
+             format: "deckcraft".into(),
+             version: VERSION,
+-            generator: format!("DeckCraft {}", env!("CARGO_PKG_VERSION")),
++            generator: format!("{} {}", option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft"), env!("CARGO_PKG_VERSION")),
+             presentation: p.clone(),
+         };
+         let json = serde_json::to_vec(&finite::Finite(&m)).map_err(|e| FormatError::Write(e.to_string()))?;
+diff --git a/crates/pdf/src/lib.rs b/crates/pdf/src/lib.rs
+index 3faec84..f09be5e 100644
+--- a/crates/pdf/src/lib.rs
++++ b/crates/pdf/src/lib.rs
+@@ -141,8 +141,8 @@ fn export_inner(pres: &Presentation, opts: &PdfOptions) -> Result<Vec<u8>> {
+     }
+     let title = opts.title.clone().unwrap_or_else(|| pres.props.title.clone());
+     let metadata = Metadata {
+-        creator: "DeckCraft".into(),
+-        producer: "DeckCraft".into(),
++        creator: option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft").into(),
++        producer: option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft").into(),
+         title: (!title.trim().is_empty()).then_some(title),
+         authors: if pres.props.author.trim().is_empty() { Vec::new() } else { vec![pres.props.author.clone()] },
+         ..Default::default()
+diff --git a/crates/pptx/src/write/mod.rs b/crates/pptx/src/write/mod.rs
+index bea8dc6..e322bf4 100644
+--- a/crates/pptx/src/write/mod.rs
++++ b/crates/pptx/src/write/mod.rs
+@@ -1252,7 +1252,7 @@ fn app_xml(p: &Presentation) -> Vec<u8> {
+             .a("xmlns", "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties")
+             .a("xmlns:vt", "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"),
+     );
+-    w.elt("Application", "DeckCraft");
++    w.elt("Application", option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft"));
+     w.elt("Slides", &p.slides.len().to_string());
+     w.elt("Notes", &p.slides.iter().filter(|s| !s.notes.is_empty()).count().to_string());
+     w.elt("HiddenSlides", &p.slides.iter().filter(|s| s.hidden).count().to_string());

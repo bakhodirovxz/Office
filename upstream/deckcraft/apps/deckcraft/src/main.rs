@@ -104,7 +104,7 @@ fn services() -> Services {
                 "theme" => d.add_filter("Themes and presentations", &["thmx", "pptx", "potx", "ppsx"]).add_filter("Office Theme", &["thmx"]),
                 _ => d
                     .add_filter("Presentations", &["deckcraft", "pptx", "potx", "ppsx"])
-                    .add_filter("DeckCraft", &["deckcraft"])
+                    .add_filter(deckcraft_ui_egui::office_overlay::rebrand("DeckCraft"), &["deckcraft"])
                     .add_filter("PowerPoint", &["pptx", "potx", "ppsx"])
                     .add_filter("Outline", &["txt", "md"]),
             };
@@ -163,7 +163,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
 
 fn app_icon() -> Option<egui::IconData> {
     let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png");
-    eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
+    eframe::icon_data::from_png_bytes(deckcraft_ui_egui::office_overlay::icon_png().unwrap_or(png)).map_err(|e| log::warn!("app icon: {e}")).ok()
 }
 
 fn main() -> eframe::Result {
@@ -177,7 +177,7 @@ fn main() -> eframe::Result {
                 return Ok(());
             }
             Startup::Version => {
-                println!("deckcraft {}", env!("CARGO_PKG_VERSION"));
+                println!("deckcraft {}", deckcraft_ui_egui::office_overlay::VERSION);
                 return Ok(());
             }
             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
@@ -197,7 +197,7 @@ fn main() -> eframe::Result {
     }
     let mut options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("DeckCraft")
+            .with_title(deckcraft_ui_egui::office_overlay::app_name())
             .with_inner_size([1440.0, 900.0])
             .with_min_inner_size([900.0, 560.0])
             .with_drag_and_drop(true)

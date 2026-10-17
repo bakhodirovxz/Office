@@ -1,0 +1,674 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:12:56 +0500
+Subject: [PATCH 100/102] ui-egui, app: office overlay hook (name, icon,
+ version, attribution)
+
+Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
+OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window and
+presenter titles, window icon, About heading/version/attribution, dialog titles, the
+native-format labels, palette labels and the web start error through it (rebrand() at each
+literal: deckcraft has no catalog lookup to hook). Without OFFICE_OVERLAY_DIR every value
+is upstream's own.
+---
+ apps/deckcraft-web/src/web.rs              |   5 +-
+ apps/deckcraft/src/main.rs                 |   8 +-
+ crates/ui-egui/build.rs                    |   4 +
+ crates/ui-egui/build_office.rs             | 128 +++++++++++++++++++++
+ crates/ui-egui/src/backstage.rs            |  27 +++--
+ crates/ui-egui/src/dialogs.rs              |  24 +++-
+ crates/ui-egui/src/lib.rs                  |   7 +-
+ crates/ui-egui/src/menus.rs                |   7 +-
+ crates/ui-egui/src/office_overlay.rs       | 119 +++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs |  23 ++++
+ crates/ui-egui/src/ribbon.rs               |  11 +-
+ crates/ui-egui/src/show.rs                 |   4 +-
+ 12 files changed, 339 insertions(+), 28 deletions(-)
+ create mode 100644 crates/ui-egui/build_office.rs
+ create mode 100644 crates/ui-egui/src/office_overlay.rs
+ create mode 100644 crates/ui-egui/src/office_overlay_tests.rs
+
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index dabad8a..809ad67 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -56,7 +56,10 @@ pub fn start() {
+         if let Some(el) = document.get_element_by_id(LOADING_ID) {
+             match result {
+                 Ok(()) => el.remove(),
+-                Err(e) => el.set_inner_html(&format!("<p>DeckCraft failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>")),
++                Err(e) => el.set_inner_html(&format!(
++                    "<p>{} failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>",
++                    deckcraft_ui_egui::office_overlay::app_name()
++                )),
+             }
+         }
+     });
+diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
+index ef80daa..bd5e16b 100644
+--- a/apps/deckcraft/src/main.rs
++++ b/apps/deckcraft/src/main.rs
+@@ -104,7 +104,7 @@ fn services() -> Services {
+                 "theme" => d.add_filter("Themes and presentations", &["thmx", "pptx", "potx", "ppsx"]).add_filter("Office Theme", &["thmx"]),
+                 _ => d
+                     .add_filter("Presentations", &["deckcraft", "pptx", "potx", "ppsx"])
+-                    .add_filter("DeckCraft", &["deckcraft"])
++                    .add_filter(deckcraft_ui_egui::office_overlay::rebrand("DeckCraft"), &["deckcraft"])
+                     .add_filter("PowerPoint", &["pptx", "potx", "ppsx"])
+                     .add_filter("Outline", &["txt", "md"]),
+             };
+@@ -163,7 +163,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
+ 
+ fn app_icon() -> Option<egui::IconData> {
+     let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png");
+-    eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
++    eframe::icon_data::from_png_bytes(deckcraft_ui_egui::office_overlay::icon_png().unwrap_or(png)).map_err(|e| log::warn!("app icon: {e}")).ok()
+ }
+ 
+ fn main() -> eframe::Result {
+@@ -177,7 +177,7 @@ fn main() -> eframe::Result {
+                 return Ok(());
+             }
+             Startup::Version => {
+-                println!("deckcraft {}", env!("CARGO_PKG_VERSION"));
++                println!("deckcraft {}", deckcraft_ui_egui::office_overlay::VERSION);
+                 return Ok(());
+             }
+             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
+@@ -197,7 +197,7 @@ fn main() -> eframe::Result {
+     }
+     let mut options = eframe::NativeOptions {
+         viewport: egui::ViewportBuilder::default()
+-            .with_title("DeckCraft")
++            .with_title(deckcraft_ui_egui::office_overlay::app_name())
+             .with_inner_size([1440.0, 900.0])
+             .with_min_inner_size([900.0, 560.0])
+             .with_drag_and_drop(true)
+diff --git a/crates/ui-egui/build.rs b/crates/ui-egui/build.rs
+index f40007f..047ee7a 100644
+--- a/crates/ui-egui/build.rs
++++ b/crates/ui-egui/build.rs
+@@ -10,9 +10,13 @@
+ 
+ use std::fmt::Write as _;
+ 
++#[path = "build_office.rs"]
++mod build_office;
++
+ use serde_json::Value;
+ 
+ fn main() {
++    build_office::run();
+     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contributors");
+     let json = read(&dir.join("contributors.json"), "the About window shows no contributors", |t| {
+         serde_json::from_str::<Value>(t).map_err(|e| e.to_string())
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+new file mode 100644
+index 0000000..25444ee
+--- /dev/null
++++ b/crates/ui-egui/build_office.rs
+@@ -0,0 +1,128 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Build-script half of the brand overlay hook. Reads `$OFFICE_OVERLAY_DIR/overlay.env` (written by
++//! `cargo xt overlay`) and writes `$OUT_DIR/office_overlay_gen.rs`, the constants behind `office_overlay.rs`.
++//! With `OFFICE_OVERLAY_DIR` unset every constant holds upstream's own value, so such a build behaves like upstream.
++
++use std::collections::HashMap;
++use std::fmt::Write as _;
++use std::path::{Path, PathBuf};
++
++/// Upstream's own values: the app's name token and its Wayland/X11 app id.
++const UPSTREAM_NAME: &str = "DeckCraft";
++const UPSTREAM_APP_ID: &str = "ai.storyteller.deckcraft";
++
++pub fn run() {
++    println!("cargo::rerun-if-env-changed=OFFICE_OVERLAY_DIR");
++    println!("cargo::rerun-if-changed=build_office.rs");
++    println!("cargo::rustc-check-cfg=cfg(office_overlay)");
++    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("office_overlay_gen.rs");
++    let dir = std::env::var_os("OFFICE_OVERLAY_DIR").map(PathBuf::from).filter(|d| d.join("overlay.env").is_file());
++    let text = match &dir {
++        Some(d) => {
++            println!("cargo::rustc-cfg=office_overlay");
++            generate(d)
++        }
++        None => generate_upstream(),
++    };
++    if let Err(e) = std::fs::write(&out, text) {
++        println!("cargo::error=writing {}: {e}", out.display());
++    }
++}
++
++fn parse(dir: &Path) -> HashMap<String, String> {
++    let file = dir.join("overlay.env");
++    println!("cargo::rerun-if-changed={}", file.display());
++    let text = std::fs::read_to_string(&file).unwrap_or_default();
++    text.lines().filter_map(|l| l.split_once('=')).map(|(k, v)| (k.trim().to_string(), v.to_string())).collect()
++}
++
++/// An `include_bytes!` path: absolute, forward slashes, registered for rebuilds.
++fn include_path(dir: &Path, name: &str) -> String {
++    let p = dir.join(name);
++    println!("cargo::rerun-if-changed={}", p.display());
++    p.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/")
++}
++
++fn flag(env: &HashMap<String, String>, key: &str) -> bool {
++    env.get(key).is_some_and(|v| v == "1")
++}
++
++fn pairs(env: &HashMap<String, String>, prefix: &str) -> String {
++    let mut s = String::from("&[");
++    for lang in ["en", "ru", "uz-latn", "uz-cyrl"] {
++        if let Some(v) = env.get(&format!("{prefix}_{lang}")) {
++            let _ = write!(s, "({lang:?}, {v:?}), ");
++        }
++    }
++    s + "]"
++}
++
++fn generate(dir: &Path) -> String {
++    let env = parse(dir);
++    let get = |k: &str| env.get(k).cloned().unwrap_or_default();
++    let mut o = String::from("// GENERATED by build_office.rs from $OFFICE_OVERLAY_DIR/overlay.env. Do not edit.\n");
++    let _ = writeln!(o, "pub const ACTIVE: bool = true;");
++    let _ = writeln!(o, "pub const PRODUCT_NAME: &str = {:?};", get("PRODUCT_NAME"));
++    let _ = writeln!(o, "pub const APP_NAME: &str = {:?};", get("APP_NAME"));
++    let _ = writeln!(o, "pub const APP_NAMES: &[(&str, &str)] = {};", pairs(&env, "APP_NAME"));
++    let names: Vec<String> = get("UPSTREAM_NAMES").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
++    let _ = writeln!(o, "pub const UPSTREAM_NAMES: &[&str] = &{names:?};");
++    let _ = writeln!(o, "pub const APP_ID: &str = {:?};", get("APP_ID"));
++    let _ = writeln!(o, "pub const VERSION: &str = {:?};", get("VERSION"));
++    let _ = writeln!(o, "pub const COPYRIGHT: &str = {:?};", get("COPYRIGHT"));
++    let _ = writeln!(o, "pub const ATTRIBUTION: &[(&str, &str)] = {};", pairs(&env, "ATTRIBUTION"));
++    for (name, key) in [
++        ("COMMUNITY", "COMMUNITY"),
++        ("SHARE", "SHARE"),
++        ("ZOTERO", "ZOTERO"),
++        ("UPDATE_CHECK", "UPDATE_CHECK"),
++        ("UPSTREAM_LINKS", "UPSTREAM_LINKS"),
++        ("CONTRIBUTORS_TAB", "CONTRIBUTORS_TAB"),
++    ] {
++        let _ = writeln!(o, "pub const {name}: bool = {};", flag(&env, key));
++    }
++    let _ = writeln!(o, "pub const LINK_WEBSITE: &str = {:?};", get("LINK_WEBSITE"));
++    let icon = get("ICON_PNG");
++    if icon.is_empty() {
++        let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
++    } else {
++        let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = Some(include_bytes!({:?}));", include_path(dir, &icon));
++    }
++    let logo = get("LOGO_RGBA");
++    if logo.is_empty() {
++        let _ = writeln!(o, "pub static LOGO_RGBA: Option<&[u8]> = None;");
++    } else {
++        let _ = writeln!(o, "pub static LOGO_RGBA: Option<&[u8]> = Some(include_bytes!({:?}));", include_path(dir, &logo));
++    }
++    let _ = writeln!(o, "pub const LOGO_SIZE: usize = 128;");
++    let fonts: Vec<String> = get("FONTS").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
++    let mut list = String::new();
++    for (i, f) in fonts.iter().enumerate() {
++        let key = if i == 0 { "office-fallback-sans" } else { "office-fallback-mono" };
++        let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
++    }
++    let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
++    o
++}
++
++fn generate_upstream() -> String {
++    let mut o = String::from("// GENERATED by build_office.rs (no overlay: upstream values). Do not edit.\n");
++    let _ = writeln!(o, "pub const ACTIVE: bool = false;");
++    let _ = writeln!(o, "pub const PRODUCT_NAME: &str = {UPSTREAM_NAME:?};");
++    let _ = writeln!(o, "pub const APP_NAME: &str = {UPSTREAM_NAME:?};");
++    let _ = writeln!(o, "pub const APP_NAMES: &[(&str, &str)] = &[];");
++    let _ = writeln!(o, "pub const UPSTREAM_NAMES: &[&str] = &[];");
++    let _ = writeln!(o, "pub const APP_ID: &str = {UPSTREAM_APP_ID:?};");
++    let _ = writeln!(o, "pub const VERSION: &str = env!(\"CARGO_PKG_VERSION\");");
++    let _ = writeln!(o, "pub const COPYRIGHT: &str = \"\";");
++    let _ = writeln!(o, "pub const ATTRIBUTION: &[(&str, &str)] = &[];");
++    for name in ["COMMUNITY", "SHARE", "ZOTERO", "UPDATE_CHECK", "UPSTREAM_LINKS", "CONTRIBUTORS_TAB"] {
++        let _ = writeln!(o, "pub const {name}: bool = true;");
++    }
++    let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
++    let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
++    let _ = writeln!(o, "pub static LOGO_RGBA: Option<&[u8]> = None;");
++    let _ = writeln!(o, "pub const LOGO_SIZE: usize = 128;");
++    let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
++    o
++}
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index f7bfe25..f855c45 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -487,6 +487,7 @@ fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
+ 
+ /// A new-presentation tile: a theme preview drawn in code (or a blank slide) over its name.
+ fn tile(ui: &mut Ui, label: &str, theme: Option<&deckcraft_model::Theme>, big: bool) -> egui::Response {
++    let label = crate::office_overlay::rebrand(label);
+     let t = Tokens::get(ui.ctx());
+     let thumb_w = if big { 200.0 } else { 160.0 };
+     let (rect, resp) = ui.allocate_exact_size(vec2(thumb_w + 16.0, thumb_w * 9.0 / 16.0 + 44.0), Sense::click());
+@@ -692,7 +693,7 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+     ui.horizontal(|ui| {
+         let (r, _) = ui.allocate_exact_size(vec2(36.0, 36.0), Sense::hover());
+         crate::dialogs::paint_logo(ui.painter(), r);
+-        ui.label(RichText::new("DeckCraft").font(theme::bold(24.0)).color(t.text));
++        ui.label(RichText::new(crate::office_overlay::app_name()).font(theme::bold(24.0)).color(t.text));
+     });
+     ui.add_space(18.0);
+     ui.horizontal(|ui| {
+@@ -929,11 +930,11 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+     ui.label(RichText::new(&title).font(theme::font(15.0)).color(t.text));
+     dim(ui, path.as_deref().unwrap_or("Not saved yet"));
+     ui.add_space(14.0);
+-    let current = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1);
++    let current = crate::office_overlay::rebrand(SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1));
+     ui.horizontal(|ui| {
+         egui::ComboBox::from_id_salt("backstage_save_type").width(340.0).selected_text(current).show_ui(ui, |ui| {
+             for (id, label, _) in SAVE_TYPES {
+-                if ui.selectable_label(bs.file_type == id, label).clicked() {
++                if ui.selectable_label(bs.file_type == id, crate::office_overlay::rebrand(label)).clicked() {
+                     bs.file_type = id;
+                 }
+             }
+@@ -957,7 +958,7 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+     });
+     ui.add_space(8.0);
+     if let Some((_, _, detail)) = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type) {
+-        dim(ui, detail);
++        dim(ui, crate::office_overlay::rebrand(detail));
+     }
+ }
+ 
+@@ -1039,11 +1040,11 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+             ui.add_space(6.0);
+             dim(
+                 ui,
+-                if app.services.pick_save.is_some() {
++                crate::office_overlay::rebrand(if app.services.pick_save.is_some() {
+                     "DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer."
+                 } else {
+                     "DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer."
+-                },
++                }),
+             );
+             ui.add_space(14.0);
+             heading(ui, "Settings");
+@@ -1295,6 +1296,7 @@ fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+                     ui.add_space(8.0);
+                     for (id, label, detail) in SAVE_TYPES.iter().filter(|s| s.0 != "pdf") {
+                         let selected = bs.file_type == *id;
++                        let label = &crate::office_overlay::rebrand(label);
+                         let (rect, resp) = ui.allocate_exact_size(vec2(520.0, 46.0), Sense::click());
+                         resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, *label));
+                         let p = ui.painter();
+@@ -1348,7 +1350,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             });
+             ui.add_space(16.0);
+             heading(ui, "User Information");
+-            dim(ui, "DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.");
++            dim(
++                ui,
++                crate::office_overlay::rebrand(
++                    "DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.",
++                ),
++            );
+         });
+         ui.add_space(40.0);
+         ui.vertical(|ui| {
+@@ -1356,7 +1363,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             ui.horizontal(|ui| {
+                 let (r, _) = ui.allocate_exact_size(vec2(40.0, 40.0), Sense::hover());
+                 crate::dialogs::paint_logo(ui.painter(), r);
+-                ui.label(RichText::new("DeckCraft").font(theme::bold(24.0)).color(t.text));
++                ui.label(RichText::new(crate::office_overlay::app_name()).font(theme::bold(24.0)).color(t.text));
+             });
+             dim(ui, &crate::dialogs::version_line());
+             dim(ui, "Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.");
+@@ -1364,8 +1371,8 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             if task(
+                 ui,
+                 Icon::Help,
+-                "About DeckCraft",
+-                "About DeckCraft",
++                crate::office_overlay::rebrand("About DeckCraft"),
++                crate::office_overlay::rebrand("About DeckCraft"),
+                 "The version, the people and models who built it, and where to find us.",
+                 true,
+             ) {
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 576a229..9071d15 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -30,6 +30,10 @@ impl Dialog {
+ }
+ 
+ fn title(id: &str) -> &'static str {
++    crate::office_overlay::rebrand(upstream_title(id))
++}
++
++fn upstream_title(id: &str) -> &'static str {
+     match id {
+         "table" => "Insert Table",
+         "slideSize" => "Slide Size",
+@@ -465,7 +469,14 @@ fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+         check(ui, d, "Captions under pictures", "captions", false);
+         check(ui, d, "ALL pictures black and white", "grayscale", false);
+         ui.label("Album theme");
+-        album_choice(ui, d, "album_theme", "theme", "DeckCraft", &ALBUM_THEMES.iter().map(|n| (*n, *n)).collect::<Vec<_>>());
++        album_choice(
++            ui,
++            d,
++            "album_theme",
++            "theme",
++            "DeckCraft",
++            &ALBUM_THEMES.iter().map(|n| (*n, crate::office_overlay::rebrand(n))).collect::<Vec<_>>(),
++        );
+     });
+     let captions = d.fields.get("captions").is_some_and(|v| v == "1");
+     let grayscale = d.fields.get("grayscale").is_some_and(|v| v == "1");
+@@ -2607,11 +2618,14 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+     ui.vertical_centered(|ui| {
+         let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
+         paint_logo(ui.painter(), r);
+-        ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
++        ui.label(egui::RichText::new(crate::office_overlay::app_name()).font(theme::bold(22.0)));
+         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
+         ui.add_space(6.0);
+         ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
+         ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
++        if !crate::office_overlay::attribution().is_empty() {
++            ui.label(crate::office_overlay::attribution());
++        }
+         ui.add_space(6.0);
+         ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+         ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+@@ -2625,7 +2639,7 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+ /// from `[workspace.package] version` (the single source of truth, `cargo xtask version`); the
+ /// release workflow sets `DECKCRAFT_BUILD_SHA` / `DECKCRAFT_BUILD_DATE` at build time.
+ pub fn version_line() -> String {
+-    let mut s = format!("Version {}", env!("CARGO_PKG_VERSION"));
++    let mut s = format!("Version {}", crate::office_overlay::VERSION);
+     let sha = option_env!("DECKCRAFT_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
+     let date = option_env!("DECKCRAFT_BUILD_DATE").filter(|s| !s.is_empty());
+     match (sha, date) {
+@@ -3217,7 +3231,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+                 p["with"] = json!(d.get("with", ""));
+                 let msg = match app.session.execute("text.replace", &p) {
+                     Ok(v) => format!("Replaced {} occurrence(s).", v.get("replaced").and_then(Value::as_u64).unwrap_or(0)),
+-                    Err(_) => format!("DeckCraft can't find “{text}”."),
++                    Err(_) => format!("{} can't find “{text}”.", crate::office_overlay::app_name()),
+                 };
+                 d.fields.insert("status".into(), msg);
+                 d.fields.remove("cur");
+@@ -3232,7 +3246,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+     if find_next {
+         let list = app.session.execute("text.find", &q).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
+         if list.is_empty() {
+-            d.fields.insert("status".into(), format!("DeckCraft can't find “{text}”."));
++            d.fields.insert("status".into(), format!("{} can't find “{text}”.", crate::office_overlay::app_name()));
+             d.fields.remove("cur");
+         } else {
+             let n = d.get("next", "0").parse::<usize>().unwrap_or(0) % list.len();
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 8867407..155b139 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -19,6 +19,7 @@ pub mod icons;
+ pub mod media;
+ pub mod menus;
+ pub mod notes;
++pub mod office_overlay;
+ pub mod opening;
+ pub mod panes;
+ mod preview;
+@@ -191,7 +192,7 @@ fn command_for(purpose: FilePurpose, name: &str, bytes: &[u8]) -> Result<&'stati
+         FilePurpose::Open => open_command(name),
+         FilePurpose::Infer => infer_command(name, bytes),
+     };
+-    cmd.ok_or_else(|| format!("{name}: DeckCraft can't open this kind of file"))
++    cmd.ok_or_else(|| format!("{name}: {} can't open this kind of file", office_overlay::app_name()))
+ }
+ 
+ /// How long a transient status message stays visible.
+@@ -744,7 +745,7 @@ impl SlideApp {
+             "deckcraft" => ("deckcraft", "deckcraft", false),
+             "gif" => ("gif", "gif", false),
+             other => {
+-                self.set_status(format!("DeckCraft can't export “{other}”"));
++                self.set_status(format!("{} can't export “{other}”", office_overlay::app_name()));
+                 return false;
+             }
+         };
+@@ -2037,6 +2038,8 @@ mod datetime_tests;
+ 
+ #[cfg(test)]
+ mod inbox_tests;
++#[cfg(test)]
++mod office_overlay_tests;
+ 
+ #[cfg(test)]
+ mod tests {
+diff --git a/crates/ui-egui/src/menus.rs b/crates/ui-egui/src/menus.rs
+index 440fd93..665fd39 100644
+--- a/crates/ui-egui/src/menus.rs
++++ b/crates/ui-egui/src/menus.rs
+@@ -87,7 +87,12 @@ fn palette_items(session: &deckcraft_engine::Session, q: &str) -> Vec<(String, S
+         // Commands that need a path or other value fail when the palette runs them with `{}`.
+         .filter(|c| c.enabled && !crate::UI_COMMANDS.iter().any(|u| u.1 == c.label) && !deckcraft_engine::cmd::needs_arguments(c.params))
+         .map(|c| (c.id.to_string(), c.label.to_string(), c.shortcut))
+-        .chain(crate::UI_COMMANDS.iter().filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3)).map(|c| (c.0.to_string(), c.1.to_string(), c.2)))
++        .chain(
++            crate::UI_COMMANDS
++                .iter()
++                .filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3))
++                .map(|c| (c.0.to_string(), crate::office_overlay::rebrand(c.1).to_string(), c.2)),
++        )
+         .filter(|(id, label, _)| q.is_empty() || label.to_lowercase().contains(q) || id.to_lowercase().contains(q))
+         .collect();
+     items.sort_by_key(|(_, l, _)| !l.to_lowercase().starts_with(q));
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+new file mode 100644
+index 0000000..8d33297
+--- /dev/null
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -0,0 +1,119 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The brand overlay: the product name, attribution, icon, chrome flags and fallback fonts that
++//! `cargo xt overlay` renders from `brand/brand.toml`. Without `OFFICE_OVERLAY_DIR` at build time
++//! every value is upstream's own, so a build without an overlay behaves like upstream.
++
++include!(concat!(env!("OUT_DIR"), "/office_overlay_gen.rs"));
++
++use std::collections::BTreeMap;
++use std::sync::Mutex;
++
++/// The interface language code, lowercase (`en`, `ru`, `uz-latn`, ...), as the overlay keys it.
++fn lang_code() -> String {
++    ("en").to_ascii_lowercase()
++}
++
++fn by_lang(table: &'static [(&'static str, &'static str)], fallback: &'static str) -> &'static str {
++    let code = lang_code();
++    let find = |c: &str| table.iter().find(|(k, _)| *k == c).map(|(_, v)| *v);
++    find(&code).or_else(|| find("en")).unwrap_or(fallback)
++}
++
++/// The app's display name in the current interface language.
++pub fn app_name() -> &'static str {
++    by_lang(APP_NAMES, APP_NAME)
++}
++
++/// The "based on" line in the current interface language (empty without an overlay).
++pub fn attribution() -> &'static str {
++    by_lang(ATTRIBUTION, "")
++}
++
++/// Upstream sentences that advertise upstream's community; `rebrand` removes them.
++const REMOVED: &[&str] = &["Part of the Crafting Apps from the ArtCraft team.", "Part of ArtCraft."];
++
++fn is_word_char(c: char) -> bool {
++    c.is_alphanumeric() || c == '_'
++}
++
++/// Replace whole-token occurrences of `from` in `s`.
++fn replace_token(s: &str, from: &str, to: &str) -> String {
++    let mut out = String::with_capacity(s.len() + to.len());
++    let mut rest = s;
++    while let Some(i) = rest.find(from) {
++        let (head, tail) = rest.split_at(i);
++        let after = &tail[from.len()..];
++        let before_ok = head.chars().next_back().is_none_or(|c| !is_word_char(c));
++        let after_ok = after.chars().next().is_none_or(|c| !is_word_char(c));
++        out.push_str(head);
++        out.push_str(if before_ok && after_ok { to } else { from });
++        rest = after;
++    }
++    out.push_str(rest);
++    out
++}
++
++static INTERNED: Mutex<BTreeMap<String, &'static str>> = Mutex::new(BTreeMap::new());
++
++/// Show `s` under the overlay's name: every upstream name token becomes `app_name()` and the upstream community
++/// sentences are dropped. Returns `s` itself when there is no overlay or nothing matches. A changed string is
++/// interned, so the cache holds one entry per distinct (language, source) pair.
++pub fn rebrand(s: &str) -> &str {
++    if !ACTIVE || UPSTREAM_NAMES.is_empty() || !(s.contains("Craft") || s.contains("Discord")) {
++        return s;
++    }
++    let key = format!("{}\u{1f}{s}", lang_code());
++    let mut cache = INTERNED.lock().unwrap_or_else(|e| e.into_inner());
++    if let Some(done) = cache.get(&key) {
++        return *done;
++    }
++    let mut out = s.to_string();
++    for sentence in REMOVED {
++        out = out.replace(sentence, "");
++    }
++    for name in UPSTREAM_NAMES {
++        out = replace_token(&out, name, app_name());
++    }
++    if out.contains('\n') && out.contains("ArtCraft") {
++        // A translation of an upstream "Part of ..." sentence: drop the lines that still name upstream's publisher.
++        out = out.lines().filter(|l| !l.contains("ArtCraft")).collect::<Vec<_>>().join("\n");
++    }
++    let out = out.trim().to_string();
++    debug_assert!(cache.len() < 4096, "rebrand cache is bounded by the catalog size");
++    let leaked: &'static str = Box::leak(out.into_boxed_str());
++    cache.insert(key, leaked);
++    leaked
++}
++
++/// The window icon (PNG bytes) when an overlay is active; callers keep upstream's icon on `None`.
++pub fn icon_png() -> Option<&'static [u8]> {
++    ICON_PNG
++}
++
++/// Append the fallback faces after every other face of every family, never first, so upstream's metrics stay.
++pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
++    for (key, bytes) in FALLBACK_FONTS {
++        defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
++    }
++    for (family, list) in defs.families.iter_mut() {
++        let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
++        let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
++        if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
++            list.push(key.into());
++        }
++    }
++}
++
++/// Paint the overlay's icon into `r`. False when there is no overlay icon: the caller then draws upstream's mark.
++pub fn paint_logo(p: &egui::Painter, r: egui::Rect) -> bool {
++    let Some(bytes) = LOGO_RGBA else { return false };
++    let id = egui::Id::new("office_overlay_logo");
++    let texture = p.ctx().data(|d| d.get_temp::<egui::TextureHandle>(id)).unwrap_or_else(|| {
++        let image = egui::ColorImage::from_rgba_unmultiplied([LOGO_SIZE, LOGO_SIZE], bytes);
++        let texture = p.ctx().load_texture("office-logo", image, egui::TextureOptions::LINEAR);
++        p.ctx().data_mut(|d| d.insert_temp(id, texture.clone()));
++        texture
++    });
++    p.image(texture.id(), r, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
++    true
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+new file mode 100644
+index 0000000..e2fff62
+--- /dev/null
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -0,0 +1,23 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Tests of the brand overlay. They assert the overlay's behaviour when it is active (`OFFICE_OVERLAY_DIR` set at
++//! build time) and upstream's behaviour when it is not.
++
++use crate::office_overlay as o;
++
++#[test]
++fn rebrand_follows_the_overlay() {
++    if o::ACTIVE {
++        assert_eq!(o::rebrand("About DeckCraft"), format!("About {}", o::app_name()));
++        assert_eq!(o::rebrand("Slides. Part of ArtCraft."), "Slides.");
++        assert_eq!(o::rebrand("Open"), "Open");
++        assert!(!o::attribution().is_empty());
++    } else {
++        assert_eq!(o::rebrand("About DeckCraft"), "About DeckCraft");
++        assert_eq!(o::attribution(), "");
++    }
++}
++
++#[test]
++fn the_about_dialog_shows_the_product_version() {
++    assert!(crate::dialogs::version_line().starts_with(&format!("Version {}", o::VERSION)));
++}
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 3e43a68..2045c29 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -75,8 +75,11 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
+         let has_doc = app.session.active().is_some();
+         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
+         crate::qat::show(app, &mut child);
+-        let title =
+-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "DeckCraft".into());
++        let title = app
++            .session
++            .active()
++            .map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" }))
++            .unwrap_or_else(|| crate::office_overlay::app_name().into());
+         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
+         // Right side.
+         let mut right = ui.new_child(
+@@ -1475,7 +1478,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
+                     paint_theme_tile(p, r, th);
+                 }
+             },
+-            |i| names.get(i).cloned().unwrap_or_default(),
++            |i| names.get(i).map(|n| crate::office_overlay::rebrand(n).to_string()).unwrap_or_default(),
+         ) && let Some(n) = names.get(i)
+         {
+             run(app, "design.theme", json!({"name": n}));
+@@ -3254,7 +3257,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
+         let r = big_button(ui, Icon::Themes, "Themes", true);
+         egui::Popup::menu(&r).show(|ui| {
+             for th in deckcraft_model::theme::builtin_themes() {
+-                if ui.button(&th.name).clicked() {
++                if ui.button(crate::office_overlay::rebrand(&th.name)).clicked() {
+                     run(app, "design.theme", json!({"name": th.name}));
+                 }
+             }
+diff --git a/crates/ui-egui/src/show.rs b/crates/ui-egui/src/show.rs
+index a875773..f06c94d 100644
+--- a/crates/ui-egui/src/show.rs
++++ b/crates/ui-egui/src/show.rs
+@@ -1754,7 +1754,9 @@ fn presenter_window(ctx: &egui::Context, show: &mut Show, doc: &Presentation, no
+     };
+     ctx.show_viewport_immediate(
+         egui::ViewportId::from_hash_of("deckcraft_presenter"),
+-        egui::ViewportBuilder::default().with_title("Presenter View — DeckCraft").with_inner_size([1100.0, 700.0]),
++        egui::ViewportBuilder::default()
++            .with_title(format!("Presenter View — {}", crate::office_overlay::app_name()))
++            .with_inner_size([1100.0, 700.0]),
+         |ui, _| {
+             if !keyboard(ui.ctx(), show, doc, now) {
+                 *keep = false;

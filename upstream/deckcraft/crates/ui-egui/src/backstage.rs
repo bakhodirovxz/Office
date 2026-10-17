@@ -487,6 +487,7 @@ fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
 
 /// A new-presentation tile: a theme preview drawn in code (or a blank slide) over its name.
 fn tile(ui: &mut Ui, label: &str, theme: Option<&deckcraft_model::Theme>, big: bool) -> egui::Response {
+    let label = crate::office_overlay::rebrand(label);
     let t = Tokens::get(ui.ctx());
     let thumb_w = if big { 200.0 } else { 160.0 };
     let (rect, resp) = ui.allocate_exact_size(vec2(thumb_w + 16.0, thumb_w * 9.0 / 16.0 + 44.0), Sense::click());
@@ -692,7 +693,7 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome) 
     ui.horizontal(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(36.0, 36.0), Sense::hover());
         crate::dialogs::paint_logo(ui.painter(), r);
-        ui.label(RichText::new("DeckCraft").font(theme::bold(24.0)).color(t.text));
+        ui.label(RichText::new(crate::office_overlay::app_name()).font(theme::bold(24.0)).color(t.text));
     });
     ui.add_space(18.0);
     ui.horizontal(|ui| {
@@ -734,7 +735,9 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome) 
         });
     }
     ui.add_space(30.0);
-    ui.hyperlink_to("Join the ArtCraft community on Discord", deckcraft_engine::links::DISCORD);
+    if crate::office_overlay::COMMUNITY {
+        ui.hyperlink_to("Join the ArtCraft community on Discord", deckcraft_engine::links::DISCORD);
+    }
 }
 
 /// New: a blank presentation, then every theme and starter template, with a search box.
@@ -929,11 +932,11 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
     ui.label(RichText::new(&title).font(theme::font(15.0)).color(t.text));
     dim(ui, path.as_deref().unwrap_or("Not saved yet"));
     ui.add_space(14.0);
-    let current = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1);
+    let current = crate::office_overlay::rebrand(SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1));
     ui.horizontal(|ui| {
         egui::ComboBox::from_id_salt("backstage_save_type").width(340.0).selected_text(current).show_ui(ui, |ui| {
             for (id, label, _) in SAVE_TYPES {
-                if ui.selectable_label(bs.file_type == id, label).clicked() {
+                if ui.selectable_label(bs.file_type == id, crate::office_overlay::rebrand(label)).clicked() {
                     bs.file_type = id;
                 }
             }
@@ -957,7 +960,7 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
     });
     ui.add_space(8.0);
     if let Some((_, _, detail)) = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type) {
-        dim(ui, detail);
+        dim(ui, crate::office_overlay::rebrand(detail));
     }
 }
 
@@ -1039,11 +1042,11 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
             ui.add_space(6.0);
             dim(
                 ui,
-                if app.services.pick_save.is_some() {
+                crate::office_overlay::rebrand(if app.services.pick_save.is_some() {
                     "DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer."
                 } else {
                     "DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer."
-                },
+                }),
             );
             ui.add_space(14.0);
             heading(ui, "Settings");
@@ -1295,6 +1298,7 @@ fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
                     ui.add_space(8.0);
                     for (id, label, detail) in SAVE_TYPES.iter().filter(|s| s.0 != "pdf") {
                         let selected = bs.file_type == *id;
+                        let label = &crate::office_overlay::rebrand(label);
                         let (rect, resp) = ui.allocate_exact_size(vec2(520.0, 46.0), Sense::click());
                         resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, *label));
                         let p = ui.painter();
@@ -1348,7 +1352,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
             });
             ui.add_space(16.0);
             heading(ui, "User Information");
-            dim(ui, "DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.");
+            dim(
+                ui,
+                crate::office_overlay::rebrand(
+                    "DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.",
+                ),
+            );
         });
         ui.add_space(40.0);
         ui.vertical(|ui| {
@@ -1356,7 +1365,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
             ui.horizontal(|ui| {
                 let (r, _) = ui.allocate_exact_size(vec2(40.0, 40.0), Sense::hover());
                 crate::dialogs::paint_logo(ui.painter(), r);
-                ui.label(RichText::new("DeckCraft").font(theme::bold(24.0)).color(t.text));
+                ui.label(RichText::new(crate::office_overlay::app_name()).font(theme::bold(24.0)).color(t.text));
             });
             dim(ui, &crate::dialogs::version_line());
             dim(ui, "Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.");
@@ -1364,15 +1373,19 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
             if task(
                 ui,
                 Icon::Help,
-                "About DeckCraft",
-                "About DeckCraft",
+                crate::office_overlay::rebrand("About DeckCraft"),
+                crate::office_overlay::rebrand("About DeckCraft"),
                 "The version, the people and models who built it, and where to find us.",
                 true,
             ) {
                 let _ = app.run("app.about", json!({}));
             }
-            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+            if crate::office_overlay::COMMUNITY {
+                ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+            }
+            if crate::office_overlay::UPSTREAM_LINKS {
+                ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+            }
         });
     });
 }

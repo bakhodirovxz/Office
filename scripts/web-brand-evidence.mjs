@@ -38,7 +38,11 @@ const STEPS = {
     ['click', 631, 53], ['wait', 1000], ['click', 272, 110], ['wait', 2000], ['shot', `${tag}-sheets-web-about`],
     ['key', 'Escape'], ['wait', 500], ['click', 700, 400], ['click', 300, 200], ['insert'], ['key', 'Enter'], ['wait', 1500], ['shot', 'font-sheets-web'],
   ],
-  slides: [['wait', 500], ['shot', `${tag}-slides-web`]],
+  slides: [
+    ['wait', 500], ['shot', `${tag}-slides-web`],
+    ['click', 22, 18], ['wait', 2500], ['click', 73, 612], ['wait', 2500], ['click', 638, 262], ['wait', 3000], ['shot', `${tag}-slides-web-about`],
+    ['key', 'Escape'], ['wait', 1000], ['click', 26, 62], ['wait', 2500], ['click', 668, 343], ['click', 668, 343], ['wait', 1000], ['key', 'Control+A'], ['insert'], ['wait', 4000], ['shot', 'font-slides-web'],
+  ],
 };
 if (process.env.STEPS_FILE) STEPS[d] = JSON.parse(fs.readFileSync(process.env.STEPS_FILE, 'utf8'));
 

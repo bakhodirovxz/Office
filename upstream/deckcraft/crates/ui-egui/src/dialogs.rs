@@ -30,6 +30,10 @@ impl Dialog {
 }
 
 fn title(id: &str) -> &'static str {
+    crate::office_overlay::rebrand(upstream_title(id))
+}
+
+fn upstream_title(id: &str) -> &'static str {
     match id {
         "table" => "Insert Table",
         "slideSize" => "Slide Size",
@@ -465,7 +469,14 @@ fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         check(ui, d, "Captions under pictures", "captions", false);
         check(ui, d, "ALL pictures black and white", "grayscale", false);
         ui.label("Album theme");
-        album_choice(ui, d, "album_theme", "theme", "DeckCraft", &ALBUM_THEMES.iter().map(|n| (*n, *n)).collect::<Vec<_>>());
+        album_choice(
+            ui,
+            d,
+            "album_theme",
+            "theme",
+            "DeckCraft",
+            &ALBUM_THEMES.iter().map(|n| (*n, crate::office_overlay::rebrand(n))).collect::<Vec<_>>(),
+        );
     });
     let captions = d.fields.get("captions").is_some_and(|v| v == "1");
     let grayscale = d.fields.get("grayscale").is_some_and(|v| v == "1");
@@ -2607,17 +2618,29 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
     ui.vertical_centered(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
         paint_logo(ui.painter(), r);
-        ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
+        ui.label(egui::RichText::new(crate::office_overlay::app_name()).font(theme::bold(22.0)));
         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
         ui.add_space(6.0);
         ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
         ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
+        if !crate::office_overlay::attribution().is_empty() {
+            ui.label(crate::office_overlay::attribution());
+        }
         ui.add_space(6.0);
-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        if crate::office_overlay::COMMUNITY {
+            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+        }
+        if crate::office_overlay::UPSTREAM_LINKS {
+            ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        }
         ui.add_space(6.0);
-        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
+        let copyright = if crate::office_overlay::ACTIVE {
+            crate::office_overlay::COPYRIGHT
+        } else {
+            "MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors"
+        };
+        ui.label(egui::RichText::new(copyright).size(11.0).color(t.text_faint));
     });
 }
 
@@ -2625,7 +2648,7 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
 /// from `[workspace.package] version` (the single source of truth, `cargo xtask version`); the
 /// release workflow sets `DECKCRAFT_BUILD_SHA` / `DECKCRAFT_BUILD_DATE` at build time.
 pub fn version_line() -> String {
-    let mut s = format!("Version {}", env!("CARGO_PKG_VERSION"));
+    let mut s = format!("Version {}", crate::office_overlay::VERSION);
     let sha = option_env!("DECKCRAFT_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
     let date = option_env!("DECKCRAFT_BUILD_DATE").filter(|s| !s.is_empty());
     match (sha, date) {
@@ -2638,6 +2661,12 @@ pub fn version_line() -> String {
 
 /// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
 pub fn paint_logo(p: &egui::Painter, r: Rect) {
+    if crate::office_overlay::paint_logo(p, r) {
+        return;
+    }
+    if crate::office_overlay::paint_logo(p, r) {
+        return;
+    }
     let orange = Color32::from_rgb(0xF2, 0x6B, 0x1D);
     let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
     let card = r.shrink(r.width() * 0.08);
@@ -3217,7 +3246,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 p["with"] = json!(d.get("with", ""));
                 let msg = match app.session.execute("text.replace", &p) {
                     Ok(v) => format!("Replaced {} occurrence(s).", v.get("replaced").and_then(Value::as_u64).unwrap_or(0)),
-                    Err(_) => format!("DeckCraft can't find “{text}”."),
+                    Err(_) => format!("{} can't find “{text}”.", crate::office_overlay::app_name()),
                 };
                 d.fields.insert("status".into(), msg);
                 d.fields.remove("cur");
@@ -3232,7 +3261,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     if find_next {
         let list = app.session.execute("text.find", &q).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
         if list.is_empty() {
-            d.fields.insert("status".into(), format!("DeckCraft can't find “{text}”."));
+            d.fields.insert("status".into(), format!("{} can't find “{text}”.", crate::office_overlay::app_name()));
             d.fields.remove("cur");
         } else {
             let n = d.get("next", "0").parse::<usize>().unwrap_or(0) % list.len();

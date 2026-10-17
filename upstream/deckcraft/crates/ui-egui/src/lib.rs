@@ -19,6 +19,7 @@ pub mod icons;
 pub mod media;
 pub mod menus;
 pub mod notes;
+pub mod office_overlay;
 pub mod opening;
 pub mod panes;
 mod preview;
@@ -191,7 +192,7 @@ fn command_for(purpose: FilePurpose, name: &str, bytes: &[u8]) -> Result<&'stati
         FilePurpose::Open => open_command(name),
         FilePurpose::Infer => infer_command(name, bytes),
     };
-    cmd.ok_or_else(|| format!("{name}: DeckCraft can't open this kind of file"))
+    cmd.ok_or_else(|| format!("{name}: {} can't open this kind of file", office_overlay::app_name()))
 }
 
 /// How long a transient status message stays visible.
@@ -744,7 +745,7 @@ impl SlideApp {
             "deckcraft" => ("deckcraft", "deckcraft", false),
             "gif" => ("gif", "gif", false),
             other => {
-                self.set_status(format!("DeckCraft can't export “{other}”"));
+                self.set_status(format!("{} can't export “{other}”", office_overlay::app_name()));
                 return false;
             }
         };
@@ -1050,6 +1051,9 @@ impl SlideApp {
             }
             "app.links" => {
                 use deckcraft_engine::links::*;
+                if !(office_overlay::COMMUNITY || office_overlay::UPSTREAM_LINKS) {
+                    return Ok(json!({}));
+                }
                 return Ok(json!({"discord": DISCORD, "website": WEBSITE, "apps": APPS, "appPage": APP_PAGE, "github": GITHUB}));
             }
             _ => return Err(format!("unknown UI command `{id}`")),
@@ -2037,6 +2041,8 @@ mod datetime_tests;
 
 #[cfg(test)]
 mod inbox_tests;
+#[cfg(test)]
+mod office_overlay_tests;
 
 #[cfg(test)]
 mod tests {

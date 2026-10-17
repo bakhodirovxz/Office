@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 19:06:52 +0500
+Subject: [PATCH] engine: do not ask wasm32 for a process id when seeding the
+ instance id
+
+std::process::id() panics on wasm32-unknown-unknown ("no pids on this platform"), so deckcraft-web
+stopped at the loading screen. The random per-process hasher state is still mixed in, as before.
+---
+ crates/engine/src/recovery.rs | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
+index 707d0aa..8149fe7 100644
+--- a/crates/engine/src/recovery.rs
++++ b/crates/engine/src/recovery.rs
+@@ -44,7 +44,12 @@ pub fn instance_id() -> u64 {
+     *ID.get_or_init(|| {
+         use std::hash::{BuildHasher, Hasher};
+         let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+-        h.write_u32(std::process::id());
++        // std::process::id() panics on wasm32-unknown-unknown ("no pids on this platform"): the web app never started.
++        #[cfg(not(target_arch = "wasm32"))]
++        let pid = std::process::id();
++        #[cfg(target_arch = "wasm32")]
++        let pid = 0;
++        h.write_u32(pid);
+         #[cfg(not(target_arch = "wasm32"))]
+         if let Ok(d) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+             h.write_u128(d.as_nanos());

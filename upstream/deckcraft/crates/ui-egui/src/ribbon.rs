@@ -75,8 +75,11 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         let has_doc = app.session.active().is_some();
         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
         crate::qat::show(app, &mut child);
-        let title =
-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "DeckCraft".into());
+        let title = app
+            .session
+            .active()
+            .map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" }))
+            .unwrap_or_else(|| crate::office_overlay::app_name().into());
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
         // Right side.
         let mut right = ui.new_child(
@@ -1475,7 +1478,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
                     paint_theme_tile(p, r, th);
                 }
             },
-            |i| names.get(i).cloned().unwrap_or_default(),
+            |i| names.get(i).map(|n| crate::office_overlay::rebrand(n).to_string()).unwrap_or_default(),
         ) && let Some(n) = names.get(i)
         {
             run(app, "design.theme", json!({"name": n}));
@@ -2113,11 +2116,13 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
             }
         }
     });
-    group(ui, |ui| {
-        if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
-            app.open_url(deckcraft_engine::links::APP_PAGE);
-        }
-    });
+    if crate::office_overlay::UPSTREAM_LINKS {
+        group(ui, |ui| {
+            if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
+                app.open_url(deckcraft_engine::links::APP_PAGE);
+            }
+        });
+    }
 }
 
 fn comment_nav(app: &mut SlideApp, ui: &mut Ui, forward: bool) {
@@ -3254,7 +3259,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Themes, "Themes", true);
         egui::Popup::menu(&r).show(|ui| {
             for th in deckcraft_model::theme::builtin_themes() {
-                if ui.button(&th.name).clicked() {
+                if ui.button(crate::office_overlay::rebrand(&th.name)).clicked() {
                     run(app, "design.theme", json!({"name": th.name}));
                 }
             }
