@@ -1,0 +1,14 @@
+# Generator input for cargo xt gen-domain (PLAN WP3)
+upstream = "deckcraft"
+
+[desktop]
+src = "deckcraft"
+bin = "slides"
+
+[web]
+src = "deckcraft-web"
+bin = "slides-web"
+
+[cli]
+src = "deckcraft-cli"
+bin = "slides-cli"

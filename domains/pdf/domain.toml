@@ -1,0 +1,14 @@
+# Generator input for cargo xt gen-domain (PLAN WP3)
+upstream = "pdfcraft"
+
+[desktop]
+src = "pdfcraft"
+bin = "pdf"
+
+[web]
+src = "pdfcraft-web"
+bin = "pdf-web"
+
+[cli]
+src = "pdfcraft-cli"
+bin = "pdf-cli"

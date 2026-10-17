@@ -1,0 +1,14 @@
+# Generator input for cargo xt gen-domain (PLAN WP3)
+upstream = "wordcraft"
+
+[desktop]
+src = "wordcraft"
+bin = "docs"
+
+[web]
+src = "wordcraft-web"
+bin = "docs-web"
+
+[cli]
+src = "wordcraft-cli"
+bin = "docs-cli"
