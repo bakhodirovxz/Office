@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 18 Oct 2026 10:00:00 +0500
+Subject: [PATCH] ui-egui: put the sans fallback before the CJK interface face so Latin and Cyrillic keep normal advances
+
+Without Inter in our craft-fonts pin, the interface stack starts with BIZ UDPGothic, which draws Latin and
+Cyrillic with CJK full-width advances: uz-Cyrl ribbon text showed absurd letter spacing. The overlay's Noto Sans
+subset (Latin, Cyrillic, no CJK) is now inserted before that face in the proportional and bold families, and stays
+last everywhere else. CJK text still falls through to the CJK face. Adds a test on the Cyrillic and Latin advances
+and adjusts the order assertion.
+---
+ crates/ui-egui/src/office_overlay.rs       | 10 ++++++++--
+ crates/ui-egui/src/office_overlay_tests.rs | 30 ++++++++++++++++++++++++++++--
+ 2 files changed, 36 insertions(+), 4 deletions(-)
+
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index b9c1f8f..db0d3ec 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -90,7 +90,10 @@ pub fn icon_png() -> Option<&'static [u8]> {
+     ICON_PNG
+ }
+ 
+-/// Append the fallback faces after every other face of every family, never first, so upstream's metrics stay.
++/// Append the fallback faces after every other face of every family so upstream's metrics stay, with one exception: the
++/// sans subset goes before the CJK interface face (BIZ UDPGothic, which the stack falls back to when Inter is not
++/// embedded), because that face draws Latin and Cyrillic with CJK full-width advances (absurd letter spacing in uz-Cyrl).
++/// CJK text still reaches the CJK face: the subset has no CJK glyphs.
+ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
+     for (key, bytes) in FALLBACK_FONTS {
+         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
+@@ -99,7 +102,10 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
+         let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
+         let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
+         if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
+-            list.push(key.into());
++            match list.iter().position(|n| !mono && n.contains("BIZ UDPGothic")) {
++                Some(at) => list.insert(at, key.into()),
++                None => list.push(key.into()),
++            }
+         }
+     }
+ }
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index b642624..a54a88a 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -82,8 +82,13 @@ fn fallback_font_covers_uzbek() {
+         }
+     }
+     for (family, stack) in &defs.families {
+-        let last = stack.last().map(String::as_str);
+-        assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
++        // Last in every family, except that the sans subset precedes the CJK interface face (Latin and Cyrillic must not
++        // be drawn with its full-width advances).
++        let at = stack.iter().position(|n| n == "office-fallback-sans" || n == "office-fallback-mono").expect("fallback present");
++        match stack.iter().position(|n| n.contains("BIZ UDPGothic")) {
++            Some(cjk) if stack[at] == "office-fallback-sans" => assert!(at < cjk, "{family:?}: {stack:?}"),
++            _ => assert_eq!(at, stack.len() - 1, "{family:?}: {stack:?}"),
++        }
+     }
+ }
+ 
+@@ -135,3 +140,24 @@ fn the_language_command_sets_and_rejects() {
+     let old: crate::UiState = serde_json::from_str("{\"tab\":\"View\"}").expect("an old ui.json without `language`");
+     assert_eq!(old.language, "auto");
+ }
++
++/// Latin and Cyrillic interface text takes its advances from the sans subset, not from the CJK face (the uz-Cyrl letter
++/// spacing bug): `Ў` and `a` are as wide as the subset says, well under a CJK full width.
++#[test]
++fn cyrillic_is_not_laid_out_in_the_cjk_face() {
++    if !o::ACTIVE {
++        return;
++    }
++    let ctx = egui::Context::default();
++    ctx.set_fonts(crate::theme::font_definitions(&[]));
++    let mut o = ctx.run_ui(Default::default(), |_| {});
++    o.textures_delta.clear();
++    ctx.fonts_mut(|f| {
++        let mut w = |s: &str| f.layout_no_wrap(s.to_string(), egui::FontId::proportional(13.0), egui::Color32::WHITE).size().x;
++        let (cyr, lat) = (w("Ўзбекистон"), w("Uzbekistan"));
++        assert!(cyr < 10.0 * 13.0 * 0.8, "Cyrillic advance too wide: {cyr}");
++        assert!(lat < 10.0 * 13.0 * 0.8, "Latin advance too wide: {lat}");
++    });
++    let mut o = ctx.run_ui(Default::default(), |_| {});
++    o.textures_delta.clear();
++}

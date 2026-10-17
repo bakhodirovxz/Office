@@ -31,9 +31,11 @@ warnings were not checked one by one. Clipping that was seen:
 2. **wordcraft web uz-Cyrl, tab row at 1100 px**: `Ишлаб чиқувчи` and `Ёрдам` fold into the `»` overflow.
 3. **Backstage side menu**: `Бошқа ном билан сақлаш` (wordcraft uz-Cyrl) and `Boshqa nom bilan saqlash` (deckcraft web uz-Latn, `Boshqa nom bila`) are cut at the menu width.
 4. **gridcraft web View tab at 1100 px**: the `Interfeys tili` combobox sits at the ribbon edge, so the draft marker is cut off.
-5. **deckcraft uz-Cyrl** (desktop and web): the interface face has no Inter at our craft-fonts pin (risk F-R2), so Cyrillic comes from BIZ UDPGothic and is drawn with wide
-   spacing. The tab row runs past the window (`Ёзиб о...`), the Account side menu is cut (`Параметрл`), and a ribbon label is cramped (`Матн қутиси`). Not fixed here (needs the Inter
-   pin or an owner decision on the face order).
+5. **deckcraft uz-Cyrl** (desktop and web): the interface face had no Inter at our craft-fonts pin (risk F-R2), so Cyrillic came from BIZ UDPGothic and was drawn with CJK full-width
+   advances (absurd letter spacing: the tab row ran past the window, `Ёзиб о...`, the Account side menu was cut, `Параметрл`). **Fixed 2026-10-18 by deckcraft patch 0112**: our Noto Sans
+   subset now comes before the CJK face in the proportional and bold families (CJK text still falls through to BIZ). Evidence: `slides-desktop-ribbon-uz-cyrl-before-fix.png` (before),
+   `slides-desktop-ribbon-uz-cyrl.png`, `slides-desktop-ribbon-uz-latn.png`, `slides-web-fixed-{cyrl,latn}-{account,deck}.png` (after, release builds): normal spacing, all ribbon tabs fit, no tofu.
+   What remains there is plain width clipping (`Boshqa nom bilan ...` in the Account side menu, the ribbon scrolling at the right edge), the same mechanism as findings 1 and 3.
 6. wordcraft uz-Cyrl style tile `Без интерв...` is elided by the tile.
 
 ## Gaps seen (draft coverage, not hooks)

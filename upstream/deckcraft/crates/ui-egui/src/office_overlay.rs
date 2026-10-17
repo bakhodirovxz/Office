@@ -90,7 +90,10 @@ pub fn icon_png() -> Option<&'static [u8]> {
     ICON_PNG
 }
 
-/// Append the fallback faces after every other face of every family, never first, so upstream's metrics stay.
+/// Append the fallback faces after every other face of every family so upstream's metrics stay, with one exception: the
+/// sans subset goes before the CJK interface face (BIZ UDPGothic, which the stack falls back to when Inter is not
+/// embedded), because that face draws Latin and Cyrillic with CJK full-width advances (absurd letter spacing in uz-Cyrl).
+/// CJK text still reaches the CJK face: the subset has no CJK glyphs.
 pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
     for (key, bytes) in FALLBACK_FONTS {
         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
@@ -99,7 +102,10 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
         let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
         let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
         if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
-            list.push(key.into());
+            match list.iter().position(|n| !mono && n.contains("BIZ UDPGothic")) {
+                Some(at) => list.insert(at, key.into()),
+                None => list.push(key.into()),
+            }
         }
     }
 }
