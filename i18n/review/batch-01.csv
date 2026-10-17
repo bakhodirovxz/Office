@@ -1,0 +1,401 @@
+﻿key,context,en,ru,uz-Latn draft,uz-Cyrl draft,status,owner comment,scope,where,pass,en_hash,glossary terms
+a96739898db5,,Cut,Вырезать,Kesib olish,Кесиб олиш,draft-unreviewed,,shared,crates/ui-egui/src/canvas.rs:1177,both,38d13bda,Cut
+3ea98687145a,,Bold,Полужирный,Qalin,Қалин,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2770,both,19e07430,Bold
+e41f299dc98c,,Copy,Копировать,Nusxalash,Нусхалаш,draft-unreviewed,,shared,crates/ui-egui/src/canvas.rs:1177,both,af74f7c5,Copy
+f37d92b738b5,,File,Файл,Fayl,Файл,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:387,both,2c3cafa4,File
+3dec31aeb534,,Font,Шрифт,Shrift,Шрифт,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2753,both,b97c4d4c,Font
+dac343dae843,,Home,Главная,Bosh sahifa,Бош саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:67,both,70f8bb9a,Home
+87f42704b831,,Left,Слева,Chap,Чап,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2963,both,8ae1c34b,Left
+f5beb53c5f2b,,Line,Линия,Chiziq,Чизиқ,draft-unreviewed,,shared,crates/ui-egui/src/panes.rs:514,both,ea967600,Line (shape)
+8769f2e59ed5,,Link,Ссылка,Havola,Ҳавола,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1251,both,d0517071,Link
+3a3a6a95ba32,,Name,Имя,Nom,Ном,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:91,both,709a2322,Name
+7b31edcbe9ff,,Next,Далее,Keyingi,Кейинги,draft-unreviewed,,shared,crates/ui-egui/src/doc_window.rs:99,both,bc981983,Next
+48e453206db3,,Open,Открыть,Ochish,Очиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:69,both,cf9b7706,Open
+19b9793bd50a,,Save,Сохранить,Saqlash,Сақлаш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:110,both,efc007a3,Save
+dad3c0ade918,,Size,Размер,Oʻlcham,Ўлчам,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:869,both,b7152342,Size
+590124b06b7e,,Sort,Сортировка,Saralash,Саралаш,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:225,both,adc4e96a,Sort
+55d4c958f84f,,Type,Тип,Tur,Тур,draft-unreviewed,,shared,crates/ui-egui/src/fillui.rs:170,both,3deb7456,Type
+c3dffb634e28,,Zoom,Масштаб,Masshtab,Масштаб,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:40,both,9b3cbed5,Zoom
+6e15c49c8a4d,,Clear,Очистить,Tozalash,Тозалаш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:3128,both,719ea396,Clear
+9a23c306b426,,Close,Закрыть,Yopish,Ёпиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:111,both,bbfa773e,Close
+d03eb428b455,,Paste,Вставить,Qoʻyish,Қўйиш,draft-unreviewed,,shared,crates/ui-egui/src/canvas.rs:1177,both,db248300,Paste
+68793aa27ebc,,Print,Печать,Chop etish,Чоп этиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1034,both,5b221e9c,Print
+05e217ad02fc,,Right,Справа,Oʻng,Ўнг,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2965,both,954daa8b,Right
+ff40259c28ed,,Table,Таблица,Jadval,Жадвал,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:241,both,0424f6e7,Table
+a111f7316f76,,Author,Автор,Muallif,Муаллиф,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:231,both,5fda23d6,Author
+fb1accde37a8,,Cancel,Отмена,Bekor qilish,Бекор қилиш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1089,both,77dfd213,Cancel
+75fcad667d97,,Center,По центру,Markaz,Марказ,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2964,both,a2391118,Center
+126d6084dd9b,,Delete,Удалить,Oʻchirish,Ўчириш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1951,both,f6fdbe48,Delete
+1ed691fb0224,,Format,Формат,Format,Формат,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:247,both,041a5dec,Format
+c9c07701da2f,,Italic,Курсив,Kursiv,Курсив,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2771,both,1616e2e5,Italic
+7a6d6d796e6c,,Comment,Комментарий,Izoh,Изоҳ,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1267,both,153d7a58,Comment
+b41884d7b057,,Justify,По ширине,Kenglik boʻyicha tekislash,Кенглик бўйича текислаш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2966,both,536d2746,Justify
+099c16924da5,,Options,Параметры,Parametrlar,Параметрлар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:112,both,6bf5da9c,Options
+89eb9570fc9b,,Replace,Заменить,Almashtirish,Алмаштириш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1661,both,a7cf7b25,Replace
+709f601c0e66,,Portrait,Книжная,Kitob yoʻnalishi,Китоб йўналиши,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1058,both,92b6b1bf,Portrait
+aa8dfb9eb88c,,Previous,Назад,Oldingi,Олдинги,draft-unreviewed,,shared,crates/ui-egui/src/doc_window.rs:102,both,50f94286,Previous
+94e239481b63,,Landscape,Альбомная,Albom yoʻnalishi,Албом йўналиши,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1059,both,7dc4bea6,Landscape
+b65f3fa3ba5a,,New,Создать,Yangi,Янги,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:68,both,6403f2b7,New
+51292c7540ff,,Tab,Tab,Tab,Tab,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:1960,both,fe06eb64,
+308fbe9f6060,,Auto,Авто,Avto,Авто,draft-unreviewed,,shared,crates/ui-egui/src/i18n.rs:408,both,c614ba7c,Auto
+c225884dd004,,Back,Назад,Orqaga,Орқага,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:336,both,b52b36b7,Back
+f8a8e05d8683,,Date,Дата,Sana,Сана,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3283,both,eb9a4bc1,Date
+613cc9c1a598,,Find,Найти,Topish,Топиш,draft-unreviewed,,shared,crates/ui-egui/src/qat.rs:52,both,df251b06,Find
+7416c23aa31d,,Help,Справка,Yordam,Ёрдам,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:292,both,c47ae153,Help
+11f1a8dd42a1,,Show,Показать,Koʻrsatish,Кўрсатиш,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:218,both,d97d1ee3,Show
+5b3d84ac378c,,Undo,Отменить,Qaytarish,Қайтариш,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:181,both,39fc7212,Undo
+d069045fda99,,Align,Выровнять,Tekislash,Текислаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1123,both,c83b0ec2,Align
+db5118791846,,Apply,Применить,Qoʻllash,Қўллаш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1088,both,cfea419c,Apply
+65ad12205300,,Chart,Диаграмма,Diagramma,Диаграмма,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:238,both,66c77347,Chart
+f198f5fed0a8,,Color,Цвет,Rang,Ранг,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2783,both,1d0c8304,Color
+a7a8db7df0e5,,Footer,Нижний колонтитул,Quyi kolontitul,Қуйи колонтитул,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1080,both,26c01e70,Footer
+e32a547cad15,,Header,Верхний колонтитул,Yuqori kolontitul,Юқори колонтитул,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3282,both,31341c6f,Header
+4beef4450795,,Rotate,Повернуть,Burish,Буриш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1124,both,87b85dca,Rotate
+5864d9c069e7,,Select,Выделить,Tanlash,Танлаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1423,both,85982229,Select
+5da02b036754,,Margins,Поля,Sahifa chetlari,Саҳифа четлари,draft-unreviewed,,shared,crates/ui-egui/src/i18n.rs:298,both,d01f8dc1,Margins
+eeda16df29ad,,Save As,Сохранить как,Boshqa nom bilan saqlash,Бошқа ном билан сақлаш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1313,both,ae3a122d,Save As; Save
+e24d8b472d2e,,Version,Версия,Versiya,Версия,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:306,both,2da600bf,Version
+d85667aef9df,,Language,Язык,Til,Тил,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:64,both,89b86ab0,Language
+82ddc6cf6fb6,,Password,Пароль,Parol,Парол,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:261,both,8be3c943,Password
+e4502eada94b,,Spelling,Орфография,Imlo,Имло,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:60,both,8a21b1ee,Spelling
+c7d2106a6c66,,Subscript,Подстрочный,Quyi indeks,Қуйи индекс,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2791,both,b1bd6eaa,Subscript
+29f54ad30a27,,Align Left,По левому краю,Chapga tekislash,Чапга текислаш,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:255,both,9fb06a28,Align; Left
+5d77245b1d3b,,Properties,Свойства,Xossalar,Хоссалар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:859,both,bc6c88db,Properties
+6b3eb29ff573,,Align Right,По правому краю,Oʻngga tekislash,Ўнгга текислаш,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:257,both,2e324ba2,Right; Align
+da969764ac3a,,Superscript,Надстрочный,Yuqori indeks,Юқори индекс,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2791,both,cea3f59b,Superscript
+0a94e78e56e0,,No,Нет,Yoʻq,Йўқ,draft-unreviewed,,shared,crates/ui-egui/src/bulk_fields.rs:241,both,816c52fd,No
+4688b5a4d5e0,,Yes,Да,Ha,Ҳа,draft-unreviewed,,shared,crates/ui-egui/src/bulk_fields.rs:241,both,5397e058,Yes
+cbfbe16a917d,,Crop,Обрезать,Qirqish,Қирқиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2718,both,c5db3d91,Crop
+ec78b0fe2024,,Page,Страница,Sahifa,Саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/comments_panel.rs:538,both,fb06270f,Page
+e1cfcfcd5682,,Field,Поле,Maydon,Майдон,draft-unreviewed,,shared,crates/ui-egui/src/sign_ui.rs:1220,both,c326a466,Field
+92003eb0390d,,Share,Поделиться,Ulashish,Улашиш,draft-unreviewed,,shared,crates/ui-egui/src/i18n.rs:415,both,09ca55ca,Share
+2389c083beff,,Style,Стиль,Uslub,Услуб,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:1024,both,99a0efc6,Style
+c0b1d4b064da,,Tools,Инструменты,Vositalar,Воситалар,draft-unreviewed,,shared,crates/ui-egui/src/docking.rs:29,both,4fa8cc86,Tools
+8cfccc5e08e4,,Change,Изменить,Oʻzgartirish,Ўзгартириш,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:2653,both,64fbd995,Change
+c331529af037,,Design,Дизайн,Dizayn,Дизайн,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:154,both,59b03536,Design
+7e7f8a2c3ece,,Layout,Макет,Maket,Макет,draft-unreviewed,,shared,crates/ui-egui/src/canvas.rs:1272,both,972ad8d8,Layout
+1e52a040024c,,Print…,Печать…,Chop etish…,Чоп этиш…,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:173,both,800a8aad,Print
+838c8c038fb3,,Search,Поиск,Qidirish,Қидириш,draft-unreviewed,,shared,crates/ui-egui/src/chrome.rs:607,both,bce06414,Search
+ebacc60c6800,,Account,Учётная запись,Hisob,Ҳисоб,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:74,both,85dfa32c,Account
+d0f6e73d7ce6,,Arrange,Упорядочить,Tartiblash,Тартиблаш,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:265,both,cfdd099c,
+00913cc2fcc7,,WordArt,WordArt,WordArt,WordArt,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:233,both,136aa22c,
+b812a014da86,,Equation,Уравнение,Tenglama,Тенглама,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:58,both,295e0d35,Equation
+f2c5d25f5884,,Paragraph,Абзац,Xatboshi,Хатбоши,draft-unreviewed,,shared,crates/ui-egui/src/dialogs.rs:47,both,05058e0b,Paragraph
+7ec8210a8982,,Orientation,Ориентация,Yoʻnalish,Йўналиш,draft-unreviewed,,shared,crates/ui-egui/src/i18n.rs:219,both,86e4e387,Orientation
+a076c02a4824,,Right-to-Left Text Direction,Направление текста справа налево,Oʻngdan chapga matn yoʻnalishi,Ўнгдан чапга матн йўналиши,draft-unreviewed,,shared,crates/ui-egui/src/menus.rs:261,both,90179b45,Right; Text; Left
+21c064e7f700,,OK,,OK,OK,draft-unreviewed,,deckcraft,crates/ui-egui/src/dialogs.rs:1067,both,9ce3bd42,OK
+f6fb87a9e8ee,,OK,OK,OK,OK,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:375,both,9ce3bd42,OK
+e40a9c4cdca7,,OK,ОК,OK,OK,draft-unreviewed,,wordcraft,crates/ui-egui/src/colors.rs:516,both,9ce3bd42,OK
+28b27c7df0ec,,Dark,,Qorongʻi,Қоронғи,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1342,both,ae1ef014,Dark
+1be4bdda19f5,,Dark,Тёмная,Qorongʻi,Қоронғи,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:938,both,ae1ef014,Dark
+aaf82dac9960,,Dark,Тёмная,Qorongʻi,Қоронғи,draft-unreviewed,,wordcraft,crates/ui-egui/src/theme.rs:44,both,ae1ef014,Dark
+9f8560a827c1,,Draw,,Chizish,Чизиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/ribbon.rs:154,both,bfa50c7a,Draw
+06816f1c53a5,,Draw,Рисование,Chizish,Чизиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:445,both,bfa50c7a,Draw
+809c170d5fc9,,Draw,Рисование,Chizish,Чизиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:74,both,bfa50c7a,Draw
+31eb4e291566,,Edit,Изменение,Tahrirlash,Таҳрирлаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:456,both,5301648d,Edit
+bafb655f6fc7,,Edit,Редактирование,Tahrirlash,Таҳрирлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:503,both,5301648d,Edit
+8a3ea5ca9e53,,Fill,Заполнить,Toʻldirish,Тўлдириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:1535,both,7adb6736,Fill
+73fc385ac2cc,,Fill,Заполнить,Toʻldirish,Тўлдириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:106,both,7adb6736,Fill
+1819dc76c490,,Fill,Заливка,Toʻldirish,Тўлдириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_para.rs:559,both,7adb6736,Fill
+3f4d116172aa,,More,Ещё,Yana,Яна,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments_panel.rs:303,both,4bab2d8f,More
+0a83691d1978,,Redo,,Qayta bajarish,Қайта бажариш,draft-unreviewed,,deckcraft,crates/ui-egui/src/menus.rs:182,both,471b94d4,Redo
+41619415ae1c,,Redo,Повторить,Qayta bajarish,Қайта бажариш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/combine_ui.rs:786,both,471b94d4,Redo
+96b3ad16e3d5,,Redo,Вернуть,Qayta bajarish,Қайта бажариш,draft-unreviewed,,wordcraft,crates/ui-egui/src/chrome.rs:48,both,471b94d4,Redo
+7c3e1d4805b3,Options,Save,Сохранение,Saqlash,Сақлаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:178,both,efc007a3,Save
+f5d1d5a19919,,Text,Текстовый,Matn,Матн,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:661,both,c3328c39,Text
+98819956cfb5,,Text,Текст,Matn,Матн,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:339,both,c3328c39,Text
+c23c8dfd5dc5,,Text,Текст,Matn,Матн,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_para.rs:547,both,c3328c39,Text
+3b4825f3dec3,,View,,Koʻrinish,Кўриниш,draft-unreviewed,,deckcraft,crates/ui-egui/src/menus.rs:199,both,69bd4ef9,View
+39149146b169,Sheet Options,View,На экране,Koʻrinish,Кўриниш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:450,both,69bd4ef9,View
+b2ea22c19a56,,View,Вид,Koʻrinish,Кўриниш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:450,both,69bd4ef9,View
+9e64180f6da3,,View,Просмотр,Koʻrinish,Кўриниш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:543,both,69bd4ef9,View
+54eee87d1640,,View,Вид,Koʻrinish,Кўриниш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:80,both,69bd4ef9,View
+44871b86e319,,Light,,Yorugʻ,Ёруғ,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1342,both,a36ef8ab,Light
+9bf32e199787,,Light,Светлая,Yorugʻ,Ёруғ,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:939,both,a36ef8ab,Light
+e9e9e018f919,,Light,Светлая,Yorugʻ,Ёруғ,draft-unreviewed,,wordcraft,crates/ui-egui/src/theme.rs:43,both,a36ef8ab,Light
+bec1e80f6955,,Merge,Объединить,Birlashtirish,Бирлаштириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2634,both,ea8f0d02,Merge
+3e0add0e7e4f,,Title,,Nomi,Номи,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:225,both,768e0c1c,Title
+dc7ca51af082,,Title,Название,Nomi,Номи,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:93,both,768e0c1c,Title
+d478eca20bc6,,Title,Заголовок,Nomi,Номи,draft-unreviewed,,wordcraft,crates/ui-egui/src/backstage.rs:408,both,768e0c1c,Title
+526345b4d50c,,Browse,,Koʻrib chiqish,Кўриб чиқиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:774,both,2f3b5c55,Browse
+4707815b4fe1,,Custom,Пользовательский,Maxsus,Махсус,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:853,both,081ae3fd,Custom
+cc9544153b0f,,Custom,Другая,Maxsus,Махсус,draft-unreviewed,,wordcraft,crates/ui-egui/src/colors.rs:489,both,081ae3fd,Custom
+01a1f86f6b7a,,Export,,Eksport qilish,Экспорт қилиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:73,both,f3e4fadb,Export
+da3c9068e9db,,Export,Экспорт,Eksport qilish,Экспорт қилиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:72,both,f3e4fadb,Export
+8d13cf56f46f,,Export,Экспорт,Eksport qilish,Экспорт қилиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/backstage.rs:18,both,f3e4fadb,Export
+240a120c641a,,Insert,,Kiritish,Киритиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/dialogs.rs:1033,both,95802daa,Insert
+c470bf9697d6,,Insert,Вставить,Kiritish,Киритиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:105,both,95802daa,Insert
+68512b133ba2,,Insert,Вставить,Kiritish,Киритиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:118,both,95802daa,Insert
+6cc7d90af0ce,,Insert,Вставка,Kiritish,Киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2924,both,95802daa,Insert
+88580c725704,,Number,Числовой,Son,Сон,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:627,both,b7baa1d4,Number
+c69bd1dc03a3,,Number,Номер,Raqam,Рақам,draft-unreviewed,,wordcraft,crates/ui-egui/src/equation_tab.rs:348,both,b7baa1d4,
+bfe5b8ca3df9,,Recent,,Soʻnggi,Сўнгги,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:721,both,76eec760,Recent
+6c6d553c6fa3,,Recent,Последние,Soʻnggi,Сўнгги,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:541,both,76eec760,Recent
+7ab3c57250fd,,Recent,Последние,Soʻnggi,Сўнгги,draft-unreviewed,,wordcraft,crates/ui-egui/src/backstage.rs:344,both,76eec760,Recent
+0b64787ccfa1,,Review,,Tekshirish,Текшириш,draft-unreviewed,,deckcraft,crates/ui-egui/src/ribbon.rs:154,both,e29a79fe,Review
+c193c7f41f2f,,Review,Рецензирование,Tekshirish,Текшириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:449,both,e29a79fe,Review
+b62c56928c82,,Review,Проверка,Tekshirish,Текшириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:247,both,e29a79fe,Review
+d0c6055928ba,,Review,Рецензирование,Tekshirish,Текшириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:79,both,e29a79fe,Review
+cdec102564b3,,Window,Окно,Oyna,Ойна,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1931,both,41dfc0a6,Window
+f588f9e4dc29,,Formula,Формула,Formula,Формула,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_layout.rs:57,both,720f58fb,Formula
+bd5a258e382c,,Location,,Joylashuv,Жойлашув,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:891,both,d219c681,Location
+812eb7473180,,Location,Расположение,Joylashuv,Жойлашув,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:630,both,d219c681,Location
+d53682b6547c,,Location,Местоположение,Joylashuv,Жойлашув,draft-unreviewed,,pdfcraft,crates/ui-egui/src/dialogs.rs:342,both,d219c681,Location
+724a5aeaf01f,,Location,Расположение,Joylashuv,Жойлашув,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs.rs:3207,both,d219c681,Location
+0723f6d70fe2,,Signature,Подпись,Imzo,Имзо,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:114,both,2f32be1d,Signature
+c69c015951f6,,Underline,Подчёркивание,Tagiga chizish,Тагига чизиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:198,both,39773aa3,Underline
+d75574368144,,Underline,Подчеркивание,Tagiga chizish,Тагига чизиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:3817,both,39773aa3,Underline
+d32e73e3fbbb,,Underline,Подчёркнутый,Tagiga chizilgan,Тагига чизилган,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs.rs:1610,both,39773aa3,
+a5aa479b88a0,,Select All,Выделить всё,Hammasini tanlash,Ҳаммасини танлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:991,both,86a599ef,Select; Select All
+e925b00a94ae,,Slide Show,,Slaydlar namoyishi,Слайдлар намойиши,draft-unreviewed,,deckcraft,crates/ui-egui/src/lib.rs:382,both,e7fead58,Slide; Slide Show
+98c56aead4f4,Page Layout,Orientation,Ориентация,Yoʻnalish,Йўналиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:219,both,86e4e387,Orientation
+5686a1e6dbe5,,Accessibility,Доступность,Maxsus imkoniyatlar,Махсус имкониятлар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:472,both,d660049b,Accessibility
+b76413ed0e29,,Accessibility,Специальные возможности,Maxsus imkoniyatlar,Махсус имкониятлар,draft-unreviewed,,wordcraft,crates/ui-egui/src/a11y_pane.rs:13,both,d660049b,Accessibility
+f8021ddd9b49,,Strikethrough,Зачёркивание,Ustidan chizish,Устидан чизиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/dialogs.rs:1638,both,a93b9a68,Strikethrough
+1da491799005,,Strikethrough,Зачеркивание,Ustidan chizish,Устидан чизиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:3818,both,a93b9a68,Strikethrough
+cd17ea64690c,,Strikethrough,Зачёркнутый,Ustidan chizilgan,Устидан чизилган,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs.rs:1611,both,a93b9a68,
+1e0913722f51,,Up,Вверх,Yuqoriga,Юқорига,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:1963,both,2038bdec,
+a16c3b44c1cf,,Eraser,Ластик,Oʻchirgich,Ўчиргич,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1427,both,a5742851,
+1444758db6dd,,Company,Организация,Tashkilot,Ташкилот,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:229,both,7a199499,
+97bc29200785,,Subject,Тема,Mavzu,Мавзу,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:226,both,8d183dbd,
+84563de5d5b8,,Comments,Комментарии,Izohlar,Изоҳлар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:230,both,fce06e20,
+a33460a56451,,Dot,Точка,Nuqta,Нуқта,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2857,both,46856bf7,
+2f499fde6b6d,,Down,Вниз,Pastga,Пастга,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:1964,both,bf93e5ce,
+bcf43dc027b6,,Info,Сведения,Maʼlumot,Маълумот,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:70,both,4b631f69,
+0a1e59eb7d3b,,Wide,Широкие,Keng,Кенг,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3026,both,9ec4d86f,
+5aec058d423c,,Find…,Найти…,Topish…,Топиш…,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:412,both,6383e55e,Find
+8ca5e7d53aae,,Fonts,Шрифты,Shriftlar,Шрифтлар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1538,both,ffe688a5,
+9a8a9224a51d,,Icons,Значки,Piktogrammalar,Пиктограммалар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1231,both,edb8f6c1,
+f9471670f0a5,,Open…,Открыть…,Ochish…,Очиш…,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:398,both,22b676fb,Open
+4f1f2b14d67f,,Ruler,Линейка,Chizgʻich,Чизғич,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:366,both,c2281cec,
+69bbe856cb8a,,Themes,Темы,Temalar,Темалар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3254,both,94d5186b,
+0045504e39f8,,Borders,Границы,Chegaralar,Чегаралар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2826,both,685f23bc,
+0bf02c80a135,,Browse…,Обзор…,Koʻrib chiqish…,Кўриб чиқиш…,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:557,both,c1b20f52,Browse
+812846507344,,Compare,Сравнить,Solishtirish,Солиштириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2154,both,8d105cf4,
+d039cf77464d,,Zoom In,Увеличить,Yaqinlashtirish,Яқинлаштириш,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:370,both,e59ac86a,
+44c60a98d78b,,Download,Скачать,Yuklab olish,Юклаб олиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:942,both,a479c9c3,
+a64a24d5ff5a,,Keywords,Ключевые слова,Kalit soʻzlar,Калит сўзлар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:97,both,f530db58,
+1177b400d0ce,,Text\nBox,Текстовое\nполе,Matn\nqutisi,Матн\nқутиси,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1270,both,c5a308fc,Text
+e4f95f55f699,,Zoom Out,Уменьшить,Uzoqlashtirish,Узоқлаштириш,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:371,both,87af1da3,
+4f2117a6d837,,Dark Mode,Тёмный режим,Qorongʻi rejim,Қоронғи режим,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:379,both,e7f8b9dc,Dark
+9b5e105d56ff,,Gridlines,Сетка,Katakcha chiziqlari,Катакча чизиқлари,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:367,both,2ba2d05a,
+22f9b253b3ec,,Translate,Перевести,Tarjima qilish,Таржима қилиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2149,both,2be17aa1,
+1412abd9c526,,Font Color,Цвет шрифта,Shrift rangi,Шрифт ранги,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:566,both,232b9a95,Font; Color
+dba3258cf14e,,Highlighter,Маркер,Marker,Маркер,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1437,both,8cb3f79b,
+84d1c2f2bb83,,New\nComment,Новый\nкомментарий,Yangi\nizoh,Янги\nизоҳ,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2167,both,9c59c88d,New; Comment
+ee489fc7bc6c,,Page Number,Номер страницы,Sahifa raqami,Саҳифа рақами,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3283,both,579d4eca,Page
+5f595358e6e9,,Chart Design,Конструктор диаграмм,Diagramma dizayni,Диаграмма дизайни,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:146,both,905d60f2,Design; Chart
+9ce43ba0c3a5,,Not saved yet,Ещё не сохранено,Hali saqlanmagan,Ҳали сақланмаган,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:817,both,0a1dc843,
+91096eff00b0,,Show\nComments,Показать\nкомментарии,Izohlarni\nkoʻrsatish,Изоҳларни\nкўрсатиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2174,both,512e5610,Show
+44f24937792b,,Paste Special…,Специальная вставка…,Maxsus qoʻyish…,Махсус қўйиш…,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:410,both,34899f8c,Paste
+82ab9b8a95c5,,Paste Formatting,Вставить форматирование,Formatni qoʻyish,Форматни қўйиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:351,both,39918f25,Paste
+70724bc7f76c,,Decrease Font Size,Уменьшить размер шрифта,Shrift oʻlchamini kamaytirish,Шрифт ўлчамини камайтириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:521,both,47b5208f,Font; Size
+fcf80e69fc99,,Increase Font Size,Увеличить размер шрифта,Shrift oʻlchamini oshirish,Шрифт ўлчамини ошириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:520,both,480732ee,Font; Size
+b473286892d8,,Interface language,Язык интерфейса,Interfeys tili,Интерфейс тили,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:949,both,9407e9ca,Language
+4aae82dafd0a,,Tags,Теги,Teglar,Теглар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:227,both,848eed0f,
+87e5495e18c0,,Enter,Ввод,Enter,Enter,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:1956,both,2b9eceb7,
+d879ced7bd55,,Notes,Заметки,Qaydlar,Қайдлар,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:365,both,70440046,
+7329653d16ec,,Pages,Страницы,Sahifalar,Саҳифалар,draft-unreviewed,,shared,crates/ui-egui/src/chrome.rs:542,both,600584c2,
+17de2afe3b27,,Reset,Сбросить,Asliga qaytarish,Аслига қайтариш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:452,both,44c57abd,
+c632a85df841,,Colors,Цвета,Ranglar,Ранглар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1511,both,88d5e4ca,
+9e43cbfe4440,,Demote,Понизить уровень,Darajani pasaytirish,Даражани пасайтириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3093,both,4946367f,
+a9c73f4db83d,,Fields,Поля,Maydonlar,Майдонлар,draft-unreviewed,,shared,crates/ui-egui/src/chrome.rs:601,both,e8b68527,
+83da5215e482,,Letter,Письмо,Letter,Letter,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1089,both,ee140506,
+5709ef5b0049,,Pencil,Карандаш,Qalam,Қалам,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1436,both,5136ae1b,
+c5db8b68c134,,Revert,Восстановить,Saqlangan holatga qaytarish,Сақланган ҳолатга қайтариш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:853,both,272607a7,
+262e77897cd9,,Layouts,Макеты,Maketlar,Макетлар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3106,both,28e6f54e,
+c9a218aa8c7c,,Promote,Повысить уровень,Darajani oshirish,Даражани ошириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3090,both,61c57736,
+9754d4102ac7,,Shading,Заливка,Soyalash,Соялаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2812,both,86cddc7d,
+bd888a789fbe,,AutoSave,Автосохранение,Avtosaqlash,Автосақлаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:55,both,1574d21a,
+bf22925e78bc,,Settings,Настройки,Sozlamalar,Созламалар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1049,both,c7f73bb5,
+7abec7dd0013,,SmartArt,SmartArt,SmartArt,SmartArt,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1233,both,7e7cc2b1,
+ee52661be311,,Add Shape,Добавить фигуру,Shakl qoʻshish,Шакл қўшиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3075,both,f847c00b,Shape; Add
+cccd7aca8cae,,Backspace,Backspace,Backspace,Backspace,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:1958,both,88d130a6,
+01234d31bac2,,Next page,Следующая страница,Keyingi sahifa,Кейинги саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:775,both,4bfc194b,Next; Page
+70fe9d4d2ea7,,Next Page,Следующая страница,Keyingi sahifa,Кейинги саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1222,both,5e92f5f1,Next; Page
+7b919326ec98,,Templates,Шаблоны,Shablonlar,Шаблонлар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:710,both,f25b700e,
+677b49a7349e,,Thesaurus,Тезаурус,Sinonimlar lugʻati,Синонимлар луғати,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:376,both,342830f0,
+d8ff7a14d093,,Transform,Трансформация,Transformatsiya,Трансформация,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2281,both,dea51bb1,
+b986e4d412e3,,{n} h ago,{n} ч назад,{n} soat oldin,{n} соат олдин,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:490,both,9e8bf7e2,
+a27190239145,,Align Text,Выравнивание текста,Matnni tekislash,Матнни текислаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:793,both,58dd4d35,Align; Text
+125953cbfc03,,Animations,Анимация,Animatsiyalar,Анимациялар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:154,both,c77dcded,
+fd85e5bc68ea,,Appearance,Внешний вид,Tashqi koʻrinish,Ташқи кўриниш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1340,both,41def7a0,
+087147424645,,Categories,Категории,Turkumlar,Туркумлар,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:228,both,6ccb6007,
+18c21f8c3309,,Create PDF,Создать PDF,PDF yaratish,PDF яратиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1271,both,a18c88be,
+f2b22e6f5b01,,Draw Table,Нарисовать таблицу,Jadval chizish,Жадвал чизиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1212,both,53eca848,Draw; Table
+84cbf360518e,,New Window,Новое окно,Yangi oyna,Янги ойна,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:381,both,cc9745bc,New; Window
+b8ddd39e3d1c,,Shape Fill,Заливка фигуры,Shaklni toʻldirish,Шаклни тўлдириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2417,both,e5ac0b74,Fill; Shape
+9e75d258ab35,,Change Case,Регистр,Harf registrini oʻzgartirish,Ҳарф регистрини ўзгартириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:542,both,ed69d43a,Change
+04f6121bc92b,,Corrections,Коррекция,Tuzatishlar,Тузатишлар,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2577,both,ccc70f2d,
+644de63b7bf5,,Date &\nTime,Дата и\nвремя,Sana va\nvaqt,Сана ва\nвақт,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1280,both,1dfb4e12,Date
+366e06a228e5,,Delete Rows,Удалить строки,Qatorlarni oʻchirish,Қаторларни ўчириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2994,both,445fefe8,Delete
+6e11c7e37e44,,Description,Описание,Tavsif,Тавсиф,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:98,both,55f8ebc8,
+cf3809de1b72,,Format\nPane,Область\nформатирования,Format\npaneli,Формат\nпанели,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2484,both,046cfc5c,Format
+f18893ea6565,,Page Setup…,Параметры страницы…,Sahifa parametrlari…,Саҳифа параметрлари…,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1604,both,1872b721,Page
+9ef48755cecb,,PDF (*.pdf),Файл PDF (*.pdf),PDF fayl (*.pdf),PDF файл (*.pdf),draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:217,both,4d2ed360,
+bcd893ba4ceb,,{n} min ago,{n} мин назад,{n} daqiqa oldin,{n} дақиқа олдин,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:488,both,fb5f8807,
+562102e9fc50,,Add comments,Добавить комментарии,Izohlar qoʻshish,Изоҳлар қўшиш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:230,both,85931104,Add
+7aad051fcadd,,Cell Margins,Поля ячеек,Katak chetlari,Катак четлари,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3025,both,5e5ca017,Cell
+57f0f80d0fda,,Change Shape,Изменить фигуру,Shaklni oʻzgartirish,Шаклни ўзгартириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2390,both,6571b555,Change; Shape
+93a295051dd8,,Delete Table,Удалить таблицу,Jadvalni oʻchirish,Жадвални ўчириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2995,both,8eeaecbf,Delete; Table
+a2597b362df4,,Line Spacing,Межстрочный интервал,Qatorlar oraligʻi,Қаторлар оралиғи,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:749,both,3f944a87,
+770860d8fb73,,Preferences…,Настройки…,Afzalliklar…,Афзалликлар…,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:397,both,65db2306,Preferences
+ef0d86e7cca0,,Shape Format,Формат фигуры,Shakl formati,Шакл формати,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:133,both,55166e85,Format; Shape
+127696f8bde7,,Text Effects,Текстовые эффекты,Matn effektlari,Матн эффектлари,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2467,both,b276518f,Text
+187140e1685d,,Text Outline,Контур текста,Matn konturi,Матн контури,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2459,both,6c6e91c3,Text
+c17577989372,,Change Colors,Изменить цвета,Ranglarni oʻzgartirish,Рангларни ўзгартириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3122,both,daa76b24,Change
+ab21a44778f3,,Display theme,Тема оформления,Koʻrinish temasi,Кўриниш темаси,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:934,both,e1a24b0f,Theme
+ccba87eb8324,,Previous page,Предыдущая страница,Oldingi sahifa,Олдинги саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:767,both,81f54719,Page; Previous
+f88824370dd3,,Previous Page,Предыдущая страница,Oldingi sahifa,Олдинги саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1217,both,27e16676,Page; Previous
+777e2d84550a,,Shape Effects,Эффекты фигуры,Shakl effektlari,Шакл эффектлари,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2439,both,703a55b7,Shape
+4a2a29571e7d,,Shape Outline,Контур фигуры,Shakl konturi,Шакл контури,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2435,both,5370f43e,Shape
+a65b97083677,,Change Picture,Заменить рисунок,Rasmni almashtirish,Расмни алмаштириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2652,both,2f5a2045,Picture
+eb2f6fea7842,,Delete Columns,Удалить столбцы,Ustunlarni oʻchirish,Устунларни ўчириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2993,both,157a82d9,Delete
+5b9d0c9e48bc,,Picture Border,Граница рисунка,Rasm chegarasi,Расм чегараси,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2677,both,499befa1,Picture; Border
+02439010e50b,,Picture Format,Формат рисунка,Rasm formati,Расм формати,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:136,both,dc33b511,Picture; Format
+e5180390ac7d,,Text Direction,Направление текста,Matn yoʻnalishi,Матн йўналиши,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:780,both,0526e3a6,Text
+84d0571b2608,,Convert to Text,Преобразовать в текст,Matnga aylantirish,Матнга айлантириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3113,both,c3d98a5f,Text
+07c5c0f7cf4d,,Distribute Rows,Выровнять высоту строк,Qatorlarni tenglashtirish,Қаторларни тенглаштириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3008,both,26d6f211,
+eb513a35a350,,Header &\nFooter,Верхний и\nнижний колонтитулы,Yuqori va\nquyi kolontitul,Юқори ва\nқуйи колонтитул,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:1271,both,b0d41000,Footer
+80cf56dbb8dd,,SmartArt Design,Конструктор SmartArt,SmartArt dizayni,SmartArt дизайни,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:143,both,feeb6291,Design
+3b879047db7a,,SmartArt Styles,Стили SmartArt,SmartArt uslublari,SmartArt услублари,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3134,both,898e2681,
+27c4331f7da0,,Change File Type,Изменить тип файла,Fayl turini oʻzgartirish,Файл турини ўзгартириш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:1250,both,d946c366,File; Type; Change
+b7dbe4aee3ab,,Add Chart Element,Добавить элемент диаграммы,Diagramma elementini qoʻshish,Диаграмма элементини қўшиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2333,both,4945d59e,Add; Chart
+fbab20e95cb1,,Character Spacing,Межзнаковый интервал,Belgilar oraligʻi,Белгилар оралиғи,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:534,both,64fa8f89,Character
+0e1fa0cd299c,,Compress Pictures,Сжать рисунки,Rasmlarni siqish,Расмларни сиқиш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2654,both,58eb57f5,
+f4682c145c63,,Convert to Shapes,Преобразовать в фигуры,Shakllarga aylantirish,Шаклларга айлантириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3116,both,d959e15e,
+b22470ecf90b,,Remove Background,Удалить фон,Fonni olib tashlash,Фонни олиб ташлаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:2571,both,abe7f989,Remove
+07171e36b3d8,,Distribute Columns,Выровнять ширину столбцов,Ustunlarni tenglashtirish,Устунларни тенглаштириш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:3009,both,8e930689,
+1e19d6881201,,Remove from Recent,Убрать из недавних,Soʻnggilardan olib tashlash,Сўнггилардан олиб ташлаш,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:623,both,32b5b990,Recent; Remove
+88c26221320f,,Clear All Formatting,Очистить всё форматирование,Barcha formatlashni tozalash,Барча форматлашни тозалаш,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:522,both,bce0bf79,Clear
+ba25e96e4e6a,,Quick Access Toolbar,Панель быстрого доступа,Tezkor kirish paneli,Тезкор кириш панели,draft-unreviewed,,shared,crates/ui-egui/src/lib.rs:411,both,a2b562f0,
+eca562efabd8,,Text Highlight Color,Цвет выделения текста,Matnni ajratish rangi,Матнни ажратиш ранги,draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:557,both,00e58848,Color; Text
+7d97a8a98fc6,,Page {page} of {pages},Страница {page} из {pages},{pages} sahifadan {page}-sahifa,{pages} саҳифадан {page}-саҳифа,draft-unreviewed,,shared,crates/ui-egui/src/backstage.rs:771,both,7f99aeb5,Page
+8741a1692320,,Format Painter (double-click to keep it on),"Формат по образцу (дважды щёлкните, чтобы закрепить)",Format namunasi (doimiy yoqish uchun ikki marta bosing),Формат намунаси (доимий ёқиш учун икки марта босинг),draft-unreviewed,,shared,crates/ui-egui/src/ribbon.rs:361,both,4f8bc66f,Format
+9fd986f71b6d,,Focus,Фокус,Fokus,Фокус,draft-unreviewed,,wordcraft,crates/ui-egui/src/chrome.rs:535,both,fe7f55b8,
+fdce5e401832,,Links,Ссылки,Havolalar,Ҳаволалар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1066,both,014bcd65,
+496192db82af,,Point,Указание,Koʻrsatish,Кўрсатиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:457,both,f79a2842,
+fd0c343a3eee,,Views,Режимы просмотра,Koʻrinish rejimlari,Кўриниш режимлари,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1866,both,24be6128,
+5f031ed797b0,,Adjust,Настройка,Moslash,Мослаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2287,both,ab166bd5,
+813a9319af12,,Expand,Расширить,Yoyish,Ёйиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1971,both,9869e506,
+5eb194471448,,Finish,Завершение,Yakunlash,Якунлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1728,both,b74bdee9,
+5ee634c8d674,,Legend,Легенда,Shartli belgilar,Шартли белгилар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2083,both,5846955d,
+dad656331357,,Manual,Вручную,Qoʻlda,Қўлда,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:984,both,4e836fdc,
+b6d720512492,,Narrow,Узкие,Tor,Тор,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:315,both,697edbe4,
+87a6612b9cfb,,Narrow,Узкая,Tor,Тор,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:39,both,697edbe4,
+0b256c7fa88b,,PDF/A…,PDF/A…,PDF/A…,PDF/A…,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:266,both,73e8eb1d,
+71ca2bf323e7,,Record,,Yozib olish,Ёзиб олиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/ribbon.rs:154,both,1c54132b,
+01caaead4cd8,,Replay,Воспроизвести,Qayta ijro etish,Қайта ижро этиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1220,both,c0f85d66,
+02d0412163d8,,Sheets,Листы,Varaqlar,Варақлар,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:633,both,3a97f965,
+eedbe8e2c2d4,,Slides,,Slaydlar,Слайдлар,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:871,both,1e35470a,
+04cf5aaed9cf,,Solver,Поиск решения,Yechim izlash,Ечим излаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:360,both,2212b12d,
+06d41152d7e6,,Speech,Речь,Nutq,Нутқ,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1758,both,d00d8594,
+dd06e13368e5,,System,Системная,Tizim,Тизим,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:937,both,bc0792d8,
+938c639b2f4a,,Zotero,Zotero,Zotero,Zotero,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:371,both,a755aecf,
+40acd4892157,,•  {b},,•  {b},•  {b},draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1327,both,d2c1079c,
+dfb5f3139eff,,AutoSum,Автосумма,Avtojamlama,Автожамлама,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:263,both,4c04c4eb,
+9b85d714c29d,,Changes,Изменения,Oʻzgarishlar,Ўзгаришлар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1799,both,8aa57de6,
+6631b6760eb4,,Logical,Логические,Mantiqiy,Мантиқий,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:476,both,122f1700,
+ef8e477d6621,,Protect,Защита,Himoya,Ҳимоя,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1816,both,016ac2dc,
+14285a4ba127,,Reapply,Повторить,Qayta qoʻllash,Қайта қўллаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:345,both,383de669,
+ba031f44e6d0,,Special,Дополнительный,Qoʻshimcha,Қўшимча,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:470,both,942078ca,
+6c1b475fba63,,Top 10%,Верхние 10%,Eng yuqori 10%,Энг юқори 10%,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:433,both,2d724da0,Top
+1f5c2d7b2f13,,All Caps,Все прописные,Barcha bosh harflar,Барча бош ҳарфлар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:838,both,5975d269,
+eb5cc47fc3f5,,Automate,Автоматизация,Avtomatlashtirish,Автоматлаштириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:451,both,dc12f66a,
+0ce49acba359,,Captions,Подписи,Izohli yozuvlar,Изоҳли ёзувлар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1631,both,1201f5be,
+c372b3019389,,comments,,izohlar,изоҳлар,draft-unreviewed,,pdfcraft,crates/ui-egui/src/lib.rs:2479,both,5b17a6c6,
+4a2ebb51bdcf,,Cut (⌘X),Вырезать (⌘X),Kesib olish (⌘X),Кесиб олиш (⌘Х),draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:190,both,998e000a,Cut
+e47e068d95e9,,Formulas,Формулы,Formulalar,Формулалар,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:978,both,23837eb4,
+66d2b84ef226,,Just now,Только что,Hozirgina,Ҳозиргина,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:486,both,a69f482d,
+e28b44368136,,Modified,Изменён,Oʻzgartirilgan,Ўзгартирилган,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:374,both,19a532c8,
+412b17879a4a,,Next tab,Следующая вкладка,Keyingi yorliq,Кейинги ёрлиқ,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:225,both,84c508a2,Next; Tab (ribbon)
+e06368fcc605,,Overtype,Замена,Ustiga yozish,Устига ёзиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/chrome.rs:468,both,6f37f71e,
+999d6b0c817a,,Pictures,Изображения,Rasmlar,Расмлар,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:277,both,935edbe9,
+c338b8309805,,Research,Исследование,Tadqiqot,Тадқиқот,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1603,both,be601df2,
+21f845d0ecdc,,Tracking,Отслеживание,Kuzatuv,Кузатув,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1778,both,e81a151b,
+a7062a86144e,,{:.1} KB,,{:.1} KB,{:.1} KB,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:919,both,9fa8127f,
+0a9800686371,,{:.1} MB,,{:.1} MB,{:.1} MB,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:920,both,dd86c5eb,
+a391cd676ad2,,{} of {},,{} / {},{} / {},draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1221,both,8ab1accf,
+2f0988cf9324,,Add a tag,,Teg qoʻshish,Тег қўшиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:227,both,a8212f9b,Add
+91c41872b01f,,Bold (⌘B),Полужирный (⌘B),Qalin (⌘B),Қалин (⌘Б),draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:193,both,856f67c2,Bold
+b5385928f073,,Calculate,Вычисление,Hisoblash,Ҳисоблаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:458,both,8e5903a8,
+c8bbed1ef041,,Cell Size,Размер ячейки,Katak oʻlchami,Катак ўлчами,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2641,both,44f38e7d,Size; Cell
+914c3359ef94,,Citations,Ссылки на источники,Iqtiboslar,Иқтибослар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1735,both,fd328df3,
+9da4cc124fda,,Clear All,Очистить всё,Hammasini tozalash,Ҳаммасини тозалаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:258,both,3a88a6d1,Clear
+749b8c7550c7,,Close all,Закрыть все,Hammasini yopish,Ҳаммасини ёпиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:189,both,98553cc8,Close
+1996230d993e,,Copy (⌘C),Копировать (⌘C),Nusxalash (⌘C),Нусхалаш (⌘C),draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:191,both,195de168,Copy
+e3b27c197110,,Copy path,,Yoʻlni nusxalash,Йўлни нусхалаш,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:822,both,9804556f,Copy
+ff56f7bfb7ec,,Cut pages,Вырезать страницы,Sahifalarni kesib olish,Саҳифаларни кесиб олиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:178,both,ece17fb5,Cut
+52e182f4dbaa,,Data Bars,Гистограммы,Maʼlumotlar chiziqlari,Маълумотлар чизиқлари,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:441,both,df64f80d,
+badcd1b657ae,,DeckCraft,,DeckCraft,DeckCraft,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1359,both,1896b628,
+e2737ebcbdc8,,Developer,Разработчик,Ishlab chiquvchi,Ишлаб чиқувчи,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:370,both,7e08ebec,
+070a1b31f505,,File\nName,Имя\nфайла,Fayl\nnomi,Файл\nноми,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:495,both,2a7f5687,File; Name
+b783f4ab4aa3,,File\nPath,Путь\nк файлу,Fayl\nyoʻli,Файл\nйўли,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:494,both,0782e0f5,File
+4ceba8fe31d8,,File Path,Путь к файлу,Fayl yoʻli,Файл йўли,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:503,both,c08ba79d,File
+057f7bc093b6,,Financial,Финансовые,Moliyaviy,Молиявий,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:475,both,bd91f016,
+5314440da3ea,,Hide Rows,Скрыть строки,Qatorlarni yashirish,Қаторларни яшириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:252,both,546024be,Hide
+f5b12a36f9bc,,Icon Sets,Наборы значков,Belgilar toʻplamlari,Белгилар тўпламлари,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:443,both,9bff68e6,
+291a629d7097,,Immersive,Иммерсивный режим,Immersiv,Иммерсив,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1875,both,632f3d3e,
+818461487a63,,Lock Cell,Заблокировать ячейку,Katakni qulflash,Катакни қулфлаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:256,both,43978cb0,Cell
+a109fb94dbe9,,Next view,Следующий вид,Keyingi koʻrinish,Кейинги кўриниш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:585,both,a325246c,View; Next
+23fb655e61ad,,Outlining,Структура,Struktura,Структура,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:128,both,9c43c0ef,
+d51387bc4c9c,,Read mode,Режим чтения,Oʻqish rejimi,Ўқиш режими,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:810,both,197fca41,
+3cd3187c7b60,,Read Mode,Режим чтения,Oʻqish rejimi,Ўқиш режими,draft-unreviewed,,wordcraft,crates/ui-egui/src/chrome.rs:520,both,cf3ebcce,
+5a791f181011,,signature,подпись,imzo,имзо,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:658,both,fab5f628,Signature
+720d683cbf56,,Top\nAlign,По верхнему\nкраю,Yuqoriga\ntekislash,Юқорига\nтекислаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:209,both,72ab3f30,Top; Align
+336b32a47ecd,,Transpose,Транспонировать,Transponirlash,Транспонирлаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:183,both,fa257429,
+5f2220cef638,,Wrap Text,Переносить текст,Matnni oʻrash,Матнни ўраш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:201,both,a1805326,Text
+7edf53bb53ae,,Yesterday,Вчера,Kecha,Кеча,draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:492,both,da24830f,
+bd782b427ed8,,{b} bytes,,{b} bayt,{b} байт,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:918,both,5b49f0f7,
+3180970e92ef,,{text}  →,,{text}  →,{text}  →,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:478,both,9a77402c,
+1ba22a53b1a5,,Add header,Добавить верхний колонтитул,Yuqori kolontitul qoʻshish,Юқори колонтитул қўшиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:485,both,d5a110d6,Add; Header
+e9143fc2f495,,Add image…,Добавить изображение…,Rasm qoʻshish…,Расм қўшиш…,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:284,both,de59416e,Add
+50d90819757f,,Back (Esc),,Orqaga (Esc),Орқага (Esc),draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:348,both,7cfd2c37,Back
+36d6c84c3847,,Bottom 10%,Нижние 10%,Eng past 10%,Энг паст 10%,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:435,both,2cd533d4,
+1869b765fc2b,,Break Link,Разорвать связь,Bogʻlanishni uzish,Боғланишни узиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2240,both,38b6f200,
+097fbfeef2f8,,Close file,Закрыть файл,Faylni yopish,Файлни ёпиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:188,both,758b0cd1,File; Close
+97f4cf7ebd00,,Copy pages,Копировать страницы,Sahifalarni nusxalash,Саҳифаларни нусхалаш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:177,both,a72cd302,Copy
+bcfbe43c49fa,,Fill Color,Цвет заливки,Toʻldirish rangi,Тўлдириш ранги,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:206,both,eab379ed,Fill; Color
+db808ae97d28,,Flash\nFill,Мгновенное\nзаполнение,Tezkor\ntoʻldirish,Тезкор\nтўлдириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:265,both,2d1e42c7,Fill
+ca4543f8613a,,Flash Fill,Мгновенное заполнение,Tezkor toʻldirish,Тезкор тўлдириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:266,both,2a48fb26,Fill
+edcef13bf91e,,Goal Seek…,Подбор параметра…,Parametrni tanlash…,Параметрни танлаш…,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:364,both,c0e292df,
+f1054727bd1f,,Icon Color,Цвет значка,Piktogramma rangi,Пиктограмма ранги,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2307,both,ab41058d,Color
+74058401c5e9,,PivotTable,Сводная таблица,Yigʻma jadval,Йиғма жадвал,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:274,both,31a825e2,
+88d0fbbe6d67,,Print\nArea,Область\nпечати,Chop etish\nhududi,Чоп этиш\nҳудуди,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:306,both,e8789ab4,Print
+978234027c31,,Remove Pen,Удалить перо,Qalamni olib tashlash,Қаламни олиб ташлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1276,both,f5e3bc1b,Remove
+540d15a18382,,Select Row,Выделить строку таблицы,Qatorni tanlash,Қаторни танлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2606,both,3d230d37,Select; Row
+720bd579aec0,,Sheet\nName,Имя\nлиста,Varaq\nnomi,Варақ\nноми,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:496,both,64f41d8d,Sheet; Name
+21de3e7d5b7d,,Sheet Name,Имя листа,Varaq nomi,Варақ номи,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:505,both,2766115b,Sheet; Name
+a80f9027e3af,,Show Level,Показать уровень,Darajani koʻrsatish,Даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1974,both,7fe15ad6,Show
+4cd81e6a845e,,Small Caps,Малые прописные,Kichik bosh harflar,Кичик бош ҳарфлар,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:837,both,35123526,
+5e11878b5007,,Sparklines,Спарклайны,Sparklaynlar,Спарклайнлар,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:289,both,04e99e7a,
+2fe585a9810d,,Web Layout,Веб-документ,Veb maket,Веб макет,draft-unreviewed,,wordcraft,crates/ui-egui/src/chrome.rs:518,both,0ef1737c,Layout
+63f729e0ad80,,Add a title,,Nom qoʻshish,Ном қўшиш,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:225,both,9c0b0b2c,Add
+45abfc387bd6,,Cell\nStyles,Стили\nячеек,Katak\nuslublari,Катак\nуслублари,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:234,both,a6270bbb,Cell
+013669715371,,Chart\nTitle,Название\nдиаграммы,Diagramma\nnomi,Диаграмма\nноми,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:428,both,c4700fbf,Title; Chart
+d37a618e025c,,Comma Style,Разделитель разрядов,Minglar ajratgichi,Минглар ажратгичи,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:227,both,c3688323,
+444def4717fa,,Create Link,Создать связь,Bogʻlanish yaratish,Боғланиш яратиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2243,both,dc18b6d8,
+37965f662e07,,Data Labels,Подписи данных,Maʼlumotlar yorliqlari,Маълумотлар ёрлиқлари,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2094,both,49565c17,
+11430d3504cb,,Data Table…,Таблица данных…,Maʼlumotlar jadvali…,Маълумотлар жадвали…,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:362,both,c3aad367,Table
+4c08b0318bc1,,Define Name,Присвоить имя,Nom belgilash,Ном белгилаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:323,both,5f5f4f97,Name
+717243a52e02,,Design Mode,Режим конструктора,Konstruktor rejimi,Конструктор режими,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1858,both,2ed44bdd,
+3f07585b5204,,Draw a line,Нарисовать линию,Chiziq chizish,Чизиқ чизиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:244,both,6ac66980,Draw; Line (shape)
+cff7d1eb8054,,"e.g. 1-3, 5",,"masalan, 1-3, 5","масалан, 1-3, 5",draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1068,both,cf641cab,
+3fa184f63678,,Edit Footer,Изменить нижний колонтитул,Quyi kolontitulni tahrirlash,Қуйи колонтитулни таҳрирлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1090,both,03192892,Edit; Footer
+53634c0ac7df,,Edit Header,Изменить верхний колонтитул,Yuqori kolontitulni tahrirlash,Юқори колонтитулни таҳрирлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1082,both,8142b5e3,Edit; Header
+69fb668b7e8e,,Fit visible,По видимой области,Koʻrinadigan qismga moslash,Кўринадиган қисмга мослаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/chrome.rs:563,both,86e734dd,
+a2c1614f7f3e,,Formula Bar,Строка формул,Formulalar satri,Формулалар сатри,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:385,both,8679a8b9,Formula
+11cba0a234cc,,Go to page…,Перейти на страницу…,Sahifaga oʻtish…,Саҳифага ўтиш…,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:230,both,d12d316b,Page
+9d613917a06b,,Hide Detail,Скрыть детали,Tafsilotni yashirish,Тафсилотни яшириш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:356,both,02891f43,Hide
+210b0247c503,,Italic (⌘I),Курсив (⌘I),Kursiv (⌘I),Курсив (⌘И),draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:194,both,d404cba5,Italic
+05e68d5f5945,,Legend: Top,Легенда: сверху,Shartli belgilar: yuqorida,Шартли белгилар: юқорида,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:424,both,314939e1,Top
+e385d75b2e44,,Math &\nTrig,Математические и\nтригонометрические,Matematik va\ntrigonometrik,Математик ва\nтригонометрик,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:479,both,3e34445c,
+aede14107332,,More themes,,Boshqa temalar,Бошқа темалар,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:701,both,31766249,
+a211548c3a95,,Next Change,Следующее изменение,Keyingi oʻzgarish,Кейинги ўзгариш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:1810,both,d460c16c,Next
+233b9389a1b2,,Notes Pages,,Qaydlar sahifalari,Қайдлар саҳифалари,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1013,both,c01b8b62,
+64e1c4d266fb,,Open Recent,Открыть недавние,Soʻnggilarni ochish,Сўнггиларни очиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:165,both,4474e6fb,Recent; Open
+605b7143c566,,Page\nLayout,Разметка\nстраницы,Sahifa\nmaketi,Саҳифа\nмакети,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:384,both,136ae026,Page; Layout
+cdf5779928b9,,Page Layout,Разметка страницы,Sahifa maketi,Саҳифа макети,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:446,both,cecb05a8,Page; Layout
+386d53bb2966,,Paste pages,Вставить страницы,Sahifalarni qoʻyish,Саҳифаларни қўйиш,draft-unreviewed,,pdfcraft,crates/engine/src/commands.rs:179,both,c2e2fbf7,Paste
+f780f8ed8e6d,,Select\nData,Выбрать\nданные,Maʼlumotlarni\ntanlash,Маълумотларни\nтанлаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:419,both,6eef1609,Select
+659e9ff81da8,,Select Cell,Выделить ячейку,Katakni tanlash,Катакни танлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/ribbon.rs:2604,both,c613794c,Select; Cell

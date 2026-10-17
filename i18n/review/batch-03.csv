@@ -1,0 +1,662 @@
+﻿key,context,en,ru,uz-Latn draft,uz-Cyrl draft,status,owner comment,scope,where,pass,en_hash,glossary terms
+2c2ecfc998d5,,Line Break,Разрыв строки,Qator uzilishi,Қатор узилиши,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:15,both,a438ad13,
+4b1e5cd72f89,,Navigation,Навигация,Navigatsiya,Навигация,draft-unreviewed,,wordcraft,crates/ui-egui/src/panes.rs:108,both,cf03cf2e,
+7774842f726a,,Next Field,Следующее поле,Keyingi maydon,Кейинги майдон,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:35,both,b375c9d5,Next; Field
+f1a953b3a75b,,Structures,Структуры,Strukturalar,Структуралар,draft-unreviewed,,wordcraft,crates/ui-egui/src/equation_tab.rs:312,both,c64b6d8a,
+16c5f29e8ca5,,Text field,Текстовое поле,Matn maydoni,Матн майдони,draft-unreviewed,,pdfcraft,crates/ui-egui/src/prepare.rs:69,both,dc7b11db,Field; Text
+8178419b4d02,,Theme List,Список тем,Temalar roʻyxati,Темалар рўйхати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/design.rs:86,both,9a440ec3,Theme
+d8503ae64b5b,,View State,Состояние вида,Koʻrinish holati,Кўриниш ҳолати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:102,both,4d913f7d,View
+0a99ba16720c,,Added Fonts,Добавленные шрифты,Qoʻshilgan shriftlar,Қўшилган шрифтлар,draft-unreviewed,,wordcraft,crates/engine/src/cmd/font.rs:19,both,ba88c5ea,
+53056d519627,,Apply Style,Применить стиль,Uslubni qoʻllash,Услубни қўллаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:132,both,939565a3,Apply; Style
+e11e66ec1020,,Attach file,Прикрепить файл,Fayl biriktirish,Файл бириктириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:136,both,0c431f49,File
+2546a07b2f18,,Copy Styles,Копировать стили,Uslublarni nusxalash,Услубларни нусхалаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:51,both,d4824cfb,Copy
+d39e458dbcaa,,Field Codes,Коды полей,Maydon kodlari,Майдон кодлари,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_insert.rs:1224,both,237fbd19,Field
+a1a8c38d73da,,Fill & Sign,Заполнить и подписать,Toʻldirish va imzolash,Тўлдириш ва имзолаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:4369,both,49e13334,Fill; Sign
+4796fc9db008,,Font Dialog,Окно «Шрифт»,Shrift oynasi,Шрифт ойнаси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:139,both,ef28ffd4,Font
+69d8c30cfc66,,Hyphenation,Расстановка переносов,Boʻgʻin koʻchirish,Бўғин кўчириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_layout.rs:52,both,1e5cd3b2,
+d693e51a3109,,Image field,Поле изображения,Rasm maydoni,Расм майдони,draft-unreviewed,,pdfcraft,crates/ui-egui/src/prepare.rs:75,both,b68fa11e,Field
+91961a5cd6fc,,Import data,Импортировать данные,Maʼlumotlarni import qilish,Маълумотларни импорт қилиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/files.rs:824,both,d82c9379,Import
+6001ed463d35,,Insert text,Вставить текст,Matn kiritish,Матн киритиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:134,both,c2cd4db4,Insert; Text
+ddbbf99a3de4,,Lock Fields,Заблокировать поля,Maydonlarni qulflash,Майдонларни қулфлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:33,both,100d1750,
+73aca1b7c352,,Normal Text,Обычный текст,Oddiy matn,Оддий матн,draft-unreviewed,,wordcraft,crates/ui-egui/src/equation_tab.rs:308,both,46d92411,Text
+c77cb9573cf5,,Page labels,Метки страниц,Sahifa yorliqlari,Саҳифа ёрлиқлари,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:157,both,d20502b0,Page
+66f7ecaddf48,,Row Height…,Высота строки…,Qator balandligi…,Қатор баландлиги…,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3121,both,3e788c6b,Row; Height
+fc1949187937,,Show Markup,Показать исправления,Tuzatishlarni koʻrsatish,Тузатишларни кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:631,both,3d933abd,Show
+0476755091bb,,Single page,Одна страница,Bitta sahifa,Битта саҳифа,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:135,both,db19485e,Page
+4d3a45552abe,,Sort A to Z,Сортировка от А до Я,A dan Z gacha saralash,А дан З гача саралаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:2862,both,b0c608f2,Sort
+dd8e09cecf2a,,Sort Z to A,Сортировка от Я до А,Z dan A gacha saralash,З дан А гача саралаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:2863,both,dcdce054,Sort
+106e99fad25c,,Sticky note,Стикер,Yopishqoq qayd,Ёпишқоқ қайд,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:1354,both,df85f408,
+b1701d7b9a5f,,Styles Pane,Область стилей,Uslublar paneli,Услублар панели,draft-unreviewed,,wordcraft,crates/ui-egui/src/panes.rs:547,both,0b766012,
+fd8413a9063b,,Apply Styles,Применить стили,Uslublarni qoʻllash,Услубларни қўллаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:227,both,ff6ba96e,Apply
+431666a4ab33,,Delete Cells,Удалить ячейки,Kataklarni oʻchirish,Катакларни ўчириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2933,both,8b1aa217,Delete
+78b5027e69a3,,Delete pages,Удалить страницы,Sahifalarni oʻchirish,Саҳифаларни ўчириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/panels.rs:1140,both,33fdff92,Delete
+15f6e6e6cbdc,,Delete Style,Удалить стиль,Uslubni oʻchirish,Услубни ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:201,both,87e8bcba,Delete; Style
+16e8ad4e16e0,,Edit Comment,Изменить комментарий,Izohni tahrirlash,Изоҳни таҳрирлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/review.rs:16,both,b5ffeb5f,Edit; Comment
+bc643c71addf,,Lasso Select,Лассо,Lasso bilan tanlash,Лассо билан танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/draw.rs:202,both,c5c8a5ce,Select
+636d0c715bbc,,Line Numbers,Номера строк,Qator raqamlari,Қатор рақамлари,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_layout.rs:51,both,0232c830,
+8fe9491ae75d,,Next Section,Следующий раздел,Keyingi boʻlim,Кейинги бўлим,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:542,both,842340de,Next; Section
+9fa9829dc299,,Normal Style,Обычный стиль,Oddiy uslub,Оддий услуб,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:133,both,c5bba635,Style
+0e66a4d26a78,,Page options,Параметры страниц,Sahifa parametrlari,Саҳифа параметрлари,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:97,both,eb9bcdf2,Page; Options
+7c0adad6f8a4,,Print to PDF,Печать в PDF,PDF ga chop etish,PDF га чоп этиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:101,both,b26edd1c,Print
+88a9ce440045,,Radio button,Переключатель,Tanlov tugmasi,Танлов тугмаси,draft-unreviewed,,pdfcraft,crates/ui-egui/src/prepare.rs:71,both,aa3fec78,
+2ee278f32384,,Record Macro,Записать макрос,Makros yozish,Макрос ёзиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:349,both,2bdb6a96,
+ef3adb5e54e4,,Rename Style,Переименовать стиль,Uslub nomini oʻzgartirish,Услуб номини ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:53,both,e38242d0,Style
+076707e99510,,Replace text,Заменить текст,Matnni almashtirish,Матнни алмаштириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:3819,both,eee7206a,Replace; Text
+6a025a1abf80,,Stop Reading,Остановить чтение,Oʻqishni toʻxtatish,Ўқишни тўхтатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:23,both,002c7811,
+1445bbb6d2c2,,Undo Actions,Отменить действия,Amallarni qaytarish,Амалларни қайтариш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:45,both,d2f2c77a,Undo
+05064574efc5,,Update Field,Обновить поле,Maydonni yangilash,Майдонни янгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2894,both,0636d180,Field
+186c35fe8c62,,Action Wizard,Мастер действий,Amallar ustasi,Амаллар устаси,draft-unreviewed,,pdfcraft,crates/ui-egui/src/actions_ui.rs:237,both,b658dc0c,
+dd1fa99dc6e0,,Add a callout,Добавить выноску,Chiqarish chizigʻini qoʻshish,Чиқариш чизиғини қўшиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:133,both,cb5e8183,Add
+1ec7f1eb1d4d,,Advanced Find,Расширенный поиск,Kengaytirilgan qidiruv,Кенгайтирилган қидирув,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:99,both,d2ae5a17,
+074439c99eec,,Alt Text Pane,Область замещающего текста,Muqobil matn paneli,Муқобил матн панели,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:80,both,5d0c5ab4,Text
+7afd1ac5cf02,,Attach a file,Прикрепить файл,Fayl biriktirish,Файл бириктириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comment_props.rs:59,both,ae85e4ee,File
+22b3b3446aed,,Canvas Member,Элемент полотна,Tuval aʼzosi,Тувал аъзоси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/canvas.rs:50,both,5af61fd7,
+6bcdc373a458,,Column Width…,Ширина столбца…,Ustun kengligi…,Устун кенглиги…,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3137,both,59d6444c,Column
+6ed812f79634,,Comments Pane,Область комментариев,Izohlar paneli,Изоҳлар панели,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:74,both,40d36db0,
+865197f35d34,,Convert Notes,Преобразовать сноски,Izohlarni aylantirish,Изоҳларни айлантириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/references.rs:43,both,455af235,
+33b3c0dfaa0d,,Document Text,Текст документа,Hujjat matni,Ҳужжат матни,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:148,both,3d6da0f4,Document; Text
+7e6382c1348f,,Drawing scale,Масштаб чертежа,Chizma masshtabi,Чизма масштаби,draft-unreviewed,,pdfcraft,crates/ui-egui/src/measure_ui.rs:83,both,adb68c01,
+e2d45a1bb879,,Extract pages,Извлечь страницы,Sahifalarni ajratib olish,Саҳифаларни ажратиб олиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:4771,both,2494fc53,
+003556109473,,Find Previous,Найти предыдущее,Oldingisini topish,Олдингисини топиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:109,both,c334d66b,Find; Previous
+041b773c8261,,Format Cells…,Формат ячеек…,Kataklar formati…,Катаклар формати…,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:2868,both,149148c0,Format
+1045b1332b40,,Insert Shapes,Вставка фигур,Shakllarni kiritish,Шаклларни киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/connectors.rs:32,both,197390e1,Insert
+051e3eec3da5,,Justification,Выравнивание,Tekislash usuli,Текислаш усули,draft-unreviewed,,wordcraft,crates/ui-egui/src/equation_tab.rs:361,both,7d2a7bff,
+696041ce6d25,,New Paragraph,Новый абзац,Yangi xatboshi,Янги хатбоши,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:14,both,8898b971,Paragraph; New
+22a9d9d547cb,,Next Sentence,Следующее предложение,Keyingi gap,Кейинги гап,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:21,both,ddb31d19,Next
+aef35fda8a44,,Reading Speed,Скорость чтения,Oʻqish tezligi,Ўқиш тезлиги,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:24,both,caa1bf0a,
+e849747ba7d9,,Reset Graphic,Сбросить графический элемент,Grafikani asliga qaytarish,Графикани аслига қайтариш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/smart_art.rs:132,both,b78f9b60,
+760ffc7d390d,,Save as PDF/A,Сохранить как PDF/A,PDF/A sifatida saqlash,PDF/A сифатида сақлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/standards_ui.rs:105,both,b476b665,Save
+cf449791897a,,Two-page view,Двухстраничный вид,Ikki sahifali koʻrinish,Икки саҳифали кўриниш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:136,both,eee238ba,View; Page
+20865016a746,,Unlink Fields,Разорвать связь с полями,Maydonlar bogʻlanishini uzish,Майдонлар боғланишини узиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:32,both,66c6ab95,
+adbae881e68a,,Unlock Fields,Разблокировать поля,Maydonlar qulfini ochish,Майдонлар қулфини очиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:34,both,483afe58,
+cb3e925d60bb,,Add a text box,Добавить текстовое поле,Matn qutisini qoʻshish,Матн қутисини қўшиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:120,both,23ea4a62,Add; Text
+91ae21ea3905,,Clear Contents,Очистить содержимое,Tarkibni tozalash,Таркибни тозалаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:2859,both,2840b381,Clear
+e8260ec83f5c,,Clipboard Pane,Область буфера обмена,Almashinuv buferi paneli,Алмашинув буфери панели,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:70,both,7c0f77b3,
+88ddf1d486ce,,Comments panel,Панель комментариев,Izohlar paneli,Изоҳлар панели,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:1659,both,f819bbc1,
+caff710dc9ab,,Copyright Sign,Знак авторского права,Mualliflik huquqi belgisi,Муаллифлик ҳуқуқи белгиси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:38,both,d0c22df0,
+9359ae8fc27b,,Create a Style,Создать стиль,Uslub yaratish,Услуб яратиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:198,both,244cd6e6,Style
+e5ebb088ff47,,Double Spacing,Двойной интервал,Ikki qator oraligʻi,Икки қатор оралиғи,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:78,both,eaceb509,
+1af268f0a68e,,Drop-down list,Раскрывающийся список,Ochiladigan roʻyxat,Очиладиган рўйхат,draft-unreviewed,,pdfcraft,crates/ui-egui/src/prepare.rs:72,both,8ec5e558,
+a9a46d25e5fe,,Hanging Indent,Выступ,Osma chekinish,Осма чекиниш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:42,both,6c520039,Indent
+1385dd6b30f4,,Insert Endnote,Вставить концевую сноску,Yakuniy izoh kiritish,Якуний изоҳ киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_notes.rs:152,both,00947f93,Insert
+f14ea7da2b48,,Keep with Next,Не отрывать от следующего,Keyingisi bilan birga saqlash,Кейингиси билан бирга сақлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:168,both,475429be,Next
+62e0dd7e3f1d,,Layout Summary,Сводка по макету,Maket xulosasi,Макет хулосаси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:163,both,345b8fbb,Layout
+10e25f9055ab,,Move or Resize,Переместить или изменить размер,Koʻchirish yoki oʻlchamini oʻzgartirish,Кўчириш ёки ўлчамини ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/objects.rs:329,both,530f19dc,Move
+7192e437ce03,,Organize pages,Организовать страницы,Sahifalarni tartibga solish,Саҳифаларни тартибга солиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/camera_ui.rs:198,both,b07281ea,
+6cdcea04f96a,,Previous Field,Предыдущее поле,Oldingi maydon,Олдинги майдон,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:36,both,ffb94718,Previous; Field
+9d9a1801666d,,Recognize text,Распознать текст,Matnni aniqlash,Матнни аниқлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/ocr_ui.rs:138,both,7f864050,Text
+b86c370a9fb6,,Replace pages…,Заменить страницы…,Sahifalarni almashtirish…,Саҳифаларни алмаштириш…,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:4775,both,2053fec6,Replace
+e604fb76247a,,Set page boxes,Задать поля страниц,Sahifa qutilarini belgilash,Саҳифа қутиларини белгилаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:144,both,0897e4b8,Page
+e0209e14b345,,Single Spacing,Одинарный интервал,Bir qator oraligʻi,Бир қатор оралиғи,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:77,both,21e42fca,
+94a59104fa0b,,Text from File,Текст из файла,Fayldan matn,Файлдан матн,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:119,both,03eac270,File; Text
+40da26eb1cab,,Trademark Sign,Знак товарного знака,Tovar belgisi,Товар белгиси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:40,both,00d5cc83,
+46bf4c8b299e,,Attach Template,Присоединить шаблон,Shablonni biriktirish,Шаблонни бириктириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:34,both,2a05ca3e,
+c14253732f34,,Bates numbering,Нумерация Бейтса,Bates raqamlash,Bates рақамлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:139,both,96021bfe,
+a14016ecaf78,,Character Scale,Масштаб знаков,Belgi masshtabi,Белги масштаби,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:127,both,d8256c82,Character
+f5f39d93d997,,Clipboard Items,Элементы буфера обмена,Almashinuv buferi elementlari,Алмашинув буфери элементлари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:77,both,2581467c,
+505a140f3cc8,,Copy Formatting,Копировать форматирование,Formatni nusxalash,Форматни нусхалаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:147,both,4711e589,Copy
+99bbd1ddc6d9,,Cross-reference,Перекрёстная ссылка,Ichki havola,Ички ҳавола,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_refs.rs:75,both,8e84e340,
+1c50e2682c49,,Delete Bookmark,Удалить закладку,Xatchoʻpni oʻchirish,Хатчўпни ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:50,both,2da866ed,Delete
+55ec1dbb14bd,,Detach Template,Отсоединить шаблон,Shablonni ajratish,Шаблонни ажратиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:36,both,223f938a,
+8c3620de49c3,,Duplicate pages,Дублировать страницы,Sahifalarni takrorlash,Саҳифаларни такрорлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:128,both,f1b4a9c5,
+b46129ad957f,,Equation Number,Номер уравнения,Tenglama raqami,Тенглама рақами,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2821,both,6b08b986,Equation
+6922ae0db1a2,,Insert Citation,Вставить ссылку на источник,Iqtibos kiritish,Иқтибос киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_refs.rs:1113,both,2a889c6c,Insert
+c928a23d16e2,,Insert Footnote,Вставить сноску,Quyi izoh kiritish,Қуйи изоҳ киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_notes.rs:152,both,5d058b54,Insert
+6145f98d90e2,,List Definition,Определение списка,Roʻyxat taʼrifi,Рўйхат таърифи,draft-unreviewed,,wordcraft,crates/engine/src/cmd/lists.rs:23,both,0bd53919,
+1cd500131ceb,,Privacy Options,Параметры конфиденциальности,Maxfiylik parametrlari,Махфийлик параметрлари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:129,both,750c83ea,Options
+0c4e4cf9d057,,Proofing Issues,Замечания по правописанию,Imlo tekshiruvi muammolari,Имло текшируви муаммолари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/review.rs:60,both,a023509d,
+2075e49ce4c6,,Registered Sign,Знак зарегистрированного товарного знака,Roʻyxatdan oʻtgan belgi,Рўйхатдан ўтган белги,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:39,both,a4c09875,
+3a6883d2cf9f,,Selected Fields,Выделенные поля,Tanlangan maydonlar,Танланган майдонлар,draft-unreviewed,,wordcraft,crates/engine/src/cmd/fields.rs:39,both,98d4a2de,
+7f36ca2cee7e,,Sort Recipients,Сортировка получателей,Qabul qiluvchilarni saralash,Қабул қилувчиларни саралаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/mailings.rs:375,both,0fcb331c,Sort
+8ac1f466ae26,,Style Inspector,Инспектор стилей,Uslublar inspektori,Услублар инспектори,draft-unreviewed,,wordcraft,crates/ui-egui/src/panes.rs:306,both,8dd6e66c,Style
+da34fcaf43f5,,Version History,Журнал версий,Versiyalar tarixi,Версиялар тарихи,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:397,both,6974ab72,Version
+2a0bd9d4aec0,,1.5 Line Spacing,Полуторный интервал,"1,5 qator oraligʻi","1,5 қатор оралиғи",draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:79,both,9b4ade6f,
+b32b272bf9f4,,Choose List Item,Выбрать элемент списка,Roʻyxat elementini tanlash,Рўйхат элементини танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/controls.rs:63,both,232a6d6f,
+eeeb72ecc4e0,,Column Selection,Выделить столбец,Ustunni tanlash,Устунни танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/column.rs:24,both,e17b9b26,Column
+0ac93055ed76,,Delete Next Word,Удалить следующее слово,Keyingi soʻzni oʻchirish,Кейинги сўзни ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:23,both,a8b480e0,Next; Delete; Word
+fe39bb3bcd94,,Extend Selection,Расширить выделение,Tanlovni kengaytirish,Танловни кенгайтириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:639,both,b5871d32,
+a32c5e136624,,Flatten comments,Расплющить комментарии,Izohlarni yassilash,Изоҳларни яссилаш,draft-unreviewed,,pdfcraft,crates/engine/src/actions.rs:78,both,7a4a7a72,
+185d86136382,,Import comments…,Импортировать комментарии…,Izohlarni import qilish…,Изоҳларни импорт қилиш…,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments_panel.rs:568,both,913c1e3d,Import
+ac92b3a18fa2,,Insert Cut Cells,Вставить вырезанные ячейки,Kesilgan kataklarni kiritish,Кесилган катакларни киритиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3183,both,2513f65f,Insert
+f7e8915dedab,,Inspect Document,Проверить документ,Hujjatni tekshirish,Ҳужжатни текшириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:147,both,0dea4304,Document
+fcd6c7bd43a1,,Link to Previous,Как в предыдущем,Oldingisidagi kabi,Олдингисидаги каби,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:529,both,7f7c9dbc,Previous
+4cd116fc139e,,Page transitions,Переходы страниц,Sahifa oʻtishlari,Саҳифа ўтишлари,draft-unreviewed,,pdfcraft,crates/ui-egui/src/organize_panel.rs:146,both,cb575ec9,Page
+7454d707afa6,,Previous Section,Предыдущий раздел,Oldingi boʻlim,Олдинги бўлим,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:543,both,f5a92157,Previous; Section
+43e2bd1a1783,,Privacy Settings,Текущие параметры конфиденциальности,Maxfiylik sozlamalari,Махфийлик созламалари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:144,both,af95411f,
+cc7c0089d0f6,,Reduce file size,Уменьшить размер файла,Fayl hajmini kamaytirish,Файл ҳажмини камайтириш,draft-unreviewed,,pdfcraft,crates/engine/src/actions.rs:75,both,9b7e5122,File
+b0ac1e6cb44d,,Remove all links,Удалить все ссылки,Barcha havolalarni olib tashlash,Барча ҳаволаларни олиб ташлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:3402,both,28d7d979,Remove
+29b762a2fdf5,,Remove Hyperlink,Удалить гиперссылку,Giperhavolani olib tashlash,Гиперҳаволани олиб ташлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:43,both,4dea3dda,Remove
+49a50d02fed4,,Save as Template,Сохранить как шаблон,Shablon sifatida saqlash,Шаблон сифатида сақлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:428,both,18ea0c6c,Save
+062fce2ec5d5,,Table Row Height,Высота строки таблицы,Jadval qatori balandligi,Жадвал қатори баландлиги,draft-unreviewed,,wordcraft,crates/ui-egui/src/table_resize.rs:460,both,5a2909d8,Row; Table; Height
+10b5c7da2297,,Toggle Check Box,Переключить флажок,Belgilash katagini almashtirish,Белгилаш катагини алмаштириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/controls.rs:62,both,c0668ac4,
+823786c73938,,Add a sticky note,Добавить стикер,Yopishqoq qayd qoʻshish,Ёпишқоқ қайд қўшиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:119,both,87476a32,Add
+6c348120c909,,Change List Level,Изменить уровень списка,Roʻyxat darajasini oʻzgartirish,Рўйхат даражасини ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:141,both,686f2a8c,Change
+1322d0339793,,Change to Display,Показать на отдельной строке,Alohida koʻrsatishga oʻtish,Алоҳида кўрсатишга ўтиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2818,both,87c3c191,
+61255b8af1bc,,Character Shading,Заливка знаков,Belgilarni toʻldirish,Белгиларни тўлдириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:111,both,95ebfb52,Character
+358962fb740c,,Define New Bullet,Определить новый маркер,Yangi marker belgilash,Янги маркер белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:605,both,a349213f,New
+7d67869af66a,,Digital signature,Цифровая подпись,Raqamli imzo,Рақамли имзо,draft-unreviewed,,pdfcraft,crates/ui-egui/src/prepare.rs:77,both,3af4775b,Signature
+5d229efb84bd,,Document Property,Свойство документа,Hujjat xossasi,Ҳужжат хоссаси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:463,both,a6a5fb65,Document
+a06542258651,,Filter Recipients,Фильтр получателей,Qabul qiluvchilarni filtrlash,Қабул қилувчиларни филтрлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/mailings.rs:360,both,52d71b0c,
+26adf4442130,,Grow Font 1 Point,Увеличить шрифт на 1 пт,Shriftni 1 punktga oshirish,Шрифтни 1 пунктга ошириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:102,both,e2951832,Font
+de8b04f23577,,Hide all comments,Скрыть все комментарии,Barcha izohlarni yashirish,Барча изоҳларни яшириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments_panel.rs:565,both,44877166,Hide
+74b2704ff759,,Insert Date Field,Вставить поле даты,Sana maydonini kiritish,Сана майдонини киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:103,both,16dff116,Insert; Field; Date
+d31c0e4afd05,,Insert Page Field,Вставить поле номера страницы,Sahifa raqami maydonini kiritish,Саҳифа рақами майдонини киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:107,both,f26dbcbd,Page; Insert; Field
+25257aa84c5c,,Insert Time Field,Вставить поле времени,Vaqt maydonini kiritish,Вақт майдонини киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:105,both,87b6acd8,Insert; Field
+1e282968bac9,,Move Paragraph Up,Переместить абзац вверх,Xatboshini yuqoriga koʻchirish,Хатбошини юқорига кўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:151,both,7f534b94,Move; Paragraph
+2b81be12dd3c,,Move Selected Ink,Переместить выделенные штрихи,Tanlangan qoʻlyozmani koʻchirish,Танланган қўлёзмани кўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/draw.rs:205,both,a5468b23,Move
+a5a420a894a6,,New from Template,Создать из шаблона,Shablondan yaratish,Шаблондан яратиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:418,both,ccabb7f7,
+a7f96152d0f9,,Page Break Before,С новой страницы,Yangi sahifadan boshlash,Янги саҳифадан бошлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:172,both,2594acfa,Page
+e8e14e2a2550,,Paragraph Details,Сведения об абзаце,Xatboshi tafsilotlari,Хатбоши тафсилотлари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:153,both,19e84615,Paragraph
+d5946a7cf071,,Previous Sentence,Предыдущее предложение,Oldingi gap,Олдинги гап,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:22,both,bd1d0f8c,Previous
+660982b7e0e7,,Read Aloud Status,Состояние чтения вслух,Ovozli oʻqish holati,Овозли ўқиш ҳолати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:28,both,fed77ce0,
+5f1b0919e458,,Reading Text Size,Размер текста в режиме чтения,Oʻqishdagi matn oʻlchami,Ўқишдаги матн ўлчами,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:34,both,57d6f37a,Size; Text
+9eca7aa28e12,,Remove Added Font,Удалить добавленный шрифт,Qoʻshilgan shriftni olib tashlash,Қўшилган шрифтни олиб ташлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/font.rs:20,both,2ff4b673,Font; Remove
+125487f571ec,,Sanitize document,Очистить документ,Hujjatni tozalash,Ҳужжатни тозалаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/redact_ui.rs:670,both,542753a8,Document
+fdfaceb9c22e,,Spreadsheet Table,Электронная таблица,Elektron jadval,Электрон жадвал,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:512,both,4ca06809,Table
+0eefe4398388,,Table of Contents,Оглавление,Mundarija,Мундарижа,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_refs.rs:78,both,9730d432,
+d19edd3df516,,Accessibility Pane,Область специальных возможностей,Maxsus imkoniyatlar paneli,Махсус имкониятлар панели,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:75,both,df0749ca,Accessibility
+d1ea7c37ddd1,,AutoFit Row Height,Автоподбор высоты строки,Qator balandligini avtomoslash,Қатор баландлигини автомослаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3122,both,3bcbe66e,Row; Height
+3e318d214279,,Character Position,Смещение знаков,Belgi oʻrni,Белги ўрни,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:132,both,cf2810fc,Character
+aa583fdc9e9c,,Detect form fields,Определить поля формы,Forma maydonlarini aniqlash,Форма майдонларини аниқлаш,draft-unreviewed,,pdfcraft,crates/engine/src/actions.rs:84,both,8eff4c9f,Form
+02fcf7b34c52,,Edit text & images,Редактировать текст и изображения,Matn va rasmlarni tahrirlash,Матн ва расмларни таҳрирлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/canvas.rs:4350,both,3aab00b5,Edit; Text
+6c9a834a79fd,,Export Page as PNG,Экспортировать страницу в PNG,Sahifani PNG sifatida eksport qilish,Саҳифани PNG сифатида экспорт қилиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:91,both,4dfa64bd,Page; Export
+796ea817085d,,Manual Hyphenation,Расстановка переносов вручную,Boʻgʻinni qoʻlda koʻchirish,Бўғинни қўлда кўчириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_layout.rs:53,both,77c37706,
+633c21e44a94,,Move Past Citation,Перейти к концу ссылки,Iqtibosdan keyingi joyga oʻtish,Иқтибосдан кейинги жойга ўтиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:29,both,4b93449a,
+187257bab5f0,,Paragraph Settings,Параметры абзаца,Xatboshi parametrlari,Хатбоши параметрлари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:193,both,5875f179,Paragraph
+b67db7b1761d,,Section Properties,Свойства раздела,Boʻlim xossalari,Бўлим хоссалари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:87,both,fb797744,Section; Properties
+81fc403efcc8,,Show or Hide Style,Показать или скрыть стиль,Uslubni koʻrsatish yoki yashirish,Услубни кўрсатиш ёки яшириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:213,both,39154e17,Hide; Show; Style
+5375c50b9c18,,Squiggly underline,Волнистое подчеркивание,Toʻlqinli tagiga chizish,Тўлқинли тагига чизиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/comments.rs:124,both,bc511d2c,Underline
+bfe6ea764d8d,,Table Column Width,Ширина столбца таблицы,Jadval ustuni kengligi,Жадвал устуни кенглиги,draft-unreviewed,,wordcraft,crates/ui-egui/src/table_resize.rs:412,both,2c776182,Column; Table
+24c6073ecf46,,Toggle Field Codes,Коды/значения полей,Maydon kodlarini almashtirish,Майдон кодларини алмаштириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/canvas.rs:2896,both,3e8f7008,Field
+2baf5b54b87b,,Use system setting,Использовать системные настройки,Tizim sozlamasidan foydalanish,Тизим созламасидан фойдаланиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/appearance.rs:16,both,3af274f1,
+5674dfb90896,,Use system setting,Как в системе,Tizim sozlamasi boʻyicha,Тизим созламаси бўйича,draft-unreviewed,,wordcraft,crates/ui-egui/src/theme.rs:45,both,3af274f1,
+acf0fe8e3897,,Vertical Alignment,Вертикальное выравнивание,Vertikal tekislash,Вертикал текислаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:52,both,4c3b4698,
+be67b48318c6,,Check Compatibility,Проверить совместимость,Muvofiqlikni tekshirish,Мувофиқликни текшириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:441,both,922a8771,
+2ac622758e02,,Delete Selected Ink,Удалить выделенные штрихи,Tanlangan qoʻlyozmani oʻchirish,Танланган қўлёзмани ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/draw.rs:206,both,936c7c9d,Delete
+d19d662e54c3,,Drag to freeze rows,"Перетащите, чтобы закрепить строки",Qatorlarni qotirish uchun sudrang,Қаторларни қотириш учун судранг,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:1815,both,da93204a,
+73e9f9c07d52,,Flatten form fields,Расплющить поля формы,Forma maydonlarini yassilash,Форма майдонларини яссилаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/optimize_ui.rs:210,both,29eb18ce,Form
+745b450304a5,,Format Page Numbers,Формат номеров страниц,Sahifa raqamlari formati,Саҳифа рақамлари формати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:73,both,0b5bde7b,Page; Format
+7c88f189aee1,,Insert Copied Cells,Вставить скопированные ячейки,Nusxalangan kataklarni kiritish,Нусхаланган катакларни киритиш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3185,both,03597b0f,Insert
+6c452fa57609,,Keep Lines Together,Не разрывать абзац,Qatorlarni birga saqlash,Қаторларни бирга сақлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:170,both,b243ab64,
+96877c41e040,,Move Paragraph Down,Переместить абзац вниз,Xatboshini pastga koʻchirish,Хатбошини пастга кўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:153,both,eeb1ecf9,Move; Paragraph
+c89ef36d6923,,Right-to-Left Table,Таблица справа налево,Jadval: oʻngdan chapga,Жадвал: ўнгдан чапга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table.rs:197,both,dea60673,Right; Table; Left
+3336c5d4f13e,,Set Numbering Value,Задать значение нумерации,Raqamlash qiymatini belgilash,Рақамлаш қийматини белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:580,both,46c6bf0e,Value
+bebc1ac96396,,Shrink Font 1 Point,Уменьшить шрифт на 1 пт,Shriftni 1 punktga kamaytirish,Шрифтни 1 пунктга камайтириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:103,both,ba70aa92,Font
+aa4780c96c01,,Type Character Code,Ввести код символа,Belgi kodini kiritish,Белги кодини киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:34,both,2bb58d97,Character
+9ebb8cada97e,,Add to Style Gallery,Добавить в коллекцию стилей,Uslublar galereyasiga qoʻshish,Услублар галереясига қўшиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:232,both,df6dc7a5,Add; Style
+61c7d0b05e84,,AutoFit Column Width,Автоподбор ширины столбца,Ustun kengligini avtomoslash,Устун кенглигини автомослаш,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3138,both,48e4cee1,Column
+5408510c1f76,,Delete Previous Word,Удалить предыдущее слово,Oldingi soʻzni oʻchirish,Олдинги сўзни ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:22,both,f2101ca0,Delete; Word; Previous
+016dcad00342,,Different First Page,Особая первая страница,Birinchi sahifa boshqacha,Биринчи саҳифа бошқача,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:65,both,ead07809,Page
+2b7fa0243d4b,,Document JavaScripts,Скрипты документа,Hujjat JavaScript skriptlari,Ҳужжат JavaScript скриптлари,draft-unreviewed,,pdfcraft,crates/ui-egui/src/js_ui.rs:205,both,8de92992,Document
+facc5538a2fa,,Double Strikethrough,Двойное зачёркивание,Ikki chiziq bilan ustidan chizish,Икки чизиқ билан устидан чизиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/dialogs_lists.rs:508,both,37a241f3,Strikethrough
+fb28a63c0cad,,Enhance camera image,Улучшить снимок с камеры,Kamera tasvirini yaxshilash,Камера тасвирини яхшилаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/editing.rs:268,both,0df59ca9,
+0af1e527953f,,Find text and redact,Найти текст и скрыть,Matnni topish va maxfiylashtirish,Матнни топиш ва махфийлаштириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/redact_ui.rs:383,both,3f138068,Find; Text
+7fdbedf09a63,,Insert Copied Cells…,Вставить скопированные ячейки…,Nusxalangan kataklarni kiritish…,Нусхаланган катакларни киритиш…,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:3186,both,d612d532,Insert
+a65f3d2402ad,,Paste Clipboard Item,Вставить элемент буфера обмена,Almashinuv buferi elementini qoʻyish,Алмашинув буфери элементини қўйиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:78,both,cc74a507,Paste
+e9ce2aa00a55,,Reading Column Width,Ширина столбца в режиме чтения,Oʻqishdagi ustun kengligi,Ўқишдаги устун кенглиги,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:31,both,74111cdf,Column
+3c542c900fc6,,Reading Line Spacing,Межстрочный интервал в режиме чтения,Oʻqish uchun qatorlar oraligʻi,Ўқиш учун қаторлар оралиғи,draft-unreviewed,,wordcraft,crates/engine/src/cmd/view.rs:37,both,949ea003,
+de33427bc6ee,,Recolor Selected Ink,Перекрасить выделенные штрихи,Tanlangan qoʻlyozma rangini oʻzgartirish,Танланган қўлёзма рангини ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/draw.rs:207,both,191d0290,
+009a913d2bf5,,Spelling Suggestions,Варианты написания,Imlo tavsiyalari,Имло тавсиялари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/review.rs:61,both,7e22c94f,Spelling
+384645561b72,,Underline Words Only,Подчёркивать только слова,Faqat soʻzlarning tagiga chizish,Фақат сўзларнинг тагига чизиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:51,both,506134ba,Underline
+a14a70873590,,Widow/Orphan Control,Запрет висячих строк,Yakka satrlarni taqiqlash,Якка сатрларни тақиқлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:176,both,52d5a2fe,
+58df98b2f51b,,Apply Character Style,Применить стиль знаков,Belgi uslubini qoʻllash,Белги услубини қўллаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:137,both,2f6ef945,Character; Apply; Style
+ae9e192c6cce,,Convert Text to Table,Преобразовать текст в таблицу,Matnni jadvalga aylantirish,Матнни жадвалга айлантириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table.rs:209,both,974dbb28,Table; Text
+5d85d5f73858,,Delete Clipboard Item,Удалить элемент буфера обмена,Almashinuv buferi elementini oʻchirish,Алмашинув буфери элементини ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:82,both,e2f56120,Delete
+a1eb85598b75,,Paste: Keep Text Only,Вставить без форматирования,Qoʻyish: faqat matn,Қўйиш: фақат матн,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:65,both,d56c3aef,Paste; Text
+b0140b80c5cb,,Reduce Hanging Indent,Уменьшить выступ,Osma chekinishni kamaytirish,Осма чекинишни камайтириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:51,both,70622648,Indent
+dc1167f14e76,,Replace Document Text,Заменить текст документа,Hujjat matnini almashtirish,Ҳужжат матнини алмаштириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/file.rs:164,both,62650fff,Replace; Document; Text
+d14277269d1a,,Right-to-Left Section,Раздел справа налево,Boʻlim: oʻngdan chapga,Бўлим: ўнгдан чапга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:57,both,31ed73ec,Right; Section; Left
+a114eb96bcb6,,Clear Formatting Level,Очистить уровень форматирования,Format darajasini tozalash,Формат даражасини тозалаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/inspector.rs:34,both,0b357bda,Clear
+ed97d10ee1f2,,Drag to freeze columns,"Перетащите, чтобы закрепить столбцы",Ustunlarni qotirish uchun sudrang,Устунларни қотириш учун судранг,draft-unreviewed,,gridcraft,crates/ui-egui/src/grid.rs:1815,both,1cbec585,
+5a4aabbfbf6c,,Header/Footer Position,Положение колонтитулов,Kolontitul oʻrni,Колонтитул ўрни,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:544,both,19de9f4f,
+538592f9d70f,,Move Table by Dragging,Переместить таблицу перетаскиванием,Jadvalni sudrab koʻchirish,Жадвални судраб кўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table_mouse.rs:53,both,10d3e38d,Move; Table
+aed4b0dd0593,,Remove Content Control,Удалить элемент управления содержимым,Kontent boshqaruvini olib tashlash,Контент бошқарувини олиб ташлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/controls.rs:66,both,9716750c,Remove
+6bb6d3bc7156,,Add Object to Selection,Добавить объект к выделению,Obyektni tanlovga qoʻshish,Объектни танловга қўшиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/objects.rs:350,both,e638053b,Add
+7ac7cb4c209c,,Check for accessibility,Проверить доступности,Maxsus imkoniyatlarni tekshirish,Махсус имкониятларни текшириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/a11y_ui.rs:172,both,282eebbb,Accessibility
+5e8cd5241010,,Close Header and Footer,Закрыть колонтитулы,Kolontitullarni yopish,Колонтитулларни ёпиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/insert.rs:67,both,58036bb4,Close
+f95064ed826e,,Formatting at Selection,Форматирование выделенного фрагмента,Tanlangan joydagi format,Танланган жойдаги формат,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:147,both,5c74c3b2,
+80321aac3780,,Measurement information,Информация об измерениях,Oʻlchov haqida maʼlumot,Ўлчов ҳақида маълумот,draft-unreviewed,,pdfcraft,crates/ui-egui/src/measure_ui.rs:325,both,57b1e0a0,
+d68d3ac5b22f,,Paste: Merge Formatting,Вставить: объединить форматирование,Qoʻyish: formatlarni birlashtirish,Қўйиш: форматларни бирлаштириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/edit.rs:68,both,3b81fbc7,Paste; Merge
+dfc1d36c6ea2,,Define New Number Format,Определить новый формат номера,Yangi raqam formatini belgilash,Янги рақам форматини белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:609,both,4946d110,Format; New
+6286532a35d5,,Resize Table by Dragging,Изменение размера таблицы перетаскиванием,Jadval oʻlchamini sudrab oʻzgartirish,Жадвал ўлчамини судраб ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table_resize.rs:31,both,45578bca,Table
+75332601d8bd,,Set Character Formatting,Задать формат знаков,Belgi formatini belgilash,Белги форматини белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:138,both,6927932f,Character
+ac49587200f0,,Set Paragraph Formatting,Задать формат абзаца,Xatboshi formatini belgilash,Хатбоши форматини белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:190,both,a9559061,Paragraph
+25f7ea1204f5,,Toggle Unicode Character,Преобразовать знак Юникода,Unicode belgisini almashtirish,Unicode белгисини алмаштириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/text.rs:28,both,fd770653,Character
+42d137cf1f67,,Recover Unsaved Documents,Восстановить несохранённые документы,Saqlanmagan hujjatlarni tiklash,Сақланмаган ҳужжатларни тиклаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:415,both,789888ab,
+3c008d6d6e78,,Remove hidden information,Удалить скрытую информацию,Yashirin maʼlumotlarni olib tashlash,Яширин маълумотларни олиб ташлаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/redact_ui.rs:634,both,6ce4fb4e,Remove
+16c19d308269,,Check Spelling as You Type,Проверять орфографию при вводе,Yozish paytida imloni tekshirish,Ёзиш пайтида имлони текшириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/review.rs:109,both,6d21e595,Spelling
+1e862de403ef,,Different Odd & Even Pages,Разные для чётных и нечётных страниц,Juft va toq sahifalar boshqacha,Жуфт ва тоқ саҳифалар бошқача,draft-unreviewed,,wordcraft,crates/engine/src/cmd/page.rs:69,both,f8a7be5a,
+e3d8025749e9,,Export measurements as CSV,Экспортировать измерения в CSV,Oʻlchovlarni CSV sifatida eksport qilish,Ўлчовларни CSV сифатида экспорт қилиш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/measure_ui.rs:409,both,28fac101,Export
+04f0c9d47d6f,,Reset Character Formatting,Сбросить форматирование символов,Belgi formatini asliga qaytarish,Белги форматини аслига қайтариш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/format.rs:121,both,90d69b1a,Character
+ab049ba897a6,,Reset Paragraph Formatting,Сбросить форматирование абзаца,Xatboshi formatini asliga qaytarish,Хатбоши форматини аслига қайтариш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:126,both,70c08888,Paragraph
+c6bcaa22da31,,Inspect Styles at Selection,Стили выделенного фрагмента,Tanlangan joydagi uslublarni tekshirish,Танланган жойдаги услубларни текшириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/inspector.rs:33,both,1516540c,
+ba5c14807978,,Update Styles from Template,Обновить стили из шаблона,Uslublarni shablondan yangilash,Услубларни шаблондан янгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:46,both,cf21763f,
+ce04ccdf3180,,Content Control at Selection,Элемент управления содержимым в выделении,Tanlangan joydagi kontent boshqaruvi,Танланган жойдаги контент бошқаруви,draft-unreviewed,,wordcraft,crates/engine/src/cmd/controls.rs:61,both,7d6e0bea,
+7cb69c296bc4,,Load System Installed Fonts…,Загрузить установленные системные шрифты…,Tizimdagi shriftlarni yuklash…,Тизимдаги шрифтларни юклаш…,draft-unreviewed,,wordcraft,crates/ui-egui/src/widgets.rs:674,both,e916e608,
+80b445655837,,New bookmarks from structure,Новые закладки из структуры,Tuzilmadan yangi xatchoʻplar,Тузилмадан янги хатчўплар,draft-unreviewed,,pdfcraft,crates/ui-egui/src/panels.rs:575,both,389ccd19,New
+20764af1abfa,,Select Table Cells by Clicking,Выделить ячейки таблицы щелчком,Bosish orqali jadval kataklarini tanlash,Босиш орқали жадвал катакларини танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table_mouse.rs:45,both,4dfc0c4a,Select; Table
+98e14431aeec,,Skip Citations and Bibliography,Пропускать ссылки и список литературы,Iqtiboslar va adabiyotlar roʻyxatini oʻtkazib yuborish,Иқтибослар ва адабиётлар рўйхатини ўтказиб юбориш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/speech.rs:25,both,ba902759,
+a62cde3ac542,,Update Style to Match Selection,Обновить стиль по выделенному фрагменту,Uslubni tanlovga moslab yangilash,Услубни танловга мослаб янгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/para.rs:200,both,12a98938,Style
+23fd65099665,,Insert Row or Column by Clicking,Вставить строку или столбец щелчком,Bosish orqali qator yoki ustun kiritish,Босиш орқали қатор ёки устун киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table_mouse.rs:50,both,bd89d148,Column; Row; Insert
+f0fee6c8e1c0,,AutoFit Column by Double-Clicking,Автоподбор ширины столбца двойным щелчком,Ikki marta bosib ustunni avtomoslash,Икки марта босиб устунни автомослаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/table_mouse.rs:56,both,46d4c0f8,Column
+95fd8a9eee86,,Select Text with Similar Formatting,Выделить текст с похожим форматированием,Oʻxshash formatdagi matnni tanlash,Ўхшаш форматдаги матнни танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/tools.rs:638,both,5c675de5,Select; Text
+177161d67819,,Automatically Update Document Styles,Автоматически обновлять стили документа,Hujjat uslublarini avtomatik yangilash,Ҳужжат услубларини автоматик янгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/templates.rs:41,both,2c6812a9,Document
+5b031a4fed59,,Presentations you open show up here. Use Open to browse for one.,,Siz ochgan taqdimotlar shu yerda koʻrinadi. Qidirish uchun «Ochish» tugmasidan foydalaning.,Сиз очган тақдимотлар шу ерда кўринади. Қидириш учун «Очиш» тугмасидан фойдаланинг.,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:582,both,875ce161,Open
+37d98619e90c,,Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.,,Ochiq manba: MIT OR Apache-2.0 litsenziyasi ostida. Microsoft bilan aloqasi yoʻq.,Очиқ манба: MIT OR Apache-2.0 лицензияси остида. Microsoft билан алоқаси йўқ.,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1362,both,70c6ea9e,
+fd81960f4e1c,,"The version, the people and models who built it, and where to find us.",,"Versiya, uni yaratgan odamlar va modellar hamda bizni qayerdan topish mumkin.","Версия, уни яратган одамлар ва моделлар ҳамда бизни қаердан топиш мумкин.",draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1369,both,1ea62ed7,Find; Version
+160fbfd31969,,"A CSV file, web page or PDF is a copy: the workbook keeps its own file.","CSV-файл, веб-страница или PDF — это копия: книга остаётся в своём файле.","CSV fayl, veb sahifa yoki PDF nusxa hisoblanadi: ish kitobi oʻz faylini saqlab qoladi.","CSV файл, веб саҳифа ёки PDF нусха ҳисобланади: иш китоби ўз файлини сақлаб қолади.",draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:688,both,e15da39e,Page; File; Workbook
+05d0d3805bec,,This presentation has unsaved changes. Revert goes back to the saved file.,,Bu taqdimotda saqlanmagan oʻzgarishlar bor. Saqlangan holatga qaytarish saqlangan faylga oʻtadi.,Бу тақдимотда сақланмаган ўзгаришлар бор. Сақланган ҳолатга қайтариш сақланган файлга ўтади.,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:850,both,8161eefc,File; Presentation
+a6cee35d4ce0,,Glide the selection outline to the cell you move to instead of jumping there,"Рамка выделения плавно скользит к новой ячейке, а не перескакивает",Tanlov ramkasi oʻtilgan katakka sakramasdan silliq siljisin,Танлов рамкаси ўтилган катакка сакрамасдан силлиқ силжисин,draft-unreviewed,,gridcraft,crates/ui-egui/src/i18n.rs:400,both,d928f303,Cell
+e8191378d006,,"Sheet structure is locked: sheets can't be added, moved, renamed or deleted.","Структура листов заблокирована: листы нельзя добавлять, перемещать, переименовывать или удалять.","Varaqlar tuzilmasi qulflangan: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin emas.","Варақлар тузилмаси қулфланган: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин эмас.",draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:620,both,b1e6d3d1,Sheet
+a1b58267a4bc,,"Lock the sheet structure so sheets can't be added, moved, renamed or deleted.","Заблокировать структуру листов, чтобы их нельзя было добавлять, перемещать, переименовывать или удалять.","Varaq tuzilmasini qulflash: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin boʻlmaydi.","Варақ тузилмасини қулфлаш: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин бўлмайди.",draft-unreviewed,,gridcraft,crates/ui-egui/src/backstage.rs:622,both,c1703637,Sheet
+8cabef0cf7b6,,"DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer.",,"DeckCraft PDF orqali chop etadi: u PDF koʻrgichda ochiladi, printerni oʻsha yerda tanlaysiz.","DeckCraft PDF орқали чоп этади: у PDF кўргичда очилади, принтерни ўша ерда танлайсиз.",draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1043,both,2238af5f,
+56cb77b49225,,"DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer.",,DeckCraft PDF orqali chop etadi: u yuklab olinadi va brauzer yoki PDF koʻrgichdan chop etishga tayyor boʻladi.,DeckCraft PDF орқали чоп этади: у юклаб олинади ва браузер ёки PDF кўргичдан чоп этишга тайёр бўлади.,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1045,both,80106b25,Print
+78fd0a8cfebf,,"DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.",,"DeckCraft: hisoblar yoʻq — kirish uchun hech narsa yoʻq, taqdimotlaringiz qurilmangizda qoladi.","DeckCraft: ҳисоблар йўқ — кириш учун ҳеч нарса йўқ, тақдимотларингиз қурилмангизда қолади.",draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:1351,both,3a61e7b5,No
+4b2505b5c07b,,"Before you share it, check the presentation for things people with disabilities might find hard to read.",,Ulashishdan oldin taqdimotda nogironligi bor odamlar uchun oʻqishi qiyin boʻlishi mumkin boʻlgan joylarni tekshiring.,Улашишдан олдин тақдимотда ногиронлиги бор одамлар учун ўқиши қийин бўлиши мумкин бўлган жойларни текширинг.,draft-unreviewed,,deckcraft,crates/ui-egui/src/backstage.rs:843,both,48aff787,Presentation; Share
+44f442553a9a,,Font:,Шрифт:,Shrift:,Шрифт:,draft-unreviewed,,shared,crates/ui-egui/src/bulk_fields.rs:298,both,6878d47a,Font
+2dd76fa6f16c,,Alignment:,Выравнивание:,Tekislash:,Текислаш:,draft-unreviewed,,shared,crates/ui-egui/src/bulk_fields.rs:326,both,62713169,
+98dd944474a6,,Field properties,Свойства поля,Maydon xossalari,Майдон хоссалари,draft-unreviewed,,shared,crates/engine/src/catalog.rs:346,both,31c688bb,Field; Properties
+4c6442457f5f,date.monthShort.4,Apr,апр.,apr,апр,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,befde54a,
+687cdcbfe81d,date.monthShort.8,Aug,авг.,avg,авг,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,75629af5,
+4ac187cff0b3,date.monthShort.12,Dec,дек.,dek,дек,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,997f59bc,
+2845bf87de56,date.monthShort.2,Feb,февр.,fev,фев,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,dc8415cc,
+dbea5b85a35b,date.dayShort.6,Fri,пт,ju,жу,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,bbd6e32e,
+726272bbf4ff,date.monthShort.1,Jan,янв.,yan,ян,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,efed3690,
+05d47de87b00,date.monthShort.7,Jul,июль,iyl,ийл,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,b7375584,
+5b8d2bd42a0d,date.monthShort.6,Jun,июнь,iyn,ийн,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,6d90df3b,
+8ac9b21b65a0,date.monthShort.3,Mar,март,mar,мар,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,c4ba0822,
+230ca30cd379,date.month.5,May,май,may,май,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,c94f4798,
+8f4849ecc602,date.monthShort.5,May,май,may,май,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,c94f4798,
+be0a62cffc6c,date.dayShort.2,Mon,пн,du,ду,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,24b2a099,
+033165da36d0,date.monthShort.11,Nov,нояб.,noy,ной,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,bb9bfefd,
+8abf83ff406c,date.monthShort.10,Oct,окт.,okt,окт,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,51327aef,
+c893e092eacd,,Pen,Ручка,Ruchka,Ручка,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:215,both,cf6c07e7,
+d9359ac2e291,date.dayShort.7,Sat,сб,sha,ша,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,6b782d41,
+78233a8cfcb0,date.monthShort.9,Sep,сент.,sen,сен,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,fdd289e3,
+b524f97c32c3,date.dayShort.1,Sun,вс,yak,як,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,48c98cab,
+d82a537a25b8,date.dayShort.5,Thu,чт,pa,па,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,3593ccd9,
+dd26bba6d9ae,date.dayShort.3,Tue,вт,se,се,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,529541bb,
+e272aa48e64b,date.dayShort.4,Wed,ср,ch,ч,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,23408b19,
+557c19b4b057,date.month.7,July,июль,iyul,июл,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,df97a425,
+f7a3badd84e5,date.month.6,June,июнь,iyun,июн,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,a9db9067,
+57e2a68d14e4,date.month.4,April,апрель,aprel,апрел,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,a0393902,
+d14650f84fdc,,Draft,Черновик,Qoralama,Қоралама,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:325,both,23d33e22,
+c89259c4a965,,Index,Индекс,Indeks,Индекс,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:510,both,c2df9b93,
+8affa2498532,date.month.3,March,март,mart,март,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,433632ea,
+b61df6caac4d,,Mixed,Разные значения,Aralash,Аралаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:123,both,c0dcb865,
+24f36a26ea0a,,Rules,Правила,Qoidalar,Қоидалар,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:286,both,bb11a8e3,
+11958d600506,date.month.8,August,август,avgust,август,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,69d97c57,
+09f41e69953c,date.day.6,Friday,пятница,juma,жума,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,d166e844,
+2ed37b699abd,,Markup,Разметка,Belgilash,Белгилаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:224,both,3d221e82,
+181754851f35,date.day.2,Monday,понедельник,dushanba,душанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,932eeb10,
+e920d051335e,,Object,Объект,Obyekt,Объект,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:207,both,2883f191,
+662fef4d5e34,,Reject,Отклонить,Rad etish,Рад этиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:312,both,2b03b592,
+fa9ff1d48461,,Stamps,Штампы,Shtamplar,Штамплар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:377,both,44ae4cb8,
+3144bd291162,date.day.1,Sunday,воскресенье,yakshanba,якшанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,bc5dd045,
+a14a9c2fa96e,,Add Pen,Добавить перо,Qalam qoʻshish,Қалам қўшиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:218,both,739ff4b6,Add
+9e5c0febacdb,,Console,Консоль,Konsol,Консол,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:522,both,9f3341d3,
+93843fc5b95e,,General,Общие,Umumiy,Умумий,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:272,both,9239ee2c,
+fb16b932817c,date.month.1,January,январь,yanvar,январ,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,7a22d73d,
+9d3f2818516e,,Measure,Измерить,Oʻlchash,Ўлчаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:424,both,d4fd0a23,
+2ea10e9289b8,date.month.10,October,октябрь,oktabr,октабр,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,87206ae2,
+4dec688ed6a0,,Outline,Структура,Struktura,Структура,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:324,both,cdd6290b,
+cb6295be6687,,Page Up,Страница вверх,Bir sahifa yuqoriga,Бир саҳифа юқорига,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:48,both,5c77b572,Page
+02cb923b9be3,,Protect,Защитить,Himoyalash,Ҳимоялаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:282,both,016ac2dc,
+1f147d98b820,date.day.3,Tuesday,вторник,seshanba,сешанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,42e43b61,
+5900b1da8636,,Add Text,Добавить текст,Matn qoʻshish,Матн қўшиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:255,both,827a9c0b,Add; Text
+b7f6cd407fec,date.month.12,December,декабрь,dekabr,декабр,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,65640c65,
+4e2a6ab6346f,,Drop Cap,Буквица,Birinchi katta harf,Биринчи катта ҳарф,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:204,both,b03c38c0,
+a48499ff5718,date.month.2,February,февраль,fevral,феврал,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,5c3a35ef,
+68cbfb7c5fb5,,Hide Ink,Скрыть рукописный ввод,Qoʻlyozmani yashirish,Қўлёзмани яшириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:318,both,550a4cf4,Hide
+3466387cc9c7,,Line End,Конец строки,Qator oxiri,Қатор охири,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:31,both,59f32f53,
+b8f9c27ad9d4,,Mailings,Рассылки,Xat tarqatish,Хат тарқатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:78,both,0114f16d,
+c3a43f6a5a58,,No color,Без цвета,Rangsiz,Рангсиз,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:251,both,1d5c5b44,Color
+647ad9535f38,date.month.11,November,ноябрь,noyabr,ноябр,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,3c5bf776,
+db03b8bdb92c,,One Page,Одна страница,Bir sahifa,Бир саҳифа,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:332,both,fcd4c685,Page
+fc8a0190cc6f,,Optimize,Оптимизировать,Optimallashtirish,Оптималлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:324,both,a8cdd9ea,
+1d6dfdb770fa,,Required,Обязательное,Majburiy,Мажбурий,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:289,both,eed6bfb4,
+75ff688f8721,date.day.7,Saturday,суббота,shanba,шанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,17063c50,
+cc459a879059,,Snapping,Привязка,Tortilish,Тортилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:431,both,702fce78,
+c57dea6eb32d,date.day.5,Thursday,четверг,payshanba,пайшанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,76031ddf,
+560057b57e4b,,Tooltip:,Подсказка:,Maslahat:,Маслаҳат:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:285,both,dc728e3a,
+c917f7a52b62,,Vertical,Вертикально,Vertikal,Вертикал,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:328,both,4b937cc8,
+783aec66d375,,Export to,Экспортировать в,Eksport formati,Экспорт формати,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:84,both,fb9b1b7d,
+00b2af3ec7ec,,Page Down,Страница вниз,Bir sahifa pastga,Бир саҳифа пастга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:49,both,eebe8b4d,Page
+67ee090963fd,,Page grid,Сетка страниц,Sahifalar toʻri,Саҳифалар тўри,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:194,both,1a538040,Page
+e545ef64819b,,Preflight,Проверка перед печатью,Chop etishdan oldin tekshirish,Чоп этишдан олдин текшириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:408,both,8016a487,
+5234125569af,,Read Only,Только для чтения,Faqat oʻqish uchun,Фақат ўқиш учун,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:288,both,2a6216ee,
+fea178fbe0d2,date.month.9,September,сентябрь,sentabr,сентабр,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,1c542e79,
+be30c6f4ca06,,Set Caret,Установить курсор,Kursorni oʻrnatish,Курсорни ўрнатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:50,both,54f6b459,
+fe5e227d9710,,Standards,Стандарты,Standartlar,Стандартлар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:494,both,b3883f88,
+bb192745390b,,Summarize,Суммировать,Jamlash,Жамлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:538,both,9763dad7,
+e9cf93cef35f,,Timestamp,Метка времени,Vaqt tamgʻasi,Вақт тамғаси,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:390,both,19eabc96,
+a2f591707ff5,,Watermark,Водяной знак,Suv belgisi,Сув белгиси,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:146,both,d67f8b55,
+5af422af72a8,,Watermark,Подложка,Suv belgisi,Сув белгиси,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:231,both,d67f8b55,
+69a0ca8a99a2,date.day.4,Wednesday,среда,chorshanba,чоршанба,draft-unreviewed,,pdfcraft,crates/engine/src/dates.rs,both,5656b9b7,
+3f5a09467758,,Word Left,На слово влево,Bir soʻz chapga,Бир сўз чапга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:19,both,531e7e0a,Word; Left
+3edba2939d6d,,Blank page,Пустая страница,Boʻsh sahifa,Бўш саҳифа,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:170,both,ba5f16e7,Page
+13cd1fa85eac,,Blank Page,Пустая страница,Boʻsh sahifa,Бўш саҳифа,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:186,both,7c4bb41e,Page
+be4c2befc59d,,Clear form,Очистить форму,Formani tozalash,Формани тозалаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:345,both,68e3e8f0,Form; Clear
+7653a0ebd8c3,,Cover Page,Титульная страница,Titul sahifa,Титул саҳифа,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:185,both,75ce9362,Page
+a3bea106de40,,Edit a PDF,Редактировать PDF,PDF ni tahrirlash,PDF ни таҳрирлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:123,both,f9646ffa,Edit
+aec32c5256f9,,Field list,Список полей,Maydonlar roʻyxati,Майдонлар рўйхати,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:343,both,4e34e3bb,Field
+a55ae698ec5a,,Font Size:,Размер шрифта:,Shrift oʻlchami:,Шрифт ўлчами:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:294,both,5b035c8d,Font; Size
+1fc206b013ce,,Ink Replay,Воспроизведение рукописного ввода,Qoʻlyozmani qayta ijro etish,Қўлёзмани қайта ижро этиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:222,both,f77386f9,
+4ab5075cebe3,,Line Start,Начало строки,Qator boshi,Қатор боши,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:27,both,192a211a,
+08c9f43d910d,,Mark Entry,Пометить элемент,Yozuvni belgilash,Ёзувни белгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:270,both,a7a11b68,
+2c0cbea319d2,,Multi-line,Многострочное,Koʻp qatorli,Кўп қаторли,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:340,both,469ed434,
+838bd02f4d4f,,Page Break,Разрыв страницы,Sahifa uzilishi,Саҳифа узилиши,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:187,both,c862c672,Page
+f34482219c88,,Page Color,Цвет страницы,Sahifa rangi,Саҳифа ранги,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:232,both,1b8c2faf,Page; Color
+15c75849c9c5,,Page Width,По ширине страницы,Sahifa eni boʻyicha,Саҳифа эни бўйича,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:334,both,40224b08,Page; Width
+a7ff72f2859b,,Read Aloud,Прочитать вслух,Ovoz chiqarib oʻqish,Овоз чиқариб ўқиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:299,both,bfd5ef22,
+fb7b1b81c035,,References,Ссылки,Havolalar,Ҳаволалар,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:77,both,5d20d0fe,
+331519b45d65,,Researcher,Исследователь,Tadqiqotchi,Тадқиқотчи,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:261,both,9d526ee3,
+806ec45cbb26,,Scan & OCR,Сканирование и OCR,Skanerlash va OCR,Сканерлаш ва OCR,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:257,both,59d0ac99,
+06d0237764c1,,Show Notes,Показать сноски,Quyi izohlarni koʻrsatish,Қуйи изоҳларни кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:260,both,56994172,Show
+800ed6ac6b93,,Sort items,Сортировать пункты,Elementlarni saralash,Элементларни саралаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:108,both,10d15147,Sort
+376781f3aedc,,Tags panel,Панель тегов,Teglar paneli,Теглар панели,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:481,both,4a44f85f,
+989ff6e3adc0,,Word Right,На слово вправо,Bir soʻz oʻngga,Бир сўз ўнгга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:23,both,a4367d6f,Word; Right
+0684d15a57ea,,Add a stamp,Добавить штамп,Shtamp qoʻshish,Штамп қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:372,both,c6fd6516,Add
+5975dc96c5c1,,Add content,Добавить содержимое,Mazmun qoʻshish,Мазмун қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:141,both,b5352645,Add
+de578e04b40d,,Conversions,Преобразования,Aylantirishlar,Айлантиришлар,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:44,both,b08eaadf,
+9a089f289aa1,,Create from,Создать из,Quyidagidan yaratish,Қуйидагидан яратиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:163,both,af638f7d,
+82787bb194f6,,Custom font,Пользовательский шрифт,Maxsus shrift,Махсус шрифт,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:127,both,e54da667,Font; Custom
+7c73bd2bf25b,,Export data,Экспортировать данные,Maʼlumotlarni eksport qilish,Маълумотларни экспорт қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:351,both,deadb481,Export
+b32bedd2d48a,,Fill Color:,Цвет заливки:,Toʻldirish rangi:,Тўлдириш ранги:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:312,both,98230cd2,Fill; Color
+2086818a8011,,Full Screen,Во весь экран,Toʻliq ekran,Тўлиқ экран,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:339,both,cb715b87,
+d69385e76d57,,Image (PNG),Изображение (PNG),Rasm (PNG),Расм (PNG),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:89,both,fbdecfe9,
+6a0a7ff3201b,,Line Style:,Стиль линии:,Chiziq uslubi:,Чизиқ услуби:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:316,both,8c990ae0,Line (shape); Style
+1d2932f10712,,Modify page,Изменить страницу,Sahifani oʻzgartirish,Саҳифани ўзгартириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:130,both,dba43d2e,Page
+b83a7ca6c0ca,,Next Record,Следующая запись,Keyingi yozuv,Кейинги ёзув,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:290,both,a7b299d3,Next
+87ee4c0838fc,,Quick Parts,Готовые блоки,Tayyor bloklar,Тайёр блоклар,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:202,both,15322ddf,
+848e93a93a14,,Select Line,Выделить строку текста,Qatorni tanlash,Қаторни танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:61,both,1b727c06,Select
+1190052133c7,,Show/Hide ¶,Показать/скрыть ¶,Koʻrsatish/yashirish ¶,Кўрсатиш/яшириш ¶,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:170,both,20edc8ab,Hide; Show
+dc20021ff5b0,,Single file,Один файл,Bitta fayl,Битта файл,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:165,both,4d4d157f,File
+9f045caa6eb7,,Split Table,Разделить таблицу,Jadvalni ajratish,Жадвални ажратиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:359,both,2d8d77c7,Table
+2b61dac8a19c,,Text Color:,Цвет текста:,Matn rangi:,Матн ранги:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:305,both,74840ed1,Color; Text
+3e6d5370ee60,,Actions list,Список действий,Amallar roʻyxati,Амаллар рўйхати,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:454,both,51dcfb87,
+b7ac55a4f0e2,,AI assistant,AI-ассистент,AI yordamchi,AI ёрдамчи,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:530,both,fc7ba354,
+f7bb550e31d9,,Bibliography,Список литературы,Adabiyotlar roʻyxati,Адабиётлар рўйхати,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:265,both,619d65e1,
+378400e59160,,Certificates,Сертификаты,Sertifikatlar,Сертификатлар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:387,both,b3e4eb01,
+1196577d8e41,,Comment list,Список комментариев,Izohlar roʻyxati,Изоҳлар рўйхати,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:249,both,936918a5,Comment
+2294d289e2b9,,Create a PDF,Создать PDF,PDF yaratish,PDF яратиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:157,both,269d3d6d,
+f40358772014,,Document End,Конец документа,Hujjat oxiri,Ҳужжат охири,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:44,both,70d571d7,Document
+94881ed7f843,,Export a PDF,Экспортировать PDF,PDF ni eksport qilish,PDF ни экспорт қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:78,both,bf0a5537,Export
+e0ac5148ff14,,In this file,В этом файле,Shu faylda,Шу файлда,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:265,both,6283815b,File
+d36d4ec2e9b5,,Input Format,Формат ввода,Kiritish formati,Киритиш формати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:47,both,7c793572,Format
+b76ccf8a1aaa,,Insert Index,Вставить указатель,Koʻrsatkich kiritish,Кўрсаткич киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:271,both,7d1a1902,Insert
+db0c858b363c,,Insert pages,Вставить страницы,Sahifalarni kiritish,Саҳифаларни киритиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:134,both,5cca932f,Insert
+cb042aa382fa,,Page Borders,Границы страниц,Sahifa chegaralari,Саҳифа чегаралари,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:233,both,588fcad1,Page
+7d92e0a5b997,,Paragraph Up,На абзац вверх,Bir xatboshi yuqoriga,Бир хатбоши юқорига,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:35,both,d8d81a18,Paragraph
+8126e7ed6fce,,Redact a PDF,Скрыть в PDF,PDF ni maxfiylashtirish,PDF ни махфийлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:300,both,e24bcca0,
+3270100d9c3d,,Redact pages,Скрыть страницы,Sahifalarni maxfiylashtirish,Саҳифаларни махфийлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:309,both,342b8097,
+b5d68a4e3f85,,Rotate pages,Повернуть страницы,Sahifalarni burish,Саҳифаларни буриш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:133,both,d601022d,Rotate
+8c742beeee03,,Select Range,Выделить диапазон,Diapazonni tanlash,Диапазонни танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:54,both,12e1289b,Select; Range
+7af0890dc740,,Set Equation,Задать уравнение,Tenglamani belgilash,Тенгламани белгилаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:66,both,6cb8088f,Equation
+9dcfd6883ea3,,Show Level 1,Показать уровень 1,1-darajani koʻrsatish,1-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:116,both,65857161,Show
+07d76f0ff05e,,Show Level 2,Показать уровень 2,2-darajani koʻrsatish,2-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:120,both,b6c88aa8,Show
+99ea23332935,,Show Level 3,Показать уровень 3,3-darajani koʻrsatish,3-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:124,both,56ab8c0c,Show
+92c68be8c4f8,,Show Level 4,Показать уровень 4,4-darajani koʻrsatish,4-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:128,both,9fc42100,Show
+043e1e9ba4f5,,Show Level 5,Показать уровень 5,5-darajani koʻrsatish,5-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:132,both,64039d30,Show
+35f049cf95c6,,Show Level 6,Показать уровень 6,6-darajani koʻrsatish,6-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:136,both,6c7d1fca,Show
+677b9d74f2a5,,Show Level 7,Показать уровень 7,7-darajani koʻrsatish,7-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:140,both,9f9265e5,Show
+08e610d634c0,,Show Level 8,Показать уровень 8,8-darajani koʻrsatish,8-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:144,both,ae801105,Show
+1038aac8d72a,,Show Level 9,Показать уровень 9,9-darajani koʻrsatish,9-даражани кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:148,both,2c5c9c59,Show
+1573974aef99,,Side to Side,Рядом,Yonma-yon,Ёнма-ён,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:329,both,6f6ba86f,
+a9f7ca7c0159,,Switch Modes,Сменить режим,Rejimni almashtirish,Режимни алмаштириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:335,both,366cd3a7,
+95d063615d9d,,Table Design,Дизайн таблицы,Jadval dizayni,Жадвал дизайни,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:85,both,6ecc0326,Design; Table
+7d0018c101df,,Table Layout,Макет таблицы,Jadval maketi,Жадвал макети,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:85,both,27e20500,Layout; Table
+a642cec553cf,,Text (plain),Текст (обычный),Matn (oddiy),Матн (оддий),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:93,both,5c942492,Text
+82a62b3560f3,,Update Index,Обновить указатель,Koʻrsatkichni yangilash,Кўрсаткични янгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:272,both,d37cb0da,
+cdc1e00b97aa,,Update Table,Обновить таблицу,Jadvalni yangilash,Жадвални янгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:256,both,1ae264ac,Table
+609362ad0616,,Address Block,Блок адреса,Manzil bloki,Манзил блоки,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:283,both,ddbcc344,
+bc03c3cddeec,,Border Color:,Цвет границы:,Chegara rangi:,Чегара ранги:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:311,both,0e83a39d,Color; Border
+906cef26c7d3,,Button Style:,Стиль кнопки:,Tugma uslubi:,Тугма услуби:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:346,both,75474274,Style
+0784c758e799,,Compare files,Сравнить файлы,Fayllarni solishtirish,Файлларни солиштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:439,both,84a7b3c7,
+9dadf76b5651,,Draw freehand,Рисовать от руки,Erkin chizish,Эркин чизиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:237,both,46db3464,Draw
+f55fc342e207,,Edit Equation,Изменить уравнение,Tenglamani tahrirlash,Тенгламани таҳрирлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:28,both,f9ed7970,Equation; Edit
+1a781b204f84,,Equation Info,Сведения об уравнении,Tenglama haqida maʼlumot,Тенглама ҳақида маълумот,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:67,both,01b231c8,Equation
+bf8ae2e9d3c3,,Fix hairlines,Исправить тонкие линии,Ingichka chiziqlarni tuzatish,Ингичка чизиқларни тузатиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:412,both,75e13610,
+586e1a5686ab,,Greeting Line,Строка приветствия,Murojaat qatori,Мурожаат қатори,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:284,both,d7d5c0e6,
+d830245fdc73,,HTML web page,Веб-страница HTML,HTML veb sahifa,HTML веб саҳифа,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:91,both,5022b8bd,Page
+ab2745842cc7,,Insert Symbol,Вставить символ,Simvol kiritish,Символ киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:36,both,bd616f10,Insert
+8c760c390c15,,Mark Citation,Пометить ссылку,Iqtibosni belgilash,Иқтибосни белгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:273,both,d15e0a1e,
+aba8239deb71,,Next Footnote,Следующая сноска,Keyingi quyi izoh,Кейинги қуйи изоҳ,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:259,both,8f4ca82d,Next
+548543fe0bb1,,Outline Level,Уровень структуры,Struktura darajasi,Структура даражаси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:65,both,31624bbd,
+3e8c8c5ba1ea,,Outline State,Состояние структуры,Struktura holati,Структура ҳолати,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:175,both,4828c5c7,
+e0e536c5055d,,Protect a PDF,Защитить PDF,PDF ni himoyalash,PDF ни ҳимоялаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:275,both,a544c7bf,
+d605d9a51507,,Save as PDF/X,Сохранить как PDF/X,PDF/X sifatida saqlash,PDF/X сифатида сақлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:497,both,182cf0c2,Save
+420f5ecb826b,,Separate PDFs,Отдельные PDF,Alohida PDFlar,Алоҳида ПДФлар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:167,both,657772ff,
+2d4f219955ae,,Show Comments,Показать комментарии,Izohlarni koʻrsatish,Изоҳларни кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:307,both,ee251485,Show
+46b3451722e0,,Stamp palette,Палитра штампов,Shtamplar palitrasi,Штамплар палитраси,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:377,both,9bc9a876,
+f6a0a27ef209,,Track Changes,Отслеживать изменения,Oʻzgarishlarni kuzatish,Ўзгаришларни кузатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:308,both,df75f02a,
+d2ac7eec4bed,,Border Painter,Кисть границ,Chegara choʻtkasi,Чегара чўткаси,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:344,both,e147db69,Border
+c37f4ab09143,,Check spelling,Проверить орфографию,Imloni tekshirish,Имлони текшириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:101,both,54d1f2d0,Spelling
+13d1b8448704,,Compress a PDF,Сжать PDF,PDF ni siqish,PDF ни сиқиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:318,both,324a6e69,
+8a89d21952d1,,Convert colors,Преобразовать цвета,Ranglarni aylantirish,Рангларни айлантириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:409,both,74b44de8,
+ee31af4ca983,,Digitally sign,Подписать цифровой подписью,Raqamli imzolash,Рақамли имзолаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:389,both,f8a55451,Sign
+a08410a112e4,,Document Start,Начало документа,Hujjat boshi,Ҳужжат боши,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:40,both,ab33fa99,Document
+bbd83eb8295d,,Drawing Canvas,Полотно для рисования,Chizma tuvali,Чизма тували,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:221,both,ca51f649,
+d0ea1f4953f2,,Finish & Merge,Завершить и объединить,Yakunlash va birlashtirish,Якунлаш ва бирлаштириш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:293,both,5338e274,Merge
+a863ee0b6508,,Highlight text,Выделить текст,Matnni ajratib koʻrsatish,Матнни ажратиб кўрсатиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:227,both,9ac021d2,Text
+d9f141dd651d,,Insert Caption,Вставить подпись,Izohli yozuv kiritish,Изоҳли ёзув киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:266,both,ab984b61,Insert
+b102d5492aa0,,Leave Equation,Выйти из уравнения,Tenglamadan chiqish,Тенгламадан чиқиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:32,both,1d1e9cd8,Equation
+f3840bb3b720,,Manage Sources,Управление источниками,Manbalarni boshqarish,Манбаларни бошқариш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:263,both,a74a9c8d,
+3d620e4f35ff,,Multiple files,Несколько файлов,Bir nechta fayl,Бир нечта файл,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:166,both,46d68d16,
+2b78209bf046,,Multiple Pages,Несколько страниц,Bir nechta sahifa,Бир нечта саҳифа,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:333,both,2034728e,
+3e5667284795,,Output preview,Предварительный просмотр вывода,Chiqishni oldindan koʻrish,Чиқишни олдиндан кўриш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:407,both,26e3c9dc,
+77a6c7afdce9,,Paragraph Down,На абзац вниз,Bir xatboshi pastga,Бир хатбоши пастга,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:36,both,8ddfd00f,Paragraph
+373861c8c79d,,Prepare a form,Подготовить форму,Forma tayyorlash,Форма тайёрлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:334,both,97512ba1,Form
+ceef6257301e,,Reviewing Pane,Область рецензирования,Tekshiruv paneli,Текширув панели,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:310,both,c8814c9f,
+1557229dcefb,,Save as PDF/UA,Сохранить как PDF/UA,PDF/UA sifatida saqlash,PDF/UA сифатида сақлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:498,both,4d3e4ff0,Save
+68893aa5aff1,,Selection Pane,Область выделения,Tanlash paneli,Танлаш панели,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:248,both,a8d83c79,
+5373652bc9ab,,Set as Default,Использовать по умолчанию,Standart qilib belgilash,Стандарт қилиб белгилаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:230,both,344efdbc,Default
+3b95b367066b,,Set properties,Задать свойства,Xossalarni belgilash,Хоссаларни белгилаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:311,both,0f0fa849,Properties
+cd4558833e5e,,Signature Line,Строка подписи,Imzo qatori,Имзо қатори,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:205,both,80975baf,Signature
+de4b4ff8ea8f,,Use JavaScript,Использовать JavaScript,JavaScript dan foydalanish,JavaScript дан фойдаланиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:514,both,7d5464cb,
+c5409d751706,,View Gridlines,Показать сетку,Katakcha chiziqlarini koʻrsatish,Катакча чизиқларини кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:348,both,263b251b,
+710c31f6d570,,Change initials,Изменить инициалы,Bosh harflarni oʻzgartirish,Бош ҳарфларни ўзгартириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:117,both,05cdf398,Change
+7ebdbfad0062,,Line Thickness:,Толщина линии:,Chiziq qalinligi:,Чизиқ қалинлиги:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:313,both,93734841,Line (shape)
+8bb6e2b319b8,,Make accessible,Сделать доступным,Maxsus imkoniyatli qilish,Махсус имкониятли қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:457,both,cf78b069,
+20633695ab7a,,Measure objects,Измерить объекты,Obyektlarni oʻlchash,Объектларни ўлчаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:418,both,0523a401,
+f621a81f58bc,,Multilevel List,Многоуровневый список,Koʻp darajali roʻyxat,Кўп даражали рўйхат,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:166,both,4272c070,
+de21547ad5b2,,Preview Results,Просмотр результатов,Natijalarni oldindan koʻrish,Натижаларни олдиндан кўриш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:288,both,7707856c,
+5d5e99ed914e,,Previous Record,Предыдущая запись,Oldingi yozuv,Олдинги ёзув,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:289,both,afbe96f9,Previous
+86d9ed61eb7c,,Show All Levels,Показать все уровни,Barcha darajalarni koʻrsatish,Барча даражаларни кўрсатиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:152,both,128a3103,Show
+cb0adde03661,,Tag form fields,Пометить поля формы,Forma maydonlarini teglash,Форма майдонларини теглаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:475,both,441c9e07,Form
+c7538225b102,,Add search index,Добавить поисковый индекс,Qidiruv indeksi qoʻshish,Қидирув индекси қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:505,both,2f27cf87,Add
+4d0b2c085845,,Advanced options,Дополнительные параметры,Qoʻshimcha parametrlar,Қўшимча параметрлар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:289,both,63c9e0ba,Options
+0ae6d280504c,,Change signature,Изменить подпись,Imzoni oʻzgartirish,Имзони ўзгартириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:116,both,106e008c,Signature; Change
+f38083f497f8,,Change Structure,Изменить структуру,Strukturani oʻzgartirish,Структурани ўзгартириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:70,both,b929417d,Change
+eb225bc87b2d,,Character limit:,Ограничение символов:,Belgilar chegarasi:,Белгилар чегараси:,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:341,both,598ac859,Character
+ff7956136379,,Document actions,Действия документа,Hujjat amallari,Ҳужжат амаллари,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:524,both,6dad05c1,Document
+90c1814e5377,,Equation Gallery,Коллекция уравнений,Tenglamalar galereyasi,Тенгламалар галереяси,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:68,both,3d276ce2,Equation
+fc2b2f058467,,Immersive Reader,Иммерсивное чтение,Immersiv oʻqish,Иммерсив ўқиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:327,both,9f3d008e,
+c9672e3a033c,,Insert Structure,Вставить структуру,Struktura kiritish,Структура киритиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:34,both,6d574bf6,Insert
+7650f7b9a29b,,Move in Equation,Перемещение в уравнении,Tenglamada koʻchirish,Тенгламада кўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:37,both,7bdcce9c,Move; Equation
+985482e5085a,,PostScript / EPS,PostScript / EPS,PostScript / EPS,PostScript / EPS,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:94,both,324ba4f2,
+ef3551a0aee1,,Print production,Подготовка к печати,Bosmaga tayyorlash,Босмага тайёрлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:405,both,3dafbe80,
+8048b3d2bf14,,Restrict Editing,Ограничить редактирование,Tahrirlashni cheklash,Таҳрирлашни чеклаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:317,both,fced3972,
+1e5b8b00773c,,Scroll long text,Прокрутка длинного текста,Uzun matnni aylantirish,Узун матнни айлантириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:100,both,601cd131,Text
+c91f41d65754,,Start Mail Merge,Начать слияние,Pochta birlashmasini boshlash,Почта бирлашмасини бошлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:279,both,31e6cf07,
+9ae1e1efe531,,Type in Equation,Ввод в уравнение,Tenglamada terish,Тенгламада териш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:33,both,69128a78,Equation
+9128049a50b6,,Add printer marks,Добавить печатные метки,Bosma belgilar qoʻshish,Босма белгилар қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:411,both,bafce1d5,Add
+660513f6035c,,Archive documents,Архивировать документы,Hujjatlarni arxivlash,Ҳужжатларни архивлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:460,both,99686a41,
+11bc645bdfdc,,Audit space usage,Анализ использования места,Joy sarfini tahlil qilish,Жой сарфини таҳлил қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:328,both,65c1782c,
+d5aa6364767a,,Enter in Equation,Новая строка в уравнении,Tenglamada yangi qator,Тенгламада янги қатор,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:43,both,89228c21,Equation
+196e805b3658,,Export all images,Экспортировать все изображения,Barcha rasmlarni eksport qilish,Барча расмларни экспорт қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:90,both,82311701,Export
+1a7b33c8497c,,Fix reading order,Исправить порядок чтения,Oʻqish tartibini tuzatish,Ўқиш тартибини тузатиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:482,both,652fd9ee,
+645fa92aac8e,,Header and footer,Колонтитулы,Kolontitullar,Колонтитуллар,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:145,both,8ee35be5,
+bc6e9dccb277,,In multiple files,В нескольких файлах,Bir nechta faylda,Бир нечта файлда,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:266,both,654055d8,
+c9cc3dbde53f,,Paragraph Spacing,Интервал между абзацами,Xatboshilar oraligʻi,Хатбошилар оралиғи,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:228,both,1ebcca6e,Paragraph
+534ce718204f,,Select Recipients,Выбрать получателей,Qabul qiluvchilarni tanlash,Қабул қилувчиларни танлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:280,both,14b541ab,Select
+ff7afbdfdbd3,,Structure Actions,Действия со структурой,Struktura amallari,Структура амаллари,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:69,both,20a0f05d,
+beed7baab167,,Tab order by rows,Порядок табуляции по строкам,Tab tartibi qatorlar boʻyicha,Tab тартиби қаторлар бўйича,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:347,both,63fde1ad,
+b5810486d2fe,,Use a certificate,Использовать сертификат,Sertifikatdan foydalanish,Сертификатдан фойдаланиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:381,both,14be3586,Certificate
+fec37c6dac39,,Add alternate text,Добавить альтернативный текст,Muqobil matn qoʻshish,Муқобил матн қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:480,both,5f31894b,Add; Text
+08512e9cd0a9,,Close Outline View,Закрыть режим структуры,Struktura koʻrinishini yopish,Структура кўринишини ёпиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:172,both,264cba2e,View; Close
+e282e8f0fc27,,Collapse Selection,Свернуть выделение,Tanlovni yigʻish,Танловни йиғиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:63,both,36bfafe6,
+6998cb7a8fb6,,Comb of characters,Гребёнка символов,Belgilar katakchasi,Белгилар катакчаси,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:103,both,d6cf83d5,
+453a608c5b6f,,Delete in Equation,Удалить в уравнении,Tenglamada oʻchirish,Тенгламада ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:42,both,6b47a404,Equation; Delete
+888ece591382,,Display for Review,Отображение исправлений,Koʻrib chiqish uchun koʻrsatish,Кўриб чиқиш учун кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:309,both,7b93ab77,
+c55b3730c0c0,,Multiple selection,Множественный выбор,Koʻp tanlov,Кўп танлов,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:112,both,8f5af0d8,
+0d5fd0c6bdee,,Repeat Header Rows,Повторять строки заголовка,Sarlavha qatorlarini takrorlash,Сарлавҳа қаторларини такрорлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:364,both,eee3f787,
+3e949ac3f42f,,Spelling & Grammar,Орфография и грамматика,Imlo va grammatika,Имло ва грамматика,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:296,both,c22b3c02,Spelling
+a053d8cf7a57,,Use guided actions,Использовать пошаговые действия,Yoʻnaltirilgan amallardan foydalanish,Йўналтирилган амаллардан фойдаланиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:448,both,d7b05af6,
+58cae1a59845,,Add form components,Добавить компоненты формы,Forma komponentlarini qoʻshish,Форма компонентларини қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:355,both,9cf90ee3,Form; Add
+cb3c31522962,,Apply PDF standards,Применить стандарты PDF,PDF standartlarini qoʻllash,PDF стандартларини қўллаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:488,both,018bad2f,Apply
+d6a1f0cab065,,Edit Recipient List,Изменить список получателей,Qabul qiluvchilar roʻyxatini tahrirlash,Қабул қилувчилар рўйхатини таҳрирлаш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:281,both,5272ba33,Edit
+929ecd216382,,Export measurements,Экспортировать измерения,Oʻlchovlarni eksport qilish,Ўлчовларни экспорт қилиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:432,both,9b5c019e,Export
+9dba77450902,,Geospatial location,Геопространственное положение,Geofazoviy joylashuv,Геофазовий жойлашув,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:433,both,2893926e,Location
+d696902432a9,,Security properties,Свойства безопасности,Xavfsizlik xossalari,Хавфсизлик хоссалари,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:292,both,b82ec098,Security; Properties
+66424187653f,,Spreadsheet (.xlsx),Электронная таблица (.xlsx),Elektron jadval (.xlsx),Электрон жадвал (.xlsx),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:87,both,c115efcb,
+b562113ffcc5,,{n} fields selected,Выбрано полей: {n},{n} ta maydon tanlandi,{n} та майдон танланди,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:264,both,f9734d70,
+d480753aa1cf,,Add files to combine,Добавить файлы для объединения,Birlashtirish uchun fayllar qoʻshish,Бирлаштириш учун файллар қўшиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:181,both,2505b73f,Add
+c031c957ee0d,,Enhance scanned file,Улучшить отсканированный файл,Skanerlangan faylni yaxshilash,Сканерланган файлни яхшилаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:267,both,efb67bcf,File
+a67f7f0c5fed,,Presentation (.pptx),Презентация (.pptx),Taqdimot (.pptx),Тақдимот (.pptx),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:88,both,1822b200,Presentation
+76c5754d4392,,Tab order by columns,Порядок табуляции по столбцам,Tab tartibi ustunlar boʻyicha,Tab тартиби устунлар бўйича,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:348,both,b4484610,
+939e5cc753f7,,Use print production,Использовать подготовку к печати,Bosmaga tayyorlashdan foydalanish,Босмага тайёрлашдан фойдаланиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:399,both,b0f78bb5,
+7b3f185b77d9,,Advanced optimization,Расширенная оптимизация,Kengaytirilgan optimallashtirish,Кенгайтирилган оптималлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:327,both,a68e03a3,
+13b7515a6c9c,,Automatically tag PDF,Автоматически разметить PDF,PDF ni avtomatik teglash,PDF ни автоматик теглаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:474,both,5af1f62e,
+5352921153ff,,Find untagged content,Найти нетегированный контент,Tegsiz tarkibni topish,Тегсиз таркибни топиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:478,both,a42ec8c3,Find
+76e9835d92af,,Manage embedded index,Управлять встроенным индексом,Oʻrnatilgan indeksni boshqarish,Ўрнатилган индексни бошқариш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:510,both,a167f7c3,
+9c617cf65374,,Protect with password,Защитить паролем,Parol bilan himoyalash,Парол билан ҳимоялаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:284,both,c889a3a5,Password
+2eabed01150c,,Change reading options,Изменить параметры чтения,Oʻqish parametrlarini oʻzgartirish,Ўқиш параметрларини ўзгартириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:476,both,574ec138,Change; Options
+2c98a4055fca,,Highlight Merge Fields,Выделить поля слияния,Birlashtirish maydonlarini ajratib koʻrsatish,Бирлаштириш майдонларини ажратиб кўрсатиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:282,both,faa7e33e,Merge
+eb7f8d375218,,Microsoft Word (.docx),Microsoft Word (.docx),Microsoft Word (.docx),Microsoft Word (.docx),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:86,both,75014525,
+8c694e63b41d,,Redact text and images,Скрыть текст и изображения,Matn va rasmlarni maxfiylashtirish,Матн ва расмларни махфийлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:308,both,2ce0642a,Text
+7f2056f84a00,,Ask about this document,Спросить об этом документе,Bu hujjat haqida soʻrash,Бу ҳужжат ҳақида сўраш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:539,both,5f51307a,Document
+b92f7f7853bf,,Change field properties,Изменить свойства поля,Maydon xossalarini oʻzgartirish,Майдон хоссаларини ўзгартириш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:225,both,56c14090,Change; Field; Properties
+e3f3a3d8f057,,Correct recognized text,Исправить распознанный текст,Aniqlangan matnni tuzatish,Аниқланган матнни тузатиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:269,both,47b67f12,Text
+09086df0f514,,Delete Back in Equation,Удалить назад в уравнении,Tenglamada orqaga oʻchirish,Тенгламада орқага ўчириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/equation.rs:41,both,52648720,Equation; Delete; Back
+c60dcb0956ac,,Insert Table of Figures,Вставить список иллюстраций,Rasmlar roʻyxatini kiritish,Расмлар рўйхатини киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:267,both,c291e6f9,Insert
+88e3bbd87ac5,,Rich Text Format (.rtf),Rich Text Format (.rtf),Rich Text Format (.rtf),Рич Техт Формат (.rtf),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:92,both,dcc06060,Format
+ad7d49fb5584,,Select files to compare,Выбрать файлы для сравнения,Solishtirish uchun fayllarni tanlash,Солиштириш учун файлларни танлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:444,both,342420f3,Select
+25c044ff2e35,,Shared Field Properties,Общие свойства полей,Umumiy maydon xossalari,Умумий майдон хоссалари,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:263,both,a18c9975,Field; Properties
+99fbb3d3afc5,,Validate all signatures,Проверить все подписи,Barcha imzolarni tekshirish,Барча имзоларни текшириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:391,both,ec42c486,
+d05d036e51a2,,Encrypt with certificate,Шифровать сертификатом,Sertifikat bilan shifrlash,Сертификат билан шифрлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:291,both,5f994735,Certificate
+d931899129cf,,Prepare for distribution,Подготовить к распространению,Tarqatishga tayyorlash,Тарқатишга тайёрлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:458,both,747a23d7,
+cade8b35755b,,Extend Selection by Units,Расширить выделение по единицам,Tanlovni birliklar boʻyicha kengaytirish,Танловни бирликлар бўйича кенгайтириш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/caret.rs:58,both,ab920860,
+1c5f1f2b6d50,,Open accessibility report,Открыть отчёт о доступности,Maxsus imkoniyatlar hisobotini ochish,Махсус имкониятлар ҳисоботини очиш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:479,both,cfd54cd1,Open; Accessibility
+272ce4997a3f,,Prepare for accessibility,Подготовить к проверке доступности,Maxsus imkoniyatlarga tayyorlash,Махсус имкониятларга тайёрлаш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:466,both,b0d96dcc,Accessibility
+2a89a77c12b0,,Expand or Collapse Heading,Развернуть или свернуть заголовок,Sarlavhani yoyish yoki yigʻish,Сарлавҳани ёйиш ёки йиғиш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:90,both,c529040b,Heading
+580887bddc28,,Line and Paragraph Spacing,Интервал между строками и абзацами,Qator va xatboshi oraligʻi,Қатор ва хатбоши оралиғи,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:175,both,df2c9e8b,Paragraph
+b7a4ba7ab822,,Optimize scanned documents,Оптимизировать отсканированные документы,Skanerlangan hujjatlarni optimallashtirish,Сканерланган ҳужжатларни оптималлаштириш,draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:459,both,94b1a34c,
+51270823146f,,Select Heading and Content,Выделить заголовок и содержимое,Sarlavha va mazmunni tanlash,Сарлавҳа ва мазмунни танлаш,draft-unreviewed,,wordcraft,crates/engine/src/cmd/outline.rs:98,both,b4be61d1,Select; Heading
+4c474adf548c,,Certify (visible signature),Сертификат (видимая подпись),Sertifikatlash (koʻrinadigan imzo),Сертификатлаш (кўринадиган имзо),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:392,both,58fedd83,Signature
+be2641e5d4e4,,Insert Table of Authorities,Вставить таблицу ссылок,Havolalar jadvalini kiritish,Ҳаволалар жадвалини киритиш,draft-unreviewed,,wordcraft,crates/ui-egui/src/keytips.rs:274,both,6c3f430c,Insert; Table
+ee1f5edc81d6,,Certify (invisible signature),Сертификат (невидимая подпись),Sertifikatlash (koʻrinmas imzo),Сертификатлаш (кўринмас имзо),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:393,both,e7dc1a58,Signature
+41016ae42368,,Allow user to enter custom text,Разрешить ввод произвольного текста,Foydalanuvchiga oʻz matnini kiritishga ruxsat berish,Фойдаланувчига ўз матнини киритишга рухсат бериш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:110,both,9f31d3e2,Text
+4a8e9f24596f,,The document is no longer open.,Документ больше не открыт.,Hujjat endi ochiq emas.,Ҳужжат энди очиқ эмас.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:220,both,bb7ad22b,Document
+bda0172eb378,,Field is used for file selection,Поле используется для выбора файла,Maydon fayl tanlash uchun ishlatiladi,Майдон файл танлаш учун ишлатилади,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:104,both,6a2e0bc8,File; Field
+b73cceeddf1b,,Commit selected value immediately,Применить выбранное значение сразу,Tanlangan qiymatni darhol qoʻllash,Танланган қийматни дарҳол қўллаш,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:108,both,8699cedb,Value
+a4aab2323670,,Font size 0 uses automatic sizing.,Размер шрифта 0 включает автоматический подбор размера.,"Shrift oʻlchami 0 boʻlsa, avtomatik oʻlcham ishlatiladi.","Шрифт ўлчами 0 бўлса, автоматик ўлчам ишлатилади.",draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:361,both,0031dfad,Font; Size
+2e1f5ebbe158,,The field {name} no longer exists.,Поле {name} больше не существует.,{name} maydoni endi mavjud emas.,{name} майдони энди мавжуд эмас.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:170,both,03deab26,Field
+acbca3b35196,,Bring your own model (off by default),Использовать свою модель (по умолчанию выключено),Oʻz modelingizdan foydalaning (sukut boʻyicha oʻchiq),Ўз моделингиздан фойдаланинг (сукут бўйича ўчиқ),draft-unreviewed,,pdfcraft,crates/engine/src/catalog.rs:536,both,a5998173,
+509535535dfe,,The field properties could not be changed.,Не удалось изменить свойства полей.,Maydon xossalarini oʻzgartirib boʻlmadi.,Майдон хоссаларини ўзгартириб бўлмади.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:228,both,9c8b9b60,Field; Properties
+4977c126a454,,The field properties dialog is no longer open.,Окно свойств полей больше не открыто.,Maydon xossalari oynasi endi ochiq emas.,Майдон хоссалари ойнаси энди очиқ эмас.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:216,both,6bb5a22b,Field; Properties
+fa35a2b29fb8,,"To change locked fields, also set Locked to No.","Чтобы изменить заблокированные поля, также установите «Заблокировано» в «Нет».",Qulflangan maydonlarni oʻzgartirish uchun Qulflangan parametrini ham Yoʻq ga oʻrnating.,Қулфланган майдонларни ўзгартириш учун Қулфланган параметрини ҳам Йўқ га ўрнатинг.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:365,both,f06a625f,No; Change
+c593c3fc697d,,The selected fields could not be found. Select them again.,Выбранные поля не найдены. Выберите их снова.,Tanlangan maydonlar topilmadi. Ularni qaytadan tanlang.,Танланган майдонлар топилмади. Уларни қайтадан танланг.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:73,both,0c4aae8a,
+31fd7bca2d42,,PRs,PR,PRlar,ПРлар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:92,both,3c880c7d,
+37bb08cd9874,,Last,Последний,Oxirgi,Охирги,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:100,both,d1c69a85,
+6999cadab10b,,First,Первый,Birinchi,Биринчи,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:99,both,916a78d7,
+a6493be912d6,,Model,Модель,Model,Модел,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:306,both,68c2cc7f,
+10ea51634a95,,Commits,Коммиты,Kommitlar,Коммитлар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:306,both,74536b51,
+442fded5d4f4,,Grab bag,Разное,Turli narsalar,Турли нарсалар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:238,both,e3b6a6ab,
+ab3dd3632319,,Username,Имя пользователя,Foydalanuvchi nomi,Фойдаланувчи номи,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:52,both,84c29015,
+7e04496c379b,,Lines +/−,Строки +/−,Qatorlar +/−,Қаторлар +/−,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:306,both,fe60f435,
+1ea92610e22b,,Real name,Настоящее имя,Haqiqiy ism,Ҳақиқий исм,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:54,both,28091331,
+47228d07c6d9,,Line delta,Изменение числа строк,Qatorlar oʻzgarishi,Қаторлар ўзгариши,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:96,both,9cdfb623,
+01bb525b31fb,,Merged PRs,Принятые PR,Qabul qilingan PRlar,Қабул қилинган ПРлар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:92,both,4c962397,
+2063745e3f9d,,Name (A–Z),Имя (А–Я),Nom (A–Z),Ном (А–З),draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:91,both,c93e4c5b,Name
+cbd0ff0028c9,,Last commit,Последний коммит,Oxirgi kommit,Охирги коммит,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:100,both,d0cac73d,
+f18b52483c7f,,Lines added,Добавлено строк,Qoʻshilgan qatorlar,Қўшилган қаторлар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:94,both,bf62517c,
+2f2f0cd5e51b,,Display name,Отображаемое имя,Koʻrsatiladigan nom,Кўрсатиладиган ном,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:53,both,c7874aaa,Name
+3c50b2466da3,,First commit,Первый коммит,Birinchi kommit,Биринчи коммит,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:99,both,1d948d55,
+506f230325a0,,Lines deleted,Удалено строк,Oʻchirilgan qatorlar,Ўчирилган қаторлар,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:95,both,24968998,
+fc7cd6a3a839,,% of all commits,% всех коммитов,Barcha kommitlarning %,Барча коммитларнинг %,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:306,both,094fd79a,
+539922bcbcd2,,Reverse the order,В обратном порядке,Tartibni teskari qilish,Тартибни тескари қилиш,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:234,both,bc0bf0fe,
+fca24331a97c,,Binary assets added,Добавлены двоичные ресурсы,Ikkilik resurslar qoʻshildi,Иккилик ресурслар қўшилди,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:97,both,f8a21fed,
+1592b6575be3,,Binary assets removed,Удалены двоичные ресурсы,Ikkilik resurslar olib tashlandi,Иккилик ресурслар олиб ташланди,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:98,both,44d923ea,
+40f01500ecbc,,No model credits were built into this copy.,В эту сборку не включены сведения о моделях.,Bu nusxaga model mualliflari haqidagi maʼlumot kiritilmagan.,Бу нусхага модел муаллифлари ҳақидаги маълумот киритилмаган.,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:300,both,1199cce7,
+f4f2abd0d30f,,No contributor data was built into this copy.,В эту сборку не включены данные об участниках.,Bu nusxaga ishtirokchilar haqida maʼlumot kiritilmagan.,Бу нусхага иштирокчилар ҳақида маълумот киритилмаган.,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:250,both,96ce342f,
+d366cf4b351b,,ΔLOC,,ΔLOC,ΔLOC,draft-unreviewed,,shared,crates/ui-egui/src/credits.rs:96,both,4a512bd5,
+be18e36229a8,,DN: ,DN: ,DN: ,DN: ,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1699,both,ff30130a,
+872487d87b66,,links,,havolalar,ҳаволалар,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:229,both,379e75c8,
+72b2d3df3fce,,Date: ,Дата: ,Sana: ,Сана: ,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1702,both,f2110a63,Date
+42c84b48c690,,metadata,,metamaʼlumotlar,метамаълумотлар,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:228,both,4c24b261,
+4bc0e4d8d96d,,Metadata,Метаданные,Metamaʼlumotlar,Метамаълумотлар,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1202,both,251edc0e,
+f9acef24dc5f,,Reason: ,Причина: ,Sabab: ,Сабаб: ,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1700,both,3cf4a40a,
+ae0125201b97,,form fill,,forma toʻldirish,форма тўлдириш,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:224,both,42934f17,Form; Fill
+347290619524,,Location: ,Местоположение: ,Joylashuv: ,Жойлашув: ,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1701,both,c47d59ef,Location
+fb03ccc4ae40,,page content,,sahifa mazmuni,саҳифа мазмуни,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:223,both,de9ca703,Page
+c623602d6d01,,other changes,,boshqa oʻzgarishlar,бошқа ўзгаришлар,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:232,both,f867e475,
+fda3a8fa6648,,document structure,,hujjat tuzilmasi,ҳужжат тузилмаси,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:230,both,14341bc0,Document
+1c5192e99aeb,,Signature is valid,,Imzo yaroqli,Имзо яроқли,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:406,both,4e705831,Signature
+ac9a3422b573,,Digitally signed by,Цифровая подпись,Raqamli imzolagan,Рақамли имзолаган,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:1698,both,87668838,
+9150eeda563e,,Signature is invalid,,Imzo yaroqsiz,Имзо яроқсиз,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:408,both,72cadee0,Signature
+e472009e2967,,pages added or removed,,sahifalar qoʻshilgan yoki olib tashlangan,саҳифалар қўшилган ёки олиб ташланган,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:231,both,90d055ef,
+bec6df3027e6,,document security store,,hujjat xavfsizlik ombori,ҳужжат хавфсизлик омбори,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:227,both,08915b72,Security; Document
+df7b403a56ec,,Unsigned signature field,,Imzolanmagan imzo maydoni,Имзоланмаган имзо майдони,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:405,both,6d7e4a0b,Signature; Field
+a2203352ddeb,,{} contributors · {} commits,,{} ishtirokchi · {} kommit,{} иштирокчи · {} коммит,draft-unreviewed,,deckcraft,crates/ui-egui/src/credits.rs:246,both,3dbe16ce,
+cc815b8a1cdd,,Signature validity is unknown,,Imzoning yaroqliligi nomaʼlum,Имзонинг яроқлилиги номаълум,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:407,both,ff532923,Signature
+eccbc552ce6b,,The signer's identity is valid.,,Imzolovchining shaxsi tasdiqlangan.,Имзоловчининг шахси тасдиқланган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:380,both,790075e7,
+fedb483d4351,,the signed version could not be read,,imzolangan versiyani oʻqib boʻlmadi,имзоланган версияни ўқиб бўлмади,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:235,both,a4ab1677,Version
+e1e5b5bf8dab,,The signature could not be read ({}).,,Imzoni oʻqib boʻlmadi ({}).,Имзони ўқиб бўлмади ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:346,both,5a9951dd,Signature
+2978af661363,,The signature has no valid byte range.,,Imzoda yaroqli bayt diapazoni yoʻq.,Имзода яроқли байт диапазони йўқ.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:342,both,eaaa1ade,Signature; No; Range
+3d23449b7e7a,,The timestamp has no valid byte range.,,Vaqt tamgʻasida yaroqli bayt diapazoni yoʻq.,Вақт тамғасида яроқли байт диапазони йўқ.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:392,both,ca635fce,No; Range
+e4e2ffaab535,,The signature could not be checked ({}).,,Imzoni tekshiruvdan oʻtkazib boʻlmadi ({}).,Имзони текширувдан ўтказиб бўлмади ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:364,both,26e58247,Signature
+c14b4afdf794,,The signature could not be verified ({}).,,Imzoni tekshirib boʻlmadi ({}).,Имзони текшириб бўлмади ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:365,both,44e30b0c,Signature
+e71e0013d31e,,The signature contents are not hexadecimal.,,Imzo tarkibi oʻn oltilik sanoq tizimida emas.,Имзо таркиби ўн олтилик саноқ тизимида эмас.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:345,both,b0d3542b,Signature
+d57813b36d28,,The timestamp contents are not hexadecimal.,,Vaqt tamgʻasi tarkibi oʻn oltilik sanoq tizimida emas.,Вақт тамғаси таркиби ўн олтилик саноқ тизимида эмас.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:395,both,327756c3,
+c4c598cd4fd3,,The timestamp token could not be read ({}).,,Vaqt tamgʻasi tokenini oʻqib boʻlmadi ({}).,Вақт тамғаси токенини ўқиб бўлмади ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:396,both,b37c172b,
+ebe87080c2fd,,PdfCraft can't check this signature yet: {}.,,PdfCraft bu imzoni hali tekshira olmaydi: {}.,PdfCraft бу имзони ҳали текшира олмайди: {}.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:347,both,4980148c,Signature
+a329e46d0d24,,The signature includes an embedded timestamp.,,Imzoda ichki vaqt tamgʻasi bor.,Имзода ички вақт тамғаси бор.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:381,both,f9997dc7,Signature
+0f06aa08c38d,,The signer's certificate has been revoked ({}).,,Imzolovchi sertifikati chaqirib olingan ({}).,Имзоловчи сертификати чақириб олинган ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:389,both,5b8b9a1a,Certificate
+282b52db296e,,The signer's certificate is not in the signature.,,Imzolovchi sertifikati imzoda yoʻq.,Имзоловчи сертификати имзода йўқ.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:362,both,18ca55af,Certificate; Signature
+79803cf7be63,,The signature's byte range does not match the file.,,Imzoning bayt diapazoni faylga mos kelmaydi.,Имзонинг байт диапазони файлга мос келмайди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:343,both,e6a493a9,File; Signature; Range
+a478af433d03,,The timestamp's byte range does not match the file.,,Vaqt tamgʻasining bayt diapazoni faylga mos kelmaydi.,Вақт тамғасининг байт диапазони файлга мос келмайди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:393,both,9a9c19b0,File; Range
+c515ccd1f8d8,,Signing time is from the clock on the signer's computer.,,Imzolash vaqti imzolovchi kompyuterining soatidan olingan.,Имзолаш вақти имзоловчи компютерининг соатидан олинган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:382,both,aed90691,
+53645cdd56ed,,The signature uses the legacy adbe.x509.rsa_sha1 format.,,Imzo eskirgan adbe.x509.rsa_sha1 formatidan foydalanadi.,Имзо эскирган адбе.х509.рса_ша1 форматидан фойдаланади.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:348,both,ddb2d016,Signature; Format
+6b92b2fbdf3f,,The timestamp token is valid and its authority is trusted.,,Vaqt tamgʻasi tokeni yaroqli va uning vakolatli markazi ishonchli.,Вақт тамғаси токени яроқли ва унинг ваколатли маркази ишончли.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:402,both,71d76d25,
+5d315048e65c,,The signature's timestamp token could not be verified ({}).,,Imzoning vaqt tamgʻasi tokenini tekshirib boʻlmadi ({}).,Имзонинг вақт тамғаси токенини текшириб бўлмади ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:385,both,7b9c75cb,Signature
+fc4cd084f3c0,,The labels are in English: the signature's font can't draw them in this language.,Метки на английском: шрифт подписи не может отобразить их на этом языке.,Yorliqlar inglizcha: imzo shrifti ularni bu tilda chiza olmaydi.,Ёрлиқлар инглизча: имзо шрифти уларни бу тилда чиза олмайди.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/sign_ui.rs:934,both,dbaca6d8,Language; Font; Signature
+5f966517c12a,,The signature is BER-encoded (indefinite lengths) rather than DER; it was read leniently.,,"Imzo DER emas, BER kodlangan (noaniq uzunliklar); yumshoq oʻqildi.","Имзо DER эмас, BER кодланган (ноаниқ узунликлар); юмшоқ ўқилди.",draft-unreviewed,,pdfcraft,crates/sign/src/cms.rs:71,both,7fe5b3e9,Signature
+d7ed28c7610e,,The ECDSA signature is the raw r and s values instead of a DER sequence; it was read anyway.,,ECDSA imzosi DER ketma-ketligi oʻrniga xom r va s qiymatlaridan iborat; baribir oʻqildi.,ECDSA имзоси DER кетма-кетлиги ўрнига хом р ва с қийматларидан иборат; барибир ўқилди.,draft-unreviewed,,pdfcraft,crates/sign/src/keys.rs:537,both,18374b29,Signature
+45b8851cc5e7,,"The signed content is a constructed (segmented) OCTET STRING, as BER allows; it was read anyway.",,Imzolangan tarkib BER ruxsat etganidek tuzilgan (segmentlangan) OCTET STRING; baribir oʻqildi.,Имзоланган таркиб BER рухсат этганидек тузилган (сегментланган) OCTET STRING; барибир ўқилди.,draft-unreviewed,,pdfcraft,crates/sign/src/cms.rs:88,both,971d4e3c,
+673b5cd36e01,,"The ECDSA signature is not in canonical DER (trailing bytes, padding or a missing sign byte); it was read anyway.",,"ECDSA imzosi kanonik DER emas (ortiqcha baytlar, toʻldirish yoki ishora baytining yoʻqligi); baribir oʻqildi.","ECDSA имзоси каноник DER эмас (ортиқча байтлар, тўлдириш ёки ишора байтининг йўқлиги); барибир ўқилди.",draft-unreviewed,,pdfcraft,crates/sign/src/keys.rs:530,both,b26e693d,Signature
+f539733459ba,,The signature algorithm and the SignerInfo's digest algorithm name different hashes; the signature was made with the SignerInfo's.,,Imzo algoritmi va SignerInfo xesh algoritmi turli xeshlarni nomlaydi; imzo SignerInfo xeshi bilan yaratilgan.,Имзо алгоритми ва SignerInfo хеш алгоритми турли хешларни номлайди; имзо SignerInfo хеши билан яратилган.,draft-unreviewed,,pdfcraft,crates/sign/src/cms.rs:166,both,58dc3e8f,Signature; Name
+3ee6d1a57ecf,,"This signature uses RIPEMD-160, a legacy 160-bit hash algorithm that is no longer recommended for signatures. It still validates, but it should not be relied on.",,"Bu imzo RIPEMD-160 dan foydalanadi — imzolar uchun endi tavsiya etilmaydigan eskirgan 160 bitli xesh algoritmi. U hali ham tasdiqlanadi, lekin unga tayanmaslik kerak.","Бу имзо RIPEMD-160 дан фойдаланади — имзолар учун энди тавсия этилмайдиган эскирган 160 битли хеш алгоритми. У ҳали ҳам тасдиқланади, лекин унга таянмаслик керак.",draft-unreviewed,,pdfcraft,crates/sign/src/keys.rs:156,both,7cfe9b33,Signature
+af867c3d9fe2,,"This signature uses SHA-1, a weak hash algorithm: collisions in it have been demonstrated. It still validates because many documents signed years ago use it, but it should not be relied on.",,"Bu imzo SHA-1 dan foydalanadi — kuchsiz xesh algoritmi: unda toʻqnashuvlar isbotlangan. Koʻp yillar oldin imzolangan hujjatlar undan foydalangani uchun u hali ham tasdiqlanadi, lekin unga tayanmaslik kerak.","Бу имзо SHA-1 дан фойдаланади — кучсиз хеш алгоритми: унда тўқнашувлар исботланган. Кўп йиллар олдин имзоланган ҳужжатлар ундан фойдалангани учун у ҳали ҳам тасдиқланади, лекин унга таянмаслик керак.",draft-unreviewed,,pdfcraft,crates/sign/src/keys.rs:153,both,aa38dac9,Signature
+dffd338a3ca9,,The document changed while you were editing field properties.,"Документ изменился, пока вы редактировали свойства полей.",Maydon xossalarini tahrirlayotganingizda hujjat oʻzgardi.,Майдон хоссаларини таҳрирлаётганингизда ҳужжат ўзгарди.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:162,both,264d94ad,Field; Document; Properties
+9d9b91081e83,,The signer's certificate was not valid at the time of signing.,,Imzolovchi sertifikati imzolash paytida yaroqli boʻlmagan.,Имзоловчи сертификати имзолаш пайтида яроқли бўлмаган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:371,both,fe90038f,Certificate
+62d3ae887fa1,,The signature's byte range does not exclude exactly its contents.,,Imzoning bayt diapazoni uning tarkibini aniq istisno qilmaydi.,Имзонинг байт диапазони унинг таркибини аниқ истисно қилмайди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:344,both,02c4d3fe,Signature; Range
+fd268e03a936,,The timestamp's byte range does not exclude exactly its contents.,,Vaqt tamgʻasining bayt diapazoni uning tarkibini aniq istisno qilmaydi.,Вақт тамғасининг байт диапазони унинг таркибини аниқ истисно қилмайди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:394,both,7af9a97d,Range
+88ecfa2fdba1,,The signature's timestamp token does not cover the signature value.,,Imzoning vaqt tamgʻasi tokeni imzo qiymatini qamrab olmaydi.,Имзонинг вақт тамғаси токени имзо қийматини қамраб олмайди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:384,both,6452b0ac,Signature; Value
+3fd473bd38c4,,Character limit 0 means no limit. A comb of characters needs a limit.,Ограничение 0 означает отсутствие ограничения. Для посимвольных ячеек нужно задать ограничение.,"Belgilar chegarasi 0 boʻlsa, cheklov yoʻq. Belgi katakchalari uchun chegara kerak.","Белгилар чегараси 0 бўлса, чеклов йўқ. Белги катакчалари учун чегара керак.",draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:363,both,8809802b,No; Character
+c534de9e24de,,This document has not been modified since this signature was applied.,,Hujjat bu imzo qoʻyilgandan beri oʻzgartirilmagan.,Ҳужжат бу имзо қўйилгандан бери ўзгартирилмаган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:367,both,8143c20d,Signature; Document
+86a39f4678bc,,This document has not been modified since this timestamp was applied.,,Hujjat bu vaqt tamgʻasi qoʻyilgandan beri oʻzgartirilmagan.,Ҳужжат бу вақт тамғаси қўйилгандан бери ўзгартирилмаган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:399,both,b2f7b276,Document
+486899266131,,The document has been altered or corrupted since the signature was applied.,,Hujjat imzo qoʻyilgandan keyin oʻzgartirilgan yoki buzilgan.,Ҳужжат имзо қўйилгандан кейин ўзгартирилган ёки бузилган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:361,both,c00b986e,Signature; Document
+371956ac764c,,The document has been altered or corrupted since the timestamp was applied.,,Hujjat vaqt tamgʻasi qoʻyilgandan keyin oʻzgartirilgan yoki buzilgan.,Ҳужжат вақт тамғаси қўйилгандан кейин ўзгартирилган ёки бузилган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:397,both,b2f2e4b0,Document
+0f58ae91d023,,The timestamp authority's certificate was not valid at the time of timestamping.,,Vaqt tamgʻasi vakolatli markazining sertifikati tamgʻa qoʻyilgan paytda yaroqli boʻlmagan.,Вақт тамғаси ваколатли марказининг сертификати тамға қўйилган пайтда яроқли бўлмаган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:398,both,6ff9da62,Certificate
+624ab2f95a06,,"@{}: {} PRs, {} commits, +{} / −{} lines (Δ {}), +{} / −{} binary assets, {} – {}",,"@{}: {} PR, {} kommit, +{} / −{} qator (Δ {}), +{} / −{} ikkilik resurs, {} – {}","@{}: {} PR, {} коммит, +{} / −{} қатор (Δ {}), +{} / −{} иккилик ресурс, {} – {}",draft-unreviewed,,deckcraft,crates/ui-egui/src/credits.rs:127,both,3fa0f741,
+1611ca026578,,The signer's certificate has critical extensions PdfCraft does not recognize ({}).,,Imzolovchi sertifikatida PdfCraft tanimaydigan muhim kengaytmalar bor ({}).,Имзоловчи сертификатида PdfCraft танимайдиган муҳим кенгайтмалар бор ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:374,both,4645bbfa,Certificate
+ad7f0e23b68e,,"A selected field has no widget on any page, so the fields can't be edited together.","У одного из выбранных полей нет виджета ни на одной странице, поэтому поля нельзя изменить вместе.","Tanlangan maydonlardan birining hech bir sahifada vidjeti yoʻq, shuning uchun maydonlarni birgalikda tahrirlab boʻlmaydi.","Танланган майдонлардан бирининг ҳеч бир саҳифада виджети йўқ, шунинг учун майдонларни биргаликда таҳрирлаб бўлмайди.",draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:79,both,beddd7ab,Page; No; Field
+77baab01cc13,,The signature value does not match the signer's certificate: the signature is corrupt.,,Imzo qiymati imzolovchi sertifikatiga mos kelmaydi: imzo buzilgan.,Имзо қиймати имзоловчи сертификатига мос келмайди: имзо бузилган.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:363,both,ce5aca82,Certificate; Signature; Value
+9a24107a9073,,The embedded timestamp token is valid and its authority is trusted; trusted time is {}.,,Ichki vaqt tamgʻasi tokeni yaroqli va uning vakolatli markazi ishonchli; ishonchli vaqt: {}.,Ички вақт тамғаси токени яроқли ва унинг ваколатли маркази ишончли; ишончли вақт: {}.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:386,both,a1b9ac3e,
+394d922cc05b,,Only checked properties will change. Mixed means the selected fields have different values.,"Изменятся только отмеченные свойства. «Разные значения» означает, что значения выбранных полей различаются.",Faqat belgilangan xossalar oʻzgaradi. «Aralash» tanlangan maydonlarda qiymatlar turlicha ekanini bildiradi.,Фақат белгиланган хоссалар ўзгаради. «Аралаш» танланган майдонларда қийматлар турлича эканини билдиради.,draft-unreviewed,,pdfcraft,crates/ui-egui/src/bulk_fields.rs:266,both,fc7b1016,Properties
+3885303e5a3c,,"The certificate of {} was not valid at the time of signing, so it is not used to vouch for {}.",,"{} sertifikati imzolash paytida yaroqli boʻlmagan, shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.","{} сертификати имзолаш пайтида яроқли бўлмаган, шунинг учун у {} учун кафолат сифатида ишлатилмайди.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:378,both,1cb543d1,Certificate
+ec96e92aacdb,,The document has been altered since this signature was applied in ways it does not permit ({}).,,Hujjat bu imzo qoʻyilgandan keyin ruxsat etilmagan tarzda oʻzgartirilgan ({}).,Ҳужжат бу имзо қўйилгандан кейин рухсат этилмаган тарзда ўзгартирилган ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:369,both,f7141058,Signature; Document
+0a5b6243cb15,,The document has been altered since this timestamp was applied in ways it does not permit ({}).,,Hujjat bu vaqt tamgʻasi qoʻyilgandan keyin ruxsat etilmagan tarzda oʻzgartirilgan ({}).,Ҳужжат бу вақт тамғаси қўйилгандан кейин рухсат этилмаган тарзда ўзгартирилган ({}).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:401,both,dd1ed9fe,Document
+2b9d3ab20e8c,,"The document has been modified since this signature was applied, but the changes are permitted ({}).",,"Hujjat bu imzo qoʻyilgandan keyin oʻzgartirilgan, ammo oʻzgarishlar ruxsat etilgan ({}).","Ҳужжат бу имзо қўйилгандан кейин ўзгартирилган, аммо ўзгаришлар рухсат этилган ({}).",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:368,both,a21c2897,Signature; Document
+97cf61fdd171,,"The document has been modified since this timestamp was applied, but the changes are permitted ({}).",,"Hujjat bu vaqt tamgʻasi qoʻyilgandan keyin oʻzgartirilgan, ammo oʻzgarishlar ruxsat etilgan ({}).","Ҳужжат бу вақт тамғаси қўйилгандан кейин ўзгартирилган, аммо ўзгаришлар рухсат этилган ({}).",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:400,both,64cc7c3e,Document
+a2e206250781,,The RSA signature's DigestInfo has no NULL parameter (older signers write it so); it was read anyway.,,RSA imzosining DigestInfo qismida NULL parametri yoʻq (eski imzolovchilar shunday yozadi); baribir oʻqildi.,RSA имзосининг DigestInfo қисмида NULL параметри йўқ (эски имзоловчилар шундай ёзади); барибир ўқилди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:353,both,d325a955,Signature; No
+04ca4e0e8d20,,"The timestamp token is valid, but the timestamp authority is not in your list of trusted certificates.",,"Vaqt tamgʻasi tokeni yaroqli, lekin tamgʻa vakolatli markazi ishonchli sertifikatlar roʻyxatingizda yoʻq.","Вақт тамғаси токени яроқли, лекин тамға ваколатли маркази ишончли сертификатлар рўйхатингизда йўқ.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:403,both,536514cc,
+fd5615c1be15,,The document's embedded revocation information shows that the signer's certificate has not been revoked.,,Hujjatga oʻrnatilgan chaqirib olish maʼlumoti imzolovchi sertifikati chaqirib olinmaganini koʻrsatadi.,Ҳужжатга ўрнатилган чақириб олиш маълумоти имзоловчи сертификати чақириб олинмаганини кўрсатади.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:390,both,25c206e2,Certificate; Document
+0c34450f3010,,"The certificate of {} is not a CA certificate that may issue certificates, so it is not used to vouch for {}.",,"{} sertifikati sertifikat berishi mumkin boʻlgan CA sertifikati emas, shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.","{} сертификати сертификат бериши мумкин бўлган CA сертификати эмас, шунинг учун у {} учун кафолат сифатида ишлатилмайди.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:376,both,fe2b30a6,Certificate
+3f3a4820b5a3,,The signer's certificate is not issued for signing documents (its extended key usage has no document-signing purpose).,,Imzolovchi sertifikati hujjat imzolash uchun berilmagan (kengaytirilgan kalit maqsadlarida hujjat imzolash yoʻq).,Имзоловчи сертификати ҳужжат имзолаш учун берилмаган (кенгайтирилган калит мақсадларида ҳужжат имзолаш йўқ).,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:373,both,3f439638,Certificate; No; Document
+7f9c31ac103b,,"The certificate of {} does not allow this many CA certificates below it (path length), so it is not used to vouch for {}.",,"{} sertifikati oʻzidan pastda bunchalik koʻp CA sertifikatiga ruxsat bermaydi (yoʻl uzunligi), shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.","{} сертификати ўзидан пастда бунчалик кўп CA сертификатига рухсат бермайди (йўл узунлиги), шунинг учун у {} учун кафолат сифатида ишлатилмайди.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:377,both,3edb25b7,Certificate
+8647773a2bf7,,The signer's certificate does not allow digital signatures (its key usage has neither digital signature nor non-repudiation).,,"Imzolovchi sertifikati raqamli imzolarga ruxsat bermaydi (kalit qoʻllanilishida na raqamli imzo, na inkor etmaslik bor).","Имзоловчи сертификати рақамли имзоларга рухсат бермайди (калит қўлланилишида на рақамли имзо, на инкор этмаслик бор).",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:372,both,20936108,Certificate; Signature
+05427f2a84a7,,The RSA signature value does not have the length of the key's modulus (leading zero bytes dropped or added); it was read anyway.,,RSA imzo qiymatining uzunligi kalit modulining uzunligiga teng emas (bosh nol baytlar tushirilgan yoki qoʻshilgan); baribir oʻqildi.,RSA имзо қийматининг узунлиги калит модулининг узунлигига тенг эмас (бош нол байтлар туширилган ёки қўшилган); барибир ўқилди.,draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:352,both,0c2e0260,Signature; Value
+d269ad2c9c60,,The signer's identity is unknown because it has not been included in your list of trusted certificates and none of its parent certificates are trusted certificates.,,"Imzolovchining shaxsi nomaʼlum, chunki u ishonchli sertifikatlar roʻyxatingizga kiritilmagan va uning yuqori sertifikatlaridan hech biri ishonchli emas.","Имзоловчининг шахси номаълум, чунки у ишончли сертификатлар рўйхатингизга киритилмаган ва унинг юқори сертификатларидан ҳеч бири ишончли эмас.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:379,both,a43f0978,
+31885b45d52c,,"The signature carries an unverified timestamp ({}): the timestamp authority is not in your list of trusted certificates, so the signing time claimed by the signer is used instead.",,"Imzoda tekshirilmagan vaqt tamgʻasi bor ({}): tamgʻa vakolatli markazi ishonchli sertifikatlar roʻyxatingizda yoʻq, shuning uchun imzolovchi koʻrsatgan imzolash vaqti ishlatiladi.","Имзода текширилмаган вақт тамғаси бор ({}): тамға ваколатли маркази ишончли сертификатлар рўйхатингизда йўқ, шунинг учун имзоловчи кўрсатган имзолаш вақти ишлатилади.",draft-unreviewed,,pdfcraft,crates/sign/src/pdf.rs:387,both,96a9cab5,Signature

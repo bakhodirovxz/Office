@@ -64,12 +64,15 @@ Import rules:
 source scripts/env.sh
 cargo xt i18n extract [--dry-run]                       # refresh i18n/*.tsv from upstream/ (read-only)
 cargo xt i18n review-export --batch 0                   # glossary -> i18n/review/batch-00.csv
-cargo xt i18n review-export --batch 1 [--pass latn|cyrl|both] [--size 400]
+cargo xt i18n review-export --batch 1 [--pass latn|cyrl|both] [--size 400 | --sizes 400,662,661]
 cargo xt i18n review-import <returned.csv>
 cargo xt i18n coverage                                  # keys / P1 / todo / draft / reviewed per app and script
 cargo xt i18n export <app|all> --mode review|release    # native files into $OFFICE_OVERLAY_ROOT/<app>/
 cargo xt i18n roundtrip                                 # extract -> export (no Uzbek) must equal upstream's en/ru
 cargo xt i18n check                                     # row ids match scope+context+English
+cargo xt i18n lint [--report FILE]                      # placeholder parity, apostrophes, script purity, length, Latin/Cyrillic pairs, missing P1
+cargo xt i18n glossary-scan                             # writes i18n/glossary-use.tsv: which glossary terms each string uses
+cargo xt i18n glossary-apply [--write]                  # after you change a glossary term: re-apply it to draft strings, flag reviewed ones
 ```
 
 Batch order: glossary (batch 0), then shared P1, then P1 per app (wordcraft, gridcraft, pdfcraft, deckcraft), then P2. A batch
@@ -79,3 +82,22 @@ lists rows that already have a draft; rows without text are not sent.
 
 `uz-Cyrl -> ru -> en` and `uz-Latn -> en`, applied by the exporter, not at run time. A missing uz-Cyrl row shows upstream's Russian
 (only where upstream has it); everything else shows English. English text is never written into an Uzbek catalog. The chain is in `i18n/config.toml`.
+
+## 7. WP9e draft batches (P1 drafts, 2026-10-17)
+
+All P1 rows (1,723 strings over shared, wordcraft, gridcraft, pdfcraft, deckcraft) have an uz-Latn and an uz-Cyrl draft with status
+`draft:agent-sonnet:2026-10-17`, shown to you as `draft-unreviewed`. Nothing is reviewed. Two ArtCraft-sentence rows have no draft
+on purpose (their note starts with `no-uz:`), because `rebrand` drops those sentences.
+
+- **Batches** are ordered by visibility (menus, backstage, ribbon, common commands first; dialogs; panes; then validation messages, credits and
+  keyboard hints). Batch 1 holds the first 400 rows, batches 2 and 3 split the rest, so they are larger than the 400-row cap of section 3
+  (`--sizes 400,662,661`). The XLSX files are `docs/phase1/i18n/review-batch-0N.xlsx`; the CSV they come from is `i18n/review/batch-0N.csv`.
+- **Glossary terms**: column M of every batch lists the batch 0 terms a string uses. The index is `i18n/glossary-use.tsv`. If you change a glossary
+  term and re-import batch 0, run `cargo xt i18n glossary-scan` once before the change and `cargo xt i18n glossary-apply` after it. A draft string
+  gets the new term (status `draft:glossary-apply:<date>`); a string you already marked reviewed keeps its text and gets a `glossary-changed:` note.
+- **Plural**: Uzbek keeps the noun singular after a number ("5 ta fayl"), so one wording serves every count. wordcraft, gridcraft and deckcraft have no plural
+  mechanism (count-neutral wording). pdfcraft's `@plural` rows would carry the same text twice (`one|other`); no P1 row is a `@plural` row, and lint requires exactly 2 forms.
+- **Script**: uz-Cyrl is derived from the uz-Latn draft by the official letter mapping (`i18n/tools/p1_drafts.py`) and checked again by `lint`
+  (pairs that disagree under the mapping are listed). The glossary's own hand-written Cyrillic is reproduced exactly by the mapping (0 differences in 150 terms).
+- **Length**: strings in ribbon and menu contexts longer than 1.4 times the English are warnings in `docs/phase1/i18n/lint-report.md`. Uzbek is simply longer than English
+  for short verbs ("Cut" = "Kesib olish"); the owner decides which labels to shorten.
