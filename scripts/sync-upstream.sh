@@ -56,7 +56,8 @@ baseval() { sed -n "s/^$2=//p" "$MAIN/patches/$1/BASE"; }
 t_start=$(secs)
 
 # ---------------------------------------------------------------- step 0 preflight
-guard() { { git rev-parse HEAD; git status --porcelain -- upstream patches domains scripts docs/phase1/sync-reports; } | sha1sum | cut -c1-40; }
+# What a dry run must not change: the content of the paths it owns (HEAD may move when another agent commits elsewhere).
+guard() { { git rev-parse HEAD:upstream HEAD:patches HEAD:domains HEAD:scripts; git status --porcelain -- upstream patches domains scripts docs/phase1/sync-reports; } | sha1sum | cut -c1-40; }
 HEAD0=$(git rev-parse HEAD); GUARD0=$(guard)
 if [ -n "$(git status --porcelain -- upstream patches domains scripts docs/phase1/sync-reports)" ]; then
   echo "preflight: upstream/ patches/ domains/ scripts/ are not clean; commit or stash first" >&2; exit 2; fi
@@ -297,7 +298,9 @@ if [ "$MODE" = apply ]; then
   if [ $OK = 1 ]; then
     mkdir -p "$SCR/docs/phase1/sync-reports"; cp "$REPORT" "$SCR/docs/phase1/sync-reports/$DATE.md"
     ( cd "$SCR" && git add docs/phase1/sync-reports patches domains && git commit -q -m "sync($(echo $READY | tr ' ' ',')): rebase queues, regenerate domains and locks ($DATE)" )
-    if [ "$(git rev-parse HEAD)" = "$HEAD0" ] && git merge --ff-only -q "$BRANCH"; then say "APPLIED: fast-forwarded to $(git rev-parse --short HEAD)"; else say "APPLY FAILED: HEAD moved or merge refused; branch $BRANCH kept"; OK=0; fi
+    # HEAD may have moved (other commits elsewhere): replay the scratch commits on it, then fast-forward
+    if [ "$(git rev-parse HEAD)" != "$HEAD0" ]; then ( cd "$SCR" && git rebase -q "$(git -C "$MAIN" rev-parse HEAD)" ) >/dev/null 2>&1 || ( cd "$SCR" && git rebase --abort ) >/dev/null 2>&1; fi
+    if git merge --ff-only -q "$BRANCH"; then say "APPLIED: fast-forwarded to $(git rev-parse --short HEAD)"; else say "APPLY FAILED: HEAD moved or merge refused; branch $BRANCH kept"; OK=0; fi
   else say "NOT APPLIED: the pin stays (STATUS gets an issue line); scratch branch $BRANCH kept at $SCR"; fi
 fi
 if [ "$MODE" = dry ] || [ $OK = 0 ]; then
