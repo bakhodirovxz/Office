@@ -6,7 +6,7 @@
 #
 #   --dry-run   (default) steps 0-5 in scratch worktrees; the monorepo working tree, index and HEAD stay untouched.
 #   --apply     the same, then (only if every selected gate passes and no patch is unresolved) commit the report
-#               and fast-forward the monorepo to the scratch branch sync/<date>.
+#               and fast-forward the monorepo to the scratch branch sync/<date>-<time>.
 #   --resolve   on a conflict, stop and wait for a resolver (agent or human) working in the printed worktree:
 #               edit, `git add`, and the script runs `git am --continue` itself and records the minutes.
 #   --survey    dry-run only: do not stop at the first conflict; commit the conflict markers and carry on, so the
@@ -47,7 +47,7 @@ case "$GATES" in quick|full) ;; *) echo "--gates quick|full" >&2; exit 2;; esac
 DATE=$(date +%F); RUN=$(date +%H%M%S)
 SYNC="$OFFICE_TARGET/sync"; REPDIR="$SYNC/reports"; WORK="$SYNC/run-$DATE-$RUN"; mkdir -p "$REPDIR" "$WORK"
 REPORT="$REPDIR/$DATE.md"; TSV="$REPDIR/$DATE-rebase-log.tsv"; : > "$REPORT"; : > "$TSV"
-SCR="$SYNC/mono-$DATE-$RUN"; BRANCH="sync/$DATE"
+SCR="$SYNC/mono-$DATE-$RUN"; BRANCH="sync/$DATE-$RUN"
 export GIT_COMMITTER_NAME="office-sync" GIT_COMMITTER_EMAIL="sync@office.invalid"
 domain_of() { case "$1" in wordcraft) echo docs;; gridcraft) echo sheets;; deckcraft) echo slides;; pdfcraft) echo pdf;; *) echo "";; esac; }
 say() { echo "$*" | tee -a "$REPORT"; }
