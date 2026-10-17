@@ -1,0 +1,150 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:07:09 +0500
+Subject: [PATCH 102/102] ui-egui, engine: append the overlay's fallback fonts
+ last and use them for PDF export
+
+font_definitions_with appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans,
+office-fallback-mono) after every other face of every family. For PDF export the sans subset
+becomes the default face, with Ubuntu Light behind it (new pdf_fonts::set_default_face_with_fallback),
+so U+02BB and Uzbek Cyrillic are embedded instead of printed as notdef. Adds cmap coverage tests.
+---
+ crates/engine/src/pdf_fonts.rs             | 14 ++++
+ crates/ui-egui/src/office_overlay_tests.rs | 76 ++++++++++++++++++++++
+ crates/ui-egui/src/theme.rs                |  7 +-
+ 3 files changed, 96 insertions(+), 1 deletion(-)
+
+diff --git a/crates/engine/src/pdf_fonts.rs b/crates/engine/src/pdf_fonts.rs
+index 6f0bed5..44d4276 100644
+--- a/crates/engine/src/pdf_fonts.rs
++++ b/crates/engine/src/pdf_fonts.rs
+@@ -92,6 +92,20 @@ pub fn set_default_face(data: Vec<u8>) -> bool {
+     true
+ }
+ 
++/// [`set_default_face`] with a second face behind `data` for the characters it lacks (the first successful call wins).
++pub fn set_default_face_with_fallback(data: Vec<u8>, fallback: Vec<u8>) -> bool {
++    if with_state(|s| s.default.is_some_and(|d| d.is_some())) {
++        return true;
++    }
++    let behind = register_face(fallback, 0, None);
++    let Some(font) = register_face(data, 0, behind) else { return false };
++    with_state(|s| {
++        s.default = Some(Some(font));
++        s.cache.clear();
++    });
++    true
++}
++
+ /// The face compiled in with the `bundled-pdf-font` feature (and in this crate's tests).
+ fn bundled() -> Option<Font> {
+     #[cfg(any(test, feature = "bundled-pdf-font"))]
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 8d9b059..dbead09 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -23,3 +23,79 @@ fn the_label_lookup_shows_the_overlay_name() {
+     let label = Language::En.tr("About\nGridCraft");
+     assert_eq!(label, if o::ACTIVE { format!("About\n{}", o::app_name()) } else { "About\nGridCraft".to_string() });
+ }
++
++/// The WP8 test text: Uzbek Latin with U+02BB and U+02BC, Uzbek Cyrillic (ўқғҳ), and the ruble and numero signs.
++const UZBEK_TEXT: &str = "Oʻzbekiston gʻoya maʼno Ўзбекистон қўғирчоқ ғоя ҳа ₽ №";
++
++/// Does a TrueType font's cmap (format 4 or 12) map `c`? A small reader, enough for the fallback subsets.
++fn cmap_has(font: &[u8], c: char) -> Option<bool> {
++    let u16at = |o: usize| font.get(o..o + 2).map(|b| u16::from_be_bytes([b[0], b[1]]) as usize);
++    let u32at = |o: usize| font.get(o..o + 4).map(|b| u32::from_be_bytes([b[0], b[1], b[2], b[3]]) as usize);
++    let record = (0..u16at(4)?).map(|i| 12 + i * 16).find(|&r| font.get(r..r + 4) == Some(b"cmap".as_slice()))?;
++    let cmap = u32at(record + 8)?;
++    let code = c as usize;
++    for i in 0..u16at(cmap + 2)? {
++        let sub = cmap + u32at(cmap + 4 + i * 8 + 4)?;
++        match u16at(sub)? {
++            4 => {
++                let segs = u16at(sub + 6)? / 2;
++                let (ends, starts, deltas, offsets) = (sub + 14, sub + 16 + 2 * segs, sub + 16 + 4 * segs, sub + 16 + 6 * segs);
++                for s in 0..segs {
++                    if code > u16at(ends + 2 * s)? {
++                        continue;
++                    }
++                    let start = u16at(starts + 2 * s)?;
++                    if code < start {
++                        break;
++                    }
++                    let (delta, range) = (u16at(deltas + 2 * s)?, u16at(offsets + 2 * s)?);
++                    let glyph = if range == 0 { (code + delta) & 0xFFFF } else { u16at(offsets + 2 * s + range + 2 * (code - start))? };
++                    if glyph != 0 {
++                        return Some(true);
++                    }
++                    break;
++                }
++            }
++            12 => {
++                for g in 0..u32at(sub + 12)? {
++                    let at = sub + 16 + g * 12;
++                    if (u32at(at)?..=u32at(at + 4)?).contains(&code) {
++                        return Some(true);
++                    }
++                }
++            }
++            _ => {}
++        }
++    }
++    Some(false)
++}
++
++/// The fallback faces cover every character of the test text, and they come last in every interface family,
++/// so upstream's metrics are unchanged.
++#[test]
++fn fallback_font_covers_uzbek() {
++    if !o::ACTIVE {
++        return;
++    }
++    let defs = crate::theme::font_definitions_for_language(Language::En);
++    for (key, bytes) in o::FALLBACK_FONTS {
++        for ch in UZBEK_TEXT.chars().filter(|c| !c.is_whitespace()) {
++            assert_eq!(cmap_has(bytes, ch), Some(true), "{key} has no glyph for {ch:?} (U+{:04X})", ch as u32);
++        }
++    }
++    for (family, stack) in &defs.families {
++        let last = stack.last().map(String::as_str);
++        assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
++    }
++}
++
++/// A sheet's text reaches the PDF export with a face that covers it (U+02BB included), also with no installed fonts.
++#[test]
++fn pdf_default_face_covers_uzbek() {
++    if !o::ACTIVE {
++        return;
++    }
++    let _ = crate::theme::font_definitions_for_language(Language::En);
++    let font = gridcraft_engine::pdf_fonts::for_text(gridcraft_engine::pdf_fonts::resolve("Arial", false, false), UZBEK_TEXT);
++    assert!(font.covers(UZBEK_TEXT));
++}
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index 3075935..a707a48 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -390,7 +390,11 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
+     // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
+     // has Latin, Greek and Cyrillic). Only the first call has an effect.
+     if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
+-        gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec());
++        match crate::office_overlay::FALLBACK_FONTS.first() {
++            // The overlay's face leads, so U+02BB and Uzbek Cyrillic print; Ubuntu Light stays behind it for Greek.
++            Some((_, sans)) => gridcraft_engine::pdf_fonts::set_default_face_with_fallback(sans.to_vec(), ubuntu.font.to_vec()),
++            None => gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec()),
++        };
+     }
+     let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
+     let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
+@@ -439,6 +443,7 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
+     if let Some(ui) = fonts.families.get(&FontFamily::Name(UI.into())).cloned() {
+         fonts.families.insert(FontFamily::Proportional, ui);
+     }
++    crate::office_overlay::append_fallback_fonts(&mut fonts);
+     drop_unparseable_fonts(&mut fonts);
+     // Only families egui still has data for count as bound (a dropped face can empty a chain).
+     bound.retain(|f| fonts.families.get(&FontFamily::Name(f.as_str().into())).is_some_and(|c| !c.is_empty()));

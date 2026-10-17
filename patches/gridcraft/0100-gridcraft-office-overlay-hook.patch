@@ -1,0 +1,460 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:06:08 +0500
+Subject: [PATCH 100/102] ui-egui, app: office overlay hook (name, icon,
+ version, attribution)
+
+Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
+OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window title,
+window icon, About heading/version/attribution and web start error through it.
+Language::tr, the message box and the About/agent/macros raw labels pass their text through
+rebrand(); set_current mirrors the interface language for it. Without OFFICE_OVERLAY_DIR every
+value is upstream's own.
+---
+ apps/gridcraft-web/src/web.rs              |   5 +-
+ apps/gridcraft/src/main.rs                 |   6 +-
+ crates/ui-egui/build.rs                    |   4 +
+ crates/ui-egui/build_office.rs             | 119 +++++++++++++++++++++
+ crates/ui-egui/src/dialogs.rs              |  15 ++-
+ crates/ui-egui/src/i18n.rs                 |   3 +-
+ crates/ui-egui/src/lib.rs                  |   3 +
+ crates/ui-egui/src/office_overlay.rs       | 114 ++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs |  25 +++++
+ crates/ui-egui/src/widgets.rs              |   4 +-
+ 10 files changed, 286 insertions(+), 12 deletions(-)
+ create mode 100644 crates/ui-egui/build_office.rs
+ create mode 100644 crates/ui-egui/src/office_overlay.rs
+ create mode 100644 crates/ui-egui/src/office_overlay_tests.rs
+
+diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
+index c0fcb22..5747898 100644
+--- a/apps/gridcraft-web/src/web.rs
++++ b/apps/gridcraft-web/src/web.rs
+@@ -75,7 +75,10 @@ pub fn start() {
+         if let Some(el) = document.get_element_by_id(LOADING_ID) {
+             match result {
+                 Ok(()) => el.remove(),
+-                Err(e) => el.set_inner_html(&format!("<p>GridCraft failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>")),
++                Err(e) => el.set_inner_html(&format!(
++                    "<p>{} failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>",
++                    gridcraft_ui_egui::office_overlay::app_name()
++                )),
+             }
+         }
+     });
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index 7c0eb04..0a55681 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -225,7 +225,7 @@ fn icon() -> Option<egui::IconData> {
+     let bytes = include_bytes!("../../../assets/app-icon/gridcraft-macos-512.png");
+     #[cfg(not(target_os = "macos"))]
+     let bytes = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.gridcraft.png");
+-    let img = image::load_from_memory(bytes).ok()?.to_rgba8();
++    let img = image::load_from_memory(gridcraft_ui_egui::office_overlay::icon_png().unwrap_or(bytes)).ok()?.to_rgba8();
+     Some(egui::IconData { width: img.width(), height: img.height(), rgba: img.into_raw() })
+ }
+ 
+@@ -252,7 +252,7 @@ fn main() -> eframe::Result<()> {
+     }));
+     let args: Vec<String> = std::env::args().skip(1).collect();
+     if args.iter().any(|a| a == "--version" || a == "-V") {
+-        println!("GridCraft {}", env!("CARGO_PKG_VERSION"));
++        println!("{} {}", gridcraft_ui_egui::office_overlay::app_name(), gridcraft_ui_egui::office_overlay::VERSION);
+         return Ok(());
+     }
+     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
+@@ -309,7 +309,7 @@ fn main() -> eframe::Result<()> {
+         app.open_path(f);
+     }
+     let mut viewport = egui::ViewportBuilder::default()
+-        .with_title("GridCraft")
++        .with_title(gridcraft_ui_egui::office_overlay::app_name())
+         .with_inner_size([1440.0, 900.0])
+         .with_min_inner_size([640.0, 420.0])
+         .with_app_id("ai.storyteller.gridcraft")
+diff --git a/crates/ui-egui/build.rs b/crates/ui-egui/build.rs
+index f40007f..047ee7a 100644
+--- a/crates/ui-egui/build.rs
++++ b/crates/ui-egui/build.rs
+@@ -10,9 +10,13 @@
+ 
+ use std::fmt::Write as _;
+ 
++#[path = "build_office.rs"]
++mod build_office;
++
+ use serde_json::Value;
+ 
+ fn main() {
++    build_office::run();
+     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contributors");
+     let json = read(&dir.join("contributors.json"), "the About window shows no contributors", |t| {
+         serde_json::from_str::<Value>(t).map_err(|e| e.to_string())
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+new file mode 100644
+index 0000000..c50531e
+--- /dev/null
++++ b/crates/ui-egui/build_office.rs
+@@ -0,0 +1,119 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Build-script half of the brand overlay hook. Reads `$OFFICE_OVERLAY_DIR/overlay.env` (written by
++//! `cargo xt overlay`) and writes `$OUT_DIR/office_overlay_gen.rs`, the constants behind `office_overlay.rs`.
++//! With `OFFICE_OVERLAY_DIR` unset every constant holds upstream's own value, so such a build behaves like upstream.
++
++use std::collections::HashMap;
++use std::fmt::Write as _;
++use std::path::{Path, PathBuf};
++
++/// Upstream's own values: the app's name token and its Wayland/X11 app id.
++const UPSTREAM_NAME: &str = "GridCraft";
++const UPSTREAM_APP_ID: &str = "ai.storyteller.gridcraft";
++
++pub fn run() {
++    println!("cargo::rerun-if-env-changed=OFFICE_OVERLAY_DIR");
++    println!("cargo::rerun-if-changed=build_office.rs");
++    println!("cargo::rustc-check-cfg=cfg(office_overlay)");
++    let out = PathBuf::from(std::env::var_os("OUT_DIR").unwrap_or_default()).join("office_overlay_gen.rs");
++    let dir = std::env::var_os("OFFICE_OVERLAY_DIR").map(PathBuf::from).filter(|d| d.join("overlay.env").is_file());
++    let text = match &dir {
++        Some(d) => {
++            println!("cargo::rustc-cfg=office_overlay");
++            generate(d)
++        }
++        None => generate_upstream(),
++    };
++    if let Err(e) = std::fs::write(&out, text) {
++        println!("cargo::error=writing {}: {e}", out.display());
++    }
++}
++
++fn parse(dir: &Path) -> HashMap<String, String> {
++    let file = dir.join("overlay.env");
++    println!("cargo::rerun-if-changed={}", file.display());
++    let text = std::fs::read_to_string(&file).unwrap_or_default();
++    text.lines().filter_map(|l| l.split_once('=')).map(|(k, v)| (k.trim().to_string(), v.to_string())).collect()
++}
++
++/// An `include_bytes!` path: absolute, forward slashes, registered for rebuilds.
++fn include_path(dir: &Path, name: &str) -> String {
++    let p = dir.join(name);
++    println!("cargo::rerun-if-changed={}", p.display());
++    p.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/")
++}
++
++fn flag(env: &HashMap<String, String>, key: &str) -> bool {
++    env.get(key).is_some_and(|v| v == "1")
++}
++
++fn pairs(env: &HashMap<String, String>, prefix: &str) -> String {
++    let mut s = String::from("&[");
++    for lang in ["en", "ru", "uz-latn", "uz-cyrl"] {
++        if let Some(v) = env.get(&format!("{prefix}_{lang}")) {
++            let _ = write!(s, "({lang:?}, {v:?}), ");
++        }
++    }
++    s + "]"
++}
++
++fn generate(dir: &Path) -> String {
++    let env = parse(dir);
++    let get = |k: &str| env.get(k).cloned().unwrap_or_default();
++    let mut o = String::from("// GENERATED by build_office.rs from $OFFICE_OVERLAY_DIR/overlay.env. Do not edit.\n");
++    let _ = writeln!(o, "pub const ACTIVE: bool = true;");
++    let _ = writeln!(o, "pub const PRODUCT_NAME: &str = {:?};", get("PRODUCT_NAME"));
++    let _ = writeln!(o, "pub const APP_NAME: &str = {:?};", get("APP_NAME"));
++    let _ = writeln!(o, "pub const APP_NAMES: &[(&str, &str)] = {};", pairs(&env, "APP_NAME"));
++    let names: Vec<String> = get("UPSTREAM_NAMES").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
++    let _ = writeln!(o, "pub const UPSTREAM_NAMES: &[&str] = &{names:?};");
++    let _ = writeln!(o, "pub const APP_ID: &str = {:?};", get("APP_ID"));
++    let _ = writeln!(o, "pub const VERSION: &str = {:?};", get("VERSION"));
++    let _ = writeln!(o, "pub const COPYRIGHT: &str = {:?};", get("COPYRIGHT"));
++    let _ = writeln!(o, "pub const ATTRIBUTION: &[(&str, &str)] = {};", pairs(&env, "ATTRIBUTION"));
++    for (name, key) in [
++        ("COMMUNITY", "COMMUNITY"),
++        ("SHARE", "SHARE"),
++        ("ZOTERO", "ZOTERO"),
++        ("UPDATE_CHECK", "UPDATE_CHECK"),
++        ("UPSTREAM_LINKS", "UPSTREAM_LINKS"),
++        ("CONTRIBUTORS_TAB", "CONTRIBUTORS_TAB"),
++    ] {
++        let _ = writeln!(o, "pub const {name}: bool = {};", flag(&env, key));
++    }
++    let _ = writeln!(o, "pub const LINK_WEBSITE: &str = {:?};", get("LINK_WEBSITE"));
++    let icon = get("ICON_PNG");
++    if icon.is_empty() {
++        let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
++    } else {
++        let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = Some(include_bytes!({:?}));", include_path(dir, &icon));
++    }
++    let fonts: Vec<String> = get("FONTS").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
++    let mut list = String::new();
++    for (i, f) in fonts.iter().enumerate() {
++        let key = if i == 0 { "office-fallback-sans" } else { "office-fallback-mono" };
++        let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
++    }
++    let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
++    o
++}
++
++fn generate_upstream() -> String {
++    let mut o = String::from("// GENERATED by build_office.rs (no overlay: upstream values). Do not edit.\n");
++    let _ = writeln!(o, "pub const ACTIVE: bool = false;");
++    let _ = writeln!(o, "pub const PRODUCT_NAME: &str = {UPSTREAM_NAME:?};");
++    let _ = writeln!(o, "pub const APP_NAME: &str = {UPSTREAM_NAME:?};");
++    let _ = writeln!(o, "pub const APP_NAMES: &[(&str, &str)] = &[];");
++    let _ = writeln!(o, "pub const UPSTREAM_NAMES: &[&str] = &[];");
++    let _ = writeln!(o, "pub const APP_ID: &str = {UPSTREAM_APP_ID:?};");
++    let _ = writeln!(o, "pub const VERSION: &str = env!(\"CARGO_PKG_VERSION\");");
++    let _ = writeln!(o, "pub const COPYRIGHT: &str = \"\";");
++    let _ = writeln!(o, "pub const ATTRIBUTION: &[(&str, &str)] = &[];");
++    for name in ["COMMUNITY", "SHARE", "ZOTERO", "UPDATE_CHECK", "UPSTREAM_LINKS", "CONTRIBUTORS_TAB"] {
++        let _ = writeln!(o, "pub const {name}: bool = true;");
++    }
++    let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
++    let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
++    let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
++    o
++}
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index fb899c7..aa5fd10 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -1063,7 +1063,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
+                 "solverResults" => solver_results(app, ui, &mut d, &mut open),
+                 "spelling" => spelling(app, ui, &mut d, &mut open),
+                 "agents" => {
+-                    ui.label("GridCraft is fully drivable by agents. Every menu item, button and gesture is a command:");
++                    ui.label(crate::office_overlay::rebrand("GridCraft is fully drivable by agents. Every menu item, button and gesture is a command:"));
+                     ui.add_space(4.0);
+                     ui.monospace("gridcraft --control 7979        # JSON-lines control channel\ngridcraft-cli mcp --connect 7979   # MCP bridged to this window\ngridcraft-cli mcp                   # headless MCP server");
+                     ui.add_space(4.0);
+@@ -1483,10 +1483,13 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
+         "Contributors" => crate::credits::contributors_ui(ui),
+         "Models" => crate::credits::models_ui(ui),
+         _ => {
+-            ui.heading("GridCraft");
+-            ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
++            ui.heading(crate::office_overlay::app_name());
++            ui.label(format!("Version {}", crate::office_overlay::VERSION));
+             ui.add_space(4.0);
+-            ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of ArtCraft.");
++            ui.label(crate::office_overlay::rebrand("A clean-room, open-source, Rust-native spreadsheet. Part of ArtCraft."));
++            if !crate::office_overlay::attribution().is_empty() {
++                ui.label(crate::office_overlay::attribution());
++            }
+             ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
+             ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
+         }
+@@ -1497,7 +1500,9 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
+ /// preserved VBA project. Mirrors Excel's Developer ▸ Macros list, but is honest that VBA is
+ /// preserved and not executed.
+ fn macros(ui: &mut egui::Ui, d: &mut Dialog) {
+-    ui.label("Automation in this workbook. GridCraft runs its own scripts; a file's VBA project is preserved but not executed.");
++    ui.label(crate::office_overlay::rebrand(
++        "Automation in this workbook. GridCraft runs its own scripts; a file's VBA project is preserved but not executed.",
++    ));
+     ui.add_space(6.0);
+     let items: Vec<Json> = d.result.as_ref().and_then(Json::as_array).cloned().unwrap_or_default();
+     if items.is_empty() {
+diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
+index 061698d..b2dcb6f 100644
+--- a/crates/ui-egui/src/i18n.rs
++++ b/crates/ui-egui/src/i18n.rs
+@@ -130,7 +130,7 @@ impl Language {
+             Self::Fr => fr::translate(text),
+             Self::Sr => sr::translate(text),
+         };
+-        translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label))
++        crate::office_overlay::rebrand(translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label)))
+     }
+ }
+ 
+@@ -170,6 +170,7 @@ pub fn current(ctx: &egui::Context) -> Language {
+ 
+ /// Sets the language for the current frame; call once per frame before anything is drawn.
+ pub fn set_current(ctx: &egui::Context, language: Language) {
++    crate::office_overlay::set_lang(language.code());
+     ctx.data_mut(|d| d.insert_temp(lang_key(), language));
+ }
+ 
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index f96cdac..6bc16f5 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -22,6 +22,9 @@ pub mod i18n;
+ pub mod icons;
+ pub mod keymap;
+ pub mod keytips;
++pub mod office_overlay;
++#[cfg(test)]
++mod office_overlay_tests;
+ pub mod outline;
+ pub mod panes;
+ pub mod paper_view;
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+new file mode 100644
+index 0000000..6276a68
+--- /dev/null
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -0,0 +1,114 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The brand overlay: the product name, attribution, icon, chrome flags and fallback fonts that
++//! `cargo xt overlay` renders from `brand/brand.toml`. Without `OFFICE_OVERLAY_DIR` at build time
++//! every value is upstream's own, so a build without an overlay behaves like upstream.
++
++include!(concat!(env!("OUT_DIR"), "/office_overlay_gen.rs"));
++
++use std::collections::BTreeMap;
++use std::sync::Mutex;
++
++/// The interface language code, lowercase (`en`, `ru`, `uz-latn`, ...), as the overlay keys it.
++fn lang_code() -> String {
++    (LANG_CODE.get()).to_ascii_lowercase()
++}
++
++fn by_lang(table: &'static [(&'static str, &'static str)], fallback: &'static str) -> &'static str {
++    let code = lang_code();
++    let find = |c: &str| table.iter().find(|(k, _)| *k == c).map(|(_, v)| *v);
++    find(&code).or_else(|| find("en")).unwrap_or(fallback)
++}
++
++/// The app's display name in the current interface language.
++pub fn app_name() -> &'static str {
++    by_lang(APP_NAMES, APP_NAME)
++}
++
++/// The "based on" line in the current interface language (empty without an overlay).
++pub fn attribution() -> &'static str {
++    by_lang(ATTRIBUTION, "")
++}
++
++/// Upstream sentences that advertise upstream's community; `rebrand` removes them.
++const REMOVED: &[&str] = &["Part of the Crafting Apps from the ArtCraft team.", "Part of ArtCraft."];
++
++fn is_word_char(c: char) -> bool {
++    c.is_alphanumeric() || c == '_'
++}
++
++/// Replace whole-token occurrences of `from` in `s`.
++fn replace_token(s: &str, from: &str, to: &str) -> String {
++    let mut out = String::with_capacity(s.len() + to.len());
++    let mut rest = s;
++    while let Some(i) = rest.find(from) {
++        let (head, tail) = rest.split_at(i);
++        let after = &tail[from.len()..];
++        let before_ok = head.chars().next_back().is_none_or(|c| !is_word_char(c));
++        let after_ok = after.chars().next().is_none_or(|c| !is_word_char(c));
++        out.push_str(head);
++        out.push_str(if before_ok && after_ok { to } else { from });
++        rest = after;
++    }
++    out.push_str(rest);
++    out
++}
++
++static INTERNED: Mutex<BTreeMap<String, &'static str>> = Mutex::new(BTreeMap::new());
++
++/// Show `s` under the overlay's name: every upstream name token becomes `app_name()` and the upstream community
++/// sentences are dropped. Returns `s` itself when there is no overlay or nothing matches. A changed string is
++/// interned, so the cache holds one entry per distinct (language, source) pair.
++pub fn rebrand(s: &str) -> &str {
++    if !ACTIVE || UPSTREAM_NAMES.is_empty() || !(s.contains("Craft") || s.contains("Discord")) {
++        return s;
++    }
++    let key = format!("{}\u{1f}{s}", lang_code());
++    let mut cache = INTERNED.lock().unwrap_or_else(|e| e.into_inner());
++    if let Some(done) = cache.get(&key) {
++        return *done;
++    }
++    let mut out = s.to_string();
++    for sentence in REMOVED {
++        out = out.replace(sentence, "");
++    }
++    for name in UPSTREAM_NAMES {
++        out = replace_token(&out, name, app_name());
++    }
++    if out.contains('\n') && out.contains("ArtCraft") {
++        // A translation of an upstream "Part of ..." sentence: drop the lines that still name upstream's publisher.
++        out = out.lines().filter(|l| !l.contains("ArtCraft")).collect::<Vec<_>>().join("\n");
++    }
++    let out = out.trim().to_string();
++    debug_assert!(cache.len() < 4096, "rebrand cache is bounded by the catalog size");
++    let leaked: &'static str = Box::leak(out.into_boxed_str());
++    cache.insert(key, leaked);
++    leaked
++}
++
++/// The window icon (PNG bytes) when an overlay is active; callers keep upstream's icon on `None`.
++pub fn icon_png() -> Option<&'static [u8]> {
++    ICON_PNG
++}
++
++/// Append the fallback faces after every other face of every family, never first, so upstream's metrics stay.
++pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
++    for (key, bytes) in FALLBACK_FONTS {
++        defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
++    }
++    for (family, list) in defs.families.iter_mut() {
++        let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
++        let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
++        if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
++            list.push(key.into());
++        }
++    }
++}
++
++thread_local! {
++    static LANG_CODE: std::cell::Cell<&'static str> = const { std::cell::Cell::new("en") };
++}
++
++/// Mirror the interface language (kept in egui context data) so `rebrand` and `app_name` can read it.
++pub fn set_lang(code: &'static str) {
++    LANG_CODE.set(code);
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+new file mode 100644
+index 0000000..8d9b059
+--- /dev/null
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -0,0 +1,25 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Tests of the brand overlay. They assert the overlay's behaviour when it is active (`OFFICE_OVERLAY_DIR` set at
++//! build time) and upstream's behaviour when it is not.
++
++use crate::i18n::Language;
++use crate::office_overlay as o;
++
++#[test]
++fn rebrand_follows_the_overlay() {
++    if o::ACTIVE {
++        assert_eq!(o::rebrand("About GridCraft"), format!("About {}", o::app_name()));
++        assert_eq!(o::rebrand("A spreadsheet. Part of ArtCraft."), "A spreadsheet.");
++        assert_eq!(o::rebrand("Open"), "Open");
++        assert!(!o::attribution().is_empty());
++    } else {
++        assert_eq!(o::rebrand("About GridCraft"), "About GridCraft");
++        assert_eq!(o::attribution(), "");
++    }
++}
++
++#[test]
++fn the_label_lookup_shows_the_overlay_name() {
++    let label = Language::En.tr("About\nGridCraft");
++    assert_eq!(label, if o::ACTIVE { format!("About\n{}", o::app_name()) } else { "About\nGridCraft".to_string() });
++}
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index e24105b..6a8d442 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -280,8 +280,8 @@ pub fn message_box(app: &mut SheetApp, ctx: &egui::Context) {
+             ui.painter().circle_filled(r.center(), 16.0, Color32::from_rgb(0xF2, 0xC3, 0x2E));
+             ui.painter().text(r.center(), Align2::CENTER_CENTER, "!", theme::ui_bold(20.0), Color32::WHITE);
+             ui.vertical(|ui| {
+-                ui.label(egui::RichText::new(title).strong());
+-                ui.add(egui::Label::new(msg).wrap());
++                ui.label(egui::RichText::new(crate::office_overlay::rebrand(&title)).strong());
++                ui.add(egui::Label::new(crate::office_overlay::rebrand(&msg)).wrap());
+             });
+         });
+         ui.add_space(8.0);
