@@ -804,6 +804,7 @@ Other risks tracked but outside the top 12:
 | B-4 | Priority order | **Fidelity (incl. the Excel engine) → mobile → co-editing** |
 | B-5 | Repo layout and upstream tracking | **W2 build domains + vendored pristine snapshot + patch queue**, as recommended (an accepted deviation from BRIEF §5) |
 | B-6 | Upstream PRs | **Not now.** Every upstream change is carried in our patch queue. This raises the sync cost (risk 1). Revisit later |
+| MPL | deckcraft links symphonia (MPL-2.0) for audio | **Allow MPL-2.0 for the 16 symphonia crates only** (2026-10-17). They are used unmodified from crates.io, and NOTICE lists them with a source link. This is an exception to BRIEF §5 "permissive only"; no other MPL crate is allowed |
 | Others | B-7…B-14 | Still open: asked again in the Phase 1 report |
 
 ## Sources
