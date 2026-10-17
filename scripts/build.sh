@@ -36,6 +36,13 @@ overlay_prepare() {
   [ "${OFFICE_NO_OVERLAY:-0}" = 1 ] && { unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION OFFICE_PRODUCT_NAME; return 0; }
   (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt overlay "$d") || return 1
   export OFFICE_OVERLAY_DIR="$OFFICE_OVERLAY_ROOT/$d"
+  # WP9c/d: the Uzbek catalogs (review mode = drafts included, labelled in the language picker; OFFICE_I18N_MODE=release for reviewed rows only)
+  # are exported next to overlay.env. The language hooks in the apps read catalog-uz-*.tsv, catalog-meta.env from there.
+  local up; case "$d" in docs) up=wordcraft;; sheets) up=gridcraft;; slides) up=deckcraft;; pdf) up=pdfcraft;; esac
+  if [ "${OFFICE_NO_I18N:-0}" != 1 ]; then
+    (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt i18n export "$up" --mode "${OFFICE_I18N_MODE:-review}" --out "$OFFICE_OVERLAY_ROOT/_i18n") || return 1
+    for f in "$OFFICE_OVERLAY_ROOT/_i18n/$up/"*; do cmp -s "$f" "$OFFICE_OVERLAY_DIR/$(basename "$f")" || cp "$f" "$OFFICE_OVERLAY_DIR/" || return 1; done   # unchanged files keep their mtime (no rebuild)
+  fi
   local web="domains/$d/apps/$d-web" name
   export OFFICE_PRODUCT_NAME=$(sed -n 's/^PRODUCT_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # written into the files we produce (O3)
   export OFFICE_PRODUCT_VERSION=$(sed -n 's/^VERSION=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # one product version for every app
