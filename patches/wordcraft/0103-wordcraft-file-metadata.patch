@@ -1,0 +1,118 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 17:52:51 +0500
+Subject: [PATCH] formats, docx, engine: name the overlay's product in the
+ files we write, not upstream and its URL
+
+The LaTeX header, the HTML/ODT/RTF generator strings, the docx Application property and the sample
+document's creator and community link use OFFICE_PRODUCT_NAME (set by scripts/build.sh from the overlay)
+when it is set at build time; without it every string is upstream's own.
+---
+ crates/docx/src/write/mod.rs | 2 +-
+ crates/engine/src/sample.rs  | 7 +++++--
+ crates/formats/src/html.rs   | 2 +-
+ crates/formats/src/latex.rs  | 5 ++++-
+ crates/formats/src/odt.rs    | 6 ++++--
+ crates/formats/src/rtf.rs    | 5 ++++-
+ 6 files changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/crates/docx/src/write/mod.rs b/crates/docx/src/write/mod.rs
+index f5b09b9..c08063f 100644
+--- a/crates/docx/src/write/mod.rs
++++ b/crates/docx/src/write/mod.rs
+@@ -1264,7 +1264,7 @@ fn app_xml(doc: &Document) -> Vec<u8> {
+             ("xmlns:vt", "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"),
+         ],
+     );
+-    w.leaf("Application", &[], "WordCraft");
++    w.leaf("Application", &[], option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft"));
+     w.leaf("Words", &[], &doc.word_count().to_string());
+     w.leaf("Paragraphs", &[], &doc.paragraph_count().to_string());
+     w.leaf("DocSecurity", &[], "0");
+diff --git a/crates/engine/src/sample.rs b/crates/engine/src/sample.rs
+index fd5ac64..7894a6f 100644
+--- a/crates/engine/src/sample.rs
++++ b/crates/engine/src/sample.rs
+@@ -30,7 +30,7 @@ fn italic() -> CharProps {
+ pub fn sample_document() -> Document {
+     let mut d = Document::new();
+     d.core.title = "The Open Studio Handbook".into();
+-    d.core.creator = "WordCraft".into();
++    d.core.creator = option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft").into();
+     let mut b: Vec<Block> = Vec::new();
+     b.push(Block::Para(styled("The Open Studio Handbook", "Title")));
+     b.push(Block::Para(styled("How a small community of makers shares space, tools and time", "Subtitle")));
+@@ -112,7 +112,10 @@ pub fn sample_document() -> Document {
+     add(
+         &mut h,
+         "Visit the community board",
+-        CharProps { style: Some("Hyperlink".into()), link: Some("https://getartcraft.com/".into()), ..Default::default() },
++        match option_env!("OFFICE_PRODUCT_NAME") {
++            Some(_) => CharProps::default(),
++            None => CharProps { style: Some("Hyperlink".into()), link: Some("https://getartcraft.com/".into()), ..Default::default() },
++        },
+     );
+     add(&mut h, " for events.", CharProps::default());
+     b.push(Block::Para(h));
+diff --git a/crates/formats/src/html.rs b/crates/formats/src/html.rs
+index 7f29a9b..145caba 100644
+--- a/crates/formats/src/html.rs
++++ b/crates/formats/src/html.rs
+@@ -1584,7 +1584,7 @@ pub fn export_flow(flow: &Flow, lang: &str) -> String {
+     let mut out = String::new();
+     out.push_str("<!DOCTYPE html>\n");
+     out.push_str(&format!("<html lang=\"{}\">\n<head>\n<meta charset=\"utf-8\">\n", esc(lang)));
+-    out.push_str("<meta name=\"generator\" content=\"WordCraft\">\n");
++    out.push_str(&format!("<meta name=\"generator\" content=\"{}\">\n", esc(option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft"))));
+     out.push_str(&format!("<title>{}</title>\n", esc(&m.title)));
+     for (k, v) in [("author", &m.author), ("description", &m.description), ("keywords", &m.keywords), ("subject", &m.subject)] {
+         if !v.is_empty() {
+diff --git a/crates/formats/src/latex.rs b/crates/formats/src/latex.rs
+index c7c555b..19d16ee 100644
+--- a/crates/formats/src/latex.rs
++++ b/crates/formats/src/latex.rs
+@@ -52,7 +52,10 @@ pub fn export(doc: &Document) -> String {
+ 
+     let meta = &flow.meta;
+     let mut o = String::new();
+-    o.push_str("% Written by WordCraft (https://getartcraft.com/apps/wordcraft).\n");
++    o.push_str(&match option_env!("OFFICE_PRODUCT_NAME") {
++        Some(name) => format!("% Written by {name}.\n"),
++        None => "% Written by WordCraft (https://getartcraft.com/apps/wordcraft).\n".to_string(),
++    });
+     o.push_str("\\documentclass{article}\n");
+     o.push_str("\\usepackage[T1]{fontenc}\n");
+     if w.uses.ulem {
+diff --git a/crates/formats/src/odt.rs b/crates/formats/src/odt.rs
+index da43860..1ae9e52 100644
+--- a/crates/formats/src/odt.rs
++++ b/crates/formats/src/odt.rs
+@@ -791,8 +791,10 @@ fn styles_xml(sec: &wordcraft_doc::SectionProps, body_font: &str) -> String {
+ }
+ 
+ fn meta_xml(m: &Meta) -> String {
+-    let mut s =
+-        format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>WordCraft</meta:generator>");
++    let mut s = format!(
++        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>{}</meta:generator>",
++        option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft")
++    );
+     if !m.title.is_empty() {
+         s.push_str(&format!("<dc:title>{}</dc:title>", x(&m.title)));
+     }
+diff --git a/crates/formats/src/rtf.rs b/crates/formats/src/rtf.rs
+index c8b002a..5aeae40 100644
+--- a/crates/formats/src/rtf.rs
++++ b/crates/formats/src/rtf.rs
+@@ -505,7 +505,10 @@ fn export_with(m: &Meta, w: &Writer, body: &str, sec: &wordcraft_doc::SectionPro
+     for c in &w.t.colors {
+         out.push_str(&format!("\\red{}\\green{}\\blue{};", c.0, c.1, c.2));
+     }
+-    out.push_str("}\n{\\*\\generator WordCraft;}\n{\\stylesheet{\\s0\\snext0 Normal;}");
++    out.push_str(&format!(
++        "}}\n{{\\*\\generator {};}}\n{{\\stylesheet{{\\s0\\snext0 Normal;}}",
++        option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft")
++    ));
+     for n in 1..=6u32 {
+         let sz = HEAD_SIZES.get(n as usize - 1).copied().unwrap_or(12.0);
+         out.push_str(&format!("{{\\s{n}\\sbasedon0\\snext0\\outlinelevel{}\\keepn\\b\\fs{} heading {n};}}", n - 1, (sz * 2.0) as i32));
