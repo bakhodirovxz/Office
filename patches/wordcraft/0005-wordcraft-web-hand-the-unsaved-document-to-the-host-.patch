@@ -1,4 +1,4 @@
-From c0d3cbd6e9b3463a874da6fcc86e2cb06ed82faf Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 20:38:14 +0500
 Subject: [PATCH 5/5] wordcraft-web: hand the unsaved document to the host when
@@ -18,11 +18,11 @@ When the canvas loses its WebGL context (webglcontextlost) the bridge
 sends wordcraft:failed {error: "webglcontextlost"} and an autosave, so the
 host can reload the page on its copy.
 ---
- apps/wordcraft-web/src/web/host.rs | 69 ++++++++++++++++++++++++++++--
- 1 file changed, 65 insertions(+), 4 deletions(-)
+ apps/wordcraft-web/src/web/host.rs | 71 ++++++++++++++++++++++++++++--
+ 1 file changed, 67 insertions(+), 4 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 943434c..18a6c07 100644
+index 943434c..9919be3 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -9,8 +9,12 @@
@@ -68,7 +68,7 @@ index 943434c..18a6c07 100644
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
          let previous = services.on_dirty.take();
-@@ -107,12 +115,65 @@ impl Bridge {
+@@ -107,12 +115,67 @@ impl Bridge {
              // The saved document is clean now: a frame reports it (`Services::on_dirty`).
              ctx.request_repaint();
          }
@@ -77,7 +77,9 @@ index 943434c..18a6c07 100644
 +            let name = self.name.borrow().clone();
 +            let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
 +            let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));
-+            match wordcraft_engine::io::save_bytes_with(&name, &app.session.doc, password, &options).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
++            match wordcraft_engine::io::save_bytes_with(&name, &app.session.doc, password, &options)
++                .and_then(|b| self.post_file("wordcraft:autosave", &name, &b))
++            {
 +                Ok(()) => {}
 +                Err(e) => log::error!("couldn't hand {name} to the page for safekeeping: {e}"),
 +            }

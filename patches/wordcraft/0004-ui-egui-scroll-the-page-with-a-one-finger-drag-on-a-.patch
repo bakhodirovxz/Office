@@ -1,4 +1,4 @@
-From 7ef867495a691c5629aa3b1d5cc5a4a686a97807 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 20:18:02 +0500
 Subject: [PATCH 4/5] ui-egui: scroll the page with a one-finger drag on a
@@ -28,10 +28,10 @@ The canvas gets touch-action: none, so Chrome does not start its own pan
 and cancel the touch.
 ---
  apps/wordcraft-web/index.html      |   2 +-
- crates/ui-egui/src/canvas.rs       |  36 +++-
+ crates/ui-egui/src/canvas.rs       |  38 +++-
  crates/ui-egui/src/lib.rs          |   1 +
  crates/ui-egui/src/touch_scroll.rs | 296 +++++++++++++++++++++++++++++
- 4 files changed, 328 insertions(+), 7 deletions(-)
+ 4 files changed, 330 insertions(+), 7 deletions(-)
  create mode 100644 crates/ui-egui/src/touch_scroll.rs
 
 diff --git a/apps/wordcraft-web/index.html b/apps/wordcraft-web/index.html
@@ -48,7 +48,7 @@ index ca6ad46..63ae5f7 100644
        color: #555; font: 14px system-ui, sans-serif; pointer-events: none; }
    </style>
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 4eca0d3..73f5497 100644
+index 4eca0d3..d1747a9 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -115,6 +115,8 @@ pub struct CanvasState {
@@ -113,7 +113,7 @@ index 4eca0d3..73f5497 100644
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
      }
-@@ -2097,7 +2112,15 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
+@@ -2097,7 +2112,17 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
      if crate::ink::pointer(app, ui, resp, rects, layout, scale) {
          return;
      }
@@ -123,14 +123,16 @@ index 4eca0d3..73f5497 100644
 +    let (held_press, held_long) = (held.map(|(at, _)| at), held.is_some_and(|(_, long)| long));
 +    // A finger's press never reaches `resp` in its own frame (egui hit-tests one frame late), so it
 +    // is taken from the input. Until the finger decides, nothing else sees it.
-+    if held_press.is_none() && (app.canvas.touch.in_gesture() || ui.input(|i| app.canvas.touch.hold_press(i, app.canvas.viewport.unwrap_or(resp.rect)))) {
++    if held_press.is_none()
++        && (app.canvas.touch.in_gesture() || ui.input(|i| app.canvas.touch.hold_press(i, app.canvas.viewport.unwrap_or(resp.rect))))
++    {
 +        return;
 +    }
 +    let pointer = held_press.or_else(|| resp.interact_pointer_pos()).or_else(|| resp.hover_pos());
      // An object (or crop handle) drag follows the pointer anywhere until it's released.
      let dragging = app.canvas.obj_drag.is_some() || app.canvas.crop_drag.is_some();
      let object_pointer = pointer.or_else(|| dragging.then(|| ui.input(|i| i.pointer.latest_pos())).flatten());
-@@ -2200,11 +2223,12 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
+@@ -2200,11 +2225,12 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
          let _ = app.run("select.paragraph", json!({}));
          return;
      }
@@ -146,17 +148,17 @@ index 4eca0d3..73f5497 100644
          app.canvas.unit_drag = None;
          // A double-click that enters or leaves a header/footer is handled on release.
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 662516f..45b13f1 100644
+index 662516f..8749972 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -73,6 +73,7 @@ pub mod read_aloud;
- pub mod ribbon;
- pub mod ruler_tabs;
- pub mod scroll;
+@@ -79,6 +79,7 @@ pub mod table_pen;
+ pub mod table_resize;
+ pub mod table_ruler;
+ pub mod theme;
 +mod touch_scroll;
- pub mod system_clipboard;
- pub mod table_mouse;
- pub mod table_pen;
+ pub mod widgets;
+ pub mod window_geometry;
+ pub mod wordart_menus;
 diff --git a/crates/ui-egui/src/touch_scroll.rs b/crates/ui-egui/src/touch_scroll.rs
 new file mode 100644
 index 0000000..09e3ebe
