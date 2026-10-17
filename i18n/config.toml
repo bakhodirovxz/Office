@@ -1,0 +1,10 @@
+# i18n configuration (docs/phase1/designs/i18n.md section 5; owner decision 2026-10-17, ADR Appendix C).
+#
+# Fallback chains are applied by `cargo xt i18n export`, never at run time. A step only supplies a value
+# that is trusted in the export mode (release: `reviewed:owner` Uzbek rows and upstream ru; review: drafts too).
+# `en` ends every chain and means "write nothing": the app falls back to English by itself, and an English copy
+# is never written into an Uzbek catalog.
+[chains]
+uz-latn = ["uz-latn", "en"]
+uz-cyrl = ["uz-cyrl", "ru", "en"]
+ru = ["ru", "en"]

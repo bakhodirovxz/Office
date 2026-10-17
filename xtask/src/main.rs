@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 mod domain;
+mod i18n;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -15,7 +16,8 @@ fn main() -> ExitCode {
         ["gen-domain", d] => domain::gen_domain(&repo_root(), false, d),
         ["lockdiff", a, b] => domain::lockdiff(Path::new(a), Path::new(b)),
         ["domain-upstream", d] => domain::domain_upstream(&repo_root(), d),
-        _ => Err("usage: cargo xt register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
+        ["i18n", rest @ ..] => i18n::run(&repo_root(), rest),
+        _ => Err("usage: cargo xt i18n <command> | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
     };
     match result {
         Ok(msg) => {
