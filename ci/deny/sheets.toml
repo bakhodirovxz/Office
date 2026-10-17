@@ -51,6 +51,9 @@ ignore = [
     { id = "RUSTSEC-2026-0367", reason = "zip 3.0.0 symlink escape in ZipArchive::extract; we never call extract(), documents are read in memory entry by entry (grep: no ZipArchive::extract in upstream/*)" },
     { id = "RUSTSEC-2026-0368", reason = "zip 3.0.0 symlink permissions in extract(); same: extract() is not called" },
     { id = "RUSTSEC-2026-0369", reason = "zip 3.0.0 SUID/SGID preservation in extract(); same: extract() is not called" },
+    { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained (no vulnerability); Linux-only AT-SPI accessibility chain eframe -> egui-winit -> accesskit_winit -> accesskit_unix; not built for Windows/web; replace when upstream egui moves (review at each sync)" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
 ]
 
 # egui's default UI fonts (Ubuntu-Light, Hack, emoji-icon-font): font licences, attributed upstream as dependency-bundled assets.
