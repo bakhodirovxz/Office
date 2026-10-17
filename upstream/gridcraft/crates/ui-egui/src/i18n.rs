@@ -35,10 +35,32 @@ pub enum Language {
     Cs,
     Fr,
     Sr,
+    #[cfg(office_uz)]
+    #[serde(rename = "uz-latn")]
+    UzLatn,
+    #[cfg(office_uz)]
+    #[serde(rename = "uz-cyrl")]
+    UzCyrl,
 }
 
 impl Language {
-    pub const ALL: [Self; 11] = [Self::En, Self::Es, Self::Zh, Self::Ja, Self::Ko, Self::Ru, Self::PtBr, Self::De, Self::Cs, Self::Fr, Self::Sr];
+    pub const ALL: [Self; 11 + crate::office_overlay::EXTRA_LANGS] = [
+        Self::En,
+        Self::Es,
+        Self::Zh,
+        Self::Ja,
+        Self::Ko,
+        Self::Ru,
+        Self::PtBr,
+        Self::De,
+        Self::Cs,
+        Self::Fr,
+        Self::Sr,
+        #[cfg(office_uz)]
+        Self::UzLatn,
+        #[cfg(office_uz)]
+        Self::UzCyrl,
+    ];
 
     /// The language's own name, shown in the switcher.
     pub fn name(self) -> &'static str {
@@ -54,6 +76,10 @@ impl Language {
             Self::Cs => "Čeština",
             Self::Fr => "Français",
             Self::Sr => "Srpski",
+            #[cfg(office_uz)]
+            Self::UzLatn => crate::office_overlay::NAME_UZ_LATN,
+            #[cfg(office_uz)]
+            Self::UzCyrl => crate::office_overlay::NAME_UZ_CYRL,
         }
     }
 
@@ -71,6 +97,10 @@ impl Language {
             Self::Cs => "cs",
             Self::Fr => "fr",
             Self::Sr => "sr",
+            #[cfg(office_uz)]
+            Self::UzLatn => "uz-latn",
+            #[cfg(office_uz)]
+            Self::UzCyrl => "uz-cyrl",
         }
     }
 
@@ -91,6 +121,11 @@ impl Language {
             "cs" => Some(Self::Cs),
             "fr" => Some(Self::Fr),
             "sr" => Some(Self::Sr),
+            // Uzbek: Latin unless the tag says Cyrillic (`uz-Cyrl-UZ`, or the Linux `uz_UZ@cyrillic`).
+            #[cfg(office_uz)]
+            "uz" if tag.to_ascii_lowercase().contains("cyrl") || tag.to_ascii_lowercase().contains("@cyrillic") => Some(Self::UzCyrl),
+            #[cfg(office_uz)]
+            "uz" => Some(Self::UzLatn),
             _ => None,
         }
     }
@@ -129,6 +164,10 @@ impl Language {
             Self::Cs => cs::translate(text),
             Self::Fr => fr::translate(text),
             Self::Sr => sr::translate(text),
+            #[cfg(office_uz)]
+            Self::UzLatn => crate::office_overlay::translate_uz_latn(text),
+            #[cfg(office_uz)]
+            Self::UzCyrl => crate::office_overlay::translate_uz_cyrl(text),
         };
         crate::office_overlay::rebrand(translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label)))
     }
