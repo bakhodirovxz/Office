@@ -1,15 +1,21 @@
-//! `cargo xt ...`: repository tooling (PLAN section 1.2). Std-only for now; later WPs add subcommands.
+//! `cargo xt ...`: repository tooling (PLAN section 1.2). Later WPs add subcommands.
 
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+mod domain;
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         ["register", "check"] => register_check(&repo_root()),
-        _ => Err("usage: cargo xt register check".to_string()),
+        ["gen-domain", "--check", d] => domain::gen_domain(&repo_root(), true, d),
+        ["gen-domain", d] => domain::gen_domain(&repo_root(), false, d),
+        ["lockdiff", a, b] => domain::lockdiff(Path::new(a), Path::new(b)),
+        ["domain-upstream", d] => domain::domain_upstream(&repo_root(), d),
+        _ => Err("usage: cargo xt register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
     };
     match result {
         Ok(msg) => {

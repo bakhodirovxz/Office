@@ -15,6 +15,7 @@ ADR Appendix C:
   Tools in `E:/office-tools/bin`: cargo-deny 0.20.2, cargo-nextest 0.9.148, sccache 0.18.0, actionlint 1.7.12 (trunk 0.21.14 already there).
 - WP1 done (2026-10-17): upstream clones moved to `E:/office-upstream/<repo>` (cache clones; spike branches and worktrees intact). Pristine snapshots committed at the Phase 0 BASEs (tree hashes equal upstream's); BASE lives in `patches/<repo>/BASE`. craft-fonts is fetched (`scripts/fetch-fonts.sh`, 31 files verified).
 - WP2 done (2026-10-17): queues at the old BASE: wordcraft 0001-0005, gridcraft one ordered queue 0001-0022 (pdf-fonts applied without conflict as 0020-0022). `scripts/verify-queue.sh all` green, `patches/REGISTER.md` has 27 rows (`cargo xt register check` OK). Repo `.git` is 54 MB after vendoring. Notes and deviations: `docs/phase1/wp0-2-notes.md`.
+- WP3 done (2026-10-17): W2 go/no-go = GO, D-A (domain wraps the unmodified upstream app sources). `cargo xt gen-domain|lockdiff|domain-upstream`, `scripts/build.sh`, `domains/{docs,sheets,slides,pdf}`. All 12 targets (desktop, CLI, web) built from our workspaces; lockdiff 0 version changes; wasm brotli within 0.02-0.10 % of Phase 0 (sheets +0.87 % = its queue). sccache works for native crates (11/11 hits on rebuild) but fails for wasm32 web (os error 206), so web builds run without it. Details and times: `docs/phase1/domain-build.md`.
 
 ## Done
 - Repo initialised; `CLAUDE.md`, `docs/BRIEF.md`, `docs/STATUS.md` created.

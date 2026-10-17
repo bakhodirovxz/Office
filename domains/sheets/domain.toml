@@ -1,0 +1,14 @@
+# Generator input for cargo xt gen-domain (PLAN WP3)
+upstream = "gridcraft"
+
+[desktop]
+src = "gridcraft"
+bin = "sheets"
+
+[web]
+src = "gridcraft-web"
+bin = "sheets-web"
+
+[cli]
+src = "gridcraft-cli"
+bin = "sheets-cli"

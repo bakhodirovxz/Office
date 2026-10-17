@@ -1,0 +1,11 @@
+# Build with: trunk build --release   (from apps/pdfcraft-web)
+# The release zip (packaging/web/package.sh) expects the site in dist/web with relative URLs.
+[build]
+target = "index.html"
+dist = "E:/office-target/p1/dist/pdf-web"
+public_url = "./"
+filehash = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8766
