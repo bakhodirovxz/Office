@@ -3,9 +3,8 @@
 # Untested until a remote exists; `actionlint` (job below and `scripts/ci.sh actionlint`) is the only check so far.
 #
 # Every step runs `scripts/ci.sh <job>`, so local and remote are one implementation. Before enabling:
-#   1. Pin every `uses:` by commit SHA (versions are in the trailing comments): actions/checkout v4, actions/cache v4,
-#      actions/upload-artifact v4, actions/download-artifact v4, taiki-e/install-action v2,
-#      mozilla-actions/sccache-action v0.0.9.
+#   1. Every `uses:` is pinned to a full commit SHA (resolved 2026-10-17; the version is in the trailing comment).
+#      Keep it that way: update the SHAs only through reviewed PRs.
 #   2. scripts/env.sh hard-codes this PC (E:/office-target, E:/office-tools, ...). Make it honour pre-set values
 #      (OFFICE_TARGET="${OFFICE_TARGET:-E:/office-target/p1}" and so on), or set a runner-side override.
 #   3. Decide the runner. GH caches are capped at 10 GB per repo, so release builds of four apps will not all stay
@@ -44,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
@@ -56,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -66,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -76,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -86,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -96,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -106,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - name: Install actionlint 1.7.12
         run: bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 /usr/local/bin
       - run: scripts/ci.sh actionlint
@@ -122,7 +121,7 @@ jobs:
         app: [wordcraft, gridcraft, deckcraft, pdfcraft]
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles(format('upstream/{0}/Cargo.lock', matrix.app)) }}
@@ -134,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -150,7 +149,7 @@ jobs:
         domain: [docs, sheets, slides, pdf]
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles(format('domains/{0}/Cargo.lock', matrix.domain)) }}
@@ -172,14 +171,14 @@ jobs:
           - kind: web
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles(format('domains/{0}/Cargo.lock', matrix.domain)) }}
       - run: scripts/ci.sh build ${{ matrix.domain }} ${{ matrix.kind }}
       - name: Keep the web dist for sizes and web-smoke
         if: ${{ matrix.kind == 'web' }}
-        uses: actions/upload-artifact@v4   # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
         with:
           name: dist-${{ matrix.domain }}-web
           path: ${{ env.OFFICE_TARGET }}/dist/${{ matrix.domain }}-web
@@ -191,11 +190,11 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
-      - uses: actions/download-artifact@v4   # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093   # v4
         with:
           pattern: dist-*-web
           path: dist
@@ -207,11 +206,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
-      - uses: actions/download-artifact@v4   # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093   # v4
         with:
           pattern: dist-*-web
           path: dist
@@ -223,7 +222,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('upstream/*/Cargo.lock') }}
@@ -235,7 +234,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
@@ -247,7 +246,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4   # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
