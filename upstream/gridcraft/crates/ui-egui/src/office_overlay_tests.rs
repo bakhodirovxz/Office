@@ -99,3 +99,21 @@ fn pdf_default_face_covers_uzbek() {
     let font = gridcraft_engine::pdf_fonts::for_text(gridcraft_engine::pdf_fonts::resolve("Arial", false, false), UZBEK_TEXT);
     assert!(font.covers(UZBEK_TEXT));
 }
+
+#[test]
+fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+    if cfg!(office_uz) {
+        // Windows script tags, scriptless tags, and the Linux `@cyrillic` modifier.
+        let code = |tag: &str| Language::parse(tag).map(Language::code);
+        assert_eq!(code("uz-Latn-UZ"), Some("uz-latn"));
+        assert_eq!(code("uz-Cyrl-UZ"), Some("uz-cyrl"));
+        assert_eq!((code("uz"), code("uz-UZ"), code("uz_UZ.UTF-8")), (Some("uz-latn"), Some("uz-latn"), Some("uz-latn")));
+        assert_eq!(code("uz_UZ@cyrillic"), Some("uz-cyrl"));
+        let (latn, cyrl) = (Language::parse("uz-latn").expect("uz-latn"), Language::parse("uz-cyrl").expect("uz-cyrl"));
+        assert!(latn.name().starts_with("O\u{2bb}zbekcha") && cyrl.name().starts_with("Ўзбекча"));
+        assert_ne!(latn.tr("Paste"), "Paste");
+        assert_ne!(cyrl.tr("Paste"), "Paste");
+    } else {
+        assert!(Language::parse("uz-Latn-UZ").is_none());
+    }
+}

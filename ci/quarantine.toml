@@ -360,3 +360,15 @@ reason = "uz-latn lacks one ribbon label ('Controls'): the P1 draft set does not
 evidence = "docs/phase1/evidence/i18n/test-docs-overlay-on.log#every_tab_and_command_is_translated"
 since = "2026-10-17@eae2421"
 review = "every sync"
+
+[[test]]
+app = "gridcraft"
+crate = "gridcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::translations_are_unique_and_preserve_unknown_text"
+class = "brand-overlay"
+env = "any"
+reason = "Expects 'About\nGridCraft' from the English label; with the overlay on rebrand() gives 'About\nSuite Sheets'."
+evidence = "docs/phase1/evidence/i18n/test-sheets-overlay-on.log#translations_are_unique_and_preserve_unknown_text"
+since = "2026-10-17@f1894c6"
+review = "every sync"
