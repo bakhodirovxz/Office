@@ -5,21 +5,37 @@
 //! cross-compile from macOS or Linux still links, unless `DECKCRAFT_REQUIRE_WINRES=1` turns it
 //! into an error (for release builds).
 
+#[path = "../../../overlay_res.rs"]
+mod overlay_res;
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=../../../overlay_res.rs");
+    println!("cargo:rerun-if-env-changed=OFFICE_OVERLAY_DIR");
     println!("cargo:rerun-if-changed=../../../../upstream/deckcraft/assets/app-icon/deckcraft.ico");
     println!("cargo:rerun-if-env-changed=DECKCRAFT_REQUIRE_WINRES");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }
     let mut res = winresource::WindowsResource::new();
-    res.set_icon("../../../../upstream/deckcraft/assets/app-icon/deckcraft.ico")
-        .set("ProductName", "DeckCraft")
-        .set("FileDescription", "DeckCraft presentations")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the DeckCraft authors. MIT OR Apache-2.0.")
-        .set("OriginalFilename", "deckcraft.exe")
-        .set("InternalName", "deckcraft");
+    match overlay_res::load() {
+        Some(o) => {
+            res.set_icon(&o.file("icon.ico"));
+            o.version_info(&mut res, "presentations", "slides");
+        }
+        None => {
+            res.set_icon("../../../../upstream/deckcraft/assets/app-icon/deckcraft.ico")
+                .set("ProductName", "DeckCraft")
+                .set("FileDescription", "DeckCraft presentations")
+                .set("CompanyName", "Learning Machines LLC")
+                .set(
+                    "LegalCopyright",
+                    "Copyright (c) the DeckCraft authors. MIT OR Apache-2.0.",
+                )
+                .set("OriginalFilename", "deckcraft.exe")
+                .set("InternalName", "deckcraft");
+        }
+    }
     if let Err(e) = res.compile() {
         if std::env::var_os("DECKCRAFT_REQUIRE_WINRES").is_some() {
             eprintln!("embedding Windows resources failed: {e}");

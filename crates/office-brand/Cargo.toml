@@ -1,0 +1,11 @@
+[package]
+name = "office-brand"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Brand config (brand/brand.toml) parsing and validation, overlay rendering and placeholder icon generator"
+
+[dependencies]
+toml_edit = "0.22"
+tiny-skia = "0.11"

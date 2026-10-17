@@ -9,8 +9,13 @@
 #[path = "../../../../upstream/pdfcraft/apps/pdfcraft/src/windows_manifest.rs"]
 mod windows_manifest;
 
+#[path = "../../../overlay_res.rs"]
+mod overlay_res;
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=../../../overlay_res.rs");
+    println!("cargo:rerun-if-env-changed=OFFICE_OVERLAY_DIR");
     println!("cargo:rerun-if-changed=../../../../upstream/pdfcraft/assets/app-icon/pdfcraft.ico");
     println!("cargo:rerun-if-changed=../../../../upstream/pdfcraft/assets/app-icon/pdfcraft-document.ico");
     println!("cargo:rerun-if-changed=../../../../upstream/pdfcraft/apps/pdfcraft/src/windows_manifest.rs");
@@ -19,14 +24,29 @@ fn main() {
         return;
     }
     let mut res = winresource::WindowsResource::new();
-    res.set_icon("../../../../upstream/pdfcraft/assets/app-icon/pdfcraft.ico")
-        .set_icon_with_id("../../../../upstream/pdfcraft/assets/app-icon/pdfcraft-document.ico", "2")
-        .set_manifest(windows_manifest::WINDOWS_MANIFEST)
-        .set("ProductName", "PdfCraft")
-        .set("FileDescription", "PdfCraft PDF workbench")
-        .set("LegalCopyright", "Copyright (c) the PdfCraft contributors. MIT OR Apache-2.0.")
-        .set("OriginalFilename", "pdfcraft.exe")
-        .set("InternalName", "pdfcraft");
+    res.set_manifest(windows_manifest::WINDOWS_MANIFEST);
+    match overlay_res::load() {
+        Some(o) => {
+            res.set_icon(&o.file("icon.ico"))
+                .set_icon_with_id(&o.file("icon-document.ico"), "2");
+            o.version_info(&mut res, "workbench", "pdf");
+        }
+        None => {
+            res.set_icon("../../../../upstream/pdfcraft/assets/app-icon/pdfcraft.ico")
+                .set_icon_with_id(
+                    "../../../../upstream/pdfcraft/assets/app-icon/pdfcraft-document.ico",
+                    "2",
+                )
+                .set("ProductName", "PdfCraft")
+                .set("FileDescription", "PdfCraft PDF workbench")
+                .set(
+                    "LegalCopyright",
+                    "Copyright (c) the PdfCraft contributors. MIT OR Apache-2.0.",
+                )
+                .set("OriginalFilename", "pdfcraft.exe")
+                .set("InternalName", "pdfcraft");
+        }
+    }
     if let Err(e) = res.compile() {
         if std::env::var_os("PDFCRAFT_REQUIRE_WINRES").is_some() {
             println!("cargo::error=embedding Windows resources failed: {e}");

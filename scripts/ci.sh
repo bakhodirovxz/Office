@@ -221,9 +221,14 @@ job_deny() {
 
 job_brand() {
   local rc=0
-  if xt_has brand-grep; then bstep brand-grep cargo xt brand-grep || rc=1; else note "stub: cargo xt brand-grep not implemented yet (WP7)"; fi
-  # logo-include check (no compile): no include_bytes!/include_str! may reach docs/brand/
-  step logo-include bash -c '! grep -rIn --include=*.rs -E "include_(bytes|str)!\(.*docs/brand/" upstream domains crates xtask 2>/dev/null' || rc=1
+  # Source scan: the working name only in brand/brand.toml (rule W), no brand-mark includes outside cfg(not(office_overlay)) (rule M).
+  bstep brand-grep cargo xt brand-grep || rc=1
+  # Binary scan (needs the release builds): no upstream URLs, no brand-mark bytes; token counts are reported.
+  if ls "$OFFICE_TARGET"/docs/release/docs.exe "$OFFICE_TARGET"/sheets/release/sheets.exe "$OFFICE_TARGET"/slides/release/slides.exe "$OFFICE_TARGET"/pdf/release/pdf.exe >/dev/null 2>&1      || ls "$OFFICE_TARGET"/dist/*-web/*.wasm >/dev/null 2>&1; then
+    bstep brand-scan-bin cargo xt brand-scan-bin || rc=1
+  else
+    note "brand-scan-bin: no release binaries yet (scripts/build.sh <d> all --release)"
+  fi
   return $rc
 }
 

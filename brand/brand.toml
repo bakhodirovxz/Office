@@ -1,0 +1,89 @@
+# The one brand config (docs/phase1/designs/brand.md section 2). This file is the ONLY place that contains the working
+# name. Owner decision B-1 (final product name) is deferred. `cargo xt brand check` validates it,
+# `cargo xt overlay <app>` renders it into $OFFICE_OVERLAY_ROOT/<app>/.
+schema = 1
+
+[product]
+id = "suite"
+name = "Suite"
+version = "0.1.0"
+vendor = "Suite contributors"
+copyright = "Copyright (c) the Suite contributors. MIT OR Apache-2.0."
+
+# Plain text only (brand licence: "You may say, in plain text, that your work is based on ..."). The owner reviews the wording.
+[attribution]
+en = "Based on WordCraft, GridCraft, DeckCraft and PdfCraft by the ArtCraft team (MIT OR Apache-2.0)."
+ru = "Основано на WordCraft, GridCraft, DeckCraft и PdfCraft от команды ArtCraft (MIT OR Apache-2.0)."
+uz-Latn = "WordCraft, GridCraft, DeckCraft va PdfCraft (ArtCraft jamoasi, MIT OR Apache-2.0) asosida."
+uz-Cyrl = "WordCraft, GridCraft, DeckCraft ва PdfCraft (ArtCraft жамоаси, MIT OR Apache-2.0) асосида."
+
+[apps.docs]
+upstream = "wordcraft"
+upstream_names = ["WordCraft"]
+bin = "suite-docs"
+cli = "suite-docs-cli"
+app_id = "suite.docs"
+aumid = "Suite.Docs"
+data_dir = "Suite/Docs"
+pictogram = "lines"
+names = { en = "Suite Docs", ru = "Suite Документы", uz-Latn = "Suite Hujjatlar", uz-Cyrl = "Suite Ҳужжатлар" }
+
+[apps.sheets]
+upstream = "gridcraft"
+upstream_names = ["GridCraft"]
+bin = "suite-sheets"
+cli = "suite-sheets-cli"
+app_id = "suite.sheets"
+aumid = "Suite.Sheets"
+data_dir = "Suite/Sheets"
+pictogram = "grid"
+names = { en = "Suite Sheets", ru = "Suite Таблицы", uz-Latn = "Suite Jadvallar", uz-Cyrl = "Suite Жадваллар" }
+
+[apps.slides]
+upstream = "deckcraft"
+upstream_names = ["DeckCraft"]
+bin = "suite-slides"
+cli = "suite-slides-cli"
+app_id = "suite.slides"
+aumid = "Suite.Slides"
+data_dir = "Suite/Slides"
+pictogram = "slide"
+names = { en = "Suite Slides", ru = "Suite Презентации", uz-Latn = "Suite Taqdimotlar", uz-Cyrl = "Suite Тақдимотлар" }
+
+[apps.pdf]
+upstream = "pdfcraft"
+upstream_names = ["PdfCraft"]
+bin = "suite-pdf"
+cli = "suite-pdf-cli"
+app_id = "suite.pdf"
+aumid = "Suite.Pdf"
+data_dir = "Suite/Pdf"
+storage_key = "suite-pdf"
+pictogram = "page"
+names = { en = "Suite PDF", ru = "Suite PDF", uz-Latn = "Suite PDF", uz-Cyrl = "Suite PDF" }
+
+# Placeholders until the owner chooses (ADR App. B).
+[colors]
+accent_light = "#0F766E"
+accent_dark = "#5EC4B6"
+icon_fg = "#FFFFFF"
+
+# Upstream community chrome. All off in our builds.
+[chrome]
+community = false
+share = false
+zotero = false
+update_check = false
+upstream_links = false
+contributors_tab = true
+
+# Our own links. Empty string = the item is hidden.
+[links]
+website = ""
+help = ""
+source = ""
+
+# Fallback UI/document fonts (WP8, designs/font.md). Paths are relative to assets/fonts/.
+[fonts]
+fallback_sans = "fallback/NotoSans-Regular-uz.ttf"
+fallback_mono = "fallback/NotoSansMono-Regular-uz.ttf"
