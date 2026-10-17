@@ -301,15 +301,6 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                     }
                     continue;
                 }
-                egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars }) => {
-                    for _ in 0..*before_chars {
-                        let _ = app.run("equation.backspace", json!({}));
-                    }
-                    for _ in 0..*after_chars {
-                        let _ = app.run("equation.delete", json!({}));
-                    }
-                    continue;
-                }
                 egui::Event::Paste(t) => {
                     let _ = app.run("equation.type", json!({"text": t}));
                     continue;
@@ -335,16 +326,6 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                 app.canvas.ime_preedit.clear();
                 if !text.is_empty() {
                     let _ = app.run("text.insert", json!({"text": text}));
-                }
-            }
-            // A keyboard replacing a word (Android autocorrect, completion: "teh " becomes "the ")
-            // first deletes the text around the caret, then sends the new text.
-            egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars }) => {
-                for _ in 0..before_chars {
-                    let _ = app.run("text.backspace", json!({}));
-                }
-                for _ in 0..after_chars {
-                    let _ = app.run("text.delete", json!({}));
                 }
             }
             egui::Event::Paste(t) => {
@@ -730,24 +711,6 @@ mod tests {
         frame(&mut a, vec![egui::Event::ModifiersChanged(alt), key(Key::AltLeft, true, alt)]);
         frame(&mut a, vec![key(Key::AltLeft, false, alt), egui::Event::ModifiersChanged(Modifiers::NONE)]);
         assert_eq!(a.ui.keytips, crate::keytips::Phase::Tabs);
-    }
-
-    /// An Android keyboard's autocorrect deletes the word it replaces, then sends the new one:
-    /// "teh " becomes "the ", not "tehthe ".
-    #[test]
-    fn ime_delete_surrounding_replaces_the_word() {
-        let (ctx, mut a) = alt_frame_app();
-        let text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end().to_string();
-        alt_frame(&ctx, &mut a, vec![egui::Event::Text("teh ".into())]);
-        assert_eq!(text(&a), "teh");
-        let delete = |before_chars, after_chars| egui::Event::Ime(egui::ImeEvent::DeleteSurrounding { before_chars, after_chars });
-        alt_frame(&ctx, &mut a, vec![delete(4, 0), egui::Event::Text("the ".into())]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "the");
-        // Characters after the caret go too.
-        alt_frame(&ctx, &mut a, vec![egui::Event::Text("xyz".into())]);
-        let _ = a.run("caret.left", json!({}));
-        alt_frame(&ctx, &mut a, vec![delete(1, 1)]);
-        assert_eq!(text(&a), "the x");
     }
 
     fn alt_frame_app() -> (egui::Context, WordApp) {
