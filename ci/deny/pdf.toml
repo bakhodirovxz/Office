@@ -50,6 +50,9 @@ db-path = "E:/office-cache/advisory-db"
 ignore = [
     { id = "RUSTSEC-2023-0071", reason = "Marvin timing attack: pdfcraft-sign uses rsa for public-key verification only; private-key operations use aws-lc-rs (upstream ADR-0009)" },
     { id = "RUSTSEC-2024-0370", reason = "proc-macro-error unmaintained: compile-time proc macro of winprint fmt-derive (craft-print Windows printing), not in the binary" },
+    { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained (no vulnerability); Linux-only AT-SPI accessibility chain eframe -> egui-winit -> accesskit_winit -> accesskit_unix; not built for Windows/web; replace when upstream egui moves (review at each sync)" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
 ]
 
 # egui's default UI fonts (Ubuntu-Light, Hack, emoji-icon-font): font licences, attributed upstream as dependency-bundled assets.
