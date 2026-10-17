@@ -800,3 +800,9 @@ ONLYOFFICE 9.3. It replaces the sandbox. A standalone prompt for its backend age
 
 ## Next step
 Task 1 (inventory): clone the six repos into `upstream/`, build desktop + web, record numbers.
+
+## WP5 part A (2026-10-17): sync script, fresh BASE, wordcraft and the non-gridcraft repos rebased
+- `scripts/sync-upstream.sh` and `docs/UPSTREAM.md` written. Fresh BASE (frozen): wordcraft eae2421, gridcraft f1894c6, deckcraft 1dc6972, pdfcraft 924c4da, craft-libs 15ed713; craft-fonts unchanged 3d9ab3a.
+- Dry run, all five repos: 27/27 patches clean, quick gates PASS, monorepo untouched. Details and costs: `docs/phase1/rebase-cost.md`.
+- Applied (partial apply by repo name) for wordcraft (5 patches, 0 conflicts, rustfmt-fixed 0004 and 0005), deckcraft, pdfcraft, craft-libs. gridcraft stays at e6b6b34 with its 22 patches (dry run: all clean); its apply and the cost section are pending.
+- Not done: `--gates full` (release builds, sizes, app tests) after the new BASE; `web/budgets.toml` baselines not re-measured.
