@@ -1,0 +1,587 @@
+id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	ru_apps	priority	apps	where	note
+000aef363848		Accept		todo		todo	Принять	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1209	
+0045504e39f8		Borders		todo		todo	Границы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2826	
+00913cc2fcc7		WordArt		todo		todo	WordArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:233	
+00e9d28485e4		Paste Special		todo		todo	Специальная вставка	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:61	
+01234d31bac2		Next page		todo		todo	Следующая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:775	
+017dd0d419ea		Options…		todo		todo	Параметры…	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/a11y_ui.rs:310	
+01bb525b31fb		Merged PRs		todo		todo	Принятые PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
+02439010e50b		Picture Format		todo		todo	Формат рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:136	
+032e76efb577		Reset Picture		todo		todo	Сбросить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:439	
+0485fcbfc78e		Insert\nAbove		todo		todo	Вставить\nсверху	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2997	
+04f6121bc92b		Corrections		todo		todo	Коррекция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2577	
+05b752ff6482		Contributors		todo		todo	Участники	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
+05e217ad02fc		Right		todo		todo	Справа	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2965	
+0611c8c0de7e		Clipboard		todo		todo	Буфер обмена	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/create_ui.rs:135	
+06c4a60a2430		Basic Process		todo		todo	Простой процесс	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2048	
+06dfc1307bf6		Pyramid		todo		todo	Пирамида	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2051	
+0702dc51ecff		Insert Hyperlink		todo		todo	Вставить гиперссылку	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:38	
+07171e36b3d8		Distribute Columns		todo		todo	Выровнять ширину столбцов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3009	
+076c6a347f95		Rotation		todo		todo	Поворот	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2369	
+07c5c0f7cf4d		Distribute Rows		todo		todo	Выровнять высоту строк	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3008	
+07e8700d79a9		Insert…		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/panes.rs:670	
+087147424645		Categories		todo		todo	Категории	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:228	
+0939a4832ef4		All Borders		todo		todo	Все границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2831	
+099c16924da5		Options		todo		todo	Параметры	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:112	
+0a1e59eb7d3b		Wide		todo		todo	Широкие	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3026	
+0a86dcae7521		Bottom:		todo		todo	Снизу:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
+0a94e78e56e0		No		todo		todo	Нет	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
+0ba9a3538423		Find and Replace		todo		todo	Найти и заменить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:62	
+0bc6be45fca7		Odd pages only		todo		todo	Только нечётные страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/marks_ui.rs:64	
+0bf02c80a135		Browse…		todo		todo	Обзор…	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:557	
+0c0cf38de152		Shadow		todo		todo	Тень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:238	
+0ca88472c52f		Split		todo		todo	Разделить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1205	
+0d7109515942		Chart Title		todo		todo	Название диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:755	
+0e1fa0cd299c		Compress Pictures		todo		todo	Сжать рисунки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2654	
+10326409359c		No Fill		todo		todo	Нет заливки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:478	
+10ea51634a95		Commits		todo		todo	Коммиты	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+1177b400d0ce		Text\nBox		todo		todo	Текстовое\nполе	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1270	
+11d155aab7c5		AutoCorrect Options		todo		todo	Параметры автозамены	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:29	
+11d2bfc97b9e		Intersection		todo		todo	Пересечение	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/measure_ui.rs:243	
+11f1a8dd42a1		Show		todo		todo	Показать	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:218	
+125953cbfc03		Animations		todo		todo	Анимация	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:154	
+126d6084dd9b		Delete		todo		todo	Удалить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1951	
+127696f8bde7		Text Effects		todo		todo	Текстовые эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2467	
+12d581461ce6		Symbol		todo		todo	Символ	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:55	
+12d5f9782750		Mark selected text as:		todo		todo	Пометить выделенный текст как:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1916	
+138ddd59dad6		Date format		todo		todo	Формат даты	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/js_ui.rs:502	
+13b3b2f2af2b		Formula:		todo		todo	Формула:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:644	
+1412abd9c526		Font Color		todo		todo	Цвет шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:566	
+1418880706bc		Unlock		todo		todo	Разблокировать	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/canvas.rs:1239	
+1444758db6dd		Company		todo		todo	Организация	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:229	
+154d7c1b59fb		Edit\nData		todo		todo	Изменить\nданные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3056	
+1592b6575be3		Binary assets removed		todo		todo	Удалены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:98	
+160e53460df6		Select Objects		todo		todo	Выбор объектов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/edit.rs:42	
+1760b808025e		Font…		todo		todo	Шрифт…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1218	
+1796175263dd		Nudge		todo		todo	Сдвинуть	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/arrange.rs:66	
+17de2afe3b27		Reset		todo		todo	Сбросить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:452	
+187140e1685d		Text Outline		todo		todo	Контур текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2459	
+18c21f8c3309		Create PDF		todo		todo	Создать PDF	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1271	
+19b9793bd50a		Save		todo		todo	Сохранить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:110	
+19ccc1c0ea3a		Cycle		todo		todo	Цикл	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:634	
+1aa4219b9c56		Pie		todo		todo	Круговая	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2042	
+1b1bc152cb85		Fit		todo		todo	По размеру	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:936	
+1bead76add04		Start at:		todo		todo	Начать с:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1315	
+1e06fb1e8801		Emphasis		todo		todo	Выделение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1912	
+1e0913722f51		Up		todo		todo	Вверх	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:1963	
+1e19d6881201		Remove from Recent		todo		todo	Убрать из недавних	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:623	
+1e52a040024c		Print…		todo		todo	Печать…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/menus.rs:173	
+1ea92610e22b		Real name		todo		todo	Настоящее имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:54	
+1eaa7e5d384e		Ignore All		todo		todo	Пропустить все	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1162	
+1eb8cf264be4		Then by		todo		todo	Затем по	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1929	
+1ec6ef8618b0		Add to Quick Access Toolbar		todo		todo	Добавить на панель быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:167	
+1ed691fb0224		Format		todo		todo	Формат	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:247	
+1f0480bafb9d		Right Margin		todo		todo	Правое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:300	
+1fa3649980c0		Top Border		todo		todo	Верхняя граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2834	
+1fb294caacd3		Black		todo		todo	Чёрный	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/show.rs:1001	
+2063745e3f9d		Name (A–Z)		todo		todo	Имя (А–Я)	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
+219c409d3156		Check Accessibility		todo		todo	Проверить доступность	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:36	
+22f9b253b3ec		Translate		todo		todo	Перевести	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2149	
+22fb1f58995c		Tight		todo		todo	Плотный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2804	
+23256add76fa		Warning		todo		todo		todo		P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:927	
+234149e508cb		Preferences		todo		todo	Настройки	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:51	
+2389c083beff		Style		todo		todo	Стиль	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1024	
+2587c62a170a		Large		todo		todo		todo		P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:598	
+25d31e86b081		Basic Cycle		todo		todo	Простой цикл	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2049	
+26061d4d4eb3		All caps		todo		todo	Все прописные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2794	
+262e77897cd9		Layouts		todo		todo	Макеты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3106	
+2677dd6fb6be		Add		todo		todo	Добавить	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2107	
+26d72a911b6f		Select Word		todo		todo	Выделить слово	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:72	
+27c4331f7da0		Change File Type		todo		todo	Изменить тип файла	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1250	
+28358053c861		Action		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1252	
+28770fb9e7cf		Allow		todo		todo	Разрешить	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:844	
+2902090a83c4		Compatibility		todo		todo	Совместимость	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/protect.rs:139	
+292645a0fca5		AaBbCcDd		todo		todo	АаБбВвГг	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2830	
+29f54ad30a27		Align Left		todo		todo	По левому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:255	
+2a5ee357372a		About		todo		todo	О программе	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
+2a685aa429b6		Alt Text		todo		todo	Замещающий текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:42	
+2aa54531e5bc		Reopen		todo		todo	Открыть снова	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1297	
+2ab843893edf		Combine		todo		todo	Объединить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/combine_ui.rs:712	
+2ab917728bf5		Product		todo		todo	Произведение	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:518	
+2b35b99b392f		Greek		todo		todo	Греческий	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1679	
+2c49eb1fd20b		Collapse		todo		todo	Свернуть	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/selpane.rs:174	
+2cc3d2eb7622		No Reflection		todo		todo	Без отражения	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1019	
+2d605c32dd42		Capitalize names of days		todo		todo	Названия дней с прописной буквы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2095	
+2dd76fa6f16c		Alignment:		todo		todo	Выравнивание:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:326	
+2e6042d9c021		Background		todo		todo	Фон	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:882	
+2e76d7e0fb0b		No Color		todo		todo	Без цвета	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:562	
+2f2f0cd5e51b		Display name		todo		todo	Отображаемое имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:53	
+2f499fde6b6d		Down		todo		todo	Вниз	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1964	
+2f9e9f5b67f4		Artistic Effects		todo		todo	Художественные эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/artistic.rs:27	
+30525b238774		Text Pane		todo		todo	Область текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:31	
+30783766f2ef		Printing		todo		todo	Печать	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:304	
+3081913e7667		Current page		todo		todo	Текущая страница	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/ocr_ui.rs:88	
+308fbe9f6060		Auto		todo		todo	Авто	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:408	
+31fd7bca2d42		PRs		todo		todo	PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
+321e5a7a0d1b		Next Comment		todo		todo	Следующий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:18	
+32a5066dcf79		Select Paragraph		todo		todo	Выделить абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:73	
+32b4a810be45		Post		todo		todo	Опубликовать	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1263	
+33bf8d206419		Join the ArtCraft Discord		todo		todo	Присоединяйтесь к Discord ArtCraft	upstream	pdfcraft	P1:pdfcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1491	
+33c7dd0c638e		Soft Edges		todo		todo	Сглаживание	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:318	
+35b7ef56cce4		Password:		todo		todo	Пароль:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:247	
+363d5f4b6ef5		Create		todo		todo	Создать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1961	
+36674dcd75a5		Paragraph…		todo		todo	Абзац…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1187	
+366e06a228e5		Delete Rows		todo		todo	Удалить строки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2994	
+367242dcd1d6		Resolution		todo		todo	Разрешение	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3593	
+3704d02d21c1		Color:		todo		todo	Цвет:	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1657	
+372a8e3466c9		Number of columns:		todo		todo	Число столбцов:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1031	
+37bb08cd9874		Last		todo		todo	Последний	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
+38162a6f9b13		Path		todo		todo	Контур	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/fillui.rs:166	
+385d2c071451		Glow		todo		todo	Свечение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:300	
+385e347022ab		Dotted		todo		todo	Точечный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
+38cab57d6254		Description:		todo		todo	Описание:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/actions_ui.rs:312	
+38dc98ca039a		Table Style Options		todo		todo	Параметры стилей таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:49	
+39b7c8de0e2d		Time		todo		todo	Время	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:851	
+3a3a6a95ba32		Name		todo		todo	Имя	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
+3a8a99850a0f		Last Column		todo		todo	Последний столбец	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2759	
+3b879047db7a		SmartArt Styles		todo		todo	Стили SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3134	
+3c4e837d8abe		Insert Chart		todo		todo	Вставка диаграммы	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:689	
+3c50b2466da3		First commit		todo		todo	Первый коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
+3da37ad0ca83		Arrows		todo		todo	Стрелки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1680	
+3dec31aeb534		Font		todo		todo	Шрифт	upstream	wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2753	
+3e19e04e934e		Double		todo		todo	Двойной	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
+3ea98687145a		Bold		todo		todo	Полужирный	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2770	
+400e082039e6		Line Spacing Options…		todo		todo	Параметры межстрочного интервала…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:756	
+40d0adfcce5a		Scatter		todo		todo	Точечная	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2046	
+40f01500ecbc		No model credits were built into this copy.		todo		todo	В эту сборку не включены сведения о моделях.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:300	
+429eeca19eb6		Theme Colors		todo		todo	Цвета темы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/widgets.rs:276	
+442fded5d4f4		Grab bag		todo		todo	Разное	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:238	
+4441725403e0		Spacing		todo		todo	Интервал	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2797	
+44455f585229		Swedish		todo		todo	Шведский	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2440	
+44c60a98d78b		Download		todo		todo	Скачать	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:942	
+44f24937792b		Paste Special…		todo		todo	Специальная вставка…	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:410	
+44f442553a9a		Font:		todo		todo	Шрифт:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:298	
+4688b5a4d5e0		Yes		todo		todo	Да	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
+4693f1d4fd52		Indent		todo		todo	Отступ	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1620	
+46c1da71ba14		Arrow		todo		todo	Стрелка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
+47228d07c6d9		Line delta		todo		todo	Изменение числа строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:96	
+4726055d8aa3		Points		todo		todo	Пункты	upstream	wordcraft	P2	deckcraft,wordcraft	crates/engine/src/cmd/points.rs:27	
+48e453206db3		Open		todo		todo	Открыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:69	
+48f5d00f576b		Columns		todo		todo	Колонки	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/panes.rs:412	
+4a2a29571e7d		Shape Outline		todo		todo	Контур фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2435	
+4aae82dafd0a		Tags		todo		todo	Теги	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:227	
+4b0f40f1c0f8		All		todo		todo	Все	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/show.rs:1007	
+4b3b04e2c0ef		none		todo		todo	нет	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/control.rs:294	
+4be49a13cfe7		Value		todo		todo	Значение	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2004	
+4beef4450795		Rotate		todo		todo	Повернуть	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1124	
+4c5f8b0a206f		File Name		todo		todo	Имя файла	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:504	
+4d34042bfe3d		Dismiss		todo		todo	Закрыть	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/widgets.rs:347	
+4d9bafd9320b		Height		todo		todo	Высота	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2380	
+4f1f2b14d67f		Ruler		todo		todo	Линейка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:366	
+4f2117a6d837		Dark Mode		todo		todo	Тёмный режим	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:379	
+4f90e8e21e75		Triple		todo		todo	Тройная	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:583	
+4ff9e7c0d004		Ink to Shape		todo		todo	Рукописный ввод в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:32	
+505331cdf00a		Hide		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/selpane.rs:222	
+506f230325a0		Lines deleted		todo		todo	Удалено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:95	
+51292c7540ff		Tab		todo		todo	Tab	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1960	
+51b41f5a4e1d		Stacked		todo		todo	Столбиком	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:786	
+51cc5412e9e4		Show password		todo		todo	Показать пароль	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1422	
+51ce57d72a52		Change Picture…		todo		todo	Заменить рисунок…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1247	
+51fcc440a721		Bottom Border		todo		todo	Нижняя граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2835	
+52d8f9a9791d		Exactly		todo		todo	Точно	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2940	
+539922bcbcd2		Reverse the order		todo		todo	В обратном порядке	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:234	
+5584a3f60e6a		Tabs		todo		todo	Табуляция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:48	
+558b41754788		Rectangle		todo		todo	Прямоугольник	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:463	
+55d4c958f84f		Type		todo		todo	Тип	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/fillui.rs:170	
+562102e9fc50		Add comments		todo		todo	Добавить комментарии	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:230	
+5623290f0eff		Previous sheet		todo		todo	Предыдущий лист	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/tabs.rs:46	
+5639c05fba0a		Hidden		todo		todo	Скрытый	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1724	
+5709ef5b0049		Pencil		todo		todo	Карандаш	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1436	
+57f0f80d0fda		Change Shape		todo		todo	Изменить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2390	
+5864d9c069e7		Select		todo		todo	Выделить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1423	
+58691c9b3510		Add footer		todo		todo	Добавить нижний колонтитул	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:486	
+590124b06b7e		Sort		todo		todo	Сортировка	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:225	
+5a32f164b835		Do not check spelling or grammar		todo		todo	Не проверять орфографию и грамматику	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1931	
+5aec058d423c		Find…		todo		todo	Найти…	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:412	
+5b3d84ac378c		Undo		todo		todo	Отменить	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:181	
+5b9d0c9e48bc		Picture Border		todo		todo	Граница рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2677	
+5bc2c39db8b8		Transparency		todo		todo	Прозрачность	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/fillui.rs:306	
+5c36ada9359d		Insert Below		todo		todo	Вставить снизу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:15	
+5c532d2163e0		Page Setup		todo		todo	Параметры страницы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:405	
+5d77245b1d3b		Properties		todo		todo	Свойства	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:859	
+5d841c528d4a		Reflection		todo		todo	Отражение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:274	
+5da02b036754		Margins		todo		todo	Поля	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:298	
+5df98001f472		Centered		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1009	
+5e32677aa9ee		Align Center		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1139	
+5ebe206342ce		Document		todo		todo	Документ	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/docking.rs:28	
+5f57ef808ac4		Split Cells		todo		todo	Разделить ячейки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:31	
+5f595358e6e9		Chart Design		todo		todo	Конструктор диаграмм	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:146	
+5f942ec93182		Saved		todo		todo	Сохранено	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:1299	
+6016bb522870		Sort by		todo		todo	Сортировать по	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1929	
+6094ba57e0a6		New Comment		todo		todo	Новый комментарий	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1306	
+613cc9c1a598		Find		todo		todo	Найти	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/qat.rs:52	
+617956be900a		Checkbox		todo		todo	Флажок	upstream		P1	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:290	
+626227c83cd2		Replace…		todo		todo	Заменить…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:3225	
+62e9bf327012		Width		todo		todo	Ширина	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2373	
+62f3cb74e53d		Add to Dictionary		todo		todo	Добавить в словарь	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1167	
+63e6aafb3cb7		Table Styles		todo		todo	Стили таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:40	
+63fabfb897a3		Data		todo		todo	Данные	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:870	
+644de63b7bf5		Date &\nTime		todo		todo	Дата и\nвремя	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1280	
+6471aaa892e2		Add a comment		todo		todo	Добавить комментарий	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comments.rs:1374	
+6546f6577477		Paste (⌘V)		todo		todo	Вставить (⌘V)	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:337	
+65ad12205300		Chart		todo		todo	Диаграмма	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:238	
+65d114bb829c		Standard Colors		todo		todo	Стандартные цвета	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/widgets.rs:338	
+66dcdb43622f		Select Text		todo		todo	Выделить текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:70	
+6747459d40a6		Volume		todo		todo	Том	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3194	
+677b49a7349e		Thesaurus		todo		todo	Тезаурус	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:376	
+68793aa27ebc		Print		todo		todo	Печать	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:1034	
+692a19d8dc21		Numbering		todo		todo	Нумерация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
+6999cadab10b		First		todo		todo	Первый	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
+69bbe856cb8a		Themes		todo		todo	Темы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3254	
+6a11f241e25b		Date & Time		todo		todo	Дата и время	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:78	
+6a4cdb93bc7a		Export…		todo		todo	Экспортировать…	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/lib.rs:406	
+6b202d4b5ef5		Reply		todo		todo	Ответить	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/engine/src/cmd/review.rs:14	
+6b3eb29ff573		Align Right		todo		todo	По правому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:257	
+6c1037376c3b		Currency		todo		todo	Денежный	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:1677	
+6cbab8c439f3		Resolve		todo		todo	Отметить решённым	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1297	
+6d012d102afa		Day		todo		todo	День	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
+6d01909775cb		Delete Comment		todo		todo	Удалить комментарий	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:15	
+6df72a93f5b4		Set		todo		todo	Установить	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3154	
+6e11c7e37e44		Description		todo		todo	Описание	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:98	
+6e15c49c8a4d		Clear		todo		todo	Очистить	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3128	
+6e8e207b8fff		Inside Horizontal Border		todo		todo	Внутренняя горизонтальная граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2838	
+70724bc7f76c		Decrease Font Size		todo		todo	Уменьшить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:521	
+709f601c0e66		Portrait		todo		todo	Книжная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1058	
+70fe9d4d2ea7		Next Page		todo		todo	Следующая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1222	
+7184490b8d0a		Oval		todo		todo	Овал	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
+7231d48018d1		Edit Data		todo		todo	Изменить данные	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/insert.rs:107	
+730f838e4ded		Play		todo		todo	Воспроизвести	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3158	
+731bc2ececa5		On		todo		todo	Включено	upstream	wordcraft	P2	pdfcraft,wordcraft	crates/ui-egui/src/motion.rs:42	
+7329653d16ec		Pages		todo		todo	Страницы	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:542	
+73b921782e6f		Select a chart first.		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:1976	
+7416c23aa31d		Help		todo		todo	Справка	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:292	
+742a595e9413		No Shadow		todo		todo	Без тени	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1006	
+752aa21ad0ff		Rename		todo		todo	Переименовать	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1528	
+756cd8d3de89		Month		todo		todo	Месяц	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
+75f350d74f4d		Text Box		todo		todo	Текстовое поле	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:213	
+75fcad667d97		Center		todo		todo	По центру	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2964	
+76dea9b2c29d		Rotate all text 90°		todo		todo	Повернуть весь текст на 90°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:784	
+770860d8fb73		Preferences…		todo		todo	Настройки…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/lib.rs:397	
+7761af1b4d3e		Join the ArtCraft community on Discord		todo		todo	Присоединяйтесь к сообществу ArtCraft в Discord	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:737	
+777e2d84550a		Shape Effects		todo		todo	Эффекты фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2439	
+7a61082e8e48		Replace All		todo		todo	Заменить все	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3215	
+7a6d6d796e6c		Comment		todo		todo	Комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1267	
+7aad051fcadd		Cell Margins		todo		todo	Поля ячеек	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3025	
+7abec7dd0013		SmartArt		todo		todo	SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1233	
+7b022b95065c		Format Painter		todo		todo	Формат по образцу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:213	
+7b232807682d		Shapes		todo		todo	Фигуры	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1681	
+7b31edcbe9ff		Next		todo		todo	Далее	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:99	
+7b919326ec98		Templates		todo		todo	Шаблоны	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:710	
+7c6fbca90bb8		Clustered Column		todo		todo	Гистограмма с группировкой	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2033	
+7c9fc0095d93		Correct TWo INitial CApitals		todo		todo	Исправлять ДВе ПРописные буквы в начале слова	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2093	
+7cae2cac2483		Automatic		todo		todo	Автоматически	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1319	
+7ce53d2e6083		Distribute		todo		todo	Распределить	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/engine/src/cmd/arrange.rs:49	
+7cf3284dbfde		Paper		todo		todo	Бумага	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:277	
+7d53fed520db		Date and Time		todo		todo	Дата и время	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:59	
+7d6411b572eb		Increase Indent		todo		todo	Увеличить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:218	
+7d97a8a98fc6		Page {page} of {pages}		todo		todo	Страница {page} из {pages}	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:771	
+7e04496c379b		Lines +/−		todo		todo	Строки +/−	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+7e7f8a2c3ece		Layout		todo		todo	Макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1272	
+7ec8210a8982		Orientation		todo		todo	Ориентация	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:219	
+7f98314d6228		Zoom…		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:373	
+7fd02178875e		Left:		todo		todo	Слева:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
+7ff5a39e1952		Customize Quick Access Toolbar		todo		todo	Настроить панель быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:134	
+80b7e4fc31e8		Small caps		todo		todo	Малые прописные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2794	
+80cf56dbb8dd		SmartArt Design		todo		todo	Конструктор SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:143	
+80f953339101		All pages		todo		todo	Все страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/combine_ui.rs:1477	
+812846507344		Compare		todo		todo	Сравнить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2154	
+81b24612f95e		Sentence case.		todo		todo	Как в предложениях.	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:545	
+82175c9eb30f		Rotation:		todo		todo	Поворот:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1067	
+824ca9534685		Space		todo		todo	Пробел	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1969	
+82ab9b8a95c5		Paste Formatting		todo		todo	Вставить форматирование	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:351	
+82ddc6cf6fb6		Password		todo		todo	Пароль	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:261	
+836620d5e661		Even pages only		todo		todo	Только чётные страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/marks_ui.rs:63	
+838c8c038fb3		Search		todo		todo	Поиск	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:607	
+83da5215e482		Letter		todo		todo	Письмо	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1089	
+84563de5d5b8		Comments		todo		todo	Комментарии	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:230	
+84cbf360518e		New Window		todo		todo	Новое окно	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:381	
+84d0571b2608		Convert to Text		todo		todo	Преобразовать в текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3113	
+84d1c2f2bb83		New\nComment		todo		todo	Новый\nкомментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2167	
+84d865bafc80		Today		todo		todo	Сегодня	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:589	
+850bba7840d4		Text Fill		todo		todo	Заливка текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:368	
+865cf3869a2c		Inside Borders		todo		todo	Внутренние границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2833	
+86fea649687d		Update		todo		todo	Обновить	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:473	
+8741a1692320		Format Painter (double-click to keep it on)		todo		todo	Формат по образцу (дважды щёлкните, чтобы закрепить)	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:361	
+8769f2e59ed5		Link		todo		todo	Ссылка	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1251	
+87e5495e18c0		Enter		todo		todo	Ввод	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:1956	
+87f42704b831		Left		todo		todo	Слева	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2963	
+88651cad8d08		Remove from Quick Access Toolbar		todo		todo	Удалить с панели быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:128	
+88c26221320f		Clear All Formatting		todo		todo	Очистить всё форматирование	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:522	
+892abf040ddc		Default		todo		todo	По умолчанию	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:185	
+892d76f36208		Next sheet		todo		todo	Следующий лист	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/tabs.rs:49	
+898f929ef649		Link…		todo		todo	Ссылка…	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1197	
+89eb9570fc9b		Replace		todo		todo	Заменить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1661	
+8c0d1a82fb3e		Ungroup		todo		todo	Разгруппировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1236	
+8ca5e7d53aae		Fonts		todo		todo	Шрифты	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1538	
+8cc496ae66b1		Tabs…		todo		todo	Табуляция…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3028	
+8cfccc5e08e4		Change		todo		todo	Изменить	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2653	
+8d0bc8f0dec6		No Glow		todo		todo	Без свечения	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1026	
+8f64dc90eea7		Middle		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:378	
+90fe4771814b		Angle		todo		todo	Угол	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/fillui.rs:212	
+91096eff00b0		Show\nComments		todo		todo	Показать\nкомментарии	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2174	
+92003eb0390d		Share		todo		todo	Поделиться	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:415	
+929effdb70b2		Grayscale		todo		todo	Оттенки серого	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:380	
+92b8ca988b75		Decrease Indent		todo		todo	Уменьшить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:217	
+931a3badd5cd		Hierarchy		todo		todo	Иерархия	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2050	
+93299d74016c		Bring Forward		todo		todo	Переместить вперёд	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1228	
+9365a19a8d00		Send Backward		todo		todo	Переместить назад	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1232	
+93723b3e38c5		Pause		todo		todo	Пауза	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3158	
+93a295051dd8		Delete Table		todo		todo	Удалить таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2995	
+93f180b8f181		Circle		todo		todo	Круг	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comment_props.rs:39	
+943d7b29b87f		Locked		todo		todo	Заблокировано	upstream	pdfcraft	P1:pdfcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1723	
+94e239481b63		Landscape		todo		todo	Альбомная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1059	
+95c41bc013cc		Rows		todo		todo	Строки	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:325	
+965d26030cca		Change Layout		todo		todo	Изменить макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/smartart.rs:201	
+965e3780355a		Undo {action}		todo		todo	Отменить: {action}	upstream	wordcraft	P2	pdfcraft,wordcraft		
+9754d4102ac7		Shading		todo		todo	Заливка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2812	
+97bc29200785		Subject		todo		todo	Тема	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:226	
+98d885117cab		Mark as decorative		todo		todo	Пометить как декоративный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1507	
+98dd944474a6		Field properties		todo		todo	Свойства поля	upstream		P1	pdfcraft,wordcraft	crates/engine/src/catalog.rs:346	
+9997fac1c1dc		Weight		todo		todo	Толщина	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2689	
+99f1d52cfba4		Presets		todo		todo	Образцы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:793	
+9a23c306b426		Close		todo		todo	Закрыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:111	
+9a8a9224a51d		Icons		todo		todo	Значки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1231	
+9b5e105d56ff		Gridlines		todo		todo	Сетка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:367	
+9bc9e48f28ce		Move Down		todo		todo	Переместить вниз	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1140	
+9c972456c699		Name:		todo		todo	Имя:	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:157	
+9cd28da6fd64		Format:		todo		todo	Формат:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1364	
+9ce43ba0c3a5		Not saved yet		todo		todo	Ещё не сохранено	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:817	
+9d4e6c613c57		Stacked Column		todo		todo	Гистограмма с накоплением	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2034	
+9e43cbfe4440		Demote		todo		todo	Понизить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3093	
+9e580f636b35		Relationship		todo		todo	Связь	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:636	
+9e75d258ab35		Change Case		todo		todo	Регистр	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:542	
+9ead8a88634c		Right Border		todo		todo	Правая граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2837	
+9ef48755cecb		PDF (*.pdf)		todo		todo	Файл PDF (*.pdf)	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:217	
+9fa4d327bb3b		Search Commands		todo		todo	Поиск команд	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:674	
+a076c02a4824		Right-to-Left Text Direction		todo		todo	Направление текста справа налево	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:261	
+a094835183b3		Insert Table		todo		todo	Вставить таблицу	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:34	
+a111f7316f76		Author		todo		todo	Автор	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:231	
+a16c3b44c1cf		Eraser		todo		todo	Ластик	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1427	
+a2354aa7100d		Title:		todo		todo	Заголовок:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:224	
+a2597b362df4		Line Spacing		todo		todo	Межстрочный интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:749	
+a27190239145		Align Text		todo		todo	Выравнивание текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:793	
+a310ce4a612b		Capitalize Each Word		todo		todo	Каждое Слово С Прописной	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:548	
+a33460a56451		Dot		todo		todo	Точка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2857	
+a350887fe899		No Border		todo		todo	Без границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2830	
+a3ca7c1a568c		Sum		todo		todo	Итог	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:468	
+a416aefdf180		(none)		todo		todo	(нет)	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:487	
+a4a7629c43cd		Accessibility Checker		todo		todo	Проверка доступности	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:63	
+a556f664ba54		Tables		todo		todo	Таблицы	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs_review.rs:105	
+a6493be912d6		Model		todo		todo	Модель	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+a64a24d5ff5a		Keywords		todo		todo	Ключевые слова	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:97	
+a65b97083677		Change Picture		todo		todo	Заменить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2652	
+a7258f0911b7		tOGGLE cASE		todo		todo	иЗМЕНИТЬ рЕГИСТР	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:549	
+a7a8db7df0e5		Footer		todo		todo	Нижний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1080	
+a7ce2524ee2c		Duplicate		todo		todo		todo		P2	deckcraft,pdfcraft	crates/ui-egui/src/menus.rs:191	
+a91ca954e0c0		Information		todo		todo		todo		P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:927	
+a96739898db5		Cut		todo		todo	Вырезать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+a9c73f4db83d		Fields		todo		todo	Поля	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:601	
+aa8dfb9eb88c		Previous		todo		todo	Назад	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:102	
+ab0d27a41b54		Search icons		todo		todo	Поиск значков	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1330	
+ab21a44778f3		Display theme		todo		todo	Тема оформления	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:934	
+ab3dd3632319		Username		todo		todo	Имя пользователя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:52	
+ab8ecdf6a546		Refresh		todo		todo	Обновить	upstream	wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/pivot_pane.rs:160	
+acf44707c398		Inside Vertical Border		todo		todo	Внутренняя вертикальная граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2839	
+ad06ca83515f		Star		todo		todo	Звезда	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1041	
+af45c5e79e90		Custom Margins…		todo		todo	Настраиваемые поля…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:320	
+af826758a054		Find Next		todo		todo	Найти далее	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3198	
+afbe592216e0		Effects		todo		todo	Эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:220	
+b0279cd18b88		List		todo		todo	Список	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:632	
+b033489981fe		Interface size		todo		todo	Размер интерфейса	upstream	gridcraft,pdfcraft	P1:gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2150	
+b06b3d0b370f		Reset Crop		todo		todo	Сбросить обрезку	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2725	
+b106f76f2b27		Go To		todo		todo	Перейти	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:639	
+b12d0b9628a8		Models		todo		todo	Модели	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
+b22470ecf90b		Remove Background		todo		todo	Удалить фон	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2571	
+b2d9533e58c9		Clustered Bar		todo		todo	Линейчатая с группировкой	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2036	
+b3f35b427ffd		Total Row		todo		todo	Строка итогов	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2755	
+b41884d7b057		Justify		todo		todo	По ширине	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2966	
+b473286892d8		Interface language		todo		todo	Язык интерфейса	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:949	
+b48de27ae1f0		Remove		todo		todo	Удалить	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:394	
+b49c9dc420b9		Preview		todo		todo	Предварительный просмотр	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1633	
+b4e2c1d70887		Alignment		todo		todo	Выравнивание	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2956	
+b5693e8aefb0		Picture		todo		todo	Рисунок	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:215	
+b58f4734f69f		UPPERCASE		todo		todo	ВСЕ ПРОПИСНЫЕ	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:547	
+b65f3fa3ba5a		New		todo		todo	Создать	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:68	
+b71e24f07c28		New…		todo		todo	Создать…	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1980	
+b7dbe4aee3ab		Add Chart Element		todo		todo	Добавить элемент диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2333	
+b812a014da86		Equation		todo		todo	Уравнение	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:58	
+b8671adfa802		Distributed		todo		todo	Распределённое	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2968	
+b8ddd39e3d1c		Shape Fill		todo		todo	Заливка фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2417	
+b986e4d412e3		{n} h ago		todo		todo	{n} ч назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:490	
+ba25e96e4e6a		Quick Access Toolbar		todo		todo	Панель быстрого доступа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:411	
+baf77eb1eea1		Email Address		todo		todo	Адрес электронной почты	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1115	
+bb28588becab		Alt\nText		todo		todo	Замещающий\nтекст	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2479	
+bc9b9d5b467d		First line		todo		todo	Первая строка	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2982	
+bcd893ba4ceb		{n} min ago		todo		todo	{n} мин назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:488	
+bcf43dc027b6		Info		todo		todo	Сведения	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:70	
+bd36d16ebac1		Example: {sample}		todo		todo	Пример: {sample}	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1407	
+bd7745679b7d		Replace text as you type		todo		todo	Заменять текст при вводе	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2098	
+bd888a789fbe		AutoSave		todo		todo	Автосохранение	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:55	
+be7d279cace8		Distance		todo		todo	Расстояние	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:271	
+be7f63c9fe7e		Line spacing		todo		todo	Межстрочный интервал	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2997	
+be90a7753992		No fill		todo		todo	Без заливки	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:456	
+bf22925e78bc		Settings		todo		todo	Настройки	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1049	
+bf46539173fb		Replace with:		todo		todo	Заменить на:	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3187	
+c038d60b8c7f		Auto ({percent}%)		todo		todo	Авто ({percent}%)	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/js_ui.rs:291	
+c0b1d4b064da		Tools		todo		todo	Инструменты	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/docking.rs:29	
+c0ba38b659b0		French (France)		todo		todo	Французский (Франция)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2438	
+c17577989372		Change Colors		todo		todo	Изменить цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3122	
+c175bd8b2d7e		Rotate all text 270°		todo		todo	Повернуть весь текст на 270°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:785	
+c1801ec2d953		Stop		todo		todo	Стоп	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/media.rs:16	
+c18a369dd8f2		Year		todo		todo	Год	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
+c20bf6e651da		Deleted		todo		todo	Удалено	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1686	
+c225884dd004		Back		todo		todo	Назад	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:336	
+c2623cb68377		Process		todo		todo	Процесс	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:633	
+c331529af037		Design		todo		todo	Дизайн	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:154	
+c387648fb7dc		Group		todo		todo	Группировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1234	
+c3dffb634e28		Zoom		todo		todo	Масштаб	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:40	
+c445c8ac00fb		English (United States)		todo		todo	Английский (США)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2436	
+c5334d4ae120		Next month		todo		todo	Следующий месяц	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:597	
+c5db8b68c134		Revert		todo		todo	Восстановить	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:853	
+c632a85df841		Colors		todo		todo	Цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1511	
+c77291478db1		Macros		todo		todo	Макросы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:724	
+c7749f8a6714		No Soft Edges		todo		todo	Без сглаживания	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1037	
+c7d2106a6c66		Subscript		todo		todo	Подстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
+c8646543cbdb		Revisions		todo		todo	Ревизии	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:33	
+c87c88f6f5b1		Insert Table…		todo		todo	Вставить таблицу…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1208	
+c99722a70137		Doughnut		todo		todo	Кольцевая	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2043	
+c9a218aa8c7c		Promote		todo		todo	Повысить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3090	
+c9c07701da2f		Italic		todo		todo	Курсив	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2771	
+cade2bded22e		Move Up		todo		todo	Переместить вверх	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1136	
+cbd0ff0028c9		Last commit		todo		todo	Последний коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
+cbf5785d6967		Report		todo		todo	Отчёт	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/a11y_ui.rs:200	
+cbfbe16a917d		Crop		todo		todo	Обрезать	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2718	
+cc2adcf46755		Insert Right		todo		todo	Вставить справа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:21	
+cc64d70e9b70		No Transform		todo		todo	Без трансформации	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2297	
+cc6cb9d5201a		Go to		todo		todo	Перейти	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1778	
+cca5c98c2c8b		Bullets		todo		todo	Маркеры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
+ccba87eb8324		Previous page		todo		todo	Предыдущая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:767	
+cccd7aca8cae		Backspace		todo		todo	Backspace	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:1958	
+ccefbf2f9335		Single		todo		todo	Одинарный	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
+cf3809de1b72		Format\nPane		todo		todo	Область\nформатирования	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:2484	
+cf9639c75ff2		Decimal		todo		todo	По разделителю	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3092	
+cfe3ca1f9935		Exported {path}		todo		todo	Экспортировано: {path}	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:760	
+d039cf77464d		Zoom In		todo		todo	Увеличить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:370	
+d03eb428b455		Paste		todo		todo	Вставить	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+d069045fda99		Align		todo		todo	Выровнять	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1123	
+d0cb00bf82dc		Hidden text		todo		todo	Скрытый текст	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/options.rs:240	
+d0f6e73d7ce6		Arrange		todo		todo	Упорядочить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:265	
+d0f8ab38dfe1		Type Text		todo		todo	Ввести текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:38	
+d2dce405a1b3		Header Row		todo		todo	Строка заголовка	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2745	
+d2f62fa83c18		Connect Shapes		todo		todo	Соединить фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:14	
+d366cf4b351b		ΔLOC		todo		todo		todo		P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/credits.rs:96	
+d36d03020ba9		Direction:		todo		todo	Направление:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:622	
+d3d641048bcf		Width:		todo		todo	Ширина:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
+d41d9ad12629		Picture Styles		todo		todo	Стили рисунков	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/picture_style.rs:14	
+d43dec102804		First Column		todo		todo	Первый столбец	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2749	
+d48b222558c2		Capitalize first letter of sentences		todo		todo	Делать первые буквы предложений прописными	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2094	
+d4b63e243a1f		Japanese		todo		todo	Японский	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2439	
+d4fbda21fc3e		No Outline		todo		todo	Нет контура	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:525	
+d58bd0d87947		Rotate Right 90°		todo		todo	Повернуть вправо на 90°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:277	
+d5c0d3c52083		Low		todo		todo	Низкое	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3196	
+d711f272b41f		Don't Save		todo		todo	Не сохранять	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1205	
+d760e1d44665		Both		todo		todo	Оба	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:1001	
+d85667aef9df		Language		todo		todo	Язык	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:64	
+d879ced7bd55		Notes		todo		todo	Заметки	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:365	
+d8ff7a14d093		Transform		todo		todo	Трансформация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2281	
+d90c099fe629		Multiple		todo		todo	Несколько	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2946	
+d94be2d67f07		Solid		todo		todo	Сплошная	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:2698	
+da5600a2064f		Indentation		todo		todo	Отступы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2972	
+da8c8e9cd3fb		Change Chart Type		todo		todo	Изменить тип диаграммы	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:106	
+da969764ac3a		Superscript		todo		todo	Надстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
+dac343dae843		Home		todo		todo	Главная	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:67	
+dad3c0ade918		Size		todo		todo	Размер	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:869	
+db5118791846		Apply		todo		todo	Применить	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1088	
+dba3258cf14e		Highlighter		todo		todo	Маркер	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1437	
+dcd01cbe2f31		Position		todo		todo	Положение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2417	
+dcda70934ab6		Double Underline		todo		todo	Двойное подчёркивание	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:196	
+dd126ce28d5d		Diamond		todo		todo	Ромб	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
+dd6cd6a8031b		Matrix		todo		todo	Матрица	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2052	
+ddb48a197ab0		Find what:		todo		todo	Найти:	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3185	
+dde846263001		Go To…		todo		todo	Перейти…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:272	
+ddfd10c97b4a		Ink to\nMath		todo		todo	Рукопись\nв формулу	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1455	
+df93684e2a38		Page Breaks		todo		todo	Разрывы страниц	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1679	
+dfc3dd729f82		Thickness		todo		todo	Толщина	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comment_props.rs:244	
+e0235a68f6a4		Outside Borders		todo		todo	Внешние границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2832	
+e08543852506		Previous Comment		todo		todo	Предыдущий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:27	
+e0f04f522125		Banded Rows		todo		todo	Чередующиеся строки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2765	
+e11ed9e275fe		Insert Above		todo		todo	Вставить сверху	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:12	
+e16950afa85a		Basic List		todo		todo	Простой список	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2047	
+e1a0f1a473ce		Ready		todo		todo	Готово	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:454	
+e1be62d85c42		Top Margin		todo		todo	Верхнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:301	
+e1bfc983d793		Document Title		todo		todo	Название документа	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:247	
+e1cfcfcd5682		Field		todo		todo	Поле	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/sign_ui.rs:1220	
+e1e94a61ebb5		Merge Cells		todo		todo	Объединить ячейки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:30	
+e24d8b472d2e		Version		todo		todo	Версия	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+e30e7180c1f1		Medium		todo		todo	Средняя	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:598	
+e32a547cad15		Header		todo		todo	Верхний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3282	
+e349de27bd10		Headings		todo		todo	Заголовки	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:387	
+e36ad29bc6ad		Match case		todo		todo	С учётом регистра	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3189	
+e41f299dc98c		Copy		todo		todo	Копировать	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+e4502eada94b		Spelling		todo		todo	Орфография	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:60	
+e4f95f55f699		Zoom Out		todo		todo	Уменьшить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:371	
+e5180390ac7d		Text Direction		todo		todo	Направление текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:780	
+e608d4af9771		Insert Left		todo		todo	Вставить слева	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:18	
+e7ea5d52709a		Breaks		todo		todo	Разрывы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:308	
+e8051ea82a2b		Move		todo		todo		todo		P2	deckcraft,pdfcraft	crates/engine/src/cmd/shape.rs:42	
+e81790f8017e		To:		todo		todo	До:	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2464	
+e9d0b904fb5c		None		todo		todo	Нет	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1342	
+ea23664cc033		Display		todo		todo	Отображение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2542	
+ea8af64a1b78		Words		todo		todo	Слова	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/word_count_ui.rs:130	
+eb2f6fea7842		Delete Columns		todo		todo	Удалить столбцы	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2993	
+eb513a35a350		Header &\nFooter		todo		todo	Верхний и\nнижний колонтитулы	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1271	
+ebacc60c6800		Account		todo		todo	Учётная запись	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:74	
+ebb5246a6292		Square		todo		todo	Квадрат	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:590	
+ec78b0fe2024		Page		todo		todo	Страница	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/comments_panel.rs:538	
+ec90d2aac452		Done		todo		todo	Готово	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2178	
+eca562efabd8		Text Highlight Color		todo		todo	Цвет выделения текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:557	
+ed3b861da358		Left Border		todo		todo	Левая граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2836	
+ee489fc7bc6c		Page Number		todo		todo	Номер страницы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3283	
+ee52661be311		Add Shape		todo		todo	Добавить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3075	
+eeda16df29ad		Save As		todo		todo	Сохранить как	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:1313	
+ef06c37d6810		Combo		todo		todo	Комбинированный	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2052	
+ef0968d5f6bb		This document has no bookmarks.		todo		todo	В этом документе нет закладки.	upstream	pdfcraft	P2	pdfcraft,wordcraft	crates/ui-egui/src/panels.rs:642	
+ef0b372fc7e6		Spacing (pt):		todo		todo	Интервал (пт):	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2540	
+ef0d86e7cca0		Shape Format		todo		todo	Формат фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:133	
+ef1d086ba344		Stacked Bar		todo		todo	Линейчатая с накоплением	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2037	
+efa50b5936d2		Font Size		todo		todo	Размер шрифта	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:41	
+f130f7ec6fd2		Banded Columns		todo		todo	Чередующиеся столбцы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2769	
+f132771b5da5		Rotate Left 90°		todo		todo	Повернуть влево на 90°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:276	
+f18893ea6565		Page Setup…		todo		todo	Параметры страницы…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1604	
+f18b52483c7f		Lines added		todo		todo	Добавлено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:94	
+f198f5fed0a8		Color		todo		todo	Цвет	upstream	wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2783	
+f2b22e6f5b01		Draw Table		todo		todo	Нарисовать таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1212	
+f2c5d25f5884		Paragraph		todo		todo	Абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:47	
+f2ce153790b5		Height:		todo		todo	Высота:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
+f2fd66f796e4		Left Margin		todo		todo	Левое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:299	
+f37d92b738b5		File		todo		todo	Файл	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:387	
+f439e58d7975		High		todo		todo	Высокое	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3196	
+f440cdbad939		Linear		todo		todo	Линейный	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/fillui.rs:164	
+f4682c145c63		Convert to Shapes		todo		todo	Преобразовать в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3116	
+f4f2abd0d30f		No contributor data was built into this copy.		todo		todo	В эту сборку не включены данные об участниках.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:250	
+f574b6c04699		English (United Kingdom)		todo		todo	Английский (Великобритания)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2437	
+f5beb53c5f2b		Line		todo		todo	Линия	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:514	
+f5db1d14c0aa		Recover		todo		todo	Восстановить	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1188	
+f5fa3cb15f7d		Bottom Margin		todo		todo	Нижнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:302	
+f73bbcba6ced		Play/Pause		todo		todo	Воспроизведение/пауза	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/media.rs:15	
+f88824370dd3		Previous Page		todo		todo	Предыдущая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1217	
+f8a8e05d8683		Date		todo		todo	Дата	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3283	
+f9471670f0a5		Open…		todo		todo	Открыть…	upstream	pdfcraft	P1:pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:398	
+fb1accde37a8		Cancel		todo		todo	Отмена	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1089	
+fb1e67504eaf		Advanced		todo		todo	Дополнительно	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:109	
+fbab20e95cb1		Character Spacing		todo		todo	Межзнаковый интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:534	
+fbe62f88d942		Selection		todo		todo	Выделение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:28	
+fc147272107a		AutoCorrect		todo		todo	Автозамена	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:52	
+fc481809844a		Page\nNumber		todo		todo	Номер\nстраницы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:490	
+fc7cd6a3a839		% of all commits		todo		todo	% всех коммитов	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+fca24331a97c		Binary assets added		todo		todo	Добавлены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:97	
+fcc3796ed32a		Category:		todo		todo	Категория:	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1550	
+fcf80e69fc99		Increase Font Size		todo		todo	Увеличить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:520	
+fd2bc10d718c		Compact		todo		todo	Компактный	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/pivot_pane.rs:167	
+fd6534186c4d		Number of rows:		todo		todo	Число строк:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1032	
+fd85e5bc68ea		Appearance		todo		todo	Внешний вид	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1340	
+fdfb85b0b709		The passwords don't match.		todo		todo	Пароли не совпадают.	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/protect.rs:34	
+fe1f9992ba1c		Magnification		todo		todo	Масштаб	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:532	
+fe756f707e61		Keep Text Only		todo		todo	Вставить без форматирования	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1721	
+ff2e175f836a		New\nWindow		todo		todo	Новое\nокно	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2259	
+ff40259c28ed		Table		todo		todo	Таблица	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:241	

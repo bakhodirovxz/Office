@@ -1,0 +1,151 @@
+﻿key,context,en,ru,uz-Latn DRAFT,uz-Cyrl DRAFT,status,owner comment,category,alt uz-Latn,alt uz-Cyrl,usage note,strings containing term,apps with exact string,scope,where,pass,en_hash
+943492fcba89,,About,О программе,Dastur haqida,Дастур ҳақида,draft-unreviewed,,menu,Haqida,Ҳақида,About dialog; upstream product token stays inside the string (I5).,9,4,glossary,,both,6b21fb79
+af32e9cd043f,,Account,Учётная запись,Hisob,Ҳисоб,draft-unreviewed,,menu,Akkaunt,Аккаунт,,3,2,glossary,,both,85dfa32c
+00009304e282,,Design,Дизайн,Dizayn,Дизайн,draft-unreviewed,,menu,Loyihalash,Лойиҳалаш,,9,2,glossary,,both,59b03536
+66843b3e0d6c,,Draw,Рисование,Chizish,Чизиш,draft-unreviewed,,menu,Chizma,Чизма,,23,4,glossary,,both,bfa50c7a
+cfd06f7dd354,,Edit,Изменение,Tahrirlash,Таҳрирлаш,draft-unreviewed,,menu,Tahrir; Oʻzgartirish,Таҳрир; Ўзгартириш,Menu/tab name.,48,4,glossary,,both,5301648d
+17acb22d30b6,,File,Файл,Fayl,Файл,draft-unreviewed,,menu,,,Established computing loan.,154,4,glossary,,both,2c3cafa4
+7f53aea8537d,,Format,Формат,Format,Формат,draft-unreviewed,,menu,Formatlash,Форматлаш,Noun and menu name; the verb form is the alternative.,55,4,glossary,,both,041a5dec
+4d7113bdc47f,,Help,Справка,Yordam,Ёрдам,draft-unreviewed,,menu,Qoʻllanma,Қўлланма,,5,3,glossary,,both,c47ae153
+3f8e9d4a3acf,,Home,Главная,Bosh sahifa,Бош саҳифа,draft-unreviewed,,menu,Asosiy,Асосий,"Ribbon tab, not a web home page.",11,4,glossary,,both,70f8bb9a
+77bda00d103a,,Insert,Вставить,Kiritish,Киритиш,draft-unreviewed,,menu,Qoʻshish; Joylashtirish,Қўшиш; Жойлаштириш,"Tab/command that puts an object into the document. Add uses Qoʻshish, Paste uses Qoʻyish, so the three stay apart.",95,4,glossary,,both,95802daa
+a870266a8369,,Layout,Макет,Maket,Макет,draft-unreviewed,,menu,Sahifa tuzilishi,Саҳифа тузилиши,,33,2,glossary,,both,972ad8d8
+f9b03ea83621,,Options,Параметры,Parametrlar,Параметрлар,draft-unreviewed,,menu,Sozlamalar,Созламалар,Options and Settings are separate words here so the two menus can differ.,42,4,glossary,,both,6bf5da9c
+6e7aeaa0e30b,,Preferences,Настройки,Afzalliklar,Афзалликлар,draft-unreviewed,,menu,Sozlamalar,Созламалар,PdfCraft menu. Owner to decide whether Preferences and Settings may share one word.,7,2,glossary,,both,9dfd349e
+99b65edf1068,,Recent,Последние,Soʻnggi,Сўнгги,draft-unreviewed,,menu,Yaqinda ishlatilgan,Яқинда ишлатилган,List of recently opened files.,12,4,glossary,,both,76eec760
+fd138422b461,,Review,Рецензирование,Tekshirish,Текшириш,draft-unreviewed,,menu,Retsenziya,Рецензия,"Ribbon tab (comments, tracked changes).",7,4,glossary,,both,e29a79fe
+e16b8cc88b03,,Slide Show,,Slaydlar namoyishi,Слайдлар намойиши,draft-unreviewed,,menu,Namoyish,Намойиш,DeckCraft ribbon tab.,8,1,glossary,,both,e7fead58
+bc001453e650,ribbon,Tab,Tab,Yorliq,Ёрлиқ,draft-unreviewed,,menu,Tab,Таб,Ribbon tab (not a keyboard key).,45,3,glossary,,both,fe06eb64
+94ffc71f6cad,,Tools,Инструменты,Vositalar,Воситалар,draft-unreviewed,,menu,Asboblar,Асбоблар,,13,2,glossary,,both,4fa8cc86
+0dab4873ea25,,View,Вид,Koʻrinish,Кўриниш,draft-unreviewed,,menu,Koʻrish,Кўриш,,39,4,glossary,,both,69bd4ef9
+cb575bbc2fcb,,Window,Окно,Oyna,Ойна,draft-unreviewed,,menu,,,,23,1,glossary,,both,41dfc0a6
+aae8a4e5573f,,Add,Добавить,Qoʻshish,Қўшиш,draft-unreviewed,,command,,,,162,4,glossary,,both,61cc55aa
+ba9eed940d1c,,Align,Выровнять,Tekislash,Текислаш,draft-unreviewed,,command,,,,27,3,glossary,,both,c83b0ec2
+cce9e6c90281,,Apply,Применить,Qoʻllash,Қўллаш,draft-unreviewed,,command,Tatbiq etish,Татбиқ этиш,Dialog button.,25,3,glossary,,both,cfea419c
+da21cc450780,,Back,Назад,Orqaga,Орқага,draft-unreviewed,,command,,,,12,3,glossary,,both,b52b36b7
+50d2f36c75f2,,Browse,Обзор…,Koʻrib chiqish,Кўриб чиқиш,draft-unreviewed,,command,Tanlash,Танлаш,File chooser button.,7,4,glossary,,both,2f3b5c55
+50e7661b826f,,Cancel,Отмена,Bekor qilish,Бекор қилиш,draft-unreviewed,,command,,,Dialog button.,1,4,glossary,,both,77dfd213
+81e66f7f878d,,Change,Изменить,Oʻzgartirish,Ўзгартириш,draft-unreviewed,,command,,,,78,2,glossary,,both,64fbd995
+ebcfaa9ca7e3,,Clear,Очистить,Tozalash,Тозалаш,draft-unreviewed,,command,,,,22,4,glossary,,both,719ea396
+eef38d75ab40,,Close,Закрыть,Yopish,Ёпиш,draft-unreviewed,,command,,,,15,4,glossary,,both,bbfa773e
+db824e4ebf75,,Copy,Копировать,Nusxalash,Нусхалаш,draft-unreviewed,,command,Nusxa olish,Нусха олиш,,39,4,glossary,,both,af74f7c5
+b1032c4a4203,,Crop,Обрезать,Qirqish,Қирқиш,draft-unreviewed,,command,Kesish,Кесиш,,12,2,glossary,,both,c5db3d91
+e3a7cb06f96f,,Cut,Вырезать,Kesib olish,Кесиб олиш,draft-unreviewed,,command,Qirqib olish,Қирқиб олиш,Clipboard cut. Crop (image) uses Qirqish.,12,4,glossary,,both,38d13bda
+3a483751146d,,Delete,Удалить,Oʻchirish,Ўчириш,draft-unreviewed,,command,Yoʻq qilish,Йўқ қилиш,,48,4,glossary,,both,f6fdbe48
+7eea88b02eaa,,Export,Экспорт,Eksport qilish,Экспорт қилиш,draft-unreviewed,,command,Eksport,Экспорт,,35,4,glossary,,both,f3e4fadb
+0ffb3df24b1f,,Find,Найти,Topish,Топиш,draft-unreviewed,,command,Qidirish,Қидириш,,31,4,glossary,,both,df251b06
+74304ab19fb2,,Hide,,Yashirish,Яшириш,draft-unreviewed,,command,,,,31,2,glossary,,both,34d8b60f
+2fdeeee6edb8,,Import,,Import qilish,Импорт қилиш,draft-unreviewed,,command,Import,Импорт,,8,1,glossary,,both,d6fbc9d2
+8a89404f0367,,Link,Ссылка,Havola,Ҳавола,draft-unreviewed,,command,,,,28,4,glossary,,both,d0517071
+702a94cca5e3,,Merge,Объединить,Birlashtirish,Бирлаштириш,draft-unreviewed,,command,,,,29,1,glossary,,both,ea8f0d02
+0e447f4c1d51,,Move,,Koʻchirish,Кўчириш,draft-unreviewed,,command,Surish,Суриш,,54,2,glossary,,both,76cdb950
+b21cae9438b4,,New,Создать,Yangi,Янги,draft-unreviewed,,command,,,,78,3,glossary,,both,6403f2b7
+120fa1fcb00a,,Next,Далее,Keyingi,Кейинги,draft-unreviewed,,command,,,,30,4,glossary,,both,bc981983
+57d42d2b486a,,No,Нет,Yoʻq,Йўқ,draft-unreviewed,,command,,,,181,2,glossary,,both,816c52fd
+04989d5e96fd,,OK,OK,OK,OK,draft-unreviewed,,command,,,"Kept in Latin letters in both scripts, as in common Uzbek software.",1,4,glossary,,both,9ce3bd42
+d894d5a30f48,,Open,Открыть,Ochish,Очиш,draft-unreviewed,,command,,,,87,4,glossary,,both,cf9b7706
+200c789c095f,,Paste,Вставить,Qoʻyish,Қўйиш,draft-unreviewed,,command,Joylashtirish,Жойлаштириш,,21,4,glossary,,both,db248300
+5db33b79e889,,Previous,Назад,Oldingi,Олдинги,draft-unreviewed,,command,,,,30,4,glossary,,both,50f94286
+334098b886d5,,Print,Печать,Chop etish,Чоп этиш,draft-unreviewed,,command,Bosib chiqarish,Босиб чиқариш,,63,4,glossary,,both,5b221e9c
+6b892f521057,,Print Preview,,Chop etishdan oldin koʻrish,Чоп этишдан олдин кўриш,draft-unreviewed,,command,Oldindan koʻrish,Олдиндан кўриш,,0,0,glossary,,both,68e27d01
+f416723069d5,,Properties,Свойства,Xossalar,Хоссалар,draft-unreviewed,,command,Xususiyatlar,Хусусиятлар,,51,4,glossary,,both,bc6c88db
+e9b104991975,,Redo,Повторить,Qayta bajarish,Қайта бажариш,draft-unreviewed,,command,Takrorlash,Такрорлаш,,5,3,glossary,,both,471b94d4
+db27816f5f4f,,Remove,Удалить,Olib tashlash,Олиб ташлаш,draft-unreviewed,,command,Oʻchirish,Ўчириш,Takes something out of a list; the file is not deleted.,78,4,glossary,,both,e963907d
+691ef9a84b33,,Replace,Заменить,Almashtirish,Алмаштириш,draft-unreviewed,,command,Oʻrniga qoʻyish,Ўрнига қўйиш,,25,4,glossary,,both,a7cf7b25
+7f526933147f,,Rotate,Повернуть,Burish,Буриш,draft-unreviewed,,command,Aylantirish,Айлантириш,,31,3,glossary,,both,87b85dca
+e6eeb59a099a,,Save,Сохранить,Saqlash,Сақлаш,draft-unreviewed,,command,,,,91,4,glossary,,both,efc007a3
+5efac91ede0d,,Save As,Сохранить как,Boshqa nom bilan saqlash,Бошқа ном билан сақлаш,draft-unreviewed,,command,Nomlab saqlash,Номлаб сақлаш,,15,3,glossary,,both,ae3a122d
+efb5490e7606,,Search,Поиск,Qidirish,Қидириш,draft-unreviewed,,command,Izlash,Излаш,,23,3,glossary,,both,bce06414
+2411beab1ca6,,Select,Выделить,Tanlash,Танлаш,draft-unreviewed,,command,Belgilash,Белгилаш,,68,3,glossary,,both,85982229
+e6fbdcb5ba1b,,Select All,Выбрать все,Hammasini tanlash,Ҳаммасини танлаш,draft-unreviewed,,command,Barchasini tanlash,Барчасини танлаш,,4,3,glossary,,both,86a599ef
+f496d6ce864e,,Share,Поделиться,Ulashish,Улашиш,draft-unreviewed,,command,Baham koʻrish,Баҳам кўриш,,5,2,glossary,,both,09ca55ca
+b5c79726c0bb,,Show,Показать,Koʻrsatish,Кўрсатиш,draft-unreviewed,,command,,,,107,3,glossary,,both,d97d1ee3
+520cd23abcbb,,Sign,Подписать,Imzolash,Имзолаш,draft-unreviewed,,command,,,,31,1,glossary,,both,8b3d8d66
+16bfc3844ea6,,Sort,Сортировка,Saralash,Саралаш,draft-unreviewed,,command,Tartiblash,Тартиблаш,,17,4,glossary,,both,adc4e96a
+f1c3fbefce23,,Undo,Отменить,Qaytarish,Қайтариш,draft-unreviewed,,command,Bekor qilish,Бекор қилиш,"Cancel takes Bekor qilish, so Undo avoids the same word.",10,3,glossary,,both,39fc7212
+f43f892bc3b7,,Yes,Да,Ha,Ҳа,draft-unreviewed,,command,,,,1,2,glossary,,both,5397e058
+c1f589ea7f81,,Zoom,Масштаб,Masshtab,Масштаб,draft-unreviewed,,command,Kattalashtirish,Катталаштириш,,28,4,glossary,,both,9b3cbed5
+40bd37b3fcad,,Annotation,,Annotatsiya,Аннотация,draft-unreviewed,,object,Izohlash,Изоҳлаш,PDF annotation.,11,0,glossary,,both,de3b78b6
+842376b51171,,Author,Автор,Muallif,Муаллиф,draft-unreviewed,,object,,,,8,4,glossary,,both,5fda23d6
+d8d0838edd1c,,Bottom,Низ,Quyi,Қуйи,draft-unreviewed,,object,Pastki,Пастки,,34,4,glossary,,both,cce7f2f2
+fa08927df247,,Cell,Ячейка,Katak,Катак,draft-unreviewed,,object,Yacheyka,Ячейка,Native word vs the Russian loan widely used in spreadsheets.,30,1,glossary,,both,4607bc7c
+0bac2738e1d0,,Center,По центру,Markaz,Марказ,draft-unreviewed,,object,Markazga tekislash,Марказга текислаш,,17,4,glossary,,both,a2391118
+4cbd7e47dda3,,Certificate,,Sertifikat,Сертификат,draft-unreviewed,,object,Guvohnoma,Гувоҳнома,,27,0,glossary,,both,10de46b3
+a9823ea5f83a,,Character,Знак,Belgi,Белги,draft-unreviewed,,object,Harf,Ҳарф,,34,1,glossary,,both,ee9946c8
+c511cf161fc4,,Chart,Диаграмма,Diagramma,Диаграмма,draft-unreviewed,,object,Grafik,График,,24,3,glossary,,both,66c77347
+57e749c390f2,,Column,Столбец,Ustun,Устун,draft-unreviewed,,object,,,,42,1,glossary,,both,65ba00e9
+f64b65dff16c,,Comment,Комментарий,Izoh,Изоҳ,draft-unreviewed,,object,Sharh,Шарҳ,,30,4,glossary,,both,153d7a58
+c8dabcd62138,,Date,Дата,Sana,Сана,draft-unreviewed,,object,,,,31,3,glossary,,both,eb9a4bc1
+e501b05661ba,,Document,Документ,Hujjat,Ҳужжат,draft-unreviewed,,object,,,,217,2,glossary,,both,e214b8a2
+22008f8efd5f,,Equation,Уравнение,Tenglama,Тенглама,draft-unreviewed,,object,Formula,Формула,Math equation in a document.,23,2,glossary,,both,295e0d35
+bdea16152cd7,,Field,Поле,Maydon,Майдон,draft-unreviewed,,object,,,,94,2,glossary,,both,c326a466
+a2d43db2fec2,,Folder,,Jild,Жилд,draft-unreviewed,,object,Papka,Папка,Papka is the common spoken Russian loan.,44,1,glossary,,both,30baa249
+e51a356d8a38,,Footer,Нижний колонтитул,Quyi kolontitul,Қуйи колонтитул,draft-unreviewed,,object,Pastki kolontitul,Пастки колонтитул,,30,3,glossary,,both,26c01e70
+1d7f9da34c3e,,Form,,Forma,Форма,draft-unreviewed,,object,Anketa,Анкета,PDF form.,59,0,glossary,,both,80446347
+7d901931f8d3,,Formula,Формула,Formula,Формула,draft-unreviewed,,object,,,Spreadsheet formula.,13,2,glossary,,both,720f58fb
+bdac76f03aeb,,Function,Функция,Funksiya,Функция,draft-unreviewed,,object,,,,30,1,glossary,,both,f1e410ad
+d2c8a389c117,,Header,Верхний колонтитул,Yuqori kolontitul,Юқори колонтитул,draft-unreviewed,,object,,,,34,3,glossary,,both,31341c6f
+563a6a073c7f,,Heading,Заголовок,Sarlavha,Сарлавҳа,draft-unreviewed,,object,Boʻlim sarlavhasi,Бўлим сарлавҳаси,Heading style/level.,20,1,glossary,,both,a3089b7f
+bae2296ce046,,Indent,Отступ,Chekinish,Чекиниш,draft-unreviewed,,object,,,,13,3,glossary,,both,aacf4213
+a29493e5966d,,Justify,По ширине,Kenglik boʻyicha tekislash,Кенглик бўйича текислаш,draft-unreviewed,,object,Ikki tomonga tekislash,Икки томонга текислаш,,2,4,glossary,,both,536d2746
+f52bc59ed03e,,Landscape,Альбомная,Albom yoʻnalishi,Албом йўналиши,draft-unreviewed,,object,Yotiq,Ётиқ,,7,4,glossary,,both,7dc4bea6
+f5cdeffd9fcb,,Left,Слева,Chap,Чап,draft-unreviewed,,object,,,,73,4,glossary,,both,8ae1c34b
+7b2bc57f5ebf,shape,Line,Линия,Chiziq,Чизиқ,draft-unreviewed,,object,,,A drawn line.,59,4,glossary,,both,ea967600
+01df214425c3,text,Line,Линия,Satr,Сатр,draft-unreviewed,,object,Qator,Қатор,A line of text.,59,4,glossary,,both,ea967600
+26f6f691760a,,Margins,Поля,Sahifa chetlari,Саҳифа четлари,draft-unreviewed,,object,Hoshiyalar,Ҳошиялар,,11,3,glossary,,both,d01f8dc1
+87ba96788d9c,,Number,Числовой,Son,Сон,draft-unreviewed,,object,Raqam,Рақам,,65,3,glossary,,both,b7baa1d4
+4fb08910bc12,,Orientation,Ориентация,Yoʻnalish,Йўналиш,draft-unreviewed,,object,,,,6,3,glossary,,both,86e4e387
+1411849c82e8,,Page,Страница,Sahifa,Саҳифа,draft-unreviewed,,object,Bet,Бет,,267,2,glossary,,both,fb06270f
+9ed9c9848dec,,Paragraph,Абзац,Xatboshi,Хатбоши,draft-unreviewed,,object,Abzats,Абзац,,29,2,glossary,,both,05058e0b
+3f69a0d43600,,Password,Пароль,Parol,Парол,draft-unreviewed,,object,,,,65,3,glossary,,both,8be3c943
+70eec9fda8ae,,Picture,Рисунок,Rasm,Расм,draft-unreviewed,,object,Surat,Сурат,,46,2,glossary,,both,61852524
+5fa04516f4ea,,Portrait,Книжная,Kitob yoʻnalishi,Китоб йўналиши,draft-unreviewed,,object,Tik,Тик,,7,4,glossary,,both,92b6b1bf
+17d311d1886c,,Presentation,,Taqdimot,Тақдимот,draft-unreviewed,,object,Prezentatsiya,Презентация,,37,1,glossary,,both,6e875951
+dc63ce231cc7,,Range,,Diapazon,Диапазон,draft-unreviewed,,object,Oraliq,Оралиқ,Cell range.,36,0,glossary,,both,a16c5bbe
+8bb251ab1d0f,,Right,Справа,Oʻng,Ўнг,draft-unreviewed,,object,,,,73,4,glossary,,both,954daa8b
+7369094f2910,,Row,Строка,Qator,Қатор,draft-unreviewed,,object,Satr,Сатр,,32,1,glossary,,both,9bf7a8e8
+96d486c17b08,,Section,,Boʻlim,Бўлим,draft-unreviewed,,object,,,,26,1,glossary,,both,f2c6b564
+cd3f5d04aeb7,,Security,Безопасность,Xavfsizlik,Хавфсизлик,draft-unreviewed,,object,,,,23,1,glossary,,both,f25ce1b8
+a3a5fa59866d,,Shape,,Shakl,Шакл,draft-unreviewed,,object,Figura,Фигура,,35,0,glossary,,both,ea5c1a20
+159fde054dec,,Sheet,,Varaq,Варақ,draft-unreviewed,,object,List,Лист,Russian loan list is common in speech.,48,0,glossary,,both,53bc47a7
+5303654275dc,,Signature,Подпись,Imzo,Имзо,draft-unreviewed,,object,,,,62,1,glossary,,both,2f32be1d
+acbd59bc86c6,,Slide,,Slayd,Слайд,draft-unreviewed,,object,Taqdimot varagʻi,Тақдимот варағи,,94,1,glossary,,both,a5d5b46a
+6fee6ede4de4,,Spacing,Интервал,Oraliq,Оралиқ,draft-unreviewed,,object,Interval,Интервал,,29,2,glossary,,both,2acbb307
+cbc9f8480beb,,Table,Таблица,Jadval,Жадвал,draft-unreviewed,,object,,,,79,4,glossary,,both,0424f6e7
+f3846a89862f,,Text,Текстовый,Matn,Матн,draft-unreviewed,,object,,,,320,4,glossary,,both,c3328c39
+1203aa24b4cd,,Title,Название,Nomi,Номи,draft-unreviewed,,object,Sarlavha,Сарлавҳа,Document property.,35,4,glossary,,both,768e0c1c
+ae968ee42543,,Top,Верх,Yuqori,Юқори,draft-unreviewed,,object,,,,38,4,glossary,,both,cae0435c
+53e06ea2ce86,,Value,Значение,Qiymat,Қиймат,draft-unreviewed,,object,,,,28,3,glossary,,both,8dce170d
+8966fb667c7a,,Version,Версия,Versiya,Версия,draft-unreviewed,,object,,,,23,3,glossary,,both,2da600bf
+54a4d726a89e,,Word,,Soʻz,Сўз,draft-unreviewed,,object,,,,46,0,glossary,,both,44363ccb
+b1ccf27a765d,,Workbook,,Ish kitobi,Иш китоби,draft-unreviewed,,object,Kitob,Китоб,,23,1,glossary,,both,b4418e62
+cea2c82cda63,,Bold,Полужирный,Qalin,Қалин,draft-unreviewed,,format,Yarim qalin,Ярим қалин,,3,4,glossary,,both,19e07430
+fd650cb3e656,,Border,,Chegara,Чегара,draft-unreviewed,,format,Ramka,Рамка,,23,1,glossary,,both,5d10d3f4
+6594cf6c6a01,,Color,Цвет,Rang,Ранг,draft-unreviewed,,format,,,,32,4,glossary,,both,1d0c8304
+30876a4370f7,,Fill,Заполнить,Toʻldirish,Тўлдириш,draft-unreviewed,,format,Boʻyash,Бўяш,,50,4,glossary,,both,7adb6736
+28461be1310c,,Font,Шрифт,Shrift,Шрифт,draft-unreviewed,,format,,,,47,4,glossary,,both,b97c4d4c
+1fe94e8c8989,,Italic,Курсив,Kursiv,Курсив,draft-unreviewed,,format,Qiya,Қия,,2,4,glossary,,both,1616e2e5
+e70f7ce0bae5,,Size,Размер,Oʻlcham,Ўлчам,draft-unreviewed,,format,,,,53,4,glossary,,both,b7152342
+8cc014b0743c,,Strikethrough,Зачёркивание,Ustidan chizish,Устидан чизиш,draft-unreviewed,,format,Ustiga chizilgan,Устига чизилган,,5,4,glossary,,both,a93b9a68
+dbfb65fb61b0,,Style,Стиль,Uslub,Услуб,draft-unreviewed,,format,Stil,Стил,,59,2,glossary,,both,99a0efc6
+c68e46b22f0a,,Subscript,Подстрочный,Quyi indeks,Қуйи индекс,draft-unreviewed,,format,Pastki indeks,Пастки индекс,,9,3,glossary,,both,b1bd6eaa
+c0afb1137964,,Superscript,Надстрочный,Yuqori indeks,Юқори индекс,draft-unreviewed,,format,,,,9,3,glossary,,both,cea3f59b
+90f0067d91fd,,Theme,,Tema,Тема,draft-unreviewed,,format,Mavzu,Мавзу,Subject (document property) takes Mavzu.,19,1,glossary,,both,a797e309
+28ba81d6d079,,Underline,Подчёркивание,Tagiga chizish,Тагига чизиш,draft-unreviewed,,format,Tagchiziq,Тагчизиқ,,10,4,glossary,,both,39773aa3
+e22b488316ba,,Accessibility,Доступность,Maxsus imkoniyatlar,Махсус имкониятлар,draft-unreviewed,,settings,Foydalanish imkoniyati,Фойдаланиш имконияти,,19,3,glossary,,both,d660049b
+f0ef899cc65a,,All,Все,Barchasi,Барчаси,draft-unreviewed,,settings,Hammasi,Ҳаммаси,,108,4,glossary,,both,6a720856
+94588c7cfbf9,,Auto,Авто,Avto,Авто,draft-unreviewed,,settings,Avtomatik,Автоматик,,8,3,glossary,,both,c614ba7c
+ecff794db9fa,,Custom,Пользовательский,Maxsus,Махсус,draft-unreviewed,,settings,,,,36,4,glossary,,both,081ae3fd
+9a1d3265a8f1,,Dark,Тёмная,Qorongʻi,Қоронғи,draft-unreviewed,,settings,Tungi,Тунги,Colour theme.,14,4,glossary,,both,ae1ef014
+419e2c5f8d75,,Default,По умолчанию,Standart,Стандарт,draft-unreviewed,,settings,Odatiy,Одатий,,31,2,glossary,,both,808d7dca
+eb470aedc1cf,,Error,,Xato,Хато,draft-unreviewed,,settings,,,,15,1,glossary,,both,7f2f6a15
+efb9bf269728,,Height,Высота,Balandligi,Баландлиги,draft-unreviewed,,settings,Boʻyi,Бўйи,,19,3,glossary,,both,3f608b49
+00ea9b1916b8,,Language,Язык,Til,Тил,draft-unreviewed,,settings,,,,22,3,glossary,,both,89b86ab0
+d2993d86bfe9,,Light,Светлая,Yorugʻ,Ёруғ,draft-unreviewed,,settings,Kunduzgi,Кундузги,Colour theme.,11,4,glossary,,both,a36ef8ab
+8d70b4fb7cbe,,Location,Расположение,Joylashuv,Жойлашув,draft-unreviewed,,settings,Manzil,Манзил,,6,4,glossary,,both,d219c681
+259b0bb49d13,,More,Ещё,Yana,Яна,draft-unreviewed,,settings,Koʻproq,Кўпроқ,,38,1,glossary,,both,4bab2d8f
+f9237318d93e,,Name,Имя,Nom,Ном,draft-unreviewed,,settings,,,,135,4,glossary,,both,709a2322
+28cee355eeec,,None,Нет,Yoʻq,Йўқ,draft-unreviewed,,settings,Hech biri,Ҳеч бири,,20,4,glossary,,both,6eef6648
+00205dd6df1a,,Spelling,Орфография,Imlo,Имло,draft-unreviewed,,settings,,,,20,3,glossary,,both,8a21b1ee
+191c8a6e8225,,Type,Тип,Tur,Тур,draft-unreviewed,,settings,,,,61,4,glossary,,both,3deb7456
+59c5c88bb960,,Width,Ширина,Eni,Эни,draft-unreviewed,,settings,Kengligi,Кенглиги,,36,3,glossary,,both,a58ddf50

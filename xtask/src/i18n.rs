@@ -1,0 +1,130 @@
+//! `cargo xt i18n ...`: canonical catalogs, extraction, export and the owner review pipeline
+//! (docs/phase1/designs/i18n.md section 6, WP9b).
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+mod catalog;
+mod export;
+mod extract;
+mod lex;
+mod review;
+
+use catalog::{Catalog, Mode, APPS};
+
+pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run]\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
+
+pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
+    let dir = root.join("i18n");
+    let flag = |name: &str| args.iter().position(|a| *a == name).and_then(|i| args.get(i + 1)).copied();
+    let has = |name: &str| args.contains(&name);
+    match args {
+        ["extract", ..] => {
+            let unis = extract::extract_all(root);
+            if has("--dry-run") {
+                return Ok(extract::report(&unis, None));
+            }
+            let mut cat = Catalog::load(&dir)?;
+            let (added, obsolete) = extract::merge(&mut cat, &unis);
+            cat.save(&dir)?;
+            Ok(format!("{}new rows: {added}, newly obsolete: {obsolete}\nwritten to {}", extract::report(&unis, Some(&cat)), dir.display()))
+        }
+        ["export", app, ..] => {
+            let mode = match flag("--mode").unwrap_or("review") {
+                "review" => Mode::Review,
+                "release" => Mode::Release,
+                o => return Err(format!("unknown mode {o:?}")),
+            };
+            let cat = Catalog::load(&dir)?;
+            let chains = export::Chains::load(&dir)?;
+            let out = match flag("--out") {
+                Some(o) => PathBuf::from(o),
+                None => export::overlay_root()?,
+            };
+            let apps: Vec<&str> = if *app == "all" { APPS.to_vec() } else { vec![*app] };
+            let mut lines = Vec::new();
+            for a in apps {
+                if !APPS.contains(&a) {
+                    return Err(format!("unknown app {a:?}"));
+                }
+                lines.extend(export::export_app(&cat, a, mode, &chains, &out, has("--with-ru"))?);
+            }
+            Ok(lines.join("\n"))
+        }
+        ["roundtrip", ..] => {
+            let cat = Catalog::load(&dir)?;
+            let chains = export::Chains::load(&dir)?;
+            let out = match flag("--out") {
+                Some(o) => PathBuf::from(o),
+                None => export::overlay_root()?,
+            };
+            export::roundtrip(root, &cat, &chains, &out).map(|l| l.join("\n"))
+        }
+        ["review-export", ..] => {
+            let batch: usize = flag("--batch").ok_or("--batch N is required")?.parse().map_err(|_| "--batch must be a number")?;
+            let pass = review::Pass::parse(flag("--pass").unwrap_or("both"))?;
+            let size: usize = flag("--size").map_or(Ok(400), str::parse).map_err(|_| "--size must be a number")?;
+            let cat = Catalog::load(&dir)?;
+            let (csv, n) = review::review_export(&cat, batch, pass, size)?;
+            let out = flag("--out").map(PathBuf::from).unwrap_or_else(|| dir.join("review").join(format!("batch-{batch:02}.csv")));
+            if let Some(p) = out.parent() {
+                fs::create_dir_all(p).map_err(|e| e.to_string())?;
+            }
+            fs::write(&out, csv).map_err(|e| format!("{}: {e}", out.display()))?;
+            Ok(format!("batch {batch} ({}): {n} rows -> {}", pass.name(), out.display()))
+        }
+        ["review-import", file, ..] => {
+            let mut cat = Catalog::load(&dir)?;
+            let date = flag("--date").map(String::from).unwrap_or_else(today);
+            let text = fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+            let st = review::review_import(&mut cat, &text, &date)?;
+            cat.save(&dir)?;
+            let name = Path::new(file).file_name().and_then(|n| n.to_str()).unwrap_or(file);
+            let line = review::log_line(name, &st, &date);
+            let log = dir.join("review/LOG.md");
+            if let Some(p) = log.parent() {
+                fs::create_dir_all(p).map_err(|e| e.to_string())?;
+            }
+            let mut old = fs::read_to_string(&log).unwrap_or_else(|_| "# Review log\n\nOne line per import, appended by `cargo xt i18n review-import`.\n\n".into());
+            old.push_str(&line);
+            fs::write(&log, old).map_err(|e| e.to_string())?;
+            Ok(line.trim_end().to_string())
+        }
+        ["coverage", ..] => Ok(review::coverage(&Catalog::load(&dir)?)),
+        ["check", ..] => {
+            let cat = Catalog::load(&dir)?;
+            let bad = review::check_ids(&cat);
+            if bad.is_empty() {
+                Ok(format!("ok: {} rows, all ids match", cat.scopes.values().map(Vec::len).sum::<usize>()))
+            } else {
+                Err(bad.join("\n"))
+            }
+        }
+        _ => Err(USAGE.to_string()),
+    }
+}
+
+/// Today's UTC date as YYYY-MM-DD (civil-from-days, no date crate).
+fn today() -> String {
+    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+    let z = (secs / 86_400) as i64 + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn today_is_a_plausible_date() {
+        let t = super::today();
+        assert_eq!(t.len(), 10);
+        assert!(t.starts_with("20"));
+    }
+}

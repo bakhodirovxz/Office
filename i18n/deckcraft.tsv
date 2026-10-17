@@ -1,0 +1,1111 @@
+id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	ru_apps	priority	apps	where	note
+005f96770465		Preview Animations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:385	
+00d2a8154ea6		Select All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:190	
+014539e3cf15		Reuse Slides (Keep Source Formatting)…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:440	
+01584692a317		Snap objects to other objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2538	
+018d7c82922a		Stopped opening {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:60	
+019183481be1		Fill & Line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:219	
+01a1f86f6b7a		Export		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:73	
+01fa00820f0e		Ελληνικά		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:241	
+0234ff20b287		Portrait Orientation		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	
+027fed5dcfac		sample deck northern lights		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:520	
+028fa0144da5		Display grid on screen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2543	
+02a151d79397		Mirror type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:696	
+02c2ae2b7b9d		Table…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:237	
+02cf00fed4bd		open the presentation to compare first		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1038	
+0357b251cb65		Edit SmartArt Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/smartart.rs:172	
+03844f1bd62c		Handouts (9 slides per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1019	
+038ac9610b9e		Captions under pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:465	
+03903b9088e6		Header and Footer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:37	
+03906beb78f3		Dark appearance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2142	
+03c91f1bfb85		Text boxes have no picture options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:512	
+0429a9925828		Choose a heading font.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:672	
+04367a5b493f		Escape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1957	
+0442f4eae333		ALL pictures black and white		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:466	
+049e12156903		Custom Show…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1429	
+04a11b7e7e4d		Insert\nRight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3000	
+04c160aa2ed7		Begin arrow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
+04c5c8a618bf		missing width/height		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:326	
+04fb3a565990		unknown UI command `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1055	
+05d0d3805bec		This presentation has unsaved changes. Revert goes back to the saved file.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:850	
+06764acd02b5		New Slide (⇧⌘N)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:426	
+06a753e6905c		missing `key`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:167	
+06acabd89fa3		the slide master it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1496	
+06ae9cbcab16		Tile picture as texture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:675	
+06b6060f970d		Height (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1054	
+06c37ad7c491		Simple, white		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:463	
+06e48526396c		Show without animation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1167	
+0705024a3a63		Action Buttons		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:134	
+077f6f67d015		Edit		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:179	
+08276248447a		{path}: {e}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:241	
+08784bbd3773		1.5 lines		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2944	
+08971a977e20		Width (pixels):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3298	
+08d386810de3		Effect Options		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:42	
+08e87d147c4c		Inserted {} slides from {path}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1213	
+08e9ab67002c		Merge Shapes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2403	
+092b80841992		Type an equation in linear form (e.g. a^2+b^2=c^2, x=(-b±√(b^2-4ac))/2a).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1700	
+09575e15a45d		End		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1966	
+097afc9f6cfe		Oval ends		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:993	
+09cf6008af77		Smooth Corners		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3511	
+09dab40d901a		Slide {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1239	
+09e9b295964b		Hide background graphics		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:910	
+0a19be5d2703		Email address:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1135	
+0a42c11b3784		Body		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3283	
+0a83691d1978		Redo		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:182	
+0a83d9e8eca0		Add Shape Before		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3079	
+0a9800686371		{:.1} MB		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:920	
+0abe49b26393		Loop Until Next Sound		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1725	
+0af4167d67ed		missing `command`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:140	
+0b023acb72a7		Long Dash Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:978	
+0b4e45f4a086		Search for themes and templates		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:751	
+0b5d14c6a481		Still opening {name}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:29	
+0b64787ccfa1		Review		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+0b72172bd3d3		{keepFormatting?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:403	
+0c57ae1e63e8		Custom width		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3283	
+0c9bb697fa70		Create a PDF Document		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1264	
+0cc5553cc059		MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2620	
+0d2eed0ef901		Delete Layout		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:109	
+0d903e7d5eb5		Saving a copy needs a file picker, which this window doesn't have.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:797	
+0da6939abd52		Font name		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1642	
+0dbe97463853		1 picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:448	
+0dfbb54a0ed0		The current slide as a picture		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
+0e614072ba8d		Strikethrough		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2786	
+0e74de6d2875		Opened the presentation as a PDF to print		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:823	
+0e8741cab95d		▶ Play All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1021	
+0e8b0f724216		Add a picture or a text box first		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:480	
+0e8cbc534031		No {} dictionary is installed, so only common misspellings are found. Put a Hunspell .aff/.dic pair in {}.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1755	
+0efdba8b9614		Depth		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:787	
+0efdc0c37d74		Gradient…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2429	
+0f0a4b92eacf		{on?: bool, slide?: index, delta?: int}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:381	
+0f10a06a4323		Open Arrow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:597	
+0f3508a60dcb		• {d}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1215	
+0f47d3b317e0		no presentation is open		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1140	
+0f73611c6dcd		Search commands…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:109	
+0fd676b526b4		{path} — this file can't be found		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:616	
+0fee1965702e		Exit Edit Points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1100	
+0ff09fbc417f		{ch}  Bullet		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:705	
+101d8cc1dee7		{n} Slide{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3310	
+103fd85ab634		Order Objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1107	
+1055edfcd0ca		Type and organise the diagram's text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3071	
+107ae8a16a96		Add Font		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:16	
+1083a0f1f05b		Body sample  {minor}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:704	
+109c9855f1fc		Fit to Window		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:374	
+113e297f2b86		Brightness {:+}%		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2580	
+11f266ef4c75		Hide Background Graphics		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:50	
+126775d6df90		Highlight click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1475	
+13354fa0cb03		Put a picture in the selected node's picture placeholder		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3099	
+133843cb2841		Accept Revision		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:61	
+13630f0167b5		In		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1768	
+13c9825f975f		Align Middle		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1142	
+13f9394fae56		Display drawing guides on screen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2544	
+14191284b0e5		Recording narration needs audio capture (coming soon)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2078	
+14249db3ad9d		Pen Style		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2856	
+142a195ad0ab		Save as Template…		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:34	
+143af26b4e9e		Punctuation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1676	
+1456aa7d28f0		Commit Composition		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:51	
+148c9ff4340f		White		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1004	
+14a7d5e12e27		From\nBeginning		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2102	
+151e6d827877		Choosing a sound file needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1721	
+15362e8e5146		Animation\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1972	
+1540d85dcd3c		Presenter View — DeckCraft		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1757	
+1578dd389f71		Motion Paths		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
+15a838bf8e7c		Print Hidden Slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1108	
+16283c4d20c5		JPEG image (current slide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1549	
+163a6a5025a7		Inspect Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/inspect.rs:14	
+16d34d3e5a3f		Animation Painter (double-click to keep it on)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1989	
+17549835cb2e		 above centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:695	
+1771a6d05ead		Follow Path		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2282	
+17973adfd8b6		 left of centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:693	
+17f9d08c5824		Aa		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1567	
+185824b670f1		There are no unsaved changes.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:849	
+189a4761b73c		Stealth end		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:992	
+18e2c3798c2c		{name} was not applied: the presentation it was chosen for is closed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1446	
+1968a8d1a5ba		Edit Alt Text…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1255	
+19b3f249d233		a. b. c.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1293	
+1a182d9873e4		Close Master View		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:106	
+1a9c3282fabf		Top left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:685	
+1b08f26af227		missing `tab`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:936	
+1b85bc762a9a		Fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:445	
+1bcf14dbbc46		Text\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3071	
+1c24bb923715		Indent after text must be a number of inches		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3050	
+1c9d89edf7c1		Scale X		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:682	
+1ca770758e91		Scheme name		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:601	
+1ce8076ace95		Nocturne		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+1d12b59a193d		Accent 2		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1322	
+1d2b951f47bb		Enter a scheme name.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:564	
+1d2c3896202a		No presentation is open.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1026	
+1d6f62aa3b7e		A-		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1850	
+1e152d2e9c33		[Stop Previous Sound]		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1699	
+1e3c4b158a33		Scale Y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:683	
+1e8c747cf2b5		With		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2105	
+1eb601e97fd6		Maximize content (else ensure fit)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1066	
+1eebec3ce50b		Special indent must be a number of inches		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3054	
+1eedd70d1820		Design\nIdeas		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1184	
+1f20931f2b97		unknown command `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:76	
+1f584bd78ca9		Themes (whole presentation)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1404	
+1f8c208830e6		Sample deck: Northern Lights		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:541	
+1fbe027451d7		{} slides per page		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1280	
+1fdde1c6c5a9		Photo\nAlbum		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:270	
+1ff6991e9bf5		{layout?, perPage?, slides?, includeHidden?, frame?, paper?: letter|a4|legal|a3, orientation?: portrait|landscape}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:393	
+20cd226d49f6		Next ▶		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1780	
+20d9742d2281		  Fixed date (empty = update automatically):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1078	
+20eb246ef041		Delete cropped areas of pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3591	
+213cc9d25682		New\nSlide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1192	
+215136b00255		Frame Slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1111	
+2198b175545c		{n} Column{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:766	
+21b65f732555		New Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:228	
+21c064e7f700		OK		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1067	
+21f55565c07f		Meadow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+223c27b1d42f		Screenshot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1221	
+224c463fed9d		Entrance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
+22b2517f499a		On Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2005	
+233b9389a1b2		Notes Pages		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1013	
+23928a7170a3		Remove Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:31	
+23a2195507f3		Browse for Themes needs the desktop app for now		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1026	
+23c1b920cee4		Flip Vertical		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:279	
+23e8d7456cdc		Presenter View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:383	
+23fb5e7060f1		Show type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1155	
+23fdbc25e4a0		+ Add		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:120	
+240a120c641a		Insert		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1033	
+2428bf3eaa0b		Run program:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1470	
+24625e6896b1		Reading View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:364	
+24946c232362		Icon Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:34	
+24c05c375184		X Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:795	
+2508aaebb4d2		{label} ({})		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:307	
+253f5e67d7d8		Animation Painter		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:52	
+254577ded25f		Presentations and slide shows, rebuilt from scratch in pure Rust.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2613	
+25486e46d520		Save to Data		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:35	
+25c975a015c7		Selection\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1181	
+25e44e77ff98		Action on click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1409	
+26182d798c68		Compound type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:580	
+262f4121e348		PowerPoint Presentation (*.pptx)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
+26686f1cee5e		Svenska		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:232	
+266e270547b4		Presented by a speaker (full screen)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1157	
+267a5e340e47		Reading the file: {secs:.0} s		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:100	
+267d060d28d3		Remove\nBackground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2569	
+26939b5fde05		DeckCraft can't find “{text}”.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3220	
+26b6aecddb68		Heading sample  {major}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:703	
+26c07ca0471d		Task Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:375	
+26d73cb19dbd		pointer events need x and y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:155	
+26fb7a45d698		RRGGBB		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:358	
+2779352ea75a		Regroup		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:274	
+27b7d4091315		Delete Point		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1093	
+27bea0c9f781		Slide Sorter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:362	
+280d822e3275		Blue Pen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1435	
+285aa6707652		This slide has no animations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1155	
+285ea622bd71		Increase List Level		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:748	
+28711c756253		Čeština		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:236	
+289ace879e1c		Rename Layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:46	
+28a860073b19		That picture is larger than 32 MB		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:257	
+28adcf5441e6		{} presentations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1198	
+28b27c7df0ec		Dark		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
+28c81e763812		{kind_label} (click to change)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:594	
+28ecbb779bbe		From top left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:99	
+28f670ea92c1		For rectangles and rounded rectangles		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3514	
+290f2a789d3a		Extra Large (1920 px wide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3282	
+2973812a9922		Recolor		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2599	
+29bc6184994a		Available formats:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2479	
+2ab0349c00af		Open Recovered Presentations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:68	
+2ad8ae9a5d2e		missing `tool`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:204	
+2b580a3004f7		Rectangular		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:165	
+2b8be9d57022		Grid Options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:53	
+2b8bfb1624dc		Seek		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/media.rs:17	
+2b8dc3737af0		Default tab stops (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3116	
+2b8e9e7fbef6		More Colors… #		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:357	
+2b930ccffa9f		Deselect		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/edit.rs:41	
+2befb3d05eae		Applies to this presentation's theme colours.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:607	
+2c5a2df51c79		How would you describe this object and its context to someone who is blind or has low vision?		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1503	
+2cc1a386f094		Norsk bokmål		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:234	
+2cd05fdc6494		End Show		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1428	
+2d302b59f6cd		Create New Theme Fonts		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:73	
+2d676a469400		PageDown		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1968	
+2d90418ca985		New Presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:166	
+2d96532d4b44		From Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1765	
+2dc20e80db2f		By Paragraph		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1943	
+2e17d4398651		This presentation has never been saved.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:851	
+2e581bde0d1f		Offset left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
+2e8d7f7ebee5		Check\nAccessibility		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2146	
+2e969257955d		Picture layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:439	
+2f0988cf9324		Add a tag		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:227	
+2f18b0fc6edb		Split\nCells		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3004	
+2f3647038ef9		Medium (960 px wide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3284	
+2f4446b80004		Handouts (1 slide per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1014	
+2f516025e979		Pictures in album		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:346	
+2f8f8aaab70a		Start: {:.2}s, End: {:.2}s		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/animtimeline.rs:90	
+2fa7bb268929		Miter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
+2ff9746bd5e9		Animated GIF (.gif)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1552	
+30614d0a8b41		■ Stop		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1021	
+307c3176cd44		More Contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:430	
+30806c5ace46		Open Data		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:31	
+3093a67bd723		◀ Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1783	
+30d4da5ecc94		unknown method `{other}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:373	
+310524ff721e		Text Box Margins		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:204	
+31520eb4d6fe		Web (150 ppi): good for web pages and projectors		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3597	
+3176c4959deb		From bottom right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:102	
+3180970e92ef		{text}  →		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:478	
+31a4a8e7f64b		Fit to\nWindow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2252	
+31f0077d1cb4		Open a presentation from a folder (Ctrl+O)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	
+323787717a1c		Align Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1143	
+32bafd0076af		Scale width (%):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2414	
+32c5cd4a786b		Pen Weight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2848	
+32fd73f9760c		The web build inserts album pictures from data passed to insert.photoAlbum		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:248	
+331a7d0261dd		Insert\nPlaceholder		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3242	
+334222fe5734		Timing		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:33	
+334a4005d32c		Freeform		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:23	
+3353c4d65ec9		{f} (Headings)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:490	
+33c5063ee5dd		Português (Brasil)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:229	
+3437fa5a9ddb		◉ on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:998	
+345eadae9b8f		Margins (pt)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:396	
+34609ca18b5f		Recolor Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/recolor.rs:22	
+3488be8060ac		Slide Size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:35	
+358d057c009b		Picture or texture fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:459	
+35d4dcd2e852		+ New Comment		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1224	
+3605be737024		Round		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
+3621573d8d8d		Merge\nShapes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2403	
+365ea039ebe3		Scale height		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2382	
+367805325492		Mute		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3196	
+368470542294		Slide {} deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1196	
+36926c246341		Dash Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2702	
+3697482ce428		Preset gradients		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:113	
+36c601ccce0f		Go to Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:26	
+36ff3df2b355		Text: {text}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:213	
+37320af18d16		Shape Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:35	
+37332cfd95ed		Play from Start		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:285	
+37932e29820a		Slate		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+37d98619e90c		Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1362	
+38596a5fd408		Action on mouse over		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1409	
+38a997758d83		Horizontal (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2419	
+38fc9540fb29		Offset X		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:680	
+3904c9692dc4		BIZ UDPGothic		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:174	
+3919f55804c9		Rotate Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:410	
+392601d6181f		Remove All Sections		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:458	
+393faec7ebf4		Insert Layout		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:107	
+398d2fa16722		Bottom Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:967	
+39edbaa15252		Add Assistant		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3082	
+3a26294a1bdd		Timing bar {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1077	
+3a44274377b4		Duplicate Selected Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:433	
+3a71f35c2a9d		+ New Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:197	
+3b4825f3dec3		View		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:199	
+3b774918b416		All slides on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1801	
+3b96f0b189f8		Z Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:797	
+3baccb6c4f10		Format Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:25	
+3bf3a1ad1d5a		This presentation has no custom shows (Slide Show ▸ Custom Slide Show).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1459	
+3bf7356741dc		End arrow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
+3cb34bccf72e		Community Links		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:414	
+3ccb3ea620fb		Compress		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3604	
+3d11204bfad3		✏ on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:995	
+3d2af7834ace		Insert Synonym		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:50	
+3d4fb49318b0		Video from File…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:404	
+3d9e0441edb2		Choose a SmartArt Graphic		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:68	
+3da9bb8f1afe		Slides from Outline		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:43	
+3dedf00d7d9d		{a}, {b}, {c} and {} more		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:25	
+3e0add0e7e4f		Title		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	
+3e1bc8c7e497		 right of centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:694	
+3e20896c6fb6		Insert Picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3098	
+3e444009ec9d		On Mouse Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1741	
+3e4763f0b77b		{name} was not applied: {e}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1455	
+3ea5d4af692f		Remove All Animations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:51	
+3f1d3e865809		Animation Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:27	
+3fd4464d2421		The slide titles and bullet text as plain text		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
+3ffc0ddd07fa		Position Objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1122	
+4034c371f780		Action Button: {k}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1255	
+404b1b651632		no writer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:320	
+407624a806e9		Remove the picture style		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2711	
+409cc40814dd		+ Series		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2005	
+40acd4892157		•  {b}		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1327	
+40bdbd8e24bb		Text Transform		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:103	
+40f00f5d555a		No themes or templates match “{}”.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:763	
+40fbfa25a60c		Arrows at both ends		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:991	
+41253609735c		Create PDF Document		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1248	
+414fe1f13287		Print Current Slide		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1052	
+41b2334ae125		Tab stops:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3118	
+41d91b4597e5		Reset Slide Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1590	
+42024d2d1432		missing `events`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:148	
+424906662ce7		Slide {} changed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1197	
+425446cd3f50		Click to add first slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:105	
+4274087900dc		Contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:427	
+42e9bc5ee521		Specify the subject		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:226	
+435c392c345a		the layout it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1507	
+43fa1f88f39d		Group Objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1117	
+43ff091c06d6		{from?: index, custom?: name}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:382	
+442998d09a0b		Adjust Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:72	
+443ed47a5822		Check for Issues		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:841	
+4443a6e44c00		User Information		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1350	
+4475a38506c6		Animation Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:62	
+44871b86e319		Light		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
+448aed90dbd8		Edit the data: first row = series names, first column = categories.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1980	
+44cb7f5d4954		Eyedropper		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:367	
+4531822ec248		Stop Editing Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:28	
+456a49d46f6f		{a}, {b} and {c}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:24	
+45f57023afd2		not every presentation could be saved		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:367	
+466fe2ac636e		Type the text for the new text box		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:380	
+470edd8334a7		fallback {} {} {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:210	
+4798dfe35493		Português (Portugal)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:230	
+47db375c6c15		New Text Box		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:376	
+47db7b3d13a6		unknown pointer kind `{kind}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:153	
+47f545eb1e2c		Saturation {}%		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2594	
+484c877900e3		nothing to print: no presentation is open		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:996	
+4851f74d0a54		Inter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:626	
+486ce7933efd		Wrap text in shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:393	
+4891fda17284		“{from}” isn't used explicitly.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1665	
+48b782f9f9bf		Accent 4		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1324	
+48bfa12f4c88		Solid fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:457	
+48c648622e4b		Diagonal Up Border		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2841	
+4907ade6867f		File › {} needs an open presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:988	
+493a281f5808		Photo Album		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:56	
+493fec4cfc98		Command Palette		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:396	
+499411f738a1		unknown tool `{name}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:210	
+4a2179912999		From the top-left corner of the slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2418	
+4a5bdb798726		Pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1219	
+4a6064af500d		Close\nMaster View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3269	
+4aecb66cb19e		Media		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3245	
+4b2505b5c07b		Before you share it, check the presentation for things people with disabilities might find hard to read.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:843	
+4b5e10e2a446		 — {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1897	
+4b69c056f46a		missing `preedit` or `commit`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:198	
+4bfa49bbb1d6		From top right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:100	
+4c1e084d7783		Türkçe		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:240	
+4c565cfc3657		Outline (*.txt)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
+4c7a3dd7c5a9		Preserve		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3228	
+4cf5f9043c6e		Date and time		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1077	
+4d0e7dcbfbfe		Find whole words only		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3190	
+4d3c4e5459e4		Join our community on Discord		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1374	
+4d6422eccabf		Apply Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:61	
+4d9d1aa18e19		Grid Options…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:369	
+4db5d1086232		Reply…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1290	
+4ddd7e2bd058		Size and Position		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:36	
+4ddd8beaaa43		The presentation has no sections. Add one with Home › Section.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3554	
+4e15183b1756		{when} · Resolved		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1273	
+4e2da29aee1b		Add Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:455	
+4e4595080ffd		WordArt style {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1275	
+4ea52942caae		{name}: DeckCraft can't open this kind of file		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:194	
+4f25890ee2a3		Vertical		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2368	
+4f27570eece4		AutoCorrect Options…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2167	
+4fa3c3af5092		Loop continuously until 'Esc'		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1165	
+4faddbe361a9		Custom character:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1313	
+4fe0138dc41e		{}  Hidden		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1699	
+505f7dd5a4d1		Audio		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1289	
+50cb58fd7617		Rotate Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:417	
+50d90819757f		Back (Esc)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:348	
+5112637fa5c4		Tab stop position (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3139	
+511a1f89928f		PNG images (current slide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1547	
+5154bfb0145f		Slides (e.g. 1,3,5):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1960	
+517bf16081bb		F7		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1972	
+520bee6dc3dd		Bottom right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:693	
+52128584943c		Underline		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2774	
+5260e4ac0a9f		Remove bullets and numbering		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1342	
+526345b4d50c		Browse		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	
+52da25d62fd6		Outline View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:361	
+52e95a6210f8		Quick Styles		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:110	
+530307cd0375		Slide\nMaster		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2198	
+536a3c233ec2		Hide\nSlide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2066	
+5378281d5f0c		Contour		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:788	
+537870397c3a		Bottom Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:969	
+53c6fffd69fa		F5		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1971	
+5428e9fc2f17		Browsed at a kiosk (full screen)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1159	
+544b11bc73d3		Deutsch (Deutschland)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:225	
+54dfb5bd9685		size (pt)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:320	
+55bfe55c3ea7		Add a title with a picture or some text to get layout ideas.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1396	
+56425f3ab64c		Translation needs a language model (not bundled)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2150	
+565b4195b7d3		Download the file		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
+566a57730576		Delete Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:22	
+56cb77b49225		DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1045	
+571f8b879d99		Table Eraser		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2877	
+5773abce12a5		Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:231	
+5773e08a6999		{safe} (print).pdf		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:815	
+57c6a4122770		Play Narrations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2087	
+57cd3a3132b0		Search for a file		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:723	
+5833559be8ef		Text box:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:405	
+58c844878c9c		Chart Elements		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:116	
+59d303281ad4		Shrink text on overflow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:385	
+59d5dc256a19		White on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1798	
+5a0e2315e4b8		With Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2006	
+5a927dbfa9fe		Add Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:29	
+5ab701b42d94		Correct accidental use of cAPS LOCK key		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2096	
+5acd56283c8c		English (Canada)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:220	
+5ae6b59f4dff		Picture Style Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/picture_style.rs:23	
+5af86b62b174		Bring to Front		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1226	
+5af982465173		Compared with {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1175	
+5aff860664d1		Accent 1		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1321	
+5b031a4fed59		Presentations you open show up here. Use Open to browse for one.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:582	
+5b19cbfa42db		Variants		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:37	
+5b25ae961c1c		{f} (Body)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:492	
+5b742a338950		Ink to Text (coming soon)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1454	
+5b8b3fa79b86		Insert Picture in SmartArt		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/smartart.rs:237	
+5b9dc1de7461		Lock aspect ratio		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2415	
+5be7c7552ef6		Collapse the Ribbon		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:378	
+5c3c03abb8a2		Arrow at start		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:990	
+5c956cad1b5c		Pick a design for this slide. Ideas are generated on your device.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1333	
+5d81bcf2adc5		Do not Autofit		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:385	
+5dc7edee9a70		Remove Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:159	
+5de406acfb0b		Go to slide {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:895	
+5df3119a149c		`spacing` must be from 1 to 288 points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:858	
+5e2c9ba8ea9a		Add an author		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:231	
+5e6072e90057		2 pictures with title		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:452	
+5ee533089915		Snap		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2536	
+5eedeca0161f		Eyedropper: click the slide (Esc cancels)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/eyedropper.rs:92	
+5ef208c096d4		Open Dialog		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:409	
+5efbeede8fe4		Inspect Presentation		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:842	
+5f54b30d1a00		Fit to slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:447	
+5f78cb9679b4		Decimal Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
+6038a6a57300		Corner Point		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1087	
+6070f9a1b90c		Hidden slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:872	
+60f49cd388b2		Starter Templates		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:20	
+610b8493b7cd		Spelling is checked for languages marked (dictionary).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1930	
+61201ceb2fee		Custom Range		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1053	
+6120d0163722		Handout Placeholders		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:79	
+622768463e4d		Transition		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:14	
+6242ccda72f5		picking a SmartArt picture needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1007	
+624ab2f95a06		@{}: {} PRs, {} commits, +{} / −{} lines (Δ {}), +{} / −{} binary assets, {} – {}		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:127	
+626d41b37ec9		Bulleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1276	
+633a87f557b7		  Present  		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:92	
+634353ed832b		Compression options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3589	
+639b0014a912		Rehearse\nTimings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2071	
+63f728746966		Edit Header & Footer		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1113	
+63f729e0ad80		Add a title		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	
+645767ab33d9		Your changes will be lost if you don't save them.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1200	
+649f0dc27259		Play Full Screen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3188	
+64ce13450146		To slide:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3303	
+64f65fb3e0e9		Frame shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:456	
+654e90896f22		Français (France)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:223	
+6630ead7f122		Move Section Down		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:171	
+665ad712553d		Style {i}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1581	
+6695a81deffb		Action Settings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:70	
+669c0aa93256		Copied the path		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:824	
+66b16ac4c770		From center		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:98	
+6706da283cd0		Couldn't save AutoRecover information: {e}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1565	
+6730e2939a95		Show Media Controls		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2091	
+675af332a3ca		No slides.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3554	
+675d35dcbb0c		Animations on Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:63	
+6763c82e35ce		Opening {name}…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:97	
+676528c935d5		Slide\nNumber		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1281	
+67bf476b281b		Heading and body fonts for this presentation.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:718	
+67db7ec6650f		Snap objects to grid		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2163	
+67f724296959		Dash		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2780	
+682832dfdaaf		File (Alt+F)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:179	
+68297d793bd4		Replace Font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:57	
+6835f1847e41		Show Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:258	
+6852344f98d3		Move Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:25	
+68735d090ae5		Harbor		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+68798b4e762b		Web Page or File		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1109	
+692a252fad0c		Apply Design Idea		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/ideas.rs:16	
+69d81335d5d6		Recover Unsaved Presentations		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:779	
+6a12a384492c		Top Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:970	
+6a282db47aa7		Size and Position…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1263	
+6a5441545a34		Slide\nSorter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2186	
+6ab5c1f8e2df		Picture source		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:669	
+6ad1561374ab		On Click of {name}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1981	
+6b1006e72d9b		(no spelling suggestions)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1146	
+6b1f35d11b26		there was no slide to put it on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1511	
+6b27c1be1870		A		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1228	
+6b60972ce694		Warp		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2293	
+6b7dd3b0c158		no slide to preview		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1147	
+6bb3f269435b		3-D Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:792	
+6bc5ca77c2af		Rename Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:44	
+6c2c661b7bd5		Nothing to print: every slide in the range is hidden.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1123	
+6d73dfc4eb60		Foreground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:882	
+6d78a3b471a3		End trim (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2024	
+6dd1403ae335		Select a SmartArt graphic to edit its text.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:69	
+6ddb34864b1d		Compare…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:408	
+6e3e9e77a4ca		Numbered		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1276	
+6e5c11a1e308		Remove Less (tighter)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2571	
+6ec1b3742f90		Exciting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1658	
+6f29a49c2574		Stealth		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:597	
+6f5129ae4c4d		Contrast {:+}%		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2586	
+6f6a85f3f4f9		At		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3014	
+6febb5f37687		Search commands (⇧⌘P)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:88	
+701d3750cd3a		Long Dash		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2703	
+7054547aba29		Begin size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
+7060d2bb19ab		Open file location		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:828	
+71006f0653bc		Play from Current Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:286	
+71505dc246f3		Choose a body font.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:676	
+717000df2955		From bottom left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:101	
+719081834310		Open another window on this presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2260	
+71ca2bf323e7		Record		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+71ee2837cdd5		Three a page leaves lines for notes		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+72178b565a7a		{} hex		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:553	
+7262a2d31208		Add Shape Below		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3081	
+7313b81e4b4e		Source on GitHub		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1375	
+733776314c40		dropped file		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1572	
+73a1774befad		Select Slides		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:31	
+73b1f321c16a		From Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1763	
+73ff187ab07f		Rewind after Playing		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3184	
+742d5eee40f5		From\nCurrent Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2108	
+744d77de2a3d		Center Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
+746b423b19f2		missing `text`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:183	
+74a064e5a0e3		Justify low		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2967	
+74dd72670f8b		Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:423	
+7593cd9329e0		Accent 3		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1323	
+75dcc4f97ebb		Insert\nLeft		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2999	
+75de82ea9970		Show All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/selpane.rs:129	
+7646607d57a8		Apply To All		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:42	
+768005f1d567		Content		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3245	
+76a28b1a653f		Select a picture to rotate it or change brightness and contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:509	
+76cd532ce5c2		Photo Album…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:240	
+76e710954f85		Learn\nMore		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2117	
+77317159665a		Top right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:687	
+77e9702a99d4		First Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1425	
+77fd63547f83		Delete Repeated Word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1109	
+789ed0569f6f		Reset Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:924	
+78ab14c61c61		{on?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:365	
+78fd0a8cfebf		DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1351	
+7914f335a945		Use Destination Theme		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1718	
+798afe627a9e		The picture list is invalid		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:373	
+79c42d0a67a2		After text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2977	
+7a203178e49c		Handouts (4 slides per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1017	
+7a67a8bafbca		Dynamic Content		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1658	
+7a74a86167a5		Deutsch (Schweiz)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:226	
+7b1871b98762		Play the shape's media		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1474	
+7b47209a0db9		Crop 20% each side		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2725	
+7bcd0d9c26c4		Very loose		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2807	
+7bd8e234c076		Choosing a presentation to reuse needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:445	
+7be75f370f6f		Create Handouts		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1249	
+7bfa745f4777		Render Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:46	
+7c242197b452		Transition Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:43	
+7c919f525bbd		Black Pen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1433	
+7ca234651d7c		Full		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:276	
+7d08a66942e9		unknown File page `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:984	
+7d1793aa7a9e		Animation\nPainter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1988	
+7d6e939aa155		Handouts (3 slides per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1016	
+7e264156f3dc		Editing		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2161	
+7e71acb1276a		Other Sound…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1717	
+7e7f61847f25		Top bevel		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:780	
+7e80c3e71e49		No recent presentations match “{}”.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:589	
+7ea31cfcc835		Loop forever		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3304	
+7efd95283713		Play from\nCurrent Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2053	
+7f191f51abcf		Slide\nSize		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1596	
+7f2eed2e322a		DeckCraft can't export “{other}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:747	
+7f30792d3f16		First {GRID_CAP} slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1668	
+7fcc1542c3b6		Move Handle		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:47	
+7fd96707c24e		Less Contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:433	
+8066725e3abd		E-mail (96 ppi): minimise document size for sharing		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3598	
+80ac94f0fd61		Add\nAnimation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1952	
+80b86501886d		Offset Y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:681	
+80d6e4b83fad		Get Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:83	
+80fbd0536cba		Autofit		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:202	
+812415d080ec		Pictures are already at or below that resolution		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3610	
+81ae42dfd62b		Hide Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:288	
+81d6878a102b		Indent before text must be a number of inches		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3046	
+826b714fa590		Select a shape to format it.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:211	
+827f84b5b163		Format Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:26	
+82e9780bd5dc		Delete Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:192	
+8325031da9ef		Full Page Slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1012	
+834c691183dd		Insert\nBelow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2998	
+83ccc8c444d3		Bullets and Numbering		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:69	
+84138c9b4777		Export the presentation as:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1543	
+847307e8bd4b		Color At		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:47	
+84a5add3b661		Ink to\nShape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1448	
+84e84eceb377		missing `percent`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:909	
+852ea72f871f		Fit slide to current window		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:41	
+8673cc01977c		Summary Zoom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3533	
+868561bca7fc		Distance from ground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:798	
+86adaf2a7e0d		Trigger		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1973	
+875bed91f09a		Start a conversation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1261	
+87a5de921c70		From Top		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1764	
+87b82eee0724		No pictures yet		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:352	
+883c2087404c		Chart…		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:65	
+885879148bef		B		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1195	
+888030caa199		Click to change this one; Shift-click to change all		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1831	
+888c90ce3b69		[No Sound]		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1699	
+888fc8f768d0		Insert Placeholder		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:110	
+88cb8a46742f		Беларуская		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:239	
+88ccea3b5218		Add Shape After		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3078	
+88e178ece973		New show name:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1959	
+891d72213d9b		Specify the company		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:229	
+8948b54c7898		Text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1320	
+8986454d4b0b		 — Edited		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:79	
+89ca220a8d98		Browsed by an individual (window)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1158	
+89d687e75fa7		Next Window		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:71	
+89fa1405169e		More presentations		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:731	
+8a07191a83d1		Move Section Up		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:167	
+8a719f8ddfb5		Accept\nAll		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2156	
+8aa5b9df057d		Search for a word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1542	
+8aded394ab74		{w} pt		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2691	
+8b5eb8777e16		Compare needs the desktop app for now		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1044	
+8b84d50c5c58		The spelling check is complete. No issues found.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1768	
+8bed50b86dd7		Camera capture is not available yet		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2101	
+8c7ec78b36b2		Seconds per slide:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3300	
+8cabef0cf7b6		DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1043	
+8cc0f86a6d76		Move Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:21	
+8d939dc05260		Crop 10% each side		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2725	
+8d97086a708a		{names} {it} installed on this computer. Text that uses {them} is shown in a similar font.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:28	
+8d9884a1a960		Not a copy of this presentation: slides are matched by position.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1177	
+8da4100dfa47		Vertical alignment		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:377	
+8e0c3e2e258c		Inner		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:245	
+8e123970b73d		 below centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:696	
+8f1919e1583e		PNG images (all slides)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1548	
+90b614d120f0		Top		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:378	
+90f495d3e634		Type your text here		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:81	
+911cd536cbef		Add Pictures…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:362	
+916c69b60f0d		Opens on any device with a PDF viewer		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+92128e9814b1		End Review		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1182	
+9253d7c631b8		Body font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:696	
+927983cff07f		Slides sized for:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1042	
+92a7fc3eb809		{}: reading the file stopped unexpectedly		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:70	
+92cb3adb91a6		Reset Effects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:325	
+9340056aae1f		Replaced {} occurrence(s).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3219	
+936406bbf5aa		Show without narration		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1166	
+938576d72c1a		Choose where to save		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
+93913bc52eb2		Audio from File…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:402	
+93941f9c6302		More Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:424	
+949f04499c9e		Pass pictures to insert.photoAlbum		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:223	
+94b752a3df73		End\nReview		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2159	
+94c02d758a95		Click the slide to zoom in. Esc cancels.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:945	
+9500c12d5517		Spelling Dictionary		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:48	
+95220685b323		Print them for your audience		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+95a896d9482d		Add Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:12	
+95c86f212018		Media Info		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/media.rs:18	
+95d74c620061		Add Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:22	
+967e474afa4b		Last Slide Viewed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1427	
+967fa02baa2a		Text Options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:222	
+96d0d23ac8a1		Set as Default Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1259	
+96eceb70544a		{page?: home|new|open|info|saveAs|print|export|account, on?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:387	
+9725d09d47db		English (Australia)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:219	
+972a331e0366		Presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1258	
+9731fb7feebe		Ink to Math (coming soon)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1456	
+977957882dbf		Send\nBackward		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2501	
+97eea18901ca		Slide inserted after {slide}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1195	
+98163d4b4dfc		Format\nBackground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1608	
+981fdaafc2ed		Standard (4:3)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1598	
+982fd92f407e		Slide timings recorded.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1054	
+984103165b83		Notes Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:210	
+9862c1e878da		{id?, index}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:400	
+98b4078a1d22		Notes\nMaster		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2206	
+98c0ad67d0fa		Rename Section…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:147	
+990fa44ff398		Enter a zoom percent		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:965	
+99354916b790		Remove Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/smartart.rs:190	
+9976eb973877		SemiBold		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:173	
+9985365118e8		Direction		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:190	
+9985845960a4		Offset top		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
+9a28726b63d8		Move Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:28	
+9a5016bf4f9a		Hanging		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2982	
+9a9603e0eb8b		Format Shape…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1202	
+9abaf7ff16d2		Grid and Guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1285	
+9ae817be42d0		Offset bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
+9b18730b25c0		Look up		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1560	
+9b847be9db95		The current slide as a compressed picture		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
+9c1a568dfe9c		That file is empty		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:253	
+9c4ec6160c65		Remove Section & Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:163	
+9c5d25d83cae		Set Zoom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:372	
+9ca186c1a8b9		An open-source, clean-room project. Not affiliated with Microsoft.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2614	
+9cb88007af9f		no slide {i}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:308	
+9cd15d97f6b6		Reorder Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:32	
+9dcad54e0b10		A fixed copy that keeps its layout on any device		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:217	
+9de8b98417b8		Normal		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2805	
+9dfcff9dfc20		missing `path`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:359	
+9e7fb64fbb78		Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:243	
+9ea895e04c4b		About DeckCraft		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1367	
+9f142578e5e8		Start With Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1129	
+9f30ee0a1c9a		Resume		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1789	
+9f3d24d53106		No line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:516	
+9f4275d34e07		missing toX/toY		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:228	
+9f8560a827c1		Draw		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+9f88cdda8ebd		Suomi		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:235	
+9f96de29201c		The Eyedropper takes colours from a slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/eyedropper.rs:86	
+9fa9faec121b		Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:34	
+a04634201c58		Slide number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1079	
+a052b7b7f5fc		No notes.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1862	
+a0593b632bdb		Change Spelling		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:38	
+a07836a7de4b		Apply only to this picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3590	
+a0944d487cac		There are no unsaved presentations to recover		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:782	
+a100b3e76133		Transitions		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+a15b257be6e5		Slide {} of {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/doc_window.rs:97	
+a18f7b4a8d96		Reset 3-D		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:799	
+a1acb2b2f922		This Document		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1112	
+a2203352ddeb		{} contributors · {} commits		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:246	
+a24899cfb6f3		From Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1762	
+a266c07f4955		Diagonal Down Border		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2840	
+a2cdd2394ae0		Distribute Horizontally		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1148	
+a2d7f31ba8a4		Pen Color		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2864	
+a2efd45e2cf3		Screenshot (not available yet)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1222	
+a33c0465c179		open a presentation first		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1020	
+a356f73b5688		Square Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2700	
+a3670b4f5de6		Handout Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:209	
+a382f5295a4c		Align Cell Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/table.rs:85	
+a391cd676ad2		{} of {}		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1221	
+a3cfe8379399		Remove More (looser)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2571	
+a3ecfc9b78f5		Click the slide to take the colour under the pointer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:367	
+a4115bcd3762		Special		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2981	
+a48169b26b06		Blank Presentation		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:526	
+a4c32d1687a2		Dictionary: {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1748	
+a530d2481a8d		Vertical (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2420	
+a5706f8636a7		Mouse Over		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1401	
+a5ab475db87d		Follow the layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:826	
+a603af481642		Very tight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2803	
+a6afb470dacb		Edit Points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1213	
+a7062a86144e		{:.1} KB		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:919	
+a72dd5311740		+ Row		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2001	
+a749e8054ee6		Paste or type an outline. Unindented lines become slide titles; tab-indented lines become bullets.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1515	
+a7804e5c3801		Shape {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1039	
+a7dffbc32234		PNG Picture (*.png)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
+a7fc17ed30ff		F2		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1970	
+a83a64c90654		Remove stop		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:289	
+a8cc804c70d2		Size (% of text):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1317	
+a8d084a039a7		Flip		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:71	
+a8d1dbb5b5cc		Heading font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:692	
+a8f42a629783		Compare this presentation with a revised copy from Review › Compare.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1171	
+a9070b12a257		Insert\nLayout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3220	
+a907fa0e0951		Print All Slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1051	
+a94333a0c245		   Height		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:784	
+a97b6339ca01		Decrease List Level		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:747	
+a9d460512a16		Rounded		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:463	
+a9d79dc1d051		Right Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
+aa0bb76ce478		3-D Format		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:779	
+aa0c65c28090		Font size must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2854	
+aa3227f410e2		Landscape Orientation		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	
+aa6f968a7319		Picture from File…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:399	
+aa739216ad5a		Custom\nShow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2061	
+aa87aba15a5d		Replace fractions (1/2) with fraction characters (½)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2097	
+aaac66af05ce		Spacing after		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2992	
+ab09a7ab7a07		Clear All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3162	
+ab82750d9ac1		Background\nStyles		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1562	
+ab8f6c0553cc		Gradient stops		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:221	
+abcd5d981e37		Footers		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3236	
+abf76276d40e		Set Up Show…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:289	
+ac1121915a5b		{n} slides per page		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1283	
+ac16829943ec		The presentation keeps its own file		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+ac5426f89f60		Select Cells		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/table.rs:126	
+ac595063d140		Reuse Slides…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:403	
+ad653ca42ed8		Text is longer than 400 characters		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:382	
+ad66a7a48452		Click a symbol to insert it at the insertion point.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1674	
+ad8e84565371		Custom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1044	
+ae3c4d602f34		Reset Style		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2711	
+ae46fd5da4b7		Material		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:789	
+ae8f7d7a3a96		Previous Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1424	
+aede14107332		More themes		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:701	
+aee9210b8a74		Replace straight quotes with smart quotes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2164	
+aef685deded3		Do you want to save the changes you made to “{name}”?		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1230	
+af03ec31c188		Italiano		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:227	
+af0f5900e5d4		Exit		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
+af29d636f501		Handouts (6 slides per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1018	
+af2ea7659d48		New Photo Album…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:282	
+af8edbfca83a		S		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1243	
+afa259a89149		Light/Dark appearance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:107	
+afe0474d6a99		Fade out (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2026	
+b00438ec5b53		Wavy		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2780	
+b01bbcdb4edc		Effect\nOptions		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1679	
+b026246b2b57		Quick\nStyles		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:922	
+b032df209ad5		Reorder Objects		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:28	
+b131e67610ae		Zoom on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1315	
+b14144baaadb		Print layout:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1562	
+b163c7f7cede		Replaced “{from}” with “{}”.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1665	
+b1b34aa77887		Zoom to		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:935	
+b1d16c9231f9		Start After Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1129	
+b2446f65d0ea		Play from\nStart		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2050	
+b2a067186d7d		{}x{} Table		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1299	
+b2c7050ea128		Hyperlink to:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1419	
+b2de2f9ee940		Sound		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:33	
+b2fed142bf2d		Edit Photo Album…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:241	
+b33f480afc5b		Paste and Match Formatting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:187	
+b36a158cf25f		Straight Point		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1087	
+b3996778d936		Motion		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1963	
+b44c2257c1d9		Scale width		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2375	
+b4aed37c1024		Out		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1769	
+b53eb2b33d72		Repeated word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1800	
+b599cbb85330		a) b) c)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1292	
+b5ab3d39248e		Poster Frame		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/media.rs:27	
+b5b2fd7b749d		Resolve Thread		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:16	
+b5d23705978d		{} ({} slides)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1946	
+b5d265710781		I. II. III.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1289	
+b5d4f7f0df99		Variant Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:38	
+b6c25747f4ac		Lock		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1239	
+b71d6e70a921		Custom Shows		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:65	
+b72ec09ec94b		No icons match.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1361	
+b73abe91c5b8		Text Transparency		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:45	
+b78c74c53743		New Window needs a slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/doc_window.rs:31	
+b79ad770c139		URL…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1431	
+b839581b3bea		Русский		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:238	
+b8537e19cef4		Video		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1288	
+b8e12b0c0151		Small		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:598	
+b9399bf94048		Add Shape Above		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3080	
+b94e7d202173		Notes Page		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:363	
+b977d9b40a48		Loose		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2806	
+b9b2bb31aadc		1 picture with title		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:451	
+b9d109f04327		Set Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:74	
+b9d2862fe160		2 pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:449	
+b9f9c9e8f24b		Guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1287	
+baa51d2f8e36		Less Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:427	
+bab8945f835d		Very Tight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:536	
+bac322d78bb6		Click to add notes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:159	
+badcd1b657ae		DeckCraft		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1359	
+badd482957ac		Previewing animations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1164	
+baf53efffb8a		{} Slide Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:312	
+bafba689e0bb		Move Insertion Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:69	
+bb4b52650f37		Custom Slide Show		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:77	
+bb9f8e0a3e72		Several slides on each page of a PDF		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+bbb93e72cafa		A photo album holds at most 48 pictures or text boxes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:372	
+bbd8d5c852af		Wrap Text in Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:203	
+bbdfdcced51f		Cameo		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2100	
+bbe14fb57a5a		DeckCraft Presentation (*.deckcraft)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
+bc052f681f39		Format Background…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1302	
+bc1d729f8af2		Duplicate Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:229	
+bc2b033a47d9		Fonts in Presentation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:17	
+bc983db582ba		Use Timings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2083	
+bca24170cdd3		Last Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1426	
+bd0566216f37		4 pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:450	
+bd5a258e382c		Location		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:891	
+bd782b427ed8		{b} bytes		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:918	
+bdcee93fe1c2		Lighting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:790	
+be06517feaa8		No synonyms for "{}".		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1553	
+be2910b74424		Play Across Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3170	
+be81ce6fd074		Dansk		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:233	
+be8624a3e75a		AutoCorrect as you type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2166	
+beb7d438e20d		Coral Reef		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+bf1cdc8a4e98		Outline (.txt)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1551	
+bf295af6e6f9		After Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2007	
+bf2ce6b69044		Thick Thin		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:583	
+bf48f4523708		Українська		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:237	
+bf597ca1a72f		Theme Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:27	
+bf9286e7099e		Regular		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:173	
+bf9de16f0bc5		Math		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1678	
+bfe5b8ca3df9		Recent		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:721	
+c00436592634		Reading\nView		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2188	
+c042d168d153		Photo Album options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:274	
+c06257490920		No accessibility issues found. People with disabilities should not have difficulty reading this document.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1888	
+c07bc791047e		Header and Footer…		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:60	
+c0a3972bf317		 ({sha}, {date})		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2632	
+c0e5087e319f		Bevel		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
+c1cbdc51f311		the slide it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1491	
+c25e015aa115		Your name (comments):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2175	
+c260b746a2c8		More templates		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:712	
+c291f77247e6		Reset Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1298	
+c36a48ad2ecf		{r} pt glow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1030	
+c3be54a67e5e		Selection Pane…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1130	
+c4c54de0ddd4		Insert Picture in SmartArt…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:400	
+c506f52e136d		Rename Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:44	
+c562c022b541		Slide Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:208	
+c5f5fb73e172		Shape\nStyles		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2414	
+c60ce0fc6912		A. B. C.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1291	
+c630df485af8		Notes\nPage		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2187	
+c641c2dbc97c		Use timings, if present		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1168	
+c6acbb4dbdd9		Send to Back		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1230	
+c6cba88c772e		Reset to Defaults		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:156	
+c75da246c47f		Set Up Slide Show…		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:68	
+c7dbab7be816		Add a category		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:228	
+c7f526db87fe		Pattern fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:460	
+c898909cdad9		Slide {}: {}{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1894	
+c9525cf8c1b2		Keeps the layout, fonts and pictures		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+c967edb2bf43		Update automatically		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2512	
+c9705effb325		“{}” is not available yet.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2189	
+ca050969f21d		Español (España)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:221	
+ca168ef296ab		no presentation open		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:305	
+ca4bda9e266a		`spacing` must be a finite number of points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:856	
+ca5c261b816d		Accent 5		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1325	
+ca98d02055d7		No comments.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1234	
+caa596b8ec38		No differences left.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1181	
+cad292555536		Hide During Show		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3180	
+cafe2f065bba		Saturation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:431	
+cbf2ab04b686		End of slide show, click to exit.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:691	
+cc1b283f87f4		General		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2140	
+cc386cbf509d		Align text to the {l} of the cell		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3021	
+cc502784c74e		Set Transparent Color		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2619	
+ccb912a98338		Table Design		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:139	
+ccbf08e6a7c2		Loop until Stopped		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3174	
+ccc7180ae842		Ink to Shape: turn drawn lines, rectangles, ovals and triangles into shapes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1449	
+ccc7cdc74c53		Clear the tab at {pos:.2}"		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3128	
+ccc8c1fab6d0		Saved {path}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1265	
+cce5bad9758c		Spacing before		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2989	
+cd71b46239f5		{} needs a colour like #RRGGBB.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:570	
+cd7659eb4783		Save AutoRecover Information		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:66	
+cdb50bd320cb		Dark\nMode		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2270	
+cdb5846023e9		As One Object		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1943	
+cddf545569d0		Move Section		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:57	
+ce5c303c4afd		Connection Sites		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:41	
+ce7a5cf67822		Start from Beginning		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:51	
+cea1ed8e0970		Fade in (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2025	
+ceef39917e06		Spacing after must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3062	
+cf42e636abc5		Change to:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1829	
+cff7d1eb8054		e.g. 1-3, 5		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1068	
+d044531d6963		Presentations		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:796	
+d0a2c503b31a		DeckCraft's own format: everything is kept		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
+d0ddc30c934f		Accept All ({})		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1188	
+d123e18524e9		Top Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:963	
+d13826148fc4		Bottom left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:691	
+d17e571eb8ff		Opens in PowerPoint and other presentation apps		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
+d1a7e93f0130		On Click of… (none)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1975	
+d28cbf0ac3e1		Inspect Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/inspect.rs:13	
+d298dd327133		Customize Colors…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1533	
+d31918cd20af		Outer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:242	
+d3b35ba9098b		Play this slide's animations on the canvas		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1867	
+d3b4f4566cdf		Position and Size		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:52	
+d3bd848f1f2c		Outline\nView		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2185	
+d3c96deb7630		Español (México)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:222	
+d4370d3abb1a		Don't show on title slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1082	
+d437e57ab9ba		Set Up\nSlide Show		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2064	
+d4a322e8329d		{pane: format|animation|selection|comments|designer|background|smartart|null}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:375	
+d4b23372dc10		Rotation {rot:.0}°, brightness {brightness:.1}, contrast {contrast:.1}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:517	
+d4c054970e21		Apply to All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1087	
+d513799446df		Line spacing must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3066	
+d5232aa7f5f9		Artistic\nEffects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2632	
+d542ca4d668c		Round Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2699	
+d57f589c9008		Slide {:02}:{:04.1}   Total {:02}:{:02}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1029	
+d5b1f4ed3b49		Red Pen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1434	
+d648ced28cd7		Layout Placeholders		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:120	
+d64ac1894319		Insert picture from file…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:896	
+d768a5be8728		Gradient fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:458	
+d83d3b2a775e		Playback		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:149	
+d863392ae58d		Expand		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/selpane.rs:174	
+d8819febfc1c		Merge\nCells		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3003	
+d88bbecf6f5d		New Window needs an open presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/doc_window.rs:28	
+d8b368fa8f46		JPEG Picture (*.jpg)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
+d9103b858f29		Slide {}: “{w}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1777	
+d92a1b4ca43a		{spacing?: pt, snap?: bool, smartGuides?: bool, gridlines?: bool, guides?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:369	
+d952d1a25470		Compressed {n} picture(s): {} KB → {} KB		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3611	
+d95f08c0633d		Picture (PNG)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1720	
+d98c04dfa304		Very Loose		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:536	
+d9a3570856a2		Pick a graphic; type one item per line.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2043	
+d9d68da3ef0f		Section Zoom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3533	
+d9eb129b9aeb		Nederlands		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:228	
+da362a902c6e		Choose a font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2850	
+da6a76977461		Month names and AM/PM are listed for English. Other languages list the numeric date and 24-hour time.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2508	
+da6fb188b9a2		Next Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1423	
+da8c799658b4		Accent 6		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1326	
+dacccb2611f6		Select a word on the slide, or type one above.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1549	
+db0f47212d36		Abc		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1092	
+dc3881a40271		Ω		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1494	
+dc425fdf75ad		Before text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2974	
+dcd886b2ddcf		Caps		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2793	
+dce171dedbe6		i. ii. iii.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1290	
+dcf10fa56395		missing `id`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:292	
+dd173ec797be		Crop to Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2720	
+dd969b8e5ff6		Formatting State		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:215	
+de0401dd650a		HD (330 ppi): good quality for high-definition displays		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3595	
+de371c91f868		Manage Presentation		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:853	
+de88fcff8e50		 (not checked)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:25	
+de966e100acb		{a} and {b}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:23	
+dea0d82da2cf		Scale height (%):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2413	
+dec2f9f855e6		Reuse Slides needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1208	
+deec28f7e571		Smooth Point		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1087	
+def64c58d272		Perspective		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:246	
+df219bd2b862		Narrow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3026	
+df51f28d5b48		Mirror		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:999	
+df5e6247a824		Add Horizontal Guide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1290	
+df947af4a7d6		Convert		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3111	
+dfa7a2b94ccb		Print (220 ppi): excellent quality on most printers and screens		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3596	
+dfaf5c76f84e		Flip Horizontal		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:278	
+dfc2da2c6fac		Rotation (°):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2412	
+e0518166b29e		Bottom bevel		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:780	
+e0de6a6bddb0		PowerPoint Presentation (.pptx)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1550	
+e11a2aa27e39		Left Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
+e154d30617d0		Slide {} of {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1775	
+e1d2926dd261		missing x/y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:214	
+e1ed42f1c04a		Spacing before must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3058	
+e2112222452e		Include hidden slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1269	
+e21a27ac0050		Save As…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:405	
+e258b6a30ca5		   Width		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:783	
+e2729f4abb27		Presenter\nView		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2058	
+e283136898eb		Français (Canada)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:224	
+e2c4f289c37d		Rescan Installed Fonts		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:506	
+e2ec2de86501		Polski		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:231	
+e35984dc55c2		Join type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
+e379b4b34709		Radial		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:167	
+e3b27c197110		Copy path		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:822	
+e3d38a842ff1		Handouts (2 slides per page)		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1015	
+e485ff760640		Grid\nOptions		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2225	
+e4baad9adee3		Convert to SmartArt		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:801	
+e595438d9d72		Duration handle {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1079	
+e60443dac0ad		a dictionaries folder		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1761	
+e68b26d8332e		Custom Show 1		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1959	
+e6e3d8c853bb		Width: enter {MIN_WIDTH} to {MAX_WIDTH} pixels		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3310	
+e704f713d3df		Width (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1053	
+e7eddf165e76		Replace Fonts		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:18	
+e7f0d3bcda46		Action Settings…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1261	
+e807898fc6d9		Bring\nForward		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2491	
+e8aa1ad0c5e6		Album theme		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:467	
+e8d1987489b5		Half		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:276	
+e925b00a94ae		Slide Show		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/lib.rs:382	
+e9bb71b2ffcd		End size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
+e9e0a13b0b7d		Delete Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:60	
+ea26d296dfce		Blur		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:269	
+ea478e66e286		Align Top		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1141	
+ea6be2add227		Seconds per slide: enter {MIN_SECONDS} to {MAX_SECONDS}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3318	
+ea72e53b14a8		Recovered Presentations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:67	
+eabab3cdb912		Widescreen (16:9)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1601	
+eaddf8e8b398		Large (1280 px wide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3281	
+eb1c800a0d0c		Offset right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
+eb2276f9de30		Rotate with shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:508	
+eb799cb56fd8		4 pictures with title		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:453	
+ebae96b640e8		Click to add text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:416	
+ebc26c8e252b		Keep Source Formatting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1719	
+ec395ff52b57		Solid line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:519	
+ec530041be4f		Text Shadow		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:93	
+ec7b33ac0765		Product Information		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1355	
+ecfe62e9df82		Slide Image		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3282	
+ed66ea34a62c		Thin Thick		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:583	
+edb6c5e5f2f5		{add: command id, params?, label?, icon?} | {remove: id, params?} | {reset: true} → [buttons]		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:411	
+ededb43400bf		Show smart guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2162	
+edf253ad2073		Select All Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:71	
+ee4d30aa712f		Animation Styles		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:13	
+ee5962772076		Do you want to save the changes you made to {what}?		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1199	
+eebf38b86925		Noto Sans Arabic		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:175	
+eec7291165c1		Change\nChart Type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3041	
+eed4d6d6e673		Horizontal		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2367	
+eed86f1bfd50		Cap type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
+eedbe8e2c2d4		Slides		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:871	
+ef31fe2f6a1e		{word?}: open the Thesaurus pane on the selected word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:376	
+ef558e0a28fd		Slide Number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:235	
+ef911d7e04f0		Select an object on the slide and add an animation from the Animations tab.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1027	
+ef9698f8412f		Start On Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1129	
+efbcb6987bb8		{label} must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2353	
+efd105d6d2b5		Add Vertical Guide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1290	
+eff5229b3afa		Heavy		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2780	
+f00c0f1609c5		Browse for Themes…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:407	
+f1035784e8f6		Resize shape to fit text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:385	
+f1afc14bab4e		Play/Pause GIF		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/media.rs:36	
+f1df8a2e45ba		{name}  (dictionary)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1923	
+f1f77d2e7768		animation preview plays the current slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1143	
+f220e58fd1a5		`{key}` must be true or false		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:526	
+f248514d543b		Trim Media		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:67	
+f24b73af1bfb		Small (640 px wide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3280	
+f26e433edb3a		Dashes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2696	
+f2851cbb1bf8		Slide Zoom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3533	
+f2b7695b05d7		Edit\nShape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2388	
+f2edbb2e3e78		Baseline		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2790	
+f3511d237e68		Show/Hide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:121	
+f38273a11c48		Notes Placeholders		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:97	
+f3c7b9de82bc		From slide:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3302	
+f3e036272ca6		Replace Fonts…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1176	
+f458fdd2a585		Arrow at end		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:989	
+f45d08329db6		Size & Properties		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:221	
+f471a674cf3d		Set Up Slide Show		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:39	
+f4b2789a0f96		Point Type		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:38	
+f4edee7539dd		Trim		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3161	
+f5158f6358ef		PDF document (.pdf)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1546	
+f5996400c040		Slide…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1430	
+f78f6448ffd2		Subtle		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1658	
+f80a35ea9d64		Version {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2628	
+f861eaea6158		By		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2984	
+f86581eac3b9		Right-click any ribbon button to add it.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:155	
+f894bc02fa0a		Chart Data		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:66	
+f8b8034aaefa		Slides from Outline…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:436	
+f8bb9ac25419		PageUp		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1967	
+f98446c37ce8		Start Automatically		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3166	
+f990d71ca8f2		Hide All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/selpane.rs:132	
+f9a949281eb7		Pixels of this colour become transparent:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2620	
+f9e5ef8f3cce		End of slide show		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1843	
+fa35b94b2a47		Y Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:796	
+fa5383becee4		Apply\nTo All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1756	
+fabe758c6a07		List Commands		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/inspect.rs:15	
+faea84a03ffa		Create New Theme Colors		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:72	
+fb4bf17755b7		Customize Fonts…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1547	
+fbd073febc09		Bullets and Numbering…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:710	
+fbe02f18bd8c		Ribbon Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:377	
+fc13cc60667f		{r} pt		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1037	
+fc705331f452		Start time (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2023	
+fc9f039053ea		Black on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1795	
+fcc07166f140		{:.0} pt{side}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:699	
+fd15f6caab54		Slides Per\nPage: {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3307	
+fd2abaaf5720		Character spacing must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2858	
+fd3ee3b889e0		Distribute Vertically		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1149	
+fd6bebd4080e		All slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1172	
+fd80a6ce84c3		No sound: {err}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/media.rs:496	
+fd81960f4e1c		The version, the people and models who built it, and where to find us.		todo		todo		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1369	
+fe293845f0bd		Discard Recovered Presentations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:69	
+fe5c03e96112		Flat		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
+fe8c8b67a045		Ember		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
+fea00fed706d		Edit Text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1207	
+ff07f0cd0af0		Slides: choose a range from 1 to {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3323	
+ff28b1a0771c		Handout\nMaster		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2202	
+ff3c61f7feff		Mouse Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1401	
+ff9b4c32ce8f		Ink to\nText		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1453	
+ffdab460358f		Design Ideas		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:30	
+ffdc3a1b1f21		  Footer text:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1081	
