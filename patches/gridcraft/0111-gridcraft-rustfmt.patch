@@ -1,0 +1,244 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 18 Oct 2026 11:00:00 +0500
+Subject: [PATCH] gridcraft: rustfmt the files the patch queue touches (mechanical formatting, regenerate on every sync)
+
+`rustfmt --edition 2024` over every .rs file touched by patches 0001-0110, so `cargo fmt --all --check` is clean in CI
+lint. No behaviour change. Always the last patch of the queue: scripts/sync-upstream.sh never rebases it, it
+regenerates it (`--fmt`, or implied when the queue has this patch).
+---
+ crates/calc/src/recalc.rs                | 12 ++++-----
+ crates/engine/src/pdf_fonts.rs           |  7 +++--
+ crates/engine/tests/formula_templates.rs |  5 +---
+ crates/model/src/store.rs                | 44 +++++++++++++++++++++++++++-----
+ crates/pdf/src/embed.rs                  |  3 ++-
+ crates/pdf/src/lib.rs                    | 25 +++++++++++++++---
+ 6 files changed, 70 insertions(+), 26 deletions(-)
+
+diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
+index 654eccf..93aedb5 100644
+--- a/crates/calc/src/recalc.rs
++++ b/crates/calc/src/recalc.rs
+@@ -864,8 +864,7 @@ fn spill_blocked(host: &PassHost<'_>, (sheet, anchor): Key, a: &Array) -> bool {
+     let range = RangeRef::new(anchor, end);
+     let own = sh.spill_ranges.get(&anchor);
+     let spilled_over = |c: CellRef| {
+-        !own.is_some_and(|o| o.contains(c))
+-            && sh.spill_ranges.iter().any(|(o, r)| *o != anchor && r.contains(c) && !host.slots.contains((sheet, *o)))
++        !own.is_some_and(|o| o.contains(c)) && sh.spill_ranges.iter().any(|(o, r)| *o != anchor && r.contains(c) && !host.slots.contains((sheet, *o)))
+     };
+     end.row >= gridcraft_core::MAX_ROWS
+         || end.col >= gridcraft_core::MAX_COLS
+@@ -1276,7 +1275,8 @@ impl Calc {
+     pub fn open(&mut self, wb: &mut Workbook, calculated: bool) -> bool {
+         self.rebuild(wb);
+         if calculated && self.graph.dynamic.is_empty() && values_are_current(wb) {
+-            let unknown: Vec<Key> = self.graph.keys().filter(|k| wb.sheet(k.0).and_then(|s| s.value_ref(k.1)) == Some(&Value::Error(CellError::Name))).collect();
++            let unknown: Vec<Key> =
++                self.graph.keys().filter(|k| wb.sheet(k.0).and_then(|s| s.value_ref(k.1)) == Some(&Value::Error(CellError::Name))).collect();
+             self.last_recalc_cells = 0;
+             if !unknown.is_empty() {
+                 let dirty = self.dirty_closure(wb, &unknown);
+@@ -1558,9 +1558,9 @@ impl Calc {
+ /// values aren't stored). Volatile formulas and those with references only known while
+ /// calculating are the graph's dynamic ones, which [`Calc::open`] checks.
+ fn values_are_current(wb: &Workbook) -> bool {
+-    wb.sheets.iter().all(|sheet| {
+-        sheet.spill_ranges.is_empty() && sheet.cells.iter().all(|(_, cell)| cell.formula.is_none() || !cell.value.is_empty())
+-    })
++    wb.sheets
++        .iter()
++        .all(|sheet| sheet.spill_ranges.is_empty() && sheet.cells.iter().all(|(_, cell)| cell.formula.is_none() || !cell.value.is_empty()))
+ }
+ 
+ /// Current date-time as a serial (1900 system), from the system clock (browser clock on wasm).
+diff --git a/crates/engine/src/pdf_fonts.rs b/crates/engine/src/pdf_fonts.rs
+index 44d4276..5ed9b26 100644
+--- a/crates/engine/src/pdf_fonts.rs
++++ b/crates/engine/src/pdf_fonts.rs
+@@ -120,9 +120,7 @@ fn bundled() -> Option<Font> {
+ 
+ /// The default face (Latin, Greek and Cyrillic), registered once.
+ fn default_face() -> Option<Font> {
+-    with_state(|s| {
+-        *s.default.get_or_insert_with(bundled)
+-    })
++    with_state(|s| *s.default.get_or_insert_with(bundled))
+ }
+ 
+ /// Name aliases: a workbook font that is not installed is looked up under metric-compatible
+@@ -256,7 +254,8 @@ fn installed_face(s: &mut State, family: &str, style: Style) -> Option<Font> {
+     let (path, index) = {
+         let faces = s.catalog.get_or_insert_with(scan).get(family)?;
+         let pick = |want: Style| faces.iter().find(|f| f.style == Some(want));
+-        let chosen = pick(style).or_else(|| pick(Style { bold: false, italic: style.italic })).or_else(|| pick(Style { bold: false, italic: false }))?;
++        let chosen =
++            pick(style).or_else(|| pick(Style { bold: false, italic: style.italic })).or_else(|| pick(Style { bold: false, italic: false }))?;
+         (chosen.path.clone(), chosen.index)
+     };
+     let data = std::fs::read(path).ok()?;
+diff --git a/crates/engine/tests/formula_templates.rs b/crates/engine/tests/formula_templates.rs
+index 86b77a6..0daec00 100644
+--- a/crates/engine/tests/formula_templates.rs
++++ b/crates/engine/tests/formula_templates.rs
+@@ -211,10 +211,7 @@ fn inserting_and_deleting_cells() {
+ 
+ #[test]
+ fn sorting() {
+-    twin(&[
+-        ("data.sortDescending", json!({"range": "A2:I31", "column": "C"})),
+-        ("data.sortAscending", json!({"range": "A2:I31", "column": "A"})),
+-    ]);
++    twin(&[("data.sortDescending", json!({"range": "A2:I31", "column": "C"})), ("data.sortAscending", json!({"range": "A2:I31", "column": "A"}))]);
+ }
+ 
+ #[test]
+diff --git a/crates/model/src/store.rs b/crates/model/src/store.rs
+index ffe6d69..ed04f15 100644
+--- a/crates/model/src/store.rs
++++ b/crates/model/src/store.rs
+@@ -109,7 +109,12 @@ impl Band {
+             let cols = self.cols.get(span.clone()).unwrap_or_default();
+             let x = span.start + cols.partition_point(|c| *c < c0);
+             let y = (span.start + cols.partition_point(|c| *c <= c1)).max(x);
+-            self.cols.get(x..y).unwrap_or_default().iter().zip(self.cells.get(x..y).unwrap_or_default()).map(move |(c, cell)| (CellRef::new(row, *c), cell))
++            self.cols
++                .get(x..y)
++                .unwrap_or_default()
++                .iter()
++                .zip(self.cells.get(x..y).unwrap_or_default())
++                .map(move |(c, cell)| (CellRef::new(row, *c), cell))
+         })
+     }
+     fn iter(&self) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
+@@ -332,7 +337,8 @@ impl CellStore {
+     /// Takes out every cell of rows `r0..=r1` in columns `c0..=c1`, row-major. Only bands holding
+     /// such a cell are touched (copied when shared).
+     fn take_block(&mut self, r0: u32, r1: u32, c0: u32, c1: u32) -> Vec<(CellRef, Cell)> {
+-        let hit: Vec<u32> = self.bands.range(r0 / BAND..=r1 / BAND).filter(|(_, b)| b.range(r0, r1, c0, c1).next().is_some()).map(|(k, _)| *k).collect();
++        let hit: Vec<u32> =
++            self.bands.range(r0 / BAND..=r1 / BAND).filter(|(_, b)| b.range(r0, r1, c0, c1).next().is_some()).map(|(k, _)| *k).collect();
+         let mut out = Vec::new();
+         for k in hit {
+             let Some(band) = self.bands.get_mut(&k) else { continue };
+@@ -394,22 +400,42 @@ impl CellStore {
+         // As if every cell of rows `from..` were taken out and each stored again `delta` rows
+         // away, in row-major order.
+         let moved = self.take_block(from, u32::MAX, 0, u32::MAX);
+-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell))).collect());
++        self.put_sorted(
++            moved
++                .into_iter()
++                .filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell)))
++                .collect(),
++        );
+     }
+     pub fn shift_cols(&mut self, from: u32, delta: i64) {
+         let moved = self.take_block(0, u32::MAX, from, u32::MAX);
+-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell))).collect());
++        self.put_sorted(
++            moved
++                .into_iter()
++                .filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell)))
++                .collect(),
++        );
+     }
+     /// Shifts cells within rows `r0..=r1` and columns `>= from` horizontally (Insert/Delete Cells
+     /// with shift right/left).
+     pub fn shift_cols_in_rows(&mut self, r0: u32, r1: u32, from: u32, delta: i64) {
+         let moved = self.take_block(r0, r1, from, gridcraft_core::MAX_COLS - 1);
+-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell))).collect());
++        self.put_sorted(
++            moved
++                .into_iter()
++                .filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell)))
++                .collect(),
++        );
+     }
+     /// Shifts cells within columns `c0..=c1` and rows `>= from` vertically.
+     pub fn shift_rows_in_cols(&mut self, c0: u32, c1: u32, from: u32, delta: i64) {
+         let moved = self.take_block(from, gridcraft_core::MAX_ROWS - 1, c0, c1);
+-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell))).collect());
++        self.put_sorted(
++            moved
++                .into_iter()
++                .filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell)))
++                .collect(),
++        );
+     }
+ }
+ 
+@@ -581,7 +607,11 @@ mod tests {
+                     .flat_map(|band| band.rows.iter().flat_map(|(row, cols)| cols.iter().map(move |(col, cell)| (CellRef::new(*row, *col), cell))))
+             }
+             pub fn row(&self, row: u32, c0: u32, c1: u32) -> impl Iterator<Item = (u32, &Cell)> + '_ {
+-                self.bands.get(&(row / BAND)).and_then(|b| b.rows.get(&row)).into_iter().flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
++                self.bands
++                    .get(&(row / BAND))
++                    .and_then(|b| b.rows.get(&row))
++                    .into_iter()
++                    .flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
+             }
+             pub fn used_range(&self) -> Option<RangeRef> {
+                 let first_band = self.bands.values().next()?;
+diff --git a/crates/pdf/src/embed.rs b/crates/pdf/src/embed.rs
+index 9d932bc..b2d3010 100644
+--- a/crates/pdf/src/embed.rs
++++ b/crates/pdf/src/embed.rs
+@@ -171,7 +171,8 @@ pub(crate) fn write_objects(used: &BTreeMap<u16, BTreeMap<u16, char>>, next: &mu
+         let _ = write!(dict, "/E{id} {type0} 0 R ");
+         objects.push((
+             type0,
+-            format!("<< /Type /Font /Subtype /Type0 /BaseFont /{base} /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {tou} 0 R >>").into_bytes(),
++            format!("<< /Type /Font /Subtype /Type0 /BaseFont /{base} /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {tou} 0 R >>")
++                .into_bytes(),
+         ));
+         let mut w = String::new();
+         for g in &gids {
+diff --git a/crates/pdf/src/lib.rs b/crates/pdf/src/lib.rs
+index 03beb8f..6882c19 100644
+--- a/crates/pdf/src/lib.rs
++++ b/crates/pdf/src/lib.rs
+@@ -130,10 +130,18 @@ impl Font {
+             Font::Courier | Font::CourierBold | Font::CourierOblique | Font::CourierBoldOblique => Family::Mono,
+             Font::Face(_) => return None,
+         };
+-        let bold = matches!(self, Font::HelveticaBold | Font::HelveticaBoldOblique | Font::TimesBold | Font::TimesBoldItalic | Font::CourierBold | Font::CourierBoldOblique);
++        let bold = matches!(
++            self,
++            Font::HelveticaBold | Font::HelveticaBoldOblique | Font::TimesBold | Font::TimesBoldItalic | Font::CourierBold | Font::CourierBoldOblique
++        );
+         let italic = matches!(
+             self,
+-            Font::HelveticaOblique | Font::HelveticaBoldOblique | Font::TimesItalic | Font::TimesBoldItalic | Font::CourierOblique | Font::CourierBoldOblique
++            Font::HelveticaOblique
++                | Font::HelveticaBoldOblique
++                | Font::TimesItalic
++                | Font::TimesBoldItalic
++                | Font::CourierOblique
++                | Font::CourierBoldOblique
+         );
+         Some((family, bold, italic))
+     }
+@@ -525,10 +533,19 @@ impl Page {
+                 return;
+             }
+             let size = n(size.min(10_000.0));
+-            let mut s = format!("BT
++            let mut s = format!(
++                "BT
+ {}
+ {} {} {} {} {} {} Tm
+-", rgb_op(color, false), n(cs), n(-sn), n(sn), n(cs), n(x), n(self.y(y)));
++",
++                rgb_op(color, false),
++                n(cs),
++                n(-sn),
++                n(sn),
++                n(cs),
++                n(x),
++                n(self.y(y))
++            );
+             for (face, glyphs) in &runs {
+                 let used = self.faces.entry(*face).or_default();
+                 for (g, c) in glyphs {

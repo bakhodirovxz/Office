@@ -171,7 +171,8 @@ pub(crate) fn write_objects(used: &BTreeMap<u16, BTreeMap<u16, char>>, next: &mu
         let _ = write!(dict, "/E{id} {type0} 0 R ");
         objects.push((
             type0,
-            format!("<< /Type /Font /Subtype /Type0 /BaseFont /{base} /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {tou} 0 R >>").into_bytes(),
+            format!("<< /Type /Font /Subtype /Type0 /BaseFont /{base} /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {tou} 0 R >>")
+                .into_bytes(),
         ));
         let mut w = String::new();
         for g in &gids {

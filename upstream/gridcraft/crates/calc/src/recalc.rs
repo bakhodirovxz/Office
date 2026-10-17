@@ -864,8 +864,7 @@ fn spill_blocked(host: &PassHost<'_>, (sheet, anchor): Key, a: &Array) -> bool {
     let range = RangeRef::new(anchor, end);
     let own = sh.spill_ranges.get(&anchor);
     let spilled_over = |c: CellRef| {
-        !own.is_some_and(|o| o.contains(c))
-            && sh.spill_ranges.iter().any(|(o, r)| *o != anchor && r.contains(c) && !host.slots.contains((sheet, *o)))
+        !own.is_some_and(|o| o.contains(c)) && sh.spill_ranges.iter().any(|(o, r)| *o != anchor && r.contains(c) && !host.slots.contains((sheet, *o)))
     };
     end.row >= gridcraft_core::MAX_ROWS
         || end.col >= gridcraft_core::MAX_COLS
@@ -1276,7 +1275,8 @@ impl Calc {
     pub fn open(&mut self, wb: &mut Workbook, calculated: bool) -> bool {
         self.rebuild(wb);
         if calculated && self.graph.dynamic.is_empty() && values_are_current(wb) {
-            let unknown: Vec<Key> = self.graph.keys().filter(|k| wb.sheet(k.0).and_then(|s| s.value_ref(k.1)) == Some(&Value::Error(CellError::Name))).collect();
+            let unknown: Vec<Key> =
+                self.graph.keys().filter(|k| wb.sheet(k.0).and_then(|s| s.value_ref(k.1)) == Some(&Value::Error(CellError::Name))).collect();
             self.last_recalc_cells = 0;
             if !unknown.is_empty() {
                 let dirty = self.dirty_closure(wb, &unknown);
@@ -1558,9 +1558,9 @@ impl Calc {
 /// values aren't stored). Volatile formulas and those with references only known while
 /// calculating are the graph's dynamic ones, which [`Calc::open`] checks.
 fn values_are_current(wb: &Workbook) -> bool {
-    wb.sheets.iter().all(|sheet| {
-        sheet.spill_ranges.is_empty() && sheet.cells.iter().all(|(_, cell)| cell.formula.is_none() || !cell.value.is_empty())
-    })
+    wb.sheets
+        .iter()
+        .all(|sheet| sheet.spill_ranges.is_empty() && sheet.cells.iter().all(|(_, cell)| cell.formula.is_none() || !cell.value.is_empty()))
 }
 
 /// Current date-time as a serial (1900 system), from the system clock (browser clock on wasm).

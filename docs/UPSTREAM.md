@@ -26,7 +26,7 @@ scripts/sync-upstream.sh --dry-run --survey all                   # list EVERY c
 scripts/sync-upstream.sh --dry-run --resolve --resolver sonnet gridcraft   # conflicts resolved in scratch, wall time recorded
 scripts/sync-upstream.sh --apply --gates quick wordcraft deckcraft pdfcraft craft-libs   # partial apply by naming repos
 ```
-Options: `--to <sha>` (one repo), `--gates quick|full`, `--resolver <name>` (recorded in the log). Exit codes: 0 ok, 1 conflict or gate
+Options: `--to <sha>` (one repo), `--gates quick|full`, `--fmt` (regenerate the trailing rustfmt patch, below), `--resolver <name>` (recorded in the log). Exit codes: 0 ok, 1 conflict or gate
 failure, 2 preflight or infrastructure.
 
 What the script does (PLAN 5.1):
@@ -40,6 +40,12 @@ What the script does (PLAN 5.1):
 4. Scratch monorepo worktree `$OFFICE_TARGET/sync/mono-<date>-<id>` on branch `sync/<date>`: commits P' and Q' per repo, `cargo xt gen-domain`,
    lock re-seeding (upstream lock copied into `domains/<d>/Cargo.lock`, `cargo metadata` adds our path packages), REGISTER last-rebase cells,
    `patches/rebase-log.tsv` rows.
+   Patch files keep their registered names (patch k of the new queue takes the file name of patch k of the old queue; `format-patch` alone would renumber from 0001).
+   **The trailing rustfmt patch.** A queue may end with `NNNN-<repo>-rustfmt.patch` (gridcraft: `0111`): `rustfmt --edition <ed>` over every `.rs` file
+   the queue touches, as ONE patch (REGISTER: "mechanical formatting, regenerate on every sync"), so `scripts/ci.sh lint` (`cargo fmt --all --check`) is clean without
+   formatting each patch. It is never rebased: the script skips it in the rebase and regenerates it on top of the rebased queue when `--fmt` is given or when the queue already
+   has one. If nothing needs formatting any more the patch is dropped (the report says so; delete its REGISTER row). A new repo gets one with `--fmt`
+   (number = last patch + 1, then add its REGISTER row). Never format the other patches by hand: they stay pure.
 5. Gates (separate target dirs `$OFFICE_TARGET/sync/target-*`, build lock, RAM gate 3 GB, no foreign rustc.exe): verify-queue, register check,
    **i18n** (below), gen-check, lockdiff (must read `0 version changes ... 0 foreign additions`), cargo-deny, `cargo check` native (desktop + cli) and wasm32 (web, sccache off).
    `full` is a stub: run `scripts/build.sh <d> all --release` and the app tests after an apply.
@@ -47,12 +53,6 @@ What the script does (PLAN 5.1):
    `docs/phase1/sync-reports/` and fast-forwards the monorepo. A failed gate leaves the pin where it is.
 Reports: `$OFFICE_TARGET/sync/reports/<date>.md` and `<date>-rebase-log.tsv`.
 
-## Resolving a conflict (`--resolve`)
-1. Run the script in the background. On a conflict it prints `RESOLVE NEEDED: worktree <path> patch <file> files: ...` and polls.
-2. In that worktree (a cache worktree, mid `git am`): edit the files so that the patch's intent is kept on top of the new upstream, remove all
-   markers, `cargo fmt` the touched files if the repo is rustfmt-clean at that spot, then `git -C <path> add <files>`.
-3. The script runs `git am --continue` itself and records the wall time and the conflicted files.
-4. Do not run `git am --continue` or `--abort` yourself while the script waits.
 ## The i18n gate (catalog resync)
 Our canonical catalogs (`i18n/*.tsv`, keyed by English) are extracted from the upstream catalogs and source in `upstream/`, so every sync can make them stale.
 - `cargo xt i18n check-stale` re-extracts in memory and compares: keys added, keys removed (now `obsolete`), English changed, upstream `ru` changed. It exits 1 with a list
@@ -66,6 +66,12 @@ Our canonical catalogs (`i18n/*.tsv`, keyed by English) are extracted from the u
   and release exports skip it. `where` line numbers are refreshed only with `--refresh-where` (or when the file changed), so a sync does not rewrite every row.
 - By hand: `cargo xt i18n extract --dry-run` (report only), `cargo xt i18n extract [--date YYYY-MM-DD]`, then `lint`, `roundtrip`, and commit `i18n/*.tsv`.
 
+## Resolving a conflict (`--resolve`)
+1. Run the script in the background. On a conflict it prints `RESOLVE NEEDED: worktree <path> patch <file> files: ...` and polls.
+2. In that worktree (a cache worktree, mid `git am`): edit the files so that the patch's intent is kept on top of the new upstream, remove all
+   markers, `cargo fmt` the touched files if the repo is rustfmt-clean at that spot, then `git -C <path> add <files>`.
+3. The script runs `git am --continue` itself and records the wall time and the conflicted files.
+4. Do not run `git am --continue` or `--abort` yourself while the script waits.
 To work by hand instead: `git -C E:/office-upstream/<repo> worktree add --detach <dir> <new>` then `git am -3 patches/<repo>/*.patch`,
 `git am --continue` after each fix, `git format-patch --zero-commit --binary --no-signature`.
 
