@@ -115,6 +115,8 @@ pub struct CanvasState {
     pub(crate) ink_ui: crate::ink::InkUi,
     /// Wheel/touchpad scrolling (smooth notches, touchpad momentum).
     pub(crate) wheel: crate::scroll::CanvasScroll,
+    /// One-finger scrolling on a touch screen.
+    pub(crate) touch: crate::touch_scroll::TouchScroll,
     /// Middle-click scrolling (#1065).
     pub(crate) auto_scroll: crate::autoscroll::AutoScroll,
     /// The scroll offset and its maximum at the end of last frame.
@@ -232,6 +234,7 @@ impl Default for CanvasState {
             alt_code: String::new(),
             alt_code_echo: None,
             wheel: Default::default(),
+            touch: Default::default(),
             auto_scroll: Default::default(),
             scroll_offset: egui::Vec2::ZERO,
             scroll_max: egui::Vec2::ZERO,
@@ -1003,7 +1006,15 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     } else {
         app.canvas.auto_scroll.update(ui, area)
     };
-    let delta = wheel_delta + auto_delta + middle_delta;
+    // A finger dragged across the page scrolls it (a mouse drag selects).
+    let long_press = ui.ctx().options(|o| o.input_options.max_click_duration);
+    let touch_delta = if app.session.view.read_mode || app.dialog.is_some() {
+        app.canvas.touch = Default::default();
+        egui::Vec2::ZERO
+    } else {
+        ui.input(|i| app.canvas.touch.frame(i, long_press))
+    };
+    let delta = wheel_delta + auto_delta + middle_delta + touch_delta;
     let mut scroll_area = egui::ScrollArea::both()
         .id_salt("canvas_scroll")
         .auto_shrink([false, false])
@@ -1025,13 +1036,16 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         if after == before && wheel_delta != egui::Vec2::ZERO {
             app.canvas.wheel.hit_edge();
         }
+        if after == before && touch_delta != egui::Vec2::ZERO {
+            app.canvas.touch.hit_edge();
+        }
         if auto_delta != egui::Vec2::ZERO && after != before {
             // The scroll keeps going without new input.
             ui.ctx().request_repaint();
         }
         scroll_area = scroll_area.scroll_offset(after);
     }
-    if app.canvas.wheel.is_animating() {
+    if app.canvas.wheel.is_animating() || app.canvas.touch.is_active() {
         ui.ctx().request_repaint();
     }
     let out = scroll_area.show_viewport(&mut ui_area, |ui, viewport| {
@@ -1447,7 +1461,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let keyboard_click = ui.memory(|m| m.has_focus(resp.id)) && ui.input(|i| i.key_pressed(egui::Key::Space) || i.key_pressed(egui::Key::Enter));
     let pointer_click = resp.clicked_by(egui::PointerButton::Primary);
     let accesskit_click = resp.clicked() && !pointer_click && !keyboard_click;
-    let focus_click = pointer_click || accesskit_click || resp.drag_started();
+    // A finger scrolling the page doesn't take the keyboard (that would raise the soft one).
+    let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled());
     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
         resp.request_focus();
     }
@@ -2097,7 +2112,15 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
     if crate::ink::pointer(app, ui, resp, rects, layout, scale) {
         return;
     }
-    let pointer = resp.interact_pointer_pos().or_else(|| resp.hover_pos());
+    // A finger's press waits to see whether it is a tap, a scroll or a long press (touch_scroll).
+    let held = app.canvas.touch.take_press();
+    let (held_press, held_long) = (held.map(|(at, _)| at), held.is_some_and(|(_, long)| long));
+    // A finger's press never reaches `resp` in its own frame (egui hit-tests one frame late), so it
+    // is taken from the input. Until the finger decides, nothing else sees it.
+    if held_press.is_none() && (app.canvas.touch.in_gesture() || ui.input(|i| app.canvas.touch.hold_press(i, app.canvas.viewport.unwrap_or(resp.rect)))) {
+        return;
+    }
+    let pointer = held_press.or_else(|| resp.interact_pointer_pos()).or_else(|| resp.hover_pos());
     // An object (or crop handle) drag follows the pointer anywhere until it's released.
     let dragging = app.canvas.obj_drag.is_some() || app.canvas.crop_drag.is_some();
     let object_pointer = pointer.or_else(|| dragging.then(|| ui.input(|i| i.pointer.latest_pos())).flatten());
@@ -2200,11 +2223,12 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
         let _ = app.run("select.paragraph", json!({}));
         return;
     }
-    let pressed = ui.input(|i| i.pointer.primary_pressed()) && resp.contains_pointer() && !over_balloon(app, p);
+    let pressed = held_press.is_some() || (ui.input(|i| i.pointer.primary_pressed()) && resp.contains_pointer() && !over_balloon(app, p));
     if pressed {
         let now = ui.input(|i| i.time);
         let (delay, dist) = ui.ctx().options(|o| (o.input_options.max_double_click_delay, o.input_options.max_click_dist));
-        let clicks = press_count(app.canvas.last_press, now, p, delay, dist);
+        // A long press selects the word, like a double-click.
+        let clicks = if held_long { 2 } else { press_count(app.canvas.last_press, now, p, delay, dist) };
         app.canvas.last_press = Some((now, p, clicks));
         app.canvas.unit_drag = None;
         // A double-click that enters or leaves a header/footer is handled on release.
