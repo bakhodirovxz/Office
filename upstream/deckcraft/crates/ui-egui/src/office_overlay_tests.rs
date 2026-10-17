@@ -82,8 +82,13 @@ fn fallback_font_covers_uzbek() {
         }
     }
     for (family, stack) in &defs.families {
-        let last = stack.last().map(String::as_str);
-        assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
+        // Last in every family, except that the sans subset precedes the CJK interface face (Latin and Cyrillic must not
+        // be drawn with its full-width advances).
+        let at = stack.iter().position(|n| n == "office-fallback-sans" || n == "office-fallback-mono").expect("fallback present");
+        match stack.iter().position(|n| n.contains("BIZ UDPGothic")) {
+            Some(cjk) if stack[at] == "office-fallback-sans" => assert!(at < cjk, "{family:?}: {stack:?}"),
+            _ => assert_eq!(at, stack.len() - 1, "{family:?}: {stack:?}"),
+        }
     }
 }
 
@@ -134,4 +139,25 @@ fn the_language_command_sets_and_rejects() {
     assert_eq!(restored.language, "en");
     let old: crate::UiState = serde_json::from_str("{\"tab\":\"View\"}").expect("an old ui.json without `language`");
     assert_eq!(old.language, "auto");
+}
+
+/// Latin and Cyrillic interface text takes its advances from the sans subset, not from the CJK face (the uz-Cyrl letter
+/// spacing bug): `Ў` and `a` are as wide as the subset says, well under a CJK full width.
+#[test]
+fn cyrillic_is_not_laid_out_in_the_cjk_face() {
+    if !o::ACTIVE {
+        return;
+    }
+    let ctx = egui::Context::default();
+    ctx.set_fonts(crate::theme::font_definitions(&[]));
+    let mut o = ctx.run_ui(Default::default(), |_| {});
+    o.textures_delta.clear();
+    ctx.fonts_mut(|f| {
+        let mut w = |s: &str| f.layout_no_wrap(s.to_string(), egui::FontId::proportional(13.0), egui::Color32::WHITE).size().x;
+        let (cyr, lat) = (w("Ўзбекистон"), w("Uzbekistan"));
+        assert!(cyr < 10.0 * 13.0 * 0.8, "Cyrillic advance too wide: {cyr}");
+        assert!(lat < 10.0 * 13.0 * 0.8, "Latin advance too wide: {lat}");
+    });
+    let mut o = ctx.run_ui(Default::default(), |_| {});
+    o.textures_delta.clear();
 }
