@@ -1,0 +1,254 @@
+# CI mirror of scripts/ci.sh (PLAN 6.1-6.3). READY TO ENABLE, NOT ENABLED: `workflow_dispatch` only. Enabling means adding
+# `push`/`pull_request` triggers once a remote is allowed (CLAUDE.md: no remote without the owner's OK).
+# Untested until a remote exists; `actionlint` (job below and `scripts/ci.sh actionlint`) is the only check so far.
+#
+# Every step runs `scripts/ci.sh <job>`, so local and remote are one implementation. Before enabling:
+#   1. Pin every `uses:` by commit SHA (versions are in the trailing comments): actions/checkout v4, actions/cache v4,
+#      actions/upload-artifact v4, actions/download-artifact v4, taiki-e/install-action v2,
+#      mozilla-actions/sccache-action v0.0.9.
+#   2. scripts/env.sh hard-codes this PC (E:/office-target, E:/office-tools, ...). Make it honour pre-set values
+#      (OFFICE_TARGET="${OFFICE_TARGET:-E:/office-target/p1}" and so on), or set a runner-side override.
+#   3. Decide the runner. GH caches are capped at 10 GB per repo, so release builds of four apps will not all stay
+#      cached: size the runners or use a self-hosted runner.
+# The windows-latest runners give the MSVC build that shipping needs (ADR 2.5); this PC builds windows-gnu.
+name: ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "quick (per commit), full (gate) or nightly (full + release tests, fidelity, xlsx bench)"
+        type: choice
+        options: [quick, full, nightly]
+        default: quick
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+  CI_RUN: ${{ github.run_id }}
+  # Only effective once scripts/env.sh honours a pre-set value (header, point 2).
+  OFFICE_TARGET: ${{ github.workspace }}/.ci-target
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4   # v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh queue
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh lint
+
+  gen-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh gen-check
+
+  deny:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh deny
+
+  brand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh brand
+
+  i18n:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh i18n
+
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - name: Install actionlint 1.7.12
+        run: bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 /usr/local/bin
+      - run: scripts/ci.sh actionlint
+
+  test:
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [queue]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [wordcraft, gridcraft, deckcraft, pdfcraft]
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles(format('upstream/{0}/Cargo.lock', matrix.app)) }}
+      - run: scripts/ci.sh test ${{ matrix.app }}
+
+  test-ours:
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [queue]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh test-ours
+
+  check:
+    needs: [queue]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [docs, sheets, slides, pdf]
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles(format('domains/{0}/Cargo.lock', matrix.domain)) }}
+      - run: scripts/ci.sh check ${{ matrix.domain }}
+
+  build:
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [check]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [docs, sheets, slides, pdf]
+        kind: [desktop, web, cli]
+        os: [windows-latest, ubuntu-latest]
+        exclude:
+          # the browser build does not depend on the OS: build it once, on Windows
+          - kind: web
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles(format('domains/{0}/Cargo.lock', matrix.domain)) }}
+      - run: scripts/ci.sh build ${{ matrix.domain }} ${{ matrix.kind }}
+      - name: Keep the web dist for sizes and web-smoke
+        if: ${{ matrix.kind == 'web' }}
+        uses: actions/upload-artifact@v4   # v4
+        with:
+          name: dist-${{ matrix.domain }}-web
+          path: ${{ env.OFFICE_TARGET }}/dist/${{ matrix.domain }}-web
+          if-no-files-found: error
+
+  sizes:
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [build]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - uses: actions/download-artifact@v4   # v4
+        with:
+          pattern: dist-*-web
+          path: dist
+      - run: CI_DIST_ROOT="$PWD/dist" scripts/ci.sh sizes
+
+  web-smoke:
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - uses: actions/download-artifact@v4   # v4
+        with:
+          pattern: dist-*-web
+          path: dist
+      - run: CI_DIST_ROOT="$PWD/dist" scripts/ci.sh web-smoke
+
+  release-tests:
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [test]
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('upstream/*/Cargo.lock') }}
+      - run: scripts/ci.sh release-tests all
+
+  fidelity:
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [build]
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh fidelity
+
+  xlsx-bench:
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [build]
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - run: scripts/ci.sh xlsx-bench

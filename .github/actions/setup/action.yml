@@ -1,0 +1,42 @@
+name: setup
+description: Toolchain, CI tools and caches for scripts/ci.sh (UNTESTED until a remote exists; see the ci.yml header)
+inputs:
+  cache-key:
+    description: Extra cache key part (the lockfile hash of the workspace the job builds)
+    required: false
+    default: ""
+  targets:
+    description: Extra rustup targets
+    required: false
+    default: wasm32-unknown-unknown
+runs:
+  using: composite
+  steps:
+    # Versions are in the trailing comments; pin each by commit SHA when the workflow is enabled (PLAN 6.3).
+    - name: Rust toolchain
+      shell: bash
+      run: |
+        rustup toolchain install stable --profile minimal --component rustfmt,clippy --target "${{ inputs.targets }}"
+        rustup default stable
+    - name: CI tools (cargo-deny, cargo-nextest, trunk)
+      uses: taiki-e/install-action@v2   # v2
+      with:
+        tool: cargo-deny,cargo-nextest,trunk
+    - name: sccache
+      uses: mozilla-actions/sccache-action@v0.0.9   # v0.0.9, GHA cache backend
+    - name: Cargo caches
+      uses: actions/cache@v4   # v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: cargo-${{ runner.os }}-${{ inputs.cache-key }}
+        restore-keys: cargo-${{ runner.os }}-
+    - name: Environment for scripts/ci.sh
+      shell: bash
+      run: |
+        {
+          echo "RUSTC_WRAPPER=sccache"
+          echo "SCCACHE_GHA_ENABLED=true"
+          echo "CARGO_INCREMENTAL=0"
+        } >> "$GITHUB_ENV"

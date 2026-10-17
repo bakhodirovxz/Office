@@ -1,0 +1,69 @@
+# Web size budgets (PLAN section 6.4). Read by `scripts/ci.sh sizes`. Sizes are bytes of dist/*-web/*.wasm and *.js,
+# measured with `brotli -q 11 --lgwin=24` and `gzip -9` (the same tool for the budget and the BASE measurement).
+#
+# Budget per domain = base_br + delta_br_max (wasm brotli). The ratchet is on OUR delta, not on upstream growth:
+#   base_br    pristine upstream brotli at BASE. Seeded from Phase 0 (inventory, old BASE, trunk --release, craft_fonts as
+#              measured there). `scripts/ci.sh sizes --measure-base` (or the nightly/sync job: one pristine web build per
+#              app per BASE) re-measures it with this tool; update it together with base_sha at every sync.
+#   delta_br_max   hard fail when (our brotli - base_br) exceeds it.
+#   js_br_max      hard fail when the JS glue brotli exceeds it (all apps: 24 KiB; measured 19.7-20.6 KB).
+#   upstream_growth_warn   warn (never fail) when a re-measured base_br grew by more than this fraction since the last sync.
+#   craft_fonts    part of the budget key: true when the wasm embeds Inter and BIZ UDPGothic (CRAFT_FONTS_DIR set at build,
+#                  F9). Measure both settings in WP3 and recommend one; the budget applies to the setting named here.
+#
+# Headroom rules:
+#   * Before WP7-WP9 land, delta_br_max = 524288 (512 KiB) is a guard only. Expected contributors: patches 10-20 KiB;
+#     fallback fonts < 250 KiB (ESTIMATE); two uz catalogs 40-80 KiB.
+#   * After WP7-WP9, set delta_br_max = measured delta + 10%, rounded up to 16 KiB (16384).
+#   * Raising any delta_br_max above its measured value + 10% needs a STATUS line with the reason.
+#   * Absolute budgets per editor (the shell's lazy-load budget) belong to Phase 4.
+#
+# `domain` is the build domain (dist/<domain>-web); `app` is the upstream product it is built from.
+
+[docs]
+app = "wordcraft"
+base_sha = "fd0bb2f"
+craft_fonts = false
+base_raw = 42597532          # wasm raw, Phase 0
+base_gzip = 15849354         # wasm gzip -9, Phase 0
+base_br = 9441597            # wasm brotli -q 11, Phase 0
+js_br = 20555                # JS glue brotli, Phase 0
+delta_br_max = 524288        # guard until WP7-WP9; our queue today: +9,263 B brotli (patches 0001-0005)
+js_br_max = 24576
+upstream_growth_warn = 0.05
+
+[sheets]
+app = "gridcraft"
+base_sha = "e6b6b34"
+craft_fonts = false
+base_raw = 18973730
+base_gzip = 7041161
+base_br = 4731289
+js_br = 20036
+delta_br_max = 524288        # guard; known delta: pdf-fonts +8,487 B gzip, memory series unmeasured
+js_br_max = 24576
+upstream_growth_warn = 0.05
+
+[slides]
+app = "deckcraft"
+base_sha = "9859da3"
+craft_fonts = false
+base_raw = 35120783
+base_gzip = 13905434
+base_br = 9300367
+js_br = 19665
+delta_br_max = 524288
+js_br_max = 24576
+upstream_growth_warn = 0.05
+
+[pdf]
+app = "pdfcraft"
+base_sha = "afa8e18"
+craft_fonts = false
+base_raw = 39076254
+base_gzip = 14379872
+base_br = 9390759
+js_br = 20487
+delta_br_max = 524288
+js_br_max = 24576
+upstream_growth_warn = 0.05

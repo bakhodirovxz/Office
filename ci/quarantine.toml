@@ -1,0 +1,278 @@
+# Known upstream test failures: the quarantine (PLAN section 6.5). Read by `cargo xt quarantine apply|check` (WP6b);
+# until that exists, `scripts/ci.sh quarantine` validates the format with a shell checker.
+#
+# One [[test]] table per test. Required, non-empty: app, crate, binary, name, class, env, reason, evidence, since, review.
+#   app      wordcraft | gridcraft | deckcraft | pdfcraft   (upstream workspace the test lives in)
+#   crate    cargo package name
+#   binary   nextest binary kind: "lib" for unit tests in src/, the integration-test file name for tests/<name>.rs,
+#            "bin/<name>" for a binary target's unit tests
+#   name     exact test path inside the binary (nextest `test(=...)`)
+#   class    env | upstream-bug | flaky | flaky-crash | brand-overlay | i18n-incomplete | debug-only
+#   env      where it fails (CI applies the entry only there); "any" when it fails everywhere
+#   reason   why it fails, one sentence
+#   evidence file#anchor with the failing output (debug-only entries must show the release pass)
+#   since    "<date>@<BASE sha7>" of the first observation
+#   review   when to look again ("every sync" by default)
+# Optional: provisional = true   cause not yet diagnosed; policy: each needs a one-paragraph diagnosis in WP6b to stay.
+# Policy (PLAN 6.5): green = no non-quarantined failure and no crash; a quarantined test that passes is "stale" (two
+# consecutive stale runs fail CI); no entry may hide a failure caused by our own patches except brand-overlay and
+# i18n-incomplete; every entry has reason and evidence. Seeded from Phase 0 (docs/phase0/inventory.md); each entry is
+# to be re-verified at the new BASE in WP6b and dropped if it now passes. Test paths not named in the inventory
+# (module path of the pdfcraft i18n tests, binary ids) are best guesses from the sources and are confirmed there too.
+
+[[test]]
+app = "wordcraft"
+crate = "wordcraft-render"
+binary = "lib"
+name = "tests_color_glyphs::emoji_are_drawn_in_colour"
+class = "env"
+env = "win10-no-colour-emoji-font"
+reason = "Both emoji must use the colour emoji font (left 1, right 2); this Windows box has no or a different colour emoji font."
+evidence = "docs/phase0/inventory.md#wordcraft"
+since = "2026-10-15@fd0bb2f"
+review = "every sync"
+
+[[test]]
+app = "wordcraft"
+crate = "wordcraft-render"
+binary = "lib"
+name = "tests_color_glyphs::emoji_keep_their_colours_on_a_dark_page"
+class = "env"
+env = "win10-no-colour-emoji-font"
+reason = "Same colour emoji font assumption as emoji_are_drawn_in_colour (left 1, right 2)."
+evidence = "docs/phase0/inventory.md#wordcraft"
+since = "2026-10-15@fd0bb2f"
+review = "every sync"
+
+[[test]]
+app = "wordcraft"
+crate = "wordcraft-ui-egui"
+binary = "lib"
+name = "keys::tests::alt_numpad_code_types_its_character_without_keytips"
+class = "env"
+env = "win10-ru-oem866"
+reason = "Alt+numpad decodes through the OEM code page; on this ru-locale PC 0233 gives a Cyrillic letter, not e-acute. Product issue tracked for uz/ru Windows."
+evidence = "docs/phase0/inventory.md#wordcraft"
+since = "2026-10-15@fd0bb2f"
+review = "every sync"
+
+[[test]]
+app = "wordcraft"
+crate = "wordcraft-ui-egui"
+binary = "breaks_menu"
+name = "page_break_from_the_menu_adds_a_page"
+class = "env"
+env = "win10-ru-locale-labels"
+reason = "The test queries the ribbon label Breaks and finds no node; the label is probably localised to the system language (unverified)."
+evidence = "docs/phase0/inventory.md#wordcraft"
+since = "2026-10-15@fd0bb2f"
+review = "every sync"
+
+[[test]]
+app = "wordcraft"
+crate = "wordcraft-ui-egui"
+binary = "breaks_menu"
+name = "section_break_from_the_menu_splits_sections"
+class = "env"
+env = "win10-ru-locale-labels"
+reason = "Same as page_break_from_the_menu_adds_a_page: label Breaks not found."
+evidence = "docs/phase0/inventory.md#wordcraft"
+since = "2026-10-15@fd0bb2f"
+review = "every sync"
+
+[[test]]
+app = "deckcraft"
+crate = "deckcraft-ui-egui"
+binary = "lib"
+name = "replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces"
+class = "env"
+env = "win10-ru-locale-labels"
+reason = "Assertion at replacefonts_tests.rs:46: the ribbon button is not found; probably the same localised-label issue as the wordcraft Breaks tests (unverified)."
+evidence = "docs/phase0/inventory.md#deckcraft"
+since = "2026-10-15@9859da3"
+review = "every sync"
+
+[[test]]
+app = "deckcraft"
+crate = "deckcraft-ui-egui"
+binary = "lib"
+name = "UNIDENTIFIED"
+class = "flaky-crash"
+env = "any"
+reason = "The ui-egui lib test binary dies with STATUS_ACCESS_VIOLATION when tests run concurrently (2 of 2 cargo test runs, 1 of 8 direct runs, 0 of 4 single-threaded). The crashing test is unknown; suspected wgpu or software-GPU race in egui_kittest. WP6b step 4 names the test and puts the binary in the gpu-serial group."
+evidence = "docs/phase0/inventory.md#deckcraft-crash-investigation"
+since = "2026-10-15@9859da3"
+review = "every sync"
+provisional = true
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-automation"
+binary = "automation"
+name = "a_save_that_does_not_reopen_leaves_the_file_as_it_was"
+class = "upstream-bug"
+env = "any"
+reason = "unwrap_err() on an Ok value (automation.rs:359): saving a damaged PDF succeeded. Cause not diagnosed; possibly Windows path or verify behaviour."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+provisional = true
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-automation"
+binary = "automation"
+name = "signing_with_translated_labels_through_tools"
+class = "upstream-bug"
+env = "any"
+reason = "The test uses the password secret1 (7 characters) but sign_id_create requires at least 8: test and code disagree."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::bundled_catalogs_are_consistent"
+class = "upstream-bug"
+env = "any"
+reason = "The zh-hant catalog has duplicate keys (lines 790 and 1325). Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::lithuanian_covers_bundled_catalog_keys_including_dynamic_dialog_labels"
+class = "upstream-bug"
+env = "any"
+reason = "The zh-hant catalog has duplicate keys (lines 790 and 1325). Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::vietnamese_covers_bundled_catalog_keys"
+class = "upstream-bug"
+env = "any"
+reason = "The zh-hant catalog has duplicate keys (lines 790 and 1325). Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::vietnamese_covers_commands_and_catalogue"
+class = "upstream-bug"
+env = "any"
+reason = "The Vietnamese catalog lacks entries. Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::vietnamese_covers_ui_literals"
+class = "upstream-bug"
+env = "any"
+reason = "The Vietnamese catalog lacks entries. Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "i18n::tests::signature_appearance_labels_are_in_every_catalog"
+class = "upstream-bug"
+env = "any"
+reason = "The Vietnamese catalog lacks entries for the signature appearance labels. Upstream data bug."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "lib"
+name = "canvas::tests::explicit_search_jumps_record_history_and_keep_match_destination"
+class = "upstream-bug"
+env = "any"
+reason = "Assertion at canvas.rs:5118 (left 1). Cause not diagnosed; likely logic or timing."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+provisional = true
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "editing"
+name = "files_dropped_beside_the_pages_panel_still_open_as_documents"
+class = "upstream-bug"
+env = "any"
+reason = "Assertion at editing.rs:1781 (left 1). Cause not diagnosed."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+provisional = true
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "fonts"
+name = "primary_ui_fonts_cover_latin_and_cyrillic_catalogs"
+class = "env"
+env = "without-craft-fonts-dir"
+reason = "JetBrainsMono lacks U+045D for the bg catalog; maybe the optional font directory (CRAFT_FONTS_DIR) was absent. Re-verify with scripts/env.sh sourced."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "print"
+name = "print_dialog_shows_the_printer_driver_options"
+class = "env"
+env = "win10"
+reason = "Expected CUPS-style printer options (InputSlot Tray2, media Letter) differ on Windows; print-oriented, likely environment."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "view"
+name = "single_page_swipe_that_reaches_the_edge_does_not_turn_but_a_fresh_one_does"
+class = "upstream-bug"
+env = "any"
+reason = "Page 2 starts at -195 instead of the top (layout or timing). Cause not diagnosed."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"
+provisional = true
+
+[[test]]
+app = "pdfcraft"
+crate = "xtask"
+binary = "bin/xtask"
+name = "parity::tests::committed_manifest_is_well_formed"
+class = "upstream-bug"
+env = "any"
+reason = "The committed parity manifest TOML has a duplicate key."
+evidence = "docs/phase0/inventory.md#pdfcraft"
+since = "2026-10-15@afa8e18"
+review = "every sync"

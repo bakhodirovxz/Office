@@ -1,0 +1,67 @@
+# cargo-deny policy for the docs domain (upstream/wordcraft graph). PLAN section 6.6, modelled on upstream/pdfcraft/deny.toml.
+# Run: scripts/ci.sh deny  (cargo deny --manifest-path <domain workspace>/Cargo.toml --config ci/deny/docs.toml check)
+# Shared policy lives in deny.toml (root); keep the [licenses]/[sources] sections in step across the five files.
+# Keep the five files in step: the [licenses] allow list and [sources] are the shared policy.
+# Our layer is MIT OR Apache-2.0 and links permissive code only. GPL/AGPL/LGPL/MPL is never allowed:
+# such tools run as sidecar processes only (CLAUDE.md, hard constraints).
+
+[graph]
+all-features = true
+
+[licenses]
+confidence-threshold = 0.9
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "BSL-1.0",
+    "CC0-1.0",
+]
+
+[licenses.private]
+ignore = true
+
+[bans]
+# 32 duplicate crate names are known across the upstream graphs; report, do not fail.
+multiple-versions = "warn"
+# The vendored upstream workspace crates are path dependencies without publish = false, so cargo-deny treats them as public
+# crates and flags their path deps as wildcards. Warn until the generated domain manifests set publish = false.
+wildcards = "warn"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = ["https://github.com/storytold/craft-libs", "https://github.com/storytold/winprint.rs"]
+
+[advisories]
+version = 2
+yanked = "warn"
+git-fetch-with-cli = true
+db-path = "E:/office-cache/advisory-db"
+# Each ignore needs: RUSTSEC id, reason, review date. None for the root workspace.
+# Each ignore: RUSTSEC id, reason. Review at every sync (review date: 2026-10-17 + next BASE bump).
+ignore = [
+    { id = "RUSTSEC-2026-0367", reason = "zip 3.0.0 symlink escape in ZipArchive::extract; we never call extract(), documents are read in memory entry by entry (grep: no ZipArchive::extract in upstream/*)" },
+    { id = "RUSTSEC-2026-0368", reason = "zip 3.0.0 symlink permissions in extract(); same: extract() is not called" },
+    { id = "RUSTSEC-2026-0369", reason = "zip 3.0.0 SUID/SGID preservation in extract(); same: extract() is not called" },
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser is unmaintained (no vulnerability); text shaping dependency of upstream layout, replace when upstream moves" },
+    { id = "RUSTSEC-2026-0206", reason = "rustybuzz is unmaintained (no vulnerability); shaping engine of upstream layout, replace when upstream moves" },
+]
+
+# egui's default UI fonts (Ubuntu-Light, Hack, emoji-icon-font): font licences, attributed upstream as dependency-bundled assets.
+[[licenses.exceptions]]
+crate = "epaint_default_fonts"
+allow = ["OFL-1.1", "Ubuntu-font-1.0"]
+
+# winprint (craft-print's Windows spooler) lists reqwest as a build-dependency for a PDFium download that only runs with a
+# feature craft-print turns off. The CA bundle is CDLA-Permissive-2.0 data used in a build script only.
+[[licenses.exceptions]]
+crate = "webpki-root-certs"
+allow = ["CDLA-Permissive-2.0"]
