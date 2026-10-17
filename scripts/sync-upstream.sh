@@ -184,7 +184,13 @@ for r in $REPOS; do
   if [ $FMT = 1 ] && [ "${UNRES[$r]}" -eq 0 ]; then
     ed=$(awk -F'"' '/^edition *=/{print $2; exit}' "$WN/Cargo.toml"); ed=${ed:-2021}
     before=$(git -C "$WN" rev-parse HEAD)
-    git -C "$WN" rebase -q -x "f=\$(git diff-tree --no-commit-id --name-only -r HEAD | grep '[.]rs\$'); [ -z \"\$f\" ] || { rustfmt --edition $ed \$f && git commit -q -a --amend --no-edit; }" "$n" >"$WORK/$r.fmt.log" 2>&1       || say "WARN: fmt pass failed for $r, see $WORK/$r.fmt.log"
+    # rustfmt formats whole files, so a reformat in patch k can conflict with a later patch touching the same file.
+    # If that happens, abort and keep the full, unformatted queue: never export a partial queue.
+    if ! git -C "$WN" rebase -q -x "f=\$(git diff-tree --no-commit-id --name-only -r HEAD | grep '[.]rs\$'); [ -z \"\$f\" ] || { rustfmt --edition $ed \$f && git commit -q -a --amend --no-edit; }" "$n" >"$WORK/$r.fmt.log" 2>&1; then
+      git -C "$WN" rebase --abort >/dev/null 2>&1
+      git -C "$WN" reset -q --hard "$before"
+      say "WARN: fmt pass failed for $r (see $WORK/$r.fmt.log); rebase aborted, queue kept unformatted at ${before:0:7}"
+    fi
     git -C "$WN" range-diff --no-color "$n..$before" "$n..HEAD" 2>/dev/null | awk '/^ *[0-9]+: +[0-9a-f]+ [=!<>] +[0-9-]+: /{ if ($3=="!") printf "%s ", $1 }' | sed 's/:/ /g' > "$WORK/$r.fmtpatches"
     say "- $r: rustfmt (edition $ed) changed patches: $(cat "$WORK/$r.fmtpatches" 2>/dev/null | tr -s ' ' | sed 's/ *$//;s/^$/none/')"
   fi
