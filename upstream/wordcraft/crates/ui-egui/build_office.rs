@@ -95,6 +95,36 @@ fn generate(dir: &Path) -> String {
         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
     }
     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
+    o + &uzbek(Some(dir))
+}
+
+/// The Uzbek catalogs that `cargo xt i18n export` wrote next to `overlay.env`. Only when both are there does the build
+/// get `cfg(office_uz)`, which adds uz-latn and uz-cyrl to the language registry.
+fn uzbek(dir: Option<&Path>) -> String {
+    println!("cargo::rustc-check-cfg=cfg(office_uz)");
+    let files = dir.map(|d| [d.join("catalog-uz-latn.tsv"), d.join("catalog-uz-cyrl.tsv")]).filter(|f| f.iter().all(|p| p.is_file()));
+    let mut o = String::new();
+    let Some([latn, cyrl]) = files else {
+        let _ = writeln!(o, "pub const EXTRA_LANGS: usize = 0;");
+        let _ = writeln!(o, "pub const CATALOG_UZ_LATN: &str = \"\";\npub const CATALOG_UZ_CYRL: &str = \"\";");
+        let _ = writeln!(o, "pub const NAME_UZ_LATN: &str = \"\";\npub const NAME_UZ_CYRL: &str = \"\";");
+        return o;
+    };
+    println!("cargo::rustc-cfg=office_uz");
+    let meta = dir.map(|d| d.join("catalog-meta.env")).unwrap_or_default();
+    println!("cargo::rerun-if-changed={}", meta.display());
+    let meta: HashMap<String, String> = std::fs::read_to_string(&meta)
+        .unwrap_or_default()
+        .lines()
+        .filter_map(|l| l.split_once('='))
+        .map(|(k, v)| (k.to_string(), v.trim().to_string()))
+        .collect();
+    let _ = writeln!(o, "pub const EXTRA_LANGS: usize = 2;");
+    for (key, file, name) in [("LATN", latn, "O\u{2bb}zbekcha"), ("CYRL", cyrl, "Ўзбекча")] {
+        println!("cargo::rerun-if-changed={}", file.display());
+        let _ = writeln!(o, "pub const CATALOG_UZ_{key}: &str = include_str!({:?});", file.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/"));
+        let _ = writeln!(o, "pub const NAME_UZ_{key}: &str = {:?};", meta.get(&format!("NAME_UZ_{key}")).map_or(name, String::as_str));
+    }
     o
 }
 
@@ -115,5 +145,5 @@ fn generate_upstream() -> String {
     let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
     let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
-    o
+    o + &uzbek(None)
 }

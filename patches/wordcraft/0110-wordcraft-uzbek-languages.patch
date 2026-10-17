@@ -1,0 +1,148 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 23:08:07 +0500
+Subject: [PATCH] ui-egui: office overlay adds uz-latn and uz-cyrl when its catalogs are present
+
+Adds uz-latn (Oʻzbekcha) and uz-cyrl (Ўзбекча) to the interface languages when the overlay
+supplies their catalogs. build_office.rs looks for catalog-uz-latn.tsv and catalog-uz-cyrl.tsv
+(written by `cargo xt i18n export`, fallback chain already applied) next to overlay.env; when
+both exist the build gets cfg(office_uz), the two catalogs are embedded with include_str!, and
+LANGUAGES grows by two entries. The picker name carries the export's draft marker while Uzbek
+rows are unreviewed. candidates() maps `uz`, `uz-UZ` and `uz_UZ.UTF-8` to uz-latn and
+`uz_UZ@cyrillic` to uz-cyrl; Windows `uz-Latn-UZ` and `uz-Cyrl-UZ` already resolve by script.
+Without the catalogs the language list and its tests are upstream's.
+---
+ crates/ui-egui/build_office.rs             | 32 +++++++++++++++++++++++++++++-
+ crates/ui-egui/src/i18n/mod.rs             | 25 ++++++++++++++++++++++-
+ crates/ui-egui/src/office_overlay_tests.rs | 20 +++++++++++++++++++
+ 3 files changed, 75 insertions(+), 2 deletions(-)
+
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+index 81e68ae..a872628 100644
+--- a/crates/ui-egui/build_office.rs
++++ b/crates/ui-egui/build_office.rs
+@@ -95,6 +95,36 @@ fn generate(dir: &Path) -> String {
+         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
+     }
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
++    o + &uzbek(Some(dir))
++}
++
++/// The Uzbek catalogs that `cargo xt i18n export` wrote next to `overlay.env`. Only when both are there does the build
++/// get `cfg(office_uz)`, which adds uz-latn and uz-cyrl to the language registry.
++fn uzbek(dir: Option<&Path>) -> String {
++    println!("cargo::rustc-check-cfg=cfg(office_uz)");
++    let files = dir.map(|d| [d.join("catalog-uz-latn.tsv"), d.join("catalog-uz-cyrl.tsv")]).filter(|f| f.iter().all(|p| p.is_file()));
++    let mut o = String::new();
++    let Some([latn, cyrl]) = files else {
++        let _ = writeln!(o, "pub const EXTRA_LANGS: usize = 0;");
++        let _ = writeln!(o, "pub const CATALOG_UZ_LATN: &str = \"\";\npub const CATALOG_UZ_CYRL: &str = \"\";");
++        let _ = writeln!(o, "pub const NAME_UZ_LATN: &str = \"\";\npub const NAME_UZ_CYRL: &str = \"\";");
++        return o;
++    };
++    println!("cargo::rustc-cfg=office_uz");
++    let meta = dir.map(|d| d.join("catalog-meta.env")).unwrap_or_default();
++    println!("cargo::rerun-if-changed={}", meta.display());
++    let meta: HashMap<String, String> = std::fs::read_to_string(&meta)
++        .unwrap_or_default()
++        .lines()
++        .filter_map(|l| l.split_once('='))
++        .map(|(k, v)| (k.to_string(), v.trim().to_string()))
++        .collect();
++    let _ = writeln!(o, "pub const EXTRA_LANGS: usize = 2;");
++    for (key, file, name) in [("LATN", latn, "O\u{2bb}zbekcha"), ("CYRL", cyrl, "Ўзбекча")] {
++        println!("cargo::rerun-if-changed={}", file.display());
++        let _ = writeln!(o, "pub const CATALOG_UZ_{key}: &str = include_str!({:?});", file.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/"));
++        let _ = writeln!(o, "pub const NAME_UZ_{key}: &str = {:?};", meta.get(&format!("NAME_UZ_{key}")).map_or(name, String::as_str));
++    }
+     o
+ }
+ 
+@@ -115,5 +145,5 @@ fn generate_upstream() -> String {
+     let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
+     let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
+-    o
++    o + &uzbek(None)
+ }
+diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
+index 10cc80a..23efdb3 100644
+--- a/crates/ui-egui/src/i18n/mod.rs
++++ b/crates/ui-egui/src/i18n/mod.rs
+@@ -52,7 +52,7 @@ pub struct LangInfo {
+ }
+ 
+ /// The registry. English first: it is the fallback and the source language.
+-pub static LANGUAGES: [LangInfo; 23] = [
++pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
+     LangInfo { code: "en", name: "English", source: "", prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` resolve here (see `candidates`).
+     LangInfo {
+@@ -165,6 +165,25 @@ pub static LANGUAGES: [LangInfo; 23] = [
+     LangInfo { code: "sv", name: "Svenska", source: include_str!("sv.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+     // Croatian; `hr`, `hr-HR` and `hr_HR.UTF-8` resolve here.
+     LangInfo { code: "hr", name: "Hrvatski", source: include_str!("hr.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
++    // Uzbek (office overlay): only when the overlay supplies the catalogs.
++    #[cfg(office_uz)]
++    LangInfo {
++        code: "uz-latn",
++        name: crate::office_overlay::NAME_UZ_LATN,
++        source: crate::office_overlay::CATALOG_UZ_LATN,
++        prefer_hans: false,
++        editing_lang: None,
++        catalog: OnceLock::new(),
++    },
++    #[cfg(office_uz)]
++    LangInfo {
++        code: "uz-cyrl",
++        name: crate::office_overlay::NAME_UZ_CYRL,
++        source: crate::office_overlay::CATALOG_UZ_CYRL,
++        prefer_hans: false,
++        editing_lang: None,
++        catalog: OnceLock::new(),
++    },
+ ];
+ 
+ impl LangInfo {
+@@ -279,6 +298,10 @@ fn candidates(tag: &str) -> Vec<String> {
+     for n in (1..=parts.len()).rev() {
+         out.push(parts.get(..n).unwrap_or_default().join("-"));
+     }
++    if primary == "uz" && !parts.iter().any(|p| matches!(*p, "latn" | "cyrl")) {
++        // Uzbek without a script: Latin, unless a Linux locale says `@cyrillic` (cut off above).
++        out.insert(out.len().saturating_sub(1), if tag.to_ascii_lowercase().contains("@cyrillic") { "uz-cyrl" } else { "uz-latn" }.to_string());
++    }
+     if primary == "zh" && !parts.iter().any(|p| matches!(*p, "hans" | "hant")) {
+         // Chinese by region when no script is given.
+         let script = if parts.iter().any(|p| matches!(*p, "tw" | "hk" | "mo")) { "zh-hant" } else { "zh-hans" };
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 76210c1..307bfe4 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -90,3 +90,23 @@ fn fallback_font_covers_uzbek() {
+         assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
+     }
+ }
++
++#[test]
++fn uzbek_is_offered_only_with_the_overlay_catalogs() {
++    use crate::i18n::{Lang, lang_from_tag, tr};
++    let code = |tag: &str| lang_from_tag(tag).map(Lang::code);
++    if cfg!(office_uz) {
++        // Windows script tags, scriptless tags, and the Linux `@cyrillic` modifier.
++        assert_eq!(code("uz-Latn-UZ"), Some("uz-latn"));
++        assert_eq!(code("uz-Cyrl-UZ"), Some("uz-cyrl"));
++        assert_eq!((code("uz"), code("uz-UZ"), code("uz_UZ.UTF-8")), (Some("uz-latn"), Some("uz-latn"), Some("uz-latn")));
++        assert_eq!(code("uz_UZ@cyrillic"), Some("uz-cyrl"));
++        let (latn, cyrl) = (Lang::from_code("uz-latn").expect("uz-latn"), Lang::from_code("uz-cyrl").expect("uz-cyrl"));
++        assert!(latn.name().starts_with("O\u{2bb}zbekcha") && cyrl.name().starts_with("Ўзбекча"));
++        assert_ne!(tr(latn, "Home"), "Home");
++        assert_ne!(tr(cyrl, "Home"), "Home");
++    } else {
++        assert_eq!(code("uz-Latn-UZ"), None);
++        assert!(Lang::from_code("uz-latn").is_none());
++    }
++}
+-- 
+2.50.0
+
