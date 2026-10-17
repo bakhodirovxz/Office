@@ -74,6 +74,10 @@ pub fn rebrand(s: &str) -> &str {
     for name in UPSTREAM_NAMES {
         out = replace_token(&out, name, app_name());
     }
+    if out.contains('\n') && out.contains("ArtCraft") {
+        // A translation of an upstream "Part of ..." sentence: drop the lines that still name upstream's publisher.
+        out = out.lines().filter(|l| !l.contains("ArtCraft")).collect::<Vec<_>>().join("\n");
+    }
     let out = out.trim().to_string();
     debug_assert!(cache.len() < 4096, "rebrand cache is bounded by the catalog size");
     let leaked: &'static str = Box::leak(out.into_boxed_str());
