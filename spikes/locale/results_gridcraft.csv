@@ -1,0 +1,24 @@
+general_big,3500000.5,General
+general_frac,0.1234567,General
+zero_dot_zero,3500000.0,0.0
+grp_1dp,"3,500,000.5","#,##0.0"
+grp_2dp,"3,500,000.50","#,##0.00"
+pct,25.50%,0.00%
+sci,1.23E+04,0.00E+00
+date_iso,2026-10-12,yyyy-mm-dd
+date_dmy,12.10.2026,dd.mm.yyyy
+date_long,12 October 2026,d mmmm yyyy
+date_dddd,"Monday, 12 Oct 2026","dddd, d mmm yyyy"
+time_ampm,3:04:05 PM,h:mm:ss AM/PM
+tag419_num,"3,500,000.50","[$-419]#,##0.00"
+tag443_num,"3,500,000.50","[$-443]#,##0.00"
+tag419_date,12 October 2026,[$-419]d mmmm yyyy
+tag443_date,12 October 2026,[$-443]d mmmm yyyy
+tag_ru_cur,"₽ 3,500,000.50","[$₽-419] #,##0.00"
+tag_uz_cur,"3,500,000.50 so'm","#,##0.00 ""so'm"""
+accounting,"  3,500,000.50 ","_-* #,##0.00_-;-* #,##0.00_-;_-* ""-""??_-;_-@_-"
+f_text_num,"3,500,000.50",General
+f_text_date,12 October 2026,General
+f_concat_num,3500000.5,General
+f_concat_date,46307,General
+f_sum_list,3,General

@@ -1,0 +1,12 @@
+uz-Latn dec ',' grp ['0xa0'] pct '%' list ';'
+  dec fmt #,##0.### pct '#,##0%' cur #,##0.00 ¤
+  months fmt wide oktabr | stand-alone Oktabr | abbr okt | mon dushanba
+  dateFormats short/medium/long dd/MM/yy | d-MMM, y | d-MMMM, y
+uz-Cyrl dec ',' grp ['0xa0'] pct '%' list ';'
+  dec fmt #,##0.### pct '#,##0%' cur #,##0.00 ¤
+  months fmt wide октябр | stand-alone октябр | abbr окт | mon душанба
+  dateFormats short/medium/long dd/MM/yy | d MMM, y | d MMMM, y
+ru dec ',' grp ['0xa0'] pct '%' list ';'
+  dec fmt #,##0.### pct '#,##0\xa0%' cur #,##0.00 ¤
+  months fmt wide октября | stand-alone октябрь | abbr окт. | mon понедельник
+  dateFormats short/medium/long dd.MM.y | d MMM y 'г'. | d MMMM y 'г'.
