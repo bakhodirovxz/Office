@@ -1,0 +1,126 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:13:13 +0500
+Subject: [PATCH 101/102] ui-egui: turn off upstream community links and show
+ the overlay's icon under the overlay
+
+With OFFICE_OVERLAY_DIR set at build time: the Discord, website and repository links in About,
+Backstage Home and Account, the Slide Show 'Learn More' group and the app.links answer are gone,
+the upstream copyright line is replaced by the overlay's, and the painted logo is replaced by the
+overlay's icon. Gated on constants from office_overlay; without an overlay the behaviour is upstream's.
+---
+ crates/ui-egui/src/backstage.rs | 12 +++++++++---
+ crates/ui-egui/src/dialogs.rs   | 23 +++++++++++++++++++----
+ crates/ui-egui/src/lib.rs       |  3 +++
+ crates/ui-egui/src/ribbon.rs    | 12 +++++++-----
+ 4 files changed, 38 insertions(+), 12 deletions(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index f855c45..ff12964 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -735,7 +735,9 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+         });
+     }
+     ui.add_space(30.0);
+-    ui.hyperlink_to("Join the ArtCraft community on Discord", deckcraft_engine::links::DISCORD);
++    if crate::office_overlay::COMMUNITY {
++        ui.hyperlink_to("Join the ArtCraft community on Discord", deckcraft_engine::links::DISCORD);
++    }
+ }
+ 
+ /// New: a blank presentation, then every theme and starter template, with a search box.
+@@ -1378,8 +1380,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             ) {
+                 let _ = app.run("app.about", json!({}));
+             }
+-            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+-            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
++            if crate::office_overlay::COMMUNITY {
++                ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
++            }
++            if crate::office_overlay::UPSTREAM_LINKS {
++                ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
++            }
+         });
+     });
+ }
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 9071d15..47279b1 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -2627,11 +2627,20 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+             ui.label(crate::office_overlay::attribution());
+         }
+         ui.add_space(6.0);
+-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+-        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+-        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
++        if crate::office_overlay::COMMUNITY {
++            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
++        }
++        if crate::office_overlay::UPSTREAM_LINKS {
++            ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
++            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
++        }
+         ui.add_space(6.0);
+-        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
++        let copyright = if crate::office_overlay::ACTIVE {
++            crate::office_overlay::COPYRIGHT
++        } else {
++            "MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors"
++        };
++        ui.label(egui::RichText::new(copyright).size(11.0).color(t.text_faint));
+     });
+ }
+ 
+@@ -2652,6 +2661,12 @@ pub fn version_line() -> String {
+ 
+ /// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
+ pub fn paint_logo(p: &egui::Painter, r: Rect) {
++    if crate::office_overlay::paint_logo(p, r) {
++        return;
++    }
++    if crate::office_overlay::paint_logo(p, r) {
++        return;
++    }
+     let orange = Color32::from_rgb(0xF2, 0x6B, 0x1D);
+     let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
+     let card = r.shrink(r.width() * 0.08);
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 155b139..db3abcd 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1051,6 +1051,9 @@ impl SlideApp {
+             }
+             "app.links" => {
+                 use deckcraft_engine::links::*;
++                if !(office_overlay::COMMUNITY || office_overlay::UPSTREAM_LINKS) {
++                    return Ok(json!({}));
++                }
+                 return Ok(json!({"discord": DISCORD, "website": WEBSITE, "apps": APPS, "appPage": APP_PAGE, "github": GITHUB}));
+             }
+             _ => return Err(format!("unknown UI command `{id}`")),
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 2045c29..2d4e735 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -2116,11 +2116,13 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
+             }
+         }
+     });
+-    group(ui, |ui| {
+-        if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
+-            app.open_url(deckcraft_engine::links::APP_PAGE);
+-        }
+-    });
++    if crate::office_overlay::UPSTREAM_LINKS {
++        group(ui, |ui| {
++            if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
++                app.open_url(deckcraft_engine::links::APP_PAGE);
++            }
++        });
++    }
+ }
+ 
+ fn comment_nav(app: &mut SlideApp, ui: &mut Ui, forward: bool) {

@@ -1,0 +1,140 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:15:51 +0500
+Subject: [PATCH 102/102] ui-egui: append the overlay's fallback fonts last in
+ every interface family and to the slide font database
+
+font_definitions appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans, office-fallback-mono)
+after every other face, and install_fonts_with registers the sans subset once in the slide font
+database, so U+02BB, U+02BC and Uzbek Cyrillic have a glyph in the interface and on web slides
+while upstream's metrics stay unchanged. Adds the cmap coverage tests.
+---
+ crates/ui-egui/src/office_overlay.rs       | 11 ++++
+ crates/ui-egui/src/office_overlay_tests.rs | 77 ++++++++++++++++++++++
+ crates/ui-egui/src/theme.rs                |  2 +
+ 3 files changed, 90 insertions(+)
+
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 8d33297..dc30b5e 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -117,3 +117,14 @@ pub fn paint_logo(p: &egui::Painter, r: egui::Rect) -> bool {
+     p.image(texture.id(), r, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
+     true
+ }
++
++/// Register the sans fallback in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
++/// Cyrillic: the database asks every loaded face before it gives up on a character.
++pub fn register_document_fonts() {
++    static ONCE: std::sync::Once = std::sync::Once::new();
++    ONCE.call_once(|| {
++        if let Some((_, bytes)) = FALLBACK_FONTS.first() {
++            deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
++        }
++    });
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index e2fff62..3091e30 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -21,3 +21,80 @@ fn rebrand_follows_the_overlay() {
+ fn the_about_dialog_shows_the_product_version() {
+     assert!(crate::dialogs::version_line().starts_with(&format!("Version {}", o::VERSION)));
+ }
++
++/// The WP8 test text: Uzbek Latin with U+02BB and U+02BC, Uzbek Cyrillic (ўқғҳ), and the ruble and numero signs.
++const UZBEK_TEXT: &str = "Oʻzbekiston gʻoya maʼno Ўзбекистон қўғирчоқ ғоя ҳа ₽ №";
++
++/// Does a TrueType font's cmap (format 4 or 12) map `c`? A small reader, enough for the fallback subsets.
++fn cmap_has(font: &[u8], c: char) -> Option<bool> {
++    let u16at = |o: usize| font.get(o..o + 2).map(|b| u16::from_be_bytes([b[0], b[1]]) as usize);
++    let u32at = |o: usize| font.get(o..o + 4).map(|b| u32::from_be_bytes([b[0], b[1], b[2], b[3]]) as usize);
++    let record = (0..u16at(4)?).map(|i| 12 + i * 16).find(|&r| font.get(r..r + 4) == Some(b"cmap".as_slice()))?;
++    let cmap = u32at(record + 8)?;
++    let code = c as usize;
++    for i in 0..u16at(cmap + 2)? {
++        let sub = cmap + u32at(cmap + 4 + i * 8 + 4)?;
++        match u16at(sub)? {
++            4 => {
++                let segs = u16at(sub + 6)? / 2;
++                let (ends, starts, deltas, offsets) = (sub + 14, sub + 16 + 2 * segs, sub + 16 + 4 * segs, sub + 16 + 6 * segs);
++                for s in 0..segs {
++                    if code > u16at(ends + 2 * s)? {
++                        continue;
++                    }
++                    let start = u16at(starts + 2 * s)?;
++                    if code < start {
++                        break;
++                    }
++                    let (delta, range) = (u16at(deltas + 2 * s)?, u16at(offsets + 2 * s)?);
++                    let glyph = if range == 0 { (code + delta) & 0xFFFF } else { u16at(offsets + 2 * s + range + 2 * (code - start))? };
++                    if glyph != 0 {
++                        return Some(true);
++                    }
++                    break;
++                }
++            }
++            12 => {
++                for g in 0..u32at(sub + 12)? {
++                    let at = sub + 16 + g * 12;
++                    if (u32at(at)?..=u32at(at + 4)?).contains(&code) {
++                        return Some(true);
++                    }
++                }
++            }
++            _ => {}
++        }
++    }
++    Some(false)
++}
++
++/// The fallback faces cover every character of the test text, and they come last in every interface family,
++/// so upstream's metrics are unchanged.
++#[test]
++fn fallback_font_covers_uzbek() {
++    if !o::ACTIVE {
++        return;
++    }
++    let defs = crate::theme::font_definitions(&[]);
++    for (key, bytes) in o::FALLBACK_FONTS {
++        for ch in UZBEK_TEXT.chars().filter(|c| !c.is_whitespace()) {
++            assert_eq!(cmap_has(bytes, ch), Some(true), "{key} has no glyph for {ch:?} (U+{:04X})", ch as u32);
++        }
++    }
++    for (family, stack) in &defs.families {
++        let last = stack.last().map(String::as_str);
++        assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
++    }
++}
++
++/// Slides drawn from the font database find a face for U+02BB, U+02BC and Uzbek Cyrillic.
++#[test]
++fn slide_fonts_cover_okina() {
++    if !o::ACTIVE {
++        return;
++    }
++    o::register_document_fonts();
++    for c in ['\u{02BB}', '\u{02BC}', 'ў', 'қ', 'ғ', 'ҳ', '₽'] {
++        assert!(deckcraft_fonts::FontDb::global().fallback_for(c, 0).is_some(), "no face for {c:?}");
++    }
++}
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index 1847d47..0560c4c 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -162,6 +162,7 @@ pub fn install_fonts(ctx: &egui::Context) {
+ /// installed or embedded faces that draw text the interface faces lack (Hangul, Simplified
+ /// Chinese, Devanagari…, #101). See [`crate::uifonts`].
+ pub fn install_fonts_with(ctx: &egui::Context, extra: &[std::sync::Arc<deckcraft_fonts::FontFace>]) {
++    crate::office_overlay::register_document_fonts();
+     ctx.set_fonts(font_definitions(extra));
+ }
+ 
+@@ -191,6 +192,7 @@ pub fn font_definitions(extra: &[std::sync::Arc<deckcraft_fonts::FontFace>]) ->
+     bold.extend(defs.families.get(&FontFamily::Proportional).cloned().unwrap_or_default());
+     defs.families.insert(FontFamily::Name("bold".into()), bold);
+     add_fallback_faces(&mut defs, extra);
++    crate::office_overlay::append_fallback_fonts(&mut defs);
+     // The Japanese interface face (the first one when Inter isn't embedded) hints its en and em
+     // dashes, bars thinner than a pixel, down to nothing, so they drew as gaps in interface text;
+     // unhinted, they draw.

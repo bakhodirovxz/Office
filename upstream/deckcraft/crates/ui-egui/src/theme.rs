@@ -162,6 +162,7 @@ pub fn install_fonts(ctx: &egui::Context) {
 /// installed or embedded faces that draw text the interface faces lack (Hangul, Simplified
 /// Chinese, Devanagari…, #101). See [`crate::uifonts`].
 pub fn install_fonts_with(ctx: &egui::Context, extra: &[std::sync::Arc<deckcraft_fonts::FontFace>]) {
+    crate::office_overlay::register_document_fonts();
     ctx.set_fonts(font_definitions(extra));
 }
 
@@ -191,6 +192,7 @@ pub fn font_definitions(extra: &[std::sync::Arc<deckcraft_fonts::FontFace>]) -> 
     bold.extend(defs.families.get(&FontFamily::Proportional).cloned().unwrap_or_default());
     defs.families.insert(FontFamily::Name("bold".into()), bold);
     add_fallback_faces(&mut defs, extra);
+    crate::office_overlay::append_fallback_fonts(&mut defs);
     // The Japanese interface face (the first one when Inter isn't embedded) hints its en and em
     // dashes, bars thinner than a pixel, down to nothing, so they drew as gaps in interface text;
     // unhinted, they draw.

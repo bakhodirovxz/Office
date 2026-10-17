@@ -141,8 +141,8 @@ fn export_inner(pres: &Presentation, opts: &PdfOptions) -> Result<Vec<u8>> {
     }
     let title = opts.title.clone().unwrap_or_else(|| pres.props.title.clone());
     let metadata = Metadata {
-        creator: "DeckCraft".into(),
-        producer: "DeckCraft".into(),
+        creator: option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft").into(),
+        producer: option_env!("OFFICE_PRODUCT_NAME").unwrap_or("DeckCraft").into(),
         title: (!title.trim().is_empty()).then_some(title),
         authors: if pres.props.author.trim().is_empty() { Vec::new() } else { vec![pres.props.author.clone()] },
         ..Default::default()
