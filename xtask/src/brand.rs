@@ -171,6 +171,33 @@ fn count(hay: &[u8], needle: &[u8]) -> usize {
     n
 }
 
+/// Occurrences of `needle`, split into those inside an embedded translation catalog record (a line holding a tab: the
+/// catalogs are `include_str!`ed TSV files, so upstream's own community keys and translations travel with them although
+/// nothing shows them) and all others. Only the others are leaks.
+fn count_split(hay: &[u8], needle: &[u8]) -> (usize, usize) {
+    let (mut code, mut catalog) = (0, 0);
+    let mut i = 0;
+    while i + needle.len() <= hay.len() {
+        let Some(p) = hay[i..].windows(needle.len()).position(|w| w == needle) else { break };
+        let at = i + p;
+        // A catalog record is a short line holding a tab; anything else (a literal in rodata) is code.
+        const RECORD: usize = 1500;
+        let before = hay[at.saturating_sub(RECORD)..at].iter().rposition(|&b| b == b'\n');
+        let after = hay[at..(at + RECORD).min(hay.len())].iter().position(|&b| b == b'\n');
+        let is_record = match (before, after) {
+            (Some(bf), Some(af)) => hay[at.saturating_sub(RECORD) + bf + 1..at + af].contains(&b'\t'),
+            _ => false,
+        };
+        if is_record {
+            catalog += 1;
+        } else {
+            code += 1;
+        }
+        i = at + needle.len();
+    }
+    (code, catalog)
+}
+
 fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
     let target = PathBuf::from(std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into()));
     let mut list: Vec<PathBuf> = files.iter().map(PathBuf::from).collect();
@@ -212,10 +239,13 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
         let bytes = fs::read(f).map_err(|e| format!("{}: {e}", f.display()))?;
         let mut line = format!("{}: {} bytes;", f.display(), bytes.len());
         for t in forbidden {
-            let n = count(&bytes, t.as_bytes());
-            if n > 0 {
+            let (code, catalog) = count_split(&bytes, t.as_bytes());
+            if code > 0 {
                 fails += 1;
-                line.push_str(&format!(" LEAK {t}={n};"));
+                line.push_str(&format!(" LEAK {t}={code};"));
+            }
+            if catalog > 0 {
+                line.push_str(&format!(" inert-in-catalog {t}={catalog};"));
             }
         }
         for (name, sig) in &sigs {

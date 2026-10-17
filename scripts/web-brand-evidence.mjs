@@ -31,11 +31,12 @@ const STEPS = {
   docs: [
     ['wait', 500], ['shot', `${tag}-docs-web`],
     ['click', 60, 652], ['wait', 2500], ['shot', `${tag}-docs-web-about`],
-    ['key', 'Escape'], ['wait', 500], ['click', 315, 180], ['wait', 3000], ['click', 600, 300], ['insert'], ['wait', 1500], ['shot', 'font-docs-web'],
+    ['key', 'Escape'], ['wait', 500], ['click', 315, 180], ['wait', 7000], ['click', 600, 300], ['insert'], ['wait', 2500], ['shot', 'font-docs-web'],
   ],
   sheets: [
     ['wait', 500], ['shot', `${tag}-sheets-web`],
-    ['click', 300, 200], ['insert'], ['key', 'Enter'], ['wait', 1500], ['shot', 'font-sheets-web'],
+    ['click', 631, 53], ['wait', 1000], ['click', 272, 110], ['wait', 2000], ['shot', `${tag}-sheets-web-about`],
+    ['key', 'Escape'], ['wait', 500], ['click', 700, 400], ['click', 300, 200], ['insert'], ['key', 'Enter'], ['wait', 1500], ['shot', 'font-sheets-web'],
   ],
   slides: [['wait', 500], ['shot', `${tag}-slides-web`]],
 };
