@@ -1,0 +1,59 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 15:53:53 +0500
+Subject: [PATCH 102/102] ui-egui: append the overlay's fallback fonts last in
+ every interface family
+
+font_definitions_for_platform appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans,
+office-fallback-mono) after every other face, so U+02BB, U+02BC and Uzbek Cyrillic have a glyph while
+upstream's metrics stay unchanged. Adds the cmap coverage test fallback_font_covers_uzbek.
+---
+ crates/ui-egui/src/office_overlay_tests.rs | 25 ++++++++++++++++++++++
+ crates/ui-egui/src/theme.rs                |  1 +
+ 2 files changed, 26 insertions(+)
+
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 7d084a3c..7c9c09c5 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -24,3 +24,28 @@ fn hidden_commands_follow_the_flags() {
+     assert_eq!(o::hidden_command("help.check_updates"), !o::UPDATE_CHECK);
+     assert!(!o::hidden_command("help.about"));
+ }
++
++/// The WP8 test text: Uzbek Latin with U+02BB and U+02BC, Uzbek Cyrillic (ўқғҳ), and the ruble and numero signs.
++const UZBEK_TEXT: &str = "Oʻzbekiston gʻoya maʼno Ўзбекистон қўғирчоқ ғоя ҳа ₽ №";
++
++/// Every character of the test text is in the cmap of some face of every interface family, and the overlay's
++/// fallback faces come last, so upstream's metrics are unchanged.
++#[test]
++fn fallback_font_covers_uzbek() {
++    use skrifa::MetadataProvider as _;
++    if !o::ACTIVE {
++        return;
++    }
++    let defs = crate::theme::font_definitions();
++    for (family, stack) in &defs.families {
++        let last = stack.last().map(String::as_str);
++        assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
++        for ch in UZBEK_TEXT.chars().filter(|c| !c.is_whitespace()) {
++            let found = stack
++                .iter()
++                .filter_map(|name| defs.font_data.get(name))
++                .any(|data| skrifa::FontRef::from_index(&data.font, data.index).is_ok_and(|font| font.charmap().map(ch).is_some()));
++            assert!(found, "{family:?} has no glyph for {ch:?} (U+{:04X})", ch as u32);
++        }
++    }
++}
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index 3f43a03d..ac8061a6 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -401,6 +401,7 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
+             }
+         }
+     }
++    crate::office_overlay::append_fallback_fonts(&mut fonts);
+     let fallback: Vec<String> = fonts.families[&FontFamily::Proportional].clone();
+     for (fam, primary) in [("medium", "Inter-Medium"), ("semibold", "Inter-SemiBold")] {
+         let mut stack = vec![primary.to_owned()];

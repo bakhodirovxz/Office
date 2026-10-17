@@ -1,0 +1,241 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 15:53:13 +0500
+Subject: [PATCH 101/102] ui-egui, app: turn off upstream community chrome,
+ brand marks and update check under the overlay
+
+With OFFICE_OVERLAY_DIR set at build time: the ArtCraft wordmark and mark are not compiled in
+(the overlay icon is drawn instead), the Discord button, the Home community card and the
+About 'Part of' row are not drawn, the community/website help commands are hidden and
+inert, and the update source is not installed (no network call, no menu entry).
+Every change is gated on constants from office_overlay; without an overlay the behaviour
+is upstream's.
+---
+ apps/pdfcraft/src/main.rs      |  4 +++-
+ crates/ui-egui/src/chrome.rs   | 11 +++++++---
+ crates/ui-egui/src/commands.rs |  8 ++++---
+ crates/ui-egui/src/dialogs.rs  | 10 +++++----
+ crates/ui-egui/src/home.rs     | 38 ++++++++++++++++++----------------
+ crates/ui-egui/src/palette.rs  |  2 +-
+ crates/ui-egui/src/updates.rs  |  2 +-
+ crates/ui-egui/src/widgets.rs  | 17 +++++++++++++++
+ 8 files changed, 61 insertions(+), 31 deletions(-)
+
+diff --git a/apps/pdfcraft/src/main.rs b/apps/pdfcraft/src/main.rs
+index 85f630a4..c8c83f21 100644
+--- a/apps/pdfcraft/src/main.rs
++++ b/apps/pdfcraft/src/main.rs
+@@ -386,7 +386,9 @@ fn app_creator<'a>(
+         {
+             app.motion.source = Some(motion::source());
+         }
+-        app.update_source = Some(std::sync::Arc::new(updates::latest_release));
++        if pdfcraft_ui_egui::office_overlay::UPDATE_CHECK {
++            app.update_source = Some(std::sync::Arc::new(updates::latest_release));
++        }
+         app.printer_source = Some(pdfcraft_ui_egui::system_printers());
+         app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));
+         #[cfg(target_os = "macos")]
+diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
+index 84e62622..824a37d7 100644
+--- a/crates/ui-egui/src/chrome.rs
++++ b/crates/ui-egui/src/chrome.rs
+@@ -67,9 +67,10 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                     app.combine_tab.focused = false;
+                 }
+                 // Keep the two icon buttons, Discord's text/padding and three gaps outside the scrolling tabs.
+-                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discord".into(), theme::medium(13.0), t.text).size().x)
++                let discord = if crate::office_overlay::COMMUNITY { "Discord" } else { "" };
++                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap(discord.into(), theme::medium(13.0), t.text).size().x)
+                     + 2.0 * button
+-                    + 50.0
++                    + if crate::office_overlay::COMMUNITY { 50.0 } else { 12.0 }
+                     + window_controls::width(&controls.right);
+                 // Open stays in sight after the tabs: its icon, text and padding, and the gaps around it.
+                 let open_width = ui.fonts_mut(|f| f.layout_no_wrap(tl!("Open").into(), theme::medium(13.0), t.text).size().x) + 38.0 + 12.0;
+@@ -300,7 +301,11 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                         app.dialog = Some(Dialog::Shortcuts);
+                     }
+                     // One click to the community, from anywhere in the app.
+-                    if widgets::ghost_button_sized(ui, "messages-square", "Discord", tab_h).on_hover_text(pdfcraft_engine::links::DISCORD).clicked() {
++                    if crate::office_overlay::COMMUNITY
++                        && widgets::ghost_button_sized(ui, "messages-square", "Discord", tab_h)
++                            .on_hover_text(pdfcraft_engine::links::DISCORD)
++                            .clicked()
++                    {
+                         app.execute("help.discord");
+                     }
+                 });
+diff --git a/crates/ui-egui/src/commands.rs b/crates/ui-egui/src/commands.rs
+index e3609fcc..7be3b748 100644
+--- a/crates/ui-egui/src/commands.rs
++++ b/crates/ui-egui/src/commands.rs
+@@ -207,7 +207,9 @@ impl PdfCraftApp {
+                 }
+                 self.dialog = Some(Dialog::NumberPages);
+             }
+-            link if pdfcraft_engine::links::for_command(link).is_some() => {
++            link if (crate::office_overlay::COMMUNITY || crate::office_overlay::UPSTREAM_LINKS)
++                && pdfcraft_engine::links::for_command(link).is_some() =>
++            {
+                 if let Some(l) = pdfcraft_engine::links::for_command(link) {
+                     self.open_url(l.url);
+                 }
+@@ -666,7 +668,7 @@ impl PdfCraftApp {
+             "page.split" => self.dialog = Some(Dialog::Split),
+             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
+             "help.about" => self.dialog = Some(Dialog::About),
+-            "help.check_updates" => self.check_for_updates(),
++            "help.check_updates" if crate::office_overlay::UPDATE_CHECK => self.check_for_updates(),
+             _ => return false,
+         }
+         true
+@@ -759,7 +761,7 @@ fn tab_after(current: Option<usize>, count: usize, forward: bool) -> Option<usiz
+ 
+ /// Render a top-level menu's registered commands (with live labels, shortcuts and enablement).
+ pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str) {
+-    for spec in commands::menu(menu) {
++    for spec in commands::menu(menu).filter(|s| !crate::office_overlay::hidden_command(s.id)) {
+         let label = commands::current_label(spec, &app.session, app.active_ids().map(|(_, id)| id));
+         let label = crate::i18n::menu_label(spec.id, &label);
+         // Open Recent is a submenu of the live recent list, not one action: disabled while the
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 975d2b0d..e0b94771 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -1172,10 +1172,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
+                             ui.label(egui::RichText::new(crate::office_overlay::attribution()).color(t.text_muted).small());
+                         }
+                         ui.add_space(12.0);
+-                        ui.horizontal(|ui| {
+-                            ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
+-                            widgets::artcraft_logo(ui, 16.0);
+-                        });
++                        if crate::office_overlay::COMMUNITY {
++                            ui.horizontal(|ui| {
++                                ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
++                                widgets::artcraft_logo(ui, 16.0);
++                            });
++                        }
+                         ui.add_space(6.0);
+                         if let Some(cmd) = widgets::community_links(ui) {
+                             link_command = Some(cmd);
+diff --git a/crates/ui-egui/src/home.rs b/crates/ui-egui/src/home.rs
+index 3e70f34e..6442b327 100644
+--- a/crates/ui-egui/src/home.rs
++++ b/crates/ui-egui/src/home.rs
+@@ -29,26 +29,28 @@ pub fn show(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                     .font(theme::regular(14.0)),
+             );
+             ui.add_space(14.0);
+-            egui::Frame::NONE
+-                .fill(t.card)
+-                .stroke(Stroke::new(1.0, t.border))
+-                .corner_radius(CornerRadius::same(12))
+-                .inner_margin(egui::Margin::same(14))
+-                .show(ui, |ui| {
+-                    ui.set_width(ui.available_width());
+-                    ui.horizontal(|ui| {
+-                        widgets::artcraft_mark(ui, 28.0);
+-                        ui.vertical(|ui| {
+-                            ui.label(egui::RichText::new(tl!("Join the ArtCraft community")).font(theme::semibold(15.0)));
+-                            ui.label(egui::RichText::new(tl!("Get help, share feedback and follow development on Discord.")).color(t.text_muted));
++            if crate::office_overlay::COMMUNITY {
++                egui::Frame::NONE
++                    .fill(t.card)
++                    .stroke(Stroke::new(1.0, t.border))
++                    .corner_radius(CornerRadius::same(12))
++                    .inner_margin(egui::Margin::same(14))
++                    .show(ui, |ui| {
++                        ui.set_width(ui.available_width());
++                        ui.horizontal(|ui| {
++                            widgets::artcraft_mark(ui, 28.0);
++                            ui.vertical(|ui| {
++                                ui.label(egui::RichText::new(tl!("Join the ArtCraft community")).font(theme::semibold(15.0)));
++                                ui.label(egui::RichText::new(tl!("Get help, share feedback and follow development on Discord.")).color(t.text_muted));
++                            });
+                         });
++                        ui.add_space(8.0);
++                        if let Some(cmd) = widgets::community_links(ui) {
++                            app.execute(cmd);
++                        }
+                     });
+-                    ui.add_space(8.0);
+-                    if let Some(cmd) = widgets::community_links(ui) {
+-                        app.execute(cmd);
+-                    }
+-                });
+-            ui.add_space(22.0);
++                ui.add_space(22.0);
++            }
+ 
+             egui::Frame::NONE
+                 .fill(t.card)
+diff --git a/crates/ui-egui/src/palette.rs b/crates/ui-egui/src/palette.rs
+index 4f419792..f87bcba9 100644
+--- a/crates/ui-egui/src/palette.rs
++++ b/crates/ui-egui/src/palette.rs
+@@ -52,7 +52,7 @@ pub fn show(app: &mut PdfCraftApp, ctx: &egui::Context) {
+     let q = pdfcraft_render::text::fold_case(app.palette_query.trim());
+     let mut hits: Vec<(usize, Hit)> = Vec::new();
+     let active = app.active_ids().map(|(_, id)| id);
+-    for spec in pdfcraft_engine::commands::COMMANDS {
++    for spec in pdfcraft_engine::commands::COMMANDS.iter().filter(|s| !crate::office_overlay::hidden_command(s.id)) {
+         let label = pdfcraft_engine::commands::current_label(spec, &app.session, active);
+         let translated = crate::i18n::command_label(&label);
+         if let Some(s) = score(&translated, &q).or_else(|| score(&label, &q)).or_else(|| score(spec.id, &q).map(|s| s + 50)) {
+diff --git a/crates/ui-egui/src/updates.rs b/crates/ui-egui/src/updates.rs
+index 4e7957e1..ac28d824 100644
+--- a/crates/ui-egui/src/updates.rs
++++ b/crates/ui-egui/src/updates.rs
+@@ -109,7 +109,7 @@ impl PdfCraftApp {
+ 
+ /// The Updates dialog.
+ pub(crate) fn dialog(app: &mut PdfCraftApp, ctx: &egui::Context) {
+-    if !app.updates.open {
++    if !crate::office_overlay::UPDATE_CHECK || !app.updates.open {
+         return;
+     }
+     let t = theme::Tokens::get(ctx);
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index 4f5aaa79..28d7b649 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -500,6 +500,13 @@ pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {
+ }
+ 
+ /// The ArtCraft wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
++/// With the office overlay the mark is not compiled in: nothing is drawn.
++#[cfg(office_overlay)]
++pub fn artcraft_logo(ui: &mut egui::Ui, _height: f32) -> Response {
++    ui.allocate_response(egui::Vec2::ZERO, egui::Sense::hover())
++}
++
++#[cfg(not(office_overlay))]
+ pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
+     let dark = ui.visuals().dark_mode;
+     let (uri, bytes): (&str, &'static [u8]) = if dark {
+@@ -511,6 +518,13 @@ pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
+ }
+ 
+ /// The ArtCraft mark (brand blue, works on light and dark), `size` points square.
++/// With the office overlay the overlay's own icon is drawn instead.
++#[cfg(office_overlay)]
++pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
++    crate::office_overlay::logo(ui, size)
++}
++
++#[cfg(not(office_overlay))]
+ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
+     ui.add(
+         egui::Image::from_bytes("bytes://artcraft-mark.svg", include_bytes!("../../../docs/brand/artcraft-mark.svg"))
+@@ -523,6 +537,9 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
+ /// Returns the registry command of the one clicked.
+ pub fn community_links(ui: &mut egui::Ui) -> Option<&'static str> {
+     let mut clicked = None;
++    if !(crate::office_overlay::COMMUNITY || crate::office_overlay::UPSTREAM_LINKS) {
++        return clicked;
++    }
+     ui.horizontal_wrapped(|ui| {
+         ui.spacing_mut().item_spacing = vec2(8.0, 8.0);
+         for (i, l) in pdfcraft_engine::links::LINKS.iter().enumerate() {
