@@ -1,0 +1,344 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 18 Oct 2026 00:48:33 +0500
+Subject: [PATCH] ui-egui: translate the P1 interface strings at the ribbon, menu, dialog and backstage helpers
+
+Routes the interface text that Phase 1 translates through i18n::t() at the display sites, with no
+change to any label, id or command: the ribbon tab row and the helpers big(), small(), tip() and
+menu_item(); the command palette labels; the dialog title, the OK/Cancel buttons, dialog field
+labels and the About blurb; the Backstage helpers (side-menu entries, page heading, heading, dim,
+arrow_link, the search hint, tiles, square buttons, place rows, tasks), the Appearance dropdown and
+the former rebrand("...") sites, which now go through t() (it rebrands too). With English selected,
+or without catalogs, every string is what it was. Strings that do not reach these helpers stay
+English until a later phase wraps them; the catalog can already hold any string that does.
+---
+ crates/ui-egui/src/backstage.rs | 54 ++++++++++++++++++++---------------------
+ crates/ui-egui/src/dialogs.rs   | 16 ++++++------
+ crates/ui-egui/src/menus.rs     |  2 +-
+ crates/ui-egui/src/ribbon.rs    | 17 +++++++------
+ 4 files changed, 47 insertions(+), 42 deletions(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 127fec1..accfced 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -395,7 +395,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+             egui::Frame::NONE.inner_margin(egui::Margin { left: 48, right: 36, top: 22, bottom: 32 }).show(ui, |ui| {
+                 ui.set_max_width(CONTENT_W);
+                 if bs.page != Page::Home {
+-                    ui.label(RichText::new(bs.page.label()).font(theme::bold(22.0)).color(t.text));
++                    ui.label(RichText::new(crate::i18n::t(bs.page.label())).font(theme::bold(22.0)).color(t.text));
+                     ui.add_space(16.0);
+                 }
+                 // Errors raised on a backstage page (a missing recent file, a failed open) would
+@@ -435,7 +435,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+ fn nav_item(ui: &mut Ui, nav: Nav, bs: &Backstage, index: usize, t: &Tokens) -> egui::Response {
+     let (rect, resp) = ui.allocate_exact_size(vec2(NAV_W, ITEM_H), Sense::click());
+     let selected = nav == Nav::Page(bs.page);
+-    let label = nav.label();
++    let label = crate::i18n::t(nav.label());
+     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, label));
+     let p = ui.painter();
+     let row = rect.shrink2(vec2(6.0, 1.0));
+@@ -463,31 +463,31 @@ fn separator(ui: &mut Ui, t: &Tokens) {
+ 
+ fn heading(ui: &mut Ui, text: &str) {
+     let t = Tokens::get(ui.ctx());
+-    ui.label(RichText::new(text).font(theme::bold(16.0)).color(t.text));
++    ui.label(RichText::new(crate::i18n::t(text)).font(theme::bold(16.0)).color(t.text));
+     ui.add_space(8.0);
+ }
+ 
+ fn dim(ui: &mut Ui, text: &str) {
+     let t = Tokens::get(ui.ctx());
+-    ui.label(RichText::new(text).font(theme::font(12.5)).color(t.text_dim));
++    ui.label(RichText::new(crate::i18n::t(text)).font(theme::font(12.5)).color(t.text_dim));
+ }
+ 
+ /// A link with an arrow (More themes →): true when clicked.
+ fn arrow_link(ui: &mut Ui, text: &str) -> bool {
+     let t = Tokens::get(ui.ctx());
+-    ui.add(egui::Label::new(RichText::new(format!("{text}  →")).font(theme::font(12.5)).color(t.accent)).sense(Sense::click()))
++    ui.add(egui::Label::new(RichText::new(format!("{}  →", crate::i18n::t(text))).font(theme::font(12.5)).color(t.accent)).sense(Sense::click()))
+         .on_hover_cursor(egui::CursorIcon::PointingHand)
+         .clicked()
+ }
+ 
+ /// A search box; true when its text changed.
+ fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
+-    ui.add(egui::TextEdit::singleline(query).hint_text(hint).desired_width(width)).changed()
++    ui.add(egui::TextEdit::singleline(query).hint_text(crate::i18n::t(hint)).desired_width(width)).changed()
+ }
+ 
+ /// A new-presentation tile: a theme preview drawn in code (or a blank slide) over its name.
+ fn tile(ui: &mut Ui, label: &str, theme: Option<&deckcraft_model::Theme>, big: bool) -> egui::Response {
+-    let label = crate::office_overlay::rebrand(label);
++    let label = crate::i18n::t(label);
+     let t = Tokens::get(ui.ctx());
+     let thumb_w = if big { 200.0 } else { 160.0 };
+     let (rect, resp) = ui.allocate_exact_size(vec2(thumb_w + 16.0, thumb_w * 9.0 / 16.0 + 44.0), Sense::click());
+@@ -637,6 +637,7 @@ fn recent_list(app: &mut SlideApp, ui: &mut Ui, query: &str, limit: usize) {
+ 
+ /// A large square command button (Print, Create PDF, Check for Issues…).
+ fn square_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> egui::Response {
++    let label = crate::i18n::t(label);
+     let t = Tokens::get(ui.ctx());
+     let (rect, resp) = ui.allocate_exact_size(vec2(88.0, 80.0), if enabled { Sense::click() } else { Sense::hover() });
+     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, label));
+@@ -652,6 +653,7 @@ fn square_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> egui::R
+ 
+ /// A row of a page's own list on the left (Open's places, Export's tasks).
+ fn place_row(ui: &mut Ui, icon: Icon, label: &str, selected: bool, width: f32) -> egui::Response {
++    let label = crate::i18n::t(label);
+     let t = Tokens::get(ui.ctx());
+     let (rect, resp) = ui.allocate_exact_size(vec2(width, 44.0), Sense::click());
+     resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, label));
+@@ -676,7 +678,7 @@ fn task(ui: &mut Ui, icon: Icon, button: &str, title: &str, detail: &str, enable
+         ui.add_space(12.0);
+         ui.vertical(|ui| {
+             ui.add_space(4.0);
+-            ui.label(RichText::new(title).font(theme::font(15.0)).color(t.text));
++            ui.label(RichText::new(crate::i18n::t(title)).font(theme::font(15.0)).color(t.text));
+             dim(ui, detail);
+         });
+     });
+@@ -932,11 +934,11 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+     ui.label(RichText::new(&title).font(theme::font(15.0)).color(t.text));
+     dim(ui, path.as_deref().unwrap_or("Not saved yet"));
+     ui.add_space(14.0);
+-    let current = crate::office_overlay::rebrand(SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1));
++    let current = crate::i18n::t(SAVE_TYPES.iter().find(|s| s.0 == bs.file_type).map_or(SAVE_TYPES[0].1, |s| s.1));
+     ui.horizontal(|ui| {
+         egui::ComboBox::from_id_salt("backstage_save_type").width(340.0).selected_text(current).show_ui(ui, |ui| {
+             for (id, label, _) in SAVE_TYPES {
+-                if ui.selectable_label(bs.file_type == id, crate::office_overlay::rebrand(label)).clicked() {
++                if ui.selectable_label(bs.file_type == id, crate::i18n::t(label)).clicked() {
+                     bs.file_type = id;
+                 }
+             }
+@@ -960,7 +962,7 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+     });
+     ui.add_space(8.0);
+     if let Some((_, _, detail)) = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type) {
+-        dim(ui, crate::office_overlay::rebrand(detail));
++        dim(ui, crate::i18n::t(detail));
+     }
+ }
+ 
+@@ -1042,7 +1044,7 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+             ui.add_space(6.0);
+             dim(
+                 ui,
+-                crate::office_overlay::rebrand(if app.services.pick_save.is_some() {
++                crate::i18n::t(if app.services.pick_save.is_some() {
+                     "DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer."
+                 } else {
+                     "DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer."
+@@ -1298,7 +1300,7 @@ fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+                     ui.add_space(8.0);
+                     for (id, label, detail) in SAVE_TYPES.iter().filter(|s| s.0 != "pdf") {
+                         let selected = bs.file_type == *id;
+-                        let label = &crate::office_overlay::rebrand(label);
++                        let label = &crate::i18n::t(label);
+                         let (rect, resp) = ui.allocate_exact_size(vec2(520.0, 46.0), Sense::click());
+                         resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, *label));
+                         let p = ui.painter();
+@@ -1343,13 +1345,16 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             ui.set_width(340.0);
+             heading(ui, "Appearance");
+             let dark = app.ui.brightness == theme::Brightness::Dark;
+-            egui::ComboBox::from_id_salt("backstage_appearance").width(260.0).selected_text(if dark { "Dark" } else { "Light" }).show_ui(ui, |ui| {
+-                for (on, label) in [(false, "Light"), (true, "Dark")] {
+-                    if ui.selectable_label(dark == on, label).clicked() {
+-                        let _ = app.run("view.dark", json!({"on": on}));
++            egui::ComboBox::from_id_salt("backstage_appearance")
++                .width(260.0)
++                .selected_text(crate::i18n::t(if dark { "Dark" } else { "Light" }))
++                .show_ui(ui, |ui| {
++                    for (on, label) in [(false, "Light"), (true, "Dark")] {
++                        if ui.selectable_label(dark == on, crate::i18n::t(label)).clicked() {
++                            let _ = app.run("view.dark", json!({"on": on}));
++                        }
+                     }
+-                }
+-            });
++                });
+             if crate::i18n::LANGUAGES.len() > 1 {
+                 ui.add_space(16.0);
+                 heading(ui, "Interface Language");
+@@ -1364,12 +1369,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             }
+             ui.add_space(16.0);
+             heading(ui, "User Information");
+-            dim(
+-                ui,
+-                crate::office_overlay::rebrand(
+-                    "DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.",
+-                ),
+-            );
++            dim(ui, crate::i18n::t("DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device."));
+         });
+         ui.add_space(40.0);
+         ui.vertical(|ui| {
+@@ -1385,8 +1385,8 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+             if task(
+                 ui,
+                 Icon::Help,
+-                crate::office_overlay::rebrand("About DeckCraft"),
+-                crate::office_overlay::rebrand("About DeckCraft"),
++                crate::i18n::t("About DeckCraft"),
++                crate::i18n::t("About DeckCraft"),
+                 "The version, the people and models who built it, and where to find us.",
+                 true,
+             ) {
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 47279b1..31523ec 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -30,7 +30,7 @@ impl Dialog {
+ }
+ 
+ fn title(id: &str) -> &'static str {
+-    crate::office_overlay::rebrand(upstream_title(id))
++    crate::i18n::t(upstream_title(id))
+ }
+ 
+ fn upstream_title(id: &str) -> &'static str {
+@@ -132,12 +132,14 @@ fn buttons(ui: &mut Ui, ok_label: &str) -> (bool, bool) {
+     ui.add_space(8.0);
+     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+         let t = Tokens::get(ui.ctx());
+-        if ui.add(egui::Button::new(egui::RichText::new(ok_label).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0))).clicked()
++        if ui
++            .add(egui::Button::new(egui::RichText::new(crate::i18n::t(ok_label)).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)))
++            .clicked()
+             || ui.input(|i| i.key_pressed(egui::Key::Enter))
+         {
+             ok = true;
+         }
+-        if ui.add(egui::Button::new("Cancel").min_size(vec2(72.0, 24.0))).clicked() {
++        if ui.add(egui::Button::new(crate::i18n::t("Cancel")).min_size(vec2(72.0, 24.0))).clicked() {
+             cancel = true;
+         }
+     });
+@@ -172,7 +174,7 @@ fn restore_preferences(app: &mut SlideApp, d: &Dialog) {
+ fn field(ui: &mut Ui, d: &mut Dialog, label: &str, key: &str, default: &str) {
+     let mut v = d.get(key, default);
+     ui.horizontal(|ui| {
+-        ui.add_sized(vec2(120.0, 20.0), egui::Label::new(label));
++        ui.add_sized(vec2(120.0, 20.0), egui::Label::new(crate::i18n::t(label)));
+         ui.add(egui::TextEdit::singleline(&mut v).desired_width(180.0));
+     });
+     d.fields.insert(key.into(), v);
+@@ -2081,7 +2083,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+             let tab = d.get("tab", "about");
+             ui.horizontal(|ui| {
+                 for (k, l) in [("about", "About"), ("contributors", "Contributors"), ("models", "Models")] {
+-                    if ui.selectable_label(tab == k, l).clicked() {
++                    if ui.selectable_label(tab == k, crate::i18n::t(l)).clicked() {
+                         d.fields.insert("tab".into(), k.into());
+                     }
+                 }
+@@ -2621,8 +2623,8 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+         ui.label(egui::RichText::new(crate::office_overlay::app_name()).font(theme::bold(22.0)));
+         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
+         ui.add_space(6.0);
+-        ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
+-        ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
++        ui.label(crate::i18n::t("Presentations and slide shows, rebuilt from scratch in pure Rust."));
++        ui.label(crate::i18n::t("An open-source, clean-room project. Not affiliated with Microsoft."));
+         if !crate::office_overlay::attribution().is_empty() {
+             ui.label(crate::office_overlay::attribution());
+         }
+diff --git a/crates/ui-egui/src/menus.rs b/crates/ui-egui/src/menus.rs
+index 665fd39..5cbf801 100644
+--- a/crates/ui-egui/src/menus.rs
++++ b/crates/ui-egui/src/menus.rs
+@@ -91,7 +91,7 @@ fn palette_items(session: &deckcraft_engine::Session, q: &str) -> Vec<(String, S
+             crate::UI_COMMANDS
+                 .iter()
+                 .filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3))
+-                .map(|c| (c.0.to_string(), crate::office_overlay::rebrand(c.1).to_string(), c.2)),
++                .map(|c| (c.0.to_string(), crate::i18n::t(c.1).to_string(), c.2)),
+         )
+         .filter(|(id, label, _)| q.is_empty() || label.to_lowercase().contains(q) || id.to_lowercase().contains(q))
+         .collect();
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 2d4e735..49ea68d 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -171,14 +171,15 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+         let mut x = rect.min.x + 12.0;
+         let y = rect.min.y + 2.0;
+         {
+-            let w = ui.fonts_mut(|f| f.layout_no_wrap("File".to_string(), theme::font(13.0), t.text).size().x) + 18.0;
++            let file = crate::i18n::t("File");
++            let w = ui.fonts_mut(|f| f.layout_no_wrap(file.to_string(), theme::font(13.0), t.text).size().x) + 18.0;
+             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
+             let resp = ui.interact(r, ui.id().with("tab_file"), Sense::click());
+             resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "File"));
+             if resp.hovered() {
+                 ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
+             }
+-            ui.painter().text(r.center(), Align2::CENTER_CENTER, "File", theme::font(13.0), t.text);
++            ui.painter().text(r.center(), Align2::CENTER_CENTER, file, theme::font(13.0), t.text);
+             if resp.on_hover_text("File (Alt+F)").clicked() {
+                 app.open_backstage(crate::backstage::Page::Home);
+             }
+@@ -187,7 +188,8 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+         let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
+         for (name, contextual) in all {
+             let font = theme::font(13.0);
+-            let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 18.0;
++            let shown = crate::i18n::t(name);
++            let w = ui.fonts_mut(|f| f.layout_no_wrap(shown.to_string(), font.clone(), t.text).size().x) + 18.0;
+             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
+             let resp = ui.interact(r, ui.id().with(("tab", name)), Sense::click());
+             let active = app.ui.tab == name;
+@@ -196,7 +198,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+             }
+             let col = if contextual { t.contextual } else { t.text };
+             let f = if active { theme::bold(13.0) } else { font };
+-            ui.painter().text(r.center(), Align2::CENTER_CENTER, name, f, col);
++            ui.painter().text(r.center(), Align2::CENTER_CENTER, shown, f, col);
+             if active {
+                 let uw = (w - 20.0).max(16.0);
+                 ui.painter().rect_filled(Rect::from_center_size(pos2(r.center().x, r.max.y - 1.0), vec2(uw, 3.0)), CornerRadius::same(1), t.accent);
+@@ -255,7 +257,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+ 
+ fn big(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
+     let en = enabled(app, id);
+-    let r = big_button(ui, icon, label, en);
++    let r = big_button(ui, icon, crate::i18n::t(label), en);
+     if id == "insert.dateTime" {
+         let name = label.replace('\n', " ");
+         r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, en, &name));
+@@ -290,7 +292,7 @@ fn photo_album_button(app: &mut SlideApp, ui: &mut Ui) {
+ 
+ fn small(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
+     let en = enabled(app, id);
+-    let r = small_button(ui, icon, label, en, false).on_hover_text(tip(id, label));
++    let r = small_button(ui, icon, crate::i18n::t(label), en, false).on_hover_text(tip(id, label));
+     if r.clicked() {
+         run(app, id, p.clone());
+     }
+@@ -305,6 +307,7 @@ fn toggle(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, on
+ }
+ 
+ fn tip(id: &str, label: &str) -> String {
++    let label = crate::i18n::t(label);
+     let sc = deckcraft_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
+     match sc {
+         Some(s) => format!("{label} ({})", pretty_shortcut(s)),
+@@ -1154,7 +1157,7 @@ pub fn align_menu(app: &mut SlideApp, ui: &mut Ui) {
+ 
+ pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
+     let en = enabled(app, id);
+-    let r = small_button(ui, icon, label, en, false);
++    let r = small_button(ui, icon, crate::i18n::t(label), en, false);
+     if r.clicked() {
+         run(app, id, p);
+         ui.close();
+-- 
+2.50.0
+

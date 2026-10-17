@@ -420,3 +420,27 @@ reason = "uz-latn lacks 'Drag the selection to move it. Esc clears the selection
 evidence = "docs/phase1/evidence/i18n/test-pdf-overlay-on.log#selection_labels_and_refusals_are_translated_in_every_catalog"
 since = "2026-10-18@924c4da"
 review = "every sync"
+
+[[test]]
+app = "deckcraft"
+crate = "deckcraft-ui-egui"
+binary = "lib"
+name = "backstage::tests::every_page_renders"
+class = "brand-overlay"
+env = "any"
+reason = "Expects the Account page to show 'About DeckCraft'; with the overlay on it shows 'About Suite Slides'."
+evidence = "docs/phase1/evidence/i18n/test-slides-overlay-on.log#every_page_renders"
+since = "2026-10-18@1dc6972"
+review = "every sync"
+
+[[test]]
+app = "deckcraft"
+crate = "deckcraft-ui-egui"
+binary = "lib"
+name = "menus::tests::palette_has_one_export_entry_that_opens_the_dialog"
+class = "brand-overlay"
+env = "any"
+reason = "Looks the palette entry up by its upstream label 'About DeckCraft'; with the overlay on the palette shows the overlay name, so no entry matches (left 0, right 1)."
+evidence = "docs/phase1/evidence/i18n/test-slides-overlay-on.log#palette_has_one_export_entry_that_opens_the_dialog"
+since = "2026-10-18@1dc6972"
+review = "every sync"

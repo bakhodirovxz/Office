@@ -10,7 +10,7 @@ use std::sync::Mutex;
 
 /// The interface language code, lowercase (`en`, `ru`, `uz-latn`, ...), as the overlay keys it.
 fn lang_code() -> String {
-    ("en").to_ascii_lowercase()
+    (crate::i18n::current().code()).to_ascii_lowercase()
 }
 
 fn by_lang(table: &'static [(&'static str, &'static str)], fallback: &'static str) -> &'static str {

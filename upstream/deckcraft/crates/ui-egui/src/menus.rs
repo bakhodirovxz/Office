@@ -91,7 +91,7 @@ fn palette_items(session: &deckcraft_engine::Session, q: &str) -> Vec<(String, S
             crate::UI_COMMANDS
                 .iter()
                 .filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3))
-                .map(|c| (c.0.to_string(), crate::office_overlay::rebrand(c.1).to_string(), c.2)),
+                .map(|c| (c.0.to_string(), crate::i18n::t(c.1).to_string(), c.2)),
         )
         .filter(|(id, label, _)| q.is_empty() || label.to_lowercase().contains(q) || id.to_lowercase().contains(q))
         .collect();
