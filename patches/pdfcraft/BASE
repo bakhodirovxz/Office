@@ -1,7 +1,7 @@
 repo=pdfcraft
 url=https://github.com/storytold/pdfcraft
-sha=afa8e1843cfed613f3d403119f6c2649bce824c9
-tree=3ff3128b12409f6a9154b34a74a7b6289f2572eb
-date=2026-10-15T04:08:34-04:00
-describe=v0.8.0-201-gafa8e184
+sha=924c4da4ac2879ac9107c6c82e20ac6be5570f0a
+tree=688c09a4455ac5dc7316be87a78410285e538781
+date=2026-10-16T16:05:39-06:00
+describe=v0.8.0-220-g924c4da4
 synced=2026-10-17
