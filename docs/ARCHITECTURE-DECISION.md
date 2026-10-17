@@ -793,6 +793,19 @@ Other risks tracked but outside the top 12:
 
 ---
 
+## Appendix C. Gate decisions recorded (2026-10-17)
+
+| # | Decision | Owner's answer |
+|---|---|---|
+| Gate | Close Phase 0 and start Phase 1 | **Go** (B-15 option (a): gaps carried into Phase 1) |
+| B-1 | Product name | **Deferred.** Phase 1 uses a neutral working name from one brand config, so the real name is a one-place change |
+| B-2 | License of our layer | **MIT OR Apache-2.0** |
+| B-3 | Mobile approach | **A-web for v1, conditional**, as recommended (re-decide at the Phase 4 gate; B's binding stays compiling) |
+| B-4 | Priority order | **Fidelity (incl. the Excel engine) → mobile → co-editing** |
+| B-5 | Repo layout and upstream tracking | **W2 build domains + vendored pristine snapshot + patch queue**, as recommended (an accepted deviation from BRIEF §5) |
+| B-6 | Upstream PRs | **Not now.** Every upstream change is carried in our patch queue. This raises the sync cost (risk 1). Revisit later |
+| Others | B-7…B-14 | Still open: asked again in the Phase 1 report |
+
 ## Sources
 
 [BRIEF]: BRIEF.md

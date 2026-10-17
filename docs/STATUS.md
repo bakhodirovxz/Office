@@ -1,7 +1,14 @@
 # Status
 
-**Current phase:** 0 — Evidence and architecture decision (branch `phase-0`). **Work complete; waiting at the Phase 0 exit gate for the owner's decisions** (ADR Appendix B, B-1…B-15).
-**Last updated:** 2026-10-16 (gate report sent)
+**Current phase:** 1 — Foundation (branch `phase-1`). The Phase 0 gate was passed on 2026-10-17; the decisions are in
+ADR Appendix C:
+- name deferred;
+- MIT OR Apache-2.0;
+- W2 build domains + vendored snapshot and patch queue;
+- A-web (conditional);
+- priority fidelity → mobile → co-editing;
+- no upstream PRs for now.
+**Last updated:** 2026-10-17
 
 ## Done
 - Repo initialised; `CLAUDE.md`, `docs/BRIEF.md`, `docs/STATUS.md` created.
