@@ -1561,7 +1561,7 @@ bef9cb8bbf84		Summation with Lower Limit		todo		todo	Сумма с нижним 
 bf364efaa2f3		Address:		todo		todo	Адрес:	upstream		P2	wordcraft	crates/ui-egui/src/dialogs.rs:2028	
 bf3f7dc712cb		2×2 Identity Matrix (sparse)		todo		todo	Единичная матрица 2×2 (разреженная)	upstream		P2	wordcraft	crates/engine/src/math_gallery.rs:472	
 bf40201d5ab1		Coproduct with Limits		todo		todo	Копроизведение с пределами	upstream		P2	wordcraft	crates/engine/src/math_gallery.rs:174	
-bf8c358cde3b		WordCraft		todo		todo	WordCraft	upstream		P2	wordcraft	crates/ui-egui/src/chrome.rs:350	
+bf8c358cde3b		WordCraft		todo		todo	WordCraft	upstream		P2	wordcraft	crates/ui-egui/src/dialogs.rs:1267	
 bf9a1329ad12		Compare Documents		todo		todo	Сравнение документов	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_review.rs:37	
 bfb30b60e849		Continuous numbering		todo		todo	Сквозная нумерация	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_notes.rs:135	
 bfda1f9f479c		Hyperbolic Cosine Function		todo		todo	Гиперболический косинус	upstream		P2	wordcraft	crates/engine/src/math_gallery.rs:312	
@@ -1951,7 +1951,7 @@ eaf4007f76fd		Show changes at:		todo		todo	Показывать изменени
 eb5e7ebf6a2c		Magazine or newspaper article		todo		todo	Статья в журнале или газете	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_refs.rs:911	
 ec05c5effd4e		Number alignment:		todo		todo	Выравнивание номера:	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_lists.rs:261	
 ec10cd0e3f12		Natural Logarithm		todo		todo	Натуральный логарифм	upstream		P2	wordcraft	crates/engine/src/math_gallery.rs:394	
-ec2573365600		Craft		todo		todo	Ремесло	upstream		P2	wordcraft	crates/engine/src/cmd/design.rs:13	
+ec2573365600		Craft		todo		todo	Ремесло	upstream		P2	wordcraft	crates/ui-egui/src/office_overlay.rs:62	
 ec2e5a28784f		How many words the document holds		todo		todo	Сколько слов в документе	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_insert.rs:941	
 ec3a68c7b90c		{n} entries marked.		todo		todo	Помечено записей: {n}.	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_refs.rs:676	
 ec55972bb6db		Document Information		todo		todo	Сведения о документе	upstream		P2	wordcraft	crates/ui-egui/src/dialogs_insert.rs:938	

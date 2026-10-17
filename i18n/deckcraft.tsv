@@ -107,7 +107,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 14a7d5e12e27		From\nBeginning		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2102	
 151e6d827877		Choosing a sound file needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1721	
 15362e8e5146		Animation\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1972	
-1540d85dcd3c		Presenter View — DeckCraft		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1757	
+1540d85dcd3c		Presenter View — DeckCraft		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/show.rs:1757	
 1578dd389f71		Motion Paths		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
 15a838bf8e7c		Print Hidden Slides	Yashirin slaydlarni chop etish	draft:agent-sonnet:2026-10-17	Яширин слайдларни чоп этиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1108	
 16283c4d20c5		JPEG image (current slide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1549	
@@ -183,7 +183,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 266e270547b4		Presented by a speaker (full screen)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1157	
 267a5e340e47		Reading the file: {secs:.0} s		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:100	
 267d060d28d3		Remove\nBackground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2569	
-26939b5fde05		DeckCraft can't find “{text}”.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3220	
+26939b5fde05		DeckCraft can't find “{text}”.		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/dialogs.rs:3220	
 26b6aecddb68		Heading sample  {major}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:703	
 26c07ca0471d		Task Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:375	
 26d73cb19dbd		pointer events need x and y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:155	
@@ -242,7 +242,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 310524ff721e		Text Box Margins		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:204	
 31520eb4d6fe		Web (150 ppi): good for web pages and projectors		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3597	
 3176c4959deb		From bottom right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:102	
-3180970e92ef		{text}  →	{text}  →	draft:agent-sonnet:2026-10-17	{text}  →	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:478	
+3180970e92ef		{text}  →	{text}  →	draft:agent-sonnet:2026-10-17	{text}  →	draft:agent-sonnet:2026-10-17		todo		obsolete	deckcraft	crates/ui-egui/src/backstage.rs:478	
 31a4a8e7f64b		Fit to\nWindow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2252	
 31f0077d1cb4		Open a presentation from a folder (Ctrl+O)	Jilddan taqdimot ochish (Ctrl+O)	draft:agent-sonnet:2026-10-17	Жилддан тақдимот очиш (Cтрл+О)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	
 323787717a1c		Align Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1143	
@@ -346,6 +346,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 47f545eb1e2c		Saturation {}%		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2594	
 484c877900e3		nothing to print: no presentation is open		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:996	
 4851f74d0a54		Inter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:626	
+4857bfa9d2f2		Presenter View — {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1758	
 486ce7933efd		Wrap text in shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:393	
 4891fda17284		“{from}” isn't used explicitly.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1665	
 48b782f9f9bf		Accent 4		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1324	
@@ -377,7 +378,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 4e15183b1756		{when} · Resolved		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1273	
 4e2da29aee1b		Add Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:455	
 4e4595080ffd		WordArt style {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1275	
-4ea52942caae		{name}: DeckCraft can't open this kind of file		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:194	
+4ea52942caae		{name}: DeckCraft can't open this kind of file		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/lib.rs:194	
 4f25890ee2a3		Vertical		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2368	
 4f27570eece4		AutoCorrect Options…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2167	
 4fa3c3af5092		Loop continuously until 'Esc'		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1165	
@@ -420,6 +421,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 59d5dc256a19		White on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1798	
 5a0e2315e4b8		With Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2006	
 5a927dbfa9fe		Add Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:29	
+5aab9bf753fd		Interface Language	Interfeys tili	draft:agent-sonnet:2026-10-18	Интерфейс тили	draft:agent-sonnet:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1360	
 5ab701b42d94		Correct accidental use of cAPS LOCK key		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2096	
 5acd56283c8c		English (Canada)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:220	
 5ae6b59f4dff		Picture Style Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/picture_style.rs:23	
@@ -512,6 +514,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 6f29a49c2574		Stealth		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:597	
 6f5129ae4c4d		Contrast {:+}%		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2586	
 6f6a85f3f4f9		At		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3014	
+6fc23d45e17c		{} can't find “{text}”.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3251	
 6febb5f37687		Search commands (⇧⌘P)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:88	
 701d3750cd3a		Long Dash		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2703	
 7054547aba29		Begin size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
@@ -539,6 +542,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 75de82ea9970		Show All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/selpane.rs:129	
 7646607d57a8		Apply To All		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:42	
 768005f1d567		Content		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3245	
+7689f8a17c18		{name}: {} can't open this kind of file		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:196	
 76a28b1a653f		Select a picture to rotate it or change brightness and contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:509	
 76cd532ce5c2		Photo Album…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:240	
 76e710954f85		Learn\nMore		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2117	
@@ -573,7 +577,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 7ea31cfcc835		Loop forever		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3304	
 7efd95283713		Play from\nCurrent Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2053	
 7f191f51abcf		Slide\nSize		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1596	
-7f2eed2e322a		DeckCraft can't export “{other}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:747	
+7f2eed2e322a		DeckCraft can't export “{other}”		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/lib.rs:747	
 7f30792d3f16		First {GRID_CAP} slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1668	
 7fcc1542c3b6		Move Handle		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:47	
 7fd96707c24e		Less Contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:433	
@@ -658,6 +662,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 967e474afa4b		Last Slide Viewed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1427	
 967fa02baa2a		Text Options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:222	
 96d0d23ac8a1		Set as Default Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1259	
+96e17c467cda		missing or unknown `language`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1008	
 96eceb70544a		{page?: home|new|open|info|saveAs|print|export|account, on?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:387	
 9725d09d47db		English (Australia)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:219	
 972a331e0366		Presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1258	
@@ -826,7 +831,7 @@ b9f9c9e8f24b		Guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.r
 baa51d2f8e36		Less Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:427	
 bab8945f835d		Very Tight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:536	
 bac322d78bb6		Click to add notes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:159	
-badcd1b657ae		DeckCraft	DeckCraft	draft:agent-sonnet:2026-10-17	DeckCraft	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1359	
+badcd1b657ae		DeckCraft	DeckCraft	draft:agent-sonnet:2026-10-17	DeckCraft	draft:agent-sonnet:2026-10-17		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:283	
 badd482957ac		Previewing animations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1164	
 baf53efffb8a		{} Slide Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:312	
 bafba689e0bb		Move Insertion Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:69	
@@ -1101,6 +1106,7 @@ fd80a6ce84c3		No sound: {err}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src
 fd81960f4e1c		The version, the people and models who built it, and where to find us.	Versiya, uni yaratgan odamlar va modellar hamda bizni qayerdan topish mumkin.	draft:agent-sonnet:2026-10-17	Версия, уни яратган одамлар ва моделлар ҳамда бизни қаердан топиш мумкин.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1369	
 fe293845f0bd		Discard Recovered Presentations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:69	
 fe5c03e96112		Flat		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
+fe63efd621dc		{} can't export “{other}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:753	
 fe8c8b67a045		Ember		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
 fea00fed706d		Edit Text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1207	
 ff07f0cd0af0		Slides: choose a range from 1 to {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3323	

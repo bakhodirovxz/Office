@@ -486,8 +486,9 @@ fn deck_universe(root: &Path) -> Universe {
     let mut cmd_labels = BTreeSet::new();
     let mut p1: BTreeMap<String, String> = BTreeMap::new();
     for (rel, toks) in &srcs {
-        let is_ui = rel.starts_with("crates/ui-egui");
         let file = rel.rsplit('/').next().unwrap_or("");
+        // Our own mechanism modules (patches 0100/0110) hold error text and registry names, not interface strings.
+        let is_ui = rel.starts_with("crates/ui-egui") && !matches!(file, "i18n.rs" | "office_overlay.rs");
         let mut stack: Vec<String> = Vec::new();
         for (i, t) in toks.iter().enumerate() {
             if t.is_punct('(') {
@@ -565,9 +566,89 @@ pub fn extract_all(root: &Path) -> Vec<Universe> {
     unis
 }
 
+/// What a merge changed, per key. `where_` (file:line) churn is not a change: it never makes a catalog stale.
+#[derive(Debug, Default)]
+pub struct MergeReport {
+    /// (scope, id, English) of rows that did not exist.
+    pub added: Vec<(String, String, String)>,
+    /// (scope, id, English) of rows that no longer exist upstream (kept, `priority = obsolete`).
+    pub obsolete: Vec<(String, String, String)>,
+    /// (scope, old id, new id, old English, new English): the English changed, so the old Uzbek was carried to the new row as a
+    /// `draft:carried:<date>` (never reviewed; release exports skip it) and flagged in `note`.
+    pub carried: Vec<(String, String, String, String, String)>,
+    /// (scope, id, English, old ru, new ru): upstream's own Russian changed under an unchanged English key.
+    pub ru_changed: Vec<(String, String, String, String, String)>,
+}
+
+impl MergeReport {
+    pub fn is_clean(&self) -> bool {
+        self.added.is_empty() && self.obsolete.is_empty() && self.ru_changed.is_empty()
+    }
+
+    /// The report, at most `LIMIT` keys per category.
+    pub fn text(&self) -> String {
+        const LIMIT: usize = 40;
+        let short = |s: &str| {
+            let one: String = s.replace('\n', " ");
+            if one.chars().count() > 70 {
+                format!("{}...", one.chars().take(67).collect::<String>())
+            } else {
+                one
+            }
+        };
+        let mut out = format!(
+            "keys added: {}, removed (now obsolete): {}, English changed (carried as draft): {}, upstream ru changed: {}\n",
+            self.added.len(),
+            self.obsolete.len(),
+            self.carried.len(),
+            self.ru_changed.len()
+        );
+        let mut section = |title: &str, lines: Vec<String>| {
+            for l in lines.iter().take(LIMIT) {
+                out.push_str(&format!("  {title} {l}\n"));
+            }
+            if lines.len() > LIMIT {
+                out.push_str(&format!("  {title} ... and {} more\n", lines.len() - LIMIT));
+            }
+        };
+        section("added  ", self.added.iter().map(|(sc, id, en)| format!("{sc}/{id} {:?}", short(en))).collect());
+        section("removed", self.obsolete.iter().map(|(sc, id, en)| format!("{sc}/{id} {:?}", short(en))).collect());
+        section("changed", self.carried.iter().map(|(sc, o, n, oe, ne)| format!("{sc}/{o} -> {n} {:?} -> {:?}", short(oe), short(ne))).collect());
+        section("ru     ", self.ru_changed.iter().map(|(sc, id, en, o, n)| format!("{sc}/{id} {:?}: {:?} -> {:?}", short(en), short(o), short(n))).collect());
+        out
+    }
+}
+
+/// Levenshtein distance in chars.
+fn edit_distance(a: &str, b: &str) -> usize {
+    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    for (i, ca) in a.iter().enumerate() {
+        let mut cur = vec![i + 1];
+        for (j, cb) in b.iter().enumerate() {
+            cur.push((prev[j] + usize::from(ca != cb)).min(prev[j + 1] + 1).min(cur[j] + 1));
+        }
+        prev = cur;
+    }
+    prev[b.len()]
+}
+
+/// [`merge_report`], counts only: (new rows, rows turned obsolete).
+#[cfg(test)]
+fn merge(cat: &mut Catalog, unis: &[Universe]) -> (usize, usize) {
+    let r = merge_report(cat, unis, "1970-01-01", true);
+    (r.added.len(), r.obsolete.len())
+}
+
 /// Merge the universes into the catalog. Existing rows keep their Uzbek values, statuses and placement.
-/// Returns (new rows, rows turned obsolete).
-pub fn merge(cat: &mut Catalog, unis: &[Universe]) -> (usize, usize) {
+/// A key whose English changed (an obsolete row and a new row of one scope and context within 20% edit distance) hands its
+/// Uzbek to the new row as `draft:carried:<date>`, with a note naming the old row and both English strings (design 6.3).
+///
+/// `where_` (file:line) is a locator that drifts with every upstream edit. Unless `refresh_where` is set, an existing row keeps
+/// its `where_` while the file part is unchanged: a weekly sync then changes the TSVs only where a key or a value changed,
+/// not on every row whose line number moved. A new file part, or a row without one, always takes the new value.
+pub fn merge_report(cat: &mut Catalog, unis: &[Universe], date: &str, refresh_where: bool) -> MergeReport {
+    let mut rep = MergeReport::default();
     type Key = (String, String);
     // key -> app -> info (UI keys and date keys alike)
     let mut by_key: BTreeMap<Key, BTreeMap<&str, &KeyInfo>> = BTreeMap::new();
@@ -586,7 +667,6 @@ pub fn merge(cat: &mut Catalog, unis: &[Universe]) -> (usize, usize) {
             existing.entry((r.context.clone(), r.source.clone())).or_default().insert(scope.clone());
         }
     }
-    let (mut added, mut obsolete) = (0, 0);
     let mut seen: BTreeSet<(String, Key)> = BTreeSet::new();
     for (key, per_app) in &by_key {
         let apps: Vec<&str> = per_app.keys().copied().collect();
@@ -644,16 +724,23 @@ pub fn merge(cat: &mut Catalog, unis: &[Universe]) -> (usize, usize) {
                     r.apps = apps_s;
                     r.ru_apps = ru_apps;
                     r.priority = priority;
-                    r.where_ = where_;
+                    let file_of = |w: &str| w.rsplit_once(':').map_or(w.to_string(), |(f, _)| f.to_string());
+                    if refresh_where || r.where_.is_empty() || file_of(&r.where_) != file_of(&where_) {
+                        r.where_ = where_;
+                    }
                     if !ru.is_empty() && (r.ru_status == "upstream" || r.ru.is_empty() || r.ru_status == "todo") {
+                        if !r.ru.is_empty() && r.ru != ru {
+                            rep.ru_changed.push((scope.clone(), r.id.clone(), r.source.clone(), r.ru.clone(), ru.clone()));
+                        }
                         r.ru = ru;
                         r.ru_status = "upstream".into();
                     }
                 }
                 None => {
-                    added += 1;
+                    let id = row_id(&scope, &key.0, &key.1);
+                    rep.added.push((scope.clone(), id.clone(), key.1.clone()));
                     rows.push(Row {
-                        id: row_id(&scope, &key.0, &key.1),
+                        id,
                         context: key.0.clone(),
                         source: key.1.clone(),
                         uz_latn_status: "todo".into(),
@@ -677,11 +764,50 @@ pub fn merge(cat: &mut Catalog, unis: &[Universe]) -> (usize, usize) {
         for r in rows.iter_mut() {
             if !seen.contains(&(scope.clone(), (r.context.clone(), r.source.clone()))) && r.priority != "obsolete" {
                 r.priority = "obsolete".into();
-                obsolete += 1;
+                rep.obsolete.push((scope.clone(), r.id.clone(), r.source.clone()));
             }
         }
     }
-    (added, obsolete)
+    carry_changed_english(cat, &mut rep, date);
+    rep
+}
+
+/// Pair each newly obsolete row that has Uzbek with the closest new row of its scope and context (within 20% edit distance)
+/// and carry the Uzbek over as an unreviewed draft. An old `reviewed:owner` status does not survive: the English changed.
+fn carry_changed_english(cat: &mut Catalog, rep: &mut MergeReport, date: &str) {
+    let mut taken: BTreeSet<String> = BTreeSet::new();
+    for (scope, old_id, old_en) in rep.obsolete.clone() {
+        let Some(rows) = cat.scopes.get_mut(&scope) else { continue };
+        let Some(old) = rows.iter().find(|r| r.id == old_id).cloned() else { continue };
+        if old.uz_latn.is_empty() && old.uz_cyrl.is_empty() {
+            continue;
+        }
+        let best = rep
+            .added
+            .iter()
+            .filter(|(sc, id, _)| *sc == scope && !taken.contains(id))
+            .filter_map(|(_, id, en)| {
+                let ctx = rows.iter().find(|r| r.id == *id).map(|r| r.context.clone())?;
+                let d = edit_distance(&old_en, en);
+                (ctx == old.context && d * 5 <= old_en.chars().count().max(en.chars().count())).then(|| (d, id.clone(), en.clone()))
+            })
+            .min();
+        let Some((_, new_id, new_en)) = best else { continue };
+        taken.insert(new_id.clone());
+        if let Some(row) = rows.iter_mut().find(|r| r.id == new_id) {
+            let carried = format!("draft:carried:{date}");
+            if !old.uz_latn.is_empty() {
+                row.uz_latn = old.uz_latn.clone();
+                row.uz_latn_status = carried.clone();
+            }
+            if !old.uz_cyrl.is_empty() {
+                row.uz_cyrl = old.uz_cyrl.clone();
+                row.uz_cyrl_status = carried;
+            }
+            row.note = format!("carried from {old_id}; English changed: {old_en:?} -> {new_en:?}");
+        }
+        rep.carried.push((scope, old_id, new_id, old_en, new_en));
+    }
 }
 
 /// The per-app report: extracted vs design numbers.
@@ -799,5 +925,31 @@ mod tests {
         assert!(!cat.scopes.contains_key("shared"));
         assert_eq!(cat.scopes["wordcraft"][0].ru, "A");
         assert_eq!(cat.scopes["pdfcraft"][0].ru, "B");
+    }
+
+    #[test]
+    fn changed_english_carries_the_uzbek_as_an_unreviewed_draft() {
+        let mk = |en: &str, ru: &str| {
+            let mut u = Universe { app: "pdfcraft".into(), ..Universe::default() };
+            u.keys.insert((String::new(), en.into()), KeyInfo { ru: Some(ru.into()), ..KeyInfo::default() });
+            u
+        };
+        let mut cat = Catalog::default();
+        merge(&mut cat, &[mk("You are viewing revision {n}", "Вы просматриваете версию {n}")]);
+        {
+            let r = &mut cat.scopes.get_mut("pdfcraft").unwrap()[0];
+            r.uz_latn = "Siz {n}-tahrirni koʻryapsiz".into();
+            r.uz_latn_status = "reviewed:owner:2026-10-21".into();
+        }
+        let rep = merge_report(&mut cat, &[mk("You are viewing revision {n}.", "Вы просматриваете версию {n}.")], "2026-10-18", true);
+        assert_eq!((rep.added.len(), rep.obsolete.len(), rep.carried.len()), (1, 1, 1));
+        assert!(!rep.is_clean());
+        let new = cat.scopes["pdfcraft"].iter().find(|r| r.priority != "obsolete").unwrap();
+        assert_eq!(new.uz_latn, "Siz {n}-tahrirni koʻryapsiz");
+        assert_eq!(new.uz_latn_status, "draft:carried:2026-10-18", "a reviewed status never survives an English change");
+        assert!(new.note.starts_with("carried from "), "{}", new.note);
+        // an unrelated new key is not a carry
+        let rep = merge_report(&mut cat, &[mk("Completely different text here", "Совсем другое")], "2026-10-18", true);
+        assert!(rep.carried.is_empty());
     }
 }

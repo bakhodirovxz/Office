@@ -14,7 +14,7 @@ mod review;
 
 use catalog::{Catalog, Mode, APPS};
 
-pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run]\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
+pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
 
 pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     let dir = root.join("i18n");
@@ -23,13 +23,28 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     match args {
         ["extract", ..] => {
             let unis = extract::extract_all(root);
-            if has("--dry-run") {
-                return Ok(extract::report(&unis, None));
-            }
+            let date = flag("--date").map(String::from).unwrap_or_else(today);
             let mut cat = Catalog::load(&dir)?;
-            let (added, obsolete) = extract::merge(&mut cat, &unis);
+            let rep = extract::merge_report(&mut cat, &unis, &date, has("--refresh-where"));
+            if has("--dry-run") {
+                return Ok(format!("{}{}", extract::report(&unis, None), rep.text()));
+            }
             cat.save(&dir)?;
-            Ok(format!("{}new rows: {added}, newly obsolete: {obsolete}\nwritten to {}", extract::report(&unis, Some(&cat)), dir.display()))
+            Ok(format!("{}{}written to {}", extract::report(&unis, Some(&cat)), rep.text(), dir.display()))
+        }
+        ["check-stale", ..] => {
+            // The sync gate (scripts/sync-upstream.sh): is our catalog current with the upstream catalogs in upstream/?
+            let unis = extract::extract_all(root);
+            let mut cat = Catalog::load(&dir)?;
+            let rep = extract::merge_report(&mut cat, &unis, &today(), false);
+            if rep.is_clean() {
+                Ok("ok: i18n catalogs are current with upstream".into())
+            } else {
+                Err(format!(
+                    "i18n catalogs are STALE: an upstream catalog changed.\n{}run `cargo xt i18n extract` (scripts/sync-upstream.sh --apply does it) and commit i18n/*.tsv",
+                    rep.text()
+                ))
+            }
         }
         ["export", app, ..] => {
             let mode = match flag("--mode").unwrap_or("review") {

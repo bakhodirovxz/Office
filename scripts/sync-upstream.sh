@@ -295,6 +295,18 @@ else
     echo "$r check_s=$sec" >> "$WORK/gate-secs"
   done
   if [ "$GATES" = full ]; then
+  # i18n gate: the canonical catalogs (i18n/*.tsv) must be current with the upstream catalogs just imported. A dry run fails
+  # when an upstream catalog changed (keys added, removed, English or ru changed); --apply merges (cargo xt i18n extract keeps
+  # every uz/ru value and status; a changed English is carried as draft:carried, never reviewed) and then re-checks.
+  out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged=""
+  if [ $rc != 0 ] && [ "$MODE" = apply ]; then
+    say "- i18n catalogs are stale: merging with \`cargo xt i18n extract\`:"; say '```'; say "$(echo "$out" | grep -v '^run ')"; say '```'
+    if cargo xt i18n extract >"$WORK/i18n-extract.log" 2>&1; then out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged="merged by --apply, "; fi
+  fi
+  gate i18n-stale $([ $rc = 0 ] && echo PASS || echo FAIL) "${merged}$(echo "$out" | head -1)"
+  [ $rc = 0 ] || { say '```'; say "$out"; say '```'; say "  (a dry run does not merge: \`scripts/sync-upstream.sh --apply\` runs the merge, or run \`cargo xt i18n extract\` yourself)"; }
+  out=$(cargo xt i18n roundtrip 2>&1); rc=$?; gate i18n-roundtrip $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tail -1)"
+  out=$(cargo xt i18n lint 2>&1); rc=$?; gate i18n-lint $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | head -1)"
     say "- full gates: release builds, sizes and tests are not automated yet in scratch; run \`scripts/build.sh <d> all --release\` and \`scripts/ci.sh test <app>\` on the applied tree (WP6b not done)."
     GATE[full]=INFRA; GATE_FAIL=1
   fi
@@ -312,7 +324,7 @@ total=$(elapsed $t_start); say ""; say "Script wall time: ${total} s"
 if [ "$MODE" = apply ]; then
   if [ $OK = 1 ]; then
     mkdir -p "$SCR/docs/phase1/sync-reports"; cp "$REPORT" "$SCR/docs/phase1/sync-reports/$DATE.md"
-    ( cd "$SCR" && git add docs/phase1/sync-reports patches domains && git commit -q -m "sync($(echo $READY | tr ' ' ',')): rebase queues, regenerate domains and locks ($DATE)" )
+    ( cd "$SCR" && git add docs/phase1/sync-reports patches domains i18n && git commit -q -m "sync($(echo $READY | tr ' ' ',')): rebase queues, regenerate domains and locks ($DATE)" )
     # HEAD may have moved (other commits elsewhere): replay the scratch commits on it, then fast-forward
     if [ "$(git rev-parse HEAD)" != "$HEAD0" ]; then ( cd "$SCR" && git rebase -q "$(git -C "$MAIN" rev-parse HEAD)" ) >/dev/null 2>&1 || ( cd "$SCR" && git rebase --abort ) >/dev/null 2>&1; fi
     if git merge --ff-only -q "$BRANCH"; then say "APPLIED: fast-forwarded to $(git rev-parse --short HEAD)"; else say "APPLY FAILED: HEAD moved or merge refused; branch $BRANCH kept"; OK=0; fi
