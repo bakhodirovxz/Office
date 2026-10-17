@@ -1,0 +1,37 @@
+﻿culture	ru-RU
+decsep	,
+thousep	 
+listsep	;
+general_big	3500000,5
+general_frac	0,1234567
+zero_dot_zero	3500000,0
+grp_1dp	3 500 000,5
+grp_2dp	3 500 000,50
+pct	25,50%
+sci	1,23E+04
+date_iso	2026-10-12
+date_dmy	12.10.2026
+date_long	12 Октябрь 2026
+date_dddd	понедельник, 12 окт 2026
+time_ampm	3:04:05 PM
+tag419_num	3 500 000,50
+tag443_num	3 500 000,50
+tag419_date	12 Октябрь 2026
+tag443_date	12 Oktabr 2026
+tag_ru_cur	₽ 3 500 000,50
+tag_uz_cur	3 500 000,50 so'm
+accounting	                                           3 500 000,50 
+f_text_num	#VALUE!
+f_text_date	dd mmmm yyyy
+f_concat_num	3500000,5
+f_concat_date	46307
+f_sum_list	3
+probe	SUM(1,2) via .Formula (en-US storage)	text=3	type=Double	fmt=Основной	Formula==SUM(1,2)
+probe	ru SUM(1;2) via .FormulaLocal	text=#NAME?	type=Int32	fmt=Основной	Formula==СУММ(1,2)
+probe	en SUM(1;2) via .FormulaLocal	text=3	type=Double	fmt=Основной	Formula==SUM(1,2)
+probe	typed 3,5	text=3,5	type=Double	fmt=Основной	Formula=3.5
+probe	typed 3.5	text=03.май	type=Double	fmt=ДД.МММ	Formula=46145
+probe	typed 12.10.2026	text=########	type=Double	fmt=ДД.ММ.ГГГГ	Formula=46307
+probe	typed 2026-10-12	text=########	type=Double	fmt=ДД.ММ.ГГГГ	Formula=46307
+probe	typed 1 234,5	text=1 234,50	type=Double	fmt=# ##0,00	Formula=1234.5
+probe	typed =1,5+1	text=2,5	type=Double	fmt=Основной	Formula==1.5+1
