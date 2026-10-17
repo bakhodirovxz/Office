@@ -90,3 +90,23 @@ fn fallback_font_covers_uzbek() {
         assert!(matches!(last, Some("office-fallback-sans" | "office-fallback-mono")), "{family:?} ends with {last:?}");
     }
 }
+
+#[test]
+fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+    use crate::i18n::{Lang, lang_from_tag, tr};
+    let code = |tag: &str| lang_from_tag(tag).map(Lang::code);
+    if cfg!(office_uz) {
+        // Windows script tags, scriptless tags, and the Linux `@cyrillic` modifier.
+        assert_eq!(code("uz-Latn-UZ"), Some("uz-latn"));
+        assert_eq!(code("uz-Cyrl-UZ"), Some("uz-cyrl"));
+        assert_eq!((code("uz"), code("uz-UZ"), code("uz_UZ.UTF-8")), (Some("uz-latn"), Some("uz-latn"), Some("uz-latn")));
+        assert_eq!(code("uz_UZ@cyrillic"), Some("uz-cyrl"));
+        let (latn, cyrl) = (Lang::from_code("uz-latn").expect("uz-latn"), Lang::from_code("uz-cyrl").expect("uz-cyrl"));
+        assert!(latn.name().starts_with("O\u{2bb}zbekcha") && cyrl.name().starts_with("Ўзбекча"));
+        assert_ne!(tr(latn, "Home"), "Home");
+        assert_ne!(tr(cyrl, "Home"), "Home");
+    } else {
+        assert_eq!(code("uz-Latn-UZ"), None);
+        assert!(Lang::from_code("uz-latn").is_none());
+    }
+}

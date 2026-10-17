@@ -52,7 +52,7 @@ pub struct LangInfo {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 23] = [
+pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
     LangInfo { code: "en", name: "English", source: "", prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` resolve here (see `candidates`).
     LangInfo {
@@ -165,6 +165,25 @@ pub static LANGUAGES: [LangInfo; 23] = [
     LangInfo { code: "sv", name: "Svenska", source: include_str!("sv.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
     // Croatian; `hr`, `hr-HR` and `hr_HR.UTF-8` resolve here.
     LangInfo { code: "hr", name: "Hrvatski", source: include_str!("hr.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+    // Uzbek (office overlay): only when the overlay supplies the catalogs.
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-latn",
+        name: crate::office_overlay::NAME_UZ_LATN,
+        source: crate::office_overlay::CATALOG_UZ_LATN,
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-cyrl",
+        name: crate::office_overlay::NAME_UZ_CYRL,
+        source: crate::office_overlay::CATALOG_UZ_CYRL,
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
 ];
 
 impl LangInfo {
@@ -278,6 +297,10 @@ fn candidates(tag: &str) -> Vec<String> {
     let mut out = Vec::new();
     for n in (1..=parts.len()).rev() {
         out.push(parts.get(..n).unwrap_or_default().join("-"));
+    }
+    if primary == "uz" && !parts.iter().any(|p| matches!(*p, "latn" | "cyrl")) {
+        // Uzbek without a script: Latin, unless a Linux locale says `@cyrillic` (cut off above).
+        out.insert(out.len().saturating_sub(1), if tag.to_ascii_lowercase().contains("@cyrillic") { "uz-cyrl" } else { "uz-latn" }.to_string());
     }
     if primary == "zh" && !parts.iter().any(|p| matches!(*p, "hans" | "hant")) {
         // Chinese by region when no script is given.
