@@ -1,0 +1,194 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:01:07 +0500
+Subject: [PATCH 101/102] ui-egui: turn off upstream community chrome and the
+ Share and Zotero tabs under the overlay
+
+With OFFICE_OVERLAY_DIR set at build time: the title-bar Discord pill and its Options checkbox,
+the Help-ribbon, Backstage and keytip Discord entries and the ui.discord command, the About
+links to the upstream website, Discord and repository, the upstream copyright line (replaced by the
+overlay's), the title-bar Share button and the Zotero ribbon tab are not shown. Every change is gated
+on constants from office_overlay; without an overlay the behaviour is upstream's.
+---
+ crates/ui-egui/src/backstage.rs |  5 +++-
+ crates/ui-egui/src/chrome.rs    |  2 +-
+ crates/ui-egui/src/dialogs.rs   | 23 ++++++++++++------
+ crates/ui-egui/src/keytips.rs   |  1 +
+ crates/ui-egui/src/lib.rs       |  2 +-
+ crates/ui-egui/src/options.rs   |  4 ++-
+ crates/ui-egui/src/ribbon.rs    | 43 ++++++++++++++++++++-------------
+ 7 files changed, 51 insertions(+), 29 deletions(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index b89665a..c31f700 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -118,7 +118,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 }
+             }
+             ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
+-                for (label, id) in [("About", "about"), ("Discord community", "discord")] {
++                for (label, id) in [("About", "about"), ("Discord community", "discord")]
++                    .into_iter()
++                    .filter(|(_, id)| *id != "discord" || crate::office_overlay::COMMUNITY)
++                {
+                     let (r, resp) = ui.allocate_exact_size(vec2(200.0, 32.0), Sense::click());
+                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), tl!(label)));
+                     if resp.hovered() {
+diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
+index b07b7ed..016abe6 100644
+--- a/crates/ui-egui/src/chrome.rs
++++ b/crates/ui-egui/src/chrome.rs
+@@ -293,7 +293,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+                         let _ = app.run("ui.backstage", json!({"value": true, "page": "options", "pane": "general"}));
+                     }
+                     ui.add_space(8.0);
+-                    if app.ui.show_discord {
++                    if crate::office_overlay::COMMUNITY && app.ui.show_discord {
+                         let (r, resp) = ui.allocate_exact_size(vec2(84.0, 22.0), Sense::click());
+                         ui.painter().rect_filled(r, 11.0, if resp.hovered() { t.accent_text } else { t.accent });
+                         icons::paint(
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index a691242..51227a4 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -2390,15 +2390,22 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+                         "A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team."
+                     ));
+                     ui.add_space(6.0);
+-                    ui.hyperlink_to(tl!("getartcraft.com/apps/wordcraft"), "https://getartcraft.com/apps/wordcraft");
+-                    ui.hyperlink_to(tl!("Join us on Discord: discord.gg/artcraft"), "https://discord.gg/artcraft");
+-                    ui.hyperlink_to(tl!("Source code: github.com/storytold/wordcraft"), "https://github.com/storytold/wordcraft");
++                    if crate::office_overlay::UPSTREAM_LINKS {
++                        ui.hyperlink_to(tl!("getartcraft.com/apps/wordcraft"), "https://getartcraft.com/apps/wordcraft");
++                    }
++                    if crate::office_overlay::COMMUNITY {
++                        ui.hyperlink_to(tl!("Join us on Discord: discord.gg/artcraft"), "https://discord.gg/artcraft");
++                    }
++                    if crate::office_overlay::UPSTREAM_LINKS {
++                        ui.hyperlink_to(tl!("Source code: github.com/storytold/wordcraft"), "https://github.com/storytold/wordcraft");
++                    }
+                     ui.add_space(6.0);
+-                    ui.label(
+-                        egui::RichText::new(tl!("MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors."))
+-                            .small()
+-                            .weak(),
+-                    );
++                    let copyright = if crate::office_overlay::ACTIVE {
++                        crate::office_overlay::COPYRIGHT
++                    } else {
++                        tl!("MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.")
++                    };
++                    ui.label(egui::RichText::new(copyright).small().weak());
+                 }
+             }
+             let (ok, cancel) = buttons(ui, tl!("Close"));
+diff --git a/crates/ui-egui/src/keytips.rs b/crates/ui-egui/src/keytips.rs
+index 45c8a1c..5c22ab0 100644
+--- a/crates/ui-egui/src/keytips.rs
++++ b/crates/ui-egui/src/keytips.rs
+@@ -339,6 +339,7 @@ fn controls(tab: &str) -> Vec<Control> {
+             c("Full Screen", "view.fullScreen"),
+             c("Macros", "tools.macros"),
+         ],
++        "Help" if !crate::office_overlay::COMMUNITY => vec![d("Help", "about"), d("Commands", "commands")],
+         "Help" => vec![d("Help", "about"), c("Community Discord", "ui.discord"), d("Commands", "commands")],
+         "Table Design" => {
+             vec![m("Shading", "table.shading"), m("Borders", "table.borders"), c("Border Painter", "table.borderPainter")]
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index f1aa1a9..3769d36 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1494,7 +1494,7 @@ impl WordApp {
+                         .into(),
+                 ));
+             }
+-            "ui.discord" => {
++            "ui.discord" if crate::office_overlay::COMMUNITY => {
+                 self.canvas.open_url = Some("https://discord.gg/artcraft".into());
+                 json!({})
+             }
+diff --git a/crates/ui-egui/src/options.rs b/crates/ui-egui/src/options.rs
+index b39d0fd..df74613 100644
+--- a/crates/ui-egui/src/options.rs
++++ b/crates/ui-egui/src/options.rs
+@@ -190,7 +190,9 @@ fn general(app: &mut WordApp, ui: &mut Ui) {
+     {
+         let _ = app.run("view.darkMode", json!({"value": dark_page}));
+     }
+-    ui.checkbox(&mut app.ui.show_discord, tl!("Show the community button in the title bar"));
++    if crate::office_overlay::COMMUNITY {
++        ui.checkbox(&mut app.ui.show_discord, tl!("Show the community button in the title bar"));
++    }
+     default_app_button(app, ui);
+     ui.add_space(8.0);
+     section(ui, "Start-up");
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 0dd3889..bc1f11a 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -197,7 +197,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+     // Format) may be stored while the selection moved away, and a tab may have been hidden.
+     let user_tabs = app.session.ribbon.tabs().into_owned();
+     let mut tabs: Vec<(String, bool)> = vec![("File".to_string(), false)];
+-    tabs.extend(user_tabs.iter().filter(|e| !e.hidden).map(|e| (e.name.clone(), e.custom)));
++    tabs.extend(
++        user_tabs
++            .iter()
++            .filter(|e| !e.hidden && (crate::office_overlay::ZOTERO || e.custom || e.name != "Zotero"))
++            .map(|e| (e.name.clone(), e.custom)),
++    );
+     for ct in contextual_tabs(&app.session) {
+         if ct == "Outlining" {
+             tabs.insert(1.min(tabs.len()), (ct.to_string(), false));
+@@ -227,22 +232,24 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                     }
+                     // Share, Editing mode, Comments, drawn first so the tabs get only the room
+                     // left of them (#897).
+-                    let share = tl!("Share");
+-                    let share_w = ui.ctx().fonts_mut(|f| f.layout_no_wrap(share.to_string(), medium(12.0), t.text).size().x);
+-                    let (r, resp) = ui.allocate_exact_size(vec2((share_w + 36.0).max(74.0), 24.0), Sense::click());
+-                    ui.painter().rect_filled(r, 4.0, if resp.hovered() { t.accent_text } else { t.accent });
+-                    icons::paint(
+-                        ui.painter(),
+-                        Rect::from_center_size(pos2(r.min.x + 14.0, r.center().y), vec2(14.0, 14.0)),
+-                        "share",
+-                        t.on_accent,
+-                        t.on_accent,
+-                    );
+-                    ui.painter().text(pos2(r.min.x + 26.0, r.center().y), Align2::LEFT_CENTER, share, medium(12.0), t.on_accent);
+-                    if resp.on_hover_text(tl!("Export a copy to share (PDF, Word document)")).clicked() {
+-                        let _ = app.run("ui.backstage", json!({"value": true, "page": "export"}));
++                    if crate::office_overlay::SHARE {
++                        let share = tl!("Share");
++                        let share_w = ui.ctx().fonts_mut(|f| f.layout_no_wrap(share.to_string(), medium(12.0), t.text).size().x);
++                        let (r, resp) = ui.allocate_exact_size(vec2((share_w + 36.0).max(74.0), 24.0), Sense::click());
++                        ui.painter().rect_filled(r, 4.0, if resp.hovered() { t.accent_text } else { t.accent });
++                        icons::paint(
++                            ui.painter(),
++                            Rect::from_center_size(pos2(r.min.x + 14.0, r.center().y), vec2(14.0, 14.0)),
++                            "share",
++                            t.on_accent,
++                            t.on_accent,
++                        );
++                        ui.painter().text(pos2(r.min.x + 26.0, r.center().y), Align2::LEFT_CENTER, share, medium(12.0), t.on_accent);
++                        if resp.on_hover_text(tl!("Export a copy to share (PDF, Word document)")).clicked() {
++                            let _ = app.run("ui.backstage", json!({"value": true, "page": "export"}));
++                        }
++                        ui.add_space(6.0);
+                     }
+-                    ui.add_space(6.0);
+                     let track = app.session.doc.settings.track_changes;
+                     let mode =
+                         crate::widgets::icon_text_menu_button(ui, "pencil", if track { tl!("Reviewing") } else { tl!("Editing") }, regular(12.0));
+@@ -2003,7 +2010,9 @@ fn outlining(app: &mut WordApp, ui: &mut Ui) {
+ fn help(app: &mut WordApp, ui: &mut Ui) {
+     group(ui, "Help", None, app, |ui, app| {
+         big(ui, app, "help", "Help", "ui.dialog", json!({"name": "about"}), false);
+-        big(ui, app, "discord", "Community\nDiscord", "ui.discord", json!({}), false);
++        if crate::office_overlay::COMMUNITY {
++            big(ui, app, "discord", "Community\nDiscord", "ui.discord", json!({}), false);
++        }
+     });
+     group(ui, "Agents", None, app, |ui, app| {
+         big(ui, app, "macros", "Commands", "ui.dialog", json!({"name": "commands"}), false);
