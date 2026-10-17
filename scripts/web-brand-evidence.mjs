@@ -30,8 +30,8 @@ const STEPS = {
   ],
   docs: [
     ['wait', 500], ['shot', `${tag}-docs-web`],
-    ['click', 60, 652], ['wait', 2500], ['shot', `${tag}-docs-web-about`],
-    ['key', 'Escape'], ['wait', 500], ['click', 315, 180], ['wait', 7000], ['click', 600, 300], ['insert'], ['wait', 2500], ['shot', 'font-docs-web'],
+    ['click', 315, 180], ['wait', 12000], ['click', 600, 300], ['insert'], ['wait', 6000], ['shot', 'font-docs-web'],
+    ['click', 706, 53], ['wait', 2000], ['click', 45, 100], ['wait', 3000], ['shot', `${tag}-docs-web-about`],
   ],
   sheets: [
     ['wait', 500], ['shot', `${tag}-sheets-web`],

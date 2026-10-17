@@ -372,7 +372,7 @@ pub fn trc<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
     if pseudo::on() {
         return pseudo::mark(s);
     }
-    lang.catalog().in_context(context, s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().in_context(context, s).unwrap_or(s))
 }
 
 /// Lowercase translated interface labels and UI search queries in the current language.
@@ -400,7 +400,7 @@ pub fn tr(lang: Lang, s: &str) -> &str {
     if pseudo::on() {
         return pseudo::mark(s);
     }
-    lang.catalog().plain(s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().plain(s).unwrap_or(s))
 }
 
 /// A style's name as the interface shows it: built-in styles (`Normal`, `Heading 2`, `TOC 3`) in

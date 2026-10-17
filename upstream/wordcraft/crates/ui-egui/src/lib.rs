@@ -63,6 +63,7 @@ pub mod keys;
 pub mod keytips;
 pub mod mini_toolbar;
 pub mod objects;
+pub mod office_overlay;
 pub mod options;
 pub mod panes;
 pub mod paste_picture;
@@ -1493,7 +1494,7 @@ impl WordApp {
                         .into(),
                 ));
             }
-            "ui.discord" => {
+            "ui.discord" if crate::office_overlay::COMMUNITY => {
                 self.canvas.open_url = Some("https://discord.gg/artcraft".into());
                 json!({})
             }
@@ -2035,9 +2036,9 @@ impl WordApp {
             ctx.open_url(egui::OpenUrl::new_tab(url));
         }
         let title = if self.has_document() {
-            format!("{}{} - WordCraft", self.title_stem(), if self.session.dirty { " •" } else { "" })
+            format!("{}{} - {}", self.title_stem(), if self.session.dirty { " •" } else { "" }, office_overlay::app_name())
         } else {
-            "WordCraft".to_string()
+            office_overlay::app_name().to_string()
         };
         if title != self.sent_title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
@@ -2446,6 +2447,8 @@ fn control_click_as_secondary(events: &mut [egui::Event], held: &mut bool) {
     }
 }
 
+#[cfg(test)]
+mod office_overlay_tests;
 #[cfg(test)]
 mod tests_perf;
 

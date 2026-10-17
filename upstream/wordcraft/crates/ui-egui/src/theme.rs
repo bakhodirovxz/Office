@@ -514,6 +514,7 @@ pub fn font_definitions_language(prefer_hans: bool, prefer_korean: bool, system_
     #[cfg(target_arch = "wasm32")]
     let _ = system_cjk;
     // Symbols and emoji fall back to egui's defaults (kept in the families).
+    crate::office_overlay::append_fallback_fonts(&mut fonts);
     fonts
 }
 

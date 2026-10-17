@@ -791,8 +791,10 @@ fn styles_xml(sec: &wordcraft_doc::SectionProps, body_font: &str) -> String {
 }
 
 fn meta_xml(m: &Meta) -> String {
-    let mut s =
-        format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>WordCraft</meta:generator>");
+    let mut s = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>{}</meta:generator>",
+        option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft")
+    );
     if !m.title.is_empty() {
         s.push_str(&format!("<dc:title>{}</dc:title>", x(&m.title)));
     }

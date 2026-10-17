@@ -33,10 +33,11 @@ wait_no_rustc() {
 # Brand overlay (WP7): render brand/brand.toml into $OFFICE_OVERLAY_ROOT/<d>/ and point the builds at it. The web page is
 # rendered from index.html.in because build.rs cannot write index.html. OFFICE_NO_OVERLAY=1 builds pristine-like.
 overlay_prepare() {
-  [ "${OFFICE_NO_OVERLAY:-0}" = 1 ] && { unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION; return 0; }
+  [ "${OFFICE_NO_OVERLAY:-0}" = 1 ] && { unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION OFFICE_PRODUCT_NAME; return 0; }
   (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt overlay "$d") || return 1
   export OFFICE_OVERLAY_DIR="$OFFICE_OVERLAY_ROOT/$d"
   local web="domains/$d/apps/$d-web" name
+  export OFFICE_PRODUCT_NAME=$(sed -n 's/^PRODUCT_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # written into the files we produce (O3)
   export OFFICE_PRODUCT_VERSION=$(sed -n 's/^VERSION=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # one product version for every app
   name=$(sed -n 's/^APP_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')
   sed -e "s|{{APP_NAME}}|$name|g" -e "s|{{FAVICON}}|$OFFICE_OVERLAY_DIR/favicon.ico|g" "$web/index.html.in" > "$web/index.html"
