@@ -1,7 +1,7 @@
 repo=deckcraft
 url=https://github.com/storytold/deckcraft
-sha=9859da39255c0262cd592bb57101d7f2fa961f72
-tree=3ebaa12b5d01c60df7b9221b02830d59a99e5b10
-date=2026-10-14T21:20:34-06:00
-describe=v0.7.0-706-g9859da3
+sha=1dc69720db64323370dda061226becb09ad79fd4
+tree=95d3e8a32a74c4e63a000b3d41cdafd66acfafda
+date=2026-10-15T23:13:10-06:00
+describe=v0.7.0-721-g1dc6972
 synced=2026-10-17
