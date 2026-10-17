@@ -155,7 +155,7 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
         cell.style = style;
         // Formulas whose result is a date/time get a format from functions like TODAY().
         if wb.styles.get(style).num_fmt.as_str() == "General" {
-            let f = cell.formula.as_ref().map(|f| f.text.to_ascii_uppercase()).unwrap_or_default();
+            let f = cell.formula.as_ref().map(|f| f.text().to_ascii_uppercase()).unwrap_or_default();
             let auto = if f.starts_with("TODAY(")
                 || f.starts_with("DATE(")
                 || f.starts_with("EDATE(")
@@ -243,7 +243,7 @@ fn cell_set(s: &mut Session, p: &Json) -> Result<Json> {
             }
             let mut cell = input_to_cell(&input, sheet, range.start, &mut cx.wb)?.unwrap_or_default();
             if let Some(f) = cell.formula.as_mut() {
-                std::sync::Arc::make_mut(f).array = Some(range);
+                std::sync::Arc::make_mut(f).set_array(Some(range));
             }
             let sh = cx.sheet_mut(sheet)?;
             // The array takes the whole range: other cells in it lose their contents.
@@ -346,10 +346,9 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {
             for at in r.iter() {
                 let mut cell = base.clone().unwrap_or_default();
                 if let Some(f) = &cell.formula
-                    && let Some(e) = f.expr()
+                    && let Some(copy) = f.copied(at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64)
                 {
-                    let shifted = gridcraft_formula::adjust::shift_relative(e, at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64);
-                    cell.formula = Some(std::sync::Arc::new(Formula::from_expr(shifted)));
+                    cell.formula = Some(std::sync::Arc::new(copy));
                 }
                 cell.style = cx.wb.sheet(sheet).and_then(|sh| sh.cell(at)).map(|c| c.style).unwrap_or(cell.style);
                 cx.sheet_mut(sheet)?.set_cell(at, cell);
@@ -980,30 +979,31 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                         let mut new = old.clone();
                         let shift = |cell: &Cell| -> Option<std::sync::Arc<Formula>> {
                             let f = cell.formula.as_ref()?;
-                            let e = f.expr()?;
                             if cut_move {
                                 // A moved formula still reads cells on its original sheet. Qualify
                                 // those references before the workbook-wide move adjustment below.
-                                let e = if dest_sheet != clip.sheet {
-                                    e.map(&mut |x| match x {
+                                let mut moved = if dest_sheet != clip.sheet {
+                                    Formula::from_expr(f.expr()?.map(&mut |x| match x {
                                         gridcraft_formula::Expr::Ref(mut r) if r.sheet == gridcraft_formula::SheetSel::Current => {
                                             r.sheet = gridcraft_formula::SheetSel::Named(src_sheet_name.clone());
                                             gridcraft_formula::Expr::Ref(r)
                                         }
                                         other => other,
-                                    })
+                                    }))
                                 } else {
-                                    e
+                                    // The same formula (it means the same wherever it is stored),
+                                    // still sharing its tree.
+                                    if !f.is_parsed() {
+                                        f.expr()?;
+                                    }
+                                    (**f).clone()
                                 };
-                                let mut moved = Formula::from_expr(e);
                                 // The array range moves with its formula.
                                 let (dr, dc) = (dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
-                                moved.array = f.array.and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?)));
+                                moved.set_array(f.array().and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?))));
                                 return Some(std::sync::Arc::new(moved));
                             }
-                            let moved =
-                                gridcraft_formula::adjust::shift_relative(e, dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
-                            Some(std::sync::Arc::new(Formula::from_expr(moved)))
+                            Some(std::sync::Arc::new(f.copied(dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64)?))
                         };
                         if link {
                             let sheet_prefix = if dest_sheet == clip.sheet && same_doc {
@@ -1095,7 +1095,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                         _ => None,
                                     }
                                 {
-                                    let text = format!("=({}){sym}{}", f.text, gridcraft_core::number_to_text(y));
+                                    let text = format!("=({}){sym}{}", f.text(), gridcraft_core::number_to_text(y));
                                     new.formula = Some(std::sync::Arc::new(Formula::new(&text)));
                                     new.value = Value::Empty;
                                 }
@@ -1192,20 +1192,24 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
         }
         let on_target = moves_arrays && host.eq_ignore_ascii_case(target);
         let Some(sheet) = wb.sheet_mut(si) else { continue };
+        // Rewritten formulas that are still the same in R1C1 terms keep sharing a tree.
+        let mut runs = gridcraft_model::FormulaRuns::default();
         for (c, f) in keys {
             let Some(expr) = f.expr() else { continue };
             let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
             let text = gridcraft_formula::print(&new);
-            let array = match f.array {
+            let array = match f.array() {
                 Some(a) if on_target => super::sheet::map_range(a, e),
                 a => a,
             };
-            if (text != f.text || array != f.array)
+            if (text != f.text() || array != f.array())
                 && let Some(cell) = sheet.cells.get_mut(c)
             {
-                let mut nf = Formula::from_expr(new);
-                nf.array = array;
+                let mut nf = runs.formula(c, new);
+                nf.set_array(array);
                 cell.formula = Some(std::sync::Arc::new(nf));
+            } else {
+                runs.keep(c, &f);
             }
         }
     }
@@ -1649,7 +1653,7 @@ mod tests {
         s.execute("cell.set", json!({"cell": "H5", "input": "=1+1", "array": true})).unwrap();
         let sh = s.doc().unwrap().wb.active().unwrap();
         let f = sh.cell(CellRef::parse("H5").unwrap()).and_then(|c| c.formula.clone()).unwrap();
-        assert_eq!(f.array, Some(RangeRef::parse("H5").unwrap()));
+        assert_eq!(f.array(), Some(RangeRef::parse("H5").unwrap()));
         assert_eq!(sh.value(CellRef::parse("K20").unwrap()), Value::text("keep"));
     }
 

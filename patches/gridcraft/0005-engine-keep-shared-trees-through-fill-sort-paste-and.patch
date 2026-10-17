@@ -43,7 +43,7 @@ index 383624b..5b64679 100644
                  if let Some(picture) = sh.cell_pictures.get(&src) {
                      pictures.push((dst, picture.clone()));
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index fd3bba4..18182fa 100644
+index 9d5d5f0..da211d3 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
 @@ -346,10 +346,9 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {

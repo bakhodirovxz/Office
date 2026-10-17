@@ -1,9 +1,11 @@
 //! Writing worksheet parts and the parts they own (tables, comments, drawings, charts).
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
+use std::sync::Arc;
 
 use gridcraft_core::{CellError, CellRef, RangeRef, Value};
+use gridcraft_formula::Expr;
 use gridcraft_model::{
     Cell, CfOperator, CfRule, CfValueKind, Color, CondFormat, ErrorStyle, FilterCriterion, LineInfo, Orientation, Sheet, SparklineKind, Style, Table,
     TotalsFn, Validation, ValidationKind, Workbook, default_icon_thresholds, icon_count,
@@ -70,6 +72,99 @@ fn table_columns(t: &Table) -> Vec<String> {
         .collect()
 }
 
+/// How a cell's formula is written as part of an Excel shared formula.
+#[derive(Clone, Copy, Debug)]
+enum SharedRole {
+    /// The first cell: the text, with the group's index and the cells it covers.
+    Master(u32, RangeRef),
+    /// Another cell: only the group's index.
+    Member(u32),
+}
+
+/// Formulas written as Excel shared formulas, and the cells whose formulas need array evaluation
+/// (the single-cell array marker; see `array_formula`).
+///
+/// A shared formula is a run of consecutive cells down a column holding shifted copies of one
+/// tree ([`gridcraft_model::Formula::template`]) at the same offset from their cells (each is the
+/// first one moved down to it), each moved without pushing a reference off the sheet, so that
+/// reading the group back (the first cell's formula moved to each cell) gives the same formulas.
+/// Formulas written as arrays (legacy, spilling or needing array evaluation), table header cells
+/// and cell pictures are written on their own, and so are formulas Excel can't read as shared
+/// ([`excel_can_share`]).
+fn shared_formulas(
+    wb: &Workbook,
+    si: usize,
+    sheet: &Sheet,
+    dynamic: &BTreeMap<CellRef, RangeRef>,
+    overrides: &BTreeMap<CellRef, String>,
+) -> (HashMap<CellRef, SharedRole>, HashSet<CellRef>) {
+    struct Run {
+        base: Arc<Expr>,
+        /// Where `base` is exact: each formula of the run is `base` moved by its cell minus this.
+        origin: (i64, i64),
+        start: CellRef,
+        end_row: u32,
+        si: Option<u32>,
+    }
+    let mut roles: HashMap<CellRef, SharedRole> = HashMap::new();
+    let mut implicit: HashSet<CellRef> = HashSet::new();
+    let mut open: HashMap<u32, Run> = HashMap::new();
+    let mut next_si = 0u32;
+    // A run that got a second cell becomes a group, written from its first cell.
+    fn close(roles: &mut HashMap<CellRef, SharedRole>, run: Option<Run>) {
+        if let Some(Run { start, end_row, si: Some(si), .. }) = run {
+            roles.insert(start, SharedRole::Master(si, RangeRef::new(start, CellRef::new(end_row, start.col))));
+        }
+    }
+    for (c, cell) in sheet.cells.iter() {
+        let Some(f) = cell.formula.as_ref() else { continue };
+        let spills = dynamic.contains_key(&c);
+        let needs_array = f.array().is_none() && !spills && crate::array_formula::needs_array(wb, si, c, f);
+        if needs_array {
+            implicit.insert(c);
+        }
+        let plain = f.array().is_none() && !spills && !needs_array && !overrides.contains_key(&c) && !sheet.cell_pictures.contains_key(&c);
+        let base = f
+            .template()
+            .filter(|(b, dr, dc)| plain && gridcraft_formula::adjust::shift_stays_on_sheet(b, *dr, *dc) && excel_can_share(b))
+            .map(|(b, dr, dc)| (b.clone(), (i64::from(c.row) - dr, i64::from(c.col) - dc)));
+        match (base, open.get_mut(&c.col)) {
+            (Some((b, origin)), Some(run)) if Arc::ptr_eq(&run.base, &b) && run.origin == origin && run.end_row.checked_add(1) == Some(c.row) => {
+                let si = *run.si.get_or_insert_with(|| {
+                    next_si += 1;
+                    next_si - 1
+                });
+                run.end_row = c.row;
+                roles.insert(c, SharedRole::Member(si));
+            }
+            (Some((b, origin)), _) => {
+                let old = open.insert(c.col, Run { base: b, origin, start: c, end_row: c.row, si: None });
+                close(&mut roles, old);
+            }
+            (None, _) => close(&mut roles, open.remove(&c.col)),
+        }
+    }
+    for (_, run) in open.drain() {
+        close(&mut roles, Some(run));
+    }
+    (roles, implicit)
+}
+
+/// Whether Excel reads the formula as a shared formula: Excel (observed: Microsoft 365, 16.0)
+/// refuses to open a workbook whose shared formulas hold a sheet-qualified reference
+/// (`Sheet2!A1`, `Lookup!$A$2:$B$21`, even the formula's own sheet), as binary shared formulas
+/// can't hold 3-D references. Names and structured references are kept out too: their spelling
+/// in files isn't a plain reference.
+fn excel_can_share(e: &Expr) -> bool {
+    let mut ok = true;
+    e.walk(&mut |x| match x {
+        Expr::Ref(r) if r.sheet != gridcraft_formula::SheetSel::Current => ok = false,
+        Expr::Name(_) | Expr::Struct(_) => ok = false,
+        _ => {}
+    });
+    ok
+}
+
 pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (String, Rels) {
     let mut rels = Rels::default();
     let Some(sheet) = wb.sheet(si) else { return (String::new(), rels) };
@@ -95,7 +190,7 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
     let dynamic: BTreeMap<CellRef, RangeRef> = sheet
         .spill_ranges
         .iter()
-        .filter(|(a, r)| !r.is_single() && sheet.cells.get(**a).is_some_and(|c| c.formula.as_ref().is_some_and(|f| f.array.is_none())))
+        .filter(|(a, r)| !r.is_single() && sheet.cells.get(**a).is_some_and(|c| c.formula.as_ref().is_some_and(|f| f.array().is_none())))
         .map(|(a, r)| (*a, *r))
         .collect();
     let mut extra: BTreeMap<CellRef, Value> = BTreeMap::new();
@@ -257,6 +352,7 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
     }
 
     // sheetData
+    let (shared, implicit) = shared_formulas(wb, si, sheet, &dynamic, &overrides);
     let mut keys: BTreeSet<CellRef> = sheet.cells.iter().map(|(c, _)| c).collect();
     keys.extend(sheet.cell_pictures.keys().copied());
     keys.extend(extra.keys().copied());
@@ -299,11 +395,8 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
             let cell = sheet.cells.get(*c);
             let ov = overrides.get(c);
             let ex = extra.get(c);
-            let array = dynamic.get(c).copied().or_else(|| {
-                let f = cell?.formula.as_ref()?;
-                (f.array.is_none() && crate::array_formula::needs_array(wb, si, *c, f)).then_some(RangeRef::cell(*c))
-            });
-            write_cell(&mut s, *c, cell, sheet.cell_pictures.get(c), ov, ex, array.as_ref(), &sid, out);
+            let array = dynamic.get(c).copied().or_else(|| implicit.contains(c).then_some(RangeRef::cell(*c)));
+            write_cell(&mut s, *c, cell, sheet.cell_pictures.get(c), ov, ex, array.as_ref(), shared.get(c), &sid, out);
         }
         s.push_str("</row>");
     }
@@ -637,6 +730,7 @@ fn write_cell(
     ov: Option<&String>,
     extra: Option<&Value>,
     dynamic: Option<&RangeRef>,
+    shared: Option<&SharedRole>,
     sid: &dyn Fn(gridcraft_model::StyleId) -> u32,
     out: &mut Out,
 ) {
@@ -668,7 +762,7 @@ fn write_cell(
         v => v,
     };
     // A non-spilling formula may still need array evaluation to avoid implicit intersection.
-    if dynamic.is_some() && formula.is_some_and(|f| f.array.is_none()) {
+    if dynamic.is_some() && formula.is_some_and(|f| f.array().is_none()) {
         s.push_str(" cm=\"1\"");
         out.dynamic_arrays = true;
     }
@@ -681,16 +775,22 @@ fn write_cell(
         };
         s.push_str(t);
         s.push('>');
-        let text = esc(&crate::fmla::to_file(f));
-        match (f.array, dynamic) {
-            (Some(r), _) => {
-                let _ = write!(s, "<f t=\"array\" ref=\"{}\">{text}</f>", r.a1());
+        let text = || esc(&crate::fmla::to_file(f));
+        match (f.array(), dynamic, shared) {
+            (Some(r), _, _) => {
+                let _ = write!(s, "<f t=\"array\" ref=\"{}\">{}</f>", r.a1(), text());
             }
-            (None, Some(r)) => {
-                let _ = write!(s, "<f t=\"array\" ref=\"{}\">{text}</f>", r.a1());
+            (None, Some(r), _) => {
+                let _ = write!(s, "<f t=\"array\" ref=\"{}\">{}</f>", r.a1(), text());
             }
-            _ => {
-                let _ = write!(s, "<f>{text}</f>");
+            (None, None, Some(SharedRole::Master(si, r))) => {
+                let _ = write!(s, "<f t=\"shared\" ref=\"{}\" si=\"{si}\">{}</f>", r.a1(), text());
+            }
+            (None, None, Some(SharedRole::Member(si))) => {
+                let _ = write!(s, "<f t=\"shared\" si=\"{si}\"/>");
+            }
+            (None, None, None) => {
+                let _ = write!(s, "<f>{}</f>", text());
             }
         }
         match &value {

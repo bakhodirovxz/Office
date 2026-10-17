@@ -33,7 +33,7 @@ right-to-left sheets and full complex-script support. Part of
   arrow keys, editor, popups and floating objects follow; text stays left-to-right inside its box
   (no bidi), and the sheet tabs, horizontal scrollbar and printing/PDF are not mirrored yet. IME input goes
   through egui/winit and is unverified for Chinese, Japanese and Korean.
-- **PDF export** uses only the 14 standard PDF fonts: non-Latin text cannot export.
+- **PDF export** embeds installed TrueType faces as subsets (Cyrillic, Greek, Uzbek export); RTL, shaping and CFF-only fonts (most CJK) still do not.
 
 ## Languages
 

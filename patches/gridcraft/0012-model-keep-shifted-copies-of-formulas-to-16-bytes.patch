@@ -64,7 +64,7 @@ index f0b8dbf..53050d5 100644
          t.calc.cells_changed(&mut t.wb, &[(0, c(at))]);
      };
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index 18182fa..bf527c5 100644
+index da211d3..ec07a77 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
 @@ -243,7 +243,7 @@ fn cell_set(s: &mut Session, p: &Json) -> Result<Json> {
@@ -104,7 +104,7 @@ index 18182fa..bf527c5 100644
                  cell.formula = Some(std::sync::Arc::new(nf));
              } else {
                  runs.keep(c, &f);
-@@ -1636,7 +1636,7 @@ mod tests {
+@@ -1653,7 +1653,7 @@ mod tests {
          s.execute("cell.set", json!({"cell": "H5", "input": "=1+1", "array": true})).unwrap();
          let sh = s.doc().unwrap().wb.active().unwrap();
          let f = sh.cell(CellRef::parse("H5").unwrap()).and_then(|c| c.formula.clone()).unwrap();

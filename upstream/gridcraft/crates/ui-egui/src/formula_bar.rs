@@ -76,7 +76,7 @@ fn active_input(app: &SheetApp) -> String {
         return if let Some(f) = &c.formula {
             let shown = crate::formula_locale::display(&c.input_text(), app.ui.language.formula_locale(), &d.wb, d.wb.active_sheet);
             // A legacy array formula shows in braces (`{=A1:A2*2}`), as `Cell::bar_text` does.
-            if f.array.is_some() { format!("{{{shown}}}") } else { shown }
+            if f.array().is_some() { format!("{{{shown}}}") } else { shown }
         } else {
             gridcraft_engine::display::edit_text(&d.wb, sh, a)
         };
@@ -89,7 +89,7 @@ fn active_input(app: &SheetApp) -> String {
             if gridcraft_engine::display::formula_hidden(&d.wb, sh, *anchor) {
                 return String::new();
             }
-            return crate::formula_locale::display(&format!("={}", f.text), app.ui.language.formula_locale(), &d.wb, d.wb.active_sheet);
+            return crate::formula_locale::display(&format!("={}", f.text()), app.ui.language.formula_locale(), &d.wb, d.wb.active_sheet);
         }
     }
     String::new()

@@ -234,7 +234,7 @@ fn insert_table(s: &mut Session, p: &Json) -> Result<Json> {
         return Err(EngineError::Other("A table can't overlap another table.".into()));
     }
     let arrays = |sh: &gridcraft_model::Sheet| {
-        sh.cells.iter().any(|(_, x)| x.formula.as_ref().and_then(|f| f.array).is_some_and(|a| !a.is_single() && a.intersects(&r)))
+        sh.cells.iter().any(|(_, x)| x.formula.as_ref().and_then(|f| f.array()).is_some_and(|a| !a.is_single() && a.intersects(&r)))
     };
     if d.wb.sheet(sheet).is_some_and(arrays) {
         return Err(EngineError::Other("Multi-cell array formulas aren't allowed in tables.".into()));
@@ -495,9 +495,10 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
             // A bare name that is also a defined name resolves to the defined name, so it is not the table.
             let shadowed = cx.wb.name(&old, i).is_some();
             let Some(sh) = cx.wb.sheet_mut(i) else { continue };
+            let mut runs = gridcraft_model::FormulaRuns::default();
             for (c, f) in keys {
                 let Some(e) = f.expr() else { continue };
-                let ne = e.map(&mut |x| match x {
+                let ne = e.clone().map(&mut |x| match x {
                     gridcraft_formula::Expr::Struct(mut st) if st.table.eq_ignore_ascii_case(&old) => {
                         st.table = name.clone();
                         gridcraft_formula::Expr::Struct(st)
@@ -505,8 +506,11 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
                     gridcraft_formula::Expr::Name(n) if !shadowed && n.eq_ignore_ascii_case(&old) => gridcraft_formula::Expr::Name(name.clone()),
                     o => o,
                 });
-                if let Some(cell) = sh.cells.get_mut(c) {
-                    cell.formula = Some(std::sync::Arc::new(Formula::from_expr(ne)));
+                if ne == e {
+                    // Unchanged: kept as it is (with the tree it shares).
+                    runs.keep(c, &f);
+                } else if let Some(cell) = sh.cells.get_mut(c) {
+                    cell.formula = Some(std::sync::Arc::new(runs.formula(c, ne)));
                 }
             }
         }
