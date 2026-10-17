@@ -567,6 +567,16 @@ Upstream HEADs at start of Phase 0:
     and the script then exported a partial (16-patch) queue. The gate caught it, and nothing was applied.
   - Fix: on a fmt conflict the script now aborts and keeps the full unformatted queue. It also uses a unique scratch
     branch per run.
+- **WP10 locale check done** (`docs/phase1/locale-check.md`). **gridcraft is hard-coded to en-US.**
+  - Display, PDF and CSV all use `.` as the decimal separator (`numfmt/src/render.rs:159,198,337`).
+  - Month names are English only, and `[$-419]`/`[$-443]` locale tags are dropped.
+  - **Data-integrity bug, re-checked by the orchestrator with the domain CLI:** typing `12.10.2026` is stored as
+    **2026-12-10**, and `3,5` stays text (`ISNUMBER` = FALSE). Excel ru-RU stores 12 October and the number 3.5.
+  - uz-Latn, uz-Cyrl and ru all expect a decimal comma, a NBSP group separator and `;` as the list separator
+    (CLDR and Windows NLS agree).
+  - **Fix:** a carried `NumLocale` patch driven by the app language, about 6–8 days for separators, names and input.
+  - This does not block the Phase 1 exit, but it **blocks v1 release quality** for uz/ru users. Proposed for early
+    Phase 2; the owner decides.
 - **Open:** gridcraft-patched files are not rustfmt-clean. Plan: add one trailing "rustfmt" patch at the end of the
   queue, so it cannot conflict. To do in WP6 final.
 
