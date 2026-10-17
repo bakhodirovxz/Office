@@ -16,7 +16,6 @@ pub mod io;
 pub mod links;
 pub mod outline;
 pub mod paper;
-pub mod pdf_fonts;
 pub mod pivot;
 pub mod pivot_calc;
 pub mod sample;
@@ -119,17 +118,9 @@ static NEXT_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::ne
 const UNDO_LIMIT: usize = 100;
 
 impl DocState {
-    pub fn new(wb: Workbook, path: Option<String>, title: String) -> DocState {
-        DocState::open(wb, path, title, false)
-    }
-    /// [`DocState::new`] for a workbook just read from a file. When `calculated` (its values come
-    /// from a full calculation and it asks for none on open: [`io::open_bytes_calculated`]), its
-    /// values are kept as the file has them, as Excel opens such a file; formulas are calculated
-    /// on open only when needed ([`Calc::open`]).
-    pub fn open(mut wb: Workbook, path: Option<String>, title: String, calculated: bool) -> DocState {
-        wb.shrink_to_fit();
+    pub fn new(mut wb: Workbook, path: Option<String>, title: String) -> DocState {
         let mut calc = Calc::new();
-        calc.open(&mut wb, calculated);
+        calc.recalc_all(&mut wb);
         let wb = Arc::new(wb);
         let sel = Selection::at(wb.active().map(|s| s.view_active).unwrap_or_default());
         DocState {

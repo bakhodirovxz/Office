@@ -204,16 +204,6 @@ impl Workbook {
     pub fn name_call_case(&self, e: Expr) -> Expr {
         spell_calls(e, &self.lambda_names())
     }
-    /// Gives back the room the sheets' cell bands keep for cells added later
-    /// ([`CellStore::shrink_to_fit`](crate::CellStore::shrink_to_fit)), after reading a file. Sheets
-    /// shared with a snapshot are left as they are.
-    pub fn shrink_to_fit(&mut self) {
-        for sheet in &mut self.sheets {
-            if let Some(sheet) = Arc::get_mut(sheet) {
-                sheet.cells.shrink_to_fit();
-            }
-        }
-    }
     /// [`Workbook::name_call_case`] for every cell formula and defined name (after reading a
     /// file).
     pub fn apply_name_call_case(&mut self) {
@@ -229,11 +219,7 @@ impl Workbook {
                     let f = cell.formula.as_ref()?;
                     let e = f.expr()?;
                     let ne = spell_calls(e.clone(), &lambdas);
-                    (ne != e).then(|| {
-                        let mut nf = Formula::from_expr(ne);
-                        nf.set_array(f.array());
-                        (c, nf)
-                    })
+                    (ne != e).then(|| (c, Formula { array: f.array, ..Formula::from_expr(ne) }))
                 })
                 .collect();
             if fixed.is_empty() {

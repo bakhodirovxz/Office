@@ -664,7 +664,7 @@ fn legacy_array_formulas_fill_their_range() {
     t.set("A2", "2");
     let cse = |t: &mut T, at: &str, formula: &str, range: &str| {
         let mut f = Formula::new(formula);
-        f.set_array(gridcraft_core::RangeRef::parse(range));
+        f.array = gridcraft_core::RangeRef::parse(range);
         t.wb.sheet_mut(0).unwrap().cells.set(c(at), Cell::formula(f));
         t.calc.cells_changed(&mut t.wb, &[(0, c(at))]);
     };
@@ -1265,96 +1265,4 @@ fn offset_extreme_arguments_return_ref() {
     ] {
         assert_eq!(crate::evaluate(&wb, 0, c("D1"), formula), Value::Number(expected), "{formula}");
     }
-}
-
-/// A recalculation writes only the values that changed, so it never copies sheets (or their bands
-/// of cells) out of a snapshot sharing them, like an undo entry or the saved state, when nothing
-/// changed; and a change copies only the sheet it is on.
-#[test]
-fn recalculation_keeps_unchanged_sheets_shared_with_snapshots() {
-    let mut t = T::new();
-    t.wb.sheets.push(std::sync::Arc::new(gridcraft_model::Sheet::new("Sheet2")));
-    for r in 1..=300 {
-        t.set(&format!("A{r}"), &r.to_string());
-        t.set(&format!("B{r}"), &format!("=A{r}*2"));
-    }
-    t.wb.sheet_mut(1).unwrap().cells.set(c("A1"), Cell::formula(Formula::new("=Sheet1!B300+1")));
-    t.calc.recalc_all(&mut t.wb);
-    assert_eq!(t.wb.sheet(1).unwrap().value(c("A1")), Value::Number(601.0));
-    let snapshot = t.wb.clone();
-    t.calc.recalc_all(&mut t.wb);
-    assert!(t.wb.sheets.iter().zip(&snapshot.sheets).all(|(a, b)| std::sync::Arc::ptr_eq(a, b)));
-    // A change on Sheet2 alone leaves Sheet1 shared.
-    let snapshot = t.wb.clone();
-    t.wb.sheet_mut(1).unwrap().cells.set(c("B1"), Cell::value(Value::Number(5.0)));
-    t.wb.sheet_mut(1).unwrap().cells.set(c("C1"), Cell::formula(Formula::new("=B1+1")));
-    t.calc.cells_changed(&mut t.wb, &[(1, c("B1")), (1, c("C1"))]);
-    assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
-    assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
-    t.calc.recalc_all(&mut t.wb);
-    assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
-    assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
-}
-
-/// Opening a calculated file keeps its values (as Excel does), unless a formula has none or is
-/// volatile; anything else calculates everything, as before.
-#[test]
-fn open_keeps_calculated_values_unless_a_formula_needs_calculating() {
-    let book = |extra: Option<&str>| {
-        let mut wb = Workbook::new();
-        let sh = wb.sheet_mut(0).unwrap();
-        sh.cells.set(c("A1"), Cell::value(Value::Number(2.0)));
-        // A cached value a calculation would not give: kept only when the file is trusted.
-        sh.cells.set(c("B1"), Cell { value: Value::Number(5.0), ..Cell::formula(Formula::new("=A1*2")) });
-        for r in 2..=40 {
-            sh.cells.set(c(&format!("B{r}")), Cell { value: Value::Number(1.0), ..Cell::formula(Formula::new(&format!("=A{r}+1"))) });
-        }
-        if let Some(f) = extra {
-            sh.cells.set(c("C1"), Cell { value: Value::Number(7.0), ..Cell::formula(Formula::new(f)) });
-        }
-        wb
-    };
-    let b1 = |wb: &Workbook| wb.sheet(0).unwrap().value(c("B1"));
-    let mut wb = book(None);
-    let mut calc = Calc::new();
-    assert!(calc.open(&mut wb, true));
-    assert_eq!(b1(&wb), Value::Number(5.0));
-    // The graph is built: an edit recalculates what depends on it.
-    wb.sheet_mut(0).unwrap().cells.set(c("A1"), Cell::value(Value::Number(3.0)));
-    calc.cells_changed(&mut wb, &[(0, c("A1"))]);
-    assert_eq!(b1(&wb), Value::Number(6.0));
-    assert_eq!(wb.sheet(0).unwrap().value(c("B2")), Value::Number(1.0), "not a dependent: kept");
-    // Not trusted, a formula without a value, a volatile formula: everything is calculated.
-    for (extra, calculated) in [(None, false), (Some("=A1+"), true), (Some("=NOW()*0+A1"), true), (Some("=INDIRECT(\"A1\")"), true)] {
-        let mut wb = book(extra);
-        if extra == Some("=A1+") {
-            // Doesn't parse and has no value.
-            wb.sheet_mut(0).unwrap().cells.set(c("C1"), Cell::formula(Formula::new("=A1+")));
-        }
-        assert!(!Calc::new().open(&mut wb, calculated), "{extra:?}");
-        assert_eq!(b1(&wb), Value::Number(4.0), "{extra:?}");
-        assert_eq!(wb.sheet(0).unwrap().value(c("B2")), Value::Number(1.0));
-    }
-    let mut fresh = book(None);
-    Calc::new().recalc_all(&mut fresh);
-    let mut opened = book(None);
-    Calc::new().open(&mut opened, false);
-    assert_eq!(opened, fresh, "an untrusted open is a full calculation");
-}
-
-/// A calculated file's `#NAME?` (a function the program that saved it didn't have) is calculated
-/// on open, with its dependents; the other values are kept.
-#[test]
-fn open_calculates_what_the_saving_program_could_not() {
-    let mut wb = Workbook::new();
-    let sh = wb.sheet_mut(0).unwrap();
-    sh.cells.set(c("A1"), Cell::value(Value::Number(2.0)));
-    sh.cells.set(c("B1"), Cell { value: Value::Error(CellError::Name), ..Cell::formula(Formula::new("=XLOOKUP(2,A1:A1,A1:A1)*3")) });
-    sh.cells.set(c("C1"), Cell { value: Value::Error(CellError::Name), ..Cell::formula(Formula::new("=B1+1")) });
-    // A stale value nothing above feeds: kept.
-    sh.cells.set(c("D1"), Cell { value: Value::Number(9.0), ..Cell::formula(Formula::new("=A1*2")) });
-    let mut calc = Calc::new();
-    assert!(calc.open(&mut wb, true));
-    let v = |a: &str| wb.sheet(0).unwrap().value(c(a));
-    assert_eq!((v("B1"), v("C1"), v("D1")), (Value::Number(6.0), Value::Number(7.0), Value::Number(9.0)));
 }

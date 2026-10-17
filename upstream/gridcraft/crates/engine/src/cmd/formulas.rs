@@ -347,7 +347,7 @@ fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_sc
         for (c, f) in formulas {
             let Some(e) = f.expr().and_then(rename) else { continue };
             let mut nf = Formula::from_expr(e);
-            nf.set_array(f.array());
+            nf.array = f.array;
             if let Some(cell) = sh.cells.get_mut(c) {
                 cell.formula = Some(std::sync::Arc::new(nf));
             }
@@ -496,7 +496,7 @@ fn error_checking(s: &mut Session, _: &Json) -> Result<Json> {
         for (c, cell) in sh.cells.iter() {
             if let Some(e) = cell.value.as_error() {
                 out.push(
-                    json!({"sheet": sh.name, "cell": c.a1(), "error": e.as_str(), "formula": cell.formula.as_ref().map(|f| format!("={}", f.text()))}),
+                    json!({"sheet": sh.name, "cell": c.a1(), "error": e.as_str(), "formula": cell.formula.as_ref().map(|f| format!("={}", f.text))}),
                 );
             }
             if out.len() >= 10_000 {
@@ -519,7 +519,7 @@ fn evaluate_formula(s: &mut Session, p: &Json) -> Result<Json> {
             d.wb.sheet(sheet)
                 .and_then(|sh| sh.cell(at))
                 .and_then(|c| c.formula.as_ref())
-                .map(|f| f.text().into_owned())
+                .map(|f| f.text.clone())
                 .ok_or_else(|| EngineError::Other("The cell has no formula.".into()))?
         }
     };

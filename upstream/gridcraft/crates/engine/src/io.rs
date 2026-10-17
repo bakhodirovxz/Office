@@ -55,17 +55,10 @@ pub fn open_bytes(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
 /// [`open_bytes`], first decrypting a password-protected workbook with `password`. Errors never
 /// quote the password.
 pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>)> {
-    open_bytes_calculated(name, bytes, password).map(|(wb, warnings, _)| (wb, warnings))
-}
-
-/// [`open_bytes_with_password`], also telling whether the workbook's values come from a full
-/// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
-/// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
-pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
-        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
+        let (mut wb, warnings) = open_plain(name, bytes)?;
         fit_imported_rows(&mut wb);
-        return Ok((wb, warnings, calculated));
+        return Ok((wb, warnings));
     }
     // A scheme no password opens is said straight away, rather than after asking for one.
     let decrypt_error = |e: gridcraft_xlsx::DecryptError| EngineError::Other(decrypt_message(name, e));
@@ -77,10 +70,10 @@ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -
     if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
     }
-    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
+    let (mut wb, mut warnings) = open_plain(name, &plain)?;
     fit_imported_rows(&mut wb);
     warnings.insert(0, DECRYPTED_NOTICE.into());
-    Ok((wb, warnings, calculated))
+    Ok((wb, warnings))
 }
 
 /// Excel auto-fits rows to their tallest font when opening a file: rows without a user-set
@@ -118,13 +111,13 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
     }
 }
 
-/// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
-fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
+/// Parses bytes that aren't encrypted.
+fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
     let kind = FileKind::from_path(name);
     let sniffed = gridcraft_xlsx::sniff(bytes);
     if sniffed == gridcraft_xlsx::Format::Xls {
         let (wb, report) = gridcraft_xlsx::read_xls(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
-        return Ok((wb, report.warnings, false));
+        return Ok((wb, report.warnings));
     }
     if sniffed == gridcraft_xlsx::Format::LegacyBinary {
         return Err(EngineError::Other(format!(
@@ -143,12 +136,12 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
     if let Some(import) = import {
         let read = if import == FileKind::Ods { gridcraft_xlsx::read_ods } else { gridcraft_xlsx::read_xlsb };
         let (wb, report) = read(bytes).map_err(|e| EngineError::Other(format!("We can't import '{name}': {e}")))?;
-        return Ok((wb, report.warnings, false));
+        return Ok((wb, report.warnings));
     }
     // Text named `.xlsx` is read as text.
     if sniffed == gridcraft_xlsx::Format::Xlsx || (kind == Some(FileKind::Xlsx) && sniffed != gridcraft_xlsx::Format::Csv) {
         let (wb, report) = gridcraft_xlsx::read_xlsx(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
-        return Ok((wb, report.warnings, report.calculated));
+        return Ok((wb, report.warnings));
     }
     match kind {
         Some(FileKind::Json) => {
@@ -157,7 +150,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
             if wb.sheets.is_empty() {
                 wb = Workbook::new();
             }
-            Ok((wb, vec![], false))
+            Ok((wb, vec![]))
         }
         Some(FileKind::Tsv) => {
             let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
@@ -165,13 +158,13 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
             // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
             wb.csv_delimiter = None;
             rename_first_sheet(&mut wb, name);
-            Ok((wb, vec![], false))
+            Ok((wb, vec![]))
         }
         _ => {
             let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             rename_first_sheet(&mut wb, name);
-            Ok((wb, vec![], false))
+            Ok((wb, vec![]))
         }
     }
 }
@@ -413,27 +406,6 @@ pub fn read_file(path: &str) -> Result<Vec<u8>> {
         return Err(EngineError::Other("files larger than 2 GB aren't supported".into()));
     }
     std::fs::read(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))
-}
-
-/// [`open_bytes_calculated`] for an XLSX file on disk (its bytes sniffed as
-/// [`gridcraft_xlsx::Format::Xlsx`], `len` of them), read from the file as its parts are needed
-/// rather than from its bytes in memory: opening a large workbook then never holds the file's bytes
-/// and the workbook being built at the same time.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn open_xlsx_file(name: &str, path: &str, len: usize) -> Result<(Workbook, Vec<String>, bool)> {
-    let file = std::fs::File::open(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
-    if file.metadata().map_err(|e| EngineError::Other(format!("{path}: {e}")))?.len() != len as u64 {
-        return Err(EngineError::Other(format!("We can't open '{name}': it changed while it was being opened.")));
-    }
-    let (mut wb, report) =
-        gridcraft_xlsx::read_xlsx_reader(std::io::BufReader::new(file)).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
-    fit_imported_rows(&mut wb);
-    Ok((wb, report.warnings, report.calculated))
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn open_xlsx_file(_name: &str, path: &str, _len: usize) -> Result<(Workbook, Vec<String>, bool)> {
-    Err(EngineError::Other(format!("{path}: no file system in the browser")))
 }
 
 #[cfg(target_arch = "wasm32")]

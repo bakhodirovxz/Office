@@ -700,7 +700,7 @@ impl<'h> Evaluator<'h> {
                     Ev::V(Value::Bool(f.is_some()))
                 } else {
                     match f {
-                        Some(f) => Ev::V(Value::text(format!("={}", f.text()))),
+                        Some(f) => Ev::V(Value::text(format!("={}", f.text))),
                         None => err(CellError::NA),
                     }
                 }
@@ -1435,7 +1435,7 @@ impl<'h> Evaluator<'h> {
                                     s.is_some_and(|s| if skip_hidden { s.is_row_hidden(c.row) } else { skip_filtered && s.is_row_filtered(c.row) });
                                 let nested = skip_nested
                                     && s.and_then(|s| s.cell(c)).and_then(|cell| cell.formula.as_ref()).is_some_and(|f| {
-                                        let u = f.text().to_ascii_uppercase();
+                                        let u = f.text.to_ascii_uppercase();
                                         u.contains("SUBTOTAL(") || u.contains("AGGREGATE(")
                                     });
                                 (hidden, nested)

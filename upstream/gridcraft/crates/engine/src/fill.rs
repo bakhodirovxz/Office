@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use gridcraft_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, days_in_month, serial_from_ymd};
 use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_model::Cell;
+use gridcraft_model::{Cell, Formula};
 use gridcraft_numfmt::{FormatKind, NumberFormat};
 
 use crate::Result;
@@ -96,8 +96,9 @@ pub fn fill(cx: &mut Ctx, sheet: usize, src: RangeRef, target: RangeRef, mode: F
                 FillMode::ValuesOnly | FillMode::Series | FillMode::Alternate | FillMode::Copy => {
                     let style = if mode == FillMode::ValuesOnly { sh.cell(*t).map(|c| c.style).unwrap_or_default() } else { cell.style };
                     if let Some(f) = &cell.formula {
-                        if let Some(copy) = f.copied(t.row as i64 - sc.row as i64, t.col as i64 - sc.col as i64) {
-                            cell.formula = Some(Arc::new(copy));
+                        if let Some(e) = f.expr() {
+                            let shifted = gridcraft_formula::adjust::shift_relative(e, t.row as i64 - sc.row as i64, t.col as i64 - sc.col as i64);
+                            cell.formula = Some(Arc::new(Formula::from_expr(shifted)));
                             cell.value = Value::Empty;
                         }
                     } else if let Some(v) = match per_cell.get(src_i) {

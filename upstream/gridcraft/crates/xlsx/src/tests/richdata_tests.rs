@@ -146,7 +146,7 @@ fn reads_independent_indices_reordered_keys_and_both_relationship_layouts() {
         assert_eq!(sheet.cell_pictures.get(&at("A1")).map(Arc::as_ref), Some(&picture(png(), "image/png", "green & <image>")));
         assert_eq!(cell.value, Value::Error(CellError::Value));
         assert!(cell.formula.is_none());
-        assert!(sheet.cells.get(at("B1")).unwrap().formula.as_ref().unwrap().array().is_none());
+        assert!(sheet.cells.get(at("B1")).unwrap().formula.as_ref().unwrap().array.is_none());
         assert!(sheet.cells.get(at("B2")).is_none());
     }
 }
@@ -181,8 +181,8 @@ fn pictures_roundtrip_across_sheets_with_and_without_dynamic_arrays() {
         assert_eq!(loaded.sheet(0).unwrap().cell_pictures.get(&at("A4")).unwrap().data, jpeg());
         if dynamic {
             let f = loaded.sheet(0).unwrap().cells.get(at("E1")).unwrap().formula.as_ref().unwrap();
-            assert_eq!(f.text(), "SEQUENCE(2)");
-            assert!(f.array().is_none());
+            assert_eq!(f.text, "SEQUENCE(2)");
+            assert!(f.array.is_none());
         }
         let rels = package.rels("xl/workbook.xml").unwrap();
         assert!(rels.iter().any(|r| r.kind == "rdRichValue"));

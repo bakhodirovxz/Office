@@ -455,11 +455,11 @@ impl SheetState<'_> {
             Ok(e) => {
                 let text = gridcraft_formula::print(&e);
                 let mut f = Formula::new(&text);
-                if !f.is_parsed() {
+                if f.expr.is_none() {
                     self.unsupported("syntax GridCraft can't parse yet");
                     return;
                 }
-                f.set_array(array.filter(|r| !r.is_single()));
+                f.array = array.filter(|r| !r.is_single());
                 if let Some(cell) = self.sheet.cells.get_mut(pos) {
                     cell.formula = Some(Arc::new(f));
                 } else {
@@ -546,7 +546,7 @@ fn worksheet(
     // .xlsx is read, so that the formula fills its range on recalculation. If the formula itself
     // couldn't be imported, they keep their values.
     for p in &pending {
-        let filled = st.sheet.cell(p.anchor).and_then(|c| c.formula.as_ref()).and_then(|f| f.array()).is_some_and(|r| r.contains(p.pos));
+        let filled = st.sheet.cell(p.anchor).and_then(|c| c.formula.as_ref()).and_then(|f| f.array).is_some_and(|r| r.contains(p.pos));
         if p.pos != p.anchor && filled {
             let style = st.sheet.style_id(p.pos);
             st.sheet.cells.set(p.pos, Cell { value: Value::Empty, formula: None, style });
