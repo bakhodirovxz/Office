@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 17 Oct 2026 16:06:30 +0500
+Subject: [PATCH 101/102] ui-egui: turn off the upstream website and Discord
+ links in About under the overlay
+
+With OFFICE_OVERLAY_DIR set at build time the About tab shows neither the upstream website nor the
+Discord link. Gated on constants from office_overlay; without an overlay the behaviour is upstream's.
+---
+ crates/ui-egui/src/dialogs.rs | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index aa5fd10..bf6baeb 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -1490,8 +1490,12 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
+             if !crate::office_overlay::attribution().is_empty() {
+                 ui.label(crate::office_overlay::attribution());
+             }
+-            ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
+-            ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
++            if crate::office_overlay::UPSTREAM_LINKS {
++                ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
++            }
++            if crate::office_overlay::COMMUNITY {
++                ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
++            }
+         }
+     }
+ }
