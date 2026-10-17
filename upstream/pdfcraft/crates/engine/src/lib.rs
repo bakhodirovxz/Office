@@ -27,6 +27,7 @@ pub mod export;
 pub mod js;
 pub mod links;
 pub mod ocr;
+mod office_dates;
 pub mod optimizer;
 pub mod print_raster;
 pub mod printcheck;
