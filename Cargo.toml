@@ -1,6 +1,6 @@
 # Root workspace "core": our own crates and xtask. Upstream trees and the build domains are separate workspaces.
 [workspace]
-members = ["xtask"]
+members = ["xtask", "crates/*"]
 exclude = ["upstream", "domains", "spikes", "services"]
 resolver = "3"
 

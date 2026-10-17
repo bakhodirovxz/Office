@@ -1,0 +1,552 @@
+Suite
+Copyright (c) 2026 Suite contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE). This applies to the files of our layer: crates/, xtask/, domains/,
+scripts/, brand/, i18n/ and the patch files in patches/.
+
+Based on WordCraft, GridCraft, DeckCraft and PdfCraft by the ArtCraft team (MIT OR Apache-2.0).
+
+The products are built from unmodified vendored snapshots of those applications (upstream/<repo>/,
+pinned in patches/<repo>/BASE) plus a queue of patches (patches/<repo>/NNNN-*.patch, listed with
+the reason for each in patches/REGISTER.md). Every changed upstream file is therefore recorded
+as a patch (Apache-2.0 section 4(b)); the upstream LICENSE, NOTICE and ATTRIBUTION files stay in the
+snapshots untouched.
+
+The ArtCraft name, wordmark and logos are trademarks of the ArtCraft Team. They are not open source,
+are not used for this product, and are not covered by the licence above. The builds contain none of
+the ArtCraft logo files (checked by `cargo xt brand-grep` and `cargo xt brand-scan-bin`).
+
+Third-party material added by this layer
+
+- Noto Sans and Noto Sans Mono, subset (assets/fonts/fallback/NotoSans-Regular-uz.ttf and
+  NotoSansMono-Regular-uz.ttf; the faces office-fallback-sans and office-fallback-mono): Copyright 2022
+  The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic), SIL Open Font License 1.1,
+  no Reserved Font Name. The files are modified: they are subsets made by scripts/subset-fallback-font.sh.
+  Provenance and checksums: assets/fonts/fallback/SOURCE.md. The licence text follows.
+
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+  
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+  This license is copied below, and is also available with a FAQ at:
+  https://scripts.sil.org/OFL
+  
+  
+  -----------------------------------------------------------
+  SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+  -----------------------------------------------------------
+  
+  PREAMBLE
+  The goals of the Open Font License (OFL) are to stimulate worldwide
+  development of collaborative font projects, to support the font creation
+  efforts of academic and linguistic communities, and to provide a free and
+  open framework in which fonts may be shared and improved in partnership
+  with others.
+  
+  The OFL allows the licensed fonts to be used, studied, modified and
+  redistributed freely as long as they are not sold by themselves. The
+  fonts, including any derivative works, can be bundled, embedded, 
+  redistributed and/or sold with any software provided that any reserved
+  names are not used by derivative works. The fonts and derivatives,
+  however, cannot be released under any other type of license. The
+  requirement for fonts to remain under this license does not apply
+  to any document created using the fonts or their derivatives.
+  
+  DEFINITIONS
+  "Font Software" refers to the set of files released by the Copyright
+  Holder(s) under this license and clearly marked as such. This may
+  include source files, build scripts and documentation.
+  
+  "Reserved Font Name" refers to any names specified as such after the
+  copyright statement(s).
+  
+  "Original Version" refers to the collection of Font Software components as
+  distributed by the Copyright Holder(s).
+  
+  "Modified Version" refers to any derivative made by adding to, deleting,
+  or substituting -- in part or in whole -- any of the components of the
+  Original Version, by changing formats or by porting the Font Software to a
+  new environment.
+  
+  "Author" refers to any designer, engineer, programmer, technical
+  writer or other person who contributed to the Font Software.
+  
+  PERMISSION & CONDITIONS
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of the Font Software, to use, study, copy, merge, embed, modify,
+  redistribute, and sell modified and unmodified copies of the Font
+  Software, subject to the following conditions:
+  
+  1) Neither the Font Software nor any of its individual components,
+  in Original or Modified Versions, may be sold by itself.
+  
+  2) Original or Modified Versions of the Font Software may be bundled,
+  redistributed and/or sold with any software, provided that each copy
+  contains the above copyright notice and this license. These can be
+  included either as stand-alone text files, human-readable headers or
+  in the appropriate machine-readable metadata fields within text or
+  binary files as long as those fields can be easily viewed by the user.
+  
+  3) No Modified Version of the Font Software may use the Reserved Font
+  Name(s) unless explicit written permission is granted by the corresponding
+  Copyright Holder. This restriction only applies to the primary font name as
+  presented to the users.
+  
+  4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+  Software shall not be used to promote, endorse or advertise any
+  Modified Version, except to acknowledge the contribution(s) of the
+  Copyright Holder(s) and the Author(s) or with their explicit written
+  permission.
+  
+  5) The Font Software, modified or unmodified, in part or in whole,
+  must be distributed entirely under this license, and must not be
+  distributed under any other license. The requirement for fonts to
+  remain under this license does not apply to any document created
+  using the Font Software.
+  
+  TERMINATION
+  This license becomes null and void if any of the above conditions are
+  not met.
+  
+  DISCLAIMER
+  THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+  OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+  COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+  DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+  OTHER DEALINGS IN THE FONT SOFTWARE.
+
+Third-party material carried by the vendored applications (full lists in each upstream NOTICE below)
+
+- Foxit standard-14 substitute fonts (FoxitSans, FoxitFixed, FoxitDingbats and their styles, in
+  vendor/hayro-interpret/assets, linked through hayro): Original code copyright 2014 Foxit Software Inc.
+  (http://www.foxitsoftware.com); Copyright 2014 PDFium Authors. BSD-3-Clause. The licence text follows
+  (upstream/pdfcraft/vendor/hayro-interpret/assets/LICENSE_FOXIT).
+
+  // Copyright 2014 PDFium Authors. All rights reserved.
+  //
+  // Redistribution and use in source and binary forms, with or without
+  // modification, are permitted provided that the following conditions are
+  // met:
+  //
+  //    * Redistributions of source code must retain the above copyright
+  // notice, this list of conditions and the following disclaimer.
+  //    * Redistributions in binary form must reproduce the above
+  // copyright notice, this list of conditions and the following disclaimer
+  // in the documentation and/or other materials provided with the
+  // distribution.
+  //    * Neither the name of Google Inc. nor the names of its
+  // contributors may be used to endorse or promote products derived from
+  // this software without specific prior written permission.
+  //
+  // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  // A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  // OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  // LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Code dependencies under the Mozilla Public License 2.0
+
+The slide application (audio decoding) links the following 16 crates of the Symphonia family, version 0.5.5,
+under the Mozilla Public License 2.0. They are used unmodified. Their source code is available at
+https://github.com/pdeljanov/Symphonia and from crates.io. The licence text is at
+https://www.mozilla.org/MPL/2.0/. No other dependency is under a copyleft licence.
+
+  - symphonia
+  - symphonia-bundle-flac
+  - symphonia-bundle-mp3
+  - symphonia-codec-aac
+  - symphonia-codec-adpcm
+  - symphonia-codec-alac
+  - symphonia-codec-pcm
+  - symphonia-codec-vorbis
+  - symphonia-core
+  - symphonia-format-caf
+  - symphonia-format-isomp4
+  - symphonia-format-mkv
+  - symphonia-format-ogg
+  - symphonia-format-riff
+  - symphonia-metadata
+  - symphonia-utils-xiph
+
+Upstream copyright notices (from the upstream LICENSE-MIT files)
+
+  wordcraft: Copyright (c) 2026 ArtCraft Team and the WordCraft contributors
+  gridcraft: Copyright (c) 2026 ArtCraft Team and the GridCraft contributors
+  deckcraft: Copyright (c) 2026 ArtCraft Team and the DeckCraft contributors
+  pdfcraft: Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors
+  craft-libs: Copyright (c) 2026 ArtCraft Team and the craft-libs contributors
+
+Upstream NOTICE files (verbatim)
+
+The following are the NOTICE files of the vendored upstream projects, reproduced without change.
+
+----- upstream/wordcraft/NOTICE -----
+WordCraft
+Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
+not open source and are not covered by the license above; their terms are in
+docs/brand/LICENSE-brand.txt.
+
+Third-party material
+
+This product bundles third-party material under its own licenses, listed below. The per-file
+list (author, source, license) is in ATTRIBUTION.md.
+
+- Source Sans 3 and Source Serif 4 (assets/fonts/Source*) — SIL Open Font License 1.1. See assets/fonts/OFL-SourceSans3.txt, OFL-SourceSerif4.txt.
+- Inter (assets/fonts/Inter-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-Inter.txt.
+- JetBrains Mono (assets/fonts/JetBrainsMono-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-JetBrainsMono.txt.
+- Japanese fonts (craft-fonts): builds made with craft-fonts (CRAFT_FONTS_DIR; all official
+  releases) embed the fonts listed in
+  https://github.com/storytold/craft-fonts/blob/main/ATTRIBUTION.md (BIZ UDPGothic, BIZ UDMincho,
+  Shippori Mincho), under the SIL Open Font License 1.1. Their licence texts ship with the
+  packages as OFL-<family>.txt. Builds without CRAFT_FONTS_DIR do not include them.
+- English word list (assets/hyphenation/en-us.dic) — derived from the Moby Hyphenator II list by
+  Grady Ward, public domain (Project Gutenberg eBook #3204). The hyphenation patterns
+  (assets/hyphenation/en-us.pat) were trained from it and are released as CC0-1.0.
+- Polish hyphenation patterns (assets/hyphenation/pl.pat) — hyph-pl.tex from the hyph-utf8
+  package, Copyright (C) 1987-1995 Hanna Kołodziejska, Bogusław Jackowski, Marek Ryćko, bundled
+  unmodified and used under the MIT License; the copyright and permission notice is in the file.
+- Portuguese hyphenation patterns (assets/hyphenation/pt.pat) — hyph-pt.tex from the hyph-utf8
+  package, bundled unmodified and used under the BSD 3-Clause License:
+
+    Copyright (C) 1987, 1994, 1996, 2015 Pedro J. de Rezende, 1996, 2015 J. Joao Dias Almeida,
+    2024 Leonardo Araujo and Aline Benevides
+
+    Redistribution and use in source and binary forms, with or without modification, are
+    permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright notice, this list of
+      conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of
+      conditions and the following disclaimer in the documentation and/or other materials
+      provided with the distribution.
+    * Neither the name of the University of Campinas, of the University of Minho nor the names
+      of its contributors may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PEDRO
+    J. DE REZENDE OR J.JOAO DIAS ALMEIDA BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+    OF THE POSSIBILITY OF SUCH DAMAGE.
+- Italian hyphenation patterns (assets/hyphenation/it.pat) — hyph-it.tex from the hyph-utf8
+  package, Copyright (C) 2008-2011 Claudio Beccari, bundled unmodified and used under the MIT
+  License (offered under LPPL 1.3+ or MIT); the copyright and permission notice is in the file:
+
+    Copyright (C) 2008-2011 Claudio Beccari
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this
+    software and associated documentation files (the "Software"), to deal in the Software
+    without restriction, including without limitation the rights to use, copy, modify, merge,
+    publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+    to whom the Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all copies or
+    substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+    PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+    FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+- All UI icons are drawn in code (crates/ui-egui/src/icons.rs) and are original work, MIT OR Apache-2.0.
+
+Rust dependencies (egui, eframe, vello_cpu, skrifa, harfrust, krilla, quick-xml, zip, image, …)
+are permissively licensed (MIT/Apache-2.0/BSD/ISC/Zlib) and fetched through crates.io or pinned Git sources.
+The craft-pdf writer and Krilla 0.8.2 backend are pinned to storytold/craft-libs revision
+c3487320b2d1de657b860b3c8abb44e1f2b32bd8. The backend retains its MIT OR Apache-2.0 licensing
+and upstream bundled material; see that revision's licenses/pdf-writer/ and ATTRIBUTION.md.
+The backend patch prevents finalization during an unwind and rejects a writer after failed
+cleanup. WordCraft enables only writing; PDF import and its image decoders are not enabled.
+
+No Microsoft, Adobe, Avid or Autodesk icons, images, templates or artwork are included.
+
+----- upstream/gridcraft/NOTICE -----
+GridCraft
+Copyright (c) 2026 ArtCraft Team and the GridCraft contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
+not open source and are not covered by the license above; their terms are in
+docs/brand/LICENSE-brand.txt.
+
+Third-party material
+
+This product bundles third-party material under its own licenses, listed below. The per-file
+list (author, source, license) is in ATTRIBUTION.md.
+
+None: every bundled asset is original to GridCraft. Builds made with craft-fonts
+(CRAFT_FONTS_DIR) embed the fonts listed in ATTRIBUTION.md under the SIL Open Font License 1.1.
+
+----- upstream/deckcraft/NOTICE -----
+DeckCraft
+Copyright (c) 2026 ArtCraft Team and the DeckCraft contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
+not open source and are not covered by the license above; their terms are in
+docs/brand/LICENSE-brand.txt.
+
+Third-party material
+
+This product bundles third-party material under its own licenses, listed below. The per-file
+list (author, source, license) is in ATTRIBUTION.md.
+
+- Ubuntu Light (via the epaint_default_fonts crate) — Ubuntu Font Licence 1.0.
+- Hack, Noto Emoji and the egui emoji icon font (via epaint_default_fonts) — MIT, Bitstream Vera,
+  OFL-1.1.
+- Builds made with craft-fonts (CRAFT_FONTS_DIR; all official releases) embed the fonts listed in
+  ATTRIBUTION.md (Inter, Carlito, Caladea, Liberation, Montserrat, Lato, Open Sans, Roboto,
+  Merriweather, Playfair Display, Poppins, Nunito Sans, BIZ UD, Shippori Mincho, Noto Sans
+  Arabic) under the SIL Open Font License 1.1; their licence texts ship with release packages.
+- Lucide icon paths embedded in crates/engine/src/icon_data.rs (Insert › Icons), release 1.56.0,
+  commit 440a1e1dfb1e712505308da46bead3c28b1f1398, https://github.com/lucide-icons/lucide.
+  ISC License, Copyright (c) 2026 Lucide Icons and Contributors. Icons Lucide derives from Feather
+  are MIT, Copyright (c) 2013-present Cole Bemis; which names those are is the list in Lucide's
+  LICENSE at that commit. Among the paths embedded here, the Feather-derived names are arrow-down,
+  arrow-left, arrow-right, arrow-up, at-sign, calendar, check, chevron-right, clipboard, clock,
+  compass, download, info, key, link, lock, minus, moon, move, music, plus, search, target and x.
+
+  ISC License
+
+  Copyright (c) 2026 Lucide Icons and Contributors
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+  The MIT License (MIT) (for the Feather-derived icons)
+
+  Copyright (c) 2013-present Cole Bemis
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+Code dependencies
+
+- symphonia (audio decoding for MP3, AAC, ALAC, FLAC, Vorbis, WAV, AIFF, CAF) is used unmodified
+  under the Mozilla Public License 2.0; its source is available at
+  https://github.com/pdeljanov/Symphonia.
+- The H.264, HEVC, VP9, AV1, Opus, MP4, Matroska and Ogg crates under crates/ are ported from
+  FilmCraft (same owner, MIT OR Apache-2.0).
+
+- Krilla 0.8.2 (https://github.com/LaurenzV/krilla) is used through craft-pdf under
+  MIT OR Apache-2.0. craft-libs vendors that version with page/surface unwind recovery
+  and rejection of serialization after failed cleanup. Its upstream licence files are
+  retained in craft-libs/licenses/pdf-writer. Its bundled Compact ICC Profiles by Clinton Ingram
+  (https://github.com/saucecontrol/Compact-ICC-Profiles) are CC0-1.0; the profile
+  licence is retained in licenses/pdf-writer/LICENSE-ICC.txt and exact files, sources
+  and hashes are in ATTRIBUTION.md.
+
+----- upstream/pdfcraft/NOTICE -----
+PdfCraft
+Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
+not open source and are not covered by the license above; their terms are in
+docs/brand/LICENSE-brand.txt.
+
+Third-party material
+
+This product bundles third-party material under its own licenses, listed below. The per-file
+list (author, source, license) is in ATTRIBUTION.md.
+
+- Lucide icons (assets/icons/*.svg) — ISC License. See assets/icons/LICENSE-lucide.txt.
+  The Windows PDF file icon (assets/app-icon/pdfcraft-document.svg and .ico) adapts Lucide's
+  file-text outline and combines it with contributor-original artwork. See
+  assets/app-icon/LICENSE-document.txt (ISC AND (MIT OR Apache-2.0)), packaged as
+  LICENSE-document.txt beside the Windows executables.
+- Inter typeface (assets/fonts/Inter-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-Inter.txt.
+- JetBrains Mono typeface (assets/fonts/JetBrainsMono-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-JetBrainsMono.txt.
+- Dancing Script typeface (assets/fonts/DancingScript.ttf), Copyright 2016 The Dancing Script Project Authors — SIL Open Font License 1.1 (Reserved Font Name "Dancing Script"). See assets/fonts/OFL-DancingScript.txt.
+- Fonts from craft-fonts (https://github.com/storytold/craft-fonts), an optional build input
+  (CRAFT_FONTS_DIR) that is not part of this repository. Builds made with it, which includes every
+  official release, embed the fonts listed in
+  https://github.com/storytold/craft-fonts/blob/main/ATTRIBUTION.md (BIZ UDPGothic, Shippori Mincho,
+  BIZ UDMincho; the web build only BIZ UDPGothic Regular) under the SIL Open Font License 1.1. Those
+  packages carry each font's licence as OFL-<family>.txt. Builds made with the craft-fonts revision
+  pinned in .github/workflows/ also include Noto Sans Thai (in the web build too), Copyright 2022
+  The Noto Project Authors (https://github.com/notofonts/thai), under SIL OFL 1.1; its licence is
+  fonts/noto-sans-thai/OFL.txt in the craft-fonts build input.
+- hayro (rendering, via crates.io) — Apache-2.0 OR MIT. Its `embed-fonts` feature bundles the Foxit
+  standard-14 Type 1 fonts under BSD-3-Clause ("Copyright 2014 PDFium Authors"), and hayro-cmap bundles
+  Adobe CMap resources under BSD-3-Clause.
+- lopdf (bootstrap document inspection, via crates.io) — MIT.
+- egui default fonts (epaint_default_fonts, via eframe) — Ubuntu Light (Ubuntu Font Licence 1.0),
+  Hack (MIT / Bitstream Vera licence), Noto Emoji (SIL OFL 1.1), emoji-icon-font (MIT).
+- Colour profile in hayro-interpret — CGATS001Compat-v2-micro.icc (CC0-1.0, Clinton Ingram).
+
+Required notices:
+
+  Foxit standard-14 substitute fonts (vendor/hayro-interpret/assets/*.pfb):
+    Copyright 2014 PDFium Authors. All rights reserved. Original code copyright 2014 Foxit Software Inc.
+    Redistributed under the BSD-3-Clause licence in vendor/hayro-interpret/assets/LICENSE_FOXIT.
+
+  CMap resources (bundled by hayro-cmap; character-mapping data, not visual assets):
+    Copyright 1990-2023 Adobe. All rights reserved. Redistributed under the BSD-3-Clause licence
+    (https://github.com/adobe-type-tools/cmap-resources/blob/master/LICENSE.txt). Neither the name of
+    Adobe nor the names of its contributors are used to endorse or promote this product.
+
+Showcase PDF (built by `cargo xtask demo-pdf`, not committed): fonts are downloaded at build time from
+google/fonts at a pinned commit, verified by SHA-256, all under the SIL Open Font License 1.1 — see the
+"Downloaded at build time" table in ATTRIBUTION.md.
+
+Asset licences are not visible to cargo-deny; keep this file current whenever assets or asset-bundling
+dependencies change (plan/adr/0002, 0006).
+
+Vendored (vendor/, patched; see vendor/README.md):
+- hayro 0.7.1 — Apache-2.0 OR MIT, Copyright the hayro authors (licence files kept in vendor/hayro).
+- hayro-interpret 0.7.0 — Apache-2.0 OR MIT, Copyright the hayro authors (LICENSE-APACHE, LICENSE-MIT kept in vendor/hayro-interpret).
+
+----- upstream/craft-libs/NOTICE -----
+craft-libs
+Copyright (c) 2026 ArtCraft Team and the craft-libs contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+Third-party material
+
+This product bundles third-party material under its own licenses, listed below. The per-file
+list (author, source, license) is in ATTRIBUTION.md.
+
+crates/cms/profiles/photocraft-coated-cmyk.icc: CC0-1.0, generated by crates/cms (see below).
+crates/cms/profiles/craft-coated-fogra39.icc: CC0-1.0, generated by crates/cms from the FOGRA39
+  characterisation data below.
+crates/cms/tests/data/FOGRA39.txt: FOGRA39 characterisation data, distributed unmodified.
+  Source: Fogra (Fogra Forschungsinstitut für Medientechnologien e.V.), www.fogra.org, from
+  https://fogra.org/fileadmin/files/7_downloads/Charakterisierungsdaten/FOGRA39_to_FOGRA60_v2.zip
+  Fogra's terms: "Free use and redistribution of the Fogra characterisation data is permitted,
+  including redistribution as part of commercial and non-commercial software, provided that
+  the data are distributed unmodified and Fogra is identified as the source. The designation
+  FOGRAxx may be used solely to identify the respective reference data. Such use does not
+  imply certification, approval or endorsement by Fogra."
+
+The optional PDF writer bundles four CC0 ICC profiles by Clinton Ingram. See ATTRIBUTION.md for per-file sources and hashes.
+
+Source provenance
+
+The SVG icon preparation in crates/ui is adapted from:
+- PhotoCraft, crates/ui-egui/src/icons.rs, revision e7a83ca342cdff568254f85f442b9cc8afb08066.
+  https://github.com/storytold/photocraft
+  Copyright (c) 2026 ArtCraft Team and the PhotoCraft contributors.
+- VectorCraft, crates/ui-egui/src/icons.rs, revision 825d4fdb8b527c597855d273fb4bcc1971855b6a.
+  https://github.com/storytold/vectorcraft
+  Copyright (c) 2026 ArtCraft Team and the VectorCraft contributors.
+The icon-button interaction/style boundary is adapted from PhotoCraft (above) and:
+- PdfCraft, crates/ui-egui/src/icons.rs, revision f626db25cca2c89f8fa3f7e30d22bf59faea65ec.
+  https://github.com/storytold/pdfcraft
+  Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
+The tab fitting in crates/ui/src/tabs is adapted from PhotoCraft's tab_strip.rs (above).
+Tab interaction adapters also use VectorCraft's dock.rs and floating.rs (above).
+The pane sizing and resize boundaries in crates/ui/src/layout draw on:
+- FilmCraft, crates/ui-egui/src/dock.rs, revision 7b6c134472287db4367fca80bcb498240ba36567.
+  https://github.com/storytold/filmcraft
+  Copyright (c) 2026 ArtCraft Team and the FilmCraft contributors.
+- EffectCraft, crates/ui-egui/src/dock.rs, revision 2a460986ee7a4b32656a3d434849693904b486bc.
+  https://github.com/storytold/effectcraft
+  Copyright (c) 2026 ArtCraft Team and the EffectCraft contributors.
+The widget-state styling in crates/ui/src/theme is adapted from VectorCraft (above),
+crates/ui-egui/src/theme.rs, and:
+- DesignCraft, crates/ui-egui/src/theme.rs, revision 66c7ce7e96ec286a091878cc2541ee8369aa79d6.
+  https://github.com/storytold/designcraft
+  Copyright (c) 2026 ArtCraft Team and the DesignCraft contributors.
+The transactional panel model and drop-zone semantics in crates/ui/src/docking draw on the
+FilmCraft/EffectCraft split, tab and accordion layouts and VectorCraft floating groups listed
+above. The generic transaction validation, optional renderer and workspace-location helpers
+are implemented here without dependencies on application engines or native window helpers.
+All sources listed above are licensed MIT OR Apache-2.0. No icon artwork is copied here.
+
+The PDF spooler in crates/print is extracted from:
+- PdfCraft, crates/print/src/spool.rs, windows_print.ps1 and spooler tests,
+  revision 33c14e07cfd742a82bf03baa6b103c01008fa68c.
+  https://github.com/storytold/pdfcraft
+  Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
+  Licensed MIT OR Apache-2.0. PDF composition and application code are not copied.
+
+The Windows printer duplex-capability query and parser additionally draw on PdfCraft,
+crates/print/src/spool.rs, revision fb97ce958dfe92b6762ce40615c7836551710139 (PR #1154), under the same licenses above.
+
+The native Windows backend (crates/print/src/windows.rs, ticket.rs and the printer-list and
+Windows spooler tests) is ported from PdfCraft's native printing work, which carries the
+approach of PdfCraft PR #599 (Win32 printer list, Windows.Data.Pdf into the XPS print API, the
+PrintTicket and its driver-paper preference):
+- PdfCraft, crates/print/src/spool/windows.rs, spool.rs and tests.rs, branch
+  claude/native-windows-print-826c99 of PR #1132, revision a435117 (jcl-bit/printcraft).
+  https://github.com/storytold/pdfcraft
+  Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
+  Licensed MIT OR Apache-2.0.
+
+The colour management module in crates/cms is extracted from:
+- PhotoCraft, crates/cms, revision b3222ee8e7e6bcb4799c37f904c595f20f9baf5e.
+  https://github.com/storytold/photocraft
+  Copyright (c) 2026 ArtCraft Team and the PhotoCraft contributors.
+  Licensed MIT OR Apache-2.0. Its generated ICC profile is dedicated to the public domain
+  (CC0-1.0); see ATTRIBUTION.md.
+
+Optional PDF writer
+
+Krilla 0.8.2 (https://github.com/LaurenzV/krilla), MIT OR Apache-2.0.
+Upstream licence texts are retained in licenses/pdf-writer.
+The optional writer embeds Compact ICC Profiles by Clinton Ingram
+(https://github.com/saucecontrol/Compact-ICC-Profiles), under CC0-1.0.
+See licenses/pdf-writer/LICENSE-ICC.txt and ATTRIBUTION.md for sources and hashes.
+The writer adds no font files. Its four existing ICC profiles are retained under vendor/krilla/icc.
+
+Krilla is vendored with a native unwind-cleanup patch; see vendor/krilla/README.craft.md
+and vendor/krilla/SOURCE.json. Its upstream MIT/Apache-2.0 licences and CC0 profiles are unchanged.
+
+Optional PDF reader
+
+Hayro 0.7.1, hayro-interpret 0.7.0, hayro-syntax 0.7.2 and hayro-jbig2 0.3.0
+(https://github.com/LaurenzV/hayro), MIT OR Apache-2.0, retain their upstream licence files.
+These patched sources are transferred from PdfCraft revision
+7437bde378f43856eada40af25b983812e615e8a (https://github.com/storytold/pdfcraft).
+See vendor/README.craft-reader.md and each crate's SOURCE.json for provenance and local changes.
+The reader retains the existing Foxit/PDFium standard-14 font assets (BSD-3-Clause),
+Compact ICC Profiles by Clinton Ingram (CC0-1.0), and dependency CMaps (BSD-3-Clause).
+Their licences and per-file hashes are retained in vendor/hayro-interpret/assets,
+licenses/pdf-backend and ATTRIBUTION.md. These are existing reader dependency assets;
+applications retain their own document-font selection and licensing policy.

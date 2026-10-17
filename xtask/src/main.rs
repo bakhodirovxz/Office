@@ -5,6 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+mod brand;
 mod domain;
 mod i18n;
 
@@ -17,7 +18,8 @@ fn main() -> ExitCode {
         ["lockdiff", a, b] => domain::lockdiff(Path::new(a), Path::new(b)),
         ["domain-upstream", d] => domain::domain_upstream(&repo_root(), d),
         ["i18n", rest @ ..] => i18n::run(&repo_root(), rest),
-        _ => Err("usage: cargo xt i18n <command> | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
+        ["overlay", ..] | ["brand", ..] | ["brand-grep"] | ["brand-scan-bin", ..] => brand::run(&repo_root(), &args.iter().map(String::as_str).collect::<Vec<_>>()),
+        _ => Err("usage: cargo xt i18n <command> | overlay <app> | brand check|icons | brand-grep | brand-scan-bin | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
     };
     match result {
         Ok(msg) => {

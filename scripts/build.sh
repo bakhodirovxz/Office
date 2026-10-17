@@ -30,9 +30,22 @@ wait_no_rustc() {
   while tasklist //FI "IMAGENAME eq rustc.exe" 2>/dev/null | grep -qi rustc.exe; do echo "another rustc.exe is running; waiting"; sleep 20; done
 }
 
+# Brand overlay (WP7): render brand/brand.toml into $OFFICE_OVERLAY_ROOT/<d>/ and point the builds at it. The web page is
+# rendered from index.html.in because build.rs cannot write index.html. OFFICE_NO_OVERLAY=1 builds pristine-like.
+overlay_prepare() {
+  [ "${OFFICE_NO_OVERLAY:-0}" = 1 ] && { unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION; return 0; }
+  (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt overlay "$d") || return 1
+  export OFFICE_OVERLAY_DIR="$OFFICE_OVERLAY_ROOT/$d"
+  local web="domains/$d/apps/$d-web" name
+  export OFFICE_PRODUCT_VERSION=$(sed -n 's/^VERSION=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # one product version for every app
+  name=$(sed -n 's/^APP_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')
+  sed -e "s|{{APP_NAME}}|$name|g" -e "s|{{FAVICON}}|$OFFICE_OVERLAY_DIR/favicon.ico|g" "$web/index.html.in" > "$web/index.html"
+}
+
 run() {
   wait_no_rustc; ram_gate 3
-  local t0=$SECONDS; echo "== $d $what ${release:+release} start $(date -Is) fonts=${CRAFT_FONTS_DIR:-unset} wrapper=${RUSTC_WRAPPER:-none}"
+  overlay_prepare || return 1
+  local t0=$SECONDS; echo "== $d $what ${release:+release} start $(date -Is) fonts=${CRAFT_FONTS_DIR:-unset} wrapper=${RUSTC_WRAPPER:-none} overlay=${OFFICE_OVERLAY_DIR:-none}"
   case "$what" in
     desktop) cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
     cli)     cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-cli" ;;

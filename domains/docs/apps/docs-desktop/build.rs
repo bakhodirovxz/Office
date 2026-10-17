@@ -5,21 +5,37 @@
 //! cross-compile from macOS or Linux still links, unless `WORDCRAFT_REQUIRE_WINRES=1` turns it
 //! into an error (for release builds).
 
+#[path = "../../../overlay_res.rs"]
+mod overlay_res;
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=../../../overlay_res.rs");
+    println!("cargo:rerun-if-env-changed=OFFICE_OVERLAY_DIR");
     println!("cargo:rerun-if-changed=../../../../upstream/wordcraft/assets/app-icon/wordcraft.ico");
     println!("cargo:rerun-if-env-changed=WORDCRAFT_REQUIRE_WINRES");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }
     let mut res = winresource::WindowsResource::new();
-    res.set_icon("../../../../upstream/wordcraft/assets/app-icon/wordcraft.ico")
-        .set("ProductName", "WordCraft")
-        .set("FileDescription", "WordCraft word processor")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the WordCraft authors. MIT OR Apache-2.0.")
-        .set("OriginalFilename", "wordcraft.exe")
-        .set("InternalName", "wordcraft");
+    match overlay_res::load() {
+        Some(o) => {
+            res.set_icon(&o.file("icon.ico"));
+            o.version_info(&mut res, "word processor", "docs");
+        }
+        None => {
+            res.set_icon("../../../../upstream/wordcraft/assets/app-icon/wordcraft.ico")
+                .set("ProductName", "WordCraft")
+                .set("FileDescription", "WordCraft word processor")
+                .set("CompanyName", "Learning Machines LLC")
+                .set(
+                    "LegalCopyright",
+                    "Copyright (c) the WordCraft authors. MIT OR Apache-2.0.",
+                )
+                .set("OriginalFilename", "wordcraft.exe")
+                .set("InternalName", "wordcraft");
+        }
+    }
     if let Err(e) = res.compile() {
         if std::env::var_os("WORDCRAFT_REQUIRE_WINRES").is_some() {
             eprintln!("embedding Windows resources failed: {e}");
