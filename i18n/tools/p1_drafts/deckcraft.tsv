@@ -1,0 +1,115 @@
+id	source_en	uz_latn
+01a1f86f6b7a	Export	Eksport qilish
+0234ff20b287	Portrait Orientation	Kitob yo`nalishi
+027fed5dcfac	sample deck northern lights	namunaviy taqdimot shimol nurlari
+03844f1bd62c	Handouts (9 slides per page)	Tarqatma materiallar (sahifada 9 ta slayd)
+05d0d3805bec	This presentation has unsaved changes. Revert goes back to the saved file.	Bu taqdimotda saqlanmagan o`zgarishlar bor. Saqlangan holatga qaytarish saqlangan faylga o`tadi.
+0a83691d1978	Redo	Qayta bajarish
+0a9800686371	{:.1} MB	{:.1} MB
+0b4e45f4a086	Search for themes and templates	Temalar va shablonlarni qidirish
+0b64787ccfa1	Review	Tekshirish
+0c9bb697fa70	Create a PDF Document	PDF hujjat yaratish
+0dfbb54a0ed0	The current slide as a picture	Joriy slayd rasm sifatida
+0fd676b526b4	{path} — this file can't be found	{path} — bu fayl topilmadi
+15a838bf8e7c	Print Hidden Slides	Yashirin slaydlarni chop etish
+185824b670f1	There are no unsaved changes.	Saqlanmagan o`zgarishlar yo`q.
+1d2c3896202a	No presentation is open.	Hech qanday taqdimot ochiq emas.
+1f8c208830e6	Sample deck: Northern Lights	Namunaviy taqdimot: Shimol nurlari
+1fbe027451d7	{} slides per page	Sahifada {} ta slayd
+215136b00255	Frame Slides	Slaydlarni ramkaga solish
+21c064e7f700	OK	OK
+233b9389a1b2	Notes Pages	Qaydlar sahifalari
+240a120c641a	Insert	Kiritish
+262f4121e348	PowerPoint Presentation (*.pptx)	PowerPoint taqdimoti (*.pptx)
+28b27c7df0ec	Dark	Qorong`i
+2e17d4398651	This presentation has never been saved.	Bu taqdimot hech qachon saqlanmagan.
+2f0988cf9324	Add a tag	Teg qo`shish
+2f4446b80004	Handouts (1 slide per page)	Tarqatma materiallar (sahifada 1 ta slayd)
+3180970e92ef	{text}  →	{text}  →
+31f0077d1cb4	Open a presentation from a folder (Ctrl+O)	Jilddan taqdimot ochish (Ctrl+O)
+37d98619e90c	Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.	Ochiq manba: MIT OR <<Apache-2.0>> litsenziyasi ostida. <<Microsoft>> bilan aloqasi yo`q.
+3b4825f3dec3	View	Ko`rinish
+3e0add0e7e4f	Title	Nomi
+3fd4464d2421	The slide titles and bullet text as plain text	Slayd sarlavhalari va marker matni oddiy matn sifatida
+40acd4892157	•  {b}	•  {b}
+40f00f5d555a	No themes or templates match “{}”.	“{}” ga mos keladigan tema yoki shablon topilmadi.
+41253609735c	Create PDF Document	PDF hujjat yaratish
+414fe1f13287	Print Current Slide	Joriy slaydni chop etish
+42e9bc5ee521	Specify the subject	Mavzuni kiritish
+443ed47a5822	Check for Issues	Muammolarni tekshirish
+4443a6e44c00	User Information	Foydalanuvchi ma~lumotlari
+44871b86e319	Light	Yorug`
+4b2505b5c07b	Before you share it, check the presentation for things people with disabilities might find hard to read.	Ulashishdan oldin taqdimotda nogironligi bor odamlar uchun o`qishi qiyin bo`lishi mumkin bo`lgan joylarni tekshiring.
+4c565cfc3657	Outline (*.txt)	Struktura (*.txt)
+4d3c4e5459e4	Join our community on Discord	Discord hamjamiyatimizga qo`shiling
+50d90819757f	Back (Esc)	Orqaga (Esc)
+526345b4d50c	Browse	Ko`rib chiqish
+565b4195b7d3	Download the file	Faylni yuklab olish
+56cb77b49225	DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer.	DeckCraft PDF orqali chop etadi: u yuklab olinadi va brauzer yoki PDF ko`rgichdan chop etishga tayyor bo`ladi.
+57cd3a3132b0	Search for a file	Fayl qidirish
+5b031a4fed59	Presentations you open show up here. Use Open to browse for one.	Siz ochgan taqdimotlar shu yerda ko`rinadi. Qidirish uchun «Ochish» tugmasidan foydalaning.
+5e2c9ba8ea9a	Add an author	Muallif qo`shish
+5efbeede8fe4	Inspect Presentation	Taqdimotni tekshirish
+6070f9a1b90c	Hidden slides	Yashirin slaydlar
+61201ceb2fee	Custom Range	Maxsus diapazon
+624ab2f95a06	@{}: {} PRs, {} commits, +{} / −{} lines (Δ {}), +{} / −{} binary assets, {} – {}	@{}: {} PR, {} kommit, +{} / −{} qator (Δ {}), +{} / −{} ikkilik resurs, {} – {}
+63f728746966	Edit Header & Footer	Kolontitullarni tahrirlash
+63f729e0ad80	Add a title	Nom qo`shish
+669c0aa93256	Copied the path	Yo`l nusxalandi
+69d81335d5d6	Recover Unsaved Presentations	Saqlanmagan taqdimotlarni tiklash
+6c2c661b7bd5	Nothing to print: every slide in the range is hidden.	Chop etiladigan narsa yo`q: diapazondagi barcha slaydlar yashirin.
+7060d2bb19ab	Open file location	Fayl joylashuvini ochish
+71ca2bf323e7	Record	Yozib olish
+71ee2837cdd5	Three a page leaves lines for notes	Sahifada uchta slayd bo`lsa, qaydlar uchun qatorlar qoladi
+7313b81e4b4e	Source on GitHub	GitHub dagi manba
+78fd0a8cfebf	DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.	DeckCraft: hisoblar yo`q — kirish uchun hech narsa yo`q, taqdimotlaringiz qurilmangizda qoladi.
+7a203178e49c	Handouts (4 slides per page)	Tarqatma materiallar (sahifada 4 ta slayd)
+7be75f370f6f	Create Handouts	Tarqatma materiallar yaratish
+7d6e939aa155	Handouts (3 slides per page)	Tarqatma materiallar (sahifada 3 ta slayd)
+7e80c3e71e49	No recent presentations match “{}”.	“{}” ga mos keladigan so`nggi taqdimot topilmadi.
+8325031da9ef	Full Page Slides	To`liq sahifali slaydlar
+891d72213d9b	Specify the company	Tashkilotni kiriting
+89fa1405169e	More presentations	Boshqa taqdimotlar
+8cabef0cf7b6	DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer.	DeckCraft PDF orqali chop etadi: u PDF ko`rgichda ochiladi, printerni o`sha yerda tanlaysiz.
+916c69b60f0d	Opens on any device with a PDF viewer	PDF ko`rgichi bor istalgan qurilmada ochiladi
+938576d72c1a	Choose where to save	Saqlash joyini tanlang
+95220685b323	Print them for your audience	Tinglovchilar uchun chop eting
+9b847be9db95	The current slide as a compressed picture	Joriy slayd siqilgan rasm sifatida
+9dcad54e0b10	A fixed copy that keeps its layout on any device	Istalgan qurilmada maketini saqlaydigan qotirilgan nusxa
+9ea895e04c4b	About DeckCraft	DeckCraft haqida
+9f8560a827c1	Draw	Chizish
+a0944d487cac	There are no unsaved presentations to recover	Tiklash uchun saqlanmagan taqdimotlar yo`q
+a100b3e76133	Transitions	O`tishlar
+a2203352ddeb	{} contributors · {} commits	{} ishtirokchi · {} kommit
+a391cd676ad2	{} of {}	{} / {}
+a48169b26b06	Blank Presentation	Bo`sh taqdimot
+a7062a86144e	{:.1} KB	{:.1} KB
+a7dffbc32234	PNG Picture (*.png)	PNG rasm (*.png)
+a907fa0e0951	Print All Slides	Barcha slaydlarni chop etish
+aa3227f410e2	Landscape Orientation	Albom yo`nalishi
+ac1121915a5b	{n} slides per page	Sahifada {n} ta slayd
+ac16829943ec	The presentation keeps its own file	Taqdimot o`z faylini saqlab qoladi
+aede14107332	More themes	Boshqa temalar
+af29d636f501	Handouts (6 slides per page)	Tarqatma materiallar (sahifada 6 ta slayd)
+badcd1b657ae	DeckCraft	DeckCraft
+bb9f8e0a3e72	Several slides on each page of a PDF	PDF ning har bir sahifasida bir nechta slayd
+bbe14fb57a5a	DeckCraft Presentation (*.deckcraft)	DeckCraft taqdimoti (*.deckcraft)
+bd5a258e382c	Location	Joylashuv
+bd782b427ed8	{b} bytes	{b} bayt
+bfe5b8ca3df9	Recent	So`nggi
+c260b746a2c8	More templates	Boshqa shablonlar
+c7dbab7be816	Add a category	Turkum qo`shish
+c9525cf8c1b2	Keeps the layout, fonts and pictures	Maket, shriftlar va rasmlarni saqlaydi
+cff7d1eb8054	e.g. 1-3, 5	masalan, 1-3, 5
+d044531d6963	Presentations	Taqdimotlar
+d0a2c503b31a	DeckCraft's own format: everything is kept	DeckCraft formati: hamma narsa saqlanadi
+d17e571eb8ff	Opens in PowerPoint and other presentation apps	PowerPoint va boshqa taqdimot ilovalarida ochiladi
+d8b368fa8f46	JPEG Picture (*.jpg)	JPEG rasm (*.jpg)
+de371c91f868	Manage Presentation	Taqdimotni boshqarish
+e2112222452e	Include hidden slides	Yashirin slaydlarni kiritish
+e3b27c197110	Copy path	Yo`lni nusxalash
+e3d38a842ff1	Handouts (2 slides per page)	Tarqatma materiallar (sahifada 2 ta slayd)
+e925b00a94ae	Slide Show	Slaydlar namoyishi
+ec7b33ac0765	Product Information	Mahsulot haqida ma~lumot
+eedbe8e2c2d4	Slides	Slaydlar
+fd81960f4e1c	The version, the people and models who built it, and where to find us.	Versiya, uni yaratgan odamlar va modellar hamda bizni qayerdan topish mumkin.

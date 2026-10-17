@@ -3,10 +3,11 @@
 //! and the owner's own text.
 
 use super::catalog::{row_id, sha1, state, Catalog, Row, APPS};
+use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write as _;
 
-pub const COLUMNS: [&str; 12] = [
-    "key", "context", "en", "ru", "uz-Latn draft", "uz-Cyrl draft", "status", "owner comment", "scope", "where", "pass", "en_hash",
+pub const COLUMNS: [&str; 13] = [
+    "key", "context", "en", "ru", "uz-Latn draft", "uz-Cyrl draft", "status", "owner comment", "scope", "where", "pass", "en_hash", "glossary terms",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -123,28 +124,78 @@ fn has_uzbek(r: &Row) -> bool {
         || matches!(state(&r.uz_cyrl_status), "draft" | "reviewed" | "rejected") && !r.uz_cyrl.is_empty()
 }
 
-/// Rows in review order: glossary (batch 0), shared P1, per-app P1, then P2.
+/// How visible a string is to a user: lower tier first. Menus and ribbon labels come before dialogs, panes, then
+/// validation messages, credits and keyboard hints. A string that is exactly a glossary term (File, Save, Open) is tier 0.
+fn visibility(scope: &str, r: &Row, glossary_en: &HashSet<String>) -> (u8, std::cmp::Reverse<usize>, usize, String) {
+    let file = r.where_.split(':').next().unwrap_or("").rsplit('/').next().unwrap_or("");
+    let mut tier: u8 = match file {
+        "menus.rs" | "qat.rs" => 0,
+        "backstage.rs" | "ribbon.rs" | "lib.rs" | "chrome.rs" | "commands.rs" => 1,
+        "i18n.rs" if scope == "gridcraft" => 1,
+        "dialogs.rs" | "i18n.rs" => 2,
+        "dates.rs" | "bulk_fields.rs" | "equation.rs" | "outline.rs" | "caret.rs" | "catalog.rs" | "keytips.rs" => 4,
+        "pdf.rs" | "credits.rs" => 5,
+        _ => 3,
+    };
+    if r.context.starts_with("date.") {
+        tier = 4;
+    }
+    if glossary_en.contains(&r.source) {
+        tier = 0;
+    }
+    if r.source.chars().count() > 60 {
+        tier = (tier + 2).min(6);
+    }
+    let apps = r.apps.split(',').filter(|a| !a.is_empty()).count().max(1);
+    (tier, std::cmp::Reverse(apps), r.source.chars().count(), r.source.to_lowercase())
+}
+
+/// Rows in review order: glossary (batch 0); then every P1 row with a draft, most visible first (see `visibility`);
+/// then P2 rows with a draft by scope and English text.
 pub fn ordered_rows(cat: &Catalog, batch: usize) -> Vec<(String, &Row)> {
     if batch == 0 {
         let mut v: Vec<_> = cat.scopes.get("glossary").into_iter().flatten().map(|r| ("glossary".to_string(), r)).collect();
         v.sort_by(|a, b| a.1.priority.cmp(&b.1.priority).then(a.1.source.to_lowercase().cmp(&b.1.source.to_lowercase())));
         return v;
     }
+    let glossary_en: HashSet<String> = cat.scopes.get("glossary").into_iter().flatten().map(|g| g.source.clone()).collect();
     let mut v: Vec<(String, &Row)> = Vec::new();
-    for prio in ["P1", "P2"] {
-        for scope in ["shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"] {
-            let mut rows: Vec<_> = cat.scopes.get(scope).into_iter().flatten().filter(|r| r.priority.starts_with(prio) && has_uzbek(r)).collect();
-            rows.sort_by(|a, b| a.source.to_lowercase().cmp(&b.source.to_lowercase()).then(a.id.cmp(&b.id)));
-            v.extend(rows.into_iter().map(|r| (scope.to_string(), r)));
-        }
+    let mut p1: Vec<(String, &Row)> = Vec::new();
+    for scope in ["shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"] {
+        p1.extend(cat.scopes.get(scope).into_iter().flatten().filter(|r| r.priority.starts_with("P1") && has_uzbek(r)).map(|r| (scope.to_string(), r)));
+    }
+    p1.sort_by(|a, b| visibility(&a.0, a.1, &glossary_en).cmp(&visibility(&b.0, b.1, &glossary_en)).then(a.0.cmp(&b.0)).then(a.1.id.cmp(&b.1.id)));
+    v.extend(p1);
+    for scope in ["shared", "wordcraft", "gridcraft", "pdfcraft", "deckcraft"] {
+        let mut rows: Vec<_> = cat.scopes.get(scope).into_iter().flatten().filter(|r| r.priority.starts_with("P2") && has_uzbek(r)).collect();
+        rows.sort_by(|a, b| a.source.to_lowercase().cmp(&b.source.to_lowercase()).then(a.id.cmp(&b.id)));
+        v.extend(rows.into_iter().map(|r| (scope.to_string(), r)));
     }
     v
 }
 
+/// The slice of `total` rows that batch `batch` (1-based) covers. `sizes[k]` is the size of batch k+1; the last size repeats.
+pub fn batch_range(batch: usize, sizes: &[usize], total: usize) -> (usize, usize) {
+    let size_of = |k: usize| sizes.get(k).or(sizes.last()).copied().unwrap_or(400);
+    let start: usize = (0..batch - 1).map(size_of).sum();
+    (start.min(total), (start + size_of(batch - 1)).min(total))
+}
+
 /// Build the CSV for batch `batch`. Batch 0 is the glossary; batch N (>= 1) is the N-th chunk of `size` rows.
+#[cfg(test)]
 pub fn review_export(cat: &Catalog, batch: usize, pass: Pass, size: usize) -> Result<(String, usize), String> {
+    review_export_with(cat, batch, pass, &[size], &BTreeMap::new())
+}
+
+/// Like `review_export`, with per-batch sizes and the glossary terms each row uses (column "glossary terms").
+pub fn review_export_with(cat: &Catalog, batch: usize, pass: Pass, sizes: &[usize], terms: &BTreeMap<(String, String), Vec<String>>) -> Result<(String, usize), String> {
     let all = ordered_rows(cat, batch);
-    let chunk: Vec<_> = if batch == 0 { all } else { all.into_iter().skip((batch - 1) * size).take(size).collect() };
+    let chunk: Vec<_> = if batch == 0 {
+        all
+    } else {
+        let (a, b) = batch_range(batch, sizes, all.len());
+        all.into_iter().skip(a).take(b - a).collect()
+    };
     if chunk.is_empty() {
         return Err(format!("batch {batch} is empty: no rows with an Uzbek draft{}", if batch == 0 { " in glossary.tsv" } else { "" }));
     }
@@ -162,10 +213,11 @@ pub fn review_export(cat: &Catalog, batch: usize, pass: Pass, size: usize) -> Re
             super::catalog::escape(&r.uz_cyrl),
             display_status(r, pass).to_string(),
             r.note.clone(),
-            scope,
+            scope.clone(),
             r.where_.clone(),
             pass.name().to_string(),
             en_hash(&r.source),
+            terms.get(&(scope, r.id.clone())).map(|t| t.join("; ")).unwrap_or_default(),
         ]);
     }
     let n = records.len() - 1;

@@ -7,12 +7,14 @@ use std::path::{Path, PathBuf};
 mod catalog;
 mod export;
 mod extract;
+mod glossary;
 mod lex;
+mod lint;
 mod review;
 
 use catalog::{Catalog, Mode, APPS};
 
-pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run]\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
+pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run]\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
 
 pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     let dir = root.join("i18n");
@@ -63,9 +65,13 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
         ["review-export", ..] => {
             let batch: usize = flag("--batch").ok_or("--batch N is required")?.parse().map_err(|_| "--batch must be a number")?;
             let pass = review::Pass::parse(flag("--pass").unwrap_or("both"))?;
-            let size: usize = flag("--size").map_or(Ok(400), str::parse).map_err(|_| "--size must be a number")?;
+            let sizes: Vec<usize> = match flag("--sizes") {
+                Some(l) => l.split(',').map(|n| n.trim().parse::<usize>().map_err(|_| "--sizes must be numbers like 400,660,660".to_string())).collect::<Result<_, _>>()?,
+                None => vec![flag("--size").map_or(Ok(400), str::parse).map_err(|_| "--size must be a number")?],
+            };
             let cat = Catalog::load(&dir)?;
-            let (csv, n) = review::review_export(&cat, batch, pass, size)?;
+            let terms = glossary::terms_by_row(&cat, &glossary::load_index(&dir)?);
+            let (csv, n) = review::review_export_with(&cat, batch, pass, &sizes, &terms)?;
             let out = flag("--out").map(PathBuf::from).unwrap_or_else(|| dir.join("review").join(format!("batch-{batch:02}.csv")));
             if let Some(p) = out.parent() {
                 fs::create_dir_all(p).map_err(|e| e.to_string())?;
@@ -99,6 +105,49 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             } else {
                 Err(bad.join("\n"))
             }
+        }
+        ["lint", ..] => {
+            let cat = Catalog::load(&dir)?;
+            let findings = lint::lint(&cat);
+            let rows = lint::rows_with_uzbek(&cat);
+            if let Some(path) = flag("--report") {
+                fs::write(path, lint::report(&findings, rows)).map_err(|e| format!("{path}: {e}"))?;
+            }
+            let errors = findings.iter().filter(|f| f.level == lint::Level::Error).count();
+            let text = format!("i18n lint: {rows} rows with an Uzbek draft, {errors} error(s), {} warning(s)
+{}", findings.len() - errors, lint::summary(&findings));
+            if errors == 0 {
+                Ok(text.trim_end().to_string())
+            } else {
+                let mut detail = String::new();
+                for f in findings.iter().filter(|f| f.level == lint::Level::Error).take(40) {
+                    detail.push_str(&format!("  {} {}/{} {:?}: {}
+", f.code, f.scope, f.id, f.source, f.detail));
+                }
+                Err(format!("{text}{detail}"))
+            }
+        }
+        ["glossary-scan", ..] => {
+            let cat = Catalog::load(&dir)?;
+            let uses = glossary::scan(&cat);
+            fs::write(dir.join(glossary::INDEX_FILE), glossary::write_index(&uses)).map_err(|e| e.to_string())?;
+            let rows: std::collections::BTreeSet<_> = uses.iter().map(|u| (&u.scope, &u.id)).collect();
+            Ok(format!("glossary-scan: {} use(s) in {} string(s) -> {}", uses.len(), rows.len(), dir.join(glossary::INDEX_FILE).display()))
+        }
+        ["glossary-apply", ..] => {
+            let mut cat = Catalog::load(&dir)?;
+            let mut uses = glossary::load_index(&dir)?;
+            if uses.is_empty() {
+                return Err("i18n/glossary-use.tsv is missing or empty: run `cargo xt i18n glossary-scan` first".into());
+            }
+            let date = flag("--date").map(String::from).unwrap_or_else(today);
+            let rep = glossary::apply(&mut cat, &mut uses, &date);
+            let write = has("--write");
+            if write {
+                cat.save(&dir)?;
+                fs::write(dir.join(glossary::INDEX_FILE), glossary::write_index(&uses)).map_err(|e| e.to_string())?;
+            }
+            Ok(rep.text(write).trim_end().to_string())
         }
         _ => Err(USAGE.to_string()),
     }

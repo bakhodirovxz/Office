@@ -1,0 +1,499 @@
+id	source_en	uz_latn
+01170902fc16	Checkmark	Belgi
+01439fa4e4d0	Squiggly underline text	To`lqinli tagiga chizilgan matn
+02cb923b9be3	Protect	Himoyalash
+02fcf7b34c52	Edit text & images	Matn va rasmlarni tahrirlash
+030b94a6e512	Measure distance	Masofani o`lchash
+033165da36d0	Nov	noy
+0476755091bb	Single page	Bitta sahifa
+04ca4e0e8d20	The timestamp token is valid, but the timestamp authority is not in your list of trusted certificates.	Vaqt tamg`asi tokeni yaroqli, lekin tamg`a vakolatli markazi ishonchli sertifikatlar ro`yxatingizda yo`q.
+050927aa92cf	Remove background	Fonni olib tashlash
+0537e6257222	Draw a polygon	Ko`pburchak chizish
+053ac737426b	Create PDF from multiple files…	Bir nechta fayldan PDF yaratish…
+05427f2a84a7	The RSA signature value does not have the length of the key's modulus (leading zero bytes dropped or added); it was read anyway.	RSA imzo qiymatining uzunligi kalit modulining uzunligiga teng emas (bosh nol baytlar tushirilgan yoki qo`shilgan); baribir o`qildi.
+05d47de87b00	Jul	iyl
+0684d15a57ea	Add a stamp	Shtamp qo`shish
+06dda53783eb	Add header & footer…	Kolontitul qo`shish…
+0723f6d70fe2	Signature	Imzo
+076707e99510	Replace text	Matnni almashtirish
+0784c758e799	Compare files	Fayllarni solishtirish
+08fcd9378f5f	Tab order: by columns	<<Tab>> tartibi: ustunlar bo`yicha
+097fbfeef2f8	Close file	Faylni yopish
+09dd603473ef	Fill & Sign: cross	To`ldirish va imzolash: krest
+09f41e69953c	Friday	juma
+0a3fd8a2c2ad	Add an image field	Rasm maydonini qo`shish
+0a5b6243cb15	The document has been altered since this timestamp was applied in ways it does not permit ({}).	Hujjat bu vaqt tamg`asi qo`yilgandan keyin ruxsat etilmagan tarzda o`zgartirilgan ({}).
+0a77bec53e6a	Add or edit links	Havolalarni qo`shish yoki tahrirlash
+0ae6d280504c	Change signature	Imzoni o`zgartirish
+0af1e527953f	Find text and redact	Matnni topish va maxfiylashtirish
+0b256c7fa88b	PDF/A…	PDF/A…
+0b41f34a60a3	Add a date field	Sana maydonini qo`shish
+0c34450f3010	The certificate of {} is not a CA certificate that may issue certificates, so it is not used to vouch for {}.	{} sertifikati sertifikat berishi mumkin bo`lgan CA sertifikati emas, shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.
+0ccdef482987	Extract pages…	Sahifalarni ajratib olish…
+0e66a4d26a78	Page options	Sahifa parametrlari
+0eec20041772	Create links from URLs	URL manzillardan havolalar yaratish
+0f06aa08c38d	The signer's certificate has been revoked ({}).	Imzolovchi sertifikati chaqirib olingan ({}).
+0f58ae91d023	The timestamp authority's certificate was not valid at the time of timestamping.	Vaqt tamg`asi vakolatli markazining sertifikati tamg`a qo`yilgan paytda yaroqli bo`lmagan.
+106e99fad25c	Sticky note	Yopishqoq qayd
+11958d600506	August	avgust
+1196577d8e41	Comment list	Izohlar ro`yxati
+11bc645bdfdc	Audit space usage	Joy sarfini tahlil qilish
+11cba0a234cc	Go to page…	Sahifaga o`tish…
+125487f571ec	Sanitize document	Hujjatni tozalash
+12bedad3f7b3	Reduce file size…	Fayl hajmini kamaytirish…
+13b7515a6c9c	Automatically tag PDF	PDF ni avtomatik teglash
+13d1b8448704	Compress a PDF	PDF ni siqish
+1557229dcefb	Save as PDF/UA	PDF/UA sifatida saqlash
+1611ca026578	The signer's certificate has critical extensions PdfCraft does not recognize ({}).	Imzolovchi sertifikatida PdfCraft tanimaydigan muhim kengaytmalar bor ({}).
+16c5f29e8ca5	Text field	Matn maydoni
+17249fe7e306	Add a list box	Ro`yxat qutisini qo`shish
+181754851f35	Monday	dushanba
+185d86136382	Import comments…	Izohlarni import qilish…
+186c35fe8c62	Action Wizard	Amallar ustasi
+1885337f5468	Add background…	Fon qo`shish…
+1891a80bbc59	Area	Yuza
+19044f0b7b4b	Fill & Sign: remove saved signature	To`ldirish va imzolash: saqlangan imzoni olib tashlash
+196e805b3658	Export all images	Barcha rasmlarni eksport qilish
+1a7b33c8497c	Fix reading order	O`qish tartibini tuzatish
+1aa7857d7741	Tab order: by rows	<<Tab>> tartibi: qatorlar bo`yicha
+1af268f0a68e	Drop-down list	Ochiladigan ro`yxat
+1c5192e99aeb	Signature is valid	Imzo yaroqli
+1c5f1f2b6d50	Open accessibility report	Maxsus imkoniyatlar hisobotini ochish
+1d2932f10712	Modify page	Sahifani o`zgartirish
+1d6dfdb770fa	Required	Majburiy
+1da491799005	Strikethrough	Ustidan chizish
+1e5b8b00773c	Scroll long text	Uzun matnni aylantirish
+1f147d98b820	Tuesday	seshanba
+203e2a332f6b	Fill & Sign: line	To`ldirish va imzolash: chiziq
+20633695ab7a	Measure objects	Obyektlarni o`lchash
+2294d289e2b9	Create a PDF	PDF yaratish
+230ca30cd379	May	may
+238ed656d909	Form fields panel	Forma maydonlari paneli
+249d7ebd236c	Column select	Ustunni tanlash
+25c044ff2e35	Shared Field Properties	Umumiy maydon xossalari
+26b7b38891f0	Clear Recent Files	So`nggi fayllarni tozalash
+272ce4997a3f	Prepare for accessibility	Maxsus imkoniyatlarga tayyorlash
+282b52db296e	The signer's certificate is not in the signature.	Imzolovchi sertifikati imzoda yo`q.
+2845bf87de56	Feb	fev
+291e23ec33bd	Optimize PDF…	PDF ni optimallashtirish…
+2978af661363	The signature has no valid byte range.	Imzoda yaroqli bayt diapazoni yo`q.
+29cf71cc2e76	Previous view	Oldingi ko`rinish
+2b61dac8a19c	Text Color:	Matn rangi:
+2b7fa0243d4b	Document JavaScripts	Hujjat JavaScript skriptlari
+2b9d3ab20e8c	The document has been modified since this signature was applied, but the changes are permitted ({}).	Hujjat bu imzo qo`yilgandan keyin o`zgartirilgan, ammo o`zgarishlar ruxsat etilgan ({}).
+2baf5b54b87b	Use system setting	Tizim sozlamasidan foydalanish
+2c0cbea319d2	Multi-line	Ko`p qatorli
+2c1575014a39	Measure area	Yuzani o`lchash
+2c4a7fb26e3b	Add a radio button	Tanlov tugmasini qo`shish
+2d0967e3a284	Action Wizard…	Amallar ustasi…
+2e1f5ebbe158	The field {name} no longer exists.	{name} maydoni endi mavjud emas.
+2ea10e9289b8	October	oktabr
+2eabed01150c	Change reading options	O`qish parametrlarini o`zgartirish
+2ed37b699abd	Markup	Belgilash
+3144bd291162	Sunday	yakshanba
+31779d48c176	Date field	Sana maydoni
+31885b45d52c	The signature carries an unverified timestamp ({}): the timestamp authority is not in your list of trusted certificates, so the signing time claimed by the signer is used instead.	Imzoda tekshirilmagan vaqt tamg`asi bor ({}): tamg`a vakolatli markazi ishonchli sertifikatlar ro`yxatingizda yo`q, shuning uchun imzolovchi ko`rsatgan imzolash vaqti ishlatiladi.
+3270100d9c3d	Redact pages	Sahifalarni maxfiylashtirish
+33cffc5df545	Export all images…	Barcha rasmlarni eksport qilish…
+347290619524	Location: 	Joylashuv: 
+347cca135be5	Add a digital signature field	Raqamli imzo maydonini qo`shish
+35f84a0d2fed	Strikethrough text	Matnni ustidan chizish
+371956ac764c	The document has been altered or corrupted since the timestamp was applied.	Hujjat vaqt tamg`asi qo`yilgandan keyin o`zgartirilgan yoki buzilgan.
+373861c8c79d	Prepare a form	Forma tayyorlash
+376781f3aedc	Tags panel	Teglar paneli
+378400e59160	Certificates	Sertifikatlar
+37a388c9d3f4	Field properties…	Maydon xossalari…
+386d53bb2966	Paste pages	Sahifalarni qo`yish
+3885303e5a3c	The certificate of {} was not valid at the time of signing, so it is not used to vouch for {}.	{} sertifikati imzolash paytida yaroqli bo`lmagan, shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.
+394d922cc05b	Only checked properties will change. Mixed means the selected fields have different values.	Faqat belgilangan xossalar o`zgaradi. «Aralash» tanlangan maydonlarda qiymatlar turlicha ekanini bildiradi.
+3a69b65aef25	Remove watermark	Suv belgisini olib tashlash
+3a6b71d1d407	Erase drawings	Chizmalarni o`chirish
+3b95b367066b	Set properties	Xossalarni belgilash
+3c008d6d6e78	Remove hidden information	Yashirin ma~lumotlarni olib tashlash
+3ccd330d2380	Draw connected lines	Ulangan chiziqlar chizish
+3d23449b7e7a	The timestamp has no valid byte range.	Vaqt tamg`asida yaroqli bayt diapazoni yo`q.
+3d3643eab57c	Text box	Matn qutisi
+3d620e4f35ff	Multiple files	Bir nechta fayl
+3e5667284795	Output preview	Chiqishni oldindan ko`rish
+3e6d5370ee60	Actions list	Amallar ro`yxati
+3ea237425ec1	Show cover page in two-page view	Ikki sahifali ko`rinishda titul sahifani ko`rsatish
+3edba2939d6d	Blank page	Bo`sh sahifa
+3ee6d1a57ecf	This signature uses RIPEMD-160, a legacy 160-bit hash algorithm that is no longer recommended for signatures. It still validates, but it should not be relied on.	Bu imzo RIPEMD-160 dan foydalanadi — imzolar uchun endi tavsiya etilmaydigan eskirgan 160 bitli xesh algoritmi. U hali ham tasdiqlanadi, lekin unga tayanmaslik kerak.
+3f07585b5204	Draw a line	Chiziq chizish
+3f3a4820b5a3	The signer's certificate is not issued for signing documents (its extended key usage has no document-signing purpose).	Imzolovchi sertifikati hujjat imzolash uchun berilmagan (kengaytirilgan kalit maqsadlarida hujjat imzolash yo`q).
+3f4d116172aa	More	Yana
+3fd473bd38c4	Character limit 0 means no limit. A comb of characters needs a limit.	Belgilar chegarasi 0 bo`lsa, cheklov yo`q. Belgi katakchalari uchun chegara kerak.
+40577cd69fa2	PdfCraft web page	PdfCraft veb sahifasi
+409d86c4f1d6	Export to image…	Rasmga eksport qilish…
+41016ae42368	Allow user to enter custom text	Foydalanuvchiga o`z matnini kiritishga ruxsat berish
+412b17879a4a	Next tab	Keyingi yorliq
+41619415ae1c	Redo	Qayta bajarish
+420f5ecb826b	Separate PDFs	Alohida PDFlar
+42c84b48c690	metadata	metama~lumotlar
+439b5aa5a917	Fill & Sign: remove saved initials	To`ldirish va imzolash: saqlangan bosh harflarni olib tashlash
+45b8851cc5e7	The signed content is a constructed (segmented) OCTET STRING, as BER allows; it was read anyway.	Imzolangan tarkib BER ruxsat etganidek tuzilgan (segmentlangan) OCTET STRING; baribir o`qildi.
+45db4f086303	Number pages…	Sahifalarni raqamlash…
+45ff86eaf663	Dark gray	To`q kulrang
+469341a0f63b	Add a checkbox	Belgilash katagini qo`shish
+46b3451722e0	Stamp palette	Shtamplar palitrasi
+479ce43cb61c	PdfCraft on GitHub	GitHub dagi PdfCraft
+486899266131	The document has been altered or corrupted since the signature was applied.	Hujjat imzo qo`yilgandan keyin o`zgartirilgan yoki buzilgan.
+4936453d1ddb	Set measurement scale	O`lchash masshtabini belgilash
+4977c126a454	The field properties dialog is no longer open.	Maydon xossalari oynasi endi ochiq emas.
+4a28ed1a95ac	Draw an arrow	Strelka chizish
+4a8e9f24596f	The document is no longer open.	Hujjat endi ochiq emas.
+4ac187cff0b3	Dec	dek
+4addfb1487b2	Add a drop-down list	Ochiladigan ro`yxat qo`shish
+4b39b568c13d	Rotate pages clockwise	Sahifalarni soat mili bo`yicha burish
+4bc0e4d8d96d	Metadata	Metama~lumotlar
+4bc67b36fa31	Update header & footer…	Kolontitulni yangilash…
+4c368eba31e0	Add alternate text…	Muqobil matn qo`shish…
+4c474adf548c	Certify (visible signature)	Sertifikatlash (ko`rinadigan imzo)
+4c6442457f5f	Apr	apr
+4cd116fc139e	Page transitions	Sahifa o`tishlari
+4d0b2c085845	Advanced options	Qo`shimcha parametrlar
+4ebb18f54ad1	Redact pages…	Sahifalarni maxfiylashtirish…
+4fb7cbca03d4	Fill & Sign: add text	To`ldirish va imzolash: matn qo`shish
+509535535dfe	The field properties could not be changed.	Maydon xossalarini o`zgartirib bo`lmadi.
+50f34c0dfa46	Fill & Sign: sign	To`ldirish va imzolash: imzolash
+5152cea33712	Image	Rasm
+5234125569af	Read Only	Faqat o`qish uchun
+528d51dc6460	Fill & Sign: date	To`ldirish va imzolash: sana
+5352921153ff	Find untagged content	Tegsiz tarkibni topish
+53645cdd56ed	The signature uses the legacy adbe.x509.rsa_sha1 format.	Imzo eskirgan adbe.x509.rsa_sha1 formatidan foydalanadi.
+5375c50b9c18	Squiggly underline	To`lqinli tagiga chizish
+544120f31098	Pin folder to Home…	Papkani bosh sahifaga mahkamlash…
+5529595fee56	Create PDF from file…	Fayldan PDF yaratish…
+557c19b4b057	July	iyul
+560057b57e4b	Tooltip:	Maslahat:
+5686a1e6dbe5	Accessibility	Maxsus imkoniyatlar
+57c517c69e65	Save as…	Boshqa nom bilan saqlash…
+57e2a68d14e4	April	aprel
+586595f6db3c	Take a snapshot	Surat olish
+58a8f94fb5e9	Word count…	So`zlar soni…
+58cae1a59845	Add form components	Forma komponentlarini qo`shish
+5975dc96c5c1	Add content	Mazmun qo`shish
+5a3ddd46f7cd	New bookmark	Yangi xatcho`p
+5a791f181011	signature	imzo
+5b8d2bd42a0d	Jun	iyn
+5cfbf96abb1e	Summarize comments	Izohlarni jamlash
+5d315048e65c	The signature's timestamp token could not be verified ({}).	Imzoning vaqt tamg`asi tokenini tekshirib bo`lmadi ({}).
+5eb9a5e9e49a	Recognize text…	Matnni aniqlash…
+5f966517c12a	The signature is BER-encoded (indefinite lengths) rather than DER; it was read leniently.	Imzo DER emas, BER kodlangan (noaniq uzunliklar); yumshoq o`qildi.
+5fb4a562b2b9	Export all comments to data file…	Barcha izohlarni ma~lumotlar fayliga eksport qilish…
+6001ed463d35	Insert text	Matn kiritish
+611a36fde57e	Marquee zoom	Ramka bilan masshtablash
+62d3ae887fa1	The signature's byte range does not exclude exactly its contents.	Imzoning bayt diapazoni uning tarkibini aniq istisno qilmaydi.
+63d91405a30a	Combine files	Fayllarni birlashtirish
+645fa92aac8e	Header and footer	Kolontitullar
+647ad9535f38	November	noyabr
+64e1c4d266fb	Open Recent	So`nggilarni ochish
+650cf3a8a1c7	Add a button	Tugma qo`shish
+660513f6035c	Archive documents	Hujjatlarni arxivlash
+663a04952954	Export to text…	Matnga eksport qilish…
+66424187653f	Spreadsheet (.xlsx)	Elektron jadval (.xlsx)
+673b5cd36e01	The ECDSA signature is not in canonical DER (trailing bytes, padding or a missing sign byte); it was read anyway.	ECDSA imzosi kanonik DER emas (ortiqcha baytlar, to`ldirish yoki ishora baytining yo`qligi); baribir o`qildi.
+67ee090963fd	Page grid	Sahifalar to`ri
+68512b133ba2	Insert	Kiritish
+687cdcbfe81d	Aug	avg
+6998cb7a8fb6	Comb of characters	Belgilar katakchasi
+69a0ca8a99a2	Wednesday	chorshanba
+69fb668b7e8e	Fit visible	Ko`rinadigan qismga moslash
+6a0a7ff3201b	Line Style:	Chiziq uslubi:
+6b92b2fbdf3f	The timestamp token is valid and its authority is trusted.	Vaqt tamg`asi tokeni yaroqli va uning vakolatli markazi ishonchli.
+6bace153ba16	Crop pages	Sahifalarni qirqish
+6d36d0c10dc6	Advanced search…	Kengaytirilgan qidiruv…
+6e1ab8606252	Prepare for distribution…	Tarqatishga tayyorlash…
+6f1d9193caec	Stamp	Shtamp
+703b418996ee	List box	Ro`yxat qutisi
+710c31f6d570	Change initials	Bosh harflarni o`zgartirish
+7175d25085fd	Fill & Sign: change signature	To`ldirish va imzolash: imzoni o`zgartirish
+7192e437ce03	Organize pages	Sahifalarni tartibga solish
+723b3c4da49f	Reset panel layout	Panel joylashuvini asliga qaytarish
+7258a4c1e876	Cloud	Bulut
+726272bbf4ff	Jan	yan
+72b2d3df3fce	Date: 	Sana: 
+735b850a9615	Export to Word…	Word ga eksport qilish…
+73e9f9c07d52	Flatten form fields	Forma maydonlarini yassilash
+73fc385ac2cc	Fill	To`ldirish
+744ef10ffd39	Import form data…	Forma ma~lumotlarini import qilish…
+7492de1362cc	Security properties…	Xavfsizlik xossalari…
+749b8c7550c7	Close all	Hammasini yopish
+75ff688f8721	Saturday	shanba
+760ffc7d390d	Save as PDF/A	PDF/A sifatida saqlash
+76c5754d4392	Tab order by columns	<<Tab>> tartibi ustunlar bo`yicha
+76d790c9e4ca	Fit to width scrolling	Eniga moslab aylantirish
+76e9835d92af	Manage embedded index	O`rnatilgan indeksni boshqarish
+77baab01cc13	The signature value does not match the signer's certificate: the signature is corrupt.	Imzo qiymati imzolovchi sertifikatiga mos kelmaydi: imzo buzilgan.
+77cd98e84e14	Extract	Ajratib olish
+78233a8cfcb0	Sep	sen
+783aec66d375	Export to	Eksport formati
+78b5027e69a3	Delete pages	Sahifalarni o`chirish
+79803cf7be63	The signature's byte range does not match the file.	Imzoning bayt diapazoni faylga mos kelmaydi.
+798444dcba10	Insert blank page	Bo`sh sahifa kiritish
+7ac7cb4c209c	Check for accessibility	Maxsus imkoniyatlarni tekshirish
+7acb80341730	Cross	Krest
+7afd1ac5cf02	Attach a file	Fayl biriktirish
+7b3f185b77d9	Advanced optimization	Kengaytirilgan optimallashtirish
+7c30076c4964	Check for accessibility…	Maxsus imkoniyatlarni tekshirish…
+7c4769f7e139	Add Bates numbering…	<<Bates>> raqamlashni qo`shish…
+7c73bd2bf25b	Export data	Ma~lumotlarni eksport qilish
+7d67869af66a	Digital signature	Raqamli imzo
+7e6382c1348f	Drawing scale	Chizma masshtabi
+7ebdbfad0062	Line Thickness:	Chiziq qalinligi:
+7f2056f84a00	Ask about this document	Bu hujjat haqida so`rash
+7f9c31ac103b	The certificate of {} does not allow this many CA certificates below it (path length), so it is not used to vouch for {}.	{} sertifikati o`zidan pastda bunchalik ko`p CA sertifikatiga ruxsat bermaydi (yo`l uzunligi), shuning uchun u {} uchun kafolat sifatida ishlatilmaydi.
+800ed6ac6b93	Sort items	Elementlarni saralash
+80321aac3780	Measurement information	O`lchov haqida ma~lumot
+806ec45cbb26	Scan & OCR	Skanerlash va OCR
+80b445655837	New bookmarks from structure	Tuzilmadan yangi xatcho`plar
+8126e7ed6fce	Redact a PDF	PDF ni maxfiylashtirish
+823786c73938	Add a sticky note	Yopishqoq qayd qo`shish
+82787bb194f6	Custom font	Maxsus shrift
+82b59b64f1ac	Add text	Matn qo`shish
+843eb430c305	Export to RTF…	RTF ga eksport qilish…
+8647773a2bf7	The signer's certificate does not allow digital signatures (its key usage has neither digital signature nor non-repudiation).	Imzolovchi sertifikati raqamli imzolarga ruxsat bermaydi (kalit qo`llanilishida na raqamli imzo, na inkor etmaslik bor).
+86a39f4678bc	This document has not been modified since this timestamp was applied.	Hujjat bu vaqt tamg`asi qo`yilgandan beri o`zgartirilmagan.
+872487d87b66	links	havolalar
+88a9ce440045	Radio button	Tanlov tugmasi
+88ddf1d486ce	Comments panel	Izohlar paneli
+88e3bbd87ac5	Rich Text Format (.rtf)	Rich Text Format (.rtf)
+88ecfa2fdba1	The signature's timestamp token does not cover the signature value.	Imzoning vaqt tamg`asi tokeni imzo qiymatini qamrab olmaydi.
+893b4ac96c14	Find tools and commands…	Vositalar va buyruqlarni topish…
+8a141deb9077	Create separate PDFs…	Alohida PDFlar yaratish…
+8a89d21952d1	Convert colors	Ranglarni aylantirish
+8abc652daca5	Optimize scanned documents…	Skanerlangan hujjatlarni optimallashtirish…
+8abf83ff406c	Oct	okt
+8ac9b21b65a0	Mar	mar
+8acbdc278945	About PdfCraft	PdfCraft haqida
+8affa2498532	March	mart
+8bb6e2b319b8	Make accessible	Maxsus imkoniyatli qilish
+8c3620de49c3	Duplicate pages	Sahifalarni takrorlash
+8c694e63b41d	Redact text and images	Matn va rasmlarni maxfiylashtirish
+8cb1d10c6bc8	Update watermark…	Suv belgisini yangilash…
+8f4849ecc602	May	may
+906cef26c7d3	Button Style:	Tugma uslubi:
+9128049a50b6	Add printer marks	Bosma belgilar qo`shish
+9150eeda563e	Signature is invalid	Imzo yaroqsiz
+91961a5cd6fc	Import data	Ma~lumotlarni import qilish
+91b0c9990259	Remove hidden information…	Yashirin ma~lumotlarni olib tashlash…
+929ecd216382	Export measurements	O`lchovlarni eksport qilish
+93843fc5b95e	General	Umumiy
+939e5cc753f7	Use print production	Bosmaga tayyorlashdan foydalanish
+94881ed7f843	Export a PDF	PDF ni eksport qilish
+96646ff58ece	Clear redaction marks	Maxfiylashtirish belgilarini tozalash
+966937441cfa	ArtCraft website	ArtCraft veb-sayti
+97cf61fdd171	The document has been modified since this timestamp was applied, but the changes are permitted ({}).	Hujjat bu vaqt tamg`asi qo`yilgandan keyin o`zgartirilgan, ammo o`zgarishlar ruxsat etilgan ({}).
+97f4cf7ebd00	Copy pages	Sahifalarni nusxalash
+985482e5085a	PostScript / EPS	PostScript / EPS
+98819956cfb5	Text	Matn
+98a01acdceb6	Button	Tugma
+99fbb3d3afc5	Validate all signatures	Barcha imzolarni tekshirish
+9a089f289aa1	Create from	Quyidagidan yaratish
+9a24107a9073	The embedded timestamp token is valid and its authority is trusted; trusted time is {}.	Ichki vaqt tamg`asi tokeni yaroqli va uning vakolatli markazi ishonchli; ishonchli vaqt: {}.
+9c617cf65374	Protect with password	Parol bilan himoyalash
+9d3f2818516e	Measure	O`lchash
+9d9a1801666d	Recognize text	Matnni aniqlash
+9d9b91081e83	The signer's certificate was not valid at the time of signing.	Imzolovchi sertifikati imzolash paytida yaroqli bo`lmagan.
+9dadf76b5651	Draw freehand	Erkin chizish
+9dba77450902	Geospatial location	Geofazoviy joylashuv
+9e1854e8fa57	Find text and redact…	Matnni topish va maxfiylashtirish…
+9e5c0febacdb	Console	Konsol
+9e64180f6da3	View	Ko`rinish
+9f729f5da056	Draw a rectangle	To`rtburchak chizish
+a053d8cf7a57	Use guided actions	Yo`naltirilgan amallardan foydalanish
+a079e2293088	Fill & Sign: checkmark	To`ldirish va imzolash: belgi
+a109fb94dbe9	Next view	Keyingi ko`rinish
+a125cfca2c27	Drawing	Chizma
+a1a8c38d73da	Fill & Sign	To`ldirish va imzolash
+a23c2c1fd3e4	Rotate pages counterclockwise	Sahifalarni soat miliga qarshi burish
+a2e206250781	The RSA signature's DigestInfo has no NULL parameter (older signers write it so); it was read anyway.	RSA imzosining DigestInfo qismida NULL parametri yo`q (eski imzolovchilar shunday yozadi); baribir o`qildi.
+a2f591707ff5	Watermark	Suv belgisi
+a329e46d0d24	The signature includes an embedded timestamp.	Imzoda ichki vaqt tamg`asi bor.
+a32c5e136624	Flatten comments	Izohlarni yassilash
+a3bea106de40	Edit a PDF	PDF ni tahrirlash
+a478af433d03	The timestamp's byte range does not match the file.	Vaqt tamg`asining bayt diapazoni faylga mos kelmaydi.
+a48499ff5718	February	fevral
+a4aab2323670	Font size 0 uses automatic sizing.	Shrift o`lchami 0 bo`lsa, avtomatik o`lcham ishlatiladi.
+a55ae698ec5a	Font Size:	Shrift o`lchami:
+a582e0cff44a	Compare files…	Fayllarni solishtirish…
+a642cec553cf	Text (plain)	Matn (oddiy)
+a67f7f0c5fed	Presentation (.pptx)	Taqdimot (.pptx)
+a71a26ca0401	Images	Rasmlar
+a7b88409223c	Fill & Sign: initials	To`ldirish va imzolash: bosh harflar
+a7f2848f2229	Draw a cloud	Bulut chizish
+a8388aaa40c2	Document properties…	Hujjat xossalari…
+a863ee0b6508	Highlight text	Matnni ajratib ko`rsatish
+aa583fdc9e9c	Detect form fields	Forma maydonlarini aniqlash
+aa6545a9abf5	Remove security	Himoyani olib tashlash
+ab4005a8ce08	Underline text	Matnning tagiga chizish
+ab80c207e4ef	Redact	Maxfiylashtirish
+abda5c7d41e7	Enter permissions password…	Ruxsatlar parolini kiritish…
+ac9a3422b573	Digitally signed by	Raqamli imzolagan
+acbca3b35196	Bring your own model (off by default)	O`z modelingizdan foydalaning (sukut bo`yicha o`chiq)
+ad3501359caf	Protect using password…	Parol bilan himoyalash…
+ad7d49fb5584	Select files to compare	Solishtirish uchun fayllarni tanlash
+ad7f0e23b68e	A selected field has no widget on any page, so the fields can't be edited together.	Tanlangan maydonlardan birining hech bir sahifada vidjeti yo`q, shuning uchun maydonlarni birgalikda tahrirlab bo`lmaydi.
+ae0125201b97	form fill	forma to`ldirish
+aec32c5256f9	Field list	Maydonlar ro`yxati
+af867c3d9fe2	This signature uses SHA-1, a weak hash algorithm: collisions in it have been demonstrated. It still validates because many documents signed years ago use it, but it should not be relied on.	Bu imzo SHA-1 dan foydalanadi — kuchsiz xesh algoritmi: unda to`qnashuvlar isbotlangan. Ko`p yillar oldin imzolangan hujjatlar undan foydalangani uchun u hali ham tasdiqlanadi, lekin unga tayanmaslik kerak.
+b006167e8804	Previous tab	Oldingi yorliq
+b082b94ff327	Fit one full page	Bitta to`liq sahifaga moslash
+b0ac1e6cb44d	Remove all links	Barcha havolalarni olib tashlash
+b32bedd2d48a	Fill Color:	To`ldirish rangi:
+b332de0f879c	JavaScript console…	JavaScript konsoli…
+b524f97c32c3	Sun	yak
+b562113ffcc5	{n} fields selected	{n} ta maydon tanlandi
+b5810486d2fe	Use a certificate	Sertifikatdan foydalanish
+b5d68a4e3f85	Rotate pages	Sahifalarni burish
+b61df6caac4d	Mixed	Aralash
+b62c56928c82	Review	Tekshirish
+b73cceeddf1b	Commit selected value immediately	Tanlangan qiymatni darhol qo`llash
+b7a4ba7ab822	Optimize scanned documents	Skanerlangan hujjatlarni optimallashtirish
+b7ac55a4f0e2	AI assistant	AI yordamchi
+b7f6cd407fec	December	dekabr
+b86c370a9fb6	Replace pages…	Sahifalarni almashtirish…
+b92f7f7853bf	Change field properties	Maydon xossalarini o`zgartirish
+b948ce091c7c	JavaScript	JavaScript
+b9ed1f2079b0	Add watermark…	Suv belgisi qo`shish…
+ba7aa189e51a	Fill & Sign: change initials	To`ldirish va imzolash: bosh harflarni o`zgartirish
+badd2d44ae39	Measure perimeter	Perimetrni o`lchash
+bafb655f6fc7	Edit	Tahrirlash
+bb004741011a	Document JavaScripts…	Hujjat JavaScript skriptlari…
+bb165c7029bb	Redaction properties…	Maxfiylashtirish xossalari…
+bb192745390b	Summarize	Jamlash
+bc03c3cddeec	Border Color:	Chegara rangi:
+bc6e9dccb277	In multiple files	Bir nechta faylda
+bda0172eb378	Field is used for file selection	Maydon fayl tanlash uchun ishlatiladi
+bddbbd58c64d	Tab order: by document structure	<<Tab>> tartibi: hujjat tuzilmasi bo`yicha
+be0a62cffc6c	Mon	du
+be18e36229a8	DN: 	DN: 
+be4c2befc59d	Clear form	Formani tozalash
+bec6df3027e6	document security store	hujjat xavfsizlik ombori
+beed7baab167	Tab order by rows	<<Tab>> tartibi qatorlar bo`yicha
+bf8ae2e9d3c3	Fix hairlines	Ingichka chiziqlarni tuzatish
+c031c957ee0d	Enhance scanned file	Skanerlangan faylni yaxshilash
+c14253732f34	Bates numbering	<<Bates>> raqamlash
+c14b4afdf794	The signature could not be verified ({}).	Imzoni tekshirib bo`lmadi ({}).
+c372b3019389	comments	izohlar
+c37f4ab09143	Check spelling	Imloni tekshirish
+c3a43f6a5a58	No color	Rangsiz
+c4c598cd4fd3	The timestamp token could not be read ({}).	Vaqt tamg`asi tokenini o`qib bo`lmadi ({}).
+c515ccd1f8d8	Signing time is from the clock on the signer's computer.	Imzolash vaqti imzolovchi kompyuterining soatidan olingan.
+c534de9e24de	This document has not been modified since this signature was applied.	Hujjat bu imzo qo`yilgandan beri o`zgartirilmagan.
+c55b3730c0c0	Multiple selection	Ko`p tanlov
+c57dea6eb32d	Thursday	payshanba
+c593c3fc697d	The selected fields could not be found. Select them again.	Tanlangan maydonlar topilmadi. Ularni qaytadan tanlang.
+c623602d6d01	other changes	boshqa o`zgarishlar
+c7538225b102	Add search index	Qidiruv indeksi qo`shish
+c77cb9573cf5	Page labels	Sahifa yorliqlari
+c89259c4a965	Index	Indeks
+ca381889fc85	Optional	Ixtiyoriy
+caacdaadfe43	Fill & Sign: dot	To`ldirish va imzolash: nuqta
+cad8602376c4	Insert pages from file…	Fayldan sahifalarni kiritish…
+cb0adde03661	Tag form fields	Forma maydonlarini teglash
+cb3c31522962	Apply PDF standards	PDF standartlarini qo`llash
+cb3e925d60bb	Add a text box	Matn qutisini qo`shish
+cb8afe74c74b	Create PDF from images…	Rasmlardan PDF yaratish…
+cc459a879059	Snapping	Tortilish
+cc7c0089d0f6	Reduce file size	Fayl hajmini kamaytirish
+cc815b8a1cdd	Signature validity is unknown	Imzoning yaroqliligi noma~lum
+cdd1c712c7ff	Light gray	Och kulrang
+cf449791897a	Two-page view	Ikki sahifali ko`rinish
+cfb3a65f710a	Split document…	Hujjatni ajratish…
+d00e61a3c700	New blank PDF	Yangi bo`sh PDF
+d05d036e51a2	Encrypt with certificate	Sertifikat bilan shifrlash
+d06e87727f44	Initials	Bosh harflar
+d0fb1be3279e	Export form data…	Forma ma~lumotlarini eksport qilish…
+d14a32a8763c	Combine files…	Fayllarni birlashtirish…
+d17c7eca2539	Add a text field	Matn maydonini qo`shish
+d19df198f4a7	Reason	Sabab
+d232a5793cd6	Perimeter	Perimetr
+d269ad2c9c60	The signer's identity is unknown because it has not been included in your list of trusted certificates and none of its parent certificates are trusted certificates.	Imzolovchining shaxsi noma~lum, chunki u ishonchli sertifikatlar ro`yxatingizga kiritilmagan va uning yuqori sertifikatlaridan hech biri ishonchli emas.
+d4231ceb3ba6	Draw an oval	Oval chizish
+d480753aa1cf	Add files to combine	Birlashtirish uchun fayllar qo`shish
+d51387bc4c9c	Read mode	O`qish rejimi
+d53682b6547c	Location	Joylashuv
+d57813b36d28	The timestamp contents are not hexadecimal.	Vaqt tamg`asi tarkibi o`n oltilik sanoq tizimida emas.
+d605d9a51507	Save as PDF/X	PDF/X sifatida saqlash
+d69385e76d57	Image (PNG)	Rasm (PNG)
+d693e51a3109	Image field	Rasm maydoni
+d696902432a9	Security properties	Xavfsizlik xossalari
+d75574368144	Underline	Tagiga chizish
+d7ed28c7610e	The ECDSA signature is the raw r and s values instead of a DER sequence; it was read anyway.	ECDSA imzosi DER ketma-ketligi o`rniga xom r va s qiymatlaridan iborat; baribir o`qildi.
+d82a537a25b8	Thu	pa
+d830245fdc73	HTML web page	HTML veb sahifa
+d854632622c1	Change reading options…	O`qish parametrlarini o`zgartirish…
+d931899129cf	Prepare for distribution	Tarqatishga tayyorlash
+d9359ac2e291	Sat	sha
+d9a0da0f87a8	Export to HTML…	HTML ga eksport qilish…
+da29307aec36	Signatures panel	Imzolar paneli
+da3389c900ee	Set page boxes…	Sahifa qutilarini belgilash…
+db0c858b363c	Insert pages	Sahifalarni kiritish
+db3cc9e7a4ae	Merge data files into spreadsheet…	Ma~lumotlar fayllarini elektron jadvalga birlashtirish…
+dbea5b85a35b	Fri	ju
+dc20021ff5b0	Single file	Bitta fayl
+dd1fa99dc6e0	Add a callout	Chiqarish chizig`ini qo`shish
+dd26bba6d9ae	Tue	se
+de0cebe35e34	Rotate pages…	Sahifalarni burish…
+de0e90625987	Remove header & footer	Kolontitulni olib tashlash
+de4b4ff8ea8f	Use JavaScript	JavaScript dan foydalanish
+de8b04f23577	Hide all comments	Barcha izohlarni yashirish
+df7b403a56ec	Unsigned signature field	Imzolanmagan imzo maydoni
+dffd338a3ca9	The document changed while you were editing field properties.	Maydon xossalarini tahrirlayotganingizda hujjat o`zgardi.
+e0ac5148ff14	In this file	Shu faylda
+e0e536c5055d	Protect a PDF	PDF ni himoyalash
+e11e66ec1020	Attach file	Fayl biriktirish
+e1bd00d5986a	Export to PowerPoint…	PowerPoint ga eksport qilish…
+e1e5b5bf8dab	The signature could not be read ({}).	Imzoni o`qib bo`lmadi ({}).
+e26c6a130a57	Measurement snapping	O`lchovni tortish
+e272aa48e64b	Wed	ch
+e2d45a1bb879	Extract pages	Sahifalarni ajratib olish
+e3d8025749e9	Export measurements as CSV	O`lchovlarni CSV sifatida eksport qilish
+e3f3a3d8f057	Correct recognized text	Aniqlangan matnni tuzatish
+e472009e2967	pages added or removed	sahifalar qo`shilgan yoki olib tashlangan
+e4e2ffaab535	The signature could not be checked ({}).	Imzoni tekshiruvdan o`tkazib bo`lmadi ({}).
+e545ef64819b	Preflight	Chop etishdan oldin tekshirish
+e604fb76247a	Set page boxes	Sahifa qutilarini belgilash
+e6abed2c1b06	Update background…	Fonni yangilash…
+e71e0013d31e	The signature contents are not hexadecimal.	Imzo tarkibi o`n oltilik sanoq tizimida emas.
+e9143fc2f495	Add image…	Rasm qo`shish…
+e9cf93cef35f	Timestamp	Vaqt tamg`asi
+eb225bc87b2d	Character limit:	Belgilar chegarasi:
+eb7f8d375218	Microsoft Word (.docx)	Microsoft Word (.docx)
+ebe87080c2fd	PdfCraft can't check this signature yet: {}.	PdfCraft bu imzoni hali tekshira olmaydi: {}.
+ebf1ac969151	Full screen mode	To`liq ekran rejimi
+ec96e92aacdb	The document has been altered since this signature was applied in ways it does not permit ({}).	Hujjat bu imzo qo`yilgandan keyin ruxsat etilmagan tarzda o`zgartirilgan ({}).
+eccbc552ce6b	The signer's identity is valid.	Imzolovchining shaxsi tasdiqlangan.
+edb14296cd6e	Create PDF from clipboard	Almashinuv buferidan PDF yaratish
+ee1f5edc81d6	Certify (invisible signature)	Sertifikatlash (ko`rinmas imzo)
+ee31af4ca983	Digitally sign	Raqamli imzolash
+ee709a71df0c	Apply redactions…	Maxfiylashtirishni qo`llash…
+eeca1c2801f5	Continuous scrolling	Uzluksiz aylantirish
+ef3551a0aee1	Print production	Bosmaga tayyorlash
+f0aed1a62574	Switch light / dark theme	Yorug`/qorong`i temani almashtirish
+f32dd3420d3c	Keyboard shortcuts	Tezkor tugmalar
+f358e4886613	Sanitize document…	Hujjatni tozalash…
+f539733459ba	The signature algorithm and the SignerInfo's digest algorithm name different hashes; the signature was made with the SignerInfo's.	Imzo algoritmi va SignerInfo xesh algoritmi turli xeshlarni nomlaydi; imzo SignerInfo xeshi bilan yaratilgan.
+f6fb87a9e8ee	OK	OK
+f7a3badd84e5	June	iyun
+f9195997ab86	Check for updates…	Yangilanishlarni tekshirish…
+f9acef24dc5f	Reason: 	Sabab: 
+f9e1ab566798	Pattern	Andoza
+fa27c1226ab4	Recognize text in multiple files…	Bir nechta fayldagi matnni aniqlash…
+fa35a2b29fb8	To change locked fields, also set Locked to No.	Qulflangan maydonlarni o`zgartirish uchun Qulflangan parametrini ham Yo`q ga o`rnating.
+fa9ff1d48461	Stamps	Shtamplar
+fb03ccc4ae40	page content	sahifa mazmuni
+fb16b932817c	January	yanvar
+fb28a63c0cad	Enhance camera image	Kamera tasvirini yaxshilash
+fc4cd084f3c0	The labels are in English: the signature's font can't draw them in this language.	Yorliqlar inglizcha: imzo shrifti ularni bu tilda chiza olmaydi.
+fc8a0190cc6f	Optimize	Optimallashtirish
+fd268e03a936	The timestamp's byte range does not exclude exactly its contents.	Vaqt tamg`asining bayt diapazoni uning tarkibini aniq istisno qilmaydi.
+fd5615c1be15	The document's embedded revocation information shows that the signer's certificate has not been revoked.	Hujjatga o`rnatilgan chaqirib olish ma~lumoti imzolovchi sertifikati chaqirib olinmaganini ko`rsatadi.
+fda3a8fa6648	document structure	hujjat tuzilmasi
+fe5e227d9710	Standards	Standartlar
+fea178fbe0d2	September	sentabr
+fec37c6dac39	Add alternate text	Muqobil matn qo`shish
+fedb483d4351	the signed version could not be read	imzolangan versiyani o`qib bo`lmadi
+ff56f7bfb7ec	Cut pages	Sahifalarni kesib olish
+ff7956136379	Document actions	Hujjat amallari

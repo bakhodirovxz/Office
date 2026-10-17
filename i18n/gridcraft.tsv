@@ -1,142 +1,142 @@
 id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	ru_apps	priority	apps	where	note
 0027a26cbb3b		t-Test: Two-Sample Assuming Equal Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:48	
 00ee3bd02459		Switch Row/Column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2354	
-013669715371		Chart\nTitle		todo		todo	Название\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:428	
+013669715371		Chart\nTitle	Diagramma\nnomi	draft:agent-sonnet:2026-10-17	Диаграмма\nноми	draft:agent-sonnet:2026-10-17	Название\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:428	
 015ae95cd897		Calculate Now (F9)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1875	
 017d8bf5a730		Current region		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:662	
 01b16f8407f0		At each change in (column letter):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:508	
 01d7e6e3abc4		applies to		todo		todo		todo		P2	gridcraft		
 01faae82fa08		Flash Fill (⌘E)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1935	
 022a7e1dd7d8		Weekday		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:330	
-02d0412163d8		Sheets		todo		todo	Листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:633	
+02d0412163d8		Sheets	Varaqlar	draft:agent-sonnet:2026-10-17	Варақлар	draft:agent-sonnet:2026-10-17	Листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:633	
 03b9a3f2d8a9		Statistic		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1494	
 03eaaf9c89ab		ScreenTip:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:373	
-041b773c8261		Format Cells…		todo		todo	Формат ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2868	
-04cf5aaed9cf		Solver		todo		todo	Поиск решения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:360	
-0525d065c2cf		Remove Arrows		todo		todo	Убрать стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:328	
+041b773c8261		Format Cells…	Kataklar formati…	draft:agent-sonnet:2026-10-17	Катаклар формати…	draft:agent-sonnet:2026-10-17	Формат ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2868	
+04cf5aaed9cf		Solver	Yechim izlash	draft:agent-sonnet:2026-10-17	Ечим излаш	draft:agent-sonnet:2026-10-17	Поиск решения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:360	
+0525d065c2cf		Remove Arrows	Strelkalarni olib tashlash	draft:agent-sonnet:2026-10-17	Стрелкаларни олиб ташлаш	draft:agent-sonnet:2026-10-17	Убрать стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:328	
 05284eecac49		Link to (web address, e-mail or Sheet!A1):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:372	
-057f7bc093b6		Financial		todo		todo	Финансовые	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:475	
-0582ff4cb725		New Note		todo		todo	Новая заметка	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:346	
+057f7bc093b6		Financial	Moliyaviy	draft:agent-sonnet:2026-10-17	Молиявий	draft:agent-sonnet:2026-10-17	Финансовые	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:475	
+0582ff4cb725		New Note	Yangi qayd	draft:agent-sonnet:2026-10-17	Янги қайд	draft:agent-sonnet:2026-10-17	Новая заметка	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:346	
 059bef0269f9		Lookup & Reference		todo		todo		todo		P2	gridcraft	crates/engine/src/catalog.rs:176	
 05e38b237fd2		Moving Average		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:44	
-05e68d5f5945		Legend: Top		todo		todo	Легенда: сверху	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:424	
+05e68d5f5945		Legend: Top	Shartli belgilar: yuqorida	draft:agent-sonnet:2026-10-17	Шартли белгилар: юқорида	draft:agent-sonnet:2026-10-17	Легенда: сверху	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:424	
 0664d8e231d1		Version, contributors and the AI models that helped		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2261	
-06816f1c53a5		Draw		todo		todo	Рисование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:445	
+06816f1c53a5		Draw	Chizish	draft:agent-sonnet:2026-10-17	Чизиш	draft:agent-sonnet:2026-10-17	Рисование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:445	
 069310737949		Pie or Doughnut		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1472	
-06aac9ecd435		Clear Print Area		todo		todo	Очистить область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:268	
+06aac9ecd435		Clear Print Area	Chop etish hududini tozalash	draft:agent-sonnet:2026-10-17	Чоп этиш ҳудудини тозалаш	draft:agent-sonnet:2026-10-17	Очистить область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:268	
 06d4762dc8a6		Range password:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:226	
-070a1b31f505		File\nName		todo		todo	Имя\nфайла	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:495	
-07743b3fef64		Gridlines: None		todo		todo	Линии сетки: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:426	
+070a1b31f505		File\nName	Fayl\nnomi	draft:agent-sonnet:2026-10-17	Файл\nноми	draft:agent-sonnet:2026-10-17	Имя\nфайла	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:495	
+07743b3fef64		Gridlines: None	Katakcha chiziqlari: yoʻq	draft:agent-sonnet:2026-10-17	Катакча чизиқлари: йўқ	draft:agent-sonnet:2026-10-17	Линии сетки: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:426	
 079ee0eb49ef		Save a copy as .{format}		todo		todo		todo		P2	gridcraft		
 088b41c91735		Comments and notes (C)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:301	
-08e0a14d67da		Table Design		todo		todo	Конструктор таблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:452	
+08e0a14d67da		Table Design	Jadval dizayni	draft:agent-sonnet:2026-10-17	Жадвал дизайни	draft:agent-sonnet:2026-10-17	Конструктор таблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:452	
 08e8616069c8		thick		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1693	
-0941af2dd73d		Angle Clockwise		todo		todo	Повернуть по часовой стрелке	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:222	
+0941af2dd73d		Angle Clockwise	Soat mili boʻyicha burish	draft:agent-sonnet:2026-10-17	Соат мили бўйича буриш	draft:agent-sonnet:2026-10-17	Повернуть по часовой стрелке	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:222	
 0a6719efb339		Legend Entries (Series)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2162	
 0a77e89fbe5c		What-If Analysis		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1961	
-0a9415be500f		Scientific		todo		todo	Экспоненциальный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-0a9671dbd00e		Switch\nRow/Column		todo		todo	Поменять\nстроки/столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:418	
-0b2ddc3d62ff		Paste Link		todo		todo	Вставить связь	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:316	
+0a9415be500f		Scientific	Ilmiy	draft:agent-sonnet:2026-10-17	Илмий	draft:agent-sonnet:2026-10-17	Экспоненциальный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+0a9671dbd00e		Switch\nRow/Column	Qator/ustunni\nalmashtirish	draft:agent-sonnet:2026-10-17	Қатор/устунни\nалмаштириш	draft:agent-sonnet:2026-10-17	Поменять\nстроки/столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:418	
+0b2ddc3d62ff		Paste Link	Havolani qoʻyish	draft:agent-sonnet:2026-10-17	Ҳаволани қўйиш	draft:agent-sonnet:2026-10-17	Вставить связь	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:316	
 0b6ba3fe0780		Group by Quarters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:140	
 0bbd3a372c20		Move or Copy Sheet…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:943	
 0bbe96f8070e		The output range already holds data. Replace it with the report?		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2389	
 0bf48064f313		Unprotect Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:269	
 0c1531fdbb89		Last month		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:595	
-0ddd07668d36		Unhide Rows		todo		todo	Показать строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:253	
+0ddd07668d36		Unhide Rows	Qatorlarni koʻrsatish	draft:agent-sonnet:2026-10-17	Қаторларни кўрсатиш	draft:agent-sonnet:2026-10-17	Показать строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:253	
 0e1cf97ca9f8		Insert Function (⇧F3)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1751	
 0ede56660872		Confidence level (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:451	
-0f7fedbb83af		Action\nJournal		todo		todo	Журнал\nдействий	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:413	
+0f7fedbb83af		Action\nJournal	Amallar\njurnali	draft:agent-sonnet:2026-10-17	Амаллар\nжурнали	draft:agent-sonnet:2026-10-17	Журнал\nдействий	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:413	
 0f805abce434		between		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:569	
 0fac1030ce0d		Show Formulas (⌃`)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1839	
 107b1a8364c6		Format cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:185	
-10b13a5d6f0b		Set Print Area		todo		todo	Задать область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:307	
-11430d3504cb		Data Table…		todo		todo	Таблица данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:362	
+10b13a5d6f0b		Set Print Area	Chop etish hududini belgilash	draft:agent-sonnet:2026-10-17	Чоп этиш ҳудудини белгилаш	draft:agent-sonnet:2026-10-17	Задать область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:307	
+11430d3504cb		Data Table…	Maʼlumotlar jadvali…	draft:agent-sonnet:2026-10-17	Маълумотлар жадвали…	draft:agent-sonnet:2026-10-17	Таблица данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:362	
 116366ba18f5		Analysis Tools		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2404	
-122e73122711		Increase Decimal		todo		todo	Увеличить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:228	
+122e73122711		Increase Decimal	Kasr xonalarini oshirish	draft:agent-sonnet:2026-10-17	Каср хоналарини ошириш	draft:agent-sonnet:2026-10-17	Увеличить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:228	
 12efea8132f1		Series		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:322	
 1369ebe66044		New sheet (⇧F11)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/tabs.rs:215	
-13b30e0d1aaa		Percentage		todo		todo	Процентный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+13b30e0d1aaa		Percentage	Foiz	draft:agent-sonnet:2026-10-17	Фоиз	draft:agent-sonnet:2026-10-17	Процентный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 13b97f21809e		Location Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:383	
 13c1dbe36e27		Engineering		todo		todo		todo		P2	gridcraft		
 13d1e87c0a74		Multiply		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
-13e459b8eeac		Legend: None		todo		todo	Легенда: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:422	
-14285a4ba127		Reapply		todo		todo	Повторить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:345	
-14d5d6a32171		Go to\nFooter		todo		todo	Перейти к нижнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:498	
+13e459b8eeac		Legend: None	Shartli belgilar: yoʻq	draft:agent-sonnet:2026-10-17	Шартли белгилар: йўқ	draft:agent-sonnet:2026-10-17	Легенда: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:422	
+14285a4ba127		Reapply	Qayta qoʻllash	draft:agent-sonnet:2026-10-17	Қайта қўллаш	draft:agent-sonnet:2026-10-17	Повторить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:345	
+14d5d6a32171		Go to\nFooter	Quyi kolontitulga\noʻtish	draft:agent-sonnet:2026-10-17	Қуйи колонтитулга\nўтиш	draft:agent-sonnet:2026-10-17	Перейти к нижнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:498	
 14daad6524d3		Interval:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
 15b9ddedd7fd		Set cell:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2284	
 15c2ed54ae34		Solve		todo		todo		todo		P2	gridcraft		
 160928366dd4		Vertical		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1607	
-160fbfd31969		A CSV file, web page or PDF is a copy: the workbook keeps its own file.		todo		todo	CSV-файл, веб-страница или PDF — это копия: книга остаётся в своём файле.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:688	
+160fbfd31969		A CSV file, web page or PDF is a copy: the workbook keeps its own file.	CSV fayl, veb sahifa yoki PDF nusxa hisoblanadi: ish kitobi oʻz faylini saqlab qoladi.	draft:agent-sonnet:2026-10-17	CSV файл, веб саҳифа ёки PDF нусха ҳисобланади: иш китоби ўз файлини сақлаб қолади.	draft:agent-sonnet:2026-10-17	CSV-файл, веб-страница или PDF — это копия: книга остаётся в своём файле.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:688	
 167a49ae29f4		This workbook has no scripts or macros.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1504	
 169b1749ae87		All except borders		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:303	
-170767adc674		Insert Sheet Columns		todo		todo	Вставить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:244	
+170767adc674		Insert Sheet Columns	Varaq ustunlarini kiritish	draft:agent-sonnet:2026-10-17	Варақ устунларини киритиш	draft:agent-sonnet:2026-10-17	Вставить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:244	
 177936805317		Filter (⌘⇧F)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1912	
 17e74039f359		Not in Dictionary ({cell}):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2628	
 1899bc8b2c7f		'{file}' is protected.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:263	
 1937269eb46d		Special…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1906	
-1996230d993e		Copy (⌘C)		todo		todo	Копировать (⌘C)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:191	
-199cd4584e13		Remove Page Break		todo		todo	Удалить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:310	
+1996230d993e		Copy (⌘C)	Nusxalash (⌘C)	draft:agent-sonnet:2026-10-17	Нусхалаш (⌘C)	draft:agent-sonnet:2026-10-17	Копировать (⌘C)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:191	
+199cd4584e13		Remove Page Break	Sahifa uzilishini olib tashlash	draft:agent-sonnet:2026-10-17	Саҳифа узилишини олиб ташлаш	draft:agent-sonnet:2026-10-17	Удалить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:310	
 1a4a430e03a2		Input message:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:923	
-1a64124f5aa8		Freeze First Column		todo		todo	Закрепить первый столбец	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:394	
+1a64124f5aa8		Freeze First Column	Birinchi ustunni qotirish	draft:agent-sonnet:2026-10-17	Биринчи устунни қотириш	draft:agent-sonnet:2026-10-17	Закрепить первый столбец	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:394	
 1aaf65c3cd54		not equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:875	
 1b12f4cbccc0		Footer (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:413	
 1b1f3ccedcb6		Error style		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:926	
-1b2551f2b07c		Number of Pages		todo		todo	Число страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:500	
+1b2551f2b07c		Number of Pages	Sahifalar soni	draft:agent-sonnet:2026-10-17	Саҳифалар сони	draft:agent-sonnet:2026-10-17	Число страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:500	
 1b7bee38a7cc		and:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:580	
-1ba22a53b1a5		Add header		todo		todo	Добавить верхний колонтитул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:485	
+1ba22a53b1a5		Add header	Yuqori kolontitul qoʻshish	draft:agent-sonnet:2026-10-17	Юқори колонтитул қўшиш	draft:agent-sonnet:2026-10-17	Добавить верхний колонтитул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:485	
 1ba3bdef887c		Select a Solving Method:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2529	
-1be4bdda19f5		Dark		todo		todo	Тёмная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:938	
+1be4bdda19f5		Dark	Qorongʻi	draft:agent-sonnet:2026-10-17	Қоронғи	draft:agent-sonnet:2026-10-17	Тёмная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:938	
 1c6e3ac7763c		greater than		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:876	
 1c9063363006		Summarize by Sum		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:111	
 1cc64795c126		Stop value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:333	
 1d267137a077		Use AutoFilter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:191	
 1d2eac57f833		Type a command, e.g. freeze, chart, bold…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2242	
-1d65deea863e		Check\nAccessibility		todo		todo	Проверка\nдоступности	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:367	
-1e15d156373d		Above Average		todo		todo	Выше среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:436	
+1d65deea863e		Check\nAccessibility	Maxsus imkoniyatlarni\ntekshirish	draft:agent-sonnet:2026-10-17	Махсус имкониятларни\nтекшириш	draft:agent-sonnet:2026-10-17	Проверка\nдоступности	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:367	
+1e15d156373d		Above Average	Oʻrtachadan yuqori	draft:agent-sonnet:2026-10-17	Ўртачадан юқори	draft:agent-sonnet:2026-10-17	Выше среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:436	
 1e1d7baa459d		Quarterly Sales Dashboard		todo		todo		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
-1e96603bb4a6		Fraction		todo		todo	Дробный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-20af6a1b070c		Legend: Bottom		todo		todo	Легенда: снизу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:423	
+1e96603bb4a6		Fraction	Oddiy kasr	draft:agent-sonnet:2026-10-17	Оддий каср	draft:agent-sonnet:2026-10-17	Дробный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+20af6a1b070c		Legend: Bottom	Shartli belgilar: pastda	draft:agent-sonnet:2026-10-17	Шартли белгилар: пастда	draft:agent-sonnet:2026-10-17	Легенда: снизу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:423	
 20c06a77d25d		Columns (blank = all, e.g. A,C):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
-20fe0c3cd46b		{n} days ago		todo		todo	{n} дн. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:494	
-210b0247c503		Italic (⌘I)		todo		todo	Курсив (⌘I)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:194	
+20fe0c3cd46b		{n} days ago	{n} kun oldin	draft:agent-sonnet:2026-10-17	{n} кун олдин	draft:agent-sonnet:2026-10-17	{n} дн. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:494	
+210b0247c503		Italic (⌘I)	Kursiv (⌘I)	draft:agent-sonnet:2026-10-17	Курсив (⌘И)	draft:agent-sonnet:2026-10-17	Курсив (⌘I)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:194	
 213c1ee375a5		Destination:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:429	
-217172daecca		Unfreeze Panes		todo		todo	Снять закрепление областей	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:395	
+217172daecca		Unfreeze Panes	Qotirishni bekor qilish	draft:agent-sonnet:2026-10-17	Қотиришни бекор қилиш	draft:agent-sonnet:2026-10-17	Снять закрепление областей	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:395	
 21b4c5d777e4		Create a copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:168	
-21de3e7d5b7d		Sheet Name		todo		todo	Имя листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:505	
+21de3e7d5b7d		Sheet Name	Varaq nomi	draft:agent-sonnet:2026-10-17	Варақ номи	draft:agent-sonnet:2026-10-17	Имя листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:505	
 21e3c98a299a		— {steps} steps		todo		todo		todo		P2	gridcraft		
 21fd2600829a		Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2044	
-222ec2f9bf25		Data\nAnalysis		todo		todo	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:358	
+222ec2f9bf25		Data\nAnalysis	Maʼlumotlar\ntahlili	draft:agent-sonnet:2026-10-17	Маълумотлар\nтаҳлили	draft:agent-sonnet:2026-10-17	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:358	
 2239efb4e93c		Max		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:465	
 22485e2f48ad		Suggestions:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2632	
 229ac5e1b035		Scatter or Bubble		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1490	
 22aa23e6be78		Top		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1610	
-2327314b7430		Change\nChart Type		todo		todo	Изменить тип\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:417	
+2327314b7430		Change\nChart Type	Diagramma\nturini oʻzgartirish	draft:agent-sonnet:2026-10-17	Диаграмма\nтурини ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить тип\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:417	
 23539a8f631c		Unprotect Workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:245	
 236b686ef3e4		Protect Workbook structure		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2091	
 24f6a56cb446		Kth Largest (blank for none):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2324	
 24feadfdc382		Date unit		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:329	
-25175d8eac88		Hide Columns		todo		todo	Скрыть столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:254	
+25175d8eac88		Hide Columns	Ustunlarni yashirish	draft:agent-sonnet:2026-10-17	Устунларни яшириш	draft:agent-sonnet:2026-10-17	Скрыть столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:254	
 252edc53fa48		Confidence interval		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:450	
 254e73496131		Place Picture over Cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
 2600fd2e43c6		Protect\nSheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2082	
 260651fd015a		Format cells that are (value):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:578	
-26c96c70f5af		Freeze\nPanes		todo		todo	Закрепить\nобласти	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:391	
+26c96c70f5af		Freeze\nPanes	Sohalarni\nqotirish	draft:agent-sonnet:2026-10-17	Соҳаларни\nқотириш	draft:agent-sonnet:2026-10-17	Закрепить\nобласти	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:391	
 26dc6d9b06c6		Forecast Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1978	
-2795c8c95dc4		Current\nDate		todo		todo	Текущая\nдата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:492	
+2795c8c95dc4		Current\nDate	Joriy\nsana	draft:agent-sonnet:2026-10-17	Жорий\nсана	draft:agent-sonnet:2026-10-17	Текущая\nдата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:492	
 2797ef0206ae		In-cell dropdown		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:861	
-28453c31ebbf		Forecast\nSheet		todo		todo	Лист\nпрогноза	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:365	
-28674c272137		Show Formulas		todo		todo	Показать формулы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:329	
+28453c31ebbf		Forecast\nSheet	Prognoz\nvaraqi	draft:agent-sonnet:2026-10-17	Прогноз\nварақи	draft:agent-sonnet:2026-10-17	Лист\nпрогноза	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:365	
+28674c272137		Show Formulas	Formulalarni koʻrsatish	draft:agent-sonnet:2026-10-17	Формулаларни кўрсатиш	draft:agent-sonnet:2026-10-17	Показать формулы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:329	
 2886b0537ae4		Aggregate duplicates using		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:460	
 2889e7ae5295		Remove Duplicates		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:435	
-28a4a07a83ef		Text to\nColumns		todo		todo	Текст\nпо столбцам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:286	
+28a4a07a83ef		Text to\nColumns	Matnni\nustunlarga ajratish	draft:agent-sonnet:2026-10-17	Матнни\nустунларга ажратиш	draft:agent-sonnet:2026-10-17	Текст\nпо столбцам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:286	
 28bb288ddf01		Find & Select		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1037	
 2916b73995a8		Yellow Fill with Dark Yellow Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:607	
 291effd58ad0		Paper Size		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1661	
 299de3fcbb2b		Insert Function		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:31	
 299f7665001a		Series…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:989	
-29ca069c5bd2		Delete Sheet Columns		todo		todo	Удалить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:246	
-29ca3cd76afb		Draw with ink		todo		todo	Рисование от руки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:293	
-29e70f5d3a9f		Blank workbook		todo		todo	Пустая книга	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:331	
+29ca069c5bd2		Delete Sheet Columns	Varaq ustunlarini oʻchirish	draft:agent-sonnet:2026-10-17	Варақ устунларини ўчириш	draft:agent-sonnet:2026-10-17	Удалить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:246	
+29ca3cd76afb		Draw with ink	Qoʻl bilan chizish	draft:agent-sonnet:2026-10-17	Қўл билан чизиш	draft:agent-sonnet:2026-10-17	Рисование от руки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:293	
+29e70f5d3a9f		Blank workbook	Boʻsh ish kitobi	draft:agent-sonnet:2026-10-17	Бўш иш китоби	draft:agent-sonnet:2026-10-17	Пустая книга	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:331	
 2a5d4621ee3f		Undo list		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:82	
 2ac4d0f65daf		Print Titles		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1694	
 2b108b9a8c7e		Formats (T)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:300	
@@ -145,191 +145,191 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 2c3923db9e0f		Unhide Sheet…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:940	
 2e6c7aece18f		Password (optional):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:183	
 2e99ecf6400d		Insert Link (⌘K)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1543	
-2f0e0f6272ab		{n} years ago		todo		todo	{n} г. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:500	
+2f0e0f6272ab		{n} years ago	{n} yil oldin	draft:agent-sonnet:2026-10-17	{n} йил олдин	draft:agent-sonnet:2026-10-17	{n} г. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:500	
 2f884cb270b2		Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
 2ff039a78379		Use a field's menu to move it between areas:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:57	
-303afe88f34a		Merge Across		todo		todo	Объединить по строкам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:204	
+303afe88f34a		Merge Across	Qatorlar boʻyicha birlashtirish	draft:agent-sonnet:2026-10-17	Қаторлар бўйича бирлаштириш	draft:agent-sonnet:2026-10-17	Объединить по строкам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:204	
 30640345191d		By Changing Variable Cells:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2472	
 313d23665956		Refers to:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:560	
-31649d8286c0		Insert Page Break		todo		todo	Вставить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:309	
+31649d8286c0		Insert Page Break	Sahifa uzilishini kiritish	draft:agent-sonnet:2026-10-17	Саҳифа узилишини киритиш	draft:agent-sonnet:2026-10-17	Вставить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:309	
 31a7b0f99014		In the last 7 days		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:591	
-31eb4e291566		Edit		todo		todo	Изменение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:456	
+31eb4e291566		Edit	Tahrirlash	draft:agent-sonnet:2026-10-17	Таҳрирлаш	draft:agent-sonnet:2026-10-17	Изменение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:456	
 32853d96cbba		F-Test Two-Sample for Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:42	
 328d3bad171f		Line or Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1462	
 3335740d3ea4		Calculation Options		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1859	
-336b32a47ecd		Transpose		todo		todo	Транспонировать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:183	
+336b32a47ecd		Transpose	Transponirlash	draft:agent-sonnet:2026-10-17	Транспонирлаш	draft:agent-sonnet:2026-10-17	Транспонировать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:183	
 3380d6cfaeb1		Refers to cells:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:225	
 3459c155ac22		Formulas and number formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:305	
 34f61c5b85be		this workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1185	
 36aad568e9b0		Red Border		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:611	
-36d6c84c3847		Bottom 10%		todo		todo	Нижние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:435	
-3726d34601a3		Clear Validation		todo		todo	Очистить проверку данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:352	
+36d6c84c3847		Bottom 10%	Eng past 10%	draft:agent-sonnet:2026-10-17	Энг паст 10%	draft:agent-sonnet:2026-10-17	Нижние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:435	
+3726d34601a3		Clear Validation	Tekshiruvni tozalash	draft:agent-sonnet:2026-10-17	Текширувни тозалаш	draft:agent-sonnet:2026-10-17	Очистить проверку данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:352	
 37e68eb5f3fd		This week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:593	
 37e71a619568		Summary statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2322	
 37f7e95ca334		Move to Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:99	
-3841f9f1d52d		Data Validation		todo		todo	Проверка данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:567	
+3841f9f1d52d		Data Validation	Maʼlumotlarni tekshirish	draft:agent-sonnet:2026-10-17	Маълумотларни текшириш	draft:agent-sonnet:2026-10-17	Проверка данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:567	
 38708c7593a6		Tabular		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:167	
 38a227195d15		Horizontal axis title:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:759	
 38aec5a5de5b		Search commands (⌘⇧Space)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:127	
 38bf1fac183e		Column widths		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:304	
 38c07f02063c		Regression		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:46	
-39149146b169	Sheet Options	View		todo		todo	На экране	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
-397b189393d1		Format\nas Table		todo		todo	Форматировать\nкак таблицу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:233	
+39149146b169	Sheet Options	View	Koʻrinish	draft:agent-sonnet:2026-10-17	Кўриниш	draft:agent-sonnet:2026-10-17	На экране	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
+397b189393d1		Format\nas Table	Jadval sifatida\nformatlash	draft:agent-sonnet:2026-10-17	Жадвал сифатида\nформатлаш	draft:agent-sonnet:2026-10-17	Форматировать\nкак таблицу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:233	
 3a3b9a2e0578		Edit Name		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
 3abd93a5e3cb		Print Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1670	
 3acd9edac592		Add subtotal to (columns, e.g. C,D):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:521	
-3b49c9e7c07a		Current Time		todo		todo	Текущее время	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:502	
+3b49c9e7c07a		Current Time	Joriy vaqt	draft:agent-sonnet:2026-10-17	Жорий вақт	draft:agent-sonnet:2026-10-17	Текущее время	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:502	
 3b5a68bfedb3		Ranges that stay editable when the sheet is protected:		todo		todo		todo		P2	gridcraft		
 3b5ec15ed061		Z to A		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1948	
-3bc9347bc0d6		Circle Invalid Data		todo		todo	Обвести неверные данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:351	
+3bc9347bc0d6		Circle Invalid Data	Notoʻgʻri maʼlumotlarni doira bilan belgilash	draft:agent-sonnet:2026-10-17	Нотўғри маълумотларни доира билан белгилаш	draft:agent-sonnet:2026-10-17	Обвести неверные данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:351	
 3be0d8024a71		Horizontal (Category) Axis Labels:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2187	
 3da29927c7e9		Save (⌘S)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:71	
 3dcc37f25962		Select Data		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:712	
 3e9598d3791f		Go To Special		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:649	
-3e95c3f43cad		Subtotal		todo		todo	Промежуточный итог	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:505	
+3e95c3f43cad		Subtotal	Oraliq jami	draft:agent-sonnet:2026-10-17	Оралиқ жами	draft:agent-sonnet:2026-10-17	Промежуточный итог	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:505	
 3ebdc88c5708		Insert Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:872	
 3f34d6b40c9d		Count		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:463	
 3f92764778c2		Interpolation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
 3fd2355426f7		Allow all users of this sheet to:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:184	
 403190d843bb		Unhide sheet:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:282	
-404e03ffdf73		Number\nof Pages		todo		todo	Число\nстраниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:491	
+404e03ffdf73		Number\nof Pages	Sahifalar\nsoni	draft:agent-sonnet:2026-10-17	Саҳифалар\nсони	draft:agent-sonnet:2026-10-17	Число\nстраниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:491	
 408b2f075010		Column chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
-40a35efc36f5		Excel Workbook (*.xlsx)		todo		todo	Книга Excel (*.xlsx)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
+40a35efc36f5		Excel Workbook (*.xlsx)	Excel ish kitobi (*.xlsx)	draft:agent-sonnet:2026-10-17	Excel иш китоби (*.xlsx)	draft:agent-sonnet:2026-10-17	Книга Excel (*.xlsx)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
 40f682276e1f		Chart data range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2160	
 414b90fc1d84		Blanks		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:655	
 41533c7af2d7		Footer:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:394	
-41631fa9cba6		Click to add data		todo		todo	Щелкните, чтобы добавить данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:484	
+41631fa9cba6		Click to add data	Maʼlumot qoʻshish uchun bosing	draft:agent-sonnet:2026-10-17	Маълумот қўшиш учун босинг	draft:agent-sonnet:2026-10-17	Щелкните, чтобы добавить данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:484	
 41721f740fb7		Formulas (F)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:298	
 41814b0703fa		Recommended Charts		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
-41b1912ac93d		Unhide Columns		todo		todo	Показать столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:255	
+41b1912ac93d		Unhide Columns	Ustunlarni koʻrsatish	draft:agent-sonnet:2026-10-17	Устунларни кўрсатиш	draft:agent-sonnet:2026-10-17	Показать столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:255	
 41d95234ce49		Line chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
 41f3a6eb0c0e		Conditional Formatting Rules Manager		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:673	
 42d1b4ef382b		Divide		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
-4353fe63eea7		Footer Margin		todo		todo	Поле нижнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:304	
-44289a4326c1		Delete Cells…		todo		todo	Удалить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:242	
+4353fe63eea7		Footer Margin	Quyi kolontitul chekkasi	draft:agent-sonnet:2026-10-17	Қуйи колонтитул чеккаси	draft:agent-sonnet:2026-10-17	Поле нижнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:304	
+44289a4326c1		Delete Cells…	Kataklarni oʻchirish…	draft:agent-sonnet:2026-10-17	Катакларни ўчириш…	draft:agent-sonnet:2026-10-17	Удалить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:242	
 443fea239c15		Show as Rank		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:125	
 44aa38680098		Move to Row Labels		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:96	
-44d206163b70		Table\nStyles		todo		todo	Стили\nтаблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:431	
+44d206163b70		Table\nStyles	Jadval\nuslublari	draft:agent-sonnet:2026-10-17	Жадвал\nуслублари	draft:agent-sonnet:2026-10-17	Стили\nтаблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:431	
 44f2f6e060d1		OK		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1373	
 454b2e7d5af6		Text to Columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1930	
 4575e2c025fb		Markers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:384	
-45abfc387bd6		Cell\nStyles		todo		todo	Стили\nячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:234	
+45abfc387bd6		Cell\nStyles	Katak\nuslublari	draft:agent-sonnet:2026-10-17	Катак\nуслублари	draft:agent-sonnet:2026-10-17	Стили\nячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:234	
 46004168cc1a		Do you want to save the changes you made to {title}?		todo		todo		todo		P2	gridcraft		
 46be21e0c4cd		There are no conditional formatting rules on this sheet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2218	
-4707815b4fe1		Custom		todo		todo	Пользовательский	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:853	
+4707815b4fe1		Custom	Maxsus	draft:agent-sonnet:2026-10-17	Махсус	draft:agent-sonnet:2026-10-17	Пользовательский	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:853	
 47357253e550		Forecast end (date or number; blank: a third of the history):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:448	
-47d9e67d779d		Filter		todo		todo	Фильтр	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2785	
+47d9e67d779d		Filter	Filtr	draft:agent-sonnet:2026-10-17	Филтр	draft:agent-sonnet:2026-10-17	Фильтр	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2785	
 48a3d09f2e45		medium		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1692	
 493ae6abfc22		Match entire cell contents		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1828	
-496192db82af		Point		todo		todo	Указание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:457	
-49cb1d2f9d2e		Insert checkboxes in the selected cells		todo		todo	Вставить флажки в выбранные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:291	
-49dde8411c94		Decrease Decimal		todo		todo	Уменьшить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:229	
+496192db82af		Point	Koʻrsatish	draft:agent-sonnet:2026-10-17	Кўрсатиш	draft:agent-sonnet:2026-10-17	Указание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:457	
+49cb1d2f9d2e		Insert checkboxes in the selected cells	Tanlangan kataklarga belgilash kataklarini kiritish	draft:agent-sonnet:2026-10-17	Танланган катакларга белгилаш катакларини киритиш	draft:agent-sonnet:2026-10-17	Вставить флажки в выбранные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:291	
+49dde8411c94		Decrease Decimal	Kasr xonalarini kamaytirish	draft:agent-sonnet:2026-10-17	Каср хоналарини камайтириш	draft:agent-sonnet:2026-10-17	Уменьшить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:229	
 4a2bbb6febd7		Column width (characters):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:143	
-4a2ebb51bdcf		Cut (⌘X)		todo		todo	Вырезать (⌘X)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:190	
+4a2ebb51bdcf		Cut (⌘X)	Kesib olish (⌘X)	draft:agent-sonnet:2026-10-17	Кесиб олиш (⌘Х)	draft:agent-sonnet:2026-10-17	Вырезать (⌘X)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:190	
 4a4290567bc7		Move to Report Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:98	
 4a442157a5ee		Formula Builder		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:633	
-4aab2050258c		Accounting		todo		todo	Финансовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-4aae67c7c848		{n} weeks ago		todo		todo	{n} нед. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:496	
+4aab2050258c		Accounting	Buxgalteriya	draft:agent-sonnet:2026-10-17	Бухгалтерия	draft:agent-sonnet:2026-10-17	Финансовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+4aae67c7c848		{n} weeks ago	{n} hafta oldin	draft:agent-sonnet:2026-10-17	{n} ҳафта олдин	draft:agent-sonnet:2026-10-17	{n} нед. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:496	
 4bf9e8ff9de7		Anova: Single Factor		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:37	
-4c08b0318bc1		Define Name		todo		todo	Присвоить имя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:323	
+4c08b0318bc1		Define Name	Nom belgilash	draft:agent-sonnet:2026-10-17	Ном белгилаш	draft:agent-sonnet:2026-10-17	Присвоить имя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:323	
 4c96c420d9e9		Radar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2048	
-4ceba8fe31d8		File Path		todo		todo	Путь к файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:503	
+4ceba8fe31d8		File Path	Fayl yoʻli	draft:agent-sonnet:2026-10-17	Файл йўли	draft:agent-sonnet:2026-10-17	Путь к файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:503	
 4d1c7fe117ac		My data has headers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
-4d2eb547a809		Data Labels: None		todo		todo	Подписи данных: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:420	
-4d3a45552abe		Sort A to Z		todo		todo	Сортировка от А до Я	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2862	
+4d2eb547a809		Data Labels: None	Maʼlumotlar yorliqlari: yoʻq	draft:agent-sonnet:2026-10-17	Маълумотлар ёрлиқлари: йўқ	draft:agent-sonnet:2026-10-17	Подписи данных: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:420	
+4d3a45552abe		Sort A to Z	A dan Z gacha saralash	draft:agent-sonnet:2026-10-17	А дан З гача саралаш	draft:agent-sonnet:2026-10-17	Сортировка от А до Я	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2862	
 4d6001c2d85b		Create Sparklines		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:379	
 4dbde37a8384		Create Forecast Worksheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:443	
 4dec544ef821		Move or Copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:164	
 4e31b10c4272		Group by Years		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:139	
-4ef00c743f56		Fit Sheet on One Page		todo		todo	Вписать лист на одну страницу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:732	
+4ef00c743f56		Fit Sheet on One Page	Varaqni bir sahifaga sigʻdirish	draft:agent-sonnet:2026-10-17	Варақни бир саҳифага сиғдириш	draft:agent-sonnet:2026-10-17	Вписать лист на одну страницу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:732	
 4f0a05f74965		The spelling check is complete for the entire sheet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2620	
 4f2e5ee35909		$ English (United States)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:801	
 4f6ccfd99e4c		To value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2287	
 4f7ab468e79d		Show as % of Grand Total		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:123	
 4fb2e8aa5ad9		Bottom Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:707	
-4fd487d5442d		Accounting Number Format		todo		todo	Финансовый числовой формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:225	
+4fd487d5442d		Accounting Number Format	Buxgalteriya son formati	draft:agent-sonnet:2026-10-17	Бухгалтерия сон формати	draft:agent-sonnet:2026-10-17	Финансовый числовой формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:225	
 4ff18fd20844		Set Objective:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2459	
-4ff27c5f2489		Different First Page		todo		todo	Особый колонтитул для первой страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:507	
+4ff27c5f2489		Different First Page	Birinchi sahifa kolontitul boshqacha	draft:agent-sonnet:2026-10-17	Биринчи саҳифа колонтитул бошқача	draft:agent-sonnet:2026-10-17	Особый колонтитул для первой страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:507	
 5004637f1fc1		Format Chart pane		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2389	
-520a94eb4ac8		Create from Selection		todo		todo	Создать из выделенного	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:325	
+520a94eb4ac8		Create from Selection	Tanlovdan yaratish	draft:agent-sonnet:2026-10-17	Танловдан яратиш	draft:agent-sonnet:2026-10-17	Создать из выделенного	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:325	
 529ebc5e39ed		Stacked Line		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2041	
-52e182f4dbaa		Data Bars		todo		todo	Гистограммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:441	
+52e182f4dbaa		Data Bars	Maʼlumotlar chiziqlari	draft:agent-sonnet:2026-10-17	Маълумотлар чизиқлари	draft:agent-sonnet:2026-10-17	Гистограммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:441	
 52e47597b42f		with		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:604	
-5314440da3ea		Hide Rows		todo		todo	Скрыть строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:252	
-533060d73779		Name\nManager		todo		todo	Диспетчер\nимён	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:322	
+5314440da3ea		Hide Rows	Qatorlarni yashirish	draft:agent-sonnet:2026-10-17	Қаторларни яшириш	draft:agent-sonnet:2026-10-17	Скрыть строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:252	
+533060d73779		Name\nManager	Nomlar\ndispetcheri	draft:agent-sonnet:2026-10-17	Номлар\nдиспетчери	draft:agent-sonnet:2026-10-17	Диспетчер\nимён	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:322	
 53598bef9c2f		Zoom to 100%		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2157	
 53993ae7c390		Column or Bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1450	
 5399758add43		Search and run any command		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2246	
 543dacd73d7b		Macros and scripts in this workbook (Alt+F8)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2243	
 544512e60696		Treat consecutive delimiters as one		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:428	
 545053146e82		Double Accounting		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1647	
-546458155c46		Lookup &\nReference		todo		todo	Поиск и\nссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:478	
+546458155c46		Lookup &\nReference	Qidirish va\nhavolalar	draft:agent-sonnet:2026-10-17	Қидириш ва\nҳаволалар	draft:agent-sonnet:2026-10-17	Поиск и\nссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:478	
 5524b084e6ae		Format cells that contain a date occurring:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:586	
 57452bc7ceb1		not between		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:873	
 57ab4c4fe73f		Top Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:705	
 57b9e2ab3911		Workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:546	
 585f499462b0		Standardized Residuals		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2343	
-5871e6c1e97c		Page Break\nPreview		todo		todo	Предварительный просмотр\nразрывов страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:383	
-59e99502ab6d		Middle\nAlign		todo		todo	По центру\nвертикали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:210	
-5a77013a9ed2		Freeze Top Row		todo		todo	Закрепить верхнюю строку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:393	
-5b04f820ca3e		Zoom to\nSelection		todo		todo	Масштаб по\nвыделению	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:390	
+5871e6c1e97c		Page Break\nPreview	Sahifa uzilishlarini\noldindan koʻrish	draft:agent-sonnet:2026-10-17	Саҳифа узилишларини\nолдиндан кўриш	draft:agent-sonnet:2026-10-17	Предварительный просмотр\nразрывов страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:383	
+59e99502ab6d		Middle\nAlign	Vertikal boʻyicha\nmarkazga	draft:agent-sonnet:2026-10-17	Вертикал бўйича\nмарказга	draft:agent-sonnet:2026-10-17	По центру\nвертикали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:210	
+5a77013a9ed2		Freeze Top Row	Yuqori qatorni qotirish	draft:agent-sonnet:2026-10-17	Юқори қаторни қотириш	draft:agent-sonnet:2026-10-17	Закрепить верхнюю строку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:393	
+5b04f820ca3e		Zoom to\nSelection	Tanlovga\nmasshtablash	draft:agent-sonnet:2026-10-17	Танловга\nмасштаблаш	draft:agent-sonnet:2026-10-17	Масштаб по\nвыделению	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:390	
 5b074d2c7d20		How agents drive GridCraft (MCP / control channel)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2251	
 5bd421b219ba		New title (Modify):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:227	
 5bd7f3483b86		Middle Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:706	
 5db59d93fb89		Scope		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2006	
-5e11878b5007		Sparklines		todo		todo	Спарклайны	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:289	
+5e11878b5007		Sparklines	Sparklaynlar	draft:agent-sonnet:2026-10-17	Спарклайнлар	draft:agent-sonnet:2026-10-17	Спарклайны	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:289	
 5e2c768c6450		Import a text or CSV file		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1889	
 5ebcac03f1db		Start a conversation:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:348	
 5efdc66c8719		Comments pane		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2055	
-5f2220cef638		Wrap Text		todo		todo	Переносить текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:201	
+5f2220cef638		Wrap Text	Matnni oʻrash	draft:agent-sonnet:2026-10-17	Матнни ўраш	draft:agent-sonnet:2026-10-17	Переносить текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:201	
 5f6470d8ebb4		less than		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:877	
 5fab5b433260		Vertical axis title:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:760	
 5fcdd68baa86		 (password, unlocked)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:203	
 5fd133ea395d		Outline		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1671	
-601007eb6fa1		{n} months ago		todo		todo	{n} мес. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:498	
-605b7143c566		Page\nLayout		todo		todo	Разметка\nстраницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:384	
+601007eb6fa1		{n} months ago	{n} oy oldin	draft:agent-sonnet:2026-10-17	{n} ой олдин	draft:agent-sonnet:2026-10-17	{n} мес. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:498	
+605b7143c566		Page\nLayout	Sahifa\nmaketi	draft:agent-sonnet:2026-10-17	Саҳифа\nмакети	draft:agent-sonnet:2026-10-17	Разметка\nстраницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:384	
 60b73435a481		Workbook\nStatistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2023	
 6182609f68d7		More commands		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:98	
 61b614dc218d		e.g. lookup, average, date		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1751	
-61bd491fceb3		Allow Edit\nRanges		todo		todo	Разрешить\nизменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:377	
-61c7d0b05e84		AutoFit Column Width		todo		todo	Автоподбор ширины столбца	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3138	
-62829705488d		Find &\nSelect		todo		todo	Найти и\nвыделить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:269	
-63f4e82d7d64		Horizontal		todo		todo	По горизонтали	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1592	
-641fe73825f1		Add Chart\nElement		todo		todo	Добавить элемент\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:416	
+61bd491fceb3		Allow Edit\nRanges	Tahrirlash\ndiapazonlariga ruxsat	draft:agent-sonnet:2026-10-17	Таҳрирлаш\nдиапазонларига рухсат	draft:agent-sonnet:2026-10-17	Разрешить\nизменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:377	
+61c7d0b05e84		AutoFit Column Width	Ustun kengligini avtomoslash	draft:agent-sonnet:2026-10-17	Устун кенглигини автомослаш	draft:agent-sonnet:2026-10-17	Автоподбор ширины столбца	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3138	
+62829705488d		Find &\nSelect	Topish va\ntanlash	draft:agent-sonnet:2026-10-17	Топиш ва\nтанлаш	draft:agent-sonnet:2026-10-17	Найти и\nвыделить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:269	
+63f4e82d7d64		Horizontal	Gorizontal boʻyicha	draft:agent-sonnet:2026-10-17	Горизонтал бўйича	draft:agent-sonnet:2026-10-17	По горизонтали	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1592	
+641fe73825f1		Add Chart\nElement	Diagramma\nelementini qoʻshish	draft:agent-sonnet:2026-10-17	Диаграмма\nэлементини қўшиш	draft:agent-sonnet:2026-10-17	Добавить элемент\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:416	
 644def2c898f		Delete Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:891	
 649a9aef5fc5		Select and move ink and shapes		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1584	
 650bb4be3653		Orientation (degrees)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1623	
-6631b6760eb4		Logical		todo		todo	Логические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:476	
-66d2b84ef226		Just now		todo		todo	Только что	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:486	
+6631b6760eb4		Logical	Mantiqiy	draft:agent-sonnet:2026-10-17	Мантиқий	draft:agent-sonnet:2026-10-17	Логические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:476	
+66d2b84ef226		Just now	Hozirgina	draft:agent-sonnet:2026-10-17	Ҳозиргина	draft:agent-sonnet:2026-10-17	Только что	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:486	
 66efd489f087		 (password)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:204	
-66f7ecaddf48		Row Height…		todo		todo	Высота строки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3121	
+66f7ecaddf48		Row Height…	Qator balandligi…	draft:agent-sonnet:2026-10-17	Қатор баландлиги…	draft:agent-sonnet:2026-10-17	Высота строки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3121	
 674b108c4867		Normal Probability		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2344	
-675bbe1f5b41		Different Odd & Even Pages		todo		todo	Разные колонтитулы для четных и нечетных страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:508	
+675bbe1f5b41		Different Odd & Even Pages	Juft va toq sahifa kolontitullari boshqacha	draft:agent-sonnet:2026-10-17	Жуфт ва тоқ саҳифа колонтитуллари бошқача	draft:agent-sonnet:2026-10-17	Разные колонтитулы для четных и нечетных страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:508	
 67a23d1653e0		Shift cells right		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
-67d9c1fcdedb		Insert Paste		todo		todo	Вставка со сдвигом	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:116	
+67d9c1fcdedb		Insert Paste	Siljitib kiritish	draft:agent-sonnet:2026-10-17	Силжитиб киритиш	draft:agent-sonnet:2026-10-17	Вставка со сдвигом	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:116	
 67f2cf535dba		Standard column width (pixels):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:150	
 684e45a6d1c0		Background Color:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1713	
 687115d15f81		GRG Nonlinear		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2533	
-68f3e92e4b97		Sheet Right-to-Left		todo		todo	Лист справа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:314	
-68f454f03e43		Format Cell Alignment…		todo		todo	Выравнивание ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:236	
+68f3e92e4b97		Sheet Right-to-Left	Varaq: oʻngdan chapga	draft:agent-sonnet:2026-10-17	Варақ: ўнгдан чапга	draft:agent-sonnet:2026-10-17	Лист справа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:314	
+68f454f03e43		Format Cell Alignment…	Katak tekislashi…	draft:agent-sonnet:2026-10-17	Катак текислаши…	draft:agent-sonnet:2026-10-17	Выравнивание ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:236	
 6929cc2728b0		Timeline range (blank: first column of the selection):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:446	
 6982b548dbac		Shift cells up		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:128	
-69af88eddae4		More Number Formats…		todo		todo	Другие числовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:474	
-69d231a39e70		Short Date		todo		todo	Краткая дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+69af88eddae4		More Number Formats…	Boshqa son formatlari…	draft:agent-sonnet:2026-10-17	Бошқа сон форматлари…	draft:agent-sonnet:2026-10-17	Другие числовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:474	
+69d231a39e70		Short Date	Qisqa sana	draft:agent-sonnet:2026-10-17	Қисқа сана	draft:agent-sonnet:2026-10-17	Краткая дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 6b4f7e3601d1		Grouped By:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2313	
 6b71f9f34e27		CountA		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:464	
 6bb47c2311e2		Group by Months		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:141	
-6bcdc373a458		Column Width…		todo		todo	Ширина столбца…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3137	
-6c1b475fba63		Top 10%		todo		todo	Верхние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:433	
-6c3bd9b20117		100%		todo		todo	100%	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:533	
-6c3e0d97ff37		Clear Formats		todo		todo	Очистить форматы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:259	
-6c6d553c6fa3		Recent		todo		todo	Последние	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:541	
+6bcdc373a458		Column Width…	Ustun kengligi…	draft:agent-sonnet:2026-10-17	Устун кенглиги…	draft:agent-sonnet:2026-10-17	Ширина столбца…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3137	
+6c1b475fba63		Top 10%	Eng yuqori 10%	draft:agent-sonnet:2026-10-17	Энг юқори 10%	draft:agent-sonnet:2026-10-17	Верхние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:433	
+6c3bd9b20117		100%	100%	draft:agent-sonnet:2026-10-17	100%	draft:agent-sonnet:2026-10-17	100%	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:533	
+6c3e0d97ff37		Clear Formats	Formatlarni tozalash	draft:agent-sonnet:2026-10-17	Форматларни тозалаш	draft:agent-sonnet:2026-10-17	Очистить форматы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:259	
+6c6d553c6fa3		Recent	Soʻnggi	draft:agent-sonnet:2026-10-17	Сўнгги	draft:agent-sonnet:2026-10-17	Последние	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:541	
 6c8ba76e7327		Spelling (F7)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2018	
-6cf2eaba833b		Convert\nto Range		todo		todo	Преобразовать\nв диапазон	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:430	
+6cf2eaba833b		Convert\nto Range	Diapazonga\naylantirish	draft:agent-sonnet:2026-10-17	Диапазонга\nайлантириш	draft:agent-sonnet:2026-10-17	Преобразовать\nв диапазон	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:430	
 6cff8de755e5		Text length		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:852	
-6d432c17698c		Select\nObjects		todo		todo	Выбрать\nобъекты	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:296	
+6d432c17698c		Select\nObjects	Obyektlarni\ntanlash	draft:agent-sonnet:2026-10-17	Объектларни\nтанлаш	draft:agent-sonnet:2026-10-17	Выбрать\nобъекты	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:296	
 6e3ef65bcd0c		Top margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:410	
-6e400f934069		Save as type		todo		todo	Тип файла	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:662	
+6e400f934069		Save as type	Fayl turi	draft:agent-sonnet:2026-10-17	Файл тури	draft:agent-sonnet:2026-10-17	Тип файла	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:662	
 6e54f30f357d		Exponential Smoothing		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:41	
 6e9df4c140a7		Semicolon		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:424	
 6eea2ad9f5f4		Variable 2 Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
@@ -337,23 +337,23 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 6efe0a0a285d		Database		todo		todo		todo		P2	gridcraft		
 6f2592685ec4		Protect Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:180	
 6fa74027cfb7		Format as Table		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:848	
-6fdf011ed63e		Insert Cells…		todo		todo	Вставить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:240	
+6fdf011ed63e		Insert Cells…	Kataklarni kiritish…	draft:agent-sonnet:2026-10-17	Катакларни киритиш…	draft:agent-sonnet:2026-10-17	Вставить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:240	
 7124ebc541b6		Alpha:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2335	
 7165234964dc		Remove the password (Modify)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:228	
 71ee56e434dd		Choose fields to add to report:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:30	
-720bd579aec0		Sheet\nName		todo		todo	Имя\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:496	
-720d683cbf56		Top\nAlign		todo		todo	По верхнему\nкраю	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:209	
-7377a5277705		Clear Comments and Notes		todo		todo	Удалить комментарии и заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:261	
-74058401c5e9		PivotTable		todo		todo	Сводная таблица	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:274	
-752a6f8d3cf4		Remove\nDuplicates		todo		todo	Удалить\nдубликаты	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:347	
-752bbaf77800		Web Page (*.html)		todo		todo	Веб-страница (*.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
-752e3f68d304		Show formula bar		todo		todo	Показывать строку формул	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:961	
-769a1d63e823		Clear Rules from Entire Sheet		todo		todo	Очистить правила на всём листе	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:438	
+720bd579aec0		Sheet\nName	Varaq\nnomi	draft:agent-sonnet:2026-10-17	Варақ\nноми	draft:agent-sonnet:2026-10-17	Имя\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:496	
+720d683cbf56		Top\nAlign	Yuqoriga\ntekislash	draft:agent-sonnet:2026-10-17	Юқорига\nтекислаш	draft:agent-sonnet:2026-10-17	По верхнему\nкраю	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:209	
+7377a5277705		Clear Comments and Notes	Izohlar va qaydlarni tozalash	draft:agent-sonnet:2026-10-17	Изоҳлар ва қайдларни тозалаш	draft:agent-sonnet:2026-10-17	Удалить комментарии и заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:261	
+74058401c5e9		PivotTable	Yigʻma jadval	draft:agent-sonnet:2026-10-17	Йиғма жадвал	draft:agent-sonnet:2026-10-17	Сводная таблица	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:274	
+752a6f8d3cf4		Remove\nDuplicates	Takrorlarni\noʻchirish	draft:agent-sonnet:2026-10-17	Такрорларни\nўчириш	draft:agent-sonnet:2026-10-17	Удалить\nдубликаты	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:347	
+752bbaf77800		Web Page (*.html)	Veb sahifa (*.html)	draft:agent-sonnet:2026-10-17	Веб саҳифа (*.html)	draft:agent-sonnet:2026-10-17	Веб-страница (*.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
+752e3f68d304		Show formula bar	Formulalar satrini koʻrsatish	draft:agent-sonnet:2026-10-17	Формулалар сатрини кўрсатиш	draft:agent-sonnet:2026-10-17	Показывать строку формул	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:961	
+769a1d63e823		Clear Rules from Entire Sheet	Butun varaq qoidalarini tozalash	draft:agent-sonnet:2026-10-17	Бутун варақ қоидаларини тозалаш	draft:agent-sonnet:2026-10-17	Очистить правила на всём листе	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:438	
 771ace62ab41		Standard Errors		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
 776825b6a90d		Min		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:467	
 77dff0ea564d		£ English (United Kingdom)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:806	
 783ba8059692		Make Unconstrained Variables Non-Negative		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2524	
-78440de7fd4c		Watch Window		todo		todo	Окно контрольных значений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:332	
+78440de7fd4c		Watch Window	Kuzatuv oynasi	draft:agent-sonnet:2026-10-17	Кузатув ойнаси	draft:agent-sonnet:2026-10-17	Окно контрольных значений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:332	
 78f75d42fe9b		Error message:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:929	
 794fd0602374		Insert Calculated Field		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:642	
 798b48d19c45		Value Of:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2465	
@@ -362,110 +362,110 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 7b9288bfc48f		Subject to the Constraints:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2474	
 7bc2c3eca5fd		Hide Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:939	
 7bf845c9f755		Delete…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2858	
-7c3e1d4805b3	Options	Save		todo		todo	Сохранение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:178	
-7c88f189aee1		Insert Copied Cells		todo		todo	Вставить скопированные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3185	
-7d6214a5cc77		Current Date		todo		todo	Текущая дата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:501	
+7c3e1d4805b3	Options	Save	Saqlash	draft:agent-sonnet:2026-10-17	Сақлаш	draft:agent-sonnet:2026-10-17	Сохранение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:178	
+7c88f189aee1		Insert Copied Cells	Nusxalangan kataklarni kiritish	draft:agent-sonnet:2026-10-17	Нусхаланган катакларни киритиш	draft:agent-sonnet:2026-10-17	Вставить скопированные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3185	
+7d6214a5cc77		Current Date	Joriy sana	draft:agent-sonnet:2026-10-17	Жорий сана	draft:agent-sonnet:2026-10-17	Текущая дата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:501	
 7e810203b6e6		Summarize by Average		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:113	
 7ec16db5d4a2		Tomorrow		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:590	
 7ec9e857e531		Whole number		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:847	
-7edf53bb53ae		Yesterday		todo		todo	Вчера	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:492	
+7edf53bb53ae		Yesterday	Kecha	draft:agent-sonnet:2026-10-17	Кеча	draft:agent-sonnet:2026-10-17	Вчера	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:492	
 7f026bc7531e		Hidden: {sheets}		todo		todo		todo		P2	gridcraft		
-7fdbedf09a63		Insert Copied Cells…		todo		todo	Вставить скопированные ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3186	
+7fdbedf09a63		Insert Copied Cells…	Nusxalangan kataklarni kiritish…	draft:agent-sonnet:2026-10-17	Нусхаланган катакларни киритиш…	draft:agent-sonnet:2026-10-17	Вставить скопированные ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3186	
 802b3c39e8ac		About GridCraft		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:677	
 808bf1c1af11		Every command run in this session (replayable)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2256	
 81076f165b9c		Fits inside the selected cell and moves with its content.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1138	
-812eb7473180		Location		todo		todo	Расположение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:630	
-818461487a63		Lock Cell		todo		todo	Заблокировать ячейку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:256	
-818988673211		No recent workbooks yet.		todo		todo	Недавних книг пока нет.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:361	
+812eb7473180		Location	Joylashuv	draft:agent-sonnet:2026-10-17	Жойлашув	draft:agent-sonnet:2026-10-17	Расположение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:630	
+818461487a63		Lock Cell	Katakni qulflash	draft:agent-sonnet:2026-10-17	Катакни қулфлаш	draft:agent-sonnet:2026-10-17	Заблокировать ячейку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:256	
+818988673211		No recent workbooks yet.	Hozircha soʻnggi ish kitoblari yoʻq.	draft:agent-sonnet:2026-10-17	Ҳозирча сўнгги иш китоблари йўқ.	draft:agent-sonnet:2026-10-17	Недавних книг пока нет.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:361	
 8245e5e66e3a		Pen\nBlack		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
-830a3746ae7f		Save the sheet as a PDF document that keeps its page layout.		todo		todo	Сохранить лист как PDF-документ с сохранением разметки страниц.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:853	
+830a3746ae7f		Save the sheet as a PDF document that keeps its page layout.	Varaqni sahifa maketi saqlanadigan PDF hujjat sifatida saqlash.	draft:agent-sonnet:2026-10-17	Варақни саҳифа макети сақланадиган PDF ҳужжат сифатида сақлаш.	draft:agent-sonnet:2026-10-17	Сохранить лист как PDF-документ с сохранением разметки страниц.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:853	
 83b55691d291		Next week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:594	
 8438358caa6f		100% Stacked Bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2038	
 863ff734e06e		Insert rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:188	
-86500532a23f		Convert to Comments		todo		todo	Преобразовать в комментарии	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:375	
+86500532a23f		Convert to Comments	Izohlarga aylantirish	draft:agent-sonnet:2026-10-17	Изоҳларга айлантириш	draft:agent-sonnet:2026-10-17	Преобразовать в комментарии	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:375	
 86bc392d60a4		Format Cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:626	
-8816327302f3		Show All Notes		todo		todo	Показать все заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:374	
+8816327302f3		Show All Notes	Barcha qaydlarni koʻrsatish	draft:agent-sonnet:2026-10-17	Барча қайдларни кўрсатиш	draft:agent-sonnet:2026-10-17	Показать все заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:374	
 883d65654afe		Unhide		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:280	
-88580c725704		Number		todo		todo	Числовой	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:627	
+88580c725704		Number	Son	draft:agent-sonnet:2026-10-17	Сон	draft:agent-sonnet:2026-10-17	Числовой	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:627	
 88ba018f96eb		Kth Smallest (blank for none):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2325	
-88d0fbbe6d67		Print\nArea		todo		todo	Область\nпечати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:306	
-8926f7a84fce		Clear Hyperlinks		todo		todo	Удалить гиперссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:262	
-899c01b91d06		Protect Sheet…		todo		todo	Защитить лист…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:380	
-89a1818d09b6		Evaluate Formula		todo		todo	Вычислить формулу	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:744	
-89b2d28c3f70		Scenario Manager…		todo		todo	Диспетчер сценариев…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:363	
-89deb917d44d		Paste Formulas		todo		todo	Вставить формулы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:181	
-8a1c58191552		Bottom\nAlign		todo		todo	По нижнему\nкраю	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:211	
-8a3ea5ca9e53		Fill		todo		todo	Заполнить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
-8a699d45d37d		Long Date		todo		todo	Длинная дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-8aad59383528		Delete Sheet Rows		todo		todo	Удалить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:245	
+88d0fbbe6d67		Print\nArea	Chop etish\nhududi	draft:agent-sonnet:2026-10-17	Чоп этиш\nҳудуди	draft:agent-sonnet:2026-10-17	Область\nпечати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:306	
+8926f7a84fce		Clear Hyperlinks	Havolalarni tozalash	draft:agent-sonnet:2026-10-17	Ҳаволаларни тозалаш	draft:agent-sonnet:2026-10-17	Удалить гиперссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:262	
+899c01b91d06		Protect Sheet…	Varaqni himoyalash…	draft:agent-sonnet:2026-10-17	Варақни ҳимоялаш…	draft:agent-sonnet:2026-10-17	Защитить лист…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:380	
+89a1818d09b6		Evaluate Formula	Formulani hisoblash	draft:agent-sonnet:2026-10-17	Формулани ҳисоблаш	draft:agent-sonnet:2026-10-17	Вычислить формулу	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:744	
+89b2d28c3f70		Scenario Manager…	Stsenariylar dispetcheri…	draft:agent-sonnet:2026-10-17	Сценарийлар диспетчери…	draft:agent-sonnet:2026-10-17	Диспетчер сценариев…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:363	
+89deb917d44d		Paste Formulas	Formulalarni qoʻyish	draft:agent-sonnet:2026-10-17	Формулаларни қўйиш	draft:agent-sonnet:2026-10-17	Вставить формулы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:181	
+8a1c58191552		Bottom\nAlign	Pastga\ntekislash	draft:agent-sonnet:2026-10-17	Пастга\nтекислаш	draft:agent-sonnet:2026-10-17	По нижнему\nкраю	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:211	
+8a3ea5ca9e53		Fill	Toʻldirish	draft:agent-sonnet:2026-10-17	Тўлдириш	draft:agent-sonnet:2026-10-17	Заполнить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
+8a699d45d37d		Long Date	Uzun sana	draft:agent-sonnet:2026-10-17	Узун сана	draft:agent-sonnet:2026-10-17	Длинная дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+8aad59383528		Delete Sheet Rows	Varaq qatorlarini oʻchirish	draft:agent-sonnet:2026-10-17	Варақ қаторларини ўчириш	draft:agent-sonnet:2026-10-17	Удалить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:245	
 8b6929b8da1f		Expand formula bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:58	
-8b98c78dc286		About\nGridCraft		todo		todo	О\nGridCraft	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:414	
+8b98c78dc286		About\nGridCraft	GridCraft\nhaqida	draft:agent-sonnet:2026-10-17	GridCraft\nҳақида	draft:agent-sonnet:2026-10-17	О\nGridCraft	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:414	
 8c0a605c8e79		Minimum / Source / Formula:		todo		todo		todo		P2	gridcraft		
-8c42a0ed378b		Delete\nChart		todo		todo	Удалить\nдиаграмму	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:429	
-8d21c930bf3d		Protect\nWorkbook		todo		todo	Защитить\nкнигу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:376	
+8c42a0ed378b		Delete\nChart	Diagrammani\noʻchirish	draft:agent-sonnet:2026-10-17	Диаграммани\nўчириш	draft:agent-sonnet:2026-10-17	Удалить\nдиаграмму	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:429	
+8d21c930bf3d		Protect\nWorkbook	Ish kitobini\nhimoyalash	draft:agent-sonnet:2026-10-17	Иш китобини\nҳимоялаш	draft:agent-sonnet:2026-10-17	Защитить\nкнигу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:376	
 8d60e5afa74f		Summarize by Max		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:114	
 8d8f0bbdc621		Entire row		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
 8dcfaef15fdd		Hierarchy & more		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1497	
 8de86dd5a0e9		Output Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
 8e579b9a2900		Format cells that contain the text:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:583	
-8e7a15beb2de		Select destination and press Enter or choose Paste		todo		todo	Выберите место вставки и нажмите Enter или выберите «Вставить»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:459	
-8faa1aea24ae		Go to\nHeader		todo		todo	Перейти к верхнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:497	
+8e7a15beb2de		Select destination and press Enter or choose Paste	Joyni tanlang va Enter tugmasini bosing yoki Qoʻyishni tanlang	draft:agent-sonnet:2026-10-17	Жойни танланг ва Enter тугмасини босинг ёки Қўйишни танланг	draft:agent-sonnet:2026-10-17	Выберите место вставки и нажмите Enter или выберите «Вставить»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:459	
+8faa1aea24ae		Go to\nHeader	Yuqori kolontitulga\noʻtish	draft:agent-sonnet:2026-10-17	Юқори колонтитулга\nўтиш	draft:agent-sonnet:2026-10-17	Перейти к верхнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:497	
 90a9b0aa5f66		Shift cells down		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
 90f349dab1b7		Pick From Drop-down List…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2869	
 91046028884a		Include forecast statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:471	
-9120b8b004c0		Calculate Now		todo		todo	Вычислить сейчас	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:334	
+9120b8b004c0		Calculate Now	Hozir hisoblash	draft:agent-sonnet:2026-10-17	Ҳозир ҳисоблаш	draft:agent-sonnet:2026-10-17	Вычислить сейчас	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:334	
 917980ff743d		Median		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:466	
 917fd223e614		Sheets: {sheets}		todo		todo		todo		P2	gridcraft		
-91882c9582c1		Color Scales		todo		todo	Цветовые шкалы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:442	
-91ae21ea3905		Clear Contents		todo		todo	Очистить содержимое	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2859	
-91c41872b01f		Bold (⌘B)		todo		todo	Полужирный (⌘B)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:193	
-91f0c74ee7f4		Automatic Except for Data Tables		todo		todo	Автоматически, кроме таблиц данных	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:983	
+91882c9582c1		Color Scales	Rang shkalalari	draft:agent-sonnet:2026-10-17	Ранг шкалалари	draft:agent-sonnet:2026-10-17	Цветовые шкалы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:442	
+91ae21ea3905		Clear Contents	Tarkibni tozalash	draft:agent-sonnet:2026-10-17	Таркибни тозалаш	draft:agent-sonnet:2026-10-17	Очистить содержимое	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2859	
+91c41872b01f		Bold (⌘B)	Qalin (⌘B)	draft:agent-sonnet:2026-10-17	Қалин (⌘Б)	draft:agent-sonnet:2026-10-17	Полужирный (⌘B)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:193	
+91f0c74ee7f4		Automatic Except for Data Tables	Avtomatik, maʼlumotlar jadvallaridan tashqari	draft:agent-sonnet:2026-10-17	Автоматик, маълумотлар жадвалларидан ташқари	draft:agent-sonnet:2026-10-17	Автоматически, кроме таблиц данных	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:983	
 92606f28ef89		Start a new workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1205	
-92c9cf5ae0f1		Insert Sheet Rows		todo		todo	Вставить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:243	
+92c9cf5ae0f1		Insert Sheet Rows	Varaq qatorlarini kiritish	draft:agent-sonnet:2026-10-17	Варақ қаторларини киритиш	draft:agent-sonnet:2026-10-17	Вставить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:243	
 93218b13b663	Format Cells	Fill		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
-932d6882b13b		Calculation settings are saved with the workbook.		todo		todo	Параметры вычислений сохраняются вместе с книгой.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:996	
+932d6882b13b		Calculation settings are saved with the workbook.	Hisoblash sozlamalari ish kitobi bilan birga saqlanadi.	draft:agent-sonnet:2026-10-17	Ҳисоблаш созламалари иш китоби билан бирга сақланади.	draft:agent-sonnet:2026-10-17	Параметры вычислений сохраняются вместе с книгой.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:996	
 93b0b43b57dc		Correlation		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:38	
 93d4792d6fb1		Bottom margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:411	
 941f00fc4279		Clear Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2817	
 943cd395e2ce		Format columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:186	
-947a8ec4515a		Data Validation…		todo		todo	Проверка данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:350	
-94e9f3efaefe		Command\nPalette		todo		todo	Палитра\nкоманд	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:411	
+947a8ec4515a		Data Validation…	Maʼlumotlarni tekshirish…	draft:agent-sonnet:2026-10-17	Маълумотларни текшириш…	draft:agent-sonnet:2026-10-17	Проверка данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:350	
+94e9f3efaefe		Command\nPalette	Buyruqlar\npaneli	draft:agent-sonnet:2026-10-17	Буйруқлар\nпанели	draft:agent-sonnet:2026-10-17	Палитра\nкоманд	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:411	
 951f50c4d234		Add-in and Automation		todo		todo		todo		P2	gridcraft		
-953b01108101		Print Entire Workbook		todo		todo	Напечатать всю книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
-9568558c6018		Not available		todo		todo	Недоступен	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:397	
+953b01108101		Print Entire Workbook	Butun ish kitobini chop etish	draft:agent-sonnet:2026-10-17	Бутун иш китобини чоп этиш	draft:agent-sonnet:2026-10-17	Напечатать всю книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
+9568558c6018		Not available	Mavjud emas	draft:agent-sonnet:2026-10-17	Мавжуд эмас	draft:agent-sonnet:2026-10-17	Недоступен	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:397	
 9591a908d8b0		Table (⌘T)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1378	
 962d7c0efab5		This workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:254	
 964fa0ccabca		Series{n}		todo		todo		todo		P2	gridcraft		
-96a0f9f369fd		Data\nValidation		todo		todo	Проверка\nданных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:348	
+96a0f9f369fd		Data\nValidation	Maʼlumotlarni\ntekshirish	draft:agent-sonnet:2026-10-17	Маълумотларни\nтекшириш	draft:agent-sonnet:2026-10-17	Проверка\nданных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:348	
 96c1bc162bc6		Insert Slicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
 96e7da179eb8		Report Layout		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:166	
-96f54b6931a7		Go to Footer		todo		todo	Перейти к нижнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:509	
+96f54b6931a7		Go to Footer	Quyi kolontitulga oʻtish	draft:agent-sonnet:2026-10-17	Қуйи колонтитулга ўтиш	draft:agent-sonnet:2026-10-17	Перейти к нижнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:509	
 970936d3179e		Rename Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:155	
 97d0fff90136		Slicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
-981396f174a5		Legend: Right		todo		todo	Легенда: справа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:425	
-98280f29c6dd		Save the active sheet as comma-separated text.		todo		todo	Сохранить активный лист как текст с разделителями-запятыми.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
-98c56aead4f4	Page Layout	Orientation		todo		todo	Ориентация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:219	
-98d4edc59f56		Web Page (.html)		todo		todo	Веб-страница (.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	
+981396f174a5		Legend: Right	Shartli belgilar: oʻngda	draft:agent-sonnet:2026-10-17	Шартли белгилар: ўнгда	draft:agent-sonnet:2026-10-17	Легенда: справа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:425	
+98280f29c6dd		Save the active sheet as comma-separated text.	Faol varaqni vergul bilan ajratilgan matn sifatida saqlash.	draft:agent-sonnet:2026-10-17	Фаол варақни вергул билан ажратилган матн сифатида сақлаш.	draft:agent-sonnet:2026-10-17	Сохранить активный лист как текст с разделителями-запятыми.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
+98c56aead4f4	Page Layout	Orientation	Yoʻnalish	draft:agent-sonnet:2026-10-17	Йўналиш	draft:agent-sonnet:2026-10-17	Ориентация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:219	
+98d4edc59f56		Web Page (.html)	Veb sahifa (.html)	draft:agent-sonnet:2026-10-17	Веб саҳифа (.html)	draft:agent-sonnet:2026-10-17	Веб-страница (.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	
 98d67b06e5c1		Share: export or save a copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:132	
-994dda40c19f		Error Checking		todo		todo	Проверка ошибок	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:739	
-999d6b0c817a		Pictures		todo		todo	Изображения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:277	
+994dda40c19f		Error Checking	Xatolarni tekshirish	draft:agent-sonnet:2026-10-17	Хатоларни текшириш	draft:agent-sonnet:2026-10-17	Проверка ошибок	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:739	
+999d6b0c817a		Pictures	Rasmlar	draft:agent-sonnet:2026-10-17	Расмлар	draft:agent-sonnet:2026-10-17	Изображения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:277	
 99d72f2aa844		Variable 1 Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
 99d9533d262c		Shrink to fit		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1626	
 9a5fd58c0e3f		Cell Color		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1936	
-9a801b791109		Agent\nControl		todo		todo	Управление\nагентом	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:412	
-9bf32e199787		Light		todo		todo	Светлая	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:939	
+9a801b791109		Agent\nControl	Agentni\nboshqarish	draft:agent-sonnet:2026-10-17	Агентни\nбошқариш	draft:agent-sonnet:2026-10-17	Управление\nагентом	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:412	
+9bf32e199787		Light	Yorugʻ	draft:agent-sonnet:2026-10-17	Ёруғ	draft:agent-sonnet:2026-10-17	Светлая	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:939	
 9bfad734ca9c		Search:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1750	
-9c5c5da00816		Header & Footer		todo		todo	Верхний и нижний колонтитулы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:390	
+9c5c5da00816		Header & Footer	Yuqori va quyi kolontitul	draft:agent-sonnet:2026-10-17	Юқори ва қуйи колонтитул	draft:agent-sonnet:2026-10-17	Верхний и нижний колонтитулы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:390	
 9c786778afba		— VBA project (preserved, not run)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1514	
 9c8685a669e1		Seasonality (auto, 0 for none, or a season length):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:452	
 9c8bfc173325		Show as No Calculation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:122	
-9d0279c5f280		Get Data\n(Text/CSV)		todo		todo	Получить данные\n(текст/CSV)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:346	
+9d0279c5f280		Get Data\n(Text/CSV)	Maʼlumot olish\n(matn/CSV)	draft:agent-sonnet:2026-10-17	Маълумот олиш\n(матн/CСВ)	draft:agent-sonnet:2026-10-17	Получить данные\n(текст/CSV)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:346	
 9d0759a7ab2c		Move to Column Labels		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:97	
 9d09d6359d83		Unlock with password		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
-9d613917a06b		Hide Detail		todo		todo	Скрыть детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:356	
+9d613917a06b		Hide Detail	Tafsilotni yashirish	draft:agent-sonnet:2026-10-17	Тафсилотни яшириш	draft:agent-sonnet:2026-10-17	Скрыть детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:356	
 9d66bb10553f		Labels in first row		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2314	
 9d85792037ba		Scatter with Lines		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2047	
-9da4cc124fda		Clear All		todo		todo	Очистить всё	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:258	
+9da4cc124fda		Clear All	Hammasini tozalash	draft:agent-sonnet:2026-10-17	Ҳаммасини тозалаш	draft:agent-sonnet:2026-10-17	Очистить всё	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:258	
 9e56c206003b		Agent Control		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:675	
 9e910c2a7e8e		Right margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:409	
 9ebb77de6aad		Single Accounting		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1646	
@@ -473,129 +473,129 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 9f78ac427f98		Conditional formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:665	
 a12fbb788dbc		Series in		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:325	
 a16d4ad5a156		Protection		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1536	
-a1b58267a4bc		Lock the sheet structure so sheets can't be added, moved, renamed or deleted.		todo		todo	Заблокировать структуру листов, чтобы их нельзя было добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:622	
+a1b58267a4bc		Lock the sheet structure so sheets can't be added, moved, renamed or deleted.	Varaq tuzilmasini qulflash: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin boʻlmaydi.	draft:agent-sonnet:2026-10-17	Варақ тузилмасини қулфлаш: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин бўлмайди.	draft:agent-sonnet:2026-10-17	Заблокировать структуру листов, чтобы их нельзя было добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:622	
 a244c745720e		Filter by Selected Cell's Value		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2861	
-a2c1614f7f3e		Formula Bar		todo		todo	Строка формул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:385	
+a2c1614f7f3e		Formula Bar	Formulalar satri	draft:agent-sonnet:2026-10-17	Формулалар сатри	draft:agent-sonnet:2026-10-17	Строка формул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:385	
 a2d2a719980c		Average		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:462	
 a329ef9bb2f5		Web		todo		todo		todo		P2	gridcraft		
 a348cf8bb0ce		Action Journal		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:722	
-a3653abf16e6		More workbooks		todo		todo	Другие книги	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:545	
+a3653abf16e6		More workbooks	Boshqa ish kitoblari	draft:agent-sonnet:2026-10-17	Бошқа иш китоблари	draft:agent-sonnet:2026-10-17	Другие книги	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:545	
 a3a480179149		¥ Japanese		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:815	
 a3eab24c6ddc		Keep Solver Solution		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2572	
 a3f7c2296030		Choose a PNG or JPEG no larger than 16 MB.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1100	
-a4039450e4ca		Save the workbook under another name or in another folder.		todo		todo	Сохранить книгу под другим именем или в другой папке.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:657	
+a4039450e4ca		Save the workbook under another name or in another folder.	Ish kitobini boshqa nom bilan yoki boshqa jildda saqlash.	draft:agent-sonnet:2026-10-17	Иш китобини бошқа ном билан ёки бошқа жилдда сақлаш.	draft:agent-sonnet:2026-10-17	Сохранить книгу под другим именем или в другой папке.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:657	
 a418a84a03b0		Insert\nSlicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
-a46cc2be5014		Recommended\nCharts		todo		todo	Рекомендуемые\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:275	
-a4aeacd74948		Workbook calculation		todo		todo	Вычисления в книге	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:979	
+a46cc2be5014		Recommended\nCharts	Tavsiya etilgan\ndiagrammalar	draft:agent-sonnet:2026-10-17	Тавсия этилган\nдиаграммалар	draft:agent-sonnet:2026-10-17	Рекомендуемые\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:275	
+a4aeacd74948		Workbook calculation	Ish kitobini hisoblash	draft:agent-sonnet:2026-10-17	Иш китобини ҳисоблаш	draft:agent-sonnet:2026-10-17	Вычисления в книге	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:979	
 a5eef34671e6		Standard Width		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:148	
-a6ab6b9dfea2		Go To Special…		todo		todo	Выделить группу ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:273	
-a6cee35d4ce0		Glide the selection outline to the cell you move to instead of jumping there		todo		todo	Рамка выделения плавно скользит к новой ячейке, а не перескакивает	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:400	
+a6ab6b9dfea2		Go To Special…	Maxsus tanlash…	draft:agent-sonnet:2026-10-17	Махсус танлаш…	draft:agent-sonnet:2026-10-17	Выделить группу ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:273	
+a6cee35d4ce0		Glide the selection outline to the cell you move to instead of jumping there	Tanlov ramkasi oʻtilgan katakka sakramasdan silliq siljisin	draft:agent-sonnet:2026-10-17	Танлов рамкаси ўтилган катакка сакрамасдан силлиқ силжисин	draft:agent-sonnet:2026-10-17	Рамка выделения плавно скользит к новой ячейке, а не перескакивает	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:400	
 a7bfdcd4a595		Cell Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1938	
 a7f03fc4a593		Skip blanks		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:314	
 a80b22c25686		Last cell		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:663	
 a8b2daf57075		Ignore Once		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2645	
-aaa96a40ad27		Constants		todo		todo	Константы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:656	
+aaa96a40ad27		Constants	Doimiylar	draft:agent-sonnet:2026-10-17	Доимийлар	draft:agent-sonnet:2026-10-17	Константы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:656	
 aaf769e319ca		Input Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2315	
 ab1aa6fa3a84		Comma		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:425	
 ab4174ba9626		dashed		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1694	
-ab4b6460e8e8		Calculation\nOptions		todo		todo	Параметры\nвычислений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:333	
+ab4b6460e8e8		Calculation\nOptions	Hisoblash\nparametrlari	draft:agent-sonnet:2026-10-17	Ҳисоблаш\nпараметрлари	draft:agent-sonnet:2026-10-17	Параметры\nвычислений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:333	
 abce8748a1da		No ranges yet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:212	
 abea4d409550		Step value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:332	
 ac17215e5ce3		Edit chart title		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2392	
-ac44b9e66ed2		Freeze Panes		todo		todo	Закрепить области	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:392	
-ac92b3a18fa2		Insert Cut Cells		todo		todo	Вставить вырезанные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3183	
+ac44b9e66ed2		Freeze Panes	Sohalarni qotirish	draft:agent-sonnet:2026-10-17	Соҳаларни қотириш	draft:agent-sonnet:2026-10-17	Закрепить области	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:392	
+ac92b3a18fa2		Insert Cut Cells	Kesilgan kataklarni kiritish	draft:agent-sonnet:2026-10-17	Кесилган катакларни киритиш	draft:agent-sonnet:2026-10-17	Вставить вырезанные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3183	
 acb6377a8753		Zeros		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
-acbfd75f6877		Show Detail		todo		todo	Показать детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:355	
+acbfd75f6877		Show Detail	Tafsilotni koʻrsatish	draft:agent-sonnet:2026-10-17	Тафсилотни кўрсатиш	draft:agent-sonnet:2026-10-17	Показать детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:355	
 ad7b08e2b35b		Diagonal ↗		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1684	
 add58ae24e6e		Funnel		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2051	
 ae94988d7989		Goal Seeking found a solution: {value}		todo		todo		todo		P2	gridcraft		
 af9991a5337d		Transpose (E)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:315	
-b00b5d275eed		Angle Counterclockwise		todo		todo	Повернуть против часовой стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:221	
-b26f6cec5ac7		Use in Formula		todo		todo	Использовать в формуле	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:324	
-b2abc855fd39		Default Width…		todo		todo	Ширина по умолчанию…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:251	
-b2ea22c19a56		View		todo		todo	Вид	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
+b00b5d275eed		Angle Counterclockwise	Soat miliga qarshi burish	draft:agent-sonnet:2026-10-17	Соат милига қарши буриш	draft:agent-sonnet:2026-10-17	Повернуть против часовой стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:221	
+b26f6cec5ac7		Use in Formula	Formulada ishlatish	draft:agent-sonnet:2026-10-17	Формулада ишлатиш	draft:agent-sonnet:2026-10-17	Использовать в формуле	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:324	
+b2abc855fd39		Default Width…	Standart kenglik…	draft:agent-sonnet:2026-10-17	Стандарт кенглик…	draft:agent-sonnet:2026-10-17	Ширина по умолчанию…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:251	
+b2ea22c19a56		View	Koʻrinish	draft:agent-sonnet:2026-10-17	Кўриниш	draft:agent-sonnet:2026-10-17	Вид	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
 b4824625a0ec		thin		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1691	
-b5385928f073		Calculate		todo		todo	Вычисление	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:458	
+b5385928f073		Calculate	Hisoblash	draft:agent-sonnet:2026-10-17	Ҳисоблаш	draft:agent-sonnet:2026-10-17	Вычисление	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:458	
 b593557e1c8d		Header (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:412	
-b6d720512492		Narrow		todo		todo	Узкие	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:315	
+b6d720512492		Narrow	Tor	draft:agent-sonnet:2026-10-17	Тор	draft:agent-sonnet:2026-10-17	Узкие	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:315	
 b6e2e932916e		Input Y Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2337	
-b759224a7cf7		Unmerge Cells		todo		todo	Отменить объединение ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:205	
-b783f4ab4aa3		File\nPath		todo		todo	Путь\nк файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:494	
+b759224a7cf7		Unmerge Cells	Kataklar birlashuvini bekor qilish	draft:agent-sonnet:2026-10-17	Катаклар бирлашувини бекор қилиш	draft:agent-sonnet:2026-10-17	Отменить объединение ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:205	
+b783f4ab4aa3		File\nPath	Fayl\nyoʻli	draft:agent-sonnet:2026-10-17	Файл\nйўли	draft:agent-sonnet:2026-10-17	Путь\nк файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:494	
 b8bfb5137c00		Red Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:610	
 b96b9f3e7af1		t-Test: Paired Two Sample for Means		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:47	
-b99bbbede92d		Custom Sort…		todo		todo	Настраиваемая сортировка…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:343	
-ba031f44e6d0		Special		todo		todo	Дополнительный	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:470	
-ba4bd870d516		Enable iterative calculation		todo		todo	Включить итеративные вычисления	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:992	
+b99bbbede92d		Custom Sort…	Maxsus saralash…	draft:agent-sonnet:2026-10-17	Махсус саралаш…	draft:agent-sonnet:2026-10-17	Настраиваемая сортировка…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:343	
+ba031f44e6d0		Special	Qoʻshimcha	draft:agent-sonnet:2026-10-17	Қўшимча	draft:agent-sonnet:2026-10-17	Дополнительный	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:470	
+ba4bd870d516		Enable iterative calculation	Iterativ hisoblashni yoqish	draft:agent-sonnet:2026-10-17	Итератив ҳисоблашни ёқиш	draft:agent-sonnet:2026-10-17	Включить итеративные вычисления	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:992	
 ba645d04f2a2		Diagonal ↘		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1683	
 bad235bab9e9		A to Z		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1947	
 bb180103b38f		No picture selected		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1108	
 bb9e8e473206		Edit…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1983	
 bbb686db2e40		Delete rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:189	
-bbedb1aba856		Data Labels: Show		todo		todo	Подписи данных: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:421	
+bbedb1aba856		Data Labels: Show	Maʼlumotlar yorliqlari: koʻrsatish	draft:agent-sonnet:2026-10-17	Маълумотлар ёрлиқлари: кўрсатиш	draft:agent-sonnet:2026-10-17	Подписи данных: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:421	
 bbee3ce9ea58		Erase ink strokes		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1601	
-bc32be9e5680		Sheet\nRight-to-Left		todo		todo	Лист\nсправа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:313	
+bc32be9e5680		Sheet\nRight-to-Left	Varaq:\noʻngdan chapga	draft:agent-sonnet:2026-10-17	Варақ:\nўнгдан чапга	draft:agent-sonnet:2026-10-17	Лист\nсправа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:313	
 bc6430a1c2c7		Covariance		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:39	
-bcfbe43c49fa		Fill Color		todo		todo	Цвет заливки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:206	
+bcfbe43c49fa		Fill Color	Toʻldirish rangi	draft:agent-sonnet:2026-10-17	Тўлдириш ранги	draft:agent-sonnet:2026-10-17	Цвет заливки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:206	
 bd0d5654c5bb		Light Red Fill		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:609	
 bd27b18974f5		Fill missing points using		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:455	
 bd7ef84a667d		New Name		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
-bdb1beab8785		Rotate Text Down		todo		todo	Повернуть текст вниз	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:224	
-bf41c4a022e6		Underline (⌘U)		todo		todo	Подчёркивание (⌘U)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:195	
+bdb1beab8785		Rotate Text Down	Matnni pastga burish	draft:agent-sonnet:2026-10-17	Матнни пастга буриш	draft:agent-sonnet:2026-10-17	Повернуть текст вниз	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:224	
+bf41c4a022e6		Underline (⌘U)	Tagiga chizish (⌘U)	draft:agent-sonnet:2026-10-17	Тагига чизиш (⌘У)	draft:agent-sonnet:2026-10-17	Подчёркивание (⌘U)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:195	
 bf914ff9afb3		Change All		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2657	
-c1185f56cd6c		CSV UTF-8 (Comma delimited) (*.csv)		todo		todo	CSV UTF-8 (разделитель — запятая) (*.csv)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
-c193c7f41f2f		Review		todo		todo	Рецензирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:449	
+c1185f56cd6c		CSV UTF-8 (Comma delimited) (*.csv)	CSV UTF-8 (vergul bilan ajratilgan) (*.csv)	draft:agent-sonnet:2026-10-17	CSV UTF-8 (вергул билан ажратилган) (*.csv)	draft:agent-sonnet:2026-10-17	CSV UTF-8 (разделитель — запятая) (*.csv)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
+c193c7f41f2f		Review	Tekshirish	draft:agent-sonnet:2026-10-17	Текшириш	draft:agent-sonnet:2026-10-17	Рецензирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:449	
 c20ebd45a214		Green Fill with Dark Green Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:608	
 c2bbf6034dcb		Math & Trig		todo		todo		todo		P2	gridcraft	crates/engine/src/catalog.rs:177	
 c309ccec77e6		Histogram		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2049	
 c45a4773a731		Cell Styles		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:851	
-c45d586406ed		Allow Edit Ranges		todo		todo	Разрешить изменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:215	
-c470bf9697d6		Insert		todo		todo	Вставить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:105	
-c479b866f180		Ink to\nShape		todo		todo	Преобразовать рукописный\nввод в фигуру	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:295	
-c565ce992473		What-If\nAnalysis		todo		todo	Анализ «что\nесли»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:361	
-c59739a7de1c		Nothing to print.		todo		todo	Нечего печатать.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:743	
+c45d586406ed		Allow Edit Ranges	Tahrirlash diapazonlariga ruxsat	draft:agent-sonnet:2026-10-17	Таҳрирлаш диапазонларига рухсат	draft:agent-sonnet:2026-10-17	Разрешить изменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:215	
+c470bf9697d6		Insert	Kiritish	draft:agent-sonnet:2026-10-17	Киритиш	draft:agent-sonnet:2026-10-17	Вставить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:105	
+c479b866f180		Ink to\nShape	Qoʻlyozmani\nshaklga aylantirish	draft:agent-sonnet:2026-10-17	Қўлёзмани\nшаклга айлантириш	draft:agent-sonnet:2026-10-17	Преобразовать рукописный\nввод в фигуру	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:295	
+c565ce992473		What-If\nAnalysis	«Agar…\nboʻlsa» tahlili	draft:agent-sonnet:2026-10-17	«Агар…\nбўлса» таҳлили	draft:agent-sonnet:2026-10-17	Анализ «что\nесли»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:361	
+c59739a7de1c		Nothing to print.	Chop etiladigan narsa yoʻq.	draft:agent-sonnet:2026-10-17	Чоп этиладиган нарса йўқ.	draft:agent-sonnet:2026-10-17	Нечего печатать.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:743	
 c5c841426c59		Entire column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
 c67b6e407b9d		This month		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:596	
-c69c015951f6		Underline		todo		todo	Подчёркивание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:198	
-c7aed5685223		Clear Rules from Selected Cells		todo		todo	Очистить правила для выделенных ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:439	
+c69c015951f6		Underline	Tagiga chizish	draft:agent-sonnet:2026-10-17	Тагига чизиш	draft:agent-sonnet:2026-10-17	Подчёркивание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:198	
+c7aed5685223		Clear Rules from Selected Cells	Tanlangan kataklar qoidalarini tozalash	draft:agent-sonnet:2026-10-17	Танланган катаклар қоидаларини тозалаш	draft:agent-sonnet:2026-10-17	Очистить правила для выделенных ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:439	
 c817807e2885		— 1 step		todo		todo		todo		P2	gridcraft		
 c857190ada2a		Zoom to Selection		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2162	
-c86e93cdfe27		Paste Values		todo		todo	Вставить значения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:180	
+c86e93cdfe27		Paste Values	Qiymatlarni qoʻyish	draft:agent-sonnet:2026-10-17	Қийматларни қўйиш	draft:agent-sonnet:2026-10-17	Вставить значения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:180	
 c94e647933ac		Pareto (sorted histogram)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2331	
 c9a8c14a0fd9		Rank and Percentile		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:45	
-ca4543f8613a		Flash Fill		todo		todo	Мгновенное заполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:266	
+ca4543f8613a		Flash Fill	Tezkor toʻldirish	draft:agent-sonnet:2026-10-17	Тезкор тўлдириш	draft:agent-sonnet:2026-10-17	Мгновенное заполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:266	
 ca494b63c7a0		Data Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:382	
 ca58a956987f		Refers To		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2005	
 cb71dd474dfd		Reference:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1902	
 cc4888fdb985		equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:874	
 cc99c2acfac5		Values range (blank: second column of the selection):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:447	
 ccc62e0d02d3		Output options		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2431	
-cce28430c610		Threaded Comments		todo		todo	Комментарии с ветками	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:368	
+cce28430c610		Threaded Comments	Muzokarali izohlar	draft:agent-sonnet:2026-10-17	Музокарали изоҳлар	draft:agent-sonnet:2026-10-17	Комментарии с ветками	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:368	
 cd23aa2a8a67		Within workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1829	
-cdf5779928b9		Page Layout		todo		todo	Разметка страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:446	
-ce0b11a24ef7		Print\nTitles		todo		todo	Печатать\nзаголовки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:312	
+cdf5779928b9		Page Layout	Sahifa maketi	draft:agent-sonnet:2026-10-17	Саҳифа макети	draft:agent-sonnet:2026-10-17	Разметка страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:446	
+ce0b11a24ef7		Print\nTitles	Sarlavhalarni\nchop etish	draft:agent-sonnet:2026-10-17	Сарлавҳаларни\nчоп этиш	draft:agent-sonnet:2026-10-17	Печатать\nзаголовки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:312	
 ce1c3c50c65d		Version {version}		todo		todo		todo		P2	gridcraft		
 ce3363306bc3		Residuals		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2342	
 cec3b25fbdef		Find All		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1856	
-cf7b13c0ce10		Unprotect\nSheet		todo		todo	Снять защиту\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:379	
+cf7b13c0ce10		Unprotect\nSheet	Varaq himoyasini\nolib tashlash	draft:agent-sonnet:2026-10-17	Варақ ҳимоясини\nолиб ташлаш	draft:agent-sonnet:2026-10-17	Снять защиту\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:379	
 cf83df7bb612		Waterfall		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2050	
 d00ac3e9c9e4		Line with Markers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2040	
 d02cd42aecd6		Input X Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2338	
 d03d47ddf16d		Household Budget		todo		todo		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
 d0b656c52642		Visible cells only		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:664	
-d0ba5aaecde7		Merge & Center		todo		todo	Объединить и поместить в центре	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:202	
-d0bd83862af5		Header Margin		todo		todo	Поле верхнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:303	
+d0ba5aaecde7		Merge & Center	Birlashtirish va markazlash	draft:agent-sonnet:2026-10-17	Бирлаштириш ва марказлаш	draft:agent-sonnet:2026-10-17	Объединить и поместить в центре	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:202	
+d0bd83862af5		Header Margin	Yuqori kolontitul chekkasi	draft:agent-sonnet:2026-10-17	Юқори колонтитул чеккаси	draft:agent-sonnet:2026-10-17	Поле верхнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:303	
 d0d290e8d25d		Light Red Fill with Dark Red Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:606	
 d0ea2b283add		Display:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:371	
-d19d662e54c3		Drag to freeze rows		todo		todo	Перетащите, чтобы закрепить строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
+d19d662e54c3		Drag to freeze rows	Qatorlarni qotirish uchun sudrang	draft:agent-sonnet:2026-10-17	Қаторларни қотириш учун судранг	draft:agent-sonnet:2026-10-17	Перетащите, чтобы закрепить строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
 d1d6c32c2e6d		Damping factor:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2350	
-d1ea7c37ddd1		AutoFit Row Height		todo		todo	Автоподбор высоты строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3122	
+d1ea7c37ddd1		AutoFit Row Height	Qator balandligini avtomoslash	draft:agent-sonnet:2026-10-17	Қатор баландлигини автомослаш	draft:agent-sonnet:2026-10-17	Автоподбор высоты строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3122	
 d1ff410e9b4e		Validation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:302	
 d2a72298c3ec		Stacked Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2045	
 d2df992b4c4c		Border		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1534	
 d30a4d629024		Bin Range (blank for automatic bins):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2329	
 d35c1d0d7f62		Convert Text to Columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:420	
-d37a618e025c		Comma Style		todo		todo	Разделитель разрядов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:227	
-d40dbaa273b7		Protect Workbook		todo		todo	Защитить книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:612	
+d37a618e025c		Comma Style	Minglar ajratgichi	draft:agent-sonnet:2026-10-17	Минглар ажратгичи	draft:agent-sonnet:2026-10-17	Разделитель разрядов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:227	
+d40dbaa273b7		Protect Workbook	Ish kitobini himoyalash	draft:agent-sonnet:2026-10-17	Иш китобини ҳимоялаш	draft:agent-sonnet:2026-10-17	Защитить книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:612	
 d4126d28b72d		Filters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
 d449731c01e6		Delete chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2397	
 d46f9fc969c3		Use function		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:511	
@@ -610,33 +610,33 @@ d6017549b0a4		{count} cell(s) found		todo		todo		todo		P2	gridcraft
 d65a4f98c69f	Tab	Insert		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:105	
 d65e856c9413		Format values where this formula is true:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:600	
 d66aaaa7669e		Convert the last ink stroke to a shape		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1609	
-d66d8c2325ef	Options	General		todo		todo	Общие	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-d7d13f6fea03		Gridlines: Show		todo		todo	Линии сетки: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:427	
-d7d60b8382e8		Insert\nFunction		todo		todo	Вставить\nфункцию	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:321	
+d66d8c2325ef	Options	General	Umumiy	draft:agent-sonnet:2026-10-17	Умумий	draft:agent-sonnet:2026-10-17	Общие	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+d7d13f6fea03		Gridlines: Show	Katakcha chiziqlari: koʻrsatish	draft:agent-sonnet:2026-10-17	Катакча чизиқлари: кўрсатиш	draft:agent-sonnet:2026-10-17	Линии сетки: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:427	
+d7d60b8382e8		Insert\nFunction	Funksiya\nkiritish	draft:agent-sonnet:2026-10-17	Функция\nкиритиш	draft:agent-sonnet:2026-10-17	Вставить\nфункцию	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:321	
 d805af85eed8		Row height (pixels):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:136	
 d855527f2d99		Cube		todo		todo		todo		P2	gridcraft		
 d8b77b33e61c		Hypothesized Mean Difference:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2360	
-da3c9068e9db		Export		todo		todo	Экспорт	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:72	
+da3c9068e9db		Export	Eksport qilish	draft:agent-sonnet:2026-10-17	Экспорт қилиш	draft:agent-sonnet:2026-10-17	Экспорт	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:72	
 da94ffcbfccd		Custom (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:535	
-dad3fd754fc6		Print Active Sheets		todo		todo	Напечатать активные листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
-dad656331357		Manual		todo		todo	Вручную	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:984	
+dad3fd754fc6		Print Active Sheets	Faol varaqlarni chop etish	draft:agent-sonnet:2026-10-17	Фаол варақларни чоп этиш	draft:agent-sonnet:2026-10-17	Напечатать активные листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
+dad656331357		Manual	Qoʻlda	draft:agent-sonnet:2026-10-17	Қўлда	draft:agent-sonnet:2026-10-17	Вручную	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:984	
 dae735caf3a7		No names defined		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2009	
-db808ae97d28		Flash\nFill		todo		todo	Мгновенное\nзаполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:265	
+db808ae97d28		Flash\nFill	Tezkor\ntoʻldirish	draft:agent-sonnet:2026-10-17	Тезкор\nтўлдириш	draft:agent-sonnet:2026-10-17	Мгновенное\nзаполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:265	
 db80ee3b401d		Protect Structure and Windows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:235	
 db9c4e00dc5f		Any value		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:846	
-dc7ca51af082		Title		todo		todo	Название	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:93	
+dc7ca51af082		Title	Nomi	draft:agent-sonnet:2026-10-17	Номи	draft:agent-sonnet:2026-10-17	Название	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:93	
 dc9b4d6d923e		Errors		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:659	
-dcfa10bce92e		Vertical Text		todo		todo	Вертикальный текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:216	
-dd06e13368e5		System		todo		todo	Системная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:937	
+dcfa10bce92e		Vertical Text	Vertikal matn	draft:agent-sonnet:2026-10-17	Вертикал матн	draft:agent-sonnet:2026-10-17	Вертикальный текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:216	
+dd06e13368e5		System	Tizim	draft:agent-sonnet:2026-10-17	Тизим	draft:agent-sonnet:2026-10-17	Системная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:937	
 dd166be169b8		PivotTable Fields		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:29	
-dd8e09cecf2a		Sort Z to A		todo		todo	Сортировка от Я до А	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2863	
+dd8e09cecf2a		Sort Z to A	Z dan A gacha saralash	draft:agent-sonnet:2026-10-17	З дан А гача саралаш	draft:agent-sonnet:2026-10-17	Сортировка от Я до А	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2863	
 ddd84d495af7		Picture file path (PNG or JPEG):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1111	
 de0ca0cf77a7		Place Picture in Cell		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
-deb8dc0e3ed7		Bottom 10 Items		todo		todo	Последние 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:434	
-dee968421d5a		Reset All Page Breaks		todo		todo	Сбросить все разрывы страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:311	
-df6104b243f3		General		todo		todo	Общий	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
+deb8dc0e3ed7		Bottom 10 Items	Eng past 10 ta element	draft:agent-sonnet:2026-10-17	Энг паст 10 та элемент	draft:agent-sonnet:2026-10-17	Последние 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:434	
+dee968421d5a		Reset All Page Breaks	Barcha sahifa uzilishlarini asliga qaytarish	draft:agent-sonnet:2026-10-17	Барча саҳифа узилишларини аслига қайтариш	draft:agent-sonnet:2026-10-17	Сбросить все разрывы страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:311	
+df6104b243f3		General	Umumiy	draft:agent-sonnet:2026-10-17	Умумий	draft:agent-sonnet:2026-10-17	Общий	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 df80cd2f215c		Restore Original Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2575	
-dfb5f3139eff		AutoSum		todo		todo	Автосумма	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:263	
+dfb5f3139eff		AutoSum	Avtojamlama	draft:agent-sonnet:2026-10-17	Автожамлама	draft:agent-sonnet:2026-10-17	Автосумма	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:263	
 e01423091319		Values and number formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:306	
 e043d847f1cf		Summarize by Min		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:115	
 e0abd493de21		Row Height		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:134	
@@ -645,41 +645,41 @@ e1e248e07338		100% Stacked Column		todo		todo		todo		P2	gridcraft	crates/ui-egui
 e1ee677e394f		All Charts		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
 e22f7046115e		Define Name…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2870	
 e237b2667790		Maximum:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:908	
-e28b44368136		Modified		todo		todo	Изменён	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:374	
-e385d75b2e44		Math &\nTrig		todo		todo	Математические и\nтригонометрические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:479	
-e3ad33f2de9d		More\nFunctions		todo		todo	Другие\nфункции	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:480	
-e47e068d95e9		Formulas		todo		todo	Формулы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:978	
-e56d9891477d		Save .xlsx workbooks automatically after every change		todo		todo	Автоматически сохранять книги .xlsx после каждого изменения	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:973	
+e28b44368136		Modified	Oʻzgartirilgan	draft:agent-sonnet:2026-10-17	Ўзгартирилган	draft:agent-sonnet:2026-10-17	Изменён	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:374	
+e385d75b2e44		Math &\nTrig	Matematik va\ntrigonometrik	draft:agent-sonnet:2026-10-17	Математик ва\nтригонометрик	draft:agent-sonnet:2026-10-17	Математические и\nтригонометрические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:479	
+e3ad33f2de9d		More\nFunctions	Boshqa\nfunksiyalar	draft:agent-sonnet:2026-10-17	Бошқа\nфункциялар	draft:agent-sonnet:2026-10-17	Другие\nфункции	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:480	
+e47e068d95e9		Formulas	Formulalar	draft:agent-sonnet:2026-10-17	Формулалар	draft:agent-sonnet:2026-10-17	Формулы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:978	
+e56d9891477d		Save .xlsx workbooks automatically after every change	.xlsx ish kitoblarini har bir oʻzgarishdan keyin avtomatik saqlash	draft:agent-sonnet:2026-10-17	.xlsx иш китобларини ҳар бир ўзгаришдан кейин автоматик сақлаш	draft:agent-sonnet:2026-10-17	Автоматически сохранять книги .xlsx после каждого изменения	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:973	
 e60bb3f0544b		t-Test: Two-Sample Assuming Unequal Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:49	
 e62592199c28		Ignore blank		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:860	
 e6469b30a297		Subtract		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
-e65eba07034f		Sort &\nFilter		todo		todo	Сортировка и\nфильтр	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:339	
+e65eba07034f		Sort &\nFilter	Saralash va\nfiltrlash	draft:agent-sonnet:2026-10-17	Саралаш ва\nфилтрлаш	draft:agent-sonnet:2026-10-17	Сортировка и\nфильтр	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:339	
 e6cadc24c3ce		Goal Seek		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:440	
 e6cf34faf587		Statistical		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1768	
 e751ca386cb7		Custom Sort		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1907	
-e761927f1a00		Go to Header		todo		todo	Перейти к верхнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:506	
-e768406bb35f		Percent Style		todo		todo	Процентный формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:226	
+e761927f1a00		Go to Header	Yuqori kolontitulga oʻtish	draft:agent-sonnet:2026-10-17	Юқори колонтитулга ўтиш	draft:agent-sonnet:2026-10-17	Перейти к верхнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:506	
+e768406bb35f		Percent Style	Foiz uslubi	draft:agent-sonnet:2026-10-17	Фоиз услуби	draft:agent-sonnet:2026-10-17	Процентный формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:226	
 e774a4f1c57a		All done. We made {count} replacements.		todo		todo		todo		P2	gridcraft		
-e8191378d006		Sheet structure is locked: sheets can't be added, moved, renamed or deleted.		todo		todo	Структура листов заблокирована: листы нельзя добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:620	
-e8c433a4fc0e		Data Analysis		todo		todo	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:479	
+e8191378d006		Sheet structure is locked: sheets can't be added, moved, renamed or deleted.	Varaqlar tuzilmasi qulflangan: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin emas.	draft:agent-sonnet:2026-10-17	Варақлар тузилмаси қулфланган: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин эмас.	draft:agent-sonnet:2026-10-17	Структура листов заблокирована: листы нельзя добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:620	
+e8c433a4fc0e		Data Analysis	Maʼlumotlar tahlili	draft:agent-sonnet:2026-10-17	Маълумотлар таҳлили	draft:agent-sonnet:2026-10-17	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:479	
 e927ddfb5c2a		Pen\nBlue		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
-e962563c50b3		Below Average		todo		todo	Ниже среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:437	
+e962563c50b3		Below Average	Oʻrtachadan past	draft:agent-sonnet:2026-10-17	Ўртачадан паст	draft:agent-sonnet:2026-10-17	Ниже среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:437	
 ea2de8839157		Sample		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1559	
 ea9c1d50e8ab		Sort & Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1015	
-eb5cc47fc3f5		Automate		todo		todo	Автоматизация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:451	
+eb5cc47fc3f5		Automate	Avtomatlashtirish	draft:agent-sonnet:2026-10-17	Автоматлаштириш	draft:agent-sonnet:2026-10-17	Автоматизация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:451	
 ec17d16139ec		Solver Parameters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:498	
 ec49cb8e7d2e		(No suggestions)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2640	
 ec6e1f74dca4		Select Data Source		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:718	
-ecf474fde9dc		Trace Precedents		todo		todo	Влияющие ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:326	
+ecf474fde9dc		Trace Precedents	Taʼsir qiluvchi kataklarni kuzatish	draft:agent-sonnet:2026-10-17	Таъсир қилувчи катакларни кузатиш	draft:agent-sonnet:2026-10-17	Влияющие ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:326	
 ed932534202d		New Worksheet Ply:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
-ed97d10ee1f2		Drag to freeze columns		todo		todo	Перетащите, чтобы закрепить столбцы	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
+ed97d10ee1f2		Drag to freeze columns	Ustunlarni qotirish uchun sudrang	draft:agent-sonnet:2026-10-17	Устунларни қотириш учун судранг	draft:agent-sonnet:2026-10-17	Перетащите, чтобы закрепить столбцы	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
 ed9c23bf8ae1		€ Euro		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:811	
-edcef13bf91e		Goal Seek…		todo		todo	Подбор параметра…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:364	
+edcef13bf91e		Goal Seek…	Parametrni tanlash…	draft:agent-sonnet:2026-10-17	Параметрни танлаш…	draft:agent-sonnet:2026-10-17	Подбор параметра…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:364	
 ee29c8f3f2eb		Cumulative Percentage		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2332	
 eebd7f4301e2		Growth		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:326	
 eeca1b107dbe		Description (optional):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1132	
 ef10f813bc9e		(unnamed)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1509	
-ef60c5ce4867		Calculate Sheet		todo		todo	Вычислить лист	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:335	
+ef60c5ce4867		Calculate Sheet	Varaqni hisoblash	draft:agent-sonnet:2026-10-17	Варақни ҳисоблаш	draft:agent-sonnet:2026-10-17	Вычислить лист	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:335	
 efd1a1bcccd1		By changing cell:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2290	
 f063cc101af3		Remove Field		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:150	
 f11f6e4c2701		Solver Results		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:502	
@@ -688,49 +688,49 @@ f1a8aafa07f1		Pick From List		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/
 f1aa77bde5f2		Column Width		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:141	
 f1bdabd59e87		Numbers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:660	
 f1c683597ca6		Redo (⌘Y)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:95	
-f1fd5c455b1b		Save the workbook as a web page.		todo		todo	Сохранить книгу как веб-страницу.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	
-f22f625188de		Top 10 Items		todo		todo	Первые 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:432	
-f38254533254		Trace Dependents		todo		todo	Зависимые ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:327	
+f1fd5c455b1b		Save the workbook as a web page.	Ish kitobini veb sahifa sifatida saqlash.	draft:agent-sonnet:2026-10-17	Иш китобини веб саҳифа сифатида сақлаш.	draft:agent-sonnet:2026-10-17	Сохранить книгу как веб-страницу.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	
+f22f625188de		Top 10 Items	Eng yuqori 10 ta element	draft:agent-sonnet:2026-10-17	Энг юқори 10 та элемент	draft:agent-sonnet:2026-10-17	Первые 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:432	
+f38254533254		Trace Dependents	Bogʻliq kataklarni kuzatish	draft:agent-sonnet:2026-10-17	Боғлиқ катакларни кузатиш	draft:agent-sonnet:2026-10-17	Зависимые ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:327	
 f3ac0f13fe4d		Watch\nWindow		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1855	
-f3c0d305c79c		Current\nTime		todo		todo	Текущее\nвремя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:493	
-f403c10ef152		AutoSum (⌘⇧T)		todo		todo	Автосумма (⌘⇧T)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:264	
-f5b12a36f9bc		Icon Sets		todo		todo	Наборы значков	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:443	
-f5d1d5a19919		Text		todo		todo	Текстовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:661	
-f68f56c7eecf		Conditional\nFormatting		todo		todo	Условное\nформатирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:231	
+f3c0d305c79c		Current\nTime	Joriy\nvaqt	draft:agent-sonnet:2026-10-17	Жорий\nвақт	draft:agent-sonnet:2026-10-17	Текущее\nвремя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:493	
+f403c10ef152		AutoSum (⌘⇧T)	Avtojamlama (⌘⇧T)	draft:agent-sonnet:2026-10-17	Автожамлама (⌘⇧Т)	draft:agent-sonnet:2026-10-17	Автосумма (⌘⇧T)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:264	
+f5b12a36f9bc		Icon Sets	Belgilar toʻplamlari	draft:agent-sonnet:2026-10-17	Белгилар тўпламлари	draft:agent-sonnet:2026-10-17	Наборы значков	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:443	
+f5d1d5a19919		Text	Matn	draft:agent-sonnet:2026-10-17	Матн	draft:agent-sonnet:2026-10-17	Текстовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:661	
+f68f56c7eecf		Conditional\nFormatting	Shartli\nformatlash	draft:agent-sonnet:2026-10-17	Шартли\nформатлаш	draft:agent-sonnet:2026-10-17	Условное\nформатирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:231	
 f6c1b5f9d175		Descriptive Statistics		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:40	
-f710346c3866		Enable AutoComplete for cell values		todo		todo	Включить автозавершение значений ячеек	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:967	
-f780f8ed8e6d		Select\nData		todo		todo	Выбрать\nданные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:419	
+f710346c3866		Enable AutoComplete for cell values	Katak qiymatlari uchun avtotoʻldirishni yoqish	draft:agent-sonnet:2026-10-17	Катак қийматлари учун автотўлдиришни ёқиш	draft:agent-sonnet:2026-10-17	Включить автозавершение значений ячеек	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:967	
+f780f8ed8e6d		Select\nData	Maʼlumotlarni\ntanlash	draft:agent-sonnet:2026-10-17	Маълумотларни\nтанлаш	draft:agent-sonnet:2026-10-17	Выбрать\nданные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:419	
 f79c22abc44d		Left margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:408	
 f7cb470a1491		less than or equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:879	
 f7ce5946ed5a		Save Changes?		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:778	
 f7f913ffa2e2		My list has headers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1923	
-f8021ddd9b49		Strikethrough		todo		todo	Зачёркивание	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1638	
+f8021ddd9b49		Strikethrough	Ustidan chizish	draft:agent-sonnet:2026-10-17	Устидан чизиш	draft:agent-sonnet:2026-10-17	Зачёркивание	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1638	
 f82f2d06c1d2		Format rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:187	
 f8488530d05c		Workbook Statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:729	
-f8558c90740c		No workbook is open.		todo		todo	Нет открытых книг.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:588	
+f8558c90740c		No workbook is open.	Ochiq ish kitobi yoʻq.	draft:agent-sonnet:2026-10-17	Очиқ иш китоби йўқ.	draft:agent-sonnet:2026-10-17	Нет открытых книг.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:588	
 f93b0d81b7c0		Modify		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
 f9d8ccc55f57		Comment:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:559	
 fa01cd7b0a0b		Accessibility		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:734	
 fa196b03565e		greater than or equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:878	
 fadd888d528d		Insert an icon		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1412	
 fae614092d8e		Undo (⌘Z)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:79	
-fb13ae072e69		More Accounting Formats…		todo		todo	Другие финансовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:230	
+fb13ae072e69		More Accounting Formats…	Boshqa buxgalteriya formatlari…	draft:agent-sonnet:2026-10-17	Бошқа бухгалтерия форматлари…	draft:agent-sonnet:2026-10-17	Другие финансовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:230	
 fb1bbeda5a2c		Summarize by Count		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:112	
 fb2a1509d725		Type (custom format code):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1563	
-fbb8be679748		Show/Hide Note		todo		todo	Показать/скрыть заметку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:284	
+fbb8be679748		Show/Hide Note	Qaydni koʻrsatish/yashirish	draft:agent-sonnet:2026-10-17	Қайдни кўрсатиш/яшириш	draft:agent-sonnet:2026-10-17	Показать/скрыть заметку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:284	
 fbc622e1c3c7		Data validation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:666	
 fbcfe384f1cd		Confidence Level (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2341	
 fbff9a7ab186		Insert a slicer to filter a table		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
-fc6572f4e53a		CSV (Comma delimited)		todo		todo	CSV (разделители — запятые)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
+fc6572f4e53a		CSV (Comma delimited)	CSV (vergul bilan ajratilgan)	draft:agent-sonnet:2026-10-17	CSV (вергул билан ажратилган)	draft:agent-sonnet:2026-10-17	CSV (разделители — запятые)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
 fcb61f763792		Constant is Zero		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2340	
-fcf12be0e803		Rotate Text Up		todo		todo	Повернуть текст вверх	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:223	
-fd6c60ffea5d		Normal		todo		todo	Обычные	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1653	
+fcf12be0e803		Rotate Text Up	Matnni yuqoriga burish	draft:agent-sonnet:2026-10-17	Матнни юқорига буриш	draft:agent-sonnet:2026-10-17	Повернуть текст вверх	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:223	
+fd6c60ffea5d		Normal	Oddiy	draft:agent-sonnet:2026-10-17	Оддий	draft:agent-sonnet:2026-10-17	Обычные	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1653	
 fd94b9c20e05		Bottom		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1612	
 fdafc13af12c		Pen\nRed		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
 fdda7ab77b0a		Keep		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2176	
 fe5a8158d22b		Values (V)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:299	
 fe7611c55601		double		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1696	
-fece81d1bc9e		Conditional Formatting		todo		todo	Условное форматирование	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:574	
+fece81d1bc9e		Conditional Formatting	Shartli formatlash	draft:agent-sonnet:2026-10-17	Шартли форматлаш	draft:agent-sonnet:2026-10-17	Условное форматирование	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:574	
 fed8358a685e		Show as Running Total		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:124	
 fede8c2e2e28		dotted		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1695	
 ff14c791b807		Last week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:592	
