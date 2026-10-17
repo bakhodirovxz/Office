@@ -1,8 +1,17 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 0 — Evidence and architecture decision** (branch `phase-0`).
+**Current phase: Phase 1 — Foundation** (branch `phase-1`, from `phase-0`; Phase 0 gate passed 2026-10-17, ADR: docs/ARCHITECTURE-DECISION.md).
 The full brief (mission, constraints, phases, exit gates) is in [docs/BRIEF.md](docs/BRIEF.md).
 Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — keep it current.
+
+## Gate decisions in force (ADR Appendix C)
+- Our layer is licensed **MIT OR Apache-2.0**.
+- **Product name: deferred.** Use the neutral working name from the one brand config. Never hard-code a name.
+- **Repo layout:** W2 build domains. Upstream is a vendored pristine snapshot plus a patch queue in `patches/`.
+  Never hand-edit `upstream/`.
+- **No upstream PRs for now.** All upstream changes are carried patches, registered in `patches/REGISTER.md`.
+- **Mobile:** A-web for v1, conditionally (re-decided at the Phase 4 gate).
+- **Priority:** fidelity → mobile → co-editing.
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
