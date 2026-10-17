@@ -741,6 +741,13 @@ Other risks tracked but outside the top 12:
 
 ---
 
+### Risk added in Phase 1: locale-dependent input in Sheets (data integrity)
+- **Problem.** gridcraft parses typed dates and decimals as en-US. `12.10.2026` becomes 10 December, and `3,5` stays
+  text. Source: `docs/phase1/locale-check.md`, re-checked with the domain CLI.
+- **Likelihood: high.** Every uz/ru user types dates and decimals this way.
+- **Impact: high.** The errors are silent and corrupt data.
+- **Mitigation.** A carried `NumLocale` patch, about 6–8 days (ESTIMATE), before any pilot that edits spreadsheets.
+
 ## 7. What is still unknown or unmeasured
 
 | Unknown | Why | What it blocks | How it gets measured |
