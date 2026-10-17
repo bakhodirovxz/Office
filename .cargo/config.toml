@@ -1,0 +1,6 @@
+[alias]
+xt = "run -q -p xtask --"
+
+# Build output never goes to C:. Domain and upstream builds override this with CARGO_TARGET_DIR (scripts/build.sh).
+[build]
+target-dir = "E:/office-target/p1/core"
