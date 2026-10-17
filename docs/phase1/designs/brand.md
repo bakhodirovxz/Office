@@ -1,3 +1,5 @@
+> **Owner decision 2026-10-17:** the pdfcraft GitHub update check is **disabled** in our builds (ADR Appendix C).
+
 # WP7a: branding design (brand config, overlay hook, per-app sites, assets, CI check)
 
 | | |
