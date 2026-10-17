@@ -7,8 +7,8 @@ use gridcraft_core::date::{serial_from_ymd, time_fraction};
 use gridcraft_core::{CellError, CellRef, DateSystem, MAX_COLS, MAX_ROWS, RangeRef, Value};
 use gridcraft_formula::Expr;
 use gridcraft_model::{
-    AutoFilter, Cell, CfOperator, CfRule, CfValueKind, Comment, CondFormat, EditRange, ErrorStyle, FilterCriterion, Formula, FormulaRuns, Hyperlink,
-    LineInfo, Orientation, PasswordHash, Sheet, SheetProtection, Sparkline, SparklineKind, Table, TableColumn, TotalsFn, Validation, ValidationKind,
+    AutoFilter, Cell, CfOperator, CfRule, CfValueKind, Comment, CondFormat, EditRange, ErrorStyle, FilterCriterion, Formula, Hyperlink, LineInfo,
+    Orientation, PasswordHash, Sheet, SheetProtection, Sparkline, SparklineKind, Table, TableColumn, TotalsFn, Validation, ValidationKind,
     XmlColumnPr,
 };
 
@@ -22,7 +22,7 @@ use crate::xml::{self, El};
 
 struct Shared {
     anchor: CellRef,
-    expr: Option<Arc<Expr>>,
+    expr: Option<Expr>,
     text: String,
 }
 
@@ -30,41 +30,11 @@ struct Shared {
 struct RowState {
     next_row: u32,
     shared: HashMap<u32, Shared>,
-    /// Ordinary formulas that are the same in R1C1 terms share one tree.
-    runs: FormulaRuns,
     /// Dynamic-array spill ranges and legacy array ranges: cached values inside them (other than
     /// the anchor) are not stored, so the formula can fill them again.
     dynamic: Vec<RangeRef>,
     dropped: u64,
     rows: u64,
-    /// Short texts of inline-string cells read so far.
-    texts: TextPool,
-}
-
-/// Cells holding the same short text (a category, a status, a code) share one string, as cells
-/// of the shared-string table do; files written with inline strings would otherwise hold a
-/// string per cell. Bounded: a long text, or a new one once the pool is full, gets a string of
-/// its own.
-#[derive(Default)]
-struct TextPool(std::collections::HashSet<Arc<str>>);
-
-impl TextPool {
-    const MAX_LEN: usize = 64;
-    const MAX_TEXTS: usize = 1 << 16;
-
-    fn value(&mut self, s: String) -> Value {
-        if s.len() > Self::MAX_LEN {
-            return Value::text(s);
-        }
-        if let Some(t) = self.0.get(s.as_str()) {
-            return Value::Text(t.clone());
-        }
-        let t: Arc<str> = Arc::from(s);
-        if self.0.len() < Self::MAX_TEXTS {
-            self.0.insert(t.clone());
-        }
-        Value::Text(t)
-    }
 }
 
 const MAX_HYPERLINK_CELLS: u64 = 10_000;
@@ -88,14 +58,7 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
     if st.dropped > 0 {
         cx.warn(format!("sheet \"{name}\": {} cells or rows outside the 1,048,576 × 16,384 grid were dropped", st.dropped));
     }
-    // Spilled values are not kept (the formulas lay them out again), so the file's values are
-    // only complete after a calculation.
-    if !st.dynamic.is_empty() {
-        cx.report.calculated = false;
-    }
     drop(bytes);
-    // Rows were filled cell by cell: give back the room kept for more.
-    sheet.cells.shrink_to_fit();
 
     let mut fit_to_page = false;
     cx.cf_ext_ids.clear();
@@ -440,12 +403,10 @@ fn read_cell(cx: &mut Ctx<'_>, sheet: &mut Sheet, st: &mut RowState, c: &El, pos
             },
             None => Value::Empty,
         },
-        "str" => v.map(|v| st.texts.value(xml::decode_xstring(v))).unwrap_or(Value::Empty),
-        "inlineStr" => c
-            .child("is")
-            .map(|is| st.texts.value(xml::rich_text(is)))
-            .or_else(|| v.map(|v| st.texts.value(xml::decode_xstring(v))))
-            .unwrap_or(Value::Empty),
+        "str" => v.map(|v| Value::text(xml::decode_xstring(v))).unwrap_or(Value::Empty),
+        "inlineStr" => {
+            c.child("is").map(|is| Value::text(xml::rich_text(is))).or_else(|| v.map(|v| Value::text(xml::decode_xstring(v)))).unwrap_or(Value::Empty)
+        }
         "b" => v.map(|v| Value::Bool(matches!(v.trim(), "1" | "true" | "TRUE"))).unwrap_or(Value::Empty),
         "e" => v.map(|v| Value::Error(CellError::parse(v.trim()).unwrap_or(CellError::Value))).unwrap_or(Value::Empty),
         "d" => match v.and_then(|v| parse_iso_datetime(v.trim(), cx.date_system)) {
@@ -501,15 +462,9 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
         "shared" => {
             let si = f.attr_u32("si")?;
             if !text.is_empty() {
-                let master = Formula::new(text);
-                // The cells of the group share the master's tree (or the tree its text parses to
-                // when that differs, as for text with a leading `=`).
-                let expr = gridcraft_formula::parse(text).ok().map(|e| match master.template() {
-                    Some((m, _, _)) if **m == e => m.clone(),
-                    _ => Arc::new(e),
-                });
+                let expr = gridcraft_formula::parse(text).ok();
                 st.shared.insert(si, Shared { anchor: pos, expr, text: text.to_string() });
-                Some(master)
+                Some(Formula::new(text))
             } else {
                 let Some(sh) = st.shared.get(&si) else {
                     cx.warn("a shared formula refers to a missing master cell; kept the cached value");
@@ -519,7 +474,7 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
                     Some(e) => {
                         let dr = pos.row as i64 - sh.anchor.row as i64;
                         let dc = pos.col as i64 - sh.anchor.col as i64;
-                        Formula::shifted(e.clone(), dr, dc)
+                        Formula::from_expr(gridcraft_formula::adjust::shift_relative(e.clone(), dr, dc))
                     }
                     None => Formula::new(&sh.text),
                 })
@@ -535,7 +490,7 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
                 st.dynamic.push(range);
             }
             if !dynamic {
-                fm.set_array(Some(range));
+                fm.array = Some(range);
             }
             Some(fm)
         }
@@ -547,21 +502,9 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
             if text.is_empty() {
                 None
             } else {
-                Some(ordinary_formula(st, text, pos))
+                Some(Formula::new(text))
             }
         }
-    }
-}
-
-/// An ordinary (not shared, not array) formula: the same as `Formula::new(text)`, sharing the
-/// tree of the formula above it or to its left when it is that formula moved to `pos`, as in a
-/// filled-down column or a filled-right row. Files written without shared formulas (by most
-/// producers other than Excel) then cost one tree per run rather than one per cell.
-fn ordinary_formula(st: &mut RowState, text: &str, pos: CellRef) -> Formula {
-    let body = text.strip_prefix('=').unwrap_or(text);
-    match gridcraft_formula::parse(body) {
-        Ok(e) => st.runs.formula(pos, e),
-        Err(_) => Formula::new(text),
     }
 }
 

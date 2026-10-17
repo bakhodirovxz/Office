@@ -2,32 +2,23 @@
 //!
 //! - The 14 standard fonts (no embedding) with WinAnsiEncoding, plus approximate width tables
 //!   ([`text_width`]) so callers can measure, align and wrap text.
-//! - Embedded TrueType faces ([`register_face`] → [`Font::Face`]): subset per document, written as
-//!   `Identity-H` CID fonts with a `ToUnicode` map, measured with the font's own advance widths,
-//!   with per-character fallback to another registered face. This is how non-Latin text exports.
 //! - Vector drawing: rectangles, lines (solid or dashed), polygons, circles (Bézier), clipping.
 //! - RGBA images as RGB image XObjects with a soft mask for alpha (run-length encoded).
 //! - Coordinates are points with a **top-left origin** (y grows down); text `y` is the baseline.
 //!
 //! Streams are written uncompressed (images use the trivial RunLengthDecode filter) so the crate
-//! needs no dependencies; embedded font subsets are uncompressed too.
+//! needs no dependencies.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
-mod embed;
 mod metrics;
-pub mod ttf;
 
-pub use embed::register_face;
-
-use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 /// RGB colour, 0–255 per channel.
 pub type Rgb = [u8; 3];
 
-/// The standard 14 fonts minus Symbol and ZapfDingbats, or an embedded face from
-/// [`register_face`].
+/// The standard 14 fonts minus Symbol and ZapfDingbats.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Font {
     #[default]
@@ -43,8 +34,6 @@ pub enum Font {
     CourierBold,
     CourierOblique,
     CourierBoldOblique,
-    /// A registered TrueType face (see [`register_face`]).
-    Face(u16),
 }
 
 /// A font family for [`Font::styled`].
@@ -87,21 +76,11 @@ impl Font {
             Font::CourierBold => "Courier-Bold",
             Font::CourierOblique => "Courier-Oblique",
             Font::CourierBoldOblique => "Courier-BoldOblique",
-            Font::Face(_) => "Embedded",
         }
     }
 
     fn index(self) -> usize {
         Font::ALL.iter().position(|f| *f == self).unwrap_or(0)
-    }
-
-    /// True when text set in this font shows `text` with real glyphs: every character is in the
-    /// face (or its fallbacks), or in WinAnsi for a standard font.
-    pub fn covers(self, text: &str) -> bool {
-        match self {
-            Font::Face(id) => embed::covers(id, text),
-            _ => text.chars().all(|c| c == '?' || win_ansi(c) != b'?'),
-        }
     }
 
     /// The face of `family` with the given weight and slant.
@@ -122,22 +101,6 @@ impl Font {
         }
     }
 
-    /// The family, weight and slant of a standard font; `None` for an embedded face.
-    pub fn parts(self) -> Option<(Family, bool, bool)> {
-        let family = match self {
-            Font::Helvetica | Font::HelveticaBold | Font::HelveticaOblique | Font::HelveticaBoldOblique => Family::Sans,
-            Font::TimesRoman | Font::TimesBold | Font::TimesItalic | Font::TimesBoldItalic => Family::Serif,
-            Font::Courier | Font::CourierBold | Font::CourierOblique | Font::CourierBoldOblique => Family::Mono,
-            Font::Face(_) => return None,
-        };
-        let bold = matches!(self, Font::HelveticaBold | Font::HelveticaBoldOblique | Font::TimesBold | Font::TimesBoldItalic | Font::CourierBold | Font::CourierBoldOblique);
-        let italic = matches!(
-            self,
-            Font::HelveticaOblique | Font::HelveticaBoldOblique | Font::TimesItalic | Font::TimesBoldItalic | Font::CourierOblique | Font::CourierBoldOblique
-        );
-        Some((family, bold, italic))
-    }
-
     /// Picks a standard family for a font name: serif faces map to Times, monospaced ones to
     /// Courier, everything else to Helvetica.
     pub fn family_for(name: &str) -> Family {
@@ -155,10 +118,6 @@ impl Font {
 
     /// Advance width of a character in 1/1000 em.
     pub fn char_width(self, c: char) -> u16 {
-        if let Font::Face(id) = self {
-            let mut b = [0u8; 4];
-            return embed::width_units(id, c.encode_utf8(&mut b)).round() as u16;
-        }
         let table: Option<&[u16; 95]> = match self {
             Font::Helvetica | Font::HelveticaOblique => Some(&metrics::HELVETICA),
             Font::HelveticaBold | Font::HelveticaBoldOblique => Some(&metrics::HELVETICA_BOLD),
@@ -186,24 +145,9 @@ impl Font {
 
 /// Width of `text` in points when set in `font` at `size` points.
 pub fn text_width(font: Font, size: f32, text: &str) -> f32 {
-    if let Font::Face(id) = font {
-        return embed::width_units(id, text) * size / 1000.0;
-    }
     // u64: a u32 sum overflows for ~8 million characters.
     let units: u64 = text.chars().map(|c| u64::from(font.char_width(c))).sum();
     units as f32 * size / 1000.0
-}
-
-/// Width of `text` in points as Windows lays it out at 100% zoom (96 dpi): each glyph advance of an
-/// embedded face is rounded to whole pixels, so 11 pt Calibri digits are 7 px wide rather than
-/// 7.44. Excel decides whether a number fits its column (or shows `####`) with these widths.
-/// `size` is the font size in points at 100% zoom. Standard fonts have no pixel metrics: this is
-/// [`text_width`] for them.
-pub fn text_width_snapped(font: Font, size: f32, text: &str) -> f32 {
-    match font {
-        Font::Face(id) if size.is_finite() && size > 0.0 => embed::width_px_snapped(id, text, size.min(10_000.0) * 96.0 / 72.0) * 72.0 / 96.0,
-        _ => text_width(font, size, text),
-    }
 }
 
 /// Unicode → WinAnsiEncoding (CP1252) byte; unmappable characters become `?`.
@@ -322,8 +266,6 @@ pub struct Page {
     height: f32,
     content: String,
     fonts: [bool; 12],
-    /// Embedded faces drawn on this page: face id → glyph id → the character it was drawn for.
-    faces: BTreeMap<u16, BTreeMap<u16, char>>,
     images: Vec<ImageData>,
     depth: u32,
 }
@@ -517,33 +459,11 @@ impl Page {
         if text.is_empty() || !extent(size) || !finite(&[x, y]) {
             return;
         }
-        let (sn, cs) = if angle.is_finite() { angle.sin_cos() } else { (0.0, 1.0) };
-        if let Font::Face(id) = font {
-            // One `Tf`/`Tj` pair per run of characters set in the same face (fallback splits runs).
-            let runs = embed::runs(id, text);
-            if runs.is_empty() {
-                return;
-            }
-            let size = n(size.min(10_000.0));
-            let mut s = format!("BT
-{}
-{} {} {} {} {} {} Tm
-", rgb_op(color, false), n(cs), n(-sn), n(sn), n(cs), n(x), n(self.y(y)));
-            for (face, glyphs) in &runs {
-                let used = self.faces.entry(*face).or_default();
-                for (g, c) in glyphs {
-                    used.entry(*g).or_insert(*c);
-                }
-                let _ = writeln!(s, "/E{face} {size} Tf {} Tj", embed::glyph_string(glyphs));
-            }
-            s.push_str("ET");
-            self.op(&s);
-            return;
-        }
         let fi = font.index();
         if let Some(f) = self.fonts.get_mut(fi) {
             *f = true;
         }
+        let (sn, cs) = if angle.is_finite() { angle.sin_cos() } else { (0.0, 1.0) };
         // Clockwise in y-down = counter-clockwise negated in PDF's y-up space.
         let s = format!(
             "BT\n{}\n/F{} {} Tf\n{} {} {} {} {} {} Tm\n{} Tj\nET",
@@ -663,7 +583,7 @@ impl PdfDoc {
     pub fn add_page(&mut self, width_pt: f32, height_pt: f32) -> &mut Page {
         let width = if width_pt.is_finite() { width_pt.clamp(3.0, 14_400.0) } else { 612.0 };
         let height = if height_pt.is_finite() { height_pt.clamp(3.0, 14_400.0) } else { 792.0 };
-        self.pages.push(Page { width, height, content: String::new(), fonts: [false; 12], faces: BTreeMap::new(), images: Vec::new(), depth: 0 });
+        self.pages.push(Page { width, height, content: String::new(), fonts: [false; 12], images: Vec::new(), depth: 0 });
         let i = self.pages.len() - 1;
         &mut self.pages[i]
     }
@@ -700,15 +620,6 @@ impl PdfDoc {
         let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
         let mut kids = Vec::new();
         let mut font_dict = String::new();
-        let mut faces_used: BTreeMap<u16, BTreeMap<u16, char>> = BTreeMap::new();
-        for p in &self.pages {
-            for (id, glyphs) in &p.faces {
-                let slot = faces_used.entry(*id).or_default();
-                for (g, c) in glyphs {
-                    slot.entry(*g).or_insert(*c);
-                }
-            }
-        }
         for (i, id) in font_ids.iter().enumerate() {
             if *id != 0 {
                 let _ = write!(font_dict, "/F{} {} 0 R ", i + 1, id);
@@ -717,7 +628,6 @@ impl PdfDoc {
                 objects.push((*id, format!("<< /Type /Font /Subtype /Type1 /BaseFont /{name}{enc} >>").into_bytes()));
             }
         }
-        font_dict.push_str(&embed::write_objects(&faces_used, &mut next, &mut objects));
         for page in &mut self.pages {
             while page.depth > 0 {
                 page.restore();

@@ -13,7 +13,6 @@ mod passthrough_tests;
 mod pivot_tests;
 mod richdata_tests;
 mod roundtrip;
-mod shared_formulas;
 mod sheet_names;
 mod smooth_roundtrip;
 mod trendline_roundtrip;

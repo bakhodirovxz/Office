@@ -1,5 +1,5 @@
 use super::*;
-use crate::adjust::{Axis, Edit, adjust, is_shifted_copy, rename_sheet, shift_relative, shift_stays_on_sheet, shifted};
+use crate::adjust::{Axis, Edit, adjust, rename_sheet, shift_relative};
 
 fn rt(src: &str) -> String {
     print(&parse(src).unwrap_or_else(|e| panic!("{src}: {e}")))
@@ -154,66 +154,6 @@ fn copy_shift() {
     assert_eq!(print(&shift_relative(e, -1, 0)), "#REF!");
     let e = parse("SUM(A:A)").unwrap();
     assert_eq!(print(&shift_relative(e, 5, 1)), "SUM(B:B)");
-}
-
-/// Formulas covering every node and reference kind, for the shifted-copy checks.
-const SHIFT_CASES: &[&str] = &[
-    "A1+$A1+A$1+$A$1+SUM(B2:C3)",
-    "IF(C2>500,C2*D2,0)",
-    "VLOOKUP(F2,Lookup!$A$2:$B$21,2,FALSE)",
-    "SUM(A:A)+SUM($B:C)+SUM(3:$4)+SUM('My Sheet'!A1:B2)+SUM(Sheet1:Sheet3!C5)",
-    "{1,2;3,4}+-A1%+@B2:B4+A1#+SUM(A1.:.B9)",
-    "LET(x,A1,LAMBDA(y,y*x+B$2)(C3))",
-    "Table1[@Col]+Name1+\"text\"&TRUE&#N/A",
-    "SUM((A1:B2 B1:C3),(D4,E5))",
-    "1+1+1+1+1+A1+1+1",
-];
-
-#[test]
-fn shifted_matches_shift_relative() {
-    for src in SHIFT_CASES {
-        let e = parse(src).unwrap_or_else(|err| panic!("{src}: {err}"));
-        for (dr, dc) in [(0, 0), (1, 0), (0, 1), (5, 3), (-1, 0), (0, -1), (1_048_575, 0), (0, 16_383), (-3, -3)] {
-            let plain = shift_relative(e.clone(), dr, dc);
-            assert_eq!(shifted(&e, dr, dc), plain, "{src} by ({dr},{dc})");
-            assert!(is_shifted_copy(&e, dr, dc, &plain), "{src} by ({dr},{dc}) is a shifted copy");
-            assert_eq!(shift_stays_on_sheet(&e, dr, dc), !print(&plain).contains("#REF!") || src.contains("#REF!"), "{src} by ({dr},{dc})");
-        }
-    }
-}
-
-#[test]
-fn shifted_copies_are_r1c1_equal() {
-    use gridcraft_core::CellRef;
-    // Same R1C1 text at the two cells <=> shifted copy, for formulas that stay on the sheet.
-    let cells = [(1, 6), (2, 6), (4799, 6), (1, 7), (10, 2)];
-    for a in SHIFT_CASES {
-        for b in SHIFT_CASES {
-            let (ea, eb) = (parse(a).unwrap(), parse(b).unwrap());
-            for &(ra, ca) in &cells {
-                for &(rb, cb) in &cells {
-                    let (dr, dc) = (rb as i64 - ra as i64, cb as i64 - ca as i64);
-                    let moved = shift_relative(ea.clone(), dr, dc);
-                    let same_r1c1 = print_r1c1(&ea, CellRef::new(ra, ca)) == print_r1c1(&moved, CellRef::new(rb, cb));
-                    assert!(same_r1c1 || !shift_stays_on_sheet(&ea, dr, dc));
-                    let other_at_b = shift_relative(eb.clone(), dr, dc);
-                    assert_eq!(is_shifted_copy(&ea, dr, dc, &other_at_b), a == b, "{a} vs {b}");
-                }
-            }
-        }
-    }
-    // Not a copy: one reference differs, an anchor differs, a function differs.
-    let base = parse("IF(C2>500,C2*D2,0)").unwrap();
-    assert!(is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D5,0)").unwrap()));
-    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D6,0)").unwrap()));
-    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*$D5,0)").unwrap()));
-    assert!(!is_shifted_copy(&base, 3, 0, &parse("IFS(C5>500,C5*D5,0)").unwrap()));
-    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>501,C5*D5,0)").unwrap()));
-    assert!(!is_shifted_copy(&base, 3, 0, &parse("IF(C5>500,C5*D5)").unwrap()));
-    // Off the sheet: the copy reads `#REF!`.
-    let up = parse("A1+1").unwrap();
-    assert!(is_shifted_copy(&up, -1, 0, &parse("#REF!+1").unwrap()));
-    assert!(!is_shifted_copy(&up, -1, 0, &parse("A1+1").unwrap()));
 }
 
 #[test]
@@ -425,4 +365,39 @@ fn prints_long_flat_chain_without_deep_recursion() {
     let (text, r1c1) = handle.join().expect("printer must not overflow the stack");
     assert_eq!(text, vec!["1"; 20001].join("+"));
     assert_eq!(r1c1, text);
+}
+
+#[test]
+fn hostile_formulas_are_errors_not_stack_overflows() {
+    // A small stack: parsing must fail cleanly instead of building trees deeper than the nesting
+    // limit, which dropping, printing and evaluating walk recursively.
+    let handle = std::thread::Builder::new()
+        .stack_size(512 * 1024)
+        .spawn(|| {
+            let percents = format!("1{}", "%".repeat(1_000));
+            let invokes = format!("LAMBDA(x,x)(1){}", "(1)".repeat(1_000));
+            let long_chain = format!("1{}", "+1".repeat(100_000));
+            let huge_percents = format!("1{}", "%".repeat(1_000_000));
+            (parse(&percents).is_err(), parse(&invokes).is_err(), parse(&long_chain).is_err(), parse(&huge_percents).is_err())
+        })
+        .expect("spawn");
+    assert_eq!(handle.join().expect("parsing must not overflow the stack"), (true, true, true, true));
+    // Within the limits these still parse.
+    assert!(parse(&format!("1{}", "%".repeat(100))).is_ok());
+    assert!(parse("LAMBDA(x,x)(1)(2)").is_ok());
+}
+
+#[test]
+fn formulas_longer_than_excel_allows_are_refused() {
+    let at_limit = format!("1{}", "+1".repeat((crate::MAX_FORMULA_LEN - 1) / 2));
+    assert_eq!(at_limit.chars().count(), crate::MAX_FORMULA_LEN - 1);
+    assert!(parse(&at_limit).is_ok());
+    assert!(parse(&format!("={at_limit}")).is_ok(), "the leading = does not count");
+    let over = format!("{at_limit}+1");
+    let err = parse(&over).unwrap_err();
+    assert!(err.msg.contains("8192"), "{}", err.msg);
+    // Characters, not bytes: 8,000 two-byte characters in a text literal are within the limit.
+    let text = format!("\"{}\"", "é".repeat(8_000));
+    assert!(text.len() > crate::MAX_FORMULA_LEN);
+    assert!(parse(&text).is_ok());
 }
