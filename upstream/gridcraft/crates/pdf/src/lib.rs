@@ -130,10 +130,18 @@ impl Font {
             Font::Courier | Font::CourierBold | Font::CourierOblique | Font::CourierBoldOblique => Family::Mono,
             Font::Face(_) => return None,
         };
-        let bold = matches!(self, Font::HelveticaBold | Font::HelveticaBoldOblique | Font::TimesBold | Font::TimesBoldItalic | Font::CourierBold | Font::CourierBoldOblique);
+        let bold = matches!(
+            self,
+            Font::HelveticaBold | Font::HelveticaBoldOblique | Font::TimesBold | Font::TimesBoldItalic | Font::CourierBold | Font::CourierBoldOblique
+        );
         let italic = matches!(
             self,
-            Font::HelveticaOblique | Font::HelveticaBoldOblique | Font::TimesItalic | Font::TimesBoldItalic | Font::CourierOblique | Font::CourierBoldOblique
+            Font::HelveticaOblique
+                | Font::HelveticaBoldOblique
+                | Font::TimesItalic
+                | Font::TimesBoldItalic
+                | Font::CourierOblique
+                | Font::CourierBoldOblique
         );
         Some((family, bold, italic))
     }
@@ -525,10 +533,19 @@ impl Page {
                 return;
             }
             let size = n(size.min(10_000.0));
-            let mut s = format!("BT
+            let mut s = format!(
+                "BT
 {}
 {} {} {} {} {} {} Tm
-", rgb_op(color, false), n(cs), n(-sn), n(sn), n(cs), n(x), n(self.y(y)));
+",
+                rgb_op(color, false),
+                n(cs),
+                n(-sn),
+                n(sn),
+                n(cs),
+                n(x),
+                n(self.y(y))
+            );
             for (face, glyphs) in &runs {
                 let used = self.faces.entry(*face).or_default();
                 for (g, c) in glyphs {

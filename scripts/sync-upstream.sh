@@ -11,7 +11,9 @@
 #               edit, `git add`, and the script runs `git am --continue` itself and records the minutes.
 #   --survey    dry-run only: do not stop at the first conflict; commit the conflict markers and carry on, so the
 #               report lists every conflicting patch with file:line. Patches after the first conflict may cascade.
-#   --fmt       after the rebase, rustfmt the .rs files of every patch (rebase --exec, amend); reformatted patches are listed.
+#   --fmt       regenerate the trailing `NNNN-<repo>-rustfmt.patch`: after the rebase, `rustfmt --edition <ed>` over the .rs
+#               files the queue touches, committed as ONE last patch (mechanical formatting, regenerate on every sync).
+#               That patch is never rebased: a queue that already has one regenerates it even without --fmt.
 #   --to <sha>  new BASE (only with one repo). Default: the newest tag newer than BASE, else origin/HEAD.
 #   --gates     quick = verify-queue + gen-check + lockdiff + deny + cargo check per domain (native + wasm);
 #               full  = quick + release desktop and web builds in scratch (+ nextest when ci/nextest.toml exists).
@@ -33,7 +35,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) MODE=dry;; --apply) MODE=apply;; --resolve) RESOLVE=1;; --survey) SURVEY=1;; --fmt) FMT=1;;
     --resolver) RESOLVER="$2"; shift;; --to) TO="$2"; shift;; --gates) GATES="$2"; shift;;
-    -h|--help) sed -n 2,22p "$0"; exit 0;;
+    -h|--help) sed -n 2,24p "$0"; exit 0;;
     all) REPOS="$ALL";; -*) echo "unknown option $1" >&2; exit 2;;
     *) REPOS="$REPOS $1";;
   esac; shift
@@ -130,7 +132,8 @@ rm_worktree() { git -C "$1" worktree remove --force "$2" >/dev/null 2>&1; rm -rf
 for r in $REPOS; do
   C="$UPSTREAM_CACHE/$r"; o=${OLD[$r]}; n=${NEW[$r]}; n7=${n:0:7}
   WN="$SYNC/wt-$r-$n7"; WO="$SYNC/wt-$r-old${o:0:7}"; rm_worktree "$C" "$WN"; rm_worktree "$C" "$WO"
-  patches=$(ls "$MAIN"/patches/$r/[0-9][0-9][0-9][0-9]-*.patch 2>/dev/null); np=$(echo "$patches" | grep -c .)
+  patches=$(ls "$MAIN"/patches/$r/[0-9][0-9][0-9][0-9]-*.patch 2>/dev/null | grep -v -- '-rustfmt[.]patch$'); np=$(echo "$patches" | grep -c .)
+  oldfmt=$(ls "$MAIN"/patches/$r/[0-9][0-9][0-9][0-9]-*-rustfmt.patch 2>/dev/null | head -1)   # the trailing fmt patch is regenerated, never rebased
   [ -n "$patches" ] || np=0
   REPO_NP[$r]=$np; UNRES[$r]=0
   git -C "$C" worktree add -q --detach "$WN" "$n" || { say "FATAL: worktree for $r failed"; exit 2; }
@@ -180,24 +183,45 @@ for r in $REPOS; do
     /^ *[0-9]+: +[0-9a-f]+ [=!<>] +[0-9-]+: / { n=$1; sub(":","",n); cur=n+0; cnt[cur]=0; next }
     cur && /^    [+-]/ { s=substr($0,6); if (s !~ /^(@@|index |diff --git|--- |\+\+\+ |new file|deleted file|Metadata)/) cnt[cur]++ }
     END { for (k in cnt) print k "\t" cnt[k] }' | sort -n > "$WORK/$r.interdiff"
-  # keep every patch rustfmt-clean (CI lint): rebase --exec rustfmt on the files each patch touches
-  if [ $FMT = 1 ] && [ "${UNRES[$r]}" -eq 0 ]; then
+  # keep the queue rustfmt-clean (CI lint) with ONE trailing patch: rustfmt on every .rs file the queue touches.
+  # rustfmt output depends on the new upstream context, so the patch is regenerated on every sync, never rebased.
+  fmtname=""; fmtdone=0
+  if { [ $FMT = 1 ] || [ -n "$oldfmt" ]; } && [ "${UNRES[$r]}" -eq 0 ]; then
     ed=$(awk -F'"' '/^edition *=/{print $2; exit}' "$WN/Cargo.toml"); ed=${ed:-2021}
-    before=$(git -C "$WN" rev-parse HEAD)
-    # rustfmt formats whole files, so a reformat in patch k can conflict with a later patch touching the same file.
-    # If that happens, abort and keep the full, unformatted queue: never export a partial queue.
-    if ! git -C "$WN" rebase -q -x "f=\$(git diff-tree --no-commit-id --name-only -r HEAD | grep '[.]rs\$'); [ -z \"\$f\" ] || { rustfmt --edition $ed \$f && git commit -q -a --amend --no-edit; }" "$n" >"$WORK/$r.fmt.log" 2>&1; then
-      git -C "$WN" rebase --abort >/dev/null 2>&1
-      git -C "$WN" reset -q --hard "$before"
-      say "WARN: fmt pass failed for $r (see $WORK/$r.fmt.log); rebase aborted, queue kept unformatted at ${before:0:7}"
+    fmtname=$(basename "${oldfmt:-}"); [ -n "$oldfmt" ] || fmtname=$(printf '%04d-%s-rustfmt.patch' $(( 10#$(ls "$MAIN"/patches/$r/[0-9][0-9][0-9][0-9]-*.patch 2>/dev/null | xargs -r -n1 basename | tail -1 | cut -c1-4 | grep . || echo 0) + 1 )) "$r")
+    qfiles=$(git -C "$WN" diff --name-only "$n..HEAD" | grep '[.]rs$' | while read -r f; do [ -f "$WN/$f" ] && echo "$f"; done)
+    if [ -n "$qfiles" ] && ( cd "$WN" && rustfmt --edition $ed $qfiles ) >"$WORK/$r.fmt.log" 2>&1; then
+      if ! git -C "$WN" diff --quiet; then
+        git -C "$WN" commit -q -a -F - <<EOM
+$r: rustfmt the files the patch queue touches (mechanical formatting, regenerate on every sync)
+
+rustfmt --edition $ed over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
+EOM
+        fmtdone=1
+      fi
+    else
+      say "WARN: rustfmt failed for $r (see $WORK/$r.fmt.log); queue kept unformatted"
     fi
-    git -C "$WN" range-diff --no-color "$n..$before" "$n..HEAD" 2>/dev/null | awk '/^ *[0-9]+: +[0-9a-f]+ [=!<>] +[0-9-]+: /{ if ($3=="!") printf "%s ", $1 }' | sed 's/:/ /g' > "$WORK/$r.fmtpatches"
-    say "- $r: rustfmt (edition $ed) changed patches: $(cat "$WORK/$r.fmtpatches" 2>/dev/null | tr -s ' ' | sed 's/ *$//;s/^$/none/')"
+    say "- $r: rustfmt (edition $ed) trailing patch ${fmtname}: $([ $fmtdone = 1 ] && echo "regenerated, $(git -C "$WN" show --stat --format= HEAD | tail -1 | sed 's/^ *//')" || echo "not needed, files are already clean${oldfmt:+ (the old patch is dropped: remove its REGISTER row)}")"
   fi
   # regenerate the queue
   rm -rf "$WORK/$r.patches"; mkdir -p "$WORK/$r.patches"
   nh=$(git -C "$WN" rev-parse HEAD)
   git -C "$WN" format-patch -q --zero-commit --binary --no-signature -o "$WORK/$r.patches" "$n..$nh"
+  # keep the registered file names (format-patch numbers from 0001): patch k takes the name of old patch k; the fmt patch keeps its own
+  mapfile -t oldnames < <(echo "$patches" | xargs -r -n1 basename)
+  mapfile -t newfiles < <(ls "$WORK/$r.patches"/[0-9][0-9][0-9][0-9]-*.patch)
+  for ((k=0; k<${#newfiles[@]}; k++)); do
+    if [ $k -lt $np ]; then tgt=${oldnames[$k]}; else tgt=$fmtname; fi
+    [ "$(basename "${newfiles[$k]}")" = "$tgt" ] || mv "${newfiles[$k]}" "$WORK/$r.patches/.tmp-$k"
+  done
+  for ((k=0; k<${#newfiles[@]}; k++)); do
+    [ -e "$WORK/$r.patches/.tmp-$k" ] || continue
+    if [ $k -lt $np ]; then tgt=${oldnames[$k]}; else tgt=$fmtname; fi
+    mv "$WORK/$r.patches/.tmp-$k" "$WORK/$r.patches/$tgt"
+  done
+  [ $fmtdone = 1 ] && echo -e "$fmtname	regenerated	-	0	0.00" >> "$WORK/$r.rows" && REPO_NP[$r]=$((np+1))
   git -C "$WN" branch -f "office/queue-$n7" "$nh" 2>/dev/null || git -C "$C" branch -f "office/queue-$n7" "$nh"
   echo "$nh" > "$WORK/$r.newq"
   say ""; say "**$r**: \`${o:0:7}\` -> \`$n7\`, ${NCOMMITS[$r]} upstream commits, cache branch \`office/queue-$n7\`, total ${REPO_SECS[$r]} s"
@@ -271,6 +295,18 @@ else
   out=$(scripts/verify-queue.sh $READY 2>&1); rc=$?
   gate verify-queue $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tr '\n' ';')"
   out=$(cargo xt register check 2>&1); rc=$?; gate register $([ $rc = 0 ] && echo PASS || echo FAIL) "$out"
+  # i18n gate: the canonical catalogs (i18n/*.tsv) must be current with the upstream catalogs just imported. A dry run fails
+  # when an upstream catalog changed (keys added, removed, English or ru changed); --apply merges (cargo xt i18n extract keeps
+  # every uz/ru value and status; a changed English is carried as draft:carried, never reviewed) and then re-checks.
+  out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged=""
+  if [ $rc != 0 ] && [ "$MODE" = apply ]; then
+    say "- i18n catalogs are stale: merging with \`cargo xt i18n extract\`:"; say '```'; say "$(echo "$out" | grep -v '^run ')"; say '```'
+    if cargo xt i18n extract >"$WORK/i18n-extract.log" 2>&1; then out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged="merged by --apply, "; fi
+  fi
+  gate i18n-stale $([ $rc = 0 ] && echo PASS || echo FAIL) "${merged}$(echo "$out" | head -1)"
+  [ $rc = 0 ] || { say '```'; say "$out"; say '```'; say "  (a dry run does not merge: \`scripts/sync-upstream.sh --apply\` runs the merge, or run \`cargo xt i18n extract\` yourself)"; }
+  out=$(cargo xt i18n roundtrip 2>&1); rc=$?; gate i18n-roundtrip $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tail -1)"
+  out=$(cargo xt i18n lint 2>&1); rc=$?; gate i18n-lint $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | head -1)"
   for r in $READY; do d=$(domain_of $r); [ -n "$d" ] || continue
     out=$(cargo xt gen-domain --check $d 2>&1); rc=$?; gate gen-check-$d $([ $rc = 0 ] && echo PASS || echo FAIL) "$out"
     out=$(cargo xt lockdiff domains/$d/Cargo.lock upstream/$r/Cargo.lock 2>&1); rc=$?; gate lockdiff-$d $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tr '\n' ';')"
@@ -295,18 +331,6 @@ else
     echo "$r check_s=$sec" >> "$WORK/gate-secs"
   done
   if [ "$GATES" = full ]; then
-  # i18n gate: the canonical catalogs (i18n/*.tsv) must be current with the upstream catalogs just imported. A dry run fails
-  # when an upstream catalog changed (keys added, removed, English or ru changed); --apply merges (cargo xt i18n extract keeps
-  # every uz/ru value and status; a changed English is carried as draft:carried, never reviewed) and then re-checks.
-  out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged=""
-  if [ $rc != 0 ] && [ "$MODE" = apply ]; then
-    say "- i18n catalogs are stale: merging with \`cargo xt i18n extract\`:"; say '```'; say "$(echo "$out" | grep -v '^run ')"; say '```'
-    if cargo xt i18n extract >"$WORK/i18n-extract.log" 2>&1; then out=$(cargo xt i18n check-stale 2>&1); rc=$?; merged="merged by --apply, "; fi
-  fi
-  gate i18n-stale $([ $rc = 0 ] && echo PASS || echo FAIL) "${merged}$(echo "$out" | head -1)"
-  [ $rc = 0 ] || { say '```'; say "$out"; say '```'; say "  (a dry run does not merge: \`scripts/sync-upstream.sh --apply\` runs the merge, or run \`cargo xt i18n extract\` yourself)"; }
-  out=$(cargo xt i18n roundtrip 2>&1); rc=$?; gate i18n-roundtrip $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tail -1)"
-  out=$(cargo xt i18n lint 2>&1); rc=$?; gate i18n-lint $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | head -1)"
     say "- full gates: release builds, sizes and tests are not automated yet in scratch; run \`scripts/build.sh <d> all --release\` and \`scripts/ci.sh test <app>\` on the applied tree (WP6b not done)."
     GATE[full]=INFRA; GATE_FAIL=1
   fi

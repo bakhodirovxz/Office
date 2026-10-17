@@ -109,7 +109,12 @@ impl Band {
             let cols = self.cols.get(span.clone()).unwrap_or_default();
             let x = span.start + cols.partition_point(|c| *c < c0);
             let y = (span.start + cols.partition_point(|c| *c <= c1)).max(x);
-            self.cols.get(x..y).unwrap_or_default().iter().zip(self.cells.get(x..y).unwrap_or_default()).map(move |(c, cell)| (CellRef::new(row, *c), cell))
+            self.cols
+                .get(x..y)
+                .unwrap_or_default()
+                .iter()
+                .zip(self.cells.get(x..y).unwrap_or_default())
+                .map(move |(c, cell)| (CellRef::new(row, *c), cell))
         })
     }
     fn iter(&self) -> impl Iterator<Item = (CellRef, &Cell)> + '_ {
@@ -332,7 +337,8 @@ impl CellStore {
     /// Takes out every cell of rows `r0..=r1` in columns `c0..=c1`, row-major. Only bands holding
     /// such a cell are touched (copied when shared).
     fn take_block(&mut self, r0: u32, r1: u32, c0: u32, c1: u32) -> Vec<(CellRef, Cell)> {
-        let hit: Vec<u32> = self.bands.range(r0 / BAND..=r1 / BAND).filter(|(_, b)| b.range(r0, r1, c0, c1).next().is_some()).map(|(k, _)| *k).collect();
+        let hit: Vec<u32> =
+            self.bands.range(r0 / BAND..=r1 / BAND).filter(|(_, b)| b.range(r0, r1, c0, c1).next().is_some()).map(|(k, _)| *k).collect();
         let mut out = Vec::new();
         for k in hit {
             let Some(band) = self.bands.get_mut(&k) else { continue };
@@ -394,22 +400,42 @@ impl CellStore {
         // As if every cell of rows `from..` were taken out and each stored again `delta` rows
         // away, in row-major order.
         let moved = self.take_block(from, u32::MAX, 0, u32::MAX);
-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell))).collect());
+        self.put_sorted(
+            moved
+                .into_iter()
+                .filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell)))
+                .collect(),
+        );
     }
     pub fn shift_cols(&mut self, from: u32, delta: i64) {
         let moved = self.take_block(0, u32::MAX, from, u32::MAX);
-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell))).collect());
+        self.put_sorted(
+            moved
+                .into_iter()
+                .filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell)))
+                .collect(),
+        );
     }
     /// Shifts cells within rows `r0..=r1` and columns `>= from` horizontally (Insert/Delete Cells
     /// with shift right/left).
     pub fn shift_cols_in_rows(&mut self, r0: u32, r1: u32, from: u32, delta: i64) {
         let moved = self.take_block(r0, r1, from, gridcraft_core::MAX_COLS - 1);
-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell))).collect());
+        self.put_sorted(
+            moved
+                .into_iter()
+                .filter_map(|(c, cell)| moved_to(c.col, delta, gridcraft_core::MAX_COLS).map(|col| (CellRef::new(c.row, col), cell)))
+                .collect(),
+        );
     }
     /// Shifts cells within columns `c0..=c1` and rows `>= from` vertically.
     pub fn shift_rows_in_cols(&mut self, c0: u32, c1: u32, from: u32, delta: i64) {
         let moved = self.take_block(from, gridcraft_core::MAX_ROWS - 1, c0, c1);
-        self.put_sorted(moved.into_iter().filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell))).collect());
+        self.put_sorted(
+            moved
+                .into_iter()
+                .filter_map(|(c, cell)| moved_to(c.row, delta, gridcraft_core::MAX_ROWS).map(|r| (CellRef::new(r, c.col), cell)))
+                .collect(),
+        );
     }
 }
 
@@ -581,7 +607,11 @@ mod tests {
                     .flat_map(|band| band.rows.iter().flat_map(|(row, cols)| cols.iter().map(move |(col, cell)| (CellRef::new(*row, *col), cell))))
             }
             pub fn row(&self, row: u32, c0: u32, c1: u32) -> impl Iterator<Item = (u32, &Cell)> + '_ {
-                self.bands.get(&(row / BAND)).and_then(|b| b.rows.get(&row)).into_iter().flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
+                self.bands
+                    .get(&(row / BAND))
+                    .and_then(|b| b.rows.get(&row))
+                    .into_iter()
+                    .flat_map(move |cols| cols.range(c0..=c1).map(|(c, cell)| (*c, cell)))
             }
             pub fn used_range(&self) -> Option<RangeRef> {
                 let first_band = self.bands.values().next()?;

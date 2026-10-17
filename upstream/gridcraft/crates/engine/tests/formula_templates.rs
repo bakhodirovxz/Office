@@ -211,10 +211,7 @@ fn inserting_and_deleting_cells() {
 
 #[test]
 fn sorting() {
-    twin(&[
-        ("data.sortDescending", json!({"range": "A2:I31", "column": "C"})),
-        ("data.sortAscending", json!({"range": "A2:I31", "column": "A"})),
-    ]);
+    twin(&[("data.sortDescending", json!({"range": "A2:I31", "column": "C"})), ("data.sortAscending", json!({"range": "A2:I31", "column": "A"}))]);
 }
 
 #[test]

@@ -120,9 +120,7 @@ fn bundled() -> Option<Font> {
 
 /// The default face (Latin, Greek and Cyrillic), registered once.
 fn default_face() -> Option<Font> {
-    with_state(|s| {
-        *s.default.get_or_insert_with(bundled)
-    })
+    with_state(|s| *s.default.get_or_insert_with(bundled))
 }
 
 /// Name aliases: a workbook font that is not installed is looked up under metric-compatible
@@ -256,7 +254,8 @@ fn installed_face(s: &mut State, family: &str, style: Style) -> Option<Font> {
     let (path, index) = {
         let faces = s.catalog.get_or_insert_with(scan).get(family)?;
         let pick = |want: Style| faces.iter().find(|f| f.style == Some(want));
-        let chosen = pick(style).or_else(|| pick(Style { bold: false, italic: style.italic })).or_else(|| pick(Style { bold: false, italic: false }))?;
+        let chosen =
+            pick(style).or_else(|| pick(Style { bold: false, italic: style.italic })).or_else(|| pick(Style { bold: false, italic: false }))?;
         (chosen.path.clone(), chosen.index)
     };
     let data = std::fs::read(path).ok()?;
