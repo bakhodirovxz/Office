@@ -98,3 +98,40 @@ fn slide_fonts_cover_okina() {
         assert!(deckcraft_fonts::FontDb::global().fallback_for(c, 0).is_some(), "no face for {c:?}");
     }
 }
+
+#[test]
+fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+    use crate::i18n::{Lang, from_pref, has, normalize_pref, tr};
+    if cfg!(office_uz) {
+        let code = |tag: &str| Lang::from_tag(tag).map(Lang::code);
+        assert_eq!(code("uz-Latn-UZ"), Some("uz-latn"));
+        assert_eq!(code("uz-Cyrl-UZ"), Some("uz-cyrl"));
+        assert_eq!((code("uz"), code("uz-UZ"), code("uz_UZ.UTF-8")), (Some("uz-latn"), Some("uz-latn"), Some("uz-latn")));
+        assert_eq!(code("uz_UZ@cyrillic"), Some("uz-cyrl"));
+        assert_eq!(normalize_pref("uz"), Some("uz-latn"));
+        let (latn, cyrl) = (from_pref("uz-latn"), from_pref("uz-cyrl"));
+        assert!(latn.name().starts_with("O\u{2bb}zbekcha") && cyrl.name().starts_with("Ўзбекча"));
+        assert!(has(latn, "Slide Show") && has(cyrl, "Slide Show"));
+        assert_ne!(tr(latn, "Slide Show"), "Slide Show");
+        assert_eq!(tr(latn, "A string no catalog has"), "A string no catalog has");
+    } else {
+        assert!(Lang::from_tag("uz-Latn-UZ").is_none());
+        assert_eq!(from_pref("uz-latn"), Lang::EN);
+    }
+    assert_eq!(from_pref("auto"), Lang::EN);
+}
+
+#[test]
+fn the_language_command_sets_and_rejects() {
+    let mut app = crate::SlideApp::new(deckcraft_engine::Session::with_new(), Default::default());
+    assert_eq!(app.ui.language, "auto");
+    assert!(app.run("app.language.set", serde_json::json!({"language": "klingon"})).is_err());
+    assert!(app.run("app.language.set", serde_json::json!({})).is_err());
+    assert_eq!(app.ui.language, "auto", "a refused value keeps the setting");
+    app.run("app.language.set", serde_json::json!({"language": "en"})).expect("en");
+    assert_eq!(app.ui.language, "en");
+    let restored: crate::UiState = serde_json::from_str(&serde_json::to_string(&app.ui).expect("ser")).expect("de");
+    assert_eq!(restored.language, "en");
+    let old: crate::UiState = serde_json::from_str("{\"tab\":\"View\"}").expect("an old ui.json without `language`");
+    assert_eq!(old.language, "auto");
+}
