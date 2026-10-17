@@ -13,6 +13,7 @@ const DOC_EXTS: &[&str] = &["docx", "docm", "dotx", "dotm", "doc", "dot", "odt",
 const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "wmf", "emf"];
 const RECIPIENT_EXTS: &[&str] = wordcraft_engine::cmd::mailings::RECIPIENT_EXTENSIONS;
 mod font_store;
+mod host;
 const CANVAS_ID: &str = "wordcraft_canvas";
 const LOADING_ID: &str = "wordcraft_loading";
 
@@ -29,15 +30,32 @@ pub fn start() {
         };
         let dirty = Rc::new(Cell::new(false));
         let saves = AsyncSaves::default();
-        if let Err(e) = guard_unload(dirty.clone(), saves.clone()) {
+        let mut options = eframe::WebOptions::default();
+        if let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
+            if query().contains("webgl") {
+                create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
+            }
+            // egui-wgpu requires 8192 texels per side, which WebGL2 contexts that report 4096
+            // (Android emulators, some phones) refuse: ask for what the adapter offers, up to that.
+            let egui_descriptor = create.device_descriptor.clone();
+            create.device_descriptor = std::sync::Arc::new(move |adapter| {
+                let mut descriptor = egui_descriptor(adapter);
+                let offered = adapter.limits().max_texture_dimension_2d;
+                descriptor.required_limits.max_texture_dimension_2d = descriptor.required_limits.max_texture_dimension_2d.min(offered);
+                descriptor
+            });
+        }
+        // `?host=parent`: a page framing WordCraft (a document server, say) opens documents in it
+        // and stores what it saves (`host`).
+        let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
+        // A framing page guards leaving itself (and reloads this frame to recover, which a guard here
+        // would turn into a prompt).
+        if bridge.is_none()
+            && let Err(e) = guard_unload(dirty.clone(), saves.clone())
+        {
             log::error!("no unsaved-changes guard: {e}");
         }
-        let mut options = eframe::WebOptions::default();
-        if query().contains("webgl")
-            && let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup
-        {
-            create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
-        }
+        let app_bridge = bridge.clone();
         let result = eframe::WebRunner::new()
             .start(
                 canvas,
@@ -56,23 +74,34 @@ pub fn start() {
                     // The browser's locale picks the new document's paper, the units and the
                     // decimal separator (#838).
                     let region = wordcraft_ui_egui::i18n::system_region();
-                    let sample = query().contains("sample");
+                    let sample = app_bridge.is_none() && query().contains("sample");
                     let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
                     let mut session = Session::new(doc);
                     session.system_region = region;
                     let messages = Rc::new(RefCell::new(Vec::new()));
-                    let mut app = WordApp::new(session, services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone()));
+                    let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
+                    if let Some(bridge) = &app_bridge {
+                        bridge.connect(&mut services, inbox.clone(), cc.egui_ctx.clone());
+                    }
+                    let mut app = WordApp::new(session, services);
                     // Pasted pictures wait apart from dropped files: the app inserts one only when the page is the edit target (#1349).
                     app.services.pasted = Some(pasted);
                     app.autosave = false;
                     // No document to show: start on File › Home, as the desktop app does (#766).
-                    if !sample {
+                    // In host mode the parent sends the document to edit.
+                    if !sample && app_bridge.is_none() {
                         app.start_screen();
                     }
-                    Ok(Box::new(WebShell { app, inbox, messages }))
+                    if let Some(bridge) = &app_bridge {
+                        bridge.post_ready();
+                    }
+                    Ok(Box::new(WebShell { app, inbox, messages, bridge: app_bridge }))
                 }),
             )
             .await;
+        if let (Err(e), Some(bridge)) = (&result, &bridge) {
+            bridge.post_failed(&format!("{e:?}"));
+        }
         if let Some(el) = document.get_element_by_id(LOADING_ID) {
             match result {
                 Ok(()) => el.remove(),
@@ -86,12 +115,18 @@ fn query() -> String {
     web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
 }
 
+/// The value of the URL's `?key=` parameter.
+fn query_param(key: &str) -> Option<String> {
+    web_sys::UrlSearchParams::new_with_str(&query()).ok()?.get(key)
+}
+
 /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
 /// and feed them through the inbox.
 struct WebShell {
     app: WordApp,
     inbox: Inbox,
     messages: Rc<RefCell<Vec<String>>>,
+    bridge: Option<host::Bridge>,
 }
 
 impl eframe::App for WebShell {
@@ -116,6 +151,9 @@ impl eframe::App for WebShell {
             self.app.status(msg);
         }
         self.app.logic(ctx);
+        if let Some(bridge) = &self.bridge {
+            bridge.sync(ctx, &mut self.app);
+        }
     }
 
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
