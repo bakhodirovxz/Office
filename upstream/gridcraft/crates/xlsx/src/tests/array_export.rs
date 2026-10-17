@@ -89,8 +89,8 @@ fn nonspilling_formulas_preserve_array_evaluation_and_metadata() {
     for (address, text, value) in cases {
         let c = results.cell(at(address)).unwrap();
         let f = c.formula.as_ref().unwrap();
-        assert_eq!(f.text, text);
-        assert_eq!(f.array, None, "dynamic formula must not become legacy CSE");
+        assert_eq!(f.text(), text);
+        assert_eq!(f.array(), None, "dynamic formula must not become legacy CSE");
         assert_eq!(c.value, Value::Number(value));
     }
     assert_eq!(results.value(at("C107")), Value::text("neighbor"));
@@ -101,7 +101,7 @@ fn dynamic_spills_and_legacy_cse_keep_distinct_ranges() {
     let mut wb = Workbook::new();
     let sh = wb.sheet_mut(0).unwrap();
     let mut legacy = Formula::new("ROW(A1:A2)");
-    legacy.array = Some(range("A1:A2"));
+    legacy.set_array(Some(range("A1:A2")));
     sh.cells.set(at("A1"), Cell::formula(legacy));
     sh.cells.set(at("A2"), Cell::value(Value::Number(2.0)));
     sh.cells.set(at("B1"), formula("SEQUENCE(3)", 1.0));
@@ -123,10 +123,10 @@ fn dynamic_spills_and_legacy_cse_keep_distinct_ranges() {
 
     let (back, _) = read_xlsx(&bytes).unwrap();
     let sh = back.sheet(0).unwrap();
-    assert_eq!(sh.cell(at("A1")).unwrap().formula.as_ref().unwrap().array, Some(range("A1:A2")));
+    assert_eq!(sh.cell(at("A1")).unwrap().formula.as_ref().unwrap().array(), Some(range("A1:A2")));
     // A legacy array's cached values are dropped on read: the formula fills its range on recalc (#156).
     assert!(sh.cell(at("A2")).is_none());
-    assert_eq!(sh.cell(at("B1")).unwrap().formula.as_ref().unwrap().array, None);
+    assert_eq!(sh.cell(at("B1")).unwrap().formula.as_ref().unwrap().array(), None);
     assert!(sh.cell(at("B2")).is_none());
     assert!(sh.cell(at("B3")).is_none());
     assert_eq!(sh.value(at("C1")), Value::Number(6.0));
@@ -144,7 +144,7 @@ fn scalar_formulas_constants_and_legacy_cse_do_not_require_dynamic_metadata() {
     for legacy in [false, true] {
         if legacy {
             let mut f = Formula::new("SUM(A1:A2)");
-            f.array = Some(range("B1"));
+            f.set_array(Some(range("B1")));
             wb.sheet_mut(0).unwrap().cells.set(at("B1"), Cell::formula(f));
         }
         let bytes = write_xlsx(&wb).unwrap();
@@ -205,7 +205,7 @@ fn calculated_table_column_keeps_formula_and_cell_value() {
     let (back, _) = read_xlsx(&bytes).unwrap();
     let sh = back.sheet(0).unwrap();
     assert_eq!(sh.tables[0].columns[1].formula.as_deref(), Some("A2*2"));
-    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().array, None);
+    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().array(), None);
     assert_eq!(sh.value(at("B2")), Value::Number(6.0));
 }
 
@@ -252,7 +252,7 @@ fn this_row_references_are_written_in_long_form() {
     let (back, _) = read_xlsx(&bytes).unwrap();
     let sh = back.sheet(0).unwrap();
     assert_eq!(sh.tables[0].columns[1].formula.as_deref(), Some("[@Input]*2"));
-    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().text, "Data[@Input]*2");
+    assert_eq!(sh.cell(at("B2")).unwrap().formula.as_ref().unwrap().text(), "Data[@Input]*2");
 }
 
 /// Compare both cell and formula metadata, collecting all boundaries in the group on failure.

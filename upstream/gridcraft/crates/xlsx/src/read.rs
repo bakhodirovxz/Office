@@ -66,8 +66,7 @@ pub fn find_rel<'r>(rels: &'r [Rel], kind: &str) -> Option<&'r Rel> {
     rels.iter().find(|r| r.kind == kind)
 }
 
-pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
-    let pkg = Package::open(bytes)?;
+pub fn read_xlsx(pkg: Package<'_>) -> Result<(Workbook, ReadReport), IoError> {
     let mut cx = Ctx {
         pkg,
         report: ReadReport::default(),
@@ -176,6 +175,7 @@ pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
     }
     wb.date_system = cx.date_system;
     if let Some(c) = wb_xml.child("calcPr") {
+        cx.report.calculated = !c.flag("fullCalcOnLoad", false);
         wb.calc.mode = match c.attr("calcMode") {
             Some("manual") => CalcMode::Manual,
             Some("autoNoTable") => CalcMode::AutomaticExceptTables,

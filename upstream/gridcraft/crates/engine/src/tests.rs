@@ -93,7 +93,7 @@ fn editing_a_name_renames_it_in_formulas() {
     let names: Vec<&str> = d.wb.names.iter().map(|n| n.name.as_str()).collect();
     assert_eq!(names, ["Other", "Cost"]);
     let b1 = d.wb.active().unwrap().cell(CellRef::parse("B1").unwrap()).and_then(|c| c.formula.clone()).unwrap();
-    assert_eq!(b1.text, "Cost*2");
+    assert_eq!(b1.text(), "Cost*2");
     assert_eq!(v(&s, "B1"), Value::number(42.0));
     assert!(s.execute("formulas.defineName", json!({"name": "X", "oldName": "Missing"})).is_err());
 }
@@ -1450,7 +1450,7 @@ fn row_and_column_inserts_move_legacy_array_ranges() {
     s.execute("home.insertRows", json!({"rows": "1:1"})).unwrap();
     let d = s.doc().unwrap();
     let f = d.wb.sheet(0).unwrap().cell(CellRef::new(3, 3)).and_then(|x| x.formula.clone()).unwrap();
-    assert_eq!(f.array, Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
+    assert_eq!(f.array(), Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
     assert_eq!(v(&s, "E4"), Value::Number(14.0));
     reopen(&mut s);
     assert_eq!(v(&s, "E4"), Value::Number(14.0));

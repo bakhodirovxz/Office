@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: bakhodirovxz <bohodirovasadbek1@gmail.com>
+Date: Fri, 16 Oct 2026 11:30:23 +0500
+Subject: [PATCH 22/22] docs: PDF export embeds TrueType subsets (gap 5)
+
+---
+ docs/file-format-parity.md  | 2 +-
+ docs/gaps.md                | 4 ++--
+ docs/localization-parity.md | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/docs/file-format-parity.md b/docs/file-format-parity.md
+index 9884724..ee81543 100644
+--- a/docs/file-format-parity.md
++++ b/docs/file-format-parity.md
+@@ -56,7 +56,7 @@ and repair-free opening remain unverified.
+ 
+ | Format | Excel | GridCraft | Notes |
+ |---|---|---|---|
+-| PDF | Save As / Export | yes (own PDF 1.7 writer) | Only the 14 standard PDF fonts, no embedding: **non-Latin text (CJK, Arabic, Devanagari, Thai) does not export**; web build exports without a file prompt (#141) |
++| PDF | Save As / Export | yes (own PDF 1.7 writer) | Installed `glyf` TrueType faces are embedded as subsets with a ToUnicode map (Latin, Greek, Cyrillic, Uzbek export); **CJK/CFF fonts, Arabic, Devanagari and Thai do not**; web build exports without a file prompt (#141) |
+ | XPS | Windows | no | Low priority |
+ | Print | yes | yes (via PDF, system dialog on desktop; PR #143 for web) | |
+ | Images of ranges/charts (Copy as Picture) | yes | chart raster in `crates/chart` | No range-to-image command |
+diff --git a/docs/gaps.md b/docs/gaps.md
+index 03e8672..f3d1282 100644
+--- a/docs/gaps.md
++++ b/docs/gaps.md
+@@ -51,10 +51,10 @@ No alpha blockers: every core workflow passes the [alpha gate](roadmap.md#alpha-
+ - **Estimate:** 25–35 h for beta (40–60 h full). [chart-parity.md](chart-parity.md)
+ 
+ ### 5. Text in non-Latin scripts doesn't render or export (L)
+-- **Missing:** CJK font fallback, complex shaping (Arabic, Devanagari, Thai), bidi, non-Latin PDF.
++- **Missing:** CJK font fallback, complex shaping (Arabic, Devanagari, Thai), bidi. PDF export now embeds TrueType subsets (Latin, Greek, Cyrillic and Uzbek work; scripts needing shaping or CFF fonts do not).
+ - **Evidence:** system-font fallback for CJK, Thai and Hebrew landed in #38 (closed #32); #142
+   (Chinese text) awaits confirmation; #54 (symbols as boxes on Fedora); no shaping for Arabic or
+-  Devanagari; PDF writer uses 14 standard fonts only.
++  Devanagari; the PDF writer embeds installed `glyf` TrueType faces (`pdf_fonts`) and falls back to the standard 14 fonts for Latin-1 text.
+ - **Impact:** blocks most of the world's users even with an English UI.
+ - **Estimate:** 12–20 h. [localization-parity.md](localization-parity.md)
+ 
+diff --git a/docs/localization-parity.md b/docs/localization-parity.md
+index 09197ff..b557b95 100644
+--- a/docs/localization-parity.md
++++ b/docs/localization-parity.md
+@@ -33,7 +33,7 @@ right-to-left sheets and full complex-script support. Part of
+   arrow keys, editor, popups and floating objects follow; text stays left-to-right inside its box
+   (no bidi), and the sheet tabs, horizontal scrollbar and printing/PDF are not mirrored yet. IME input goes
+   through egui/winit and is unverified for Chinese, Japanese and Korean.
+-- **PDF export** uses only the 14 standard PDF fonts: non-Latin text cannot export.
++- **PDF export** embeds installed TrueType faces as subsets (Cyrillic, Greek, Uzbek export); RTL, shaping and CFF-only fonts (most CJK) still do not.
+ 
+ ## Languages
+ 
