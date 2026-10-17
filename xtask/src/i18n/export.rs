@@ -52,6 +52,15 @@ impl Chains {
     }
 }
 
+/// The picker name of an Uzbek locale in its own script, and the marker for a draft translation (owner-visible, not a catalog row).
+fn picker_name(locale: &str) -> Option<(&'static str, &'static str)> {
+    match locale {
+        "uz-latn" => Some(("O\u{2bb}zbekcha", "qoralama")),
+        "uz-cyrl" => Some(("Ўзбекча", "қоралама")),
+        _ => None,
+    }
+}
+
 /// Number of plural forms a locale's catalog uses (pdfcraft: `plural_one_other` for uz, three for ru).
 pub fn plural_count(locale: &str) -> usize {
     if locale == "ru" { 3 } else { 2 }
@@ -229,6 +238,10 @@ pub fn export_app(cat: &Catalog, app: &str, mode: Mode, chains: &Chains, out_roo
         meta.push(format!("{key}_REVIEWED={}", b.own_reviewed));
         meta.push(format!("{key}_DRAFT={}", b.own_draft));
         meta.push(format!("{key}_FILLED={}", b.entries.len() - b.own_reviewed - b.own_draft));
+        if let Some((name, draft)) = picker_name(loc) {
+            // The language picker shows the name in its own script; a draft marker follows while any row is unreviewed.
+            meta.push(format!("NAME_{key}={name}{}", if b.own_draft > 0 { format!(" ({draft})") } else { String::new() }));
+        }
     }
     if app == "pdfcraft" {
         for loc in EXPORT_LOCALES {

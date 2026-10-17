@@ -1,5 +1,5 @@
 // Playwright evidence for a built web app (WP7/WP8): page title, About dialog, the font test string, console errors.
-//   node scripts/web-brand-evidence.mjs <docs|sheets|slides|pdf> <outdir> [--dist <dir>] [--tag <prefix>]
+//   node scripts/web-brand-evidence.mjs <docs|sheets|slides|pdf> <outdir> [--dist <dir>] [--tag <prefix>] [--locale <tag>]
 // The dist is served from $OFFICE_TARGET/dist/<d>-web (or --dist). Headless Chromium with SwiftShader (as the e2e spikes).
 // Output in <outdir>: <prefix>-<d>-web.png (the page after start), <prefix>-<d>-web-about.png (About dialog) and
 // font-<d>-web.png (the test string typed into the app's own field). Prints one JSON line with the page title.
@@ -21,7 +21,7 @@ const tag = opt('--tag', 'brand');
 const TEXT = 'Oʻzbekiston gʻoya maʼno Ўзбекистон қўғирчоқ ғоя ҳа ₽ №';
 fs.mkdirSync(outdir, { recursive: true });
 
-// [op, a, b]: click x y | key K | insert (the test text) | text T | wait ms | shot name
+// [op, a, b]: click x y | move x y | wheel dy | key K | insert (the test text) | text T | wait ms | shot name
 const STEPS = {
   pdf: [
     ['wait', 500], ['shot', `${tag}-pdf-web`],
@@ -60,7 +60,7 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
-const ctx = await browser.newContext({ viewport: { width: 1100, height: 680 }, locale: 'en-US' });
+const ctx = await browser.newContext({ viewport: { width: 1100, height: 680 }, locale: opt('--locale', 'en-US') });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
@@ -75,6 +75,8 @@ for (const [op, a, b] of STEPS[d]) {
   else if (op === 'key') await page.keyboard.press(a);
   else if (op === 'insert') await page.keyboard.insertText(TEXT);
   else if (op === 'text') await page.keyboard.insertText(a);
+  else if (op === 'wheel') await page.mouse.wheel(0, a);
+  else if (op === 'move') await page.mouse.move(a, b);
   else if (op === 'wait') await page.waitForTimeout(a);
   else if (op === 'shot') { await page.screenshot({ path: path.join(outdir, `${a}.png`) }); shots.push(`${a}.png`); }
 }
