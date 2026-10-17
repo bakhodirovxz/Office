@@ -52,7 +52,10 @@ pub fn export(doc: &Document) -> String {
 
     let meta = &flow.meta;
     let mut o = String::new();
-    o.push_str("% Written by WordCraft (https://getartcraft.com/apps/wordcraft).\n");
+    o.push_str(&match option_env!("OFFICE_PRODUCT_NAME") {
+        Some(name) => format!("% Written by {name}.\n"),
+        None => "% Written by WordCraft (https://getartcraft.com/apps/wordcraft).\n".to_string(),
+    });
     o.push_str("\\documentclass{article}\n");
     o.push_str("\\usepackage[T1]{fontenc}\n");
     if w.uses.ulem {
