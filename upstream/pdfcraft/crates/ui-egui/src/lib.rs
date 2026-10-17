@@ -109,6 +109,7 @@ pub use print_ui::{Handling as PrintHandling, PrintDraft, PrinterSource, Which a
 mod redact_ui;
 pub use redact_ui::{HiddenDraft, PagesDraft as RedactPagesDraft, RedactPrefs, SearchDraft as RedactSearchDraft, SearchMode as RedactSearchMode};
 pub mod i18n;
+pub mod office_overlay;
 
 /// [`PdfCraftApp::date_text`] for callers that already borrow other parts of the app.
 pub(crate) fn date_text(session: &Session, fmt: Option<&str>) -> Result<String, String> {
@@ -143,6 +144,8 @@ mod wheel_pager;
 mod widgets;
 pub mod window_controls;
 
+#[cfg(test)]
+mod office_overlay_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod open_worker_tests;
 
@@ -3087,7 +3090,7 @@ impl eframe::App for PdfCraftApp {
             .active
             .and_then(|i| crate::canvas::tab_label(self, i))
             .or_else(|| self.combine_showing().then(|| tl!("Combine files").to_owned()))
-            .map_or_else(|| "PdfCraft".to_owned(), |name| format!("{name} — PdfCraft"));
+            .map_or_else(|| office_overlay::app_name().to_owned(), |name| format!("{name} — {}", office_overlay::app_name()));
         if title != self.window_title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
             self.window_title = title;

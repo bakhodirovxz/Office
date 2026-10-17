@@ -4,7 +4,10 @@
 //! the update check compares it with published releases.
 
 /// The release version from the workspace `Cargo.toml`.
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &str = match option_env!("OFFICE_PRODUCT_VERSION") {
+    Some(v) => v,
+    None => env!("CARGO_PKG_VERSION"),
+};
 
 /// The compile-time build label, if any.
 pub const LABEL: Option<&str> = option_env!("PDFCRAFT_BUILD_LABEL");

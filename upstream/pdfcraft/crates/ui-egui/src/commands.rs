@@ -207,7 +207,9 @@ impl PdfCraftApp {
                 }
                 self.dialog = Some(Dialog::NumberPages);
             }
-            link if pdfcraft_engine::links::for_command(link).is_some() => {
+            link if (crate::office_overlay::COMMUNITY || crate::office_overlay::UPSTREAM_LINKS)
+                && pdfcraft_engine::links::for_command(link).is_some() =>
+            {
                 if let Some(l) = pdfcraft_engine::links::for_command(link) {
                     self.open_url(l.url);
                 }
@@ -666,7 +668,7 @@ impl PdfCraftApp {
             "page.split" => self.dialog = Some(Dialog::Split),
             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
             "help.about" => self.dialog = Some(Dialog::About),
-            "help.check_updates" => self.check_for_updates(),
+            "help.check_updates" if crate::office_overlay::UPDATE_CHECK => self.check_for_updates(),
             _ => return false,
         }
         true
@@ -759,7 +761,7 @@ fn tab_after(current: Option<usize>, count: usize, forward: bool) -> Option<usiz
 
 /// Render a top-level menu's registered commands (with live labels, shortcuts and enablement).
 pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str) {
-    for spec in commands::menu(menu) {
+    for spec in commands::menu(menu).filter(|s| !crate::office_overlay::hidden_command(s.id)) {
         let label = commands::current_label(spec, &app.session, app.active_ids().map(|(_, id)| id));
         let label = crate::i18n::menu_label(spec.id, &label);
         // Open Recent is a submenu of the live recent list, not one action: disabled while the

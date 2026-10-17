@@ -436,7 +436,7 @@ pub fn key_name(s: &str) -> &str {
 
 /// Translate an English UI string; unknown strings come back unchanged.
 pub fn tr(lang: Lang, s: &str) -> &str {
-    lang.catalog().plain(s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().plain(s).unwrap_or(s))
 }
 
 /// How the layers below say their own sentences in the current language.
@@ -452,12 +452,12 @@ pub fn words(wording: &str) -> String {
 
 /// Like [`tr`], for an English string that needs a disambiguating `context`.
 pub fn tr_ctx<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
-    lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s))
+    crate::office_overlay::rebrand(lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s)))
 }
 
 /// A string keyed by its command id, falling back to the translation of the English `label`.
 pub fn tr_id<'a>(lang: Lang, id: &str, label: &'a str) -> &'a str {
-    lang.catalog().id(id).unwrap_or_else(|| tr(lang, label))
+    crate::office_overlay::rebrand(lang.catalog().id(id).unwrap_or_else(|| tr(lang, label)))
 }
 
 /// Fill `{name}` placeholders in one pass. Unknown placeholders are left as written, and inserted
@@ -544,7 +544,7 @@ pub fn command_label(text: &str) -> String {
 /// [`command_label`] of the current English label.
 pub fn menu_label(id: &str, label: &str) -> String {
     match current().catalog().id(id) {
-        Some(translated) => translated.to_owned(),
+        Some(translated) => crate::office_overlay::rebrand(translated).to_owned(),
         None => command_label(label),
     }
 }
