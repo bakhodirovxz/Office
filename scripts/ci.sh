@@ -75,7 +75,9 @@ note() { echo "$*" | tee -a "$JOB_LOG"; DETAIL="${DETAIL:+$DETAIL; }$*"; }
 step() {
   local name="$1" rc; shift
   echo "--- $name: $*" | tee -a "$JOB_LOG"
+  local t0=$SECONDS
   "$@" 2>&1 | tee -a "$JOB_LOG"; rc=${PIPESTATUS[0]}
+  echo "--- $name: exit $rc in $((SECONDS - t0))s" | tee -a "$JOB_LOG"
   STEPS="${STEPS:+$STEPS,}\"$name:$rc\""; return "$rc"
 }
 # bstep <name> <cmd...>: a step that compiles. Skipped under --no-build; otherwise under the build lock and RAM gate.
@@ -250,21 +252,48 @@ domains_arg() {
   case "${1:-all}" in all) echo "$DOMAINS";; docs|sheets|slides|pdf) echo "$1";; wordcraft|gridcraft|deckcraft|pdfcraft) domain_of "$1";; *) return 1;; esac
 }
 
-# Debug tests of one upstream workspace (patched tree) with the overlay on; quarantine applied by the xtask (WP6b).
+# Overlay environment for the upstream test builds (same as scripts/build.sh overlay_prepare). OFFICE_NO_OVERLAY=1 builds
+# pristine-like (overlay off) and also drops the quarantine entries of class brand-overlay / i18n-incomplete.
+test_overlay() { # <app>
+  local app="$1" d; d=$(domain_of "$app")
+  if [ "${OFFICE_NO_OVERLAY:-0}" = 1 ]; then unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION OFFICE_PRODUCT_NAME; return 0; fi
+  [ "$NO_BUILD" = 1 ] && { export OFFICE_OVERLAY_DIR="$(overlay_dir "$d")"; return 0; }
+  (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt overlay "$d"     && cargo xt i18n export "$app" --mode "${OFFICE_I18N_MODE:-review}" --out "$OFFICE_OVERLAY_ROOT/_i18n") || return 2
+  export OFFICE_OVERLAY_DIR="$(overlay_dir "$d")"
+  local f; for f in "$OFFICE_OVERLAY_ROOT/_i18n/$app/"*; do cmp -s "$f" "$OFFICE_OVERLAY_DIR/$(basename "$f")" || cp "$f" "$OFFICE_OVERLAY_DIR/" || return 2; done
+  export OFFICE_PRODUCT_NAME=$(sed -n 's/^PRODUCT_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '
+')
+  export OFFICE_PRODUCT_VERSION=$(sed -n 's/^VERSION=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '
+')
+}
+
+# Debug tests of one upstream workspace (patched tree) with the overlay on; quarantined tests run in a separate pass
+# (cargo xt quarantine apply) which reports stale / still-failing / missing entries. nextest -j is TEST threads.
 test_app() { # <app> <debug|release>
-  local app="$1" mode="$2" m=upstream/$1/Cargo.toml tdir="$OFFICE_TARGET/upstream-$1" rc=0 rel="" ; local -a filt=()
+  local app="$1" mode="$2" m=upstream/$1/Cargo.toml tdir="$OFFICE_TARGET/upstream-$1" rc=0 rel="" filt="all()"
   [ "$mode" = release ] && rel="--release"
-  if [ "$NO_BUILD" != 1 ] && [ ! -f ci/nextest.toml ]; then note "ci/nextest.toml missing (WP6b)"; return 2; fi
-  if xt_has quarantine; then
-    bstep "quarantine-$app" cargo xt quarantine apply "$app" || return 1   # runs the quarantined pass, reports stale
-    filt=(-E "$(cargo xt quarantine filter "$app" 2>/dev/null)")
-  else note "quarantine: cargo xt quarantine not implemented yet (WP6b); running the unfiltered suite"; fi
-  bstep "nextest-$app" env CARGO_TARGET_DIR="$tdir" OFFICE_OVERLAY_DIR="$(overlay_dir "$app")" \
-    cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --manifest-path "$m" -j "$([ -n "$rel" ] && echo 4 || echo 6)" $rel "${filt[@]}" || rc=1
+  if [ "$NO_BUILD" != 1 ] && [ ! -f ci/nextest.toml ]; then note "ci/nextest.toml missing"; return 2; fi
+  test_overlay "$app" || return 2
+  # the xtask runs in the root target dir; the upstream target dir is passed to nextest explicitly (--target-dir)
+  # Run the built xtask directly, not through `cargo run`: cargo run exports CARGO_MANIFEST_DIR/CARGO_PKG_*/CARGO_BIN_NAME,
+  # which would leak into the nested nextest build and rebuild the upstream crates that read them (70 min for pdfcraft).
+  xtq() { (unset CARGO_TARGET_DIR CARGO_BUILD_JOBS; cargo build -q -p xtask && "$OFFICE_TARGET/core/debug/xtask.exe" "$@"); }
+  export UP_TARGET="$tdir"
+  # nextest keeps its store (junit, archives) in <workspace>/target/nextest, i.e. inside upstream/: point it at the target dir
+  export NEXTEST_CFG="$tdir/nextest-ci.toml"; mkdir -p "$tdir"
+  { cat ci/nextest.toml; printf '
+[store]
+dir = "%s/nextest"
+' "$tdir"; } > "$NEXTEST_CFG"
+  bstep "quarantine-check" xtq quarantine check || return 1
+  if [ "$NO_BUILD" != 1 ]; then filt=$(xtq quarantine filter "$app") || return 2; fi
+  # the quarantined pass first: it builds the test binaries, the blocking pass below reuses them
+  bstep "quarantine-$app" xtq quarantine apply "$app" || rc=1
+  bstep "nextest-$app" cargo nextest run --workspace --profile ci --config-file "$NEXTEST_CFG" --manifest-path "$m" --target-dir "$tdir"     --build-jobs 4 --test-threads 4 $rel -E "$filt" || rc=1
   if [ "$mode" = debug ]; then
-    bstep "doctests-$app" env CARGO_TARGET_DIR="$tdir" OFFICE_OVERLAY_DIR="$(overlay_dir "$app")" \
-      cargo test --doc --workspace --manifest-path "$m" || rc=1
+    bstep "doctests-$app" cargo test --doc --workspace --manifest-path "$m" -j 4 || rc=1
   fi
+  unset CARGO_TARGET_DIR CARGO_BUILD_JOBS
   return $rc
 }
 job_test() { local rc=0 a; for a in $(apps_arg "${1:-all}") ; do test_app "$a" debug || rc=$?; done; return $rc; }
@@ -272,10 +301,10 @@ job_release_tests() { local rc=0 a; for a in $(apps_arg "${1:-all}"); do test_ap
 
 job_test_ours() {
   local rc=0 d
-  bstep root-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo nextest run --workspace -j 6 || rc=1
+  bstep root-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo nextest run --workspace --build-jobs 4 --test-threads 4 || rc=1
   for d in $DOMAINS; do
     [ -f "domains/$d/Cargo.toml" ] || continue
-    bstep "domain-tests-$d" env CARGO_TARGET_DIR="$(target_dir_domain "$d")" cargo nextest run --workspace -j 6 --manifest-path "domains/$d/Cargo.toml" || rc=1
+    bstep "domain-tests-$d" env CARGO_TARGET_DIR="$(target_dir_domain "$d")" cargo nextest run --workspace --build-jobs 4 --test-threads 4 --manifest-path "domains/$d/Cargo.toml" || rc=1
   done
   return $rc
 }

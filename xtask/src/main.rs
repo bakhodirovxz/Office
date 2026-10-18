@@ -8,6 +8,7 @@ use std::process::ExitCode;
 mod brand;
 mod domain;
 mod i18n;
+mod quarantine;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -17,9 +18,10 @@ fn main() -> ExitCode {
         ["gen-domain", d] => domain::gen_domain(&repo_root(), false, d),
         ["lockdiff", a, b] => domain::lockdiff(Path::new(a), Path::new(b)),
         ["domain-upstream", d] => domain::domain_upstream(&repo_root(), d),
+        ["quarantine", rest @ ..] => quarantine::run(&repo_root(), rest),
         ["i18n", rest @ ..] => i18n::run(&repo_root(), rest),
         ["overlay", ..] | ["brand", ..] | ["brand-grep"] | ["brand-scan-bin", ..] => brand::run(&repo_root(), &args.iter().map(String::as_str).collect::<Vec<_>>()),
-        _ => Err("usage: cargo xt i18n <command> | overlay <app> | brand check|icons | brand-grep | brand-scan-bin | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
+        _ => Err("usage: cargo xt quarantine <command> | i18n <command> | overlay <app> | brand check|icons | brand-grep | brand-scan-bin | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
     };
     match result {
         Ok(msg) => {
