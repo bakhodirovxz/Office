@@ -12,6 +12,10 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 - **Single licence exception: MPL-2.0 for the symphonia crates only** (deckcraft audio). They stay unmodified, and
   NOTICE lists them with a source link. Any other non-permissive licence needs a new owner decision.
 - **No upstream PRs for now.** All upstream changes are carried patches, registered in `patches/REGISTER.md`.
+- **Uzbek UI strings: review delegated to the agent** (owner, 2026-10-18).
+  - Mark the status `reviewed:agent-<model>:<date>`, never an owner review.
+  - The owner reports problems found in use.
+  - The Phase 2 transliteration golden list still needs the owner's approval.
 - **Mobile:** A-web for v1, conditionally (re-decided at the Phase 4 gate).
 - **Priority:** fidelity → mobile → co-editing.
 
