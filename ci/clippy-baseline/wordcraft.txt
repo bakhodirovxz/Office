@@ -1,0 +1,2 @@
+# upstream clippy baseline for wordcraft at BASE eae2421, clippy of rustc 1.97.1 (path<TAB>message<TAB>lint<TAB>origin); ratchet in scripts/ci.sh
+crates/ui-egui/src/office_overlay.rs	deref which would be done by auto-deref	clippy::explicit_auto_deref	ours: carried patch 0100 (return *done)

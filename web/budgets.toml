@@ -2,9 +2,10 @@
 # measured with `brotli -q 11 --lgwin=24` and `gzip -9` (the same tool for the budget and the BASE measurement).
 #
 # Budget per domain = base_br + delta_br_max (wasm brotli). The ratchet is on OUR delta, not on upstream growth:
-#   base_br    pristine upstream brotli at BASE. Seeded from Phase 0 (inventory, old BASE, trunk --release, craft_fonts as
-#              measured there). `scripts/ci.sh sizes --measure-base` (or the nightly/sync job: one pristine web build per
-#              app per BASE) re-measures it with this tool; update it together with base_sha at every sync.
+#   base_br    pristine upstream brotli at BASE, measured 2026-10-19 (WP6 final) with this tool: a scratch worktree with
+#              upstream/<app> replaced by the pristine commit (no queue, no overlay, no catalogs), built through the same domain
+#              wrapper with `OFFICE_NO_OVERLAY=1 scripts/build.sh <d> web --release`. Re-measure at every sync together with
+#              base_sha (`scripts/ci.sh sizes --measure-base` prints the dist numbers to paste in).
 #   delta_br_max   hard fail when (our brotli - base_br) exceeds it.
 #   js_br_max      hard fail when the JS glue brotli exceeds it (all apps: 24 KiB; measured 19.7-20.6 KB).
 #   upstream_growth_warn   warn (never fail) when a re-measured base_br grew by more than this fraction since the last sync.
@@ -12,9 +13,9 @@
 #                  F9). Measure both settings in WP3 and recommend one; the budget applies to the setting named here.
 #
 # Headroom rules:
-#   * Before WP7-WP9 land, delta_br_max = 524288 (512 KiB) is a guard only. Expected contributors: patches 10-20 KiB;
-#     fallback fonts < 250 KiB (ESTIMATE); two uz catalogs 40-80 KiB.
-#   * After WP7-WP9, set delta_br_max = measured delta + 10%, rounded up to 16 KiB (16384).
+#   * The temporary 512 KiB guard is gone (WP6 final, 2026-10-19). delta_br_max = measured delta + 10%, rounded up to
+#     16 KiB (16384). The measured delta is our whole layer: carried queue + brand overlay + fallback fonts + Uzbek catalogs
+#     (see docs/phase1/wp6-final.md for the breakdown and the dist numbers).
 #   * Raising any delta_br_max above its measured value + 10% needs a STATUS line with the reason.
 #   * Absolute budgets per editor (the shell's lazy-load budget) belong to Phase 4.
 #
@@ -22,48 +23,48 @@
 
 [docs]
 app = "wordcraft"
-base_sha = "fd0bb2f"
+base_sha = "eae2421"
 craft_fonts = false
-base_raw = 42597532          # wasm raw, Phase 0
-base_gzip = 15849354         # wasm gzip -9, Phase 0
-base_br = 9441597            # wasm brotli -q 11, Phase 0
-js_br = 20555                # JS glue brotli, Phase 0
-delta_br_max = 524288        # guard until WP7-WP9; our queue today: +9,263 B brotli (patches 0001-0005)
+base_raw = 42219232          # pristine wasm raw at BASE (2026-10-19)
+base_gzip = 15735172         # wasm gzip -9
+base_br = 9377090            # wasm brotli -q 11 --lgwin=24
+js_br = 20548                # JS glue brotli
+delta_br_max = 131072        # delta +105,622 B brotli (+1.13 %): queue 0001-0005, overlay 0100-0103, 0110 catalogs, fallback fonts; ceil(1.10 x delta / 16 KiB) x 16 KiB
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [sheets]
 app = "gridcraft"
-base_sha = "e6b6b34"
+base_sha = "f1894c6"
 craft_fonts = false
-base_raw = 18973730
-base_gzip = 7041161
-base_br = 4731289
-js_br = 20036
-delta_br_max = 524288        # guard; known delta: pdf-fonts +8,487 B gzip, memory series unmeasured
+base_raw = 18979436          # pristine wasm raw at BASE (2026-10-19)
+base_gzip = 7044454         # wasm gzip -9
+base_br = 4733055            # wasm brotli -q 11 --lgwin=24
+js_br = 20041                # JS glue brotli
+delta_br_max = 147456        # delta +122,186 B brotli (+2.58 %): queue 0001-0022 + 0103/0104/0111, overlay, 0110 catalogs, fallback fonts; ceil(1.10 x delta / 16 KiB) x 16 KiB
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [slides]
 app = "deckcraft"
-base_sha = "9859da3"
-craft_fonts = false
-base_raw = 35120783
-base_gzip = 13905434
-base_br = 9300367
-js_br = 19665
-delta_br_max = 524288
+base_sha = "1dc6972"
+craft_fonts = true
+base_raw = 35135104          # pristine wasm raw at BASE (2026-10-19)
+base_gzip = 13902137         # wasm gzip -9
+base_br = 9302764            # wasm brotli -q 11 --lgwin=24
+js_br = 19644                # JS glue brotli
+delta_br_max = 131072        # delta +109,715 B brotli (+1.18 %): 0001 web fix, overlay, 0110-0112, catalogs, fallback fonts; craft-fonts embedded (CRAFT_FONTS_DIR) as in Phase 0; ceil(1.10 x delta / 16 KiB) x 16 KiB
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [pdf]
 app = "pdfcraft"
-base_sha = "afa8e18"
+base_sha = "924c4da"
 craft_fonts = false
-base_raw = 39076254
-base_gzip = 14379872
-base_br = 9390759
-js_br = 20487
-delta_br_max = 524288
+base_raw = 39099122          # pristine wasm raw at BASE (2026-10-19)
+base_gzip = 14393230         # wasm gzip -9
+base_br = 9395853            # wasm brotli -q 11 --lgwin=24
+js_br = 20495                # JS glue brotli
+delta_br_max = 114688        # delta +97,954 B brotli (+1.04 %): overlay 0100-0102, 0110 catalogs, fallback fonts, 64 KiB RGBA logo; ceil(1.10 x delta / 16 KiB) x 16 KiB
 js_br_max = 24576
 upstream_growth_warn = 0.05

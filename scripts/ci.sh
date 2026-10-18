@@ -6,7 +6,7 @@
 #
 # Jobs (names as in PLAN 6.1):
 #   queue                    verify-queue all; cargo xt register check; quarantine format check
-#   lint                     fmt + clippy (root), fmt/layers/assets/clippy-ratchet (upstream trees)
+#   lint                     fmt + clippy -D warnings (root), fmt/layers/assets (upstream trees), upstream clippy ratchet (fails on new warnings only)
 #   gen-check                cargo xt gen-domain --check all; lockdiff x4
 #   deny                     cargo-deny x5 (root + 4 domains), one config each
 #   brand                    cargo xt brand-grep + logo-include check
@@ -165,20 +165,47 @@ job_lint() {
     if [ "$app" = pdfcraft ] || [ "$app" = wordcraft ]; then
       bstep "assets-$app" env CARGO_TARGET_DIR="$OFFICE_TARGET/upstream-$app" cargo run --manifest-path "upstream/$app/Cargo.toml" -p xtask -- assets || rc=1
     fi
-    upstream_clippy_ratchet "$app"   # advisory: never changes rc
+    upstream_clippy_ratchet "$app" || rc=1   # ratchet: fails only on a warning that is not in ci/clippy-baseline/<app>.txt
   done
   return $rc
 }
-# Upstream clippy -D warnings is advisory: count warnings and compare with ci/clippy-baseline/<app>.count.
+# Upstream clippy ratchet (PLAN 6.1): upstream's own warnings are baselined in ci/clippy-baseline/<app>.txt (one warning per line:
+# path<TAB>message<TAB>lint, no line numbers so that unrelated edits do not move them). The job FAILS on a warning that is not in the
+# baseline (a new one, or one more of the same kind), and only notes baselined warnings that disappeared (shrink the file then).
+# A newer clippy than upstream's CI may add lints we did not cause: refresh the baseline in that case, with a STATUS line.
+# Refresh: scripts/ci.sh lint with CI_CLIPPY_REFRESH=1 rewrites the files from the current output (lint names need --message-format json,
+# see docs/phase1/wp6-final.md; a refresh keeps the lint column of rows that already exist).
+clippy_keys() { # stdin: cargo clippy --message-format short output; stdout: sorted "path<TAB>message"
+  tr -d '\r' | sed -n -E 's#\\#/#g; s#^([^ :][^:]*):[0-9]+:[0-9]+: warning: (.*)$#\1\t\2#p' | sed -E 's/: help: .*$//' | LC_ALL=C sort
+}
 upstream_clippy_ratchet() {
-  local app="$1" base=ci/clippy-baseline/$1.count n
+  local app="$1" base=ci/clippy-baseline/$1.txt out cur basek new gone crc
   if [ "$NO_BUILD" = 1 ]; then note "clippy-ratchet-$app: skipped (no-build)"; SKIPPED=$((SKIPPED+1)); return 0; fi
   ram_gate "${CI_RAM_GB:-3}"
-  n=$(with_build_lock env CARGO_TARGET_DIR="$OFFICE_TARGET/upstream-$app" cargo clippy --workspace --all-targets -j 6 \
-        --manifest-path "upstream/$app/Cargo.toml" --message-format short 2>&1 | tee -a "$JOB_LOG" | grep -c ': warning')
-  if [ -f "$base" ] && [ "$n" -gt "$(cat "$base")" ]; then note "ADVISORY upstream clippy $app: $n warnings > baseline $(cat "$base")"
-  else note "upstream clippy $app: $n warnings (baseline $( [ -f "$base" ] && cat "$base" || echo none ))"; fi
-  return 0
+  out=$(mktemp); cur=$(mktemp); basek=$(mktemp)
+  with_build_lock env CARGO_TARGET_DIR="$OFFICE_TARGET/upstream-$app" cargo clippy --workspace --all-targets -j 6 \
+        --manifest-path "upstream/$app/Cargo.toml" --message-format short >"$out" 2>&1; crc=$?
+  cat "$out" >>"$JOB_LOG"
+  if [ "$crc" -ne 0 ]; then note "upstream clippy $app: cargo clippy exit $crc (does not compile; see $JOB_LOG)"; rm -f "$out" "$cur" "$basek"; return 1; fi
+  clippy_keys <"$out" >"$cur"
+  if [ ! -f "$base" ]; then
+    note "upstream clippy $app: $(wc -l <"$cur" | tr -d ' ') warnings, NO baseline file $base"; rm -f "$out" "$cur" "$basek"; return 1
+  fi
+  grep -v '^#' "$base" | cut -f1,2 | LC_ALL=C sort >"$basek"
+  new=$(LC_ALL=C comm -23 "$cur" "$basek"); gone=$(LC_ALL=C comm -13 "$cur" "$basek")
+  rm -f "$out"
+  if [ "${CI_CLIPPY_REFRESH:-0}" = 1 ]; then
+    { echo "# upstream clippy baseline for $app (path<TAB>message<TAB>lint<TAB>origin); see scripts/ci.sh clippy_keys"
+      local T=$'\t' p m
+      while IFS=$'\t' read -r p m; do printf '%s\t%s\t%s\n' "$p" "$m" "$(grep -F "$p$T$m$T" "$base" | head -1 | cut -f3-)"; done <"$cur"; } >"$base.new" && mv "$base.new" "$base"
+    note "upstream clippy $app: baseline refreshed ($(wc -l <"$cur" | tr -d ' ') warnings)"; rm -f "$cur" "$basek"; return 0
+  fi
+  if [ -n "$new" ]; then
+    note "FAIL upstream clippy $app: $(echo "$new" | wc -l | tr -d ' ') new warning(s) not in $base"; echo "$new" | sed 's/^/    NEW: /' | tee -a "$JOB_LOG"
+    rm -f "$cur" "$basek"; return 1
+  fi
+  note "upstream clippy $app: $(wc -l <"$cur" | tr -d ' ') warnings, all baselined${gone:+; $(echo "$gone" | wc -l | tr -d ' ') baselined warning(s) gone, shrink $base}"
+  rm -f "$cur" "$basek"; return 0
 }
 
 job_gen_check() {

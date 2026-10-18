@@ -1,0 +1,74 @@
+warning: ignoring --test-threads because --no-capture is specified
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+   Compiling pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\upstream\pdfcraft\crates\sign)
+    Finished `test` profile [optimized + debuginfo] target(s) in 10.57s
+────────────
+ Nextest run ID 1227433d-ab4c-42c5-940a-fbff805247b0 with nextest profile: ci
+    Starting 1 test across 1 binary (274 tests and 133 binaries skipped)
+────────────
+ Stress test iteration 1/5 (00:00:00 elapsed so far, 5 iterations remaining)
+       START [         ] [1/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+running 1 test
+210 calculate scripts on open in 7.4648152s
+recalculated after a change in 1.733332s
+test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 9.25s
+
+        PASS [   9.286s] [1/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+ Stress test [   9.287s] iteration 1/5: 1 test run: 1 passed, 274 skipped
+────────────
+ Stress test iteration 2/5 (00:00:09 elapsed so far, 4 iterations remaining)
+       START [         ] [2/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+running 1 test
+210 calculate scripts on open in 7.5340357s
+recalculated after a change in 2.2176289s
+test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 9.77s
+
+        PASS [   9.800s] [2/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+ Stress test [   9.801s] iteration 2/5: 1 test run: 1 passed, 274 skipped
+────────────
+ Stress test iteration 3/5 (00:00:19 elapsed so far, 3 iterations remaining)
+       START [         ] [3/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+running 1 test
+210 calculate scripts on open in 7.4102784s
+recalculated after a change in 2.1611469s
+test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 9.58s
+
+        PASS [   9.612s] [3/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+ Stress test [   9.613s] iteration 3/5: 1 test run: 1 passed, 274 skipped
+────────────
+ Stress test iteration 4/5 (00:00:28 elapsed so far, 2 iterations remaining)
+       START [         ] [4/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+running 1 test
+210 calculate scripts on open in 6.2053936s
+recalculated after a change in 2.0421251s
+test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 8.26s
+
+        PASS [   8.302s] [4/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+ Stress test [   8.303s] iteration 4/5: 1 test run: 1 passed, 274 skipped
+────────────
+ Stress test iteration 5/5 (00:00:37 elapsed so far, 1 iteration remaining)
+       START [         ] [5/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+running 1 test
+210 calculate scripts on open in 6.293042s
+recalculated after a change in 2.4984019s
+test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 8.80s
+
+        PASS [   8.840s] [5/5] (1/1) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+ Stress test [   8.841s] iteration 5/5: 1 test run: 1 passed, 274 skipped
+────────────
+     Summary [  45.845s] 5/5 stress run iterations: 5 passed

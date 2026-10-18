@@ -1,0 +1,188 @@
+warning: ignoring --test-threads because --no-capture is specified
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+   Compiling pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\upstream\pdfcraft\crates\sign)
+    Finished `test` profile [optimized + debuginfo] target(s) in 40.14s
+────────────
+ Nextest run ID 95ebb2e4-426f-4d14-8eea-8b3237371e6c with nextest profile: ci
+    Starting 2 tests across 1 binary (133 binaries skipped)
+────────────
+ Stress test iteration 1/5 (00:00:00 elapsed so far, 5 iterations remaining)
+       START [         ] [1/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+running 1 test
+PERF comments round 1: avg frame 47.597947ms, worst 136.6524ms
+PERF comments round 2: avg frame 60.347953ms, worst 126.7018ms
+PERF comments round 3: avg frame 51.419175ms, worst 85.3568ms
+
+thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (16644) panicked at crates\ui-egui\tests\perf.rs:138:9:
+comments: average frame 47.597947ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+failures:
+
+failures:
+    panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 17.27s
+
+        FAIL [  17.368s] [1/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+       START [         ] [1/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+
+running 1 test
+PERF open 666.4333ms
+PERF scroll round 1: avg frame 58.764254ms, worst 229.2537ms
+PERF scroll round 2: avg frame 41.558844ms, worst 75.1839ms
+PERF scroll round 3: avg frame 55.346959ms, worst 90.5534ms
+
+thread 'scrolling_a_500_page_document_stays_within_the_frame_budget' (4244) panicked at crates\ui-egui\tests\perf.rs:114:5:
+average frame 41.558844ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test scrolling_a_500_page_document_stays_within_the_frame_budget ... FAILED
+
+failures:
+
+failures:
+    scrolling_a_500_page_document_stays_within_the_frame_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 31.84s
+
+        FAIL [  31.937s] [1/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+ Stress test [  49.306s] iteration 1/5: 2 tests run: 0 passed, 2 failed, 0 skipped
+────────────
+ Stress test iteration 2/5 (00:00:49 elapsed so far, 4 iterations remaining)
+       START [         ] [2/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+running 1 test
+PERF comments round 1: avg frame 57.218881ms, worst 164.3474ms
+PERF comments round 2: avg frame 44.21011ms, worst 128.0223ms
+PERF comments round 3: avg frame 41.061481ms, worst 78.2628ms
+
+thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (6872) panicked at crates\ui-egui\tests\perf.rs:138:9:
+comments: average frame 41.061481ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+failures:
+
+failures:
+    panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 15.07s
+
+        FAIL [  15.168s] [2/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+       START [         ] [2/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+
+running 1 test
+PERF open 486.9075ms
+PERF scroll round 1: avg frame 49.845235ms, worst 78.4816ms
+PERF scroll round 2: avg frame 53.814476ms, worst 126.6843ms
+PERF scroll round 3: avg frame 39.53029ms, worst 120.8089ms
+test scrolling_a_500_page_document_stays_within_the_frame_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 29.15s
+
+        PASS [  29.245s] [2/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+ Stress test [  44.414s] iteration 2/5: 2 tests run: 1 passed, 1 failed, 0 skipped
+────────────
+ Stress test iteration 3/5 (00:01:33 elapsed so far, 3 iterations remaining)
+       START [         ] [3/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+running 1 test
+PERF comments round 1: avg frame 36.273004ms, worst 54.7099ms
+PERF pages round 1: avg frame 14.578525ms, worst 25.2113ms
+PERF fields round 1: avg frame 3.6305ms, worst 8.6745ms
+test panels_with_hundreds_of_items_stay_within_the_frame_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 6.37s
+
+        PASS [   6.453s] [3/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+       START [         ] [3/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+
+running 1 test
+PERF open 733.513ms
+PERF scroll round 1: avg frame 46.288361ms, worst 66.9586ms
+PERF scroll round 2: avg frame 41.740425ms, worst 76.8936ms
+PERF scroll round 3: avg frame 37.086985ms, worst 106.24ms
+test scrolling_a_500_page_document_stays_within_the_frame_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 25.79s
+
+        PASS [  25.895s] [3/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+ Stress test [  32.348s] iteration 3/5: 2 tests run: 2 passed, 0 skipped
+────────────
+ Stress test iteration 4/5 (00:02:06 elapsed so far, 2 iterations remaining)
+       START [         ] [4/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+running 1 test
+PERF comments round 1: avg frame 49.639322ms, worst 122.4053ms
+PERF comments round 2: avg frame 49.318865ms, worst 79.9493ms
+PERF comments round 3: avg frame 53.566107ms, worst 102.9058ms
+
+thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (16476) panicked at crates\ui-egui\tests\perf.rs:138:9:
+comments: average frame 49.318865ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+failures:
+
+failures:
+    panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 15.90s
+
+        FAIL [  15.990s] [4/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+       START [         ] [4/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+
+running 1 test
+PERF open 758.9785ms
+PERF scroll round 1: avg frame 44.143744ms, worst 89.0982ms
+PERF scroll round 2: avg frame 37.845912ms, worst 66.3415ms
+test scrolling_a_500_page_document_stays_within_the_frame_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 17.20s
+
+        PASS [  17.299s] [4/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+ Stress test [  33.290s] iteration 4/5: 2 tests run: 1 passed, 1 failed, 0 skipped
+────────────
+ Stress test iteration 5/5 (00:02:39 elapsed so far, 1 iteration remaining)
+       START [         ] [5/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+running 1 test
+PERF comments round 1: avg frame 48.493282ms, worst 74.7832ms
+PERF comments round 2: avg frame 46.429743ms, worst 64.987ms
+PERF comments round 3: avg frame 47.906939ms, worst 104.2229ms
+
+thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (23100) panicked at crates\ui-egui\tests\perf.rs:138:9:
+comments: average frame 46.429743ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+failures:
+
+failures:
+    panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 14.87s
+
+        FAIL [  14.960s] [5/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+       START [         ] [5/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+
+running 1 test
+PERF open 669.3525ms
+PERF scroll round 1: avg frame 40.211776ms, worst 100.1499ms
+PERF scroll round 2: avg frame 38.873679ms, worst 83.308ms
+test scrolling_a_500_page_document_stays_within_the_frame_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 16.52s
+
+        PASS [  16.621s] [5/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+ Stress test [  31.582s] iteration 5/5: 2 tests run: 1 passed, 1 failed, 0 skipped
+────────────
+     Summary [ 190.940s] 5/5 stress run iterations: 1 passed, 4 failed
+        FAIL [  17.368s] [1/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+        FAIL [  31.937s] [1/5] (2/2) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+        FAIL [  15.168s] [2/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+        FAIL [  15.990s] [4/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+        FAIL [  14.960s] [5/5] (1/2) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+error: test run failed
