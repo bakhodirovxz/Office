@@ -1,478 +1,478 @@
 id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	ru_apps	priority	apps	where	note
-000aef363848		Accept	Qabul qilish	draft:agent-sonnet:2026-10-17	Қабул қилиш	draft:agent-sonnet:2026-10-17	Принять	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1209	
-0045504e39f8		Borders	Chegaralar	draft:agent-sonnet:2026-10-17	Чегаралар	draft:agent-sonnet:2026-10-17	Границы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2826	
-00913cc2fcc7		WordArt	WordArt	draft:agent-sonnet:2026-10-17	WordArt	draft:agent-sonnet:2026-10-17	WordArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:233	
-00e9d28485e4		Paste Special	Maxsus qoʻyish	draft:agent-sonnet:2026-10-17	Махсус қўйиш	draft:agent-sonnet:2026-10-17	Специальная вставка	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:61	
-01234d31bac2		Next page	Keyingi sahifa	draft:agent-sonnet:2026-10-17	Кейинги саҳифа	draft:agent-sonnet:2026-10-17	Следующая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:775	
+000aef363848		Accept	Qabul qilish	reviewed:agent-opus:2026-10-18	Қабул қилиш	reviewed:agent-opus:2026-10-18	Принять	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1209	
+0045504e39f8		Borders	Chegaralar	reviewed:agent-opus:2026-10-18	Чегаралар	reviewed:agent-opus:2026-10-18	Границы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2826	
+00913cc2fcc7		WordArt	WordArt	reviewed:agent-opus:2026-10-18	WordArt	reviewed:agent-opus:2026-10-18	WordArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:233	
+00e9d28485e4		Paste Special	Maxsus qoʻyish	reviewed:agent-opus:2026-10-18	Махсус қўйиш	reviewed:agent-opus:2026-10-18	Специальная вставка	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:61	
+01234d31bac2		Next page	Keyingi sahifa	reviewed:agent-opus:2026-10-18	Кейинги саҳифа	reviewed:agent-opus:2026-10-18	Следующая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:775	
 017dd0d419ea		Options…		todo		todo	Параметры…	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/a11y_ui.rs:310	
-01bb525b31fb		Merged PRs	Qabul qilingan PRlar	draft:agent-sonnet:2026-10-17	Қабул қилинган ПРлар	draft:agent-sonnet:2026-10-17	Принятые PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
-02439010e50b		Picture Format	Rasm formati	draft:agent-sonnet:2026-10-17	Расм формати	draft:agent-sonnet:2026-10-17	Формат рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:136	
-032e76efb577		Reset Picture	Rasmni asliga qaytarish	draft:agent-sonnet:2026-10-17	Расмни аслига қайтариш	draft:agent-sonnet:2026-10-17	Сбросить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:439	
+01bb525b31fb		Merged PRs	Qabul qilingan PRlar	reviewed:agent-opus:2026-10-18	Қабул қилинган ПРлар	reviewed:agent-opus:2026-10-18	Принятые PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
+02439010e50b		Picture Format	Rasm formati	reviewed:agent-opus:2026-10-18	Расм формати	reviewed:agent-opus:2026-10-18	Формат рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:136	
+032e76efb577		Reset Picture	Rasmni asliga qaytarish	reviewed:agent-opus:2026-10-18	Расмни аслига қайтариш	reviewed:agent-opus:2026-10-18	Сбросить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:439	
 0485fcbfc78e		Insert\nAbove		todo		todo	Вставить\nсверху	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2997	
-04f6121bc92b		Corrections	Tuzatishlar	draft:agent-sonnet:2026-10-17	Тузатишлар	draft:agent-sonnet:2026-10-17	Коррекция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2577	
+04f6121bc92b		Corrections	Tuzatishlar	reviewed:agent-opus:2026-10-18	Тузатишлар	reviewed:agent-opus:2026-10-18	Коррекция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2577	
 05b752ff6482		Contributors		todo		todo	Участники	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
-05e217ad02fc		Right	Oʻng	draft:agent-sonnet:2026-10-17	Ўнг	draft:agent-sonnet:2026-10-17	Справа	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2965	
-0611c8c0de7e		Clipboard	Almashinuv buferi	draft:agent-sonnet:2026-10-17	Алмашинув буфери	draft:agent-sonnet:2026-10-17	Буфер обмена	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/create_ui.rs:135	
+05e217ad02fc		Right	Oʻng	reviewed:agent-opus:2026-10-18	Ўнг	reviewed:agent-opus:2026-10-18	Справа	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2965	
+0611c8c0de7e		Clipboard	Almashinuv buferi	reviewed:agent-opus:2026-10-18	Алмашинув буфери	reviewed:agent-opus:2026-10-18	Буфер обмена	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/create_ui.rs:135	
 06c4a60a2430		Basic Process		todo		todo	Простой процесс	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2048	
 06dfc1307bf6		Pyramid		todo		todo	Пирамида	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2051	
 0702dc51ecff		Insert Hyperlink		todo		todo	Вставить гиперссылку	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:38	
-07171e36b3d8		Distribute Columns	Ustunlarni tenglashtirish	draft:agent-sonnet:2026-10-17	Устунларни тенглаштириш	draft:agent-sonnet:2026-10-17	Выровнять ширину столбцов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3009	
-076c6a347f95		Rotation	Burilish	draft:agent-sonnet:2026-10-17	Бурилиш	draft:agent-sonnet:2026-10-17	Поворот	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2369	
-07c5c0f7cf4d		Distribute Rows	Qatorlarni tenglashtirish	draft:agent-sonnet:2026-10-17	Қаторларни тенглаштириш	draft:agent-sonnet:2026-10-17	Выровнять высоту строк	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3008	
+07171e36b3d8		Distribute Columns	Ustunlarni tenglashtirish	reviewed:agent-opus:2026-10-18	Устунларни тенглаштириш	reviewed:agent-opus:2026-10-18	Выровнять ширину столбцов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3009	
+076c6a347f95		Rotation	Burilish	reviewed:agent-opus:2026-10-18	Бурилиш	reviewed:agent-opus:2026-10-18	Поворот	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2369	
+07c5c0f7cf4d		Distribute Rows	Qatorlarni tenglashtirish	reviewed:agent-opus:2026-10-18	Қаторларни тенглаштириш	reviewed:agent-opus:2026-10-18	Выровнять высоту строк	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3008	
 07e8700d79a9		Insert…		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/panes.rs:670	
-087147424645		Categories	Turkumlar	draft:agent-sonnet:2026-10-17	Туркумлар	draft:agent-sonnet:2026-10-17	Категории	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:228	
+087147424645		Categories	Turkumlar	reviewed:agent-opus:2026-10-18	Туркумлар	reviewed:agent-opus:2026-10-18	Категории	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:228	
 0939a4832ef4		All Borders		todo		todo	Все границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2831	
-099c16924da5		Options	Parametrlar	draft:agent-sonnet:2026-10-17	Параметрлар	draft:agent-sonnet:2026-10-17	Параметры	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:112	
-0a1e59eb7d3b		Wide	Keng	draft:agent-sonnet:2026-10-17	Кенг	draft:agent-sonnet:2026-10-17	Широкие	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3026	
+099c16924da5		Options	Parametrlar	reviewed:agent-opus:2026-10-18	Параметрлар	reviewed:agent-opus:2026-10-18	Параметры	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:112	
+0a1e59eb7d3b		Wide	Keng	reviewed:agent-opus:2026-10-18	Кенг	reviewed:agent-opus:2026-10-18	Широкие	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3026	
 0a86dcae7521		Bottom:		todo		todo	Снизу:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
-0a94e78e56e0		No	Yoʻq	draft:agent-sonnet:2026-10-17	Йўқ	draft:agent-sonnet:2026-10-17	Нет	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
-0ba9a3538423		Find and Replace	Topish va almashtirish	draft:agent-sonnet:2026-10-17	Топиш ва алмаштириш	draft:agent-sonnet:2026-10-17	Найти и заменить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:62	
+0a94e78e56e0		No	Yoʻq	reviewed:agent-opus:2026-10-18	Йўқ	reviewed:agent-opus:2026-10-18	Нет	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
+0ba9a3538423		Find and Replace	Topish va almashtirish	reviewed:agent-opus:2026-10-18	Топиш ва алмаштириш	reviewed:agent-opus:2026-10-18	Найти и заменить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:62	
 0bc6be45fca7		Odd pages only		todo		todo	Только нечётные страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/marks_ui.rs:64	
-0bf02c80a135		Browse…	Koʻrib chiqish…	draft:agent-sonnet:2026-10-17	Кўриб чиқиш…	draft:agent-sonnet:2026-10-17	Обзор…	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:557	
-0c0cf38de152		Shadow	Soya	draft:agent-sonnet:2026-10-17	Соя	draft:agent-sonnet:2026-10-17	Тень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:238	
-0ca88472c52f		Split	Ajratish	draft:agent-sonnet:2026-10-17	Ажратиш	draft:agent-sonnet:2026-10-17	Разделить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1205	
-0d7109515942		Chart Title	Diagramma nomi	draft:agent-sonnet:2026-10-17	Диаграмма номи	draft:agent-sonnet:2026-10-17	Название диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:755	
-0e1fa0cd299c		Compress Pictures	Rasmlarni siqish	draft:agent-sonnet:2026-10-17	Расмларни сиқиш	draft:agent-sonnet:2026-10-17	Сжать рисунки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2654	
+0bf02c80a135		Browse…	Tanlash…	reviewed:agent-opus:2026-10-18	Танлаш…	reviewed:agent-opus:2026-10-18	Обзор…	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:557	review-agent-2026-10-18: glossary Browse
+0c0cf38de152		Shadow	Soya	reviewed:agent-opus:2026-10-18	Соя	reviewed:agent-opus:2026-10-18	Тень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:238	
+0ca88472c52f		Split	Ajratish	reviewed:agent-opus:2026-10-18	Ажратиш	reviewed:agent-opus:2026-10-18	Разделить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1205	
+0d7109515942		Chart Title	Diagramma sarlavhasi	reviewed:agent-opus:2026-10-18	Диаграмма сарлавҳаси	reviewed:agent-opus:2026-10-18	Название диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:755	review-agent-2026-10-18: glossary Title
+0e1fa0cd299c		Compress Pictures	Rasmlarni siqish	reviewed:agent-opus:2026-10-18	Расмларни сиқиш	reviewed:agent-opus:2026-10-18	Сжать рисунки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2654	
 10326409359c		No Fill		todo		todo	Нет заливки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:478	
-10ea51634a95		Commits	Kommitlar	draft:agent-sonnet:2026-10-17	Коммитлар	draft:agent-sonnet:2026-10-17	Коммиты	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
-1177b400d0ce		Text\nBox	Matn\nqutisi	draft:agent-sonnet:2026-10-17	Матн\nқутиси	draft:agent-sonnet:2026-10-17	Текстовое\nполе	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1270	
-11d155aab7c5		AutoCorrect Options	Avtomatik tuzatish parametrlari	draft:agent-sonnet:2026-10-17	Автоматик тузатиш параметрлари	draft:agent-sonnet:2026-10-17	Параметры автозамены	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:29	
+10ea51634a95		Commits	Kommitlar	reviewed:agent-opus:2026-10-18	Коммитлар	reviewed:agent-opus:2026-10-18	Коммиты	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+1177b400d0ce		Text\nBox	Matn\nqutisi	reviewed:agent-opus:2026-10-18	Матн\nқутиси	reviewed:agent-opus:2026-10-18	Текстовое\nполе	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1270	
+11d155aab7c5		AutoCorrect Options	Avtomatik tuzatish parametrlari	reviewed:agent-opus:2026-10-18	Автоматик тузатиш параметрлари	reviewed:agent-opus:2026-10-18	Параметры автозамены	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:29	
 11d2bfc97b9e		Intersection		todo		todo	Пересечение	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/measure_ui.rs:243	
-11f1a8dd42a1		Show	Koʻrsatish	draft:agent-sonnet:2026-10-17	Кўрсатиш	draft:agent-sonnet:2026-10-17	Показать	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:218	
-125953cbfc03		Animations	Animatsiyalar	draft:agent-sonnet:2026-10-17	Анимациялар	draft:agent-sonnet:2026-10-17	Анимация	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:154	
-126d6084dd9b		Delete	Oʻchirish	draft:agent-sonnet:2026-10-17	Ўчириш	draft:agent-sonnet:2026-10-17	Удалить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1951	
-127696f8bde7		Text Effects	Matn effektlari	draft:agent-sonnet:2026-10-17	Матн эффектлари	draft:agent-sonnet:2026-10-17	Текстовые эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2467	
-12d581461ce6		Symbol	Simvol	draft:agent-sonnet:2026-10-17	Символ	draft:agent-sonnet:2026-10-17	Символ	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:55	
+11f1a8dd42a1		Show	Koʻrsatish	reviewed:agent-opus:2026-10-18	Кўрсатиш	reviewed:agent-opus:2026-10-18	Показать	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:218	
+125953cbfc03		Animations	Animatsiyalar	reviewed:agent-opus:2026-10-18	Анимациялар	reviewed:agent-opus:2026-10-18	Анимация	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:154	
+126d6084dd9b		Delete	Oʻchirish	reviewed:agent-opus:2026-10-18	Ўчириш	reviewed:agent-opus:2026-10-18	Удалить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1951	
+127696f8bde7		Text Effects	Matn effektlari	reviewed:agent-opus:2026-10-18	Матн эффектлари	reviewed:agent-opus:2026-10-18	Текстовые эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2467	
+12d581461ce6		Symbol	Simvol	reviewed:agent-opus:2026-10-18	Символ	reviewed:agent-opus:2026-10-18	Символ	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:55	
 12d5f9782750		Mark selected text as:		todo		todo	Пометить выделенный текст как:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1916	
 138ddd59dad6		Date format		todo		todo	Формат даты	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/js_ui.rs:502	
 13b3b2f2af2b		Formula:		todo		todo	Формула:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:644	
-1412abd9c526		Font Color	Shrift rangi	draft:agent-sonnet:2026-10-17	Шрифт ранги	draft:agent-sonnet:2026-10-17	Цвет шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:566	
+1412abd9c526		Font Color	Shrift rangi	reviewed:agent-opus:2026-10-18	Шрифт ранги	reviewed:agent-opus:2026-10-18	Цвет шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:566	
 1418880706bc		Unlock		todo		todo	Разблокировать	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/canvas.rs:1239	
-1444758db6dd		Company	Tashkilot	draft:agent-sonnet:2026-10-17	Ташкилот	draft:agent-sonnet:2026-10-17	Организация	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:229	
+1444758db6dd		Company	Tashkilot	reviewed:agent-opus:2026-10-18	Ташкилот	reviewed:agent-opus:2026-10-18	Организация	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:229	
 154d7c1b59fb		Edit\nData		todo		todo	Изменить\nданные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3056	
-1592b6575be3		Binary assets removed	Ikkilik resurslar olib tashlandi	draft:agent-sonnet:2026-10-17	Иккилик ресурслар олиб ташланди	draft:agent-sonnet:2026-10-17	Удалены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:98	
-160e53460df6		Select Objects	Obyektlarni tanlash	draft:agent-sonnet:2026-10-17	Объектларни танлаш	draft:agent-sonnet:2026-10-17	Выбор объектов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/edit.rs:42	
+1592b6575be3		Binary assets removed	Olib tashlangan ikkilik resurslar	reviewed:agent-opus:2026-10-18	Олиб ташланган иккилик ресурслар	reviewed:agent-opus:2026-10-18	Удалены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:98	review-agent-2026-10-18: column header, parallel to "O`chirilgan qatorlar"
+160e53460df6		Select Objects	Obyektlarni tanlash	reviewed:agent-opus:2026-10-18	Объектларни танлаш	reviewed:agent-opus:2026-10-18	Выбор объектов	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/edit.rs:42	
 1760b808025e		Font…		todo		todo	Шрифт…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1218	
-1796175263dd		Nudge	Surish	draft:agent-sonnet:2026-10-17	Суриш	draft:agent-sonnet:2026-10-17	Сдвинуть	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/arrange.rs:66	
-17de2afe3b27		Reset	Asliga qaytarish	draft:agent-sonnet:2026-10-17	Аслига қайтариш	draft:agent-sonnet:2026-10-17	Сбросить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:452	
-187140e1685d		Text Outline	Matn konturi	draft:agent-sonnet:2026-10-17	Матн контури	draft:agent-sonnet:2026-10-17	Контур текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2459	
-18c21f8c3309		Create PDF	PDF yaratish	draft:agent-sonnet:2026-10-17	PDF яратиш	draft:agent-sonnet:2026-10-17	Создать PDF	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1271	
-19b9793bd50a		Save	Saqlash	draft:agent-sonnet:2026-10-17	Сақлаш	draft:agent-sonnet:2026-10-17	Сохранить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:110	
+1796175263dd		Nudge	Surish	reviewed:agent-opus:2026-10-18	Суриш	reviewed:agent-opus:2026-10-18	Сдвинуть	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/arrange.rs:66	
+17de2afe3b27		Reset	Tiklash	reviewed:agent-opus:2026-10-18	Тиклаш	reviewed:agent-opus:2026-10-18	Сбросить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:452	review-agent-2026-10-18: standard short form of reset
+187140e1685d		Text Outline	Matn konturi	reviewed:agent-opus:2026-10-18	Матн контури	reviewed:agent-opus:2026-10-18	Контур текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2459	
+18c21f8c3309		Create PDF	PDF yaratish	reviewed:agent-opus:2026-10-18	PDF яратиш	reviewed:agent-opus:2026-10-18	Создать PDF	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1271	
+19b9793bd50a		Save	Saqlash	reviewed:agent-opus:2026-10-18	Сақлаш	reviewed:agent-opus:2026-10-18	Сохранить	upstream	gridcraft,pdfcraft,wordcraft	P1	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:110	
 19ccc1c0ea3a		Cycle		todo		todo	Цикл	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:634	
 1aa4219b9c56		Pie		todo		todo	Круговая	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2042	
-1b1bc152cb85		Fit	Moslash	draft:agent-sonnet:2026-10-17	Мослаш	draft:agent-sonnet:2026-10-17	По размеру	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:936	
+1b1bc152cb85		Fit	Moslash	reviewed:agent-opus:2026-10-18	Мослаш	reviewed:agent-opus:2026-10-18	По размеру	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:936	
 1bead76add04		Start at:		todo		todo	Начать с:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1315	
 1e06fb1e8801		Emphasis		todo		todo	Выделение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1912	
-1e0913722f51		Up	Yuqoriga	draft:agent-sonnet:2026-10-17	Юқорига	draft:agent-sonnet:2026-10-17	Вверх	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:1963	
-1e19d6881201		Remove from Recent	Soʻnggilardan olib tashlash	draft:agent-sonnet:2026-10-17	Сўнггилардан олиб ташлаш	draft:agent-sonnet:2026-10-17	Убрать из недавних	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:623	
-1e52a040024c		Print…	Chop etish…	draft:agent-sonnet:2026-10-17	Чоп этиш…	draft:agent-sonnet:2026-10-17	Печать…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/menus.rs:173	
-1ea92610e22b		Real name	Haqiqiy ism	draft:agent-sonnet:2026-10-17	Ҳақиқий исм	draft:agent-sonnet:2026-10-17	Настоящее имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:54	
-1eaa7e5d384e		Ignore All	Hammasini eʼtiborsiz qoldirish	draft:agent-sonnet:2026-10-17	Ҳаммасини эътиборсиз қолдириш	draft:agent-sonnet:2026-10-17	Пропустить все	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1162	
+1e0913722f51		Up	Yuqoriga	reviewed:agent-opus:2026-10-18	Юқорига	reviewed:agent-opus:2026-10-18	Вверх	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:1963	
+1e19d6881201		Remove from Recent	Roʻyxatdan olib tashlash	reviewed:agent-opus:2026-10-18	Рўйхатдан олиб ташлаш	reviewed:agent-opus:2026-10-18	Убрать из недавних	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:623	review-agent-2026-10-18: "So`nggilardan" is not a natural word
+1e52a040024c		Print…	Chop etish…	reviewed:agent-opus:2026-10-18	Чоп этиш…	reviewed:agent-opus:2026-10-18	Печать…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/menus.rs:173	
+1ea92610e22b		Real name	Haqiqiy ism	reviewed:agent-opus:2026-10-18	Ҳақиқий исм	reviewed:agent-opus:2026-10-18	Настоящее имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:54	
+1eaa7e5d384e		Ignore All	Hammasini eʼtiborsiz qoldirish	reviewed:agent-opus:2026-10-18	Ҳаммасини эътиборсиз қолдириш	reviewed:agent-opus:2026-10-18	Пропустить все	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1162	
 1eb8cf264be4		Then by		todo		todo	Затем по	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1929	
 1ec6ef8618b0		Add to Quick Access Toolbar		todo		todo	Добавить на панель быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:167	
-1ed691fb0224		Format	Format	draft:agent-sonnet:2026-10-17	Формат	draft:agent-sonnet:2026-10-17	Формат	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:247	
-1f0480bafb9d		Right Margin	Oʻng chet	draft:agent-sonnet:2026-10-17	Ўнг чет	draft:agent-sonnet:2026-10-17	Правое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:300	
+1ed691fb0224		Format	Format	reviewed:agent-opus:2026-10-18	Формат	reviewed:agent-opus:2026-10-18	Формат	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:247	
+1f0480bafb9d		Right Margin	Oʻng hoshiya	reviewed:agent-opus:2026-10-18	Ўнг ҳошия	reviewed:agent-opus:2026-10-18	Правое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:300	review-agent-2026-10-18: glossary Margins
 1fa3649980c0		Top Border		todo		todo	Верхняя граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2834	
 1fb294caacd3		Black		todo		todo	Чёрный	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/show.rs:1001	
-2063745e3f9d		Name (A–Z)	Nom (A–Z)	draft:agent-sonnet:2026-10-17	Ном (А–З)	draft:agent-sonnet:2026-10-17	Имя (А–Я)	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
-219c409d3156		Check Accessibility	Maxsus imkoniyatlarni tekshirish	draft:agent-sonnet:2026-10-17	Махсус имкониятларни текшириш	draft:agent-sonnet:2026-10-17	Проверить доступность	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:36	
-22f9b253b3ec		Translate	Tarjima qilish	draft:agent-sonnet:2026-10-17	Таржима қилиш	draft:agent-sonnet:2026-10-17	Перевести	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2149	
+2063745e3f9d		Name (A–Z)	Nom (A–Z)	reviewed:agent-opus:2026-10-18	Ном (А–З)	reviewed:agent-opus:2026-10-18	Имя (А–Я)	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
+219c409d3156		Check Accessibility	Maxsus imkoniyatlarni tekshirish	reviewed:agent-opus:2026-10-18	Махсус имкониятларни текшириш	reviewed:agent-opus:2026-10-18	Проверить доступность	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:36	
+22f9b253b3ec		Translate	Tarjima	reviewed:agent-opus:2026-10-18	Таржима	reviewed:agent-opus:2026-10-18	Перевести	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2149	review-agent-2026-10-18: ribbon button
 22fb1f58995c		Tight		todo		todo	Плотный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2804	
 23256add76fa		Warning		todo		todo		todo		P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:927	
 234149e508cb		Preferences		todo		todo	Настройки	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:51	
-2389c083beff		Style	Uslub	draft:agent-sonnet:2026-10-17	Услуб	draft:agent-sonnet:2026-10-17	Стиль	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1024	
+2389c083beff		Style	Uslub	reviewed:agent-opus:2026-10-18	Услуб	reviewed:agent-opus:2026-10-18	Стиль	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1024	
 2587c62a170a		Large		todo		todo		todo		P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:598	
 25d31e86b081		Basic Cycle		todo		todo	Простой цикл	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2049	
 26061d4d4eb3		All caps		todo		todo	Все прописные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2794	
-262e77897cd9		Layouts	Maketlar	draft:agent-sonnet:2026-10-17	Макетлар	draft:agent-sonnet:2026-10-17	Макеты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3106	
+262e77897cd9		Layouts	Maketlar	reviewed:agent-opus:2026-10-18	Макетлар	reviewed:agent-opus:2026-10-18	Макеты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3106	
 2677dd6fb6be		Add		todo		todo	Добавить	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2107	
-26d72a911b6f		Select Word	Soʻzni tanlash	draft:agent-sonnet:2026-10-17	Сўзни танлаш	draft:agent-sonnet:2026-10-17	Выделить слово	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:72	
-27c4331f7da0		Change File Type	Fayl turini oʻzgartirish	draft:agent-sonnet:2026-10-17	Файл турини ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить тип файла	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1250	
+26d72a911b6f		Select Word	Soʻzni tanlash	reviewed:agent-opus:2026-10-18	Сўзни танлаш	reviewed:agent-opus:2026-10-18	Выделить слово	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:72	
+27c4331f7da0		Change File Type	Fayl turini oʻzgartirish	reviewed:agent-opus:2026-10-18	Файл турини ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить тип файла	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:1250	
 28358053c861		Action		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1252	
 28770fb9e7cf		Allow		todo		todo	Разрешить	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:844	
 2902090a83c4		Compatibility		todo		todo	Совместимость	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/protect.rs:139	
 292645a0fca5		AaBbCcDd		todo		todo	АаБбВвГг	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2830	
-29f54ad30a27		Align Left	Chapga tekislash	draft:agent-sonnet:2026-10-17	Чапга текислаш	draft:agent-sonnet:2026-10-17	По левому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:255	
+29f54ad30a27		Align Left	Chapga tekislash	reviewed:agent-opus:2026-10-18	Чапга текислаш	reviewed:agent-opus:2026-10-18	По левому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:255	
 2a5ee357372a		About		todo		todo	О программе	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
-2a685aa429b6		Alt Text	Muqobil matn	draft:agent-sonnet:2026-10-17	Муқобил матн	draft:agent-sonnet:2026-10-17	Замещающий текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:42	
+2a685aa429b6		Alt Text	Muqobil matn	reviewed:agent-opus:2026-10-18	Муқобил матн	reviewed:agent-opus:2026-10-18	Замещающий текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:42	
 2aa54531e5bc		Reopen		todo		todo	Открыть снова	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1297	
-2ab843893edf		Combine	Jamlash	draft:agent-sonnet:2026-10-17	Жамлаш	draft:agent-sonnet:2026-10-17	Объединить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/combine_ui.rs:712	
+2ab843893edf		Combine	Birlashtirish	reviewed:agent-opus:2026-10-18	Бирлаштириш	reviewed:agent-opus:2026-10-18	Объединить	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/combine_ui.rs:712	review-agent-2026-10-18: same verb as "Combine files" (Fayllarni birlashtirish)
 2ab917728bf5		Product		todo		todo	Произведение	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:518	
 2b35b99b392f		Greek		todo		todo	Греческий	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1679	
-2c49eb1fd20b		Collapse	Yigʻish	draft:agent-sonnet:2026-10-17	Йиғиш	draft:agent-sonnet:2026-10-17	Свернуть	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/selpane.rs:174	
+2c49eb1fd20b		Collapse	Yigʻish	reviewed:agent-opus:2026-10-18	Йиғиш	reviewed:agent-opus:2026-10-18	Свернуть	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/selpane.rs:174	
 2cc3d2eb7622		No Reflection		todo		todo	Без отражения	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1019	
 2d605c32dd42		Capitalize names of days		todo		todo	Названия дней с прописной буквы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2095	
-2dd76fa6f16c		Alignment:	Tekislash:	draft:agent-sonnet:2026-10-17	Текислаш:	draft:agent-sonnet:2026-10-17	Выравнивание:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:326	
-2e6042d9c021		Background	Fon	draft:agent-sonnet:2026-10-17	Фон	draft:agent-sonnet:2026-10-17	Фон	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:882	
+2dd76fa6f16c		Alignment:	Tekislash:	reviewed:agent-opus:2026-10-18	Текислаш:	reviewed:agent-opus:2026-10-18	Выравнивание:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:326	
+2e6042d9c021		Background	Fon	reviewed:agent-opus:2026-10-18	Фон	reviewed:agent-opus:2026-10-18	Фон	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:882	
 2e76d7e0fb0b		No Color		todo		todo	Без цвета	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:562	
-2f2f0cd5e51b		Display name	Koʻrsatiladigan nom	draft:agent-sonnet:2026-10-17	Кўрсатиладиган ном	draft:agent-sonnet:2026-10-17	Отображаемое имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:53	
-2f499fde6b6d		Down	Pastga	draft:agent-sonnet:2026-10-17	Пастга	draft:agent-sonnet:2026-10-17	Вниз	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1964	
-2f9e9f5b67f4		Artistic Effects	Badiiy effektlar	draft:agent-sonnet:2026-10-17	Бадиий эффектлар	draft:agent-sonnet:2026-10-17	Художественные эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/artistic.rs:27	
-30525b238774		Text Pane	Matn paneli	draft:agent-sonnet:2026-10-17	Матн панели	draft:agent-sonnet:2026-10-17	Область текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:31	
+2f2f0cd5e51b		Display name	Koʻrsatiladigan nom	reviewed:agent-opus:2026-10-18	Кўрсатиладиган ном	reviewed:agent-opus:2026-10-18	Отображаемое имя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:53	
+2f499fde6b6d		Down	Pastga	reviewed:agent-opus:2026-10-18	Пастга	reviewed:agent-opus:2026-10-18	Вниз	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1964	
+2f9e9f5b67f4		Artistic Effects	Badiiy effektlar	reviewed:agent-opus:2026-10-18	Бадиий эффектлар	reviewed:agent-opus:2026-10-18	Художественные эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/artistic.rs:27	
+30525b238774		Text Pane	Matn paneli	reviewed:agent-opus:2026-10-18	Матн панели	reviewed:agent-opus:2026-10-18	Область текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:31	
 30783766f2ef		Printing		todo		todo	Печать	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:304	
 3081913e7667		Current page		todo		todo	Текущая страница	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/ocr_ui.rs:88	
-308fbe9f6060		Auto	Avto	draft:agent-sonnet:2026-10-17	Авто	draft:agent-sonnet:2026-10-17	Авто	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:408	
-31fd7bca2d42		PRs	PRlar	draft:agent-sonnet:2026-10-17	ПРлар	draft:agent-sonnet:2026-10-17	PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
-321e5a7a0d1b		Next Comment	Keyingi izoh	draft:agent-sonnet:2026-10-17	Кейинги изоҳ	draft:agent-sonnet:2026-10-17	Следующий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:18	
-32a5066dcf79		Select Paragraph	Xatboshini tanlash	draft:agent-sonnet:2026-10-17	Хатбошини танлаш	draft:agent-sonnet:2026-10-17	Выделить абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:73	
+308fbe9f6060		Auto	Avto	reviewed:agent-opus:2026-10-18	Авто	reviewed:agent-opus:2026-10-18	Авто	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:408	
+31fd7bca2d42		PRs	PRlar	reviewed:agent-opus:2026-10-18	ПРлар	reviewed:agent-opus:2026-10-18	PR	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:92	
+321e5a7a0d1b		Next Comment	Keyingi izoh	reviewed:agent-opus:2026-10-18	Кейинги изоҳ	reviewed:agent-opus:2026-10-18	Следующий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:18	
+32a5066dcf79		Select Paragraph	Xatboshini tanlash	reviewed:agent-opus:2026-10-18	Хатбошини танлаш	reviewed:agent-opus:2026-10-18	Выделить абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:73	
 32b4a810be45		Post		todo		todo	Опубликовать	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1263	
 33bf8d206419		Join the ArtCraft Discord		todo		todo	Присоединяйтесь к Discord ArtCraft	upstream	pdfcraft	P1:pdfcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1491	no-uz: part of an ArtCraft sentence that rebrand drops (design 4.3); nothing to translate
 33c7dd0c638e		Soft Edges		todo		todo	Сглаживание	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:318	
 35b7ef56cce4		Password:		todo		todo	Пароль:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:247	
-363d5f4b6ef5		Create	Yaratish	draft:agent-sonnet:2026-10-17	Яратиш	draft:agent-sonnet:2026-10-17	Создать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1961	
+363d5f4b6ef5		Create	Yaratish	reviewed:agent-opus:2026-10-18	Яратиш	reviewed:agent-opus:2026-10-18	Создать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1961	
 36674dcd75a5		Paragraph…		todo		todo	Абзац…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1187	
-366e06a228e5		Delete Rows	Qatorlarni oʻchirish	draft:agent-sonnet:2026-10-17	Қаторларни ўчириш	draft:agent-sonnet:2026-10-17	Удалить строки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2994	
+366e06a228e5		Delete Rows	Qatorlarni oʻchirish	reviewed:agent-opus:2026-10-18	Қаторларни ўчириш	reviewed:agent-opus:2026-10-18	Удалить строки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2994	
 367242dcd1d6		Resolution		todo		todo	Разрешение	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3593	
 3704d02d21c1		Color:		todo		todo	Цвет:	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1657	
 372a8e3466c9		Number of columns:		todo		todo	Число столбцов:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1031	
-37bb08cd9874		Last	Oxirgi	draft:agent-sonnet:2026-10-17	Охирги	draft:agent-sonnet:2026-10-17	Последний	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
+37bb08cd9874		Last	Oxirgi	reviewed:agent-opus:2026-10-18	Охирги	reviewed:agent-opus:2026-10-18	Последний	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
 38162a6f9b13		Path		todo		todo	Контур	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/fillui.rs:166	
 385d2c071451		Glow		todo		todo	Свечение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:300	
 385e347022ab		Dotted		todo		todo	Точечный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
 38cab57d6254		Description:		todo		todo	Описание:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/actions_ui.rs:312	
-38dc98ca039a		Table Style Options	Jadval uslubi parametrlari	draft:agent-sonnet:2026-10-17	Жадвал услуби параметрлари	draft:agent-sonnet:2026-10-17	Параметры стилей таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:49	
-39b7c8de0e2d		Time	Vaqt	draft:agent-sonnet:2026-10-17	Вақт	draft:agent-sonnet:2026-10-17	Время	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:851	
-3a3a6a95ba32		Name	Nom	draft:agent-sonnet:2026-10-17	Ном	draft:agent-sonnet:2026-10-17	Имя	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
+38dc98ca039a		Table Style Options	Jadval uslubi parametrlari	reviewed:agent-opus:2026-10-18	Жадвал услуби параметрлари	reviewed:agent-opus:2026-10-18	Параметры стилей таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:49	
+39b7c8de0e2d		Time	Vaqt	reviewed:agent-opus:2026-10-18	Вақт	reviewed:agent-opus:2026-10-18	Время	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:851	
+3a3a6a95ba32		Name	Nom	reviewed:agent-opus:2026-10-18	Ном	reviewed:agent-opus:2026-10-18	Имя	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:91	
 3a8a99850a0f		Last Column		todo		todo	Последний столбец	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2759	
-3b879047db7a		SmartArt Styles	SmartArt uslublari	draft:agent-sonnet:2026-10-17	SmartArt услублари	draft:agent-sonnet:2026-10-17	Стили SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3134	
+3b879047db7a		SmartArt Styles	SmartArt uslublari	reviewed:agent-opus:2026-10-18	SmartArt услублари	reviewed:agent-opus:2026-10-18	Стили SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3134	
 3c4e837d8abe		Insert Chart		todo		todo	Вставка диаграммы	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:689	
-3c50b2466da3		First commit	Birinchi kommit	draft:agent-sonnet:2026-10-17	Биринчи коммит	draft:agent-sonnet:2026-10-17	Первый коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
+3c50b2466da3		First commit	Birinchi kommit	reviewed:agent-opus:2026-10-18	Биринчи коммит	reviewed:agent-opus:2026-10-18	Первый коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
 3da37ad0ca83		Arrows		todo		todo	Стрелки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1680	
-3dec31aeb534		Font	Shrift	draft:agent-sonnet:2026-10-17	Шрифт	draft:agent-sonnet:2026-10-17	Шрифт	upstream	wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2753	
+3dec31aeb534		Font	Shrift	reviewed:agent-opus:2026-10-18	Шрифт	reviewed:agent-opus:2026-10-18	Шрифт	upstream	wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2753	
 3e19e04e934e		Double		todo		todo	Двойной	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
-3ea98687145a		Bold	Qalin	draft:agent-sonnet:2026-10-17	Қалин	draft:agent-sonnet:2026-10-17	Полужирный	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2770	
+3ea98687145a		Bold	Qalin	reviewed:agent-opus:2026-10-18	Қалин	reviewed:agent-opus:2026-10-18	Полужирный	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2770	
 400e082039e6		Line Spacing Options…		todo		todo	Параметры межстрочного интервала…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:756	
 40d0adfcce5a		Scatter		todo		todo	Точечная	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2046	
-40f01500ecbc		No model credits were built into this copy.	Bu nusxaga model mualliflari haqidagi maʼlumot kiritilmagan.	draft:agent-sonnet:2026-10-17	Бу нусхага модел муаллифлари ҳақидаги маълумот киритилмаган.	draft:agent-sonnet:2026-10-17	В эту сборку не включены сведения о моделях.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:300	
+40f01500ecbc		No model credits were built into this copy.	Bu nusxaga model mualliflari haqidagi maʼlumot kiritilmagan.	reviewed:agent-opus:2026-10-18	Бу нусхага модель муаллифлари ҳақидаги маълумот киритилмаган.	reviewed:agent-opus:2026-10-18	В эту сборку не включены сведения о моделях.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:300	review-agent-2026-10-18: Cyrillic spelling
 429eeca19eb6		Theme Colors		todo		todo	Цвета темы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/widgets.rs:276	
-442fded5d4f4		Grab bag	Turli narsalar	draft:agent-sonnet:2026-10-17	Турли нарсалар	draft:agent-sonnet:2026-10-17	Разное	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:238	
+442fded5d4f4		Grab bag	Turli narsalar	reviewed:agent-opus:2026-10-18	Турли нарсалар	reviewed:agent-opus:2026-10-18	Разное	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:238	
 4441725403e0		Spacing		todo		todo	Интервал	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2797	
 44455f585229		Swedish		todo		todo	Шведский	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2440	
-44c60a98d78b		Download	Yuklab olish	draft:agent-sonnet:2026-10-17	Юклаб олиш	draft:agent-sonnet:2026-10-17	Скачать	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:942	
-44f24937792b		Paste Special…	Maxsus qoʻyish…	draft:agent-sonnet:2026-10-17	Махсус қўйиш…	draft:agent-sonnet:2026-10-17	Специальная вставка…	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:410	
-44f442553a9a		Font:	Shrift:	draft:agent-sonnet:2026-10-17	Шрифт:	draft:agent-sonnet:2026-10-17	Шрифт:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:298	
-4688b5a4d5e0		Yes	Ha	draft:agent-sonnet:2026-10-17	Ҳа	draft:agent-sonnet:2026-10-17	Да	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
+44c60a98d78b		Download	Yuklab olish	reviewed:agent-opus:2026-10-18	Юклаб олиш	reviewed:agent-opus:2026-10-18	Скачать	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:942	
+44f24937792b		Paste Special…	Maxsus qoʻyish…	reviewed:agent-opus:2026-10-18	Махсус қўйиш…	reviewed:agent-opus:2026-10-18	Специальная вставка…	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:410	
+44f442553a9a		Font:	Shrift:	reviewed:agent-opus:2026-10-18	Шрифт:	reviewed:agent-opus:2026-10-18	Шрифт:	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:298	
+4688b5a4d5e0		Yes	Ha	reviewed:agent-opus:2026-10-18	Ҳа	reviewed:agent-opus:2026-10-18	Да	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/bulk_fields.rs:241	
 4693f1d4fd52		Indent		todo		todo	Отступ	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1620	
-46c1da71ba14		Arrow	Strelka	draft:agent-sonnet:2026-10-17	Стрелка	draft:agent-sonnet:2026-10-17	Стрелка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
-47228d07c6d9		Line delta	Qatorlar oʻzgarishi	draft:agent-sonnet:2026-10-17	Қаторлар ўзгариши	draft:agent-sonnet:2026-10-17	Изменение числа строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:96	
+46c1da71ba14		Arrow	Strelka	reviewed:agent-opus:2026-10-18	Стрелка	reviewed:agent-opus:2026-10-18	Стрелка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
+47228d07c6d9		Line delta	Qatorlar oʻzgarishi	reviewed:agent-opus:2026-10-18	Қаторлар ўзгариши	reviewed:agent-opus:2026-10-18	Изменение числа строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:96	
 4726055d8aa3		Points		todo		todo	Пункты	upstream	wordcraft	P2	deckcraft,wordcraft	crates/engine/src/cmd/points.rs:27	
-48e453206db3		Open	Ochish	draft:agent-sonnet:2026-10-17	Очиш	draft:agent-sonnet:2026-10-17	Открыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:69	
-48f5d00f576b		Columns	Ustunlar	draft:agent-sonnet:2026-10-17	Устунлар	draft:agent-sonnet:2026-10-17	Колонки	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/panes.rs:412	
-4a2a29571e7d		Shape Outline	Shakl konturi	draft:agent-sonnet:2026-10-17	Шакл контури	draft:agent-sonnet:2026-10-17	Контур фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2435	
-4aae82dafd0a		Tags	Teglar	draft:agent-sonnet:2026-10-17	Теглар	draft:agent-sonnet:2026-10-17	Теги	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:227	
+48e453206db3		Open	Ochish	reviewed:agent-opus:2026-10-18	Очиш	reviewed:agent-opus:2026-10-18	Открыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:69	
+48f5d00f576b		Columns	Ustunlar	reviewed:agent-opus:2026-10-18	Устунлар	reviewed:agent-opus:2026-10-18	Колонки	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/panes.rs:412	
+4a2a29571e7d		Shape Outline	Shakl konturi	reviewed:agent-opus:2026-10-18	Шакл контури	reviewed:agent-opus:2026-10-18	Контур фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2435	
+4aae82dafd0a		Tags	Teglar	reviewed:agent-opus:2026-10-18	Теглар	reviewed:agent-opus:2026-10-18	Теги	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:227	
 4b0f40f1c0f8		All		todo		todo	Все	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/show.rs:1007	
 4b3b04e2c0ef		none		todo		todo	нет	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/control.rs:294	
 4be49a13cfe7		Value		todo		todo	Значение	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2004	
-4beef4450795		Rotate	Burish	draft:agent-sonnet:2026-10-17	Буриш	draft:agent-sonnet:2026-10-17	Повернуть	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1124	
-4c5f8b0a206f		File Name	Fayl nomi	draft:agent-sonnet:2026-10-17	Файл номи	draft:agent-sonnet:2026-10-17	Имя файла	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:504	
+4beef4450795		Rotate	Burish	reviewed:agent-opus:2026-10-18	Буриш	reviewed:agent-opus:2026-10-18	Повернуть	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1124	
+4c5f8b0a206f		File Name	Fayl nomi	reviewed:agent-opus:2026-10-18	Файл номи	reviewed:agent-opus:2026-10-18	Имя файла	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:504	
 4d34042bfe3d		Dismiss		todo		todo	Закрыть	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/widgets.rs:347	
 4d9bafd9320b		Height		todo		todo	Высота	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2380	
-4f1f2b14d67f		Ruler	Chizgʻich	draft:agent-sonnet:2026-10-17	Чизғич	draft:agent-sonnet:2026-10-17	Линейка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:366	
-4f2117a6d837		Dark Mode	Qorongʻi rejim	draft:agent-sonnet:2026-10-17	Қоронғи режим	draft:agent-sonnet:2026-10-17	Тёмный режим	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:379	
+4f1f2b14d67f		Ruler	Chizgʻich	reviewed:agent-opus:2026-10-18	Чизғич	reviewed:agent-opus:2026-10-18	Линейка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:366	
+4f2117a6d837		Dark Mode	Qorongʻi rejim	reviewed:agent-opus:2026-10-18	Қоронғи режим	reviewed:agent-opus:2026-10-18	Тёмный режим	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:379	
 4f90e8e21e75		Triple		todo		todo	Тройная	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:583	
-4ff9e7c0d004		Ink to Shape	Qoʻlyozmani shaklga aylantirish	draft:agent-sonnet:2026-10-17	Қўлёзмани шаклга айлантириш	draft:agent-sonnet:2026-10-17	Рукописный ввод в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:32	
+4ff9e7c0d004		Ink to Shape	Qoʻlyozmani shaklga aylantirish	reviewed:agent-opus:2026-10-18	Қўлёзмани шаклга айлантириш	reviewed:agent-opus:2026-10-18	Рукописный ввод в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:32	
 505331cdf00a		Hide		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/selpane.rs:222	
-506f230325a0		Lines deleted	Oʻchirilgan qatorlar	draft:agent-sonnet:2026-10-17	Ўчирилган қаторлар	draft:agent-sonnet:2026-10-17	Удалено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:95	
-51292c7540ff		Tab	Tab	draft:agent-sonnet:2026-10-17	Tab	draft:agent-sonnet:2026-10-17	Tab	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1960	
+506f230325a0		Lines deleted	Oʻchirilgan qatorlar	reviewed:agent-opus:2026-10-18	Ўчирилган қаторлар	reviewed:agent-opus:2026-10-18	Удалено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:95	
+51292c7540ff		Tab	Tab	reviewed:agent-opus:2026-10-18	Tab	reviewed:agent-opus:2026-10-18	Tab	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1960	
 51b41f5a4e1d		Stacked		todo		todo	Столбиком	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:786	
 51cc5412e9e4		Show password		todo		todo	Показать пароль	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1422	
 51ce57d72a52		Change Picture…		todo		todo	Заменить рисунок…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1247	
 51fcc440a721		Bottom Border		todo		todo	Нижняя граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2835	
 52d8f9a9791d		Exactly		todo		todo	Точно	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2940	
-539922bcbcd2		Reverse the order	Tartibni teskari qilish	draft:agent-sonnet:2026-10-17	Тартибни тескари қилиш	draft:agent-sonnet:2026-10-17	В обратном порядке	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:234	
-5584a3f60e6a		Tabs	Tabulyatsiya	draft:agent-sonnet:2026-10-17	Табуляция	draft:agent-sonnet:2026-10-17	Табуляция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:48	
-558b41754788		Rectangle	Toʻgʻri toʻrtburchak	draft:agent-sonnet:2026-10-17	Тўғри тўртбурчак	draft:agent-sonnet:2026-10-17	Прямоугольник	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:463	
-55d4c958f84f		Type	Tur	draft:agent-sonnet:2026-10-17	Тур	draft:agent-sonnet:2026-10-17	Тип	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/fillui.rs:170	
-562102e9fc50		Add comments	Izohlar qoʻshish	draft:agent-sonnet:2026-10-17	Изоҳлар қўшиш	draft:agent-sonnet:2026-10-17	Добавить комментарии	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:230	
+539922bcbcd2		Reverse the order	Tartibni teskari qilish	reviewed:agent-opus:2026-10-18	Тартибни тескари қилиш	reviewed:agent-opus:2026-10-18	В обратном порядке	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:234	
+5584a3f60e6a		Tabs	Tabulyatsiya	reviewed:agent-opus:2026-10-18	Табуляция	reviewed:agent-opus:2026-10-18	Табуляция	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:48	
+558b41754788		Rectangle	Toʻgʻri toʻrtburchak	reviewed:agent-opus:2026-10-18	Тўғри тўртбурчак	reviewed:agent-opus:2026-10-18	Прямоугольник	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:463	
+55d4c958f84f		Type	Tur	reviewed:agent-opus:2026-10-18	Тур	reviewed:agent-opus:2026-10-18	Тип	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/fillui.rs:170	
+562102e9fc50		Add comments	Izohlar qoʻshish	reviewed:agent-opus:2026-10-18	Изоҳлар қўшиш	reviewed:agent-opus:2026-10-18	Добавить комментарии	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:230	
 5623290f0eff		Previous sheet		todo		todo	Предыдущий лист	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/tabs.rs:46	
-5639c05fba0a		Hidden	Yashirin	draft:agent-sonnet:2026-10-17	Яширин	draft:agent-sonnet:2026-10-17	Скрытый	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1724	
-5709ef5b0049		Pencil	Qalam	draft:agent-sonnet:2026-10-17	Қалам	draft:agent-sonnet:2026-10-17	Карандаш	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1436	
-57f0f80d0fda		Change Shape	Shaklni oʻzgartirish	draft:agent-sonnet:2026-10-17	Шаклни ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2390	
-5864d9c069e7		Select	Tanlash	draft:agent-sonnet:2026-10-17	Танлаш	draft:agent-sonnet:2026-10-17	Выделить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1423	
-58691c9b3510		Add footer	Quyi kolontitul qoʻshish	draft:agent-sonnet:2026-10-17	Қуйи колонтитул қўшиш	draft:agent-sonnet:2026-10-17	Добавить нижний колонтитул	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:486	
-590124b06b7e		Sort	Saralash	draft:agent-sonnet:2026-10-17	Саралаш	draft:agent-sonnet:2026-10-17	Сортировка	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:225	
+5639c05fba0a		Hidden	Yashirin	reviewed:agent-opus:2026-10-18	Яширин	reviewed:agent-opus:2026-10-18	Скрытый	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1724	
+5709ef5b0049		Pencil	Qalam	reviewed:agent-opus:2026-10-18	Қалам	reviewed:agent-opus:2026-10-18	Карандаш	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1436	
+57f0f80d0fda		Change Shape	Shaklni oʻzgartirish	reviewed:agent-opus:2026-10-18	Шаклни ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2390	
+5864d9c069e7		Select	Tanlash	reviewed:agent-opus:2026-10-18	Танлаш	reviewed:agent-opus:2026-10-18	Выделить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1423	
+58691c9b3510		Add footer	Quyi kolontitul qoʻshish	reviewed:agent-opus:2026-10-18	Қуйи колонтитул қўшиш	reviewed:agent-opus:2026-10-18	Добавить нижний колонтитул	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:486	
+590124b06b7e		Sort	Saralash	reviewed:agent-opus:2026-10-18	Саралаш	reviewed:agent-opus:2026-10-18	Сортировка	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:225	
 5a32f164b835		Do not check spelling or grammar		todo		todo	Не проверять орфографию и грамматику	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1931	
-5aec058d423c		Find…	Topish…	draft:agent-sonnet:2026-10-17	Топиш…	draft:agent-sonnet:2026-10-17	Найти…	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:412	
-5b3d84ac378c		Undo	Qaytarish	draft:agent-sonnet:2026-10-17	Қайтариш	draft:agent-sonnet:2026-10-17	Отменить	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:181	
-5b9d0c9e48bc		Picture Border	Rasm chegarasi	draft:agent-sonnet:2026-10-17	Расм чегараси	draft:agent-sonnet:2026-10-17	Граница рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2677	
-5bc2c39db8b8		Transparency	Shaffoflik	draft:agent-sonnet:2026-10-17	Шаффофлик	draft:agent-sonnet:2026-10-17	Прозрачность	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/fillui.rs:306	
-5c36ada9359d		Insert Below	Pastga kiritish	draft:agent-sonnet:2026-10-17	Пастга киритиш	draft:agent-sonnet:2026-10-17	Вставить снизу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:15	
-5c532d2163e0		Page Setup	Sahifa parametrlari	draft:agent-sonnet:2026-10-17	Саҳифа параметрлари	draft:agent-sonnet:2026-10-17	Параметры страницы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:405	
-5d77245b1d3b		Properties	Xossalar	draft:agent-sonnet:2026-10-17	Хоссалар	draft:agent-sonnet:2026-10-17	Свойства	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:859	
+5aec058d423c		Find…	Topish…	reviewed:agent-opus:2026-10-18	Топиш…	reviewed:agent-opus:2026-10-18	Найти…	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:412	
+5b3d84ac378c		Undo	Qaytarish	reviewed:agent-opus:2026-10-18	Қайтариш	reviewed:agent-opus:2026-10-18	Отменить	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:181	
+5b9d0c9e48bc		Picture Border	Rasm chegarasi	reviewed:agent-opus:2026-10-18	Расм чегараси	reviewed:agent-opus:2026-10-18	Граница рисунка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2677	
+5bc2c39db8b8		Transparency	Shaffoflik	reviewed:agent-opus:2026-10-18	Шаффофлик	reviewed:agent-opus:2026-10-18	Прозрачность	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/fillui.rs:306	
+5c36ada9359d		Insert Below	Pastga kiritish	reviewed:agent-opus:2026-10-18	Пастга киритиш	reviewed:agent-opus:2026-10-18	Вставить снизу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:15	
+5c532d2163e0		Page Setup	Sahifa parametrlari	reviewed:agent-opus:2026-10-18	Саҳифа параметрлари	reviewed:agent-opus:2026-10-18	Параметры страницы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:405	
+5d77245b1d3b		Properties	Xususiyatlar	reviewed:agent-opus:2026-10-18	Хусусиятлар	reviewed:agent-opus:2026-10-18	Свойства	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:859	review-agent-2026-10-18: glossary Properties
 5d841c528d4a		Reflection		todo		todo	Отражение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:274	
-5da02b036754		Margins	Sahifa chetlari	draft:agent-sonnet:2026-10-17	Саҳифа четлари	draft:agent-sonnet:2026-10-17	Поля	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:298	
+5da02b036754		Margins	Hoshiyalar	reviewed:agent-opus:2026-10-18	Ҳошиялар	reviewed:agent-opus:2026-10-18	Поля	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:298	review-agent-2026-10-18: glossary Margins
 5df98001f472		Centered		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1009	
 5e32677aa9ee		Align Center		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1139	
 5ebe206342ce		Document		todo		todo	Документ	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/docking.rs:28	
-5f57ef808ac4		Split Cells	Kataklarni ajratish	draft:agent-sonnet:2026-10-17	Катакларни ажратиш	draft:agent-sonnet:2026-10-17	Разделить ячейки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:31	
-5f595358e6e9		Chart Design	Diagramma dizayni	draft:agent-sonnet:2026-10-17	Диаграмма дизайни	draft:agent-sonnet:2026-10-17	Конструктор диаграмм	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:146	
+5f57ef808ac4		Split Cells	Kataklarni ajratish	reviewed:agent-opus:2026-10-18	Катакларни ажратиш	reviewed:agent-opus:2026-10-18	Разделить ячейки	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:31	
+5f595358e6e9		Chart Design	Diagramma dizayni	reviewed:agent-opus:2026-10-18	Диаграмма дизайни	reviewed:agent-opus:2026-10-18	Конструктор диаграмм	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:146	
 5f942ec93182		Saved		todo		todo	Сохранено	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:1299	
 6016bb522870		Sort by		todo		todo	Сортировать по	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1929	
-6094ba57e0a6		New Comment	Yangi izoh	draft:agent-sonnet:2026-10-17	Янги изоҳ	draft:agent-sonnet:2026-10-17	Новый комментарий	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1306	
-613cc9c1a598		Find	Topish	draft:agent-sonnet:2026-10-17	Топиш	draft:agent-sonnet:2026-10-17	Найти	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/qat.rs:52	
-617956be900a		Checkbox	Belgilash katagi	draft:agent-sonnet:2026-10-17	Белгилаш катаги	draft:agent-sonnet:2026-10-17	Флажок	upstream		P1	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:290	
-626227c83cd2		Replace…	Almashtirish…	draft:agent-sonnet:2026-10-17	Алмаштириш…	draft:agent-sonnet:2026-10-17	Заменить…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:3225	
+6094ba57e0a6		New Comment	Yangi izoh	reviewed:agent-opus:2026-10-18	Янги изоҳ	reviewed:agent-opus:2026-10-18	Новый комментарий	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1306	
+613cc9c1a598		Find	Topish	reviewed:agent-opus:2026-10-18	Топиш	reviewed:agent-opus:2026-10-18	Найти	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/qat.rs:52	
+617956be900a		Checkbox	Belgilash katagi	reviewed:agent-opus:2026-10-18	Белгилаш катаги	reviewed:agent-opus:2026-10-18	Флажок	upstream		P1	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:290	
+626227c83cd2		Replace…	Almashtirish…	reviewed:agent-opus:2026-10-18	Алмаштириш…	reviewed:agent-opus:2026-10-18	Заменить…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:3225	
 62e9bf327012		Width		todo		todo	Ширина	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2373	
-62f3cb74e53d		Add to Dictionary	Lugʻatga qoʻshish	draft:agent-sonnet:2026-10-17	Луғатга қўшиш	draft:agent-sonnet:2026-10-17	Добавить в словарь	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1167	
-63e6aafb3cb7		Table Styles	Jadval uslublari	draft:agent-sonnet:2026-10-17	Жадвал услублари	draft:agent-sonnet:2026-10-17	Стили таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:40	
-63fabfb897a3		Data	Maʼlumotlar	draft:agent-sonnet:2026-10-17	Маълумотлар	draft:agent-sonnet:2026-10-17	Данные	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:870	
-644de63b7bf5		Date &\nTime	Sana va\nvaqt	draft:agent-sonnet:2026-10-17	Сана ва\nвақт	draft:agent-sonnet:2026-10-17	Дата и\nвремя	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1280	
+62f3cb74e53d		Add to Dictionary	Lugʻatga qoʻshish	reviewed:agent-opus:2026-10-18	Луғатга қўшиш	reviewed:agent-opus:2026-10-18	Добавить в словарь	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1167	
+63e6aafb3cb7		Table Styles	Jadval uslublari	reviewed:agent-opus:2026-10-18	Жадвал услублари	reviewed:agent-opus:2026-10-18	Стили таблиц	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:40	
+63fabfb897a3		Data	Maʼlumotlar	reviewed:agent-opus:2026-10-18	Маълумотлар	reviewed:agent-opus:2026-10-18	Данные	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:870	
+644de63b7bf5		Date &\nTime	Sana va\nvaqt	reviewed:agent-opus:2026-10-18	Сана ва\nвақт	reviewed:agent-opus:2026-10-18	Дата и\nвремя	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1280	
 6471aaa892e2		Add a comment		todo		todo	Добавить комментарий	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comments.rs:1374	
 6546f6577477		Paste (⌘V)		todo		todo	Вставить (⌘V)	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:337	
-65ad12205300		Chart	Diagramma	draft:agent-sonnet:2026-10-17	Диаграмма	draft:agent-sonnet:2026-10-17	Диаграмма	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:238	
+65ad12205300		Chart	Diagramma	reviewed:agent-opus:2026-10-18	Диаграмма	reviewed:agent-opus:2026-10-18	Диаграмма	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:238	
 65d114bb829c		Standard Colors		todo		todo	Стандартные цвета	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/widgets.rs:338	
-66dcdb43622f		Select Text	Matnni tanlash	draft:agent-sonnet:2026-10-17	Матнни танлаш	draft:agent-sonnet:2026-10-17	Выделить текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:70	
+66dcdb43622f		Select Text	Matnni tanlash	reviewed:agent-opus:2026-10-18	Матнни танлаш	reviewed:agent-opus:2026-10-18	Выделить текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:70	
 6747459d40a6		Volume		todo		todo	Том	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3194	
-677b49a7349e		Thesaurus	Sinonimlar lugʻati	draft:agent-sonnet:2026-10-17	Синонимлар луғати	draft:agent-sonnet:2026-10-17	Тезаурус	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:376	
-68793aa27ebc		Print	Chop etish	draft:agent-sonnet:2026-10-17	Чоп этиш	draft:agent-sonnet:2026-10-17	Печать	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:1034	
-692a19d8dc21		Numbering	Raqamlash	draft:agent-sonnet:2026-10-17	Рақамлаш	draft:agent-sonnet:2026-10-17	Нумерация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
-6999cadab10b		First	Birinchi	draft:agent-sonnet:2026-10-17	Биринчи	draft:agent-sonnet:2026-10-17	Первый	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
-69bbe856cb8a		Themes	Temalar	draft:agent-sonnet:2026-10-17	Темалар	draft:agent-sonnet:2026-10-17	Темы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3254	
-6a11f241e25b		Date & Time	Sana va vaqt	draft:agent-sonnet:2026-10-17	Сана ва вақт	draft:agent-sonnet:2026-10-17	Дата и время	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:78	
+677b49a7349e		Thesaurus	Sinonimlar lugʻati	reviewed:agent-opus:2026-10-18	Синонимлар луғати	reviewed:agent-opus:2026-10-18	Тезаурус	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:376	
+68793aa27ebc		Print	Chop etish	reviewed:agent-opus:2026-10-18	Чоп этиш	reviewed:agent-opus:2026-10-18	Печать	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:1034	
+692a19d8dc21		Numbering	Raqamlash	reviewed:agent-opus:2026-10-18	Рақамлаш	reviewed:agent-opus:2026-10-18	Нумерация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
+6999cadab10b		First	Birinchi	reviewed:agent-opus:2026-10-18	Биринчи	reviewed:agent-opus:2026-10-18	Первый	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:99	
+69bbe856cb8a		Themes	Mavzular	reviewed:agent-opus:2026-10-18	Мавзулар	reviewed:agent-opus:2026-10-18	Темы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3254	review-agent-2026-10-18: glossary Theme
+6a11f241e25b		Date & Time	Sana va vaqt	reviewed:agent-opus:2026-10-18	Сана ва вақт	reviewed:agent-opus:2026-10-18	Дата и время	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:78	
 6a4cdb93bc7a		Export…		todo		todo	Экспортировать…	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/lib.rs:406	
-6b202d4b5ef5		Reply	Javob berish	draft:agent-sonnet:2026-10-17	Жавоб бериш	draft:agent-sonnet:2026-10-17	Ответить	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/engine/src/cmd/review.rs:14	
-6b3eb29ff573		Align Right	Oʻngga tekislash	draft:agent-sonnet:2026-10-17	Ўнгга текислаш	draft:agent-sonnet:2026-10-17	По правому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:257	
-6c1037376c3b		Currency	Pul birligi	draft:agent-sonnet:2026-10-17	Пул бирлиги	draft:agent-sonnet:2026-10-17	Денежный	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:1677	
-6cbab8c439f3		Resolve	Hal qilindi deb belgilash	draft:agent-sonnet:2026-10-17	Ҳал қилинди деб белгилаш	draft:agent-sonnet:2026-10-17	Отметить решённым	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1297	
+6b202d4b5ef5		Reply	Javob berish	reviewed:agent-opus:2026-10-18	Жавоб бериш	reviewed:agent-opus:2026-10-18	Ответить	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/engine/src/cmd/review.rs:14	
+6b3eb29ff573		Align Right	Oʻngga tekislash	reviewed:agent-opus:2026-10-18	Ўнгга текислаш	reviewed:agent-opus:2026-10-18	По правому краю	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/menus.rs:257	
+6c1037376c3b		Currency	Pul birligi	reviewed:agent-opus:2026-10-18	Пул бирлиги	reviewed:agent-opus:2026-10-18	Денежный	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:1677	
+6cbab8c439f3		Resolve	Hal qilish	reviewed:agent-opus:2026-10-18	Ҳал қилиш	reviewed:agent-opus:2026-10-18	Отметить решённым	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1297	review-agent-2026-10-18: button label
 6d012d102afa		Day		todo		todo	День	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
 6d01909775cb		Delete Comment		todo		todo	Удалить комментарий	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:15	
 6df72a93f5b4		Set		todo		todo	Установить	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3154	
-6e11c7e37e44		Description	Tavsif	draft:agent-sonnet:2026-10-17	Тавсиф	draft:agent-sonnet:2026-10-17	Описание	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:98	
-6e15c49c8a4d		Clear	Tozalash	draft:agent-sonnet:2026-10-17	Тозалаш	draft:agent-sonnet:2026-10-17	Очистить	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3128	
+6e11c7e37e44		Description	Tavsif	reviewed:agent-opus:2026-10-18	Тавсиф	reviewed:agent-opus:2026-10-18	Описание	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:98	
+6e15c49c8a4d		Clear	Tozalash	reviewed:agent-opus:2026-10-18	Тозалаш	reviewed:agent-opus:2026-10-18	Очистить	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3128	
 6e8e207b8fff		Inside Horizontal Border		todo		todo	Внутренняя горизонтальная граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2838	
-70724bc7f76c		Decrease Font Size	Shrift oʻlchamini kamaytirish	draft:agent-sonnet:2026-10-17	Шрифт ўлчамини камайтириш	draft:agent-sonnet:2026-10-17	Уменьшить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:521	
-709f601c0e66		Portrait	Kitob yoʻnalishi	draft:agent-sonnet:2026-10-17	Китоб йўналиши	draft:agent-sonnet:2026-10-17	Книжная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1058	
-70fe9d4d2ea7		Next Page	Keyingi sahifa	draft:agent-sonnet:2026-10-17	Кейинги саҳифа	draft:agent-sonnet:2026-10-17	Следующая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1222	
-7184490b8d0a		Oval	Oval	draft:agent-sonnet:2026-10-17	Овал	draft:agent-sonnet:2026-10-17	Овал	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
-7231d48018d1		Edit Data	Maʼlumotlarni tahrirlash	draft:agent-sonnet:2026-10-17	Маълумотларни таҳрирлаш	draft:agent-sonnet:2026-10-17	Изменить данные	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/insert.rs:107	
+70724bc7f76c		Decrease Font Size	Shrift oʻlchamini kamaytirish	reviewed:agent-opus:2026-10-18	Шрифт ўлчамини камайтириш	reviewed:agent-opus:2026-10-18	Уменьшить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:521	
+709f601c0e66		Portrait	Kitob	reviewed:agent-opus:2026-10-18	Китоб	reviewed:agent-opus:2026-10-18	Книжная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1058	review-agent-2026-10-18: glossary Portrait
+70fe9d4d2ea7		Next Page	Keyingi sahifa	reviewed:agent-opus:2026-10-18	Кейинги саҳифа	reviewed:agent-opus:2026-10-18	Следующая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1222	
+7184490b8d0a		Oval	Oval	reviewed:agent-opus:2026-10-18	Овал	reviewed:agent-opus:2026-10-18	Овал	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
+7231d48018d1		Edit Data	Maʼlumotlarni tahrirlash	reviewed:agent-opus:2026-10-18	Маълумотларни таҳрирлаш	reviewed:agent-opus:2026-10-18	Изменить данные	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/insert.rs:107	
 730f838e4ded		Play		todo		todo	Воспроизвести	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3158	
 731bc2ececa5		On		todo		todo	Включено	upstream	wordcraft	P2	pdfcraft,wordcraft	crates/ui-egui/src/motion.rs:42	
-7329653d16ec		Pages	Sahifalar	draft:agent-sonnet:2026-10-17	Саҳифалар	draft:agent-sonnet:2026-10-17	Страницы	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:542	
+7329653d16ec		Pages	Sahifalar	reviewed:agent-opus:2026-10-18	Саҳифалар	reviewed:agent-opus:2026-10-18	Страницы	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:542	
 73b921782e6f		Select a chart first.		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/dialogs.rs:1976	
-7416c23aa31d		Help	Yordam	draft:agent-sonnet:2026-10-17	Ёрдам	draft:agent-sonnet:2026-10-17	Справка	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:292	
+7416c23aa31d		Help	Yordam	reviewed:agent-opus:2026-10-18	Ёрдам	reviewed:agent-opus:2026-10-18	Справка	upstream	pdfcraft,wordcraft	P1	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/menus.rs:292	
 742a595e9413		No Shadow		todo		todo	Без тени	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1006	
 752aa21ad0ff		Rename		todo		todo	Переименовать	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1528	
 756cd8d3de89		Month		todo		todo	Месяц	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
-75f350d74f4d		Text Box	Matn qutisi	draft:agent-sonnet:2026-10-17	Матн қутиси	draft:agent-sonnet:2026-10-17	Текстовое поле	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:213	
-75fcad667d97		Center	Markaz	draft:agent-sonnet:2026-10-17	Марказ	draft:agent-sonnet:2026-10-17	По центру	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2964	
+75f350d74f4d		Text Box	Matn qutisi	reviewed:agent-opus:2026-10-18	Матн қутиси	reviewed:agent-opus:2026-10-18	Текстовое поле	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:213	
+75fcad667d97		Center	Markaz	reviewed:agent-opus:2026-10-18	Марказ	reviewed:agent-opus:2026-10-18	По центру	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2964	
 76dea9b2c29d		Rotate all text 90°		todo		todo	Повернуть весь текст на 90°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:784	
-770860d8fb73		Preferences…	Afzalliklar…	draft:agent-sonnet:2026-10-17	Афзалликлар…	draft:agent-sonnet:2026-10-17	Настройки…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/lib.rs:397	
+770860d8fb73		Preferences…	Sozlamalar…	reviewed:agent-opus:2026-10-18	Созламалар…	reviewed:agent-opus:2026-10-18	Настройки…	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/lib.rs:397	review-agent-2026-10-18: glossary Preferences
 7761af1b4d3e		Join the ArtCraft community on Discord		todo		todo	Присоединяйтесь к сообществу ArtCraft в Discord	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:737	no-uz: part of an ArtCraft sentence that rebrand drops (design 4.3); nothing to translate
-777e2d84550a		Shape Effects	Shakl effektlari	draft:agent-sonnet:2026-10-17	Шакл эффектлари	draft:agent-sonnet:2026-10-17	Эффекты фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2439	
-7a61082e8e48		Replace All	Hammasini almashtirish	draft:agent-sonnet:2026-10-17	Ҳаммасини алмаштириш	draft:agent-sonnet:2026-10-17	Заменить все	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3215	
-7a6d6d796e6c		Comment	Izoh	draft:agent-sonnet:2026-10-17	Изоҳ	draft:agent-sonnet:2026-10-17	Комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1267	
-7aad051fcadd		Cell Margins	Katak chetlari	draft:agent-sonnet:2026-10-17	Катак четлари	draft:agent-sonnet:2026-10-17	Поля ячеек	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3025	
-7abec7dd0013		SmartArt	SmartArt	draft:agent-sonnet:2026-10-17	SmartArt	draft:agent-sonnet:2026-10-17	SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1233	
-7b022b95065c		Format Painter	Format namunasi	draft:agent-sonnet:2026-10-17	Формат намунаси	draft:agent-sonnet:2026-10-17	Формат по образцу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:213	
-7b232807682d		Shapes	Shakllar	draft:agent-sonnet:2026-10-17	Шакллар	draft:agent-sonnet:2026-10-17	Фигуры	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1681	
-7b31edcbe9ff		Next	Keyingi	draft:agent-sonnet:2026-10-17	Кейинги	draft:agent-sonnet:2026-10-17	Далее	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:99	
-7b919326ec98		Templates	Shablonlar	draft:agent-sonnet:2026-10-17	Шаблонлар	draft:agent-sonnet:2026-10-17	Шаблоны	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:710	
+777e2d84550a		Shape Effects	Shakl effektlari	reviewed:agent-opus:2026-10-18	Шакл эффектлари	reviewed:agent-opus:2026-10-18	Эффекты фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2439	
+7a61082e8e48		Replace All	Hammasini almashtirish	reviewed:agent-opus:2026-10-18	Ҳаммасини алмаштириш	reviewed:agent-opus:2026-10-18	Заменить все	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3215	
+7a6d6d796e6c		Comment	Izoh	reviewed:agent-opus:2026-10-18	Изоҳ	reviewed:agent-opus:2026-10-18	Комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1267	
+7aad051fcadd		Cell Margins	Katak hoshiyalari	reviewed:agent-opus:2026-10-18	Катак ҳошиялари	reviewed:agent-opus:2026-10-18	Поля ячеек	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3025	review-agent-2026-10-18: glossary Margins
+7abec7dd0013		SmartArt	SmartArt	reviewed:agent-opus:2026-10-18	SmartArt	reviewed:agent-opus:2026-10-18	SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1233	
+7b022b95065c		Format Painter	Formatni nusxalash	reviewed:agent-opus:2026-10-18	Форматни нусхалаш	reviewed:agent-opus:2026-10-18	Формат по образцу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:213	review-agent-2026-10-18: "Format namunasi" (format sample) did not name the tool; same term as Copy Formatting
+7b232807682d		Shapes	Shakllar	reviewed:agent-opus:2026-10-18	Шакллар	reviewed:agent-opus:2026-10-18	Фигуры	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1681	
+7b31edcbe9ff		Next	Keyingi	reviewed:agent-opus:2026-10-18	Кейинги	reviewed:agent-opus:2026-10-18	Далее	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:99	
+7b919326ec98		Templates	Shablonlar	reviewed:agent-opus:2026-10-18	Шаблонлар	reviewed:agent-opus:2026-10-18	Шаблоны	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:710	
 7c6fbca90bb8		Clustered Column		todo		todo	Гистограмма с группировкой	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2033	
 7c9fc0095d93		Correct TWo INitial CApitals		todo		todo	Исправлять ДВе ПРописные буквы в начале слова	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2093	
-7cae2cac2483		Automatic	Avtomatik	draft:agent-sonnet:2026-10-17	Автоматик	draft:agent-sonnet:2026-10-17	Автоматически	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1319	
+7cae2cac2483		Automatic	Avtomatik	reviewed:agent-opus:2026-10-18	Автоматик	reviewed:agent-opus:2026-10-18	Автоматически	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1319	
 7ce53d2e6083		Distribute		todo		todo	Распределить	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/engine/src/cmd/arrange.rs:49	
 7cf3284dbfde		Paper		todo		todo	Бумага	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:277	
 7d53fed520db		Date and Time		todo		todo	Дата и время	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:59	
-7d6411b572eb		Increase Indent	Chekinishni oshirish	draft:agent-sonnet:2026-10-17	Чекинишни ошириш	draft:agent-sonnet:2026-10-17	Увеличить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:218	
-7d97a8a98fc6		Page {page} of {pages}	{pages} sahifadan {page}-sahifa	draft:agent-sonnet:2026-10-17	{pages} саҳифадан {page}-саҳифа	draft:agent-sonnet:2026-10-17	Страница {page} из {pages}	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:771	
-7e04496c379b		Lines +/−	Qatorlar +/−	draft:agent-sonnet:2026-10-17	Қаторлар +/−	draft:agent-sonnet:2026-10-17	Строки +/−	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
-7e7f8a2c3ece		Layout	Maket	draft:agent-sonnet:2026-10-17	Макет	draft:agent-sonnet:2026-10-17	Макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1272	
-7ec8210a8982		Orientation	Yoʻnalish	draft:agent-sonnet:2026-10-17	Йўналиш	draft:agent-sonnet:2026-10-17	Ориентация	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:219	
+7d6411b572eb		Increase Indent	Chekinishni oshirish	reviewed:agent-opus:2026-10-18	Чекинишни ошириш	reviewed:agent-opus:2026-10-18	Увеличить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:218	
+7d97a8a98fc6		Page {page} of {pages}	Sahifa {page} / {pages}	reviewed:agent-opus:2026-10-18	Саҳифа {page} / {pages}	reviewed:agent-opus:2026-10-18	Страница {page} из {pages}	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:771	review-agent-2026-10-18: compact pager form
+7e04496c379b		Lines +/−	Qatorlar +/−	reviewed:agent-opus:2026-10-18	Қаторлар +/−	reviewed:agent-opus:2026-10-18	Строки +/−	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+7e7f8a2c3ece		Layout	Maket	reviewed:agent-opus:2026-10-18	Макет	reviewed:agent-opus:2026-10-18	Макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1272	
+7ec8210a8982		Orientation	Yoʻnalish	reviewed:agent-opus:2026-10-18	Йўналиш	reviewed:agent-opus:2026-10-18	Ориентация	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:219	
 7f98314d6228		Zoom…		todo		todo		todo		P2	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:373	
 7fd02178875e		Left:		todo		todo	Слева:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
 7ff5a39e1952		Customize Quick Access Toolbar		todo		todo	Настроить панель быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:134	
 80b7e4fc31e8		Small caps		todo		todo	Малые прописные	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2794	
-80cf56dbb8dd		SmartArt Design	SmartArt dizayni	draft:agent-sonnet:2026-10-17	SmartArt дизайни	draft:agent-sonnet:2026-10-17	Конструктор SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:143	
+80cf56dbb8dd		SmartArt Design	SmartArt dizayni	reviewed:agent-opus:2026-10-18	SmartArt дизайни	reviewed:agent-opus:2026-10-18	Конструктор SmartArt	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:143	
 80f953339101		All pages		todo		todo	Все страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/combine_ui.rs:1477	
-812846507344		Compare	Solishtirish	draft:agent-sonnet:2026-10-17	Солиштириш	draft:agent-sonnet:2026-10-17	Сравнить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2154	
+812846507344		Compare	Solishtirish	reviewed:agent-opus:2026-10-18	Солиштириш	reviewed:agent-opus:2026-10-18	Сравнить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2154	
 81b24612f95e		Sentence case.		todo		todo	Как в предложениях.	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:545	
 82175c9eb30f		Rotation:		todo		todo	Поворот:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1067	
 824ca9534685		Space		todo		todo	Пробел	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:1969	
-82ab9b8a95c5		Paste Formatting	Formatni qoʻyish	draft:agent-sonnet:2026-10-17	Форматни қўйиш	draft:agent-sonnet:2026-10-17	Вставить форматирование	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:351	
-82ddc6cf6fb6		Password	Parol	draft:agent-sonnet:2026-10-17	Парол	draft:agent-sonnet:2026-10-17	Пароль	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:261	
+82ab9b8a95c5		Paste Formatting	Formatni qoʻyish	reviewed:agent-opus:2026-10-18	Форматни қўйиш	reviewed:agent-opus:2026-10-18	Вставить форматирование	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:351	
+82ddc6cf6fb6		Password	Parol	reviewed:agent-opus:2026-10-18	Пароль	reviewed:agent-opus:2026-10-18	Пароль	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:261	review-agent-2026-10-18: Cyrillic spelling
 836620d5e661		Even pages only		todo		todo	Только чётные страницы	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/marks_ui.rs:63	
-838c8c038fb3		Search	Qidirish	draft:agent-sonnet:2026-10-17	Қидириш	draft:agent-sonnet:2026-10-17	Поиск	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:607	
-83da5215e482		Letter	Letter	draft:agent-sonnet:2026-10-17	Letter	draft:agent-sonnet:2026-10-17	Письмо	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1089	
-84563de5d5b8		Comments	Izohlar	draft:agent-sonnet:2026-10-17	Изоҳлар	draft:agent-sonnet:2026-10-17	Комментарии	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:230	
-84cbf360518e		New Window	Yangi oyna	draft:agent-sonnet:2026-10-17	Янги ойна	draft:agent-sonnet:2026-10-17	Новое окно	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:381	
-84d0571b2608		Convert to Text	Matnga aylantirish	draft:agent-sonnet:2026-10-17	Матнга айлантириш	draft:agent-sonnet:2026-10-17	Преобразовать в текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3113	
-84d1c2f2bb83		New\nComment	Yangi\nizoh	draft:agent-sonnet:2026-10-17	Янги\nизоҳ	draft:agent-sonnet:2026-10-17	Новый\nкомментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2167	
+838c8c038fb3		Search	Qidirish	reviewed:agent-opus:2026-10-18	Қидириш	reviewed:agent-opus:2026-10-18	Поиск	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:607	
+83da5215e482		Letter	Letter	reviewed:agent-opus:2026-10-18	Letter	reviewed:agent-opus:2026-10-18	Письмо	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1089	
+84563de5d5b8		Comments	Izohlar	reviewed:agent-opus:2026-10-18	Изоҳлар	reviewed:agent-opus:2026-10-18	Комментарии	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:230	
+84cbf360518e		New Window	Yangi oyna	reviewed:agent-opus:2026-10-18	Янги ойна	reviewed:agent-opus:2026-10-18	Новое окно	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:381	
+84d0571b2608		Convert to Text	Matnga aylantirish	reviewed:agent-opus:2026-10-18	Матнга айлантириш	reviewed:agent-opus:2026-10-18	Преобразовать в текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3113	
+84d1c2f2bb83		New\nComment	Yangi\nizoh	reviewed:agent-opus:2026-10-18	Янги\nизоҳ	reviewed:agent-opus:2026-10-18	Новый\nкомментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2167	
 84d865bafc80		Today		todo		todo	Сегодня	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:589	
-850bba7840d4		Text Fill	Matnni toʻldirish	draft:agent-sonnet:2026-10-17	Матнни тўлдириш	draft:agent-sonnet:2026-10-17	Заливка текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:368	
+850bba7840d4		Text Fill	Matnni toʻldirish	reviewed:agent-opus:2026-10-18	Матнни тўлдириш	reviewed:agent-opus:2026-10-18	Заливка текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:368	
 865cf3869a2c		Inside Borders		todo		todo	Внутренние границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2833	
 86fea649687d		Update		todo		todo	Обновить	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:473	
-8741a1692320		Format Painter (double-click to keep it on)	Format namunasi (doimiy yoqish uchun ikki marta bosing)	draft:agent-sonnet:2026-10-17	Формат намунаси (доимий ёқиш учун икки марта босинг)	draft:agent-sonnet:2026-10-17	Формат по образцу (дважды щёлкните, чтобы закрепить)	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:361	
-8769f2e59ed5		Link	Havola	draft:agent-sonnet:2026-10-17	Ҳавола	draft:agent-sonnet:2026-10-17	Ссылка	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1251	
-87e5495e18c0		Enter	Enter	draft:agent-sonnet:2026-10-17	Enter	draft:agent-sonnet:2026-10-17	Ввод	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:1956	
-87f42704b831		Left	Chap	draft:agent-sonnet:2026-10-17	Чап	draft:agent-sonnet:2026-10-17	Слева	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2963	
+8741a1692320		Format Painter (double-click to keep it on)	Formatni nusxalash (yoniq qolishi uchun ikki marta bosing)	reviewed:agent-opus:2026-10-18	Форматни нусхалаш (ёниқ қолиши учун икки марта босинг)	reviewed:agent-opus:2026-10-18	Формат по образцу (дважды щёлкните, чтобы закрепить)	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:361	review-agent-2026-10-18: tool name as Format Painter; "keep it on" said plainly
+8769f2e59ed5		Link	Havola	reviewed:agent-opus:2026-10-18	Ҳавола	reviewed:agent-opus:2026-10-18	Ссылка	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1251	
+87e5495e18c0		Enter	Enter	reviewed:agent-opus:2026-10-18	Enter	reviewed:agent-opus:2026-10-18	Ввод	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:1956	
+87f42704b831		Left	Chap	reviewed:agent-opus:2026-10-18	Чап	reviewed:agent-opus:2026-10-18	Слева	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2963	
 88651cad8d08		Remove from Quick Access Toolbar		todo		todo	Удалить с панели быстрого доступа	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/qat.rs:128	
-88c26221320f		Clear All Formatting	Barcha formatlashni tozalash	draft:agent-sonnet:2026-10-17	Барча форматлашни тозалаш	draft:agent-sonnet:2026-10-17	Очистить всё форматирование	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:522	
+88c26221320f		Clear All Formatting	Barcha formatlashni tozalash	reviewed:agent-opus:2026-10-18	Барча форматлашни тозалаш	reviewed:agent-opus:2026-10-18	Очистить всё форматирование	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:522	
 892abf040ddc		Default		todo		todo	По умолчанию	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:185	
 892d76f36208		Next sheet		todo		todo	Следующий лист	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/tabs.rs:49	
 898f929ef649		Link…		todo		todo	Ссылка…	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1197	
-89eb9570fc9b		Replace	Almashtirish	draft:agent-sonnet:2026-10-17	Алмаштириш	draft:agent-sonnet:2026-10-17	Заменить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1661	
-8c0d1a82fb3e		Ungroup	Guruhdan chiqarish	draft:agent-sonnet:2026-10-17	Гуруҳдан чиқариш	draft:agent-sonnet:2026-10-17	Разгруппировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1236	
-8ca5e7d53aae		Fonts	Shriftlar	draft:agent-sonnet:2026-10-17	Шрифтлар	draft:agent-sonnet:2026-10-17	Шрифты	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1538	
+89eb9570fc9b		Replace	Almashtirish	reviewed:agent-opus:2026-10-18	Алмаштириш	reviewed:agent-opus:2026-10-18	Заменить	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1661	
+8c0d1a82fb3e		Ungroup	Guruhdan chiqarish	reviewed:agent-opus:2026-10-18	Гуруҳдан чиқариш	reviewed:agent-opus:2026-10-18	Разгруппировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1236	
+8ca5e7d53aae		Fonts	Shriftlar	reviewed:agent-opus:2026-10-18	Шрифтлар	reviewed:agent-opus:2026-10-18	Шрифты	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1538	
 8cc496ae66b1		Tabs…		todo		todo	Табуляция…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3028	
-8cfccc5e08e4		Change	Oʻzgartirish	draft:agent-sonnet:2026-10-17	Ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2653	
+8cfccc5e08e4		Change	Oʻzgartirish	reviewed:agent-opus:2026-10-18	Ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2653	
 8d0bc8f0dec6		No Glow		todo		todo	Без свечения	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1026	
 8f64dc90eea7		Middle		todo		todo	По центру	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:378	
 90fe4771814b		Angle		todo		todo	Угол	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/fillui.rs:212	
-91096eff00b0		Show\nComments	Izohlarni\nkoʻrsatish	draft:agent-sonnet:2026-10-17	Изоҳларни\nкўрсатиш	draft:agent-sonnet:2026-10-17	Показать\nкомментарии	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2174	
-92003eb0390d		Share	Ulashish	draft:agent-sonnet:2026-10-17	Улашиш	draft:agent-sonnet:2026-10-17	Поделиться	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:415	
+91096eff00b0		Show\nComments	Izohlarni\nkoʻrsatish	reviewed:agent-opus:2026-10-18	Изоҳларни\nкўрсатиш	reviewed:agent-opus:2026-10-18	Показать\nкомментарии	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2174	
+92003eb0390d		Share	Ulashish	reviewed:agent-opus:2026-10-18	Улашиш	reviewed:agent-opus:2026-10-18	Поделиться	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:415	
 929effdb70b2		Grayscale		todo		todo	Оттенки серого	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:380	
-92b8ca988b75		Decrease Indent	Chekinishni kamaytirish	draft:agent-sonnet:2026-10-17	Чекинишни камайтириш	draft:agent-sonnet:2026-10-17	Уменьшить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:217	
+92b8ca988b75		Decrease Indent	Chekinishni kamaytirish	reviewed:agent-opus:2026-10-18	Чекинишни камайтириш	reviewed:agent-opus:2026-10-18	Уменьшить отступ	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:217	
 931a3badd5cd		Hierarchy		todo		todo	Иерархия	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2050	
-93299d74016c		Bring Forward	Oldinga olib chiqish	draft:agent-sonnet:2026-10-17	Олдинга олиб чиқиш	draft:agent-sonnet:2026-10-17	Переместить вперёд	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1228	
-9365a19a8d00		Send Backward	Orqaga surish	draft:agent-sonnet:2026-10-17	Орқага суриш	draft:agent-sonnet:2026-10-17	Переместить назад	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1232	
+93299d74016c		Bring Forward	Oldinga olib chiqish	reviewed:agent-opus:2026-10-18	Олдинга олиб чиқиш	reviewed:agent-opus:2026-10-18	Переместить вперёд	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1228	
+9365a19a8d00		Send Backward	Orqaga surish	reviewed:agent-opus:2026-10-18	Орқага суриш	reviewed:agent-opus:2026-10-18	Переместить назад	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1232	
 93723b3e38c5		Pause		todo		todo	Пауза	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3158	
-93a295051dd8		Delete Table	Jadvalni oʻchirish	draft:agent-sonnet:2026-10-17	Жадвални ўчириш	draft:agent-sonnet:2026-10-17	Удалить таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2995	
+93a295051dd8		Delete Table	Jadvalni oʻchirish	reviewed:agent-opus:2026-10-18	Жадвални ўчириш	reviewed:agent-opus:2026-10-18	Удалить таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2995	
 93f180b8f181		Circle		todo		todo	Круг	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comment_props.rs:39	
-943d7b29b87f		Locked	Qulflangan	draft:agent-sonnet:2026-10-17	Қулфланган	draft:agent-sonnet:2026-10-17	Заблокировано	upstream	pdfcraft	P1:pdfcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1723	
-94e239481b63		Landscape	Albom yoʻnalishi	draft:agent-sonnet:2026-10-17	Албом йўналиши	draft:agent-sonnet:2026-10-17	Альбомная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1059	
+943d7b29b87f		Locked	Qulflangan	reviewed:agent-opus:2026-10-18	Қулфланган	reviewed:agent-opus:2026-10-18	Заблокировано	upstream	pdfcraft	P1:pdfcraft	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1723	
+94e239481b63		Landscape	Albom	reviewed:agent-opus:2026-10-18	Альбом	reviewed:agent-opus:2026-10-18	Альбомная	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1059	review-agent-2026-10-18: glossary Landscape
 95c41bc013cc		Rows		todo		todo	Строки	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:325	
-965d26030cca		Change Layout	Maketni oʻzgartirish	draft:agent-sonnet:2026-10-17	Макетни ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/smartart.rs:201	
+965d26030cca		Change Layout	Maketni oʻzgartirish	reviewed:agent-opus:2026-10-18	Макетни ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить макет	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/smartart.rs:201	
 965e3780355a		Undo {action}		todo		todo	Отменить: {action}	upstream	wordcraft	P2	pdfcraft,wordcraft		
-9754d4102ac7		Shading	Soyalash	draft:agent-sonnet:2026-10-17	Соялаш	draft:agent-sonnet:2026-10-17	Заливка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2812	
-97bc29200785		Subject	Mavzu	draft:agent-sonnet:2026-10-17	Мавзу	draft:agent-sonnet:2026-10-17	Тема	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:226	
+9754d4102ac7		Shading	Soyalash	reviewed:agent-opus:2026-10-18	Соялаш	reviewed:agent-opus:2026-10-18	Заливка	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2812	
+97bc29200785		Subject	Mavzu	reviewed:agent-opus:2026-10-18	Мавзу	reviewed:agent-opus:2026-10-18	Тема	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:226	
 98d885117cab		Mark as decorative		todo		todo	Пометить как декоративный	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1507	
-98dd944474a6		Field properties	Maydon xossalari	draft:agent-sonnet:2026-10-17	Майдон хоссалари	draft:agent-sonnet:2026-10-17	Свойства поля	upstream		P1	pdfcraft,wordcraft	crates/engine/src/catalog.rs:346	
+98dd944474a6		Field properties	Maydon xususiyatlari	reviewed:agent-opus:2026-10-18	Майдон хусусиятлари	reviewed:agent-opus:2026-10-18	Свойства поля	upstream		P1	pdfcraft,wordcraft	crates/engine/src/catalog.rs:346	review-agent-2026-10-18: glossary Properties
 9997fac1c1dc		Weight		todo		todo	Толщина	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2689	
 99f1d52cfba4		Presets		todo		todo	Образцы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:793	
-9a23c306b426		Close	Yopish	draft:agent-sonnet:2026-10-17	Ёпиш	draft:agent-sonnet:2026-10-17	Закрыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:111	
-9a8a9224a51d		Icons	Piktogrammalar	draft:agent-sonnet:2026-10-17	Пиктограммалар	draft:agent-sonnet:2026-10-17	Значки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1231	
-9b5e105d56ff		Gridlines	Katakcha chiziqlari	draft:agent-sonnet:2026-10-17	Катакча чизиқлари	draft:agent-sonnet:2026-10-17	Сетка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:367	
-9bc9e48f28ce		Move Down	Pastga koʻchirish	draft:agent-sonnet:2026-10-17	Пастга кўчириш	draft:agent-sonnet:2026-10-17	Переместить вниз	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1140	
+9a23c306b426		Close	Yopish	reviewed:agent-opus:2026-10-18	Ёпиш	reviewed:agent-opus:2026-10-18	Закрыть	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:111	
+9a8a9224a51d		Icons	Piktogrammalar	reviewed:agent-opus:2026-10-18	Пиктограммалар	reviewed:agent-opus:2026-10-18	Значки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1231	
+9b5e105d56ff		Gridlines	Toʻr chiziqlari	reviewed:agent-opus:2026-10-18	Тўр чизиқлари	reviewed:agent-opus:2026-10-18	Сетка	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:367	review-agent-2026-10-18: gridlines are grid lines, not "small cell" lines
+9bc9e48f28ce		Move Down	Pastga koʻchirish	reviewed:agent-opus:2026-10-18	Пастга кўчириш	reviewed:agent-opus:2026-10-18	Переместить вниз	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1140	
 9c972456c699		Name:		todo		todo	Имя:	upstream	pdfcraft,wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:157	
 9cd28da6fd64		Format:		todo		todo	Формат:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1364	
-9ce43ba0c3a5		Not saved yet	Hali saqlanmagan	draft:agent-sonnet:2026-10-17	Ҳали сақланмаган	draft:agent-sonnet:2026-10-17	Ещё не сохранено	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:817	
+9ce43ba0c3a5		Not saved yet	Hali saqlanmagan	reviewed:agent-opus:2026-10-18	Ҳали сақланмаган	reviewed:agent-opus:2026-10-18	Ещё не сохранено	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:817	
 9d4e6c613c57		Stacked Column		todo		todo	Гистограмма с накоплением	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2034	
-9e43cbfe4440		Demote	Darajani pasaytirish	draft:agent-sonnet:2026-10-17	Даражани пасайтириш	draft:agent-sonnet:2026-10-17	Понизить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3093	
+9e43cbfe4440		Demote	Darajani pasaytirish	reviewed:agent-opus:2026-10-18	Даражани пасайтириш	reviewed:agent-opus:2026-10-18	Понизить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3093	
 9e580f636b35		Relationship		todo		todo	Связь	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:636	
-9e75d258ab35		Change Case	Harf registrini oʻzgartirish	draft:agent-sonnet:2026-10-17	Ҳарф регистрини ўзгартириш	draft:agent-sonnet:2026-10-17	Регистр	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:542	
+9e75d258ab35		Change Case	Harf registri	reviewed:agent-opus:2026-10-18	Ҳарф регистри	reviewed:agent-opus:2026-10-18	Регистр	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:542	review-agent-2026-10-18: dropdown label (ru Регистр)
 9ead8a88634c		Right Border		todo		todo	Правая граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2837	
-9ef48755cecb		PDF (*.pdf)	PDF fayl (*.pdf)	draft:agent-sonnet:2026-10-17	PDF файл (*.pdf)	draft:agent-sonnet:2026-10-17	Файл PDF (*.pdf)	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:217	
+9ef48755cecb		PDF (*.pdf)	PDF (*.pdf)	reviewed:agent-opus:2026-10-18	PDF (*.pdf)	reviewed:agent-opus:2026-10-18	Файл PDF (*.pdf)	upstream	gridcraft	P1	deckcraft,gridcraft	crates/ui-egui/src/backstage.rs:217	review-agent-2026-10-18: "fayl" was redundant
 9fa4d327bb3b		Search Commands		todo		todo	Поиск команд	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:674	
-a076c02a4824		Right-to-Left Text Direction	Oʻngdan chapga matn yoʻnalishi	draft:agent-sonnet:2026-10-17	Ўнгдан чапга матн йўналиши	draft:agent-sonnet:2026-10-17	Направление текста справа налево	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:261	
+a076c02a4824		Right-to-Left Text Direction	Matn yoʻnalishi: oʻngdan chapga	reviewed:agent-opus:2026-10-18	Матн йўналиши: ўнгдан чапга	reviewed:agent-opus:2026-10-18	Направление текста справа налево	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:261	review-agent-2026-10-18: same pattern as the left-to-right row
 a094835183b3		Insert Table		todo		todo	Вставить таблицу	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:34	
-a111f7316f76		Author	Muallif	draft:agent-sonnet:2026-10-17	Муаллиф	draft:agent-sonnet:2026-10-17	Автор	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:231	
-a16c3b44c1cf		Eraser	Oʻchirgich	draft:agent-sonnet:2026-10-17	Ўчиргич	draft:agent-sonnet:2026-10-17	Ластик	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1427	
+a111f7316f76		Author	Muallif	reviewed:agent-opus:2026-10-18	Муаллиф	reviewed:agent-opus:2026-10-18	Автор	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:231	
+a16c3b44c1cf		Eraser	Oʻchirgich	reviewed:agent-opus:2026-10-18	Ўчиргич	reviewed:agent-opus:2026-10-18	Ластик	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1427	
 a2354aa7100d		Title:		todo		todo	Заголовок:	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:224	
-a2597b362df4		Line Spacing	Qatorlar oraligʻi	draft:agent-sonnet:2026-10-17	Қаторлар оралиғи	draft:agent-sonnet:2026-10-17	Межстрочный интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:749	
-a27190239145		Align Text	Matnni tekislash	draft:agent-sonnet:2026-10-17	Матнни текислаш	draft:agent-sonnet:2026-10-17	Выравнивание текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:793	
+a2597b362df4		Line Spacing	Satr oraligʻi	reviewed:agent-opus:2026-10-18	Сатр оралиғи	reviewed:agent-opus:2026-10-18	Межстрочный интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:749	review-agent-2026-10-18: glossary Line (text) = Satr
+a27190239145		Align Text	Matnni tekislash	reviewed:agent-opus:2026-10-18	Матнни текислаш	reviewed:agent-opus:2026-10-18	Выравнивание текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:793	
 a310ce4a612b		Capitalize Each Word		todo		todo	Каждое Слово С Прописной	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:548	
-a33460a56451		Dot	Nuqta	draft:agent-sonnet:2026-10-17	Нуқта	draft:agent-sonnet:2026-10-17	Точка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2857	
+a33460a56451		Dot	Nuqta	reviewed:agent-opus:2026-10-18	Нуқта	reviewed:agent-opus:2026-10-18	Точка	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2857	
 a350887fe899		No Border		todo		todo	Без границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2830	
 a3ca7c1a568c		Sum		todo		todo	Итог	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:468	
-a416aefdf180		(none)	(yoʻq)	draft:agent-sonnet:2026-10-17	(йўқ)	draft:agent-sonnet:2026-10-17	(нет)	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:487	
+a416aefdf180		(none)	(yoʻq)	reviewed:agent-opus:2026-10-18	(йўқ)	reviewed:agent-opus:2026-10-18	(нет)	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:487	
 a4a7629c43cd		Accessibility Checker		todo		todo	Проверка доступности	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:63	
-a556f664ba54		Tables	Jadvallar	draft:agent-sonnet:2026-10-17	Жадваллар	draft:agent-sonnet:2026-10-17	Таблицы	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs_review.rs:105	
-a6493be912d6		Model	Model	draft:agent-sonnet:2026-10-17	Модел	draft:agent-sonnet:2026-10-17	Модель	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
-a64a24d5ff5a		Keywords	Kalit soʻzlar	draft:agent-sonnet:2026-10-17	Калит сўзлар	draft:agent-sonnet:2026-10-17	Ключевые слова	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:97	
-a65b97083677		Change Picture	Rasmni almashtirish	draft:agent-sonnet:2026-10-17	Расмни алмаштириш	draft:agent-sonnet:2026-10-17	Заменить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2652	
+a556f664ba54		Tables	Jadvallar	reviewed:agent-opus:2026-10-18	Жадваллар	reviewed:agent-opus:2026-10-18	Таблицы	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs_review.rs:105	
+a6493be912d6		Model	Model	reviewed:agent-opus:2026-10-18	Модель	reviewed:agent-opus:2026-10-18	Модель	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	review-agent-2026-10-18: Cyrillic spelling
+a64a24d5ff5a		Keywords	Kalit soʻzlar	reviewed:agent-opus:2026-10-18	Калит сўзлар	reviewed:agent-opus:2026-10-18	Ключевые слова	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:97	
+a65b97083677		Change Picture	Rasmni almashtirish	reviewed:agent-opus:2026-10-18	Расмни алмаштириш	reviewed:agent-opus:2026-10-18	Заменить рисунок	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2652	
 a7258f0911b7		tOGGLE cASE		todo		todo	иЗМЕНИТЬ рЕГИСТР	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:549	
-a7a8db7df0e5		Footer	Quyi kolontitul	draft:agent-sonnet:2026-10-17	Қуйи колонтитул	draft:agent-sonnet:2026-10-17	Нижний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1080	
+a7a8db7df0e5		Footer	Quyi kolontitul	reviewed:agent-opus:2026-10-18	Қуйи колонтитул	reviewed:agent-opus:2026-10-18	Нижний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1080	
 a7ce2524ee2c		Duplicate		todo		todo		todo		P2	deckcraft,pdfcraft	crates/ui-egui/src/menus.rs:191	
 a91ca954e0c0		Information		todo		todo		todo		P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:927	
-a96739898db5		Cut	Kesib olish	draft:agent-sonnet:2026-10-17	Кесиб олиш	draft:agent-sonnet:2026-10-17	Вырезать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
-a9c73f4db83d		Fields	Maydonlar	draft:agent-sonnet:2026-10-17	Майдонлар	draft:agent-sonnet:2026-10-17	Поля	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:601	
-aa8dfb9eb88c		Previous	Oldingi	draft:agent-sonnet:2026-10-17	Олдинги	draft:agent-sonnet:2026-10-17	Назад	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:102	
+a96739898db5		Cut	Kesib olish	reviewed:agent-opus:2026-10-18	Кесиб олиш	reviewed:agent-opus:2026-10-18	Вырезать	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+a9c73f4db83d		Fields	Maydonlar	reviewed:agent-opus:2026-10-18	Майдонлар	reviewed:agent-opus:2026-10-18	Поля	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/chrome.rs:601	
+aa8dfb9eb88c		Previous	Oldingi	reviewed:agent-opus:2026-10-18	Олдинги	reviewed:agent-opus:2026-10-18	Назад	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/doc_window.rs:102	
 ab0d27a41b54		Search icons		todo		todo	Поиск значков	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1330	
-ab21a44778f3		Display theme	Koʻrinish temasi	draft:agent-sonnet:2026-10-17	Кўриниш темаси	draft:agent-sonnet:2026-10-17	Тема оформления	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:934	
-ab3dd3632319		Username	Foydalanuvchi nomi	draft:agent-sonnet:2026-10-17	Фойдаланувчи номи	draft:agent-sonnet:2026-10-17	Имя пользователя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:52	
+ab21a44778f3		Display theme	Koʻrinish mavzusi	reviewed:agent-opus:2026-10-18	Кўриниш мавзуси	reviewed:agent-opus:2026-10-18	Тема оформления	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:934	review-agent-2026-10-18: glossary Theme
+ab3dd3632319		Username	Foydalanuvchi nomi	reviewed:agent-opus:2026-10-18	Фойдаланувчи номи	reviewed:agent-opus:2026-10-18	Имя пользователя	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:52	
 ab8ecdf6a546		Refresh		todo		todo	Обновить	upstream	wordcraft	P2	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/pivot_pane.rs:160	
 acf44707c398		Inside Vertical Border		todo		todo	Внутренняя вертикальная граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2839	
 ad06ca83515f		Star		todo		todo	Звезда	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1041	
-af45c5e79e90		Custom Margins…	Maxsus sahifa chetlari…	draft:agent-sonnet:2026-10-17	Махсус саҳифа четлари…	draft:agent-sonnet:2026-10-17	Настраиваемые поля…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:320	
-af826758a054		Find Next	Keyingisini topish	draft:agent-sonnet:2026-10-17	Кейингисини топиш	draft:agent-sonnet:2026-10-17	Найти далее	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3198	
-afbe592216e0		Effects	Effektlar	draft:agent-sonnet:2026-10-17	Эффектлар	draft:agent-sonnet:2026-10-17	Эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:220	
+af45c5e79e90		Custom Margins…	Maxsus hoshiyalar…	reviewed:agent-opus:2026-10-18	Махсус ҳошиялар…	reviewed:agent-opus:2026-10-18	Настраиваемые поля…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:320	review-agent-2026-10-18: glossary Margins
+af826758a054		Find Next	Keyingisini topish	reviewed:agent-opus:2026-10-18	Кейингисини топиш	reviewed:agent-opus:2026-10-18	Найти далее	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3198	
+afbe592216e0		Effects	Effektlar	reviewed:agent-opus:2026-10-18	Эффектлар	reviewed:agent-opus:2026-10-18	Эффекты	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:220	
 b0279cd18b88		List		todo		todo	Список	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:632	
-b033489981fe		Interface size	Interfeys oʻlchami	draft:agent-sonnet:2026-10-17	Интерфейс ўлчами	draft:agent-sonnet:2026-10-17	Размер интерфейса	upstream	gridcraft,pdfcraft	P1:gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2150	
+b033489981fe		Interface size	Interfeys oʻlchami	reviewed:agent-opus:2026-10-18	Интерфейс ўлчами	reviewed:agent-opus:2026-10-18	Размер интерфейса	upstream	gridcraft,pdfcraft	P1:gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2150	
 b06b3d0b370f		Reset Crop		todo		todo	Сбросить обрезку	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2725	
-b106f76f2b27		Go To	Oʻtish	draft:agent-sonnet:2026-10-17	Ўтиш	draft:agent-sonnet:2026-10-17	Перейти	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:639	
+b106f76f2b27		Go To	Oʻtish	reviewed:agent-opus:2026-10-18	Ўтиш	reviewed:agent-opus:2026-10-18	Перейти	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:639	
 b12d0b9628a8		Models		todo		todo	Модели	upstream	wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2072	
-b22470ecf90b		Remove Background	Fonni olib tashlash	draft:agent-sonnet:2026-10-17	Фонни олиб ташлаш	draft:agent-sonnet:2026-10-17	Удалить фон	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2571	
+b22470ecf90b		Remove Background	Fonni olib tashlash	reviewed:agent-opus:2026-10-18	Фонни олиб ташлаш	reviewed:agent-opus:2026-10-18	Удалить фон	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2571	
 b2d9533e58c9		Clustered Bar		todo		todo	Линейчатая с группировкой	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2036	
 b3f35b427ffd		Total Row		todo		todo	Строка итогов	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2755	
-b41884d7b057		Justify	Kenglik boʻyicha tekislash	draft:agent-sonnet:2026-10-17	Кенглик бўйича текислаш	draft:agent-sonnet:2026-10-17	По ширине	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2966	
-b473286892d8		Interface language	Interfeys tili	draft:agent-sonnet:2026-10-17	Интерфейс тили	draft:agent-sonnet:2026-10-17	Язык интерфейса	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:949	
+b41884d7b057		Justify	Kenglik boʻyicha	reviewed:agent-opus:2026-10-18	Кенглик бўйича	reviewed:agent-opus:2026-10-18	По ширине	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2966	review-agent-2026-10-18: glossary Justify
+b473286892d8		Interface language	Interfeys tili	reviewed:agent-opus:2026-10-18	Интерфейс тили	reviewed:agent-opus:2026-10-18	Язык интерфейса	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:949	
 b48de27ae1f0		Remove		todo		todo	Удалить	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:394	
 b49c9dc420b9		Preview		todo		todo	Предварительный просмотр	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1633	
-b4e2c1d70887		Alignment	Tekislash	draft:agent-sonnet:2026-10-17	Текислаш	draft:agent-sonnet:2026-10-17	Выравнивание	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2956	
+b4e2c1d70887		Alignment	Tekislash	reviewed:agent-opus:2026-10-18	Текислаш	reviewed:agent-opus:2026-10-18	Выравнивание	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2956	
 b5693e8aefb0		Picture		todo		todo	Рисунок	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:215	
 b58f4734f69f		UPPERCASE		todo		todo	ВСЕ ПРОПИСНЫЕ	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:547	
-b65f3fa3ba5a		New	Yangi	draft:agent-sonnet:2026-10-17	Янги	draft:agent-sonnet:2026-10-17	Создать	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:68	
+b65f3fa3ba5a		New	Yangi	reviewed:agent-opus:2026-10-18	Янги	reviewed:agent-opus:2026-10-18	Создать	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:68	
 b71e24f07c28		New…		todo		todo	Создать…	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1980	
-b7dbe4aee3ab		Add Chart Element	Diagramma elementini qoʻshish	draft:agent-sonnet:2026-10-17	Диаграмма элементини қўшиш	draft:agent-sonnet:2026-10-17	Добавить элемент диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2333	
-b812a014da86		Equation	Tenglama	draft:agent-sonnet:2026-10-17	Тенглама	draft:agent-sonnet:2026-10-17	Уравнение	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:58	
-b8671adfa802		Distributed	Teng taqsimlangan	draft:agent-sonnet:2026-10-17	Тенг тақсимланган	draft:agent-sonnet:2026-10-17	Распределённое	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2968	
-b8ddd39e3d1c		Shape Fill	Shaklni toʻldirish	draft:agent-sonnet:2026-10-17	Шаклни тўлдириш	draft:agent-sonnet:2026-10-17	Заливка фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2417	
-b986e4d412e3		{n} h ago	{n} soat oldin	draft:agent-sonnet:2026-10-17	{n} соат олдин	draft:agent-sonnet:2026-10-17	{n} ч назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:490	
-ba25e96e4e6a		Quick Access Toolbar	Tezkor kirish paneli	draft:agent-sonnet:2026-10-17	Тезкор кириш панели	draft:agent-sonnet:2026-10-17	Панель быстрого доступа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:411	
+b7dbe4aee3ab		Add Chart Element	Element qoʻshish	reviewed:agent-opus:2026-10-18	Элемент қўшиш	reviewed:agent-opus:2026-10-18	Добавить элемент диаграммы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2333	review-agent-2026-10-18: on the Chart Design tab the chart is implied
+b812a014da86		Equation	Tenglama	reviewed:agent-opus:2026-10-18	Тенглама	reviewed:agent-opus:2026-10-18	Уравнение	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:58	
+b8671adfa802		Distributed	Teng taqsimlangan	reviewed:agent-opus:2026-10-18	Тенг тақсимланган	reviewed:agent-opus:2026-10-18	Распределённое	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2968	
+b8ddd39e3d1c		Shape Fill	Shaklni toʻldirish	reviewed:agent-opus:2026-10-18	Шаклни тўлдириш	reviewed:agent-opus:2026-10-18	Заливка фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2417	
+b986e4d412e3		{n} h ago	{n} soat oldin	reviewed:agent-opus:2026-10-18	{n} соат олдин	reviewed:agent-opus:2026-10-18	{n} ч назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:490	
+ba25e96e4e6a		Quick Access Toolbar	Tezkor kirish paneli	reviewed:agent-opus:2026-10-18	Тезкор кириш панели	reviewed:agent-opus:2026-10-18	Панель быстрого доступа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:411	
 baf77eb1eea1		Email Address		todo		todo	Адрес электронной почты	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1115	
 bb28588becab		Alt\nText		todo		todo	Замещающий\nтекст	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2479	
 bc9b9d5b467d		First line		todo		todo	Первая строка	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2982	
-bcd893ba4ceb		{n} min ago	{n} daqiqa oldin	draft:agent-sonnet:2026-10-17	{n} дақиқа олдин	draft:agent-sonnet:2026-10-17	{n} мин назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:488	
-bcf43dc027b6		Info	Maʼlumot	draft:agent-sonnet:2026-10-17	Маълумот	draft:agent-sonnet:2026-10-17	Сведения	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:70	
+bcd893ba4ceb		{n} min ago	{n} daqiqa oldin	reviewed:agent-opus:2026-10-18	{n} дақиқа олдин	reviewed:agent-opus:2026-10-18	{n} мин назад	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:488	
+bcf43dc027b6		Info	Maʼlumot	reviewed:agent-opus:2026-10-18	Маълумот	reviewed:agent-opus:2026-10-18	Сведения	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:70	
 bd36d16ebac1		Example: {sample}		todo		todo	Пример: {sample}	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1407	
 bd7745679b7d		Replace text as you type		todo		todo	Заменять текст при вводе	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2098	
-bd888a789fbe		AutoSave	Avtosaqlash	draft:agent-sonnet:2026-10-17	Автосақлаш	draft:agent-sonnet:2026-10-17	Автосохранение	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:55	
-be7d279cace8		Distance	Masofa	draft:agent-sonnet:2026-10-17	Масофа	draft:agent-sonnet:2026-10-17	Расстояние	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:271	
+bd888a789fbe		AutoSave	Avtosaqlash	reviewed:agent-opus:2026-10-18	Автосақлаш	reviewed:agent-opus:2026-10-18	Автосохранение	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:55	
+be7d279cace8		Distance	Masofa	reviewed:agent-opus:2026-10-18	Масофа	reviewed:agent-opus:2026-10-18	Расстояние	upstream	pdfcraft	P1:pdfcraft	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:271	
 be7f63c9fe7e		Line spacing		todo		todo	Межстрочный интервал	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2997	
 be90a7753992		No fill		todo		todo	Без заливки	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:456	
-bf22925e78bc		Settings	Sozlamalar	draft:agent-sonnet:2026-10-17	Созламалар	draft:agent-sonnet:2026-10-17	Настройки	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1049	
+bf22925e78bc		Settings	Sozlamalar	reviewed:agent-opus:2026-10-18	Созламалар	reviewed:agent-opus:2026-10-18	Настройки	upstream	pdfcraft	P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1049	
 bf46539173fb		Replace with:		todo		todo	Заменить на:	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3187	
 c038d60b8c7f		Auto ({percent}%)		todo		todo	Авто ({percent}%)	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/js_ui.rs:291	
-c0b1d4b064da		Tools	Vositalar	draft:agent-sonnet:2026-10-17	Воситалар	draft:agent-sonnet:2026-10-17	Инструменты	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/docking.rs:29	
+c0b1d4b064da		Tools	Vositalar	reviewed:agent-opus:2026-10-18	Воситалар	reviewed:agent-opus:2026-10-18	Инструменты	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/docking.rs:29	
 c0ba38b659b0		French (France)		todo		todo	Французский (Франция)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2438	
-c17577989372		Change Colors	Ranglarni oʻzgartirish	draft:agent-sonnet:2026-10-17	Рангларни ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3122	
+c17577989372		Change Colors	Ranglarni oʻzgartirish	reviewed:agent-opus:2026-10-18	Рангларни ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3122	
 c175bd8b2d7e		Rotate all text 270°		todo		todo	Повернуть весь текст на 270°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:785	
 c1801ec2d953		Stop		todo		todo	Стоп	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/media.rs:16	
 c18a369dd8f2		Year		todo		todo	Год	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:330	
 c20bf6e651da		Deleted		todo		todo	Удалено	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1686	
-c225884dd004		Back	Orqaga	draft:agent-sonnet:2026-10-17	Орқага	draft:agent-sonnet:2026-10-17	Назад	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:336	
+c225884dd004		Back	Orqaga	reviewed:agent-opus:2026-10-18	Орқага	reviewed:agent-opus:2026-10-18	Назад	upstream	gridcraft,pdfcraft	P1:deckcraft+gridcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:336	
 c2623cb68377		Process		todo		todo	Процесс	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:633	
-c331529af037		Design	Dizayn	draft:agent-sonnet:2026-10-17	Дизайн	draft:agent-sonnet:2026-10-17	Дизайн	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:154	
-c387648fb7dc		Group	Guruhlash	draft:agent-sonnet:2026-10-17	Гуруҳлаш	draft:agent-sonnet:2026-10-17	Группировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1234	
-c3dffb634e28		Zoom	Masshtab	draft:agent-sonnet:2026-10-17	Масштаб	draft:agent-sonnet:2026-10-17	Масштаб	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:40	
+c331529af037		Design	Dizayn	reviewed:agent-opus:2026-10-18	Дизайн	reviewed:agent-opus:2026-10-18	Дизайн	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:154	
+c387648fb7dc		Group	Guruhlash	reviewed:agent-opus:2026-10-18	Гуруҳлаш	reviewed:agent-opus:2026-10-18	Группировать	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/canvas.rs:1234	
+c3dffb634e28		Zoom	Masshtab	reviewed:agent-opus:2026-10-18	Масштаб	reviewed:agent-opus:2026-10-18	Масштаб	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:40	
 c445c8ac00fb		English (United States)		todo		todo	Английский (США)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2436	
 c5334d4ae120		Next month		todo		todo	Следующий месяц	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:597	
-c5db8b68c134		Revert	Saqlangan holatga qaytarish	draft:agent-sonnet:2026-10-17	Сақланган ҳолатга қайтариш	draft:agent-sonnet:2026-10-17	Восстановить	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:853	
-c632a85df841		Colors	Ranglar	draft:agent-sonnet:2026-10-17	Ранглар	draft:agent-sonnet:2026-10-17	Цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1511	
-c77291478db1		Macros	Makroslar	draft:agent-sonnet:2026-10-17	Макрослар	draft:agent-sonnet:2026-10-17	Макросы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:724	
+c5db8b68c134		Revert	Saqlangan holatga qaytarish	reviewed:agent-opus:2026-10-18	Сақланган ҳолатга қайтариш	reviewed:agent-opus:2026-10-18	Восстановить	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:853	
+c632a85df841		Colors	Ranglar	reviewed:agent-opus:2026-10-18	Ранглар	reviewed:agent-opus:2026-10-18	Цвета	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1511	
+c77291478db1		Macros	Makroslar	reviewed:agent-opus:2026-10-18	Макрослар	reviewed:agent-opus:2026-10-18	Макросы	upstream	wordcraft	P1:wordcraft	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:724	
 c7749f8a6714		No Soft Edges		todo		todo	Без сглаживания	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1037	
-c7d2106a6c66		Subscript	Quyi indeks	draft:agent-sonnet:2026-10-17	Қуйи индекс	draft:agent-sonnet:2026-10-17	Подстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
+c7d2106a6c66		Subscript	Quyi indeks	reviewed:agent-opus:2026-10-18	Қуйи индекс	reviewed:agent-opus:2026-10-18	Подстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
 c8646543cbdb		Revisions		todo		todo	Ревизии	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:33	
 c87c88f6f5b1		Insert Table…		todo		todo	Вставить таблицу…	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1208	
 c99722a70137		Doughnut		todo		todo	Кольцевая	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2043	
-c9a218aa8c7c		Promote	Darajani oshirish	draft:agent-sonnet:2026-10-17	Даражани ошириш	draft:agent-sonnet:2026-10-17	Повысить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3090	
-c9c07701da2f		Italic	Kursiv	draft:agent-sonnet:2026-10-17	Курсив	draft:agent-sonnet:2026-10-17	Курсив	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2771	
-cade2bded22e		Move Up	Yuqoriga koʻchirish	draft:agent-sonnet:2026-10-17	Юқорига кўчириш	draft:agent-sonnet:2026-10-17	Переместить вверх	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1136	
-cbd0ff0028c9		Last commit	Oxirgi kommit	draft:agent-sonnet:2026-10-17	Охирги коммит	draft:agent-sonnet:2026-10-17	Последний коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
+c9a218aa8c7c		Promote	Darajani oshirish	reviewed:agent-opus:2026-10-18	Даражани ошириш	reviewed:agent-opus:2026-10-18	Повысить уровень	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3090	
+c9c07701da2f		Italic	Kursiv	reviewed:agent-opus:2026-10-18	Курсив	reviewed:agent-opus:2026-10-18	Курсив	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2771	
+cade2bded22e		Move Up	Yuqoriga koʻchirish	reviewed:agent-opus:2026-10-18	Юқорига кўчириш	reviewed:agent-opus:2026-10-18	Переместить вверх	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/panes.rs:1136	
+cbd0ff0028c9		Last commit	Oxirgi kommit	reviewed:agent-opus:2026-10-18	Охирги коммит	reviewed:agent-opus:2026-10-18	Последний коммит	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:100	
 cbf5785d6967		Report		todo		todo	Отчёт	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/a11y_ui.rs:200	
-cbfbe16a917d		Crop	Qirqish	draft:agent-sonnet:2026-10-17	Қирқиш	draft:agent-sonnet:2026-10-17	Обрезать	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2718	
-cc2adcf46755		Insert Right	Oʻngga kiritish	draft:agent-sonnet:2026-10-17	Ўнгга киритиш	draft:agent-sonnet:2026-10-17	Вставить справа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:21	
+cbfbe16a917d		Crop	Qirqish	reviewed:agent-opus:2026-10-18	Қирқиш	reviewed:agent-opus:2026-10-18	Обрезать	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2718	
+cc2adcf46755		Insert Right	Oʻngga kiritish	reviewed:agent-opus:2026-10-18	Ўнгга киритиш	reviewed:agent-opus:2026-10-18	Вставить справа	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:21	
 cc64d70e9b70		No Transform		todo		todo	Без трансформации	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2297	
 cc6cb9d5201a		Go to		todo		todo	Перейти	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1778	
-cca5c98c2c8b		Bullets	Markerlar	draft:agent-sonnet:2026-10-17	Маркерлар	draft:agent-sonnet:2026-10-17	Маркеры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
-ccba87eb8324		Previous page	Oldingi sahifa	draft:agent-sonnet:2026-10-17	Олдинги саҳифа	draft:agent-sonnet:2026-10-17	Предыдущая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:767	
-cccd7aca8cae		Backspace	Backspace	draft:agent-sonnet:2026-10-17	Backspace	draft:agent-sonnet:2026-10-17	Backspace	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:1958	
+cca5c98c2c8b		Bullets	Markerlar	reviewed:agent-opus:2026-10-18	Маркерлар	reviewed:agent-opus:2026-10-18	Маркеры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/canvas.rs:1191	
+ccba87eb8324		Previous page	Oldingi sahifa	reviewed:agent-opus:2026-10-18	Олдинги саҳифа	reviewed:agent-opus:2026-10-18	Предыдущая страница	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/backstage.rs:767	
+cccd7aca8cae		Backspace	Backspace	reviewed:agent-opus:2026-10-18	Backspace	reviewed:agent-opus:2026-10-18	Backspace	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:1958	
 ccefbf2f9335		Single		todo		todo	Одинарный	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2780	
-cf3809de1b72		Format\nPane	Format\npaneli	draft:agent-sonnet:2026-10-17	Формат\nпанели	draft:agent-sonnet:2026-10-17	Область\nформатирования	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:2484	
+cf3809de1b72		Format\nPane	Format\npaneli	reviewed:agent-opus:2026-10-18	Формат\nпанели	reviewed:agent-opus:2026-10-18	Область\nформатирования	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:2484	
 cf9639c75ff2		Decimal		todo		todo	По разделителю	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3092	
 cfe3ca1f9935		Exported {path}		todo		todo	Экспортировано: {path}	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/lib.rs:760	
-d039cf77464d		Zoom In	Yaqinlashtirish	draft:agent-sonnet:2026-10-17	Яқинлаштириш	draft:agent-sonnet:2026-10-17	Увеличить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:370	
-d03eb428b455		Paste	Qoʻyish	draft:agent-sonnet:2026-10-17	Қўйиш	draft:agent-sonnet:2026-10-17	Вставить	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
-d069045fda99		Align	Tekislash	draft:agent-sonnet:2026-10-17	Текислаш	draft:agent-sonnet:2026-10-17	Выровнять	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1123	
+d039cf77464d		Zoom In	Yaqinlashtirish	reviewed:agent-opus:2026-10-18	Яқинлаштириш	reviewed:agent-opus:2026-10-18	Увеличить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:370	
+d03eb428b455		Paste	Qoʻyish	reviewed:agent-opus:2026-10-18	Қўйиш	reviewed:agent-opus:2026-10-18	Вставить	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+d069045fda99		Align	Tekislash	reviewed:agent-opus:2026-10-18	Текислаш	reviewed:agent-opus:2026-10-18	Выровнять	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1123	
 d0cb00bf82dc		Hidden text		todo		todo	Скрытый текст	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/options.rs:240	
-d0f6e73d7ce6		Arrange	Tartiblash	draft:agent-sonnet:2026-10-17	Тартиблаш	draft:agent-sonnet:2026-10-17	Упорядочить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:265	
-d0f8ab38dfe1		Type Text	Matn terish	draft:agent-sonnet:2026-10-17	Матн териш	draft:agent-sonnet:2026-10-17	Ввести текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:38	
+d0f6e73d7ce6		Arrange	Tartiblash	reviewed:agent-opus:2026-10-18	Тартиблаш	reviewed:agent-opus:2026-10-18	Упорядочить	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:265	
+d0f8ab38dfe1		Type Text	Matn terish	reviewed:agent-opus:2026-10-18	Матн териш	reviewed:agent-opus:2026-10-18	Ввести текст	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/text.rs:38	
 d2dce405a1b3		Header Row		todo		todo	Строка заголовка	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2745	
-d2f62fa83c18		Connect Shapes	Shakllarni ulash	draft:agent-sonnet:2026-10-17	Шаклларни улаш	draft:agent-sonnet:2026-10-17	Соединить фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:14	
-d366cf4b351b		ΔLOC	ΔLOC	draft:agent-sonnet:2026-10-17	ΔLOC	draft:agent-sonnet:2026-10-17		todo		P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/credits.rs:96	
+d2f62fa83c18		Connect Shapes	Shakllarni ulash	reviewed:agent-opus:2026-10-18	Шаклларни улаш	reviewed:agent-opus:2026-10-18	Соединить фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/shape.rs:14	
+d366cf4b351b		ΔLOC	ΔLOC	reviewed:agent-opus:2026-10-18	ΔLOC	reviewed:agent-opus:2026-10-18		todo		P1:deckcraft	deckcraft,pdfcraft	crates/ui-egui/src/credits.rs:96	
 d36d03020ba9		Direction:		todo		todo	Направление:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:622	
 d3d641048bcf		Width:		todo		todo	Ширина:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
-d41d9ad12629		Picture Styles	Rasm uslublari	draft:agent-sonnet:2026-10-17	Расм услублари	draft:agent-sonnet:2026-10-17	Стили рисунков	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/picture_style.rs:14	
+d41d9ad12629		Picture Styles	Rasm uslublari	reviewed:agent-opus:2026-10-18	Расм услублари	reviewed:agent-opus:2026-10-18	Стили рисунков	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/picture_style.rs:14	
 d43dec102804		First Column		todo		todo	Первый столбец	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2749	
 d48b222558c2		Capitalize first letter of sentences		todo		todo	Делать первые буквы предложений прописными	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2094	
 d4b63e243a1f		Japanese		todo		todo	Японский	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2439	
@@ -481,107 +481,107 @@ d58bd0d87947		Rotate Right 90°		todo		todo	Повернуть вправо на
 d5c0d3c52083		Low		todo		todo	Низкое	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3196	
 d711f272b41f		Don't Save		todo		todo	Не сохранять	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1205	
 d760e1d44665		Both		todo		todo	Оба	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/panes.rs:1001	
-d85667aef9df		Language	Til	draft:agent-sonnet:2026-10-17	Тил	draft:agent-sonnet:2026-10-17	Язык	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:64	
-d879ced7bd55		Notes	Qaydlar	draft:agent-sonnet:2026-10-17	Қайдлар	draft:agent-sonnet:2026-10-17	Заметки	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:365	
-d8ff7a14d093		Transform	Transformatsiya	draft:agent-sonnet:2026-10-17	Трансформация	draft:agent-sonnet:2026-10-17	Трансформация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2281	
+d85667aef9df		Language	Til	reviewed:agent-opus:2026-10-18	Тил	reviewed:agent-opus:2026-10-18	Язык	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:64	
+d879ced7bd55		Notes	Qaydlar	reviewed:agent-opus:2026-10-18	Қайдлар	reviewed:agent-opus:2026-10-18	Заметки	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/lib.rs:365	
+d8ff7a14d093		Transform	Transformatsiya	reviewed:agent-opus:2026-10-18	Трансформация	reviewed:agent-opus:2026-10-18	Трансформация	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2281	
 d90c099fe629		Multiple		todo		todo	Несколько	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2946	
 d94be2d67f07		Solid		todo		todo	Сплошная	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:2698	
 da5600a2064f		Indentation		todo		todo	Отступы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2972	
-da8c8e9cd3fb		Change Chart Type	Diagramma turini oʻzgartirish	draft:agent-sonnet:2026-10-17	Диаграмма турини ўзгартириш	draft:agent-sonnet:2026-10-17	Изменить тип диаграммы	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:106	
-da969764ac3a		Superscript	Yuqori indeks	draft:agent-sonnet:2026-10-17	Юқори индекс	draft:agent-sonnet:2026-10-17	Надстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
-dac343dae843		Home	Bosh sahifa	draft:agent-sonnet:2026-10-17	Бош саҳифа	draft:agent-sonnet:2026-10-17	Главная	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:67	
-dad3c0ade918		Size	Oʻlcham	draft:agent-sonnet:2026-10-17	Ўлчам	draft:agent-sonnet:2026-10-17	Размер	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:869	
-db5118791846		Apply	Qoʻllash	draft:agent-sonnet:2026-10-17	Қўллаш	draft:agent-sonnet:2026-10-17	Применить	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1088	
-dba3258cf14e		Highlighter	Marker	draft:agent-sonnet:2026-10-17	Маркер	draft:agent-sonnet:2026-10-17	Маркер	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1437	
-dcd01cbe2f31		Position	Oʻrni	draft:agent-sonnet:2026-10-17	Ўрни	draft:agent-sonnet:2026-10-17	Положение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2417	
-dcda70934ab6		Double Underline	Ikki chiziq bilan tagiga chizish	draft:agent-sonnet:2026-10-17	Икки чизиқ билан тагига чизиш	draft:agent-sonnet:2026-10-17	Двойное подчёркивание	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:196	
+da8c8e9cd3fb		Change Chart Type	Diagramma turini oʻzgartirish	reviewed:agent-opus:2026-10-18	Диаграмма турини ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить тип диаграммы	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/insert.rs:106	
+da969764ac3a		Superscript	Yuqori indeks	reviewed:agent-opus:2026-10-18	Юқори индекс	reviewed:agent-opus:2026-10-18	Надстрочный	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2791	
+dac343dae843		Home	Asosiy	reviewed:agent-opus:2026-10-18	Асосий	reviewed:agent-opus:2026-10-18	Главная	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:67	review-agent-2026-10-18: glossary Home
+dad3c0ade918		Size	Oʻlcham	reviewed:agent-opus:2026-10-18	Ўлчам	reviewed:agent-opus:2026-10-18	Размер	upstream	gridcraft,pdfcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/backstage.rs:869	
+db5118791846		Apply	Qoʻllash	reviewed:agent-opus:2026-10-18	Қўллаш	reviewed:agent-opus:2026-10-18	Применить	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1088	
+dba3258cf14e		Highlighter	Marker	reviewed:agent-opus:2026-10-18	Маркер	reviewed:agent-opus:2026-10-18	Маркер	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1437	
+dcd01cbe2f31		Position	Oʻrni	reviewed:agent-opus:2026-10-18	Ўрни	reviewed:agent-opus:2026-10-18	Положение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2417	
+dcda70934ab6		Double Underline	Tagi qoʻsh chizilgan	reviewed:agent-opus:2026-10-18	Таги қўш чизилган	reviewed:agent-opus:2026-10-18	Двойное подчёркивание	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:196	review-agent-2026-10-18: format name, parallel to "Tagi chizilgan"
 dd126ce28d5d		Diamond		todo		todo	Ромб	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:597	
 dd6cd6a8031b		Matrix		todo		todo	Матрица	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2052	
 ddb48a197ab0		Find what:		todo		todo	Найти:	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3185	
-dde846263001		Go To…	Oʻtish…	draft:agent-sonnet:2026-10-17	Ўтиш…	draft:agent-sonnet:2026-10-17	Перейти…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:272	
+dde846263001		Go To…	Oʻtish…	reviewed:agent-opus:2026-10-18	Ўтиш…	reviewed:agent-opus:2026-10-18	Перейти…	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:272	
 ddfd10c97b4a		Ink to\nMath		todo		todo	Рукопись\nв формулу	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1455	
 df93684e2a38		Page Breaks		todo		todo	Разрывы страниц	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1679	
 dfc3dd729f82		Thickness		todo		todo	Толщина	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/comment_props.rs:244	
 e0235a68f6a4		Outside Borders		todo		todo	Внешние границы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2832	
-e08543852506		Previous Comment	Oldingi izoh	draft:agent-sonnet:2026-10-17	Олдинги изоҳ	draft:agent-sonnet:2026-10-17	Предыдущий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:27	
+e08543852506		Previous Comment	Oldingi izoh	reviewed:agent-opus:2026-10-18	Олдинги изоҳ	reviewed:agent-opus:2026-10-18	Предыдущий комментарий	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/review.rs:27	
 e0f04f522125		Banded Rows		todo		todo	Чередующиеся строки	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2765	
-e11ed9e275fe		Insert Above	Tepaga kiritish	draft:agent-sonnet:2026-10-17	Тепага киритиш	draft:agent-sonnet:2026-10-17	Вставить сверху	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:12	
+e11ed9e275fe		Insert Above	Yuqoriga kiritish	reviewed:agent-opus:2026-10-18	Юқорига киритиш	reviewed:agent-opus:2026-10-18	Вставить сверху	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:12	review-agent-2026-10-18: "tepaga" is colloquial; matches Up = Yuqoriga
 e16950afa85a		Basic List		todo		todo	Простой список	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2047	
-e1a0f1a473ce		Ready	Tayyor	draft:agent-sonnet:2026-10-17	Тайёр	draft:agent-sonnet:2026-10-17	Готово	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:454	
-e1be62d85c42		Top Margin	Yuqori chet	draft:agent-sonnet:2026-10-17	Юқори чет	draft:agent-sonnet:2026-10-17	Верхнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:301	
+e1a0f1a473ce		Ready	Tayyor	reviewed:agent-opus:2026-10-18	Тайёр	reviewed:agent-opus:2026-10-18	Готово	upstream		P1:gridcraft	gridcraft,pdfcraft	crates/ui-egui/src/i18n.rs:454	
+e1be62d85c42		Top Margin	Yuqori hoshiya	reviewed:agent-opus:2026-10-18	Юқори ҳошия	reviewed:agent-opus:2026-10-18	Верхнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:301	review-agent-2026-10-18: glossary Margins
 e1bfc983d793		Document Title		todo		todo	Название документа	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:247	
-e1cfcfcd5682		Field	Maydon	draft:agent-sonnet:2026-10-17	Майдон	draft:agent-sonnet:2026-10-17	Поле	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/sign_ui.rs:1220	
-e1e94a61ebb5		Merge Cells	Kataklarni birlashtirish	draft:agent-sonnet:2026-10-17	Катакларни бирлаштириш	draft:agent-sonnet:2026-10-17	Объединить ячейки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:30	
-e24d8b472d2e		Version	Versiya	draft:agent-sonnet:2026-10-17	Версия	draft:agent-sonnet:2026-10-17	Версия	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+e1cfcfcd5682		Field	Maydon	reviewed:agent-opus:2026-10-18	Майдон	reviewed:agent-opus:2026-10-18	Поле	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/sign_ui.rs:1220	
+e1e94a61ebb5		Merge Cells	Kataklarni birlashtirish	reviewed:agent-opus:2026-10-18	Катакларни бирлаштириш	reviewed:agent-opus:2026-10-18	Объединить ячейки	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/engine/src/cmd/table.rs:30	
+e24d8b472d2e		Version	Versiya	reviewed:agent-opus:2026-10-18	Версия	reviewed:agent-opus:2026-10-18	Версия	upstream	pdfcraft,wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
 e30e7180c1f1		Medium		todo		todo	Средняя	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:598	
-e32a547cad15		Header	Yuqori kolontitul	draft:agent-sonnet:2026-10-17	Юқори колонтитул	draft:agent-sonnet:2026-10-17	Верхний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3282	
-e349de27bd10		Headings	Sarlavhalar	draft:agent-sonnet:2026-10-17	Сарлавҳалар	draft:agent-sonnet:2026-10-17	Заголовки	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:387	
+e32a547cad15		Header	Yuqori kolontitul	reviewed:agent-opus:2026-10-18	Юқори колонтитул	reviewed:agent-opus:2026-10-18	Верхний колонтитул	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3282	
+e349de27bd10		Headings	Sarlavhalar	reviewed:agent-opus:2026-10-18	Сарлавҳалар	reviewed:agent-opus:2026-10-18	Заголовки	upstream		P1:gridcraft+wordcraft	gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/i18n.rs:387	
 e36ad29bc6ad		Match case		todo		todo	С учётом регистра	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:3189	
-e41f299dc98c		Copy	Nusxalash	draft:agent-sonnet:2026-10-17	Нусхалаш	draft:agent-sonnet:2026-10-17	Копировать	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
-e4502eada94b		Spelling	Imlo	draft:agent-sonnet:2026-10-17	Имло	draft:agent-sonnet:2026-10-17	Орфография	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:60	
-e4f95f55f699		Zoom Out	Uzoqlashtirish	draft:agent-sonnet:2026-10-17	Узоқлаштириш	draft:agent-sonnet:2026-10-17	Уменьшить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:371	
-e5180390ac7d		Text Direction	Matn yoʻnalishi	draft:agent-sonnet:2026-10-17	Матн йўналиши	draft:agent-sonnet:2026-10-17	Направление текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:780	
-e608d4af9771		Insert Left	Chapga kiritish	draft:agent-sonnet:2026-10-17	Чапга киритиш	draft:agent-sonnet:2026-10-17	Вставить слева	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:18	
-e7ea5d52709a		Breaks	Uzilishlar	draft:agent-sonnet:2026-10-17	Узилишлар	draft:agent-sonnet:2026-10-17	Разрывы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:308	
+e41f299dc98c		Copy	Nusxalash	reviewed:agent-opus:2026-10-18	Нусхалаш	reviewed:agent-opus:2026-10-18	Копировать	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/canvas.rs:1177	
+e4502eada94b		Spelling	Imlo	reviewed:agent-opus:2026-10-18	Имло	reviewed:agent-opus:2026-10-18	Орфография	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:60	
+e4f95f55f699		Zoom Out	Uzoqlashtirish	reviewed:agent-opus:2026-10-18	Узоқлаштириш	reviewed:agent-opus:2026-10-18	Уменьшить	upstream	wordcraft	P1:wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/lib.rs:371	
+e5180390ac7d		Text Direction	Matn yoʻnalishi	reviewed:agent-opus:2026-10-18	Матн йўналиши	reviewed:agent-opus:2026-10-18	Направление текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:780	
+e608d4af9771		Insert Left	Chapga kiritish	reviewed:agent-opus:2026-10-18	Чапга киритиш	reviewed:agent-opus:2026-10-18	Вставить слева	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/table.rs:18	
+e7ea5d52709a		Breaks	Uzilishlar	reviewed:agent-opus:2026-10-18	Узилишлар	reviewed:agent-opus:2026-10-18	Разрывы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:308	
 e8051ea82a2b		Move		todo		todo		todo		P2	deckcraft,pdfcraft	crates/engine/src/cmd/shape.rs:42	
 e81790f8017e		To:		todo		todo	До:	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2464	
 e9d0b904fb5c		None		todo		todo	Нет	upstream	pdfcraft,wordcraft	P2	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1342	
 ea23664cc033		Display		todo		todo	Отображение	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2542	
 ea8af64a1b78		Words		todo		todo	Слова	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/word_count_ui.rs:130	
-eb2f6fea7842		Delete Columns	Ustunlarni oʻchirish	draft:agent-sonnet:2026-10-17	Устунларни ўчириш	draft:agent-sonnet:2026-10-17	Удалить столбцы	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2993	
-eb513a35a350		Header &\nFooter	Yuqori va\nquyi kolontitul	draft:agent-sonnet:2026-10-17	Юқори ва\nқуйи колонтитул	draft:agent-sonnet:2026-10-17	Верхний и\nнижний колонтитулы	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1271	
-ebacc60c6800		Account	Hisob	draft:agent-sonnet:2026-10-17	Ҳисоб	draft:agent-sonnet:2026-10-17	Учётная запись	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:74	
+eb2f6fea7842		Delete Columns	Ustunlarni oʻchirish	reviewed:agent-opus:2026-10-18	Устунларни ўчириш	reviewed:agent-opus:2026-10-18	Удалить столбцы	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2993	
+eb513a35a350		Header &\nFooter	Yuqori va\nquyi kolontitul	reviewed:agent-opus:2026-10-18	Юқори ва\nқуйи колонтитул	reviewed:agent-opus:2026-10-18	Верхний и\nнижний колонтитулы	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1271	
+ebacc60c6800		Account	Hisob	reviewed:agent-opus:2026-10-18	Ҳисоб	reviewed:agent-opus:2026-10-18	Учётная запись	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:74	
 ebb5246a6292		Square		todo		todo	Квадрат	upstream	pdfcraft,wordcraft	P2	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:590	
-ec78b0fe2024		Page	Sahifa	draft:agent-sonnet:2026-10-17	Саҳифа	draft:agent-sonnet:2026-10-17	Страница	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/comments_panel.rs:538	
+ec78b0fe2024		Page	Sahifa	reviewed:agent-opus:2026-10-18	Саҳифа	reviewed:agent-opus:2026-10-18	Страница	upstream		P1	pdfcraft,wordcraft	crates/ui-egui/src/comments_panel.rs:538	
 ec90d2aac452		Done		todo		todo	Готово	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2178	
-eca562efabd8		Text Highlight Color	Matnni ajratish rangi	draft:agent-sonnet:2026-10-17	Матнни ажратиш ранги	draft:agent-sonnet:2026-10-17	Цвет выделения текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:557	
+eca562efabd8		Text Highlight Color	Matnni ajratish rangi	reviewed:agent-opus:2026-10-18	Матнни ажратиш ранги	reviewed:agent-opus:2026-10-18	Цвет выделения текста	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:557	
 ed3b861da358		Left Border		todo		todo	Левая граница	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2836	
-ee489fc7bc6c		Page Number	Sahifa raqami	draft:agent-sonnet:2026-10-17	Саҳифа рақами	draft:agent-sonnet:2026-10-17	Номер страницы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3283	
-ee52661be311		Add Shape	Shakl qoʻshish	draft:agent-sonnet:2026-10-17	Шакл қўшиш	draft:agent-sonnet:2026-10-17	Добавить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3075	
-eeda16df29ad		Save As	Boshqa nom bilan saqlash	draft:agent-sonnet:2026-10-17	Бошқа ном билан сақлаш	draft:agent-sonnet:2026-10-17	Сохранить как	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:1313	
+ee489fc7bc6c		Page Number	Sahifa raqami	reviewed:agent-opus:2026-10-18	Саҳифа рақами	reviewed:agent-opus:2026-10-18	Номер страницы	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3283	
+ee52661be311		Add Shape	Shakl qoʻshish	reviewed:agent-opus:2026-10-18	Шакл қўшиш	reviewed:agent-opus:2026-10-18	Добавить фигуру	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3075	
+eeda16df29ad		Save As	Boshqa nomda saqlash	reviewed:agent-opus:2026-10-18	Бошқа номда сақлаш	reviewed:agent-opus:2026-10-18	Сохранить как	upstream	gridcraft,wordcraft	P1	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/backstage.rs:1313	review-agent-2026-10-18: glossary Save As
 ef06c37d6810		Combo		todo		todo	Комбинированный	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:2052	
 ef0968d5f6bb		This document has no bookmarks.		todo		todo	В этом документе нет закладки.	upstream	pdfcraft	P2	pdfcraft,wordcraft	crates/ui-egui/src/panels.rs:642	
 ef0b372fc7e6		Spacing (pt):		todo		todo	Интервал (пт):	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2540	
-ef0d86e7cca0		Shape Format	Shakl formati	draft:agent-sonnet:2026-10-17	Шакл формати	draft:agent-sonnet:2026-10-17	Формат фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:133	
+ef0d86e7cca0		Shape Format	Shakl formati	reviewed:agent-opus:2026-10-18	Шакл формати	reviewed:agent-opus:2026-10-18	Формат фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:133	
 ef1d086ba344		Stacked Bar		todo		todo	Линейчатая с накоплением	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2037	
-efa50b5936d2		Font Size	Shrift oʻlchami	draft:agent-sonnet:2026-10-17	Шрифт ўлчами	draft:agent-sonnet:2026-10-17	Размер шрифта	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:41	
+efa50b5936d2		Font Size	Shrift oʻlchami	reviewed:agent-opus:2026-10-18	Шрифт ўлчами	reviewed:agent-opus:2026-10-18	Размер шрифта	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/format.rs:41	
 f130f7ec6fd2		Banded Columns		todo		todo	Чередующиеся столбцы	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2769	
 f132771b5da5		Rotate Left 90°		todo		todo	Повернуть влево на 90°	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/menus.rs:276	
-f18893ea6565		Page Setup…	Sahifa parametrlari…	draft:agent-sonnet:2026-10-17	Саҳифа параметрлари…	draft:agent-sonnet:2026-10-17	Параметры страницы…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1604	
-f18b52483c7f		Lines added	Qoʻshilgan qatorlar	draft:agent-sonnet:2026-10-17	Қўшилган қаторлар	draft:agent-sonnet:2026-10-17	Добавлено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:94	
-f198f5fed0a8		Color	Rang	draft:agent-sonnet:2026-10-17	Ранг	draft:agent-sonnet:2026-10-17	Цвет	upstream	wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2783	
-f2b22e6f5b01		Draw Table	Jadval chizish	draft:agent-sonnet:2026-10-17	Жадвал чизиш	draft:agent-sonnet:2026-10-17	Нарисовать таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1212	
-f2c5d25f5884		Paragraph	Xatboshi	draft:agent-sonnet:2026-10-17	Хатбоши	draft:agent-sonnet:2026-10-17	Абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:47	
+f18893ea6565		Page Setup…	Sahifa parametrlari…	reviewed:agent-opus:2026-10-18	Саҳифа параметрлари…	reviewed:agent-opus:2026-10-18	Параметры страницы…	upstream	gridcraft	P1:gridcraft	deckcraft,gridcraft	crates/ui-egui/src/ribbon.rs:1604	
+f18b52483c7f		Lines added	Qoʻshilgan qatorlar	reviewed:agent-opus:2026-10-18	Қўшилган қаторлар	reviewed:agent-opus:2026-10-18	Добавлено строк	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:94	
+f198f5fed0a8		Color	Rang	reviewed:agent-opus:2026-10-18	Ранг	reviewed:agent-opus:2026-10-18	Цвет	upstream	wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2783	
+f2b22e6f5b01		Draw Table	Jadval chizish	reviewed:agent-opus:2026-10-18	Жадвал чизиш	reviewed:agent-opus:2026-10-18	Нарисовать таблицу	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:1212	
+f2c5d25f5884		Paragraph	Xatboshi	reviewed:agent-opus:2026-10-18	Хатбоши	reviewed:agent-opus:2026-10-18	Абзац	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:47	
 f2ce153790b5		Height:		todo		todo	Высота:	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/prepare.rs:1055	
-f2fd66f796e4		Left Margin	Chap chet	draft:agent-sonnet:2026-10-17	Чап чет	draft:agent-sonnet:2026-10-17	Левое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:299	
-f37d92b738b5		File	Fayl	draft:agent-sonnet:2026-10-17	Файл	draft:agent-sonnet:2026-10-17	Файл	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:387	
+f2fd66f796e4		Left Margin	Chap hoshiya	reviewed:agent-opus:2026-10-18	Чап ҳошия	reviewed:agent-opus:2026-10-18	Левое поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:299	review-agent-2026-10-18: glossary Margins
+f37d92b738b5		File	Fayl	reviewed:agent-opus:2026-10-18	Файл	reviewed:agent-opus:2026-10-18	Файл	upstream	gridcraft,pdfcraft,wordcraft	P1:gridcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/lib.rs:387	
 f439e58d7975		High		todo		todo	Высокое	upstream	pdfcraft	P2	deckcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3196	
 f440cdbad939		Linear		todo		todo	Линейный	upstream	wordcraft	P2	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/fillui.rs:164	
-f4682c145c63		Convert to Shapes	Shakllarga aylantirish	draft:agent-sonnet:2026-10-17	Шаклларга айлантириш	draft:agent-sonnet:2026-10-17	Преобразовать в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3116	
-f4f2abd0d30f		No contributor data was built into this copy.	Bu nusxaga ishtirokchilar haqida maʼlumot kiritilmagan.	draft:agent-sonnet:2026-10-17	Бу нусхага иштирокчилар ҳақида маълумот киритилмаган.	draft:agent-sonnet:2026-10-17	В эту сборку не включены данные об участниках.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:250	
+f4682c145c63		Convert to Shapes	Shakllarga aylantirish	reviewed:agent-opus:2026-10-18	Шаклларга айлантириш	reviewed:agent-opus:2026-10-18	Преобразовать в фигуры	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:3116	
+f4f2abd0d30f		No contributor data was built into this copy.	Bu nusxaga ishtirokchilar haqida maʼlumot kiritilmagan.	reviewed:agent-opus:2026-10-18	Бу нусхага иштирокчилар ҳақида маълумот киритилмаган.	reviewed:agent-opus:2026-10-18	В эту сборку не включены данные об участниках.	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:250	
 f574b6c04699		English (United Kingdom)		todo		todo	Английский (Великобритания)	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:2437	
-f5beb53c5f2b		Line	Chiziq	draft:agent-sonnet:2026-10-17	Чизиқ	draft:agent-sonnet:2026-10-17	Линия	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:514	
+f5beb53c5f2b		Line	Chiziq	reviewed:agent-opus:2026-10-18	Чизиқ	reviewed:agent-opus:2026-10-18	Линия	upstream	pdfcraft,wordcraft	P1:pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:514	
 f5db1d14c0aa		Recover		todo		todo	Восстановить	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1188	
-f5fa3cb15f7d		Bottom Margin	Quyi chet	draft:agent-sonnet:2026-10-17	Қуйи чет	draft:agent-sonnet:2026-10-17	Нижнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:302	
-f73bbcba6ced		Play/Pause	Ijro etish/Pauza	draft:agent-sonnet:2026-10-17	Ижро этиш/Пауза	draft:agent-sonnet:2026-10-17	Воспроизведение/пауза	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/media.rs:15	
-f88824370dd3		Previous Page	Oldingi sahifa	draft:agent-sonnet:2026-10-17	Олдинги саҳифа	draft:agent-sonnet:2026-10-17	Предыдущая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1217	
-f8a8e05d8683		Date	Sana	draft:agent-sonnet:2026-10-17	Сана	draft:agent-sonnet:2026-10-17	Дата	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3283	
-f9471670f0a5		Open…	Ochish…	draft:agent-sonnet:2026-10-17	Очиш…	draft:agent-sonnet:2026-10-17	Открыть…	upstream	pdfcraft	P1:pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:398	
-fb1accde37a8		Cancel	Bekor qilish	draft:agent-sonnet:2026-10-17	Бекор қилиш	draft:agent-sonnet:2026-10-17	Отмена	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1089	
-fb1e67504eaf		Advanced	Qoʻshimcha	draft:agent-sonnet:2026-10-17	Қўшимча	draft:agent-sonnet:2026-10-17	Дополнительно	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:109	
-fbab20e95cb1		Character Spacing	Belgilar oraligʻi	draft:agent-sonnet:2026-10-17	Белгилар оралиғи	draft:agent-sonnet:2026-10-17	Межзнаковый интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:534	
-fbe62f88d942		Selection	Tanlov	draft:agent-sonnet:2026-10-17	Танлов	draft:agent-sonnet:2026-10-17	Выделение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:28	
+f5fa3cb15f7d		Bottom Margin	Quyi hoshiya	reviewed:agent-opus:2026-10-18	Қуйи ҳошия	reviewed:agent-opus:2026-10-18	Нижнее поле	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:302	review-agent-2026-10-18: glossary Margins
+f73bbcba6ced		Play/Pause	Ijro etish/Pauza	reviewed:agent-opus:2026-10-18	Ижро этиш/Пауза	reviewed:agent-opus:2026-10-18	Воспроизведение/пауза	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/engine/src/cmd/media.rs:15	
+f88824370dd3		Previous Page	Oldingi sahifa	reviewed:agent-opus:2026-10-18	Олдинги саҳифа	reviewed:agent-opus:2026-10-18	Предыдущая страница	upstream	wordcraft	P1	deckcraft,wordcraft	crates/ui-egui/src/backstage.rs:1217	
+f8a8e05d8683		Date	Sana	reviewed:agent-opus:2026-10-18	Сана	reviewed:agent-opus:2026-10-18	Дата	upstream	gridcraft,pdfcraft	P1:gridcraft+pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/ribbon.rs:3283	
+f9471670f0a5		Open…	Ochish…	reviewed:agent-opus:2026-10-18	Очиш…	reviewed:agent-opus:2026-10-18	Открыть…	upstream	pdfcraft	P1:pdfcraft	deckcraft,gridcraft,pdfcraft	crates/ui-egui/src/lib.rs:398	
+fb1accde37a8		Cancel	Bekor qilish	reviewed:agent-opus:2026-10-18	Бекор қилиш	reviewed:agent-opus:2026-10-18	Отмена	upstream	pdfcraft,wordcraft	P1:deckcraft+pdfcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1089	
+fb1e67504eaf		Advanced	Qoʻshimcha	reviewed:agent-opus:2026-10-18	Қўшимча	reviewed:agent-opus:2026-10-18	Дополнительно	upstream		P1:wordcraft	pdfcraft,wordcraft	crates/ui-egui/src/dialogs.rs:109	
+fbab20e95cb1		Character Spacing	Belgilar oraligʻi	reviewed:agent-opus:2026-10-18	Белгилар оралиғи	reviewed:agent-opus:2026-10-18	Межзнаковый интервал	upstream	wordcraft	P1:wordcraft	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:534	
+fbe62f88d942		Selection	Tanlash	reviewed:agent-opus:2026-10-18	Танлаш	reviewed:agent-opus:2026-10-18	Выделение	upstream	pdfcraft,wordcraft	P1:wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/panes.rs:28	review-agent-2026-10-18: pane name, as in Selection Pane = Tanlash paneli
 fc147272107a		AutoCorrect		todo		todo	Автозамена	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:52	
-fc481809844a		Page\nNumber	Sahifa\nraqami	draft:agent-sonnet:2026-10-17	Саҳифа\nрақами	draft:agent-sonnet:2026-10-17	Номер\nстраницы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:490	
-fc7cd6a3a839		% of all commits	Barcha kommitlarning %	draft:agent-sonnet:2026-10-17	Барча коммитларнинг %	draft:agent-sonnet:2026-10-17	% всех коммитов	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
-fca24331a97c		Binary assets added	Ikkilik resurslar qoʻshildi	draft:agent-sonnet:2026-10-17	Иккилик ресурслар қўшилди	draft:agent-sonnet:2026-10-17	Добавлены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:97	
+fc481809844a		Page\nNumber	Sahifa\nraqami	reviewed:agent-opus:2026-10-18	Саҳифа\nрақами	reviewed:agent-opus:2026-10-18	Номер\nстраницы	upstream		P1	gridcraft,wordcraft	crates/ui-egui/src/i18n.rs:490	
+fc7cd6a3a839		% of all commits	Barcha kommitlarning %	reviewed:agent-opus:2026-10-18	Барча коммитларнинг %	reviewed:agent-opus:2026-10-18	% всех коммитов	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:306	
+fca24331a97c		Binary assets added	Qoʻshilgan ikkilik resurslar	reviewed:agent-opus:2026-10-18	Қўшилган иккилик ресурслар	reviewed:agent-opus:2026-10-18	Добавлены двоичные ресурсы	upstream	wordcraft	P1:deckcraft+wordcraft	deckcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:97	review-agent-2026-10-18: column header, parallel to "Qo`shilgan qatorlar"
 fcc3796ed32a		Category:		todo		todo	Категория:	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:1550	
-fcf80e69fc99		Increase Font Size	Shrift oʻlchamini oshirish	draft:agent-sonnet:2026-10-17	Шрифт ўлчамини ошириш	draft:agent-sonnet:2026-10-17	Увеличить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:520	
+fcf80e69fc99		Increase Font Size	Shrift oʻlchamini oshirish	reviewed:agent-opus:2026-10-18	Шрифт ўлчамини ошириш	reviewed:agent-opus:2026-10-18	Увеличить размер шрифта	upstream	gridcraft,wordcraft	P1:gridcraft+wordcraft	deckcraft,gridcraft,wordcraft	crates/ui-egui/src/ribbon.rs:520	
 fd2bc10d718c		Compact		todo		todo	Компактный	upstream	wordcraft	P2	gridcraft,wordcraft	crates/ui-egui/src/pivot_pane.rs:167	
 fd6534186c4d		Number of rows:		todo		todo	Число строк:	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1032	
-fd85e5bc68ea		Appearance	Tashqi koʻrinish	draft:agent-sonnet:2026-10-17	Ташқи кўриниш	draft:agent-sonnet:2026-10-17	Внешний вид	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1340	
+fd85e5bc68ea		Appearance	Tashqi koʻrinish	reviewed:agent-opus:2026-10-18	Ташқи кўриниш	reviewed:agent-opus:2026-10-18	Внешний вид	upstream	pdfcraft	P1	deckcraft,pdfcraft	crates/ui-egui/src/backstage.rs:1340	
 fdfb85b0b709		The passwords don't match.		todo		todo	Пароли не совпадают.	upstream		P2	pdfcraft,wordcraft	crates/ui-egui/src/protect.rs:34	
 fe1f9992ba1c		Magnification		todo		todo	Масштаб	upstream	pdfcraft	P2	gridcraft,pdfcraft	crates/ui-egui/src/dialogs.rs:532	
 fe756f707e61		Keep Text Only		todo		todo	Вставить без форматирования	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/dialogs.rs:1721	
 ff2e175f836a		New\nWindow		todo		todo	Новое\nокно	upstream	wordcraft	P2	deckcraft,wordcraft	crates/ui-egui/src/ribbon.rs:2259	
-ff40259c28ed		Table	Jadval	draft:agent-sonnet:2026-10-17	Жадвал	draft:agent-sonnet:2026-10-17	Таблица	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:241	
+ff40259c28ed		Table	Jadval	reviewed:agent-opus:2026-10-18	Жадвал	reviewed:agent-opus:2026-10-18	Таблица	upstream	gridcraft,wordcraft	P1:deckcraft+gridcraft+wordcraft	deckcraft,gridcraft,pdfcraft,wordcraft	crates/ui-egui/src/credits.rs:241	

@@ -12,7 +12,7 @@ mod lex;
 mod lint;
 mod review;
 
-use catalog::{APPS, Catalog, Mode};
+use catalog::{APPS, Catalog, Mode, Policy};
 
 pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
 
@@ -64,6 +64,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             };
             let cat = Catalog::load(&dir)?;
             let chains = export::Chains::load(&dir)?;
+            let policy = Policy::load(&dir)?;
             let out = match flag("--out") {
                 Some(o) => PathBuf::from(o),
                 None => export::overlay_root()?,
@@ -73,7 +74,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             } else {
                 vec![*app]
             };
-            let mut lines = Vec::new();
+            let mut lines = vec![format!("export ({}):", policy.describe())];
             for a in apps {
                 if !APPS.contains(&a) {
                     return Err(format!("unknown app {a:?}"));
@@ -85,6 +86,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
                     &chains,
                     &out,
                     has("--with-ru"),
+                    &policy,
                 )?);
             }
             Ok(lines.join("\n"))
@@ -155,7 +157,14 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             fs::write(&log, old).map_err(|e| e.to_string())?;
             Ok(line.trim_end().to_string())
         }
-        ["coverage", ..] => Ok(review::coverage(&Catalog::load(&dir)?)),
+        ["coverage", ..] => {
+            let cat = Catalog::load(&dir)?;
+            Ok(format!(
+                "{}\n{}",
+                review::coverage(&cat),
+                lint::review_summary(&cat, &Policy::load(&dir)?)
+            ))
+        }
         ["check", ..] => {
             let cat = Catalog::load(&dir)?;
             let bad = review::check_ids(&cat);
@@ -172,8 +181,9 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             let cat = Catalog::load(&dir)?;
             let findings = lint::lint(&cat);
             let rows = lint::rows_with_uzbek(&cat);
+            let review = lint::review_summary(&cat, &Policy::load(&dir)?);
             if let Some(path) = flag("--report") {
-                fs::write(path, lint::report(&findings, rows))
+                fs::write(path, lint::report_with(&findings, rows, &review))
                     .map_err(|e| format!("{path}: {e}"))?;
             }
             let errors = findings
@@ -184,7 +194,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
                 "i18n lint: {rows} rows with an Uzbek draft, {errors} error(s), {} warning(s)
 {}",
                 findings.len() - errors,
-                lint::summary(&findings)
+                lint::summary(&findings) + &review
             );
             if errors == 0 {
                 Ok(text.trim_end().to_string())

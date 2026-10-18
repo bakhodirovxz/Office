@@ -8,3 +8,12 @@
 uz-latn = ["uz-latn", "en"]
 uz-cyrl = ["uz-cyrl", "ru", "en"]
 ru = ["ru", "en"]
+
+# Who is trusted as a reviewer of Uzbek text. Owner decision 2026-10-18 (CLAUDE.md gate decisions): the owner delegated
+# the review of the uz-Latn and uz-Cyrl UI strings to the agent ("check them yourself; I will report problems found in
+# use"). With `trust_agent_review = true`, a `reviewed:agent-<model>:<date>` value is trusted like `reviewed:owner`:
+# release exports include it and the language pickers drop the "(qoralama)" marker once every P1 row is trusted.
+# Lint, coverage and export still count owner-reviewed and agent-reviewed rows apart. Set it to false to go back to
+# owner-only trust.
+[review]
+trust_agent_review = true

@@ -98,9 +98,81 @@ pub fn state(status: &str) -> &str {
     status.split(':').next().unwrap_or("")
 }
 
-/// Only `reviewed:owner[:date]` is a trusted Uzbek value; `upstream` (shipped ru) is trusted as shipped.
-pub fn is_trusted(status: &str) -> bool {
-    status.starts_with("reviewed:owner") || state(status) == "upstream"
+/// Who marked a value `reviewed`: the owner (`reviewed:owner[:date]`) or an agent the owner delegated the review to
+/// (`reviewed:agent-<model>[:date]`, CLAUDE.md gate decisions, 2026-10-18).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Reviewer {
+    Owner,
+    Agent,
+}
+
+/// The reviewer of a `reviewed:*` status; `None` for every other state (and for an unknown reviewer).
+pub fn reviewer(status: &str) -> Option<Reviewer> {
+    let mut parts = status.split(':');
+    if parts.next() != Some("reviewed") {
+        return None;
+    }
+    match parts.next() {
+        Some("owner") => Some(Reviewer::Owner),
+        Some(who) if who.starts_with("agent-") && who.len() > "agent-".len() => {
+            Some(Reviewer::Agent)
+        }
+        _ => None,
+    }
+}
+
+/// The trust policy from `i18n/config.toml` `[review]`. The default trusts the owner only.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct Policy {
+    /// `trust_agent_review = true`: a `reviewed:agent-<model>` value is trusted like an owner review (the owner
+    /// delegated the Uzbek review, 2026-10-18). Reports still count agent and owner reviews apart.
+    pub trust_agent_review: bool,
+}
+
+impl Policy {
+    /// Only the owner's review is trusted (what `cargo xt i18n` did before the delegation; also the "no Uzbek" baseline).
+    pub const OWNER_ONLY: Policy = Policy {
+        trust_agent_review: false,
+    };
+
+    pub fn parse(text: &str) -> Result<Policy, String> {
+        let doc = text
+            .parse::<toml_edit::DocumentMut>()
+            .map_err(|e| format!("config.toml: {e}"))?;
+        let mut p = Policy::default();
+        if let Some(item) = doc.get("review").and_then(|r| r.get("trust_agent_review")) {
+            p.trust_agent_review = item
+                .as_bool()
+                .ok_or("config.toml: review.trust_agent_review must be true or false")?;
+        }
+        Ok(p)
+    }
+
+    /// `i18n/config.toml`, or the owner-only default when the file is missing.
+    pub fn load(i18n_dir: &Path) -> Result<Policy, String> {
+        match fs::read_to_string(i18n_dir.join("config.toml")) {
+            Ok(t) => Policy::parse(&t),
+            Err(_) => Ok(Policy::default()),
+        }
+    }
+
+    pub fn describe(&self) -> &'static str {
+        if self.trust_agent_review {
+            "trusted: owner and agent reviews (review.trust_agent_review = true)"
+        } else {
+            "trusted: owner reviews only"
+        }
+    }
+}
+
+/// A trusted value: `reviewed:owner[:date]`, `reviewed:agent-<model>[:date]` when the policy trusts agent review, and
+/// `upstream` (shipped ru), which is trusted as shipped.
+pub fn is_trusted(status: &str, policy: &Policy) -> bool {
+    match reviewer(status) {
+        Some(Reviewer::Owner) => true,
+        Some(Reviewer::Agent) => policy.trust_agent_review,
+        None => state(status) == "upstream",
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -110,12 +182,51 @@ pub enum Mode {
 }
 
 /// May a value with this status be exported in `mode`?
-pub fn exportable(status: &str, mode: Mode) -> bool {
+pub fn exportable(status: &str, mode: Mode, policy: &Policy) -> bool {
     match mode {
-        Mode::Release => is_trusted(status),
+        Mode::Release => is_trusted(status, policy),
         Mode::Review => {
-            is_trusted(status) || state(status) == "draft" || state(status) == "reviewed"
+            is_trusted(status, policy) || state(status) == "draft" || state(status) == "reviewed"
         }
+    }
+}
+
+/// Review counts of one locale over a set of rows (rows without a value are `missing`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ReviewCounts {
+    pub owner: usize,
+    pub agent: usize,
+    pub draft: usize,
+    pub missing: usize,
+    pub other: usize,
+}
+
+impl ReviewCounts {
+    pub fn of<'a>(rows: impl IntoIterator<Item = &'a Row>, locale: &str) -> ReviewCounts {
+        let mut c = ReviewCounts::default();
+        for r in rows {
+            let status = r.status(locale);
+            if r.value(locale).is_empty() {
+                c.missing += 1;
+            } else {
+                match (reviewer(status), state(status)) {
+                    (Some(Reviewer::Owner), _) => c.owner += 1,
+                    (Some(Reviewer::Agent), _) => c.agent += 1,
+                    (None, "draft") => c.draft += 1,
+                    _ => c.other += 1,
+                }
+            }
+        }
+        c
+    }
+    /// Values a `policy` trusts.
+    pub fn trusted(&self, policy: &Policy) -> usize {
+        self.owner
+            + if policy.trust_agent_review {
+                self.agent
+            } else {
+                0
+            }
     }
 }
 
@@ -400,11 +511,115 @@ mod tests {
 
     #[test]
     fn export_gate_by_status() {
-        assert!(exportable("reviewed:owner:2026-10-21", Mode::Release));
-        assert!(!exportable("draft:agent-sonnet:2026-10-18", Mode::Release));
-        assert!(exportable("draft:agent-sonnet:2026-10-18", Mode::Review));
-        assert!(exportable("upstream", Mode::Release));
-        assert!(!exportable("todo", Mode::Review));
-        assert!(!exportable("rejected", Mode::Review));
+        let p = Policy::OWNER_ONLY;
+        assert!(exportable("reviewed:owner:2026-10-21", Mode::Release, &p));
+        assert!(!exportable(
+            "draft:agent-sonnet:2026-10-18",
+            Mode::Release,
+            &p
+        ));
+        assert!(exportable(
+            "draft:agent-sonnet:2026-10-18",
+            Mode::Review,
+            &p
+        ));
+        assert!(exportable("upstream", Mode::Release, &p));
+        assert!(!exportable("todo", Mode::Review, &p));
+        assert!(!exportable("rejected", Mode::Review, &p));
+    }
+
+    #[test]
+    fn agent_review_is_trusted_only_when_the_policy_says_so() {
+        let owner_only = Policy::OWNER_ONLY;
+        let delegated = Policy {
+            trust_agent_review: true,
+        };
+        let agent = "reviewed:agent-opus:2026-10-18";
+        assert!(!is_trusted(agent, &owner_only));
+        assert!(is_trusted(agent, &delegated));
+        assert!(!exportable(agent, Mode::Release, &owner_only));
+        assert!(exportable(agent, Mode::Release, &delegated));
+        assert!(
+            exportable(agent, Mode::Review, &owner_only),
+            "review builds show it either way"
+        );
+        // the owner and upstream stay trusted under both policies; drafts never are
+        for p in [owner_only, delegated] {
+            assert!(is_trusted("reviewed:owner:2026-10-21", &p));
+            assert!(is_trusted("reviewed:owner", &p));
+            assert!(is_trusted("upstream", &p));
+            assert!(!is_trusted("draft:agent-opus:2026-10-18", &p));
+            assert!(!is_trusted("draft:owner-fix:2026-10-21", &p));
+            assert!(!is_trusted("rejected:owner:2026-10-21", &p));
+            assert!(!is_trusted("todo", &p));
+        }
+        // a malformed reviewer is not an agent review
+        for bad in [
+            "reviewed:agent-",
+            "reviewed:agent",
+            "reviewed:agentopus",
+            "reviewed",
+            "reviewed:someone",
+        ] {
+            assert_eq!(reviewer(bad), None, "{bad}");
+            assert!(!is_trusted(bad, &delegated), "{bad}");
+        }
+        assert_eq!(reviewer(agent), Some(Reviewer::Agent));
+        assert_eq!(reviewer("reviewed:owner:2026-10-21"), Some(Reviewer::Owner));
+    }
+
+    #[test]
+    fn policy_from_config() {
+        assert_eq!(Policy::parse("").unwrap(), Policy::OWNER_ONLY);
+        assert_eq!(
+            Policy::parse("[chains]\nuz-latn = [\"uz-latn\", \"en\"]\n").unwrap(),
+            Policy::OWNER_ONLY
+        );
+        assert!(
+            Policy::parse("[review]\ntrust_agent_review = true\n")
+                .unwrap()
+                .trust_agent_review
+        );
+        assert!(
+            !Policy::parse("[review]\ntrust_agent_review = false\n")
+                .unwrap()
+                .trust_agent_review
+        );
+        assert!(Policy::parse("[review]\ntrust_agent_review = \"yes\"\n").is_err());
+    }
+
+    #[test]
+    fn review_counts_split_owner_and_agent() {
+        let mk = |v: &str, s: &str| Row {
+            uz_latn: v.into(),
+            uz_latn_status: s.into(),
+            ..Row::default()
+        };
+        let rows = [
+            mk("a", "reviewed:owner:2026-10-21"),
+            mk("b", "reviewed:agent-opus:2026-10-18"),
+            mk("c", "reviewed:agent-opus:2026-10-18"),
+            mk("d", "draft:agent-sonnet:2026-10-17"),
+            mk("", "todo"),
+            mk("e", "rejected:owner:2026-10-21"),
+        ];
+        let c = ReviewCounts::of(&rows, "uz-latn");
+        assert_eq!(
+            c,
+            ReviewCounts {
+                owner: 1,
+                agent: 2,
+                draft: 1,
+                missing: 1,
+                other: 1
+            }
+        );
+        assert_eq!(c.trusted(&Policy::OWNER_ONLY), 1);
+        assert_eq!(
+            c.trusted(&Policy {
+                trust_agent_review: true
+            }),
+            3
+        );
     }
 }
