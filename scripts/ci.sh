@@ -267,6 +267,20 @@ test_overlay() { # <app>
 ')
 }
 
+# deckcraft's fonts build.rs prints rerun-if-changed for fonts/latin-manifest.txt, which our craft-fonts pin does not have: a missing
+# file is always "changed", so the build script and the 11 crates above it rebuilt on EVERY cargo invocation (20 min per call).
+# The test builds use a copy of the pin with an empty latin-manifest.txt (same embedded fonts; the file only lists Latin extras).
+test_fonts() { # <app>
+  [ "$1" = deckcraft ] || return 0
+  local src="$OFFICE_ROOT/upstream/craft-fonts" dst="$OFFICE_CACHE/craft-fonts-ci"
+  [ -f "$src/fonts/latin-manifest.txt" ] && return 0
+  [ "$NO_BUILD" = 1 ] && return 0
+  if ! cmp -s "$src/fonts/manifest.txt" "$dst/fonts/manifest.txt" 2>/dev/null; then
+    rm -rf "$dst"; mkdir -p "$dst"; cp -r "$src/fonts" "$dst/fonts"; : > "$dst/fonts/latin-manifest.txt"
+  fi
+  export CRAFT_FONTS_DIR="$dst"
+}
+
 # Debug tests of one upstream workspace (patched tree) with the overlay on; quarantined tests run in a separate pass
 # (cargo xt quarantine apply) which reports stale / still-failing / missing entries. nextest -j is TEST threads.
 test_app() { # <app> <debug|release>
@@ -274,6 +288,7 @@ test_app() { # <app> <debug|release>
   [ "$mode" = release ] && rel="--release"
   if [ "$NO_BUILD" != 1 ] && [ ! -f ci/nextest.toml ]; then note "ci/nextest.toml missing"; return 2; fi
   test_overlay "$app" || return 2
+  test_fonts "$app"
   # the xtask runs in the root target dir; the upstream target dir is passed to nextest explicitly (--target-dir)
   # Run the built xtask directly, not through `cargo run`: cargo run exports CARGO_MANIFEST_DIR/CARGO_PKG_*/CARGO_BIN_NAME,
   # which would leak into the nested nextest build and rebuild the upstream crates that read them (70 min for pdfcraft).
@@ -294,17 +309,21 @@ dir = "%s/nextest"
     bstep "doctests-$app" cargo test --doc --workspace --manifest-path "$m" -j 4 || rc=1
   fi
   unset CARGO_TARGET_DIR CARGO_BUILD_JOBS
+  export CRAFT_FONTS_DIR="$OFFICE_ROOT/upstream/craft-fonts"   # undo test_fonts
   return $rc
 }
 job_test() { local rc=0 a; for a in $(apps_arg "${1:-all}") ; do test_app "$a" debug || rc=$?; done; return $rc; }
 job_release_tests() { local rc=0 a; for a in $(apps_arg "${1:-all}"); do test_app "$a" release || rc=$?; done; return $rc; }
 
 job_test_ours() {
-  local rc=0 d
-  bstep root-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo nextest run --workspace --build-jobs 4 --test-threads 4 || rc=1
+  local rc=0 d filt="all()"
+  bstep root-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 || rc=1
   for d in $DOMAINS; do
     [ -f "domains/$d/Cargo.toml" ] || continue
-    bstep "domain-tests-$d" env CARGO_TARGET_DIR="$(target_dir_domain "$d")" cargo nextest run --workspace --build-jobs 4 --test-threads 4 --manifest-path "domains/$d/Cargo.toml" || rc=1
+    # pdfcraft's main.rs tests egui_wgpu_* and winit_carries_* read vendor/ and Cargo.lock relative to CARGO_MANIFEST_DIR/../.. (the upstream
+    # workspace layout); in the domain wrapper those paths do not exist. They run, and pass, in the upstream suite (ci.sh test pdfcraft).
+    [ "$d" = pdf ] && filt='not (binary_id(=pdf-desktop::bin/pdf) & (test(=tests::egui_wgpu_carries_the_surface_size_fit) | test(=tests::egui_wgpu_returns_a_surface_it_cannot_configure_as_an_error) | test(=tests::winit_carries_the_windows_11_monitor_scale_fix)))' || filt="all()"
+    bstep "domain-tests-$d" env CARGO_TARGET_DIR="$(target_dir_domain "$d")" cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 --manifest-path "domains/$d/Cargo.toml" -E "$filt" || rc=1
   done
   return $rc
 }
