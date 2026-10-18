@@ -176,10 +176,10 @@ fn resolve_dep(ctx: &Ctx, key: &str, local: &Item) -> Res<Item> {
         out = t;
     }
     // A bare `{ version = "x" }` is written back as a string.
-    if out.len() == 1 {
-        if let Some(v) = out.get("version").and_then(Value::as_str) {
-            return Ok(Item::Value(v.into()));
-        }
+    if out.len() == 1
+        && let Some(v) = out.get("version").and_then(Value::as_str)
+    {
+        return Ok(Item::Value(v.into()));
     }
     Ok(Item::Value(Value::InlineTable(out)))
 }

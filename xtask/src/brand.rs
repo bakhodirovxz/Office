@@ -280,11 +280,11 @@ fn scan_bin(root: &Path, files: &[&str]) -> Result<String, String> {
         .iter()
         .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("svg"))
     {
-        if let Ok(bytes) = fs::read(s) {
-            if bytes.len() > 160 {
-                let mid = bytes.len() / 2;
-                sigs.push((rel(root, s), bytes[mid..mid + 48].to_vec()));
-            }
+        if let Ok(bytes) = fs::read(s)
+            && bytes.len() > 160
+        {
+            let mid = bytes.len() / 2;
+            sigs.push((rel(root, s), bytes[mid..mid + 48].to_vec()));
         }
     }
     let forbidden = [
