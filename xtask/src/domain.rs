@@ -260,7 +260,7 @@ fn gen_app(
     bins.push(b);
     doc.insert("bin", Item::ArrayOfTables(bins));
 
-    for sect in ["dependencies", "build-dependencies"] {
+    for sect in ["dependencies", "build-dependencies", "dev-dependencies"] {
         if let Some(t) = up_doc.get(sect).and_then(Item::as_table) {
             doc.insert(sect, Item::Table(resolve_table(&ctx, t)?));
         }
@@ -271,7 +271,7 @@ fn gen_app(
         for (cfg, tt) in targets.iter() {
             let Some(tt) = tt.as_table() else { continue };
             let mut ot = Table::new();
-            for sect in ["dependencies", "build-dependencies"] {
+            for sect in ["dependencies", "build-dependencies", "dev-dependencies"] {
                 if let Some(t) = tt.get(sect).and_then(Item::as_table) {
                     ot.insert(sect, Item::Table(resolve_table(&ctx, t)?));
                 }
