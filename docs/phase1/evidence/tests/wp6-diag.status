@@ -1,0 +1,6 @@
+wc-breaks-default rc=100
+wc-breaks-lang-en rc=0
+pc-perf-alone5 rc=100
+pc-xfa-alone5 rc=0
+pc-textbg-alone10 rc=0
+finished

@@ -1,0 +1,46 @@
+warning: ignoring --test-threads because --no-capture is specified
+    Finished `test` profile [optimized + debuginfo] target(s) in 14.20s
+────────────
+ Nextest run ID af8ba027-3679-4f78-b588-3c4a7360e484 with nextest profile: ci
+    Starting 2 tests across 1 binary (60 binaries skipped)
+       START [         ] (1/2) wordcraft-ui-egui::breaks_menu page_break_from_the_menu_adds_a_page
+
+running 1 test
+
+thread 'page_break_from_the_menu_adds_a_page' (16900) panicked at crates\ui-egui\tests\breaks_menu.rs:31:7:
+No nodes found matching the query:
+By {
+    label: "Breaks",
+    role: Button,
+}
+
+On node:
+Node {
+    id: NodeId(
+        TreeIndex(
+            0,
+        ),
+        #13826925289788388,
+    ),
+    role: Window,
+    focused: false,
+    hidden: false,
+    disabled: false,
+    children: [
+        Node {
+            id: NodeId(
+                TreeIndex(
+                    0,
+                ),
+                #18356943641707106210,
+            ),
+            role: GenericContainer,
+            focused: false,
+            hidden: false,
+            disabled: false,
+[... trimmed: egui accessibility tree dump ...]
+1909:        FAIL [   1.776s] (1/2) wordcraft-ui-egui::breaks_menu page_break_from_the_menu_adds_a_page
+3813:        FAIL [   0.348s] (2/2) wordcraft-ui-egui::breaks_menu section_break_from_the_menu_splits_sections
+3815:     Summary [   2.124s] 2 tests run: 0 passed, 2 failed, 0 skipped
+3816:        FAIL [   1.776s] (1/2) wordcraft-ui-egui::breaks_menu page_break_from_the_menu_adds_a_page
+3817:        FAIL [   0.348s] (2/2) wordcraft-ui-egui::breaks_menu section_break_from_the_menu_splits_sections

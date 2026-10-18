@@ -1,0 +1,23 @@
+warning: ignoring --test-threads because --no-capture is specified
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.37s
+────────────
+ Nextest run ID 6f68871f-29e2-4d23-95a4-2abef94ada31 with nextest profile: ci
+    Starting 2 tests across 1 binary (60 binaries skipped)
+       START [         ] (1/2) wordcraft-ui-egui::breaks_menu page_break_from_the_menu_adds_a_page
+
+running 1 test
+test page_break_from_the_menu_adds_a_page ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.29s
+
+        PASS [   0.378s] (1/2) wordcraft-ui-egui::breaks_menu page_break_from_the_menu_adds_a_page
+       START [         ] (2/2) wordcraft-ui-egui::breaks_menu section_break_from_the_menu_splits_sections
+
+running 1 test
+test section_break_from_the_menu_splits_sections ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.24s
+
+        PASS [   0.323s] (2/2) wordcraft-ui-egui::breaks_menu section_break_from_the_menu_splits_sections
+────────────
+     Summary [   0.701s] 2 tests run: 2 passed, 0 skipped

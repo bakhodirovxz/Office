@@ -1,0 +1,118 @@
+warning: ignoring --test-threads because --no-capture is specified
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.01s
+────────────
+ Nextest run ID 184c2462-551a-4a1c-80d8-f182c2ff683f with nextest profile: ci
+    Starting 1 test across 1 binary (434 tests and 133 binaries skipped)
+────────────
+ Stress test iteration 1/10 (00:00:00 elapsed so far, 10 iterations remaining)
+       START [         ] [ 1/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.51s
+
+        PASS [   0.624s] [ 1/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.627s] iteration 1/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 2/10 (00:00:00 elapsed so far, 9 iterations remaining)
+       START [         ] [ 2/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.141s] [ 2/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.143s] iteration 2/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 3/10 (00:00:00 elapsed so far, 8 iterations remaining)
+       START [         ] [ 3/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.137s] [ 3/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.139s] iteration 3/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 4/10 (00:00:00 elapsed so far, 7 iterations remaining)
+       START [         ] [ 4/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.03s
+
+        PASS [   0.147s] [ 4/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.149s] iteration 4/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 5/10 (00:00:01 elapsed so far, 6 iterations remaining)
+       START [         ] [ 5/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.131s] [ 5/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.134s] iteration 5/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 6/10 (00:00:01 elapsed so far, 5 iterations remaining)
+       START [         ] [ 6/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.01s
+
+        PASS [   0.113s] [ 6/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.116s] iteration 6/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 7/10 (00:00:01 elapsed so far, 4 iterations remaining)
+       START [         ] [ 7/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.148s] [ 7/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.150s] iteration 7/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 8/10 (00:00:01 elapsed so far, 3 iterations remaining)
+       START [         ] [ 8/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.130s] [ 8/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.131s] iteration 8/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 9/10 (00:00:01 elapsed so far, 2 iterations remaining)
+       START [         ] [ 9/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.131s] [ 9/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.133s] iteration 9/10: 1 test run: 1 passed, 434 skipped
+────────────
+ Stress test iteration 10/10 (00:00:01 elapsed so far, 1 iteration remaining)
+       START [         ] [10/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+
+running 1 test
+test edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 434 filtered out; finished in 0.02s
+
+        PASS [   0.132s] [10/10] (1/1) pdfcraft-ui-egui edit_text_ui::tests::text_background_is_cached_without_editing_and_released_on_cancel
+ Stress test [   0.133s] iteration 10/10: 1 test run: 1 passed, 434 skipped
+────────────
+     Summary [   1.854s] 10/10 stress run iterations: 10 passed
