@@ -171,12 +171,12 @@ fn set_where(u: &mut Universe, idx: &HashMap<String, String>) {
 
 fn mark_p1(u: &mut Universe, p1: &BTreeMap<String, String>) {
     for ((ctx, src), info) in u.keys.iter_mut() {
-        if let Some(w) = p1.get(src) {
-            if ctx.is_empty() || ctx == "template" || ctx == "preview" {
-                info.p1 = true;
-                if info.where_.is_empty() {
-                    info.where_ = w.clone();
-                }
+        if let Some(w) = p1.get(src)
+            && (ctx.is_empty() || ctx == "template" || ctx == "preview")
+        {
+            info.p1 = true;
+            if info.where_.is_empty() {
+                info.where_ = w.clone();
             }
         }
     }
@@ -194,10 +194,10 @@ fn lits_in_call(toks: &[Token], start: usize) -> Vec<&str> {
             if depth == 0 {
                 break;
             }
-        } else if depth == 1 {
-            if let Some(l) = t.lit() {
-                out.push(l);
-            }
+        } else if depth == 1
+            && let Some(l) = t.lit()
+        {
+            out.push(l);
         }
     }
     out
@@ -350,10 +350,11 @@ fn add_dates(u: &mut Universe, path: &Path) {
     ];
     let mut i = 0;
     while i + 2 < toks.len() {
-        if toks[i].is_ident("code") && toks[i + 1].is_punct(':') {
-            if let Some(l) = toks[i + 2].lit() {
-                code = l.to_string();
-            }
+        if toks[i].is_ident("code")
+            && toks[i + 1].is_punct(':')
+            && let Some(l) = toks[i + 2].lit()
+        {
+            code = l.to_string();
         }
         for (f, _) in fields {
             if toks[i].is_ident(f) && toks[i + 1].is_punct(':') && toks[i + 2].is_punct('[') {
@@ -401,10 +402,11 @@ pub fn parse_rust_table(src: &str, slice: Option<&str>) -> (Vec<(String, String)
     let mut i = 0;
     let mut in_slice = slice.is_none();
     while i < toks.len() {
-        if let Some(name) = slice {
-            if toks[i].is_ident(name) && toks.get(i + 1).is_some_and(|t| t.is_punct(':')) {
-                in_slice = true;
-            }
+        if let Some(name) = slice
+            && toks[i].is_ident(name)
+            && toks.get(i + 1).is_some_and(|t| t.is_punct(':'))
+        {
+            in_slice = true;
         }
         if in_slice {
             if slice.is_some() && toks[i].is_punct(';') {
@@ -424,12 +426,11 @@ pub fn parse_rust_table(src: &str, slice: Option<&str>) -> (Vec<(String, String)
                     // `"key" => { "value" }`
                     if toks.get(i + 3).is_some_and(|t| t.is_punct('{'))
                         && toks.get(i + 5).is_some_and(|t| t.is_punct('}'))
+                        && let Some(v) = toks.get(i + 4).and_then(Token::lit)
                     {
-                        if let Some(v) = toks.get(i + 4).and_then(Token::lit) {
-                            out.push((k.to_string(), v.to_string()));
-                            i += 6;
-                            continue;
-                        }
+                        out.push((k.to_string(), v.to_string()));
+                        i += 6;
+                        continue;
                     }
                     anomalies += 1;
                 } else if toks[i].lit().is_some()
@@ -437,17 +438,17 @@ pub fn parse_rust_table(src: &str, slice: Option<&str>) -> (Vec<(String, String)
                 {
                     anomalies += 1;
                 }
-            } else if toks[i].is_punct('(') {
-                if let (Some(k), true, Some(v), true) = (
+            } else if toks[i].is_punct('(')
+                && let (Some(k), true, Some(v), true) = (
                     toks.get(i + 1).and_then(Token::lit),
                     toks.get(i + 2).is_some_and(|t| t.is_punct(',')),
                     toks.get(i + 3).and_then(Token::lit),
                     toks.get(i + 4).is_some_and(|t| t.is_punct(')')),
-                ) {
-                    out.push((k.to_string(), v.to_string()));
-                    i += 5;
-                    continue;
-                }
+                )
+            {
+                out.push((k.to_string(), v.to_string()));
+                i += 5;
+                continue;
             }
         }
         i += 1;
@@ -660,18 +661,17 @@ fn deck_universe(root: &Path) -> Universe {
                 stack.push(callee);
             } else if t.is_punct(')') {
                 stack.pop();
-            } else if let Some(l) = t.lit() {
-                if is_ui
-                    && looks_like_ui(l)
-                    && !stack.iter().any(|c| {
-                        SKIP_CALLEES.contains(&c.as_str()) || SKIP_CALLEES2.contains(&c.as_str())
-                    })
-                {
-                    let at = format!("{rel}:{}", t.line);
-                    ui_lits.insert((l.to_string(), at.clone()));
-                    if matches!(file, "backstage.rs" | "credits.rs") {
-                        p1.entry(l.to_string()).or_insert(at);
-                    }
+            } else if let Some(l) = t.lit()
+                && is_ui
+                && looks_like_ui(l)
+                && !stack.iter().any(|c| {
+                    SKIP_CALLEES.contains(&c.as_str()) || SKIP_CALLEES2.contains(&c.as_str())
+                })
+            {
+                let at = format!("{rel}:{}", t.line);
+                ui_lits.insert((l.to_string(), at.clone()));
+                if matches!(file, "backstage.rs" | "credits.rs") {
+                    p1.entry(l.to_string()).or_insert(at);
                 }
             }
         }
