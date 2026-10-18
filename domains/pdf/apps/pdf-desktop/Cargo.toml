@@ -29,6 +29,9 @@ log = "0.4"
 [build-dependencies]
 winresource = "0.1"
 
+[dev-dependencies]
+pollster = "1.0"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 fmv-macos-events = "=0.1.0"
 craft-quit = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "f58bc1a3df490992d633393d0898af0588ce882c" , features = ["menu"] }
@@ -36,6 +39,9 @@ craft-quit = { git = "https://github.com/storytold/craft-libs", version = "0.1.0
 [target.'cfg(target_os = "linux")'.dependencies]
 wayland-client = "0.31"
 wayland-protocols = { version = "0.32", features = ["client"] }
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+winit = { version = "0.30", default-features = false, features = ["wayland"] }
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 raw-window-handle = "0.6"

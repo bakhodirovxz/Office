@@ -3915,6 +3915,7 @@ dependencies = [
  "log",
  "pdfcraft-engine",
  "pdfcraft-ui-egui",
+ "pollster 1.0.1",
  "raw-window-handle",
  "rustls-native-certs",
  "serde_json",
@@ -3923,6 +3924,7 @@ dependencies = [
  "wayland-client",
  "wayland-protocols",
  "windows",
+ "winit",
  "winresource",
  "winsafe",
 ]
