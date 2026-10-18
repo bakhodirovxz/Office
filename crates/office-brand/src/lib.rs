@@ -421,8 +421,13 @@ impl Brand {
     ) -> Result<String, String> {
         let app = self.app(app_key)?;
         fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+        // Unchanged files keep their mtime: the upstream build scripts rerun (and the app crates rebuild) when it moves.
         let w = |name: &str, bytes: &[u8]| {
-            fs::write(out.join(name), bytes).map_err(|e| format!("{name}: {e}"))
+            let path = out.join(name);
+            if fs::read(&path).is_ok_and(|old| old == bytes) {
+                return Ok(());
+            }
+            fs::write(path, bytes).map_err(|e| format!("{name}: {e}"))
         };
         let (acc, fg) = (self.accent_light, self.icon_fg);
         w("overlay.env", self.overlay_env(app).as_bytes())?;

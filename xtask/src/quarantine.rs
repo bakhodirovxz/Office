@@ -222,7 +222,10 @@ fn apply(root: &Path, app: &str) -> Result<String, String> {
     let manifest = root.join("upstream").join(app).join("Cargo.toml");
     let junit = PathBuf::from(&target).join("nextest/quarantine/junit.xml");
     let _ = fs::remove_file(&junit);
+    // Same environment as the blocking pass, or cargo rebuilds the upstream crates that read these (up to 70 min).
     let status = Command::new("cargo")
+        .env("CARGO_TARGET_DIR", &target)
+        .env("CARGO_BUILD_JOBS", "4")
         .args([
             "nextest",
             "run",
