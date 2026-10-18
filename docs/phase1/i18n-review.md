@@ -101,3 +101,10 @@ on purpose (their note starts with `no-uz:`), because `rebrand` drops those sent
   (pairs that disagree under the mapping are listed). The glossary's own hand-written Cyrillic is reproduced exactly by the mapping (0 differences in 150 terms).
 - **Length**: strings in ribbon and menu contexts longer than 1.4 times the English are warnings in `docs/phase1/i18n/lint-report.md`. Uzbek is simply longer than English
   for short verbs ("Cut" = "Kesib olish"); the owner decides which labels to shorten.
+
+## 8. Agent review under the owner's delegation (2026-10-18)
+
+The owner delegated the Uzbek review to the agent (CLAUDE.md gate decisions). The glossary and all P1 rows were reviewed; the
+result, the glossary decisions and the rows left as draft are in `docs/phase1/i18n/review-agent-2026-10-18.md`. Reviewed rows
+have the status `reviewed:agent-opus:2026-10-18` and are trusted because `i18n/config.toml` sets `[review] trust_agent_review = true`.
+They still appear as `draft-unreviewed` in owner batches, so the owner can review any of them; an owner verdict replaces the agent's.

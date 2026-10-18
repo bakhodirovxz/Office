@@ -2,7 +2,10 @@
 //! at export time (design section 5): the app only ever sees one catalog and keeps its own
 //! "missing means English" behaviour. The exporter never writes English text into a locale column.
 
-use super::catalog::{Catalog, Mode, Row, adapt_plural, escape, exportable, plural_forms};
+use super::catalog::{
+    Catalog, Mode, Policy, Reviewer, Row, adapt_plural, escape, exportable, is_trusted,
+    plural_forms, reviewer,
+};
 use super::extract::{parse_rust_table, read_upstream_tsv, split_grid_key};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -92,19 +95,33 @@ pub struct Built {
     pub entries: Vec<Entry>,
     /// Entries per chain locale that supplied the value.
     pub from: BTreeMap<String, usize>,
-    /// Rows whose own-locale value was a draft (review mode) or reviewed.
+    /// Exported rows whose own-locale value is not trusted under the policy (drafts; review mode only).
     pub own_draft: usize,
+    /// Exported rows whose own-locale value is trusted under the policy.
     pub own_reviewed: usize,
+    /// Exported own-locale values by reviewer, whatever the policy (`own_reviewed` = owner + trusted agent reviews).
+    pub own_owner: usize,
+    pub own_agent: usize,
+    /// P1 rows of the app (`no-uz:` rows excepted) whose own-locale value is missing or not trusted.
+    pub p1_untrusted: usize,
     pub skipped_plural: usize,
 }
 
-/// The value a row gives to `locale` through its chain: (value, supplying locale).
+impl Built {
+    /// The language picker shows the draft marker while any P1 row is untrusted or any draft was exported.
+    pub fn is_draft(&self) -> bool {
+        self.own_draft > 0 || self.p1_untrusted > 0
+    }
+}
+
+/// The value a row gives to `locale` through its chain: (value, supplying locale, trusted under `policy`).
 pub fn resolve(
     row: &Row,
     app: &str,
     locale: &str,
     chains: &Chains,
     mode: Mode,
+    policy: &Policy,
 ) -> Option<(String, String, bool)> {
     for step in chains.of(locale) {
         if step == "en" {
@@ -112,7 +129,7 @@ pub fn resolve(
         }
         let v = row.value(&step);
         if v.is_empty()
-            || !exportable(row.status(&step), mode)
+            || !exportable(row.status(&step), mode, policy)
             || (step == "ru" && !row.ru_in_app(app))
         {
             continue;
@@ -128,8 +145,7 @@ pub fn resolve(
         if row.context == "@plural" && plural_forms(&v) != plural_count(locale) {
             continue;
         }
-        let reviewed = row.status(&step).starts_with("reviewed") || row.status(&step) == "upstream";
-        return Some((v, step, reviewed));
+        return Some((v, step.clone(), is_trusted(row.status(&step), policy)));
     }
     None
 }
@@ -144,13 +160,26 @@ fn sort_entries(entries: &mut [Entry]) {
     });
 }
 
-pub fn build_locale(cat: &Catalog, app: &str, locale: &str, chains: &Chains, mode: Mode) -> Built {
+pub fn build_locale(
+    cat: &Catalog,
+    app: &str,
+    locale: &str,
+    chains: &Chains,
+    mode: Mode,
+    policy: &Policy,
+) -> Built {
     let mut b = Built::default();
     for row in cat.app_rows(app) {
+        if row.is_p1(app)
+            && !super::lint::exempt(row)
+            && (row.value(locale).is_empty() || !is_trusted(row.status(locale), policy))
+        {
+            b.p1_untrusted += 1;
+        }
         if row.context.starts_with("date.") {
             continue;
         }
-        let Some((value, step, reviewed)) = resolve(row, app, locale, chains, mode) else {
+        let Some((value, step, reviewed)) = resolve(row, app, locale, chains, mode, policy) else {
             if row.context == "@plural" && !row.value(locale).is_empty() {
                 b.skipped_plural += 1;
             }
@@ -161,6 +190,11 @@ pub fn build_locale(cat: &Catalog, app: &str, locale: &str, chains: &Chains, mod
                 b.own_reviewed += 1
             } else {
                 b.own_draft += 1
+            }
+            match reviewer(row.status(locale)) {
+                Some(Reviewer::Owner) => b.own_owner += 1,
+                Some(Reviewer::Agent) => b.own_agent += 1,
+                None => {}
             }
         }
         *b.from.entry(step).or_default() += 1;
@@ -255,6 +289,7 @@ pub fn build_dates(
     locale: &str,
     chains: &Chains,
     mode: Mode,
+    policy: &Policy,
 ) -> Result<String, String> {
     let rows: Vec<&Row> = cat
         .app_rows("pdfcraft")
@@ -263,7 +298,7 @@ pub fn build_dates(
         .collect();
     let mut found: Vec<(String, u32, String, String)> = Vec::new();
     for r in &rows {
-        if let Some((v, _, _)) = resolve(r, "pdfcraft", locale, chains, mode) {
+        if let Some((v, _, _)) = resolve(r, "pdfcraft", locale, chains, mode, policy) {
             let mut parts = r.context.rsplitn(2, '.');
             let n = parts
                 .next()
@@ -314,6 +349,7 @@ pub fn export_app(
     chains: &Chains,
     out_root: &Path,
     with_ru: bool,
+    policy: &Policy,
 ) -> Result<Vec<String>, String> {
     let dir = out_root.join(app);
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -331,7 +367,7 @@ pub fn export_app(
         locales.push("ru");
     }
     for loc in locales {
-        let b = build_locale(cat, app, loc, chains, mode);
+        let b = build_locale(cat, app, loc, chains, mode, policy);
         let path = dir.join(format!("catalog-{loc}.tsv"));
         fs::write(&path, render(app, loc, &b.entries, mode))
             .map_err(|e| format!("{}: {e}", path.display()))?;
@@ -342,18 +378,27 @@ pub fn export_app(
             from.join(", "),
             path.display()
         ));
+        if loc != "ru" {
+            report.push(format!(
+                "  {loc} own rows: {} trusted (owner-reviewed {}, agent-reviewed {}), {} draft; P1 rows not trusted: {}",
+                b.own_reviewed, b.own_owner, b.own_agent, b.own_draft, b.p1_untrusted
+            ));
+        }
         let key = loc.to_uppercase().replace('-', "_");
         meta.push(format!("{key}_REVIEWED={}", b.own_reviewed));
+        meta.push(format!("{key}_REVIEWED_OWNER={}", b.own_owner));
+        meta.push(format!("{key}_REVIEWED_AGENT={}", b.own_agent));
         meta.push(format!("{key}_DRAFT={}", b.own_draft));
+        meta.push(format!("{key}_P1_UNTRUSTED={}", b.p1_untrusted));
         meta.push(format!(
             "{key}_FILLED={}",
             b.entries.len() - b.own_reviewed - b.own_draft
         ));
         if let Some((name, draft)) = picker_name(loc) {
-            // The language picker shows the name in its own script; a draft marker follows while any row is unreviewed.
+            // The language picker shows the name in its own script; a draft marker follows while any P1 row is untrusted.
             meta.push(format!(
                 "NAME_{key}={name}{}",
-                if b.own_draft > 0 {
+                if b.is_draft() {
                     format!(" ({draft})")
                 } else {
                     String::new()
@@ -363,7 +408,7 @@ pub fn export_app(
     }
     if app == "pdfcraft" {
         for loc in EXPORT_LOCALES {
-            match build_dates(cat, loc, chains, mode) {
+            match build_dates(cat, loc, chains, mode, policy) {
                 Ok(text) => {
                     fs::write(dir.join(format!("dates-{loc}.tsv")), text)
                         .map_err(|e| e.to_string())?;
@@ -377,6 +422,17 @@ pub fn export_app(
     Ok(report)
 }
 
+/// A copy of the catalog with every uz-Latn and uz-Cyrl value removed (status `todo`).
+pub fn without_uzbek(cat: &Catalog) -> Catalog {
+    let mut bare = cat.clone();
+    for row in bare.scopes.values_mut().flatten() {
+        for loc in EXPORT_LOCALES {
+            row.set(loc, String::new(), "todo".into());
+        }
+    }
+    bare
+}
+
 /// Round trip: extract -> export `ru` with no Uzbek -> compare with upstream's own ru catalog.
 pub fn roundtrip(
     root: &Path,
@@ -386,8 +442,12 @@ pub fn roundtrip(
 ) -> Result<Vec<String>, String> {
     let mut report = Vec::new();
     let mut failed = false;
+    // The round trip is about extract and export, not about review: it runs on the catalog with every Uzbek value
+    // removed, so its "no Uzbek" checks hold whatever has been reviewed and whatever the trust policy is.
+    let cat = &without_uzbek(cat);
+    let policy = &Policy::OWNER_ONLY;
     for app in ["wordcraft", "gridcraft", "pdfcraft"] {
-        let built = build_locale(cat, app, "ru", chains, Mode::Release);
+        let built = build_locale(cat, app, "ru", chains, Mode::Release, policy);
         let dir = out_root.join("roundtrip").join(app);
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let text = render(app, "ru", &built.entries, Mode::Release);
@@ -458,8 +518,8 @@ pub fn roundtrip(
         ));
         failed |= !(semantic && reparse_ok);
         // No Uzbek at all: uz-Latn must be empty, uz-Cyrl must equal the ru chain fill.
-        let latn = build_locale(cat, app, "uz-latn", chains, Mode::Release);
-        let cyrl = build_locale(cat, app, "uz-cyrl", chains, Mode::Release);
+        let latn = build_locale(cat, app, "uz-latn", chains, Mode::Release, policy);
+        let cyrl = build_locale(cat, app, "uz-cyrl", chains, Mode::Release, policy);
         report.push(format!("{app}: with no Uzbek, release export uz-latn = {} entries, uz-cyrl = {} entries (all from ru: {})", latn.entries.len(), cyrl.entries.len(), cyrl.from.keys().all(|k| k == "ru")));
         failed |= !latn.entries.is_empty();
     }
@@ -511,7 +571,14 @@ mod tests {
         c.uz_latn_status = "draft:agent:2026-10-18".into();
         let cat = cat_of(vec![a, b, c]);
         let chains = Chains::default();
-        let cyrl = build_locale(&cat, "wordcraft", "uz-cyrl", &chains, Mode::Release);
+        let cyrl = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-cyrl",
+            &chains,
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+        );
         let got: Vec<_> = cyrl
             .entries
             .iter()
@@ -519,14 +586,259 @@ mod tests {
             .collect();
         assert_eq!(got, vec![("Copy", "Нусхалаш"), ("Paste", "Вставить")]); // own reviewed first, ru fills, draft Latn never leaks
         assert_eq!(cyrl.from.get("ru"), Some(&1));
-        let latn = build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Release);
+        let latn = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-latn",
+            &chains,
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+        );
         assert!(
             latn.entries.is_empty(),
             "release: a draft is not exported and en is never written"
         );
-        let latn = build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Review);
+        let latn = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-latn",
+            &chains,
+            Mode::Review,
+            &Policy::OWNER_ONLY,
+        );
         assert_eq!(latn.entries.len(), 1);
         assert_eq!(latn.own_draft, 1);
+    }
+
+    fn uz(src: &str, status: &str) -> Row {
+        let mut r = row("", src);
+        r.uz_latn = format!("{src} uz");
+        r.uz_latn_status = status.into();
+        r.uz_cyrl = format!("{src} уз");
+        r.uz_cyrl_status = status.into();
+        r
+    }
+
+    const AGENT: &str = "reviewed:agent-opus:2026-10-18";
+    const OWNER: &str = "reviewed:owner:2026-10-21";
+    const DRAFT: &str = "draft:agent-sonnet:2026-10-17";
+    const DELEGATED: Policy = Policy {
+        trust_agent_review: true,
+    };
+    const OWNER_ONLY: Policy = Policy::OWNER_ONLY;
+
+    #[test]
+    fn agent_reviewed_rows_reach_release_only_under_the_delegation_policy() {
+        let cat = cat_of(vec![
+            uz("Copy", AGENT),
+            uz("Cut", OWNER),
+            uz("Paste", DRAFT),
+        ]);
+        let chains = Chains::default();
+        let owner_only = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-latn",
+            &chains,
+            Mode::Release,
+            &OWNER_ONLY,
+        );
+        assert_eq!(owner_only.entries.len(), 1, "owner review only");
+        let delegated = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-latn",
+            &chains,
+            Mode::Release,
+            &DELEGATED,
+        );
+        let got: Vec<_> = delegated
+            .entries
+            .iter()
+            .map(|e| e.source.as_str())
+            .collect();
+        assert_eq!(
+            got,
+            vec!["Copy", "Cut"],
+            "the draft never reaches a release"
+        );
+        assert_eq!(
+            (
+                delegated.own_owner,
+                delegated.own_agent,
+                delegated.own_reviewed
+            ),
+            (1, 1, 2)
+        );
+        // review mode shows everything; an agent review counts as a draft unless the policy trusts it
+        let review = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-cyrl",
+            &chains,
+            Mode::Review,
+            &OWNER_ONLY,
+        );
+        assert_eq!(
+            (review.entries.len(), review.own_reviewed, review.own_draft),
+            (3, 1, 2)
+        );
+        assert_eq!((review.own_owner, review.own_agent), (1, 1));
+        let review = build_locale(
+            &cat,
+            "wordcraft",
+            "uz-cyrl",
+            &chains,
+            Mode::Review,
+            &DELEGATED,
+        );
+        assert_eq!((review.own_reviewed, review.own_draft), (2, 1));
+    }
+
+    #[test]
+    fn draft_marker_goes_once_every_p1_row_is_trusted() {
+        let chains = Chains::default();
+        let mut exempt = row("", "Part of ArtCraft");
+        exempt.note = "no-uz: part of an ArtCraft sentence".into();
+        let mut p2 = row("", "Rare");
+        p2.priority = "P2".into();
+        let grid = |s: &str| {
+            let mut r = uz("Grid", s);
+            r.priority = "P1:gridcraft".into();
+            r.apps = "gridcraft,wordcraft".into();
+            r
+        };
+        let rows = |s: &str| {
+            vec![
+                uz("Copy", AGENT),
+                uz("Cut", OWNER),
+                uz("Paste", s),
+                exempt.clone(),
+                p2.clone(),
+                grid(s),
+            ]
+        };
+        for mode in [Mode::Review, Mode::Release] {
+            // one P1 draft left: the marker stays, also in a release, where the draft is not exported
+            let b = build_locale(
+                &cat_of(rows(DRAFT)),
+                "wordcraft",
+                "uz-latn",
+                &chains,
+                mode,
+                &DELEGATED,
+            );
+            assert_eq!(b.p1_untrusted, 1, "{mode:?}");
+            assert!(b.is_draft(), "{mode:?}");
+            // every P1 row trusted (the no-uz row, the P2 row and gridcraft's P1 row do not count): no marker
+            let b = build_locale(
+                &cat_of(rows(AGENT)),
+                "wordcraft",
+                "uz-latn",
+                &chains,
+                mode,
+                &DELEGATED,
+            );
+            assert_eq!(b.p1_untrusted, 0, "{mode:?}");
+            assert!(!b.is_draft(), "{mode:?}");
+            // the same catalog without the delegation: agent reviews are not trusted, the marker stays
+            let b = build_locale(
+                &cat_of(rows(AGENT)),
+                "wordcraft",
+                "uz-latn",
+                &chains,
+                mode,
+                &OWNER_ONLY,
+            );
+            assert_eq!(b.p1_untrusted, 2, "{mode:?}");
+            assert!(b.is_draft(), "{mode:?}");
+            // every wordcraft P1 row trusted, but a draft that is P1 only in gridcraft is shown by wordcraft:
+            // a review build shows a draft, so it keeps the marker; a release does not export it
+            let mut mixed = rows(AGENT);
+            mixed[5] = grid(DRAFT);
+            let b = build_locale(
+                &cat_of(mixed),
+                "wordcraft",
+                "uz-latn",
+                &chains,
+                mode,
+                &DELEGATED,
+            );
+            assert_eq!(b.p1_untrusted, 0, "{mode:?}");
+            assert_eq!(b.is_draft(), mode == Mode::Review, "{mode:?}");
+        }
+    }
+
+    #[test]
+    fn export_meta_counts_agent_and_owner_reviews_apart() {
+        let out = std::env::temp_dir().join(format!("xtask-i18n-meta-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&out);
+        let chains = Chains::default();
+        let meta = |cat: &Catalog, policy: &Policy| {
+            let report =
+                export_app(cat, "wordcraft", Mode::Review, &chains, &out, false, policy).unwrap();
+            let text = fs::read_to_string(out.join("wordcraft/catalog-meta.env")).unwrap();
+            (report.join("\n"), text)
+        };
+        let all = cat_of(vec![uz("Copy", AGENT), uz("Cut", OWNER)]);
+        let (report, m) = meta(&all, &DELEGATED);
+        for line in [
+            "UZ_LATN_REVIEWED=2\n",
+            "UZ_LATN_REVIEWED_OWNER=1\n",
+            "UZ_LATN_REVIEWED_AGENT=1\n",
+            "UZ_LATN_DRAFT=0\n",
+            "UZ_LATN_P1_UNTRUSTED=0\n",
+            "NAME_UZ_LATN=O\u{2bb}zbekcha\n",
+            "NAME_UZ_CYRL=Ўзбекча\n",
+        ] {
+            assert!(m.contains(line), "{line:?} not in {m}");
+        }
+        assert!(
+            report.contains("owner-reviewed 1, agent-reviewed 1"),
+            "{report}"
+        );
+        let (_, m) = meta(&all, &OWNER_ONLY);
+        assert!(m.contains("UZ_LATN_REVIEWED_AGENT=1\n"), "{m}");
+        assert!(m.contains("UZ_LATN_DRAFT=1\n"), "{m}");
+        assert!(
+            m.contains("NAME_UZ_LATN=O\u{2bb}zbekcha (qoralama)\n"),
+            "{m}"
+        );
+        assert!(m.contains("NAME_UZ_CYRL=Ўзбекча (қоралама)\n"), "{m}");
+        let _ = fs::remove_dir_all(&out);
+    }
+
+    #[test]
+    fn without_uzbek_clears_both_scripts_and_keeps_ru() {
+        let mut a = uz("Copy", AGENT);
+        a.ru = "Копировать".into();
+        a.ru_status = "upstream".into();
+        let bare = without_uzbek(&cat_of(vec![a]));
+        let r = &bare.scopes["shared"][0];
+        assert!(r.uz_latn.is_empty() && r.uz_cyrl.is_empty());
+        assert_eq!(
+            (r.uz_latn_status.as_str(), r.uz_cyrl_status.as_str()),
+            ("todo", "todo")
+        );
+        assert_eq!(r.ru, "Копировать");
+        let latn = build_locale(
+            &bare,
+            "wordcraft",
+            "uz-latn",
+            &Chains::default(),
+            Mode::Release,
+            &DELEGATED,
+        );
+        assert!(latn.entries.is_empty());
+        let cyrl = build_locale(
+            &bare,
+            "wordcraft",
+            "uz-cyrl",
+            &Chains::default(),
+            Mode::Release,
+            &DELEGATED,
+        );
+        assert_eq!(cyrl.from.get("ru"), Some(&1));
     }
 
     #[test]
@@ -541,16 +853,24 @@ mod tests {
                 "wordcraft",
                 "uz-latn",
                 &Chains::default(),
-                Mode::Release
+                Mode::Release,
+                &Policy::OWNER_ONLY
             )
             .entries
             .is_empty()
         );
         let chains = Chains::parse("[chains]\nuz-latn = [\"uz-latn\", \"ru\", \"en\"]\n").unwrap();
         assert_eq!(
-            build_locale(&cat, "wordcraft", "uz-latn", &chains, Mode::Release)
-                .entries
-                .len(),
+            build_locale(
+                &cat,
+                "wordcraft",
+                "uz-latn",
+                &chains,
+                Mode::Release,
+                &Policy::OWNER_ONLY
+            )
+            .entries
+            .len(),
             1
         );
         assert!(Chains::parse("[chains]\nuz-latn = [\"ru\"]\n").is_err());
@@ -564,15 +884,29 @@ mod tests {
         a.ru_apps = "wordcraft".into();
         let cat = cat_of(vec![a]);
         assert_eq!(
-            build_locale(&cat, "wordcraft", "ru", &Chains::default(), Mode::Release)
-                .entries
-                .len(),
+            build_locale(
+                &cat,
+                "wordcraft",
+                "ru",
+                &Chains::default(),
+                Mode::Release,
+                &Policy::OWNER_ONLY
+            )
+            .entries
+            .len(),
             1
         );
         assert_eq!(
-            build_locale(&cat, "pdfcraft", "ru", &Chains::default(), Mode::Release)
-                .entries
-                .len(),
+            build_locale(
+                &cat,
+                "pdfcraft",
+                "ru",
+                &Chains::default(),
+                Mode::Release,
+                &Policy::OWNER_ONLY
+            )
+            .entries
+            .len(),
             0
         );
     }
@@ -589,11 +923,32 @@ mod tests {
         bad.uz_latn_status = "reviewed:owner:2026-10-21".into();
         let cat = cat_of(vec![p, bad]);
         let chains = Chains::default();
-        let ru = build_locale(&cat, "pdfcraft", "ru", &chains, Mode::Release);
+        let ru = build_locale(
+            &cat,
+            "pdfcraft",
+            "ru",
+            &chains,
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+        );
         assert_eq!(ru.entries[0].value.split('|').count(), 3);
-        let cyrl = build_locale(&cat, "pdfcraft", "uz-cyrl", &chains, Mode::Release);
+        let cyrl = build_locale(
+            &cat,
+            "pdfcraft",
+            "uz-cyrl",
+            &chains,
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+        );
         assert_eq!(cyrl.entries[0].value, "{n} страница|{n} страниц"); // 3 forms -> 2 (one, other)
-        let latn = build_locale(&cat, "pdfcraft", "uz-latn", &chains, Mode::Release);
+        let latn = build_locale(
+            &cat,
+            "pdfcraft",
+            "uz-latn",
+            &chains,
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+        );
         assert_eq!(latn.entries.len(), 1);
         assert_eq!(latn.skipped_plural, 1);
     }
@@ -658,8 +1013,8 @@ mod tests {
         let mut cat = Catalog::default();
         cat.scopes.insert("pdfcraft".into(), rows);
         let chains = Chains::default();
-        assert!(build_dates(&cat, "uz-latn", &chains, Mode::Release).is_err());
-        let ok = build_dates(&cat, "uz-cyrl", &chains, Mode::Release).unwrap();
+        assert!(build_dates(&cat, "uz-latn", &chains, Mode::Release, &Policy::OWNER_ONLY).is_err());
+        let ok = build_dates(&cat, "uz-cyrl", &chains, Mode::Release, &Policy::OWNER_ONLY).unwrap();
         assert_eq!(
             ok.lines()
                 .filter(|l| !l.starts_with('#') && !l.is_empty())

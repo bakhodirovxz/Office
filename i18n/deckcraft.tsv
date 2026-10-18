@@ -5,16 +5,16 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 01584692a317		Snap objects to other objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2538	
 018d7c82922a		Stopped opening {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:60	
 019183481be1		Fill & Line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:219	
-01a1f86f6b7a		Export	Eksport qilish	draft:agent-sonnet:2026-10-17	Экспорт қилиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:73	
+01a1f86f6b7a		Export	Eksport	reviewed:agent-opus:2026-10-18	Экспорт	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:73	review-agent-2026-10-18: glossary Export
 01fa00820f0e		Ελληνικά		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:241	
-0234ff20b287		Portrait Orientation	Kitob yoʻnalishi	draft:agent-sonnet:2026-10-17	Китоб йўналиши	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	
-027fed5dcfac		sample deck northern lights	namunaviy taqdimot shimol nurlari	draft:agent-sonnet:2026-10-17	намунавий тақдимот шимол нурлари	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:520	
+0234ff20b287		Portrait Orientation	Kitob yoʻnalishi	reviewed:agent-opus:2026-10-18	Китоб йўналиши	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	review-agent-2026-10-18: "Orientation" is in the English here
+027fed5dcfac		sample deck northern lights	namunaviy taqdimot shimoliy yogʻdu	reviewed:agent-opus:2026-10-18	намунавий тақдимот шимолий ёғду	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:520	review-agent-2026-10-18: aurora = shimoliy yog`du
 028fa0144da5		Display grid on screen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2543	
 02a151d79397		Mirror type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:696	
 02c2ae2b7b9d		Table…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:237	
 02cf00fed4bd		open the presentation to compare first		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1038	
 0357b251cb65		Edit SmartArt Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/smartart.rs:172	
-03844f1bd62c		Handouts (9 slides per page)	Tarqatma materiallar (sahifada 9 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 9 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1019	
+03844f1bd62c		Handouts (9 slides per page)	Tarqatmalar (sahifada 9 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 9 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1019	review-agent-2026-10-18: handout = tarqatma
 038ac9610b9e		Captions under pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:465	
 03903b9088e6		Header and Footer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:37	
 03906beb78f3		Dark appearance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2142	
@@ -27,7 +27,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 04c160aa2ed7		Begin arrow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
 04c5c8a618bf		missing width/height		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:326	
 04fb3a565990		unknown UI command `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1055	
-05d0d3805bec		This presentation has unsaved changes. Revert goes back to the saved file.	Bu taqdimotda saqlanmagan oʻzgarishlar bor. Saqlangan holatga qaytarish saqlangan faylga oʻtadi.	draft:agent-sonnet:2026-10-17	Бу тақдимотда сақланмаган ўзгаришлар бор. Сақланган ҳолатга қайтариш сақланган файлга ўтади.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:850	
+05d0d3805bec		This presentation has unsaved changes. Revert goes back to the saved file.	Bu taqdimotda saqlanmagan oʻzgarishlar bor. «Saqlangan holatga qaytarish» saqlangan faylni qayta ochadi.	reviewed:agent-opus:2026-10-18	Бу тақдимотда сақланмаган ўзгаришлар бор. «Сақланган ҳолатга қайтариш» сақланган файлни қайта очади.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:850	review-agent-2026-10-18: names the button; says what it does
 06764acd02b5		New Slide (⇧⌘N)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:426	
 06a753e6905c		missing `key`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:167	
 06acabd89fa3		the slide master it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1496	
@@ -51,24 +51,24 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 09e9b295964b		Hide background graphics		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:910	
 0a19be5d2703		Email address:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1135	
 0a42c11b3784		Body		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3283	
-0a83691d1978		Redo	Qayta bajarish	draft:agent-sonnet:2026-10-17	Қайта бажариш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:182	
+0a83691d1978		Redo	Qayta bajarish	reviewed:agent-opus:2026-10-18	Қайта бажариш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:182	
 0a83d9e8eca0		Add Shape Before		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3079	
-0a9800686371		{:.1} MB	{:.1} MB	draft:agent-sonnet:2026-10-17	{:.1} MB	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:920	
+0a9800686371		{:.1} MB	{:.1} MB	reviewed:agent-opus:2026-10-18	{:.1} MB	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:920	
 0abe49b26393		Loop Until Next Sound		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1725	
 0af4167d67ed		missing `command`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:140	
 0b023acb72a7		Long Dash Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:978	
-0b4e45f4a086		Search for themes and templates	Temalar va shablonlarni qidirish	draft:agent-sonnet:2026-10-17	Темалар ва шаблонларни қидириш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:751	
+0b4e45f4a086		Search for themes and templates	Mavzular va shablonlarni qidirish	reviewed:agent-opus:2026-10-18	Мавзулар ва шаблонларни қидириш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:751	review-agent-2026-10-18: glossary Theme
 0b5d14c6a481		Still opening {name}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:29	
-0b64787ccfa1		Review	Tekshirish	draft:agent-sonnet:2026-10-17	Текшириш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+0b64787ccfa1		Review	Tekshirish	reviewed:agent-opus:2026-10-18	Текшириш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
 0b72172bd3d3		{keepFormatting?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:403	
 0c57ae1e63e8		Custom width		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3283	
-0c9bb697fa70		Create a PDF Document	PDF hujjat yaratish	draft:agent-sonnet:2026-10-17	PDF ҳужжат яратиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1264	
+0c9bb697fa70		Create a PDF Document	PDF hujjat yaratish	reviewed:agent-opus:2026-10-18	PDF ҳужжат яратиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1264	
 0cc5553cc059		MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2620	
 0d2eed0ef901		Delete Layout		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:109	
 0d903e7d5eb5		Saving a copy needs a file picker, which this window doesn't have.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:797	
 0da6939abd52		Font name		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1642	
 0dbe97463853		1 picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:448	
-0dfbb54a0ed0		The current slide as a picture	Joriy slayd rasm sifatida	draft:agent-sonnet:2026-10-17	Жорий слайд расм сифатида	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
+0dfbb54a0ed0		The current slide as a picture	Joriy slayd rasm sifatida	reviewed:agent-opus:2026-10-18	Жорий слайд расм сифатида	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
 0e614072ba8d		Strikethrough		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2786	
 0e74de6d2875		Opened the presentation as a PDF to print		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:823	
 0e8741cab95d		▶ Play All		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1021	
@@ -81,7 +81,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 0f3508a60dcb		• {d}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1215	
 0f47d3b317e0		no presentation is open		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1140	
 0f73611c6dcd		Search commands…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:109	
-0fd676b526b4		{path} — this file can't be found	{path} — bu fayl topilmadi	draft:agent-sonnet:2026-10-17	{path} — бу файл топилмади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:616	
+0fd676b526b4		{path} — this file can't be found	{path} — bu fayl topilmadi	reviewed:agent-opus:2026-10-18	{path} — бу файл топилмади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:616	
 0fee1965702e		Exit Edit Points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1100	
 0ff09fbc417f		{ch}  Bullet		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:705	
 101d8cc1dee7		{n} Slide{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3310	
@@ -109,7 +109,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 15362e8e5146		Animation\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1972	
 1540d85dcd3c		Presenter View — DeckCraft		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/show.rs:1757	
 1578dd389f71		Motion Paths		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
-15a838bf8e7c		Print Hidden Slides	Yashirin slaydlarni chop etish	draft:agent-sonnet:2026-10-17	Яширин слайдларни чоп этиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1108	
+15a838bf8e7c		Print Hidden Slides	Yashirin slaydlarni chop etish	reviewed:agent-opus:2026-10-18	Яширин слайдларни чоп этиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1108	
 16283c4d20c5		JPEG image (current slide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1549	
 163a6a5025a7		Inspect Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/inspect.rs:14	
 16d34d3e5a3f		Animation Painter (double-click to keep it on)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1989	
@@ -117,7 +117,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 1771a6d05ead		Follow Path		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2282	
 17973adfd8b6		 left of centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:693	
 17f9d08c5824		Aa		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1567	
-185824b670f1		There are no unsaved changes.	Saqlanmagan oʻzgarishlar yoʻq.	draft:agent-sonnet:2026-10-17	Сақланмаган ўзгаришлар йўқ.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:849	
+185824b670f1		There are no unsaved changes.	Saqlanmagan oʻzgarishlar yoʻq.	reviewed:agent-opus:2026-10-18	Сақланмаган ўзгаришлар йўқ.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:849	
 189a4761b73c		Stealth end		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:992	
 18e2c3798c2c		{name} was not applied: the presentation it was chosen for is closed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1446	
 1968a8d1a5ba		Edit Alt Text…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1255	
@@ -133,7 +133,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 1ce8076ace95		Nocturne		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
 1d12b59a193d		Accent 2		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1322	
 1d2b951f47bb		Enter a scheme name.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:564	
-1d2c3896202a		No presentation is open.	Hech qanday taqdimot ochiq emas.	draft:agent-sonnet:2026-10-17	Ҳеч қандай тақдимот очиқ эмас.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1026	
+1d2c3896202a		No presentation is open.	Hech qanday taqdimot ochiq emas.	reviewed:agent-opus:2026-10-18	Ҳеч қандай тақдимот очиқ эмас.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1026	
 1d6f62aa3b7e		A-		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1850	
 1e152d2e9c33		[Stop Previous Sound]		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1699	
 1e3c4b158a33		Scale Y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:683	
@@ -143,30 +143,30 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 1eedd70d1820		Design\nIdeas		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1184	
 1f20931f2b97		unknown command `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:76	
 1f584bd78ca9		Themes (whole presentation)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1404	
-1f8c208830e6		Sample deck: Northern Lights	Namunaviy taqdimot: Shimol nurlari	draft:agent-sonnet:2026-10-17	Намунавий тақдимот: Шимол нурлари	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:541	
-1fbe027451d7		{} slides per page	Sahifada {} ta slayd	draft:agent-sonnet:2026-10-17	Саҳифада {} та слайд	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1280	
+1f8c208830e6		Sample deck: Northern Lights	Namunaviy taqdimot: Shimoliy yogʻdu	reviewed:agent-opus:2026-10-18	Намунавий тақдимот: Шимолий ёғду	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:541	review-agent-2026-10-18: aurora = shimoliy yog`du
+1fbe027451d7		{} slides per page	Sahifada {} ta slayd	reviewed:agent-opus:2026-10-18	Саҳифада {} та слайд	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1280	
 1fdde1c6c5a9		Photo\nAlbum		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:270	
 1ff6991e9bf5		{layout?, perPage?, slides?, includeHidden?, frame?, paper?: letter|a4|legal|a3, orientation?: portrait|landscape}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:393	
 20cd226d49f6		Next ▶		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1780	
 20d9742d2281		  Fixed date (empty = update automatically):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1078	
 20eb246ef041		Delete cropped areas of pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3591	
 213cc9d25682		New\nSlide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1192	
-215136b00255		Frame Slides	Slaydlarni ramkaga solish	draft:agent-sonnet:2026-10-17	Слайдларни рамкага солиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1111	
+215136b00255		Frame Slides	Slaydlarni ramkalash	reviewed:agent-opus:2026-10-18	Слайдларни рамкалаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1111	review-agent-2026-10-18: shorter verb
 2198b175545c		{n} Column{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:766	
 21b65f732555		New Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:228	
-21c064e7f700		OK	OK	draft:agent-sonnet:2026-10-17	OK	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1067	
+21c064e7f700		OK	OK	reviewed:agent-opus:2026-10-18	OK	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1067	
 21f55565c07f		Meadow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
 223c27b1d42f		Screenshot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1221	
 224c463fed9d		Entrance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
 22b2517f499a		On Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2005	
-233b9389a1b2		Notes Pages	Qaydlar sahifalari	draft:agent-sonnet:2026-10-17	Қайдлар саҳифалари	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1013	
+233b9389a1b2		Notes Pages	Qaydlar sahifalari	reviewed:agent-opus:2026-10-18	Қайдлар саҳифалари	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1013	
 23928a7170a3		Remove Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:31	
 23a2195507f3		Browse for Themes needs the desktop app for now		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1026	
 23c1b920cee4		Flip Vertical		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:279	
 23e8d7456cdc		Presenter View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:383	
 23fb5e7060f1		Show type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1155	
 23fdbc25e4a0		+ Add		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:120	
-240a120c641a		Insert	Kiritish	draft:agent-sonnet:2026-10-17	Киритиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1033	
+240a120c641a		Insert	Kiritish	reviewed:agent-opus:2026-10-18	Киритиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1033	
 2428bf3eaa0b		Run program:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1470	
 24625e6896b1		Reading View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:364	
 24946c232362		Icon Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:34	
@@ -178,7 +178,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 25c975a015c7		Selection\nPane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1181	
 25e44e77ff98		Action on click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1409	
 26182d798c68		Compound type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:580	
-262f4121e348		PowerPoint Presentation (*.pptx)	PowerPoint taqdimoti (*.pptx)	draft:agent-sonnet:2026-10-17	PowerPoint тақдимоти (*.pptx)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
+262f4121e348		PowerPoint Presentation (*.pptx)	PowerPoint taqdimoti (*.pptx)	reviewed:agent-opus:2026-10-18	PowerPoint тақдимоти (*.pptx)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
 26686f1cee5e		Svenska		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:232	
 266e270547b4		Presented by a speaker (full screen)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1157	
 267a5e340e47		Reading the file: {secs:.0} s		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/opening.rs:100	
@@ -198,7 +198,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 289ace879e1c		Rename Layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:46	
 28a860073b19		That picture is larger than 32 MB		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:257	
 28adcf5441e6		{} presentations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1198	
-28b27c7df0ec		Dark	Qorongʻi	draft:agent-sonnet:2026-10-17	Қоронғи	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
+28b27c7df0ec		Dark	Qorongʻi	reviewed:agent-opus:2026-10-18	Қоронғи	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
 28c81e763812		{kind_label} (click to change)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:594	
 28ecbb779bbe		From top left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:99	
 28f670ea92c1		For rectangles and rounded rectangles		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3514	
@@ -222,14 +222,14 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 2d90418ca985		New Presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:166	
 2d96532d4b44		From Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1765	
 2dc20e80db2f		By Paragraph		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1943	
-2e17d4398651		This presentation has never been saved.	Bu taqdimot hech qachon saqlanmagan.	draft:agent-sonnet:2026-10-17	Бу тақдимот ҳеч қачон сақланмаган.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:851	
+2e17d4398651		This presentation has never been saved.	Bu taqdimot hech qachon saqlanmagan.	reviewed:agent-opus:2026-10-18	Бу тақдимот ҳеч қачон сақланмаган.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:851	
 2e581bde0d1f		Offset left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
 2e8d7f7ebee5		Check\nAccessibility		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2146	
 2e969257955d		Picture layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:439	
-2f0988cf9324		Add a tag	Teg qoʻshish	draft:agent-sonnet:2026-10-17	Тег қўшиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:227	
+2f0988cf9324		Add a tag	Teg qoʻshing	reviewed:agent-opus:2026-10-18	Тег қўшинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:227	review-agent-2026-10-18: placeholder hint: polite imperative
 2f18b0fc6edb		Split\nCells		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3004	
 2f3647038ef9		Medium (960 px wide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3284	
-2f4446b80004		Handouts (1 slide per page)	Tarqatma materiallar (sahifada 1 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 1 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1014	
+2f4446b80004		Handouts (1 slide per page)	Tarqatmalar (sahifada 1 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 1 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1014	review-agent-2026-10-18: handout = tarqatma
 2f516025e979		Pictures in album		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:346	
 2f8f8aaab70a		Start: {:.2}s, End: {:.2}s		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/animtimeline.rs:90	
 2fa7bb268929		Miter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
@@ -244,7 +244,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 3176c4959deb		From bottom right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:102	
 3180970e92ef		{text}  →	{text}  →	draft:agent-sonnet:2026-10-17	{text}  →	draft:agent-sonnet:2026-10-17		todo		obsolete	deckcraft	crates/ui-egui/src/backstage.rs:478	
 31a4a8e7f64b		Fit to\nWindow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2252	
-31f0077d1cb4		Open a presentation from a folder (Ctrl+O)	Jilddan taqdimot ochish (Ctrl+O)	draft:agent-sonnet:2026-10-17	Жилддан тақдимот очиш (Cтрл+О)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	
+31f0077d1cb4		Open a presentation from a folder (Ctrl+O)	Jilddan taqdimot ochish (Ctrl+O)	reviewed:agent-opus:2026-10-18	Жилддан тақдимот очиш (Ctrl+O)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	review-agent-2026-10-18: Cyrillic spelling
 323787717a1c		Align Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1143	
 32bafd0076af		Scale width (%):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2414	
 32c5cd4a786b		Pen Weight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2848	
@@ -272,7 +272,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 37320af18d16		Shape Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:35	
 37332cfd95ed		Play from Start		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:285	
 37932e29820a		Slate		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
-37d98619e90c		Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.	Ochiq manba: MIT OR Apache-2.0 litsenziyasi ostida. Microsoft bilan aloqasi yoʻq.	draft:agent-sonnet:2026-10-17	Очиқ манба: MIT OR Apache-2.0 лицензияси остида. Microsoft билан алоқаси йўқ.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1362	
+37d98619e90c		Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.	Ochiq manbali dastur, MIT OR Apache-2.0 litsenziyasi ostida. Microsoft bilan bogʻliq emas.	reviewed:agent-opus:2026-10-18	Очиқ манбали дастур, MIT OR Apache-2.0 лицензияси остида. Microsoft билан боғлиқ эмас.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1362	review-agent-2026-10-18: natural wording
 38596a5fd408		Action on mouse over		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1409	
 38a997758d83		Horizontal (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2419	
 38fc9540fb29		Offset X		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:680	
@@ -285,7 +285,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 3a26294a1bdd		Timing bar {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1077	
 3a44274377b4		Duplicate Selected Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:433	
 3a71f35c2a9d		+ New Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:197	
-3b4825f3dec3		View	Koʻrinish	draft:agent-sonnet:2026-10-17	Кўриниш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:199	
+3b4825f3dec3		View	Koʻrinish	reviewed:agent-opus:2026-10-18	Кўриниш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:199	
 3b774918b416		All slides on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1801	
 3b96f0b189f8		Z Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:797	
 3baccb6c4f10		Format Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:25	
@@ -299,40 +299,40 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 3d9e0441edb2		Choose a SmartArt Graphic		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:68	
 3da9bb8f1afe		Slides from Outline		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:43	
 3dedf00d7d9d		{a}, {b}, {c} and {} more		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:25	
-3e0add0e7e4f		Title	Nomi	draft:agent-sonnet:2026-10-17	Номи	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	
+3e0add0e7e4f		Title	Sarlavha	reviewed:agent-opus:2026-10-18	Сарлавҳа	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	review-agent-2026-10-18: glossary Title
 3e1bc8c7e497		 right of centre		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:694	
 3e20896c6fb6		Insert Picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3098	
 3e444009ec9d		On Mouse Click		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1741	
 3e4763f0b77b		{name} was not applied: {e}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1455	
 3ea5d4af692f		Remove All Animations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:51	
 3f1d3e865809		Animation Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:27	
-3fd4464d2421		The slide titles and bullet text as plain text	Slayd sarlavhalari va marker matni oddiy matn sifatida	draft:agent-sonnet:2026-10-17	Слайд сарлавҳалари ва маркер матни оддий матн сифатида	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
+3fd4464d2421		The slide titles and bullet text as plain text	Slayd sarlavhalari va marker matni oddiy matn sifatida	reviewed:agent-opus:2026-10-18	Слайд сарлавҳалари ва маркер матни оддий матн сифатида	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
 3ffc0ddd07fa		Position Objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1122	
 4034c371f780		Action Button: {k}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1255	
 404b1b651632		no writer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:320	
 407624a806e9		Remove the picture style		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2711	
 409cc40814dd		+ Series		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2005	
-40acd4892157		•  {b}	•  {b}	draft:agent-sonnet:2026-10-17	•  {b}	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1327	
+40acd4892157		•  {b}	•  {b}	reviewed:agent-opus:2026-10-18	•  {b}	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1327	
 40bdbd8e24bb		Text Transform		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:103	
-40f00f5d555a		No themes or templates match “{}”.	“{}” ga mos keladigan tema yoki shablon topilmadi.	draft:agent-sonnet:2026-10-17	“{}” га мос келадиган тема ёки шаблон топилмади.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:763	
+40f00f5d555a		No themes or templates match “{}”.	“{}” soʻroviga mos mavzu yoki shablon topilmadi.	reviewed:agent-opus:2026-10-18	“{}” сўровига мос мавзу ёки шаблон топилмади.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:763	review-agent-2026-10-18: glossary Theme; no suffix after the quote
 40fbfa25a60c		Arrows at both ends		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:991	
-41253609735c		Create PDF Document	PDF hujjat yaratish	draft:agent-sonnet:2026-10-17	PDF ҳужжат яратиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1248	
-414fe1f13287		Print Current Slide	Joriy slaydni chop etish	draft:agent-sonnet:2026-10-17	Жорий слайдни чоп этиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1052	
+41253609735c		Create PDF Document	PDF hujjat yaratish	reviewed:agent-opus:2026-10-18	PDF ҳужжат яратиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1248	
+414fe1f13287		Print Current Slide	Joriy slaydni chop etish	reviewed:agent-opus:2026-10-18	Жорий слайдни чоп этиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1052	
 41b2334ae125		Tab stops:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3118	
 41d91b4597e5		Reset Slide Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1590	
 42024d2d1432		missing `events`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:148	
 424906662ce7		Slide {} changed		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1197	
 425446cd3f50		Click to add first slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:105	
 4274087900dc		Contrast		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:427	
-42e9bc5ee521		Specify the subject	Mavzuni kiritish	draft:agent-sonnet:2026-10-17	Мавзуни киритиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:226	
+42e9bc5ee521		Specify the subject	Mavzuni kiriting	reviewed:agent-opus:2026-10-18	Мавзуни киритинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:226	review-agent-2026-10-18: placeholder hint: polite imperative
 435c392c345a		the layout it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1507	
 43fa1f88f39d		Group Objects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1117	
 43ff091c06d6		{from?: index, custom?: name}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:382	
 442998d09a0b		Adjust Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:72	
-443ed47a5822		Check for Issues	Muammolarni tekshirish	draft:agent-sonnet:2026-10-17	Муаммоларни текшириш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:841	
-4443a6e44c00		User Information	Foydalanuvchi maʼlumotlari	draft:agent-sonnet:2026-10-17	Фойдаланувчи маълумотлари	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1350	
+443ed47a5822		Check for Issues	Muammolarni tekshirish	reviewed:agent-opus:2026-10-18	Муаммоларни текшириш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:841	
+4443a6e44c00		User Information	Foydalanuvchi maʼlumotlari	reviewed:agent-opus:2026-10-18	Фойдаланувчи маълумотлари	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1350	
 4475a38506c6		Animation Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:62	
-44871b86e319		Light	Yorugʻ	draft:agent-sonnet:2026-10-17	Ёруғ	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
+44871b86e319		Light	Yorugʻ	reviewed:agent-opus:2026-10-18	Ёруғ	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1342	
 448aed90dbd8		Edit the data: first row = series names, first column = categories.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1980	
 44cb7f5d4954		Eyedropper		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:367	
 4531822ec248		Stop Editing Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:28	
@@ -360,16 +360,16 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 4a5bdb798726		Pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1219	
 4a6064af500d		Close\nMaster View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3269	
 4aecb66cb19e		Media		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3245	
-4b2505b5c07b		Before you share it, check the presentation for things people with disabilities might find hard to read.	Ulashishdan oldin taqdimotda nogironligi bor odamlar uchun oʻqishi qiyin boʻlishi mumkin boʻlgan joylarni tekshiring.	draft:agent-sonnet:2026-10-17	Улашишдан олдин тақдимотда ногиронлиги бор одамлар учун ўқиши қийин бўлиши мумкин бўлган жойларни текширинг.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:843	
+4b2505b5c07b		Before you share it, check the presentation for things people with disabilities might find hard to read.	Ulashishdan oldin taqdimotda nogironligi boʻlgan shaxslar qiynalib oʻqishi mumkin boʻlgan joylarni tekshiring.	reviewed:agent-opus:2026-10-18	Улашишдан олдин тақдимотда ногиронлиги бўлган шахслар қийналиб ўқиши мумкин бўлган жойларни текширинг.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:843	review-agent-2026-10-18: official term "nogironligi bo`lgan shaxslar"; clearer
 4b5e10e2a446		 — {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1897	
 4b69c056f46a		missing `preedit` or `commit`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:198	
 4bfa49bbb1d6		From top right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:100	
 4c1e084d7783		Türkçe		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:240	
-4c565cfc3657		Outline (*.txt)	Struktura (*.txt)	draft:agent-sonnet:2026-10-17	Структура (*.txt)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
+4c565cfc3657		Outline (*.txt)	Struktura (*.txt)	reviewed:agent-opus:2026-10-18	Структура (*.txt)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:218	
 4c7a3dd7c5a9		Preserve		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3228	
 4cf5f9043c6e		Date and time		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1077	
 4d0e7dcbfbfe		Find whole words only		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3190	
-4d3c4e5459e4		Join our community on Discord	Discord hamjamiyatimizga qoʻshiling	draft:agent-sonnet:2026-10-17	Discord ҳамжамиятимизга қўшилинг	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1374	
+4d3c4e5459e4		Join our community on Discord	Discord hamjamiyatimizga qoʻshiling	reviewed:agent-opus:2026-10-18	Discord ҳамжамиятимизга қўшилинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1374	
 4d6422eccabf		Apply Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:61	
 4d9d1aa18e19		Grid Options…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:369	
 4db5d1086232		Reply…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1290	
@@ -386,7 +386,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 4fe0138dc41e		{}  Hidden		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1699	
 505f7dd5a4d1		Audio		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1289	
 50cb58fd7617		Rotate Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:417	
-50d90819757f		Back (Esc)	Orqaga (Esc)	draft:agent-sonnet:2026-10-17	Орқага (Esc)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:348	
+50d90819757f		Back (Esc)	Orqaga (Esc)	reviewed:agent-opus:2026-10-18	Орқага (Esc)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:348	
 5112637fa5c4		Tab stop position (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3139	
 511a1f89928f		PNG images (current slide)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1547	
 5154bfb0145f		Slides (e.g. 1,3,5):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1960	
@@ -394,7 +394,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 520bee6dc3dd		Bottom right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:693	
 52128584943c		Underline		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2774	
 5260e4ac0a9f		Remove bullets and numbering		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1342	
-526345b4d50c		Browse	Koʻrib chiqish	draft:agent-sonnet:2026-10-17	Кўриб чиқиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	
+526345b4d50c		Browse	Tanlash	reviewed:agent-opus:2026-10-18	Танлаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	review-agent-2026-10-18: glossary Browse
 52da25d62fd6		Outline View		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:361	
 52e95a6210f8		Quick Styles		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.rs:110	
 530307cd0375		Slide\nMaster		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2198	
@@ -407,28 +407,28 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 54dfb5bd9685		size (pt)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:320	
 55bfe55c3ea7		Add a title with a picture or some text to get layout ideas.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1396	
 56425f3ab64c		Translation needs a language model (not bundled)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2150	
-565b4195b7d3		Download the file	Faylni yuklab olish	draft:agent-sonnet:2026-10-17	Файлни юклаб олиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
+565b4195b7d3		Download the file	Faylni yuklab olish	reviewed:agent-opus:2026-10-18	Файлни юклаб олиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
 566a57730576		Delete Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:22	
-56cb77b49225		DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer.	DeckCraft PDF orqali chop etadi: u yuklab olinadi va brauzer yoki PDF koʻrgichdan chop etishga tayyor boʻladi.	draft:agent-sonnet:2026-10-17	DeckCraft PDF орқали чоп этади: у юклаб олинади ва браузер ёки PDF кўргичдан чоп этишга тайёр бўлади.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1045	
+56cb77b49225		DeckCraft prints through a PDF: it downloads, ready to print from your browser or PDF viewer.	DeckCraft PDF orqali chop etadi: u yuklab olinadi va brauzer yoki PDF koʻrgichdan chop etishga tayyor boʻladi.	reviewed:agent-opus:2026-10-18	DeckCraft PDF орқали чоп этади: у юклаб олинади ва браузер ёки PDF кўргичдан чоп этишга тайёр бўлади.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1045	
 571f8b879d99		Table Eraser		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2877	
 5773abce12a5		Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:231	
 5773e08a6999		{safe} (print).pdf		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:815	
 57c6a4122770		Play Narrations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2087	
-57cd3a3132b0		Search for a file	Fayl qidirish	draft:agent-sonnet:2026-10-17	Файл қидириш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:723	
+57cd3a3132b0		Search for a file	Fayl qidirish	reviewed:agent-opus:2026-10-18	Файл қидириш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:723	
 5833559be8ef		Text box:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:405	
 58c844878c9c		Chart Elements		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/insert.rs:116	
 59d303281ad4		Shrink text on overflow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:385	
 59d5dc256a19		White on		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1798	
 5a0e2315e4b8		With Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2006	
 5a927dbfa9fe		Add Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/points.rs:29	
-5aab9bf753fd		Interface Language	Interfeys tili	draft:agent-sonnet:2026-10-18	Интерфейс тили	draft:agent-sonnet:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1360	
+5aab9bf753fd		Interface Language	Interfeys tili	reviewed:agent-opus:2026-10-18	Интерфейс тили	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1360	
 5ab701b42d94		Correct accidental use of cAPS LOCK key		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2096	
 5acd56283c8c		English (Canada)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:220	
 5ae6b59f4dff		Picture Style Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/picture_style.rs:23	
 5af86b62b174		Bring to Front		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1226	
 5af982465173		Compared with {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1175	
 5aff860664d1		Accent 1		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1321	
-5b031a4fed59		Presentations you open show up here. Use Open to browse for one.	Siz ochgan taqdimotlar shu yerda koʻrinadi. Qidirish uchun «Ochish» tugmasidan foydalaning.	draft:agent-sonnet:2026-10-17	Сиз очган тақдимотлар шу ерда кўринади. Қидириш учун «Очиш» тугмасидан фойдаланинг.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:582	
+5b031a4fed59		Presentations you open show up here. Use Open to browse for one.	Ochilgan taqdimotlar shu yerda koʻrinadi. Boshqasini «Ochish» orqali tanlang.	reviewed:agent-opus:2026-10-18	Очилган тақдимотлар шу ерда кўринади. Бошқасини «Очиш» орқали танланг.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:582	review-agent-2026-10-18: shorter; "qidirish" (search) was wrong for browse
 5b19cbfa42db		Variants		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:37	
 5b25ae961c1c		{f} (Body)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:492	
 5b742a338950		Ink to Text (coming soon)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1454	
@@ -441,29 +441,29 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 5dc7edee9a70		Remove Section		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:159	
 5de406acfb0b		Go to slide {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:895	
 5df3119a149c		`spacing` must be from 1 to 288 points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:858	
-5e2c9ba8ea9a		Add an author	Muallif qoʻshish	draft:agent-sonnet:2026-10-17	Муаллиф қўшиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:231	
+5e2c9ba8ea9a		Add an author	Muallif qoʻshing	reviewed:agent-opus:2026-10-18	Муаллиф қўшинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:231	review-agent-2026-10-18: placeholder hint: polite imperative
 5e6072e90057		2 pictures with title		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:452	
 5ee533089915		Snap		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2536	
 5eedeca0161f		Eyedropper: click the slide (Esc cancels)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/eyedropper.rs:92	
 5ef208c096d4		Open Dialog		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:409	
-5efbeede8fe4		Inspect Presentation	Taqdimotni tekshirish	draft:agent-sonnet:2026-10-17	Тақдимотни текшириш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:842	
+5efbeede8fe4		Inspect Presentation	Taqdimotni tekshirish	reviewed:agent-opus:2026-10-18	Тақдимотни текшириш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:842	
 5f54b30d1a00		Fit to slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:447	
 5f78cb9679b4		Decimal Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
 6038a6a57300		Corner Point		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1087	
-6070f9a1b90c		Hidden slides	Yashirin slaydlar	draft:agent-sonnet:2026-10-17	Яширин слайдлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:872	
+6070f9a1b90c		Hidden slides	Yashirin slaydlar	reviewed:agent-opus:2026-10-18	Яширин слайдлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:872	
 60f49cd388b2		Starter Templates		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:20	
 610b8493b7cd		Spelling is checked for languages marked (dictionary).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1930	
-61201ceb2fee		Custom Range	Maxsus diapazon	draft:agent-sonnet:2026-10-17	Махсус диапазон	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1053	
+61201ceb2fee		Custom Range	Maxsus diapazon	reviewed:agent-opus:2026-10-18	Махсус диапазон	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1053	
 6120d0163722		Handout Placeholders		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:79	
 622768463e4d		Transition		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:14	
 6242ccda72f5		picking a SmartArt picture needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1007	
-624ab2f95a06		@{}: {} PRs, {} commits, +{} / −{} lines (Δ {}), +{} / −{} binary assets, {} – {}	@{}: {} PR, {} kommit, +{} / −{} qator (Δ {}), +{} / −{} ikkilik resurs, {} – {}	draft:agent-sonnet:2026-10-17	@{}: {} PR, {} коммит, +{} / −{} қатор (Δ {}), +{} / −{} иккилик ресурс, {} – {}	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:127	
+624ab2f95a06		@{}: {} PRs, {} commits, +{} / −{} lines (Δ {}), +{} / −{} binary assets, {} – {}	@{}: {} PR, {} kommit, +{} / −{} qator (Δ {}), +{} / −{} ikkilik resurs, {} – {}	reviewed:agent-opus:2026-10-18	@{}: {} PR, {} коммит, +{} / −{} қатор (Δ {}), +{} / −{} иккилик ресурс, {} – {}	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:127	
 626d41b37ec9		Bulleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1276	
 633a87f557b7		  Present  		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:92	
 634353ed832b		Compression options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3589	
 639b0014a912		Rehearse\nTimings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2071	
-63f728746966		Edit Header & Footer	Kolontitullarni tahrirlash	draft:agent-sonnet:2026-10-17	Колонтитулларни таҳрирлаш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1113	
-63f729e0ad80		Add a title	Nom qoʻshish	draft:agent-sonnet:2026-10-17	Ном қўшиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	
+63f728746966		Edit Header & Footer	Kolontitullarni tahrirlash	reviewed:agent-opus:2026-10-18	Колонтитулларни таҳрирлаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1113	
+63f729e0ad80		Add a title	Sarlavha qoʻshing	reviewed:agent-opus:2026-10-18	Сарлавҳа қўшинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:225	review-agent-2026-10-18: placeholder hint: polite imperative
 645767ab33d9		Your changes will be lost if you don't save them.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1200	
 649f0dc27259		Play Full Screen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3188	
 64ce13450146		To slide:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3303	
@@ -472,7 +472,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 6630ead7f122		Move Section Down		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:171	
 665ad712553d		Style {i}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1581	
 6695a81deffb		Action Settings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:70	
-669c0aa93256		Copied the path	Yoʻl nusxalandi	draft:agent-sonnet:2026-10-17	Йўл нусхаланди	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:824	
+669c0aa93256		Copied the path	Yoʻl nusxalandi	reviewed:agent-opus:2026-10-18	Йўл нусхаланди	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:824	
 66b16ac4c770		From center		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:98	
 6706da283cd0		Couldn't save AutoRecover information: {e}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1565	
 6730e2939a95		Show Media Controls		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2091	
@@ -490,7 +490,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 68735d090ae5		Harbor		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
 68798b4e762b		Web Page or File		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1109	
 692a252fad0c		Apply Design Idea		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/ideas.rs:16	
-69d81335d5d6		Recover Unsaved Presentations	Saqlanmagan taqdimotlarni tiklash	draft:agent-sonnet:2026-10-17	Сақланмаган тақдимотларни тиклаш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:779	
+69d81335d5d6		Recover Unsaved Presentations	Saqlanmagan taqdimotlarni tiklash	reviewed:agent-opus:2026-10-18	Сақланмаган тақдимотларни тиклаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:779	
 6a12a384492c		Top Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:970	
 6a282db47aa7		Size and Position…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1263	
 6a5441545a34		Slide\nSorter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2186	
@@ -503,7 +503,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 6b7dd3b0c158		no slide to preview		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1147	
 6bb3f269435b		3-D Rotation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:792	
 6bc5ca77c2af		Rename Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:44	
-6c2c661b7bd5		Nothing to print: every slide in the range is hidden.	Chop etiladigan narsa yoʻq: diapazondagi barcha slaydlar yashirin.	draft:agent-sonnet:2026-10-17	Чоп этиладиган нарса йўқ: диапазондаги барча слайдлар яширин.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1123	
+6c2c661b7bd5		Nothing to print: every slide in the range is hidden.	Chop etiladigan narsa yoʻq: diapazondagi barcha slaydlar yashirin.	reviewed:agent-opus:2026-10-18	Чоп этиладиган нарса йўқ: диапазондаги барча слайдлар яширин.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1123	
 6d73dfc4eb60		Foreground		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:882	
 6d78a3b471a3		End trim (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2024	
 6dd1403ae335		Select a SmartArt graphic to edit its text.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:69	
@@ -518,16 +518,16 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 6febb5f37687		Search commands (⇧⌘P)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:88	
 701d3750cd3a		Long Dash		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2703	
 7054547aba29		Begin size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
-7060d2bb19ab		Open file location	Fayl joylashuvini ochish	draft:agent-sonnet:2026-10-17	Файл жойлашувини очиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:828	
+7060d2bb19ab		Open file location	Fayl joylashuvini ochish	reviewed:agent-opus:2026-10-18	Файл жойлашувини очиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:828	
 71006f0653bc		Play from Current Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:286	
 71505dc246f3		Choose a body font.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:676	
 717000df2955		From bottom left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:101	
 719081834310		Open another window on this presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2260	
-71ca2bf323e7		Record	Yozib olish	draft:agent-sonnet:2026-10-17	Ёзиб олиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
-71ee2837cdd5		Three a page leaves lines for notes	Sahifada uchta slayd boʻlsa, qaydlar uchun qatorlar qoladi	draft:agent-sonnet:2026-10-17	Саҳифада учта слайд бўлса, қайдлар учун қаторлар қолади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+71ca2bf323e7		Record	Yozib olish	reviewed:agent-opus:2026-10-18	Ёзиб олиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+71ee2837cdd5		Three a page leaves lines for notes	Sahifada uchtadan boʻlsa, qaydlar uchun satrlar qoladi	reviewed:agent-opus:2026-10-18	Саҳифада учтадан бўлса, қайдлар учун сатрлар қолади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	review-agent-2026-10-18: shorter; text lines = satr
 72178b565a7a		{} hex		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:553	
 7262a2d31208		Add Shape Below		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3081	
-7313b81e4b4e		Source on GitHub	GitHub dagi manba	draft:agent-sonnet:2026-10-17	GitHub даги манба	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1375	
+7313b81e4b4e		Source on GitHub	GitHubdagi manba kodi	reviewed:agent-opus:2026-10-18	GitHubдаги манба коди	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1375	review-agent-2026-10-18: suffix joined to the name; "source" = source code
 733776314c40		dropped file		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1572	
 73a1774befad		Select Slides		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:31	
 73b1f321c16a		From Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1763	
@@ -551,29 +551,29 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 77fd63547f83		Delete Repeated Word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1109	
 789ed0569f6f		Reset Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:924	
 78ab14c61c61		{on?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:365	
-78fd0a8cfebf		DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.	DeckCraft: hisoblar yoʻq — kirish uchun hech narsa yoʻq, taqdimotlaringiz qurilmangizda qoladi.	draft:agent-sonnet:2026-10-17	DeckCraft: ҳисоблар йўқ — кириш учун ҳеч нарса йўқ, тақдимотларингиз қурилмангизда қолади.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1351	
+78fd0a8cfebf		DeckCraft has no accounts: there is nothing to sign in to, and your presentations stay on your device.	DeckCraft hisoblardan foydalanmaydi: tizimga kirish shart emas, taqdimotlaringiz qurilmangizda qoladi.	reviewed:agent-opus:2026-10-18	DeckCraft ҳисоблардан фойдаланмайди: тизимга кириш шарт эмас, тақдимотларингиз қурилмангизда қолади.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1351	review-agent-2026-10-18: the draft read "DeckCraft: there are no accounts"
 7914f335a945		Use Destination Theme		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1718	
 798afe627a9e		The picture list is invalid		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:373	
 79c42d0a67a2		After text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2977	
-7a203178e49c		Handouts (4 slides per page)	Tarqatma materiallar (sahifada 4 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 4 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1017	
+7a203178e49c		Handouts (4 slides per page)	Tarqatmalar (sahifada 4 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 4 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1017	review-agent-2026-10-18: handout = tarqatma
 7a67a8bafbca		Dynamic Content		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1658	
 7a74a86167a5		Deutsch (Schweiz)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:226	
 7b1871b98762		Play the shape's media		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1474	
 7b47209a0db9		Crop 20% each side		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2725	
 7bcd0d9c26c4		Very loose		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2807	
 7bd8e234c076		Choosing a presentation to reuse needs the desktop app		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:445	
-7be75f370f6f		Create Handouts	Tarqatma materiallar yaratish	draft:agent-sonnet:2026-10-17	Тарқатма материаллар яратиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1249	
+7be75f370f6f		Create Handouts	Tarqatmalar yaratish	reviewed:agent-opus:2026-10-18	Тарқатмалар яратиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1249	review-agent-2026-10-18: handout = tarqatma
 7bfa745f4777		Render Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:46	
 7c242197b452		Transition Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/transition.rs:43	
 7c919f525bbd		Black Pen		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1433	
 7ca234651d7c		Full		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:276	
 7d08a66942e9		unknown File page `{id}`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:984	
 7d1793aa7a9e		Animation\nPainter		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1988	
-7d6e939aa155		Handouts (3 slides per page)	Tarqatma materiallar (sahifada 3 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 3 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1016	
+7d6e939aa155		Handouts (3 slides per page)	Tarqatmalar (sahifada 3 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 3 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1016	review-agent-2026-10-18: handout = tarqatma
 7e264156f3dc		Editing		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2161	
 7e71acb1276a		Other Sound…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1717	
 7e7f61847f25		Top bevel		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:780	
-7e80c3e71e49		No recent presentations match “{}”.	“{}” ga mos keladigan soʻnggi taqdimot topilmadi.	draft:agent-sonnet:2026-10-17	“{}” га мос келадиган сўнгги тақдимот топилмади.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:589	
+7e80c3e71e49		No recent presentations match “{}”.	“{}” soʻroviga mos soʻnggi taqdimot topilmadi.	reviewed:agent-opus:2026-10-18	“{}” сўровига мос сўнгги тақдимот топилмади.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:589	review-agent-2026-10-18: no suffix after the quoted placeholder
 7ea31cfcc835		Loop forever		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3304	
 7efd95283713		Play from\nCurrent Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2053	
 7f191f51abcf		Slide\nSize		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1596	
@@ -592,7 +592,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 826b714fa590		Select a shape to format it.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:211	
 827f84b5b163		Format Background		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:26	
 82e9780bd5dc		Delete Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:192	
-8325031da9ef		Full Page Slides	Toʻliq sahifali slaydlar	draft:agent-sonnet:2026-10-17	Тўлиқ саҳифали слайдлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1012	
+8325031da9ef		Full Page Slides	Toʻliq sahifali slaydlar	reviewed:agent-opus:2026-10-18	Тўлиқ саҳифали слайдлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1012	
 834c691183dd		Insert\nBelow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2998	
 83ccc8c444d3		Bullets and Numbering		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:69	
 84138c9b4777		Export the presentation as:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1543	
@@ -614,12 +614,12 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 88cb8a46742f		Беларуская		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:239	
 88ccea3b5218		Add Shape After		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3078	
 88e178ece973		New show name:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1959	
-891d72213d9b		Specify the company	Tashkilotni kiriting	draft:agent-sonnet:2026-10-17	Ташкилотни киритинг	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:229	
+891d72213d9b		Specify the company	Tashkilotni kiriting	reviewed:agent-opus:2026-10-18	Ташкилотни киритинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:229	
 8948b54c7898		Text		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1320	
 8986454d4b0b		 — Edited		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:79	
 89ca220a8d98		Browsed by an individual (window)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1158	
 89d687e75fa7		Next Window		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:71	
-89fa1405169e		More presentations	Boshqa taqdimotlar	draft:agent-sonnet:2026-10-17	Бошқа тақдимотлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:731	
+89fa1405169e		More presentations	Boshqa taqdimotlar	reviewed:agent-opus:2026-10-18	Бошқа тақдимотлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:731	
 8a07191a83d1		Move Section Up		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:167	
 8a719f8ddfb5		Accept\nAll		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2156	
 8aa5b9df057d		Search for a word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1542	
@@ -628,7 +628,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 8b84d50c5c58		The spelling check is complete. No issues found.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1768	
 8bed50b86dd7		Camera capture is not available yet		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2101	
 8c7ec78b36b2		Seconds per slide:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3300	
-8cabef0cf7b6		DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer.	DeckCraft PDF orqali chop etadi: u PDF koʻrgichda ochiladi, printerni oʻsha yerda tanlaysiz.	draft:agent-sonnet:2026-10-17	DeckCraft PDF орқали чоп этади: у PDF кўргичда очилади, принтерни ўша ерда танлайсиз.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1043	
+8cabef0cf7b6		DeckCraft prints through a PDF: it opens in your PDF viewer, where you choose the printer.	DeckCraft PDF orqali chop etadi: u PDF koʻrgichda ochiladi, printerni oʻsha yerda tanlaysiz.	reviewed:agent-opus:2026-10-18	DeckCraft PDF орқали чоп этади: у PDF кўргичда очилади, принтерни ўша ерда танлайсиз.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1043	
 8cc0f86a6d76		Move Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:21	
 8d939dc05260		Crop 10% each side		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2725	
 8d97086a708a		{names} {it} installed on this computer. Text that uses {them} is shown in a similar font.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:28	
@@ -640,7 +640,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 90b614d120f0		Top		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:378	
 90f495d3e634		Type your text here		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:81	
 911cd536cbef		Add Pictures…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:362	
-916c69b60f0d		Opens on any device with a PDF viewer	PDF koʻrgichi bor istalgan qurilmada ochiladi	draft:agent-sonnet:2026-10-17	PDF кўргичи бор исталган қурилмада очилади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+916c69b60f0d		Opens on any device with a PDF viewer	PDF koʻrgichi bor istalgan qurilmada ochiladi	reviewed:agent-opus:2026-10-18	PDF кўргичи бор исталган қурилмада очилади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
 92128e9814b1		End Review		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1182	
 9253d7c631b8		Body font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:696	
 927983cff07f		Slides sized for:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1042	
@@ -648,14 +648,14 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 92cb3adb91a6		Reset Effects		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:325	
 9340056aae1f		Replaced {} occurrence(s).		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3219	
 936406bbf5aa		Show without narration		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1166	
-938576d72c1a		Choose where to save	Saqlash joyini tanlang	draft:agent-sonnet:2026-10-17	Сақлаш жойини танланг	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
+938576d72c1a		Choose where to save	Saqlash joyini tanlang	reviewed:agent-opus:2026-10-18	Сақлаш жойини танланг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:944	
 93913bc52eb2		Audio from File…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:402	
 93941f9c6302		More Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:424	
 949f04499c9e		Pass pictures to insert.photoAlbum		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:223	
 94b752a3df73		End\nReview		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2159	
 94c02d758a95		Click the slide to zoom in. Esc cancels.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:945	
 9500c12d5517		Spelling Dictionary		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:48	
-95220685b323		Print them for your audience	Tinglovchilar uchun chop eting	draft:agent-sonnet:2026-10-17	Тингловчилар учун чоп этинг	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+95220685b323		Print them for your audience	Tinglovchilar uchun chop eting	reviewed:agent-opus:2026-10-18	Тингловчилар учун чоп этинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
 95a896d9482d		Add Guide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/arrange.rs:12	
 95c86f212018		Media Info		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/media.rs:18	
 95d74c620061		Add Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:22	
@@ -687,23 +687,23 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 9abaf7ff16d2		Grid and Guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1285	
 9ae817be42d0		Offset bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:711	
 9b18730b25c0		Look up		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1560	
-9b847be9db95		The current slide as a compressed picture	Joriy slayd siqilgan rasm sifatida	draft:agent-sonnet:2026-10-17	Жорий слайд сиқилган расм сифатида	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
+9b847be9db95		The current slide as a compressed picture	Joriy slayd siqilgan rasm sifatida	reviewed:agent-opus:2026-10-18	Жорий слайд сиқилган расм сифатида	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
 9c1a568dfe9c		That file is empty		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:253	
 9c4ec6160c65		Remove Section & Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/sorter.rs:163	
 9c5d25d83cae		Set Zoom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:372	
 9ca186c1a8b9		An open-source, clean-room project. Not affiliated with Microsoft.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2614	
 9cb88007af9f		no slide {i}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:308	
 9cd15d97f6b6		Reorder Animation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/animation.rs:32	
-9dcad54e0b10		A fixed copy that keeps its layout on any device	Istalgan qurilmada maketini saqlaydigan qotirilgan nusxa	draft:agent-sonnet:2026-10-17	Исталган қурилмада макетини сақлайдиган қотирилган нусха	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:217	
+9dcad54e0b10		A fixed copy that keeps its layout on any device	Istalgan qurilmada maketini saqlaydigan oʻzgarmas nusxa	reviewed:agent-opus:2026-10-18	Исталган қурилмада макетини сақлайдиган ўзгармас нусха	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:217	review-agent-2026-10-18: "qotirilgan" (frozen) reads as a spreadsheet term
 9de8b98417b8		Normal		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2805	
 9dfcff9dfc20		missing `path`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:359	
 9e7fb64fbb78		Bottom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:243	
-9ea895e04c4b		About DeckCraft	DeckCraft haqida	draft:agent-sonnet:2026-10-17	DeckCraft ҳақида	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1367	
+9ea895e04c4b		About DeckCraft	DeckCraft haqida	reviewed:agent-opus:2026-10-18	DeckCraft ҳақида	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1367	
 9f142578e5e8		Start With Previous		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1129	
 9f30ee0a1c9a		Resume		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1789	
 9f3d24d53106		No line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:516	
 9f4275d34e07		missing toX/toY		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:228	
-9f8560a827c1		Draw	Chizish	draft:agent-sonnet:2026-10-17	Чизиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+9f8560a827c1		Draw	Chizish	reviewed:agent-opus:2026-10-18	Чизиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
 9f88cdda8ebd		Suomi		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:235	
 9f96de29201c		The Eyedropper takes colours from a slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/eyedropper.rs:86	
 9fa9faec121b		Pane		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:34	
@@ -711,12 +711,12 @@ a04634201c58		Slide number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/di
 a052b7b7f5fc		No notes.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1862	
 a0593b632bdb		Change Spelling		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:38	
 a07836a7de4b		Apply only to this picture		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3590	
-a0944d487cac		There are no unsaved presentations to recover	Tiklash uchun saqlanmagan taqdimotlar yoʻq	draft:agent-sonnet:2026-10-17	Тиклаш учун сақланмаган тақдимотлар йўқ	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:782	
-a100b3e76133		Transitions	Oʻtishlar	draft:agent-sonnet:2026-10-17	Ўтишлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
+a0944d487cac		There are no unsaved presentations to recover	Tiklash uchun saqlanmagan taqdimotlar yoʻq	reviewed:agent-opus:2026-10-18	Тиклаш учун сақланмаган тақдимотлар йўқ	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:782	
+a100b3e76133		Transitions	Oʻtishlar	reviewed:agent-opus:2026-10-18	Ўтишлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/ribbon.rs:154	
 a15b257be6e5		Slide {} of {n}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/doc_window.rs:97	
 a18f7b4a8d96		Reset 3-D		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:799	
 a1acb2b2f922		This Document		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1112	
-a2203352ddeb		{} contributors · {} commits	{} ishtirokchi · {} kommit	draft:agent-sonnet:2026-10-17	{} иштирокчи · {} коммит	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:246	
+a2203352ddeb		{} contributors · {} commits	{} ishtirokchi · {} kommit	reviewed:agent-opus:2026-10-18	{} иштирокчи · {} коммит	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/credits.rs:246	
 a24899cfb6f3		From Left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1762	
 a266c07f4955		Diagonal Down Border		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2840	
 a2cdd2394ae0		Distribute Horizontally		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1148	
@@ -726,22 +726,22 @@ a33c0465c179		open a presentation first		todo		todo		todo		P2	deckcraft	crates/u
 a356f73b5688		Square Dot		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2700	
 a3670b4f5de6		Handout Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:209	
 a382f5295a4c		Align Cell Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/table.rs:85	
-a391cd676ad2		{} of {}	{} / {}	draft:agent-sonnet:2026-10-17	{} / {}	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1221	
+a391cd676ad2		{} of {}	{} / {}	reviewed:agent-opus:2026-10-18	{} / {}	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1221	
 a3cfe8379399		Remove More (looser)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2571	
 a3ecfc9b78f5		Click the slide to take the colour under the pointer		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/widgets.rs:367	
 a4115bcd3762		Special		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2981	
-a48169b26b06		Blank Presentation	Boʻsh taqdimot	draft:agent-sonnet:2026-10-17	Бўш тақдимот	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:526	
+a48169b26b06		Blank Presentation	Boʻsh taqdimot	reviewed:agent-opus:2026-10-18	Бўш тақдимот	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:526	
 a4c32d1687a2		Dictionary: {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1748	
 a530d2481a8d		Vertical (in):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2420	
 a5706f8636a7		Mouse Over		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1401	
 a5ab475db87d		Follow the layout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:826	
 a603af481642		Very tight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2803	
 a6afb470dacb		Edit Points		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1213	
-a7062a86144e		{:.1} KB	{:.1} KB	draft:agent-sonnet:2026-10-17	{:.1} KB	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:919	
+a7062a86144e		{:.1} KB	{:.1} KB	reviewed:agent-opus:2026-10-18	{:.1} KB	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:919	
 a72dd5311740		+ Row		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2001	
 a749e8054ee6		Paste or type an outline. Unindented lines become slide titles; tab-indented lines become bullets.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1515	
 a7804e5c3801		Shape {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1039	
-a7dffbc32234		PNG Picture (*.png)	PNG rasm (*.png)	draft:agent-sonnet:2026-10-17	PNG расм (*.png)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
+a7dffbc32234		PNG Picture (*.png)	PNG rasm (*.png)	reviewed:agent-opus:2026-10-18	PNG расм (*.png)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:219	
 a7fc17ed30ff		F2		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1970	
 a83a64c90654		Remove stop		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:289	
 a8cc804c70d2		Size (% of text):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1317	
@@ -749,14 +749,14 @@ a8d084a039a7		Flip		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/shape.r
 a8d1dbb5b5cc		Heading font		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:692	
 a8f42a629783		Compare this presentation with a revised copy from Review › Compare.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1171	
 a9070b12a257		Insert\nLayout		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3220	
-a907fa0e0951		Print All Slides	Barcha slaydlarni chop etish	draft:agent-sonnet:2026-10-17	Барча слайдларни чоп этиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1051	
+a907fa0e0951		Print All Slides	Barcha slaydlarni chop etish	reviewed:agent-opus:2026-10-18	Барча слайдларни чоп этиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1051	
 a94333a0c245		   Height		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:784	
 a97b6339ca01		Decrease List Level		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:747	
 a9d460512a16		Rounded		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:463	
 a9d79dc1d051		Right Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:587	
 aa0bb76ce478		3-D Format		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:779	
 aa0c65c28090		Font size must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2854	
-aa3227f410e2		Landscape Orientation	Albom yoʻnalishi	draft:agent-sonnet:2026-10-17	Албом йўналиши	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	
+aa3227f410e2		Landscape Orientation	Albom yoʻnalishi	reviewed:agent-opus:2026-10-18	Альбом йўналиши	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1098	review-agent-2026-10-18: "Orientation" is in the English here
 aa6f968a7319		Picture from File…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:399	
 aa739216ad5a		Custom\nShow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2061	
 aa87aba15a5d		Replace fractions (1/2) with fraction characters (½)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2097	
@@ -766,8 +766,8 @@ ab82750d9ac1		Background\nStyles		todo		todo		todo		P2	deckcraft	crates/ui-egui/
 ab8f6c0553cc		Gradient stops		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:221	
 abcd5d981e37		Footers		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3236	
 abf76276d40e		Set Up Show…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:289	
-ac1121915a5b		{n} slides per page	Sahifada {n} ta slayd	draft:agent-sonnet:2026-10-17	Саҳифада {n} та слайд	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1283	
-ac16829943ec		The presentation keeps its own file	Taqdimot oʻz faylini saqlab qoladi	draft:agent-sonnet:2026-10-17	Тақдимот ўз файлини сақлаб қолади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+ac1121915a5b		{n} slides per page	Sahifada {n} ta slayd	reviewed:agent-opus:2026-10-18	Саҳифада {n} та слайд	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1283	
+ac16829943ec		The presentation keeps its own file	Taqdimot oʻz faylini saqlab qoladi	reviewed:agent-opus:2026-10-18	Тақдимот ўз файлини сақлаб қолади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
 ac5426f89f60		Select Cells		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/table.rs:126	
 ac595063d140		Reuse Slides…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:403	
 ad653ca42ed8		Text is longer than 400 characters		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:382	
@@ -776,12 +776,12 @@ ad8e84565371		Custom		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.
 ae3c4d602f34		Reset Style		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2711	
 ae46fd5da4b7		Material		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:789	
 ae8f7d7a3a96		Previous Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1424	
-aede14107332		More themes	Boshqa temalar	draft:agent-sonnet:2026-10-17	Бошқа темалар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:701	
+aede14107332		More themes	Boshqa mavzular	reviewed:agent-opus:2026-10-18	Бошқа мавзулар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:701	review-agent-2026-10-18: glossary Theme
 aee9210b8a74		Replace straight quotes with smart quotes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2164	
 aef685deded3		Do you want to save the changes you made to “{name}”?		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1230	
 af03ec31c188		Italiano		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:227	
 af0f5900e5d4		Exit		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1912	
-af29d636f501		Handouts (6 slides per page)	Tarqatma materiallar (sahifada 6 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 6 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1018	
+af29d636f501		Handouts (6 slides per page)	Tarqatmalar (sahifada 6 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 6 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1018	review-agent-2026-10-18: handout = tarqatma
 af2ea7659d48		New Photo Album…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:282	
 af8edbfca83a		S		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/icons.rs:1243	
 afa259a89149		Light/Dark appearance		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:107	
@@ -831,24 +831,24 @@ b9f9c9e8f24b		Guides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.r
 baa51d2f8e36		Less Brightness		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:427	
 bab8945f835d		Very Tight		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:536	
 bac322d78bb6		Click to add notes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:159	
-badcd1b657ae		DeckCraft	DeckCraft	draft:agent-sonnet:2026-10-17	DeckCraft	draft:agent-sonnet:2026-10-17		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:283	
+badcd1b657ae		DeckCraft	DeckCraft	reviewed:agent-opus:2026-10-18	DeckCraft	reviewed:agent-opus:2026-10-18		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:283	review-agent-2026-10-18: P2 row; upstream product token, kept as is (rebrand replaces it)
 badd482957ac		Previewing animations		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1164	
 baf53efffb8a		{} Slide Master		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/thumbs.rs:312	
 bafba689e0bb		Move Insertion Point		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:69	
 bb4b52650f37		Custom Slide Show		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:77	
-bb9f8e0a3e72		Several slides on each page of a PDF	PDF ning har bir sahifasida bir nechta slayd	draft:agent-sonnet:2026-10-17	PDF нинг ҳар бир саҳифасида бир нечта слайд	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	
+bb9f8e0a3e72		Several slides on each page of a PDF	PDFning har bir sahifasida bir nechta slayd	reviewed:agent-opus:2026-10-18	PDFнинг ҳар бир саҳифасида бир нечта слайд	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1277	review-agent-2026-10-18: suffix joined to the abbreviation
 bbb93e72cafa		A photo album holds at most 48 pictures or text boxes		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:372	
 bbd8d5c852af		Wrap Text in Shape		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:203	
 bbdfdcced51f		Cameo		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2100	
-bbe14fb57a5a		DeckCraft Presentation (*.deckcraft)	DeckCraft taqdimoti (*.deckcraft)	draft:agent-sonnet:2026-10-17	DeckCraft тақдимоти (*.deckcraft)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
+bbe14fb57a5a		DeckCraft Presentation (*.deckcraft)	DeckCraft taqdimoti (*.deckcraft)	reviewed:agent-opus:2026-10-18	DeckCraft тақдимоти (*.deckcraft)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
 bc052f681f39		Format Background…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1302	
 bc1d729f8af2		Duplicate Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:229	
 bc2b033a47d9		Fonts in Presentation		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:17	
 bc983db582ba		Use Timings		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2083	
 bca24170cdd3		Last Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1426	
 bd0566216f37		4 pictures		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:450	
-bd5a258e382c		Location	Joylashuv	draft:agent-sonnet:2026-10-17	Жойлашув	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:891	
-bd782b427ed8		{b} bytes	{b} bayt	draft:agent-sonnet:2026-10-17	{b} байт	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:918	
+bd5a258e382c		Location	Joylashuv	reviewed:agent-opus:2026-10-18	Жойлашув	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:891	
+bd782b427ed8		{b} bytes	{b} bayt	reviewed:agent-opus:2026-10-18	{b} байт	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:918	
 bdcee93fe1c2		Lighting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:790	
 be06517feaa8		No synonyms for "{}".		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1553	
 be2910b74424		Play Across Slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3170	
@@ -862,7 +862,7 @@ bf48f4523708		Українська		todo		todo		todo		P2	deckcraft	crates/ui-egu
 bf597ca1a72f		Theme Gallery		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/design.rs:27	
 bf9286e7099e		Regular		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/theme.rs:173	
 bf9de16f0bc5		Math		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1678	
-bfe5b8ca3df9		Recent	Soʻnggi	draft:agent-sonnet:2026-10-17	Сўнгги	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:721	
+bfe5b8ca3df9		Recent	Soʻnggi	reviewed:agent-opus:2026-10-18	Сўнгги	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:721	
 c00436592634		Reading\nView		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2188	
 c042d168d153		Photo Album options		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:274	
 c06257490920		No accessibility issues found. People with disabilities should not have difficulty reading this document.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1888	
@@ -871,7 +871,7 @@ c0a3972bf317		 ({sha}, {date})		todo		todo		todo		P2	deckcraft	crates/ui-egui/sr
 c0e5087e319f		Bevel		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
 c1cbdc51f311		the slide it was chosen for was deleted		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1491	
 c25e015aa115		Your name (comments):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2175	
-c260b746a2c8		More templates	Boshqa shablonlar	draft:agent-sonnet:2026-10-17	Бошқа шаблонлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:712	
+c260b746a2c8		More templates	Boshqa shablonlar	reviewed:agent-opus:2026-10-18	Бошқа шаблонлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:712	
 c291f77247e6		Reset Slide		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1298	
 c36a48ad2ecf		{r} pt glow		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1030	
 c3be54a67e5e		Selection Pane…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1130	
@@ -885,10 +885,10 @@ c641c2dbc97c		Use timings, if present		todo		todo		todo		P2	deckcraft	crates/ui-
 c6acbb4dbdd9		Send to Back		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas.rs:1230	
 c6cba88c772e		Reset to Defaults		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/qat.rs:156	
 c75da246c47f		Set Up Slide Show…		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/review.rs:68	
-c7dbab7be816		Add a category	Turkum qoʻshish	draft:agent-sonnet:2026-10-17	Туркум қўшиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:228	
+c7dbab7be816		Add a category	Turkum qoʻshing	reviewed:agent-opus:2026-10-18	Туркум қўшинг	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:228	review-agent-2026-10-18: placeholder hint: polite imperative
 c7f526db87fe		Pattern fill		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:460	
 c898909cdad9		Slide {}: {}{}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1894	
-c9525cf8c1b2		Keeps the layout, fonts and pictures	Maket, shriftlar va rasmlarni saqlaydi	draft:agent-sonnet:2026-10-17	Макет, шрифтлар ва расмларни сақлайди	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
+c9525cf8c1b2		Keeps the layout, fonts and pictures	Maket, shriftlar va rasmlarni saqlaydi	reviewed:agent-opus:2026-10-18	Макет, шрифтлар ва расмларни сақлайди	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1267	
 c967edb2bf43		Update automatically		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2512	
 c9705effb325		“{}” is not available yet.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2189	
 ca050969f21d		Español (España)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:221	
@@ -919,13 +919,13 @@ ce7a5cf67822		Start from Beginning		todo		todo		todo		P2	deckcraft	crates/ui-egu
 cea1ed8e0970		Fade in (s):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2025	
 ceef39917e06		Spacing after must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3062	
 cf42e636abc5		Change to:		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1829	
-cff7d1eb8054		e.g. 1-3, 5	masalan, 1-3, 5	draft:agent-sonnet:2026-10-17	масалан, 1-3, 5	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1068	
-d044531d6963		Presentations	Taqdimotlar	draft:agent-sonnet:2026-10-17	Тақдимотлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:796	
-d0a2c503b31a		DeckCraft's own format: everything is kept	DeckCraft formati: hamma narsa saqlanadi	draft:agent-sonnet:2026-10-17	DeckCraft формати: ҳамма нарса сақланади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
+cff7d1eb8054		e.g. 1-3, 5	masalan, 1-3, 5	reviewed:agent-opus:2026-10-18	масалан, 1-3, 5	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1068	
+d044531d6963		Presentations	Taqdimotlar	reviewed:agent-opus:2026-10-18	Тақдимотлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:796	
+d0a2c503b31a		DeckCraft's own format: everything is kept	DeckCraft formati: hamma narsa saqlanadi	reviewed:agent-opus:2026-10-18	DeckCraft формати: ҳамма нарса сақланади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
 d0ddc30c934f		Accept All ({})		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1188	
 d123e18524e9		Top Right		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:963	
 d13826148fc4		Bottom left		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:691	
-d17e571eb8ff		Opens in PowerPoint and other presentation apps	PowerPoint va boshqa taqdimot ilovalarida ochiladi	draft:agent-sonnet:2026-10-17	PowerPoint ва бошқа тақдимот иловаларида очилади	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
+d17e571eb8ff		Opens in PowerPoint and other presentation apps	PowerPoint va boshqa taqdimot ilovalarida ochiladi	reviewed:agent-opus:2026-10-18	PowerPoint ва бошқа тақдимот иловаларида очилади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:215	
 d1a7e93f0130		On Click of… (none)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1975	
 d28cbf0ac3e1		Inspect Slide		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/inspect.rs:13	
 d298dd327133		Customize Colors…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1533	
@@ -951,7 +951,7 @@ d83d3b2a775e		Playback		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon
 d863392ae58d		Expand		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/selpane.rs:174	
 d8819febfc1c		Merge\nCells		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3003	
 d88bbecf6f5d		New Window needs an open presentation		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/doc_window.rs:28	
-d8b368fa8f46		JPEG Picture (*.jpg)	JPEG rasm (*.jpg)	draft:agent-sonnet:2026-10-17	JPEG расм (*.jpg)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
+d8b368fa8f46		JPEG Picture (*.jpg)	JPEG rasm (*.jpg)	reviewed:agent-opus:2026-10-18	JPEG расм (*.jpg)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:220	
 d9103b858f29		Slide {}: “{w}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1777	
 d92a1b4ca43a		{spacing?: pt, snap?: bool, smartGuides?: bool, gridlines?: bool, guides?: bool}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:369	
 d952d1a25470		Compressed {n} picture(s): {} KB → {} KB		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3611	
@@ -974,7 +974,7 @@ dcf10fa56395		missing `id`		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/co
 dd173ec797be		Crop to Shape		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2720	
 dd969b8e5ff6		Formatting State		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:215	
 de0401dd650a		HD (330 ppi): good quality for high-definition displays		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3595	
-de371c91f868		Manage Presentation	Taqdimotni boshqarish	draft:agent-sonnet:2026-10-17	Тақдимотни бошқариш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:853	
+de371c91f868		Manage Presentation	Taqdimotni boshqarish	reviewed:agent-opus:2026-10-18	Тақдимотни бошқариш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:853	
 de88fcff8e50		 (not checked)		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/status.rs:25	
 de966e100acb		{a} and {b}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/toast.rs:23	
 dea0d82da2cf		Scale height (%):		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2413	
@@ -994,7 +994,7 @@ e11a2aa27e39		Left Tab		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/canvas
 e154d30617d0		Slide {} of {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1775	
 e1d2926dd261		missing x/y		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/control.rs:214	
 e1ed42f1c04a		Spacing before must be a number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:3058	
-e2112222452e		Include hidden slides	Yashirin slaydlarni kiritish	draft:agent-sonnet:2026-10-17	Яширин слайдларни киритиш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1269	
+e2112222452e		Include hidden slides	Yashirin slaydlarni kiritish	reviewed:agent-opus:2026-10-18	Яширин слайдларни киритиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1269	
 e21a27ac0050		Save As…		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:405	
 e258b6a30ca5		   Width		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:783	
 e2729f4abb27		Presenter\nView		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2058	
@@ -1003,8 +1003,8 @@ e2c4f289c37d		Rescan Installed Fonts		todo		todo		todo		P2	deckcraft	crates/ui-e
 e2ec2de86501		Polski		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/squiggles.rs:231	
 e35984dc55c2		Join type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:596	
 e379b4b34709		Radial		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/fillui.rs:167	
-e3b27c197110		Copy path	Yoʻlni nusxalash	draft:agent-sonnet:2026-10-17	Йўлни нусхалаш	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:822	
-e3d38a842ff1		Handouts (2 slides per page)	Tarqatma materiallar (sahifada 2 ta slayd)	draft:agent-sonnet:2026-10-17	Тарқатма материаллар (саҳифада 2 та слайд)	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1015	
+e3b27c197110		Copy path	Yoʻlni nusxalash	reviewed:agent-opus:2026-10-18	Йўлни нусхалаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:822	
+e3d38a842ff1		Handouts (2 slides per page)	Tarqatmalar (sahifada 2 ta slayd)	reviewed:agent-opus:2026-10-18	Тарқатмалар (саҳифада 2 та слайд)	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1015	review-agent-2026-10-18: handout = tarqatma
 e485ff760640		Grid\nOptions		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2225	
 e4baad9adee3		Convert to SmartArt		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:801	
 e595438d9d72		Duration handle {}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1079	
@@ -1017,7 +1017,7 @@ e7f0d3bcda46		Action Settings…		todo		todo		todo		P2	deckcraft	crates/ui-egui/
 e807898fc6d9		Bring\nForward		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2491	
 e8aa1ad0c5e6		Album theme		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:467	
 e8d1987489b5		Half		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:276	
-e925b00a94ae		Slide Show	Slaydlar namoyishi	draft:agent-sonnet:2026-10-17	Слайдлар намойиши	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/lib.rs:382	
+e925b00a94ae		Slide Show	Namoyish	reviewed:agent-opus:2026-10-18	Намойиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/lib.rs:382	review-agent-2026-10-18: glossary Slide Show
 e9bb71b2ffcd		End size		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
 e9e0a13b0b7d		Delete Text		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:60	
 ea26d296dfce		Blur		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:269	
@@ -1033,7 +1033,7 @@ ebae96b640e8		Click to add text		todo		todo		todo		P2	deckcraft	crates/ui-egui/s
 ebc26c8e252b		Keep Source Formatting		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1719	
 ec395ff52b57		Solid line		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:519	
 ec530041be4f		Text Shadow		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/format.rs:93	
-ec7b33ac0765		Product Information	Mahsulot haqida maʼlumot	draft:agent-sonnet:2026-10-17	Маҳсулот ҳақида маълумот	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1355	
+ec7b33ac0765		Product Information	Mahsulot haqida maʼlumot	reviewed:agent-opus:2026-10-18	Маҳсулот ҳақида маълумот	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1355	
 ecfe62e9df82		Slide Image		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3282	
 ed66ea34a62c		Thin Thick		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:583	
 edb6c5e5f2f5		{add: command id, params?, label?, icon?} | {remove: id, params?} | {reset: true} → [buttons]		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:411	
@@ -1045,7 +1045,7 @@ eebf38b86925		Noto Sans Arabic		todo		todo		todo		P2	deckcraft	crates/ui-egui/sr
 eec7291165c1		Change\nChart Type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3041	
 eed4d6d6e673		Horizontal		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2367	
 eed86f1bfd50		Cap type		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
-eedbe8e2c2d4		Slides	Slaydlar	draft:agent-sonnet:2026-10-17	Слайдлар	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:871	
+eedbe8e2c2d4		Slides	Slaydlar	reviewed:agent-opus:2026-10-18	Слайдлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:871	
 ef31fe2f6a1e		{word?}: open the Thesaurus pane on the selected word		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:376	
 ef558e0a28fd		Slide Number		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:235	
 ef911d7e04f0		Select an object on the slide and add an animation from the Animations tab.		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1027	
@@ -1103,7 +1103,7 @@ fd2abaaf5720		Character spacing must be a number		todo		todo		todo		P2	deckcraft
 fd3ee3b889e0		Distribute Vertically		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1149	
 fd6bebd4080e		All slides		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1172	
 fd80a6ce84c3		No sound: {err}		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/media.rs:496	
-fd81960f4e1c		The version, the people and models who built it, and where to find us.	Versiya, uni yaratgan odamlar va modellar hamda bizni qayerdan topish mumkin.	draft:agent-sonnet:2026-10-17	Версия, уни яратган одамлар ва моделлар ҳамда бизни қаердан топиш мумкин.	draft:agent-sonnet:2026-10-17		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1369	
+fd81960f4e1c		The version, the people and models who built it, and where to find us.	Versiya, uni yaratgan odamlar va modellar hamda bizni qayerdan topish mumkin.	reviewed:agent-opus:2026-10-18	Версия, уни яратган одамлар ва моделлар ҳамда бизни қаердан топиш мумкин.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1369	
 fe293845f0bd		Discard Recovered Presentations		todo		todo		todo		P2	deckcraft	crates/engine/src/cmd/file.rs:69	
 fe5c03e96112		Flat		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:590	
 fe63efd621dc		{} can't export “{other}”		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:753	

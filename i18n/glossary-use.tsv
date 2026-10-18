@@ -1,7 +1,7 @@
 scope	id	glossary_id	latn_term	cyrl_term
-deckcraft	01a1f86f6b7a	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+deckcraft	01a1f86f6b7a	7eea88b02eaa	Eksport	Экспорт
 deckcraft	0234ff20b287	4fb08910bc12	Yoʻnalish	Йўналиш
-deckcraft	0234ff20b287	5fa04516f4ea	Kitob yoʻnalishi	Китоб йўналиши
+deckcraft	0234ff20b287	5fa04516f4ea	Kitob	Китоб
 deckcraft	03844f1bd62c	1411849c82e8	Sahifa	Саҳифа
 deckcraft	05d0d3805bec	17acb22d30b6	Fayl	Файл
 deckcraft	05d0d3805bec	17d311d1886c	Taqdimot	Тақдимот
@@ -21,14 +21,13 @@ deckcraft	240a120c641a	77bda00d103a	Kiritish	Киритиш
 deckcraft	262f4121e348	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	28b27c7df0ec	9a1d3265a8f1	Qorongʻi	Қоронғи
 deckcraft	2e17d4398651	17d311d1886c	Taqdimot	Тақдимот
-deckcraft	2f0988cf9324	aae8a4e5573f	Qoʻshish	Қўшиш
 deckcraft	2f4446b80004	1411849c82e8	Sahifa	Саҳифа
 deckcraft	2f4446b80004	acbd59bc86c6	Slayd	Слайд
 deckcraft	31f0077d1cb4	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	31f0077d1cb4	a2d43db2fec2	Jild	Жилд
 deckcraft	31f0077d1cb4	d894d5a30f48	Ochish	Очиш
 deckcraft	3b4825f3dec3	0dab4873ea25	Koʻrinish	Кўриниш
-deckcraft	3e0add0e7e4f	1203aa24b4cd	Nomi	Номи
+deckcraft	3e0add0e7e4f	1203aa24b4cd	Sarlavha	Сарлавҳа
 deckcraft	3fd4464d2421	acbd59bc86c6	Slayd	Слайд
 deckcraft	3fd4464d2421	f3846a89862f	Matn	Матн
 deckcraft	41253609735c	e501b05661ba	Hujjat	Ҳужжат
@@ -38,26 +37,25 @@ deckcraft	44871b86e319	d2993d86bfe9	Yorugʻ	Ёруғ
 deckcraft	4b2505b5c07b	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	4b2505b5c07b	f496d6ce864e	Ulashish	Улашиш
 deckcraft	50d90819757f	da21cc450780	Orqaga	Орқага
-deckcraft	526345b4d50c	50d2f36c75f2	Koʻrib chiqish	Кўриб чиқиш
+deckcraft	526345b4d50c	50d2f36c75f2	Tanlash	Танлаш
 deckcraft	565b4195b7d3	17acb22d30b6	Fayl	Файл
 deckcraft	56cb77b49225	334098b886d5	Chop etish	Чоп этиш
 deckcraft	57cd3a3132b0	17acb22d30b6	Fayl	Файл
 deckcraft	57cd3a3132b0	efb5490e7606	Qidirish	Қидириш
+deckcraft	5aab9bf753fd	00ea9b1916b8	Til	Тил
 deckcraft	5b031a4fed59	d894d5a30f48	Ochish	Очиш
 deckcraft	5e2c9ba8ea9a	842376b51171	Muallif	Муаллиф
-deckcraft	5e2c9ba8ea9a	aae8a4e5573f	Qoʻshish	Қўшиш
 deckcraft	5efbeede8fe4	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	61201ceb2fee	dc63ce231cc7	Diapazon	Диапазон
 deckcraft	61201ceb2fee	ecff794db9fa	Maxsus	Махсус
 deckcraft	63f728746966	cfd06f7dd354	Tahrirlash	Таҳрирлаш
-deckcraft	63f729e0ad80	aae8a4e5573f	Qoʻshish	Қўшиш
+deckcraft	63f729e0ad80	1203aa24b4cd	Sarlavha	Сарлавҳа
 deckcraft	6c2c661b7bd5	acbd59bc86c6	Slayd	Слайд
 deckcraft	6c2c661b7bd5	dc63ce231cc7	Diapazon	Диапазон
 deckcraft	7060d2bb19ab	17acb22d30b6	Fayl	Файл
 deckcraft	7060d2bb19ab	8d70b4fb7cbe	Joylashuv	Жойлашув
 deckcraft	7060d2bb19ab	d894d5a30f48	Ochish	Очиш
 deckcraft	71ee2837cdd5	1411849c82e8	Sahifa	Саҳифа
-deckcraft	78fd0a8cfebf	57d42d2b486a	Yoʻq	Йўқ
 deckcraft	7a203178e49c	1411849c82e8	Sahifa	Саҳифа
 deckcraft	7d6e939aa155	1411849c82e8	Sahifa	Саҳифа
 deckcraft	7e80c3e71e49	99b65edf1068	Soʻnggi	Сўнгги
@@ -72,7 +70,7 @@ deckcraft	a48169b26b06	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	a7dffbc32234	70eec9fda8ae	Rasm	Расм
 deckcraft	a907fa0e0951	334098b886d5	Chop etish	Чоп этиш
 deckcraft	aa3227f410e2	4fb08910bc12	Yoʻnalish	Йўналиш
-deckcraft	aa3227f410e2	f52bc59ed03e	Albom yoʻnalishi	Албом йўналиши
+deckcraft	aa3227f410e2	f52bc59ed03e	Albom	Альбом
 deckcraft	ac1121915a5b	1411849c82e8	Sahifa	Саҳифа
 deckcraft	ac16829943ec	17acb22d30b6	Fayl	Файл
 deckcraft	ac16829943ec	17d311d1886c	Taqdimot	Тақдимот
@@ -81,7 +79,6 @@ deckcraft	bb9f8e0a3e72	1411849c82e8	Sahifa	Саҳифа
 deckcraft	bbe14fb57a5a	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	bd5a258e382c	8d70b4fb7cbe	Joylashuv	Жойлашув
 deckcraft	bfe5b8ca3df9	99b65edf1068	Soʻnggi	Сўнгги
-deckcraft	c7dbab7be816	aae8a4e5573f	Qoʻshish	Қўшиш
 deckcraft	c9525cf8c1b2	a870266a8369	Maket	Макет
 deckcraft	d0a2c503b31a	7f53aea8537d	Format	Формат
 deckcraft	d17e571eb8ff	17d311d1886c	Taqdimot	Тақдимот
@@ -89,11 +86,10 @@ deckcraft	d8b368fa8f46	70eec9fda8ae	Rasm	Расм
 deckcraft	de371c91f868	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	e3b27c197110	db824e4ebf75	Nusxalash	Нусхалаш
 deckcraft	e3d38a842ff1	1411849c82e8	Sahifa	Саҳифа
-deckcraft	e925b00a94ae	acbd59bc86c6	Slayd	Слайд
-deckcraft	e925b00a94ae	e16b8cc88b03	Slaydlar namoyishi	Слайдлар намойиши
+deckcraft	e925b00a94ae	e16b8cc88b03	Namoyish	Намойиш
 deckcraft	fd81960f4e1c	0ffb3df24b1f	Topish	Топиш
 deckcraft	fd81960f4e1c	8966fb667c7a	Versiya	Версия
-gridcraft	013669715371	1203aa24b4cd	Nomi	Номи
+gridcraft	013669715371	1203aa24b4cd	Sarlavha	Сарлавҳа
 gridcraft	013669715371	c511cf161fc4	Diagramma	Диаграмма
 gridcraft	041b773c8261	7f53aea8537d	Format	Формат
 gridcraft	0525d065c2cf	db27816f5f4f	Olib tashlash	Олиб ташлаш
@@ -174,6 +170,7 @@ gridcraft	4ff27c5f2489	1411849c82e8	Sahifa	Саҳифа
 gridcraft	5314440da3ea	74304ab19fb2	Yashirish	Яшириш
 gridcraft	533060d73779	f9237318d93e	Nom	Ном
 gridcraft	5871e6c1e97c	1411849c82e8	Sahifa	Саҳифа
+gridcraft	59e99502ab6d	ba9eed940d1c	Tekislash	Текислаш
 gridcraft	5a77013a9ed2	7369094f2910	Qator	Қатор
 gridcraft	5a77013a9ed2	ae968ee42543	Yuqori	Юқори
 gridcraft	5b04f820ca3e	c1f589ea7f81	Masshtab	Масштаб
@@ -182,13 +179,13 @@ gridcraft	605b7143c566	1411849c82e8	Sahifa	Саҳифа
 gridcraft	605b7143c566	a870266a8369	Maket	Макет
 gridcraft	61bd491fceb3	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 gridcraft	61c7d0b05e84	57e749c390f2	Ustun	Устун
+gridcraft	61c7d0b05e84	59c5c88bb960	Kengligi	Кенглиги
 gridcraft	62829705488d	0ffb3df24b1f	Topish	Топиш
 gridcraft	62829705488d	2411beab1ca6	Tanlash	Танлаш
 gridcraft	641fe73825f1	aae8a4e5573f	Qoʻshish	Қўшиш
-gridcraft	641fe73825f1	c511cf161fc4	Diagramma	Диаграмма
 gridcraft	66f7ecaddf48	7369094f2910	Qator	Қатор
 gridcraft	66f7ecaddf48	efb9bf269728	Balandligi	Баландлиги
-gridcraft	67d9c1fcdedb	77bda00d103a	Kiritish	Киритиш
+gridcraft	67d9c1fcdedb	200c789c095f	Qoʻyish	Қўйиш
 gridcraft	68f3e92e4b97	159fde054dec	Varaq	Варақ
 gridcraft	68f3e92e4b97	8bb251ab1d0f	Oʻng	Ўнг
 gridcraft	68f3e92e4b97	f5cdeffd9fcb	Chap	Чап
@@ -196,6 +193,7 @@ gridcraft	68f454f03e43	fa08927df247	Katak	Катак
 gridcraft	69af88eddae4	87ba96788d9c	Son	Сон
 gridcraft	69d231a39e70	c8dabcd62138	Sana	Сана
 gridcraft	6bcdc373a458	57e749c390f2	Ustun	Устун
+gridcraft	6bcdc373a458	59c5c88bb960	Kengligi	Кенглиги
 gridcraft	6c1b475fba63	ae968ee42543	Yuqori	Юқори
 gridcraft	6c3e0d97ff37	ebcfaa9ca7e3	Tozalash	Тозалаш
 gridcraft	6c6d553c6fa3	99b65edf1068	Soʻnggi	Сўнгги
@@ -249,6 +247,7 @@ gridcraft	91ae21ea3905	ebcfaa9ca7e3	Tozalash	Тозалаш
 gridcraft	91c41872b01f	cea2c82cda63	Qalin	Қалин
 gridcraft	92c9cf5ae0f1	159fde054dec	Varaq	Варақ
 gridcraft	92c9cf5ae0f1	77bda00d103a	Kiritish	Киритиш
+gridcraft	932d6882b13b	22c284682679	Sozlamalar	Созламалар
 gridcraft	932d6882b13b	b1ccf27a765d	Ish kitobi	Иш китоби
 gridcraft	953b01108101	334098b886d5	Chop etish	Чоп этиш
 gridcraft	953b01108101	b1ccf27a765d	Ish kitobi	Иш китоби
@@ -290,12 +289,12 @@ gridcraft	bcfbe43c49fa	30876a4370f7	Toʻldirish	Тўлдириш
 gridcraft	bcfbe43c49fa	6594cf6c6a01	Rang	Ранг
 gridcraft	bdb1beab8785	7f526933147f	Burish	Буриш
 gridcraft	bdb1beab8785	f3846a89862f	Matn	Матн
-gridcraft	bf41c4a022e6	28ba81d6d079	Tagiga chizish	Тагига чизиш
+gridcraft	bf41c4a022e6	28ba81d6d079	Tagi chizilgan	Таги чизилган
 gridcraft	c193c7f41f2f	fd138422b461	Tekshirish	Текшириш
 gridcraft	c45d586406ed	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 gridcraft	c470bf9697d6	77bda00d103a	Kiritish	Киритиш
 gridcraft	c479b866f180	a3a5fa59866d	Shakl	Шакл
-gridcraft	c69c015951f6	28ba81d6d079	Tagiga chizish	Тагига чизиш
+gridcraft	c69c015951f6	28ba81d6d079	Tagi chizilgan	Таги чизилган
 gridcraft	c7aed5685223	ebcfaa9ca7e3	Tozalash	Тозалаш
 gridcraft	c86e93cdfe27	200c789c095f	Qoʻyish	Қўйиш
 gridcraft	ca4543f8613a	30876a4370f7	Toʻldirish	Тўлдириш
@@ -312,17 +311,16 @@ gridcraft	d40dbaa273b7	b1ccf27a765d	Ish kitobi	Иш китоби
 gridcraft	d7d13f6fea03	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 gridcraft	d7d60b8382e8	77bda00d103a	Kiritish	Киритиш
 gridcraft	d7d60b8382e8	bdac76f03aeb	Funksiya	Функция
-gridcraft	da3c9068e9db	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+gridcraft	da3c9068e9db	7eea88b02eaa	Eksport	Экспорт
 gridcraft	dad3fd754fc6	334098b886d5	Chop etish	Чоп этиш
 gridcraft	db808ae97d28	30876a4370f7	Toʻldirish	Тўлдириш
-gridcraft	dc7ca51af082	1203aa24b4cd	Nomi	Номи
+gridcraft	dc7ca51af082	1203aa24b4cd	Sarlavha	Сарлавҳа
 gridcraft	dcfa10bce92e	f3846a89862f	Matn	Матн
 gridcraft	dd8e09cecf2a	16bfc3844ea6	Saralash	Саралаш
 gridcraft	dee968421d5a	1411849c82e8	Sahifa	Саҳифа
 gridcraft	e56d9891477d	e6eeb59a099a	Saqlash	Сақлаш
 gridcraft	e65eba07034f	16bfc3844ea6	Saralash	Саралаш
 gridcraft	e761927f1a00	d2c8a389c117	Yuqori kolontitul	Юқори колонтитул
-gridcraft	e768406bb35f	dbfb65fb61b0	Uslub	Услуб
 gridcraft	e8191378d006	159fde054dec	Varaq	Варақ
 gridcraft	ef60c5ce4867	159fde054dec	Varaq	Варақ
 gridcraft	f1fd5c455b1b	1411849c82e8	Sahifa	Саҳифа
@@ -332,7 +330,7 @@ gridcraft	f22f625188de	ae968ee42543	Yuqori	Юқори
 gridcraft	f5d1d5a19919	f3846a89862f	Matn	Матн
 gridcraft	f710346c3866	fa08927df247	Katak	Катак
 gridcraft	f780f8ed8e6d	2411beab1ca6	Tanlash	Танлаш
-gridcraft	f8021ddd9b49	8cc014b0743c	Ustidan chizish	Устидан чизиш
+gridcraft	f8021ddd9b49	8cc014b0743c	Ustidan chizilgan	Устидан чизилган
 gridcraft	f8558c90740c	57d42d2b486a	Yoʻq	Йўқ
 gridcraft	f8558c90740c	b1ccf27a765d	Ish kitobi	Иш китоби
 gridcraft	fbb8be679748	74304ab19fb2	Yashirish	Яшириш
@@ -343,6 +341,7 @@ pdfcraft	01439fa4e4d0	f3846a89862f	Matn	Матн
 pdfcraft	02fcf7b34c52	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 pdfcraft	02fcf7b34c52	f3846a89862f	Matn	Матн
 pdfcraft	0476755091bb	1411849c82e8	Sahifa	Саҳифа
+pdfcraft	04ca4e0e8d20	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	050927aa92cf	db27816f5f4f	Olib tashlash	Олиб ташлаш
 pdfcraft	0537e6257222	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	05427f2a84a7	5303654275dc	Imzo	Имзо
@@ -358,12 +357,13 @@ pdfcraft	09dd603473ef	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	09dd603473ef	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	0a3fd8a2c2ad	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	0a3fd8a2c2ad	bdea16152cd7	Maydon	Майдон
+pdfcraft	0a5b6243cb15	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	0a5b6243cb15	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	0a77bec53e6a	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	0a77bec53e6a	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 pdfcraft	0ae6d280504c	5303654275dc	Imzo	Имзо
 pdfcraft	0ae6d280504c	81e66f7f878d	Oʻzgartirish	Ўзгартириш
-pdfcraft	0af1e527953f	0ffb3df24b1f	Topish	Топиш
+pdfcraft	0af1e527953f	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
 pdfcraft	0af1e527953f	f3846a89862f	Matn	Матн
 pdfcraft	0b41f34a60a3	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	0b41f34a60a3	bdea16152cd7	Maydon	Майдон
@@ -373,6 +373,7 @@ pdfcraft	0e66a4d26a78	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	0e66a4d26a78	f9b03ea83621	Parametrlar	Параметрлар
 pdfcraft	0f06aa08c38d	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	0f58ae91d023	4cbd7e47dda3	Sertifikat	Сертификат
+pdfcraft	0f58ae91d023	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	1196577d8e41	f64b65dff16c	Izoh	Изоҳ
 pdfcraft	11cba0a234cc	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	125487f571ec	e501b05661ba	Hujjat	Ҳужжат
@@ -382,18 +383,17 @@ pdfcraft	1611ca026578	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	16c5f29e8ca5	bdea16152cd7	Maydon	Майдон
 pdfcraft	16c5f29e8ca5	f3846a89862f	Matn	Матн
 pdfcraft	17249fe7e306	aae8a4e5573f	Qoʻshish	Қўшиш
-pdfcraft	185d86136382	2fdeeee6edb8	Import qilish	Импорт қилиш
+pdfcraft	185d86136382	2fdeeee6edb8	Import	Импорт
 pdfcraft	1885337f5468	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	19044f0b7b4b	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	19044f0b7b4b	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	19044f0b7b4b	5303654275dc	Imzo	Имзо
 pdfcraft	19044f0b7b4b	db27816f5f4f	Olib tashlash	Олиб ташлаш
-pdfcraft	196e805b3658	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	196e805b3658	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	1c5192e99aeb	5303654275dc	Imzo	Имзо
 pdfcraft	1c5f1f2b6d50	d894d5a30f48	Ochish	Очиш
 pdfcraft	1c5f1f2b6d50	e22b488316ba	Maxsus imkoniyatlar	Махсус имкониятлар
 pdfcraft	1d2932f10712	1411849c82e8	Sahifa	Саҳифа
-pdfcraft	1da491799005	8cc014b0743c	Ustidan chizish	Устидан чизиш
 pdfcraft	1e5b8b00773c	f3846a89862f	Matn	Матн
 pdfcraft	203e2a332f6b	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	203e2a332f6b	520cd23abcbb	Imzolash	Имзолаш
@@ -402,7 +402,7 @@ pdfcraft	238ed656d909	1d7f9da34c3e	Forma	Форма
 pdfcraft	249d7ebd236c	2411beab1ca6	Tanlash	Танлаш
 pdfcraft	249d7ebd236c	57e749c390f2	Ustun	Устун
 pdfcraft	25c044ff2e35	bdea16152cd7	Maydon	Майдон
-pdfcraft	25c044ff2e35	f416723069d5	Xossalar	Хоссалар
+pdfcraft	25c044ff2e35	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	26b7b38891f0	99b65edf1068	Soʻnggi	Сўнгги
 pdfcraft	26b7b38891f0	ebcfaa9ca7e3	Tozalash	Тозалаш
 pdfcraft	272ce4997a3f	e22b488316ba	Maxsus imkoniyatlar	Махсус имкониятлар
@@ -418,6 +418,7 @@ pdfcraft	2b61dac8a19c	f3846a89862f	Matn	Матн
 pdfcraft	2b7fa0243d4b	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	2b9d3ab20e8c	5303654275dc	Imzo	Имзо
 pdfcraft	2b9d3ab20e8c	e501b05661ba	Hujjat	Ҳужжат
+pdfcraft	2c0cbea319d2	01df214425c3	Satr	Сатр
 pdfcraft	2c4a7fb26e3b	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	2e1f5ebbe158	bdea16152cd7	Maydon	Майдон
 pdfcraft	2eabed01150c	81e66f7f878d	Oʻzgartirish	Ўзгартириш
@@ -425,25 +426,28 @@ pdfcraft	2eabed01150c	f9b03ea83621	Parametrlar	Параметрлар
 pdfcraft	31779d48c176	bdea16152cd7	Maydon	Майдон
 pdfcraft	31779d48c176	c8dabcd62138	Sana	Сана
 pdfcraft	31885b45d52c	5303654275dc	Imzo	Имзо
-pdfcraft	33cffc5df545	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	31885b45d52c	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
+pdfcraft	3270100d9c3d	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
+pdfcraft	33cffc5df545	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	347290619524	8d70b4fb7cbe	Joylashuv	Жойлашув
 pdfcraft	347cca135be5	5303654275dc	Imzo	Имзо
 pdfcraft	347cca135be5	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	347cca135be5	bdea16152cd7	Maydon	Майдон
-pdfcraft	35f84a0d2fed	8cc014b0743c	Ustidan chizish	Устидан чизиш
 pdfcraft	35f84a0d2fed	f3846a89862f	Matn	Матн
+pdfcraft	371956ac764c	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	371956ac764c	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	373861c8c79d	1d7f9da34c3e	Forma	Форма
 pdfcraft	37a388c9d3f4	bdea16152cd7	Maydon	Майдон
-pdfcraft	37a388c9d3f4	f416723069d5	Xossalar	Хоссалар
+pdfcraft	37a388c9d3f4	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	386d53bb2966	200c789c095f	Qoʻyish	Қўйиш
 pdfcraft	3885303e5a3c	4cbd7e47dda3	Sertifikat	Сертификат
-pdfcraft	394d922cc05b	f416723069d5	Xossalar	Хоссалар
+pdfcraft	394d922cc05b	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	3a69b65aef25	db27816f5f4f	Olib tashlash	Олиб ташлаш
-pdfcraft	3b95b367066b	f416723069d5	Xossalar	Хоссалар
+pdfcraft	3b95b367066b	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	3c008d6d6e78	db27816f5f4f	Olib tashlash	Олиб ташлаш
 pdfcraft	3ccd330d2380	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	3d23449b7e7a	57d42d2b486a	Yoʻq	Йўқ
+pdfcraft	3d23449b7e7a	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	3d23449b7e7a	dc63ce231cc7	Diapazon	Диапазон
 pdfcraft	3d3643eab57c	f3846a89862f	Matn	Матн
 pdfcraft	3ea237425ec1	0dab4873ea25	Koʻrinish	Кўриниш
@@ -460,7 +464,7 @@ pdfcraft	3f4d116172aa	259b0bb49d13	Yana	Яна
 pdfcraft	3fd473bd38c4	57d42d2b486a	Yoʻq	Йўқ
 pdfcraft	3fd473bd38c4	a9823ea5f83a	Belgi	Белги
 pdfcraft	40577cd69fa2	1411849c82e8	Sahifa	Саҳифа
-pdfcraft	409d86c4f1d6	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	409d86c4f1d6	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	41016ae42368	f3846a89862f	Matn	Матн
 pdfcraft	412b17879a4a	120fa1fcb00a	Keyingi	Кейинги
 pdfcraft	412b17879a4a	bc001453e650	Yorliq	Ёрлиқ
@@ -472,7 +476,7 @@ pdfcraft	469341a0f63b	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	486899266131	5303654275dc	Imzo	Имзо
 pdfcraft	486899266131	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	4977c126a454	bdea16152cd7	Maydon	Майдон
-pdfcraft	4977c126a454	f416723069d5	Xossalar	Хоссалар
+pdfcraft	4977c126a454	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	4a28ed1a95ac	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	4a8e9f24596f	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	4addfb1487b2	aae8a4e5573f	Qoʻshish	Қўшиш
@@ -482,12 +486,13 @@ pdfcraft	4c368eba31e0	f3846a89862f	Matn	Матн
 pdfcraft	4c474adf548c	5303654275dc	Imzo	Имзо
 pdfcraft	4cd116fc139e	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	4d0b2c085845	f9b03ea83621	Parametrlar	Параметрлар
+pdfcraft	4ebb18f54ad1	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
 pdfcraft	4fb7cbca03d4	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	4fb7cbca03d4	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	4fb7cbca03d4	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	4fb7cbca03d4	f3846a89862f	Matn	Матн
 pdfcraft	509535535dfe	bdea16152cd7	Maydon	Майдон
-pdfcraft	509535535dfe	f416723069d5	Xossalar	Хоссалар
+pdfcraft	509535535dfe	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	50f34c0dfa46	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	50f34c0dfa46	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	528d51dc6460	30876a4370f7	Toʻldirish	Тўлдириш
@@ -496,11 +501,10 @@ pdfcraft	528d51dc6460	c8dabcd62138	Sana	Сана
 pdfcraft	5352921153ff	0ffb3df24b1f	Topish	Топиш
 pdfcraft	53645cdd56ed	5303654275dc	Imzo	Имзо
 pdfcraft	53645cdd56ed	7f53aea8537d	Format	Формат
-pdfcraft	5375c50b9c18	28ba81d6d079	Tagiga chizish	Тагига чизиш
-pdfcraft	544120f31098	3f8e9d4a3acf	Bosh sahifa	Бош саҳифа
+pdfcraft	544120f31098	a2d43db2fec2	Jild	Жилд
 pdfcraft	5529595fee56	17acb22d30b6	Fayl	Файл
 pdfcraft	5686a1e6dbe5	e22b488316ba	Maxsus imkoniyatlar	Махсус имкониятлар
-pdfcraft	57c517c69e65	5efac91ede0d	Boshqa nom bilan saqlash	Бошқа ном билан сақлаш
+pdfcraft	57c517c69e65	5efac91ede0d	Boshqa nomda saqlash	Бошқа номда сақлаш
 pdfcraft	57c517c69e65	e6eeb59a099a	Saqlash	Сақлаш
 pdfcraft	58a8f94fb5e9	54a4d726a89e	Soʻz	Сўз
 pdfcraft	58cae1a59845	1d7f9da34c3e	Forma	Форма
@@ -509,25 +513,26 @@ pdfcraft	5975dc96c5c1	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	5a3ddd46f7cd	b21cae9438b4	Yangi	Янги
 pdfcraft	5a791f181011	5303654275dc	Imzo	Имзо
 pdfcraft	5d315048e65c	5303654275dc	Imzo	Имзо
+pdfcraft	5d315048e65c	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	5eb9a5e9e49a	f3846a89862f	Matn	Матн
 pdfcraft	5f966517c12a	5303654275dc	Imzo	Имзо
 pdfcraft	5fb4a562b2b9	17acb22d30b6	Fayl	Файл
-pdfcraft	5fb4a562b2b9	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	5fb4a562b2b9	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	6001ed463d35	77bda00d103a	Kiritish	Киритиш
 pdfcraft	6001ed463d35	f3846a89862f	Matn	Матн
 pdfcraft	611a36fde57e	c1f589ea7f81	Masshtab	Масштаб
 pdfcraft	62d3ae887fa1	5303654275dc	Imzo	Имзо
 pdfcraft	62d3ae887fa1	dc63ce231cc7	Diapazon	Диапазон
 pdfcraft	64e1c4d266fb	99b65edf1068	Soʻnggi	Сўнгги
-pdfcraft	64e1c4d266fb	d894d5a30f48	Ochish	Очиш
 pdfcraft	650cf3a8a1c7	aae8a4e5573f	Qoʻshish	Қўшиш
-pdfcraft	663a04952954	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	663a04952954	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	663a04952954	f3846a89862f	Matn	Матн
 pdfcraft	673b5cd36e01	5303654275dc	Imzo	Имзо
 pdfcraft	67ee090963fd	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	68512b133ba2	77bda00d103a	Kiritish	Киритиш
 pdfcraft	6a0a7ff3201b	7b2bc57f5ebf	Chiziq	Чизиқ
 pdfcraft	6a0a7ff3201b	dbfb65fb61b0	Uslub	Услуб
+pdfcraft	6b92b2fbdf3f	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	6bace153ba16	b1032c4a4203	Qirqish	Қирқиш
 pdfcraft	710c31f6d570	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 pdfcraft	7175d25085fd	30876a4370f7	Toʻldirish	Тўлдириш
@@ -535,19 +540,20 @@ pdfcraft	7175d25085fd	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	7175d25085fd	5303654275dc	Imzo	Имзо
 pdfcraft	7175d25085fd	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 pdfcraft	72b2d3df3fce	c8dabcd62138	Sana	Сана
-pdfcraft	735b850a9615	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	735b850a9615	7eea88b02eaa	Eksport	Экспорт
+pdfcraft	73e9f9c07d52	0138f348ef11	Sahifaga singdirish	Саҳифага сингдириш
 pdfcraft	73e9f9c07d52	1d7f9da34c3e	Forma	Форма
 pdfcraft	73fc385ac2cc	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	744ef10ffd39	1d7f9da34c3e	Forma	Форма
-pdfcraft	744ef10ffd39	2fdeeee6edb8	Import qilish	Импорт қилиш
+pdfcraft	744ef10ffd39	2fdeeee6edb8	Import	Импорт
 pdfcraft	7492de1362cc	cd3f5d04aeb7	Xavfsizlik	Хавфсизлик
-pdfcraft	7492de1362cc	f416723069d5	Xossalar	Хоссалар
+pdfcraft	7492de1362cc	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	749b8c7550c7	eef38d75ab40	Yopish	Ёпиш
 pdfcraft	760ffc7d390d	e6eeb59a099a	Saqlash	Сақлаш
-pdfcraft	76d790c9e4ca	59c5c88bb960	Eni	Эни
 pdfcraft	77baab01cc13	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	77baab01cc13	5303654275dc	Imzo	Имзо
 pdfcraft	77baab01cc13	53e06ea2ce86	Qiymat	Қиймат
+pdfcraft	783aec66d375	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	78b5027e69a3	3a483751146d	Oʻchirish	Ўчириш
 pdfcraft	79803cf7be63	17acb22d30b6	Fayl	Файл
 pdfcraft	79803cf7be63	5303654275dc	Imzo	Имзо
@@ -558,45 +564,51 @@ pdfcraft	7ac7cb4c209c	e22b488316ba	Maxsus imkoniyatlar	Махсус имкони
 pdfcraft	7afd1ac5cf02	17acb22d30b6	Fayl	Файл
 pdfcraft	7c30076c4964	e22b488316ba	Maxsus imkoniyatlar	Махсус имкониятлар
 pdfcraft	7c4769f7e139	aae8a4e5573f	Qoʻshish	Қўшиш
-pdfcraft	7c73bd2bf25b	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	7c73bd2bf25b	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	7d67869af66a	5303654275dc	Imzo	Имзо
 pdfcraft	7ebdbfad0062	7b2bc57f5ebf	Chiziq	Чизиқ
 pdfcraft	7f2056f84a00	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	7f9c31ac103b	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	800ed6ac6b93	16bfc3844ea6	Saralash	Саралаш
 pdfcraft	80b445655837	b21cae9438b4	Yangi	Янги
+pdfcraft	8126e7ed6fce	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
 pdfcraft	823786c73938	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	82787bb194f6	28461be1310c	Shrift	Шрифт
 pdfcraft	82787bb194f6	ecff794db9fa	Maxsus	Махсус
 pdfcraft	82b59b64f1ac	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	82b59b64f1ac	f3846a89862f	Matn	Матн
-pdfcraft	843eb430c305	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	843eb430c305	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	8647773a2bf7	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	8647773a2bf7	5303654275dc	Imzo	Имзо
+pdfcraft	86a39f4678bc	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	86a39f4678bc	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	88e3bbd87ac5	7f53aea8537d	Format	Формат
 pdfcraft	88ecfa2fdba1	5303654275dc	Imzo	Имзо
 pdfcraft	88ecfa2fdba1	53e06ea2ce86	Qiymat	Қиймат
+pdfcraft	88ecfa2fdba1	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	893b4ac96c14	0ffb3df24b1f	Topish	Топиш
 pdfcraft	893b4ac96c14	94ffc71f6cad	Vositalar	Воситалар
+pdfcraft	8c694e63b41d	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
 pdfcraft	8c694e63b41d	f3846a89862f	Matn	Матн
 pdfcraft	906cef26c7d3	dbfb65fb61b0	Uslub	Услуб
 pdfcraft	9128049a50b6	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	9150eeda563e	5303654275dc	Imzo	Имзо
-pdfcraft	91961a5cd6fc	2fdeeee6edb8	Import qilish	Импорт қилиш
+pdfcraft	91961a5cd6fc	2fdeeee6edb8	Import	Импорт
 pdfcraft	91b0c9990259	db27816f5f4f	Olib tashlash	Олиб ташлаш
-pdfcraft	929ecd216382	7eea88b02eaa	Eksport qilish	Экспорт қилиш
-pdfcraft	94881ed7f843	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	929ecd216382	7eea88b02eaa	Eksport	Экспорт
+pdfcraft	94881ed7f843	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	96646ff58ece	ebcfaa9ca7e3	Tozalash	Тозалаш
+pdfcraft	97cf61fdd171	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	97cf61fdd171	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	97f4cf7ebd00	db824e4ebf75	Nusxalash	Нусхалаш
 pdfcraft	98819956cfb5	f3846a89862f	Matn	Матн
-pdfcraft	9c617cf65374	3f69a0d43600	Parol	Парол
+pdfcraft	9a24107a9073	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
+pdfcraft	9c617cf65374	3f69a0d43600	Parol	Пароль
 pdfcraft	9d9a1801666d	f3846a89862f	Matn	Матн
 pdfcraft	9d9b91081e83	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	9dadf76b5651	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	9dba77450902	8d70b4fb7cbe	Joylashuv	Жойлашув
-pdfcraft	9e1854e8fa57	0ffb3df24b1f	Topish	Топиш
+pdfcraft	9e1854e8fa57	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
 pdfcraft	9e1854e8fa57	f3846a89862f	Matn	Матн
 pdfcraft	9e64180f6da3	0dab4873ea25	Koʻrinish	Кўриниш
 pdfcraft	9f729f5da056	66843b3e0d6c	Chizish	Чизиш
@@ -610,8 +622,11 @@ pdfcraft	a23c2c1fd3e4	7f526933147f	Burish	Буриш
 pdfcraft	a2e206250781	5303654275dc	Imzo	Имзо
 pdfcraft	a2e206250781	57d42d2b486a	Yoʻq	Йўқ
 pdfcraft	a329e46d0d24	5303654275dc	Imzo	Имзо
+pdfcraft	a329e46d0d24	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
+pdfcraft	a32c5e136624	0138f348ef11	Sahifaga singdirish	Саҳифага сингдириш
 pdfcraft	a3bea106de40	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 pdfcraft	a478af433d03	17acb22d30b6	Fayl	Файл
+pdfcraft	a478af433d03	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	a478af433d03	dc63ce231cc7	Diapazon	Диапазон
 pdfcraft	a4aab2323670	28461be1310c	Shrift	Шрифт
 pdfcraft	a4aab2323670	e70f7ce0bae5	Oʻlcham	Ўлчам
@@ -623,14 +638,15 @@ pdfcraft	a7b88409223c	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	a7b88409223c	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	a7f2848f2229	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	a8388aaa40c2	e501b05661ba	Hujjat	Ҳужжат
-pdfcraft	a8388aaa40c2	f416723069d5	Xossalar	Хоссалар
+pdfcraft	a8388aaa40c2	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	a863ee0b6508	f3846a89862f	Matn	Матн
 pdfcraft	aa583fdc9e9c	1d7f9da34c3e	Forma	Форма
 pdfcraft	aa6545a9abf5	db27816f5f4f	Olib tashlash	Олиб ташлаш
-pdfcraft	ab4005a8ce08	28ba81d6d079	Tagiga chizish	Тагига чизиш
 pdfcraft	ab4005a8ce08	f3846a89862f	Matn	Матн
-pdfcraft	abda5c7d41e7	3f69a0d43600	Parol	Парол
-pdfcraft	ad3501359caf	3f69a0d43600	Parol	Парол
+pdfcraft	ab80c207e4ef	57caac1d373c	Oʻchirib yopish	Ўчириб ёпиш
+pdfcraft	abda5c7d41e7	3f69a0d43600	Parol	Пароль
+pdfcraft	acbca3b35196	419e2c5f8d75	Standart	Стандарт
+pdfcraft	ad3501359caf	3f69a0d43600	Parol	Пароль
 pdfcraft	ad7d49fb5584	2411beab1ca6	Tanlash	Танлаш
 pdfcraft	ad7f0e23b68e	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	ad7f0e23b68e	57d42d2b486a	Yoʻq	Йўқ
@@ -652,14 +668,14 @@ pdfcraft	b73cceeddf1b	53e06ea2ce86	Qiymat	Қиймат
 pdfcraft	b86c370a9fb6	691ef9a84b33	Almashtirish	Алмаштириш
 pdfcraft	b92f7f7853bf	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 pdfcraft	b92f7f7853bf	bdea16152cd7	Maydon	Майдон
-pdfcraft	b92f7f7853bf	f416723069d5	Xossalar	Хоссалар
+pdfcraft	b92f7f7853bf	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	b9ed1f2079b0	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	ba7aa189e51a	30876a4370f7	Toʻldirish	Тўлдириш
 pdfcraft	ba7aa189e51a	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	ba7aa189e51a	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 pdfcraft	bafb655f6fc7	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 pdfcraft	bb004741011a	e501b05661ba	Hujjat	Ҳужжат
-pdfcraft	bb165c7029bb	f416723069d5	Xossalar	Хоссалар
+pdfcraft	bb165c7029bb	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	bc03c3cddeec	6594cf6c6a01	Rang	Ранг
 pdfcraft	bc03c3cddeec	fd650cb3e656	Chegara	Чегара
 pdfcraft	bda0172eb378	17acb22d30b6	Fayl	Файл
@@ -673,6 +689,7 @@ pdfcraft	c031c957ee0d	17acb22d30b6	Fayl	Файл
 pdfcraft	c14b4afdf794	5303654275dc	Imzo	Имзо
 pdfcraft	c37f4ab09143	00205dd6df1a	Imlo	Имло
 pdfcraft	c3a43f6a5a58	6594cf6c6a01	Rang	Ранг
+pdfcraft	c4c598cd4fd3	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	c534de9e24de	5303654275dc	Imzo	Имзо
 pdfcraft	c534de9e24de	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	c7538225b102	aae8a4e5573f	Qoʻshish	Қўшиш
@@ -693,23 +710,23 @@ pdfcraft	cfb3a65f710a	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	d00e61a3c700	b21cae9438b4	Yangi	Янги
 pdfcraft	d05d036e51a2	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	d0fb1be3279e	1d7f9da34c3e	Forma	Форма
-pdfcraft	d0fb1be3279e	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	d0fb1be3279e	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	d17c7eca2539	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	d17c7eca2539	bdea16152cd7	Maydon	Майдон
 pdfcraft	d17c7eca2539	f3846a89862f	Matn	Матн
 pdfcraft	d4231ceb3ba6	66843b3e0d6c	Chizish	Чизиш
 pdfcraft	d480753aa1cf	aae8a4e5573f	Qoʻshish	Қўшиш
 pdfcraft	d53682b6547c	8d70b4fb7cbe	Joylashuv	Жойлашув
+pdfcraft	d57813b36d28	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	d605d9a51507	e6eeb59a099a	Saqlash	Сақлаш
 pdfcraft	d693e51a3109	bdea16152cd7	Maydon	Майдон
 pdfcraft	d696902432a9	cd3f5d04aeb7	Xavfsizlik	Хавфсизлик
-pdfcraft	d696902432a9	f416723069d5	Xossalar	Хоссалар
-pdfcraft	d75574368144	28ba81d6d079	Tagiga chizish	Тагига чизиш
+pdfcraft	d696902432a9	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	d7ed28c7610e	5303654275dc	Imzo	Имзо
 pdfcraft	d830245fdc73	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	d854632622c1	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 pdfcraft	d854632622c1	f9b03ea83621	Parametrlar	Параметрлар
-pdfcraft	d9a0da0f87a8	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	d9a0da0f87a8	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	da3389c900ee	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	db0c858b363c	77bda00d103a	Kiritish	Киритиш
 pdfcraft	db3cc9e7a4ae	702a94cca5e3	Birlashtirish	Бирлаштириш
@@ -722,17 +739,18 @@ pdfcraft	df7b403a56ec	5303654275dc	Imzo	Имзо
 pdfcraft	df7b403a56ec	bdea16152cd7	Maydon	Майдон
 pdfcraft	dffd338a3ca9	bdea16152cd7	Maydon	Майдон
 pdfcraft	dffd338a3ca9	e501b05661ba	Hujjat	Ҳужжат
-pdfcraft	dffd338a3ca9	f416723069d5	Xossalar	Хоссалар
+pdfcraft	dffd338a3ca9	f416723069d5	Xususiyatlar	Хусусиятлар
 pdfcraft	e0ac5148ff14	17acb22d30b6	Fayl	Файл
 pdfcraft	e11e66ec1020	17acb22d30b6	Fayl	Файл
-pdfcraft	e1bd00d5986a	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	e1bd00d5986a	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	e1e5b5bf8dab	5303654275dc	Imzo	Имзо
-pdfcraft	e3d8025749e9	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+pdfcraft	e3d8025749e9	7eea88b02eaa	Eksport	Экспорт
 pdfcraft	e3f3a3d8f057	f3846a89862f	Matn	Матн
 pdfcraft	e4e2ffaab535	5303654275dc	Imzo	Имзо
 pdfcraft	e604fb76247a	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	e71e0013d31e	5303654275dc	Imzo	Имзо
 pdfcraft	e9143fc2f495	aae8a4e5573f	Qoʻshish	Қўшиш
+pdfcraft	e9cf93cef35f	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	eb225bc87b2d	a9823ea5f83a	Belgi	Белги
 pdfcraft	ebe87080c2fd	5303654275dc	Imzo	Имзо
 pdfcraft	ec96e92aacdb	5303654275dc	Imzo	Имзо
@@ -740,12 +758,11 @@ pdfcraft	ec96e92aacdb	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	ee1f5edc81d6	5303654275dc	Imzo	Имзо
 pdfcraft	ee31af4ca983	520cd23abcbb	Imzolash	Имзолаш
 pdfcraft	ee709a71df0c	cce9e6c90281	Qoʻllash	Қўллаш
-pdfcraft	f0aed1a62574	90f0067d91fd	Tema	Тема
+pdfcraft	f0aed1a62574	90f0067d91fd	Mavzu	Мавзу
 pdfcraft	f0aed1a62574	9a1d3265a8f1	Qorongʻi	Қоронғи
 pdfcraft	f0aed1a62574	d2993d86bfe9	Yorugʻ	Ёруғ
 pdfcraft	f358e4886613	e501b05661ba	Hujjat	Ҳужжат
 pdfcraft	f539733459ba	5303654275dc	Imzo	Имзо
-pdfcraft	f539733459ba	f9237318d93e	Nom	Ном
 pdfcraft	f6fb87a9e8ee	04989d5e96fd	OK	OK
 pdfcraft	fa27c1226ab4	f3846a89862f	Matn	Матн
 pdfcraft	fa35a2b29fb8	57d42d2b486a	Yoʻq	Йўқ
@@ -754,6 +771,7 @@ pdfcraft	fb03ccc4ae40	1411849c82e8	Sahifa	Саҳифа
 pdfcraft	fc4cd084f3c0	00ea9b1916b8	Til	Тил
 pdfcraft	fc4cd084f3c0	28461be1310c	Shrift	Шрифт
 pdfcraft	fc4cd084f3c0	5303654275dc	Imzo	Имзо
+pdfcraft	fd268e03a936	b675461d627d	Vaqt tamgʻasi	Вақт тамғаси
 pdfcraft	fd268e03a936	dc63ce231cc7	Diapazon	Диапазон
 pdfcraft	fd5615c1be15	4cbd7e47dda3	Sertifikat	Сертификат
 pdfcraft	fd5615c1be15	e501b05661ba	Hujjat	Ҳужжат
@@ -774,8 +792,8 @@ shared	099c16924da5	f9b03ea83621	Parametrlar	Параметрлар
 shared	0a94e78e56e0	57d42d2b486a	Yoʻq	Йўқ
 shared	0ba9a3538423	0ffb3df24b1f	Topish	Топиш
 shared	0ba9a3538423	691ef9a84b33	Almashtirish	Алмаштириш
-shared	0bf02c80a135	50d2f36c75f2	Koʻrib chiqish	Кўриб чиқиш
-shared	0d7109515942	1203aa24b4cd	Nomi	Номи
+shared	0bf02c80a135	50d2f36c75f2	Tanlash	Танлаш
+shared	0d7109515942	1203aa24b4cd	Sarlavha	Сарлавҳа
 shared	0d7109515942	c511cf161fc4	Diagramma	Диаграмма
 shared	1177b400d0ce	f3846a89862f	Matn	Матн
 shared	11d155aab7c5	f9b03ea83621	Parametrlar	Параметрлар
@@ -787,7 +805,6 @@ shared	1412abd9c526	6594cf6c6a01	Rang	Ранг
 shared	160e53460df6	2411beab1ca6	Tanlash	Танлаш
 shared	187140e1685d	f3846a89862f	Matn	Матн
 shared	19b9793bd50a	e6eeb59a099a	Saqlash	Сақлаш
-shared	1e19d6881201	99b65edf1068	Soʻnggi	Сўнгги
 shared	1e19d6881201	db27816f5f4f	Olib tashlash	Олиб ташлаш
 shared	1e52a040024c	334098b886d5	Chop etish	Чоп этиш
 shared	1ed691fb0224	7f53aea8537d	Format	Формат
@@ -841,8 +858,8 @@ shared	5b9d0c9e48bc	70eec9fda8ae	Rasm	Расм
 shared	5b9d0c9e48bc	fd650cb3e656	Chegara	Чегара
 shared	5c36ada9359d	77bda00d103a	Kiritish	Киритиш
 shared	5c532d2163e0	1411849c82e8	Sahifa	Саҳифа
-shared	5d77245b1d3b	f416723069d5	Xossalar	Хоссалар
-shared	5da02b036754	26f6f691760a	Sahifa chetlari	Саҳифа четлари
+shared	5d77245b1d3b	f416723069d5	Xususiyatlar	Хусусиятлар
+shared	5da02b036754	26f6f691760a	Hoshiyalar	Ҳошиялар
 shared	5f595358e6e9	00009304e282	Dizayn	Дизайн
 shared	5f595358e6e9	c511cf161fc4	Diagramma	Диаграмма
 shared	6094ba57e0a6	b21cae9438b4	Yangi	Янги
@@ -862,17 +879,18 @@ shared	6b3eb29ff573	ba9eed940d1c	Tekislash	Текислаш
 shared	6e15c49c8a4d	ebcfaa9ca7e3	Tozalash	Тозалаш
 shared	70724bc7f76c	28461be1310c	Shrift	Шрифт
 shared	70724bc7f76c	e70f7ce0bae5	Oʻlcham	Ўлчам
-shared	709f601c0e66	5fa04516f4ea	Kitob yoʻnalishi	Китоб йўналиши
+shared	709f601c0e66	5fa04516f4ea	Kitob	Китоб
 shared	70fe9d4d2ea7	120fa1fcb00a	Keyingi	Кейинги
 shared	70fe9d4d2ea7	1411849c82e8	Sahifa	Саҳифа
 shared	7231d48018d1	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 shared	7416c23aa31d	4d7113bdc47f	Yordam	Ёрдам
 shared	75f350d74f4d	f3846a89862f	Matn	Матн
 shared	75fcad667d97	0bac2738e1d0	Markaz	Марказ
-shared	770860d8fb73	6e7aeaa0e30b	Afzalliklar	Афзалликлар
+shared	770860d8fb73	6e7aeaa0e30b	Sozlamalar	Созламалар
 shared	777e2d84550a	a3a5fa59866d	Shakl	Шакл
 shared	7a61082e8e48	691ef9a84b33	Almashtirish	Алмаштириш
 shared	7a6d6d796e6c	f64b65dff16c	Izoh	Изоҳ
+shared	7aad051fcadd	26f6f691760a	Hoshiyalar	Ҳошиялар
 shared	7aad051fcadd	fa08927df247	Katak	Катак
 shared	7b022b95065c	7f53aea8537d	Format	Формат
 shared	7b31edcbe9ff	120fa1fcb00a	Keyingi	Кейинги
@@ -882,7 +900,7 @@ shared	7e7f8a2c3ece	a870266a8369	Maket	Макет
 shared	7ec8210a8982	4fb08910bc12	Yoʻnalish	Йўналиш
 shared	80cf56dbb8dd	00009304e282	Dizayn	Дизайн
 shared	82ab9b8a95c5	200c789c095f	Qoʻyish	Қўйиш
-shared	82ddc6cf6fb6	3f69a0d43600	Parol	Парол
+shared	82ddc6cf6fb6	3f69a0d43600	Parol	Пароль
 shared	838c8c038fb3	efb5490e7606	Qidirish	Қидириш
 shared	84cbf360518e	b21cae9438b4	Yangi	Янги
 shared	84cbf360518e	cb575bbc2fcb	Oyna	Ойна
@@ -902,18 +920,18 @@ shared	92003eb0390d	f496d6ce864e	Ulashish	Улашиш
 shared	92b8ca988b75	bae2296ce046	Chekinish	Чекиниш
 shared	93a295051dd8	3a483751146d	Oʻchirish	Ўчириш
 shared	93a295051dd8	cbc9f8480beb	Jadval	Жадвал
-shared	94e239481b63	f52bc59ed03e	Albom yoʻnalishi	Албом йўналиши
+shared	94e239481b63	f52bc59ed03e	Albom	Альбом
 shared	965d26030cca	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 shared	965d26030cca	a870266a8369	Maket	Макет
 shared	98dd944474a6	bdea16152cd7	Maydon	Майдон
-shared	98dd944474a6	f416723069d5	Xossalar	Хоссалар
+shared	98dd944474a6	f416723069d5	Xususiyatlar	Хусусиятлар
 shared	9a23c306b426	eef38d75ab40	Yopish	Ёпиш
 shared	9bc9e48f28ce	0e447f4c1d51	Koʻchirish	Кўчириш
-shared	9e75d258ab35	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 shared	a076c02a4824	8bb251ab1d0f	Oʻng	Ўнг
 shared	a076c02a4824	f3846a89862f	Matn	Матн
 shared	a076c02a4824	f5cdeffd9fcb	Chap	Чап
 shared	a111f7316f76	842376b51171	Muallif	Муаллиф
+shared	a2597b362df4	01df214425c3	Satr	Сатр
 shared	a27190239145	ba9eed940d1c	Tekislash	Текислаш
 shared	a27190239145	f3846a89862f	Matn	Матн
 shared	a416aefdf180	28cee355eeec	Yoʻq	Йўқ
@@ -921,21 +939,21 @@ shared	a65b97083677	70eec9fda8ae	Rasm	Расм
 shared	a7a8db7df0e5	e51a356d8a38	Quyi kolontitul	Қуйи колонтитул
 shared	a96739898db5	e3a7cb06f96f	Kesib olish	Кесиб олиш
 shared	aa8dfb9eb88c	5db33b79e889	Oldingi	Олдинги
-shared	ab21a44778f3	90f0067d91fd	Tema	Тема
-shared	af45c5e79e90	26f6f691760a	Sahifa chetlari	Саҳифа четлари
+shared	ab21a44778f3	90f0067d91fd	Mavzu	Мавзу
+shared	af45c5e79e90	26f6f691760a	Hoshiyalar	Ҳошиялар
 shared	af45c5e79e90	ecff794db9fa	Maxsus	Махсус
 shared	af826758a054	0ffb3df24b1f	Topish	Топиш
 shared	af826758a054	120fa1fcb00a	Keyingi	Кейинги
 shared	b033489981fe	e70f7ce0bae5	Oʻlcham	Ўлчам
 shared	b22470ecf90b	db27816f5f4f	Olib tashlash	Олиб ташлаш
-shared	b41884d7b057	a29493e5966d	Kenglik boʻyicha tekislash	Кенглик бўйича текислаш
+shared	b41884d7b057	a29493e5966d	Kenglik boʻyicha	Кенглик бўйича
 shared	b473286892d8	00ea9b1916b8	Til	Тил
 shared	b65f3fa3ba5a	b21cae9438b4	Yangi	Янги
 shared	b7dbe4aee3ab	aae8a4e5573f	Qoʻshish	Қўшиш
-shared	b7dbe4aee3ab	c511cf161fc4	Diagramma	Диаграмма
 shared	b812a014da86	22008f8efd5f	Tenglama	Тенглама
 shared	b8ddd39e3d1c	30876a4370f7	Toʻldirish	Тўлдириш
 shared	b8ddd39e3d1c	a3a5fa59866d	Shakl	Шакл
+shared	bf22925e78bc	22c284682679	Sozlamalar	Созламалар
 shared	c0b1d4b064da	94ffc71f6cad	Vositalar	Воситалар
 shared	c17577989372	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 shared	c225884dd004	da21cc450780	Orqaga	Орқага
@@ -959,10 +977,9 @@ shared	da8c8e9cd3fb	191c8a6e8225	Tur	Тур
 shared	da8c8e9cd3fb	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 shared	da8c8e9cd3fb	c511cf161fc4	Diagramma	Диаграмма
 shared	da969764ac3a	c0afb1137964	Yuqori indeks	Юқори индекс
-shared	dac343dae843	3f8e9d4a3acf	Bosh sahifa	Бош саҳифа
+shared	dac343dae843	3f8e9d4a3acf	Asosiy	Асосий
 shared	dad3c0ade918	e70f7ce0bae5	Oʻlcham	Ўлчам
 shared	db5118791846	cce9e6c90281	Qoʻllash	Қўллаш
-shared	dcda70934ab6	28ba81d6d079	Tagiga chizish	Тагига чизиш
 shared	e08543852506	5db33b79e889	Oldingi	Олдинги
 shared	e08543852506	f64b65dff16c	Izoh	Изоҳ
 shared	e11ed9e275fe	77bda00d103a	Kiritish	Киритиш
@@ -985,7 +1002,7 @@ shared	eca562efabd8	f3846a89862f	Matn	Матн
 shared	ee489fc7bc6c	1411849c82e8	Sahifa	Саҳифа
 shared	ee52661be311	a3a5fa59866d	Shakl	Шакл
 shared	ee52661be311	aae8a4e5573f	Qoʻshish	Қўшиш
-shared	eeda16df29ad	5efac91ede0d	Boshqa nom bilan saqlash	Бошқа ном билан сақлаш
+shared	eeda16df29ad	5efac91ede0d	Boshqa nomda saqlash	Бошқа номда сақлаш
 shared	eeda16df29ad	e6eeb59a099a	Saqlash	Сақлаш
 shared	ef0d86e7cca0	7f53aea8537d	Format	Формат
 shared	ef0d86e7cca0	a3a5fa59866d	Shakl	Шакл
@@ -1026,7 +1043,6 @@ wordcraft	062fce2ec5d5	cbc9f8480beb	Jadval	Жадвал
 wordcraft	062fce2ec5d5	efb9bf269728	Balandligi	Баландлиги
 wordcraft	06a4b180e1e4	2411beab1ca6	Tanlash	Танлаш
 wordcraft	06a4b180e1e4	57e749c390f2	Ustun	Устун
-wordcraft	06d0237764c1	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	074439c99eec	f3846a89862f	Matn	Матн
 wordcraft	07d76f0ff05e	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	08512e9cd0a9	0dab4873ea25	Koʻrinish	Кўриниш
@@ -1045,11 +1061,12 @@ wordcraft	10e25f9055ab	0e447f4c1d51	Koʻchirish	Кўчириш
 wordcraft	1190052133c7	74304ab19fb2	Yashirish	Яшириш
 wordcraft	1190052133c7	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	1385dd6b30f4	77bda00d103a	Kiritish	Киритиш
+wordcraft	1385dd6b30f4	a964a935b1a4	Yakuniy izoh	Якуний изоҳ
 wordcraft	13cd1fa85eac	1411849c82e8	Sahifa	Саҳифа
 wordcraft	140deefcae4c	96d486c17b08	Boʻlim	Бўлим
 wordcraft	1445bbb6d2c2	f1c3fbefce23	Qaytarish	Қайтариш
 wordcraft	15c75849c9c5	1411849c82e8	Sahifa	Саҳифа
-wordcraft	15c75849c9c5	59c5c88bb960	Eni	Эни
+wordcraft	15c75849c9c5	59c5c88bb960	Kengligi	Кенглиги
 wordcraft	15f6e6e6cbdc	3a483751146d	Oʻchirish	Ўчириш
 wordcraft	15f6e6e6cbdc	dbfb65fb61b0	Uslub	Услуб
 wordcraft	16c19d308269	00205dd6df1a	Imlo	Имло
@@ -1058,6 +1075,7 @@ wordcraft	16e8ad4e16e0	f64b65dff16c	Izoh	Изоҳ
 wordcraft	1736ba957df4	e501b05661ba	Hujjat	Ҳужжат
 wordcraft	177161d67819	e501b05661ba	Hujjat	Ҳужжат
 wordcraft	1819dc76c490	30876a4370f7	Toʻldirish	Тўлдириш
+wordcraft	187257bab5f0	22c284682679	Sozlamalar	Созламалар
 wordcraft	187257bab5f0	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	1a781b204f84	22008f8efd5f	Tenglama	Тенглама
 wordcraft	1a8882bba8bf	e501b05661ba	Hujjat	Ҳужжат
@@ -1083,10 +1101,12 @@ wordcraft	2546a07b2f18	db824e4ebf75	Nusxalash	Нусхалаш
 wordcraft	25f7ea1204f5	a9823ea5f83a	Belgi	Белги
 wordcraft	26adf4442130	28461be1310c	Shrift	Шрифт
 wordcraft	29b762a2fdf5	db27816f5f4f	Olib tashlash	Олиб ташлаш
+wordcraft	2a0bd9d4aec0	01df214425c3	Satr	Сатр
 wordcraft	2a89a77c12b0	563a6a073c7f	Sarlavha	Сарлавҳа
 wordcraft	2ac622758e02	3a483751146d	Oʻchirish	Ўчириш
 wordcraft	2aebd3e2278a	1411849c82e8	Sahifa	Саҳифа
 wordcraft	2b81be12dd3c	0e447f4c1d51	Koʻchirish	Кўчириш
+wordcraft	2c2ecfc998d5	01df214425c3	Satr	Сатр
 wordcraft	2c98a4055fca	702a94cca5e3	Birlashtirish	Бирлаштириш
 wordcraft	2d4f219955ae	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	2db57e574f6e	dbfb65fb61b0	Uslub	Услуб
@@ -1096,12 +1116,14 @@ wordcraft	2fe585a9810d	a870266a8369	Maket	Макет
 wordcraft	3336c5d4f13e	53e06ea2ce86	Qiymat	Қиймат
 wordcraft	33b3c0dfaa0d	e501b05661ba	Hujjat	Ҳужжат
 wordcraft	33b3c0dfaa0d	f3846a89862f	Matn	Матн
+wordcraft	3466387cc9c7	01df214425c3	Satr	Сатр
 wordcraft	352a553f60a8	b21cae9438b4	Yangi	Янги
 wordcraft	358962fb740c	b21cae9438b4	Yangi	Янги
 wordcraft	35f049cf95c6	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	3660cae474b4	94ffc71f6cad	Vositalar	Воситалар
-wordcraft	384645561b72	28ba81d6d079	Tagiga chizish	Тагига чизиш
 wordcraft	3b81c06ca7a3	db27816f5f4f	Olib tashlash	Олиб ташлаш
+wordcraft	3c542c900fc6	01df214425c3	Satr	Сатр
+wordcraft	3ceca9eb923d	01df214425c3	Satr	Сатр
 wordcraft	3ceca9eb923d	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	3e318d214279	a9823ea5f83a	Belgi	Белги
 wordcraft	3e949ac3f42f	00205dd6df1a	Imlo	Имло
@@ -1113,12 +1135,14 @@ wordcraft	4157aa23af2e	db27816f5f4f	Olib tashlash	Олиб ташлаш
 wordcraft	4157aa23af2e	e51a356d8a38	Quyi kolontitul	Қуйи колонтитул
 wordcraft	431666a4ab33	3a483751146d	Oʻchirish	Ўчириш
 wordcraft	4394ded5883c	f9237318d93e	Nom	Ном
+wordcraft	43e2bd1a1783	22c284682679	Sozlamalar	Созламалар
 wordcraft	442931755122	dbfb65fb61b0	Uslub	Услуб
 wordcraft	453a608c5b6f	22008f8efd5f	Tenglama	Тенглама
 wordcraft	453a608c5b6f	3a483751146d	Oʻchirish	Ўчириш
 wordcraft	4796fc9db008	28461be1310c	Shrift	Шрифт
 wordcraft	47e21a06fa66	f3846a89862f	Matn	Матн
 wordcraft	49a50d02fed4	e6eeb59a099a	Saqlash	Сақлаш
+wordcraft	4ab5075cebe3	01df214425c3	Satr	Сатр
 wordcraft	4f8f9d6ccb2a	a870266a8369	Maket	Макет
 wordcraft	505a140f3cc8	db824e4ebf75	Nusxalash	Нусхалаш
 wordcraft	51270823146f	2411beab1ca6	Tanlash	Танлаш
@@ -1140,6 +1164,7 @@ wordcraft	54eee87d1640	0dab4873ea25	Koʻrinish	Кўриниш
 wordcraft	55651e761958	702a94cca5e3	Birlashtirish	Бирлаштириш
 wordcraft	55651e761958	77bda00d103a	Kiritish	Киритиш
 wordcraft	55651e761958	bdea16152cd7	Maydon	Майдон
+wordcraft	580887bddc28	01df214425c3	Satr	Сатр
 wordcraft	580887bddc28	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	58bea0952aa9	3a483751146d	Oʻchirish	Ўчириш
 wordcraft	58bea0952aa9	cbc9f8480beb	Jadval	Жадвал
@@ -1157,9 +1182,10 @@ wordcraft	5e8cd5241010	eef38d75ab40	Yopish	Ёпиш
 wordcraft	5f1b0919e458	e70f7ce0bae5	Oʻlcham	Ўлчам
 wordcraft	5f1b0919e458	f3846a89862f	Matn	Матн
 wordcraft	61255b8af1bc	a9823ea5f83a	Belgi	Белги
-wordcraft	624c828bc0a7	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+wordcraft	624c828bc0a7	7eea88b02eaa	Eksport	Экспорт
 wordcraft	6286532a35d5	cbc9f8480beb	Jadval	Жадвал
 wordcraft	62e0dd7e3f1d	a870266a8369	Maket	Макет
+wordcraft	636d0c715bbc	01df214425c3	Satr	Сатр
 wordcraft	659e9ff81da8	2411beab1ca6	Tanlash	Танлаш
 wordcraft	659e9ff81da8	fa08927df247	Katak	Катак
 wordcraft	677b9d74f2a5	b5c79726c0bb	Koʻrsatish	Кўрсатиш
@@ -1171,7 +1197,7 @@ wordcraft	696041ce6d25	b21cae9438b4	Yangi	Янги
 wordcraft	6bb6d3bc7156	aae8a4e5573f	Qoʻshish	Қўшиш
 wordcraft	6c348120c909	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 wordcraft	6c9a834a79fd	1411849c82e8	Sahifa	Саҳифа
-wordcraft	6c9a834a79fd	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+wordcraft	6c9a834a79fd	7eea88b02eaa	Eksport	Экспорт
 wordcraft	6cc7d90af0ce	77bda00d103a	Kiritish	Киритиш
 wordcraft	6cdcea04f96a	5db33b79e889	Oldingi	Олдинги
 wordcraft	6cdcea04f96a	bdea16152cd7	Maydon	Майдон
@@ -1186,7 +1212,6 @@ wordcraft	74b2704ff759	77bda00d103a	Kiritish	Киритиш
 wordcraft	74b2704ff759	bdea16152cd7	Maydon	Майдон
 wordcraft	74b2704ff759	c8dabcd62138	Sana	Сана
 wordcraft	75332601d8bd	a9823ea5f83a	Belgi	Белги
-wordcraft	7650f7b9a29b	0e447f4c1d51	Koʻchirish	Кўчириш
 wordcraft	7650f7b9a29b	22008f8efd5f	Tenglama	Тенглама
 wordcraft	7653a0ebd8c3	1411849c82e8	Sahifa	Саҳифа
 wordcraft	76cb87537f01	b21cae9438b4	Yangi	Янги
@@ -1196,11 +1221,12 @@ wordcraft	776245672466	66843b3e0d6c	Chizish	Чизиш
 wordcraft	7774842f726a	120fa1fcb00a	Keyingi	Кейинги
 wordcraft	7774842f726a	bdea16152cd7	Maydon	Майдон
 wordcraft	77a6c7afdce9	9ed9c9848dec	Xatboshi	Хатбоши
+wordcraft	79b7add4d6b3	1203aa24b4cd	Sarlavha	Сарлавҳа
 wordcraft	79e1b244c602	f3846a89862f	Matn	Матн
 wordcraft	7aae0f495a39	1411849c82e8	Sahifa	Саҳифа
 wordcraft	7ab3c57250fd	99b65edf1068	Soʻnggi	Сўнгги
 wordcraft	7af0890dc740	22008f8efd5f	Tenglama	Тенглама
-wordcraft	7bec546cb521	3f69a0d43600	Parol	Парол
+wordcraft	7bec546cb521	3f69a0d43600	Parol	Пароль
 wordcraft	7c0adad6f8a4	334098b886d5	Chop etish	Чоп этиш
 wordcraft	7d0018c101df	a870266a8369	Maket	Макет
 wordcraft	7d0018c101df	cbc9f8480beb	Jadval	Жадвал
@@ -1208,18 +1234,19 @@ wordcraft	7d92e0a5b997	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	7f1a6790ce04	77bda00d103a	Kiritish	Киритиш
 wordcraft	7f36ca2cee7e	16bfc3844ea6	Saralash	Саралаш
 wordcraft	809c170d5fc9	66843b3e0d6c	Chizish	Чизиш
-wordcraft	8178419b4d02	90f0067d91fd	Tema	Тема
+wordcraft	8178419b4d02	90f0067d91fd	Mavzu	Мавзу
 wordcraft	81fc403efcc8	74304ab19fb2	Yashirish	Яшириш
 wordcraft	81fc403efcc8	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	81fc403efcc8	dbfb65fb61b0	Uslub	Услуб
 wordcraft	824496f6063a	f9b03ea83621	Parametrlar	Параметрлар
 wordcraft	838bd02f4d4f	1411849c82e8	Sahifa	Саҳифа
+wordcraft	848e93a93a14	01df214425c3	Satr	Сатр
 wordcraft	848e93a93a14	2411beab1ca6	Tanlash	Танлаш
 wordcraft	86d9ed61eb7c	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	8ac1f466ae26	dbfb65fb61b0	Uslub	Услуб
 wordcraft	8c742beeee03	2411beab1ca6	Tanlash	Танлаш
 wordcraft	8c742beeee03	dc63ce231cc7	Diapazon	Диапазон
-wordcraft	8d13cf56f46f	7eea88b02eaa	Eksport qilish	Экспорт қилиш
+wordcraft	8d13cf56f46f	7eea88b02eaa	Eksport	Экспорт
 wordcraft	8fe9491ae75d	120fa1fcb00a	Keyingi	Кейинги
 wordcraft	8fe9491ae75d	96d486c17b08	Boʻlim	Бўлим
 wordcraft	90c1814e5377	22008f8efd5f	Tenglama	Тенглама
@@ -1254,6 +1281,7 @@ wordcraft	9eca7aa28e12	db27816f5f4f	Olib tashlash	Олиб ташлаш
 wordcraft	9f045caa6eb7	cbc9f8480beb	Jadval	Жадвал
 wordcraft	9fa9829dc299	dbfb65fb61b0	Uslub	Услуб
 wordcraft	a08410a112e4	e501b05661ba	Hujjat	Ҳужжат
+wordcraft	a0cc2c579776	a964a935b1a4	Yakuniy izoh	Якуний изоҳ
 wordcraft	a114eb96bcb6	ebcfaa9ca7e3	Tozalash	Тозалаш
 wordcraft	a14016ecaf78	a9823ea5f83a	Belgi	Белги
 wordcraft	a14a9c2fa96e	aae8a4e5573f	Qoʻshish	Қўшиш
@@ -1269,6 +1297,7 @@ wordcraft	a62cde3ac542	dbfb65fb61b0	Uslub	Услуб
 wordcraft	a65f3d2402ad	200c789c095f	Qoʻyish	Қўйиш
 wordcraft	a7f96152d0f9	1411849c82e8	Sahifa	Саҳифа
 wordcraft	a80f9027e3af	b5c79726c0bb	Koʻrsatish	Кўрсатиш
+wordcraft	a82e9dca0a1f	01df214425c3	Satr	Сатр
 wordcraft	a82e9dca0a1f	1411849c82e8	Sahifa	Саҳифа
 wordcraft	a9a46d25e5fe	bae2296ce046	Chekinish	Чекиниш
 wordcraft	a9bb94f721b9	f3846a89862f	Matn	Матн
@@ -1278,6 +1307,7 @@ wordcraft	aaf82dac9960	9a1d3265a8f1	Qorongʻi	Қоронғи
 wordcraft	ab049ba897a6	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	ab2745842cc7	77bda00d103a	Kiritish	Киритиш
 wordcraft	aba8239deb71	120fa1fcb00a	Keyingi	Кейинги
+wordcraft	aba8239deb71	6e4b2a40c30f	Sahifa osti izohi	Саҳифа ости изоҳи
 wordcraft	ac49587200f0	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	ae9e192c6cce	cbc9f8480beb	Jadval	Жадвал
 wordcraft	ae9e192c6cce	f3846a89862f	Matn	Матн
@@ -1287,9 +1317,8 @@ wordcraft	b08a5cd9a892	c8dabcd62138	Sana	Сана
 wordcraft	b102d5492aa0	22008f8efd5f	Tenglama	Тенглама
 wordcraft	b127ad2f5ab9	57e749c390f2	Ustun	Устун
 wordcraft	b46129ad957f	22008f8efd5f	Tenglama	Тенглама
-wordcraft	b4b6c3b291a3	f1c3fbefce23	Qaytarish	Қайтариш
 wordcraft	b67db7b1761d	96d486c17b08	Boʻlim	Бўлим
-wordcraft	b67db7b1761d	f416723069d5	Xossalar	Хоссалар
+wordcraft	b67db7b1761d	f416723069d5	Xususiyatlar	Хусусиятлар
 wordcraft	b76413ed0e29	e22b488316ba	Maxsus imkoniyatlar	Махсус имкониятлар
 wordcraft	b76ccf8a1aaa	77bda00d103a	Kiritish	Киритиш
 wordcraft	b7a05bbe66cb	54a4d726a89e	Soʻz	Сўз
@@ -1303,6 +1332,7 @@ wordcraft	be2641e5d4e4	cbc9f8480beb	Jadval	Жадвал
 wordcraft	bebc1ac96396	28461be1310c	Shrift	Шрифт
 wordcraft	bec1e80f6955	702a94cca5e3	Birlashtirish	Бирлаштириш
 wordcraft	bfe6ea764d8d	57e749c390f2	Ustun	Устун
+wordcraft	bfe6ea764d8d	59c5c88bb960	Kengligi	Кенглиги
 wordcraft	bfe6ea764d8d	cbc9f8480beb	Jadval	Жадвал
 wordcraft	c12b452e4492	563a6a073c7f	Sarlavha	Сарлавҳа
 wordcraft	c23c8dfd5dc5	f3846a89862f	Matn	Матн
@@ -1312,6 +1342,8 @@ wordcraft	c89ef36d6923	cbc9f8480beb	Jadval	Жадвал
 wordcraft	c89ef36d6923	f5cdeffd9fcb	Chap	Чап
 wordcraft	c8bbed1ef041	e70f7ce0bae5	Oʻlcham	Ўлчам
 wordcraft	c8bbed1ef041	fa08927df247	Katak	Катак
+wordcraft	c91f41d65754	702a94cca5e3	Birlashtirish	Бирлаштириш
+wordcraft	c928a23d16e2	6e4b2a40c30f	Sahifa osti izohi	Саҳифа ости изоҳи
 wordcraft	c928a23d16e2	77bda00d103a	Kiritish	Киритиш
 wordcraft	c9672e3a033c	77bda00d103a	Kiritish	Киритиш
 wordcraft	c9cc3dbde53f	9ed9c9848dec	Xatboshi	Хатбоши
@@ -1322,6 +1354,7 @@ wordcraft	cbe71882052e	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 wordcraft	cbe71882052e	c511cf161fc4	Diagramma	Диаграмма
 wordcraft	cc86d5d59d05	e501b05661ba	Hujjat	Ҳужжат
 wordcraft	cc9544153b0f	ecff794db9fa	Maxsus	Махсус
+wordcraft	cd17ea64690c	8cc014b0743c	Ustidan chizilgan	Устидан чизилган
 wordcraft	cd4558833e5e	5303654275dc	Imzo	Имзо
 wordcraft	cdc1e00b97aa	cbc9f8480beb	Jadval	Жадвал
 wordcraft	cdec102564b3	cb575bbc2fcb	Oyna	Ойна
@@ -1336,10 +1369,11 @@ wordcraft	d2ac7eec4bed	fd650cb3e656	Chegara	Чегара
 wordcraft	d31c0e4afd05	1411849c82e8	Sahifa	Саҳифа
 wordcraft	d31c0e4afd05	77bda00d103a	Kiritish	Киритиш
 wordcraft	d31c0e4afd05	bdea16152cd7	Maydon	Майдон
+wordcraft	d32e73e3fbbb	28ba81d6d079	Tagi chizilgan	Таги чизилган
 wordcraft	d33c4babbb7c	c8dabcd62138	Sana	Сана
 wordcraft	d36d4ec2e9b5	7f53aea8537d	Format	Формат
 wordcraft	d39e458dbcaa	bdea16152cd7	Maydon	Майдон
-wordcraft	d478eca20bc6	1203aa24b4cd	Nomi	Номи
+wordcraft	d478eca20bc6	1203aa24b4cd	Sarlavha	Сарлавҳа
 wordcraft	d5946a7cf071	5db33b79e889	Oldingi	Олдинги
 wordcraft	d5aa6364767a	22008f8efd5f	Tenglama	Тенглама
 wordcraft	d68d3ac5b22f	200c789c095f	Qoʻyish	Қўйиш
@@ -1368,6 +1402,7 @@ wordcraft	e8e14e2a2550	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	e99f73eeecf3	28461be1310c	Shrift	Шрифт
 wordcraft	e99f73eeecf3	aae8a4e5573f	Qoʻshish	Қўшиш
 wordcraft	e9ce2aa00a55	57e749c390f2	Ustun	Устун
+wordcraft	e9ce2aa00a55	59c5c88bb960	Kengligi	Кенглиги
 wordcraft	e9e9e018f919	d2993d86bfe9	Yorugʻ	Ёруғ
 wordcraft	ea7a73ac7491	db824e4ebf75	Nusxalash	Нусхалаш
 wordcraft	eeeb72ecc4e0	57e749c390f2	Ustun	Устун
@@ -1387,7 +1422,6 @@ wordcraft	f588f9e4dc29	7d901931f8d3	Formula	Формула
 wordcraft	f6127b48bcb2	200c789c095f	Qoʻyish	Қўйиш
 wordcraft	f71292dee9ee	0ffb3df24b1f	Topish	Топиш
 wordcraft	f7e8915dedab	e501b05661ba	Hujjat	Ҳужжат
-wordcraft	facc5538a2fa	8cc014b0743c	Ustidan chizish	Устидан чизиш
 wordcraft	fc1949187937	b5c79726c0bb	Koʻrsatish	Кўрсатиш
 wordcraft	fcd6c7bd43a1	5db33b79e889	Oldingi	Олдинги
 wordcraft	fd8413a9063b	cce9e6c90281	Qoʻllash	Қўллаш
