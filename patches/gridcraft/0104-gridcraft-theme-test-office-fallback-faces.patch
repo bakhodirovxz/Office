@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 18 Oct 2026 12:00:00 +0500
+Subject: [PATCH 104/104] ui-egui tests: fallback_faces_are_appended_to_every_family ignores the overlay's fallback faces
+
+Patch 0102 appends office-fallback-sans/-mono after every family's script fallbacks; the upstream
+test requires the chain to END with those script fallbacks. Skip the office-fallback keys when comparing.
+---
+ crates/ui-egui/src/theme.rs | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index a707a48..f2ae521 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -793,7 +793,16 @@ mod tests {
+                 return; // no fallback face on this machine (minimal Linux)
+             }
+             for role in [UI, UI_BOLD, CELL, CELL_BOLD, CELL_ITALIC, CELL_BOLD_ITALIC, SERIF, MONO] {
+-                let chain = fonts.families.get(&FontFamily::Name(role.into())).map(Vec::as_slice).unwrap_or_default();
++                // The office overlay appends its own fallback faces after the script fallbacks (patch 0102).
++                let chain: Vec<String> = fonts
++                    .families
++                    .get(&FontFamily::Name(role.into()))
++                    .map(Vec::as_slice)
++                    .unwrap_or_default()
++                    .iter()
++                    .filter(|k| !k.starts_with("office-fallback"))
++                    .cloned()
++                    .collect();
+                 assert!(chain.len() >= fb_keys.len(), "{role} chain too short for its fallback");
+                 let tail = &chain[chain.len() - fb_keys.len()..];
+                 assert_eq!(tail, fb_keys.as_slice(), "{role} must end its chain with the fallback faces");

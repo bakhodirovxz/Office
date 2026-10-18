@@ -793,7 +793,16 @@ mod tests {
                 return; // no fallback face on this machine (minimal Linux)
             }
             for role in [UI, UI_BOLD, CELL, CELL_BOLD, CELL_ITALIC, CELL_BOLD_ITALIC, SERIF, MONO] {
-                let chain = fonts.families.get(&FontFamily::Name(role.into())).map(Vec::as_slice).unwrap_or_default();
+                // The office overlay appends its own fallback faces after the script fallbacks (patch 0102).
+                let chain: Vec<String> = fonts
+                    .families
+                    .get(&FontFamily::Name(role.into()))
+                    .map(Vec::as_slice)
+                    .unwrap_or_default()
+                    .iter()
+                    .filter(|k| !k.starts_with("office-fallback"))
+                    .cloned()
+                    .collect();
                 assert!(chain.len() >= fb_keys.len(), "{role} chain too short for its fallback");
                 let tail = &chain[chain.len() - fb_keys.len()..];
                 assert_eq!(tail, fb_keys.as_slice(), "{role} must end its chain with the fallback faces");
