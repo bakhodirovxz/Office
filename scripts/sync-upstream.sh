@@ -15,7 +15,7 @@
 #               files the queue touches, committed as ONE last patch (mechanical formatting, regenerate on every sync).
 #               That patch is never rebased: a queue that already has one regenerates it even without --fmt.
 #   --to <sha>  new BASE (only with one repo). Default: the newest tag newer than BASE, else origin/HEAD.
-#   --gates     quick = verify-queue + gen-check + lockdiff + deny + cargo check per domain (native + wasm);
+#   --gates     quick = verify-queue + gen-check + lockdiff + deny + cargo check per domain (native + wasm) plus `cargo check --workspace --all-targets` of the upstream tree (tests, examples, benches compile);
 #               full  = quick + release desktop and web builds in scratch (+ nextest when ci/nextest.toml exists).
 #   repos       wordcraft gridcraft deckcraft pdfcraft craft-libs | all. craft-fonts is pinned by patches/craft-fonts/BASE
 #               and moved by hand (never patched).
@@ -321,6 +321,8 @@ else
     [ "$d" = slides ] && export CRAFT_FONTS_DIR="$MAIN/upstream/craft-fonts" || unset CRAFT_FONTS_DIR
     wait_no_rustc; ram_gate 3; t0=$(secs)
     cargo check --locked -j 4 --manifest-path domains/$d/Cargo.toml -p $d-desktop -p $d-cli >"$WORK/check-$d-native.log" 2>&1; rc1=$?
+    # tests too: a new upstream test can stop compiling against our patches (gridcraft 0103, E0615), which a plain check misses
+    cargo check --locked -j 4 --workspace --all-targets --manifest-path upstream/$r/Cargo.toml >>"$WORK/check-$d-native.log" 2>&1 || rc1=1
     wait_no_rustc; ram_gate 3
     ( unset RUSTC_WRAPPER; cargo check --locked -j 4 --manifest-path domains/$d/Cargo.toml -p $d-web --target wasm32-unknown-unknown ) >"$WORK/check-$d-wasm.log" 2>&1; rc2=$?
     echo "$rc1 $rc2 $(elapsed $t0)" > "$WORK/check-$d.rc"
