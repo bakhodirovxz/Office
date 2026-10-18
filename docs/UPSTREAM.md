@@ -26,6 +26,9 @@ scripts/sync-upstream.sh --dry-run --survey all                   # list EVERY c
 scripts/sync-upstream.sh --dry-run --resolve --resolver sonnet gridcraft   # conflicts resolved in scratch, wall time recorded
 scripts/sync-upstream.sh --apply --gates quick wordcraft deckcraft pdfcraft craft-libs   # partial apply by naming repos
 ```
+The `quick` gate's native check also runs `cargo check --workspace --all-targets` on `upstream/<repo>`, so a new upstream test that no longer compiles against
+our patches fails the sync (it was missed once: gridcraft `malformed.rs` reading `Formula` fields, patch 0103).
+
 Options: `--to <sha>` (one repo), `--gates quick|full`, `--fmt` (regenerate the trailing rustfmt patch, below), `--resolver <name>` (recorded in the log). Exit codes: 0 ok, 1 conflict or gate
 failure, 2 preflight or infrastructure.
 
