@@ -814,6 +814,7 @@ Other risks tracked but outside the top 12:
 | MPL | deckcraft links symphonia (MPL-2.0) for audio | **Allow MPL-2.0 for the 16 symphonia crates only** (2026-10-17). They are used unmodified from crates.io, and NOTICE lists them with a source link. This is an exception to BRIEF §5 "permissive only"; no other MPL crate is allowed |
 | i18n fallback | Language shown for strings not yet translated into Uzbek | **uz-Cyrl → ru → en; uz-Latn → en** (2026-10-17) |
 | Update check | pdfcraft's GitHub update check (Help menu) | **Disable** in our builds (2026-10-17). Updates will come from our own channel later |
+| Uzbek UI review | Who reviews the Uzbek UI strings (BRIEF: "reviewed by the owner, not machine-trusted") | **Delegated to the agent** (2026-10-18): "check them yourself; I will report problems found in use". The status is recorded as `reviewed:agent-<model>:<date>`, never as an owner review, so unreviewed-by-a-human rows stay identifiable. **Scope: UI strings only.** The Phase 2 transliteration golden list still needs the owner |
 | Others | B-7…B-14 | Still open: asked again in the Phase 1 report |
 
 ## Sources
