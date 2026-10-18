@@ -8,7 +8,7 @@ ADR Appendix C:
 - A-web (conditional);
 - priority fidelity → mobile → co-editing;
 - no upstream PRs for now.
-**Last updated:** 2026-10-17
+**Last updated:** 2026-10-18
 
 ## Phase 1 progress
 - WP0 done (2026-10-17): `scripts/{env.sh,bootstrap.sh,tools.lock,lib/lock.sh}`. Shared toolchain changed: rustup components `rustfmt` and `clippy` added.
@@ -539,6 +539,24 @@ Upstream HEADs at start of Phase 0:
   - cargo-deny ×5, all green, with the MPL exception for symphonia only.
   - Size budgets.
   - Quarantine of 21 known upstream test failures.
+- **WP6b done (2026-10-18): debug tests of all four apps are green, overlay on, with 54 justified quarantine entries.**
+  - `scripts/ci.sh test <app>` and `test-ours` are wired to cargo-nextest (`ci/nextest.toml`) and `cargo xt quarantine check|filter|selector|apply`.
+    A quarantined test that passes is reported stale (two in a row fail CI); an entry matching no test fails; any other failure fails CI.
+  - Final overlay-on results (passed / failed / quarantined): wordcraft 2748/0/19, gridcraft 1665/0/1, deckcraft 1676/0/4,
+    pdfcraft 3491/0/28 (+1 binary of 3 tests that Windows Defender deletes: `pdfcraft-sign::store_keys`). test-ours: 59 + 64 + 44 + 43 + 71 passed.
+  - Overlay-off baseline: wordcraft 2760/0, gridcraft 1666/0, deckcraft 1678/1 (flaky), pdfcraft 3516/3 (flaky perf).
+  - Quarantine re-validated at the fresh BASE: 12 of 14 Phase 0 pdfcraft entries now pass and are gone; wordcraft's 5 env entries still fail.
+    By class: env 9, flaky 5, brand-overlay 35, i18n-incomplete 5, upstream-bug 0.
+  - Real breakages fixed by carried patches (not quarantined): gridcraft 0103 (new upstream xlsx test vs the shared-formula API) and 0104
+    (fallback-faces test vs the overlay fonts). The sync quick gate now runs `cargo check --all-targets` (docs/UPSTREAM.md).
+  - deckcraft ui-egui crash: not reproduced under nextest (13 runs of the binary, 0 crashes); it still reproduces in-process (6 of 10 direct
+    runs) and was narrowed to `dialogs::spelling_tests` (the two `squiggles_*` tests with any other spelling test, global spell state). Not
+    root-caused; hand-off notes in `docs/phase1/tests.md`.
+  - Timings (debug profile is opt-level 1, so close to release): test run 1.5-9.5 min per app; cold compile 30-90 min per app; first run
+    after the overlay appears 20-60 min. Four avoidable-rebuild causes fixed (cargo run env leak, deckcraft's missing
+    `latin-manifest.txt`, overlay files rewritten, quarantine pass env). sccache gave no measurable help (no A/B). Details: `docs/phase1/tests.md`.
+  - Other fixes: `gen-domain` now carries dev-dependencies (pdf-desktop tests compile); xtask clippy clean.
+  - Open: architect review of `ci/quarantine.toml`; a Defender exclusion for `E:\office-target` (admin) to run `store_keys`.
 - **WP7a/WP8/WP9a designs done.**
   - The font is Noto Sans + Noto Sans Mono, with cmap-verified coverage of ʻ ʼ ўқғҳ ₽.
   - No telemetry was found in any app.
