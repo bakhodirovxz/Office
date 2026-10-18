@@ -812,6 +812,12 @@ apps.** It changes only WP7's patch count (+12) and WP3's files. It is not a rea
 - **Model.** builder.
 - **Parallel / RAM.** A light build.
 
+> **Owner decision 2026-10-18 (option A).**
+> - WP14 does NOT wait for a 7-day-old BASE. The second sync dry run runs now, against the current upstream HEAD,
+>   whatever its distance.
+> - The weekly rebase cost (risk 1) is measured during Phase 2, with one sync per week and a report each time.
+> - Phase 1 is finished completely (all WPs), then the gate report goes out; Phase 2 starts only after "go".
+
 ### WP14. Clean-checkout proof, second sync dry run, docs, final review, gate report
 - **Goal.** The evidence for all four gate items, plus an adversarial review.
 - **Inputs / deps.** All the other WPs. The second dry run needs BASE to be **at least 7 days old**.
