@@ -47,7 +47,10 @@ overlay_prepare() {
   export OFFICE_PRODUCT_NAME=$(sed -n 's/^PRODUCT_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # written into the files we produce (O3)
   export OFFICE_PRODUCT_VERSION=$(sed -n 's/^VERSION=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')   # one product version for every app
   name=$(sed -n 's/^APP_NAME=//p' "$OFFICE_OVERLAY_DIR/overlay.env" | tr -d '\r')
-  sed -e "s|{{APP_NAME}}|$name|g" -e "s|{{FAVICON}}|$OFFICE_OVERLAY_DIR/favicon.ico|g" "$web/index.html.in" > "$web/index.html"
+  # trunk 0.21 mangles an absolute "E:/..." href when the repo is on the same drive ("E:office-target\..."): use a relative one there
+  local fav="$OFFICE_OVERLAY_DIR/favicon.ico"
+  [ "$(cygpath -m "$PWD/$web" | cut -c1-2)" = "$(cygpath -m "$fav" | cut -c1-2)" ] && fav=$(realpath --relative-to="$(cygpath -u "$PWD/$web")" "$(cygpath -u "$fav")")
+  sed -e "s|{{APP_NAME}}|$name|g" -e "s|{{FAVICON}}|$fav|g" "$web/index.html.in" > "$web/index.html"
 }
 
 run() {
