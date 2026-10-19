@@ -1,0 +1,150 @@
+=== job test gridcraft gridcraft
+overlay sheets: written to E:/office-target/p1/overlay\sheets
+gridcraft uz-latn: 447 entries (uz-latn=447) -> E:/office-target/p1/overlay/_i18n\gridcraft\catalog-uz-latn.tsv
+gridcraft uz-cyrl: 447 entries (uz-cyrl=447) -> E:/office-target/p1/overlay/_i18n\gridcraft\catalog-uz-cyrl.tsv
+--- quarantine-check: xtq quarantine check
+OK, 41 entries
+--- quarantine-check: exit 0 in 1s
+--- quarantine-gridcraft: xtq quarantine apply gridcraft
+   Compiling gridcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\gridcraft\crates\ui-egui)
+   Compiling gridcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\gridcraft\apps\gridcraft)
+   Compiling gridcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\gridcraft\apps\gridcraft-web)
+    Finished `test` profile [optimized + debuginfo] target(s) in 24m 20s
+────────────
+ Nextest run ID 31cc9bf9-2231-4533-8fd4-4ee6c7e4f469 with nextest profile: quarantine
+    Starting 1 test across 1 binary (95 tests and 83 binaries skipped)
+────────────
+     Summary [   0.165s] 1 test run: 0 passed, 1 failed, 95 skipped
+error: test run failed
+gridcraft: quarantined 1 (still failing 1, stale 0, missing 0)
+--- quarantine-gridcraft: exit 0 in 1465s
+--- nextest-gridcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-gridcraft/nextest-ci.toml --manifest-path upstream/gridcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-gridcraft --build-jobs 4 --test-threads 4 -E not ((binary_id(=gridcraft-ui-egui) & test(=i18n::tests::translations_are_unique_and_preserve_unknown_text)))
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.29s
+────────────
+ Nextest run ID 950c6a67-ea15-4b62-99d8-1bb7d3272b1e with nextest profile: ci
+    Starting 1665 tests across 84 binaries (2 tests skipped)
+        FAIL [   0.122s] ( 868/1665) gridcraft-ui-egui theme::tests::fallback_faces_are_appended_to_every_family
+  stdout ───
+
+    running 1 test
+    test theme::tests::fallback_faces_are_appended_to_every_family ... FAILED
+
+    failures:
+
+    failures:
+        theme::tests::fallback_faces_are_appended_to_every_family
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 95 filtered out; finished in 0.10s
+
+  stderr ───
+
+    thread 'theme::tests::fallback_faces_are_appended_to_every_family' (11004) panicked at crates\ui-egui\src\theme.rs:799:17:
+    assertion `left == right` failed: ui must end its chain with the fallback faces
+      left: ["sys-cjk-han-ja", "sys-cjk-hangul", "sys-thai", "sys-hebrew", "sys-symbols", "office-fallback-sans"]
+     right: ["sys-cjk-han-zh", "sys-cjk-han-ja", "sys-cjk-hangul", "sys-thai", "sys-hebrew", "sys-symbols"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [ 216.101s] 1665 tests run: 1664 passed, 1 failed, 2 skipped
+        FAIL [   0.122s] ( 868/1665) gridcraft-ui-egui theme::tests::fallback_faces_are_appended_to_every_family
+  stdout ───
+
+    running 1 test
+    test theme::tests::fallback_faces_are_appended_to_every_family ... FAILED
+
+    failures:
+
+    failures:
+        theme::tests::fallback_faces_are_appended_to_every_family
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 95 filtered out; finished in 0.10s
+
+  stderr ───
+
+    thread 'theme::tests::fallback_faces_are_appended_to_every_family' (11004) panicked at crates\ui-egui\src\theme.rs:799:17:
+    assertion `left == right` failed: ui must end its chain with the fallback faces
+      left: ["sys-cjk-han-ja", "sys-cjk-hangul", "sys-thai", "sys-hebrew", "sys-symbols", "office-fallback-sans"]
+     right: ["sys-cjk-han-zh", "sys-cjk-han-ja", "sys-cjk-hangul", "sys-thai", "sys-hebrew", "sys-symbols"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+--- nextest-gridcraft: exit 100 in 304s
+--- doctests-gridcraft: cargo test --doc --workspace --manifest-path upstream/gridcraft/Cargo.toml -j 4
+   Compiling gridcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\gridcraft\crates\ui-egui)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 09s
+   Doc-tests gridcraft_calc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_chart
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_formula
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_functions
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_model
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_numfmt
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_pdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gridcraft_xlsx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+--- doctests-gridcraft: exit 0 in 80s
+=== test gridcraft: fail (exit 1)
+summary: E:/office-target/p1/ci/gc-on/summary.md
+done

@@ -1,0 +1,355 @@
+=== job test pdfcraft pdfcraft
+--- quarantine-check: xtq quarantine check
+OK, 30 entries
+--- quarantine-check: exit 0 in 1s
+--- quarantine-pdfcraft: xtq quarantine apply pdfcraft
+pdfcraft: quarantined 0 (still failing 0, stale 0, missing 0)
+--- quarantine-pdfcraft: exit 0 in 0s
+--- nextest-pdfcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-pdfcraft/nextest-ci.toml --manifest-path upstream/pdfcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-pdfcraft --build-jobs 4 --test-threads 4 -E not (binary_id(=pdfcraft-sign::store_keys))
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+   Compiling pdfcraft-sign v0.8.0 (C:\Users\uge226\Desktop\office\upstream\pdfcraft\crates\sign)
+    Finished `test` profile [optimized + debuginfo] target(s) in 53.91s
+────────────
+ Nextest run ID 1b5c1c16-3022-4819-85ff-432404ccaaab with nextest profile: ci
+    Starting 3519 tests across 133 binaries (16 tests and 1 binary skipped)
+        FAIL [  11.612s] (1170/3519) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+  stdout ───
+
+    running 1 test
+    test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... FAILED
+
+    failures:
+
+    failures:
+        tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 274 filtered out; finished in 11.53s
+
+  stderr ───
+
+    thread 'tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget' (7764) panicked at crates\engine\src\tests.rs:4204:5:
+    ["The form's scripts were stopped: the scripts took more than 3 seconds; 8 more were skipped"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [  23.087s] (3120/3519) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+  stdout ───
+
+    running 1 test
+    test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+    failures:
+
+    failures:
+        panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 22.78s
+
+  stderr ───
+    PERF comments round 1: avg frame 74.028159ms, worst 145.504ms
+    PERF comments round 2: avg frame 64.43543ms, worst 154.4824ms
+    PERF comments round 3: avg frame 62.011842ms, worst 193.8788ms
+
+    thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (1492) panicked at crates\ui-egui\tests\perf.rs:138:9:
+    comments: average frame 62.011842ms
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [  40.616s] (3215/3519) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+  stdout ───
+
+    running 1 test
+    test scrolling_a_500_page_document_stays_within_the_frame_budget ... FAILED
+
+    failures:
+
+    failures:
+        scrolling_a_500_page_document_stays_within_the_frame_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 40.45s
+
+  stderr ───
+    PERF open 1.0969295s
+    PERF scroll round 1: avg frame 70.867621ms, worst 191.2568ms
+    PERF scroll round 2: avg frame 54.83983ms, worst 210.6858ms
+    PERF scroll round 3: avg frame 70.726576ms, worst 152.7718ms
+
+    thread 'scrolling_a_500_page_document_stays_within_the_frame_budget' (13384) panicked at crates\ui-egui\tests\perf.rs:114:5:
+    average frame 54.83983ms
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [ 332.673s] 3519 tests run: 3516 passed (1 slow), 3 failed, 16 skipped
+        FAIL [  11.612s] (1170/3519) pdfcraft-engine tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+  stdout ───
+
+    running 1 test
+    test tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget ... FAILED
+
+    failures:
+
+    failures:
+        tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 274 filtered out; finished in 11.53s
+
+  stderr ───
+
+    thread 'tests::hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget' (7764) panicked at crates\engine\src\tests.rs:4204:5:
+    ["The form's scripts were stopped: the scripts took more than 3 seconds; 8 more were skipped"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [  23.087s] (3120/3519) pdfcraft-ui-egui::perf panels_with_hundreds_of_items_stay_within_the_frame_budget
+  stdout ───
+
+    running 1 test
+    test panels_with_hundreds_of_items_stay_within_the_frame_budget ... FAILED
+
+    failures:
+
+    failures:
+        panels_with_hundreds_of_items_stay_within_the_frame_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 22.78s
+
+  stderr ───
+    PERF comments round 1: avg frame 74.028159ms, worst 145.504ms
+    PERF comments round 2: avg frame 64.43543ms, worst 154.4824ms
+    PERF comments round 3: avg frame 62.011842ms, worst 193.8788ms
+
+    thread 'panels_with_hundreds_of_items_stay_within_the_frame_budget' (1492) panicked at crates\ui-egui\tests\perf.rs:138:9:
+    comments: average frame 62.011842ms
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [  40.616s] (3215/3519) pdfcraft-ui-egui::perf scrolling_a_500_page_document_stays_within_the_frame_budget
+  stdout ───
+
+    running 1 test
+    test scrolling_a_500_page_document_stays_within_the_frame_budget ... FAILED
+
+    failures:
+
+    failures:
+        scrolling_a_500_page_document_stays_within_the_frame_budget
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 40.45s
+
+  stderr ───
+    PERF open 1.0969295s
+    PERF scroll round 1: avg frame 70.867621ms, worst 191.2568ms
+    PERF scroll round 2: avg frame 54.83983ms, worst 210.6858ms
+    PERF scroll round 3: avg frame 70.726576ms, worst 152.7718ms
+
+    thread 'scrolling_a_500_page_document_stays_within_the_frame_budget' (13384) panicked at crates\ui-egui\tests\perf.rs:114:5:
+    average frame 54.83983ms
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+--- nextest-pdfcraft: exit 100 in 428s
+--- doctests-pdfcraft: cargo test --doc --workspace --manifest-path upstream/pdfcraft/Cargo.toml -j 4
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+    Finished `test` profile [optimized + debuginfo] target(s) in 9.46s
+   Doc-tests pdfcraft_a11y
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_annot
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_audit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_automation
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_compare
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_content
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_cos
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_create
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_crypt
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_edit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_export
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_filters
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_fonts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_forms
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_geom
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_js
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_measure
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_model
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_ocr
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_optimize
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_oracle
+
+running 1 test
+test crates\oracle\src\lib.rs - (line 15) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 2.84s; merged doctests compilation took 1.86s
+   Doc-tests pdfcraft_organize
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_platform
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_preflight
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_print
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_redact
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_sign
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_testkit
+
+running 2 tests
+test crates\testkit\src\lib.rs - (line 13) ... ok
+test crates\testkit\src\lib.rs - Pdf::next_obj (line 89) ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+all doctests ran in 1.37s; merged doctests compilation took 0.90s
+   Doc-tests pdfcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_xfa
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pdfcraft_xfdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+--- doctests-pdfcraft: exit 0 in 46s
+=== test pdfcraft: fail (exit 1)
+summary: E:/office-target/p1/ci/pc-off3/summary.md

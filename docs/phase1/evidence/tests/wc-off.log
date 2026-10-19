@@ -1,0 +1,348 @@
+=== job test wordcraft wordcraft
+waiting for RAM: free 3108400 KB < 3145728 KB
+waiting for RAM: free 3012556 KB < 3145728 KB
+waiting for RAM: free 2818868 KB < 3145728 KB
+waiting for RAM: free 2144820 KB < 3145728 KB
+waiting for RAM: free 2691864 KB < 3145728 KB
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+waiting for build lock
+--- quarantine-check: cargo xt quarantine check
+OK, 34 entries
+--- quarantine-wordcraft: cargo xt quarantine apply wordcraft
+   Compiling getrandom v0.3.4
+   Compiling regex-syntax v0.8.11
+   Compiling fearless_simd v0.4.1
+   Compiling alloc-stdlib v0.2.4
+   Compiling brotli-decompressor v5.0.3
+   Compiling wordcraft-docx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\docx)
+   Compiling windows-sys v0.61.2
+   Compiling wuff v0.2.9
+   Compiling vello_common v0.2.0
+   Compiling wordcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\fonts)
+   Compiling glifo v0.3.0
+   Compiling regex-automata v0.4.18
+   Compiling vello_cpu v0.2.0
+   Compiling wordcraft-layout v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\layout)
+   Compiling tempfile v3.27.0
+   Compiling wordcraft-formats v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\formats)
+   Compiling rand_core v0.9.5
+   Compiling regex v1.13.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling quick-error v1.2.3
+   Compiling wait-timeout v0.2.1
+   Compiling bit-vec v0.8.0
+   Compiling bit-set v0.8.0
+   Compiling rusty-fork v0.3.1
+   Compiling rand_chacha v0.9.0
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.5
+   Compiling wordcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\pdf)
+   Compiling unarray v0.1.4
+   Compiling proptest v1.11.0
+   Compiling windows-core v0.62.2
+   Compiling windows-future v0.3.2
+   Compiling windows-collections v0.3.2
+   Compiling windows-numerics v0.3.1
+   Compiling vello_common v0.1.0
+   Compiling windows v0.62.2
+   Compiling wgpu-types v30.0.1
+   Compiling wordcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\render)
+   Compiling vello_cpu v0.1.0
+   Compiling wordcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\engine)
+   Compiling zerovec-derive v0.11.6
+   Compiling zerovec v0.11.8
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling displaydoc v0.2.7
+   Compiling pin-project-lite v0.2.17
+   Compiling tracing-core v0.1.36
+   Compiling wordcraft-control-key v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\control-key)
+   Compiling tracing v0.1.44
+   Compiling windows-sys v0.52.0
+   Compiling smol_str v0.2.2
+   Compiling dpi v0.1.2
+   Compiling cursor-icon v1.2.0
+   Compiling winit v0.30.13
+   Compiling tinystr v0.8.4
+   Compiling writeable v0.6.4
+   Compiling litemap v0.8.3
+   Compiling icu_locale_core v2.3.0
+   Compiling zerotrie v0.2.5
+   Compiling potential_utf v0.1.6
+   Compiling utf8_iter v1.0.4
+   Compiling icu_collections v2.3.0
+   Compiling icu_provider v2.3.1
+   Compiling epaint v0.36.2
+   Compiling wordcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\ui-egui)
+   Compiling icu_properties_data v2.3.0
+   Compiling icu_normalizer_data v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling icu_properties v2.3.0
+   Compiling egui v0.36.2
+   Compiling idna_adapter v1.2.2
+   Compiling windows_x86_64_gnu v0.53.1
+   Compiling percent-encoding v2.3.2
+   Compiling form_urlencoded v1.2.2
+   Compiling windows-targets v0.53.5
+   Compiling idna v1.1.0
+   Compiling wordcraft-zotero v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\zotero)
+   Compiling wordcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\mcp)
+   Compiling error-code v3.4.0
+   Compiling clipboard-win v5.4.1
+   Compiling url v2.5.8
+   Compiling windows-sys v0.60.2
+   Compiling webbrowser v1.2.4
+   Compiling winresource v0.1.31
+   Compiling wordcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\apps\wordcraft)
+   Compiling phf_shared v0.13.1
+   Compiling arboard v3.6.1
+   Compiling phf_generator v0.13.1
+   Compiling rfd v0.17.2
+   Compiling craft-print v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5)
+   Compiling fearless_simd v1.1.0
+   Compiling hayro-ccitt v0.4.0
+   Compiling pollster v0.4.0
+   Compiling phf_macros v0.13.1
+   Compiling craft-ui v0.1.0 (https://github.com/storytold/craft-libs?rev=d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d#d27646a5)
+   Compiling hayro-jpeg2000 v0.3.5
+   Compiling brotli v8.0.4
+   Compiling hayro-jbig2 v0.3.1
+   Compiling hayro-postscript v0.1.0
+   Compiling hayro-ccitt v0.3.0
+   Compiling hayro-cmap v0.1.0
+   Compiling phf v0.13.1
+   Compiling wordcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\apps\wordcraft-cli)
+   Compiling hayro-syntax v0.7.2
+   Compiling gpu-allocator v0.28.0
+   Compiling accesskit_windows v0.32.1
+   Compiling wgpu-hal v30.0.1
+   Compiling accesskit_winit v0.32.2
+   Compiling egui-winit v0.36.2
+   Compiling hayro-interpret v0.7.0
+   Compiling wordcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\apps\wordcraft-web)
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling wgpu-core v30.0.1
+   Compiling wgpu v30.0.1
+   Compiling egui-wgpu v0.36.2
+   Compiling egui_kittest v0.36.2
+   Compiling eframe v0.36.2
+   Compiling wordcraft-proof v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\proof)
+   Compiling wordcraft-doc v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\doc)
+   Compiling wordcraft-docbin v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\docbin)
+   Compiling wordcraft-metafile v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\metafile)
+   Compiling xtask v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\xtask)
+   Compiling wordcraft-geom v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\geom)
+    Finished `test` profile [optimized + debuginfo] target(s) in 44m 00s
+────────────
+ Nextest run ID 424d5a20-7f77-4c88-a25f-f8973e3c39a1 with nextest profile: quarantine
+    Starting 5 tests across 3 binaries (594 tests and 58 binaries skipped)
+────────────
+     Summary [  10.004s] 5 tests run: 0 passed, 5 failed, 594 skipped
+error: test run failed
+error: E:/office-target/p1/upstream-wordcraft\nextest/quarantine/junit.xml: Системе не удается найти указанный путь. (os error 3) (nextest exit Some(100): infrastructure error)
+--- nextest-wordcraft: cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --manifest-path upstream/wordcraft/Cargo.toml --build-jobs 4 --test-threads 4 -E not ((binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_are_drawn_in_colour)) | (binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_keep_their_colours_on_a_dark_page)) | (binary_id(=wordcraft-ui-egui) & test(=keys::tests::alt_numpad_code_types_its_character_without_keytips)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=page_break_from_the_menu_adds_a_page)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=section_break_from_the_menu_splits_sections)))
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.37s
+────────────
+ Nextest run ID e1040ec9-de20-4dcd-a7ff-ff27e9296016 with nextest profile: ci
+    Starting 2762 tests across 61 binaries (7 tests skipped)
+        FAIL [   0.042s] (1278/2762) wordcraft-fonts fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name
+  stdout ───
+
+    running 1 test
+    test fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name ... FAILED
+
+    failures:
+
+    failures:
+        fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name' (24828) panicked at crates\fonts\src\tests_sysfonts.rs:247:5:
+    assertion failed: db.fallback_for(thai, latin.id()).is_none()
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.057s] (1279/2762) wordcraft-fonts fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load
+  stdout ───
+
+    running 1 test
+    test fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load ... FAILED
+
+    failures:
+
+    failures:
+        fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.04s
+
+  stderr ───
+
+    thread 'fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load' (16864) panicked at crates\fonts\src\tests_sysfonts.rs:166:5:
+    no bundled Thai font
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [ 250.504s] 2762 tests run: 2760 passed, 2 failed, 7 skipped
+        FAIL [   0.042s] (1278/2762) wordcraft-fonts fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name
+  stdout ───
+
+    running 1 test
+    test fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name ... FAILED
+
+    failures:
+
+    failures:
+        fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name' (24828) panicked at crates\fonts\src\tests_sysfonts.rs:247:5:
+    assertion failed: db.fallback_for(thai, latin.id()).is_none()
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.057s] (1279/2762) wordcraft-fonts fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load
+  stdout ───
+
+    running 1 test
+    test fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load ... FAILED
+
+    failures:
+
+    failures:
+        fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.04s
+
+  stderr ───
+
+    thread 'fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load' (16864) panicked at crates\fonts\src\tests_sysfonts.rs:166:5:
+    no bundled Thai font
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+--- doctests-wordcraft: cargo test --doc --workspace --manifest-path upstream/wordcraft/Cargo.toml -j 4
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.45s
+   Doc-tests wordcraft_control_key
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_doc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_docbin
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_docx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_fonts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_formats
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_geom
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_layout
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_metafile
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_pdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_proof
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_zotero
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+=== test wordcraft: fail (exit 1)
+summary: E:/office-target/p1/ci/wc-off/summary.md
+done

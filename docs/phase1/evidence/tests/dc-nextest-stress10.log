@@ -1,0 +1,468 @@
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft)
+   Compiling deckcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-web)
+   Compiling deckcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-cli)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+    Finished `test` profile [optimized + debuginfo] target(s) in 16m 51s
+────────────
+ Nextest run ID 1f64360a-923c-4130-917a-4857d4c1e442 with nextest profile: ci
+    Starting 211 tests across 1 binary (4 tests and 59 binaries skipped)
+────────────
+ Stress test iteration 1/10 (00:00:00 elapsed so far, 10 iterations remaining)
+        FAIL [   0.219s] [ 1/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.13s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (12208) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  22.633s] iteration 1/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 2/10 (00:00:22 elapsed so far, 9 iterations remaining)
+        FAIL [   0.225s] [ 2/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.14s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (18056) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  22.535s] iteration 2/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 3/10 (00:00:45 elapsed so far, 8 iterations remaining)
+        FAIL [   0.283s] [ 3/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.18s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (20976) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  23.440s] iteration 3/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 4/10 (00:01:08 elapsed so far, 7 iterations remaining)
+        FAIL [   0.260s] [ 4/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.16s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (19128) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  22.349s] iteration 4/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 5/10 (00:01:30 elapsed so far, 6 iterations remaining)
+        FAIL [   0.250s] [ 5/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.16s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (16448) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  23.575s] iteration 5/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 6/10 (00:01:54 elapsed so far, 5 iterations remaining)
+        FAIL [   0.259s] [ 6/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.18s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (20380) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  21.825s] iteration 6/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 7/10 (00:02:16 elapsed so far, 4 iterations remaining)
+        FAIL [   0.230s] [ 7/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.15s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (21656) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  23.930s] iteration 7/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 8/10 (00:02:40 elapsed so far, 3 iterations remaining)
+        FAIL [   0.279s] [ 8/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.19s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (24920) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  24.228s] iteration 8/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 9/10 (00:03:04 elapsed so far, 2 iterations remaining)
+        FAIL [   0.282s] [ 9/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.20s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (15800) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  21.857s] iteration 9/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+ Stress test iteration 10/10 (00:03:26 elapsed so far, 1 iteration remaining)
+        FAIL [   0.294s] [10/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.19s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (13756) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  22.889s] iteration 10/10: 211 tests run: 210 passed, 1 failed, 4 skipped
+────────────
+     Summary [ 229.261s] 10/10 stress run iterations: 0 passed, 10 failed
+        FAIL [   0.219s] [ 1/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.13s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (12208) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.225s] [ 2/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.14s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (18056) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.283s] [ 3/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.18s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (20976) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.260s] [ 4/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.16s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (19128) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.250s] [ 5/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.16s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (16448) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.259s] [ 6/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.18s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (20380) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.230s] [ 7/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.15s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (21656) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.279s] [ 8/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.19s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (24920) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.282s] [ 9/10] (119/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.20s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (15800) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.294s] [10/10] (120/211) deckcraft-ui-egui replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+  stdout ───
+
+    running 1 test
+    test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+
+    failures:
+
+    failures:
+        replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 214 filtered out; finished in 0.19s
+
+  stderr ───
+
+    thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (13756) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+    assertion `left == right` failed
+      left: None
+     right: Some("replaceFonts")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

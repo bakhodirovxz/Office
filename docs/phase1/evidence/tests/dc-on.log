@@ -1,0 +1,257 @@
+=== job test deckcraft deckcraft
+overlay slides: written to E:/office-target/p1/overlay\slides
+deckcraft uz-latn: 389 entries (uz-latn=389) -> E:/office-target/p1/overlay/_i18n\deckcraft\catalog-uz-latn.tsv
+deckcraft uz-cyrl: 389 entries (uz-cyrl=389) -> E:/office-target/p1/overlay/_i18n\deckcraft\catalog-uz-cyrl.tsv
+--- quarantine-check: xtq quarantine check
+OK, 42 entries
+--- quarantine-check: exit 0 in 1s
+--- quarantine-deckcraft: xtq quarantine apply deckcraft
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-format v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\format)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling deckcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-cli)
+   Compiling deckcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft)
+   Compiling deckcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-web)
+    Finished `test` profile [optimized + debuginfo] target(s) in 20m 09s
+────────────
+ Nextest run ID 48237923-3bd5-4f70-9b08-485f7a4446bc with nextest profile: quarantine
+    Starting 4 tests across 2 binaries (242 tests and 58 binaries skipped)
+────────────
+     Summary [   4.145s] 4 tests run: 2 passed, 2 failed, 242 skipped
+error: test run failed
+deckcraft: quarantined 4 (still failing 2, passed-flaky 1, stale 1, missing 0)
+  quarantine stale: replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces passes now; remove the entry
+--- quarantine-deckcraft: exit 0 in 1220s
+--- nextest-deckcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-deckcraft/nextest-ci.toml --manifest-path upstream/deckcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-deckcraft --build-jobs 4 --test-threads 4 -E not ((binary_id(=deckcraft-ui-egui) & test(=replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces)) | (binary_id(=deckcraft-ui-egui) & test(=backstage::tests::every_page_renders)) | (binary_id(=deckcraft-ui-egui) & test(=menus::tests::palette_has_one_export_entry_that_opens_the_dialog)) | (binary_id(=deckcraft::bin/deckcraft) & test(=control_server::tests::blocked_ui_times_out_and_full_queue_is_busy)))
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling deckcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-cli)
+   Compiling deckcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-web)
+   Compiling deckcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft)
+    Finished `test` profile [optimized + debuginfo] target(s) in 19m 15s
+────────────
+ Nextest run ID e69b2cf8-226f-4534-88f4-95c5094d8ed2 with nextest profile: ci
+    Starting 1676 tests across 60 binaries (10 tests skipped)
+        FAIL [   0.157s] (1011/1676) deckcraft-pdf tests::metadata_retains_values_and_omits_blank_fields
+  stdout ───
+
+    running 1 test
+    test tests::metadata_retains_values_and_omits_blank_fields ... FAILED
+
+    failures:
+
+    failures:
+        tests::metadata_retains_values_and_omits_blank_fields
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.13s
+
+  stderr ───
+
+    thread 'tests::metadata_retains_values_and_omits_blank_fields' (25216) panicked at crates\pdf\src\tests.rs:96:5:
+    assertion `left == right` failed
+      left: Some([83, 117, 105, 116, 101])
+     right: Some([68, 101, 99, 107, 67, 114, 97, 102, 116])
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [ 103.304s] 1676 tests run: 1675 passed, 1 failed, 10 skipped
+        FAIL [   0.157s] (1011/1676) deckcraft-pdf tests::metadata_retains_values_and_omits_blank_fields
+  stdout ───
+
+    running 1 test
+    test tests::metadata_retains_values_and_omits_blank_fields ... FAILED
+
+    failures:
+
+    failures:
+        tests::metadata_retains_values_and_omits_blank_fields
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.13s
+
+  stderr ───
+
+    thread 'tests::metadata_retains_values_and_omits_blank_fields' (25216) panicked at crates\pdf\src\tests.rs:96:5:
+    assertion `left == right` failed
+      left: Some([83, 117, 105, 116, 101])
+     right: Some([68, 101, 99, 107, 67, 114, 97, 102, 116])
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+--- nextest-deckcraft: exit 100 in 1303s
+--- doctests-deckcraft: cargo test --doc --workspace --manifest-path upstream/deckcraft/Cargo.toml -j 4
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-format v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\format)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4m 28s
+   Doc-tests deckcraft_anim
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_av1
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_bitstream
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_color
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_fonts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_format
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_geom
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_h264
+
+running 1 test
+test crates\h264\src\lib.rs - (line 7) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 3.08s; merged doctests compilation took 1.96s
+   Doc-tests deckcraft_hevc
+
+running 1 test
+test crates\hevc\src\lib.rs - (line 9) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 2.75s; merged doctests compilation took 1.83s
+   Doc-tests deckcraft_isobmff
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_matroska
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_media
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_metafile
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_model
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_ogg
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_opus
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_pdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_pptx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_text
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_vp9
+
+running 1 test
+test crates\vp9\src\lib.rs - (line 12) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 1.96s; merged doctests compilation took 1.14s
+--- doctests-deckcraft: exit 0 in 289s
+=== test deckcraft: fail (exit 1)
+summary: E:/office-target/p1/ci/dc-on/summary.md
+done

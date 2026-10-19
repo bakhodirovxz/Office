@@ -1,0 +1,113 @@
+overlay slides: written to E:/office-target/p1/overlay\slides
+deckcraft uz-latn: 389 entries (uz-latn=389) -> E:/office-target/p1/overlay/_i18n\deckcraft\catalog-uz-latn.tsv
+deckcraft uz-cyrl: 389 entries (uz-cyrl=389) -> E:/office-target/p1/overlay/_i18n\deckcraft\catalog-uz-cyrl.tsv
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 59s
+     Running unittests src\lib.rs (E:/office-target/p1/upstream-deckcraft\debug\deps\deckcraft_ui_egui-06b355d5dfff7ace.exe)
+
+running 68 tests
+test backstage::tests::a_file_that_cant_be_opened_says_why ... ok
+test backstage::tests::alt_f_arrows_enter_and_esc_drive_the_side_menu ... ok
+test backstage::tests::close_closes_and_asks_about_unsaved_changes ... ok
+test backstage::tests::ctrl_w_asks_before_closing_unsaved_changes ... ok
+test backstage::tests::every_page_renders ... FAILED
+test backstage::tests::info_keeps_a_property_draft_when_another_field_is_clicked ... ok
+test backstage::tests::info_saves_a_property_draft_when_save_is_clicked ... ok
+test backstage::tests::info_shows_and_edits_the_properties ... ok
+test backstage::tests::new_creates_a_presentation ... ok
+test backstage::tests::new_template_opens_a_starter_deck ... ok
+test backstage::tests::open_lists_recent_files_and_opens_one ... ok
+test backstage::tests::page_ids_round_trip_and_unknown_ids_are_refused ... ok
+test backstage::tests::print_previews_pages_and_prints_a_pdf ... ok
+test backstage::tests::print_slides_follow_the_settings ... ok
+test backstage::tests::save_as_and_export_run_the_file_commands ... ok
+test backstage::tests::the_file_tab_opens_the_backstage_and_esc_or_back_returns ... ok
+test backstage::tests::the_start_screen_is_file_home ... ok
+test canvas::ruler_tests::tabs_dialog_sets_clears_and_applies_on_ok ... ok
+test datetime_tests::cancel_closes_the_dialog_without_a_date ... ok
+test datetime_tests::insert_opens_the_dialog_and_ok_inserts_one_field ... ok
+test dialogs::alt_text_tests::decorative_starts_checked_only_when_every_shape_is ... ok
+test dialogs::font_dialog_tests::command_t_opens_the_font_dialog_and_cancel_keeps_the_text ... ok
+test dialogs::font_dialog_tests::font_button_applies_bold_from_the_dialog ... ok
+test dialogs::paragraph_dialog_tests::paragraph_button_aligns_text_in_one_undo ... ok
+test dialogs::paragraph_dialog_tests::tabs_from_paragraph_applies_a_stop_and_returns ... ok
+test dialogs::photo_album_tests::create_inserts_the_album_in_one_step ... ok
+test dialogs::photo_album_tests::create_with_nothing_keeps_the_dialog ... ok
+test dialogs::photo_album_tests::insert_ribbon_opens_the_dialog_without_editing ... ok
+test dialogs::photo_album_tests::update_reflows_the_open_album ... ok
+test dialogs::size_position_tests::lock_aspect_from_the_dialog_scales_height ... ok
+test dialogs::size_position_tests::size_button_sets_width_in_one_undo ... ok
+test dialogs::spelling_tests::notes_menu_language_dialog_and_repeated_words ... ok
+test dialogs::spelling_tests::spelling_dialog_changes_and_ignores_words ... ok
+test dialogs::spelling_tests::squiggles_in_table_cells_and_notes_and_on_the_ui_thread ... ok
+test dialogs::spelling_tests::squiggles_mark_misspelt_words_in_the_background ... ok
+test dialogs::tests::a_text_span_reports_the_link_it_covers ... ok
+test dialogs::tests::actions_this_dialog_does_not_edit_survive_ok ... ok
+test dialogs::tests::export_dialog_writes_an_animated_gif ... ok
+test dialogs::tests::no_link_opens_as_a_new_web_address ... ok
+test dialogs::tests::the_open_dialog_reads_the_caret_word_and_the_shape_click ... ok
+test dialogs::tests::web_email_and_slide_links_fill_the_dialog ... ok
+test dialogs::theme_colors_tests::a_bad_hex_keeps_the_dialog_open ... ok
+test dialogs::theme_colors_tests::cancel_closes_without_editing ... ok
+test dialogs::theme_colors_tests::customize_colors_opens_from_the_design_tab ... ok
+test dialogs::theme_colors_tests::save_applies_the_name_and_one_colour ... ok
+test dialogs::theme_colors_tests::typing_a_hex_replaces_accent_1 ... ok
+test dialogs::theme_fonts_tests::a_blank_heading_keeps_the_dialog_open ... ok
+test dialogs::theme_fonts_tests::cancel_closes_without_editing ... ok
+test dialogs::theme_fonts_tests::customize_fonts_opens_from_the_design_tab ... ok
+test dialogs::theme_fonts_tests::save_applies_the_name_and_both_faces ... ok
+test dialogs::theme_fonts_tests::typing_a_name_replaces_the_scheme_name ... ok
+test dialogs::trim_media_tests::trim_dialog_reads_the_selected_clip ... ok
+test dialogs::trim_media_tests::trim_seconds_round_trip_the_stored_milliseconds ... ok
+test dialogs::zoom_tests::zoom_percent_accepts_a_number_and_clamps ... ok
+test menus::tests::palette_has_one_export_entry_that_opens_the_dialog ... FAILED
+test office_overlay_tests::the_about_dialog_shows_the_product_version ... ok
+test replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces ... FAILED
+test ribbon::drawtable_tests::draw_a_table_split_it_and_erase_the_border ... ok
+test ribbon::effects_tests::effects_menu_applies_a_scheme_once ... ok
+test ribbon::inktoshape_tests::pen_a_rectangle_then_ink_to_shape ... ok
+test ribbon::master_layout_tests::slide_master_preserve_title_and_footers ... ok
+test ribbon::tests::effect_options_mark_only_the_stored_choice ... ok
+test ribbon::tests::ribbon_tile_labels_follow_the_theme ... ok
+test ribbon::title_bar_tests::mac_title_bar_centres_and_clears_the_traffic_lights ... ok
+test tests::grid_options_dialog_lists_spacing_and_display ... ok
+test tests::grid_options_sets_spacing_and_display_or_opens_the_dialog ... ok
+test tests::the_language_dialog_marks_the_selected_text ... ok
+test tests::title_bar_export_opens_the_export_dialog ... ok
+
+failures:
+
+---- backstage::tests::every_page_renders stdout ----
+
+thread 'backstage::tests::every_page_renders' (12404) panicked at crates\ui-egui\src\backstage_tests.rs:175:9:
+Account shows “About DeckCraft”
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- menus::tests::palette_has_one_export_entry_that_opens_the_dialog stdout ----
+
+thread 'menus::tests::palette_has_one_export_entry_that_opens_the_dialog' (2332) panicked at crates\ui-egui\src\menus.rs:321:13:
+assertion `left == right` failed: About DeckCraft
+  left: 0
+ right: 1
+
+---- replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces stdout ----
+
+thread 'replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces' (2060) panicked at crates\ui-egui\src\replacefonts_tests.rs:46:5:
+assertion `left == right` failed
+  left: None
+ right: Some("replaceFonts")
+
+
+failures:
+    backstage::tests::every_page_renders
+    menus::tests::palette_has_one_export_entry_that_opens_the_dialog
+    replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces
+
+test result: FAILED. 65 passed; 3 failed; 0 ignored; 0 measured; 146 filtered out; finished in 11.15s
+
+error: test failed, to rerun pass `-p deckcraft-ui-egui --lib`

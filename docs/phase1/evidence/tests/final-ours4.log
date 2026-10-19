@@ -1,0 +1,74 @@
+=== job test-ours 
+--- root-tests: env CARGO_TARGET_DIR=E:/office-target/p1/root cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+────────────
+ Nextest run ID 75e373a0-54c0-4c46-96a4-08892d8c2596 with nextest profile: ci
+    Starting 59 tests across 2 binaries
+────────────
+     Summary [   0.980s] 59 tests run: 59 passed, 0 skipped
+--- root-tests: exit 0 in 2s
+--- domain-tests-docs: env CARGO_TARGET_DIR=E:/office-target/p1/domain-docs cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 --manifest-path domains/docs/Cargo.toml -E all()
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.79s
+────────────
+ Nextest run ID 4c8b9b0e-0adb-409d-8570-2337a4787562 with nextest profile: ci
+    Starting 64 tests across 4 binaries
+────────────
+     Summary [   2.969s] 64 tests run: 64 passed, 0 skipped
+--- domain-tests-docs: exit 0 in 6s
+--- domain-tests-sheets: env CARGO_TARGET_DIR=E:/office-target/p1/domain-sheets cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 --manifest-path domains/sheets/Cargo.toml -E all()
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.07s
+────────────
+ Nextest run ID 89710593-578d-4d32-8ccf-79fc0863461f with nextest profile: ci
+    Starting 44 tests across 3 binaries
+────────────
+     Summary [   0.962s] 44 tests run: 44 passed, 0 skipped
+--- domain-tests-sheets: exit 0 in 4s
+--- domain-tests-slides: env CARGO_TARGET_DIR=E:/office-target/p1/domain-slides cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 --manifest-path domains/slides/Cargo.toml -E all()
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling slides-cli v0.1.0 (C:\Users\uge226\Desktop\office\domains\slides\apps\slides-cli)
+   Compiling slides-web v0.1.0 (C:\Users\uge226\Desktop\office\domains\slides\apps\slides-web)
+   Compiling slides-desktop v0.1.0 (C:\Users\uge226\Desktop\office\domains\slides\apps\slides-desktop)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 52s
+────────────
+ Nextest run ID 555bae21-25c0-43cb-bca2-553e23963e42 with nextest profile: ci
+    Starting 43 tests across 3 binaries
+────────────
+     Summary [   1.796s] 43 tests run: 43 passed, 0 skipped
+--- domain-tests-slides: exit 0 in 118s
+--- domain-tests-pdf: env CARGO_TARGET_DIR=E:/office-target/p1/domain-pdf cargo nextest run --workspace --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 --manifest-path domains/pdf/Cargo.toml -E not (binary_id(=pdf-desktop::bin/pdf) & (test(=tests::egui_wgpu_carries_the_surface_size_fit) | test(=tests::egui_wgpu_returns_a_surface_it_cannot_configure_as_an_error) | test(=tests::winit_carries_the_windows_11_monitor_scale_fix)))
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+warning: field `dir` is never read
+ --> apps\pdf-cli\..\..\..\overlay_res.rs:9:5
+  |
+8 | pub struct Overlay {
+  |            ------- field in this struct
+9 |     dir: PathBuf,
+  |     ^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `file` is never used
+  --> apps\pdf-cli\..\..\..\overlay_res.rs:32:12
+   |
+26 | impl Overlay {
+   | ------------ method in this implementation
+...
+32 |     pub fn file(&self, name: &str) -> String {
+   |            ^^^^
+
+warning: `pdf-cli` (build script) generated 2 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.67s
+────────────
+ Nextest run ID 1b499022-9963-49ee-af41-f26b9c53814c with nextest profile: ci
+    Starting 71 tests across 3 binaries (4 tests skipped)
+────────────
+     Summary [   3.446s] 71 tests run: 71 passed, 4 skipped
+--- domain-tests-pdf: exit 0 in 9s
+=== test-ours: ok (exit 0)
+summary: E:/office-target/p1/ci/final-ours4/summary.md

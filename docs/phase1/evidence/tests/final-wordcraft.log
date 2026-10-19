@@ -1,0 +1,133 @@
+=== job test wordcraft wordcraft
+overlay docs: written to E:/office-target/p1/overlay\docs
+export (trusted: owner and agent reviews (review.trust_agent_review = true)):
+wordcraft uz-latn: 784 entries (uz-latn=784) -> E:/office-target/p1/overlay/_i18n\wordcraft\catalog-uz-latn.tsv
+  uz-latn own rows: 784 trusted (owner-reviewed 0, agent-reviewed 784), 0 draft; P1 rows not trusted: 0
+wordcraft uz-cyrl: 2571 entries (ru=1787, uz-cyrl=784) -> E:/office-target/p1/overlay/_i18n\wordcraft\catalog-uz-cyrl.tsv
+  uz-cyrl own rows: 784 trusted (owner-reviewed 0, agent-reviewed 784), 0 draft; P1 rows not trusted: 0
+--- quarantine-check: xtq quarantine check
+OK, 54 entries
+--- quarantine-check: exit 0 in 1s
+--- quarantine-wordcraft: xtq quarantine apply wordcraft
+   Compiling wordcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\ui-egui)
+   Compiling wordcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\apps\wordcraft)
+   Compiling wordcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\apps\wordcraft-web)
+    Finished `test` profile [optimized + debuginfo] target(s) in 13m 51s
+────────────
+ Nextest run ID 8ea8dc36-a0c9-4ccd-a426-fc08e6bd575a with nextest profile: quarantine
+    Starting 19 tests across 6 binaries (779 tests and 55 binaries skipped)
+────────────
+     Summary [ 140.071s] 19 tests run: 0 passed, 19 failed, 779 skipped
+error: test run failed
+wordcraft: quarantined 19 (still failing 19, passed-flaky 0, stale 0, missing 0), unrunnable binaries 0
+--- quarantine-wordcraft: exit 0 in 984s
+--- nextest-wordcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-wordcraft/nextest-ci.toml --manifest-path upstream/wordcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-wordcraft --build-jobs 4 --test-threads 4 -E not ((binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_are_drawn_in_colour)) | (binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_keep_their_colours_on_a_dark_page)) | (binary_id(=wordcraft-ui-egui) & test(=keys::tests::alt_numpad_code_types_its_character_without_keytips)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=page_break_from_the_menu_adds_a_page)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=section_break_from_the_menu_splits_sections)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::audit::untranslated_interface_text)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::hungarian_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::swedish_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::every_tab_and_command_is_translated)) | (binary_id(=wordcraft-fonts) & test(=fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load)) | (binary_id(=wordcraft-fonts) & test(=fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name)) | (binary_id(=wordcraft-docx::passthrough) & test(=extended_properties_are_kept_without_words_counts_and_personal_ones_follow_the_privacy_setting)) | (binary_id(=wordcraft-formats) & test(=tests::latex_round_trip)) | (binary_id(=wordcraft-ui-egui) & test(=tests::the_default_app_button_shows_only_with_the_hosts_hook)) | (binary_id(=wordcraft-ui-egui) & test(=options::tests::general_start_up_turns_the_start_screen_off_and_on)) | (binary_id(=wordcraft-ui-egui) & test(=tests::start_screen_shows_file_home_and_esc_leaves_no_document)))
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.48s
+────────────
+ Nextest run ID 7f735ccc-0d1e-4364-bca3-12b43fb6805f with nextest profile: ci
+    Starting 2748 tests across 61 binaries (21 tests skipped)
+────────────
+     Summary [ 154.273s] 2748 tests run: 2748 passed, 21 skipped
+--- nextest-wordcraft: exit 0 in 190s
+--- doctests-wordcraft: cargo test --doc --workspace --manifest-path upstream/wordcraft/Cargo.toml -j 4
+   Compiling wordcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\ui-egui)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 36s
+   Doc-tests wordcraft_control_key
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_doc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_docbin
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_docx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_fonts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_formats
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_geom
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_layout
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_metafile
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_pdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_proof
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests wordcraft_zotero
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+--- doctests-wordcraft: exit 0 in 183s
+=== test wordcraft: ok (exit 0)
+summary: E:/office-target/p1/ci/final-wordcraft/summary.md
