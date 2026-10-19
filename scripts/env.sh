@@ -8,5 +8,6 @@ export OFFICE_ROOT; export OFFICE_TARGET="${OFFICE_TARGET:-E:/office-target/p1}"
 export UPSTREAM_CACHE=E:/office-upstream OFFICE_CACHE=E:/office-cache
 export RUSTC_WRAPPER=sccache SCCACHE_DIR=$OFFICE_CACHE/sccache SCCACHE_CACHE_SIZE=40G
 export CRAFT_FONTS_DIR="$OFFICE_ROOT/upstream/craft-fonts"   # one copy for all domains (F9)
+export CARGO_BUILD_TARGET_DIR="$OFFICE_TARGET/core"          # root workspace (xtask, root tests); overrides .cargo/config.toml, so a clean checkout never shares it
 export OFFICE_OVERLAY_ROOT=$OFFICE_TARGET/overlay            # per-app OFFICE_OVERLAY_DIR is set by build.sh
 # curl is always used with --ssl-no-revoke; Gradle is not needed in Phase 1

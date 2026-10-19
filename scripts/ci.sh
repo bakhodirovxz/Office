@@ -361,7 +361,7 @@ job_check() {
     m="$(domain_manifest "$d")"; t="$(target_dir_domain "$d")"
     domain_standin "$d" && note "check $d: stand-in $m (WP3 pending)"
     bstep "check-desktop-$d" env CARGO_TARGET_DIR="$t" cargo check -j 6 --manifest-path "$m" -p "$(domain_pkg "$d" desktop)" || rc=1
-    bstep "check-web-$d" env CARGO_TARGET_DIR="$t" cargo check -j 6 --manifest-path "$m" -p "$(domain_pkg "$d" web)" --target wasm32-unknown-unknown || rc=1
+    bstep "check-web-$d" env -u RUSTC_WRAPPER CARGO_TARGET_DIR="$t" cargo check -j 6 --manifest-path "$m" -p "$(domain_pkg "$d" web)" --target wasm32-unknown-unknown || rc=1
   done
   return $rc
 }
