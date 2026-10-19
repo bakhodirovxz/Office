@@ -15,7 +15,8 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 - **Uzbek UI strings: review delegated to the agent** (owner, 2026-10-18).
   - Mark the status `reviewed:agent-<model>:<date>`, never an owner review.
   - The owner reports problems found in use.
-  - The Phase 2 transliteration golden list still needs the owner's approval.
+  - The Phase 2 transliteration golden list and exceptions dictionary: **also delegated to the agent** (owner,
+    2026-10-20). Use the same `reviewed:agent-*` marking.
 - **Mobile:** A-web for v1, conditionally (re-decided at the Phase 4 gate).
 - **Priority:** fidelity → mobile → co-editing.
 
