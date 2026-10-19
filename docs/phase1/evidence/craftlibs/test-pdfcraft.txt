@@ -1,0 +1,9 @@
+     Summary [  24.206s] 28 tests run: 3 passed, 25 failed, 959 skipped
+pdfcraft: quarantined 28 (still failing 25, passed-flaky 3, stale 0, missing 0), unrunnable binaries 1
+        FAIL [   3.042s] ( 401/3491) pdfcraft-automation::automation xfa_scripts_run_for_buttons_and_field_changes_through_tools
+        FAIL [   3.322s] ( 432/3491) pdfcraft-cli::check check_scans_overlapping_directories_once
+        FAIL [   9.192s] ( 906/3491) pdfcraft-engine tests::a_formcalc_calculate_result_is_cut_before_it_is_saved
+     Summary [ 444.990s] 3491 tests run: 3488 passed (1 slow), 3 failed, 44 skipped
+        FAIL [   3.042s] ( 401/3491) pdfcraft-automation::automation xfa_scripts_run_for_buttons_and_field_changes_through_tools
+        FAIL [   3.322s] ( 432/3491) pdfcraft-cli::check check_scans_overlapping_directories_once
+        FAIL [   9.192s] ( 906/3491) pdfcraft-engine tests::a_formcalc_calculate_result_is_cut_before_it_is_saved

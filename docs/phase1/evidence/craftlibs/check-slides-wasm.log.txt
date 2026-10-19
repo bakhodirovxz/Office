@@ -1,0 +1,12 @@
+    Checking i_key_sort v0.11.0
+    Checking deckcraft-pptx v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pptx)
+    Checking i_overlay v9.0.0
+    Checking deckcraft-media v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\media)
+   Compiling deckcraft-ui-egui v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\ui-egui)
+    Checking deckcraft-pdf v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf)
+E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf\src\lib.rs:32:48: error[E0432]: unresolved import `krilla::text::TextDirection`: no `TextDirection` in `text`
+E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf\src\lib.rs:562:23: error[E0599]: no method named `draw_text` found for mutable reference `&mut craft_pdf::write::krilla::surface::Surface<'_>` in the current scope: method not found in `&mut craft_pdf::write::krilla::surface::Surface<'_>`
+E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf\src\lib.rs:573:19: error[E0599]: no method named `draw_text` found for mutable reference `&mut craft_pdf::write::krilla::surface::Surface<'_>` in the current scope: method not found in `&mut craft_pdf::write::krilla::surface::Surface<'_>`
+E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf\src\lib.rs:617:11: error[E0599]: no method named `draw_text` found for mutable reference `&mut craft_pdf::write::krilla::surface::Surface<'_>` in the current scope: method not found in `&mut craft_pdf::write::krilla::surface::Surface<'_>`
+error: could not compile `deckcraft-pdf` (lib) due to 4 previous errors
+warning: build failed, waiting for other jobs to finish...
