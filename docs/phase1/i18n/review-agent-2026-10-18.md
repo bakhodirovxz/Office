@@ -219,6 +219,9 @@ Two lint `script-mismatch` warnings remain on purpose: official Latin "sentabr",
 
 ## 4. Rows left as draft (19)
 
+> **Note (gate review 2026-10-19).** Superseded later on 2026-10-18: the orchestrator resolved these 19 rows (row note "orchestrator 2026-10-18: resolved left-as-draft row",
+> commit `99d1ba8`), so every P1 row is now `reviewed:agent-opus:2026-10-18` and `cargo xt i18n lint` reports draft 0. The "(qoralama)" consequence below no longer holds.
+
 | Scope | Id | English | Current uz-Latn | Why |
 |---|---|---|---|---|
 | wordcraft | ce04ccdf3180 | Content Control at Selection | Tanlangan joydagi kontent boshqaruvi | content control (Word's form-control concept): no established Uzbek term |
