@@ -750,3 +750,16 @@ evidence = "docs/phase1/evidence/tests/clean3-pdfcraft-flaky.log#a_released_pen_
 since = "2026-10-19@924c4da"
 review = "every sync; move to a serial test group or a quiet runner"
 reviewed = "2026-10-19@phase1-exit"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-cli"
+binary = "check"
+name = "check_scans_overlapping_directories_once"
+class = "flaky"
+env = "any"
+reason = "Load-sensitive timing: the test passes `--timeout 2` (2 s per file) to a spawned debug `check`; under 4 parallel test threads it ran 4.9 s and reported status=timeout. Isolated: 5 of 5 pass in 0.1 s."
+evidence = "docs/phase1/evidence/tests/final-run-pdfcli-check-overlap.log#check_scans_overlapping_directories_once"
+since = "2026-10-20@924c4da"
+review = "every sync; move to a serial test group or a quiet runner"
+reviewed = "2026-10-20@phase1-exit"
