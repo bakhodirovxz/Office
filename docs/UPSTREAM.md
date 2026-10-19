@@ -54,6 +54,7 @@ What the script does (PLAN 5.1):
    `--gates full` adds, per affected repo, `scripts/ci.sh build <domain>` (release desktop, web, CLI) and `scripts/ci.sh test <app>` (nextest + quarantine) run
    from the scratch tree, so they are the same jobs as CI, not copies. They use their own target root `$OFFICE_TARGET/sync/full` (persistent: only the first run is cold;
    the main tree's dists stay untouched). Each is a gate `full-build-<domain>` / `full-test-<app>`; expect hours, not minutes (a clean build is ~1 h, pdfcraft tests ~10 min warm).
+   **Not exercised yet** (implemented 98c0a02, never run; gate review 2026-10-19 suspects `CRAFT_FONTS_DIR` points at the scratch tree, which has no `upstream/craft-fonts`).
 6. `--dry-run` deletes the scratch worktree and branch. `--apply` (all gates PASS, no unresolved patch) commits the report to
    `docs/phase1/sync-reports/` and fast-forwards the monorepo. A failed gate leaves the pin where it is.
 Reports: `$OFFICE_TARGET/sync/reports/<date>.md` and `<date>-rebase-log.tsv`.

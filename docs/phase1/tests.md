@@ -2,7 +2,8 @@
 
 Run 2026-10-18 on branch `phase-1`, BASE as in `patches/*/BASE` (wordcraft eae2421, gridcraft f1894c6, deckcraft 1dc6972,
 pdfcraft 924c4da). Machine: 12 cores, 11.8 GB RAM, Windows 10, one build at a time, `-j 4` (`--build-jobs 4 --test-threads 4`).
-Logs of every run are in `docs/phase1/evidence/tests/` (`<app>-off` = overlay off, `-on` = overlay on).
+Logs of every run are in `docs/phase1/evidence/tests/` (`<app>-off` = overlay off, `-on` = overlay on). Only on this PC: `*.log` is gitignored, and only the
+`wp6-diag-*` logs are committed (gate review 2026-10-19).
 
 ## How it runs
 

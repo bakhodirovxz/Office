@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Plan, not started. Written 2026-10-17 on branch `phase-1`. |
+| **Status** | Executed (WP0-WP10, WP12-WP14; WP11 not done: no corpus). Written 2026-10-17 on branch `phase-1`. Gate review: `docs/phase1/gate-review.md` (2026-10-19). |
 | **Gate decisions in force** | ADR Appendix C: working name from one brand config; MIT OR Apache-2.0; W2 build domains + vendored pristine snapshot + patch queue; **no upstream PRs, everything is carried**; A-web (conditional); fidelity → mobile → co-editing. |
 | **Inputs** | `CLAUDE.md`, `docs/BRIEF.md` §7 Phase 1, `docs/ARCHITECTURE-DECISION.md` (§2.1, §2.5, §3, §4, §5, §6, App. B/C), `docs/STATUS.md`, `docs/phase0/*` |
 | **Exit gate (brief)** | (1) A clean checkout builds desktop and web for all four apps. (2) CI is green. (3) A dry run of the upstream sync succeeds. (4) The UI shows the new brand and switches to uz-Latn and uz-Cyrl. |
