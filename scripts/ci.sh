@@ -56,7 +56,7 @@ domain_standin() { [ ! -f "domains/$1/Cargo.toml" ]; }
 # Package names inside that workspace.
 domain_pkg() { # <domain> <desktop|web|cli>
   local base; if domain_standin "$1"; then base="$(app_of "$1")"; else base="$1"; fi
-  case "$2" in desktop) echo "$base";; web) echo "$base-web";; cli) echo "$base-cli";; esac
+  case "$2" in desktop) if domain_standin "$1"; then echo "$base"; else echo "$base-desktop"; fi;; web) echo "$base-web";; cli) echo "$base-cli";; esac
 }
 target_dir_domain() { if domain_standin "$1"; then echo "$OFFICE_TARGET/upstream-$(app_of "$1")"; else echo "$OFFICE_TARGET/domain-$1"; fi; }
 overlay_dir() { echo "$OFFICE_OVERLAY_ROOT/$1"; }
