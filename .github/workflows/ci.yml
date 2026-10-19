@@ -230,6 +230,7 @@ jobs:
         with:
           pattern: dist-*-web
           path: dist
+      - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
       - run: CI_DIST_ROOT="$PWD/dist" scripts/ci.sh web-smoke
 
   release-tests:

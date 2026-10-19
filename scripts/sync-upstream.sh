@@ -16,7 +16,7 @@
 #               That patch is never rebased: a queue that already has one regenerates it even without --fmt.
 #   --to <sha>  new BASE (only with one repo). Default: the newest tag newer than BASE, else origin/HEAD.
 #   --gates     quick = verify-queue + gen-check + lockdiff + deny + cargo check per domain (native + wasm) plus `cargo check --workspace --all-targets` of the upstream tree (tests, examples, benches compile);
-#               full  = quick + release desktop and web builds in scratch (+ nextest when ci/nextest.toml exists).
+#               full  = quick + `scripts/ci.sh build <affected domains>` and `scripts/ci.sh test <affected apps>` run on the scratch tree (own target root $OFFICE_TARGET/sync/full).
 #   repos       wordcraft gridcraft deckcraft pdfcraft craft-libs | all. craft-fonts is pinned by patches/craft-fonts/BASE
 #               and moved by hand (never patched).
 #
@@ -333,8 +333,15 @@ else
     echo "$r check_s=$sec" >> "$WORK/gate-secs"
   done
   if [ "$GATES" = full ]; then
-    say "- full gates: release builds, sizes and tests are not automated yet in scratch; run \`scripts/build.sh <d> all --release\` and \`scripts/ci.sh test <app>\` on the applied tree (WP6b not done)."
-    GATE[full]=INFRA; GATE_FAIL=1
+    # Reuse the CI jobs on the scratch tree (env.sh makes the scratch checkout the root). Own target root: the main tree's
+    # dists and warm caches stay untouched; it is persistent, so only the first full run is cold.
+    fdoms=""; fapps=""; for r in $READY; do d=$(domain_of $r); [ -n "$d" ] && { fdoms="$fdoms $d"; fapps="$fapps $r"; }; done
+    for x in $fdoms $fapps; do
+      case " $fdoms " in *" $x "*) job=build;; *) job=test;; esac
+      out=$(env -u CARGO_TARGET_DIR OFFICE_TARGET="$SYNC/full" CI_RUN="sync-$DATE-$RUN" scripts/ci.sh $job $x 2>&1); rc=$?
+      echo "$out" > "$WORK/full-$job-$x.log"
+      gate full-$job-$x $([ $rc = 0 ] && echo PASS || echo FAIL) "rc=$rc ($(echo "$out" | grep '^summary:' | head -1); log $WORK/full-$job-$x.log)"
+    done
   fi
   export CARGO_TARGET_DIR="$SYNC/target-xt"
 fi
