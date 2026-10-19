@@ -1,0 +1,411 @@
+=== job test deckcraft deckcraft
+--- quarantine-check: xtq quarantine check
+OK, 41 entries
+--- quarantine-check: exit 0 in 1s
+--- quarantine-deckcraft: xtq quarantine apply deckcraft
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-format v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\format)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling windows-core v0.62.2
+   Compiling windows-future v0.3.2
+   Compiling windows-collections v0.3.2
+   Compiling windows-numerics v0.3.1
+   Compiling windows v0.62.2
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling zerovec-derive v0.11.6
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling zerovec v0.11.8
+   Compiling displaydoc v0.2.7
+   Compiling wgpu-types v30.0.1
+   Compiling windows-sys v0.61.2
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling tinystr v0.8.4
+   Compiling litemap v0.8.3
+   Compiling pin-project-lite v0.2.17
+   Compiling tracing-core v0.1.36
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling writeable v0.6.4
+   Compiling icu_locale_core v2.3.0
+   Compiling tracing v0.1.44
+   Compiling egui v0.36.2
+   Compiling zerotrie v0.2.5
+   Compiling potential_utf v0.1.6
+   Compiling windows-sys v0.52.0
+   Compiling smol_str v0.2.2
+   Compiling cursor-icon v1.2.0
+   Compiling utf8_iter v1.0.4
+   Compiling dpi v0.1.2
+   Compiling winit v0.30.13
+   Compiling icu_collections v2.3.0
+   Compiling icu_provider v2.3.1
+   Compiling tempfile v3.27.0
+   Compiling icu_normalizer_data v2.3.0
+   Compiling icu_properties_data v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling icu_properties v2.3.0
+   Compiling getrandom v0.3.4
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling rand_core v0.9.5
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling windows_x86_64_gnu v0.53.1
+   Compiling percent-encoding v2.3.2
+   Compiling form_urlencoded v1.2.2
+   Compiling windows-targets v0.53.5
+   Compiling idna_adapter v1.2.2
+   Compiling error-code v3.4.0
+   Compiling idna v1.1.0
+   Compiling clipboard-win v5.4.1
+   Compiling windows-sys v0.60.2
+   Compiling url v2.5.8
+   Compiling windows-result v0.1.2
+   Compiling ppv-lite86 v0.2.21
+   Compiling wait-timeout v0.2.1
+   Compiling quick-error v1.2.3
+   Compiling bit-vec v0.8.0
+   Compiling fnv v1.0.7
+   Compiling rusty-fork v0.3.1
+   Compiling bit-set v0.8.0
+   Compiling rand_chacha v0.9.0
+   Compiling windows-core v0.54.0
+   Compiling arboard v3.6.1
+   Compiling webbrowser v1.2.4
+   Compiling rand v0.9.5
+   Compiling rand_xorshift v0.4.0
+   Compiling winresource v0.1.31
+   Compiling unarray v0.1.4
+   Compiling regex-syntax v0.8.11
+   Compiling deckcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft)
+   Compiling windows v0.54.0
+   Compiling proptest v1.11.0
+   Compiling gpu-allocator v0.28.0
+   Compiling wgpu-hal v30.0.1
+   Compiling accesskit_windows v0.32.1
+   Compiling hayro-syntax v0.7.2
+   Compiling accesskit_winit v0.32.2
+   Compiling egui-winit v0.36.2
+   Compiling dasp_sample v0.11.0
+   Compiling rfd v0.17.2
+   Compiling deckcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-web)
+   Compiling deckcraft-bitstream v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\bitstream)
+   Compiling deckcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-cli)
+   Compiling cpal v0.16.0
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling wgpu-core v30.0.1
+   Compiling wgpu v30.0.1
+   Compiling egui-wgpu v0.36.2
+   Compiling egui_kittest v0.36.2
+   Compiling eframe v0.36.2
+   Compiling deckcraft-media v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\media)
+   Compiling deckcraft-anim v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\anim)
+   Compiling deckcraft-metafile v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\metafile)
+   Compiling deckcraft-av1 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\av1)
+   Compiling deckcraft-h264 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\h264)
+   Compiling deckcraft-vp9 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\vp9)
+   Compiling deckcraft-isobmff v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\isobmff)
+   Compiling deckcraft-hevc v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\hevc)
+   Compiling deckcraft-model v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\model)
+   Compiling xtask v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\xtask)
+   Compiling deckcraft-geom v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\geom)
+   Compiling deckcraft-color v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\color)
+   Compiling deckcraft-opus v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\opus)
+   Compiling deckcraft-ogg v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ogg)
+   Compiling deckcraft-matroska v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\matroska)
+    Finished `test` profile [optimized + debuginfo] target(s) in 28m 56s
+────────────
+ Nextest run ID c3d3f46d-635d-420c-a607-476041d3021f with nextest profile: quarantine
+    Starting 1 test across 1 binary (214 tests and 59 binaries skipped)
+────────────
+     Summary [   5.476s] 1 test run: 0 passed, 1 failed, 214 skipped
+error: test run failed
+deckcraft: quarantined 1 (still failing 1, stale 0, missing 0)
+--- quarantine-deckcraft: exit 0 in 1753s
+--- nextest-deckcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-deckcraft/nextest-ci.toml --manifest-path upstream/deckcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-deckcraft --build-jobs 4 --test-threads 4 -E not ((binary_id(=deckcraft-ui-egui) & test(=replacefonts_tests::ribbon_button_opens_the_dialog_and_replaces)))
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling deckcraft-cli v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-cli)
+   Compiling deckcraft v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft)
+   Compiling deckcraft-web v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\apps\deckcraft-web)
+    Finished `test` profile [optimized + debuginfo] target(s) in 20m 00s
+────────────
+ Nextest run ID 103de6e8-968f-49d5-bed4-29e06a399685 with nextest profile: ci
+    Starting 1679 tests across 60 binaries (7 tests skipped)
+        FAIL [   2.200s] (   7/1679) deckcraft::bin/deckcraft control_server::tests::blocked_ui_times_out_and_full_queue_is_busy
+  stdout ───
+
+    running 1 test
+    test control_server::tests::blocked_ui_times_out_and_full_queue_is_busy ... FAILED
+
+    failures:
+
+    failures:
+        control_server::tests::blocked_ui_times_out_and_full_queue_is_busy
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 30 filtered out; finished in 2.10s
+
+  stderr ───
+
+    thread 'control_server::tests::blocked_ui_times_out_and_full_queue_is_busy' (24188) panicked at apps\deckcraft\src\control_server.rs:306:9:
+    assertion failed: b["error"].as_str().unwrap().starts_with("busy")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [  93.411s] 1679 tests run: 1678 passed, 1 failed, 7 skipped
+        FAIL [   2.200s] (   7/1679) deckcraft::bin/deckcraft control_server::tests::blocked_ui_times_out_and_full_queue_is_busy
+  stdout ───
+
+    running 1 test
+    test control_server::tests::blocked_ui_times_out_and_full_queue_is_busy ... FAILED
+
+    failures:
+
+    failures:
+        control_server::tests::blocked_ui_times_out_and_full_queue_is_busy
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 30 filtered out; finished in 2.10s
+
+  stderr ───
+
+    thread 'control_server::tests::blocked_ui_times_out_and_full_queue_is_busy' (24188) panicked at apps\deckcraft\src\control_server.rs:306:9:
+    assertion failed: b["error"].as_str().unwrap().starts_with("busy")
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+--- nextest-deckcraft: exit 100 in 1347s
+--- doctests-deckcraft: cargo test --doc --workspace --manifest-path upstream/deckcraft/Cargo.toml -j 4
+   Compiling arrayvec v0.7.8
+   Compiling bitflags v1.3.2
+   Compiling deckcraft-color v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\color)
+   Compiling deckcraft-bitstream v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\bitstream)
+   Compiling deckcraft-fonts v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\fonts)
+   Compiling polycool v0.4.0
+   Compiling symphonia-core v0.5.5
+   Compiling chrono v0.4.45
+   Compiling extended v0.1.0
+   Compiling deckcraft-h264 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\h264)
+   Compiling kurbo v0.13.1
+   Compiling symphonia-metadata v0.5.5
+   Compiling symphonia-codec-adpcm v0.5.5
+   Compiling symphonia-codec-aac v0.5.5
+   Compiling deckcraft-geom v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\geom)
+   Compiling peniko v0.6.1
+   Compiling symphonia-utils-xiph v0.5.5
+   Compiling vello_common v0.2.0
+   Compiling deckcraft-metafile v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\metafile)
+   Compiling deckcraft-model v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\model)
+   Compiling glifo v0.3.0
+   Compiling write-fonts v0.48.1
+   Compiling symphonia-bundle-flac v0.5.5
+   Compiling symphonia-format-ogg v0.5.5
+   Compiling vello_cpu v0.2.0
+   Compiling symphonia-format-isomp4 v0.5.5
+   Compiling symphonia-format-mkv v0.5.5
+   Compiling deckcraft-anim v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\anim)
+   Compiling deckcraft-text v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\text)
+   Compiling symphonia-codec-vorbis v0.5.5
+   Compiling symphonia-format-riff v0.5.5
+   Compiling symphonia-format-caf v0.5.5
+   Compiling symphonia-bundle-mp3 v0.5.5
+   Compiling symphonia-codec-pcm v0.5.5
+   Compiling symphonia-codec-alac v0.5.5
+   Compiling deckcraft-av1 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\av1)
+   Compiling deckcraft-isobmff v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\isobmff)
+   Compiling deckcraft-vp9 v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\vp9)
+   Compiling subsetter v0.2.6
+   Compiling deckcraft-hevc v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\hevc)
+   Compiling krilla v0.8.2 (https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320)
+   Compiling deckcraft-render v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\render)
+   Compiling deckcraft-ogg v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ogg)
+   Compiling deckcraft-opus v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\opus)
+   Compiling deckcraft-matroska v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\matroska)
+   Compiling symphonia v0.5.5
+   Compiling i_float v5.0.0
+   Compiling deckcraft-media v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\media)
+   Compiling i_shape v5.0.0
+   Compiling naga v30.0.1
+   Compiling deckcraft-format v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\format)
+   Compiling i_tree v0.19.0
+   Compiling i_key_sort v0.11.0
+   Compiling gpu-allocator v0.28.0
+   Compiling craft-pdf v0.1.0 (https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320)
+   Compiling deckcraft-pdf v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pdf)
+   Compiling i_overlay v9.0.0
+   Compiling deckcraft-pptx v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\pptx)
+   Compiling vello_common v0.1.0
+   Compiling vello_cpu v0.1.0
+   Compiling deckcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\ui-egui)
+   Compiling accesskit_consumer v0.35.0
+   Compiling deckcraft-engine v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\engine)
+   Compiling kittest v0.4.0
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling wgpu-hal v30.0.1
+   Compiling hayro-syntax v0.7.2
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling wgpu-core v30.0.1
+   Compiling epaint v0.36.2
+   Compiling deckcraft-mcp v0.7.0 (C:\Users\uge226\Desktop\office\upstream\deckcraft\crates\mcp)
+   Compiling egui v0.36.2
+   Compiling wgpu v30.0.1
+   Compiling egui-wgpu v0.36.2
+   Compiling egui_kittest v0.36.2
+    Finished `test` profile [optimized + debuginfo] target(s) in 13m 46s
+   Doc-tests deckcraft_anim
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_av1
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_bitstream
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_color
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_fonts
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_format
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_geom
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_h264
+
+running 1 test
+test crates\h264\src\lib.rs - (line 7) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 2.93s; merged doctests compilation took 1.66s
+   Doc-tests deckcraft_hevc
+
+running 1 test
+test crates\hevc\src\lib.rs - (line 9) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 1.72s; merged doctests compilation took 0.97s
+   Doc-tests deckcraft_isobmff
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_matroska
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_media
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_metafile
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_model
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_ogg
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_opus
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_pdf
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_pptx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_text
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_ui_egui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deckcraft_vp9
+
+running 1 test
+test crates\vp9\src\lib.rs - (line 12) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 1.80s; merged doctests compilation took 0.77s
+--- doctests-deckcraft: exit 0 in 842s
+=== test deckcraft: fail (exit 1)
+summary: E:/office-target/p1/ci/dc-off/summary.md
+done

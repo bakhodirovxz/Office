@@ -1,5 +1,10 @@
 # i18n evidence (WP9c, WP9d, 2026-10-18)
 
+> **Note (gate review 2026-10-19).** These screenshots were taken before the owner-delegated agent review (`99d1ba8`): the Uzbek strings shown are the earlier drafts, and
+> many have changed since (e.g. "PDF ni eksport qilish" is now joined, "maxfiylashtirish" became "Oʻchirib yopish"). They prove the switching mechanism, not the current wording.
+> All 1,878 P1 rows are now `reviewed:agent-opus:2026-10-18` (`cargo xt i18n lint`), and the pdfcraft roundtrip failure described at the end was fixed by the catalog resync
+> (STATUS, cleanup package step 2). The draft marker "(qoralama)" disappears once every P1 row of an app is trusted; this was not re-screenshotted.
+
 Phase 1 gate item: the UI switches to uz-Latn and uz-Cyrl. All Uzbek text here is the **unreviewed draft** (`draft-unreviewed`); the language pickers say so
 (`Oʻzbekcha (qoralama)`, `Ўзбекча (қоралама)`). Builds: `scripts/build.sh <d> desktop|web --release` (review-mode export, overlay on). Fallback chain at export:
 uz-Cyrl to ru to en, uz-Latn to en, so Cyrillic screens show Russian words where no Uzbek row exists, and Latin screens show English.

@@ -1,0 +1,37 @@
+overlay sheets: written to E:/office-target/p1/overlay\sheets
+gridcraft uz-latn: 447 entries (uz-latn=447) -> E:/office-target/p1/overlay/_i18n\gridcraft\catalog-uz-latn.tsv
+gridcraft uz-cyrl: 447 entries (uz-cyrl=447) -> E:/office-target/p1/overlay/_i18n\gridcraft\catalog-uz-cyrl.tsv
+   Compiling gridcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\gridcraft\crates\ui-egui)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 15s
+     Running unittests src\lib.rs (E:/office-target/p1/upstream-gridcraft\debug\deps\gridcraft_ui_egui-e445316a193ff85f.exe)
+
+running 10 tests
+test i18n::tests::tags_reduce_to_a_supported_language ... ok
+test i18n::tests::an_unset_language_preference_is_english_until_the_app_applies_the_system_one ... ok
+test i18n::tests::unknown_saved_language_keeps_the_other_preferences ... ok
+test office_overlay_tests::rebrand_follows_the_overlay ... ok
+test office_overlay_tests::the_label_lookup_shows_the_overlay_name ... ok
+test office_overlay_tests::uzbek_is_offered_only_with_the_overlay_catalogs ... ok
+test i18n::tests::language_commands_switch_and_persist ... ok
+test i18n::tests::translations_are_unique_and_preserve_unknown_text ... FAILED
+test office_overlay_tests::fallback_font_covers_uzbek ... ok
+test office_overlay_tests::pdf_default_face_covers_uzbek ... ok
+
+failures:
+
+---- i18n::tests::translations_are_unique_and_preserve_unknown_text stdout ----
+
+thread 'i18n::tests::translations_are_unique_and_preserve_unknown_text' (14284) panicked at crates\ui-egui\src\i18n.rs:642:13:
+assertion `left == right` failed
+  left: "About\nSuite Sheets"
+ right: "About\nGridCraft"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    i18n::tests::translations_are_unique_and_preserve_unknown_text
+
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.17s
+
+error: test failed, to rerun pass `-p gridcraft-ui-egui --lib`
+done rc=101

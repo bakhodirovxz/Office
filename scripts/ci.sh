@@ -484,7 +484,7 @@ profile_jobs() { # prints "job args" lines
       for d in $DOMAINS; do echo "check $d"; done
       echo bind
       for d in $DOMAINS; do echo "build $d all"; done
-      echo sizes; echo web-smoke; echo actionlint
+      echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
       if [ "$p" = nightly ]; then echo release-tests; echo fidelity; echo xlsx-bench; fi;;
   esac
 }

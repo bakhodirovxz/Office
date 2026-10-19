@@ -1,0 +1,174 @@
+overlay pdf: written to E:/office-target/p1/overlay\pdf
+pdfcraft uz-latn: 601 entries (uz-latn=601) -> E:/office-target/p1/overlay/_i18n\pdfcraft\catalog-uz-latn.tsv
+pdfcraft uz-cyrl: 2415 entries (ru=1814, uz-cyrl=601) -> E:/office-target/p1/overlay/_i18n\pdfcraft\catalog-uz-cyrl.tsv
+pdfcraft dates-uz-latn.tsv: 38 rows
+pdfcraft dates-uz-cyrl.tsv: 38 rows
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+   Compiling pdfcraft-engine v0.8.0 (C:\Users\uge226\Desktop\office\upstream\pdfcraft\crates\engine)
+   Compiling pdfcraft-ui-egui v0.8.0 (C:\Users\uge226\Desktop\office\upstream\pdfcraft\crates\ui-egui)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6m 04s
+     Running unittests src\lib.rs (E:/office-target/p1/upstream-pdfcraft\debug\deps\pdfcraft_ui_egui-94dee372bdfb2067.exe)
+
+running 123 tests
+test i18n::tests::broken_catalog_falls_back_to_english ... ok
+test i18n::tests::bulgarian_diagnostics_preserve_user_values ... ok
+test i18n::tests::bulgarian_covers_commands_and_catalogue ... ok
+test i18n::tests::brazilian_portuguese_covers_commands_and_catalogue ... ok
+test i18n::tests::bulgarian_is_registered ... ok
+test i18n::tests::brazilian_portuguese_is_registered ... ok
+test i18n::tests::candidates_walk_from_specific_to_general ... ok
+test i18n::tests::catalog_kinds_are_parsed_and_looked_up ... ok
+test i18n::tests::catalogs_handle_escapes_crlf_and_distinct_contexts ... ok
+test i18n::tests::contextual_id_and_plural_lookups_have_english_fallbacks ... ok
+test i18n::tests::current_language_is_per_thread ... ok
+test i18n::tests::czech_covers_commands_and_catalogue ... ok
+test i18n::tests::contextual_labels_fall_back_to_the_plain_translation ... ok
+test i18n::tests::czech_covers_every_menu_label ... ok
+test i18n::tests::czech_plurals_dates_and_history_labels ... ok
+test i18n::tests::date_languages_are_the_interface_languages ... ok
+test i18n::tests::formatting_reorders_parameters_without_reinterpreting_user_text ... ok
+test i18n::tests::arabic_plurals_follow_the_six_cldr_forms ... ok
+test i18n::tests::arabic_covers_commands_and_catalogue ... ok
+test i18n::tests::arabic_lookups_are_in_display_order ... FAILED
+test i18n::tests::arabic_is_registered_and_persists ... ok
+test i18n::tests::french_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::french_covers_commands_and_catalogue ... ok
+test i18n::tests::german_certificate_subject_has_a_distinct_context ... ok
+test i18n::tests::french_is_registered ... ok
+test i18n::tests::german_covers_commands_and_catalogue ... ok
+test i18n::tests::german_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::history_labels_keep_captured_names ... ok
+test i18n::tests::german_is_registered ... ok
+test i18n::tests::hungarian_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::hungarian_covers_commands_and_catalogue ... ok
+test i18n::tests::hungarian_is_registered ... ok
+test i18n::tests::italian_covers_commands_and_catalogue ... ok
+test i18n::tests::japanese_covers_commands_and_catalogue ... ok
+test i18n::tests::bulgarian_covers_ui_literals ... ok
+test i18n::tests::czech_covers_ui_literals ... ok
+test i18n::tests::hungarian_covers_ui_literals ... ok
+test i18n::tests::german_covers_ui_literals ... ok
+test i18n::tests::brazilian_portuguese_covers_ui_literals ... ok
+test i18n::tests::french_covers_ui_literals ... ok
+test i18n::tests::arabic_covers_ui_literals ... ok
+test i18n::tests::language_persists_and_invalid_input_keeps_current_language ... ok
+test i18n::tests::italian_covers_ui_literals ... ok
+test i18n::tests::kazakh_catalog_does_not_leave_english_ui_text ... ok
+test i18n::tests::kazakh_covers_commands_and_catalogue ... ok
+test i18n::tests::lithuanian_covers_credits_labels ... ok
+test i18n::tests::lithuanian_covers_contextual_calendar_certificate_and_preference_labels ... ok
+test i18n::tests::lithuanian_covers_commands_and_catalogue ... ok
+test i18n::tests::lithuanian_dialog_wording_preserves_resolution_and_selection_counts ... ok
+test i18n::tests::lithuanian_wording_fixes_keep_context_and_meaning ... ok
+test i18n::tests::bulk_field_properties_labels_are_in_every_full_catalog ... ok
+test i18n::tests::lithuanian_is_registered_and_persists ... ok
+test i18n::tests::lookups_fall_back_to_english ... ok
+test i18n::tests::macos_language_list_is_parsed ... ok
+test i18n::tests::malformed_lines_are_reported_not_fatal ... ok
+test i18n::tests::neutral_locale_does_not_override_display_language ... ok
+test i18n::tests::plurals_and_placeholders ... ok
+test i18n::tests::preferences_resolve_with_fallback ... ok
+test i18n::tests::russian_covers_commands_and_catalogue ... ok
+test i18n::tests::russian_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::russian_is_registered ... ok
+test i18n::tests::missing_ocr_models_messages_are_translated ... ok
+test i18n::tests::simplified_chinese_covers_about_credit_labels ... ok
+test i18n::tests::simplified_chinese_covers_commands_and_catalogue ... ok
+test i18n::tests::japanese_labels_have_glyphs ... ok
+test i18n::tests::simplified_chinese_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::japanese_covers_ui_literals ... ok
+test i18n::tests::simplified_chinese_is_registered ... ok
+test i18n::tests::slovene_covers_commands_and_catalogue ... ok
+test i18n::tests::slovene_diagnostics_preserve_user_values ... ok
+test i18n::tests::slovene_is_registered_and_persists ... ok
+test i18n::tests::slovene_plurals_cover_dual_few_teens_and_large_counts ... ok
+test i18n::tests::spanish_covers_commands_and_catalogue ... ok
+test i18n::tests::arabic_labels_have_glyphs ... ok
+test i18n::tests::spanish_covers_what_the_engine_says ... ok
+test i18n::tests::spanish_is_registered ... ok
+test i18n::tests::kazakh_covers_ui_literals ... ok
+test i18n::tests::strict_validation_skips_only_the_bad_line ... ok
+test i18n::tests::spanish_keeps_the_holes_in_what_the_engine_says ... ok
+test i18n::tests::tags_map_to_languages ... ok
+test i18n::tests::telugu_covers_commands_and_catalogue ... ok
+test i18n::tests::keyboard_key_names_have_a_separate_context_and_english_fallback ... FAILED
+test i18n::tests::local_gotor_confirmation_is_translated_in_all_supported_languages ... FAILED
+test i18n::tests::telugu_labels_have_glyphs ... ok
+test i18n::tests::tool_names_inside_sentences_are_lowercased_except_in_german ... ok
+test i18n::tests::traditional_chinese_accessibility_meaning ... ok
+test i18n::tests::telugu_is_registered ... ok
+test i18n::tests::traditional_chinese_form_vocabulary ... ok
+test i18n::tests::traditional_chinese_is_registered ... ok
+test i18n::tests::turkish_covers_commands_and_catalogue ... ok
+test i18n::tests::ukrainian_calendar_uses_month_case_for_dates ... ok
+test i18n::tests::ukrainian_covers_commands_and_catalogue ... ok
+test i18n::tests::russian_covers_ui_literals ... ok
+test i18n::tests::ukrainian_history_and_diagnostics_preserve_user_values ... ok
+test i18n::tests::ukrainian_integer_plurals_cover_teens_and_large_counts ... ok
+test i18n::tests::signature_appearance_labels_are_in_every_catalog ... ok
+test i18n::tests::undo_and_redo_labels_use_the_catalog_phrase_when_there_is_one ... ok
+test i18n::tests::ukrainian_is_registered_and_persists ... ok
+test i18n::tests::turkish_covers_every_menu_label ... ok
+test i18n::tests::ukrainian_catalog_does_not_leave_english_ui_text ... ok
+test i18n::tests::lithuanian_covers_ui_literals ... ok
+test i18n::tests::vietnamese_covers_contextual_calendar_certificate_and_preference_labels ... ok
+test i18n::tests::vietnamese_covers_commands_and_catalogue ... ok
+test i18n::tests::vietnamese_covers_credits_labels ... ok
+test i18n::tests::simplified_chinese_covers_ui_literals ... ok
+test i18n::tests::vietnamese_is_registered_and_persists ... ok
+test i18n::tests::windows_display_language_resolves_chinese_scripts ... ok
+test i18n::tests::slovene_covers_ui_literals ... ok
+test i18n::tests::windows_display_language_query_returns_a_locale_tag ... ok
+test office_overlay_tests::hidden_commands_follow_the_flags ... ok
+test object_ui::tests::selection_labels_and_refusals_are_translated_in_every_catalog ... FAILED
+test office_overlay_tests::fallback_font_covers_uzbek ... ok
+test icons::tests::every_catalog_icon_exists ... ok
+test office_overlay_tests::rebrand_follows_the_overlay ... ok
+test office_overlay_tests::uzbek_is_offered_only_with_the_overlay_catalogs ... ok
+test i18n::tests::vietnamese_leaves_no_unapproved_english_fallbacks ... ok
+test i18n::tests::spanish_covers_ui_literals ... ok
+test i18n::tests::turkish_covers_ui_literals ... ok
+test i18n::tests::ukrainian_covers_ui_literals ... ok
+test i18n::tests::bundled_catalogs_are_consistent ... ok
+test i18n::tests::vietnamese_covers_ui_literals ... ok
+test i18n::tests::lithuanian_covers_bundled_catalog_keys_including_dynamic_dialog_labels ... ok
+test i18n::tests::vietnamese_covers_bundled_catalog_keys ... ok
+
+failures:
+
+---- i18n::tests::arabic_lookups_are_in_display_order stdout ----
+
+thread 'i18n::tests::arabic_lookups_are_in_display_order' (18084) panicked at crates\ui-egui\src\i18n\mod.rs:3265:9:
+assertion `left == right` failed
+  left: "Suite PDF حول"
+ right: "PdfCraft حول"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- i18n::tests::keyboard_key_names_have_a_separate_context_and_english_fallback stdout ----
+
+thread 'i18n::tests::keyboard_key_names_have_a_separate_context_and_english_fallback' (18828) panicked at crates\ui-egui\src\i18n\mod.rs:596:17:
+uz-latn: Ctrl
+
+---- i18n::tests::local_gotor_confirmation_is_translated_in_all_supported_languages stdout ----
+
+thread 'i18n::tests::local_gotor_confirmation_is_translated_in_all_supported_languages' (3936) panicked at crates\ui-egui\src\i18n\mod.rs:961:17:
+uz-latn lacks GoToR confirmation label: Open this local PDF?
+
+---- object_ui::tests::selection_labels_and_refusals_are_translated_in_every_catalog stdout ----
+
+thread 'object_ui::tests::selection_labels_and_refusals_are_translated_in_every_catalog' (12540) panicked at crates\ui-egui\src\object_ui.rs:433:17:
+assertion `left != right` failed: uz-latn: Drag the selection to move it. Esc clears the selection.
+  left: "Drag the selection to move it. Esc clears the selection."
+ right: "Drag the selection to move it. Esc clears the selection."
+
+
+failures:
+    i18n::tests::arabic_lookups_are_in_display_order
+    i18n::tests::keyboard_key_names_have_a_separate_context_and_english_fallback
+    i18n::tests::local_gotor_confirmation_is_translated_in_all_supported_languages
+    object_ui::tests::selection_labels_and_refusals_are_translated_in_every_catalog
+
+test result: FAILED. 119 passed; 4 failed; 0 ignored; 0 measured; 312 filtered out; finished in 0.26s
+
+error: test failed, to rerun pass `-p pdfcraft-ui-egui --lib`
+done rc=101

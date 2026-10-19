@@ -1,0 +1,154 @@
+overlay docs: written to E:/office-target/p1/overlay\docs
+wordcraft uz-latn: 784 entries (uz-latn=784) -> E:/office-target/p1/overlay/_i18n\wordcraft\catalog-uz-latn.tsv
+wordcraft uz-cyrl: 2571 entries (ru=1787, uz-cyrl=784) -> E:/office-target/p1/overlay/_i18n\wordcraft\catalog-uz-cyrl.tsv
+   Compiling wordcraft-ui-egui v0.7.0 (C:\Users\uge226\Desktop\office\upstream\wordcraft\crates\ui-egui)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4m 58s
+     Running unittests src\lib.rs (E:/office-target/p1/upstream-wordcraft\debug\deps\wordcraft_ui_egui-dff2aef22d3fff02.exe)
+
+running 76 tests
+test i18n::tests::built_in_style_names_are_translated_for_display_and_user_styles_are_not ... ok
+test i18n::tests::brazilian_portuguese_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::bundled_interface_fonts_cover_brazilian_portuguese_without_system_fallbacks ... ok
+test i18n::tests::bulgarian_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::bundled_interface_fonts_cover_bulgarian_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_estonian_letters ... ok
+test i18n::tests::bundled_interface_fonts_cover_german_letters ... ok
+test i18n::tests::bundled_interface_fonts_cover_croatian_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_italian_letters ... ok
+test i18n::tests::bundled_interface_fonts_cover_french_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_czech_without_system_fallbacks ... ok
+test i18n::tests::brazilian_portuguese_covers_the_entire_existing_interface_catalog ... ok
+test i18n::tests::bundled_interface_fonts_cover_hungarian_without_system_fallbacks ... ok
+test i18n::tests::an_italian_interface_writes_new_documents_in_italian ... ok
+test i18n::tests::a_czech_interface_writes_new_documents_and_plain_text_in_czech ... ok
+test i18n::tests::a_polish_interface_writes_new_documents_in_polish ... ok
+test i18n::tests::bundled_interface_fonts_cover_serbian_latin_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_polish_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_serbian_cyrillic_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_turkish_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_vietnamese_letters ... ok
+test i18n::tests::bundled_interface_fonts_cover_russian_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_ukrainian_without_system_fallbacks ... ok
+test i18n::tests::bundled_interface_fonts_cover_swedish_letters ... ok
+test i18n::tests::context_entries_override_only_their_context_and_unknown_contexts_are_rejected ... ok
+test i18n::tests::current_language_is_per_thread ... ok
+test i18n::tests::chinese_interface_fonts_load_and_cover_simplified_hanzi ... ok
+test i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog ... FAILED
+test i18n::tests::croatian_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::czech_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::german_locales_and_saved_preference_keep_document_content ... ok
+test i18n::tests::estonian_locales_and_saved_preference_keep_document_content ... ok
+test i18n::tests::french_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::hungarian_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::german_covers_the_interface_catalog_and_keeps_count_labels_neutral ... ok
+test i18n::tests::korean_print_settings_and_printer_feedback_are_translated ... ok
+test i18n::tests::lookups_fall_back_to_english ... ok
+test i18n::tests::italian_locales_and_saved_preference_keep_document_content ... ok
+test i18n::tests::malformed_catalog_lines_are_skipped_not_fatal ... ok
+test i18n::tests::only_cjk_languages_ask_for_an_installed_cjk_font ... ok
+test i18n::tests::placeholders_fill_without_reinterpreting_values ... ok
+test i18n::tests::korean_interface_fonts_load_and_cover_hangul ... ok
+test i18n::tests::polish_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::cjk_catalogs_are_covered_by_the_embedded_interface_faces ... ok
+test i18n::tests::czech_covers_the_entire_existing_interface_catalog ... ok
+test i18n::tests::estonian_covers_the_interface_catalog_and_keeps_count_labels_neutral ... ok
+test i18n::tests::serbian_locales_resolve_by_script ... ok
+test i18n::tests::russian_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::settings_resolve_with_fallback ... ok
+test i18n::tests::hungarian_covers_the_entire_existing_interface_catalog ... FAILED
+test i18n::tests::spanish_built_in_style_names_are_translated ... ok
+test i18n::tests::the_editing_languages_are_the_ones_wordcraft_can_proof ... ok
+test i18n::tests::russian_covers_the_entire_existing_interface_catalog ... ok
+test i18n::tests::system_locales_map_to_languages ... ok
+test i18n::tests::the_first_supported_preferred_language_wins ... ok
+test i18n::tests::the_language_setting_is_a_ui_command_and_persists ... ok
+test i18n::tests::swedish_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::ukrainian_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::serbian_covers_the_entire_existing_interface_catalog ... ok
+test i18n::tests::turkish_locales_and_saved_preference_work_without_changing_the_document ... ok
+test i18n::tests::vietnamese_translations_preserve_templates_and_count_labels ... ok
+test i18n::tests::italian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral ... ok
+test i18n::tests::swedish_covers_the_entire_existing_interface_catalog ... FAILED
+test i18n::tests::ukrainian_covers_the_entire_existing_interface_catalog ... ok
+test office_overlay_tests::the_about_blurb_loses_its_upstream_sentence_through_the_catalog_lookup ... ok
+test i18n::tests::vietnamese_locales_and_saved_preference_work_without_changing_the_document ... ok
+test office_overlay_tests::rebrand_follows_the_overlay ... ok
+test office_overlay_tests::fallback_font_covers_uzbek ... ok
+test office_overlay_tests::uzbek_is_offered_only_with_the_overlay_catalogs ... ok
+test i18n::tests::every_tab_and_command_is_translated ... FAILED
+test i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates ... FAILED
+test i18n::tests::bundled_catalogs_are_well_formed ... ok
+test i18n::tests::polish_covers_every_key_of_every_other_catalog ... ok
+test i18n::tests::vietnamese_covers_existing_catalog_keys_with_an_explicit_preview_fallback ... ok
+test i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral ... FAILED
+test i18n::audit::untranslated_interface_text has been running for over 60 seconds
+test i18n::audit::untranslated_interface_text ... FAILED
+
+failures:
+
+---- i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog stdout ----
+
+thread 'i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog' (10724) panicked at crates\ui-egui\src\i18n\tests.rs:1269:9:
+assertion `left == right` failed: WordCraft
+  left: "Suite Docs"
+ right: "WordCraft"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- i18n::tests::hungarian_covers_the_entire_existing_interface_catalog stdout ----
+
+thread 'i18n::tests::hungarian_covers_the_entire_existing_interface_catalog' (15108) panicked at crates\ui-egui\src\i18n\tests.rs:871:9:
+assertion `left == right` failed
+  left: "Suite Docs"
+ right: "WordCraft"
+
+---- i18n::tests::swedish_covers_the_entire_existing_interface_catalog stdout ----
+
+thread 'i18n::tests::swedish_covers_the_entire_existing_interface_catalog' (8960) panicked at crates\ui-egui\src\i18n\tests.rs:1432:9:
+assertion `left == right` failed: WordCraft
+  left: "Suite Docs"
+ right: "WordCraft"
+
+---- i18n::tests::every_tab_and_command_is_translated stdout ----
+
+thread 'i18n::tests::every_tab_and_command_is_translated' (6808) panicked at crates\ui-egui\src\i18n\tests.rs:152:5:
+untranslated: [
+    "uz-latn: \"Controls\"",
+]
+
+---- i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates stdout ----
+
+thread 'i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates' (6176) panicked at crates\ui-egui\src\i18n\tests.rs:792:9:
+assertion `left == right` failed
+  left: "Suite Docs"
+ right: "WordCraft"
+
+---- i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral stdout ----
+
+thread 'i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral' (8196) panicked at crates\ui-egui\src\i18n\tests.rs:1351:9:
+assertion `left == right` failed: WordCraft
+  left: "Suite Docs"
+ right: "WordCraft"
+
+---- i18n::audit::untranslated_interface_text stdout ----
+
+thread 'i18n::audit::untranslated_interface_text' (15892) panicked at crates\ui-egui\src\i18n\audit.rs:332:5:
+3 interface texts skip translation (wrap them in tl!):
+"Based on WordCraft, GridCraft, DeckCraft and PdfCraft by the ArtCraft team (MIT OR Apache-2.0)."  [Help › click, dialog about]
+"Copyright (c) the Suite contributors. MIT OR Apache-2.0."  [Help › click, dialog about]
+"Suite"  [File › info]
+
+
+
+failures:
+    i18n::audit::untranslated_interface_text
+    i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog
+    i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral
+    i18n::tests::every_tab_and_command_is_translated
+    i18n::tests::hungarian_covers_the_entire_existing_interface_catalog
+    i18n::tests::swedish_covers_the_entire_existing_interface_catalog
+    i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates
+
+test result: FAILED. 69 passed; 7 failed; 0 ignored; 0 measured; 486 filtered out; finished in 128.15s
+
+error: test failed, to rerun pass `-p wordcraft-ui-egui --lib`
+done rc=101

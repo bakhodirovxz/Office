@@ -1,0 +1,45 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 24.87s
+────────────
+ Nextest run ID e365f868-065c-489a-b663-6c618bfb5149 with nextest profile: ci
+    Starting 3491 tests across 133 binaries (44 tests and 1 binary skipped)
+        FAIL [   1.993s] (2581/3491) pdfcraft-ui-egui::combine_grid a_long_file_expanded_renders_only_its_pages_in_view_within_three_threads
+  stdout ───
+
+    running 1 test
+    test a_long_file_expanded_renders_only_its_pages_in_view_within_three_threads ... FAILED
+
+    failures:
+
+    failures:
+        a_long_file_expanded_renders_only_its_pages_in_view_within_three_threads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 58 filtered out; finished in 1.73s
+
+  stderr ───
+
+    thread 'a_long_file_expanded_renders_only_its_pages_in_view_within_three_threads' (21260) panicked at crates\ui-egui\tests\combine_grid.rs:1548:5:
+    only the pages in view (and a row either side): 0 of 300
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   9.189s] (2650/3491) pdfcraft-ui-egui::comments a_released_pen_stroke_stays_drawn_until_the_page_raster_has_it
+  stdout ───
+
+    running 1 test
+    test a_released_pen_stroke_stays_drawn_until_the_page_raster_has_it ... FAILED
+
+    failures:
+
+    failures:
+        a_released_pen_stroke_stays_drawn_until_the_page_raster_has_it
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 44 filtered out; finished in 9.03s
+
+  stderr ───
+
+    thread 'a_released_pen_stroke_stays_drawn_until_the_page_raster_has_it' (23240) panicked at crates\ui-egui\tests\comments.rs:431:5:
+    assertion `left == right` failed: still drawn from its points
+      left: 0
+     right: 1
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
