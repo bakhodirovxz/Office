@@ -61,3 +61,38 @@ hot spot (0002, 27 files; `recalc.rs`) did not conflict at this BASE. Real rebas
 - Projection of weekly cost = rate x weekly commits (701 to 993) is **not supportable** from this data: the rate is 0 conflicts per 48 commits, and the queue-touched files changed in only
   4 of 63 files (gridcraft) and 0 of 9 (wordcraft). The WP14 sync at about 7 days is the first real data point. Two points are not a trend.
 - Agent minutes are not human minutes; with no conflict there is no resolver time to report.
+
+# Second dry run, 2026-10-19 (WP14 step 2; nothing applied, BASE still 2026-10-17)
+
+Owner decision 2026-10-18 (option A): run now against the current upstream HEAD, no 7-day wait. Full reports: `docs/phase1/sync-reports/2026-10-19.md`.
+`--gates full` is still a stub in the script, so `quick` was used (verify-queue, register, i18n, gen-check, lockdiff, deny, `cargo check` native incl. `--workspace --all-targets`
+of the upstream tree, and wasm32 web). Release builds, sizes and tests are covered by the clean-checkout run (`docs/phase1/clean-checkout.md`), not by this dry run.
+
+Upstream **did move, but little**: 67 commits in about 2 days (newest 2026-10-18). Again a low-distance point, not a weekly one.
+
+| repo | BASE (2026-10-17) | NEW | commits | queue patches | churn on queue-touched files | clean | 3-way | conflict | rebase wall |
+|---|---|---|---|---|---|---|---|---|---|
+| wordcraft | eae2421 | f2e15cf | 3 | 10 | 1 file, +2/-2 | 10 | 0 | 0 | 5.2 s |
+| gridcraft | f1894c6 | 823c565 | 3 | 29 | 1 file, +16/-16 | 28 | 0 | 1 (0020, `Cargo.lock`) | 12.1 s survey, 102.3 s resolved |
+| deckcraft | 1dc6972 | 22db926 | 10 | 8 | 1 file, +4/-1 | 8 | 0 | 0 | 4.7 s |
+| pdfcraft | 924c4da | 645016a | 29 | 4 | 3 files, +7/-4 | 4 | 0 | 0 | 4.2 s |
+| craft-libs | 15ed713 | ae2f796 | 22 | 0 | - | - | - | - | - |
+| total | | | 67 | 51 | | 50 | 0 | 1 | |
+
+- **Patch outcomes: 50 of 51 clean (98 %), 0 three-way, 1 conflicting.** The conflict is a generated file, not source: gridcraft 0020 (pdf font embedding) adds a dependency line to
+  `Cargo.lock` under `gridcraft-pdf`, and upstream bumped that crate `0.7.0 -> 0.8.0` in the same lock stanza. Resolution: keep `0.8.0` plus the `epaint_default_fonts` dependency.
+  1 hunk, 4 interdiff lines, **92 s** agent wall time (about 1.5 min). This is a recurring-conflict candidate: every upstream version bump of a crate whose lock stanza a patch edits
+  collides here. Cheaper fix than resolving each time: have the patch not edit `Cargo.lock` (the domain lock is re-seeded by the script anyway), tracked as a follow-up for Phase 2.
+- Hot files (conflicting in two consecutive syncs): none yet; `Cargo.lock` (gridcraft) is the first candidate, to be confirmed by the next sync.
+- The brand, i18n, font and overlay patches (wordcraft 0100-0110, gridcraft 0100-0110, deckcraft 0100-0112, pdfcraft 0100-0110) rebased clean: **0 of 19 conflicted** in the hot overlay sites.
+  The R10 risk (brand patches in hot files) is not contradicted, but the sample is 2 days and the queue-touched files changed in only 4 of 130 files.
+- **Gates (quick): all PASS after the resolution** (run 2 for gridcraft; run 1 for the others): verify-queue, register (51 rows), gen-check x4, lockdiff x4 (0 version changes, 0 foreign
+  additions), deny x4, `cargo check` native + wasm32: docs 172 s, slides 126 s, pdf 244 s, sheets 106 s.
+- **i18n gate in a dry run fails by design** when an upstream catalog changed: pdfcraft added 1 key (`the name is not a plain file name`) and wordcraft changed 1 upstream `ru` value
+  ("Accessibility"). `--apply` runs the catalog merge. In run 1 `i18n-roundtrip` also failed while the stale catalogs were not merged (gridcraft was still unrebased in that scratch tree);
+  in the gridcraft-only run 2 the stale, roundtrip and lint gates passed. The cause of the run 1 roundtrip failure was not isolated (a dry run does not merge); to be confirmed on the real apply.
+- Wall time: run 1 763 s (12 m 47 s) for five repos, run 2 271 s. Rebase machine time was 26 s for run 1 (23 s per 100 upstream commits); the cost is the gates (about 9 min cold-ish, 2 min per domain).
+- **Rebase cost per PLAN 5.4** (this sync): resolver time 1.5 min for 67 commits, i.e. about **2.3 min per 100 upstream commits**; 50 of 51 patches clean; 4 resolution lines.
+  Together with the first sync (0 conflicts per 57 commits) that is 2 points over 124 commits and 1 conflict: **not a trend**, still no basis for a weekly projection (701 to 993 commits a week
+  in PLAN F6/D4). The weekly measurement is Phase 2 work (owner decision above).
+- Not applied: BASE for the gate stays 2026-10-17. The cache branches `office/queue-<new7>` hold the rebased queues; the scratch worktrees were removed by the script.
