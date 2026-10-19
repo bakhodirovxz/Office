@@ -58,7 +58,7 @@ run() {
     desktop) cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
     cli)     cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-cli" ;;
     web)     # sccache cannot spawn rustc for web-sys (command line too long on Windows), so web builds run without it
-             (unset RUSTC_WRAPPER; cd "domains/$d/apps/$d-web" && trunk build ${release:+--release} --locked) ;;
+             (unset RUSTC_WRAPPER; cd "domains/$d/apps/$d-web" && TRUNK_BUILD_DIST="$OFFICE_TARGET/dist/$d-web" trunk build ${release:+--release} --locked) ;;
     *) echo "unknown target $what"; return 2 ;;
   esac
   local rc=$?; local secs=$((SECONDS - t0))
