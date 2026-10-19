@@ -9,12 +9,14 @@ wait_unpaused() {
 
 # with_build_lock <cmd...>: one rustc-heavy job at a time (mkdir is atomic).
 with_build_lock() {
+  # nested call (ci.sh holds the lock and runs build.sh): the outer holder already serialises
+  [ -n "${OFFICE_LOCK_HELD:-}" ] && { "$@"; return; }
   local lock; lock="$(_lock_dir)"; mkdir -p "$(dirname "$lock")"
   wait_unpaused
   until mkdir "$lock" 2>/dev/null; do echo "waiting for build lock"; sleep 10; done
   # shellcheck disable=SC2064
   trap "rmdir '$lock' 2>/dev/null" EXIT INT TERM
-  "$@"; local rc=$?
+  export OFFICE_LOCK_HELD=1; "$@"; local rc=$?; unset OFFICE_LOCK_HELD
   rmdir "$lock" 2>/dev/null; trap - EXIT INT TERM
   return $rc
 }
