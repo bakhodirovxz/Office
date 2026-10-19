@@ -90,7 +90,13 @@ Upstream **did move, but little**: 67 commits in about 2 days (newest 2026-10-18
   additions), deny x4, `cargo check` native + wasm32: docs 172 s, slides 126 s, pdf 244 s, sheets 106 s.
 - **i18n gate in a dry run fails by design** when an upstream catalog changed: pdfcraft added 1 key (`the name is not a plain file name`) and wordcraft changed 1 upstream `ru` value
   ("Accessibility"). `--apply` runs the catalog merge. In run 1 `i18n-roundtrip` also failed while the stale catalogs were not merged (gridcraft was still unrebased in that scratch tree);
-  in the gridcraft-only run 2 the stale, roundtrip and lint gates passed. The cause of the run 1 roundtrip failure was not isolated (a dry run does not merge); to be confirmed on the real apply.
+  in the gridcraft-only run 2 the stale, roundtrip and lint gates passed.
+  **i18n-roundtrip finding (reproduced 2026-10-19, not a tool bug).** Rebuilt run 1's scratch tree (HEAD plus the rebased wordcraft f2e15cf, pdfcraft 645016a and deckcraft 22db926 queues, gridcraft still old)
+  and ran the gates by hand: `check-stale` FAIL (same 1 added key, 1 ru change), `roundtrip` FAIL with exactly `wordcraft: semantic equal: false` (2571 vs 2571 entries, the changed `ru` value) and
+  `pdfcraft: semantic equal: false` (upstream ru 2317 entries, exported 2316: the new key is missing); gridcraft passed, and the Uzbek-empty checks passed for all three. `roundtrip` compares the committed
+  catalog (`i18n/*.tsv`) exported as `ru` with upstream's own `ru` file, so it fails whenever the catalog is stale; it is the same condition as `i18n-stale`, reported a second time. After `cargo xt i18n extract`
+  (what `--apply` runs; it changed `i18n/pdfcraft.tsv` +2/-1 and `i18n/wordcraft.tsv` +1/-1) on that tree: `check-stale` PASS, `roundtrip` PASS ("round trip OK"), `lint` PASS (1879 rows, 0 errors).
+  So `--apply` merges the catalogs and then passes both gates; nothing to fix in `xtask`.
 - Wall time: run 1 763 s (12 m 47 s) for five repos, run 2 271 s. Rebase machine time was 26 s for run 1 (23 s per 100 upstream commits); the cost is the gates (2 to 4 min of cargo check per domain, sccache warm).
 - **Rebase cost per PLAN 5.4** (this sync): resolver time 1.5 min for 67 commits, i.e. about **2.3 min per 100 upstream commits**; 50 of 51 patches clean; 4 resolution lines.
   Together with the first sync (0 conflicts per 57 commits) that is 2 points over 124 commits and 1 conflict: **not a trend**, still no basis for a weekly projection (701 to 993 commits a week

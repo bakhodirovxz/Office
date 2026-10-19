@@ -433,7 +433,10 @@ job_web_smoke() {
   local cfg=ci/web-smoke/playwright.config.ts
   if [ "$NO_BUILD" = 1 ]; then note "skipped (no-build): needs built dists"; SKIPPED=$((SKIPPED+1)); return 0; fi
   [ -f "$cfg" ] || { note "$cfg missing (web-smoke spec not written yet)"; return 2; }
-  step playwright env DIST_ROOT="${CI_DIST_ROOT:-$OFFICE_TARGET/dist}" npx playwright test --config "$cfg"
+  local dist; dist=$(cd "${CI_DIST_ROOT:-$OFFICE_TARGET/dist}" && pwd) || { note "dist root missing"; return 2; }
+  step npm-ci npm ci --prefix ci/web-smoke || return 2
+  # the config path is relative to the cwd; npx resolves @playwright/test from ci/web-smoke/node_modules
+  step playwright env DIST_ROOT="$dist" npm exec --prefix ci/web-smoke -- playwright test --config "$cfg"
 }
 
 job_actionlint() {
