@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>Lotin ⇄ Kiril</title>
+	<script type="text/javascript" src="../v1/plugins.js"></script>
+	<script type="text/javascript" src="../v1/plugins-ui.js"></script>
+	<script type="text/javascript">
+		// The document server serves plugin files as "immutable" for a year, so a
+		// fixed script URL would pin every browser to the first release. A per-load
+		// query keeps the (small) scripts fresh after an update.
+		(function () {
+			var v = Date.now();
+			document.write('<script src="scripts/translit.js?v=' + v + '"><\/script>');
+			document.write('<script src="scripts/code.js?v=' + v + '"><\/script>');
+		})();
+	</script>
+</head>
+<body></body>
+</html>

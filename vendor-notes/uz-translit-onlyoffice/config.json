@@ -1,0 +1,29 @@
+{
+	"name": "Lotin ⇄ Kiril",
+	"nameLocale": {
+		"ru": "Латиница ⇄ Кириллица",
+		"uz": "Lotin ⇄ Kiril"
+	},
+	"guid": "asc.{CFA126E3-AA8A-4457-B4B7-99AA619AF960}",
+	"version": "1.0.0",
+	"minVersion": "8.2.0",
+	"offered": "Uzbekgidroenergo HRM",
+
+	"variations": [
+		{
+			"description": "Converts the selected Uzbek text between the Latin and Cyrillic alphabets.",
+			"descriptionLocale": {
+				"ru": "Переводит выделенный узбекский текст между латиницей и кириллицей.",
+				"uz": "Belgilangan o'zbekcha matnni lotin va kiril yozuvlari orasida o'giradi."
+			},
+			"url": "index.html",
+			"icons": "resources/%theme-type%(light|dark)/icon%scale%(default).%extension%(png)",
+			"isViewer": false,
+			"EditorsSupport": ["word", "cell", "slide"],
+			"type": "background",
+			"initDataType": "none",
+			"buttons": [],
+			"events": ["onContextMenuShow", "onContextMenuClick", "onToolbarMenuClick"]
+		}
+	]
+}
