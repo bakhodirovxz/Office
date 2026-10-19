@@ -1,0 +1,22 @@
+        FAIL [   1.670s] (2991/3488) pdfcraft-ui-egui::forms buttons_over_text_show_the_pointing_hand_not_the_i_beam
+  stdout ───
+
+    running 1 test
+    test buttons_over_text_show_the_pointing_hand_not_the_i_beam ... FAILED
+
+    failures:
+
+    failures:
+        buttons_over_text_show_the_pointing_hand_not_the_i_beam
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 26 filtered out; finished in 1.58s
+
+  stderr ───
+
+    thread 'buttons_over_text_show_the_pointing_hand_not_the_i_beam' (20844) panicked at crates\ui-egui\tests\forms.rs:561:5:
+    assertion `left == right` failed: printed text off any field shows the I-beam
+      left: Default
+     right: Text
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────

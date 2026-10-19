@@ -763,3 +763,16 @@ evidence = "docs/phase1/evidence/tests/final-run-pdfcli-check-overlap.log#check_
 since = "2026-10-20@924c4da"
 review = "every sync; move to a serial test group or a quiet runner"
 reviewed = "2026-10-20@phase1-exit"
+
+[[test]]
+app = "pdfcraft"
+crate = "pdfcraft-ui-egui"
+binary = "forms"
+name = "buttons_over_text_show_the_pointing_hand_not_the_i_beam"
+class = "flaky"
+env = "any"
+reason = "Load-sensitive timing: the test polls 100 x 10 ms for the page text layer to go live; on a loaded run (4 test threads) it ended with Default instead of Text. Passed in every other run."
+evidence = "docs/phase1/evidence/tests/final-run2-pdf-forms-cursor.log#buttons_over_text_show_the_pointing_hand_not_the_i_beam"
+since = "2026-10-20@924c4da"
+review = "every sync; move to a serial test group or a quiet runner"
+reviewed = "2026-10-20@phase1-exit"
