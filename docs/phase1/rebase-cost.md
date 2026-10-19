@@ -84,14 +84,14 @@ Upstream **did move, but little**: 67 commits in about 2 days (newest 2026-10-18
   1 hunk, 4 interdiff lines, **92 s** agent wall time (about 1.5 min). This is a recurring-conflict candidate: every upstream version bump of a crate whose lock stanza a patch edits
   collides here. Cheaper fix than resolving each time: have the patch not edit `Cargo.lock` (the domain lock is re-seeded by the script anyway), tracked as a follow-up for Phase 2.
 - Hot files (conflicting in two consecutive syncs): none yet; `Cargo.lock` (gridcraft) is the first candidate, to be confirmed by the next sync.
-- The brand, i18n, font and overlay patches (wordcraft 0100-0110, gridcraft 0100-0110, deckcraft 0100-0112, pdfcraft 0100-0110) rebased clean: **0 of 19 conflicted** in the hot overlay sites.
-  The R10 risk (brand patches in hot files) is not contradicted, but the sample is 2 days and the queue-touched files changed in only 4 of 130 files.
+- The brand, i18n, font and overlay patches (wordcraft 0100-0110, gridcraft 0100-0110, deckcraft 0100-0112, pdfcraft 0100-0110) rebased clean (the only conflict is the gridcraft lock file above).
+  The R10 risk (brand patches in hot files) is not contradicted, but the sample is 2 days and the queue-touched files changed in only 6 of 142 files.
 - **Gates (quick): all PASS after the resolution** (run 2 for gridcraft; run 1 for the others): verify-queue, register (51 rows), gen-check x4, lockdiff x4 (0 version changes, 0 foreign
   additions), deny x4, `cargo check` native + wasm32: docs 172 s, slides 126 s, pdf 244 s, sheets 106 s.
 - **i18n gate in a dry run fails by design** when an upstream catalog changed: pdfcraft added 1 key (`the name is not a plain file name`) and wordcraft changed 1 upstream `ru` value
   ("Accessibility"). `--apply` runs the catalog merge. In run 1 `i18n-roundtrip` also failed while the stale catalogs were not merged (gridcraft was still unrebased in that scratch tree);
   in the gridcraft-only run 2 the stale, roundtrip and lint gates passed. The cause of the run 1 roundtrip failure was not isolated (a dry run does not merge); to be confirmed on the real apply.
-- Wall time: run 1 763 s (12 m 47 s) for five repos, run 2 271 s. Rebase machine time was 26 s for run 1 (23 s per 100 upstream commits); the cost is the gates (about 9 min cold-ish, 2 min per domain).
+- Wall time: run 1 763 s (12 m 47 s) for five repos, run 2 271 s. Rebase machine time was 26 s for run 1 (23 s per 100 upstream commits); the cost is the gates (2 to 4 min of cargo check per domain, sccache warm).
 - **Rebase cost per PLAN 5.4** (this sync): resolver time 1.5 min for 67 commits, i.e. about **2.3 min per 100 upstream commits**; 50 of 51 patches clean; 4 resolution lines.
   Together with the first sync (0 conflicts per 57 commits) that is 2 points over 124 commits and 1 conflict: **not a trend**, still no basis for a weekly projection (701 to 993 commits a week
   in PLAN F6/D4). The weekly measurement is Phase 2 work (owner decision above).
