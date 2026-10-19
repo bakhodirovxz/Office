@@ -1,0 +1,12 @@
+    Checking rustybuzz v0.20.1
+   Compiling deckcraft-ui-egui v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\ui-egui)
+    Checking deckcraft-text v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\text)
+    Checking percent-encoding v2.3.2
+    Checking deckcraft-render v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\render)
+    Checking krilla v0.8.2 (E:\office-target\p1\wt\craftlibs\upstream\craft-libs\vendor\krilla)
+    Checking eframe v0.36.2
+    Checking craft-pdf v0.1.0 (E:\office-target\p1\wt\craftlibs\upstream\craft-libs\crates\pdf)
+    Checking deckcraft-pdf v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\pdf)
+    Checking deckcraft-engine v0.7.0 (E:\office-target\p1\wt\craftlibs\upstream\deckcraft\crates\engine)
+    Checking slides-web v0.1.0 (E:\office-target\p1\wt\craftlibs\domains\slides\apps\slides-web)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 1m 04s

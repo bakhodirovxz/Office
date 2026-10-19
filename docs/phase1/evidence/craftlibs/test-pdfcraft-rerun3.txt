@@ -1,0 +1,69 @@
+warning: patch `craft-pdf v0.1.0 (E:\office-target\p1\wt\craftlibs\upstream\craft-libs\crates\pdf)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+warning: patch `craft-pdf v0.1.0 (E:\office-target\p1\wt\craftlibs\upstream\craft-libs\crates\pdf)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+warning: pdfcraft-fonts@0.8.0: craft-fonts: not embedding Noto Sans CJK SC Regular (AGENTS.md §1.1)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.26s
+────────────
+ Nextest run ID 2ff1de7c-a3dd-43bb-a8df-0ff0bcc82f84 with nextest profile: ci
+    Starting 3 tests across 133 binaries (3532 tests and 1 binary skipped)
+────────────
+ Stress test iteration 1/3 (00:00:00 elapsed so far, 3 iterations remaining)
+        FAIL [   3.514s] [1/3] (2/3) pdfcraft-cli::check check_scans_overlapping_directories_once
+  stdout ───
+
+    running 1 test
+    test check_scans_overlapping_directories_once ... FAILED
+
+    failures:
+
+    failures:
+        check_scans_overlapping_directories_once
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.42s
+
+  stderr ───
+
+    thread 'check_scans_overlapping_directories_once' (10432) panicked at apps\pdfcraft-cli\tests\check.rs:73:9:
+    assertion `left == right` failed: {"detail":"exceeded 2s","file":"C:\\Users\\uge226\\AppData\\Local\\Temp\\pdfcraft-cli-check-overlap-13104\\input\\a.pdf","status":"timeout"}
+      left: String("timeout")
+     right: "ok"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ Stress test [  17.330s] iteration 1/3: 3 tests run: 2 passed, 1 failed, 3532 skipped
+────────────
+ Stress test iteration 2/3 (00:00:17 elapsed so far, 2 iterations remaining)
+ Stress test [   0.597s] iteration 2/3: 3 tests run: 3 passed, 3532 skipped
+────────────
+ Stress test iteration 3/3 (00:00:17 elapsed so far, 1 iteration remaining)
+ Stress test [   0.345s] iteration 3/3: 3 tests run: 3 passed, 3532 skipped
+────────────
+     Summary [  18.272s] 3/3 stress run iterations: 2 passed, 1 failed
+        FAIL [   3.514s] [1/3] (2/3) pdfcraft-cli::check check_scans_overlapping_directories_once
+  stdout ───
+
+    running 1 test
+    test check_scans_overlapping_directories_once ... FAILED
+
+    failures:
+
+    failures:
+        check_scans_overlapping_directories_once
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.42s
+
+  stderr ───
+
+    thread 'check_scans_overlapping_directories_once' (10432) panicked at apps\pdfcraft-cli\tests\check.rs:73:9:
+    assertion `left == right` failed: {"detail":"exceeded 2s","file":"C:\\Users\\uge226\\AppData\\Local\\Temp\\pdfcraft-cli-check-overlap-13104\\input\\a.pdf","status":"timeout"}
+      left: String("timeout")
+     right: "ok"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
