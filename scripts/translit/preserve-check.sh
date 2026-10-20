@@ -5,7 +5,7 @@
 # Prints IDENTICAL per file and direction, or the deltas; exit 1 if any differs.
 set -uo pipefail
 . "$(dirname "$0")/../env.sh"
-T=$(mktemp -d); rc=0
+T=$(mktemp -d); rc=0; EXE=""; [ -f "$OFFICE_TARGET/sheets/release/sheets-cli.exe" ] && EXE=.exe
 check() { # <kind> <cli> <savearg> <file>
   local kind=$1 cli=$2 save=$3 f=$4 n; n=$(basename "$f")
   "$cli" run --in "$f" $save "$T/b1.$kind" >/dev/null 2>&1 || { echo "FAIL $n: B1"; rc=1; return; }
@@ -17,6 +17,6 @@ check() { # <kind> <cli> <savearg> <file>
     python -I "$(dirname "$0")/preserve.py" "$kind" "$T/b$r.$kind" "$T/r$r.$kind" || rc=1
   done
 }
-for f in domains/sheets/tests/translit-fixtures/xlsx/*.xlsx; do check xlsx "$OFFICE_TARGET/sheets/release/sheets-cli.exe" --out "$f"; done
-for f in domains/slides/tests/translit-fixtures/pptx/*.pptx; do check pptx "$OFFICE_TARGET/slides/release/slides-cli.exe" --save "$f"; done
+for f in domains/sheets/tests/translit-fixtures/xlsx/*.xlsx; do check xlsx "$OFFICE_TARGET/sheets/release/sheets-cli$EXE" --out "$f"; done
+for f in domains/slides/tests/translit-fixtures/pptx/*.pptx; do check pptx "$OFFICE_TARGET/slides/release/slides-cli$EXE" --save "$f"; done
 rm -rf "$T"; exit $rc

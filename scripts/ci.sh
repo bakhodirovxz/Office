@@ -18,6 +18,8 @@
 #   build <domain|all> <desktop|web|cli|all>   release builds via scripts/build.sh
 #   sizes [--baseline] [--measure-base]        brotli/gzip of dist/<domain>-web vs web/budgets.toml
 #   translit-npm             uz-translit npm package: build, size budget, node tests, Chromium smoke (nothing is published)
+#   translit-preserve        xlsx/pptx formatting preservation of the transliteration (scripts/translit/preserve-check.sh, release sheets/slides CLIs)
+#   translit-perf (nightly)  108-page docx: perf_108 in release, fails when command -> layout exceeds 2 s
 #   web-smoke                Playwright smoke over every dist
 #   actionlint               lint .github/workflows/ci.yml
 #   release-tests (nightly)  cargo test --release per app with the quarantine
@@ -42,7 +44,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes translit-npm web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
+JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -461,6 +463,21 @@ job_translit_npm() {
   return $rc
 }
 
+# xlsx/pptx preservation (Phase 2 WP9): B (open, save) against R (open, convert, save), both directions. Needs the release CLIs;
+# they are built here (cheap when `build <d> cli` already ran).
+job_translit_preserve() {
+  local rc=0 d
+  for d in sheets slides; do bstep "build-$d-cli" scripts/build.sh "$d" cli --release || rc=1; done
+  [ "$rc" = 0 ] || return 1
+  bstep preserve-check scripts/translit/preserve-check.sh
+}
+
+# N1 budget (Phase 2 WP10): the 108-page docx, command -> finished layout, must stay under 2 s (the test asserts it).
+# Ignored in the normal test runs, so only the nightly profile runs it.
+job_translit_perf() {
+  bstep perf-108 env CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml     -p docs-translit --test perf perf_108 -- --ignored --nocapture --test-threads 1
+}
+
 job_web_smoke() {
   local cfg=ci/web-smoke/playwright.config.ts
   if [ "$NO_BUILD" = 1 ]; then note "skipped (no-build): needs built dists"; SKIPPED=$((SKIPPED+1)); return 0; fi
@@ -505,19 +522,26 @@ affected_domains() {
   echo $out
 }
 
+# Does the diff touch the transliteration surface (crates/uz-translit*, */crates/*-translit, its fixtures, the npm package or its scripts)?
+translit_changed() {
+  git diff --name-only "${CI_DIFF_BASE:-HEAD~1}" 2>/dev/null | grep -Eq '^(crates/uz-translit|domains/[a-z]+/(crates/[a-z]+-translit|tests/translit-fixtures)|ci/npm/uz-translit|scripts/(build-npm\.sh|translit/))'
+}
+
 profile_jobs() { # prints "job args" lines
   local p="$1" d a aff
   printf '%s\n' queue lint gen-check deny brand i18n
   case "$p" in
-    quick) for d in $(affected_domains); do echo "check $d"; echo "test $(app_of "$d")"; [ "$d" = docs ] && echo bind; done;;
+    quick) for d in $(affected_domains); do echo "check $d"; echo "test $(app_of "$d")"; [ "$d" = docs ] && echo bind; done
+           # transliteration surface (uz-translit golden/property tests, docs-translit incl. preservation, npm package, xlsx/pptx checks)
+           if translit_changed; then echo test-ours; echo translit-npm; echo translit-preserve; fi;;
     full|nightly)
       echo "test-ours"
       for a in $APPS; do echo "test $a"; done
       for d in $DOMAINS; do echo "check $d"; done
       echo bind
       for d in $DOMAINS; do echo "build $d all"; done
-      echo translit-npm; echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
-      if [ "$p" = nightly ]; then echo release-tests; echo fidelity; echo xlsx-bench; fi;;
+      echo translit-npm; echo translit-preserve; echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
+      if [ "$p" = nightly ]; then echo translit-perf; echo release-tests; echo fidelity; echo xlsx-bench; fi;;
   esac
 }
 
@@ -537,6 +561,8 @@ dispatch() { # <job> [args]
     build) run_job "build${1:+ $1}" job_build "$@";;
     sizes) run_job sizes job_sizes "$@";;
     translit-npm) run_job translit-npm job_translit_npm;;
+    translit-preserve) run_job translit-preserve job_translit_preserve;;
+    translit-perf) run_job translit-perf job_translit_perf;;
     web-smoke) run_job web-smoke job_web_smoke;;
     actionlint) run_job actionlint job_actionlint;;
     release-tests) run_job release-tests job_release_tests "$@";;

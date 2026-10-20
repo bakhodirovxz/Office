@@ -125,4 +125,4 @@ A "Transliterate" menu (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) calls
   `lib.rs` (`translit_status` in `run()`), and the labels in `cmd/translit.rs`.
 - Hot spots at each sync: the three `review()` functions, the three `context_menu()` functions, `run()`/`run_command()`. The English strings are not in any upstream catalog: `xtask/src/i18n/extract.rs`
   `OWN` lists them (otherwise `cargo xt i18n extract` marks their rows obsolete). Change a label in the patch, in `OWN`, in `i18n/*.tsv`, in `docs-translit` `specs()` (a test checks the labels are rows of `shared.tsv`).
-- ru: the catalog holds a Russian value for each row, but the build does not ship a ru export (`i18n export` without `--with-ru`), so a ru interface still shows these strings in English.
+- ru: the catalog holds a Russian value for each row and `i18n export` now always writes `catalog-ru.tsv` (upstream's Russian plus ours), but no app hook reads it yet (the `ru` entry of `LANGUAGES` embeds upstream's own file), so a ru interface still shows these strings in English until a 0110 follow-up patch merges the file.

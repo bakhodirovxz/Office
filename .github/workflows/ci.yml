@@ -261,6 +261,32 @@ jobs:
           path: ${{ env.OFFICE_TARGET }}/dist/npm/*.tgz
           if-no-files-found: error
 
+  translit-preserve:
+    # Phase 2 WP9/WP11: xlsx/pptx formatting preservation of the transliteration (builds the release sheets/slides CLIs)
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [queue]
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('domains/sheets/Cargo.lock', 'domains/slides/Cargo.lock') }}
+      - run: scripts/ci.sh translit-preserve
+
+  translit-perf:
+    # Phase 2 WP10/WP11: 108-page docx, command -> layout under 2 s (release test perf_108; ignored in every other run)
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [queue]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('domains/docs/Cargo.lock') }}
+      - run: scripts/ci.sh translit-perf
+
   release-tests:
     if: ${{ inputs.profile == 'nightly' }}
     needs: [test]

@@ -4,6 +4,9 @@ use std::time::Instant;
 use wordcraft_doc::StoryRef;
 use wordcraft_engine::{Session, io};
 
+/// Exit-gate budget: the whole command -> finished layout on the 108-page document (brief; `ci.sh translit-perf`, nightly).
+const BUDGET_MS: f64 = 2000.0;
+
 fn median(v: &mut [f64]) -> f64 {
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
     v[v.len() / 2]
@@ -136,6 +139,11 @@ fn perf_108() {
                 );
             }
         }
+        let total = median(&mut tot);
+        assert!(
+            total < BUDGET_MS,
+            "{name} {id}: command -> layout {total:.0} ms exceeds the {BUDGET_MS} ms budget"
+        );
         println!(
             "{name} {id}: pages after {pages}, paragraphs {}, runs {} | run() {:.0} ms (ours: convert+apply {:.0}, of which result.ms {}), relayout {:.0}, command->layout {:.0}, undo->layout {:.0}, redo->layout {:.0} (median of 5)",
             res["paragraphs"],
@@ -144,7 +152,7 @@ fn perf_108() {
             median(&mut ours),
             res["ms"],
             median(&mut lay),
-            median(&mut tot),
+            total,
             median(&mut undo),
             median(&mut redo)
         );
