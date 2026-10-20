@@ -98,10 +98,9 @@ fn variants() {
 /// passed through the 1995 -> 2026 letter substitution (`common::to_2026`) at test time.
 #[test]
 fn golden_2026() {
-    let o95 = Options::default();
     let o26 = Options {
         latin_alphabet: LatinAlphabet::Y2026,
-        ..o95
+        ..Options::default()
     };
     let (mut n, mut skipped, mut fails) = (0, 0, Vec::new());
     for r in table("golden.tsv")
@@ -109,12 +108,9 @@ fn golden_2026() {
         .filter(|r| r["status"].starts_with("reviewed:") && r["dir"] == "both")
     {
         let (lat, cyr) = (&r["latin"], &r["cyrillic"]);
-        // R15 quote guard rows: the substitution would read a closing quote as oʻ. s'h cannot round-trip (2026 writes plain "sh", which reads as ш), and rows that keep Latin text in
+        // R15 quote-guard rows (the substitution would misread a closing quote as oʻ) and rows that keep Latin text in
         // the Cyrillic output (protected spans, foreign words) are not letter-substituted by the engine.
-        if r["rule"].contains("R15")
-            || common::has_separated_sh(lat)
-            || cyr.chars().any(|c| c.is_ascii_alphabetic())
-        {
+        if r["rule"].contains("R15") || cyr.chars().any(|c| c.is_ascii_alphabetic()) {
             skipped += 1;
             continue;
         }
@@ -127,7 +123,7 @@ fn golden_2026() {
                 r["id"]
             ));
         }
-        let fwd = convert(&l26, Direction::ToCyrillic, &o95);
+        let fwd = convert(&l26, Direction::ToCyrillic, &o26);
         if fwd != *cyr {
             fails.push(format!(
                 "{} l2c {l26:?} -> {fwd:?}, expected {cyr:?}",

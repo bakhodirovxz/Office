@@ -1169,7 +1169,7 @@ S6–S8 are corpus measurements over S5: S6 is ц (Q4), S7 is ь (Q1), and S8 is
 
 ## 15. Reformed alphabet (2026, pending)
 
-**Status: not in force.** The law passed the Senate on 2026-09-10 and is not yet signed (§14, Q9). It is implemented behind `Options.latin_alphabet`; the default stays `Y1995`, so no existing output changes. Owner decision, 2026-10-20: support both alphabets, 1995 by default. Status of this section: `reviewed:agent-opus:2026-10-20` (not an owner review).
+**Status: not in force.** The law passed the Senate on 2026-09-10 and is not yet signed (§14, Q9). It is implemented behind `Options.latin_alphabet`; the default stays `Y1995`, so no existing output changes. Owner decision, 2026-10-20: support both alphabets, 1995 by default; explicit `Y2026` reads Latin as 2026 only (coordinator, same day). Status of this section: `reviewed:agent-opus:2026-10-20` (not an owner review).
 
 **Sources.**
 
@@ -1194,22 +1194,29 @@ S14 and S15 were given by the owner and were not fetched by this check. The deta
 
 ### 15.2 Behaviour
 
-- **→C always reads both alphabets** (the option is ignored). Mixed text, and mixed spelling inside one word, work: `Oʻzbekiştan` → Ўзбекиштан.
+`Options.latin_alphabet` is `Y1995` (default), `Y2026` or `Auto`.
+
+- **→C with `Y1995` (default) reads both alphabets.** Mixed text, and mixed spelling inside one word, work: `Oʻzbekiştan` → Ўзбекиштан.
   - The four letters map as in 15.1 and are single clusters, so case is trivial: ŞAHAR → ШАҲАР, Şahar → Шаҳар.
-  - **Decomposed input is normalised (R16):** `o`+U+0308, `g`+U+0306, `s`+U+0327 (or U+0326), `c`+U+0327, either case, compose before any rule runs. Combining marks on other Latin letters keep the foreign-word guard.
-  - **R14 guard:** ö ğ ş ç are not "diacritic Latin letters"; the guard does not fire on them, and `c`/`w` words are guarded as before. `Müller` is still guarded.
+  - **Decomposed input is normalised (R16):** `o`+U+0308, `g`+U+0306, `s`+U+0327 (or U+0326), `c`+U+0327, either case, compose before any rule runs. This holds for every option value. Combining marks on other Latin letters keep the foreign-word guard.
+  - **R14 guard:** ö ğ ş ç are not "diacritic Latin letters"; the guard does not fire on them. `Müller` is still guarded.
   - **R5:** ö counts as a vowel, and `e` after ğ is э, exactly as after oʻ and gʻ.
   - A tutuq between 2026 letters continues the word (maʼşuq → маъшуқ).
   - **Dictionary (R11):** word and stem keys are written in 1995 spelling. A 2026 word is expanded to the 1995 form for lookup (ö → oʻ, ş → sh, …), so `özbekkonsert` → ўзбекконцерт and `JŞŞIR` → ЖШШИР. A stem that would end inside one 2026 letter is not a hit.
-- **→L writes the chosen alphabet.** Under `Y2026`: ш, щ → ş; ч → ç; ў → ö; ғ → ğ.
+- **→C with `Y2026` reads 2026 text only.** ş ç ö ğ are letters, and `sh`, `ch`, `o'`, `g'` are **not** digraphs:
+  - `sh` is с + ҳ (Ishoq → Исҳоқ), `ch` is c + h (c is a foreign letter, so R14 guards the word), and every apostrophe is the tutuq (to'g'ri → тоъгъри; `s'h` is not a separator any more).
+  - Dictionary lookup keeps 1995 keys, but plain `sh`/`ch` in the input never matches a digraph key.
+  - Use this value for documents known to be in the 2026 alphabet.
+- **→C with `Auto`:** per call (per paragraph for `convert_runs`), if any of ö ğ ş ç (either case, also decomposed) occurs, the text is read as `Y2026`; otherwise as `Y1995`. A 2026 paragraph that has none of the four letters (no ş, ç, ö, ğ) is indistinguishable from 1995 and reads as 1995.
+- **→L writes the chosen alphabet** (`Auto` writes 1995). Under `Y2026`: ш, щ → ş; ч → ç; ў → ö; ғ → ğ.
   - **Case (R10).** Each is one letter, so a digraph never splits case: Ш → Ş, ШАҲАР → ŞAHAR, Шаҳар → Şahar, ШШ → ŞŞ. The multi-letter all-caps rule of §5.2 now applies only to ю, я, ё, ts and ye.
-  - **Dictionary and acronym targets** (which are stored in 1995 spelling) go through the same 1995 → 2026 letter substitution before case transfer: МЧЖ → MÇJ, ЖШШИР → JŞŞIR.
+  - **Dictionary and acronym targets** (stored in 1995 spelling) go through the same 1995 → 2026 letter substitution before case transfer: МЧЖ → MÇJ, ЖШШИР → JŞŞIR.
   - ng and the tutuq are unchanged. The `Apostrophe` option still applies to the tutuq.
 - **s'h separation (R4).** With `Y2026`, сҳ is written `sh` (s + h) with **no separator**: Исҳоқ → Ishoq, because ş is a distinct letter, so `sh` can only mean с + ҳ. With `Y1995`, it stays `Isʼhoq`.
-  - Consequence: →C cannot tell 2026 "sh" (сҳ) from 1995 "sh" (ш), because it reads both alphabets. A Cyrillic text with сҳ therefore does not round-trip through 2026 Latin (Исҳоқ → Ishoq → Ишоқ). This is the one non-round-trip class added by §15; it is listed in §9.4 terms as a `c2l`-only case. Use the 1995 alphabet if the Latin text is to be converted back.
+  - Round trip: Cyrillic → `Y2026` Latin → `Y2026` Cyrillic is lossless, сҳ included. Reading the same Latin with `Y1995` gives Ишоқ, so a 2026 document must be converted back with `Y2026` (or `Auto` when it contains one of the four letters).
 
 ### 15.3 Tests
 
-- `tests/alphabet2026.rs`: both directions, mixed input, decomposed forms, the guard, dictionary and acronyms, case.
-- `tests/golden.rs::golden_2026`: every approved `both` row of `golden.tsv` is checked in both directions with the Latin side mapped through the 1995 → 2026 substitution at test time (`tests/common/mod.rs`; the golden file is not duplicated). Skipped: rows that contain s'h, rows whose Cyrillic keeps Latin letters (protected spans), and R15 quote-guard rows (the substitution would misread the closing quote).
+- `tests/alphabet2026.rs`: both directions, mixed input, decomposed forms, the guard, dictionary and acronyms, case, explicit `Y2026` and `Auto` reading, the сҳ round trip.
+- `tests/golden.rs::golden_2026`: every approved `both` row of `golden.tsv` is checked in both directions with the Latin side mapped through the 1995 → 2026 substitution at test time (`tests/common/mod.rs`; the golden file is not duplicated). Both directions run with `Y2026` set, сҳ rows included. Skipped: rows whose Cyrillic keeps Latin letters (protected spans) and R15 quote-guard rows (the substitution would misread the closing quote).
 - `tests/props.rs`: `reformed_alphabet_properties` (2026 output = substitution of the 1995 output; round trip; randomly mixed alphabets; idempotence; run splits) and the run-split test over the new letters and both alphabets.

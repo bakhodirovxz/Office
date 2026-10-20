@@ -1,6 +1,6 @@
 //! Shared machinery: items (R16 view), words, case classes (R10), output pieces (R13) and the driver.
 use crate::chars::*;
-use crate::{Apostrophe, Direction, Options, c2l, l2c, scan};
+use crate::{Apostrophe, Direction, LatinAlphabet, Options, c2l, l2c, scan};
 use alloc::{string::String, vec::Vec};
 
 pub(crate) const PROT: u8 = 1; // inside a protected span (R12): verbatim, acts as a boundary
@@ -259,7 +259,7 @@ impl<'a> Seg<'a> {
         }
         let prev = self.items[i - 1].c;
         is_latin_ext(prev)
-            && (is_og(prev)
+            && ((is_og(prev) && self.opts.latin_alphabet != LatinAlphabet::Y2026)
                 || self
                     .items
                     .get(i + 1)
@@ -306,6 +306,15 @@ pub(crate) fn convert_segment(
         buf: String::new(),
     };
     let to_cyr = dir == Direction::ToCyrillic;
+    if opts.latin_alphabet == LatinAlphabet::Auto {
+        // Auto: a paragraph with any of ö ğ ş ç is read as 2026; otherwise 1995 (->L writes 1995)
+        let new = to_cyr && seg.items.iter().any(|t| is_new_letter(t.c));
+        seg.opts.latin_alphabet = if new {
+            LatinAlphabet::Y2026
+        } else {
+            LatinAlphabet::Y1995
+        };
+    }
     scan::mark(&mut seg.items, to_cyr && opts.roman_numerals, para_start);
     if to_cyr {
         l2c::mark_closers(&mut seg.items);

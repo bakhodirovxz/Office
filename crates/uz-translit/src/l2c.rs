@@ -1,4 +1,5 @@
 //! Latin -> Cyrillic (rules.md 4.x, cluster order 4.12).
+use crate::LatinAlphabet;
 use crate::chars::*;
 use crate::dict;
 use crate::engine::{CLOSER, Class, Item, PROT, Seg, Word};
@@ -83,7 +84,9 @@ fn foreign(seg: &Seg, w: &Word) -> bool {
     (w.ws..w.we).any(|i| {
         let it = seg.items[i];
         match it.c {
-            'c' | 'C' => !at(seg, i + 1, w.we).is_some_and(|n| n == 'h'),
+            'c' | 'C' => {
+                seg.opts.latin_alphabet == LatinAlphabet::Y2026 || at(seg, i + 1, w.we) != Some('h')
+            }
             'w' | 'W' => true,
             c if is_foreign_latin(c) => true,
             c => {
@@ -127,14 +130,24 @@ fn word_with(seg: &mut Seg, wi: usize, buf: &mut String) {
         buf.clear();
         let mut prev = ' ';
         let mut wide = false; // 2026 letters: one item, two key characters
+        let y26 = seg.opts.latin_alphabet == LatinAlphabet::Y2026;
         for t in &seg.items[w.ws..w.we] {
             if let Some((a, b)) = expand(t.c) {
                 buf.push(a);
                 buf.push(b);
                 wide = true;
             } else {
+                // explicit 2026 text: "sh"/"ch" are two letters (the \u{1} keeps them from matching a
+                // digraph key) and every apostrophe is the tutuq
+                if y26 && lower(t.c) == 'h' && matches!(lower(prev), 's' | 'c') {
+                    buf.push('\u{1}');
+                }
                 buf.push(if is_apos(t.c) {
-                    if is_og(prev) { '\u{2BB}' } else { '\u{2BC}' }
+                    if is_og(prev) && !y26 {
+                        '\u{2BB}'
+                    } else {
+                        '\u{2BC}'
+                    }
                 } else {
                     lower(t.c)
                 });
@@ -211,6 +224,7 @@ fn single(lc: char) -> Option<char> {
 
 /// The letter rules over items `from..we` of the word starting at `ws` (the part before `from` is the dictionary stem).
 fn letters(seg: &mut Seg, from: usize, ws: usize, we: usize) {
+    let digraphs = seg.opts.latin_alphabet != LatinAlphabet::Y2026;
     let mut i = from;
     while i < we {
         let c = seg.items[i].c;
@@ -218,13 +232,13 @@ fn letters(seg: &mut Seg, from: usize, ws: usize, we: usize) {
         let up = is_up(c);
         let (n1, n2, n3) = (at(seg, i + 1, we), at(seg, i + 2, we), at(seg, i + 3, we));
         let apos = |x: Option<char>| x.is_some_and(is_apos);
-        if matches!(lc, 'o' | 'g') && apos(n1) {
+        if digraphs && matches!(lc, 'o' | 'g') && apos(n1) {
             cluster(seg, i, i + 1, if lc == 'o' { 'ў' } else { 'ғ' }, up);
             i += 2;
-        } else if lc == 's' && apos(n1) && n2 == Some('h') {
+        } else if digraphs && lc == 's' && apos(n1) && n2 == Some('h') {
             cluster(seg, i, i + 1, 'с', up);
             i += 2;
-        } else if (lc == 's' || lc == 'c') && n1 == Some('h') {
+        } else if digraphs && (lc == 's' || lc == 'c') && n1 == Some('h') {
             cluster(seg, i, i + 1, if lc == 's' { 'ш' } else { 'ч' }, up);
             i += 2;
         } else if lc == 'y' {
