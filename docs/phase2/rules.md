@@ -6,7 +6,7 @@
 | **Scope** | The authoritative rule set for the `uz-translit` crate (Phase 2, WP1). It is precise enough to implement and test without making any language decisions. Adapter behaviour (Docs, Sheets, Slides) is named in §7.2 but specified in `PLAN.md` §3–§5. |
 | **Precedence** | 1. Owner decisions (PLAN.md header, 2026-10-20). 2. BRIEF Appendix A. 3. The official orthography: *Oʻzbek tilining asosiy imlo qoidalari* (Latin; Cabinet of Ministers resolution No. 339, 24 Aug 1995) and *Ўзбек орфографиясининг асосий қоидалари* (Cyrillic, 1956). 4. Agent decisions, listed in §12. The owner's `translit.js` is a reference only; Appendix A wins wherever they differ (PLAN.md §2). |
 | **Location** | PLAN.md WP1 named `crates/uz-translit/RULES.md`. This file is the spec; WP2 makes the crate's `RULES.md` a one-line pointer here. |
-| **Rule numbers in the sources** | The official texts are cited by name, not by paragraph. WP3 adds paragraph numbers when it quotes a rule in a golden row, and it does not guess them. |
+| **Rule numbers in the sources** | The 1995 rules are cited by item number ("1995 item 32") as published on lex.uz (§14). Other official texts are cited by lex.uz document id. Verified against the sources on 2026-10-20 (§14); the 1956 Cyrillic rules were not found online. |
 
 Notation:
 - `→C` means Latin → Cyrillic (`Direction::ToCyrillic`); `→L` means Cyrillic → Latin (`Direction::ToLatin`).
@@ -240,7 +240,8 @@ Multi-character outputs take their case from R10. A Latin letter inside Cyrillic
 - **→L output forms.** ў → `oʻ` and ғ → `gʻ` use U+02BB. The tutuq ъ → `ʼ` and the R4 separator use U+02BC.
   - With `Options.apostrophe = Ascii`, all three are U+0027 instead.
 - **→L leaves existing Latin alone.** Latin text already present in the input keeps its apostrophes; →L does not normalise text it does not convert.
-- Source: Appendix A; the 1995 alphabet (Oʻ oʻ, Gʻ gʻ, and the tutuq belgisi ʼ as separate signs). The choice of U+02BB/U+02BC follows the plugin and current official practice.
+- Source: Appendix A; the 1995 alphabet (Oʻ oʻ, Gʻ gʻ, and the tutuq belgisi as separate signs); 1995 item 32(1) (moʻjiza, moʻtadil, moʻtabar take no tutuq).
+  - The official texts prescribe glyph shapes, not code points: the alphabet law's table on lex.uz prints the letters as ``G`g` `` and ``O`o` `` and the sign as ``(`) — tutuq belgisi (apostrof)``, all with U+0060 (§14, S2). The choice of U+02BB/U+02BC follows lex.uz's own encoding (in the 1995 rules on lex.uz: 201 × U+02BB after o/g, 34 × U+02BC as tutuq) and the plugin.
 
 ### 4.2 R2: tutuq belgisi
 - **→C.** An apostrophe from `A` gives ъ when **all** of these hold:
@@ -256,7 +257,7 @@ Multi-character outputs take their case from R10. A Latin letter inside Cyrillic
   - taʼlim → таълим; eʼlon → эълон; sheʼr → шеър;
   - qatʼiy → қатъий; maʼyus → маъюс; MAʼNO → МАЪНО.
 - **→L.** ъ → ʼ, except in the R8 cases.
-- Source: Appendix A; the 1995 rules (the tutuq belgisi corresponds to Cyrillic ъ in Arabic loans).
+- Source: Appendix A; 1995 item 32 (the tutuq after a vowel in aʼlo, maʼyus, eʼlon, sheʼr; before a vowel in inʼom, sanʼat, qatʼiy, masʼul). The 1995 rules are Latin-only and do not name the Cyrillic ъ; the ʼ ↔ ъ correspondence is confirmed by the lex.uz parallel texts (§14, S5: sanʼati / санъати).
 
 ### 4.3 R3: digraphs sh, ch, and ng
 - **→C.** `s`+`h` → ш; `c`+`h` → ч. Each is one cluster. The case of the output is the case of the **first** letter (R10): Sh, SH → Ш; sH → ш.
@@ -276,7 +277,7 @@ Multi-character outputs take their case from R10. A Latin letter inside Cyrillic
 - **→L.** с immediately followed by ҳ/Ҳ (no intervening character other than transparent ones) → `sʼ`; then ҳ → `h`.
 - Examples: Isʼhoq → Исҳоқ; Is'hoq → Исҳоқ; Asʼhob → Асҳоб; IS'HOQ → ИСҲОҚ; Исҳоқ → Isʼhoq.
 - **Known input error.** A Latin `Ishoq` (written without the separator) gives Ишоқ. This is not corrected: it could equally be a real ш.
-- Source: Appendix A; the 1995 rules (the tutuq belgisi separates s and h when they are pronounced separately).
+- Source: Appendix A; 1995 item 17 ("Sh ҳарфлари икки товушни ифодаласа, улар орасига ʼ тутуқ белгиси қўйилади: Isʼhoq, asʼhob").
 
 ### 4.5 R5: е, э, ye
 **→C.** The order matters:
@@ -310,7 +311,7 @@ Examples: ер → yer; қаер → qayer; Европа → Yevropa; объек
 
 **No exceptions to the Latin word-start rule are needed.** Every Cyrillic word that starts with е is written ye in Latin. The dictionary may still override a word if one is found.
 
-Source: Appendix A; the 1995 rules (ye for Cyrillic е at word start and after vowels).
+Source: Appendix A. The 1995 rules state no Cyrillic correspondence, but their examples fit R5: item 6 (ekin, esla, ekran, eksport = экин, эсла, экран, экспорт; poyezd, atelye = поезд, ателье), item 7(2) (aerostat, poema: e after a/o), item 82 (Abduvaliyev = Абдувалиев). The lex.uz parallel texts agree (§14, S5).
 
 ### 4.6 R6: ё, ю, я and йў
 **→C.**
@@ -326,7 +327,7 @@ Source: Appendix A; the 1995 rules (ye for Cyrillic е at word start and after v
 
 **Loanwords with Cyrillic й + vowel** (район, майор, конвейер, фойе) give Latin `yo`/`ye` sequences. →C reads these back as ё/е, so they need dictionary entries (§6.4, group F).
 
-Source: Appendix A; the 1995 rules (yo yu ya as letter combinations).
+Source: Appendix A; 1995 item 25 (yoʻl, yigit, yetti, yaxshi, yoz, yulduz; tuya, dunyo, tayyor = йўл, йигит, етти, яхши, ёз, юлдуз; туя, дунё, тайёр). The 1995 law lists only sh, ch and ng as letter combinations; yo, yu, ya are y + vowel.
 
 ### 4.7 R7 and R7a: ц
 **→L (R7), fully by rule.**
@@ -337,7 +338,10 @@ Source: Appendix A; the 1995 rules (yo yu ya as letter combinations).
   - at a word start: цирк → sirk;
   - after a consonant: концерт → konsert; функция → funksiya;
   - after a consonant or ь: кальций → kalsiy; сцена → ssena.
-- Source: the 1995 rules (s at a word start and after consonants, ts after vowels) and Appendix A. The plugin agrees.
+- Word-final ц follows the same rule: марганец → marganets, сланец → slanets (after a vowel); кварц → kvars (after a consonant).
+- Source (corrected 2026-10-20): the 1995 rules contain **no** ц rule; the 1995 amendment removed the letter for ц from the alphabet (§14, S3). The rule is official **usage**: in the lex.uz parallel texts, R7 gives the official Latin for every ц token that has a Latin counterpart (3,768 tokens, 0 contradictions; §14, S6). Appendix A and the plugin agree.
+  - The lexicographer R. Jomonov (§14, S9) also writes s at a word **end**; official texts do not (marganets, slanets), so R7 keeps ts there.
+  - He writes a prefix + ц-root as s (антициклон → antisiklon, эпицентр → episentr); R7 gives antitsiklon. No official text was found; it stays a candidate dictionary class (§13.7).
 
 **→C (R7, default).** `ts` → тс and `s` → с. Native Uzbek words have т+с across morpheme boundaries (ketsa → кетса, otsiz → отсиз, aytsin → айтсин), so ц is never produced by default.
 
@@ -360,12 +364,14 @@ This covers the productive Russian suffix family -tsiya / -tsion / -tsial / -tsi
 **→C.** By rule, ъ is produced only from a tutuq apostrophe (R2). Russian ъ and the ъ of ўъ are restored only by the dictionary (§6.4, groups D and E). Without an entry: obyekt → обект, moʻjiza → мўжиза.
 
 **Decision D-09.** Rule 2 assumes that no Uzbek word has consonant + tutuq + е/ё/ю/я. None is known. A counter-example would lose its ʼ in →L.
+- Sources: 1995 item 32(1) lists maʼyus (rule 3) and moʻjiza without a tutuq (rule 1). объект / obyekt and субъект / subyekt occur in every lex.uz parallel text checked (rule 2; §14, S5).
 
 ### 4.9 R9 and R9a: ь
 **→L.**
 - **R9a:** ь/Ь immediately before о/О → `y`.
   - Examples: почтальон → pochtalyon; батальон → batalyon; павильон → pavilyon.
   - This sequence occurs only in Russian loans, and the Latin y keeps the sound. Decision D-10.
+  - Sources: the lexicographer R. Jomonov gives бульон → bulyon, павильон → pavilyon, медальон → medalyon (§14, S9). For почтальон the only official text found (Statistics Agency) writes Uzbek Cyrillic **почталон** and Latin **pochtalon**, without ь. R9a stays: it converts the Russian-style input почтальон; the Uzbek-style почталон ↔ pochtalon round-trips by rule.
 - Otherwise ь/Ь → nothing. Its effect on a following е is R5 (пьеса → pyesa).
   - Examples: фильм → film; апрель → aprel; компьютер → kompyuter.
 
@@ -375,6 +381,7 @@ This covers the productive Russian suffix family -tsiya / -tsion / -tsial / -tsi
 - `word` entries apply to the bare word only, so the inflected form falls back to the rules (yanvardan → январдан), which already gives the ь-less form.
 - `stem` entries drop a final ь whenever a remainder follows (§6.3).
 - →L ignores ь either way, so сентябрьда and сентябрда both give sentabrda.
+- Source (verified 2026-10-20): in six lex.uz Cyrillic texts (1992–2023), about 480 month + suffix tokens (сентябрдаги, апрелдан, январдан …) were found, and **none** keeps the ь; the bare forms keep it (сентябрь, календарь). An internal ь stays before a suffix (фильмлар). §14, S7.
 
 ### 4.10 R14: foreign Latin word guard (→C, `Options.foreign_latin_guard`, default on)
 - A **word** (§2.2) is copied verbatim if it contains any of:
@@ -725,6 +732,7 @@ All `dir` = `l2c` unless stated. For `l2c` rows, →L of the Cyrillic by rule gi
 | A4 | YaIM | ЯИМ | medium | GDP |
 
 Other Uzbek acronyms convert by rule (BMT ↔ БМТ, AQSH ↔ АҚШ, OʻzR ↔ ЎзР, ToshDU ↔ ТошДУ, IIV ↔ ИИВ). Decision D-14: an UPPER acronym gives SH/CH/YA in →L (AQSH, not AQSh).
+- Sources: 1995 items 74 and 79 write AQSH, BMT and ToshDTU; president.uz writes AQSH only; the 2023 Constitution and the 2022 Labour Code in Latin write all-caps headings with SH/CH/YO (78 such words, 0 Mixed). MChJ is the statutory abbreviation (LLC law, lex.uz/docs/-22525). JShShIR is **not** settled: gov.uz uses JShShIR and JSHSHIR on the same page. YaTT and YaIM were not found in an official text. §14, S4.
 
 **K. Keep (`keep`, →C only, exact case, copied verbatim) (33)**
 
@@ -732,7 +740,7 @@ PDF, USB, ID, HR, URL, HTML, XML, JSON, IBAN, IELTS, TOEFL, PhD, USD, EUR, UZS, 
 
 IT, API, IP, VPN, GPS, SMS, ISO, RUB, Apple, Zoom, Skype, Outlook, Linux are conf **medium**.
 
-`QR` is conf **low**, status `ambiguous`: QR-kod vs ҚР = Qoraqalpogʻiston Respublikasi. It is not compiled.
+`QR` is conf **medium** (changed 2026-10-20). The Tax Code writes QR-кодларнинг / QR-kodlarning: QR stays Latin in Cyrillic text (§14, S8). The residual risk is a Latin `QR` meaning Qoraqalpogʻiston Respublikasi (ҚР); no such use was found in the official texts checked.
 
 Exact case means that lower-case `it` (dog, ит) and `id` still convert. Words with c or w (Excel, Word, CD, kW) need no entry because of R14.
 
@@ -978,7 +986,7 @@ The PLAN quotas stand. Added for rules this spec introduces:
 | # | Decision | Basis | Reversible by |
 |---|---|---|---|
 | D-01 | `A` adds U+02BF ʿ and U+00B4 ´; it excludes U+2032 and U+02B9 | in use in typed Uzbek; the prime has another meaning | data change |
-| D-02 | Output: oʻ/gʻ = U+02BB, tutuq and the sʼh separator = U+02BC; `Ascii` option = U+0027 | 1995 alphabet; current official practice; the plugin | option |
+| D-02 | Output: oʻ/gʻ = U+02BB, tutuq and the sʼh separator = U+02BC; `Ascii` option = U+0027 | 1995 alphabet (shapes only, no code points); lex.uz's encoding of the official texts (§14, S2); the plugin | option |
 | D-03 | An apostrophe after o/g is always oʻ/gʻ, never a tutuq (except R15 closers) | 1995 spelling: moʻjiza; Uzbek has no гъ/оъ | — |
 | D-04 | Tutuq only between two Latin letters; elsewhere an apostrophe is punctuation | Appendix A example set; fixes plugin bug C6 | — |
 | D-05 | ng is never a unit: n ↔ н, g ↔ г | both scripts write two letters; no separator exists | — |
@@ -986,11 +994,11 @@ The PLAN quotas stand. Added for rules this spec introduces:
 | D-07 | Compound boundaries without a hyphen are not detected (Ўзбекэнерго does not round-trip) | no morphology in the crate | dictionary rows |
 | D-08 | R7a: vowel + ts + i + (y, a, o, e) → ц | productive -tsiya/-tsion family; no native counter-example | option or rule change |
 | D-09 | Cyrillic consonant + ъ + е/ё/ю/я → no tutuq in Latin (Russian ъ); vowel + ъ + iotated keeps ʼ (маъюс) | Russian ъ follows a prefix consonant; Uzbek tutuq words have a vowel there | — |
-| D-10 | R9a: ьо → yo (почтальон → pochtalyon) | the y keeps the pronunciation; common Latin spelling | rule change |
-| D-11 | A final ь of a stem is dropped before an Uzbek suffix (сентябрда, январдан); →L accepts both | prevalent Cyrillic usage in official texts | data change |
+| D-10 | R9a: ьо → yo (почтальон → pochtalyon) | the y keeps the pronunciation; lexicographer R. Jomonov (bulyon, pavilyon, medalyon; §14, S9). The Statistics Agency writes the Uzbek forms почталон / pochtalon, which round-trip by rule | rule change |
+| D-11 | A final ь of a stem is dropped before an Uzbek suffix (сентябрда, январдан); →L accepts both | verified: 0 of ~480 suffixed month forms keep ь in lex.uz Cyrillic texts (§14, S7) | data change |
 | D-12 | щ → sh, ы → i; other non-Uzbek Cyrillic letters unchanged | Uzbek Latin has no shch; the plugin agrees | — |
 | D-13 | Mixed case: a capital is all-upper when its neighbour letter is a capital (§5.2) | Appendix A "as far as possible"; the plugin heuristic made word-aware | — |
-| D-14 | UPPER acronyms → SH/CH/YA (AQSH); common Mixed ones via `acro` (MChJ, YaTT, JShShIR, YaIM) | consistent with SHAHAR; the Mixed forms are the dominant convention | data change |
+| D-14 | UPPER acronyms → SH/CH/YA (AQSH); common Mixed ones via `acro` (MChJ, YaTT, JShShIR, YaIM) | verified: 1995 items 74, 79 (AQSH); president.uz; all-caps lex.uz headings; MChJ is statutory (§14, S4). JShShIR/JSHSHIR split on gov.uz | data change |
 | D-15 | All-caps Latin acronyms **convert** unless `keep` or R14 | Uzbek acronyms dominate HR documents | data change |
 | D-16 | Roman numerals (I V X L C only, 1–399) protected in →C; a single I/V/X + `.` is protected only at a paragraph start | Cyrillic documents keep Latin numerals; initials mid-text; DXX = ДХХ | option |
 | D-17 | Codes: CODE-A (1–4 upper-case letters + digits) and CODE-B (an upper-case letter touching ≥ 3 digits), in both scripts | owner decision 2026-10-20 (codes as typed) | owner |
@@ -1000,16 +1008,161 @@ The PLAN quotas stand. Added for rules this spec introduces:
 | D-21 | Cyrillic combining pairs composed; transparent characters ignored for context; words containing them skip the dictionary | real Word documents contain soft hyphens | — |
 | D-22 | ru/en-tagged text converted; other non-uz tags skipped; an option skips ru/en | owner decision 2026-10-20; PLAN D1 | owner / option |
 | D-23 | Field results converted; field codes and hyperlink targets never touched | PLAN §3.4 | param |
-| D-24 | `yod` gets no entry (ёд "memory" vs йод "iodine"); `sirk` is word-only (sirka) | false-hit risk | data change |
+| D-24 | `yod` gets no entry (ёд "memory" vs йод "iodine"); `sirk` is word-only (sirka) | false-hit risk; both readings occur in one official text (PF-158: йод препарати / yod preparati, ёдгорлик / yodgorlik; §14, S8) | data change |
 
 ---
 
 ## 13. Genuinely uncertain (watch in use; `ambiguous` rows at the gate)
-1. **D-11, ь before suffixes.** Usage is mixed (сентябрьда and сентябрда both occur). Our →C picks the ь-less form.
-2. **D-10, ьо → yo.** pochtalyon vs pochtalon. Both Latin spellings exist; the 1995 text gives no example we could cite.
-3. **D-16, a single I/V/X with a dot.** At a paragraph start, `V. Aliyev` (an initial) stays Latin. Mid-text, a section `I.` would convert to `И.`.
-4. **R15 with ASCII apostrophes throughout** (`'bog'`). This is inherently ambiguous.
-5. **D-14, AQSH vs AQSh.** Both appear in official Latin texts.
-6. **`QR`** (QR-kod vs ҚР). Left unprotected and marked `ambiguous`.
-7. **D-08 (R7a) and D-09 (consonant + ъ + iotated).** They rest on the absence of counter-examples, not on a cited rule. The lex.uz parallel texts in WP3 are the test.
-8. **CODE-A with 1–4 letters.** A short all-caps word + `-digit` (e.g. `BOB-2`) stays Latin.
+Status after the source check of 2026-10-20 (§14).
+
+1. **D-11, ь before suffixes. Resolved.** Official Cyrillic drops the final ь before a suffix (§14, S7). →L still accepts сентябрьда.
+2. **D-10, ьо → yo. Partly resolved.** R9a matches the lexicographer's forms (pavilyon, medalyon, bulyon; S9). For почтальон, the only official text found writes почталон / pochtalon (S10), so the dictionary `variant` row pochtalon → почтальон is withdrawn (`source-verification.md`). No official text with pochtalyon was found.
+3. **D-16, a single I/V/X with a dot. Open.** No source covers it. At a paragraph start, `V. Aliyev` (an initial) stays Latin. Mid-text, a section `I.` would convert to `И.`.
+4. **R15 with ASCII apostrophes throughout** (`'bog'`). **Open;** inherently ambiguous.
+5. **D-14, AQSH vs AQSh. Resolved: AQSH** (S4). Only the old 1995 lex.uz title style writes Mixed caps (YoZUVIGA, ETISh). JShShIR vs JSHSHIR stays open (gov.uz uses both).
+6. **`QR`. Resolved: keep QR** (S8). Residual risk: a Latin QR meaning Qoraqalpogʻiston Respublikasi.
+7. **D-08 (R7a) and D-09. No counter-example found.**
+   - R7a: the S5 Latin texts have 228 word types (3,059 tokens) of the form vowel + tsi + y/a/o/e. The Cyrillic texts have no vowel + тси + vowel word, so there is no counter-example (S6).
+   - D-09: one official exception was found. The Law on Education writes **adʼyunktura** (адъюнктура), whereas obyekt, subyekt and kuryer follow rule 2. →L gives adyunktura; the →C direction is correct by rule (golden SRC-016).
+   - Both decisions still rest on absence, not on a cited rule.
+   - New candidate class from S9: prefix + ц-root (антициклон → antisiklon). No official text was found.
+8. **CODE-A with 1–4 letters. Open.** A short all-caps word + `-digit` (e.g. `BOB-2`) stays Latin.
+9. **New: the 2026 alphabet amendment. Open; owner decision.** Parliament has passed a law that replaces Gʻ Oʻ Sh Ch with Ğ Ö Ş Ç (28 letters + the tutuq). On 2026-10-20 it was not yet on lex.uz (S12). This spec targets the 1995 alphabet, which is in force.
+10. **New: D-24 `yod`. Open.** Both ёд and йод are official (S8), so the bare word needs context.
+11. **New: the 1956 Cyrillic rules and the imlo lugʻati** were not found online. The Cyrillic side of every rule rests on official usage (S5–S8), not on a cited Cyrillic rule.
+
+---
+
+## 14. Sources and verification (2026-10-20)
+
+**Method.**
+- Each source was fetched from its primary site. Quotes are copied from the fetched text, keeping the original script and apostrophes.
+- "Corpus" counts come from a throw-away script over the downloaded pages (not committed).
+- Golden rows cite these ids in the `source` column.
+
+| Id | Source | URL |
+|---|---|---|
+| S1 `lex-1625271` | Cabinet of Ministers resolution No. 339 of 24 Aug 1995, annex *Ўзбек тилининг асосий имло қоидалари* | https://lex.uz/docs/1625271 |
+| S2 `lex-112286` | Law No. 931-XII of 2 Sep 1993 on the Latin-based Uzbek alphabet, as amended in 1995 | https://lex.uz/docs/-112286 |
+| S3 `lex-116158` | Law No. 71-I of 6 May 1995, which amends it | https://lex.uz/docs/-116158 |
+| S4 `president-uz` | The President's site, Latin news pages | https://president.uz/oz/lists/view/8522 (also /2183, /6688, /8595, /8625, /8636) |
+| S4 | LLC law (Latin) | https://lex.uz/docs/-22525 |
+| S4 | gov.uz news page | https://gov.uz/oz/davaktiv/news/view/203789 |
+| S5 `lex-parallel`, `lex-<id>` | lex.uz texts in both scripts: Cyrillic at `/docs/<id>`, Latin at `/docs/-<id>`. See the list below the table. | https://lex.uz/docs/6257288 and https://lex.uz/docs/-6257288, and so on |
+| `lex-attested` | A golden row whose Latin word (≥ 4 letters) and Cyrillic word both occur in S5. This checks occurrence only, not an aligned pair. | — |
+| S9 | R. Jomonov (PhD, lexicographer), kun.uz video lessons, Jan 2021 | https://kun.uz/news/2021/01/25/senariymi-yoki-ssenariy-ts-tovushli-sozlar-imlosi ; https://kun.uz/news/2021/01/31/yumshatish-belgili-sozlarning-lotin-alifbosidagi-imlosi-nozik-nuqtalar |
+| S10 `stat-366` | Statistics Agency, postal indicators table | https://api.siat.stat.uz/media/uploads/sdmx/sdmx_data_366.pdf |
+| S11 `kun-2017-sentabr` | kun.uz, "Sentabrmi yoki sentyabr?" (quotes dotsent M. Boltayev) | https://kun.uz/news/2017/10/14/sentabrmi-eki-sentyabr |
+| S12 | The 2026 alphabet amendment: gov.uz (Senate approval) and kun.uz (lower house) | https://gov.uz/oz/cirns/news/view/217333 ; https://kun.uz/news/2026/07/07/ozbekistonda-alifbo-islohoti-boyicha-qonun-qabul-qilindi-4cf07b |
+| S13 | Cabinet of Ministers resolution No. 61 of 10 Feb 2021 (road map) | https://lex.uz/docs/-5281850 |
+
+S5 document ids:
+- 5013007 (ЎРҚ-637, 2020)
+- 6257288 (Labour Code, 2022)
+- 6445145 (Constitution, 2023)
+- 5841063 (ПФ-60, 2022)
+- 6600413 (ПФ-158, 2023)
+- 4674902 (Tax Code)
+- 6058066 (postal law, 2022)
+- 1472830 (2009 law)
+- 2831618 (concert activity)
+- 3210102 (ПФ-5044, 2017)
+
+S6–S8 are corpus measurements over S5: S6 is ц (Q4), S7 is ь (Q1), and S8 is QR and yod (Q6).
+
+### 14.1 Findings, by question
+**Q1. ь before suffixes (D-11): settled by usage.**
+- S7 (corpus over the S5 Cyrillic texts):
+  - month + suffix forms: 480+ tokens, of which **0** keep the ь (сентябр- 76, феврал- 100, октябр- 40, апрел- 37 …);
+  - bare forms keep the ь (сентябрь 13, календарь 92);
+  - other stems agree (медалга, табелни);
+  - an internal ь stays before a suffix (фильмлар / filmlar).
+- S1, item 56: "1991-yilning 1-sentabri". Item 1: "sentabr, noyabr каби сўзларда".
+- S11: "«sentabr» so‘zi lotincha imlomizda «sentabr» deb, «oktabr» esa «oktabr» ko‘rinishida yoziladi. Bu borada hech qanday muhokamaga o‘rin yo‘q." In the S5 Latin texts, sentyabr occurs 0 times and sentabr 82 times.
+- The 1956 rules themselves were not found online. S9: "kirill yozuvi bo‘yicha imlo qoidalari oxirgi marta 1956-yilda tasdiqlangan".
+
+**Q2. pochtalyon vs pochtalon: partly settled.**
+- S10: "Xat-xabar yetkazib beruvchi pochtalonlar soni"; in Uzbek Cyrillic, "Хат-хабар етказиб берувчи почталонлар сони". The Russian column has "Почтальоны".
+- S9 (the soft-sign lesson): "Бульон – bulyon, сеньор – senyor, павильон – pavilyon, медальон – medalyon."
+- No lex.uz text uses the word.
+- Result: R9a is kept (§4.9). pochtalon ↔ почталон is official and round-trips by rule. The dictionary `variant` row is withdrawn.
+
+**Q3. AQSH vs AQSh, and digraphs in capitals: settled (D-14).**
+- S1, item 74: "Таркибли номларнинг бош ҳарфидан иборат қисқартмалар … бош ҳарф билан ёзилади: AQSH (Amerika Qo'shma Shtatlari), BMT (Birlashgan Millatlar Tashkiloti), AES (atom elektr stansiyasi) каби. Қисқартма таркибида бўғинга тенг қисм бўлса, унинг биринчи ҳарфигина бош ҳарф билан ёзилади: ToshDTU".
+- S1, item 79: "AQSH, BMT, ToshDU, 16, 245, 1994, XIX каби."
+- S4, president.uz: for example "Oʻzbekiston Prezidenti AQSH Prezidentining maxsus vakilini qabul qildi". Over six pages: AQSH 45 times, AQSh 0 times.
+- S5 Latin: all-caps headings write SH, CH and YO in full (SHERIKLIK, JOYLASHTIRISH, MIRZIYOYEV): 78 words, 0 Mixed. Only the 1995 title in S3 uses the old Mixed style ("LOTIN YoZUVIGA … JORIY ETISh").
+- MChJ, S4 (LLC law): "“masʼuliyati cheklangan jamiyat” degan soʻzlarni yoki MChJ abbreviaturasini oʻz ichiga olishi kerak".
+- JShShIR: the gov.uz page writes both "JShShIR" and "JSHSHIR".
+- YaTT and YaIM: not found in an official text.
+- Oʻ in an abbreviation: S1, item 49, has the example "OʻzXDP" (title-case Oʻ). OʻzR was not found in the texts checked.
+
+**Q4. ц ↔ ts / s (R7, R7a): settled by usage; the spec's source is corrected.**
+- S3: "1-moddadagi “31 harf va 1 tutuq belgisi (apostrof)dan” soʻzlari “26 ta harf va 3 ta harflar birikmasidan” soʻzlari bilan almashtirilsin. 2. S s, Ɉ ɉ harflari mustaqil harf belgisi sifatida alifbodan chiqarilsin."
+  - lex.uz renders the removed letter as "S s". S9 says that the 1993 letter for ц was c: "«ц» o‘rniga «c» belgisi qabul qilindi. 1995 yilgi o‘zgartirishlardan so‘ng mazkur harf o‘zbek lotin alifbosidan chiqarib tashlandi."
+- S1 has no ц rule; item 16 covers only S. Its examples include:
+  - "Rossiya Federatsiyasi" (item 71);
+  - "unter-ofitser" (item 54);
+  - "radiostansiya" (item 48);
+  - "AES (atom elektr stansiyasi)" (item 74).
+- S6 (corpus over S5):
+  - ц tokens by context: between vowels 3,209; after a consonant, before a vowel 574; at a word start 26; at a word end 4.
+  - R7 gives the official Latin for 3,768 tokens. The other 18 had no Latin counterpart in the corpus (their documents' Latin texts were not loaded). **0 contradictions.**
+  - At a word start: цирк / sirk, цехларда / sexlarda, цемент / sement, центнер / sentner, цикл / sikl, цензура / senzura, цивилизация / sivilizatsiya, цирконий / sirkoniy.
+  - After a consonant: функция / funksiya, акциядорлар / aksiyadorlar, концепция / konsepsiya, станция / stansiya, концерт / konsert (16 of 16), сценарий / ssenariy.
+  - After a vowel: лицензия / litsenziya, процесс / protsess, доцент / dotsent, офицер / ofitser, кириллица / kirillitsa.
+  - At a word end: марганец / marganets, сланец / slanets, кварц / kvars.
+- S9 quotes:
+  - "Agar «ц» so‘z boshida va oxirida kelsa, shuningdek, so‘z o‘rtasida undosh tovushdan keyin kelsa, «s» bilan yozish mumkin … Циркуль – sirkul, цирк – sirk; акция – aksiya, концерт – konsert".
+  - "«ц» harfi so‘z o‘rtasida ikki unli tovush orasida kelsa, «ts» shaklida o‘girish kerak. Masalan, доцент – dotsent, акация – akatsiya, конституция – konstitutsiya".
+  - "Антициклон – antisiklon, эпицентр – episentr, геоцентрик – geosentrik."
+  - The word-end s is not official usage (marganets). The prefix class is unconfirmed.
+
+**Q5. е/э, ё/ю/я, ъ: settled; no change.**
+- S1 examples:
+  - item 6: e = э at a word start; poyezd, atelye;
+  - item 7(2): "ae, oe унлилари … е ёзилади: aerostat, poema";
+  - item 25: Y + vowel;
+  - item 82: "А.D. Abduvaliyev".
+- S1, item 32: "1) aʼlo, baʼzan, maʼyus, taʼzim; raʼy, taʼb; eʼlon, eʼtibor, eʼtiqod, meʼmor, neʼmat, sheʼr, feʼl; Nuʼmon, shuʼla каби ўзлашма сўзларда унлидан кейин шу унли товушнинг чўзиқроқ айтилишини ифодалаш учун қўйилади; moʻjiza, moʻtadil, moʻtabar каби сўзларда оʻ унлиси чўзиқроқ айтилса ҳам, тутуқ белгиси қўйилмайди; 2) inʼоm, sanʼat, qatʼiy, masʼul каби ўзлашма сўзларда …"
+- S5:
+  - объект / obyekt and субъект / subyekt occur in every text (Tax Code Cyrillic: объекти 110, объектлари 72 …);
+  - курьерлик / kuryerlik 159 times (ье after ь → ye);
+  - карьер / karyer;
+  - ПФ-158: "цирк санъати" / "sirk sanʼati" (ъ ↔ ʼ);
+  - one exception to D-09: ЎРҚ-637 writes адъюнктура / **adʼyunktura**.
+
+**Q6. yod and QR-kod (S8).**
+- S5 (ПФ-158): "3 — 15 ёшдаги болаларни йод препарати" / "3 — 15 yoshdagi bolalarni yod preparati", and ёдгорлик / yodgorlik in the same text.
+  - Result: D-24 is kept, and AMB-010 stays `ambiguous`.
+- S5 (Tax Code): "QR-кодларнинг" / "QR-kodlarning" (5 hits each). No Latin "QR" meaning Qoraqalpogʻiston was found.
+  - Result: `QR` becomes a keep entry.
+
+**Q7. Apostrophe glyphs.**
+- S2 table (lex.uz rendering): the letters are "G`g`" and "O`o`", and the sign is "(`) — tutuq belgisi (apostrof)". The pronunciation column has "Gʻgʻ" and "Oʻoʻ (oʻrdak)".
+- S3, item 3: "Ḡ ḡ harfi G` g` shaklida".
+- The official texts give shapes, not Unicode code points. lex.uz encodes its texts with U+02BB for oʻ/gʻ and U+02BC for the tutuq: in S1, 201 and 34 occurrences, plus 2 stray U+2019/U+0027.
+  - Result: D-02 is kept, with its basis restated.
+- S13 plans "transliteratsiyaga moʻljallangan axborot dasturiy taʼminotlar uchun yagona talab" (a uniform requirement for transliteration software, due in 2022). It was not found published.
+
+**Q8. Ambiguous golden rows.**
+
+| Row | Result |
+|---|---|
+| AMB-007 pochtalon | **reviewed**, `c2l` for now (S10); becomes `both` after dictionary change SV-03 |
+| AMB-008 QR-kod | **reviewed**, Cyrillic fixed to `QR-код`, `c2l` for now (S5); becomes `both` after SV-04 |
+| AMB-010 yod | still `ambiguous` (both readings are official) |
+| AMB-001/002/003, 016/017, 018 | still `ambiguous`; no source covers them (official texts write "elektron pochta", not e-mail) |
+| AMB-020/021 bilyard, mayonez | still `ambiguous`; no official text. WP2 has already promoted the dictionary rows, so these rows can be promoted on the dictionary's authority. |
+| AMB-022 sink | still `ambiguous`; the Tax Code uses rux / рух for zinc |
+| SOFT-065 moʻmin | still `ambiguous`; no online dictionary was found |
+
+**Q9 (new). The 2026 alphabet amendment (S12).**
+- gov.uz: "Senatning 19-yalpi majlisida “Lotin yozuviga asoslangan o‘zbek alifbosini joriy etish to‘g‘risida”gi O‘zbekiston Respublikasi Qonuniga o‘zgartirish kiritish haqida”gi Qonun muhokama qilindi. Qonunga ko‘ra, lotin yozuviga asoslangan o‘zbek alifbosini 26 ta harf va 3 ta harflar birikmasi o‘rniga 28 ta harf va 1 ta tutuq belgisidan tashkil topishini nazarda tutuvchi o‘zgartirishlar kiritilmoqda."
+- kun.uz: "Gʻ harfi Ğ shaklida, Oʻ harfi Ö shaklida, Sh harfi Ş shaklida, Ch harfi Ç shaklida ifodalanishi mumkin." The same article says that the law also needs the President's signature.
+- On 2026-10-20, lex.uz/docs/-112286 still shows the 1995 text (edition dates 12.10.1993 and 17.06.1995).
+- Unverified: the signature and the entry-into-force date. Reports say the Ng combination is dropped; that is unverified too.
+
+### 14.2 Spec changes made by this check
+- Sections changed: §4.1, §4.2, §4.4, §4.5, §4.6, §4.7 (corrected source; word-final ц), §4.8, §4.9 (R9a, D-11), §6.4 J and K (QR), §12 (D-02, D-10, D-11, D-14, D-24), §13 (statuses), and §14 (new).
+- No rule's behaviour changed. The QR keep row and the dictionary list in `source-verification.md` are data changes.
