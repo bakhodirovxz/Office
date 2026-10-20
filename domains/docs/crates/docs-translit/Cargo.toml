@@ -18,3 +18,8 @@ wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
 wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
 uz-translit = { path = "../../../../crates/uz-translit" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
+
+[dev-dependencies]
+# Same versions as the upstream workspace already locks (no new lock entries): the preservation tests read the saved packages.
+quick-xml = "0.41"
+zip = { version = "3", default-features = false, features = ["deflate"] }

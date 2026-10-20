@@ -728,10 +728,19 @@ fn deck_universe(root: &Path) -> Universe {
 /// every extract would mark their rows obsolete.
 const OWN: [(&str, &[&str]); 9] = [
     ("Transliterate", &["wordcraft", "gridcraft", "deckcraft"]),
-    ("Latin to Cyrillic", &["wordcraft", "gridcraft", "deckcraft"]),
-    ("Cyrillic to Latin", &["wordcraft", "gridcraft", "deckcraft"]),
+    (
+        "Latin to Cyrillic",
+        &["wordcraft", "gridcraft", "deckcraft"],
+    ),
+    (
+        "Cyrillic to Latin",
+        &["wordcraft", "gridcraft", "deckcraft"],
+    ),
     ("Auto-detect", &["wordcraft", "gridcraft", "deckcraft"]),
-    ("Nothing to convert", &["wordcraft", "gridcraft", "deckcraft"]),
+    (
+        "Nothing to convert",
+        &["wordcraft", "gridcraft", "deckcraft"],
+    ),
     (
         "{n} items skipped (other language, locked or field)",
         &["wordcraft", "gridcraft", "deckcraft"],

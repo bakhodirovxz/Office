@@ -953,3 +953,25 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
 - **Measured (release, engine, `docs/phase2/perf.md`).** Sheets: 200,000 text cells 1.07 s, 800,000 cells 3.7 s (4.6 us a cell, half of it recalculation and row heights in `edit()`); slides: 8,500 paragraphs of a 500-slide deck 76 ms.
 - **Gates.** `verify-queue.sh all` OK (gridcraft 30, deckcraft 9 patches), `cargo xt register check` 54 rows OK, `gen-domain --check all` up to date, `lockdiff` sheets and slides `0 version changes ... 0 foreign additions`, `ci.sh check sheets` and `check slides` native and wasm32 OK. CLI: `sheets-cli commands --json` and `slides-cli commands` list the three ids, `run --cmd 'tools.translitCyrl={}'` converts a workbook and the sample deck.
 - **Still to do:** UI entries and catalogs (WP7), preservation harness on Office-written xlsx/pptx (WP9).
+
+## Phase 2 WP7 + WP9 + WP10 N2/N3 (2026-10-20)
+- **WP7 UI entries (patches `wordcraft/0121`, `gridcraft/0121`, `deckcraft/0121`; 57 patches, 57 REGISTER rows).** A "Transliterate" menu with Latin to Cyrillic, Cyrillic to Latin and Auto-detect:
+  Docs Review > Language (menu button) and the text context menu (submenu, selection only); Sheets Review tab (button + menu) and two items in the cell context menu; Slides Review (button + menu) and a submenu
+  in the shape/text context menu. Result as a status line (Docs, Slides) or toast (Sheets): "{n} paragraphs/cells converted", "Nothing to convert", "{n} items skipped ...", "{n} formulas contain text ...".
+  No keyboard shortcut (the plan: none; gridcraft keytips need no row, Excel has no such command). The engine command labels were renamed to the menu labels ("Latin to Cyrillic", "Cyrillic to Latin", "Auto-detect")
+  in docs-translit and the two carried engine modules; a test checks the labels are catalog rows. **Catalog:** 9 new rows (7 in `shared.tsv`, 2 in `gridcraft.tsv`), en/ru/uz-Latn/uz-Cyrl;
+  uz-Latn "Lotinchadan kirillchaga" / "Kirillchadan lotinchaga" / "Avtomatik aniqlash", uz-Cyrl made with `uz-translit` itself. Reviewed by an opus sub-agent, which changed 3 rows (ru "Автоопределение", "boshqa tilda" in the skipped message,
+  ru of the formulas message); status `reviewed:agent-opus:2026-10-20` (agent review, not owner review). `cargo xt i18n extract` needed an `OWN` list in xtask (upstream catalogs do not contain these keys); lint 0 errors, roundtrip OK, check-stale OK.
+  **Not done:** the ru strings are in the catalog, but no ru export ships with the apps (existing pipeline), so a ru UI shows them in English.
+  **Evidence:** `docs/phase2/evidence/ui/` (1.1 MB, 11 PNG): web apps in uz-Latn (menu, conversion through the UI with the status line, context menu) for Docs, Sheets and Slides, plus Docs in uz-Cyrl; no tofu. Slides has no browser-language detection, so the language was picked on File > Account.
+  No desktop window captures (web only).
+- **WP9 formatting preservation.** Fixtures written by Word, Excel and PowerPoint 16 through COM (`scripts/translit/make-fixtures.ps1`; own PIDs only, nothing was running before): 9 .docx (the 8 of the plan, tracked changes off and on), 2 .xlsx, 2 .pptx, synthetic text.
+  - **docx** (`cargo nextest run -p docs-translit preserve`, 10 tests): B (open, save) against R (open, convert, save), both directions (round 2 converts the Cyrillic result back). Non-text parts byte-identical, text parts equal as XML trees ignoring `w:t`
+    text (digraph-tail runs may vanish), model check of runs/props/mark/objects, plus a text check against `uz_translit::convert` and a test that the comparer sees a changed property. **All identical.** Findings: (1) Word writes its own symbol font on a U+2060 word joiner; after conversion
+    that run is absorbed by the letter before it (the invisible character loses its font): reported, excluded from the model check; (2) with recording on (`06-tracked-on`) R differs from B by design (2 revisions per run) and `docProps/app.xml` word counts change; there the test checks non-text parts, accept-all text = converted text and reject-all text = original.
+  - **xlsx/pptx** (`scripts/translit/preserve-check.sh`, comparer `preserve.py`, 2+2 files, both directions): **IDENTICAL** for all 8 comparisons, after two documented normalisations: xlsx the cached string result of a formula cell may change (B8 `="Natija: "&A2` follows A2; the `<f>` is identical),
+    pptx adjacent runs with identical `a:rPr` are merged in R (the engine's `normalize()`) but not in B. No other delta; no rich-text delta beyond the known P3 loss (identical in B and R).
+- **WP10 N2/N3 (`docs/phase2/perf.md`).** Desktop `docs.exe`, control channel, median of 5: command 55-73 ms, next frame after the command **0.40-0.42 s**, painted new layout (screenshot, upper bound) **0.93-0.94 s**. Web (docs-web wasm, headless Chromium, palette to next presented frame): **1.26-1.27 s**. Gate 2 s: met on both.
+  Android emulator: **not obtained** (the 108-page file never reported `wordcraft:opened` in 240 s); R1 stays open for phones.
+- **Gates run:** see the end of this section.
+

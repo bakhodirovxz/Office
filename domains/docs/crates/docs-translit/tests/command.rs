@@ -478,3 +478,21 @@ fn headers_and_text_boxes_are_part_of_the_document_scope() {
         );
     }
 }
+
+/// The palette looks a command up by its label, so each label must be a row of the canonical catalog (the ribbon uses the same text).
+#[test]
+fn command_labels_are_catalog_rows() {
+    let tsv = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../../i18n/shared.tsv"
+    ))
+    .unwrap();
+    let sources: Vec<&str> = tsv.lines().filter_map(|l| l.split('\t').nth(2)).collect();
+    for spec in docs_translit::specs() {
+        assert!(
+            sources.contains(&&*spec.label),
+            "{} is not a row of i18n/shared.tsv",
+            spec.label
+        );
+    }
+}
