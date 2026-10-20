@@ -1,0 +1,195 @@
+# Exceptions dictionary (docs/phase2/rules.md section 6). Only reviewed:* rows are compiled in by build.rs.
+latin	cyrillic	match	dir	conf	status	source	note
+yanvar	январь	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	inflected forms by rule: yanvardan → январдан (D-11)
+fevral	февраль	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+aprel	апрель	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+iyun	июнь	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+iyul	июль	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sentabr	сентябрь	stem	both	high	reviewed:agent-opus:2026-10-20	rules.md	→L by rule would give "sentyabr"; the official Latin is sentabr
+oktabr	октябрь	stem	both	high	reviewed:agent-opus:2026-10-20	rules.md	as above
+noyabr	ноябрь	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+dekabr	декабрь	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sentyabr	сентябрь	stem	variant	medium	reviewed:agent-opus:2026-10-20	rules.md	common non-standard Latin
+oktyabr	октябрь	stem	variant	medium	reviewed:agent-opus:2026-10-20	rules.md	common non-standard Latin
+kompyuter	компьютер	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+film	фильм	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	4 letters; no native word starts with film
+rol	роль	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	roli → роли by rule
+nol	ноль	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+parol	пароль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+avtomobil	автомобиль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+mebel	мебель	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+model	модель	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	modellashtirish → моделлаштириш
+portfel	портфель	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+spektakl	спектакль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+rubl	рубль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	4 letters
+dizel	дизель	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+albom	альбом	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+medal	медаль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+medalyon	медальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	WP3 review	longer than medal: medalyon, not медалён
+detal	деталь	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+shtempel	штемпель	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+kalkulyator	калькулятор	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+kalkulyats	калькуляц	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	kalkulyatsiya → калькуляция (ь + ц)
+fakultet	факультет	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+apelsin	апельсин	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+asfalt	асфальт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+gospital	госпиталь	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+kontrol	контроль	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	kontrolyor → контролёр
+pult	пульт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	4 letters
+volt	вольт	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	4 letters; voltmetr → вольтметр
+tabel	табель	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	HR timesheet
+profil	профиль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+stil	стиль	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	4 letters; stilistika → стилистика (D-11 drops the ь)
+modul	модуль	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+otel	отель	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	4 letters
+spiral	спираль	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+dvigatel	двигатель	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+ansambl	ансамбль	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+sekretar	секретарь	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	sekretariat → секретариат (ь dropped)
+kalendar	календарь	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+lager	лагерь	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+konsult	консульт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	konsultant, konsultatsiya (R7a in the remainder)
+devalv	девальв	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	devalvatsiya
+alyans	альянс	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+polsha	польша	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	proper name, Title case by R10
+premyer	премьер	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	premyer-ministr: hyphen parts
+karyera	карьера	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	HR
+intervyu	интервью	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+pyesa	пьеса	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+atelye	ателье	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+pochtalyon	почтальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
+pochtalon	почтальон	stem	variant	medium	reviewed:agent-opus:2026-10-20	WP3 review	common non-standard Latin
+batalyon	батальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
+pavilyon	павильон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
+bilyard	бильярд	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	promoted after WP3 review
+kalsiy	кальций	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	ь + ц
+selsiy	цельсий	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	initial ц + ь
+obyekt	объект	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	obyektiv, obyektlar
+subyekt	субъект	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+inyeksi	инъекци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	inyeksiya (ъ + ц)
+syezd	съезд	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+podyezd	подъезд	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+konyunktura	конъюнктура	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+adyutant	адъютант	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+obyom	объём	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+moʻjiza	мўъжиза	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	moʻjizaviy
+moʻtabar	мўътабар	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+moʻtadil	мўътадил	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+moʻjaz	мўъжаз	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+moʻmin	мўъмин	stem	l2c	medium	ambiguous	rules.md	Cyrillic spelling split between мўъмин and мўмин; demoted after WP3 review
+rayon	район	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	not ёд/йод: `yod` is deliberately absent (yod = ёд, "memory")
+mayor	майор	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	military rank (HR)
+konveyer	конвейер	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+foye	фойе	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+york	йорк	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	Nyu-York → Ню-Йорк
+mayonez	майонез	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	promoted after WP3 review
+mer	мэр	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	the only seeded э-after-consonant word
+sirk	цирк	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	word only: sirka = сирка (vinegar)
+sex	цех	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	3 letters; checked: "magic" is sehr, so no native word starts with sex
+sement	цемент	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sentr	центр	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	sentral → централ
+sentner	центнер	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+sitata	цитата	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sikl	цикл	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	4 letters; siklon → циклон
+silindr	цилиндр	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sivilizats	цивилизац	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	sivilizatsiya, sivilizatsion
+senzura	цензура	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sisterna	цистерна	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+sirkulyar	циркуляр	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	longer than `sirk`, which is word-only
+sink	цинк	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	promoted after WP3 review
+ssena	сцена	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	covers ssenariy → сценарий
+funksi	функци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	funksiya, funksional
+aksiya	акция	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	not `aksi` (aksincha = аксинча); aksiyador
+aksiz	акциз	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	excise
+seksiya	секция	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+inspeksi	инспекци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	inspektor is unaffected
+konsert	концерт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+konsern	концерн	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+konsepsi	концепци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+konsept	концепт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	konseptual
+prinsip	принцип	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	prinsipial
+korrupsi	коррупци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	anti-corruption HR documents
+stansi	станци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+kvitansi	квитанци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+instansi	инстанци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+distansi	дистанци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	distansion taʼlim
+tendensi	тенденци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+kompetensi	компетенци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	HR
+konferensi	конференци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+preferensi	преференци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+konvensi	конвенци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	ILO conventions
+intervensi	интервенци	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+konkurensi	конкуренци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+potensial	потенциал	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+sanksi	санкци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+fraksi	фракци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+reaksi	реакци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+kolleksi	коллекци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+leksiya	лекция	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	not `leksi` (leksika = лексика)
+direksiya	дирекция	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+korreksi	коррекци	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+proyeksi	проекци	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+konstruksi	конструкци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	konstruktor is unaffected
+rekonstruksi	реконструкци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+instruksi	инструкци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+produksi	продукци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+redaksi	редакци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+tranzaksi	транзакци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+infeksi	инфекци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+vaksina	вакцина	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	vaksinatsiya (R7a in the remainder)
+konsess	концесс	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	konsessiya
+fransi	франци	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	Fransiya
+fransuz	француз	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+shveysar	швейцар	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	Shveysariya
+konsentr	концентр	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	konsentratsiya
+aksent	акцент	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+opsiya	опция	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+litsenz	лиценз	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	litsenziya, litsenziat
+litsey	лицей	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+abzats	абзац	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	legal documents
+ofitser	офицер	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+dotsent	доцент	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	academic rank (HR)
+protsent	процент	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+protsess	процесс	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+protsedur	процедур	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+retsept	рецепт	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+retsenz	реценз	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	retsenziya, retsenzent
+spetsifik	специфик	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+matritsa	матрица	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+MChJ	МЧЖ	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	→L by rule would give MCHJ
+YaTT	ЯТТ	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	
+JShShIR	ЖШШИР	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	personal ID number
+YaIM	ЯИМ	acro	both	medium	reviewed:agent-opus:2026-10-20	rules.md	GDP
+PDF	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+USB	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+ID	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+HR	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+URL	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+HTML	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+XML	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+JSON	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+IBAN	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+IELTS	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+TOEFL	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+PhD	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+USD	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+EUR	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+UZS	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+Google	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+YouTube	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+iPhone	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+Gmail	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
+IT	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+API	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+IP	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+VPN	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+GPS	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+SMS	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+ISO	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+RUB	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+Apple	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+Zoom	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+Skype	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+Outlook	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+Linux	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
+QR	-	keep	l2c	low	ambiguous	rules.md	QR-kod vs ҚР (Qoraqalpogʻiston Respublikasi); not compiled
