@@ -1,0 +1,8 @@
+[package]
+name = "uz-translit"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Uzbek Latin <-> Cyrillic transliteration engine (rules: docs/phase2/rules.md); zero dependencies, no_std + alloc"
+build = "build.rs"
