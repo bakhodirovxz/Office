@@ -24,13 +24,16 @@ pub struct LangInfo {
     catalog: OnceLock<HashMap<String, String>>,
 }
 
-/// The registry. English first: it is the fallback and the source language. Uzbek is there only when the overlay supplies its catalogs.
-pub static LANGUAGES: [LangInfo; 1 + crate::office_overlay::EXTRA_LANGS] = [
+/// The registry. English first: it is the fallback and the source language. Uzbek and Russian are there only when the overlay supplies
+/// their catalogs.
+pub static LANGUAGES: [LangInfo; 1 + crate::office_overlay::EXTRA_LANGS + crate::office_overlay::RU_LANGS] = [
     LangInfo { code: "en", name: "English", source: "", catalog: OnceLock::new() },
     #[cfg(office_uz)]
     LangInfo { code: "uz-latn", name: crate::office_overlay::NAME_UZ_LATN, source: crate::office_overlay::CATALOG_UZ_LATN, catalog: OnceLock::new() },
     #[cfg(office_uz)]
     LangInfo { code: "uz-cyrl", name: crate::office_overlay::NAME_UZ_CYRL, source: crate::office_overlay::CATALOG_UZ_CYRL, catalog: OnceLock::new() },
+    #[cfg(office_ru)]
+    LangInfo { code: "ru", name: "Русский", source: crate::office_overlay::CATALOG_RU, catalog: OnceLock::new() },
 ];
 
 impl LangInfo {

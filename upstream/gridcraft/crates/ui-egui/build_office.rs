@@ -95,7 +95,7 @@ fn generate(dir: &Path) -> String {
         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
     }
     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
-    o + &uzbek(Some(dir))
+    o + &uzbek(Some(dir)) + &russian(Some(dir))
 }
 
 /// The Uzbek catalogs that `cargo xt i18n export` wrote next to `overlay.env` (`key<TAB>translation` lines). Only when both
@@ -134,6 +134,25 @@ fn uzbek(dir: Option<&Path>) -> String {
     o
 }
 
+/// Our Russian rows from the `catalog-ru.tsv` that `cargo xt i18n export` wrote next to `overlay.env`, as a `match` function.
+/// The export holds upstream's Russian rows too; those are left out (`Language::tr` asks upstream's table first, so they would
+/// be dead arms), judged by whether `src/i18n/ru.rs` already spells the key.
+fn russian(dir: Option<&Path>) -> String {
+    let mut o = String::from("pub fn translate_ru_extra(text: &str) -> Option<&'static str> {\n    Some(match text {\n");
+    if let Some(file) = dir.map(|d| d.join("catalog-ru.tsv")).filter(|f| f.is_file()) {
+        println!("cargo::rerun-if-changed={}", file.display());
+        let upstream = std::fs::read_to_string("src/i18n/ru.rs").unwrap_or_default();
+        for line in std::fs::read_to_string(&file).unwrap_or_default().lines().filter(|l| !l.starts_with('#')) {
+            if let Some((k, v)) = line.split_once('\t').map(|(k, v)| (unescape(k), unescape(v))) {
+                if !upstream.contains(&format!("{k:?}")) {
+                    let _ = writeln!(o, "        {k:?} => {v:?},");
+                }
+            }
+        }
+    }
+    o + "        _ => return None,\n    })\n}\n"
+}
+
 /// The catalog escapes `\n`, `\t` and `\\`.
 fn unescape(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
@@ -170,5 +189,5 @@ fn generate_upstream() -> String {
     let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
     let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
-    o + &uzbek(None)
+    o + &uzbek(None) + &russian(None)
 }

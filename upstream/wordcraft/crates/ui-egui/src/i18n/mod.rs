@@ -131,8 +131,15 @@ pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
     // German, neutral across Germany, Austria and Switzerland; `de`, `de-DE`, `de-AT`, `de-CH` …
     // resolve here.
     LangInfo { code: "de", name: "Deutsch", source: include_str!("de.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
-    // Russian; `ru`, `ru-RU`, `ru_RU.UTF-8` and other regions resolve here.
-    LangInfo { code: "ru", name: "Русский", source: include_str!("ru.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+    // Russian; `ru`, `ru-RU`, `ru_RU.UTF-8` and other regions resolve here. The overlay's export holds upstream's rows plus ours.
+    LangInfo {
+        code: "ru",
+        name: "Русский",
+        source: if crate::office_overlay::CATALOG_RU.is_empty() { include_str!("ru.tsv") } else { crate::office_overlay::CATALOG_RU },
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
     LangInfo {
         code: "tr",
         name: "Türkçe",

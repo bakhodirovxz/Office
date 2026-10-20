@@ -158,7 +158,7 @@ impl Language {
             Self::Ja => JAPANESE.iter().find(|(english, _)| *english == text).map(|(_, translated)| *translated),
             Self::Zh => zh::translate(text),
             Self::Ko => ko::translate(text),
-            Self::Ru => ru::translate(text),
+            Self::Ru => ru::translate(text).or_else(|| crate::office_overlay::translate_ru_extra(text)),
             Self::PtBr => pt::translate(text),
             Self::De => de::translate(text),
             Self::Cs => cs::translate(text),

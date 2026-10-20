@@ -117,3 +117,16 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
         assert!(Language::parse("uz-Latn-UZ").is_none());
     }
 }
+
+#[test]
+fn russian_gets_our_rows_and_keeps_upstreams() {
+    let ru = Language::Ru;
+    if crate::office_overlay::translate_ru_extra("Transliterate").is_some() {
+        assert_eq!(ru.tr("Transliterate"), "Транслитерация");
+        assert_eq!(ru.tr("Latin to Cyrillic"), "С латиницы на кириллицу");
+        // Upstream's table is asked first, so its rows are never shadowed.
+        assert_eq!(ru.tr("Paste"), "Вставить");
+    } else {
+        assert_eq!(ru.tr("Transliterate"), "Transliterate");
+    }
+}

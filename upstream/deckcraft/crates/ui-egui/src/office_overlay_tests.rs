@@ -161,3 +161,17 @@ fn cyrillic_is_not_laid_out_in_the_cjk_face() {
     let mut o = ctx.run_ui(Default::default(), |_| {});
     o.textures_delta.clear();
 }
+
+#[test]
+fn russian_is_offered_only_with_the_overlay_catalog() {
+    use crate::i18n::{Lang, from_pref, tr};
+    if cfg!(office_ru) {
+        let ru = from_pref("ru");
+        assert_eq!((ru.code(), ru.name()), ("ru", "Русский"));
+        assert_eq!(tr(ru, "Transliterate"), "Транслитерация");
+        assert_eq!(tr(ru, "Latin to Cyrillic"), "С латиницы на кириллицу");
+        assert_eq!(tr(ru, "A string no catalog has"), "A string no catalog has");
+    } else {
+        assert!(Lang::from_tag("ru").is_none());
+    }
+}

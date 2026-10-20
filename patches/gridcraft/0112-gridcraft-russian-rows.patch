@@ -1,0 +1,96 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 23:15:18 +0500
+Subject: [PATCH] ui-egui: office overlay adds its Russian rows to the ru
+ language
+
+build_office.rs reads the catalog-ru.tsv that `cargo xt i18n export` writes next to overlay.env and compiles the rows
+upstream's src/i18n/ru.rs does not spell into translate_ru_extra(), a match like the tables in src/i18n/*.rs.
+Language::tr asks upstream's Russian table first and ours second, so upstream's rows always win and a Russian UI shows
+the Russian labels of our menus. Without the file the function matches nothing and ru is upstream's.
+---
+ crates/ui-egui/build_office.rs             | 23 ++++++++++++++++++++--
+ crates/ui-egui/src/i18n.rs                 |  2 +-
+ crates/ui-egui/src/office_overlay_tests.rs | 13 ++++++++++++
+ 3 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+index 295640e..7abf42c 100644
+--- a/crates/ui-egui/build_office.rs
++++ b/crates/ui-egui/build_office.rs
+@@ -95,7 +95,7 @@ fn generate(dir: &Path) -> String {
+         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
+     }
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
+-    o + &uzbek(Some(dir))
++    o + &uzbek(Some(dir)) + &russian(Some(dir))
+ }
+ 
+ /// The Uzbek catalogs that `cargo xt i18n export` wrote next to `overlay.env` (`key<TAB>translation` lines). Only when both
+@@ -134,6 +134,25 @@ fn uzbek(dir: Option<&Path>) -> String {
+     o
+ }
+ 
++/// Our Russian rows from the `catalog-ru.tsv` that `cargo xt i18n export` wrote next to `overlay.env`, as a `match` function.
++/// The export holds upstream's Russian rows too; those are left out (`Language::tr` asks upstream's table first, so they would
++/// be dead arms), judged by whether `src/i18n/ru.rs` already spells the key.
++fn russian(dir: Option<&Path>) -> String {
++    let mut o = String::from("pub fn translate_ru_extra(text: &str) -> Option<&'static str> {\n    Some(match text {\n");
++    if let Some(file) = dir.map(|d| d.join("catalog-ru.tsv")).filter(|f| f.is_file()) {
++        println!("cargo::rerun-if-changed={}", file.display());
++        let upstream = std::fs::read_to_string("src/i18n/ru.rs").unwrap_or_default();
++        for line in std::fs::read_to_string(&file).unwrap_or_default().lines().filter(|l| !l.starts_with('#')) {
++            if let Some((k, v)) = line.split_once('\t').map(|(k, v)| (unescape(k), unescape(v))) {
++                if !upstream.contains(&format!("{k:?}")) {
++                    let _ = writeln!(o, "        {k:?} => {v:?},");
++                }
++            }
++        }
++    }
++    o + "        _ => return None,\n    })\n}\n"
++}
++
+ /// The catalog escapes `\n`, `\t` and `\\`.
+ fn unescape(s: &str) -> String {
+     let mut out = String::with_capacity(s.len());
+@@ -170,5 +189,5 @@ fn generate_upstream() -> String {
+     let _ = writeln!(o, "pub const LINK_WEBSITE: &str = \"\";");
+     let _ = writeln!(o, "pub static ICON_PNG: Option<&[u8]> = None;");
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[];");
+-    o + &uzbek(None)
++    o + &uzbek(None) + &russian(None)
+ }
+diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
+index 7d2d7a0..f83d26b 100644
+--- a/crates/ui-egui/src/i18n.rs
++++ b/crates/ui-egui/src/i18n.rs
+@@ -158,7 +158,7 @@ impl Language {
+             Self::Ja => JAPANESE.iter().find(|(english, _)| *english == text).map(|(_, translated)| *translated),
+             Self::Zh => zh::translate(text),
+             Self::Ko => ko::translate(text),
+-            Self::Ru => ru::translate(text),
++            Self::Ru => ru::translate(text).or_else(|| crate::office_overlay::translate_ru_extra(text)),
+             Self::PtBr => pt::translate(text),
+             Self::De => de::translate(text),
+             Self::Cs => cs::translate(text),
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index e9357ef..35a8458 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -117,3 +117,16 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+         assert!(Language::parse("uz-Latn-UZ").is_none());
+     }
+ }
++
++#[test]
++fn russian_gets_our_rows_and_keeps_upstreams() {
++    let ru = Language::Ru;
++    if crate::office_overlay::translate_ru_extra("Transliterate").is_some() {
++        assert_eq!(ru.tr("Transliterate"), "Транслитерация");
++        assert_eq!(ru.tr("Latin to Cyrillic"), "С латиницы на кириллицу");
++        // Upstream's table is asked first, so its rows are never shadowed.
++        assert_eq!(ru.tr("Paste"), "Вставить");
++    } else {
++        assert_eq!(ru.tr("Transliterate"), "Transliterate");
++    }
++}
