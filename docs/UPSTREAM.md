@@ -114,3 +114,15 @@ Our logic lives in our crates, not in the queue. A carried patch only installs i
   in `crates/engine/Cargo.toml` (and the lock lines). Hot spots at each sync: `command_specs()` and the engine manifest `[dependencies]` tail. Run
   `cargo test -p gridcraft-engine --test translit` / `-p deckcraft-engine --test translit` after the sync; the files are rustfmt-clean (the gridcraft
   `0111` rustfmt patch sorts before `0120` and does not touch them; regenerate it with `--fmt` only if upstream formatting moves).
+
+## UI entries (Phase 2 WP7): `patches/<repo>/0121`
+A "Transliterate" menu (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) calls the three ids, plus a status line for the result (`translit_status`).
+- **wordcraft/0121** (3 files, +28): `ribbon.rs` (`review()` Language group: one `menu_button`, and `translit_menu()` before `language_menu`), `canvas.rs` (`context_menu()`, a submenu after
+  "New Comment", only with a non-empty selection), `lib.rs` (`translit_status` and the call after `system_clipboard::explain` in `WordApp::run`).
+- **gridcraft/0121** (4 files, +40/-3): `ribbon.rs` `review()` (a `big_button` + `Popup::menu` + `menu_items`, between Accessibility and Comments), `grid.rs` `context_menu()` (two tuples at the end of the
+  `items` vec; the generic `other => run_or_alert` arm runs them), `lib.rs` (`translit_status`, toast after `run_command`), and the three labels in the carried `cmd/translit.rs`.
+- **deckcraft/0121** (4 files, +30/-3): `ribbon.rs` `review()` Language group (`big_button` + `Popup::menu(translit_menu)`), `canvas.rs` `context_menu()` (a submenu when a shape or text is selected),
+  `lib.rs` (`translit_status` in `run()`), and the labels in `cmd/translit.rs`.
+- Hot spots at each sync: the three `review()` functions, the three `context_menu()` functions, `run()`/`run_command()`. The English strings are not in any upstream catalog: `xtask/src/i18n/extract.rs`
+  `OWN` lists them (otherwise `cargo xt i18n extract` marks their rows obsolete). Change a label in the patch, in `OWN`, in `i18n/*.tsv`, in `docs-translit` `specs()` (a test checks the labels are rows of `shared.tsv`).
+- ru: the catalog holds a Russian value for each row, but the build does not ship a ru export (`i18n export` without `--with-ru`), so a ru interface still shows these strings in English.

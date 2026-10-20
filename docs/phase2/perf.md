@@ -1,6 +1,6 @@
 # Phase 2 performance: the 108-page document
 
-Status: **WP10a done (2026-10-20); N1 (headless native) measured; N2 (desktop GUI) and N3 (web) still to do (WP10).**
+Status: **WP10a, N1, N2 and N3 (desktop Chromium) measured (2026-10-20); N3 on the Android emulator not obtained (see below).**
 Machine: Windows 10, 12 cores, 11.8 GB RAM, Intel UHD 630, no discrete GPU. Release profile of the docs domain
 (`opt-level 3`, thin LTO). Each figure is the median of 5 timed rounds after one warm-up round; every run was started alone
 (no other build running). Commit: the WP4 commit on branch `phase-2` (see `git log`).
@@ -74,11 +74,48 @@ and stops when the new layout is finished (`Session::layout()`). Undo and redo a
 - Undo and redo are 36-49 ms: the engine restores the previous `Arc` snapshot, whose paragraph revisions are cached.
 - The page count moves with the script (Cyrillic letters are wider): 110 -> 114 to Cyrillic, 110 -> 106 to Latin. Reported, not a defect.
 
-## Gate reading so far
-- **N1 (headless native): 0.35 to 0.44 s from command to finished layout for 108 (engine: 110) pages, against the 2 s gate.** ONLYOFFICE plugin: 62 s.
-- N2 (desktop GUI) and N3 (web, Chromium) are not measured yet. N2 should add the frame time (egui paint, tens of ms). N3 is the risk
-  (wasm layout, see the projection above).
-- Docs CLI wall time on the same files: see the last section.
+## N2: the command in the release desktop app (`docs.exe`, control channel)
+`python -I scripts/translit/perf-desktop.py E:/office-target/p1/docs/release/docs.exe --rounds 6` (release build of the docs domain with patch 0121; one fresh
+process per round, first round a warm-up, median of 5). The script opens the 108-page file (`docs.exe <file> --control PORT`), waits until the layout is stable, then
+times from the client side: `cmd` = the `engine.execute` round trip (the app runs the command inside a frame), `inspect` = a `ui.inspect` sent straight after (answered by the
+next frame, after that frame's layout), `shot` = a `ui.screenshot` sent straight after (answered after a frame with the **new layout** was painted and read back: an upper bound).
+The app's own timers come from `ui.inspect` (`perf.layoutMs`, `perf.frameMs`). Machine idle (no rustc, no Office process). Commit: the WP7/WP9/WP10 commit on `phase-2`.
+
+| Direction (file) | pages | `cmd` | of which app `ms` (convert + apply) | `inspect` (next frame) | `shot` (painted new layout, upper bound) | app `layoutMs` after | app `frameMs` after |
+|---|---|---|---|---|---|---|---|
+| to Cyrillic (latn) | 110 -> 114 | 73 ms | 55 + 5 | **420 ms** | **938 ms** | 305 ms | 2-3 ms |
+| to Latin (cyrl) | 110 -> 106 | 55 ms | 43 + 5 | **399 ms** | **928 ms** | 327 ms | 2-6 ms |
+
+- Raw `shot` runs (ms): latn 953, 951, 938, 949, 928, 925; cyrl 920, 1006, 924, 899, 932, 928. Raw `inspect`: latn 412, 420, 398, 420, 430, 392; cyrl 390, 450, 397, 386, 399, 416.
+- The command itself is 51-84 ms; the rest is upstream's layout (the app's own `layoutMs`, 295-339 ms, matches N1) plus the egui paint. The screenshot figure adds the render,
+  the GPU readback and a PNG write, so the time to the first painted frame is between the `inspect` and the `shot` columns, **about 0.4 to 0.9 s**.
+- Raw rows: `E:/office-target/p2/n2.json` (scratch, not committed); the script prints one JSON line per round.
+
+## N3: the command in the docs-web wasm build (Chromium, Playwright)
+`node scripts/translit/perf-web.mjs --rounds 6` (headless Chromium with SwiftShader, 1280x800, this PC, idle; the `docs-web` release dist served at `/wc/`, embedded in a host page
+with `?host=parent`, the 108-page file opened through `wordcraft:open`, one fresh page per round, median of 5). The command runs from the palette (Alt+Q "Tell me", type the
+label, Enter or a click on the row). In the page: `t0` = the keydown/mousedown that confirms; `longtask` entries after it are the frame that runs the command and its layout; the
+metric is the first `requestAnimationFrame` after the last long task = **the next presented frame**.
+
+| Direction (file) | median t0 -> next frame | raw rounds (ms; round 0 = warm-up) | longest long task |
+|---|---|---|---|
+| to Cyrillic (latn) | **1,264 ms** | 1069, 1296, 1256, 1327, 1183, 1264 | 0.96-1.11 s |
+| to Latin (cyrl) | **1,267 ms** | 1166, 1325, 1279, 1267, 1205, 1242 | 1.06-1.14 s |
+
+- The wasm build lays the document out in 138 pages before and 146 after (Latin to Cyrillic; 141 -> 132 the other way): the web build uses the bundled fonts, so its page count differs from
+  Word's 108 and the desktop's 110. Screenshots with the result: `docs/phase2/evidence/ui/docs-web-uz-latn-converted.png` (small file), the 108-page one in the scratch dir.
+- The wasm layout is about 3 times the native N1 figure (1.1 s against 0.3-0.35 s), inside the "1.5 to 3 times native" the projection above gave for desktop Chromium. The command's
+  own part (convert + apply) is not logged in the web build (the status line shows the count only), so the 100 ms check for "our part" rests on N1/N2 (55-84 ms).
+- **Android emulator (Chrome on `HRM_Pixel_8`): not obtained.** The emulator booted (Android, 1080x2400), Chrome was driven over CDP (`adb reverse` + `connectOverCDP`), and the host page
+  reached `wordcraft:ready`, but the app never answered `wordcraft:opened` for the 108-page file within 240 s, with and without `?webgl`; the page stayed grey. Not investigated further: the
+  cause (mobile layout, memory, or the open path) is unknown. The Phase 0 emulator figure (16-22 ms a page, 1.8-2.4 s projected for 110 pages) therefore stays a projection and **risk R1 stays
+  open for phones**. The script supports it (`--cdp http://localhost:9222 --port 8791 --base http://localhost:8791 --only latn --webgl`).
+
+## Gate reading
+- **108 pages: 0.40 to 0.94 s (desktop app, command to a painted new layout), 1.26 s (web, desktop Chromium); against the 2 s gate. ONLYOFFICE plugin: 62 s.**
+- N1 (headless native): 0.35 to 0.44 s. Our part (convert + apply) is 46-84 ms in every measurement, under the 100 ms the plan sets before blaming layout.
+- Not measured: Android Chrome (above). Optimisation is not needed for the desktop or the desktop browser; for a phone it is an open owner decision once a figure exists.
+- Sheets and Slides: engine-level figures only (WP5/WP6 section); no GUI timing.
 
 ## Docs CLI, release (`docs-cli`, wall time of the whole process)
 `docs-cli commands --json` lists `tools.translitCyrl`, `tools.translitLatn` and `tools.translitAuto` (proves the install hook in the CLI).

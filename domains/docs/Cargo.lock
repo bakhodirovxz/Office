@@ -1032,11 +1032,13 @@ dependencies = [
 name = "docs-translit"
 version = "0.1.0"
 dependencies = [
+ "quick-xml",
  "serde_json",
  "uz-translit",
  "wordcraft-doc",
  "wordcraft-engine",
  "wordcraft-layout",
+ "zip",
 ]
 
 [[package]]
