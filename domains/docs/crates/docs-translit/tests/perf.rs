@@ -15,7 +15,8 @@ fn engine_baseline_108() {
     for name in ["uz108-latn.docx", "uz108-cyrl.docx"] {
         let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         let bytes = std::fs::read(&path).unwrap();
-        let (mut open, mut lay, mut iter, mut conv, mut save, mut relay) = (vec![], vec![], vec![], vec![], vec![], vec![]);
+        let (mut open, mut lay, mut iter, mut conv, mut save, mut relay) =
+            (vec![], vec![], vec![], vec![], vec![], vec![]);
         let mut pages = 0;
         let (mut chars, mut runs, mut paras) = (0, 0, 0);
         for round in 0..6 {
@@ -46,7 +47,11 @@ fn engine_baseline_108() {
             }
             let it = t.elapsed().as_secs_f64() * 1e3;
             let t = Instant::now();
-            let dir = if name.contains("latn") { uz_translit::Direction::ToCyrillic } else { uz_translit::Direction::ToLatin };
+            let dir = if name.contains("latn") {
+                uz_translit::Direction::ToCyrillic
+            } else {
+                uz_translit::Direction::ToLatin
+            };
             let out = uz_translit::convert(&text, dir, &uz_translit::Options::default());
             let cv = t.elapsed().as_secs_f64() * 1e3;
             std::hint::black_box(&out);
@@ -77,7 +82,12 @@ fn engine_baseline_108() {
         }
         println!(
             "{name}: pages {pages}, paragraphs {paras}, runs {runs}, text {chars} B | open {:.0} ms, layout {:.0}, iterate runs {:.2}, convert whole text {:.1}, save {:.0}, touch-all+relayout {:.0} (median of 5, 1 warm-up)",
-            median(&mut open), median(&mut lay), median(&mut iter), median(&mut conv), median(&mut save), median(&mut relay)
+            median(&mut open),
+            median(&mut lay),
+            median(&mut iter),
+            median(&mut conv),
+            median(&mut save),
+            median(&mut relay)
         );
     }
 }
@@ -86,10 +96,14 @@ fn engine_baseline_108() {
 #[test]
 #[ignore]
 fn perf_108() {
-    for (name, id) in [("uz108-latn.docx", "tools.translitCyrl"), ("uz108-cyrl.docx", "tools.translitLatn")] {
+    for (name, id) in [
+        ("uz108-latn.docx", "tools.translitCyrl"),
+        ("uz108-cyrl.docx", "tools.translitLatn"),
+    ] {
         let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         let bytes = std::fs::read(&path).unwrap();
-        let (mut cmd, mut lay, mut tot, mut undo, mut redo, mut ours) = (vec![], vec![], vec![], vec![], vec![], vec![]);
+        let (mut cmd, mut lay, mut tot, mut undo, mut redo, mut ours) =
+            (vec![], vec![], vec![], vec![], vec![], vec![]);
         let mut pages = 0;
         let mut res = serde_json::Value::Null;
         for round in 0..6 {
@@ -117,12 +131,22 @@ fn perf_108() {
                 tot.push(all);
                 undo.push(u);
                 redo.push(r);
-                ours.push(res["ms"]["convert"].as_f64().unwrap() + res["ms"]["apply"].as_f64().unwrap());
+                ours.push(
+                    res["ms"]["convert"].as_f64().unwrap() + res["ms"]["apply"].as_f64().unwrap(),
+                );
             }
         }
         println!(
             "{name} {id}: pages after {pages}, paragraphs {}, runs {} | run() {:.0} ms (ours: convert+apply {:.0}, of which result.ms {}), relayout {:.0}, command->layout {:.0}, undo->layout {:.0}, redo->layout {:.0} (median of 5)",
-            res["paragraphs"], res["runs"], median(&mut cmd), median(&mut ours), res["ms"], median(&mut lay), median(&mut tot), median(&mut undo), median(&mut redo)
+            res["paragraphs"],
+            res["runs"],
+            median(&mut cmd),
+            median(&mut ours),
+            res["ms"],
+            median(&mut lay),
+            median(&mut tot),
+            median(&mut undo),
+            median(&mut redo)
         );
     }
 }

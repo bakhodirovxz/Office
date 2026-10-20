@@ -54,7 +54,11 @@ fn load_domain(root: &Path, name: &str) -> Res<Domain> {
         .get("extensions")
         .and_then(|t| t.get("crates"))
         .and_then(Item::as_array)
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
         .unwrap_or_default();
     Ok(Domain {
         name: name.to_string(),
@@ -540,21 +544,31 @@ serde_json = \"1\"
 [features]
 office-ext = []
 "
-            .parse()
-            .unwrap();
+        .parse()
+        .unwrap();
         add_extensions(&mut doc, &["docs-translit".to_string()]);
         let t = doc.to_string();
-        assert!(t.contains("docs-translit = { path = \"../../crates/docs-translit\", optional = true }"), "{t}");
+        assert!(
+            t.contains(
+                "docs-translit = { path = \"../../crates/docs-translit\", optional = true }"
+            ),
+            "{t}"
+        );
         assert!(t.contains("office-ext = [\"dep:docs-translit\"]"), "{t}");
         assert!(t.contains("default = [\"office-ext\"]"), "{t}");
         assert!(t.contains("serde_json"), "{t}");
         // no extensions: untouched
         let mut same: DocumentMut = "[package]
 name = \"x\"
-".parse().unwrap();
+"
+        .parse()
+        .unwrap();
         add_extensions(&mut same, &[]);
-        assert_eq!(same.to_string(), "[package]
+        assert_eq!(
+            same.to_string(),
+            "[package]
 name = \"x\"
-");
+"
+        );
     }
 }
