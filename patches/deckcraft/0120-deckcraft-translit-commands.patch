@@ -13,8 +13,8 @@ field, break and equation runs are boundaries. One command is one undo step (Ses
  crates/engine/Cargo.toml          |   2 +
  crates/engine/src/cmd/mod.rs      |   2 +
  crates/engine/src/cmd/translit.rs | 293 ++++++++++++++++++++++++++++++++++++++
- crates/engine/tests/translit.rs   | 270 +++++++++++++++++++++++++++++++++++
- 5 files changed, 572 insertions(+)
+ crates/engine/tests/translit.rs   | 273 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 575 insertions(+)
 
 diff --git a/Cargo.lock b/Cargo.lock
 index e2bc796..9a19f30 100644
@@ -373,10 +373,10 @@ index 0000000..4781fc9
 +}
 diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
 new file mode 100644
-index 0000000..a0bd7a3
+index 0000000..d683097
 --- /dev/null
 +++ b/crates/engine/tests/translit.rs
-@@ -0,0 +1,270 @@
+@@ -0,0 +1,273 @@
 +//! Office overlay (patches/deckcraft/0120): the transliteration commands of `cmd/translit.rs`.
 +use std::sync::Arc;
 +
@@ -620,10 +620,13 @@ index 0000000..a0bd7a3
 +                let mut sl = base.clone();
 +                sl.id = deckcraft_model::SlideId(doc.alloc_id().unwrap());
 +                for k in 0..8 {
-+                    let mut sh = Shape::default();
-+                    sh.id = ShapeId(doc.alloc_id().unwrap());
-+                    sh.text = Some(TextBody::from_text(&format!("{}\n{}", words[(i + k) % 6], words[(i + k + 1) % 6])));
-+                    sl.shapes.push(sh);
++                    let text = TextBody::from_text(&format!(
++                        "{}
++{}",
++                        words[(i + k) % 6],
++                        words[(i + k + 1) % 6]
++                    ));
++                    sl.shapes.push(Shape { id: ShapeId(doc.alloc_id().unwrap()), text: Some(text), ..Default::default() });
 +                }
 +                sl.notes = TextBody::from_text(words[i % 6]);
 +                doc.slides.push(Arc::new(sl));

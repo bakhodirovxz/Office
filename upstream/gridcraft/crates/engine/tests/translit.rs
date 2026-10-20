@@ -204,6 +204,7 @@ fn a_generated_sheet_converts_in_both_directions() {
 /// Release timing for docs/phase2/perf.md: `cargo test --release -p gridcraft-engine --test translit -- --ignored --nocapture`.
 #[test]
 #[ignore]
+#[allow(clippy::disallowed_methods)] // a native timing test
 fn timing_on_a_large_sheet() {
     for (rows, cols) in [(50_000, 5), (200_000, 5)] {
         let mut s = big(rows, cols);

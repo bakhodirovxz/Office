@@ -13,8 +13,8 @@ sheets and sheet names. One command is one undo step (it runs through edit()). T
  crates/engine/Cargo.toml          |   2 +
  crates/engine/src/cmd/mod.rs      |   2 +
  crates/engine/src/cmd/translit.rs | 190 ++++++++++++++++++++++++++++++++
- crates/engine/tests/translit.rs   | 223 ++++++++++++++++++++++++++++++++++++++
- 5 files changed, 422 insertions(+)
+ crates/engine/tests/translit.rs   | 224 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 423 insertions(+)
 
 diff --git a/Cargo.lock b/Cargo.lock
 index c992b2e..2287809 100644
@@ -270,10 +270,10 @@ index 0000000..4a1e6e3
 +}
 diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
 new file mode 100644
-index 0000000..21e6eb1
+index 0000000..6325041
 --- /dev/null
 +++ b/crates/engine/tests/translit.rs
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,224 @@
 +//! Office overlay (patches/gridcraft/0120): the transliteration commands of `cmd/translit.rs`.
 +use gridcraft_core::{CellRef, Value};
 +use gridcraft_engine::Session;
@@ -480,6 +480,7 @@ index 0000000..21e6eb1
 +/// Release timing for docs/phase2/perf.md: `cargo test --release -p gridcraft-engine --test translit -- --ignored --nocapture`.
 +#[test]
 +#[ignore]
++#[allow(clippy::disallowed_methods)] // a native timing test
 +fn timing_on_a_large_sheet() {
 +    for (rows, cols) in [(50_000, 5), (200_000, 5)] {
 +        let mut s = big(rows, cols);

@@ -241,10 +241,13 @@ fn timing_on_a_large_deck() {
                 let mut sl = base.clone();
                 sl.id = deckcraft_model::SlideId(doc.alloc_id().unwrap());
                 for k in 0..8 {
-                    let mut sh = Shape::default();
-                    sh.id = ShapeId(doc.alloc_id().unwrap());
-                    sh.text = Some(TextBody::from_text(&format!("{}\n{}", words[(i + k) % 6], words[(i + k + 1) % 6])));
-                    sl.shapes.push(sh);
+                    let text = TextBody::from_text(&format!(
+                        "{}
+{}",
+                        words[(i + k) % 6],
+                        words[(i + k + 1) % 6]
+                    ));
+                    sl.shapes.push(Shape { id: ShapeId(doc.alloc_id().unwrap()), text: Some(text), ..Default::default() });
                 }
                 sl.notes = TextBody::from_text(words[i % 6]);
                 doc.slides.push(Arc::new(sl));

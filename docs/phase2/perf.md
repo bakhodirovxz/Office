@@ -93,3 +93,23 @@ Process wall times, three runs each, release build of the docs domain, files fro
 
 `run` does not lay the document out, so it is the cheap path (about 0.2 s for 108 pages, process start included); the editor pays the layout
 (N1 above). `docs-cli run ... --print` shows the result JSON: `{"direction":"cyrl","paragraphs":1990,"runs":3771,"skipped":{"field":0,"lang":0,"locked":0},"ms":{"convert":53.5,"apply":4.8}}`.
+
+## WP5 Sheets and WP6 Slides: the commands, headless native (engine level)
+Commands `tools.translitCyrl|Latn|Auto` in `gridcraft-engine` (`cmd/translit.rs`, patch `gridcraft/0120`) and `deckcraft-engine`
+(`cmd/translit.rs`, patch `deckcraft/0120`). Release builds, `Session::execute` timed from the call to its return; the document is
+generated in memory (`tests/translit.rs`, `timing_on_a_large_sheet` and `timing_on_a_large_deck`, `#[ignore]`):
+`cargo test --release -p gridcraft-engine --test translit -- --ignored --nocapture`, the same for `-p deckcraft-engine`.
+
+| Document | Converted | `execute()` total | of which scan + convert | of which apply (+ recalc and row heights) | undo |
+|---|---|---|---|---|---|
+| sheet 50,000 rows x 5 columns (4 text, 1 number) | 200,000 cells | 1,072 ms | 495 ms | 573 ms | 2.1 ms |
+| sheet 200,000 rows x 5 columns | 800,000 cells | 3,703 ms | 1,774 ms | 1,917 ms | 5.3 ms |
+| deck 100 slides (8 shapes of 2 paragraphs, plus notes) | 1,700 paragraphs | 16 ms | 16 ms | 0.2 ms | 0.03 ms |
+| deck 500 slides | 8,500 paragraphs | 76 ms | 75 ms | 0.3 ms | 0.01 ms |
+
+- Sheets scales linearly at about 4.6 microseconds a cell (2.2 scan and convert, 2.4 apply). The apply side is `edit()`: one workbook
+  copy-on-write, one incremental recalculation of the formulas that read a changed cell, and `auto_row_height` for the changed rows. A
+  realistic HRM sheet (a few thousand cells) is under 50 ms. Undo is a snapshot swap.
+- Slides has no layout in the measurement, so it reads the conversion alone: 9 microseconds a paragraph, a 500-slide deck in 76 ms.
+  The cost in the editor is the repaint of the visible slide, not the command.
+- Neither has an N2/N3 figure (desktop frame, wasm). The sheets clock is `SystemTime`, 0 on wasm (it has none); the `ms` field is then 0.
