@@ -1,6 +1,6 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 1 — Foundation** (branch `phase-1`, from `phase-0`; Phase 0 gate passed 2026-10-17, ADR: docs/ARCHITECTURE-DECISION.md).
+**Current phase: Phase 2 — Transliteration (`uz-translit`)** (branch `phase-2`, from `phase-1`; Phase 1 gate passed 2026-10-20 on the owner's pre-authorisation; plan: docs/phase2/PLAN.md).
 The full brief (mission, constraints, phases, exit gates) is in [docs/BRIEF.md](docs/BRIEF.md).
 Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — keep it current.
 

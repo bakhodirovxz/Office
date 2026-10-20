@@ -1,6 +1,8 @@
 # Status
 
-**Current phase:** 1 — Foundation (branch `phase-1`). The Phase 0 gate was passed on 2026-10-17; the decisions are in
+**Current phase:** 2 — Transliteration (branch `phase-2`). **Phase 1 closed on 2026-10-20**: the final clean-checkout `ci.sh full` exited 0 (`docs/phase1/clean-checkout.md`) and the gate review is in `docs/phase1/gate-review.md`.
+
+Phase 1 history: 1 — Foundation (branch `phase-1`). The Phase 0 gate was passed on 2026-10-17; the decisions are in
 ADR Appendix C:
 - name deferred;
 - MIT OR Apache-2.0;
