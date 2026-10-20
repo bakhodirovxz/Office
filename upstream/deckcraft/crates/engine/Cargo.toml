@@ -25,6 +25,8 @@ i_overlay = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
 image = { workspace = true }
+# office overlay (patches/deckcraft/0120): the transliteration rules, an in-monorepo path
+uz-translit = { path = "../../../../crates/uz-translit" }
 
 [dev-dependencies]
 deckcraft-anim = { workspace = true }

@@ -19,6 +19,7 @@ pub mod sheet;
 pub mod slicer;
 pub mod solver;
 pub mod spelling;
+pub mod translit;
 pub mod view;
 pub mod whatif;
 
@@ -144,6 +145,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(forecast::specs());
         v.extend(analysis::specs());
         v.extend(print::specs());
+        v.extend(translit::specs());
         v
     })
 }
