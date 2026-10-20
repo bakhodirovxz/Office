@@ -1,0 +1,1067 @@
+id	latin	cyrillic	dir	rule	status	source	conf	note
+LET-001	a	а	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-002	b	б	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-003	d	д	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-004	e	э	both	R5	reviewed:agent-opus:2026-10-20	agent	high	word-start e is э
+LET-005	f	ф	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-006	g	г	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-007	h	ҳ	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-008	i	и	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-009	j	ж	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-010	k	к	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-011	l	л	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-012	m	м	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-013	n	н	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-014	o	о	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-015	p	п	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-016	q	қ	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-017	r	р	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-018	s	с	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-019	t	т	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-020	u	у	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-021	v	в	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-022	x	х	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-023	y	й	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-024	z	з	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-025	ch	ч	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-026	sh	ш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-027	ng	нг	both	R3	reviewed:agent-opus:2026-10-20	agent	high	two letters, never a unit (D-05)
+LET-028	oʻ	ў	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+LET-029	gʻ	ғ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+LET-030	ye	е	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-031	yo	ё	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-032	yu	ю	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-033	ya	я	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-034	ts	тс	both	R7	reviewed:agent-opus:2026-10-20	agent	high	no ц by default
+LET-035	bahor	баҳор	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-036	xalq	халқ	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-037	qalam	қалам	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-038	jahon	жаҳон	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-039	quyosh	қуёш	both	R3,R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-040	zavod	завод	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-041	vazifa	вазифа	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-042	fan	фан	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-043	gazeta	газета	both	tables,R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-044	daftar	дафтар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-045	maktab	мактаб	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-046	kitob	китоб	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-047	uzum	узум	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-048	tuman	туман	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-049	viloyat	вилоят	both	tables,R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-050	paxta	пахта	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-051	ipak	ипак	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-052	chiroq	чироқ	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-053	shamol	шамол	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-054	tong	тонг	both	R3	reviewed:agent-opus:2026-10-20	agent	high	ng not a unit
+LET-055	ming	минг	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-056	yangi	янги	both	R3,R6	reviewed:agent-opus:2026-10-20	agent	high	ng and ya
+LET-057	kech	кеч	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-058	kecha	кеча	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-059	sherik	шерик	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-060	ish	иш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-061	choy	чой	both	R3,R6	reviewed:agent-opus:2026-10-20	agent	high	
+LET-062	chorak	чорак	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-063	shahar	шаҳар	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-064	shaharlar	шаҳарлар	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-065	shartnoma	шартнома	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-066	chegara	чегара	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+LET-067	tosh	тош	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-068	oltin	олтин	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-069	singil	сингил	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+LET-070	dengiz	денгиз	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	ng then iz
+LET-071	sakkiz	саккиз	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+LET-072	toʻqqiz	тўққиз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-001	oʻzbek	ўзбек	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-002	oʻz	ўз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-003	oʻqish	ўқиш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-004	oʻqituvchi	ўқитувчи	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-005	oʻquvchi	ўқувчи	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-006	oʻrta	ўрта	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-007	oʻrin	ўрин	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-008	oʻzgarish	ўзгариш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-009	oʻtkazish	ўтказиш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-010	oʻn	ўн	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-011	oʻrgatish	ўргатиш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-012	oʻlchov	ўлчов	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-013	oʻyin	ўйин	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	oʻ then y plus i
+APO-014	toʻgʻri	тўғри	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-015	toʻgʻrisida	тўғрисида	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-016	toʻlov	тўлов	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-017	toʻlash	тўлаш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-018	toʻrt	тўрт	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-019	toʻy	тўй	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-020	toʻp	тўп	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-021	koʻcha	кўча	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-022	koʻl	кўл	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-023	koʻp	кўп	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-024	koʻz	кўз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-025	koʻrsatkich	кўрсаткич	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-026	koʻrik	кўрик	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-027	soʻz	сўз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-028	soʻm	сўм	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-029	soʻrov	сўров	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-030	boʻlim	бўлим	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-031	boʻsh	бўш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-032	boʻyicha	бўйича	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-033	qoʻl	қўл	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-034	qoʻshimcha	қўшимча	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-035	qoʻmita	қўмита	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-036	doʻst	дўст	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-037	doʻkon	дўкон	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-038	goʻzal	гўзал	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-039	poʻlat	пўлат	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-040	roʻyxat	рўйхат	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-041	yoʻl	йўл	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	yoʻ gives йў
+APO-042	yoʻq	йўқ	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-043	yoʻnalish	йўналиш	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-044	yoʻriqnoma	йўриқнома	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-045	oʻgʻil	ўғил	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-046	qoʻngʻiroq	қўнғироқ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	n then gʻ
+APO-047	gʻalaba	ғалаба	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-048	gʻoya	ғоя	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-049	gʻarb	ғарб	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-050	gʻayrat	ғайрат	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-051	gʻazal	ғазал	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-052	gʻor	ғор	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-053	gʻisht	ғишт	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-054	gʻoz	ғоз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-055	ogʻir	оғир	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-056	ogʻiz	оғиз	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-057	bogʻ	боғ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	word-final gʻ
+APO-058	togʻ	тоғ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	word-final gʻ
+APO-059	yogʻ	ёғ	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	yo then gʻ
+APO-060	dogʻ	доғ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	word-final gʻ
+APO-061	sogʻlom	соғлом	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-062	sogʻliq	соғлиқ	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-063	sogʻliqni saqlash	соғлиқни сақлаш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-064	ilgʻor	илғор	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-065	yigʻin	йиғин	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-066	yigʻilish	йиғилиш	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+APO-067	tugʻilish	туғилиш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-068	bugʻdoy	буғдой	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-069	sugʻurta	суғурта	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-070	sugʻorish	суғориш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+APO-071	bogʻcha	боғча	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-001	taʼtil	таътил	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-002	taʼlim	таълим	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-003	taʼsir	таъсир	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-004	taʼminot	таъминот	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-005	taʼrif	таъриф	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-006	taʼkid	таъкид	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-007	taʼqib	таъқиб	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-008	taʼna	таъна	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-009	taʼbir	таъбир	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-010	taʼmir	таъмир	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-011	taʼsis	таъсис	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-012	taʼzim	таъзим	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-013	taʼsischi	таъсисчи	both	R2,R3	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-014	taʼlimot	таълимот	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-015	maʼno	маъно	both	R2	reviewed:agent-opus:2026-10-20	agent	high	spec example
+TUT-016	maʼnaviyat	маънавият	both	R2,R6	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-017	maʼmur	маъмур	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-018	maʼmuriy	маъмурий	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-019	maʼmuriyat	маъмурият	both	R2,R6	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-020	maʼlumot	маълумот	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-021	maʼlum	маълум	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-022	maʼlumotnoma	маълумотнома	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-023	maʼqul	маъқул	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-024	maʼqullash	маъқуллаш	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-025	maʼruza	маъруза	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-026	maʼrifat	маърифат	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-027	masʼul	масъул	both	R2	reviewed:agent-opus:2026-10-20	agent	high	spec example
+TUT-028	masʼuliyat	масъулият	both	R2,R6	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-029	sanʼat	санъат	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-030	sanʼatkor	санъаткор	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-031	eʼlon	эълон	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	spec example
+TUT-032	eʼtibor	эътибор	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-033	eʼtiroz	эътироз	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-034	eʼtirof	эътироф	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-035	eʼtiqod	эътиқод	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-036	eʼzoz	эъзоз	both	R2,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-037	sheʼr	шеър	both	R2,R3	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-038	sheʼriyat	шеърият	both	R2,R3	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-039	qatʼiy	қатъий	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-040	qatʼiyat	қатъият	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-041	sunʼiy	сунъий	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-042	jamʼiyat	жамъият	both	R2,R6	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-043	daʼvo	даъво	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-044	qalʼa	қалъа	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-045	sharʼiy	шаръий	both	R2,R3	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-046	Isʼhoq	Исҳоқ	both	R4	reviewed:agent-opus:2026-10-20	agent	high	spec example; separator is dropped
+TUT-047	Asʼhob	Асҳоб	both	R4	reviewed:agent-opus:2026-10-20	agent	medium	
+TUT-048	Isʼhoqov	Исҳоқов	both	R4	reviewed:agent-opus:2026-10-20	agent	medium	surname
+TUT-049	Isʼhoqjon	Исҳоқжон	both	R4	reviewed:agent-opus:2026-10-20	agent	medium	
+TUT-050	musʼhaf	мусҳаф	both	R4	reviewed:agent-opus:2026-10-20	agent	medium	
+TUT-051	MAʼNO	МАЪНО	both	R2,R10	reviewed:agent-opus:2026-10-20	agent	high	ъ upper case, both neighbours upper
+TUT-052	ISʼHOQ	ИСҲОҚ	both	R4,R10	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-053	Maʼno	Маъно	both	R2,R10	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-054	TAʼTIL	ТАЪТИЛ	both	R2,R10	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-055	ASʼHOB	АСҲОБ	both	R4,R10	reviewed:agent-opus:2026-10-20	agent	medium	
+TUT-056	Isʼhoq aka	Исҳоқ ака	both	R4	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-057	Isʼhoq Isʼhoqov	Исҳоқ Исҳоқов	both	R4	reviewed:agent-opus:2026-10-20	agent	high	
+TUT-058	Isʼhoqova	Исҳоқова	both	R4	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R4 quota (10 both rows)
+YE-001	yer	ер	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-002	yetti	етти	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-003	yetmish	етмиш	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-004	yetim	етим	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-005	yelka	елка	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-006	yeng	енг	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-007	yelim	елим	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-008	yetuk	етук	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-009	yetakchi	етакчи	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-010	Yevropa	Европа	both	R5	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YE-011	qayer	қаер	both	R5	reviewed:agent-opus:2026-10-20	agent	high	ye after a vowel
+YE-012	kliyent	клиент	both	R5	reviewed:agent-opus:2026-10-20	agent	high	ye after a vowel
+YE-013	diyeta	диета	both	R5	reviewed:agent-opus:2026-10-20	agent	high	ye after a vowel
+YE-014	poyezd	поезд	both	R5	reviewed:agent-opus:2026-10-20	agent	high	ye after a vowel
+YE-015	Aliyev	Алиев	both	R5	reviewed:agent-opus:2026-10-20	agent	high	surname
+YE-016	Safoyev	Сафоев	both	R5	reviewed:agent-opus:2026-10-20	agent	high	surname
+YE-017	Mirziyoyev	Мирзиёев	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	surname
+YE-018	ekin	экин	both	R5	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YE-019	eshik	эшик	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-020	el	эл	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-021	eng	энг	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-022	erta	эрта	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-023	ertaga	эртага	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-024	esla	эсла	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-025	eslatma	эслатма	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-026	eski	эски	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-027	ega	эга	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-028	ehtiyoj	эҳтиёж	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-029	ehtiyot	эҳтиёт	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-030	ehtimol	эҳтимол	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-031	ehson	эҳсон	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-032	ekran	экран	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-033	ekspert	эксперт	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-034	elektron	электрон	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-035	energiya	энергия	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-036	emas	эмас	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-037	erkak	эркак	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-038	eshitish	эшитиш	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-039	ekologiya	экология	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-040	ekonomika	экономика	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-041	eksport	экспорт	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-042	etaj	этаж	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-043	epidemiya	эпидемия	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-044	elchi	элчи	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-045	emlash	эмлаш	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-046	etsa	этса	both	R5,R7	reviewed:agent-opus:2026-10-20	agent	high	word-start e before ts
+YE-047	poeziya	поэзия	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YE-048	aeroport	аэропорт	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-049	poema	поэма	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-050	duet	дуэт	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-051	kel	кел	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-052	ket	кет	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-053	kelin	келин	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-054	sevgi	севги	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-055	sezgi	сезги	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-056	sekin	секин	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-057	teatr	театр	both	R5	reviewed:agent-opus:2026-10-20	agent	high	e after a consonant, then a
+YE-058	geografiya	география	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-059	geologiya	геология	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-060	geometriya	геометрия	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+YE-061	telefon	телефон	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-062	tekshirish	текшириш	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-063	tenglama	тенглама	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-064	semiz	семиз	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-065	temir	темир	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+YE-066	Toshkent	Тошкент	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YE-067	Oʻzbekgidroenergo	Ўзбекгидроэнерго	both	R5,R1	reviewed:agent-opus:2026-10-20	agent	high	e after o gives э
+YE-068	3-etaj	3-этаж	both	R5,R12	reviewed:agent-opus:2026-10-20	agent	high	hyphen is a boundary
+YE-069	sotsial-ekonomik	социал-экономик	both	R5,R7a	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YO-001	dunyo	дунё	both	R6	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YO-002	aktyor	актёр	both	R6	reviewed:agent-opus:2026-10-20	agent	high	no dictionary entry needed
+YO-003	tayyor	тайёр	both	R6	reviewed:agent-opus:2026-10-20	agent	high	spec example
+YO-004	yosh	ёш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-005	yoz	ёз	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-006	yozuv	ёзув	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-007	yordam	ёрдам	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-008	yoqimli	ёқимли	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-009	yogʻoch	ёғоч	both	R6,R1	reviewed:agent-opus:2026-10-20	agent	high	
+YO-010	yopish	ёпиш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-011	yonish	ёниш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-012	ayol	аёл	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-013	hayot	ҳаёт	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-014	xayol	хаёл	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-015	bayon	баён	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-016	kuyov	куёв	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-017	qiyomat	қиёмат	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-018	tuyoq	туёқ	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-019	soya	соя	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-020	yuz	юз	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-021	yurak	юрак	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-022	yulduz	юлдуз	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-023	yutuq	ютуқ	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-024	yuk	юк	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-025	yurt	юрт	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-026	yuqori	юқори	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-027	yuklash	юклаш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-028	yuborish	юбориш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-029	yurish	юриш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-030	yuridik	юридик	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-031	yaxshi	яхши	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-032	yashil	яшил	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-033	yagona	ягона	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-034	yakun	якун	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-035	yaqin	яқин	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-036	yarim	ярим	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-037	yangilik	янгилик	both	R6,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YO-038	yashash	яшаш	both	R6,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YO-039	yakshanba	якшанба	both	R6,R3	reviewed:agent-opus:2026-10-20	agent	high	
+YO-040	familiya	фамилия	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-041	mayda	майда	both	R6	reviewed:agent-opus:2026-10-20	agent	high	y before a consonant is й
+YO-042	bayram	байрам	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-043	bayroq	байроқ	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-044	yil	йил	both	R6	reviewed:agent-opus:2026-10-20	agent	high	y before i is й
+YO-045	yillik	йиллик	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-046	yigirma	йигирма	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-047	yigit	йигит	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-048	qiyin	қийин	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-049	uy	уй	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-050	oy	ой	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-051	kuy	куй	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-052	ayt	айт	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-053	boy	бой	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-054	joy	жой	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+YO-055	rayon	район	both	R11,R6	reviewed:agent-opus:2026-10-20	agent	high	dictionary: й plus vowel
+YO-056	mayor	майор	both	R11,R6	reviewed:agent-opus:2026-10-20	agent	high	dictionary
+YO-057	konveyer	конвейер	both	R11,R6	reviewed:agent-opus:2026-10-20	agent	high	dictionary
+YO-058	foye	фойе	both	R11,R6	reviewed:agent-opus:2026-10-20	agent	medium	dictionary
+YO-059	Nyu-York	Ню-Йорк	both	R11,R6	reviewed:agent-opus:2026-10-20	agent	medium	dictionary york; hyphen parts
+YO-060	seyf	сейф	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+TS-001	operatsiya	операция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-002	konstitutsiya	конституция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-003	investitsiya	инвестиция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-004	militsiya	милиция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-005	sotsial	социал	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-006	ratsion	рацион	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-007	patsiyent	пациент	both	R7a,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TS-008	koeffitsiyent	коэффициент	both	R7a,R5	reviewed:agent-opus:2026-10-20	agent	high	rules.md 1.3 plugin disagreement
+TS-009	initsiativa	инициатива	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-010	ofitsiant	официант	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-011	delegatsiya	делегация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-012	kommunikatsiya	коммуникация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-013	organizatsiya	организация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-014	informatsiya	информация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-015	kvalifikatsiya	квалификация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-016	attestatsiya	аттестация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-017	sertifikatsiya	сертификация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-018	inflyatsiya	инфляция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-019	emotsiya	эмоция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-020	migratsiya	миграция	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-021	nominatsiya	номинация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-022	motivatsiya	мотивация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-023	adaptatsiya	адаптация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-024	likvidatsiya	ликвидация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-025	reorganizatsiya	реорганизация	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-026	ratsional	рационал	both	R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-027	ketsa	кетса	both	R7	reviewed:agent-opus:2026-10-20	agent	high	native ts is тс
+TS-028	ketsin	кетсин	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-029	aytsa	айтса	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-030	aytsin	айтсин	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-031	otsiz	отсиз	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-032	yetsa	етса	both	R7,R5	reviewed:agent-opus:2026-10-20	agent	high	
+TS-033	tutsa	тутса	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-034	kutsa	кутса	both	R7	reviewed:agent-opus:2026-10-20	agent	high	
+TS-035	yotsin	ётсин	both	R7,R6	reviewed:agent-opus:2026-10-20	agent	medium	
+TS-036	sirk	цирк	both	R11	reviewed:agent-opus:2026-10-20	agent	high	word-only entry
+TS-037	sirka	сирка	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	vinegar; sirk entry is word-only
+TS-038	sement	цемент	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-039	sentr	центр	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-040	sentral	централ	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-041	ssena	сцена	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-042	ssenariy	сценарий	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-043	funksiya	функция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-044	funksional	функционал	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-045	aksiya	акция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-046	seksiya	секция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-047	konsert	концерт	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-048	prinsip	принцип	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-049	korrupsiya	коррупция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-050	stansiya	станция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-051	kompetensiya	компетенция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-052	konferensiya	конференция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-053	kvitansiya	квитанция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-054	sanksiya	санкция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-055	instruksiya	инструкция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-056	konstruksiya	конструкция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-057	produksiya	продукция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-058	redaksiya	редакция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-059	reaksiya	реакция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-060	tendensiya	тенденция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-061	potensial	потенциал	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-062	litsey	лицей	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-063	litsenziya	лицензия	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-064	abzats	абзац	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-065	ofitser	офицер	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-066	dotsent	доцент	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-067	protsent	процент	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-068	protsess	процесс	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-069	protsedura	процедура	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-070	retsept	рецепт	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-071	matritsa	матрица	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-072	vaksinatsiya	вакцинация	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	high	spec example; R7a in the remainder
+TS-073	sivilizatsiya	цивилизация	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-074	konsentratsiya	концентрация	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-075	Fransiya	Франция	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-076	fransuz	француз	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-077	Shveysariya	Швейцария	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	
+TS-078	sirkulyar	циркуляр	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	
+TS-079	senzura	цензура	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-080	selsiy	цельсий	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	
+TS-081	kalsiy	кальций	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	
+TS-082	kalkulyatsiya	калькуляция	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-083	konsultatsiya	консультация	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	high	
+TS-084	devalvatsiya	девальвация	both	R11,R7a	reviewed:agent-opus:2026-10-20	agent	medium	
+SOFT-001	sentabrda	сентябрда	both	R11	reviewed:agent-opus:2026-10-20	agent	high	D-11: the ь is dropped before a suffix
+SOFT-002	sentabrdan	сентябрдан	both	R11	reviewed:agent-opus:2026-10-20	agent	high	D-11
+SOFT-003	oktabrda	октябрда	both	R11	reviewed:agent-opus:2026-10-20	agent	high	D-11
+SOFT-004	oktabrdan	октябрдан	both	R11	reviewed:agent-opus:2026-10-20	agent	high	D-11
+SOFT-005	yanvardan	январдан	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-006	fevralgacha	февралгача	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-007	aprelda	апрелда	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-008	iyundan	июндан	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-009	iyulda	июлда	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-010	noyabrdan	ноябрдан	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-011	dekabrgacha	декабргача	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-012	sentabrda	сентябрьда	c2l	R11	reviewed:agent-opus:2026-10-20	agent	high	ь before a suffix is accepted
+SOFT-013	oktabrdan	октябрьдан	c2l	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-014	yanvardan	январьдан	c2l	R11	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-015	kompyuter	компьютер	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-016	kompyuterlar	компьютерлар	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-017	film	фильм	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-018	filmlar	фильмлар	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-019	rol	роль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-020	roli	роли	both	R11	reviewed:agent-opus:2026-10-20	agent	high	by rule: no ь before a suffix
+SOFT-021	nol	ноль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-022	parol	пароль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-023	avtomobil	автомобиль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-024	mebel	мебель	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-025	portfel	портфель	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-026	spektakl	спектакль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-027	rubl	рубль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-028	albom	альбом	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-029	medal	медаль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-030	tabel	табель	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-031	profil	профиль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-032	profilaktika	профилактика	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	medium	stem plus remainder: ь dropped
+SOFT-033	modul	модуль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-034	kalendar	календарь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-035	sekretar	секретарь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-036	sekretariat	секретариат	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	medium	ь dropped before the remainder
+SOFT-037	premyer	премьер	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-038	karyera	карьера	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-039	intervyu	интервью	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-040	pyesa	пьеса	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-041	kalkulyator	калькулятор	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-042	fakultet	факультет	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-043	asfalt	асфальт	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-044	apelsin	апельсин	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-045	konsultant	консультант	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-046	kontrol	контроль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	medium	
+SOFT-047	kontrolyor	контролёр	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	medium	ь dropped, yor gives ёр
+SOFT-048	pochtalyon	почтальон	both	R11,R9a	reviewed:agent-opus:2026-10-20	agent	medium	D-10
+SOFT-049	batalyon	батальон	both	R11,R9a	reviewed:agent-opus:2026-10-20	agent	medium	D-10
+SOFT-050	pavilyon	павильон	both	R11,R9a	reviewed:agent-opus:2026-10-20	agent	medium	D-10
+SOFT-051	obyekt	объект	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-052	obyektiv	объектив	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-053	obyektlar	объектлар	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-054	subyekt	субъект	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-055	syezd	съезд	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-056	podyezd	подъезд	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-057	konyunktura	конъюнктура	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-058	obyom	объём	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	medium	
+SOFT-059	inyeksiya	инъекция	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-060	adyutant	адъютант	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	medium	
+SOFT-061	moʻjiza	мўъжиза	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-062	moʻtabar	мўътабар	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-063	moʻtadil	мўътадил	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-064	moʻjaz	мўъжаз	both	R11,R8	reviewed:agent-opus:2026-10-20	agent	medium	
+SOFT-065	moʻmin	мўъмин	both	R11,R8	ambiguous	agent	medium	review: Cyrillic usage is split between мўъмин and мўмин (cf. the surname Мўминов). The exceptions.tsv seed row moʻmin should be demoted to `ambiguous` too
+SOFT-066	maʼyus	маъюс	both	R2,R8	reviewed:agent-opus:2026-10-20	agent	high	rules.md 1.3: plugin gives mayus
+SOFT-067	maʼyuslik	маъюслик	both	R2,R8	reviewed:agent-opus:2026-10-20	agent	high	
+SOFT-068	taʼyin	таъйин	both	R2,R8	rejected	agent	high	rejected: non-standard spelling; the standard form is tayin / тайин (see HR-129 lavozimga tayinlash)
+SOFT-069	taʼyinlash	таъйинлаш	both	R2,R8	rejected	agent	high	rejected: non-standard spelling; standard tayinlash / тайинлаш
+SOFT-070	taʼyinlandi	таъйинланди	both	R2,R8	rejected	agent	high	rejected: non-standard spelling; standard tayinlandi / тайинланди
+SOFT-071	maʼyusona	маъюсона	both	R2,R8	reviewed:agent-opus:2026-10-20	agent	high	added in review: R8 vowel + ъ + iotated quota
+SOFT-072	maʼyuslanmoq	маъюсланмоқ	both	R2,R8	reviewed:agent-opus:2026-10-20	agent	high	added in review: R8 quota
+SOFT-073	maʼyuslanib	маъюсланиб	both	R2,R8	reviewed:agent-opus:2026-10-20	agent	high	added in review: R8 quota; the class has one productive root (maʼyus)
+SOFT-074	pochtalyonlar	почтальонлар	both	R11,R9a	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R9a quota; stem pochtalyon + lar (stem keeps its inner ь)
+SOFT-075	batalyonlar	батальонлар	both	R11,R9a	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R9a quota; stem batalyon + lar
+SOFT-076	medalyon	медальон	c2l	R9a	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R9a by rule. l2c is wrong today: the `medal` stem gives медалён (D-11). Needs a `medalyon` stem row
+SOFT-077	bulyon	бульон	c2l	R9a	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R9a by rule; l2c gives булён without an entry
+SOFT-078	losyon	лосьон	c2l	R9a	reviewed:agent-opus:2026-10-20	agent	medium	added in review: R9a by rule; l2c gives лосён without an entry
+TUT2-001	mashʼal	машъал	both	R2	reviewed:agent-opus:2026-10-20	agent	high	review: standard Latin mashʼal and Cyrillic машъал; conf raised
+TUT2-002	Qurʼon	Қуръон	both	R2	reviewed:agent-opus:2026-10-20	agent	high	review: standard Latin Qurʼon and Cyrillic Қуръон; conf raised
+CASE-001	Shahar	Шаҳар	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-002	SHAHAR	ШАҲАР	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-003	SHAHARLAR	ШАҲАРЛАР	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-004	toshkent	тошкент	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-005	TOSHKENT	ТОШКЕНТ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-006	oʻzbekiston	ўзбекистон	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-007	Oʻzbekiston	Ўзбекистон	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-008	OʻZBEKISTON	ЎЗБЕКИСТОН	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-009	Oʻzbek	Ўзбек	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-010	OʻZBEK	ЎЗБЕК	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-011	Yangi	Янги	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-012	YANGI	ЯНГИ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-013	Yoʻl	Йўл	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-014	YOʻL	ЙЎЛ	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-015	YOʻQ	ЙЎҚ	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-016	Yosh	Ёш	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-017	YOSH	ЁШ	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-018	Yer	Ер	both	R10,R5	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-019	YER	ЕР	both	R10,R5	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-020	Ekin	Экин	both	R10,R5	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-021	EKIN	ЭКИН	both	R10,R5	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-022	Gʻoya	Ғоя	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-023	GʻOYA	ҒОЯ	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-024	GʻALABA	ҒАЛАБА	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-025	Qozogʻiston	Қозоғистон	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-026	QOZOGʻISTON	ҚОЗОҒИСТОН	both	R10,R1	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-027	Choy	Чой	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-028	CHOY	ЧОЙ	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-029	Chorshanba	Чоршанба	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-030	CHORSHANBA	ЧОРШАНБА	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-031	YAKSHANBA	ЯКШАНБА	both	R10,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-032	Xodim	Ходим	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-033	XODIM	ХОДИМ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-034	Buyruq	Буйруқ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-035	BUYRUQ	БУЙРУҚ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-036	Shartnoma	Шартнома	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-037	SHARTNOMA	ШАРТНОМА	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-038	Sharq	Шарқ	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-039	SHARQ	ШАРҚ	both	R10,R3	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-040	Ish haqi	Иш ҳақи	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-041	ISH HAQI	ИШ ҲАҚИ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-042	Mehnat kodeksi	Меҳнат кодекси	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-043	MEHNAT KODEKSI	МЕҲНАТ КОДЕКСИ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-044	TOSHKENT shahri	ТОШКЕНТ шаҳри	both	R10	reviewed:agent-opus:2026-10-20	agent	high	all-caps word next to a lower-case word
+CASE-045	Kompyuter	Компьютер	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-046	KOMPYUTER	КОМПЬЮТЕР	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-047	Sentabr	Сентябрь	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-048	SENTABR	СЕНТЯБРЬ	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	spec example
+CASE-049	Obyekt	Объект	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-050	OBYEKT	ОБЪЕКТ	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-051	Sh. Rashidov	Ш. Рашидов	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Single letter; rules.md 1.3
+CASE-052	SH. RASHIDOV	Ш. РАШИДОВ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Single letter in an all-caps context; plugin gives Sh.
+CASE-053	BMT	БМТ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-054	AQSH	АҚШ	both	R10	reviewed:agent-opus:2026-10-20	agent	medium	D-14
+CASE-055	MDH	МДҲ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-056	IIV	ИИВ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-057	STIR	СТИР	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-058	OAV	ОАВ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-059	DXX	ДХХ	both	R10,R12	reviewed:agent-opus:2026-10-20	agent	high	D is not a Roman letter in the ROMAN rule
+CASE-060	OʻzR	ЎзР	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-061	OʻzMU	ЎзМУ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-062	ToshDU	ТошДУ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-063	SamDU	СамДУ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-064	TerDU	ТерДУ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-065	NavDPI	НавДПИ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	Mixed case
+CASE-066	TATU	ТАТУ	both	R10	reviewed:agent-opus:2026-10-20	agent	high	
+CASE-067	MChJ	МЧЖ	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	acro entry
+CASE-068	YaTT	ЯТТ	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	acro entry
+CASE-069	JShShIR	ЖШШИР	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	high	acro entry
+CASE-070	YaIM	ЯИМ	both	R10,R11	reviewed:agent-opus:2026-10-20	agent	medium	acro entry
+CASE-071	FHDYo	ФҲДЁ	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed; the reverse gives FHDYO (D-14)
+CASE-072	TDYuU	ТДЮУ	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed; the reverse gives TDYUU (D-14)
+NAME-001	Alisher Navoiy	Алишер Навоий	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-002	Abdulla Qodiriy	Абдулла Қодирий	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-003	Zahiriddin Muhammad Bobur	Заҳириддин Муҳаммад Бобур	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-004	Amir Temur	Амир Темур	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-005	Mirzo Ulugʻbek	Мирзо Улуғбек	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-006	Ibn Sino	Ибн Сино	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-007	Al-Xorazmiy	Ал-Хоразмий	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	hyphen is a boundary
+NAME-008	Imom Buxoriy	Имом Бухорий	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-009	Abu Rayhon Beruniy	Абу Райҳон Беруний	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-010	Shavkat Mirziyoyev	Шавкат Мирзиёев	both	R5,R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-011	Islom Karimov	Ислом Каримов	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-012	Sharof Rashidov	Шароф Рашидов	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-013	Choʻlpon	Чўлпон	both	R1,R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-014	Gʻafur Gʻulom	Ғафур Ғулом	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-015	Hamid Olimjon	Ҳамид Олимжон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-016	Erkin Vohidov	Эркин Воҳидов	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-017	Abdulla Oripov	Абдулла Орипов	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-018	Hamza Hakimzoda Niyoziy	Ҳамза Ҳакимзода Ниёзий	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-019	Oybek	Ойбек	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-020	Zulfiya	Зулфия	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-021	Ibrohim	Иброҳим	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-022	Ismoil	Исмоил	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-023	Yusuf	Юсуф	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-024	Zafar	Зафар	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-025	Aziza	Азиза	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-026	Dilnoza	Дилноза	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-027	Sardor	Сардор	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-028	Jasur	Жасур	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-029	Bahodir	Баҳодир	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-030	Shuhrat	Шуҳрат	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-031	Gulnora	Гулнора	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-032	Madina	Мадина	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-033	Nodira	Нодира	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-034	Sevara	Севара	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-035	Otabek	Отабек	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-036	Sherzod	Шерзод	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-037	Dilshod	Дилшод	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-038	Farhod	Фарҳод	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-039	Rustam	Рустам	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-040	Sanjar	Санжар	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-041	Umid	Умид	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-042	Feruza	Феруза	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-043	Malika	Малика	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-044	Nargiza	Наргиза	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-045	Laylo	Лайло	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-046	Shahnoza	Шаҳноза	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-047	Mohira	Моҳира	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-048	Zarina	Зарина	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-049	Eldor	Элдор	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-050	Elyor	Элёр	both	R5,R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-051	Ergash	Эргаш	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-052	Elmurod	Элмурод	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-053	Yodgor	Ёдгор	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-054	Yoqub	Ёқуб	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-055	Yulduz	Юлдуз	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-056	Yaxyo	Яхё	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-057	Oʻktam	Ўктам	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-058	Oʻtkir	Ўткир	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-059	Gʻayrat	Ғайрат	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-060	Xurshid	Хуршид	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-061	Hilola	Ҳилола	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-062	Anvar	Анвар	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-063	Akmal	Акмал	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-064	Sobir	Собир	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-065	Abror	Аброр	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-066	Jahongir	Жаҳонгир	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-067	Nilufar	Нилуфар	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-068	Iroda	Ирода	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-069	Nigora	Нигора	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-070	Raʼno	Раъно	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-071	Saʼdulla	Саъдулла	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-072	Qudrat	Қудрат	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-073	Muhammad	Муҳаммад	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-074	Karimov	Каримов	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-075	Rahimov	Раҳимов	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-076	Abdullayev	Абдуллаев	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-077	Ergashev	Эргашев	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-078	Yusupov	Юсупов	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-079	Xolmatov	Холматов	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-080	Tursunov	Турсунов	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-081	Qodirov	Қодиров	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-082	Rasulova	Расулова	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-083	Sodiqova	Содиқова	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-084	Ahmedov	Аҳмедов	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-085	Valiyeva	Валиева	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-086	Karimov Anvar Abdullayevich	Каримов Анвар Абдуллаевич	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-087	Rahimova Dilnoza Karimovna	Раҳимова Дилноза Каримовна	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-088	Yusupov Jasur Rustamovich	Юсупов Жасур Рустамович	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-089	Karimov Anvar Abdulla oʻgʻli	Каримов Анвар Абдулла ўғли	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-090	Rahimova Dilnoza Sardor qizi	Раҳимова Дилноза Сардор қизи	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+NAME-091	Samarqand	Самарқанд	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-092	Buxoro	Бухоро	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-093	Namangan	Наманган	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-094	Andijon	Андижон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-095	Fargʻona	Фарғона	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-096	Qashqadaryo	Қашқадарё	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-097	Surxondaryo	Сурхондарё	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-098	Xorazm	Хоразм	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-099	Navoiy	Навоий	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-100	Jizzax	Жиззах	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-101	Sirdaryo	Сирдарё	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-102	Termiz	Термиз	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-103	Nukus	Нукус	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-104	Qarshi	Қарши	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-105	Guliston	Гулистон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-106	Urganch	Урганч	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-107	Margʻilon	Марғилон	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-108	Qoʻqon	Қўқон	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-109	Chirchiq	Чирчиқ	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-110	Angren	Ангрен	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-111	Olmaliq	Олмалиқ	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-112	Zarafshon	Зарафшон	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-113	Denov	Денов	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-114	Shahrisabz	Шаҳрисабз	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-115	Kitob	Китоб	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-116	Bekobod	Бекобод	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-117	Ohangaron	Оҳангарон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-118	Xiva	Хива	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-119	Orol	Орол	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-120	Chilonzor	Чилонзор	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-121	Yunusobod	Юнусобод	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-122	Yakkasaroy	Яккасарой	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-123	Shayxontohur	Шайхонтоҳур	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-124	Sergeli	Сергели	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-125	Uchtepa	Учтепа	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-126	Mirobod	Миробод	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-127	Olmazor	Олмазор	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-128	Bektemir	Бектемир	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-129	Yashnobod	Яшнобод	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-130	Qoraqalpogʻiston	Қорақалпоғистон	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-131	Qirgʻiziston	Қирғизистон	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-132	Tojikiston	Тожикистон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-133	Afgʻoniston	Афғонистон	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-134	Turkmaniston	Туркманистон	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-135	Polsha	Польша	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	medium	dictionary word, Title case
+NAME-136	Oʻzbekneftgaz	Ўзбекнефтгаз	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-137	Oʻzbekiston temir yoʻllari	Ўзбекистон темир йўллари	both	R1,R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-138	Oʻzbekiston Respublikasi	Ўзбекистон Республикаси	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-139	Oʻzbekiston Respublikasi Prezidenti	Ўзбекистон Республикаси Президенти	both	R1,R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-140	Vazirlar Mahkamasi	Вазирлар Маҳкамаси	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-141	Oliy Majlis	Олий Мажлис	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-142	Moliya vazirligi	Молия вазирлиги	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-143	Adliya vazirligi	Адлия вазирлиги	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-144	Ichki ishlar vazirligi	Ички ишлар вазирлиги	both	R3	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-145	Mehnat vazirligi	Меҳнат вазирлиги	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-146	Soliq qoʻmitasi	Солиқ қўмитаси	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-147	Markaziy bank	Марказий банк	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-148	Konstitutsiyaviy sud	Конституциявий суд	both	R7a	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-149	Oliy sud	Олий суд	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-150	Bosh prokuratura	Бош прокуратура	both	R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-151	Davlat statistika qoʻmitasi	Давлат статистика қўмитаси	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-152	Sogʻliqni saqlash vazirligi	Соғлиқни сақлаш вазирлиги	both	R1	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-153	Xalq taʼlimi vazirligi	Халқ таълими вазирлиги	both	R2	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-154	Oʻzbekiston Milliy universiteti	Ўзбекистон Миллий университети	both	R1,R5	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-155	Toshkent davlat yuridik universiteti	Тошкент давлат юридик университети	both	R6	reviewed:agent-opus:2026-10-20	official-name	high	
+NAME-156	Oʻzbekiston Respublikasi Mehnat kodeksi	Ўзбекистон Республикаси Меҳнат кодекси	both	R1,R5	reviewed:agent-opus:2026-10-20	official-name	high	
+HR-001	buyruq	буйруқ	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-002	buyruqlar	буйруқлар	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-003	xodim	ходим	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-004	xodimlar	ходимлар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-005	xodimlar boʻlimi	ходимлар бўлими	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-006	kadrlar	кадрлар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-007	kadrlar boʻlimi	кадрлар бўлими	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-008	kadrlar boʻyicha buyruq	кадрлар бўйича буйруқ	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-009	mehnat taʼtili	меҳнат таътили	both	R2	reviewed:agent-opus:2026-10-20	agent	high	
+HR-010	yillik taʼtil	йиллик таътил	both	R2,R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-011	taʼtilga chiqish	таътилга чиқиш	both	R2,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-012	tugʻruq taʼtili	туғруқ таътили	both	R1,R2	reviewed:agent-opus:2026-10-20	agent	high	
+HR-013	haq toʻlanmaydigan taʼtil	ҳақ тўланмайдиган таътил	both	R1,R2	reviewed:agent-opus:2026-10-20	agent	high	
+HR-014	ishga qabul	ишга қабул	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-015	ishga qabul qilish	ишга қабул қилиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-016	ishga qabul qilish toʻgʻrisida buyruq	ишга қабул қилиш тўғрисида буйруқ	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-017	ishdan boʻshatish	ишдан бўшатиш	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-018	ishdan boʻshash	ишдан бўшаш	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-019	lavozim	лавозим	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-020	lavozim yoʻriqnomasi	лавозим йўриқномаси	both	R1,R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-021	lavozim maoshi	лавозим маоши	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-022	maosh	маош	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-023	oylik maosh	ойлик маош	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-024	ish haqi	иш ҳақи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-025	ish haqi toʻlash	иш ҳақи тўлаш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-026	mehnat shartnomasi	меҳнат шартномаси	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-027	muddatli mehnat shartnomasi	муддатли меҳнат шартномаси	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-028	mehnat daftarchasi	меҳнат дафтарчаси	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-029	mehnat kodeksi	меҳнат кодекси	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-030	mehnat staji	меҳнат стажи	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-031	ish staji	иш стажи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-032	stajyor	стажёр	both	R6	reviewed:agent-opus:2026-10-20	agent	high	j then yo
+HR-033	ish vaqti	иш вақти	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-034	ish kuni	иш куни	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-035	ish joyi	иш жойи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-036	ish oʻrni	иш ўрни	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-037	ish beruvchi	иш берувчи	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-038	ishchi	ишчи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-039	xizmatchi	хизматчи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-040	rahbar	раҳбар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-041	rahbariyat	раҳбарият	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-042	boshliq	бошлиқ	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-043	boʻlim boshligʻi	бўлим бошлиғи	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-044	bosh mutaxassis	бош мутахассис	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-045	mutaxassis	мутахассис	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-046	direktor	директор	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-047	direktor oʻrinbosari	директор ўринбосари	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-048	buxgalter	бухгалтер	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-049	bosh buxgalter	бош бухгалтер	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-050	buxgalteriya	бухгалтерия	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-051	kotib	котиб	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-052	menejer	менежер	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-053	yurist	юрист	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-054	ariza	ариза	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-055	ariza yozish	ариза ёзиш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-056	tushuntirish xati	тушунтириш хати	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-057	kafolat xati	кафолат хати	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-058	dalolatnoma	далолатнома	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-059	bayonnoma	баённома	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-060	farmoyish	фармойиш	both	R3,R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-061	farmon	фармон	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-062	qaror	қарор	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-063	nizom	низом	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-064	talabnoma	талабнома	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-065	xizmat safari	хизмат сафари	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-066	xizmat safariga yuborish	хизмат сафарига юбориш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-067	kasallik varaqasi	касаллик варақаси	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-068	ruxsatnoma	рухсатнома	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-069	tabel raqami	табель рақами	both	R11	reviewed:agent-opus:2026-10-20	agent	high	
+HR-070	mukofot	мукофот	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-071	mukofotlash	мукофотлаш	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-072	jarima	жарима	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-073	intizomiy jazo	интизомий жазо	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-074	hayfsan	ҳайфсан	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-075	ogohlantirish	огоҳлантириш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-076	tanbeh	танбеҳ	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-077	kasaba uyushmasi	касаба уюшмаси	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-078	jamoa shartnomasi	жамоа шартномаси	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-079	ichki tartib qoidalari	ички тартиб қоидалари	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-080	ish jadvali	иш жадвали	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-081	smena	смена	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-082	tungi smena	тунги смена	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-083	navbatchilik	навбатчилик	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-084	dam olish kuni	дам олиш куни	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-085	bayram kuni	байрам куни	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-086	shtat	штат	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-087	shtat birligi	штат бирлиги	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-088	shtat jadvali	штат жадвали	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-089	vakansiya	вакансия	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-090	nomzod	номзод	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-091	suhbat	суҳбат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-092	rezyume	резюме	both	R6,R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-093	sinov muddati	синов муддати	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-094	tajriba	тажриба	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-095	malaka	малака	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-096	malaka oshirish	малака ошириш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-097	diplom	диплом	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-098	sertifikat	сертификат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-099	pasport	паспорт	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-100	guvohnoma	гувоҳнома	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-101	yashash joyi	яшаш жойи	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-102	oilaviy ahvol	оилавий аҳвол	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-103	farzand	фарзанд	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-104	harbiy xizmat	ҳарбий хизмат	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-105	harbiy bilet	ҳарбий билет	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-106	nafaqa	нафақа	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-107	nafaqaga chiqish	нафақага чиқиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-108	pensiya	пенсия	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-109	ijtimoiy sugʻurta	ижтимоий суғурта	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-110	soliq	солиқ	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-111	daromad	даромад	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-112	imzo	имзо	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-113	muhr	муҳр	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-114	hujjat	ҳужжат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-115	hujjatlar	ҳужжатлар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-116	hisobot	ҳисобот	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-117	hisob-kitob	ҳисоб-китоб	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-118	jadval	жадвал	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-119	raqam	рақам	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-120	sana	сана	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-121	mutaxassislik	мутахассислик	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-122	bandlik	бандлик	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-123	ishsizlik	ишсизлик	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-124	ishga joylashish	ишга жойлашиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-125	shikoyat	шикоят	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-126	taklif	таклиф	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-127	iltimos	илтимос	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-128	muddat	муддат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-129	lavozimga tayinlash	лавозимга тайинлаш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-130	fayl	файл	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-131	fayl nomi	файл номи	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-132	papka	папка	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-133	taqdimot	тақдимот	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-134	matn	матн	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-135	sahifa	саҳифа	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-136	bosh sahifa	бош саҳифа	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-137	sahifa raqami	саҳифа рақами	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-138	satr	сатр	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-139	ustun	устун	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-140	katak	катак	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-141	hujayra	ҳужайра	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-142	formula	формула	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-143	diagramma	диаграмма	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-144	grafik	график	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-145	saqlash	сақлаш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-146	ochish	очиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-147	chop etish	чоп этиш	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	word-start e gives э
+HR-148	nusxa	нусха	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-149	nusxa koʻchirish	нусха кўчириш	both	R1	reviewed:agent-opus:2026-10-20	agent	high	
+HR-150	qidirish	қидириш	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-151	almashtirish	алмаштириш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-152	tahrirlash	таҳрирлаш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-153	format	формат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-154	shrift	шрифт	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-155	qalin	қалин	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-156	kursiv	курсив	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-157	rang	ранг	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-158	rasm	расм	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-159	slayd	слайд	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-160	dastur	дастур	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-161	tizim	тизим	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-162	parametr	параметр	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-163	sozlamalar	созламалар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-164	qoʻshish	қўшиш	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-165	oʻchirish	ўчириш	both	R1,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-166	bekor qilish	бекор қилиш	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-167	qaytarish	қайтариш	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+HR-168	tasdiqlash	тасдиқлаш	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-169	xabar	хабар	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-170	elektron pochta	электрон почта	both	R5,R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-171	pochta manzili	почта манзили	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+HR-172	manzil	манзил	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-173	telefon raqami	телефон рақами	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-174	soat	соат	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-175	daqiqa	дақиқа	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+HR-176	sekund	секунд	both	R5	reviewed:agent-opus:2026-10-20	agent	high	
+HR-177	hujjat shabloni	ҳужжат шаблони	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-001	dushanba	душанба	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-002	seshanba	сешанба	both	R3,R5	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-003	chorshanba	чоршанба	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-004	payshanba	пайшанба	both	R3,R6	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-005	juma	жума	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-006	shanba	шанба	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-007	yanvar	январь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-008	fevral	февраль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-009	mart	март	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-010	aprel	апрель	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-011	may	май	both	R6	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-012	iyun	июнь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-013	iyul	июль	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-014	avgust	август	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-015	sentabr	сентябрь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-016	oktabr	октябрь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-017	noyabr	ноябрь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-018	dekabr	декабрь	both	R11,R9	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-019	qish	қиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-020	kuz	куз	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-021	hafta	ҳафта	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-022	kun	кун	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-023	bugun	бугун	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-024	bir	бир	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-025	ikki	икки	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-026	uch	уч	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-027	besh	беш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-028	olti	олти	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-029	oltmish	олтмиш	both	R3	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-030	million	миллион	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+CAL-031	milliard	миллиард	both	tables	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-001	PF-1234-son farmon	PF-1234-сон фармон	both	R12	reviewed:agent-opus:2026-10-20	rules.md-§10	high	
+SPN-002	PQ-4545-sonli qaror	PQ-4545-сонли қарор	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-003	VMQ-123 qaror	VMQ-123 қарор	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-004	OʻRQ-587-son Qonun	OʻRQ-587-сон Қонун	both	R12,R1	reviewed:agent-opus:2026-10-20	agent	high	Oʻ counts as one letter in CODE-A
+SPN-005	A4 qogʻoz	A4 қоғоз	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-006	BI72373344 raqamli pasport	BI72373344 рақамли паспорт	both	R12	reviewed:agent-opus:2026-10-20	agent	high	CODE-B
+SPN-007	AA1234567 raqamli pasport	AA1234567 рақамли паспорт	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-008	info@lex.uz manziliga yuboring	info@lex.uz манзилига юборинг	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-009	Savollar uchun hr@company.com manziliga yozing	Саволлар учун hr@company.com манзилига ёзинг	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-010	Manba: https://lex.uz/docs/5013007.	Манба: https://lex.uz/docs/5013007.	both	R12	reviewed:agent-opus:2026-10-20	rules.md-§10	high	
+SPN-011	www.gov.uz saytiga kiring	www.gov.uz сайтига киринг	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-012	Qonunlar lex.uz saytida	Қонунлар lex.uz сайтида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	bare domain
+SPN-013	my.gov.uz portali	my.gov.uz портали	both	R12	reviewed:agent-opus:2026-10-20	agent	high	bare domain
+SPN-014	IJRO.GOV.UZ saytida	IJRO.GOV.UZ сайтида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	bare domain, upper case
+SPN-015	2024-yil 15-oktabrda	2024-йил 15-октябрда	both	R11,R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-016	1-sentabrdan 2025-yil 1-yanvargacha	1-сентябрдан 2025-йил 1-январгача	both	R11,R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-017	15-sentabr kuni soat 9:30 da	15-сентябрь куни соат 9:30 да	both	R11,R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-018	5-sinf	5-синф	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-019	7-sinf oʻquvchilari	7-синф ўқувчилари	both	R12,R1	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-020	1 500 000 soʻm maosh	1 500 000 сўм маош	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-021	20 foiz chegirma	20 фоиз чегирма	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-022	+998 90 123 45 67	+998 90 123 45 67	both	R12	reviewed:agent-opus:2026-10-20	agent	high	digits only
+SPN-023	100ta	100та	both	R12	reviewed:agent-opus:2026-10-20	agent	high	CODE-B needs an upper-case letter
+SPN-024	2024yil	2024йил	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-025	XXI asr	XXI аср	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-026	XX asr boshida	XX аср бошида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-027	XIX asrda	XIX асрда	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-028	II bob	II боб	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-029	III band	III банд	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-030	IV chorak	IV чорак	both	R12	reviewed:agent-opus:2026-10-20	agent	high	ROMAN
+SPN-031	Buyruqni X. Rahimov imzoladi	Буйруқни Х. Раҳимов имзолади	both	R12	reviewed:agent-opus:2026-10-20	agent	high	E; an initial mid-paragraph converts
+SPN-032	A. Karimov	А. Каримов	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-033	3x4 metr	3x4 метр	both	R12	reviewed:agent-opus:2026-10-20	agent	high	multiplication sign
+SPN-034	1920x1080 piksel	1920x1080 пиксел	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-035	va/yoki 3x4	ва/ёки 3x4	both	R12	reviewed:agent-opus:2026-10-20	agent	high	E; not a path
+SPN-036	12/05/2024 sanasi	12/05/2024 санаси	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-037	C:\Hujjatlar\hisobot.docx	C:\Hujjatlar\hisobot.docx	both	R12	reviewed:agent-opus:2026-10-20	agent	high	file path
+SPN-038	hisobot.xlsx faylini oching	hisobot.xlsx файлини очинг	both	R12	reviewed:agent-opus:2026-10-20	agent	high	file name
+SPN-039	@ijro_gov_uz kanali	@ijro_gov_uz канали	both	R12	reviewed:agent-opus:2026-10-20	agent	high	mention
+SPN-040	№ 25 buyruq	№ 25 буйруқ	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-041	Qaror № PQ-4545 asosida	Қарор № PQ-4545 асосида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-042	mehnat shartnomasi № 45	меҳнат шартномаси № 45	both	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-043	PDF fayl, BMT	PDF файл, БМТ	both	R11,R12	reviewed:agent-opus:2026-10-20	agent	high	E; keep entry and an acronym
+SPN-044	USB port	USB порт	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-045	HR boʻlimi	HR бўлими	both	R11,R1	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-046	ID karta	ID карта	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-047	IELTS sertifikati	IELTS сертификати	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-048	Google hujjatlari	Google ҳужжатлари	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-049	YouTube kanali	YouTube канали	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-050	iPhone telefoni	iPhone телефони	both	R11,R5	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-051	URL manzili	URL манзили	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-052	PhD darajasi	PhD даражаси	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-053	IBAN raqami	IBAN рақами	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-054	USD kursi	USD курси	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-055	Gmail pochtasi	Gmail почтаси	both	R11	reviewed:agent-opus:2026-10-20	agent	high	keep
+SPN-056	Microsoft Word dasturi	Microsoft Word дастури	both	R14	reviewed:agent-opus:2026-10-20	rules.md-§10	high	
+SPN-057	Excel jadvali	Excel жадвали	both	R14	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-058	Windows tizimi	Windows тизими	both	R14	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-059	Facebook sahifasi	Facebook саҳифаси	both	R14	reviewed:agent-opus:2026-10-20	agent	high	review fix: rule tag R11 removed (no dictionary entry involved)
+SPN-060	Word hujjati	Word ҳужжати	both	R14	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-061	PowerPoint taqdimoti	PowerPoint тақдимоти	both	R14	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-062	WhatsApp guruhi	WhatsApp гуруҳи	both	R14	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-063	Müller kompaniyasi	Müller компанияси	both	R14	reviewed:agent-opus:2026-10-20	agent	high	foreign diacritic letter
+SPN-064	McDonald's restorani	McDonald's ресторани	both	R14	reviewed:agent-opus:2026-10-20	agent	medium	guard covers the whole word incl. apostrophe
+SPN-065	ПФ-5050-son farmon	ПФ-5050-сон фармон	c2l	R12	reviewed:agent-opus:2026-10-20	agent	high	Cyrillic code stays as typed
+SPN-066	ПҚ-4545-sonli qaror	ПҚ-4545-сонли қарор	c2l	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-067	ЎРҚ-587-son qonun	ЎРҚ-587-сон қонун	c2l	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-068	XXI asr	XXI аср	c2l	R12	rejected	agent	high	rejected: duplicate of SPN-025 (dir=both already asserts c2l)
+SPN-069	Manba: https://lex.uz/docs/5013007.	Манба: https://lex.uz/docs/5013007.	c2l	R12	rejected	agent	high	rejected: duplicate of SPN-010 (dir=both already asserts c2l)
+SPN-070	Savollar uchun info@lex.uz manziliga yozing	Саволлар учун info@lex.uz манзилига ёзинг	c2l	R12	reviewed:agent-opus:2026-10-20	agent	high	
+SPN-071	Batafsil: https://my.gov.uz/oz/service/123 sahifasida	Батафсил: https://my.gov.uz/oz/service/123 саҳифасида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); URL with a path
+SPN-072	Havola (https://lex.uz/acts/142859) orqali	Ҳавола (https://lex.uz/acts/142859) орқали	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); URL trailing ) is trimmed
+SPN-073	Davlat raqami 01A123BC	Давлат рақами 01A123BC	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); CODE-B
+SPN-074	Guvohnoma raqami UZ12345678	Гувоҳнома рақами UZ12345678	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); CODE-B
+SPN-075	D:/Arxiv/2024/buyruqlar.pdf faylida	D:/Arxiv/2024/buyruqlar.pdf файлида	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); file path (a)
+SPN-076	\\server\hujjatlar papkasi	\\server\hujjatlar папкаси	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); UNC path (b)
+SPN-077	@kadrlar_bot orqali	@kadrlar_bot орқали	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); @mention
+SPN-078	Savollar: @hr_uz	Саволлар: @hr_uz	both	R12	reviewed:agent-opus:2026-10-20	agent	high	added in review: R12 quota (3 sentences per span type, rules.md 11); @mention
+QUO-001	‘radio’ dedi	‘радио’ деди	both	R15	reviewed:agent-opus:2026-10-20	agent	high	E; U+2018 opener, U+2019 closer
+QUO-002	‘Bog’ ko’chasi’	‘Боғ кўчаси’	l2c	R15	reviewed:agent-opus:2026-10-20	agent	high	E; variant apostrophes in the input
+QUO-003	'olma'	'олма'	both	R15,R2	reviewed:agent-opus:2026-10-20	agent	high	E; no ъ at a word end
+QUO-004	Men 'yo'q' dedim	Мен 'йўқ' дедим	l2c	R15	reviewed:agent-opus:2026-10-20	agent	high	U+0027 throughout
+QUO-005	Tog' baland	Тоғ баланд	l2c	R1,R15	reviewed:agent-opus:2026-10-20	agent	high	word-final U+0027 without an opener is the letter
+QUO-006	«Oʻqituvchi» gazetasi	«Ўқитувчи» газетаси	both	R15	reviewed:agent-opus:2026-10-20	agent	high	guillemets are not apostrophes
+QUO-007	"Oʻzbekiston" gazetasi	"Ўзбекистон" газетаси	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
+QUO-008	‘Gʻoya’ nima?	‘Ғоя’ нима?	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
+QUO-009	Ular ‘yoʻq’ dedi	Улар ‘йўқ’ деди	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
+QUO-010	‘Toʻgʻri’ javob	‘Тўғри’ жавоб	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
+AMB-001	'bog'	'бог'	l2c	R15	ambiguous	agent	low	ambiguous: the last U+0027 is read as the closing quote; review: R15 inherently ambiguous with U+0027 throughout (rules.md 4.11, 13.4)
+AMB-002	Ular 'tog' dedi	Улар 'тог' деди	l2c	R15	ambiguous	agent	low	ambiguous, as above; review: R15 inherently ambiguous (13.4)
+AMB-003	Ular 'bog' va 'tog' dedi	Улар 'бог' ва 'тог' деди	l2c	R15	ambiguous	agent	low	ambiguous, as above; review: R15 inherently ambiguous (13.4)
+AMB-004	Ishoq	Ишоқ	l2c	R4	reviewed:agent-opus:2026-10-20	agent	medium	no separator: could be ш or сҳ (Isʼhoq); review fix: dir both -> l2c; Ишоқ is not a word, the row documents the uncorrected input error (4.4, 9.4)
+AMB-005	sentyabr	сентябрь	l2c	R11	reviewed:agent-opus:2026-10-20	agent	medium	variant spelling; the reverse gives sentabr
+AMB-006	oktyabr	октябрь	l2c	R11	reviewed:agent-opus:2026-10-20	agent	medium	variant spelling; the reverse gives oktabr
+AMB-007	pochtalon	почталон	l2c	R9a	ambiguous	agent	low	rule result; the official form is pochtalyon (D-10); review: D-10 / 13.2; pochtalon is a widespread Latin spelling, so the rule output почталон is linguistically wrong. Proposal: a `variant` dictionary row pochtalon -> почтальон
+AMB-008	QR-kod	ҚР-код	l2c	R11	ambiguous	agent	low	QR vs ҚР (Qoraqalpogʻiston Respublikasi); left unprotected; review: 13.6, QR keep row is not compiled
+AMB-009	AQSh	АҚШ	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed form; the reverse gives AQSH; review: the l2c result is fully specified (5.3); only the reverse is a convention question (D-14)
+AMB-010	yod	ёд	both	R6	ambiguous	agent	low	"memory"; йод "iodine" is the other reading (D-24); review: D-24, ёд vs йод cannot be decided without context
+AMB-011	yod	йод	c2l	R6	reviewed:agent-opus:2026-10-20	agent	medium	"iodine"; no dictionary entry on purpose (D-24); review: йод -> yod is the correct Latin; unambiguous in this direction
+AMB-012	SHahar	Шаҳар	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed case; the reverse gives Shahar; review: Mixed-case test form, output specified by 5.3
+AMB-013	ToShkent	ТоШкент	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed case test form; review: Mixed-case test form, output specified by 5.3
+AMB-014	TOshkent	ТОшкент	l2c	R10	reviewed:agent-opus:2026-10-20	agent	medium	Mixed case test form; review: Mixed-case test form, output specified by 5.3
+AMB-015	Oʻzbekenergo	Ўзбекэнерго	c2l	R5	reviewed:agent-opus:2026-10-20	agent	medium	D-07: э after a consonant in a solid compound gives e; review: D-07 class; Oʻzbekenergo is the official Latin name
+AMB-016	I. Karimov	I. Каримов	l2c	R12	ambiguous	agent	low	I at a paragraph start is read as a Roman numeral (D-16); review: D-16 / 13.3; the intended reading is the initial И.
+AMB-017	V. Aliyev	V. Алиев	l2c	R12	ambiguous	agent	low	V at a paragraph start is read as a Roman numeral (D-16); review: D-16 / 13.3; the intended reading is the initial В.
+AMB-018	e-mail	э-маил	l2c	R14	ambiguous	agent	low	hyphen parts are separate words; Uzbek writes elektron pochta; review: R14 hyphen limitation (4.10); the output is undesirable but specified
+AMB-019	mer	мэр	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	the only seeded э-after-consonant word
+AMB-020	bilyard	бильярд	both	R11,R9	ambiguous	agent	low	review: the pair is correct, but the exceptions.tsv row is `ambiguous` (not compiled), so the crate gives билярд. Promote both together
+AMB-021	mayonez	майонез	both	R11	ambiguous	agent	low	review: the pair is correct; the exceptions.tsv row is `ambiguous` (not compiled), so the crate gives маёнез. Promote both together
+AMB-022	sink	цинк	both	R11	ambiguous	agent	low	review: the pair follows R7; Uzbek usually says rux for zinc. The exceptions.tsv row is `ambiguous`
+AMB-023	York	Йорк	both	R11	reviewed:agent-opus:2026-10-20	agent	medium	
+AMB-024	Oʻzekspomarkaz	Ўзэкспомарказ	c2l	R5	reviewed:agent-opus:2026-10-20	official-name	medium	added in review: D-07 solid-compound э class; l2c gives Ўзекспомарказ
+AMB-025	Oʻzeltexsanoat	Ўзэлтехсаноат	c2l	R5	reviewed:agent-opus:2026-10-20	official-name	medium	added in review: D-07 solid-compound э class; l2c gives Ўзелтехсаноат
+AMB-026	sentyabrda	сентябрда	l2c	R11	reviewed:agent-opus:2026-10-20	agent	medium	added in review: 9.4 variant class; variant stem + D-11; the reverse gives sentabrda
+AMB-027	Ishoqov	Ишоқов	l2c	R4	reviewed:agent-opus:2026-10-20	agent	medium	added in review: 9.4 missing-separator class (Isʼhoqov intended)
+AMB-028	Ashob	Ашоб	l2c	R4	reviewed:agent-opus:2026-10-20	agent	medium	added in review: 9.4 missing-separator class (Asʼhob intended)
+NRT-001	sunami	цунами	c2l	R7	reviewed:agent-opus:2026-10-20	agent	medium	ц without an entry gives s
+NRT-002	sitrus	цитрус	c2l	R7	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-003	sirkoniy	цирконий	c2l	R7	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-004	buldozer	бульдозер	c2l	R9	reviewed:agent-opus:2026-10-20	agent	medium	ь without an entry is dropped
+NRT-005	byulleten	бюллетень	c2l	R9	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-006	felyeton	фельетон	c2l	R9,R5	reviewed:agent-opus:2026-10-20	agent	medium	е after ь gives ye
+NRT-007	konyunktivit	конъюнктивит	c2l	R8	reviewed:agent-opus:2026-10-20	agent	medium	Russian ъ without an entry; review fix: was obyavleniye / объявление, a Russian word that Uzbek does not use (eʼlon); replaced by a medical loan with Russian ъ and no entry
+NRT-008	podyom	подъём	c2l	R8	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-009	syomka	съёмка	c2l	R8	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-010	shyotka	щётка	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	щ is not Uzbek; rules.md E59
+NRT-011	borsh	борщ	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-012	shit	щит	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-013	mish	мышь	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	ы gives i
+NRT-014	rinok	рынок	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	
+NRT-015	yashik	ящик	c2l	R17	reviewed:agent-opus:2026-10-20	agent	medium	review fix: was yorsh / ёрш, which has no щ or ы and round-trips by rule (wrong class)
+U16-001	oʻzbek	ўзбек	c2l	R16	reviewed:agent-opus:2026-10-20	agent	high	U+0306 after у
+U16-002	choy	чой	c2l	R16	reviewed:agent-opus:2026-10-20	agent	high	U+0306 after и
+U16-003	dunyo	дунё	c2l	R16	reviewed:agent-opus:2026-10-20	agent	high	U+0308 after е
+U16-004	Oʻzbekiston	Ўзбекистон	c2l	R16	reviewed:agent-opus:2026-10-20	agent	high	capital
+U16-005	qoʻl	қўл	c2l	R16	reviewed:agent-opus:2026-10-20	agent	high	
