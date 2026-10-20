@@ -6,6 +6,22 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+/// The message for a transliteration command's result.
+fn translit_status(lang: i18n::Language, v: &Json) -> String {
+    let n = |x: Option<&Json>| x.and_then(Json::as_u64).unwrap_or(0);
+    let done = n(v.get("cells"));
+    let skipped: u64 = ["lang", "locked", "header"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
+    let formulas = n(v.get("formulasWithText"));
+    let mut m = if done == 0 { lang.tr("Nothing to convert").to_string() } else { lang.tr("{n} cells converted").replace("{n}", &done.to_string()) };
+    if skipped > 0 {
+        m += &format!(". {}", lang.tr("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
+    }
+    if formulas > 0 {
+        m += &format!(". {}", lang.tr("{n} formulas contain text and were not changed").replace("{n}", &formulas.to_string()));
+    }
+    m
+}
+
 pub mod backstage;
 mod border_preview;
 mod cell_pictures;
@@ -344,6 +360,11 @@ impl SheetApp {
     /// Runs an engine command (or a UI command) and handles UI requests it makes.
     pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
         let r = self.run_command(id, params);
+        if id.starts_with("tools.translit")
+            && let Ok(v) = &r
+        {
+            self.toast = Some((translit_status(self.ui.language, v), now_ms()));
+        }
         // This copy leaves the system clipboard alone: note what it holds, so Paste can tell
         // that GridCraft's copy is newer while that text is still there.
         if matches!(id, "edit.copy" | "edit.cut") && r.is_ok() {

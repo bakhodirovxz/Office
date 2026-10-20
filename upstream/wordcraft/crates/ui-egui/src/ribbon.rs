@@ -654,6 +654,13 @@ pub(crate) fn caret_missing_dictionary(app: &WordApp) -> Option<&'static str> {
 /// (French, German…) shows checked above it. Set Proofing Language… opens the Language dialog
 /// with every language and Set As Default, and Language Preferences… opens Options › Language
 /// (#860: the short list alone left no way to pick French).
+/// Uzbek Latin/Cyrillic transliteration (the commands come from the office extension; greyed out without it).
+pub(crate) fn translit_menu(ui: &mut Ui, app: &mut WordApp) {
+    mi(ui, app, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
+    mi(ui, app, "Cyrillic to Latin", "tools.translitLatn", json!({}));
+    mi(ui, app, "Auto-detect", "tools.translitAuto", json!({}));
+}
+
 pub(crate) fn language_menu(ui: &mut Ui, app: &mut WordApp) {
     let st = app.session.run("format.state", &json!({})).unwrap_or_default();
     // The selection's own language; else (nothing set on the text) the one it gets from its
@@ -1771,6 +1778,7 @@ fn review(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Language", None, app, |ui, app| {
         big(ui, app, "translate", "Translate", "review.translate", json!({}), false);
         menu_button(ui, app, "language", Some("Language"), "Language", true, "", language_menu);
+        menu_button(ui, app, "language", Some("Transliterate"), "Transliterate", true, "", translit_menu);
     });
     group(ui, "Comments", None, app, |ui, app| {
         big(ui, app, "newComment", "New\nComment", "review.newComment", json!({}), false);

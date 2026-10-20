@@ -6,6 +6,19 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+/// The status line for a transliteration command's result.
+fn translit_status(v: &Value) -> String {
+    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
+    let done = n(v.get("paragraphs"));
+    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
+    let mut m =
+        if done == 0 { i18n::t("Nothing to convert").to_string() } else { i18n::t("{n} paragraphs converted").replace("{n}", &done.to_string()) };
+    if skipped > 0 {
+        m += &format!(". {}", i18n::t("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
+    }
+    m
+}
+
 pub mod animtimeline;
 pub mod backstage;
 pub mod canvas;
@@ -670,6 +683,7 @@ impl SlideApp {
                     self.pending_copy = Some(t.to_string());
                 }
             }
+            Ok(v) if id.starts_with("tools.translit") => self.set_status(translit_status(v)),
             Ok(_) => {}
             Err(e) => self.set_status(e.clone()),
         }

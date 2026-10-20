@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 15:40:47 +0500
+Subject: [PATCH] ui-egui: Transliterate menu in Review > Language and in the
+ text context menu, with a status line
+
+Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
+transliteration commands (tools.translitCyrl, tools.translitLatn, tools.translitAuto). Labels go through the interface-language
+lookup; the result is shown as a status line ("{n} ... converted", "Nothing to convert", "{n} items skipped ...").
+---
+ crates/ui-egui/src/canvas.rs |  3 +++
+ crates/ui-egui/src/lib.rs    | 17 +++++++++++++++++
+ crates/ui-egui/src/ribbon.rs |  8 ++++++++
+ 3 files changed, 28 insertions(+)
+
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index d1747a92..e79d0756 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -2891,6 +2891,9 @@ fn context_menu(app: &mut WordApp, ui: &mut Ui) {
+     item(ui, app, "Paragraph…", "ui.dialog", json!({"name": "paragraph"}));
+     item(ui, app, "Link…", "ui.dialog", json!({"name": "link"}));
+     item(ui, app, "New Comment", "review.newComment", json!({}));
++    if !app.session.sel.is_collapsed() {
++        ui.menu_button(tl!("Transliterate"), |ui| crate::ribbon::translit_menu(ui, app));
++    }
+     if !wordcraft_engine::cmd::fields::selected(&app.session).is_empty() {
+         ui.separator();
+         item(ui, app, tl!("Update Field"), "references.updateFields", json!({}));
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 3769d366..daf9c381 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -20,6 +20,18 @@ macro_rules! tl {
+     };
+ }
+ 
++/// The status line for a transliteration command's result.
++fn translit_status(v: &Value) -> String {
++    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
++    let done = n(v.get("paragraphs"));
++    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
++    let mut m = if done == 0 { tl!("Nothing to convert").to_string() } else { tl!("{n} paragraphs converted").replace("{n}", &done.to_string()) };
++    if skipped > 0 {
++        m += &format!(". {}", tl!("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
++    }
++    m
++}
++
+ pub mod a11y;
+ pub mod a11y_pane;
+ pub mod async_saves;
+@@ -795,6 +807,11 @@ impl WordApp {
+             self.select_inserted_picture(&r);
+         }
+         let r = system_clipboard::explain(self, id, r);
++        if id.starts_with("tools.translit")
++            && let Ok(v) = &r
++        {
++            self.status(translit_status(v));
++        }
+         // Check Accessibility shows its findings in the Accessibility pane, kept up to date there.
+         if id == "file.accessibility" && r.is_ok() {
+             self.session.view.accessibility_pane = true;
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index bc1f11a0..fa09d27e 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -654,6 +654,13 @@ pub(crate) fn caret_missing_dictionary(app: &WordApp) -> Option<&'static str> {
+ /// (French, German…) shows checked above it. Set Proofing Language… opens the Language dialog
+ /// with every language and Set As Default, and Language Preferences… opens Options › Language
+ /// (#860: the short list alone left no way to pick French).
++/// Uzbek Latin/Cyrillic transliteration (the commands come from the office extension; greyed out without it).
++pub(crate) fn translit_menu(ui: &mut Ui, app: &mut WordApp) {
++    mi(ui, app, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
++    mi(ui, app, "Cyrillic to Latin", "tools.translitLatn", json!({}));
++    mi(ui, app, "Auto-detect", "tools.translitAuto", json!({}));
++}
++
+ pub(crate) fn language_menu(ui: &mut Ui, app: &mut WordApp) {
+     let st = app.session.run("format.state", &json!({})).unwrap_or_default();
+     // The selection's own language; else (nothing set on the text) the one it gets from its
+@@ -1771,6 +1778,7 @@ fn review(app: &mut WordApp, ui: &mut Ui) {
+     group(ui, "Language", None, app, |ui, app| {
+         big(ui, app, "translate", "Translate", "review.translate", json!({}), false);
+         menu_button(ui, app, "language", Some("Language"), "Language", true, "", language_menu);
++        menu_button(ui, app, "language", Some("Transliterate"), "Transliterate", true, "", translit_menu);
+     });
+     group(ui, "Comments", None, app, |ui, app| {
+         big(ui, app, "newComment", "New\nComment", "review.newComment", json!({}), false);

@@ -286,6 +286,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 5fab5b433260		Vertical axis title:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:760	
 5fcdd68baa86		 (password, unlocked)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:203	
 5fd133ea395d		Outline		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1671	
+5fff6969a344		{n} formulas contain text and were not changed	{n} ta formulada matn bor, ular oʻzgartirilmadi	reviewed:agent-opus:2026-10-20	{n} та формулада матн бор, улар ўзгартирилмади	reviewed:agent-opus:2026-10-20	Формулы с текстом не изменены: {n}	reviewed:agent-opus:2026-10-20		P1	gridcraft	patches/gridcraft/0121	category:message; added by the translit UI patches (0121) | reviewed by an opus sub-agent 2026-10-20 (agent review delegated by the owner)
 601007eb6fa1		{n} months ago	{n} oy oldin	reviewed:agent-opus:2026-10-18	{n} ой олдин	reviewed:agent-opus:2026-10-18	{n} мес. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:498	
 605b7143c566		Page\nLayout	Sahifa\nmaketi	reviewed:agent-opus:2026-10-18	Саҳифа\nмакети	reviewed:agent-opus:2026-10-18	Разметка\nстраницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:384	
 60b73435a481		Workbook\nStatistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2023	
@@ -551,6 +552,7 @@ c45a4773a731		Cell Styles		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/rib
 c45d586406ed		Allow Edit Ranges	Tahrirlash diapazonlariga ruxsat	reviewed:agent-opus:2026-10-18	Таҳрирлаш диапазонларига рухсат	reviewed:agent-opus:2026-10-18	Разрешить изменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:215	
 c470bf9697d6		Insert	Kiritish	reviewed:agent-opus:2026-10-18	Киритиш	reviewed:agent-opus:2026-10-18	Вставить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:105	
 c479b866f180		Ink to\nShape	Shaklga\naylantirish	reviewed:agent-opus:2026-10-18	Шаклга\nайлантириш	reviewed:agent-opus:2026-10-18	Преобразовать рукописный\nввод в фигуру	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:295	review-agent-2026-10-18: shortened: Draw tab: the ink is implied
+c53640cbb10e		{n} cells converted	{n} ta katak aylantirildi	reviewed:agent-opus:2026-10-20	{n} та катак айлантирилди	reviewed:agent-opus:2026-10-20	Преобразовано ячеек: {n}	reviewed:agent-opus:2026-10-20		P1	gridcraft	patches/gridcraft/0121	category:message; added by the translit UI patches (0121) | reviewed by an opus sub-agent 2026-10-20 (agent review delegated by the owner)
 c565ce992473		What-If\nAnalysis	«Agar…\nboʻlsa» tahlili	reviewed:agent-opus:2026-10-18	«Агар…\nбўлса» таҳлили	reviewed:agent-opus:2026-10-18	Анализ «что\nесли»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:361	
 c59739a7de1c		Nothing to print.	Chop etiladigan narsa yoʻq.	reviewed:agent-opus:2026-10-18	Чоп этиладиган нарса йўқ.	reviewed:agent-opus:2026-10-18	Нечего печатать.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:743	
 c5c841426c59		Entire column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	

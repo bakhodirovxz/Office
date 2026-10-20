@@ -1155,6 +1155,13 @@ pub fn align_menu(app: &mut SlideApp, ui: &mut Ui) {
     menu_item(app, ui, Icon::DistributeV, "Distribute Vertically", "arrange.distribute", json!({"dir": "vertical"}));
 }
 
+/// Uzbek Latin/Cyrillic transliteration items (ribbon menu and the shape context menu).
+pub fn translit_menu(app: &mut SlideApp, ui: &mut Ui) {
+    menu_item(app, ui, Icon::Language, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
+    menu_item(app, ui, Icon::Language, "Cyrillic to Latin", "tools.translitLatn", json!({}));
+    menu_item(app, ui, Icon::Language, "Auto-detect", "tools.translitAuto", json!({}));
+}
+
 pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
     let en = enabled(app, id);
     let r = small_button(ui, icon, crate::i18n::t(label), en, false);
@@ -2157,6 +2164,8 @@ fn review(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Translate, "Translate", false);
         let _ = r.on_hover_text("Translation needs a language model (not bundled)");
         big(app, ui, Icon::Language, "Language", "app.dialog", json!({"id": "language"}));
+        let r = big_button(ui, Icon::Language, crate::i18n::t("Transliterate"), true);
+        egui::Popup::menu(&r).show(|ui| translit_menu(app, ui));
     });
     group(ui, |ui| {
         big(app, ui, Icon::Compare, "Compare", "app.compareDialog", json!({}));

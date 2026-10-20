@@ -20,6 +20,18 @@ macro_rules! tl {
     };
 }
 
+/// The status line for a transliteration command's result.
+fn translit_status(v: &Value) -> String {
+    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
+    let done = n(v.get("paragraphs"));
+    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
+    let mut m = if done == 0 { tl!("Nothing to convert").to_string() } else { tl!("{n} paragraphs converted").replace("{n}", &done.to_string()) };
+    if skipped > 0 {
+        m += &format!(". {}", tl!("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
+    }
+    m
+}
+
 pub mod a11y;
 pub mod a11y_pane;
 pub mod async_saves;
@@ -795,6 +807,11 @@ impl WordApp {
             self.select_inserted_picture(&r);
         }
         let r = system_clipboard::explain(self, id, r);
+        if id.starts_with("tools.translit")
+            && let Ok(v) = &r
+        {
+            self.status(translit_status(v));
+        }
         // Check Accessibility shows its findings in the Accessibility pane, kept up to date there.
         if id == "file.accessibility" && r.is_ok() {
             self.session.view.accessibility_pane = true;
