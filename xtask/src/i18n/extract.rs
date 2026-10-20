@@ -724,6 +724,40 @@ fn deck_universe(root: &Path) -> Universe {
 
 // ---------------------------------------------------------------- merge
 
+/// UI strings that our carried UI patches (`patches/*/0121`) add. Upstream's catalogs do not hold them, so without this list
+/// every extract would mark their rows obsolete.
+const OWN: [(&str, &[&str]); 9] = [
+    ("Transliterate", &["wordcraft", "gridcraft", "deckcraft"]),
+    ("Latin to Cyrillic", &["wordcraft", "gridcraft", "deckcraft"]),
+    ("Cyrillic to Latin", &["wordcraft", "gridcraft", "deckcraft"]),
+    ("Auto-detect", &["wordcraft", "gridcraft", "deckcraft"]),
+    ("Nothing to convert", &["wordcraft", "gridcraft", "deckcraft"]),
+    (
+        "{n} items skipped (other language, locked or field)",
+        &["wordcraft", "gridcraft", "deckcraft"],
+    ),
+    ("{n} paragraphs converted", &["wordcraft", "deckcraft"]),
+    ("{n} cells converted", &["gridcraft"]),
+    (
+        "{n} formulas contain text and were not changed",
+        &["gridcraft"],
+    ),
+];
+
+fn add_own(unis: &mut [Universe]) {
+    for u in unis {
+        for (en, apps) in OWN {
+            if apps.contains(&u.app.as_str()) {
+                let e = u.keys.entry((String::new(), en.to_string())).or_default();
+                e.p1 = true;
+                if e.where_.is_empty() {
+                    e.where_ = format!("patches/{}/0121", u.app);
+                }
+            }
+        }
+    }
+}
+
 pub fn extract_all(root: &Path) -> Vec<Universe> {
     let mut unis = vec![
         tsv_universe(root, "wordcraft"),
@@ -731,6 +765,7 @@ pub fn extract_all(root: &Path) -> Vec<Universe> {
         tsv_universe(root, "pdfcraft"),
         deck_universe(root),
     ];
+    add_own(&mut unis);
     // wordcraft chrome: strings that are P1 in another app are common UI words; they join P1 when pl.tsv covers them.
     let others: BTreeSet<(String, String)> = unis[1..]
         .iter()

@@ -2884,6 +2884,9 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                 ("Pick From Drop-down List…", "ui:pickList"),
                 ("Define Name…", "ui:defineName"),
                 ("Link…", "ui:insertLink"),
+                ("-", ""),
+                ("Latin to Cyrillic", "tools.translitCyrl"),
+                ("Cyrillic to Latin", "tools.translitLatn"),
             ];
             if let Some(item) = insert_copied {
                 items.insert(6, item);

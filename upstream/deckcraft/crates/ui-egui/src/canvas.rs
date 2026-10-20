@@ -1181,6 +1181,10 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
             }
         }
         ui.separator();
+        if has_sel || app.session.active().is_some_and(|d| d.selection.text.is_some()) {
+            ui.menu_button(crate::i18n::t("Transliterate"), |ui| crate::ribbon::translit_menu(app, ui));
+            ui.separator();
+        }
         // Right-clicking the text being edited keeps it (`PointerKind::ContextClick`): text items.
         let editing = app.session.active().is_some_and(|d| d.selection.text.as_ref().is_some_and(|t| !t.notes));
         if editing {

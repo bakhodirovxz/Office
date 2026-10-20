@@ -1,0 +1,121 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 15:40:56 +0500
+Subject: [PATCH] ui-egui: Transliterate menu on Review and in the shape and
+ text context menu, with a status line
+
+Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
+transliteration commands (tools.translitCyrl, tools.translitLatn, tools.translitAuto). Labels go through the interface-language
+lookup; the result is shown as a status line ("{n} ... converted", "Nothing to convert", "{n} items skipped ...").
+---
+ crates/engine/src/cmd/translit.rs |  6 +++---
+ crates/ui-egui/src/canvas.rs      |  4 ++++
+ crates/ui-egui/src/lib.rs         | 14 ++++++++++++++
+ crates/ui-egui/src/ribbon.rs      |  9 +++++++++
+ 4 files changed, 30 insertions(+), 3 deletions(-)
+
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 4781fc9..9efdd71 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -17,7 +17,7 @@ pub fn specs() -> Vec<CommandSpec> {
+     vec![
+         cmd!(
+             "tools.translitCyrl",
+-            "To Cyrillic",
++            "Latin to Cyrillic",
+             [],
+             None,
+             "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+@@ -26,7 +26,7 @@ pub fn specs() -> Vec<CommandSpec> {
+         ),
+         cmd!(
+             "tools.translitLatn",
+-            "To Latin",
++            "Cyrillic to Latin",
+             [],
+             None,
+             "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+@@ -35,7 +35,7 @@ pub fn specs() -> Vec<CommandSpec> {
+         ),
+         cmd!(
+             "tools.translitAuto",
+-            "Transliterate (auto-detect)",
++            "Auto-detect",
+             [],
+             None,
+             "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index ba66aad..d798595 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -1181,6 +1181,10 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
+             }
+         }
+         ui.separator();
++        if has_sel || app.session.active().is_some_and(|d| d.selection.text.is_some()) {
++            ui.menu_button(crate::i18n::t("Transliterate"), |ui| crate::ribbon::translit_menu(app, ui));
++            ui.separator();
++        }
+         // Right-clicking the text being edited keeps it (`PointerKind::ContextClick`): text items.
+         let editing = app.session.active().is_some_and(|d| d.selection.text.as_ref().is_some_and(|t| !t.notes));
+         if editing {
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 075abbd..f4de26d 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -6,6 +6,19 @@
+ #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+ #![forbid(unsafe_code)]
+ 
++/// The status line for a transliteration command's result.
++fn translit_status(v: &Value) -> String {
++    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
++    let done = n(v.get("paragraphs"));
++    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
++    let mut m =
++        if done == 0 { i18n::t("Nothing to convert").to_string() } else { i18n::t("{n} paragraphs converted").replace("{n}", &done.to_string()) };
++    if skipped > 0 {
++        m += &format!(". {}", i18n::t("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
++    }
++    m
++}
++
+ pub mod animtimeline;
+ pub mod backstage;
+ pub mod canvas;
+@@ -670,6 +683,7 @@ impl SlideApp {
+                     self.pending_copy = Some(t.to_string());
+                 }
+             }
++            Ok(v) if id.starts_with("tools.translit") => self.set_status(translit_status(v)),
+             Ok(_) => {}
+             Err(e) => self.set_status(e.clone()),
+         }
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 49ea68d..9ec9841 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -1155,6 +1155,13 @@ pub fn align_menu(app: &mut SlideApp, ui: &mut Ui) {
+     menu_item(app, ui, Icon::DistributeV, "Distribute Vertically", "arrange.distribute", json!({"dir": "vertical"}));
+ }
+ 
++/// Uzbek Latin/Cyrillic transliteration items (ribbon menu and the shape context menu).
++pub fn translit_menu(app: &mut SlideApp, ui: &mut Ui) {
++    menu_item(app, ui, Icon::Language, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
++    menu_item(app, ui, Icon::Language, "Cyrillic to Latin", "tools.translitLatn", json!({}));
++    menu_item(app, ui, Icon::Language, "Auto-detect", "tools.translitAuto", json!({}));
++}
++
+ pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
+     let en = enabled(app, id);
+     let r = small_button(ui, icon, crate::i18n::t(label), en, false);
+@@ -2157,6 +2164,8 @@ fn review(app: &mut SlideApp, ui: &mut Ui) {
+         let r = big_button(ui, Icon::Translate, "Translate", false);
+         let _ = r.on_hover_text("Translation needs a language model (not bundled)");
+         big(app, ui, Icon::Language, "Language", "app.dialog", json!({"id": "language"}));
++        let r = big_button(ui, Icon::Language, crate::i18n::t("Transliterate"), true);
++        egui::Popup::menu(&r).show(|ui| translit_menu(app, ui));
+     });
+     group(ui, |ui| {
+         big(app, ui, Icon::Compare, "Compare", "app.compareDialog", json!({}));

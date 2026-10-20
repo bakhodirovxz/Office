@@ -28,20 +28,23 @@ const PARAMS: &str = r#"{"scope"?: "auto"|"selection"|"document", "skipLangs"?: 
 /// The specs, for callers that build a registry themselves.
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        CommandSpec::new(TO_CYRILLIC, "To Cyrillic", "Review › Language", |s, v| {
-            run(s, v, Some(Direction::ToCyrillic))
-        })
-        .params(PARAMS),
-        CommandSpec::new(TO_LATIN, "To Latin", "Review › Language", |s, v| {
-            run(s, v, Some(Direction::ToLatin))
-        })
+        CommandSpec::new(
+            TO_CYRILLIC,
+            "Latin to Cyrillic",
+            "Review › Language",
+            |s, v| run(s, v, Some(Direction::ToCyrillic)),
+        )
         .params(PARAMS),
         CommandSpec::new(
-            AUTO,
-            "Transliterate (auto-detect)",
+            TO_LATIN,
+            "Cyrillic to Latin",
             "Review › Language",
-            |s, v| run(s, v, None),
+            |s, v| run(s, v, Some(Direction::ToLatin)),
         )
+        .params(PARAMS),
+        CommandSpec::new(AUTO, "Auto-detect", "Review › Language", |s, v| {
+            run(s, v, None)
+        })
         .params(PARAMS),
     ]
 }

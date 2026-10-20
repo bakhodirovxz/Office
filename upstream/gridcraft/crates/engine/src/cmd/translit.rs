@@ -19,7 +19,7 @@ pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
             "tools.translitCyrl",
-            "To Cyrillic",
+            "Latin to Cyrillic",
             [],
             None,
             "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
@@ -28,7 +28,7 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         cmd!(
             "tools.translitLatn",
-            "To Latin",
+            "Cyrillic to Latin",
             [],
             None,
             "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
@@ -37,7 +37,7 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         cmd!(
             "tools.translitAuto",
-            "Transliterate (auto-detect)",
+            "Auto-detect",
             [],
             None,
             "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
