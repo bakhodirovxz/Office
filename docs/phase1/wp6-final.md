@@ -77,6 +77,9 @@ Counts at the current BASE (rustc 1.97.1 clippy, `cargo clippy --workspace --all
 
 ## 3. Quarantine review (`ci/quarantine.toml`, 54 entries, `cargo xt quarantine check` = OK, 54 entries)
 
+> **Note (gate review 2026-10-19).** Now 56 entries (98c0a02 added 2 pdfcraft `flaky`). "All evidence files exist" holds only on this PC: `*.log` is gitignored, so 12 of the
+> 16 evidence files (cited by 47 entries, including `pc-on.log` and `wc-on.log`) are not in git and are missing in a clean checkout. See `docs/phase1/gate-review.md`.
+
 Criteria: every entry has a class, a reason, evidence that exists (all 54 evidence files and anchors were checked), and a review trigger. New optional
 field `reviewed = "<date>@WP6-final[: verdict]"` records this review; the checker ignores it. The review also re-read the failing assertion of every
 pdfcraft entry in `pc-on.log` and ran diagnostics on the entries that looked weak (`docs/phase1/evidence/tests/wp6-diag-*.log`, warm targets,
