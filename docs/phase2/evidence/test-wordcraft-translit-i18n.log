@@ -1,0 +1,5 @@
+# ci.sh test wordcraft at the WP7 commit (2026-10-20): the two failures caused by the new Transliterate strings
+    pl lacks uz-latn's ["Auto-detect", "Cyrillic to Latin", "Latin to Cyrillic", "Nothing to convert", "Transliterate", "{n} items skipped (other language, locked or field)", "{n} paragraphs converted"]
+    thread 'i18n::tests::polish_covers_every_key_of_every_other_catalog' (25576) panicked at crates\ui-egui\src\i18n\tests.rs:995:9:
+    thread 'i18n::tests::vietnamese_covers_existing_catalog_keys_with_an_explicit_preview_fallback' (13236) panicked at crates\ui-egui\src\i18n\tests.rs:1509:9:
+    vi lacks uz-latn's [("", "Auto-detect"), ("", "Cyrillic to Latin"), ("", "Latin to Cyrillic"), ("", "Nothing to convert"), ("", "Transliterate"), ("", "{n} items skipped (other language, locked or field)"), ("", "{n} paragraphs converted")]

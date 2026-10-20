@@ -975,3 +975,6 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
   Android emulator: **not obtained** (the 108-page file never reported `wordcraft:opened` in 240 s); R1 stays open for phones.
 - **Gates run:** see the end of this section.
 
+- **Gates (2026-10-20, all exit 0 at the end):** `verify-queue.sh all` (wordcraft 12, gridcraft 31, deckcraft 10 patches), `cargo xt register check` 57 rows, `cargo xt i18n lint` 0 errors / `roundtrip` OK / `check-stale` OK, `ci.sh queue`, `lint` (the root `fmt` caught my xtask change once; fixed), `brand`, `i18n`, `check docs|sheets|slides` (native and wasm32), `test-ours` (docs-translit 26 tests, sheets and slides engines), `test gridcraft`, `test deckcraft`.
+  `test wordcraft` first failed on two upstream tests that compare the overlay's uz-Latn catalog with `pl.tsv` / `vi.tsv` (`polish_covers_every_key_of_every_other_catalog`, `vietnamese_covers_existing_catalog_keys_...`): the 7 new strings are in no Polish or Vietnamese catalog. Quarantined as `i18n-incomplete` (60 entries now, evidence `docs/phase2/evidence/test-wordcraft-translit-i18n.log`); rerun exit 0.
+- **Still to do:** WP11 (CI, docs), WP12 (gate review); Android-phone timing; ru export for the apps; desktop window screenshots of the new entries.
