@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 23:40:13 +0500
-Subject: [PATCH] engine, ui-egui: latinAlphabet param for the transliteration
- commands; the cell context menu converts the selection only
+Subject: [PATCH 2/2] engine, ui-egui: latinAlphabet param for the
+ transliteration commands; the cell context menu converts the selection only
 
 The three tools.translit* commands accept latinAlphabet "1995" (default), "2026" or "auto" and pass it to uz-translit, so
 Sheets can write and read the pending 2026 Latin alphabet. The cell context menu items passed {} and a single cell meant

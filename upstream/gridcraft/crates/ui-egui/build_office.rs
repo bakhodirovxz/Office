@@ -143,10 +143,10 @@ fn russian(dir: Option<&Path>) -> String {
         println!("cargo::rerun-if-changed={}", file.display());
         let upstream = std::fs::read_to_string("src/i18n/ru.rs").unwrap_or_default();
         for line in std::fs::read_to_string(&file).unwrap_or_default().lines().filter(|l| !l.starts_with('#')) {
-            if let Some((k, v)) = line.split_once('\t').map(|(k, v)| (unescape(k), unescape(v))) {
-                if !upstream.contains(&format!("{k:?}")) {
-                    let _ = writeln!(o, "        {k:?} => {v:?},");
-                }
+            if let Some((k, v)) = line.split_once('\t').map(|(k, v)| (unescape(k), unescape(v)))
+                && !upstream.contains(&format!("{k:?}"))
+            {
+                let _ = writeln!(o, "        {k:?} => {v:?},");
             }
         }
     }

@@ -124,11 +124,11 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
     // Upstream's own Russian wins: every plain, escape-free row of its file reads back unchanged.
     let mut checked = 0;
     for line in include_str!("i18n/ru.tsv").lines().filter(|l| !l.starts_with('#') && !l.contains("\\")) {
-        if let [context, source, translation] = line.split('\t').collect::<Vec<_>>()[..] {
-            if context.is_empty() {
-                assert_eq!(tr(ru, source), o::rebrand(translation), "{source}");
-                checked += 1;
-            }
+        if let [context, source, translation] = line.split('\t').collect::<Vec<_>>()[..]
+            && context.is_empty()
+        {
+            assert_eq!(tr(ru, source), o::rebrand(translation), "{source}");
+            checked += 1;
         }
     }
     assert!(checked > 1000, "{checked} upstream rows checked");
