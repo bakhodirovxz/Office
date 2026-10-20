@@ -1,5 +1,6 @@
 {
   "name": "uz-translit",
+  "private": true,
   "version": "@VERSION@",
   "description": "Uzbek Latin <-> Cyrillic transliteration (WebAssembly). Same engine as the office suite.",
   "license": "MIT OR Apache-2.0",

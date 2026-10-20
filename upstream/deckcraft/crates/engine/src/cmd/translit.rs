@@ -8,7 +8,7 @@ use std::sync::Arc;
 use deckcraft_model::text::RunKind;
 use deckcraft_model::{Paragraph, Run, ShapeId, ShapeKind, Slide, TextBody};
 use serde_json::{Value, json};
-use uz_translit::{Apostrophe, Direction, Options, Script};
+use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
 
 use super::*;
 use crate::{Result, Session, Target};
@@ -20,7 +20,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Latin to Cyrillic",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, Some(Direction::ToCyrillic))
         ),
@@ -29,7 +29,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Cyrillic to Latin",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, Some(Direction::ToLatin))
         ),
@@ -38,7 +38,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Auto-detect",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, None)
         ),
@@ -203,8 +203,14 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
         Some("ascii") => Apostrophe::Ascii,
         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
     };
+    let latin_alphabet = match str_param(p, "latinAlphabet") {
+        None | Some("1995") => LatinAlphabet::Y1995,
+        Some("2026") => LatinAlphabet::Y2026,
+        Some("auto") => LatinAlphabet::Auto,
+        Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
+    };
     let defaults = Options::default();
-    let opts = Options { apostrophe, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
+    let opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
 
     let t0 = now_ms();
     let st = s.doc()?;

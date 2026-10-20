@@ -210,4 +210,4 @@ Changes to `golden.tsv`:
 - **Added:** 16 `SRC` rows, all official parallel pairs: 6 `both`, 9 `c2l` and 1 `l2c`.
 - **Sources:** 334 rows got `source = lex-attested`, and about 30 rows got a specific `lex-<id>`.
 
-Totals: 1082 rows, of which 11 are `ambiguous`.
+Totals: 1087 rows, of which 11 are `ambiguous` (5 added at the gate review: QUO-011, QUO-012, TS-901..903).

@@ -54,6 +54,25 @@ fn a_selection_converts_only_the_selection_and_a_single_cell_the_sheet() {
 }
 
 #[test]
+fn an_explicit_selection_scope_converts_a_single_cell_only() {
+    let mut s = session();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["Toshkent", "salom"]]})).unwrap();
+    s.execute("selection.set", json!({"range": "A1"})).unwrap();
+    let r = s.execute(CYRL, json!({"scope": "selection"})).unwrap();
+    assert_eq!((r["scope"].as_str(), r["cells"].as_u64()), (Some("selection"), Some(1)));
+    assert_eq!((text(&s, "A1"), text(&s, "B1")), (cyr("Toshkent"), "salom".to_string()));
+}
+
+#[test]
+fn the_latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
+    let mut s = session();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["Шаҳар ўғил"]]})).unwrap();
+    assert!(s.execute(LATN, json!({"latinAlphabet": "1999"})).is_err());
+    s.execute(LATN, json!({"scope": "selection", "range": "A1", "latinAlphabet": "2026"})).unwrap();
+    assert_eq!(text(&s, "A1"), "Şahar öğil");
+}
+
+#[test]
 fn auto_follows_the_dominant_script() {
     let mut s = session();
     s.execute("range.setValues", json!({"range": "A1", "values": [["салом"], ["дунё"], ["ok"]]})).unwrap();

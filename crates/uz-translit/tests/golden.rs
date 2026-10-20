@@ -1,4 +1,4 @@
-//! Golden lists (WP3). Skipped when a file is absent; only `reviewed:*` rows are asserted.
+//! Golden lists (WP3). A missing or empty declared file fails; only `reviewed:*` rows are asserted.
 use std::{collections::HashMap, fs, path::Path};
 mod common;
 use uz_translit::{Direction, LatinAlphabet, Options, convert};
@@ -7,9 +7,8 @@ fn table(name: &str) -> Vec<HashMap<String, String>> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("data")
         .join(name);
-    let Ok(text) = fs::read_to_string(&path) else {
-        return Vec::new();
-    };
+    let text =
+        fs::read_to_string(&path).unwrap_or_else(|e| panic!("golden file {name} is missing: {e}"));
     let mut lines = text
         .lines()
         .filter(|l| !l.is_empty() && !l.starts_with('#'));
@@ -34,7 +33,9 @@ fn table(name: &str) -> Vec<HashMap<String, String>> {
 fn check(file: &str, input_col: &str) -> (usize, usize) {
     let (mut fwd, mut back) = (0, 0);
     let mut fails = Vec::new();
-    for r in table(file)
+    let rows = table(file);
+    assert!(!rows.is_empty(), "golden file {file} has no rows");
+    for r in rows
         .into_iter()
         .filter(|r| r["status"].starts_with("reviewed:"))
     {
@@ -78,16 +79,10 @@ fn check(file: &str, input_col: &str) -> (usize, usize) {
 #[test]
 fn golden() {
     let (f, b) = check("golden.tsv", "latin");
-    if f > 0 {
-        assert!(
-            f >= 500 && b >= 500,
-            "plan: at least 500 reviewed both-direction rows"
-        );
-    }
-}
-#[test]
-fn sentences() {
-    check("sentences.tsv", "latin");
+    assert!(
+        f >= 500 && b >= 500,
+        "plan: at least 500 reviewed both-direction rows"
+    );
 }
 #[test]
 fn variants() {

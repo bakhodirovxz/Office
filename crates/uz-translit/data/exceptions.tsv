@@ -83,7 +83,8 @@ foye	фойе	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md
 york	йорк	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	Nyu-York → Ню-Йорк
 mayonez	майонез	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	promoted after WP3 review
 mer	мэр	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	the only seeded э-after-consonant word
-sirk	цирк	word	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	word only: sirka = сирка (vinegar)
+sirk	цирк	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	circus; sirkda, sirklar follow it. Short stem, no false hit: the only other sirk- words are sirka (own stem below), sirkulyar and sirkoniy
+sirka	сирка	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	vinegar; the longer stem beats sirk, so sirkada and sirkani keep сирка
 sex	цех	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	3 letters; checked: "magic" is sehr, so no native word starts with sex
 sement	цемент	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
 sentr	центр	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	sentral → централ

@@ -12,7 +12,9 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use uz_translit::{Apostrophe, Direction, LangPolicy, Options, Script, lang_converts};
+use uz_translit::{
+    Apostrophe, Direction, LangPolicy, LatinAlphabet, Options, Script, lang_converts,
+};
 use wordcraft_doc::para::OBJ;
 use wordcraft_doc::{InlineObject, Path, Pos, RevisionKind, StoryRef};
 use wordcraft_engine::cmd::{new_revision, selected_paths};
@@ -114,9 +116,20 @@ fn params(v: &Value) -> Result<(Scope, Ctx), CmdError> {
             )));
         }
     };
+    let latin_alphabet = match wordcraft_engine::p::str(v, "latinAlphabet") {
+        None | Some("1995") => LatinAlphabet::Y1995,
+        Some("2026") => LatinAlphabet::Y2026,
+        Some("auto") => LatinAlphabet::Auto,
+        Some(o) => {
+            return Err(CmdError::Params(format!(
+                "`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"
+            )));
+        }
+    };
     let defaults = Options::default();
     let opts = Options {
         apostrophe,
+        latin_alphabet,
         foreign_latin_guard: wordcraft_engine::p::bool(v, "foreignGuard")
             .unwrap_or(defaults.foreign_latin_guard),
         ..defaults

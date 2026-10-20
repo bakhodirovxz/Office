@@ -1,0 +1,89 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 23:40:28 +0500
+Subject: [PATCH] engine: latinAlphabet param for the transliteration commands
+
+The three tools.translit* commands accept latinAlphabet "1995" (default), "2026" or "auto" and pass it to uz-translit, so
+Slides can write and read the pending 2026 Latin alphabet. Test: 2026 output and a refused value.
+---
+ crates/engine/src/cmd/translit.rs | 16 +++++++++++-----
+ crates/engine/tests/translit.rs   | 10 ++++++++++
+ 2 files changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 9efdd71..114150a 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -8,7 +8,7 @@ use std::sync::Arc;
+ use deckcraft_model::text::RunKind;
+ use deckcraft_model::{Paragraph, Run, ShapeId, ShapeKind, Slide, TextBody};
+ use serde_json::{Value, json};
+-use uz_translit::{Apostrophe, Direction, Options, Script};
++use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
+ 
+ use super::*;
+ use crate::{Result, Session, Target};
+@@ -20,7 +20,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Latin to Cyrillic",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, Some(Direction::ToCyrillic))
+         ),
+@@ -29,7 +29,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Cyrillic to Latin",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, Some(Direction::ToLatin))
+         ),
+@@ -38,7 +38,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Auto-detect",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"slide\"|\"deck\", apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, None)
+         ),
+@@ -203,8 +203,14 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
+         Some("ascii") => Apostrophe::Ascii,
+         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
+     };
++    let latin_alphabet = match str_param(p, "latinAlphabet") {
++        None | Some("1995") => LatinAlphabet::Y1995,
++        Some("2026") => LatinAlphabet::Y2026,
++        Some("auto") => LatinAlphabet::Auto,
++        Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
++    };
+     let defaults = Options::default();
+-    let opts = Options { apostrophe, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
++    let opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
+ 
+     let t0 = now_ms();
+     let st = s.doc()?;
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index d683097..770d84c 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -84,6 +84,16 @@ fn the_deck_converts_every_shape_and_the_notes_when_nothing_is_selected() {
+     assert_eq!(s.doc().unwrap().doc.slides[0].notes.text(), "salom dunyo");
+ }
+ 
++#[test]
++fn the_latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
++    let mut s = session();
++    let a = add(&mut s, "Шаҳар ўғил");
++    deselect(&mut s);
++    assert!(s.execute(LATN, &json!({"latinAlphabet": "1999"})).is_err());
++    s.execute(LATN, &json!({"latinAlphabet": "2026"})).unwrap();
++    assert_eq!(text_of(&s, 0, a), "Şahar öğil");
++}
++
+ #[test]
+ fn selected_shapes_convert_and_the_rest_stays() {
+     let mut s = session();

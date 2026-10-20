@@ -1,0 +1,120 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 23:40:13 +0500
+Subject: [PATCH] engine, ui-egui: latinAlphabet param for the transliteration
+ commands; the cell context menu converts the selection only
+
+The three tools.translit* commands accept latinAlphabet "1995" (default), "2026" or "auto" and pass it to uz-translit, so
+Sheets can write and read the pending 2026 Latin alphabet. The cell context menu items passed {} and a single cell meant
+"the used range of the sheet"; they now pass {"scope":"selection"}, so right-clicking one cell converts that cell. The
+Review tab keeps scope auto. Tests: 2026 output, a single-cell selection scope.
+---
+ crates/engine/src/cmd/translit.rs | 21 ++++++++++++++++-----
+ crates/engine/tests/translit.rs   | 19 +++++++++++++++++++
+ crates/ui-egui/src/grid.rs        |  2 ++
+ 3 files changed, 37 insertions(+), 5 deletions(-)
+
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 0cb7b2b..e1e9732 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -6,7 +6,7 @@
+ //! `Session::execute` is one undo step; `edit` recalculates the formulas that read a converted cell.
+ use gridcraft_core::{CellRef, RangeRef, Value};
+ use serde_json::json;
+-use uz_translit::{Apostrophe, Direction, Options, Script};
++use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
+ 
+ use super::{CommandSpec, Json, bad, bool_param, cmd, edit, has_doc, locked_cell_error, str_param, target_ranges, target_sheet};
+ use crate::{Result, Session};
+@@ -22,7 +22,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Latin to Cyrillic",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, Some(Direction::ToCyrillic))
+         ),
+@@ -31,7 +31,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Cyrillic to Latin",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, Some(Direction::ToLatin))
+         ),
+@@ -40,7 +40,7 @@ pub fn specs() -> Vec<CommandSpec> {
+             "Auto-detect",
+             [],
+             None,
+-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
++            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
+             has_doc,
+             |s, p| run(s, p, None)
+         ),
+@@ -102,8 +102,19 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
+         Some("ascii") => Apostrophe::Ascii,
+         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
+     };
++    let latin_alphabet = match str_param(p, "latinAlphabet") {
++        None | Some("1995") => LatinAlphabet::Y1995,
++        Some("2026") => LatinAlphabet::Y2026,
++        Some("auto") => LatinAlphabet::Auto,
++        Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
++    };
+     let defaults = Options::default();
+-    let opts = Options { apostrophe, foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard), ..defaults };
++    let opts = Options {
++        apostrophe,
++        latin_alphabet,
++        foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard),
++        ..defaults
++    };
+ 
+     let t0 = now_ms();
+     let sel = target_ranges(s, p)?;
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index 6325041..e69fa4f 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -53,6 +53,25 @@ fn a_selection_converts_only_the_selection_and_a_single_cell_the_sheet() {
+     assert_eq!(text(&s, "B1"), "salom");
+ }
+ 
++#[test]
++fn an_explicit_selection_scope_converts_a_single_cell_only() {
++    let mut s = session();
++    s.execute("range.setValues", json!({"range": "A1", "values": [["Toshkent", "salom"]]})).unwrap();
++    s.execute("selection.set", json!({"range": "A1"})).unwrap();
++    let r = s.execute(CYRL, json!({"scope": "selection"})).unwrap();
++    assert_eq!((r["scope"].as_str(), r["cells"].as_u64()), (Some("selection"), Some(1)));
++    assert_eq!((text(&s, "A1"), text(&s, "B1")), (cyr("Toshkent"), "salom".to_string()));
++}
++
++#[test]
++fn the_latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
++    let mut s = session();
++    s.execute("range.setValues", json!({"range": "A1", "values": [["Шаҳар ўғил"]]})).unwrap();
++    assert!(s.execute(LATN, json!({"latinAlphabet": "1999"})).is_err());
++    s.execute(LATN, json!({"scope": "selection", "range": "A1", "latinAlphabet": "2026"})).unwrap();
++    assert_eq!(text(&s, "A1"), "Şahar öğil");
++}
++
+ #[test]
+ fn auto_follows_the_dominant_script() {
+     let mut s = session();
+diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
+index ed08f4a..c608d0c 100644
+--- a/crates/ui-egui/src/grid.rs
++++ b/crates/ui-egui/src/grid.rs
+@@ -2925,6 +2925,8 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
+                             app.copy_to_clipboard(ui.ctx(), id);
+                         }
+                         "edit.paste" => app.paste_from_clipboard(),
++                        // The context menu means "this selection": a single cell must not convert the whole sheet.
++                        other if other.starts_with("tools.translit") => app.run_or_alert(other, json!({"scope": "selection"})),
+                         other => app.run_or_alert(other, json!({})),
+                     }
+                 }

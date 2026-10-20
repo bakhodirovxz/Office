@@ -496,3 +496,18 @@ fn command_labels_are_catalog_rows() {
         );
     }
 }
+
+#[test]
+fn latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
+    let mut s = session(vec![para(&[("Шаҳар ўғил", Default::default())])]);
+    s.run("tools.translitLatn", &json!({"latinAlphabet": "2026"}))
+        .unwrap();
+    assert_eq!(text(&s, 0), "Şahar öğil");
+    assert!(
+        s.run("tools.translitLatn", &json!({"latinAlphabet": "1999"}))
+            .is_err()
+    );
+    let mut d = session(vec![para(&[("Шаҳар ўғил", Default::default())])]);
+    d.run("tools.translitLatn", &json!({})).unwrap();
+    assert_eq!(text(&d, 0), lat("Шаҳар ўғил"));
+}

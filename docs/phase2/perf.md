@@ -1,7 +1,7 @@
 # Phase 2 performance: the 108-page document
 
 Status: **WP10a, N1, N2 and N3 (desktop Chromium) measured (2026-10-20); N3 on the Android emulator not obtained (see below).**
-Machine: Windows 10, 12 cores, 11.8 GB RAM, Intel UHD 630, no discrete GPU. Release profile of the docs domain
+Machine: Windows 10, 12 cores, 11.8 GB RAM (CLAUDE.md records 31.8 GB from 19:56 the same day; which applied to each run is not recorded), Intel UHD 630, no discrete GPU. Release profile of the docs domain
 (`opt-level 3`, thin LTO). Each figure is the median of 5 timed rounds after one warm-up round; every run was started alone
 (no other build running). Commit: the WP4 commit on branch `phase-2` (see `git log`).
 
@@ -83,13 +83,13 @@ The app's own timers come from `ui.inspect` (`perf.layoutMs`, `perf.frameMs`). M
 
 | Direction (file) | pages | `cmd` | of which app `ms` (convert + apply) | `inspect` (next frame) | `shot` (painted new layout, upper bound) | app `layoutMs` after | app `frameMs` after |
 |---|---|---|---|---|---|---|---|
-| to Cyrillic (latn) | 110 -> 114 | 73 ms | 55 + 5 | **420 ms** | **938 ms** | 305 ms | 2-3 ms |
+| to Cyrillic (latn) | 110 -> 114 | 73 ms | 57 + 5 | **420 ms** | **938 ms** | 305 ms | 2-3 ms |
 | to Latin (cyrl) | 110 -> 106 | 55 ms | 43 + 5 | **399 ms** | **928 ms** | 327 ms | 2-6 ms |
 
 - Raw `shot` runs (ms): latn 953, 951, 938, 949, 928, 925; cyrl 920, 1006, 924, 899, 932, 928. Raw `inspect`: latn 412, 420, 398, 420, 430, 392; cyrl 390, 450, 397, 386, 399, 416.
 - The command itself is 51-84 ms; the rest is upstream's layout (the app's own `layoutMs`, 295-339 ms, matches N1) plus the egui paint. The screenshot figure adds the render,
   the GPU readback and a PNG write, so the time to the first painted frame is between the `inspect` and the `shot` columns, **about 0.4 to 0.9 s**.
-- Raw rows: `E:/office-target/p2/n2.json` (scratch, not committed); the script prints one JSON line per round.
+- Raw rows: `docs/phase2/evidence/perf/n2.json` (copied from `E:/office-target/p2/` at the gate review; N3: `n3.json`); the script prints one JSON line per round.
 
 ## N3: the command in the docs-web wasm build (Chromium, Playwright)
 `node scripts/translit/perf-web.mjs --rounds 6` (headless Chromium with SwiftShader, 1280x800, this PC, idle; the `docs-web` release dist served at `/wc/`, embedded in a host page
@@ -105,7 +105,7 @@ metric is the first `requestAnimationFrame` after the last long task = **the nex
 - The wasm build lays the document out in 138 pages before and 146 after (Latin to Cyrillic; 141 -> 132 the other way): the web build uses the bundled fonts, so its page count differs from
   Word's 108 and the desktop's 110. Screenshots with the result: `docs/phase2/evidence/ui/docs-web-uz-latn-converted.png` (small file), the 108-page one in the scratch dir.
 - The wasm layout is about 3 times the native N1 figure (1.1 s against 0.3-0.35 s), inside the "1.5 to 3 times native" the projection above gave for desktop Chromium. The command's
-  own part (convert + apply) is not logged in the web build (the status line shows the count only), so the 100 ms check for "our part" rests on N1/N2 (55-84 ms).
+  own part (convert + apply) is not logged in the web build (the status line shows the count only), so the 100 ms check for "our part" rests on N1/N2 (46-74 ms in the app; 51-84 ms is the N2 client round trip).
 - **Android emulator (Chrome on `HRM_Pixel_8`): not obtained.** The emulator booted (Android, 1080x2400), Chrome was driven over CDP (`adb reverse` + `connectOverCDP`), and the host page
   reached `wordcraft:ready`, but the app never answered `wordcraft:opened` for the 108-page file within 240 s, with and without `?webgl`; the page stayed grey. Not investigated further: the
   cause (mobile layout, memory, or the open path) is unknown. The Phase 0 emulator figure (16-22 ms a page, 1.8-2.4 s projected for 110 pages) therefore stays a projection and **risk R1 stays
@@ -113,7 +113,7 @@ metric is the first `requestAnimationFrame` after the last long task = **the nex
 
 ## Gate reading
 - **108 pages: 0.40 to 0.94 s (desktop app, command to a painted new layout), 1.26 s (web, desktop Chromium); against the 2 s gate. ONLYOFFICE plugin: 62 s.**
-- N1 (headless native): 0.35 to 0.44 s. Our part (convert + apply) is 46-84 ms in every measurement, under the 100 ms the plan sets before blaming layout.
+- N1 (headless native): 0.35 to 0.44 s. Our part (convert + apply) is 46-74 ms in every measurement (N1 46-65, N2 in-app 47-74; the N2 client round trip is 51-84 ms), under the 100 ms the plan sets before blaming layout.
 - Not measured: Android Chrome (above). Optimisation is not needed for the desktop or the desktop browser; for a phone it is an open owner decision once a figure exists.
 - Sheets and Slides: engine-level figures only (WP5/WP6 section); no GUI timing.
 

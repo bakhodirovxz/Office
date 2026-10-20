@@ -42,7 +42,11 @@ pub(crate) fn mark_closers(items: &mut [Item]) {
             j += 1;
         }
         if let Some(k) = last_og {
-            items[k].flags |= CLOSER;
+            // `tog’’`: two apostrophes after o/g are the okina and the closer, in that order.
+            let double = items
+                .get(k + 1)
+                .is_some_and(|x| matches!(x.c, '\'' | '`' | '\u{2019}') && x.flags & PROT == 0);
+            items[k + usize::from(double)].flags |= CLOSER;
         }
         i = j.max(i + 1);
     }

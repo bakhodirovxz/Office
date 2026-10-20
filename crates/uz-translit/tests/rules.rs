@@ -278,6 +278,26 @@ fn quote_guard() {
     assert_eq!(c("tog' va bog'"), "тоғ ва боғ");
     assert_eq!(c("'bog' bor"), "'бог' бор"); // ambiguous by spec: the last apostrophe is read as the closing quote
     assert_eq!(c("(\u{2018}ko\u{2019}p\u{2019})"), "(\u{2018}кўп\u{2019})");
+    // Gate review M1: okina plus closer after o/g keeps the okina.
+    assert_eq!(c("\u{2018}tog\u{2019}\u{2019}"), "\u{2018}тоғ\u{2019}");
+    assert_eq!(c("'bog''"), "'боғ'");
+    assert_eq!(
+        c("Men \u{2018}tog\u{2019}\u{2019} dedim"),
+        "Мен \u{2018}тоғ\u{2019} дедим"
+    );
+}
+
+#[test]
+fn sirk_stems() {
+    // Gate review m1: circus inflects from `sirk`, vinegar from `sirka` (the longer stem wins).
+    assert_eq!(
+        (c("sirk"), c("sirkda"), c("sirklar")),
+        ("цирк".into(), "циркда".into(), "цирклар".into())
+    );
+    assert_eq!(
+        (c("sirka"), c("sirkada"), c("sirkani")),
+        ("сирка".into(), "сиркада".into(), "сиркани".into())
+    );
 }
 
 #[test]

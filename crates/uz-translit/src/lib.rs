@@ -18,7 +18,7 @@ mod scan;
 use alloc::{borrow::Cow, string::String, vec::Vec};
 
 /// Bumped with any output-changing rule or data change.
-pub const RULES_VERSION: &str = "uz-translit-rules/2";
+pub const RULES_VERSION: &str = "uz-translit-rules/3";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
