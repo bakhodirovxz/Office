@@ -68,3 +68,11 @@ js_br = 20495                # JS glue brotli
 delta_br_max = 114688        # delta +97,954 B brotli (+1.04 %): overlay 0100-0102, 0110 catalogs, fallback fonts, 64 KiB RGBA logo; ceil(1.10 x delta / 16 KiB) x 16 KiB
 js_br_max = 24576
 upstream_growth_warn = 0.05
+
+# The uz-translit npm package (PLAN phase 2 section 7; `scripts/ci.sh translit-npm` builds it, `sizes` checks it). Not an
+# upstream-based domain: no base, the budget is the measured value + 10 %, rounded up to 16 KiB (the rule above).
+# Measured 2026-10-20 (v0.1.0, wasm-opt -Oz): wasm raw 72345, gzip 36169, brotli 30671; JS glue brotli 3142; tarball 46771.
+# The plan projected about 20 KB brotli; the embedded dictionary makes it 30.7 KB.
+[npm.uz-translit]
+wasm_br_max = 49152
+js_br_max = 16384

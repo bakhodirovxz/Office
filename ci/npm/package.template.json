@@ -1,0 +1,30 @@
+{
+  "name": "uz-translit",
+  "version": "@VERSION@",
+  "description": "Uzbek Latin <-> Cyrillic transliteration (WebAssembly). Same engine as the office suite.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "main": "./uz_translit.js",
+  "module": "./uz_translit.js",
+  "types": "./uz_translit.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./uz_translit.d.ts",
+      "default": "./uz_translit.js"
+    },
+    "./uz_translit_bg.wasm": "./uz_translit_bg.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "uz_translit.js",
+    "uz_translit.d.ts",
+    "uz_translit_bg.wasm",
+    "uz_translit_bg.wasm.d.ts",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "engines": { "node": ">=18" },
+  "keywords": ["uzbek", "transliteration", "cyrillic", "latin", "wasm"]
+}
