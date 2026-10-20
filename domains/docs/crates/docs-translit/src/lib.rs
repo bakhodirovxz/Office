@@ -28,9 +28,21 @@ const PARAMS: &str = r#"{"scope"?: "auto"|"selection"|"document", "skipLangs"?: 
 /// The specs, for callers that build a registry themselves.
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        CommandSpec::new(TO_CYRILLIC, "To Cyrillic", "Review › Language", |s, v| run(s, v, Some(Direction::ToCyrillic))).params(PARAMS),
-        CommandSpec::new(TO_LATIN, "To Latin", "Review › Language", |s, v| run(s, v, Some(Direction::ToLatin))).params(PARAMS),
-        CommandSpec::new(AUTO, "Transliterate (auto-detect)", "Review › Language", |s, v| run(s, v, None)).params(PARAMS),
+        CommandSpec::new(TO_CYRILLIC, "To Cyrillic", "Review › Language", |s, v| {
+            run(s, v, Some(Direction::ToCyrillic))
+        })
+        .params(PARAMS),
+        CommandSpec::new(TO_LATIN, "To Latin", "Review › Language", |s, v| {
+            run(s, v, Some(Direction::ToLatin))
+        })
+        .params(PARAMS),
+        CommandSpec::new(
+            AUTO,
+            "Transliterate (auto-detect)",
+            "Review › Language",
+            |s, v| run(s, v, None),
+        )
+        .params(PARAMS),
     ]
 }
 
@@ -84,18 +96,43 @@ fn params(v: &Value) -> Result<(Scope, Ctx), CmdError> {
         None | Some("auto") => Scope::Auto,
         Some("selection") => Scope::Selection,
         Some("document") => Scope::Document,
-        Some(o) => return Err(CmdError::Params(format!("`scope` must be auto, selection or document, not `{o}`"))),
+        Some(o) => {
+            return Err(CmdError::Params(format!(
+                "`scope` must be auto, selection or document, not `{o}`"
+            )));
+        }
     };
     let apostrophe = match wordcraft_engine::p::str(v, "apostrophe") {
         None | Some("official") => Apostrophe::Official,
         Some("ascii") => Apostrophe::Ascii,
-        Some(o) => return Err(CmdError::Params(format!("`apostrophe` must be official or ascii, not `{o}`"))),
+        Some(o) => {
+            return Err(CmdError::Params(format!(
+                "`apostrophe` must be official or ascii, not `{o}`"
+            )));
+        }
     };
     let defaults = Options::default();
-    let opts = Options { apostrophe, foreign_latin_guard: wordcraft_engine::p::bool(v, "foreignGuard").unwrap_or(defaults.foreign_latin_guard), ..defaults };
-    let policy = if wordcraft_engine::p::bool(v, "skipLangs") == Some(true) { LangPolicy::SkipRuEn } else { LangPolicy::ConvertRuEn };
+    let opts = Options {
+        apostrophe,
+        foreign_latin_guard: wordcraft_engine::p::bool(v, "foreignGuard")
+            .unwrap_or(defaults.foreign_latin_guard),
+        ..defaults
+    };
+    let policy = if wordcraft_engine::p::bool(v, "skipLangs") == Some(true) {
+        LangPolicy::SkipRuEn
+    } else {
+        LangPolicy::ConvertRuEn
+    };
     let field_results = wordcraft_engine::p::bool(v, "fieldResults").unwrap_or(true);
-    Ok((scope, Ctx { opts, policy, field_results, tracked: false }))
+    Ok((
+        scope,
+        Ctx {
+            opts,
+            policy,
+            field_results,
+            tracked: false,
+        },
+    ))
 }
 
 fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
@@ -116,9 +153,15 @@ fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
         let (a, b) = s.sel.ordered();
         let mut m = BTreeMap::new();
         for path in selected_paths(s) {
-            let Some(p) = s.doc.para(a.story, &path) else { continue };
+            let Some(p) = s.doc.para(a.story, &path) else {
+                continue;
+            };
             let from = if path == a.path { a.off } else { 0 };
-            let to = if path == b.path { b.off.min(p.len()) } else { p.len() };
+            let to = if path == b.path {
+                b.off.min(p.len())
+            } else {
+                p.len()
+            };
             if from < to {
                 m.insert(path, (from, to));
             }
@@ -155,11 +198,16 @@ fn summary(st: &Stats, dir: Option<Direction>, selection: bool, ctx: &Ctx) -> Va
 }
 
 /// The dominant script of the target text, as a direction (Latin text goes to Cyrillic and back).
-fn detect(s: &Session, targets: &[(StoryRef, Option<BTreeMap<Path, (usize, usize)>>)]) -> Option<Direction> {
+fn detect(
+    s: &Session,
+    targets: &[(StoryRef, Option<BTreeMap<Path, (usize, usize)>>)],
+) -> Option<Direction> {
     let mut text = String::new();
     for (story, bounds) in targets {
         for path in s.doc.para_paths(*story) {
-            let Some(p) = s.doc.para(*story, &path) else { continue };
+            let Some(p) = s.doc.para(*story, &path) else {
+                continue;
+            };
             let (from, to) = match bounds {
                 None => (0, p.len()),
                 Some(m) => match m.get(&path) {
@@ -180,9 +228,22 @@ fn detect(s: &Session, targets: &[(StoryRef, Option<BTreeMap<Path, (usize, usize
 }
 
 /// Convert the paragraphs of one story (document order, so that field results are tracked across paragraphs).
-fn story_pass(s: &mut Session, story: StoryRef, bounds: Option<&BTreeMap<Path, (usize, usize)>>, dir: Direction, ctx: &Ctx, st: &mut Stats) -> Result<(), CmdError> {
+fn story_pass(
+    s: &mut Session,
+    story: StoryRef,
+    bounds: Option<&BTreeMap<Path, (usize, usize)>>,
+    dir: Direction,
+    ctx: &Ctx,
+    st: &mut Stats,
+) -> Result<(), CmdError> {
     // Locked content controls: (content start, end) positions.
-    let locked: Vec<(Pos, Pos)> = s.doc.control_ranges(story).into_iter().filter(|r| !r.control.lock.can_edit()).map(|r| (r.content_start(), r.end)).collect();
+    let locked: Vec<(Pos, Pos)> = s
+        .doc
+        .control_ranges(story)
+        .into_iter()
+        .filter(|r| !r.control.lock.can_edit())
+        .map(|r| (r.content_start(), r.end))
+        .collect();
     let mut depth = 0usize; // open FieldStart markers
     let mut revs: Option<(u32, u32)> = None;
     for path in s.doc.para_paths(story) {
@@ -194,11 +255,20 @@ fn story_pass(s: &mut Session, story: StoryRef, bounds: Option<&BTreeMap<Path, (
             continue;
         }
         let t0 = wordcraft_layout::now_ms();
-        let Some(p) = s.doc.para(story, &path) else { continue };
-        let field_spans = if ctx.field_results { Vec::new() } else { field_spans(p, &mut depth) };
+        let Some(p) = s.doc.para(story, &path) else {
+            continue;
+        };
+        let field_spans = if ctx.field_results {
+            Vec::new()
+        } else {
+            field_spans(p, &mut depth)
+        };
         let Some((from, to)) = own else { continue };
         let to = to.min(p.len());
-        if !p.text.is_char_boundary(from) || !p.text.is_char_boundary(to) || p.runs.iter().map(|r| r.len).sum::<usize>() != p.text.len() {
+        if !p.text.is_char_boundary(from)
+            || !p.text.is_char_boundary(to)
+            || p.runs.iter().map(|r| r.len).sum::<usize>() != p.text.len()
+        {
             continue;
         }
         // Spans that must stay as typed.
@@ -220,7 +290,13 @@ fn story_pass(s: &mut Session, story: StoryRef, bounds: Option<&BTreeMap<Path, (
         keep.extend(field_spans);
         let mut segs = classify(s, p, &keep, ctx, st);
         // Convert.
-        let runs: Vec<uz_translit::Run> = segs.iter().map(|g| uz_translit::Run { text: &p.text[g.range.clone()], convert: g.convert }).collect();
+        let runs: Vec<uz_translit::Run> = segs
+            .iter()
+            .map(|g| uz_translit::Run {
+                text: &p.text[g.range.clone()],
+                convert: g.convert,
+            })
+            .collect();
         let out = uz_translit::convert_runs(&runs, dir, &ctx.opts);
         let mut changed = false;
         let outs: Vec<Option<String>> = out
@@ -245,12 +321,18 @@ fn story_pass(s: &mut Session, story: StoryRef, bounds: Option<&BTreeMap<Path, (
         if ctx.tracked {
             for g in segs.iter_mut().filter(|g| g.new.is_some()) {
                 let c = p.props_of_char(g.range.start);
-                let own_ins = c.ins.and_then(|i| s.doc.revisions.get(i as usize)).is_some_and(|rv| rv.author == s.author);
+                let own_ins = c
+                    .ins
+                    .and_then(|i| s.doc.revisions.get(i as usize))
+                    .is_some_and(|rv| rv.author == s.author);
                 g.replace = !own_ins;
             }
         }
         if segs.iter().any(|g| g.replace) && revs.is_none() {
-            revs = Some((new_revision(s, RevisionKind::Delete), new_revision(s, RevisionKind::Insert)));
+            revs = Some((
+                new_revision(s, RevisionKind::Delete),
+                new_revision(s, RevisionKind::Insert),
+            ));
         }
         let spans = apply(s, story, &path, &segs, revs)?;
         st.paragraphs += 1;
@@ -267,7 +349,13 @@ fn story_pass(s: &mut Session, story: StoryRef, bounds: Option<&BTreeMap<Path, (
 }
 
 /// Split the paragraph's runs into pieces (never across a run, an object, or a `keep` boundary) and mark which are converted.
-fn classify(s: &Session, p: &wordcraft_doc::Paragraph, keep: &[Range<usize>], ctx: &Ctx, st: &mut Stats) -> Vec<Seg> {
+fn classify(
+    s: &Session,
+    p: &wordcraft_doc::Paragraph,
+    keep: &[Range<usize>],
+    ctx: &Ctx,
+    st: &mut Stats,
+) -> Vec<Seg> {
     let n = p.len();
     let mut skip = vec![false; n];
     for r in keep {
@@ -287,7 +375,15 @@ fn classify(s: &Session, p: &wordcraft_doc::Paragraph, keep: &[Range<usize>], ct
             continue;
         }
         // A tracked deletion is not text any more; a run in a skipped language stays as typed.
-        let lang_skip = props.del.is_none() && !lang_converts(s.doc.styles.resolve_char(p.props.style.as_deref(), props).lang.as_deref(), ctx.policy);
+        let lang_skip = props.del.is_none()
+            && !lang_converts(
+                s.doc
+                    .styles
+                    .resolve_char(p.props.style.as_deref(), props)
+                    .lang
+                    .as_deref(),
+                ctx.policy,
+            );
         if lang_skip {
             st.lang += 1;
         }
@@ -298,12 +394,24 @@ fn classify(s: &Session, p: &wordcraft_doc::Paragraph, keep: &[Range<usize>], ct
             let at = range.start + i;
             let flag = whole_skip || skip[at];
             if flag != cur {
-                segs.push(Seg { range: start..at, run: ri, convert: !cur, new: None, replace: false });
+                segs.push(Seg {
+                    range: start..at,
+                    run: ri,
+                    convert: !cur,
+                    new: None,
+                    replace: false,
+                });
                 start = at;
                 cur = flag;
             }
         }
-        segs.push(Seg { range: start..range.end, run: ri, convert: !cur, new: None, replace: false });
+        segs.push(Seg {
+            range: start..range.end,
+            run: ri,
+            convert: !cur,
+            new: None,
+            replace: false,
+        });
     }
     segs
 }
@@ -343,7 +451,13 @@ fn field_spans(p: &wordcraft_doc::Paragraph, depth: &mut usize) -> Vec<Range<usi
 }
 
 /// Write the converted pieces back. Returns `(start, end, new_len)` of every changed stretch, in text order.
-fn apply(s: &mut Session, story: StoryRef, path: &Path, segs: &[Seg], revs: Option<(u32, u32)>) -> Result<Vec<(usize, usize, usize)>, CmdError> {
+fn apply(
+    s: &mut Session,
+    story: StoryRef,
+    path: &Path,
+    segs: &[Seg],
+    revs: Option<(u32, u32)>,
+) -> Result<Vec<(usize, usize, usize)>, CmdError> {
     let para = s.doc.para_mut(story, path)?;
     let mut spans = Vec::new();
     if !segs.iter().any(|g| g.replace) {
@@ -372,7 +486,8 @@ fn apply(s: &mut Session, story: StoryRef, path: &Path, segs: &[Seg], revs: Opti
         return Ok(spans);
     }
     // Tracked: right to left so that earlier offsets hold.
-    let (del, ins) = revs.ok_or_else(|| CmdError::Failed("tracked conversion without revisions".into()))?;
+    let (del, ins) =
+        revs.ok_or_else(|| CmdError::Failed("tracked conversion without revisions".into()))?;
     let mut rev_spans: Vec<(usize, usize, usize)> = Vec::new();
     for g in segs.iter().rev().filter(|g| g.new.is_some()) {
         let new = g.new.as_deref().unwrap_or_default();

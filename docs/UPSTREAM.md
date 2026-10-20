@@ -97,3 +97,15 @@ human time; the interdiff line count is the size of the resolution.
 ## Parking a patch
 If a patch costs too much to rebase, move it to `patches/<repo>/parked/`, set the register category/status `parked: rebase cost X h`, and
 report it as an owner decision (the B-6 revisit). `cargo xt register check` accepts files in `parked/`.
+
+## Extension hooks (Phase 2): `patches/<repo>/0120`
+Our logic lives in our crates, not in the queue. A carried patch only installs it:
+- **wordcraft/0120** adds `#[cfg(feature = "office-ext")] docs_translit::install(&mut session);` after `Session::new` in the three apps
+  (`apps/wordcraft/src/main.rs`, `apps/wordcraft-web/src/web.rs`, `apps/wordcraft-cli/src/main.rs`, in `session()`), an empty `[features] office-ext = []`
+  in their manifests (so the upstream workspace compiles the call out with clean check-cfg), and three ids in the `per_row` arm of
+  `crates/engine/src/cmd/column.rs` (otherwise a column or cell selection collapses to a caret and the command converts the whole document).
+- `domains/<d>/domain.toml` `[extensions] crates = [...]` makes `cargo xt gen-domain` add each crate as an optional path dependency of every app
+  and write `office-ext = ["dep:<crate>"]` plus `default = ["office-ext"]`. Nothing else in the generated manifests changes.
+- Hot spots at each sync: the three `Session::new` sites, the `[dependencies]` anchor line in the three app manifests, and `column.rs` `per_row`.
+  If upstream adds a fourth session site (for example MCP: `crates/mcp/src/lib.rs` builds its own headless session, which has no transliteration commands),
+  add the call there. Run `cargo test -p docs-translit` in the docs domain after the sync: the column test fails when the `column.rs` ids are lost.
