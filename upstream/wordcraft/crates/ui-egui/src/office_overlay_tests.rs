@@ -110,3 +110,26 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
         assert!(Lang::from_code("uz-latn").is_none());
     }
 }
+
+#[test]
+fn russian_gets_our_rows_and_keeps_upstreams() {
+    use crate::i18n::{Lang, tr};
+    let ru = Lang::from_code("ru").expect("ru");
+    if o::CATALOG_RU.is_empty() {
+        assert_eq!(tr(ru, "Transliterate"), "Transliterate");
+        return;
+    }
+    assert_eq!(tr(ru, "Transliterate"), "Транслитерация");
+    assert_eq!(tr(ru, "Latin to Cyrillic"), "С латиницы на кириллицу");
+    // Upstream's own Russian wins: every plain, escape-free row of its file reads back unchanged.
+    let mut checked = 0;
+    for line in include_str!("i18n/ru.tsv").lines().filter(|l| !l.starts_with('#') && !l.contains("\\")) {
+        if let [context, source, translation] = line.split('\t').collect::<Vec<_>>()[..] {
+            if context.is_empty() {
+                assert_eq!(tr(ru, source), o::rebrand(translation), "{source}");
+                checked += 1;
+            }
+        }
+    }
+    assert!(checked > 1000, "{checked} upstream rows checked");
+}
