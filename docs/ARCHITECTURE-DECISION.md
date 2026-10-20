@@ -816,6 +816,7 @@ Other risks tracked but outside the top 12:
 | Update check | pdfcraft's GitHub update check (Help menu) | **Disable** in our builds (2026-10-17). Updates will come from our own channel later |
 | Uzbek UI review | Who reviews the Uzbek UI strings (BRIEF: "reviewed by the owner, not machine-trusted") | **Delegated to the agent** (2026-10-18): "check them yourself; I will report problems found in use". The status is recorded as `reviewed:agent-<model>:<date>`, never as an owner review, so unreviewed-by-a-human rows stay identifiable. **Scope: UI strings only.** The Phase 2 transliteration golden list still needs the owner |
 | Translit golden list | Approval of the ≥500-pair Phase 2 golden list and the exceptions dictionary (BRIEF Phase 2: "the owner must approve") | **Delegated to the agent** (2026-10-20). Rows are marked `reviewed:agent-<model>:<date>`, never as an owner approval. The owner reports problems found in use |
+| Android / mobile timing | The emulator could not open the 108-page file; the owner calls the emulator itself problematic | **Android deferred** (2026-10-20). Work goes to the converter (Phase 3) and the remaining UI translations first; mobile is revisited later. This lowers mobile in the priority order for now |
 | Others | B-7…B-14 | Still open: asked again in the Phase 1 report |
 
 ## Sources

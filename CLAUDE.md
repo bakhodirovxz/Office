@@ -17,7 +17,7 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
   - The owner reports problems found in use.
   - The Phase 2 transliteration golden list and exceptions dictionary: **also delegated to the agent** (owner,
     2026-10-20). Use the same `reviewed:agent-*` marking.
-- **Mobile:** A-web for v1, conditionally (re-decided at the Phase 4 gate).
+- **Mobile:** A-web for v1, conditionally. **Android deferred** (owner, 2026-10-20): the converter and the UI translations go first.
 - **Priority:** fidelity → mobile → co-editing.
 
 ## Phase discipline
