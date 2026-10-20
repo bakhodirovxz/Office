@@ -67,7 +67,7 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 4. Decisions the owner must make. 5. Proposal for the next phase.
 
 ## Local environment notes (this machine)
-- Windows 10, 12 cores, 11.8 GB RAM, Intel UHD 630 (no discrete GPU). No macOS → no iOS simulator.
+- Windows 10, 12 cores, **31.8 GB RAM** (upgraded from 11.8 GB, noticed 2026-10-20), Intel UHD 630 (no discrete GPU). No macOS → no iOS simulator.
 - Rust: `~/.cargo/bin` (rustc 1.97.1, `stable-x86_64-pc-windows-gnu`, MSYS2 ucrt64 gcc).
   Not on the Bash PATH by default: `export PATH="$HOME/.cargo/bin:$PATH"`.
 - C: has ~34 GB free; build output goes to E: (`CARGO_TARGET_DIR=E:/office-target/<repo>`).
