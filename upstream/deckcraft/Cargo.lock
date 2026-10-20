@@ -972,6 +972,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "uz-translit",
  "zip",
 ]
 
@@ -4625,6 +4626,10 @@ dependencies = [
  "serde_core",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "uz-translit"
+version = "0.1.0"
 
 [[package]]
 name = "vello_common"

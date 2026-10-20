@@ -27,6 +27,8 @@ gridcraft-pdf = { workspace = true }
 # startup (`pdf_fonts::set_default_face`), so linking a second copy would only grow the wasm.
 epaint_default_fonts = { workspace = true, optional = true }
 image = { workspace = true }
+# office overlay (patches/gridcraft/0120): the transliteration rules, an in-monorepo path
+uz-translit = { path = "../../../../crates/uz-translit" }
 
 [dev-dependencies]
 epaint_default_fonts = { workspace = true }
