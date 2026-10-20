@@ -85,6 +85,16 @@ fn the_deck_converts_every_shape_and_the_notes_when_nothing_is_selected() {
 }
 
 #[test]
+fn the_latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
+    let mut s = session();
+    let a = add(&mut s, "Шаҳар ўғил");
+    deselect(&mut s);
+    assert!(s.execute(LATN, &json!({"latinAlphabet": "1999"})).is_err());
+    s.execute(LATN, &json!({"latinAlphabet": "2026"})).unwrap();
+    assert_eq!(text_of(&s, 0, a), "Şahar öğil");
+}
+
+#[test]
 fn selected_shapes_convert_and_the_rest_stays() {
     let mut s = session();
     let a = add(&mut s, "salom");

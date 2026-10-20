@@ -1,0 +1,132 @@
+[
+ {
+  "summary": {
+   "file": "uz108-latn.docx",
+   "command": "Latin to Cyrillic",
+   "timed": 5,
+   "median_frame_ms": 1264.2999999970198,
+   "max_frame_ms": 1327
+  },
+  "rows": [
+   {
+    "round": 0,
+    "t0": 18377.40000000596,
+    "longtasks": 2,
+    "longest_ms": 957,
+    "task_end_ms": 1062.5999999940395,
+    "frame_ms": 1069.0999999940395,
+    "errors": []
+   },
+   {
+    "round": 1,
+    "t0": 17891.59999999404,
+    "longtasks": 2,
+    "longest_ms": 1039,
+    "task_end_ms": 1289.2000000029802,
+    "frame_ms": 1296.2999999970198,
+    "errors": []
+   },
+   {
+    "round": 2,
+    "t0": 18038.90000000596,
+    "longtasks": 2,
+    "longest_ms": 1088,
+    "task_end_ms": 1255.5999999940395,
+    "frame_ms": 1255.7000000029802,
+    "errors": []
+   },
+   {
+    "round": 3,
+    "t0": 17932.20000000298,
+    "longtasks": 2,
+    "longest_ms": 1107,
+    "task_end_ms": 1327,
+    "frame_ms": 1327,
+    "errors": []
+   },
+   {
+    "round": 4,
+    "t0": 17886.59999999404,
+    "longtasks": 2,
+    "longest_ms": 977,
+    "task_end_ms": 1182.2000000029802,
+    "frame_ms": 1182.800000011921,
+    "errors": []
+   },
+   {
+    "round": 5,
+    "t0": 17923.60000000894,
+    "longtasks": 2,
+    "longest_ms": 994,
+    "task_end_ms": 1264,
+    "frame_ms": 1264.2999999970198,
+    "errors": []
+   }
+  ]
+ },
+ {
+  "summary": {
+   "file": "uz108-cyrl.docx",
+   "command": "Cyrillic to Latin",
+   "timed": 5,
+   "median_frame_ms": 1266.5999999940395,
+   "max_frame_ms": 1324.6000000089407
+  },
+  "rows": [
+   {
+    "round": 0,
+    "t0": 18119,
+    "longtasks": 2,
+    "longest_ms": 1085,
+    "task_end_ms": 1165.5,
+    "frame_ms": 1165.7000000029802,
+    "errors": []
+   },
+   {
+    "round": 1,
+    "t0": 17752.20000000298,
+    "longtasks": 2,
+    "longest_ms": 1141,
+    "task_end_ms": 1324.6000000089407,
+    "frame_ms": 1324.6000000089407,
+    "errors": []
+   },
+   {
+    "round": 2,
+    "t0": 17866.60000000894,
+    "longtasks": 2,
+    "longest_ms": 1136,
+    "task_end_ms": 1278,
+    "frame_ms": 1278.5999999940395,
+    "errors": []
+   },
+   {
+    "round": 3,
+    "t0": 17920.5,
+    "longtasks": 2,
+    "longest_ms": 1125,
+    "task_end_ms": 1266.5999999940395,
+    "frame_ms": 1266.5999999940395,
+    "errors": []
+   },
+   {
+    "round": 4,
+    "t0": 17814.10000000894,
+    "longtasks": 2,
+    "longest_ms": 1055,
+    "task_end_ms": 1205.0999999940395,
+    "frame_ms": 1205.2999999970198,
+    "errors": []
+   },
+   {
+    "round": 5,
+    "t0": 17894.09999999404,
+    "longtasks": 2,
+    "longest_ms": 1075,
+    "task_end_ms": 1241.9000000059605,
+    "frame_ms": 1242,
+    "errors": []
+   }
+  ]
+ }
+]

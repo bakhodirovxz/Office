@@ -1017,6 +1017,11 @@ QUO-007	"Oʻzbekiston" gazetasi	"Ўзбекистон" газетаси	both	R15
 QUO-008	‘Gʻoya’ nima?	‘Ғоя’ нима?	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
 QUO-009	Ular ‘yoʻq’ dedi	Улар ‘йўқ’ деди	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
 QUO-010	‘Toʻgʻri’ javob	‘Тўғри’ жавоб	both	R15	reviewed:agent-opus:2026-10-20	agent	high	
+QUO-011	‘tog’’	‘тоғ’	l2c	R15	reviewed:agent-opus:2026-10-20	agent	high	okina plus closer: the first apostrophe is the letter (gate review M1)
+QUO-012	'bog''	'боғ'	l2c	R15	reviewed:agent-opus:2026-10-20	agent	high	as above, U+0027
+TS-901	sirkda	циркда	l2c	R11	reviewed:agent-opus:2026-10-20	agent	high	circus, locative (gate review m1)
+TS-902	sirklar	цирклар	l2c	R11	reviewed:agent-opus:2026-10-20	agent	high	
+TS-903	sirkada	сиркада	l2c	R11	reviewed:agent-opus:2026-10-20	agent	high	vinegar, locative
 AMB-001	'bog'	'бог'	l2c	R15	ambiguous	agent	low	ambiguous: the last U+0027 is read as the closing quote; review: R15 inherently ambiguous with U+0027 throughout (rules.md 4.11, 13.4)
 AMB-002	Ular 'tog' dedi	Улар 'тог' деди	l2c	R15	ambiguous	agent	low	ambiguous, as above; review: R15 inherently ambiguous (13.4)
 AMB-003	Ular 'bog' va 'tog' dedi	Улар 'бог' ва 'тог' деди	l2c	R15	ambiguous	agent	low	ambiguous, as above; review: R15 inherently ambiguous (13.4)

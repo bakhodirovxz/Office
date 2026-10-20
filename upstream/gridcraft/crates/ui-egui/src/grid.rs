@@ -2925,6 +2925,8 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                             app.copy_to_clipboard(ui.ctx(), id);
                         }
                         "edit.paste" => app.paste_from_clipboard(),
+                        // The context menu means "this selection": a single cell must not convert the whole sheet.
+                        other if other.starts_with("tools.translit") => app.run_or_alert(other, json!({"scope": "selection"})),
                         other => app.run_or_alert(other, json!({})),
                     }
                 }

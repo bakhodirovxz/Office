@@ -6,7 +6,7 @@
 //! `Session::execute` is one undo step; `edit` recalculates the formulas that read a converted cell.
 use gridcraft_core::{CellRef, RangeRef, Value};
 use serde_json::json;
-use uz_translit::{Apostrophe, Direction, Options, Script};
+use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
 
 use super::{CommandSpec, Json, bad, bool_param, cmd, edit, has_doc, locked_cell_error, str_param, target_ranges, target_sheet};
 use crate::{Result, Session};
@@ -22,7 +22,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Latin to Cyrillic",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, Some(Direction::ToCyrillic))
         ),
@@ -31,7 +31,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Cyrillic to Latin",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, Some(Direction::ToLatin))
         ),
@@ -40,7 +40,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Auto-detect",
             [],
             None,
-            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
+            "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool, latinAlphabet?: \"1995\"|\"2026\"|\"auto\"}",
             has_doc,
             |s, p| run(s, p, None)
         ),
@@ -102,8 +102,19 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
         Some("ascii") => Apostrophe::Ascii,
         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
     };
+    let latin_alphabet = match str_param(p, "latinAlphabet") {
+        None | Some("1995") => LatinAlphabet::Y1995,
+        Some("2026") => LatinAlphabet::Y2026,
+        Some("auto") => LatinAlphabet::Auto,
+        Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
+    };
     let defaults = Options::default();
-    let opts = Options { apostrophe, foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard), ..defaults };
+    let opts = Options {
+        apostrophe,
+        latin_alphabet,
+        foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard),
+        ..defaults
+    };
 
     let t0 = now_ms();
     let sel = target_ranges(s, p)?;
