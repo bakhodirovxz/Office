@@ -14,7 +14,7 @@ mod review;
 
 use catalog::{APPS, Catalog, Mode, Policy};
 
-pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR] [--with-ru]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
+pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
 
 pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     let dir = root.join("i18n");
@@ -79,15 +79,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
                 if !APPS.contains(&a) {
                     return Err(format!("unknown app {a:?}"));
                 }
-                lines.extend(export::export_app(
-                    &cat,
-                    a,
-                    mode,
-                    &chains,
-                    &out,
-                    has("--with-ru"),
-                    &policy,
-                )?);
+                lines.extend(export::export_app(&cat, a, mode, &chains, &out, &policy)?);
             }
             Ok(lines.join("\n"))
         }

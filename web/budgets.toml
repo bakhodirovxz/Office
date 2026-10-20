@@ -29,7 +29,7 @@ base_raw = 42219232          # pristine wasm raw at BASE (2026-10-19)
 base_gzip = 15735172         # wasm gzip -9
 base_br = 9377090            # wasm brotli -q 11 --lgwin=24
 js_br = 20548                # JS glue brotli
-delta_br_max = 131072        # delta +105,622 B brotli (+1.13 %): queue 0001-0005, overlay 0100-0103, 0110 catalogs, fallback fonts; ceil(1.10 x delta / 16 KiB) x 16 KiB
+delta_br_max = 163840        # delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 0001-0005, overlay 0100-0103, 0110 catalogs, fallback fonts, 0120/0121 + docs-translit (rules, dictionary); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 131072 = +105,622 B at Phase 1)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 

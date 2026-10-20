@@ -348,7 +348,6 @@ pub fn export_app(
     mode: Mode,
     chains: &Chains,
     out_root: &Path,
-    with_ru: bool,
     policy: &Policy,
 ) -> Result<Vec<String>, String> {
     let dir = out_root.join(app);
@@ -362,10 +361,9 @@ pub fn export_app(
             "release"
         }
     )];
+    // ru is always exported: the catalog holds upstream's Russian rows and ours (the new rows ship with ru too).
     let mut locales: Vec<&str> = EXPORT_LOCALES.to_vec();
-    if with_ru {
-        locales.push("ru");
-    }
+    locales.push("ru");
     for loc in locales {
         let b = build_locale(cat, app, loc, chains, mode, policy);
         let path = dir.join(format!("catalog-{loc}.tsv"));
@@ -775,8 +773,7 @@ mod tests {
         let _ = fs::remove_dir_all(&out);
         let chains = Chains::default();
         let meta = |cat: &Catalog, policy: &Policy| {
-            let report =
-                export_app(cat, "wordcraft", Mode::Review, &chains, &out, false, policy).unwrap();
+            let report = export_app(cat, "wordcraft", Mode::Review, &chains, &out, policy).unwrap();
             let text = fs::read_to_string(out.join("wordcraft/catalog-meta.env")).unwrap();
             (report.join("\n"), text)
         };
@@ -805,6 +802,33 @@ mod tests {
             "{m}"
         );
         assert!(m.contains("NAME_UZ_CYRL=Ўзбекча (қоралама)\n"), "{m}");
+        let _ = fs::remove_dir_all(&out);
+    }
+
+    #[test]
+    fn export_always_writes_ru_with_our_rows() {
+        let out = std::env::temp_dir().join(format!("xtask-i18n-ru-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&out);
+        let mut ours = uz("Transliterate", AGENT);
+        ours.ru = "Транслитерация".into();
+        ours.ru_status = "reviewed:agent-opus:2026-10-20".into();
+        export_app(
+            &cat_of(vec![ours]),
+            "wordcraft",
+            Mode::Review,
+            &Chains::default(),
+            &out,
+            &DELEGATED,
+        )
+        .unwrap();
+        let ru = fs::read_to_string(out.join("wordcraft/catalog-ru.tsv")).unwrap();
+        assert!(
+            ru.contains(
+                "Transliterate	Транслитерация
+"
+            ),
+            "{ru}"
+        );
         let _ = fs::remove_dir_all(&out);
     }
 
