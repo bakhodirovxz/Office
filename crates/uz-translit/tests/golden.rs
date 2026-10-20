@@ -1,6 +1,7 @@
 //! Golden lists (WP3). Skipped when a file is absent; only `reviewed:*` rows are asserted.
 use std::{collections::HashMap, fs, path::Path};
-use uz_translit::{Direction, Options, convert};
+mod common;
+use uz_translit::{Direction, LatinAlphabet, Options, convert};
 
 fn table(name: &str) -> Vec<HashMap<String, String>> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -91,4 +92,55 @@ fn sentences() {
 #[test]
 fn variants() {
     check("variants.tsv", "input");
+}
+
+/// Section 15: the approved both-direction rows under the 2026 alphabet. The 2026 Latin is the golden Latin
+/// passed through the 1995 -> 2026 letter substitution (`common::to_2026`) at test time.
+#[test]
+fn golden_2026() {
+    let o95 = Options::default();
+    let o26 = Options {
+        latin_alphabet: LatinAlphabet::Y2026,
+        ..o95
+    };
+    let (mut n, mut skipped, mut fails) = (0, 0, Vec::new());
+    for r in table("golden.tsv")
+        .into_iter()
+        .filter(|r| r["status"].starts_with("reviewed:") && r["dir"] == "both")
+    {
+        let (lat, cyr) = (&r["latin"], &r["cyrillic"]);
+        // R15 quote guard rows: the substitution would read a closing quote as oʻ. s'h cannot round-trip (2026 writes plain "sh", which reads as ш), and rows that keep Latin text in
+        // the Cyrillic output (protected spans, foreign words) are not letter-substituted by the engine.
+        if r["rule"].contains("R15")
+            || common::has_separated_sh(lat)
+            || cyr.chars().any(|c| c.is_ascii_alphabetic())
+        {
+            skipped += 1;
+            continue;
+        }
+        n += 1;
+        let l26 = common::to_2026(lat);
+        let back = convert(cyr, Direction::ToLatin, &o26);
+        if back != l26 {
+            fails.push(format!(
+                "{} c2l {cyr:?} -> {back:?}, expected {l26:?}",
+                r["id"]
+            ));
+        }
+        let fwd = convert(&l26, Direction::ToCyrillic, &o95);
+        if fwd != *cyr {
+            fails.push(format!(
+                "{} l2c {l26:?} -> {fwd:?}, expected {cyr:?}",
+                r["id"]
+            ));
+        }
+    }
+    assert!(
+        fails.is_empty(),
+        "{} mismatches\n{}",
+        fails.len(),
+        fails.join("\n")
+    );
+    println!("golden_2026: {n} rows checked in both directions, {skipped} skipped");
+    assert!(n >= 500);
 }

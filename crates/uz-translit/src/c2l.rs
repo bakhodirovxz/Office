@@ -1,11 +1,49 @@
 //! Cyrillic -> Latin (rules.md 3.2, 4.x, case 5.2).
+use crate::LatinAlphabet;
 use crate::chars::*;
 use crate::dict;
 use crate::engine::{Class, Seg, Word};
 use alloc::vec::Vec;
 
+/// 1995 Latin text -> 2026 letters (case follows the first letter; sʼh -> sh, section 15).
+fn to_2026(t: &[char]) -> Vec<char> {
+    let mut o = Vec::with_capacity(t.len());
+    let mut i = 0;
+    while i < t.len() {
+        let (c, n1, n2) = (
+            t[i],
+            t.get(i + 1).map(|&x| lower(x)),
+            t.get(i + 2).map(|&x| lower(x)),
+        );
+        let new = match (lower(c), n1) {
+            ('o', Some('\u{2BB}')) => Some(('ö', 2)),
+            ('g', Some('\u{2BB}')) => Some(('ğ', 2)),
+            ('s', Some('\u{2BC}')) if n2 == Some('h') => None,
+            ('s', Some('h')) => Some(('ş', 2)),
+            ('c', Some('h')) => Some(('ç', 2)),
+            _ => None,
+        };
+        match new {
+            Some((l, k)) => {
+                o.push(if is_up(c) { upper(l) } else { l });
+                i += k;
+            }
+            None if lower(c) == 's' && n1 == Some('\u{2BC}') && n2 == Some('h') => {
+                o.extend([c, t[i + 2]]); // s + h: no separator, "ş" is distinct
+                i += 3;
+            }
+            None => {
+                o.push(c);
+                i += 1;
+            }
+        }
+    }
+    o
+}
+
 pub(crate) fn word(seg: &mut Seg, wi: usize) {
     let w = seg.words[wi];
+    let y26 = seg.opts.latin_alphabet == LatinAlphabet::Y2026;
     if !w.attach {
         let mut buf = core::mem::take(&mut seg.buf);
         buf.clear();
@@ -25,12 +63,18 @@ pub(crate) fn word(seg: &mut Seg, wi: usize) {
         };
         seg.buf = buf;
         if let Some(l) = acro {
-            let t: Vec<char> = l.chars().collect();
+            let mut t: Vec<char> = l.chars().collect();
+            if y26 {
+                t = to_2026(&t);
+            }
             seg.emit_split(w.ws, w.we - w.ws, &t, true);
             return;
         }
         if let Some(h) = hit {
             let mut t: Vec<char> = h.target.chars().collect();
+            if y26 {
+                t = to_2026(&t);
+            }
             seg.recase(&w, h.n, &mut t);
             seg.emit_split(w.ws, h.n, &t, true);
             letters(seg, w.ws + h.n, &w);
@@ -40,7 +84,16 @@ pub(crate) fn word(seg: &mut Seg, wi: usize) {
     letters(seg, w.ws, &w);
 }
 
-fn map(lc: char) -> Option<&'static str> {
+fn map(lc: char, y26: bool) -> Option<&'static str> {
+    if y26 {
+        match lc {
+            'ғ' => return Some("ğ"),
+            'ў' => return Some("ö"),
+            'ч' => return Some("ç"),
+            'ш' | 'щ' => return Some("ş"),
+            _ => {}
+        }
+    }
     Some(match lc {
         'а' => "a",
         'б' => "b",
@@ -79,6 +132,7 @@ fn map(lc: char) -> Option<&'static str> {
 
 fn letters(seg: &mut Seg, from: usize, w: &Word) {
     let (ws, we) = (w.ws, w.we);
+    let y26 = seg.opts.latin_alphabet == LatinAlphabet::Y2026;
     for i in from..we {
         let c = seg.items[i].c;
         let lc = lower(c);
@@ -93,7 +147,7 @@ fn letters(seg: &mut Seg, from: usize, w: &Word) {
                 },
             ),
             'ц' => Some(if prev.is_some_and(is_vc) { "ts" } else { "s" }),
-            'с' => Some(if next.is_some_and(|n| lower(n) == 'ҳ') {
+            'с' => Some(if !y26 && next.is_some_and(|n| lower(n) == 'ҳ') {
                 "s\u{2BC}"
             } else {
                 "s"
@@ -113,7 +167,7 @@ fn letters(seg: &mut Seg, from: usize, w: &Word) {
             } else {
                 ""
             }),
-            _ => map(lc),
+            _ => map(lc, y26),
         };
         let Some(s) = out else {
             seg.verbatim(i);

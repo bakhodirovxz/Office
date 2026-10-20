@@ -1023,8 +1023,8 @@ AMB-003	Ular 'bog' va 'tog' dedi	Улар 'бог' ва 'тог' деди	l2c	R1
 AMB-004	Ishoq	Ишоқ	l2c	R4	reviewed:agent-opus:2026-10-20	agent	medium	no separator: could be ш or сҳ (Isʼhoq); review fix: dir both -> l2c; Ишоқ is not a word, the row documents the uncorrected input error (4.4, 9.4)
 AMB-005	sentyabr	сентябрь	l2c	R11	reviewed:agent-opus:2026-10-20	kun-2017-sentabr;lex-parallel	medium	variant spelling; the reverse gives sentabr; source check: 0 Latin hits for sentyabr in the lex.uz corpus; sentabr 82
 AMB-006	oktyabr	октябрь	l2c	R11	reviewed:agent-opus:2026-10-20	agent	medium	variant spelling; the reverse gives oktabr
-AMB-007	pochtalon	почталон	c2l	tables	reviewed:agent-opus:2026-10-20	stat-366	medium	rule result; the official form is pochtalyon (D-10); review: D-10 / 13.2; pochtalon is a widespread Latin spelling, so the rule output почталон is linguistically wrong. Proposal: a `variant` dictionary row pochtalon -> почтальон; source check: the Statistics Agency writes pochtalonlar / почталонлар (Uzbek Cyrillic without ь); make it both once WP2 removes the variant row pochtalon -> почтальон (source-verification.md SV-03)
-AMB-008	QR-kod	QR-код	c2l	R11	reviewed:agent-opus:2026-10-20	lex-4674902	medium	QR vs ҚР (Qoraqalpogʻiston Respublikasi); left unprotected; review: 13.6, QR keep row is not compiled; source check: the Tax Code writes QR-кодларнинг / QR-kodlarning: QR stays Latin in Cyrillic text; make it both once WP2 compiles the QR keep row (SV-04)
+AMB-007	pochtalon	почталон	both	tables	reviewed:agent-opus:2026-10-20	stat-366	medium	rule result; the official form is pochtalyon (D-10); review: D-10 / 13.2; pochtalon is a widespread Latin spelling, so the rule output почталон is linguistically wrong. Proposal: a `variant` dictionary row pochtalon -> почтальон; source check: the Statistics Agency writes pochtalonlar / почталонлар (Uzbek Cyrillic without ь); make it both once WP2 removes the variant row pochtalon -> почтальон (source-verification.md SV-03)
+AMB-008	QR-kod	QR-код	both	R11	reviewed:agent-opus:2026-10-20	lex-4674902	medium	QR vs ҚР (Qoraqalpogʻiston Respublikasi); left unprotected; review: 13.6, QR keep row is not compiled; source check: the Tax Code writes QR-кодларнинг / QR-kodlarning: QR stays Latin in Cyrillic text; make it both once WP2 compiles the QR keep row (SV-04)
 AMB-009	AQSh	АҚШ	l2c	R10	reviewed:agent-opus:2026-10-20	lex-attested	medium	Mixed form; the reverse gives AQSH; review: the l2c result is fully specified (5.3); only the reverse is a convention question (D-14)
 AMB-010	yod	ёд	both	R6	ambiguous	lex-6600413	low	"memory"; йод "iodine" is the other reading (D-24); review: D-24, ёд vs йод cannot be decided without context; source check: still ambiguous: PF-158 pairs йод препарати / yod preparati and ёдгорлик / yodgorlik, so both readings are official
 AMB-011	yod	йод	c2l	R6	reviewed:agent-opus:2026-10-20	lex-6600413	high	"iodine"; no dictionary entry on purpose (D-24); review: йод -> yod is the correct Latin; unambiguous in this direction; source check: official pair йод препарати / yod preparati
@@ -1071,13 +1071,13 @@ SRC-003	unter-ofitser	унтер-офицер	both	R11,R7	reviewed:agent-opus:20
 SRC-004	sentabrdagi	сентябрдаги	both	R11	reviewed:agent-opus:2026-10-20	lex-5013007	high	added in source check: official pair, 50x each; D-11
 SRC-005	sexlarda	цехларда	both	R11	reviewed:agent-opus:2026-10-20	lex-6257288	high	added in source check: Labour Code: issiq sexlarda / иссиқ цехларда
 SRC-006	ssenariylarini	сценарийларини	both	R11	reviewed:agent-opus:2026-10-20	lex-2831618	high	added in source check: official pair
-SRC-007	marganets	марганец	c2l	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: word-final ц after a vowel -> ts (Tax Code)
-SRC-008	kvars	кварц	c2l	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: word-final ц after a consonant -> s (Tax Code)
-SRC-009	slanets	сланец	c2l	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code
-SRC-010	slanslar	сланцлар	c2l	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code
-SRC-011	kuryerlik	курьерлик	c2l	R9,R5	reviewed:agent-opus:2026-10-20	lex-6058066	high	added in source check: Postal law 159x; both after the WP2 stem kuryer (SV-05)
-SRC-012	karyerda	карьерда	c2l	R9,R5	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code (quarry); both after the WP2 stem karyer (SV-06)
-SRC-013	kirillitsani	кириллицани	c2l	R7	reviewed:agent-opus:2026-10-20	lex-112286	high	added in source check: alphabet law art. 2; ts + a after a vowel needs a dictionary row for l2c
-SRC-014	radiostansiya	радиостанция	c2l	R7	reviewed:agent-opus:2026-10-20	lex-1625271	high	added in source check: 1995 rules item 48; stem stansi matches only at a word start
-SRC-015	Oʻzbekkonsert	Ўзбекконцерт	c2l	R7,R1	reviewed:agent-opus:2026-10-20	lex-2831618	high	added in source check: organisation name; solid compound, no dictionary row
-SRC-016	adʼyunktura	адъюнктура	l2c	R2,R6	reviewed:agent-opus:2026-10-20	lex-5013007	medium	added in source check: Law on Education writes adʼyunktura (tutuq for Russian ъ), unlike obyekt; c2l by R8 gives adyunktura (D-09 exception, SV-20)
+SRC-007	marganets	марганец	both	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: word-final ц after a vowel -> ts (Tax Code)
+SRC-008	kvars	кварц	both	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: word-final ц after a consonant -> s (Tax Code)
+SRC-009	slanets	сланец	both	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code
+SRC-010	slanslar	сланцлар	both	R7	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code
+SRC-011	kuryerlik	курьерлик	both	R9,R5	reviewed:agent-opus:2026-10-20	lex-6058066	high	added in source check: Postal law 159x; both after the WP2 stem kuryer (SV-05)
+SRC-012	karyerda	карьерда	both	R9,R5	reviewed:agent-opus:2026-10-20	lex-4674902	high	added in source check: Tax Code (quarry); both after the WP2 stem karyer (SV-06)
+SRC-013	kirillitsani	кириллицани	both	R7	reviewed:agent-opus:2026-10-20	lex-112286	high	added in source check: alphabet law art. 2; ts + a after a vowel needs a dictionary row for l2c
+SRC-014	radiostansiya	радиостанция	both	R7	reviewed:agent-opus:2026-10-20	lex-1625271	high	added in source check: 1995 rules item 48; stem stansi matches only at a word start
+SRC-015	Oʻzbekkonsert	Ўзбекконцерт	both	R7,R1	reviewed:agent-opus:2026-10-20	lex-2831618	high	added in source check: organisation name; solid compound, no dictionary row
+SRC-016	adʼyunktura	адъюнктура	both	R2,R6	reviewed:agent-opus:2026-10-20	lex-5013007	medium	added in source check: Law on Education writes adʼyunktura (tutuq for Russian ъ), unlike obyekt; c2l by R8 gives adyunktura (D-09 exception, SV-20)

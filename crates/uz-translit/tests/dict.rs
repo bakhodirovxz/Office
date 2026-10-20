@@ -106,7 +106,7 @@ fn case_transfer() {
 #[test]
 fn wp3_review_changes() {
     assert_eq!(c("medalyon medal medallar"), "медальон медаль медаллар");
-    assert_eq!(c("pochtalon"), "почтальон");
+    assert_eq!(c("pochtalon"), "почталон"); // SV-03: the official pair (stat-366)
     assert_eq!(l("почтальон"), "pochtalyon");
     assert_eq!(c("bilyard mayonez sink"), "бильярд майонез цинк");
 }

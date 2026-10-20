@@ -47,6 +47,28 @@ pub(crate) fn mark_closers(items: &mut [Item]) {
     }
 }
 
+/// Key characters of a 2026 letter in the 1995 spelling (dictionary keys are 1995).
+fn expand(c: char) -> Option<(char, char)> {
+    Some(match lower(c) {
+        'ö' => ('o', '\u{2BB}'),
+        'ğ' => ('g', '\u{2BB}'),
+        'ş' => ('s', 'h'),
+        'ç' => ('c', 'h'),
+        _ => return None,
+    })
+}
+
+/// Push `c` for an exact-case key (keep, acro): a 2026 letter becomes its Title-case 1995 form.
+fn push_exact(buf: &mut String, c: char) {
+    match expand(c) {
+        Some((a, b)) => {
+            buf.push(if is_up(c) { upper(a) } else { a });
+            buf.push(b);
+        }
+        None => buf.push(c),
+    }
+}
+
 fn at(seg: &Seg, k: usize, we: usize) -> Option<char> {
     (k < we).then(|| lower(seg.items[k].c))
 }
@@ -84,7 +106,9 @@ fn word_with(seg: &mut Seg, wi: usize, buf: &mut String) {
     // keep and acro entries are matched with exact case; all of them contain a capital
     if !w.attach && w.class != Class::Lower {
         buf.clear();
-        buf.extend(seg.items[w.ws..w.we].iter().map(|t| t.c));
+        seg.items[w.ws..w.we]
+            .iter()
+            .for_each(|t| push_exact(buf, t.c));
         if dict::keep(buf) {
             seg.verbatim_range(w.ws, w.we);
             return;
@@ -102,26 +126,52 @@ fn word_with(seg: &mut Seg, wi: usize, buf: &mut String) {
     if !w.attach {
         buf.clear();
         let mut prev = ' ';
+        let mut wide = false; // 2026 letters: one item, two key characters
         for t in &seg.items[w.ws..w.we] {
-            buf.push(if is_apos(t.c) {
-                if is_og(prev) { '\u{2BB}' } else { '\u{2BC}' }
+            if let Some((a, b)) = expand(t.c) {
+                buf.push(a);
+                buf.push(b);
+                wide = true;
             } else {
-                lower(t.c)
-            });
+                buf.push(if is_apos(t.c) {
+                    if is_og(prev) { '\u{2BB}' } else { '\u{2BC}' }
+                } else {
+                    lower(t.c)
+                });
+            }
             prev = t.c;
         }
-        if let Some(h) = dict::find(dict::L2C, buf) {
+        if let Some(h) = dict::find(dict::L2C, buf)
+            && let Some(ni) = key_items(seg, &w, h.n, wide)
+        {
             let mut t: Vec<char> = h.target.chars().collect();
-            if w.ws + h.n < w.we && t.last() == Some(&'ь') {
+            if w.ws + ni < w.we && t.last() == Some(&'ь') {
                 t.pop(); // D-11: a final soft sign is dropped before a suffix
             }
-            seg.recase(&w, h.n, &mut t);
-            seg.emit_split(w.ws, h.n, &t, false);
-            letters(seg, w.ws + h.n, w.ws, w.we);
+            seg.recase(&w, ni, &mut t);
+            seg.emit_split(w.ws, ni, &t, false);
+            letters(seg, w.ws + ni, w.ws, w.we);
             return;
         }
     }
     letters(seg, w.ws, w.ws, w.we);
+}
+
+/// Items covered by the first `n` key characters (`None` if the key ends inside a 2026 letter).
+fn key_items(seg: &Seg, w: &Word, n: usize, wide: bool) -> Option<usize> {
+    if !wide {
+        return Some(n);
+    }
+    let (mut acc, mut k) = (0, w.ws);
+    while acc < n && k < w.we {
+        acc += if expand(seg.items[k].c).is_some() {
+            2
+        } else {
+            1
+        };
+        k += 1;
+    }
+    (acc == n).then_some(k - w.ws)
 }
 
 fn single(lc: char) -> Option<char> {
@@ -151,6 +201,10 @@ fn single(lc: char) -> Option<char> {
         'x' => 'х',
         'y' => 'й',
         'z' => 'з',
+        'ö' => 'ў',
+        'ğ' => 'ғ',
+        'ş' => 'ш',
+        'ç' => 'ч',
         _ => return None,
     })
 }
@@ -198,7 +252,8 @@ fn letters(seg: &mut Seg, from: usize, ws: usize, we: usize) {
             let e_hard = match seg.prev_letter(i, ws) {
                 None => true,
                 Some(p) => is_vl(seg.items[p].c),
-            } || (i > ws && is_apos(seg.items[i - 1].c));
+            } || (i > ws
+                && (is_apos(seg.items[i - 1].c) || lower(seg.items[i - 1].c) == 'ğ'));
             cluster(seg, i, i, if e_hard { 'э' } else { 'е' }, up);
             i += 1;
         } else if is_apos(c) && i > ws && i + 1 < we {

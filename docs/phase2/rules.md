@@ -1027,7 +1027,7 @@ Status after the source check of 2026-10-20 (§14).
    - Both decisions still rest on absence, not on a cited rule.
    - New candidate class from S9: prefix + ц-root (антициклон → antisiklon). No official text was found.
 8. **CODE-A with 1–4 letters. Open.** A short all-caps word + `-digit` (e.g. `BOB-2`) stays Latin.
-9. **New: the 2026 alphabet amendment. Open; owner decision.** Parliament has passed a law that replaces Gʻ Oʻ Sh Ch with Ğ Ö Ş Ç (28 letters + the tutuq). On 2026-10-20 it was not yet on lex.uz (S12). This spec targets the 1995 alphabet, which is in force.
+9. **New: the 2026 alphabet amendment. Open; owner decision.** Parliament has passed a law that replaces Gʻ Oʻ Sh Ch with Ğ Ö Ş Ç (28 letters + the tutuq). On 2026-10-20 it was not yet on lex.uz (S12). This spec targets the 1995 alphabet, which is in force. **Resolved 2026-10-20 (owner): support both, 1995 is the default; see §15.**
 10. **New: D-24 `yod`. Open.** Both ёд and йод are official (S8), so the bare word needs context.
 11. **New: the 1956 Cyrillic rules and the imlo lugʻati** were not found online. The Cyrillic side of every rule rests on official usage (S5–S8), not on a cited Cyrillic rule.
 
@@ -1166,3 +1166,50 @@ S6–S8 are corpus measurements over S5: S6 is ц (Q4), S7 is ь (Q1), and S8 is
 ### 14.2 Spec changes made by this check
 - Sections changed: §4.1, §4.2, §4.4, §4.5, §4.6, §4.7 (corrected source; word-final ц), §4.8, §4.9 (R9a, D-11), §6.4 J and K (QR), §12 (D-02, D-10, D-11, D-14, D-24), §13 (statuses), and §14 (new).
 - No rule's behaviour changed. The QR keep row and the dictionary list in `source-verification.md` are data changes.
+
+## 15. Reformed alphabet (2026, pending)
+
+**Status: not in force.** The law passed the Senate on 2026-09-10 and is not yet signed (§14, Q9). It is implemented behind `Options.latin_alphabet`; the default stays `Y1995`, so no existing output changes. Owner decision, 2026-10-20: support both alphabets, 1995 by default. Status of this section: `reviewed:agent-opus:2026-10-20` (not an owner review).
+
+**Sources.**
+
+| Id | Source | URL |
+|---|---|---|
+| S14 | gazeta.uz, Senate approval, 2026-09-10 | https://www.gazeta.uz/en/2026/09/10/uzb-alphabet/ |
+| S15 | uzdaily.uz, parliament approves changing four letters of the Latin alphabet | https://www.uzdaily.uz/en/uzbek-parliament-approves-changing-four-letters-of-latin-alphabet/ |
+| S12 | gov.uz and kun.uz (§14) | see §14 |
+
+S14 and S15 were given by the owner and were not fetched by this check. The details below (ng no longer a unit, one remaining apostrophe, the tutuq) follow the owner's brief and S12.
+
+### 15.1 Mapping
+
+| 1995 | 2026 | Cyrillic |
+|---|---|---|
+| Oʻ oʻ | Ö ö (U+00D6, U+00F6) | Ў ў |
+| Gʻ gʻ | Ğ ğ (U+011E, U+011F) | Ғ ғ |
+| Sh sh | Ş ş (U+015E, U+015F) | Ш ш |
+| Ch ch | Ç ç (U+00C7, U+00E7) | Ч ч |
+| ng (digraph for sorting) | n g: not a unit | нг (already two letters, D-05) |
+| ʼ tutuq | ʼ tutuq (the only apostrophe) | ъ |
+
+### 15.2 Behaviour
+
+- **→C always reads both alphabets** (the option is ignored). Mixed text, and mixed spelling inside one word, work: `Oʻzbekiştan` → Ўзбекиштан.
+  - The four letters map as in 15.1 and are single clusters, so case is trivial: ŞAHAR → ШАҲАР, Şahar → Шаҳар.
+  - **Decomposed input is normalised (R16):** `o`+U+0308, `g`+U+0306, `s`+U+0327 (or U+0326), `c`+U+0327, either case, compose before any rule runs. Combining marks on other Latin letters keep the foreign-word guard.
+  - **R14 guard:** ö ğ ş ç are not "diacritic Latin letters"; the guard does not fire on them, and `c`/`w` words are guarded as before. `Müller` is still guarded.
+  - **R5:** ö counts as a vowel, and `e` after ğ is э, exactly as after oʻ and gʻ.
+  - A tutuq between 2026 letters continues the word (maʼşuq → маъшуқ).
+  - **Dictionary (R11):** word and stem keys are written in 1995 spelling. A 2026 word is expanded to the 1995 form for lookup (ö → oʻ, ş → sh, …), so `özbekkonsert` → ўзбекконцерт and `JŞŞIR` → ЖШШИР. A stem that would end inside one 2026 letter is not a hit.
+- **→L writes the chosen alphabet.** Under `Y2026`: ш, щ → ş; ч → ç; ў → ö; ғ → ğ.
+  - **Case (R10).** Each is one letter, so a digraph never splits case: Ш → Ş, ШАҲАР → ŞAHAR, Шаҳар → Şahar, ШШ → ŞŞ. The multi-letter all-caps rule of §5.2 now applies only to ю, я, ё, ts and ye.
+  - **Dictionary and acronym targets** (which are stored in 1995 spelling) go through the same 1995 → 2026 letter substitution before case transfer: МЧЖ → MÇJ, ЖШШИР → JŞŞIR.
+  - ng and the tutuq are unchanged. The `Apostrophe` option still applies to the tutuq.
+- **s'h separation (R4).** With `Y2026`, сҳ is written `sh` (s + h) with **no separator**: Исҳоқ → Ishoq, because ş is a distinct letter, so `sh` can only mean с + ҳ. With `Y1995`, it stays `Isʼhoq`.
+  - Consequence: →C cannot tell 2026 "sh" (сҳ) from 1995 "sh" (ш), because it reads both alphabets. A Cyrillic text with сҳ therefore does not round-trip through 2026 Latin (Исҳоқ → Ishoq → Ишоқ). This is the one non-round-trip class added by §15; it is listed in §9.4 terms as a `c2l`-only case. Use the 1995 alphabet if the Latin text is to be converted back.
+
+### 15.3 Tests
+
+- `tests/alphabet2026.rs`: both directions, mixed input, decomposed forms, the guard, dictionary and acronyms, case.
+- `tests/golden.rs::golden_2026`: every approved `both` row of `golden.tsv` is checked in both directions with the Latin side mapped through the 1995 → 2026 substitution at test time (`tests/common/mod.rs`; the golden file is not duplicated). Skipped: rows that contain s'h, rows whose Cyrillic keeps Latin letters (protected spans), and R15 quote-guard rows (the substitution would misread the closing quote).
+- `tests/props.rs`: `reformed_alphabet_properties` (2026 output = substitution of the 1995 output; round trip; randomly mixed alphabets; idempotence; run splits) and the run-split test over the new letters and both alphabets.
