@@ -41,14 +41,17 @@ pub enum Apostrophe {
     Ascii,
 }
 
-/// Latin alphabet written by ->L (rules.md section 15). ->C always reads both.
+/// Latin alphabet (rules.md section 15). ->L writes it. ->C: `Y1995` reads both alphabets, `Y2026` reads
+/// 2026 only (sh, ch, o', g' are not digraphs), `Auto` picks per paragraph.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum LatinAlphabet {
-    /// The alphabet in force: oʻ gʻ sh ch, and s + tutuq + h for сҳ.
+    /// The alphabet in force (default): oʻ gʻ sh ch, and s + tutuq + h for сҳ.
     #[default]
     Y1995,
     /// The pending 2026 reform (not in force): ö ğ ş ç, and plain sh for сҳ.
     Y2026,
+    /// ->Latin writes 1995. ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
+    Auto,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

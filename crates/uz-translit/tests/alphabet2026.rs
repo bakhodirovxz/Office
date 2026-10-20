@@ -88,3 +88,44 @@ fn tutuq_next_to_new_letters() {
     assert_eq!(c("maʼşuq"), "маъшуқ");
     assert_eq!(c("Özbek taʼlim"), "Ўзбек таълим");
 }
+
+fn cy(s: &str, a: LatinAlphabet) -> String {
+    let o = Options {
+        latin_alphabet: a,
+        ..Options::default()
+    };
+    convert(s, Direction::ToCyrillic, &o)
+}
+
+#[test]
+fn explicit_2026_reads_2026_only() {
+    use LatinAlphabet::{Auto, Y1995, Y2026};
+    // sh, ch, o', g' are not digraphs; ş ç ö ğ are letters
+    assert_eq!(cy("Ishoq asha", Y2026), "Исҳоқ асҳа");
+    assert_eq!(cy("Ishoq", Y1995), "Ишоқ");
+    assert_eq!(
+        cy("Şahar Çoy Özbek Ğalaba", Y2026),
+        "Шаҳар Чой Ўзбек Ғалаба"
+    );
+    assert_eq!(cy("taʼlim to'g'ri", Y2026), "таълим тоъгъри");
+    assert_eq!(cy("Isʼhoq", Y1995), "Исҳоқ");
+    // the guard treats c as foreign when ch is not a digraph
+    assert_eq!(cy("cheque", Y2026), "cheque");
+    // Auto: per paragraph
+    assert_eq!(cy("Ishoq", Auto), "Ишоқ");
+    assert_eq!(cy("Ishoq Çoy", Auto), "Исҳоқ Чой");
+    assert_eq!(cy("Oʻzbek shahar", Auto), "Ўзбек шаҳар");
+}
+
+#[test]
+fn separated_sh_round_trips_in_2026() {
+    use LatinAlphabet::Y2026;
+    let o = Options {
+        latin_alphabet: Y2026,
+        ..Options::default()
+    };
+    for t in ["Исҳоқ", "асҳоб", "ИСҲОҚ", "шоҳ Шаҳар"] {
+        let l = convert(t, Direction::ToLatin, &o);
+        assert_eq!(convert(&l, Direction::ToCyrillic, &o), t, "{l}");
+    }
+}

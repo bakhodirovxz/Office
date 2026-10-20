@@ -278,7 +278,7 @@ fn reformed_alphabet_properties() {
         assert_eq!(
             convert(&y, Direction::ToCyrillic, &o26),
             cy,
-            "option is ignored by ->C, case {case}"
+            "Y2026 reads its own output, case {case}"
         );
         let mixed: Vec<String> = x
             .split(' ')
