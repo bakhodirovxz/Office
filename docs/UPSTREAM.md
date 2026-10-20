@@ -109,3 +109,8 @@ Our logic lives in our crates, not in the queue. A carried patch only installs i
 - Hot spots at each sync: the three `Session::new` sites, the `[dependencies]` anchor line in the three app manifests, and `column.rs` `per_row`.
   If upstream adds a fourth session site (for example MCP: `crates/mcp/src/lib.rs` builds its own headless session, which has no transliteration commands),
   add the call there. Run `cargo test -p docs-translit` in the docs domain after the sync: the column test fails when the `column.rs` ids are lost.
+- **gridcraft/0120 and deckcraft/0120** carry the whole command as a new file `crates/engine/src/cmd/translit.rs` (the command registries are closed
+  `OnceLock`s, so there is no install hook), plus `pub mod translit;`, `v.extend(translit::specs());` in `command_specs()`, and a `uz-translit` path dependency
+  in `crates/engine/Cargo.toml` (and the lock lines). Hot spots at each sync: `command_specs()` and the engine manifest `[dependencies]` tail. Run
+  `cargo test -p gridcraft-engine --test translit` / `-p deckcraft-engine --test translit` after the sync; the files are rustfmt-clean (the gridcraft
+  `0111` rustfmt patch sorts before `0120` and does not touch them; regenerate it with `--fmt` only if upstream formatting moves).
