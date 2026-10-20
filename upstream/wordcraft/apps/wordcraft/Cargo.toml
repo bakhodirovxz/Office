@@ -10,6 +10,10 @@ description = "WordCraft desktop app"
 [lints]
 workspace = true
 
+# office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
+[features]
+office-ext = []
+
 [dependencies]
 wordcraft-doc = { workspace = true }
 wordcraft-engine = { workspace = true }

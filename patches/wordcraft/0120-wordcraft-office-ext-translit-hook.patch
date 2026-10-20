@@ -1,0 +1,125 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 20 Oct 2026 12:00:00 +0500
+Subject: [PATCH] office-ext: install hook for the Docs transliteration commands, and a column-selection arm
+
+The three apps (wordcraft, wordcraft-web, wordcraft-cli) call docs_translit::install(&mut session) right after
+Session::new, behind an empty `office-ext` feature: the upstream workspace compiles the call out with clean check-cfg,
+and `cargo xt gen-domain` turns the feature on (default) and adds the optional docs-translit dependency. The commands
+live in our crate (domains/docs/crates/docs-translit); install() appends three CommandSpecs to Session.registry.
+
+column.rs: tools.translitCyrl, tools.translitLatn and tools.translitAuto join the per_row arm of the column dispatch.
+Without it a column or cell selection falls into the generic `_ if mutates` arm, which collapses the selection to a
+caret, and the commands would then read the empty selection as "convert the whole document".
+---
+ apps/wordcraft-cli/Cargo.toml   | 4 ++++
+ apps/wordcraft-cli/src/main.rs  | 2 ++
+ apps/wordcraft-web/Cargo.toml   | 4 ++++
+ apps/wordcraft-web/src/web.rs   | 2 ++
+ apps/wordcraft/Cargo.toml       | 4 ++++
+ apps/wordcraft/src/main.rs      | 2 ++
+ crates/engine/src/cmd/column.rs | 4 +++-
+ 7 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/apps/wordcraft-cli/Cargo.toml b/apps/wordcraft-cli/Cargo.toml
+index 7f9b25d..41f3def 100644
+--- a/apps/wordcraft-cli/Cargo.toml
++++ b/apps/wordcraft-cli/Cargo.toml
+@@ -13,6 +13,10 @@ path = "src/main.rs"
+ [lints]
+ workspace = true
+ 
++# office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
++[features]
++office-ext = []
++
+ [dependencies]
+ wordcraft-doc = { workspace = true }
+ wordcraft-engine = { workspace = true }
+diff --git a/apps/wordcraft-cli/src/main.rs b/apps/wordcraft-cli/src/main.rs
+index 4230645..13cee7d 100644
+--- a/apps/wordcraft-cli/src/main.rs
++++ b/apps/wordcraft-cli/src/main.rs
+@@ -101,6 +101,8 @@ fn text_args<S: AsRef<OsStr>>(raw: &[S]) -> Result<(Vec<String>, Option<PathBuf>
+ /// same paper (#1381).
+ fn session(doc: wordcraft_doc::Document) -> Session {
+     let mut s = Session::new(doc);
++    #[cfg(feature = "office-ext")]
++    docs_translit::install(&mut s);
+     s.system_region = system_region();
+     s
+ }
+diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
+index 36242e7..43175ec 100644
+--- a/apps/wordcraft-web/Cargo.toml
++++ b/apps/wordcraft-web/Cargo.toml
+@@ -13,6 +13,10 @@ workspace = true
+ name = "wordcraft-web"
+ path = "src/main.rs"
+ 
++# office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
++[features]
++office-ext = []
++
+ [dependencies]
+ wordcraft-engine = { workspace = true }
+ wordcraft-ui-egui = { workspace = true }
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 382837a..ee22981 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -77,6 +77,8 @@ pub fn start() {
+                     let sample = app_bridge.is_none() && query().contains("sample");
+                     let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+                     let mut session = Session::new(doc);
++                    #[cfg(feature = "office-ext")]
++                    docs_translit::install(&mut session);
+                     session.system_region = region;
+                     let messages = Rc::new(RefCell::new(Vec::new()));
+                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
+diff --git a/apps/wordcraft/Cargo.toml b/apps/wordcraft/Cargo.toml
+index 911da17..eefc853 100644
+--- a/apps/wordcraft/Cargo.toml
++++ b/apps/wordcraft/Cargo.toml
+@@ -10,6 +10,10 @@ description = "WordCraft desktop app"
+ [lints]
+ workspace = true
+ 
++# office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
++[features]
++office-ext = []
++
+ [dependencies]
+ wordcraft-doc = { workspace = true }
+ wordcraft-engine = { workspace = true }
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index f737a82..dd83650 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -420,6 +420,8 @@ fn main() -> eframe::Result {
+             let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
+             let (file_dialog, dialogs) = file_dialogs::hook(&cc.egui_ctx);
+             let mut session = Session::new(doc);
++            #[cfg(feature = "office-ext")]
++            docs_translit::install(&mut session);
+             session.system_region = region;
+             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+             load_prefs(&mut app);
+diff --git a/crates/engine/src/cmd/column.rs b/crates/engine/src/cmd/column.rs
+index 2fc5595..93255a4 100644
+--- a/crates/engine/src/cmd/column.rs
++++ b/crates/engine/src/cmd/column.rs
+@@ -175,7 +175,9 @@ pub(crate) fn dispatch(s: &mut Session, id: &str, mutates: bool, run: fn(&mut Se
+             delete(s, &segs)?;
+             super::sel_result(s)
+         }
+-        "format.changeCase" | "format.clear" | "format.resetChar" => per_row(s, run, v, &segs),
++        "format.changeCase" | "format.clear" | "format.resetChar" | "tools.translitCyrl" | "tools.translitLatn" | "tools.translitAuto" => {
++            per_row(s, run, v, &segs)
++        }
+         _ if id.starts_with("format.") || id.starts_with("para.") || id == "select.column" => run(s, v),
+         // Pasting formatting (the format painter) leaves the text alone.
+         _ if mutates && (id.starts_with("text.") || (id.starts_with("edit.paste") && id != "edit.pasteFormat")) => {
+-- 
+2.50.0
+

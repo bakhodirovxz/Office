@@ -12,3 +12,7 @@ bin = "docs-web"
 [cli]
 src = "wordcraft-cli"
 bin = "docs-cli"
+
+# Our crates every app links (cargo xt gen-domain: optional path dependency + default `office-ext` feature; PLAN section 3.1)
+[extensions]
+crates = ["docs-translit"]

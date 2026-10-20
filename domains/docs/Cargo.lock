@@ -985,6 +985,7 @@ dependencies = [
 name = "docs-cli"
 version = "0.1.0"
 dependencies = [
+ "docs-translit",
  "serde_json",
  "sys-locale",
  "wordcraft-doc",
@@ -1002,6 +1003,7 @@ dependencies = [
  "clipboard-win",
  "craft-print",
  "dispatch2",
+ "docs-translit",
  "eframe",
  "egui",
  "fmv-macos-events",
@@ -1027,9 +1029,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "docs-translit"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "uz-translit",
+ "wordcraft-doc",
+ "wordcraft-engine",
+ "wordcraft-layout",
+]
+
+[[package]]
 name = "docs-web"
 version = "0.1.0"
 dependencies = [
+ "docs-translit",
  "eframe",
  "egui",
  "js-sys",
@@ -4029,6 +4043,10 @@ dependencies = [
  "serde_core",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "uz-translit"
+version = "0.1.0"
 
 [[package]]
 name = "vello_common"
