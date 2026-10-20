@@ -1,0 +1,251 @@
+﻿key,context,en,ru,uz-Latn draft,uz-Cyrl draft,status,owner comment,scope,where,pass,en_hash,glossary terms
+017dd0d419ea,,Options…,Параметры…,Parametrlar…,Параметрлар…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/a11y_ui.rs:310,both,6f695d54,Options
+0485fcbfc78e,,Insert\nAbove,Вставить\nсверху,Yuqoriga\nkiritish,Юқорига\nкиритиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2997,both,25203091,Insert; Above
+05b752ff6482,,Contributors,Участники,Hissa qoʻshganlar,Ҳисса қўшганлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2072,both,a60a223c,Contributors
+06c4a60a2430,,Basic Process,Простой процесс,Oddiy jarayon,Оддий жараён,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2048,both,7539bd8f,
+06dfc1307bf6,,Pyramid,Пирамида,Piramida,Пирамида,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2051,both,38d1f195,
+0702dc51ecff,,Insert Hyperlink,Вставить гиперссылку,Giperhavola kiritish,Гиперҳавола киритиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:38,both,e784d291,Hyperlink; Insert
+07e8700d79a9,,Insert…,,Kiritish…,Киритиш…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:670,both,44b12ffa,Insert
+0939a4832ef4,,All Borders,Все границы,Barcha chegaralar,Барча чегаралар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2831,both,1cb1c03d,All
+0a86dcae7521,,Bottom:,Снизу:,Pastdan:,Пастдан:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1055,both,77d5898d,Bottom
+0bc6be45fca7,,Odd pages only,Только нечётные страницы,Faqat toq sahifalar,Фақат тоқ саҳифалар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/marks_ui.rs:64,both,a777be96,Odd pages
+10326409359c,,No Fill,Нет заливки,Toʻldirishsiz,Тўлдиришсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:478,both,1f389d97,Fill; No
+11d2bfc97b9e,,Intersection,Пересечение,Kesishma,Кесишма,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/measure_ui.rs:243,both,d0f596ba,Intersection
+12d5f9782750,,Mark selected text as:,Пометить выделенный текст как:,Tanlangan matn tili:,Танланган матн тили:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1916,both,5f7b4a6c,Mark; Text
+138ddd59dad6,,Date format,Формат даты,Sana formati,Сана формати,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/js_ui.rs:502,both,94ee8869,Format; Date
+13b3b2f2af2b,,Formula:,Формула:,Formula:,Формула:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:644,both,f7e7b6af,Formula
+1418880706bc,,Unlock,Разблокировать,Qulfdan chiqarish,Қулфдан чиқариш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1239,both,1526a17e,Unlock
+154d7c1b59fb,,Edit\nData,Изменить\nданные,Maʼlumotlarni\ntahrirlash,Маълумотларни\nтаҳрирлаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3056,both,0dd2d718,Edit
+1760b808025e,,Font…,Шрифт…,Shrift…,Шрифт…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1218,both,b126e97f,Font
+19ccc1c0ea3a,,Cycle,Цикл,Sikl,Цикл,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:634,both,f5eda1b1,
+1aa4219b9c56,,Pie,Круговая,Doiraviy,Доиравий,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2042,both,9318d4f6,
+1bead76add04,,Start at:,Начать с:,Boshlangʻich qiymat:,Бошланғич қиймат:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1315,both,8a417d04,
+1e06fb1e8801,,Emphasis,Выделение,Urgʻu,Урғу,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1912,both,0bbeff65,Emphasis
+1eb8cf264be4,,Then by,Затем по,Keyingi mezon,Кейинги мезон,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1929,both,84617cf2,
+1ec6ef8618b0,,Add to Quick Access Toolbar,Добавить на панель быстрого доступа,Tezkor kirish paneliga qoʻshish,Тезкор кириш панелига қўшиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/qat.rs:167,both,e17a9f9c,Quick Access Toolbar; Toolbar; Add
+1fa3649980c0,,Top Border,Верхняя граница,Yuqori chegara,Юқори чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2834,both,269f1d10,Border; Top
+1fb294caacd3,,Black,Чёрный,Qora,Қора,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/show.rs:1001,both,b406fb57,Black
+22fb1f58995c,,Tight,Плотный,Zich,Зич,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2804,both,eced0ced,Tight
+23256add76fa,,Warning,,Ogohlantirish,Огоҳлантириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:927,both,e9c45563,Warning
+234149e508cb,,Preferences,Настройки,Sozlamalar,Созламалар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:51,both,9dfd349e,Preferences
+2587c62a170a,,Large,,Katta,Катта,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:598,both,738fd1d2,
+25d31e86b081,,Basic Cycle,Простой цикл,Oddiy sikl,Оддий цикл,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2049,both,44f96649,
+26061d4d4eb3,,All caps,Все прописные,Katta harflar,Катта ҳарфлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2794,both,0b1c0d2d,All
+2677dd6fb6be,,Add,Добавить,Qoʻshish,Қўшиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2107,both,61cc55aa,Add
+28358053c861,,Action,,Amal,Амал,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1252,both,97c89a4d,Action
+28770fb9e7cf,,Allow,Разрешить,Ruxsat berish,Рухсат бериш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:844,both,3ad0e369,Allow
+2902090a83c4,,Compatibility,Совместимость,Moslik,Мослик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/protect.rs:139,both,5d60c7dd,Compatibility
+292645a0fca5,,AaBbCcDd,АаБбВвГг,AaBbDdEe,АаБбДдЕе,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2830,both,95f2b3ad,
+2a5ee357372a,,About,О программе,Dastur haqida,Дастур ҳақида,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2072,both,6b21fb79,About
+2aa54531e5bc,,Reopen,Открыть снова,Qayta ochish,Қайта очиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:1297,both,61e05da2,
+2ab917728bf5,,Product,Произведение,Koʻpaytma,Кўпайтма,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:518,both,dd3b86d1,Product
+2b35b99b392f,,Greek,Греческий,Yunoncha,Юнонча,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1679,both,59d5f5b1,
+2cc3d2eb7622,,No Reflection,Без отражения,Akssiz,Акссиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1019,both,50c40099,Reflection; No
+2d605c32dd42,,Capitalize names of days,Названия дней с прописной буквы,Hafta kunlari nomlarini bosh harf bilan yozish,Ҳафта кунлари номларини бош ҳарф билан ёзиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2095,both,c3ecaaae,
+2e76d7e0fb0b,,No Color,Без цвета,Rangsiz,Рангсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:562,both,6a469644,Color; No
+30783766f2ef,,Printing,Печать,Chop etish,Чоп этиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:304,both,f16eadab,Printing
+3081913e7667,,Current page,Текущая страница,Joriy sahifa,Жорий саҳифа,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ocr_ui.rs:88,both,af778b34,Current page; Page
+32b4a810be45,,Post,Опубликовать,Yuborish,Юбориш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1263,both,7858ac3f,
+33c7dd0c638e,,Soft Edges,Сглаживание,Yumshoq chetlar,Юмшоқ четлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:318,both,fdc7da76,Soft Edges
+35b7ef56cce4,,Password:,Пароль:,Parol:,Пароль:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:247,both,be81ab98,Password
+36674dcd75a5,,Paragraph…,Абзац…,Xatboshi…,Хатбоши…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1187,both,e9a9998f,Paragraph
+367242dcd1d6,,Resolution,Разрешение,Aniqlik,Аниқлик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3593,both,516aae52,Resolution
+3704d02d21c1,,Color:,Цвет:,Rang:,Ранг:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1657,both,511a0006,Color
+372a8e3466c9,,Number of columns:,Число столбцов:,Ustunlar soni:,Устунлар сони:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1031,both,8fe6874a,Number
+38162a6f9b13,,Path,Контур,Kontur,Контур,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/fillui.rs:166,both,519e3913,Path
+385d2c071451,,Glow,Свечение,Nur sochish,Нур сочиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:300,both,d5545dea,Glow
+385e347022ab,,Dotted,Точечный,Nuqtali,Нуқтали,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2780,both,14949230,Dotted
+38cab57d6254,,Description:,Описание:,Tavsif:,Тавсиф:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/actions_ui.rs:312,both,9b6f3f07,
+3a8a99850a0f,,Last Column,Последний столбец,Oxirgi ustun,Охирги устун,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2759,both,c6924962,Column
+3c4e837d8abe,,Insert Chart,Вставка диаграммы,Diagramma kiritish,Диаграмма киритиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:689,both,436ac48d,Insert; Chart
+3da37ad0ca83,,Arrows,Стрелки,Strelkalar,Стрелкалар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1680,both,0cf604cb,
+3e19e04e934e,,Double,Двойной,Qoʻsh,Қўш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2780,both,81581597,Double
+400e082039e6,,Line Spacing Options…,Параметры межстрочного интервала…,Satr oraligʻi parametrlari…,Сатр оралиғи параметрлари…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:756,both,4fcb8fc3,Line Spacing; Spacing; Options; Line
+40d0adfcce5a,,Scatter,Точечная,Nuqtali,Нуқтали,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2046,both,28d74daa,Scatter
+429eeca19eb6,,Theme Colors,Цвета темы,Mavzu ranglari,Мавзу ранглари,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/widgets.rs:276,both,974337d7,Theme Colors; Theme
+4441725403e0,,Spacing,Интервал,Oraliq,Оралиқ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2797,both,2acbb307,Spacing
+44455f585229,,Swedish,Шведский,Shved,Швед,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2440,both,04a422d3,
+4693f1d4fd52,,Indent,Отступ,Chekinish,Чекиниш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1620,both,aacf4213,Indent
+4726055d8aa3,,Points,Пункты,Nuqtalar,Нуқталар,reviewed:agent-opus:2026-10-21,,shared,crates/engine/src/cmd/points.rs:27,both,4b2a6a31,
+4b0f40f1c0f8,,All,Все,Barchasi,Барчаси,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/show.rs:1007,both,6a720856,All
+4b3b04e2c0ef,,none,нет,yoʻq,йўқ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/control.rs:294,both,71f8e797,None
+4be49a13cfe7,,Value,Значение,Qiymat,Қиймат,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2004,both,8dce170d,Value
+4d34042bfe3d,,Dismiss,Закрыть,Yopish,Ёпиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/widgets.rs:347,both,70afe9ef,
+4d9bafd9320b,,Height,Высота,Balandligi,Баландлиги,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2380,both,3f608b49,Height
+4f90e8e21e75,,Triple,Тройная,Uchlik,Учлик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:583,both,ae1a12e0,
+505331cdf00a,,Hide,,Yashirish,Яшириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/selpane.rs:222,both,34d8b60f,Hide
+51b41f5a4e1d,,Stacked,Столбиком,Yigʻma,Йиғма,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:786,both,9eafca46,Stacked
+51cc5412e9e4,,Show password,Показать пароль,Parolni koʻrsatish,Паролни кўрсатиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1422,both,044b852f,Password; Show
+51ce57d72a52,,Change Picture…,Заменить рисунок…,Rasmni almashtirish…,Расмни алмаштириш…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1247,both,58113f62,Picture; Change
+51fcc440a721,,Bottom Border,Нижняя граница,Quyi chegara,Қуйи чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2835,both,316e3302,Bottom; Border
+52d8f9a9791d,,Exactly,Точно,Aniq,Аниқ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2940,both,6b0bf891,
+5623290f0eff,,Previous sheet,Предыдущий лист,Oldingi varaq,Олдинги варақ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/tabs.rs:46,both,9d8e74ed,Previous; Sheet
+5a32f164b835,,Do not check spelling or grammar,Не проверять орфографию и грамматику,Imlo va grammatikani tekshirmaslik,Имло ва грамматикани текширмаслик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1931,both,510f6cf0,Spelling; Grammar
+5d841c528d4a,,Reflection,Отражение,Aks,Акс,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:274,both,fda05af6,Reflection
+5df98001f472,,Centered,По центру,Markazda,Марказда,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1009,both,6d00bb19,
+5e32677aa9ee,,Align Center,По центру,Markazga tekislash,Марказга текислаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1139,both,472e0dd9,Center; Align
+5ebe206342ce,,Document,Документ,Hujjat,Ҳужжат,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/docking.rs:28,both,e214b8a2,Document
+5f942ec93182,,Saved,Сохранено,Saqlandi,Сақланди,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:1299,both,c0ae8f6e,
+6016bb522870,,Sort by,Сортировать по,Saralash mezoni,Саралаш мезони,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1929,both,a2a5bdec,Sort
+62e9bf327012,,Width,Ширина,Kengligi,Кенглиги,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2373,both,a58ddf50,Width
+6471aaa892e2,,Add a comment,Добавить комментарий,Izoh qoʻshing,Изоҳ қўшинг,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/comments.rs:1374,both,3e183615,Comment; Add
+6546f6577477,,Paste (⌘V),Вставить (⌘V),Qoʻyish (⌘V),Қўйиш (⌘V),reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:337,both,dc3acd3f,Paste
+65d114bb829c,,Standard Colors,Стандартные цвета,Standart ranglar,Стандарт ранглар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/widgets.rs:338,both,901fbca6,
+6747459d40a6,,Volume,Том,Ovoz balandligi,Овоз баландлиги,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3194,both,3b18e8e3,Volume
+6a4cdb93bc7a,,Export…,Экспортировать…,Eksport…,Экспорт…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:406,both,0a116345,Export
+6d012d102afa,,Day,День,Kun,Кун,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:330,both,987b9ced,Day
+6d01909775cb,,Delete Comment,Удалить комментарий,Izohni oʻchirish,Изоҳни ўчириш,reviewed:agent-opus:2026-10-21,,shared,crates/engine/src/cmd/review.rs:15,both,545e8ae3,Comment; Delete
+6df72a93f5b4,,Set,Установить,Oʻrnatish,Ўрнатиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3154,both,448ab73b,
+6e8e207b8fff,,Inside Horizontal Border,Внутренняя горизонтальная граница,Ichki gorizontal chegara,Ички горизонтал чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2838,both,d2a47ade,Inside; Border
+730f838e4ded,,Play,Воспроизвести,Ijro etish,Ижро этиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3158,both,5d12bd53,Play
+731bc2ececa5,,On,Включено,Yoniq,Ёниқ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/motion.rs:42,both,e0049a66,
+73b921782e6f,,Select a chart first.,,Avval diagrammani tanlang.,Аввал диаграммани танланг.,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1976,both,5db822aa,Select; Chart
+742a595e9413,,No Shadow,Без тени,Soyasiz,Соясиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1006,both,275954ef,Shadow; No
+752aa21ad0ff,,Rename,Переименовать,Qayta nomlash,Қайта номлаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1528,both,d3f4cb89,Rename
+756cd8d3de89,,Month,Месяц,Oy,Ой,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:330,both,082bc378,Month
+76dea9b2c29d,,Rotate all text 90°,Повернуть весь текст на 90°,Butun matnni 90° burish,Бутун матнни 90° буриш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:784,both,89383737,Rotate; Text; All
+7c6fbca90bb8,,Clustered Column,Гистограмма с группировкой,Guruhlangan ustunli,Гуруҳланган устунли,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2033,both,f7f73207,Clustered; Column
+7c9fc0095d93,,Correct TWo INitial CApitals,Исправлять ДВе ПРописные буквы в начале слова,Soʻz boshidagi IKki BOsh harfni tuzatish,Сўз бошидаги ИКки БОш ҳарфни тузатиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2093,both,f6db966a,
+7ce53d2e6083,,Distribute,Распределить,Taqsimlash,Тақсимлаш,reviewed:agent-opus:2026-10-21,,shared,crates/engine/src/cmd/arrange.rs:49,both,18b06914,Distribute
+7cf3284dbfde,,Paper,Бумага,Qogʻoz,Қоғоз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:277,both,22d507f2,
+7d53fed520db,,Date and Time,Дата и время,Sana va vaqt,Сана ва вақт,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:59,both,e6a0d7eb,Date and time; Date
+7f98314d6228,,Zoom…,,Masshtab…,Масштаб…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:373,both,eba5cf96,Zoom
+7fd02178875e,,Left:,Слева:,Chapdan:,Чапдан:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1055,both,d6f8caeb,Left
+7ff5a39e1952,,Customize Quick Access Toolbar,Настроить панель быстрого доступа,Tezkor kirish panelini moslashtirish,Тезкор кириш панелини мослаштириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/qat.rs:134,both,7dffb77d,Quick Access Toolbar; Customize; Toolbar
+80b7e4fc31e8,,Small caps,Малые прописные,Kichik bosh harflar,Кичик бош ҳарфлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2794,both,27fa7d07,
+80f953339101,,All pages,Все страницы,Barcha sahifalar,Барча саҳифалар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/combine_ui.rs:1477,both,921a7ea3,All pages; All
+81b24612f95e,,Sentence case.,Как в предложениях.,Gapdagidek.,Гапдагидек.,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:545,both,275a22fe,Sentence case; Sentence
+82175c9eb30f,,Rotation:,Поворот:,Burilish:,Бурилиш:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1067,both,0f78023e,Rotation
+824ca9534685,,Space,Пробел,Probel,Пробел,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:1969,both,6d8c9b12,
+836620d5e661,,Even pages only,Только чётные страницы,Faqat juft sahifalar,Фақат жуфт саҳифалар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/marks_ui.rs:63,both,dc6bcb3b,Even pages
+84d865bafc80,,Today,Сегодня,Bugun,Бугун,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:589,both,24345a14,Today
+865cf3869a2c,,Inside Borders,Внутренние границы,Ichki chegaralar,Ички чегаралар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2833,both,bb5696b3,Inside
+86fea649687d,,Update,Обновить,Yangilash,Янгилаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:473,both,fb91e24f,Update
+88651cad8d08,,Remove from Quick Access Toolbar,Удалить с панели быстрого доступа,Tezkor kirish panelidan olib tashlash,Тезкор кириш панелидан олиб ташлаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/qat.rs:128,both,fa50eb37,Quick Access Toolbar; Toolbar; Remove
+892abf040ddc,,Default,По умолчанию,Standart,Стандарт,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:185,both,808d7dca,Default
+892d76f36208,,Next sheet,Следующий лист,Keyingi varaq,Кейинги варақ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/tabs.rs:49,both,924e048d,Sheet; Next
+898f929ef649,,Link…,Ссылка…,Havola…,Ҳавола…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1197,both,e6b87a0c,Link
+8cc496ae66b1,,Tabs…,Табуляция…,Tabulyatsiya…,Табуляция…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3028,both,46433913,
+8d0bc8f0dec6,,No Glow,Без свечения,Nur sochishsiz,Нур сочишсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1026,both,c26f9fa3,Glow; No
+8f64dc90eea7,,Middle,По центру,Oʻrta,Ўрта,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:378,both,ced02810,Middle
+90fe4771814b,,Angle,Угол,Burchak,Бурчак,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/fillui.rs:212,both,1fd70473,
+929effdb70b2,,Grayscale,Оттенки серого,Kulrang tuslar,Кулранг туслар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:380,both,c8b0f2ed,Grayscale
+931a3badd5cd,,Hierarchy,Иерархия,Ierarxiya,Иерархия,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2050,both,bda1b9dd,
+93723b3e38c5,,Pause,Пауза,Pauza,Пауза,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3158,both,781961bc,Pause
+93f180b8f181,,Circle,Круг,Doira,Доира,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/comment_props.rs:39,both,1cc7820a,
+95c41bc013cc,,Rows,Строки,Qatorlar,Қаторлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:325,both,52d0b352,
+965e3780355a,,Undo {action},Отменить: {action},Qaytarish: {action},Қайтариш: {action},reviewed:agent-opus:2026-10-21,,shared,,both,781a5c88,Action; Undo
+98d885117cab,,Mark as decorative,Пометить как декоративный,Bezak sifatida belgilash,Безак сифатида белгилаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1507,both,13cfe088,Mark
+9997fac1c1dc,,Weight,Толщина,Qalinlik,Қалинлик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2689,both,69c0b815,Weight
+99f1d52cfba4,,Presets,Образцы,Tayyor variantlar,Тайёр вариантлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:793,both,e709e76f,
+9c972456c699,,Name:,Имя:,Nom:,Ном:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:157,both,71dd2eff,Name
+9cd28da6fd64,,Format:,Формат:,Format:,Формат:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1364,both,d6400d55,Format
+9d4e6c613c57,,Stacked Column,Гистограмма с накоплением,Yigʻma ustunli,Йиғма устунли,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2034,both,933a9642,Stacked; Column
+9e580f636b35,,Relationship,Связь,Bogʻliqlik,Боғлиқлик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:636,both,9b4a86cb,
+9ead8a88634c,,Right Border,Правая граница,Oʻng chegara,Ўнг чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2837,both,11b14a33,Border; Right
+9fa4d327bb3b,,Search Commands,Поиск команд,Buyruqlarni qidirish,Буйруқларни қидириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:674,both,a81819c7,Search
+a094835183b3,,Insert Table,Вставить таблицу,Jadval kiritish,Жадвал киритиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:34,both,964fee05,Insert; Table
+a16c3b44c1cf,,Eraser,Ластик,Oʻchirgʻich,Ўчирғич,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1427,both,a5742851,Eraser
+a2354aa7100d,,Title:,Заголовок:,Sarlavha:,Сарлавҳа:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:224,both,7698df7c,Title
+a310ce4a612b,,Capitalize Each Word,Каждое Слово С Прописной,Har Bir Soʻz Bosh Harfdan,Ҳар Бир Сўз Бош Ҳарфдан,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:548,both,4d458189,Capitalize Each Word; Word
+a350887fe899,,No Border,Без границы,Chegarasiz,Чегарасиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2830,both,1cf27712,Border; No
+a3ca7c1a568c,,Sum,Итог,Yigʻindi,Йиғинди,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:468,both,fc9ce14b,Sum
+a4a7629c43cd,,Accessibility Checker,Проверка доступности,Maxsus imkoniyatlarni tekshirish,Махсус имкониятларни текшириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:63,both,a9c98dcb,Accessibility Checker; Accessibility
+a7258f0911b7,,tOGGLE cASE,иЗМЕНИТЬ рЕГИСТР,rEGISTRNI aLMASHTIRISH,рЕГИСТРНИ аЛМАШТИРИШ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:549,both,5106e0ae,
+a7ce2524ee2c,,Duplicate,,Nusxasini yaratish,Нусхасини яратиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/menus.rs:191,both,972d5737,Duplicate
+a91ca954e0c0,,Information,,Maʼlumot,Маълумот,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:927,both,0eb5ed50,Information
+ab0d27a41b54,,Search icons,Поиск значков,Piktogrammalarni qidirish,Пиктограммаларни қидириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1330,both,a8b63bb6,Search
+ab8ecdf6a546,,Refresh,Обновить,Yangilash,Янгилаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/pivot_pane.rs:160,both,56e3badc,Refresh
+acf44707c398,,Inside Vertical Border,Внутренняя вертикальная граница,Ichki vertikal chegara,Ички вертикал чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2839,both,7949a347,Inside; Border
+ad06ca83515f,,Star,Звезда,Yulduz,Юлдуз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1041,both,85a7de6e,
+b0279cd18b88,,List,Список,Roʻyxat,Рўйхат,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:632,both,a1fffaaa,List
+b06b3d0b370f,,Reset Crop,Сбросить обрезку,Qirqishni bekor qilish,Қирқишни бекор қилиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2725,both,ecee5349,Reset; Crop
+b12d0b9628a8,,Models,Модели,Modellar,Моделлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2072,both,f3798f81,
+b2d9533e58c9,,Clustered Bar,Линейчатая с группировкой,Guruhlangan yotiq ustunli,Гуруҳланган ётиқ устунли,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2036,both,bf5a4a24,Clustered
+b3f35b427ffd,,Total Row,Строка итогов,Jami qatori,Жами қатори,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2755,both,018487d3,Row
+b48de27ae1f0,,Remove,Удалить,Olib tashlash,Олиб ташлаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:394,both,e963907d,Remove
+b49c9dc420b9,,Preview,Предварительный просмотр,Oldindan koʻrish,Олдиндан кўриш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1633,both,f1fbb2b4,Preview
+b5693e8aefb0,,Picture,Рисунок,Rasm,Расм,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:215,both,61852524,Picture
+b58f4734f69f,,UPPERCASE,ВСЕ ПРОПИСНЫЕ,KATTA HARFLAR,КАТТА ҲАРФЛАР,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:547,both,7ad1e7b0,Uppercase
+b71e24f07c28,,New…,Создать…,Yangi…,Янги…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1980,both,bc7a359b,New
+baf77eb1eea1,,Email Address,Адрес электронной почты,Elektron pochta manzili,Электрон почта манзили,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1115,both,09ba557f,Address; Email
+bb28588becab,,Alt\nText,Замещающий\nтекст,Muqobil\nmatn,Муқобил\nматн,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2479,both,0fd9a8f0,Text
+bc9b9d5b467d,,First line,Первая строка,Birinchi satr,Биринчи сатр,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2982,both,ce405c63,Line
+bd36d16ebac1,,Example: {sample},Пример: {sample},Namuna: {sample},Намуна: {sample},reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1407,both,72105ee1,
+bd7745679b7d,,Replace text as you type,Заменять текст при вводе,Yozish jarayonida matnni almashtirish,Ёзиш жараёнида матнни алмаштириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2098,both,637b1c41,Replace; Text; Type
+be7f63c9fe7e,,Line spacing,Межстрочный интервал,Satr oraligʻi,Сатр оралиғи,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2997,both,18f550e3,Line Spacing; Spacing; Line
+be90a7753992,,No fill,Без заливки,Toʻldirishsiz,Тўлдиришсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:456,both,8c4e184c,Fill; No
+bf46539173fb,,Replace with:,Заменить на:,Nimaga almashtirish:,Нимага алмаштириш:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3187,both,e0b9893c,Replace
+c038d60b8c7f,,Auto ({percent}%),Авто ({percent}%),Avto ({percent}%),Авто ({percent}%),reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/js_ui.rs:291,both,a1b456eb,Percent; Auto
+c0ba38b659b0,,French (France),Французский (Франция),Fransuz (Fransiya),Француз (Франция),reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2438,both,950e3b84,
+c175bd8b2d7e,,Rotate all text 270°,Повернуть весь текст на 270°,Butun matnni 270° burish,Бутун матнни 270° буриш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:785,both,32644de2,Rotate; Text; All
+c1801ec2d953,,Stop,Стоп,Toʻxtatish,Тўхтатиш,reviewed:agent-opus:2026-10-21,,shared,crates/engine/src/cmd/media.rs:16,both,9e253470,Stop
+c18a369dd8f2,,Year,Год,Yil,Йил,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:330,both,879e3232,Year
+c20bf6e651da,,Deleted,Удалено,Oʻchirilgan,Ўчирилган,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/canvas.rs:1686,both,441bda6c,
+c2623cb68377,,Process,Процесс,Jarayon,Жараён,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:633,both,12f4c13a,
+c445c8ac00fb,,English (United States),Английский (США),Ingliz (AQSH),Инглиз (АҚШ),reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2436,both,52579100,
+c5334d4ae120,,Next month,Следующий месяц,Keyingi oy,Кейинги ой,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:597,both,8abf7cf1,Next month; Month; Next
+c7749f8a6714,,No Soft Edges,Без сглаживания,Yumshoq chetlarsiz,Юмшоқ четларсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1037,both,fafd5d18,Soft Edges; No
+c8646543cbdb,,Revisions,Ревизии,Tahrirlar,Таҳрирлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:33,both,2dba7961,
+c87c88f6f5b1,,Insert Table…,Вставить таблицу…,Jadval kiritish…,Жадвал киритиш…,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1208,both,d0639050,Insert; Table
+c99722a70137,,Doughnut,Кольцевая,Halqasimon,Ҳалқасимон,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2043,both,e32b9008,Doughnut
+cbf5785d6967,,Report,Отчёт,Hisobot,Ҳисобот,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/a11y_ui.rs:200,both,ee45c303,
+cc64d70e9b70,,No Transform,Без трансформации,Transformatsiyasiz,Трансформациясиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2297,both,382bfb8d,No
+cc6cb9d5201a,,Go to,Перейти,Oʻtish,Ўтиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1778,both,8a68d908,
+ccefbf2f9335,,Single,Одинарный,Yakka,Якка,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2780,both,dd118689,Single
+cf9639c75ff2,,Decimal,По разделителю,Oʻnli son,Ўнли сон,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3092,both,e4c3a2d0,Decimal
+cfe3ca1f9935,,Exported {path},Экспортировано: {path},Eksport qilindi: {path},Экспорт қилинди: {path},reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/lib.rs:760,both,b4c05638,Path
+d0cb00bf82dc,,Hidden text,Скрытый текст,Yashirin matn,Яширин матн,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/options.rs:240,both,3d2a8afa,Hidden text; Text
+d2dce405a1b3,,Header Row,Строка заголовка,Sarlavha qatori,Сарлавҳа қатори,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2745,both,a9602f66,Header; Row
+d36d03020ba9,,Direction:,Направление:,Yoʻnalish:,Йўналиш:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:622,both,d0575816,
+d3d641048bcf,,Width:,Ширина:,Kengligi:,Кенглиги:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1055,both,bff1e21a,Width
+d43dec102804,,First Column,Первый столбец,Birinchi ustun,Биринчи устун,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2749,both,0060e182,Column
+d48b222558c2,,Capitalize first letter of sentences,Делать первые буквы предложений прописными,Gaplarni bosh harf bilan boshlash,Гапларни бош ҳарф билан бошлаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2094,both,dbdf1b14,Letter
+d4b63e243a1f,,Japanese,Японский,Yapon,Япон,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2439,both,9239c22d,
+d4fbda21fc3e,,No Outline,Нет контура,Kontursiz,Контурсиз,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:525,both,61537f1b,Outline; No
+d58bd0d87947,,Rotate Right 90°,Повернуть вправо на 90°,Oʻngga 90° burish,Ўнгга 90° буриш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/menus.rs:277,both,d5176efb,Rotate; Right
+d5c0d3c52083,,Low,Низкое,Past,Паст,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3196,both,a124947c,
+d711f272b41f,,Don't Save,Не сохранять,Saqlanmasin,Сақланмасин,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1205,both,ed716b36,Don't Save; Save
+d760e1d44665,,Both,Оба,Ikkalasi,Иккаласи,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:1001,both,1f469838,
+d90c099fe629,,Multiple,Несколько,Koʻpaytiruvchi,Кўпайтирувчи,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2946,both,740922ac,
+d94be2d67f07,,Solid,Сплошная,Yaxlit,Яхлит,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2698,both,d0063586,Solid
+da5600a2064f,,Indentation,Отступы,Chekinishlar,Чекинишлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2972,both,c9ec7fcf,
+dd126ce28d5d,,Diamond,Ромб,Romb,Ромб,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:597,both,b3850e04,
+dd6cd6a8031b,,Matrix,Матрица,Matritsa,Матрица,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2052,both,58947ebc,Matrix
+ddb48a197ab0,,Find what:,Найти:,Nimani topish:,Нимани топиш:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3185,both,70669513,Find
+ddfd10c97b4a,,Ink to\nMath,Рукопись\nв формулу,Formulaga\naylantirish,Формулага\nайлантириш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1455,both,0474db9b,Ink
+df93684e2a38,,Page Breaks,Разрывы страниц,Sahifa uzilishlari,Саҳифа узилишлари,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:1679,both,384bda81,Page
+dfc3dd729f82,,Thickness,Толщина,Qalinlik,Қалинлик,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/comment_props.rs:244,both,ad48f341,
+e0235a68f6a4,,Outside Borders,Внешние границы,Tashqi chegaralar,Ташқи чегаралар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2832,both,43c28266,Outside
+e0f04f522125,,Banded Rows,Чередующиеся строки,Navbatlashuvchi qatorlar,Навбатлашувчи қаторлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2765,both,532e67e9,
+e16950afa85a,,Basic List,Простой список,Oddiy roʻyxat,Оддий рўйхат,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2047,both,77ef3f48,List
+e1bfc983d793,,Document Title,Название документа,Hujjat sarlavhasi,Ҳужжат сарлавҳаси,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:247,both,73ee9605,Document; Title
+e30e7180c1f1,,Medium,Средняя,Oʻrtacha,Ўртача,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:598,both,d404968e,Medium
+e36ad29bc6ad,,Match case,С учётом регистра,Registrni hisobga olish,Регистрни ҳисобга олиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:3189,both,d18bbf9e,
+e8051ea82a2b,,Move,,Koʻchirish,Кўчириш,reviewed:agent-opus:2026-10-21,,shared,crates/engine/src/cmd/shape.rs:42,both,76cdb950,Move
+e81790f8017e,,To:,До:,Gacha:,Гача:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2464,both,7e7fbc81,
+e9d0b904fb5c,,None,Нет,Yoʻq,Йўқ,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1342,both,6eef6648,None
+ea23664cc033,,Display,Отображение,Ekran,Экран,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2542,both,574ff9b0,Display
+ea8af64a1b78,,Words,Слова,Soʻzlar,Сўзлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/word_count_ui.rs:130,both,d26d55c7,
+ebb5246a6292,,Square,Квадрат,Kvadrat,Квадрат,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panes.rs:590,both,82810cb9,Square
+ec90d2aac452,,Done,Готово,Tayyor,Тайёр,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2178,both,e9b450d1,Done
+ed3b861da358,,Left Border,Левая граница,Chap chegara,Чап чегара,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2836,both,92aeab0b,Border; Left
+ef06c37d6810,,Combo,Комбинированный,Kombinatsiyalangan,Комбинацияланган,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2052,both,dcae5862,Combo
+ef0968d5f6bb,,This document has no bookmarks.,В этом документе нет закладки.,Bu hujjatda xatchoʻplar yoʻq.,Бу ҳужжатда хатчўплар йўқ.,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/panels.rs:642,both,841a1cdf,Bookmarks; Document; No
+ef0b372fc7e6,,Spacing (pt):,Интервал (пт):,Oraliq (pt):,Оралиқ (пт):,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2540,both,a7f22e7f,Spacing
+ef1d086ba344,,Stacked Bar,Линейчатая с накоплением,Yigʻma yotiq ustunli,Йиғма ётиқ устунли,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2037,both,b71db2a8,Stacked
+f130f7ec6fd2,,Banded Columns,Чередующиеся столбцы,Navbatlashuvchi ustunlar,Навбатлашувчи устунлар,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2769,both,c749d9dd,
+f132771b5da5,,Rotate Left 90°,Повернуть влево на 90°,Chapga 90° burish,Чапга 90° буриш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/menus.rs:276,both,d020959c,Rotate; Left
+f2ce153790b5,,Height:,Высота:,Balandligi:,Баландлиги:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/prepare.rs:1055,both,c58a28e4,Height
+f439e58d7975,,High,Высокое,Baland,Баланд,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:3196,both,b1a5954a,
+f440cdbad939,,Linear,Линейный,Chiziqli,Чизиқли,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/fillui.rs:164,both,af502f2b,Linear
+f574b6c04699,,English (United Kingdom),Английский (Великобритания),Ingliz (Buyuk Britaniya),Инглиз (Буюк Британия),reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:2437,both,bd3f8583,
+f5db1d14c0aa,,Recover,Восстановить,Qayta tiklash,Қайта тиклаш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1188,both,4addbf16,Recover
+fc147272107a,,AutoCorrect,Автозамена,Avtotuzatish,Автотузатиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:52,both,02c3be59,AutoCorrect
+fcc3796ed32a,,Category:,Категория:,Toifa:,Тоифа:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1550,both,61b9204f,Category
+fd2bc10d718c,,Compact,Компактный,Ixcham,Ихчам,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/pivot_pane.rs:167,both,1df39aa5,
+fd6534186c4d,,Number of rows:,Число строк:,Qatorlar soni:,Қаторлар сони:,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1032,both,70b0401b,Number
+fdfb85b0b709,,The passwords don't match.,Пароли не совпадают.,Parollar mos kelmadi.,Пароллар мос келмади.,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/protect.rs:34,both,f034d6d9,
+fe1f9992ba1c,,Magnification,Масштаб,Masshtab,Масштаб,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:532,both,10942255,
+fe756f707e61,,Keep Text Only,Вставить без форматирования,Faqat matnni saqlab qolish,Фақат матнни сақлаб қолиш,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/dialogs.rs:1721,both,f00794b6,Text; Keep
+ff2e175f836a,,New\nWindow,Новое\nокно,Yangi\noyna,Янги\nойна,reviewed:agent-opus:2026-10-21,,shared,crates/ui-egui/src/ribbon.rs:2259,both,da1b0e8d,Window; New

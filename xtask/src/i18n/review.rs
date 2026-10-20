@@ -354,7 +354,26 @@ pub struct ImportStats {
     pub unknown: Vec<String>,
 }
 
-pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportStats, String> {
+/// `reviewed:agent-<model>:<YYYY-MM-DD>`: an agent review status that may be imported verbatim.
+fn is_agent_status(s: &str) -> bool {
+    let mut p = s.splitn(3, ':');
+    let (Some("reviewed"), Some(m), Some(d)) = (p.next(), p.next(), p.next()) else {
+        return false;
+    };
+    let digits = |x: &str| x.bytes().all(|b| b.is_ascii_digit());
+    let ds: Vec<_> = d.split('-').collect();
+    m.strip_prefix("agent-").is_some_and(|m| !m.is_empty())
+        && matches!(ds[..], [y, mo, da] if y.len() == 4 && mo.len() == 2 && da.len() == 2 && ds.iter().all(|x| digits(x)))
+}
+
+/// `trust_agent`: honour a `reviewed:agent-<model>:<date>` status in the CSV (config `review.trust_agent_review`);
+/// otherwise such a verdict is treated as an unknown one, as before.
+pub fn review_import(
+    cat: &mut Catalog,
+    csv: &str,
+    date: &str,
+    trust_agent: bool,
+) -> Result<ImportStats, String> {
     let records = read_csv(csv);
     let header = records.first().ok_or("empty file")?;
     let col = |name: &str| {
@@ -397,7 +416,8 @@ pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportS
         }
         let pass = Pass::parse(get(c_pass).trim()).unwrap_or(Pass::Both);
         let verdict = get(c_st).trim().to_lowercase();
-        let reviewed = matches!(verdict.as_str(), "reviewed" | "ok" | "approved");
+        let agent = trust_agent && is_agent_status(get(c_st).trim());
+        let reviewed = agent || matches!(verdict.as_str(), "reviewed" | "ok" | "approved");
         let rejected = matches!(verdict.as_str(), "rejected" | "reject");
         let comment = get(c_cm).trim();
         if !comment.is_empty() && !row.note.contains(comment) {
@@ -436,7 +456,12 @@ pub fn review_import(cat: &mut Catalog, csv: &str, date: &str) -> Result<ImportS
                         st.lint_failed += 1;
                     }
                     None if reviewed => {
-                        row.set(loc, cell, format!("reviewed:owner:{date}"));
+                        let status = if agent {
+                            get(c_st).trim().to_string()
+                        } else {
+                            format!("reviewed:owner:{date}")
+                        };
+                        row.set(loc, cell, status);
                         if changed {
                             st.edited_reviewed += 1
                         } else {
@@ -636,7 +661,7 @@ mod tests {
         recs[sv][4] = "Saqla'sh".into(); // owner edit that fails the apostrophe lint
         recs[sv][6] = "reviewed".into();
         recs[sv][7] = "prefer this".into();
-        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20").unwrap();
+        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20", false).unwrap();
         assert_eq!((st.reviewed, st.lint_failed), (3, 1)); // File: latn + cyrl; the second row: cyrl reviewed, latn lint-failed
         let g = &c.scopes["glossary"];
         let file = g.iter().find(|r| r.source == "File").unwrap();
@@ -651,6 +676,28 @@ mod tests {
     }
 
     #[test]
+    fn agent_status_is_imported_verbatim_only_when_trusted() {
+        let (csv, _) = review_export(&cat(), 0, Pass::Both, 400).unwrap();
+        let mut recs = read_csv(&csv);
+        recs[1][6] = "reviewed:agent-opus:2026-10-21".into();
+        let text = write_csv(&recs);
+        let mut c = cat();
+        review_import(&mut c, &text, "2026-10-22", true).unwrap();
+        let r = c.scopes["glossary"]
+            .iter()
+            .find(|r| r.id == recs[1][0])
+            .unwrap();
+        assert_eq!(r.uz_latn_status, "reviewed:agent-opus:2026-10-21");
+        let mut c = cat();
+        review_import(&mut c, &text, "2026-10-22", false).unwrap();
+        assert!(
+            c.scopes["glossary"]
+                .iter()
+                .all(|r| r.uz_latn_status.starts_with("draft"))
+        );
+    }
+
+    #[test]
     fn import_skips_stale_rows_and_empty_verdicts() {
         let mut c = cat();
         let (csv, _) = review_export(&c, 0, Pass::Both, 400).unwrap();
@@ -659,10 +706,10 @@ mod tests {
         for r in recs.iter_mut().skip(1) {
             r[6] = "reviewed".into();
         }
-        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20").unwrap();
+        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20", false).unwrap();
         assert_eq!(st.stale.len() + st.unknown.len(), 1);
         let mut c2 = cat();
-        let st = review_import(&mut c2, &csv, "2026-10-20").unwrap();
+        let st = review_import(&mut c2, &csv, "2026-10-20", false).unwrap();
         assert_eq!((st.reviewed, st.unchanged), (0, 2));
     }
 
@@ -672,7 +719,7 @@ mod tests {
         let (csv, _) = review_export(&c, 0, Pass::Latn, 400).unwrap();
         let mut recs = read_csv(&csv);
         recs[1][6] = "rejected".into();
-        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20").unwrap();
+        let st = review_import(&mut c, &write_csv(&recs), "2026-10-20", false).unwrap();
         assert_eq!(st.rejected, 1);
     }
 

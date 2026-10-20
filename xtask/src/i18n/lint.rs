@@ -229,7 +229,8 @@ fn is_kept_token(w: &str) -> bool {
 pub fn script_purity(latn: bool, en: &str, uz: &str) -> Vec<String> {
     let mut p = Vec::new();
     if latn {
-        if let Some(c) = uz.chars().find(|c| is_cyrillic(*c)) {
+        // A language autonym kept verbatim (Русский, Українська) is legitimately Cyrillic.
+        if let Some(c) = uz.chars().find(|c| is_cyrillic(*c)).filter(|_| uz != en) {
             p.push(format!("Cyrillic letter {c:?} in the Latin text"));
         }
     } else {
@@ -685,6 +686,7 @@ mod tests {
 
     #[test]
     fn script_purity_rules() {
+        assert!(script_purity(true, "Русский", "Русский").is_empty()); // verbatim autonym
         assert!(
             script_purity(true, "Open", "Ochиsh")
                 .iter()

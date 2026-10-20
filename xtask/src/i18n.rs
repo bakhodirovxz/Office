@@ -133,7 +133,12 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             let mut cat = Catalog::load(&dir)?;
             let date = flag("--date").map(String::from).unwrap_or_else(today);
             let text = fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
-            let st = review::review_import(&mut cat, &text, &date)?;
+            let st = review::review_import(
+                &mut cat,
+                &text,
+                &date,
+                Policy::load(&dir)?.trust_agent_review,
+            )?;
             cat.save(&dir)?;
             let name = Path::new(file)
                 .file_name()

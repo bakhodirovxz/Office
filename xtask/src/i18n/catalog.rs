@@ -20,6 +20,8 @@ pub const HEADER: [&str; 14] = [
     "where",
     "note",
 ];
+/// Optional 15th column (the glossary's term citations, docs/phase3-i18n/sources.md). Written only when a row has one.
+pub const SOURCE_COLUMN: &str = "source";
 
 pub const APPS: [&str; 4] = ["wordcraft", "gridcraft", "pdfcraft", "deckcraft"];
 /// Catalog files, in load order. `glossary` and `shared` are scopes of their own.
@@ -49,6 +51,8 @@ pub struct Row {
     pub apps: String,
     pub where_: String,
     pub note: String,
+    /// Citation of the term's sources (`source` column; glossary only, empty elsewhere).
+    pub source_ref: String,
 }
 
 impl Row {
@@ -371,23 +375,29 @@ impl Catalog {
 
 pub fn parse_rows(text: &str) -> Result<Vec<Row>, String> {
     let mut rows = Vec::new();
+    let mut width = HEADER.len();
     for (n, line) in text.lines().enumerate() {
         if n == 0 {
-            if line.split('\t').collect::<Vec<_>>() != HEADER {
+            let head: Vec<&str> = line.split('\t').collect();
+            let with_source = head.len() == HEADER.len() + 1 && head[HEADER.len()] == SOURCE_COLUMN;
+            if head[..head.len().min(HEADER.len())] != HEADER
+                || (head.len() != HEADER.len() && !with_source)
+            {
                 return Err("line 1: header does not match the catalog format".into());
             }
+            width = head.len();
             continue;
         }
         if line.is_empty() {
             continue;
         }
         let cells: Vec<&str> = line.split('\t').collect();
-        if cells.len() != HEADER.len() {
+        if cells.len() != width {
             return Err(format!(
                 "line {}: {} cells, expected {}",
                 n + 1,
                 cells.len(),
-                HEADER.len()
+                width
             ));
         }
         let u = |i: usize| unescape(cells[i]).map_err(|e| format!("line {}: {e}", n + 1));
@@ -406,16 +416,26 @@ pub fn parse_rows(text: &str) -> Result<Vec<Row>, String> {
             apps: cells[11].into(),
             where_: u(12)?,
             note: u(13)?,
+            source_ref: if width > HEADER.len() {
+                u(14)?
+            } else {
+                String::new()
+            },
         });
     }
     Ok(rows)
 }
 
 pub fn write_rows(rows: &[Row]) -> String {
+    let with_source = rows.iter().any(|r| !r.source_ref.is_empty());
     let mut out = HEADER.join("\t");
+    if with_source {
+        out.push('\t');
+        out.push_str(SOURCE_COLUMN);
+    }
     out.push('\n');
     for r in rows {
-        let cells = [
+        let mut cells = vec![
             r.id.clone(),
             escape(&r.context),
             escape(&r.source),
@@ -431,6 +451,9 @@ pub fn write_rows(rows: &[Row]) -> String {
             escape(&r.where_),
             escape(&r.note),
         ];
+        if with_source {
+            cells.push(escape(&r.source_ref));
+        }
         out.push_str(&cells.join("\t"));
         out.push('\n');
     }
@@ -492,7 +515,28 @@ mod tests {
             ..Row::default()
         };
         let text = write_rows(std::slice::from_ref(&r));
+        assert!(!text.lines().next().unwrap().ends_with(SOURCE_COLUMN));
         assert_eq!(parse_rows(&text).unwrap(), vec![r]);
+    }
+
+    #[test]
+    fn optional_source_column_round_trips() {
+        let r = Row {
+            id: row_id("glossary", "", "Toolbar"),
+            source: "Toolbar".into(),
+            uz_latn: "Asboblar paneli".into(),
+            source_ref: "CR:generated_resources#8000020256436988724; MS:469081".into(),
+            ..Row::default()
+        };
+        let text = write_rows(std::slice::from_ref(&r));
+        assert!(text.lines().next().unwrap().ends_with("\tnote\tsource"));
+        assert_eq!(parse_rows(&text).unwrap(), vec![r]);
+        // a 15-cell row under a 14-column header, or an unknown 15th column, is still an error
+        let mut bad = HEADER.join("\t");
+        bad.push_str("\n");
+        bad.push_str(&["x"; 15].join("\t"));
+        assert!(parse_rows(&bad).is_err());
+        assert!(parse_rows(&format!("{}\textra\n", HEADER.join("\t"))).is_err());
     }
 
     #[test]

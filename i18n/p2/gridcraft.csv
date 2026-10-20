@@ -1,0 +1,453 @@
+﻿key,context,en,ru,uz-Latn draft,uz-Cyrl draft,status,owner comment,scope,where,pass,en_hash,glossary terms
+0027a26cbb3b,,t-Test: Two-Sample Assuming Equal Variances,,t-test: teng dispersiyali ikki tanlanma,t-тест: тенг дисперсияли икки танланма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:48,both,be28a6c3,
+00ee3bd02459,,Switch Row/Column,,Qator/ustunni almashtirish,Қатор/устунни алмаштириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2354,both,dfe1beda,Column; Row
+015ae95cd897,,Calculate Now (F9),,Hozir hisoblash (F9),Ҳозир ҳисоблаш (F9),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1875,both,214d532d,Calculate Now; Calculate
+017d8bf5a730,,Current region,,Joriy soha,Жорий соҳа,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:662,both,244ef10a,
+01b16f8407f0,,At each change in (column letter):,,Har bir oʻzgarishda (ustun harfi):,Ҳар бир ўзгаришда (устун ҳарфи):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:508,both,24afa5e0,Letter; Change; Column
+01d7e6e3abc4,,applies to,,qoʻllanish sohasi,қўлланиш соҳаси,reviewed:agent-opus:2026-10-21,,gridcraft,,both,2c1eb688,
+01faae82fa08,,Flash Fill (⌘E),,Tezkor toʻldirish (⌘E),Тезкор тўлдириш (⌘E),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1935,both,e9125e79,Flash Fill; Fill
+022a7e1dd7d8,,Weekday,,Ish kuni,Иш куни,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:330,both,beb258e9,Weekday
+03b9a3f2d8a9,,Statistic,,Statistik,Статистик,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1494,both,cd4e9feb,
+03eaaf9c89ab,,ScreenTip:,,Maslahat:,Маслаҳат:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:373,both,f81a98dc,ScreenTip
+05284eecac49,,"Link to (web address, e-mail or Sheet!A1):",,"Havola manzili (veb-manzil, elektron pochta yoki Varaq!A1):","Ҳавола манзили (веб-манзил, электрон почта ёки Варақ!A1):",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:372,both,b9490ff9,Address; Sheet; Link
+059bef0269f9,,Lookup & Reference,,Qidirish va havolalar,Қидириш ва ҳаволалар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/catalog.rs:176,both,c30e969b,Lookup & Reference
+05e38b237fd2,,Moving Average,,Sirpanuvchi oʻrtacha,Сирпанувчи ўртача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:44,both,2bab79b4,Moving Average; Average
+0664d8e231d1,,"Version, contributors and the AI models that helped",,"Versiya, hissa qoʻshganlar va yordam bergan sunʼiy intellekt modellari","Версия, ҳисса қўшганлар ва ёрдам берган сунъий интеллект моделлари",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2261,both,0ce2ef69,Contributors; Version
+069310737949,,Pie or Doughnut,,Doiraviy yoki halqasimon,Доиравий ёки ҳалқасимон,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1472,both,fbff519f,Doughnut
+06d4762dc8a6,,Range password:,,Diapazon paroli:,Диапазон пароли:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:226,both,2cd36567,Password; Range
+079ee0eb49ef,,Save a copy as .{format},,Nusxasini .{format} sifatida saqlash,Нусхасини .{format} сифатида сақлаш,reviewed:agent-opus:2026-10-21,,gridcraft,,both,3cd43671,Save a Copy; Format; Copy; Save
+088b41c91735,,Comments and notes (C),,Izohlar va qaydlar (C),Изоҳлар ва қайдлар (C),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:301,both,b6fec21c,Notes
+08e8616069c8,,thick,,qalin,қалин,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1693,both,8fb4cd18,Thick
+0a6719efb339,,Legend Entries (Series),,Shartli belgilar elementlari (qatorlar),Шартли белгилар элементлари (қаторлар),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2162,both,44f53853,Series
+0a77e89fbe5c,,What-If Analysis,,«Agar… boʻlsa» tahlili,«Агар… бўлса» таҳлили,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1961,both,b01e865e,What-If Analysis
+0b6ba3fe0780,,Group by Quarters,,Choraklar boʻyicha guruhlash,Чораклар бўйича гуруҳлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:140,both,524a7d43,Group
+0bbd3a372c20,,Move or Copy Sheet…,,Varaqni koʻchirish yoki nusxalash…,Варақни кўчириш ёки нусхалаш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:943,both,858ba530,Sheet; Copy; Move
+0bbe96f8070e,,The output range already holds data. Replace it with the report?,,Chiqish diapazonida maʼlumotlar bor. Ular hisobot bilan almashtirilsinmi?,Чиқиш диапазонида маълумотлар бор. Улар ҳисобот билан алмаштирилсинми?,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2389,both,f3c73dd3,Replace; Output; Range
+0bf48064f313,,Unprotect Sheet,,Varaq himoyasini yechish,Варақ ҳимоясини ечиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:269,both,f0cfe613,Unprotect; Sheet
+0c1531fdbb89,,Last month,,Oʻtgan oy,Ўтган ой,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:595,both,9cce45bf,Last month; Month
+0e1cf97ca9f8,,Insert Function (⇧F3),,Funksiya kiritish (⇧F3),Функция киритиш (⇧F3),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1751,both,30deb86e,Function; Insert
+0ede56660872,,Confidence level (%):,,Ishonchlilik darajasi (%):,Ишончлилик даражаси (%):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:451,both,e35a5397,Confidence level
+0f805abce434,,between,,oraligʻida,оралиғида,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:569,both,70963405,Between
+0fac1030ce0d,,Show Formulas (⌃`),,Formulalarni koʻrsatish (⌃`),Формулаларни кўрсатиш (⌃`),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1839,both,d29255a9,Show
+107b1a8364c6,,Format cells,,Kataklarni formatlash,Катакларни форматлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:185,both,1a630a74,Format
+116366ba18f5,,Analysis Tools,,Tahlil vositalari,Таҳлил воситалари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2404,both,aecf584b,Tools
+12efea8132f1,,Series,,Progressiya,Прогрессия,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:322,both,40c20d94,Series
+1369ebe66044,,New sheet (⇧F11),,Yangi varaq (⇧F11),Янги варақ (⇧F11),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/tabs.rs:215,both,2dcca0bb,Sheet; New
+13b97f21809e,,Location Range:,,Joylashuv diapazoni:,Жойлашув диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:383,both,a7f094fb,Location; Range
+13c1dbe36e27,,Engineering,,Muhandislik,Муҳандислик,reviewed:agent-opus:2026-10-21,,gridcraft,,both,4143d048,Engineering
+13d1e87c0a74,,Multiply,,Koʻpaytirish,Кўпайтириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:312,both,b20a305f,
+14daad6524d3,,Interval:,,Interval:,Интервал:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2347,both,56bb8897,
+15b9ddedd7fd,,Set cell:,,Oʻrnatiladigan katak:,Ўрнатиладиган катак:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2284,both,262b63bd,Cell
+15c2ed54ae34,,Solve,,Yechish,Ечиш,reviewed:agent-opus:2026-10-21,,gridcraft,,both,67b7724f,
+160928366dd4,,Vertical,,Vertikal boʻyicha,Вертикал бўйича,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1607,both,4b937cc8,
+167a49ae29f4,,This workbook has no scripts or macros.,,Bu ish kitobida skript yoki makros yoʻq.,Бу иш китобида скрипт ёки макрос йўқ.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1504,both,b7b08a1a,Workbook; No
+169b1749ae87,,All except borders,,Chegaralardan tashqari hammasi,Чегаралардан ташқари ҳаммаси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:303,both,db8d5e67,All
+177936805317,,Filter (⌘⇧F),,Filtr (⌘⇧F),Фильтр (⌘⇧F),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1912,both,3c6be010,Filter
+17e74039f359,,Not in Dictionary ({cell}):,,Lugʻatda yoʻq ({cell}):,Луғатда йўқ ({cell}):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2628,both,28a4149d,Dictionary; Cell
+1899bc8b2c7f,,'{file}' is protected.,,“{file}” himoyalangan.,“{file}” ҳимояланган.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:263,both,015a10ac,File
+1937269eb46d,,Special…,,Maxsus…,Махсус…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1906,both,2532fbed,
+1a4a430e03a2,,Input message:,,Kiritish xabari:,Киритиш хабари:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:923,both,19570cc0,Input message; Input
+1aaf65c3cd54,,not equal to,,teng emas,тенг эмас,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:875,both,2b3d1f23,Equal to
+1b12f4cbccc0,,Footer (in):,,Quyi kolontitul (dyuym):,Қуйи колонтитул (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:413,both,3a4f4b8a,Footer
+1b1f3ccedcb6,,Error style,,Xabar turi,Хабар тури,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:926,both,f5512954,Error; Style
+1b7bee38a7cc,,and:,,va:,ва:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:580,both,a5230bf3,
+1ba3bdef887c,,Select a Solving Method:,,Yechish usulini tanlang:,Ечиш усулини танланг:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2529,both,4dcde9f9,Select
+1c6e3ac7763c,,greater than,,katta,катта,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:876,both,2fa709f0,Greater than
+1c9063363006,,Summarize by Sum,,Jamlash: yigʻindi,Жамлаш: йиғинди,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:111,both,19f341a0,Summarize; Sum
+1cc64795c126,,Stop value:,,Oxirgi qiymat:,Охирги қиймат:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:333,both,850fcca9,Value; Stop
+1d267137a077,,Use AutoFilter,,Avtofiltrdan foydalanish,Автофильтрдан фойдаланиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:191,both,79fe9c63,AutoFilter
+1d2eac57f833,,"Type a command, e.g. freeze, chart, bold…",,"Buyruq yozing, masalan: qotirish, diagramma, qalin…","Буйруқ ёзинг, масалан: қотириш, диаграмма, қалин…",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2242,both,9ca8d767,Command; Chart; Bold; Type
+1e1d7baa459d,,Quarterly Sales Dashboard,,Choraklik savdo koʻrsatkichlari,Чораклик савдо кўрсаткичлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/sample.rs:11,both,07c4002b,
+20c06a77d25d,,"Columns (blank = all, e.g. A,C):",,"Ustunlar (boʻsh = hammasi, masalan A,C):","Устунлар (бўш = ҳаммаси, масалан A,C):",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:437,both,80c43e64,All
+213c1ee375a5,,Destination:,,Moʻljal:,Мўлжал:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:429,both,b61bb042,Destination
+21b4c5d777e4,,Create a copy,,Nusxa yaratish,Нусха яратиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:168,both,86250ffe,Copy
+21e3c98a299a,,— {steps} steps,,— {steps} qadam,— {steps} қадам,reviewed:agent-opus:2026-10-21,,gridcraft,,both,487da51e,
+21fd2600829a,,Area,,Sohali,Соҳали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2044,both,2745deba,Area
+2239efb4e93c,,Max,,Maks,Макс,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:465,both,a95e85ae,
+22485e2f48ad,,Suggestions:,,Takliflar:,Таклифлар:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2632,both,5d328375,Suggestions
+229ac5e1b035,,Scatter or Bubble,,Nuqtali yoki pufakchali,Нуқтали ёки пуфакчали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1490,both,9b0b7e2f,Scatter; Bubble
+22aa23e6be78,,Top,,Yuqori,Юқори,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1610,both,cae0435c,Top
+23539a8f631c,,Unprotect Workbook,,Ish kitobi himoyasini yechish,Иш китоби ҳимоясини ечиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:245,both,2aff51ba,Unprotect; Workbook
+236b686ef3e4,,Protect Workbook structure,,Ish kitobi tuzilmasini himoyalash,Иш китоби тузилмасини ҳимоялаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2091,both,df3ca895,Protect Workbook; Structure; Workbook; Protect
+24f6a56cb446,,Kth Largest (blank for none):,,K-chi eng katta (boʻsh = yoʻq):,K-чи энг катта (бўш = йўқ):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2324,both,86a871cd,None
+24feadfdc382,,Date unit,,Sana birligi,Сана бирлиги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:329,both,8beffdfb,Date
+252edc53fa48,,Confidence interval,,Ishonch oraligʻi,Ишонч оралиғи,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:450,both,5f40b013,Confidence interval
+254e73496131,,Place Picture over Cells,,Rasmni kataklar ustiga joylash,Расмни катаклар устига жойлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:768,both,5dd5d3c3,Picture
+2600fd2e43c6,,Protect\nSheet,,Varaqni\nhimoyalash,Варақни\nҳимоялаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2082,both,37dd9fd2,Protect; Sheet
+260651fd015a,,Format cells that are (value):,,Shu shartdagi kataklarni formatlash (qiymat):,Шу шартдаги катакларни форматлаш (қиймат):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:578,both,42ed8802,Format; Value
+26dc6d9b06c6,,Forecast Sheet,,Prognoz varaqi,Прогноз варақи,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1978,both,612b76c4,Forecast; Sheet
+2797ef0206ae,,In-cell dropdown,,Katakdagi roʻyxat,Катакдаги рўйхат,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:861,both,53ae3c4e,Cell
+2886b0537ae4,,Aggregate duplicates using,,Takrorlarni jamlash usuli,Такрорларни жамлаш усули,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:460,both,656bfcef,
+2889e7ae5295,,Remove Duplicates,,Takrorlarni oʻchirish,Такрорларни ўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:435,both,777992f6,Remove Duplicates; Remove
+28bb288ddf01,,Find & Select,,Topish va tanlash,Топиш ва танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1037,both,b9d60e47,Select; Find
+2916b73995a8,,Yellow Fill with Dark Yellow Text,,"Sariq fon, quyuq sariq matn","Сариқ фон, қуюқ сариқ матн",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:607,both,0b2c2dc9,Yellow; Text; Fill; Dark
+291effd58ad0,,Paper Size,,Qogʻoz oʻlchami,Қоғоз ўлчами,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1661,both,6040c4cd,Paper size; Size
+299de3fcbb2b,,Insert Function,,Funksiya kiritish,Функция киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/formula_bar.rs:31,both,aefa3cb5,Function; Insert
+299f7665001a,,Series…,,Progressiya…,Прогрессия…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:989,both,bec45416,Series
+2a5d4621ee3f,,Undo list,,Qaytarish roʻyxati,Қайтариш рўйхати,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:82,both,ed601784,Undo; List
+2ac4d0f65daf,,Print Titles,,Sarlavhalarni chop etish,Сарлавҳаларни чоп этиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1694,both,c8bced95,Print Titles; Print
+2b108b9a8c7e,,Formats (T),,Formatlar (T),Форматлар (T),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:300,both,91303af9,
+2b269ea231e5,,Save a Copy,,Nusxasini saqlash,Нусхасини сақлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:777,both,d16754aa,Save a Copy; Copy; Save
+2b70d0ae1d84,,Operation,,Amal,Амал,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:311,both,430d3207,
+2c3923db9e0f,,Unhide Sheet…,,Varaqni koʻrsatish…,Варақни кўрсатиш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:940,both,6495d793,Unhide; Sheet
+2e6c7aece18f,,Password (optional):,,Parol (ixtiyoriy):,Пароль (ихтиёрий):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:183,both,038d8efb,Password
+2e99ecf6400d,,Insert Link (⌘K),,Havola kiritish (⌘K),Ҳавола киритиш (⌘K),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1543,both,f99a2e76,Insert; Link
+2f884cb270b2,,Values,,Qiymatlar,Қийматлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:82,both,b1564f6b,
+2ff039a78379,,Use a field's menu to move it between areas:,,Maydonni sohalar oʻrtasida koʻchirish uchun uning menyusidan foydalaning:,Майдонни соҳалар ўртасида кўчириш учун унинг менюсидан фойдаланинг:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:57,both,ce1f5b9b,Between; Field; Menu; Move
+30640345191d,,By Changing Variable Cells:,,Oʻzgaruvchi kataklarni oʻzgartirib:,Ўзгарувчи катакларни ўзгартириб:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2472,both,39ee3853,Variable
+313d23665956,,Refers to:,,Diapazon:,Диапазон:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:560,both,64f4f4bc,
+31a7b0f99014,,In the last 7 days,,Oxirgi 7 kunda,Охирги 7 кунда,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:591,both,1d4fa942,
+32853d96cbba,,F-Test Two-Sample for Variances,,Dispersiyalar uchun ikki tanlanmali F-test,Дисперсиялар учун икки танланмали F-тест,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:42,both,04f0cbd6,
+328d3bad171f,,Line or Area,,Chiziqli yoki sohali,Чизиқли ёки соҳали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1462,both,3621b34b,Line; Area
+3335740d3ea4,,Calculation Options,,Hisoblash parametrlari,Ҳисоблаш параметрлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1859,both,995a3530,Calculation Options; Options
+3380d6cfaeb1,,Refers to cells:,,Kataklar diapazoni:,Катаклар диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:225,both,0fa8c314,
+3459c155ac22,,Formulas and number formats,,Formulalar va son formatlari,Формулалар ва сон форматлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:305,both,87a80491,Number
+34f61c5b85be,,this workbook,,bu ish kitobi,бу иш китоби,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1185,both,3928b55a,Workbook
+36aad568e9b0,,Red Border,,Qizil chegara,Қизил чегара,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:611,both,ae1d81ff,Border; Red
+37e68eb5f3fd,,This week,,Shu hafta,Шу ҳафта,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:593,both,7b72883e,This week; Week
+37e71a619568,,Summary statistics,,Yakuniy statistika,Якуний статистика,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2322,both,9c253157,Summary
+37f7e95ca334,,Move to Values,,Qiymatlarga koʻchirish,Қийматларга кўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:99,both,faa8cd9c,Move
+38708c7593a6,,Tabular,,Jadvalli,Жадвалли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:167,both,c7e7d809,
+38a227195d15,,Horizontal axis title:,,Gorizontal oʻq sarlavhasi:,Горизонтал ўқ сарлавҳаси:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:759,both,79e5d3ab,Axis Title; Title; Axis
+38aec5a5de5b,,Search commands (⌘⇧Space),,Buyruqlarni qidirish (⌘⇧Space),Буйруқларни қидириш (⌘⇧Space),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:127,both,9c028101,Search
+38bf1fac183e,,Column widths,,Ustun kengliklari,Устун кенгликлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:304,both,f77c8fb3,Column
+38c07f02063c,,Regression,,Regressiya,Регрессия,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:46,both,1eb1498d,Regression
+3a3b9a2e0578,,Edit Name,,Nomni tahrirlash,Номни таҳрирлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:554,both,7d94193c,Name; Edit
+3abd93a5e3cb,,Print Area,,Chop etish sohasi,Чоп этиш соҳаси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1670,both,8c43129c,Print Area; Print; Area
+3acd9edac592,,"Add subtotal to (columns, e.g. C,D):",,"Oraliq jamini qoʻshish (ustunlar, masalan C,D):","Оралиқ жамини қўшиш (устунлар, масалан C,D):",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:521,both,ecf47fc8,Subtotal; Add
+3b5a68bfedb3,,Ranges that stay editable when the sheet is protected:,,Varaq himoyalanganda tahrirlash mumkin boʻlgan diapazonlar:,Варақ ҳимояланганда таҳрирлаш мумкин бўлган диапазонлар:,reviewed:agent-opus:2026-10-21,,gridcraft,,both,180fdd36,Sheet
+3b5ec15ed061,,Z to A,,Z dan A gacha,З дан А гача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1948,both,13105f46,
+3be0d8024a71,,Horizontal (Category) Axis Labels:,,Gorizontal (toifa) oʻq yorliqlari:,Горизонтал (тоифа) ўқ ёрлиқлари:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2187,both,bbc65a2e,Category; Axis
+3da29927c7e9,,Save (⌘S),,Saqlash (⌘S),Сақлаш (⌘S),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:71,both,75544ce2,Save
+3dcc37f25962,,Select Data,,Maʼlumotlarni tanlash,Маълумотларни танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:712,both,6e1aeaf0,Select
+3e9598d3791f,,Go To Special,,Maxsus tanlash,Махсус танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:649,both,8847eaf5,
+3ebdc88c5708,,Insert Sheet,,Varaq kiritish,Варақ киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:872,both,05d0dcfd,Insert; Sheet
+3f34d6b40c9d,,Count,,Soni,Сони,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:463,both,66e12969,Count
+3f92764778c2,,Interpolation,,Interpolyatsiya,Интерполяция,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:456,both,6a9858c9,
+3fd2355426f7,,Allow all users of this sheet to:,,Ushbu varaqning barcha foydalanuvchilariga ruxsat berish:,Ушбу варақнинг барча фойдаланувчиларига рухсат бериш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:184,both,2d6d0d43,Allow; Sheet; All
+403190d843bb,,Unhide sheet:,,Koʻrsatiladigan varaq:,Кўрсатиладиган варақ:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:282,both,32f67685,Unhide; Sheet
+408b2f075010,,Column chart,,Ustunli diagramma,Устунли диаграмма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:472,both,094524ee,Column chart; Column; Chart
+40f682276e1f,,Chart data range:,,Diagramma maʼlumotlari diapazoni:,Диаграмма маълумотлари диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2160,both,cec0e1b3,Range; Chart
+414b90fc1d84,,Blanks,,Boʻsh kataklar,Бўш катаклар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:655,both,1e553558,Blanks
+41533c7af2d7,,Footer:,,Quyi kolontitul:,Қуйи колонтитул:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:394,both,60719d49,Footer
+41721f740fb7,,Formulas (F),,Formulalar (F),Формулалар (F),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:298,both,3895cd6b,
+41814b0703fa,,Recommended Charts,,Tavsiya etilgan diagrammalar,Тавсия этилган диаграммалар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:694,both,df2c2ccd,
+41d95234ce49,,Line chart,,Chiziqli diagramma,Чизиқли диаграмма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:472,both,5b92de66,Line chart; Chart; Line
+41f3a6eb0c0e,,Conditional Formatting Rules Manager,,Shartli formatlash qoidalarini boshqarish,Шартли форматлаш қоидаларини бошқариш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:673,both,37c99cff,Conditional Formatting
+42d1b4ef382b,,Divide,,Boʻlish,Бўлиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:312,both,104ed7c2,
+443fea239c15,,Show as Rank,,Rang sifatida koʻrsatish,Ранг сифатида кўрсатиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:125,both,06220d67,Show
+44aa38680098,,Move to Row Labels,,Qator yorliqlariga koʻchirish,Қатор ёрлиқларига кўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:96,both,8e6b3739,Move; Row
+44f2f6e060d1,,OK,,OK,OK,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1373,both,9ce3bd42,OK
+454b2e7d5af6,,Text to Columns,,Matnni ustunlarga ajratish,Матнни устунларга ажратиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1930,both,7cf7f9a3,Text to Columns; Text
+4575e2c025fb,,Markers,,Markerlar,Маркерлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:384,both,c64fa883,Markers
+46004168cc1a,,Do you want to save the changes you made to {title}?,,{title} ish kitobidagi oʻzgarishlar saqlansinmi?,{title} иш китобидаги ўзгаришлар сақлансинми?,reviewed:agent-opus:2026-10-21,,gridcraft,,both,39ac706d,Title; Save
+46be21e0c4cd,,There are no conditional formatting rules on this sheet.,,Bu varaqda shartli formatlash qoidalari yoʻq.,Бу варақда шартли форматлаш қоидалари йўқ.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2218,both,c405075d,Conditional Formatting; Sheet; No
+47357253e550,,Forecast end (date or number; blank: a third of the history):,,Prognoz oxiri (sana yoki son; boʻsh: tarixning uchdan bir qismi):,Прогноз охири (сана ёки сон; бўш: тарихнинг учдан бир қисми):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:448,both,54839515,Forecast; History; Number; Date
+48a3d09f2e45,,medium,,oʻrtacha,ўртача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1692,both,20af4186,Medium
+493ae6abfc22,,Match entire cell contents,,Katakning butun tarkibi mos kelsin,Катакнинг бутун таркиби мос келсин,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1828,both,60bdde08,Cell
+4a2bbb6febd7,,Column width (characters):,,Ustun kengligi (belgilarda):,Устун кенглиги (белгиларда):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:143,both,75773879,Column; Width
+4a4290567bc7,,Move to Report Filter,,Hisobot filtriga koʻchirish,Ҳисобот фильтрига кўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:98,both,74c216e4,Filter; Move
+4a442157a5ee,,Formula Builder,,Formula konstruktori,Формула конструктори,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:633,both,4c3845aa,Formula
+4bf9e8ff9de7,,Anova: Single Factor,,Bir omilli dispersion tahlil,Бир омилли дисперсион таҳлил,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:37,both,6344b806,Single
+4c96c420d9e9,,Radar,,Radar,Радар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2048,both,aad82db2,Radar
+4d1c7fe117ac,,My data has headers,,Maʼlumotlarimda sarlavhalar bor,Маълумотларимда сарлавҳалар бор,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:437,both,043fef0a,
+4d6001c2d85b,,Create Sparklines,,Mini-diagrammalar yaratish,Мини-диаграммалар яратиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:379,both,234cbb0b,Sparklines
+4dbde37a8384,,Create Forecast Worksheet,,Prognoz varaqini yaratish,Прогноз варақини яратиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:443,both,2c707d26,Worksheet; Forecast
+4dec544ef821,,Move or Copy,,Koʻchirish yoki nusxalash,Кўчириш ёки нусхалаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:164,both,c24de4c4,Copy; Move
+4e31b10c4272,,Group by Years,,Yillar boʻyicha guruhlash,Йиллар бўйича гуруҳлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:139,both,739ada9d,Group
+4f0a05f74965,,The spelling check is complete for the entire sheet.,,Butun varaq boʻyicha imlo tekshiruvi yakunlandi.,Бутун варақ бўйича имло текшируви якунланди.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2620,both,3f23be3c,Spelling; Sheet
+4f2e5ee35909,,$ English (United States),,$ Ingliz (AQSH),$ Инглиз (АҚШ),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:801,both,42524ab5,
+4f6ccfd99e4c,,To value:,,Maqsadli qiymat:,Мақсадли қиймат:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2287,both,b3f94d32,Value
+4f7ab468e79d,,Show as % of Grand Total,,Umumiy jamidan % sifatida koʻrsatish,Умумий жамидан % сифатида кўрсатиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:123,both,db780e30,Grand Total; Show
+4fb2e8aa5ad9,,Bottom Align,,Pastga tekislash,Пастга текислаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:707,both,83d923de,Bottom; Align
+4ff18fd20844,,Set Objective:,,Maqsad katagi:,Мақсад катаги:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2459,both,bace0c8b,Objective
+5004637f1fc1,,Format Chart pane,,Diagramma formati paneli,Диаграмма формати панели,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2389,both,e3b55038,Format; Chart; Pane
+529ebc5e39ed,,Stacked Line,,Yigʻma chiziqli,Йиғма чизиқли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2041,both,6119b906,Stacked; Line
+52e47597b42f,,with,,bilan,билан,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:604,both,8fcd25a3,
+53598bef9c2f,,Zoom to 100%,,100% masshtab,100% масштаб,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2157,both,ef2e3daa,Zoom
+53993ae7c390,,Column or Bar,,Ustunli yoki yotiq ustunli,Устунли ёки ётиқ устунли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1450,both,7d87bf0a,Column
+5399758add43,,Search and run any command,,Istalgan buyruqni qidirish va bajarish,Исталган буйруқни қидириш ва бажариш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2246,both,3ea7c1b4,Command; Search
+543dacd73d7b,,Macros and scripts in this workbook (Alt+F8),,Bu ish kitobidagi makroslar va skriptlar (Alt+F8),Бу иш китобидаги макрослар ва скриптлар (Alt+F8),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2243,both,eb055b22,Workbook
+544512e60696,,Treat consecutive delimiters as one,,Ketma-ket ajratgichlarni bitta deb hisoblash,Кетма-кет ажратгичларни битта деб ҳисоблаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:428,both,4e070a63,
+545053146e82,,Double Accounting,,Qoʻsh (buxgalteriya),Қўш (бухгалтерия),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1647,both,8f21b53e,Accounting; Double
+5524b084e6ae,,Format cells that contain a date occurring:,,Sanasi quyidagicha boʻlgan kataklarni formatlash:,Санаси қуйидагича бўлган катакларни форматлаш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:586,both,f3c5ef37,Format; Date
+57452bc7ceb1,,not between,,oraligʻida emas,оралиғида эмас,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:873,both,2d9cf48f,Not between; Between
+57ab4c4fe73f,,Top Align,,Yuqoriga tekislash,Юқорига текислаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:705,both,0ae76027,Align; Top
+57b9e2ab3911,,Workbook,,Ish kitobi,Иш китоби,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:546,both,b4418e62,Workbook
+585f499462b0,,Standardized Residuals,,Standartlashtirilgan qoldiqlar,Стандартлаштирилган қолдиқлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2343,both,dee38ddf,Residuals
+5b074d2c7d20,,How agents drive GridCraft (MCP / control channel),,Agentlar GridCraftni qanday boshqaradi (MCP / boshqaruv kanali),Агентлар GridCraftни қандай бошқаради (MCP / бошқарув канали),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2251,both,7ad59e6b,
+5bd421b219ba,,New title (Modify):,,Yangi nom (oʻzgartirish uchun):,Янги ном (ўзгартириш учун):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:227,both,4a3fb684,Title; New
+5bd7f3483b86,,Middle Align,,Oʻrtaga tekislash,Ўртага текислаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:706,both,34e49394,Middle; Align
+5db59d93fb89,,Scope,,Amal doirasi,Амал доираси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2006,both,4651a34e,
+5e2c768c6450,,Import a text or CSV file,,Matn yoki CSV faylni import qilish,Матн ёки CSV файлни импорт қилиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1889,both,ebb60260,Import; File; Text
+5ebcac03f1db,,Start a conversation:,,Muhokamani boshlang:,Муҳокамани бошланг:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:348,both,0094a5f9,
+5efdc66c8719,,Comments pane,,Izohlar paneli,Изоҳлар панели,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2055,both,1c20c9a9,Pane
+5f6470d8ebb4,,less than,,kichik,кичик,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:877,both,6bb2aa98,Less than
+5fab5b433260,,Vertical axis title:,,Vertikal oʻq sarlavhasi:,Вертикал ўқ сарлавҳаси:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:760,both,9185a65c,Axis Title; Title; Axis
+5fcdd68baa86,," (password, unlocked)",," (parol, qulfdan chiqarilgan)"," (пароль, қулфдан чиқарилган)",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:203,both,557f4f81,Password
+5fd133ea395d,,Outline,,Kontur,Контур,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1671,both,cdd6290b,Outline
+60b73435a481,,Workbook\nStatistics,,Ish kitobi\nstatistikasi,Иш китоби\nстатистикаси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2023,both,ed4da3d7,Workbook
+6182609f68d7,,More commands,,Boshqa buyruqlar,Бошқа буйруқлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:98,both,be1d25d7,More
+61b614dc218d,,"e.g. lookup, average, date",,"masalan: qidiruv, oʻrtacha, sana","масалан: қидирув, ўртача, сана",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1751,both,db0ab900,Average; Date
+644def2c898f,,Delete Sheet,,Varaqni oʻchirish,Варақни ўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:891,both,c610d7fb,Delete; Sheet
+649a9aef5fc5,,Select and move ink and shapes,,Qoʻlyozma va shakllarni tanlash va koʻchirish,Қўлёзма ва шаклларни танлаш ва кўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1584,both,4416987d,Select; Move; Ink
+650bb4be3653,,Orientation (degrees),,Yoʻnalish (gradus),Йўналиш (градус),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1623,both,34cec421,Orientation; Degrees
+66efd489f087,, (password),, (parol), (пароль),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:204,both,b34eb5af,Password
+674b108c4867,,Normal Probability,,Normal ehtimollik grafigi,Нормал эҳтимоллик графиги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2344,both,9306c663,Normal
+67a23d1653e0,,Shift cells right,,Kataklarni oʻngga surish,Катакларни ўнгга суриш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:110,both,6390052c,Right
+67f2cf535dba,,Standard column width (pixels):,,Standart ustun kengligi (pikselda):,Стандарт устун кенглиги (пикселда):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:150,both,aa6f1f9b,Column; Width
+684e45a6d1c0,,Background Color:,,Fon rangi:,Фон ранги:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1713,both,fb80f293,Background; Color
+687115d15f81,,GRG Nonlinear,,GRG nochiziqli,GRG ночизиқли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2533,both,bb60eb1b,
+6929cc2728b0,,Timeline range (blank: first column of the selection):,,Vaqt shkalasi diapazoni (boʻsh: tanlovning birinchi ustuni):,Вақт шкаласи диапазони (бўш: танловнинг биринчи устуни):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:446,both,d952c433,Selection; Timeline; Column; Range
+6982b548dbac,,Shift cells up,,Kataklarni yuqoriga surish,Катакларни юқорига суриш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:128,both,2ef5ddb9,
+6b4f7e3601d1,,Grouped By:,,Guruhlash:,Гуруҳлаш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2313,both,cb936b4b,
+6b71f9f34e27,,CountA,,Boʻsh emaslar soni,Бўш эмаслар сони,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:464,both,c2fa7582,
+6bb47c2311e2,,Group by Months,,Oylar boʻyicha guruhlash,Ойлар бўйича гуруҳлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:141,both,a443a7d7,Group
+6c8ba76e7327,,Spelling (F7),,Imlo (F7),Имло (F7),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2018,both,7b07d34d,Spelling
+6cff8de755e5,,Text length,,Matn uzunligi,Матн узунлиги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:852,both,0fd2ddf2,Text length; Text
+6e3ef65bcd0c,,Top margin (in):,,Yuqori hoshiya (dyuym):,Юқори ҳошия (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:410,both,4eba139f,Top
+6e54f30f357d,,Exponential Smoothing,,Eksponensial tekislash,Экспоненциал текислаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:41,both,389cf313,Exponential Smoothing; Exponential
+6e9df4c140a7,,Semicolon,,Nuqtali vergul,Нуқтали вергул,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:424,both,727ceca9,Semicolon
+6eea2ad9f5f4,,Variable 2 Range:,,2-oʻzgaruvchi diapazoni:,2-ўзгарувчи диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2316,both,16a94e1c,Variable; Range
+6ef640b3eae7,,Wrap text,,Matnni oʻrash,Матнни ўраш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1625,both,470b567e,Wrap Text; Text
+6efe0a0a285d,,Database,,Maʼlumotlar bazasi,Маълумотлар базаси,reviewed:agent-opus:2026-10-21,,gridcraft,,both,61074f1c,Database
+6f2592685ec4,,Protect Sheet,,Varaqni himoyalash,Варақни ҳимоялаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:180,both,a8def7ca,Protect Sheet; Protect; Sheet
+6fa74027cfb7,,Format as Table,,Jadval sifatida formatlash,Жадвал сифатида форматлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:848,both,428198e9,Format as Table; Format; Table
+7124ebc541b6,,Alpha:,,Alfa:,Альфа:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2335,both,802f5fd8,
+7165234964dc,,Remove the password (Modify),,Parolni olib tashlash (oʻzgartirish uchun),Паролни олиб ташлаш (ўзгартириш учун),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:228,both,553fd0bc,Password; Remove
+71ee56e434dd,,Choose fields to add to report:,,Hisobotga qoʻshiladigan maydonlarni tanlang:,Ҳисоботга қўшиладиган майдонларни танланг:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:30,both,b07dcbca,Add
+771ace62ab41,,Standard Errors,,Standart xatolar,Стандарт хатолар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2347,both,d783ea66,
+776825b6a90d,,Min,,Min,Мин,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:467,both,7eb0cee8,
+77dff0ea564d,,£ English (United Kingdom),,£ Ingliz (Buyuk Britaniya),£ Инглиз (Буюк Британия),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:806,both,089b5737,
+783ba8059692,,Make Unconstrained Variables Non-Negative,,Cheklanmagan oʻzgaruvchilarni manfiy boʻlmagan qilish,Чекланмаган ўзгарувчиларни манфий бўлмаган қилиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2524,both,92901f3c,
+78f75d42fe9b,,Error message:,,Xato xabari:,Хато хабари:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:929,both,e4fac95b,Error message; Error
+794fd0602374,,Insert Calculated Field,,Hisoblanadigan maydon kiritish,Ҳисобланадиган майдон киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:642,both,5b694c94,Calculated Field; Insert; Field
+798b48d19c45,,Value Of:,,Qiymat:,Қиймат:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2465,both,5f3a839f,Value
+7a92a8acc163,,Scope (Workbook or sheet name):,,Amal doirasi (ish kitobi yoki varaq nomi):,Амал доираси (иш китоби ёки варақ номи):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:558,both,51d36558,Workbook; Sheet; Name
+7b1e971585af,,Center Across Selection,,Tanlov boʻylab markazlash,Танлов бўйлаб марказлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1601,both,8cb1ca8f,Selection; Center
+7b9288bfc48f,,Subject to the Constraints:,,Cheklovlar:,Чекловлар:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2474,both,02335c69,Subject
+7bc2c3eca5fd,,Hide Sheet,,Varaqni yashirish,Варақни яшириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:939,both,5744f973,Sheet; Hide
+7bf845c9f755,,Delete…,,Oʻchirish…,Ўчириш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/grid.rs:2858,both,26957394,Delete
+7e810203b6e6,,Summarize by Average,,Jamlash: oʻrtacha,Жамлаш: ўртача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:113,both,1a6c8426,Summarize; Average
+7ec16db5d4a2,,Tomorrow,,Ertaga,Эртага,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:590,both,1948bf2d,Tomorrow
+7ec9e857e531,,Whole number,,Butun son,Бутун сон,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:847,both,2d2c5408,Whole number; Number
+7f026bc7531e,,Hidden: {sheets},,Yashirin: {sheets},Яширин: {sheets},reviewed:agent-opus:2026-10-21,,gridcraft,,both,292e00af,
+802b3c39e8ac,,About GridCraft,,GridCraft haqida,GridCraft ҳақида,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:677,both,70dc2938,About
+808bf1c1af11,,Every command run in this session (replayable),,Ushbu seansda bajarilgan barcha buyruqlar (qayta ijro etish mumkin),Ушбу сеансда бажарилган барча буйруқлар (қайта ижро этиш мумкин),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2256,both,d9f32d9b,Command
+81076f165b9c,,Fits inside the selected cell and moves with its content.,,Tanlangan katak ichiga sigʻadi va uning tarkibi bilan birga koʻchadi.,Танланган катак ичига сиғади ва унинг таркиби билан бирга кўчади.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1138,both,6c68b33d,Inside; Cell
+8245e5e66e3a,,Pen\nBlack,,Qora\nruchka,Қора\nручка,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1590,both,0947951b,Black; Pen
+83b55691d291,,Next week,,Keyingi hafta,Кейинги ҳафта,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:594,both,5a20763a,Next week; Next; Week
+8438358caa6f,,100% Stacked Bar,,100% yigʻma yotiq ustunli,100% йиғма ётиқ устунли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2038,both,ab3aa1a2,100% Stacked; Stacked
+863ff734e06e,,Insert rows,,Qatorlar kiritish,Қаторлар киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:188,both,d5993d12,Insert
+86bc392d60a4,,Format Cells,,Kataklar formati,Катаклар формати,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:626,both,d430f9f8,Format
+883d65654afe,,Unhide,,Koʻrsatish,Кўрсатиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:280,both,37f0297a,Unhide
+88ba018f96eb,,Kth Smallest (blank for none):,,K-chi eng kichik (boʻsh = yoʻq):,K-чи энг кичик (бўш = йўқ):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2325,both,48361979,None
+8b6929b8da1f,,Expand formula bar,,Formulalar satrini yoyish,Формулалар сатрини ёйиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/formula_bar.rs:58,both,32cf9f26,Formula Bar; Formula; Expand
+8c0a605c8e79,,Minimum / Source / Formula:,,Minimum / Manba / Formula:,Минимум / Манба / Формула:,reviewed:agent-opus:2026-10-21,,gridcraft,,both,9fc864e4,Formula; Minimum; Source
+8d60e5afa74f,,Summarize by Max,,Jamlash: maksimum,Жамлаш: максимум,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:114,both,97ff3502,Summarize
+8d8f0bbdc621,,Entire row,,Butun qator,Бутун қатор,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:110,both,c25ebf96,Entire row; Row
+8dcfaef15fdd,,Hierarchy & more,,Ierarxik va boshqalar,Иерархик ва бошқалар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1497,both,e83ec7d2,More
+8de86dd5a0e9,,Output Range:,,Chiqish diapazoni:,Чиқиш диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2433,both,51152e44,Output; Range
+8e579b9a2900,,Format cells that contain the text:,,Quyidagi matnni oʻz ichiga olgan kataklarni formatlash:,Қуйидаги матнни ўз ичига олган катакларни форматлаш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:583,both,e4bf5ffb,Format; Text
+90a9b0aa5f66,,Shift cells down,,Kataklarni pastga surish,Катакларни пастга суриш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:110,both,ac77d7a1,
+90f349dab1b7,,Pick From Drop-down List…,,Ochiladigan roʻyxatdan tanlash…,Очиладиган рўйхатдан танлаш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/grid.rs:2869,both,c5d242b8,Drop-down list; List
+91046028884a,,Include forecast statistics,,Prognoz statistikasini qoʻshish,Прогноз статистикасини қўшиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:471,both,049e164f,Forecast
+917980ff743d,,Median,,Mediana,Медиана,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:466,both,b887ba2a,Median
+917fd223e614,,Sheets: {sheets},,Varaqlar: {sheets},Варақлар: {sheets},reviewed:agent-opus:2026-10-21,,gridcraft,,both,48725ff7,
+92606f28ef89,,Start a new workbook,,Yangi ish kitobini boshlash,Янги иш китобини бошлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1205,both,1f6a2893,Workbook; New
+93218b13b663,Format Cells,Fill,,Toʻldirish,Тўлдириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1535,both,7adb6736,Fill
+93b0b43b57dc,,Correlation,,Korrelyatsiya,Корреляция,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:38,both,2b6a8b85,Correlation
+93d4792d6fb1,,Bottom margin (in):,,Quyi hoshiya (dyuym):,Қуйи ҳошия (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:411,both,69eba71c,Bottom
+941f00fc4279,,Clear Filter,,Filtrni tozalash,Фильтрни тозалаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/grid.rs:2817,both,f641dcde,Clear Filter; Filter; Clear
+943cd395e2ce,,Format columns,,Ustunlarni formatlash,Устунларни форматлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:186,both,25bfed9b,Format
+951f50c4d234,,Add-in and Automation,,Qoʻshimcha modullar va avtomatlashtirish,Қўшимча модуллар ва автоматлаштириш,reviewed:agent-opus:2026-10-21,,gridcraft,,both,29989ef1,Add-in; Add
+9591a908d8b0,,Table (⌘T),,Jadval (⌘T),Жадвал (⌘T),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1378,both,241f9486,Table
+962d7c0efab5,,This workbook,,Bu ish kitobi,Бу иш китоби,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:254,both,0ac9815c,Workbook
+964fa0ccabca,,Series{n},,Qator{n},Қатор{n},reviewed:agent-opus:2026-10-21,,gridcraft,,both,984150fb,Series
+96c1bc162bc6,,Insert Slicer,,Kesim kiritish,Кесим киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2297,both,2062996d,Insert; Slicer
+96e7da179eb8,,Report Layout,,Hisobot maketi,Ҳисобот макети,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:166,both,953c5ac7,Report Layout; Layout
+970936d3179e,,Rename Sheet,,Varaqni qayta nomlash,Варақни қайта номлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:155,both,b981c5c0,Rename; Sheet
+97d0fff90136,,Slicer,,Kesim,Кесим,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1524,both,633bf931,Slicer
+98d67b06e5c1,,Share: export or save a copy,,Ulashish: eksport qilish yoki nusxasini saqlash,Улашиш: экспорт қилиш ёки нусхасини сақлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:132,both,1702aca8,Save a Copy; Export; Share; Copy; Save
+99d72f2aa844,,Variable 1 Range:,,1-oʻzgaruvchi diapazoni:,1-ўзгарувчи диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2316,both,ecdee5ce,Variable; Range
+99d9533d262c,,Shrink to fit,,Kichraytirib sigʻdirish,Кичрайтириб сиғдириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1626,both,1ff92a0c,
+9a5fd58c0e3f,,Cell Color,,Katak rangi,Катак ранги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1936,both,1dd6f957,Color; Cell
+9bfad734ca9c,,Search:,,Qidirish:,Қидириш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1750,both,6b7e645e,Search
+9c786778afba,,"— VBA project (preserved, not run)",,"— VBA loyihasi (saqlangan, ishga tushirilmaydi)","— VBA лойиҳаси (сақланган, ишга туширилмайди)",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1514,both,4c63d20c,
+9c8685a669e1,,"Seasonality (auto, 0 for none, or a season length):",,"Mavsumiylik (avto, yoʻq boʻlsa 0 yoki mavsum uzunligi):","Мавсумийлик (авто, йўқ бўлса 0 ёки мавсум узунлиги):",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:452,both,dac3e52f,None; Auto
+9c8bfc173325,,Show as No Calculation,,Hisoblashsiz koʻrsatish,Ҳисоблашсиз кўрсатиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:122,both,e643f69e,Show; No
+9d0759a7ab2c,,Move to Column Labels,,Ustun yorliqlariga koʻchirish,Устун ёрлиқларига кўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:97,both,b344cc3e,Column; Move
+9d09d6359d83,,Unlock with password,,Parol bilan qulfdan chiqarish,Пароль билан қулфдан чиқариш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:222,both,5aa9924a,Password; Unlock
+9d66bb10553f,,Labels in first row,,Birinchi qatorda yorliqlar,Биринчи қаторда ёрлиқлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2314,both,18b804f0,Row
+9d85792037ba,,Scatter with Lines,,Chiziqli nuqtali,Чизиқли нуқтали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2047,both,1db0e0b9,Scatter
+9e56c206003b,,Agent Control,,Agentni boshqarish,Агентни бошқариш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:675,both,bb54ab20,Agent
+9e910c2a7e8e,,Right margin (in):,,Oʻng hoshiya (dyuym):,Ўнг ҳошия (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:409,both,a58699f1,Right
+9ebb77de6aad,,Single Accounting,,Yakka (buxgalteriya),Якка (бухгалтерия),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1646,both,09045daa,Accounting; Single
+9f650fc3df50,,Shift cells left,,Kataklarni chapga surish,Катакларни чапга суриш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:128,both,75eed51b,Left
+9f78ac427f98,,Conditional formats,,Shartli formatlar,Шартли форматлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:665,both,67a1045c,
+a12fbb788dbc,,Series in,,Joylashuv,Жойлашув,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:325,both,92187972,Series
+a16d4ad5a156,,Protection,,Himoya,Ҳимоя,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1536,both,0f8cc4f3,
+a244c745720e,,Filter by Selected Cell's Value,,Tanlangan katak qiymati boʻyicha filtrlash,Танланган катак қиймати бўйича фильтрлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/grid.rs:2861,both,57859473,Filter; Value; Cell
+a2d2a719980c,,Average,,Oʻrtacha,Ўртача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:462,both,15f86c05,Average
+a329ef9bb2f5,,Web,,Veb,Веб,reviewed:agent-opus:2026-10-21,,gridcraft,,both,a8323a2a,
+a348cf8bb0ce,,Action Journal,,Amallar jurnali,Амаллар журнали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:722,both,a724599b,Action
+a3a480179149,,¥ Japanese,,¥ Yapon,¥ Япон,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:815,both,2578e589,
+a3eab24c6ddc,,Keep Solver Solution,,Topilgan yechimni saqlab qolish,Топилган ечимни сақлаб қолиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2572,both,374924e9,Solver; Keep
+a3f7c2296030,,Choose a PNG or JPEG no larger than 16 MB.,,16 MB dan katta boʻlmagan PNG yoki JPEG faylni tanlang.,16 MB дан катта бўлмаган PNG ёки JPEG файлни танланг.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1100,both,87b21d6d,No
+a418a84a03b0,,Insert\nSlicer,,Kesim\nkiritish,Кесим\nкиритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2297,both,9ac2e5b4,Insert; Slicer
+a5eef34671e6,,Standard Width,,Standart kenglik,Стандарт кенглик,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:148,both,4119d384,Width
+a7bfdcd4a595,,Cell Values,,Katak qiymatlari,Катак қийматлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1938,both,d1040135,Cell
+a7f03fc4a593,,Skip blanks,,Boʻsh kataklarni oʻtkazib yuborish,Бўш катакларни ўтказиб юбориш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:314,both,22703b69,Skip blanks; Blanks; Skip
+a80b22c25686,,Last cell,,Oxirgi katak,Охирги катак,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:663,both,4d77d91c,Cell
+a8b2daf57075,,Ignore Once,,Bir marta eʼtiborsiz qoldirish,Бир марта эътиборсиз қолдириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2645,both,0f7c8f9e,Ignore Once; Ignore
+aaf769e319ca,,Input Range:,,Kirish diapazoni:,Кириш диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2315,both,236952d2,Range; Input
+ab1aa6fa3a84,,Comma,,Vergul,Вергул,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:425,both,b9ee3dea,Comma
+ab4174ba9626,,dashed,,shtrixli,штрихли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1694,both,147e9311,Dashed
+abce8748a1da,,No ranges yet.,,Hozircha diapazonlar yoʻq.,Ҳозирча диапазонлар йўқ.,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:212,both,9f6f664a,No
+abea4d409550,,Step value:,,Qadam:,Қадам:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:332,both,3814a78e,Value
+ac17215e5ce3,,Edit chart title,,Diagramma sarlavhasini tahrirlash,Диаграмма сарлавҳасини таҳрирлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2392,both,654433ea,Chart Title; Chart; Title; Edit
+acb6377a8753,,Zeros,,Nollar,Ноллар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:456,both,bf35d2c6,
+ad7b08e2b35b,,Diagonal ↗,,Diagonal ↗,Диагонал ↗,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1684,both,7c3b1cde,Diagonal
+add58ae24e6e,,Funnel,,Voronka,Воронка,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2051,both,b328ddca,Funnel
+ae94988d7989,,Goal Seeking found a solution: {value},,Parametrni tanlash yechim topdi: {value},Параметрни танлаш ечим топди: {value},reviewed:agent-opus:2026-10-21,,gridcraft,,both,21723872,Value
+af9991a5337d,,Transpose (E),,Transponirlash (E),Транспонирлаш (E),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:315,both,24f7e04a,Transpose
+b4824625a0ec,,thin,,ingichka,ингичка,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1691,both,6ca0fa26,Thin
+b593557e1c8d,,Header (in):,,Yuqori kolontitul (dyuym):,Юқори колонтитул (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:412,both,b8028620,Header
+b6e2e932916e,,Input Y Range:,,Y kirish diapazoni:,Y кириш диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2337,both,c6a85713,Range; Input
+b8bfb5137c00,,Red Text,,Qizil matn,Қизил матн,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:610,both,2f5509a0,Text; Red
+b96b9f3e7af1,,t-Test: Paired Two Sample for Means,,t-test: oʻrtachalar uchun juftlashgan ikki tanlanma,t-тест: ўртачалар учун жуфтлашган икки танланма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:47,both,88b882d5,
+ba645d04f2a2,,Diagonal ↘,,Diagonal ↘,Диагонал ↘,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1683,both,f4c472a3,Diagonal
+bad235bab9e9,,A to Z,,A dan Z gacha,А дан З гача,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1947,both,3ae085e5,
+bb180103b38f,,No picture selected,,Rasm tanlanmagan,Расм танланмаган,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1108,both,dea1a549,Picture; No
+bb9e8e473206,,Edit…,,Tahrirlash…,Таҳрирлаш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1983,both,b454359e,Edit
+bbb686db2e40,,Delete rows,,Qatorlarni oʻchirish,Қаторларни ўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:189,both,c1a1d731,Delete
+bbee3ce9ea58,,Erase ink strokes,,Qoʻlyozma chiziqlarini oʻchirish,Қўлёзма чизиқларини ўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1601,both,5f39e92a,Erase; Ink
+bc6430a1c2c7,,Covariance,,Kovariatsiya,Ковариация,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:39,both,d37d133e,Covariance
+bd0d5654c5bb,,Light Red Fill,,Och qizil fon,Оч қизил фон,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:609,both,ed121021,Light; Fill; Red
+bd27b18974f5,,Fill missing points using,,Yetishmayotgan nuqtalarni toʻldirish usuli,Етишмаётган нуқталарни тўлдириш усули,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:455,both,fb16900d,Fill
+bd7ef84a667d,,New Name,,Yangi nom,Янги ном,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:554,both,ddbcd371,Name; New
+bf914ff9afb3,,Change All,,Hammasini almashtirish,Ҳаммасини алмаштириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2657,both,8815ed23,Change; All
+c20ebd45a214,,Green Fill with Dark Green Text,,"Yashil fon, quyuq yashil matn","Яшил фон, қуюқ яшил матн",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:608,both,c69ab5d5,Green; Text; Fill; Dark
+c2bbf6034dcb,,Math & Trig,,Matematik va trigonometrik,Математик ва тригонометрик,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/catalog.rs:177,both,b166cd97,Math & Trig
+c309ccec77e6,,Histogram,,Gistogramma,Гистограмма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2049,both,f1645910,Histogram
+c45a4773a731,,Cell Styles,,Katak uslublari,Катак услублари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:851,both,9d72111a,Cell Styles; Cell
+c5c841426c59,,Entire column,,Butun ustun,Бутун устун,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:110,both,9e3896f2,Entire column; Column
+c67b6e407b9d,,This month,,Shu oy,Шу ой,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:596,both,1b478533,This month; Month
+c817807e2885,,— 1 step,,— 1 qadam,— 1 қадам,reviewed:agent-opus:2026-10-21,,gridcraft,,both,9674d804,
+c857190ada2a,,Zoom to Selection,,Tanlovga masshtablash,Танловга масштаблаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2162,both,f00247f1,Selection; Zoom
+c94e647933ac,,Pareto (sorted histogram),,Pareto (saralangan gistogramma),Парето (сараланган гистограмма),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2331,both,53b531f4,Histogram
+c9a8c14a0fd9,,Rank and Percentile,,Rang va protsentil,Ранг ва процентиль,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:45,both,14fb57cd,Rank and Percentile
+ca494b63c7a0,,Data Range:,,Maʼlumotlar diapazoni:,Маълумотлар диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:382,both,ebdf260e,Range
+ca58a956987f,,Refers To,,Diapazon,Диапазон,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2005,both,500c8e2a,
+cb71dd474dfd,,Reference:,,Havola:,Ҳавола:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1902,both,45c3dc1c,
+cc4888fdb985,,equal to,,teng,тенг,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:874,both,a1e8770f,Equal to
+cc99c2acfac5,,Values range (blank: second column of the selection):,,Qiymatlar diapazoni (boʻsh: tanlovning ikkinchi ustuni):,Қийматлар диапазони (бўш: танловнинг иккинчи устуни):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:447,both,57e3a995,Selection; Column; Second; Range
+ccc62e0d02d3,,Output options,,Chiqish parametrlari,Чиқиш параметрлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2431,both,ca4409ba,Options; Output
+cd23aa2a8a67,,Within workbook,,Ish kitobi ichida,Иш китоби ичида,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1829,both,a05b5fbb,Workbook
+ce1c3c50c65d,,Version {version},,Versiya {version},Версия {version},reviewed:agent-opus:2026-10-21,,gridcraft,,both,7a4a5b08,Version
+ce3363306bc3,,Residuals,,Qoldiqlar,Қолдиқлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2342,both,017a5486,Residuals
+cec3b25fbdef,,Find All,,Hammasini topish,Ҳаммасини топиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1856,both,d0b9d0d8,Find; All
+cf83df7bb612,,Waterfall,,Sharshara,Шаршара,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2050,both,f2655713,Waterfall
+d00ac3e9c9e4,,Line with Markers,,Markerli chiziqli,Маркерли чизиқли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2040,both,9e92edb3,Markers; Line
+d02cd42aecd6,,Input X Range:,,X kirish diapazoni:,X кириш диапазони:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2338,both,17e6ef2b,Range; Input
+d03d47ddf16d,,Household Budget,,Oilaviy byudjet,Оилавий бюджет,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/sample.rs:11,both,d7b569f2,
+d0b656c52642,,Visible cells only,,Faqat koʻrinadigan kataklar,Фақат кўринадиган катаклар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:664,both,70144c6c,Visible cells only
+d0d290e8d25d,,Light Red Fill with Dark Red Text,,"Och qizil fon, quyuq qizil matn","Оч қизил фон, қуюқ қизил матн",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:606,both,8556ba00,Light; Text; Fill; Dark; Red
+d0ea2b283add,,Display:,,Koʻrsatiladigan matn:,Кўрсатиладиган матн:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:371,both,322ea433,Display
+d1d6c32c2e6d,,Damping factor:,,Soʻnish omili:,Сўниш омили:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2350,both,36278780,
+d1ff410e9b4e,,Validation,,Tekshirish qoidalari,Текшириш қоидалари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:302,both,dd74d182,
+d2a72298c3ec,,Stacked Area,,Yigʻma sohali,Йиғма соҳали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2045,both,cb0bd7ae,Stacked; Area
+d2df992b4c4c,,Border,,Chegara,Чегара,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1534,both,5d10d3f4,Border
+d30a4d629024,,Bin Range (blank for automatic bins):,,Intervallar diapazoni (boʻsh = avtomatik intervallar):,Интерваллар диапазони (бўш = автоматик интерваллар):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2329,both,a5547250,Automatic; Range
+d35c1d0d7f62,,Convert Text to Columns,,Matnni ustunlarga ajratish,Матнни устунларга ажратиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:420,both,a03899b4,Text to Columns; Convert; Text
+d4126d28b72d,,Filters,,Filtrlar,Фильтрлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:82,both,96e57821,
+d449731c01e6,,Delete chart,,Diagrammani oʻchirish,Диаграммани ўчириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2397,both,447493ea,Delete; Chart
+d46f9fc969c3,,Use function,,Funksiya,Функция,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:511,both,b5fd76d7,Function
+d4976d7ffcfc,,Convert to Range,,Diapazonga aylantirish,Диапазонга айлантириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:2291,both,2e79eb27,Convert; Range
+d4ec3ed30f3d,,"Before sheet (position, 0 = first):",,"Qaysi varaqdan oldin (oʻrin, 0 = birinchi):","Қайси варақдан олдин (ўрин, 0 = биринчи):",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:167,both,436e45d1,Sheet
+d54d6bbe3d1f,,Other:,,Boshqa:,Бошқа:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:427,both,ae8a3be1,
+d55625243726,,Name Manager,,Nomlarni boshqarish,Номларни бошқариш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:672,both,60f6bd92,Name Manager; Name
+d57e02e328b3,,Calculate Sheet (⇧F9),,Varaqni hisoblash (⇧F9),Варақни ҳисоблаш (⇧F9),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1880,both,a3e28eb3,Calculate; Sheet
+d5a24820f7d1,,"Confidence Level for Mean (%), blank for none:",,"Oʻrtacha uchun ishonchlilik darajasi (%), kerak boʻlmasa boʻsh:","Ўртача учун ишончлилик даражаси (%), керак бўлмаса бўш:",reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2323,both,8129af34,Confidence level; None
+d5cbd26a58c4,,Gradebook,,Baholar jurnali,Баҳолар журнали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/sample.rs:11,both,255ce06c,
+d6017549b0a4,,{count} cell(s) found,,{count} ta katak topildi,{count} та катак топилди,reviewed:agent-opus:2026-10-21,,gridcraft,,both,50f3a24b,Count; Cell
+d65a4f98c69f,Tab,Insert,,Kiritish,Киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:105,both,95802daa,Insert
+d65e856c9413,,Format values where this formula is true:,,Ushbu formula rost boʻlgan qiymatlarni formatlash:,Ушбу формула рост бўлган қийматларни форматлаш:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:600,both,bd38221d,Formula; Format
+d66aaaa7669e,,Convert the last ink stroke to a shape,,Oxirgi qoʻlyozma chizigʻini shaklga aylantirish,Охирги қўлёзма чизиғини шаклга айлантириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1609,both,78bfaf41,Convert; Shape; Ink
+d805af85eed8,,Row height (pixels):,,Qator balandligi (pikselda):,Қатор баландлиги (пикселда):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:136,both,e5f944e3,Height; Row
+d855527f2d99,,Cube,,Kub,Куб,reviewed:agent-opus:2026-10-21,,gridcraft,,both,90ccc9aa,
+d8b77b33e61c,,Hypothesized Mean Difference:,,Oʻrtachalarning faraz qilingan farqi:,Ўртачаларнинг фараз қилинган фарқи:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2360,both,dcdc8836,
+da94ffcbfccd,,Custom (%):,,Maxsus (%):,Махсус (%):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:535,both,da065faf,Custom
+dae735caf3a7,,No names defined,,Nomlar aniqlanmagan,Номлар аниқланмаган,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2009,both,f0ea8ad7,No
+db80ee3b401d,,Protect Structure and Windows,,Tuzilma va oynalarni himoyalash,Тузилма ва ойналарни ҳимоялаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:235,both,d5115da6,Structure; Protect
+db9c4e00dc5f,,Any value,,Istalgan qiymat,Исталган қиймат,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:846,both,b74960e7,Any value; Value
+dc9b4d6d923e,,Errors,,Xatolar,Хатолар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:659,both,805e86a8,
+dd166be169b8,,PivotTable Fields,,Yigʻma jadval maydonlari,Йиғма жадвал майдонлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:29,both,54192bc9,PivotTable
+ddd84d495af7,,Picture file path (PNG or JPEG):,,Rasm fayli yoʻli (PNG yoki JPEG):,Расм файли йўли (PNG ёки JPEG):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1111,both,941cd57c,Picture; File; Path
+de0ca0cf77a7,,Place Picture in Cell,,Rasmni katak ichiga joylash,Расмни катак ичига жойлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:768,both,c0ab1ba8,Picture; Cell
+df80cd2f215c,,Restore Original Values,,Asl qiymatlarni tiklash,Асл қийматларни тиклаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2575,both,005a21e1,Original; Restore
+e01423091319,,Values and number formats,,Qiymatlar va son formatlari,Қийматлар ва сон форматлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:306,both,747cb890,Number
+e043d847f1cf,,Summarize by Min,,Jamlash: minimum,Жамлаш: минимум,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:115,both,e8869aa3,Summarize
+e0abd493de21,,Row Height,,Qator balandligi,Қатор баландлиги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:134,both,5fb65e90,Height; Row
+e11607ff230d,,Insert a picture,,Rasm kiritish,Расм киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1384,both,53a832e2,Picture; Insert
+e1e248e07338,,100% Stacked Column,,100% yigʻma ustunli,100% йиғма устунли,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2035,both,a98c508d,100% Stacked; Stacked; Column
+e1ee677e394f,,All Charts,,Barcha diagrammalar,Барча диаграммалар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:694,both,b438aced,All
+e22f7046115e,,Define Name…,,Nom berish…,Ном бериш…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/grid.rs:2870,both,386c035a,Name
+e237b2667790,,Maximum:,,Maksimum:,Максимум:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:908,both,1b0befb2,Maximum
+e60bb3f0544b,,t-Test: Two-Sample Assuming Unequal Variances,,t-test: turli dispersiyali ikki tanlanma,t-тест: турли дисперсияли икки танланма,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:49,both,dea74fbf,
+e62592199c28,,Ignore blank,,Boʻshlarni eʼtiborsiz qoldirish,Бўшларни эътиборсиз қолдириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:860,both,e43488b6,Ignore
+e6469b30a297,,Subtract,,Ayirish,Айириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:312,both,ae5f61e5,Subtract
+e6cadc24c3ce,,Goal Seek,,Parametrni tanlash,Параметрни танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:440,both,2ffa0ede,Goal Seek
+e6cf34faf587,,Statistical,,Statistik,Статистик,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1768,both,88adb84e,Statistical
+e751ca386cb7,,Custom Sort,,Maxsus saralash,Махсус саралаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1907,both,1fa2a7ba,Custom Sort; Custom; Sort
+e774a4f1c57a,,All done. We made {count} replacements.,,Tayyor. {count} ta almashtirish bajarildi.,Тайёр. {count} та алмаштириш бажарилди.,reviewed:agent-opus:2026-10-21,,gridcraft,,both,2f41b2d8,Count; Done; All
+e927ddfb5c2a,,Pen\nBlue,,Koʻk\nruchka,Кўк\nручка,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1590,both,ad560f1d,Blue; Pen
+ea2de8839157,,Sample,,Namuna,Намуна,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1559,both,58fabfa7,
+ea9c1d50e8ab,,Sort & Filter,,Saralash va filtrlash,Саралаш ва фильтрлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1015,both,1607ee94,Filter; Sort
+ec17d16139ec,,Solver Parameters,,Yechim izlash parametrlari,Ечим излаш параметрлари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:498,both,a70a0256,Solver
+ec49cb8e7d2e,,(No suggestions),,(Takliflar yoʻq),(Таклифлар йўқ),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2640,both,8f7cc6c4,Suggestions; No
+ec6e1f74dca4,,Select Data Source,,Maʼlumotlar manbasini tanlash,Маълумотлар манбасини танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:718,both,52e87012,Source; Select
+ed932534202d,,New Worksheet Ply:,,Yangi varaq:,Янги варақ:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2433,both,d2fbf99b,Worksheet; New
+ed9c23bf8ae1,,€ Euro,,€ Yevro,€ Евро,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:811,both,34bb1e65,
+ee29c8f3f2eb,,Cumulative Percentage,,Jamlanma foiz,Жамланма фоиз,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2332,both,95a95268,Percentage
+eebd7f4301e2,,Growth,,Oʻsish,Ўсиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:326,both,f3b21e04,
+eeca1b107dbe,,Description (optional):,,Tavsif (ixtiyoriy):,Тавсиф (ихтиёрий):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1132,both,93bd16d0,
+ef10f813bc9e,,(unnamed),,(nomsiz),(номсиз),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1509,both,fedbd200,
+efd1a1bcccd1,,By changing cell:,,Oʻzgartiriladigan katak:,Ўзгартириладиган катак:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2290,both,a349ac17,Cell
+f063cc101af3,,Remove Field,,Maydonni olib tashlash,Майдонни олиб ташлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:150,both,a2794135,Remove; Field
+f11f6e4c2701,,Solver Results,,Yechim izlash natijalari,Ечим излаш натижалари,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:502,both,ab59d63e,Results; Solver
+f12960e65b77,,Note:,,Qayd:,Қайд:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:348,both,83423c19,
+f1a8aafa07f1,,Pick From List,,Roʻyxatdan tanlash,Рўйхатдан танлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:776,both,5537bbd5,List
+f1aa77bde5f2,,Column Width,,Ustun kengligi,Устун кенглиги,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:141,both,7c48d23b,Column; Width
+f1bdabd59e87,,Numbers,,Sonlar,Сонлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:660,both,7e53821f,
+f1c683597ca6,,Redo (⌘Y),,Qayta bajarish (⌘Y),Қайта бажариш (⌘Y),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:95,both,befbe193,Redo
+f3ac0f13fe4d,,Watch\nWindow,,Kuzatuv\noynasi,Кузатув\nойнаси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1855,both,c596be55,Window
+f6c1b5f9d175,,Descriptive Statistics,,Tavsifiy statistika,Тавсифий статистика,reviewed:agent-opus:2026-10-21,,gridcraft,crates/engine/src/cmd/analysis.rs:40,both,6b4a2b23,Descriptive Statistics
+f79c22abc44d,,Left margin (in):,,Chap hoshiya (dyuym):,Чап ҳошия (дюйм):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:408,both,bb399268,Left
+f7cb470a1491,,less than or equal to,,kichik yoki teng,кичик ёки тенг,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:879,both,1b709205,Less than; Equal to
+f7ce5946ed5a,,Save Changes?,,Oʻzgarishlar saqlansinmi?,Ўзгаришлар сақлансинми?,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:778,both,151ca115,Save changes; Save
+f7f913ffa2e2,,My list has headers,,Roʻyxatimda sarlavhalar bor,Рўйхатимда сарлавҳалар бор,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1923,both,59819769,List
+f82f2d06c1d2,,Format rows,,Qatorlarni formatlash,Қаторларни форматлаш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:187,both,24e99e20,Format
+f8488530d05c,,Workbook Statistics,,Ish kitobi statistikasi,Иш китоби статистикаси,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:729,both,7df361a7,Workbook
+f93b0d81b7c0,,Modify,,Oʻzgartirish,Ўзгартириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:222,both,9fe408e1,
+f9d8ccc55f57,,Comment:,,Izoh:,Изоҳ:,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:559,both,2a52646f,Comment
+fa01cd7b0a0b,,Accessibility,,Maxsus imkoniyatlar,Махсус имкониятлар,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:734,both,d660049b,Accessibility
+fa196b03565e,,greater than or equal to,,katta yoki teng,катта ёки тенг,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:878,both,65bc30c9,Greater than; Equal to
+fadd888d528d,,Insert an icon,,Piktogramma kiritish,Пиктограмма киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1412,both,ba9ef3fa,Insert; Icon
+fae614092d8e,,Undo (⌘Z),,Qaytarish (⌘Z),Қайтариш (⌘Z),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:79,both,b35df2eb,Undo
+fb1bbeda5a2c,,Summarize by Count,,Jamlash: soni,Жамлаш: сони,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:112,both,7fb6123b,Summarize; Count
+fb2a1509d725,,Type (custom format code):,,Tur (maxsus format kodi):,Тур (махсус формат коди):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1563,both,e849fb91,Format; Custom; Type
+fbc622e1c3c7,,Data validation,,Maʼlumotlarni tekshirish,Маълумотларни текшириш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:666,both,ac512b22,Data Validation
+fbcfe384f1cd,,Confidence Level (%):,,Ishonchlilik darajasi (%):,Ишончлилик даражаси (%):,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2341,both,b7d8474a,Confidence level
+fbff9a7ab186,,Insert a slicer to filter a table,,Jadvalni filtrlash uchun kesim kiritish,Жадвални фильтрлаш учун кесим киритиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1524,both,8a9ccfc1,Insert; Slicer; Filter; Table
+fcb61f763792,,Constant is Zero,,Konstanta nolga teng,Константа нолга тенг,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2340,both,cbd7fa5e,
+fd94b9c20e05,,Bottom,,Quyi,Қуйи,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1612,both,cce7f2f2,Bottom
+fdafc13af12c,,Pen\nRed,,Qizil\nruchka,Қизил\nручка,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/ribbon.rs:1590,both,07529612,Red; Pen
+fdda7ab77b0a,,Keep,,Saqlab qolish,Сақлаб қолиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:2176,both,466fc492,Keep
+fe5a8158d22b,,Values (V),,Qiymatlar (V),Қийматлар (V),reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:299,both,1a172458,
+fe7611c55601,,double,,qoʻsh,қўш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1696,both,bdb36bb2,Double
+fed8358a685e,,Show as Running Total,,Jamlanma jami sifatida koʻrsatish,Жамланма жами сифатида кўрсатиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:124,both,6dff4208,Show
+fede8c2e2e28,,dotted,,nuqtali,нуқтали,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1695,both,19e4f8a3,Dotted
+ff14c791b807,,Last week,,Oʻtgan hafta,Ўтган ҳафта,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:592,both,76c1ed93,Last week; Week
+ff3e760ee923,,+ Add Level,,+ Daraja qoʻshish,+ Даража қўшиш,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/dialogs.rs:1960,both,04b45a1c,Add
+ffd1f64e006e,,Calculated Field…,,Hisoblanadigan maydon…,Ҳисобланадиган майдон…,reviewed:agent-opus:2026-10-21,,gridcraft,crates/ui-egui/src/pivot_pane.rs:163,both,7bc1b37a,Calculated Field; Field

@@ -1,347 +1,347 @@
 id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	ru_apps	priority	apps	where	note
-0027a26cbb3b		t-Test: Two-Sample Assuming Equal Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:48	
-00ee3bd02459		Switch Row/Column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2354	
+0027a26cbb3b		t-Test: Two-Sample Assuming Equal Variances	t-test: teng dispersiyali ikki tanlanma	reviewed:agent-opus:2026-10-21	t-тест: тенг дисперсияли икки танланма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:48	
+00ee3bd02459		Switch Row/Column	Qator/ustunni almashtirish	reviewed:agent-opus:2026-10-21	Қатор/устунни алмаштириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2354	
 013669715371		Chart\nTitle	Diagramma\nsarlavhasi	reviewed:agent-opus:2026-10-18	Диаграмма\nсарлавҳаси	reviewed:agent-opus:2026-10-18	Название\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:428	review-agent-2026-10-18: glossary Title
-015ae95cd897		Calculate Now (F9)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1875	
-017d8bf5a730		Current region		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:662	
-01b16f8407f0		At each change in (column letter):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:508	
-01d7e6e3abc4		applies to		todo		todo		todo		P2	gridcraft		
-01faae82fa08		Flash Fill (⌘E)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1935	
-022a7e1dd7d8		Weekday		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:330	
+015ae95cd897		Calculate Now (F9)	Hozir hisoblash (F9)	reviewed:agent-opus:2026-10-21	Ҳозир ҳисоблаш (F9)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1875	
+017d8bf5a730		Current region	Joriy soha	reviewed:agent-opus:2026-10-21	Жорий соҳа	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:662	
+01b16f8407f0		At each change in (column letter):	Har bir oʻzgarishda (ustun harfi):	reviewed:agent-opus:2026-10-21	Ҳар бир ўзгаришда (устун ҳарфи):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:508	
+01d7e6e3abc4		applies to	qoʻllanish sohasi	reviewed:agent-opus:2026-10-21	қўлланиш соҳаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+01faae82fa08		Flash Fill (⌘E)	Tezkor toʻldirish (⌘E)	reviewed:agent-opus:2026-10-21	Тезкор тўлдириш (⌘E)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1935	
+022a7e1dd7d8		Weekday	Ish kuni	reviewed:agent-opus:2026-10-21	Иш куни	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:330	
 02d0412163d8		Sheets	Varaqlar	reviewed:agent-opus:2026-10-18	Варақлар	reviewed:agent-opus:2026-10-18	Листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:633	
-03b9a3f2d8a9		Statistic		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1494	
-03eaaf9c89ab		ScreenTip:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:373	
+03b9a3f2d8a9		Statistic	Statistik	reviewed:agent-opus:2026-10-21	Статистик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1494	
+03eaaf9c89ab		ScreenTip:	Maslahat:	reviewed:agent-opus:2026-10-21	Маслаҳат:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:373	
 041b773c8261		Format Cells…	Kataklar formati…	reviewed:agent-opus:2026-10-18	Катаклар формати…	reviewed:agent-opus:2026-10-18	Формат ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2868	
 04cf5aaed9cf		Solver	Yechim izlash	reviewed:agent-opus:2026-10-18	Ечим излаш	reviewed:agent-opus:2026-10-18	Поиск решения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:360	
 0525d065c2cf		Remove Arrows	Strelkalarni olib tashlash	reviewed:agent-opus:2026-10-18	Стрелкаларни олиб ташлаш	reviewed:agent-opus:2026-10-18	Убрать стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:328	
-05284eecac49		Link to (web address, e-mail or Sheet!A1):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:372	
+05284eecac49		Link to (web address, e-mail or Sheet!A1):	Havola manzili (veb-manzil, elektron pochta yoki Varaq!A1):	reviewed:agent-opus:2026-10-21	Ҳавола манзили (веб-манзил, электрон почта ёки Варақ!A1):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:372	
 057f7bc093b6		Financial	Moliyaviy	reviewed:agent-opus:2026-10-18	Молиявий	reviewed:agent-opus:2026-10-18	Финансовые	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:475	
 0582ff4cb725		New Note	Yangi qayd	reviewed:agent-opus:2026-10-18	Янги қайд	reviewed:agent-opus:2026-10-18	Новая заметка	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:346	
-059bef0269f9		Lookup & Reference		todo		todo		todo		P2	gridcraft	crates/engine/src/catalog.rs:176	
-05e38b237fd2		Moving Average		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:44	
+059bef0269f9		Lookup & Reference	Qidirish va havolalar	reviewed:agent-opus:2026-10-21	Қидириш ва ҳаволалар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/catalog.rs:176	
+05e38b237fd2		Moving Average	Sirpanuvchi oʻrtacha	reviewed:agent-opus:2026-10-21	Сирпанувчи ўртача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:44	
 05e68d5f5945		Legend: Top	Shartli belgilar: yuqorida	reviewed:agent-opus:2026-10-18	Шартли белгилар: юқорида	reviewed:agent-opus:2026-10-18	Легенда: сверху	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:424	
-0664d8e231d1		Version, contributors and the AI models that helped		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2261	
+0664d8e231d1		Version, contributors and the AI models that helped	Versiya, hissa qoʻshganlar va yordam bergan sunʼiy intellekt modellari	reviewed:agent-opus:2026-10-21	Версия, ҳисса қўшганлар ва ёрдам берган сунъий интеллект моделлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2261	
 06816f1c53a5		Draw	Chizish	reviewed:agent-opus:2026-10-18	Чизиш	reviewed:agent-opus:2026-10-18	Рисование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:445	
-069310737949		Pie or Doughnut		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1472	
+069310737949		Pie or Doughnut	Doiraviy yoki halqasimon	reviewed:agent-opus:2026-10-21	Доиравий ёки ҳалқасимон	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1472	
 06aac9ecd435		Clear Print Area	Chop etish sohasini tozalash	reviewed:agent-opus:2026-10-18	Чоп этиш соҳасини тозалаш	reviewed:agent-opus:2026-10-18	Очистить область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:268	review-agent-2026-10-18: print area = chop etish sohasi (ru Область печати)
-06d4762dc8a6		Range password:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:226	
+06d4762dc8a6		Range password:	Diapazon paroli:	reviewed:agent-opus:2026-10-21	Диапазон пароли:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:226	
 070a1b31f505		File\nName	Fayl\nnomi	reviewed:agent-opus:2026-10-18	Файл\nноми	reviewed:agent-opus:2026-10-18	Имя\nфайла	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:495	
 07743b3fef64		Gridlines: None	Toʻr chiziqlari: yoʻq	reviewed:agent-opus:2026-10-18	Тўр чизиқлари: йўқ	reviewed:agent-opus:2026-10-18	Линии сетки: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:426	review-agent-2026-10-18: gridlines
-079ee0eb49ef		Save a copy as .{format}		todo		todo		todo		P2	gridcraft		
-088b41c91735		Comments and notes (C)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:301	
+079ee0eb49ef		Save a copy as .{format}	Nusxasini .{format} sifatida saqlash	reviewed:agent-opus:2026-10-21	Нусхасини .{format} сифатида сақлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+088b41c91735		Comments and notes (C)	Izohlar va qaydlar (C)	reviewed:agent-opus:2026-10-21	Изоҳлар ва қайдлар (C)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:301	
 08e0a14d67da		Table Design	Jadval dizayni	reviewed:agent-opus:2026-10-18	Жадвал дизайни	reviewed:agent-opus:2026-10-18	Конструктор таблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:452	
-08e8616069c8		thick		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1693	
+08e8616069c8		thick	qalin	reviewed:agent-opus:2026-10-21	қалин	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1693	
 0941af2dd73d		Angle Clockwise	Soat mili boʻyicha burish	reviewed:agent-opus:2026-10-18	Соат мили бўйича буриш	reviewed:agent-opus:2026-10-18	Повернуть по часовой стрелке	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:222	
-0a6719efb339		Legend Entries (Series)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2162	
-0a77e89fbe5c		What-If Analysis		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1961	
+0a6719efb339		Legend Entries (Series)	Shartli belgilar elementlari (qatorlar)	reviewed:agent-opus:2026-10-21	Шартли белгилар элементлари (қаторлар)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2162	
+0a77e89fbe5c		What-If Analysis	«Agar… boʻlsa» tahlili	reviewed:agent-opus:2026-10-21	«Агар… бўлса» таҳлили	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1961	
 0a9415be500f		Scientific	Ilmiy	reviewed:agent-opus:2026-10-18	Илмий	reviewed:agent-opus:2026-10-18	Экспоненциальный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 0a9671dbd00e		Switch\nRow/Column	Qator/ustunni\nalmashtirish	reviewed:agent-opus:2026-10-18	Қатор/устунни\nалмаштириш	reviewed:agent-opus:2026-10-18	Поменять\nстроки/столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:418	
 0b2ddc3d62ff		Paste Link	Havolani qoʻyish	reviewed:agent-opus:2026-10-18	Ҳаволани қўйиш	reviewed:agent-opus:2026-10-18	Вставить связь	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:316	
-0b6ba3fe0780		Group by Quarters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:140	
-0bbd3a372c20		Move or Copy Sheet…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:943	
-0bbe96f8070e		The output range already holds data. Replace it with the report?		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2389	
-0bf48064f313		Unprotect Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:269	
-0c1531fdbb89		Last month		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:595	
+0b6ba3fe0780		Group by Quarters	Choraklar boʻyicha guruhlash	reviewed:agent-opus:2026-10-21	Чораклар бўйича гуруҳлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:140	
+0bbd3a372c20		Move or Copy Sheet…	Varaqni koʻchirish yoki nusxalash…	reviewed:agent-opus:2026-10-21	Варақни кўчириш ёки нусхалаш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:943	
+0bbe96f8070e		The output range already holds data. Replace it with the report?	Chiqish diapazonida maʼlumotlar bor. Ular hisobot bilan almashtirilsinmi?	reviewed:agent-opus:2026-10-21	Чиқиш диапазонида маълумотлар бор. Улар ҳисобот билан алмаштирилсинми?	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2389	
+0bf48064f313		Unprotect Sheet	Varaq himoyasini yechish	reviewed:agent-opus:2026-10-21	Варақ ҳимоясини ечиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:269	
+0c1531fdbb89		Last month	Oʻtgan oy	reviewed:agent-opus:2026-10-21	Ўтган ой	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:595	
 0ddd07668d36		Unhide Rows	Qatorlarni koʻrsatish	reviewed:agent-opus:2026-10-18	Қаторларни кўрсатиш	reviewed:agent-opus:2026-10-18	Показать строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:253	
-0e1cf97ca9f8		Insert Function (⇧F3)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1751	
-0ede56660872		Confidence level (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:451	
+0e1cf97ca9f8		Insert Function (⇧F3)	Funksiya kiritish (⇧F3)	reviewed:agent-opus:2026-10-21	Функция киритиш (⇧F3)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1751	
+0ede56660872		Confidence level (%):	Ishonchlilik darajasi (%):	reviewed:agent-opus:2026-10-21	Ишончлилик даражаси (%):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:451	
 0f7fedbb83af		Action\nJournal	Amallar\njurnali	reviewed:agent-opus:2026-10-18	Амаллар\nжурнали	reviewed:agent-opus:2026-10-18	Журнал\nдействий	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:413	
-0f805abce434		between		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:569	
-0fac1030ce0d		Show Formulas (⌃`)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1839	
-107b1a8364c6		Format cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:185	
+0f805abce434		between	oraligʻida	reviewed:agent-opus:2026-10-21	оралиғида	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:569	
+0fac1030ce0d		Show Formulas (⌃`)	Formulalarni koʻrsatish (⌃`)	reviewed:agent-opus:2026-10-21	Формулаларни кўрсатиш (⌃`)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1839	
+107b1a8364c6		Format cells	Kataklarni formatlash	reviewed:agent-opus:2026-10-21	Катакларни форматлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:185	
 10b13a5d6f0b		Set Print Area	Chop etish sohasini belgilash	reviewed:agent-opus:2026-10-18	Чоп этиш соҳасини белгилаш	reviewed:agent-opus:2026-10-18	Задать область печати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:307	review-agent-2026-10-18: print area
 11430d3504cb		Data Table…	Maʼlumotlar jadvali…	reviewed:agent-opus:2026-10-18	Маълумотлар жадвали…	reviewed:agent-opus:2026-10-18	Таблица данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:362	
-116366ba18f5		Analysis Tools		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2404	
+116366ba18f5		Analysis Tools	Tahlil vositalari	reviewed:agent-opus:2026-10-21	Таҳлил воситалари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2404	
 122e73122711		Increase Decimal	Kasr xonalarini oshirish	reviewed:agent-opus:2026-10-18	Каср хоналарини ошириш	reviewed:agent-opus:2026-10-18	Увеличить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:228	
-12efea8132f1		Series		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:322	
-1369ebe66044		New sheet (⇧F11)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/tabs.rs:215	
+12efea8132f1		Series	Progressiya	reviewed:agent-opus:2026-10-21	Прогрессия	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:322	
+1369ebe66044		New sheet (⇧F11)	Yangi varaq (⇧F11)	reviewed:agent-opus:2026-10-21	Янги варақ (⇧F11)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/tabs.rs:215	
 13b30e0d1aaa		Percentage	Foiz	reviewed:agent-opus:2026-10-18	Фоиз	reviewed:agent-opus:2026-10-18	Процентный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-13b97f21809e		Location Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:383	
-13c1dbe36e27		Engineering		todo		todo		todo		P2	gridcraft		
-13d1e87c0a74		Multiply		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
+13b97f21809e		Location Range:	Joylashuv diapazoni:	reviewed:agent-opus:2026-10-21	Жойлашув диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:383	
+13c1dbe36e27		Engineering	Muhandislik	reviewed:agent-opus:2026-10-21	Муҳандислик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+13d1e87c0a74		Multiply	Koʻpaytirish	reviewed:agent-opus:2026-10-21	Кўпайтириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
 13e459b8eeac		Legend: None	Shartli belgilar: yoʻq	reviewed:agent-opus:2026-10-18	Шартли белгилар: йўқ	reviewed:agent-opus:2026-10-18	Легенда: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:422	
 14285a4ba127		Reapply	Qayta qoʻllash	reviewed:agent-opus:2026-10-18	Қайта қўллаш	reviewed:agent-opus:2026-10-18	Повторить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:345	
 14d5d6a32171		Go to\nFooter	Quyi kolontitulga\noʻtish	reviewed:agent-opus:2026-10-18	Қуйи колонтитулга\nўтиш	reviewed:agent-opus:2026-10-18	Перейти к нижнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:498	
-14daad6524d3		Interval:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
-15b9ddedd7fd		Set cell:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2284	
-15c2ed54ae34		Solve		todo		todo		todo		P2	gridcraft		
-160928366dd4		Vertical		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1607	
+14daad6524d3		Interval:	Interval:	reviewed:agent-opus:2026-10-21	Интервал:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
+15b9ddedd7fd		Set cell:	Oʻrnatiladigan katak:	reviewed:agent-opus:2026-10-21	Ўрнатиладиган катак:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2284	
+15c2ed54ae34		Solve	Yechish	reviewed:agent-opus:2026-10-21	Ечиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+160928366dd4		Vertical	Vertikal boʻyicha	reviewed:agent-opus:2026-10-21	Вертикал бўйича	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1607	
 160fbfd31969		A CSV file, web page or PDF is a copy: the workbook keeps its own file.	CSV fayl, veb-sahifa yoki PDF nusxa hisoblanadi: ish kitobi oʻz faylini saqlab qoladi.	reviewed:agent-opus:2026-10-18	CSV файл, веб-саҳифа ёки PDF нусха ҳисобланади: иш китоби ўз файлини сақлаб қолади.	reviewed:agent-opus:2026-10-18	CSV-файл, веб-страница или PDF — это копия: книга остаётся в своём файле.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:688	review-agent-2026-10-18: veb- compounds hyphenated
-167a49ae29f4		This workbook has no scripts or macros.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1504	
-169b1749ae87		All except borders		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:303	
+167a49ae29f4		This workbook has no scripts or macros.	Bu ish kitobida skript yoki makros yoʻq.	reviewed:agent-opus:2026-10-21	Бу иш китобида скрипт ёки макрос йўқ.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1504	
+169b1749ae87		All except borders	Chegaralardan tashqari hammasi	reviewed:agent-opus:2026-10-21	Чегаралардан ташқари ҳаммаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:303	
 170767adc674		Insert Sheet Columns	Varaq ustunlarini kiritish	reviewed:agent-opus:2026-10-18	Варақ устунларини киритиш	reviewed:agent-opus:2026-10-18	Вставить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:244	
-177936805317		Filter (⌘⇧F)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1912	
-17e74039f359		Not in Dictionary ({cell}):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2628	
-1899bc8b2c7f		'{file}' is protected.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:263	
-1937269eb46d		Special…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1906	
+177936805317		Filter (⌘⇧F)	Filtr (⌘⇧F)	reviewed:agent-opus:2026-10-21	Фильтр (⌘⇧F)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1912	
+17e74039f359		Not in Dictionary ({cell}):	Lugʻatda yoʻq ({cell}):	reviewed:agent-opus:2026-10-21	Луғатда йўқ ({cell}):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2628	
+1899bc8b2c7f		'{file}' is protected.	“{file}” himoyalangan.	reviewed:agent-opus:2026-10-21	“{file}” ҳимояланган.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:263	
+1937269eb46d		Special…	Maxsus…	reviewed:agent-opus:2026-10-21	Махсус…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1906	
 1996230d993e		Copy (⌘C)	Nusxalash (⌘C)	reviewed:agent-opus:2026-10-18	Нусхалаш (⌘C)	reviewed:agent-opus:2026-10-18	Копировать (⌘C)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:191	
 199cd4584e13		Remove Page Break	Sahifa uzilishini olib tashlash	reviewed:agent-opus:2026-10-18	Саҳифа узилишини олиб ташлаш	reviewed:agent-opus:2026-10-18	Удалить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:310	
-1a4a430e03a2		Input message:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:923	
+1a4a430e03a2		Input message:	Kiritish xabari:	reviewed:agent-opus:2026-10-21	Киритиш хабари:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:923	
 1a64124f5aa8		Freeze First Column	Birinchi ustunni qotirish	reviewed:agent-opus:2026-10-18	Биринчи устунни қотириш	reviewed:agent-opus:2026-10-18	Закрепить первый столбец	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:394	
-1aaf65c3cd54		not equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:875	
-1b12f4cbccc0		Footer (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:413	
-1b1f3ccedcb6		Error style		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:926	
+1aaf65c3cd54		not equal to	teng emas	reviewed:agent-opus:2026-10-21	тенг эмас	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:875	
+1b12f4cbccc0		Footer (in):	Quyi kolontitul (dyuym):	reviewed:agent-opus:2026-10-21	Қуйи колонтитул (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:413	
+1b1f3ccedcb6		Error style	Xabar turi	reviewed:agent-opus:2026-10-21	Хабар тури	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:926	
 1b2551f2b07c		Number of Pages	Sahifalar soni	reviewed:agent-opus:2026-10-18	Саҳифалар сони	reviewed:agent-opus:2026-10-18	Число страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:500	
-1b7bee38a7cc		and:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:580	
+1b7bee38a7cc		and:	va:	reviewed:agent-opus:2026-10-21	ва:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:580	
 1ba22a53b1a5		Add header	Yuqori kolontitul qoʻshish	reviewed:agent-opus:2026-10-18	Юқори колонтитул қўшиш	reviewed:agent-opus:2026-10-18	Добавить верхний колонтитул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:485	
-1ba3bdef887c		Select a Solving Method:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2529	
+1ba3bdef887c		Select a Solving Method:	Yechish usulini tanlang:	reviewed:agent-opus:2026-10-21	Ечиш усулини танланг:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2529	
 1be4bdda19f5		Dark	Qorongʻi	reviewed:agent-opus:2026-10-18	Қоронғи	reviewed:agent-opus:2026-10-18	Тёмная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:938	
-1c6e3ac7763c		greater than		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:876	
-1c9063363006		Summarize by Sum		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:111	
-1cc64795c126		Stop value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:333	
-1d267137a077		Use AutoFilter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:191	
-1d2eac57f833		Type a command, e.g. freeze, chart, bold…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2242	
+1c6e3ac7763c		greater than	katta	reviewed:agent-opus:2026-10-21	катта	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:876	
+1c9063363006		Summarize by Sum	Jamlash: yigʻindi	reviewed:agent-opus:2026-10-21	Жамлаш: йиғинди	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:111	
+1cc64795c126		Stop value:	Oxirgi qiymat:	reviewed:agent-opus:2026-10-21	Охирги қиймат:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:333	
+1d267137a077		Use AutoFilter	Avtofiltrdan foydalanish	reviewed:agent-opus:2026-10-21	Автофильтрдан фойдаланиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:191	
+1d2eac57f833		Type a command, e.g. freeze, chart, bold…	Buyruq yozing, masalan: qotirish, diagramma, qalin…	reviewed:agent-opus:2026-10-21	Буйруқ ёзинг, масалан: қотириш, диаграмма, қалин…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2242	
 1d65deea863e		Check\nAccessibility	Maxsus imkoniyatlarni\ntekshirish	reviewed:agent-opus:2026-10-18	Махсус имкониятларни\nтекшириш	reviewed:agent-opus:2026-10-18	Проверка\nдоступности	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:367	
 1e15d156373d		Above Average	Oʻrtachadan yuqori	reviewed:agent-opus:2026-10-18	Ўртачадан юқори	reviewed:agent-opus:2026-10-18	Выше среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:436	
-1e1d7baa459d		Quarterly Sales Dashboard		todo		todo		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
+1e1d7baa459d		Quarterly Sales Dashboard	Choraklik savdo koʻrsatkichlari	reviewed:agent-opus:2026-10-21	Чораклик савдо кўрсаткичлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
 1e96603bb4a6		Fraction	Oddiy kasr	reviewed:agent-opus:2026-10-18	Оддий каср	reviewed:agent-opus:2026-10-18	Дробный	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 20af6a1b070c		Legend: Bottom	Shartli belgilar: pastda	reviewed:agent-opus:2026-10-18	Шартли белгилар: пастда	reviewed:agent-opus:2026-10-18	Легенда: снизу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:423	
-20c06a77d25d		Columns (blank = all, e.g. A,C):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
+20c06a77d25d		Columns (blank = all, e.g. A,C):	Ustunlar (boʻsh = hammasi, masalan A,C):	reviewed:agent-opus:2026-10-21	Устунлар (бўш = ҳаммаси, масалан A,C):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
 20fe0c3cd46b		{n} days ago	{n} kun oldin	reviewed:agent-opus:2026-10-18	{n} кун олдин	reviewed:agent-opus:2026-10-18	{n} дн. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:494	
 210b0247c503		Italic (⌘I)	Kursiv (⌘I)	reviewed:agent-opus:2026-10-18	Курсив (⌘I)	reviewed:agent-opus:2026-10-18	Курсив (⌘I)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:194	review-agent-2026-10-18: Cyrillic spelling
-213c1ee375a5		Destination:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:429	
+213c1ee375a5		Destination:	Moʻljal:	reviewed:agent-opus:2026-10-21	Мўлжал:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:429	
 217172daecca		Unfreeze Panes	Qotirishni bekor qilish	reviewed:agent-opus:2026-10-18	Қотиришни бекор қилиш	reviewed:agent-opus:2026-10-18	Снять закрепление областей	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:395	
-21b4c5d777e4		Create a copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:168	
+21b4c5d777e4		Create a copy	Nusxa yaratish	reviewed:agent-opus:2026-10-21	Нусха яратиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:168	
 21de3e7d5b7d		Sheet Name	Varaq nomi	reviewed:agent-opus:2026-10-18	Варақ номи	reviewed:agent-opus:2026-10-18	Имя листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:505	
-21e3c98a299a		— {steps} steps		todo		todo		todo		P2	gridcraft		
-21fd2600829a		Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2044	
+21e3c98a299a		— {steps} steps	— {steps} qadam	reviewed:agent-opus:2026-10-21	— {steps} қадам	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+21fd2600829a		Area	Sohali	reviewed:agent-opus:2026-10-21	Соҳали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2044	
 222ec2f9bf25		Data\nAnalysis	Maʼlumotlar\ntahlili	reviewed:agent-opus:2026-10-18	Маълумотлар\nтаҳлили	reviewed:agent-opus:2026-10-18	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:358	
-2239efb4e93c		Max		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:465	
-22485e2f48ad		Suggestions:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2632	
-229ac5e1b035		Scatter or Bubble		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1490	
-22aa23e6be78		Top		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1610	
+2239efb4e93c		Max	Maks	reviewed:agent-opus:2026-10-21	Макс	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:465	
+22485e2f48ad		Suggestions:	Takliflar:	reviewed:agent-opus:2026-10-21	Таклифлар:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2632	
+229ac5e1b035		Scatter or Bubble	Nuqtali yoki pufakchali	reviewed:agent-opus:2026-10-21	Нуқтали ёки пуфакчали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1490	
+22aa23e6be78		Top	Yuqori	reviewed:agent-opus:2026-10-21	Юқори	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1610	
 2327314b7430		Change\nChart Type	Diagramma\nturini oʻzgartirish	reviewed:agent-opus:2026-10-18	Диаграмма\nтурини ўзгартириш	reviewed:agent-opus:2026-10-18	Изменить тип\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:417	
-23539a8f631c		Unprotect Workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:245	
-236b686ef3e4		Protect Workbook structure		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2091	
-24f6a56cb446		Kth Largest (blank for none):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2324	
-24feadfdc382		Date unit		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:329	
+23539a8f631c		Unprotect Workbook	Ish kitobi himoyasini yechish	reviewed:agent-opus:2026-10-21	Иш китоби ҳимоясини ечиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:245	
+236b686ef3e4		Protect Workbook structure	Ish kitobi tuzilmasini himoyalash	reviewed:agent-opus:2026-10-21	Иш китоби тузилмасини ҳимоялаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2091	
+24f6a56cb446		Kth Largest (blank for none):	K-chi eng katta (boʻsh = yoʻq):	reviewed:agent-opus:2026-10-21	K-чи энг катта (бўш = йўқ):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2324	
+24feadfdc382		Date unit	Sana birligi	reviewed:agent-opus:2026-10-21	Сана бирлиги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:329	
 25175d8eac88		Hide Columns	Ustunlarni yashirish	reviewed:agent-opus:2026-10-18	Устунларни яшириш	reviewed:agent-opus:2026-10-18	Скрыть столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:254	
-252edc53fa48		Confidence interval		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:450	
-254e73496131		Place Picture over Cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
-2600fd2e43c6		Protect\nSheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2082	
-260651fd015a		Format cells that are (value):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:578	
+252edc53fa48		Confidence interval	Ishonch oraligʻi	reviewed:agent-opus:2026-10-21	Ишонч оралиғи	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:450	
+254e73496131		Place Picture over Cells	Rasmni kataklar ustiga joylash	reviewed:agent-opus:2026-10-21	Расмни катаклар устига жойлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
+2600fd2e43c6		Protect\nSheet	Varaqni\nhimoyalash	reviewed:agent-opus:2026-10-21	Варақни\nҳимоялаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2082	
+260651fd015a		Format cells that are (value):	Shu shartdagi kataklarni formatlash (qiymat):	reviewed:agent-opus:2026-10-21	Шу шартдаги катакларни форматлаш (қиймат):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:578	
 26c96c70f5af		Freeze\nPanes	Sohalarni\nqotirish	reviewed:agent-opus:2026-10-18	Соҳаларни\nқотириш	reviewed:agent-opus:2026-10-18	Закрепить\nобласти	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:391	
-26dc6d9b06c6		Forecast Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1978	
+26dc6d9b06c6		Forecast Sheet	Prognoz varaqi	reviewed:agent-opus:2026-10-21	Прогноз варақи	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1978	
 2795c8c95dc4		Current\nDate	Joriy\nsana	reviewed:agent-opus:2026-10-18	Жорий\nсана	reviewed:agent-opus:2026-10-18	Текущая\nдата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:492	
-2797ef0206ae		In-cell dropdown		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:861	
+2797ef0206ae		In-cell dropdown	Katakdagi roʻyxat	reviewed:agent-opus:2026-10-21	Катакдаги рўйхат	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:861	
 28453c31ebbf		Forecast\nSheet	Prognoz\nvaraqi	reviewed:agent-opus:2026-10-18	Прогноз\nварақи	reviewed:agent-opus:2026-10-18	Лист\nпрогноза	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:365	
 28674c272137		Show Formulas	Formulalarni koʻrsatish	reviewed:agent-opus:2026-10-18	Формулаларни кўрсатиш	reviewed:agent-opus:2026-10-18	Показать формулы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:329	
-2886b0537ae4		Aggregate duplicates using		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:460	
-2889e7ae5295		Remove Duplicates		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:435	
+2886b0537ae4		Aggregate duplicates using	Takrorlarni jamlash usuli	reviewed:agent-opus:2026-10-21	Такрорларни жамлаш усули	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:460	
+2889e7ae5295		Remove Duplicates	Takrorlarni oʻchirish	reviewed:agent-opus:2026-10-21	Такрорларни ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:435	
 28a4a07a83ef		Text to\nColumns	Matnni\nustunlarga ajratish	reviewed:agent-opus:2026-10-18	Матнни\nустунларга ажратиш	reviewed:agent-opus:2026-10-18	Текст\nпо столбцам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:286	
-28bb288ddf01		Find & Select		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1037	
-2916b73995a8		Yellow Fill with Dark Yellow Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:607	
-291effd58ad0		Paper Size		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1661	
-299de3fcbb2b		Insert Function		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:31	
-299f7665001a		Series…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:989	
+28bb288ddf01		Find & Select	Topish va tanlash	reviewed:agent-opus:2026-10-21	Топиш ва танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1037	
+2916b73995a8		Yellow Fill with Dark Yellow Text	Sariq fon, quyuq sariq matn	reviewed:agent-opus:2026-10-21	Сариқ фон, қуюқ сариқ матн	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:607	
+291effd58ad0		Paper Size	Qogʻoz oʻlchami	reviewed:agent-opus:2026-10-21	Қоғоз ўлчами	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1661	
+299de3fcbb2b		Insert Function	Funksiya kiritish	reviewed:agent-opus:2026-10-21	Функция киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:31	
+299f7665001a		Series…	Progressiya…	reviewed:agent-opus:2026-10-21	Прогрессия…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:989	
 29ca069c5bd2		Delete Sheet Columns	Varaq ustunlarini oʻchirish	reviewed:agent-opus:2026-10-18	Варақ устунларини ўчириш	reviewed:agent-opus:2026-10-18	Удалить столбцы листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:246	
 29ca3cd76afb		Draw with ink	Qoʻl bilan chizish	reviewed:agent-opus:2026-10-18	Қўл билан чизиш	reviewed:agent-opus:2026-10-18	Рисование от руки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:293	
 29e70f5d3a9f		Blank workbook	Boʻsh ish kitobi	reviewed:agent-opus:2026-10-18	Бўш иш китоби	reviewed:agent-opus:2026-10-18	Пустая книга	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:331	
-2a5d4621ee3f		Undo list		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:82	
-2ac4d0f65daf		Print Titles		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1694	
-2b108b9a8c7e		Formats (T)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:300	
-2b269ea231e5		Save a Copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:777	
-2b70d0ae1d84		Operation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:311	
-2c3923db9e0f		Unhide Sheet…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:940	
-2e6c7aece18f		Password (optional):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:183	
-2e99ecf6400d		Insert Link (⌘K)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1543	
+2a5d4621ee3f		Undo list	Qaytarish roʻyxati	reviewed:agent-opus:2026-10-21	Қайтариш рўйхати	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:82	
+2ac4d0f65daf		Print Titles	Sarlavhalarni chop etish	reviewed:agent-opus:2026-10-21	Сарлавҳаларни чоп этиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1694	
+2b108b9a8c7e		Formats (T)	Formatlar (T)	reviewed:agent-opus:2026-10-21	Форматлар (T)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:300	
+2b269ea231e5		Save a Copy	Nusxasini saqlash	reviewed:agent-opus:2026-10-21	Нусхасини сақлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:777	
+2b70d0ae1d84		Operation	Amal	reviewed:agent-opus:2026-10-21	Амал	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:311	
+2c3923db9e0f		Unhide Sheet…	Varaqni koʻrsatish…	reviewed:agent-opus:2026-10-21	Варақни кўрсатиш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:940	
+2e6c7aece18f		Password (optional):	Parol (ixtiyoriy):	reviewed:agent-opus:2026-10-21	Пароль (ихтиёрий):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:183	
+2e99ecf6400d		Insert Link (⌘K)	Havola kiritish (⌘K)	reviewed:agent-opus:2026-10-21	Ҳавола киритиш (⌘K)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1543	
 2f0e0f6272ab		{n} years ago	{n} yil oldin	reviewed:agent-opus:2026-10-18	{n} йил олдин	reviewed:agent-opus:2026-10-18	{n} г. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:500	
-2f884cb270b2		Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
-2ff039a78379		Use a field's menu to move it between areas:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:57	
+2f884cb270b2		Values	Qiymatlar	reviewed:agent-opus:2026-10-21	Қийматлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
+2ff039a78379		Use a field's menu to move it between areas:	Maydonni sohalar oʻrtasida koʻchirish uchun uning menyusidan foydalaning:	reviewed:agent-opus:2026-10-21	Майдонни соҳалар ўртасида кўчириш учун унинг менюсидан фойдаланинг:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:57	
 303afe88f34a		Merge Across	Qatorlar boʻyicha birlashtirish	reviewed:agent-opus:2026-10-18	Қаторлар бўйича бирлаштириш	reviewed:agent-opus:2026-10-18	Объединить по строкам	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:204	
-30640345191d		By Changing Variable Cells:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2472	
-313d23665956		Refers to:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:560	
+30640345191d		By Changing Variable Cells:	Oʻzgaruvchi kataklarni oʻzgartirib:	reviewed:agent-opus:2026-10-21	Ўзгарувчи катакларни ўзгартириб:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2472	
+313d23665956		Refers to:	Diapazon:	reviewed:agent-opus:2026-10-21	Диапазон:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:560	
 31649d8286c0		Insert Page Break	Sahifa uzilishini kiritish	reviewed:agent-opus:2026-10-18	Саҳифа узилишини киритиш	reviewed:agent-opus:2026-10-18	Вставить разрыв страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:309	
-31a7b0f99014		In the last 7 days		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:591	
+31a7b0f99014		In the last 7 days	Oxirgi 7 kunda	reviewed:agent-opus:2026-10-21	Охирги 7 кунда	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:591	
 31eb4e291566		Edit	Tahrirlash	reviewed:agent-opus:2026-10-18	Таҳрирлаш	reviewed:agent-opus:2026-10-18	Изменение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:456	
-32853d96cbba		F-Test Two-Sample for Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:42	
-328d3bad171f		Line or Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1462	
-3335740d3ea4		Calculation Options		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1859	
+32853d96cbba		F-Test Two-Sample for Variances	Dispersiyalar uchun ikki tanlanmali F-test	reviewed:agent-opus:2026-10-21	Дисперсиялар учун икки танланмали F-тест	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:42	
+328d3bad171f		Line or Area	Chiziqli yoki sohali	reviewed:agent-opus:2026-10-21	Чизиқли ёки соҳали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1462	
+3335740d3ea4		Calculation Options	Hisoblash parametrlari	reviewed:agent-opus:2026-10-21	Ҳисоблаш параметрлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1859	
 336b32a47ecd		Transpose	Transponirlash	reviewed:agent-opus:2026-10-18	Транспонирлаш	reviewed:agent-opus:2026-10-18	Транспонировать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:183	
-3380d6cfaeb1		Refers to cells:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:225	
-3459c155ac22		Formulas and number formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:305	
-34f61c5b85be		this workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1185	
-36aad568e9b0		Red Border		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:611	
+3380d6cfaeb1		Refers to cells:	Kataklar diapazoni:	reviewed:agent-opus:2026-10-21	Катаклар диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:225	
+3459c155ac22		Formulas and number formats	Formulalar va son formatlari	reviewed:agent-opus:2026-10-21	Формулалар ва сон форматлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:305	
+34f61c5b85be		this workbook	bu ish kitobi	reviewed:agent-opus:2026-10-21	бу иш китоби	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1185	
+36aad568e9b0		Red Border	Qizil chegara	reviewed:agent-opus:2026-10-21	Қизил чегара	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:611	
 36d6c84c3847		Bottom 10%	Eng past 10%	reviewed:agent-opus:2026-10-18	Энг паст 10%	reviewed:agent-opus:2026-10-18	Нижние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:435	
 3726d34601a3		Clear Validation	Tekshiruvni tozalash	reviewed:agent-opus:2026-10-18	Текширувни тозалаш	reviewed:agent-opus:2026-10-18	Очистить проверку данных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:352	
-37e68eb5f3fd		This week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:593	
-37e71a619568		Summary statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2322	
-37f7e95ca334		Move to Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:99	
+37e68eb5f3fd		This week	Shu hafta	reviewed:agent-opus:2026-10-21	Шу ҳафта	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:593	
+37e71a619568		Summary statistics	Yakuniy statistika	reviewed:agent-opus:2026-10-21	Якуний статистика	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2322	
+37f7e95ca334		Move to Values	Qiymatlarga koʻchirish	reviewed:agent-opus:2026-10-21	Қийматларга кўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:99	
 3841f9f1d52d		Data Validation	Maʼlumotlarni tekshirish	reviewed:agent-opus:2026-10-18	Маълумотларни текшириш	reviewed:agent-opus:2026-10-18	Проверка данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:567	
-38708c7593a6		Tabular		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:167	
-38a227195d15		Horizontal axis title:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:759	
-38aec5a5de5b		Search commands (⌘⇧Space)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:127	
-38bf1fac183e		Column widths		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:304	
-38c07f02063c		Regression		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:46	
+38708c7593a6		Tabular	Jadvalli	reviewed:agent-opus:2026-10-21	Жадвалли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:167	
+38a227195d15		Horizontal axis title:	Gorizontal oʻq sarlavhasi:	reviewed:agent-opus:2026-10-21	Горизонтал ўқ сарлавҳаси:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:759	
+38aec5a5de5b		Search commands (⌘⇧Space)	Buyruqlarni qidirish (⌘⇧Space)	reviewed:agent-opus:2026-10-21	Буйруқларни қидириш (⌘⇧Space)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:127	
+38bf1fac183e		Column widths	Ustun kengliklari	reviewed:agent-opus:2026-10-21	Устун кенгликлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:304	
+38c07f02063c		Regression	Regressiya	reviewed:agent-opus:2026-10-21	Регрессия	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:46	
 39149146b169	Sheet Options	View	Koʻrinish	reviewed:agent-opus:2026-10-18	Кўриниш	reviewed:agent-opus:2026-10-18	На экране	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
 397b189393d1		Format\nas Table	Jadval sifatida\nformatlash	reviewed:agent-opus:2026-10-18	Жадвал сифатида\nформатлаш	reviewed:agent-opus:2026-10-18	Форматировать\nкак таблицу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:233	
-3a3b9a2e0578		Edit Name		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
-3abd93a5e3cb		Print Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1670	
-3acd9edac592		Add subtotal to (columns, e.g. C,D):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:521	
+3a3b9a2e0578		Edit Name	Nomni tahrirlash	reviewed:agent-opus:2026-10-21	Номни таҳрирлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
+3abd93a5e3cb		Print Area	Chop etish sohasi	reviewed:agent-opus:2026-10-21	Чоп этиш соҳаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1670	
+3acd9edac592		Add subtotal to (columns, e.g. C,D):	Oraliq jamini qoʻshish (ustunlar, masalan C,D):	reviewed:agent-opus:2026-10-21	Оралиқ жамини қўшиш (устунлар, масалан C,D):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:521	
 3b49c9e7c07a		Current Time	Joriy vaqt	reviewed:agent-opus:2026-10-18	Жорий вақт	reviewed:agent-opus:2026-10-18	Текущее время	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:502	
-3b5a68bfedb3		Ranges that stay editable when the sheet is protected:		todo		todo		todo		P2	gridcraft		
-3b5ec15ed061		Z to A		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1948	
+3b5a68bfedb3		Ranges that stay editable when the sheet is protected:	Varaq himoyalanganda tahrirlash mumkin boʻlgan diapazonlar:	reviewed:agent-opus:2026-10-21	Варақ ҳимояланганда таҳрирлаш мумкин бўлган диапазонлар:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+3b5ec15ed061		Z to A	Z dan A gacha	reviewed:agent-opus:2026-10-21	З дан А гача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1948	
 3bc9347bc0d6		Circle Invalid Data	Xato maʼlumotlarni doiraga olish	reviewed:agent-opus:2026-10-18	Хато маълумотларни доирага олиш	reviewed:agent-opus:2026-10-18	Обвести неверные данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:351	review-agent-2026-10-18: shorter, keeps "circle"
-3be0d8024a71		Horizontal (Category) Axis Labels:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2187	
-3da29927c7e9		Save (⌘S)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:71	
-3dcc37f25962		Select Data		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:712	
-3e9598d3791f		Go To Special		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:649	
+3be0d8024a71		Horizontal (Category) Axis Labels:	Gorizontal (toifa) oʻq yorliqlari:	reviewed:agent-opus:2026-10-21	Горизонтал (тоифа) ўқ ёрлиқлари:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2187	
+3da29927c7e9		Save (⌘S)	Saqlash (⌘S)	reviewed:agent-opus:2026-10-21	Сақлаш (⌘S)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:71	
+3dcc37f25962		Select Data	Maʼlumotlarni tanlash	reviewed:agent-opus:2026-10-21	Маълумотларни танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:712	
+3e9598d3791f		Go To Special	Maxsus tanlash	reviewed:agent-opus:2026-10-21	Махсус танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:649	
 3e95c3f43cad		Subtotal	Oraliq jami	reviewed:agent-opus:2026-10-18	Оралиқ жами	reviewed:agent-opus:2026-10-18	Промежуточный итог	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:505	
-3ebdc88c5708		Insert Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:872	
-3f34d6b40c9d		Count		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:463	
-3f92764778c2		Interpolation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
-3fd2355426f7		Allow all users of this sheet to:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:184	
-403190d843bb		Unhide sheet:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:282	
+3ebdc88c5708		Insert Sheet	Varaq kiritish	reviewed:agent-opus:2026-10-21	Варақ киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:872	
+3f34d6b40c9d		Count	Soni	reviewed:agent-opus:2026-10-21	Сони	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:463	
+3f92764778c2		Interpolation	Interpolyatsiya	reviewed:agent-opus:2026-10-21	Интерполяция	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
+3fd2355426f7		Allow all users of this sheet to:	Ushbu varaqning barcha foydalanuvchilariga ruxsat berish:	reviewed:agent-opus:2026-10-21	Ушбу варақнинг барча фойдаланувчиларига рухсат бериш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:184	
+403190d843bb		Unhide sheet:	Koʻrsatiladigan varaq:	reviewed:agent-opus:2026-10-21	Кўрсатиладиган варақ:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:282	
 404e03ffdf73		Number\nof Pages	Sahifalar\nsoni	reviewed:agent-opus:2026-10-18	Саҳифалар\nсони	reviewed:agent-opus:2026-10-18	Число\nстраниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:491	
-408b2f075010		Column chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
+408b2f075010		Column chart	Ustunli diagramma	reviewed:agent-opus:2026-10-21	Устунли диаграмма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
 40a35efc36f5		Excel Workbook (*.xlsx)	Excel ish kitobi (*.xlsx)	reviewed:agent-opus:2026-10-18	Excel иш китоби (*.xlsx)	reviewed:agent-opus:2026-10-18	Книга Excel (*.xlsx)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
-40f682276e1f		Chart data range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2160	
-414b90fc1d84		Blanks		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:655	
-41533c7af2d7		Footer:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:394	
+40f682276e1f		Chart data range:	Diagramma maʼlumotlari diapazoni:	reviewed:agent-opus:2026-10-21	Диаграмма маълумотлари диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2160	
+414b90fc1d84		Blanks	Boʻsh kataklar	reviewed:agent-opus:2026-10-21	Бўш катаклар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:655	
+41533c7af2d7		Footer:	Quyi kolontitul:	reviewed:agent-opus:2026-10-21	Қуйи колонтитул:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:394	
 41631fa9cba6		Click to add data	Maʼlumot qoʻshish uchun bosing	reviewed:agent-opus:2026-10-18	Маълумот қўшиш учун босинг	reviewed:agent-opus:2026-10-18	Щелкните, чтобы добавить данные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:484	
-41721f740fb7		Formulas (F)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:298	
-41814b0703fa		Recommended Charts		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
+41721f740fb7		Formulas (F)	Formulalar (F)	reviewed:agent-opus:2026-10-21	Формулалар (F)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:298	
+41814b0703fa		Recommended Charts	Tavsiya etilgan diagrammalar	reviewed:agent-opus:2026-10-21	Тавсия этилган диаграммалар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
 41b1912ac93d		Unhide Columns	Ustunlarni koʻrsatish	reviewed:agent-opus:2026-10-18	Устунларни кўрсатиш	reviewed:agent-opus:2026-10-18	Показать столбцы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:255	
-41d95234ce49		Line chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
-41f3a6eb0c0e		Conditional Formatting Rules Manager		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:673	
-42d1b4ef382b		Divide		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
+41d95234ce49		Line chart	Chiziqli diagramma	reviewed:agent-opus:2026-10-21	Чизиқли диаграмма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:472	
+41f3a6eb0c0e		Conditional Formatting Rules Manager	Shartli formatlash qoidalarini boshqarish	reviewed:agent-opus:2026-10-21	Шартли форматлаш қоидаларини бошқариш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:673	
+42d1b4ef382b		Divide	Boʻlish	reviewed:agent-opus:2026-10-21	Бўлиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
 4353fe63eea7		Footer Margin	Quyi kolontitul hoshiyasi	reviewed:agent-opus:2026-10-18	Қуйи колонтитул ҳошияси	reviewed:agent-opus:2026-10-18	Поле нижнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:304	review-agent-2026-10-18: glossary Margins
 44289a4326c1		Delete Cells…	Kataklarni oʻchirish…	reviewed:agent-opus:2026-10-18	Катакларни ўчириш…	reviewed:agent-opus:2026-10-18	Удалить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:242	
-443fea239c15		Show as Rank		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:125	
-44aa38680098		Move to Row Labels		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:96	
+443fea239c15		Show as Rank	Rang sifatida koʻrsatish	reviewed:agent-opus:2026-10-21	Ранг сифатида кўрсатиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:125	
+44aa38680098		Move to Row Labels	Qator yorliqlariga koʻchirish	reviewed:agent-opus:2026-10-21	Қатор ёрлиқларига кўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:96	
 44d206163b70		Table\nStyles	Jadval\nuslublari	reviewed:agent-opus:2026-10-18	Жадвал\nуслублари	reviewed:agent-opus:2026-10-18	Стили\nтаблиц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:431	
-44f2f6e060d1		OK		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1373	
-454b2e7d5af6		Text to Columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1930	
-4575e2c025fb		Markers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:384	
+44f2f6e060d1		OK	OK	reviewed:agent-opus:2026-10-21	OK	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1373	
+454b2e7d5af6		Text to Columns	Matnni ustunlarga ajratish	reviewed:agent-opus:2026-10-21	Матнни устунларга ажратиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1930	
+4575e2c025fb		Markers	Markerlar	reviewed:agent-opus:2026-10-21	Маркерлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:384	
 45abfc387bd6		Cell\nStyles	Katak\nuslublari	reviewed:agent-opus:2026-10-18	Катак\nуслублари	reviewed:agent-opus:2026-10-18	Стили\nячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:234	
-46004168cc1a		Do you want to save the changes you made to {title}?		todo		todo		todo		P2	gridcraft		
-46be21e0c4cd		There are no conditional formatting rules on this sheet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2218	
+46004168cc1a		Do you want to save the changes you made to {title}?	{title} ish kitobidagi oʻzgarishlar saqlansinmi?	reviewed:agent-opus:2026-10-21	{title} иш китобидаги ўзгаришлар сақлансинми?	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+46be21e0c4cd		There are no conditional formatting rules on this sheet.	Bu varaqda shartli formatlash qoidalari yoʻq.	reviewed:agent-opus:2026-10-21	Бу варақда шартли форматлаш қоидалари йўқ.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2218	
 4707815b4fe1		Custom	Maxsus	reviewed:agent-opus:2026-10-18	Махсус	reviewed:agent-opus:2026-10-18	Пользовательский	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:853	
-47357253e550		Forecast end (date or number; blank: a third of the history):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:448	
+47357253e550		Forecast end (date or number; blank: a third of the history):	Prognoz oxiri (sana yoki son; boʻsh: tarixning uchdan bir qismi):	reviewed:agent-opus:2026-10-21	Прогноз охири (сана ёки сон; бўш: тарихнинг учдан бир қисми):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:448	
 47d9e67d779d		Filter	Filtr	reviewed:agent-opus:2026-10-18	Фильтр	reviewed:agent-opus:2026-10-18	Фильтр	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2785	review-agent-2026-10-18: Cyrillic spelling
-48a3d09f2e45		medium		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1692	
-493ae6abfc22		Match entire cell contents		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1828	
+48a3d09f2e45		medium	oʻrtacha	reviewed:agent-opus:2026-10-21	ўртача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1692	
+493ae6abfc22		Match entire cell contents	Katakning butun tarkibi mos kelsin	reviewed:agent-opus:2026-10-21	Катакнинг бутун таркиби мос келсин	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1828	
 496192db82af		Point	Koʻrsatish	reviewed:agent-opus:2026-10-18	Кўрсатиш	reviewed:agent-opus:2026-10-18	Указание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:457	
 49cb1d2f9d2e		Insert checkboxes in the selected cells	Tanlangan kataklarga belgilash kataklarini kiritish	reviewed:agent-opus:2026-10-18	Танланган катакларга белгилаш катакларини киритиш	reviewed:agent-opus:2026-10-18	Вставить флажки в выбранные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:291	
 49dde8411c94		Decrease Decimal	Kasr xonalarini kamaytirish	reviewed:agent-opus:2026-10-18	Каср хоналарини камайтириш	reviewed:agent-opus:2026-10-18	Уменьшить разрядность	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:229	
-4a2bbb6febd7		Column width (characters):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:143	
+4a2bbb6febd7		Column width (characters):	Ustun kengligi (belgilarda):	reviewed:agent-opus:2026-10-21	Устун кенглиги (белгиларда):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:143	
 4a2ebb51bdcf		Cut (⌘X)	Kesib olish (⌘X)	reviewed:agent-opus:2026-10-18	Кесиб олиш (⌘X)	reviewed:agent-opus:2026-10-18	Вырезать (⌘X)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:190	review-agent-2026-10-18: Cyrillic spelling
-4a4290567bc7		Move to Report Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:98	
-4a442157a5ee		Formula Builder		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:633	
+4a4290567bc7		Move to Report Filter	Hisobot filtriga koʻchirish	reviewed:agent-opus:2026-10-21	Ҳисобот фильтрига кўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:98	
+4a442157a5ee		Formula Builder	Formula konstruktori	reviewed:agent-opus:2026-10-21	Формула конструктори	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:633	
 4aab2050258c		Accounting	Buxgalteriya	reviewed:agent-opus:2026-10-18	Бухгалтерия	reviewed:agent-opus:2026-10-18	Финансовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 4aae67c7c848		{n} weeks ago	{n} hafta oldin	reviewed:agent-opus:2026-10-18	{n} ҳафта олдин	reviewed:agent-opus:2026-10-18	{n} нед. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:496	
-4bf9e8ff9de7		Anova: Single Factor		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:37	
+4bf9e8ff9de7		Anova: Single Factor	Bir omilli dispersion tahlil	reviewed:agent-opus:2026-10-21	Бир омилли дисперсион таҳлил	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:37	
 4c08b0318bc1		Define Name	Nom berish	reviewed:agent-opus:2026-10-18	Ном бериш	reviewed:agent-opus:2026-10-18	Присвоить имя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:323	review-agent-2026-10-18: define a name = give a name
-4c96c420d9e9		Radar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2048	
+4c96c420d9e9		Radar	Radar	reviewed:agent-opus:2026-10-21	Радар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2048	
 4ceba8fe31d8		File Path	Fayl yoʻli	reviewed:agent-opus:2026-10-18	Файл йўли	reviewed:agent-opus:2026-10-18	Путь к файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:503	
-4d1c7fe117ac		My data has headers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
+4d1c7fe117ac		My data has headers	Maʼlumotlarimda sarlavhalar bor	reviewed:agent-opus:2026-10-21	Маълумотларимда сарлавҳалар бор	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:437	
 4d2eb547a809		Data Labels: None	Maʼlumotlar yorliqlari: yoʻq	reviewed:agent-opus:2026-10-18	Маълумотлар ёрлиқлари: йўқ	reviewed:agent-opus:2026-10-18	Подписи данных: нет	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:420	
 4d3a45552abe		Sort A to Z	A dan Z gacha saralash	reviewed:agent-opus:2026-10-18	А дан З гача саралаш	reviewed:agent-opus:2026-10-18	Сортировка от А до Я	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2862	
-4d6001c2d85b		Create Sparklines		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:379	
-4dbde37a8384		Create Forecast Worksheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:443	
-4dec544ef821		Move or Copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:164	
-4e31b10c4272		Group by Years		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:139	
+4d6001c2d85b		Create Sparklines	Mini-diagrammalar yaratish	reviewed:agent-opus:2026-10-21	Мини-диаграммалар яратиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:379	
+4dbde37a8384		Create Forecast Worksheet	Prognoz varaqini yaratish	reviewed:agent-opus:2026-10-21	Прогноз варақини яратиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:443	
+4dec544ef821		Move or Copy	Koʻchirish yoki nusxalash	reviewed:agent-opus:2026-10-21	Кўчириш ёки нусхалаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:164	
+4e31b10c4272		Group by Years	Yillar boʻyicha guruhlash	reviewed:agent-opus:2026-10-21	Йиллар бўйича гуруҳлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:139	
 4ef00c743f56		Fit Sheet on One Page	Varaqni bir sahifaga sigʻdirish	reviewed:agent-opus:2026-10-18	Варақни бир саҳифага сиғдириш	reviewed:agent-opus:2026-10-18	Вписать лист на одну страницу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:732	
-4f0a05f74965		The spelling check is complete for the entire sheet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2620	
-4f2e5ee35909		$ English (United States)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:801	
-4f6ccfd99e4c		To value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2287	
-4f7ab468e79d		Show as % of Grand Total		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:123	
-4fb2e8aa5ad9		Bottom Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:707	
+4f0a05f74965		The spelling check is complete for the entire sheet.	Butun varaq boʻyicha imlo tekshiruvi yakunlandi.	reviewed:agent-opus:2026-10-21	Бутун варақ бўйича имло текшируви якунланди.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2620	
+4f2e5ee35909		$ English (United States)	$ Ingliz (AQSH)	reviewed:agent-opus:2026-10-21	$ Инглиз (АҚШ)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:801	
+4f6ccfd99e4c		To value:	Maqsadli qiymat:	reviewed:agent-opus:2026-10-21	Мақсадли қиймат:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2287	
+4f7ab468e79d		Show as % of Grand Total	Umumiy jamidan % sifatida koʻrsatish	reviewed:agent-opus:2026-10-21	Умумий жамидан % сифатида кўрсатиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:123	
+4fb2e8aa5ad9		Bottom Align	Pastga tekislash	reviewed:agent-opus:2026-10-21	Пастга текислаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:707	
 4fd487d5442d		Accounting Number Format	Buxgalteriya son formati	reviewed:agent-opus:2026-10-18	Бухгалтерия сон формати	reviewed:agent-opus:2026-10-18	Финансовый числовой формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:225	
-4ff18fd20844		Set Objective:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2459	
+4ff18fd20844		Set Objective:	Maqsad katagi:	reviewed:agent-opus:2026-10-21	Мақсад катаги:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2459	
 4ff27c5f2489		Different First Page	Birinchi sahifa boshqacha	reviewed:agent-opus:2026-10-18	Биринчи саҳифа бошқача	reviewed:agent-opus:2026-10-18	Особый колонтитул для первой страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:507	review-agent-2026-10-18: same as wordcraft
-5004637f1fc1		Format Chart pane		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2389	
+5004637f1fc1		Format Chart pane	Diagramma formati paneli	reviewed:agent-opus:2026-10-21	Диаграмма формати панели	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2389	
 520a94eb4ac8		Create from Selection	Tanlovdan yaratish	reviewed:agent-opus:2026-10-18	Танловдан яратиш	reviewed:agent-opus:2026-10-18	Создать из выделенного	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:325	
-529ebc5e39ed		Stacked Line		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2041	
+529ebc5e39ed		Stacked Line	Yigʻma chiziqli	reviewed:agent-opus:2026-10-21	Йиғма чизиқли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2041	
 52e182f4dbaa		Data Bars	Maʼlumotlar chiziqlari	reviewed:agent-opus:2026-10-18	Маълумотлар чизиқлари	reviewed:agent-opus:2026-10-18	Гистограммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:441	
-52e47597b42f		with		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:604	
+52e47597b42f		with	bilan	reviewed:agent-opus:2026-10-21	билан	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:604	
 5314440da3ea		Hide Rows	Qatorlarni yashirish	reviewed:agent-opus:2026-10-18	Қаторларни яшириш	reviewed:agent-opus:2026-10-18	Скрыть строки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:252	
 533060d73779		Name\nManager	Nomlarni\nboshqarish	reviewed:agent-opus:2026-10-18	Номларни\nбошқариш	reviewed:agent-opus:2026-10-18	Диспетчер\nимён	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:322	review-agent-2026-10-18: "dispetcher" is a Russian loan; pattern of Manage Styles
-53598bef9c2f		Zoom to 100%		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2157	
-53993ae7c390		Column or Bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1450	
-5399758add43		Search and run any command		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2246	
-543dacd73d7b		Macros and scripts in this workbook (Alt+F8)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2243	
-544512e60696		Treat consecutive delimiters as one		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:428	
-545053146e82		Double Accounting		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1647	
+53598bef9c2f		Zoom to 100%	100% masshtab	reviewed:agent-opus:2026-10-21	100% масштаб	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2157	
+53993ae7c390		Column or Bar	Ustunli yoki yotiq ustunli	reviewed:agent-opus:2026-10-21	Устунли ёки ётиқ устунли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1450	
+5399758add43		Search and run any command	Istalgan buyruqni qidirish va bajarish	reviewed:agent-opus:2026-10-21	Исталган буйруқни қидириш ва бажариш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2246	
+543dacd73d7b		Macros and scripts in this workbook (Alt+F8)	Bu ish kitobidagi makroslar va skriptlar (Alt+F8)	reviewed:agent-opus:2026-10-21	Бу иш китобидаги макрослар ва скриптлар (Alt+F8)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2243	
+544512e60696		Treat consecutive delimiters as one	Ketma-ket ajratgichlarni bitta deb hisoblash	reviewed:agent-opus:2026-10-21	Кетма-кет ажратгичларни битта деб ҳисоблаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:428	
+545053146e82		Double Accounting	Qoʻsh (buxgalteriya)	reviewed:agent-opus:2026-10-21	Қўш (бухгалтерия)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1647	
 546458155c46		Lookup &\nReference	Qidirish va\nhavolalar	reviewed:agent-opus:2026-10-18	Қидириш ва\nҳаволалар	reviewed:agent-opus:2026-10-18	Поиск и\nссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:478	
-5524b084e6ae		Format cells that contain a date occurring:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:586	
-57452bc7ceb1		not between		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:873	
-57ab4c4fe73f		Top Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:705	
-57b9e2ab3911		Workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:546	
-585f499462b0		Standardized Residuals		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2343	
+5524b084e6ae		Format cells that contain a date occurring:	Sanasi quyidagicha boʻlgan kataklarni formatlash:	reviewed:agent-opus:2026-10-21	Санаси қуйидагича бўлган катакларни форматлаш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:586	
+57452bc7ceb1		not between	oraligʻida emas	reviewed:agent-opus:2026-10-21	оралиғида эмас	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:873	
+57ab4c4fe73f		Top Align	Yuqoriga tekislash	reviewed:agent-opus:2026-10-21	Юқорига текислаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:705	
+57b9e2ab3911		Workbook	Ish kitobi	reviewed:agent-opus:2026-10-21	Иш китоби	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:546	
+585f499462b0		Standardized Residuals	Standartlashtirilgan qoldiqlar	reviewed:agent-opus:2026-10-21	Стандартлаштирилган қолдиқлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2343	
 5871e6c1e97c		Page Break\nPreview	Sahifa uzilishlarini\noldindan koʻrish	reviewed:agent-opus:2026-10-18	Саҳифа узилишларини\nолдиндан кўриш	reviewed:agent-opus:2026-10-18	Предварительный просмотр\nразрывов страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:383	
 59e99502ab6d		Middle\nAlign	Oʻrtaga\ntekislash	reviewed:agent-opus:2026-10-18	Ўртага\nтекислаш	reviewed:agent-opus:2026-10-18	По центру\nвертикали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:210	review-agent-2026-10-18: parallel to Top/Bottom Align
 5a77013a9ed2		Freeze Top Row	Yuqori qatorni qotirish	reviewed:agent-opus:2026-10-18	Юқори қаторни қотириш	reviewed:agent-opus:2026-10-18	Закрепить верхнюю строку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:393	
 5b04f820ca3e		Zoom to\nSelection	Tanlovga\nmasshtablash	reviewed:agent-opus:2026-10-18	Танловга\nмасштаблаш	reviewed:agent-opus:2026-10-18	Масштаб по\nвыделению	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:390	
-5b074d2c7d20		How agents drive GridCraft (MCP / control channel)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2251	
-5bd421b219ba		New title (Modify):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:227	
-5bd7f3483b86		Middle Align		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:706	
-5db59d93fb89		Scope		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2006	
+5b074d2c7d20		How agents drive GridCraft (MCP / control channel)	Agentlar GridCraftni qanday boshqaradi (MCP / boshqaruv kanali)	reviewed:agent-opus:2026-10-21	Агентлар GridCraftни қандай бошқаради (MCP / бошқарув канали)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2251	
+5bd421b219ba		New title (Modify):	Yangi nom (oʻzgartirish uchun):	reviewed:agent-opus:2026-10-21	Янги ном (ўзгартириш учун):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:227	
+5bd7f3483b86		Middle Align	Oʻrtaga tekislash	reviewed:agent-opus:2026-10-21	Ўртага текислаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:706	
+5db59d93fb89		Scope	Amal doirasi	reviewed:agent-opus:2026-10-21	Амал доираси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2006	
 5e11878b5007		Sparklines	Mini-diagrammalar	reviewed:agent-opus:2026-10-18	Мини-диаграммалар	reviewed:agent-opus:2026-10-18	Спарклайны	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:289	review-agent-2026-10-18: left as draft: sparklines: no established Uzbek term; descriptive draft; orchestrator 2026-10-18: resolved left-as-draft row (owner-delegated review)
-5e2c768c6450		Import a text or CSV file		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1889	
-5ebcac03f1db		Start a conversation:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:348	
-5efdc66c8719		Comments pane		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2055	
+5e2c768c6450		Import a text or CSV file	Matn yoki CSV faylni import qilish	reviewed:agent-opus:2026-10-21	Матн ёки CSV файлни импорт қилиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1889	
+5ebcac03f1db		Start a conversation:	Muhokamani boshlang:	reviewed:agent-opus:2026-10-21	Муҳокамани бошланг:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:348	
+5efdc66c8719		Comments pane	Izohlar paneli	reviewed:agent-opus:2026-10-21	Изоҳлар панели	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2055	
 5f2220cef638		Wrap Text	Matnni oʻrash	reviewed:agent-opus:2026-10-18	Матнни ўраш	reviewed:agent-opus:2026-10-18	Переносить текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:201	
-5f6470d8ebb4		less than		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:877	
-5fab5b433260		Vertical axis title:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:760	
-5fcdd68baa86		 (password, unlocked)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:203	
-5fd133ea395d		Outline		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1671	
+5f6470d8ebb4		less than	kichik	reviewed:agent-opus:2026-10-21	кичик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:877	
+5fab5b433260		Vertical axis title:	Vertikal oʻq sarlavhasi:	reviewed:agent-opus:2026-10-21	Вертикал ўқ сарлавҳаси:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:760	
+5fcdd68baa86		 (password, unlocked)	 (parol, qulfdan chiqarilgan)	reviewed:agent-opus:2026-10-21	 (пароль, қулфдан чиқарилган)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:203	
+5fd133ea395d		Outline	Kontur	reviewed:agent-opus:2026-10-21	Контур	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1671	
 5fff6969a344		{n} formulas contain text and were not changed	{n} ta formulada matn bor, ular oʻzgartirilmadi	reviewed:agent-opus:2026-10-20	{n} та формулада матн бор, улар ўзгартирилмади	reviewed:agent-opus:2026-10-20	Формулы с текстом не изменены: {n}	reviewed:agent-opus:2026-10-20		P1	gridcraft	patches/gridcraft/0121	category:message; added by the translit UI patches (0121) | reviewed by an opus sub-agent 2026-10-20 (agent review delegated by the owner)
 601007eb6fa1		{n} months ago	{n} oy oldin	reviewed:agent-opus:2026-10-18	{n} ой олдин	reviewed:agent-opus:2026-10-18	{n} мес. назад	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:498	
 605b7143c566		Page\nLayout	Sahifa\nmaketi	reviewed:agent-opus:2026-10-18	Саҳифа\nмакети	reviewed:agent-opus:2026-10-18	Разметка\nстраницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:384	
-60b73435a481		Workbook\nStatistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2023	
-6182609f68d7		More commands		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:98	
-61b614dc218d		e.g. lookup, average, date		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1751	
+60b73435a481		Workbook\nStatistics	Ish kitobi\nstatistikasi	reviewed:agent-opus:2026-10-21	Иш китоби\nстатистикаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2023	
+6182609f68d7		More commands	Boshqa buyruqlar	reviewed:agent-opus:2026-10-21	Бошқа буйруқлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:98	
+61b614dc218d		e.g. lookup, average, date	masalan: qidiruv, oʻrtacha, sana	reviewed:agent-opus:2026-10-21	масалан: қидирув, ўртача, сана	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1751	
 61bd491fceb3		Allow Edit\nRanges	Tahrirlash\ndiapazonlariga ruxsat	reviewed:agent-opus:2026-10-18	Таҳрирлаш\nдиапазонларига рухсат	reviewed:agent-opus:2026-10-18	Разрешить\nизменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:377	
 61c7d0b05e84		AutoFit Column Width	Ustun kengligini avtomoslash	reviewed:agent-opus:2026-10-18	Устун кенглигини автомослаш	reviewed:agent-opus:2026-10-18	Автоподбор ширины столбца	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3138	
 62829705488d		Find &\nSelect	Topish va\ntanlash	reviewed:agent-opus:2026-10-18	Топиш ва\nтанлаш	reviewed:agent-opus:2026-10-18	Найти и\nвыделить	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:269	
 63f4e82d7d64		Horizontal	Gorizontal boʻyicha	reviewed:agent-opus:2026-10-18	Горизонтал бўйича	reviewed:agent-opus:2026-10-18	По горизонтали	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1592	
 641fe73825f1		Add Chart\nElement	Element\nqoʻshish	reviewed:agent-opus:2026-10-18	Элемент\nқўшиш	reviewed:agent-opus:2026-10-18	Добавить элемент\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:416	review-agent-2026-10-18: chart tab context
-644def2c898f		Delete Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:891	
-649a9aef5fc5		Select and move ink and shapes		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1584	
-650bb4be3653		Orientation (degrees)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1623	
+644def2c898f		Delete Sheet	Varaqni oʻchirish	reviewed:agent-opus:2026-10-21	Варақни ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:891	
+649a9aef5fc5		Select and move ink and shapes	Qoʻlyozma va shakllarni tanlash va koʻchirish	reviewed:agent-opus:2026-10-21	Қўлёзма ва шаклларни танлаш ва кўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1584	
+650bb4be3653		Orientation (degrees)	Yoʻnalish (gradus)	reviewed:agent-opus:2026-10-21	Йўналиш (градус)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1623	
 6631b6760eb4		Logical	Mantiqiy	reviewed:agent-opus:2026-10-18	Мантиқий	reviewed:agent-opus:2026-10-18	Логические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:476	
 66d2b84ef226		Just now	Hozirgina	reviewed:agent-opus:2026-10-18	Ҳозиргина	reviewed:agent-opus:2026-10-18	Только что	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:486	
-66efd489f087		 (password)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:204	
+66efd489f087		 (password)	 (parol)	reviewed:agent-opus:2026-10-21	 (пароль)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:204	
 66f7ecaddf48		Row Height…	Qator balandligi…	reviewed:agent-opus:2026-10-18	Қатор баландлиги…	reviewed:agent-opus:2026-10-18	Высота строки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3121	
-674b108c4867		Normal Probability		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2344	
+674b108c4867		Normal Probability	Normal ehtimollik grafigi	reviewed:agent-opus:2026-10-21	Нормал эҳтимоллик графиги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2344	
 675bbe1f5b41		Different Odd & Even Pages	Toq va juft sahifalar boshqacha	reviewed:agent-opus:2026-10-18	Тоқ ва жуфт саҳифалар бошқача	reviewed:agent-opus:2026-10-18	Разные колонтитулы для четных и нечетных страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:508	review-agent-2026-10-18: same as wordcraft
-67a23d1653e0		Shift cells right		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
+67a23d1653e0		Shift cells right	Kataklarni oʻngga surish	reviewed:agent-opus:2026-10-21	Катакларни ўнгга суриш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
 67d9c1fcdedb		Insert Paste	Siljitib qoʻyish	reviewed:agent-opus:2026-10-18	Силжитиб қўйиш	reviewed:agent-opus:2026-10-18	Вставка со сдвигом	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:116	review-agent-2026-10-18: Insert Paste is a paste (Paste = Qo`yish)
-67f2cf535dba		Standard column width (pixels):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:150	
-684e45a6d1c0		Background Color:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1713	
-687115d15f81		GRG Nonlinear		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2533	
+67f2cf535dba		Standard column width (pixels):	Standart ustun kengligi (pikselda):	reviewed:agent-opus:2026-10-21	Стандарт устун кенглиги (пикселда):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:150	
+684e45a6d1c0		Background Color:	Fon rangi:	reviewed:agent-opus:2026-10-21	Фон ранги:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1713	
+687115d15f81		GRG Nonlinear	GRG nochiziqli	reviewed:agent-opus:2026-10-21	GRG ночизиқли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2533	
 68f3e92e4b97		Sheet Right-to-Left	Varaq: oʻngdan chapga	reviewed:agent-opus:2026-10-18	Варақ: ўнгдан чапга	reviewed:agent-opus:2026-10-18	Лист справа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:314	
 68f454f03e43		Format Cell Alignment…	Katak tekislashi…	reviewed:agent-opus:2026-10-18	Катак текислаши…	reviewed:agent-opus:2026-10-18	Выравнивание ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:236	
-6929cc2728b0		Timeline range (blank: first column of the selection):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:446	
-6982b548dbac		Shift cells up		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:128	
+6929cc2728b0		Timeline range (blank: first column of the selection):	Vaqt shkalasi diapazoni (boʻsh: tanlovning birinchi ustuni):	reviewed:agent-opus:2026-10-21	Вақт шкаласи диапазони (бўш: танловнинг биринчи устуни):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:446	
+6982b548dbac		Shift cells up	Kataklarni yuqoriga surish	reviewed:agent-opus:2026-10-21	Катакларни юқорига суриш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:128	
 69af88eddae4		More Number Formats…	Boshqa son formatlari…	reviewed:agent-opus:2026-10-18	Бошқа сон форматлари…	reviewed:agent-opus:2026-10-18	Другие числовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:474	
 69d231a39e70		Short Date	Qisqa sana	reviewed:agent-opus:2026-10-18	Қисқа сана	reviewed:agent-opus:2026-10-18	Краткая дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-6b4f7e3601d1		Grouped By:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2313	
-6b71f9f34e27		CountA		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:464	
-6bb47c2311e2		Group by Months		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:141	
+6b4f7e3601d1		Grouped By:	Guruhlash:	reviewed:agent-opus:2026-10-21	Гуруҳлаш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2313	
+6b71f9f34e27		CountA	Boʻsh emaslar soni	reviewed:agent-opus:2026-10-21	Бўш эмаслар сони	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:464	
+6bb47c2311e2		Group by Months	Oylar boʻyicha guruhlash	reviewed:agent-opus:2026-10-21	Ойлар бўйича гуруҳлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:141	
 6bcdc373a458		Column Width…	Ustun kengligi…	reviewed:agent-opus:2026-10-18	Устун кенглиги…	reviewed:agent-opus:2026-10-18	Ширина столбца…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3137	
 6c1b475fba63		Top 10%	Eng yuqori 10%	reviewed:agent-opus:2026-10-18	Энг юқори 10%	reviewed:agent-opus:2026-10-18	Верхние 10%	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:433	
 6c3bd9b20117		100%	100%	reviewed:agent-opus:2026-10-18	100%	reviewed:agent-opus:2026-10-18	100%	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:533	
 6c3e0d97ff37		Clear Formats	Formatlarni tozalash	reviewed:agent-opus:2026-10-18	Форматларни тозалаш	reviewed:agent-opus:2026-10-18	Очистить форматы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:259	
 6c6d553c6fa3		Recent	Soʻnggi	reviewed:agent-opus:2026-10-18	Сўнгги	reviewed:agent-opus:2026-10-18	Последние	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:541	
-6c8ba76e7327		Spelling (F7)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2018	
+6c8ba76e7327		Spelling (F7)	Imlo (F7)	reviewed:agent-opus:2026-10-21	Имло (F7)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2018	
 6cf2eaba833b		Convert\nto Range	Diapazonga\naylantirish	reviewed:agent-opus:2026-10-18	Диапазонга\nайлантириш	reviewed:agent-opus:2026-10-18	Преобразовать\nв диапазон	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:430	
-6cff8de755e5		Text length		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:852	
+6cff8de755e5		Text length	Matn uzunligi	reviewed:agent-opus:2026-10-21	Матн узунлиги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:852	
 6d432c17698c		Select\nObjects	Obyektlarni\ntanlash	reviewed:agent-opus:2026-10-18	Объектларни\nтанлаш	reviewed:agent-opus:2026-10-18	Выбрать\nобъекты	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:296	
-6e3ef65bcd0c		Top margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:410	
+6e3ef65bcd0c		Top margin (in):	Yuqori hoshiya (dyuym):	reviewed:agent-opus:2026-10-21	Юқори ҳошия (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:410	
 6e400f934069		Save as type	Fayl turi	reviewed:agent-opus:2026-10-18	Файл тури	reviewed:agent-opus:2026-10-18	Тип файла	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:662	
-6e54f30f357d		Exponential Smoothing		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:41	
-6e9df4c140a7		Semicolon		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:424	
-6eea2ad9f5f4		Variable 2 Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
-6ef640b3eae7		Wrap text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1625	
-6efe0a0a285d		Database		todo		todo		todo		P2	gridcraft		
-6f2592685ec4		Protect Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:180	
-6fa74027cfb7		Format as Table		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:848	
+6e54f30f357d		Exponential Smoothing	Eksponensial tekislash	reviewed:agent-opus:2026-10-21	Экспоненциал текислаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:41	
+6e9df4c140a7		Semicolon	Nuqtali vergul	reviewed:agent-opus:2026-10-21	Нуқтали вергул	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:424	
+6eea2ad9f5f4		Variable 2 Range:	2-oʻzgaruvchi diapazoni:	reviewed:agent-opus:2026-10-21	2-ўзгарувчи диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
+6ef640b3eae7		Wrap text	Matnni oʻrash	reviewed:agent-opus:2026-10-21	Матнни ўраш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1625	
+6efe0a0a285d		Database	Maʼlumotlar bazasi	reviewed:agent-opus:2026-10-21	Маълумотлар базаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+6f2592685ec4		Protect Sheet	Varaqni himoyalash	reviewed:agent-opus:2026-10-21	Варақни ҳимоялаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:180	
+6fa74027cfb7		Format as Table	Jadval sifatida formatlash	reviewed:agent-opus:2026-10-21	Жадвал сифатида форматлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:848	
 6fdf011ed63e		Insert Cells…	Kataklarni kiritish…	reviewed:agent-opus:2026-10-18	Катакларни киритиш…	reviewed:agent-opus:2026-10-18	Вставить ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:240	
-7124ebc541b6		Alpha:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2335	
-7165234964dc		Remove the password (Modify)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:228	
-71ee56e434dd		Choose fields to add to report:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:30	
+7124ebc541b6		Alpha:	Alfa:	reviewed:agent-opus:2026-10-21	Альфа:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2335	
+7165234964dc		Remove the password (Modify)	Parolni olib tashlash (oʻzgartirish uchun)	reviewed:agent-opus:2026-10-21	Паролни олиб ташлаш (ўзгартириш учун)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:228	
+71ee56e434dd		Choose fields to add to report:	Hisobotga qoʻshiladigan maydonlarni tanlang:	reviewed:agent-opus:2026-10-21	Ҳисоботга қўшиладиган майдонларни танланг:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:30	
 720bd579aec0		Sheet\nName	Varaq\nnomi	reviewed:agent-opus:2026-10-18	Варақ\nноми	reviewed:agent-opus:2026-10-18	Имя\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:496	
 720d683cbf56		Top\nAlign	Yuqoriga\ntekislash	reviewed:agent-opus:2026-10-18	Юқорига\nтекислаш	reviewed:agent-opus:2026-10-18	По верхнему\nкраю	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:209	
 7377a5277705		Clear Comments and Notes	Izohlar va qaydlarni tozalash	reviewed:agent-opus:2026-10-18	Изоҳлар ва қайдларни тозалаш	reviewed:agent-opus:2026-10-18	Удалить комментарии и заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:261	
@@ -350,45 +350,45 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 752bbaf77800		Web Page (*.html)	Veb-sahifa (*.html)	reviewed:agent-opus:2026-10-18	Веб-саҳифа (*.html)	reviewed:agent-opus:2026-10-18	Веб-страница (*.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	review-agent-2026-10-18: veb- compounds hyphenated
 752e3f68d304		Show formula bar	Formulalar satrini koʻrsatish	reviewed:agent-opus:2026-10-18	Формулалар сатрини кўрсатиш	reviewed:agent-opus:2026-10-18	Показывать строку формул	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:961	
 769a1d63e823		Clear Rules from Entire Sheet	Butun varaq qoidalarini tozalash	reviewed:agent-opus:2026-10-18	Бутун варақ қоидаларини тозалаш	reviewed:agent-opus:2026-10-18	Очистить правила на всём листе	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:438	
-771ace62ab41		Standard Errors		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
-776825b6a90d		Min		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:467	
-77dff0ea564d		£ English (United Kingdom)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:806	
-783ba8059692		Make Unconstrained Variables Non-Negative		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2524	
+771ace62ab41		Standard Errors	Standart xatolar	reviewed:agent-opus:2026-10-21	Стандарт хатолар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2347	
+776825b6a90d		Min	Min	reviewed:agent-opus:2026-10-21	Мин	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:467	
+77dff0ea564d		£ English (United Kingdom)	£ Ingliz (Buyuk Britaniya)	reviewed:agent-opus:2026-10-21	£ Инглиз (Буюк Британия)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:806	
+783ba8059692		Make Unconstrained Variables Non-Negative	Cheklanmagan oʻzgaruvchilarni manfiy boʻlmagan qilish	reviewed:agent-opus:2026-10-21	Чекланмаган ўзгарувчиларни манфий бўлмаган қилиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2524	
 78440de7fd4c		Watch Window	Kuzatuv oynasi	reviewed:agent-opus:2026-10-18	Кузатув ойнаси	reviewed:agent-opus:2026-10-18	Окно контрольных значений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:332	
-78f75d42fe9b		Error message:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:929	
-794fd0602374		Insert Calculated Field		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:642	
-798b48d19c45		Value Of:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2465	
-7a92a8acc163		Scope (Workbook or sheet name):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:558	
-7b1e971585af		Center Across Selection		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1601	
-7b9288bfc48f		Subject to the Constraints:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2474	
-7bc2c3eca5fd		Hide Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:939	
-7bf845c9f755		Delete…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2858	
+78f75d42fe9b		Error message:	Xato xabari:	reviewed:agent-opus:2026-10-21	Хато хабари:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:929	
+794fd0602374		Insert Calculated Field	Hisoblanadigan maydon kiritish	reviewed:agent-opus:2026-10-21	Ҳисобланадиган майдон киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:642	
+798b48d19c45		Value Of:	Qiymat:	reviewed:agent-opus:2026-10-21	Қиймат:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2465	
+7a92a8acc163		Scope (Workbook or sheet name):	Amal doirasi (ish kitobi yoki varaq nomi):	reviewed:agent-opus:2026-10-21	Амал доираси (иш китоби ёки варақ номи):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:558	
+7b1e971585af		Center Across Selection	Tanlov boʻylab markazlash	reviewed:agent-opus:2026-10-21	Танлов бўйлаб марказлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1601	
+7b9288bfc48f		Subject to the Constraints:	Cheklovlar:	reviewed:agent-opus:2026-10-21	Чекловлар:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2474	
+7bc2c3eca5fd		Hide Sheet	Varaqni yashirish	reviewed:agent-opus:2026-10-21	Варақни яшириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:939	
+7bf845c9f755		Delete…	Oʻchirish…	reviewed:agent-opus:2026-10-21	Ўчириш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2858	
 7c3e1d4805b3	Options	Save	Saqlash	reviewed:agent-opus:2026-10-18	Сақлаш	reviewed:agent-opus:2026-10-18	Сохранение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:178	
 7c88f189aee1		Insert Copied Cells	Nusxalangan kataklarni kiritish	reviewed:agent-opus:2026-10-18	Нусхаланган катакларни киритиш	reviewed:agent-opus:2026-10-18	Вставить скопированные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3185	
 7d6214a5cc77		Current Date	Joriy sana	reviewed:agent-opus:2026-10-18	Жорий сана	reviewed:agent-opus:2026-10-18	Текущая дата	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:501	
-7e810203b6e6		Summarize by Average		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:113	
-7ec16db5d4a2		Tomorrow		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:590	
-7ec9e857e531		Whole number		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:847	
+7e810203b6e6		Summarize by Average	Jamlash: oʻrtacha	reviewed:agent-opus:2026-10-21	Жамлаш: ўртача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:113	
+7ec16db5d4a2		Tomorrow	Ertaga	reviewed:agent-opus:2026-10-21	Эртага	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:590	
+7ec9e857e531		Whole number	Butun son	reviewed:agent-opus:2026-10-21	Бутун сон	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:847	
 7edf53bb53ae		Yesterday	Kecha	reviewed:agent-opus:2026-10-18	Кеча	reviewed:agent-opus:2026-10-18	Вчера	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:492	
-7f026bc7531e		Hidden: {sheets}		todo		todo		todo		P2	gridcraft		
+7f026bc7531e		Hidden: {sheets}	Yashirin: {sheets}	reviewed:agent-opus:2026-10-21	Яширин: {sheets}	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 7fdbedf09a63		Insert Copied Cells…	Nusxalangan kataklarni kiritish…	reviewed:agent-opus:2026-10-18	Нусхаланган катакларни киритиш…	reviewed:agent-opus:2026-10-18	Вставить скопированные ячейки…	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3186	
-802b3c39e8ac		About GridCraft		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:677	
-808bf1c1af11		Every command run in this session (replayable)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2256	
-81076f165b9c		Fits inside the selected cell and moves with its content.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1138	
+802b3c39e8ac		About GridCraft	GridCraft haqida	reviewed:agent-opus:2026-10-21	GridCraft ҳақида	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:677	
+808bf1c1af11		Every command run in this session (replayable)	Ushbu seansda bajarilgan barcha buyruqlar (qayta ijro etish mumkin)	reviewed:agent-opus:2026-10-21	Ушбу сеансда бажарилган барча буйруқлар (қайта ижро этиш мумкин)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2256	
+81076f165b9c		Fits inside the selected cell and moves with its content.	Tanlangan katak ichiga sigʻadi va uning tarkibi bilan birga koʻchadi.	reviewed:agent-opus:2026-10-21	Танланган катак ичига сиғади ва унинг таркиби билан бирга кўчади.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1138	
 812eb7473180		Location	Joylashuv	reviewed:agent-opus:2026-10-18	Жойлашув	reviewed:agent-opus:2026-10-18	Расположение	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:630	
 818461487a63		Lock Cell	Katakni qulflash	reviewed:agent-opus:2026-10-18	Катакни қулфлаш	reviewed:agent-opus:2026-10-18	Заблокировать ячейку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:256	
 818988673211		No recent workbooks yet.	Hozircha soʻnggi ish kitoblari yoʻq.	reviewed:agent-opus:2026-10-18	Ҳозирча сўнгги иш китоблари йўқ.	reviewed:agent-opus:2026-10-18	Недавних книг пока нет.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:361	
-8245e5e66e3a		Pen\nBlack		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
+8245e5e66e3a		Pen\nBlack	Qora\nruchka	reviewed:agent-opus:2026-10-21	Қора\nручка	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
 830a3746ae7f		Save the sheet as a PDF document that keeps its page layout.	Varaqni sahifa maketi saqlanadigan PDF hujjat sifatida saqlash.	reviewed:agent-opus:2026-10-18	Варақни саҳифа макети сақланадиган PDF ҳужжат сифатида сақлаш.	reviewed:agent-opus:2026-10-18	Сохранить лист как PDF-документ с сохранением разметки страниц.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:853	
-83b55691d291		Next week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:594	
-8438358caa6f		100% Stacked Bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2038	
-863ff734e06e		Insert rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:188	
+83b55691d291		Next week	Keyingi hafta	reviewed:agent-opus:2026-10-21	Кейинги ҳафта	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:594	
+8438358caa6f		100% Stacked Bar	100% yigʻma yotiq ustunli	reviewed:agent-opus:2026-10-21	100% йиғма ётиқ устунли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2038	
+863ff734e06e		Insert rows	Qatorlar kiritish	reviewed:agent-opus:2026-10-21	Қаторлар киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:188	
 86500532a23f		Convert to Comments	Izohlarga aylantirish	reviewed:agent-opus:2026-10-18	Изоҳларга айлантириш	reviewed:agent-opus:2026-10-18	Преобразовать в комментарии	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:375	
-86bc392d60a4		Format Cells		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:626	
+86bc392d60a4		Format Cells	Kataklar formati	reviewed:agent-opus:2026-10-21	Катаклар формати	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:626	
 8816327302f3		Show All Notes	Barcha qaydlarni koʻrsatish	reviewed:agent-opus:2026-10-18	Барча қайдларни кўрсатиш	reviewed:agent-opus:2026-10-18	Показать все заметки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:374	
-883d65654afe		Unhide		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:280	
+883d65654afe		Unhide	Koʻrsatish	reviewed:agent-opus:2026-10-21	Кўрсатиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:280	
 88580c725704		Number	Son	reviewed:agent-opus:2026-10-18	Сон	reviewed:agent-opus:2026-10-18	Числовой	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:627	
-88ba018f96eb		Kth Smallest (blank for none):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2325	
+88ba018f96eb		Kth Smallest (blank for none):	K-chi eng kichik (boʻsh = yoʻq):	reviewed:agent-opus:2026-10-21	K-чи энг кичик (бўш = йўқ):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2325	
 88d0fbbe6d67		Print\nArea	Chop etish\nsohasi	reviewed:agent-opus:2026-10-18	Чоп этиш\nсоҳаси	reviewed:agent-opus:2026-10-18	Область\nпечати	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:306	review-agent-2026-10-18: print area
 8926f7a84fce		Clear Hyperlinks	Havolalarni tozalash	reviewed:agent-opus:2026-10-18	Ҳаволаларни тозалаш	reviewed:agent-opus:2026-10-18	Удалить гиперссылки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:262	
 899c01b91d06		Protect Sheet…	Varaqni himoyalash…	reviewed:agent-opus:2026-10-18	Варақни ҳимоялаш…	reviewed:agent-opus:2026-10-18	Защитить лист…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:380	
@@ -399,342 +399,342 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 8a3ea5ca9e53		Fill	Toʻldirish	reviewed:agent-opus:2026-10-18	Тўлдириш	reviewed:agent-opus:2026-10-18	Заполнить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
 8a699d45d37d		Long Date	Uzun sana	reviewed:agent-opus:2026-10-18	Узун сана	reviewed:agent-opus:2026-10-18	Длинная дата	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 8aad59383528		Delete Sheet Rows	Varaq qatorlarini oʻchirish	reviewed:agent-opus:2026-10-18	Варақ қаторларини ўчириш	reviewed:agent-opus:2026-10-18	Удалить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:245	
-8b6929b8da1f		Expand formula bar		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:58	
+8b6929b8da1f		Expand formula bar	Formulalar satrini yoyish	reviewed:agent-opus:2026-10-21	Формулалар сатрини ёйиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/formula_bar.rs:58	
 8b98c78dc286		About\nGridCraft	GridCraft\nhaqida	reviewed:agent-opus:2026-10-18	GridCraft\nҳақида	reviewed:agent-opus:2026-10-18	О\nGridCraft	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:414	
-8c0a605c8e79		Minimum / Source / Formula:		todo		todo		todo		P2	gridcraft		
+8c0a605c8e79		Minimum / Source / Formula:	Minimum / Manba / Formula:	reviewed:agent-opus:2026-10-21	Минимум / Манба / Формула:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 8c42a0ed378b		Delete\nChart	Diagrammani\noʻchirish	reviewed:agent-opus:2026-10-18	Диаграммани\nўчириш	reviewed:agent-opus:2026-10-18	Удалить\nдиаграмму	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:429	
 8d21c930bf3d		Protect\nWorkbook	Ish kitobini\nhimoyalash	reviewed:agent-opus:2026-10-18	Иш китобини\nҳимоялаш	reviewed:agent-opus:2026-10-18	Защитить\nкнигу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:376	
-8d60e5afa74f		Summarize by Max		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:114	
-8d8f0bbdc621		Entire row		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
-8dcfaef15fdd		Hierarchy & more		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1497	
-8de86dd5a0e9		Output Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
-8e579b9a2900		Format cells that contain the text:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:583	
+8d60e5afa74f		Summarize by Max	Jamlash: maksimum	reviewed:agent-opus:2026-10-21	Жамлаш: максимум	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:114	
+8d8f0bbdc621		Entire row	Butun qator	reviewed:agent-opus:2026-10-21	Бутун қатор	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
+8dcfaef15fdd		Hierarchy & more	Ierarxik va boshqalar	reviewed:agent-opus:2026-10-21	Иерархик ва бошқалар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1497	
+8de86dd5a0e9		Output Range:	Chiqish diapazoni:	reviewed:agent-opus:2026-10-21	Чиқиш диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
+8e579b9a2900		Format cells that contain the text:	Quyidagi matnni oʻz ichiga olgan kataklarni formatlash:	reviewed:agent-opus:2026-10-21	Қуйидаги матнни ўз ичига олган катакларни форматлаш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:583	
 8e7a15beb2de		Select destination and press Enter or choose Paste	Joyni tanlang va Enter tugmasini bosing yoki Qoʻyishni tanlang	reviewed:agent-opus:2026-10-18	Жойни танланг ва Enter тугмасини босинг ёки Қўйишни танланг	reviewed:agent-opus:2026-10-18	Выберите место вставки и нажмите Enter или выберите «Вставить»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:459	
 8faa1aea24ae		Go to\nHeader	Yuqori kolontitulga\noʻtish	reviewed:agent-opus:2026-10-18	Юқори колонтитулга\nўтиш	reviewed:agent-opus:2026-10-18	Перейти к верхнему\nколонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:497	
-90a9b0aa5f66		Shift cells down		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
-90f349dab1b7		Pick From Drop-down List…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2869	
-91046028884a		Include forecast statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:471	
+90a9b0aa5f66		Shift cells down	Kataklarni pastga surish	reviewed:agent-opus:2026-10-21	Катакларни пастга суриш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
+90f349dab1b7		Pick From Drop-down List…	Ochiladigan roʻyxatdan tanlash…	reviewed:agent-opus:2026-10-21	Очиладиган рўйхатдан танлаш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2869	
+91046028884a		Include forecast statistics	Prognoz statistikasini qoʻshish	reviewed:agent-opus:2026-10-21	Прогноз статистикасини қўшиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:471	
 9120b8b004c0		Calculate Now	Hozir hisoblash	reviewed:agent-opus:2026-10-18	Ҳозир ҳисоблаш	reviewed:agent-opus:2026-10-18	Вычислить сейчас	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:334	
-917980ff743d		Median		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:466	
-917fd223e614		Sheets: {sheets}		todo		todo		todo		P2	gridcraft		
+917980ff743d		Median	Mediana	reviewed:agent-opus:2026-10-21	Медиана	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:466	
+917fd223e614		Sheets: {sheets}	Varaqlar: {sheets}	reviewed:agent-opus:2026-10-21	Варақлар: {sheets}	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 91882c9582c1		Color Scales	Rang shkalalari	reviewed:agent-opus:2026-10-18	Ранг шкалалари	reviewed:agent-opus:2026-10-18	Цветовые шкалы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:442	
 91ae21ea3905		Clear Contents	Tarkibni tozalash	reviewed:agent-opus:2026-10-18	Таркибни тозалаш	reviewed:agent-opus:2026-10-18	Очистить содержимое	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2859	
 91c41872b01f		Bold (⌘B)	Qalin (⌘B)	reviewed:agent-opus:2026-10-18	Қалин (⌘B)	reviewed:agent-opus:2026-10-18	Полужирный (⌘B)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:193	review-agent-2026-10-18: Cyrillic spelling
 91f0c74ee7f4		Automatic Except for Data Tables	Avtomatik, maʼlumotlar jadvallaridan tashqari	reviewed:agent-opus:2026-10-18	Автоматик, маълумотлар жадвалларидан ташқари	reviewed:agent-opus:2026-10-18	Автоматически, кроме таблиц данных	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:983	
-92606f28ef89		Start a new workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1205	
+92606f28ef89		Start a new workbook	Yangi ish kitobini boshlash	reviewed:agent-opus:2026-10-21	Янги иш китобини бошлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1205	
 92c9cf5ae0f1		Insert Sheet Rows	Varaq qatorlarini kiritish	reviewed:agent-opus:2026-10-18	Варақ қаторларини киритиш	reviewed:agent-opus:2026-10-18	Вставить строки листа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:243	
-93218b13b663	Format Cells	Fill		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
+93218b13b663	Format Cells	Fill	Toʻldirish	reviewed:agent-opus:2026-10-21	Тўлдириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1535	
 932d6882b13b		Calculation settings are saved with the workbook.	Hisoblash sozlamalari ish kitobi bilan birga saqlanadi.	reviewed:agent-opus:2026-10-18	Ҳисоблаш созламалари иш китоби билан бирга сақланади.	reviewed:agent-opus:2026-10-18	Параметры вычислений сохраняются вместе с книгой.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:996	
-93b0b43b57dc		Correlation		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:38	
-93d4792d6fb1		Bottom margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:411	
-941f00fc4279		Clear Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2817	
-943cd395e2ce		Format columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:186	
+93b0b43b57dc		Correlation	Korrelyatsiya	reviewed:agent-opus:2026-10-21	Корреляция	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:38	
+93d4792d6fb1		Bottom margin (in):	Quyi hoshiya (dyuym):	reviewed:agent-opus:2026-10-21	Қуйи ҳошия (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:411	
+941f00fc4279		Clear Filter	Filtrni tozalash	reviewed:agent-opus:2026-10-21	Фильтрни тозалаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2817	
+943cd395e2ce		Format columns	Ustunlarni formatlash	reviewed:agent-opus:2026-10-21	Устунларни форматлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:186	
 947a8ec4515a		Data Validation…	Maʼlumotlarni tekshirish…	reviewed:agent-opus:2026-10-18	Маълумотларни текшириш…	reviewed:agent-opus:2026-10-18	Проверка данных…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:350	
 94e9f3efaefe		Command\nPalette	Buyruqlar\npaneli	reviewed:agent-opus:2026-10-18	Буйруқлар\nпанели	reviewed:agent-opus:2026-10-18	Палитра\nкоманд	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:411	
-951f50c4d234		Add-in and Automation		todo		todo		todo		P2	gridcraft		
+951f50c4d234		Add-in and Automation	Qoʻshimcha modullar va avtomatlashtirish	reviewed:agent-opus:2026-10-21	Қўшимча модуллар ва автоматлаштириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 953b01108101		Print Entire Workbook	Butun ish kitobini chop etish	reviewed:agent-opus:2026-10-18	Бутун иш китобини чоп этиш	reviewed:agent-opus:2026-10-18	Напечатать всю книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
 9568558c6018		Not available	Mavjud emas	reviewed:agent-opus:2026-10-18	Мавжуд эмас	reviewed:agent-opus:2026-10-18	Недоступен	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:397	
-9591a908d8b0		Table (⌘T)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1378	
-962d7c0efab5		This workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:254	
-964fa0ccabca		Series{n}		todo		todo		todo		P2	gridcraft		
+9591a908d8b0		Table (⌘T)	Jadval (⌘T)	reviewed:agent-opus:2026-10-21	Жадвал (⌘T)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1378	
+962d7c0efab5		This workbook	Bu ish kitobi	reviewed:agent-opus:2026-10-21	Бу иш китоби	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:254	
+964fa0ccabca		Series{n}	Maʼlumotlar qatori {n}	reviewed:agent-opus:2026-10-21	Маълумотлар қатори {n}	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 96a0f9f369fd		Data\nValidation	Maʼlumotlarni\ntekshirish	reviewed:agent-opus:2026-10-18	Маълумотларни\nтекшириш	reviewed:agent-opus:2026-10-18	Проверка\nданных	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:348	
-96c1bc162bc6		Insert Slicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
-96e7da179eb8		Report Layout		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:166	
+96c1bc162bc6		Insert Slicer	Kesim kiritish	reviewed:agent-opus:2026-10-21	Кесим киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
+96e7da179eb8		Report Layout	Hisobot maketi	reviewed:agent-opus:2026-10-21	Ҳисобот макети	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:166	
 96f54b6931a7		Go to Footer	Quyi kolontitulga oʻtish	reviewed:agent-opus:2026-10-18	Қуйи колонтитулга ўтиш	reviewed:agent-opus:2026-10-18	Перейти к нижнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:509	
-970936d3179e		Rename Sheet		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:155	
-97d0fff90136		Slicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
+970936d3179e		Rename Sheet	Varaqni qayta nomlash	reviewed:agent-opus:2026-10-21	Варақни қайта номлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:155	
+97d0fff90136		Slicer	Kesim	reviewed:agent-opus:2026-10-21	Кесим	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
 981396f174a5		Legend: Right	Shartli belgilar: oʻngda	reviewed:agent-opus:2026-10-18	Шартли белгилар: ўнгда	reviewed:agent-opus:2026-10-18	Легенда: справа	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:425	
 98280f29c6dd		Save the active sheet as comma-separated text.	Faol varaqni vergul bilan ajratilgan matn sifatida saqlash.	reviewed:agent-opus:2026-10-18	Фаол варақни вергул билан ажратилган матн сифатида сақлаш.	reviewed:agent-opus:2026-10-18	Сохранить активный лист как текст с разделителями-запятыми.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
 98c56aead4f4	Page Layout	Orientation	Yoʻnalish	reviewed:agent-opus:2026-10-18	Йўналиш	reviewed:agent-opus:2026-10-18	Ориентация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:219	
 98d4edc59f56		Web Page (.html)	Veb-sahifa (.html)	reviewed:agent-opus:2026-10-18	Веб-саҳифа (.html)	reviewed:agent-opus:2026-10-18	Веб-страница (.html)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	review-agent-2026-10-18: veb- compounds hyphenated
-98d67b06e5c1		Share: export or save a copy		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:132	
+98d67b06e5c1		Share: export or save a copy	Ulashish: eksport qilish yoki nusxasini saqlash	reviewed:agent-opus:2026-10-21	Улашиш: экспорт қилиш ёки нусхасини сақлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:132	
 994dda40c19f		Error Checking	Xatolarni tekshirish	reviewed:agent-opus:2026-10-18	Хатоларни текшириш	reviewed:agent-opus:2026-10-18	Проверка ошибок	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:739	
 999d6b0c817a		Pictures	Rasmlar	reviewed:agent-opus:2026-10-18	Расмлар	reviewed:agent-opus:2026-10-18	Изображения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:277	
-99d72f2aa844		Variable 1 Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
-99d9533d262c		Shrink to fit		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1626	
-9a5fd58c0e3f		Cell Color		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1936	
+99d72f2aa844		Variable 1 Range:	1-oʻzgaruvchi diapazoni:	reviewed:agent-opus:2026-10-21	1-ўзгарувчи диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2316	
+99d9533d262c		Shrink to fit	Kichraytirib sigʻdirish	reviewed:agent-opus:2026-10-21	Кичрайтириб сиғдириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1626	
+9a5fd58c0e3f		Cell Color	Katak rangi	reviewed:agent-opus:2026-10-21	Катак ранги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1936	
 9a801b791109		Agent\nControl	Agentni\nboshqarish	reviewed:agent-opus:2026-10-18	Агентни\nбошқариш	reviewed:agent-opus:2026-10-18	Управление\nагентом	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:412	
 9bf32e199787		Light	Yorugʻ	reviewed:agent-opus:2026-10-18	Ёруғ	reviewed:agent-opus:2026-10-18	Светлая	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:939	
-9bfad734ca9c		Search:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1750	
+9bfad734ca9c		Search:	Qidirish:	reviewed:agent-opus:2026-10-21	Қидириш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1750	
 9c5c5da00816		Header & Footer	Yuqori va quyi kolontitul	reviewed:agent-opus:2026-10-18	Юқори ва қуйи колонтитул	reviewed:agent-opus:2026-10-18	Верхний и нижний колонтитулы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:390	
-9c786778afba		— VBA project (preserved, not run)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1514	
-9c8685a669e1		Seasonality (auto, 0 for none, or a season length):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:452	
-9c8bfc173325		Show as No Calculation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:122	
+9c786778afba		— VBA project (preserved, not run)	— VBA loyihasi (saqlangan, ishga tushirilmaydi)	reviewed:agent-opus:2026-10-21	— VBA лойиҳаси (сақланган, ишга туширилмайди)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1514	
+9c8685a669e1		Seasonality (auto, 0 for none, or a season length):	Mavsumiylik (avto, yoʻq boʻlsa 0 yoki mavsum uzunligi):	reviewed:agent-opus:2026-10-21	Мавсумийлик (авто, йўқ бўлса 0 ёки мавсум узунлиги):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:452	
+9c8bfc173325		Show as No Calculation	Hisoblashsiz koʻrsatish	reviewed:agent-opus:2026-10-21	Ҳисоблашсиз кўрсатиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:122	
 9d0279c5f280		Get Data\n(Text/CSV)	Maʼlumot olish\n(matn/CSV)	reviewed:agent-opus:2026-10-18	Маълумот олиш\n(матн/CSV)	reviewed:agent-opus:2026-10-18	Получить данные\n(текст/CSV)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:346	review-agent-2026-10-18: Cyrillic spelling
-9d0759a7ab2c		Move to Column Labels		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:97	
-9d09d6359d83		Unlock with password		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
+9d0759a7ab2c		Move to Column Labels	Ustun yorliqlariga koʻchirish	reviewed:agent-opus:2026-10-21	Устун ёрлиқларига кўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:97	
+9d09d6359d83		Unlock with password	Parol bilan qulfdan chiqarish	reviewed:agent-opus:2026-10-21	Пароль билан қулфдан чиқариш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
 9d613917a06b		Hide Detail	Tafsilotni yashirish	reviewed:agent-opus:2026-10-18	Тафсилотни яшириш	reviewed:agent-opus:2026-10-18	Скрыть детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:356	
-9d66bb10553f		Labels in first row		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2314	
-9d85792037ba		Scatter with Lines		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2047	
+9d66bb10553f		Labels in first row	Birinchi qatorda yorliqlar	reviewed:agent-opus:2026-10-21	Биринчи қаторда ёрлиқлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2314	
+9d85792037ba		Scatter with Lines	Chiziqli nuqtali	reviewed:agent-opus:2026-10-21	Чизиқли нуқтали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2047	
 9da4cc124fda		Clear All	Hammasini tozalash	reviewed:agent-opus:2026-10-18	Ҳаммасини тозалаш	reviewed:agent-opus:2026-10-18	Очистить всё	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:258	
-9e56c206003b		Agent Control		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:675	
-9e910c2a7e8e		Right margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:409	
-9ebb77de6aad		Single Accounting		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1646	
-9f650fc3df50		Shift cells left		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:128	
-9f78ac427f98		Conditional formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:665	
-a12fbb788dbc		Series in		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:325	
-a16d4ad5a156		Protection		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1536	
+9e56c206003b		Agent Control	Agentni boshqarish	reviewed:agent-opus:2026-10-21	Агентни бошқариш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:675	
+9e910c2a7e8e		Right margin (in):	Oʻng hoshiya (dyuym):	reviewed:agent-opus:2026-10-21	Ўнг ҳошия (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:409	
+9ebb77de6aad		Single Accounting	Yakka (buxgalteriya)	reviewed:agent-opus:2026-10-21	Якка (бухгалтерия)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1646	
+9f650fc3df50		Shift cells left	Kataklarni chapga surish	reviewed:agent-opus:2026-10-21	Катакларни чапга суриш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:128	
+9f78ac427f98		Conditional formats	Shartli formatlar	reviewed:agent-opus:2026-10-21	Шартли форматлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:665	
+a12fbb788dbc		Series in	Joylashuv	reviewed:agent-opus:2026-10-21	Жойлашув	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:325	
+a16d4ad5a156		Protection	Himoya	reviewed:agent-opus:2026-10-21	Ҳимоя	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1536	
 a1b58267a4bc		Lock the sheet structure so sheets can't be added, moved, renamed or deleted.	Varaqlar tuzilmasini qulflash: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin boʻlmaydi.	reviewed:agent-opus:2026-10-18	Варақлар тузилмасини қулфлаш: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин бўлмайди.	reviewed:agent-opus:2026-10-18	Заблокировать структуру листов, чтобы их нельзя было добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:622	review-agent-2026-10-18: same noun as the row above
-a244c745720e		Filter by Selected Cell's Value		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2861	
+a244c745720e		Filter by Selected Cell's Value	Tanlangan katak qiymati boʻyicha filtrlash	reviewed:agent-opus:2026-10-21	Танланган катак қиймати бўйича фильтрлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2861	
 a2c1614f7f3e		Formula Bar	Formulalar satri	reviewed:agent-opus:2026-10-18	Формулалар сатри	reviewed:agent-opus:2026-10-18	Строка формул	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:385	
-a2d2a719980c		Average		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:462	
-a329ef9bb2f5		Web		todo		todo		todo		P2	gridcraft		
-a348cf8bb0ce		Action Journal		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:722	
+a2d2a719980c		Average	Oʻrtacha	reviewed:agent-opus:2026-10-21	Ўртача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:462	
+a329ef9bb2f5		Web	Veb	reviewed:agent-opus:2026-10-21	Веб	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+a348cf8bb0ce		Action Journal	Amallar jurnali	reviewed:agent-opus:2026-10-21	Амаллар журнали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:722	
 a3653abf16e6		More workbooks	Boshqa ish kitoblari	reviewed:agent-opus:2026-10-18	Бошқа иш китоблари	reviewed:agent-opus:2026-10-18	Другие книги	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:545	
-a3a480179149		¥ Japanese		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:815	
-a3eab24c6ddc		Keep Solver Solution		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2572	
-a3f7c2296030		Choose a PNG or JPEG no larger than 16 MB.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1100	
+a3a480179149		¥ Japanese	¥ Yapon	reviewed:agent-opus:2026-10-21	¥ Япон	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:815	
+a3eab24c6ddc		Keep Solver Solution	Topilgan yechimni saqlab qolish	reviewed:agent-opus:2026-10-21	Топилган ечимни сақлаб қолиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2572	
+a3f7c2296030		Choose a PNG or JPEG no larger than 16 MB.	16 MB dan katta boʻlmagan PNG yoki JPEG faylni tanlang.	reviewed:agent-opus:2026-10-21	16 MB дан катта бўлмаган PNG ёки JPEG файлни танланг.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1100	
 a4039450e4ca		Save the workbook under another name or in another folder.	Ish kitobini boshqa nomda yoki boshqa jildda saqlash.	reviewed:agent-opus:2026-10-18	Иш китобини бошқа номда ёки бошқа жилдда сақлаш.	reviewed:agent-opus:2026-10-18	Сохранить книгу под другим именем или в другой папке.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:657	review-agent-2026-10-18: matches Save As
-a418a84a03b0		Insert\nSlicer		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
+a418a84a03b0		Insert\nSlicer	Kesim\nkiritish	reviewed:agent-opus:2026-10-21	Кесим\nкиритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2297	
 a46cc2be5014		Recommended\nCharts	Tavsiya etilgan\ndiagrammalar	reviewed:agent-opus:2026-10-18	Тавсия этилган\nдиаграммалар	reviewed:agent-opus:2026-10-18	Рекомендуемые\nдиаграммы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:275	
 a4aeacd74948		Workbook calculation	Ish kitobini hisoblash	reviewed:agent-opus:2026-10-18	Иш китобини ҳисоблаш	reviewed:agent-opus:2026-10-18	Вычисления в книге	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:979	
-a5eef34671e6		Standard Width		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:148	
+a5eef34671e6		Standard Width	Standart kenglik	reviewed:agent-opus:2026-10-21	Стандарт кенглик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:148	
 a6ab6b9dfea2		Go To Special…	Maxsus tanlash…	reviewed:agent-opus:2026-10-18	Махсус танлаш…	reviewed:agent-opus:2026-10-18	Выделить группу ячеек…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:273	
 a6cee35d4ce0		Glide the selection outline to the cell you move to instead of jumping there	Tanlov ramkasi oʻtilgan katakka sakramasdan silliq siljisin	reviewed:agent-opus:2026-10-18	Танлов рамкаси ўтилган катакка сакрамасдан силлиқ силжисин	reviewed:agent-opus:2026-10-18	Рамка выделения плавно скользит к новой ячейке, а не перескакивает	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:400	
-a7bfdcd4a595		Cell Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1938	
-a7f03fc4a593		Skip blanks		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:314	
-a80b22c25686		Last cell		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:663	
-a8b2daf57075		Ignore Once		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2645	
+a7bfdcd4a595		Cell Values	Katak qiymatlari	reviewed:agent-opus:2026-10-21	Катак қийматлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1938	
+a7f03fc4a593		Skip blanks	Boʻsh kataklarni oʻtkazib yuborish	reviewed:agent-opus:2026-10-21	Бўш катакларни ўтказиб юбориш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:314	
+a80b22c25686		Last cell	Oxirgi katak	reviewed:agent-opus:2026-10-21	Охирги катак	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:663	
+a8b2daf57075		Ignore Once	Bir marta eʼtiborsiz qoldirish	reviewed:agent-opus:2026-10-21	Бир марта эътиборсиз қолдириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2645	
 aaa96a40ad27		Constants	Doimiylar	reviewed:agent-opus:2026-10-18	Доимийлар	reviewed:agent-opus:2026-10-18	Константы	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:656	
-aaf769e319ca		Input Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2315	
-ab1aa6fa3a84		Comma		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:425	
-ab4174ba9626		dashed		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1694	
+aaf769e319ca		Input Range:	Kirish diapazoni:	reviewed:agent-opus:2026-10-21	Кириш диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2315	
+ab1aa6fa3a84		Comma	Vergul	reviewed:agent-opus:2026-10-21	Вергул	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:425	
+ab4174ba9626		dashed	shtrixli	reviewed:agent-opus:2026-10-21	штрихли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1694	
 ab4b6460e8e8		Calculation\nOptions	Hisoblash\nparametrlari	reviewed:agent-opus:2026-10-18	Ҳисоблаш\nпараметрлари	reviewed:agent-opus:2026-10-18	Параметры\nвычислений	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:333	
-abce8748a1da		No ranges yet.		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:212	
-abea4d409550		Step value:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:332	
-ac17215e5ce3		Edit chart title		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2392	
+abce8748a1da		No ranges yet.	Hozircha diapazonlar yoʻq.	reviewed:agent-opus:2026-10-21	Ҳозирча диапазонлар йўқ.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:212	
+abea4d409550		Step value:	Qadam:	reviewed:agent-opus:2026-10-21	Қадам:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:332	
+ac17215e5ce3		Edit chart title	Diagramma sarlavhasini tahrirlash	reviewed:agent-opus:2026-10-21	Диаграмма сарлавҳасини таҳрирлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2392	
 ac44b9e66ed2		Freeze Panes	Sohalarni qotirish	reviewed:agent-opus:2026-10-18	Соҳаларни қотириш	reviewed:agent-opus:2026-10-18	Закрепить области	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:392	
 ac92b3a18fa2		Insert Cut Cells	Kesilgan kataklarni kiritish	reviewed:agent-opus:2026-10-18	Кесилган катакларни киритиш	reviewed:agent-opus:2026-10-18	Вставить вырезанные ячейки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3183	
-acb6377a8753		Zeros		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
+acb6377a8753		Zeros	Nollar	reviewed:agent-opus:2026-10-21	Ноллар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:456	
 acbfd75f6877		Show Detail	Tafsilotni koʻrsatish	reviewed:agent-opus:2026-10-18	Тафсилотни кўрсатиш	reviewed:agent-opus:2026-10-18	Показать детали	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:355	
-ad7b08e2b35b		Diagonal ↗		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1684	
-add58ae24e6e		Funnel		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2051	
-ae94988d7989		Goal Seeking found a solution: {value}		todo		todo		todo		P2	gridcraft		
-af9991a5337d		Transpose (E)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:315	
+ad7b08e2b35b		Diagonal ↗	Diagonal ↗	reviewed:agent-opus:2026-10-21	Диагонал ↗	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1684	
+add58ae24e6e		Funnel	Voronka	reviewed:agent-opus:2026-10-21	Воронка	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2051	
+ae94988d7989		Goal Seeking found a solution: {value}	Parametrni tanlash yechim topdi: {value}	reviewed:agent-opus:2026-10-21	Параметрни танлаш ечим топди: {value}	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+af9991a5337d		Transpose (E)	Transponirlash (E)	reviewed:agent-opus:2026-10-21	Транспонирлаш (E)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:315	
 b00b5d275eed		Angle Counterclockwise	Soat miliga qarshi burish	reviewed:agent-opus:2026-10-18	Соат милига қарши буриш	reviewed:agent-opus:2026-10-18	Повернуть против часовой стрелки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:221	
 b26f6cec5ac7		Use in Formula	Formulada ishlatish	reviewed:agent-opus:2026-10-18	Формулада ишлатиш	reviewed:agent-opus:2026-10-18	Использовать в формуле	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:324	
 b2abc855fd39		Default Width…	Standart kenglik…	reviewed:agent-opus:2026-10-18	Стандарт кенглик…	reviewed:agent-opus:2026-10-18	Ширина по умолчанию…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:251	
 b2ea22c19a56		View	Koʻrinish	reviewed:agent-opus:2026-10-18	Кўриниш	reviewed:agent-opus:2026-10-18	Вид	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:450	
-b4824625a0ec		thin		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1691	
+b4824625a0ec		thin	ingichka	reviewed:agent-opus:2026-10-21	ингичка	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1691	
 b5385928f073		Calculate	Hisoblash	reviewed:agent-opus:2026-10-18	Ҳисоблаш	reviewed:agent-opus:2026-10-18	Вычисление	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:458	
-b593557e1c8d		Header (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:412	
+b593557e1c8d		Header (in):	Yuqori kolontitul (dyuym):	reviewed:agent-opus:2026-10-21	Юқори колонтитул (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:412	
 b6d720512492		Narrow	Tor	reviewed:agent-opus:2026-10-18	Тор	reviewed:agent-opus:2026-10-18	Узкие	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:315	
-b6e2e932916e		Input Y Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2337	
+b6e2e932916e		Input Y Range:	Y kirish diapazoni:	reviewed:agent-opus:2026-10-21	Y кириш диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2337	
 b759224a7cf7		Unmerge Cells	Birlashtirishni bekor qilish	reviewed:agent-opus:2026-10-18	Бирлаштиришни бекор қилиш	reviewed:agent-opus:2026-10-18	Отменить объединение ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:205	review-agent-2026-10-18: shortened: shorter, same meaning
 b783f4ab4aa3		File\nPath	Fayl\nyoʻli	reviewed:agent-opus:2026-10-18	Файл\nйўли	reviewed:agent-opus:2026-10-18	Путь\nк файлу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:494	
-b8bfb5137c00		Red Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:610	
-b96b9f3e7af1		t-Test: Paired Two Sample for Means		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:47	
+b8bfb5137c00		Red Text	Qizil matn	reviewed:agent-opus:2026-10-21	Қизил матн	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:610	
+b96b9f3e7af1		t-Test: Paired Two Sample for Means	t-test: oʻrtachalar uchun juftlashgan ikki tanlanma	reviewed:agent-opus:2026-10-21	t-тест: ўртачалар учун жуфтлашган икки танланма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:47	
 b99bbbede92d		Custom Sort…	Maxsus saralash…	reviewed:agent-opus:2026-10-18	Махсус саралаш…	reviewed:agent-opus:2026-10-18	Настраиваемая сортировка…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:343	
 ba031f44e6d0		Special	Qoʻshimcha	reviewed:agent-opus:2026-10-18	Қўшимча	reviewed:agent-opus:2026-10-18	Дополнительный	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:470	
 ba4bd870d516		Enable iterative calculation	Iterativ hisoblashni yoqish	reviewed:agent-opus:2026-10-18	Итератив ҳисоблашни ёқиш	reviewed:agent-opus:2026-10-18	Включить итеративные вычисления	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:992	
-ba645d04f2a2		Diagonal ↘		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1683	
-bad235bab9e9		A to Z		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1947	
-bb180103b38f		No picture selected		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1108	
-bb9e8e473206		Edit…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1983	
-bbb686db2e40		Delete rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:189	
+ba645d04f2a2		Diagonal ↘	Diagonal ↘	reviewed:agent-opus:2026-10-21	Диагонал ↘	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1683	
+bad235bab9e9		A to Z	A dan Z gacha	reviewed:agent-opus:2026-10-21	А дан З гача	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1947	
+bb180103b38f		No picture selected	Rasm tanlanmagan	reviewed:agent-opus:2026-10-21	Расм танланмаган	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1108	
+bb9e8e473206		Edit…	Tahrirlash…	reviewed:agent-opus:2026-10-21	Таҳрирлаш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1983	
+bbb686db2e40		Delete rows	Qatorlarni oʻchirish	reviewed:agent-opus:2026-10-21	Қаторларни ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:189	
 bbedb1aba856		Data Labels: Show	Maʼlumotlar yorliqlari: koʻrsatish	reviewed:agent-opus:2026-10-18	Маълумотлар ёрлиқлари: кўрсатиш	reviewed:agent-opus:2026-10-18	Подписи данных: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:421	
-bbee3ce9ea58		Erase ink strokes		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1601	
+bbee3ce9ea58		Erase ink strokes	Qoʻlyozma chiziqlarini oʻchirish	reviewed:agent-opus:2026-10-21	Қўлёзма чизиқларини ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1601	
 bc32be9e5680		Sheet\nRight-to-Left	Varaq:\noʻngdan chapga	reviewed:agent-opus:2026-10-18	Варақ:\nўнгдан чапга	reviewed:agent-opus:2026-10-18	Лист\nсправа налево	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:313	
-bc6430a1c2c7		Covariance		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:39	
+bc6430a1c2c7		Covariance	Kovariatsiya	reviewed:agent-opus:2026-10-21	Ковариация	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:39	
 bcfbe43c49fa		Fill Color	Toʻldirish rangi	reviewed:agent-opus:2026-10-18	Тўлдириш ранги	reviewed:agent-opus:2026-10-18	Цвет заливки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:206	
-bd0d5654c5bb		Light Red Fill		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:609	
-bd27b18974f5		Fill missing points using		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:455	
-bd7ef84a667d		New Name		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
+bd0d5654c5bb		Light Red Fill	Och qizil fon	reviewed:agent-opus:2026-10-21	Оч қизил фон	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:609	
+bd27b18974f5		Fill missing points using	Yetishmayotgan nuqtalarni toʻldirish usuli	reviewed:agent-opus:2026-10-21	Етишмаётган нуқталарни тўлдириш усули	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:455	
+bd7ef84a667d		New Name	Yangi nom	reviewed:agent-opus:2026-10-21	Янги ном	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:554	
 bdb1beab8785		Rotate Text Down	Matnni pastga burish	reviewed:agent-opus:2026-10-18	Матнни пастга буриш	reviewed:agent-opus:2026-10-18	Повернуть текст вниз	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:224	
 bf41c4a022e6		Underline (⌘U)	Tagi chizilgan (⌘U)	reviewed:agent-opus:2026-10-18	Таги чизилган (⌘U)	reviewed:agent-opus:2026-10-18	Подчёркивание (⌘U)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:195	review-agent-2026-10-18: glossary Underline
-bf914ff9afb3		Change All		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2657	
+bf914ff9afb3		Change All	Hammasini almashtirish	reviewed:agent-opus:2026-10-21	Ҳаммасини алмаштириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2657	
 c1185f56cd6c		CSV UTF-8 (Comma delimited) (*.csv)	CSV UTF-8 (vergul bilan ajratilgan) (*.csv)	reviewed:agent-opus:2026-10-18	CSV UTF-8 (вергул билан ажратилган) (*.csv)	reviewed:agent-opus:2026-10-18	CSV UTF-8 (разделитель — запятая) (*.csv)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:124	
 c193c7f41f2f		Review	Tekshirish	reviewed:agent-opus:2026-10-18	Текшириш	reviewed:agent-opus:2026-10-18	Рецензирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:449	
-c20ebd45a214		Green Fill with Dark Green Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:608	
-c2bbf6034dcb		Math & Trig		todo		todo		todo		P2	gridcraft	crates/engine/src/catalog.rs:177	
-c309ccec77e6		Histogram		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2049	
-c45a4773a731		Cell Styles		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:851	
+c20ebd45a214		Green Fill with Dark Green Text	Yashil fon, quyuq yashil matn	reviewed:agent-opus:2026-10-21	Яшил фон, қуюқ яшил матн	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:608	
+c2bbf6034dcb		Math & Trig	Matematik va trigonometrik	reviewed:agent-opus:2026-10-21	Математик ва тригонометрик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/catalog.rs:177	
+c309ccec77e6		Histogram	Gistogramma	reviewed:agent-opus:2026-10-21	Гистограмма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2049	
+c45a4773a731		Cell Styles	Katak uslublari	reviewed:agent-opus:2026-10-21	Катак услублари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:851	
 c45d586406ed		Allow Edit Ranges	Tahrirlash diapazonlariga ruxsat	reviewed:agent-opus:2026-10-18	Таҳрирлаш диапазонларига рухсат	reviewed:agent-opus:2026-10-18	Разрешить изменение диапазонов	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:215	
 c470bf9697d6		Insert	Kiritish	reviewed:agent-opus:2026-10-18	Киритиш	reviewed:agent-opus:2026-10-18	Вставить	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:105	
 c479b866f180		Ink to\nShape	Shaklga\naylantirish	reviewed:agent-opus:2026-10-18	Шаклга\nайлантириш	reviewed:agent-opus:2026-10-18	Преобразовать рукописный\nввод в фигуру	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:295	review-agent-2026-10-18: shortened: Draw tab: the ink is implied
 c53640cbb10e		{n} cells converted	{n} ta katak aylantirildi	reviewed:agent-opus:2026-10-20	{n} та катак айлантирилди	reviewed:agent-opus:2026-10-20	Преобразовано ячеек: {n}	reviewed:agent-opus:2026-10-20		P1	gridcraft	patches/gridcraft/0121	category:message; added by the translit UI patches (0121) | reviewed by an opus sub-agent 2026-10-20 (agent review delegated by the owner)
 c565ce992473		What-If\nAnalysis	«Agar…\nboʻlsa» tahlili	reviewed:agent-opus:2026-10-18	«Агар…\nбўлса» таҳлили	reviewed:agent-opus:2026-10-18	Анализ «что\nесли»	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:361	
 c59739a7de1c		Nothing to print.	Chop etiladigan narsa yoʻq.	reviewed:agent-opus:2026-10-18	Чоп этиладиган нарса йўқ.	reviewed:agent-opus:2026-10-18	Нечего печатать.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:743	
-c5c841426c59		Entire column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
-c67b6e407b9d		This month		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:596	
+c5c841426c59		Entire column	Butun ustun	reviewed:agent-opus:2026-10-21	Бутун устун	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:110	
+c67b6e407b9d		This month	Shu oy	reviewed:agent-opus:2026-10-21	Шу ой	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:596	
 c69c015951f6		Underline	Tagi chizilgan	reviewed:agent-opus:2026-10-18	Таги чизилган	reviewed:agent-opus:2026-10-18	Подчёркивание	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:198	review-agent-2026-10-18: glossary Underline
 c7aed5685223		Clear Rules from Selected Cells	Tanlangan kataklar qoidalarini tozalash	reviewed:agent-opus:2026-10-18	Танланган катаклар қоидаларини тозалаш	reviewed:agent-opus:2026-10-18	Очистить правила для выделенных ячеек	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:439	
-c817807e2885		— 1 step		todo		todo		todo		P2	gridcraft		
-c857190ada2a		Zoom to Selection		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2162	
+c817807e2885		— 1 step	— 1 qadam	reviewed:agent-opus:2026-10-21	— 1 қадам	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+c857190ada2a		Zoom to Selection	Tanlovga masshtablash	reviewed:agent-opus:2026-10-21	Танловга масштаблаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2162	
 c86e93cdfe27		Paste Values	Qiymatlarni qoʻyish	reviewed:agent-opus:2026-10-18	Қийматларни қўйиш	reviewed:agent-opus:2026-10-18	Вставить значения	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:180	
-c94e647933ac		Pareto (sorted histogram)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2331	
-c9a8c14a0fd9		Rank and Percentile		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:45	
+c94e647933ac		Pareto (sorted histogram)	Pareto (saralangan gistogramma)	reviewed:agent-opus:2026-10-21	Парето (сараланган гистограмма)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2331	
+c9a8c14a0fd9		Rank and Percentile	Rang va protsentil	reviewed:agent-opus:2026-10-21	Ранг ва процентиль	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:45	
 ca4543f8613a		Flash Fill	Tezkor toʻldirish	reviewed:agent-opus:2026-10-18	Тезкор тўлдириш	reviewed:agent-opus:2026-10-18	Мгновенное заполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:266	
-ca494b63c7a0		Data Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:382	
-ca58a956987f		Refers To		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2005	
-cb71dd474dfd		Reference:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1902	
-cc4888fdb985		equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:874	
-cc99c2acfac5		Values range (blank: second column of the selection):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:447	
-ccc62e0d02d3		Output options		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2431	
+ca494b63c7a0		Data Range:	Maʼlumotlar diapazoni:	reviewed:agent-opus:2026-10-21	Маълумотлар диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:382	
+ca58a956987f		Refers To	Diapazon	reviewed:agent-opus:2026-10-21	Диапазон	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2005	
+cb71dd474dfd		Reference:	Havola:	reviewed:agent-opus:2026-10-21	Ҳавола:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1902	
+cc4888fdb985		equal to	teng	reviewed:agent-opus:2026-10-21	тенг	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:874	
+cc99c2acfac5		Values range (blank: second column of the selection):	Qiymatlar diapazoni (boʻsh: tanlovning ikkinchi ustuni):	reviewed:agent-opus:2026-10-21	Қийматлар диапазони (бўш: танловнинг иккинчи устуни):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:447	
+ccc62e0d02d3		Output options	Chiqish parametrlari	reviewed:agent-opus:2026-10-21	Чиқиш параметрлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2431	
 cce28430c610		Threaded Comments	Javobli izohlar	reviewed:agent-opus:2026-10-18	Жавобли изоҳлар	reviewed:agent-opus:2026-10-18	Комментарии с ветками	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:368	review-agent-2026-10-18: left as draft: threaded comments: no established term; "muzokara" means negotiation; orchestrator 2026-10-18: resolved left-as-draft row (owner-delegated review)
-cd23aa2a8a67		Within workbook		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1829	
+cd23aa2a8a67		Within workbook	Ish kitobi ichida	reviewed:agent-opus:2026-10-21	Иш китоби ичида	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1829	
 cdf5779928b9		Page Layout	Sahifa maketi	reviewed:agent-opus:2026-10-18	Саҳифа макети	reviewed:agent-opus:2026-10-18	Разметка страницы	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:446	
 ce0b11a24ef7		Print\nTitles	Sarlavhalarni\nchop etish	reviewed:agent-opus:2026-10-18	Сарлавҳаларни\nчоп этиш	reviewed:agent-opus:2026-10-18	Печатать\nзаголовки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:312	
-ce1c3c50c65d		Version {version}		todo		todo		todo		P2	gridcraft		
-ce3363306bc3		Residuals		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2342	
-cec3b25fbdef		Find All		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1856	
+ce1c3c50c65d		Version {version}	Versiya {version}	reviewed:agent-opus:2026-10-21	Версия {version}	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+ce3363306bc3		Residuals	Qoldiqlar	reviewed:agent-opus:2026-10-21	Қолдиқлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2342	
+cec3b25fbdef		Find All	Hammasini topish	reviewed:agent-opus:2026-10-21	Ҳаммасини топиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1856	
 cf7b13c0ce10		Unprotect\nSheet	Varaq himoyasini\nyechish	reviewed:agent-opus:2026-10-18	Варақ ҳимоясини\nечиш	reviewed:agent-opus:2026-10-18	Снять защиту\nлиста	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:379	review-agent-2026-10-18: shorter verb
-cf83df7bb612		Waterfall		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2050	
-d00ac3e9c9e4		Line with Markers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2040	
-d02cd42aecd6		Input X Range:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2338	
-d03d47ddf16d		Household Budget		todo		todo		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
-d0b656c52642		Visible cells only		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:664	
+cf83df7bb612		Waterfall	Sharshara	reviewed:agent-opus:2026-10-21	Шаршара	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2050	
+d00ac3e9c9e4		Line with Markers	Markerli chiziqli	reviewed:agent-opus:2026-10-21	Маркерли чизиқли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2040	
+d02cd42aecd6		Input X Range:	X kirish diapazoni:	reviewed:agent-opus:2026-10-21	X кириш диапазони:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2338	
+d03d47ddf16d		Household Budget	Oilaviy byudjet	reviewed:agent-opus:2026-10-21	Оилавий бюджет	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
+d0b656c52642		Visible cells only	Faqat koʻrinadigan kataklar	reviewed:agent-opus:2026-10-21	Фақат кўринадиган катаклар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:664	
 d0ba5aaecde7		Merge & Center	Birlashtirish va markazlash	reviewed:agent-opus:2026-10-18	Бирлаштириш ва марказлаш	reviewed:agent-opus:2026-10-18	Объединить и поместить в центре	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:202	
 d0bd83862af5		Header Margin	Yuqori kolontitul hoshiyasi	reviewed:agent-opus:2026-10-18	Юқори колонтитул ҳошияси	reviewed:agent-opus:2026-10-18	Поле верхнего колонтитула	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:303	review-agent-2026-10-18: glossary Margins
-d0d290e8d25d		Light Red Fill with Dark Red Text		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:606	
-d0ea2b283add		Display:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:371	
+d0d290e8d25d		Light Red Fill with Dark Red Text	Och qizil fon, quyuq qizil matn	reviewed:agent-opus:2026-10-21	Оч қизил фон, қуюқ қизил матн	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:606	
+d0ea2b283add		Display:	Koʻrsatiladigan matn:	reviewed:agent-opus:2026-10-21	Кўрсатиладиган матн:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:371	
 d19d662e54c3		Drag to freeze rows	Qatorlarni qotirish uchun sudrang	reviewed:agent-opus:2026-10-18	Қаторларни қотириш учун судранг	reviewed:agent-opus:2026-10-18	Перетащите, чтобы закрепить строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
-d1d6c32c2e6d		Damping factor:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2350	
+d1d6c32c2e6d		Damping factor:	Soʻnish omili:	reviewed:agent-opus:2026-10-21	Сўниш омили:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2350	
 d1ea7c37ddd1		AutoFit Row Height	Qator balandligini avtomoslash	reviewed:agent-opus:2026-10-18	Қатор баландлигини автомослаш	reviewed:agent-opus:2026-10-18	Автоподбор высоты строки	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:3122	
-d1ff410e9b4e		Validation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:302	
-d2a72298c3ec		Stacked Area		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2045	
-d2df992b4c4c		Border		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1534	
-d30a4d629024		Bin Range (blank for automatic bins):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2329	
-d35c1d0d7f62		Convert Text to Columns		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:420	
+d1ff410e9b4e		Validation	Tekshirish qoidalari	reviewed:agent-opus:2026-10-21	Текшириш қоидалари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:302	
+d2a72298c3ec		Stacked Area	Yigʻma sohali	reviewed:agent-opus:2026-10-21	Йиғма соҳали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2045	
+d2df992b4c4c		Border	Chegara	reviewed:agent-opus:2026-10-21	Чегара	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1534	
+d30a4d629024		Bin Range (blank for automatic bins):	Intervallar diapazoni (boʻsh = avtomatik intervallar):	reviewed:agent-opus:2026-10-21	Интерваллар диапазони (бўш = автоматик интерваллар):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2329	
+d35c1d0d7f62		Convert Text to Columns	Matnni ustunlarga ajratish	reviewed:agent-opus:2026-10-21	Матнни устунларга ажратиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:420	
 d37a618e025c		Comma Style	Minglar ajratgichi	reviewed:agent-opus:2026-10-18	Минглар ажратгичи	reviewed:agent-opus:2026-10-18	Разделитель разрядов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:227	
 d40dbaa273b7		Protect Workbook	Ish kitobini himoyalash	reviewed:agent-opus:2026-10-18	Иш китобини ҳимоялаш	reviewed:agent-opus:2026-10-18	Защитить книгу	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:612	
-d4126d28b72d		Filters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
-d449731c01e6		Delete chart		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2397	
-d46f9fc969c3		Use function		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:511	
-d4976d7ffcfc		Convert to Range		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2291	
-d4ec3ed30f3d		Before sheet (position, 0 = first):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:167	
-d54d6bbe3d1f		Other:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:427	
-d55625243726		Name Manager		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:672	
-d57e02e328b3		Calculate Sheet (⇧F9)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1880	
-d5a24820f7d1		Confidence Level for Mean (%), blank for none:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2323	
-d5cbd26a58c4		Gradebook		todo		todo		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
-d6017549b0a4		{count} cell(s) found		todo		todo		todo		P2	gridcraft		
-d65a4f98c69f	Tab	Insert		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:105	
-d65e856c9413		Format values where this formula is true:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:600	
-d66aaaa7669e		Convert the last ink stroke to a shape		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1609	
+d4126d28b72d		Filters	Filtrlar	reviewed:agent-opus:2026-10-21	Фильтрлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:82	
+d449731c01e6		Delete chart	Diagrammani oʻchirish	reviewed:agent-opus:2026-10-21	Диаграммани ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2397	
+d46f9fc969c3		Use function	Funksiya	reviewed:agent-opus:2026-10-21	Функция	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:511	
+d4976d7ffcfc		Convert to Range	Diapazonga aylantirish	reviewed:agent-opus:2026-10-21	Диапазонга айлантириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:2291	
+d4ec3ed30f3d		Before sheet (position, 0 = first):	Qaysi varaqdan oldin (oʻrin, 0 = birinchi):	reviewed:agent-opus:2026-10-21	Қайси варақдан олдин (ўрин, 0 = биринчи):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:167	
+d54d6bbe3d1f		Other:	Boshqa:	reviewed:agent-opus:2026-10-21	Бошқа:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:427	
+d55625243726		Name Manager	Nomlarni boshqarish	reviewed:agent-opus:2026-10-21	Номларни бошқариш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:672	
+d57e02e328b3		Calculate Sheet (⇧F9)	Varaqni hisoblash (⇧F9)	reviewed:agent-opus:2026-10-21	Варақни ҳисоблаш (⇧F9)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1880	
+d5a24820f7d1		Confidence Level for Mean (%), blank for none:	Oʻrtacha uchun ishonchlilik darajasi (%), kerak boʻlmasa boʻsh:	reviewed:agent-opus:2026-10-21	Ўртача учун ишончлилик даражаси (%), керак бўлмаса бўш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2323	
+d5cbd26a58c4		Gradebook	Baholar jurnali	reviewed:agent-opus:2026-10-21	Баҳолар журнали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/sample.rs:11	
+d6017549b0a4		{count} cell(s) found	{count} ta katak topildi	reviewed:agent-opus:2026-10-21	{count} та катак топилди	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+d65a4f98c69f	Tab	Insert	Kiritish	reviewed:agent-opus:2026-10-21	Киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:105	
+d65e856c9413		Format values where this formula is true:	Ushbu formula rost boʻlgan qiymatlarni formatlash:	reviewed:agent-opus:2026-10-21	Ушбу формула рост бўлган қийматларни форматлаш:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:600	
+d66aaaa7669e		Convert the last ink stroke to a shape	Oxirgi qoʻlyozma chizigʻini shaklga aylantirish	reviewed:agent-opus:2026-10-21	Охирги қўлёзма чизиғини шаклга айлантириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1609	
 d66d8c2325ef	Options	General	Umumiy	reviewed:agent-opus:2026-10-18	Умумий	reviewed:agent-opus:2026-10-18	Общие	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
 d7d13f6fea03		Gridlines: Show	Toʻr chiziqlari: koʻrsatish	reviewed:agent-opus:2026-10-18	Тўр чизиқлари: кўрсатиш	reviewed:agent-opus:2026-10-18	Линии сетки: показать	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:427	review-agent-2026-10-18: gridlines
 d7d60b8382e8		Insert\nFunction	Funksiya\nkiritish	reviewed:agent-opus:2026-10-18	Функция\nкиритиш	reviewed:agent-opus:2026-10-18	Вставить\nфункцию	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:321	
-d805af85eed8		Row height (pixels):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:136	
-d855527f2d99		Cube		todo		todo		todo		P2	gridcraft		
-d8b77b33e61c		Hypothesized Mean Difference:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2360	
+d805af85eed8		Row height (pixels):	Qator balandligi (pikselda):	reviewed:agent-opus:2026-10-21	Қатор баландлиги (пикселда):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:136	
+d855527f2d99		Cube	Kub	reviewed:agent-opus:2026-10-21	Куб	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
+d8b77b33e61c		Hypothesized Mean Difference:	Oʻrtachalarning faraz qilingan farqi:	reviewed:agent-opus:2026-10-21	Ўртачаларнинг фараз қилинган фарқи:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2360	
 da3c9068e9db		Export	Eksport	reviewed:agent-opus:2026-10-18	Экспорт	reviewed:agent-opus:2026-10-18	Экспорт	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:72	review-agent-2026-10-18: glossary Export
-da94ffcbfccd		Custom (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:535	
+da94ffcbfccd		Custom (%):	Maxsus (%):	reviewed:agent-opus:2026-10-21	Махсус (%):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:535	
 dad3fd754fc6		Print Active Sheets	Faol varaqlarni chop etish	reviewed:agent-opus:2026-10-18	Фаол варақларни чоп этиш	reviewed:agent-opus:2026-10-18	Напечатать активные листы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:722	
 dad656331357		Manual	Qoʻlda	reviewed:agent-opus:2026-10-18	Қўлда	reviewed:agent-opus:2026-10-18	Вручную	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:984	
-dae735caf3a7		No names defined		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2009	
+dae735caf3a7		No names defined	Nomlar aniqlanmagan	reviewed:agent-opus:2026-10-21	Номлар аниқланмаган	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2009	
 db808ae97d28		Flash\nFill	Tezkor\ntoʻldirish	reviewed:agent-opus:2026-10-18	Тезкор\nтўлдириш	reviewed:agent-opus:2026-10-18	Мгновенное\nзаполнение	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:265	
-db80ee3b401d		Protect Structure and Windows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:235	
-db9c4e00dc5f		Any value		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:846	
+db80ee3b401d		Protect Structure and Windows	Tuzilma va oynalarni himoyalash	reviewed:agent-opus:2026-10-21	Тузилма ва ойналарни ҳимоялаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:235	
+db9c4e00dc5f		Any value	Istalgan qiymat	reviewed:agent-opus:2026-10-21	Исталган қиймат	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:846	
 dc7ca51af082		Title	Sarlavha	reviewed:agent-opus:2026-10-18	Сарлавҳа	reviewed:agent-opus:2026-10-18	Название	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:93	review-agent-2026-10-18: glossary Title
-dc9b4d6d923e		Errors		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:659	
+dc9b4d6d923e		Errors	Xatolar	reviewed:agent-opus:2026-10-21	Хатолар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:659	
 dcfa10bce92e		Vertical Text	Vertikal matn	reviewed:agent-opus:2026-10-18	Вертикал матн	reviewed:agent-opus:2026-10-18	Вертикальный текст	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:216	
 dd06e13368e5		System	Tizim	reviewed:agent-opus:2026-10-18	Тизим	reviewed:agent-opus:2026-10-18	Системная	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:937	
-dd166be169b8		PivotTable Fields		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:29	
+dd166be169b8		PivotTable Fields	Yigʻma jadval maydonlari	reviewed:agent-opus:2026-10-21	Йиғма жадвал майдонлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:29	
 dd8e09cecf2a		Sort Z to A	Z dan A gacha saralash	reviewed:agent-opus:2026-10-18	З дан А гача саралаш	reviewed:agent-opus:2026-10-18	Сортировка от Я до А	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:2863	
-ddd84d495af7		Picture file path (PNG or JPEG):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1111	
-de0ca0cf77a7		Place Picture in Cell		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
+ddd84d495af7		Picture file path (PNG or JPEG):	Rasm fayli yoʻli (PNG yoki JPEG):	reviewed:agent-opus:2026-10-21	Расм файли йўли (PNG ёки JPEG):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1111	
+de0ca0cf77a7		Place Picture in Cell	Rasmni katak ichiga joylash	reviewed:agent-opus:2026-10-21	Расмни катак ичига жойлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:768	
 deb8dc0e3ed7		Bottom 10 Items	Eng past 10 ta element	reviewed:agent-opus:2026-10-18	Энг паст 10 та элемент	reviewed:agent-opus:2026-10-18	Последние 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:434	
 dee968421d5a		Reset All Page Breaks	Sahifa uzilishlarini tiklash	reviewed:agent-opus:2026-10-18	Саҳифа узилишларини тиклаш	reviewed:agent-opus:2026-10-18	Сбросить все разрывы страниц	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:311	review-agent-2026-10-18: reset = tiklash
 df6104b243f3		General	Umumiy	reviewed:agent-opus:2026-10-18	Умумий	reviewed:agent-opus:2026-10-18	Общий	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1552	
-df80cd2f215c		Restore Original Values		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2575	
+df80cd2f215c		Restore Original Values	Asl qiymatlarni tiklash	reviewed:agent-opus:2026-10-21	Асл қийматларни тиклаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2575	
 dfb5f3139eff		AutoSum	Avtoyigʻindi	reviewed:agent-opus:2026-10-18	Автойиғинди	reviewed:agent-opus:2026-10-18	Автосумма	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:263	review-agent-2026-10-18: sum = yig`indi ("jamlama" is a compilation)
-e01423091319		Values and number formats		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:306	
-e043d847f1cf		Summarize by Min		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:115	
-e0abd493de21		Row Height		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:134	
-e11607ff230d		Insert a picture		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1384	
-e1e248e07338		100% Stacked Column		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2035	
-e1ee677e394f		All Charts		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
-e22f7046115e		Define Name…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2870	
-e237b2667790		Maximum:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:908	
+e01423091319		Values and number formats	Qiymatlar va son formatlari	reviewed:agent-opus:2026-10-21	Қийматлар ва сон форматлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:306	
+e043d847f1cf		Summarize by Min	Jamlash: minimum	reviewed:agent-opus:2026-10-21	Жамлаш: минимум	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:115	
+e0abd493de21		Row Height	Qator balandligi	reviewed:agent-opus:2026-10-21	Қатор баландлиги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:134	
+e11607ff230d		Insert a picture	Rasm kiritish	reviewed:agent-opus:2026-10-21	Расм киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1384	
+e1e248e07338		100% Stacked Column	100% yigʻma ustunli	reviewed:agent-opus:2026-10-21	100% йиғма устунли	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2035	
+e1ee677e394f		All Charts	Barcha diagrammalar	reviewed:agent-opus:2026-10-21	Барча диаграммалар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:694	
+e22f7046115e		Define Name…	Nom berish…	reviewed:agent-opus:2026-10-21	Ном бериш…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/grid.rs:2870	
+e237b2667790		Maximum:	Maksimum:	reviewed:agent-opus:2026-10-21	Максимум:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:908	
 e28b44368136		Modified	Oʻzgartirilgan	reviewed:agent-opus:2026-10-18	Ўзгартирилган	reviewed:agent-opus:2026-10-18	Изменён	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:374	
 e385d75b2e44		Math &\nTrig	Matematik va\ntrigonometrik	reviewed:agent-opus:2026-10-18	Математик ва\nтригонометрик	reviewed:agent-opus:2026-10-18	Математические и\nтригонометрические	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:479	
 e3ad33f2de9d		More\nFunctions	Boshqa\nfunksiyalar	reviewed:agent-opus:2026-10-18	Бошқа\nфункциялар	reviewed:agent-opus:2026-10-18	Другие\nфункции	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:480	
 e47e068d95e9		Formulas	Formulalar	reviewed:agent-opus:2026-10-18	Формулалар	reviewed:agent-opus:2026-10-18	Формулы	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:978	
 e56d9891477d		Save .xlsx workbooks automatically after every change	.xlsx ish kitoblarini har bir oʻzgarishdan keyin avtomatik saqlash	reviewed:agent-opus:2026-10-18	.xlsx иш китобларини ҳар бир ўзгаришдан кейин автоматик сақлаш	reviewed:agent-opus:2026-10-18	Автоматически сохранять книги .xlsx после каждого изменения	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:973	
-e60bb3f0544b		t-Test: Two-Sample Assuming Unequal Variances		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:49	
-e62592199c28		Ignore blank		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:860	
-e6469b30a297		Subtract		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
+e60bb3f0544b		t-Test: Two-Sample Assuming Unequal Variances	t-test: turli dispersiyali ikki tanlanma	reviewed:agent-opus:2026-10-21	t-тест: турли дисперсияли икки танланма	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:49	
+e62592199c28		Ignore blank	Boʻshlarni eʼtiborsiz qoldirish	reviewed:agent-opus:2026-10-21	Бўшларни эътиборсиз қолдириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:860	
+e6469b30a297		Subtract	Ayirish	reviewed:agent-opus:2026-10-21	Айириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:312	
 e65eba07034f		Sort &\nFilter	Saralash va\nfiltrlash	reviewed:agent-opus:2026-10-18	Саралаш ва\nфильтрлаш	reviewed:agent-opus:2026-10-18	Сортировка и\nфильтр	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:339	review-agent-2026-10-18: Cyrillic spelling
-e6cadc24c3ce		Goal Seek		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:440	
-e6cf34faf587		Statistical		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1768	
-e751ca386cb7		Custom Sort		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1907	
+e6cadc24c3ce		Goal Seek	Parametrni tanlash	reviewed:agent-opus:2026-10-21	Параметрни танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:440	
+e6cf34faf587		Statistical	Statistik	reviewed:agent-opus:2026-10-21	Статистик	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1768	
+e751ca386cb7		Custom Sort	Maxsus saralash	reviewed:agent-opus:2026-10-21	Махсус саралаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1907	
 e761927f1a00		Go to Header	Yuqori kolontitulga oʻtish	reviewed:agent-opus:2026-10-18	Юқори колонтитулга ўтиш	reviewed:agent-opus:2026-10-18	Перейти к верхнему колонтитулу	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:506	
 e768406bb35f		Percent Style	Foiz formati	reviewed:agent-opus:2026-10-18	Фоиз формати	reviewed:agent-opus:2026-10-18	Процентный формат	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:226	review-agent-2026-10-18: number format, not a style
-e774a4f1c57a		All done. We made {count} replacements.		todo		todo		todo		P2	gridcraft		
+e774a4f1c57a		All done. We made {count} replacements.	Tayyor. {count} ta almashtirish bajarildi.	reviewed:agent-opus:2026-10-21	Тайёр. {count} та алмаштириш бажарилди.	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft		
 e8191378d006		Sheet structure is locked: sheets can't be added, moved, renamed or deleted.	Varaqlar tuzilmasi qulflangan: varaqlarni qoʻshish, koʻchirish, nomini oʻzgartirish yoki oʻchirish mumkin emas.	reviewed:agent-opus:2026-10-18	Варақлар тузилмаси қулфланган: варақларни қўшиш, кўчириш, номини ўзгартириш ёки ўчириш мумкин эмас.	reviewed:agent-opus:2026-10-18	Структура листов заблокирована: листы нельзя добавлять, перемещать, переименовывать или удалять.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:620	
 e8c433a4fc0e		Data Analysis	Maʼlumotlar tahlili	reviewed:agent-opus:2026-10-18	Маълумотлар таҳлили	reviewed:agent-opus:2026-10-18	Анализ данных	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:479	
-e927ddfb5c2a		Pen\nBlue		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
+e927ddfb5c2a		Pen\nBlue	Koʻk\nruchka	reviewed:agent-opus:2026-10-21	Кўк\nручка	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
 e962563c50b3		Below Average	Oʻrtachadan past	reviewed:agent-opus:2026-10-18	Ўртачадан паст	reviewed:agent-opus:2026-10-18	Ниже среднего	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:437	
-ea2de8839157		Sample		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1559	
-ea9c1d50e8ab		Sort & Filter		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1015	
+ea2de8839157		Sample	Namuna	reviewed:agent-opus:2026-10-21	Намуна	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1559	
+ea9c1d50e8ab		Sort & Filter	Saralash va filtrlash	reviewed:agent-opus:2026-10-21	Саралаш ва фильтрлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1015	
 eb5cc47fc3f5		Automate	Avtomatlashtirish	reviewed:agent-opus:2026-10-18	Автоматлаштириш	reviewed:agent-opus:2026-10-18	Автоматизация	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:451	
-ec17d16139ec		Solver Parameters		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:498	
-ec49cb8e7d2e		(No suggestions)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2640	
-ec6e1f74dca4		Select Data Source		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:718	
+ec17d16139ec		Solver Parameters	Yechim izlash parametrlari	reviewed:agent-opus:2026-10-21	Ечим излаш параметрлари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:498	
+ec49cb8e7d2e		(No suggestions)	(Takliflar yoʻq)	reviewed:agent-opus:2026-10-21	(Таклифлар йўқ)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2640	
+ec6e1f74dca4		Select Data Source	Maʼlumotlar manbasini tanlash	reviewed:agent-opus:2026-10-21	Маълумотлар манбасини танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:718	
 ecf474fde9dc		Trace Precedents	Taʼsir etuvchi kataklar	reviewed:agent-opus:2026-10-18	Таъсир этувчи катаклар	reviewed:agent-opus:2026-10-18	Влияющие ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:326	review-agent-2026-10-18: ru Влияющие ячейки
-ed932534202d		New Worksheet Ply:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
+ed932534202d		New Worksheet Ply:	Yangi varaq:	reviewed:agent-opus:2026-10-21	Янги варақ:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2433	
 ed97d10ee1f2		Drag to freeze columns	Ustunlarni qotirish uchun sudrang	reviewed:agent-opus:2026-10-18	Устунларни қотириш учун судранг	reviewed:agent-opus:2026-10-18	Перетащите, чтобы закрепить столбцы	upstream		P1	gridcraft	crates/ui-egui/src/grid.rs:1815	
-ed9c23bf8ae1		€ Euro		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:811	
+ed9c23bf8ae1		€ Euro	€ Yevro	reviewed:agent-opus:2026-10-21	€ Евро	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:811	
 edcef13bf91e		Goal Seek…	Parametrni tanlash…	reviewed:agent-opus:2026-10-18	Параметрни танлаш…	reviewed:agent-opus:2026-10-18	Подбор параметра…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:364	
-ee29c8f3f2eb		Cumulative Percentage		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2332	
-eebd7f4301e2		Growth		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:326	
-eeca1b107dbe		Description (optional):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1132	
-ef10f813bc9e		(unnamed)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1509	
+ee29c8f3f2eb		Cumulative Percentage	Jamlanma foiz	reviewed:agent-opus:2026-10-21	Жамланма фоиз	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2332	
+eebd7f4301e2		Growth	Oʻsish	reviewed:agent-opus:2026-10-21	Ўсиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:326	
+eeca1b107dbe		Description (optional):	Tavsif (ixtiyoriy):	reviewed:agent-opus:2026-10-21	Тавсиф (ихтиёрий):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1132	
+ef10f813bc9e		(unnamed)	(nomsiz)	reviewed:agent-opus:2026-10-21	(номсиз)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1509	
 ef60c5ce4867		Calculate Sheet	Varaqni hisoblash	reviewed:agent-opus:2026-10-18	Варақни ҳисоблаш	reviewed:agent-opus:2026-10-18	Вычислить лист	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:335	
-efd1a1bcccd1		By changing cell:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2290	
-f063cc101af3		Remove Field		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:150	
-f11f6e4c2701		Solver Results		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:502	
-f12960e65b77		Note:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:348	
-f1a8aafa07f1		Pick From List		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:776	
-f1aa77bde5f2		Column Width		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:141	
-f1bdabd59e87		Numbers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:660	
-f1c683597ca6		Redo (⌘Y)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:95	
+efd1a1bcccd1		By changing cell:	Oʻzgartiriladigan katak:	reviewed:agent-opus:2026-10-21	Ўзгартириладиган катак:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2290	
+f063cc101af3		Remove Field	Maydonni olib tashlash	reviewed:agent-opus:2026-10-21	Майдонни олиб ташлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:150	
+f11f6e4c2701		Solver Results	Yechim izlash natijalari	reviewed:agent-opus:2026-10-21	Ечим излаш натижалари	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:502	
+f12960e65b77		Note:	Qayd:	reviewed:agent-opus:2026-10-21	Қайд:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:348	
+f1a8aafa07f1		Pick From List	Roʻyxatdan tanlash	reviewed:agent-opus:2026-10-21	Рўйхатдан танлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:776	
+f1aa77bde5f2		Column Width	Ustun kengligi	reviewed:agent-opus:2026-10-21	Устун кенглиги	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:141	
+f1bdabd59e87		Numbers	Sonlar	reviewed:agent-opus:2026-10-21	Сонлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:660	
+f1c683597ca6		Redo (⌘Y)	Qayta bajarish (⌘Y)	reviewed:agent-opus:2026-10-21	Қайта бажариш (⌘Y)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:95	
 f1fd5c455b1b		Save the workbook as a web page.	Ish kitobini veb-sahifa sifatida saqlash.	reviewed:agent-opus:2026-10-18	Иш китобини веб-саҳифа сифатида сақлаш.	reviewed:agent-opus:2026-10-18	Сохранить книгу как веб-страницу.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:862	review-agent-2026-10-18: veb- compounds hyphenated
 f22f625188de		Top 10 Items	Eng yuqori 10 ta element	reviewed:agent-opus:2026-10-18	Энг юқори 10 та элемент	reviewed:agent-opus:2026-10-18	Первые 10 элементов	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:432	
 f38254533254		Trace Dependents	Bogʻliq kataklar	reviewed:agent-opus:2026-10-18	Боғлиқ катаклар	reviewed:agent-opus:2026-10-18	Зависимые ячейки	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:327	review-agent-2026-10-18: ru Зависимые ячейки
-f3ac0f13fe4d		Watch\nWindow		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1855	
+f3ac0f13fe4d		Watch\nWindow	Kuzatuv\noynasi	reviewed:agent-opus:2026-10-21	Кузатув\nойнаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1855	
 f3c0d305c79c		Current\nTime	Joriy\nvaqt	reviewed:agent-opus:2026-10-18	Жорий\nвақт	reviewed:agent-opus:2026-10-18	Текущее\nвремя	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:493	
 f403c10ef152		AutoSum (⌘⇧T)	Avtoyigʻindi (⌘⇧T)	reviewed:agent-opus:2026-10-18	Автойиғинди (⌘⇧T)	reviewed:agent-opus:2026-10-18	Автосумма (⌘⇧T)	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:264	review-agent-2026-10-18: sum = yig`indi
 f5b12a36f9bc		Icon Sets	Piktogramma toʻplamlari	reviewed:agent-opus:2026-10-18	Пиктограмма тўпламлари	reviewed:agent-opus:2026-10-18	Наборы значков	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:443	review-agent-2026-10-18: Icons = Piktogrammalar ("Belgilar" is Character)
 f5d1d5a19919		Text	Matn	reviewed:agent-opus:2026-10-18	Матн	reviewed:agent-opus:2026-10-18	Текстовый	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:661	
 f68f56c7eecf		Conditional\nFormatting	Shartli\nformatlash	reviewed:agent-opus:2026-10-18	Шартли\nформатлаш	reviewed:agent-opus:2026-10-18	Условное\nформатирование	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:231	
-f6c1b5f9d175		Descriptive Statistics		todo		todo		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:40	
+f6c1b5f9d175		Descriptive Statistics	Tavsifiy statistika	reviewed:agent-opus:2026-10-21	Тавсифий статистика	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/engine/src/cmd/analysis.rs:40	
 f710346c3866		Enable AutoComplete for cell values	Katak qiymatlari uchun avtotoʻldirishni yoqish	reviewed:agent-opus:2026-10-18	Катак қийматлари учун автотўлдиришни ёқиш	reviewed:agent-opus:2026-10-18	Включить автозавершение значений ячеек	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:967	
 f780f8ed8e6d		Select\nData	Maʼlumotlarni\ntanlash	reviewed:agent-opus:2026-10-18	Маълумотларни\nтанлаш	reviewed:agent-opus:2026-10-18	Выбрать\nданные	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:419	
-f79c22abc44d		Left margin (in):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:408	
-f7cb470a1491		less than or equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:879	
-f7ce5946ed5a		Save Changes?		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:778	
-f7f913ffa2e2		My list has headers		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1923	
+f79c22abc44d		Left margin (in):	Chap hoshiya (dyuym):	reviewed:agent-opus:2026-10-21	Чап ҳошия (дюйм):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:408	
+f7cb470a1491		less than or equal to	kichik yoki teng	reviewed:agent-opus:2026-10-21	кичик ёки тенг	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:879	
+f7ce5946ed5a		Save Changes?	Oʻzgarishlar saqlansinmi?	reviewed:agent-opus:2026-10-21	Ўзгаришлар сақлансинми?	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:778	
+f7f913ffa2e2		My list has headers	Roʻyxatimda sarlavhalar bor	reviewed:agent-opus:2026-10-21	Рўйхатимда сарлавҳалар бор	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1923	
 f8021ddd9b49		Strikethrough	Ustidan chizilgan	reviewed:agent-opus:2026-10-18	Устидан чизилган	reviewed:agent-opus:2026-10-18	Зачёркивание	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1638	review-agent-2026-10-18: glossary Strikethrough
-f82f2d06c1d2		Format rows		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:187	
-f8488530d05c		Workbook Statistics		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:729	
+f82f2d06c1d2		Format rows	Qatorlarni formatlash	reviewed:agent-opus:2026-10-21	Қаторларни форматлаш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:187	
+f8488530d05c		Workbook Statistics	Ish kitobi statistikasi	reviewed:agent-opus:2026-10-21	Иш китоби статистикаси	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:729	
 f8558c90740c		No workbook is open.	Ochiq ish kitobi yoʻq.	reviewed:agent-opus:2026-10-18	Очиқ иш китоби йўқ.	reviewed:agent-opus:2026-10-18	Нет открытых книг.	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:588	
-f93b0d81b7c0		Modify		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
-f9d8ccc55f57		Comment:		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:559	
-fa01cd7b0a0b		Accessibility		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:734	
-fa196b03565e		greater than or equal to		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:878	
-fadd888d528d		Insert an icon		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1412	
-fae614092d8e		Undo (⌘Z)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:79	
+f93b0d81b7c0		Modify	Oʻzgartirish	reviewed:agent-opus:2026-10-21	Ўзгартириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:222	
+f9d8ccc55f57		Comment:	Izoh:	reviewed:agent-opus:2026-10-21	Изоҳ:	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:559	
+fa01cd7b0a0b		Accessibility	Maxsus imkoniyatlar	reviewed:agent-opus:2026-10-21	Махсус имкониятлар	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:734	
+fa196b03565e		greater than or equal to	katta yoki teng	reviewed:agent-opus:2026-10-21	катта ёки тенг	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:878	
+fadd888d528d		Insert an icon	Piktogramma kiritish	reviewed:agent-opus:2026-10-21	Пиктограмма киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1412	
+fae614092d8e		Undo (⌘Z)	Qaytarish (⌘Z)	reviewed:agent-opus:2026-10-21	Қайтариш (⌘Z)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:79	
 fb13ae072e69		More Accounting Formats…	Boshqa buxgalteriya formatlari…	reviewed:agent-opus:2026-10-18	Бошқа бухгалтерия форматлари…	reviewed:agent-opus:2026-10-18	Другие финансовые форматы…	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:230	
-fb1bbeda5a2c		Summarize by Count		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:112	
-fb2a1509d725		Type (custom format code):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1563	
+fb1bbeda5a2c		Summarize by Count	Jamlash: soni	reviewed:agent-opus:2026-10-21	Жамлаш: сони	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:112	
+fb2a1509d725		Type (custom format code):	Tur (maxsus format kodi):	reviewed:agent-opus:2026-10-21	Тур (махсус формат коди):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1563	
 fbb8be679748		Show/Hide Note	Qaydni koʻrsatish/yashirish	reviewed:agent-opus:2026-10-18	Қайдни кўрсатиш/яшириш	reviewed:agent-opus:2026-10-18	Показать/скрыть заметку	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:284	
-fbc622e1c3c7		Data validation		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:666	
-fbcfe384f1cd		Confidence Level (%):		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2341	
-fbff9a7ab186		Insert a slicer to filter a table		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
+fbc622e1c3c7		Data validation	Maʼlumotlarni tekshirish	reviewed:agent-opus:2026-10-21	Маълумотларни текшириш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:666	
+fbcfe384f1cd		Confidence Level (%):	Ishonchlilik darajasi (%):	reviewed:agent-opus:2026-10-21	Ишончлилик даражаси (%):	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2341	
+fbff9a7ab186		Insert a slicer to filter a table	Jadvalni filtrlash uchun kesim kiritish	reviewed:agent-opus:2026-10-21	Жадвални фильтрлаш учун кесим киритиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1524	
 fc6572f4e53a		CSV (Comma delimited)	CSV (vergul bilan ajratilgan)	reviewed:agent-opus:2026-10-18	CSV (вергул билан ажратилган)	reviewed:agent-opus:2026-10-18	CSV (разделители — запятые)	upstream		P1	gridcraft	crates/ui-egui/src/backstage.rs:861	
-fcb61f763792		Constant is Zero		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2340	
+fcb61f763792		Constant is Zero	Konstanta nolga teng	reviewed:agent-opus:2026-10-21	Константа нолга тенг	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2340	
 fcf12be0e803		Rotate Text Up	Matnni yuqoriga burish	reviewed:agent-opus:2026-10-18	Матнни юқорига буриш	reviewed:agent-opus:2026-10-18	Повернуть текст вверх	upstream		P1	gridcraft	crates/ui-egui/src/i18n.rs:223	
 fd6c60ffea5d		Normal	Oddiy	reviewed:agent-opus:2026-10-18	Оддий	reviewed:agent-opus:2026-10-18	Обычные	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:1653	
-fd94b9c20e05		Bottom		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1612	
-fdafc13af12c		Pen\nRed		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
-fdda7ab77b0a		Keep		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2176	
-fe5a8158d22b		Values (V)		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:299	
-fe7611c55601		double		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1696	
+fd94b9c20e05		Bottom	Quyi	reviewed:agent-opus:2026-10-21	Қуйи	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1612	
+fdafc13af12c		Pen\nRed	Qizil\nruchka	reviewed:agent-opus:2026-10-21	Қизил\nручка	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/ribbon.rs:1590	
+fdda7ab77b0a		Keep	Saqlab qolish	reviewed:agent-opus:2026-10-21	Сақлаб қолиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:2176	
+fe5a8158d22b		Values (V)	Qiymatlar (V)	reviewed:agent-opus:2026-10-21	Қийматлар (V)	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:299	
+fe7611c55601		double	qoʻsh	reviewed:agent-opus:2026-10-21	қўш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1696	
 fece81d1bc9e		Conditional Formatting	Shartli formatlash	reviewed:agent-opus:2026-10-18	Шартли форматлаш	reviewed:agent-opus:2026-10-18	Условное форматирование	upstream		P1	gridcraft	crates/ui-egui/src/dialogs.rs:574	
-fed8358a685e		Show as Running Total		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:124	
-fede8c2e2e28		dotted		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1695	
-ff14c791b807		Last week		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:592	
-ff3e760ee923		+ Add Level		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1960	
-ffd1f64e006e		Calculated Field…		todo		todo		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:163	
+fed8358a685e		Show as Running Total	Jamlanma jami sifatida koʻrsatish	reviewed:agent-opus:2026-10-21	Жамланма жами сифатида кўрсатиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:124	
+fede8c2e2e28		dotted	nuqtali	reviewed:agent-opus:2026-10-21	нуқтали	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1695	
+ff14c791b807		Last week	Oʻtgan hafta	reviewed:agent-opus:2026-10-21	Ўтган ҳафта	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:592	
+ff3e760ee923		+ Add Level	+ Daraja qoʻshish	reviewed:agent-opus:2026-10-21	+ Даража қўшиш	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/dialogs.rs:1960	
+ffd1f64e006e		Calculated Field…	Hisoblanadigan maydon…	reviewed:agent-opus:2026-10-21	Ҳисобланадиган майдон…	reviewed:agent-opus:2026-10-21		todo		P2	gridcraft	crates/ui-egui/src/pivot_pane.rs:163	

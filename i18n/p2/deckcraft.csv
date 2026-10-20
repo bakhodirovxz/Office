@@ -1,0 +1,998 @@
+﻿key,context,en,ru,uz-Latn draft,uz-Cyrl draft,status,owner comment,scope,where,pass,en_hash,glossary terms
+ee4d30aa712f,,Animation Styles,,Animatsiya uslublari,Анимация услублари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:13,both,aec9b573,Animation
+95d74c620061,,Add Animation,,Animatsiya qoʻshish,Анимация қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:22,both,57adb329,Animation; Add
+23928a7170a3,,Remove Animation,,Animatsiyani olib tashlash,Анимацияни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:31,both,424302b6,Animation; Remove
+9cd15d97f6b6,,Reorder Animation,,Animatsiya tartibini oʻzgartirish,Анимация тартибини ўзгартириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:32,both,13f907db,Animation
+334222fe5734,,Timing,,Vaqt,Вақт,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:33,both,098024dc,Timing
+08d386810de3,,Effect Options,,Effekt parametrlari,Эффект параметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:42,both,b235b424,Effect Options; Options
+3ea5d4af692f,,Remove All Animations,,Barcha animatsiyalarni olib tashlash,Барча анимацияларни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:51,both,e20e7aa4,Remove; All
+253f5e67d7d8,,Animation Painter,,Animatsiyani nusxalash,Анимацияни нусхалаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:52,both,8f03d106,Animation Painter; Animation
+4d6422eccabf,,Apply Animation,,Animatsiyani qoʻllash,Анимацияни қўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:61,both,4a7417c0,Animation; Apply
+4475a38506c6,,Animation Gallery,,Animatsiyalar galereyasi,Анимациялар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:62,both,c6a830c8,Animation; Gallery
+675d35dcbb0c,,Animations on Slide,,Slayddagi animatsiyalar,Слайддаги анимациялар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/animation.rs:63,both,9aba82b8,Slide
+95a896d9482d,,Add Guide,,Yoʻnaltiruvchi chiziq qoʻshish,Йўналтирувчи чизиқ қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/arrange.rs:12,both,2e0f8971,Add
+8cc0f86a6d76,,Move Guide,,Yoʻnaltiruvchi chiziqni koʻchirish,Йўналтирувчи чизиқни кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/arrange.rs:21,both,88e24303,Move
+566a57730576,,Delete Guide,,Yoʻnaltiruvchi chiziqni oʻchirish,Йўналтирувчи чизиқни ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/arrange.rs:22,both,77cc3fec,Delete
+b032df209ad5,,Reorder Objects,,Obyektlar tartibini oʻzgartirish,Объектлар тартибини ўзгартириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/arrange.rs:28,both,91f22b6e,
+bf597ca1a72f,,Theme Gallery,,Mavzular galereyasi,Мавзулар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:27,both,a364a52e,Gallery; Theme
+5b19cbfa42db,,Variants,,Variantlar,Вариантлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:37,both,1bc3d368,Variants
+b5d4f7f0df99,,Variant Gallery,,Variantlar galereyasi,Вариантлар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:38,both,ad26086a,Gallery
+11f266ef4c75,,Hide Background Graphics,,Fon grafikasini yashirish,Фон графикасини яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:50,both,4a191a73,Background Graphics; Background; Hide
+c07bc791047e,,Header and Footer…,,Kolontitullar…,Колонтитуллар…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:60,both,807ff68e,Header and Footer; Footer; Header
+6120d0163722,,Handout Placeholders,,Tarqatma toʻldirgichlari,Тарқатма тўлдиргичлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:79,both,0413dcc2,Handout
+f38273a11c48,,Notes Placeholders,,Qaydlar toʻldirgichlari,Қайдлар тўлдиргичлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:97,both,26904a42,Notes
+1a182d9873e4,,Close Master View,,Namuna rejimini yopish,Намуна режимини ёпиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:106,both,49d4602b,Close; View
+393faec7ebf4,,Insert Layout,,Maket kiritish,Макет киритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:107,both,94e65692,Insert; Layout
+0d2eed0ef901,,Delete Layout,,Maketni oʻchirish,Макетни ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:109,both,2be066e1,Delete; Layout
+888fc8f768d0,,Insert Placeholder,,Toʻldirgich kiritish,Тўлдиргич киритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:110,both,c40d5489,Placeholder; Insert
+d648ced28cd7,,Layout Placeholders,,Maket toʻldirgichlari,Макет тўлдиргичлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/design.rs:120,both,eeded15b,Layout
+2b930ccffa9f,,Deselect,,Tanlovni bekor qilish,Танловни бекор қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/edit.rs:41,both,04d948a3,
+60f49cd388b2,,Starter Templates,,Boshlangʻich shablonlar,Бошланғич шаблонлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:20,both,cc055f95,
+30806c5ace46,,Open Data,,Maʼlumotlardan ochish,Маълумотлардан очиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:31,both,d2c5b1f0,Open
+142a195ad0ab,,Save as Template…,,Shablon sifatida saqlash…,Шаблон сифатида сақлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:34,both,6568d051,Template; Save As; Save
+25486e46d520,,Save to Data,,Maʼlumot sifatida saqlash,Маълумот сифатида сақлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:35,both,25c90028,Save
+7bfa745f4777,,Render Slide,,Slaydni rasmga aylantirish,Слайдни расмга айлантириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:46,both,a49fe5d7,Slide
+847307e8bd4b,,Color At,,Nuqtadagi rang,Нуқтадаги ранг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:47,both,3bc9c32d,Color
+cd7659eb4783,,Save AutoRecover Information,,Avtotiklash maʼlumotlarini saqlash,Автотиклаш маълумотларини сақлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:66,both,62d5991f,AutoRecover; Information; Save
+ea72e53b14a8,,Recovered Presentations,,Tiklangan taqdimotlar,Тикланган тақдимотлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:67,both,6e1d69df,Recovered
+2ab0349c00af,,Open Recovered Presentations,,Tiklangan taqdimotlarni ochish,Тикланган тақдимотларни очиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:68,both,7a625886,Recovered; Open
+fe293845f0bd,,Discard Recovered Presentations,,Tiklangan taqdimotlardan voz kechish,Тикланган тақдимотлардан воз кечиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:69,both,58eb4559,Recovered; Discard
+89d687e75fa7,,Next Window,,Keyingi oyna,Кейинги ойна,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/file.rs:71,both,1bf266c2,Window; Next
+107ae8a16a96,,Add Font,,Shrift qoʻshish,Шрифт қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:16,both,f0c97506,Font; Add
+b73abe91c5b8,,Text Transparency,,Matn shaffofligi,Матн шаффофлиги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:45,both,64511f9d,Transparency; Text
+ec530041be4f,,Text Shadow,,Matn soyasi,Матн сояси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:93,both,9fdf707e,Shadow; Text
+40bdbd8e24bb,,Text Transform,,Matn transformatsiyasi,Матн трансформацияси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:103,both,c7291c10,Text
+80fbd0536cba,,Autofit,,Avtomatik moslash,Автоматик мослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:202,both,cc324aaa,
+bbd8d5c852af,,Wrap Text in Shape,,Shakl ichida matnni oʻrash,Шакл ичида матнни ўраш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:203,both,6c80b372,Wrap Text; Shape; Text
+310524ff721e,,Text Box Margins,,Matn qutisi hoshiyalari,Матн қутиси ҳошиялари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:204,both,52379d8c,Text Box; Margins; Text
+dd969b8e5ff6,,Formatting State,,Formatlash holati,Форматлаш ҳолати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/format.rs:215,both,9f9a2744,
+692a252fad0c,,Apply Design Idea,,Dizayn gʻoyasini qoʻllash,Дизайн ғоясини қўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/ideas.rs:16,both,9b33c725,Design; Apply
+24946c232362,,Icon Gallery,,Piktogrammalar galereyasi,Пиктограммалар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/insert.rs:34,both,07870f49,Gallery; Icon
+37320af18d16,,Shape Gallery,,Shakllar galereyasi,Шакллар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/insert.rs:35,both,44a426c4,Gallery; Shape
+883c2087404c,,Chart…,,Diagramma…,Диаграмма…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/insert.rs:65,both,414cd809,Chart
+58c844878c9c,,Chart Elements,,Diagramma elementlari,Диаграмма элементлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/insert.rs:116,both,ba27cdfb,Chart
+0705024a3a63,,Action Buttons,,Amal tugmalari,Амал тугмалари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/insert.rs:134,both,c2b6b5d7,Action
+d28cbf0ac3e1,,Inspect Slide,,Slaydni tekshirish,Слайдни текшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/inspect.rs:13,both,b6539be0,Slide
+163a6a5025a7,,Inspect Shape,,Shaklni tekshirish,Шаклни текшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/inspect.rs:14,both,b837f21c,Shape
+fabe758c6a07,,List Commands,,Buyruqlar roʻyxati,Буйруқлар рўйхати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/inspect.rs:15,both,ac8f8233,List
+2b8bfb1624dc,,Seek,,Pozitsiyaga oʻtish,Позицияга ўтиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/media.rs:17,both,1ad08a39,
+95c86f212018,,Media Info,,Media maʼlumotlari,Медиа маълумотлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/media.rs:18,both,21750a23,Media
+b5ab3d39248e,,Poster Frame,,Muqova kadri,Муқова кадри,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/media.rs:27,both,1e3a340f,
+f1afc14bab4e,,Play/Pause GIF,,GIFni ijro etish/pauza,GIFни ижро этиш/пауза,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/media.rs:36,both,6146b0ae,Pause; Play
+5ae6b59f4dff,,Picture Style Gallery,,Rasm uslublari galereyasi,Расм услублари галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/picture_style.rs:23,both,0a1a220d,Picture; Gallery; Style
+9a28726b63d8,,Move Point,,Nuqtani koʻchirish,Нуқтани кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/points.rs:28,both,aa92e290,Point; Move
+5a927dbfa9fe,,Add Point,,Nuqta qoʻshish,Нуқта қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/points.rs:29,both,f353ad70,Point; Add
+f4b2789a0f96,,Point Type,,Nuqta turi,Нуқта тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/points.rs:38,both,bec8a154,Point; Type
+7fcc1542c3b6,,Move Handle,,Dastakni koʻchirish,Дастакни кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/points.rs:47,both,bda8cd22,Move
+34609ca18b5f,,Recolor Gallery,,Qayta boʻyash galereyasi,Қайта бўяш галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/recolor.rs:22,both,0dc1e027,Recolor; Gallery
+b5b2fd7b749d,,Resolve Thread,,Muhokamani hal qilish,Муҳокамани ҳал қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:16,both,17ea84c6,Resolve
+a0593b632bdb,,Change Spelling,,Imloni tuzatish,Имлони тузатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:38,both,bf0eb981,Spelling; Change
+9500c12d5517,,Spelling Dictionary,,Imlo lugʻati,Имло луғати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:48,both,3ebb65e4,Dictionary; Spelling
+3d2af7834ace,,Insert Synonym,,Sinonim kiritish,Синоним киритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:50,both,5f257c6e,Synonym; Insert
+133843cb2841,,Accept Revision,,Tahrirni qabul qilish,Таҳрирни қабул қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:61,both,24f666e6,Revision; Accept
+c75da246c47f,,Set Up Slide Show…,,Namoyishni sozlash…,Намойишни созлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:68,both,54119fe0,Slide Show; Slide; Show
+bb4b52650f37,,Custom Slide Show,,Maxsus namoyish,Махсус намойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/review.rs:77,both,6fea4d84,Slide Show; Custom; Slide; Show
+334a4005d32c,,Freeform,,Erkin shakl,Эркин шакл,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:23,both,46d64f45,Freeform
+ce5c303c4afd,,Connection Sites,,Ulanish nuqtalari,Уланиш нуқталари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:41,both,f26c4bbf,
+d3b4f4566cdf,,Position and Size,,Joylashuv va oʻlcham,Жойлашув ва ўлчам,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:52,both,01dc27a8,Size
+a8d084a039a7,,Flip,,Aks ettirish,Акс эттириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:71,both,5836b271,Flip
+442998d09a0b,,Adjust Shape,,Shaklni sozlash,Шаклни созлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:72,both,4218ffaf,Shape
+52e95a6210f8,,Quick Styles,,Tezkor uslublar,Тезкор услублар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:110,both,e9228c8e,
+f3511d237e68,,Show/Hide,,Koʻrsatish/yashirish,Кўрсатиш/яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/shape.rs:121,both,06c23682,Show; Hide
+6852344f98d3,,Move Slide,,Slaydni koʻchirish,Слайдни кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/slide.rs:25,both,1efc844d,Slide; Move
+36c601ccce0f,,Go to Slide,,Slaydga oʻtish,Слайдга ўтиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/slide.rs:26,both,65b51a68,Slide
+73a1774befad,,Select Slides,,Slaydlarni tanlash,Слайдларни танлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/slide.rs:31,both,6cce20df,Select
+6bc5ca77c2af,,Rename Slide,,Slaydni qayta nomlash,Слайдни қайта номлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/slide.rs:44,both,0fcefdfd,Rename; Slide
+cddf545569d0,,Move Section,,Boʻlimni koʻchirish,Бўлимни кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/slide.rs:57,both,ef6778f2,Section; Move
+0357b251cb65,,Edit SmartArt Text,,SmartArt matnini tahrirlash,SmartArt матнини таҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/smartart.rs:172,both,67790c7e,Edit; Text
+99354916b790,,Remove Shape,,Shaklni olib tashlash,Шаклни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/smartart.rs:190,both,2e9fc518,Remove; Shape
+5b8b3fa79b86,,Insert Picture in SmartArt,,SmartArtga rasm kiritish,SmartArtга расм киритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/smartart.rs:237,both,3b40caa6,Picture; Insert
+a382f5295a4c,,Align Cell Text,,Katak matnini tekislash,Катак матнини текислаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/table.rs:85,both,aba43cd7,Align; Text; Cell
+ac5426f89f60,,Select Cells,,Kataklarni tanlash,Катакларни танлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/table.rs:126,both,692cad29,Select
+bc2b033a47d9,,Fonts in Presentation,,Taqdimotdagi shriftlar,Тақдимотдаги шрифтлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:17,both,d7cfbf04,Presentation
+e7eddf165e76,,Replace Fonts,,Shriftlarni almashtirish,Шрифтларни алмаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:18,both,584a171f,Replace
+4531822ec248,,Stop Editing Text,,Matnni tahrirlashni tugatish,Матнни таҳрирлашни тугатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:28,both,06855aac,Stop; Text
+1456aa7d28f0,,Commit Composition,,Kiritilayotgan matnni tasdiqlash,Киритилаётган матнни тасдиқлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:51,both,bd8ad9df,
+e9e0a13b0b7d,,Delete Text,,Matnni oʻchirish,Матнни ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:60,both,97136080,Delete; Text
+bafba689e0bb,,Move Insertion Point,,Kiritish nuqtasini koʻchirish,Киритиш нуқтасини кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:69,both,a94febcf,Point; Move
+edf253ad2073,,Select All Text,,Butun matnni tanlash,Бутун матнни танлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:71,both,eee0c7ce,Select All; Select; Text; All
+b9d109f04327,,Set Text,,Matnni oʻrnatish,Матнни ўрнатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:74,both,43a3687a,Text
+80d6e4b83fad,,Get Text,,Matnni olish,Матнни олиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/text.rs:83,both,b2abe656,Text
+622768463e4d,,Transition,,Oʻtish,Ўтиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/transition.rs:14,both,4ead496f,Transition
+b2de2f9ee940,,Sound,,Ovoz,Овоз,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/transition.rs:33,both,b4e3efeb,
+7646607d57a8,,Apply To All,,Hammasiga qoʻllash,Ҳаммасига қўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/transition.rs:42,both,81faf58c,Apply; All
+7c242197b452,,Transition Gallery,,Oʻtishlar galereyasi,Ўтишлар галереяси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/engine/src/cmd/transition.rs:43,both,f12f01ce,Transition; Gallery
+2f8f8aaab70a,,"Start: {:.2}s, End: {:.2}s",,"Boshlanish: {:.2} s, tugash: {:.2} s","Бошланиш: {:.2} с, тугаш: {:.2} с",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/animtimeline.rs:90,both,7f36741b,
+425446cd3f50,,Click to add first slide,,Birinchi slaydni qoʻshish uchun bosing,Биринчи слайдни қўшиш учун босинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:105,both,697d0757,Slide; Click; Add
+5f78cb9679b4,,Decimal Tab,,Oʻnli tabulyatsiya,Ўнли табуляция,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:587,both,822163e6,Decimal; Tab
+744d77de2a3d,,Center Tab,,Markaziy tabulyatsiya,Марказий табуляция,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:587,both,82ae3f1f,Center; Tab
+a9d79dc1d051,,Right Tab,,Oʻng tabulyatsiya,Ўнг табуляция,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:587,both,4b755adf,Right; Tab
+e11a2aa27e39,,Left Tab,,Chap tabulyatsiya,Чап табуляция,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:587,both,15f43e25,Left; Tab
+28c81e763812,,{kind_label} (click to change),,{kind_label} (oʻzgartirish uchun bosing),{kind_label} (ўзгартириш учун босинг),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:594,both,1edfdb0a,Change; Click; Label
+17973adfd8b6,, left of centre,, markazdan chapda, марказдан чапда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:693,both,c4077771,Left
+3e1bc8c7e497,, right of centre,, markazdan oʻngda, марказдан ўнгда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:694,both,d49c4a6a,Right
+17549835cb2e,, above centre,, markazdan yuqorida, марказдан юқорида,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:695,both,07db2de9,Above
+8e123970b73d,, below centre,, markazdan pastda, марказдан пастда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:696,both,48285b81,Below
+fcc07166f140,,{:.0} pt{side},,{:.0} pt{side},{:.0} пт{side},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:699,both,cd4a0e7c,
+6038a6a57300,,Corner Point,,Burchak nuqtasi,Бурчак нуқтаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1087,both,4ff58b39,Corner Point; Point
+b36a158cf25f,,Straight Point,,Toʻgʻri nuqta,Тўғри нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1087,both,b13c59d2,Point
+deec28f7e571,,Smooth Point,,Silliq nuqta,Силлиқ нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1087,both,17b5056c,Smooth Point; Point
+27b7d4091315,,Delete Point,,Nuqtani oʻchirish,Нуқтани ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1093,both,325db51f,Delete; Point
+0fee1965702e,,Exit Edit Points,,Nuqtalarni tahrirlashdan chiqish,Нуқталарни таҳрирлашдан чиқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1100,both,f44d1741,Edit Points; Edit; Exit
+77fd63547f83,,Delete Repeated Word,,Takrorlangan soʻzni oʻchirish,Такрорланган сўзни ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1109,both,08463691,Delete; Word
+6b1006e72d9b,,(no spelling suggestions),,(imlo boʻyicha takliflar yoʻq),(имло бўйича таклифлар йўқ),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1146,both,d07acfeb,Suggestions; Spelling; No
+9a9603e0eb8b,,Format Shape…,,Shakl formati…,Шакл формати…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1202,both,09a0c5a6,Format; Shape
+fea00fed706d,,Edit Text,,Matnni tahrirlash,Матнни таҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1207,both,f5f4f6d7,Edit; Text
+a6afb470dacb,,Edit Points,,Nuqtalarni tahrirlash,Нуқталарни таҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1213,both,692aef80,Edit Points; Edit
+5af86b62b174,,Bring to Front,,Eng oldinga chiqarish,Энг олдинга чиқариш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1226,both,8a095042,Bring to Front; Front
+c6acbb4dbdd9,,Send to Back,,Eng orqaga surish,Энг орқага суриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1230,both,887995a2,Send to Back; Send; Back
+b6c25747f4ac,,Lock,,Qulflash,Қулфлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1239,both,891ebccd,Lock
+1968a8d1a5ba,,Edit Alt Text…,,Muqobil matnni tahrirlash…,Муқобил матнни таҳрирлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1255,both,2c606d51,Edit; Text
+96d0d23ac8a1,,Set as Default Shape,,Standart shakl sifatida belgilash,Стандарт шакл сифатида белгилаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1259,both,52854ffe,Default; Shape
+6a282db47aa7,,Size and Position…,,Oʻlcham va joylashuv…,Ўлчам ва жойлашув…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1263,both,8dc30aff,Size
+9abaf7ff16d2,,Grid and Guides,,Toʻr va yoʻnaltiruvchi chiziqlar,Тўр ва йўналтирувчи чизиқлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1285,both,9cbf0690,Guides; Grid
+b9f9c9e8f24b,,Guides,,Yoʻnaltiruvchi chiziqlar,Йўналтирувчи чизиқлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1287,both,929a28d2,Guides
+df5e6247a824,,Add Horizontal Guide,,Gorizontal yoʻnaltiruvchi chiziq qoʻshish,Горизонтал йўналтирувчи чизиқ қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1290,both,711e20d0,Add
+efd105d6d2b5,,Add Vertical Guide,,Vertikal yoʻnaltiruvchi chiziq qoʻshish,Вертикал йўналтирувчи чизиқ қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1290,both,5898a16b,Add
+c291f77247e6,,Reset Slide,,Slaydni tiklash,Слайдни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1298,both,ee743b79,Reset; Slide
+bc052f681f39,,Format Background…,,Fon formati…,Фон формати…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/canvas.rs:1302,both,6c49ee68,Format Background; Background; Format
+0af4167d67ed,,missing `command`,,«command» koʻrsatilmagan,«command» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:140,both,8eecf38a,Command
+42024d2d1432,,missing `events`,,«events» koʻrsatilmagan,«events» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:148,both,53c05bb9,
+47db7b3d13a6,,unknown pointer kind `{kind}`,,nomaʼlum koʻrsatkich turi «{kind}»,номаълум кўрсаткич тури «{kind}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:153,both,cd751d7c,Pointer
+26d73cb19dbd,,pointer events need x and y,,koʻrsatkich hodisalari uchun x va y kerak,кўрсаткич ҳодисалари учун x ва y керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:155,both,433e7ff3,Pointer
+06a753e6905c,,missing `key`,,«key» koʻrsatilmagan,«key» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:167,both,dd2e6546,Key
+746b423b19f2,,missing `text`,,«text» koʻrsatilmagan,«text» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:183,both,2d8c6416,Text
+4b69c056f46a,,missing `preedit` or `commit`,,«preedit» yoki «commit» koʻrsatilmagan,«preedit» ёки «commit» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:198,both,1c8f6133,
+2ad8ae9a5d2e,,missing `tool`,,«tool» koʻrsatilmagan,«tool» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:204,both,f761e6b3,
+499411f738a1,,unknown tool `{name}`,,nomaʼlum vosita «{name}»,номаълум восита «{name}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:210,both,b51495cd,Name
+e1d2926dd261,,missing x/y,,x/y koʻrsatilmagan,x/y кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:214,both,5cc2ad09,
+9f4275d34e07,,missing toX/toY,,toX/toY koʻrsatilmagan,toX/toY кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:228,both,67723b20,
+dcf10fa56395,,missing `id`,,«id» koʻrsatilmagan,«id» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:292,both,82df06d2,
+ca168ef296ab,,no presentation open,,ochiq taqdimot yoʻq,очиқ тақдимот йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:305,both,2a036df2,Presentation; Open; No
+9cb88007af9f,,no slide {i},,{i}-slayd yoʻq,{i}-слайд йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:308,both,c8195979,Slide; No
+404b1b651632,,no writer,,yozish vositasi yoʻq,ёзиш воситаси йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:320,both,55fbf474,No
+04c5c8a618bf,,missing width/height,,width/height koʻrsatilmagan,width/height кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:326,both,a13b62e5,Height; Width
+9dfcff9dfc20,,missing `path`,,«path» koʻrsatilmagan,«path» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:359,both,e2f82762,Path
+45f57023afd2,,not every presentation could be saved,,barcha taqdimotlarni saqlab boʻlmadi,барча тақдимотларни сақлаб бўлмади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:367,both,2f302498,Presentation
+30d4da5ecc94,,unknown method `{other}`,,nomaʼlum metod «{other}»,номаълум метод «{other}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/control.rs:373,both,5f955f27,
+3488be8060ac,,Slide Size,,Slayd oʻlchami,Слайд ўлчами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:35,both,b050cd5f,Slide Size; Slide; Size
+4ddd7e2bd058,,Size and Position,,Oʻlcham va joylashuv,Ўлчам ва жойлашув,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:36,both,d8fc636c,Size
+03903b9088e6,,Header and Footer,,Kolontitullar,Колонтитуллар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:37,both,1cce63c5,Header and Footer; Footer; Header
+f471a674cf3d,,Set Up Slide Show,,Namoyishni sozlash,Намойишни созлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:39,both,760f0f1a,Slide Show; Slide; Show
+3da9bb8f1afe,,Slides from Outline,,Strukturadan slaydlar,Структурадан слайдлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:43,both,b9c24d93,Outline
+c506f52e136d,,Rename Section,,Boʻlimni qayta nomlash,Бўлимни қайта номлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:44,both,e97ea556,Section; Rename
+289ace879e1c,,Rename Layout,,Maketni qayta nomlash,Макетни қайта номлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:46,both,d45d563c,Rename; Layout
+2b8be9d57022,,Grid Options,,Toʻr parametrlari,Тўр параметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:53,both,330509f7,Options; Grid
+493a281f5808,,Photo Album,,Fotoalbom,Фотоальбом,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:56,both,997d9215,Photo Album
+68297d793bd4,,Replace Font,,Shriftni almashtirish,Шрифтни алмаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:57,both,9c0313c2,Replace; Font
+b71d6e70a921,,Custom Shows,,Maxsus namoyishlar,Махсус намойишлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:65,both,3eb58282,Custom
+f894bc02fa0a,,Chart Data,,Diagramma maʼlumotlari,Диаграмма маълумотлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:66,both,cea98e67,Chart
+f248514d543b,,Trim Media,,Mediani qirqish,Медиани қирқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:67,both,c40947a1,Media; Trim
+3d9e0441edb2,,Choose a SmartArt Graphic,,SmartArt grafikasini tanlash,SmartArt графикасини танлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:68,both,37274d00,
+83ccc8c444d3,,Bullets and Numbering,,Markerlar va raqamlash,Маркерлар ва рақамлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:69,both,bd4a98bb,Numbering
+6695a81deffb,,Action Settings,,Amal sozlamalari,Амал созламалари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:70,both,a636f322,Settings; Action
+faea84a03ffa,,Create New Theme Colors,,Yangi mavzu ranglarini yaratish,Янги мавзу рангларини яратиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:72,both,99e62a76,Theme Colors; Theme; New
+2d302b59f6cd,,Create New Theme Fonts,,Yangi mavzu shriftlarini yaratish,Янги мавзу шрифтларини яратиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:73,both,e1470904,Theme Fonts; Theme; New
+36ff3df2b355,,Text: {text},,Matn: {text},Матн: {text},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:213,both,6416db20,Text
+949f04499c9e,,Pass pictures to insert.photoAlbum,,Rasmlarni insert.photoAlbum buyrugʻiga uzating,Расмларни insert.photoAlbum буйруғига узатинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:223,both,771d76cc,Insert
+08276248447a,,{path}: {e},,{path}: {e},{path}: {e},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:241,both,63d02acc,Path
+32fd73f9760c,,The web build inserts album pictures from data passed to insert.photoAlbum,,Veb-versiya albom rasmlarini insert.photoAlbum buyrugʻiga uzatilgan maʼlumotlardan kiritadi,Веб-версия альбом расмларини insert.photoAlbum буйруғига узатилган маълумотлардан киритади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:248,both,f317419c,Insert
+9c1a568dfe9c,,That file is empty,,Bu fayl boʻsh,Бу файл бўш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:253,both,0d5502b1,File
+28a860073b19,,That picture is larger than 32 MB,,Bu rasm 32 MBdan katta,Бу расм 32 MBдан катта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:257,both,8590a269,Picture
+1ce8076ace95,,Nocturne,,Nocturne,Nocturne,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,75a2b75a,
+21f55565c07f,,Meadow,,Meadow,Meadow,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,afb106c7,
+37932e29820a,,Slate,,Slate,Slate,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,26d7b218,
+68735d090ae5,,Harbor,,Harbor,Harbor,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,d053a6c4,
+beb7d438e20d,,Coral Reef,,Coral Reef,Coral Reef,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,02f95453,
+fe8c8b67a045,,Ember,,Ember,Ember,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:277,both,20632bc3,
+2f516025e979,,Pictures in album,,Albomdagi rasmlar,Альбомдаги расмлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:346,both,47dd04d2,
+87b82eee0724,,No pictures yet,,Hali rasm yoʻq,Ҳали расм йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:352,both,e086f8d7,No
+911cd536cbef,,Add Pictures…,,Rasmlar qoʻshish…,Расмлар қўшиш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:362,both,c1e39de0,Add
+bbb93e72cafa,,A photo album holds at most 48 pictures or text boxes,,Fotoalbomga koʻpi bilan 48 ta rasm yoki matn qutisi sigʻadi,Фотоальбомга кўпи билан 48 та расм ёки матн қутиси сиғади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:372,both,ee04000d,Photo Album; Text
+798afe627a9e,,The picture list is invalid,,Rasmlar roʻyxati notoʻgʻri,Расмлар рўйхати нотўғри,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:373,both,ce40cdda,Picture; List
+47db375c6c15,,New Text Box,,Yangi matn qutisi,Янги матн қутиси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:376,both,18dacfd5,Text Box; Text; New
+466fe2ac636e,,Type the text for the new text box,,Yangi matn qutisi uchun matn kiriting,Янги матн қутиси учун матн киритинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:380,both,123a960a,Text Box; Text; Type; New
+ad653ca42ed8,,Text is longer than 400 characters,,Matn 400 belgidan uzun,Матн 400 белгидан узун,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:382,both,0c3f0bb4,Text
+5833559be8ef,,Text box:,,Matn qutisi:,Матн қутиси:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:405,both,50dcb91b,Text Box; Text
+3919f55804c9,,Rotate Left,,Chapga burish,Чапга буриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:410,both,9c4883f3,Rotate; Left
+50cb58fd7617,,Rotate Right,,Oʻngga burish,Ўнгга буриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:417,both,daf582b1,Rotate; Right
+93941f9c6302,,More Brightness,,Yorqinlikni oshirish,Ёрқинликни ошириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:424,both,bd7f4a6a,Brightness; More
+baa51d2f8e36,,Less Brightness,,Yorqinlikni kamaytirish,Ёрқинликни камайтириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:427,both,59b370c5,Brightness
+307c3176cd44,,More Contrast,,Kontrastni oshirish,Контрастни ошириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:430,both,a4f5de47,Contrast; More
+7fd96707c24e,,Less Contrast,,Kontrastni kamaytirish,Контрастни камайтириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:433,both,a46de969,Contrast
+2e969257955d,,Picture layout,,Rasmlar maketi,Расмлар макети,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:439,both,5aa830d1,Picture; Layout
+5f54b30d1a00,,Fit to slide,,Slaydga moslash,Слайдга мослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:447,both,6a281708,Slide
+0dbe97463853,,1 picture,,1 ta rasm,1 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:448,both,0c360cb3,Picture
+b9d2862fe160,,2 pictures,,2 ta rasm,2 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:449,both,a05d4b73,
+bd0566216f37,,4 pictures,,4 ta rasm,4 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:450,both,72ff19bc,
+b9b2bb31aadc,,1 picture with title,,Sarlavhali 1 ta rasm,Сарлавҳали 1 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:451,both,828949bd,Picture; Title
+5e6072e90057,,2 pictures with title,,Sarlavhali 2 ta rasm,Сарлавҳали 2 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:452,both,a8899c17,Title
+eb799cb56fd8,,4 pictures with title,,Sarlavhali 4 ta rasm,Сарлавҳали 4 та расм,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:453,both,0f570b12,Title
+64f65fb3e0e9,,Frame shape,,Ramka shakli,Рамка шакли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:456,both,c5e852aa,Shape
+06c37ad7c491,,"Simple, white",,"Oddiy, oq","Оддий, оқ",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:463,both,185d1a6f,White
+a9d460512a16,,Rounded,,Yumaloqlangan,Юмалоқланган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:463,both,c5aa340f,
+038ac9610b9e,,Captions under pictures,,Rasmlar ostida tagyozuvlar,Расмлар остида тагёзувлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:465,both,b68fd05d,
+0442f4eae333,,ALL pictures black and white,,BARCHA rasmlar oq-qora,БАРЧА расмлар оқ-қора,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:466,both,d746ba0a,Black and white; White; Black; All
+e8aa1ad0c5e6,,Album theme,,Albom mavzusi,Альбом мавзуси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:467,both,ad153d62,Theme
+0e8b0f724216,,Add a picture or a text box first,,Avval rasm yoki matn qutisi qoʻshing,Аввал расм ёки матн қутиси қўшинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:480,both,7fb73ad4,Text Box; Picture; Text; Add
+76a28b1a653f,,Select a picture to rotate it or change brightness and contrast,,Burish yoki yorqinlik va kontrastni oʻzgartirish uchun rasmni tanlang,Буриш ёки ёрқинлик ва контрастни ўзгартириш учун расмни танланг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:509,both,7c5e7de7,Brightness; Contrast; Picture; Select; Rotate; Change
+03c91f1bfb85,,Text boxes have no picture options,,Matn qutilarida rasm parametrlari yoʻq,Матн қутиларида расм параметрлари йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:512,both,3368a1c7,Options; Picture; Text; No
+d4b23372dc10,,"Rotation {rot:.0}°, brightness {brightness:.1}, contrast {contrast:.1}",,"Burilish {rot:.0}°, yorqinlik {brightness:.1}, kontrast {contrast:.1}","Бурилиш {rot:.0}°, ёрқинлик {brightness:.1}, контраст {contrast:.1}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:517,both,265c3dd0,Brightness; Rotation; Contrast
+72178b565a7a,,{} hex,,{} (oʻn oltilik),{} (ўн олтилик),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:553,both,1cf28aac,Hex
+1d2b951f47bb,,Enter a scheme name.,,Sxema nomini kiriting.,Схема номини киритинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:564,both,fb52dcd9,Name
+cd71b46239f5,,{} needs a colour like #RRGGBB.,,{} uchun #RRGGBB koʻrinishidagi rang kerak.,{} учун #RRGGBB кўринишидаги ранг керак.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:570,both,1eddad9c,
+1ca770758e91,,Scheme name,,Sxema nomi,Схема номи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:601,both,ec915259,Name
+2befb3d05eae,,Applies to this presentation's theme colours.,,Bu taqdimotning mavzu ranglariga qoʻllanadi.,Бу тақдимотнинг мавзу рангларига қўлланади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:607,both,94a9ed8a,Presentation; Theme
+4851f74d0a54,,Inter,,Inter,Inter,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:626,both,de578269,
+0429a9925828,,Choose a heading font.,,Sarlavhalar shriftini tanlang.,Сарлавҳалар шрифтини танланг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:672,both,09cba2c8,Heading; Font
+71505dc246f3,,Choose a body font.,,Asosiy matn shriftini tanlang.,Асосий матн шрифтини танланг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:676,both,80837ed6,Font
+a8d1dbb5b5cc,,Heading font,,Sarlavhalar shrifti,Сарлавҳалар шрифти,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:692,both,d7519b2f,Heading; Font
+9253d7c631b8,,Body font,,Asosiy matn shrifti,Асосий матн шрифти,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:696,both,02aeca6c,Font
+26b6aecddb68,,Heading sample  {major},,Sarlavha namunasi  {major},Сарлавҳа намунаси  {major},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:703,both,4d33c07d,Heading
+1083a0f1f05b,,Body sample  {minor},,Asosiy matn namunasi  {minor},Асосий матн намунаси  {minor},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:704,both,07eb6e7a,
+67bf476b281b,,Heading and body fonts for this presentation.,,Bu taqdimot uchun sarlavha va asosiy matn shriftlari.,Бу тақдимот учун сарлавҳа ва асосий матн шрифтлари.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:718,both,0e7211ed,Presentation; Heading
+b1b34aa77887,,Zoom to,,Masshtab,Масштаб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:935,both,0a0075fd,Zoom
+990fa44ff398,,Enter a zoom percent,,Masshtab foizini kiriting,Масштаб фоизини киритинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:965,both,e440eb03,Percent; Zoom
+927983cff07f,,Slides sized for:,,Slaydlar oʻlchami:,Слайдлар ўлчами:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1042,both,4136c546,
+ad8e84565371,,Custom,,Maxsus,Махсус,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1044,both,081ae3fd,Custom
+e704f713d3df,,Width (in):,,Kengligi (dyuym):,Кенглиги (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1053,both,379d2e1b,Width
+06b6060f970d,,Height (in):,,Balandligi (dyuym):,Баландлиги (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1054,both,1ea898e8,Height
+1eb601e97fd6,,Maximize content (else ensure fit),,Tarkibni kattalashtirish (aks holda sigʻdirish),Таркибни катталаштириш (акс ҳолда сиғдириш),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1066,both,3ca45afd,
+4cf5f9043c6e,,Date and time,,Sana va vaqt,Сана ва вақт,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1077,both,07c9c3a5,Date and time; Date
+20d9742d2281,,  Fixed date (empty = update automatically):,,  Belgilangan sana (boʻsh = avtomatik yangilanadi):,  Белгиланган сана (бўш = автоматик янгиланади):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1078,both,3dbabcfb,Update; Date
+a04634201c58,,Slide number,,Slayd raqami,Слайд рақами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1079,both,106cb1c1,Number; Slide
+ffdc3a1b1f21,,  Footer text:,,  Quyi kolontitul matni:,  Қуйи колонтитул матни:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1081,both,05a00e57,Footer; Text
+d4370d3abb1a,,Don't show on title slide,,Sarlavha slaydida koʻrsatilmasin,Сарлавҳа слайдида кўрсатилмасин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1082,both,e94cb296,Title; Slide; Show
+d4c054970e21,,Apply to All,,Hammasiga qoʻllash,Ҳаммасига қўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1087,both,44a04c3d,Apply; All
+68798b4e762b,,Web Page or File,,Veb-sahifa yoki fayl,Веб-саҳифа ёки файл,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1109,both,fa4893b1,Page; File
+a1acb2b2f922,,This Document,,Shu hujjat,Шу ҳужжат,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1112,both,2d8d9761,Document
+0a19be5d2703,,Email address:,,Elektron pochta manzili:,Электрон почта манзили:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1135,both,a69fa6af,Address; Email
+23fb5e7060f1,,Show type,,Namoyish turi,Намойиш тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1155,both,a176f896,Show; Type
+266e270547b4,,Presented by a speaker (full screen),,Maʼruzachi namoyish qiladi (toʻliq ekran),Маърузачи намойиш қилади (тўлиқ экран),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1157,both,c3ccb28f,Full Screen
+89ca220a8d98,,Browsed by an individual (window),,Foydalanuvchi oʻzi koʻradi (oyna),Фойдаланувчи ўзи кўради (ойна),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1158,both,64c0c51f,Window
+5428e9fc2f17,,Browsed at a kiosk (full screen),,Kioskda koʻrish (toʻliq ekran),Киоскда кўриш (тўлиқ экран),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1159,both,fce85f12,Full Screen
+4fa3c3af5092,,Loop continuously until 'Esc',,«Esc» bosilguncha uzluksiz takrorlash,«Esc» босилгунча узлуксиз такрорлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1165,both,0ea127dc,Loop
+936406bbf5aa,,Show without narration,,Ovozli sharhsiz namoyish,Овозли шарҳсиз намойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1166,both,502f1b51,Narration; Show
+06e48526396c,,Show without animation,,Animatsiyasiz namoyish,Анимациясиз намойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1167,both,264a1c7c,Animation; Show
+c641c2dbc97c,,"Use timings, if present",,"Vaqt sozlamalari boʻlsa, ulardan foydalanish","Вақт созламалари бўлса, улардан фойдаланиш",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1168,both,981f1e06,Present
+fd6bebd4080e,,All slides,,Barcha slaydlar,Барча слайдлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1172,both,0b83afd9,All
+28adcf5441e6,,{} presentations,,{} ta taqdimot,{} та тақдимот,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1198,both,505b3533,
+ee5962772076,,Do you want to save the changes you made to {what}?,,Oʻzgarishlar saqlansinmi: {what}?,Ўзгаришлар сақлансинми: {what}?,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1199,both,254b7fb9,Save
+645767ab33d9,,Your changes will be lost if you don't save them.,,"Agar saqlamasangiz, oʻzgarishlar yoʻqoladi.","Агар сақламасангиз, ўзгаришлар йўқолади.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1200,both,20438a71,Don't Save; Save
+aef685deded3,,Do you want to save the changes you made to “{name}”?,,“{name}” taqdimotidagi oʻzgarishlar saqlansinmi?,“{name}” тақдимотидаги ўзгаришлар сақлансинми?,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1230,both,5abbcb1f,Name; Save
+875bed91f09a,,Start a conversation,,Muhokamani boshlang,Муҳокамани бошланг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1261,both,244c20ea,
+626d41b37ec9,,Bulleted,,Markerli,Маркерли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1276,both,48cd1217,
+6e3e9e77a4ca,,Numbered,,Raqamli,Рақамли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1276,both,3aea9135,
+b5d265710781,,I. II. III.,,I. II. III.,I. II. III.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1289,both,e8748498,
+dce171dedbe6,,i. ii. iii.,,i. ii. iii.,i. ii. iii.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1290,both,2c3a4d9e,
+c60ce0fc6912,,A. B. C.,,A. B. C.,A. B. C.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1291,both,58e736ce,
+b599cbb85330,,a) b) c),,a) b) c),a) b) c),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1292,both,2a72a0cf,
+19b3f249d233,,a. b. c.,,a. b. c.,a. b. c.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1293,both,4e35853a,
+4faddbe361a9,,Custom character:,,Maxsus belgi:,Махсус белги:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1313,both,e8898f7b,Character; Custom
+a8cc804c70d2,,Size (% of text):,,Oʻlchami (matnga nisbatan %):,Ўлчами (матнга нисбатан %):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1317,both,2c9c39cf,Text; Size
+8948b54c7898,,Text,,Matn,Матн,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1320,both,c3328c39,Text
+5aff860664d1,,Accent 1,,Urgʻu rangi 1,Урғу ранги 1,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1321,both,adb27bcd,Accent
+1d12b59a193d,,Accent 2,,Urgʻu rangi 2,Урғу ранги 2,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1322,both,b3e95331,Accent
+7593cd9329e0,,Accent 3,,Urgʻu rangi 3,Урғу ранги 3,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1323,both,749aa890,Accent
+48b782f9f9bf,,Accent 4,,Urgʻu rangi 4,Урғу ранги 4,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1324,both,d897ff0e,Accent
+ca5c261b816d,,Accent 5,,Urgʻu rangi 5,Урғу ранги 5,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1325,both,09296c0e,Accent
+da8c799658b4,,Accent 6,,Urgʻu rangi 6,Урғу ранги 6,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1326,both,51ebc113,Accent
+5260e4ac0a9f,,Remove bullets and numbering,,Markerlar va raqamlashni olib tashlash,Маркерлар ва рақамлашни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1342,both,a56ab30e,Numbering; Remove
+a5706f8636a7,,Mouse Over,,Sichqoncha ustiga kelganda,Сичқонча устига келганда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1401,both,e2562943,Mouse
+ff3c61f7feff,,Mouse Click,,Sichqoncha bosilganda,Сичқонча босилганда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1401,both,f60f2284,Mouse; Click
+25e44e77ff98,,Action on click,,Bosilgandagi amal,Босилгандаги амал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1409,both,2cd047a1,On Click; Action; Click
+38596a5fd408,,Action on mouse over,,Sichqoncha ustiga kelgandagi amal,Сичқонча устига келгандаги амал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1409,both,8782433d,Action; Mouse
+b2c7050ea128,,Hyperlink to:,,Giperhavola:,Гиперҳавола:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1419,both,b314d523,Hyperlink
+da6fb188b9a2,,Next Slide,,Keyingi slayd,Кейинги слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1423,both,7141bc98,Slide; Next
+ae8f7d7a3a96,,Previous Slide,,Oldingi slayd,Олдинги слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1424,both,10bb09b1,Previous; Slide
+77e9702a99d4,,First Slide,,Birinchi slayd,Биринчи слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1425,both,1f26ba7a,Slide
+bca24170cdd3,,Last Slide,,Oxirgi slayd,Охирги слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1426,both,662c1d7a,Slide
+967e474afa4b,,Last Slide Viewed,,Oxirgi koʻrilgan slayd,Охирги кўрилган слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1427,both,69cea476,Slide
+2cd05fdc6494,,End Show,,Namoyishni tugatish,Намойишни тугатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1428,both,744d6dfc,Show
+049e12156903,,Custom Show…,,Maxsus namoyish…,Махсус намойиш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1429,both,228fedca,Custom Show; Custom; Show
+f5996400c040,,Slide…,,Slayd…,Слайд…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1430,both,31396426,Slide
+b79ad770c139,,URL…,,URL…,URL…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1431,both,8d5c382b,
+3bf3a1ad1d5a,,This presentation has no custom shows (Slide Show ▸ Custom Slide Show).,,Bu taqdimotda maxsus namoyishlar yoʻq (Namoyish ▸ Maxsus namoyish).,Бу тақдимотда махсус намойишлар йўқ (Намойиш ▸ Махсус намойиш).,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1459,both,2cef88ee,Presentation; Slide Show; Custom; Slide; Show; No
+2428bf3eaa0b,,Run program:,,Dasturni ishga tushirish:,Дастурни ишга тушириш:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1470,both,c49c3e73,
+7b1871b98762,,Play the shape's media,,Shakl mediasini ijro etish,Шакл медиасини ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1474,both,bf115999,Media; Shape; Play
+126775d6df90,,Highlight click,,Bosishni ajratib koʻrsatish,Босишни ажратиб кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1475,both,3f6accf8,Highlight; Click
+2c5a2df51c79,,How would you describe this object and its context to someone who is blind or has low vision?,,Bu obyekt va uning kontekstini koʻzi ojiz yoki zaif koʻradigan odamga qanday tasvirlab bergan boʻlardingiz?,Бу объект ва унинг контекстини кўзи ожиз ёки заиф кўрадиган одамга қандай тасвирлаб берган бўлардингиз?,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1503,both,119723e8,
+a749e8054ee6,,Paste or type an outline. Unindented lines become slide titles; tab-indented lines become bullets.,,"Strukturani qoʻying yoki kiriting. Chekinishsiz satrlar slayd sarlavhalariga, tabulyatsiya bilan surilgan satrlar markerli bandlarga aylanadi.","Структурани қўйинг ёки киритинг. Чекинишсиз сатрлар слайд сарлавҳаларига, табуляция билан сурилган сатрлар маркерли бандларга айланади.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1515,both,66bfa4d1,Outline; Slide; Paste; Type; Tab
+84138c9b4777,,Export the presentation as:,,Taqdimotni quyidagi formatda eksport qilish:,Тақдимотни қуйидаги форматда экспорт қилиш:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1543,both,73f29562,Presentation; Export
+f5158f6358ef,,PDF document (.pdf),,PDF hujjat (.pdf),PDF ҳужжат (.pdf),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1546,both,5fb83818,Document
+511a1f89928f,,PNG images (current slide),,PNG rasmlar (joriy slayd),PNG расмлар (жорий слайд),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1547,both,fa78c891,Slide
+8f1919e1583e,,PNG images (all slides),,PNG rasmlar (barcha slaydlar),PNG расмлар (барча слайдлар),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1548,both,129e35cf,All
+16283c4d20c5,,JPEG image (current slide),,JPEG rasm (joriy slayd),JPEG расм (жорий слайд),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1549,both,561afdaa,Slide
+e0de6a6bddb0,,PowerPoint Presentation (.pptx),,PowerPoint taqdimoti (.pptx),PowerPoint тақдимоти (.pptx),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1550,both,60ed2531,Presentation
+bf1cdc8a4e98,,Outline (.txt),,Struktura (.txt),Структура (.txt),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1551,both,908d2788,Outline
+2ff9746bd5e9,,Animated GIF (.gif),,Animatsiyali GIF (.gif),Анимацияли GIF (.gif),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1552,both,624943c7,
+b14144baaadb,,Print layout:,,Chop etish maketi:,Чоп этиш макети:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1562,both,c5d139a5,Print Layout; Layout; Print
+0da6939abd52,,Font name,,Shrift nomi,Шрифт номи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1642,both,6dec72d2,Name; Font
+4891fda17284,,“{from}” isn't used explicitly.,,“{from}” shrifti bevosita ishlatilmagan.,“{from}” шрифти бевосита ишлатилмаган.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1665,both,8e535263,
+b163c7f7cede,,Replaced “{from}” with “{}”.,,“{from}” shrifti “{}” bilan almashtirildi.,“{from}” шрифти “{}” билан алмаштирилди.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1665,both,a42bc033,
+ad66a7a48452,,Click a symbol to insert it at the insertion point.,,Simvolni kiritish nuqtasiga qoʻyish uchun uni bosing.,Символни киритиш нуқтасига қўйиш учун уни босинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1674,both,e25815f6,Symbol; Insert; Point; Click
+143af26b4e9e,,Punctuation,,Tinish belgilari,Тиниш белгилари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1676,both,68fc7bd4,Punctuation
+bf9de16f0bc5,,Math,,Matematika,Математика,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1678,both,3edf0df4,
+092b80841992,,"Type an equation in linear form (e.g. a^2+b^2=c^2, x=(-b±√(b^2-4ac))/2a).",,"Tenglamani chiziqli shaklda kiriting (masalan, a^2+b^2=c^2, x=(-b±√(b^2-4ac))/2a).","Тенгламани чизиқли шаклда киритинг (масалан, a^2+b^2=c^2, x=(-b±√(b^2-4ac))/2a).",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1700,both,2c441cea,Equation; Linear; Form; Type
+7914f335a945,,Use Destination Theme,,Moʻljal mavzusidan foydalanish,Мўлжал мавзусидан фойдаланиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1718,both,e32abd08,Destination; Theme
+ebc26c8e252b,,Keep Source Formatting,,Manba formatlashini saqlab qolish,Манба форматлашини сақлаб қолиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1719,both,70d056c0,Source; Keep
+d95f08c0633d,,Picture (PNG),,Rasm (PNG),Расм (PNG),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1720,both,473b3126,Picture
+a4c32d1687a2,,Dictionary: {},,Lugʻat: {},Луғат: {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1748,both,8a32ffdd,Dictionary
+0e8cbc534031,,"No {} dictionary is installed, so only common misspellings are found. Put a Hunspell .aff/.dic pair in {}.",,"{} lugʻati oʻrnatilmagan, shuning uchun faqat keng tarqalgan imlo xatolari topiladi. Hunspell .aff/.dic juftligini bu joyga qoʻying: {}.","{} луғати ўрнатилмаган, шунинг учун фақат кенг тарқалган имло хатолари топилади. Hunspell .aff/.dic жуфтлигини бу жойга қўйинг: {}.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1755,both,e8f22ea1,Dictionary; No
+e60443dac0ad,,a dictionaries folder,,lugʻatlar jildi,луғатлар жилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1761,both,22fef751,Folder
+8b84d50c5c58,,The spelling check is complete. No issues found.,,Imlo tekshiruvi yakunlandi. Muammo topilmadi.,Имло текшируви якунланди. Муаммо топилмади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1768,both,6bc4cda0,Spelling; No
+d9103b858f29,,Slide {}: “{w}”,,Slayd {}: “{w}”,Слайд {}: “{w}”,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1777,both,66367c2a,Slide
+b53eb2b33d72,,Repeated word,,Takrorlangan soʻz,Такрорланган сўз,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1800,both,9d353b8a,Word
+cf42e636abc5,,Change to:,,Quyidagiga oʻzgartirish:,Қуйидагига ўзгартириш:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1829,both,a31dc672,Change
+888030caa199,,Click to change this one; Shift-click to change all,,Shu birini oʻzgartirish uchun bosing; hammasini oʻzgartirish uchun Shift bilan bosing,Шу бирини ўзгартириш учун босинг; ҳаммасини ўзгартириш учун Shift билан босинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1831,both,5ee2ec3b,Change; Click; All
+c06257490920,,No accessibility issues found. People with disabilities should not have difficulty reading this document.,,Maxsus imkoniyatlar boʻyicha muammo topilmadi. Nogironligi boʻlgan shaxslar bu hujjatni oʻqishda qiynalmasligi kerak.,Махсус имкониятлар бўйича муаммо топилмади. Ногиронлиги бўлган шахслар бу ҳужжатни ўқишда қийналмаслиги керак.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1888,both,fec61f96,Accessibility; Document; No
+c898909cdad9,,Slide {}: {}{},,Slayd {}: {}{},Слайд {}: {}{},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1894,both,e639127a,Slide
+4b5e10e2a446,, — {n},, — {n}, — {n},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1897,both,127741f3,
+f1df8a2e45ba,,{name}  (dictionary),,{name}  (lugʻat),{name}  (луғат),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1923,both,c1d5fa7a,Dictionary; Name
+610b8493b7cd,,Spelling is checked for languages marked (dictionary).,,Imlo «(lugʻat)» deb belgilangan tillar uchun tekshiriladi.,Имло «(луғат)» деб белгиланган тиллар учун текширилади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1930,both,fd6398ee,Dictionary; Spelling
+b5d23705978d,,{} ({} slides),,{} ({} ta slayd),{} ({} та слайд),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1946,both,806ff85a,
+88e178ece973,,New show name:,,Yangi namoyish nomi:,Янги намойиш номи:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1959,both,3314a9bd,Show; Name; New
+e68b26d8332e,,Custom Show 1,,Maxsus namoyish 1,Махсус намойиш 1,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1959,both,8a48e1d3,Custom Show; Custom; Show
+5154bfb0145f,,"Slides (e.g. 1,3,5):",,"Slaydlar (masalan, 1,3,5):","Слайдлар (масалан, 1,3,5):",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1960,both,62ec419e,
+448aed90dbd8,,"Edit the data: first row = series names, first column = categories.",,"Maʼlumotlarni tahrirlang: birinchi qator = maʼlumotlar qatorlari nomlari, birinchi ustun = toifalar.","Маълумотларни таҳрирланг: биринчи қатор = маълумотлар қаторлари номлари, биринчи устун = тоифалар.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:1980,both,819f0838,Column; Series; Edit; Row
+a72dd5311740,,+ Row,,+ Qator,+ Қатор,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2001,both,8fc568a7,Row
+409cc40814dd,,+ Series,,+ Maʼlumotlar qatori,+ Маълумотлар қатори,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2005,both,efe619c2,Series
+fc705331f452,,Start time (s):,,Boshlanish vaqti (s):,Бошланиш вақти (с):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2023,both,26838061,
+6d78a3b471a3,,End trim (s):,,Oxiridan qirqish (s):,Охиридан қирқиш (с):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2024,both,61feaf47,Trim
+cea1ed8e0970,,Fade in (s):,,Sekin paydo boʻlish (s):,Секин пайдо бўлиш (с):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2025,both,ea617267,Fade In
+afe0474d6a99,,Fade out (s):,,Sekin yoʻqolish (s):,Секин йўқолиш (с):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2026,both,90c7a7f7,Fade Out
+d9a3570856a2,,Pick a graphic; type one item per line.,,Grafikani tanlang; har bir satrga bitta element yozing.,Графикани танланг; ҳар бир сатрга битта элемент ёзинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2043,both,0ebe4475,Type; Line; Item
+5ab701b42d94,,Correct accidental use of cAPS LOCK key,,cAPS LOCK tugmasining tasodifiy bosilishini tuzatish,cAPS LOCK тугмасининг тасодифий босилишини тузатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2096,both,fc032686,Lock; Key
+aa87aba15a5d,,Replace fractions (1/2) with fraction characters (½),,Kasrlarni (1/2) kasr belgilariga (½) almashtirish,Касрларни (1/2) каср белгиларига (½) алмаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2097,both,ee0bd602,Fraction; Replace
+1e8c747cf2b5,,With,,Nimaga,Нимага,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2105,both,564f8c6e,
+cc1b283f87f4,,General,,Umumiy,Умумий,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2140,both,9239ee2c,General
+03906beb78f3,,Dark appearance,,Qorongʻi koʻrinish,Қоронғи кўриниш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2142,both,f229ed45,Appearance; Dark
+7e264156f3dc,,Editing,,Tahrirlash,Таҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2161,both,3b9ba1a2,
+ededb43400bf,,Show smart guides,,Aqlli yoʻnaltiruvchi chiziqlarni koʻrsatish,Ақлли йўналтирувчи чизиқларни кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2162,both,820d0508,Guides; Show
+67db7ec6650f,,Snap objects to grid,,Obyektlarni toʻrga bogʻlash,Объектларни тўрга боғлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2163,both,6463085b,Snap; Grid
+aee9210b8a74,,Replace straight quotes with smart quotes,,Toʻgʻri qoʻshtirnoqlarni jingalak qoʻshtirnoqlarga almashtirish,Тўғри қўштирноқларни жингалак қўштирноқларга алмаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2164,both,fd3cdd90,Replace
+be8624a3e75a,,AutoCorrect as you type,,Yozish davomida avtomatik tuzatish,Ёзиш давомида автоматик тузатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2166,both,2491233d,AutoCorrect; Type
+4f27570eece4,,AutoCorrect Options…,,Avtomatik tuzatish parametrlari…,Автоматик тузатиш параметрлари…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2167,both,41310b6f,AutoCorrect; Options
+c25e015aa115,,Your name (comments):,,Ismingiz (izohlar uchun):,Исмингиз (изоҳлар учун):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2175,both,8dc8d511,Name
+c9705effb325,,“{}” is not available yet.,,“{}” hozircha mavjud emas.,“{}” ҳозирча мавжуд эмас.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2189,both,05c92452,
+efbcb6987bb8,,{label} must be a number,,{label} son boʻlishi kerak,{label} сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2353,both,e107e714,Number; Label
+eed4d6d6e673,,Horizontal,,Gorizontal,Горизонтал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2367,both,4f57a1ce,
+4f25890ee2a3,,Vertical,,Vertikal,Вертикал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2368,both,4b937cc8,
+b44c2257c1d9,,Scale width,,Kenglik masshtabi,Кенглик масштаби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2375,both,ce5f55cc,Width; Scale
+365ea039ebe3,,Scale height,,Balandlik masshtabi,Баландлик масштаби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2382,both,bdac7df3,Height; Scale
+dfc2da2c6fac,,Rotation (°):,,Burilish (°):,Бурилиш (°):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2412,both,0ae33d82,Rotation
+dea0d82da2cf,,Scale height (%):,,Balandlik masshtabi (%):,Баландлик масштаби (%):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2413,both,f8710572,Height; Scale
+32bafd0076af,,Scale width (%):,,Kenglik masshtabi (%):,Кенглик масштаби (%):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2414,both,9abd6b50,Width; Scale
+5b9dc1de7461,,Lock aspect ratio,,Tomonlar nisbatini qulflash,Томонлар нисбатини қулфлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2415,both,370bda7f,Lock aspect ratio; Aspect ratio; Lock
+4a2179912999,,From the top-left corner of the slide,,Slaydning yuqori chap burchagidan,Слайднинг юқори чап бурчагидан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2418,both,a6d14a44,Slide; Left; Top
+38a997758d83,,Horizontal (in):,,Gorizontal (dyuym):,Горизонтал (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2419,both,57279f69,
+a530d2481a8d,,Vertical (in):,,Vertikal (dyuym):,Вертикал (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2420,both,2d4b2ff0,
+29bc6184994a,,Available formats:,,Mavjud formatlar:,Мавжуд форматлар:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2479,both,bf2e9c55,
+da6a76977461,,Month names and AM/PM are listed for English. Other languages list the numeric date and 24-hour time.,,"Oy nomlari va AM/PM ingliz tili uchun koʻrsatilgan. Boshqa tillarda sana raqamlarda, vaqt esa 24 soatlik formatda koʻrsatiladi.","Ой номлари ва AM/PM инглиз тили учун кўрсатилган. Бошқа тилларда сана рақамларда, вақт эса 24 соатлик форматда кўрсатилади.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2508,both,5cfce06c,Month; List; Date; Hour
+c967edb2bf43,,Update automatically,,Avtomatik yangilash,Автоматик янгилаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2512,both,0c638798,Update
+5ee533089915,,Snap,,Bogʻlash,Боғлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2536,both,455673bb,Snap
+01584692a317,,Snap objects to other objects,,Obyektlarni boshqa obyektlarga bogʻlash,Объектларни бошқа объектларга боғлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2538,both,dad253da,Snap
+028fa0144da5,,Display grid on screen,,Toʻrni ekranda koʻrsatish,Тўрни экранда кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2543,both,3aa777c2,Display; Grid
+13f9394fae56,,Display drawing guides on screen,,Yoʻnaltiruvchi chiziqlarni ekranda koʻrsatish,Йўналтирувчи чизиқларни экранда кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2544,both,5bef3526,Display; Guides
+254577ded25f,,"Presentations and slide shows, rebuilt from scratch in pure Rust.",,"Taqdimotlar va slayd namoyishlari, sof Rust tilida noldan qayta yaratilgan.","Тақдимотлар ва слайд намойишлари, соф Rust тилида нолдан қайта яратилган.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2613,both,106adab7,Slide
+9ca186c1a8b9,,"An open-source, clean-room project. Not affiliated with Microsoft.",,"Ochiq manbali, «toza xona» usulida yaratilgan loyiha. Microsoft bilan bogʻliq emas.","Очиқ манбали, «тоза хона» усулида яратилган лойиҳа. Microsoft билан боғлиқ эмас.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2614,both,10d46728,Source; Open
+0cc5553cc059,,MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors,,MIT OR Apache-2.0 · © 2026 ArtCraft Team va DeckCraft loyihasiga hissa qoʻshganlar,MIT OR Apache-2.0 · © 2026 ArtCraft Team ва DeckCraft лойиҳасига ҳисса қўшганлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2620,both,2345e456,Contributors
+f80a35ea9d64,,Version {},,Versiya {},Версия {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2628,both,12c59bf6,Version
+c0a3972bf317,," ({sha}, {date})",," ({sha}, {date})"," ({sha}, {date})",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2632,both,7c02a486,Date
+52128584943c,,Underline,,Tagi chizilgan,Таги чизилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2774,both,39773aa3,Underline
+67f724296959,,Dash,,Shtrix,Штрих,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2780,both,24942523,
+b00438ec5b53,,Wavy,,Toʻlqinsimon,Тўлқинсимон,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2780,both,d4142497,
+eff5229b3afa,,Heavy,,Qalin,Қалин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2780,both,84d7adf0,
+0e614072ba8d,,Strikethrough,,Ustidan chizilgan,Устидан чизилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2786,both,a93b9a68,Strikethrough
+f2edbb2e3e78,,Baseline,,Tayanch chiziq,Таянч чизиқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2790,both,e6ab7982,
+dcd886b2ddcf,,Caps,,Bosh harflar,Бош ҳарфлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2793,both,fb6abc7b,
+a603af481642,,Very tight,,Juda zich,Жуда зич,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2803,both,d8afae1f,Tight
+9de8b98417b8,,Normal,,Oddiy,Оддий,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2805,both,45e118d0,Normal
+b977d9b40a48,,Loose,,Siyrak,Сийрак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2806,both,1634c464,
+7bcd0d9c26c4,,Very loose,,Juda siyrak,Жуда сийрак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2807,both,22638722,
+da362a902c6e,,Choose a font,,Shriftni tanlang,Шрифтни танланг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2850,both,47774f8a,Font
+aa0c65c28090,,Font size must be a number,,Shrift oʻlchami son boʻlishi kerak,Шрифт ўлчами сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2854,both,2e4d3528,Font Size; Number; Font; Size
+fd2abaaf5720,,Character spacing must be a number,,Belgilar oraligʻi son boʻlishi kerak,Белгилар оралиғи сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2858,both,ea68fe57,Character Spacing; Character; Spacing; Number
+08784bbd3773,,1.5 lines,,"1,5 satr","1,5 сатр",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2944,both,e981e5bb,
+74a064e5a0e3,,Justify low,,Kenglik boʻyicha (kam),Кенглик бўйича (кам),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2967,both,a9b44c79,Justify
+dc425fdf75ad,,Before text,,Matndan oldin,Матндан олдин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2974,both,068662e1,Text
+79c42d0a67a2,,After text,,Matndan keyin,Матндан кейин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2977,both,af902a76,Text
+a4115bcd3762,,Special,,Maxsus,Махсус,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2981,both,942078ca,
+9a5016bf4f9a,,Hanging,,Osma,Осма,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2982,both,347f6865,
+f861eaea6158,,By,,Kattaligi,Катталиги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2984,both,cfadbd7a,
+cce5bad9758c,,Spacing before,,Oraliq: oldin,Оралиқ: олдин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2989,both,424d1369,Spacing
+aaac66af05ce,,Spacing after,,Oraliq: keyin,Оралиқ: кейин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:2992,both,ec60a41f,Spacing
+6f6a85f3f4f9,,At,,Qiymati,Қиймати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3014,both,0855009c,
+81d6878a102b,,Indent before text must be a number of inches,,Matndan oldingi chekinish dyuymdagi son boʻlishi kerak,Матндан олдинги чекиниш дюймдаги сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3046,both,d260b0c9,Indent; Number; Text
+1c24bb923715,,Indent after text must be a number of inches,,Matndan keyingi chekinish dyuymdagi son boʻlishi kerak,Матндан кейинги чекиниш дюймдаги сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3050,both,b616deb0,Indent; Number; Text
+1eebec3ce50b,,Special indent must be a number of inches,,Maxsus chekinish dyuymdagi son boʻlishi kerak,Махсус чекиниш дюймдаги сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3054,both,4df92276,Indent; Number
+e1ed42f1c04a,,Spacing before must be a number,,Oldingi oraliq son boʻlishi kerak,Олдинги оралиқ сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3058,both,ea5fd904,Spacing; Number
+ceef39917e06,,Spacing after must be a number,,Keyingi oraliq son boʻlishi kerak,Кейинги оралиқ сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3062,both,2d7499e2,Spacing; Number
+d513799446df,,Line spacing must be a number,,Satr oraligʻi son boʻlishi kerak,Сатр оралиғи сон бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3066,both,a12c73ee,Line Spacing; Spacing; Number; Line
+2b8dc3737af0,,Default tab stops (in):,,Standart tabulyatsiya pozitsiyalari (dyuym):,Стандарт табуляция позициялари (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3116,both,91ba21b8,Default; Tab
+41b2334ae125,,Tab stops:,,Tabulyatsiya pozitsiyalari:,Табуляция позициялари:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3118,both,b9b633dc,Tab
+ccc7cdc74c53,,"Clear the tab at {pos:.2}""",,"{pos:.2}"" pozitsiyadagi tabulyatsiyani tozalash","{pos:.2}"" позициядаги табуляцияни тозалаш",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3128,both,a1dc1cc8,Clear; Tab
+5112637fa5c4,,Tab stop position (in):,,Tabulyatsiya pozitsiyasi (dyuym):,Табуляция позицияси (дюйм):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3139,both,ac125da6,Tab Stop; Stop; Tab
+ab09a7ab7a07,,Clear All,,Hammasini tozalash,Ҳаммасини тозалаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3162,both,3a88a6d1,Clear; All
+4d0e7dcbfbfe,,Find whole words only,,Faqat butun soʻzlarni topish,Фақат бутун сўзларни топиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3190,both,1bc80e2e,Find
+9340056aae1f,,Replaced {} occurrence(s).,,{} ta moslik almashtirildi.,{} та мослик алмаштирилди.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3219,both,59a2f874,
+6fc23d45e17c,,{} can't find “{text}”.,,{} “{text}” matnini topa olmadi.,{} “{text}” матнини топа олмади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3251,both,dde30439,Text; Find
+f24b73af1bfb,,Small (640 px wide),,Kichik (kengligi 640 piksel),Кичик (кенглиги 640 пиксель),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3280,both,e6996370,
+eaddf8e8b398,,Large (1280 px wide),,Katta (kengligi 1280 piksel),Катта (кенглиги 1280 пиксель),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3281,both,35f4e512,
+290f2a789d3a,,Extra Large (1920 px wide),,Juda katta (kengligi 1920 piksel),Жуда катта (кенглиги 1920 пиксель),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3282,both,0da172c1,
+0c57ae1e63e8,,Custom width,,Maxsus kenglik,Махсус кенглик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3283,both,3d4cf60d,Custom; Width
+2f3647038ef9,,Medium (960 px wide),,Oʻrta (kengligi 960 piksel),Ўрта (кенглиги 960 пиксель),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3284,both,e1648435,Medium
+08971a977e20,,Width (pixels):,,Kengligi (piksel):,Кенглиги (пиксель):,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3298,both,82d7e010,Width
+8c7ec78b36b2,,Seconds per slide:,,Har slayd uchun soniya:,Ҳар слайд учун сония:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3300,both,4c2f8144,Slide
+f3c7b9de82bc,,From slide:,,Qaysi slayddan:,Қайси слайддан:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3302,both,94b93e30,Slide
+64ce13450146,,To slide:,,Qaysi slaydgacha:,Қайси слайдгача:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3303,both,4374b2ac,Slide
+7ea31cfcc835,,Loop forever,,Cheksiz takrorlash,Чексиз такрорлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3304,both,72f516ed,Loop
+e6e3d8c853bb,,Width: enter {MIN_WIDTH} to {MAX_WIDTH} pixels,,Kenglik: {MIN_WIDTH}–{MAX_WIDTH} piksel kiriting,Кенглик: {MIN_WIDTH}–{MAX_WIDTH} пиксель киритинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3310,both,f57b3b76,Width
+ea6be2add227,,Seconds per slide: enter {MIN_SECONDS} to {MAX_SECONDS},,Har slayd uchun soniya: {MIN_SECONDS}–{MAX_SECONDS} oraligʻida kiriting,Ҳар слайд учун сония: {MIN_SECONDS}–{MAX_SECONDS} оралиғида киритинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3318,both,d1b505ae,Slide
+ff07f0cd0af0,,Slides: choose a range from 1 to {n},,Slaydlar: 1–{n} oraligʻidagi diapazonni tanlang,Слайдлар: 1–{n} оралиғидаги диапазонни танланг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/dialogs.rs:3323,both,699e6b8b,Range
+d88bbecf6f5d,,New Window needs an open presentation,,Yangi oyna uchun ochiq taqdimot kerak,Янги ойна учун очиқ тақдимот керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/doc_window.rs:28,both,89cebfac,Presentation; New window; Window; Open; New
+b78c74c53743,,New Window needs a slide,,Yangi oyna uchun slayd kerak,Янги ойна учун слайд керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/doc_window.rs:31,both,83a83121,New window; Window; Slide; New
+a15b257be6e5,,Slide {} of {n},,Slayd {} / {n},Слайд {} / {n},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/doc_window.rs:97,both,0c3299e0,Slide
+9f96de29201c,,The Eyedropper takes colours from a slide,,Pipetka ranglarni slayddan oladi,Пипетка рангларни слайддан олади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/eyedropper.rs:86,both,71009810,Eyedropper; Slide
+5eedeca0161f,,Eyedropper: click the slide (Esc cancels),,Pipetka: slaydni bosing (Esc — bekor qilish),Пипетка: слайдни босинг (Esc — бекор қилиш),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/eyedropper.rs:92,both,a4313c77,Eyedropper; Slide; Click
+66b16ac4c770,,From center,,Markazdan,Марказдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:98,both,abb36957,Center
+28ecbb779bbe,,From top left,,Yuqori chapdan,Юқори чапдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:99,both,cdce3918,Top Left; Left; Top
+4bfa49bbb1d6,,From top right,,Yuqori oʻngdan,Юқори ўнгдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:100,both,8c2707a9,Top Right; Right; Top
+717000df2955,,From bottom left,,Quyi chapdan,Қуйи чапдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:101,both,6ae50a29,Bottom Left; Bottom; Left
+3176c4959deb,,From bottom right,,Quyi oʻngdan,Қуйи ўнгдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:102,both,b1ea0783,Bottom Right; Bottom; Right
+3697482ce428,,Preset gradients,,Tayyor gradiyentlar,Тайёр градиентлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:113,both,e9886193,
+2b580a3004f7,,Rectangular,,Toʻrtburchakli,Тўртбурчакли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:165,both,51ed1728,
+e379b4b34709,,Radial,,Radial,Радиал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:167,both,e2a166db,
+9985365118e8,,Direction,,Yoʻnalish,Йўналиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:190,both,fd8e45ba,
+ab8f6c0553cc,,Gradient stops,,Gradiyent nuqtalari,Градиент нуқталари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:221,both,f6bf31bf,Gradient
+a83a64c90654,,Remove stop,,Nuqtani olib tashlash,Нуқтани олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/fillui.rs:289,both,5e5dfbbe,Remove; Stop
+885879148bef,,B,,B,B,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/icons.rs:1195,both,ae4f281d,
+6b27c1be1870,,A,,A,A,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/icons.rs:1228,both,6dcd4ce2,
+af8edbfca83a,,S,,S,S,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/icons.rs:1243,both,02aa629c,
+dc3881a40271,,Ω,,Ω,Ω,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/icons.rs:1494,both,c127b56a,
+17f9d08c5824,,Aa,,Aa,Aa,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/icons.rs:1567,both,2c419ecc,
+7689f8a17c18,,{name}: {} can't open this kind of file,,{name}: {} bunday turdagi faylni ocha olmaydi,{name}: {} бундай турдаги файлни оча олмайди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:196,both,c80ea92b,Open; Name; File
+52da25d62fd6,,Outline View,,Struktura rejimi,Структура режими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:361,both,994eabcc,Outline View; Outline; View
+27bea0c9f781,,Slide Sorter,,Slaydlarni saralash,Слайдларни саралаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:362,both,a4b33faa,Slide Sorter; Slide
+b94e7d202173,,Notes Page,,Qaydlar sahifasi,Қайдлар саҳифаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:363,both,4bb3690a,Notes Page; Notes; Page
+24625e6896b1,,Reading View,,Oʻqish rejimi,Ўқиш режими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:364,both,d19b63a0,Reading View; View
+78ab14c61c61,,{on?: bool},,{on?: bool},{on?: bool},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:365,both,5083d182,
+4d9d1aa18e19,,Grid Options…,,Toʻr parametrlari…,Тўр параметрлари…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:369,both,59909109,Options; Grid
+d92a1b4ca43a,,"{spacing?: pt, snap?: bool, smartGuides?: bool, gridlines?: bool, guides?: bool}",,"{spacing?: pt, snap?: bool, smartGuides?: bool, gridlines?: bool, guides?: bool}","{spacing?: pt, snap?: bool, smartGuides?: bool, gridlines?: bool, guides?: bool}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:369,both,7789b458,Gridlines; Spacing; Guides; Snap
+9c5d25d83cae,,Set Zoom,,Masshtabni belgilash,Масштабни белгилаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:372,both,8a9ea559,Zoom
+109c9855f1fc,,Fit to Window,,Oynaga moslash,Ойнага мослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:374,both,1df31d52,Window
+26c07ca0471d,,Task Pane,,Vazifalar paneli,Вазифалар панели,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:375,both,59b9bdf1,Task Pane; Pane
+d4a322e8329d,,{pane: format|animation|selection|comments|designer|background|smartart|null},,{pane: format|animation|selection|comments|designer|background|smartart|null},{pane: format|animation|selection|comments|designer|background|smartart|null},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:375,both,b85caad9,Background; Animation; Selection; Format; Pane
+ef31fe2f6a1e,,{word?}: open the Thesaurus pane on the selected word,,{word?}: tanlangan soʻz uchun «Sinonimlar lugʻati» panelini ochish,{word?}: танланган сўз учун «Синонимлар луғати» панелини очиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:376,both,69aafde6,Open; Pane; Word
+fbe02f18bd8c,,Ribbon Tab,,Lenta yorligʻi,Лента ёрлиғи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:377,both,48a58c21,Ribbon; Tab
+5be7c7552ef6,,Collapse the Ribbon,,Lentani yigʻish,Лентани йиғиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:378,both,92322107,Collapse; Ribbon
+0f0a4b92eacf,,"{on?: bool, slide?: index, delta?: int}",,"{on?: bool, slide?: index, delta?: int}","{on?: bool, slide?: index, delta?: int}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:381,both,cc31a4b1,Index; Slide
+43ff091c06d6,,"{from?: index, custom?: name}",,"{from?: index, custom?: name}","{from?: index, custom?: name}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:382,both,a16a014d,Custom; Index; Name
+23e8d7456cdc,,Presenter View,,Maʼruzachi rejimi,Маърузачи режими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:383,both,f422e995,Presenter View; View
+005f96770465,,Preview Animations,,Animatsiyalarni oldindan koʻrish,Анимацияларни олдиндан кўриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:385,both,3d213821,Preview
+96eceb70544a,,"{page?: home|new|open|info|saveAs|print|export|account, on?: bool}",,"{page?: home|new|open|info|saveAs|print|export|account, on?: bool}","{page?: home|new|open|info|saveAs|print|export|account, on?: bool}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:387,both,039f3b97,Account; Export; Print; Open; Page; Home; New
+1ff6991e9bf5,,"{layout?, perPage?, slides?, includeHidden?, frame?, paper?: letter|a4|legal|a3, orientation?: portrait|landscape}",,"{layout?, perPage?, slides?, includeHidden?, frame?, paper?: letter|a4|legal|a3, orientation?: portrait|landscape}","{layout?, perPage?, slides?, includeHidden?, frame?, paper?: letter|a4|legal|a3, orientation?: portrait|landscape}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:393,both,0d7654da,Orientation; Landscape; Portrait; Layout; Letter
+493fec4cfc98,,Command Palette,,Buyruqlar palitrasi,Буйруқлар палитраси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:396,both,5843727a,Command Palette; Command
+aa6f968a7319,,Picture from File…,,Fayldan rasm…,Файлдан расм…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:399,both,1e75b44f,Picture; File
+9862c1e878da,,"{id?, index}",,"{id?, index}","{id?, index}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:400,both,468c6002,Index
+c4c54de0ddd4,,Insert Picture in SmartArt…,,SmartArtga rasm kiritish…,SmartArtга расм киритиш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:400,both,97049588,Picture; Insert
+93913bc52eb2,,Audio from File…,,Fayldan audio…,Файлдан аудио…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:402,both,3492d09c,Audio; File
+0b72172bd3d3,,{keepFormatting?: bool},,{keepFormatting?: bool},{keepFormatting?: bool},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:403,both,8adcce13,
+ac595063d140,,Reuse Slides…,,Slaydlarni qayta ishlatish…,Слайдларни қайта ишлатиш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:403,both,8557e7ac,
+3d4fb49318b0,,Video from File…,,Fayldan video…,Файлдан видео…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:404,both,39ac69f3,Video; File
+e21a27ac0050,,Save As…,,Boshqa nomda saqlash…,Бошқа номда сақлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:405,both,d2002547,Save As; Save
+f00c0f1609c5,,Browse for Themes…,,Mavzularni tanlash…,Мавзуларни танлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:407,both,e66fc234,Browse
+6ddb34864b1d,,Compare…,,Solishtirish…,Солиштириш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:408,both,e811fd66,Compare
+5ef208c096d4,,Open Dialog,,Dialog oynasini ochish,Диалог ойнасини очиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:409,both,09b69372,Open
+edb6c5e5f2f5,,"{add: command id, params?, label?, icon?} | {remove: id, params?} | {reset: true} → [buttons]",,"{add: command id, params?, label?, icon?} | {remove: id, params?} | {reset: true} → [buttons]","{add: command id, params?, label?, icon?} | {remove: id, params?} | {reset: true} → [buttons]",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:411,both,7a3a671f,Command; Remove; Reset; Label; Icon; Add
+3cb34bccf72e,,Community Links,,Hamjamiyat havolalari,Ҳамжамият ҳаволалари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:414,both,b8810ca1,Community
+f220e58fd1a5,,`{key}` must be true or false,,«{key}» true yoki false boʻlishi kerak,«{key}» true ёки false бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:526,both,4e30f21c,Key
+fe63efd621dc,,{} can't export “{other}”,,{} “{other}” formatiga eksport qila olmaydi,{} “{other}” форматига экспорт қила олмайди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:753,both,913bbf2f,Export
+0d903e7d5eb5,,"Saving a copy needs a file picker, which this window doesn't have.",,"Nusxa saqlash uchun fayl tanlash oynasi kerak, bu oynada esa u yoʻq.","Нусха сақлаш учун файл танлаш ойнаси керак, бу ойнада эса у йўқ.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:797,both,7ce21f9b,Saving; Window; Copy; File
+5773e08a6999,,{safe} (print).pdf,,{safe} (chop etish).pdf,{safe} (чоп этиш).pdf,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:815,both,f6408e92,Print
+0e74de6d2875,,Opened the presentation as a PDF to print,,Chop etish uchun taqdimot PDF sifatida ochildi,Чоп этиш учун тақдимот PDF сифатида очилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:823,both,bb64e676,Presentation; Print
+ca4bda9e266a,,`spacing` must be a finite number of points,,«spacing» chekli punktlar soni boʻlishi kerak,«spacing» чекли пунктлар сони бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:856,both,8508f5ce,Spacing; Number
+5df3119a149c,,`spacing` must be from 1 to 288 points,,«spacing» 1–288 punkt oraligʻida boʻlishi kerak,«spacing» 1–288 пункт оралиғида бўлиши керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:858,both,03f6242c,Spacing
+84e84eceb377,,missing `percent`,,«percent» koʻrsatilmagan,«percent» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:909,both,abd3a0c2,Percent
+1b08f26af227,,missing `tab`,,«tab» koʻrsatilmagan,«tab» кўрсатилмаган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:936,both,c556564f,Tab
+7d08a66942e9,,unknown File page `{id}`,,nomaʼlum «Fayl» sahifasi «{id}»,номаълум «Файл» саҳифаси «{id}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:984,both,2f6c97f0,Page; File
+4907ade6867f,,File › {} needs an open presentation,,Fayl › {} uchun ochiq taqdimot kerak,Файл › {} учун очиқ тақдимот керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:988,both,dbae64ee,Presentation; Open; File
+484c877900e3,,nothing to print: no presentation is open,,chop etiladigan narsa yoʻq: hech qanday taqdimot ochiq emas,чоп этиладиган нарса йўқ: ҳеч қандай тақдимот очиқ эмас,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:996,both,56431a3c,Presentation; Print; Open; No
+6242ccda72f5,,picking a SmartArt picture needs the desktop app,,SmartArt rasmini tanlash uchun kompyuter ilovasi kerak,SmartArt расмини танлаш учун компьютер иловаси керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1007,both,6638c6b3,Desktop app; Picture; App
+96e17c467cda,,missing or unknown `language`,,«language» koʻrsatilmagan yoki nomaʼlum,«language» кўрсатилмаган ёки номаълум,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1008,both,0b2895db,Language
+a33c0465c179,,open a presentation first,,avval taqdimotni oching,аввал тақдимотни очинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1020,both,4fb00e7c,Presentation; Open
+23a2195507f3,,Browse for Themes needs the desktop app for now,,Mavzularni tanlash hozircha faqat kompyuter ilovasida ishlaydi,Мавзуларни танлаш ҳозирча фақат компьютер иловасида ишлайди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1026,both,db3d0f0d,Desktop app; Browse; App
+02cf00fed4bd,,open the presentation to compare first,,avval solishtiriladigan taqdimotni oching,аввал солиштириладиган тақдимотни очинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1038,both,9d860c80,Presentation; Compare; Open
+8b5eb8777e16,,Compare needs the desktop app for now,,Solishtirish hozircha faqat kompyuter ilovasida ishlaydi,Солиштириш ҳозирча фақат компьютер иловасида ишлайди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1044,both,bfe69d97,Desktop app; Compare; App
+04fb3a565990,,unknown UI command `{id}`,,nomaʼlum interfeys buyrugʻi «{id}»,номаълум интерфейс буйруғи «{id}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1055,both,5778ef06,Command
+0f47d3b317e0,,no presentation is open,,hech qanday taqdimot ochiq emas,ҳеч қандай тақдимот очиқ эмас,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1140,both,b9d050f9,Presentation; Open; No
+f1f77d2e7768,,animation preview plays the current slide,,animatsiyani oldindan koʻrish joriy slaydni ijro etadi,анимацияни олдиндан кўриш жорий слайдни ижро этади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1143,both,78f743b8,Animation; Preview; Slide
+6b7dd3b0c158,,no slide to preview,,oldindan koʻrish uchun slayd yoʻq,олдиндан кўриш учун слайд йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1147,both,123ed2f6,Preview; Slide; No
+285aa6707652,,This slide has no animations,,Bu slaydda animatsiya yoʻq,Бу слайдда анимация йўқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1155,both,f203ada8,Slide; No
+badd482957ac,,Previewing animations,,Animatsiyalar oldindan koʻrilmoqda,Анимациялар олдиндан кўрилмоқда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1164,both,c1bcd369,
+dec2f9f855e6,,Reuse Slides needs the desktop app,,Slaydlarni qayta ishlatish uchun kompyuter ilovasi kerak,Слайдларни қайта ишлатиш учун компьютер иловаси керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1208,both,66f7631e,Desktop app; App
+08e87d147c4c,,Inserted {} slides from {path},,{path} faylidan {} ta slayd kiritildi,{path} файлидан {} та слайд киритилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1213,both,f375589e,Path
+972a331e0366,,Presentation,,Taqdimot,Тақдимот,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1258,both,6e875951,Presentation
+ccc8c1fab6d0,,Saved {path},,Saqlandi: {path},Сақланди: {path},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1265,both,66e3a752,Path
+18e2c3798c2c,,{name} was not applied: the presentation it was chosen for is closed,,{name} qoʻllanmadi: u tanlangan taqdimot yopilgan,{name} қўлланмади: у танланган тақдимот ёпилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1446,both,cc411b9a,Presentation; Name
+3e4763f0b77b,,{name} was not applied: {e},,{name} qoʻllanmadi: {e},{name} қўлланмади: {e},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1455,both,31d2a379,Name
+c1cbdc51f311,,the slide it was chosen for was deleted,,u tanlangan slayd oʻchirilgan,у танланган слайд ўчирилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1491,both,cd580519,Slide
+06acabd89fa3,,the slide master it was chosen for was deleted,,u tanlangan slaydlar namunasi oʻchirilgan,у танланган слайдлар намунаси ўчирилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1496,both,cddd88f7,Slide Master; Slide
+435c392c345a,,the layout it was chosen for was deleted,,u tanlangan maket oʻchirilgan,у танланган макет ўчирилган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1507,both,6a516125,Layout
+6b1f35d11b26,,there was no slide to put it on,,uni joylash uchun slayd yoʻq edi,уни жойлаш учун слайд йўқ эди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1511,both,36fa9792,Slide; No
+6706da283cd0,,Couldn't save AutoRecover information: {e},,Avtotiklash maʼlumotlarini saqlab boʻlmadi: {e},Автотиклаш маълумотларини сақлаб бўлмади: {e},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1565,both,0d38c447,AutoRecover; Information; Save
+733776314c40,,dropped file,,tashlangan fayl,ташланган файл,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1572,both,426cf426,File
+04367a5b493f,,Escape,,Escape,Escape,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1957,both,b4cfe1f4,
+09575e15a45d,,End,,End,End,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1966,both,a2bb9d34,
+f8bb9ac25419,,PageUp,,PageUp,PageUp,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1967,both,f37641df,
+2d676a469400,,PageDown,,PageDown,PageDown,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1968,both,7cba3e21,
+a7fc17ed30ff,,F2,,F2,F2,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1970,both,999d0cd6,
+53c6fffd69fa,,F5,,F5,F5,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1971,both,b5cbd343,
+517bf16081bb,,F7,,F7,F7,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/lib.rs:1972,both,d7b4d9b4,
+fd80a6ce84c3,,No sound: {err},,Ovoz yoʻq: {err},Овоз йўқ: {err},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/media.rs:496,both,4b7d5abe,No
+0f73611c6dcd,,Search commands…,,Buyruqlarni qidirish…,Буйруқларни қидириш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:109,both,132b89d5,Search
+2d90418ca985,,New Presentation,,Yangi taqdimot,Янги тақдимот,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:166,both,9b74fabf,Presentation; New
+077f6f67d015,,Edit,,Tahrirlash,Таҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:179,both,5301648d,Edit
+b33f480afc5b,,Paste and Match Formatting,,Formatni moslab qoʻyish,Форматни мослаб қўйиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:187,both,f1a6d9cc,Paste
+00d2a8154ea6,,Select All,,Hammasini tanlash,Ҳаммасини танлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:190,both,86a599ef,Select All; Select; All
+82e9780bd5dc,,Delete Slide,,Slaydni oʻchirish,Слайдни ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:192,both,90c6f505,Delete; Slide
+c562c022b541,,Slide Master,,Slaydlar namunasi,Слайдлар намунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:208,both,61c21317,Slide Master; Slide
+a3670b4f5de6,,Handout Master,,Tarqatmalar namunasi,Тарқатмалар намунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:209,both,9a199dba,Handout
+984103165b83,,Notes Master,,Qaydlar namunasi,Қайдлар намунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:210,both,28d46cc8,Notes
+21b65f732555,,New Slide,,Yangi slayd,Янги слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:228,both,e429d3f1,Slide; New
+bc1d729f8af2,,Duplicate Slide,,Slayd nusxasini yaratish,Слайд нусхасини яратиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:229,both,be302794,Duplicate; Slide
+5773abce12a5,,Section,,Boʻlim,Бўлим,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:231,both,f2c6b564,Section
+ef558e0a28fd,,Slide Number,,Slayd raqami,Слайд рақами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:235,both,e0b6b555,Number; Slide
+02c2ae2b7b9d,,Table…,,Jadval…,Жадвал…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:237,both,827f5d47,Table
+76cd532ce5c2,,Photo Album…,,Fotoalbom…,Фотоальбом…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:240,both,e3bd8bb7,Photo Album
+b2fed142bf2d,,Edit Photo Album…,,Fotoalbomni tahrirlash…,Фотоальбомни таҳрирлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:241,both,ce8310f1,Photo Album; Edit
+2779352ea75a,,Regroup,,Qayta guruhlash,Қайта гуруҳлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:274,both,a17c1123,Regroup
+dfaf5c76f84e,,Flip Horizontal,,Gorizontal aks ettirish,Горизонтал акс эттириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:278,both,33045f79,Flip Horizontal; Flip
+23c1b920cee4,,Flip Vertical,,Vertikal aks ettirish,Вертикал акс эттириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:279,both,2871c06d,Flip Vertical; Flip
+37332cfd95ed,,Play from Start,,Boshidan namoyish qilish,Бошидан намойиш қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:285,both,48f6c3f7,Play
+71006f0653bc,,Play from Current Slide,,Joriy slayddan namoyish qilish,Жорий слайддан намойиш қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:286,both,f7de44bf,From Current Slide; Slide; Play
+81ae42dfd62b,,Hide Slide,,Slaydni yashirish,Слайдни яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:288,both,58d9dd03,Hide Slide; Slide; Hide
+abf76276d40e,,Set Up Show…,,Namoyishni sozlash…,Намойишни созлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/menus.rs:289,both,01dc8dde,Show
+0b5d14c6a481,,Still opening {name},,{name} hali ochilmoqda,{name} ҳали очилмоқда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/opening.rs:29,both,84c445e9,Name
+018d7c82922a,,Stopped opening {},,{} ochilishi toʻxtatildi,{} очилиши тўхтатилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/opening.rs:60,both,624acc7c,
+92a7fc3eb809,,{}: reading the file stopped unexpectedly,,{}: faylni oʻqish kutilmaganda toʻxtadi,{}: файлни ўқиш кутилмаганда тўхтади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/opening.rs:70,both,f8da21ff,File
+6763c82e35ce,,Opening {name}…,,{name} ochilmoqda…,{name} очилмоқда…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/opening.rs:97,both,825df926,Name
+267a5e340e47,,Reading the file: {secs:.0} s,,Fayl oʻqilmoqda: {secs:.0} s,Файл ўқилмоқда: {secs:.0} с,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/opening.rs:100,both,3358ede7,File
+3baccb6c4f10,,Format Shape,,Shakl formati,Шакл формати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:25,both,b035f03e,Format; Shape
+827f84b5b163,,Format Background,,Fon formati,Фон формати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:26,both,26c73ac1,Format Background; Background; Format
+3f1d3e865809,,Animation Pane,,Animatsiya paneli,Анимация панели,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:27,both,d581ab2a,Animation Pane; Animation; Pane
+ffdab460358f,,Design Ideas,,Dizayn gʻoyalari,Дизайн ғоялари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:30,both,6bea6825,Design Ideas; Design
+9fa9faec121b,,Pane,,Panel,Панель,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:34,both,3ee955c4,Pane
+6dd1403ae335,,Select a SmartArt graphic to edit its text.,,Matnini tahrirlash uchun SmartArt grafikasini tanlang.,Матнини таҳрирлаш учун SmartArt графикасини танланг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:69,both,2db4587f,Select; Edit; Text
+90f495d3e634,,Type your text here,,Matnni shu yerga kiriting,Матнни шу ерга киритинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:81,both,055dc766,Text; Type
+23fdbc25e4a0,,+ Add,,+ Qoʻshish,+ Қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:120,both,109b936a,Add
+826b714fa590,,Select a shape to format it.,,Formatlash uchun shaklni tanlang.,Форматлаш учун шаклни танланг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:211,both,97be206d,Select; Format; Shape
+019183481be1,,Fill & Line,,Toʻldirish va chiziq,Тўлдириш ва чизиқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:219,both,508c681f,Fill & Line; Fill; Line
+f45d08329db6,,Size & Properties,,Oʻlcham va xususiyatlar,Ўлчам ва хусусиятлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:221,both,cca00c33,Properties; Size
+967fa02baa2a,,Text Options,,Matn parametrlari,Матн параметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:222,both,6b74b131,Options; Text
+d31918cd20af,,Outer,,Tashqi,Ташқи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:242,both,c119b7bd,
+9e7fb64fbb78,,Bottom,,Quyi,Қуйи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:243,both,cce7f2f2,Bottom
+8e0c3e2e258c,,Inner,,Ichki,Ички,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:245,both,df6bbdbc,
+def64c58d272,,Perspective,,Perspektiva,Перспектива,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:246,both,cc68ebe6,
+ea26d296dfce,,Blur,,Xiralik,Хиралик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:269,both,900aa998,
+7ca234651d7c,,Full,,Toʻliq,Тўлиқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:276,both,10b28a8c,
+e8d1987489b5,,Half,,Yarim,Ярим,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:276,both,45d31208,
+54dfb5bd9685,,size (pt),,oʻlcham (pt),ўлчам (пт),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:320,both,85ba8711,Size
+92cb3adb91a6,,Reset Effects,,Effektlarni tiklash,Эффектларни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:325,both,ed3a9e90,Reset
+8da4100dfa47,,Vertical alignment,,Vertikal tekislash,Вертикал текислаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:377,both,eadf99ec,
+90b614d120f0,,Top,,Yuqori,Юқори,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:378,both,cae0435c,Top
+59d303281ad4,,Shrink text on overflow,,"Sigʻmasa, matnni kichraytirish","Сиғмаса, матнни кичрайтириш",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:385,both,63215bfd,Text
+5d81bcf2adc5,,Do not Autofit,,Avtomatik moslashtirmaslik,Автоматик мослаштирмаслик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:385,both,99d19d5d,
+f1035784e8f6,,Resize shape to fit text,,Shakl oʻlchamini matnga moslash,Шакл ўлчамини матнга мослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:385,both,b21c22c4,Resize; Shape; Text
+486ce7933efd,,Wrap text in shape,,Shakl ichida matnni oʻrash,Шакл ичида матнни ўраш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:393,both,48109f65,Wrap Text; Shape; Text
+345eadae9b8f,,Margins (pt),,Hoshiyalar (pt),Ҳошиялар (пт),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:396,both,5762ea4c,Margins
+74dd72670f8b,,Brightness,,Yorqinlik,Ёрқинлик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:423,both,e1a2b65d,Brightness
+4274087900dc,,Contrast,,Kontrast,Контраст,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:427,both,c4fc37ad,Contrast
+cafe2f065bba,,Saturation,,Toʻyinganlik,Тўйинганлик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:431,both,20a32bc8,Saturation
+1b85bc762a9a,,Fill,,Toʻldirish,Тўлдириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:445,both,7adb6736,Fill
+48bfa12f4c88,,Solid fill,,Yaxlit toʻldirish,Яхлит тўлдириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:457,both,6e9a3790,Solid; Fill
+d768a5be8728,,Gradient fill,,Gradiyentli toʻldirish,Градиентли тўлдириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:458,both,c9eb947d,Gradient; Fill
+358d057c009b,,Picture or texture fill,,Rasm yoki tekstura bilan toʻldirish,Расм ёки текстура билан тўлдириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:459,both,93aa84ef,Picture; Fill
+c7f526db87fe,,Pattern fill,,Naqsh bilan toʻldirish,Нақш билан тўлдириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:460,both,fc4a1e3d,Fill
+eb2276f9de30,,Rotate with shape,,Shakl bilan birga burish,Шакл билан бирга буриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:508,both,52df0658,Rotate; Shape
+9f3d24d53106,,No line,,Chiziqsiz,Чизиқсиз,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:516,both,0740abec,Line; No
+ec395ff52b57,,Solid line,,Yaxlit chiziq,Яхлит чизиқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:519,both,dcfb9c04,Solid; Line
+26182d798c68,,Compound type,,Qoʻshma chiziq turi,Қўшма чизиқ тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:580,both,7943f571,Type
+bf2ce6b69044,,Thick Thin,,Qalin-ingichka,Қалин-ингичка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:583,both,066927cd,Thick; Thin
+ed66ea34a62c,,Thin Thick,,Ingichka-qalin,Ингичка-қалин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:583,both,813bb3ab,Thick; Thin
+3605be737024,,Round,,Yumaloq,Юмалоқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:590,both,ec7b5983,Round
+eed86f1bfd50,,Cap type,,Uch turi,Уч тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:590,both,85e30c7c,Cap type; Type
+fe5c03e96112,,Flat,,Yassi,Ясси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:590,both,79c9e13a,
+2fa7bb268929,,Miter,,Burchakli,Бурчакли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:596,both,3c85782d,Miter
+c0e5087e319f,,Bevel,,Qiya kesik,Қия кесик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:596,both,a2a7fc6a,Bevel
+e35984dc55c2,,Join type,,Ulanish turi,Уланиш тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:596,both,9f767970,Join type; Type
+0f10a06a4323,,Open Arrow,,Ochiq strelka,Очиқ стрелка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:597,both,82508004,Arrow; Open
+6f29a49c2574,,Stealth,,Oʻtkir,Ўткир,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:597,both,723e8dc1,
+b8e12b0c0151,,Small,,Kichik,Кичик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:598,both,c74fd971,
+04c160aa2ed7,,Begin arrow,,Boshlanish strelkasi,Бошланиш стрелкаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:600,both,972fd5b6,Begin arrow; Arrow
+3bf7356741dc,,End arrow,,Tugash strelkasi,Тугаш стрелкаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:600,both,ce08aaf0,End arrow; Arrow
+7054547aba29,,Begin size,,Boshlanish oʻlchami,Бошланиш ўлчами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:600,both,7b3a53ee,Size
+e9bb71b2ffcd,,End size,,Tugash oʻlchami,Тугаш ўлчами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:600,both,69e1c1eb,Size
+6ab5c1f8e2df,,Picture source,,Rasm manbasi,Расм манбаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:669,both,8f7248b3,Picture; Source
+06ae9cbcab16,,Tile picture as texture,,Rasmni tekstura sifatida takrorlash,Расмни текстура сифатида такрорлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:675,both,13dc86bd,Picture
+38fc9540fb29,,Offset X,,X boʻyicha siljish,X бўйича силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:680,both,6f14dafd,
+80b86501886d,,Offset Y,,Y boʻyicha siljish,Y бўйича силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:681,both,07b2b363,
+1c9d89edf7c1,,Scale X,,X boʻyicha masshtab,X бўйича масштаб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:682,both,6f4142fb,Scale
+1e3c4b158a33,,Scale Y,,Y boʻyicha masshtab,Y бўйича масштаб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:683,both,d9f420db,Scale
+1a9c3282fabf,,Top left,,Yuqori chap,Юқори чап,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:685,both,04b38cf9,Top Left; Left; Top
+77317159665a,,Top right,,Yuqori oʻng,Юқори ўнг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:687,both,c1cc898f,Top Right; Right; Top
+d13826148fc4,,Bottom left,,Quyi chap,Қуйи чап,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:691,both,1a7ce96f,Bottom Left; Bottom; Left
+520bee6dc3dd,,Bottom right,,Quyi oʻng,Қуйи ўнг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:693,both,c2fc5768,Bottom Right; Bottom; Right
+02a151d79397,,Mirror type,,Koʻzgu turi,Кўзгу тури,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:696,both,44098944,Type
+2e581bde0d1f,,Offset left,,Chapdan siljish,Чапдан силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:711,both,20e7707d,Left
+9985845960a4,,Offset top,,Yuqoridan siljish,Юқоридан силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:711,both,eb346d49,Top
+9ae817be42d0,,Offset bottom,,Pastdan siljish,Пастдан силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:711,both,e041c450,Bottom
+eb1c800a0d0c,,Offset right,,Oʻngdan siljish,Ўнгдан силжиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:711,both,58f4908a,Right
+aa0bb76ce478,,3-D Format,,3D format,3D формат,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:779,both,3b3a7b9c,Format
+7e7f61847f25,,Top bevel,,Yuqori qiya kesik,Юқори қия кесик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:780,both,81161a14,Bevel; Top
+e0518166b29e,,Bottom bevel,,Quyi qiya kesik,Қуйи қия кесик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:780,both,98d32cc1,Bottom; Bevel
+e258b6a30ca5,,   Width,,   Kengligi,   Кенглиги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:783,both,45f727be,Width
+a94333a0c245,,   Height,,   Balandligi,   Баландлиги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:784,both,85f1e14d,Height
+0efdba8b9614,,Depth,,Chuqurlik,Чуқурлик,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:787,both,df0e298e,
+5378281d5f0c,,Contour,,Kontur,Контур,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:788,both,ae77a05f,
+ae46fd5da4b7,,Material,,Material,Материал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:789,both,d8169782,
+bdcee93fe1c2,,Lighting,,Yoritish,Ёритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:790,both,6153deda,
+6bb3f269435b,,3-D Rotation,,3D burilish,3D бурилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:792,both,bbf71e3d,3-D Rotation; Rotation
+24c05c375184,,X Rotation,,X boʻyicha burilish,X бўйича бурилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:795,both,08193177,Rotation
+fa35b94b2a47,,Y Rotation,,Y boʻyicha burilish,Y бўйича бурилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:796,both,a4ad9a90,Rotation
+3b96f0b189f8,,Z Rotation,,Z boʻyicha burilish,Z бўйича бурилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:797,both,dcedbf8a,Rotation
+868561bca7fc,,Distance from ground,,Yerdan masofa,Ердан масофа,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:798,both,d39ae256,Distance
+a18f7b4a8d96,,Reset 3-D,,3D effektni tiklash,3D эффектни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:799,both,ed228055,Reset
+a5ab475db87d,,Follow the layout,,Maket boʻyicha,Макет бўйича,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:826,both,ab661f81,Layout
+6d73dfc4eb60,,Foreground,,Oldingi plan,Олдинги план,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:882,both,f7745efd,
+d64ac1894319,,Insert picture from file…,,Fayldan rasm kiritish…,Файлдан расм киритиш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:896,both,2019f4be,Picture; Insert; File
+09e9b295964b,,Hide background graphics,,Fon grafikasini yashirish,Фон графикасини яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:910,both,936f3897,Background Graphics; Background; Hide
+789ed0569f6f,,Reset Background,,Fonni tiklash,Фонни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:924,both,28a567cc,Background; Reset
+d123e18524e9,,Top Right,,Yuqori oʻng,Юқори ўнг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:963,both,d0fa5ce8,Top Right; Right; Top
+398d2fa16722,,Bottom Left,,Quyi chap,Қуйи чап,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:967,both,922e1003,Bottom Left; Bottom; Left
+537870397c3a,,Bottom Right,,Quyi oʻng,Қуйи ўнг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:969,both,45c0e255,Bottom Right; Bottom; Right
+6a12a384492c,,Top Left,,Yuqori chap,Юқори чап,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:970,both,589ad2aa,Top Left; Left; Top
+df51f28d5b48,,Mirror,,Koʻzgu,Кўзгу,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:999,both,74adc578,
+0e8741cab95d,,▶ Play All,,▶ Hammasini ijro etish,▶ Ҳаммасини ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1021,both,18fba6ad,Play; All
+30614d0a8b41,,■ Stop,,■ Toʻxtatish,■ Тўхтатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1021,both,e9b365b4,Stop
+ef911d7e04f0,,Select an object on the slide and add an animation from the Animations tab.,,Slayddagi obyektni tanlang va «Animatsiyalar» yorligʻidan animatsiya qoʻshing.,Слайддаги объектни танланг ва «Анимациялар» ёрлиғидан анимация қўшинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1027,both,c5d90554,Animation; Select; Slide; Add; Tab
+a7804e5c3801,,Shape {},,Shakl {},Шакл {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1039,both,db11e688,Shape
+3a26294a1bdd,,Timing bar {},,Vaqt chizigʻi {},Вақт чизиғи {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1077,both,8e408ade,Timing
+e595438d9d72,,Duration handle {},,Davomiylik dastagi {},Давомийлик дастаги {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1079,both,217516cb,Duration
+9f142578e5e8,,Start With Previous,,Oldingisi bilan boshlash,Олдингиси билан бошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1129,both,634ca210,With Previous; Previous
+b1d16c9231f9,,Start After Previous,,Oldingisidan keyin boshlash,Олдингисидан кейин бошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1129,both,592234c6,After Previous; Previous
+ef9698f8412f,,Start On Click,,Bosilganda boshlash,Босилганда бошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1129,both,3077e381,On Click; Click
+a8f42a629783,,Compare this presentation with a revised copy from Review › Compare.,,Bu taqdimotni uning tahrirlangan nusxasi bilan Tekshirish › Solishtirish orqali solishtiring.,Бу тақдимотни унинг таҳрирланган нусхаси билан Текшириш › Солиштириш орқали солиштиринг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1171,both,9891fc49,Presentation; Compare; Review; Copy
+5af982465173,,Compared with {},,Solishtirildi: {},Солиштирилди: {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1175,both,e9d488da,
+8d9884a1a960,,Not a copy of this presentation: slides are matched by position.,,Bu taqdimotning nusxasi emas: slaydlar tartib raqami boʻyicha moslashtirildi.,Бу тақдимотнинг нусхаси эмас: слайдлар тартиб рақами бўйича мослаштирилди.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1177,both,63a60be6,Presentation; Copy
+caa596b8ec38,,No differences left.,,Boshqa farq qolmadi.,Бошқа фарқ қолмади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1181,both,6a46a960,Left; No
+92128e9814b1,,End Review,,Tekshiruvni yakunlash,Текширувни якунлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1182,both,e55d3133,Review
+d0ddc30c934f,,Accept All ({}),,Hammasini qabul qilish ({}),Ҳаммасини қабул қилиш ({}),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1188,both,beca825a,Accept; All
+97eea18901ca,,Slide inserted after {slide},,{slide}-slayddan keyin slayd kiritildi,{slide}-слайддан кейин слайд киритилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1195,both,bb469edb,Slide
+368470542294,,Slide {} deleted,,{}-slayd oʻchirildi,{}-слайд ўчирилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1196,both,8cd9cb8d,Slide
+424906662ce7,,Slide {} changed,,{}-slayd oʻzgartirildi,{}-слайд ўзгартирилди,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1197,both,15c46d4c,Slide
+0f3508a60dcb,,• {d},,• {d},• {d},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1215,both,83a866fe,
+35d4dcd2e852,,+ New Comment,,+ Yangi izoh,+ Янги изоҳ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1224,both,c610411b,Comment; New
+ca98d02055d7,,No comments.,,Izohlar yoʻq.,Изоҳлар йўқ.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1234,both,03fdef78,No
+09dab40d901a,,Slide {},,Slayd {},Слайд {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1239,both,0e397c5e,Slide
+4e15183b1756,,{when} · Resolved,,{when} · Hal qilingan,{when} · Ҳал қилинган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1273,both,6165e65c,
+4db5d1086232,,Reply…,,Javob berish…,Жавоб бериш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1290,both,defdba4d,Reply
+5c956cad1b5c,,Pick a design for this slide. Ideas are generated on your device.,,Bu slayd uchun dizaynni tanlang. Gʻoyalar qurilmangizda yaratiladi.,Бу слайд учун дизайнни танланг. Ғоялар қурилмангизда яратилади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1333,both,1877b333,Design; Slide
+55bfe55c3ea7,,Add a title with a picture or some text to get layout ideas.,,Maket gʻoyalarini olish uchun sarlavha va rasm yoki biroz matn qoʻshing.,Макет ғояларини олиш учун сарлавҳа ва расм ёки бироз матн қўшинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1396,both,a45b78aa,Picture; Layout; Title; Text; Add
+1f584bd78ca9,,Themes (whole presentation),,Mavzular (butun taqdimot),Мавзулар (бутун тақдимот),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1404,both,0f5417d2,Presentation
+8aa5b9df057d,,Search for a word,,Soʻz qidirish,Сўз қидириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1542,both,b42764fb,Search; Word
+dacccb2611f6,,"Select a word on the slide, or type one above.",,Slayddagi soʻzni tanlang yoki uni yuqorida kiriting.,Слайддаги сўзни танланг ёки уни юқорида киритинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1549,both,97a760a2,Select; Slide; Above; Type; Word
+be06517feaa8,,"No synonyms for ""{}"".",,“{}” uchun sinonim topilmadi.,“{}” учун синоним топилмади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1553,both,fe7f6465,No
+9b18730b25c0,,Look up,,Qidirish,Қидириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/panes.rs:1560,both,6d7049b8,
+ce7a5cf67822,,Start from Beginning,,Boshidan boshlash,Бошидан бошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/qat.rs:51,both,f1eb7755,From Beginning
+1f20931f2b97,,unknown command `{id}`,,nomaʼlum buyruq «{id}»,номаълум буйруқ «{id}»,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/qat.rs:76,both,84960688,Command
+f86581eac3b9,,Right-click any ribbon button to add it.,,Qoʻshish uchun lentadagi istalgan tugmani oʻng tugma bilan bosing.,Қўшиш учун лентадаги исталган тугмани ўнг тугма билан босинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/qat.rs:155,both,fb7419e5,Ribbon; Button; Right; Click; Add
+c6cba88c772e,,Reset to Defaults,,Standart sozlamalarni tiklash,Стандарт созламаларни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/qat.rs:156,both,299ef4aa,Reset
+8986454d4b0b,, — Edited,, — Tahrirlangan, — Таҳрирланган,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:79,both,d36e9f06,
+6febb5f37687,,Search commands (⇧⌘P),,Buyruqlarni qidirish (⇧⌘P),Буйруқларни қидириш (⇧⌘P),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:88,both,fcb270e8,Search
+633a87f557b7,,  Present  ,,  Namoyish qilish  ,  Намойиш қилиш  ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:92,both,03a14c32,Present
+afa259a89149,,Light/Dark appearance,,Yorugʻ/qorongʻi koʻrinish,Ёруғ/қоронғи кўриниш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:107,both,8c3821e0,Appearance; Light; Dark
+ccb912a98338,,Table Design,,Jadval dizayni,Жадвал дизайни,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:139,both,6ecc0326,Design; Table
+d83d3b2a775e,,Playback,,Ijro,Ижро,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:149,both,c8e30870,Playback
+682832dfdaaf,,File (Alt+F),,Fayl (Alt+F),Файл (Alt+F),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:179,both,9fcd1504,File
+1fdde1c6c5a9,,Photo\nAlbum,,Foto-\nalbom,Фото-\nальбом,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:270,both,356d592b,
+c042d168d153,,Photo Album options,,Fotoalbom parametrlari,Фотоальбом параметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:274,both,aad90bd3,Photo Album; Options
+af2ea7659d48,,New Photo Album…,,Yangi fotoalbom…,Янги фотоальбом…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:282,both,5564d7ed,Photo Album; New
+2508aaebb4d2,,{label} ({}),,{label} ({}),{label} ({}),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:307,both,8637e6e9,Label
+06764acd02b5,,New Slide (⇧⌘N),,Yangi slayd (⇧⌘N),Янги слайд (⇧⌘N),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:426,both,b12ffab7,Slide; New
+3a44274377b4,,Duplicate Selected Slides,,Tanlangan slaydlar nusxasini yaratish,Танланган слайдлар нусхасини яратиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:433,both,a6c162d8,Duplicate
+f8b8034aaefa,,Slides from Outline…,,Strukturadan slaydlar…,Структурадан слайдлар…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:436,both,3cc10cf1,Outline
+014539e3cf15,,Reuse Slides (Keep Source Formatting)…,,Slaydlarni qayta ishlatish (manba formatlashini saqlab)…,Слайдларни қайта ишлатиш (манба форматлашини сақлаб)…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:440,both,a35992d7,Source; Keep
+7bd8e234c076,,Choosing a presentation to reuse needs the desktop app,,Qayta ishlatiladigan taqdimotni tanlash uchun kompyuter ilovasi kerak,Қайта ишлатиладиган тақдимотни танлаш учун компьютер иловаси керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:445,both,7c1a6e14,Presentation; Desktop app; App
+4e2da29aee1b,,Add Section,,Boʻlim qoʻshish,Бўлим қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:455,both,b639deba,Section; Add
+392601d6181f,,Remove All Sections,,Barcha boʻlimlarni olib tashlash,Барча бўлимларни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:458,both,8f291401,Remove; All
+3353c4d65ec9,,{f} (Headings),,{f} (sarlavhalar),{f} (сарлавҳалар),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:490,both,1b94df73,
+5b25ae961c1c,,{f} (Body),,{f} (asosiy matn),{f} (асосий матн),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:492,both,e1f9c58f,
+e2c4f289c37d,,Rescan Installed Fonts,,Oʻrnatilgan shriftlarni qayta tekshirish,Ўрнатилган шрифтларни қайта текшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:506,both,95ad8abb,
+bab8945f835d,,Very Tight,,Juda zich,Жуда зич,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:536,both,77f3342a,Tight
+d98c04dfa304,,Very Loose,,Juda siyrak,Жуда сийрак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:536,both,b7f485c8,
+0ff09fbc417f,,{ch}  Bullet,,{ch}  Marker,{ch}  Маркер,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:705,both,fbf0d4f1,Bullet
+fbd073febc09,,Bullets and Numbering…,,Markerlar va raqamlash…,Маркерлар ва рақамлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:710,both,a18076c3,Numbering
+a97b6339ca01,,Decrease List Level,,Roʻyxat darajasini pasaytirish,Рўйхат даражасини пасайтириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:747,both,ee2d5afa,List level; List
+285ea622bd71,,Increase List Level,,Roʻyxat darajasini oshirish,Рўйхат даражасини ошириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:748,both,20d58dde,List level; List
+2198b175545c,,{n} Column{},,{n} ta ustun{},{n} та устун{},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:766,both,d542f317,Column
+e4baad9adee3,,Convert to SmartArt,,SmartArtga aylantirish,SmartArtга айлантириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:801,both,b97fe139,Convert
+b026246b2b57,,Quick\nStyles,,Tezkor\nuslublar,Тезкор\nуслублар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:922,both,00a05efd,
+0b023acb72a7,,Long Dash Dot,,Uzun shtrix-nuqta,Узун штрих-нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:978,both,0e41aaac,Long Dash; Dash Dot
+f458fdd2a585,,Arrow at end,,Oxirida strelka,Охирида стрелка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:989,both,ed9e27c0,Arrow
+5c3c03abb8a2,,Arrow at start,,Boshida strelka,Бошида стрелка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:990,both,9aed56e4,Arrow
+40fbfa25a60c,,Arrows at both ends,,Ikki uchida strelka,Икки учида стрелка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:991,both,95731411,
+189a4761b73c,,Stealth end,,Oʻtkir uch,Ўткир уч,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:992,both,98f7b933,
+097afc9f6cfe,,Oval ends,,Oval uchlar,Овал учлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:993,both,f13d3834,
+c36a48ad2ecf,,{r} pt glow,,{r} pt nur sochish,{r} пт нур сочиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1030,both,eb435e8e,Glow
+fc13cc60667f,,{r} pt,,{r} pt,{r} пт,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1037,both,1642de06,
+db0f47212d36,,Abc,,Abc,Abc,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1092,both,915858af,
+103fd85ab634,,Order Objects,,Obyektlar tartibi,Объектлар тартиби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1107,both,735b0e7c,
+43fa1f88f39d,,Group Objects,,Obyektlarni guruhlash,Объектларни гуруҳлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1117,both,1110b90d,Group
+3ffc0ddd07fa,,Position Objects,,Obyektlarni joylashtirish,Объектларни жойлаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1122,both,e1429a53,
+c3be54a67e5e,,Selection Pane…,,Tanlash paneli…,Танлаш панели…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1130,both,955f3187,Selection Pane; Selection; Pane
+ea478e66e286,,Align Top,,Yuqoriga tekislash,Юқорига текислаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1141,both,14dcdbbf,Align; Top
+13c9825f975f,,Align Middle,,Oʻrtaga tekislash,Ўртага текислаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1142,both,7d2490dd,Middle; Align
+323787717a1c,,Align Bottom,,Pastga tekislash,Пастга текислаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1143,both,f84a2ed3,Bottom; Align
+a2cdd2394ae0,,Distribute Horizontally,,Gorizontal taqsimlash,Горизонтал тақсимлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1148,both,4fa64b0b,Distribute
+fd3ee3b889e0,,Distribute Vertically,,Vertikal taqsimlash,Вертикал тақсимлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1149,both,19725113,Distribute
+f3e036272ca6,,Replace Fonts…,,Shriftlarni almashtirish…,Шрифтларни алмаштириш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1176,both,ab9a6d96,Replace
+25c975a015c7,,Selection\nPane,,Tanlash\npaneli,Танлаш\nпанели,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1181,both,77a22645,Selection; Pane
+1eedd70d1820,,Design\nIdeas,,Dizayn\ngʻoyalari,Дизайн\nғоялари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1184,both,897fdfc0,Design
+213cc9d25682,,New\nSlide,,Yangi\nslayd,Янги\nслайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1192,both,fb976b23,Slide; New
+4a5bdb798726,,Pictures,,Rasmlar,Расмлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1219,both,935edbe9,
+223c27b1d42f,,Screenshot,,Skrinshot,Скриншот,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1221,both,60c152d9,Screenshot
+a2efd45e2cf3,,Screenshot (not available yet),,Skrinshot (hozircha mavjud emas),Скриншот (ҳозирча мавжуд эмас),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1222,both,411cb09c,Screenshot
+4034c371f780,,Action Button: {k},,Amal tugmasi: {k},Амал тугмаси: {k},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1255,both,a452e7f2,Button; Action
+e7f0d3bcda46,,Action Settings…,,Amal sozlamalari…,Амал созламалари…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1261,both,0ea48ae4,Settings; Action
+4e4595080ffd,,WordArt style {},,WordArt uslubi {},WordArt услуби {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1275,both,98cac2e0,Style
+676528c935d5,,Slide\nNumber,,Slayd\nraqami,Слайд\nрақами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1281,both,ed9528f5,Number; Slide
+b8537e19cef4,,Video,,Video,Видео,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1288,both,bc17c1f0,Video
+505f7dd5a4d1,,Audio,,Audio,Аудио,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1289,both,acdac205,Audio
+b2a067186d7d,,{}x{} Table,,{}x{} jadval,{}x{} жадвал,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1299,both,05cfdd9b,Table
+b72ec09ec94b,,No icons match.,,Mos piktogramma topilmadi.,Мос пиктограмма топилмади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1361,both,45e1f4df,No
+7c919f525bbd,,Black Pen,,Qora ruchka,Қора ручка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1433,both,5f3c35cc,Black; Pen
+d5b1f4ed3b49,,Red Pen,,Qizil ruchka,Қизил ручка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1434,both,88be3dd0,Red; Pen
+280d822e3275,,Blue Pen,,Koʻk ruchka,Кўк ручка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1435,both,c5d926c4,Blue; Pen
+84a5add3b661,,Ink to\nShape,,Shaklga\naylantirish,Шаклга\nайлантириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1448,both,ce560a17,Shape; Ink
+ccc7180ae842,,"Ink to Shape: turn drawn lines, rectangles, ovals and triangles into shapes",,"Qoʻlyozmani shaklga aylantirish: chizilgan chiziqlar, toʻrtburchaklar, ovallar va uchburchaklarni shakllarga aylantiradi","Қўлёзмани шаклга айлантириш: чизилган чизиқлар, тўртбурчаклар, оваллар ва учбурчакларни шаклларга айлантиради",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1449,both,e6526a9b,Shape; Ink
+ff9b4c32ce8f,,Ink to\nText,,Matnga\naylantirish,Матнга\nайлантириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1453,both,52cd12e0,Text; Ink
+5b742a338950,,Ink to Text (coming soon),,Qoʻlyozmani matnga aylantirish (tez orada),Қўлёзмани матнга айлантириш (тез орада),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1454,both,f87ba8c3,Text; Ink
+9731fb7feebe,,Ink to Math (coming soon),,Qoʻlyozmani formulaga aylantirish (tez orada),Қўлёзмани формулага айлантириш (тез орада),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1456,both,69804d5d,Ink
+d298dd327133,,Customize Colors…,,Ranglarni moslashtirish…,Рангларни мослаштириш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1533,both,397ad6b6,Customize
+fb4bf17755b7,,Customize Fonts…,,Shriftlarni moslashtirish…,Шрифтларни мослаштириш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1547,both,07c96f68,Customize
+ab82750d9ac1,,Background\nStyles,,Fon\nuslublari,Фон\nуслублари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1562,both,3935b563,Background
+665ad712553d,,Style {i},,Uslub {i},Услуб {i},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1581,both,0f5a0c19,Style
+41d91b4597e5,,Reset Slide Background,,Slayd fonini tiklash,Слайд фонини тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1590,both,7a627385,Background; Reset; Slide
+7f191f51abcf,,Slide\nSize,,Slayd\noʻlchami,Слайд\nўлчами,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1596,both,8a9eeb26,Slide; Size
+981fdaafc2ed,,Standard (4:3),,Standart (4:3),Стандарт (4:3),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1598,both,e6ce0c4c,
+eabab3cdb912,,Widescreen (16:9),,Keng ekran (16:9),Кенг экран (16:9),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1601,both,461ac2e2,Widescreen
+98163d4b4dfc,,Format\nBackground,,Fon\nformati,Фон\nформати,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1608,both,48b6f4c0,Background; Format
+6ec1b3742f90,,Exciting,,Taʼsirli,Таъсирли,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1658,both,2c4bd46a,
+7a67a8bafbca,,Dynamic Content,,Dinamik tarkib,Динамик таркиб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1658,both,c2663d78,
+f78f6448ffd2,,Subtle,,Sokin,Сокин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1658,both,615336f8,
+b01bbcdb4edc,,Effect\nOptions,,Effekt\nparametrlari,Эффект\nпараметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1679,both,0eaf12ef,Options
+1e152d2e9c33,,[Stop Previous Sound],,[Oldingi ovozni toʻxtatish],[Олдинги овозни тўхтатиш],reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1699,both,e648d28c,Previous; Stop
+888c90ce3b69,,[No Sound],,[Ovozsiz],[Овозсиз],reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1699,both,936cd984,No
+7e71acb1276a,,Other Sound…,,Boshqa ovoz…,Бошқа овоз…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1717,both,496d5ef4,
+151e6d827877,,Choosing a sound file needs the desktop app,,Ovoz faylini tanlash uchun kompyuter ilovasi kerak,Овоз файлини танлаш учун компьютер иловаси керак,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1721,both,d7cedb20,Desktop app; File; App
+0abe49b26393,,Loop Until Next Sound,,Keyingi ovozgacha takrorlash,Кейинги овозгача такрорлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1725,both,c3de672c,Loop; Next
+3e444009ec9d,,On Mouse Click,,Sichqoncha bosilganda,Сичқонча босилганда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1741,both,a499c496,Mouse; Click
+fa5383becee4,,Apply\nTo All,,Hammasiga\nqoʻllash,Ҳаммасига\nқўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1756,both,42cd300f,Apply; All
+a24899cfb6f3,,From Left,,Chapdan,Чапдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1762,both,51644d27,Left
+73b1f321c16a,,From Right,,Oʻngdan,Ўнгдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1763,both,216e0f20,Right
+87a5de921c70,,From Top,,Yuqoridan,Юқоридан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1764,both,a8e79248,Top
+2d96532d4b44,,From Bottom,,Pastdan,Пастдан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1765,both,f026a5b3,Bottom
+13630f0167b5,,In,,Ichkariga,Ичкарига,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1768,both,aef36502,
+b4aed37c1024,,Out,,Tashqariga,Ташқарига,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1769,both,220e06ba,
+d3b35ba9098b,,Play this slide's animations on the canvas,,Bu slayd animatsiyalarini tahrirlash maydonida ijro etish,Бу слайд анимацияларини таҳрирлаш майдонида ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1867,both,b7be3d79,Slide; Play
+1578dd389f71,,Motion Paths,,Harakat yoʻllari,Ҳаракат йўллари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1912,both,1a5a27a1,Motion Paths
+224c463fed9d,,Entrance,,Kirish,Кириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1912,both,aa4bbfb3,Entrance
+af0f5900e5d4,,Exit,,Chiqish,Чиқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1912,both,f83b6fe3,Exit
+2dc20e80db2f,,By Paragraph,,Xatboshilar boʻyicha,Хатбошилар бўйича,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1943,both,eef63144,Paragraph
+cdb5846023e9,,As One Object,,Bitta obyekt sifatida,Битта объект сифатида,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1943,both,6d89b5cf,
+80ac94f0fd61,,Add\nAnimation,,Animatsiya\nqoʻshish,Анимация\nқўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1952,both,9e0a83a9,Animation; Add
+b3996778d936,,Motion,,Harakat,Ҳаракат,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1963,both,e040db2b,
+15362e8e5146,,Animation\nPane,,Animatsiya\npaneli,Анимация\nпанели,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1972,both,156f29b7,Animation; Pane
+86adaf2a7e0d,,Trigger,,Ishga tushirgich,Ишга туширгич,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1973,both,d3f06a58,Trigger
+d1a7e93f0130,,On Click of… (none),,Obyekt bosilganda… (yoʻq),Объект босилганда… (йўқ),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1975,both,f3f25fc9,On Click; Click; None
+6ad1561374ab,,On Click of {name},,{name} bosilganda,{name} босилганда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1981,both,93c4d1ee,On Click; Click; Name
+7d1793aa7a9e,,Animation\nPainter,,Animatsiyani\nnusxalash,Анимацияни\nнусхалаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1988,both,98f6e1c7,Animation
+16d34d3e5a3f,,Animation Painter (double-click to keep it on),,Animatsiyani nusxalash (yoniq qolishi uchun ikki marta bosing),Анимацияни нусхалаш (ёниқ қолиши учун икки марта босинг),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:1989,both,cd1da7d1,Animation Painter; Double-click; Animation; Double; Click; Keep
+22b2517f499a,,On Click,,Bosilganda,Босилганда,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2005,both,e829d6ae,On Click; Click
+5a0e2315e4b8,,With Previous,,Oldingisi bilan,Олдингиси билан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2006,both,f56b025c,With Previous; Previous
+bf295af6e6f9,,After Previous,,Oldingisidan keyin,Олдингисидан кейин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2007,both,f5442967,After Previous; Previous
+b2446f65d0ea,,Play from\nStart,,Boshidan\nnamoyish,Бошидан\nнамойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2050,both,9f0f37dc,Play
+7efd95283713,,Play from\nCurrent Slide,,Joriy slayddan\nnamoyish,Жорий слайддан\nнамойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2053,both,357d201d,Slide; Play
+e2729f4abb27,,Presenter\nView,,Maʼruzachi\nrejimi,Маърузачи\nрежими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2058,both,4e2f220c,View
+aa739216ad5a,,Custom\nShow,,Maxsus\nnamoyish,Махсус\nнамойиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2061,both,6b34526f,Custom; Show
+d437e57ab9ba,,Set Up\nSlide Show,,Namoyishni\nsozlash,Намойишни\nсозлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2064,both,b5f5d088,Slide Show; Slide; Show
+536a3c233ec2,,Hide\nSlide,,Slaydni\nyashirish,Слайдни\nяшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2066,both,559771f7,Slide; Hide
+639b0014a912,,Rehearse\nTimings,,Vaqtni\nsinab koʻrish,Вақтни\nсинаб кўриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2071,both,63632832,
+14191284b0e5,,Recording narration needs audio capture (coming soon),,Ovozli sharhni yozib olish uchun audio yozish imkoniyati kerak (tez orada),Овозли шарҳни ёзиб олиш учун аудио ёзиш имконияти керак (тез орада),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2078,both,666ac582,Narration; Audio
+bc983db582ba,,Use Timings,,Vaqt sozlamalaridan foydalanish,Вақт созламаларидан фойдаланиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2083,both,14393f63,
+57c6a4122770,,Play Narrations,,Ovozli sharhlarni ijro etish,Овозли шарҳларни ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2087,both,d1531c79,Play
+6730e2939a95,,Show Media Controls,,Media boshqaruv elementlarini koʻrsatish,Медиа бошқарув элементларини кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2091,both,23a63a45,Media; Show
+bbdfdcced51f,,Cameo,,Kameo,Камео,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2100,both,bd21da8f,
+8bed50b86dd7,,Camera capture is not available yet,,Kameradan tasvir olish hozircha mavjud emas,Камерадан тасвир олиш ҳозирча мавжуд эмас,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2101,both,3ce6a5c9,
+14a7d5e12e27,,From\nBeginning,,Boshidan\nboshlash,Бошидан\nбошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2102,both,3d6a39c2,
+742d5eee40f5,,From\nCurrent Slide,,Joriy\nslayddan,Жорий\nслайддан,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2108,both,7af533df,Slide
+76e710954f85,,Learn\nMore,,Batafsil\nmaʼlumot,Батафсил\nмаълумот,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2117,both,bde72dab,More
+2e8d7f7ebee5,,Check\nAccessibility,,Maxsus imkoniyatlarni\ntekshirish,Махсус имкониятларни\nтекшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2146,both,2ffbc9ed,Accessibility
+56425f3ab64c,,Translation needs a language model (not bundled),,Tarjima uchun til modeli kerak (dasturga kiritilmagan),Таржима учун тил модели керак (дастурга киритилмаган),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2150,both,cf694181,Language; Model
+8a719f8ddfb5,,Accept\nAll,,Hammasini\nqabul qilish,Ҳаммасини\nқабул қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2156,both,2b3045a8,Accept; All
+94b752a3df73,,End\nReview,,Tekshiruvni\nyakunlash,Текширувни\nякунлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2159,both,abfe5e5a,Review
+d3bd848f1f2c,,Outline\nView,,Struktura\nrejimi,Структура\nрежими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2185,both,1e7ec464,Outline; View
+6a5441545a34,,Slide\nSorter,,Slaydlarni\nsaralash,Слайдларни\nсаралаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2186,both,a35f18d8,Slide
+c630df485af8,,Notes\nPage,,Qaydlar\nsahifasi,Қайдлар\nсаҳифаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2187,both,5c47f253,Notes; Page
+c00436592634,,Reading\nView,,Oʻqish\nrejimi,Ўқиш\nрежими,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2188,both,93fcbb5f,View
+530307cd0375,,Slide\nMaster,,Slaydlar\nnamunasi,Слайдлар\nнамунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2198,both,73b14f15,Slide
+ff28b1a0771c,,Handout\nMaster,,Tarqatmalar\nnamunasi,Тарқатмалар\nнамунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2202,both,6238c4b7,Handout
+98b4078a1d22,,Notes\nMaster,,Qaydlar\nnamunasi,Қайдлар\nнамунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2206,both,61014d7e,Notes
+e485ff760640,,Grid\nOptions,,Toʻr\nparametrlari,Тўр\nпараметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2225,both,d631a32e,Options; Grid
+31a4a8e7f64b,,Fit to\nWindow,,Oynaga\nmoslash,Ойнага\nмослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2252,both,ca80998e,Window
+719081834310,,Open another window on this presentation,,Bu taqdimot uchun yana bir oyna ochish,Бу тақдимот учун яна бир ойна очиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2260,both,6d88a8d8,Presentation; Window; Open
+cdb50bd320cb,,Dark\nMode,,Qorongʻi\nrejim,Қоронғи\nрежим,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2270,both,28bc6c4f,Dark; Mode
+1771a6d05ead,,Follow Path,,Yoʻl boʻylab,Йўл бўйлаб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2282,both,b79ad345,Path
+6b60972ce694,,Warp,,Egish,Эгиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2293,both,5b55d2cf,
+f2b7695b05d7,,Edit\nShape,,Shaklni\ntahrirlash,Шаклни\nтаҳрирлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2388,both,f6d9ea7c,Shape; Edit
+08e9ab67002c,,Merge Shapes,,Shakllarni birlashtirish,Шаклларни бирлаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2403,both,853952ba,Merge Shapes; Merge
+3621573d8d8d,,Merge\nShapes,,Shakllarni\nbirlashtirish,Шаклларни\nбирлаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2403,both,81f25c56,Merge
+c5f5fb73e172,,Shape\nStyles,,Shakl\nuslublari,Шакл\nуслублари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2414,both,9904ff0d,Shape
+0efdc0c37d74,,Gradient…,,Gradiyent…,Градиент…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2429,both,e0437073,Gradient
+e807898fc6d9,,Bring\nForward,,Oldinga\nolib chiqish,Олдинга\nолиб чиқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2491,both,5615e303,
+977957882dbf,,Send\nBackward,,Orqaga\nsurish,Орқага\nсуриш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2501,both,cb81d1ce,Send
+267d060d28d3,,Remove\nBackground,,Fonni olib\ntashlash,Фонни олиб\nташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2569,both,6ce9ec45,Background; Remove
+6e5c11a1e308,,Remove Less (tighter),,Kamroq olib tashlash (zichroq),Камроқ олиб ташлаш (зичроқ),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2571,both,7e4565e8,Remove
+a3cfe8379399,,Remove More (looser),,Koʻproq olib tashlash (kengroq),Кўпроқ олиб ташлаш (кенгроқ),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2571,both,fae8ac31,Remove; More
+113e297f2b86,,Brightness {:+}%,,Yorqinlik {:+}%,Ёрқинлик {:+}%,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2580,both,3721c98e,Brightness
+6f5129ae4c4d,,Contrast {:+}%,,Kontrast {:+}%,Контраст {:+}%,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2586,both,502fa186,Contrast
+47f545eb1e2c,,Saturation {}%,,Toʻyinganlik {}%,Тўйинганлик {}%,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2594,both,1d9c7ee3,Saturation
+2973812a9922,,Recolor,,Qayta boʻyash,Қайта бўяш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2599,both,76e9947b,Recolor
+cc502784c74e,,Set Transparent Color,,Shaffof rangni belgilash,Шаффоф рангни белгилаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2619,both,f771c38d,Transparent; Color
+f9a949281eb7,,Pixels of this colour become transparent:,,Shu rangdagi piksellar shaffof boʻladi:,Шу рангдаги пикселлар шаффоф бўлади:,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2620,both,35c3b4e3,Transparent
+d5232aa7f5f9,,Artistic\nEffects,,Badiiy\neffektlar,Бадиий\nэффектлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2632,both,90922601,
+8aded394ab74,,{w} pt,,{w} pt,{w} пт,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2691,both,c8cbeeaa,
+f26e433edb3a,,Dashes,,Shtrixlar,Штрихлар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2696,both,626d6c55,
+d542ca4d668c,,Round Dot,,Yumaloq nuqta,Юмалоқ нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2699,both,bd0d66d9,Round
+a356f73b5688,,Square Dot,,Kvadrat nuqta,Квадрат нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2700,both,b2cedde7,Square
+36926c246341,,Dash Dot,,Shtrix-nuqta,Штрих-нуқта,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2702,both,57b8f5bb,Dash Dot
+701d3750cd3a,,Long Dash,,Uzun shtrix,Узун штрих,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2703,both,6e59b45d,Long Dash
+407624a806e9,,Remove the picture style,,Rasm uslubini olib tashlash,Расм услубини олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2711,both,5a5c96df,Picture; Remove; Style
+ae3c4d602f34,,Reset Style,,Uslubni tiklash,Услубни тиклаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2711,both,82ad43fc,Reset; Style
+dd173ec797be,,Crop to Shape,,Shakl boʻyicha qirqish,Шакл бўйича қирқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2720,both,a64fa919,Shape; Crop
+7b47209a0db9,,Crop 20% each side,,Har tomondan 20% qirqish,Ҳар томондан 20% қирқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2725,both,0dc465d9,Crop
+8d939dc05260,,Crop 10% each side,,Har tomondan 10% qirqish,Ҳар томондан 10% қирқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2725,both,6d135305,Crop
+a266c07f4955,,Diagonal Down Border,,Pastga diagonal chegara,Пастга диагонал чегара,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2840,both,4a8f8ea8,Diagonal; Border
+48c648622e4b,,Diagonal Up Border,,Yuqoriga diagonal chegara,Юқорига диагонал чегара,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2841,both,6d9658d2,Diagonal; Border
+32c5cd4a786b,,Pen Weight,,Ruchka qalinligi,Ручка қалинлиги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2848,both,0a02e0bc,Weight; Pen
+14249db3ad9d,,Pen Style,,Ruchka uslubi,Ручка услуби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2856,both,b3ce634b,Style; Pen
+a2d7f31ba8a4,,Pen Color,,Ruchka rangi,Ручка ранги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2864,both,3ff275ec,Color; Pen
+571f8b879d99,,Table Eraser,,Jadval oʻchirgʻichi,Жадвал ўчирғичи,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2877,both,c69e1c8e,Eraser; Table
+834c691183dd,,Insert\nBelow,,Pastga\nkiritish,Пастга\nкиритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2998,both,cd36fed1,Insert; Below
+75dcc4f97ebb,,Insert\nLeft,,Chapga\nkiritish,Чапга\nкиритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:2999,both,953821bd,Insert; Left
+04a11b7e7e4d,,Insert\nRight,,Oʻngga\nkiritish,Ўнгга\nкиритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3000,both,5aaa3a10,Insert; Right
+d8819febfc1c,,Merge\nCells,,Kataklarni\nbirlashtirish,Катакларни\nбирлаштириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3003,both,43291c5e,Merge
+2f18b0fc6edb,,Split\nCells,,Kataklarni\najratish,Катакларни\nажратиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3004,both,94cc131c,Split
+cc386cbf509d,,Align text to the {l} of the cell,,Matnni katakda tekislash: {l},Матнни катакда текислаш: {l},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3021,both,771c4aab,Align; Text; Cell
+df219bd2b862,,Narrow,,Tor,Тор,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3026,both,697edbe4,
+eec7291165c1,,Change\nChart Type,,Diagramma\nturini oʻzgartirish,Диаграмма\nтурини ўзгартириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3041,both,fce3e039,Change; Chart; Type
+1055edfcd0ca,,Type and organise the diagram's text,,Grafika matnini kiritish va tartibga solish,Графика матнини киритиш ва тартибга солиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3071,both,061b593e,Text; Type
+1bcf14dbbc46,,Text\nPane,,Matn\npaneli,Матн\nпанели,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3071,both,13e281af,Text; Pane
+88ccea3b5218,,Add Shape After,,Keyin shakl qoʻshish,Кейин шакл қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3078,both,eefad4c6,Shape; Add
+0a83d9e8eca0,,Add Shape Before,,Oldin shakl qoʻshish,Олдин шакл қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3079,both,1a14b7f1,Shape; Add
+b9399bf94048,,Add Shape Above,,Yuqoriga shakl qoʻshish,Юқорига шакл қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3080,both,6001adee,Shape; Above; Add
+7262a2d31208,,Add Shape Below,,Pastga shakl qoʻshish,Пастга шакл қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3081,both,9caed795,Below; Shape; Add
+39edbaa15252,,Add Assistant,,Yordamchi qoʻshish,Ёрдамчи қўшиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3082,both,74ba6b4a,Assistant; Add
+3e20896c6fb6,,Insert Picture,,Rasm kiritish,Расм киритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3098,both,6ae7a5b5,Picture; Insert
+13354fa0cb03,,Put a picture in the selected node's picture placeholder,,Tanlangan tugunning rasm toʻldirgichiga rasm qoʻyish,Танланган тугуннинг расм тўлдиргичига расм қўйиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3099,both,7424e87b,Placeholder; Picture
+df947af4a7d6,,Convert,,Aylantirish,Айлантириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3111,both,3f15ce79,Convert
+f4edee7539dd,,Trim,,Qirqish,Қирқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3161,both,0266abd2,Trim
+f98446c37ce8,,Start Automatically,,Avtomatik boshlash,Автоматик бошлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3166,both,1b489305,
+be2910b74424,,Play Across Slides,,Slaydlar boʻylab ijro etish,Слайдлар бўйлаб ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3170,both,c4c51edc,Play
+ccbf08e6a7c2,,Loop until Stopped,,Toʻxtatilguncha takrorlash,Тўхтатилгунча такрорлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3174,both,739965a7,Loop
+cad292555536,,Hide During Show,,Namoyish paytida yashirish,Намойиш пайтида яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3180,both,1816cc07,Show; Hide
+73ff187ab07f,,Rewind after Playing,,Ijrodan keyin boshiga qaytarish,Ижродан кейин бошига қайтариш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3184,both,e94e3aa4,Rewind
+649f0dc27259,,Play Full Screen,,Toʻliq ekranda ijro etish,Тўлиқ экранда ижро этиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3188,both,f392747c,Full Screen; Play
+367805325492,,Mute,,Ovozsiz qilish,Овозсиз қилиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3196,both,0f097348,Mute
+a9070b12a257,,Insert\nLayout,,Maket\nkiritish,Макет\nкиритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3220,both,d06c8e07,Insert; Layout
+4c7a3dd7c5a9,,Preserve,,Saqlab qolish,Сақлаб қолиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3228,both,50813fc4,
+abcd5d981e37,,Footers,,Quyi kolontitullar,Қуйи колонтитуллар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3236,both,cdf8cb90,
+331a7d0261dd,,Insert\nPlaceholder,,Toʻldirgich\nkiritish,Тўлдиргич\nкиритиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3242,both,8ab26f5b,Placeholder; Insert
+4aecb66cb19e,,Media,,Media,Медиа,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3245,both,0c77aeec,Media
+768005f1d567,,Content,,Tarkib,Таркиб,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3245,both,4f9be057,
+4a6064af500d,,Close\nMaster View,,Namuna rejimini\nyopish,Намуна режимини\nёпиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3269,both,fcab7db2,Close; View
+ecfe62e9df82,,Slide Image,,Slayd tasviri,Слайд тасвири,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3282,both,7ebcbd2f,Slide
+0a42c11b3784,,Body,,Asosiy matn,Асосий матн,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3283,both,718a7e8a,
+fd15f6caab54,,Slides Per\nPage: {},,Sahifadagi\nslaydlar: {},Саҳифадаги\nслайдлар: {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3307,both,b29d61ec,Page
+101d8cc1dee7,,{n} Slide{},,{n} ta slayd{},{n} та слайд{},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3310,both,f0511114,Slide
+09cf6008af77,,Smooth Corners,,Silliq burchaklar,Силлиқ бурчаклар,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3511,both,62fff85d,
+28f670ea92c1,,For rectangles and rounded rectangles,,Toʻgʻri toʻrtburchaklar va yumaloq burchakli toʻgʻri toʻrtburchaklar uchun,Тўғри тўртбурчаклар ва юмалоқ бурчакли тўғри тўртбурчаклар учун,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3514,both,630dec9e,
+8673cc01977c,,Summary Zoom,,Xulosa masshtabi,Хулоса масштаби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3533,both,9aea38a2,Summary; Zoom
+d9d68da3ef0f,,Section Zoom,,Boʻlim masshtabi,Бўлим масштаби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3533,both,af6bc611,Section; Zoom
+f2851cbb1bf8,,Slide Zoom,,Slayd masshtabi,Слайд масштаби,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3533,both,56dcb5fc,Slide; Zoom
+4ddd8beaaa43,,The presentation has no sections. Add one with Home › Section.,,Taqdimotda boʻlimlar yoʻq. Asosiy › Boʻlim orqali qoʻshing.,Тақдимотда бўлимлар йўқ. Асосий › Бўлим орқали қўшинг.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3554,both,cd1f9e13,Presentation; Section; Home; Add; No
+675af332a3ca,,No slides.,,Slaydlar yoʻq.,Слайдлар йўқ.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3554,both,548e16ed,No
+634353ed832b,,Compression options,,Siqish parametrlari,Сиқиш параметрлари,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3589,both,3522a3ff,Options
+a07836a7de4b,,Apply only to this picture,,Faqat shu rasmga qoʻllash,Фақат шу расмга қўллаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3590,both,3334ea1e,Picture; Apply
+20eb246ef041,,Delete cropped areas of pictures,,Rasmlarning qirqilgan qismlarini oʻchirish,Расмларнинг қирқилган қисмларини ўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3591,both,6e9ff120,Delete
+de0401dd650a,,HD (330 ppi): good quality for high-definition displays,,HD (330 ppi): yuqori aniqlikdagi ekranlar uchun yaxshi sifat,HD (330 ppi): юқори аниқликдаги экранлар учун яхши сифат,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3595,both,4c4b1aeb,
+dfa7a2b94ccb,,Print (220 ppi): excellent quality on most printers and screens,,Chop etish (220 ppi): koʻpchilik printer va ekranlarda aʼlo sifat,Чоп этиш (220 ppi): кўпчилик принтер ва экранларда аъло сифат,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3596,both,faca21f1,Print
+31520eb4d6fe,,Web (150 ppi): good for web pages and projectors,,Veb (150 ppi): veb-sahifalar va proyektorlar uchun yaxshi,Веб (150 ppi): веб-саҳифалар ва проекторлар учун яхши,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3597,both,46589c71,
+8066725e3abd,,E-mail (96 ppi): minimise document size for sharing,,Elektron pochta (96 ppi): ulashish uchun hujjat hajmini kamaytirish,Электрон почта (96 ppi): улашиш учун ҳужжат ҳажмини камайтириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3598,both,3b7203f3,Document; Size
+3ccb3ea620fb,,Compress,,Siqish,Сиқиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3604,both,f5e41c09,Compress
+812415d080ec,,Pictures are already at or below that resolution,,Rasmlar allaqachon shu aniqlikda yoki undan past,Расмлар аллақачон шу аниқликда ёки ундан паст,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3610,both,c1be2ebc,Resolution; Below
+d952d1a25470,,Compressed {n} picture(s): {} KB → {} KB,,{n} ta rasm siqildi: {} KB → {} KB,{n} та расм сиқилди: {} KB → {} KB,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/ribbon.rs:3611,both,760688c9,Picture
+75de82ea9970,,Show All,,Hammasini koʻrsatish,Ҳаммасини кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/selpane.rs:129,both,b3f85420,Show; All
+f990d71ca8f2,,Hide All,,Hammasini yashirish,Ҳаммасини яшириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/selpane.rs:132,both,556020f3,Hide; All
+d863392ae58d,,Expand,,Yoyish,Ёйиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/selpane.rs:174,both,9869e506,Expand
+cbf2ab04b686,,"End of slide show, click to exit.",,"Namoyish tugadi, chiqish uchun bosing.","Намойиш тугади, чиқиш учун босинг.",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:691,both,eb663d83,Slide Show; Slide; Click; Show; Exit
+5de406acfb0b,,Go to slide {},,{}-slaydga oʻtish,{}-слайдга ўтиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:895,both,e0f86fcd,Slide
+94c02d758a95,,Click the slide to zoom in. Esc cancels.,,Yaqinlashtirish uchun slaydni bosing. Esc — bekor qilish.,Яқинлаштириш учун слайдни босинг. Esc — бекор қилиш.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:945,both,71038719,Slide; Click; Zoom
+3d11204bfad3,,✏ on,,✏ yoniq,✏ ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:995,both,3651a6a0,
+3437fa5a9ddb,,◉ on,,◉ yoniq,◉ ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:998,both,71464be2,
+148c9ff4340f,,White,,Oq,Оқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1004,both,37619fc1,White
+d57f589c9008,,Slide {:02}:{:04.1}   Total {:02}:{:02},,Slayd {:02}:{:04.1}   Jami {:02}:{:02},Слайд {:02}:{:04.1}   Жами {:02}:{:02},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1029,both,116de453,Slide
+982fd92f407e,,Slide timings recorded.,,Slaydlar vaqti yozib olindi.,Слайдлар вақти ёзиб олинди.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1054,both,3b98bbf6,Slide
+b131e67610ae,,Zoom on,,Masshtab yoniq,Масштаб ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1315,both,920952ba,Zoom
+7f30792d3f16,,First {GRID_CAP} slides,,Dastlabki {GRID_CAP} ta slayd,Дастлабки {GRID_CAP} та слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1668,both,aff31d23,Grid
+4fe0138dc41e,,{}  Hidden,,{}  Yashirin,{}  Яширин,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1699,both,21a85bf2,
+4857bfa9d2f2,,Presenter View — {},,Maʼruzachi rejimi — {},Маърузачи режими — {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1758,both,9e8eed5a,Presenter View; View
+e154d30617d0,,Slide {} of {},,Slayd {} / {},Слайд {} / {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1775,both,75d0f930,Slide
+20cd226d49f6,,Next ▶,,Keyingi ▶,Кейинги ▶,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1780,both,e50d6b06,Next
+3093a67bd723,,◀ Previous,,◀ Oldingi,◀ Олдинги,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1783,both,32b54818,Previous
+9f30ee0a1c9a,,Resume,,Davom ettirish,Давом эттириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1789,both,b3bd0b5a,
+fc9f039053ea,,Black on,,Qora yoniq,Қора ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1795,both,1651dc44,Black
+59d5dc256a19,,White on,,Oq yoniq,Оқ ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1798,both,8c62cb8b,White
+3b774918b416,,All slides on,,Barcha slaydlar yoniq,Барча слайдлар ёниқ,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1801,both,689b0e5b,All
+f9e5ef8f3cce,,End of slide show,,Namoyish tugadi,Намойиш тугади,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1843,both,dac9894e,Slide Show; Slide; Show
+1d6f62aa3b7e,,A-,,A-,A-,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1850,both,1a6a3baa,
+a052b7b7f5fc,,No notes.,,Qaydlar yoʻq.,Қайдлар йўқ.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/show.rs:1862,both,c0e8f375,Notes; No
+98c0ad67d0fa,,Rename Section…,,Boʻlimni qayta nomlash…,Бўлимни қайта номлаш…,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:147,both,923a9fe9,Section; Rename
+5dc7edee9a70,,Remove Section,,Boʻlimni olib tashlash,Бўлимни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:159,both,e012c461,Section; Remove
+9c4ec6160c65,,Remove Section & Slides,,Boʻlim va slaydlarni olib tashlash,Бўлим ва слайдларни олиб ташлаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:163,both,2b4eb285,Section; Remove
+8a07191a83d1,,Move Section Up,,Boʻlimni yuqoriga koʻchirish,Бўлимни юқорига кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:167,both,9aa477d2,Section; Move
+6630ead7f122,,Move Section Down,,Boʻlimni pastga koʻchirish,Бўлимни пастга кўчириш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:171,both,66d914a3,Section; Move
+ebae96b640e8,,Click to add text,,Matn qoʻshish uchun bosing,Матн қўшиш учун босинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/sorter.rs:416,both,bae5ec28,Click; Text; Add
+9725d09d47db,,English (Australia),,English (Australia),English (Australia),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:219,both,7fe6b57b,
+5acd56283c8c,,English (Canada),,English (Canada),English (Canada),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:220,both,0b126000,
+ca050969f21d,,Español (España),,Español (España),Español (España),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:221,both,7ba25d2e,
+d3c96deb7630,,Español (México),,Español (México),Español (México),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:222,both,dd8f0fa3,
+654e90896f22,,Français (France),,Français (France),Français (France),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:223,both,537c9363,
+e283136898eb,,Français (Canada),,Français (Canada),Français (Canada),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:224,both,0dccbeae,
+544b11bc73d3,,Deutsch (Deutschland),,Deutsch (Deutschland),Deutsch (Deutschland),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:225,both,05381ac8,
+7a74a86167a5,,Deutsch (Schweiz),,Deutsch (Schweiz),Deutsch (Schweiz),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:226,both,fb62b7f2,
+af03ec31c188,,Italiano,,Italiano,Italiano,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:227,both,21df7394,
+d9eb129b9aeb,,Nederlands,,Nederlands,Nederlands,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:228,both,f61c54c1,
+33c5063ee5dd,,Português (Brasil),,Português (Brasil),Português (Brasil),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:229,both,d53cc7ed,
+4798dfe35493,,Português (Portugal),,Português (Portugal),Português (Portugal),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:230,both,ef3617ba,
+e2ec2de86501,,Polski,,Polski,Polski,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:231,both,fd200115,
+26686f1cee5e,,Svenska,,Svenska,Svenska,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:232,both,f344580a,
+be81ce6fd074,,Dansk,,Dansk,Dansk,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:233,both,c2d04a67,
+2cc1a386f094,,Norsk bokmål,,Norsk bokmål,Norsk bokmål,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:234,both,e84fbb7c,
+9f88cdda8ebd,,Suomi,,Suomi,Suomi,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:235,both,e43343e2,
+28711c756253,,Čeština,,Čeština,Čeština,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:236,both,a56cf3ae,
+bf48f4523708,,Українська,,Українська,Українська,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:237,both,181bf512,
+b839581b3bea,,Русский,,Русский,Русский,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:238,both,5537fc8e,
+88cb8a46742f,,Беларуская,,Беларуская,Беларуская,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:239,both,053052ba,
+4c1e084d7783,,Türkçe,,Türkçe,Türkçe,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:240,both,efaad145,
+01fa00820f0e,,Ελληνικά,,Ελληνικά,Ελληνικά,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/squiggles.rs:241,both,08a6101b,
+de88fcff8e50,, (not checked),, (tekshirilmaydi), (текширилмайди),reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/status.rs:25,both,1288318b,
+852ea72f871f,,Fit slide to current window,,Slaydni joriy oynaga moslash,Слайдни жорий ойнага мослаш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/status.rs:41,both,2d7f1549,Window; Slide
+bac322d78bb6,,Click to add notes,,Qayd qoʻshish uchun bosing,Қайд қўшиш учун босинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/status.rs:159,both,bcb4a4e7,Notes; Click; Add
+9976eb973877,,SemiBold,,SemiBold,SemiBold,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/theme.rs:173,both,24abf27c,
+bf9286e7099e,,Regular,,Regular,Regular,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/theme.rs:173,both,8d4e4ef3,
+3904c9692dc4,,BIZ UDPGothic,,BIZ UDPGothic,BIZ UDPGothic,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/theme.rs:174,both,eda68645,
+eebf38b86925,,Noto Sans Arabic,,Noto Sans Arabic,Noto Sans Arabic,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/theme.rs:175,both,412b5ad0,
+470edd8334a7,,fallback {} {} {},,fallback {} {} {},fallback {} {} {},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/theme.rs:210,both,fed509d4,
+3a71f35c2a9d,,+ New Slide,,+ Yangi slayd,+ Янги слайд,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/thumbs.rs:197,both,50728e23,Slide; New
+6835f1847e41,,Show Slide,,Slaydni koʻrsatish,Слайдни кўрсатиш,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/thumbs.rs:258,both,a7f9ca7a,Slide; Show
+baf53efffb8a,,{} Slide Master,,{} slaydlar namunasi,{} слайдлар намунаси,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/thumbs.rs:312,both,a3649718,Slide Master; Slide
+de966e100acb,,{a} and {b},,{a} va {b},{a} ва {b},reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/toast.rs:23,both,42d0ba4a,
+456a49d46f6f,,"{a}, {b} and {c}",,"{a}, {b} va {c}","{a}, {b} ва {c}",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/toast.rs:24,both,a7e82d83,
+3dedf00d7d9d,,"{a}, {b}, {c} and {} more",,"{a}, {b}, {c} va yana {} ta","{a}, {b}, {c} ва яна {} та",reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/toast.rs:25,both,a1a9b7ea,More
+8d97086a708a,,{names} {it} installed on this computer. Text that uses {them} is shown in a similar font.,,{names} {it} bu kompyuterda oʻrnatilmagan. {them} ishlatilgan matn oʻxshash shriftda koʻrsatiladi.,{names} {it} бу компьютерда ўрнатилмаган. {them} ишлатилган матн ўхшаш шрифтда кўрсатилади.,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/toast.rs:28,both,a632f25e,Text; Font
+2b8e9e7fbef6,,More Colors… #,,Boshqa ranglar… #,Бошқа ранглар… #,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/widgets.rs:357,both,db4d1995,More Colors; More
+26fb7a45d698,,RRGGBB,,RRGGBB,RRGGBB,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/widgets.rs:358,both,f3b0c568,
+44cb7f5d4954,,Eyedropper,,Pipetka,Пипетка,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/widgets.rs:367,both,c8e9ba4c,Eyedropper
+a3ecfc9b78f5,,Click the slide to take the colour under the pointer,,Koʻrsatkich ostidagi rangni olish uchun slaydni bosing,Кўрсаткич остидаги рангни олиш учун слайдни босинг,reviewed:agent-opus:2026-10-21,,deckcraft,crates/ui-egui/src/widgets.rs:367,both,eeab5efd,Pointer; Slide; Click
