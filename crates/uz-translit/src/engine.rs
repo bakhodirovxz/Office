@@ -258,12 +258,12 @@ impl<'a> Seg<'a> {
             return false;
         }
         let prev = self.items[i - 1].c;
-        is_latin(prev)
+        is_latin_ext(prev)
             && (is_og(prev)
                 || self
                     .items
                     .get(i + 1)
-                    .is_some_and(|nx| nx.flags & PROT == 0 && is_latin(nx.c)))
+                    .is_some_and(|nx| nx.flags & PROT == 0 && is_latin_ext(nx.c)))
     }
 
     fn run(&mut self, dir: Direction) {

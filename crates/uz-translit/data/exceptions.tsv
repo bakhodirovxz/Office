@@ -53,12 +53,11 @@ devalv	девальв	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	de
 alyans	альянс	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
 polsha	польша	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	proper name, Title case by R10
 premyer	премьер	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	premyer-ministr: hyphen parts
-karyera	карьера	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	HR
+karyer	карьер	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-4674902	karyer, karyerda (Tax Code); karyera = karyer + a
 intervyu	интервью	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
 pyesa	пьеса	stem	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
 atelye	ателье	word	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
-pochtalyon	почтальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
-pochtalon	почтальон	stem	variant	medium	reviewed:agent-opus:2026-10-20	WP3 review	common non-standard Latin
+pochtalyon	почтальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a; official Uzbek form: почталон / pochtalon (stat-366)
 batalyon	батальон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
 pavilyon	павильон	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	R9a
 bilyard	бильярд	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	promoted after WP3 review
@@ -158,7 +157,7 @@ spetsifik	специфик	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.
 matritsa	матрица	stem	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
 MChJ	МЧЖ	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	→L by rule would give MCHJ
 YaTT	ЯТТ	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	
-JShShIR	ЖШШИР	acro	both	high	reviewed:agent-opus:2026-10-20	rules.md	personal ID number
+JShShIR	ЖШШИР	acro	both	medium	reviewed:agent-opus:2026-10-20	rules.md	personal ID number; gov.uz writes both JShShIR and JSHSHIR (SV-15)
 YaIM	ЯИМ	acro	both	medium	reviewed:agent-opus:2026-10-20	rules.md	GDP
 PDF	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
 USB	-	keep	l2c	high	reviewed:agent-opus:2026-10-20	rules.md	
@@ -192,4 +191,13 @@ Zoom	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md
 Skype	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
 Outlook	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
 Linux	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	rules.md	
-QR	-	keep	l2c	low	ambiguous	rules.md	QR-kod vs ҚР (Qoraqalpogʻiston Respublikasi); not compiled
+QR	-	keep	l2c	medium	reviewed:agent-opus:2026-10-20	lex-4674902	Tax Code: QR-кодларнинг / QR-kodlarning
+kuryer	курьер	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-6058066	kuryerlik 159x in the postal law; ь is internal, so D-11 does not apply
+kirillits	кириллиц	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-112286	ts + a after a vowel; R7a does not cover it
+marganets	марганец	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-4674902	word-final ц after a vowel
+slanets	сланец	word	l2c	high	reviewed:agent-opus:2026-10-20	lex-4674902	word, because the plural is сланцлар / slanslar
+slans	сланц	stem	l2c	medium	reviewed:agent-opus:2026-10-20	lex-4674902	slanslar
+kvars	кварц	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-4674902	kvarsit → кварцит
+radiostansi	радиостанци	stem	l2c	high	reviewed:agent-opus:2026-10-20	lex-1625271	1995 rules item 48
+oʻzbekkonsert	ўзбекконцерт	word	l2c	high	reviewed:agent-opus:2026-10-20	lex-2831618	organisation name
+adʼyunktura	адъюнктура	stem	c2l	medium	reviewed:agent-opus:2026-10-20	lex-5013007	Law on Education writes the tutuq here; the only official exception to D-09 rule 2

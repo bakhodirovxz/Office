@@ -1,6 +1,7 @@
 //! Deterministic property-style tests (rules.md section 9): fixed xorshift seeds, no external crates.
 use std::borrow::Cow;
-use uz_translit::{Direction, Options, Run, convert, convert_runs};
+mod common;
+use uz_translit::{Direction, LatinAlphabet, Options, Run, convert, convert_runs};
 
 const CASES: usize = 20_000;
 
@@ -163,7 +164,7 @@ fn split_runs(rng: &mut Rng, s: &str) -> Vec<String> {
         .collect()
 }
 
-fn runs_concat(parts: &[String], dir: Direction) -> String {
+fn runs_concat(parts: &[String], dir: Direction, o: &Options) -> String {
     let rs: Vec<Run> = parts
         .iter()
         .map(|t| Run {
@@ -171,10 +172,7 @@ fn runs_concat(parts: &[String], dir: Direction) -> String {
             convert: true,
         })
         .collect();
-    convert_runs(&rs, dir, &Options::default())
-        .iter()
-        .map(Cow::as_ref)
-        .collect()
+    convert_runs(&rs, dir, o).iter().map(Cow::as_ref).collect()
 }
 
 #[test]
@@ -194,13 +192,13 @@ fn round_trip_variants_and_splits() {
         assert_eq!(l(&l(&cy)), l(&cy), "idempotence ->L, case {case}: {x:?}");
         let parts = split_runs(&mut rng, &x);
         assert_eq!(
-            runs_concat(&parts, Direction::ToCyrillic),
+            runs_concat(&parts, Direction::ToCyrillic, &Options::default()),
             cy,
             "run split ->C, case {case}: {parts:?}"
         );
         let parts = split_runs(&mut rng, &cy);
         assert_eq!(
-            runs_concat(&parts, Direction::ToLatin),
+            runs_concat(&parts, Direction::ToLatin, &Options::default()),
             l(&cy),
             "run split ->L, case {case}: {parts:?}"
         );
@@ -223,28 +221,90 @@ fn cyrillic_round_trip() {
 
 #[test]
 fn run_split_invariance_on_arbitrary_text() {
-    const ALPHABET: [&str; 44] = [
+    const ALPHABET: [&str; 52] = [
         "a", "o", "g", "s", "h", "c", "y", "e", "t", "'", "\u{2BB}", "\u{2019}", "\u{2018}", " ",
         "-", "5", "x", "S", "H", "Ш", "ш", "ў", "ъ", "ь", "е", "ц", "с", "ҳ", "(", ")", ".", "/",
-        "@", "A", "O", "X", "I", "V", "\n", "`", "\u{AD}", "\u{306}", "у", "Ё",
+        "@", "A", "O", "X", "I", "V", "\n", "`", "\u{AD}", "\u{306}", "у", "Ё", "ö", "Ş", "ç", "Ğ",
+        "\u{308}", "\u{327}", "щ", "ч",
     ];
     let mut rng = Rng(0x2545_F491_4F6C_DD1D);
     for case in 0..CASES {
         let n = 1 + rng.below(40);
         let s: String = (0..n).map(|_| *rng.pick(&ALPHABET)).collect();
-        for dir in [Direction::ToCyrillic, Direction::ToLatin] {
-            let whole = convert(&s, dir, &Options::default());
+        for (dir, alphabet) in [
+            (Direction::ToCyrillic, LatinAlphabet::Y1995),
+            (Direction::ToLatin, LatinAlphabet::Y1995),
+            (Direction::ToLatin, LatinAlphabet::Y2026),
+        ] {
+            let o = Options {
+                latin_alphabet: alphabet,
+                ..Options::default()
+            };
+            let whole = convert(&s, dir, &o);
             assert_eq!(
-                convert(&whole, dir, &Options::default()),
+                convert(&whole, dir, &o),
                 whole,
-                "idempotence, case {case}, {dir:?}: {s:?}"
+                "idempotence, case {case}, {dir:?} {alphabet:?}: {s:?}"
             );
             let parts = split_runs(&mut rng, &s);
             assert_eq!(
-                runs_concat(&parts, dir),
+                runs_concat(&parts, dir, &o),
                 whole,
-                "split invariance, case {case}, {dir:?}: {s:?} {parts:?}"
+                "split invariance, case {case}, {dir:?} {alphabet:?}: {s:?} {parts:?}"
             );
         }
+    }
+}
+
+#[test]
+fn reformed_alphabet_properties() {
+    // Section 15: ->L in 2026 is the 1995 output through the letter substitution; ->C reads it back, also
+    // when each word is randomly written in either alphabet; ->C is unchanged by the option.
+    let o26 = Options {
+        latin_alphabet: LatinAlphabet::Y2026,
+        ..Options::default()
+    };
+    let mut rng = Rng(0xA5A5_1234_DEAD_BEEF);
+    for case in 0..CASES {
+        let x = gen_sentence(&mut rng);
+        let cy = c(&x);
+        let y = convert(&cy, Direction::ToLatin, &o26);
+        assert_eq!(
+            y,
+            common::to_2026(&l(&cy)),
+            "2026 output, case {case}: {cy:?}"
+        );
+        assert_eq!(c(&y), cy, "2026 round trip, case {case}: {y:?}");
+        assert_eq!(
+            convert(&y, Direction::ToCyrillic, &o26),
+            cy,
+            "option is ignored by ->C, case {case}"
+        );
+        let mixed: Vec<String> = x
+            .split(' ')
+            .map(|w| {
+                if rng.below(2) == 0 {
+                    common::to_2026(w)
+                } else {
+                    w.to_string()
+                }
+            })
+            .collect();
+        assert_eq!(
+            c(&mixed.join(" ")),
+            cy,
+            "mixed alphabets, case {case}: {mixed:?}"
+        );
+        assert_eq!(
+            convert(&y, Direction::ToLatin, &o26),
+            y,
+            "idempotence ->L 2026, case {case}"
+        );
+        let parts = split_runs(&mut rng, &cy);
+        assert_eq!(
+            runs_concat(&parts, Direction::ToLatin, &o26),
+            y,
+            "run split ->L 2026, case {case}: {parts:?}"
+        );
     }
 }

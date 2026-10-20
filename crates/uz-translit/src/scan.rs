@@ -251,7 +251,7 @@ fn roman(t: &[char], para_start: bool) -> usize {
     {
         return 0;
     }
-    if t.get(r).is_some_and(|&a| is_apos(a)) && t.get(r + 1).is_some_and(|&b| is_latin(b)) {
+    if t.get(r).is_some_and(|&a| is_apos(a)) && t.get(r + 1).is_some_and(|&b| is_latin_ext(b)) {
         return 0; // the word continues over a tutuq (2.2 b)
     }
     if r >= 2 {

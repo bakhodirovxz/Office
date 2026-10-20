@@ -18,7 +18,7 @@ mod scan;
 use alloc::{borrow::Cow, string::String, vec::Vec};
 
 /// Bumped with any output-changing rule or data change.
-pub const RULES_VERSION: &str = "uz-translit-rules/1";
+pub const RULES_VERSION: &str = "uz-translit-rules/2";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
@@ -41,9 +41,21 @@ pub enum Apostrophe {
     Ascii,
 }
 
+/// Latin alphabet written by ->L (rules.md section 15). ->C always reads both.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum LatinAlphabet {
+    /// The alphabet in force: oʻ gʻ sh ch, and s + tutuq + h for сҳ.
+    #[default]
+    Y1995,
+    /// The pending 2026 reform (not in force): ö ğ ş ç, and plain sh for сҳ.
+    Y2026,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Options {
     pub apostrophe: Apostrophe,
+    /// ->Latin: which Latin alphabet to write (default: 1995).
+    pub latin_alphabet: LatinAlphabet,
     /// ->Cyrillic: copy words with c (not in ch), w or diacritic Latin letters unchanged (R14).
     pub foreign_latin_guard: bool,
     /// ->Cyrillic: protect Roman numerals (R12 ROMAN).
@@ -54,6 +66,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             apostrophe: Apostrophe::Official,
+            latin_alphabet: LatinAlphabet::Y1995,
             foreign_latin_guard: true,
             roman_numerals: true,
         }

@@ -32,8 +32,16 @@ pub(crate) fn is_lo(c: char) -> bool {
 pub(crate) fn is_latin(c: char) -> bool {
     c.is_ascii_alphabetic()
 }
+/// The four 2026 letters (rules.md section 15): ö ğ ş ç, either case.
+pub(crate) fn is_new_letter(c: char) -> bool {
+    matches!(lower(c), 'ö' | 'ğ' | 'ş' | 'ç')
+}
+/// Latin letters of either alphabet.
+pub(crate) fn is_latin_ext(c: char) -> bool {
+    is_latin(c) || is_new_letter(c)
+}
 pub(crate) fn is_foreign_latin(c: char) -> bool {
-    matches!(c as u32, 0xC0..=0x24F | 0x1E00..=0x1EFF) && c.is_alphabetic()
+    matches!(c as u32, 0xC0..=0x24F | 0x1E00..=0x1EFF) && c.is_alphabetic() && !is_new_letter(c)
 }
 pub(crate) fn lower(c: char) -> char {
     match c {
@@ -54,7 +62,7 @@ pub(crate) fn upper(c: char) -> char {
     }
 }
 pub(crate) fn is_vl(c: char) -> bool {
-    matches!(lower(c), 'a' | 'e' | 'i' | 'o' | 'u')
+    matches!(lower(c), 'a' | 'e' | 'i' | 'o' | 'u' | 'ö')
 }
 pub(crate) fn is_vc(c: char) -> bool {
     matches!(
@@ -78,7 +86,8 @@ pub(crate) fn is_transparent(c: char) -> bool {
 pub(crate) fn is_combining(c: char) -> bool {
     matches!(c as u32, 0x300..=0x36F)
 }
-/// Cyrillic combining pairs (R16): у+breve, и+breve, е+diaeresis.
+/// Combining pairs (R16): Cyrillic у+breve, и+breve, е+diaeresis; Latin o+diaeresis, g+breve,
+/// s+cedilla (or comma below), c+cedilla (the 2026 letters, section 15).
 pub(crate) fn compose(a: char, m: char) -> Option<char> {
     match (a, m) {
         ('у', '\u{306}') => Some('ў'),
@@ -87,6 +96,14 @@ pub(crate) fn compose(a: char, m: char) -> Option<char> {
         ('И', '\u{306}') => Some('Й'),
         ('е', '\u{308}') => Some('ё'),
         ('Е', '\u{308}') => Some('Ё'),
+        ('o', '\u{308}') => Some('ö'),
+        ('O', '\u{308}') => Some('Ö'),
+        ('g', '\u{306}') => Some('ğ'),
+        ('G', '\u{306}') => Some('Ğ'),
+        ('s', '\u{327}' | '\u{326}') => Some('ş'),
+        ('S', '\u{327}' | '\u{326}') => Some('Ş'),
+        ('c', '\u{327}') => Some('ç'),
+        ('C', '\u{327}') => Some('Ç'),
         _ => None,
     }
 }
