@@ -55,4 +55,37 @@ The plan's line `GREEN: ... web-smoke x4` is therefore **not** reached.
 
 ## Still red or unverified
 - `web-smoke` (spec missing). 2 flaky pdfcraft UI tests (not quarantined). `sync-upstream.sh --gates full` is still a stub.
+  Update 98c0a02 (gate review 2026-10-19): spec written (`ci/web-smoke/`) but not executed yet; the 2 tests quarantined as `flaky`; `--gates full` implemented, never run.
+- The `brand` job runs before `build` in the `full` profile, so its binary scan (`brand-scan-bin`) saw no binaries in clean2 and, in the final run, scans the binaries of the
+  earlier runs (finding M3 in `docs/phase1/gate-review.md`).
 - The evidence is stitched from runs clean1 to clean5 on one target dir, with the fixes applied between them. A single uninterrupted `ci.sh full` from zero was not run, and sccache gave no benefit.
+
+## Final run (gate evidence): one uninterrupted `ci.sh full`, exit 0
+
+- **Where:** clean clone `E:/office-target/p1/clean/office`.
+- **Commit:** `3fe5f0c`, which includes the M3 fix (brand scan after the builds) and the 2 new pdfcraft `flaky` quarantines.
+- **When:** 2026-10-20, 04:48 → 07:38.
+- **Logs:** `E:/office-target/p1/clean/ci-final.log`; job logs in `E:/office-target/p1/clean/target/ci/final-run/`.
+
+| job | result | wall |
+|---|---|---|
+| queue | ok | 361 s |
+| lint (clippy: wordcraft 1, gridcraft 2, deckcraft 2, pdfcraft 1, all baselined) | ok | 3410 s |
+| gen-check | ok | 32 s |
+| deny | ok | 160 s |
+| brand (source scan) | ok | 412 s |
+| i18n | ok | 9 s |
+| test-ours | ok | 790 s |
+| test wordcraft / gridcraft / deckcraft / pdfcraft | ok / ok / ok / ok | 302 / 156 / 111 / 484 s |
+| check docs / sheets / slides / pdf | ok ×4 | 40 / 34 / 68 / 72 s |
+| bind | ok | 141 s |
+| build docs / sheets / slides / pdf (desktop + CLI + web, release) | ok ×4 | 485 / 169 / 1620 / 417 s |
+| sizes | ok | 526 s |
+| brand (binary scan of this run's builds) | ok | 380 s |
+| web-smoke (4 web dists, headless Chromium) | ok | 16 s |
+| actionlint | ok | 1 s |
+
+**Caveats**
+- The target dir was warm, left over from the clean1–5 runs. This is not a cold build from zero.
+- Only windows-gnu was built. The GitHub workflow has never run.
+- Two load-sensitive pdfcraft tests failed in the attempts before this run and were quarantined as `flaky`: `e3b871d`, `3fe5f0c`.
