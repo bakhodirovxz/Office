@@ -16,6 +16,9 @@ struct Domain {
     upstream: String,
     /// kind -> (upstream app dir name, our bin name)
     apps: BTreeMap<String, (String, String)>,
+    /// `[extensions] crates`: our crates under `domains/<d>/crates/` that every app links through the `office-ext` feature
+    /// (the carried install hook, e.g. patches/wordcraft/0120, is `#[cfg(feature = "office-ext")]`).
+    extensions: Vec<String>,
 }
 
 fn read_doc(path: &Path) -> Res<DocumentMut> {
@@ -47,10 +50,17 @@ fn load_domain(root: &Path, name: &str) -> Res<Domain> {
             .ok_or(format!("domain.toml [{kind}]: missing bin"))?;
         apps.insert(kind.to_string(), (src.to_string(), bin.to_string()));
     }
+    let extensions = doc
+        .get("extensions")
+        .and_then(|t| t.get("crates"))
+        .and_then(Item::as_array)
+        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
     Ok(Domain {
         name: name.to_string(),
         upstream,
         apps,
+        extensions,
     })
 }
 
@@ -288,6 +298,7 @@ fn gen_app(
     if let Some(f) = up_doc.get("features") {
         doc.insert("features", f.clone());
     }
+    add_extensions(&mut doc, &d.extensions);
     let path = root
         .join("domains")
         .join(&d.name)
@@ -295,6 +306,39 @@ fn gen_app(
         .join(&pkg)
         .join("Cargo.toml");
     Ok((path, format!("{}{}", header(d, sha7), doc)))
+}
+
+/// Link the domain's own crates into an app: an optional path dependency each, switched on by the `office-ext` feature,
+/// which is a default feature. The upstream manifest declares `office-ext = []` (patch 0120), so the upstream workspace
+/// compiles the hook out; here the feature pulls the crates in.
+fn add_extensions(doc: &mut DocumentMut, crates: &[String]) {
+    if crates.is_empty() {
+        return;
+    }
+    let mut deps = doc
+        .get("dependencies")
+        .and_then(Item::as_table)
+        .cloned()
+        .unwrap_or_default();
+    let mut feat = Array::new();
+    for c in crates {
+        let mut t = InlineTable::new();
+        t.insert("path", format!("../../crates/{c}").into());
+        t.insert("optional", true.into());
+        deps.insert(c, Item::Value(Value::InlineTable(t)));
+        feat.push(format!("dep:{c}"));
+    }
+    doc.insert("dependencies", Item::Table(deps));
+    let mut features = doc
+        .get("features")
+        .and_then(Item::as_table)
+        .cloned()
+        .unwrap_or_default();
+    features.insert("office-ext", Item::Value(Value::Array(feat)));
+    let mut default = Array::new();
+    default.push("office-ext");
+    features.insert("default", Item::Value(Value::Array(default)));
+    doc.insert("features", Item::Table(features));
 }
 
 fn gen_root(root: &Path, d: &Domain, sha7: &str) -> Res<(PathBuf, String, Table)> {
@@ -480,5 +524,37 @@ pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
                 .collect::<Vec<_>>()
                 .join("\n  ")
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extensions_add_an_optional_path_dependency_and_a_default_feature() {
+        let mut doc: DocumentMut = "[package]
+name = \"x\"
+[dependencies]
+serde_json = \"1\"
+[features]
+office-ext = []
+"
+            .parse()
+            .unwrap();
+        add_extensions(&mut doc, &["docs-translit".to_string()]);
+        let t = doc.to_string();
+        assert!(t.contains("docs-translit = { path = \"../../crates/docs-translit\", optional = true }"), "{t}");
+        assert!(t.contains("office-ext = [\"dep:docs-translit\"]"), "{t}");
+        assert!(t.contains("default = [\"office-ext\"]"), "{t}");
+        assert!(t.contains("serde_json"), "{t}");
+        // no extensions: untouched
+        let mut same: DocumentMut = "[package]
+name = \"x\"
+".parse().unwrap();
+        add_extensions(&mut same, &[]);
+        assert_eq!(same.to_string(), "[package]
+name = \"x\"
+");
     }
 }

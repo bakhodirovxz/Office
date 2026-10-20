@@ -1,0 +1,20 @@
+# Phase 2 WP4: the Docs transliteration command (PLAN section 3). Our crate: the logic lives here, the upstream engine only gets an
+# install hook (patches/wordcraft/0120). Upstream crates by path into the committed snapshot; the rules come from crates/uz-translit.
+[package]
+name = "docs-translit"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Uzbek Latin/Cyrillic transliteration command for the wordcraft engine"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
+wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
+uz-translit = { path = "../../../../crates/uz-translit" }
+serde_json = { version = "1", features = ["float_roundtrip"] }

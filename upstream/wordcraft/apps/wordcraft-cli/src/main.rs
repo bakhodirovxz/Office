@@ -101,6 +101,8 @@ fn text_args<S: AsRef<OsStr>>(raw: &[S]) -> Result<(Vec<String>, Option<PathBuf>
 /// same paper (#1381).
 fn session(doc: wordcraft_doc::Document) -> Session {
     let mut s = Session::new(doc);
+    #[cfg(feature = "office-ext")]
+    docs_translit::install(&mut s);
     s.system_region = system_region();
     s
 }
