@@ -200,3 +200,14 @@ Approved rows by conf: high 981, medium 67, low 0.
 1. Promote bilyard and mayonez, and decide sink.
 2. Demote moʻmin.
 3. Add the stem `medalyon` → `медальон`, and consider `bulyon`, `losyon` and the variant `pochtalon`.
+
+## Source check (2026-10-20)
+The lex.uz and official-source check is in `rules.md` §14, and the dictionary follow-ups for WP2 are in `source-verification.md`.
+
+Changes to `golden.tsv`:
+- **Promoted:** AMB-007 and AMB-008, both now `c2l` (reviewed); they become `both` after SV-03 and SV-04.
+- **Raised to high:** CASE-054 AQSH (D-14 confirmed).
+- **Added:** 16 `SRC` rows, all official parallel pairs: 6 `both`, 9 `c2l` and 1 `l2c`.
+- **Sources:** 334 rows got `source = lex-attested`, and about 30 rows got a specific `lex-<id>`.
+
+Totals: 1082 rows, of which 11 are `ambiguous`.
