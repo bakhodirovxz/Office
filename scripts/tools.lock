@@ -4,3 +4,5 @@ cargo-nextest 0.9.148 https://github.com/nextest-rs/nextest/releases/download/ca
 sccache 0.18.0 https://github.com/mozilla/sccache/releases/download/v0.18.0/sccache-v0.18.0-x86_64-pc-windows-msvc.zip 8965c74d5e8a225244f741e18ad2f3f504f48228dc1bac948fc22761a348363d
 actionlint 1.7.12 https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_windows_amd64.zip 6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9
 trunk 0.21.14 (preinstalled via cargo install at E:/office-tools/cargo/bin/trunk.exe) 3f2f5611dd492ab794ae57d7ca569376f7506f78658a244a18e441ac95968131
+wasm-bindgen-cli 0.2.129 https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-pc-windows-msvc.tar.gz 79e348c169d0c10c0b287647f1e753d0985353ca96800bc29be8f4261baf13e6
+binaryen 123 https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-windows.tar.gz 7b3568424a0f871a52865d5c78177db646b1832a8c487321e27703103f936880

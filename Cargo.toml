@@ -7,3 +7,12 @@ resolver = "3"
 [workspace.package]
 edition = "2024"
 license = "MIT OR Apache-2.0"
+
+# npm package size profile (PLAN phase 2 section 7): `cargo build --profile npm -p uz-translit-wasm`. A custom profile keeps
+# the other crates' release settings untouched.
+[profile.npm]
+inherits = "release"
+opt-level = "s"
+lto = true
+panic = "abort"
+codegen-units = 1

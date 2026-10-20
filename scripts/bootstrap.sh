@@ -15,6 +15,8 @@ while read -r name ver _; do
     sccache)       got=$(sccache --version 2>&1 | awk '{print $2}') ;;
     actionlint)    got=$(actionlint --version 2>&1 | head -1) ;;
     trunk)         got=$(trunk --version 2>&1 | awk '{print $2}') ;;
+    wasm-bindgen-cli) got=$(wasm-bindgen --version 2>&1 | awk '{print $2}') ;;   # must equal the wasm-bindgen pin in Cargo.lock
+    binaryen)      got=$(wasm-opt --version 2>&1 | awk '{print $3}') ;;
     *) continue ;;
   esac
   if [ "$got" = "$ver" ]; then echo "tool ok: $name $ver"; else echo "TOOL MISMATCH: $name want $ver got '$got'"; rc=1; fi

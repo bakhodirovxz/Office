@@ -17,6 +17,7 @@
 #   bind                     docs-bind (WP13, approach B binding layer): cargo check + test, native and wasm32
 #   build <domain|all> <desktop|web|cli|all>   release builds via scripts/build.sh
 #   sizes [--baseline] [--measure-base]        brotli/gzip of dist/<domain>-web vs web/budgets.toml
+#   translit-npm             uz-translit npm package: build, size budget, node tests, Chromium smoke (nothing is published)
 #   web-smoke                Playwright smoke over every dist
 #   actionlint               lint .github/workflows/ci.yml
 #   release-tests (nightly)  cargo test --release per app with the quarantine
@@ -41,7 +42,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
+JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes translit-npm web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -394,6 +395,21 @@ job_build() {
 bytes() { wc -c <"$1" | tr -d ' '; }
 br_bytes() { brotli -q 11 --lgwin=24 -c "$1" | wc -c | tr -d ' '; }
 gz_bytes() { gzip -9 -c "$1" | wc -c | tr -d ' '; }
+# The uz-translit npm package: absolute budgets, no base. Skipped when not built (`ci.sh translit-npm` builds it).
+npm_sizes() {
+  local B=web/budgets.toml rc=0 np="$OFFICE_TARGET/dist/npm/uz-translit" raw gz nw njs nwmax njmax
+  nwmax=$(toml_get "$B" npm.uz-translit wasm_br_max); njmax=$(toml_get "$B" npm.uz-translit js_br_max)
+  if [ -f "$np/uz_translit_bg.wasm" ]; then
+    raw=$(bytes "$np/uz_translit_bg.wasm"); gz=$(gz_bytes "$np/uz_translit_bg.wasm"); nw=$(br_bytes "$np/uz_translit_bg.wasm"); njs=$(br_bytes "$np/uz_translit.js")
+    printf '%-7s %-9s %12s %12s %12s %12s %12s %s/%s
+' npm dist "$raw" "$gz" "$nw" "$nwmax" "$((nwmax - nw))" "$njs" "$njmax" | tee -a "$JOB_LOG"
+    [ "$nw" -gt "$nwmax" ] && { echo "FAIL npm: wasm brotli $nw exceeds $nwmax" | tee -a "$JOB_LOG"; [ $rc -lt 1 ] && rc=1; }
+    [ "$njs" -gt "$njmax" ] && { echo "FAIL npm: js brotli $njs exceeds $njmax" | tee -a "$JOB_LOG"; [ $rc -lt 1 ] && rc=1; }
+  else
+    echo "npm: $np not built, skipped" | tee -a "$JOB_LOG"
+  fi
+  return $rc
+}
 job_sizes() {
   local B=web/budgets.toml baseline=0 measure=0 rc=0 a d dist f raw gz br jsbr base dmax js_max budget head jhead
   for a in "$@"; do case "$a" in --baseline) baseline=1;; --measure-base) measure=1;; esac; done
@@ -426,6 +442,22 @@ job_sizes() {
     fi
   done
   [ "$baseline" = 1 ] && DETAIL="${DETAIL:+$DETAIL; }baseline table only"
+  [ "$baseline" = 0 ] && { npm_sizes || { [ $rc -lt 1 ] && rc=1; }; }
+  return $rc
+}
+
+# uz-translit npm package (WP8): build (scripts/build-npm.sh), size check, node tests against the Rust golden list, and the
+# Chromium smoke over the unpacked tarball. Nothing is published.
+job_translit_npm() {
+  local rc=0 out="$OFFICE_TARGET/dist/npm" un="$OFFICE_TARGET/npm-unpack"
+  bstep npm-build scripts/build-npm.sh || return 1
+  [ "$NO_BUILD" = 1 ] && return 0
+  step npm-sizes npm_sizes || rc=1
+  step npm-node-test env PKG_DIR="$out/uz-translit" node --test ci/npm/uz-translit.test.mjs || rc=1
+  rm -rf "$un"; mkdir -p "$un"
+  step npm-unpack tar --force-local -xzf "$out"/uz-translit-*.tgz -C "$un" || return 2
+  step npm-ci npm ci --prefix ci/web-smoke || return 2
+  step npm-chromium env PKG_DIR="$un/package" SHOT="$out/smoke.png" npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.npm.config.ts || rc=1
   return $rc
 }
 
@@ -484,7 +516,7 @@ profile_jobs() { # prints "job args" lines
       for d in $DOMAINS; do echo "check $d"; done
       echo bind
       for d in $DOMAINS; do echo "build $d all"; done
-      echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
+      echo translit-npm; echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
       if [ "$p" = nightly ]; then echo release-tests; echo fidelity; echo xlsx-bench; fi;;
   esac
 }
@@ -504,6 +536,7 @@ dispatch() { # <job> [args]
     bind) run_job bind job_bind;;
     build) run_job "build${1:+ $1}" job_build "$@";;
     sizes) run_job sizes job_sizes "$@";;
+    translit-npm) run_job translit-npm job_translit_npm;;
     web-smoke) run_job web-smoke job_web_smoke;;
     actionlint) run_job actionlint job_actionlint;;
     release-tests) run_job release-tests job_release_tests "$@";;

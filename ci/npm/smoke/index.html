@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>uz-translit smoke</title>
+<style>body{font:20px/1.5 system-ui,sans-serif;margin:2rem}td{padding:.2rem 1rem}th{text-align:left;color:#555}</style>
+<h1>uz-translit npm package</h1>
+<p id="meta">loading</p>
+<table><tr><th>Input</th><th>Output</th></tr><tbody id="rows"></tbody></table>
+<script type="module">
+  import init, { toCyrillic, toLatin, convertRuns, detect, version, rulesVersion } from './pkg/uz_translit.js';
+  await init();
+  const rows = [
+    ["toCyrillic", "O'zbekiston Respublikasi, Toshkent shahri", toCyrillic("O'zbekiston Respublikasi, Toshkent shahri")],
+    ["toLatin", "Ўзбекистон Республикаси, Тошкент шаҳри", toLatin("Ўзбекистон Республикаси, Тошкент шаҳри")],
+    ["toLatin 2026", "Ўзбекистон, Тошкент шаҳри", toLatin("Ўзбекистон, Тошкент шаҳри", { latinAlphabet: "2026" })],
+    ["convertRuns", "s | h | ahar", convertRuns(["s", "h", "ahar"], "cyrl").join(" | ")],
+    ["detect", "салом", String(detect("салом"))],
+  ];
+  document.getElementById('rows').innerHTML = rows.map(([k, i, o]) => `<tr><td>${k}: ${i}</td><td class="out">${o}</td></tr>`).join('');
+  document.getElementById('meta').textContent = `version ${version()}, ${rulesVersion()}`;
+  document.body.dataset.ready = '1';
+</script>

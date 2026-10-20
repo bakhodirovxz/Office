@@ -233,6 +233,34 @@ jobs:
       - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
       - run: CI_DIST_ROOT="$PWD/dist" scripts/ci.sh web-smoke
 
+  translit-npm:
+    # WP8: the uz-translit npm package: build, size budget, node tests, Chromium smoke. Nothing is published.
+    needs: [queue]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('Cargo.lock') }}
+      - name: wasm-bindgen 0.2.129 and binaryen 123 (linux builds of the pins in scripts/tools.lock, sha256-checked)
+        run: |
+          mkdir -p "$HOME/.office-bin"
+          curl -fsSLO https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz
+          curl -fsSLO https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-linux.tar.gz
+          echo "82d12bb940e2d4e72e0d5605387fc1b8ca179044e012b620f0ce4e7440e8320e  wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz" | sha256sum -c -
+          echo "e959f2170af4c20c552e9de3a0253704d6a9d2766e8fdb88e4d6ac4bae9388fe  binaryen-version_123-x86_64-linux.tar.gz" | sha256sum -c -
+          tar xzf wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz --strip-components=1 -C "$HOME/.office-bin" --wildcards '*/wasm-bindgen'
+          tar xzf binaryen-version_123-x86_64-linux.tar.gz --strip-components=2 -C "$HOME/.office-bin" binaryen-version_123/bin/wasm-opt
+          echo "$HOME/.office-bin" >> "$GITHUB_PATH"
+      - run: npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium || (npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium)
+      - run: scripts/ci.sh translit-npm
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: uz-translit-npm
+          path: ${{ env.OFFICE_TARGET }}/dist/npm/*.tgz
+          if-no-files-found: error
+
   release-tests:
     if: ${{ inputs.profile == 'nightly' }}
     needs: [test]
