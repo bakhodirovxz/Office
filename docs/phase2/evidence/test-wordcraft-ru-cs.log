@@ -1,0 +1,40 @@
+24- Nextest run ID d2a35b4d-79bb-4964-ad2a-846dd3e8d578 with nextest profile: ci
+25-    Starting 2747 tests across 61 binaries (23 tests skipped)
+26:        FAIL [   0.092s] (2360/2747) wordcraft-ui-egui i18n::tests::czech_covers_the_entire_existing_interface_catalog
+27-  stdout ───
+28-
+29-    running 1 test
+30:    test i18n::tests::czech_covers_the_entire_existing_interface_catalog ... FAILED
+31-
+32-    failures:
+33-
+34-    failures:
+35:        i18n::tests::czech_covers_the_entire_existing_interface_catalog
+36-
+37-    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 562 filtered out; finished in 0.01s
+38-
+39-  stderr ───
+40-
+41:    thread 'i18n::tests::czech_covers_the_entire_existing_interface_catalog' (10728) panicked at crates\ui-egui\src\i18n\tests.rs:419:5:
+42-    assertion failed: keys(lang("cs").0.source).is_superset(&keys(lang("ru").0.source))
+43-    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+44-
+45-────────────
+46-     Summary [  92.687s] 2747 tests run: 2746 passed, 1 failed, 23 skipped
+47:        FAIL [   0.092s] (2360/2747) wordcraft-ui-egui i18n::tests::czech_covers_the_entire_existing_interface_catalog
+48-  stdout ───
+49-
+50-    running 1 test
+51:    test i18n::tests::czech_covers_the_entire_existing_interface_catalog ... FAILED
+52-
+53-    failures:
+54-
+55-    failures:
+56:        i18n::tests::czech_covers_the_entire_existing_interface_catalog
+57-
+58-    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 562 filtered out; finished in 0.01s
+59-
+60-  stderr ───
+61-
+62:    thread 'i18n::tests::czech_covers_the_entire_existing_interface_catalog' (10728) panicked at crates\ui-egui\src\i18n\tests.rs:419:5:
+63-    assertion failed: keys(lang("cs").0.source).is_superset(&keys(lang("ru").0.source))
