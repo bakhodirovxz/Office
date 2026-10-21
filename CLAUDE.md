@@ -1,6 +1,6 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 2 — Transliteration (`uz-translit`)** (branch `phase-2`, from `phase-1`; Phase 1 gate passed 2026-10-20 on the owner's pre-authorisation; plan: docs/phase2/PLAN.md).
+**Current phase: Phase 3 — Converter** (branch `phase-3`, from `phase-2`; Phase 2 gate passed 2026-10-21, owner "go"; plan: docs/phase3/PLAN.md).
 The full brief (mission, constraints, phases, exit gates) is in [docs/BRIEF.md](docs/BRIEF.md).
 Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — keep it current.
 
@@ -19,6 +19,7 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
     2026-10-20). Use the same `reviewed:agent-*` marking.
 - **Mobile:** A-web for v1, conditionally. **Android deferred** (owner, 2026-10-20): the converter and the UI translations go first.
 - **Priority:** fidelity → mobile → co-editing.
+- **Accounts are optional** (owner, 2026-10-21): fully open source, most users have no HRM. Local mode needs no login; connecting to a server is optional; the HRM is one configured token issuer or SSO provider, never required or hard-coded.
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
