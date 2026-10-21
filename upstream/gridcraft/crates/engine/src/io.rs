@@ -245,9 +245,14 @@ pub fn save_bytes_as_in(wb: &Workbook, path: &str, kind: FileKind, loc: NumLocal
 /// [`save_bytes`] for the file at `path`: relative paths to linked workbooks are rewritten for
 /// its folder, so they still name the same files.
 pub fn save_file_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
+    save_file_bytes_in(wb, path, NumLocale::EnUs)
+}
+
+/// [`save_file_bytes`] with delimited text written as a reader of `loc` sees it.
+pub fn save_file_bytes_in(wb: &Workbook, path: &str, loc: NumLocale) -> Result<Vec<u8>> {
     match source_dir(path).and_then(|f| gridcraft_xlsx::rebase_links(wb, &f)) {
-        Some(rebased) => save_bytes(&rebased, path),
-        None => save_bytes(wb, path),
+        Some(rebased) => save_bytes_in(&rebased, path, loc),
+        None => save_bytes_in(wb, path, loc),
     }
 }
 

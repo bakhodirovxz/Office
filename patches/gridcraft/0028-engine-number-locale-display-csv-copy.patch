@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 17:14:19 +0500
+Date: Wed, 21 Oct 2026 12:00:00 +0500
 Subject: [PATCH] engine: number locale in Prefs, display *_in, CSV save and
  open, sheet.read, copy, paste
 
@@ -16,12 +16,12 @@ not: xlsx parts are byte-equal across locales (test).
  crates/engine/src/cmd/file.rs    |  11 +-
  crates/engine/src/cmd/inspect.rs |   2 +-
  crates/engine/src/display.rs     |  54 ++++++--
- crates/engine/src/io.rs          |  58 ++++++--
+ crates/engine/src/io.rs          |  67 ++++++++--
  crates/engine/src/lib.rs         |  12 ++
  crates/engine/tests/numlocale.rs | 220 +++++++++++++++++++++++++++++++
  crates/xlsx/src/csv.rs           |   8 +-
  crates/xlsx/src/lib.rs           |   5 +-
- 9 files changed, 343 insertions(+), 34 deletions(-)
+ 9 files changed, 350 insertions(+), 36 deletions(-)
  create mode 100644 crates/engine/tests/numlocale.rs
 
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
@@ -237,7 +237,7 @@ index 0f70b56..52a6a1c 100644
                  out.push('"');
                  out.push_str(&t.replace('"', "\"\""));
 diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
-index aa2b03b..c4e484d 100644
+index aa2b03b..28792d7 100644
 --- a/crates/engine/src/io.rs
 +++ b/crates/engine/src/io.rs
 @@ -2,7 +2,7 @@
@@ -346,7 +346,24 @@ index aa2b03b..c4e484d 100644
          FileKind::Json => serde_json::to_vec_pretty(wb).map_err(|e| EngineError::Other(e.to_string())),
          FileKind::Html => to_html(wb, sheet).map(String::into_bytes),
      }
-@@ -235,10 +256,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
+@@ -224,9 +245,14 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
+ /// [`save_bytes`] for the file at `path`: relative paths to linked workbooks are rewritten for
+ /// its folder, so they still name the same files.
+ pub fn save_file_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
++    save_file_bytes_in(wb, path, NumLocale::EnUs)
++}
++
++/// [`save_file_bytes`] with delimited text written as a reader of `loc` sees it.
++pub fn save_file_bytes_in(wb: &Workbook, path: &str, loc: NumLocale) -> Result<Vec<u8>> {
+     match source_dir(path).and_then(|f| gridcraft_xlsx::rebase_links(wb, &f)) {
+-        Some(rebased) => save_bytes(&rebased, path),
+-        None => save_bytes(wb, path),
++        Some(rebased) => save_bytes_in(&rebased, path, loc),
++        None => save_bytes_in(wb, path, loc),
+     }
+ }
+ 
+@@ -235,10 +261,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
      std::path::absolute(path).ok()?.parent().map(std::path::Path::to_path_buf)
  }
  
@@ -370,7 +387,7 @@ index aa2b03b..c4e484d 100644
      gridcraft_xlsx::write_csv(sh, delimiter, |c| {
          // General's grid-width formatting rounds large identifiers to scientific notation.
          // Delimited files have no column width, so preserve the whole numeric value instead.
-@@ -246,9 +279,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
+@@ -246,9 +284,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
              && let gridcraft_core::Value::Number(number) = sh.value(c)
              && number.is_finite()
          {
