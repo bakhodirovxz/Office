@@ -211,7 +211,7 @@
       for (const w of it.warnings) li.append(el('p', { class: 'warn', text: warningText(w) }));
       if (it.outputs.length) {
         const row = el('div', { class: 'row' });
-        for (const o of it.outputs) row.append(dlLink('/api/v1/jobs/' + S.job + '/files/' + it.n + '/' + o.id, o.name, t('ui.download') + ' ' + o.name, t('ui.download.named', { name: o.name })));
+        for (const o of it.outputs) row.append(dlLink('/api/v1/jobs/' + S.job + '/files/' + it.n + '/' + o.id, o.name, t('ui.download.named', { name: o.name }), t('ui.download.named', { name: o.name })));
         li.append(row);
       }
       list.append(li);
