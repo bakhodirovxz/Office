@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Render summary.json (synthetic runs only) into docs/phase0/fidelity-baseline.md and copy worst images.
 
-  python -I spikes/fidelity/report.py --summary E:/office-target/fidelity/summary.json \
-      --md docs/phase0/fidelity-baseline.md --images docs/phase0/fidelity --notes spikes/fidelity/notes.md
+  python -I scripts/fidelity/report.py --summary E:/office-target/fidelity/summary.json \
+      --md docs/phase0/fidelity-baseline.md --images docs/phase0/fidelity --notes scripts/fidelity/notes.md
 """
 import argparse, collections, json, shutil
 from pathlib import Path
@@ -26,11 +26,11 @@ def main():
     w = L.append
     w("# Fidelity baseline (Phase 0, task 5 prep)\n")
     w("> **SYNTHETIC set, produced by Microsoft Office 16.** The owner's anonymised `corpus/` run is **pending**.")
-    w("> All numbers below come from `spikes/fidelity/run.py` runs on %s; none are about real HRM documents.\n" % S["generated"])
+    w("> All numbers below come from `scripts/fidelity/office_baseline.py` runs on %s; none are about real HRM documents.\n" % S["generated"])
     w("Corpus run command (artefacts go under `E:/` only; names are replaced by ids):\n")
-    w("```\npython -I spikes/fidelity/run.py --input corpus/ --out E:/office-target/fidelity-corpus\n```\n")
+    w("```\npython -I scripts/fidelity/office_baseline.py --input corpus/ --out E:/office-target/fidelity-corpus\n```\n")
     w("## Method\n")
-    w("- Test set: `spikes/fidelity/gen_office.ps1` drives Word/Excel/PowerPoint through COM and saves each document as "
+    w("- Test set: `scripts/fidelity/gen_office.ps1` drives Word/Excel/PowerPoint through COM and saves each document as "
       "modern (`docx/xlsx/pptx`) and legacy (`doc/xls/ppt`) files (10 files, synthetic text incl. Uzbek Cyrillic/Latin with U+02BB/U+02BC, Russian).")
     w("- Reference (\"truth\"): the same Office 16 opens the file read-only and exports PDF (`ExportAsFixedFormat` / `SaveAs 32`).")
     w("- Candidate, per file: Craft CLI `direct` = open -> PDF; `roundtrip` = open -> save native format -> reopen -> PDF. "

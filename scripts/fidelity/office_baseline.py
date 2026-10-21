@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Fidelity harness: Craft CLIs vs a reference renderer, page-image + text + structure metrics.
 
-  python -I spikes/fidelity/run.py --input E:/office-target/fidelity/synthetic --out E:/office-target/fidelity
-  python -I spikes/fidelity/run.py --input corpus/ --out E:/office-target/fidelity-corpus     (owner's corpus)
+  python -I scripts/fidelity/office_baseline.py --input E:/office-target/fidelity/synthetic --out E:/office-target/fidelity
+  python -I scripts/fidelity/office_baseline.py --input corpus/ --out E:/office-target/fidelity-corpus     (owner's corpus)
 
 Per file and per build (release / head):
   reference : Microsoft Office 16 (COM) -> PDF                      [providers: office; libreoffice/x2t = hooks]

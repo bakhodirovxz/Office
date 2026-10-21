@@ -2,8 +2,8 @@
 #   -Mode export  : open each {src} read-only and export a PDF to {out}
 #   -Mode inspect : open each {src} read-only, write structural counts JSON to {out}
 # -List is a UTF-8 JSON array of {src,out}. -Result gets a JSON array of per-file status.
-# Refuses to run if an Office process already exists (the owner may be using Office); only
-# processes created by this script are ever killed.
+# Other agents/users may have Office open: this script starts its own instance and only ever kills the one PID that
+# appeared because of it (same rule as census.ps1).
 param(
   [Parameter(Mandatory)][ValidateSet("export", "inspect")][string]$Mode,
   [Parameter(Mandatory)][ValidateSet("word", "excel", "ppt")][string]$App,
@@ -12,8 +12,6 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $procName = @{ word = "WINWORD"; excel = "EXCEL"; ppt = "POWERPNT" }[$App]
-$busy = Get-Process WINWORD, EXCEL, POWERPNT -ErrorAction SilentlyContinue
-if ($busy) { throw "Office process already running (PIDs $($busy.Id -join ',')); refusing to start." }
 $items = [IO.File]::ReadAllText($List, [Text.Encoding]::UTF8) | ConvertFrom-Json
 if ($items -isnot [array]) { $items = @($items) }
 $miss = [Type]::Missing
@@ -73,8 +71,8 @@ function Inspect-Ppt($app, $pr) {
 }
 
 $com = @{ word = "Word.Application"; excel = "Excel.Application"; ppt = "PowerPoint.Application" }[$App]
-$oa = New-Object -ComObject $com
-$mine = Get-Process $procName -ErrorAction SilentlyContinue | ForEach-Object { $_.Id }
+. "$PSScriptRoot\com.ps1"
+$oa, $mypid = New-Office $com $procName
 try {
   if ($App -ne "ppt") { $oa.Visible = $false }
   if ($App -eq "word") { $oa.DisplayAlerts = 0 }
@@ -109,9 +107,6 @@ try {
     [void]$results.Add($r)
   }
 } finally {
-  try { $oa.Quit() } catch {}
-  try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($oa) } catch {}
-  [GC]::Collect(); [GC]::WaitForPendingFinalizers(); Start-Sleep 2
-  Get-Process $procName -ErrorAction SilentlyContinue | Where-Object { $mine -contains $_.Id } | Stop-Process -Force
+  Stop-Mine $oa $mypid
   [IO.File]::WriteAllText($Result, (ConvertTo-Json -InputObject @($results) -Depth 4), (New-Object Text.UTF8Encoding $false))
 }

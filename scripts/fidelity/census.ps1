@@ -42,7 +42,7 @@ function Prep {
     Copy-Item "$fx\sheets\tests\translit-fixtures\xlsx\02-table-rich.xlsx" $IN -Force
     Copy-Item "$fx\slides\tests\translit-fixtures\pptx\01-shapes-notes.pptx", "$fx\slides\tests\translit-fixtures\pptx\02-languages.pptx" $IN -Force
 
-    $T = [IO.File]::ReadAllText("$repo\spikes\fidelity\content.json", [Text.Encoding]::UTF8) | ConvertFrom-Json
+    $T = [IO.File]::ReadAllText("$repo\scripts\fidelity\content.json", [Text.Encoding]::UTF8) | ConvertFrom-Json
     # ---- Word
     $wd, $wdp = New-Office "Word.Application" "WINWORD"; $wd.Visible = $false; $wd.DisplayAlerts = 0
     try {
@@ -207,7 +207,7 @@ function Run-Census {
         Step "pdf.native2$e" "1.4 pdf -> docx (other targets, F3)" $PDF @("run", "--script", (ScriptFile "native_$e" $steps), "--root", $W) "$o\uz_cyrl_native.$e" -inFile "$i\uz_cyrl.pdf" }
 }
 
-# ---------------------------------------------------------------- analysis helpers (python: numpy + pillow, like spikes/fidelity)
+# ---------------------------------------------------------------- analysis helpers (python: numpy + pillow, like scripts/fidelity)
 $an = @'
 import sys, json, re, difflib, subprocess
 import numpy as np
