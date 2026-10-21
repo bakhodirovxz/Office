@@ -25,7 +25,7 @@ pub const TO_CYRILLIC: &str = "tools.translitCyrl";
 pub const TO_LATIN: &str = "tools.translitLatn";
 pub const AUTO: &str = "tools.translitAuto";
 
-const PARAMS: &str = r#"{"scope"?: "auto"|"selection"|"document", "skipLangs"?: bool, "fieldResults"?: bool, "apostrophe"?: "official"|"ascii", "foreignGuard"?: bool}"#;
+const PARAMS: &str = r#"{"scope"?: "auto"|"selection"|"document", "skipLangs"?: bool, "fieldResults"?: bool, "latinAlphabet"?: "1995"|"2026"|"auto", "apostrophe"?: "official"|"ascii", "foreignGuard"?: bool}"#;
 
 /// The specs, for callers that build a registry themselves.
 pub fn specs() -> Vec<CommandSpec> {
