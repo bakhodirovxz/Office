@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 15:29:54 +0500
+Date: Wed, 21 Oct 2026 15:41:52 +0500
 Subject: [PATCH] ui-egui: the interface language sets the number locale of
  typed input and cell text
 
@@ -11,17 +11,19 @@ The grid shows cells with format_in; the editor opens a number or date in the lo
 to_invariant, so the engine, validation, the journal and macros only see en-US. 12.10.2026 is 12 October
 in ru and uz; 1.234 stays text; a text-formatted cell keeps what was typed. Ctrl+; and Ctrl+' insert
 the locale's short date.
+
+Russian and Uzbek formulas are entered with ; and a decimal comma (FormulaLocale::DecimalComma); the stored formula and the xlsx keep SUM(1,2).
 ---
  crates/ui-egui/src/editor.rs         |   4 +
  crates/ui-egui/src/formula_bar.rs    |   2 +-
- crates/ui-egui/src/formula_locale.rs |  13 +++-
+ crates/ui-egui/src/formula_locale.rs |  13 ++-
  crates/ui-egui/src/grid.rs           |   8 +-
- crates/ui-egui/src/i18n.rs           |  28 +++++++
+ crates/ui-egui/src/i18n.rs           |  38 ++++++-
  crates/ui-egui/src/keymap.rs         |   8 +-
- crates/ui-egui/src/lib.rs            |  15 +++-
+ crates/ui-egui/src/lib.rs            |  15 ++-
  crates/ui-egui/src/ribbon.rs         |   3 +-
- crates/ui-egui/tests/num_locale.rs   | 110 +++++++++++++++++++++++++++
- 9 files changed, 180 insertions(+), 11 deletions(-)
+ crates/ui-egui/tests/num_locale.rs   | 145 +++++++++++++++++++++++++++
+ 9 files changed, 224 insertions(+), 12 deletions(-)
  create mode 100644 crates/ui-egui/tests/num_locale.rs
 
 diff --git a/crates/ui-egui/src/editor.rs b/crates/ui-egui/src/editor.rs
@@ -146,10 +148,10 @@ index c608d0c..0b22091 100644
              text = crate::formula_locale::display(&text, crate::i18n::current(p.ctx()).formula_locale(), wb, si);
          }
 diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
-index f83d26b..88aeccd 100644
+index f83d26b..03d8761 100644
 --- a/crates/ui-egui/src/i18n.rs
 +++ b/crates/ui-egui/src/i18n.rs
-@@ -143,6 +143,20 @@ impl Language {
+@@ -143,8 +143,30 @@ impl Language {
          }
      }
  
@@ -168,9 +170,20 @@ index f83d26b..88aeccd 100644
 +    }
 +
      pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
-         if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
+-        if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
++        use gridcraft_engine::formula::FormulaLocale;
++        if self == Self::Es {
++            FormulaLocale::Es
++        } else if self.num_locale() != gridcraft_engine::core::NumLocale::EnUs {
++            // Russian and Uzbek: `;` between arguments and a decimal comma, as Excel takes them there.
++            FormulaLocale::DecimalComma
++        } else {
++            FormulaLocale::En
++        }
      }
-@@ -207,6 +221,20 @@ pub fn current(ctx: &egui::Context) -> Language {
+ 
+     /// Translates an interface label; untranslated labels fall back to English.
+@@ -207,6 +229,20 @@ pub fn current(ctx: &egui::Context) -> Language {
      ctx.data(|d| d.get_temp(lang_key())).unwrap_or_default()
  }
  
@@ -306,10 +319,10 @@ index c3532e1..8b6566f 100644
              app.begin_edit(Some(text), false);
 diff --git a/crates/ui-egui/tests/num_locale.rs b/crates/ui-egui/tests/num_locale.rs
 new file mode 100644
-index 0000000..387db07
+index 0000000..de60b16
 --- /dev/null
 +++ b/crates/ui-egui/tests/num_locale.rs
-@@ -0,0 +1,110 @@
+@@ -0,0 +1,145 @@
 +//! Office overlay (patch 0130): the interface language sets the number locale of typed input. A
 +//! date typed `12.10.2026` is 12 October (not 10 December), `3,5` is a number, and opening a cell
 +//! for edit and confirming it unchanged never changes its value. The engine only sees en-US text.
@@ -419,4 +432,39 @@ index 0000000..387db07
 +    app.run("home.formatCells", json!({"range": "A1", "style": {"num_fmt": "@"}})).unwrap();
 +    enter(&mut app, "A1", "12.10.2026");
 +    assert_eq!(value(&app, "A1"), Value::text("12.10.2026"));
++}
++
++fn formula(app: &SheetApp, a: &str) -> String {
++    app.session.active().unwrap().wb.active().unwrap().cell(CellRef::parse(a).unwrap()).unwrap().formula.as_ref().unwrap().text().to_string()
++}
++
++#[test]
++fn russian_formulas_take_semicolons_and_a_decimal_comma_and_store_the_file_syntax() {
++    let mut app = app(Language::Ru);
++    enter(&mut app, "A1", "=SUM(1;2)");
++    enter(&mut app, "A2", "=1,5+1");
++    enter(&mut app, "A3", "=IF(A1>2;\"a;b\";\"c,d\")");
++    assert_eq!(
++        (formula(&app, "A1"), formula(&app, "A2"), formula(&app, "A3")),
++        ("SUM(1,2)".into(), "1.5+1".into(), "IF(A1>2,\"a;b\",\"c,d\")".into())
++    );
++    assert_eq!((value(&app, "A1"), value(&app, "A2"), value(&app, "A3")), (Value::Number(3.0), Value::Number(2.5), Value::text("a;b")));
++    // the editor and the formula bar show the entry syntax; confirming keeps the formula
++    for (cell, shown) in [("A1", "=SUM(1;2)"), ("A2", "=1,5+1"), ("A3", "=IF(A1>2;\"a;b\";\"c,d\")")] {
++        let stored = formula(&app, cell);
++        app.run("selection.set", json!({"range": cell})).unwrap();
++        app.begin_edit(None, false);
++        assert_eq!(app.editor.as_ref().unwrap().text, shown);
++        assert!(app.commit_edit(0, 0, false, false));
++        assert_eq!(formula(&app, cell), stored);
++    }
++    // the engine API still takes the file syntax only
++    assert!(app.run("cell.set", json!({"cell": "B1", "input": "=SUM(1,2)"})).is_ok());
++    assert!(app.run("cell.set", json!({"cell": "B2", "input": "=SUM(1;2)"})).is_err());
++    // and the xlsx keeps SUM(1,2) (no locale in the file)
++    let saved = app.run("file.save", json!({"format": "xlsx"})).unwrap();
++    app.run("app.language.set", json!({"language": "en"})).unwrap();
++    app.run("file.open", json!({"name": "ru.xlsx", "base64": saved["base64"]})).unwrap();
++    assert_eq!(formula(&app, "A1"), "SUM(1,2)");
++    assert_eq!(formula(&app, "A2"), "1.5+1");
 +}

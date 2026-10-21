@@ -9,6 +9,9 @@ pub enum FormulaLocale {
     #[default]
     En,
     Es,
+    /// Russian and Uzbek: `;` between arguments and `,` as the decimal, as Excel takes them there,
+    /// with the English function names (a translation table belongs to a later phase).
+    DecimalComma,
 }
 
 const SPANISH: &[(&str, &str)] = &[
@@ -26,13 +29,13 @@ const SPANISH: &[(&str, &str)] = &[
 
 impl FormulaLocale {
     pub fn list_separator(self) -> char {
-        if self == Self::Es { ';' } else { ',' }
+        if self == Self::En { ',' } else { ';' }
     }
     pub fn decimal_separator(self) -> char {
-        if self == Self::Es { ',' } else { '.' }
+        if self == Self::En { '.' } else { ',' }
     }
     pub fn array_column_separator(self) -> char {
-        if self == Self::Es { '\\' } else { ',' }
+        if self == Self::En { ',' } else { '\\' }
     }
     pub fn function_name(self, canonical: &str) -> &str {
         if self == Self::Es {
@@ -89,7 +92,9 @@ pub fn print_input(expr: &Expr, locale: FormulaLocale, known_name: impl Fn(&str)
         return Ok(crate::print(expr));
     }
     let mut expr = expr.clone();
-    normalize(&mut expr, &known_name, &mut Vec::new(), 0, true)?;
+    if locale == FormulaLocale::Es {
+        normalize(&mut expr, &known_name, &mut Vec::new(), 0, true)?;
+    }
     let canonical = crate::print(&expr);
     let tokens = crate::lexer::tokenize(&canonical).map_err(|e| ParseError { msg: e.msg, pos: e.pos })?;
     let mut out = String::new();

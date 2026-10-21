@@ -158,7 +158,15 @@ impl Language {
     }
 
     pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
-        if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
+        use gridcraft_engine::formula::FormulaLocale;
+        if self == Self::Es {
+            FormulaLocale::Es
+        } else if self.num_locale() != gridcraft_engine::core::NumLocale::EnUs {
+            // Russian and Uzbek: `;` between arguments and a decimal comma, as Excel takes them there.
+            FormulaLocale::DecimalComma
+        } else {
+            FormulaLocale::En
+        }
     }
 
     /// Translates an interface label; untranslated labels fall back to English.

@@ -108,3 +108,38 @@ fn a_text_formatted_cell_keeps_what_was_typed() {
     enter(&mut app, "A1", "12.10.2026");
     assert_eq!(value(&app, "A1"), Value::text("12.10.2026"));
 }
+
+fn formula(app: &SheetApp, a: &str) -> String {
+    app.session.active().unwrap().wb.active().unwrap().cell(CellRef::parse(a).unwrap()).unwrap().formula.as_ref().unwrap().text().to_string()
+}
+
+#[test]
+fn russian_formulas_take_semicolons_and_a_decimal_comma_and_store_the_file_syntax() {
+    let mut app = app(Language::Ru);
+    enter(&mut app, "A1", "=SUM(1;2)");
+    enter(&mut app, "A2", "=1,5+1");
+    enter(&mut app, "A3", "=IF(A1>2;\"a;b\";\"c,d\")");
+    assert_eq!(
+        (formula(&app, "A1"), formula(&app, "A2"), formula(&app, "A3")),
+        ("SUM(1,2)".into(), "1.5+1".into(), "IF(A1>2,\"a;b\",\"c,d\")".into())
+    );
+    assert_eq!((value(&app, "A1"), value(&app, "A2"), value(&app, "A3")), (Value::Number(3.0), Value::Number(2.5), Value::text("a;b")));
+    // the editor and the formula bar show the entry syntax; confirming keeps the formula
+    for (cell, shown) in [("A1", "=SUM(1;2)"), ("A2", "=1,5+1"), ("A3", "=IF(A1>2;\"a;b\";\"c,d\")")] {
+        let stored = formula(&app, cell);
+        app.run("selection.set", json!({"range": cell})).unwrap();
+        app.begin_edit(None, false);
+        assert_eq!(app.editor.as_ref().unwrap().text, shown);
+        assert!(app.commit_edit(0, 0, false, false));
+        assert_eq!(formula(&app, cell), stored);
+    }
+    // the engine API still takes the file syntax only
+    assert!(app.run("cell.set", json!({"cell": "B1", "input": "=SUM(1,2)"})).is_ok());
+    assert!(app.run("cell.set", json!({"cell": "B2", "input": "=SUM(1;2)"})).is_err());
+    // and the xlsx keeps SUM(1,2) (no locale in the file)
+    let saved = app.run("file.save", json!({"format": "xlsx"})).unwrap();
+    app.run("app.language.set", json!({"language": "en"})).unwrap();
+    app.run("file.open", json!({"name": "ru.xlsx", "base64": saved["base64"]})).unwrap();
+    assert_eq!(formula(&app, "A1"), "SUM(1,2)");
+    assert_eq!(formula(&app, "A2"), "1.5+1");
+}

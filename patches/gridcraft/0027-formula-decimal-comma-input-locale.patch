@@ -1,0 +1,133 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office-wp14 <wp14@office.invalid>
+Date: Wed, 21 Oct 2026 15:38:09 +0500
+Subject: [PATCH] formula: FormulaLocale::DecimalComma, the entry syntax of
+ Russian and Uzbek
+
+; between arguments, a comma decimal and \ between array columns, as Excel takes them in ru and uz, with the
+English function names. The file still stores SUM(1,2) and 1.5; print_input shows the stored formula in the
+entry syntax. Tests: separators, stored form, strings and sheet names holding ; and ,, unions, arrays, round trip.
+---
+ crates/formula/src/input.rs                 | 13 ++--
+ crates/formula/tests/decimal_comma_input.rs | 70 +++++++++++++++++++++
+ 2 files changed, 79 insertions(+), 4 deletions(-)
+ create mode 100644 crates/formula/tests/decimal_comma_input.rs
+
+diff --git a/crates/formula/src/input.rs b/crates/formula/src/input.rs
+index 8568023..2692d15 100644
+--- a/crates/formula/src/input.rs
++++ b/crates/formula/src/input.rs
+@@ -9,6 +9,9 @@ pub enum FormulaLocale {
+     #[default]
+     En,
+     Es,
++    /// Russian and Uzbek: `;` between arguments and `,` as the decimal, as Excel takes them there,
++    /// with the English function names (a translation table belongs to a later phase).
++    DecimalComma,
+ }
+ 
+ const SPANISH: &[(&str, &str)] = &[
+@@ -26,13 +29,13 @@ const SPANISH: &[(&str, &str)] = &[
+ 
+ impl FormulaLocale {
+     pub fn list_separator(self) -> char {
+-        if self == Self::Es { ';' } else { ',' }
++        if self == Self::En { ',' } else { ';' }
+     }
+     pub fn decimal_separator(self) -> char {
+-        if self == Self::Es { ',' } else { '.' }
++        if self == Self::En { '.' } else { ',' }
+     }
+     pub fn array_column_separator(self) -> char {
+-        if self == Self::Es { '\\' } else { ',' }
++        if self == Self::En { ',' } else { '\\' }
+     }
+     pub fn function_name(self, canonical: &str) -> &str {
+         if self == Self::Es {
+@@ -89,7 +92,9 @@ pub fn print_input(expr: &Expr, locale: FormulaLocale, known_name: impl Fn(&str)
+         return Ok(crate::print(expr));
+     }
+     let mut expr = expr.clone();
+-    normalize(&mut expr, &known_name, &mut Vec::new(), 0, true)?;
++    if locale == FormulaLocale::Es {
++        normalize(&mut expr, &known_name, &mut Vec::new(), 0, true)?;
++    }
+     let canonical = crate::print(&expr);
+     let tokens = crate::lexer::tokenize(&canonical).map_err(|e| ParseError { msg: e.msg, pos: e.pos })?;
+     let mut out = String::new();
+diff --git a/crates/formula/tests/decimal_comma_input.rs b/crates/formula/tests/decimal_comma_input.rs
+new file mode 100644
+index 0000000..d7216b9
+--- /dev/null
++++ b/crates/formula/tests/decimal_comma_input.rs
+@@ -0,0 +1,70 @@
++//! Office overlay (patch 0027): `FormulaLocale::DecimalComma`, the formula entry of Russian and
++//! Uzbek (`;` between arguments, `,` as the decimal, English function names).
++use gridcraft_formula::{FormulaLocale, parse, parse_input, print, print_input};
++
++const L: FormulaLocale = FormulaLocale::DecimalComma;
++
++fn input(src: &str) -> String {
++    print(&parse_input(src, L, |_| false).unwrap())
++}
++
++#[test]
++fn separators_follow_excel_in_ru_and_uz() {
++    assert_eq!((L.list_separator(), L.decimal_separator(), L.array_column_separator()), (';', ',', '\\'));
++    let en = FormulaLocale::En;
++    assert_eq!((en.list_separator(), en.decimal_separator(), en.array_column_separator()), (',', '.', ','));
++    assert_eq!(L.function_name("SUM"), "SUM");
++    assert_eq!(L.canonical_name("SUM"), "SUM");
++}
++
++#[test]
++fn arguments_and_decimals_become_the_stored_syntax() {
++    for (src, expected) in [
++        ("=SUM(1;2)", "SUM(1,2)"),
++        ("1,5+1", "1.5+1"),
++        ("SUM(1,5;2,25)", "SUM(1.5,2.25)"),
++        ("IF(A1>0;\"да\";\"нет\")", "IF(A1>0,\"да\",\"нет\")"),
++        ("SUM((A1:A3;C1:C3))", "SUM((A1:A3,C1:C3))"),
++        ("SUM({1,5\\2;3\\4};5)", "SUM({1.5,2;3,4},5)"),
++        ("ROUND(2,675;2)", "ROUND(2.675,2)"),
++        ("LAMBDA(x;x+1)(2)", "LAMBDA(x,x+1)(2)"),
++    ] {
++        assert_eq!(input(src), expected, "{src}");
++    }
++}
++
++#[test]
++fn strings_and_sheet_names_keep_their_separators() {
++    for (src, expected) in [
++        ("\"a;b,c\"&\"x\"\"y\"", "\"a;b,c\"&\"x\"\"y\""),
++        ("'My;Sheet,1'!A1+1,5", "'My;Sheet,1'!A1+1.5"),
++        ("CONCAT(\"1,5\";\"2;3\")", "CONCAT(\"1,5\",\"2;3\")"),
++    ] {
++        assert_eq!(input(src), expected, "{src}");
++    }
++}
++
++#[test]
++fn english_function_names_only_and_no_spanish_aliases() {
++    assert_eq!(input("SUMA(1;2)"), "SUMA(1,2)");
++    assert_eq!(input("VERDADERO"), "VERDADERO");
++}
++
++#[test]
++fn a_comma_as_argument_separator_is_an_error_like_in_excel() {
++    assert!(parse_input("SUM(1,2)", L, |_| false).is_ok(), "1,2 is the number 1.2 inside one argument list");
++    assert_eq!(input("SUM(1,2)"), "SUM(1.2)");
++    assert!(parse_input("SUM(1;;", L, |_| false).is_err());
++}
++
++#[test]
++fn printing_for_editing_round_trips() {
++    for stored in ["SUM(1.5,2.25)", "IF(A1>0,\"a;b\",2.5)", "SUM({1.5,2;3,4},5)", "SUM((A1:A3,C1:C3))", "A1+2.5%", "TEXT(A1,\"0.00\")"] {
++        let expr = parse(stored).unwrap();
++        let shown = print_input(&expr, L, |_| false).unwrap();
++        assert_ne!(shown, stored, "{stored} should change in this locale");
++        assert_eq!(print(&parse_input(&shown, L, |_| false).unwrap()), print(&expr), "{stored} via {shown}");
++    }
++    assert_eq!(print_input(&parse("SUM(1.5,2)").unwrap(), L, |_| false).unwrap(), "SUM(1,5;2)");
++    assert_eq!(print_input(&parse("SUM({1,2;3,4})").unwrap(), L, |_| false).unwrap(), "SUM({1\\2;3\\4})");
++}
