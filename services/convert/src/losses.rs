@@ -17,9 +17,6 @@ pub struct Row {
     pub to: Vec<String>,
     #[serde(default)]
     pub requires: Vec<String>,
-    /// does not apply when the target is the input's own format
-    #[serde(default)]
-    pub cross: bool,
     pub evidence: String,
     #[serde(default)]
     pub until: Option<String>,
@@ -43,9 +40,6 @@ fn hit(r: &Row, k: Kind, t: Target, scan: &Scan) -> Option<u32> {
     if !(r.from.is_empty() || r.from.iter().any(|f| f == k.ext()))
         || !(r.to.is_empty() || r.to.iter().any(|x| x == t.ext()))
     {
-        return None;
-    }
-    if r.cross && k.ext() == t.ext() {
         return None;
     }
     if r.requires.is_empty() {
@@ -180,7 +174,7 @@ mod tests {
     }
 
     /// The WP9 rows: each fires for the measured kind and target when the scanner found the feature, and stays quiet without it,
-    /// for another target, and (the `cross` rows) for the input's own format.
+    /// for another target. The reader losses (odt, rtf) apply to the input's own format too.
     #[test]
     fn the_wp9_rows_fire_only_for_their_feature_kind_and_target() {
         let none = with(&[]);
@@ -259,15 +253,27 @@ mod tests {
                 "comments_dropped",
                 "comments",
                 &[Kind::Odt, Kind::Rtf],
-                &[Target::Docx, Target::Pdf, Target::Txt],
-                Target::Odt,
+                &[
+                    Target::Docx,
+                    Target::Odt,
+                    Target::Rtf,
+                    Target::Pdf,
+                    Target::Txt,
+                ],
+                Target::Md,
             ),
             (
                 "footnotes_dropped",
                 "footnotes",
                 &[Kind::Odt, Kind::Rtf],
-                &[Target::Docx, Target::Pdf, Target::Txt],
-                Target::Odt,
+                &[
+                    Target::Docx,
+                    Target::Odt,
+                    Target::Rtf,
+                    Target::Pdf,
+                    Target::Txt,
+                ],
+                Target::Md,
             ),
         ];
         for (code, feature, kinds, targets, quiet_target) in rows {
@@ -284,15 +290,6 @@ mod tests {
                         "{code}: {} to {} warned without {feature}",
                         k.ext(),
                         t.ext()
-                    );
-                }
-                let own = Target::parse(k.ext())
-                    .filter(|_| kinds.len() == 2 && code.ends_with("dropped"));
-                if let Some(own) = own {
-                    assert!(
-                        !codes(&has(feature), k, own).contains(&code.to_string()),
-                        "{code}: {} to itself",
-                        k.ext()
                     );
                 }
                 if kinds.len() == 1 {
@@ -337,5 +334,9 @@ mod tests {
             ["plain_text_layout"]
         );
         assert!(codes(&has("headers_footers"), Kind::Rtf, Target::Docx).is_empty());
+        assert_eq!(
+            codes(&has("headers_footers"), Kind::Odt, Target::Odt),
+            ["headers_footers_dropped"]
+        );
     }
 }
