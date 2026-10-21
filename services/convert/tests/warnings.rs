@@ -3,7 +3,7 @@
 //! real CLIs print (stderr `Warning:` lines, the translit result JSON).
 use convert::exec::{Config, Exit};
 use convert::job::{self, Dest, FileReport, JobSpec};
-use convert::plan::{Options, Outputs, Step, Target, ToolId, ToolStep};
+use convert::plan::{NumLocale, Options, Outputs, Step, Target, ToolId, ToolStep};
 use convert::report;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -459,6 +459,7 @@ fn every_code_has_catalog_text() {
             "xdfu_cannot_check",
             "pdf_text_missing",
             "pdf_docx_fallback",
+            "csv_one_sheet",
         ]
         .map(String::from),
     );
@@ -601,5 +602,114 @@ fn the_report_matches_its_schema() {
     assert!(
         v.get("translit").is_some() && v.get("verified").is_some(),
         "optional fields appear when set"
+    );
+}
+
+/// D6: the job's locale reaches every tool as `GRIDCRAFT_NUM_LOCALE`.
+#[test]
+fn the_job_locale_reaches_the_tool() {
+    for (loc, tag) in [
+        (NumLocale::EnUs, "en"),
+        (NumLocale::Ru, "ru"),
+        (NumLocale::UzLatn, "uz-latn"),
+        (NumLocale::UzCyrl, "uz-cyrl"),
+    ] {
+        let s = Sandbox::new(&format!("loc-{tag}"));
+        let input = s.file("sample.txt", b"hello");
+        let dest = s.dest();
+        let r = job::run_job(
+            &s.cfg(),
+            JobSpec {
+                label: "sample.txt".into(),
+                kind: Some("txt".into()),
+                target: "x".into(),
+                inputs: vec![(input.clone(), "in/input.txt".into())],
+                origins: vec![input],
+                steps: Ok(vec![Step::Tool(ToolStep {
+                    tool: ToolId::Sheets,
+                    argv: ["env".into(), "out/output.txt".into()].into(),
+                    outputs: Outputs::Files(vec!["out/output.txt".into()]),
+                    stdout_to: None,
+                    allow_empty: false,
+                    write_files: vec![],
+                })]),
+                stem: "sample".into(),
+                opts: Options {
+                    locale: loc,
+                    ..Options::default()
+                },
+                ..JobSpec::new(&dest)
+            },
+        );
+        assert_eq!(r.code, 0, "{}", r.message);
+        let out = std::fs::read_to_string(&r.outputs[0]).unwrap();
+        assert_eq!(out.trim(), format!("stub {tag}"));
+    }
+}
+
+#[test]
+fn locale_names_parse_from_the_ui_and_the_os() {
+    for (name, want) in [
+        ("en-US", NumLocale::EnUs),
+        ("en_GB.UTF-8", NumLocale::EnUs),
+        ("ru", NumLocale::Ru),
+        ("ru-RU", NumLocale::Ru),
+        ("uz", NumLocale::UzLatn),
+        ("uz-Latn", NumLocale::UzLatn),
+        ("uz_UZ.UTF-8", NumLocale::UzLatn),
+        ("uz-Cyrl", NumLocale::UzCyrl),
+        ("uz-Cyrl-UZ", NumLocale::UzCyrl),
+    ] {
+        assert_eq!(NumLocale::parse(name), Some(want), "{name}");
+    }
+    assert_eq!(NumLocale::parse("de-DE"), None);
+    assert_eq!(NumLocale::parse(""), None);
+}
+
+/// D6: where the CLI honours the locale, the en-US notes go away (the csv keeps its one-sheet note); where it does not, they stay.
+/// The probe is answered once per tool binary and process, so the two cases are two tests (nextest runs each in its own process).
+fn notes_under(name: &str, honours: bool, loc: NumLocale, to: Target) -> Vec<String> {
+    let s = Sandbox::new(name);
+    let cfg = s.cfg();
+    std::fs::create_dir_all(&cfg.work_dir).unwrap();
+    if honours {
+        std::fs::write(cfg.work_dir.join("honour-locale"), b"").unwrap();
+    }
+    let input = s.zip("staff.xlsx", &["[Content_Types].xml", "xl/workbook.xml"]);
+    let opts = Options {
+        locale: loc,
+        ..Options::default()
+    };
+    let r = job::convert_file(&cfg, &input, to, &opts, &s.dest());
+    assert_eq!(r.code, 0, "{}", r.message);
+    r.warnings.into_iter().map(|w| w.code).collect()
+}
+
+#[test]
+fn the_en_us_notes_go_away_where_the_cli_honours_the_locale() {
+    let run = |n, loc, to| notes_under(n, true, loc, to);
+    assert_eq!(
+        run("hon-pdf", NumLocale::Ru, Target::Pdf),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        run("hon-csv", NumLocale::Ru, Target::Csv),
+        ["csv_one_sheet"]
+    );
+    // en-US asks nothing of the tool and keeps the notes
+    assert_eq!(run("en-pdf", NumLocale::EnUs, Target::Pdf), ["pdf_en_us"]);
+    assert_eq!(
+        run("en-csv", NumLocale::EnUs, Target::Csv),
+        ["csv_one_sheet_en_us"]
+    );
+}
+
+#[test]
+fn the_en_us_notes_stay_where_the_cli_ignores_the_locale() {
+    let run = |n, loc, to| notes_under(n, false, loc, to);
+    assert_eq!(run("deaf-pdf", NumLocale::Ru, Target::Pdf), ["pdf_en_us"]);
+    assert_eq!(
+        run("deaf-csv", NumLocale::UzCyrl, Target::Csv),
+        ["csv_one_sheet_en_us"]
     );
 }

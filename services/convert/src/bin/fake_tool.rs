@@ -58,6 +58,22 @@ fn main() {
             stub(arg(1), "");
             stub(arg(2), "");
         }
+        // the locale probe of `sheets_honours_locale`: a tool that reads `01.03.2019` in `ru` answers with it, one that does not says `1/3/2019`;
+        // a marker file `honour-locale` in the work directory (the probe runs in a directory under it) plays the tool's version
+        "convert"
+            if arg(2) == "o.csv"
+                && std::fs::read_to_string(arg(1)).is_ok_and(|t| t.contains("01.03.2019")) =>
+        {
+            let honours = std::env::var("GRIDCRAFT_NUM_LOCALE").is_ok_and(|l| l == "ru")
+                && std::path::Path::new("../honour-locale").exists();
+            let date = if honours { "01.03.2019" } else { "1/3/2019" };
+            std::fs::write("o.csv", format!("a;b\n3,5;{date}\n")).unwrap();
+        }
+        // prints the locale the tool was given: `env PATH`
+        "env" => stub(
+            arg(1),
+            &std::env::var("GRIDCRAFT_NUM_LOCALE").unwrap_or_default(),
+        ),
         "convert" => {
             // an input that says SLEEP keeps the tool busy (the containment test kills the parent meanwhile)
             if std::fs::read(arg(1)).is_ok_and(|b| b.starts_with(b"SLEEP")) {

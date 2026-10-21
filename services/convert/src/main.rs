@@ -20,6 +20,8 @@ usage:
       --pages 1,3-5               (png output; pdf to txt takes one page)
       --dpi N                     (png; 72-600, default 150)
       --pdf-engine sidecar|native (pdf to docx; default native; sidecar needs CONVERT_PDF2DOCX_URL)
+      --locale en-US|ru|uz-Latn|uz-Cyrl   (how numbers and dates in csv, tsv and spreadsheets are read and written;
+                                           default: your Windows user locale, en-US when that is not one of these)
       --timeout SECS  --max-mem MB  -j N  --json  --strict  --verify  --keep-work  --work-dir DIR  --max-input-mb N
       --xdfu off|watermark|refuse (default off: nothing is detected, logged or marked)
           a document with the XDFU grif (XDFU, ХДФУ, ДСП, Для служебного пользования) is refused, or converted with a watermark
@@ -46,6 +48,7 @@ const VALUE_FLAGS: &[&str] = &[
     "--pages",
     "--dpi",
     "--pdf-engine",
+    "--locale",
     "--timeout",
     "--max-mem",
     "-j",
@@ -194,6 +197,18 @@ fn options(a: &Args) -> Result<Options, String> {
         Some("native") => PdfEngine::Native,
         Some("sidecar") => PdfEngine::Sidecar,
         Some(x) => return Err(format!("--pdf-engine takes sidecar or native, got '{x}'")),
+    };
+    o.locale = match a.val.get("--locale") {
+        Some(l) => plan::NumLocale::parse(l)
+            .ok_or_else(|| format!("--locale takes en-US, ru, uz-Latn or uz-Cyrl, got '{l}'"))?,
+        None => sys_locale::get_locale()
+            .or_else(|| {
+                ["LC_ALL", "LANG"]
+                    .iter()
+                    .find_map(|k| std::env::var(k).ok())
+            })
+            .and_then(|l| plan::NumLocale::parse(&l))
+            .unwrap_or_default(),
     };
     Ok(o)
 }
@@ -374,6 +389,16 @@ fn cmd_check(a: Args) -> ExitCode {
                 }
             },
         }
+    }
+    if cfg.resolve(ToolId::Sheets).is_ok() {
+        println!(
+            "locale      {}",
+            if convert::exec::sheets_honours_locale(&cfg) {
+                "sheets-cli reads and writes numbers and dates in the job's locale (--locale, GRIDCRAFT_NUM_LOCALE)"
+            } else {
+                "sheets-cli ignores GRIDCRAFT_NUM_LOCALE: csv and pdf outputs keep their en-US warnings"
+            }
+        );
     }
     match cfg.pdf2docx_url.as_deref() {
         None => println!(

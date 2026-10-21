@@ -447,6 +447,8 @@ struct OptionsIn {
     pages: Option<String>,
     dpi: Option<u32>,
     pdf_engine: Option<String>,
+    /// the UI language: how numbers and dates in csv, tsv and spreadsheets are read and written (en-US when absent)
+    locale: Option<String>,
 }
 
 fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
@@ -497,6 +499,11 @@ fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
         Some("sidecar") => PdfEngine::Sidecar,
         Some(x) => return Err(format!("pdfEngine takes sidecar or native, got '{x}'")),
     };
+    if let Some(l) = &o.locale {
+        opts.locale = convert::plan::NumLocale::parse(l).ok_or(format!(
+            "locale takes en-US, ru, uz-Latn or uz-Cyrl, got '{l}'"
+        ))?;
+    }
     Ok((target, opts))
 }
 

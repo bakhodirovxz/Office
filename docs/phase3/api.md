@@ -50,7 +50,7 @@ All under `/api/v1` need the mode's auth. Errors are `{"error": {"code", "messag
 | `GET /`, `/app.js`, `/app.css`, `/i18n.json`, ... | the UI files (WP8) |
 
 `options` (unknown keys are a 400): `to` (required), `translit` (`cyrl\|latn\|auto`), `alphabet` (`1995\|2026\|auto`), `apostrophe`
-(`official\|ascii`), `sheet`, `pages`, `dpi` (72-600), `pdfEngine` (`native\|sidecar`). Same meaning as the CLI flags.
+(`official\|ascii`), `sheet`, `pages`, `dpi` (72-600), `pdfEngine` (`native\|sidecar`), `locale` (`en-US\|ru\|uz-Latn\|uz-Cyrl`, default `en-US`; the UI sends its language; how numbers and dates in csv, tsv and spreadsheets are read and written). Same meaning as the CLI flags.
 
 Statuses of `POST`: 202; 400 bad multipart, options, no files; 409 `too_large_for_server` (the file needs more memory than the whole
 budget); 413 `file_too_large`, `batch_too_large`, `too_many_files`, or a `Content-Length` over the request limit; 408

@@ -209,6 +209,8 @@ pub fn classify(stderr: &str) -> Option<(Exit, &'static str)> {
 pub struct Ctl {
     pub cancel: Option<Arc<AtomicBool>>,
     pub deadline: Option<Instant>,
+    /// the job's number locale; every tool gets it as `GRIDCRAFT_NUM_LOCALE` (only gridcraft reads it)
+    pub locale: crate::plan::NumLocale,
 }
 
 impl Ctl {
@@ -260,6 +262,63 @@ pub struct Config {
     pub share_localappdata: bool,
     /// limits that keep a document from fanning out into thousands of processes (checked by the expand steps, exit 9)
     pub caps: crate::plan::Caps,
+}
+
+/// Does this `sheets-cli` read and write in `GRIDCRAFT_NUM_LOCALE` (WP14)? Asked of the tool itself, once per binary: a `;` CSV with
+/// `01.03.2019` converted to CSV under `ru` comes back as `01.03.2019` when the locale is honoured (1 March, shown `dd.mm.yyyy`),
+/// and as `1/3/2019` when it is not. A tool that cannot be run or does not answer in time says "no" (the warnings stay).
+pub fn sheets_honours_locale(cfg: &Config) -> bool {
+    use std::sync::Mutex;
+    static SEEN: Mutex<Vec<(PathBuf, Option<std::time::SystemTime>, bool)>> =
+        Mutex::new(Vec::new());
+    let Ok(exe) = cfg.resolve(ToolId::Sheets) else {
+        return false;
+    };
+    let stamp = std::fs::metadata(&exe).and_then(|m| m.modified()).ok();
+    if let Some((_, _, v)) = SEEN
+        .lock()
+        .ok()
+        .and_then(|s| s.iter().find(|(p, t, _)| *p == exe && *t == stamp).cloned())
+    {
+        return v;
+    }
+    let dir = cfg.work_dir.join(
+        format!("probe-{}-{:?}", std::process::id(), thread::current().id())
+            .replace(['(', ')'], ""),
+    );
+    let ok = (|| {
+        std::fs::create_dir_all(&dir).ok()?;
+        std::fs::write(dir.join("p.csv"), "a;b\n3,5;01.03.2019\n").ok()?;
+        let ctl = Ctl {
+            locale: crate::plan::NumLocale::Ru,
+            ..Ctl::default()
+        };
+        let argv = ["convert".to_string(), "p.csv".into(), "o.csv".into()];
+        let mut steps = vec![];
+        run_tool(
+            cfg,
+            &ctl,
+            ToolId::Sheets,
+            &argv,
+            &dir,
+            None,
+            0.0,
+            0,
+            &mut steps,
+        )
+        .ok()?;
+        Some(
+            std::fs::read_to_string(dir.join("o.csv"))
+                .ok()?
+                .contains("01.03.2019"),
+        )
+    })()
+    .unwrap_or(false);
+    let _ = std::fs::remove_dir_all(&dir);
+    if let Ok(mut s) = SEEN.lock() {
+        s.push((exe, stamp, ok));
+    }
+    ok
 }
 
 impl Config {
@@ -459,7 +518,8 @@ pub fn run_tool(
     cmd.env("LANG", "uz_UZ.UTF-8")
         .env("LC_ALL", "uz_UZ.UTF-8")
         .env("LC_PAPER", "uz_UZ.UTF-8")
-        .env("WORDCRAFT_NO_PREFS", "1");
+        .env("WORDCRAFT_NO_PREFS", "1")
+        .env("GRIDCRAFT_NUM_LOCALE", ctl.locale.tag());
     for k in ["SystemRoot", "windir"] {
         if let Some(v) = std::env::var_os(k) {
             cmd.env(k, v);

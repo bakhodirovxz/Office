@@ -186,7 +186,7 @@
     renderResults();
   }
   function collect() {
-    const o = { to: $('o-to').value }, vis = (n) => !document.querySelector('[data-opt="' + n + '"]').hidden;
+    const o = { to: $('o-to').value, locale: S.lang }, vis = (n) => !document.querySelector('[data-opt="' + n + '"]').hidden;
     if (vis('translit') && $('o-translit').value) { o.translit = $('o-translit').value; if (vis('alphabet')) o.alphabet = $('o-alphabet').value; }
     if (vis('sheet')) o.sheet = $('o-sheet').value;
     if (vis('pages') && $('o-pages').value.trim()) o.pages = $('o-pages').value.trim();

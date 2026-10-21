@@ -107,6 +107,41 @@ pub enum PdfEngine {
     Native,
 }
 
+/// The language numbers and dates are read and written in (gridcraft `NumLocale`). Sent to the tools as `GRIDCRAFT_NUM_LOCALE`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum NumLocale {
+    #[default]
+    EnUs,
+    Ru,
+    UzLatn,
+    UzCyrl,
+}
+
+impl NumLocale {
+    /// A UI language or an OS locale name: `en-US`, `ru`, `ru-RU`, `uz-Latn`, `uz-Cyrl-UZ`, `uz_UZ.UTF-8`, `en_GB`. `None` = not one of ours.
+    pub fn parse(s: &str) -> Option<NumLocale> {
+        let t = s.trim().to_ascii_lowercase().replace('_', "-");
+        let t = t.split(['.', '@']).next().unwrap_or("");
+        let mut p = t.split('-');
+        match (p.next()?, p.next()) {
+            ("en", _) => Some(NumLocale::EnUs),
+            ("ru", _) => Some(NumLocale::Ru),
+            ("uz", Some("cyrl")) => Some(NumLocale::UzCyrl),
+            ("uz", _) => Some(NumLocale::UzLatn),
+            _ => None,
+        }
+    }
+    /// The value of `GRIDCRAFT_NUM_LOCALE`.
+    pub fn tag(self) -> &'static str {
+        match self {
+            NumLocale::EnUs => "en",
+            NumLocale::Ru => "ru",
+            NumLocale::UzLatn => "uz-latn",
+            NumLocale::UzCyrl => "uz-cyrl",
+        }
+    }
+}
+
 /// `1,3-5`: ranges of 1-based pages, in the order given.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PageSpec(pub Vec<(u32, u32)>);
@@ -164,6 +199,7 @@ pub struct Options {
     pub pages: Option<PageSpec>,
     pub dpi: u32,
     pub pdf_engine: PdfEngine,
+    pub locale: NumLocale,
 }
 
 impl Default for Options {
@@ -174,6 +210,7 @@ impl Default for Options {
             pages: None,
             dpi: 150,
             pdf_engine: PdfEngine::Native,
+            locale: NumLocale::EnUs,
         }
     }
 }

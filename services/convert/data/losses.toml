@@ -27,14 +27,14 @@ code = "csv_one_sheet_en_us"
 from = ["xlsx", "xls", "xlsb", "ods"]
 to = ["csv"]
 evidence = "docs/phase1/locale-check.md 1 and 5 (CSV is en-US, one sheet of displayed values); PLAN F6"
-until = "the gridcraft NumLocale patch lands (WP14, owner decision O7); then keep the row only for locales the patch does not cover"
+until = "the gridcraft NumLocale patch lands (WP14, owner decision O7): done. job.rs drops this row when the job locale is not en-US and `sheets-cli` honours GRIDCRAFT_NUM_LOCALE (probed once, `convert check`); the en-US row stays, since en-US is what the file shows then"
 
 [[row]]
 code = "pdf_en_us"
 from = ["xlsx", "xls", "xlsb", "ods"]
 to = ["pdf"]
 evidence = "docs/phase1/locale-check.md 1 and 5 (PDF numbers and dates are en-US); PLAN F6"
-until = "the gridcraft NumLocale patch lands (WP14, owner decision O7); then keep the row only for locales the patch does not cover"
+until = "the gridcraft NumLocale patch lands (WP14, owner decision O7): done. job.rs drops this row when the job locale is not en-US and `sheets-cli` honours GRIDCRAFT_NUM_LOCALE (probed once, `convert check`); the en-US row stays, since en-US is what the file shows then"
 
 [[row]]
 code = "plain_text_layout"

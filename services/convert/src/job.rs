@@ -923,6 +923,7 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
                 .deadline
                 .unwrap_or_else(|| Instant::now() + Duration::from_secs(cfg.job_timeout_s)),
         ),
+        locale: spec.opts.locale,
     };
     let stem = safe_name(&spec.stem, "output");
     let mut ctx_for_hooks: Option<JobCtx> = None;
@@ -1231,7 +1232,22 @@ pub fn convert_source(
         .and_then(|s| s.to_str())
         .unwrap_or("output")
         .to_string();
-    warnings.extend(crate::losses::warnings(&scan, k, target));
+    let mut lost = crate::losses::warnings(&scan, k, target);
+    // WP14: where sheets-cli formats in the job's locale, the en-US notes are not true; the one-sheet note of the csv stays
+    if opts.locale != plan::NumLocale::EnUs
+        && lost
+            .iter()
+            .any(|w| matches!(w.code.as_str(), "pdf_en_us" | "csv_one_sheet_en_us"))
+        && crate::exec::sheets_honours_locale(cfg)
+    {
+        lost.retain(|w| w.code != "pdf_en_us");
+        for w in &mut lost {
+            if w.code == "csv_one_sheet_en_us" {
+                *w = report::warn("csv_one_sheet", w.count);
+            }
+        }
+    }
+    warnings.extend(lost);
     let steps = plan::plan(k, target, opts).map_err(plan_failure);
     run_job(
         cfg,
