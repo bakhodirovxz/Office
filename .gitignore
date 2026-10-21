@@ -29,3 +29,4 @@ spikes/mobile-b/android-webview/local.properties
 ci/web-smoke/test-results/
 # Test evidence logs cited by ci/quarantine.toml must be in git (gate review M1).
 !docs/phase1/evidence/**/*.log
+__pycache__/
