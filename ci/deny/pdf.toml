@@ -53,6 +53,8 @@ ignore = [
     { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained (no vulnerability); Linux-only AT-SPI accessibility chain eframe -> egui-winit -> accesskit_winit -> accesskit_unix; not built for Windows/web; replace when upstream egui moves (review at each sync)" },
     { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
     { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
+    { id = "RUSTSEC-2026-0382", reason = "rustls-webpki 0.103.15 may accept distrusted emSign intermediates (fixed in 0.103.16); the version is pinned by upstream pdfcraft's Cargo.lock, which our lockdiff gate keeps identical. TLS is used only for pdfcraft's optional network features (timestamp, online checks). Bump with the next upstream sync (owner-visible, STATUS 2026-10-21)" },
+    { id = "RUSTSEC-2026-0383", reason = "webpki-root-certs 1.0.9 bundles the distrusted emSign ECC Root CA - G3 (removed in 1.0.10); same upstream-pinned TLS chain as RUSTSEC-2026-0382. Bump with the next upstream sync" },
 ]
 
 # egui's default UI fonts (Ubuntu-Light, Hack, emoji-icon-font): font licences, attributed upstream as dependency-bundled assets.
