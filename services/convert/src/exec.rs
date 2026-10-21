@@ -75,16 +75,18 @@ pub struct Limits {
 }
 
 pub const TIMEOUT_CAP_S: u64 = 15 * 60;
+/// Census proposed 10 s; on a loaded 12-core box a 0.2 s docx->pdf still tripped it (WP3/4 runs), so 30 s.
+const BASE_S: f64 = 30.0;
 
 pub fn limits(c: Class) -> Limits {
-    let l = |base_s, per_mb_s, per_page_s, mem_gb: u64| Limits { base_s, per_mb_s, per_page_s, mem_mb: mem_gb * 1024 };
+    let l = |per_mb_s, per_page_s, mem_gb: u64| Limits { base_s: BASE_S, per_mb_s, per_page_s, mem_mb: mem_gb * 1024 };
     match c {
-        Class::Docs => l(10.0, 25.0, 0.0, 3),
-        Class::SheetsConvert => l(10.0, 3.0, 0.0, 6),
-        Class::SheetsPdf => l(10.0, 7.0, 0.0, 6),
-        Class::Slides => l(10.0, 10.0, 0.0, 3),
-        Class::Pdf => l(10.0, 3.0, 0.5, 2),
-        Class::PdfNativeDocx => l(10.0, 0.0, 1.0, 2),
+        Class::Docs => l(25.0, 0.0, 3),
+        Class::SheetsConvert => l(3.0, 0.0, 6),
+        Class::SheetsPdf => l(7.0, 0.0, 6),
+        Class::Slides => l(10.0, 0.0, 3),
+        Class::Pdf => l(3.0, 0.5, 2),
+        Class::PdfNativeDocx => l(0.0, 1.0, 2),
     }
 }
 
@@ -567,12 +569,12 @@ mod tests {
     #[test]
     fn timeouts_follow_the_census_table() {
         let s = |c, mb, p| timeout_for(c, mb, p).as_secs();
-        assert_eq!(s(Class::Docs, 1.0, 0), 35);
-        assert_eq!(s(Class::SheetsConvert, 10.0, 0), 40);
-        assert_eq!(s(Class::SheetsPdf, 10.0, 0), 80);
-        assert_eq!(s(Class::Slides, 2.0, 0), 30);
-        assert_eq!(s(Class::Pdf, 1.0, 10), 18);
-        assert_eq!(s(Class::PdfNativeDocx, 5.0, 20), 30);
+        assert_eq!(s(Class::Docs, 1.0, 0), 55);
+        assert_eq!(s(Class::SheetsConvert, 10.0, 0), 60);
+        assert_eq!(s(Class::SheetsPdf, 10.0, 0), 100);
+        assert_eq!(s(Class::Slides, 2.0, 0), 50);
+        assert_eq!(s(Class::Pdf, 1.0, 10), 38);
+        assert_eq!(s(Class::PdfNativeDocx, 5.0, 20), 50);
         assert_eq!(s(Class::Docs, 1000.0, 0), TIMEOUT_CAP_S);
         assert_eq!(class_of(ToolId::Sheets, &["run".into()]), Class::SheetsPdf);
     }
