@@ -1,7 +1,8 @@
 # Fixture generator 1/2: the extra direction inputs, written by the real MS Office 16 through COM (ASCII-only source).
 #   Word  : order.{odt,rtf,html,txt,dot,md,pdf} from the Phase 0 synthetic hrm_order.docx (md is built from the paragraph
 #           styles: Word has no md writer)
-#   Excel : hrm_staff / hrm_timesheet as .xlsb and .ods
+#   Excel : hrm_staff / hrm_timesheet as .xlsb and .ods; staff.csv = Excel's own CSV (UTF-8) of hrm_staff.xlsx, with this PC's list
+#           separator and decimal (";" and "3500000,0" on ru-RU): the D6 input
 # Synthetic only, never corpus/. Own Office instances (PID attributed, only those are killed).
 param([Parameter(Mandatory)][string]$Dir)
 $ErrorActionPreference = "Stop"
@@ -58,5 +59,7 @@ try {
             $b = $x.Workbooks.Open("$Dir\$n.xlsx", 0, $true); $b.SaveAs("$Dir\$n.$($f[0])", $f[1]); $b.Close($false)
         }
     }
+    # xlCSVUTF8 = 62: the separator and the decimal are this PC's (";" and a comma on ru-RU), as a user's own export
+    $b = $x.Workbooks.Open("$Dir\hrm_staff.xlsx", 0, $true); $b.SaveAs("$Dir\staff.csv", 62); $b.Close($false)
 } finally { Stop-Mine $x $xp }
 Get-ChildItem $Dir | Select-Object Name, Length | Format-Table -AutoSize | Out-String | Write-Host

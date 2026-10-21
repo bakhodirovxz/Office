@@ -16,7 +16,7 @@ Quick triggers are `diff_has` in `scripts/ci.sh` (diff against `CI_DIFF_BASE`, d
 
 Inputs: the e2e tests use the synthetic WP1 set in `E:/office-target/p3/census/in` (override `CONVERT_INPUTS`; the Rust tests hard-code that path). When a file is missing, `convert-e2e` regenerates the set with `scripts/fidelity/census.ps1 -Phase prep` (Office 16 COM, only PIDs it started). Nothing comes from `corpus/`.
 
-Silent-loss baseline: `ci/fidelity/silent-baseline.json`, keys `direction|fixture|feature`, seeded from `summary.json` of 2026-10-21 (73 entries). When a loss is fixed the job prints "gone"; shrink the file with `python -I scripts/fidelity/silent_baseline.py seed <out>/summary.json`. x2t is optional (`X2T_URL`); `CI_FID_NO_OFFICE=1` drops the Office reference.
+Silent-loss baseline: `ci/fidelity/silent-baseline.json`, keys `direction|fixture|feature`, re-seeded on 2026-10-21 after the WP10 fixes from the 90-direction run (4 entries, all D1: txt to docx, odt, rtf, pdf). When a loss is fixed the job prints "gone"; shrink the file with `python -I scripts/fidelity/silent_baseline.py seed <out>/summary.json`. x2t is optional (`X2T_URL`); `CI_FID_NO_OFFICE=1` drops the Office reference.
 
 Known gap: `services/` is not rustfmt-clean (about 500 hunks), so `convert` has no fmt check yet.
 

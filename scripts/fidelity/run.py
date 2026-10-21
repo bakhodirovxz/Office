@@ -9,6 +9,7 @@ For every direction in fid/directions.py and every synthetic fixture:
   office   : MS Office 16 COM doing the same conversion (reference, fid/refs.py + office_ref.ps1)
   soffice  : LibreOffice sidecar (POST /v1/convert, OOXML only)         -> "unavailable: <reason>" when not reachable
   x2t      : ONLYOFFICE document server /converter (X2T_URL)            -> "unavailable: <reason>" when not configured
+             (start it with -e JWT_ENABLED=false -e ALLOW_PRIVATE_IP_ADDRESS=true; see fid/refs.py X2T)
 Metrics per output: page count, word-level text similarity, per-page pixel diff vs the Office PDF of the source (pdf-cli
 render, 96 dpi), paragraph ratio, structural counts kept/lost, Cyrillic letters kept, csv cell equality, PDF-op page
 hashes, and for pdf -> docx the PLAN 3.4 metrics. Finally the "loss without warning" check: every measured structural,
@@ -16,7 +17,7 @@ text, page or Cyrillic loss of the craft output must be matched by a warning in 
 Output: <out>/directions/<id>.json, <out>/summary.json (+ work files under <out>/work). Synthetic fixtures only.
 Test tooling: needs pillow + numpy; never builds anything. Kills only the Office PID it started.
 """
-import argparse, hashlib, json, os, re, subprocess, sys, time, urllib.request, csv, html
+import argparse, hashlib, io, json, os, re, subprocess, sys, time, urllib.request, csv, html
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -149,19 +150,42 @@ def plain_text(path):
         return ""
 
 
+def csv_load(p):
+    """-> (delimiter, rows). Each file is read with the separator it was written with (Excel writes ';' and a decimal comma on a ru-RU
+    PC, our converter writes what its --locale says): the delimiter is the commonest of ';' ',' tab in the first line outside quotes. Excel
+    pads every row to the used width, so trailing empty cells are not content."""
+    raw = Path(p).read_text("utf-8-sig", errors="replace")
+    first = re.sub(r'"[^"]*"', "", raw.split("\n", 1)[0]) if raw else ""
+    delim = max(";,\t", key=first.count) if first else ","
+    rows = []
+    for r in csv.reader(io.StringIO(raw, newline=""), delimiter=delim):
+        while r and r[-1] == "":
+            r = r[:-1]
+        rows.append(r)
+    return delim, rows
+
+
+def _neutral(v):
+    """A cell without the locale's own marks: group spaces, the decimal comma and the date slash."""
+    return v.replace("\u00a0", "").replace("\u202f", "").replace(" ", "").replace(",", ".").replace("/", ".")
+
+
 def csv_compare(ref, cand):
-    def load(p):
-        with open(p, encoding="utf-8-sig", newline="") as f:
-            return list(csv.reader(f))
-    a, b = load(ref), load(cand)
-    cells = sum(len(r) for r in a); eq = 0; diffs = []
+    """Cell equality of two CSVs, each read with its own delimiter. `cell_equality` is strict; a cell that differs only by locale marks
+    (1,5 / 1.5, 1/3/2019 / 1.3.2019) is counted apart in `cells_differ_only_by_locale`, since it is not lost content."""
+    rd, a = csv_load(ref)
+    cd, b = csv_load(cand)
+    cells = sum(len(r) for r in a); eq = loc = 0; diffs = []
     for i, r in enumerate(a):
         for j, v in enumerate(r):
             w = b[i][j] if i < len(b) and j < len(b[i]) else None
             if v == w: eq += 1
+            elif w is not None and _neutral(v) == _neutral(w): loc += 1
             elif len(diffs) < 3: diffs.append({"cell": [i + 1, j + 1], "office": v[:30], "craft": (w or "")[:30]})
-    return {"rows_ref": len(a), "rows_cand": len(b), "cells_ref": cells, "cells_equal": eq,
-            "cell_equality": round(eq / cells, 4) if cells else 1.0, "first_diffs": diffs}
+    return {"rows_ref": len(a), "rows_cand": len(b), "cells_ref": cells, "cells_equal": eq, "cells_differ_only_by_locale": loc,
+            "cells_other_diff": cells - eq - loc, "delimiter_ref": rd, "delimiter_cand": cd,
+            "cell_equality": round(eq / cells, 4) if cells else 1.0, "cell_equality_locale_neutral": round((eq + loc) / cells, 4) if cells else 1.0,
+            "first_diffs": diffs}
 
 
 def page_hashes(pdf, work, tag):
@@ -198,6 +222,7 @@ def main():
     ap.add_argument("--convert-bin")
     ap.add_argument("--no-office", action="store_true"); ap.add_argument("--no-soffice", action="store_true"); ap.add_argument("--no-x2t", action="store_true")
     ap.add_argument("--force", action="store_true", help="redo cached Office conversions")
+    ap.add_argument("--locale", help="convert --locale for every craft job (default: convert's own default, the Windows user locale)")
     ap.add_argument("--list", action="store_true", help="print the directions and exit")
     a = ap.parse_args()
     dirs = select(a.directions)
@@ -215,7 +240,7 @@ def main():
     (out / "directions").mkdir(parents=True, exist_ok=True)
     work = out / "work"; work.mkdir(exist_ok=True)
 
-    ad = Adapter(a.adapter, a.convert_bin)
+    ad = Adapter(a.adapter, a.convert_bin, locale=a.locale)
     so, x2 = Soffice(disabled=a.no_soffice), X2T(disabled=a.no_x2t)
     oq = OQ(work, not a.no_office, a.force)
     p2d_url = (os.environ.get("CONVERT_PDF2DOCX_URL") or "http://127.0.0.1:18080").rstrip("/")
@@ -223,6 +248,8 @@ def main():
         with urllib.request.urlopen(p2d_url + "/healthz", timeout=4) as r: p2d_up = True
     except Exception as e:
         p2d_up = False; p2d_reason = "pdf2docx sidecar not reachable at %s (%s); start sidecars/pdf2docx/run.sh" % (p2d_url, type(e).__name__)
+    if p2d_up:   # the product falls back to the sidecar when the native pdf -> docx loses text (D5), and `--pdf-engine sidecar` needs the URL
+        ad.env.setdefault("CONVERT_PDF2DOCX_URL", p2d_url)
     print("adapter:", ad.describe(), "| soffice:", so.reason or "up", "| x2t:", x2.reason or "up", "| pdf2docx:", "up" if p2d_up else p2d_reason, flush=True)
 
     # ---------- round 0: build the case list, run craft / soffice / x2t, queue Office jobs
@@ -377,6 +404,8 @@ def main():
             elif kind == "csv":
                 o = (c["engines"]["office"] or {}).get("out")
                 if o and oq.ok(o): m.update(csv_compare(o, y))
+                elif c["src"].suffix.lower() in (".csv", ".tsv"):   # csv -> csv: the source text is the reference (Office has no "same format" job)
+                    m.update(csv_compare(c["src"], y)); m["reference"] = "source fixture"
                 else: m["ref_note"] = "no Office CSV"
                 m["structural_losses"] = S.structural_losses(src_s, S.structure(y), "csv")
             if kind == "translit" and vis:   # the text is SUPPOSED to change: only pagination counts (Phase 2 owns the text checks)
@@ -447,9 +476,22 @@ def main():
                     m["visual"] = {"note": "Office could not render the output: " + (oq.error(yp) if yp else "no job")[:100]}
                 return m
             rec["craft"]["metrics"] = p2("craft", craft["outputs"][0]) if craft["outputs"] else {}
+
+            def p2d_loss_check(res, y, m):
+                """Loss without warning for a pdf -> docx output (D5): the letters of the PDF text layer against the docx, and tables. Pagination is
+                not judged: the docx reflows, and the native engine's extra paragraph spacing is a layout difference, measured in fidelity.md 2."""
+                if res["status"] == "failed" or not y: return None
+                L = losses_of(None, None, None, text_metrics(pdf_text(c["src"]), docx_info(y)["text"]))
+                if m.get("tables_out", 0) < m.get("tables_src", 0):
+                    L.append({"feature": "tables", "before": m["tables_src"], "after": m["tables_out"]})
+                sil = S.silent_losses(L, res["warnings"])
+                return {"losses": L, "warnings": len(res["warnings"]), "silent": sil, "ok": not sil}
+            if craft["outputs"]: rec["loss_check"] = p2d_loss_check(craft, craft["outputs"][0], rec["craft"]["metrics"])
             cs = c["craft_sidecar"]
             rec["engines"]["craft_sidecar"] = {"status": "ok" if cs["outputs"] else "unavailable", "reason": None if cs["outputs"] else "convert --pdf-engine sidecar: %s (code %s)" % (cs["message"], cs["code"]),
                                                 **({"metrics": p2("craft_sidecar", cs["outputs"][0])} if cs["outputs"] else {})}
+            if cs["outputs"]:
+                rec["engines"]["craft_sidecar"]["loss_check"] = p2d_loss_check(cs, cs["outputs"][0], rec["engines"]["craft_sidecar"]["metrics"])
             for eng in ("pdf2docx_raw", "pdf2docx_merged", "office", "soffice", "x2t"):
                 e = dict(c["engines"].get(eng) or {"status": "unavailable", "reason": "n/a"})
                 ys = engine_outputs(c, eng)
@@ -473,7 +515,7 @@ def main():
             rec["engines"] = {e: {"status": "unavailable", "reason": "not applicable"} for e in ("office", "soffice", "x2t")}
 
     # ---------- write
-    summary = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "adapter": ad.describe(), "fixtures": str(fx), "engines": {
+    summary = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "adapter": ad.describe(), "locale": a.locale or "convert default (Windows user locale)", "fixtures": str(fx), "engines": {
         "office": oq.reason or "MS Office 16 COM", "soffice": so.reason or "up (%s)" % so.url, "x2t": x2.reason or "up (%s)" % x2.url,
         "pdf2docx_sidecar": "up (%s)" % p2d_url if p2d_up else p2d_reason}, "directions": {}, "loss_without_warning": []}
     for d in dirs:
@@ -485,6 +527,8 @@ def main():
         for r in rows:
             for s in (r.get("loss_check") or {}).get("silent", []):
                 summary["loss_without_warning"].append({"direction": d["id"], "fixture": r["fixture"], **s})
+            for s in (((r.get("engines") or {}).get("craft_sidecar") or {}).get("loss_check") or {}).get("silent", []):
+                summary["loss_without_warning"].append({"direction": d["id"], "fixture": r["fixture"] + " (sidecar)", **s})
     (out / "summary.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")
     print("directions: %d, cases: %d, silent losses: %d -> %s" % (len(dirs), len(cases), len(summary["loss_without_warning"]), out / "summary.json"))
 

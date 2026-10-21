@@ -4,7 +4,7 @@
   python -I scripts/fidelity/gen_fixtures.py --out E:/office-target/p3/fidelity/fixtures
 
 1. base set: copied from the Phase 0 synthetic dir (gen_office.ps1 builds it with Office 16 if it is missing)
-2. gen_word_excel.ps1: odt rtf html txt md dot pdf (Word), xlsb ods (Excel)
+2. gen_word_excel.ps1: odt rtf html txt md dot pdf (Word), xlsb ods and staff.csv (Excel; staff.tsv is made from it here)
 3. gen_pdf2docx.ps1: the PLAN 3.4 PDF -> DOCX fixtures (Word-made PDFs + truth files)
 4. the Phase 2 translit fixtures (copied from domains/*/tests), plus PDF edge cases (scan, 0 bytes, truncated)
 5. MANIFEST.json (name -> size, sha256)
@@ -40,6 +40,17 @@ def edge_pdfs(out):
     (out / "truncated.pdf").write_bytes(data[: len(data) // 2])
 
 
+def tsv_from_csv(src, dst):
+    """The tab-separated copy of Excel's CSV (Excel COM writes UTF-16 for tabs; the converter's input is UTF-8)."""
+    import csv
+    with open(src, encoding="utf-8-sig", newline="") as f:
+        head = f.readline()
+        f.seek(0)
+        rows = list(csv.reader(f, delimiter=max(";,", key=head.count)))
+    with open(dst, "w", encoding="utf-8", newline="") as f:
+        csv.writer(f, delimiter="\t", lineterminator="\r\n").writerows(rows)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -55,8 +66,10 @@ def main():
         ps("gen_office.ps1", "-Out", SYN)
     for f in BASE:
         shutil.copy2(SYN / f, out / f)
-    if not (out / "order.odt").exists() or not (out / "hrm_staff.ods").exists():
+    if not (out / "order.odt").exists() or not (out / "hrm_staff.ods").exists() or not (out / "staff.csv").exists():
         ps("gen_word_excel.ps1", out)
+    if not (out / "staff.tsv").exists():
+        tsv_from_csv(out / "staff.csv", out / "staff.tsv")
     if not (out / "p2d_widths.pdf").exists():
         ps("gen_pdf2docx.ps1", out, "-Png", out / "sample.png")
     for t in TRANSLIT:

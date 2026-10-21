@@ -15,17 +15,89 @@ class T(unittest.TestCase):
         self.assertEqual([l["feature"] for l in S.silent_losses(losses, warn)], ["charts"])
         self.assertEqual(len(S.silent_losses(losses, [])), 2)
 
-    def test_derived_losses_are_explained_by_any_loss_warning(self):
+    def test_derived_losses_are_explained_only_by_a_warning_that_names_them(self):
         text = [{"feature": "text", "before": 1.0, "after": 0.7}, {"feature": "pagination", "before": 2, "after": 3}]
         self.assertEqual(S.silent_losses(text, []), text)                                        # nothing said at all: silent
-        self.assertEqual(S.silent_losses(text, [{"code": "pdf_en_us", "text": "Numbers use en-US"}]), [])
+        self.assertEqual(S.silent_losses(text, [{"code": "pdf_en_us", "text": "Numbers use en-US"}]), text[1:])   # en-US explains text, not pages
+        self.assertEqual(S.silent_losses(text, [{"code": "headers_footers_dropped", "text": "Headers are not kept"}]), [])
         self.assertEqual(S.silent_losses(text, [{"code": "upstream", "text": "Warning: charts not imported"}]), [])
-        # a warning that announces no loss explains nothing
+        # a warning that names another kind of loss, or none, explains nothing: a second, unwarned text loss stays silent
+        self.assertEqual(S.silent_losses(text, [{"code": "macros_dropped", "text": "Macros are not kept"}]), text)
+        self.assertEqual(S.silent_losses(text, [{"code": "upstream", "text": "Warning: the font was substituted"}]), text)
         self.assertEqual(S.silent_losses(text, [{"code": "text_transcoded", "text": "cp1251"}, {"code": "kind_mismatch", "text": "x"}]), text)
+        cyr = [{"feature": "cyrillic", "before": 100, "after": 90}]
+        self.assertEqual(S.silent_losses(cyr, [{"code": "pdf_en_us", "text": "x"}]), cyr)
+        self.assertEqual(S.silent_losses(cyr, [{"code": "pdf_text_missing", "text": "18 of 480 letters"}]), [])
         # a structural loss needs its own warning: "text" in a warning does not cover a lost comment
         c = [{"feature": "comments", "before": 1, "after": 0}]
         self.assertEqual(S.silent_losses(c, [{"code": "pdf_en_us", "text": "Numbers use en-US"}]), c)
         self.assertEqual(S.silent_losses(c, [{"code": "comments_dropped", "text": "Comments are not kept in the result."}]), [])
+
+    def test_a_lost_pdf_column_is_a_text_loss_unless_the_report_says_so(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("fid_run", Path(__file__).resolve().parent / "run.py")
+        run = importlib.util.module_from_spec(spec); spec.loader.exec_module(run)
+        pdf = " ".join(["Rahimov Sherzod Toshpulatovich"] * 12 + ["Karimova Dilnoza"] * 12)
+        docx = " ".join(["Rahimov Sherzod Toshpulatovich"] * 12)
+        L = run.losses_of(None, None, None, text_metrics(pdf, docx))
+        self.assertIn("text", [l["feature"] for l in L])
+        self.assertEqual([l["feature"] for l in S.silent_losses(L, [])], [l["feature"] for l in L])
+        self.assertEqual(S.silent_losses(L, [{"code": "pdf_text_missing", "text": "18 of 480 letters are missing"}]), [])
+        self.assertEqual(run.losses_of(None, None, None, text_metrics(pdf, pdf)), [])
+
+    def test_csv_compare_reads_each_file_with_its_own_delimiter(self):
+        import tempfile
+        spec = __import__("importlib.util").util.spec_from_file_location("fid_run2", Path(__file__).resolve().parent / "run.py")
+        run = __import__("importlib.util").util.module_from_spec(spec); spec.loader.exec_module(run)
+        with tempfile.TemporaryDirectory() as d:
+            ru = Path(d) / "ru.csv"; en = Path(d) / "en.csv"; ru2 = Path(d) / "ru2.csv"
+            ru.write_text("Name;Pay;Date\nA;3500000,0;01.03.2019\nB;12,5;11.09.2019\n", "utf-8")
+            en.write_text('Name,Pay,Date\nA,3500000.0,01/03/2019\nB,"12.5",11/09/2019\n', "utf-8")
+            ru2.write_text("Name;Pay;Date;;\nA;3500000,0;01.03.2019;;\nB;12,5;11.09.2019;;\n", "utf-8-sig")
+            same = run.csv_compare(ru, ru2)            # Excel pads rows; the same content in the same locale is equal
+            self.assertEqual((same["cells_equal"], same["cells_other_diff"], same["delimiter_ref"]), (9, 0, ";"))
+            other = run.csv_compare(ru, en)            # ru against en-US: only locale marks differ, and it is counted apart
+            self.assertEqual((other["delimiter_ref"], other["delimiter_cand"], other["cells_other_diff"]), (";", ",", 0))
+            self.assertLess(other["cell_equality"], 1.0)
+            self.assertEqual(other["cell_equality_locale_neutral"], 1.0)
+
+    def test_one_office_hang_costs_one_file(self):
+        """A stand-in office_ref.ps1 hangs on 'hang.docx'. The batch kills only the process in the pid file, marks that file as a timeout and
+        runs the files after it in a fresh instance."""
+        import subprocess, tempfile
+        from fid import refs
+        if not (hasattr(subprocess, "STARTUPINFO") and subprocess.run(["where", "powershell"], capture_output=True).returncode == 0):
+            self.skipTest("needs Windows PowerShell")
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            (d / "office_ref.ps1").write_text(r'''
+param([string]$App, [string]$List, [string]$Result, [string]$Progress = "")
+$items = [IO.File]::ReadAllText($List, [Text.Encoding]::UTF8) | ConvertFrom-Json
+if ($items -isnot [array]) { $items = @($items) }
+$child = Start-Process -PassThru -WindowStyle Hidden ping -ArgumentList "-n 200 127.0.0.1"
+Set-Content $env:FID_PIDFILE $child.Id
+$all = @()
+foreach ($it in $items) {
+    if ($it.src -like "*hang.docx") { Start-Sleep 300 }
+    $r = [ordered]@{ src = $it.src; out = $it.out; fmt = $it.fmt; ok = $true; error = $null; ms = 1 }
+    $all += $r
+    [IO.File]::AppendAllText($Progress, (ConvertTo-Json -InputObject $r -Compress) + "`n")
+}
+Stop-Process -Id $child.Id -Force
+[IO.File]::WriteAllText($Result, (ConvertTo-Json -InputObject @($all)))
+''', "ascii")
+            old = refs.HERE
+            refs.HERE = d
+            try:
+                jobs = [{"src": "C:/x/a.docx", "out": "C:/x/a.pdf", "fmt": "pdf"}, {"src": "C:/x/hang.docx", "out": "C:/x/h.pdf", "fmt": "pdf"},
+                        {"src": "C:/x/b.docx", "out": "C:/x/b.pdf", "fmt": "pdf"}]
+                res = refs.office_batch("word", jobs, d / "work", "t", per_item=4)
+            finally:
+                refs.HERE = old
+        self.assertTrue(res["C:/x/a.pdf"]["ok"])
+        self.assertFalse(res["C:/x/h.pdf"]["ok"])
+        self.assertTrue(res["C:/x/h.pdf"]["error"].endswith("timeout"))
+        self.assertTrue(res["C:/x/b.pdf"]["ok"], res["C:/x/b.pdf"])
 
     def test_rtf_structure_counts(self):
         import tempfile

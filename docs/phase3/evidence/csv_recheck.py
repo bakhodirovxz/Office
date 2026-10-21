@@ -1,4 +1,5 @@
-"""Re-measure csv cell equality with each file's own delimiter (the harness reads Excel's ';' CSV with ',').
+"""WP10 record (folded into scripts/fidelity/run.py csv_compare, which now reads each file with its own delimiter).
+Re-measure csv cell equality with each file's own delimiter (the harness reads Excel's ';' CSV with ',').
 usage: csv_recheck.py <out json> <fixtures dir> <work dir>...
 When Office made no CSV (csv -> csv is "same format"; Office COM cannot open .tsv) the source fixture is the reference."""
 import csv, json, sys

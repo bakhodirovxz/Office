@@ -165,18 +165,33 @@ def structural_losses(src, out, target=None):
     return [{"feature": k, "before": src[k], "after": out.get(k, 0)} for k in RELEVANT.get(target, FEATURES) if k not in skip and src.get(k, 0) > out.get(k, 0)]
 
 
-# text, pagination and Cyrillic differences are consequences of something else being lost or reformatted (a header, a chart, a
-# number format, a picture), not features of their own. They are explained when the report warns about a loss at all; a text
-# difference with no structural loss and no warning stays a silent loss. Codes that do not announce a loss do not explain.
-DERIVED = {"text", "pagination", "cyrillic"}
+# Text, pagination and Cyrillic differences are consequences of something else being lost or reformatted (a header, a chart, a number
+# format, a picture), not features of their own. A warning explains one only when it NAMES that kind of loss: the codes below
+# (data/losses.toml and the job codes of services/convert), or an engine message (`upstream`) that says content was dropped. Any other
+# warning on the same case explains nothing, so a second, unwarned text loss on a file that already carries a warning stays silent.
+_TEXT = {"headers_footers_dropped", "footnotes_dropped", "comments_dropped", "revisions_dropped", "plain_text_layout", "tables_to_text",
+         "merged_cells_flattened", "doc_import_loss", "xls_pdf_chart_page", "pdf_en_us", "csv_one_sheet_en_us", "pdf_text_missing",
+         "empty_text", "pdf_damaged"}
+NAMES = {
+    "text": _TEXT,
+    "pagination": {"headers_footers_dropped", "footnotes_dropped", "comments_dropped", "html_images_not_embedded", "doc_import_loss",
+                   "xls_pdf_chart_page", "plain_text_layout", "tables_to_text", "pdf_text_missing", "empty_text", "pdf_damaged"},
+    "cyrillic": _TEXT - {"pdf_en_us", "csv_one_sheet_en_us"},
+}
+DERIVED = set(NAMES)
+UPSTREAM_DROP = re.compile(r"not imported|not supported|unsupported|ignored|dropped|lost|skipp|not kept|not read|cannot|could not", re.I)
 NOT_A_LOSS = {"kind_mismatch", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark",
               "xdfu_cannot_check", "translit_nothing", "translit_formula_text", "text_transcoded"}
+
+
+def names_loss(w, feature):
+    """Does warning `w` name a loss of this derived kind (text, pagination, Cyrillic)?"""
+    return w.get("code") in NAMES[feature] or (w.get("code") == "upstream" and bool(UPSTREAM_DROP.search(w.get("text", ""))))
 
 
 def silent_losses(losses, warnings):
     """Losses with no matching warning. warnings: [{code,text}]. This is the 'loss without warning is a bug' list."""
     warnings = [w for w in warnings if w.get("code") not in NOT_A_LOSS]
     blob = " ".join("%s %s" % (w.get("code", ""), w.get("text", "")) for w in warnings).lower()
-    explained = bool(warnings)
-    return [l for l in losses if not re.search(COVER.get(l["feature"], l["feature"]), blob)
-            and not (l["feature"] in DERIVED and explained)]
+    return [l for l in losses if not (any(names_loss(w, l["feature"]) for w in warnings) if l["feature"] in DERIVED
+                                      else re.search(COVER.get(l["feature"], l["feature"]), blob))]

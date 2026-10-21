@@ -4,9 +4,10 @@
 #         csv is Excel's UTF-8 CSV with Local:=False (en-US separators, apples to apples with the Craft CSV).
 #         png (PowerPoint) writes slides into the directory {out}.
 # -Result : JSON array of {src, out, fmt, ok, error, ms}. Opening a file ALSO proves "Office can reopen it".
+# -Progress : optional; one compact JSON line per finished item is appended at once, so the caller keeps them when it has to kill a hung Office.
 # Own Office instance per app (PID attributed, written to $env:FID_PIDFILE for the caller); only that PID is killed.
 param([Parameter(Mandatory)][ValidateSet("word", "excel", "ppt")][string]$App,
-      [Parameter(Mandatory)][string]$List, [Parameter(Mandatory)][string]$Result)
+      [Parameter(Mandatory)][string]$List, [Parameter(Mandatory)][string]$Result, [string]$Progress = "")
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\com.ps1"
 $items = [IO.File]::ReadAllText($List, [Text.Encoding]::UTF8) | ConvertFrom-Json

@@ -346,7 +346,9 @@ Every other measured loss in the 117 cases is matched by a warning: E1-E12 of `d
 (`pdf.edge`): the 0-byte file is refused with exit 9, the truncated file gives text plus `pdf_damaged`, and the scan
 gives `empty_text`. None is an empty success.
 
-**Harness gaps found** (for the owner of `scripts/fidelity/` and WP12; not changed here):
+**Harness gaps found** (all closed on 2026-10-21 in `scripts/fidelity`: pdf2docx outputs are loss-checked, `csv_compare` reads each file with its own
+delimiter and the source fixture is the csv to csv reference, DERIVED names the loss kind, an Office hang costs one file, the 52 rows are in
+`fid/directions.py`, and x2t is documented with `ALLOW_PRIVATE_IP_ADDRESS`; the list is kept as found):
 1. pdf -> docx outputs are not loss-checked (this is how D5 got past it).
 2. `csv_compare` assumes `,` (section 3.2).
 3. csv -> csv and tsv rows have no reference.

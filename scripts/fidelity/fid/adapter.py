@@ -26,8 +26,9 @@ def find_convert(explicit=None):
 
 
 class Adapter:
-    def __init__(self, mode="auto", convert_bin=None):
+    def __init__(self, mode="auto", convert_bin=None, locale=None):
         self.bin = find_convert(convert_bin)
+        self.locale = locale
         self.mode = "convert" if (mode in ("auto", "convert") and self.bin) else "raw"
         if mode == "convert" and not self.bin:
             raise SystemExit("--adapter convert: no convert binary (set CONVERT_BIN or build services/convert)")
@@ -36,7 +37,7 @@ class Adapter:
             self.env.setdefault(k, str(CLI[v]))
 
     def describe(self):
-        return {"mode": self.mode, "convert": str(self.bin) if self.bin else None}
+        return {"mode": self.mode, "convert": str(self.bin) if self.bin else None, "locale": self.locale}
 
     # ---- public
     def convert(self, src, to, out_dir, translit=None, sheet=None, pdf_engine=None, dpi=None, timeout=600):
@@ -46,6 +47,7 @@ class Adapter:
             if translit: argv += ["--translit", translit]
             if sheet: argv += ["--sheet", sheet]
             if pdf_engine: argv += ["--pdf-engine", pdf_engine]
+            if self.locale: argv += ["--locale", self.locale]
             if dpi: argv += ["--dpi", dpi]
             return self._run_convert(argv, timeout)
         return self._raw(Path(src), to, out_dir, translit, sheet, dpi, timeout)

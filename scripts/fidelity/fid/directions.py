@@ -39,6 +39,19 @@ DIRECTIONS = [
     D("pdf.edge", "pdf", ["empty.pdf", "truncated.pdf", "scan.pdf"], "docx", "edge"),
 ]
 
+# ---- the rows of `convert formats --json` that the table above does not list (WP10 found D2-D6 in them): same format and the other
+# source formats, one fixture per source. staff.csv / staff.tsv are Excel's own CSV of hrm_staff.xlsx (gen_fixtures.py).
+_SRC = {"doc": "hrm_order.doc", "odt": "order.odt", "rtf": "order.rtf", "html": "order.html", "md": "order.md", "txt": "order.txt"}
+_MISSING = {"doc": "odt rtf html md txt png", "odt": "odt rtf html md txt png", "rtf": "odt rtf html md txt png",
+            "html": "odt rtf html md txt pdf png", "md": "odt rtf html md txt png", "txt": "odt rtf html md txt pdf png"}
+DIRECTIONS += [D("docs.docx2docx", "docs", ["hrm_order.docx"], "docx")]
+DIRECTIONS += [D("docs.%s2%s" % (s, t), "docs", [_SRC[s]], t) for s, ts in _MISSING.items() for t in ts.split()]
+DIRECTIONS += [D("sheets.xlsx2xlsx", "sheets", ["hrm_staff.xlsx"], "xlsx"), D("sheets.xls2csv", "sheets", ["hrm_staff.xls"], "csv")]
+DIRECTIONS += [D("sheets.%s2%s" % (s, t), "sheets", ["hrm_staff." + s], t) for s in ("xlsb", "ods") for t in ("pdf", "csv")]
+DIRECTIONS += [D("sheets.%s2%s" % (s, t), "sheets", ["staff." + s], t) for s in ("csv", "tsv") for t in ("pdf", "xlsx", "csv")]
+DIRECTIONS += [D("slides.pptx2pptx", "slides", ["hrm_deck.pptx"], "pptx")]
+assert len({d["id"] for d in DIRECTIONS}) == len(DIRECTIONS), "duplicate direction ids"
+
 
 def select(spec):
     if spec in (None, "all"):

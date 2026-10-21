@@ -1,6 +1,9 @@
 {
  "comment": "silent losses accepted for now; see scripts/fidelity/silent_baseline.py",
  "losses": [
-  "docs.txt2docx|order.txt|pagination"
+  "docs.txt2docx|order.txt|pagination",
+  "docs.txt2odt|order.txt|pagination",
+  "docs.txt2pdf|order.txt|pagination",
+  "docs.txt2rtf|order.txt|pagination"
  ]
 }
