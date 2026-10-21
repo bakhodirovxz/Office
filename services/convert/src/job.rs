@@ -151,6 +151,24 @@ pub fn translit_result(stdout: &[u8]) -> Option<serde_json::Value> {
     })
 }
 
+/// Does the docx at `path` hold a single non-blank `<w:t>` run? A file that cannot be read says "yes": that is the validator's to report.
+fn docx_has_text(path: &Path) -> bool {
+    let Ok(f) = fs::File::open(path) else { return true };
+    let Ok(mut z) = zip::ZipArchive::new(f) else { return true };
+    let Ok(part) = z.by_name("word/document.xml") else { return true };
+    let mut xml = Vec::new();
+    if part.take(scan::PART_CAP).read_to_end(&mut xml).is_err() {
+        return true;
+    }
+    let xml = String::from_utf8_lossy(&xml);
+    xml.match_indices("<w:t").any(|(i, _)| {
+        let rest = &xml[i + 4..];
+        // `<w:t>` or `<w:t xml:space="preserve">`, not `<w:tbl>`, `<w:tc>` or `<w:tab/>`
+        matches!(rest.as_bytes().first(), Some(b'>' | b' '))
+            && rest.split_once('>').and_then(|(_, body)| body.split_once("</w:t>")).is_some_and(|(text, _)| !text.trim().is_empty())
+    })
+}
+
 /// The regular files of `out/`. A symlink, a directory or anything else is reported by name.
 fn list_out(job: &Path) -> Result<Vec<PathBuf>, Failure> {
     let mut files = vec![];
@@ -529,6 +547,10 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
             p.warnings.extend(h.before(&jctx, &runner)?);
         }
         let declared = run_plan(cfg, &ctl, job.path(), steps, mb, &mut p)?;
+        // pdf -> docx with the native engine has no stdout to look at (pdf -> txt does): a scan gives a docx without a single word
+        if spec.kind.as_deref() == Some("pdf") && spec.target == "docx" && spec.opts.pdf_engine == plan::PdfEngine::Native && !docx_has_text(&job.path().join("out/output.docx")) {
+            p.warn("empty_text", 1);
+        }
         if cfg.verify {
             verify(cfg, &ctl, job.path(), &mut p.steps)?;
             p.verified = Some(true);
@@ -756,4 +778,34 @@ pub fn par_map<T: Sync, R: Send>(items: &[T], n: usize, f: impl Fn(&T) -> R + Sy
         }
     });
     out.into_inner().unwrap().into_iter().map(|r| r.expect("every item ran")).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    fn docx(name: &str, body: &str) -> PathBuf {
+        let p = std::env::temp_dir().join(format!("convert-hastext-{}-{name}.docx", std::process::id()));
+        let mut w = zip::ZipWriter::new(fs::File::create(&p).unwrap());
+        w.start_file("word/document.xml", zip::write::SimpleFileOptions::default()).unwrap();
+        w.write_all(body.as_bytes()).unwrap();
+        w.finish().unwrap();
+        p
+    }
+
+    #[test]
+    fn a_docx_has_text_when_one_run_is_not_blank() {
+        let yes = docx("yes", "<w:document><w:body><w:p><w:r><w:t>Salom</w:t></w:r></w:p></w:body></w:document>");
+        let preserved = docx("pres", "<w:p><w:r><w:t xml:space=\"preserve\"> a </w:t></w:r></w:p>");
+        // a scan: tables, cells, tabs, empty and blank runs, no words
+        let no = docx("no", "<w:tbl><w:tr><w:tc><w:p><w:r><w:tab/><w:t></w:t><w:t xml:space=\"preserve\">  </w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p/>");
+        assert!(docx_has_text(&yes) && docx_has_text(&preserved));
+        assert!(!docx_has_text(&no));
+        // what cannot be read is not called empty (the validator reports it)
+        assert!(docx_has_text(&std::env::temp_dir().join("convert-hastext-missing.docx")));
+        for p in [yes, preserved, no] {
+            let _ = fs::remove_file(p);
+        }
+    }
 }

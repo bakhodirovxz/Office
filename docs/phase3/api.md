@@ -246,6 +246,10 @@ the owner must have started before the directory was last written. An operator's
   valid UTF-8 (nothing to do), then cp1251 against cp1252 by how the high bytes sit in words (runs of three or more mean Cyrillic).
   Legacy text under any other extension (`x.docx` that holds cp1251 text) is still refused with exit 3. Limits: no other code page
   (cp1250, koi8-r) is guessed, and UTF-16 without a BOM is not recognised.
+- **Damaged and scanned PDFs** (WP9 fixes): `pdf` to `txt` and to `docx` (native engine) first run `pdf-cli info`; what it lists as unread
+  (a cut-off file: "failed parsing cross reference table") is shown as the engine said it (`upstream`) and the file is flagged
+  `pdf_damaged`; `png` and `split` give the same flag from the `info` they ran anyway. A PDF with no text layer gives `empty_text` to
+  `txt` (empty output) and to `docx` (the native docx holds no non-blank run); the sidecar engine already answers 422 for it.
 - Logs: job id, `sub` (quoted, so a hostile value cannot forge fields), kinds, sizes, codes and timings; never a file name, a token or
   document content. A panic prints only its location, not its message.
 

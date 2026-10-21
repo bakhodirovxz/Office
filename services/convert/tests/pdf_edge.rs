@@ -1,6 +1,7 @@
-//! WP9 fix 3, against the real pdf-cli (skipped loudly when it is not built; it is looked up under `$OFFICE_TARGET`, default
+//! WP9 fixes 3 and 4, against the real pdf-cli (skipped loudly when it is not built; it is looked up under `$OFFICE_TARGET`, default
 //! `E:/office-target/p1`, as `pdf/release/pdf-cli(.exe)`):
 //! - a cut-off PDF converted to txt or docx carries `pdf_damaged` (and the engine's own message), a whole one does not;
+//! - a PDF with no text layer converted to docx (native engine) carries `empty_text`, the same as to txt; a PDF with text does not.
 //! The PDFs are built here, byte by byte, with a correct cross-reference table.
 use convert::exec::Config;
 use convert::job::{self, Dest, FileReport};
@@ -43,6 +44,7 @@ fn pdf(content: &str) -> Vec<u8> {
 }
 
 const WITH_TEXT: &str = "BT /F1 18 Tf 20 100 Td (Hello converter, page one) Tj ET";
+const NO_TEXT: &str = "0.5 g 20 20 200 100 re f";
 
 struct Run {
     dir: PathBuf,
@@ -92,5 +94,19 @@ fn a_cut_off_pdf_warns_and_a_whole_one_does_not() {
         let bad = r.convert("cut.pdf", cut, to);
         assert!(codes(&bad).contains(&"pdf_damaged"), "a cut-off pdf to {}: code {} {:?} {}", to.ext(), bad.code, codes(&bad), bad.message);
         assert!(bad.warnings.iter().any(|w| w.code == "upstream" && w.text.contains("cross reference")), "{:?}", bad.warnings);
+    }
+}
+
+#[test]
+fn a_pdf_without_a_text_layer_warns_empty_text_to_docx_as_it_does_to_txt() {
+    let Some(t) = tool() else { return };
+    let r = run_env("scan", t);
+    let scan = pdf(NO_TEXT);
+    for to in [Target::Txt, Target::Docx] {
+        let rep = r.convert("scan.pdf", &scan, to);
+        assert_eq!(rep.code, 0, "{}: {}", to.ext(), rep.message);
+        assert!(codes(&rep).contains(&"empty_text"), "a scan to {}: {:?}", to.ext(), codes(&rep));
+        let withtext = r.convert("text.pdf", &pdf(WITH_TEXT), to);
+        assert!(!codes(&withtext).contains(&"empty_text"), "a pdf with text to {}: {:?}", to.ext(), codes(&withtext));
     }
 }
