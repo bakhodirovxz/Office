@@ -18,6 +18,7 @@ fn show(steps: &[Step]) -> String {
                 }
                 x
             }
+            Step::Http(h) => format!("HTTP {:?} POST {}?{} {} -> {}", h.sidecar, h.route, h.query.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("&"), h.input, h.output),
             Step::Expand(e) => format!("EXPAND {e:?}"),
         })
         .collect::<Vec<_>>()
@@ -75,6 +76,7 @@ fn table() -> String {
     s += &line("pdf-text-page", Kind::Pdf, Target::Txt, &Options { pages: Some(PageSpec::parse("2").unwrap()), ..Options::default() });
     s += &line("pdf-text-pages", Kind::Pdf, Target::Txt, &pages);
     s += &line("pdf-sidecar", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..Options::default() });
+    s += &line("pdf-sidecar+translit", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..cyrl.clone() });
     // 4. dynamic expansions, with a fixture `info`
     let info = json!({"pages": 5});
     s += &format!("expand pages all: {}\n", show(&expand_pages("mid/doc.pdf", &None, 150, &info).unwrap()));

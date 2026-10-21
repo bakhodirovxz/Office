@@ -15,7 +15,7 @@ usage:
       --sheet NAME|active|all     (csv; default active)
       --pages 1,3-5               (png output; pdf to txt takes one page)
       --dpi N                     (png; 72-600, default 150)
-      --pdf-engine sidecar|native (pdf to docx; default native until the sidecar exists)
+      --pdf-engine sidecar|native (pdf to docx; default native; sidecar needs CONVERT_PDF2DOCX_URL)
       --timeout SECS  --max-mem MB  -j N  --json  --strict  --verify  --keep-work  --work-dir DIR  --max-input-mb N
   convert pdf combine <a.pdf> <b.pdf>... -o out.pdf
   convert pdf split <in.pdf> (--every N | --before 3,7) --out-dir DIR
@@ -247,7 +247,20 @@ fn cmd_check(a: Args) -> ExitCode {
             },
         }
     }
-    println!("sidecars    not configured (pdf2docx, soffice: later work packages)");
+    match cfg.pdf2docx_url.as_deref() {
+        None => println!("pdf2docx    not configured (set CONVERT_PDF2DOCX_URL to use --pdf-engine sidecar)"),
+        Some(u) => {
+            let agent: ureq::Agent = ureq::Agent::config_builder().proxy(None).timeout_global(Some(std::time::Duration::from_secs(5))).build().into();
+            match agent.get(format!("{}/healthz", u.trim_end_matches('/'))).call().ok().and_then(|mut r| r.body_mut().read_to_string().ok()) {
+                Some(h) => println!("pdf2docx    ok       {u}  {h}"),
+                None => {
+                    missing = true;
+                    println!("pdf2docx    MISSING  {u} does not answer /healthz");
+                }
+            }
+        }
+    }
+    println!("soffice     not wired in (.ppt is out of scope, owner decision O2)");
     ExitCode::from(if missing { Exit::Missing.code() } else { 0 })
 }
 

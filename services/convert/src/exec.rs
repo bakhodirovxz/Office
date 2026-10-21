@@ -145,6 +145,10 @@ pub struct Config {
     pub max_input_mb: u64,
     /// `--verify`: re-open every output with its own CLI (`info`) before it leaves the job directory
     pub verify: bool,
+    /// the pdf2docx sidecar (`CONVERT_PDF2DOCX_URL`), e.g. `http://127.0.0.1:18080`
+    pub pdf2docx_url: Option<String>,
+    /// first wait after a busy (503) sidecar; doubles on each retry
+    pub http_backoff_ms: u64,
     /// extra variables passed through (fonts); the rest of the environment is cleared
     pub pass_env: Vec<(String, String)>,
     pub post_output: Vec<std::sync::Arc<dyn PostOutput>>,
@@ -162,6 +166,8 @@ impl Config {
             max_mem_mb: None,
             max_input_mb: 512,
             verify: false,
+            pdf2docx_url: std::env::var("CONVERT_PDF2DOCX_URL").ok().filter(|u| !u.is_empty()),
+            http_backoff_ms: 1000,
             pass_env: pass.iter().filter_map(|k| std::env::var(k).ok().map(|v| (k.to_string(), v))).collect(),
             post_output: vec![],
             sample_ms: 250,

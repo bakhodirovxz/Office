@@ -273,27 +273,29 @@ none pdf->xlsx: Unsupported("no converter writes .xlsx from .pdf files")
 none pdf->csv: Unsupported("no converter writes .csv from .pdf files")
 none pdf->pptx: Unsupported("no converter writes .pptx from .pdf files")
 translit-cyrl docx->docx:
-    docs-cli run --file in/input.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save out/output.docx
+    docs-cli run --file in/input.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
 translit-cyrl doc->pdf:
-    docs-cli run --file in/input.doc --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save out/output.pdf
+    docs-cli run --file in/input.doc --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.pdf
 translit-cyrl md->png:
-    docs-cli run --file in/input.md --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save mid/doc.pdf
+    docs-cli run --file in/input.md --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save mid/doc.pdf
     EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
 translit-cyrl xlsx->xlsx:
     sheets-cli run --in in/input.xlsx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"workbook"} --out out/output.xlsx
 translit-cyrl xls->pdf:
     sheets-cli run --in in/input.xls --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"workbook"} --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
 translit-cyrl pptx->pptx:
-    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save out/output.pptx
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --print --save out/output.pptx
 translit-cyrl pptx->pdf:
-    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save out/output.pdf
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --print --save out/output.pdf
 translit-cyrl pptx->png:
-    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save mid/deck.pptx
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --print --save mid/deck.pptx
     slides-cli render mid/deck.pptx --all out --scale 2.00
 translit-cyrl csv->csv: Unsupported("--translit is not available for .csv to .csv")
-translit-cyrl pdf->docx: Unsupported("--translit is not available for .pdf to .docx")
+translit-cyrl pdf->docx:
+    pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"mid/pdf.docx"},"tool":"doc_export_office"}]]
+    docs-cli run --file mid/pdf.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
 translit-latn-2026 docx->docx:
-    docs-cli run --file in/input.docx --cmd tools.translitLatn={"apostrophe":"official","latinAlphabet":"2026","scope":"document"} --save out/output.docx
+    docs-cli run --file in/input.docx --cmd tools.translitLatn={"apostrophe":"official","latinAlphabet":"2026","scope":"document"} --print --save out/output.docx
 translit-auto xlsx->pdf:
     sheets-cli run --in in/input.xlsx --cmd tools.translitAuto={"apostrophe":"official","latinAlphabet":"auto","scope":"workbook"} --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
 sheet=Active xlsx->csv:
@@ -316,7 +318,11 @@ pages-on-pdf-out docx->pdf: Usage("--pages only applies to png output and pdf to
 pdf-text-page pdf->txt:
     pdf-cli text in/input.pdf --page 2 > out/output.txt
 pdf-text-pages pdf->txt: Usage("pdf to txt takes one page (--pages N), or none for all")
-pdf-sidecar pdf->docx: NeedsSidecar("the pdf2docx sidecar is not wired in yet; use --pdf-engine native")
+pdf-sidecar pdf->docx:
+    HTTP Pdf2Docx POST /v1/pdf2docx?merge=1 in/input.pdf -> out/output.docx
+pdf-sidecar+translit pdf->docx:
+    HTTP Pdf2Docx POST /v1/pdf2docx?merge=1 in/input.pdf -> mid/pdf.docx
+    docs-cli run --file mid/pdf.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
 expand pages all: pdf-cli render mid/doc.pdf --page 1 --dpi 150 --out out/p01.png
     pdf-cli render mid/doc.pdf --page 2 --dpi 150 --out out/p02.png
     pdf-cli render mid/doc.pdf --page 3 --dpi 150 --out out/p03.png

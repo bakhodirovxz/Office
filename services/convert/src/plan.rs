@@ -169,9 +169,25 @@ pub enum Expand {
     PdfPages { pdf: String, spec: Option<PageSpec>, dpi: u32 },
 }
 
+/// One POST to a sidecar (PLAN 2.3): the file `input` in the job directory is the body, the answer is written to `output`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HttpStep {
+    pub sidecar: Sidecar,
+    pub route: String,
+    pub query: Vec<(String, String)>,
+    pub input: String,
+    pub output: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Sidecar {
+    Pdf2Docx,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Step {
     Tool(ToolStep),
+    Http(HttpStep),
     Expand(Expand),
 }
 
@@ -245,7 +261,7 @@ pub fn row_options(k: Kind, t: Target) -> Vec<&'static str> {
         Family::Docs => matches!(t, Target::Docx | Target::Odt | Target::Rtf | Target::Html | Target::Md | Target::Txt | Target::Pdf | Target::Png),
         Family::Sheets => matches!(t, Target::Xlsx | Target::Pdf),
         Family::Slides => true,
-        Family::Pdf => false,
+        Family::Pdf => t == Target::Docx,
     };
     if translit {
         o.extend(["translit", "alphabet", "apostrophe"]);
@@ -292,7 +308,7 @@ pub fn plan(kind: Kind, target: Target, o: &Options) -> Result<Vec<Step>, PlanEr
         Family::Docs => docs(&inp, target, o, tr),
         Family::Sheets => sheets(&inp, target, o, tr)?,
         Family::Slides => slides(&inp, target, o, tr),
-        Family::Pdf => pdf(&inp, target, o)?,
+        Family::Pdf => pdf(&inp, target, o, tr)?,
     })
 }
 
@@ -304,7 +320,7 @@ fn docs(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step> {
     let dest = if t == Target::Png { "mid/doc.pdf".to_string() } else { format!("out/output.{}", t.ext()) };
     let first = match tr {
         None => tool(ToolId::Docs, &["convert", inp, &dest], &dest),
-        Some(tr) => tool(ToolId::Docs, &["run", "--file", inp, "--cmd", &translit_cmd(tr, "document"), "--save", &dest], &dest),
+        Some(tr) => tool(ToolId::Docs, &["run", "--file", inp, "--cmd", &translit_cmd(tr, "document"), "--print", "--save", &dest], &dest),
     };
     let mut v = vec![Step::Tool(first)];
     if t == Target::Png {
@@ -349,11 +365,11 @@ fn slides(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step>
         None => (inp.to_string(), vec![]),
         Some(tr) if t == Target::Pptx || t == Target::Pdf => {
             let dest = format!("out/output.{}", t.ext());
-            return vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--save", &dest], &dest))];
+            return vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--print", "--save", &dest], &dest))];
         }
         Some(tr) => (
             "mid/deck.pptx".to_string(),
-            vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--save", "mid/deck.pptx"], "mid/deck.pptx"))],
+            vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--print", "--save", "mid/deck.pptx"], "mid/deck.pptx"))],
         ),
     };
     match t {
@@ -372,7 +388,7 @@ fn slides(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step>
     v
 }
 
-fn pdf(inp: &str, t: Target, o: &Options) -> Result<Vec<Step>, PlanError> {
+fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<Step>, PlanError> {
     Ok(match t {
         Target::Png => vec![pages_png(inp, o)],
         Target::Txt => {
@@ -390,21 +406,37 @@ fn pdf(inp: &str, t: Target, o: &Options) -> Result<Vec<Step>, PlanError> {
             st.allow_empty = true;
             vec![Step::Tool(st)]
         }
-        Target::Docx => match o.pdf_engine {
-            PdfEngine::Sidecar => {
-                return Err(PlanError::NeedsSidecar("the pdf2docx sidecar is not wired in yet; use --pdf-engine native".into()));
+        Target::Docx => {
+            // with --translit the pdf -> docx step writes a middle file and docs-cli converts it (PLAN 4)
+            let first = if tr.is_some() { "mid/pdf.docx" } else { "out/output.docx" };
+            let mut v = match o.pdf_engine {
+                PdfEngine::Sidecar => vec![Step::Http(HttpStep {
+                    sidecar: Sidecar::Pdf2Docx,
+                    route: "/v1/pdf2docx".into(),
+                    query: vec![("merge".into(), "1".into())],
+                    input: inp.into(),
+                    output: first.into(),
+                })],
+                PdfEngine::Native => {
+                    // doc id 1: a fresh `run` process opens exactly one document
+                    let script = json!([
+                        {"tool": "doc_open", "args": {"path": inp}},
+                        {"tool": "doc_export_office", "args": {"doc": 1, "path": first}}
+                    ]);
+                    let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/native.json", "--root", "."], first);
+                    st.write_files = vec![("mid/native.json".into(), script.to_string())];
+                    vec![Step::Tool(st)]
+                }
+            };
+            if let Some(tr) = tr {
+                v.push(Step::Tool(tool(
+                    ToolId::Docs,
+                    &["run", "--file", first, "--cmd", &translit_cmd(tr, "document"), "--print", "--save", "out/output.docx"],
+                    "out/output.docx",
+                )));
             }
-            PdfEngine::Native => {
-                // doc id 1: a fresh `run` process opens exactly one document
-                let script = json!([
-                    {"tool": "doc_open", "args": {"path": inp}},
-                    {"tool": "doc_export_office", "args": {"doc": 1, "path": "out/output.docx"}}
-                ]);
-                let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/native.json", "--root", "."], "out/output.docx");
-                st.write_files = vec![("mid/native.json".into(), script.to_string())];
-                vec![Step::Tool(st)]
-            }
-        },
+            v
+        }
         _ => unreachable!("route() admitted only png, txt, docx"),
     })
 }

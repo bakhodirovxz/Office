@@ -2,6 +2,7 @@
 //! CLIs as processes, validates what they wrote and reports. The CLI is `src/main.rs`; the API (WP7) reuses `job`.
 pub mod exec;
 pub mod formats;
+pub mod http;
 pub mod job;
 pub mod kind;
 pub mod losses;

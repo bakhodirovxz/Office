@@ -143,6 +143,13 @@ fn run_plan(cfg: &Config, job: &Path, steps: Vec<Step>, input_mb: f64, p: &mut P
                     p.warn("empty_text", 1);
                 }
             }
+            Step::Http(h) => {
+                if let Some(rep) = crate::http::run_http(cfg, job, &h, &mut p.steps)? {
+                    for w in rep["warnings"].as_array().into_iter().flatten().filter_map(|w| w.as_str()) {
+                        p.warnings.push(Warning { code: "sidecar".into(), count: 1, text: w.to_string() });
+                    }
+                }
+            }
             Step::Expand(e) => {
                 let (tool, argv): (ToolId, Vec<String>) = match &e {
                     Expand::CsvSheets { input, .. } => (ToolId::Sheets, vec!["info".into(), input.clone(), "--json".into()]),
