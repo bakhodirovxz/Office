@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "convert-report-v1",
+  "title": "One file's conversion report (`convert --json` prints an array of these; the API returns one per job)",
+  "type": "object",
+  "required": ["schema", "input", "kind", "target", "status", "code", "message", "steps", "warnings", "outputs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": 1, "description": "bumped when a field changes meaning or goes away"},
+    "input": {"type": "string"},
+    "kind": {"type": ["string", "null"], "description": "the detected input kind (by content), null when detection failed"},
+    "target": {"type": "string"},
+    "status": {"enum": ["ok", "warn", "failed"]},
+    "code": {"type": "integer", "minimum": 0, "maximum": 10, "description": "the exit code of this file (PLAN 2.6)"},
+    "message": {"type": "string"},
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tool", "exit", "ms", "peak_mb", "stderr_tail"],
+        "properties": {
+          "tool": {"type": "string"}, "exit": {"type": "integer"}, "ms": {"type": "integer"},
+          "peak_mb": {"type": "integer"}, "stderr_tail": {"type": "string", "maxLength": 2048}
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "count", "text"],
+        "properties": {"code": {"type": "string"}, "count": {"type": "integer", "minimum": 1}, "text": {"type": "string"}}
+      }
+    },
+    "translit": {"type": "object", "description": "result JSON of the transliteration command: paragraphs, runs, skipped, rulesVersion ..."},
+    "verified": {"type": "boolean", "description": "present only with --verify on a successful file"},
+    "outputs": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -111,14 +111,20 @@ pub fn timeout_for(c: Class, input_mb: f64, pages: u32) -> Duration {
 pub const STDERR_PATTERNS: &[(&str, Exit, &str)] = &[
     ("not a presentation", Exit::Unsupported, "the presentation cannot be read (legacy .ppt? re-save it as .pptx in PowerPoint)"),
     ("no sheet named", Exit::Usage, "that sheet does not exist in the workbook"),
-    ("password", Exit::Rejected, "the input is password-protected"),
-    ("encrypted", Exit::Rejected, "the input is encrypted"),
+    // exact upstream phrases (gridcraft io.rs PASSWORD_REQUIRED / WRONG_PASSWORD, deckcraft cmd/file.rs, craft-libs print): a bare
+    // "password" would also match gridcraft's "The sheet is protected with a password", which is not an input problem
+    ("is password-protected", Exit::Rejected, "the input is password-protected"),
+    ("password is incorrect", Exit::Rejected, "the input is password-protected"),
+    ("password required", Exit::Rejected, "the input is password-protected"),
+    ("it is encrypted", Exit::Rejected, "the input is encrypted"),
     ("not a readable pdf", Exit::Unsupported, "the input is not a readable PDF"),
     ("unknown output format", Exit::Unsupported, "that output format is not supported by the tool"),
 ];
 
 pub fn classify(stderr: &str) -> Option<(Exit, &'static str)> {
-    let low = stderr.to_lowercase();
+    // `Warning:` lines are not the failure
+    let low = stderr.lines().filter(|l| !l.trim_start().to_ascii_lowercase().starts_with("warning:")).collect::<Vec<_>>().join("
+").to_lowercase();
     STDERR_PATTERNS.iter().find(|(p, _, _)| low.contains(p)).map(|(_, e, m)| (*e, *m))
 }
 
@@ -137,6 +143,8 @@ pub struct Config {
     pub timeout_s: Option<u64>,
     pub max_mem_mb: Option<u64>,
     pub max_input_mb: u64,
+    /// `--verify`: re-open every output with its own CLI (`info`) before it leaves the job directory
+    pub verify: bool,
     /// extra variables passed through (fonts); the rest of the environment is cleared
     pub pass_env: Vec<(String, String)>,
     pub post_output: Vec<std::sync::Arc<dyn PostOutput>>,
@@ -153,6 +161,7 @@ impl Config {
             timeout_s: None,
             max_mem_mb: None,
             max_input_mb: 512,
+            verify: false,
             pass_env: pass.iter().filter_map(|k| std::env::var(k).ok().map(|v| (k.to_string(), v))).collect(),
             post_output: vec![],
             sample_ms: 250,
@@ -204,7 +213,7 @@ pub struct StepReport {
 
 pub struct Ran {
     pub stdout: Vec<u8>,
-    /// stderr lines that start with `Warning:` (F8), verbatim
+    /// stderr lines that start with `Warning:` (any case; F8), verbatim
     pub warnings: Vec<String>,
 }
 
@@ -237,6 +246,12 @@ fn tail(s: &str, max: usize) -> String {
 }
 
 fn last_line(s: &str) -> String {
+    // a Rust panic prints "thread .. panicked at ..:" and then the message; the last line is the RUST_BACKTRACE note
+    if let Some(i) = s.lines().position(|l| l.contains("panicked at")) {
+        if let Some(m) = s.lines().skip(i + 1).map(str::trim).find(|l| !l.is_empty() && !l.starts_with("note:")) {
+            return m.chars().take(300).collect();
+        }
+    }
     s.lines().rev().map(str::trim).find(|l| !l.is_empty()).unwrap_or("no message").chars().take(300).collect()
 }
 
@@ -356,7 +371,7 @@ pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, std
         }
         None => return fail(Exit::Crash, format!("{name} was killed by a signal: {}", last_line(&stderr))),
     }
-    let warnings = stderr.lines().map(str::trim).filter(|l| l.starts_with("Warning:")).map(String::from).collect();
+    let warnings = stderr.lines().map(str::trim).filter(|l| l.get(..8).is_some_and(|h| h.eq_ignore_ascii_case("warning:"))).map(String::from).collect();
     Ok(Ran { stdout, warnings })
 }
 
@@ -461,7 +476,9 @@ mod tests {
         let c = |s: &str| classify(s).map(|x| x.0);
         assert_eq!(c("deckcraft-cli: x.ppt: not a presentation DeckCraft can read"), Some(Exit::Unsupported));
         assert_eq!(c("gridcraft-cli: no sheet named `X`"), Some(Exit::Usage));
-        assert_eq!(c("needs a Password to open"), Some(Exit::Rejected));
+        assert_eq!(c("book.xlsx is password-protected. Enter its password to open it."), Some(Exit::Rejected));
+        assert_eq!(c("The sheet is protected with a password. Unprotect it first"), None);
+        assert_eq!(c("Warning: the file is password-protected"), None);
         assert_eq!(c("something new went wrong"), None);
     }
 

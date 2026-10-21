@@ -95,7 +95,13 @@ pub struct Detected {
 pub enum DetectError {
     Io(String),
     Unknown,
+    /// text in a legacy encoding (cp1251, UTF-16): not read as UTF-8, so it would be converted as garbage
+    NotUtf8,
 }
+
+/// Extensions wordcraft opens by name (Word 2003 XML, LaTeX, JSON) but which PLAN section 1 does not list: refused, never
+/// converted as plain text.
+const UNLISTED_TEXT_EXTS: [&str; 5] = ["xml", "tex", "latex", "ltx", "json"];
 
 const OLE: [u8; 8] = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
 
@@ -115,7 +121,16 @@ pub fn detect(path: &Path) -> Result<Detected, DetectError> {
         None
     };
     let zip_names = if head.starts_with(b"PK\x03\x04") { zip_names(path) } else { None };
-    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext).ok_or(DetectError::Unknown)
+    let raw_ext = path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).unwrap_or_default();
+    let container = head.starts_with(b"%PDF-") || head.starts_with(b"PK\x03\x04") || head.starts_with(&OLE) || head.starts_with(b"{\rtf");
+    if !container && UNLISTED_TEXT_EXTS.contains(&raw_ext.as_str()) {
+        return Err(DetectError::Unknown);
+    }
+    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext).ok_or_else(|| {
+        let bom16 = head.starts_with(&[0xFF, 0xFE]) || head.starts_with(&[0xFE, 0xFF]);
+        let high_bytes_only = !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
+        if bom16 || (high_bytes_only && ext.is_some_and(|k| matches!(k.family(), Family::Docs | Family::Sheets))) { DetectError::NotUtf8 } else { DetectError::Unknown }
+    })
 }
 
 fn zip_names(path: &Path) -> Option<Vec<String>> {
@@ -143,14 +158,21 @@ pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext
             let kind = ext.unwrap_or(Kind::Docx);
             return Some(Detected { kind, ext_mismatch: false, password_protected: true });
         }
-        let kind = if contains(all, &utf16("WordDocument")) {
-            Kind::Doc
-        } else if contains(all, &utf16("PowerPoint Document")) {
-            Kind::Ppt
-        } else if contains(all, &utf16("Workbook")) || contains(all, &utf16("Book")) {
-            Kind::Xls
-        } else {
-            return None;
+        // an .xls with an embedded Word object holds a WordDocument stream too: when several apps are named, the extension decides
+        let mut named = vec![];
+        if contains(all, &utf16("WordDocument")) {
+            named.push(Kind::Doc);
+        }
+        if contains(all, &utf16("PowerPoint Document")) {
+            named.push(Kind::Ppt);
+        }
+        if contains(all, &utf16("Workbook")) || contains(all, &utf16("Book")) {
+            named.push(Kind::Xls);
+        }
+        let kind = match (named.as_slice(), ext) {
+            ([], _) => return None,
+            (_, Some(e)) if named.contains(&e) => e,
+            (n, _) => n[0],
         };
         return Some(found(kind));
     }
@@ -195,6 +217,9 @@ pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext
         return None;
     }
     let lower = text.trim_start_matches('\u{feff}').trim_start().to_ascii_lowercase();
+    if lower.starts_with("<?xml") {
+        return None; // Word 2003 XML, Flat OPC, SVG ...: not a listed input
+    }
     let kind = if lower.starts_with("<!doctype html") || lower.starts_with("<html") {
         Kind::Html
     } else {
@@ -259,5 +284,10 @@ mod tests {
         assert_eq!(kind(&[0, 1, 2, 0xff, 0xfe], None, None, None), None);
         assert_eq!(kind(PK, None, Some(&["a.txt"]), None), None);
         assert_eq!(kind(&OLE, Some(&OLE), None, None), None);
+        assert_eq!(kind(b"<?xml version=\"1.0\"?><w:wordDocument/>", None, None, Some(Kind::Txt)), None);
+        // an .xls that also carries a Word stream stays an .xls
+        let both = [&OLE[..], &utf16("Workbook"), &utf16("WordDocument")].concat();
+        assert_eq!(kind(&OLE, Some(&both), None, Some(Kind::Xls)), Some(Kind::Xls));
+        assert_eq!(kind(&OLE, Some(&both), None, Some(Kind::Doc)), Some(Kind::Doc));
     }
 }

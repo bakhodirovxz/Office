@@ -1,0 +1,47 @@
+# The static loss table (PLAN phase 3, 2.6 source 3). One row = "when this kind goes to this target, this is lost".
+# The text of each code is in i18n/converter.tsv (context `warning.<code>`); the English there is the single source.
+#
+#   from      input kinds this row applies to (Kind::ext names); empty = any
+#   to        targets (Target::ext names); empty = any
+#   requires  scanner features (src/scan.rs), any of them; empty = the row always applies. When the input is not a zip
+#             package the scanner cannot look inside, so a row with `requires` applies (the safe side).
+#   evidence  where the loss was measured; WP9 rows are added when the fidelity run lands
+#   until     optional: the condition after which the row is deleted
+
+[[row]]
+code = "doc_import_loss"
+from = ["doc"]
+evidence = "docs/phase0/fidelity-baseline.md (hrm_order.doc round trip: comments 1->0, revisions 1->0, paragraphs 99->113); docs/phase3/census.md 1.1 (rc 0, empty stderr: the loss is silent)"
+
+[[row]]
+code = "xls_pdf_chart_page"
+from = ["xls"]
+to = ["pdf"]
+evidence = "docs/phase3/census.md 1.2 (hrm_staff.xls gives 3 pages where the .xlsx gives 4: the chart is lost); docs/phase0/fidelity-baseline.md (charts 1->0, 4 vs 3 pages)"
+
+[[row]]
+code = "csv_one_sheet_en_us"
+from = ["xlsx", "xls", "xlsb", "ods"]
+to = ["csv"]
+evidence = "docs/phase1/locale-check.md 1 and 5 (CSV is en-US, one sheet of displayed values); PLAN F6"
+until = "the gridcraft NumLocale patch lands (WP14, owner decision O7); then keep the row only for locales the patch does not cover"
+
+[[row]]
+code = "pdf_en_us"
+from = ["xlsx", "xls", "xlsb", "ods"]
+to = ["pdf"]
+evidence = "docs/phase1/locale-check.md 1 and 5 (PDF numbers and dates are en-US); PLAN F6"
+until = "the gridcraft NumLocale patch lands (WP14, owner decision O7); then keep the row only for locales the patch does not cover"
+
+[[row]]
+code = "plain_text_layout"
+from = ["docx", "doc", "odt", "rtf", "html"]
+to = ["md", "txt"]
+requires = ["headers_footers", "images"]
+evidence = "PLAN 1.1 and 2.6 (md and txt carry text only); not yet measured per feature, WP9 to confirm"
+
+[[row]]
+code = "macros_dropped"
+from = ["docx", "xlsx", "pptx"]
+requires = ["macros"]
+evidence = "PLAN 2.6 (macros are dropped when docm/xlsm is saved as docx/xlsx); not measured, WP9 to confirm"

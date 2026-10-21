@@ -16,7 +16,7 @@ usage:
       --pages 1,3-5               (png output; pdf to txt takes one page)
       --dpi N                     (png; 72-600, default 150)
       --pdf-engine sidecar|native (pdf to docx; default native until the sidecar exists)
-      --timeout SECS  --max-mem MB  -j N  --json  --strict  --keep-work  --work-dir DIR  --max-input-mb N
+      --timeout SECS  --max-mem MB  -j N  --json  --strict  --verify  --keep-work  --work-dir DIR  --max-input-mb N
   convert pdf combine <a.pdf> <b.pdf>... -o out.pdf
   convert pdf split <in.pdf> (--every N | --before 3,7) --out-dir DIR
   convert pdf extract <in.pdf> --pages 1,3-5 -o out.pdf
@@ -29,7 +29,7 @@ const VALUE_FLAGS: &[&str] = &[
     "--to", "-o", "--out-dir", "--translit", "--alphabet", "--apostrophe", "--sheet", "--pages", "--dpi", "--pdf-engine", "--timeout",
     "--max-mem", "-j", "--every", "--before", "--work-dir", "--max-input-mb",
 ];
-const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work"];
+const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work", "--verify"];
 
 struct Args {
     pos: Vec<String>,
@@ -77,6 +77,7 @@ fn config(a: &Args) -> Result<Config, String> {
         c.work_dir = d.into();
     }
     c.keep_work = a.flag.iter().any(|f| f == "--keep-work");
+    c.verify = a.flag.iter().any(|f| f == "--verify");
     Ok(c)
 }
 

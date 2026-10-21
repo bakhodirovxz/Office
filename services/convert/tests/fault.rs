@@ -42,6 +42,7 @@ impl Sandbox {
                 kind: Some("txt".into()),
                 target: "x".into(),
                 inputs: vec![(self.0.join("sample.txt"), "in/input.txt".into())],
+                origins: vec![],
                 steps: Ok(vec![step]),
                 warnings: vec![],
                 stem: "sample".into(),

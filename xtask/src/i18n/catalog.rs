@@ -25,13 +25,14 @@ pub const SOURCE_COLUMN: &str = "source";
 
 pub const APPS: [&str; 4] = ["wordcraft", "gridcraft", "pdfcraft", "deckcraft"];
 /// Catalog files, in load order. `glossary` and `shared` are scopes of their own.
-pub const SCOPES: [&str; 6] = [
+pub const SCOPES: [&str; 7] = [
     "glossary",
     "shared",
     "wordcraft",
     "gridcraft",
     "pdfcraft",
     "deckcraft",
+    "converter",
 ];
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

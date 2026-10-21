@@ -4,5 +4,7 @@ pub mod exec;
 pub mod formats;
 pub mod job;
 pub mod kind;
-pub mod loss;
+pub mod losses;
+pub mod report;
+pub mod scan;
 pub mod plan;
