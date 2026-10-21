@@ -269,17 +269,18 @@ pub struct Config {
 /// and as `1/3/2019` when it is not. A tool that cannot be run or does not answer in time says "no" (the warnings stay).
 pub fn sheets_honours_locale(cfg: &Config) -> bool {
     use std::sync::Mutex;
-    static SEEN: Mutex<Vec<(PathBuf, Option<std::time::SystemTime>, bool)>> =
+    // keyed by the work dir too: the answer can depend on what the tool finds there (the fake tool's marker), and a process has one work dir
+    static SEEN: Mutex<Vec<(PathBuf, PathBuf, Option<std::time::SystemTime>, bool)>> =
         Mutex::new(Vec::new());
     let Ok(exe) = cfg.resolve(ToolId::Sheets) else {
         return false;
     };
     let stamp = std::fs::metadata(&exe).and_then(|m| m.modified()).ok();
-    if let Some((_, _, v)) = SEEN
-        .lock()
-        .ok()
-        .and_then(|s| s.iter().find(|(p, t, _)| *p == exe && *t == stamp).cloned())
-    {
+    if let Some((_, _, _, v)) = SEEN.lock().ok().and_then(|s| {
+        s.iter()
+            .find(|(p, w, t, _)| *p == exe && *w == cfg.work_dir && *t == stamp)
+            .cloned()
+    }) {
         return v;
     }
     let dir = cfg.work_dir.join(
@@ -316,7 +317,7 @@ pub fn sheets_honours_locale(cfg: &Config) -> bool {
     .unwrap_or(false);
     let _ = std::fs::remove_dir_all(&dir);
     if let Ok(mut s) = SEEN.lock() {
-        s.push((exe, stamp, ok));
+        s.push((exe, cfg.work_dir.clone(), stamp, ok));
     }
     ok
 }

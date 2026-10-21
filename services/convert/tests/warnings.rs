@@ -667,7 +667,7 @@ fn locale_names_parse_from_the_ui_and_the_os() {
 }
 
 /// D6: where the CLI honours the locale, the en-US notes go away (the csv keeps its one-sheet note); where it does not, they stay.
-/// The probe is answered once per tool binary and process, so the two cases are two tests (nextest runs each in its own process).
+/// The probe is answered once per tool binary and work dir, and every sandbox has its own work dir, so no test inherits another's answer.
 fn notes_under(name: &str, honours: bool, loc: NumLocale, to: Target) -> Vec<String> {
     let s = Sandbox::new(name);
     let cfg = s.cfg();
