@@ -1033,3 +1033,29 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
   - D6: uz/ru CSV dates swapped because `GRIDCRAFT_NUM_LOCALE` is not set.
 - O8 input: native as the default once D5 is guarded, the sidecar optional. The pdf2docx "one paragraph per line" weakness did not appear
   on Word-made PDFs. Word PDF reflow hangs headless (not measurable). Corpus (O9) still missing: every number is synthetic.
+
+## Phase 3 WP16 (2026-10-21): the 2026 Latin alphabet law
+- **Signed 2026-10-21, not in force.** It enters into force 6 months after official publication. On 2026-10-21 the text was
+  not on lex.uz, and no fetched source gives the number OʻRQ-1184 (it comes from the brief). The diff against rules.md
+  section 15 used the official announcement, written in the new alphabet, the Senate's page and the press
+  (rules.md section 15.0). Result: letters, case pairs, code points, 28 letters + 1 tutuq, and ng (dropped as a unit,
+  no transliteration effect) **all match**. The tutuq code point is not stated anywhere; output stays U+02BC (D-02).
+- **Crate:** no rule change. The whole official 2026 paragraph converts correctly and round-trips. Added golden
+  SRC-017..025 and `official_2026_text_reads_and_round_trips`.
+- **Default switch (O13):** one line, `DEFAULT_LATIN_ALPHABET` in `crates/uz-translit/src/lib.rs`, still `Y1995`. The
+  library, docs-translit, wasm, the converter CLI/API (`convert::plan::DEFAULT_ALPHABET`) and the page (via
+  `/api/v1/formats` `defaults.alphabet`) follow it. The tests pin 1995 themselves.
+  - **Not measured:** a run of the suite with the switch flipped was not done; the agent's permission check refused even a
+    temporary flip.
+- **uz-Latn-2026 converter catalog:** derived at export time, `cargo xt i18n export converter --format json`. Each value
+  is the row's own trusted uz-Cyrl value through `uz-translit` `Y2026`, never the ru fallback; there is no new TSV column.
+  - `i18n lint` checks the derived values too: 0 errors.
+  - All 123 page strings equal the 1995 strings under the letter substitution, 0 differences.
+  - The page menu offers "Oʻzbekcha (1995)" and "Oʻzbekcha (2026)". The app catalogs are not derived: four carried 0110
+    patches would need a third locale.
+- **Font:** Noto Sans Uz (subset) has Ş ş Ç ç Ö ö Ğ ğ. Screenshots are in
+  `docs/phase3/evidence/ui/converter-uz-Latn-2026*.png`; no tofu. The converter Playwright spec passed 9 of 9.
+- **Reviewed:** `warning.pdf_text_missing`, `warning.pdf_docx_fallback` and `warning.csv_one_sheet` (uz-Latn, uz-Cyrl, ru).
+- **Found, not fixed:** `services/convert/tests/warnings.rs` fails depending on test order. `sheets_honours_locale` caches the
+  probe per tool binary, so the first test's `honour-locale` marker decides for all the others. It fails
+  single-threaded too. This came from the D6 commits; WP16 does not cause it.
