@@ -1,0 +1,339 @@
+row docx->docx:
+    docs-cli convert in/input.docx out/output.docx
+row docx->odt:
+    docs-cli convert in/input.docx out/output.odt
+row docx->rtf:
+    docs-cli convert in/input.docx out/output.rtf
+row docx->html:
+    docs-cli convert in/input.docx out/output.html
+row docx->md:
+    docs-cli convert in/input.docx out/output.md
+row docx->txt:
+    docs-cli convert in/input.docx out/output.txt
+row docx->pdf:
+    docs-cli convert in/input.docx out/output.pdf
+row docx->png:
+    docs-cli convert in/input.docx mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row doc->docx:
+    docs-cli convert in/input.doc out/output.docx
+row doc->odt:
+    docs-cli convert in/input.doc out/output.odt
+row doc->rtf:
+    docs-cli convert in/input.doc out/output.rtf
+row doc->html:
+    docs-cli convert in/input.doc out/output.html
+row doc->md:
+    docs-cli convert in/input.doc out/output.md
+row doc->txt:
+    docs-cli convert in/input.doc out/output.txt
+row doc->pdf:
+    docs-cli convert in/input.doc out/output.pdf
+row doc->png:
+    docs-cli convert in/input.doc mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row odt->docx:
+    docs-cli convert in/input.odt out/output.docx
+row odt->odt:
+    docs-cli convert in/input.odt out/output.odt
+row odt->rtf:
+    docs-cli convert in/input.odt out/output.rtf
+row odt->html:
+    docs-cli convert in/input.odt out/output.html
+row odt->md:
+    docs-cli convert in/input.odt out/output.md
+row odt->txt:
+    docs-cli convert in/input.odt out/output.txt
+row odt->pdf:
+    docs-cli convert in/input.odt out/output.pdf
+row odt->png:
+    docs-cli convert in/input.odt mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row rtf->docx:
+    docs-cli convert in/input.rtf out/output.docx
+row rtf->odt:
+    docs-cli convert in/input.rtf out/output.odt
+row rtf->rtf:
+    docs-cli convert in/input.rtf out/output.rtf
+row rtf->html:
+    docs-cli convert in/input.rtf out/output.html
+row rtf->md:
+    docs-cli convert in/input.rtf out/output.md
+row rtf->txt:
+    docs-cli convert in/input.rtf out/output.txt
+row rtf->pdf:
+    docs-cli convert in/input.rtf out/output.pdf
+row rtf->png:
+    docs-cli convert in/input.rtf mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row html->docx:
+    docs-cli convert in/input.html out/output.docx
+row html->odt:
+    docs-cli convert in/input.html out/output.odt
+row html->rtf:
+    docs-cli convert in/input.html out/output.rtf
+row html->html:
+    docs-cli convert in/input.html out/output.html
+row html->md:
+    docs-cli convert in/input.html out/output.md
+row html->txt:
+    docs-cli convert in/input.html out/output.txt
+row html->pdf:
+    docs-cli convert in/input.html out/output.pdf
+row html->png:
+    docs-cli convert in/input.html mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row md->docx:
+    docs-cli convert in/input.md out/output.docx
+row md->odt:
+    docs-cli convert in/input.md out/output.odt
+row md->rtf:
+    docs-cli convert in/input.md out/output.rtf
+row md->html:
+    docs-cli convert in/input.md out/output.html
+row md->md:
+    docs-cli convert in/input.md out/output.md
+row md->txt:
+    docs-cli convert in/input.md out/output.txt
+row md->pdf:
+    docs-cli convert in/input.md out/output.pdf
+row md->png:
+    docs-cli convert in/input.md mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row txt->docx:
+    docs-cli convert in/input.txt out/output.docx
+row txt->odt:
+    docs-cli convert in/input.txt out/output.odt
+row txt->rtf:
+    docs-cli convert in/input.txt out/output.rtf
+row txt->html:
+    docs-cli convert in/input.txt out/output.html
+row txt->md:
+    docs-cli convert in/input.txt out/output.md
+row txt->txt:
+    docs-cli convert in/input.txt out/output.txt
+row txt->pdf:
+    docs-cli convert in/input.txt out/output.pdf
+row txt->png:
+    docs-cli convert in/input.txt mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+row xlsx->pdf:
+    sheets-cli run --in in/input.xlsx --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row xlsx->xlsx:
+    sheets-cli convert in/input.xlsx out/output.xlsx
+row xlsx->csv:
+    sheets-cli convert in/input.xlsx out/output.csv
+row xls->pdf:
+    sheets-cli run --in in/input.xls --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row xls->xlsx:
+    sheets-cli convert in/input.xls out/output.xlsx
+row xls->csv:
+    sheets-cli convert in/input.xls out/output.csv
+row xlsb->pdf:
+    sheets-cli run --in in/input.xlsb --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row xlsb->xlsx:
+    sheets-cli convert in/input.xlsb out/output.xlsx
+row xlsb->csv:
+    sheets-cli convert in/input.xlsb out/output.csv
+row ods->pdf:
+    sheets-cli run --in in/input.ods --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row ods->xlsx:
+    sheets-cli convert in/input.ods out/output.xlsx
+row ods->csv:
+    sheets-cli convert in/input.ods out/output.csv
+row csv->pdf:
+    sheets-cli run --in in/input.csv --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row csv->xlsx:
+    sheets-cli convert in/input.csv out/output.xlsx
+row csv->csv:
+    sheets-cli convert in/input.csv out/output.csv
+row tsv->pdf:
+    sheets-cli run --in in/input.tsv --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+row tsv->xlsx:
+    sheets-cli convert in/input.tsv out/output.xlsx
+row tsv->csv:
+    sheets-cli convert in/input.tsv out/output.csv
+row pptx->pdf:
+    slides-cli convert in/input.pptx out/output.pdf
+row pptx->png:
+    slides-cli render in/input.pptx --all out --scale 2.00
+row pptx->pptx:
+    slides-cli convert in/input.pptx out/output.pptx
+row pdf->docx:
+    pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"out/output.docx"},"tool":"doc_export_office"}]]
+row pdf->txt:
+    pdf-cli text in/input.pdf > out/output.txt
+row pdf->png:
+    EXPAND PdfPages { pdf: "in/input.pdf", spec: None, dpi: 150 }
+none docx->xlsx: Unsupported("no converter writes .xlsx from .docx files")
+none docx->csv: Unsupported("no converter writes .csv from .docx files")
+none docx->pptx: Unsupported("no converter writes .pptx from .docx files")
+none doc->xlsx: Unsupported("no converter writes .xlsx from .doc files")
+none doc->csv: Unsupported("no converter writes .csv from .doc files")
+none doc->pptx: Unsupported("no converter writes .pptx from .doc files")
+none odt->xlsx: Unsupported("no converter writes .xlsx from .odt files")
+none odt->csv: Unsupported("no converter writes .csv from .odt files")
+none odt->pptx: Unsupported("no converter writes .pptx from .odt files")
+none rtf->xlsx: Unsupported("no converter writes .xlsx from .rtf files")
+none rtf->csv: Unsupported("no converter writes .csv from .rtf files")
+none rtf->pptx: Unsupported("no converter writes .pptx from .rtf files")
+none html->xlsx: Unsupported("no converter writes .xlsx from .html files")
+none html->csv: Unsupported("no converter writes .csv from .html files")
+none html->pptx: Unsupported("no converter writes .pptx from .html files")
+none md->xlsx: Unsupported("no converter writes .xlsx from .md files")
+none md->csv: Unsupported("no converter writes .csv from .md files")
+none md->pptx: Unsupported("no converter writes .pptx from .md files")
+none txt->xlsx: Unsupported("no converter writes .xlsx from .txt files")
+none txt->csv: Unsupported("no converter writes .csv from .txt files")
+none txt->pptx: Unsupported("no converter writes .pptx from .txt files")
+none xlsx->docx: Unsupported("no converter writes .docx from .xlsx files")
+none xlsx->odt: Unsupported("no converter writes .odt from .xlsx files")
+none xlsx->rtf: Unsupported("no converter writes .rtf from .xlsx files")
+none xlsx->html: Unsupported("no converter writes .html from .xlsx files")
+none xlsx->md: Unsupported("no converter writes .md from .xlsx files")
+none xlsx->txt: Unsupported("no converter writes .txt from .xlsx files")
+none xlsx->png: Unsupported("no converter writes .png from .xlsx files")
+none xlsx->pptx: Unsupported("no converter writes .pptx from .xlsx files")
+none xls->docx: Unsupported("no converter writes .docx from .xls files")
+none xls->odt: Unsupported("no converter writes .odt from .xls files")
+none xls->rtf: Unsupported("no converter writes .rtf from .xls files")
+none xls->html: Unsupported("no converter writes .html from .xls files")
+none xls->md: Unsupported("no converter writes .md from .xls files")
+none xls->txt: Unsupported("no converter writes .txt from .xls files")
+none xls->png: Unsupported("no converter writes .png from .xls files")
+none xls->pptx: Unsupported("no converter writes .pptx from .xls files")
+none xlsb->docx: Unsupported("no converter writes .docx from .xlsb files")
+none xlsb->odt: Unsupported("no converter writes .odt from .xlsb files")
+none xlsb->rtf: Unsupported("no converter writes .rtf from .xlsb files")
+none xlsb->html: Unsupported("no converter writes .html from .xlsb files")
+none xlsb->md: Unsupported("no converter writes .md from .xlsb files")
+none xlsb->txt: Unsupported("no converter writes .txt from .xlsb files")
+none xlsb->png: Unsupported("no converter writes .png from .xlsb files")
+none xlsb->pptx: Unsupported("no converter writes .pptx from .xlsb files")
+none ods->docx: Unsupported("no converter writes .docx from .ods files")
+none ods->odt: Unsupported("no converter writes .odt from .ods files")
+none ods->rtf: Unsupported("no converter writes .rtf from .ods files")
+none ods->html: Unsupported("no converter writes .html from .ods files")
+none ods->md: Unsupported("no converter writes .md from .ods files")
+none ods->txt: Unsupported("no converter writes .txt from .ods files")
+none ods->png: Unsupported("no converter writes .png from .ods files")
+none ods->pptx: Unsupported("no converter writes .pptx from .ods files")
+none csv->docx: Unsupported("no converter writes .docx from .csv files")
+none csv->odt: Unsupported("no converter writes .odt from .csv files")
+none csv->rtf: Unsupported("no converter writes .rtf from .csv files")
+none csv->html: Unsupported("no converter writes .html from .csv files")
+none csv->md: Unsupported("no converter writes .md from .csv files")
+none csv->txt: Unsupported("no converter writes .txt from .csv files")
+none csv->png: Unsupported("no converter writes .png from .csv files")
+none csv->pptx: Unsupported("no converter writes .pptx from .csv files")
+none tsv->docx: Unsupported("no converter writes .docx from .tsv files")
+none tsv->odt: Unsupported("no converter writes .odt from .tsv files")
+none tsv->rtf: Unsupported("no converter writes .rtf from .tsv files")
+none tsv->html: Unsupported("no converter writes .html from .tsv files")
+none tsv->md: Unsupported("no converter writes .md from .tsv files")
+none tsv->txt: Unsupported("no converter writes .txt from .tsv files")
+none tsv->png: Unsupported("no converter writes .png from .tsv files")
+none tsv->pptx: Unsupported("no converter writes .pptx from .tsv files")
+none pptx->docx: Unsupported("no converter writes .docx from .pptx files")
+none pptx->odt: Unsupported("no converter writes .odt from .pptx files")
+none pptx->rtf: Unsupported("no converter writes .rtf from .pptx files")
+none pptx->html: Unsupported("no converter writes .html from .pptx files")
+none pptx->md: Unsupported("no converter writes .md from .pptx files")
+none pptx->txt: Unsupported("no converter writes .txt from .pptx files")
+none pptx->xlsx: Unsupported("no converter writes .xlsx from .pptx files")
+none pptx->csv: Unsupported("no converter writes .csv from .pptx files")
+none ppt->docx: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->odt: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->rtf: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->html: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->md: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->txt: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->pdf: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->png: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->xlsx: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->csv: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none ppt->pptx: Unsupported(".ppt files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->docx: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->odt: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->rtf: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->html: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->md: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->txt: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->pdf: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->png: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->xlsx: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->csv: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none odp->pptx: Unsupported(".odp files are not supported: re-save the file as .pptx in PowerPoint (or Impress) and convert that")
+none pdf->odt: Unsupported("no converter writes .odt from .pdf files")
+none pdf->rtf: Unsupported("no converter writes .rtf from .pdf files")
+none pdf->html: Unsupported("no converter writes .html from .pdf files")
+none pdf->md: Unsupported("no converter writes .md from .pdf files")
+none pdf->pdf: Unsupported("no converter writes .pdf from .pdf files")
+none pdf->xlsx: Unsupported("no converter writes .xlsx from .pdf files")
+none pdf->csv: Unsupported("no converter writes .csv from .pdf files")
+none pdf->pptx: Unsupported("no converter writes .pptx from .pdf files")
+translit-cyrl docx->docx:
+    docs-cli run --file in/input.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save out/output.docx
+translit-cyrl doc->pdf:
+    docs-cli run --file in/input.doc --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save out/output.pdf
+translit-cyrl md->png:
+    docs-cli run --file in/input.md --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --save mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: None, dpi: 150 }
+translit-cyrl xlsx->xlsx:
+    sheets-cli run --in in/input.xlsx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"workbook"} --out out/output.xlsx
+translit-cyrl xls->pdf:
+    sheets-cli run --in in/input.xls --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"workbook"} --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+translit-cyrl pptx->pptx:
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save out/output.pptx
+translit-cyrl pptx->pdf:
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save out/output.pdf
+translit-cyrl pptx->png:
+    slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --save mid/deck.pptx
+    slides-cli render mid/deck.pptx --all out --scale 2.00
+translit-cyrl csv->csv: Unsupported("--translit is not available for .csv to .csv")
+translit-cyrl pdf->docx: Unsupported("--translit is not available for .pdf to .docx")
+translit-latn-2026 docx->docx:
+    docs-cli run --file in/input.docx --cmd tools.translitLatn={"apostrophe":"official","latinAlphabet":"2026","scope":"document"} --save out/output.docx
+translit-auto xlsx->pdf:
+    sheets-cli run --in in/input.xlsx --cmd tools.translitAuto={"apostrophe":"official","latinAlphabet":"auto","scope":"workbook"} --cmd file.exportPdf={"path":"out/output.pdf","sheets":"all"}
+sheet=Active xlsx->csv:
+    sheets-cli convert in/input.xlsx out/output.csv
+sheet=All xlsx->csv:
+    EXPAND CsvSheets { input: "in/input.xlsx", only: None }
+sheet=Name("Q1 2026") xlsx->csv:
+    EXPAND CsvSheets { input: "in/input.xlsx", only: Some("Q1 2026") }
+sheet=Name("-x") xlsx->csv:
+    EXPAND CsvSheets { input: "in/input.xlsx", only: Some("-x") }
+sheet-on-pdf xlsx->pdf: Usage("--sheet only applies to --to csv")
+pages+dpi docx->png:
+    docs-cli convert in/input.docx mid/doc.pdf
+    EXPAND PdfPages { pdf: "mid/doc.pdf", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
+pages+dpi pptx->png:
+    slides-cli render in/input.pptx --all out --scale 4.00
+pages+dpi pdf->png:
+    EXPAND PdfPages { pdf: "in/input.pdf", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
+pages-on-pdf-out docx->pdf: Usage("--pages only applies to png output and pdf to txt")
+pdf-text-page pdf->txt:
+    pdf-cli text in/input.pdf --page 2 > out/output.txt
+pdf-text-pages pdf->txt: Usage("pdf to txt takes one page (--pages N), or none for all")
+pdf-sidecar pdf->docx: NeedsSidecar("the pdf2docx sidecar is not wired in yet; use --pdf-engine native")
+expand pages all: pdf-cli render mid/doc.pdf --page 1 --dpi 150 --out out/p01.png
+    pdf-cli render mid/doc.pdf --page 2 --dpi 150 --out out/p02.png
+    pdf-cli render mid/doc.pdf --page 3 --dpi 150 --out out/p03.png
+    pdf-cli render mid/doc.pdf --page 4 --dpi 150 --out out/p04.png
+    pdf-cli render mid/doc.pdf --page 5 --dpi 150 --out out/p05.png
+expand pages 1,3-4 @300: pdf-cli render in/input.pdf --page 1 --dpi 300 --out out/p01.png
+    pdf-cli render in/input.pdf --page 3 --dpi 300 --out out/p03.png
+    pdf-cli render in/input.pdf --page 4 --dpi 300 --out out/p04.png
+expand pages out of range: Usage("page 6 is beyond the last page (5)")
+expand csv: sheets-cli convert in/input.xlsx out/Sheet_1.csv --sheet Sheet 1
+    sheets-cli convert in/input.xlsx out/sheet_12.csv --sheet sheet_1
+    sheets-cli convert in/input.xlsx out/Ёлка.csv --sheet Ёлка
+    sheets-cli convert in/input.xlsx out/A_B.csv --sheet A/B
+    sheets-cli convert in/input.xlsx out/5.csv --sheet 
+expand csv only Sheet 1: sheets-cli convert in/input.xlsx out/output.csv --sheet Sheet 1
+expand csv only wrong: Usage("no sheet named 'Nope'; the workbook has: Sheet 1, sheet_1, Ёлка, A/B, ")
+pdf combine 3: pdf-cli combine in/input1.pdf in/input2.pdf in/input3.pdf --out out/output.pdf
+pdf extract: pdf-cli extract in/input.pdf --pages 5-8,1 --out out/output.pdf
+pdf split every: pdf-cli split in/input.pdf --every 2 --out-dir out
+pdf split before: pdf-cli split in/input.pdf --before 3,7 --out-dir out
