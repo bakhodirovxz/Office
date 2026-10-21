@@ -1,0 +1,51 @@
+[package]
+name = "convert-api"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "HTTP API over the converter (PLAN phase 3, section 5): jobs, queue, auth, TLS, encryption at rest"
+
+[lints]
+workspace = true
+
+[lib]
+name = "convert_api"
+
+[[bin]]
+name = "convert-api"
+path = "src/main.rs"
+
+# Test-only stand-in for a domain CLI (cancel and fault tests); see tests/api.rs.
+[[bin]]
+name = "convert-api-fake-tool"
+path = "src/bin/fake_tool.rs"
+
+[dependencies]
+convert = { path = "../convert" }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "json", "multipart", "query"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "signal", "sync"] }
+tokio-stream = "0.1"
+tower-http = { version = "0.6", default-features = false, features = ["limit"] }
+# TLS: rustls with the ring provider (aws-lc-sys carries the OpenSSL licence, which the policy does not allow). The accept loop
+# is ours (src/tls.rs) because axum-server needs rustls-pemfile, which is unmaintained (RUSTSEC-2025-0134).
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+hyper = { version = "1", default-features = false, features = ["http1", "server"] }
+hyper-util = { version = "0.1", default-features = false, features = ["tokio"] }
+tower = { version = "0.5", features = ["util"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = { version = "1", default-features = false, features = ["parse", "serde"] }
+# hand-rolled HS256 (no jsonwebtoken, so no rsa crate and no RUSTSEC-2023-0071), as in spike 4
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+aes-gcm = "0.10"
+zeroize = "1"
+# blocking client for the /healthz sidecar probe, no TLS (same as convert)
+ureq = { version = "3", default-features = false }
+zip = { version = "9", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+rcgen = { version = "0.13", default-features = false, features = ["ring", "pem"] }
