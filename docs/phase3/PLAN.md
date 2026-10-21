@@ -437,9 +437,13 @@ change if the shell wants it.
   - **Server (optional).** `auth = "jwt"`. The operator sets the issuer's shared secret (`secret_file`) and an optional
     `iss` to accept, in the server config. Any organisation can issue these tokens; our HRM is just one configured
     issuer, so nothing names the HRM in code. Phase 5 adds SSO (OIDC) as a further `auth` value, not a replacement.
-- **UI:** in local mode the UI never asks for anything. A "Connect to server" setting (server URL plus a token) is
-  optional. The token comes from the URL fragment (`#token=…`, never sent to the server in logs) or from a paste field.
-  Clearing the setting returns the UI to local mode.
+- **UI:** in local mode the UI never asks for anything. A "Connect to server" setting is optional.
+  - **It navigates rather than fetches.** It opens the server's own page; under CSP `connect-src 'self'` with CORS
+    closed, the page only ever talks to its own origin (review-wp7 M8). The CSP is not loosened for this.
+  - **The token** comes from the URL fragment (`#token=…`) or from a paste field. It is read once, removed from history
+    with `history.replaceState`, and kept in sessionStorage only. It never goes in a URL sent to a server; downloads use
+    `fetch` with the header, then a blob.
+  - **Disconnect** clears it.
 - **Path traversal:** client file names are never used as paths. They are stored as `in/<n>.<ext>` with `ext` from the
   allowlist. The original name is used only for the download name and zip entry names, sanitised: no separators, no
   `..`, no control or bidi characters, 200 characters max, deduplicated.
