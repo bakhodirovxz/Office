@@ -294,7 +294,8 @@
   // ---- start ---------------------------------------------------------------------------------------------------------
   async function start() {
     S.fmts = null; S.health = null;
-    try { S.health = await (await fetch('/healthz')).json(); } catch (_) { /* shown by the next call if the server is really down */ }
+    // api() adds the Authorization header in server mode: without a token the server answers only {ok:true} (no tool list, no sidecar state)
+    try { S.health = await (await api('/healthz')).json(); } catch (_) { /* shown by the next call if the server is really down */ }
     try { S.fmts = await (await api('/api/v1/formats')).json(); } catch (e) { showError(e); }
     setLang(S.lang);
   }

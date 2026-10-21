@@ -175,6 +175,22 @@ test('connect to server: the #token= fragment is read and removed; disconnect re
   await expect(page.locator('#srv-token')).toHaveValue(''); // not left in the field
 });
 
+test('server mode: the healthz probe carries the token in the Authorization header, never in the URL; local mode sends none', async ({ page }) => {
+  const probes: { url: string; auth: string | undefined }[] = [];
+  page.on('request', (r) => { if (new URL(r.url()).pathname === '/healthz') probes.push({ url: r.url(), auth: r.headers()['authorization'] }); });
+  await page.goto(base + '/#token=abc.def.ghi');
+  await expect(page.locator('#conn-mode')).toHaveText(txt('en', 'ui.conn.mode.server'));
+  await expect.poll(() => probes.length).toBeGreaterThan(0);
+  expect(probes.at(-1)).toEqual({ url: base + '/healthz', auth: 'Bearer abc.def.ghi' });
+  expect(probes.every((p) => !p.url.includes('abc.def.ghi'))).toBe(true);
+  // disconnecting probes again, now without the header
+  const n = probes.length;
+  await page.locator('#conn summary').click();
+  await page.click('#srv-clear');
+  await expect.poll(() => probes.length).toBeGreaterThan(n);
+  expect(probes.at(-1)!.auth).toBeUndefined();
+});
+
 test('screenshots in en, ru, uz-Latn and uz-Cyrl', async ({ page }) => {
   test.skip(!process.env.UI_SHOTS, 'set UI_SHOTS=<dir> to write them');
   fs.mkdirSync(process.env.UI_SHOTS!, { recursive: true });
