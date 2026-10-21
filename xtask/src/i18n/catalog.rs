@@ -533,7 +533,7 @@ mod tests {
         assert_eq!(parse_rows(&text).unwrap(), vec![r]);
         // a 15-cell row under a 14-column header, or an unknown 15th column, is still an error
         let mut bad = HEADER.join("\t");
-        bad.push_str("\n");
+        bad.push('\n');
         bad.push_str(&["x"; 15].join("\t"));
         assert!(parse_rows(&bad).is_err());
         assert!(parse_rows(&format!("{}\textra\n", HEADER.join("\t"))).is_err());
