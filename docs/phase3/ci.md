@@ -22,3 +22,17 @@ Known gap: `services/` is not rustfmt-clean (about 500 hunks), so `convert` has 
 
 ## Wall times (this PC)
 
+| Job | Wall time | Notes |
+|---|---|---|
+| `convert` | 32 s warm (clippy cached, 135 tests in 25 s); 10 min 15 s cold | cold: clippy 6 min, then the test build |
+| `convert-e2e` | 19 min 14 s | 12 min of it rebuilt the sheets/slides/pdf CLIs (their sources had changed); then api-e2e 39 s, directions.sh 13 s, `npm ci` 21 s, Playwright 15 s (7 passed, 1 screenshot test skipped without `UI_SHOTS`). Without builds: about 1.5 min |
+| `convert-ui` | about 40 s with a built converter | build services + `npm ci` + 15 s of Playwright |
+| `sidecars` | 6 min 19 s (two image builds with a cold layer cache, 9 + 9 tests) | with Docker stopped: exit 2 and "Docker is not running" at once |
+| `fidelity-directions` | 12 min 18 s | the run itself 530 s (38 directions, 65 cases, MS Office 16 reference, no soffice/x2t); 73 silent losses = the baseline, 0 new |
+
+Negative check: removing one key from a copy of the baseline makes `silent_baseline.py check` print `NEW silent loss: ...` and exit 1.
+
+## Observed while testing (not caused by WP12)
+
+- At commit 3f699b6 `convert` failed one test, `convert-api::e2e every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart` (assertion `the finished jobs are kept for the retention time`, `e2e.rs:244`); with the services builder's working tree it passes.
+- `ci.sh quick` could not go green on a shared working tree: `lint` stopped at `gridcraft-numfmt` (`en_us_golden`, a test that did not compile mid-change by the NumLocale work).
