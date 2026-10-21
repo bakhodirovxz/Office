@@ -76,3 +76,4 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 - cargo git deps (craft-libs) need `CARGO_NET_GIT_FETCH_WITH_CLI=true` and
   `CARGO_HTTP_CHECK_REVOKE=false` on this machine.
 - Docker 29 available (for LibreOffice / ONLYOFFICE x2t reference renders and sidecars).
+- Docker networking on this PC goes through a TLS-intercepting proxy: `pip`/`curl` inside a container fail with CERTIFICATE_VERIFY_FAILED. Fetch dependencies on the host with hashes and install offline (see `sidecars/pdf2docx/fetch-wheels.sh`). CI is not affected.
