@@ -91,6 +91,8 @@ struct Seg {
     range: Range<usize>,
     run: usize,
     convert: bool,
+    /// A tracked deletion: left out of the converter's input, so the text around it reads as one word.
+    deleted: bool,
     new: Option<String>,
     /// Tracked mode: the old text becomes a tracked deletion and the new text a tracked insertion after it.
     replace: bool,
@@ -306,11 +308,12 @@ fn story_pass(
         keep.extend(field_spans);
         let mut segs = classify(s, p, &keep, ctx, st);
         // Convert.
-        let runs: Vec<uz_translit::Run> = segs
+        let live: Vec<usize> = (0..segs.len()).filter(|&i| !segs[i].deleted).collect();
+        let runs: Vec<uz_translit::Run> = live
             .iter()
-            .map(|g| uz_translit::Run {
-                text: &p.text[g.range.clone()],
-                convert: g.convert,
+            .map(|&i| uz_translit::Run {
+                text: &p.text[segs[i].range.clone()],
+                convert: segs[i].convert,
             })
             .collect();
         let out = uz_translit::convert_runs(&runs, dir, &ctx.opts);
@@ -325,8 +328,8 @@ fn story_pass(
                 std::borrow::Cow::Borrowed(_) => None,
             })
             .collect();
-        for (g, o) in segs.iter_mut().zip(outs) {
-            g.new = o;
+        for (i, o) in live.into_iter().zip(outs) {
+            segs[i].new = o;
         }
         let t1 = wordcraft_layout::now_ms();
         st.convert_ms += t1 - t0;
@@ -414,6 +417,7 @@ fn classify(
                     range: start..at,
                     run: ri,
                     convert: !cur,
+                    deleted: props.del.is_some(),
                     new: None,
                     replace: false,
                 });
@@ -425,6 +429,7 @@ fn classify(
             range: start..range.end,
             run: ri,
             convert: !cur,
+            deleted: props.del.is_some(),
             new: None,
             replace: false,
         });

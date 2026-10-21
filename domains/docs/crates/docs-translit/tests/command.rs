@@ -511,3 +511,29 @@ fn latin_alphabet_param_writes_2026_and_rejects_unknown_values() {
     d.run("tools.translitLatn", &json!({})).unwrap();
     assert_eq!(text(&d, 0), lat("Шаҳар ўғил"));
 }
+
+#[test]
+fn a_tracked_deletion_inside_a_digraph_is_not_a_boundary() {
+    let del = CharProps {
+        del: Some(0),
+        ..Default::default()
+    };
+    let mut s = session(vec![para(&[
+        ("s", Default::default()),
+        ("x", del),
+        ("h", Default::default()),
+    ])]);
+    s.sel = Selection::caret(Pos::body(0, 0));
+    s.run(CYRL, &json!({})).unwrap();
+    let live: String = runs(p(&s, 0))
+        .iter()
+        .filter(|(c, _)| c.del.is_none())
+        .map(|(_, t)| t.as_str())
+        .collect();
+    let gone: String = runs(p(&s, 0))
+        .iter()
+        .filter(|(c, _)| c.del.is_some())
+        .map(|(_, t)| t.as_str())
+        .collect();
+    assert_eq!((live.as_str(), gone.as_str()), ("ш", "x"));
+}

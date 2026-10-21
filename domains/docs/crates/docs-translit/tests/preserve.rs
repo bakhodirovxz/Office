@@ -8,8 +8,8 @@
 //! "Identical" (PLAN 8.2):
 //! 1. every package part except the text parts (document, header, footer, footnotes, endnotes, comments) is byte-identical;
 //! 2. text parts: equal XML trees (names, order, attributes) with the character content of `w:t` ignored, and a `w:r` that
-//!    lost its text (the tail of a digraph) allowed to vanish from R;
-//! 3. model check: runs (props, non-empty), paragraph props, mark, objects and section equal for every body paragraph.
+//!    lost its text allowed to vanish from R only when that text is the tail of a digraph or cluster (`tail_ok`);
+//! 3. model check: runs (props, non-empty), paragraph props, mark, objects and section equal for every paragraph of every story.
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use serde_json::json;
@@ -151,7 +151,43 @@ fn run_text(n: &Node) -> String {
         .collect()
 }
 
-/// Walk B and R together. A B run of at most two characters of text may be missing from R (digraph tail).
+const APOSTROPHES: &str = "'\u{2019}\u{2018}\u{2BB}\u{2BC}\u{2B9}\u{2BF}`\u{B4}";
+const JOINERS: [char; 5] = ['\u{AD}', '\u{200C}', '\u{200D}', '\u{2060}', '\u{FEFF}'];
+
+/// May a B run holding exactly `t` vanish from R, given the text `before` and `after` it in the paragraph?
+/// Yes only when every char is the second half of something the converter merges (rules.md 3.1/3.2, R3, R4, R1, R6, R8, R9):
+/// h after s/c (sh, ch), an apostrophe after o/g (oʻ, gʻ) or between s and h (R4 drops it), e/o/u/a after y (ye yo yu ya),
+/// ъ/ь (dropped), a combining breve/diaeresis after у/и/е; and invisible joiners anywhere.
+fn tail_ok(before: &str, t: &str, after: &str) -> bool {
+    let low = |c: char| c.to_lowercase().next().unwrap_or(c);
+    let mut prev = before.chars().rev().find(|c| !JOINERS.contains(c));
+    let chars: Vec<char> = t.chars().chain(after.chars()).collect();
+    for (k, c) in t.chars().enumerate() {
+        if JOINERS.contains(&c) {
+            continue;
+        }
+        let p = prev.map(low);
+        let next = chars[k + 1..].iter().copied().find(|c| !JOINERS.contains(c)).map(low);
+        let ok = match low(c) {
+            'h' => matches!(p, Some('s' | 'c')),
+            'e' | 'o' | 'u' | 'a' => p == Some('y'),
+            'ъ' | 'ь' => true,
+            '\u{306}' => matches!(p, Some('у' | 'и')),
+            '\u{308}' => p == Some('е'),
+            a if APOSTROPHES.contains(a) => {
+                matches!(p, Some('o' | 'g')) || (p == Some('s') && next == Some('h'))
+            }
+            _ => false,
+        };
+        if !ok {
+            return false;
+        }
+        prev = Some(c);
+    }
+    true
+}
+
+/// Walk B and R together. A B run may be missing from R only when `tail_ok` says its text is a digraph or cluster tail.
 fn diff(b: &Node, r: &Node, path: &str, out: &mut Vec<String>) {
     if b.name != r.name || b.attrs != r.attrs {
         out.push(format!(
@@ -176,7 +212,7 @@ fn diff(b: &Node, r: &Node, path: &str, out: &mut Vec<String>) {
                 if sub.is_empty() {
                     i += 1;
                     j += 1;
-                } else if bk.name == "w:r" && run_text(bk).chars().count() <= 2 {
+                } else if bk.name == "w:r" && vanished_tail(b, i) {
                     i += 1; // the digraph tail run vanished from R
                 } else {
                     out.extend(sub);
@@ -185,7 +221,7 @@ fn diff(b: &Node, r: &Node, path: &str, out: &mut Vec<String>) {
                 }
             }
             (Some(bk), None) => {
-                if !(bk.name == "w:r" && run_text(bk).chars().count() <= 2) {
+                if !(bk.name == "w:r" && vanished_tail(b, i)) {
                     out.push(format!("{here}: <{}> missing from R", bk.name));
                 }
                 i += 1;
@@ -197,6 +233,17 @@ fn diff(b: &Node, r: &Node, path: &str, out: &mut Vec<String>) {
             (None, None) => break,
         }
     }
+}
+
+/// Is the run `b.kids[i]` a cluster tail, judged by the text of the runs before and after it in the same parent?
+fn vanished_tail(b: &Node, i: usize) -> bool {
+    let join = |kids: &[Node]| {
+        let mut t = String::new();
+        kids.iter().for_each(|k| all_text(k, &mut t));
+        t.replace('\n', "")
+    };
+    let t = run_text(&b.kids[i]);
+    !t.is_empty() && tail_ok(&join(&b.kids[..i]), &t, &join(&b.kids[i + 1..]))
 }
 
 /// The text of each paragraph (`w:p`), without the paragraphs nested in it (text boxes); document order.
@@ -247,11 +294,18 @@ fn pass(name: &str, bytes: &[u8], cmd: Option<&str>) -> (Vec<u8>, serde_json::Va
 }
 
 fn model_check(b: &Session, r: &Session, what: &str, errs: &mut Vec<String>) {
-    let pb = b.doc.para_paths(StoryRef::Body);
-    let pr = r.doc.para_paths(StoryRef::Body);
+    let stories = std::iter::once(StoryRef::Body).chain(b.doc.parts.keys().map(|k| StoryRef::Part(*k)));
+    for story in stories {
+        story_check(b, r, story, &format!("{what} {story:?}"), errs);
+    }
+}
+
+fn story_check(b: &Session, r: &Session, story: StoryRef, what: &str, errs: &mut Vec<String>) {
+    let pb = b.doc.para_paths(story);
+    let pr = r.doc.para_paths(story);
     if pb.len() != pr.len() {
         errs.push(format!(
-            "{what}: body paragraph count {} vs {}",
+            "{what}: paragraph count {} vs {}",
             pb.len(),
             pr.len()
         ));
@@ -259,8 +313,8 @@ fn model_check(b: &Session, r: &Session, what: &str, errs: &mut Vec<String>) {
     }
     for (k, (x, y)) in pb.iter().zip(&pr).enumerate() {
         let (a, c) = (
-            b.doc.para(StoryRef::Body, x).unwrap(),
-            r.doc.para(StoryRef::Body, y).unwrap(),
+            b.doc.para(story, x).unwrap(),
+            r.doc.para(story, y).unwrap(),
         );
         // runs with text, in order; equal neighbours merge in R when a tail run vanished
         // A run that holds only invisible joiners (Word puts its own symbol font on U+2060) is absorbed by the
@@ -512,6 +566,16 @@ fn comparer_detects_a_formatting_change() {
         w.finish().unwrap();
     }
     assert!(!compare(&b, &buf.into_inner(), "x").is_empty());
+}
+
+/// A vanished run is accepted only as the tail of a digraph or cluster.
+#[test]
+fn only_cluster_tails_may_vanish() {
+    assert!(tail_ok("s", "h", "") && tail_ok("C", "H", "") && tail_ok("o", "\u{2BB}", "") && tail_ok("g", "'", ""));
+    assert!(tail_ok("s", "'", "h") && tail_ok("y", "o", "") && tail_ok("\u{43A}", "ь", ""));
+    assert!(tail_ok("a", "\u{2060}", "") && tail_ok("s\u{AD}", "h", ""));
+    assert!(!tail_ok("a", "h", "") && !tail_ok("s", "'", "a") && !tail_ok("a", "'", "") && !tail_ok("s", "x", ""));
+    assert!(!tail_ok("s", "hx", "") && !tail_ok("", "h", ""));
 }
 
 /// Report the page-count shift and the text check (informational, printed with --nocapture).
