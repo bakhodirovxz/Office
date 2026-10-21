@@ -753,7 +753,21 @@ const OWN: [(&str, &[&str]); 9] = [
     ),
 ];
 
+/// deckcraft engine messages (`cmd/file.rs`, patch 0124) that the UI translates by template; the engine tree is not scanned for UI text.
+const OWN_DECK_0124: [&str; 2] = [
+    "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
+    "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
+];
+
 fn add_own(unis: &mut [Universe]) {
+    for u in unis.iter_mut().filter(|u| u.app == "deckcraft") {
+        for en in OWN_DECK_0124 {
+            let e = u.keys.entry((String::new(), en.to_string())).or_default();
+            if e.where_.is_empty() {
+                e.where_ = "patches/deckcraft/0124".into();
+            }
+        }
+    }
     for u in unis {
         for (en, apps) in OWN {
             if apps.contains(&u.app.as_str()) {

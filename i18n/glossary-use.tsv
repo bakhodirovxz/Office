@@ -56,6 +56,9 @@ deckcraft	08e9ab67002c	e7bdff9717fe	Shakllarni birlashtirish	Шаклларни 
 deckcraft	092b80841992	22008f8efd5f	Tenglama	Тенглама
 deckcraft	092b80841992	6c951b80b705	Chiziqli	Чизиқли
 deckcraft	09dab40d901a	acbd59bc86c6	Slayd	Слайд
+deckcraft	09dccf8eee21	259b0bb49d13	Yana	Яна
+deckcraft	09dccf8eee21	28461be1310c	Shrift	Шрифт
+deckcraft	09dccf8eee21	f3846a89862f	Matn	Матн
 deckcraft	09e9b295964b	1328428a2a6c	Fon grafikasi	Фон графикаси
 deckcraft	09e9b295964b	74304ab19fb2	Yashirish	Яшириш
 deckcraft	09e9b295964b	aad1c3e5c3cd	Fon	Фон
@@ -99,7 +102,6 @@ deckcraft	0fee1965702e	0e4f037cdd4a	Chiqish	Чиқиш
 deckcraft	0fee1965702e	1bdb86ed84a2	Nuqtalarni tahrirlash	Нуқталарни таҳрирлаш
 deckcraft	0fee1965702e	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 deckcraft	0ff09fbc417f	815479e20850	Marker	Маркер
-deckcraft	101d8cc1dee7	acbd59bc86c6	Slayd	Слайд
 deckcraft	1055edfcd0ca	f3846a89862f	Matn	Матн
 deckcraft	107ae8a16a96	28461be1310c	Shrift	Шрифт
 deckcraft	107ae8a16a96	aae8a4e5573f	Qoʻshish	Қўшиш
@@ -174,7 +176,6 @@ deckcraft	20d9742d2281	c8dabcd62138	Sana	Сана
 deckcraft	20eb246ef041	3a483751146d	Oʻchirish	Ўчириш
 deckcraft	213cc9d25682	acbd59bc86c6	Slayd	Слайд
 deckcraft	213cc9d25682	b21cae9438b4	Yangi	Янги
-deckcraft	2198b175545c	57e749c390f2	Ustun	Устун
 deckcraft	21b65f732555	acbd59bc86c6	Slayd	Слайд
 deckcraft	21b65f732555	b21cae9438b4	Yangi	Янги
 deckcraft	21c064e7f700	04989d5e96fd	OK	OK
@@ -332,7 +333,6 @@ deckcraft	3d2af7834ace	7c5dd3949fe4	Sinonim	Синоним
 deckcraft	3d4fb49318b0	17acb22d30b6	Fayl	Файл
 deckcraft	3d4fb49318b0	805c78162283	Video	Видео
 deckcraft	3da9bb8f1afe	7d1b7bdc9ef7	Struktura	Структура
-deckcraft	3dedf00d7d9d	259b0bb49d13	Yana	Яна
 deckcraft	3e0add0e7e4f	1203aa24b4cd	Sarlavha	Сарлавҳа
 deckcraft	3e1bc8c7e497	8bb251ab1d0f	Oʻng	Ўнг
 deckcraft	3e20896c6fb6	70eec9fda8ae	Rasm	Расм
@@ -400,9 +400,11 @@ deckcraft	48c648622e4b	fd650cb3e656	Chegara	Чегара
 deckcraft	4907ade6867f	17acb22d30b6	Fayl	Файл
 deckcraft	4907ade6867f	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	493a281f5808	1afbea1c5b94	Fotoalbom	Фотоальбом
-deckcraft	493fec4cfc98	99062995442b	Buyruqlar palitrasi	Буйруқлар палитраси
+deckcraft	493fec4cfc98	99062995442b	Buyruqlar paneli	Буйруқлар панели
 deckcraft	493fec4cfc98	a164b4552074	Buyruq	Буйруқ
 deckcraft	499411f738a1	f9237318d93e	Nom	Ном
+deckcraft	49ea77736f3f	28461be1310c	Shrift	Шрифт
+deckcraft	49ea77736f3f	f3846a89862f	Matn	Матн
 deckcraft	4a2179912999	acbd59bc86c6	Slayd	Слайд
 deckcraft	4a2179912999	ae968ee42543	Yuqori	Юқори
 deckcraft	4a2179912999	f5cdeffd9fcb	Chap	Чап
@@ -432,6 +434,7 @@ deckcraft	4ddd8beaaa43	96d486c17b08	Boʻlim	Бўлим
 deckcraft	4e2da29aee1b	96d486c17b08	Boʻlim	Бўлим
 deckcraft	4e2da29aee1b	aae8a4e5573f	Qoʻshish	Қўшиш
 deckcraft	4e4595080ffd	dbfb65fb61b0	Uslub	Услуб
+deckcraft	4f27570eece4	515423525568	Avtomatik tuzatish	Автоматик тузатиш
 deckcraft	4f27570eece4	f9b03ea83621	Parametrlar	Параметрлар
 deckcraft	4fa3c3af5092	233343588c89	Uzluksiz takrorlash	Узлуксиз такрорлаш
 deckcraft	4faddbe361a9	a9823ea5f83a	Belgi	Белги
@@ -659,6 +662,8 @@ deckcraft	7b1871b98762	a3a5fa59866d	Shakl	Шакл
 deckcraft	7b1871b98762	dbd33e837963	Media	Медиа
 deckcraft	7b1871b98762	dccd80f9aa8c	Ijro etish	Ижро этиш
 deckcraft	7b47209a0db9	b1032c4a4203	Qirqish	Қирқиш
+deckcraft	7b508cfd5789	28461be1310c	Shrift	Шрифт
+deckcraft	7b508cfd5789	f3846a89862f	Matn	Матн
 deckcraft	7bcd0d9c26c4	0b4bff04756d	Siyrak	Сийрак
 deckcraft	7bcd0d9c26c4	585d58aea7b7	Juda siyrak	Жуда сийрак
 deckcraft	7bd8e234c076	17d311d1886c	Taqdimot	Тақдимот
@@ -740,10 +745,10 @@ deckcraft	8cabef0cf7b6	c61d1c368115	Printer	Принтер
 deckcraft	8cc0f86a6d76	0bc68b2a9258	Yoʻnaltiruvchi chiziq	Йўналтирувчи чизиқ
 deckcraft	8cc0f86a6d76	0e447f4c1d51	Koʻchirish	Кўчириш
 deckcraft	8d939dc05260	b1032c4a4203	Qirqish	Қирқиш
-deckcraft	8d97086a708a	28461be1310c	Shrift	Шрифт
-deckcraft	8d97086a708a	f3846a89862f	Matn	Матн
 deckcraft	8d9884a1a960	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	8e123970b73d	43bd7d21bda4	Pastda	Пастда
+deckcraft	9070b96606c8	28461be1310c	Shrift	Шрифт
+deckcraft	9070b96606c8	f3846a89862f	Matn	Матн
 deckcraft	90b614d120f0	ae968ee42543	Yuqori	Юқори
 deckcraft	90f495d3e634	f3846a89862f	Matn	Матн
 deckcraft	911cd536cbef	aae8a4e5573f	Qoʻshish	Қўшиш
@@ -784,6 +789,11 @@ deckcraft	990fa44ff398	c1f589ea7f81	Masshtab	Масштаб
 deckcraft	99354916b790	a3a5fa59866d	Shakl	Шакл
 deckcraft	99354916b790	db27816f5f4f	Olib tashlash	Олиб ташлаш
 deckcraft	9985845960a4	ae968ee42543	Yuqori	Юқори
+deckcraft	99b61ac175e1	17acb22d30b6	Fayl	Файл
+deckcraft	99b61ac175e1	17d311d1886c	Taqdimot	Тақдимот
+deckcraft	99b61ac175e1	c697ec5dadf3	Saqlab qolish	Сақлаб қолиш
+deckcraft	99b61ac175e1	dbd33e837963	Media	Медиа
+deckcraft	99b61ac175e1	f9237318d93e	Nom	Ном
 deckcraft	9a28726b63d8	0e447f4c1d51	Koʻchirish	Кўчириш
 deckcraft	9a28726b63d8	c0cf4cea6d9a	Nuqta	Нуқта
 deckcraft	9a5016bf4f9a	a4a7f4831e4d	Osma	Осма
@@ -811,6 +821,9 @@ deckcraft	9f8560a827c1	66843b3e0d6c	Chizish	Чизиш
 deckcraft	9f96de29201c	acbd59bc86c6	Slayd	Слайд
 deckcraft	9f96de29201c	da3a742acd85	Pipetka	Пипетка
 deckcraft	9fa9faec121b	4b9682beafc2	Panel	Панель
+deckcraft	a042efedcaee	ba9eed940d1c	Tekislash	Текислаш
+deckcraft	a042efedcaee	f3846a89862f	Matn	Матн
+deckcraft	a042efedcaee	fa08927df247	Katak	Катак
 deckcraft	a04634201c58	acbd59bc86c6	Slayd	Слайд
 deckcraft	a052b7b7f5fc	48d6503735e4	Qaydlar	Қайдлар
 deckcraft	a052b7b7f5fc	57d42d2b486a	Yoʻq	Йўқ
@@ -837,9 +850,16 @@ deckcraft	a382f5295a4c	fa08927df247	Katak	Катак
 deckcraft	a3cfe8379399	db27816f5f4f	Olib tashlash	Олиб ташлаш
 deckcraft	a3ecfc9b78f5	acbd59bc86c6	Slayd	Слайд
 deckcraft	a3ecfc9b78f5	efef9607d17f	Koʻrsatkich	Кўрсаткич
+deckcraft	a46ec8eaf548	57e749c390f2	Ustun	Устун
 deckcraft	a48169b26b06	17d311d1886c	Taqdimot	Тақдимот
 deckcraft	a4c32d1687a2	32f58f12a81f	Lugʻat	Луғат
 deckcraft	a5706f8636a7	9730ed4e235a	Sichqoncha	Сичқонча
+deckcraft	a57ae01a1864	17acb22d30b6	Fayl	Файл
+deckcraft	a57ae01a1864	17d311d1886c	Taqdimot	Тақдимот
+deckcraft	a57ae01a1864	70eec9fda8ae	Rasm	Расм
+deckcraft	a57ae01a1864	c697ec5dadf3	Saqlab qolish	Сақлаб қолиш
+deckcraft	a57ae01a1864	dbd33e837963	Media	Медиа
+deckcraft	a57ae01a1864	f9237318d93e	Nom	Ном
 deckcraft	a5ab475db87d	a870266a8369	Maket	Макет
 deckcraft	a603af481642	3ac2c9c77166	Zich	Зич
 deckcraft	a6afb470dacb	1bdb86ed84a2	Nuqtalarni tahrirlash	Нуқталарни таҳрирлаш
@@ -955,6 +975,10 @@ deckcraft	bb4b52650f37	ecff794db9fa	Maxsus	Махсус
 deckcraft	bb9f8e0a3e72	1411849c82e8	Sahifa	Саҳифа
 deckcraft	bbb93e72cafa	1afbea1c5b94	Fotoalbom	Фотоальбом
 deckcraft	bbb93e72cafa	f3846a89862f	Matn	Матн
+deckcraft	bbb9df55b0ae	0bac2738e1d0	Markaz	Марказ
+deckcraft	bbb9df55b0ae	ba9eed940d1c	Tekislash	Текислаш
+deckcraft	bbb9df55b0ae	f3846a89862f	Matn	Матн
+deckcraft	bbb9df55b0ae	fa08927df247	Katak	Катак
 deckcraft	bbd8d5c852af	2ed874670f79	Matnni oʻrash	Матнни ўраш
 deckcraft	bbd8d5c852af	a3a5fa59866d	Shakl	Шакл
 deckcraft	bbd8d5c852af	f3846a89862f	Matn	Матн
@@ -969,6 +993,8 @@ deckcraft	bca24170cdd3	acbd59bc86c6	Slayd	Слайд
 deckcraft	bd5a258e382c	8d70b4fb7cbe	Joylashuv	Жойлашув
 deckcraft	bdcee93fe1c2	d24e43b2ab08	Yoritish	Ёритиш
 deckcraft	be2910b74424	dccd80f9aa8c	Ijro etish	Ижро этиш
+deckcraft	be75a14c7dc3	acbd59bc86c6	Slayd	Слайд
+deckcraft	be8624a3e75a	515423525568	Avtomatik tuzatish	Автоматик тузатиш
 deckcraft	bf1cdc8a4e98	7d1b7bdc9ef7	Struktura	Структура
 deckcraft	bf295af6e6f9	3c4c4a223a7b	Oldingisidan keyin	Олдингисидан кейин
 deckcraft	bf295af6e6f9	5db33b79e889	Oldingi	Олдинги
@@ -1016,9 +1042,6 @@ deckcraft	cafe2f065bba	3a010828713d	Toʻyinganlik	Тўйинганлик
 deckcraft	cbf2ab04b686	0e4f037cdd4a	Chiqish	Чиқиш
 deckcraft	cbf2ab04b686	e16b8cc88b03	Namoyish	Намойиш
 deckcraft	cc1b283f87f4	b125434d6b9a	Umumiy	Умумий
-deckcraft	cc386cbf509d	ba9eed940d1c	Tekislash	Текислаш
-deckcraft	cc386cbf509d	f3846a89862f	Matn	Матн
-deckcraft	cc386cbf509d	fa08927df247	Katak	Катак
 deckcraft	cc502784c74e	6594cf6c6a01	Rang	Ранг
 deckcraft	cc502784c74e	bc99b097c5d0	Shaffof	Шаффоф
 deckcraft	ccb912a98338	00009304e282	Dizayn	Дизайн
@@ -1185,6 +1208,9 @@ deckcraft	eec7291165c1	81e66f7f878d	Oʻzgartirish	Ўзгартириш
 deckcraft	eec7291165c1	c511cf161fc4	Diagramma	Диаграмма
 deckcraft	eed86f1bfd50	191c8a6e8225	Tur	Тур
 deckcraft	eed86f1bfd50	68ac81323e4d	Uch turi	Уч тури
+deckcraft	eef8fab00889	ba9eed940d1c	Tekislash	Текислаш
+deckcraft	eef8fab00889	f3846a89862f	Matn	Матн
+deckcraft	eef8fab00889	fa08927df247	Katak	Катак
 deckcraft	ef31fe2f6a1e	4b9682beafc2	Panel	Панель
 deckcraft	ef31fe2f6a1e	54a4d726a89e	Soʻz	Сўз
 deckcraft	ef31fe2f6a1e	d894d5a30f48	Ochish	Очиш
@@ -5109,6 +5135,7 @@ shared	0d7109515942	c511cf161fc4	Diagramma	Диаграмма
 shared	0e1fa0cd299c	8228c8d99730	Siqish	Сиқиш
 shared	10326409359c	30876a4370f7	Toʻldirish	Тўлдириш
 shared	1177b400d0ce	f3846a89862f	Matn	Матн
+shared	11d155aab7c5	515423525568	Avtomatik tuzatish	Автоматик тузатиш
 shared	11d155aab7c5	f9b03ea83621	Parametrlar	Параметрлар
 shared	11d2bfc97b9e	0c34772bdfbd	Kesishma	Кесишма
 shared	11f1a8dd42a1	b5c79726c0bb	Koʻrsatish	Кўрсатиш
@@ -5606,7 +5633,7 @@ shared	f9471670f0a5	d894d5a30f48	Ochish	Очиш
 shared	fb1accde37a8	50e7661b826f	Bekor qilish	Бекор қилиш
 shared	fbab20e95cb1	a9823ea5f83a	Belgi	Белги
 shared	fbab20e95cb1	c9add43cc03e	Belgilar oraligʻi	Белгилар оралиғи
-shared	fc147272107a	515423525568	Avtotuzatish	Автотузатиш
+shared	fc147272107a	515423525568	Avtomatik tuzatish	Автоматик тузатиш
 shared	fc481809844a	1411849c82e8	Sahifa	Саҳифа
 shared	fcc3796ed32a	ed60e62636a5	Toifa	Тоифа
 shared	fcf80e69fc99	28461be1310c	Shrift	Шрифт
@@ -5808,6 +5835,7 @@ wordcraft	1385dd6b30f4	a964a935b1a4	Yakuniy izoh	Якуний изоҳ
 wordcraft	1398e6079800	f24d7b4f5f0f	Yorliq	Ёрлиқ
 wordcraft	13cd1fa85eac	1411849c82e8	Sahifa	Саҳифа
 wordcraft	13cd1fa85eac	a361ab858ec1	Boʻsh sahifa	Бўш саҳифа
+wordcraft	140deefcae4c	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	140deefcae4c	96d486c17b08	Boʻlim	Бўлим
 wordcraft	14313390d25e	a9efddf57ceb	Raqamlash	Рақамлаш
 wordcraft	1445bbb6d2c2	f1c3fbefce23	Qaytarish	Қайтариш
@@ -5837,7 +5865,7 @@ wordcraft	16423864ba35	9b0c9129684e	Chop etish	Чоп этиш
 wordcraft	16ab05a950ba	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 wordcraft	16ab05a950ba	e501b05661ba	Hujjat	Ҳужжат
 wordcraft	16c19d308269	00205dd6df1a	Imlo	Имло
-wordcraft	16d4879454d0	608641df0be1	Tarkib boshqaruvi elementi	Таркиб бошқаруви элементи
+wordcraft	16d4879454d0	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	16d4879454d0	f416723069d5	Xususiyatlar	Хусусиятлар
 wordcraft	16e8ad4e16e0	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 wordcraft	16e8ad4e16e0	f64b65dff16c	Izoh	Изоҳ
@@ -5860,6 +5888,7 @@ wordcraft	186b4333e583	bdac76f03aeb	Funksiya	Функция
 wordcraft	187257bab5f0	22c284682679	Sozlamalar	Созламалар
 wordcraft	187257bab5f0	9ed9c9848dec	Xatboshi	Хатбоши
 wordcraft	18755d6ef687	cb3a8cac7832	Oʻn oltilik	Ўн олтилик
+wordcraft	1878e386bebf	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	1878e386bebf	a137efb000e6	Kombinatsiyalangan	Комбинацияланган
 wordcraft	1886babb0d5e	6f2940b3ab46	Yigʻindi	Йиғинди
 wordcraft	193b5d19987a	349830f3fa92	Operator	Оператор
@@ -6126,6 +6155,7 @@ wordcraft	39c7082f2d4e	d2da13dbf53c	Mantiqiy	Мантиқий
 wordcraft	3a144910a9a2	00205dd6df1a	Imlo	Имло
 wordcraft	3a144910a9a2	0369b60155b0	Grammatika	Грамматика
 wordcraft	3a72deee8bc3	03ddc433c171	Ochiladigan roʻyxat	Очиладиган рўйхат
+wordcraft	3a72deee8bc3	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	3a72deee8bc3	c201e63db06b	Roʻyxat	Рўйхат
 wordcraft	3b2e9cdb972b	96d486c17b08	Boʻlim	Бўлим
 wordcraft	3b2e9cdb972b	bdea16152cd7	Maydon	Майдон
@@ -6254,6 +6284,7 @@ wordcraft	475db38de154	90f0067d91fd	Mavzu	Мавзу
 wordcraft	475db38de154	d5532181ac59	Mavzu shriftlari	Мавзу шрифтлари
 wordcraft	4796fc9db008	28461be1310c	Shrift	Шрифт
 wordcraft	47e21a06fa66	18e7230d5bea	Formatlangan matn	Форматланган матн
+wordcraft	47e21a06fa66	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	47e21a06fa66	f3846a89862f	Matn	Матн
 wordcraft	480fcabf084d	ae968ee42543	Yuqori	Юқори
 wordcraft	481f6a5da7c9	401f42e3bad2	Qabul qiluvchi	Қабул қилувчи
@@ -6425,6 +6456,7 @@ wordcraft	5ba72b1dfa02	c9add43cc03e	Belgilar oraligʻi	Белгилар орал
 wordcraft	5c12248c19f1	cfd06f7dd354	Tahrirlash	Таҳрирлаш
 wordcraft	5c12248c19f1	db0df8e09864	Manba	Манба
 wordcraft	5cc741c783b5	0f4b14478a29	Belgilash katakchasi	Белгилаш катакчаси
+wordcraft	5cc741c783b5	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	5cf394aeb5ca	1411849c82e8	Sahifa	Саҳифа
 wordcraft	5d0cde5e64be	17acb22d30b6	Fayl	Файл
 wordcraft	5d0cde5e64be	e501b05661ba	Hujjat	Ҳужжат
@@ -6954,6 +6986,7 @@ wordcraft	9a095342f401	2411beab1ca6	Tanlash	Танлаш
 wordcraft	9a564546dc85	d6295ac1338e	Hajm boʻyicha integral	Ҳажм бўйича интеграл
 wordcraft	9a564546dc85	ea1b7d89b678	Integral	Интеграл
 wordcraft	9a56f044e168	0fad5b68d276	Element	Элемент
+wordcraft	9a840e241306	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	9a840e241306	70eec9fda8ae	Rasm	Расм
 wordcraft	9a9e5c3438b5	db0da793addf	Kichik	Кичик
 wordcraft	9ae1e1efe531	22008f8efd5f	Tenglama	Тенглама
@@ -7094,6 +7127,7 @@ wordcraft	a989e502caac	f64b65dff16c	Izoh	Изоҳ
 wordcraft	a9927c1cc50b	9429d7e50c9d	Qayta nomlash	Қайта номлаш
 wordcraft	a9a46d25e5fe	a4a7f4831e4d	Osma	Осма
 wordcraft	a9a46d25e5fe	bae2296ce046	Chekinish	Чекиниш
+wordcraft	a9bb94f721b9	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	a9bb94f721b9	9547ba57e653	Oddiy matn	Оддий матн
 wordcraft	a9bb94f721b9	f3846a89862f	Matn	Матн
 wordcraft	a9fd4435442f	ebcfaa9ca7e3	Tozalash	Тозалаш
@@ -7140,6 +7174,7 @@ wordcraft	ae87744b4e46	c61d1c368115	Printer	Принтер
 wordcraft	ae9e192c6cce	40c02c26a24c	Aylantirish	Айлантириш
 wordcraft	ae9e192c6cce	cbc9f8480beb	Jadval	Жадвал
 wordcraft	ae9e192c6cce	f3846a89862f	Matn	Матн
+wordcraft	aed4b0dd0593	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	aed4b0dd0593	db27816f5f4f	Olib tashlash	Олиб ташлаш
 wordcraft	aede3016ea4b	26f6f691760a	Hoshiyalar	Ҳошиялар
 wordcraft	aede3016ea4b	fa08927df247	Katak	Катак
@@ -7153,6 +7188,7 @@ wordcraft	af8375d32fc7	f0ef899cc65a	Barchasi	Барчаси
 wordcraft	b0140b80c5cb	a4a7f4831e4d	Osma	Осма
 wordcraft	b0140b80c5cb	bae2296ce046	Chekinish	Чекиниш
 wordcraft	b04750e48602	bdea16152cd7	Maydon	Майдон
+wordcraft	b08a5cd9a892	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	b08a5cd9a892	c8dabcd62138	Sana	Сана
 wordcraft	b08b2c45d4bf	334a9883cc5d	Kamayish boʻyicha	Камайиш бўйича
 wordcraft	b0c00ece895a	b5c79726c0bb	Koʻrsatish	Кўрсатиш
@@ -7200,6 +7236,7 @@ wordcraft	b4fed79cffd8	f5cdeffd9fcb	Chap	Чап
 wordcraft	b557c1475da1	7923650b1c6a	Kasr	Каср
 wordcraft	b5a0788f63c2	6f14294697d8	Yuqorida	Юқорида
 wordcraft	b5a0788f63c2	cefda819a1ee	Strelka	Стрелка
+wordcraft	b5b5bc52aeb5	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	b5c302c4bd34	3e7ed44035cf	Yakka	Якка
 wordcraft	b5c302c4bd34	8bb251ab1d0f	Oʻng	Ўнг
 wordcraft	b5c302c4bd34	fd9bb4813b9f	Qavs	Қавс
@@ -7435,6 +7472,7 @@ wordcraft	cdc1e00b97aa	6230c4fd03ad	Yangilash	Янгилаш
 wordcraft	cdc1e00b97aa	cbc9f8480beb	Jadval	Жадвал
 wordcraft	cdca757eec28	e70f7ce0bae5	Oʻlcham	Ўлчам
 wordcraft	cdec102564b3	cb575bbc2fcb	Oyna	Ойна
+wordcraft	ce04ccdf3180	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	ce217d5a26ba	c511cf161fc4	Diagramma	Диаграмма
 wordcraft	ce2d485252e9	f5cdeffd9fcb	Chap	Чап
 wordcraft	cea2becb4477	00205dd6df1a	Imlo	Имло
@@ -7542,7 +7580,7 @@ wordcraft	d849beecd8bf	8bb251ab1d0f	Oʻng	Ўнг
 wordcraft	d849beecd8bf	bae2296ce046	Chekinish	Чекиниш
 wordcraft	d8503ae64b5b	0dab4873ea25	Koʻrinish	Кўриниш
 wordcraft	d856783e95cb	2692dfb341b6	Diagonal	Диагонал
-wordcraft	d8a5468adecd	515423525568	Avtotuzatish	Автотузатиш
+wordcraft	d8a5468adecd	515423525568	Avtomatik tuzatish	Автоматик тузатиш
 wordcraft	d8c39bc3baa8	7923650b1c6a	Kasr	Каср
 wordcraft	d8d3ba490291	99b65edf1068	Soʻnggi	Сўнгги
 wordcraft	d92eafa48bd4	49f3e65ad13d	Koʻk	Кўк
@@ -7621,7 +7659,7 @@ wordcraft	e0f61380b5ca	5f9e3b0cb737	Qoʻlyozma	Қўлёзма
 wordcraft	e10be744fb71	dbfb65fb61b0	Uslub	Услуб
 wordcraft	e10e2c8ccbfe	25d6aabe3379	Boʻsh matritsa	Бўш матрица
 wordcraft	e10e2c8ccbfe	dbd19ff6e1fe	Matritsa	Матрица
-wordcraft	e110591b17f8	608641df0be1	Tarkib boshqaruvi elementi	Таркиб бошқаруви элементи
+wordcraft	e110591b17f8	608641df0be1	Boshqaruv elementi	Бошқарув элементи
 wordcraft	e1314b5b4650	cbc9f8480beb	Jadval	Жадвал
 wordcraft	e1314b5b4650	dbfb65fb61b0	Uslub	Услуб
 wordcraft	e185fbc3d707	2692dfb341b6	Diagonal	Диагонал

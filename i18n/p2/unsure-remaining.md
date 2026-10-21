@@ -4,6 +4,7 @@ The "unsure" rows of `notes-*.md` (about 50) were reviewed. Decided and kept (fi
 
 Changed on review:
 - gridcraft `964fa0ccabca` `Series{n}`: now `Maʼlumotlar qatori {n}` (not *Qator*, which is Row; same as wordcraft `Series {n}`).
+- AutoCorrect, Command Palette, Content control (decided 2026-10-21, agent, owner-delegated): the reviewed P1 catalog form wins, so *Avtomatik tuzatish*, *Buyruqlar paneli*, *Boshqaruv elementi*; the glossary keeps the old form as `alt-*` and the P2 rows that used it were changed.
 - pdfcraft `8c0604ac0ec2` / `3f02d96f8cce` `On` / `Off` (animation effects): `Yoniq` / `Oʻchiq` (a symmetric pair; matches the deckcraft *yoniq*).
 
 ## Still open (decision or an outside check needed)
@@ -20,9 +21,6 @@ Changed on review:
 | deckcraft `f78f6448ffd2`, `6ec1b3742f90`, `7a67a8bafbca` | Subtle / Exciting / Dynamic Content | Sokin / Taʼsirli / Dinamik tarkib | Transition group names; no source |
 | deckcraft `8673cc01977c`, `d9d68da3ef0f`, `f2851cbb1bf8` | Summary / Section / Slide Zoom | Xulosa / Boʻlim / Slayd masshtabi | A navigation-link object, not a zoom level |
 | deckcraft `633a87f557b7` | `  Present  ` | `  Namoyish qilish  ` | Longer than the English; check the button width on screen |
-| deckcraft `4f27570eece4`, `be8624a3e75a`, shared `fc147272107a`, wordcraft `d8a5468adecd` | AutoCorrect | Avtomatik tuzatish (shared P1 + deckcraft) vs *Avtotuzatish* (glossary, shared P2, Math AutoCorrect) | Mixed. Owner to choose one; the glossary says *Avtotuzatish* |
-| gridcraft `94e9f3efaefe` | Command Palette | Buyruqlar paneli (P1) | Glossary says *Buyruqlar palitrasi* |
-| wordcraft (13 P1 rows `Boshqaruv elementi: ...`) | Content Control | Boshqaruv elementi | Glossary says *Tarkib boshqaruvi elementi* (used in `dialogs.rs:1111`, `:1287`) |
 | wordcraft `311bd57b4ddf` | Strong | Yaqqol | Bold character style; no better word found (*Kuchli* = Intense, *Qalin* = Bold) |
 | wordcraft `2297175b36af` + 5 | Inverse Sine ... Cosecant Function | Teskari sinus funksiyasi ... | Uzbek textbooks say *arksinus*; the 8 hyperbolic ones have no such name, so *Teskari* was kept for all |
 | pdfcraft `fb8fd0c81ca2` | `file.word_count` (@id) | Soʻzlar soni | Ellipsis dropped because lint compares an id row; restore `…` once lint exempts `@id` rows |
