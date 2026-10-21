@@ -1018,3 +1018,18 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
 - **Built** as carried patches `gridcraft/0023`-`0030` and `0130` (9 patches, 81 gridcraft rows in total in REGISTER). The UI language (ru, uz-Latn, uz-Cyrl; every other language keeps en-US) sets the locale of displayed and typed numbers and dates. Typing `12.10.2026` is 12 October (it was 10 December), `3,5` and `1 234,5` are numbers, `=SUM(1;2)` is accepted. Stored data does not depend on the locale: xlsx parts are byte-equal across en, ru, uz-Latn and uz-Cyrl (engine test, and Excel reads all four files cell for cell identically).
 - **Measured** (`docs/phase3/numlocale.md` section 13): matrix 5 of 24 rows equal to Excel ru before, 21 of 24 after (the 3 left are calc, en-US on purpose); 27 typed inputs agree with Excel ru except two deliberate leniencies; ids 14-17 and 22 match. w80 release CLI: en-US median 65.9 s against 71.3 s before (inside the spread), peak 817 against 818 MB.
 - **Owner:** Q4 (a uz Windows culture to measure uz in Excel) and Q5 (`;` or `,` as the CSV default for uz and ru, one constant `LOCALE_CSV_LIST_SEPARATOR`) are still open. Excel on this PC writes a plain space as the CSV group character (its Windows thousands separator is U+0020), so Q5 and the group byte need a decision with the real HRM importers.
+
+## Phase 3 WP10 (2026-10-21): fidelity runs and report
+- `docs/phase3/fidelity.md`. All 80 `convert formats --json` rows measured: the CI harness set (65 cases) plus 52 rows added through
+  `docs/phase3/evidence/fidelity_extra.py`. References: Office 16 COM, LibreOffice 7.4.7 (soffice sidecar), ONLYOFFICE x2t 8.2.3 (local
+  reference, needs `ALLOW_PRIVATE_IP_ADDRESS=true`). JSON under `E:/office-target/p3/fidelity`; summary in
+  `docs/phase3/evidence/fidelity-summary.json`.
+- CI set: 1 silent loss (D1), 0 new against the baseline. The rows outside the CI set: 22 more in 12 directions, plus 2 that `run.py`
+  does not check. They are `defects.md` D2-D6, all open, fixes in `services/convert`:
+  - D2: same-format odt/rtf conversions carry no warnings;
+  - D3: rtf header and revision rows missing;
+  - D4: html to html pictures, md to txt tables;
+  - D5: native pdf to docx drops a narrow table column;
+  - D6: uz/ru CSV dates swapped because `GRIDCRAFT_NUM_LOCALE` is not set.
+- O8 input: native as the default once D5 is guarded, the sidecar optional. The pdf2docx "one paragraph per line" weakness did not appear
+  on Word-made PDFs. Word PDF reflow hangs headless (not measurable). Corpus (O9) still missing: every number is synthetic.

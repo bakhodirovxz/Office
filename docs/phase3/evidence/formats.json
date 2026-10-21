@@ -1,0 +1,762 @@
+{
+  "inputs": [
+    "docx",
+    "doc",
+    "odt",
+    "rtf",
+    "html",
+    "md",
+    "txt",
+    "xlsx",
+    "xls",
+    "xlsb",
+    "ods",
+    "csv",
+    "tsv",
+    "pptx",
+    "ppt",
+    "odp",
+    "pdf"
+  ],
+  "rows": [
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "docx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "doc",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "odt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "rtf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "html",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "md",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "odt"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "rtf"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "html"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "md"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "txt",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "xlsx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "xlsx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "xlsx",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "xls",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "xls",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "xls",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "xlsb",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "xlsb",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "xlsb",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "ods",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "ods",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "ods",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "csv",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "csv",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "csv",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "tsv",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "tsv",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "xlsx"
+    },
+    {
+      "from": "tsv",
+      "options": [
+        "sheet"
+      ],
+      "to": "csv"
+    },
+    {
+      "from": "pptx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pdf"
+    },
+    {
+      "from": "pptx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    },
+    {
+      "from": "pptx",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe"
+      ],
+      "to": "pptx"
+    },
+    {
+      "from": "pdf",
+      "options": [
+        "translit",
+        "alphabet",
+        "apostrophe",
+        "pdf-engine"
+      ],
+      "to": "docx"
+    },
+    {
+      "from": "pdf",
+      "options": [
+        "pages"
+      ],
+      "to": "txt"
+    },
+    {
+      "from": "pdf",
+      "options": [
+        "pages",
+        "dpi"
+      ],
+      "to": "png"
+    }
+  ],
+  "targets": [
+    "docx",
+    "odt",
+    "rtf",
+    "html",
+    "md",
+    "txt",
+    "pdf",
+    "png",
+    "xlsx",
+    "csv",
+    "pptx"
+  ],
+  "unsupported_inputs": [
+    "ppt",
+    "odp"
+  ]
+}

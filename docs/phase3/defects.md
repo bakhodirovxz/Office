@@ -3,7 +3,8 @@
 PLAN section 7: every loss without a warning is either fixed in the loss table (`services/convert/data/losses.toml`) or listed here with its
 evidence. The evidence is the fidelity run of 2026-10-21 (`python -I scripts/fidelity/run.py --directions all --out E:/office-target/p3/fidelity`):
 `directions/<id>.json`, case = fixture name, plus `summary.json` (`loss_without_warning`). The run before the fixes had 73 silent losses; the run
-after them has the entries of section 1 and nothing else (`ci/fidelity/silent-baseline.json` holds exactly those).
+after them has the entries of section 1 and nothing else (`ci/fidelity/silent-baseline.json` holds exactly those). WP10 ran the same harness
+over every `convert formats --json` row and found D2-D6 (section 1b) in rows the CI direction set does not cover.
 
 ## 1. Silent, accepted for now (no warning; the layout differs, the content does not)
 
@@ -16,6 +17,67 @@ after them has the entries of section 1 and nothing else (`ci/fidelity/silent-ba
 - **Why it is not warned**: nothing is lost. A warning on every `.txt` to `.docx` would be noise (PLAN 2.6: a plain input stays quiet).
 - **Fix**: a wordcraft default for text imports (a patch in `patches/`, registered in `patches/REGISTER.md`), or a planner step that sets the
   styles after the conversion. Owner decision; not done in WP9.
+- **WP10 (2026-10-21): the same cause on the other text targets.** `extra/directions/docs.txt2odt.json`, `docs.txt2rtf.json`,
+  `docs.txt2pdf.json`, `docs.txt2png.json`, all with case `order.txt`: 2 pages in Word, 4, 3, 5 and 5 here. Same decision as D1 (Phase 8).
+
+## 1b. Silent, found by WP10, open (not accepted)
+
+Found by the WP10 runs over all 80 rows of `convert formats --json` (`docs/phase3/fidelity.md` section 4). The evidence is under
+`E:/office-target/p3/fidelity/extra/` (the 52 rows that `scripts/fidelity/fid/directions.py` does not list, run by
+`docs/phase3/evidence/fidelity_extra.py`) unless another path is given. These rows are not in the CI direction set, so
+`ci/fidelity/silent-baseline.json` does not see them. **None is fixed yet. The fixes are in `services/convert`** (loss rows,
+planner, environment), not in WP10.
+
+### D2. Same-format conversions carry no warnings at all
+
+- **Evidence**: `docs.odt2odt.json` (case `order.odt`): comments 1 to 0, footnotes 1 to 0, headers and footers 4 to 0, pages 4 to 5,
+  status `ok` with **no warning**. `docs.rtf2rtf.json` (`order.rtf`): comments 1 to 0, footnotes 1 to 0, headers and footers 2 to 0, pages
+  4 to 3, no warning. The same losses are warned on odt to docx and rtf to docx (E5).
+- **Cause** (read in the code): in `services/convert/data/losses.toml`, the odt/rtf rows of `comments_dropped` and `footnotes_dropped` are
+  `cross = true`, and `services/convert/src/losses.rs:48` skips a cross row when the target is the input's own format. The idea that the
+  same format keeps them is wrong: the reader drops them, so the writer never sees them. The odt row of `headers_footers_dropped` lists
+  `to = [docx, rtf, html, pdf, png]`, without odt. The rtf header loss comes from the rtf writer, and its row exists for docx sources only (D3).
+- **Fix**: drop `cross` from those two rows (a reader loss applies to every target) and add odt to the odt header row's targets. Change
+  the unit test that expects them to stay quiet for the same format. Add rtf to rtf to the D3 header rows.
+
+### D3. RTF sources: header and revision losses not covered
+
+- **Evidence**: `docs.rtf2odt.json`: headers and footers 2 to 0, while only `comments_dropped` and `footnotes_dropped` are raised.
+  `docs.rtf2html.json`, `docs.rtf2md.json`, `docs.rtf2txt.json`: tracked changes 1 to 0 with no `revisions_dropped` (E3 lists docx only;
+  the rtf reader keeps revisions, as rtf to docx shows). `docs.rtf2html.json`: headers and footers 2 to 0 as well.
+- **Fix**: extend the `headers_footers_dropped` (to odt, html) and `revisions_dropped` (to html, md, txt) rows to rtf sources.
+
+### D4. html to html drops linked pictures; md to txt drops tables, both silently
+
+- **Evidence**: `docs.html2html.json` (`order.html` with `order_files/`): images 2 to 0, no warning (html to docx, odt, rtf, pdf and png
+  raise `html_images_not_embedded`). `docs.md2txt.json` (`order.md`): tables 2 to 0, no warning (docx, odt, rtf and html to txt raise
+  `tables_to_text`).
+- **Fix**: add html to html to the `html_images_not_embedded` row and md to the `tables_to_text` row.
+
+### D5. Native PDF to DOCX drops a narrow table column
+
+- **Evidence**: `E:/office-target/p3/fidelity/directions/pdf.pdf2docx.json`, case `p2d_widths.pdf` (a Word-made 5-column table, first
+  column 24 pt, Cyrillic names), `convert --pdf-engine native`: status `ok`, no warning. The docx table has 3 or 4 cells per row against
+  4 or 5 in the source: the whole first column (`1.1 Рахимов Ш.Т.` and so on) and the text of cells 2.5 and 5.5 are missing.
+  Cyrillic letters 480 to 462, docx text similarity 0.761 (`E:/office-target/p3/fidelity/p2d-widths-table.json` lists the cells). The
+  sidecar keeps every letter of the same file.
+- **Why the harness did not flag it**: `run.py` does not loss-check `pdf2docx` outputs.
+- **Fix**: an upstream (pdfcraft export) defect. Mitigate in `convert`: compare the letter count of the PDF text layer with the letter count
+  of the docx. If letters are missing, use the sidecar when it is configured, otherwise raise a warning. This must be done before native
+  is the default (O8).
+
+### D6. CSV/TSV in the uz/ru format: dates swapped, numbers become text
+
+- **Evidence**: `sheets.csv2xlsx.json`, `sheets.csv2pdf.json`, `sheets.csv2csv.json` and the three tsv rows (cases `staff.csv` and
+  `staff.tsv`). The input is Excel 16's own CSV on this PC: `;`, `3500000,0`, `01.03.2019`. Status `ok`, no warning. In the xlsx,
+  `01.03.2019` is stored as 2019-01-03 and `11.09.2019` as 2019-11-09, and `3500000,0` is a text cell. The csv output reads `1/3/2019`
+  (`E:/office-target/p3/fidelity/csv-recheck.json`: 5 of 79 cells differ, all dates).
+- **Cause, measured** (`E:/office-target/p3/fidelity/csv-locale-probe.json`): `sheets-cli convert staff.csv out.xlsx` gives 2019-01-03 and
+  text without `GRIDCRAFT_NUM_LOCALE`. With `GRIDCRAFT_NUM_LOCALE=ru` or `uz-latn` it gives 2019-03-01, 2019-09-11 and the number 3500000
+  (WP14 patch 0028: a `;` or tab CSV is read in the session locale). `convert` never sets that variable.
+- **Fix**: `convert` sets `GRIDCRAFT_NUM_LOCALE` per job from the user's language (as it sets the region for paper size, PLAN F7). Until
+  then, warn on every csv/tsv input that is not `,`-delimited. With the variable set, the `pdf_en_us` and `csv_one_sheet_en_us` warnings can
+  be revisited too.
 
 ## 2. Engine limits that `convert` warns about (kept here for the record; they are not silent)
 
