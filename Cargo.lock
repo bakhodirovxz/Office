@@ -329,6 +329,7 @@ version = "0.1.0"
 dependencies = [
  "office-brand",
  "toml_edit",
+ "uz-translit",
 ]
 
 [[package]]

@@ -8,3 +8,5 @@ publish = false
 [dependencies]
 toml_edit = "0.22"
 office-brand = { path = "../crates/office-brand" }
+# the derived uz-Latn-2026 catalog (WP16)
+uz-translit = { path = "../crates/uz-translit" }

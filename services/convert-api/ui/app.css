@@ -1,4 +1,4 @@
-/* Self-hosted Noto Sans (Latin, U+02BB, U+02BC, Cyrillic): the system fonts lack some Uzbek letters. */
+/* Self-hosted Noto Sans (Latin incl. the 2026 letters Ş Ç Ö Ğ, U+02BB, U+02BC, Cyrillic): the system fonts lack some Uzbek letters. */
 @font-face { font-family: "Noto Sans Uz"; src: url("/NotoSans-Regular-uz.ttf") format("truetype"); font-weight: 100 900; font-style: normal; font-display: swap; }
 
 :root {

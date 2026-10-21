@@ -400,9 +400,16 @@ pub fn lint(cat: &Catalog) -> Vec<Finding> {
                     ),
                 );
             }
+            // The converter page's derived uz-Latn-2026 value (export::latn_2026) is checked like a Latin draft.
+            let d26 = if scope == "converter" && !r.uz_cyrl.is_empty() {
+                super::export::latn_2026(&r.uz_cyrl)
+            } else {
+                String::new()
+            };
             for (loc, value, status, is_latn) in [
                 ("uz-Latn", &r.uz_latn, &r.uz_latn_status, true),
                 ("uz-Cyrl", &r.uz_cyrl, &r.uz_cyrl_status, false),
+                ("uz-Latn-2026", &d26, &r.uz_cyrl_status, true),
             ] {
                 if value.is_empty() {
                     continue;
@@ -427,6 +434,12 @@ pub fn lint(cat: &Catalog) -> Vec<Finding> {
                         .into_iter()
                         .map(|m| ("apostrophe", m)),
                 );
+                if loc == "uz-Latn-2026" && value.contains('\u{02bb}') {
+                    errs.push((
+                        "apostrophe",
+                        "1995 letter (U+02BB) in the 2026 text".to_string(),
+                    ));
+                }
                 errs.extend(
                     script_purity(is_latn, &r.source, value)
                         .into_iter()

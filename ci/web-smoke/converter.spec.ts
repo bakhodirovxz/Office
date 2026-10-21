@@ -8,7 +8,7 @@ import * as path from 'node:path';
 // The converter page against the real convert-api binary. The tools are the test stand-in (convert-api-fake-tool): it writes a
 // stub PDF, `FAIL...` input makes it exit 1, `SLEEP...` input keeps it busy (cancel). Run with:
 //   npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.converter.config.ts
-// UI_SHOTS=<dir> also writes the four-language screenshots.
+// UI_SHOTS=<dir> also writes the five-language screenshots.
 const ROOT = path.resolve(__dirname, '../..');
 const SVC = process.env.CONVERT_SERVICES_DIR ?? 'E:/office-target/p1/services/release';
 const API_BIN = process.env.CONVERT_API_BIN ?? path.join(SVC, 'convert-api.exe');
@@ -144,7 +144,7 @@ test('cancel stops a running conversion and deletes the job', async ({ page }) =
 
 test('the language switch changes the page, the name and the document language, and is remembered', async ({ page }) => {
   const problems = await open(page);
-  for (const [lang, htmlLang] of [['ru', 'ru'], ['uz-Latn', 'uz-Latn'], ['uz-Cyrl', 'uz-Cyrl'], ['en', 'en']] as const) {
+  for (const [lang, htmlLang] of [['ru', 'ru'], ['uz-Latn', 'uz-Latn'], ['uz-Latn-2026', 'uz-Latn-2026'], ['uz-Cyrl', 'uz-Cyrl'], ['en', 'en']] as const) {
     await page.selectOption('#lang', lang);
     await expect(page.locator('html')).toHaveAttribute('lang', htmlLang);
     await expect(page.locator('#files-h')).toHaveText(txt(lang, 'ui.files.heading'));
@@ -152,12 +152,20 @@ test('the language switch changes the page, the name and the document language, 
     await expect(page).toHaveTitle(I18N[lang]['app.name']);
   }
   expect(txt('uz-Cyrl', 'ui.convert')).not.toBe(txt('uz-Latn', 'ui.convert'));
+  // the 2026 catalog is generated from uz-Cyrl: it has the new letters and none of the 1995 oʻ gʻ
+  const all26 = Object.values(I18N['uz-Latn-2026']).join(' ');
+  expect(all26).toMatch(/[şçöğ]/i);
+  expect(all26).not.toMatch(/ʻ/);
+  // the Latin alphabet menu preselects and marks the server's default (DEFAULT_LATIN_ALPHABET, owner decision O13)
+  const def = (await (await page.request.get(`${base}/api/v1/formats`)).json()).defaults.alphabet;
+  await expect(page.locator('#o-alphabet')).toHaveValue(def);
+  await expect(page.locator(`#o-alphabet option[value="${def}"]`)).toHaveText(txt('en', 'ui.opt.alphabet.default', { alphabet: def }));
   await page.selectOption('#lang', 'uz-Cyrl');
   await page.reload();
   await expect(page.locator('#lang')).toHaveValue('uz-Cyrl'); // remembered
   await expect(page.locator('#go')).toHaveText(txt('uz-Cyrl', 'ui.convert'));
   // the self-hosted Noto Sans really loaded and has the Uzbek letters
-  expect(await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px "Noto Sans Uz"', '\u02bb\u02bc\u045e\u049b\u0493\u04b3'); })).toBe(true);
+  expect(await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px "Noto Sans Uz"', '\u02bb\u02bc\u045e\u049b\u0493\u04b3\u015e\u015f\u00c7\u00e7\u00d6\u00f6\u011e\u011f'); })).toBe(true);
   expect(problems).toEqual([]);
 });
 
@@ -191,10 +199,10 @@ test('server mode: the healthz probe carries the token in the Authorization head
   expect(probes.at(-1)!.auth).toBeUndefined();
 });
 
-test('screenshots in en, ru, uz-Latn and uz-Cyrl', async ({ page }) => {
+test('screenshots in en, ru, uz-Latn, uz-Latn-2026 and uz-Cyrl', async ({ page }) => {
   test.skip(!process.env.UI_SHOTS, 'set UI_SHOTS=<dir> to write them');
   fs.mkdirSync(process.env.UI_SHOTS!, { recursive: true });
-  for (const lang of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
+  for (const lang of ['en', 'ru', 'uz-Latn', 'uz-Latn-2026', 'uz-Cyrl']) {
     await page.goto(base + '/');
     await page.selectOption('#lang', lang);
     await expect(page.locator('#go')).toHaveText(txt(lang, 'ui.convert'));

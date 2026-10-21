@@ -342,12 +342,26 @@ pub fn overlay_root() -> Result<PathBuf, String> {
 }
 
 /// Locales of the converter page, as `brand.toml` spells them, with the catalog's lower-case name.
-const PAGE_LOCALES: [(&str, &str); 4] = [
+const PAGE_LOCALES: [(&str, &str); 5] = [
     ("en", "en"),
     ("ru", "ru"),
     ("uz-Latn", "uz-latn"),
     ("uz-Cyrl", "uz-cyrl"),
+    ("uz-Latn-2026", LATN_2026),
 ];
+
+/// The derived 2026-alphabet locale (WP16): no catalog column of its own. Each value is the row's own uz-Cyrl value
+/// (never the ru fallback) transliterated by uz-translit with the 2026 alphabet, so it is exactly as trusted as that value.
+pub const LATN_2026: &str = "uz-latn-2026";
+
+/// uz-Cyrl text in the 2026 Latin alphabet (rules.md section 15).
+pub fn latn_2026(cyrl: &str) -> String {
+    let o = uz_translit::Options {
+        latin_alphabet: uz_translit::LatinAlphabet::Y2026,
+        ..Default::default()
+    };
+    uz_translit::convert(cyrl, uz_translit::Direction::ToLatin, &o)
+}
 
 fn json_str(s: &str) -> String {
     let mut out = String::from("\"");
@@ -384,6 +398,9 @@ pub fn build_page_json(
             }
             let v = if *key == "en" {
                 Some(row.source.clone())
+            } else if *key == LATN_2026 {
+                let own = Chains(BTreeMap::from([("uz-cyrl".into(), vec!["uz-cyrl".into()])]));
+                resolve(row, "converter", "uz-cyrl", &own, mode, policy).map(|r| latn_2026(&r.0))
             } else {
                 resolve(row, "converter", key, chains, mode, policy).map(|r| r.0)
             };
@@ -391,8 +408,12 @@ pub fn build_page_json(
                 m.entry(row.context.clone()).or_insert(v);
             }
         }
-        if let Some(n) = names.get(*loc) {
-            m.insert("app.name".into(), n.clone());
+        let name = match *key {
+            LATN_2026 => names.get("uz-Cyrl").map(|n| latn_2026(n)),
+            _ => names.get(*loc).cloned(),
+        };
+        if let Some(n) = name {
+            m.insert("app.name".into(), n);
         }
         out.push_str(&format!("  {}: {{\n", json_str(loc)));
         let body: Vec<String> = m
@@ -1188,10 +1209,15 @@ mod tests {
     "app.name": "Н",
     "ui.a": "Алфа",
     "ui.b": "Бета"
+  },
+  "uz-Latn-2026": {
+    "app.name": "N",
+    "ui.a": "Alfa"
   }
 }
 "#;
-        assert_eq!(text, want); // uz-Cyrl falls back to ru, uz-Latn never to en
+        // uz-Cyrl falls back to ru, uz-Latn never to en; uz-Latn-2026 is the own uz-Cyrl value transliterated, never ru
+        assert_eq!(text, want);
         let release = build_page_json(
             &cat,
             &Chains::default(),

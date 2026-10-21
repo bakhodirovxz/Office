@@ -3,7 +3,8 @@
 // All server text goes in through textContent, never innerHTML.
 (function () {
   const $ = (id) => document.getElementById(id);
-  const LANGS = ['en', 'ru', 'uz-Latn', 'uz-Cyrl'];
+  // uz-Latn-2026: the 2026 Latin alphabet, generated from uz-Cyrl by `cargo xt i18n export` (WP16)
+  const LANGS = ['en', 'ru', 'uz-Latn', 'uz-Latn-2026', 'uz-Cyrl'];
   const S = { lang: 'en', i18n: {}, fmts: null, health: null, items: [], sent: [], job: null, ctrl: null, timer: null, running: false, token: null };
 
   // ---- small helpers -------------------------------------------------------------------------------------------------
@@ -25,6 +26,9 @@
 
   class ApiErr extends Error { constructor(code, message, status) { super(message); this.code = code; this.status = status || 0; } }
 
+  // The server's default Latin alphabet (uz-translit DEFAULT_LATIN_ALPHABET, owner decision O13); null until /formats answers.
+  const defAlphabet = () => (S.fmts && S.fmts.defaults && S.fmts.defaults.alphabet) || null;
+
   // ---- language ------------------------------------------------------------------------------------------------------
   function guessLang() {
     const saved = store('localStorage', 'cv.lang');
@@ -41,6 +45,7 @@
     document.title = t('app.name');
     $('appname').textContent = t('app.name');
     for (const e of document.querySelectorAll('[data-i18n]')) e.textContent = t(e.dataset.i18n);
+    for (const o of $('o-alphabet').options) if (o.value === defAlphabet()) o.textContent = t('ui.opt.alphabet.default', { alphabet: o.textContent });
     const sc = $('o-sidecar'); if (sc && S.health && S.health.sidecars && S.health.sidecars.pdf2docx === false) sc.textContent = t('ui.opt.engine.sidecar') + ' (' + t('ui.opt.engine.unavailable') + ')';
     render();
   }
@@ -297,6 +302,7 @@
     // api() adds the Authorization header in server mode: without a token the server answers only {ok:true} (no tool list, no sidecar state)
     try { S.health = await (await api('/healthz')).json(); } catch (_) { /* shown by the next call if the server is really down */ }
     try { S.fmts = await (await api('/api/v1/formats')).json(); } catch (e) { showError(e); }
+    if (defAlphabet()) $('o-alphabet').value = defAlphabet();
     setLang(S.lang);
   }
   async function init() {
