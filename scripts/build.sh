@@ -26,9 +26,6 @@ export CARGO_BUILD_JOBS=4
 [ "${OFFICE_FONTS:-parity}" = all ] || { [ "$d" = slides ] || unset CRAFT_FONTS_DIR; }
 mf="domains/$d/Cargo.toml"
 
-wait_no_rustc() {
-  while tasklist //FI "IMAGENAME eq rustc.exe" 2>/dev/null | grep -qi rustc.exe; do echo "another rustc.exe is running; waiting"; sleep 20; done
-}
 
 # Brand overlay (WP7): render brand/brand.toml into $OFFICE_OVERLAY_ROOT/<d>/ and point the builds at it. The web page is
 # rendered from index.html.in because build.rs cannot write index.html. OFFICE_NO_OVERLAY=1 builds pristine-like.
@@ -54,7 +51,7 @@ overlay_prepare() {
 }
 
 run() {
-  wait_no_rustc; ram_gate 3
+  ram_gate 6   # two builds may overlap (2-slot lock): free RAM must cover this one plus the running one
   overlay_prepare || return 1
   local t0=$SECONDS; echo "== $d $what ${release:+release} start $(date -Is) fonts=${CRAFT_FONTS_DIR:-unset} wrapper=${RUSTC_WRAPPER:-none} overlay=${OFFICE_OVERLAY_DIR:-none}"
   case "$what" in

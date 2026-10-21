@@ -90,7 +90,7 @@ bstep() {
     shift; echo "--- $name: SKIPPED (no-build): $*" | tee -a "$JOB_LOG"
     STEPS="${STEPS:+$STEPS,}\"$name:skipped\""; SKIPPED=$((SKIPPED+1)); return 0
   fi
-  ram_gate "${CI_RAM_GB:-3}"; with_build_lock step "$@"
+  ram_gate "${CI_RAM_GB:-6}"; with_build_lock step "$@"
 }
 job_end() { # <rc> [status override]
   local rc="$1" status="${2:-}" t1; t1=$(date +%s)
@@ -184,7 +184,7 @@ clippy_keys() { # stdin: cargo clippy --message-format short output; stdout: sor
 upstream_clippy_ratchet() {
   local app="$1" base=ci/clippy-baseline/$1.txt out cur basek new gone crc
   if [ "$NO_BUILD" = 1 ]; then note "clippy-ratchet-$app: skipped (no-build)"; SKIPPED=$((SKIPPED+1)); return 0; fi
-  ram_gate "${CI_RAM_GB:-3}"
+  ram_gate "${CI_RAM_GB:-6}"
   out=$(mktemp); cur=$(mktemp); basek=$(mktemp)
   with_build_lock env CARGO_TARGET_DIR="$OFFICE_TARGET/upstream-$app" cargo clippy --workspace --all-targets -j 6 \
         --manifest-path "upstream/$app/Cargo.toml" --message-format short >"$out" 2>&1; crc=$?

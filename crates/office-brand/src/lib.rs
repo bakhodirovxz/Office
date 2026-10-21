@@ -486,9 +486,9 @@ mod tests {
     }
 
     #[test]
-    fn brand_toml_is_valid_and_has_four_apps() {
+    fn brand_toml_is_valid_and_has_five_apps() {
         let b = repo_brand();
-        assert_eq!(b.apps.len(), 4);
+        assert_eq!(b.apps.len(), 5);
         assert_eq!(b.version, "0.1.0");
     }
 
