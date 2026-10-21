@@ -1,7 +1,7 @@
 //! Test-only stand-in for a domain CLI (PLAN WP2 step 5). The first argument picks the fault; the integration tests in
 //! `tests/fault.rs` run the executor against it.
 //!   sleep SECS | exit1 | panic | abort | alloc MB | empty PATH | truncated PATH | ok PATH [TEXT] | warn PATH
-//!   translit PATH JSON (prints JSON on stdout) | silent (writes nothing, exit 0)
+//!   two A B (writes both) | translit PATH JSON (prints JSON on stdout) | silent (writes nothing, exit 0)
 //! and the shapes the planner really emits, so `convert_file` can run end to end without a domain CLI:
 //!   convert IN OUT | run ... (--out/--save OUT, or a file.exportPdf path) | info FILE (fails when the file holds BADINFO)
 fn stub(path: &str, extra: &str) {
@@ -45,7 +45,18 @@ fn main() {
             stub(arg(1), "");
         }
         "silent" => {}
-        "convert" => stub(arg(2), ""),
+        // two files in one step: `two A B` (both declared by a test step as A, B stays undeclared unless the test declares it)
+        "two" => {
+            stub(arg(1), "");
+            stub(arg(2), "");
+        }
+        "convert" => {
+            // an input that says SLEEP keeps the tool busy (the containment test kills the parent meanwhile)
+            if std::fs::read(arg(1)).is_ok_and(|b| b.starts_with(b"SLEEP")) {
+                std::thread::sleep(std::time::Duration::from_secs(120));
+            }
+            stub(arg(2), "")
+        }
         "run" => {
             let at = a.iter().position(|x| x == "--out" || x == "--save").map(|i| a[i + 1].clone());
             let pdf = a.iter().find_map(|x| x.strip_prefix("file.exportPdf=")).and_then(|j| serde_json::from_str::<serde_json::Value>(j).ok()).and_then(|v| v["path"].as_str().map(String::from));

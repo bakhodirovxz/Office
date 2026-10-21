@@ -29,3 +29,7 @@ toml = { version = "1", default-features = false, features = ["parse", "serde"] 
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 # Blocking HTTP client for the sidecars, no TLS (they sit on an internal network): MIT OR Apache-2.0. PLAN 2.1.
 ureq = { version = "3", default-features = false }
+
+[target.'cfg(windows)'.dependencies]
+# safe wrapper over Win32 Job Objects (kill-on-close, memory limit); keeps our crates free of `unsafe`
+win32job = "2"

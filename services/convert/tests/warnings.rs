@@ -80,9 +80,8 @@ impl Sandbox {
                 inputs: vec![(input.clone(), "in/input.txt".into())],
                 origins: vec![input],
                 steps: Ok(steps),
-                warnings: vec![],
                 stem: "sample".into(),
-                dest: &dest,
+                ..JobSpec::new(&dest)
             },
         )
     }
@@ -201,7 +200,10 @@ fn translit_result_is_captured_and_nothing_to_convert_warns() {
 #[test]
 fn every_code_has_catalog_text() {
     let mut emitted: Vec<String> = convert::losses::rows().iter().map(|r| r.code.clone()).collect();
-    emitted.extend(["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar"].map(String::from));
+    emitted.extend(
+        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped"]
+            .map(String::from),
+    );
     emitted.sort();
     emitted.dedup();
     assert_eq!(emitted, report::codes(), "i18n/converter.tsv and the codes the converter emits must be the same set");

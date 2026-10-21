@@ -13,7 +13,7 @@
 //!   504 timeout                 4
 //!   500 worker_crashed          6
 //!   connection refused / no answer   7  unreachable;  our own client timeout   4
-use crate::exec::{Config, Exit, Failure, StepReport, fail, validate_file};
+use crate::exec::{Config, Ctl, Exit, Failure, StepReport, fail, validate_file};
 use crate::plan::HttpStep;
 use std::io::Write;
 use std::path::Path;
@@ -39,25 +39,28 @@ pub fn map_error(status: u16, code: &str, message: &str) -> Failure {
     Failure { exit, msg: format!("{what} (pdf2docx sidecar {status} {code}): {message}") }
 }
 
-fn timeout(cfg: &Config) -> Duration {
+fn timeout(cfg: &Config, ctl: &Ctl) -> Duration {
     // the sidecar's own job timeout is 300 s; wait a little longer so its 504 arrives before our client gives up
-    Duration::from_secs(cfg.timeout_s.unwrap_or(330))
+    let t = Duration::from_secs(cfg.timeout_s.unwrap_or(330));
+    ctl.remaining().map_or(t, |left| t.min(left))
 }
 
 /// Run one Http step. Returns the sidecar's `X-Convert-Report` JSON, if it sent one.
-pub fn run_http(cfg: &Config, job: &Path, h: &HttpStep, steps: &mut Vec<StepReport>) -> Result<Option<serde_json::Value>, Failure> {
+pub fn run_http(cfg: &Config, ctl: &Ctl, job: &Path, h: &HttpStep, steps: &mut Vec<StepReport>) -> Result<Option<serde_json::Value>, Failure> {
     let Some(base) = cfg.pdf2docx_url.as_deref() else {
         return fail(Exit::Missing, "the pdf2docx sidecar is not configured (set CONVERT_PDF2DOCX_URL, e.g. http://127.0.0.1:18080), or use --pdf-engine native");
     };
     let query = h.query.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("&");
     let url = format!("{}{}{}{}", base.trim_end_matches('/'), h.route, if query.is_empty() { "" } else { "?" }, query);
     let body = std::fs::read(job.join(&h.input)).map_err(|e| Failure { exit: Exit::ToolError, msg: format!("cannot read {}: {e}", h.input) })?;
-    let agent: ureq::Agent = ureq::Agent::config_builder().http_status_as_error(false).proxy(None).timeout_global(Some(timeout(cfg))).build().into();
+    let agent: ureq::Agent = ureq::Agent::config_builder().http_status_as_error(false).proxy(None).timeout_global(Some(timeout(cfg, ctl))).build().into();
     let start = Instant::now();
     let note = |status: i64, text: String, steps: &mut Vec<StepReport>| {
         steps.push(StepReport { tool: "pdf2docx".into(), exit: status, ms: start.elapsed().as_millis() as u64, peak_mb: 0, stderr_tail: text.chars().take(2048).collect() });
     };
+    // shortcut: a blocking request is not interrupted by a cancel; the job deadline caps it, and cancel is checked between attempts
     for attempt in 0..ATTEMPTS {
+        ctl.check()?;
         let mut resp = match agent.post(&url).header("Content-Type", "application/pdf").send(&body[..]) {
             Ok(r) => r,
             Err(e) => {

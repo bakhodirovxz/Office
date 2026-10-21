@@ -1,5 +1,5 @@
 //! `convert`: the command line (PLAN phase 3, section 2.2). Hand-rolled argument parsing, no clap: the grammar is small.
-use convert::exec::{Config, Exit, run_tool};
+use convert::exec::{Config, Ctl, Exit, run_tool};
 use convert::formats;
 use convert::job::{self, Dest, FileReport};
 use convert::plan::{self, Options, PageSpec, PdfEngine, SheetSel, SplitBy, Target, ToolId, Translit, TranslitDir};
@@ -177,7 +177,8 @@ fn cmd_convert(a: Args) -> ExitCode {
         Err(e) => return usage_err(e),
     };
     let inputs: Vec<PathBuf> = a.pos.iter().map(PathBuf::from).collect();
-    let reports = job::par_map(&inputs, j, |i| job::convert_file(&cfg, i, target, &opts, &d));
+    job::sweep_stale(&cfg.work_dir);
+    let reports = job::par_map(&inputs, j, |i| job::guarded(&i.display().to_string(), target.ext(), || job::convert_file(&cfg, i, target, &opts, &d)));
     finish(reports, &a)
 }
 
@@ -220,7 +221,8 @@ fn cmd_pdf(mut a: Args) -> ExitCode {
         }
         _ => return usage_err(format!("unknown pdf operation '{op}'")),
     };
-    let r = job::pdf_op(&cfg, &op, &inputs, steps, &d);
+    job::sweep_stale(&cfg.work_dir);
+    let r = job::guarded(&op, "pdf", || job::pdf_op(&cfg, &op, &inputs, steps, &d));
     finish(vec![r], &a)
 }
 
@@ -229,7 +231,12 @@ fn cmd_check(a: Args) -> ExitCode {
         Ok(c) => c,
         Err(e) => return usage_err(e),
     };
-    let dir = std::env::temp_dir();
+    // the tools run in a private job directory like in a conversion, not in the system temp dir
+    let job = match job::JobDir::create(&cfg, &format!("{}-check", std::process::id())) {
+        Ok(j) => j,
+        Err(f) => return usage_err(f.msg),
+    };
+    let dir = job.path().to_path_buf();
     let mut missing = false;
     for t in ToolId::ALL {
         let ver = if t == ToolId::Sheets { "version" } else { "--version" };
@@ -238,7 +245,7 @@ fn cmd_check(a: Args) -> ExitCode {
                 missing = true;
                 println!("{:<11} MISSING  {}", t.name(), f.msg);
             }
-            Ok(p) => match run_tool(&cfg, t, &[ver.to_string()], &dir, None, 0.0, 0, &mut vec![]) {
+            Ok(p) => match run_tool(&cfg, &Ctl::default(), t, &[ver.to_string()], &dir, None, 0.0, 0, &mut vec![]) {
                 Ok(r) => println!("{:<11} ok       {}  {}", t.name(), p.display(), String::from_utf8_lossy(&r.stdout).lines().next().unwrap_or("").trim()),
                 Err(f) => {
                     missing = true;

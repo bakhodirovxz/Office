@@ -23,6 +23,7 @@ fn root() -> PathBuf {
 fn config(work: &Path) -> Option<Config> {
     let target = std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into());
     let mut c = Config::from_env();
+    c.timeout_s = Some(120); // a loaded box must not turn a 0.1 s conversion into a flaky timeout
     c.work_dir = work.join("work");
     for (id, dir) in [(ToolId::Docs, "docs"), (ToolId::Sheets, "sheets"), (ToolId::Slides, "slides"), (ToolId::Pdf, "pdf")] {
         let p = PathBuf::from(&target).join(dir).join("release").join(format!("{}{}", id.name(), std::env::consts::EXE_SUFFIX));
@@ -71,6 +72,23 @@ fn without_modified(v: &[u8]) -> Vec<u8> {
         (Some(a), Some(b)) => format!("{}{}", &t[..a], &t[b + "</dcterms:modified>".len()..]).into_bytes(),
         _ => v.to_vec(),
     }
+}
+
+/// Tracked revisions carry the save time (`w:date`), which differs between two runs; everything else must match.
+fn without_dates(v: &[u8]) -> Vec<u8> {
+    let t = String::from_utf8_lossy(v);
+    let mut out = String::new();
+    let mut rest: &str = &t;
+    while let Some(i) = rest.find(" w:date=\"") {
+        let (head, tail) = rest.split_at(i + " w:date=\"".len());
+        out.push_str(head);
+        match tail.find('"') {
+            Some(j) => rest = &tail[j..],
+            None => break,
+        }
+    }
+    out.push_str(rest);
+    out.into_bytes()
 }
 
 fn parts(path: &Path) -> BTreeMap<String, Vec<u8>> {
@@ -128,7 +146,7 @@ fn docx_fixtures_match_the_phase_2_route() {
         assert!(out.status.success(), "{name}: {}", String::from_utf8_lossy(&out.stderr));
         let p2parts = parts(&p2);
         for (k, v) in &pr {
-            if v != &p2parts[k] {
+            if without_dates(v) != without_dates(&p2parts[k]) {
                 panic!("{name}: part {k} differs between convert --translit cyrl and the Phase 2 route
   C: {}
   P: {}", String::from_utf8_lossy(v), String::from_utf8_lossy(&p2parts[k]));

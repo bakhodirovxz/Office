@@ -32,6 +32,7 @@ fn ok(report: &str) -> Reply {
 }
 
 /// One canned reply per connection, in order; the last one repeats. Returns the base URL and the requests seen.
+#[allow(clippy::type_complexity)] // shortcut: a test helper returning the request log as a tuple
 fn serve(replies: Vec<Reply>) -> (String, Arc<Mutex<Vec<(String, Vec<(String, String)>, usize)>>>) {
     let l = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", l.local_addr().unwrap());

@@ -206,9 +206,18 @@ convert check                      (finds every tool and sidecar, prints version
 
 ### 2.4 Process environment
 - **Cleared environment.** Only these are passed: `PATH` (the tools dir), `SystemRoot` and `TEMP`/`TMP` = `<job>/tmp`
-  (Windows), `HOME` = `<job>/home`, `LANG`/`LC_ALL`/`LC_PAPER` from the job's paper region (default `uz_UZ.UTF-8` →
-  A4; F7), `WORDCRAFT_NO_PREFS=1` (no preferences read or written), `CRAFT_FONTS_DIR` (config), and
-  `GRIDCRAFT_PDF_SYSTEM_FONTS` (config; on servers it points at the font set of §6.3).
+  (Windows), `HOME`/`USERPROFILE`/`APPDATA` = `<job>/home`, `LANG`/`LC_ALL`/`LC_PAPER` from the job's paper region
+  (default `uz_UZ.UTF-8` → A4; F7), `WORDCRAFT_NO_PREFS=1` (no preferences read or written), `CRAFT_FONTS_DIR`
+  (config), and `GRIDCRAFT_PDF_SYSTEM_FONTS`, which is an **on/off switch**, not a path (`pdf_fonts.rs:245`).
+- **`LOCALAPPDATA`** (review M5): both font scanners read `%LOCALAPPDATA%\Microsoft\Windows\Fonts` (wordcraft
+  `fontdb.rs:730`, gridcraft `pdf_fonts.rs:166`), where Windows 10 1809+ puts fonts installed without admin rights. In
+  **local mode** the tools therefore get the real `LOCALAPPDATA`, so `convert` renders like the measured raw CLIs;
+  preferences stay off through `WORDCRAFT_NO_PREFS`. In **server mode** (`CONVERT_LOCALAPPDATA=isolated`) it points into the
+  job directory, and the fonts come from `CRAFT_FONTS_DIR` or the image only.
+- **Process containment (Windows)**: each tool step runs in a Job Object with *kill on close*, through the safe `win32job` crate (it offers no
+  per-process commit limit, so the memory cap stays with the watchdog; exact caps would need `unsafe` FFI). The tools die
+  with `convert`, and `unsafe_code = "forbid"` still holds for our crates. Linux (WP11): process group, kill the group,
+  `PR_SET_PDEATHSIG`.
 - `pdf-cli run` always gets `--root <job>`, so its script can only touch the job directory.
 
 ### 2.5 Timeouts and memory
@@ -216,10 +225,11 @@ convert check                      (finds every tool and sidecar, prints version
   measures them): docs 60 s + 2 s/MB; sheets 60 s + 3 s/MB (w40 opened in 37 s); slides 60 s + 2 s/MB; pdf 30 s +
   1 s/MB; pdf2docx 60 s + 3 s/page; soffice 120 s. On timeout the process is killed (`kill_on_drop` plus an explicit
   kill and wait), and the step reports exit 4.
-- **Memory.** A watchdog samples the child's working set (`sysinfo`) every 250 ms and kills it above the cap (exit 5).
+- **Memory.** A watchdog samples the child's commit (private bytes, `sysinfo` `virtual_memory`; the working set reads low under
+  memory pressure) every 100 ms and kills it above the cap (exit 5).
   Defaults: docs 3 GB, slides 3 GB, pdf 2 GB, sheets 6 GB. `shortcut: polling can overshoot by one sampling interval;
-  the container cgroup limit (§5.6) is the hard backstop.` Windows Job Objects would be exact, but they need `unsafe`
-  FFI, which our workspace lints forbid.
+  the container cgroup limit (§5.6) is the hard backstop.` The cgroup limit (WP11) is the hard backstop on Linux; on Windows there is none
+  beyond the watchdog.
 - The peak working set of every step goes into the report. That is how WP1 and WP9 measure peaks for free.
 
 ### 2.6 Errors, warnings and exit codes (never fail silently)

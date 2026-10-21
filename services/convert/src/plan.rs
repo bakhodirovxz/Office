@@ -143,8 +143,8 @@ impl Default for Options {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Outputs {
     Files(Vec<String>),
-    /// at least one file with this extension in the directory
-    Dir { dir: String, ext: String },
+    /// at least one file with this extension in the directory; exactly `expect` of them when the plan knows the count
+    Dir { dir: String, ext: String, expect: Option<usize> },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -165,8 +165,35 @@ pub struct ToolStep {
 pub enum Expand {
     /// `sheets-cli info <input> --json`, then one `convert` per sheet, or only the sheet `only` (checked against the names)
     CsvSheets { input: String, only: Option<String> },
-    /// `pdf-cli info <pdf>`, then one `render` per page
+    /// `pdf-cli info <pdf>`, then one `pdf-cli run --script` that renders the pages
     PdfPages { pdf: String, spec: Option<PageSpec>, dpi: u32 },
+    /// `slides-cli info <deck>`, then `render --all`, or one `render --slide N` per chosen slide
+    SlidePages { deck: String, spec: Option<PageSpec>, dpi: u32 },
+    /// `pdf-cli info <pdf>`, then `split` with the exact number of parts known
+    PdfSplit { pdf: String, by: SplitBy },
+}
+
+/// What an expansion produced: the steps, and warnings the planner knows about before anything runs (hidden sheets).
+#[derive(Debug, PartialEq, Eq)]
+pub struct Expanded {
+    pub steps: Vec<Step>,
+    pub warnings: Vec<(&'static str, u32)>,
+}
+
+/// Limits that keep one document from fanning out into thousands of processes or files (review M8). Over a limit: exit 9.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Caps {
+    /// pages of a PDF, slides of a deck
+    pub max_pages_in: u32,
+    /// PNG files (or split parts) one job may write
+    pub max_png_out: u32,
+    pub max_sheets: u32,
+}
+
+impl Default for Caps {
+    fn default() -> Self {
+        Caps { max_pages_in: 500, max_png_out: 200, max_sheets: 50 }
+    }
 }
 
 /// One POST to a sidecar (PLAN 2.3): the file `input` in the job directory is the body, the answer is written to `output`.
@@ -199,6 +226,8 @@ pub enum PlanError {
     NeedsSidecar(String),
     /// exit 2
     Usage(String),
+    /// exit 9: over a limit
+    Rejected(String),
 }
 
 pub fn input_path(kind: Kind) -> String {
@@ -373,13 +402,7 @@ fn slides(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step>
         ),
     };
     match t {
-        Target::Png => {
-            // deckcraft takes a scale factor (2 = 1920 px wide); 150 dpi maps to 2
-            let scale = format!("{:.2}", o.dpi as f32 / 75.0);
-            let mut st = tool(ToolId::Slides, &["render", &src, "--all", "out", "--scale", &scale], "out");
-            st.outputs = Outputs::Dir { dir: "out".into(), ext: "png".into() };
-            v.push(Step::Tool(st));
-        }
+        Target::Png => v.push(Step::Expand(Expand::SlidePages { deck: src, spec: o.pages.clone(), dpi: o.dpi })),
         _ => {
             let dest = format!("out/output.{}", t.ext());
             v.push(Step::Tool(tool(ToolId::Slides, &["convert", &src, &dest], &dest)));
@@ -441,33 +464,124 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
     })
 }
 
-/// One `render` per page, after `pdf-cli info` said how many pages there are.
-pub fn expand_pages(pdf: &str, spec: &Option<PageSpec>, dpi: u32, info: &serde_json::Value) -> Result<Vec<Step>, PlanError> {
-    let total = info.get("pages").and_then(|p| p.as_u64()).filter(|&p| p >= 1).ok_or_else(|| PlanError::Unsupported("pdf-cli info reported no pages".into()))? as u32;
+fn count(info: &serde_json::Value, key: &str, what: &str) -> Result<u32, PlanError> {
+    let n = match info.get(key) {
+        Some(v) if v.is_array() => v.as_array().map(|a| a.len() as u64),
+        Some(v) => v.as_u64(),
+        None => None,
+    };
+    n.filter(|&n| n >= 1).map(|n| n as u32).ok_or_else(|| PlanError::Unsupported(format!("the tool's info reported no {what}")))
+}
+
+fn chosen(spec: &Option<PageSpec>, total: u32, caps: &Caps, what: &str) -> Result<Vec<u32>, PlanError> {
+    if total > caps.max_pages_in {
+        return Err(PlanError::Rejected(format!("the file has {total} {what}, over the limit of {}", caps.max_pages_in)));
+    }
     let pages = match spec {
         Some(s) => s.pages(total).map_err(PlanError::Usage)?,
         None => (1..=total).collect(),
     };
-    Ok(pages
-        .into_iter()
-        .map(|p| {
-            let out = format!("out/p{p:02}.png");
-            Step::Tool(tool(ToolId::Pdf, &["render", pdf, "--page", &p.to_string(), "--dpi", &dpi.to_string(), "--out", &out], &out))
-        })
-        .collect())
+    if pages.len() as u32 > caps.max_png_out {
+        return Err(PlanError::Rejected(format!("{} images were asked for, over the limit of {}", pages.len(), caps.max_png_out)));
+    }
+    Ok(pages)
 }
 
-/// One `convert … .csv --sheet NAME` per sheet of `sheets-cli info --json` (`only`: just that sheet, written as
-/// `out/output.csv`, and an unknown name is a usage error that lists the real ones). Output names are sanitised and unique.
-pub fn expand_csv(input: &str, only: Option<&str>, info: &serde_json::Value) -> Result<Vec<Step>, PlanError> {
-    let names: Vec<&str> = info
+/// The pages of a PDF as PNGs, in ONE `pdf-cli run --script` (census F4: 108 pages in 12-16 s in one process, against a
+/// reopen of the whole PDF per page).
+pub fn expand_pages(pdf: &str, spec: &Option<PageSpec>, dpi: u32, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+    let total = count(info, "pages", "pages")?;
+    let pages = chosen(spec, total, caps, "pages")?;
+    let mut script = vec![json!({"tool": "doc_open", "args": {"path": pdf}})];
+    for p in &pages {
+        script.push(json!({"tool": "page_render", "args": {"doc": 1, "page": p, "dpi": dpi}, "out": format!("out/p{p:02}.png")}));
+    }
+    let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/pages.json", "--root", "."], "out");
+    st.outputs = Outputs::Dir { dir: "out".into(), ext: "png".into(), expect: Some(pages.len()) };
+    st.write_files = vec![("mid/pages.json".into(), serde_json::Value::Array(script).to_string())];
+    Ok(Expanded { steps: vec![Step::Tool(st)], warnings: vec![] })
+}
+
+/// Slides as PNGs: all of them in one `render --all`, or the chosen ones one `render --slide N` each. The count is known from
+/// `info`, so a render that stops early is exit 8, and `--pages` is honoured.
+pub fn expand_slides(deck: &str, spec: &Option<PageSpec>, dpi: u32, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+    let total = count(info, "slides", "slides")?;
+    let pages = chosen(spec, total, caps, "slides")?;
+    // deckcraft takes a scale factor (2 = 1920 px wide); 150 dpi maps to 2
+    let scale = format!("{:.2}", dpi as f32 / 75.0);
+    let steps = if spec.is_none() {
+        let mut st = tool(ToolId::Slides, &["render", deck, "--all", "out", "--scale", &scale], "out");
+        st.outputs = Outputs::Dir { dir: "out".into(), ext: "png".into(), expect: Some(pages.len()) };
+        vec![Step::Tool(st)]
+    } else {
+        pages
+            .iter()
+            .map(|p| {
+                let out = format!("out/slide-{p:02}.png");
+                Step::Tool(tool(ToolId::Slides, &["render", deck, "--slide", &(p - 1).to_string(), "--scale", &scale, &out], &out))
+            })
+            .collect()
+    };
+    Ok(Expanded { steps, warnings: vec![] })
+}
+
+/// `pdf split` with the number of parts known from the page count.
+pub fn expand_split(input: &str, by: &SplitBy, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+    let total = count(info, "pages", "pages")?;
+    if total > caps.max_pages_in {
+        return Err(PlanError::Rejected(format!("the PDF has {total} pages, over the limit of {}", caps.max_pages_in)));
+    }
+    let mut argv = vec!["split".to_string(), input.into()];
+    let parts = match by {
+        SplitBy::Every(n) => {
+            argv.extend(["--every".into(), n.to_string()]);
+            total.div_ceil(*n) as usize
+        }
+        SplitBy::Before(v) => {
+            if let Some(bad) = v.iter().find(|&&b| b < 2 || b > total) {
+                return Err(PlanError::Usage(format!("cannot split before page {bad}: the PDF has {total} pages (split points are 2 to {total})")));
+            }
+            argv.extend(["--before".into(), v.iter().map(u32::to_string).collect::<Vec<_>>().join(",")]);
+            let mut u = v.clone();
+            u.sort_unstable();
+            u.dedup();
+            u.len() + 1
+        }
+    };
+    argv.extend(["--out-dir".into(), "out".into()]);
+    if parts as u32 > caps.max_png_out {
+        return Err(PlanError::Rejected(format!("the split would write {parts} files, over the limit of {}", caps.max_png_out)));
+    }
+    Ok(Expanded {
+        steps: vec![Step::Tool(ToolStep {
+            tool: ToolId::Pdf,
+            argv,
+            outputs: Outputs::Dir { dir: "out".into(), ext: "pdf".into(), expect: Some(parts) },
+            stdout_to: None,
+            allow_empty: false,
+            write_files: vec![],
+        })],
+        warnings: vec![],
+    })
+}
+
+/// One `convert ... .csv --sheet NAME` per sheet of `sheets-cli info --json` (`only`: just that sheet, written as
+/// `out/output.csv`, and an unknown name is a usage error that lists the real ones). Internal file names are `sNN-<safe name>`:
+/// the index keeps them unique, and `safe_name` keeps document content from choosing a device name (review m7). Hidden sheets
+/// are exported with a warning; very hidden ones are skipped with a warning.
+pub fn expand_csv(input: &str, only: Option<&str>, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+    let sheets: Vec<(&str, &str)> = info
         .get("sheets")
         .and_then(|s| s.as_array())
-        .map(|a| a.iter().filter_map(|s| s.get("name").and_then(|n| n.as_str())).collect())
+        .map(|a| a.iter().filter_map(|s| Some((s.get("name")?.as_str()?, s.get("visibility").and_then(|v| v.as_str()).unwrap_or("Visible")))).collect())
         .unwrap_or_default();
-    if names.is_empty() {
+    if sheets.is_empty() {
         return Err(PlanError::Unsupported("sheets-cli info listed no sheets".into()));
     }
+    if sheets.len() as u32 > caps.max_sheets {
+        return Err(PlanError::Rejected(format!("the workbook has {} sheets, over the limit of {}", sheets.len(), caps.max_sheets)));
+    }
+    let names: Vec<&str> = sheets.iter().map(|s| s.0).collect();
     if let Some(n) = only {
         if !names.contains(&n) {
             return Err(PlanError::Usage(format!("no sheet named '{n}'; the workbook has: {}", names.join(", "))));
@@ -475,23 +589,36 @@ pub fn expand_csv(input: &str, only: Option<&str>, info: &serde_json::Value) -> 
         if n.starts_with('-') {
             return Err(PlanError::Unsupported(format!("sheet name '{n}' starts with '-' and cannot be passed to the tool")));
         }
-        return Ok(vec![Step::Tool(tool(ToolId::Sheets, &["convert", input, "out/output.csv", "--sheet", n], "out/output.csv"))]);
+        return Ok(Expanded { steps: vec![Step::Tool(tool(ToolId::Sheets, &["convert", input, "out/output.csv", "--sheet", n], "out/output.csv"))], warnings: vec![] });
     }
-    let mut used: Vec<String> = vec![];
+    let (mut hidden, mut skipped) = (0u32, 0u32);
     let mut v = vec![];
-    for (i, n) in names.iter().enumerate() {
+    for (i, (n, vis)) in sheets.iter().enumerate() {
+        match *vis {
+            "VeryHidden" => {
+                skipped += 1;
+                continue;
+            }
+            "Hidden" => hidden += 1,
+            _ => {}
+        }
         if n.starts_with('-') {
             return Err(PlanError::Unsupported(format!("sheet name '{n}' starts with '-' and cannot be passed to the tool")));
         }
-        let mut file: String = n.chars().map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
-        if file.is_empty() || used.contains(&file.to_lowercase()) {
-            file = format!("{file}{}", i + 1);
-        }
-        used.push(file.to_lowercase());
-        let out = format!("out/{file}.csv");
+        let out = format!("out/s{:02}-{}.csv", i + 1, crate::names::safe_name(n, "sheet"));
         v.push(Step::Tool(tool(ToolId::Sheets, &["convert", input, &out, "--sheet", n], &out)));
     }
-    Ok(v)
+    if v.is_empty() {
+        return Err(PlanError::Unsupported("every sheet of the workbook is hidden".into()));
+    }
+    let mut warnings = vec![];
+    if hidden > 0 {
+        warnings.push(("hidden_sheet_exported", hidden));
+    }
+    if skipped > 0 {
+        warnings.push(("very_hidden_sheet_skipped", skipped));
+    }
+    Ok(Expanded { steps: v, warnings })
 }
 
 /// The PDF subcommands (no kind detection, the inputs are PDFs by contract).
@@ -507,24 +634,12 @@ pub fn pdf_extract(pages: &PageSpec) -> Vec<Step> {
     vec![Step::Tool(tool(ToolId::Pdf, &["extract", "in/input.pdf", "--pages", &pages.canonical(), "--out", "out/output.pdf"], "out/output.pdf"))]
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SplitBy {
     Every(u32),
     Before(Vec<u32>),
 }
 
 pub fn pdf_split(by: &SplitBy) -> Vec<Step> {
-    let mut argv = vec!["split".to_string(), "in/input.pdf".into()];
-    match by {
-        SplitBy::Every(n) => argv.extend(["--every".into(), n.to_string()]),
-        SplitBy::Before(v) => argv.extend(["--before".into(), v.iter().map(u32::to_string).collect::<Vec<_>>().join(",")]),
-    }
-    argv.extend(["--out-dir".into(), "out".into()]);
-    vec![Step::Tool(ToolStep {
-        tool: ToolId::Pdf,
-        argv,
-        outputs: Outputs::Dir { dir: "out".into(), ext: "pdf".into() },
-        stdout_to: None,
-        allow_empty: false,
-        write_files: vec![],
-    })]
+    vec![Step::Expand(Expand::PdfSplit { pdf: "in/input.pdf".into(), by: by.clone() })]
 }

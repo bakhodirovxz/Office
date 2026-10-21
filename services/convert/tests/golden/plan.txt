@@ -156,7 +156,7 @@ row tsv->csv:
 row pptx->pdf:
     slides-cli convert in/input.pptx out/output.pdf
 row pptx->png:
-    slides-cli render in/input.pptx --all out --scale 2.00
+    EXPAND SlidePages { deck: "in/input.pptx", spec: None, dpi: 150 }
 row pptx->pptx:
     slides-cli convert in/input.pptx out/output.pptx
 row pdf->docx:
@@ -289,7 +289,7 @@ translit-cyrl pptx->pdf:
     slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --print --save out/output.pdf
 translit-cyrl pptx->png:
     slides-cli run --in in/input.pptx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"deck"} --print --save mid/deck.pptx
-    slides-cli render mid/deck.pptx --all out --scale 2.00
+    EXPAND SlidePages { deck: "mid/deck.pptx", spec: None, dpi: 150 }
 translit-cyrl csv->csv: Unsupported("--translit is not available for .csv to .csv")
 translit-cyrl pdf->docx:
     pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"mid/pdf.docx"},"tool":"doc_export_office"}]]
@@ -311,7 +311,7 @@ pages+dpi docx->png:
     docs-cli convert in/input.docx mid/doc.pdf
     EXPAND PdfPages { pdf: "mid/doc.pdf", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
 pages+dpi pptx->png:
-    slides-cli render in/input.pptx --all out --scale 4.00
+    EXPAND SlidePages { deck: "in/input.pptx", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
 pages+dpi pdf->png:
     EXPAND PdfPages { pdf: "in/input.pdf", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
 pages-on-pdf-out docx->pdf: Usage("--pages only applies to png output and pdf to txt")
@@ -323,23 +323,28 @@ pdf-sidecar pdf->docx:
 pdf-sidecar+translit pdf->docx:
     HTTP Pdf2Docx POST /v1/pdf2docx?merge=1 in/input.pdf -> mid/pdf.docx
     docs-cli run --file mid/pdf.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
-expand pages all: pdf-cli render mid/doc.pdf --page 1 --dpi 150 --out out/p01.png
-    pdf-cli render mid/doc.pdf --page 2 --dpi 150 --out out/p02.png
-    pdf-cli render mid/doc.pdf --page 3 --dpi 150 --out out/p03.png
-    pdf-cli render mid/doc.pdf --page 4 --dpi 150 --out out/p04.png
-    pdf-cli render mid/doc.pdf --page 5 --dpi 150 --out out/p05.png
-expand pages 1,3-4 @300: pdf-cli render in/input.pdf --page 1 --dpi 300 --out out/p01.png
-    pdf-cli render in/input.pdf --page 3 --dpi 300 --out out/p03.png
-    pdf-cli render in/input.pdf --page 4 --dpi 300 --out out/p04.png
+expand pages all: pdf-cli run --script mid/pages.json --root . [writes mid/pages.json: [{"args":{"path":"mid/doc.pdf"},"tool":"doc_open"},{"args":{"doc":1,"dpi":150,"page":1},"out":"out/p01.png","tool":"page_render"},{"args":{"doc":1,"dpi":150,"page":2},"out":"out/p02.png","tool":"page_render"},{"args":{"doc":1,"dpi":150,"page":3},"out":"out/p03.png","tool":"page_render"},{"args":{"doc":1,"dpi":150,"page":4},"out":"out/p04.png","tool":"page_render"},{"args":{"doc":1,"dpi":150,"page":5},"out":"out/p05.png","tool":"page_render"}]] []
+expand pages 1,3-4 @300: pdf-cli run --script mid/pages.json --root . [writes mid/pages.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"dpi":300,"page":1},"out":"out/p01.png","tool":"page_render"},{"args":{"doc":1,"dpi":300,"page":3},"out":"out/p03.png","tool":"page_render"},{"args":{"doc":1,"dpi":300,"page":4},"out":"out/p04.png","tool":"page_render"}]] []
 expand pages out of range: Usage("page 6 is beyond the last page (5)")
-expand csv: sheets-cli convert in/input.xlsx out/Sheet_1.csv --sheet Sheet 1
-    sheets-cli convert in/input.xlsx out/sheet_12.csv --sheet sheet_1
-    sheets-cli convert in/input.xlsx out/Ёлка.csv --sheet Ёлка
-    sheets-cli convert in/input.xlsx out/A_B.csv --sheet A/B
-    sheets-cli convert in/input.xlsx out/5.csv --sheet 
-expand csv only Sheet 1: sheets-cli convert in/input.xlsx out/output.csv --sheet Sheet 1
-expand csv only wrong: Usage("no sheet named 'Nope'; the workbook has: Sheet 1, sheet_1, Ёлка, A/B, ")
+expand pages over the input cap: Rejected("the file has 501 pages, over the limit of 500")
+expand pages over the png cap: Rejected("250 images were asked for, over the limit of 200")
+expand slides all: slides-cli render in/input.pptx --all out --scale 2.00 []
+expand slides 2,3 @300: slides-cli render in/input.pptx --slide 1 --scale 4.00 out/slide-02.png
+    slides-cli render in/input.pptx --slide 2 --scale 4.00 out/slide-03.png []
+expand slides out of range: Usage("page 4 is beyond the last page (3)")
+expand csv: sheets-cli convert in/input.xlsx out/s01-Sheet 1.csv --sheet Sheet 1
+    sheets-cli convert in/input.xlsx out/s02-sheet_1.csv --sheet sheet_1
+    sheets-cli convert in/input.xlsx out/s03-Ёлка.csv --sheet Ёлка
+    sheets-cli convert in/input.xlsx out/s04-A_B.csv --sheet A/B
+    sheets-cli convert in/input.xlsx out/s05-_NUL.csv --sheet NUL
+    sheets-cli convert in/input.xlsx out/s07-sheet.csv --sheet  [("hidden_sheet_exported", 1), ("very_hidden_sheet_skipped", 1)]
+expand csv only Sheet 1: sheets-cli convert in/input.xlsx out/output.csv --sheet Sheet 1 []
+expand csv only wrong: Usage("no sheet named 'Nope'; the workbook has: Sheet 1, sheet_1, Ёлка, A/B, NUL, Secret, ")
+expand csv too many sheets: Rejected("the workbook has 7 sheets, over the limit of 3")
+expand split every 2 of 5: pdf-cli split in/input.pdf --every 2 --out-dir out []
+expand split before 3,5: pdf-cli split in/input.pdf --before 3,5 --out-dir out []
+expand split before 9: Usage("cannot split before page 9: the PDF has 5 pages (split points are 2 to 5)")
 pdf combine 3: pdf-cli combine in/input1.pdf in/input2.pdf in/input3.pdf --out out/output.pdf
 pdf extract: pdf-cli extract in/input.pdf --pages 5-8,1 --out out/output.pdf
-pdf split every: pdf-cli split in/input.pdf --every 2 --out-dir out
-pdf split before: pdf-cli split in/input.pdf --before 3,7 --out-dir out
+pdf split every: EXPAND PdfSplit { pdf: "in/input.pdf", by: Every(2) }
+pdf split before: EXPAND PdfSplit { pdf: "in/input.pdf", by: Before([3, 7]) }

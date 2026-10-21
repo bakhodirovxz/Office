@@ -31,9 +31,18 @@ run pdf2docx-native 0 "$IN/uz_latn.pdf" --to docx
 run translit-docx 0 "$IN/uz_latn.docx" --to docx --translit cyrl
 run translit-xlsx 0 "$IN/hrm_staff.xlsx" --to xlsx --translit cyrl
 run translit-pptx 0 "$IN/02-languages.pptx" --to pptx --translit cyrl
+run xlsx2csv-sheetname 0 "$IN/hrm_staff.xlsx" --to csv --sheet Xodimlar
+run pptx2png-pages 0 "$IN/hrm_deck.pptx" --to png --pages 2,4
+run docx2pdf-translit 0 "$IN/hrm_order.docx" --to pdf --translit cyrl
+run docx2png-translit 0 "$IN/hrm_order.docx" --to png --translit cyrl --pages 1-2
+run pdf2txt-page 0 "$IN/uz_latn.pdf" --to txt --pages 2
+run pdf2docx-translit 0 "$IN/uz_latn.pdf" --to docx --translit cyrl
+printf '<?xml version="1.0"?><w:wordDocument/>' > "$OUT/order2003.xml"; run xml-refused-file 3 "$OUT/order2003.xml" --to docx
 cp "$IN/hrm_order.docx" "$OUT/mislabel.xlsx"; run mislabel 0 "$OUT/mislabel.xlsx" --to pdf
 run batch-j2 0 "$IN/hrm_order.docx" "$IN/hrm_letter.docx" --to pdf -j 2
 "$C" pdf combine "$IN/uz_latn.pdf" "$IN/uz_cyrl.pdf" -o "$OUT/combined.pdf" && echo "PASS pdf-combine" || { echo FAIL pdf-combine; fail=1; }
 "$C" pdf split "$IN/uz_latn.pdf" --every 1 --out-dir "$OUT/split" >/dev/null && echo "PASS pdf-split $(ls "$OUT/split" | wc -l)" || { echo FAIL pdf-split; fail=1; }
+"$C" pdf combine "$IN/uz_latn.pdf" "$IN/uz_cyrl.pdf" "$IN/uz_latn.pdf" -o "$OUT/combined3.pdf" && echo "PASS pdf-combine-3" || { echo FAIL pdf-combine-3; fail=1; }
+"$C" pdf split "$IN/uz_latn.pdf" --before 2 --out-dir "$OUT/split-before" >/dev/null && echo "PASS pdf-split-before $(ls "$OUT/split-before" | wc -l)" || { echo FAIL pdf-split-before; fail=1; }
 "$C" pdf extract "$IN/uz_latn.pdf" --pages 1 -o "$OUT/extract.pdf" && echo "PASS pdf-extract" || { echo FAIL pdf-extract; fail=1; }
 exit $fail

@@ -77,20 +77,56 @@ fn table() -> String {
     s += &line("pdf-text-pages", Kind::Pdf, Target::Txt, &pages);
     s += &line("pdf-sidecar", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..Options::default() });
     s += &line("pdf-sidecar+translit", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..cyrl.clone() });
-    // 4. dynamic expansions, with a fixture `info`
+    // 4. dynamic expansions, with fixture `info` outputs (the shapes were checked against the real CLIs)
+    let caps = Caps::default();
+    let ex = |e: Result<Expanded, PlanError>| match e {
+        Ok(x) => format!("{} {:?}", show(&x.steps), x.warnings),
+        Err(e) => format!("{e:?}"),
+    };
     let info = json!({"pages": 5});
-    s += &format!("expand pages all: {}\n", show(&expand_pages("mid/doc.pdf", &None, 150, &info).unwrap()));
-    s += &format!("expand pages 1,3-4 @300: {}\n", show(&expand_pages("in/input.pdf", &Some(PageSpec::parse("1,3-4").unwrap()), 300, &info).unwrap()));
-    s += &format!("expand pages out of range: {:?}\n", expand_pages("in/input.pdf", &Some(PageSpec::parse("6").unwrap()), 150, &info).unwrap_err());
-    let sheets = json!({"sheets": [{"name": "Sheet 1"}, {"name": "sheet_1"}, {"name": "Ёлка"}, {"name": "A/B"}, {"name": ""}]});
-    s += &format!("expand csv: {}\n", show(&expand_csv("in/input.xlsx", None, &sheets).unwrap()));
-    s += &format!("expand csv only Sheet 1: {}\n", show(&expand_csv("in/input.xlsx", Some("Sheet 1"), &sheets).unwrap()));
-    s += &format!("expand csv only wrong: {:?}\n", expand_csv("in/input.xlsx", Some("Nope"), &sheets).unwrap_err());
+    s += &format!("expand pages all: {}
+", ex(expand_pages("mid/doc.pdf", &None, 150, &info, &caps)));
+    s += &format!("expand pages 1,3-4 @300: {}
+", ex(expand_pages("in/input.pdf", &Some(PageSpec::parse("1,3-4").unwrap()), 300, &info, &caps)));
+    s += &format!("expand pages out of range: {}
+", ex(expand_pages("in/input.pdf", &Some(PageSpec::parse("6").unwrap()), 150, &info, &caps)));
+    s += &format!("expand pages over the input cap: {}
+", ex(expand_pages("in/input.pdf", &None, 150, &json!({"pages": 501}), &caps)));
+    s += &format!("expand pages over the png cap: {}
+", ex(expand_pages("in/input.pdf", &None, 150, &json!({"pages": 250}), &caps)));
+    let deck = json!({"slides": [{"id": 1}, {"id": 2}, {"id": 3}]});
+    s += &format!("expand slides all: {}
+", ex(expand_slides("in/input.pptx", &None, 150, &deck, &caps)));
+    s += &format!("expand slides 2,3 @300: {}
+", ex(expand_slides("in/input.pptx", &Some(PageSpec::parse("2-3").unwrap()), 300, &deck, &caps)));
+    s += &format!("expand slides out of range: {}
+", ex(expand_slides("in/input.pptx", &Some(PageSpec::parse("4").unwrap()), 150, &deck, &caps)));
+    let sheets = json!({"sheets": [
+        {"name": "Sheet 1", "visibility": "Visible"}, {"name": "sheet_1"}, {"name": "Ёлка", "visibility": "Hidden"},
+        {"name": "A/B"}, {"name": "NUL"}, {"name": "Secret", "visibility": "VeryHidden"}, {"name": ""}]});
+    s += &format!("expand csv: {}
+", ex(expand_csv("in/input.xlsx", None, &sheets, &caps)));
+    s += &format!("expand csv only Sheet 1: {}
+", ex(expand_csv("in/input.xlsx", Some("Sheet 1"), &sheets, &caps)));
+    s += &format!("expand csv only wrong: {}
+", ex(expand_csv("in/input.xlsx", Some("Nope"), &sheets, &caps)));
+    s += &format!("expand csv too many sheets: {}
+", ex(expand_csv("in/input.xlsx", None, &sheets, &Caps { max_sheets: 3, ..caps })));
+    s += &format!("expand split every 2 of 5: {}
+", ex(expand_split("in/input.pdf", &SplitBy::Every(2), &info, &caps)));
+    s += &format!("expand split before 3,5: {}
+", ex(expand_split("in/input.pdf", &SplitBy::Before(vec![3, 5]), &info, &caps)));
+    s += &format!("expand split before 9: {}
+", ex(expand_split("in/input.pdf", &SplitBy::Before(vec![9]), &info, &caps)));
     // 5. the PDF subcommands
-    s += &format!("pdf combine 3: {}\n", show(&pdf_combine(3)));
-    s += &format!("pdf extract: {}\n", show(&pdf_extract(&PageSpec::parse("5-8,1").unwrap())));
-    s += &format!("pdf split every: {}\n", show(&pdf_split(&SplitBy::Every(2))));
-    s += &format!("pdf split before: {}\n", show(&pdf_split(&SplitBy::Before(vec![3, 7]))));
+    s += &format!("pdf combine 3: {}
+", show(&pdf_combine(3)));
+    s += &format!("pdf extract: {}
+", show(&pdf_extract(&PageSpec::parse("5-8,1").unwrap())));
+    s += &format!("pdf split every: {}
+", show(&pdf_split(&SplitBy::Every(2))));
+    s += &format!("pdf split before: {}
+", show(&pdf_split(&SplitBy::Before(vec![3, 7]))));
     s
 }
 

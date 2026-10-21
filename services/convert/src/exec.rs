@@ -1,5 +1,6 @@
 //! The executor: one subprocess per tool step, a cleared environment, a timeout, a memory watchdog and output validation
 //! (PLAN 2.3-2.6). Never fails silently: every failure is a `Failure` with an exit code and a human-readable message.
+use crate::hook::JobHook;
 use crate::plan::{Outputs, ToolId, ToolStep};
 use serde::Serialize;
 use std::collections::HashMap;
@@ -7,6 +8,8 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
@@ -85,6 +88,26 @@ pub fn limits(c: Class) -> Limits {
     }
 }
 
+/// Put a freshly spawned tool into a Job Object with kill-on-close. `win32job` wraps the Win32 calls safely, so our crates keep
+/// `unsafe_code = "forbid"`. The crate offers no per-process commit limit (only working-set limits, which page instead of
+/// kill), so the memory cap stays with the watchdog. `shortcut: if the OS refuses (a parent job without nesting), the
+/// watchdog alone applies and the tool can outlive us; the step still runs.`
+#[cfg(windows)]
+fn contain(child: &std::process::Child) -> Option<win32job::Job> {
+    use std::os::windows::io::AsRawHandle;
+    let job = win32job::Job::create().ok()?;
+    let mut info = job.query_extended_limit_info().ok()?;
+    info.limit_kill_on_job_close();
+    job.set_extended_limit_info(&info).ok()?;
+    job.assign_process(child.as_raw_handle() as isize).ok()?;
+    Some(job)
+}
+
+#[cfg(not(windows))]
+fn contain(_child: &std::process::Child) -> Option<()> {
+    None
+}
+
 /// `sheets-cli run` is the pdf export (and translit); `pdf-cli run` is the native pdf to docx script.
 pub fn class_of(tool: ToolId, argv: &[String]) -> Class {
     let first = argv.first().map(String::as_str);
@@ -123,16 +146,31 @@ pub const STDERR_PATTERNS: &[(&str, Exit, &str)] = &[
 
 pub fn classify(stderr: &str) -> Option<(Exit, &'static str)> {
     // `Warning:` lines are not the failure
-    let low = stderr.lines().filter(|l| !l.trim_start().to_ascii_lowercase().starts_with("warning:")).collect::<Vec<_>>().join("
-").to_lowercase();
+    let low = stderr.lines().filter(|l| !l.trim_start().to_ascii_lowercase().starts_with("warning:")).collect::<Vec<_>>().join(" ").to_lowercase();
     STDERR_PATTERNS.iter().find(|(p, _, _)| low.contains(p)).map(|(_, e, m)| (*e, *m))
 }
 
-/// Seam for WP15 (opt-in XDFU handling) and WP7 (local/server modes): runs after every step succeeded and every output
-/// validated, before the outputs leave the job directory. A hook may rewrite files in `out/` or veto with a `Failure`.
-/// No hook is installed by default.
-pub trait PostOutput: Send + Sync {
-    fn after(&self, job_dir: &Path, outputs: &[PathBuf]) -> Result<(), Failure>;
+/// Cancellation and the overall job deadline (PLAN 5.1 `DELETE /jobs/{id}`, 5.3 job timeout). `run_tool` polls it, and
+/// `run_plan` checks it between steps. Both end the job with exit 4.
+#[derive(Clone, Default)]
+pub struct Ctl {
+    pub cancel: Option<Arc<AtomicBool>>,
+    pub deadline: Option<Instant>,
+}
+
+impl Ctl {
+    pub fn check(&self) -> Result<(), Failure> {
+        if self.cancel.as_ref().is_some_and(|c| c.load(Ordering::Relaxed)) {
+            return fail(Exit::Timeout, "the job was cancelled");
+        }
+        if self.deadline.is_some_and(|d| Instant::now() >= d) {
+            return fail(Exit::Timeout, "the job exceeded its overall time limit");
+        }
+        Ok(())
+    }
+    pub fn remaining(&self) -> Option<Duration> {
+        self.deadline.map(|d| d.saturating_duration_since(Instant::now()))
+    }
 }
 
 pub struct Config {
@@ -151,8 +189,19 @@ pub struct Config {
     pub http_backoff_ms: u64,
     /// extra variables passed through (fonts); the rest of the environment is cleared
     pub pass_env: Vec<(String, String)>,
-    pub post_output: Vec<std::sync::Arc<dyn PostOutput>>,
+    /// Hooks around every job (WP15 XDFU, WP7 audit); none by default. See `hook.rs`.
+    pub hooks: Vec<Arc<dyn JobHook>>,
     pub sample_ms: u64,
+    /// overall time limit of one job (PLAN 5.3: 30 min)
+    pub job_timeout_s: u64,
+    /// stops every job of this process (a signal handler or the API sets it); a per-job flag goes into `JobMeta`
+    pub cancel: Option<Arc<AtomicBool>>,
+    /// Local mode: tools see the real `%LOCALAPPDATA%`, so per-user fonts (`Microsoft\Windows\Fonts`) are found like in a
+    /// plain CLI run. Server mode (`CONVERT_LOCALAPPDATA=isolated`): it points into the job directory and fonts come from
+    /// `CRAFT_FONTS_DIR` or the image only.
+    pub share_localappdata: bool,
+    /// limits that keep a document from fanning out into thousands of processes (checked by the expand steps, exit 9)
+    pub caps: crate::plan::Caps,
 }
 
 impl Config {
@@ -169,8 +218,12 @@ impl Config {
             pdf2docx_url: std::env::var("CONVERT_PDF2DOCX_URL").ok().filter(|u| !u.is_empty()),
             http_backoff_ms: 1000,
             pass_env: pass.iter().filter_map(|k| std::env::var(k).ok().map(|v| (k.to_string(), v))).collect(),
-            post_output: vec![],
-            sample_ms: 250,
+            hooks: vec![],
+            sample_ms: 100,
+            job_timeout_s: 30 * 60,
+            cancel: None,
+            share_localappdata: std::env::var("CONVERT_LOCALAPPDATA").map_or(true, |v| v != "isolated"),
+            caps: crate::plan::Caps::default(),
         }
     }
 
@@ -253,10 +306,8 @@ fn tail(s: &str, max: usize) -> String {
 
 fn last_line(s: &str) -> String {
     // a Rust panic prints "thread .. panicked at ..:" and then the message; the last line is the RUST_BACKTRACE note
-    if let Some(i) = s.lines().position(|l| l.contains("panicked at")) {
-        if let Some(m) = s.lines().skip(i + 1).map(str::trim).find(|l| !l.is_empty() && !l.starts_with("note:")) {
-            return m.chars().take(300).collect();
-        }
+    if let Some(m) = s.lines().position(|l| l.contains("panicked at")).and_then(|i| s.lines().skip(i + 1).map(str::trim).find(|l| !l.is_empty() && !l.starts_with("note:"))) {
+        return m.chars().take(300).collect();
     }
     s.lines().rev().map(str::trim).find(|l| !l.is_empty()).unwrap_or("no message").chars().take(300).collect()
 }
@@ -264,11 +315,17 @@ fn last_line(s: &str) -> String {
 /// Run one tool process in `job_dir` (its cwd). `stdout_to` streams stdout into a file instead of memory. The step report
 /// is pushed to `steps` whether the step succeeds or not.
 #[allow(clippy::too_many_arguments)] // shortcut: one call shape for every step; fold into a struct when a 9th arrives
-pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, stdout_to: Option<&Path>, input_mb: f64, pages: u32, steps: &mut Vec<StepReport>) -> Result<Ran, Failure> {
+pub fn run_tool(cfg: &Config, ctl: &Ctl, tool: ToolId, argv: &[String], job_dir: &Path, stdout_to: Option<&Path>, input_mb: f64, pages: u32, steps: &mut Vec<StepReport>) -> Result<Ran, Failure> {
     let exe = cfg.resolve(tool)?;
     let name = tool.name();
     let class = class_of(tool, argv);
-    let timeout = cfg.timeout_s.map(Duration::from_secs).unwrap_or_else(|| timeout_for(class, input_mb, pages));
+    ctl.check()?;
+    let mut timeout = cfg.timeout_s.map(Duration::from_secs).unwrap_or_else(|| timeout_for(class, input_mb, pages));
+    let mut deadline_hit = false;
+    if let Some(left) = ctl.remaining().filter(|l| *l < timeout) {
+        timeout = left;
+        deadline_hit = true;
+    }
     let mem_cap = cfg.max_mem_mb.unwrap_or(limits(class).mem_mb);
 
     let abs = |p: &str| job_dir.join(p);
@@ -285,8 +342,13 @@ pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, std
         .env("TMPDIR", abs("tmp"))
         .env("HOME", abs("home"))
         .env("USERPROFILE", abs("home"))
-        .env("APPDATA", abs("home"))
-        .env("LOCALAPPDATA", abs("home"))
+        .env("APPDATA", abs("home"));
+    // per-user fonts live under the real %LOCALAPPDATA% (wordcraft fontdb.rs, gridcraft pdf_fonts.rs); see Config::share_localappdata
+    match std::env::var_os("LOCALAPPDATA").filter(|_| cfg.share_localappdata) {
+        Some(real) => cmd.env("LOCALAPPDATA", real),
+        None => cmd.env("LOCALAPPDATA", abs("home")),
+    };
+    cmd
         .env("LANG", "uz_UZ.UTF-8")
         .env("LC_ALL", "uz_UZ.UTF-8")
         .env("LC_PAPER", "uz_UZ.UTF-8")
@@ -314,6 +376,8 @@ pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, std
     let out_t = child.stdout.take().map(|s| drain(s, 8 * 1024 * 1024));
     let err_t = child.stderr.take().map(|s| drain(s, 1024 * 1024));
 
+    // Windows: the tool runs in a Job Object that kills it when we die or drop the job.
+    let _job = contain(&child);
     let pid = Pid::from_u32(child.id());
     let mut sys = System::new();
     let mut peak: u64 = 0;
@@ -328,19 +392,27 @@ pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, std
                 break None;
             }
         }
+        if let Err(f) = ctl.check() {
+            verdict = Some(f);
+            break None;
+        }
         if start.elapsed() > timeout {
-            verdict = Some(Failure { exit: Exit::Timeout, msg: format!("{name} did not finish within {} s and was stopped", timeout.as_secs()) });
+            let why = if deadline_hit { "the job ran out of time while" } else { "" };
+            verdict = Some(Failure { exit: Exit::Timeout, msg: format!("{why} {name} did not finish within {} s and was stopped", timeout.as_secs()).trim().to_string() });
             break None;
         }
         if last_sample.is_none_or(|t| t.elapsed() >= Duration::from_millis(cfg.sample_ms)) {
             last_sample = Some(Instant::now());
             sys.refresh_processes_specifics(ProcessesToUpdate::Some(&[pid]), true, ProcessRefreshKind::nothing().with_memory());
             if let Some(p) = sys.process(pid) {
-                peak = peak.max(p.memory());
-                if p.memory() / (1024 * 1024) > mem_cap {
+                // commit (private bytes), not the working set: Windows trims working sets under pressure, so that reads low
+                // exactly when the box is short of memory
+                let used = p.memory().max(p.virtual_memory());
+                peak = peak.max(used);
+                if used / (1024 * 1024) > mem_cap {
                     verdict = Some(Failure {
                         exit: Exit::Memory,
-                        msg: format!("{name} used more than {mem_cap} MB of memory (saw {} MB) and was stopped", p.memory() / (1024 * 1024)),
+                        msg: format!("{name} used more than {mem_cap} MB of memory (saw {} MB) and was stopped", used / (1024 * 1024)),
                     });
                     break None;
                 }
@@ -348,6 +420,7 @@ pub fn run_tool(cfg: &Config, tool: ToolId, argv: &[String], job_dir: &Path, std
         }
         thread::sleep(Duration::from_millis(10));
     };
+    drop(_job);
     if status.is_none() {
         let _ = child.kill();
         let _ = child.wait();
@@ -452,13 +525,16 @@ pub fn validate_file(path: &Path, allow_empty: bool) -> Result<bool, String> {
 pub fn validate_step(job_dir: &Path, st: &ToolStep) -> Result<(Vec<PathBuf>, bool), Failure> {
     let files: Vec<PathBuf> = match &st.outputs {
         Outputs::Files(v) => v.iter().map(|p| job_dir.join(p)).collect(),
-        Outputs::Dir { dir, ext } => {
+        Outputs::Dir { dir, ext, expect } => {
             let mut v: Vec<PathBuf> = std::fs::read_dir(job_dir.join(dir))
                 .map(|rd| rd.filter_map(Result::ok).map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case(ext))).collect())
                 .unwrap_or_default();
             v.sort();
             if v.is_empty() {
                 return fail(Exit::BadOutput, format!("{} wrote no .{ext} files", st.tool.name()));
+            }
+            if let Some(n) = expect.filter(|n| *n != v.len()) {
+                return fail(Exit::BadOutput, format!("{} wrote {} .{ext} files, expected {n}", st.tool.name(), v.len()));
             }
             v
         }
