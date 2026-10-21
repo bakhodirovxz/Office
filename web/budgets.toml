@@ -29,7 +29,7 @@ base_raw = 42219232          # pristine wasm raw at BASE (2026-10-19)
 base_gzip = 15735172         # wasm gzip -9
 base_br = 9377090            # wasm brotli -q 11 --lgwin=24
 js_br = 20548                # JS glue brotli
-delta_br_max = 163840        # delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 0001-0005, overlay 0100-0103, 0110 catalogs, fallback fonts, 0120/0121 + docs-translit (rules, dictionary); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 131072 = +105,622 B at Phase 1)
+delta_br_max = 196608        # delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
@@ -41,7 +41,7 @@ base_raw = 18979436          # pristine wasm raw at BASE (2026-10-19)
 base_gzip = 7044454         # wasm gzip -9
 base_br = 4733055            # wasm brotli -q 11 --lgwin=24
 js_br = 20041                # JS glue brotli
-delta_br_max = 147456        # delta +122,186 B brotli (+2.58 %): queue 0001-0022 + 0103/0104/0111, overlay, 0110 catalogs, fallback fonts; ceil(1.10 x delta / 16 KiB) x 16 KiB
+delta_br_max = 196608        # delta +168,712 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 147456: delta +122,186 B brotli (+2.58 %): queue 0001-0022 + 0103/01)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
@@ -53,7 +53,7 @@ base_raw = 35135104          # pristine wasm raw at BASE (2026-10-19)
 base_gzip = 13902137         # wasm gzip -9
 base_br = 9302764            # wasm brotli -q 11 --lgwin=24
 js_br = 19644                # JS glue brotli
-delta_br_max = 131072        # delta +109,715 B brotli (+1.18 %): 0001 web fix, overlay, 0110-0112, catalogs, fallback fonts; craft-fonts embedded (CRAFT_FONTS_DIR) as in Phase 0; ceil(1.10 x delta / 16 KiB) x 16 KiB
+delta_br_max = 163840        # delta +139,894 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 131072: delta +109,715 B brotli (+1.18 %): 0001 web fix, overlay, 01)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
@@ -65,7 +65,7 @@ base_raw = 39099122          # pristine wasm raw at BASE (2026-10-19)
 base_gzip = 14393230         # wasm gzip -9
 base_br = 9395853            # wasm brotli -q 11 --lgwin=24
 js_br = 20495                # JS glue brotli
-delta_br_max = 114688        # delta +97,954 B brotli (+1.04 %): overlay 0100-0102, 0110 catalogs, fallback fonts, 64 KiB RGBA logo; ceil(1.10 x delta / 16 KiB) x 16 KiB
+delta_br_max = 163840        # delta +137,654 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 114688: delta +97,954 B brotli (+1.04 %): overlay 0100-0102, 0110 ca)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
