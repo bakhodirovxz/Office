@@ -90,11 +90,18 @@ requires = ["headers_footers"]
 evidence = "WP9 docs.odt2docx / order.odt: headers_footers 4->0; docs.odt2pdf / order.odt: the header words are missing from the PDF (52 words, text 1.0->0.88). md and txt are covered by plain_text_layout"
 
 [[row]]
+code = "headers_footers_dropped"
+from = ["rtf"]
+to = ["odt", "rtf", "html"]
+requires = ["headers_footers"]
+evidence = "WP10 docs.rtf2odt, docs.rtf2html, docs.rtf2rtf / order.rtf: headers_footers 2->0 (rtf to docx keeps them)"
+
+[[row]]
 code = "revisions_dropped"
-from = ["docx"]
+from = ["docx", "rtf"]
 to = ["html", "md", "txt"]
 requires = ["revisions"]
-evidence = "WP9 docs.docx2html, docx2md, docx2txt / hrm_order.docx: revisions 1->0 (odt and rtf keep them)"
+evidence = "WP9 docs.docx2html, docx2md, docx2txt / hrm_order.docx: revisions 1->0 (odt and rtf keep them); WP10 docs.rtf2html, rtf2md, rtf2txt / order.rtf: revisions 1->0 (the rtf reader keeps them, as rtf to docx shows)"
 
 [[row]]
 code = "merged_cells_flattened"

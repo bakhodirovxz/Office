@@ -151,6 +151,7 @@ mod tests {
                 "plain_text_layout",
                 "comments_dropped",
                 "footnotes_dropped",
+                "revisions_dropped",
                 "merged_cells_flattened"
             ]
         );
@@ -181,7 +182,7 @@ mod tests {
         let has = |f: &'static str| with(&[(f, 1)]);
         // (code, feature, kinds that warn, targets that warn, a target that must stay quiet)
         type Case<'a> = (&'a str, &'static str, &'a [Kind], &'a [Target], Target);
-        let rows: [Case; 9] = [
+        let rows: [Case; 10] = [
             (
                 "comments_dropped",
                 "comments",
@@ -218,7 +219,7 @@ mod tests {
             (
                 "revisions_dropped",
                 "revisions",
-                &[Kind::Docx],
+                &[Kind::Docx, Kind::Rtf],
                 &[Target::Html, Target::Md, Target::Txt],
                 Target::Odt,
             ),
@@ -274,6 +275,13 @@ mod tests {
                     Target::Txt,
                 ],
                 Target::Md,
+            ),
+            (
+                "headers_footers_dropped",
+                "headers_footers",
+                &[Kind::Rtf],
+                &[Target::Odt, Target::Rtf, Target::Html],
+                Target::Docx,
             ),
         ];
         for (code, feature, kinds, targets, quiet_target) in rows {
