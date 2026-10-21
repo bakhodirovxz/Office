@@ -179,19 +179,6 @@ review = "every sync"
 reviewed = "2026-10-19@WP6-final"
 
 [[test]]
-app = "wordcraft"
-crate = "wordcraft-ui-egui"
-binary = "lib"
-name = "i18n::tests::every_tab_and_command_is_translated"
-class = "i18n-incomplete"
-env = "any"
-reason = "uz-latn lacks one ribbon label ('Controls'): it is not in the P1 string set (i18n lint reports it as a coverage warning); stays until the Phase 2 catalog completion adds the row."
-evidence = "docs/phase1/evidence/i18n/test-docs-overlay-on.log#every_tab_and_command_is_translated"
-since = "2026-10-17@eae2421"
-review = "Phase 2 uz catalog completion (WP9e is closed and did not add this row); CI fails after two stale runs"
-reviewed = "2026-10-19@WP6-final"
-
-[[test]]
 app = "gridcraft"
 crate = "gridcraft-ui-egui"
 binary = "lib"
@@ -215,45 +202,6 @@ reason = "Expects the Arabic catalog's 'About PdfCraft' to read 'PdfCraft ...'; 
 evidence = "docs/phase1/evidence/i18n/test-pdf-overlay-on.log#arabic_lookups_are_in_display_order"
 since = "2026-10-18@924c4da"
 review = "every sync"
-reviewed = "2026-10-19@WP6-final"
-
-[[test]]
-app = "pdfcraft"
-crate = "pdfcraft-ui-egui"
-binary = "lib"
-name = "i18n::tests::keyboard_key_names_have_a_separate_context_and_english_fallback"
-class = "i18n-incomplete"
-env = "any"
-reason = "uz-latn has no row for the keyboard key names (context rows such as 'Ctrl'); not in the P1 string set; stays until the Phase 2 catalog completion adds them."
-evidence = "docs/phase1/evidence/i18n/test-pdf-overlay-on.log#keyboard_key_names_have_a_separate_context_and_english_fallback"
-since = "2026-10-18@924c4da"
-review = "Phase 2 uz catalog completion (WP9e is closed and did not add this row); CI fails after two stale runs"
-reviewed = "2026-10-19@WP6-final"
-
-[[test]]
-app = "pdfcraft"
-crate = "pdfcraft-ui-egui"
-binary = "lib"
-name = "i18n::tests::local_gotor_confirmation_is_translated_in_all_supported_languages"
-class = "i18n-incomplete"
-env = "any"
-reason = "uz-latn lacks the GoToR confirmation label ('Open this local PDF?'); not in the P1 string set; stays until the Phase 2 catalog completion adds it."
-evidence = "docs/phase1/evidence/i18n/test-pdf-overlay-on.log#local_gotor_confirmation_is_translated_in_all_supported_languages"
-since = "2026-10-18@924c4da"
-review = "Phase 2 uz catalog completion (WP9e is closed and did not add this row); CI fails after two stale runs"
-reviewed = "2026-10-19@WP6-final"
-
-[[test]]
-app = "pdfcraft"
-crate = "pdfcraft-ui-egui"
-binary = "lib"
-name = "object_ui::tests::selection_labels_and_refusals_are_translated_in_every_catalog"
-class = "i18n-incomplete"
-env = "any"
-reason = "uz-latn lacks 'Drag the selection to move it. Esc clears the selection.' and possibly more selection labels; not in the P1 string set; stays until the Phase 2 catalog completion adds them."
-evidence = "docs/phase1/evidence/i18n/test-pdf-overlay-on.log#selection_labels_and_refusals_are_translated_in_every_catalog"
-since = "2026-10-18@924c4da"
-review = "Phase 2 uz catalog completion (WP9e is closed and did not add this row); CI fails after two stale runs"
 reviewed = "2026-10-19@WP6-final"
 
 [[test]]
