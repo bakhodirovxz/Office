@@ -1,12 +1,13 @@
 //! The worked examples of docs/phase2/rules.md section 10 (E01-E60) plus per-rule extras.
+mod common;
 use std::borrow::Cow;
 use uz_translit::{Apostrophe, Direction, Options, Run, convert, convert_runs};
 
 fn c(s: &str) -> String {
-    convert(s, Direction::ToCyrillic, &Options::default())
+    convert(s, Direction::ToCyrillic, &common::o95())
 }
 fn l(s: &str) -> String {
-    convert(s, Direction::ToLatin, &Options::default())
+    convert(s, Direction::ToLatin, &common::o95())
 }
 fn runs(rs: &[&str], dir: Direction) -> Vec<String> {
     let rs: Vec<Run> = rs
@@ -16,7 +17,7 @@ fn runs(rs: &[&str], dir: Direction) -> Vec<String> {
             convert: true,
         })
         .collect();
-    convert_runs(&rs, dir, &Options::default())
+    convert_runs(&rs, dir, &common::o95())
         .into_iter()
         .map(Cow::into_owned)
         .collect()
@@ -115,7 +116,7 @@ fn e60_runs_and_ascii() {
     assert_eq!(runs(&["сент", "ябрь"], Direction::ToLatin), ["sent", "abr"]);
     let o = Options {
         apostrophe: Apostrophe::Ascii,
-        ..Options::default()
+        ..common::o95()
     };
     assert_eq!(
         convert("Ўзбекистон ғ ъ", Direction::ToLatin, &o),
@@ -264,7 +265,7 @@ fn foreign_guard() {
     assert_eq!(c("Chilonzor choy"), "Чилонзор чой");
     let o = Options {
         foreign_latin_guard: false,
-        ..Options::default()
+        ..common::o95()
     };
     assert_eq!(convert("Word", Direction::ToCyrillic, &o), "Ворд");
 }
@@ -364,7 +365,7 @@ fn convert_false_runs_are_boundaries() {
             convert: true,
         },
     ];
-    let out = convert_runs(&rs, Direction::ToCyrillic, &Options::default());
+    let out = convert_runs(&rs, Direction::ToCyrillic, &common::o95());
     assert_eq!(
         out.iter().map(|c| c.as_ref()).collect::<Vec<_>>(),
         ["С", "h", "аҳар"]
@@ -388,7 +389,7 @@ fn unchanged_runs_are_borrowed() {
             convert: true,
         },
     ];
-    let out = convert_runs(&rs, Direction::ToCyrillic, &Options::default());
+    let out = convert_runs(&rs, Direction::ToCyrillic, &common::o95());
     assert!(matches!(out[0], Cow::Borrowed(_)));
     assert!(matches!(out[1], Cow::Owned(_)));
     assert!(matches!(out[2], Cow::Borrowed(_)));

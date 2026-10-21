@@ -43,21 +43,42 @@ pub enum Apostrophe {
 
 /// Latin alphabet (rules.md section 15). ->L writes it. ->C: `Y1995` reads both alphabets, `Y2026` reads
 /// 2026 only (sh, ch, o', g' are not digraphs), `Auto` picks per paragraph.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LatinAlphabet {
-    /// The alphabet in force (default): oʻ gʻ sh ch, and s + tutuq + h for сҳ.
-    #[default]
+    /// The alphabet in force: oʻ gʻ sh ch, and s + tutuq + h for сҳ.
     Y1995,
-    /// The pending 2026 reform (not in force): ö ğ ş ç, and plain sh for сҳ.
+    /// The 2026 reform (law signed 2026-10-21, in force six months after publication): ö ğ ş ç, and plain sh for сҳ.
     Y2026,
     /// ->Latin writes 1995. ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
     Auto,
 }
 
+/// The default Latin alphabet of every product surface: the library, docs-translit, the converter CLI, API and page,
+/// and the wasm package. Owner decision O13 (docs/phase3/PLAN.md): switch it to `Y2026` on the law's entry-into-force
+/// date. This is the one line to change (rules.md section 15.4).
+pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y1995;
+
+impl Default for LatinAlphabet {
+    fn default() -> Self {
+        DEFAULT_LATIN_ALPHABET
+    }
+}
+
+impl LatinAlphabet {
+    /// The option value used by the JSON and CLI surfaces: `1995`, `2026` or `auto`.
+    pub const fn name(self) -> &'static str {
+        match self {
+            LatinAlphabet::Y1995 => "1995",
+            LatinAlphabet::Y2026 => "2026",
+            LatinAlphabet::Auto => "auto",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Options {
     pub apostrophe: Apostrophe,
-    /// ->Latin: which Latin alphabet to write (default: 1995).
+    /// ->Latin: which Latin alphabet to write (default: [`DEFAULT_LATIN_ALPHABET`]).
     pub latin_alphabet: LatinAlphabet,
     /// ->Cyrillic: copy words with c (not in ch), w or diacritic Latin letters unchanged (R14).
     pub foreign_latin_guard: bool,
@@ -69,7 +90,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             apostrophe: Apostrophe::Official,
-            latin_alphabet: LatinAlphabet::Y1995,
+            latin_alphabet: DEFAULT_LATIN_ALPHABET,
             foreign_latin_guard: true,
             roman_numerals: true,
         }

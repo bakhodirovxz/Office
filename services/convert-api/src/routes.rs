@@ -383,6 +383,8 @@ async fn formats(State(app): State<Arc<App>>) -> Json<Value> {
         "maxPagesIn": app.cfg.caps.max_pages_in, "maxPngOut": app.cfg.caps.max_png_out, "retentionSeconds": s.retention_s,
         "activeJobsPerUser": s.per_user_active,
     });
+    // the page preselects it in the Latin alphabet menu
+    v["defaults"] = json!({ "alphabet": convert::plan::DEFAULT_ALPHABET });
     Json(v)
 }
 
@@ -461,7 +463,11 @@ fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
             "auto" => TranslitDir::Auto,
             _ => return Err(format!("translit takes cyrl, latn or auto, got '{t}'")),
         };
-        let alphabet = match o.alphabet.as_deref().unwrap_or("1995") {
+        let alphabet = match o
+            .alphabet
+            .as_deref()
+            .unwrap_or(convert::plan::DEFAULT_ALPHABET)
+        {
             "1995" => "1995",
             "2026" => "2026",
             "auto" => "auto",

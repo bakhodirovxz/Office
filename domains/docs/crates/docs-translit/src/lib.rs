@@ -119,7 +119,8 @@ fn params(v: &Value) -> Result<(Scope, Ctx), CmdError> {
         }
     };
     let latin_alphabet = match wordcraft_engine::p::str(v, "latinAlphabet") {
-        None | Some("1995") => LatinAlphabet::Y1995,
+        None => LatinAlphabet::default(),
+        Some("1995") => LatinAlphabet::Y1995,
         Some("2026") => LatinAlphabet::Y2026,
         Some("auto") => LatinAlphabet::Auto,
         Some(o) => {

@@ -1,6 +1,16 @@
 //! Test helper: the 1995 -> 2026 Latin letter substitution (rules.md section 15.2).
 #![allow(dead_code)]
 
+use uz_translit::{LatinAlphabet, Options};
+
+/// The 1995 options: the tests pin the alphabet, so they keep passing when DEFAULT_LATIN_ALPHABET switches (O13).
+pub fn o95() -> Options {
+    Options {
+        latin_alphabet: LatinAlphabet::Y1995,
+        ..Options::default()
+    }
+}
+
 fn is_apos(c: char) -> bool {
     matches!(
         c,

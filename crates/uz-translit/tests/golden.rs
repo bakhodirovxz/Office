@@ -41,7 +41,7 @@ fn check(file: &str, input_col: &str) -> (usize, usize) {
     {
         let dir = r.get("dir").map_or("l2c", String::as_str);
         let (lat, cyr) = (&r[input_col], &r["cyrillic"]);
-        let o = Options::default();
+        let o = common::o95();
         if matches!(dir, "both" | "l2c") {
             fwd += 1;
         }
@@ -95,7 +95,7 @@ fn variants() {
 fn golden_2026() {
     let o26 = Options {
         latin_alphabet: LatinAlphabet::Y2026,
-        ..Options::default()
+        ..common::o95()
     };
     let (mut n, mut skipped, mut fails) = (0, 0, Vec::new());
     for r in table("golden.tsv")

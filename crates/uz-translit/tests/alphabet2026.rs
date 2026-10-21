@@ -1,23 +1,32 @@
 //! The reformed Latin alphabet option (rules.md section 15): unit tests for both directions.
+mod common;
 use uz_translit::{Direction, LatinAlphabet, Options, convert};
 
 fn l26(s: &str) -> String {
     let o = Options {
         latin_alphabet: LatinAlphabet::Y2026,
-        ..Options::default()
+        ..common::o95()
     };
     convert(s, Direction::ToLatin, &o)
 }
 fn l95(s: &str) -> String {
-    convert(s, Direction::ToLatin, &Options::default())
+    convert(s, Direction::ToLatin, &common::o95())
 }
 fn c(s: &str) -> String {
-    convert(s, Direction::ToCyrillic, &Options::default())
+    convert(s, Direction::ToCyrillic, &common::o95())
 }
 
 #[test]
-fn default_is_1995() {
-    assert_eq!(Options::default().latin_alphabet, LatinAlphabet::Y1995);
+fn defaults_follow_the_one_switch() {
+    // owner decision O13: Options::default() and LatinAlphabet::default() follow DEFAULT_LATIN_ALPHABET
+    assert_eq!(
+        Options::default().latin_alphabet,
+        uz_translit::DEFAULT_LATIN_ALPHABET
+    );
+    assert_eq!(
+        LatinAlphabet::default(),
+        uz_translit::DEFAULT_LATIN_ALPHABET
+    );
     assert_eq!(l95("Шаҳар Ўзбекистон"), "Shahar Oʻzbekiston");
 }
 
@@ -92,7 +101,7 @@ fn tutuq_next_to_new_letters() {
 fn cy(s: &str, a: LatinAlphabet) -> String {
     let o = Options {
         latin_alphabet: a,
-        ..Options::default()
+        ..common::o95()
     };
     convert(s, Direction::ToCyrillic, &o)
 }
@@ -122,10 +131,29 @@ fn separated_sh_round_trips_in_2026() {
     use LatinAlphabet::Y2026;
     let o = Options {
         latin_alphabet: Y2026,
-        ..Options::default()
+        ..common::o95()
     };
     for t in ["Исҳоқ", "асҳоб", "ИСҲОҚ", "шоҳ Шаҳар"] {
         let l = convert(t, Direction::ToLatin, &o);
         assert_eq!(convert(&l, Direction::ToCyrillic, &o), t, "{l}");
     }
+}
+
+/// Words as written in the first official text in the 2026 alphabet: the Presidential Administration head's
+/// announcement of the signed law, 2026-10-21 (rules.md section 15, S16). Precomposed letters, U+2019 as the tutuq.
+#[test]
+fn official_2026_text_reads_and_round_trips() {
+    let o26 = Options {
+        latin_alphabet: LatinAlphabet::Y2026,
+        ..common::o95()
+    };
+    let src = "Özbek alifbosini takomillaştirişga bağişlangan, körsatkiçlar, qoğozlar, peşlavha, \
+               bosqiçma-bosqiç almaştiriladi, keçmaydi, yöl yöq, yangidan, e\u{2019}tiroz, ma\u{2019}no";
+    let cyr = "Ўзбек алифбосини такомиллаштиришга бағишланган, кўрсаткичлар, қоғозлар, пешлавҳа, \
+               босқичма-босқич алмаштирилади, кечмайди, йўл йўқ, янгидан, эътироз, маъно";
+    for opts in [common::o95(), o26] {
+        assert_eq!(convert(src, Direction::ToCyrillic, &opts), cyr);
+    }
+    // ->L writes the tutuq as U+02BC (D-02); everything else comes back as published.
+    assert_eq!(l26(cyr), src.replace('\u{2019}', "\u{2bc}"));
 }

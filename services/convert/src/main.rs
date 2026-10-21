@@ -11,11 +11,15 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
+fn usage() -> String {
+    USAGE.replace("@ALPHABET@", convert::plan::DEFAULT_ALPHABET)
+}
+
 const USAGE: &str = "\
 usage:
   convert <inputs...> --to <fmt> [-o FILE | --out-dir DIR] [options]
       fmt: docx odt rtf html md txt pdf png xlsx csv pptx
-      --translit cyrl|latn|auto   --alphabet 1995|2026|auto (default 1995)   --apostrophe official|ascii
+      --translit cyrl|latn|auto   --alphabet 1995|2026|auto (default @ALPHABET@)   --apostrophe official|ascii
       --sheet NAME|active|all     (csv; default active)
       --pages 1,3-5               (png output; pdf to txt takes one page)
       --dpi N                     (png; 72-600, default 150)
@@ -98,7 +102,7 @@ impl Args {
 }
 
 fn usage_err(m: impl std::fmt::Display) -> ExitCode {
-    eprintln!("convert: {m}\n\n{USAGE}");
+    eprintln!("convert: {m}\n\n{}", usage());
     ExitCode::from(Exit::Usage.code())
 }
 
@@ -153,7 +157,7 @@ fn options(a: &Args) -> Result<Options, String> {
             .val
             .get("--alphabet")
             .map(String::as_str)
-            .unwrap_or("1995")
+            .unwrap_or(convert::plan::DEFAULT_ALPHABET)
         {
             "1995" => "1995",
             "2026" => "2026",
@@ -450,7 +454,7 @@ fn cmd_xdfu_verify(args: &[String]) -> ExitCode {
 fn main() -> ExitCode {
     let mut argv: Vec<String> = std::env::args().skip(1).collect();
     if argv.is_empty() || argv.iter().any(|a| a == "-h" || a == "--help") {
-        println!("{USAGE}");
+        println!("{}", usage());
         return ExitCode::from(if argv.is_empty() {
             Exit::Usage.code()
         } else {

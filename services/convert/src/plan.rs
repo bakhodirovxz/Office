@@ -83,6 +83,9 @@ pub enum TranslitDir {
     Auto,
 }
 
+/// The Latin alphabet when a job does not name one: follows `uz_translit::DEFAULT_LATIN_ALPHABET` (owner decision O13).
+pub const DEFAULT_ALPHABET: &str = uz_translit::DEFAULT_LATIN_ALPHABET.name();
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Translit {
     pub dir: TranslitDir,

@@ -1,5 +1,6 @@
 //! The exceptions dictionary against the rules (rules.md 6, 9.2): every reviewed row, with and without suffixes.
-use uz_translit::{Direction, Options, convert};
+mod common;
+use uz_translit::{Direction, convert};
 
 const TSV: &str = include_str!("../data/exceptions.tsv");
 const SUFFIXES: [&str; 14] = [
@@ -8,10 +9,10 @@ const SUFFIXES: [&str; 14] = [
 ];
 
 fn c(s: &str) -> String {
-    convert(s, Direction::ToCyrillic, &Options::default())
+    convert(s, Direction::ToCyrillic, &common::o95())
 }
 fn l(s: &str) -> String {
-    convert(s, Direction::ToLatin, &Options::default())
+    convert(s, Direction::ToLatin, &common::o95())
 }
 
 struct Row<'a> {

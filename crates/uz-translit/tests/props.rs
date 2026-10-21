@@ -24,10 +24,10 @@ impl Rng {
 }
 
 fn c(s: &str) -> String {
-    convert(s, Direction::ToCyrillic, &Options::default())
+    convert(s, Direction::ToCyrillic, &common::o95())
 }
 fn l(s: &str) -> String {
-    convert(s, Direction::ToLatin, &Options::default())
+    convert(s, Direction::ToLatin, &common::o95())
 }
 
 const CONS: [&str; 22] = [
@@ -192,13 +192,13 @@ fn round_trip_variants_and_splits() {
         assert_eq!(l(&l(&cy)), l(&cy), "idempotence ->L, case {case}: {x:?}");
         let parts = split_runs(&mut rng, &x);
         assert_eq!(
-            runs_concat(&parts, Direction::ToCyrillic, &Options::default()),
+            runs_concat(&parts, Direction::ToCyrillic, &common::o95()),
             cy,
             "run split ->C, case {case}: {parts:?}"
         );
         let parts = split_runs(&mut rng, &cy);
         assert_eq!(
-            runs_concat(&parts, Direction::ToLatin, &Options::default()),
+            runs_concat(&parts, Direction::ToLatin, &common::o95()),
             l(&cy),
             "run split ->L, case {case}: {parts:?}"
         );
@@ -238,7 +238,7 @@ fn run_split_invariance_on_arbitrary_text() {
         ] {
             let o = Options {
                 latin_alphabet: alphabet,
-                ..Options::default()
+                ..common::o95()
             };
             let whole = convert(&s, dir, &o);
             assert_eq!(
@@ -262,7 +262,7 @@ fn reformed_alphabet_properties() {
     // when each word is randomly written in either alphabet; ->C is unchanged by the option.
     let o26 = Options {
         latin_alphabet: LatinAlphabet::Y2026,
-        ..Options::default()
+        ..common::o95()
     };
     let mut rng = Rng(0xA5A5_1234_DEAD_BEEF);
     for case in 0..CASES {

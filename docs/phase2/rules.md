@@ -1027,7 +1027,7 @@ Status after the source check of 2026-10-20 (§14).
    - Both decisions still rest on absence, not on a cited rule.
    - New candidate class from S9: prefix + ц-root (антициклон → antisiklon). No official text was found.
 8. **CODE-A with 1–4 letters. Open.** A short all-caps word + `-digit` (e.g. `BOB-2`) stays Latin.
-9. **New: the 2026 alphabet amendment. Open; owner decision.** Parliament has passed a law that replaces Gʻ Oʻ Sh Ch with Ğ Ö Ş Ç (28 letters + the tutuq). On 2026-10-20 it was not yet on lex.uz (S12). This spec targets the 1995 alphabet, which is in force. **Resolved 2026-10-20 (owner): support both, 1995 is the default; see §15.**
+9. **New: the 2026 alphabet amendment. Signed 2026-10-21 (§15.0); not yet in force.** Parliament has passed a law that replaces Gʻ Oʻ Sh Ch with Ğ Ö Ş Ç (28 letters + the tutuq). On 2026-10-20 it was not yet on lex.uz (S12). This spec targets the 1995 alphabet, which is in force. **Resolved 2026-10-20 (owner): support both, 1995 is the default; see §15.**
 10. **New: D-24 `yod`. Open.** Both ёд and йод are official (S8), so the bare word needs context.
 11. **New: the 1956 Cyrillic rules and the imlo lugʻati** were not found online. The Cyrillic side of every rule rests on official usage (S5–S8), not on a cited Cyrillic rule.
 
@@ -1161,15 +1161,16 @@ S6–S8 are corpus measurements over S5: S6 is ц (Q4), S7 is ь (Q1), and S8 is
 - gov.uz: "Senatning 19-yalpi majlisida “Lotin yozuviga asoslangan o‘zbek alifbosini joriy etish to‘g‘risida”gi O‘zbekiston Respublikasi Qonuniga o‘zgartirish kiritish haqida”gi Qonun muhokama qilindi. Qonunga ko‘ra, lotin yozuviga asoslangan o‘zbek alifbosini 26 ta harf va 3 ta harflar birikmasi o‘rniga 28 ta harf va 1 ta tutuq belgisidan tashkil topishini nazarda tutuvchi o‘zgartirishlar kiritilmoqda."
 - kun.uz: "Gʻ harfi Ğ shaklida, Oʻ harfi Ö shaklida, Sh harfi Ş shaklida, Ch harfi Ç shaklida ifodalanishi mumkin." The same article says that the law also needs the President's signature.
 - On 2026-10-20, lex.uz/docs/-112286 still shows the 1995 text (edition dates 12.10.1993 and 17.06.1995).
-- Unverified: the signature and the entry-into-force date. Reports say the Ng combination is dropped; that is unverified too.
+- Unverified on 2026-10-20: the signature and the entry-into-force date. Reports say the Ng combination is dropped; that is unverified too.
+- **Update 2026-10-21 (WP16): signed; ng confirmed dropped as a unit, with no effect on transliteration. See §15.0.**
 
 ### 14.2 Spec changes made by this check
 - Sections changed: §4.1, §4.2, §4.4, §4.5, §4.6, §4.7 (corrected source; word-final ц), §4.8, §4.9 (R9a, D-11), §6.4 J and K (QR), §12 (D-02, D-10, D-11, D-14, D-24), §13 (statuses), and §14 (new).
 - No rule's behaviour changed. The QR keep row and the dictionary list in `source-verification.md` are data changes.
 
-## 15. Reformed alphabet (2026, pending)
+## 15. Reformed alphabet (2026, signed, not yet in force)
 
-**Status: not in force.** The law passed the Senate on 2026-09-10 and is not yet signed (§14, Q9). It is implemented behind `Options.latin_alphabet`; the default stays `Y1995`, so no existing output changes. Owner decision, 2026-10-20: support both alphabets, 1995 by default; explicit `Y2026` reads Latin as 2026 only (coordinator, same day). Status of this section: `reviewed:agent-opus:2026-10-20` (not an owner review).
+**Status: signed 2026-10-21; in force 6 months after official publication.** On 2026-10-21 the text was not yet published, so the in-force date is not known (the earliest possible is 2027-04-21). It is implemented behind `Options.latin_alphabet`; the default stays `Y1995` (one switch, §15.4), so no existing output changes. Owner decision, 2026-10-20: support both alphabets, 1995 by default; explicit `Y2026` reads Latin as 2026 only (coordinator, same day). Status of this section: `reviewed:agent-opus:2026-10-21` (not an owner review).
 
 **Sources.**
 
@@ -1178,8 +1179,50 @@ S6–S8 are corpus measurements over S5: S6 is ц (Q4), S7 is ь (Q1), and S8 is
 | S14 | gazeta.uz, Senate approval, 2026-09-10 | https://www.gazeta.uz/en/2026/09/10/uzb-alphabet/ |
 | S15 | uzdaily.uz, parliament approves changing four letters of the Latin alphabet | https://www.uzdaily.uz/en/uzbek-parliament-approves-changing-four-letters-of-latin-alphabet/ |
 | S12 | gov.uz and kun.uz (§14) | see §14 |
+| S16 `tg-sshm-4480` | Head of the Presidential Administration, announcement of the signature, 2026-10-21, **written in the 2026 alphabet** (the first official text in it that was found) | https://t.me/s/SShMirziyoyeva/4480 |
+| S17 | kun.uz, the President signed the law, 2026-10-21 | https://kun.uz/news/2026/10/21/ozbek-lotin-alifbosini-takomillashtirishga-doir-qonun-prezident-tomonidan-imzolandi |
+| S18 | daryo.uz, the same | https://daryo.uz/2026/10/21/shavkat-mirziyoyev-lotin-yozuviga-asoslangan-ozbek-alifbosini-takomillashtirishga-oid-qonunni-imzoladi/ |
+| S19 | spot.uz and gazeta.uz, the same | https://www.spot.uz/oz/2026/10/21/alphabet ; https://www.gazeta.uz/oz/2026/10/21/alphabet/ |
+| S20 | gov.uz, Senate approval (the transition rules of the approved text) | https://gov.uz/oz/cirns/news/view/217333 |
 
-S14 and S15 were given by the owner and were not fetched by this check. The details below (ng no longer a unit, one remaining apostrophe, the tutuq) follow the owner's brief and S12.
+S14 and S15 were given by the owner and were not fetched. S16–S20 were fetched on 2026-10-21.
+
+### 15.0 Verification of the signed law (WP16, 2026-10-21)
+
+**The law text itself is not available yet.**
+- lex.uz has no new edition: https://lex.uz/docs/-112286 still shows the 1995 text (editions 12.10.1993 and 17.06.1995).
+- A lex.uz search for `ЎРҚ-1184`, `OʻRQ-1184`, `1184` and the law's title found nothing. The newest law the searches returned was ЎРҚ-1158 of 13.07.2026.
+- regulation.gov.uz (the draft, d/31596) did not answer.
+- The number **OʻRQ-1184 comes from the owner's brief; no fetched source states it.**
+
+The most authoritative sources are therefore S16 (an official of the Presidential Administration, writing in the new alphabet) and S20 (the Senate's own page on the approved text). S17–S19 are press reports. Re-check against lex.uz once the text is published; publication starts the six-month clock.
+
+| Item | §15 (2026-10-20) | Signed law, by S16–S20 | Result |
+|---|---|---|---|
+| Letters | Oʻ→Ö, Gʻ→Ğ, Sh→Ş, Ch→Ç | S17: "O‘ o‘ → Ö ö, G‘ g‘ → Ğ ğ, Sh sh → Ş ş, Ch ch → Ç ç"; S19: "o‘, g‘, sh va ch harflarining shakli ö, ğ, ş, ç ga o‘zgartirildi" | match |
+| Count | 28 letters + the tutuq | S18: "Yangilangan alifbo 28 ta harf va bitta tutuq belgisidan iborat boʻladi"; S20: "26 ta harf va 3 ta harflar birikmasi o‘rniga 28 ta harf va 1 ta tutuq belgisidan" | match |
+| Case pairs, code points | Ö ö U+00D6/U+00F6, Ğ ğ U+011E/U+011F, Ş ş U+015E/U+015F, Ç ç U+00C7/U+00E7 | S16 is typed with exactly these precomposed letters (ş 22, ö 12, ç 10, ğ 3, Ö 1); S17 prints all four pairs | match. The law's own table is unseen (only lex.uz will show it). |
+| Tutuq | ʼ, the only apostrophe; output U+02BC (D-02) | S17: "Tutuq belgisi alifboda saqlanib qoldi". No source gives a code point. S16 types it as U+2019 (e’tiroz, ma’no, ma’rifatparvar). | no mismatch: input accepts U+2019 (set A); output stays U+02BC, as lex.uz encodes it today. Re-check the published text. |
+| ng | not a unit; нг ↔ ng | S18: "Ng birikmasi esa alifbo tarkibidan chiqariladi, lekin uning oʻqilishi imlo qoidalarida saqlanib qoladi"; S17: "ng harfi mustaqil harf sifatida alifbodan chiqariladi" | match. **No transliteration effect:** both scripts already write n + g (D-05). S16's yangidan, tilimizning and qonunning keep ng. |
+| Entry into force | unknown | S17, S18, S19: "Qonun rasman eʼlon qilinganidan keyin 6 oy oʻtib kuchga kiradi" | in force 6 months after official publication |
+| Transition | — | see the list below | recorded. No software consequence beyond keeping 1995 readable, which `Y1995` and `Auto` already do. |
+
+Transition rules:
+- **S16, S18, S19:** existing documents, the national currency and securities stay valid ("amaldagi barça hujjatlar, milliy valyuta va qimmatli qoğozlar öz kuçida qoladi"). Textbooks, signboards and indicators are replaced gradually once their service life ends ("bosqiçma-bosqiç almaştiriladi").
+- **S18:**
+  - first-grade textbooks are printed in the new alphabet from 2027, and all textbooks by 2031;
+  - state bodies may use their signage until it is unusable;
+  - mass media and official paperwork move over gradually.
+- **S20:** documents issued before entry into force stay valid; signage stays until it is unusable or for a set period.
+
+**Crate check against S16.**
+- The whole S16 paragraph (about 120 words) was converted from 2026 Latin to Cyrillic with `Y2026`, `Auto` and `Y1995`. The three outputs are identical and correct.
+- Cyrillic → `Y2026` Latin gives the text back, except that ’ becomes ʼ (D-02) and `oktyabr` becomes the official `oktabr` (§6).
+- **No mismatch, no rule change.**
+
+Evidence:
+- golden rows SRC-017..025 (`reviewed:agent-opus:2026-10-21`), checked under 1995 and, through `golden_2026`, under 2026;
+- `tests/alphabet2026.rs::official_2026_text_reads_and_round_trips`, which uses S16's spelling verbatim (U+2019 tutuq included).
 
 ### 15.1 Mapping
 
@@ -1216,7 +1259,28 @@ S14 and S15 were given by the owner and were not fetched by this check. The deta
   - Round trip: Cyrillic → `Y2026` Latin → `Y2026` Cyrillic is lossless, сҳ included. Reading the same Latin with `Y1995` gives Ишоқ, so a 2026 document must be converted back with `Y2026` (or `Auto` when it contains one of the four letters).
 
 ### 15.3 Tests
+- `tests/alphabet2026.rs::official_2026_text_reads_and_round_trips` and golden SRC-017..025: words from S16 (§15.0).
+- Every test pins 1995 itself (`tests/common::o95`), so the suite does not depend on the default (§15.4).
 
 - `tests/alphabet2026.rs`: both directions, mixed input, decomposed forms, the guard, dictionary and acronyms, case, explicit `Y2026` and `Auto` reading, the сҳ round trip.
 - `tests/golden.rs::golden_2026`: every approved `both` row of `golden.tsv` is checked in both directions with the Latin side mapped through the 1995 → 2026 substitution at test time (`tests/common/mod.rs`; the golden file is not duplicated). Both directions run with `Y2026` set, сҳ rows included. Skipped: rows whose Cyrillic keeps Latin letters (protected spans) and R15 quote-guard rows (the substitution would misread the closing quote).
 - `tests/props.rs`: `reformed_alphabet_properties` (2026 output = substitution of the 1995 output; round trip; randomly mixed alphabets; idempotence; run splits) and the run-split test over the new letters and both alphabets.
+
+### 15.4 The default switch (owner decision O13)
+
+The default Latin alphabet is **one line** in `crates/uz-translit/src/lib.rs`:
+
+    pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y1995;
+
+Every surface follows it:
+- the library: `LatinAlphabet::default()` and `Options::default()`;
+- docs-translit (the word processor command), when `latinAlphabet` is absent (`domains/docs/crates/docs-translit/src/lib.rs`);
+- the wasm/npm package, when `latinAlphabet` is absent (`crates/uz-translit-wasm`);
+- the converter CLI `--alphabet` and the API `alphabet`, when absent, through `convert::plan::DEFAULT_ALPHABET` (`services/convert/src/plan.rs`);
+- the converter page: `/api/v1/formats` returns `defaults.alphabet`. The page preselects it in the Latin alphabet menu and marks it "(default)" (`ui.opt.alphabet.default`).
+
+**Not switched (2026-10-21):** the law is not in force. Switch it on the entry-into-force date (publication + 6 months), after re-checking §15.0 against the published text. With the switch:
+- rebuild the products;
+- update the prose that names 1995 as the default: the `LatinAlphabet` doc comments, `ci/npm/README.md`, and the `// default 1995` assertion in `ci/npm/uz-translit.test.mjs` (that npm test checks the package default on purpose, so it changes with it).
+
+The page's browser-language guess maps `uz` to "Oʻzbekcha (1995)". That is a UI-language choice, separate from O13, and stays until the owner decides otherwise.
