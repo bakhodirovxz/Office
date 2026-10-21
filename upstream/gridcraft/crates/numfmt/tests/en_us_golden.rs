@@ -4,6 +4,7 @@
 //!
 //! `GOLD_OUT=<path> cargo test --test en_us_golden` rewrites the file (only meant to be run
 //! against a tree whose en-US output is known to be right).
+#![allow(clippy::approx_constant)]
 use gridcraft_core::{DateSystem, NumLocale, Value};
 use gridcraft_numfmt::{NumberFormat, builtin_format, format_value_in};
 

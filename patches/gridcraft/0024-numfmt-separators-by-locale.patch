@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 14:52:00 +0500
+Date: Wed, 21 Oct 2026 12:00:00 +0500
 Subject: [PATCH] numfmt: decimal and group separators by locale
 
 format_value_in and format_general_fit_in take a NumLocale: the decimal point, the thousands
@@ -13,10 +13,10 @@ values, recorded before the change, pins the old output.
  crates/numfmt/src/lib.rs                 |   32 +-
  crates/numfmt/src/render.rs              |   41 +-
  crates/numfmt/src/tests.rs               |    2 +-
- crates/numfmt/tests/en_us_golden.rs      |   91 ++
+ crates/numfmt/tests/en_us_golden.rs      |   92 ++
  crates/numfmt/tests/en_us_golden.tsv     | 1500 ++++++++++++++++++++++
  crates/numfmt/tests/locale_separators.rs |   61 +
- 7 files changed, 1703 insertions(+), 36 deletions(-)
+ 7 files changed, 1704 insertions(+), 36 deletions(-)
  create mode 100644 crates/numfmt/tests/en_us_golden.rs
  create mode 100644 crates/numfmt/tests/en_us_golden.tsv
  create mode 100644 crates/numfmt/tests/locale_separators.rs
@@ -347,16 +347,17 @@ index e5687f5..2a4b417 100644
  
 diff --git a/crates/numfmt/tests/en_us_golden.rs b/crates/numfmt/tests/en_us_golden.rs
 new file mode 100644
-index 0000000..c29301f
+index 0000000..62cfb71
 --- /dev/null
 +++ b/crates/numfmt/tests/en_us_golden.rs
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,92 @@
 +//! The en-US display must not change with the locale work (office patch 0024): every built-in
 +//! format id and a set of custom codes, applied to 25 values, equal the output recorded from the
 +//! tree before the locale parameter existed (`en_us_golden.tsv`).
 +//!
 +//! `GOLD_OUT=<path> cargo test --test en_us_golden` rewrites the file (only meant to be run
 +//! against a tree whose en-US output is known to be right).
++#![allow(clippy::approx_constant)]
 +use gridcraft_core::{DateSystem, NumLocale, Value};
 +use gridcraft_numfmt::{NumberFormat, builtin_format, format_value_in};
 +

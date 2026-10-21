@@ -1,6 +1,6 @@
 # WP14: gridcraft NumLocale, design note
 
-Status: design, written 2026-10-21 for PLAN §8 WP14 (owner decision O7). No code yet. A builder implements it as
+Status: built 2026-10-21 (section 13; decisions in section 12). Design written the same day for PLAN §8 WP14 (owner decision O7). A builder implements it as
 carried patches in `patches/gridcraft/` with REGISTER rows. Inputs: `docs/phase1/locale-check.md` (matrix §2, code
 map §3, recommendation §5), `spikes/locale/results_cldr.txt`, `spikes/locale/results_excel_ru.tsv`, and Windows NLS
 values printed by `spikes/locale/nls_values.ps1` (PowerShell 5.1, .NET Framework, so Windows NLS data).
@@ -280,3 +280,93 @@ Owner answers of 2026-10-21, taken before WP14 was built:
 - **Q5.** (`;` or `,` as the CSV default for uz and ru) **still with the owner.** It is implemented behind one
   constant, `LOCALE_CSV_LIST_SEPARATOR` in `engine/src/io.rs` (patch 0028). `true` writes `;` (Excel parity),
   `false` keeps `,`. A file opened from CSV keeps its own separator either way.
+
+## 13. Built (2026-10-21)
+
+Nine carried patches in `patches/gridcraft/`, REGISTER rows for each (category `i18n`, 72 rows before, 81 after).
+
+| Patch | What it does | Files / lines |
+|---|---|---|
+| 0023 | `core::NumLocale` and its tables. `builtin_date` maps the built-in date codes of ids 14-17 and 22 to the locale forms | 2 / +193 |
+| 0024 | numfmt: decimal, group, sub-second point and General follow the locale (`format_value_in`, `format_general_fit_in`). En-US golden (1500 rows recorded before the change) | 7 / +1703 (1500 are the golden) |
+| 0025 | numfmt: `mmm`/`mmmm`/`mmmmm`/`ddd`/`dddd` names and `[$-419]`/`[$-443]`/`[$-843]` name tags (non-English UI only, Q3) | 3 / +81 |
+| 0026 | core: `parse_input_in`, `to_invariant`, property tests (all dates 1900-2100, 10,000 numbers) | 1 / +222 |
+| 0027 | formula: `FormulaLocale::DecimalComma` | 2 / +79 |
+| 0028 | engine: `Prefs.num_locale`, `display::*_in`, `edit_text_in`, CSV save and open, `sheet.read`, copy and paste, `CsvOptions.locale`, `LOCALE_CSV_LIST_SEPARATOR` (Q5), `env_num_locale` | 9 / +350 |
+| 0029 | engine: PDF text, `&D`/`&T` | 1 / +80 |
+| 0030 | sheets-cli: `GRIDCRAFT_NUM_LOCALE` for `cat`, `convert`, `run`, `eval` | 1 / +15 |
+| 0130 | ui-egui: `Language::num_locale`, frame sync, grid, editor start text, `canonical`, Ctrl+; and Ctrl+', formula entry mapping | 9 / +224 |
+
+Differences from the design, all small:
+- **Paste.** Text pasted from the system clipboard is typed in the session locale (`to_invariant` in `paste_text`). The design listed paste parsing as not changed, but copy now produces `12.10.2026`, and pasting it back as en-US would store 10 December. The internal clipboard path is unchanged.
+- **Built-in ids 15-17.** Excel ru shows them as `12.окт.26`, `12.окт`, `окт.26` (COM row C6), so `NumLocale::builtin_date` swaps them like ids 14 and 22. uz follows ru (Q1); the uz forms are not measured in Excel (Q4).
+- **`edit_text_in` numbers.** A constant number opens in the editor with the locale decimal (`3500000,5`). Without it, F2 then Enter would turn a number into text under ru (the typed-input rule reads `3500000.5` as a date or text).
+- **One sync point.** `SheetApp::num_locale()` (language, or `GRIDCRAFT_NUM_LOCALE`) is used by `begin_edit` and by the frame sync, so headless UI tests do not depend on a frame having run. `Prefs.num_locale` is `serde(skip)`.
+- **Month names in typed text.** English names are still accepted in ru and uz (design). Excel ru does not accept them (`12 Oct 2026` stays text there), and Excel ru reads `$5,5` as text where we read a dollar amount. Both are deliberate leniency, not fidelity.
+- **Custom `m/d/yyyy`.** Excel ru shows a *custom* `m/d/yyyy` month first (`10.12.2026`, the `/` becomes the date separator) and only the built-in id 14 as `12.10.2026`. Our model reads both as the same code, so both show `12.10.2026`. The `/` and `-` of date codes stay literal in all other codes too.
+
+### Tests added
+
+| Level | Where | Count |
+|---|---|---|
+| core | `locale.rs` (3), `parse.rs` (+6: en-US identity, per locale numbers, dates, the integrity case, every date 1900-2100 x 3 locales, 10,000 numbers x 3) | 9 |
+| numfmt | `tests/en_us_golden.rs` (1500 rows), `tests/locale_separators.rs` (3), `tests/locale_names.rs` (2) | 6 |
+| formula | `tests/decimal_comma_input.rs` | 6 |
+| engine | `tests/numlocale.rs` (8: CSV per locale, comma rule, CSV round trip, `sheet.read`/copy, editor round trip, paste, built-in date ids, xlsx parts byte-equal across en/ru/uz-Latn/uz-Cyrl), `print.rs` (2: PDF text, header date and time) | 10 |
+| ui-egui | `tests/num_locale.rs` (7: typing in ru and en, F2-Enter keeps the value for 6 kinds of cell, editor text, `@` cells, ru formulas) | 7 |
+
+The existing suites run unedited except one line in `numfmt/src/tests.rs` (a private method gained the locale argument).
+
+### Matrix re-measured (locale-check section 2)
+
+`sheets-cli cat/convert/run` with `GRIDCRAFT_NUM_LOCALE`, PDF text through pdfplumber, Excel 16 on the ru-RU account. Files: `spikes/locale/gen_locale_xlsx.py` (24 cases) and `gen_wp14_xlsx.py` (20 cases), driver `spikes/locale/excel_wp14.ps1`.
+
+- **Before** (en-US everywhere): 5 of 24 rows equal Excel ru.
+- **After:** 21 of 24 rows equal Excel ru, and 19 of 20 of the new rows. The 3 differences are `TEXT(3500000.5,"#,##0.00")`, `TEXT(DATE(..),"dd mmmm yyyy")` and `3500000.5&""`: calc stays en-US on purpose (D3, R5). The 1 of 20 is the custom `m/d/yyyy` above.
+- Screen, CSV and PDF text agree in every row for ru, uz-Latn and uz-Cyrl (a row's screen text is found in the CSV and in the PDF text layer).
+- The en-US column equals `spikes/locale/results_gridcraft.csv`, row by row (only the padding of the accounting row differs: `cat` trims).
+
+| Case (3500000.5 unless stated) | Excel ru-RU | ours ru | ours uz-Latn | ours uz-Cyrl | ours en |
+|---|---|---|---|---|---|
+| General | `3500000,5` | `3500000,5` | same | same | `3500000.5` |
+| `#,##0.00` | `3 500 000,50` | `3 500 000,50` (U+00A0) | same | same | `3,500,000.50` |
+| `0.00%` of 0.255 | `25,50%` | `25,50%` | same | same | `25.50%` |
+| `d mmmm yyyy` | `12 Октябрь 2026` | `12 Октябрь 2026` | `12 Oktabr 2026` | `12 октябр 2026` | `12 October 2026` |
+| `dddd, d mmm yyyy` | `понедельник, 12 окт 2026` | same | `dushanba, 12 Okt 2026` | `душанба, 12 окт 2026` | `Monday, 12 Oct 2026` |
+| `[$-443]d mmmm yyyy` | `12 Oktabr 2026` | same | same | same | `12 October 2026` (Q3) |
+| built-in id 14 | `12.10.2026` | `12.10.2026` | same | same | `10/12/2026` |
+| built-in id 15 / 16 / 17 | `12.окт.26` / `12.окт` / `окт.26` | same | `12.Okt.26` / `12.Okt` / `Okt.26` | Cyrillic as ru | `12-Oct-26` / `12-Oct` / `Oct-26` |
+| `mm:ss.0` | `00:00,9` | same | same | same | `00:00.9` |
+
+Typed input (Excel `.FormulaLocal` against our UI commit path, 27 inputs, ru and en): every ru row agrees with Excel ru except the two leniencies above (`12 Oct 2026`, `$5,5`). Results: `3,5` is 3.5; `3.5` is 3 May (46145, `d-mmm`); `1 234,5` is 1234.5 with `# ##0,00`; `1.234` text; `1,234` is 1.234; `12.10.2026`, `12/10/2026`, `12.10.26`, `12.10`, `2026-10-12` are 46307; `10.13.2026` and `31.02.2026` text; `25,5%`, `(1 234)`, `1,5E3`, `10:30`, `TRUE`, `12 окт 2026`, `окт 2026`, `10.2026` agree; `1 23 456` and `1,234,567` text. In the en UI the old behaviour is unchanged (`12.10.2026` is still 46366).
+
+### Excel COM rows (MS Office 16, own PID, Windows culture ru-RU)
+
+| # | Result |
+|---|---|
+| C1 display | see the matrix; U+0020 and U+00A0 compared as equal |
+| C2 invariance | xlsx saved by `sheets-cli convert` under en, ru, uz-Latn and uz-Cyrl: 72 cells, `.Value2`, `.Formula` and `.NumberFormat` equal in all four |
+| C3 typed input | as above |
+| C4 formulas | `=SUM(1;2)` stores `SUM(1,2)` = 3; `=1,5+1` stores `1.5+1` = 2.5; `SUM(1,2)` typed in ru is `SUM(1.2)` = 1.2; `=ROUND(2,675;2)` = 2.68; `;` inside a string stays. All equal our `DecimalComma` results |
+| C5 CSV | `xlCSV` and `xlCSVUTF8`: delimiter `;`, decimal `,`, date as displayed, field with `;` quoted (UTF-8 adds the BOM). The group byte is **0x20**, not U+00A0: this PC's Windows thousands separator is U+0020 (`International(4)`), so this does not settle the default; we keep U+00A0 (NLS and CLDR) |
+| C6 ids 15-17 | Excel localizes them; implemented |
+| C7 `ss.0` | decimal comma (`00,9`), as implemented |
+| C8 `1.234`, `ddd` | `1.234` text; `ddd` is `Пн`; both as implemented |
+| C9 arrays | `.Formula = "=SUM({1,2;3,4})"` reads back `.FormulaLocal` `=SUM({1\2;3\4})`, so `\` is right |
+| uz rows | **not run**: they need a Windows culture change (Q4). The uz-Latn and uz-Cyrl outputs rest on NLS, CLDR and the `[$-443]`/`[$-843]` tags measured on the ru account |
+
+Windows notes: COM's `.NumberFormat` takes the culture's own separators and letters (`'#,##0.00'` and `'m/d/yyyy'` are refused on ru-RU), so the format cases go in through xlsx files with en-US codes.
+
+### Performance (w80, `E:/office-target/xlsx-bench/w80.xlsx`, 79 MB, release `sheets-cli`, 5 runs interleaved)
+
+| Workload | before | after en-US | after ru |
+|---|---|---|---|
+| `convert w80.xlsx w80.csv`: median s (min-max) | 71.3 (66.0-96.5) | 65.9 (62.9-71.5) | 66.4 (65.2-71.3) |
+| `file.exportPdf` range A1:L200: median s | 65.1 (64.1-68.6) | 65.9 (63.8-69.7) | 68.3 (63.4-69.0) |
+| peak working set, MB | 818 | 817 | 818 |
+
+en-US after is inside the spread of before in both workloads (PDF +1.3 %, CSV -7.6 % with a 96 s outlier in before), and the peak working set is 1 MB lower. ru is +0.7 % (CSV) and +4.9 % (PDF) of the after-en median, inside the spread of before. The workload is dominated by open and calculation (about 65 s), so the formatting cost is below the noise of this measurement.
+
+### Still en-US
+
+Chart axes and data labels, AutoFilter lists, pivot and slicer labels, HTML export, Format Cells samples, status-bar aggregates, row autofit widths, `[$-F800]`, wordcraft DATE fields, `TEXT()` pictures, `VALUE`/`DATEVALUE` and the text of `&` concatenation, function names, `TRUE`/`FALSE`/error names, and the `/` and `-` of date codes (Excel ru shows them as `.`).
