@@ -7,7 +7,7 @@
 //! - every output direction of an XDFU input either carries the watermark (text extracted from the output) or is refused;
 //! - the audit chain verifies, tampering with one line breaks it, and the CLI's `xdfu-verify` says so.
 use convert::audit::{self, AuditLog};
-use convert::exec::Config;
+use convert::exec::{Config, Exit};
 use convert::job::{self, Dest, FileReport};
 use convert::plan::{self, Options, Target, ToolId};
 use convert::xdfu::{Mode, XdfuHook};
@@ -362,4 +362,105 @@ fn the_audit_chain_verifies_tampering_breaks_it_and_the_cli_says_so() {
     assert!(String::from_utf8_lossy(&out.stderr).contains("line 2"), "{}", String::from_utf8_lossy(&out.stderr));
     // and the converter refuses to extend a damaged log
     assert!(AuditLog::open(&audit, false).is_err());
+}
+
+// ---- input kinds the converter cannot scan are checked on their output ------------------------------------------------------
+
+/// `tests/golden/xdfu/{grif,plain}.{doc,xls}`: made with Word and Excel from synthetic text (a first paragraph or cell "ХДФУ" for
+/// the grif, "Oddiy hujjat" for the plain one), small enough to commit.
+fn golden(name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden/xdfu").join(name)
+}
+
+fn audit_lines(p: &Path) -> usize {
+    std::fs::read_to_string(p).map(|t| t.lines().count()).unwrap_or(0)
+}
+
+#[test]
+fn a_doc_and_an_xls_with_a_grif_are_found_on_the_output_and_watermarked() {
+    let Some(e) = Env::new("deferred") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Watermark), &audit, false);
+    for (src, to) in [("grif.doc", "docx"), ("grif.doc", "txt"), ("grif.doc", "pdf"), ("grif.doc", "html"), ("grif.xls", "xlsx"), ("grif.xls", "csv"), ("grif.xls", "pdf")] {
+        let r = e.convert(&cfg, &golden(src), to, &format!("g-{src}-{to}"));
+        assert_eq!(r.code, 0, "{src} to {to}: {}", r.message);
+        let x = xdfu_of(&r).unwrap_or_else(|| panic!("{src} to {to}: the grif was not found on the output"));
+        assert_eq!((x["detected"].clone(), x["refused"].clone()), (serde_json::json!(true), serde_json::Value::Null), "{src} to {to}");
+        assert!(x["copy"].as_u64().is_some() && !x["evidence"].as_array().unwrap().is_empty(), "{src} to {to}: {x}");
+        assert!(r.warnings.iter().any(|w| w.code == "xdfu_copy"), "{src} to {to}");
+        let out = PathBuf::from(&r.outputs[0]);
+        assert!(extracted(&e, &out).contains("XDFU copy"), "{src} to {to}: the output carries no watermark");
+    }
+    // a plain document of the same kinds: converted as it always was, no xdfu in the report, nothing in the audit log
+    let before = audit_lines(&audit);
+    for (src, to) in [("plain.doc", "docx"), ("plain.doc", "txt"), ("plain.xls", "xlsx"), ("plain.xls", "csv")] {
+        let r = e.convert(&cfg, &golden(src), to, &format!("p-{src}-{to}"));
+        assert_eq!(r.code, 0, "{src} to {to}: {}", r.message);
+        assert!(xdfu_of(&r).is_none(), "{src} to {to}: {:?}", xdfu_of(&r));
+        assert!(!extracted(&e, &PathBuf::from(&r.outputs[0])).contains("XDFU copy"), "{src} to {to}: marked");
+    }
+    assert_eq!(audit_lines(&audit), before, "a plain document left a line in the audit log");
+    assert!(audit::verify(&audit).is_ok());
+}
+
+#[test]
+fn refuse_mode_vetoes_a_doc_with_a_grif_after_the_conversion_and_lets_a_plain_one_through() {
+    let Some(e) = Env::new("deferred-refuse") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Refuse), &audit, false);
+    for (src, to) in [("grif.doc", "docx"), ("grif.xls", "xlsx")] {
+        let r = e.convert(&cfg, &golden(src), to, &format!("r-{src}"));
+        assert_eq!(r.code, Exit::Rejected.code(), "{src}: {}", r.message);
+        assert!(r.outputs.is_empty(), "{src}: a refused job returned a file");
+        assert_eq!(xdfu_of(&r).unwrap()["refused"], "mode", "{src}");
+    }
+    assert!(std::fs::read_to_string(&audit).unwrap().lines().filter(|l| l.contains("\"refused\"")).count() == 2);
+    for (src, to) in [("plain.doc", "docx"), ("plain.xls", "xlsx")] {
+        let r = e.convert(&cfg, &golden(src), to, &format!("rp-{src}"));
+        assert_eq!(r.code, 0, "{src}: {}", r.message);
+    }
+}
+
+#[test]
+fn when_neither_the_input_nor_the_output_can_be_scanned_the_job_is_refused_under_xdfu() {
+    let Some(e) = Env::new("cannot-check") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    for mode in [Mode::Watermark, Mode::Refuse] {
+        let cfg = e.cfg(Some(mode), &audit, false);
+        // odt, rtf and png results are not scanned; a plain document is refused too, because nobody can tell that it is plain
+        for (src, to) in [("grif.doc", "odt"), ("plain.doc", "rtf"), ("plain.doc", "png")] {
+            let r = e.convert(&cfg, &golden(src), to, &format!("c-{src}-{to}"));
+            assert_eq!(r.code, Exit::Unsupported.code(), "{src} to {to} ({mode:?}): {}", r.message);
+            assert!(r.message.contains("XDFU") && r.message.contains("cannot be checked"), "{}", r.message);
+            assert!(r.outputs.is_empty() && r.steps.is_empty(), "{src} to {to}: a tool ran");
+        }
+    }
+    let log = std::fs::read_to_string(&audit).unwrap();
+    assert!(log.lines().any(|l| l.contains("cannot_check")), "no audit line for the refusal");
+    assert!(audit::verify(&audit).is_ok());
+    // with xdfu off nothing changes: the same conversion works
+    let off = e.cfg(None, &audit, false);
+    assert_eq!(e.convert(&off, &golden("plain.doc"), "odt", "off-odt").code, 0);
+}
+
+#[test]
+fn an_html_input_is_scanned_and_a_grif_in_it_is_found() {
+    let Some(e) = Env::new("html") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Watermark), &audit, false);
+    let page = |head: &str| format!("<!DOCTYPE html><html><head><title>t</title><style>p {{ color: red }}</style></head><body><p>{head}</p><p>Salom dunyo, sinov matni.</p></body></html>");
+    let grif = e.dir.join("grif.html");
+    std::fs::write(&grif, page("ХДФУ")).unwrap();
+    let r = e.convert(&cfg, &grif, "txt", "html-grif");
+    assert_eq!(r.code, 0, "{}", r.message);
+    assert_eq!(xdfu_of(&r).unwrap()["detected"], true);
+    assert!(extracted(&e, &PathBuf::from(&r.outputs[0])).contains("XDFU copy"));
+    let plain = e.dir.join("plain.html");
+    std::fs::write(&plain, page("Oddiy hujjat")).unwrap();
+    let r = e.convert(&cfg, &plain, "txt", "html-plain");
+    assert!(r.code == 0 && xdfu_of(&r).is_none(), "{}", r.message);
+    // the grif in a <style> or the title is not text on the page
+    let hidden = e.dir.join("hidden.html");
+    std::fs::write(&hidden, "<html><head><title>ХДФУ</title></head><body><p>Oddiy hujjat</p></body></html>").unwrap();
+    assert!(xdfu_of(&e.convert(&cfg, &hidden, "txt", "html-hidden")).is_none());
 }

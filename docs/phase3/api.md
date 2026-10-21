@@ -268,7 +268,14 @@ setting is the operator's (the server config, or the local user's `--xdfu` flag 
   of a txt, md or csv), a header (docx headers, sheet headers and footers, slide masters and layouts) and the document properties
   (docx, xlsx, pptx core, app and custom properties; the pdf title, author, subject and keywords). The report gets
   `xdfu: {detected: true, mode, copy, refused, evidence: [{place, part, marker}]}`; the evidence names the place and the marker, never
-  document text.
+  document text. An html page is read as text (its head, styles and scripts are not text on the page).
+- **Kinds that cannot be scanned** (`doc`, `xls`, `xlsb`, `odt`, `ods`, `rtf`): the check moves to the tool's OUTPUT. `before` only notes that
+  the check is deferred; `after` looks for the grif in the outputs (docx, xlsx, pptx, pdf, txt, md, csv, html: every output we
+  watermark except png), in the same places, before they are watermarked. Found: `refuse` vetoes the job (exit 9, after the
+  conversion, nothing returned) and `watermark` marks the output as for any other input. Not found: an ordinary job, no `xdfu` in the
+  report, nothing in the audit log. If neither the input nor the result can be scanned (an `.odt`, `.rtf` or `.png` result of a `.doc`),
+  the job is refused before any tool runs with exit 3 and `xdfu_cannot_check` ("choose docx, xlsx, ... as the result"), an audit line
+  with reason `cannot_check`, and no `xdfu` object (nothing was found; not knowing is not the same as "not marked").
 - **`refuse`**: the before-phase vetoes with exit 9 and a clear message. Nothing is converted.
 - **`watermark`**: an output kind that cannot carry a mark (`odt`, `rtf`) is refused before any tool runs (exit 3). Otherwise the
   after-phase writes the audit line, whose sequence number is the **copy number**, and marks every output of the job with
@@ -300,17 +307,17 @@ setting is the operator's (the server config, or the local user's `--xdfu` flag 
   service account (an ACL that grants append but not write; `chattr +a`). A damaged log is not extended: the server and the CLI refuse
   to start with it. Two processes may share a log (a lock file serialises them).
 - **Limits, said plainly.** Detection reads text, not layout, so a word that is also an ordinary word (ДСП is chipboard in Russian) in
-  those places is a false positive, which errs on the safe side. Kinds that are not scanned: `doc`, `xls`, `xlsb`, `ppt`, `odt`,
-  `ods`, `odp`, `rtf`, `html`, `tsv`; a grif in one of them is not found (an owner decision: convert them to a scanned kind first, or
-  refuse them). Local mode on an uncertified computer only watermarks and warns; it cannot make XDFU handling compliant. The audit log
+  those places is a false positive, which errs on the safe side. For the kinds that are not scanned
+  on the way in (`doc`, `xls`, `xlsb`, `odt`, `ods`, `rtf`) the output is scanned instead, so a grif that the conversion itself drops (a
+  header the writer does not keep) is missed; `ppt` and `odp` are not converted at all. `tsv` and `html` are scanned. Local mode on an uncertified computer only watermarks and warns; it cannot make XDFU handling compliant. The audit log
   and the marks say nothing about the Rules' print, copy and save restrictions (Phase 4) or the EDS and QR (Phase 5).
 
 ## Tests (`cargo test`, run from `services/`)
 
 `convert-api`: `src/*` unit tests (15: jwt 6, crypt 2, config 4, gate 1, app 2), `tests/api.rs` (18, in-process router against a stand-in tool),
 `tests/hardening.rs` (17: the review fixes), `tests/xdfu_api.rs` (5: WP15 through the API), `tests/tls.rs` (3, real sockets), `tests/e2e.rs`
-(2, the binary: refusals; every direction against the real tools, then a hard kill and a restart). `convert`: `tests/xdfu.rs` (5, real tools:
-detection per language, off is byte-identical, every direction marked or refused, refuse and redact, the audit chain and `xdfu-verify`),
+(2, the binary: refusals; every direction against the real tools, then a hard kill and a restart). `convert`: `tests/xdfu.rs` (9, real tools:
+detection per language, off is byte-identical, every direction marked or refused, refuse and redact, the audit chain and `xdfu-verify`, and the unscanned kinds: `tests/golden/xdfu/{grif,plain}.{doc,xls}` found on the output, refused after the conversion, and refused when nothing can be scanned; an html input),
 `src/audit.rs` and `src/xdfu.rs` unit tests, `tests/verdict.rs` (3). The e2e test needs the release tools in `E:/office-target/p1/<domain>/release` and
 the WP1 inputs in `E:/office-target/p3/census/in`; it skips with a message without them (`CONVERT_API_E2E_REQUIRED=1` turns that into
 a failure).

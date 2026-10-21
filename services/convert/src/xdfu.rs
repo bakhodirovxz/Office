@@ -3,6 +3,10 @@
 //!
 //! With `Watermark` or `Refuse` the hook sees every job twice (`hook.rs`):
 //!
+//! 0. A kind that cannot be scanned (`doc`, `xls`, `xlsb`, `odt`, `ods`, `rtf`; `scannable`) is checked on the tool's OUTPUT instead: `before`
+//!    only notes that the check is deferred, and `after` looks for the grif in the outputs (every output kind we watermark except `png` is
+//!    scannable) before they are watermarked. If neither the input nor the output can be scanned, the job is refused (exit 3,
+//!    `xdfu_cannot_check`): not knowing is not the same as "not marked".
 //! 1. `before`: look for the grif ("XDFU", "ХДФУ", "ДСП", "Для служебного пользования", and the Uzbek spellings of the phrase) in the
 //!    places the Rules name: the upper part of page 1, a header, the document properties. Nothing found: the job is an ordinary job
 //!    and the hook forgets it. Found: `Refuse` ends the job with exit 9; `Watermark` checks that the target can carry a watermark
@@ -21,6 +25,8 @@
 //! - `txt`, `md`, `csv`, `html`: a first line (a quoted one-field row in csv; a paragraph after `<body>` in html);
 //! - `odt` and `rtf` cannot carry one, so the job is refused before any tool runs.
 //!
+//! `shortcut: for an unscanned input kind the converted output is scanned, not the input, so a grif that the conversion itself drops or
+//! changes (a header the writer does not keep) is missed; the first 8 paragraphs, rows or lines of the output are what is looked at.`
 //! `shortcut: the grif is looked for by text in the top part of the first page, not by layout: the first 8 paragraphs of a docx,
 //! the first 5 rows of the first sheet, the top quarter of the first slide, the first 8 lines of page 1. A word that is also an
 //! ordinary word (ДСП is chipboard in Russian) in those places is a false positive; that errs on the safe side.`
@@ -250,6 +256,34 @@ fn plain(xml: &str) -> String {
     decode(&out)
 }
 
+/// The text of an HTML file as lines: one per run of text between tags, without `<head>`, `<style>` and `<script>` and with entities decoded.
+fn html_lines(raw: &str) -> Vec<String> {
+    let tg = tags(raw);
+    let (mut out, mut skip) = (vec![], None::<&str>);
+    let lead = decode(&raw[..tg.first().map_or(raw.len(), |t| t.2)]);
+    if !lead.trim().is_empty() {
+        out.push(lead.trim().to_string());
+    }
+    for (k, (name, closing, _, end)) in tg.iter().enumerate() {
+        let lname = name.to_ascii_lowercase();
+        match skip {
+            Some(s) if *closing && lname == s => skip = None,
+            Some(_) => continue,
+            None if !*closing && matches!(lname.as_str(), "head" | "style" | "script") => {
+                skip = Some(["head", "style", "script"].into_iter().find(|n| *n == lname).expect("matched above"));
+                continue;
+            }
+            None => {}
+        }
+        let next = tg.get(k + 1).map_or(raw.len(), |n| n.2);
+        let text = decode(&raw[*end..next]);
+        if !text.trim().is_empty() {
+            out.push(text.trim().to_string());
+        }
+    }
+    out
+}
+
 /// A spreadsheet header or footer without its `&L` `&C` `&R` section codes, font and size codes.
 fn header_text(s: &str) -> String {
     let c: Vec<char> = s.chars().collect();
@@ -447,6 +481,16 @@ fn detect_pdf(rel: &str, size_mb: f64, tools: &dyn ToolRunner) -> Result<Vec<Evi
     Ok(found)
 }
 
+/// Kinds `detect` reads. A job whose input kind is not one of these is checked on its output (see the module doc).
+pub fn scannable(kind: Option<Kind>) -> bool {
+    matches!(kind, Some(Kind::Docx | Kind::Xlsx | Kind::Pptx | Kind::Pdf | Kind::Txt | Kind::Md | Kind::Csv | Kind::Tsv | Kind::Html))
+}
+
+/// Output kinds `detect` reads (a png is an image: no text to look at).
+pub fn output_scannable(ext: &str) -> bool {
+    matches!(ext, "docx" | "xlsx" | "pptx" | "pdf" | "txt" | "md" | "csv" | "html")
+}
+
 /// Look for the grif in one input file, in the places the Rules name. `rel` is the path inside the job directory (the tools'
 /// working directory). A file that cannot be read at all is an error: not knowing is not the same as "not marked".
 pub fn detect(path: &Path, rel: &str, kind: Option<Kind>, tools: &dyn ToolRunner) -> Result<Vec<Evidence>, Failure> {
@@ -457,6 +501,16 @@ pub fn detect(path: &Path, rel: &str, kind: Option<Kind>, tools: &dyn ToolRunner
         Some(Kind::Xlsx) => detect_xlsx(path).map_err(unreadable),
         Some(Kind::Pptx) => detect_pptx(path).map_err(unreadable),
         Some(Kind::Pdf) => detect_pdf(rel, mb, tools),
+        Some(Kind::Html) => {
+            let mut b = Vec::new();
+            // a Word-saved page carries a long style block before the body
+            fs::File::open(path).and_then(|f| f.take(1 << 20).read_to_end(&mut b)).map_err(|e| unreadable(e.to_string()))?;
+            let mut found = vec![];
+            for l in html_lines(&String::from_utf8_lossy(&b)).iter().take(TOP_PARAGRAPHS) {
+                hit(&mut found, l, "first-lines", "html");
+            }
+            Ok(found)
+        }
         Some(Kind::Txt | Kind::Md | Kind::Csv | Kind::Tsv) => {
             let mut b = Vec::new();
             fs::File::open(path).and_then(|f| f.take(64 * 1024).read_to_end(&mut b)).map_err(|e| unreadable(e.to_string()))?;
@@ -706,6 +760,8 @@ fn mark(ctx: &JobCtx, file: &Path, n: usize, s: &Stamp, tools: &dyn ToolRunner, 
 
 #[derive(Default)]
 struct Note {
+    /// the input kind cannot be scanned: `after` looks at the outputs
+    deferred: bool,
     evidence: Vec<Evidence>,
     copy: Option<u64>,
     refused: Option<&'static str>,
@@ -770,6 +826,20 @@ impl XdfuHook {
         })
     }
 
+    /// Refuse the job: an audit line, the note for the report, and the failure.
+    fn veto(&self, ctx: &JobCtx, evidence: Vec<Evidence>, why: &'static str, f: Failure) -> Result<Vec<Warning>, Failure> {
+        let (user, client) = self.who(ctx);
+        let mut e = self.event(ctx, &user, &client, &evidence);
+        e["reason"] = why.into();
+        self.audit.append("refused", e).map_err(|m| Failure { exit: Exit::ToolError, msg: format!("XDFU audit log: {m}") })?;
+        // nothing was found when the job is refused only because it could not be checked: no `xdfu` in the report (the schema says
+        // "found the grif"), the audit line and the message carry it
+        if !evidence.is_empty() {
+            self.jobs.lock().unwrap().insert(ctx.job_id.clone(), Note { evidence, copy: None, refused: Some(why), deferred: false });
+        }
+        Err(f)
+    }
+
     fn note_with<T>(&self, ctx: &JobCtx, f: impl FnOnce(&mut Note) -> T) -> Option<T> {
         self.jobs.lock().unwrap().get_mut(&ctx.job_id).map(f)
     }
@@ -787,6 +857,15 @@ impl JobHook for XdfuHook {
         if self.mode == Mode::Off {
             return Ok(vec![]);
         }
+        if !scannable(ctx.kind) {
+            // the input cannot be read for a grif: check what the tool makes of it, if that can be read
+            if !output_scannable(&ctx.target) {
+                let what = ctx.kind.map_or("this", Kind::ext);
+                return self.veto(ctx, vec![], "cannot_check", Failure { exit: Exit::Unsupported, msg: report::text_with("xdfu_cannot_check", &[("kind", what), ("target", &ctx.target)]) });
+            }
+            self.jobs.lock().unwrap().insert(ctx.job_id.clone(), Note { deferred: true, ..Note::default() });
+            return Ok(vec![]);
+        }
         let mut evidence = vec![];
         for (path, rel) in Self::input_files(ctx) {
             evidence.extend(detect(&path, &rel, ctx.kind, tools)?);
@@ -794,25 +873,40 @@ impl JobHook for XdfuHook {
         if evidence.is_empty() {
             return Ok(vec![]);
         }
-        let (user, client) = self.who(ctx);
-        let refuse = |why: &'static str, f: Failure| -> Result<Vec<Warning>, Failure> {
-            let mut e = self.event(ctx, &user, &client, &evidence);
-            e["reason"] = why.into();
-            self.audit.append("refused", e).map_err(|m| Failure { exit: Exit::ToolError, msg: format!("XDFU audit log: {m}") })?;
-            self.jobs.lock().unwrap().insert(ctx.job_id.clone(), Note { evidence: evidence.clone(), copy: None, refused: Some(why) });
-            Err(f)
-        };
         if self.mode == Mode::Refuse {
-            return refuse("mode", Failure { exit: Exit::Rejected, msg: report::text("xdfu_refused") });
+            return self.veto(ctx, evidence, "mode", Failure { exit: Exit::Rejected, msg: report::text("xdfu_refused") });
         }
         if !can_carry(&ctx.target) {
-            return refuse("cannot_carry", Failure { exit: Exit::Unsupported, msg: report::text_with("xdfu_no_watermark", &[("target", &ctx.target)]) });
+            return self.veto(ctx, evidence, "cannot_carry", Failure { exit: Exit::Unsupported, msg: report::text_with("xdfu_no_watermark", &[("target", &ctx.target)]) });
         }
         self.jobs.lock().unwrap().insert(ctx.job_id.clone(), Note { evidence, ..Note::default() });
         Ok(vec![])
     }
 
     fn after(&self, ctx: &JobCtx, outputs: &[PathBuf], tools: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
+        if self.note_with(ctx, |n| n.deferred) == Some(true) {
+            // the input could not be scanned: look for the grif in what was made of it, before it is watermarked
+            let mut found = vec![];
+            for f in outputs {
+                let ext = f.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+                if let (true, Some(kind)) = (output_scannable(&ext), Kind::ALL.into_iter().find(|k| k.ext() == ext)) {
+                    let rel = format!("out/{}", f.file_name().unwrap_or_default().to_string_lossy());
+                    found.extend(detect(f, &rel, Some(kind), tools)?);
+                }
+            }
+            if found.is_empty() {
+                // an ordinary document: the hook forgets the job
+                self.jobs.lock().unwrap().remove(&ctx.job_id);
+                return Ok(vec![]);
+            }
+            self.note_with(ctx, |n| {
+                n.deferred = false;
+                n.evidence = found.clone();
+            });
+            if self.mode == Mode::Refuse {
+                return self.veto(ctx, found, "mode", Failure { exit: Exit::Rejected, msg: report::text("xdfu_refused") });
+            }
+        }
         let Some(evidence) = self.note_with(ctx, |n| n.evidence.clone()) else { return Ok(vec![]) };
         let (user, client) = self.who(ctx);
         let mut e = self.event(ctx, &user, &client, &evidence);
@@ -884,6 +978,31 @@ mod tests {
         assert_eq!(decode("&#1044;&#x421;&#x41F; &lt;"), "ДСП <");
         assert_eq!(header_text("&LX&CДСП&R&\"Arial,Bold\"&12Page &P").trim(), "X ДСП Page P");
         assert_eq!(plain("<a>x</a><b>y</b>").split_whitespace().collect::<Vec<_>>(), ["x", "y"]);
+    }
+
+    #[test]
+    fn html_text_skips_the_head_and_reads_entities() {
+        let h = "<html><head><title>XDFU in the title</title><style>p {x: 1}</style></head><body><p>X&amp;Y</p><script>var a = 'XDFU';</script><p>  second </p><br><b></b></body></html>";
+        assert_eq!(html_lines(h), ["X&Y", "second"]);
+        assert!(find_grif(&html_lines("<body><p class=a>ХДФУ</p><p>text</p>").join("\n")).is_some());
+        assert!(html_lines("plain text, no tags").len() == 1);
+    }
+
+    #[test]
+    fn what_can_be_scanned_on_the_way_in_and_on_the_way_out() {
+        for k in [Kind::Docx, Kind::Xlsx, Kind::Pptx, Kind::Pdf, Kind::Txt, Kind::Md, Kind::Csv, Kind::Tsv, Kind::Html] {
+            assert!(scannable(Some(k)), "{}", k.ext());
+        }
+        for k in [Kind::Doc, Kind::Xls, Kind::Xlsb, Kind::Odt, Kind::Ods, Kind::Rtf] {
+            assert!(!scannable(Some(k)), "{}", k.ext());
+        }
+        assert!(!scannable(None));
+        // every output kind that is watermarked can be scanned, except the png (an image)
+        for ext in ["txt", "md", "csv", "html", "docx", "xlsx", "pptx", "pdf"] {
+            assert!(output_scannable(ext) && can_carry(ext), "{ext}");
+        }
+        assert!(can_carry("png") && !output_scannable("png"));
+        assert!(!output_scannable("odt") && !output_scannable("rtf"));
     }
 
     #[test]
