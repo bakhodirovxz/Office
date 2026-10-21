@@ -19,6 +19,10 @@
 > - **O7: the NumLocale patch IS in Phase 3** (about 6–8 days). gridcraft becomes locale-aware for display, CSV, PDF
 >   and typed input (uz/ru: decimal comma, NBSP grouping, `;` list separator, localized month names, dd.mm.yyyy input),
 >   per `docs/phase1/locale-check.md`.
+> - **Added 2026-10-21 (owner):**
+>   - web security and encryption rules (§5.5), with XDFU ("for official use only") handling per Cabinet of Ministers
+>     Resolution No. 766 of 04.12.2025 (§10, WP15);
+>   - the 2026 Latin alphabet law, reported approved today (WP16).
 > - **Licence facts verified by the orchestrator:** pdf2docx is MIT since 0.5.12 (PyPI shows 0.5.13, 2026-05-01). It
 >   depends on PyMuPDF (AGPL), so the sidecar stays an isolated container.
 
@@ -438,7 +442,23 @@ change if the shell wants it.
   private ranges, which the spike lacked.
 - **Logs:** job id, user sub, kinds, sizes, codes and timings. No file names in server logs when `--redact` is on, and
   never any document content (the corpus rule).
-- **Headers:** `X-Content-Type-Options: nosniff`, a CSP on the UI, `Cache-Control: no-store` on outputs.
+- **Web security baseline** (owner request, 2026-10-21; checked by a test that reads every response's headers):
+  - **Transport.** Server mode serves HTTPS only, via rustls: TLS 1.3, plus 1.2 with AEAD suites only. HSTS is set
+    (`max-age=31536000`). Plain HTTP only redirects. Local mode stays plain HTTP, because it is bound to `127.0.0.1`.
+  - **CSP.** `default-src 'self'`, `script-src 'self'` (no inline scripts, no `eval`), `object-src 'none'`,
+    `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`.
+  - **Other headers.** `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
+    `Permissions-Policy` denying camera, microphone and geolocation, and `Cache-Control: no-store` on every API
+    response and output.
+  - **No third-party origins.** Fonts, scripts and styles are all self-hosted, with no CDN, so the UI works on an
+    air-gapped network. CORS is closed (same origin only).
+  - **Cookies, if any appear later:** `Secure`, `HttpOnly`, `SameSite=Strict`. Tokens never go in URLs sent to the
+    server (the fragment only).
+  - **Rate limits** per `sub` and per IP on uploads and job creation.
+  - **Data at rest (server mode).** Job files are encrypted with AES-256-GCM (RustCrypto `aes-gcm`, MIT/Apache) under
+    a per-job key. The key is held only in memory and wrapped by an operator key file. The sweeper deletes the key
+    first, so leftover files are unreadable after a crash.
+- **XDFU documents:** see §10.
 - **Body limits** are applied before multipart parsing, so a slow or huge upload cannot fill the disk.
 
 ---
@@ -760,6 +780,40 @@ count as one build slot each.
 - **Estimate:** 6–8 d. **Tier:** architect (design and review), builder (patches). Stream E runs in parallel with
   A–C on the second cargo slot.
 
+### WP15. XDFU handling in the converter (§10)
+- **Goal:** an XDFU-marked document is never converted silently or anonymously.
+- **Steps:**
+  - **Detect the grif.** Look for "XDFU", "ХДФУ", "ДСП" or "Для служебного пользования" in the upper-right of page 1,
+    in a header, or in the document properties. The result goes in the job report as `xdfu: true`, with the evidence.
+  - **Watermark** every output of an XDFU input, per cl. 12: copy number, the client's network address, the user
+    (`sub` in server mode, the OS user in local mode), and date and time. Text outputs (csv, txt, md) get a header line.
+    Any direction that cannot carry a watermark is refused with a clear message.
+  - **Audit log** (append-only JSON lines, hash-chained) of every XDFU job: who, when, from where, which copy number.
+    No content and no file names when `--redact` is on.
+  - **Policy:** `xdfu = "watermark" | "refuse"` in the server config; the default is watermark.
+  - Server mode with `auth = "none"` is already impossible on the network (§5.5).
+- **Files:** `services/convert/src/xdfu.rs`, `services/convert/src/audit.rs`, tests, `i18n/converter.tsv` (warnings).
+- **Done-check:**
+  - a grif fixture per language (uz-Latn, uz-Cyrl, ru) is detected, and a plain document is not;
+  - every output direction either carries the watermark (text extracted from the output) or is refused;
+  - the audit chain verifies, and tampering with one line breaks it.
+- **Estimate:** 2 d. **Tier:** builder; architect review together with the WP7 security review.
+
+### WP16. 2026 Latin alphabet adoption
+- **Context:** the owner reports the new alphabet law (Ş Ç Ö Ğ replacing sh, ch, oʻ, gʻ) was approved on
+  2026-10-21. Phase 2 already supports it behind `latinAlphabet = 2026`, from the Senate text (`docs/phase2/rules.md`
+  §15). The default stays 1995.
+- **Steps:**
+  - Once the signed text is published on lex.uz, diff it against rules.md §15: letters, case pairs, the separating
+    sign and its code point, the `ng` status, and the entry-into-force date and transition rules. Fix any mismatch,
+    with golden rows, `reviewed:agent-*`.
+  - Generate a **uz-Latn-2026 UI catalog** from uz-Cyrl through `uz-translit` (Y2026), with no new translation work.
+    The language menu then offers "Oʻzbekcha (1995)" and "Oʻzbekcha (2026)".
+  - Prepare the default switch (O13) as a one-line config change.
+- **Done-check:** the §15 diff is recorded with the source link; the 2026 catalog passes lint; the UI screenshot shows
+  2026 Latin with no tofu (the Noto fallback covers Ş Ç Ö Ğ).
+- **Estimate:** 1 d. **Tier:** builder; opus for the text diff.
+
 ### Parallel streams
 ```
 day:        1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
@@ -845,6 +899,45 @@ Without WP11 (O1 = no): 22.5 likely. Calendar with three streams: **about 13–1
 | O7 | Fund the gridcraft NumLocale patch (6–8 d, `locale-check.md` §5) so CSV and PDF show `3 500 000,50` | Yes, before Sheets output is used for ru/uz documents; Phase 3 ships with the warning meanwhile |
 | O8 | The default PDF → DOCX engine after WP10: pdf2docx sidecar (AGPL container) or pdfcraft native (permissive, built in) | Decide on the WP10 numbers |
 | O9 | Deliver `corpus/` (B-14) | Still the biggest gap in every fidelity claim |
+| O10 | Will XDFU documents go through the converter or our server at all, or only the HRM's own registry system? | Plan for yes (WP15). Before the HRM test-server deploy, the organisation's registry (devonxona) and security unit confirm it. |
+| O11 | Which e-signature (EDS) for the cl. 34 QR + signature: E-IMZO? Does the organisation require certified national crypto (O‘z DSt) inside our server? | E-IMZO as a Phase 5 plugin. National crypto via a certified provider module, not our own implementation. |
+| O12 | Who submits the deployed system for the cybersecurity expertise (cl. 11)? | The organisation, with the HRM. We deliver the security documentation pack (Phase 10). |
+| O13 | 2026 alphabet: when does the default switch from 1995 to 2026? | On the law's entry-into-force date, once the published text is confirmed (WP16). Until then 2026 stays an option. |
+
+---
+
+## 10. XDFU ("Xizmat doirasida foydalanish uchun") documents
+
+**Source:** Cabinet of Ministers Resolution No. 766 of 04.12.2025 and its Rules (lex.uz/docs/7883108), read on
+2026-10-21. The Rules enter into force 3 months after publication. Clause numbers below are the Rules'.
+
+**What the law requires of an electronic system, and who provides it:**
+
+| Requirement | Clause | Our software | The organisation |
+|---|---|---|---|
+| Handle XDFU only in e-document systems that passed the **cybersecurity expertise** | 11, Resolution 2 | Security docs and a hardened server mode, so the deployed system can pass | Submits the deployed system (O12) |
+| **Cryptographic protection and EDS** are the basic conditions | 11 | TLS + at-rest encryption (§5.5); a crypto-provider seam for certified national algorithms (O11) | Chooses the certified provider and EDS |
+| Network exchange only via protected e-mail or expertised e-doc systems | 11 | No egress, no third-party origins; HTTPS only in server mode | Network design |
+| Save, download, copy text and print are **restricted**; each electronic copy strictly identifiable | 11, 38 | A per-document policy: print, export and copy are blocked or need approval when the grif is present | Approvals (unit or registry head) |
+| Every copy, print or download carries a **watermark**: copy number, the computer's network address, the user profile, date and time | 12 | Watermark on every output of an XDFU-marked input (WP15); in the editors in Phase 4 | — |
+| The grif goes in the **upper-right corner of page 1**, with the copy number under it | 32 | Detection (WP15); an "Insert XDFU grif" command in Phase 4 | Marking decisions |
+| E-documents are signed with an **EDS** and carry a **QR** (issuing body, number and date, signer) | 34 | Phase 5 plugin (E-IMZO, O11) | — |
+| The registration index gets "-XDFU" | 36 | HRM registry side; our docserver passes it through | — |
+| Storage only in protected systems; never taken off the premises | 41, 42 | Server mode with encryption at rest; local mode warns that the file is XDFU | Policy and endpoint control |
+| Grif removal by a commission, reviewed every 2 years | 50–53 | Phase 5: the grif is removable only via the registry workflow | Commission |
+
+**Limits, said plainly.**
+- Our open-source code cannot be certified on its own. The expertise covers the deployed system: our server, the
+  HRM, the network and procedures.
+- The resolution does not specify encryption algorithms, a log retention period, or the grif's exact electronic
+  format. Where it is silent we follow the general cybersecurity regulations and record the choice.
+- Local mode on an uncertified PC cannot make XDFU handling compliant. It only watermarks and warns.
+
+**Phase mapping.**
+- Phase 3, WP15: detection, watermark, audit log, policy hooks in the converter.
+- Phase 4: the grif command and print, export and copy restriction in the editors.
+- Phase 5: EDS and QR, registry integration, grif removal workflow, at-rest storage in the docserver.
+- Phase 10: the security documentation pack for the expertise.
 
 ---
 
