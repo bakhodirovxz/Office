@@ -270,8 +270,8 @@ pub struct Config {
 pub fn sheets_honours_locale(cfg: &Config) -> bool {
     use std::sync::Mutex;
     // keyed by the work dir too: the answer can depend on what the tool finds there (the fake tool's marker), and a process has one work dir
-    static SEEN: Mutex<Vec<(PathBuf, PathBuf, Option<std::time::SystemTime>, bool)>> =
-        Mutex::new(Vec::new());
+    type Probe = (PathBuf, PathBuf, Option<std::time::SystemTime>, bool);
+    static SEEN: Mutex<Vec<Probe>> = Mutex::new(Vec::new());
     let Ok(exe) = cfg.resolve(ToolId::Sheets) else {
         return false;
     };
