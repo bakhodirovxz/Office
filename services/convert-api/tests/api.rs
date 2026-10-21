@@ -51,7 +51,8 @@ fn fake_cfg() -> ConvertConfig {
 impl H {
     fn local(name: &str, f: impl FnOnce(&mut Settings)) -> H {
         let dir = sandbox(name);
-        let mut s = Settings { work_dir: Some(dir.join("work")), ..Settings::default() };
+        // the store shares the work directory here so that `work_entries` sees everything the server keeps
+        let mut s = Settings { work_dir: Some(dir.join("work")), store_dir: Some(dir.join("work")), ..Settings::default() };
         f(&mut s);
         H::build(dir, s, "127.0.0.1:8787", false)
     }
@@ -59,15 +60,14 @@ impl H {
     fn server(name: &str, f: impl FnOnce(&mut Settings)) -> H {
         let dir = sandbox(name);
         std::fs::write(dir.join("secret"), SECRET).unwrap();
-        std::fs::write(dir.join("key"), [7u8; 32]).unwrap();
         let mut s = Settings {
             auth: "jwt".into(),
             secret_file: Some(dir.join("secret")),
-            key_file: Some(dir.join("key")),
             tls_cert: Some(dir.join("cert.pem")),
             tls_key: Some(dir.join("key.pem")),
             public_url: Some("https://convert.test".into()),
             work_dir: Some(dir.join("work")),
+            store_dir: Some(dir.join("work")),
             ..Settings::default()
         };
         f(&mut s);
@@ -616,40 +616,50 @@ fn all_files(dir: &std::path::Path, out: &mut Vec<PathBuf>) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn server_mode_stores_nothing_readable_and_the_operator_can_recover_the_key() {
+async fn server_mode_stores_nothing_readable_and_no_key_anywhere() {
     let h = H::server("rest", |_| {});
     let t = h.token("alice");
     let secret = "SALOM-MAXFIY-MATN-1234567890-SALOM-MAXFIY-MATN";
-    let data = format!("{secret}\n").repeat(5000);
+    // while the tool runs, the upload is on disk: it must be ciphertext, and no key may sit beside it (WP7 review M5)
+    let data = format!("SLEEP{secret}\n").repeat(5000);
     let (st, _, v) = h.post(&[("note.txt", data.as_bytes())], json!({"to": "txt"}), Some(&t)).await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
-    let id = v["job"].as_str().unwrap().to_string();
-    h.wait_done(&id, Some(&t)).await;
-    // finished: only the store is left, and no file in it holds the text
+    let slow = v["job"].as_str().unwrap().to_string();
+    let t0 = Instant::now();
+    while h.json("GET", &format!("/api/v1/jobs/{slow}"), Some(&t)).await.1["files"][0]["state"] != "running" {
+        assert!(t0.elapsed() < Duration::from_secs(20), "never started");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
     let mut files = vec![];
     all_files(&h.dir.join("work"), &mut files);
-    assert!(files.iter().any(|f| f.ends_with("key")) && files.iter().any(|f| f.ends_with("0")));
+    assert!(files.iter().any(|f| f.ends_with("0") && f.parent().unwrap().ends_with("in")), "the upload is stored: {files:?}");
+    assert!(!files.iter().any(|f| f.file_name().is_some_and(|n| n.to_string_lossy().contains("key"))), "a key file on disk: {files:?}");
     for f in &files {
-        if f.ends_with("key") {
-            continue;
-        }
         let b = std::fs::read(f).unwrap();
         assert!(!b.windows(secret.len()).any(|w| w == secret.as_bytes()), "plaintext in {}", f.display());
     }
+    h.json("DELETE", &format!("/api/v1/jobs/{slow}"), Some(&t)).await;
+    let t0 = Instant::now();
+    while !h.work_entries().is_empty() {
+        assert!(t0.elapsed() < Duration::from_secs(20), "the cancelled job left: {:?}", h.work_entries());
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    // a finished job: the output decrypts through the API, the input is already gone, and nothing but the store is left
+    let (_, _, v) = h.post(&[("note.txt", TXT)], json!({"to": "txt"}), Some(&t)).await;
+    let id = v["job"].as_str().unwrap().to_string();
+    h.wait_done(&id, Some(&t)).await;
+    let mut files = vec![];
+    all_files(&h.dir.join("work"), &mut files);
+    assert!(files.iter().all(|f| !f.parent().unwrap().ends_with("in")), "inputs are deleted when their file has run: {files:?}");
     assert!(files.iter().all(|f| !f.to_string_lossy().contains("stage-") || f.to_string_lossy().contains("-api-")), "only the store remains: {files:?}");
-    // the download decrypts
     let (_, _, body) = h.send(h.req("GET", &format!("/api/v1/jobs/{id}/files/0/0"), Some(&t), None, vec![])).await;
-    assert_eq!(body, b"stub
-"); // the stand-in tool's output, decrypted on the way out
-    // the operator recovers the job key from the wrapped copy and reads the input
-    let key_file = files.iter().find(|f| f.ends_with("key")).unwrap();
-    let k = convert_api::crypt::JobKey::unwrap(&[7u8; 32], &id, &std::fs::read(key_file).unwrap()).expect("wrapped key");
-    let mut back = vec![];
-    std::io::Read::read_to_end(&mut convert_api::crypt::Codec::Aes(k).open(&key_file.with_file_name("in").join("0")).unwrap(), &mut back).unwrap();
-    assert_eq!(back, data.as_bytes());
-    // delete: the key goes first and the directory is empty of everything
+    assert_eq!(body, b"stub\n"); // the stand-in tool's output, decrypted on the way out
     h.json("DELETE", &format!("/api/v1/jobs/{id}"), Some(&t)).await;
-    assert!(h.work_entries().is_empty());
+    let t1 = Instant::now();
+    while !h.work_entries().is_empty() {
+        assert!(t1.elapsed() < Duration::from_secs(20), "left: {:?}", h.work_entries());
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -657,13 +667,18 @@ async fn startup_sweeps_what_a_dead_server_left() {
     let dir = sandbox("restart");
     let work = dir.join("work");
     // a store and a staging directory of a process that is gone (pid 4000000 cannot exist)
-    for d in ["stage-4000000-api-abc/in", "stage-4000000-pre-abc-0", "job-4000000-x-1/out"] {
+    for d in ["stage-4000000-api-0123456789abcdef0123456789abcdef/in", "stage-4000000-pre-0123456789abcdef0123456789abcdef-0", "job-4000000-1a2b3c-1/out", "stage-4000000-1a2b3c-2"] {
         std::fs::create_dir_all(work.join(d)).unwrap();
         std::fs::write(work.join(d).join("f"), b"leftover").unwrap();
     }
-    std::fs::write(work.join("stage-4000000-api-abc/key"), b"k").unwrap();
+    // an operator folder that only looks a little like ours must survive the sweep
+    for keep in ["stage-2024-photos", "job-4000000-notes", "stage-4000000-api-short"] {
+        std::fs::create_dir_all(work.join(keep)).unwrap();
+    }
     let s = Settings { work_dir: Some(work.clone()), ..Settings::default() };
     let _app = App::new(s.resolve().unwrap(), fake_cfg(), false).unwrap();
-    assert_eq!(std::fs::read_dir(&work).unwrap().count(), 0);
+    let mut left: Vec<String> = std::fs::read_dir(&work).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    left.sort();
+    assert_eq!(left, ["job-4000000-notes", "stage-2024-photos", "stage-4000000-api-short"]);
     let _ = std::fs::remove_dir_all(&dir);
 }

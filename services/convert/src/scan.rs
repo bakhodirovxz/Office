@@ -11,8 +11,10 @@ use std::path::Path;
 pub const MAX_TOTAL_BYTES: u64 = 1 << 30;
 pub const MAX_ENTRIES: usize = 10_000;
 pub const MAX_RATIO: u64 = 100;
-/// The ratio check applies to entries above this size only (small text parts compress very well and are harmless).
-pub const RATIO_FROM_BYTES: u64 = 10 << 20;
+/// The ratio check applies to entries above this size only (small text parts compress very well and are harmless). The floor is
+/// small on purpose (WP7 review M1): with a 10 MB floor, 100 entries of 9.9 MB of zeros cost a megabyte of upload and a gigabyte of
+/// inflate. Entries under the floor are bounded by the entry count and by the caller's inflate budget.
+pub const RATIO_FROM_BYTES: u64 = 1 << 20;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
@@ -93,8 +95,38 @@ pub fn scan_entries(entries: &[Entry], file_len: u64) -> Result<Scan, String> {
     Ok(scan)
 }
 
+/// A scan result bound to the content it was made from: the API scans an upload once at `POST` and hands the verdict to the job,
+/// which re-hashes its staged copy and skips the second inflate when the hash is the same (WP7 review M1).
+#[derive(Debug, Clone)]
+pub struct Verdict {
+    pub sha256: String,
+    pub scan: Scan,
+}
+
+pub fn sha256_file(path: &Path) -> std::io::Result<String> {
+    use sha2::{Digest, Sha256};
+    let mut f = File::open(path)?;
+    let mut h = Sha256::new();
+    let mut buf = vec![0u8; 64 * 1024];
+    loop {
+        let n = f.read(&mut buf)?;
+        if n == 0 {
+            break;
+        }
+        h.update(&buf[..n]);
+    }
+    Ok(h.finalize().iter().map(|b| format!("{b:02x}")).collect())
+}
+
 /// Scan a file by content: anything that is not a zip package comes back as `inspected: false`.
 pub fn scan(path: &Path) -> Result<Scan, Failure> {
+    let mut unlimited = u64::MAX;
+    scan_with(path, &mut unlimited)
+}
+
+/// `scan` that charges every measured inflated byte to `budget` (the API gives one budget to a whole upload). A file that would
+/// overdraw it is rejected like a bomb, and so is every later file of the same upload.
+pub fn scan_with(path: &Path, budget: &mut u64) -> Result<Scan, Failure> {
     let reject = |m: String| fail(Exit::Rejected, m);
     let Ok(mut f) = File::open(path) else { return Ok(Scan::default()) };
     let mut magic = [0u8; 4];
@@ -116,6 +148,8 @@ pub fn scan(path: &Path) -> Result<Scan, Failure> {
             Err(e) => return reject(format!("part {i} of the zip directory is inconsistent: {e}")),
         }
     }
+    // What the headers declare is checked first and costs nothing: a bomb that declares its size is refused before one byte is inflated.
+    scan_entries(&entries, len).or_else(reject)?;
     // The headers are attacker-controlled, so the sizes that count are the ones measured while inflating (fail closed:
     // a part that cannot be inflated, fails its CRC, or outgrows its declared size rejects the file).
     let mut used = 0u64;
@@ -139,6 +173,11 @@ pub fn scan(path: &Path) -> Result<Scan, Failure> {
             if n > e.size || used + n > MAX_TOTAL_BYTES {
                 return reject(format!("part {} inflates beyond its declared size or the {} MB limit", e.name, MAX_TOTAL_BYTES >> 20));
             }
+            if *budget < got {
+                *budget = 0;
+                return reject("the upload expands more than this server allows for one request (inflate budget used up)".into());
+            }
+            *budget -= got;
         }
         used += n;
         e.size = n;
@@ -161,8 +200,9 @@ mod tests {
         assert!(scan_entries(&ok, 1000).is_ok());
         assert!(scan_entries(&[e("a", 600 << 20, 100 << 20, 0), e("b", 600 << 20, 100 << 20, 100 << 20)], 300 << 20).unwrap_err().contains("expands"));
         assert!(scan_entries(&[e("big.xml", 20 << 20, 100_000, 0)], 100_000).unwrap_err().contains("zip bomb"));
-        // a small part with a huge ratio is harmless
-        assert!(scan_entries(&[e("small.xml", 5 << 20, 100, 0)], 100).is_ok());
+        // a small part with a huge ratio is harmless, one over the floor is not
+        assert!(scan_entries(&[e("small.xml", 512 << 10, 100, 0)], 100).is_ok());
+        assert!(scan_entries(&[e("mid.xml", 5 << 20, 100, 0)], 100).unwrap_err().contains("zip bomb"));
         let many: Vec<Entry> = (0..=MAX_ENTRIES as u64).map(|i| e(&format!("p{i}"), 1, 1, i)).collect();
         assert!(scan_entries(&many, 20_000).unwrap_err().contains("parts"));
         assert!(scan_entries(&[e("a", 10, 10, 0), e("b", 10, 10, 5)], 100).unwrap_err().contains("overlap"));

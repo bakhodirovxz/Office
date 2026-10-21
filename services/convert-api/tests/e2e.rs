@@ -54,8 +54,9 @@ impl Server {
         std::fs::write(
             &cfg,
             format!(
-                "listen = '127.0.0.1:{port}'\nwork_dir = '{}'\nper_user_active = 8\nrate_user_per_min = 100000\nrate_ip_per_min = 100000\nqueue_max = 100\n",
-                dir.join("work").display()
+                "listen = '127.0.0.1:{port}'\nwork_dir = '{}'\nstore_dir = '{}'\nper_user_active = 8\nrate_user_per_min = 100000\nrate_ip_per_min = 100000\nqueue_max = 100\n",
+                dir.join("work").display(),
+                dir.join("store").display()
             ),
         )
         .unwrap();
@@ -239,12 +240,12 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
     assert!(!rep.to_string().contains(&dir.display().to_string().replace('\\', "/")), "a server path in the report");
 
     // a hard kill: the store of the finished jobs is still on disk; the next start must remove it
-    let left = std::fs::read_dir(dir.join("work")).unwrap().count();
-    println!("entries in work/ before the kill: {left}");
+    let left = std::fs::read_dir(dir.join("store")).unwrap().count();
+    println!("entries in store/ before the kill: {left}");
     assert!(left > 0, "the finished jobs are kept for the retention time");
     server.kill();
     let server2 = Server::start(&dir, port);
-    let after: Vec<_> = std::fs::read_dir(dir.join("work")).unwrap().filter_map(Result::ok).map(|e| e.file_name()).collect();
+    let after: Vec<_> = ["work", "store"].iter().flat_map(|d| std::fs::read_dir(dir.join(d)).unwrap().filter_map(Result::ok).map(|e| e.file_name())).collect();
     println!("entries in work/ after the restart: {after:?}");
     assert!(after.is_empty(), "{after:?}");
     drop(server2);

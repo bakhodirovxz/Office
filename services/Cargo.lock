@@ -21,6 +21,7 @@ dependencies = [
  "cfg-if",
  "cipher",
  "cpufeatures",
+ "zeroize",
 ]
 
 [[package]]
@@ -171,6 +172,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "sha2",
  "sysinfo",
  "toml",
  "ureq",
@@ -182,6 +184,7 @@ dependencies = [
 name = "convert-api"
 version = "0.1.0"
 dependencies = [
+ "aes",
  "aes-gcm",
  "axum",
  "base64 0.22.1",
@@ -194,6 +197,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sysinfo",
  "tokio",
  "tokio-rustls",
  "tokio-stream",

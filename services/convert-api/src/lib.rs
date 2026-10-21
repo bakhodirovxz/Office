@@ -3,6 +3,7 @@
 pub mod app;
 pub mod config;
 pub mod crypt;
+pub mod gate;
 pub mod jwt;
 pub mod routes;
 pub mod tls;

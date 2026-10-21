@@ -42,7 +42,11 @@ hmac = "0.12"
 sha2 = "0.10"
 base64 = "0.22"
 aes-gcm = "0.10"
+# zeroize the AES key schedule on drop (aes-gcm builds aes without it): WP7 review m7
+aes = { version = "0.8", features = ["zeroize"] }
 zeroize = "1"
+# free space of the store volume (admission floor); the "disk" feature only
+sysinfo = { version = "0.37", default-features = false, features = ["disk"] }
 # blocking client for the /healthz sidecar probe, no TLS (same as convert)
 ureq = { version = "3", default-features = false }
 zip = { version = "9", default-features = false, features = ["deflate"] }

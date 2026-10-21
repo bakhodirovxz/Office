@@ -41,14 +41,83 @@ pub fn redirect_router(public_url: &str) -> Router {
         }))
 }
 
-/// Serve `router` over TLS on `listener` until `stop` completes. A handshake has 10 s, request headers have 10 s, and at most
-/// 1024 connections are open (the rest are dropped), so an idle or slow client cannot hold the server.
-pub async fn serve(listener: tokio::net::TcpListener, cfg: Arc<rustls::ServerConfig>, router: Router, stop: impl std::future::Future<Output = ()>) {
+/// Connection limits of every listener (TLS, the redirect listener and the local one): a total, a cap per client address (an IPv6
+/// /64), and how long a connection lives. Peers listed in `exempt` (the trusted proxies) are not counted per address, because
+/// every client of the proxy comes from it; the total still applies to them.
+#[derive(Clone)]
+pub struct ConnLimits {
+    pub total: usize,
+    pub per_ip: usize,
+    pub exempt: Vec<crate::config::Cidr>,
+    /// a connection is closed after this long, however busy; an upload (`upload_timeout_s`) must fit
+    pub max_age: std::time::Duration,
+    /// a connection is closed (`Connection: close`) after this many requests
+    pub max_requests: usize,
+    /// handshake, and the wait for the head of each request including the idle wait between keep-alive requests
+    pub head_timeout: std::time::Duration,
+}
+
+impl ConnLimits {
+    pub fn from_settings(r: &crate::config::Resolved) -> ConnLimits {
+        ConnLimits {
+            total: r.s.max_connections,
+            per_ip: r.s.max_conn_per_ip,
+            exempt: r.trusted.clone(),
+            max_age: std::time::Duration::from_secs(r.s.upload_timeout_s.max(3600) + 600),
+            max_requests: 100,
+            head_timeout: std::time::Duration::from_secs(10),
+        }
+    }
+}
+
+/// Releases a client address's slot when its connection ends.
+struct PerIp(Arc<std::sync::Mutex<std::collections::HashMap<String, usize>>>, Option<String>);
+
+impl Drop for PerIp {
+    fn drop(&mut self) {
+        let Some(k) = self.1.take() else { return };
+        let mut m = self.0.lock().unwrap();
+        if let Some(n) = m.get_mut(&k) {
+            *n -= 1;
+            if *n == 0 {
+                m.remove(&k);
+            }
+        }
+    }
+}
+
+async fn run_connection<I>(io: I, addr: std::net::SocketAddr, router: Router, lim: ConnLimits)
+where
+    I: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
+{
     use hyper_util::rt::{TokioIo, TokioTimer};
-    use std::time::Duration;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use tower::ServiceExt;
-    let acceptor = tokio_rustls::TlsAcceptor::from(cfg);
-    let slots = Arc::new(tokio::sync::Semaphore::new(1024));
+    let seen = Arc::new(AtomicUsize::new(0));
+    let max = lim.max_requests;
+    let svc = hyper::service::service_fn(move |mut req: axum::http::Request<hyper::body::Incoming>| {
+        req.extensions_mut().insert(axum::extract::ConnectInfo(addr));
+        let (router, last) = (router.clone(), seen.fetch_add(1, Ordering::Relaxed) + 1 >= max);
+        async move {
+            let mut res = router.oneshot(req.map(axum::body::Body::new)).await;
+            if last && let Ok(r) = res.as_mut() {
+                r.headers_mut().insert(axum::http::header::CONNECTION, axum::http::HeaderValue::from_static("close"));
+            }
+            res
+        }
+    });
+    let conn = hyper::server::conn::http1::Builder::new().timer(TokioTimer::new()).header_read_timeout(lim.head_timeout).serve_connection(TokioIo::new(io), svc);
+    let _ = tokio::time::timeout(lim.max_age, conn).await;
+}
+
+/// Serve `router` on `listener` until `stop` completes: over TLS when `tls` is given, else plain HTTP. Handshake and request-head
+/// timeouts, a connection cap per client address and in total, a maximum connection age and a maximum number of requests per
+/// connection apply to every listener, so an idle or slow client cannot hold a slot for ever (WP7 review M3).
+pub async fn serve(listener: tokio::net::TcpListener, tls: Option<Arc<rustls::ServerConfig>>, router: Router, lim: ConnLimits, stop: impl std::future::Future<Output = ()>) {
+    use std::time::Duration;
+    let acceptor = tls.map(tokio_rustls::TlsAcceptor::from);
+    let slots = Arc::new(tokio::sync::Semaphore::new(lim.total));
+    let per_ip: Arc<std::sync::Mutex<std::collections::HashMap<String, usize>>> = Arc::default();
     tokio::pin!(stop);
     loop {
         let (tcp, addr) = tokio::select! {
@@ -62,15 +131,28 @@ pub async fn serve(listener: tokio::net::TcpListener, cfg: Arc<rustls::ServerCon
             () = &mut stop => break,
         };
         let Ok(permit) = slots.clone().try_acquire_owned() else { continue };
-        let (acceptor, router) = (acceptor.clone(), router.clone());
+        let ip_guard = if lim.exempt.iter().any(|c| c.contains(addr.ip())) {
+            PerIp(per_ip.clone(), None)
+        } else {
+            let key = crate::app::ip_key(addr.ip());
+            let mut m = per_ip.lock().unwrap();
+            let n = m.entry(key.clone()).or_insert(0);
+            if *n >= lim.per_ip {
+                continue;
+            }
+            *n += 1;
+            PerIp(per_ip.clone(), Some(key))
+        };
+        let (acceptor, router, lim) = (acceptor.clone(), router.clone(), lim.clone());
         tokio::spawn(async move {
-            let _permit = permit;
-            let Ok(Ok(tls)) = tokio::time::timeout(Duration::from_secs(10), acceptor.accept(tcp)).await else { return };
-            let svc = hyper::service::service_fn(move |mut req: axum::http::Request<hyper::body::Incoming>| {
-                req.extensions_mut().insert(axum::extract::ConnectInfo(addr));
-                router.clone().oneshot(req.map(axum::body::Body::new))
-            });
-            let _ = hyper::server::conn::http1::Builder::new().timer(TokioTimer::new()).header_read_timeout(Duration::from_secs(10)).serve_connection(TokioIo::new(tls), svc).await;
+            let (_permit, _ip) = (permit, ip_guard);
+            match acceptor {
+                Some(a) => {
+                    let Ok(Ok(io)) = tokio::time::timeout(lim.head_timeout, a.accept(tcp)).await else { return };
+                    run_connection(io, addr, router, lim).await;
+                }
+                None => run_connection(tcp, addr, router, lim).await,
+            }
         });
     }
 }

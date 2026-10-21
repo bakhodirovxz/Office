@@ -52,7 +52,6 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
     std::fs::write(dir.join("cert.pem"), ck.cert.pem()).unwrap();
     std::fs::write(dir.join("key.pem"), ck.key_pair.serialize_pem()).unwrap();
     std::fs::write(dir.join("secret"), [b's'; 40]).unwrap();
-    std::fs::write(dir.join("key"), [3u8; 32]).unwrap();
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
     let port = listener.local_addr().unwrap().port();
@@ -60,11 +59,11 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
         auth: "jwt".into(),
         listen: format!("127.0.0.1:{port}"),
         secret_file: Some(dir.join("secret")),
-        key_file: Some(dir.join("key")),
         tls_cert: Some(dir.join("cert.pem")),
         tls_key: Some(dir.join("key.pem")),
         public_url: Some(format!("https://localhost:{port}")),
         work_dir: Some(dir.join("work")),
+        store_dir: Some(dir.join("store")),
         ..Settings::default()
     };
     let cfg = tls::server_config(&dir.join("cert.pem"), &dir.join("key.pem")).unwrap();
@@ -72,7 +71,8 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
     conv.tools.insert(ToolId::Docs, env!("CARGO_BIN_EXE_convert-api-fake-tool").into());
     let app = App::new(s.resolve().unwrap(), conv, true).unwrap();
     let router = routes::router(app.clone());
-    tokio::spawn(tls::serve(tokio::net::TcpListener::from_std(listener).unwrap(), cfg, router, std::future::pending()));
+    let limits = tls::ConnLimits::from_settings(&app.r);
+    tokio::spawn(tls::serve(tokio::net::TcpListener::from_std(listener).unwrap(), Some(cfg), router, limits, std::future::pending()));
     let der = ck.cert.der().to_vec();
     let go = |tls12: bool, path: &'static str| {
         let der = der.clone();

@@ -59,8 +59,27 @@ impl Drop for JobDir {
     }
 }
 
+/// The pid in the name of a directory this crate or the API makes, and only then (WP7 review m9: an operator folder such as
+/// `stage-2024-photos` in a shared directory must never match). The shapes: `job-<pid>-<hex>-<n>`, `job-<pid>-check`,
+/// `stage-<pid>-<hex>-<n>`, `stage-<pid>-api-<32 hex>`, `stage-<pid>-pre-<32 hex>-<n>`.
+fn owner_pid(name: &str) -> Option<u32> {
+    let rest = name.strip_prefix("job-").or_else(|| name.strip_prefix("stage-"))?;
+    let parts: Vec<&str> = rest.split('-').collect();
+    let hex = |s: &str, len: Option<usize>| !s.is_empty() && s.bytes().all(|b| b.is_ascii_hexdigit()) && len.is_none_or(|l| s.len() == l);
+    let num = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    let ok = match parts.as_slice() {
+        [_, "check"] => true,
+        [_, "api", id] => hex(id, Some(32)),
+        [_, "pre", id, n] => hex(id, Some(32)) && num(n),
+        [_, h, n] => hex(h, None) && num(n),
+        _ => false,
+    };
+    ok.then(|| parts[0].parse().ok()).flatten()
+}
+
 /// Remove `job-<pid>-*` and `stage-<pid>-*` directories whose process is gone (a crash, a kill or Ctrl-C left them, with
-/// plaintext copies of inputs). Returns how many were removed. Best effort: a pid reused by another process keeps its directory.
+/// plaintext copies of inputs). Returns how many were removed. A pid that a later process reused does not keep a directory
+/// alive: the owner must have started before the directory was last written.
 pub fn sweep_stale(work_dir: &Path) -> usize {
     use sysinfo::{Pid, ProcessesToUpdate, System};
     let Ok(rd) = fs::read_dir(work_dir) else { return 0 };
@@ -70,9 +89,10 @@ pub fn sweep_stale(work_dir: &Path) -> usize {
     let mut n = 0;
     for e in rd.filter_map(Result::ok) {
         let name = e.file_name().to_string_lossy().into_owned();
-        let Some(rest) = name.strip_prefix("job-").or_else(|| name.strip_prefix("stage-")) else { continue };
-        let Some(pid) = rest.split('-').next().and_then(|p| p.parse::<u32>().ok()) else { continue };
-        if pid != me && sys.process(Pid::from_u32(pid)).is_none() && fs::remove_dir_all(e.path()).is_ok() {
+        let Some(pid) = owner_pid(&name) else { continue };
+        let written = e.metadata().and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(u64::MAX, |d| d.as_secs());
+        let alive = sys.process(Pid::from_u32(pid)).is_some_and(|p| p.start_time() <= written);
+        if pid != me && !alive && fs::remove_dir_all(e.path()).is_ok() {
             n += 1;
         }
     }
@@ -414,6 +434,10 @@ pub struct JobMeta {
     pub client: Option<String>,
     /// set it to stop this job (exit 4)
     pub cancel: Option<Arc<AtomicBool>>,
+    /// the end of the whole API job, shared by all its files (default: `job_timeout_s` from the start of this file)
+    pub deadline: Option<Instant>,
+    /// a scan the caller already made of this very content: used when the staged copy has the same SHA-256
+    pub verdict: Option<Arc<scan::Verdict>>,
 }
 
 pub struct JobSpec<'a> {
@@ -454,7 +478,7 @@ impl<'a> JobSpec<'a> {
 pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
     let mut p = Progress { warnings: spec.warnings.clone(), ..Progress::default() };
     let id = new_id();
-    let ctl = Ctl { cancel: spec.meta.cancel.clone().or_else(|| cfg.cancel.clone()), deadline: Some(Instant::now() + Duration::from_secs(cfg.job_timeout_s)) };
+    let ctl = Ctl { cancel: spec.meta.cancel.clone().or_else(|| cfg.cancel.clone()), deadline: Some(spec.meta.deadline.unwrap_or_else(|| Instant::now() + Duration::from_secs(cfg.job_timeout_s))) };
     let stem = safe_name(&spec.stem, "output");
     let result = (|| {
         let steps = spec.steps.clone()?;
@@ -595,9 +619,17 @@ pub fn convert_source(cfg: &Config, input: &dyn InputSource, target: Target, opt
     if det.password_protected {
         return failed(&label, t, kind, Failure { exit: Exit::Rejected, msg: "the file is password-protected; passwords are not supported".into() });
     }
-    let scan = match scan::scan(&staged.file) {
-        Ok(s) => s,
-        Err(f) => return failed(&label, t, kind, f),
+    // staging, detection and the scan run before any `Ctl` exists, so the cancel flag is looked at here (WP7 review m12)
+    if meta.cancel.as_ref().is_some_and(|c| c.load(Ordering::Relaxed)) {
+        return failed(&label, t, kind, Failure { exit: Exit::Timeout, msg: "the job was cancelled".into() });
+    }
+    let known = meta.verdict.as_ref().filter(|v| scan::sha256_file(&staged.file).is_ok_and(|h| h == v.sha256));
+    let scan = match known {
+        Some(v) => v.scan.clone(),
+        None => match scan::scan(&staged.file) {
+            Ok(s) => s,
+            Err(f) => return failed(&label, t, kind, f),
+        },
     };
     let mut warnings = vec![];
     if det.ext_mismatch {

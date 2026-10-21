@@ -64,15 +64,15 @@ pub fn run_http(cfg: &Config, ctl: &Ctl, job: &Path, h: &HttpStep, steps: &mut V
         let mut resp = match agent.post(&url).header("Content-Type", "application/pdf").send(&body[..]) {
             Ok(r) => r,
             Err(e) => {
-                note(-1, e.to_string(), steps);
+                note(-1, e.to_string().replace(base, "<sidecar>"), steps);
                 let timed_out = matches!(e, ureq::Error::Timeout(_));
-                return fail(if timed_out { Exit::Timeout } else { Exit::Missing }, format!("the pdf2docx sidecar at {base} did not answer: {e}"));
+                return fail(if timed_out { Exit::Timeout } else { Exit::Missing }, format!("the pdf2docx sidecar did not answer: {}", e.to_string().replace(base, "<sidecar>")));
             }
         };
         let status = resp.status().as_u16();
         let header = |n: &str| resp.headers().get(n).and_then(|v| v.to_str().ok()).map(String::from);
         let report_header = header("x-convert-report");
-        let bytes = resp.body_mut().with_config().limit(1 << 30).read_to_vec().map_err(|e| Failure { exit: Exit::Missing, msg: format!("the pdf2docx sidecar answer was cut off: {e}") })?;
+        let bytes = resp.body_mut().with_config().limit(cfg.max_input_mb.max(16).saturating_mul(4) << 20).read_to_vec().map_err(|e| Failure { exit: Exit::Missing, msg: format!("the pdf2docx sidecar answer was cut off: {e}") })?;
         if status == 200 {
             let report = report_header.as_deref().and_then(|j| serde_json::from_str::<serde_json::Value>(j).ok());
             note(200, report_header.unwrap_or_default(), steps);
