@@ -126,3 +126,22 @@ A "Transliterate" menu (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) calls
 - Hot spots at each sync: the three `review()` functions, the three `context_menu()` functions, `run()`/`run_command()`. The English strings are not in any upstream catalog: `xtask/src/i18n/extract.rs`
   `OWN` lists them (otherwise `cargo xt i18n extract` marks their rows obsolete). Change a label in the patch, in `OWN`, in `i18n/*.tsv`, in `docs-translit` `specs()` (a test checks the labels are rows of `shared.tsv`).
 - ru: the catalog holds a Russian value for each row and `i18n export` now always writes `catalog-ru.tsv` (upstream's Russian plus ours), but no app hook reads it yet (the `ru` entry of `LANGUAGES` embeds upstream's own file), so a ru interface still shows these strings in English until a 0110 follow-up patch merges the file.
+
+## Domain-CLI interface the converter depends on (Phase 3 WP12)
+
+`services/convert/src/plan.rs` builds every command line that `convert` runs. A sync that renames or drops one of these flags or
+subcommands breaks the converter, so each is listed here (read from `plan.rs` and `job.rs`, 2026-10-21; if you change `plan.rs`, change this list).
+
+| CLI | Subcommands and flags used |
+|---|---|
+| `docs-cli` | `convert <in> <out>`; `run --file <in> --cmd <json> --print --save <out>` (the `--cmd` JSON is `{id, args}`: `tools.translitCyrl`, `tools.translitLatn`, `tools.translitAuto` with `scope`, `latinAlphabet`, `apostrophe`) |
+| `sheets-cli` | `convert <in> <out> [--sheet NAME]`; `info <in> --json`; `run --in <in> --cmd <json> [--cmd <json>] --out <out>` (commands `tools.translit*` with `scope: workbook`, `file.exportPdf` with `{path, sheets}`) |
+| `slides-cli` | `convert <in> <out>`; `run --in <in> --cmd <json> --print --save <out>` (`scope: deck`); `render <deck> --all <dir> --scale N`; `render <deck> --slide N --scale N <out>`; `info <deck>` |
+| `pdf-cli` | `text <pdf> [--page N]`; `info <pdf>`; `run --script <json> --root .` (tools `doc_open`, `doc_export_office`, `page_render` with `{doc, page, dpi}` and `out`); `split <pdf> (--every N \| --before a,b) --out-dir <dir>`; `combine <pdf>... --out <pdf>`; `extract <pdf> --pages <spec> --out <pdf>` |
+
+**How a sync that changes them fails `convert-e2e`, not production.** The job runs the converter against the freshly built release CLIs:
+(1) `cargo nextest run -p convert-api --test e2e` converts one file per row of `GET /formats` over HTTP (`CONVERT_API_E2E_REQUIRED=1`, so a
+missing tool is a failure, not a skip); (2) `services/convert/tests/directions.sh` runs about 45 conversions and the pdf operations through
+`convert`, each with its expected exit code. A CLI that rejects a flag exits non-zero, the converter reports it, and the direction fails.
+`scripts/ci.sh sync-dry-run` followed by `scripts/ci.sh convert-e2e` is the check to run on a sync candidate. The planner itself is pinned by
+`services/convert/tests/plan_golden.rs` (job `convert`): a changed command line shows up as a golden diff.

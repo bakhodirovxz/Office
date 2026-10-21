@@ -322,3 +322,58 @@ jobs:
         with:
           cache-key: ${{ hashFiles('Cargo.lock') }}
       - run: scripts/ci.sh xlsx-bench
+
+  convert:
+    # Phase 3 WP12: the services workspace (convert, convert-api): clippy -D warnings, nextest, cargo-deny (ci/deny/services.toml).
+    # Quick profile on a diff: add `paths: [services/**]` to the push trigger when the workflow is enabled.
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [queue]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock') }}
+      - run: scripts/ci.sh convert
+
+  convert-e2e:
+    # Phase 3 WP12: release CLIs + services; API all-directions e2e, services/convert/tests/directions.sh, the converter Playwright spec.
+    # Needs MS Office 16 on the runner when the synthetic inputs have to be (re)generated (census.ps1 -Phase prep): self-hosted Windows.
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [convert]
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
+      - run: scripts/ci.sh convert-e2e
+
+  sidecars:
+    # Phase 3 WP12: docker build + the in-image tests of sidecars/pdf2docx and sidecars/soffice. Nightly; on a diff add `paths: [sidecars/**]`.
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [queue]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - run: scripts/ci.sh sidecars
+
+  fidelity-directions:
+    # Phase 3 WP12: every direction through convert against the references; fails on a NEW "loss without warning"
+    # (ci/fidelity/silent-baseline.json). The MS Office reference needs the self-hosted runner; x2t is optional (X2T_URL).
+    if: ${{ inputs.profile == 'nightly' }}
+    needs: [convert-e2e]
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: scripts/ci.sh fidelity-directions
+        env:
+          X2T_URL: ${{ vars.X2T_URL }}
