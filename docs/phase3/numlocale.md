@@ -274,12 +274,16 @@ Owner answers of 2026-10-21, taken before WP14 was built:
 - **Q2.** The locale follows the **UI language**. An English UI keeps en-US numbers, also on a ru or uz Windows.
 - **Q3.** `[$-419]`/`[$-443]`/`[$-843]` tags do **not** change the en-US UI output in WP14. They name months and days only
   under a non-English interface.
-- **Q4.** (switching the Windows culture to measure uz in Excel) **still with the owner.** Until it is answered the uz
-  rows rest on NLS and CLDR plus the `[$-443]` tag on the ru-RU account, and the Excel COM rows that need a culture
-  change are skipped.
-- **Q5.** (`;` or `,` as the CSV default for uz and ru) **still with the owner.** It is implemented behind one
-  constant, `LOCALE_CSV_LIST_SEPARATOR` in `engine/src/io.rs` (patch 0028). `true` writes `;` (Excel parity),
-  `false` keeps `,`. A file opened from CSV keeps its own separator either way.
+- **Q4.** (switching the Windows culture to measure uz in Excel) **Yes (owner, 2026-10-22).**
+  - A temporary uz-Latn-UZ user culture may be used for the Excel COM uz rows.
+  - It runs after the Phase 3 gate's `ci.sh full`, so the culture switch cannot disturb the locale-dependent tests.
+  - The original culture is restored afterwards.
+- **Q5.** (`;` or `,` as the CSV default for uz and ru) **Decided by the agent (owner delegated it, 2026-10-22):
+  `;` stays.**
+  - Excel in these locales writes `;`, so a double-clicked CSV opens in columns.
+  - `,` remains one choice away: `convert --locale en-US`, or the constant `LOCALE_CSV_LIST_SEPARATOR = false` in
+    `engine/src/io.rs` (patch 0028).
+  - A file opened from CSV keeps its own separator either way.
 
 ## 13. Built (2026-10-21)
 
