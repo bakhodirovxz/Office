@@ -163,14 +163,24 @@ fn exec(s: &mut Session, id: &str, params: Value) -> Result<Value, String> {
     r
 }
 
-fn open(path: &str) -> Result<Session, String> {
+/// A session whose number locale is `GRIDCRAFT_NUM_LOCALE` (en-US when unset), so `cat`, `convert` and
+/// `run` show and write cells as a reader of that locale sees them.
+fn new_session() -> Session {
     let mut s = Session::new();
+    if let Some(loc) = gridcraft_engine::env_num_locale() {
+        s.prefs.num_locale = loc;
+    }
+    s
+}
+
+fn open(path: &str) -> Result<Session, String> {
+    let mut s = new_session();
     exec(&mut s, "file.open", json!({"path": path}))?;
     Ok(s)
 }
 
 fn blank() -> Session {
-    let mut s = Session::new();
+    let mut s = new_session();
     s.new_workbook();
     s
 }
@@ -388,7 +398,7 @@ fn run(args: &[String]) -> Result<(), String> {
         (Some(_), Some(_)) => return Err("give --in or --sample, not both".into()),
         (Some(p), None) => open(p)?,
         (None, Some(name)) => {
-            let mut s = Session::new();
+            let mut s = new_session();
             exec(&mut s, "file.new", json!({"sample": name}))?;
             s
         }
@@ -510,7 +520,7 @@ fn mcp(args: &[String]) -> Result<(), String> {
             let session = match (a.opt("in"), a.opt("sample")) {
                 (Some(p), _) => open(p)?,
                 (None, Some(name)) => {
-                    let mut s = Session::new();
+                    let mut s = new_session();
                     exec(&mut s, "file.new", json!({"sample": name}))?;
                     s
                 }

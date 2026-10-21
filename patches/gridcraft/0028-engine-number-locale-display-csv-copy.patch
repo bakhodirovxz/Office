@@ -1,0 +1,674 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office-wp14 <wp14@office.invalid>
+Date: Wed, 21 Oct 2026 15:16:53 +0500
+Subject: [PATCH] engine: number locale in Prefs, display *_in, CSV save and
+ open, sheet.read, copy, paste
+
+Session.prefs.num_locale (not saved) picks the locale of displayed and typed text. display::format_in,
+cell_text_in, value_text_in, range_text_in and edit_text_in follow it (built-in ids 14 and 22 show the
+locale's short date; the editor text of a number or date types back to itself); the old functions are
+the en-US wrappers. A new CSV from a ru or uz session uses ; (one constant, LOCALE_CSV_LIST_SEPARATOR);
+a comma-delimited file is always en-US in both directions; CsvOptions.locale reads fields as typed.
+sheet.read formatted, the system clipboard text and pasted text follow the locale. Stored data does
+not: xlsx parts are byte-equal across locales (test).
+---
+ crates/engine/src/cmd/edit.rs    |   7 +-
+ crates/engine/src/cmd/file.rs    |  11 +-
+ crates/engine/src/cmd/inspect.rs |   2 +-
+ crates/engine/src/display.rs     |  58 +++++++--
+ crates/engine/src/io.rs          |  58 +++++++--
+ crates/engine/src/lib.rs         |  12 ++
+ crates/engine/tests/numlocale.rs | 196 +++++++++++++++++++++++++++++++
+ crates/xlsx/src/csv.rs           |   8 +-
+ crates/xlsx/src/lib.rs           |   5 +-
+ 9 files changed, 323 insertions(+), 34 deletions(-)
+ create mode 100644 crates/engine/tests/numlocale.rs
+
+diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
+index ec07a77..e49f4ee 100644
+--- a/crates/engine/src/cmd/edit.rs
++++ b/crates/engine/src/cmd/edit.rs
+@@ -659,7 +659,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
+     } else {
+         (d.wb.clone(), trim(ranges.first().copied().unwrap_or_default()), Vec::new())
+     };
+-    let text = crate::display::range_text(&wb, sheet, range);
++    let text = crate::display::range_text_in(&wb, sheet, range, s.prefs.num_locale);
+     // The HTML rendering is for the host clipboard (UI); it can reach 4 MB, so agents and
+     // scripts get it only when they ask for it.
+     let html = if p.get("html").and_then(Json::as_bool) == Some(true) { crate::io::range_html(&wb, sheet, range, &text) } else { None };
+@@ -796,11 +796,14 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
+     let html = str_param(p, "html").map(crate::clip_html::table_cells).unwrap_or_default();
+     let h = rows.len();
+     let w = rows.iter().map(Vec::len).max().unwrap_or(0);
++    let loc = s.prefs.num_locale;
+     edit(s, |cx| {
+         for (ri, row) in rows.iter().enumerate() {
+             for (ci, v) in row.iter().enumerate() {
+                 let Some(c) = at.offset(ri as i64, ci as i64) else { continue };
+-                let mut cell = input_to_cell(v, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
++                // Text copied from a locale session (or Excel in that locale) is typed in it: `12.10.2026` is 12 October.
++                let typed = gridcraft_core::parse::to_invariant(v, cx.wb.date_system, loc);
++                let mut cell = input_to_cell(&typed, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
+                 if let Some(cl) = cell.as_mut() {
+                     numeric_from_html(cl, v, html.get(ri).and_then(|r| r.get(ci)), &mut cx.wb);
+                 }
+diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
+index c30de6b..f642890 100644
+--- a/crates/engine/src/cmd/file.rs
++++ b/crates/engine/src/cmd/file.rs
+@@ -66,7 +66,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+             crate::io::open_xlsx_file(&name, path, len)?
+         }
+         _ => {
+-            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
++            let opened = crate::io::open_bytes_calculated_in(&name, &bytes, str_param(p, "password"), s.prefs.num_locale)?;
+             // The file's bytes are not needed past reading: freed before the first
+             // recalculation, which is where opening needs the most memory.
+             drop(bytes);
+@@ -125,6 +125,7 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
+     if std::path::Path::new(&path).extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("pdf")) {
+         return super::print::export_pdf(s, &json!({"path": path}));
+     }
++    let loc = s.prefs.num_locale;
+     let d = s.doc_mut()?;
+     // The document's own file keeps the format its content had when opened; any other path
+     // goes by its extension. Relative paths to linked workbooks are rewritten for the new folder.
+@@ -132,8 +133,8 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
+     let rebased = crate::io::source_dir(&path).and_then(|f| gridcraft_xlsx::rebase_links(&d.wb, &f));
+     let wb = rebased.as_ref().unwrap_or(&d.wb);
+     let bytes = match kind {
+-        Some(kind) => crate::io::save_bytes_as(wb, &path, kind)?,
+-        None => crate::io::save_bytes(wb, &path)?,
++        Some(kind) => crate::io::save_bytes_as_in(wb, &path, kind, loc)?,
++        None => crate::io::save_bytes_in(wb, &path, loc)?,
+     };
+     crate::io::write_file(&path, &bytes)?;
+     // Only a full-fidelity format clears the dirty flag and becomes the document's file.
+@@ -155,7 +156,7 @@ fn save_as(s: &mut Session, p: &Json) -> Result<Json> {
+ fn save_bytes(s: &mut Session, p: &Json) -> Result<Json> {
+     let fmt = str_param(p, "format").unwrap_or("xlsx");
+     let d = s.doc()?;
+-    let bytes = crate::io::save_bytes(&d.wb, &format!("x.{fmt}"))?;
++    let bytes = crate::io::save_bytes_in(&d.wb, &format!("x.{fmt}"), s.prefs.num_locale)?;
+     let name = format!("{}.{fmt}", std::path::Path::new(&d.display_title()).file_stem().and_then(|x| x.to_str()).unwrap_or("Book"));
+     Ok(json!({"name": name, "base64": crate::io::base64_encode(&bytes), "bytes": bytes.len()}))
+ }
+@@ -180,7 +181,7 @@ fn export(s: &mut Session, p: &Json, ext: &str) -> Result<Json> {
+         wb.active_sheet = target_sheet(s, p)?;
+     }
+     let target = if path.ends_with(&format!(".{ext}")) { path.clone() } else { format!("{path}.{ext}") };
+-    let bytes = crate::io::save_bytes(&wb, &target)?;
++    let bytes = crate::io::save_bytes_in(&wb, &target, s.prefs.num_locale)?;
+     crate::io::write_file(&target, &bytes)?;
+     Ok(json!({"path": target, "bytes": bytes.len()}))
+ }
+diff --git a/crates/engine/src/cmd/inspect.rs b/crates/engine/src/cmd/inspect.rs
+index 530e10f..56c9d58 100644
+--- a/crates/engine/src/cmd/inspect.rs
++++ b/crates/engine/src/cmd/inspect.rs
+@@ -104,7 +104,7 @@ fn read(s: &mut Session, p: &Json) -> Result<Json> {
+             let v = if formulas && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref()) {
+                 json!(format!("={}", f.text()))
+             } else if formatted {
+-                json!(crate::display::cell_text(&d.wb, sh, c))
++                json!(crate::display::cell_text_in(&d.wb, sh, c, s.prefs.num_locale))
+             } else {
+                 value_json(&sh.value(c))
+             };
+diff --git a/crates/engine/src/display.rs b/crates/engine/src/display.rs
+index 0f70b56..ce3c370 100644
+--- a/crates/engine/src/display.rs
++++ b/crates/engine/src/display.rs
+@@ -3,9 +3,9 @@
+ use std::collections::HashMap;
+ use std::sync::Mutex;
+ 
+-use gridcraft_core::{CellRef, RangeRef, Value};
++use gridcraft_core::{CellRef, NumLocale, RangeRef, Value};
+ use gridcraft_model::{Sheet, Workbook};
+-use gridcraft_numfmt::{Formatted, NumberFormat, format_value};
++use gridcraft_numfmt::{Formatted, NumberFormat, format_value_in};
+ 
+ /// Parsed number formats are cached by code.
+ fn parsed(code: &str) -> NumberFormat {
+@@ -28,9 +28,21 @@ pub fn number_format(code: &str) -> NumberFormat {
+     parsed(code)
+ }
+ 
+-/// Formats a value with a format code.
++/// Formats a value with a format code (en-US).
+ pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
+-    format_value(v, &parsed(code), wb.date_system)
++    format_in(v, code, wb, NumLocale::EnUs)
++}
++
++/// Formats a value with a format code as a reader of `loc` sees it. The stored code is never
++/// rewritten: built-in ids 14 and 22 (`m/d/yyyy`, `m/d/yyyy h:mm`) are shown in the locale's
++/// short date, as Excel does.
++pub fn format_in(v: &Value, code: &str, wb: &Workbook, loc: NumLocale) -> Formatted {
++    let code = match code {
++        "m/d/yyyy" => loc.short_date().unwrap_or(code),
++        "m/d/yyyy h:mm" => loc.short_date_time().unwrap_or(code),
++        _ => code,
++    };
++    format_value_in(v, &parsed(code), wb.date_system, loc)
+ }
+ 
+ /// What the cell editor and the formula bar start from. Same as `Cell::input_text`, except that a
+@@ -39,15 +51,26 @@ pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
+ /// `dddd, mmmm d`), an ISO `yyyy-mm-dd` (with `hh:mm:ss` for a time of day; just `hh:mm:ss`
+ /// for a time alone) is used instead, and if even that would not read back, the serial.
+ pub fn edit_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
++    edit_text_in(wb, sheet, c, NumLocale::EnUs)
++}
++
++/// [`edit_text`] in a locale's typing syntax: a number has the locale's decimal and a date its
++/// short form, so confirming the edit unchanged (the UI turns it back with
++/// `core::parse::to_invariant`) keeps the value.
++pub fn edit_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
+     let raw = sheet.input_text(c);
+     let Some(cell) = sheet.cell(c) else { return raw };
+     let Value::Number(n) = &cell.value else { return raw };
+     let code = wb.styles.get(cell.style).num_fmt.as_str();
+-    if cell.formula.is_some() || !parsed(code).is_date() {
++    if cell.formula.is_some() {
+         return raw;
+     }
+-    let reads_back = |s: &str| matches!(gridcraft_core::parse::parse_input(s, wb.date_system).value, Value::Number(m) if (m - n).abs() < 1e-9);
+-    let shown = format(&cell.value, code, wb).text;
++    if !parsed(code).is_date() {
++        return if loc == NumLocale::EnUs { raw } else { raw.replace('.', &loc.decimal().to_string()) };
++    }
++    let reads_back =
++        |s: &str| matches!(gridcraft_core::parse::parse_input_in(s, wb.date_system, loc).value, Value::Number(m) if (m - n).abs() < 1e-9);
++    let shown = format_in(&cell.value, code, wb, loc).text;
+     if reads_back(&shown) {
+         return shown;
+     }
+@@ -82,20 +105,30 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
+ 
+ /// The text a cell shows (full precision General; the grid narrows General to fit the column).
+ pub fn cell_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
++    cell_text_in(wb, sheet, c, NumLocale::EnUs)
++}
++
++/// [`cell_text`] as a reader of `loc` sees it.
++pub fn cell_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
+     if sheet.show_formulas
+         && let Some(f) = sheet.cell(c).and_then(|x| x.formula.as_ref())
+         && !formula_hidden(wb, sheet, c)
+     {
+         return format!("={}", f.text());
+     }
+-    value_text(wb, sheet, c)
++    value_text_in(wb, sheet, c, loc)
+ }
+ 
+ /// A cell's value with its number format applied, independent of column width: no `#####`
+ /// and no General narrowing (Save As CSV/Text writes this). Formulas give their result.
+ pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
++    value_text_in(wb, sheet, c, NumLocale::EnUs)
++}
++
++/// [`value_text`] as a reader of `loc` sees it.
++pub fn value_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
+     let style = wb.styles.get(sheet.style_id(c));
+-    let f = format(&sheet.value(c), style.num_fmt.as_str(), wb);
++    let f = format_in(&sheet.value(c), style.num_fmt.as_str(), wb, loc);
+     match f.fill {
+         Some((_, pos)) => {
+             let mut t = f.text;
+@@ -110,6 +143,11 @@ pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
+ 
+ /// Tab-separated text of a range, as the system clipboard gets it.
+ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
++    range_text_in(wb, sheet, r, NumLocale::EnUs)
++}
++
++/// [`range_text`] as a reader of `loc` sees it (Excel copies the displayed text).
++pub fn range_text_in(wb: &Workbook, sheet: usize, r: RangeRef, loc: NumLocale) -> String {
+     let Some(sh) = wb.sheet(sheet) else { return String::new() };
+     let mut out = String::new();
+     let r = clipboard_range(r);
+@@ -123,7 +161,7 @@ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
+                 out.push('\t');
+             }
+             first = false;
+-            let t = cell_text(wb, sh, CellRef::new(row, col));
++            let t = cell_text_in(wb, sh, CellRef::new(row, col), loc);
+             if t.contains(['\t', '\n', '"']) {
+                 out.push('"');
+                 out.push_str(&t.replace('"', "\"\""));
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index aa2b03b..c4e484d 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -2,7 +2,7 @@
+ 
+ use std::fmt::Write as _;
+ 
+-use gridcraft_core::{CellRef, RangeRef};
++use gridcraft_core::{CellRef, NumLocale, RangeRef};
+ use gridcraft_model::{Sheet, Workbook};
+ 
+ use crate::{EngineError, Result};
+@@ -62,8 +62,14 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
+ /// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
+ /// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
+ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
++    open_bytes_calculated_in(name, bytes, password, NumLocale::EnUs)
++}
++
++/// [`open_bytes_calculated`] reading CSV and tab-separated text as typed in `loc`. Only delimited
++/// text depends on it; every other format is locale-free.
++pub fn open_bytes_calculated_in(name: &str, bytes: &[u8], password: Option<&str>, loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
+     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
+-        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
++        let (mut wb, warnings, calculated) = open_plain(name, bytes, loc)?;
+         fit_imported_rows(&mut wb);
+         return Ok((wb, warnings, calculated));
+     }
+@@ -77,7 +83,7 @@ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -
+     if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
+         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
+     }
+-    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
++    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, loc)?;
+     fit_imported_rows(&mut wb);
+     warnings.insert(0, DECRYPTED_NOTICE.into());
+     Ok((wb, warnings, calculated))
+@@ -119,7 +125,7 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
+ }
+ 
+ /// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
+-fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
++fn open_plain(name: &str, bytes: &[u8], loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
+     let kind = FileKind::from_path(name);
+     let sniffed = gridcraft_xlsx::sniff(bytes);
+     if sniffed == gridcraft_xlsx::Format::Xls {
+@@ -160,7 +166,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
+             Ok((wb, vec![], false))
+         }
+         Some(FileKind::Tsv) => {
+-            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
++            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', locale: loc, ..Default::default() };
+             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+             // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
+             wb.csv_delimiter = None;
+@@ -168,7 +174,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
+             Ok((wb, vec![], false))
+         }
+         _ => {
+-            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
++            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, locale: loc, ..Default::default() };
+             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+             rename_first_sheet(&mut wb, name);
+             Ok((wb, vec![], false))
+@@ -192,17 +198,28 @@ fn rename_first_sheet(wb: &mut Workbook, path: &str) {
+ 
+ /// Encodes a workbook in the format chosen by `path`'s extension.
+ pub fn save_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
++    save_bytes_in(wb, path, NumLocale::EnUs)
++}
++
++/// [`save_bytes`] with delimited text written as a reader of `loc` sees it.
++pub fn save_bytes_in(wb: &Workbook, path: &str, loc: NumLocale) -> Result<Vec<u8>> {
+     // An unknown or missing extension is refused rather than written as an XLSX under that name:
+     // a typo like `.cvs` would otherwise produce a file no other app recognises.
+     let Some(kind) = FileKind::from_path(path) else {
+         let name = std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
+         return Err(EngineError::Other(format!("{name}: unknown file format. Save as .xlsx, .csv, .tsv, .json or .html.")));
+     };
+-    save_bytes_as(wb, path, kind)
++    save_bytes_as_in(wb, path, kind, loc)
+ }
+ 
+ /// Encodes a workbook as `kind`, whatever `path`'s extension says.
+ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8>> {
++    save_bytes_as_in(wb, path, kind, NumLocale::EnUs)
++}
++
++/// [`save_bytes_as`] writing delimited text as a reader of `loc` sees it. Only CSV and tab text
++/// depend on it (they are display formats); every other format is locale-free.
++pub fn save_bytes_as_in(wb: &Workbook, path: &str, kind: FileKind, loc: NumLocale) -> Result<Vec<u8>> {
+     let sheet = wb.active_sheet;
+     match kind {
+         // The extension picks the package kind; only the macro-enabled kinds (.xlsm, .xltm) carry
+@@ -214,8 +231,12 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
+         FileKind::Xlsb => Err(EngineError::Other("XLSB is supported for data import only. Save as .xlsx or another supported export format.".into())),
+         FileKind::Ods => Err(EngineError::Other("ODS is supported for data import only. Save as .xlsx or another supported export format.".into())),
+         // A workbook read from CSV keeps the separator it was read with (a `;` file stays `;`).
+-        FileKind::Csv => wb.sheet(sheet).map(|sh| csv(wb, sh, wb.csv_delimiter.unwrap_or(b','))).transpose().map(Option::unwrap_or_default),
+-        FileKind::Tsv => wb.sheet(sheet).map(|sh| csv(wb, sh, b'\t')).transpose().map(Option::unwrap_or_default),
++        FileKind::Csv => wb
++            .sheet(sheet)
++            .map(|sh| csv(wb, sh, wb.csv_delimiter.unwrap_or_else(|| default_csv_delimiter(loc)), loc))
++            .transpose()
++            .map(Option::unwrap_or_default),
++        FileKind::Tsv => wb.sheet(sheet).map(|sh| csv(wb, sh, b'\t', loc)).transpose().map(Option::unwrap_or_default),
+         FileKind::Json => serde_json::to_vec_pretty(wb).map_err(|e| EngineError::Other(e.to_string())),
+         FileKind::Html => to_html(wb, sheet).map(String::into_bytes),
+     }
+@@ -235,10 +256,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
+     std::path::absolute(path).ok()?.parent().map(std::path::Path::to_path_buf)
+ }
+ 
++/// Whether a new CSV from a locale session is separated by the locale's list separator (`;` in ru
++/// and uz, as Excel does) instead of a comma. Owner question Q5 (open): flip this one constant
++/// to keep `,` for imports that expect it. A file read from CSV keeps its own separator either way.
++const LOCALE_CSV_LIST_SEPARATOR: bool = true;
++
++/// The separator of a new CSV: `,` in en-US, the locale's list separator in ru and uz.
++fn default_csv_delimiter(loc: NumLocale) -> u8 {
++    if LOCALE_CSV_LIST_SEPARATOR { loc.list_sep() as u8 } else { b',' }
++}
++
+ /// Save As CSV/Text writes "the text and values as they are displayed in cells" with "all
+ /// characters in each cell" (Microsoft Support, *Excel formatting and features that are not
+ /// transferred to other file formats*): number formats applied, never column-width `#####`.
+-fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
++fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8, loc: NumLocale) -> Result<Vec<u8>> {
++    // A comma-delimited file is always en-US: a comma decimal would split every number.
++    let loc = if delimiter == loc.decimal() as u8 { NumLocale::EnUs } else { loc };
+     gridcraft_xlsx::write_csv(sh, delimiter, |c| {
+         // General's grid-width formatting rounds large identifiers to scientific notation.
+         // Delimited files have no column width, so preserve the whole numeric value instead.
+@@ -246,9 +279,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
+             && let gridcraft_core::Value::Number(number) = sh.value(c)
+             && number.is_finite()
+         {
+-            number.to_string()
++            let t = number.to_string();
++            if loc == NumLocale::EnUs { t } else { t.replace('.', &loc.decimal().to_string()) }
+         } else {
+-            crate::display::value_text(wb, sh, c)
++            crate::display::value_text_in(wb, sh, c, loc)
+         }
+     })
+     .map_err(|e| EngineError::Other(e.to_string()))
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 93e53b1..bbfa4f8 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -208,6 +208,17 @@ pub struct Prefs {
+     pub user_dictionary: Vec<String>,
+     /// View › Show › Formula Bar (an application option in Excel, not saved in the file).
+     pub formula_bar: bool,
++    /// The number locale of displayed and typed text (separators, month and day names). The UI sets
++    /// it from the interface language every frame; `GRIDCRAFT_NUM_LOCALE` sets it for sheets-cli.
++    /// Not saved: it is never part of a document.
++    #[serde(skip)]
++    pub num_locale: gridcraft_core::NumLocale,
++}
++
++/// The number locale named by the environment variable `GRIDCRAFT_NUM_LOCALE` (`en`, `ru`, `uz-latn`,
++/// `uz-cyrl`), which overrides the interface language for tests, scripts and the locale matrix.
++pub fn env_num_locale() -> Option<gridcraft_core::NumLocale> {
++    std::env::var("GRIDCRAFT_NUM_LOCALE").ok().and_then(|tag| gridcraft_core::NumLocale::from_tag(&tag))
+ }
+ 
+ impl Default for Prefs {
+@@ -222,6 +233,7 @@ impl Default for Prefs {
+             r1c1: false,
+             user_dictionary: vec![],
+             formula_bar: true,
++            num_locale: gridcraft_core::NumLocale::EnUs,
+         }
+     }
+ }
+diff --git a/crates/engine/tests/numlocale.rs b/crates/engine/tests/numlocale.rs
+new file mode 100644
+index 0000000..5ef01df
+--- /dev/null
++++ b/crates/engine/tests/numlocale.rs
+@@ -0,0 +1,196 @@
++//! Office overlay (patches/gridcraft/0028, 0029): the number locale in the engine. What a person
++//! sees (cell text, CSV, PDF, copy) follows `Session.prefs.num_locale`; what is stored (xlsx
++//! parts, values, format codes) never does.
++use std::io::Read;
++
++use gridcraft_core::parse::to_invariant;
++use gridcraft_core::{CellRef, DateSystem, NumLocale, Value};
++use gridcraft_engine::{Session, io};
++use serde_json::json;
++
++const NB: &str = "\u{a0}";
++const LOCALES: [NumLocale; 3] = [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl];
++
++fn session(loc: NumLocale) -> Session {
++    let mut s = Session::new();
++    s.new_workbook();
++    s.prefs.num_locale = loc;
++    s
++}
++
++fn set(s: &mut Session, cell: &str, input: &str) {
++    s.execute("cell.set", json!({"cell": cell, "input": input})).unwrap();
++}
++
++fn fmt(s: &mut Session, range: &str, code: &str) {
++    s.execute("home.formatCells", json!({"range": range, "style": {"num_fmt": code}})).unwrap();
++}
++
++fn value(s: &Session, a: &str) -> Value {
++    s.doc().unwrap().wb.sheet(0).unwrap().value(CellRef::parse(a).unwrap())
++}
++
++fn bytes(s: &mut Session, format: &str) -> Vec<u8> {
++    let r = s.execute("file.saveBytes", json!({"format": format})).unwrap();
++    io::base64_decode(r["base64"].as_str().unwrap()).unwrap()
++}
++
++/// Two columns: 3500000.5 in General, 3500000.5 as `#,##0.00`, and a date, a text.
++fn book(loc: NumLocale) -> Session {
++    let mut s = session(loc);
++    set(&mut s, "A1", "3500000.5");
++    set(&mut s, "B1", "3500000.5");
++    fmt(&mut s, "B1", "#,##0.00");
++    set(&mut s, "A2", "10/12/2026");
++    set(&mut s, "B2", "x;y");
++    s
++}
++
++#[test]
++fn csv_save_per_locale() {
++    let en = bytes(&mut book(NumLocale::EnUs), "csv");
++    assert_eq!(String::from_utf8(en).unwrap(), "3500000.5,\"3,500,000.50\"\r\n10/12/2026,x;y\r\n");
++    for loc in LOCALES {
++        let got = String::from_utf8(bytes(&mut book(loc), "csv")).unwrap();
++        // `;` between fields, `,` decimal, U+00A0 groups, the date in the short form, `;` in a field quoted
++        assert_eq!(got, format!("3500000,5;3{NB}500{NB}000,50\r\n12.10.2026;\"x;y\"\r\n"), "{loc:?}");
++    }
++    // tab text keeps the tab and follows the locale
++    let tsv = String::from_utf8(bytes(&mut book(NumLocale::Ru), "tsv")).unwrap();
++    assert_eq!(tsv, format!("3500000,5\t3{NB}500{NB}000,50\r\n12.10.2026\tx;y\r\n"));
++}
++
++#[test]
++fn a_comma_delimited_file_is_always_en_us() {
++    // a CSV that came in with `,` keeps it and stays en-US text, whatever the session locale
++    let csv = b"a,b\r\n1.5,\"2,500.25\"\r\n";
++    let mut s = session(NumLocale::Ru);
++    s.execute("file.open", json!({"name": "in.csv", "base64": io::base64_encode(csv)})).unwrap();
++    assert_eq!(value(&s, "A2"), Value::Number(1.5));
++    assert_eq!(value(&s, "B2"), Value::Number(2500.25));
++    assert_eq!(String::from_utf8(bytes(&mut s, "csv")).unwrap(), "a,b\r\n1.5,\"2,500.25\"\r\n");
++}
++
++#[test]
++fn csv_save_and_open_round_trips_in_a_locale() {
++    for loc in LOCALES {
++        let saved = bytes(&mut book(loc), "csv");
++        let mut s = session(loc);
++        s.execute("file.open", json!({"name": "back.csv", "base64": io::base64_encode(&saved)})).unwrap();
++        assert_eq!(value(&s, "A1"), Value::Number(3_500_000.5), "{loc:?}");
++        assert_eq!(value(&s, "B1"), Value::Number(3_500_000.5), "{loc:?}");
++        // 10/12/2026 = 12 October = serial 46307
++        assert_eq!(value(&s, "A2"), Value::Number(46307.0), "{loc:?}");
++        assert_eq!(value(&s, "B2"), Value::text("x;y"));
++        // and saving it again gives the same bytes
++        assert_eq!(bytes(&mut s, "csv"), saved, "{loc:?}");
++    }
++    // an en-US session reads a `;` file written by Excel in en (decimal point)
++    let mut s = session(NumLocale::EnUs);
++    s.execute("file.open", json!({"name": "x.csv", "base64": io::base64_encode(b"1.5;2\r\n")})).unwrap();
++    assert_eq!(value(&s, "A1"), Value::Number(1.5));
++}
++
++#[test]
++fn sheet_read_formatted_and_copy_follow_the_locale() {
++    let mut en = book(NumLocale::EnUs);
++    let r = en.execute("sheet.read", json!({"range": "A1:B2", "formatted": true})).unwrap();
++    assert_eq!(r["values"], json!([["3500000.5", "3,500,000.50"], ["10/12/2026", "x;y"]]));
++    for loc in LOCALES {
++        let mut s = book(loc);
++        let r = s.execute("sheet.read", json!({"range": "A1:B2", "formatted": true})).unwrap();
++        assert_eq!(r["values"], json!([["3500000,5", format!("3{NB}500{NB}000,50")], ["12.10.2026", "x;y"]]), "{loc:?}");
++        // the plain value is never localized
++        let v = s.execute("sheet.read", json!({"range": "A1:A2"})).unwrap();
++        assert_eq!(v["values"], json!([[3_500_000.5], [46307.0]]));
++        let c = s.execute("edit.copy", json!({"range": "A1:B1"})).unwrap();
++        assert_eq!(c["text"], format!("3500000,5\t3{NB}500{NB}000,50\n"), "{loc:?}");
++    }
++}
++
++#[test]
++fn the_editor_text_of_a_number_or_date_types_back_to_itself() {
++    for loc in LOCALES {
++        let mut s = book(loc);
++        s.execute("cell.set", json!({"cell": "C1", "input": &to_invariant("12 окт 2026", DateSystem::D1900, loc)})).unwrap();
++        let d = s.doc().unwrap();
++        let sh = d.wb.sheet(0).unwrap();
++        for a in ["A1", "B1", "A2", "C1"] {
++            let c = CellRef::parse(a).unwrap();
++            let shown = gridcraft_engine::display::edit_text_in(&d.wb, sh, c, loc);
++            let back = to_invariant(&shown, DateSystem::D1900, loc);
++            let p = gridcraft_core::parse::parse_input(&back, DateSystem::D1900);
++            assert_eq!(p.value, sh.value(c), "{a} {shown:?} in {loc:?}");
++        }
++        assert_eq!(gridcraft_engine::display::edit_text_in(&d.wb, sh, CellRef::parse("A2").unwrap(), loc), "12.10.2026");
++        assert_eq!(gridcraft_engine::display::edit_text_in(&d.wb, sh, CellRef::parse("A1").unwrap(), loc), "3500000,5");
++    }
++}
++
++#[test]
++fn pasted_text_is_typed_in_the_session_locale() {
++    for loc in LOCALES {
++        let mut s = session(loc);
++        s.execute("edit.paste", json!({"text": "12.10.2026\t1 234,5\t1.234\r\n", "at": "A1"})).unwrap();
++        assert_eq!(value(&s, "A1"), Value::Number(46307.0), "{loc:?}");
++        assert_eq!(value(&s, "B1"), Value::Number(1234.5));
++        assert_eq!(value(&s, "C1"), Value::text("1.234"));
++    }
++}
++
++/// The zip parts of an xlsx except `docProps/*` (timestamps and the app name differ per save).
++fn parts(xlsx: &[u8]) -> Vec<(String, Vec<u8>)> {
++    let mut z = zip::ZipArchive::new(std::io::Cursor::new(xlsx)).unwrap();
++    let mut out = Vec::new();
++    for i in 0..z.len() {
++        let mut f = z.by_index(i).unwrap();
++        let name = f.name().to_string();
++        if name.starts_with("docProps/") {
++            continue;
++        }
++        let mut b = Vec::new();
++        f.read_to_end(&mut b).unwrap();
++        out.push((name, b));
++    }
++    out
++}
++
++/// The same entries, once as typed in a locale and once in en-US.
++const SCRIPT: [(&str, &str, &str); 12] = [
++    ("A1", "12.10.2026", "10/12/2026"),
++    ("A2", "3,5", "3.5"),
++    ("A3", "1 234,5", "1,234.5"),
++    ("A4", "25,5%", "25.5%"),
++    ("A5", "1.234", "'1.234"),
++    ("A6", "12.10.2026 15:00", "10/12/2026 15:00"),
++    ("A7", "-1 234,50", "-1,234.50"),
++    ("A8", "hello", "hello"),
++    ("A9", "2026-10-12", "2026-10-12"),
++    ("B1", "=SUM(A2:A4)", "=SUM(A2:A4)"),
++    ("B2", "10:30", "10:30"),
++    ("B3", "TRUE", "TRUE"),
++];
++
++#[test]
++fn xlsx_parts_are_byte_equal_across_locales() {
++    let mut en = session(NumLocale::EnUs);
++    for (cell, _, invariant) in SCRIPT {
++        set(&mut en, cell, invariant);
++    }
++    let want = parts(&bytes(&mut en, "xlsx"));
++    assert!(want.len() > 5);
++    for loc in LOCALES {
++        let mut s = session(loc);
++        for (cell, typed, _) in SCRIPT {
++            set(&mut s, cell, &to_invariant(typed, DateSystem::D1900, loc));
++        }
++        // the locale is also set while saving: it must not reach the file
++        let got = parts(&bytes(&mut s, "xlsx"));
++        assert_eq!(got.iter().map(|p| &p.0).collect::<Vec<_>>(), want.iter().map(|p| &p.0).collect::<Vec<_>>(), "{loc:?}");
++        for ((name, a), (_, b)) in got.iter().zip(&want) {
++            assert!(a == b, "{name} differs in {loc:?}");
++        }
++        assert_eq!(value(&s, "A1"), Value::Number(46307.0));
++        assert_eq!(value(&s, "A5"), Value::text("1.234"));
++    }
++}
+diff --git a/crates/xlsx/src/csv.rs b/crates/xlsx/src/csv.rs
+index 47486bf..172a222 100644
+--- a/crates/xlsx/src/csv.rs
++++ b/crates/xlsx/src/csv.rs
+@@ -2,8 +2,8 @@
+ 
+ use std::sync::Arc;
+ 
+-use gridcraft_core::parse::parse_input;
+-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, Value};
++use gridcraft_core::parse::parse_input_in;
++use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, NumLocale, Value};
+ use gridcraft_model::{Cell, NumFmt, Sheet, StyleId, Workbook};
+ 
+ use crate::{CsvOptions, IoError};
+@@ -143,6 +143,8 @@ pub fn read_csv(bytes: &[u8], opts: &CsvOptions) -> Result<Workbook, IoError> {
+     let mut wb = Workbook::new();
+     wb.date_system = opts.date_system;
+     wb.csv_delimiter = u8::try_from(delim).ok();
++    // A file separated by the locale's decimal cannot hold locale numbers: it is en-US text.
++    let loc = if delim == opts.locale.decimal() { NumLocale::EnUs } else { opts.locale };
+     let mut sheet = Sheet::new("Sheet1");
+     let mut styles = std::mem::take(&mut wb.styles);
+     let mut fmt_cache: Vec<(&'static str, StyleId)> = vec![];
+@@ -161,7 +163,7 @@ pub fn read_csv(bytes: &[u8], opts: &CsvOptions) -> Result<Workbook, IoError> {
+             }
+             let pos = CellRef::new(row, col as u32);
+             let cell = if opts.parse_values {
+-                let p = parse_input(&f, opts.date_system);
++                let p = parse_input_in(&f, opts.date_system, loc);
+                 let style = match p.format {
+                     Some(code) => match fmt_cache.iter().find(|(c, _)| *c == code) {
+                         Some((_, id)) => *id,
+diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
+index c5122dc..9e39382 100644
+--- a/crates/xlsx/src/lib.rs
++++ b/crates/xlsx/src/lib.rs
+@@ -157,11 +157,14 @@ pub struct CsvOptions {
+     pub date_system: DateSystem,
+     /// Interpret fields like typed input (numbers, dates, booleans…); otherwise keep text.
+     pub parse_values: bool,
++    /// The number locale fields are typed in (`1 234,5`, `12.10.2026`). A file separated by the
++    /// locale's decimal (a comma in ru and uz) is en-US whatever this says; `;` and tab follow it.
++    pub locale: gridcraft_core::NumLocale,
+ }
+ 
+ impl Default for CsvOptions {
+     fn default() -> Self {
+-        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true }
++        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true, locale: gridcraft_core::NumLocale::EnUs }
+     }
+ }
+ 

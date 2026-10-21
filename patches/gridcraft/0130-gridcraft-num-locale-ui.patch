@@ -1,0 +1,422 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office-wp14 <wp14@office.invalid>
+Date: Wed, 21 Oct 2026 15:29:54 +0500
+Subject: [PATCH] ui-egui: the interface language sets the number locale of
+ typed input and cell text
+
+Language::num_locale (Ru, Uz-Latn, Uz-Cyrl; every other language, Spanish included, stays en-US), with
+GRIDCRAFT_NUM_LOCALE as the override. Once per frame it goes to Session.prefs and the egui context.
+The grid shows cells with format_in; the editor opens a number or date in the locale's typing form
+(12.10.2026, 3500000,5) and the commit turns what was typed back into en-US input text with
+to_invariant, so the engine, validation, the journal and macros only see en-US. 12.10.2026 is 12 October
+in ru and uz; 1.234 stays text; a text-formatted cell keeps what was typed. Ctrl+; and Ctrl+' insert
+the locale's short date.
+---
+ crates/ui-egui/src/editor.rs         |   4 +
+ crates/ui-egui/src/formula_bar.rs    |   2 +-
+ crates/ui-egui/src/formula_locale.rs |  13 +++-
+ crates/ui-egui/src/grid.rs           |   8 +-
+ crates/ui-egui/src/i18n.rs           |  28 +++++++
+ crates/ui-egui/src/keymap.rs         |   8 +-
+ crates/ui-egui/src/lib.rs            |  15 +++-
+ crates/ui-egui/src/ribbon.rs         |   3 +-
+ crates/ui-egui/tests/num_locale.rs   | 110 +++++++++++++++++++++++++++
+ 9 files changed, 180 insertions(+), 11 deletions(-)
+ create mode 100644 crates/ui-egui/tests/num_locale.rs
+
+diff --git a/crates/ui-egui/src/editor.rs b/crates/ui-egui/src/editor.rs
+index 4aada29..6dc4b35 100644
+--- a/crates/ui-egui/src/editor.rs
++++ b/crates/ui-egui/src/editor.rs
+@@ -21,6 +21,9 @@ pub struct EditState {
+     pub sheet: usize,
+     /// Syntax of this edit, captured when it starts (prevents a language switch reinterpreting it).
+     pub locale: gridcraft_engine::formula::FormulaLocale,
++    /// Number locale of this edit, captured with `locale`: the text is typed in it, and the commit
++    /// turns it back into en-US input text for the engine.
++    pub num_locale: gridcraft_engine::core::NumLocale,
+     pub cell: CellRef,
+     pub text: String,
+     /// Started by typing (Enter mode: arrows commit) rather than F2 (Edit mode: arrows move the caret).
+@@ -49,6 +52,7 @@ impl EditState {
+         EditState {
+             sheet,
+             locale: Default::default(),
++            num_locale: Default::default(),
+             cell,
+             text,
+             enter_mode,
+diff --git a/crates/ui-egui/src/formula_bar.rs b/crates/ui-egui/src/formula_bar.rs
+index 5d532bc..c7ec7b0 100644
+--- a/crates/ui-egui/src/formula_bar.rs
++++ b/crates/ui-egui/src/formula_bar.rs
+@@ -78,7 +78,7 @@ fn active_input(app: &SheetApp) -> String {
+             // A legacy array formula shows in braces (`{=A1:A2*2}`), as `Cell::bar_text` does.
+             if f.array().is_some() { format!("{{{shown}}}") } else { shown }
+         } else {
+-            gridcraft_engine::display::edit_text(&d.wb, sh, a)
++            gridcraft_engine::display::edit_text_in(&d.wb, sh, a, app.num_locale())
+         };
+     }
+     // A spilled cell shows the anchor's formula greyed out in Excel; we show it plainly.
+diff --git a/crates/ui-egui/src/formula_locale.rs b/crates/ui-egui/src/formula_locale.rs
+index 6e833b9..ab5065e 100644
+--- a/crates/ui-egui/src/formula_locale.rs
++++ b/crates/ui-egui/src/formula_locale.rs
+@@ -1,10 +1,12 @@
+ //! UI formula syntax boundary. Engine commands, control/API callers and XLSX keep English.
++use gridcraft_engine::core::NumLocale;
+ use gridcraft_engine::formula::{self, FormulaLocale, ParseError};
+ use gridcraft_engine::model::Workbook;
+ 
+ pub(crate) fn canonical(
+     text: &str,
+     locale: FormulaLocale,
++    num: NumLocale,
+     wb: &Workbook,
+     sheet: usize,
+     cell: gridcraft_engine::core::CellRef,
+@@ -17,7 +19,9 @@ pub(crate) fn canonical(
+     {
+         return Ok(stored);
+     }
+-    if locale == FormulaLocale::En || wb.sheet(sheet).is_some_and(|sh| wb.styles.get(sh.style_id(cell)).num_fmt.as_str() == "@") {
++    if wb.sheet(sheet).is_some_and(|sh| wb.styles.get(sh.style_id(cell)).num_fmt.as_str() == "@")
++        || (locale == FormulaLocale::En && num == NumLocale::EnUs)
++    {
+         return Ok(text.to_string());
+     }
+     // Same formula detection as the engine's `input_to_cell` (no trimming: " =1" is text).
+@@ -25,6 +29,9 @@ pub(crate) fn canonical(
+     if body.starts_with('=')
+         || ((body.starts_with('+') || body.starts_with('-')) && body.chars().nth(1).is_some_and(|c| c.is_ascii_alphabetic() || c == '('))
+     {
++        if locale == FormulaLocale::En {
++            return Ok(text.to_string());
++        }
+         let known = |name: &str| wb.name(name, sheet).is_some() || wb.table(name).is_some();
+         // Match the engine's existing convenience for missing closing parentheses.
+         let mut body = body.to_string();
+@@ -38,6 +45,10 @@ pub(crate) fn canonical(
+         }
+         return Ok(format!("={}", formula::print(&expr?)));
+     }
++    // Typed in a number locale (ru, uz): `1 234,5` and `12.10.2026` become the en-US input text the engine reads.
++    if num != NumLocale::EnUs {
++        return Ok(gridcraft_engine::core::parse::to_invariant(text, wb.date_system, num));
++    }
+     // Decimal-comma number entry follows the same preference, without rewriting text or dates.
+     let normalized = body.trim().replace(locale.decimal_separator(), ".");
+     let number = normalized.strip_suffix('%').unwrap_or(&normalized);
+diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
+index c608d0c..0b22091 100644
+--- a/crates/ui-egui/src/grid.rs
++++ b/crates/ui-egui/src/grid.rs
+@@ -525,6 +525,7 @@ fn display_text(
+     st: &Style,
+     width_px: f32,
+     char_w: f32,
++    loc: gridcraft_engine::core::NumLocale,
+ ) -> (String, Option<Color32>, bool, Option<(char, usize)>) {
+     if sh.show_formulas
+         && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref())
+@@ -543,12 +544,12 @@ fn display_text(
+         && let Value::Number(n) = v
+     {
+         let max_chars = ((width_px - 4.0) / char_w).floor().max(1.0) as usize;
+-        return match gridcraft_engine::numfmt::format_general_fit(*n, max_chars.min(11)) {
++        return match gridcraft_engine::numfmt::format_general_fit_in(*n, max_chars.min(11), loc) {
+             Some(t) => (t, None, true, None),
+             None => ("#".repeat(max_chars.max(1)), None, true, None),
+         };
+     }
+-    let f = gridcraft_engine::display::format(v, code, wb);
++    let f = gridcraft_engine::display::format_in(v, code, wb, loc);
+     (f.text, f.color.map(numfmt_color), f.numeric, f.fill)
+ }
+ 
+@@ -1159,7 +1160,8 @@ pub(crate) fn paint_quadrant(
+         // Digits fit by the cell's own font and size, not the default 11pt (9pt marks in narrow columns).
+         let char_w = p.layout_no_wrap("0".to_string(), font.clone(), Color32::PLACEHOLDER).size().x.max(1.0);
+         let avail_w = rect.right() - text_left;
+-        let (mut text, ncolor, numeric, fill_char) = display_text(wb, sh, c, &v, st, avail_w / z.max(0.1) * z, char_w);
++        let (mut text, ncolor, numeric, fill_char) =
++            display_text(wb, sh, c, &v, st, avail_w / z.max(0.1) * z, char_w, crate::i18n::current_num_locale(p.ctx()));
+         if sh.show_formulas && sh.cell(c).is_some_and(|cell| cell.formula.is_some()) {
+             text = crate::formula_locale::display(&text, crate::i18n::current(p.ctx()).formula_locale(), wb, si);
+         }
+diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
+index f83d26b..88aeccd 100644
+--- a/crates/ui-egui/src/i18n.rs
++++ b/crates/ui-egui/src/i18n.rs
+@@ -143,6 +143,20 @@ impl Language {
+         }
+     }
+ 
++    /// The number locale of displayed and typed numbers and dates: Russian and Uzbek follow their
++    /// language, every other language (Spanish included) keeps en-US.
++    pub fn num_locale(self) -> gridcraft_engine::core::NumLocale {
++        use gridcraft_engine::core::NumLocale;
++        match self {
++            Self::Ru => NumLocale::Ru,
++            #[cfg(office_uz)]
++            Self::UzLatn => NumLocale::UzLatn,
++            #[cfg(office_uz)]
++            Self::UzCyrl => NumLocale::UzCyrl,
++            _ => NumLocale::EnUs,
++        }
++    }
++
+     pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
+         if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
+     }
+@@ -207,6 +221,20 @@ pub fn current(ctx: &egui::Context) -> Language {
+     ctx.data(|d| d.get_temp(lang_key())).unwrap_or_default()
+ }
+ 
++fn num_locale_key() -> egui::Id {
++    egui::Id::new("gridcraft.num_locale")
++}
++
++/// The number locale the current frame draws cell text in (see [`Language::num_locale`]).
++pub fn current_num_locale(ctx: &egui::Context) -> gridcraft_engine::core::NumLocale {
++    ctx.data(|d| d.get_temp(num_locale_key())).unwrap_or_default()
++}
++
++/// Sets the number locale for the current frame, with the language.
++pub fn set_current_num_locale(ctx: &egui::Context, loc: gridcraft_engine::core::NumLocale) {
++    ctx.data_mut(|d| d.insert_temp(num_locale_key(), loc));
++}
++
+ /// Sets the language for the current frame; call once per frame before anything is drawn.
+ pub fn set_current(ctx: &egui::Context, language: Language) {
+     crate::office_overlay::set_lang(language.code());
+diff --git a/crates/ui-egui/src/keymap.rs b/crates/ui-egui/src/keymap.rs
+index 032db1a..d3dfb3f 100644
+--- a/crates/ui-egui/src/keymap.rs
++++ b/crates/ui-egui/src/keymap.rs
+@@ -179,25 +179,27 @@ pub(crate) fn dispatch(app: &mut SheetApp, ctx: &egui::Context, key: Key, physic
+         }
+         Shortcut::Dialog(name, params) => app.open_dialog(name, params),
+         Shortcut::Date | Shortcut::Time => {
++            let loc = app.num_locale();
+             let text = app
+                 .session
+                 .active()
+                 .map(|d| {
+                     let now = gridcraft_engine::core::date::serial_in_system(d.wb.date_system, gridcraft_engine::calc::now_serial());
+                     let (value, format) = if shortcut == Shortcut::Date { (now.floor(), "m/d/yyyy") } else { (now.fract(), "h:mm AM/PM") };
+-                    gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(value), format, &d.wb).text
++                    gridcraft_engine::display::format_in(&gridcraft_engine::core::Value::Number(value), format, &d.wb, loc).text
+                 })
+                 .unwrap_or_default();
+             edit_with(app, text);
+         }
+         Shortcut::FormulaAbove | Shortcut::ValueAbove => {
++            let loc = app.num_locale();
+             let Some(above) = active.row.checked_sub(1).map(|r| CellRef::new(r, active.col)) else { return true };
+             let text = if shortcut == Shortcut::FormulaAbove {
+-                app.session.active().map(|d| gridcraft_engine::display::edit_text(&d.wb, sh, above)).unwrap_or_default()
++                app.session.active().map(|d| gridcraft_engine::display::edit_text_in(&d.wb, sh, above, loc)).unwrap_or_default()
+             } else {
+                 app.session
+                     .active()
+-                    .and_then(|d| sh.value_ref(above).map(|v| gridcraft_engine::display::format(v, "General", &d.wb).text))
++                    .and_then(|d| sh.value_ref(above).map(|v| gridcraft_engine::display::format_in(v, "General", &d.wb, loc).text))
+                     .unwrap_or_default()
+             };
+             edit_with(app, text);
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 5a223e2..5e2e8a4 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -901,12 +901,13 @@ impl SheetApp {
+             return;
+         }
+         let locale = self.ui.language.formula_locale();
++        let num = self.num_locale();
+         let current = if sh.cell_pictures.contains_key(&at) {
+             String::new()
+         } else {
+             match sh.cell(at) {
+                 Some(c) if c.formula.is_some() => formula_locale::display(&c.input_text(), locale, &d.wb, d.wb.active_sheet),
+-                _ => gridcraft_engine::display::edit_text(&d.wb, sh, at),
++                _ => gridcraft_engine::display::edit_text_in(&d.wb, sh, at, num),
+             }
+         };
+         let (text, replace) = match text {
+@@ -915,6 +916,7 @@ impl SheetApp {
+         };
+         let mut ed = editor::EditState::new(d.wb.active_sheet, at, text, replace, from_formula_bar);
+         ed.locale = locale;
++        ed.num_locale = num;
+         if replace && self.ui.autocomplete && !ed.is_formula() {
+             ed.completion = editor::column_completion(sh, at, &ed.text);
+         }
+@@ -922,6 +924,11 @@ impl SheetApp {
+         self.session.mode = if replace { gridcraft_engine::Mode::Enter } else { gridcraft_engine::Mode::Edit };
+     }
+ 
++    /// The number locale of this session: `GRIDCRAFT_NUM_LOCALE` (tests), else the interface language's.
++    pub(crate) fn num_locale(&self) -> gridcraft_engine::core::NumLocale {
++        gridcraft_engine::env_num_locale().unwrap_or_else(|| self.ui.language.num_locale())
++    }
++
+     /// Commits the edit; `then` moves the selection (dr, dc) afterwards.
+     pub fn commit_edit(&mut self, dr: i64, dc: i64, array: bool, fill_selection: bool) -> bool {
+         let Some(ed) = self.editor.take() else { return true };
+@@ -930,7 +937,7 @@ impl SheetApp {
+             Some(full) if full.to_lowercase().starts_with(&ed.text.to_lowercase()) => full.clone(),
+             _ => ed.text.clone(),
+         };
+-        let text = match self.session.active().map(|d| formula_locale::canonical(&text, ed.locale, &d.wb, ed.sheet, ed.cell)) {
++        let text = match self.session.active().map(|d| formula_locale::canonical(&text, ed.locale, ed.num_locale, &d.wb, ed.sheet, ed.cell)) {
+             Some(Ok(text)) => text,
+             Some(Err(error)) => {
+                 self.message = Some(("GridCraft".into(), error.to_string()));
+@@ -1126,6 +1133,10 @@ impl SheetApp {
+         text_box::before_ui(self, &ctx);
+         // The language the widgets translate with this frame (see `i18n::current`).
+         i18n::set_current(&ctx, self.ui.language);
++        // One number locale for the frame: the engine (PDF, CSV, sheet.read, copy), the grid and the editor read it.
++        let num = self.num_locale();
++        self.session.prefs.num_locale = num;
++        i18n::set_current_num_locale(&ctx, num);
+         let t = theme::Tokens::get(&ctx);
+         if self.backstage.is_none() {
+             self.ribbon_keys(&ctx);
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index c3532e1..8b6566f 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -2475,12 +2475,13 @@ pub fn shortcut(app: &mut SheetApp, key: Key, m: Modifiers) {
+         }
+         Key::Semicolon => {
+             // Insert today's date.
++            let loc = app.num_locale();
+             let text = app
+                 .session
+                 .active()
+                 .map(|d| {
+                     let today = gridcraft_engine::core::date::serial_in_system(d.wb.date_system, gridcraft_engine::calc::now_serial()).floor();
+-                    gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb).text
++                    gridcraft_engine::display::format_in(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb, loc).text
+                 })
+                 .unwrap_or_default();
+             app.begin_edit(Some(text), false);
+diff --git a/crates/ui-egui/tests/num_locale.rs b/crates/ui-egui/tests/num_locale.rs
+new file mode 100644
+index 0000000..387db07
+--- /dev/null
++++ b/crates/ui-egui/tests/num_locale.rs
+@@ -0,0 +1,110 @@
++//! Office overlay (patch 0130): the interface language sets the number locale of typed input. A
++//! date typed `12.10.2026` is 12 October (not 10 December), `3,5` is a number, and opening a cell
++//! for edit and confirming it unchanged never changes its value. The engine only sees en-US text.
++use gridcraft_engine::{
++    Session,
++    core::{CellRef, NumLocale, Value},
++};
++use gridcraft_ui_egui::{SheetApp, i18n::Language};
++use serde_json::json;
++
++fn app(language: Language) -> SheetApp {
++    let mut session = Session::new();
++    session.new_workbook();
++    let mut app = SheetApp::new(session, Default::default());
++    app.ui.language = language;
++    app
++}
++
++fn value(app: &SheetApp, a: &str) -> Value {
++    app.session.active().unwrap().wb.active().unwrap().value(CellRef::parse(a).unwrap())
++}
++
++fn enter(app: &mut SheetApp, cell: &str, text: &str) {
++    app.run("selection.set", json!({"range": cell})).unwrap();
++    app.begin_edit(Some(text.into()), false);
++    assert!(app.commit_edit(0, 0, false, false));
++}
++
++#[test]
++fn language_maps_to_the_number_locale() {
++    assert_eq!(Language::En.num_locale(), NumLocale::EnUs);
++    assert_eq!(Language::Es.num_locale(), NumLocale::EnUs);
++    assert_eq!(Language::Ru.num_locale(), NumLocale::Ru);
++}
++
++#[test]
++fn russian_typing_is_read_in_russian() {
++    let mut app = app(Language::Ru);
++    enter(&mut app, "A1", "12.10.2026");
++    enter(&mut app, "A2", "3,5");
++    enter(&mut app, "A3", "1 234,5");
++    enter(&mut app, "A4", "1.234");
++    enter(&mut app, "A5", "25,5%");
++    enter(&mut app, "A6", "12 окт 2026");
++    enter(&mut app, "A7", "10.13.2026");
++    assert_eq!(value(&app, "A1"), Value::Number(46307.0), "12 October, not 10 December");
++    assert_eq!(value(&app, "A2"), Value::Number(3.5));
++    assert_eq!(value(&app, "A3"), Value::Number(1234.5));
++    assert_eq!(value(&app, "A4"), Value::text("1.234"));
++    assert_eq!(value(&app, "A5"), Value::Number(0.255));
++    assert_eq!(value(&app, "A6"), Value::Number(46307.0));
++    assert_eq!(value(&app, "A7"), Value::text("10.13.2026"));
++    // engine commands stay en-US whatever the language
++    app.run("cell.set", json!({"cell": "B1", "input": "10/12/2026"})).unwrap();
++    app.run("cell.set", json!({"cell": "B2", "input": "3.5"})).unwrap();
++    assert_eq!(value(&app, "B1"), Value::Number(46307.0));
++    assert_eq!(value(&app, "B2"), Value::Number(3.5));
++}
++
++#[test]
++fn english_typing_is_unchanged() {
++    let mut app = app(Language::En);
++    enter(&mut app, "A1", "12.10.2026");
++    enter(&mut app, "A2", "3,5");
++    enter(&mut app, "A3", "10/12/2026");
++    assert_eq!(value(&app, "A1"), Value::Number(46366.0), "en-US still reads D.M.Y as M.D.Y");
++    assert_eq!(value(&app, "A2"), Value::text("3,5"));
++    assert_eq!(value(&app, "A3"), Value::Number(46307.0));
++}
++
++#[test]
++fn opening_a_cell_for_edit_and_confirming_keeps_the_value() {
++    for language in [Language::Ru, Language::En] {
++        let mut app = app(language);
++        for (cell, input) in [("A1", "10/12/2026"), ("A2", "3500000.5"), ("A3", "0.255"), ("A4", "46307.75"), ("A5", "hello"), ("A6", "1.234E+20")] {
++            app.run("cell.set", json!({"cell": cell, "input": input})).unwrap();
++        }
++        app.run("home.formatCells", json!({"range": "A4", "style": {"num_fmt": "dd.mm.yyyy hh:mm"}})).unwrap();
++        app.run("home.formatCells", json!({"range": "A3", "style": {"num_fmt": "0.0%"}})).unwrap();
++        for cell in ["A1", "A2", "A3", "A4", "A5", "A6"] {
++            let before = value(&app, cell);
++            app.run("selection.set", json!({"range": cell})).unwrap();
++            app.begin_edit(None, false);
++            assert!(app.commit_edit(0, 0, false, false));
++            assert_eq!(value(&app, cell), before, "{cell} in {language:?}");
++        }
++    }
++}
++
++#[test]
++fn the_editor_shows_the_locale_form() {
++    let mut app = app(Language::Ru);
++    app.run("cell.set", json!({"cell": "A1", "input": "10/12/2026"})).unwrap();
++    app.run("cell.set", json!({"cell": "A2", "input": "3500000.5"})).unwrap();
++    app.run("selection.set", json!({"range": "A1"})).unwrap();
++    app.begin_edit(None, false);
++    assert_eq!(app.editor.as_ref().unwrap().text, "12.10.2026");
++    app.cancel_edit();
++    app.run("selection.set", json!({"range": "A2"})).unwrap();
++    app.begin_edit(None, false);
++    assert_eq!(app.editor.as_ref().unwrap().text, "3500000,5");
++}
++
++#[test]
++fn a_text_formatted_cell_keeps_what_was_typed() {
++    let mut app = app(Language::Ru);
++    app.run("home.formatCells", json!({"range": "A1", "style": {"num_fmt": "@"}})).unwrap();
++    enter(&mut app, "A1", "12.10.2026");
++    assert_eq!(value(&app, "A1"), Value::text("12.10.2026"));
++}

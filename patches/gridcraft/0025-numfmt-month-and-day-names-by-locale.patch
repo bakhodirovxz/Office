@@ -1,0 +1,207 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office-wp14 <wp14@office.invalid>
+Date: Wed, 21 Oct 2026 14:52:30 +0500
+Subject: [PATCH] numfmt: month and day names by locale, [$-xxx] name tags
+
+mmm/mmmm/mmmmm/ddd/dddd use the locale's Windows NLS names. A [$-419] / [$-443] / [$-843] tag
+(LCID, low 16 bits) names the months and days of its section for a non-English interface; the
+digits are not affected, as in Excel. In the en-US interface the tags stay ignored.
+---
+ crates/numfmt/src/parse.rs          | 29 +++++++++++++----
+ crates/numfmt/src/render.rs         | 13 +++++---
+ crates/numfmt/tests/locale_names.rs | 50 +++++++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+), 11 deletions(-)
+ create mode 100644 crates/numfmt/tests/locale_names.rs
+
+diff --git a/crates/numfmt/src/parse.rs b/crates/numfmt/src/parse.rs
+index 63e2d30..f4d66ea 100644
+--- a/crates/numfmt/src/parse.rs
++++ b/crates/numfmt/src/parse.rs
+@@ -1,5 +1,7 @@
+ //! Format code parsing: sections, bracket tags and tokens.
+ 
++use gridcraft_core::NumLocale;
++
+ use crate::FormatColor;
+ 
+ /// At most this many sections are honoured (`pos;neg;zero;text`); extra ones are ignored.
+@@ -122,6 +124,8 @@ pub(crate) struct Section {
+     pub fraction: bool,
+     pub currency: bool,
+     pub fill: bool,
++    /// Month and day names of a `[$-419]`-style locale tag.
++    pub names: Option<NumLocale>,
+ }
+ 
+ /// Splits a code into sections at unquoted, unescaped, unbracketed semicolons.
+@@ -251,11 +255,12 @@ struct Raw {
+     color: Option<FormatColor>,
+     cond: Option<Cond>,
+     currency: bool,
++    names: Option<NumLocale>,
+ }
+ 
+ fn tokenize(src: &str) -> Raw {
+     let cs: Vec<char> = src.chars().collect();
+-    let mut raw = Raw { toks: Vec::new(), color: None, cond: None, currency: false };
++    let mut raw = Raw { toks: Vec::new(), color: None, cond: None, currency: false, names: None };
+     let toks = &mut raw.toks;
+     // With no `]` at or after a `[`, that `[` is a literal; checking this once keeps the scan linear.
+     let last_close = cs.iter().rposition(|&c| c == ']');
+@@ -306,7 +311,7 @@ fn tokenize(src: &str) -> Raw {
+                 let close = if last_close.is_some_and(|l| l > i) { cs.get(i + 1..).and_then(|r| r.iter().position(|&d| d == ']')) } else { None };
+                 if let Some(p) = close {
+                     let content: String = cs.get(i + 1..i + 1 + p).unwrap_or(&[]).iter().collect();
+-                    bracket(&mut raw_parts(toks, &mut raw.color, &mut raw.cond, &mut raw.currency), &content);
++                    bracket(&mut raw_parts(toks, &mut raw.color, &mut raw.cond, &mut raw.currency, &mut raw.names), &content);
+                     i += p + 2;
+                 } else {
+                     push_lit(toks, "[");
+@@ -391,10 +396,17 @@ struct RawParts<'a> {
+     color: &'a mut Option<FormatColor>,
+     cond: &'a mut Option<Cond>,
+     currency: &'a mut bool,
++    names: &'a mut Option<NumLocale>,
+ }
+ 
+-fn raw_parts<'a>(toks: &'a mut Vec<Tok>, color: &'a mut Option<FormatColor>, cond: &'a mut Option<Cond>, currency: &'a mut bool) -> RawParts<'a> {
+-    RawParts { toks, color, cond, currency }
++fn raw_parts<'a>(
++    toks: &'a mut Vec<Tok>,
++    color: &'a mut Option<FormatColor>,
++    cond: &'a mut Option<Cond>,
++    currency: &'a mut bool,
++    names: &'a mut Option<NumLocale>,
++) -> RawParts<'a> {
++    RawParts { toks, color, cond, currency, names }
+ }
+ 
+ /// Handles the content of a `[...]` tag.
+@@ -411,7 +423,11 @@ fn bracket(p: &mut RawParts<'_>, content: &str) {
+         return;
+     }
+     if let Some(body) = content.strip_prefix('$') {
+-        let sym = body.split('-').next().unwrap_or("");
++        let (sym, lcid) = body.split_once('-').unwrap_or((body, ""));
++        // `[$-419]`: the LCID names the months and days (the digits are not affected, as in Excel).
++        if let Some(l) = u32::from_str_radix(lcid.trim(), 16).ok().and_then(NumLocale::from_lcid) {
++            *p.names = Some(l);
++        }
+         if !sym.is_empty() {
+             *p.currency = true;
+             push_lit(p.toks, sym);
+@@ -438,7 +454,7 @@ fn date_part(t: &Tok) -> Option<DatePart> {
+ }
+ 
+ fn analyze(raw: Raw) -> Section {
+-    let Raw { mut toks, color, cond, currency } = raw;
++    let Raw { mut toks, color, cond, currency, names } = raw;
+     let is_date = toks.iter().any(|t| matches!(t, Tok::Date(_)));
+     let has_general = toks.iter().any(|t| matches!(t, Tok::General));
+     let mut sec = Section {
+@@ -455,6 +471,7 @@ fn analyze(raw: Raw) -> Section {
+         fraction: false,
+         currency,
+         fill: toks.iter().any(|t| matches!(t, Tok::Fill(_))),
++        names,
+     };
+     if is_date {
+         sec.kind = SecKind::Date;
+diff --git a/crates/numfmt/src/render.rs b/crates/numfmt/src/render.rs
+index 035de0a..46d2840 100644
+--- a/crates/numfmt/src/render.rs
++++ b/crates/numfmt/src/render.rs
+@@ -1,6 +1,6 @@
+ //! Rendering a value with a parsed section.
+ 
+-use gridcraft_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, max_serial};
++use gridcraft_core::date::{datetime_from_serial, max_serial};
+ use gridcraft_core::{DateSystem, NumLocale};
+ 
+ use crate::decimal::{decimal_digits, fixed, fixed_from_digits, format_general_fit_in};
+@@ -80,8 +80,11 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
+     let second = (ms / 1000) % 60;
+     let milli = ms % 1000;
+     let pad = |n: i64, w: u8| if w >= 2 { format!("{:0w$}", n, w = w.min(20) as usize) } else { n.to_string() };
+-    let month_name = MONTHS.get((dt.month as usize).wrapping_sub(1)).copied().unwrap_or("");
+-    let day_name = WEEKDAYS.get(dt.weekday as usize).copied().unwrap_or("");
++    // A `[$-419]` tag names the month and day for a non-English interface only (the en-US display is unchanged).
++    let names = sec.names.filter(|_| loc != NumLocale::EnUs).unwrap_or(loc);
++    let month_idx = (dt.month as usize).wrapping_sub(1);
++    let month_name = names.months().get(month_idx).copied().unwrap_or("");
++    let day_name = names.weekdays().get(dt.weekday as usize).copied().unwrap_or("");
+     let mut out = Out::default();
+     for t in &sec.toks {
+         match t {
+@@ -96,13 +99,13 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
+                     }
+                     DatePart::Month(n) => match n {
+                         1 | 2 => pad(dt.month as i64, n),
+-                        3 => month_name.chars().take(3).collect(),
++                        3 => names.months_abbr().get(month_idx).copied().unwrap_or_default().to_string(),
+                         5 => month_name.chars().take(1).collect(),
+                         _ => month_name.to_string(),
+                     },
+                     DatePart::Day(n) => match n {
+                         1 | 2 => pad(dt.day as i64, n),
+-                        3 => day_name.chars().take(3).collect(),
++                        3 => names.weekdays_abbr().get(dt.weekday as usize).copied().unwrap_or_default().to_string(),
+                         _ => day_name.to_string(),
+                     },
+                     DatePart::Hour(n) => {
+diff --git a/crates/numfmt/tests/locale_names.rs b/crates/numfmt/tests/locale_names.rs
+new file mode 100644
+index 0000000..3a95ba0
+--- /dev/null
++++ b/crates/numfmt/tests/locale_names.rs
+@@ -0,0 +1,50 @@
++//! Month and day names by locale and `[$-xxx]` tags (office patch 0025). The names are the
++//! Windows NLS ones Excel shows (locale-check matrix, measured on ru-RU).
++use gridcraft_core::{DateSystem, NumLocale, Value};
++use gridcraft_numfmt::{NumberFormat, format_value_in};
++
++fn show(v: f64, code: &str, loc: NumLocale) -> String {
++    format_value_in(&Value::Number(v), &NumberFormat::parse(code), DateSystem::D1900, loc).text
++}
++
++/// 12 October 2026, a Monday.
++const D: f64 = 46_307.0;
++
++#[test]
++fn names_follow_the_locale() {
++    assert_eq!(show(D, "d mmmm yyyy", NumLocale::Ru), "12 Октябрь 2026");
++    assert_eq!(show(D, "dddd, d mmm yyyy", NumLocale::Ru), "понедельник, 12 окт 2026");
++    assert_eq!(show(D, "ddd", NumLocale::Ru), "Пн");
++    assert_eq!(show(D, "mmmmm", NumLocale::Ru), "О");
++    assert_eq!(show(D, "d mmmm yyyy", NumLocale::UzLatn), "12 Oktabr 2026");
++    assert_eq!(show(D, "dddd, d mmm yyyy", NumLocale::UzLatn), "dushanba, 12 Okt 2026");
++    assert_eq!(show(D, "ddd", NumLocale::UzLatn), "Dush");
++    assert_eq!(show(D, "d mmmm yyyy", NumLocale::UzCyrl), "12 октябр 2026");
++    assert_eq!(show(D, "dddd, d mmm yyyy", NumLocale::UzCyrl), "душанба, 12 окт 2026");
++    assert_eq!(show(D, "d mmmm yyyy", NumLocale::EnUs), "12 October 2026");
++    assert_eq!(show(D, "dddd, d mmm yyyy", NumLocale::EnUs), "Monday, 12 Oct 2026");
++    // every month and weekday, abbreviated and full, is non-empty and distinct per month
++    for loc in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
++        let months: std::collections::HashSet<String> = (0..12).map(|m| show(46_023.0 + 31.0 * m as f64, "mmmm", loc)).collect();
++        assert_eq!(months.len(), 12, "{loc:?}");
++        let days: std::collections::HashSet<String> = (0..7).map(|d| show(D + d as f64, "dddd", loc)).collect();
++        assert_eq!(days.len(), 7, "{loc:?}");
++    }
++}
++
++#[test]
++fn locale_tags_name_months_for_a_non_english_interface_only() {
++    // [$-419] Russian, [$-443] uz-Latn, [$-843] uz-Cyrl; the digits are not affected
++    assert_eq!(show(D, "[$-419]d mmmm yyyy", NumLocale::UzLatn), "12 Октябрь 2026");
++    assert_eq!(show(D, "[$-443]d mmmm yyyy", NumLocale::Ru), "12 Oktabr 2026");
++    assert_eq!(show(D, "[$-843]d mmmm yyyy", NumLocale::Ru), "12 октябр 2026");
++    assert_eq!(show(D, "[$-10419]d mmmm yyyy", NumLocale::UzLatn), "12 Октябрь 2026");
++    assert_eq!(show(D, "[$-409]d mmmm yyyy", NumLocale::Ru), "12 October 2026");
++    // an unknown LCID leaves the interface's names
++    assert_eq!(show(D, "[$-407]d mmmm yyyy", NumLocale::Ru), "12 Октябрь 2026");
++    // en-US interface: the tag stays ignored (owner decision Q3, WP14)
++    assert_eq!(show(D, "[$-419]d mmmm yyyy", NumLocale::EnUs), "12 October 2026");
++    assert_eq!(show(D, "[$-443]d mmmm yyyy", NumLocale::EnUs), "12 October 2026");
++    // a currency symbol with an LCID keeps both jobs
++    assert_eq!(show(3.5, "[$₽-419] 0.0", NumLocale::Ru), "₽ 3,5");
++}

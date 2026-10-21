@@ -1,10 +1,12 @@
 //! UI formula syntax boundary. Engine commands, control/API callers and XLSX keep English.
+use gridcraft_engine::core::NumLocale;
 use gridcraft_engine::formula::{self, FormulaLocale, ParseError};
 use gridcraft_engine::model::Workbook;
 
 pub(crate) fn canonical(
     text: &str,
     locale: FormulaLocale,
+    num: NumLocale,
     wb: &Workbook,
     sheet: usize,
     cell: gridcraft_engine::core::CellRef,
@@ -17,7 +19,9 @@ pub(crate) fn canonical(
     {
         return Ok(stored);
     }
-    if locale == FormulaLocale::En || wb.sheet(sheet).is_some_and(|sh| wb.styles.get(sh.style_id(cell)).num_fmt.as_str() == "@") {
+    if wb.sheet(sheet).is_some_and(|sh| wb.styles.get(sh.style_id(cell)).num_fmt.as_str() == "@")
+        || (locale == FormulaLocale::En && num == NumLocale::EnUs)
+    {
         return Ok(text.to_string());
     }
     // Same formula detection as the engine's `input_to_cell` (no trimming: " =1" is text).
@@ -25,6 +29,9 @@ pub(crate) fn canonical(
     if body.starts_with('=')
         || ((body.starts_with('+') || body.starts_with('-')) && body.chars().nth(1).is_some_and(|c| c.is_ascii_alphabetic() || c == '('))
     {
+        if locale == FormulaLocale::En {
+            return Ok(text.to_string());
+        }
         let known = |name: &str| wb.name(name, sheet).is_some() || wb.table(name).is_some();
         // Match the engine's existing convenience for missing closing parentheses.
         let mut body = body.to_string();
@@ -37,6 +44,10 @@ pub(crate) fn canonical(
             expr = formula::parse_input(&body, locale, known);
         }
         return Ok(format!("={}", formula::print(&expr?)));
+    }
+    // Typed in a number locale (ru, uz): `1 234,5` and `12.10.2026` become the en-US input text the engine reads.
+    if num != NumLocale::EnUs {
+        return Ok(gridcraft_engine::core::parse::to_invariant(text, wb.date_system, num));
     }
     // Decimal-comma number entry follows the same preference, without rewriting text or dates.
     let normalized = body.trim().replace(locale.decimal_separator(), ".");

@@ -1,5 +1,6 @@
 //! GridCraft number formats: Excel format codes (`#,##0.00;[Red](#,##0.00)`, dates, fractions,
-//! scientific…), the General display format and the `TEXT()` worksheet function. en-US only.
+//! scientific…), the General display format and the `TEXT()` worksheet function. The display follows
+//! a [`NumLocale`] (separators, month and day names); `TEXT()` and the parser stay en-US.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
@@ -10,10 +11,10 @@ mod render;
 
 use std::sync::Arc;
 
-use gridcraft_core::{CellError, DateSystem, Value};
+use gridcraft_core::{CellError, DateSystem, NumLocale, Value};
 
 pub use builtin::{builtin_format, builtin_id};
-pub use decimal::format_general_fit;
+pub use decimal::{format_general_fit, format_general_fit_in};
 
 use parse::{SecKind, Section, Tok};
 use render::Out;
@@ -256,9 +257,9 @@ impl NumberFormat {
     }
 
     /// Formats a number. The flag is true when the value cannot be shown (date out of range).
-    fn format_number(&self, n: f64, sys: DateSystem) -> (Formatted, bool) {
+    fn format_number(&self, n: f64, sys: DateSystem, loc: NumLocale) -> (Formatted, bool) {
         let general = |n: f64| Formatted {
-            text: format_general_fit(n, GENERAL_WIDTH).unwrap_or_else(|| OVERFLOW.into()),
+            text: format_general_fit_in(n, GENERAL_WIDTH, loc).unwrap_or_else(|| OVERFLOW.into()),
             color: None,
             fill: None,
             numeric: true,
@@ -269,19 +270,19 @@ impl NumberFormat {
         let Some((sec, drop_sign)) = self.select(n) else { return (general(n), false) };
         let minus = n < 0.0 && !drop_sign;
         let out: Option<Out> = match sec.kind {
-            SecKind::Text => Some(render::render_text(sec, &format_general_fit(n, GENERAL_WIDTH).unwrap_or_default())),
+            SecKind::Text => Some(render::render_text(sec, &format_general_fit_in(n, GENERAL_WIDTH, loc).unwrap_or_default())),
             SecKind::General => {
                 let width = if minus { GENERAL_WIDTH - 1 } else { GENERAL_WIDTH };
-                Some(render::render_general(sec, n.abs(), width))
+                Some(render::render_general(sec, n.abs(), width, loc))
             }
             SecKind::Date => {
                 if minus {
                     None
                 } else {
-                    render::render_date(sec, n.abs(), sys)
+                    render::render_date(sec, n.abs(), sys, loc)
                 }
             }
-            SecKind::Number => Some(render::render_number(sec, n.abs())),
+            SecKind::Number => Some(render::render_number(sec, n.abs(), loc)),
         };
         let Some(mut out) = out else {
             return (Formatted { text: OVERFLOW.into(), color: sec.color, fill: None, numeric: true }, true);
@@ -304,18 +305,23 @@ impl NumberFormat {
     }
 }
 
-/// Formats a cell value for display.
+/// Formats a cell value for display (en-US).
 pub fn format_value(v: &Value, fmt: &NumberFormat, sys: DateSystem) -> Formatted {
+    format_value_in(v, fmt, sys, NumLocale::EnUs)
+}
+
+/// Formats a cell value for display with a locale's separators and month and day names.
+pub fn format_value_in(v: &Value, fmt: &NumberFormat, sys: DateSystem, loc: NumLocale) -> Formatted {
     match v {
         Value::Empty => Formatted::default(),
         Value::Number(n) if !n.is_finite() => Formatted { text: CellError::Num.as_str().into(), ..Formatted::default() },
-        Value::Number(n) => fmt.format_number(*n, sys).0,
+        Value::Number(n) => fmt.format_number(*n, sys, loc).0,
         Value::Text(t) => fmt.format_text(t),
         Value::Bool(b) => Formatted { text: if *b { "TRUE" } else { "FALSE" }.into(), ..Formatted::default() },
         Value::Error(e) => Formatted { text: e.as_str().into(), ..Formatted::default() },
         Value::Array(a) => match a.data.first() {
             Some(Value::Array(_)) | None => Formatted::default(),
-            Some(first) => format_value(first, fmt, sys),
+            Some(first) => format_value_in(first, fmt, sys, loc),
         },
     }
 }
@@ -417,7 +423,7 @@ pub fn text_function(v: &Value, code: &str, sys: DateSystem) -> Result<String, C
     if !n.is_finite() {
         return Err(CellError::Num);
     }
-    let (f, overflow) = fmt.format_number(n, sys);
+    let (f, overflow) = fmt.format_number(n, sys, NumLocale::EnUs);
     if overflow { Err(CellError::Value) } else { Ok(f.text) }
 }
 

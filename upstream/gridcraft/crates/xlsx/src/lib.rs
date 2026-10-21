@@ -157,11 +157,14 @@ pub struct CsvOptions {
     pub date_system: DateSystem,
     /// Interpret fields like typed input (numbers, dates, booleans…); otherwise keep text.
     pub parse_values: bool,
+    /// The number locale fields are typed in (`1 234,5`, `12.10.2026`). A file separated by the
+    /// locale's decimal (a comma in ru and uz) is en-US whatever this says; `;` and tab follow it.
+    pub locale: gridcraft_core::NumLocale,
 }
 
 impl Default for CsvOptions {
     fn default() -> Self {
-        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true }
+        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true, locale: gridcraft_core::NumLocale::EnUs }
     }
 }
 

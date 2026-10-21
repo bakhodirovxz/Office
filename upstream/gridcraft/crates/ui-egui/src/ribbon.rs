@@ -2475,12 +2475,13 @@ pub fn shortcut(app: &mut SheetApp, key: Key, m: Modifiers) {
         }
         Key::Semicolon => {
             // Insert today's date.
+            let loc = app.num_locale();
             let text = app
                 .session
                 .active()
                 .map(|d| {
                     let today = gridcraft_engine::core::date::serial_in_system(d.wb.date_system, gridcraft_engine::calc::now_serial()).floor();
-                    gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb).text
+                    gridcraft_engine::display::format_in(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb, loc).text
                 })
                 .unwrap_or_default();
             app.begin_edit(Some(text), false);

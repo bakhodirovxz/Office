@@ -2,7 +2,7 @@
 
 use std::fmt::Write as _;
 
-use gridcraft_core::{CellRef, RangeRef};
+use gridcraft_core::{CellRef, NumLocale, RangeRef};
 use gridcraft_model::{Sheet, Workbook};
 
 use crate::{EngineError, Result};
@@ -62,8 +62,14 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
 /// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
 /// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
 pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
+    open_bytes_calculated_in(name, bytes, password, NumLocale::EnUs)
+}
+
+/// [`open_bytes_calculated`] reading CSV and tab-separated text as typed in `loc`. Only delimited
+/// text depends on it; every other format is locale-free.
+pub fn open_bytes_calculated_in(name: &str, bytes: &[u8], password: Option<&str>, loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
-        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
+        let (mut wb, warnings, calculated) = open_plain(name, bytes, loc)?;
         fit_imported_rows(&mut wb);
         return Ok((wb, warnings, calculated));
     }
@@ -77,7 +83,7 @@ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -
     if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
     }
-    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
+    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, loc)?;
     fit_imported_rows(&mut wb);
     warnings.insert(0, DECRYPTED_NOTICE.into());
     Ok((wb, warnings, calculated))
@@ -119,7 +125,7 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
 }
 
 /// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
-fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
+fn open_plain(name: &str, bytes: &[u8], loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
     let kind = FileKind::from_path(name);
     let sniffed = gridcraft_xlsx::sniff(bytes);
     if sniffed == gridcraft_xlsx::Format::Xls {
@@ -160,7 +166,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
             Ok((wb, vec![], false))
         }
         Some(FileKind::Tsv) => {
-            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
+            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', locale: loc, ..Default::default() };
             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
             wb.csv_delimiter = None;
@@ -168,7 +174,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
             Ok((wb, vec![], false))
         }
         _ => {
-            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
+            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, locale: loc, ..Default::default() };
             let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             rename_first_sheet(&mut wb, name);
             Ok((wb, vec![], false))
@@ -192,17 +198,28 @@ fn rename_first_sheet(wb: &mut Workbook, path: &str) {
 
 /// Encodes a workbook in the format chosen by `path`'s extension.
 pub fn save_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
+    save_bytes_in(wb, path, NumLocale::EnUs)
+}
+
+/// [`save_bytes`] with delimited text written as a reader of `loc` sees it.
+pub fn save_bytes_in(wb: &Workbook, path: &str, loc: NumLocale) -> Result<Vec<u8>> {
     // An unknown or missing extension is refused rather than written as an XLSX under that name:
     // a typo like `.cvs` would otherwise produce a file no other app recognises.
     let Some(kind) = FileKind::from_path(path) else {
         let name = std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path);
         return Err(EngineError::Other(format!("{name}: unknown file format. Save as .xlsx, .csv, .tsv, .json or .html.")));
     };
-    save_bytes_as(wb, path, kind)
+    save_bytes_as_in(wb, path, kind, loc)
 }
 
 /// Encodes a workbook as `kind`, whatever `path`'s extension says.
 pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8>> {
+    save_bytes_as_in(wb, path, kind, NumLocale::EnUs)
+}
+
+/// [`save_bytes_as`] writing delimited text as a reader of `loc` sees it. Only CSV and tab text
+/// depend on it (they are display formats); every other format is locale-free.
+pub fn save_bytes_as_in(wb: &Workbook, path: &str, kind: FileKind, loc: NumLocale) -> Result<Vec<u8>> {
     let sheet = wb.active_sheet;
     match kind {
         // The extension picks the package kind; only the macro-enabled kinds (.xlsm, .xltm) carry
@@ -214,8 +231,12 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
         FileKind::Xlsb => Err(EngineError::Other("XLSB is supported for data import only. Save as .xlsx or another supported export format.".into())),
         FileKind::Ods => Err(EngineError::Other("ODS is supported for data import only. Save as .xlsx or another supported export format.".into())),
         // A workbook read from CSV keeps the separator it was read with (a `;` file stays `;`).
-        FileKind::Csv => wb.sheet(sheet).map(|sh| csv(wb, sh, wb.csv_delimiter.unwrap_or(b','))).transpose().map(Option::unwrap_or_default),
-        FileKind::Tsv => wb.sheet(sheet).map(|sh| csv(wb, sh, b'\t')).transpose().map(Option::unwrap_or_default),
+        FileKind::Csv => wb
+            .sheet(sheet)
+            .map(|sh| csv(wb, sh, wb.csv_delimiter.unwrap_or_else(|| default_csv_delimiter(loc)), loc))
+            .transpose()
+            .map(Option::unwrap_or_default),
+        FileKind::Tsv => wb.sheet(sheet).map(|sh| csv(wb, sh, b'\t', loc)).transpose().map(Option::unwrap_or_default),
         FileKind::Json => serde_json::to_vec_pretty(wb).map_err(|e| EngineError::Other(e.to_string())),
         FileKind::Html => to_html(wb, sheet).map(String::into_bytes),
     }
@@ -235,10 +256,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
     std::path::absolute(path).ok()?.parent().map(std::path::Path::to_path_buf)
 }
 
+/// Whether a new CSV from a locale session is separated by the locale's list separator (`;` in ru
+/// and uz, as Excel does) instead of a comma. Owner question Q5 (open): flip this one constant
+/// to keep `,` for imports that expect it. A file read from CSV keeps its own separator either way.
+const LOCALE_CSV_LIST_SEPARATOR: bool = true;
+
+/// The separator of a new CSV: `,` in en-US, the locale's list separator in ru and uz.
+fn default_csv_delimiter(loc: NumLocale) -> u8 {
+    if LOCALE_CSV_LIST_SEPARATOR { loc.list_sep() as u8 } else { b',' }
+}
+
 /// Save As CSV/Text writes "the text and values as they are displayed in cells" with "all
 /// characters in each cell" (Microsoft Support, *Excel formatting and features that are not
 /// transferred to other file formats*): number formats applied, never column-width `#####`.
-fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
+fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8, loc: NumLocale) -> Result<Vec<u8>> {
+    // A comma-delimited file is always en-US: a comma decimal would split every number.
+    let loc = if delimiter == loc.decimal() as u8 { NumLocale::EnUs } else { loc };
     gridcraft_xlsx::write_csv(sh, delimiter, |c| {
         // General's grid-width formatting rounds large identifiers to scientific notation.
         // Delimited files have no column width, so preserve the whole numeric value instead.
@@ -246,9 +279,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
             && let gridcraft_core::Value::Number(number) = sh.value(c)
             && number.is_finite()
         {
-            number.to_string()
+            let t = number.to_string();
+            if loc == NumLocale::EnUs { t } else { t.replace('.', &loc.decimal().to_string()) }
         } else {
-            crate::display::value_text(wb, sh, c)
+            crate::display::value_text_in(wb, sh, c, loc)
         }
     })
     .map_err(|e| EngineError::Other(e.to_string()))

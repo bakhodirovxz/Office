@@ -104,7 +104,7 @@ fn read(s: &mut Session, p: &Json) -> Result<Json> {
             let v = if formulas && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref()) {
                 json!(format!("={}", f.text()))
             } else if formatted {
-                json!(crate::display::cell_text(&d.wb, sh, c))
+                json!(crate::display::cell_text_in(&d.wb, sh, c, s.prefs.num_locale))
             } else {
                 value_json(&sh.value(c))
             };

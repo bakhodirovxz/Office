@@ -659,7 +659,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
     } else {
         (d.wb.clone(), trim(ranges.first().copied().unwrap_or_default()), Vec::new())
     };
-    let text = crate::display::range_text(&wb, sheet, range);
+    let text = crate::display::range_text_in(&wb, sheet, range, s.prefs.num_locale);
     // The HTML rendering is for the host clipboard (UI); it can reach 4 MB, so agents and
     // scripts get it only when they ask for it.
     let html = if p.get("html").and_then(Json::as_bool) == Some(true) { crate::io::range_html(&wb, sheet, range, &text) } else { None };
@@ -796,11 +796,14 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
     let html = str_param(p, "html").map(crate::clip_html::table_cells).unwrap_or_default();
     let h = rows.len();
     let w = rows.iter().map(Vec::len).max().unwrap_or(0);
+    let loc = s.prefs.num_locale;
     edit(s, |cx| {
         for (ri, row) in rows.iter().enumerate() {
             for (ci, v) in row.iter().enumerate() {
                 let Some(c) = at.offset(ri as i64, ci as i64) else { continue };
-                let mut cell = input_to_cell(v, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
+                // Text copied from a locale session (or Excel in that locale) is typed in it: `12.10.2026` is 12 October.
+                let typed = gridcraft_core::parse::to_invariant(v, cx.wb.date_system, loc);
+                let mut cell = input_to_cell(&typed, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
                 if let Some(cl) = cell.as_mut() {
                     numeric_from_html(cl, v, html.get(ri).and_then(|r| r.get(ci)), &mut cx.wb);
                 }

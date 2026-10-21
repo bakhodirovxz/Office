@@ -143,6 +143,20 @@ impl Language {
         }
     }
 
+    /// The number locale of displayed and typed numbers and dates: Russian and Uzbek follow their
+    /// language, every other language (Spanish included) keeps en-US.
+    pub fn num_locale(self) -> gridcraft_engine::core::NumLocale {
+        use gridcraft_engine::core::NumLocale;
+        match self {
+            Self::Ru => NumLocale::Ru,
+            #[cfg(office_uz)]
+            Self::UzLatn => NumLocale::UzLatn,
+            #[cfg(office_uz)]
+            Self::UzCyrl => NumLocale::UzCyrl,
+            _ => NumLocale::EnUs,
+        }
+    }
+
     pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
         if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
     }
@@ -205,6 +219,20 @@ fn lang_key() -> egui::Id {
 /// The language the current frame is drawing in. `En` when unset.
 pub fn current(ctx: &egui::Context) -> Language {
     ctx.data(|d| d.get_temp(lang_key())).unwrap_or_default()
+}
+
+fn num_locale_key() -> egui::Id {
+    egui::Id::new("gridcraft.num_locale")
+}
+
+/// The number locale the current frame draws cell text in (see [`Language::num_locale`]).
+pub fn current_num_locale(ctx: &egui::Context) -> gridcraft_engine::core::NumLocale {
+    ctx.data(|d| d.get_temp(num_locale_key())).unwrap_or_default()
+}
+
+/// Sets the number locale for the current frame, with the language.
+pub fn set_current_num_locale(ctx: &egui::Context, loc: gridcraft_engine::core::NumLocale) {
+    ctx.data_mut(|d| d.insert_temp(num_locale_key(), loc));
 }
 
 /// Sets the language for the current frame; call once per frame before anything is drawn.

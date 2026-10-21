@@ -1,0 +1,179 @@
+//! Number locale: the separators, month and day names and short date of the interface languages
+//! the display and typed input follow. Anything parsed, calculated or stored stays en-US (the
+//! locale only changes the text a person sees and types).
+//!
+//! The data is Windows NLS (what Excel shows), hard-coded: ru-RU, uz-Latn-UZ, uz-Cyrl-UZ.
+//! The Uzbek rows are user-facing data, reviewed:agent-opus-5.5:2026-10-21 (delegated review).
+
+use crate::date::{MONTHS, WEEKDAYS};
+
+/// The locale of displayed and typed numbers and dates. Passed explicitly; en-US is the default
+/// and gives exactly the pre-locale output.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum NumLocale {
+    #[default]
+    EnUs,
+    Ru,
+    UzLatn,
+    UzCyrl,
+}
+
+const MONTHS_ABBR_EN: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS_ABBR_EN: [&str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const MONTHS_RU: [&str; 12] = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+const MONTHS_ABBR_RU: [&str; 12] = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const WEEKDAYS_RU: [&str; 7] = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
+const WEEKDAYS_ABBR_RU: [&str; 7] = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+const MONTHS_UZ_LATN: [&str; 12] = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+const MONTHS_ABBR_UZ_LATN: [&str; 12] = ["Yan", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
+const WEEKDAYS_UZ_LATN: [&str; 7] = ["yakshanba", "dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba"];
+const WEEKDAYS_ABBR_UZ_LATN: [&str; 7] = ["Yak", "Dush", "Sesh", "Chor", "Pay", "Jum", "Shan"];
+
+const MONTHS_UZ_CYRL: [&str; 12] = ["январ", "феврал", "март", "апрел", "май", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр"];
+const WEEKDAYS_UZ_CYRL: [&str; 7] = ["якшанба", "душанба", "сешанба", "чоршанба", "пайшанба", "жума", "шанба"];
+const WEEKDAYS_ABBR_UZ_CYRL: [&str; 7] = ["якш", "душ", "сеш", "чор", "пай", "жум", "шан"];
+
+impl NumLocale {
+    /// `en`, `en-US`, `ru`, `ru-RU`, `uz` (Latin), `uz-Latn`, `uz-Cyrl` (case and `_` ignored).
+    pub fn from_tag(tag: &str) -> Option<NumLocale> {
+        let t = tag.trim().to_ascii_lowercase().replace('_', "-");
+        let mut parts = t.split('-');
+        match (parts.next()?, parts.next()) {
+            ("en", _) => Some(NumLocale::EnUs),
+            ("ru", _) => Some(NumLocale::Ru),
+            ("uz", Some("cyrl")) => Some(NumLocale::UzCyrl),
+            ("uz", Some("latn") | None) => Some(NumLocale::UzLatn),
+            ("uz", Some(r)) if r.len() == 2 => Some(NumLocale::UzLatn),
+            _ => None,
+        }
+    }
+
+    /// An LCID as in a `[$-419]` tag; only the low 16 bits count (`0x10419` is Russian).
+    pub fn from_lcid(lcid: u32) -> Option<NumLocale> {
+        match lcid & 0xFFFF {
+            0x409 => Some(NumLocale::EnUs),
+            0x419 => Some(NumLocale::Ru),
+            0x443 => Some(NumLocale::UzLatn),
+            0x843 => Some(NumLocale::UzCyrl),
+            _ => None,
+        }
+    }
+
+    pub fn decimal(self) -> char {
+        if self == NumLocale::EnUs { '.' } else { ',' }
+    }
+
+    /// Thousands separator: U+00A0 for ru and uz (NLS).
+    pub fn group(self) -> char {
+        if self == NumLocale::EnUs { ',' } else { '\u{a0}' }
+    }
+
+    /// Argument and CSV field separator.
+    pub fn list_sep(self) -> char {
+        if self == NumLocale::EnUs { ',' } else { ';' }
+    }
+
+    pub fn months(self) -> &'static [&'static str; 12] {
+        match self {
+            NumLocale::EnUs => &MONTHS,
+            NumLocale::Ru => &MONTHS_RU,
+            NumLocale::UzLatn => &MONTHS_UZ_LATN,
+            NumLocale::UzCyrl => &MONTHS_UZ_CYRL,
+        }
+    }
+
+    pub fn months_abbr(self) -> &'static [&'static str; 12] {
+        match self {
+            NumLocale::EnUs => &MONTHS_ABBR_EN,
+            NumLocale::Ru | NumLocale::UzCyrl => &MONTHS_ABBR_RU,
+            NumLocale::UzLatn => &MONTHS_ABBR_UZ_LATN,
+        }
+    }
+
+    /// Sunday first.
+    pub fn weekdays(self) -> &'static [&'static str; 7] {
+        match self {
+            NumLocale::EnUs => &WEEKDAYS,
+            NumLocale::Ru => &WEEKDAYS_RU,
+            NumLocale::UzLatn => &WEEKDAYS_UZ_LATN,
+            NumLocale::UzCyrl => &WEEKDAYS_UZ_CYRL,
+        }
+    }
+
+    pub fn weekdays_abbr(self) -> &'static [&'static str; 7] {
+        match self {
+            NumLocale::EnUs => &WEEKDAYS_ABBR_EN,
+            NumLocale::Ru => &WEEKDAYS_ABBR_RU,
+            NumLocale::UzLatn => &WEEKDAYS_ABBR_UZ_LATN,
+            NumLocale::UzCyrl => &WEEKDAYS_ABBR_UZ_CYRL,
+        }
+    }
+
+    /// What built-in format id 14 (`m/d/yyyy`) shows as; `None` keeps the stored code (en-US).
+    /// Q1 (owner, 2026-10-21): uz shows `dd.mm.yyyy` like ru.
+    pub fn short_date(self) -> Option<&'static str> {
+        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy") }
+    }
+
+    /// Same for built-in id 22 (`m/d/yyyy h:mm`).
+    pub fn short_date_time(self) -> Option<&'static str> {
+        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy h:mm") }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ALL: [NumLocale; 4] = [NumLocale::EnUs, NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl];
+
+    #[test]
+    fn separators_are_the_nls_ones() {
+        assert_eq!((NumLocale::EnUs.decimal(), NumLocale::EnUs.group(), NumLocale::EnUs.list_sep()), ('.', ',', ','));
+        for l in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
+            assert_eq!((l.decimal(), l.group(), l.list_sep()), (',', '\u{a0}', ';'));
+            assert_eq!(l.short_date(), Some("dd.mm.yyyy"));
+        }
+        assert_eq!(NumLocale::EnUs.short_date(), None);
+    }
+
+    #[test]
+    fn names_match_the_nls_table() {
+        assert_eq!(NumLocale::Ru.months()[9], "Октябрь");
+        assert_eq!(NumLocale::Ru.months_abbr()[9], "окт");
+        assert_eq!(NumLocale::Ru.weekdays()[1], "понедельник");
+        assert_eq!(NumLocale::Ru.weekdays_abbr()[1], "Пн");
+        assert_eq!(NumLocale::UzLatn.months()[9], "Oktabr");
+        assert_eq!(NumLocale::UzLatn.weekdays_abbr()[2], "Sesh");
+        assert_eq!(NumLocale::UzCyrl.months()[0], "январ");
+        assert_eq!(NumLocale::UzCyrl.weekdays()[5], "жума");
+        for l in ALL {
+            assert!(l.months().iter().all(|m| !m.is_empty()) && l.weekdays().iter().all(|d| !d.is_empty()));
+            assert!(l.months_abbr().iter().all(|m| !m.is_empty()) && l.weekdays_abbr().iter().all(|d| !d.is_empty()));
+        }
+        // en-US abbreviations are the first three letters of the full names (the pre-locale rule)
+        for i in 0..12 {
+            assert_eq!(NumLocale::EnUs.months_abbr()[i], &NumLocale::EnUs.months()[i][..3]);
+        }
+        for i in 0..7 {
+            assert_eq!(NumLocale::EnUs.weekdays_abbr()[i], &NumLocale::EnUs.weekdays()[i][..3]);
+        }
+    }
+
+    #[test]
+    fn tags_and_lcids() {
+        assert_eq!(NumLocale::from_tag("ru-RU"), Some(NumLocale::Ru));
+        assert_eq!(NumLocale::from_tag("uz-Latn"), Some(NumLocale::UzLatn));
+        assert_eq!(NumLocale::from_tag("uz_Cyrl"), Some(NumLocale::UzCyrl));
+        assert_eq!(NumLocale::from_tag("uz-UZ"), Some(NumLocale::UzLatn));
+        assert_eq!(NumLocale::from_tag("EN"), Some(NumLocale::EnUs));
+        assert_eq!(NumLocale::from_tag("de-DE"), None);
+        assert_eq!(NumLocale::from_lcid(0x419), Some(NumLocale::Ru));
+        assert_eq!(NumLocale::from_lcid(0x10419), Some(NumLocale::Ru));
+        assert_eq!(NumLocale::from_lcid(0x443), Some(NumLocale::UzLatn));
+        assert_eq!(NumLocale::from_lcid(0x843), Some(NumLocale::UzCyrl));
+        assert_eq!(NumLocale::from_lcid(0x407), None);
+    }
+}

@@ -265,3 +265,18 @@ test, and the COM rows.
 - **Q4.** May uz be measured in Excel with a temporary uz-Latn-UZ user culture, or a second Windows user? Without
   it, the uz rows rest on NLS and CLDR plus `[$-443]` tags.
 - **Q5.** Should a new CSV use `;` in uz and ru (proposed, Excel parity), or must it stay `,` for HRM imports?
+
+## 12. Decisions
+
+Owner answers of 2026-10-21, taken before WP14 was built:
+
+- **Q1.** The uz short date (built-in ids 14 and 22) shows as `dd.mm.yyyy`, as in ru.
+- **Q2.** The locale follows the **UI language**. An English UI keeps en-US numbers, also on a ru or uz Windows.
+- **Q3.** `[$-419]`/`[$-443]`/`[$-843]` tags do **not** change the en-US UI output in WP14. They name months and days only
+  under a non-English interface.
+- **Q4.** (switching the Windows culture to measure uz in Excel) **still with the owner.** Until it is answered the uz
+  rows rest on NLS and CLDR plus the `[$-443]` tag on the ru-RU account, and the Excel COM rows that need a culture
+  change are skipped.
+- **Q5.** (`;` or `,` as the CSV default for uz and ru) **still with the owner.** It is implemented behind one
+  constant, `LOCALE_CSV_LIST_SEPARATOR` in `engine/src/io.rs` (patch 0028). `true` writes `;` (Excel parity),
+  `false` keeps `,`. A file opened from CSV keeps its own separator either way.
