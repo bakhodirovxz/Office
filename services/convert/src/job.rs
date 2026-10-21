@@ -391,7 +391,20 @@ impl OutputSink for Dest {
     }
 }
 
-fn collect(cfg: &Config, jctx: &JobCtx, declared: &HashSet<PathBuf>, spec: &JobSpec, stem: &str, p: &mut Progress) -> Result<Vec<String>, Failure> {
+/// Hooks run domain CLIs through this: the same environment, limits and cancel as a conversion step.
+struct Runner<'a> {
+    cfg: &'a Config,
+    ctl: &'a Ctl,
+    job: &'a Path,
+}
+
+impl crate::hook::ToolRunner for Runner<'_> {
+    fn run(&self, tool: ToolId, argv: &[String], input_mb: f64) -> Result<Vec<u8>, Failure> {
+        run_tool(self.cfg, self.ctl, tool, argv, self.job, None, input_mb, 0, &mut vec![]).map(|r| r.stdout)
+    }
+}
+
+fn collect(cfg: &Config, ctl: &Ctl, jctx: &JobCtx, declared: &HashSet<PathBuf>, spec: &JobSpec, stem: &str, p: &mut Progress) -> Result<Vec<String>, Failure> {
     let mut files = list_out(&jctx.job_dir)?;
     if files.is_empty() {
         return fail(Exit::BadOutput, "the conversion finished but produced no output file");
@@ -400,8 +413,9 @@ fn collect(cfg: &Config, jctx: &JobCtx, declared: &HashSet<PathBuf>, spec: &JobS
         return fail(Exit::BadOutput, format!("the tool left an unexpected file in out/: {}", extra.file_name().unwrap_or_default().to_string_lossy()));
     }
     if !cfg.hooks.is_empty() {
+        let runner = Runner { cfg, ctl, job: &jctx.job_dir };
         for h in &cfg.hooks {
-            p.warnings.extend(h.after(jctx, &files)?);
+            p.warnings.extend(h.after(jctx, &files, &runner)?);
         }
         // the hooks may have rewritten or added files: list again and validate again
         files = list_out(&jctx.job_dir)?;
@@ -438,6 +452,8 @@ pub struct JobMeta {
     pub deadline: Option<Instant>,
     /// a scan the caller already made of this very content: used when the staged copy has the same SHA-256
     pub verdict: Option<Arc<scan::Verdict>>,
+    /// the caller's own id for this file, for the audit log (the API: `<job id>/<file number>`)
+    pub reference: Option<String>,
 }
 
 pub struct JobSpec<'a> {
@@ -480,6 +496,7 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
     let id = new_id();
     let ctl = Ctl { cancel: spec.meta.cancel.clone().or_else(|| cfg.cancel.clone()), deadline: Some(spec.meta.deadline.unwrap_or_else(|| Instant::now() + Duration::from_secs(cfg.job_timeout_s))) };
     let stem = safe_name(&spec.stem, "output");
+    let mut ctx_for_hooks: Option<JobCtx> = None;
     let result = (|| {
         let steps = spec.steps.clone()?;
         let job = JobDir::create(cfg, &id)?;
@@ -497,21 +514,27 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
             opts: spec.opts.clone(),
             principal: spec.meta.principal.clone(),
             client: spec.meta.client.clone(),
+            label: spec.label.clone(),
+            reference: spec.meta.reference.clone(),
         };
+        ctx_for_hooks = Some(jctx.clone());
+        let runner = Runner { cfg, ctl: &ctl, job: job.path() };
         for h in &cfg.hooks {
-            p.warnings.extend(h.before(&jctx)?);
+            p.warnings.extend(h.before(&jctx, &runner)?);
         }
         let declared = run_plan(cfg, &ctl, job.path(), steps, mb, &mut p)?;
         if cfg.verify {
             verify(cfg, &ctl, job.path(), &mut p.steps)?;
             p.verified = Some(true);
         }
-        collect(cfg, &jctx, &declared, &spec, &stem, &mut p)
+        collect(cfg, &ctl, &jctx, &declared, &spec, &stem, &mut p)
     })();
     let (code, message, outputs) = match result {
         Ok(o) => (Exit::Ok, "ok".to_string(), o),
         Err(f) => (f.exit, f.msg, vec![]),
     };
+    // the hooks forget the job, and one of them may have something for the report (WP15: `xdfu`)
+    let xdfu = ctx_for_hooks.and_then(|c| cfg.hooks.iter().filter_map(|h| h.finish(&c)).next());
     FileReport {
         schema: SCHEMA,
         input: spec.label,
@@ -524,6 +547,7 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
         warnings: p.warnings,
         translit: p.translit,
         verified: if code == Exit::Ok { p.verified } else { None },
+        xdfu,
         outputs,
     }
 }
@@ -541,6 +565,7 @@ fn failed(label: &str, target: &str, kind: Option<String>, f: Failure) -> FileRe
         warnings: vec![],
         translit: None,
         verified: None,
+        xdfu: None,
         outputs: vec![],
     }
 }

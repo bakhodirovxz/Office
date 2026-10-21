@@ -1,11 +1,13 @@
 //! `convert`: the command line (PLAN phase 3, section 2.2). Hand-rolled argument parsing, no clap: the grammar is small.
 use convert::exec::{Config, Ctl, Exit, run_tool};
+use convert::{audit, xdfu};
 use convert::formats;
 use convert::job::{self, Dest, FileReport};
 use convert::plan::{self, Options, PageSpec, PdfEngine, SheetSel, SplitBy, Target, ToolId, Translit, TranslitDir};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::Arc;
 
 const USAGE: &str = "\
 usage:
@@ -17,19 +19,25 @@ usage:
       --dpi N                     (png; 72-600, default 150)
       --pdf-engine sidecar|native (pdf to docx; default native; sidecar needs CONVERT_PDF2DOCX_URL)
       --timeout SECS  --max-mem MB  -j N  --json  --strict  --verify  --keep-work  --work-dir DIR  --max-input-mb N
+      --xdfu off|watermark|refuse (default off: nothing is detected, logged or marked)
+          a document with the XDFU grif (XDFU, ХДФУ, ДСП, Для служебного пользования) is refused, or converted with a watermark
+          (copy number, this computer's address, user, date and time) on every output; each such job goes in the audit log
+      --xdfu-audit FILE   the hash-chained audit log (default: your data directory, convert/xdfu-audit.jsonl)
+      --redact            leave file names out of the audit log
   convert pdf combine <a.pdf> <b.pdf>... -o out.pdf
   convert pdf split <in.pdf> (--every N | --before 3,7) --out-dir DIR
   convert pdf extract <in.pdf> --pages 1,3-5 -o out.pdf
   convert formats [--json]
   convert check
+  convert xdfu-verify <audit.jsonl>   check the hash chain of an audit log (exit 1 and the first bad line when it is broken)
 exit codes: 0 ok, 1 tool error, 2 usage, 3 unsupported, 4 timeout, 5 memory cap, 6 tool crashed, 7 tool missing,
             8 output failed validation, 9 input rejected, 10 warnings under --strict";
 
 const VALUE_FLAGS: &[&str] = &[
     "--to", "-o", "--out-dir", "--translit", "--alphabet", "--apostrophe", "--sheet", "--pages", "--dpi", "--pdf-engine", "--timeout",
-    "--max-mem", "-j", "--every", "--before", "--work-dir", "--max-input-mb",
+    "--max-mem", "-j", "--every", "--before", "--work-dir", "--max-input-mb", "--xdfu", "--xdfu-audit",
 ];
-const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work", "--verify"];
+const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work", "--verify", "--redact"];
 
 struct Args {
     pos: Vec<String>,
@@ -78,6 +86,19 @@ fn config(a: &Args) -> Result<Config, String> {
     }
     c.keep_work = a.flag.iter().any(|f| f == "--keep-work");
     c.verify = a.flag.iter().any(|f| f == "--verify");
+    // WP15: off (the default) installs nothing at all
+    let mode = a.val.get("--xdfu").map_or(Ok(xdfu::Mode::Off), |m| xdfu::Mode::parse(m).map_err(|e| e.replace("xdfu = ", "--xdfu ")))?;
+    let redact = a.flag.iter().any(|f| f == "--redact");
+    if mode == xdfu::Mode::Off {
+        if a.val.contains_key("--xdfu-audit") || redact {
+            return Err("--xdfu-audit and --redact need --xdfu watermark or --xdfu refuse".into());
+        }
+    } else {
+        let path = a.val.get("--xdfu-audit").map(PathBuf::from).unwrap_or_else(xdfu::default_audit_path);
+        let log = audit::AuditLog::open(&path, redact)?;
+        eprintln!("convert: XDFU handling is on ({mode:?}); audit log {}", log.path().display());
+        c.hooks.push(Arc::new(xdfu::XdfuHook::new(mode, Arc::new(log), true)));
+    }
     Ok(c)
 }
 
@@ -271,6 +292,20 @@ fn cmd_check(a: Args) -> ExitCode {
     ExitCode::from(if missing { Exit::Missing.code() } else { 0 })
 }
 
+fn cmd_xdfu_verify(args: &[String]) -> ExitCode {
+    let [path] = args else { return usage_err("xdfu-verify takes one audit log file") };
+    match audit::verify(std::path::Path::new(path)) {
+        Ok(v) => {
+            println!("{path}: the chain is intact, {} lines, last hash {}", v.lines, v.last_hash);
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("{path}: the audit log is broken at {e}");
+            ExitCode::from(Exit::ToolError.code())
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let mut argv: Vec<String> = std::env::args().skip(1).collect();
     if argv.is_empty() || argv.iter().any(|a| a == "-h" || a == "--help") {
@@ -278,6 +313,9 @@ fn main() -> ExitCode {
         return ExitCode::from(if argv.is_empty() { Exit::Usage.code() } else { 0 });
     }
     let sub = argv[0].clone();
+    if sub == "xdfu-verify" {
+        return cmd_xdfu_verify(&argv[1..]);
+    }
     let rest = if matches!(sub.as_str(), "formats" | "check" | "pdf") { argv.drain(1..).collect() } else { std::mem::take(&mut argv) };
     let a = match parse(rest) {
         Ok(a) => a,

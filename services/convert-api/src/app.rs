@@ -297,6 +297,16 @@ impl App {
             job::sweep_stale(d);
         }
         warn_about_disks(&r);
+        if r.xdfu != convert::xdfu::Mode::Off {
+            // WP15: opt-in. The hook (detection, watermark, audit) is installed here and nowhere else, so with `off` nothing of it exists.
+            let path = r.s.xdfu_audit_file.clone().unwrap_or_else(convert::xdfu::default_audit_path);
+            let log = convert::audit::AuditLog::open(&path, r.s.xdfu_redact)?;
+            eprintln!("convert-api: XDFU handling is ON ({:?}); audit log {}", r.xdfu, path.display());
+            if !r.server_mode() {
+                eprintln!("convert-api: note: local mode on an uncertified computer can only watermark and warn; it does not make XDFU handling compliant (PLAN 10)");
+            }
+            cfg.hooks.push(Arc::new(convert::xdfu::XdfuHook::new(r.xdfu, Arc::new(log), !r.server_mode())));
+        }
         cfg.work_dir = r.work_dir.clone();
         cfg.max_input_mb = r.s.max_file_mb.max(r.s.max_xlsx_mb);
         cfg.job_timeout_s = r.s.job_timeout_s;
@@ -605,7 +615,7 @@ pub async fn run_file(app: Arc<App>, job: Arc<Job>, n: usize, target: Target, op
     let t0 = Instant::now();
     let rep = tokio::task::spawn_blocking(move || {
         let input = StoredInput { name: a.name_of(&j, n), path: j.in_path(n), codec: j.codec.clone(), role: Job::in_role(n) };
-        let meta = JobMeta { principal: Some(j.owner.clone()), client: Some(client), cancel: Some(j.cancel.clone()), deadline: Some(j.deadline), verdict: Some(verdict) };
+        let meta = JobMeta { principal: Some(j.owner.clone()), client: Some(client), cancel: Some(j.cancel.clone()), deadline: Some(j.deadline), verdict: Some(verdict), reference: Some(format!("{}/{}", j.id, n)) };
         job::guarded(&input.name, target.ext(), || job::convert_source(&a.cfg, &input, target, &opts, &*s, &meta))
     })
     .await
@@ -648,6 +658,7 @@ pub fn convert_failed(label: &str, target: Target, exit: Exit, msg: &str) -> Fil
         warnings: vec![],
         translit: None,
         verified: None,
+        xdfu: None,
         outputs: vec![],
     }
 }

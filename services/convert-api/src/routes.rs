@@ -603,12 +603,17 @@ async fn job_status(State(app): State<Arc<App>>, Extension(p): Extension<Princip
         .iter()
         .map(|f| {
             let rep = f.report.as_ref();
-            json!({
+            let mut v = json!({
                 "n": f.n, "name": f.name, "kind": f.kind, "target": f.target, "state": f.state, "step": f.step,
                 "code": rep.map(|r| r["code"].clone()), "message": rep.map(|r| r["message"].clone()),
                 "warnings": rep.map(|r| r["warnings"].clone()).unwrap_or(json!([])),
                 "outputs": f.outputs.iter().enumerate().map(|(k, o)| json!({"id": k, "name": o.name, "size": o.size})).collect::<Vec<_>>(),
-            })
+            });
+            // only when the XDFU hook found a grif: with `xdfu = "off"` the answer is what it always was
+            if let Some(x) = rep.and_then(|r| r.get("xdfu")) {
+                v["xdfu"] = x.clone();
+            }
+            v
         })
         .collect();
     Ok(Json(json!({"job": job.id, "state": state, "progress": {"done": done, "total": st.files.len()}, "files": files})))

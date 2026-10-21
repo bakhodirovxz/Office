@@ -201,7 +201,7 @@ fn translit_result_is_captured_and_nothing_to_convert_warns() {
 fn every_code_has_catalog_text() {
     let mut emitted: Vec<String> = convert::losses::rows().iter().map(|r| r.code.clone()).collect();
     emitted.extend(
-        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped"]
+        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark"]
             .map(String::from),
     );
     emitted.sort();

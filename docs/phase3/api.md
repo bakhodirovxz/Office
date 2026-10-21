@@ -2,7 +2,7 @@
 
 Status: implemented and tested on 2026-10-21; hardened after the architect security review the same day
 ([review-wp7.md](review-wp7.md), every finding has a status there). Plan: [PLAN.md](PLAN.md) section 5. The UI page is WP8
-(`services/convert-api/ui/`). XDFU handling is WP15 and is not implemented here (see "XDFU" below).
+(`services/convert-api/ui/`). XDFU handling (WP15, opt-in, off by default) is in the converter core; see "XDFU" below.
 
 Run: `convert-api [--config FILE]`. With no file it is **local mode** on `127.0.0.1:8787`. The tools are found like the CLI does
 (`CONVERT_DOCS_CLI`, ..., `CONVERT_TOOLS_DIR`), the sidecar through `CONVERT_PDF2DOCX_URL`, fonts through `CRAFT_FONTS_DIR`.
@@ -42,7 +42,7 @@ All under `/api/v1` need the mode's auth. Errors are `{"error": {"code", "messag
 |---|---|
 | `GET /api/v1/formats` | `convert formats --json` plus `limits` |
 | `POST /api/v1/jobs` | multipart: `files` (1..30, repeated, also `files[]`) and `options` (JSON, at most 64 KiB, checked while it streams). `202 {job, files:[{n, name, kind, target} or {n, name, kind, error:{code, message}}]}` and `Location`. A file that is unsupported, password-protected, a zip bomb or an unreadable type is rejected **on its own**; the rest run |
-| `GET /api/v1/jobs/{id}` | `{job, state: queued\|running\|done, progress:{done,total}, files:[{n, name, kind, target, state: queued\|running\|done\|failed, step, code, message, warnings, outputs:[{id, name, size}]}]}` |
+| `GET /api/v1/jobs/{id}` | `{job, state: queued\|running\|done, progress:{done,total}, files:[{n, name, kind, target, state: queued\|running\|done\|failed, step, code, message, warnings, outputs:[{id, name, size}]}]}`; a file also has `xdfu` when the XDFU hook found a grif |
 | `GET /api/v1/jobs/{id}/files/{n}/{id}` | one output, `Content-Disposition: attachment` with an RFC 5987 `filename*` |
 | `GET /api/v1/jobs/{id}/zip` | every output plus `report.json` (the per-file reports, schema `report.schema.json`), once the job is `done`; built once (it takes a CPU slot), then served |
 | `DELETE /api/v1/jobs/{id}` | cancels (the running step is killed through the convert cancel flag and the Windows Job Object) and deletes now. `204`. The job can no longer be fetched, but it counts against the limits until its work has stopped |
@@ -84,7 +84,9 @@ and `application/octet-stream` for markup, so a downloaded html file can never r
 | `key_file` | - | not used any more (the job keys are not written anywhere, WP7 review M5). Still accepted; if set it must hold 32 random bytes (raw, base64 or 64 hex characters), not a passphrase |
 | `work_dir` | `<tmp>/convert-api-work` | scratch for the tools: **plaintext**. Dedicated to this server. Server mode: put it on a RAM disk |
 | `store_dir` | `<work_dir>-store` | where the job store lives (ciphertext in server mode) |
-| `xdfu` | `off` | any other value is refused: "not implemented yet" |
+| `xdfu` | `off` | `off`, `watermark` or `refuse` (see "XDFU"). Off installs nothing |
+| `xdfu_audit_file` | - | the XDFU audit log. Required in server mode, on storage that survives a restart (not the RAM disk of `work_dir`); local mode defaults to `<user data dir>/convert/xdfu-audit.jsonl` |
+| `xdfu_redact` | `false` | leave file names out of the audit log |
 | `cpu_slots` | `clamp(cores/3, 1, 4)` | concurrent conversions |
 | `mem_budget_mb` | 12288 | each conversion reserves its estimate first (sheets 20 MB per input MB, others 40, plus 256, capped at the tool cap) |
 | `queue_max`, `per_user_active` | 100, 3 | active jobs in total, and per `sub` |
@@ -242,21 +244,69 @@ the owner must have started before the directory was last written. An operator's
 
 ## XDFU
 
-Not implemented here (WP15, section 10, opt-in). WP7 only does the plumbing: `JobMeta.principal` (the `sub`, or `local`) and
-`JobMeta.client` (the client address, behind trusted proxies) reach every `JobHook` through `JobCtx`, and `xdfu = "off"` is the only
-accepted value of the config key.
+Resolution No. 766 of 2025 and its Rules (PLAN section 10). **Opt-in and off by default.** `xdfu = "off"` installs no hook at all: no
+detection, no watermark, no audit file, no `xdfu` in any report, and an output that is byte for byte what it was before (tested). The
+setting is the operator's (the server config, or the local user's `--xdfu` flag of the CLI); the UI shows nothing about it.
 
-## Tests (`cargo test -p convert-api`, run from `services/`)
+`xdfu = "watermark"` or `"refuse"` installs the hook of `services/convert/src/xdfu.rs` for the API and for the CLI alike:
 
-`src/*` unit tests (15: jwt 6, crypt 2, config 4, gate 1, app 2), `tests/api.rs` (18, in-process router against a stand-in tool),
-`tests/hardening.rs` (17: the review fixes), `tests/tls.rs` (3, real sockets), `tests/e2e.rs` (2, the binary: refusals; every direction
-against the real tools, then a hard kill and a restart). The e2e test needs the release tools in `E:/office-target/p1/<domain>/release` and
+- **Detection** (before any tool runs): the grif "XDFU", "ХДФУ", "ДСП", "Для служебного пользования", or the Uzbek phrase in Latin or
+  Cyrillic ("Xizmat doirasida foydalanish uchun", "Хизмат доирасида фойдаланиш учун"), in any case and spacing ("X D F U", "Х.Д.Ф.У.",
+  a Latin x for a Cyrillic х), as a whole word. Looked for in the places the Rules name: the top of page 1 (the first 8 paragraphs of a
+  docx, the first 5 rows of the first sheet, the top quarter of the first slide, the first 8 lines of page 1 of a pdf, the first 8 lines
+  of a txt, md or csv), a header (docx headers, sheet headers and footers, slide masters and layouts) and the document properties
+  (docx, xlsx, pptx core, app and custom properties; the pdf title, author, subject and keywords). The report gets
+  `xdfu: {detected: true, mode, copy, refused, evidence: [{place, part, marker}]}`; the evidence names the place and the marker, never
+  document text.
+- **`refuse`**: the before-phase vetoes with exit 9 and a clear message. Nothing is converted.
+- **`watermark`**: an output kind that cannot carry a mark (`odt`, `rtf`) is refused before any tool runs (exit 3). Otherwise the
+  after-phase writes the audit line, whose sequence number is the **copy number**, and marks every output of the job with
+  `XDFU copy N | <client address> | <user> | <date and time UTC>`. The user is the `sub` in server mode and the OS user in local mode;
+  the client address is the address behind the trusted proxies, and in local mode this computer's address. The outputs are validated again
+  after the hook.
+
+  | Output | The mark |
+  |---|---|
+  | `pdf` | a footer line and a diagonal text on every page (`pdf-cli`: `doc_header_footer`, `doc_watermark`). Western European text only, so other characters in a user name become `_` with a short digest |
+  | `png` | a strip with the line appended under the page (a one-line page rendered by `pdf-cli` at the png's dpi; the page pixels are never covered), and the line as a `tEXt` chunk `XDFU` |
+  | `docx` | a header, a footer, a diagonal watermark and the custom properties `XDFU-copy` and `XDFU-stamp` (`docs-cli`) |
+  | `xlsx` | a header and a footer on every sheet (`sheets-cli`); they show in the page layout and on paper |
+  | `pptx` | a footer on every slide (`slides-cli`) |
+  | `txt`, `md` | a first line (a first paragraph in md) |
+  | `csv` | a first row of one quoted field |
+  | `html` | a paragraph right after `<body>` |
+  | `odt`, `rtf` | cannot carry one: refused |
+
+  The matrix test marks all 30 directions the planner has from a docx, xlsx, pptx, pdf, txt, md or csv input and reads the mark back
+  from each output; the 6 directions to odt or rtf are refused.
+- **Audit log** (`services/convert/src/audit.rs`): JSON lines, append-only, hash-chained. Each line has `seq`, `ts` (UTC), `prev` (the
+  hash of the line before, 64 zeros first), `event` (`copy`, or `refused` with a `reason` of `mode` or `cannot_carry`), `user`,
+  `client`, `host`, `job` (the API job id and file number, or the converter's own id), `file` (left out with `xdfu_redact` or `--redact`),
+  `kind`, `target`, `places`, `outputs`, and `hash`, which is SHA-256 over the line without its `hash`. Never any content. Verify with
+  `convert xdfu-verify FILE`: it prints the line count and the last hash, or the first bad line (exit 1). A changed, deleted, inserted
+  or reordered line breaks the chain from that line on. Two limits: lines cut off the END of the file are not detected (record the
+  last hash elsewhere from time to time), and "append-only" is how this code writes the file: make the file append-only for the
+  service account (an ACL that grants append but not write; `chattr +a`). A damaged log is not extended: the server and the CLI refuse
+  to start with it. Two processes may share a log (a lock file serialises them).
+- **Limits, said plainly.** Detection reads text, not layout, so a word that is also an ordinary word (ДСП is chipboard in Russian) in
+  those places is a false positive, which errs on the safe side. Kinds that are not scanned: `doc`, `xls`, `xlsb`, `ppt`, `odt`,
+  `ods`, `odp`, `rtf`, `html`, `tsv`; a grif in one of them is not found (an owner decision: convert them to a scanned kind first, or
+  refuse them). Local mode on an uncertified computer only watermarks and warns; it cannot make XDFU handling compliant. The audit log
+  and the marks say nothing about the Rules' print, copy and save restrictions (Phase 4) or the EDS and QR (Phase 5).
+
+## Tests (`cargo test`, run from `services/`)
+
+`convert-api`: `src/*` unit tests (15: jwt 6, crypt 2, config 4, gate 1, app 2), `tests/api.rs` (18, in-process router against a stand-in tool),
+`tests/hardening.rs` (17: the review fixes), `tests/xdfu_api.rs` (5: WP15 through the API), `tests/tls.rs` (3, real sockets), `tests/e2e.rs`
+(2, the binary: refusals; every direction against the real tools, then a hard kill and a restart). `convert`: `tests/xdfu.rs` (5, real tools:
+detection per language, off is byte-identical, every direction marked or refused, refuse and redact, the audit chain and `xdfu-verify`),
+`src/audit.rs` and `src/xdfu.rs` unit tests, `tests/verdict.rs` (3). The e2e test needs the release tools in `E:/office-target/p1/<domain>/release` and
 the WP1 inputs in `E:/office-target/p3/census/in`; it skips with a message without them (`CONVERT_API_E2E_REQUIRED=1` turns that into
 a failure).
 
 ## Not done (deferred)
 
-- WP15 XDFU; SSO (OIDC) as a third `auth` value; PROXY protocol v2 (the trusted-proxy list with `X-Forwarded-For` is used instead).
+- SSO (OIDC) as a third `auth` value; PROXY protocol v2 (the trusted-proxy list with `X-Forwarded-For` is used instead).
 - A persistent queue (jobs survive restarts).
 - Operator key rotation and an HSM do not apply any more (no key is stored); token revocation (`jti`) waits for SSO, with
   `max_token_lifetime_s` limiting the damage of a leaked token.

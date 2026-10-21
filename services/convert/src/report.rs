@@ -34,6 +34,9 @@ pub struct FileReport {
     /// `--verify` ran and every output re-opened with its own CLI
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verified: Option<bool>,
+    /// WP15: present only when the XDFU hook is on and found a grif: `{detected, mode, copy, refused, evidence:[{place, part, marker}]}`
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub xdfu: Option<serde_json::Value>,
     pub outputs: Vec<String>,
 }
 

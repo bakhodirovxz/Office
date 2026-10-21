@@ -30,7 +30,7 @@ fn bad_configurations_refuse_to_start() {
     for (what, toml, needle) in [
         ("auth none on all interfaces", "auth = \"none\"\nlisten = \"0.0.0.0:18787\"\n", "loopback"),
         ("auth none on a LAN address", "listen = \"192.168.1.20:18787\"\n", "loopback"),
-        ("xdfu on", "xdfu = \"on\"\n", "not implemented yet"),
+        ("xdfu on", "xdfu = \"on\"\n", "watermark"),
         ("jwt without tls", "auth = \"jwt\"\n", "secret_file"),
         ("unknown key", "bogus = 1\n", "bogus"),
     ] {

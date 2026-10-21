@@ -39,8 +39,13 @@ pub struct Settings {
     pub work_dir: Option<PathBuf>,
     /// where the (encrypted) job store lives; defaults to `<work_dir>-store`
     pub store_dir: Option<PathBuf>,
-    /// `"off"`; any other value is refused until WP15
+    /// XDFU documents (PLAN 10): `"off"` (the default: nothing is detected, logged or marked), `"watermark"` or `"refuse"`
     pub xdfu: String,
+    /// the hash-chained audit log of XDFU jobs. Required in server mode, and it must be on storage that survives a restart (not the
+    /// RAM disk of `work_dir`); local mode defaults to the user's data directory.
+    pub xdfu_audit_file: Option<PathBuf>,
+    /// leave file names out of the audit log
+    pub xdfu_redact: bool,
     pub cpu_slots: Option<usize>,
     pub mem_budget_mb: u64,
     pub queue_max: usize,
@@ -86,6 +91,8 @@ impl Default for Settings {
             work_dir: None,
             store_dir: None,
             xdfu: "off".into(),
+            xdfu_audit_file: None,
+            xdfu_redact: false,
             cpu_slots: None,
             mem_budget_mb: 12 * 1024,
             queue_max: 100,
@@ -167,6 +174,7 @@ pub struct Resolved {
     pub trusted: Vec<Cidr>,
     /// `tls = "upstream"`: TLS ends at a trusted proxy
     pub upstream_tls: bool,
+    pub xdfu: convert::xdfu::Mode,
 }
 
 impl Resolved {
@@ -223,9 +231,7 @@ impl Settings {
 
     pub fn resolve(self) -> Result<Resolved, String> {
         let listen: SocketAddr = self.listen.parse().map_err(|_| format!("listen = \"{}\" is not an ip:port", self.listen))?;
-        if self.xdfu != "off" {
-            return Err(format!("xdfu = \"{}\": not implemented yet (only \"off\")", self.xdfu));
-        }
+        let xdfu = convert::xdfu::Mode::parse(&self.xdfu)?;
         let trusted = self.trusted_proxies.iter().map(|s| Cidr::parse(s)).collect::<Result<Vec<_>, _>>()?;
         if !matches!(self.tls.as_str(), "builtin" | "upstream") {
             return Err(format!("tls = \"{}\": expected \"builtin\" or \"upstream\"", self.tls));
@@ -273,6 +279,9 @@ impl Settings {
                 if let Some(k) = &self.key_file {
                     read_key(k)?;
                 }
+                if xdfu != convert::xdfu::Mode::Off && self.xdfu_audit_file.is_none() {
+                    return Err("xdfu needs xdfu_audit_file in server mode: the audit log must live on storage that survives a restart".into());
+                }
                 if self.max_token_lifetime_s == 0 {
                     return Err("max_token_lifetime_s must be positive".into());
                 }
@@ -290,7 +299,7 @@ impl Settings {
         }
         let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
         let cpu_slots = self.cpu_slots.unwrap_or((cores / 3).clamp(1, 4)).max(1);
-        Ok(Resolved { listen, auth, work_dir, store_dir, cpu_slots, trusted, upstream_tls, s: self })
+        Ok(Resolved { listen, auth, work_dir, store_dir, cpu_slots, trusted, upstream_tls, xdfu, s: self })
     }
 }
 
@@ -310,7 +319,7 @@ mod tests {
             assert!(e.contains("loopback") || e.contains("not an ip:port"), "{bad}: {e}");
         }
         let e = Settings { xdfu: "on".into(), ..Settings::default() }.resolve().err().unwrap();
-        assert!(e.contains("not implemented yet"), "{e}");
+        assert!(e.contains("watermark") && e.contains("refuse"), "{e}");
         let e = Settings { auth: "jwt".into(), ..Settings::default() }.resolve().err().unwrap();
         assert!(e.contains("secret_file"), "{e}");
     }

@@ -1,7 +1,7 @@
 //! Fault injection (PLAN WP2 step 5): the executor against `convert-fake-tool`. Every fault must give its exit code
 //! (1/4/5/6/8, plus 7 for a missing tool) and a human-readable message, and must never return an output.
 use convert::exec::{Config, Exit, Failure};
-use convert::hook::{JobCtx, JobHook};
+use convert::hook::{JobCtx, JobHook, ToolRunner};
 use convert::report::Warning;
 use convert::job::{self, Dest, FileReport, JobSpec};
 use convert::plan::{Outputs, Step, ToolId, ToolStep};
@@ -146,7 +146,7 @@ fn success_copies_the_output_and_passes_upstream_warnings() {
 
 struct Veto;
 impl JobHook for Veto {
-    fn after(&self, _: &JobCtx, _: &[PathBuf]) -> Result<Vec<Warning>, Failure> {
+    fn after(&self, _: &JobCtx, _: &[PathBuf], _: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
         Err(Failure { exit: Exit::Rejected, msg: "vetoed by hook".into() })
     }
 }
@@ -163,7 +163,7 @@ fn after_hook_can_veto() {
 fn before_hook_refuses_before_any_tool_runs() {
     struct Refuse(std::sync::Mutex<Vec<String>>);
     impl JobHook for Refuse {
-        fn before(&self, ctx: &JobCtx) -> Result<Vec<Warning>, Failure> {
+        fn before(&self, ctx: &JobCtx, _: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
             self.0.lock().unwrap().push(format!("{:?} {} {:?} {:?}", ctx.kind, ctx.target, ctx.principal, ctx.client));
             Err(Failure { exit: Exit::Unsupported, msg: "this direction cannot carry a watermark".into() })
         }
@@ -182,7 +182,7 @@ fn before_hook_refuses_before_any_tool_runs() {
 fn hook_warnings_join_the_report_and_context_arrives() {
     struct Note;
     impl JobHook for Note {
-        fn before(&self, ctx: &JobCtx) -> Result<Vec<Warning>, Failure> {
+        fn before(&self, ctx: &JobCtx, _: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
             assert!(ctx.job_dir.join("in").is_dir() && ctx.input.ends_with("input.txt"));
             Ok(vec![convert::report::warn("macros_dropped", 1)])
         }
@@ -199,7 +199,7 @@ fn outputs_are_listed_and_validated_again_after_the_hooks() {
     // a watermark hook that writes a NEW file next to the original: both are returned, the original is never alone
     struct Adds;
     impl JobHook for Adds {
-        fn after(&self, ctx: &JobCtx, _: &[PathBuf]) -> Result<Vec<Warning>, Failure> {
+        fn after(&self, ctx: &JobCtx, _: &[PathBuf], _: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
             std::fs::write(ctx.job_dir.join("out/output-wm.pdf"), b"%PDF-1.4\n%%EOF\n").unwrap();
             Ok(vec![])
         }
@@ -212,7 +212,7 @@ fn outputs_are_listed_and_validated_again_after_the_hooks() {
     // a hook that corrupts an output is exit 8, not a silent exit 0
     struct Corrupts;
     impl JobHook for Corrupts {
-        fn after(&self, ctx: &JobCtx, _: &[PathBuf]) -> Result<Vec<Warning>, Failure> {
+        fn after(&self, ctx: &JobCtx, _: &[PathBuf], _: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
             std::fs::write(ctx.job_dir.join("out/output.pdf"), b"garbage").unwrap();
             Ok(vec![])
         }

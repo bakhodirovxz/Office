@@ -34,6 +34,18 @@
     },
     "translit": {"type": "object", "description": "result JSON of the transliteration command: paragraphs, runs, skipped, rulesVersion ..."},
     "verified": {"type": "boolean", "description": "present only with --verify on a successful file"},
+    "xdfu": {
+      "type": "object",
+      "description": "present only when the XDFU hook is on and found the grif (WP15)",
+      "required": ["detected", "mode", "evidence"],
+      "properties": {
+        "detected": {"const": true},
+        "mode": {"enum": ["watermark", "refuse"]},
+        "copy": {"type": ["integer", "null"], "description": "the copy number (the audit log's sequence number); null when the job was refused"},
+        "refused": {"type": ["string", "null"], "description": "mode, or cannot_carry (the output kind cannot carry a watermark); null when the job went ahead"},
+        "evidence": {"type": "array", "items": {"type": "object", "required": ["place", "part", "marker"], "properties": {"place": {"enum": ["first-page-top", "header", "properties", "first-lines"]}, "part": {"type": "string"}, "marker": {"type": "string"}}}}
+      }
+    },
     "outputs": {"type": "array", "items": {"type": "string"}}
   }
 }
