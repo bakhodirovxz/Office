@@ -24,7 +24,7 @@ Workflow: `.github/workflows/ci.yml` gained the jobs `translit-preserve` (not in
 ## ru export (WP7 gap)
 
 `cargo xt i18n export` wrote `catalog-ru.tsv` only with `--with-ru`, so the ru rows (ours included) were never produced by the build pipeline. It now always writes it (upstream's Russian plus our rows; test `export_always_writes_ru_with_our_rows`). `docs/UPSTREAM.md` is updated.
-**Still open:** no app hook reads `catalog-ru.tsv` yet; the `ru` entry of `LANGUAGES` embeds upstream's own `ru.tsv` (gridcraft: `ru.rs`), so a Russian UI still shows the nine new labels in English. Shipping them needs a follow-up of the 0110 patches (build_office.rs would embed the merged ru file) in wordcraft, gridcraft and deckcraft (deckcraft has no upstream ru at all: its export holds only our 7 rows). It is a carried-patch change in three apps with ui-egui rebuilds, so it was not done in WP11.
+**Closed in WP12 (patches wordcraft 0111, gridcraft 0112, deckcraft 0113).** Before that, no app hook read `catalog-ru.tsv`; the `ru` entry of `LANGUAGES` embeds upstream's own `ru.tsv` (gridcraft: `ru.rs`), so a Russian UI still shows the nine new labels in English. Shipping them needs a follow-up of the 0110 patches (build_office.rs would embed the merged ru file) in wordcraft, gridcraft and deckcraft (deckcraft has no upstream ru at all: its export holds only our 7 rows). It is a carried-patch change in three apps with ui-egui rebuilds, so it was not done in WP11.
 
 ## Gate results (this machine, 2026-10-20)
 

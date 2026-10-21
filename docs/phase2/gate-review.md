@@ -100,3 +100,15 @@ Checked and consistent: N2 and N3 medians and raw rounds against the JSON; the c
 | Phase 5 / HRM pilot | Gate item 1 caveat: real HRM documents (`corpus/`, B-14) for both the golden behaviour and preservation. The owner reports problems found in use (delegation). |
 | Phase 8 (fidelity) | xlsx rich-text loss on any save (P3); the WP9 baseline is the engine's own round trip. |
 | Ongoing | 2026 alphabet: the law is not yet signed, and sources S14/S15 were not fetched (rules.md §15). Revisit when it is signed. |
+
+## 6. Fixes applied after the review (WP12, 2026-10-21)
+
+| Id | Status | What was done | Evidence |
+|---|---|---|---|
+| M1 | **fixed** | `mark_closers` in `crates/uz-translit/src/l2c.rs`: when the o/g candidate is directly followed by another apostrophe, the second one is the closer and the first stays the okina. `RULES_VERSION` is `uz-translit-rules/3`. | `‘tog’’` gives `‘тоғ’`, `'bog''` gives `'боғ'`. Unit test `quote_guard`; golden rows QUO-011, QUO-012 (`reviewed:agent-opus:2026-10-21` is the date of the review, the rows carry 2026-10-20 like their neighbours). |
+| M2 | **fixed** | `latinAlphabet: "1995" \| "2026" \| "auto"` (default 1995, a refused value is an error) in `docs-translit` and, as follow-up patches, in the Sheets and Slides commands. No new menu item. | `docs-translit` test `latin_alphabet_param_writes_2026_and_rejects_unknown_values`; `gridcraft/0122` and `deckcraft/0122` carry one test each (`the_latin_alphabet_param_writes_2026_and_rejects_unknown_values`). |
+| D1 | **fixed** | The cell context menu items of Sheets pass `{"scope":"selection"}`; the Review tab keeps `auto`. | `gridcraft/0122`; test `an_explicit_selection_scope_converts_a_single_cell_only`. |
+| D4 | **fixed** | The golden harness panics when `golden.tsv` or `variants.tsv` is missing or has no rows, the `>= 500` check is unconditional, and the vacuous `sentences` test is gone. | `crates/uz-translit/tests/golden.rs` |
+| m1 | **fixed** | `sirk` is a `stem` (circus: sirkda, sirklar) and `sirka` a new longer `stem` (vinegar: sirka, sirkada, sirkani). | `sirk_stems` test; golden rows TS-901..TS-903. |
+| m5 | **fixed** | `"private": true` in `ci/npm/package.template.json`. | |
+| D3, D2, m4, M3 | open | Not in this batch (Slides language tags, comparer tolerances, tracked-deleted boundary, phone open failure). | |
