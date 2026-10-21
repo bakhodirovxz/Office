@@ -284,12 +284,27 @@ fn translit_result_is_captured_and_nothing_to_convert_warns() {
 fn every_code_has_catalog_text() {
     let mut emitted: Vec<String> = convert::losses::rows().iter().map(|r| r.code.clone()).collect();
     emitted.extend(
-        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark", "text_transcoded"]
+        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark", "text_transcoded", "pdf_damaged"]
             .map(String::from),
     );
     emitted.sort();
     emitted.dedup();
     assert_eq!(emitted, report::codes(), "i18n/converter.tsv and the codes the converter emits must be the same set");
+}
+
+/// pdf-cli `info` lists what it could not read; the planner asks for it before the text or the docx is made (the real tool is
+/// exercised in tests/pdf_edge.rs). The fake tool reports a damaged cross-reference table for a file that holds XREFWARN.
+#[test]
+fn a_damaged_pdf_is_flagged_before_anything_is_made_from_it() {
+    let s = Sandbox::new("pdfinfo");
+    let damaged = s.file("cut.pdf", b"%PDF-1.4\n1 0 obj<<>>endobj\nXREFWARN\n");
+    // the fake tool has no `text` mode, so the job fails after the check: the warnings of a failed job are in the report all the same
+    let r = s.convert(&damaged, Target::Txt);
+    assert!(codes(&r).contains(&"pdf_damaged"), "{:?} {}", codes(&r), r.message);
+    assert!(r.warnings.iter().any(|w| w.code == "upstream" && w.text.contains("cross reference")), "{:?}", r.warnings);
+    assert_eq!(r.warnings.iter().find(|w| w.code == "pdf_damaged").unwrap().count, 1);
+    let whole = s.file("whole.pdf", b"%PDF-1.4\n1 0 obj<<>>endobj\n");
+    assert!(!codes(&s.convert(&whole, Target::Txt)).contains(&"pdf_damaged"));
 }
 
 #[test]

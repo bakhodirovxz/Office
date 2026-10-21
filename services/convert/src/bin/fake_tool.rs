@@ -71,7 +71,12 @@ fn main() {
                 eprintln!("fake-tool: not a valid document");
                 std::process::exit(1);
             }
-            println!("{{\"pages\": 1}}");
+            // a file that holds XREFWARN reports a damaged cross-reference table, as pdf-cli does for a cut-off PDF
+            if data.windows(8).any(|w| w == b"XREFWARN") {
+                println!("{{\"pages\": 1, \"warnings\": [\"Some document structure (bookmarks, comments, fields) could not be read: failed parsing cross reference table\"]}}");
+            } else {
+                println!("{{\"pages\": 1}}");
+            }
         }
         other => {
             eprintln!("fake-tool: unknown mode '{other}'");

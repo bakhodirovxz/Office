@@ -171,6 +171,9 @@ pub enum Expand {
     SlidePages { deck: String, spec: Option<PageSpec>, dpi: u32 },
     /// `pdf-cli info <pdf>`, then `split` with the exact number of parts known
     PdfSplit { pdf: String, by: SplitBy },
+    /// `pdf-cli info <pdf>` and nothing else: what the tool could not read (a cut-off file, a damaged cross-reference table) becomes a
+    /// `pdf_damaged` warning before the text or the docx is made from the file
+    PdfCheck { pdf: String },
 }
 
 /// What an expansion produced: the steps, and warnings the planner knows about before anything runs (hidden sheets).
@@ -427,7 +430,7 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
             let mut st = tool(ToolId::Pdf, &argv, "out/output.txt");
             st.stdout_to = Some("out/output.txt".into());
             st.allow_empty = true;
-            vec![Step::Tool(st)]
+            vec![Step::Expand(Expand::PdfCheck { pdf: inp.into() }), Step::Tool(st)]
         }
         Target::Docx => {
             // with --translit the pdf -> docx step writes a middle file and docs-cli converts it (PLAN 4)
@@ -448,7 +451,7 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
                     ]);
                     let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/native.json", "--root", "."], first);
                     st.write_files = vec![("mid/native.json".into(), script.to_string())];
-                    vec![Step::Tool(st)]
+                    vec![Step::Expand(Expand::PdfCheck { pdf: inp.into() }), Step::Tool(st)]
                 }
             };
             if let Some(tr) = tr {

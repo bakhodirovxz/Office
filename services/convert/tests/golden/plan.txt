@@ -160,8 +160,10 @@ row pptx->png:
 row pptx->pptx:
     slides-cli convert in/input.pptx out/output.pptx
 row pdf->docx:
+    EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"out/output.docx"},"tool":"doc_export_office"}]]
 row pdf->txt:
+    EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli text in/input.pdf > out/output.txt
 row pdf->png:
     EXPAND PdfPages { pdf: "in/input.pdf", spec: None, dpi: 150 }
@@ -292,6 +294,7 @@ translit-cyrl pptx->png:
     EXPAND SlidePages { deck: "mid/deck.pptx", spec: None, dpi: 150 }
 translit-cyrl csv->csv: Unsupported("--translit is not available for .csv to .csv")
 translit-cyrl pdf->docx:
+    EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"mid/pdf.docx"},"tool":"doc_export_office"}]]
     docs-cli run --file mid/pdf.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
 translit-latn-2026 docx->docx:
@@ -316,6 +319,7 @@ pages+dpi pdf->png:
     EXPAND PdfPages { pdf: "in/input.pdf", spec: Some(PageSpec([(1, 1), (3, 5)])), dpi: 300 }
 pages-on-pdf-out docx->pdf: Usage("--pages only applies to png output and pdf to txt")
 pdf-text-page pdf->txt:
+    EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli text in/input.pdf --page 2 > out/output.txt
 pdf-text-pages pdf->txt: Usage("pdf to txt takes one page (--pages N), or none for all")
 pdf-sidecar pdf->docx:

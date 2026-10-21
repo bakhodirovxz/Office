@@ -226,7 +226,7 @@ fn run_plan(cfg: &Config, ctl: &Ctl, job: &Path, steps: Vec<Step>, input_mb: f64
             Step::Expand(e) => {
                 let (tool, argv): (ToolId, Vec<String>) = match &e {
                     Expand::CsvSheets { input, .. } => (ToolId::Sheets, vec!["info".into(), input.clone(), "--json".into()]),
-                    Expand::PdfPages { pdf, .. } | Expand::PdfSplit { pdf, .. } => (ToolId::Pdf, vec!["info".into(), pdf.clone()]),
+                    Expand::PdfPages { pdf, .. } | Expand::PdfSplit { pdf, .. } | Expand::PdfCheck { pdf } => (ToolId::Pdf, vec!["info".into(), pdf.clone()]),
                     Expand::SlidePages { deck, .. } => (ToolId::Slides, vec!["info".into(), deck.clone()]),
                 };
                 let ran = run_tool(cfg, ctl, tool, &argv, job, None, input_mb, 0, &mut p.steps)?;
@@ -235,11 +235,16 @@ fn run_plan(cfg: &Config, ctl: &Ctl, job: &Path, steps: Vec<Step>, input_mb: f64
                 for w in ran.warnings {
                     p.upstream(w);
                 }
-                // pdf-cli info lists what it could not read (a damaged page, skipped content) in `warnings`
-                for w in info.get("warnings").and_then(|w| w.as_array()).into_iter().flatten().filter_map(|w| w.as_str()) {
+                // pdf-cli info lists what it could not read (a damaged page, skipped content, a cross-reference table it had to rebuild)
+                // in `warnings`: each is shown as the engine said it, and the file as a whole is flagged `pdf_damaged`
+                let damage: Vec<&str> = info.get("warnings").and_then(|w| w.as_array()).into_iter().flatten().filter_map(|w| w.as_str()).collect();
+                for w in &damage {
                     p.upstream(format!("Warning: {w}"));
                 }
-                if matches!(e, Expand::PdfPages { .. } | Expand::PdfSplit { .. }) {
+                if tool == ToolId::Pdf && !damage.is_empty() {
+                    p.warn("pdf_damaged", damage.len() as u32);
+                }
+                if matches!(e, Expand::PdfPages { .. } | Expand::PdfSplit { .. } | Expand::PdfCheck { .. }) {
                     pages = info.get("pages").and_then(|p| p.as_u64()).unwrap_or(0) as u32;
                 }
                 let more = match &e {
@@ -247,6 +252,7 @@ fn run_plan(cfg: &Config, ctl: &Ctl, job: &Path, steps: Vec<Step>, input_mb: f64
                     Expand::PdfPages { pdf, spec, dpi } => plan::expand_pages(pdf, spec, *dpi, &info, &cfg.caps),
                     Expand::SlidePages { deck, spec, dpi } => plan::expand_slides(deck, spec, *dpi, &info, &cfg.caps),
                     Expand::PdfSplit { pdf, by } => plan::expand_split(pdf, by, &info, &cfg.caps),
+                    Expand::PdfCheck { .. } => Ok(plan::Expanded { steps: vec![], warnings: vec![] }),
                 }
                 .map_err(plan_failure)?;
                 for (code, n) in more.warnings {
