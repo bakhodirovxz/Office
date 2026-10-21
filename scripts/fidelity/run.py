@@ -31,6 +31,34 @@ from fid.util import CLI, rasterise, pdf_pages, pdf_text, text_metrics, pix_metr
 SRC_FIXTURE_DIR = None
 
 
+def office_source(src, work):
+    """The file Office is given as the reference for `src`. A text file in a legacy encoding (a Word "save as text" in cp1251, UTF-16
+    without a BOM) is misread by Word's own guess, which makes the reference wrong and not the converter; hand Word the same text as
+    UTF-8 with a BOM. Anything else is the source itself."""
+    src = Path(src)
+    if src.suffix.lower() not in (".txt", ".csv", ".tsv"):
+        return src
+    b = src.read_bytes()
+    try:
+        b.decode("utf-8"); return src
+    except UnicodeDecodeError:
+        pass
+    if b[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        text = b.decode("utf-16")
+    else:   # cp1251 when most high bytes sit in runs of 3+ (Cyrillic words), else cp1252: the same rule as text.rs
+        hi = runs = run = 0
+        for x in list(b) + [0]:
+            if x >= 0xC0 or x in (0xA1, 0xA2, 0xA8, 0xAA, 0xAF, 0xB2, 0xB3, 0xB4, 0xB8, 0xBA, 0xBF):
+                hi += 1; run += 1
+            else:
+                runs += run if run >= 3 else 0; run = 0
+        text = b.decode("cp1251" if runs >= 3 and runs * 2 >= hi else "cp1252", "replace")
+    out = Path(work) / "_ref_src" / src.name
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(b"\xef\xbb\xbf" + text.encode("utf-8"))
+    return out
+
+
 def key(p):
     return str(p).replace("\\", "/")
 
@@ -149,8 +177,10 @@ def losses_of(src_s, out_s, vis, tmet, translit=False):
         if not (translit and a and abs(a - b) <= 0.1 * max(a, b)):
             L.append({"feature": "pagination", "before": a, "after": b})
     for m in (vis, tmet):
-        # a low word-order similarity alone is a reading-order difference (tables, text boxes), not lost text: words must be missing
-        if m and m.get("word_sim") is not None and m["word_sim"] < 0.9 and m.get("missing_count", 1) >= max(3, 0.02 * (m.get("ref_words") or 0)):
+        # a low word-order similarity alone is a reading-order difference (tables, text boxes), and words glued by a tab are an extraction
+        # artefact: letters must be missing (at least 2% of the reference's, and some whole words)
+        if (m and m.get("word_sim") is not None and m["word_sim"] < 0.9 and m.get("chars_kept", 0) < 0.98
+                and m.get("missing_count", 1) >= max(3, 0.02 * (m.get("ref_words") or 0))):
             L.append({"feature": "text", "before": 1.0, "after": m["word_sim"]}); break
     for m in (vis, tmet):
         if m and m.get("cyr_kept") is not None and m["cyr_kept"] < 0.99:
@@ -208,6 +238,7 @@ def main():
     for c in cases:
         if c.get("error"): continue
         d, kind, w, src = c["d"], c["d"]["kind"], c["w"], c["src"]
+        osrc = office_source(src, work)
         t0 = time.time()
         # --- craft
         if kind == "pdfop":
@@ -224,16 +255,16 @@ def main():
         # --- Office source PDF (the reference for every pixel/page/text metric) + Office's own conversion
         stem = src.stem
         if app_of(src) and kind in ("pdf", "png", "edit", "text", "csv", "translit"):
-            c["ref_pdf"] = oq.need(src, "pdf", work / "_ref" / (src.name + ".pdf")) if src.suffix.lower() != ".pdf" else None
+            c["ref_pdf"] = oq.need(osrc, "pdf", work / "_ref" / (src.name + ".pdf")) if src.suffix.lower() != ".pdf" else None
         elif src.suffix.lower() == ".pdf":
             c["ref_pdf"] = key(src)
         fmt, why = office_plan(d, src.name)
         c["engines"]["office"] = {"status": "pending" if fmt else "unavailable", "reason": why or oq.reason}
         if fmt:
             ofile = w / "office" / ((stem + "_png") if fmt == "png" else (stem + "." + fmt))
-            c["engines"]["office"]["out"] = oq.need(src, fmt, ofile)
+            c["engines"]["office"]["out"] = oq.need(osrc, fmt, ofile)
             if kind == "text" or d["to"] in ("html", "md", "txt"):
-                c["ref_txt"] = oq.need(src, "txt", work / "_ref" / (src.name + ".ref.txt")) if app_of(src) == "word" else None
+                c["ref_txt"] = oq.need(osrc, "txt", work / "_ref" / (src.name + ".ref.txt")) if app_of(src) == "word" else None
         if kind == "csv" and not fmt:
             pass
         # --- soffice

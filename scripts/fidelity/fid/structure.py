@@ -175,7 +175,8 @@ NOT_A_LOSS = {"kind_mismatch", "hidden_sheet_exported", "very_hidden_sheet_skipp
 
 def silent_losses(losses, warnings):
     """Losses with no matching warning. warnings: [{code,text}]. This is the 'loss without warning is a bug' list."""
+    warnings = [w for w in warnings if w.get("code") not in NOT_A_LOSS]
     blob = " ".join("%s %s" % (w.get("code", ""), w.get("text", "")) for w in warnings).lower()
-    explained = any(w.get("code") not in NOT_A_LOSS for w in warnings)
+    explained = bool(warnings)
     return [l for l in losses if not re.search(COVER.get(l["feature"], l["feature"]), blob)
             and not (l["feature"] in DERIVED and explained)]

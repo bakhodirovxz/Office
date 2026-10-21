@@ -66,7 +66,11 @@ def text_metrics(ref_txt, cand_txt):
     sim = difflib.SequenceMatcher(None, wa, wb, autojunk=False).ratio()
     ca, cb = collections.Counter(wa), collections.Counter(wb)
     miss = list((ca - cb).elements())
-    return {"word_sim": round(sim, 4), "ref_words": len(wa), "cand_words": len(wb), "missing_count": len(miss),
+    # the letters and digits of the reference that the candidate still has (order and spaces ignored): a PDF text extractor glues words
+    # that are separated by a tab, and reads tables in another order, but it never makes text up
+    ka, kb = collections.Counter("".join(wa)), collections.Counter("".join(wb))
+    kept = sum((ka & kb).values()) / sum(ka.values()) if ka else 1.0
+    return {"word_sim": round(sim, 4), "ref_words": len(wa), "cand_words": len(wb), "missing_count": len(miss), "chars_kept": round(kept, 4),
             "missing_words": miss[:10], "cyr_ref": cr, "cyr_cand": cc,
             "cyr_kept": round(min(cc, cr) / cr, 4) if cr else None}
 
