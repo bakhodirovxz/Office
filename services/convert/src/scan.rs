@@ -311,9 +311,34 @@ fn scan_text(path: &Path) -> Scan {
             span_gt1(&low, b"colspan=") + span_gt1(&low, b"rowspan="),
         );
         s
+    } else if path
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| ["md", "markdown"].iter().any(|m| e.eq_ignore_ascii_case(m)))
+    {
+        add(&mut s, "tables", md_pipe_tables(&bytes));
+        s
     } else {
         Scan::default()
     }
+}
+
+/// Pipe tables of a Markdown file: a header line with a `|`, then a delimiter row such as `| --- | :-: |` (a bare `---` is a rule).
+fn md_pipe_tables(b: &[u8]) -> u32 {
+    let text = String::from_utf8_lossy(b);
+    let mut lines = text.lines().map(str::trim).peekable();
+    let mut n = 0;
+    while let Some(l) = lines.next() {
+        let delim = lines.peek().is_some_and(|d| {
+            d.contains('|')
+                && d.contains('-')
+                && d.chars().all(|c| matches!(c, '|' | '-' | ':' | ' '))
+        });
+        if l.contains('|') && delim {
+            n += 1;
+        }
+    }
+    n
 }
 
 /// `<img` tags whose source is not an inline `data:` URI: the picture lives in another file that a one-file conversion never sees.
@@ -780,6 +805,15 @@ mod tests {
                 ("tables", 1)
             ]
         );
+        let md = dir.join("a.md");
+        std::fs::write(
+            &md,
+            "# T\n\n---\n\n| a | b |\n|---|:-:|\n| 1 | 2 |\n\na | b\n--|--\n1 | 2\n",
+        )
+        .unwrap();
+        assert_eq!(feats(&scan(&md).unwrap()), [("tables", 2)]);
+        std::fs::write(&md, "# T\n\n---\n\ntext | not a table\n").unwrap();
+        assert!(scan(&md).unwrap().inspected && scan(&md).unwrap().features.is_empty());
         // a plain text file and an html fragment stay opaque
         let txt = dir.join("a.txt");
         std::fs::write(&txt, "<table><tr>").unwrap();

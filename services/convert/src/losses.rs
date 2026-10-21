@@ -170,8 +170,12 @@ mod tests {
             )
             .is_empty()
         );
-        // md and txt inputs do not "lose" layout going to md/txt
-        assert!(codes(&blind, Kind::Md, Target::Txt).is_empty());
+        // md and txt inputs do not "lose" layout going to md/txt; an md file with no pipe table does not lose a table
+        assert!(codes(&none, Kind::Md, Target::Txt).is_empty());
+        assert_eq!(
+            codes(&with(&[("tables", 1)]), Kind::Md, Target::Txt),
+            ["tables_to_text"]
+        );
     }
 
     /// The WP9 rows: each fires for the measured kind and target when the scanner found the feature, and stays quiet without it,
@@ -233,7 +237,7 @@ mod tests {
             (
                 "tables_to_text",
                 "tables",
-                &[Kind::Docx, Kind::Odt, Kind::Rtf, Kind::Html],
+                &[Kind::Docx, Kind::Odt, Kind::Rtf, Kind::Html, Kind::Md],
                 &[Target::Txt],
                 Target::Md,
             ),
@@ -245,6 +249,7 @@ mod tests {
                     Target::Docx,
                     Target::Odt,
                     Target::Rtf,
+                    Target::Html,
                     Target::Pdf,
                     Target::Png,
                 ],

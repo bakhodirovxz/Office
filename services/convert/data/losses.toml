@@ -112,14 +112,14 @@ evidence = "WP9 docs.docx2md and docx2txt / hrm_order.docx and hrm_letter.docx: 
 
 [[row]]
 code = "tables_to_text"
-from = ["docx", "odt", "rtf", "html"]
+from = ["docx", "odt", "rtf", "html", "md"]
 to = ["txt"]
 requires = ["tables"]
-evidence = "WP9 docs.docx2txt / hrm_order.docx: tables 2->0, hrm_letter.docx: tables 1->0 (a text file has no tables)"
+evidence = "WP9 docs.docx2txt / hrm_order.docx: tables 2->0, hrm_letter.docx: tables 1->0 (a text file has no tables); WP10 docs.md2txt / order.md: tables 2->0"
 
 [[row]]
 code = "html_images_not_embedded"
 from = ["html"]
-to = ["docx", "odt", "rtf", "pdf", "png"]
+to = ["docx", "odt", "rtf", "html", "pdf", "png"]
 requires = ["linked_images"]
-evidence = "WP9 docs.html2docx / order.html: images 2->0 and pages 5->2 (both are img tags with src=order_files/imageNNN.png, files the one-file job never sees)"
+evidence = "WP10 docs.html2html / order.html: images 2->0, same cause; WP9 docs.html2docx / order.html: images 2->0 and pages 5->2 (both are img tags with src=order_files/imageNNN.png, files the one-file job never sees)"
