@@ -5,7 +5,11 @@
 //! and the shapes the planner really emits, so `convert_file` can run end to end without a domain CLI:
 //!   convert IN OUT | run ... (--out/--save OUT, or a file.exportPdf path) | info FILE (fails when the file holds BADINFO)
 fn stub(path: &str, extra: &str) {
-    let body = if path.ends_with(".pdf") { format!("%PDF-1.4\n1 0 obj<<>>endobj\n{extra}\ntrailer<<>>\n%%EOF\n") } else { format!("stub {extra}\n") };
+    let body = if path.ends_with(".pdf") {
+        format!("%PDF-1.4\n1 0 obj<<>>endobj\n{extra}\ntrailer<<>>\n%%EOF\n")
+    } else {
+        format!("stub {extra}\n")
+    };
     std::fs::write(path, body).unwrap();
 }
 
@@ -33,7 +37,9 @@ fn main() {
         }
         "empty" => std::fs::write(arg(1), b"").unwrap(),
         // a zip header and nothing else: right magic, unreadable directory
-        "truncated" => std::fs::write(arg(1), b"PK\x03\x04\x14\x00\x00\x00\x08\x00partial").unwrap(),
+        "truncated" => {
+            std::fs::write(arg(1), b"PK\x03\x04\x14\x00\x00\x00\x08\x00partial").unwrap()
+        }
         "ok" | "warn" => {
             if arg(0) == "warn" {
                 eprintln!("Warning: fake-tool dropped the charts");
@@ -58,8 +64,15 @@ fn main() {
             stub(arg(2), "")
         }
         "run" => {
-            let at = a.iter().position(|x| x == "--out" || x == "--save").map(|i| a[i + 1].clone());
-            let pdf = a.iter().find_map(|x| x.strip_prefix("file.exportPdf=")).and_then(|j| serde_json::from_str::<serde_json::Value>(j).ok()).and_then(|v| v["path"].as_str().map(String::from));
+            let at = a
+                .iter()
+                .position(|x| x == "--out" || x == "--save")
+                .map(|i| a[i + 1].clone());
+            let pdf = a
+                .iter()
+                .find_map(|x| x.strip_prefix("file.exportPdf="))
+                .and_then(|j| serde_json::from_str::<serde_json::Value>(j).ok())
+                .and_then(|v| v["path"].as_str().map(String::from));
             stub(&at.or(pdf).expect("run needs an output"), "");
         }
         "info" => {
@@ -73,7 +86,9 @@ fn main() {
             }
             // a file that holds XREFWARN reports a damaged cross-reference table, as pdf-cli does for a cut-off PDF
             if data.windows(8).any(|w| w == b"XREFWARN") {
-                println!("{{\"pages\": 1, \"warnings\": [\"Some document structure (bookmarks, comments, fields) could not be read: failed parsing cross reference table\"]}}");
+                println!(
+                    "{{\"pages\": 1, \"warnings\": [\"Some document structure (bookmarks, comments, fields) could not be read: failed parsing cross reference table\"]}}"
+                );
             } else {
                 println!("{{\"pages\": 1}}");
             }

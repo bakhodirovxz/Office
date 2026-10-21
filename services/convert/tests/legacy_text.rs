@@ -22,7 +22,8 @@ impl Sandbox {
         let mut c = Config::from_env();
         c.work_dir = self.0.join("work");
         for t in ToolId::ALL {
-            c.tools.insert(t, env!("CARGO_BIN_EXE_convert-fake-tool").into());
+            c.tools
+                .insert(t, env!("CARGO_BIN_EXE_convert-fake-tool").into());
         }
         c.sample_ms = 50;
         if let Some(seen) = seen {
@@ -34,8 +35,17 @@ impl Sandbox {
         let p = self.0.join(name);
         std::fs::write(&p, bytes).unwrap();
         let seen = Arc::new(Mutex::new(vec![]));
-        let dest = Dest { out_dir: self.0.join("dest"), out_file: None };
-        let r = job::convert_file(&self.cfg(Some(seen.clone())), &p, to, &Options::default(), &dest);
+        let dest = Dest {
+            out_dir: self.0.join("dest"),
+            out_file: None,
+        };
+        let r = job::convert_file(
+            &self.cfg(Some(seen.clone())),
+            &p,
+            to,
+            &Options::default(),
+            &dest,
+        );
         let got = seen.lock().unwrap().clone();
         (r, got)
     }
@@ -66,13 +76,24 @@ fn cp1251_text_is_transcoded_and_named() {
     let s = Sandbox::new("cp1251");
     // "Буйруқ № 125-к: Тошкент шаҳри" has letters cp1251 lacks (қ, ҳ): they come out as '?' in Word too; the Cyrillic ones survive
     let bytes: &[u8] = b"\xC1\xF3\xE9\xF0\xF3? \xB9 125-\xEA\r\n\xD2\xEE\xF8\xEA\xE5\xED\xF2 \xF8\xE0?\xF0\xE8, 2026 \xE9\xE8\xEB 15 \xEE\xEA\xF2\xFF\xE1\xF0\xFC\r\n";
-    for (name, to) in [("order.txt", Target::Pdf), ("order.csv", Target::Pdf), ("order.md", Target::Pdf)] {
+    for (name, to) in [
+        ("order.txt", Target::Pdf),
+        ("order.csv", Target::Pdf),
+        ("order.md", Target::Pdf),
+    ] {
         let (r, seen) = s.convert(name, bytes, to);
         assert_eq!(r.code, 0, "{name}: {}", r.message);
         assert_eq!(codes(&r), ["text_transcoded"], "{name}");
-        assert!(r.warnings[0].text.contains("cp1251"), "{}", r.warnings[0].text);
+        assert!(
+            r.warnings[0].text.contains("cp1251"),
+            "{}",
+            r.warnings[0].text
+        );
         let text = String::from_utf8(seen).expect("the tool gets UTF-8");
-        assert!(text.starts_with("\u{411}\u{443}\u{439}\u{440}\u{443}?"), "{text}");
+        assert!(
+            text.starts_with("\u{411}\u{443}\u{439}\u{440}\u{443}?"),
+            "{text}"
+        );
         assert!(text.contains("\u{2116} 125-\u{43a}\r\n") && text.contains("2026 \u{439}\u{438}\u{43b} 15 \u{43e}\u{43a}\u{442}\u{44f}\u{431}\u{440}\u{44c}"), "{text}");
     }
 }
@@ -84,20 +105,49 @@ fn cp1252_text_is_transcoded_and_named() {
     let (r, seen) = s.convert("menu.txt", bytes, Target::Pdf);
     assert_eq!(r.code, 0, "{}", r.message);
     assert_eq!(codes(&r), ["text_transcoded"]);
-    assert!(r.warnings[0].text.contains("cp1252"), "{}", r.warnings[0].text);
-    assert_eq!(String::from_utf8(seen).unwrap(), "Le caf\u{e9} du d\u{e9}jeuner co\u{fb}te 5 \u{20ac}; na\u{ef}ve \u{e0} la fa\u{e7}on, \u{fc}ber, se\u{f1}or.\r\n");
+    assert!(
+        r.warnings[0].text.contains("cp1252"),
+        "{}",
+        r.warnings[0].text
+    );
+    assert_eq!(
+        String::from_utf8(seen).unwrap(),
+        "Le caf\u{e9} du d\u{e9}jeuner co\u{fb}te 5 \u{20ac}; na\u{ef}ve \u{e0} la fa\u{e7}on, \u{fc}ber, se\u{f1}or.\r\n"
+    );
 }
 
 #[test]
 fn utf16_with_a_bom_is_transcoded_in_both_byte_orders() {
     let s = Sandbox::new("utf16");
     let text = "Salom, dunyo \u{43c}\u{438}\u{440}\r\nIkkinchi qator\r\n";
-    let le: Vec<u8> = [&[0xFF, 0xFE][..], &text.encode_utf16().flat_map(|c| c.to_le_bytes()).collect::<Vec<_>>()].concat();
-    let be: Vec<u8> = [&[0xFE, 0xFF][..], &text.encode_utf16().flat_map(|c| c.to_be_bytes()).collect::<Vec<_>>()].concat();
-    for (name, bytes, label) in [("le.txt", le.clone(), "UTF-16 LE"), ("be.txt", be, "UTF-16 BE"), ("le.csv", le, "UTF-16 LE")] {
+    let le: Vec<u8> = [
+        &[0xFF, 0xFE][..],
+        &text
+            .encode_utf16()
+            .flat_map(|c| c.to_le_bytes())
+            .collect::<Vec<_>>(),
+    ]
+    .concat();
+    let be: Vec<u8> = [
+        &[0xFE, 0xFF][..],
+        &text
+            .encode_utf16()
+            .flat_map(|c| c.to_be_bytes())
+            .collect::<Vec<_>>(),
+    ]
+    .concat();
+    for (name, bytes, label) in [
+        ("le.txt", le.clone(), "UTF-16 LE"),
+        ("be.txt", be, "UTF-16 BE"),
+        ("le.csv", le, "UTF-16 LE"),
+    ] {
         let (r, seen) = s.convert(name, &bytes, Target::Pdf);
         assert_eq!(r.code, 0, "{name}: {}", r.message);
-        assert!(r.warnings[0].text.contains(label), "{name}: {}", r.warnings[0].text);
+        assert!(
+            r.warnings[0].text.contains(label),
+            "{name}: {}",
+            r.warnings[0].text
+        );
         assert_eq!(String::from_utf8(seen).unwrap(), text, "{name}");
     }
 }

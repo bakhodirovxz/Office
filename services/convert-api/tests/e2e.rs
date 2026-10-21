@@ -21,24 +21,48 @@ fn sandbox(name: &str) -> PathBuf {
 }
 
 fn free_port() -> u16 {
-    std::net::TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port()
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
 }
 
 #[test]
 fn bad_configurations_refuse_to_start() {
     let d = sandbox("refuse");
     for (what, toml, needle) in [
-        ("auth none on all interfaces", "auth = \"none\"\nlisten = \"0.0.0.0:18787\"\n", "loopback"),
-        ("auth none on a LAN address", "listen = \"192.168.1.20:18787\"\n", "loopback"),
+        (
+            "auth none on all interfaces",
+            "auth = \"none\"\nlisten = \"0.0.0.0:18787\"\n",
+            "loopback",
+        ),
+        (
+            "auth none on a LAN address",
+            "listen = \"192.168.1.20:18787\"\n",
+            "loopback",
+        ),
         ("xdfu on", "xdfu = \"on\"\n", "watermark"),
         ("jwt without tls", "auth = \"jwt\"\n", "secret_file"),
         ("unknown key", "bogus = 1\n", "bogus"),
     ] {
         let cfg = d.join("c.toml");
-        std::fs::write(&cfg, format!("work_dir = '{}'\n{toml}", d.join("work").display())).unwrap();
-        let out = Command::new(BIN).arg("--config").arg(&cfg).output().unwrap();
+        std::fs::write(
+            &cfg,
+            format!("work_dir = '{}'\n{toml}", d.join("work").display()),
+        )
+        .unwrap();
+        let out = Command::new(BIN)
+            .arg("--config")
+            .arg(&cfg)
+            .output()
+            .unwrap();
         assert_eq!(out.status.code(), Some(2), "{what}");
-        assert!(String::from_utf8_lossy(&out.stderr).contains(needle), "{what}: {}", String::from_utf8_lossy(&out.stderr));
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains(needle),
+            "{what}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
     let _ = std::fs::remove_dir_all(&d);
 }
@@ -61,9 +85,20 @@ impl Server {
         )
         .unwrap();
         let mut cmd = Command::new(BIN);
-        cmd.arg("--config").arg(&cfg).stdout(Stdio::null()).stderr(Stdio::null());
-        for (var, dom, exe) in [("DOCS", "docs", "docs-cli"), ("SHEETS", "sheets", "sheets-cli"), ("SLIDES", "slides", "slides-cli"), ("PDF", "pdf", "pdf-cli")] {
-            cmd.env(format!("CONVERT_{var}_CLI"), format!("E:/office-target/p1/{dom}/release/{exe}.exe"));
+        cmd.arg("--config")
+            .arg(&cfg)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        for (var, dom, exe) in [
+            ("DOCS", "docs", "docs-cli"),
+            ("SHEETS", "sheets", "sheets-cli"),
+            ("SLIDES", "slides", "slides-cli"),
+            ("PDF", "pdf", "pdf-cli"),
+        ] {
+            cmd.env(
+                format!("CONVERT_{var}_CLI"),
+                format!("E:/office-target/p1/{dom}/release/{exe}.exe"),
+            );
         }
         let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../upstream/craft-fonts");
         if fonts.is_dir() {
@@ -72,7 +107,10 @@ impl Server {
         let child = cmd.spawn().unwrap();
         let t = Instant::now();
         while TcpStream::connect(("127.0.0.1", port)).is_err() {
-            assert!(t.elapsed() < Duration::from_secs(30), "the server did not start");
+            assert!(
+                t.elapsed() < Duration::from_secs(30),
+                "the server did not start"
+            );
             std::thread::sleep(Duration::from_millis(100));
         }
         Server { child, port }
@@ -96,23 +134,53 @@ struct Client {
 
 impl Client {
     fn new(port: u16) -> Client {
-        let agent: ureq::Agent = ureq::Agent::config_builder().proxy(None).http_status_as_error(false).timeout_global(Some(Duration::from_secs(600))).build().into();
-        Client { agent, base: format!("http://127.0.0.1:{port}") }
+        let agent: ureq::Agent = ureq::Agent::config_builder()
+            .proxy(None)
+            .http_status_as_error(false)
+            .timeout_global(Some(Duration::from_secs(600)))
+            .build()
+            .into();
+        Client {
+            agent,
+            base: format!("http://127.0.0.1:{port}"),
+        }
     }
     fn get(&self, path: &str) -> (u16, Vec<u8>) {
-        let mut r = self.agent.get(format!("{}{path}", self.base)).call().unwrap();
-        (r.status().as_u16(), r.body_mut().with_config().limit(1 << 30).read_to_vec().unwrap())
+        let mut r = self
+            .agent
+            .get(format!("{}{path}", self.base))
+            .call()
+            .unwrap();
+        (
+            r.status().as_u16(),
+            r.body_mut()
+                .with_config()
+                .limit(1 << 30)
+                .read_to_vec()
+                .unwrap(),
+        )
     }
     fn json(&self, path: &str) -> Value {
         serde_json::from_slice(&self.get(path).1).unwrap()
     }
     fn post(&self, name: &str, data: &[u8], options: &Value) -> (u16, Value) {
         let b = "----e2e-boundary";
-        let mut body = format!("--{b}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{name}\"\r\n\r\n").into_bytes();
+        let mut body = format!(
+            "--{b}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{name}\"\r\n\r\n"
+        )
+        .into_bytes();
         body.extend_from_slice(data);
         body.extend_from_slice(format!("\r\n--{b}\r\nContent-Disposition: form-data; name=\"options\"\r\n\r\n{options}\r\n--{b}--\r\n").as_bytes());
-        let mut r = self.agent.post(format!("{}/api/v1/jobs", self.base)).header("Content-Type", format!("multipart/form-data; boundary={b}")).send(&body[..]).unwrap();
-        (r.status().as_u16(), serde_json::from_slice(&r.body_mut().read_to_vec().unwrap()).unwrap_or(Value::Null))
+        let mut r = self
+            .agent
+            .post(format!("{}/api/v1/jobs", self.base))
+            .header("Content-Type", format!("multipart/form-data; boundary={b}"))
+            .send(&body[..])
+            .unwrap();
+        (
+            r.status().as_u16(),
+            serde_json::from_slice(&r.body_mut().read_to_vec().unwrap()).unwrap_or(Value::Null),
+        )
     }
     /// POST, poll to done, return the final status.
     fn run(&self, name: &str, data: &[u8], options: &Value) -> Value {
@@ -125,7 +193,10 @@ impl Client {
             if s["state"] == "done" {
                 return s;
             }
-            assert!(t.elapsed() < Duration::from_secs(600), "{name} {options} never finished: {s}");
+            assert!(
+                t.elapsed() < Duration::from_secs(600),
+                "{name} {options} never finished: {s}"
+            );
             std::thread::sleep(Duration::from_millis(150));
         }
     }
@@ -158,17 +229,29 @@ Vali	41
     if !text.is_empty() {
         return Some((format!("sample.{kind}"), text.to_vec()));
     }
-    let mut files: Vec<_> = std::fs::read_dir(INPUTS).ok()?.filter_map(Result::ok).filter(|e| e.path().extension().is_some_and(|x| x == kind)).collect();
+    let mut files: Vec<_> = std::fs::read_dir(INPUTS)
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().is_some_and(|x| x == kind))
+        .collect();
     files.sort_by_key(|e| e.metadata().map_or(u64::MAX, |m| m.len()));
     let f = files.first()?.path();
-    Some((f.file_name()?.to_string_lossy().into_owned(), std::fs::read(&f).ok()?))
+    Some((
+        f.file_name()?.to_string_lossy().into_owned(),
+        std::fs::read(&f).ok()?,
+    ))
 }
 
 #[test]
 fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() {
-    let tools = ["docs", "sheets", "slides", "pdf"].iter().all(|d| Path::new(&format!("E:/office-target/p1/{d}/release/{d}-cli.exe")).is_file());
+    let tools = ["docs", "sheets", "slides", "pdf"]
+        .iter()
+        .all(|d| Path::new(&format!("E:/office-target/p1/{d}/release/{d}-cli.exe")).is_file());
     if !tools || !Path::new(INPUTS).is_dir() {
-        assert!(std::env::var("CONVERT_API_E2E_REQUIRED").is_err(), "tools or {INPUTS} missing");
+        assert!(
+            std::env::var("CONVERT_API_E2E_REQUIRED").is_err(),
+            "tools or {INPUTS} missing"
+        );
         eprintln!("SKIPPED: the release tools or {INPUTS} are not on this machine");
         return;
     }
@@ -177,9 +260,23 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
     let mut server = Server::start(&dir, port);
     let c = Client::new(server.port);
     let formats = c.json("/api/v1/formats");
-    let rows: Vec<(String, String)> = formats["rows"].as_array().unwrap().iter().map(|r| (r["from"].as_str().unwrap().into(), r["to"].as_str().unwrap().into())).collect();
+    let rows: Vec<(String, String)> = formats["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| {
+            (
+                r["from"].as_str().unwrap().into(),
+                r["to"].as_str().unwrap().into(),
+            )
+        })
+        .collect();
     assert!(rows.len() >= 80, "{} rows", rows.len());
-    assert!(c.json("/healthz")["ok"] == json!(true), "{}", c.json("/healthz"));
+    assert!(
+        c.json("/healthz")["ok"] == json!(true),
+        "{}",
+        c.json("/healthz")
+    );
 
     let results = Mutex::new(Vec::<(String, String, String, u128, u64)>::new());
     let work: Mutex<Vec<(String, String)>> = Mutex::new(rows.clone());
@@ -187,10 +284,15 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
         for _ in 0..4 {
             s.spawn(|| {
                 loop {
-                    let Some((from, to)) = work.lock().unwrap().pop() else { break };
+                    let Some((from, to)) = work.lock().unwrap().pop() else {
+                        break;
+                    };
                     let t = Instant::now();
                     let Some((name, data)) = input_for(&from) else {
-                        results.lock().unwrap().push((from, to, "no synthetic input".into(), 0, 0));
+                        results
+                            .lock()
+                            .unwrap()
+                            .push((from, to, "no synthetic input".into(), 0, 0));
                         continue;
                     };
                     let st = c.run(&name, &data, &json!({"to": to}));
@@ -198,7 +300,11 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
                     let (mut state, mut bytes) = (f["state"].as_str().unwrap().to_string(), 0u64);
                     if state == "done" {
                         let o = &f["outputs"][0];
-                        let (code, body) = c.get(&format!("/api/v1/jobs/{}/files/0/{}", st["job"].as_str().unwrap(), o["id"]));
+                        let (code, body) = c.get(&format!(
+                            "/api/v1/jobs/{}/files/0/{}",
+                            st["job"].as_str().unwrap(),
+                            o["id"]
+                        ));
                         bytes = body.len() as u64;
                         let magic_ok = match to.as_str() {
                             "pdf" => body.starts_with(b"%PDF-"),
@@ -207,13 +313,20 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
                             "rtf" => body.starts_with(b"{\\rtf"),
                             _ => !body.is_empty(),
                         };
-                        if code != 200 || bytes == 0 || bytes != o["size"].as_u64().unwrap() || !magic_ok {
+                        if code != 200
+                            || bytes == 0
+                            || bytes != o["size"].as_u64().unwrap()
+                            || !magic_ok
+                        {
                             state = format!("bad download: {code}, {bytes} bytes");
                         }
                     } else {
                         state = format!("{state}: code {} {}", f["code"], f["message"]);
                     }
-                    results.lock().unwrap().push((from, to, state, t.elapsed().as_millis(), bytes));
+                    results
+                        .lock()
+                        .unwrap()
+                        .push((from, to, state, t.elapsed().as_millis(), bytes));
                 }
             });
         }
@@ -228,24 +341,52 @@ fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() 
     assert!(bad.is_empty(), "directions that did not finish: {bad:#?}");
 
     // options reach the tools: a transliteration shows up in the report inside the zip
-    let (name, data) = ("uz_latn.docx".to_string(), std::fs::read(Path::new(INPUTS).join("uz_latn.docx")).unwrap());
-    let st = c.run(&name, &data, &json!({"to": "docx", "translit": "cyrl", "alphabet": "2026"}));
+    let (name, data) = (
+        "uz_latn.docx".to_string(),
+        std::fs::read(Path::new(INPUTS).join("uz_latn.docx")).unwrap(),
+    );
+    let st = c.run(
+        &name,
+        &data,
+        &json!({"to": "docx", "translit": "cyrl", "alphabet": "2026"}),
+    );
     assert_eq!(st["files"][0]["state"], "done", "{st}");
     let (_, zip) = c.get(&format!("/api/v1/jobs/{}/zip", st["job"].as_str().unwrap()));
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(zip)).unwrap();
     let mut rep = String::new();
-    z.by_name("report.json").unwrap().read_to_string(&mut rep).unwrap();
+    z.by_name("report.json")
+        .unwrap()
+        .read_to_string(&mut rep)
+        .unwrap();
     let rep: Value = serde_json::from_str(&rep).unwrap();
-    assert!(rep[0]["translit"]["runs"].as_u64().unwrap_or(0) > 0, "{rep}");
-    assert!(!rep.to_string().contains(&dir.display().to_string().replace('\\', "/")), "a server path in the report");
+    assert!(
+        rep[0]["translit"]["runs"].as_u64().unwrap_or(0) > 0,
+        "{rep}"
+    );
+    assert!(
+        !rep.to_string()
+            .contains(&dir.display().to_string().replace('\\', "/")),
+        "a server path in the report"
+    );
 
     // a hard kill: the store of the finished jobs is still on disk; the next start must remove it
     let left = std::fs::read_dir(dir.join("store")).unwrap().count();
     println!("entries in store/ before the kill: {left}");
-    assert!(left > 0, "the finished jobs are kept for the retention time");
+    assert!(
+        left > 0,
+        "the finished jobs are kept for the retention time"
+    );
     server.kill();
     let server2 = Server::start(&dir, port);
-    let after: Vec<_> = ["work", "store"].iter().flat_map(|d| std::fs::read_dir(dir.join(d)).unwrap().filter_map(Result::ok).map(|e| e.file_name())).collect();
+    let after: Vec<_> = ["work", "store"]
+        .iter()
+        .flat_map(|d| {
+            std::fs::read_dir(dir.join(d))
+                .unwrap()
+                .filter_map(Result::ok)
+                .map(|e| e.file_name())
+        })
+        .collect();
     println!("entries in work/ after the restart: {after:?}");
     assert!(after.is_empty(), "{after:?}");
     drop(server2);

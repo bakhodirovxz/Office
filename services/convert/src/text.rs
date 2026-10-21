@@ -17,7 +17,11 @@ pub fn is_text(k: Kind) -> bool {
 
 /// Bytes that are letters in cp1251 (A-ya, plus the ones outside that block: Yo, yo, short U, Ukrainian letters).
 fn cyrillic_letter(b: u8) -> bool {
-    b >= 0xC0 || matches!(b, 0xA1 | 0xA2 | 0xA8 | 0xAA | 0xAF | 0xB2 | 0xB3 | 0xB4 | 0xB8 | 0xBA | 0xBF)
+    b >= 0xC0
+        || matches!(
+            b,
+            0xA1 | 0xA2 | 0xA8 | 0xAA | 0xAF | 0xB2 | 0xB3 | 0xB4 | 0xB8 | 0xBA | 0xBF
+        )
 }
 
 /// cp1251 or cp1252 for 8-bit text. Cyrillic words are runs of high bytes (a, b, c all above 0xC0 in cp1251), while the accented
@@ -36,7 +40,11 @@ fn eight_bit(b: &[u8]) -> &'static Encoding {
             run = 0;
         }
     }
-    if in_runs >= 3 && in_runs * 2 >= high { WINDOWS_1251 } else { WINDOWS_1252 }
+    if in_runs >= 3 && in_runs * 2 >= high {
+        WINDOWS_1251
+    } else {
+        WINDOWS_1252
+    }
 }
 
 /// The legacy encoding of `bytes`, or `None` when it is UTF-8 (with or without a BOM) or not text we recognise.
@@ -47,7 +55,10 @@ pub fn guess(bytes: &[u8]) -> Option<&'static Encoding> {
     if bytes.starts_with(&[0xFE, 0xFF]) {
         return Some(UTF_16BE);
     }
-    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) || std::str::from_utf8(bytes).is_ok() || bytes.contains(&0) {
+    if bytes.starts_with(&[0xEF, 0xBB, 0xBF])
+        || std::str::from_utf8(bytes).is_ok()
+        || bytes.contains(&0)
+    {
         return None;
     }
     Some(eight_bit(bytes))
@@ -74,11 +85,19 @@ pub fn to_utf8(bytes: &[u8]) -> Option<(String, &'static Encoding)> {
 
 /// Rewrite `path` as UTF-8 when it is text in a legacy encoding. Returns the encoding's label when it did.
 pub fn normalise(path: &Path) -> Result<Option<&'static str>, Failure> {
-    let io = |e: std::io::Error| Failure { exit: Exit::ToolError, msg: format!("cannot read the staged text file: {e}") };
+    let io = |e: std::io::Error| Failure {
+        exit: Exit::ToolError,
+        msg: format!("cannot read the staged text file: {e}"),
+    };
     let bytes = fs::read(path).map_err(io)?;
-    let Some((text, enc)) = to_utf8(&bytes) else { return Ok(None) };
+    let Some((text, enc)) = to_utf8(&bytes) else {
+        return Ok(None);
+    };
     if text.is_empty() {
-        return fail(Exit::Rejected, "the file is empty (it holds only a byte order mark)");
+        return fail(
+            Exit::Rejected,
+            "the file is empty (it holds only a byte order mark)",
+        );
     }
     fs::write(path, text.as_bytes()).map_err(io)?;
     Ok(Some(label(enc)))
@@ -89,22 +108,43 @@ mod tests {
     use super::*;
 
     fn utf16le(s: &str) -> Vec<u8> {
-        [&[0xFF, 0xFE][..], &s.encode_utf16().flat_map(|c| c.to_le_bytes()).collect::<Vec<_>>()].concat()
+        [
+            &[0xFF, 0xFE][..],
+            &s.encode_utf16()
+                .flat_map(|c| c.to_le_bytes())
+                .collect::<Vec<_>>(),
+        ]
+        .concat()
     }
 
     #[test]
     fn utf8_is_left_alone_and_a_bom_wins() {
-        assert!(guess("Salom dunyo, \u{43f}\u{440}\u{438}\u{432}\u{435}\u{442}".as_bytes()).is_none());
+        assert!(
+            guess("Salom dunyo, \u{43f}\u{440}\u{438}\u{432}\u{435}\u{442}".as_bytes()).is_none()
+        );
         assert!(guess(b"plain ascii").is_none());
         assert!(guess(b"\xEF\xBB\xBFhello").is_none());
         assert_eq!(guess(&utf16le("a")).map(|e| e.name()), Some("UTF-16LE"));
-        assert_eq!(guess(&[0xFE, 0xFF, 0, b'a']).map(|e| e.name()), Some("UTF-16BE"));
+        assert_eq!(
+            guess(&[0xFE, 0xFF, 0, b'a']).map(|e| e.name()),
+            Some("UTF-16BE")
+        );
     }
 
     #[test]
     fn utf16_both_orders_decode() {
-        assert_eq!(to_utf8(&utf16le("Salom, \u{43c}\u{438}\u{440}")).unwrap().0, "Salom, \u{43c}\u{438}\u{440}");
-        let be = [&[0xFE, 0xFF][..], &"Ok \u{43c}".encode_utf16().flat_map(|c| c.to_be_bytes()).collect::<Vec<_>>()].concat();
+        assert_eq!(
+            to_utf8(&utf16le("Salom, \u{43c}\u{438}\u{440}")).unwrap().0,
+            "Salom, \u{43c}\u{438}\u{440}"
+        );
+        let be = [
+            &[0xFE, 0xFF][..],
+            &"Ok \u{43c}"
+                .encode_utf16()
+                .flat_map(|c| c.to_be_bytes())
+                .collect::<Vec<_>>(),
+        ]
+        .concat();
         assert_eq!(to_utf8(&be).unwrap().0, "Ok \u{43c}");
     }
 
@@ -115,7 +155,8 @@ mod tests {
         assert_eq!(e.name(), "windows-1251");
         assert!(t.starts_with("\u{411}\u{443}\u{439}\u{440}\u{443}"), "{t}");
         // a Russian sentence with latin product names in it
-        let (mixed, _, _) = WINDOWS_1251.encode("Приказ № 5 по HRM: премии за октябрь, see order 12");
+        let (mixed, _, _) =
+            WINDOWS_1251.encode("Приказ № 5 по HRM: премии за октябрь, see order 12");
         assert_eq!(to_utf8(&mixed).unwrap().1.name(), "windows-1251");
         let (fr, _, _) = WINDOWS_1252.encode("Le caf\u{e9} du d\u{e9}jeuner co\u{fb}te 5 \u{20ac}; na\u{ef}ve \u{e0} la fa\u{e7}on, \u{fc}ber, se\u{f1}or, \u{201c}quoted\u{201d}");
         let (t, e) = to_utf8(&fr).unwrap();

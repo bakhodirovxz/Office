@@ -16,16 +16,28 @@ use tower::ServiceExt;
 fn fetch(port: u16, cert_der: Vec<u8>, tls12: bool, path: &str) -> (String, String, String) {
     let mut roots = rustls::RootCertStore::empty();
     roots.add(cert_der.into()).unwrap();
-    let v = if tls12 { vec![&rustls::version::TLS12] } else { vec![&rustls::version::TLS13] };
-    let cfg = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-        .with_protocol_versions(&v)
-        .unwrap()
-        .with_root_certificates(roots)
-        .with_no_client_auth();
-    let mut conn = rustls::ClientConnection::new(Arc::new(cfg), ServerName::try_from("localhost").unwrap()).unwrap();
+    let v = if tls12 {
+        vec![&rustls::version::TLS12]
+    } else {
+        vec![&rustls::version::TLS13]
+    };
+    let cfg = rustls::ClientConfig::builder_with_provider(Arc::new(
+        rustls::crypto::ring::default_provider(),
+    ))
+    .with_protocol_versions(&v)
+    .unwrap()
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    let mut conn =
+        rustls::ClientConnection::new(Arc::new(cfg), ServerName::try_from("localhost").unwrap())
+            .unwrap();
     let mut tcp = TcpStream::connect(("127.0.0.1", port)).unwrap();
     let mut s = rustls::Stream::new(&mut conn, &mut tcp);
-    write!(s, "GET {path} HTTP/1.1\r\nHost: localhost:{port}\r\nConnection: close\r\n\r\n").unwrap();
+    write!(
+        s,
+        "GET {path} HTTP/1.1\r\nHost: localhost:{port}\r\nConnection: close\r\n\r\n"
+    )
+    .unwrap();
     let mut body = Vec::new();
     let _ = s.read_to_end(&mut body); // the server closes without close_notify at times
     let ver = format!("{:?}", conn.protocol_version().unwrap());
@@ -35,11 +47,21 @@ fn fetch(port: u16, cert_der: Vec<u8>, tls12: bool, path: &str) -> (String, Stri
 
 #[test]
 fn every_offered_suite_is_aead() {
-    let suites: Vec<String> = tls::provider().cipher_suites.iter().map(|s| format!("{:?}", s.suite())).collect();
+    let suites: Vec<String> = tls::provider()
+        .cipher_suites
+        .iter()
+        .map(|s| format!("{:?}", s.suite()))
+        .collect();
     assert!(suites.len() >= 5, "{suites:?}");
     for s in &suites {
-        assert!(s.contains("_GCM_") || s.contains("CHACHA20_POLY1305"), "{s}");
-        assert!(!s.contains("CBC") && !s.contains("RC4") && !s.contains("3DES"), "{s}");
+        assert!(
+            s.contains("_GCM_") || s.contains("CHACHA20_POLY1305"),
+            "{s}"
+        );
+        assert!(
+            !s.contains("CBC") && !s.contains("RC4") && !s.contains("3DES"),
+            "{s}"
+        );
     }
 }
 
@@ -68,11 +90,20 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
     };
     let cfg = tls::server_config(&dir.join("cert.pem"), &dir.join("key.pem")).unwrap();
     let mut conv = ConvertConfig::from_env();
-    conv.tools.insert(ToolId::Docs, env!("CARGO_BIN_EXE_convert-api-fake-tool").into());
+    conv.tools.insert(
+        ToolId::Docs,
+        env!("CARGO_BIN_EXE_convert-api-fake-tool").into(),
+    );
     let app = App::new(s.resolve().unwrap(), conv, true).unwrap();
     let router = routes::router(app.clone());
     let limits = tls::ConnLimits::from_settings(&app.r);
-    tokio::spawn(tls::serve(tokio::net::TcpListener::from_std(listener).unwrap(), Some(cfg), router, limits, std::future::pending()));
+    tokio::spawn(tls::serve(
+        tokio::net::TcpListener::from_std(listener).unwrap(),
+        Some(cfg),
+        router,
+        limits,
+        std::future::pending(),
+    ));
     let der = ck.cert.der().to_vec();
     let go = |tls12: bool, path: &'static str| {
         let der = der.clone();
@@ -82,27 +113,40 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
     assert!(head.starts_with("HTTP/1.1 200"), "{head}");
     assert_eq!(ver, "TLSv1_3", "{suite}");
     let low = head.to_ascii_lowercase();
-    assert!(low.contains("strict-transport-security: max-age=31536000"), "{head}");
+    assert!(
+        low.contains("strict-transport-security: max-age=31536000"),
+        "{head}"
+    );
     assert!(low.contains("default-src 'self'"), "{head}");
     let (head, ver, suite) = go(true, "/healthz").await.unwrap();
     assert!(head.starts_with("HTTP/1.1 200"), "{head}");
     assert_eq!(ver, "TLSv1_2");
-    assert!(suite.starts_with("TLS_ECDHE_") && (suite.contains("_GCM_") || suite.contains("CHACHA20_POLY1305")), "{suite}");
+    assert!(
+        suite.starts_with("TLS_ECDHE_")
+            && (suite.contains("_GCM_") || suite.contains("CHACHA20_POLY1305")),
+        "{suite}"
+    );
     // the API needs a token over TLS as well
     let (head, _, _) = go(false, "/api/v1/formats").await.unwrap();
     assert!(head.starts_with("HTTP/1.1 401"), "{head}");
     // plain HTTP on the TLS port gets no HTTP answer
     let plain = tokio::task::spawn_blocking(move || {
         let mut t = TcpStream::connect(("127.0.0.1", port)).unwrap();
-        t.set_read_timeout(Some(std::time::Duration::from_secs(5))).unwrap();
-        let _ = t.write_all(format!("GET /healthz HTTP/1.1\r\nHost: localhost:{port}\r\n\r\n").as_bytes());
+        t.set_read_timeout(Some(std::time::Duration::from_secs(5)))
+            .unwrap();
+        let _ = t.write_all(
+            format!("GET /healthz HTTP/1.1\r\nHost: localhost:{port}\r\n\r\n").as_bytes(),
+        );
         let mut b = vec![];
         let _ = t.read_to_end(&mut b);
         String::from_utf8_lossy(&b).into_owned()
     })
     .await
     .unwrap();
-    assert!(!plain.contains("HTTP/1.1 200") && !plain.contains("convert") && !plain.contains("tools"), "{plain:?}");
+    assert!(
+        !plain.contains("HTTP/1.1 200") && !plain.contains("convert") && !plain.contains("tools"),
+        "{plain:?}"
+    );
     app.shutdown();
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -110,11 +154,25 @@ async fn server_mode_speaks_tls13_and_tls12_aead_with_hsts_and_never_plain_http(
 #[tokio::test]
 async fn the_plain_http_listener_only_redirects_to_the_configured_url() {
     let r = tls::redirect_router("https://convert.test/");
-    let mut req = Request::builder().uri("/api/v1/jobs?x=1").header("host", "evil.example").body(Body::empty()).unwrap();
-    req.extensions_mut().insert(axum::extract::ConnectInfo("203.0.113.9:1".parse::<SocketAddr>().unwrap()));
+    let mut req = Request::builder()
+        .uri("/api/v1/jobs?x=1")
+        .header("host", "evil.example")
+        .body(Body::empty())
+        .unwrap();
+    req.extensions_mut().insert(axum::extract::ConnectInfo(
+        "203.0.113.9:1".parse::<SocketAddr>().unwrap(),
+    ));
     let res = r.oneshot(req).await.unwrap();
     assert_eq!(res.status(), 308);
-    assert_eq!(res.headers()["location"], "https://convert.test/api/v1/jobs?x=1");
+    assert_eq!(
+        res.headers()["location"],
+        "https://convert.test/api/v1/jobs?x=1"
+    );
     assert_eq!(res.headers()["x-content-type-options"], "nosniff");
-    assert!(res.headers()["content-security-policy"].to_str().unwrap().contains("frame-ancestors 'none'"));
+    assert!(
+        res.headers()["content-security-policy"]
+            .to_str()
+            .unwrap()
+            .contains("frame-ancestors 'none'")
+    );
 }

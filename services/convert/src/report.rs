@@ -45,7 +45,10 @@ impl FileReport {
     pub fn apply_strict(&mut self) {
         if self.code == 0 && !self.warnings.is_empty() {
             self.code = Exit::Warnings.code();
-            self.message = format!("done, but with {} warning(s) and --strict is on", self.warnings.len());
+            self.message = format!(
+                "done, but with {} warning(s) and --strict is on",
+                self.warnings.len()
+            );
         }
     }
 }
@@ -62,7 +65,13 @@ fn messages() -> &'static HashMap<String, String> {
             .filter_map(|l| {
                 let c: Vec<&str> = l.split('\t').collect();
                 let code = c.get(1)?.strip_prefix("warning.")?;
-                Some((code.to_string(), c.get(2)?.replace("\\n", "\n").replace("\\t", "\t").replace("\\\\", "\\")))
+                Some((
+                    code.to_string(),
+                    c.get(2)?
+                        .replace("\\n", "\n")
+                        .replace("\\t", "\t")
+                        .replace("\\\\", "\\"),
+                ))
             })
             .collect()
     })
@@ -71,16 +80,24 @@ fn messages() -> &'static HashMap<String, String> {
 /// The English text of a warning code. A code without a catalog row is a bug that the test `every_code_has_text` catches;
 /// the code itself is returned so that a report is never empty-handed.
 pub fn text(code: &str) -> String {
-    messages().get(code).cloned().unwrap_or_else(|| code.to_string())
+    messages()
+        .get(code)
+        .cloned()
+        .unwrap_or_else(|| code.to_string())
 }
 
 /// `text(code)` with `{name}` placeholders filled.
 pub fn text_with(code: &str, fill: &[(&str, &str)]) -> String {
-    fill.iter().fold(text(code), |t, (k, v)| t.replace(&format!("{{{k}}}"), v))
+    fill.iter()
+        .fold(text(code), |t, (k, v)| t.replace(&format!("{{{k}}}"), v))
 }
 
 pub fn warn(code: &str, count: u32) -> Warning {
-    Warning { code: code.into(), count, text: text(code) }
+    Warning {
+        code: code.into(),
+        count,
+        text: text(code),
+    }
 }
 
 pub fn codes() -> Vec<String> {

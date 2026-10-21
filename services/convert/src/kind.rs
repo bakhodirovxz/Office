@@ -35,23 +35,55 @@ pub enum Family {
 
 impl Kind {
     pub const ALL: [Kind; 17] = [
-        Kind::Docx, Kind::Doc, Kind::Odt, Kind::Rtf, Kind::Html, Kind::Md, Kind::Txt, Kind::Xlsx, Kind::Xls,
-        Kind::Xlsb, Kind::Ods, Kind::Csv, Kind::Tsv, Kind::Pptx, Kind::Ppt, Kind::Odp, Kind::Pdf,
+        Kind::Docx,
+        Kind::Doc,
+        Kind::Odt,
+        Kind::Rtf,
+        Kind::Html,
+        Kind::Md,
+        Kind::Txt,
+        Kind::Xlsx,
+        Kind::Xls,
+        Kind::Xlsb,
+        Kind::Ods,
+        Kind::Csv,
+        Kind::Tsv,
+        Kind::Pptx,
+        Kind::Ppt,
+        Kind::Odp,
+        Kind::Pdf,
     ];
 
     pub fn ext(self) -> &'static str {
         match self {
-            Kind::Docx => "docx", Kind::Doc => "doc", Kind::Odt => "odt", Kind::Rtf => "rtf", Kind::Html => "html",
-            Kind::Md => "md", Kind::Txt => "txt", Kind::Xlsx => "xlsx", Kind::Xls => "xls", Kind::Xlsb => "xlsb",
-            Kind::Ods => "ods", Kind::Csv => "csv", Kind::Tsv => "tsv", Kind::Pptx => "pptx", Kind::Ppt => "ppt",
-            Kind::Odp => "odp", Kind::Pdf => "pdf",
+            Kind::Docx => "docx",
+            Kind::Doc => "doc",
+            Kind::Odt => "odt",
+            Kind::Rtf => "rtf",
+            Kind::Html => "html",
+            Kind::Md => "md",
+            Kind::Txt => "txt",
+            Kind::Xlsx => "xlsx",
+            Kind::Xls => "xls",
+            Kind::Xlsb => "xlsb",
+            Kind::Ods => "ods",
+            Kind::Csv => "csv",
+            Kind::Tsv => "tsv",
+            Kind::Pptx => "pptx",
+            Kind::Ppt => "ppt",
+            Kind::Odp => "odp",
+            Kind::Pdf => "pdf",
         }
     }
 
     pub fn family(self) -> Family {
         match self {
-            Kind::Docx | Kind::Doc | Kind::Odt | Kind::Rtf | Kind::Html | Kind::Md | Kind::Txt => Family::Docs,
-            Kind::Xlsx | Kind::Xls | Kind::Xlsb | Kind::Ods | Kind::Csv | Kind::Tsv => Family::Sheets,
+            Kind::Docx | Kind::Doc | Kind::Odt | Kind::Rtf | Kind::Html | Kind::Md | Kind::Txt => {
+                Family::Docs
+            }
+            Kind::Xlsx | Kind::Xls | Kind::Xlsb | Kind::Ods | Kind::Csv | Kind::Tsv => {
+                Family::Sheets
+            }
             Kind::Pptx | Kind::Ppt | Kind::Odp => Family::Slides,
             Kind::Pdf => Family::Pdf,
         }
@@ -112,30 +144,57 @@ const OLE: [u8; 8] = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
 pub fn detect(path: &Path) -> Result<Detected, DetectError> {
     let mut f = File::open(path).map_err(|e| DetectError::Io(e.to_string()))?;
     let mut head = vec![0u8; 64 * 1024];
-    let n = f.read(&mut head).map_err(|e| DetectError::Io(e.to_string()))?;
+    let n = f
+        .read(&mut head)
+        .map_err(|e| DetectError::Io(e.to_string()))?;
     head.truncate(n);
     if n == 0 && f.metadata().is_ok_and(|m| m.len() == 0) {
         return Err(DetectError::Empty);
     }
-    let ext = path.extension().and_then(|e| e.to_str()).and_then(Kind::from_ext);
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .and_then(Kind::from_ext);
     let ole_bytes = if head.starts_with(&OLE) {
         let mut all = head.clone();
-        f.read_to_end(&mut all).map_err(|e| DetectError::Io(e.to_string()))?;
+        f.read_to_end(&mut all)
+            .map_err(|e| DetectError::Io(e.to_string()))?;
         Some(all)
     } else {
         None
     };
-    let zip_names = if head.starts_with(b"PK\x03\x04") { zip_names(path) } else { None };
-    let raw_ext = path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).unwrap_or_default();
-    let container = head.starts_with(b"%PDF-") || head.starts_with(b"PK\x03\x04") || head.starts_with(&OLE) || head.starts_with(b"{\rtf");
+    let zip_names = if head.starts_with(b"PK\x03\x04") {
+        zip_names(path)
+    } else {
+        None
+    };
+    let raw_ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
+    let container = head.starts_with(b"%PDF-")
+        || head.starts_with(b"PK\x03\x04")
+        || head.starts_with(&OLE)
+        || head.starts_with(b"{\rtf");
     if !container && UNLISTED_TEXT_EXTS.contains(&raw_ext.as_str()) {
         return Err(DetectError::Unknown);
     }
-    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext).or_else(|| legacy_text(&head, ext)).ok_or_else(|| {
-        let bom16 = head.starts_with(&[0xFF, 0xFE]) || head.starts_with(&[0xFE, 0xFF]);
-        let high_bytes_only = !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
-        if bom16 || (high_bytes_only && ext.is_some_and(|k| matches!(k.family(), Family::Docs | Family::Sheets))) { DetectError::NotUtf8 } else { DetectError::Unknown }
-    })
+    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext)
+        .or_else(|| legacy_text(&head, ext))
+        .ok_or_else(|| {
+            let bom16 = head.starts_with(&[0xFF, 0xFE]) || head.starts_with(&[0xFE, 0xFF]);
+            let high_bytes_only =
+                !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
+            if bom16
+                || (high_bytes_only
+                    && ext.is_some_and(|k| matches!(k.family(), Family::Docs | Family::Sheets)))
+            {
+                DetectError::NotUtf8
+            } else {
+                DetectError::Unknown
+            }
+        })
 }
 
 /// Text in a legacy encoding (UTF-16 with a BOM, or 8-bit cp1251 / cp1252) under an extension that names text is still text: the job
@@ -149,12 +208,21 @@ fn legacy_text(head: &[u8], ext: Option<Kind>) -> Option<Detected> {
         _ => return None,
     };
     let eight_bit = !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
-    (bom16 || eight_bit).then_some(Detected { kind, ext_mismatch: false, password_protected: false })
+    (bom16 || eight_bit).then_some(Detected {
+        kind,
+        ext_mismatch: false,
+        password_protected: false,
+    })
 }
 
 fn zip_names(path: &Path) -> Option<Vec<String>> {
     let z = zip::ZipArchive::new(File::open(path).ok()?).ok()?;
-    Some(z.file_names().filter_map(Result::ok).map(|n| n.into_owned()).collect())
+    Some(
+        z.file_names()
+            .filter_map(Result::ok)
+            .map(|n| n.into_owned())
+            .collect(),
+    )
 }
 
 fn utf16(s: &str) -> Vec<u8> {
@@ -166,8 +234,17 @@ fn contains(hay: &[u8], needle: &[u8]) -> bool {
 }
 
 /// Pure core, unit-tested. `head` = first 64 KB, `ole` = the whole file when it is an OLE container, `zip` = entry names.
-pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext: Option<Kind>) -> Option<Detected> {
-    let found = |kind: Kind| Detected { kind, ext_mismatch: ext.is_some_and(|e| e != kind), password_protected: false };
+pub fn detect_bytes(
+    head: &[u8],
+    ole: Option<&[u8]>,
+    zip: Option<&[String]>,
+    ext: Option<Kind>,
+) -> Option<Detected> {
+    let found = |kind: Kind| Detected {
+        kind,
+        ext_mismatch: ext.is_some_and(|e| e != kind),
+        password_protected: false,
+    };
     if head.starts_with(b"%PDF-") {
         return Some(found(Kind::Pdf));
     }
@@ -175,7 +252,11 @@ pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext
         if contains(all, &utf16("EncryptedPackage")) {
             // which app it was is unknowable without the password; the extension decides only the label
             let kind = ext.unwrap_or(Kind::Docx);
-            return Some(Detected { kind, ext_mismatch: false, password_protected: true });
+            return Some(Detected {
+                kind,
+                ext_mismatch: false,
+                password_protected: true,
+            });
         }
         // an .xls with an embedded Word object holds a WordDocument stream too: when several apps are named, the extension decides
         let mut named = vec![];
@@ -235,7 +316,10 @@ pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext
     if text.contains('\0') {
         return None;
     }
-    let lower = text.trim_start_matches('\u{feff}').trim_start().to_ascii_lowercase();
+    let lower = text
+        .trim_start_matches('\u{feff}')
+        .trim_start()
+        .to_ascii_lowercase();
     if lower.starts_with("<?xml") {
         return None; // Word 2003 XML, Flat OPC, SVG ...: not a listed input
     }
@@ -254,11 +338,21 @@ pub fn detect_bytes(head: &[u8], ole: Option<&[u8]>, zip: Option<&[String]>, ext
 mod tests {
     use super::*;
 
-    fn d(head: &[u8], ole: Option<&[u8]>, zip: Option<&[&str]>, ext: Option<Kind>) -> Option<Detected> {
+    fn d(
+        head: &[u8],
+        ole: Option<&[u8]>,
+        zip: Option<&[&str]>,
+        ext: Option<Kind>,
+    ) -> Option<Detected> {
         let z: Option<Vec<String>> = zip.map(|n| n.iter().map(|s| s.to_string()).collect());
         detect_bytes(head, ole, z.as_deref(), ext)
     }
-    fn kind(head: &[u8], ole: Option<&[u8]>, zip: Option<&[&str]>, ext: Option<Kind>) -> Option<Kind> {
+    fn kind(
+        head: &[u8],
+        ole: Option<&[u8]>,
+        zip: Option<&[&str]>,
+        ext: Option<Kind>,
+    ) -> Option<Kind> {
         d(head, ole, zip, ext).map(|x| x.kind)
     }
     const PK: &[u8] = b"PK\x03\x04rest";
@@ -266,30 +360,100 @@ mod tests {
     #[test]
     fn every_kind() {
         assert_eq!(kind(b"%PDF-1.7\n", None, None, None), Some(Kind::Pdf));
-        assert_eq!(kind(PK, None, Some(&["[Content_Types].xml", "word/document.xml"]), None), Some(Kind::Docx));
-        assert_eq!(kind(PK, None, Some(&["xl/workbook.xml"]), None), Some(Kind::Xlsx));
-        assert_eq!(kind(PK, None, Some(&["xl/workbook.bin"]), None), Some(Kind::Xlsb));
-        assert_eq!(kind(PK, None, Some(&["ppt/presentation.xml"]), None), Some(Kind::Pptx));
+        assert_eq!(
+            kind(
+                PK,
+                None,
+                Some(&["[Content_Types].xml", "word/document.xml"]),
+                None
+            ),
+            Some(Kind::Docx)
+        );
+        assert_eq!(
+            kind(PK, None, Some(&["xl/workbook.xml"]), None),
+            Some(Kind::Xlsx)
+        );
+        assert_eq!(
+            kind(PK, None, Some(&["xl/workbook.bin"]), None),
+            Some(Kind::Xlsb)
+        );
+        assert_eq!(
+            kind(PK, None, Some(&["ppt/presentation.xml"]), None),
+            Some(Kind::Pptx)
+        );
         let odf = |m: &str| [&b"PK\x03\x04"[..], b"....mimetype", m.as_bytes()].concat();
-        assert_eq!(kind(&odf("application/vnd.oasis.opendocument.text"), None, Some(&["mimetype"]), None), Some(Kind::Odt));
-        assert_eq!(kind(&odf("application/vnd.oasis.opendocument.spreadsheet"), None, Some(&["mimetype"]), None), Some(Kind::Ods));
-        assert_eq!(kind(&odf("application/vnd.oasis.opendocument.presentation"), None, Some(&["mimetype"]), None), Some(Kind::Odp));
+        assert_eq!(
+            kind(
+                &odf("application/vnd.oasis.opendocument.text"),
+                None,
+                Some(&["mimetype"]),
+                None
+            ),
+            Some(Kind::Odt)
+        );
+        assert_eq!(
+            kind(
+                &odf("application/vnd.oasis.opendocument.spreadsheet"),
+                None,
+                Some(&["mimetype"]),
+                None
+            ),
+            Some(Kind::Ods)
+        );
+        assert_eq!(
+            kind(
+                &odf("application/vnd.oasis.opendocument.presentation"),
+                None,
+                Some(&["mimetype"]),
+                None
+            ),
+            Some(Kind::Odp)
+        );
         assert_eq!(kind(b"{\\rtf1\\ansi", None, None, None), Some(Kind::Rtf));
         let ole = |s: &str| [&OLE[..], &utf16(s)].concat();
-        assert_eq!(kind(&OLE, Some(&ole("WordDocument")), None, None), Some(Kind::Doc));
-        assert_eq!(kind(&OLE, Some(&ole("Workbook")), None, None), Some(Kind::Xls));
-        assert_eq!(kind(&OLE, Some(&ole("PowerPoint Document")), None, None), Some(Kind::Ppt));
-        assert_eq!(kind(b"<!DOCTYPE html><p>x", None, None, None), Some(Kind::Html));
-        assert_eq!(kind(b"  <html>", None, None, Some(Kind::Txt)), Some(Kind::Html));
-        assert_eq!(kind(b"a,b\n1,2\n", None, None, Some(Kind::Csv)), Some(Kind::Csv));
-        assert_eq!(kind(b"a\tb\n", None, None, Some(Kind::Tsv)), Some(Kind::Tsv));
-        assert_eq!(kind(b"# Title\n", None, None, Some(Kind::Md)), Some(Kind::Md));
-        assert_eq!(kind("Salom dunyo \u{43f}".as_bytes(), None, None, None), Some(Kind::Txt));
+        assert_eq!(
+            kind(&OLE, Some(&ole("WordDocument")), None, None),
+            Some(Kind::Doc)
+        );
+        assert_eq!(
+            kind(&OLE, Some(&ole("Workbook")), None, None),
+            Some(Kind::Xls)
+        );
+        assert_eq!(
+            kind(&OLE, Some(&ole("PowerPoint Document")), None, None),
+            Some(Kind::Ppt)
+        );
+        assert_eq!(
+            kind(b"<!DOCTYPE html><p>x", None, None, None),
+            Some(Kind::Html)
+        );
+        assert_eq!(
+            kind(b"  <html>", None, None, Some(Kind::Txt)),
+            Some(Kind::Html)
+        );
+        assert_eq!(
+            kind(b"a,b\n1,2\n", None, None, Some(Kind::Csv)),
+            Some(Kind::Csv)
+        );
+        assert_eq!(
+            kind(b"a\tb\n", None, None, Some(Kind::Tsv)),
+            Some(Kind::Tsv)
+        );
+        assert_eq!(
+            kind(b"# Title\n", None, None, Some(Kind::Md)),
+            Some(Kind::Md)
+        );
+        assert_eq!(
+            kind("Salom dunyo \u{43f}".as_bytes(), None, None, None),
+            Some(Kind::Txt)
+        );
     }
 
     #[test]
     fn legacy_text_is_text_only_under_a_text_extension() {
-        let cp1251 = [0xC1u8, 0xD3, 0xC9, 0xD0, 0xD3, b'\r', b'\n', 0xD2, 0xEE, 0xF8];
+        let cp1251 = [
+            0xC1u8, 0xD3, 0xC9, 0xD0, 0xD3, b'\r', b'\n', 0xD2, 0xEE, 0xF8,
+        ];
         let bom = [0xFFu8, 0xFE, b'a', 0];
         let k = |h: &[u8], e: Option<Kind>| legacy_text(h, e).map(|d| d.kind);
         assert_eq!(k(&cp1251, Some(Kind::Txt)), Some(Kind::Txt));
@@ -311,20 +475,42 @@ mod tests {
         assert_eq!((r.kind, r.ext_mismatch), (Kind::Xlsx, true));
         let r = d(b"%PDF-1.4", None, None, Some(Kind::Docx)).unwrap();
         assert_eq!((r.kind, r.ext_mismatch), (Kind::Pdf, true));
-        assert!(!d(PK, None, Some(&["word/document.xml"]), Some(Kind::Docx)).unwrap().ext_mismatch);
+        assert!(
+            !d(PK, None, Some(&["word/document.xml"]), Some(Kind::Docx))
+                .unwrap()
+                .ext_mismatch
+        );
     }
 
     #[test]
     fn encrypted_package_and_garbage() {
         let enc = [&OLE[..], &utf16("EncryptedPackage")].concat();
-        assert!(d(&OLE, Some(&enc), None, Some(Kind::Xlsx)).unwrap().password_protected);
+        assert!(
+            d(&OLE, Some(&enc), None, Some(Kind::Xlsx))
+                .unwrap()
+                .password_protected
+        );
         assert_eq!(kind(&[0, 1, 2, 0xff, 0xfe], None, None, None), None);
         assert_eq!(kind(PK, None, Some(&["a.txt"]), None), None);
         assert_eq!(kind(&OLE, Some(&OLE), None, None), None);
-        assert_eq!(kind(b"<?xml version=\"1.0\"?><w:wordDocument/>", None, None, Some(Kind::Txt)), None);
+        assert_eq!(
+            kind(
+                b"<?xml version=\"1.0\"?><w:wordDocument/>",
+                None,
+                None,
+                Some(Kind::Txt)
+            ),
+            None
+        );
         // an .xls that also carries a Word stream stays an .xls
         let both = [&OLE[..], &utf16("Workbook"), &utf16("WordDocument")].concat();
-        assert_eq!(kind(&OLE, Some(&both), None, Some(Kind::Xls)), Some(Kind::Xls));
-        assert_eq!(kind(&OLE, Some(&both), None, Some(Kind::Doc)), Some(Kind::Doc));
+        assert_eq!(
+            kind(&OLE, Some(&both), None, Some(Kind::Xls)),
+            Some(Kind::Xls)
+        );
+        assert_eq!(
+            kind(&OLE, Some(&both), None, Some(Kind::Doc)),
+            Some(Kind::Doc)
+        );
     }
 }

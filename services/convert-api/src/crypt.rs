@@ -40,7 +40,12 @@ impl JobKey {
         Self::from_bytes(b, job_id)
     }
     pub fn from_bytes(bytes: [u8; 32], job_id: &str) -> Arc<JobKey> {
-        Arc::new(JobKey { cipher: Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(&bytes)), bytes, next_file: AtomicU32::new(1), job_id: job_id.into() })
+        Arc::new(JobKey {
+            cipher: Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(&bytes)),
+            bytes,
+            next_file: AtomicU32::new(1),
+            job_id: job_id.into(),
+        })
     }
     /// `job id | 0 | role | 0 | last`: the last byte is the LAST flag, set per frame.
     fn aad(&self, role: &str) -> Vec<u8> {
@@ -74,7 +79,15 @@ impl Codec {
             }
         };
         // room for the tag, so the in-place encryption never reallocates (a realloc would leave a plaintext copy behind)
-        Ok(BlobWriter { inner, codec: self.clone(), file, aad, frame: 0, buf: Vec::with_capacity(FRAME + 16), written: 0 })
+        Ok(BlobWriter {
+            inner,
+            codec: self.clone(),
+            file,
+            aad,
+            frame: 0,
+            buf: Vec::with_capacity(FRAME + 16),
+            written: 0,
+        })
     }
 
     pub fn reader<R: Read>(&self, mut inner: R, role: &str) -> io::Result<BlobReader<R>> {
@@ -84,20 +97,41 @@ impl Codec {
                 let mut h = [0u8; 9];
                 inner.read_exact(&mut h)?;
                 if &h[..5] != MAGIC {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "not an encrypted blob"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "not an encrypted blob",
+                    ));
                 }
                 (u32::from_be_bytes([h[5], h[6], h[7], h[8]]), k.aad(role))
             }
         };
-        Ok(BlobReader { inner, codec: self.clone(), file, aad, frame: 0, plain: Vec::with_capacity(FRAME + 16), pos: 0, done: false })
+        Ok(BlobReader {
+            inner,
+            codec: self.clone(),
+            file,
+            aad,
+            frame: 0,
+            plain: Vec::with_capacity(FRAME + 16),
+            pos: 0,
+            done: false,
+        })
     }
 
-    pub fn open(&self, path: &std::path::Path, role: &str) -> io::Result<BlobReader<std::fs::File>> {
+    pub fn open(
+        &self,
+        path: &std::path::Path,
+        role: &str,
+    ) -> io::Result<BlobReader<std::fs::File>> {
         self.reader(std::fs::File::open(path)?, role)
     }
 
     /// Encrypt (or copy) a plaintext file into `dest` (which must not exist); returns the plaintext size.
-    pub fn store_file(&self, src: &std::path::Path, dest: &std::path::Path, role: &str) -> io::Result<u64> {
+    pub fn store_file(
+        &self,
+        src: &std::path::Path,
+        dest: &std::path::Path,
+        role: &str,
+    ) -> io::Result<u64> {
         let mut w = self.writer(std::fs::File::create_new(dest)?, role)?;
         io::copy(&mut std::fs::File::open(src)?, &mut w)?;
         w.finish()
@@ -122,10 +156,22 @@ impl<W: Write> Drop for BlobWriter<W> {
 
 impl<W: Write> BlobWriter<W> {
     fn emit(&mut self, last: bool) -> io::Result<()> {
-        let Codec::Aes(k) = &self.codec else { return Ok(()) };
-        *self.aad.last_mut().expect("the aad ends with the last flag") = last as u8;
-        k.cipher.encrypt_in_place(Nonce::from_slice(&nonce(self.file, self.frame)), &self.aad, &mut self.buf).map_err(|_| io::Error::other("encryption failed"))?;
-        self.inner.write_all(&((self.buf.len() as u32) | if last { LAST } else { 0 }).to_be_bytes())?;
+        let Codec::Aes(k) = &self.codec else {
+            return Ok(());
+        };
+        *self
+            .aad
+            .last_mut()
+            .expect("the aad ends with the last flag") = last as u8;
+        k.cipher
+            .encrypt_in_place(
+                Nonce::from_slice(&nonce(self.file, self.frame)),
+                &self.aad,
+                &mut self.buf,
+            )
+            .map_err(|_| io::Error::other("encryption failed"))?;
+        self.inner
+            .write_all(&((self.buf.len() as u32) | if last { LAST } else { 0 }).to_be_bytes())?;
         self.inner.write_all(&self.buf)?;
         self.frame += 1;
         self.buf.zeroize();
@@ -178,14 +224,18 @@ pub struct BlobReader<R: Read> {
 
 impl<R: Read> Read for BlobReader<R> {
     fn read(&mut self, out: &mut [u8]) -> io::Result<usize> {
-        let Codec::Aes(k) = &self.codec else { return self.inner.read(out) };
+        let Codec::Aes(k) = &self.codec else {
+            return self.inner.read(out);
+        };
         let bad = |m: &str| io::Error::new(io::ErrorKind::InvalidData, m.to_string());
         while self.pos == self.plain.len() {
             if self.done {
                 return Ok(0);
             }
             let mut len = [0u8; 4];
-            self.inner.read_exact(&mut len).map_err(|_| bad("truncated blob"))?;
+            self.inner
+                .read_exact(&mut len)
+                .map_err(|_| bad("truncated blob"))?;
             let word = u32::from_be_bytes(len);
             let (last, n) = (word & LAST != 0, (word & !LAST) as usize);
             if !(16..=FRAME + 16).contains(&n) {
@@ -194,13 +244,31 @@ impl<R: Read> Read for BlobReader<R> {
             // one buffer, decrypted in place: the previous frame is wiped before the next one is read into it
             self.plain.zeroize();
             self.plain.resize(n, 0);
-            self.inner.read_exact(&mut self.plain).map_err(|_| bad("truncated blob"))?;
-            *self.aad.last_mut().expect("the aad ends with the last flag") = last as u8;
-            if k.cipher.decrypt_in_place(Nonce::from_slice(&nonce(self.file, self.frame)), &self.aad, &mut self.plain).is_err() {
+            self.inner
+                .read_exact(&mut self.plain)
+                .map_err(|_| bad("truncated blob"))?;
+            *self
+                .aad
+                .last_mut()
+                .expect("the aad ends with the last flag") = last as u8;
+            if k.cipher
+                .decrypt_in_place(
+                    Nonce::from_slice(&nonce(self.file, self.frame)),
+                    &self.aad,
+                    &mut self.plain,
+                )
+                .is_err()
+            {
                 self.plain.zeroize();
                 return Err(bad("blob failed authentication"));
             }
-            if last && self.inner.read(&mut [0u8; 1]).map_err(|_| bad("blob unreadable"))? != 0 {
+            if last
+                && self
+                    .inner
+                    .read(&mut [0u8; 1])
+                    .map_err(|_| bad("blob unreadable"))?
+                    != 0
+            {
                 self.plain.zeroize();
                 return Err(bad("data after the last frame"));
             }
@@ -240,14 +308,28 @@ mod tests {
     #[test]
     fn round_trip_at_the_frame_borders_and_nothing_readable_on_disk() {
         let c = key();
-        for n in [0usize, 1, FRAME - 1, FRAME, FRAME + 1, 3 * FRAME, 3 * FRAME + 7] {
+        for n in [
+            0usize,
+            1,
+            FRAME - 1,
+            FRAME,
+            FRAME + 1,
+            3 * FRAME,
+            3 * FRAME + 7,
+        ] {
             let data: Vec<u8> = (0..n).map(|i| (i % 251) as u8).collect();
             let sealed = seal(&c, &data, "in/0");
             if n > 64 {
-                assert!(!sealed.windows(64).any(|w| w == &data[..64]), "plaintext visible at n={n}");
+                assert!(
+                    !sealed.windows(64).any(|w| w == &data[..64]),
+                    "plaintext visible at n={n}"
+                );
             }
             let mut back = Vec::new();
-            c.reader(&sealed[..], "in/0").unwrap().read_to_end(&mut back).unwrap();
+            c.reader(&sealed[..], "in/0")
+                .unwrap()
+                .read_to_end(&mut back)
+                .unwrap();
             assert_eq!(back, data, "n={n}");
         }
     }
@@ -257,7 +339,10 @@ mod tests {
         let c = key();
         let data = vec![7u8; 3 * FRAME];
         let sealed = seal(&c, &data, "in/0");
-        let read = |c: &Codec, b: &[u8], role: &str| c.reader(b, role).and_then(|mut r| r.read_to_end(&mut Vec::new()));
+        let read = |c: &Codec, b: &[u8], role: &str| {
+            c.reader(b, role)
+                .and_then(|mut r| r.read_to_end(&mut Vec::new()))
+        };
         assert!(read(&c, &sealed, "in/0").is_ok());
         let mut flipped = sealed.clone();
         flipped[40] ^= 1;
@@ -276,7 +361,14 @@ mod tests {
         // a whole blob moved to another role of the same job, or to another job under the same key, no longer reads
         assert!(read(&c, &sealed, "in/1").is_err());
         let Codec::Aes(k) = &c else { unreachable!() };
-        assert!(read(&Codec::Aes(JobKey::from_bytes(k.bytes, "job-b")), &sealed, "in/0").is_err());
+        assert!(
+            read(
+                &Codec::Aes(JobKey::from_bytes(k.bytes, "job-b")),
+                &sealed,
+                "in/0"
+            )
+            .is_err()
+        );
         // bytes after the last frame
         let mut extra = sealed.clone();
         extra.push(0);

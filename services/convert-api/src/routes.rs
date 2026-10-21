@@ -13,7 +13,9 @@ use convert::exec::Exit;
 use convert::job::InputSource;
 use convert::kind::{self, DetectError};
 use convert::names::safe_name;
-use convert::plan::{self, Options, PageSpec, PdfEngine, PlanError, SheetSel, Target, Translit, TranslitDir};
+use convert::plan::{
+    self, Options, PageSpec, PdfEngine, PlanError, SheetSel, Target, Translit, TranslitDir,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io::Write;
@@ -33,7 +35,12 @@ pub struct ApiError {
 
 impl ApiError {
     pub fn new(status: StatusCode, code: &'static str, message: impl Into<String>) -> ApiError {
-        ApiError { status, code, message: message.into(), retry_after: None }
+        ApiError {
+            status,
+            code,
+            message: message.into(),
+            retry_after: None,
+        }
     }
     pub fn retry(mut self, secs: u64) -> ApiError {
         self.retry_after = Some(secs);
@@ -41,21 +48,35 @@ impl ApiError {
     }
     pub fn internal(message: String) -> ApiError {
         eprintln!("internal error: {message}");
-        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "internal", "internal error")
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "internal",
+            "internal error",
+        )
     }
     fn not_found() -> ApiError {
-        ApiError::new(StatusCode::NOT_FOUND, "not_found", "no such job, file or output")
+        ApiError::new(
+            StatusCode::NOT_FOUND,
+            "not_found",
+            "no such job, file or output",
+        )
     }
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let mut r = (self.status, Json(json!({"error": {"code": self.code, "message": self.message}}))).into_response();
+        let mut r = (
+            self.status,
+            Json(json!({"error": {"code": self.code, "message": self.message}})),
+        )
+            .into_response();
         if let Some(s) = self.retry_after {
-            r.headers_mut().insert(header::RETRY_AFTER, HeaderValue::from(s));
+            r.headers_mut()
+                .insert(header::RETRY_AFTER, HeaderValue::from(s));
         }
         if self.status == StatusCode::UNAUTHORIZED {
-            r.headers_mut().insert(header::WWW_AUTHENTICATE, HeaderValue::from_static("Bearer"));
+            r.headers_mut()
+                .insert(header::WWW_AUTHENTICATE, HeaderValue::from_static("Bearer"));
         }
         r
     }
@@ -80,7 +101,10 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         ("content-security-policy", CSP),
         ("x-content-type-options", "nosniff"),
         ("referrer-policy", "no-referrer"),
-        ("permissions-policy", "camera=(), microphone=(), geolocation=()"),
+        (
+            "permissions-policy",
+            "camera=(), microphone=(), geolocation=()",
+        ),
         ("cache-control", "no-store"),
         // nobody else's page may embed or probe our responses
         ("cross-origin-resource-policy", "same-origin"),
@@ -89,7 +113,10 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         h.insert(k, HeaderValue::from_static(v));
     }
     if hsts {
-        h.insert("strict-transport-security", HeaderValue::from_static("max-age=31536000"));
+        h.insert(
+            "strict-transport-security",
+            HeaderValue::from_static("max-age=31536000"),
+        );
     }
 }
 
@@ -104,21 +131,46 @@ struct Origin {
 }
 
 fn origin(app: &App, req: &Request) -> Origin {
-    let peer = req.extensions().get::<axum::extract::ConnectInfo<SocketAddr>>().map(|c| c.0.ip().to_canonical());
+    let peer = req
+        .extensions()
+        .get::<axum::extract::ConnectInfo<SocketAddr>>()
+        .map(|c| c.0.ip().to_canonical());
     if !peer.is_some_and(|p| app.r.is_trusted_proxy(p)) {
-        return Origin { peer, client: peer, via_proxy: false, https: app.tls };
+        return Origin {
+            peer,
+            client: peer,
+            via_proxy: false,
+            https: app.tls,
+        };
     }
-    let joined = |name: &str| req.headers().get_all(name).iter().filter_map(|v| v.to_str().ok()).collect::<Vec<_>>().join(",");
+    let joined = |name: &str| {
+        req.headers()
+            .get_all(name)
+            .iter()
+            .filter_map(|v| v.to_str().ok())
+            .collect::<Vec<_>>()
+            .join(",")
+    };
     let mut client = peer;
     for e in joined("x-forwarded-for").rsplit(',') {
-        let Ok(ip) = e.trim().parse::<IpAddr>() else { break };
+        let Ok(ip) = e.trim().parse::<IpAddr>() else {
+            break;
+        };
         client = Some(ip.to_canonical());
         if !app.r.is_trusted_proxy(ip) {
             break;
         }
     }
-    let https = joined("x-forwarded-proto").rsplit(',').next().is_some_and(|p| p.trim().eq_ignore_ascii_case("https"));
-    Origin { peer, client, via_proxy: true, https }
+    let https = joined("x-forwarded-proto")
+        .rsplit(',')
+        .next()
+        .is_some_and(|p| p.trim().eq_ignore_ascii_case("https"));
+    Origin {
+        peer,
+        client,
+        via_proxy: true,
+        https,
+    }
 }
 
 async fn headers(State(app): State<Arc<App>>, req: Request, next: Next) -> Response {
@@ -134,8 +186,13 @@ async fn headers(State(app): State<Arc<App>>, req: Request, next: Next) -> Respo
 /// received over plain HTTP is redirected to `public_url`.
 async fn guard(State(app): State<Arc<App>>, mut req: Request, next: Next) -> Response {
     let o = origin(&app, &req);
-    let ip = o.client.map_or_else(|| "unknown".to_string(), |ip| ip.to_string());
-    let client = Client { key: o.client.map_or_else(|| "unknown".to_string(), ip_key), ip };
+    let ip = o
+        .client
+        .map_or_else(|| "unknown".to_string(), |ip| ip.to_string());
+    let client = Client {
+        key: o.client.map_or_else(|| "unknown".to_string(), ip_key),
+        ip,
+    };
     if app.r.upstream_tls {
         if !o.via_proxy {
             // a health probe on the loopback address of the container is the one exception; it learns only `{"ok":true}`
@@ -143,23 +200,62 @@ async fn guard(State(app): State<Arc<App>>, mut req: Request, next: Next) -> Res
                 req.extensions_mut().insert(client);
                 return next.run(req).await;
             }
-            return ApiError::new(StatusCode::FORBIDDEN, "not_via_proxy", "this server answers its reverse proxy only").into_response();
+            return ApiError::new(
+                StatusCode::FORBIDDEN,
+                "not_via_proxy",
+                "this server answers its reverse proxy only",
+            )
+            .into_response();
         }
         if !o.https {
-            let base = app.r.s.public_url.as_deref().unwrap_or("").trim_end_matches('/');
-            let to = format!("{base}{}", req.uri().path_and_query().map_or("/", |p| p.as_str()));
-            return (StatusCode::PERMANENT_REDIRECT, [(header::LOCATION, HeaderValue::from_str(&to).unwrap_or_else(|_| HeaderValue::from_static("/")))]).into_response();
+            let base = app
+                .r
+                .s
+                .public_url
+                .as_deref()
+                .unwrap_or("")
+                .trim_end_matches('/');
+            let to = format!(
+                "{base}{}",
+                req.uri().path_and_query().map_or("/", |p| p.as_str())
+            );
+            return (
+                StatusCode::PERMANENT_REDIRECT,
+                [(
+                    header::LOCATION,
+                    HeaderValue::from_str(&to).unwrap_or_else(|_| HeaderValue::from_static("/")),
+                )],
+            )
+                .into_response();
         }
     }
-    let host = req.headers().get(header::HOST).and_then(|h| h.to_str().ok()).map(str::to_ascii_lowercase);
-    if !app.allowed_hosts.is_empty() && !host.as_ref().is_some_and(|h| app.allowed_hosts.contains(h)) {
-        return ApiError::new(StatusCode::MISDIRECTED_REQUEST, "bad_host", "this host name is not served here").into_response();
+    let host = req
+        .headers()
+        .get(header::HOST)
+        .and_then(|h| h.to_str().ok())
+        .map(str::to_ascii_lowercase);
+    if !app.allowed_hosts.is_empty()
+        && !host.as_ref().is_some_and(|h| app.allowed_hosts.contains(h))
+    {
+        return ApiError::new(
+            StatusCode::MISDIRECTED_REQUEST,
+            "bad_host",
+            "this host name is not served here",
+        )
+        .into_response();
     }
     if let Some(o) = req.headers().get(header::ORIGIN) {
         let origin = o.to_str().unwrap_or("").to_ascii_lowercase();
-        let same = origin.split_once("://").is_some_and(|(_, a)| Some(a) == host.as_deref());
+        let same = origin
+            .split_once("://")
+            .is_some_and(|(_, a)| Some(a) == host.as_deref());
         if !same {
-            return ApiError::new(StatusCode::FORBIDDEN, "bad_origin", "cross-origin requests are not allowed").into_response();
+            return ApiError::new(
+                StatusCode::FORBIDDEN,
+                "bad_origin",
+                "cross-origin requests are not allowed",
+            )
+            .into_response();
         }
     }
     req.extensions_mut().insert(client);
@@ -171,7 +267,11 @@ fn authenticate(app: &App, h: &axum::http::HeaderMap) -> Option<String> {
     match &app.r.auth {
         Auth::None => Some("local".to_string()),
         Auth::Jwt { secret, rules } => {
-            let tok = h.get(header::AUTHORIZATION).and_then(|h| h.to_str().ok()).and_then(|h| h.strip_prefix("Bearer ")).filter(|t| t.len() <= 8192);
+            let tok = h
+                .get(header::AUTHORIZATION)
+                .and_then(|h| h.to_str().ok())
+                .and_then(|h| h.strip_prefix("Bearer "))
+                .filter(|t| t.len() <= 8192);
             tok.and_then(|t| jwt::claims(secret, t, rules).ok())
         }
     }
@@ -184,10 +284,25 @@ async fn auth(State(app): State<Arc<App>>, mut req: Request, next: Next) -> Resp
             next.run(req).await
         }
         None => {
-            let key = req.extensions().get::<Client>().map(|c| c.key.clone()).unwrap_or_default();
+            let key = req
+                .extensions()
+                .get::<Client>()
+                .map(|c| c.key.clone())
+                .unwrap_or_default();
             match app.auth_rl.hit(&key) {
-                Err(s) => ApiError::new(StatusCode::TOO_MANY_REQUESTS, "rate_limited", "too many failed attempts").retry(s).into_response(),
-                Ok(()) => ApiError::new(StatusCode::UNAUTHORIZED, "unauthorized", "a valid bearer token is required").into_response(),
+                Err(s) => ApiError::new(
+                    StatusCode::TOO_MANY_REQUESTS,
+                    "rate_limited",
+                    "too many failed attempts",
+                )
+                .retry(s)
+                .into_response(),
+                Ok(()) => ApiError::new(
+                    StatusCode::UNAUTHORIZED,
+                    "unauthorized",
+                    "a valid bearer token is required",
+                )
+                .into_response(),
             }
         }
     }
@@ -198,7 +313,12 @@ pub fn router(app: Arc<App>) -> Router {
     let api = Router::new()
         .route("/formats", get(formats))
         // the limit layer rejects a too-large Content-Length before the handler runs, and counts a streamed body
-        .route("/jobs", post(create_job).layer::<_, std::convert::Infallible>(DefaultBodyLimit::disable()).layer::<_, std::convert::Infallible>(RequestBodyLimitLayer::new(post_limit)))
+        .route(
+            "/jobs",
+            post(create_job)
+                .layer::<_, std::convert::Infallible>(DefaultBodyLimit::disable())
+                .layer::<_, std::convert::Infallible>(RequestBodyLimitLayer::new(post_limit)),
+        )
         .route("/jobs/{id}", get(job_status).delete(delete_job))
         .route("/jobs/{id}/files/{n}/{output}", get(download))
         .route("/jobs/{id}/zip", get(zip))
@@ -206,13 +326,41 @@ pub fn router(app: Arc<App>) -> Router {
     Router::new()
         .nest("/api/v1", api)
         .route("/healthz", get(healthz))
-        .route("/", get(|| async { page("text/html; charset=utf-8", include_str!("../ui/index.html")) }))
-        .route("/app.js", get(|| async { page("text/javascript; charset=utf-8", include_str!("../ui/app.js")) }))
-        .route("/app.css", get(|| async { page("text/css; charset=utf-8", include_str!("../ui/app.css")) }))
-        .route("/i18n.json", get(|| async { page("application/json", include_str!("../ui/i18n.json")) }))
-        .route("/icon.png", get(|| async { asset("image/png", include_bytes!("../ui/icon.png")) }))
+        .route(
+            "/",
+            get(|| async { page("text/html; charset=utf-8", include_str!("../ui/index.html")) }),
+        )
+        .route(
+            "/app.js",
+            get(|| async {
+                page(
+                    "text/javascript; charset=utf-8",
+                    include_str!("../ui/app.js"),
+                )
+            }),
+        )
+        .route(
+            "/app.css",
+            get(|| async { page("text/css; charset=utf-8", include_str!("../ui/app.css")) }),
+        )
+        .route(
+            "/i18n.json",
+            get(|| async { page("application/json", include_str!("../ui/i18n.json")) }),
+        )
+        .route(
+            "/icon.png",
+            get(|| async { asset("image/png", include_bytes!("../ui/icon.png")) }),
+        )
         // the one Noto Sans of the repo (assets/fonts/fallback): it has U+02BB, U+02BC and Cyrillic, which system fonts may lack
-        .route("/NotoSans-Regular-uz.ttf", get(|| async { asset("font/ttf", include_bytes!("../../../assets/fonts/fallback/NotoSans-Regular-uz.ttf")) }))
+        .route(
+            "/NotoSans-Regular-uz.ttf",
+            get(|| async {
+                asset(
+                    "font/ttf",
+                    include_bytes!("../../../assets/fonts/fallback/NotoSans-Regular-uz.ttf"),
+                )
+            }),
+        )
         .fallback(|| async { ApiError::not_found() })
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .layer(middleware::from_fn_with_state(app.clone(), headers))
@@ -243,18 +391,33 @@ async fn healthz(State(app): State<Arc<App>>, h: axum::http::HeaderMap) -> Json<
     if authenticate(&app, &h).is_none() {
         return Json(json!({"ok": true}));
     }
-    let tools: serde_json::Map<String, Value> = plan::ToolId::ALL.iter().map(|t| (t.name().to_string(), json!(app.cfg.resolve(*t).is_ok()))).collect();
+    let tools: serde_json::Map<String, Value> = plan::ToolId::ALL
+        .iter()
+        .map(|t| (t.name().to_string(), json!(app.cfg.resolve(*t).is_ok())))
+        .collect();
     let sidecar = match app.cfg.pdf2docx_url.clone() {
         None => Value::Null,
         Some(url) => {
-            let cached = app.health.lock().unwrap().filter(|(t, _)| t.elapsed() < Duration::from_secs(10)).map(|x| x.1);
+            let cached = app
+                .health
+                .lock()
+                .unwrap()
+                .filter(|(t, _)| t.elapsed() < Duration::from_secs(10))
+                .map(|x| x.1);
             let ok = match cached {
                 Some(ok) => ok,
                 None => {
                     // `shortcut: a blocking probe on the blocking pool; cached 10 s so an open endpoint cannot be used to hammer the sidecar`
                     let ok = tokio::task::spawn_blocking(move || {
-                        let agent: ureq::Agent = ureq::Agent::config_builder().proxy(None).timeout_global(Some(Duration::from_secs(2))).build().into();
-                        agent.get(format!("{}/healthz", url.trim_end_matches('/'))).call().is_ok()
+                        let agent: ureq::Agent = ureq::Agent::config_builder()
+                            .proxy(None)
+                            .timeout_global(Some(Duration::from_secs(2)))
+                            .build()
+                            .into();
+                        agent
+                            .get(format!("{}/healthz", url.trim_end_matches('/')))
+                            .call()
+                            .is_ok()
                     })
                     .await
                     .unwrap_or(false);
@@ -266,7 +429,9 @@ async fn healthz(State(app): State<Arc<App>>, h: axum::http::HeaderMap) -> Json<
         }
     };
     let all = tools.values().all(|v| v == &json!(true));
-    Json(json!({"ok": all, "tools": tools, "sidecars": {"pdf2docx": sidecar}, "queue": {"active": app.queue_depth(), "max": app.r.s.queue_max}}))
+    Json(
+        json!({"ok": all, "tools": tools, "sidecars": {"pdf2docx": sidecar}, "queue": {"active": app.queue_depth(), "max": app.r.s.queue_max}}),
+    )
 }
 
 // ---- POST /jobs ---------------------------------------------------------------------------------------------------
@@ -305,7 +470,11 @@ fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
             "ascii" => "ascii",
             x => return Err(format!("apostrophe takes official or ascii, got '{x}'")),
         };
-        opts.translit = Some(Translit { dir, alphabet, apostrophe });
+        opts.translit = Some(Translit {
+            dir,
+            alphabet,
+            apostrophe,
+        });
     } else if o.alphabet.is_some() || o.apostrophe.is_some() {
         return Err("alphabet and apostrophe need translit".into());
     }
@@ -338,21 +507,39 @@ struct Upload {
 
 fn multipart_error(e: axum::extract::multipart::MultipartError) -> ApiError {
     if e.status() == StatusCode::PAYLOAD_TOO_LARGE {
-        ApiError::new(StatusCode::PAYLOAD_TOO_LARGE, "too_large", "the upload is over the request limit")
+        ApiError::new(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "too_large",
+            "the upload is over the request limit",
+        )
     } else {
-        ApiError::new(StatusCode::BAD_REQUEST, "bad_multipart", "the multipart body is malformed")
+        ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "bad_multipart",
+            "the multipart body is malformed",
+        )
     }
 }
 
 /// Fields and files, streamed to the job store (encrypted in server mode) with a byte counter: nothing is buffered whole.
-async fn read_upload(app: &App, job: &crate::app::Job, mut mp: Multipart) -> Res<(Vec<Upload>, Option<String>)> {
+async fn read_upload(
+    app: &App,
+    job: &crate::app::Job,
+    mut mp: Multipart,
+) -> Res<(Vec<Upload>, Option<String>)> {
     let s = &app.r.s;
     let (mut files, mut options, mut total) = (Vec::<Upload>::new(), None, 0u64);
     while let Some(mut field) = mp.next_field().await.map_err(multipart_error)? {
         match field.name() {
             Some("options") => {
                 // read with a counter: a part is never held whole before its size is known (WP7 review M7)
-                let too_big = || ApiError::new(StatusCode::BAD_REQUEST, "bad_options", "options must be one JSON object under 64 KiB");
+                let too_big = || {
+                    ApiError::new(
+                        StatusCode::BAD_REQUEST,
+                        "bad_options",
+                        "options must be one JSON object under 64 KiB",
+                    )
+                };
                 let mut buf = Vec::new();
                 while let Some(b) = field.chunk().await.map_err(multipart_error)? {
                     if buf.len() + b.len() > 64 * 1024 {
@@ -367,12 +554,36 @@ async fn read_upload(app: &App, job: &crate::app::Job, mut mp: Multipart) -> Res
             }
             Some("files" | "files[]") => {
                 if files.len() >= s.max_batch_files {
-                    return Err(ApiError::new(StatusCode::PAYLOAD_TOO_LARGE, "too_many_files", format!("at most {} files per job", s.max_batch_files)));
+                    return Err(ApiError::new(
+                        StatusCode::PAYLOAD_TOO_LARGE,
+                        "too_many_files",
+                        format!("at most {} files per job", s.max_batch_files),
+                    ));
                 }
-                let raw = field.file_name().ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "bad_multipart", "a file part needs a file name"))?.to_string();
+                let raw = field
+                    .file_name()
+                    .ok_or_else(|| {
+                        ApiError::new(
+                            StatusCode::BAD_REQUEST,
+                            "bad_multipart",
+                            "a file part needs a file name",
+                        )
+                    })?
+                    .to_string();
                 let name = safe_name(&raw, "upload");
-                let ext = std::path::Path::new(&name).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
-                let cap = if matches!(ext.as_str(), "xlsx" | "xlsm" | "xls" | "xlsb" | "ods" | "csv" | "tsv") { s.max_xlsx_mb } else { s.max_file_mb } << 20;
+                let ext = std::path::Path::new(&name)
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("")
+                    .to_ascii_lowercase();
+                let cap = if matches!(
+                    ext.as_str(),
+                    "xlsx" | "xlsm" | "xls" | "xlsb" | "ods" | "csv" | "tsv"
+                ) {
+                    s.max_xlsx_mb
+                } else {
+                    s.max_file_mb
+                } << 20;
                 let n = files.len();
                 let (tx, mut rx) = tokio::sync::mpsc::channel::<Bytes>(8);
                 let (path, codec, role) = (job.in_path(n), job.codec.clone(), Job::in_role(n));
@@ -390,10 +601,18 @@ async fn read_upload(app: &App, job: &crate::app::Job, mut mp: Multipart) -> Res
                             size += b.len() as u64;
                             total += b.len() as u64;
                             if size > cap {
-                                break Err(ApiError::new(StatusCode::PAYLOAD_TOO_LARGE, "file_too_large", format!("a file is over the {} MB limit", cap >> 20)));
+                                break Err(ApiError::new(
+                                    StatusCode::PAYLOAD_TOO_LARGE,
+                                    "file_too_large",
+                                    format!("a file is over the {} MB limit", cap >> 20),
+                                ));
                             }
                             if total > s.max_batch_mb << 20 {
-                                break Err(ApiError::new(StatusCode::PAYLOAD_TOO_LARGE, "batch_too_large", format!("the batch is over the {} MB limit", s.max_batch_mb)));
+                                break Err(ApiError::new(
+                                    StatusCode::PAYLOAD_TOO_LARGE,
+                                    "batch_too_large",
+                                    format!("the batch is over the {} MB limit", s.max_batch_mb),
+                                ));
                             }
                             if tx.send(b).await.is_err() {
                                 break Err(ApiError::internal("the store writer stopped".into()));
@@ -404,12 +623,20 @@ async fn read_upload(app: &App, job: &crate::app::Job, mut mp: Multipart) -> Res
                     }
                 };
                 drop(tx);
-                let stored = writer.await.map_err(|e| ApiError::internal(e.to_string()))?;
+                let stored = writer
+                    .await
+                    .map_err(|e| ApiError::internal(e.to_string()))?;
                 fed?;
                 stored.map_err(|e| ApiError::internal(format!("cannot store an upload: {e}")))?;
                 files.push(Upload { name, size });
             }
-            _ => return Err(ApiError::new(StatusCode::BAD_REQUEST, "unknown_field", "only the fields files and options are accepted")),
+            _ => {
+                return Err(ApiError::new(
+                    StatusCode::BAD_REQUEST,
+                    "unknown_field",
+                    "only the fields files and options are accepted",
+                ));
+            }
         }
     }
     Ok((files, options))
@@ -433,8 +660,19 @@ fn exit_of(e: &PlanError) -> (u8, String) {
 
 /// The per-file answer in the 202: detect the kind, scan the zip directory, plan. A file that fails here is rejected on its own
 /// and the rest of the batch runs. In server mode this is the one extra plaintext copy (see docs/phase3/api.md).
-fn precheck(app: &App, job: &crate::app::Job, n: usize, up: &Upload, target: Target, opts: &Options, budget: &mut u64) -> Result<Checked, (Option<kind::Kind>, u8, String)> {
-    let dir = app.r.work_dir.join(format!("stage-{}-pre-{}-{n}", std::process::id(), job.id));
+fn precheck(
+    app: &App,
+    job: &crate::app::Job,
+    n: usize,
+    up: &Upload,
+    target: Target,
+    opts: &Options,
+    budget: &mut u64,
+) -> Result<Checked, (Option<kind::Kind>, u8, String)> {
+    let dir = app
+        .r
+        .work_dir
+        .join(format!("stage-{}-pre-{}-{n}", std::process::id(), job.id));
     struct Cleanup(PathBuf);
     impl Drop for Cleanup {
         fn drop(&mut self) {
@@ -442,12 +680,31 @@ fn precheck(app: &App, job: &crate::app::Job, n: usize, up: &Upload, target: Tar
         }
     }
     let _guard = Cleanup(dir.clone());
-    let io = |e: std::io::Error| (None, Exit::ToolError.code(), format!("cannot read the upload: {e}"));
+    let io = |e: std::io::Error| {
+        (
+            None,
+            Exit::ToolError.code(),
+            format!("cannot read the upload: {e}"),
+        )
+    };
     std::fs::create_dir_all(&dir).map_err(io)?;
-    let ext = std::path::Path::new(&up.name).extension().and_then(|e| e.to_str()).map(|e| safe_name(e, "")).filter(|e| !e.is_empty());
+    let ext = std::path::Path::new(&up.name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| safe_name(e, ""))
+        .filter(|e| !e.is_empty());
     let file = dir.join(ext.map_or("input".to_string(), |e| format!("input.{e}")));
-    let src = StoredInput { name: up.name.clone(), path: job.in_path(n), codec: job.codec.clone(), role: Job::in_role(n) };
-    std::io::copy(&mut src.open().map_err(io)?, &mut std::fs::File::create(&file).map_err(io)?).map_err(io)?;
+    let src = StoredInput {
+        name: up.name.clone(),
+        path: job.in_path(n),
+        codec: job.codec.clone(),
+        role: Job::in_role(n),
+    };
+    std::io::copy(
+        &mut src.open().map_err(io)?,
+        &mut std::fs::File::create(&file).map_err(io)?,
+    )
+    .map_err(io)?;
     let det = kind::detect(&file).map_err(|e| match e {
         DetectError::Io(e) => (None, Exit::Usage.code(), format!("cannot read the file: {e}")),
         DetectError::Empty => (None, Exit::Rejected.code(), convert::job::empty_file().msg),
@@ -456,15 +713,24 @@ fn precheck(app: &App, job: &crate::app::Job, n: usize, up: &Upload, target: Tar
     })?;
     let k = det.kind;
     if det.password_protected {
-        return Err((Some(k), Exit::Rejected.code(), "the file is password-protected; passwords are not supported".into()));
+        return Err((
+            Some(k),
+            Exit::Rejected.code(),
+            "the file is password-protected; passwords are not supported".into(),
+        ));
     }
     let sha256 = convert::scan::sha256_file(&file).map_err(io)?;
-    let scan = convert::scan::scan_with(&file, budget).map_err(|f| (Some(k), f.exit.code(), f.msg))?;
+    let scan =
+        convert::scan::scan_with(&file, budget).map_err(|f| (Some(k), f.exit.code(), f.msg))?;
     plan::plan(k, target, opts).map_err(|e| {
         let (c, m) = exit_of(&e);
         (Some(k), c, m)
     })?;
-    Ok(Checked { kind: k, est_mb: estimate_mb(k, up.size), verdict: Arc::new(convert::scan::Verdict { sha256, scan }) })
+    Ok(Checked {
+        kind: k,
+        est_mb: estimate_mb(k, up.size),
+        verdict: Arc::new(convert::scan::Verdict { sha256, scan }),
+    })
 }
 
 /// A job that has been admitted but not handed to its supervisor yet. If the request is dropped before that (the client closed the
@@ -478,7 +744,8 @@ struct Admitted {
 
 impl Admitted {
     fn disarm(&self) {
-        self.armed.store(false, std::sync::atomic::Ordering::Relaxed);
+        self.armed
+            .store(false, std::sync::atomic::Ordering::Relaxed);
     }
 }
 
@@ -491,48 +758,122 @@ impl Drop for Admitted {
     }
 }
 
-async fn create_job(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, Extension(c): Extension<Client>, mp: Multipart) -> Res {
+async fn create_job(
+    State(app): State<Arc<App>>,
+    Extension(p): Extension<Principal>,
+    Extension(c): Extension<Client>,
+    mp: Multipart,
+) -> Res {
     for (l, key) in [(&app.user_rl, &p.0), (&app.ip_rl, &c.key)] {
-        l.hit(key).map_err(|s| ApiError::new(StatusCode::TOO_MANY_REQUESTS, "rate_limited", "too many requests; slow down").retry(s))?;
+        l.hit(key).map_err(|s| {
+            ApiError::new(
+                StatusCode::TOO_MANY_REQUESTS,
+                "rate_limited",
+                "too many requests; slow down",
+            )
+            .retry(s)
+        })?;
     }
     // admission before the body is read: a full queue costs no disk
     let job = app.admit(&p.0)?;
-    let admitted = Admitted { app: app.clone(), job: job.clone(), armed: std::sync::atomic::AtomicBool::new(true) };
+    let admitted = Admitted {
+        app: app.clone(),
+        job: job.clone(),
+        armed: std::sync::atomic::AtomicBool::new(true),
+    };
     create_inner(&app, &job, &c.ip, mp, &admitted).await
 }
 
-async fn create_inner(app: &Arc<App>, job: &Arc<Job>, client: &str, mp: Multipart, admitted: &Admitted) -> Res {
-    let (uploads, options) = tokio::time::timeout(Duration::from_secs(app.r.s.upload_timeout_s), read_upload(app, job, mp))
-        .await
-        .map_err(|_| ApiError::new(StatusCode::REQUEST_TIMEOUT, "upload_timeout", "the upload took too long"))??;
+async fn create_inner(
+    app: &Arc<App>,
+    job: &Arc<Job>,
+    client: &str,
+    mp: Multipart,
+    admitted: &Admitted,
+) -> Res {
+    let (uploads, options) = tokio::time::timeout(
+        Duration::from_secs(app.r.s.upload_timeout_s),
+        read_upload(app, job, mp),
+    )
+    .await
+    .map_err(|_| {
+        ApiError::new(
+            StatusCode::REQUEST_TIMEOUT,
+            "upload_timeout",
+            "the upload took too long",
+        )
+    })??;
     // the reservation made at admission gives way to what was really stored
     let uploaded: u64 = uploads.iter().map(|u| u.size).sum();
-    job.bytes.store(uploaded, std::sync::atomic::Ordering::Relaxed);
+    job.bytes
+        .store(uploaded, std::sync::atomic::Ordering::Relaxed);
     let bad = |m: String| ApiError::new(StatusCode::BAD_REQUEST, "bad_options", m);
     if uploads.is_empty() {
-        return Err(ApiError::new(StatusCode::BAD_REQUEST, "no_files", "send at least one part named files"));
+        return Err(ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "no_files",
+            "send at least one part named files",
+        ));
     }
-    let parsed: OptionsIn = serde_json::from_str(&options.ok_or_else(|| bad("the options field is required".into()))?).map_err(|e| bad(format!("options: {e}")))?;
+    let parsed: OptionsIn =
+        serde_json::from_str(&options.ok_or_else(|| bad("the options field is required".into()))?)
+            .map_err(|e| bad(format!("options: {e}")))?;
     let (target, opts) = parse_options(parsed).map_err(bad)?;
 
     // the prechecks read and inflate the upload, so they wait for a CPU slot like a conversion does, but not for ever
-    let _cpu = tokio::time::timeout(Duration::from_secs(app.r.s.slot_wait_s), app.cpu.acquire(&job.owner))
-        .await
-        .map_err(|_| ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "busy", "all conversion slots are busy; try again shortly").retry(10))?;
+    let _cpu = tokio::time::timeout(
+        Duration::from_secs(app.r.s.slot_wait_s),
+        app.cpu.acquire(&job.owner),
+    )
+    .await
+    .map_err(|_| {
+        ApiError::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "busy",
+            "all conversion slots are busy; try again shortly",
+        )
+        .retry(10)
+    })?;
     // one inflate budget for the whole request: 50 times what was uploaded, between 256 MiB and 2 GiB (WP7 review M1)
     let mut budget = (uploaded.saturating_mul(50)).clamp(256 << 20, 2 << 30);
     let checks = {
         let (app, job, opts) = (app.clone(), job.clone(), opts.clone());
         let names: Vec<(String, u64)> = uploads.iter().map(|u| (u.name.clone(), u.size)).collect();
         tokio::task::spawn_blocking(move || {
-            names.into_iter().enumerate().map(|(n, (name, size))| precheck(&app, &job, n, &Upload { name, size }, target, &opts, &mut budget)).collect::<Vec<_>>()
+            names
+                .into_iter()
+                .enumerate()
+                .map(|(n, (name, size))| {
+                    precheck(
+                        &app,
+                        &job,
+                        n,
+                        &Upload { name, size },
+                        target,
+                        &opts,
+                        &mut budget,
+                    )
+                })
+                .collect::<Vec<_>>()
         })
         .await
         .map_err(|e| ApiError::internal(e.to_string()))?
     };
     drop(_cpu);
-    if let Some((n, c)) = checks.iter().enumerate().find_map(|(n, c)| c.as_ref().ok().filter(|c| c.est_mb > app.r.s.mem_budget_mb).map(|c| (n, c))) {
-        return Err(ApiError::new(StatusCode::CONFLICT, "too_large_for_server", format!("file {n} needs about {} MB of memory, more than this server's budget of {} MB", c.est_mb, app.r.s.mem_budget_mb)));
+    if let Some((n, c)) = checks.iter().enumerate().find_map(|(n, c)| {
+        c.as_ref()
+            .ok()
+            .filter(|c| c.est_mb > app.r.s.mem_budget_mb)
+            .map(|c| (n, c))
+    }) {
+        return Err(ApiError::new(
+            StatusCode::CONFLICT,
+            "too_large_for_server",
+            format!(
+                "file {n} needs about {} MB of memory, more than this server's budget of {} MB",
+                c.est_mb, app.r.s.mem_budget_mb
+            ),
+        ));
     }
 
     let mut answer = vec![];
@@ -541,7 +882,17 @@ async fn create_inner(app: &Arc<App>, job: &Arc<Job>, client: &str, mp: Multipar
     {
         let mut st = job.st.lock().unwrap();
         for (n, (up, chk)) in uploads.iter().zip(&checks).enumerate() {
-            let mut f = FileState { n, name: up.name.clone(), kind: None, target: target.ext().into(), state: "queued", step: None, report: None, outputs: vec![], in_bytes: up.size };
+            let mut f = FileState {
+                n,
+                name: up.name.clone(),
+                kind: None,
+                target: target.ext().into(),
+                state: "queued",
+                step: None,
+                report: None,
+                outputs: vec![],
+                in_bytes: up.size,
+            };
             match chk {
                 Ok(c) => {
                     f.kind = Some(c.kind.ext().into());
@@ -551,7 +902,8 @@ async fn create_inner(app: &Arc<App>, job: &Arc<Job>, client: &str, mp: Multipar
                 Err((k, code, msg)) => {
                     f.kind = k.map(|k| k.ext().to_string());
                     f.state = "failed";
-                    let mut rep = crate::app::convert_failed(&up.name, target, Exit::ToolError, msg);
+                    let mut rep =
+                        crate::app::convert_failed(&up.name, target, Exit::ToolError, msg);
                     rep.code = *code;
                     rep.kind = f.kind.clone();
                     f.report = Some(app.public_report(&rep, &[]));
@@ -570,14 +922,30 @@ async fn create_inner(app: &Arc<App>, job: &Arc<Job>, client: &str, mp: Multipar
     tokio::spawn(async move {
         let mut set = tokio::task::JoinSet::new();
         for (n, est, verdict) in runnable {
-            set.spawn(run_file(a.clone(), j.clone(), n, target, opts.clone(), est, client.clone(), verdict));
+            set.spawn(run_file(
+                a.clone(),
+                j.clone(),
+                n,
+                target,
+                opts.clone(),
+                est,
+                client.clone(),
+                verdict,
+            ));
         }
         while set.join_next().await.is_some() {}
         a.finish(&j);
     });
     admitted.disarm();
-    let mut res = (StatusCode::ACCEPTED, Json(json!({"job": job.id, "files": answer}))).into_response();
-    res.headers_mut().insert(header::LOCATION, HeaderValue::from_str(&format!("/api/v1/jobs/{}", job.id)).expect("hex id"));
+    let mut res = (
+        StatusCode::ACCEPTED,
+        Json(json!({"job": job.id, "files": answer})),
+    )
+        .into_response();
+    res.headers_mut().insert(
+        header::LOCATION,
+        HeaderValue::from_str(&format!("/api/v1/jobs/{}", job.id)).expect("hex id"),
+    );
     Ok(res)
 }
 
@@ -587,7 +955,11 @@ fn lookup(app: &App, id: &str, p: &Principal) -> Res<Arc<crate::app::Job>> {
     app.get(id, &p.0).ok_or_else(ApiError::not_found)
 }
 
-async fn job_status(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, UrlPath(id): UrlPath<String>) -> Res<Json<Value>> {
+async fn job_status(
+    State(app): State<Arc<App>>,
+    Extension(p): Extension<Principal>,
+    UrlPath(id): UrlPath<String>,
+) -> Res<Json<Value>> {
     let job = lookup(&app, &id, &p)?;
     let st = job.st.lock().unwrap();
     let finished = |f: &FileState| matches!(f.state, "done" | "failed");
@@ -617,10 +989,16 @@ async fn job_status(State(app): State<Arc<App>>, Extension(p): Extension<Princip
             v
         })
         .collect();
-    Ok(Json(json!({"job": job.id, "state": state, "progress": {"done": done, "total": st.files.len()}, "files": files})))
+    Ok(Json(
+        json!({"job": job.id, "state": state, "progress": {"done": done, "total": st.files.len()}, "files": files}),
+    ))
 }
 
-async fn delete_job(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, UrlPath(id): UrlPath<String>) -> Res {
+async fn delete_job(
+    State(app): State<Arc<App>>,
+    Extension(p): Extension<Principal>,
+    UrlPath(id): UrlPath<String>,
+) -> Res {
     let job = lookup(&app, &id, &p)?;
     app.delete(&job);
     Ok(StatusCode::NO_CONTENT.into_response())
@@ -628,7 +1006,16 @@ async fn delete_job(State(app): State<Arc<App>>, Extension(p): Extension<Princip
 
 /// RFC 5987 `filename*` plus an ASCII fallback.
 fn disposition(name: &str) -> HeaderValue {
-    let ascii: String = name.chars().map(|c| if c.is_ascii_graphic() && c != '"' && c != '\\' || c == ' ' { c } else { '_' }).collect();
+    let ascii: String = name
+        .chars()
+        .map(|c| {
+            if c.is_ascii_graphic() && c != '"' && c != '\\' || c == ' ' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
     let mut enc = String::new();
     for b in name.bytes() {
         if b.is_ascii_alphanumeric() || b"!#$&+-.^_`|~".contains(&b) {
@@ -637,12 +1024,21 @@ fn disposition(name: &str) -> HeaderValue {
             enc.push_str(&format!("%{b:02X}"));
         }
     }
-    HeaderValue::from_str(&format!("attachment; filename=\"{ascii}\"; filename*=UTF-8''{enc}")).expect("ascii header")
+    HeaderValue::from_str(&format!(
+        "attachment; filename=\"{ascii}\"; filename*=UTF-8''{enc}"
+    ))
+    .expect("ascii header")
 }
 
 /// A fixed type per extension; markup types are served as opaque bytes so a downloaded page can never run in our origin.
 fn content_type(name: &str) -> &'static str {
-    match std::path::Path::new(name).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase().as_str() {
+    match std::path::Path::new(name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase()
+        .as_str()
+    {
         "pdf" => "application/pdf",
         "png" => "image/png",
         "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -656,7 +1052,13 @@ fn content_type(name: &str) -> &'static str {
 }
 
 /// Decrypt on the blocking pool and stream; the response is as long as the plaintext.
-fn stream(codec: crate::crypt::Codec, path: PathBuf, role: String, name: &str, size: u64) -> Response {
+fn stream(
+    codec: crate::crypt::Codec,
+    path: PathBuf,
+    role: String,
+    name: &str,
+    size: u64,
+) -> Response {
     use zeroize::Zeroize;
     let (tx, rx) = tokio::sync::mpsc::channel::<Result<Bytes, std::io::Error>>(4);
     tokio::task::spawn_blocking(move || {
@@ -666,7 +1068,12 @@ fn stream(codec: crate::crypt::Codec, path: PathBuf, role: String, name: &str, s
             loop {
                 match std::io::Read::read(&mut r, &mut buf)? {
                     0 => return Ok(()),
-                    n if tx.blocking_send(Ok(Bytes::copy_from_slice(&buf[..n]))).is_err() => return Ok(()),
+                    n if tx
+                        .blocking_send(Ok(Bytes::copy_from_slice(&buf[..n])))
+                        .is_err() =>
+                    {
+                        return Ok(());
+                    }
                     _ => {}
                 }
             }
@@ -676,22 +1083,42 @@ fn stream(codec: crate::crypt::Codec, path: PathBuf, role: String, name: &str, s
             let _ = tx.blocking_send(Err(e));
         }
     });
-    let mut res = Response::new(Body::from_stream(tokio_stream::wrappers::ReceiverStream::new(rx)));
+    let mut res = Response::new(Body::from_stream(
+        tokio_stream::wrappers::ReceiverStream::new(rx),
+    ));
     let h = res.headers_mut();
-    h.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type(name)));
+    h.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static(content_type(name)),
+    );
     h.insert(header::CONTENT_DISPOSITION, disposition(name));
     h.insert(header::CONTENT_LENGTH, HeaderValue::from(size));
     res
 }
 
-async fn download(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, UrlPath((id, n, k)): UrlPath<(String, usize, usize)>) -> Res {
+async fn download(
+    State(app): State<Arc<App>>,
+    Extension(p): Extension<Principal>,
+    UrlPath((id, n, k)): UrlPath<(String, usize, usize)>,
+) -> Res {
     let job = lookup(&app, &id, &p)?;
     let (name, size) = {
         let st = job.st.lock().unwrap();
-        let o = st.files.get(n).filter(|f| f.state == "done").and_then(|f| f.outputs.get(k)).ok_or_else(ApiError::not_found)?;
+        let o = st
+            .files
+            .get(n)
+            .filter(|f| f.state == "done")
+            .and_then(|f| f.outputs.get(k))
+            .ok_or_else(ApiError::not_found)?;
         (o.name.clone(), o.size)
     };
-    Ok(stream(job.codec.clone(), job.out_path(n, k), Job::out_role(n, k), &name, size))
+    Ok(stream(
+        job.codec.clone(),
+        job.out_path(n, k),
+        Job::out_role(n, k),
+        &name,
+        size,
+    ))
 }
 
 /// Every output plus `report.json`, built once into the job directory (encrypted in server mode), then served.
@@ -714,16 +1141,43 @@ fn build_zip_part(job: &crate::app::Job, part: &std::path::Path) -> Result<(), A
     type Item = (usize, Vec<String>, Option<Value>); // file n, output names, report
     let (total, files): (u64, Vec<Item>) = {
         let st = job.st.lock().unwrap();
-        (st.files.iter().flat_map(|f| &f.outputs).map(|o| o.size).sum(), st.files.iter().map(|f| (f.n, f.outputs.iter().map(|o| o.name.clone()).collect(), f.report.clone())).collect())
+        (
+            st.files
+                .iter()
+                .flat_map(|f| &f.outputs)
+                .map(|o| o.size)
+                .sum(),
+            st.files
+                .iter()
+                .map(|f| {
+                    (
+                        f.n,
+                        f.outputs.iter().map(|o| o.name.clone()).collect(),
+                        f.report.clone(),
+                    )
+                })
+                .collect(),
+        )
     };
     if total > convert::scan::MAX_TOTAL_BYTES {
-        return Err(ApiError::new(StatusCode::PAYLOAD_TOO_LARGE, "zip_too_large", "the outputs are too large to pack into one zip; download them one by one"));
+        return Err(ApiError::new(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "zip_too_large",
+            "the outputs are too large to pack into one zip; download them one by one",
+        ));
     }
     let internal = |e: &dyn std::fmt::Display| ApiError::internal(format!("zip: {e}"));
     // a part left by a crashed build is overwritten, not an error
-    let w = job.codec.writer(std::fs::File::create(part).map_err(|e| internal(&e))?, Job::ZIP_ROLE).map_err(|e| internal(&e))?;
+    let w = job
+        .codec
+        .writer(
+            std::fs::File::create(part).map_err(|e| internal(&e))?,
+            Job::ZIP_ROLE,
+        )
+        .map_err(|e| internal(&e))?;
     let mut z = zip::ZipWriter::new_stream(w);
-    let opt = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let opt = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
     let mut names: Vec<String> = vec![];
     let mut reports = vec![];
     for (n, outs, report) in files {
@@ -731,31 +1185,58 @@ fn build_zip_part(job: &crate::app::Job, part: &std::path::Path) -> Result<(), A
             let taken: Vec<&str> = names.iter().map(String::as_str).collect();
             let entry = crate::app::dedupe(&taken, name);
             z.start_file(entry.clone(), opt).map_err(|e| internal(&e))?;
-            std::io::copy(&mut job.codec.open(&job.out_path(n, k), &Job::out_role(n, k)).map_err(|e| internal(&e))?, &mut z).map_err(|e| internal(&e))?;
+            std::io::copy(
+                &mut job
+                    .codec
+                    .open(&job.out_path(n, k), &Job::out_role(n, k))
+                    .map_err(|e| internal(&e))?,
+                &mut z,
+            )
+            .map_err(|e| internal(&e))?;
             names.push(entry);
         }
         reports.extend(report);
     }
     z.start_file("report.json", opt).map_err(|e| internal(&e))?;
-    z.write_all(&serde_json::to_vec_pretty(&reports).expect("json")).map_err(|e| internal(&e))?;
+    z.write_all(&serde_json::to_vec_pretty(&reports).expect("json"))
+        .map_err(|e| internal(&e))?;
     let sw = z.finish().map_err(|e| internal(&e))?;
     let size = sw.into_inner().finish().map_err(|e| internal(&e))?;
-    job.zip_size.store(size, std::sync::atomic::Ordering::Relaxed);
+    job.zip_size
+        .store(size, std::sync::atomic::Ordering::Relaxed);
     std::fs::rename(part, job.zip_path()).map_err(|e| internal(&e))?;
     job.add_bytes(size);
     Ok(())
 }
 
-async fn zip(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, UrlPath(id): UrlPath<String>) -> Res {
+async fn zip(
+    State(app): State<Arc<App>>,
+    Extension(p): Extension<Principal>,
+    UrlPath(id): UrlPath<String>,
+) -> Res {
     let job = lookup(&app, &id, &p)?;
     if !job.is_finished() {
-        return Err(ApiError::new(StatusCode::CONFLICT, "not_done", "the job has not finished yet"));
+        return Err(ApiError::new(
+            StatusCode::CONFLICT,
+            "not_done",
+            "the job has not finished yet",
+        ));
     }
     if !job.zip_path().exists() {
         // deflating up to a gigabyte is conversion-sized work: it takes a CPU slot like one (WP7 review M1)
-        let slot = tokio::time::timeout(Duration::from_secs(app.r.s.slot_wait_s), app.cpu.acquire(&job.owner))
-            .await
-            .map_err(|_| ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "busy", "all conversion slots are busy; try again shortly").retry(10))?;
+        let slot = tokio::time::timeout(
+            Duration::from_secs(app.r.s.slot_wait_s),
+            app.cpu.acquire(&job.owner),
+        )
+        .await
+        .map_err(|_| {
+            ApiError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "busy",
+                "all conversion slots are busy; try again shortly",
+            )
+            .retry(10)
+        })?;
         let j = job.clone();
         tokio::task::spawn_blocking(move || {
             let _slot = slot;
@@ -764,6 +1245,11 @@ async fn zip(State(app): State<Arc<App>>, Extension(p): Extension<Principal>, Ur
         .await
         .map_err(|e| ApiError::internal(e.to_string()))??;
     }
-    Ok(stream(job.codec.clone(), job.zip_path(), Job::ZIP_ROLE.to_string(), "converted.zip", job.zip_size.load(std::sync::atomic::Ordering::Relaxed)))
+    Ok(stream(
+        job.codec.clone(),
+        job.zip_path(),
+        Job::ZIP_ROLE.to_string(),
+        "converted.zip",
+        job.zip_size.load(std::sync::atomic::Ordering::Relaxed),
+    ))
 }
-

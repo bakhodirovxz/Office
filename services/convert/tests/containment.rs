@@ -29,10 +29,16 @@ fn killing_convert_kills_the_tool_it_started() {
     let t = Instant::now();
     let child = loop {
         sys.refresh_processes(ProcessesToUpdate::All, true);
-        if let Some(p) = sys.processes().values().find(|p| p.parent() == Some(parent_pid) && p.name().to_string_lossy().contains("convert-fake-tool")) {
+        if let Some(p) = sys.processes().values().find(|p| {
+            p.parent() == Some(parent_pid)
+                && p.name().to_string_lossy().contains("convert-fake-tool")
+        }) {
             break p.pid();
         }
-        assert!(t.elapsed() < Duration::from_secs(20), "the tool never started");
+        assert!(
+            t.elapsed() < Duration::from_secs(20),
+            "the tool never started"
+        );
         std::thread::sleep(Duration::from_millis(100));
     };
     parent.kill().unwrap();
@@ -43,7 +49,10 @@ fn killing_convert_kills_the_tool_it_started() {
         if sys.process(child).is_none() {
             break;
         }
-        assert!(t.elapsed() < Duration::from_secs(10), "the tool outlived the parent");
+        assert!(
+            t.elapsed() < Duration::from_secs(10),
+            "the tool outlived the parent"
+        );
         std::thread::sleep(Duration::from_millis(100));
     }
     let _ = std::fs::remove_dir_all(&dir);

@@ -44,7 +44,12 @@ pub trait JobHook: Send + Sync {
     }
     /// After every step succeeded and every output validated, before the outputs leave the job directory. `outputs` are the
     /// files in `out/`; the hook may rewrite them in place or add files there.
-    fn after(&self, _ctx: &JobCtx, _outputs: &[PathBuf], _tools: &dyn ToolRunner) -> Result<Vec<Warning>, Failure> {
+    fn after(
+        &self,
+        _ctx: &JobCtx,
+        _outputs: &[PathBuf],
+        _tools: &dyn ToolRunner,
+    ) -> Result<Vec<Warning>, Failure> {
         Ok(vec![])
     }
     /// The job is over, whatever its result. The hook forgets the job; what it returns goes into the report as `xdfu`.

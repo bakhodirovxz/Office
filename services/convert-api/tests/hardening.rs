@@ -45,7 +45,8 @@ fn sandbox(name: &str) -> PathBuf {
 fn fake_cfg() -> ConvertConfig {
     let mut c = ConvertConfig::from_env();
     for t in ToolId::ALL {
-        c.tools.insert(t, env!("CARGO_BIN_EXE_convert-api-fake-tool").into());
+        c.tools
+            .insert(t, env!("CARGO_BIN_EXE_convert-api-fake-tool").into());
     }
     c.sample_ms = 50;
     c
@@ -54,7 +55,11 @@ fn fake_cfg() -> ConvertConfig {
 impl H {
     fn local(name: &str, f: impl FnOnce(&mut Settings)) -> H {
         let dir = sandbox(name);
-        let mut s = Settings { work_dir: Some(dir.join("work")), store_dir: Some(dir.join("store")), ..Settings::default() };
+        let mut s = Settings {
+            work_dir: Some(dir.join("work")),
+            store_dir: Some(dir.join("store")),
+            ..Settings::default()
+        };
         f(&mut s);
         H::build(dir, s, "127.0.0.1:8787", false, fake_cfg())
     }
@@ -83,26 +88,52 @@ impl H {
 
     fn build(dir: PathBuf, s: Settings, host: &'static str, tls: bool, cfg: ConvertConfig) -> H {
         let app = App::new(s.resolve().unwrap(), cfg, tls).unwrap();
-        H { dir, router: routes::router(app.clone()), app, host }
+        H {
+            dir,
+            router: routes::router(app.clone()),
+            app,
+            host,
+        }
     }
 
-    fn req(&self, method: &str, uri: &str, token: Option<&str>, ct: Option<&str>, body: Vec<u8>) -> Request<Body> {
-        let mut r = Request::builder().method(method).uri(uri).header("host", self.host);
+    fn req(
+        &self,
+        method: &str,
+        uri: &str,
+        token: Option<&str>,
+        ct: Option<&str>,
+        body: Vec<u8>,
+    ) -> Request<Body> {
+        let mut r = Request::builder()
+            .method(method)
+            .uri(uri)
+            .header("host", self.host);
         if let Some(t) = token {
             r = r.header("authorization", format!("Bearer {t}"));
         }
         if let Some(c) = ct {
-            r = r.header("content-type", c).header("content-length", body.len());
+            r = r
+                .header("content-type", c)
+                .header("content-length", body.len());
         }
         let mut r = r.body(Body::from(body)).unwrap();
-        r.extensions_mut().insert(ConnectInfo("203.0.113.9:5555".parse::<SocketAddr>().unwrap()));
+        r.extensions_mut().insert(ConnectInfo(
+            "203.0.113.9:5555".parse::<SocketAddr>().unwrap(),
+        ));
         r
     }
 
     async fn send(&self, r: Request<Body>) -> (StatusCode, HeaderMap, Vec<u8>) {
         let res = self.router.clone().oneshot(r).await.unwrap();
         let (st, h) = (res.status(), res.headers().clone());
-        (st, h, axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap().to_vec())
+        (
+            st,
+            h,
+            axum::body::to_bytes(res.into_body(), usize::MAX)
+                .await
+                .unwrap()
+                .to_vec(),
+        )
     }
 
     async fn json(&self, method: &str, uri: &str, token: Option<&str>) -> (StatusCode, Value) {
@@ -110,12 +141,22 @@ impl H {
         (st, serde_json::from_slice(&b).unwrap_or(Value::Null))
     }
 
-    fn post_req(&self, files: &[(&str, &[u8])], options: Value, token: Option<&str>) -> Request<Body> {
+    fn post_req(
+        &self,
+        files: &[(&str, &[u8])],
+        options: Value,
+        token: Option<&str>,
+    ) -> Request<Body> {
         let (ct, body) = multipart(files, &options.to_string());
         self.req("POST", "/api/v1/jobs", token, Some(&ct), body)
     }
 
-    async fn post(&self, files: &[(&str, &[u8])], options: Value, token: Option<&str>) -> (StatusCode, HeaderMap, Value) {
+    async fn post(
+        &self,
+        files: &[(&str, &[u8])],
+        options: Value,
+        token: Option<&str>,
+    ) -> (StatusCode, HeaderMap, Value) {
         let (st, h, b) = self.send(self.post_req(files, options, token)).await;
         (st, h, serde_json::from_slice(&b).unwrap_or(Value::Null))
     }
@@ -128,21 +169,32 @@ impl H {
             if v["state"] == "done" {
                 return v;
             }
-            assert!(t.elapsed() < Duration::from_secs(60), "job never finished: {v}");
+            assert!(
+                t.elapsed() < Duration::from_secs(60),
+                "job never finished: {v}"
+            );
             tokio::time::sleep(Duration::from_millis(100)).await;
         }
     }
 
     async fn wait_running(&self, id: &str, token: Option<&str>) {
         let t = Instant::now();
-        while self.json("GET", &format!("/api/v1/jobs/{id}"), token).await.1["files"][0]["state"] != "running" {
+        while self
+            .json("GET", &format!("/api/v1/jobs/{id}"), token)
+            .await
+            .1["files"][0]["state"]
+            != "running"
+        {
             assert!(t.elapsed() < Duration::from_secs(20), "never started");
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
     }
 
     fn token(&self, sub: &str) -> String {
-        jwt::sign(SECRET, &json!({"sub": sub, "exp": jwt::now() + 600, "scope": "convert"}))
+        jwt::sign(
+            SECRET,
+            &json!({"sub": sub, "exp": jwt::now() + 600, "scope": "convert"}),
+        )
     }
 
     fn files_in(&self, sub: &str) -> Vec<PathBuf> {
@@ -153,15 +205,26 @@ impl H {
 
     async fn wait_clean(&self) {
         let t = Instant::now();
-        while !(self.files_in("work").is_empty() && std::fs::read_dir(self.dir.join("store")).map_or(true, |r| r.count() == 0)) {
-            assert!(t.elapsed() < Duration::from_secs(20), "left: {:?} {:?}", self.files_in("work"), self.files_in("store"));
+        while !(self.files_in("work").is_empty()
+            && std::fs::read_dir(self.dir.join("store")).map_or(true, |r| r.count() == 0))
+        {
+            assert!(
+                t.elapsed() < Duration::from_secs(20),
+                "left: {:?} {:?}",
+                self.files_in("work"),
+                self.files_in("store")
+            );
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
     }
 }
 
 fn all_files(dir: &std::path::Path, out: &mut Vec<PathBuf>) {
-    for e in std::fs::read_dir(dir).into_iter().flatten().filter_map(Result::ok) {
+    for e in std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .filter_map(Result::ok)
+    {
         let p = e.path();
         if p.is_dir() {
             all_files(&p, out);
@@ -200,7 +263,10 @@ async fn a_request_dropped_while_it_waits_for_a_slot_leaks_nothing() {
     });
     let held = h.app.cpu.try_acquire().expect("the only slot");
     // the upload is read, then the handler waits for a slot for the upload check; the client goes away at that point
-    let (router, req) = (h.router.clone(), h.post_req(&[("a.txt", TXT)], json!({"to": "pdf"}), None));
+    let (router, req) = (
+        h.router.clone(),
+        h.post_req(&[("a.txt", TXT)], json!({"to": "pdf"}), None),
+    );
     let task = tokio::spawn(async move { router.oneshot(req).await });
     let t = Instant::now();
     while h.app.queue_depth() == 0 {
@@ -214,14 +280,22 @@ async fn a_request_dropped_while_it_waits_for_a_slot_leaks_nothing() {
     let _ = task.await;
     let t = Instant::now();
     while h.app.queue_depth() != 0 {
-        assert!(t.elapsed() < Duration::from_secs(10), "the dropped request still counts as an active job");
+        assert!(
+            t.elapsed() < Duration::from_secs(10),
+            "the dropped request still counts as an active job"
+        );
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
     h.wait_clean().await;
     assert_eq!(h.app.stored_bytes(), 0);
     drop(held);
     // and the user, whose limit is one active job, can post again
-    assert_eq!(h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None).await.0, StatusCode::ACCEPTED);
+    assert_eq!(
+        h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None)
+            .await
+            .0,
+        StatusCode::ACCEPTED
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -237,7 +311,11 @@ async fn the_wait_for_a_slot_is_bounded_for_the_upload_check_and_for_the_zip() {
     let held = h.app.cpu.try_acquire().expect("the only slot");
     let t = Instant::now();
     let (st, hd, v) = h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None).await;
-    assert_eq!((st, v["error"]["code"].clone()), (StatusCode::SERVICE_UNAVAILABLE, json!("busy")), "{v}");
+    assert_eq!(
+        (st, v["error"]["code"].clone()),
+        (StatusCode::SERVICE_UNAVAILABLE, json!("busy")),
+        "{v}"
+    );
     assert!(hd.contains_key("retry-after") && t.elapsed() < Duration::from_secs(10));
     // the refused job is gone, not leaked
     let t = Instant::now();
@@ -246,14 +324,24 @@ async fn the_wait_for_a_slot_is_bounded_for_the_upload_check_and_for_the_zip() {
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
     // building a zip needs a slot (M1); an already-built zip needs none
-    let (st, _, _) = h.send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![])).await;
+    let (st, _, _) = h
+        .send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![]))
+        .await;
     assert_eq!(st, StatusCode::SERVICE_UNAVAILABLE);
     drop(held);
-    let (st, _, zip) = h.send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![])).await;
+    let (st, _, zip) = h
+        .send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![]))
+        .await;
     assert_eq!(st, StatusCode::OK);
     assert!(zip.starts_with(b"PK"));
     let held = h.app.cpu.try_acquire().expect("the only slot");
-    assert_eq!(h.send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![])).await.0, StatusCode::OK, "a built zip is served without a slot");
+    assert_eq!(
+        h.send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![]))
+            .await
+            .0,
+        StatusCode::OK,
+        "a built zip is served without a slot"
+    );
     drop(held);
 }
 
@@ -263,15 +351,27 @@ async fn the_wait_for_a_slot_is_bounded_for_the_upload_check_and_for_the_zip() {
 async fn inputs_are_deleted_as_soon_as_their_file_has_run_or_failed_its_check() {
     let h = H::server("b2-in", |_| {});
     let t = h.token("alice");
-    let (st, _, v) = h.post(&[("a.txt", TXT), ("b.bin", &[0u8, 1, 2, 3, 0xFF][..])], json!({"to": "pdf"}), Some(&t)).await;
+    let (st, _, v) = h
+        .post(
+            &[("a.txt", TXT), ("b.bin", &[0u8, 1, 2, 3, 0xFF][..])],
+            json!({"to": "pdf"}),
+            Some(&t),
+        )
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
     assert_eq!(v["files"][1]["error"]["code"], 3);
     // the rejected file's input goes at once (no wait for the run), the other when it has run
     let id = v["job"].as_str().unwrap().to_string();
     h.wait_done(&id, Some(&t)).await;
     let files = h.files_in("store");
-    assert!(files.iter().all(|f| !f.parent().unwrap().ends_with("in")), "inputs left: {files:?}");
-    assert!(files.iter().any(|f| f.to_string_lossy().contains("out")), "the output stays");
+    assert!(
+        files.iter().all(|f| !f.parent().unwrap().ends_with("in")),
+        "inputs left: {files:?}"
+    );
+    assert!(
+        files.iter().any(|f| f.to_string_lossy().contains("out")),
+        "the output stays"
+    );
     // what is accounted is what is left: the (tiny) output, not the 2 uploads
     assert!(h.app.stored_bytes() < 1024, "{}", h.app.stored_bytes());
 }
@@ -295,14 +395,24 @@ async fn the_store_quota_the_user_cap_and_the_disk_floor_each_refuse_a_new_job()
     }
     assert!(h.app.stored_bytes() > 1_100_000, "{}", h.app.stored_bytes());
     let (st, hd, v) = h.post(&[("s.txt", &big)], json!({"to": "pdf"}), None).await;
-    assert_eq!((st, v["error"]["code"].clone()), (StatusCode::SERVICE_UNAVAILABLE, json!("store_full")), "{v}");
+    assert_eq!(
+        (st, v["error"]["code"].clone()),
+        (StatusCode::SERVICE_UNAVAILABLE, json!("store_full")),
+        "{v}"
+    );
     assert!(hd.contains_key("retry-after"));
     for id in &ids {
         h.json("DELETE", &format!("/api/v1/jobs/{id}"), None).await;
     }
     h.wait_clean().await;
     assert_eq!(h.app.stored_bytes(), 0);
-    assert_eq!(h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None).await.0, StatusCode::ACCEPTED, "room again after the deletes");
+    assert_eq!(
+        h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None)
+            .await
+            .0,
+        StatusCode::ACCEPTED,
+        "room again after the deletes"
+    );
 
     // per-user cap: alice may keep 1 MB; bob is not affected
     let h = H::server("b2-user", |s| {
@@ -313,17 +423,31 @@ async fn the_store_quota_the_user_cap_and_the_disk_floor_each_refuse_a_new_job()
         s.per_user_active = 10;
     });
     let (alice, bob) = (h.token("alice"), h.token("bob"));
-    let (st, _, v) = h.post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&alice)).await;
+    let (st, _, v) = h
+        .post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&alice))
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
-    let (st, _, v) = h.post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&alice)).await;
-    assert_eq!((st, v["error"]["code"].clone()), (StatusCode::TOO_MANY_REQUESTS, json!("user_store_full")), "{v}");
-    let (st, _, v) = h.post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&bob)).await;
+    let (st, _, v) = h
+        .post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&alice))
+        .await;
+    assert_eq!(
+        (st, v["error"]["code"].clone()),
+        (StatusCode::TOO_MANY_REQUESTS, json!("user_store_full")),
+        "{v}"
+    );
+    let (st, _, v) = h
+        .post(&[("s.txt", &big)], json!({"to": "pdf"}), Some(&bob))
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
 
     // the free-space floor: a floor no disk can meet
     let h = H::local("b2-floor", |s| s.min_free_mb = 1 << 30);
     let (st, hd, v) = h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), None).await;
-    assert_eq!((st, v["error"]["code"].clone()), (StatusCode::SERVICE_UNAVAILABLE, json!("disk_low")), "{v}");
+    assert_eq!(
+        (st, v["error"]["code"].clone()),
+        (StatusCode::SERVICE_UNAVAILABLE, json!("disk_low")),
+        "{v}"
+    );
     assert!(hd.contains_key("retry-after"));
     assert_eq!(h.app.queue_depth(), 0);
 }
@@ -332,7 +456,8 @@ async fn the_store_quota_the_user_cap_and_the_disk_floor_each_refuse_a_new_job()
 
 fn zip_of(parts: &[(&str, usize)]) -> Vec<u8> {
     let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-    let o = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let o = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
     for (name, size) in parts {
         w.start_file(*name, o).unwrap();
         w.write_all(&vec![0u8; *size]).unwrap();
@@ -346,10 +471,22 @@ async fn the_ratio_rule_now_covers_parts_that_used_to_slip_under_ten_megabytes()
     // 100 such parts used to pass: each is under 10 MB. One is enough to be refused now (a few KB of upload, 9.9 MB of inflate)
     let bomb = zip_of(&[("word/document.xml", 9_900_000)]);
     assert!(bomb.len() < 50_000, "{}", bomb.len());
-    let (st, _, v) = h.post(&[("bomb.docx", &bomb), ("ok.txt", TXT)], json!({"to": "pdf"}), None).await;
+    let (st, _, v) = h
+        .post(
+            &[("bomb.docx", &bomb), ("ok.txt", TXT)],
+            json!({"to": "pdf"}),
+            None,
+        )
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
     assert_eq!(v["files"][0]["error"]["code"], 9, "{v}");
-    assert!(v["files"][0]["error"]["message"].as_str().unwrap().contains("zip bomb"), "{v}");
+    assert!(
+        v["files"][0]["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("zip bomb"),
+        "{v}"
+    );
     assert!(v["files"][1].get("error").is_none());
 }
 
@@ -364,13 +501,23 @@ async fn the_job_deadline_covers_all_its_files_together() {
     // three files that would each sleep for two minutes, one slot: per file that would be six minutes, per job it is three seconds
     let slow = sleeper(0);
     let t = Instant::now();
-    let (st, _, v) = h.post(&[("1.txt", &slow), ("2.txt", &slow), ("3.txt", &slow)], json!({"to": "pdf"}), None).await;
+    let (st, _, v) = h
+        .post(
+            &[("1.txt", &slow), ("2.txt", &slow), ("3.txt", &slow)],
+            json!({"to": "pdf"}),
+            None,
+        )
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
     let done = h.wait_done(v["job"].as_str().unwrap(), None).await;
     let took = t.elapsed();
     assert!(took < Duration::from_secs(20), "{took:?}");
     for f in done["files"].as_array().unwrap() {
-        assert_eq!((f["state"].clone(), f["code"].clone()), (json!("failed"), json!(4)), "{done}");
+        assert_eq!(
+            (f["state"].clone(), f["code"].clone()),
+            (json!("failed"), json!(4)),
+            "{done}"
+        );
     }
 }
 
@@ -378,16 +525,33 @@ async fn the_job_deadline_covers_all_its_files_together() {
 
 async fn plain_server(lim: tls::ConnLimits) -> (u16, Arc<App>, PathBuf) {
     let dir = sandbox(&format!("m3-{}", lim.per_ip));
-    let s = Settings { work_dir: Some(dir.join("work")), store_dir: Some(dir.join("store")), ..Settings::default() };
+    let s = Settings {
+        work_dir: Some(dir.join("work")),
+        store_dir: Some(dir.join("store")),
+        ..Settings::default()
+    };
     let app = App::new(s.resolve().unwrap(), fake_cfg(), false).unwrap();
     let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = l.local_addr().unwrap().port();
-    tokio::spawn(tls::serve(l, None, routes::router(app.clone()), lim, std::future::pending()));
+    tokio::spawn(tls::serve(
+        l,
+        None,
+        routes::router(app.clone()),
+        lim,
+        std::future::pending(),
+    ));
     (port, app, dir)
 }
 
 fn limits() -> tls::ConnLimits {
-    tls::ConnLimits { total: 1000, per_ip: 2, exempt: vec![], max_age: Duration::from_secs(60), max_requests: 100, head_timeout: Duration::from_secs(1) }
+    tls::ConnLimits {
+        total: 1000,
+        per_ip: 2,
+        exempt: vec![],
+        max_age: Duration::from_secs(60),
+        max_requests: 100,
+        head_timeout: Duration::from_secs(1),
+    }
 }
 
 fn get(port: u16, s: &mut std::net::TcpStream) -> String {
@@ -437,15 +601,30 @@ async fn the_listener_caps_connections_per_address_and_drops_slow_and_old_ones()
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_connection_is_closed_after_its_request_budget_so_keepalive_drip_ends() {
-    let (port, _app, dir) = plain_server(tls::ConnLimits { max_requests: 3, head_timeout: Duration::from_secs(30), per_ip: 10, ..limits() }).await;
+    let (port, _app, dir) = plain_server(tls::ConnLimits {
+        max_requests: 3,
+        head_timeout: Duration::from_secs(30),
+        per_ip: 10,
+        ..limits()
+    })
+    .await;
     tokio::task::spawn_blocking(move || {
         let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
         s.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
-        let heads: Vec<String> = (0..3).map(|_| get(port, &mut s).to_ascii_lowercase()).collect();
-        assert!(!heads[0].contains("connection: close") && !heads[1].contains("connection: close"), "{heads:?}");
+        let heads: Vec<String> = (0..3)
+            .map(|_| get(port, &mut s).to_ascii_lowercase())
+            .collect();
+        assert!(
+            !heads[0].contains("connection: close") && !heads[1].contains("connection: close"),
+            "{heads:?}"
+        );
         assert!(heads[2].contains("connection: close"), "{}", heads[2]);
         let mut buf = [0u8; 8];
-        assert_eq!(s.read(&mut buf).unwrap_or(0), 0, "the server hung up after the last request");
+        assert_eq!(
+            s.read(&mut buf).unwrap_or(0),
+            0,
+            "the server hung up after the last request"
+        );
     })
     .await
     .unwrap();
@@ -455,7 +634,8 @@ async fn a_connection_is_closed_after_its_request_budget_so_keepalive_drip_ends(
 // ---- M6: proxies ---------------------------------------------------------------------------------------------------------
 
 fn from(mut r: Request<Body>, peer: &str, headers: &[(&'static str, &str)]) -> Request<Body> {
-    r.extensions_mut().insert(ConnectInfo(peer.parse::<SocketAddr>().unwrap()));
+    r.extensions_mut()
+        .insert(ConnectInfo(peer.parse::<SocketAddr>().unwrap()));
     for (k, v) in headers {
         r.headers_mut().insert(*k, v.parse().unwrap());
     }
@@ -473,26 +653,65 @@ async fn x_forwarded_for_counts_only_from_a_trusted_proxy_and_ipv6_counts_by_64(
     let t = h.token("alice");
     let hr = &h;
     let post = |peer: &str, hs: &[(&'static str, &str)]| {
-        let r = from(hr.post_req(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t)), peer, hs);
+        let r = from(
+            hr.post_req(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t)),
+            peer,
+            hs,
+        );
         async move { hr.send(r).await.0 }
     };
     // an untrusted peer cannot choose its bucket: three different X-Forwarded-For values are still one address
-    assert_eq!(post("203.0.113.9:1", &[("x-forwarded-for", "1.1.1.1")]).await, StatusCode::ACCEPTED);
-    assert_eq!(post("203.0.113.9:1", &[("x-forwarded-for", "2.2.2.2")]).await, StatusCode::ACCEPTED);
-    assert_eq!(post("203.0.113.9:1", &[("x-forwarded-for", "3.3.3.3")]).await, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        post("203.0.113.9:1", &[("x-forwarded-for", "1.1.1.1")]).await,
+        StatusCode::ACCEPTED
+    );
+    assert_eq!(
+        post("203.0.113.9:1", &[("x-forwarded-for", "2.2.2.2")]).await,
+        StatusCode::ACCEPTED
+    );
+    assert_eq!(
+        post("203.0.113.9:1", &[("x-forwarded-for", "3.3.3.3")]).await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
     // behind the trusted proxy each client has its own bucket; the rightmost address that is not a proxy is the client
     for _ in 0..2 {
-        assert_eq!(post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.1")]).await, StatusCode::ACCEPTED);
+        assert_eq!(
+            post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.1")]).await,
+            StatusCode::ACCEPTED
+        );
     }
-    assert_eq!(post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.1")]).await, StatusCode::TOO_MANY_REQUESTS);
-    assert_eq!(post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.2")]).await, StatusCode::ACCEPTED);
+    assert_eq!(
+        post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.1")]).await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        post("10.1.2.3:1", &[("x-forwarded-for", "198.51.100.2")]).await,
+        StatusCode::ACCEPTED
+    );
     // a client-supplied left part cannot hide the real client behind a chain of proxies
-    assert_eq!(post("10.1.2.3:1", &[("x-forwarded-for", "9.9.9.9, 198.51.100.1, 10.1.9.9")]).await, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        post(
+            "10.1.2.3:1",
+            &[("x-forwarded-for", "9.9.9.9, 198.51.100.1, 10.1.9.9")]
+        )
+        .await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
     // IPv6: every address of one /64 is one client
     assert_eq!(post("[2001:db8:0:1::1]:1", &[]).await, StatusCode::ACCEPTED);
-    assert_eq!(post("[2001:db8:0:1::ffff]:1", &[]).await, StatusCode::ACCEPTED);
-    assert_eq!(post("[2001:db8:0:1:aaaa::3]:1", &[]).await, StatusCode::TOO_MANY_REQUESTS);
-    assert_eq!(post("[2001:db8:0:2::1]:1", &[]).await, StatusCode::ACCEPTED, "another /64 has its own bucket");
+    assert_eq!(
+        post("[2001:db8:0:1::ffff]:1", &[]).await,
+        StatusCode::ACCEPTED
+    );
+    assert_eq!(
+        post("[2001:db8:0:1:aaaa::3]:1", &[]).await,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        post("[2001:db8:0:2::1]:1", &[]).await,
+        StatusCode::ACCEPTED,
+        "another /64 has its own bucket"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -502,26 +721,73 @@ async fn tls_upstream_answers_the_proxy_only_and_keeps_hsts_and_the_redirect_rig
         s.trusted_proxies = vec!["10.1.0.0/16".into()];
     });
     let t = h.token("alice");
-    let get = |peer: &str, uri: &str, hs: &[(&'static str, &str)]| from(h.req("GET", uri, Some(&t), None, vec![]), peer, hs);
+    let get = |peer: &str, uri: &str, hs: &[(&'static str, &str)]| {
+        from(h.req("GET", uri, Some(&t), None, vec![]), peer, hs)
+    };
     // a direct client, even one that claims to be forwarded, gets nothing
-    let (st, hd, _) = h.send(get("203.0.113.9:1", "/api/v1/formats", &[("x-forwarded-proto", "https"), ("x-forwarded-for", "10.1.2.3")])).await;
+    let (st, hd, _) = h
+        .send(get(
+            "203.0.113.9:1",
+            "/api/v1/formats",
+            &[
+                ("x-forwarded-proto", "https"),
+                ("x-forwarded-for", "10.1.2.3"),
+            ],
+        ))
+        .await;
     assert_eq!(st, StatusCode::FORBIDDEN);
-    assert!(!hd.contains_key("strict-transport-security"), "HSTS is not sent for an answer that did not travel over TLS");
+    assert!(
+        !hd.contains_key("strict-transport-security"),
+        "HSTS is not sent for an answer that did not travel over TLS"
+    );
     // the proxy, with the client on https: served, with HSTS
-    let (st, hd, _) = h.send(get("10.1.2.3:1", "/api/v1/formats", &[("x-forwarded-proto", "https")])).await;
+    let (st, hd, _) = h
+        .send(get(
+            "10.1.2.3:1",
+            "/api/v1/formats",
+            &[("x-forwarded-proto", "https")],
+        ))
+        .await;
     assert_eq!(st, StatusCode::OK);
     assert_eq!(hd["strict-transport-security"], "max-age=31536000");
     // the proxy, with the client on plain http: a redirect to the configured URL, never to the Host header, and no HSTS
-    let (st, hd, _) = h.send(get("10.1.2.3:1", "/api/v1/jobs/x?a=1", &[("x-forwarded-proto", "http"), ("host", "convert.test")])).await;
+    let (st, hd, _) = h
+        .send(get(
+            "10.1.2.3:1",
+            "/api/v1/jobs/x?a=1",
+            &[("x-forwarded-proto", "http"), ("host", "convert.test")],
+        ))
+        .await;
     assert_eq!(st, StatusCode::PERMANENT_REDIRECT);
     assert_eq!(hd["location"], "https://convert.test/api/v1/jobs/x?a=1");
     assert!(!hd.contains_key("strict-transport-security"));
     // a missing X-Forwarded-Proto is not https
-    assert_eq!(h.send(get("10.1.2.3:1", "/api/v1/formats", &[])).await.0, StatusCode::PERMANENT_REDIRECT);
+    assert_eq!(
+        h.send(get("10.1.2.3:1", "/api/v1/formats", &[])).await.0,
+        StatusCode::PERMANENT_REDIRECT
+    );
     // the container's own health probe on the loopback address learns nothing
-    let (st, _, b) = h.send(from(h.req("GET", "/healthz", None, None, vec![]), "127.0.0.1:1", &[])).await;
-    assert_eq!((st, serde_json::from_slice::<Value>(&b).unwrap()), (StatusCode::OK, json!({"ok": true})));
-    assert_eq!(h.send(from(h.req("GET", "/api/v1/formats", Some(&t), None, vec![]), "127.0.0.1:1", &[])).await.0, StatusCode::FORBIDDEN);
+    let (st, _, b) = h
+        .send(from(
+            h.req("GET", "/healthz", None, None, vec![]),
+            "127.0.0.1:1",
+            &[],
+        ))
+        .await;
+    assert_eq!(
+        (st, serde_json::from_slice::<Value>(&b).unwrap()),
+        (StatusCode::OK, json!({"ok": true}))
+    );
+    assert_eq!(
+        h.send(from(
+            h.req("GET", "/api/v1/formats", Some(&t), None, vec![]),
+            "127.0.0.1:1",
+            &[]
+        ))
+        .await
+        .0,
+        StatusCode::FORBIDDEN
+    );
 }
 
 // ---- M7, m1, m4, m5, m8, m11, m12 -----------------------------------------------------------------------------------------
@@ -529,9 +795,14 @@ async fn tls_upstream_answers_the_proxy_only_and_keeps_hsts_and_the_redirect_rig
 #[tokio::test(flavor = "multi_thread")]
 async fn an_oversized_options_part_is_refused_while_it_streams() {
     let h = H::local("m7", |_| {});
-    let big = format!("{{\"to\":\"pdf\",\"sheet\":\"{}\"}}", "x".repeat(200 * 1024));
+    let big = format!(
+        "{{\"to\":\"pdf\",\"sheet\":\"{}\"}}",
+        "x".repeat(200 * 1024)
+    );
     let (ct, body) = multipart(&[("a.txt", TXT)], &big);
-    let (st, _, b) = h.send(h.req("POST", "/api/v1/jobs", None, Some(&ct), body)).await;
+    let (st, _, b) = h
+        .send(h.req("POST", "/api/v1/jobs", None, Some(&ct), body))
+        .await;
     assert_eq!(st, StatusCode::BAD_REQUEST);
     assert!(String::from_utf8_lossy(&b).contains("bad_options"));
     h.wait_clean().await;
@@ -545,7 +816,9 @@ async fn token_rules_nbf_lifetime_audience_and_leeway_at_the_door() {
     });
     let tok = |extra: Value| {
         let mut p = json!({"sub": "alice", "exp": jwt::now() + 600, "scope": "convert", "aud": "convert-api"});
-        p.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+        p.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
         jwt::sign(SECRET, &p)
     };
     let status = |t: String| {
@@ -553,12 +826,32 @@ async fn token_rules_nbf_lifetime_audience_and_leeway_at_the_door() {
         async move { h.json("GET", "/api/v1/formats", Some(&t)).await.0 }
     };
     assert_eq!(status(tok(json!({}))).await, StatusCode::OK);
-    assert_eq!(status(tok(json!({"exp": jwt::now() - 30}))).await, StatusCode::OK, "inside the leeway");
-    assert_eq!(status(tok(json!({"exp": jwt::now() - 300}))).await, StatusCode::UNAUTHORIZED);
-    assert_eq!(status(tok(json!({"nbf": jwt::now() + 600}))).await, StatusCode::UNAUTHORIZED);
-    assert_eq!(status(tok(json!({"exp": jwt::now() + 100 * 365 * 86400}))).await, StatusCode::UNAUTHORIZED, "a token for a century");
-    assert_eq!(status(tok(json!({"aud": "somebody-else"}))).await, StatusCode::UNAUTHORIZED);
-    let no_aud = jwt::sign(SECRET, &json!({"sub": "alice", "exp": jwt::now() + 600, "scope": "convert"}));
+    assert_eq!(
+        status(tok(json!({"exp": jwt::now() - 30}))).await,
+        StatusCode::OK,
+        "inside the leeway"
+    );
+    assert_eq!(
+        status(tok(json!({"exp": jwt::now() - 300}))).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        status(tok(json!({"nbf": jwt::now() + 600}))).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        status(tok(json!({"exp": jwt::now() + 100 * 365 * 86400}))).await,
+        StatusCode::UNAUTHORIZED,
+        "a token for a century"
+    );
+    assert_eq!(
+        status(tok(json!({"aud": "somebody-else"}))).await,
+        StatusCode::UNAUTHORIZED
+    );
+    let no_aud = jwt::sign(
+        SECRET,
+        &json!({"sub": "alice", "exp": jwt::now() + 600, "scope": "convert"}),
+    );
     assert_eq!(status(no_aud).await, StatusCode::UNAUTHORIZED);
 }
 
@@ -580,42 +873,95 @@ async fn the_sidecar_address_never_reaches_a_client() {
     let mut cfg = fake_cfg();
     cfg.pdf2docx_url = Some("http://10.255.255.1:18080".into());
     cfg.timeout_s = Some(2);
-    let s = Settings { work_dir: Some(dir.join("work")), store_dir: Some(dir.join("store")), ..Settings::default() };
+    let s = Settings {
+        work_dir: Some(dir.join("work")),
+        store_dir: Some(dir.join("store")),
+        ..Settings::default()
+    };
     let h = H::build(dir, s, "127.0.0.1:8787", false, cfg);
     let pdf = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n";
-    let (st, _, v) = h.post(&[("a.pdf", pdf)], json!({"to": "docx", "pdfEngine": "sidecar"}), None).await;
+    let (st, _, v) = h
+        .post(
+            &[("a.pdf", pdf)],
+            json!({"to": "docx", "pdfEngine": "sidecar"}),
+            None,
+        )
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED, "{v}");
     let done = h.wait_done(v["job"].as_str().unwrap(), None).await;
     let all = done.to_string() + &v.to_string();
-    assert!(all.contains("sidecar"), "the job did fail on the sidecar: {all}");
-    assert!(!all.contains("10.255.255.1") && !all.contains("18080"), "{all}");
+    assert!(
+        all.contains("sidecar"),
+        "the job did fail on the sidecar: {all}"
+    );
+    assert!(
+        !all.contains("10.255.255.1") && !all.contains("18080"),
+        "{all}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_zip_part_left_by_a_crashed_build_does_not_break_downloads() {
     let h = H::server("m8", |_| {});
     let t = h.token("alice");
-    let (_, _, v) = h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t)).await;
+    let (_, _, v) = h
+        .post(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t))
+        .await;
     let id = v["job"].as_str().unwrap().to_string();
     h.wait_done(&id, Some(&t)).await;
-    let dir = h.files_in("store").iter().find_map(|f| f.ancestors().find(|a| a.file_name().is_some_and(|n| n.to_string_lossy().contains("-api-"))).map(|a| a.to_path_buf())).unwrap();
+    let dir = h
+        .files_in("store")
+        .iter()
+        .find_map(|f| {
+            f.ancestors()
+                .find(|a| {
+                    a.file_name()
+                        .is_some_and(|n| n.to_string_lossy().contains("-api-"))
+                })
+                .map(|a| a.to_path_buf())
+        })
+        .unwrap();
     std::fs::write(dir.join("zip.part"), b"half a zip").unwrap();
-    let (st, _, zip) = h.send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), Some(&t), None, vec![])).await;
+    let (st, _, zip) = h
+        .send(h.req(
+            "GET",
+            &format!("/api/v1/jobs/{id}/zip"),
+            Some(&t),
+            None,
+            vec![],
+        ))
+        .await;
     assert_eq!(st, StatusCode::OK);
     assert!(!dir.join("zip.part").exists());
     assert!(zip.len() > 100);
 }
 
 fn check_headers(what: &str, hd: &HeaderMap, tls: bool) {
-    let get = |k: &str| hd.get(k).unwrap_or_else(|| panic!("{what}: missing {k}")).to_str().unwrap().to_string();
-    assert!(get("content-security-policy").contains("default-src 'self'"), "{what}");
+    let get = |k: &str| {
+        hd.get(k)
+            .unwrap_or_else(|| panic!("{what}: missing {k}"))
+            .to_str()
+            .unwrap()
+            .to_string()
+    };
+    assert!(
+        get("content-security-policy").contains("default-src 'self'"),
+        "{what}"
+    );
     assert_eq!(get("x-content-type-options"), "nosniff", "{what}");
     assert_eq!(get("referrer-policy"), "no-referrer", "{what}");
     assert_eq!(get("cache-control"), "no-store", "{what}");
     assert_eq!(get("cross-origin-resource-policy"), "same-origin", "{what}");
     assert_eq!(get("cross-origin-opener-policy"), "same-origin", "{what}");
-    assert_eq!(hd.contains_key("strict-transport-security"), tls, "{what}: HSTS");
-    assert!(!hd.keys().any(|k| k.as_str().starts_with("access-control-")), "{what}: CORS header");
+    assert_eq!(
+        hd.contains_key("strict-transport-security"),
+        tls,
+        "{what}: HSTS"
+    );
+    assert!(
+        !hd.keys().any(|k| k.as_str().starts_with("access-control-")),
+        "{what}: CORS header"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -623,13 +969,23 @@ async fn error_statuses_413_408_409_429_503_carry_the_security_headers_too() {
     // 413: a Content-Length over the limit, answered by the limit layer before the handler runs
     let h = H::local("m11-413", |s| s.max_batch_mb = 1);
     let (ct, body) = multipart(&[("a.txt", &vec![b'a'; 3 << 20])], "{}");
-    let (st, hd, _) = h.send(h.req("POST", "/api/v1/jobs", None, Some(&ct), body)).await;
+    let (st, hd, _) = h
+        .send(h.req("POST", "/api/v1/jobs", None, Some(&ct), body))
+        .await;
     assert_eq!(st, StatusCode::PAYLOAD_TOO_LARGE);
     check_headers("413", &hd, false);
     // 408: a body that never ends
     let h = H::local("m11-408", |s| s.upload_timeout_s = 1);
-    let mut r = Request::builder().method("POST").uri("/api/v1/jobs").header("host", "127.0.0.1:8787").header("content-type", "multipart/form-data; boundary=x").body(Body::from_stream(futures_pending())).unwrap();
-    r.extensions_mut().insert(ConnectInfo("203.0.113.9:5555".parse::<SocketAddr>().unwrap()));
+    let mut r = Request::builder()
+        .method("POST")
+        .uri("/api/v1/jobs")
+        .header("host", "127.0.0.1:8787")
+        .header("content-type", "multipart/form-data; boundary=x")
+        .body(Body::from_stream(futures_pending()))
+        .unwrap();
+    r.extensions_mut().insert(ConnectInfo(
+        "203.0.113.9:5555".parse::<SocketAddr>().unwrap(),
+    ));
     let (st, hd, _) = h.send(r).await;
     assert_eq!(st, StatusCode::REQUEST_TIMEOUT);
     check_headers("408", &hd, false);
@@ -645,13 +1001,23 @@ async fn error_statuses_413_408_409_429_503_carry_the_security_headers_too() {
         s.per_user_active = 5;
     });
     let t = h.token("alice");
-    let (st, hd, _) = h.post(&[("s.txt", b"SLEEP")], json!({"to": "pdf"}), Some(&t)).await;
+    let (st, hd, _) = h
+        .post(&[("s.txt", b"SLEEP")], json!({"to": "pdf"}), Some(&t))
+        .await;
     assert_eq!(st, StatusCode::ACCEPTED);
     check_headers("202", &hd, true);
-    let (st, hd, _) = h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t)).await;
+    let (st, hd, _) = h
+        .post(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t))
+        .await;
     assert_eq!(st, StatusCode::TOO_MANY_REQUESTS);
     check_headers("429", &hd, true);
-    let (st, hd, _) = h.post(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&h.token("bob"))).await;
+    let (st, hd, _) = h
+        .post(
+            &[("a.txt", TXT)],
+            json!({"to": "pdf"}),
+            Some(&h.token("bob")),
+        )
+        .await;
     assert_eq!(st, StatusCode::SERVICE_UNAVAILABLE);
     check_headers("503", &hd, true);
 }
@@ -677,12 +1043,22 @@ mod futures_core_free {
 #[tokio::test(flavor = "multi_thread")]
 async fn a_deleted_job_still_counts_until_its_work_has_stopped() {
     let h = H::local("m12", |s| s.per_user_active = 1);
-    let (_, _, v) = h.post(&[("s.txt", b"SLEEP")], json!({"to": "pdf"}), None).await;
+    let (_, _, v) = h
+        .post(&[("s.txt", b"SLEEP")], json!({"to": "pdf"}), None)
+        .await;
     let id = v["job"].as_str().unwrap().to_string();
     h.wait_running(&id, None).await;
-    assert_eq!(h.json("DELETE", &format!("/api/v1/jobs/{id}"), None).await.0, StatusCode::NO_CONTENT);
+    assert_eq!(
+        h.json("DELETE", &format!("/api/v1/jobs/{id}"), None)
+            .await
+            .0,
+        StatusCode::NO_CONTENT
+    );
     // the job cannot be fetched any more ...
-    assert_eq!(h.json("GET", &format!("/api/v1/jobs/{id}"), None).await.0, StatusCode::NOT_FOUND);
+    assert_eq!(
+        h.json("GET", &format!("/api/v1/jobs/{id}"), None).await.0,
+        StatusCode::NOT_FOUND
+    );
     // ... but its tool is still being killed, so POST then DELETE cannot be cycled past the per-user limit
     assert!(h.app.queue_depth() <= 1);
     let t = Instant::now();

@@ -2,8 +2,9 @@
 //! upload or from document content (a sheet name) can never be a path, a Windows device, or carry control or bidi characters.
 
 const RESERVED: [&str; 24] = [
-    "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2",
-    "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$", "COM1", "COM2", "COM3", "COM4", "COM5",
+    "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8",
+    "LPT9",
 ];
 const MAX_CHARS: usize = 200;
 
@@ -19,12 +20,26 @@ pub fn safe_name(s: &str, fallback: &str) -> String {
     let mapped: String = s.chars().map(|c| if bad(c) { '_' } else { c }).collect();
     let trimmed = mapped.trim_matches(|c: char| c == '.' || c.is_whitespace());
     let mut out: String = trimmed.chars().take(MAX_CHARS).collect();
-    out = out.trim_end_matches(|c: char| c == '.' || c.is_whitespace()).to_string();
+    out = out
+        .trim_end_matches(|c: char| c == '.' || c.is_whitespace())
+        .to_string();
     if out.is_empty() || out.chars().all(|c| c == '_') {
         return fallback.to_string();
     }
     // Windows also treats the superscript digits as device numbers (`COM¹`)
-    let base: String = out.split('.').next().unwrap_or("").trim_end().chars().map(|c| match c { '\u{B9}' => '1', '\u{B2}' => '2', '\u{B3}' => '3', c => c.to_ascii_uppercase() }).collect();
+    let base: String = out
+        .split('.')
+        .next()
+        .unwrap_or("")
+        .trim_end()
+        .chars()
+        .map(|c| match c {
+            '\u{B9}' => '1',
+            '\u{B2}' => '2',
+            '\u{B3}' => '3',
+            c => c.to_ascii_uppercase(),
+        })
+        .collect();
     if RESERVED.contains(&base.as_str()) {
         out.insert(0, '_');
     }
@@ -43,7 +58,10 @@ mod tests {
         assert_eq!(s(r"..\..\x"), "_.._x");
         for evil in ["..", "...", "", "   ", "/", r"\\", r"..\.."] {
             let n = s(evil);
-            assert!(!n.contains(['/', '\\']) && n != ".." && !n.is_empty(), "{evil:?} -> {n:?}");
+            assert!(
+                !n.contains(['/', '\\']) && n != ".." && !n.is_empty(),
+                "{evil:?} -> {n:?}"
+            );
         }
         assert_eq!(s("NUL"), "_NUL");
         assert_eq!(s("con.txt"), "_con.txt");

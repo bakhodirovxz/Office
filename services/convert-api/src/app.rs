@@ -100,8 +100,18 @@ impl Job {
     /// An input is never served back, so it goes as soon as its file has run (or failed its check): the store then holds outputs only.
     pub fn drop_input(&self, n: usize) {
         let _ = std::fs::remove_file(self.in_path(n));
-        let freed = self.st.lock().unwrap().files.get_mut(n).map_or(0, |f| std::mem::take(&mut f.in_bytes));
-        let _ = self.bytes.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |b| Some(b.saturating_sub(freed)));
+        let freed = self
+            .st
+            .lock()
+            .unwrap()
+            .files
+            .get_mut(n)
+            .map_or(0, |f| std::mem::take(&mut f.in_bytes));
+        let _ = self
+            .bytes
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |b| {
+                Some(b.saturating_sub(freed))
+            });
     }
 }
 
@@ -128,7 +138,10 @@ const LIMITER_KEYS: usize = 16_384;
 
 impl Limiter {
     pub fn new(per_min: u32) -> Limiter {
-        Limiter { per_min, m: Mutex::new(HashMap::new()) }
+        Limiter {
+            per_min,
+            m: Mutex::new(HashMap::new()),
+        }
     }
     pub fn hit(&self, key: &str) -> Result<(), u64> {
         let mut m = self.m.lock().unwrap();
@@ -144,7 +157,13 @@ impl Limiter {
             *e = (now, 0);
         }
         e.1 += 1;
-        if e.1 > self.per_min { Err(60u64.saturating_sub(now.duration_since(e.0).as_secs()).max(1)) } else { Ok(()) }
+        if e.1 > self.per_min {
+            Err(60u64
+                .saturating_sub(now.duration_since(e.0).as_secs())
+                .max(1))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -182,7 +201,10 @@ impl Redactor {
         let mut res = String::new();
         let mut i = 0;
         while i < b.len() {
-            let drive = b[i].is_ascii_alphabetic() && b.get(i + 1) == Some(&':') && matches!(b.get(i + 2), Some('\\' | '/')) && (i == 0 || !b[i - 1].is_alphanumeric());
+            let drive = b[i].is_ascii_alphabetic()
+                && b.get(i + 1) == Some(&':')
+                && matches!(b.get(i + 2), Some('\\' | '/'))
+                && (i == 0 || !b[i - 1].is_alphanumeric());
             if drive {
                 res.push_str("<path>");
                 i += 3;
@@ -232,7 +254,9 @@ fn rand_hex() -> String {
 }
 
 pub fn is_job_id(s: &str) -> bool {
-    s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    s.len() == 32
+        && s.bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
 }
 
 /// Is `path` on a RAM-backed filesystem according to the text of `/proc/mounts`? `None` when the mount list does not say.
@@ -256,15 +280,31 @@ fn warn_about_disks(r: &Resolved) {
     if !r.server_mode() {
         return;
     }
-    let mounts = if cfg!(target_os = "linux") { std::fs::read_to_string("/proc/mounts").ok() } else { None };
+    let mounts = if cfg!(target_os = "linux") {
+        std::fs::read_to_string("/proc/mounts").ok()
+    } else {
+        None
+    };
     let real = |p: &Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
     let bar = "*".repeat(78);
-    for (what, dir, loud) in [("work_dir", &r.work_dir, true), ("store_dir", &r.store_dir, false)] {
+    for (what, dir, loud) in [
+        ("work_dir", &r.work_dir, true),
+        ("store_dir", &r.store_dir, false),
+    ] {
         match mounts.as_deref().and_then(|m| ram_backed(m, &real(dir))) {
             Some(true) => {}
-            Some(false) if loud => eprintln!("convert-api: {bar}\nconvert-api: WARNING: {what} {} is NOT on tmpfs. Every upload is decrypted into it while it is converted, and a crash\nconvert-api: leaves that plaintext on the disk. Mount a tmpfs there (docs/phase3/api.md, \"Plaintext on disk\").\nconvert-api: {bar}", dir.display()),
-            None if loud => eprintln!("convert-api: {bar}\nconvert-api: WARNING: cannot tell whether {what} {} is RAM-backed. On Windows put it on a RAM disk and turn on\nconvert-api: BitLocker for the system volume (page file, crash dumps); on Linux use a tmpfs (docs/phase3/api.md).\nconvert-api: {bar}", dir.display()),
-            _ => eprintln!("convert-api: note: {what} {} is not on a RAM disk; it holds ciphertext only, which is fine, but size it for store_max_mb", dir.display()),
+            Some(false) if loud => eprintln!(
+                "convert-api: {bar}\nconvert-api: WARNING: {what} {} is NOT on tmpfs. Every upload is decrypted into it while it is converted, and a crash\nconvert-api: leaves that plaintext on the disk. Mount a tmpfs there (docs/phase3/api.md, \"Plaintext on disk\").\nconvert-api: {bar}",
+                dir.display()
+            ),
+            None if loud => eprintln!(
+                "convert-api: {bar}\nconvert-api: WARNING: cannot tell whether {what} {} is RAM-backed. On Windows put it on a RAM disk and turn on\nconvert-api: BitLocker for the system volume (page file, crash dumps); on Linux use a tmpfs (docs/phase3/api.md).\nconvert-api: {bar}",
+                dir.display()
+            ),
+            _ => eprintln!(
+                "convert-api: note: {what} {} is not on a RAM disk; it holds ciphertext only, which is fine, but size it for store_max_mb",
+                dir.display()
+            ),
         }
     }
 }
@@ -282,8 +322,13 @@ fn free_space(dir: &Path) -> Option<u64> {
         .list()
         .iter()
         .filter_map(|d| {
-            let m = d.mount_point().to_string_lossy().replace('\\', "/").to_lowercase();
-            s.starts_with(m.trim_end_matches('/')).then(|| (m.len(), d.available_space()))
+            let m = d
+                .mount_point()
+                .to_string_lossy()
+                .replace('\\', "/")
+                .to_lowercase();
+            s.starts_with(m.trim_end_matches('/'))
+                .then(|| (m.len(), d.available_space()))
         })
         .max_by_key(|x| x.0)
         .map(|x| x.1)
@@ -293,45 +338,82 @@ impl App {
     /// Build the state and clean up after a crashed predecessor: directories of dead processes are removed before anything is served.
     pub fn new(r: Resolved, mut cfg: ConvertConfig, tls: bool) -> Result<Arc<App>, String> {
         for d in [&r.work_dir, &r.store_dir] {
-            std::fs::create_dir_all(d).map_err(|e| format!("cannot create {}: {e}", d.display()))?;
+            std::fs::create_dir_all(d)
+                .map_err(|e| format!("cannot create {}: {e}", d.display()))?;
             job::sweep_stale(d);
         }
         warn_about_disks(&r);
         if r.xdfu != convert::xdfu::Mode::Off {
             // WP15: opt-in. The hook (detection, watermark, audit) is installed here and nowhere else, so with `off` nothing of it exists.
-            let path = r.s.xdfu_audit_file.clone().unwrap_or_else(convert::xdfu::default_audit_path);
+            let path =
+                r.s.xdfu_audit_file
+                    .clone()
+                    .unwrap_or_else(convert::xdfu::default_audit_path);
             let log = convert::audit::AuditLog::open(&path, r.s.xdfu_redact)?;
-            eprintln!("convert-api: XDFU handling is ON ({:?}); audit log {}", r.xdfu, path.display());
+            eprintln!(
+                "convert-api: XDFU handling is ON ({:?}); audit log {}",
+                r.xdfu,
+                path.display()
+            );
             if !r.server_mode() {
-                eprintln!("convert-api: note: local mode on an uncertified computer can only watermark and warn; it does not make XDFU handling compliant (PLAN 10)");
+                eprintln!(
+                    "convert-api: note: local mode on an uncertified computer can only watermark and warn; it does not make XDFU handling compliant (PLAN 10)"
+                );
             }
-            cfg.hooks.push(Arc::new(convert::xdfu::XdfuHook::new(r.xdfu, Arc::new(log), !r.server_mode())));
+            cfg.hooks.push(Arc::new(convert::xdfu::XdfuHook::new(
+                r.xdfu,
+                Arc::new(log),
+                !r.server_mode(),
+            )));
         }
         cfg.work_dir = r.work_dir.clone();
         cfg.max_input_mb = r.s.max_file_mb.max(r.s.max_xlsx_mb);
         cfg.job_timeout_s = r.s.job_timeout_s;
         // server mode: fonts come from the image, not from a user profile
         cfg.share_localappdata = !r.server_mode();
-        let mut roots: Vec<PathBuf> = vec![r.work_dir.clone(), r.store_dir.clone(), std::env::temp_dir()];
-        roots.extend(convert::plan::ToolId::ALL.iter().filter_map(|t| cfg.resolve(*t).ok()).filter_map(|p| p.parent().map(Path::to_path_buf)));
+        let mut roots: Vec<PathBuf> = vec![
+            r.work_dir.clone(),
+            r.store_dir.clone(),
+            std::env::temp_dir(),
+        ];
+        roots.extend(
+            convert::plan::ToolId::ALL
+                .iter()
+                .filter_map(|t| cfg.resolve(*t).ok())
+                .filter_map(|p| p.parent().map(Path::to_path_buf)),
+        );
         // the sidecar's address is internal too: it must not reach a client in a message
-        roots.extend(cfg.pdf2docx_url.iter().map(|u| PathBuf::from(u.trim_end_matches('/'))));
+        roots.extend(
+            cfg.pdf2docx_url
+                .iter()
+                .map(|u| PathBuf::from(u.trim_end_matches('/'))),
+        );
         let root_refs: Vec<&Path> = roots.iter().map(PathBuf::as_path).collect();
         let host = |a: &str| a.to_ascii_lowercase();
         let mut allowed = vec![];
         if let Some(u) = &r.s.public_url {
-            let auth = u.split_once("://").map_or(u.as_str(), |x| x.1).trim_end_matches('/');
+            let auth = u
+                .split_once("://")
+                .map_or(u.as_str(), |x| x.1)
+                .trim_end_matches('/');
             allowed.push(host(auth));
             if let Some(h) = auth.strip_suffix(":443") {
                 allowed.push(host(h));
             }
         } else if !r.server_mode() {
             let p = r.listen.port();
-            allowed.extend([format!("127.0.0.1:{p}"), format!("localhost:{p}"), format!("[::1]:{p}"), r.listen.to_string()]);
+            allowed.extend([
+                format!("127.0.0.1:{p}"),
+                format!("localhost:{p}"),
+                format!("[::1]:{p}"),
+                r.listen.to_string(),
+            ]);
         }
         Ok(Arc::new(App {
             cpu: Gate::new(r.cpu_slots),
-            mem: Arc::new(Semaphore::new(r.s.mem_budget_mb.min(u32::MAX as u64 / 2) as usize)),
+            mem: Arc::new(Semaphore::new(
+                r.s.mem_budget_mb.min(u32::MAX as u64 / 2) as usize
+            )),
             user_rl: Limiter::new(r.s.rate_user_per_min),
             ip_rl: Limiter::new(r.s.rate_ip_per_min),
             auth_rl: Limiter::new(r.s.rate_ip_per_min.min(30)),
@@ -380,24 +462,52 @@ impl App {
             }
         }
         if total >= s.queue_max {
-            return Err(ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "queue_full", "the job queue is full; try again shortly").retry(30));
+            return Err(ApiError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "queue_full",
+                "the job queue is full; try again shortly",
+            )
+            .retry(30));
         }
         if mine >= s.per_user_active {
-            return Err(ApiError::new(StatusCode::TOO_MANY_REQUESTS, "too_many_active_jobs", format!("at most {} active jobs per user", s.per_user_active)).retry(10));
+            return Err(ApiError::new(
+                StatusCode::TOO_MANY_REQUESTS,
+                "too_many_active_jobs",
+                format!("at most {} active jobs per user", s.per_user_active),
+            )
+            .retry(10));
         }
         if stored.saturating_add(reserve) > s.store_max_mb << 20 {
-            return Err(ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "store_full", "the server's job store is full; try again later or delete finished jobs").retry(60));
+            return Err(ApiError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "store_full",
+                "the server's job store is full; try again later or delete finished jobs",
+            )
+            .retry(60));
         }
         if my_stored.saturating_add(reserve) > s.user_store_mb << 20 {
             return Err(ApiError::new(StatusCode::TOO_MANY_REQUESTS, "user_store_full", format!("you keep more than {} MB of results on the server; download and delete finished jobs first", s.user_store_mb)).retry(60));
         }
         if free.is_some_and(|f| f < (s.min_free_mb + s.max_batch_mb) << 20) {
-            return Err(ApiError::new(StatusCode::SERVICE_UNAVAILABLE, "disk_low", "the server is low on disk space; try again later").retry(60));
+            return Err(ApiError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "disk_low",
+                "the server is low on disk space; try again later",
+            )
+            .retry(60));
         }
         let id = rand_hex();
-        let dir = self.r.store_dir.join(format!("stage-{}-api-{id}", std::process::id()));
-        let codec = if self.r.encrypt() { Codec::Aes(JobKey::generate(&id)) } else { Codec::Plain };
-        let io = |e: std::io::Error| ApiError::internal(format!("cannot create the job store: {e}"));
+        let dir = self
+            .r
+            .store_dir
+            .join(format!("stage-{}-api-{id}", std::process::id()));
+        let codec = if self.r.encrypt() {
+            Codec::Aes(JobKey::generate(&id))
+        } else {
+            Codec::Plain
+        };
+        let io =
+            |e: std::io::Error| ApiError::internal(format!("cannot create the job store: {e}"));
         std::fs::create_dir_all(dir.join("in")).map_err(io)?;
         std::fs::create_dir_all(dir.join("out")).map_err(io)?;
         let job = Arc::new(Job {
@@ -423,16 +533,31 @@ impl App {
         if !is_job_id(id) {
             return None;
         }
-        self.jobs.lock().unwrap().get(id).filter(|j| j.owner == owner && !j.is_deleted()).cloned()
+        self.jobs
+            .lock()
+            .unwrap()
+            .get(id)
+            .filter(|j| j.owner == owner && !j.is_deleted())
+            .cloned()
     }
 
     pub fn queue_depth(&self) -> usize {
-        self.jobs.lock().unwrap().values().filter(|j| j.active.load(Ordering::Relaxed)).count()
+        self.jobs
+            .lock()
+            .unwrap()
+            .values()
+            .filter(|j| j.active.load(Ordering::Relaxed))
+            .count()
     }
 
     /// What the store holds, reservations included (for the quota and the tests).
     pub fn stored_bytes(&self) -> u64 {
-        self.jobs.lock().unwrap().values().map(|j| j.bytes.load(Ordering::Relaxed)).sum()
+        self.jobs
+            .lock()
+            .unwrap()
+            .values()
+            .map(|j| j.bytes.load(Ordering::Relaxed))
+            .sum()
     }
 
     fn purge(&self, job: &Job) {
@@ -475,7 +600,19 @@ impl App {
     /// Expired results go, and directories that could not be removed before are tried again.
     pub fn sweep(&self) {
         let ttl = Duration::from_secs(self.r.s.retention_s);
-        let old: Vec<Arc<Job>> = self.jobs.lock().unwrap().values().filter(|j| j.st.lock().unwrap().finished_at.is_some_and(|t| t.elapsed() >= ttl)).cloned().collect();
+        let old: Vec<Arc<Job>> = self
+            .jobs
+            .lock()
+            .unwrap()
+            .values()
+            .filter(|j| {
+                j.st.lock()
+                    .unwrap()
+                    .finished_at
+                    .is_some_and(|t| t.elapsed() >= ttl)
+            })
+            .cloned()
+            .collect();
         for j in old {
             self.delete(&j);
         }
@@ -548,7 +685,10 @@ pub struct JobSink {
 /// `a.pdf`, `a (2).pdf`, ... against the names already taken.
 pub fn dedupe(taken: &[&str], name: &str) -> String {
     let p = Path::new(name);
-    let (stem, ext) = (p.file_stem().and_then(|s| s.to_str()).unwrap_or("output"), p.extension().and_then(|s| s.to_str()));
+    let (stem, ext) = (
+        p.file_stem().and_then(|s| s.to_str()).unwrap_or("output"),
+        p.extension().and_then(|s| s.to_str()),
+    );
     (1..)
         .map(|n| match (n, ext) {
             (1, _) => name.to_string(),
@@ -561,10 +701,22 @@ pub fn dedupe(taken: &[&str], name: &str) -> String {
 
 impl OutputSink for JobSink {
     fn begin(&self, _count: usize, _origins: &[PathBuf]) -> Result<(), Failure> {
-        std::fs::create_dir_all(&self.dir).or_else(|e| fail(Exit::ToolError, format!("cannot create the output store: {e}")))
+        std::fs::create_dir_all(&self.dir).or_else(|e| {
+            fail(
+                Exit::ToolError,
+                format!("cannot create the output store: {e}"),
+            )
+        })
     }
     fn put(&self, index: usize, name: &str, src: &Path) -> Result<String, Failure> {
-        let size = self.codec.store_file(src, &self.dir.join(index.to_string()), &Job::out_role(self.n, index)).or_else(|e| fail(Exit::ToolError, format!("cannot store the output: {e}")))?;
+        let size = self
+            .codec
+            .store_file(
+                src,
+                &self.dir.join(index.to_string()),
+                &Job::out_role(self.n, index),
+            )
+            .or_else(|e| fail(Exit::ToolError, format!("cannot store the output: {e}")))?;
         let mut outs = self.outs.lock().unwrap();
         let taken: Vec<&str> = outs.iter().map(|o| o.name.as_str()).collect();
         let name = dedupe(&taken, name);
@@ -587,7 +739,16 @@ impl Drop for DropInput {
 
 /// One file of a job: wait for a CPU slot (fairly, by user), then for its memory, then convert. Waiting ends at the job's deadline.
 #[allow(clippy::too_many_arguments)] // shortcut: one call shape for the supervisor; fold into a struct when a 9th arrives
-pub async fn run_file(app: Arc<App>, job: Arc<Job>, n: usize, target: Target, opts: Options, est_mb: u64, client: String, verdict: Arc<convert::scan::Verdict>) {
+pub async fn run_file(
+    app: Arc<App>,
+    job: Arc<Job>,
+    n: usize,
+    target: Target,
+    opts: Options,
+    est_mb: u64,
+    client: String,
+    verdict: Arc<convert::scan::Verdict>,
+) {
     let _input = DropInput(job.clone(), n);
     let set = |f: &dyn Fn(&mut FileState)| f(&mut job.st.lock().unwrap().files[n]);
     let name = job.st.lock().unwrap().files[n].name.clone();
@@ -601,31 +762,68 @@ pub async fn run_file(app: Arc<App>, job: Arc<Job>, n: usize, target: Target, op
     let by = tokio::time::Instant::from_std(job.deadline);
     // CPU first, then memory: a holder of both always finishes, so the two gates cannot deadlock
     let Ok(cpu) = tokio::time::timeout_at(by, app.cpu.acquire(&job.owner)).await else {
-        return give_up(Exit::Timeout, "the job waited for a free slot until its time limit ran out");
+        return give_up(
+            Exit::Timeout,
+            "the job waited for a free slot until its time limit ran out",
+        );
     };
-    let Ok(mem) = tokio::time::timeout_at(by, app.mem.clone().acquire_many_owned(est_mb as u32)).await else {
-        return give_up(Exit::Timeout, "the job waited for memory until its time limit ran out");
+    let Ok(mem) =
+        tokio::time::timeout_at(by, app.mem.clone().acquire_many_owned(est_mb as u32)).await
+    else {
+        return give_up(
+            Exit::Timeout,
+            "the job waited for memory until its time limit ran out",
+        );
     };
     if job.cancel.load(Ordering::Relaxed) || mem.is_err() {
         return give_up(Exit::Timeout, "the job was cancelled");
     }
     set(&|f| f.state = "running");
-    let sink = Arc::new(JobSink { dir: job.dir.join("out").join(n.to_string()), codec: job.codec.clone(), outs: Mutex::new(vec![]), n });
+    let sink = Arc::new(JobSink {
+        dir: job.dir.join("out").join(n.to_string()),
+        codec: job.codec.clone(),
+        outs: Mutex::new(vec![]),
+        n,
+    });
     let (a, j, s) = (app.clone(), job.clone(), sink.clone());
     let t0 = Instant::now();
     let rep = tokio::task::spawn_blocking(move || {
-        let input = StoredInput { name: a.name_of(&j, n), path: j.in_path(n), codec: j.codec.clone(), role: Job::in_role(n) };
-        let meta = JobMeta { principal: Some(j.owner.clone()), client: Some(client), cancel: Some(j.cancel.clone()), deadline: Some(j.deadline), verdict: Some(verdict), reference: Some(format!("{}/{}", j.id, n)) };
-        job::guarded(&input.name, target.ext(), || job::convert_source(&a.cfg, &input, target, &opts, &*s, &meta))
+        let input = StoredInput {
+            name: a.name_of(&j, n),
+            path: j.in_path(n),
+            codec: j.codec.clone(),
+            role: Job::in_role(n),
+        };
+        let meta = JobMeta {
+            principal: Some(j.owner.clone()),
+            client: Some(client),
+            cancel: Some(j.cancel.clone()),
+            deadline: Some(j.deadline),
+            verdict: Some(verdict),
+            reference: Some(format!("{}/{}", j.id, n)),
+        };
+        job::guarded(&input.name, target.ext(), || {
+            job::convert_source(&a.cfg, &input, target, &opts, &*s, &meta)
+        })
     })
     .await
-    .unwrap_or_else(|e| convert_failed(&name, target, Exit::Crash, &format!("internal error: {e}")));
+    .unwrap_or_else(|e| {
+        convert_failed(&name, target, Exit::Crash, &format!("internal error: {e}"))
+    });
     drop((cpu, mem));
     let outs = std::mem::take(&mut *sink.outs.lock().unwrap());
     let ok = rep.code == 0 || rep.code == 10;
     let public = app.public_report(&rep, &outs);
     // `sub` is quoted (Debug) so that a hostile value cannot add fields to the line
-    eprintln!("job={} sub={:?} file={n} kind={} to={} code={} ms={}", job.id, job.owner, rep.kind.as_deref().unwrap_or("?"), rep.target, rep.code, t0.elapsed().as_millis());
+    eprintln!(
+        "job={} sub={:?} file={n} kind={} to={} code={} ms={}",
+        job.id,
+        job.owner,
+        rep.kind.as_deref().unwrap_or("?"),
+        rep.target,
+        rep.code,
+        t0.elapsed().as_millis()
+    );
     if ok {
         job.add_bytes(outs.iter().map(|o| o.size).sum());
     }
@@ -677,7 +875,11 @@ mod tests {
         for i in 0..LIMITER_KEYS {
             l.hit(&format!("k{i}")).unwrap();
         }
-        assert_eq!(l.hit("one-more"), Err(60), "a full map refuses a new key instead of evicting a live one");
+        assert_eq!(
+            l.hit("one-more"),
+            Err(60),
+            "a full map refuses a new key instead of evicting a live one"
+        );
         assert!(l.hit("k0").is_ok());
     }
 
@@ -687,7 +889,11 @@ mod tests {
         assert_eq!(ram_backed(m, Path::new("/work")), Some(true));
         assert_eq!(ram_backed(m, Path::new("/work/a/b")), Some(true));
         assert_eq!(ram_backed(m, Path::new("/work/disk/x")), Some(false));
-        assert_eq!(ram_backed(m, Path::new("/workshop")), Some(false), "a sibling with the same prefix is on /");
+        assert_eq!(
+            ram_backed(m, Path::new("/workshop")),
+            Some(false),
+            "a sibling with the same prefix is on /"
+        );
         assert_eq!(ram_backed("", Path::new("/work")), None);
     }
 }

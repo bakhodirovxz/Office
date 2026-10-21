@@ -18,7 +18,10 @@ pub fn provider() -> rustls::crypto::CryptoProvider {
 }
 
 pub fn server_config(cert: &Path, key: &Path) -> Result<Arc<rustls::ServerConfig>, String> {
-    let chain = CertificateDer::pem_file_iter(cert).map_err(|e| format!("tls_cert: {e}"))?.collect::<Result<Vec<_>, _>>().map_err(|e| format!("tls_cert: {e}"))?;
+    let chain = CertificateDer::pem_file_iter(cert)
+        .map_err(|e| format!("tls_cert: {e}"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("tls_cert: {e}"))?;
     let key = PrivateKeyDer::from_pem_file(key).map_err(|e| format!("tls_key: {e}"))?;
     let mut cfg = rustls::ServerConfig::builder_with_provider(Arc::new(provider()))
         .with_protocol_versions(&[&rustls::version::TLS13, &rustls::version::TLS12])
@@ -34,11 +37,18 @@ pub fn server_config(cert: &Path, key: &Path) -> Result<Arc<rustls::ServerConfig
 pub fn redirect_router(public_url: &str) -> Router {
     let base = public_url.trim_end_matches('/').to_string();
     Router::new()
-        .fallback(move |uri: axum::http::Uri| async move { Redirect::permanent(&format!("{base}{}", uri.path_and_query().map_or("/", |p| p.as_str()))) })
-        .layer(axum::middleware::map_response(|mut r: axum::response::Response| async move {
-            crate::routes::baseline_headers(r.headers_mut(), false);
-            r
-        }))
+        .fallback(move |uri: axum::http::Uri| async move {
+            Redirect::permanent(&format!(
+                "{base}{}",
+                uri.path_and_query().map_or("/", |p| p.as_str())
+            ))
+        })
+        .layer(axum::middleware::map_response(
+            |mut r: axum::response::Response| async move {
+                crate::routes::baseline_headers(r.headers_mut(), false);
+                r
+            },
+        ))
 }
 
 /// Connection limits of every listener (TLS, the redirect listener and the local one): a total, a cap per client address (an IPv6
@@ -71,7 +81,10 @@ impl ConnLimits {
 }
 
 /// Releases a client address's slot when its connection ends.
-struct PerIp(Arc<std::sync::Mutex<std::collections::HashMap<String, usize>>>, Option<String>);
+struct PerIp(
+    Arc<std::sync::Mutex<std::collections::HashMap<String, usize>>>,
+    Option<String>,
+);
 
 impl Drop for PerIp {
     fn drop(&mut self) {
@@ -95,25 +108,42 @@ where
     use tower::ServiceExt;
     let seen = Arc::new(AtomicUsize::new(0));
     let max = lim.max_requests;
-    let svc = hyper::service::service_fn(move |mut req: axum::http::Request<hyper::body::Incoming>| {
-        req.extensions_mut().insert(axum::extract::ConnectInfo(addr));
-        let (router, last) = (router.clone(), seen.fetch_add(1, Ordering::Relaxed) + 1 >= max);
-        async move {
-            let mut res = router.oneshot(req.map(axum::body::Body::new)).await;
-            if last && let Ok(r) = res.as_mut() {
-                r.headers_mut().insert(axum::http::header::CONNECTION, axum::http::HeaderValue::from_static("close"));
+    let svc =
+        hyper::service::service_fn(move |mut req: axum::http::Request<hyper::body::Incoming>| {
+            req.extensions_mut()
+                .insert(axum::extract::ConnectInfo(addr));
+            let (router, last) = (
+                router.clone(),
+                seen.fetch_add(1, Ordering::Relaxed) + 1 >= max,
+            );
+            async move {
+                let mut res = router.oneshot(req.map(axum::body::Body::new)).await;
+                if last && let Ok(r) = res.as_mut() {
+                    r.headers_mut().insert(
+                        axum::http::header::CONNECTION,
+                        axum::http::HeaderValue::from_static("close"),
+                    );
+                }
+                res
             }
-            res
-        }
-    });
-    let conn = hyper::server::conn::http1::Builder::new().timer(TokioTimer::new()).header_read_timeout(lim.head_timeout).serve_connection(TokioIo::new(io), svc);
+        });
+    let conn = hyper::server::conn::http1::Builder::new()
+        .timer(TokioTimer::new())
+        .header_read_timeout(lim.head_timeout)
+        .serve_connection(TokioIo::new(io), svc);
     let _ = tokio::time::timeout(lim.max_age, conn).await;
 }
 
 /// Serve `router` on `listener` until `stop` completes: over TLS when `tls` is given, else plain HTTP. Handshake and request-head
 /// timeouts, a connection cap per client address and in total, a maximum connection age and a maximum number of requests per
 /// connection apply to every listener, so an idle or slow client cannot hold a slot for ever (WP7 review M3).
-pub async fn serve(listener: tokio::net::TcpListener, tls: Option<Arc<rustls::ServerConfig>>, router: Router, lim: ConnLimits, stop: impl std::future::Future<Output = ()>) {
+pub async fn serve(
+    listener: tokio::net::TcpListener,
+    tls: Option<Arc<rustls::ServerConfig>>,
+    router: Router,
+    lim: ConnLimits,
+    stop: impl std::future::Future<Output = ()>,
+) {
     use std::time::Duration;
     let acceptor = tls.map(tokio_rustls::TlsAcceptor::from);
     let slots = Arc::new(tokio::sync::Semaphore::new(lim.total));
@@ -130,7 +160,9 @@ pub async fn serve(listener: tokio::net::TcpListener, tls: Option<Arc<rustls::Se
             },
             () = &mut stop => break,
         };
-        let Ok(permit) = slots.clone().try_acquire_owned() else { continue };
+        let Ok(permit) = slots.clone().try_acquire_owned() else {
+            continue;
+        };
         let ip_guard = if lim.exempt.iter().any(|c| c.contains(addr.ip())) {
             PerIp(per_ip.clone(), None)
         } else {
@@ -148,7 +180,10 @@ pub async fn serve(listener: tokio::net::TcpListener, tls: Option<Arc<rustls::Se
             let (_permit, _ip) = (permit, ip_guard);
             match acceptor {
                 Some(a) => {
-                    let Ok(Ok(io)) = tokio::time::timeout(lim.head_timeout, a.accept(tcp)).await else { return };
+                    let Ok(Ok(io)) = tokio::time::timeout(lim.head_timeout, a.accept(tcp)).await
+                    else {
+                        return;
+                    };
                     run_connection(io, addr, router, lim).await;
                 }
                 None => run_connection(tcp, addr, router, lim).await,

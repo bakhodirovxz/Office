@@ -17,7 +17,9 @@ fn refuse(m: impl std::fmt::Display) -> ExitCode {
 /// is replaced by one that prints the location only (WP7 review m14). `job::guarded` still reports the panic to the client.
 fn quiet_panics() {
     std::panic::set_hook(Box::new(|info| {
-        let at = info.location().map_or("unknown".to_string(), |l| format!("{}:{}", l.file(), l.line()));
+        let at = info.location().map_or("unknown".to_string(), |l| {
+            format!("{}:{}", l.file(), l.line())
+        });
         eprintln!("convert-api: internal panic at {at} (message withheld)");
     }));
 }
@@ -42,11 +44,25 @@ async fn main() -> ExitCode {
         },
         _ => None,
     };
-    let (listen, redirect, limits) = (resolved.listen, resolved.s.redirect_listen.clone().zip(resolved.s.public_url.clone()), tls::ConnLimits::from_settings(&resolved));
+    let (listen, redirect, limits) = (
+        resolved.listen,
+        resolved
+            .s
+            .redirect_listen
+            .clone()
+            .zip(resolved.s.public_url.clone()),
+        tls::ConnLimits::from_settings(&resolved),
+    );
     if resolved.upstream_tls {
-        eprintln!("convert-api: tls = \"upstream\": plain HTTP, answering the trusted proxies only; TLS must end at the proxy");
+        eprintln!(
+            "convert-api: tls = \"upstream\": plain HTTP, answering the trusted proxies only; TLS must end at the proxy"
+        );
     }
-    let app = match App::new(resolved, convert::exec::Config::from_env(), tls_cfg.is_some()) {
+    let app = match App::new(
+        resolved,
+        convert::exec::Config::from_env(),
+        tls_cfg.is_some(),
+    ) {
         Ok(a) => a,
         Err(e) => return refuse(e),
     };
@@ -71,7 +87,13 @@ async fn main() -> ExitCode {
             match tokio::net::TcpListener::bind(addr).await {
                 // the same timeouts and caps as the API listener; it only ever answers with a redirect
                 Ok(l) => {
-                    tokio::spawn(tls::serve(l, None, tls::redirect_router(&public), limits.clone(), std::future::pending()));
+                    tokio::spawn(tls::serve(
+                        l,
+                        None,
+                        tls::redirect_router(&public),
+                        limits.clone(),
+                        std::future::pending(),
+                    ));
                 }
                 Err(e) => return refuse(format!("cannot listen on {addr}: {e}")),
             }
@@ -81,7 +103,10 @@ async fn main() -> ExitCode {
             Err(e) => return refuse(format!("cannot listen on {listen}: {e}")),
         };
         let scheme = if tls_cfg.is_some() { "https" } else { "http" };
-        println!("convert-api listening on {scheme}://{}", l.local_addr().unwrap_or(listen));
+        println!(
+            "convert-api listening on {scheme}://{}",
+            l.local_addr().unwrap_or(listen)
+        );
         tls::serve(l, tls_cfg, router, limits, stop).await;
         Ok(())
     };

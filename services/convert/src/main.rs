@@ -1,9 +1,11 @@
 //! `convert`: the command line (PLAN phase 3, section 2.2). Hand-rolled argument parsing, no clap: the grammar is small.
 use convert::exec::{Config, Ctl, Exit, run_tool};
-use convert::{audit, xdfu};
 use convert::formats;
 use convert::job::{self, Dest, FileReport};
-use convert::plan::{self, Options, PageSpec, PdfEngine, SheetSel, SplitBy, Target, ToolId, Translit, TranslitDir};
+use convert::plan::{
+    self, Options, PageSpec, PdfEngine, SheetSel, SplitBy, Target, ToolId, Translit, TranslitDir,
+};
+use convert::{audit, xdfu};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -34,8 +36,25 @@ exit codes: 0 ok, 1 tool error, 2 usage, 3 unsupported, 4 timeout, 5 memory cap,
             8 output failed validation, 9 input rejected, 10 warnings under --strict";
 
 const VALUE_FLAGS: &[&str] = &[
-    "--to", "-o", "--out-dir", "--translit", "--alphabet", "--apostrophe", "--sheet", "--pages", "--dpi", "--pdf-engine", "--timeout",
-    "--max-mem", "-j", "--every", "--before", "--work-dir", "--max-input-mb", "--xdfu", "--xdfu-audit",
+    "--to",
+    "-o",
+    "--out-dir",
+    "--translit",
+    "--alphabet",
+    "--apostrophe",
+    "--sheet",
+    "--pages",
+    "--dpi",
+    "--pdf-engine",
+    "--timeout",
+    "--max-mem",
+    "-j",
+    "--every",
+    "--before",
+    "--work-dir",
+    "--max-input-mb",
+    "--xdfu",
+    "--xdfu-audit",
 ];
 const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work", "--verify", "--redact"];
 
@@ -65,7 +84,13 @@ fn parse(argv: Vec<String>) -> Result<Args, String> {
 
 impl Args {
     fn num<T: std::str::FromStr>(&self, k: &str) -> Result<Option<T>, String> {
-        self.val.get(k).map(|v| v.parse::<T>().map_err(|_| format!("{k} needs a number, got '{v}'"))).transpose()
+        self.val
+            .get(k)
+            .map(|v| {
+                v.parse::<T>()
+                    .map_err(|_| format!("{k} needs a number, got '{v}'"))
+            })
+            .transpose()
     }
 }
 
@@ -87,17 +112,27 @@ fn config(a: &Args) -> Result<Config, String> {
     c.keep_work = a.flag.iter().any(|f| f == "--keep-work");
     c.verify = a.flag.iter().any(|f| f == "--verify");
     // WP15: off (the default) installs nothing at all
-    let mode = a.val.get("--xdfu").map_or(Ok(xdfu::Mode::Off), |m| xdfu::Mode::parse(m).map_err(|e| e.replace("xdfu = ", "--xdfu ")))?;
+    let mode = a.val.get("--xdfu").map_or(Ok(xdfu::Mode::Off), |m| {
+        xdfu::Mode::parse(m).map_err(|e| e.replace("xdfu = ", "--xdfu "))
+    })?;
     let redact = a.flag.iter().any(|f| f == "--redact");
     if mode == xdfu::Mode::Off {
         if a.val.contains_key("--xdfu-audit") || redact {
             return Err("--xdfu-audit and --redact need --xdfu watermark or --xdfu refuse".into());
         }
     } else {
-        let path = a.val.get("--xdfu-audit").map(PathBuf::from).unwrap_or_else(xdfu::default_audit_path);
+        let path = a
+            .val
+            .get("--xdfu-audit")
+            .map(PathBuf::from)
+            .unwrap_or_else(xdfu::default_audit_path);
         let log = audit::AuditLog::open(&path, redact)?;
-        eprintln!("convert: XDFU handling is on ({mode:?}); audit log {}", log.path().display());
-        c.hooks.push(Arc::new(xdfu::XdfuHook::new(mode, Arc::new(log), true)));
+        eprintln!(
+            "convert: XDFU handling is on ({mode:?}); audit log {}",
+            log.path().display()
+        );
+        c.hooks
+            .push(Arc::new(xdfu::XdfuHook::new(mode, Arc::new(log), true)));
     }
     Ok(c)
 }
@@ -111,18 +146,32 @@ fn options(a: &Args) -> Result<Options, String> {
             "auto" => TranslitDir::Auto,
             _ => return Err(format!("--translit takes cyrl, latn or auto, got '{t}'")),
         };
-        let alphabet = match a.val.get("--alphabet").map(String::as_str).unwrap_or("1995") {
+        let alphabet = match a
+            .val
+            .get("--alphabet")
+            .map(String::as_str)
+            .unwrap_or("1995")
+        {
             "1995" => "1995",
             "2026" => "2026",
             "auto" => "auto",
             x => return Err(format!("--alphabet takes 1995, 2026 or auto, got '{x}'")),
         };
-        let apostrophe = match a.val.get("--apostrophe").map(String::as_str).unwrap_or("official") {
+        let apostrophe = match a
+            .val
+            .get("--apostrophe")
+            .map(String::as_str)
+            .unwrap_or("official")
+        {
             "official" => "official",
             "ascii" => "ascii",
             x => return Err(format!("--apostrophe takes official or ascii, got '{x}'")),
         };
-        o.translit = Some(Translit { dir, alphabet, apostrophe });
+        o.translit = Some(Translit {
+            dir,
+            alphabet,
+            apostrophe,
+        });
     } else if a.val.contains_key("--alphabet") || a.val.contains_key("--apostrophe") {
         return Err("--alphabet and --apostrophe need --translit".into());
     }
@@ -168,7 +217,10 @@ fn finish(mut reports: Vec<FileReport>, a: &Args) -> ExitCode {
         }
     }
     if json {
-        println!("{}", serde_json::to_string_pretty(&reports).expect("report serialises"));
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&reports).expect("report serialises")
+        );
     }
     ExitCode::from(job::batch_exit(&reports))
 }
@@ -180,12 +232,23 @@ fn dest(a: &Args, many: bool) -> Result<Dest, String> {
     if a.val.contains_key("-o") && many {
         return Err("-o names one file; use --out-dir with several inputs".into());
     }
-    Ok(Dest { out_dir: a.val.get("--out-dir").map(PathBuf::from).unwrap_or_else(|| ".".into()), out_file: a.val.get("-o").map(PathBuf::from) })
+    Ok(Dest {
+        out_dir: a
+            .val
+            .get("--out-dir")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| ".".into()),
+        out_file: a.val.get("-o").map(PathBuf::from),
+    })
 }
 
 fn cmd_convert(a: Args) -> ExitCode {
-    let Some(to) = a.val.get("--to") else { return usage_err("--to is required") };
-    let Some(target) = Target::parse(to) else { return usage_err(format!("unknown target '{to}'")) };
+    let Some(to) = a.val.get("--to") else {
+        return usage_err("--to is required");
+    };
+    let Some(target) = Target::parse(to) else {
+        return usage_err(format!("unknown target '{to}'"));
+    };
     if a.pos.is_empty() {
         return usage_err("no input files");
     }
@@ -199,7 +262,11 @@ fn cmd_convert(a: Args) -> ExitCode {
     };
     let inputs: Vec<PathBuf> = a.pos.iter().map(PathBuf::from).collect();
     job::sweep_stale(&cfg.work_dir);
-    let reports = job::par_map(&inputs, j, |i| job::guarded(&i.display().to_string(), target.ext(), || job::convert_file(&cfg, i, target, &opts, &d)));
+    let reports = job::par_map(&inputs, j, |i| {
+        job::guarded(&i.display().to_string(), target.ext(), || {
+            job::convert_file(&cfg, i, target, &opts, &d)
+        })
+    });
     finish(reports, &a)
 }
 
@@ -220,7 +287,9 @@ fn cmd_pdf(mut a: Args) -> ExitCode {
     let steps = match op.as_str() {
         "combine" if inputs.len() >= 2 => plan::pdf_combine(inputs.len()),
         "combine" => return usage_err("combine needs at least two PDFs"),
-        "extract" | "split" if inputs.len() != 1 => return usage_err(format!("{op} takes exactly one PDF")),
+        "extract" | "split" if inputs.len() != 1 => {
+            return usage_err(format!("{op} takes exactly one PDF"));
+        }
         "extract" => match a.val.get("--pages").map(|p| PageSpec::parse(p)) {
             Some(Ok(p)) => plan::pdf_extract(&p),
             Some(Err(e)) => return usage_err(e),
@@ -229,11 +298,19 @@ fn cmd_pdf(mut a: Args) -> ExitCode {
         "split" => {
             let by = match (a.num::<u32>("--every"), a.val.get("--before")) {
                 (Ok(Some(n)), None) if n >= 1 => SplitBy::Every(n),
-                (Ok(None), Some(b)) => match b.split(',').map(|x| x.parse::<u32>().ok().filter(|n| *n >= 1)).collect::<Option<Vec<_>>>() {
+                (Ok(None), Some(b)) => match b
+                    .split(',')
+                    .map(|x| x.parse::<u32>().ok().filter(|n| *n >= 1))
+                    .collect::<Option<Vec<_>>>()
+                {
                     Some(v) if !v.is_empty() => SplitBy::Before(v),
                     _ => return usage_err("--before takes page numbers like 3,7"),
                 },
-                _ => return usage_err("split needs exactly one of --every N (N >= 1) or --before 3,7"),
+                _ => {
+                    return usage_err(
+                        "split needs exactly one of --every N (N >= 1) or --before 3,7",
+                    );
+                }
             };
             if a.val.contains_key("-o") {
                 return usage_err("split writes several files; use --out-dir");
@@ -260,14 +337,37 @@ fn cmd_check(a: Args) -> ExitCode {
     let dir = job.path().to_path_buf();
     let mut missing = false;
     for t in ToolId::ALL {
-        let ver = if t == ToolId::Sheets { "version" } else { "--version" };
+        let ver = if t == ToolId::Sheets {
+            "version"
+        } else {
+            "--version"
+        };
         match cfg.resolve(t) {
             Err(f) => {
                 missing = true;
                 println!("{:<11} MISSING  {}", t.name(), f.msg);
             }
-            Ok(p) => match run_tool(&cfg, &Ctl::default(), t, &[ver.to_string()], &dir, None, 0.0, 0, &mut vec![]) {
-                Ok(r) => println!("{:<11} ok       {}  {}", t.name(), p.display(), String::from_utf8_lossy(&r.stdout).lines().next().unwrap_or("").trim()),
+            Ok(p) => match run_tool(
+                &cfg,
+                &Ctl::default(),
+                t,
+                &[ver.to_string()],
+                &dir,
+                None,
+                0.0,
+                0,
+                &mut vec![],
+            ) {
+                Ok(r) => println!(
+                    "{:<11} ok       {}  {}",
+                    t.name(),
+                    p.display(),
+                    String::from_utf8_lossy(&r.stdout)
+                        .lines()
+                        .next()
+                        .unwrap_or("")
+                        .trim()
+                ),
                 Err(f) => {
                     missing = true;
                     println!("{:<11} BROKEN   {}  {}", t.name(), p.display(), f.msg);
@@ -276,10 +376,21 @@ fn cmd_check(a: Args) -> ExitCode {
         }
     }
     match cfg.pdf2docx_url.as_deref() {
-        None => println!("pdf2docx    not configured (set CONVERT_PDF2DOCX_URL to use --pdf-engine sidecar)"),
+        None => println!(
+            "pdf2docx    not configured (set CONVERT_PDF2DOCX_URL to use --pdf-engine sidecar)"
+        ),
         Some(u) => {
-            let agent: ureq::Agent = ureq::Agent::config_builder().proxy(None).timeout_global(Some(std::time::Duration::from_secs(5))).build().into();
-            match agent.get(format!("{}/healthz", u.trim_end_matches('/'))).call().ok().and_then(|mut r| r.body_mut().read_to_string().ok()) {
+            let agent: ureq::Agent = ureq::Agent::config_builder()
+                .proxy(None)
+                .timeout_global(Some(std::time::Duration::from_secs(5)))
+                .build()
+                .into();
+            match agent
+                .get(format!("{}/healthz", u.trim_end_matches('/')))
+                .call()
+                .ok()
+                .and_then(|mut r| r.body_mut().read_to_string().ok())
+            {
                 Some(h) => println!("pdf2docx    ok       {u}  {h}"),
                 None => {
                     missing = true;
@@ -293,10 +404,15 @@ fn cmd_check(a: Args) -> ExitCode {
 }
 
 fn cmd_xdfu_verify(args: &[String]) -> ExitCode {
-    let [path] = args else { return usage_err("xdfu-verify takes one audit log file") };
+    let [path] = args else {
+        return usage_err("xdfu-verify takes one audit log file");
+    };
     match audit::verify(std::path::Path::new(path)) {
         Ok(v) => {
-            println!("{path}: the chain is intact, {} lines, last hash {}", v.lines, v.last_hash);
+            println!(
+                "{path}: the chain is intact, {} lines, last hash {}",
+                v.lines, v.last_hash
+            );
             ExitCode::SUCCESS
         }
         Err(e) => {
@@ -310,13 +426,21 @@ fn main() -> ExitCode {
     let mut argv: Vec<String> = std::env::args().skip(1).collect();
     if argv.is_empty() || argv.iter().any(|a| a == "-h" || a == "--help") {
         println!("{USAGE}");
-        return ExitCode::from(if argv.is_empty() { Exit::Usage.code() } else { 0 });
+        return ExitCode::from(if argv.is_empty() {
+            Exit::Usage.code()
+        } else {
+            0
+        });
     }
     let sub = argv[0].clone();
     if sub == "xdfu-verify" {
         return cmd_xdfu_verify(&argv[1..]);
     }
-    let rest = if matches!(sub.as_str(), "formats" | "check" | "pdf") { argv.drain(1..).collect() } else { std::mem::take(&mut argv) };
+    let rest = if matches!(sub.as_str(), "formats" | "check" | "pdf") {
+        argv.drain(1..).collect()
+    } else {
+        std::mem::take(&mut argv)
+    };
     let a = match parse(rest) {
         Ok(a) => a,
         Err(e) => return usage_err(e),
@@ -324,7 +448,10 @@ fn main() -> ExitCode {
     match sub.as_str() {
         "formats" => {
             if a.flag.iter().any(|f| f == "--json") {
-                println!("{}", serde_json::to_string_pretty(&formats::formats_json()).expect("json"));
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&formats::formats_json()).expect("json")
+                );
             } else {
                 print!("{}", formats::formats_text());
             }

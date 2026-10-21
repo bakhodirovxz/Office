@@ -511,7 +511,7 @@ cli_build() { local d rc=0; for d in docs sheets slides pdf; do bstep "build-$d-
 
 job_convert() {
   local rc=0 r line
-  # no fmt gate: services/ was written without rustfmt (501 hunks); formatting it is a separate change, then add fmt_check services services/Cargo.toml here
+  fmt_check services services/Cargo.toml || rc=1
   bstep clippy-services env CARGO_TARGET_DIR="$SVC_T" cargo clippy --manifest-path services/Cargo.toml --workspace --all-targets --locked -j 6 -- -D warnings || rc=1
   bstep nextest-services env CARGO_TARGET_DIR="$SVC_T" cargo nextest run --manifest-path services/Cargo.toml --workspace --locked --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 || rc=1
   command -v cargo-deny >/dev/null 2>&1 || { note "cargo-deny not found on PATH"; return 2; }

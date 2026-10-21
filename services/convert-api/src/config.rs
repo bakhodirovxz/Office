@@ -120,7 +120,10 @@ impl Default for Settings {
 pub enum Auth {
     /// local mode
     None,
-    Jwt { secret: Vec<u8>, rules: crate::jwt::Rules },
+    Jwt {
+        secret: Vec<u8>,
+        rules: crate::jwt::Rules,
+    },
 }
 
 /// An IP or a CIDR range (`10.0.0.0/8`, `fd00::/8`, `::1`).
@@ -137,10 +140,19 @@ impl Cidr {
             Some((a, p)) => (a, Some(p)),
             None => (s, None),
         };
-        let addr: IpAddr = a.trim().parse::<IpAddr>().map_err(|_| bad())?.to_canonical();
+        let addr: IpAddr = a
+            .trim()
+            .parse::<IpAddr>()
+            .map_err(|_| bad())?
+            .to_canonical();
         let max = if addr.is_ipv4() { 32 } else { 128 };
         let prefix = match p {
-            Some(p) => p.trim().parse::<u8>().ok().filter(|p| *p <= max).ok_or_else(bad)?,
+            Some(p) => p
+                .trim()
+                .parse::<u8>()
+                .ok()
+                .filter(|p| *p <= max)
+                .ok_or_else(bad)?,
             None => max,
         };
         Ok(Cidr { addr, prefix })
@@ -194,13 +206,25 @@ impl Resolved {
 /// even when it happens to have 32 characters, so printable-only raw bytes and keys with few distinct bytes are refused.
 fn read_key(path: &Path) -> Result<[u8; 32], String> {
     use base64::Engine;
-    let raw = std::fs::read(path).map_err(|e| format!("cannot read key_file {}: {e}", path.display()))?;
+    let raw =
+        std::fs::read(path).map_err(|e| format!("cannot read key_file {}: {e}", path.display()))?;
     let text = String::from_utf8_lossy(&raw);
     let text = text.trim();
-    let hex = (text.len() == 64 && text.is_ascii()).then(|| (0..32).map(|i| u8::from_str_radix(&text[2 * i..2 * i + 2], 16).ok()).collect::<Option<Vec<u8>>>()).flatten();
-    let b64 = [&base64::engine::general_purpose::STANDARD, &base64::engine::general_purpose::STANDARD_NO_PAD, &base64::engine::general_purpose::URL_SAFE, &base64::engine::general_purpose::URL_SAFE_NO_PAD]
-        .iter()
-        .find_map(|e| e.decode(text).ok().filter(|b| b.len() == 32));
+    let hex = (text.len() == 64 && text.is_ascii())
+        .then(|| {
+            (0..32)
+                .map(|i| u8::from_str_radix(&text[2 * i..2 * i + 2], 16).ok())
+                .collect::<Option<Vec<u8>>>()
+        })
+        .flatten();
+    let b64 = [
+        &base64::engine::general_purpose::STANDARD,
+        &base64::engine::general_purpose::STANDARD_NO_PAD,
+        &base64::engine::general_purpose::URL_SAFE,
+        &base64::engine::general_purpose::URL_SAFE_NO_PAD,
+    ]
+    .iter()
+    .find_map(|e| e.decode(text).ok().filter(|b| b.len() == 32));
     let printable = |b: &[u8]| b.iter().all(|c| (0x20..0x7f).contains(c));
     let key: Vec<u8> = match (raw.len() == 32 && !printable(&raw)).then(|| raw.clone()).or(hex).or(b64) {
         Some(k) => k,
@@ -208,15 +232,24 @@ fn read_key(path: &Path) -> Result<[u8; 32], String> {
     };
     let distinct = key.iter().collect::<std::collections::BTreeSet<_>>().len();
     if distinct < 16 {
-        return Err("key_file does not look random (fewer than 16 distinct byte values in 32)".into());
+        return Err(
+            "key_file does not look random (fewer than 16 distinct byte values in 32)".into(),
+        );
     }
     Ok(key.try_into().expect("32 bytes"))
 }
 
 /// `https://host[:port]`, nothing else: no path, query, fragment or user info.
 fn check_public_url(u: &str) -> Result<(), String> {
-    let bad = || format!("public_url = \"{u}\" must look like https://host[:port] (no path, query or user info)");
-    let rest = u.strip_prefix("https://").ok_or_else(bad)?.trim_end_matches('/');
+    let bad = || {
+        format!(
+            "public_url = \"{u}\" must look like https://host[:port] (no path, query or user info)"
+        )
+    };
+    let rest = u
+        .strip_prefix("https://")
+        .ok_or_else(bad)?
+        .trim_end_matches('/');
     if rest.is_empty() || rest.contains(['/', '@', '?', '#', ' ', '\\']) || rest.starts_with(':') {
         return Err(bad());
     }
@@ -225,24 +258,40 @@ fn check_public_url(u: &str) -> Result<(), String> {
 
 impl Settings {
     pub fn load(path: &Path) -> Result<Settings, String> {
-        let text = std::fs::read_to_string(path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+        let text = std::fs::read_to_string(path)
+            .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
         toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))
     }
 
     pub fn resolve(self) -> Result<Resolved, String> {
-        let listen: SocketAddr = self.listen.parse().map_err(|_| format!("listen = \"{}\" is not an ip:port", self.listen))?;
+        let listen: SocketAddr = self
+            .listen
+            .parse()
+            .map_err(|_| format!("listen = \"{}\" is not an ip:port", self.listen))?;
         let xdfu = convert::xdfu::Mode::parse(&self.xdfu)?;
-        let trusted = self.trusted_proxies.iter().map(|s| Cidr::parse(s)).collect::<Result<Vec<_>, _>>()?;
+        let trusted = self
+            .trusted_proxies
+            .iter()
+            .map(|s| Cidr::parse(s))
+            .collect::<Result<Vec<_>, _>>()?;
         if !matches!(self.tls.as_str(), "builtin" | "upstream") {
-            return Err(format!("tls = \"{}\": expected \"builtin\" or \"upstream\"", self.tls));
+            return Err(format!(
+                "tls = \"{}\": expected \"builtin\" or \"upstream\"",
+                self.tls
+            ));
         }
         let upstream_tls = self.tls == "upstream";
         let auth = match self.auth.as_str() {
             "none" => {
                 if !listen.ip().is_loopback() {
-                    return Err(format!("auth = \"none\" is refused on {listen}: local mode is for a loopback address only (use auth = \"jwt\" for a network server)"));
+                    return Err(format!(
+                        "auth = \"none\" is refused on {listen}: local mode is for a loopback address only (use auth = \"jwt\" for a network server)"
+                    ));
                 }
-                if self.redirect_listen.is_some() || self.tls_cert.is_some() || self.tls_key.is_some() {
+                if self.redirect_listen.is_some()
+                    || self.tls_cert.is_some()
+                    || self.tls_key.is_some()
+                {
                     return Err("tls_cert, tls_key and redirect_listen belong to server mode (auth = \"jwt\")".into());
                 }
                 if self.public_url.is_some() {
@@ -254,20 +303,31 @@ impl Settings {
                 Auth::None
             }
             "jwt" => {
-                let need = |o: &Option<PathBuf>, k: &str| o.clone().ok_or(format!("auth = \"jwt\" needs {k}"));
-                let secret = std::fs::read(need(&self.secret_file, "secret_file")?).map_err(|e| format!("cannot read secret_file: {e}"))?;
+                let need = |o: &Option<PathBuf>, k: &str| {
+                    o.clone().ok_or(format!("auth = \"jwt\" needs {k}"))
+                };
+                let secret = std::fs::read(need(&self.secret_file, "secret_file")?)
+                    .map_err(|e| format!("cannot read secret_file: {e}"))?;
                 let secret = secret.trim_ascii_end().to_vec();
                 if secret.len() < 32 {
                     return Err("secret_file must hold at least 32 bytes".into());
                 }
-                let url = self.public_url.as_deref().ok_or("auth = \"jwt\" needs public_url (the Host check and the redirect target)")?;
+                let url = self.public_url.as_deref().ok_or(
+                    "auth = \"jwt\" needs public_url (the Host check and the redirect target)",
+                )?;
                 check_public_url(url)?;
                 if upstream_tls {
                     if trusted.is_empty() {
                         return Err("tls = \"upstream\" needs trusted_proxies: only a listed proxy may speak for TLS".into());
                     }
-                    if self.tls_cert.is_some() || self.tls_key.is_some() || self.redirect_listen.is_some() {
-                        return Err("tls_cert, tls_key and redirect_listen belong to tls = \"builtin\"".into());
+                    if self.tls_cert.is_some()
+                        || self.tls_key.is_some()
+                        || self.redirect_listen.is_some()
+                    {
+                        return Err(
+                            "tls_cert, tls_key and redirect_listen belong to tls = \"builtin\""
+                                .into(),
+                        );
                     }
                 } else {
                     need(&self.tls_cert, "tls_cert")?;
@@ -285,21 +345,47 @@ impl Settings {
                 if self.max_token_lifetime_s == 0 {
                     return Err("max_token_lifetime_s must be positive".into());
                 }
-                Auth::Jwt { secret, rules: crate::jwt::Rules { iss: self.iss.clone(), aud: self.aud.clone(), max_lifetime_s: self.max_token_lifetime_s } }
+                Auth::Jwt {
+                    secret,
+                    rules: crate::jwt::Rules {
+                        iss: self.iss.clone(),
+                        aud: self.aud.clone(),
+                        max_lifetime_s: self.max_token_lifetime_s,
+                    },
+                }
             }
             other => return Err(format!("auth = \"{other}\": expected \"none\" or \"jwt\"")),
         };
-        let work_dir = self.work_dir.clone().unwrap_or_else(|| std::env::temp_dir().join("convert-api-work"));
+        let work_dir = self
+            .work_dir
+            .clone()
+            .unwrap_or_else(|| std::env::temp_dir().join("convert-api-work"));
         let store_dir = self.store_dir.clone().unwrap_or_else(|| {
-            let name = work_dir.file_name().map_or("convert-api-work".into(), |n| n.to_string_lossy().into_owned());
+            let name = work_dir.file_name().map_or("convert-api-work".into(), |n| {
+                n.to_string_lossy().into_owned()
+            });
             work_dir.with_file_name(format!("{name}-store"))
         });
         if work_dir == store_dir {
-            eprintln!("convert-api: warning: work_dir and store_dir are the same directory; they should be separate so each can be sized and placed on its own volume");
+            eprintln!(
+                "convert-api: warning: work_dir and store_dir are the same directory; they should be separate so each can be sized and placed on its own volume"
+            );
         }
-        let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+        let cores = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
         let cpu_slots = self.cpu_slots.unwrap_or((cores / 3).clamp(1, 4)).max(1);
-        Ok(Resolved { listen, auth, work_dir, store_dir, cpu_slots, trusted, upstream_tls, xdfu, s: self })
+        Ok(Resolved {
+            listen,
+            auth,
+            work_dir,
+            store_dir,
+            cpu_slots,
+            trusted,
+            upstream_tls,
+            xdfu,
+            s: self,
+        })
     }
 }
 
@@ -309,24 +395,55 @@ mod tests {
 
     #[test]
     fn auth_none_is_refused_off_loopback_and_xdfu_is_off_only() {
-        let s = |listen: &str| Settings { listen: listen.into(), ..Settings::default() };
+        let s = |listen: &str| Settings {
+            listen: listen.into(),
+            ..Settings::default()
+        };
         assert!(s("127.0.0.1:1").resolve().is_ok());
         assert!(s("[::1]:1").resolve().is_ok());
         // any 127.0.0.0/8 address is loopback; an IPv4-mapped IPv6 address is not (`Ipv6Addr::is_loopback` is `::1` only)
         assert!(s("127.0.0.2:1").resolve().is_ok());
-        for bad in ["0.0.0.0:8787", "192.168.1.5:8787", "[::]:8787", "[::ffff:127.0.0.1]:8787", "[::ffff:192.168.1.5]:8787", "localhost:8787"] {
+        for bad in [
+            "0.0.0.0:8787",
+            "192.168.1.5:8787",
+            "[::]:8787",
+            "[::ffff:127.0.0.1]:8787",
+            "[::ffff:192.168.1.5]:8787",
+            "localhost:8787",
+        ] {
             let e = s(bad).resolve().err().unwrap_or_default();
-            assert!(e.contains("loopback") || e.contains("not an ip:port"), "{bad}: {e}");
+            assert!(
+                e.contains("loopback") || e.contains("not an ip:port"),
+                "{bad}: {e}"
+            );
         }
-        let e = Settings { xdfu: "on".into(), ..Settings::default() }.resolve().err().unwrap();
+        let e = Settings {
+            xdfu: "on".into(),
+            ..Settings::default()
+        }
+        .resolve()
+        .err()
+        .unwrap();
         assert!(e.contains("watermark") && e.contains("refuse"), "{e}");
-        let e = Settings { auth: "jwt".into(), ..Settings::default() }.resolve().err().unwrap();
+        let e = Settings {
+            auth: "jwt".into(),
+            ..Settings::default()
+        }
+        .resolve()
+        .err()
+        .unwrap();
         assert!(e.contains("secret_file"), "{e}");
     }
 
     #[test]
     fn local_mode_takes_no_public_url_and_server_mode_needs_a_good_one() {
-        let e = Settings { public_url: Some("https://x.test".into()), ..Settings::default() }.resolve().err().unwrap();
+        let e = Settings {
+            public_url: Some("https://x.test".into()),
+            ..Settings::default()
+        }
+        .resolve()
+        .err()
+        .unwrap();
         assert!(e.contains("public_url"), "{e}");
         let dir = std::env::temp_dir().join(format!("capi-cfg-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
@@ -344,9 +461,25 @@ mod tests {
             s.resolve().err()
         };
         assert!(server(&|_| {}).is_none());
-        assert!(server(&|s| s.public_url = None).unwrap().contains("needs public_url"));
-        for bad in ["http://x.test", "https://x.test/app", "https://u@x.test", "https://", "x.test", "https://x.test?a=1"] {
-            assert!(server(&|s| s.public_url = Some(bad.into())).unwrap().contains("public_url"), "{bad}");
+        assert!(
+            server(&|s| s.public_url = None)
+                .unwrap()
+                .contains("needs public_url")
+        );
+        for bad in [
+            "http://x.test",
+            "https://x.test/app",
+            "https://u@x.test",
+            "https://",
+            "x.test",
+            "https://x.test?a=1",
+        ] {
+            assert!(
+                server(&|s| s.public_url = Some(bad.into()))
+                    .unwrap()
+                    .contains("public_url"),
+                "{bad}"
+            );
         }
         assert!(server(&|s| s.public_url = Some("https://x.test:8443/".into())).is_none());
         // the proxy settings
@@ -359,14 +492,24 @@ mod tests {
             s.tls_key = None;
         };
         assert!(server(&up).is_none());
-        assert!(server(&|s| {
-            up(s);
-            s.tls_cert = Some("c.pem".into());
-        })
-        .unwrap()
-        .contains("builtin"));
-        assert!(server(&|s| s.trusted_proxies = vec!["not-an-ip".into()]).unwrap().contains("trusted_proxies"));
-        assert!(server(&|s| s.tls = "plain".into()).unwrap().contains("builtin"));
+        assert!(
+            server(&|s| {
+                up(s);
+                s.tls_cert = Some("c.pem".into());
+            })
+            .unwrap()
+            .contains("builtin")
+        );
+        assert!(
+            server(&|s| s.trusted_proxies = vec!["not-an-ip".into()])
+                .unwrap()
+                .contains("trusted_proxies")
+        );
+        assert!(
+            server(&|s| s.tls = "plain".into())
+                .unwrap()
+                .contains("builtin")
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -380,13 +523,24 @@ mod tests {
         assert!(!c("192.168.1.5").contains(ip("192.168.1.6")));
         assert!(c("fd00::/8").contains(ip("fd12::1")));
         assert!(!c("fd00::/8").contains(ip("fe80::1")));
-        assert!(c("10.0.0.0/8").contains(ip("::ffff:10.1.1.1")), "a mapped address is its IPv4 address");
+        assert!(
+            c("10.0.0.0/8").contains(ip("::ffff:10.1.1.1")),
+            "a mapped address is its IPv4 address"
+        );
         assert!(!c("10.0.0.0/8").contains(ip("fd00::1")));
         assert!(c("0.0.0.0/0").contains(ip("1.2.3.4")));
         assert!(Cidr::parse("10.0.0.0/33").is_err() && Cidr::parse("x").is_err());
-        let r = Settings { work_dir: Some("<server-path>".into()), ..Settings::default() }.resolve().unwrap();
+        let r = Settings {
+            work_dir: Some("<server-path>".into()),
+            ..Settings::default()
+        }
+        .resolve()
+        .unwrap();
         assert_eq!(r.store_dir, PathBuf::from("<server-path>"));
-        assert_ne!(Settings::default().resolve().unwrap().store_dir, Settings::default().resolve().unwrap().work_dir);
+        assert_ne!(
+            Settings::default().resolve().unwrap().store_dir,
+            Settings::default().resolve().unwrap().work_dir
+        );
     }
 
     #[test]
@@ -398,14 +552,25 @@ mod tests {
             std::fs::write(dir.join(name), bytes).unwrap();
             read_key(&dir.join(name))
         };
-        let random: Vec<u8> = (0..32u8).map(|i| i.wrapping_mul(37).wrapping_add(11) | 0x80).collect();
+        let random: Vec<u8> = (0..32u8)
+            .map(|i| i.wrapping_mul(37).wrapping_add(11) | 0x80)
+            .collect();
         assert_eq!(try_key("raw", &random).unwrap().to_vec(), random);
         let b64 = base64::engine::general_purpose::STANDARD.encode(&random);
         assert_eq!(try_key("b64", b64.as_bytes()).unwrap().to_vec(), random);
         let hex: String = random.iter().map(|b| format!("{b:02x}")).collect();
-        assert_eq!(try_key("hex", format!("{hex}\n").as_bytes()).unwrap().to_vec(), random);
+        assert_eq!(
+            try_key("hex", format!("{hex}\n").as_bytes())
+                .unwrap()
+                .to_vec(),
+            random
+        );
         // a 32-character passphrase is 32 bytes too, and so is a key of one repeated byte
-        assert!(try_key("pass", b"correct horse battery staple 12").unwrap_err().contains("passphrase"));
+        assert!(
+            try_key("pass", b"correct horse battery staple 12")
+                .unwrap_err()
+                .contains("passphrase")
+        );
         assert!(try_key("short", b"tooshort").is_err());
         assert!(try_key("same", &[7u8; 32]).unwrap_err().contains("random"));
         let _ = std::fs::remove_dir_all(&dir);

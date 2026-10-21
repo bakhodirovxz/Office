@@ -38,21 +38,37 @@ fn civil(days: i64) -> (i64, u32, u32) {
 pub fn utc_text(secs: u64) -> String {
     let (y, m, d) = civil((secs / 86_400) as i64);
     let t = secs % 86_400;
-    format!("{y:04}-{m:02}-{d:02} {:02}:{:02}:{:02} UTC", t / 3600, t % 3600 / 60, t % 60)
+    format!(
+        "{y:04}-{m:02}-{d:02} {:02}:{:02}:{:02} UTC",
+        t / 3600,
+        t % 3600 / 60,
+        t % 60
+    )
 }
 
 /// `2026-10-21T10:15:03Z`, the audit timestamp.
 pub fn utc_iso(secs: u64) -> String {
-    utc_text(secs).replace(' ', "T").replace("TUTC", "Z").trim_end_matches("UTC").trim_end_matches('T').to_string()
+    utc_text(secs)
+        .replace(' ', "T")
+        .replace("TUTC", "Z")
+        .trim_end_matches("UTC")
+        .trim_end_matches('T')
+        .to_string()
 }
 
 pub fn now_secs() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 fn hash_of(body: &Map<String, Value>) -> String {
     let text = serde_json::to_string(body).expect("a JSON object serialises");
-    Sha256::digest(text.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 #[derive(Debug)]
@@ -68,20 +84,31 @@ pub fn verify(path: &Path) -> Result<Verified, String> {
     let (mut prev, mut seq) = (GENESIS.to_string(), 0u64);
     for (i, line) in text.lines().enumerate() {
         let n = i + 1;
-        let Ok(Value::Object(mut obj)) = serde_json::from_str::<Value>(line) else { return Err(format!("line {n}: not a JSON object")) };
-        let Some(Value::String(hash)) = obj.remove("hash") else { return Err(format!("line {n}: no hash")) };
+        let Ok(Value::Object(mut obj)) = serde_json::from_str::<Value>(line) else {
+            return Err(format!("line {n}: not a JSON object"));
+        };
+        let Some(Value::String(hash)) = obj.remove("hash") else {
+            return Err(format!("line {n}: no hash"));
+        };
         if obj.get("prev").and_then(Value::as_str) != Some(prev.as_str()) {
-            return Err(format!("line {n}: it does not follow the line before it (a line was changed, deleted or inserted)"));
+            return Err(format!(
+                "line {n}: it does not follow the line before it (a line was changed, deleted or inserted)"
+            ));
         }
         if obj.get("seq").and_then(Value::as_u64) != Some(seq + 1) {
             return Err(format!("line {n}: the sequence number is not {}", seq + 1));
         }
         if hash_of(&obj) != hash {
-            return Err(format!("line {n}: the hash does not match its content (the line was changed)"));
+            return Err(format!(
+                "line {n}: the hash does not match its content (the line was changed)"
+            ));
         }
         (prev, seq) = (hash, seq + 1);
     }
-    Ok(Verified { lines: seq, last_hash: prev })
+    Ok(Verified {
+        lines: seq,
+        last_hash: prev,
+    })
 }
 
 /// A lock file next to the log, so two processes (the CLI run twice, the CLI beside the API) cannot both extend the same chain.
@@ -95,7 +122,10 @@ impl FileLock {
                 Ok(_) => return Ok(FileLock(p)),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
                     // a lock whose owner died: older than 30 s
-                    if fs::metadata(&p).and_then(|m| m.modified()).is_ok_and(|t| t.elapsed().is_ok_and(|e| e > Duration::from_secs(30))) {
+                    if fs::metadata(&p)
+                        .and_then(|m| m.modified())
+                        .is_ok_and(|t| t.elapsed().is_ok_and(|e| e > Duration::from_secs(30)))
+                    {
                         let _ = fs::remove_file(&p);
                     }
                     std::thread::sleep(Duration::from_millis(50));
@@ -126,9 +156,14 @@ impl AuditLog {
             fs::create_dir_all(dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
         }
         if path.exists() {
-            verify(path).map_err(|e| format!("the audit log {} is damaged: {e}", path.display()))?;
+            verify(path)
+                .map_err(|e| format!("the audit log {} is damaged: {e}", path.display()))?;
         }
-        Ok(AuditLog { path: path.to_path_buf(), redact, mu: Mutex::new(()) })
+        Ok(AuditLog {
+            path: path.to_path_buf(),
+            redact,
+            mu: Mutex::new(()),
+        })
     }
 
     pub fn path(&self) -> &Path {
@@ -137,15 +172,20 @@ impl AuditLog {
 
     /// The last line's `(seq, hash)`, read from the end of the file.
     fn tail(&self) -> Result<(u64, String), String> {
-        let Ok(mut f) = fs::File::open(&self.path) else { return Ok((0, GENESIS.to_string())) };
+        let Ok(mut f) = fs::File::open(&self.path) else {
+            return Ok((0, GENESIS.to_string()));
+        };
         let len = f.metadata().map_err(|e| e.to_string())?.len();
         let from = len.saturating_sub(64 * 1024);
         f.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf).map_err(|e| e.to_string())?;
         let text = String::from_utf8_lossy(&buf);
-        let Some(line) = text.lines().rev().find(|l| !l.trim().is_empty()) else { return Ok((0, GENESIS.to_string())) };
-        let v: Value = serde_json::from_str(line).map_err(|_| "the last line of the audit log is not JSON".to_string())?;
+        let Some(line) = text.lines().rev().find(|l| !l.trim().is_empty()) else {
+            return Ok((0, GENESIS.to_string()));
+        };
+        let v: Value = serde_json::from_str(line)
+            .map_err(|_| "the last line of the audit log is not JSON".to_string())?;
         match (v["seq"].as_u64(), v["hash"].as_str()) {
             (Some(s), Some(h)) => Ok((s, h.to_string())),
             _ => Err("the last line of the audit log has no seq or hash".into()),
@@ -173,8 +213,14 @@ impl AuditLog {
         body.insert("hash".into(), hash.into());
         let mut line = serde_json::to_string(&body).expect("serialises");
         line.push('\n');
-        let mut f = OpenOptions::new().create(true).append(true).open(&self.path).map_err(|e| format!("cannot open the audit log: {e}"))?;
-        f.write_all(line.as_bytes()).and_then(|_| f.sync_data()).map_err(|e| format!("cannot write the audit log: {e}"))?;
+        let mut f = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.path)
+            .map_err(|e| format!("cannot open the audit log: {e}"))?;
+        f.write_all(line.as_bytes())
+            .and_then(|_| f.sync_data())
+            .map_err(|e| format!("cannot write the audit log: {e}"))?;
         Ok(seq + 1)
     }
 }
@@ -220,14 +266,30 @@ mod tests {
         check(good.replacen("\"u2\"", "\"mallory\"", 1), "line 2:");
         // line 2 removed, two lines swapped, a line inserted from another place in the log
         check([lines[0], lines[2], lines[3]].join("\n") + "\n", "line 2:");
-        check([lines[0], lines[2], lines[1], lines[3]].join("\n") + "\n", "line 2:");
-        check([lines[0], lines[1], lines[1], lines[2], lines[3]].join("\n") + "\n", "line 3:");
+        check(
+            [lines[0], lines[2], lines[1], lines[3]].join("\n") + "\n",
+            "line 2:",
+        );
+        check(
+            [lines[0], lines[1], lines[1], lines[2], lines[3]].join("\n") + "\n",
+            "line 3:",
+        );
         // the hash itself rewritten to fit a changed line: the next line no longer follows
         let forged = lines[1].replace("\"u2\"", "\"mallory\"");
         let mut obj: Map<String, Value> = serde_json::from_str(&forged).unwrap();
         obj.remove("hash");
         obj.insert("hash".into(), hash_of(&obj).into());
-        check([lines[0].to_string(), serde_json::to_string(&obj).unwrap(), lines[2].to_string(), lines[3].to_string()].join("\n") + "\n", "line 3:");
+        check(
+            [
+                lines[0].to_string(),
+                serde_json::to_string(&obj).unwrap(),
+                lines[2].to_string(),
+                lines[3].to_string(),
+            ]
+            .join("\n")
+                + "\n",
+            "line 3:",
+        );
         // garbage
         check(good.clone() + "not json\n", "line 5:");
         // cutting lines off the END is the known blind spot: it still verifies, with fewer lines
@@ -243,12 +305,21 @@ mod tests {
     fn redact_leaves_the_file_name_out_and_a_reopened_log_continues_the_chain() {
         let p = tmp("redact");
         let log = AuditLog::open(&p, true).unwrap();
-        log.append("copy", json!({"file": "secret-name.docx", "user": "u"})).unwrap();
+        log.append("copy", json!({"file": "secret-name.docx", "user": "u"}))
+            .unwrap();
         drop(log);
         let log = AuditLog::open(&p, true).unwrap();
-        assert_eq!(log.append("copy", json!({"file": "other.docx"})).unwrap(), 2);
+        assert_eq!(
+            log.append("copy", json!({"file": "other.docx"})).unwrap(),
+            2
+        );
         let text = fs::read_to_string(&p).unwrap();
-        assert!(!text.contains("secret-name") && !text.contains("other.docx") && !text.contains("\"file\""), "{text}");
+        assert!(
+            !text.contains("secret-name")
+                && !text.contains("other.docx")
+                && !text.contains("\"file\""),
+            "{text}"
+        );
         assert_eq!(verify(&p).unwrap().lines, 2);
         let _ = fs::remove_dir_all(p.parent().unwrap());
     }

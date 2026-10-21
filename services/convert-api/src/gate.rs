@@ -32,7 +32,10 @@ impl Drop for Permit {
 
 impl Gate {
     pub fn new(slots: usize) -> Gate {
-        Gate(Arc::new(Mutex::new(Inner { free: slots, ..Inner::default() })))
+        Gate(Arc::new(Mutex::new(Inner {
+            free: slots,
+            ..Inner::default()
+        })))
     }
 
     /// A slot if one is free right now.
@@ -67,7 +70,9 @@ impl Gate {
     fn release(&self) {
         let mut g = self.0.lock().unwrap();
         while let Some(user) = g.order.pop_front() {
-            let Some(q) = g.queues.get_mut(&user) else { continue };
+            let Some(q) = g.queues.get_mut(&user) else {
+                continue;
+            };
             let Some(tx) = q.pop_front() else {
                 g.queues.remove(&user);
                 continue;
@@ -101,7 +106,12 @@ mod tests {
         let order = Arc::new(Mutex::new(Vec::<String>::new()));
         let mut tasks = vec![];
         // alice queues three files before bob queues one: FIFO would serve bob last
-        for (user, tag) in [("alice", "a1"), ("alice", "a2"), ("alice", "a3"), ("bob", "b1")] {
+        for (user, tag) in [
+            ("alice", "a1"),
+            ("alice", "a2"),
+            ("alice", "a3"),
+            ("bob", "b1"),
+        ] {
             let (g, o) = (gate.clone(), order.clone());
             tasks.push(tokio::spawn(async move {
                 let p = g.acquire(user).await;

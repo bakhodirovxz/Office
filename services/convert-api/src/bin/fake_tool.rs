@@ -11,7 +11,11 @@ fn main() {
                 eprintln!("fake tool: cannot read this file");
                 std::process::exit(1);
             }
-            let body = if a[2].ends_with(".pdf") { "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n" } else { "stub\n" };
+            let body = if a[2].ends_with(".pdf") {
+                "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
+            } else {
+                "stub\n"
+            };
             std::fs::write(&a[2], body).unwrap();
         }
         Some("info") => println!("{{\"pages\": 1}}"),

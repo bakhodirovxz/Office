@@ -18,7 +18,18 @@ fn show(steps: &[Step]) -> String {
                 }
                 x
             }
-            Step::Http(h) => format!("HTTP {:?} POST {}?{} {} -> {}", h.sidecar, h.route, h.query.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("&"), h.input, h.output),
+            Step::Http(h) => format!(
+                "HTTP {:?} POST {}?{} {} -> {}",
+                h.sidecar,
+                h.route,
+                h.query
+                    .iter()
+                    .map(|(k, v)| format!("{k}={v}"))
+                    .collect::<Vec<_>>()
+                    .join("&"),
+                h.input,
+                h.output
+            ),
             Step::Expand(e) => format!("EXPAND {e:?}"),
         })
         .collect::<Vec<_>>()
@@ -33,7 +44,11 @@ fn line(label: &str, k: Kind, t: Target, o: &Options) -> String {
 }
 
 fn tr(dir: TranslitDir, alphabet: &'static str) -> Option<Translit> {
-    Some(Translit { dir, alphabet, apostrophe: "official" })
+    Some(Translit {
+        dir,
+        alphabet,
+        apostrophe: "official",
+    })
 }
 
 fn table() -> String {
@@ -52,31 +67,96 @@ fn table() -> String {
         }
     }
     // 3. option variants
-    let cyrl = Options { translit: tr(TranslitDir::Cyrl, "1995"), ..Options::default() };
-    let latn26 = Options { translit: tr(TranslitDir::Latn, "2026"), ..Options::default() };
-    let auto = Options { translit: tr(TranslitDir::Auto, "auto"), ..Options::default() };
+    let cyrl = Options {
+        translit: tr(TranslitDir::Cyrl, "1995"),
+        ..Options::default()
+    };
+    let latn26 = Options {
+        translit: tr(TranslitDir::Latn, "2026"),
+        ..Options::default()
+    };
+    let auto = Options {
+        translit: tr(TranslitDir::Auto, "auto"),
+        ..Options::default()
+    };
     for (k, t) in [
-        (Kind::Docx, Target::Docx), (Kind::Doc, Target::Pdf), (Kind::Md, Target::Png), (Kind::Xlsx, Target::Xlsx),
-        (Kind::Xls, Target::Pdf), (Kind::Pptx, Target::Pptx), (Kind::Pptx, Target::Pdf), (Kind::Pptx, Target::Png),
-        (Kind::Csv, Target::Csv), (Kind::Pdf, Target::Docx),
+        (Kind::Docx, Target::Docx),
+        (Kind::Doc, Target::Pdf),
+        (Kind::Md, Target::Png),
+        (Kind::Xlsx, Target::Xlsx),
+        (Kind::Xls, Target::Pdf),
+        (Kind::Pptx, Target::Pptx),
+        (Kind::Pptx, Target::Pdf),
+        (Kind::Pptx, Target::Png),
+        (Kind::Csv, Target::Csv),
+        (Kind::Pdf, Target::Docx),
     ] {
         s += &line("translit-cyrl", k, t, &cyrl);
     }
     s += &line("translit-latn-2026", Kind::Docx, Target::Docx, &latn26);
     s += &line("translit-auto", Kind::Xlsx, Target::Pdf, &auto);
-    for sheet in [SheetSel::Active, SheetSel::All, SheetSel::Name("Q1 2026".into()), SheetSel::Name("-x".into())] {
-        s += &line(&format!("sheet={sheet:?}"), Kind::Xlsx, Target::Csv, &Options { sheet, ..Options::default() });
+    for sheet in [
+        SheetSel::Active,
+        SheetSel::All,
+        SheetSel::Name("Q1 2026".into()),
+        SheetSel::Name("-x".into()),
+    ] {
+        s += &line(
+            &format!("sheet={sheet:?}"),
+            Kind::Xlsx,
+            Target::Csv,
+            &Options {
+                sheet,
+                ..Options::default()
+            },
+        );
     }
-    s += &line("sheet-on-pdf", Kind::Xlsx, Target::Pdf, &Options { sheet: SheetSel::All, ..Options::default() });
-    let pages = Options { pages: Some(PageSpec::parse("1,3-5").unwrap()), dpi: 300, ..Options::default() };
+    s += &line(
+        "sheet-on-pdf",
+        Kind::Xlsx,
+        Target::Pdf,
+        &Options {
+            sheet: SheetSel::All,
+            ..Options::default()
+        },
+    );
+    let pages = Options {
+        pages: Some(PageSpec::parse("1,3-5").unwrap()),
+        dpi: 300,
+        ..Options::default()
+    };
     s += &line("pages+dpi", Kind::Docx, Target::Png, &pages);
     s += &line("pages+dpi", Kind::Pptx, Target::Png, &pages);
     s += &line("pages+dpi", Kind::Pdf, Target::Png, &pages);
     s += &line("pages-on-pdf-out", Kind::Docx, Target::Pdf, &pages);
-    s += &line("pdf-text-page", Kind::Pdf, Target::Txt, &Options { pages: Some(PageSpec::parse("2").unwrap()), ..Options::default() });
+    s += &line(
+        "pdf-text-page",
+        Kind::Pdf,
+        Target::Txt,
+        &Options {
+            pages: Some(PageSpec::parse("2").unwrap()),
+            ..Options::default()
+        },
+    );
     s += &line("pdf-text-pages", Kind::Pdf, Target::Txt, &pages);
-    s += &line("pdf-sidecar", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..Options::default() });
-    s += &line("pdf-sidecar+translit", Kind::Pdf, Target::Docx, &Options { pdf_engine: PdfEngine::Sidecar, ..cyrl.clone() });
+    s += &line(
+        "pdf-sidecar",
+        Kind::Pdf,
+        Target::Docx,
+        &Options {
+            pdf_engine: PdfEngine::Sidecar,
+            ..Options::default()
+        },
+    );
+    s += &line(
+        "pdf-sidecar+translit",
+        Kind::Pdf,
+        Target::Docx,
+        &Options {
+            pdf_engine: PdfEngine::Sidecar,
+            ..cyrl.clone()
+        },
+    );
     // 4. dynamic expansions, with fixture `info` outputs (the shapes were checked against the real CLIs)
     let caps = Caps::default();
     let ex = |e: Result<Expanded, PlanError>| match e {
@@ -84,49 +164,165 @@ fn table() -> String {
         Err(e) => format!("{e:?}"),
     };
     let info = json!({"pages": 5});
-    s += &format!("expand pages all: {}
-", ex(expand_pages("mid/doc.pdf", &None, 150, &info, &caps)));
-    s += &format!("expand pages 1,3-4 @300: {}
-", ex(expand_pages("in/input.pdf", &Some(PageSpec::parse("1,3-4").unwrap()), 300, &info, &caps)));
-    s += &format!("expand pages out of range: {}
-", ex(expand_pages("in/input.pdf", &Some(PageSpec::parse("6").unwrap()), 150, &info, &caps)));
-    s += &format!("expand pages over the input cap: {}
-", ex(expand_pages("in/input.pdf", &None, 150, &json!({"pages": 501}), &caps)));
-    s += &format!("expand pages over the png cap: {}
-", ex(expand_pages("in/input.pdf", &None, 150, &json!({"pages": 250}), &caps)));
+    s += &format!(
+        "expand pages all: {}
+",
+        ex(expand_pages("mid/doc.pdf", &None, 150, &info, &caps))
+    );
+    s += &format!(
+        "expand pages 1,3-4 @300: {}
+",
+        ex(expand_pages(
+            "in/input.pdf",
+            &Some(PageSpec::parse("1,3-4").unwrap()),
+            300,
+            &info,
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand pages out of range: {}
+",
+        ex(expand_pages(
+            "in/input.pdf",
+            &Some(PageSpec::parse("6").unwrap()),
+            150,
+            &info,
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand pages over the input cap: {}
+",
+        ex(expand_pages(
+            "in/input.pdf",
+            &None,
+            150,
+            &json!({"pages": 501}),
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand pages over the png cap: {}
+",
+        ex(expand_pages(
+            "in/input.pdf",
+            &None,
+            150,
+            &json!({"pages": 250}),
+            &caps
+        ))
+    );
     let deck = json!({"slides": [{"id": 1}, {"id": 2}, {"id": 3}]});
-    s += &format!("expand slides all: {}
-", ex(expand_slides("in/input.pptx", &None, 150, &deck, &caps)));
-    s += &format!("expand slides 2,3 @300: {}
-", ex(expand_slides("in/input.pptx", &Some(PageSpec::parse("2-3").unwrap()), 300, &deck, &caps)));
-    s += &format!("expand slides out of range: {}
-", ex(expand_slides("in/input.pptx", &Some(PageSpec::parse("4").unwrap()), 150, &deck, &caps)));
+    s += &format!(
+        "expand slides all: {}
+",
+        ex(expand_slides("in/input.pptx", &None, 150, &deck, &caps))
+    );
+    s += &format!(
+        "expand slides 2,3 @300: {}
+",
+        ex(expand_slides(
+            "in/input.pptx",
+            &Some(PageSpec::parse("2-3").unwrap()),
+            300,
+            &deck,
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand slides out of range: {}
+",
+        ex(expand_slides(
+            "in/input.pptx",
+            &Some(PageSpec::parse("4").unwrap()),
+            150,
+            &deck,
+            &caps
+        ))
+    );
     let sheets = json!({"sheets": [
         {"name": "Sheet 1", "visibility": "Visible"}, {"name": "sheet_1"}, {"name": "Ёлка", "visibility": "Hidden"},
         {"name": "A/B"}, {"name": "NUL"}, {"name": "Secret", "visibility": "VeryHidden"}, {"name": ""}]});
-    s += &format!("expand csv: {}
-", ex(expand_csv("in/input.xlsx", None, &sheets, &caps)));
-    s += &format!("expand csv only Sheet 1: {}
-", ex(expand_csv("in/input.xlsx", Some("Sheet 1"), &sheets, &caps)));
-    s += &format!("expand csv only wrong: {}
-", ex(expand_csv("in/input.xlsx", Some("Nope"), &sheets, &caps)));
-    s += &format!("expand csv too many sheets: {}
-", ex(expand_csv("in/input.xlsx", None, &sheets, &Caps { max_sheets: 3, ..caps })));
-    s += &format!("expand split every 2 of 5: {}
-", ex(expand_split("in/input.pdf", &SplitBy::Every(2), &info, &caps)));
-    s += &format!("expand split before 3,5: {}
-", ex(expand_split("in/input.pdf", &SplitBy::Before(vec![3, 5]), &info, &caps)));
-    s += &format!("expand split before 9: {}
-", ex(expand_split("in/input.pdf", &SplitBy::Before(vec![9]), &info, &caps)));
+    s += &format!(
+        "expand csv: {}
+",
+        ex(expand_csv("in/input.xlsx", None, &sheets, &caps))
+    );
+    s += &format!(
+        "expand csv only Sheet 1: {}
+",
+        ex(expand_csv("in/input.xlsx", Some("Sheet 1"), &sheets, &caps))
+    );
+    s += &format!(
+        "expand csv only wrong: {}
+",
+        ex(expand_csv("in/input.xlsx", Some("Nope"), &sheets, &caps))
+    );
+    s += &format!(
+        "expand csv too many sheets: {}
+",
+        ex(expand_csv(
+            "in/input.xlsx",
+            None,
+            &sheets,
+            &Caps {
+                max_sheets: 3,
+                ..caps
+            }
+        ))
+    );
+    s += &format!(
+        "expand split every 2 of 5: {}
+",
+        ex(expand_split(
+            "in/input.pdf",
+            &SplitBy::Every(2),
+            &info,
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand split before 3,5: {}
+",
+        ex(expand_split(
+            "in/input.pdf",
+            &SplitBy::Before(vec![3, 5]),
+            &info,
+            &caps
+        ))
+    );
+    s += &format!(
+        "expand split before 9: {}
+",
+        ex(expand_split(
+            "in/input.pdf",
+            &SplitBy::Before(vec![9]),
+            &info,
+            &caps
+        ))
+    );
     // 5. the PDF subcommands
-    s += &format!("pdf combine 3: {}
-", show(&pdf_combine(3)));
-    s += &format!("pdf extract: {}
-", show(&pdf_extract(&PageSpec::parse("5-8,1").unwrap())));
-    s += &format!("pdf split every: {}
-", show(&pdf_split(&SplitBy::Every(2))));
-    s += &format!("pdf split before: {}
-", show(&pdf_split(&SplitBy::Before(vec![3, 7]))));
+    s += &format!(
+        "pdf combine 3: {}
+",
+        show(&pdf_combine(3))
+    );
+    s += &format!(
+        "pdf extract: {}
+",
+        show(&pdf_extract(&PageSpec::parse("5-8,1").unwrap()))
+    );
+    s += &format!(
+        "pdf split every: {}
+",
+        show(&pdf_split(&SplitBy::Every(2)))
+    );
+    s += &format!(
+        "pdf split before: {}
+",
+        show(&pdf_split(&SplitBy::Before(vec![3, 7])))
+    );
     s
 }
 
@@ -137,8 +333,13 @@ fn planner_table_matches_golden() {
     if std::env::var_os("UPDATE_GOLDEN").is_some() {
         std::fs::write(path, &got).unwrap();
     }
-    let want = std::fs::read_to_string(path).expect("golden file missing; run with UPDATE_GOLDEN=1");
-    assert_eq!(got.replace("\r\n", "\n"), want.replace("\r\n", "\n"), "planner output changed; review and regenerate");
+    let want =
+        std::fs::read_to_string(path).expect("golden file missing; run with UPDATE_GOLDEN=1");
+    assert_eq!(
+        got.replace("\r\n", "\n"),
+        want.replace("\r\n", "\n"),
+        "planner output changed; review and regenerate"
+    );
 }
 
 #[test]

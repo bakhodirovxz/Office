@@ -11,7 +11,9 @@ use std::path::PathBuf;
 
 fn tool() -> Option<PathBuf> {
     let target = std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into());
-    let p = PathBuf::from(target).join("pdf/release").join(format!("pdf-cli{}", std::env::consts::EXE_SUFFIX));
+    let p = PathBuf::from(target)
+        .join("pdf/release")
+        .join(format!("pdf-cli{}", std::env::consts::EXE_SUFFIX));
     if p.is_file() {
         Some(p)
     } else {
@@ -40,7 +42,13 @@ fn pdf(content: &str) -> Vec<u8> {
     for o in offsets {
         out.extend_from_slice(format!("{o:010} 00000 n \n").as_bytes());
     }
-    out.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objs.len() + 1).as_bytes());
+    out.extend_from_slice(
+        format!(
+            "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n",
+            objs.len() + 1
+        )
+        .as_bytes(),
+    );
     out
 }
 
@@ -66,7 +74,10 @@ impl Run {
     fn convert(&self, name: &str, bytes: &[u8], to: Target) -> FileReport {
         let p = self.dir.join(name);
         std::fs::write(&p, bytes).unwrap();
-        let dest = Dest { out_dir: self.dir.join("dest"), out_file: None };
+        let dest = Dest {
+            out_dir: self.dir.join("dest"),
+            out_file: None,
+        };
         job::convert_file(&self.cfg, &p, to, &Options::default(), &dest)
     }
 }
@@ -89,12 +100,30 @@ fn a_cut_off_pdf_warns_and_a_whole_one_does_not() {
     for to in [Target::Txt, Target::Docx] {
         let ok = r.convert("whole.pdf", &whole, to);
         assert_eq!(ok.code, 0, "{}: {}", to.ext(), ok.message);
-        assert!(!codes(&ok).contains(&"pdf_damaged"), "a whole pdf to {}: {:?}", to.ext(), codes(&ok));
+        assert!(
+            !codes(&ok).contains(&"pdf_damaged"),
+            "a whole pdf to {}: {:?}",
+            to.ext(),
+            codes(&ok)
+        );
         // cut off before the cross-reference table, as an interrupted download or a half-copied file is
         let cut = &whole[..whole.windows(4).position(|w| w == b"xref").unwrap()];
         let bad = r.convert("cut.pdf", cut, to);
-        assert!(codes(&bad).contains(&"pdf_damaged"), "a cut-off pdf to {}: code {} {:?} {}", to.ext(), bad.code, codes(&bad), bad.message);
-        assert!(bad.warnings.iter().any(|w| w.code == "upstream" && w.text.contains("cross reference")), "{:?}", bad.warnings);
+        assert!(
+            codes(&bad).contains(&"pdf_damaged"),
+            "a cut-off pdf to {}: code {} {:?} {}",
+            to.ext(),
+            bad.code,
+            codes(&bad),
+            bad.message
+        );
+        assert!(
+            bad.warnings
+                .iter()
+                .any(|w| w.code == "upstream" && w.text.contains("cross reference")),
+            "{:?}",
+            bad.warnings
+        );
     }
 }
 
@@ -106,8 +135,18 @@ fn a_pdf_without_a_text_layer_warns_empty_text_to_docx_as_it_does_to_txt() {
     for to in [Target::Txt, Target::Docx] {
         let rep = r.convert("scan.pdf", &scan, to);
         assert_eq!(rep.code, 0, "{}: {}", to.ext(), rep.message);
-        assert!(codes(&rep).contains(&"empty_text"), "a scan to {}: {:?}", to.ext(), codes(&rep));
+        assert!(
+            codes(&rep).contains(&"empty_text"),
+            "a scan to {}: {:?}",
+            to.ext(),
+            codes(&rep)
+        );
         let withtext = r.convert("text.pdf", &pdf(WITH_TEXT), to);
-        assert!(!codes(&withtext).contains(&"empty_text"), "a pdf with text to {}: {:?}", to.ext(), codes(&withtext));
+        assert!(
+            !codes(&withtext).contains(&"empty_text"),
+            "a pdf with text to {}: {:?}",
+            to.ext(),
+            codes(&withtext)
+        );
     }
 }

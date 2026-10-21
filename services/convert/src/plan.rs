@@ -42,18 +42,37 @@ pub enum Target {
 
 impl Target {
     pub const ALL: [Target; 11] = [
-        Target::Docx, Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt, Target::Pdf, Target::Png,
-        Target::Xlsx, Target::Csv, Target::Pptx,
+        Target::Docx,
+        Target::Odt,
+        Target::Rtf,
+        Target::Html,
+        Target::Md,
+        Target::Txt,
+        Target::Pdf,
+        Target::Png,
+        Target::Xlsx,
+        Target::Csv,
+        Target::Pptx,
     ];
     pub fn ext(self) -> &'static str {
         match self {
-            Target::Docx => "docx", Target::Odt => "odt", Target::Rtf => "rtf", Target::Html => "html",
-            Target::Md => "md", Target::Txt => "txt", Target::Pdf => "pdf", Target::Png => "png",
-            Target::Xlsx => "xlsx", Target::Csv => "csv", Target::Pptx => "pptx",
+            Target::Docx => "docx",
+            Target::Odt => "odt",
+            Target::Rtf => "rtf",
+            Target::Html => "html",
+            Target::Md => "md",
+            Target::Txt => "txt",
+            Target::Pdf => "pdf",
+            Target::Png => "png",
+            Target::Xlsx => "xlsx",
+            Target::Csv => "csv",
+            Target::Pptx => "pptx",
         }
     }
     pub fn parse(s: &str) -> Option<Target> {
-        Target::ALL.into_iter().find(|t| t.ext() == s.to_ascii_lowercase())
+        Target::ALL
+            .into_iter()
+            .find(|t| t.ext() == s.to_ascii_lowercase())
     }
 }
 
@@ -103,13 +122,27 @@ impl PageSpec {
             let n = |x: &str| x.parse::<u32>().ok().filter(|n| *n >= 1);
             match (n(a), n(b)) {
                 (Some(a), Some(b)) if a <= b => v.push((a, b)),
-                _ => return Err(format!("bad page list '{s}': use numbers and ranges like 1,3-5 (pages start at 1)")),
+                _ => {
+                    return Err(format!(
+                        "bad page list '{s}': use numbers and ranges like 1,3-5 (pages start at 1)"
+                    ));
+                }
             }
         }
         Ok(PageSpec(v))
     }
     pub fn canonical(&self) -> String {
-        self.0.iter().map(|&(a, b)| if a == b { a.to_string() } else { format!("{a}-{b}") }).collect::<Vec<_>>().join(",")
+        self.0
+            .iter()
+            .map(|&(a, b)| {
+                if a == b {
+                    a.to_string()
+                } else {
+                    format!("{a}-{b}")
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(",")
     }
     /// The pages in order; `Err` when one lies beyond `total`.
     pub fn pages(&self, total: u32) -> Result<Vec<u32>, String> {
@@ -135,7 +168,13 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options { translit: None, sheet: SheetSel::Active, pages: None, dpi: 150, pdf_engine: PdfEngine::Native }
+        Options {
+            translit: None,
+            sheet: SheetSel::Active,
+            pages: None,
+            dpi: 150,
+            pdf_engine: PdfEngine::Native,
+        }
     }
 }
 
@@ -144,7 +183,11 @@ impl Default for Options {
 pub enum Outputs {
     Files(Vec<String>),
     /// at least one file with this extension in the directory; exactly `expect` of them when the plan knows the count
-    Dir { dir: String, ext: String, expect: Option<usize> },
+    Dir {
+        dir: String,
+        ext: String,
+        expect: Option<usize>,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -166,9 +209,17 @@ pub enum Expand {
     /// `sheets-cli info <input> --json`, then one `convert` per sheet, or only the sheet `only` (checked against the names)
     CsvSheets { input: String, only: Option<String> },
     /// `pdf-cli info <pdf>`, then one `pdf-cli run --script` that renders the pages
-    PdfPages { pdf: String, spec: Option<PageSpec>, dpi: u32 },
+    PdfPages {
+        pdf: String,
+        spec: Option<PageSpec>,
+        dpi: u32,
+    },
     /// `slides-cli info <deck>`, then `render --all`, or one `render --slide N` per chosen slide
-    SlidePages { deck: String, spec: Option<PageSpec>, dpi: u32 },
+    SlidePages {
+        deck: String,
+        spec: Option<PageSpec>,
+        dpi: u32,
+    },
     /// `pdf-cli info <pdf>`, then `split` with the exact number of parts known
     PdfSplit { pdf: String, by: SplitBy },
     /// `pdf-cli info <pdf>` and nothing else: what the tool could not read (a cut-off file, a damaged cross-reference table) becomes a
@@ -195,7 +246,11 @@ pub struct Caps {
 
 impl Default for Caps {
     fn default() -> Self {
-        Caps { max_pages_in: 500, max_png_out: 200, max_sheets: 50 }
+        Caps {
+            max_pages_in: 500,
+            max_png_out: 200,
+            max_sheets: 50,
+        }
     }
 }
 
@@ -258,7 +313,10 @@ fn translit_cmd(t: &Translit, scope: &str) -> String {
         TranslitDir::Latn => "tools.translitLatn",
         TranslitDir::Auto => "tools.translitAuto",
     };
-    cmd_arg(id, json!({"scope": scope, "latinAlphabet": t.alphabet, "apostrophe": t.apostrophe}))
+    cmd_arg(
+        id,
+        json!({"scope": scope, "latinAlphabet": t.alphabet, "apostrophe": t.apostrophe}),
+    )
 }
 
 /// Every (kind, target) pair the planner knows, with its first step's tool. This is the table `formats` prints.
@@ -290,7 +348,17 @@ fn route(k: Kind, t: Target) -> Option<()> {
 pub fn row_options(k: Kind, t: Target) -> Vec<&'static str> {
     let mut o = vec![];
     let translit = match k.family() {
-        Family::Docs => matches!(t, Target::Docx | Target::Odt | Target::Rtf | Target::Html | Target::Md | Target::Txt | Target::Pdf | Target::Png),
+        Family::Docs => matches!(
+            t,
+            Target::Docx
+                | Target::Odt
+                | Target::Rtf
+                | Target::Html
+                | Target::Md
+                | Target::Txt
+                | Target::Pdf
+                | Target::Png
+        ),
         Family::Sheets => matches!(t, Target::Xlsx | Target::Pdf),
         Family::Slides => true,
         Family::Pdf => t == Target::Docx,
@@ -322,18 +390,29 @@ pub fn plan(kind: Kind, target: Target, o: &Options) -> Result<Vec<Step>, PlanEr
         )));
     }
     if route(kind, target).is_none() {
-        return Err(PlanError::Unsupported(format!("no converter writes .{} from .{} files", target.ext(), kind.ext())));
+        return Err(PlanError::Unsupported(format!(
+            "no converter writes .{} from .{} files",
+            target.ext(),
+            kind.ext()
+        )));
     }
     let inp = input_path(kind);
     let want_translit = o.translit.is_some();
     if want_translit && !row_options(kind, target).contains(&"translit") {
-        return Err(PlanError::Unsupported(format!("--translit is not available for .{} to .{}", kind.ext(), target.ext())));
+        return Err(PlanError::Unsupported(format!(
+            "--translit is not available for .{} to .{}",
+            kind.ext(),
+            target.ext()
+        )));
     }
     if o.sheet != SheetSel::Active && target != Target::Csv {
         return Err(PlanError::Usage("--sheet only applies to --to csv".into()));
     }
-    if o.pages.is_some() && !(target == Target::Png || (kind == Kind::Pdf && target == Target::Txt)) {
-        return Err(PlanError::Usage("--pages only applies to png output and pdf to txt".into()));
+    if o.pages.is_some() && !(target == Target::Png || (kind == Kind::Pdf && target == Target::Txt))
+    {
+        return Err(PlanError::Usage(
+            "--pages only applies to png output and pdf to txt".into(),
+        ));
     }
     let tr = o.translit.as_ref();
     Ok(match kind.family() {
@@ -345,14 +424,35 @@ pub fn plan(kind: Kind, target: Target, o: &Options) -> Result<Vec<Step>, PlanEr
 }
 
 fn pages_png(pdf: &str, o: &Options) -> Step {
-    Step::Expand(Expand::PdfPages { pdf: pdf.into(), spec: o.pages.clone(), dpi: o.dpi })
+    Step::Expand(Expand::PdfPages {
+        pdf: pdf.into(),
+        spec: o.pages.clone(),
+        dpi: o.dpi,
+    })
 }
 
 fn docs(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step> {
-    let dest = if t == Target::Png { "mid/doc.pdf".to_string() } else { format!("out/output.{}", t.ext()) };
+    let dest = if t == Target::Png {
+        "mid/doc.pdf".to_string()
+    } else {
+        format!("out/output.{}", t.ext())
+    };
     let first = match tr {
         None => tool(ToolId::Docs, &["convert", inp, &dest], &dest),
-        Some(tr) => tool(ToolId::Docs, &["run", "--file", inp, "--cmd", &translit_cmd(tr, "document"), "--print", "--save", &dest], &dest),
+        Some(tr) => tool(
+            ToolId::Docs,
+            &[
+                "run",
+                "--file",
+                inp,
+                "--cmd",
+                &translit_cmd(tr, "document"),
+                "--print",
+                "--save",
+                &dest,
+            ],
+            &dest,
+        ),
     };
     let mut v = vec![Step::Tool(first)];
     if t == Target::Png {
@@ -361,18 +461,38 @@ fn docs(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step> {
     v
 }
 
-fn sheets(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<Step>, PlanError> {
+fn sheets(
+    inp: &str,
+    t: Target,
+    o: &Options,
+    tr: Option<&Translit>,
+) -> Result<Vec<Step>, PlanError> {
     Ok(match t {
         Target::Xlsx => match tr {
-            None => vec![Step::Tool(tool(ToolId::Sheets, &["convert", inp, "out/output.xlsx"], "out/output.xlsx"))],
+            None => vec![Step::Tool(tool(
+                ToolId::Sheets,
+                &["convert", inp, "out/output.xlsx"],
+                "out/output.xlsx",
+            ))],
             Some(tr) => vec![Step::Tool(tool(
                 ToolId::Sheets,
-                &["run", "--in", inp, "--cmd", &translit_cmd(tr, "workbook"), "--out", "out/output.xlsx"],
+                &[
+                    "run",
+                    "--in",
+                    inp,
+                    "--cmd",
+                    &translit_cmd(tr, "workbook"),
+                    "--out",
+                    "out/output.xlsx",
+                ],
                 "out/output.xlsx",
             ))],
         },
         Target::Pdf => {
-            let export = cmd_arg("file.exportPdf", json!({"path": "out/output.pdf", "sheets": "all"}));
+            let export = cmd_arg(
+                "file.exportPdf",
+                json!({"path": "out/output.pdf", "sheets": "all"}),
+            );
             let mut argv = vec!["run", "--in", inp];
             let tc;
             if let Some(tr) = tr {
@@ -383,9 +503,19 @@ fn sheets(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Ve
             vec![Step::Tool(tool(ToolId::Sheets, &argv, "out/output.pdf"))]
         }
         Target::Csv => match &o.sheet {
-            SheetSel::Active => vec![Step::Tool(tool(ToolId::Sheets, &["convert", inp, "out/output.csv"], "out/output.csv"))],
-            SheetSel::Name(n) => vec![Step::Expand(Expand::CsvSheets { input: inp.into(), only: Some(n.clone()) })],
-            SheetSel::All => vec![Step::Expand(Expand::CsvSheets { input: inp.into(), only: None })],
+            SheetSel::Active => vec![Step::Tool(tool(
+                ToolId::Sheets,
+                &["convert", inp, "out/output.csv"],
+                "out/output.csv",
+            ))],
+            SheetSel::Name(n) => vec![Step::Expand(Expand::CsvSheets {
+                input: inp.into(),
+                only: Some(n.clone()),
+            })],
+            SheetSel::All => vec![Step::Expand(Expand::CsvSheets {
+                input: inp.into(),
+                only: None,
+            })],
         },
         _ => unreachable!("route() admitted only xlsx, csv, pdf"),
     })
@@ -397,18 +527,52 @@ fn slides(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Vec<Step>
         None => (inp.to_string(), vec![]),
         Some(tr) if t == Target::Pptx || t == Target::Pdf => {
             let dest = format!("out/output.{}", t.ext());
-            return vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--print", "--save", &dest], &dest))];
+            return vec![Step::Tool(tool(
+                ToolId::Slides,
+                &[
+                    "run",
+                    "--in",
+                    inp,
+                    "--cmd",
+                    &translit_cmd(tr, "deck"),
+                    "--print",
+                    "--save",
+                    &dest,
+                ],
+                &dest,
+            ))];
         }
         Some(tr) => (
             "mid/deck.pptx".to_string(),
-            vec![Step::Tool(tool(ToolId::Slides, &["run", "--in", inp, "--cmd", &translit_cmd(tr, "deck"), "--print", "--save", "mid/deck.pptx"], "mid/deck.pptx"))],
+            vec![Step::Tool(tool(
+                ToolId::Slides,
+                &[
+                    "run",
+                    "--in",
+                    inp,
+                    "--cmd",
+                    &translit_cmd(tr, "deck"),
+                    "--print",
+                    "--save",
+                    "mid/deck.pptx",
+                ],
+                "mid/deck.pptx",
+            ))],
         ),
     };
     match t {
-        Target::Png => v.push(Step::Expand(Expand::SlidePages { deck: src, spec: o.pages.clone(), dpi: o.dpi })),
+        Target::Png => v.push(Step::Expand(Expand::SlidePages {
+            deck: src,
+            spec: o.pages.clone(),
+            dpi: o.dpi,
+        })),
         _ => {
             let dest = format!("out/output.{}", t.ext());
-            v.push(Step::Tool(tool(ToolId::Slides, &["convert", &src, &dest], &dest)));
+            v.push(Step::Tool(tool(
+                ToolId::Slides,
+                &["convert", &src, &dest],
+                &dest,
+            )));
         }
     }
     v
@@ -422,7 +586,9 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
             let page;
             if let Some(p) = &o.pages {
                 if p.0.len() != 1 || p.0[0].0 != p.0[0].1 {
-                    return Err(PlanError::Usage("pdf to txt takes one page (--pages N), or none for all".into()));
+                    return Err(PlanError::Usage(
+                        "pdf to txt takes one page (--pages N), or none for all".into(),
+                    ));
                 }
                 page = p.0[0].0.to_string();
                 argv.extend(["--page", &page]);
@@ -430,11 +596,18 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
             let mut st = tool(ToolId::Pdf, &argv, "out/output.txt");
             st.stdout_to = Some("out/output.txt".into());
             st.allow_empty = true;
-            vec![Step::Expand(Expand::PdfCheck { pdf: inp.into() }), Step::Tool(st)]
+            vec![
+                Step::Expand(Expand::PdfCheck { pdf: inp.into() }),
+                Step::Tool(st),
+            ]
         }
         Target::Docx => {
             // with --translit the pdf -> docx step writes a middle file and docs-cli converts it (PLAN 4)
-            let first = if tr.is_some() { "mid/pdf.docx" } else { "out/output.docx" };
+            let first = if tr.is_some() {
+                "mid/pdf.docx"
+            } else {
+                "out/output.docx"
+            };
             let mut v = match o.pdf_engine {
                 PdfEngine::Sidecar => vec![Step::Http(HttpStep {
                     sidecar: Sidecar::Pdf2Docx,
@@ -449,15 +622,31 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
                         {"tool": "doc_open", "args": {"path": inp}},
                         {"tool": "doc_export_office", "args": {"doc": 1, "path": first}}
                     ]);
-                    let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/native.json", "--root", "."], first);
+                    let mut st = tool(
+                        ToolId::Pdf,
+                        &["run", "--script", "mid/native.json", "--root", "."],
+                        first,
+                    );
                     st.write_files = vec![("mid/native.json".into(), script.to_string())];
-                    vec![Step::Expand(Expand::PdfCheck { pdf: inp.into() }), Step::Tool(st)]
+                    vec![
+                        Step::Expand(Expand::PdfCheck { pdf: inp.into() }),
+                        Step::Tool(st),
+                    ]
                 }
             };
             if let Some(tr) = tr {
                 v.push(Step::Tool(tool(
                     ToolId::Docs,
-                    &["run", "--file", first, "--cmd", &translit_cmd(tr, "document"), "--print", "--save", "out/output.docx"],
+                    &[
+                        "run",
+                        "--file",
+                        first,
+                        "--cmd",
+                        &translit_cmd(tr, "document"),
+                        "--print",
+                        "--save",
+                        "out/output.docx",
+                    ],
                     "out/output.docx",
                 )));
             }
@@ -473,66 +662,137 @@ fn count(info: &serde_json::Value, key: &str, what: &str) -> Result<u32, PlanErr
         Some(v) => v.as_u64(),
         None => None,
     };
-    n.filter(|&n| n >= 1).map(|n| n as u32).ok_or_else(|| PlanError::Unsupported(format!("the tool's info reported no {what}")))
+    n.filter(|&n| n >= 1)
+        .map(|n| n as u32)
+        .ok_or_else(|| PlanError::Unsupported(format!("the tool's info reported no {what}")))
 }
 
-fn chosen(spec: &Option<PageSpec>, total: u32, caps: &Caps, what: &str) -> Result<Vec<u32>, PlanError> {
+fn chosen(
+    spec: &Option<PageSpec>,
+    total: u32,
+    caps: &Caps,
+    what: &str,
+) -> Result<Vec<u32>, PlanError> {
     if total > caps.max_pages_in {
-        return Err(PlanError::Rejected(format!("the file has {total} {what}, over the limit of {}", caps.max_pages_in)));
+        return Err(PlanError::Rejected(format!(
+            "the file has {total} {what}, over the limit of {}",
+            caps.max_pages_in
+        )));
     }
     let pages = match spec {
         Some(s) => s.pages(total).map_err(PlanError::Usage)?,
         None => (1..=total).collect(),
     };
     if pages.len() as u32 > caps.max_png_out {
-        return Err(PlanError::Rejected(format!("{} images were asked for, over the limit of {}", pages.len(), caps.max_png_out)));
+        return Err(PlanError::Rejected(format!(
+            "{} images were asked for, over the limit of {}",
+            pages.len(),
+            caps.max_png_out
+        )));
     }
     Ok(pages)
 }
 
 /// The pages of a PDF as PNGs, in ONE `pdf-cli run --script` (census F4: 108 pages in 12-16 s in one process, against a
 /// reopen of the whole PDF per page).
-pub fn expand_pages(pdf: &str, spec: &Option<PageSpec>, dpi: u32, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+pub fn expand_pages(
+    pdf: &str,
+    spec: &Option<PageSpec>,
+    dpi: u32,
+    info: &serde_json::Value,
+    caps: &Caps,
+) -> Result<Expanded, PlanError> {
     let total = count(info, "pages", "pages")?;
     let pages = chosen(spec, total, caps, "pages")?;
     let mut script = vec![json!({"tool": "doc_open", "args": {"path": pdf}})];
     for p in &pages {
         script.push(json!({"tool": "page_render", "args": {"doc": 1, "page": p, "dpi": dpi}, "out": format!("out/p{p:02}.png")}));
     }
-    let mut st = tool(ToolId::Pdf, &["run", "--script", "mid/pages.json", "--root", "."], "out");
-    st.outputs = Outputs::Dir { dir: "out".into(), ext: "png".into(), expect: Some(pages.len()) };
-    st.write_files = vec![("mid/pages.json".into(), serde_json::Value::Array(script).to_string())];
-    Ok(Expanded { steps: vec![Step::Tool(st)], warnings: vec![] })
+    let mut st = tool(
+        ToolId::Pdf,
+        &["run", "--script", "mid/pages.json", "--root", "."],
+        "out",
+    );
+    st.outputs = Outputs::Dir {
+        dir: "out".into(),
+        ext: "png".into(),
+        expect: Some(pages.len()),
+    };
+    st.write_files = vec![(
+        "mid/pages.json".into(),
+        serde_json::Value::Array(script).to_string(),
+    )];
+    Ok(Expanded {
+        steps: vec![Step::Tool(st)],
+        warnings: vec![],
+    })
 }
 
 /// Slides as PNGs: all of them in one `render --all`, or the chosen ones one `render --slide N` each. The count is known from
 /// `info`, so a render that stops early is exit 8, and `--pages` is honoured.
-pub fn expand_slides(deck: &str, spec: &Option<PageSpec>, dpi: u32, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+pub fn expand_slides(
+    deck: &str,
+    spec: &Option<PageSpec>,
+    dpi: u32,
+    info: &serde_json::Value,
+    caps: &Caps,
+) -> Result<Expanded, PlanError> {
     let total = count(info, "slides", "slides")?;
     let pages = chosen(spec, total, caps, "slides")?;
     // deckcraft takes a scale factor (2 = 1920 px wide); 150 dpi maps to 2
     let scale = format!("{:.2}", dpi as f32 / 75.0);
     let steps = if spec.is_none() {
-        let mut st = tool(ToolId::Slides, &["render", deck, "--all", "out", "--scale", &scale], "out");
-        st.outputs = Outputs::Dir { dir: "out".into(), ext: "png".into(), expect: Some(pages.len()) };
+        let mut st = tool(
+            ToolId::Slides,
+            &["render", deck, "--all", "out", "--scale", &scale],
+            "out",
+        );
+        st.outputs = Outputs::Dir {
+            dir: "out".into(),
+            ext: "png".into(),
+            expect: Some(pages.len()),
+        };
         vec![Step::Tool(st)]
     } else {
         pages
             .iter()
             .map(|p| {
                 let out = format!("out/slide-{p:02}.png");
-                Step::Tool(tool(ToolId::Slides, &["render", deck, "--slide", &(p - 1).to_string(), "--scale", &scale, &out], &out))
+                Step::Tool(tool(
+                    ToolId::Slides,
+                    &[
+                        "render",
+                        deck,
+                        "--slide",
+                        &(p - 1).to_string(),
+                        "--scale",
+                        &scale,
+                        &out,
+                    ],
+                    &out,
+                ))
             })
             .collect()
     };
-    Ok(Expanded { steps, warnings: vec![] })
+    Ok(Expanded {
+        steps,
+        warnings: vec![],
+    })
 }
 
 /// `pdf split` with the number of parts known from the page count.
-pub fn expand_split(input: &str, by: &SplitBy, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+pub fn expand_split(
+    input: &str,
+    by: &SplitBy,
+    info: &serde_json::Value,
+    caps: &Caps,
+) -> Result<Expanded, PlanError> {
     let total = count(info, "pages", "pages")?;
     if total > caps.max_pages_in {
-        return Err(PlanError::Rejected(format!("the PDF has {total} pages, over the limit of {}", caps.max_pages_in)));
+        return Err(PlanError::Rejected(format!(
+            "the PDF has {total} pages, over the limit of {}",
+            caps.max_pages_in
+        )));
     }
     let mut argv = vec!["split".to_string(), input.into()];
     let parts = match by {
@@ -542,9 +802,14 @@ pub fn expand_split(input: &str, by: &SplitBy, info: &serde_json::Value, caps: &
         }
         SplitBy::Before(v) => {
             if let Some(bad) = v.iter().find(|&&b| b < 2 || b > total) {
-                return Err(PlanError::Usage(format!("cannot split before page {bad}: the PDF has {total} pages (split points are 2 to {total})")));
+                return Err(PlanError::Usage(format!(
+                    "cannot split before page {bad}: the PDF has {total} pages (split points are 2 to {total})"
+                )));
             }
-            argv.extend(["--before".into(), v.iter().map(u32::to_string).collect::<Vec<_>>().join(",")]);
+            argv.extend([
+                "--before".into(),
+                v.iter().map(u32::to_string).collect::<Vec<_>>().join(","),
+            ]);
             let mut u = v.clone();
             u.sort_unstable();
             u.dedup();
@@ -553,13 +818,20 @@ pub fn expand_split(input: &str, by: &SplitBy, info: &serde_json::Value, caps: &
     };
     argv.extend(["--out-dir".into(), "out".into()]);
     if parts as u32 > caps.max_png_out {
-        return Err(PlanError::Rejected(format!("the split would write {parts} files, over the limit of {}", caps.max_png_out)));
+        return Err(PlanError::Rejected(format!(
+            "the split would write {parts} files, over the limit of {}",
+            caps.max_png_out
+        )));
     }
     Ok(Expanded {
         steps: vec![Step::Tool(ToolStep {
             tool: ToolId::Pdf,
             argv,
-            outputs: Outputs::Dir { dir: "out".into(), ext: "pdf".into(), expect: Some(parts) },
+            outputs: Outputs::Dir {
+                dir: "out".into(),
+                ext: "pdf".into(),
+                expect: Some(parts),
+            },
             stdout_to: None,
             allow_empty: false,
             write_files: vec![],
@@ -572,27 +844,61 @@ pub fn expand_split(input: &str, by: &SplitBy, info: &serde_json::Value, caps: &
 /// `out/output.csv`, and an unknown name is a usage error that lists the real ones). Internal file names are `sNN-<safe name>`:
 /// the index keeps them unique, and `safe_name` keeps document content from choosing a device name (review m7). Hidden sheets
 /// are exported with a warning; very hidden ones are skipped with a warning.
-pub fn expand_csv(input: &str, only: Option<&str>, info: &serde_json::Value, caps: &Caps) -> Result<Expanded, PlanError> {
+pub fn expand_csv(
+    input: &str,
+    only: Option<&str>,
+    info: &serde_json::Value,
+    caps: &Caps,
+) -> Result<Expanded, PlanError> {
     let sheets: Vec<(&str, &str)> = info
         .get("sheets")
         .and_then(|s| s.as_array())
-        .map(|a| a.iter().filter_map(|s| Some((s.get("name")?.as_str()?, s.get("visibility").and_then(|v| v.as_str()).unwrap_or("Visible")))).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|s| {
+                    Some((
+                        s.get("name")?.as_str()?,
+                        s.get("visibility")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("Visible"),
+                    ))
+                })
+                .collect()
+        })
         .unwrap_or_default();
     if sheets.is_empty() {
-        return Err(PlanError::Unsupported("sheets-cli info listed no sheets".into()));
+        return Err(PlanError::Unsupported(
+            "sheets-cli info listed no sheets".into(),
+        ));
     }
     if sheets.len() as u32 > caps.max_sheets {
-        return Err(PlanError::Rejected(format!("the workbook has {} sheets, over the limit of {}", sheets.len(), caps.max_sheets)));
+        return Err(PlanError::Rejected(format!(
+            "the workbook has {} sheets, over the limit of {}",
+            sheets.len(),
+            caps.max_sheets
+        )));
     }
     let names: Vec<&str> = sheets.iter().map(|s| s.0).collect();
     if let Some(n) = only {
         if !names.contains(&n) {
-            return Err(PlanError::Usage(format!("no sheet named '{n}'; the workbook has: {}", names.join(", "))));
+            return Err(PlanError::Usage(format!(
+                "no sheet named '{n}'; the workbook has: {}",
+                names.join(", ")
+            )));
         }
         if n.starts_with('-') {
-            return Err(PlanError::Unsupported(format!("sheet name '{n}' starts with '-' and cannot be passed to the tool")));
+            return Err(PlanError::Unsupported(format!(
+                "sheet name '{n}' starts with '-' and cannot be passed to the tool"
+            )));
         }
-        return Ok(Expanded { steps: vec![Step::Tool(tool(ToolId::Sheets, &["convert", input, "out/output.csv", "--sheet", n], "out/output.csv"))], warnings: vec![] });
+        return Ok(Expanded {
+            steps: vec![Step::Tool(tool(
+                ToolId::Sheets,
+                &["convert", input, "out/output.csv", "--sheet", n],
+                "out/output.csv",
+            ))],
+            warnings: vec![],
+        });
     }
     let (mut hidden, mut skipped) = (0u32, 0u32);
     let mut v = vec![];
@@ -606,13 +912,25 @@ pub fn expand_csv(input: &str, only: Option<&str>, info: &serde_json::Value, cap
             _ => {}
         }
         if n.starts_with('-') {
-            return Err(PlanError::Unsupported(format!("sheet name '{n}' starts with '-' and cannot be passed to the tool")));
+            return Err(PlanError::Unsupported(format!(
+                "sheet name '{n}' starts with '-' and cannot be passed to the tool"
+            )));
         }
-        let out = format!("out/s{:02}-{}.csv", i + 1, crate::names::safe_name(n, "sheet"));
-        v.push(Step::Tool(tool(ToolId::Sheets, &["convert", input, &out, "--sheet", n], &out)));
+        let out = format!(
+            "out/s{:02}-{}.csv",
+            i + 1,
+            crate::names::safe_name(n, "sheet")
+        );
+        v.push(Step::Tool(tool(
+            ToolId::Sheets,
+            &["convert", input, &out, "--sheet", n],
+            &out,
+        )));
     }
     if v.is_empty() {
-        return Err(PlanError::Unsupported("every sheet of the workbook is hidden".into()));
+        return Err(PlanError::Unsupported(
+            "every sheet of the workbook is hidden".into(),
+        ));
     }
     let mut warnings = vec![];
     if hidden > 0 {
@@ -634,7 +952,18 @@ pub fn pdf_combine(n: usize) -> Vec<Step> {
 }
 
 pub fn pdf_extract(pages: &PageSpec) -> Vec<Step> {
-    vec![Step::Tool(tool(ToolId::Pdf, &["extract", "in/input.pdf", "--pages", &pages.canonical(), "--out", "out/output.pdf"], "out/output.pdf"))]
+    vec![Step::Tool(tool(
+        ToolId::Pdf,
+        &[
+            "extract",
+            "in/input.pdf",
+            "--pages",
+            &pages.canonical(),
+            "--out",
+            "out/output.pdf",
+        ],
+        "out/output.pdf",
+    ))]
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -644,5 +973,8 @@ pub enum SplitBy {
 }
 
 pub fn pdf_split(by: &SplitBy) -> Vec<Step> {
-    vec![Step::Expand(Expand::PdfSplit { pdf: "in/input.pdf".into(), by: by.clone() })]
+    vec![Step::Expand(Expand::PdfSplit {
+        pdf: "in/input.pdf".into(),
+        by: by.clone(),
+    })]
 }
