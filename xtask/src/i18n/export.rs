@@ -400,7 +400,11 @@ pub fn build_page_json(
             .map(|(k, v)| format!("    {}: {}", json_str(k), json_str(v)))
             .collect();
         out.push_str(&body.join(",\n"));
-        out.push_str(if i + 1 < PAGE_LOCALES.len() { "\n  },\n" } else { "\n  }\n" });
+        out.push_str(if i + 1 < PAGE_LOCALES.len() {
+            "\n  },\n"
+        } else {
+            "\n  }\n"
+        });
     }
     out.push_str("}\n");
     out
@@ -1160,7 +1164,13 @@ mod tests {
             .into_iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
-        let text = build_page_json(&cat, &Chains::default(), Mode::Review, &Policy::OWNER_ONLY, &names);
+        let text = build_page_json(
+            &cat,
+            &Chains::default(),
+            Mode::Review,
+            &Policy::OWNER_ONLY,
+            &names,
+        );
         let want = r#"{
   "en": {
     "app.name": "N",
@@ -1182,7 +1192,13 @@ mod tests {
 }
 "#;
         assert_eq!(text, want); // uz-Cyrl falls back to ru, uz-Latn never to en
-        let release = build_page_json(&cat, &Chains::default(), Mode::Release, &Policy::OWNER_ONLY, &names);
+        let release = build_page_json(
+            &cat,
+            &Chains::default(),
+            Mode::Release,
+            &Policy::OWNER_ONLY,
+            &names,
+        );
         assert!(!release.contains("Alfa"), "release exports no draft");
     }
 
@@ -1191,9 +1207,18 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
         let (json, icon) = page_assets(root, Mode::Review).unwrap();
         let ui = root.join("services/convert-api/ui");
-        let have = fs::read_to_string(ui.join("i18n.json")).unwrap().replace("\r\n", "\n");
-        assert!(have == json, "services/convert-api/ui/i18n.json is stale: run `cargo xt i18n export converter --format json`");
-        assert_eq!(fs::read(ui.join("icon.png")).unwrap(), icon, "icon.png is stale");
+        let have = fs::read_to_string(ui.join("i18n.json"))
+            .unwrap()
+            .replace("\r\n", "\n");
+        assert!(
+            have == json,
+            "services/convert-api/ui/i18n.json is stale: run `cargo xt i18n export converter --format json`"
+        );
+        assert_eq!(
+            fs::read(ui.join("icon.png")).unwrap(),
+            icon,
+            "icon.png is stale"
+        );
         assert!(icon.starts_with(b"\x89PNG"));
     }
 }
