@@ -15,6 +15,8 @@ wheels' own metadata (the pinned files in `sidecars/pdf2docx/requirements.lock`)
 | `merge_lines.py` | MIT OR Apache-2.0 (owner decision O4) | image, byte-identical copy (sha256 `9563dd3a...`, checked at build and shown in `/healthz`) | allowed |
 | `server.py`, `worker.py`, `relay.py`, tests | MIT OR Apache-2.0 (ours) | image | allowed; the image as a whole is AGPL-3.0 because the worker imports PyMuPDF |
 | python:3.12-slim-bookworm (digest-pinned) | PSF-2.0 + Debian package licences | image base | allowed; unmodified |
+| LibreOffice 7.4.7 (Debian `libreoffice-writer/calc/impress`) | MPL-2.0 (+ LGPL-3.0+ parts) | `sidecars/soffice` image, **test-only** reference renderer (WP6 reduced, O2 = no .ppt) | allowed as a separate process over HTTP; nothing linked or vendored; we compare outputs and never copy code; see `sidecars/soffice/LICENSES.md` |
+| Carlito, Caladea, Liberation 2, Noto Core fonts (Debian) | OFL-1.1 (Caladea also Apache-2.0) | soffice image | allowed; no Microsoft fonts |
 
 ## Findings the architect should look at
 
