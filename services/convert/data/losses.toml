@@ -6,7 +6,11 @@
 #   requires  scanner features (src/scan.rs), any of them; empty = the row always applies. When the input is not a zip
 #             package the scanner cannot look inside, so a row with `requires` applies (the safe side).
 #   evidence  where the loss was measured; WP9 rows are added when the fidelity run lands
+#   cross     true: the row does not apply when the target is the input's own format (an .odt written as .odt keeps its comments)
 #   until     optional: the condition after which the row is deleted
+#
+# WP9 evidence below is the fidelity run of 2026-10-21 (`python -I scripts/fidelity/run.py --directions all`), file
+# `directions/<id>.json` of its output directory, case = fixture name; "a 1->0" is "the source has 1, the output has 0".
 
 [[row]]
 code = "doc_import_loss"
@@ -45,3 +49,73 @@ code = "macros_dropped"
 from = ["docx", "xlsx", "pptx"]
 requires = ["macros"]
 evidence = "PLAN 2.6 (macros are dropped when docm/xlsm is saved as docx/xlsx); not measured, WP9 to confirm"
+
+[[row]]
+code = "comments_dropped"
+from = ["docx"]
+to = ["odt", "rtf", "html", "md", "txt"]
+requires = ["comments"]
+evidence = "WP9 docs.docx2odt, docx2rtf, docx2html, docx2md, docx2txt / hrm_order.docx: comments 1->0 (the comment text is nowhere in the output)"
+
+[[row]]
+code = "comments_dropped"
+from = ["odt", "rtf"]
+requires = ["comments"]
+cross = true
+evidence = "WP9 docs.odt2docx / order.odt: comments 1->0; docs.rtf2docx / order.rtf: comments 1->0 (the reader drops them, so every target loses them)"
+
+[[row]]
+code = "footnotes_dropped"
+from = ["docx"]
+to = ["odt", "rtf", "html", "md", "txt"]
+requires = ["footnotes"]
+evidence = "WP9 docs.docx2odt, docx2rtf, docx2html, docx2md, docx2txt / hrm_order.docx: footnotes 1->0 (the note text is nowhere in the output)"
+
+[[row]]
+code = "footnotes_dropped"
+from = ["odt", "rtf"]
+requires = ["footnotes"]
+cross = true
+evidence = "WP9 docs.odt2docx / order.odt: footnotes 1->0; docs.rtf2docx / order.rtf: footnotes 1->0; docs.odt2pdf and docs.rtf2pdf lose the same 113 Cyrillic letters (cyrillic 1311->1198)"
+
+[[row]]
+code = "headers_footers_dropped"
+from = ["docx"]
+to = ["odt", "rtf", "html"]
+requires = ["headers_footers"]
+evidence = "WP9 docs.docx2odt, docx2rtf, docx2html / hrm_order.docx and hrm_letter.docx: headers_footers 2->0 (the header and footer text is nowhere in the output)"
+
+[[row]]
+code = "headers_footers_dropped"
+from = ["odt"]
+to = ["docx", "rtf", "html", "pdf", "png"]
+requires = ["headers_footers"]
+evidence = "WP9 docs.odt2docx / order.odt: headers_footers 4->0; docs.odt2pdf / order.odt: the header words are missing from the PDF (52 words, text 1.0->0.88). md and txt are covered by plain_text_layout"
+
+[[row]]
+code = "revisions_dropped"
+from = ["docx"]
+to = ["html", "md", "txt"]
+requires = ["revisions"]
+evidence = "WP9 docs.docx2html, docx2md, docx2txt / hrm_order.docx: revisions 1->0 (odt and rtf keep them)"
+
+[[row]]
+code = "merged_cells_flattened"
+from = ["docx", "odt", "rtf", "html"]
+to = ["md", "txt"]
+requires = ["merged"]
+evidence = "WP9 docs.docx2md and docx2txt / hrm_order.docx and hrm_letter.docx: merged cells present in the source and none in the output (Markdown tables and text cannot merge cells); with the harness counting fixed, docx to odt, rtf and html keep them (colspan 2, rowspan 2)"
+
+[[row]]
+code = "tables_to_text"
+from = ["docx", "odt", "rtf", "html"]
+to = ["txt"]
+requires = ["tables"]
+evidence = "WP9 docs.docx2txt / hrm_order.docx: tables 2->0, hrm_letter.docx: tables 1->0 (a text file has no tables)"
+
+[[row]]
+code = "html_images_not_embedded"
+from = ["html"]
+to = ["docx", "odt", "rtf", "pdf", "png"]
+requires = ["linked_images"]
+evidence = "WP9 docs.html2docx / order.html: images 2->0 and pages 5->2 (both are img tags with src=order_files/imageNNN.png, files the one-file job never sees)"

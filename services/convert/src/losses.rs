@@ -17,6 +17,9 @@ pub struct Row {
     pub to: Vec<String>,
     #[serde(default)]
     pub requires: Vec<String>,
+    /// does not apply when the target is the input's own format
+    #[serde(default)]
+    pub cross: bool,
     pub evidence: String,
     #[serde(default)]
     pub until: Option<String>,
@@ -34,6 +37,9 @@ pub fn rows() -> &'static [Row] {
 
 fn hit(r: &Row, k: Kind, t: Target, scan: &Scan) -> Option<u32> {
     if !(r.from.is_empty() || r.from.iter().any(|f| f == k.ext())) || !(r.to.is_empty() || r.to.iter().any(|x| x == t.ext())) {
+        return None;
+    }
+    if r.cross && k.ext() == t.ext() {
         return None;
     }
     if r.requires.is_empty() {
@@ -92,12 +98,62 @@ mod tests {
         assert!(codes(&none, Kind::Docx, Target::Md).is_empty());
         assert_eq!(codes(&with(&[("images", 2), ("headers_footers", 1)]), Kind::Docx, Target::Txt), ["plain_text_layout"]);
         assert_eq!(warnings(&with(&[("images", 2), ("headers_footers", 1)]), Kind::Docx, Target::Txt)[0].count, 3);
-        assert_eq!(codes(&blind, Kind::Rtf, Target::Md), ["plain_text_layout"]);
+        // an opaque rtf (the scanner could not open it) gets every row that could apply; a scanned one only the rows it has features for
+        assert_eq!(codes(&blind, Kind::Rtf, Target::Md), ["plain_text_layout", "comments_dropped", "footnotes_dropped", "merged_cells_flattened"]);
+        assert!(codes(&none, Kind::Rtf, Target::Md).is_empty());
         assert!(codes(&with(&[("images", 2)]), Kind::Docx, Target::Pdf).is_empty());
         assert_eq!(codes(&with(&[("macros", 1)]), Kind::Xlsx, Target::Xlsx), ["macros_dropped"]);
         // a plain letter to pdf: nothing
         assert!(codes(&with(&[("images", 1), ("headers_footers", 2)]), Kind::Docx, Target::Pdf).is_empty());
         // md and txt inputs do not "lose" layout going to md/txt
         assert!(codes(&blind, Kind::Md, Target::Txt).is_empty());
+    }
+
+    /// The WP9 rows: each fires for the measured kind and target when the scanner found the feature, and stays quiet without it,
+    /// for another target, and (the `cross` rows) for the input's own format.
+    #[test]
+    fn the_wp9_rows_fire_only_for_their_feature_kind_and_target() {
+        let none = with(&[]);
+        let has = |f: &'static str| with(&[(f, 1)]);
+        // (code, feature, kinds that warn, targets that warn, a target that must stay quiet)
+        let rows: [(&str, &'static str, &[Kind], &[Target], Target); 9] = [
+            ("comments_dropped", "comments", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt], Target::Pdf),
+            ("footnotes_dropped", "footnotes", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt], Target::Pdf),
+            ("headers_footers_dropped", "headers_footers", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html], Target::Pdf),
+            ("revisions_dropped", "revisions", &[Kind::Docx], &[Target::Html, Target::Md, Target::Txt], Target::Odt),
+            ("merged_cells_flattened", "merged", &[Kind::Docx, Kind::Odt, Kind::Rtf, Kind::Html], &[Target::Md, Target::Txt], Target::Html),
+            ("tables_to_text", "tables", &[Kind::Docx, Kind::Odt, Kind::Rtf, Kind::Html], &[Target::Txt], Target::Md),
+            ("html_images_not_embedded", "linked_images", &[Kind::Html], &[Target::Docx, Target::Odt, Target::Rtf, Target::Pdf, Target::Png], Target::Md),
+            ("comments_dropped", "comments", &[Kind::Odt, Kind::Rtf], &[Target::Docx, Target::Pdf, Target::Txt], Target::Odt),
+            ("footnotes_dropped", "footnotes", &[Kind::Odt, Kind::Rtf], &[Target::Docx, Target::Pdf, Target::Txt], Target::Odt),
+        ];
+        for (code, feature, kinds, targets, quiet_target) in rows {
+            for &k in kinds {
+                for &t in targets {
+                    assert!(codes(&has(feature), k, t).contains(&code.to_string()), "{code}: {} to {} should warn", k.ext(), t.ext());
+                    assert!(!codes(&none, k, t).contains(&code.to_string()), "{code}: {} to {} warned without {feature}", k.ext(), t.ext());
+                }
+                let own = Target::parse(k.ext()).filter(|_| kinds.len() == 2 && code.ends_with("dropped"));
+                if let Some(own) = own {
+                    assert!(!codes(&has(feature), k, own).contains(&code.to_string()), "{code}: {} to itself", k.ext());
+                }
+                if kinds.len() == 1 {
+                    assert!(!codes(&has(feature), k, quiet_target).contains(&code.to_string()), "{code}: {} to {} must stay quiet", k.ext(), quiet_target.ext());
+                }
+            }
+        }
+        // an input the scanner cannot open (opaque) gets the warning: not knowing is not "not there"
+        assert!(codes(&Scan::default(), Kind::Docx, Target::Odt).contains(&"comments_dropped".to_string()));
+        // a different feature does not trigger the row
+        assert!(!codes(&has("images"), Kind::Docx, Target::Odt).contains(&"comments_dropped".to_string()));
+        // docx keeps comments, notes and headers in docx and pdf; odt and rtf keep revisions
+        for t in [Target::Docx, Target::Pdf] {
+            assert!(codes(&with(&[("comments", 1), ("footnotes", 1), ("headers_footers", 1)]), Kind::Docx, t).is_empty());
+        }
+        assert!(codes(&has("revisions"), Kind::Docx, Target::Rtf).is_empty());
+        // odt headers: lost going to docx, pdf, rtf, html (md and txt are plain_text_layout's)
+        assert_eq!(codes(&has("headers_footers"), Kind::Odt, Target::Docx), ["headers_footers_dropped"]);
+        assert_eq!(codes(&has("headers_footers"), Kind::Odt, Target::Txt), ["plain_text_layout"]);
+        assert!(codes(&has("headers_footers"), Kind::Rtf, Target::Docx).is_empty());
     }
 }

@@ -43,6 +43,19 @@ impl Sandbox {
         w.finish().unwrap();
         p
     }
+    /// A zip whose parts have the given bodies (the scanner looks inside document.xml, content.xml and the header parts).
+    fn zip_bodies(&self, name: &str, parts: &[(&str, &str)]) -> PathBuf {
+        let p = self.0.join(name);
+        let mut w = zip::ZipWriter::new(std::fs::File::create(&p).unwrap());
+        // stored, so that an ODF package's `mimetype` is readable in the first bytes, as kind detection expects
+        let stored = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+        for (part, body) in parts {
+            w.start_file(*part, stored).unwrap();
+            w.write_all(body.as_bytes()).unwrap();
+        }
+        w.finish().unwrap();
+        p
+    }
     fn docx(&self, name: &str, extra: &[&str]) -> PathBuf {
         let mut parts = vec!["[Content_Types].xml", "word/document.xml"];
         parts.extend_from_slice(extra);
@@ -134,13 +147,83 @@ fn csv_is_en_us_one_sheet() {
     assert_eq!(codes(&r), ["csv_one_sheet_en_us"], "{}", r.message);
 }
 
+const FOOTER: &str = "<w:ftr><w:p><w:r><w:t>Page 1</w:t></w:r></w:p></w:ftr>";
+const EMPTY_HEADER: &str = "<w:hdr><w:p/></w:hdr>";
+
 #[test]
 fn plain_text_layout_needs_a_header_or_an_image() {
     let s = Sandbox::new("md");
     assert!(s.convert(&s.docx("plain.docx", &[]), Target::Md).warnings.is_empty());
-    let r = s.convert(&s.docx("rich.docx", &["word/media/image1.png", "word/footer1.xml"]), Target::Md);
+    // Word's empty first-page header and footer parts are not a header: a plain letter stays quiet
+    let letter = s.zip_bodies("letter.docx", &[("word/document.xml", "<w:document><w:p/></w:document>"), ("word/header1.xml", EMPTY_HEADER), ("word/footer1.xml", EMPTY_HEADER)]);
+    for to in [Target::Md, Target::Txt, Target::Odt, Target::Rtf, Target::Html] {
+        assert!(s.convert(&letter, to).warnings.is_empty(), "a plain letter to {} warned", to.ext());
+    }
+    let rich = s.zip_bodies("rich.docx", &[("word/document.xml", "<w:document/>"), ("word/media/image1.png", "x"), ("word/footer1.xml", FOOTER)]);
+    let r = s.convert(&rich, Target::Md);
     assert_eq!(codes(&r), ["plain_text_layout"], "{}", r.message);
     assert_eq!(r.warnings[0].count, 2);
+}
+
+/// WP9 rows end to end: the planner is real, the tool is the fake one, the scanner reads a package built here.
+#[test]
+fn the_wp9_loss_rows_warn_through_convert_only_when_the_feature_is_there() {
+    let s = Sandbox::new("wp9");
+    let doc = |body: &str| format!("<w:document>{body}</w:document>");
+    let rich_body = doc("<w:tbl><w:tr><w:tc><w:gridSpan w:val=\"2\"/></w:tc></w:tr></w:tbl><w:ins w:id=\"1\"/><w:footnoteReference w:id=\"2\"/>");
+    let rich = s.zip_bodies(
+        "rich.docx",
+        &[
+            ("word/document.xml", &rich_body),
+            ("word/comments.xml", "<w:comments/>"),
+            ("word/header2.xml", "<w:hdr><w:p><w:r><w:t>HRM</w:t></w:r></w:p></w:hdr>"),
+        ],
+    );
+    for (to, want) in [
+        (Target::Odt, vec!["comments_dropped", "footnotes_dropped", "headers_footers_dropped"]),
+        (Target::Rtf, vec!["comments_dropped", "footnotes_dropped", "headers_footers_dropped"]),
+        (Target::Html, vec!["comments_dropped", "footnotes_dropped", "headers_footers_dropped", "revisions_dropped"]),
+        (Target::Md, vec!["plain_text_layout", "comments_dropped", "footnotes_dropped", "revisions_dropped", "merged_cells_flattened"]),
+        (Target::Txt, vec!["plain_text_layout", "comments_dropped", "footnotes_dropped", "revisions_dropped", "merged_cells_flattened", "tables_to_text"]),
+        (Target::Pdf, vec![]),
+        (Target::Docx, vec![]),
+    ] {
+        let r = s.convert(&rich, to);
+        let mut got = codes(&r);
+        let mut want: Vec<String> = want.into_iter().map(String::from).collect();
+        got.sort();
+        want.sort();
+        assert_eq!(got, want, "docx to {}: {}", to.ext(), r.message);
+    }
+    // the same package without the features: nothing
+    let bare_body = doc("<w:p/>");
+    let bare = s.zip_bodies("bare.docx", &[("word/document.xml", &bare_body)]);
+    for to in [Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt] {
+        assert!(s.convert(&bare, to).warnings.is_empty(), "a bare docx to {} warned", to.ext());
+    }
+    // odt: comments and notes are lost going anywhere else, headers going to docx and pdf (the reader drops them)
+    let odt = s.zip_bodies(
+        "a.odt",
+        &[
+            ("mimetype", "application/vnd.oasis.opendocument.text"),
+            ("content.xml", "<office:text><office:annotation office:name=\"c\"/><text:note text:id=\"n\"/></office:text>"),
+            ("styles.xml", "<office:styles><style:header><text:p/></style:header></office:styles>"),
+        ],
+    );
+    let r = s.convert(&odt, Target::Docx);
+    let mut got = codes(&r);
+    got.sort();
+    assert_eq!(got, ["comments_dropped", "footnotes_dropped", "headers_footers_dropped"]);
+    // rtf: a scanned file only gets the rows it has features for; and a real one with a comment says so
+    let rtf = s.file("a.rtf", b"{\\rtf1\\ansi {\\*\\annotation c} text\\par}");
+    assert_eq!(codes(&s.convert(&rtf, Target::Docx)), ["comments_dropped"]);
+    let plain_rtf = s.file("b.rtf", b"{\\rtf1\\ansi text\\par}");
+    assert!(s.convert(&plain_rtf, Target::Docx).warnings.is_empty());
+    // html with a linked picture (and one inline) to docx; without a linked one nothing
+    let html = s.file("a.html", b"<!DOCTYPE html><p><img src=\"order_files/a.png\"><img src=\"data:image/png;base64,AA\">");
+    assert_eq!(codes(&s.convert(&html, Target::Docx)), ["html_images_not_embedded"]);
+    let inline = s.file("b.html", b"<!DOCTYPE html><p><img src=\"data:image/png;base64,AA\">");
+    assert!(s.convert(&inline, Target::Docx).warnings.is_empty());
 }
 
 #[test]

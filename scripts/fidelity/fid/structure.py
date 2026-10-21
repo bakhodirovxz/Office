@@ -22,6 +22,52 @@ def _zip_text(z, pat):
     return "".join(z.read(n).decode("utf-8", "replace") for n in z.namelist() if re.fullmatch(pat, n))
 
 
+def _rtf_tables(t):
+    """Tables of an RTF. A table starts at the first paragraph marked `\\intbl` (or the first `\\trowd`) and ends at the first
+    ordinary paragraph (one with no `\\intbl`) after it: Word writes a row definition before some rows and not before others."""
+    n, in_table, para_intbl = 0, False, False
+    for m in re.finditer(r"\\pard(?![a-z])|\\intbl(?![a-z])|\\trowd(?![a-z])|\\par(?![a-z])", t):
+        w = m.group(0)
+        if w == "\\pard":
+            para_intbl = False
+        elif w == "\\par":
+            if not para_intbl:
+                in_table = False
+        else:
+            para_intbl = True
+            if not in_table:
+                n, in_table = n + 1, True
+    return n
+
+
+def _rtf_header_groups_with_text(t):
+    """Number of {\\header*} / {\\footer*} groups that hold visible characters (Word writes empty first-page variants)."""
+    n = 0
+    for m in re.finditer(r"\{\\(?:header|footer)", t):
+        depth, i, skip, text = 0, m.start(), None, False
+        while i < len(t) and not text:
+            c = t[i]
+            if c == "{":
+                depth += 1
+                if skip is None and t.startswith("{\\*", i): skip = depth - 1
+            elif c == "}":
+                depth -= 1
+                if skip == depth: skip = None
+                if depth == 0: break
+            elif c == "\\":
+                w = re.match(r"\\([a-zA-Z]+)(-?\d+)? ?", t[i:])
+                if w:
+                    text = skip is None and w.group(1) == "u" and w.group(2) is not None
+                    i += w.end(); continue
+                text = skip is None and t.startswith("\\'", i)
+                i += 1
+            elif skip is None and c.isalnum():
+                text = True
+            i += 1
+        n += text
+    return n
+
+
 def _blank():
     d = {k: 0 for k in FEATURES}
     d["paragraphs"] = 0
@@ -46,7 +92,7 @@ def structure(path):
                 d["headers_footers"] = len([n for n in names if re.fullmatch(r"word/(header|footer)\d*\.xml", n)
                                             and "<w:t" in z.read(n).decode("utf-8", "replace")])
                 d["charts"] = len([n for n in names if re.fullmatch(r"word/charts/chart\d*\.xml", n)])
-                d["merged"] = _n(r"<w:(?:gridSpan|vMerge)", body)
+                d["merged"] = _n(r"<w:gridSpan", body) + _n(r'<w:vMerge w:val="restart"', body)
         elif ext in ("xlsx", "xlsm", "xltx"):
             with zipfile.ZipFile(p) as z:
                 names = z.namelist(); sh = _zip_text(z, r"xl/worksheets/sheet\d+\.xml")
@@ -77,14 +123,17 @@ def structure(path):
                 d["formulas"] = _n(r"table:formula=", c); d["merged"] = _n(r"number-(?:columns|rows)-spanned", c)
         elif ext == "rtf":
             t = p.read_bytes().decode("latin-1")
-            d["paragraphs"] = _n(r"\\par[ \\\r\n]", t); d["tables"] = _n(r"(?:\\trowd.*?\\row\s*)+", t, re.S)
-            d["images"] = _n(r"\\pict", t); d["comments"] = _n(r"\\atrfstart|\{\\\*\\annotation", t)
+            d["paragraphs"] = _n(r"\\par[ \\\r\n]", t)
+            d["tables"] = _rtf_tables(t)
+            # Word writes every picture twice (shppict + nonshppict); one comment is an annotation group plus its atrfstart mark
+            d["images"] = _n(r"\\shppict", t) or _n(r"\\pict", t); d["comments"] = _n(r"\{\\\*\\annotation", t)
             d["revisions"] = _n(r"\\revised|\\deleted", t); d["footnotes"] = _n(r"\\footnote", t)
-            d["headers_footers"] = _n(r"\{\\(?:header|footer)", t)
+            d["headers_footers"] = _rtf_header_groups_with_text(t)
+            d["merged"] = _n(r"\\clmgf|\\clvmgf", t)
         elif ext in ("html", "htm"):
             t = p.read_text("utf-8", "replace")
             d["paragraphs"] = _n(r"<p[ >]", t); d["tables"] = _n(r"<table[ >]", t); d["images"] = _n(r"<img[ >]", t)
-            d["comments"] = 0
+            d["merged"] = len([v for v in re.findall(r"(?:colspan|rowspan)=[\"']?(\d+)", t, re.I) if int(v) > 1])
         elif ext == "md":
             t = p.read_text("utf-8", "replace")
             d["paragraphs"] = len([b for b in re.split(r"\n\s*\n", t) if b.strip()])
@@ -103,6 +152,8 @@ def structure(path):
     return d
 
 
+# RTF has no merge marker for a horizontal merge (the writer widens one cell), so merged cells cannot be counted in an RTF output
+UNCOUNTABLE = {"rtf": ("merged",)}
 RELEVANT = {"csv": ["sheets", "formulas"]}   # a value-only target can only lose these; charts etc. are inherent
 
 
@@ -110,10 +161,21 @@ def structural_losses(src, out, target=None):
     """Features present in the source and fewer in the output -> [{feature, before, after}]."""
     if not src or not out:
         return []
-    return [{"feature": k, "before": src[k], "after": out.get(k, 0)} for k in RELEVANT.get(target, FEATURES) if src.get(k, 0) > out.get(k, 0)]
+    skip = UNCOUNTABLE.get(out.get("kind"), ())
+    return [{"feature": k, "before": src[k], "after": out.get(k, 0)} for k in RELEVANT.get(target, FEATURES) if k not in skip and src.get(k, 0) > out.get(k, 0)]
+
+
+# text, pagination and Cyrillic differences are consequences of something else being lost or reformatted (a header, a chart, a
+# number format, a picture), not features of their own. They are explained when the report warns about a loss at all; a text
+# difference with no structural loss and no warning stays a silent loss. Codes that do not announce a loss do not explain.
+DERIVED = {"text", "pagination", "cyrillic"}
+NOT_A_LOSS = {"kind_mismatch", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark",
+              "xdfu_cannot_check", "translit_nothing", "translit_formula_text", "text_transcoded"}
 
 
 def silent_losses(losses, warnings):
     """Losses with no matching warning. warnings: [{code,text}]. This is the 'loss without warning is a bug' list."""
     blob = " ".join("%s %s" % (w.get("code", ""), w.get("text", "")) for w in warnings).lower()
-    return [l for l in losses if not re.search(COVER.get(l["feature"], l["feature"]), blob)]
+    explained = any(w.get("code") not in NOT_A_LOSS for w in warnings)
+    return [l for l in losses if not re.search(COVER.get(l["feature"], l["feature"]), blob)
+            and not (l["feature"] in DERIVED and explained)]

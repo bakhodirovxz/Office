@@ -141,12 +141,16 @@ def page_hashes(pdf, work, tag):
     return n, [hashlib.sha256(p.read_bytes()).hexdigest()[:12] if p else None for p in pngs]
 
 
-def losses_of(src_s, out_s, vis, tmet):
+def losses_of(src_s, out_s, vis, tmet, translit=False):
     L = S.structural_losses(src_s, out_s)
     if vis and vis.get("page_match") is False:
-        L.append({"feature": "pagination", "before": vis["pages_ref"], "after": vis["pages_cand"]})
+        a, b = vis["pages_ref"], vis["pages_cand"]
+        # transliteration changes the text length, so a few pages more or less is expected (up to 10%)
+        if not (translit and a and abs(a - b) <= 0.1 * max(a, b)):
+            L.append({"feature": "pagination", "before": a, "after": b})
     for m in (vis, tmet):
-        if m and m.get("word_sim") is not None and m["word_sim"] < 0.9:
+        # a low word-order similarity alone is a reading-order difference (tables, text boxes), not lost text: words must be missing
+        if m and m.get("word_sim") is not None and m["word_sim"] < 0.9 and m.get("missing_count", 1) >= max(3, 0.02 * (m.get("ref_words") or 0)):
             L.append({"feature": "text", "before": 1.0, "after": m["word_sim"]}); break
     for m in (vis, tmet):
         if m and m.get("cyr_kept") is not None and m["cyr_kept"] < 0.99:
@@ -346,7 +350,7 @@ def main():
                 m["structural_losses"] = S.structural_losses(src_s, S.structure(y), "csv")
             if kind == "translit" and vis:   # the text is SUPPOSED to change: only pagination counts (Phase 2 owns the text checks)
                 vis = {k: vis[k] for k in ("page_match", "pages_ref", "pages_cand")}
-            m["losses"] = (m.get("structural_losses") or []) + losses_of(None, None, vis, tm)
+            m["losses"] = (m.get("structural_losses") or []) + losses_of(None, None, vis, tm, translit=(kind == "translit"))
             return m
 
         if kind in ("pdf", "png", "edit", "text", "csv", "translit"):
