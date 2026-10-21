@@ -11,5 +11,6 @@ pub mod losses;
 pub mod names;
 pub mod report;
 pub mod scan;
+pub mod text;
 pub mod plan;
 pub mod xdfu;

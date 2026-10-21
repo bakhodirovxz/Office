@@ -657,6 +657,15 @@ pub fn convert_source(cfg: &Config, input: &dyn InputSource, target: Target, opt
     if meta.cancel.as_ref().is_some_and(|c| c.load(Ordering::Relaxed)) {
         return failed(&label, t, kind, Failure { exit: Exit::Timeout, msg: "the job was cancelled".into() });
     }
+    // text in cp1251, cp1252 or UTF-16 becomes UTF-8 in the private copy, before the scan and before any tool (owner decision, WP9 fixes)
+    let transcoded = if crate::text::is_text(k) {
+        match crate::text::normalise(&staged.file) {
+            Ok(e) => e,
+            Err(f) => return failed(&label, t, kind, f),
+        }
+    } else {
+        None
+    };
     let known = meta.verdict.as_ref().filter(|v| scan::sha256_file(&staged.file).is_ok_and(|h| h == v.sha256));
     let scan = match known {
         Some(v) => v.scan.clone(),
@@ -666,6 +675,9 @@ pub fn convert_source(cfg: &Config, input: &dyn InputSource, target: Target, opt
         },
     };
     let mut warnings = vec![];
+    if let Some(enc) = transcoded {
+        warnings.push(Warning { code: "text_transcoded".into(), count: 1, text: report::text_with("text_transcoded", &[("encoding", enc)]) });
+    }
     if det.ext_mismatch {
         warnings.push(Warning { code: "kind_mismatch".into(), count: 1, text: report::text_with("kind_mismatch", &[("kind", k.ext())]) });
     }

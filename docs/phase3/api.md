@@ -239,6 +239,13 @@ the owner must have started before the directory was last written. An operator's
   out-of-file parts, ratio 100:1 for every entry above 1 MiB, and one inflate budget per request: 50 times the upload, between
   256 MiB and 2 GiB, charged across all its files. The test fixtures are a 40,755-byte zip of overlapping entries that declares 4.5 GB,
   a 12 MB part with a 1000:1 ratio, and a 9.9 MB part with a ratio of the same size that the old 10 MB floor let through.
+- **Empty files and legacy text encodings** (WP9 fixes): a 0-byte file of any claimed kind (`a.txt`, `a.docx`, `a.pdf`, no extension) is
+  rejected at `POST` and by the CLI with exit 9 and "the file is empty (0 bytes)"; it is never converted as an empty text file. A `.txt`,
+  `.csv`, `.tsv`, `.md` or `.html` file in cp1251, cp1252 or UTF-16 (BOM, little or big endian) is converted to UTF-8 in the job's private
+  copy before the scan and before any tool, and the report carries `text_transcoded` naming the encoding. Detection order: a BOM, then
+  valid UTF-8 (nothing to do), then cp1251 against cp1252 by how the high bytes sit in words (runs of three or more mean Cyrillic).
+  Legacy text under any other extension (`x.docx` that holds cp1251 text) is still refused with exit 3. Limits: no other code page
+  (cp1250, koi8-r) is guessed, and UTF-16 without a BOM is not recognised.
 - Logs: job id, `sub` (quoted, so a hostile value cannot forge fields), kinds, sizes, codes and timings; never a file name, a token or
   document content. A panic prints only its location, not its message.
 

@@ -284,7 +284,7 @@ fn translit_result_is_captured_and_nothing_to_convert_warns() {
 fn every_code_has_catalog_text() {
     let mut emitted: Vec<String> = convert::losses::rows().iter().map(|r| r.code.clone()).collect();
     emitted.extend(
-        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark"]
+        ["upstream", "kind_mismatch", "empty_text", "translit_nothing", "translit_formula_text", "sidecar", "hidden_sheet_exported", "very_hidden_sheet_skipped", "xdfu_copy", "xdfu_refused", "xdfu_no_watermark", "text_transcoded"]
             .map(String::from),
     );
     emitted.sort();
@@ -320,8 +320,9 @@ fn input_limits_are_exit_9_or_3() {
     let r = s.convert(&p, Target::Pdf);
     assert_eq!((r.code, r.status), (9, "failed"), "{}", r.message);
     assert!(r.message.contains("zip bomb"));
-    // legacy encodings and unlisted text types are refused, not converted as garbage
-    let r = s.convert(&s.file("cp1251.txt", b"\xcf\xf0\xe8\xe2\xe5\xf2 \xec\xe8\xf0"), Target::Docx);
+    // legacy-encoded text is transcoded under a text extension (tests/legacy_text.rs) and refused under any other, never converted as
+    // garbage; so are unlisted text types
+    let r = s.convert(&s.file("cp1251.docx",b"\xcf\xf0\xe8\xe2\xe5\xf2 \xec\xe8\xf0"), Target::Docx);
     assert_eq!(r.code, 3, "{}", r.message);
     assert!(r.message.contains("UTF-8"), "{}", r.message);
     let r = s.convert(&s.file("order.xml", b"<?xml version=\"1.0\"?><w:wordDocument/>"), Target::Docx);

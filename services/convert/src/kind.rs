@@ -131,11 +131,25 @@ pub fn detect(path: &Path) -> Result<Detected, DetectError> {
     if !container && UNLISTED_TEXT_EXTS.contains(&raw_ext.as_str()) {
         return Err(DetectError::Unknown);
     }
-    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext).ok_or_else(|| {
+    detect_bytes(&head, ole_bytes.as_deref(), zip_names.as_deref(), ext).or_else(|| legacy_text(&head, ext)).ok_or_else(|| {
         let bom16 = head.starts_with(&[0xFF, 0xFE]) || head.starts_with(&[0xFE, 0xFF]);
         let high_bytes_only = !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
         if bom16 || (high_bytes_only && ext.is_some_and(|k| matches!(k.family(), Family::Docs | Family::Sheets))) { DetectError::NotUtf8 } else { DetectError::Unknown }
     })
+}
+
+/// Text in a legacy encoding (UTF-16 with a BOM, or 8-bit cp1251 / cp1252) under an extension that names text is still text: the job
+/// transcodes it to UTF-8 before any tool sees it (`text.rs`). An 8-bit file needs an explicit text extension (anything else with
+/// high bytes may be a damaged binary); a UTF-16 file with a BOM and no extension is a `.txt`.
+fn legacy_text(head: &[u8], ext: Option<Kind>) -> Option<Detected> {
+    let bom16 = head.starts_with(&[0xFF, 0xFE]) || head.starts_with(&[0xFE, 0xFF]);
+    let kind = match ext {
+        Some(k) if crate::text::is_text(k) => k,
+        None if bom16 => Kind::Txt,
+        _ => return None,
+    };
+    let eight_bit = !head.contains(&0) && head.iter().all(|&b| b >= 0x20 || b"\t\r\n".contains(&b));
+    (bom16 || eight_bit).then_some(Detected { kind, ext_mismatch: false, password_protected: false })
 }
 
 fn zip_names(path: &Path) -> Option<Vec<String>> {
@@ -271,6 +285,24 @@ mod tests {
         assert_eq!(kind(b"a\tb\n", None, None, Some(Kind::Tsv)), Some(Kind::Tsv));
         assert_eq!(kind(b"# Title\n", None, None, Some(Kind::Md)), Some(Kind::Md));
         assert_eq!(kind("Salom dunyo \u{43f}".as_bytes(), None, None, None), Some(Kind::Txt));
+    }
+
+    #[test]
+    fn legacy_text_is_text_only_under_a_text_extension() {
+        let cp1251 = [0xC1u8, 0xD3, 0xC9, 0xD0, 0xD3, b'\r', b'\n', 0xD2, 0xEE, 0xF8];
+        let bom = [0xFFu8, 0xFE, b'a', 0];
+        let k = |h: &[u8], e: Option<Kind>| legacy_text(h, e).map(|d| d.kind);
+        assert_eq!(k(&cp1251, Some(Kind::Txt)), Some(Kind::Txt));
+        assert_eq!(k(&cp1251, Some(Kind::Csv)), Some(Kind::Csv));
+        assert_eq!(k(&cp1251, Some(Kind::Md)), Some(Kind::Md));
+        assert_eq!(k(&cp1251, Some(Kind::Docx)), None);
+        assert_eq!(k(&cp1251, None), None);
+        assert_eq!(k(&bom, Some(Kind::Txt)), Some(Kind::Txt));
+        assert_eq!(k(&bom, None), Some(Kind::Txt));
+        assert_eq!(k(&bom, Some(Kind::Xlsx)), None);
+        // binary with a NUL and no BOM, or control bytes, is not text
+        assert_eq!(k(&[0xC1, 0, 0xD3], Some(Kind::Txt)), None);
+        assert_eq!(k(&[0xC1, 0x01, 0xD3], Some(Kind::Txt)), None);
     }
 
     #[test]

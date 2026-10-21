@@ -27,6 +27,8 @@ serde_json = "1"
 sha2 = "0.10"
 # png decoding and encoding for the XDFU watermark on png outputs (WP15): MIT OR Apache-2.0
 png = "0.18"
+# cp1251, cp1252 and UTF-16 text to UTF-8 (text.rs): (Apache-2.0 OR MIT) AND BSD-3-Clause
+encoding_rs = "0.8"
 zip = { version = "9", default-features = false, features = ["deflate"] }
 toml = { version = "1", default-features = false, features = ["parse", "serde"] }
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
