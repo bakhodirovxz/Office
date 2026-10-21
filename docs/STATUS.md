@@ -3,6 +3,30 @@
 **Current phase:** 3 — Converter (branch `phase-3`, plan `docs/phase3/PLAN.md`). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
 Phase 3 owner decisions: this PC only (WP11 deferred), no .ppt, limits accepted, accounts optional (local mode with no login is the default, server mode optional with an operator-configured token issuer), NumLocale in scope (WP14).
 
+**Owner requirement, 2026-10-21: GitHub-like version history and authorship, independent of the HRM.** The brief's
+version history (Phase 5) relies on the HRM's `/versions` API. Accounts are optional, so we also need our own store.
+- **Version store.** Built into our docserver and content-addressed, so identical blobs are stored once. Every save
+  becomes a version holding: author (the token `sub`, or the OS user in local mode), time, an optional message,
+  parent, size and hash. The history is append-only and hash-chained, so it cannot be edited quietly.
+- **Who changed what.**
+  - Docs: a version diff at paragraph and run level, with the author per changed paragraph (a "blame" view), built on
+    the tracked-changes model wordcraft already has (`w:ins`/`w:del` with authors).
+  - Sheets: a cell-level diff showing changed and added cells, sheets and formulas.
+  - Slides: a per-slide diff. PDF: a page diff.
+- **Actions.** List versions, view one, compare any two, restore (a new version, never a rewrite), download an old
+  version, and name a version (like a tag).
+- **Backends.**
+  - Our own store is the default.
+  - When the HRM is configured, its `/versions` is used instead, through the same interface.
+  - Local mode, optional: snapshots kept under app data, the same as the store with one user.
+- **Not in scope:** git branches or merges of documents. Real-time co-editing (Phase 9) adds per-change attribution
+  on top.
+- **Phases:**
+  - Phase 4 (shell): the History panel UI, local snapshots.
+  - Phase 5: the server store, diff engines, restore, HRM backend.
+  - Phase 9: live attribution.
+- **Rough size:** about +8–12 stream-days over SIZING 5.3. To be sized in the Phase 4/5 plans.
+
 **Previous:** 2 — Transliteration (branch `phase-2`). **Phase 1 closed on 2026-10-20**: the final clean-checkout `ci.sh full` exited 0 (`docs/phase1/clean-checkout.md`) and the gate review is in `docs/phase1/gate-review.md`.
 
 Phase 1 history: 1 — Foundation (branch `phase-1`). The Phase 0 gate was passed on 2026-10-17; the decisions are in
