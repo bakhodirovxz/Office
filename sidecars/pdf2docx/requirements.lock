@@ -1,0 +1,12 @@
+# Exact pins, linux x86_64, CPython 3.12. Install: pip install --no-index --no-deps --require-hashes -r requirements.lock
+# PyMuPDF stays at 1.26.7 (the pdf2docx floor): 2.x pulls pymupdf-layout, pymupdf4llm and onnxruntime (see LICENSES.md).
+fire==0.7.1 --hash=sha256:e43fd8a5033a9001e7e2973bab96070694b9f12f2e0ecf96d4683971b5ab1882
+fonttools==4.67.0 --hash=sha256:eb3c98cac93aac4b9f6e3ce2008325340b234cc9b0338ca6b513f31962a1e278
+lxml==6.1.3 --hash=sha256:379f8a75cf6eb7eef0af074b55f49ab73b868388a98de14646abcdfa4564bb11
+numpy==2.5.4 --hash=sha256:fbde6962867ee75b48b0ee29b2b9372ec5d617799dbaf38e82dc0596f2f7738a
+opencv-python-headless==4.14.0.94 --hash=sha256:5e02669eac0ba67b2a22d7245af1e8ee1a2ef1185ee526a063d8f0555224bd52
+pdf2docx==0.5.13 --hash=sha256:a293e9e78d89b12a4a43fcefba1346de220681c3daf20b8a7d3e1fce77f0fe97
+PyMuPDF==1.26.7 --hash=sha256:69dfc78f206a96e5b3ac22741263ebab945fdf51f0dbe7c5757c3511b23d9d72
+python-docx==1.2.0 --hash=sha256:3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7
+termcolor==3.3.0 --hash=sha256:cf642efadaf0a8ebbbf4bc7a31cec2f9b5f21a9f726f4ccbb08192c9c26f43a5
+typing-extensions==4.16.0 --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
