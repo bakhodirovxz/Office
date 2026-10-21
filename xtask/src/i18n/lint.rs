@@ -415,7 +415,13 @@ pub fn lint(cat: &Catalog) -> Vec<Finding> {
                     );
                 }
                 let mut errs: Vec<(&'static str, String)> = Vec::new();
-                errs.extend(parity(&r.source, value).into_iter().map(|m| ("parity", m)));
+                // An `@id` row's source is an identifier, not the label: the Russian label is the reference for its punctuation.
+                let reference = if r.context == "@id" && !r.ru.is_empty() {
+                    &r.ru
+                } else {
+                    &r.source
+                };
+                errs.extend(parity(reference, value).into_iter().map(|m| ("parity", m)));
                 errs.extend(
                     apostrophes(is_latn, value)
                         .into_iter()

@@ -2431,7 +2431,7 @@ fb22cf1802cc		Opacity:	Noshaffoflik:	reviewed:agent-opus:2026-10-21	Ношафф
 fb28a63c0cad		Enhance camera image	Kamera tasvirini yaxshilash	reviewed:agent-opus:2026-10-18	Камера тасвирини яхшилаш	reviewed:agent-opus:2026-10-18	Улучшить снимок с камеры	upstream		P1	pdfcraft	crates/ui-egui/src/editing.rs:268	
 fb4d14a89ace		{page} is not a page number or label	{page} sahifa raqami yoki yorligʻi emas	reviewed:agent-opus:2026-10-21	{page} саҳифа рақами ёки ёрлиғи эмас	reviewed:agent-opus:2026-10-21		todo		P2	pdfcraft		
 fb6bd50782dd		This document isn't password-protected	Bu hujjat parol bilan himoyalanmagan	reviewed:agent-opus:2026-10-21	Бу ҳужжат пароль билан ҳимояланмаган	reviewed:agent-opus:2026-10-21	Этот документ не защищён паролем	upstream		P2	pdfcraft	crates/ui-egui/src/commands.rs:138	
-fb8fd0c81ca2	@id	file.word_count	Soʻzlar soni	reviewed:agent-opus:2026-10-21	Сўзлар сони	reviewed:agent-opus:2026-10-21	Количество слов…	upstream		P2	pdfcraft		
+fb8fd0c81ca2	@id	file.word_count	Soʻzlar soni…	reviewed:agent-opus:2026-10-21	Сўзлар сони…	reviewed:agent-opus:2026-10-21	Количество слов…	upstream		P2	pdfcraft		
 fbc4cb986eaa		Report created	Hisobot yaratildi	reviewed:agent-opus:2026-10-21	Ҳисобот яратилди	reviewed:agent-opus:2026-10-21		todo		P2	pdfcraft		
 fc091c273277		Comments only	Faqat izohlar	reviewed:agent-opus:2026-10-21	Фақат изоҳлар	reviewed:agent-opus:2026-10-21	Только комментарии	upstream		P2	pdfcraft	crates/ui-egui/src/dialogs.rs:765	
 fc148cc385d6		This document has no layers.	Bu hujjatda qatlamlar yoʻq.	reviewed:agent-opus:2026-10-21	Бу ҳужжатда қатламлар йўқ.	reviewed:agent-opus:2026-10-21	В этом документе нет слоёв.	upstream		P2	pdfcraft	crates/ui-egui/src/panels.rs:668	
