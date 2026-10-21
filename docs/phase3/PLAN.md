@@ -790,10 +790,16 @@ count as one build slot each.
     Any direction that cannot carry a watermark is refused with a clear message.
   - **Audit log** (append-only JSON lines, hash-chained) of every XDFU job: who, when, from where, which copy number.
     No content and no file names when `--redact` is on.
-  - **Policy:** `xdfu = "watermark" | "refuse"` in the server config; the default is watermark.
+  - **Policy (owner, 2026-10-21): XDFU support is opt-in and OFF by default.** The product is open source and most
+    users don't need it. The setting is `xdfu = "off" | "watermark" | "refuse"`, in the server config and the local
+    settings. When it is `off`, there is no detection, no watermark, no audit log and no XDFU UI. When it is on, the
+    operator picks watermark or refuse. The UI shows the setting only to whoever controls the config: the local user
+    or the server operator.
   - Server mode with `auth = "none"` is already impossible on the network (§5.5).
 - **Files:** `services/convert/src/xdfu.rs`, `services/convert/src/audit.rs`, tests, `i18n/converter.tsv` (warnings).
 - **Done-check:**
+  - with `xdfu = "off"` (the default), a grif document converts exactly like any other: no watermark, no audit
+    entry, byte-identical output;
   - a grif fixture per language (uz-Latn, uz-Cyrl, ru) is detected, and a plain document is not;
   - every output direction either carries the watermark (text extracted from the output) or is refused;
   - the audit chain verifies, and tampering with one line breaks it.
@@ -925,6 +931,10 @@ Without WP11 (O1 = no): 22.5 likely. Calendar with three streams: **about 13–1
 | The registration index gets "-XDFU" | 36 | HRM registry side; our docserver passes it through | — |
 | Storage only in protected systems; never taken off the premises | 41, 42 | Server mode with encryption at rest; local mode warns that the file is XDFU | Policy and endpoint control |
 | Grif removal by a commission, reviewed every 2 years | 50–53 | Phase 5: the grif is removable only via the registry workflow | Commission |
+
+**On/off (owner, 2026-10-21):** everything in this section is **opt-in and off by default** (`xdfu = "off"`), in
+every phase: the converter, the editors and the docserver. An organisation that needs it switches it on. The general
+web security baseline of §5.5 is not part of this switch; it is always on.
 
 **Limits, said plainly.**
 - Our open-source code cannot be certified on its own. The expertise covers the deployed system: our server, the
