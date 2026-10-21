@@ -4,6 +4,8 @@
 //!   two A B (writes both) | translit PATH JSON (prints JSON on stdout) | silent (writes nothing, exit 0)
 //! and the shapes the planner really emits, so `convert_file` can run end to end without a domain CLI:
 //!   convert IN OUT | run ... (--out/--save OUT, or a file.exportPdf path) | info FILE (fails when the file holds BADINFO)
+//!   text PDF (prints the file after its first line, with the `<<` and `>>` marks removed: the "text layer")
+//!   run --script S (the native pdf to docx: writes a docx of that text with every `<<...>>` span left out: the "lost column")
 fn stub(path: &str, extra: &str) {
     let body = if path.ends_with(".pdf") {
         format!("%PDF-1.4\n1 0 obj<<>>endobj\n{extra}\ntrailer<<>>\n%%EOF\n")
@@ -62,6 +64,50 @@ fn main() {
                 std::thread::sleep(std::time::Duration::from_secs(120));
             }
             stub(arg(2), "")
+        }
+        "text" => {
+            let t = std::fs::read_to_string(arg(1)).unwrap_or_default();
+            print!(
+                "{}",
+                t.split_once('\n')
+                    .map_or("", |x| x.1)
+                    .replace(['<', '>'], "")
+            );
+        }
+        "run" if a.iter().any(|x| x == "--script") => {
+            let script: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(arg(2)).unwrap()).unwrap();
+            let arg_of = |tool: &str, key: &str| {
+                script
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|s| s["tool"] == tool)
+                    .and_then(|s| s["args"][key].as_str())
+                    .unwrap()
+                    .to_string()
+            };
+            let text = std::fs::read_to_string(arg_of("doc_open", "path")).unwrap_or_default();
+            let (mut kept, mut rest) = (String::new(), text.split_once('\n').map_or("", |x| x.1));
+            while let Some((before, after)) = rest.split_once("<<") {
+                kept += before;
+                rest = after.split_once(">>").map_or("", |x| x.1);
+            }
+            kept += rest;
+            let mut w = zip::ZipWriter::new(
+                std::fs::File::create(arg_of("doc_export_office", "path")).unwrap(),
+            );
+            w.start_file(
+                "word/document.xml",
+                zip::write::SimpleFileOptions::default(),
+            )
+            .unwrap();
+            std::io::Write::write_all(
+                &mut w,
+                format!("<w:document><w:body><w:p><w:r><w:t>{kept}</w:t></w:r></w:p></w:body></w:document>").as_bytes(),
+            )
+            .unwrap();
+            w.finish().unwrap();
         }
         "run" => {
             let at = a

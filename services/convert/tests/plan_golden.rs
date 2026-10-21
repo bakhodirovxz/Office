@@ -31,6 +31,10 @@ fn show(steps: &[Step]) -> String {
                 h.output
             ),
             Step::Expand(e) => format!("EXPAND {e:?}"),
+            Step::PdfTextGuard(g) => format!(
+                "GUARD {} against {} (else {})",
+                g.pdf, g.docx, g.fallback.output
+            ),
         })
         .collect::<Vec<_>>()
         .join("\n    ")

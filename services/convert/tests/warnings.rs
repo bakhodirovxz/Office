@@ -457,6 +457,8 @@ fn every_code_has_catalog_text() {
             "text_transcoded",
             "pdf_damaged",
             "xdfu_cannot_check",
+            "pdf_text_missing",
+            "pdf_docx_fallback",
         ]
         .map(String::from),
     );

@@ -269,11 +269,21 @@ pub enum Sidecar {
     Pdf2Docx,
 }
 
+/// After a native pdf to docx (D5): the letters of the PDF text layer against the letters of `docx`. A shortfall over the threshold
+/// is redone by `fallback` (the pdf2docx sidecar) when it is configured and answers, and warned about otherwise.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PdfTextGuard {
+    pub pdf: String,
+    pub docx: String,
+    pub fallback: HttpStep,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Step {
     Tool(ToolStep),
     Http(HttpStep),
     Expand(Expand),
+    PdfTextGuard(PdfTextGuard),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -608,14 +618,15 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
             } else {
                 "out/output.docx"
             };
+            let side = HttpStep {
+                sidecar: Sidecar::Pdf2Docx,
+                route: "/v1/pdf2docx".into(),
+                query: vec![("merge".into(), "1".into())],
+                input: inp.into(),
+                output: first.into(),
+            };
             let mut v = match o.pdf_engine {
-                PdfEngine::Sidecar => vec![Step::Http(HttpStep {
-                    sidecar: Sidecar::Pdf2Docx,
-                    route: "/v1/pdf2docx".into(),
-                    query: vec![("merge".into(), "1".into())],
-                    input: inp.into(),
-                    output: first.into(),
-                })],
+                PdfEngine::Sidecar => vec![Step::Http(side.clone())],
                 PdfEngine::Native => {
                     // doc id 1: a fresh `run` process opens exactly one document
                     let script = json!([
@@ -631,6 +642,11 @@ fn pdf(inp: &str, t: Target, o: &Options, tr: Option<&Translit>) -> Result<Vec<S
                     vec![
                         Step::Expand(Expand::PdfCheck { pdf: inp.into() }),
                         Step::Tool(st),
+                        Step::PdfTextGuard(PdfTextGuard {
+                            pdf: inp.into(),
+                            docx: first.into(),
+                            fallback: side,
+                        }),
                     ]
                 }
             };

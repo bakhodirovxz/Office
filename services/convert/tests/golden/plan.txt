@@ -162,6 +162,7 @@ row pptx->pptx:
 row pdf->docx:
     EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"out/output.docx"},"tool":"doc_export_office"}]]
+    GUARD in/input.pdf against out/output.docx (else out/output.docx)
 row pdf->txt:
     EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli text in/input.pdf > out/output.txt
@@ -296,6 +297,7 @@ translit-cyrl csv->csv: Unsupported("--translit is not available for .csv to .cs
 translit-cyrl pdf->docx:
     EXPAND PdfCheck { pdf: "in/input.pdf" }
     pdf-cli run --script mid/native.json --root . [writes mid/native.json: [{"args":{"path":"in/input.pdf"},"tool":"doc_open"},{"args":{"doc":1,"path":"mid/pdf.docx"},"tool":"doc_export_office"}]]
+    GUARD in/input.pdf against mid/pdf.docx (else mid/pdf.docx)
     docs-cli run --file mid/pdf.docx --cmd tools.translitCyrl={"apostrophe":"official","latinAlphabet":"1995","scope":"document"} --print --save out/output.docx
 translit-latn-2026 docx->docx:
     docs-cli run --file in/input.docx --cmd tools.translitLatn={"apostrophe":"official","latinAlphabet":"2026","scope":"document"} --print --save out/output.docx

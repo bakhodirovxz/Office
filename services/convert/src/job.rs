@@ -171,6 +171,21 @@ impl Progress {
     fn warn(&mut self, code: &str, count: u32) {
         self.warnings.push(report::warn(code, count));
     }
+    /// The sidecar's own warnings (`X-Convert-Report`), each as a `sidecar` warning.
+    fn sidecar(&mut self, rep: Option<serde_json::Value>) {
+        for w in rep
+            .iter()
+            .flat_map(|r| r["warnings"].as_array())
+            .flatten()
+            .filter_map(|w| w.as_str())
+        {
+            self.warnings.push(Warning {
+                code: "sidecar".into(),
+                count: 1,
+                text: w.to_string(),
+            });
+        }
+    }
     /// An engine message, verbatim. The same message again (`--sheet all` on an .xls repeats the import warning per sheet) raises the count.
     fn upstream(&mut self, text: String) {
         match self
@@ -212,31 +227,180 @@ pub fn translit_result(stdout: &[u8]) -> Option<serde_json::Value> {
     })
 }
 
-/// Does the docx at `path` hold a single non-blank `<w:t>` run? A file that cannot be read says "yes": that is the validator's to report.
-fn docx_has_text(path: &Path) -> bool {
-    let Ok(f) = fs::File::open(path) else {
-        return true;
-    };
-    let Ok(mut z) = zip::ZipArchive::new(f) else {
-        return true;
-    };
-    let Ok(part) = z.by_name("word/document.xml") else {
-        return true;
-    };
-    let mut xml = Vec::new();
-    if part.take(scan::PART_CAP).read_to_end(&mut xml).is_err() {
-        return true;
-    }
-    let xml = String::from_utf8_lossy(&xml);
-    xml.match_indices("<w:t").any(|(i, _)| {
+/// The text of every `<w:t>` run in `xml`.
+fn w_t_texts(xml: &str) -> impl Iterator<Item = &str> {
+    xml.match_indices("<w:t").filter_map(|(i, _)| {
         let rest = &xml[i + 4..];
         // `<w:t>` or `<w:t xml:space="preserve">`, not `<w:tbl>`, `<w:tc>` or `<w:tab/>`
         matches!(rest.as_bytes().first(), Some(b'>' | b' '))
-            && rest
-                .split_once('>')
-                .and_then(|(_, body)| body.split_once("</w:t>"))
-                .is_some_and(|(text, _)| !text.trim().is_empty())
+            .then(|| rest.split_once('>')?.1.split_once("</w:t>").map(|(t, _)| t))
+            .flatten()
     })
+}
+
+/// The XML parts of the docx at `path` whose names pass `want`, as text. `None` when the file or a part cannot be read.
+fn docx_parts(path: &Path, want: impl Fn(&str) -> bool) -> Option<Vec<String>> {
+    let mut z = zip::ZipArchive::new(fs::File::open(path).ok()?).ok()?;
+    let names: Vec<String> = z
+        .file_names()
+        .filter_map(Result::ok)
+        .filter(|n| want(n))
+        .map(|n| n.into_owned())
+        .collect();
+    let mut out = vec![];
+    for n in names {
+        let mut xml = Vec::new();
+        z.by_name(&n)
+            .ok()?
+            .take(scan::PART_CAP)
+            .read_to_end(&mut xml)
+            .ok()?;
+        out.push(String::from_utf8_lossy(&xml).into_owned());
+    }
+    Some(out)
+}
+
+/// Does the docx at `path` hold a single non-blank `<w:t>` run? A file that cannot be read says "yes": that is the validator's to report.
+fn docx_has_text(path: &Path) -> bool {
+    docx_parts(path, |n| n == "word/document.xml").is_none_or(|parts| {
+        parts.is_empty()
+            || parts
+                .iter()
+                .any(|x| w_t_texts(x).any(|t| !t.trim().is_empty()))
+    })
+}
+
+/// Letters in the body, header and footer runs of the docx (`&#NNN;` references decoded, named entities such as `&amp;` skipped).
+fn docx_letters(path: &Path) -> Option<usize> {
+    let parts = docx_parts(path, |n| {
+        n == "word/document.xml"
+            || ((n.starts_with("word/header") || n.starts_with("word/footer"))
+                && n.ends_with(".xml"))
+    })?;
+    Some(
+        parts
+            .iter()
+            .flat_map(|x| w_t_texts(x))
+            .map(|t| {
+                let mut n = 0;
+                let mut rest = t;
+                while let Some((a, b)) = rest.split_once('&') {
+                    n += a.chars().filter(|c| c.is_alphabetic()).count();
+                    let (ent, tail) = b.split_once(';').unwrap_or((b, ""));
+                    let num =
+                        ent.strip_prefix('#')
+                            .and_then(|d| match d.strip_prefix(['x', 'X']) {
+                                Some(h) => u32::from_str_radix(h, 16).ok(),
+                                None => d.parse().ok(),
+                            });
+                    n += usize::from(
+                        num.and_then(char::from_u32)
+                            .is_some_and(char::is_alphabetic),
+                    );
+                    rest = tail;
+                }
+                n + rest.chars().filter(|c| c.is_alphabetic()).count()
+            })
+            .sum(),
+    )
+}
+
+/// D5: the native pdf to docx lost a table column (18 of 480 letters of `p2d_widths`, 3.75 %) and said nothing; the other native
+/// outputs of the WP10 fixtures lose 0. A shortfall over this share of the PDF's letters, and at least `MIN_MISSING_LETTERS`, counts.
+const MAX_MISSING_PERCENT: usize = 1;
+const MIN_MISSING_LETTERS: usize = 3;
+
+fn letters_missing(pdf: usize, docx: usize) -> Option<usize> {
+    let missing = pdf.saturating_sub(docx);
+    (missing >= MIN_MISSING_LETTERS && missing * 100 > pdf * MAX_MISSING_PERCENT).then_some(missing)
+}
+
+/// The `PdfTextGuard` step: compare the PDF text layer with the docx the native engine wrote. Short by more than the threshold: redo
+/// the job with the sidecar when it is configured and answers (`pdf_docx_fallback`), else keep the native file (`pdf_text_missing`).
+fn guard_pdf_text(
+    cfg: &Config,
+    ctl: &Ctl,
+    job: &Path,
+    g: &plan::PdfTextGuard,
+    input_mb: f64,
+    pages: u32,
+    p: &mut Progress,
+) -> Result<(), Failure> {
+    let sink = job.join("mid/pdf-text.txt");
+    let mut probe = vec![];
+    // the guard is a check on a finished file: if it cannot run, the native result stands
+    if run_tool(
+        cfg,
+        ctl,
+        ToolId::Pdf,
+        &["text".into(), g.pdf.clone()],
+        job,
+        Some(&sink),
+        input_mb,
+        pages,
+        &mut probe,
+    )
+    .is_err()
+    {
+        ctl.check()?;
+        return Ok(());
+    }
+    let pdf_letters = fs::read(&sink)
+        .map(|b| {
+            String::from_utf8_lossy(&b)
+                .chars()
+                .filter(|c| c.is_alphabetic())
+                .count()
+        })
+        .unwrap_or(0);
+    let docx = job.join(&g.docx);
+    let Some(have) = docx_letters(&docx) else {
+        return Ok(());
+    };
+    let Some(missing) = letters_missing(pdf_letters, have) else {
+        return Ok(());
+    };
+    let warn_missing = |p: &mut Progress, missing: usize| {
+        p.warnings.push(Warning {
+            code: "pdf_text_missing".into(),
+            count: missing as u32,
+            text: report::text_with(
+                "pdf_text_missing",
+                &[
+                    ("missing", &missing.to_string()),
+                    ("total", &pdf_letters.to_string()),
+                ],
+            ),
+        })
+    };
+    if cfg.pdf2docx_url.is_none() {
+        warn_missing(p, missing);
+        return Ok(());
+    }
+    let native = job.join("mid/native.docx");
+    fs::rename(&docx, &native).map_err(|e| Failure {
+        exit: Exit::ToolError,
+        msg: format!("cannot keep the native docx: {e}"),
+    })?;
+    match crate::http::run_http(cfg, ctl, job, &g.fallback, &mut p.steps) {
+        Ok(rep) => {
+            p.sidecar(rep);
+            p.warn("pdf_docx_fallback", 1);
+            if let Some(m) = docx_letters(&docx).and_then(|h| letters_missing(pdf_letters, h)) {
+                warn_missing(p, m);
+            }
+        }
+        Err(_) => {
+            ctl.check()?;
+            let _ = fs::remove_file(&docx);
+            fs::rename(&native, &docx).map_err(|e| Failure {
+                exit: Exit::ToolError,
+                msg: format!("cannot restore the native docx: {e}"),
+            })?;
+            warn_missing(p, missing);
+        }
+    }
+    Ok(())
 }
 
 /// The regular files of `out/`. A symlink, a directory or anything else is reported by name.
@@ -358,21 +522,13 @@ fn run_plan(
                 }
             }
             Step::Http(h) => {
-                if let Some(rep) = crate::http::run_http(cfg, ctl, job, &h, &mut p.steps)? {
-                    for w in rep["warnings"]
-                        .as_array()
-                        .into_iter()
-                        .flatten()
-                        .filter_map(|w| w.as_str())
-                    {
-                        p.warnings.push(Warning {
-                            code: "sidecar".into(),
-                            count: 1,
-                            text: w.to_string(),
-                        });
-                    }
-                }
+                let rep = crate::http::run_http(cfg, ctl, job, &h, &mut p.steps)?;
+                p.sidecar(rep);
                 declared.insert(job.join(&h.output));
+            }
+            Step::PdfTextGuard(g) => {
+                guard_pdf_text(cfg, ctl, job, &g, input_mb, pages, p)?;
+                declared.insert(job.join(&g.docx));
             }
             Step::Expand(e) => {
                 let (tool, argv): (ToolId, Vec<String>) = match &e {
