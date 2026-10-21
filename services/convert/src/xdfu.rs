@@ -1277,7 +1277,13 @@ impl JobHook for XdfuHook {
         if !scannable(ctx.kind) {
             // the input cannot be read for a grif: check what the tool makes of it, if that can be read
             if !output_scannable(&ctx.target) {
-                let what = ctx.kind.map_or("this", Kind::ext);
+                // no detected kind (PDF operations): name the staged input's extension, never an English word
+                let what = ctx.kind.map(Kind::ext).unwrap_or_else(|| {
+                    ctx.input
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .unwrap_or("?")
+                });
                 return self.veto(
                     ctx,
                     vec![],
