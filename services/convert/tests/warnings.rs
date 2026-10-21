@@ -705,6 +705,29 @@ fn the_en_us_notes_go_away_where_the_cli_honours_the_locale() {
 }
 
 #[test]
+fn a_workbook_with_charts_keeps_the_pdf_note_under_ru() {
+    let s = Sandbox::new("charts");
+    let cfg = s.cfg();
+    std::fs::create_dir_all(&cfg.work_dir).unwrap();
+    std::fs::write(cfg.work_dir.join("honour-locale"), b"").unwrap();
+    let input = s.zip(
+        "staff.xlsx",
+        &[
+            "[Content_Types].xml",
+            "xl/workbook.xml",
+            "xl/charts/chart1.xml",
+        ],
+    );
+    let opts = Options {
+        locale: NumLocale::Ru,
+        ..Options::default()
+    };
+    let r = job::convert_file(&cfg, &input, Target::Pdf, &opts, &s.dest());
+    let codes: Vec<_> = r.warnings.iter().map(|w| w.code.as_str()).collect();
+    assert_eq!(codes, ["pdf_en_us"], "{}", r.message);
+}
+
+#[test]
 fn the_en_us_notes_stay_where_the_cli_ignores_the_locale() {
     let run = |n, loc, to| notes_under(n, false, loc, to);
     assert_eq!(run("deaf-pdf", NumLocale::Ru, Target::Pdf), ["pdf_en_us"]);

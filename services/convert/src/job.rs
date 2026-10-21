@@ -1240,7 +1240,8 @@ pub fn convert_source(
             .any(|w| matches!(w.code.as_str(), "pdf_en_us" | "csv_one_sheet_en_us"))
         && crate::exec::sheets_honours_locale(cfg)
     {
-        lost.retain(|w| w.code != "pdf_en_us");
+        // chart axes and labels stay en-US in every locale (numlocale.md, "Still en-US"), so a workbook with charts keeps the PDF note
+        lost.retain(|w| w.code != "pdf_en_us" || scan.count("charts") > 0);
         for w in &mut lost {
             if w.code == "csv_one_sheet_en_us" {
                 *w = report::warn("csv_one_sheet", w.count);
