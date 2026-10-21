@@ -95,7 +95,7 @@ fn utf16_with_a_bom_is_transcoded_in_both_byte_orders() {
     let le: Vec<u8> = [&[0xFF, 0xFE][..], &text.encode_utf16().flat_map(|c| c.to_le_bytes()).collect::<Vec<_>>()].concat();
     let be: Vec<u8> = [&[0xFE, 0xFF][..], &text.encode_utf16().flat_map(|c| c.to_be_bytes()).collect::<Vec<_>>()].concat();
     for (name, bytes, label) in [("le.txt", le.clone(), "UTF-16 LE"), ("be.txt", be, "UTF-16 BE"), ("le.csv", le, "UTF-16 LE")] {
-        let (r, seen) = s.convert(name, &bytes, if name.ends_with("csv") { Target::Pdf } else { Target::Pdf });
+        let (r, seen) = s.convert(name, &bytes, Target::Pdf);
         assert_eq!(r.code, 0, "{name}: {}", r.message);
         assert!(r.warnings[0].text.contains(label), "{name}: {}", r.warnings[0].text);
         assert_eq!(String::from_utf8(seen).unwrap(), text, "{name}");

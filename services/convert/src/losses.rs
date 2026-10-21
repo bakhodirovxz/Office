@@ -116,7 +116,8 @@ mod tests {
         let none = with(&[]);
         let has = |f: &'static str| with(&[(f, 1)]);
         // (code, feature, kinds that warn, targets that warn, a target that must stay quiet)
-        let rows: [(&str, &'static str, &[Kind], &[Target], Target); 9] = [
+        type Case<'a> = (&'a str, &'static str, &'a [Kind], &'a [Target], Target);
+        let rows: [Case; 9] = [
             ("comments_dropped", "comments", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt], Target::Pdf),
             ("footnotes_dropped", "footnotes", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html, Target::Md, Target::Txt], Target::Pdf),
             ("headers_footers_dropped", "headers_footers", &[Kind::Docx], &[Target::Odt, Target::Rtf, Target::Html], Target::Pdf),

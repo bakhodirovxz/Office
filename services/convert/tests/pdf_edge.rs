@@ -2,6 +2,7 @@
 //! `E:/office-target/p1`, as `pdf/release/pdf-cli(.exe)`):
 //! - a cut-off PDF converted to txt or docx carries `pdf_damaged` (and the engine's own message), a whole one does not;
 //! - a PDF with no text layer converted to docx (native engine) carries `empty_text`, the same as to txt; a PDF with text does not.
+//!
 //! The PDFs are built here, byte by byte, with a correct cross-reference table.
 use convert::exec::Config;
 use convert::job::{self, Dest, FileReport};
