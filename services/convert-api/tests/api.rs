@@ -1110,7 +1110,16 @@ async fn server_mode_stores_nothing_readable_and_no_key_anywhere() {
             .is_some_and(|n| n.to_string_lossy().contains("key"))),
         "a key file on disk: {files:?}"
     );
-    for f in &files {
+    // The tool's own scratch (`stage-<pid>-<hex>-<n>/`, not the `-api-` store or the `-pre-` check) is the documented
+    // plaintext the tool reads while it runs (api.md, plaintext table); it is skipped here only, and the finished-job
+    // check below proves it is gone afterwards. Owner decision, 2026-10-22.
+    let tool_scratch = |f: &std::path::Path| {
+        f.components().any(|c| {
+            let c = c.as_os_str().to_string_lossy();
+            c.starts_with("stage-") && !c.contains("-api-") && !c.contains("-pre-")
+        })
+    };
+    for f in files.iter().filter(|f| !tool_scratch(f)) {
         let b = std::fs::read(f).unwrap();
         assert!(
             !b.windows(secret.len()).any(|w| w == secret.as_bytes()),
