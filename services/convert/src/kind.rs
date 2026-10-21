@@ -94,6 +94,8 @@ pub struct Detected {
 #[derive(Debug)]
 pub enum DetectError {
     Io(String),
+    /// 0 bytes: nothing to convert, whatever the extension claims
+    Empty,
     Unknown,
     /// text in a legacy encoding (cp1251, UTF-16): not read as UTF-8, so it would be converted as garbage
     NotUtf8,
@@ -112,6 +114,9 @@ pub fn detect(path: &Path) -> Result<Detected, DetectError> {
     let mut head = vec![0u8; 64 * 1024];
     let n = f.read(&mut head).map_err(|e| DetectError::Io(e.to_string()))?;
     head.truncate(n);
+    if n == 0 && f.metadata().is_ok_and(|m| m.len() == 0) {
+        return Err(DetectError::Empty);
+    }
     let ext = path.extension().and_then(|e| e.to_str()).and_then(Kind::from_ext);
     let ole_bytes = if head.starts_with(&OLE) {
         let mut all = head.clone();

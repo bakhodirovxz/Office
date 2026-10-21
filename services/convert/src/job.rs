@@ -611,12 +611,21 @@ fn stage(cfg: &Config, src: &dyn InputSource) -> Result<Staged, Failure> {
     if n > max {
         return fail(Exit::Rejected, format!("the file is over the {} MB input limit", cfg.max_input_mb));
     }
+    if n == 0 {
+        return Err(empty_file());
+    }
     Ok(staged)
+}
+
+/// A 0-byte file is rejected whatever its extension claims: it is never read as an empty text file.
+pub fn empty_file() -> Failure {
+    Failure { exit: Exit::Rejected, msg: "the file is empty (0 bytes), so there is nothing to convert".into() }
 }
 
 fn detect_failure(label: &str, e: DetectError) -> Failure {
     match e {
         DetectError::Io(e) => Failure { exit: Exit::Usage, msg: format!("cannot read {label}: {e}") },
+        DetectError::Empty => empty_file(),
         DetectError::Unknown => Failure { exit: Exit::Unsupported, msg: "unsupported input: the content is not a document, spreadsheet, presentation or PDF this converter reads".into() },
         DetectError::NotUtf8 => Failure { exit: Exit::Unsupported, msg: "unsupported input: the text is not UTF-8 (cp1251 or UTF-16?); re-save it as UTF-8".into() },
     }

@@ -450,6 +450,7 @@ fn precheck(app: &App, job: &crate::app::Job, n: usize, up: &Upload, target: Tar
     std::io::copy(&mut src.open().map_err(io)?, &mut std::fs::File::create(&file).map_err(io)?).map_err(io)?;
     let det = kind::detect(&file).map_err(|e| match e {
         DetectError::Io(e) => (None, Exit::Usage.code(), format!("cannot read the file: {e}")),
+        DetectError::Empty => (None, Exit::Rejected.code(), convert::job::empty_file().msg),
         DetectError::Unknown => (None, Exit::Unsupported.code(), "unsupported input: the content is not a document, spreadsheet, presentation or PDF this converter reads".into()),
         DetectError::NotUtf8 => (None, Exit::Unsupported.code(), "unsupported input: the text is not UTF-8 (cp1251 or UTF-16?); re-save it as UTF-8".into()),
     })?;
