@@ -6,6 +6,17 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+/// An engine message that is a filled-in `{n}` template, shown in the interface language; any other text comes back as it is.
+fn localize_message(text: String) -> String {
+    for template in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
+        let Some((head, tail)) = template.split_once("{n}") else { continue };
+        if let Some(n) = text.strip_prefix(head).and_then(|r| r.strip_suffix(tail)).filter(|n| n.parse::<usize>().is_ok()) {
+            return i18n::t(template).replace("{n}", n);
+        }
+    }
+    text
+}
+
 /// The status line for a transliteration command's result.
 fn translit_status(v: &Value) -> String {
     let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
@@ -1342,7 +1353,7 @@ impl SlideApp {
                 }
                 UiRequest::Pane { id } => self.ui.pane = Some(id),
                 UiRequest::StartShow { from } => self.start_show(from, false),
-                UiRequest::Message { text } => self.set_status(text),
+                UiRequest::Message { text } => self.set_status(localize_message(text)),
                 UiRequest::PickFile { purpose } => {
                     if purpose == "saveAs" {
                         self.save_as_dialog("deckcraft");

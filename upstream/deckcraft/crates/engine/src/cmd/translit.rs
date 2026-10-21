@@ -8,7 +8,7 @@ use std::sync::Arc;
 use deckcraft_model::text::RunKind;
 use deckcraft_model::{Paragraph, Run, ShapeId, ShapeKind, Slide, TextBody};
 use serde_json::{Value, json};
-use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
+use uz_translit::{Apostrophe, Direction, LangPolicy, LatinAlphabet, Options, Script, lang_converts};
 
 use super::*;
 use crate::{Result, Session, Target};
@@ -68,6 +68,8 @@ struct Stats {
     paragraphs: usize,
     runs: usize,
     field: usize,
+    /// Text runs left as typed because of their language tag (de-DE, ...).
+    lang: usize,
     /// Chars gained (or lost) in the last paragraph of a selected range, to keep the selection on the same text.
     end_delta: isize,
 }
@@ -117,9 +119,12 @@ fn pieces(p: &Paragraph, from: usize, to: usize, st: &mut Stats) -> Vec<(Run, bo
             continue;
         }
         let (a, b) = (from.clamp(s, e) - s, to.clamp(s, e) - s);
+        // Owner decision D1: ru/en tags are converted, other non-Uzbek tags stay as typed.
+        let lc = lang_converts(r.props.lang.as_deref(), LangPolicy::ConvertRuEn);
+        st.lang += (!lc && a < b) as usize;
         let cut = |x: usize| r.text.char_indices().nth(x).map_or(r.text.len(), |(i, _)| i);
         let (ia, ib) = (cut(a), cut(b));
-        for (range, convert) in [(0..ia, false), (ia..ib, true), (ib..r.text.len(), false)] {
+        for (range, convert) in [(0..ia, false), (ia..ib, lc), (ib..r.text.len(), false)] {
             if !range.is_empty() {
                 out.push((Run { text: r.text[range].to_string(), props: r.props.clone(), kind: RunKind::Text }, convert));
             }
@@ -292,7 +297,7 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
         "tracked": false,
         "paragraphs": stats.paragraphs,
         "runs": stats.runs,
-        "skipped": {"lang": 0, "field": stats.field, "locked": 0},
+        "skipped": {"lang": stats.lang, "field": stats.field, "locked": 0},
         "ms": {"convert": t1 - t0, "apply": t2 - t1},
         "rulesVersion": uz_translit::RULES_VERSION,
     }))

@@ -1,0 +1,166 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Wed, 21 Oct 2026 10:10:27 +0500
+Subject: [PATCH] ui-egui, engine: plural and list fragments become whole
+ translatable strings
+
+The Columns and Slides pop-ups, the table cell alignment tips, the missing-fonts toast and the damaged-media notice were English
+sentences spliced from pieces (plural s, is/are, and/more, a lower-cased label). Each case is now one whole template with {a}/{b}/{c}/{n}
+placeholders looked up through i18n::t; the engine notice keeps English text and the UI translates it by template.
+---
+ crates/engine/src/cmd/file.rs | 14 +++++++-------
+ crates/ui-egui/src/lib.rs     | 13 ++++++++++++-
+ crates/ui-egui/src/ribbon.rs  | 14 ++++++++++----
+ crates/ui-egui/src/toast.rs   | 30 +++++++++++++++++++++++-------
+ 4 files changed, 52 insertions(+), 19 deletions(-)
+
+diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
+index 4761dc1..be74f4e 100644
+--- a/crates/engine/src/cmd/file.rs
++++ b/crates/engine/src/cmd/file.rs
+@@ -239,6 +239,12 @@ fn open_bytes(s: &mut Session, p: &Value) -> Result<Value> {
+     Ok(json!({"document": i, "missingFonts": s.doc()?.missing_fonts, "damagedMedia": damaged}))
+ }
+ 
++/// The damaged-media notice as whole-string templates; the UI finds them in [`MESSAGE_TEMPLATES`] and shows the translation.
++pub const DAMAGE_ONE: &str = "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
++pub const DAMAGE_MANY: &str = "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
++/// Every engine `UiRequest::Message` whose text is a `{n}` template filled in by the engine.
++pub const MESSAGE_TEMPLATES: [&str; 2] = [DAMAGE_ONE, DAMAGE_MANY];
++
+ /// Tell the user which pictures and media a damaged file lost, and mark the copy repaired.
+ fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
+     if damaged.is_empty() {
+@@ -246,13 +252,7 @@ fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
+     }
+     let st = s.doc_mut()?;
+     st.title = format!("{} (Repaired)", st.title);
+-    let n = damaged.len();
+-    let text = format!(
+-        "{n} picture{} or media file{} in this presentation couldn't be read and {} empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
+-        if n == 1 { "" } else { "s" },
+-        if n == 1 { "" } else { "s" },
+-        if n == 1 { "is" } else { "are" },
+-    );
++    let text = (if damaged.len() == 1 { DAMAGE_ONE } else { DAMAGE_MANY }).replace("{n}", &damaged.len().to_string());
+     s.ui_requests.push(crate::UiRequest::Message { text });
+     Ok(())
+ }
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index f4de26d..a676cc3 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -6,6 +6,17 @@
+ #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+ #![forbid(unsafe_code)]
+ 
++/// An engine message that is a filled-in `{n}` template, shown in the interface language; any other text comes back as it is.
++fn localize_message(text: String) -> String {
++    for template in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
++        let Some((head, tail)) = template.split_once("{n}") else { continue };
++        if let Some(n) = text.strip_prefix(head).and_then(|r| r.strip_suffix(tail)).filter(|n| n.parse::<usize>().is_ok()) {
++            return i18n::t(template).replace("{n}", n);
++        }
++    }
++    text
++}
++
+ /// The status line for a transliteration command's result.
+ fn translit_status(v: &Value) -> String {
+     let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
+@@ -1342,7 +1353,7 @@ impl SlideApp {
+                 }
+                 UiRequest::Pane { id } => self.ui.pane = Some(id),
+                 UiRequest::StartShow { from } => self.start_show(from, false),
+-                UiRequest::Message { text } => self.set_status(text),
++                UiRequest::Message { text } => self.set_status(localize_message(text)),
+                 UiRequest::PickFile { purpose } => {
+                     if purpose == "saveAs" {
+                         self.save_as_dialog("deckcraft");
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 9ec9841..fb22cbe 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -769,7 +769,8 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+                 let r = icon_toggle(ui, Icon::Columns, "Columns", en, false);
+                 egui::Popup::menu(&r).show(|ui| {
+                     for n in 1..=3 {
+-                        if ui.button(format!("{n} Column{}", if n > 1 { "s" } else { "" })).clicked() {
++                        let label = crate::i18n::t(if n > 1 { "{n} Columns" } else { "{n} Column" }).replace("{n}", &n.to_string());
++                        if ui.button(label).clicked() {
+                             run(app, "format.columns", json!({"count": n, "spacing": 18}));
+                         }
+                     }
+@@ -3034,8 +3035,12 @@ fn table_layout(app: &mut SlideApp, ui: &mut Ui) {
+                 toggle(app, ui, Icon::AlignRight, "Align Right", "format.alignRight", false);
+             });
+             ui.horizontal(|ui| {
+-                for (l, a) in [("Top", "top"), ("Center", "middle"), ("Bottom", "bottom")] {
+-                    if ui.small_button(l).on_hover_text(format!("Align text to the {l} of the cell").to_lowercase()).clicked() {
++                for (l, a, tip) in [
++                    ("Top", "top", "Align text to the top of the cell"),
++                    ("Center", "middle", "Align text to the center of the cell"),
++                    ("Bottom", "bottom", "Align text to the bottom of the cell"),
++                ] {
++                    if ui.small_button(l).on_hover_text(crate::i18n::t(tip)).clicked() {
+                         run(app, "table.cellAlign", json!({"anchor": a}));
+                     }
+                 }
+@@ -3324,7 +3329,8 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
+         let r = big_button(ui, Icon::Layout, &format!("Slides Per\nPage: {}", app.ui.handout_per_page), true);
+         egui::Popup::menu(&r).show(|ui| {
+             for n in [1u8, 2, 3, 4, 6, 9] {
+-                if ui.selectable_label(app.ui.handout_per_page == n, format!("{n} Slide{}", if n == 1 { "" } else { "s" })).clicked() {
++                let label = crate::i18n::t(if n == 1 { "{n} Slide" } else { "{n} Slides" }).replace("{n}", &n.to_string());
++                if ui.selectable_label(app.ui.handout_per_page == n, label).clicked() {
+                     app.ui.handout_per_page = n;
+                 }
+             }
+diff --git a/crates/ui-egui/src/toast.rs b/crates/ui-egui/src/toast.rs
+index 0dcfb05..bff3fb8 100644
+--- a/crates/ui-egui/src/toast.rs
++++ b/crates/ui-egui/src/toast.rs
+@@ -17,15 +17,21 @@ pub struct Toast {
+ 
+ /// The notice for fonts a presentation uses that aren't installed, or `None` when all are.
+ pub fn missing_fonts_message(fonts: &[String]) -> Option<String> {
+-    let names = match fonts {
++    let template = match fonts {
+         [] => return None,
+-        [a] => a.clone(),
+-        [a, b] => format!("{a} and {b}"),
+-        [a, b, c] => format!("{a}, {b} and {c}"),
+-        [a, b, c, rest @ ..] => format!("{a}, {b}, {c} and {} more", rest.len()),
++        [_] => "{a} isn't installed on this computer. Text that uses it is shown in a similar font.",
++        [_, _] => "{a} and {b} aren't installed on this computer. Text that uses them is shown in a similar font.",
++        [_, _, _] => "{a}, {b} and {c} aren't installed on this computer. Text that uses them is shown in a similar font.",
++        _ => "{a}, {b}, {c} and {n} more aren't installed on this computer. Text that uses them is shown in a similar font.",
+     };
+-    let (it, them) = if fonts.len() == 1 { ("isn't", "it") } else { ("aren't", "them") };
+-    Some(format!("{names} {it} installed on this computer. Text that uses {them} is shown in a similar font."))
++    let name = |i: usize| fonts.get(i).map_or("", String::as_str);
++    Some(
++        crate::i18n::t(template)
++            .replace("{a}", name(0))
++            .replace("{b}", name(1))
++            .replace("{c}", name(2))
++            .replace("{n}", &fonts.len().saturating_sub(3).to_string()),
++    )
+ }
+ 
+ /// Toast the active presentation's missing fonts, once per opened document.
+@@ -91,4 +97,14 @@ mod tests {
+         assert!(f(&["A", "B", "C"]).unwrap().starts_with("A, B and C aren't"));
+         assert!(f(&["A", "B", "C", "D", "E"]).unwrap().starts_with("A, B, C and 2 more aren't"));
+     }
++
++    #[test]
++    fn engine_count_templates_are_matched_and_other_messages_pass_through() {
++        use deckcraft_engine::cmd::file::{DAMAGE_MANY, DAMAGE_ONE};
++        for (tpl, n) in [(DAMAGE_ONE, "1"), (DAMAGE_MANY, "12")] {
++            let text = tpl.replace("{n}", n);
++            assert_eq!(crate::localize_message(text.clone()), text);
++        }
++        assert_eq!(crate::localize_message("Saved".into()), "Saved");
++    }
+ }

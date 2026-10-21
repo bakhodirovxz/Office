@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Wed, 21 Oct 2026 10:08:43 +0500
+Subject: [PATCH] engine: translit skips text runs whose language tag is not
+ uz, ru or en
+
+Each text run is passed to uz-translit with convert = lang_converts(run.props.lang, ConvertRuEn), like the Docs adapter: untagged, uz, ru
+and en runs convert, other tags (de-DE, ...) stay as typed and count in skipped.lang. Test: one paragraph with uz, ru, en and de runs.
+---
+ crates/engine/src/cmd/translit.rs | 11 ++++++++---
+ crates/engine/tests/translit.rs   | 21 +++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 114150a..bae7408 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -8,7 +8,7 @@ use std::sync::Arc;
+ use deckcraft_model::text::RunKind;
+ use deckcraft_model::{Paragraph, Run, ShapeId, ShapeKind, Slide, TextBody};
+ use serde_json::{Value, json};
+-use uz_translit::{Apostrophe, Direction, LatinAlphabet, Options, Script};
++use uz_translit::{Apostrophe, Direction, LangPolicy, LatinAlphabet, Options, Script, lang_converts};
+ 
+ use super::*;
+ use crate::{Result, Session, Target};
+@@ -68,6 +68,8 @@ struct Stats {
+     paragraphs: usize,
+     runs: usize,
+     field: usize,
++    /// Text runs left as typed because of their language tag (de-DE, ...).
++    lang: usize,
+     /// Chars gained (or lost) in the last paragraph of a selected range, to keep the selection on the same text.
+     end_delta: isize,
+ }
+@@ -117,9 +119,12 @@ fn pieces(p: &Paragraph, from: usize, to: usize, st: &mut Stats) -> Vec<(Run, bo
+             continue;
+         }
+         let (a, b) = (from.clamp(s, e) - s, to.clamp(s, e) - s);
++        // Owner decision D1: ru/en tags are converted, other non-Uzbek tags stay as typed.
++        let lc = lang_converts(r.props.lang.as_deref(), LangPolicy::ConvertRuEn);
++        st.lang += (!lc && a < b) as usize;
+         let cut = |x: usize| r.text.char_indices().nth(x).map_or(r.text.len(), |(i, _)| i);
+         let (ia, ib) = (cut(a), cut(b));
+-        for (range, convert) in [(0..ia, false), (ia..ib, true), (ib..r.text.len(), false)] {
++        for (range, convert) in [(0..ia, false), (ia..ib, lc), (ib..r.text.len(), false)] {
+             if !range.is_empty() {
+                 out.push((Run { text: r.text[range].to_string(), props: r.props.clone(), kind: RunKind::Text }, convert));
+             }
+@@ -292,7 +297,7 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
+         "tracked": false,
+         "paragraphs": stats.paragraphs,
+         "runs": stats.runs,
+-        "skipped": {"lang": 0, "field": stats.field, "locked": 0},
++        "skipped": {"lang": stats.lang, "field": stats.field, "locked": 0},
+         "ms": {"convert": t1 - t0, "apply": t2 - t1},
+         "rulesVersion": uz_translit::RULES_VERSION,
+     }))
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index 770d84c..4fb5e47 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -186,6 +186,27 @@ fn run_properties_fields_breaks_and_link_targets_are_untouched() {
+     assert_eq!(find_shape(&s.doc().unwrap().doc.slides[0].shapes, a).unwrap().geom, was.geom);
+ }
+ 
++#[test]
++fn language_tags_decide_which_runs_convert() {
++    let mut s = session();
++    let a = add(&mut s, "x");
++    let tag = |l: Option<&str>| RunProps { lang: l.map(Into::into), ..Default::default() };
++    with_shape(&mut s, 0, a, |sh| {
++        sh.text.as_mut().unwrap().paragraphs = vec![Paragraph {
++            runs: vec![
++                run("shahar ", tag(Some("uz-Latn"))),
++                run("shahar ", tag(Some("ru-RU"))),
++                run("shahar ", tag(Some("en-US"))),
++                run("shahar", tag(Some("de-DE"))),
++            ],
++            ..Default::default()
++        }];
++    });
++    let r = s.execute(CYRL, &json!({"scope": "slide"})).unwrap();
++    assert_eq!(r["skipped"]["lang"], 1);
++    assert_eq!(text_of(&s, 0, a), format!("{0}{0}{0}shahar", cyr("shahar ")));
++}
++
+ #[test]
+ fn tables_and_groups_are_reached() {
+     let mut s = session();

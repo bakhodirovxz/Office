@@ -187,6 +187,27 @@ fn run_properties_fields_breaks_and_link_targets_are_untouched() {
 }
 
 #[test]
+fn language_tags_decide_which_runs_convert() {
+    let mut s = session();
+    let a = add(&mut s, "x");
+    let tag = |l: Option<&str>| RunProps { lang: l.map(Into::into), ..Default::default() };
+    with_shape(&mut s, 0, a, |sh| {
+        sh.text.as_mut().unwrap().paragraphs = vec![Paragraph {
+            runs: vec![
+                run("shahar ", tag(Some("uz-Latn"))),
+                run("shahar ", tag(Some("ru-RU"))),
+                run("shahar ", tag(Some("en-US"))),
+                run("shahar", tag(Some("de-DE"))),
+            ],
+            ..Default::default()
+        }];
+    });
+    let r = s.execute(CYRL, &json!({"scope": "slide"})).unwrap();
+    assert_eq!(r["skipped"]["lang"], 1);
+    assert_eq!(text_of(&s, 0, a), format!("{0}{0}{0}shahar", cyr("shahar ")));
+}
+
+#[test]
 fn tables_and_groups_are_reached() {
     let mut s = session();
     s.execute("insert.table", &json!({"rows": 2, "cols": 2})).unwrap();

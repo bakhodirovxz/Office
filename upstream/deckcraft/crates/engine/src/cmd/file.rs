@@ -239,6 +239,12 @@ fn open_bytes(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"document": i, "missingFonts": s.doc()?.missing_fonts, "damagedMedia": damaged}))
 }
 
+/// The damaged-media notice as whole-string templates; the UI finds them in [`MESSAGE_TEMPLATES`] and shows the translation.
+pub const DAMAGE_ONE: &str = "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
+pub const DAMAGE_MANY: &str = "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
+/// Every engine `UiRequest::Message` whose text is a `{n}` template filled in by the engine.
+pub const MESSAGE_TEMPLATES: [&str; 2] = [DAMAGE_ONE, DAMAGE_MANY];
+
 /// Tell the user which pictures and media a damaged file lost, and mark the copy repaired.
 fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
     if damaged.is_empty() {
@@ -246,13 +252,7 @@ fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
     }
     let st = s.doc_mut()?;
     st.title = format!("{} (Repaired)", st.title);
-    let n = damaged.len();
-    let text = format!(
-        "{n} picture{} or media file{} in this presentation couldn't be read and {} empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
-        if n == 1 { "" } else { "s" },
-        if n == 1 { "" } else { "s" },
-        if n == 1 { "is" } else { "are" },
-    );
+    let text = (if damaged.len() == 1 { DAMAGE_ONE } else { DAMAGE_MANY }).replace("{n}", &damaged.len().to_string());
     s.ui_requests.push(crate::UiRequest::Message { text });
     Ok(())
 }

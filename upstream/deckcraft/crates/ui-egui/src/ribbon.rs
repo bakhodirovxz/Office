@@ -769,7 +769,8 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 let r = icon_toggle(ui, Icon::Columns, "Columns", en, false);
                 egui::Popup::menu(&r).show(|ui| {
                     for n in 1..=3 {
-                        if ui.button(format!("{n} Column{}", if n > 1 { "s" } else { "" })).clicked() {
+                        let label = crate::i18n::t(if n > 1 { "{n} Columns" } else { "{n} Column" }).replace("{n}", &n.to_string());
+                        if ui.button(label).clicked() {
                             run(app, "format.columns", json!({"count": n, "spacing": 18}));
                         }
                     }
@@ -3034,8 +3035,12 @@ fn table_layout(app: &mut SlideApp, ui: &mut Ui) {
                 toggle(app, ui, Icon::AlignRight, "Align Right", "format.alignRight", false);
             });
             ui.horizontal(|ui| {
-                for (l, a) in [("Top", "top"), ("Center", "middle"), ("Bottom", "bottom")] {
-                    if ui.small_button(l).on_hover_text(format!("Align text to the {l} of the cell").to_lowercase()).clicked() {
+                for (l, a, tip) in [
+                    ("Top", "top", "Align text to the top of the cell"),
+                    ("Center", "middle", "Align text to the center of the cell"),
+                    ("Bottom", "bottom", "Align text to the bottom of the cell"),
+                ] {
+                    if ui.small_button(l).on_hover_text(crate::i18n::t(tip)).clicked() {
                         run(app, "table.cellAlign", json!({"anchor": a}));
                     }
                 }
@@ -3324,7 +3329,8 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Layout, &format!("Slides Per\nPage: {}", app.ui.handout_per_page), true);
         egui::Popup::menu(&r).show(|ui| {
             for n in [1u8, 2, 3, 4, 6, 9] {
-                if ui.selectable_label(app.ui.handout_per_page == n, format!("{n} Slide{}", if n == 1 { "" } else { "s" })).clicked() {
+                let label = crate::i18n::t(if n == 1 { "{n} Slide" } else { "{n} Slides" }).replace("{n}", &n.to_string());
+                if ui.selectable_label(app.ui.handout_per_page == n, label).clicked() {
                     app.ui.handout_per_page = n;
                 }
             }
