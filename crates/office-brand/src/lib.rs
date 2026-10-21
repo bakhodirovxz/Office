@@ -9,7 +9,7 @@ use std::fs;
 use std::path::Path;
 use toml_edit::{DocumentMut, Item, Table};
 
-pub use icons::{Pictogram, ico_bytes, render_icon};
+pub use icons::{Pictogram, ico_bytes, png_bytes, render_icon};
 
 /// Locale codes in the order the overlay emits them (`brand.toml` spelling).
 pub const LOCALES: [&str; 4] = ["en", "ru", "uz-Latn", "uz-Cyrl"];

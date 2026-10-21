@@ -1083,7 +1083,8 @@ pub fn merge_report(
         }
     }
     for (scope, rows) in cat.scopes.iter_mut() {
-        if scope == "glossary" {
+        // the glossary and our own converter catalog have no upstream to disappear from
+        if scope == "glossary" || scope == "converter" {
             continue;
         }
         for r in rows.iter_mut() {

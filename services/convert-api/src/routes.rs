@@ -151,6 +151,9 @@ pub fn router(app: Arc<App>) -> Router {
         .route("/app.js", get(|| async { page("text/javascript; charset=utf-8", include_str!("../ui/app.js")) }))
         .route("/app.css", get(|| async { page("text/css; charset=utf-8", include_str!("../ui/app.css")) }))
         .route("/i18n.json", get(|| async { page("application/json", include_str!("../ui/i18n.json")) }))
+        .route("/icon.png", get(|| async { asset("image/png", include_bytes!("../ui/icon.png")) }))
+        // the one Noto Sans of the repo (assets/fonts/fallback): it has U+02BB, U+02BC and Cyrillic, which system fonts may lack
+        .route("/NotoSans-Regular-uz.ttf", get(|| async { asset("font/ttf", include_bytes!("../../../assets/fonts/fallback/NotoSans-Regular-uz.ttf")) }))
         .fallback(|| async { ApiError::not_found() })
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .layer(middleware::from_fn_with_state(app.clone(), headers))
@@ -158,6 +161,10 @@ pub fn router(app: Arc<App>) -> Router {
 }
 
 fn page(ct: &'static str, body: &'static str) -> Response {
+    ([(header::CONTENT_TYPE, ct)], body).into_response()
+}
+
+fn asset(ct: &'static str, body: &'static [u8]) -> Response {
     ([(header::CONTENT_TYPE, ct)], body).into_response()
 }
 

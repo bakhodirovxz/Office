@@ -341,6 +341,92 @@ pub fn overlay_root() -> Result<PathBuf, String> {
         })
 }
 
+/// Locales of the converter page, as `brand.toml` spells them, with the catalog's lower-case name.
+const PAGE_LOCALES: [(&str, &str); 4] = [
+    ("en", "en"),
+    ("ru", "ru"),
+    ("uz-Latn", "uz-latn"),
+    ("uz-Cyrl", "uz-cyrl"),
+];
+
+fn json_str(s: &str) -> String {
+    let mut out = String::from("\"");
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// The converter page catalog (`ui/i18n.json`): `{locale: {context: text}}` with the fallback chains applied, so the page
+/// only falls back to `en`. `names` holds the app name per locale from `brand.toml` (`app.name`).
+pub fn build_page_json(
+    cat: &Catalog,
+    chains: &Chains,
+    mode: Mode,
+    policy: &Policy,
+    names: &BTreeMap<String, String>,
+) -> String {
+    let rows = cat.app_rows("converter");
+    let mut out = String::from("{\n");
+    for (i, (loc, key)) in PAGE_LOCALES.iter().enumerate() {
+        let mut m: BTreeMap<String, String> = BTreeMap::new();
+        for row in &rows {
+            if row.context.is_empty() || row.context.starts_with('@') {
+                continue;
+            }
+            let v = if *key == "en" {
+                Some(row.source.clone())
+            } else {
+                resolve(row, "converter", key, chains, mode, policy).map(|r| r.0)
+            };
+            if let Some(v) = v {
+                m.entry(row.context.clone()).or_insert(v);
+            }
+        }
+        if let Some(n) = names.get(*loc) {
+            m.insert("app.name".into(), n.clone());
+        }
+        out.push_str(&format!("  {}: {{\n", json_str(loc)));
+        let body: Vec<String> = m
+            .iter()
+            .map(|(k, v)| format!("    {}: {}", json_str(k), json_str(v)))
+            .collect();
+        out.push_str(&body.join(",\n"));
+        out.push_str(if i + 1 < PAGE_LOCALES.len() { "\n  },\n" } else { "\n  }\n" });
+    }
+    out.push_str("}\n");
+    out
+}
+
+/// `ui/i18n.json` and `ui/icon.png` of the converter page, from the catalog and `brand.toml [apps.convert]`.
+pub fn page_assets(root: &Path, mode: Mode) -> Result<(String, Vec<u8>), String> {
+    let dir = root.join("i18n");
+    let brand = office_brand::Brand::load(&root.join("brand/brand.toml"))?;
+    let app = brand.app("convert")?;
+    let json = build_page_json(
+        &Catalog::load(&dir)?,
+        &Chains::load(&dir)?,
+        mode,
+        &Policy::load(&dir)?,
+        &app.names,
+    );
+    let icon = office_brand::png_bytes(&office_brand::render_icon(
+        app.pictogram,
+        128,
+        brand.accent_light,
+        brand.icon_fg,
+    ))?;
+    Ok((json, icon))
+}
+
 /// Export one app. Returns report lines.
 pub fn export_app(
     cat: &Catalog,
@@ -1048,5 +1134,66 @@ mod tests {
         assert!(
             ok.contains("date.month.2\t") && ok.find("date.month.2\t") < ok.find("date.month.10\t")
         );
+    }
+
+    fn conv_row(ctx: &str, en: &str) -> Row {
+        let mut r = row(ctx, en);
+        r.apps = "converter".into();
+        r
+    }
+
+    #[test]
+    fn page_json_applies_the_chains_and_the_brand_name() {
+        let mut a = conv_row("ui.a", "Alpha \"q\"");
+        a.uz_latn = "Alfa".into();
+        a.uz_latn_status = "draft:agent-sonnet:2026-10-21".into();
+        a.uz_cyrl = "Алфа".into();
+        a.uz_cyrl_status = "draft:agent-sonnet:2026-10-21".into();
+        a.ru = "Альфа".into();
+        a.ru_status = "draft:agent-sonnet:2026-10-21".into();
+        let mut b = conv_row("ui.b", "Beta");
+        b.ru = "Бета".into();
+        b.ru_status = "draft:agent-sonnet:2026-10-21".into();
+        let mut cat = Catalog::default();
+        cat.scopes.insert("converter".into(), vec![a, b]);
+        let names: BTreeMap<String, String> = [("en", "N"), ("uz-Cyrl", "Н")]
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        let text = build_page_json(&cat, &Chains::default(), Mode::Review, &Policy::OWNER_ONLY, &names);
+        let want = r#"{
+  "en": {
+    "app.name": "N",
+    "ui.a": "Alpha \"q\"",
+    "ui.b": "Beta"
+  },
+  "ru": {
+    "ui.a": "Альфа",
+    "ui.b": "Бета"
+  },
+  "uz-Latn": {
+    "ui.a": "Alfa"
+  },
+  "uz-Cyrl": {
+    "app.name": "Н",
+    "ui.a": "Алфа",
+    "ui.b": "Бета"
+  }
+}
+"#;
+        assert_eq!(text, want); // uz-Cyrl falls back to ru, uz-Latn never to en
+        let release = build_page_json(&cat, &Chains::default(), Mode::Release, &Policy::OWNER_ONLY, &names);
+        assert!(!release.contains("Alfa"), "release exports no draft");
+    }
+
+    #[test]
+    fn the_committed_page_catalog_is_current() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let (json, icon) = page_assets(root, Mode::Review).unwrap();
+        let ui = root.join("services/convert-api/ui");
+        let have = fs::read_to_string(ui.join("i18n.json")).unwrap().replace("\r\n", "\n");
+        assert!(have == json, "services/convert-api/ui/i18n.json is stale: run `cargo xt i18n export converter --format json`");
+        assert_eq!(fs::read(ui.join("icon.png")).unwrap(), icon, "icon.png is stale");
+        assert!(icon.starts_with(b"\x89PNG"));
     }
 }

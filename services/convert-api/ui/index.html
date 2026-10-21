@@ -1,5 +1,121 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Converter</title><link rel="stylesheet" href="/app.css"></head>
-<body><main><h1>Converter</h1><p>The converter page is added in WP8. The API is at <code>/api/v1</code>.</p></main>
-<script src="/app.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Converter</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="bar">
+  <img id="logo" src="/icon.png" alt="" width="40" height="40">
+  <h1 id="appname">Converter</h1>
+  <div class="bar-end">
+    <label for="lang" data-i18n="ui.language">Language</label>
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+      <option value="uz-Latn">Oʻzbekcha</option>
+      <option value="uz-Cyrl">Ўзбекча</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <section class="card" aria-labelledby="conn-h">
+    <details id="conn">
+      <summary id="conn-h" data-i18n="ui.conn.heading">Connect to server</summary>
+      <p id="conn-mode" class="muted"></p>
+      <p class="muted" data-i18n="ui.conn.hint"></p>
+      <div class="grid2">
+        <div class="field"><label for="srv-url" data-i18n="ui.conn.url">Server address</label>
+          <input id="srv-url" type="url" inputmode="url" autocomplete="off" placeholder="https://server.example"></div>
+        <div class="field"><label for="srv-token" data-i18n="ui.conn.token">Access token</label>
+          <input id="srv-token" type="password" autocomplete="off" spellcheck="false"></div>
+      </div>
+      <div class="row">
+        <button id="srv-apply" type="button" class="btn" data-i18n="ui.conn.apply">Connect</button>
+        <button id="srv-clear" type="button" class="btn ghost" data-i18n="ui.conn.clear">Disconnect and use local mode</button>
+      </div>
+    </details>
+  </section>
+
+  <div id="alert" class="alert" role="alert" hidden></div>
+
+  <section class="card" aria-labelledby="files-h">
+    <h2 id="files-h" data-i18n="ui.files.heading">Files</h2>
+    <div id="drop" class="drop">
+      <span data-i18n="ui.drop.title">Drop files here or</span>
+      <input id="pick" class="sr" type="file" multiple>
+      <label for="pick" class="btn" data-i18n="ui.drop.pick">Choose files</label>
+      <p id="drop-hint" class="muted"></p>
+    </div>
+    <p id="files-none" class="muted" data-i18n="ui.files.none">No files chosen yet.</p>
+    <div class="scroll" id="files-wrap" hidden>
+      <table>
+        <thead><tr>
+          <th scope="col" data-i18n="ui.col.file">File</th>
+          <th scope="col" data-i18n="ui.col.type">Type</th>
+          <th scope="col" data-i18n="ui.col.size">Size</th>
+          <th scope="col" data-i18n="ui.col.status">Status</th>
+          <th scope="col"></th>
+        </tr></thead>
+        <tbody id="files"></tbody>
+      </table>
+    </div>
+    <div class="row"><button id="clear" type="button" class="btn ghost" data-i18n="ui.files.clear" hidden>Clear the list</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="opt-h">
+    <h2 id="opt-h" data-i18n="ui.opt.heading">Options</h2>
+    <div class="grid2">
+      <div class="field"><label for="o-to" data-i18n="ui.opt.target">Convert to</label><select id="o-to"></select>
+        <p id="o-to-none" class="muted" data-i18n="ui.opt.target.none" hidden></p></div>
+      <div class="field" data-opt="translit"><label for="o-translit" data-i18n="ui.opt.translit">Transliteration</label>
+        <select id="o-translit">
+          <option value="" data-i18n="ui.opt.translit.none">None</option>
+          <option value="cyrl" data-i18n="ui.opt.translit.cyrl">Latin to Cyrillic</option>
+          <option value="latn" data-i18n="ui.opt.translit.latn">Cyrillic to Latin</option>
+          <option value="auto" data-i18n="ui.opt.translit.auto">Detect the direction automatically</option>
+        </select></div>
+      <div class="field" data-opt="alphabet"><label for="o-alphabet" data-i18n="ui.opt.alphabet">Latin alphabet</label>
+        <select id="o-alphabet">
+          <option value="1995" data-i18n="ui.opt.alphabet.1995">1995 (default)</option>
+          <option value="2026" data-i18n="ui.opt.alphabet.2026">2026</option>
+        </select></div>
+      <div class="field" data-opt="sheet"><label for="o-sheet" data-i18n="ui.opt.sheet">Sheet to save as CSV</label>
+        <select id="o-sheet">
+          <option value="active" data-i18n="ui.opt.sheet.active">Active sheet</option>
+          <option value="all" data-i18n="ui.opt.sheet.all">All sheets</option>
+        </select></div>
+      <div class="field" data-opt="pages"><label for="o-pages" data-i18n="ui.opt.pages">Pages</label>
+        <input id="o-pages" type="text" autocomplete="off" aria-describedby="o-pages-hint">
+        <span id="o-pages-hint" class="muted" data-i18n="ui.opt.pages.hint"></span></div>
+      <div class="field" data-opt="dpi"><label for="o-dpi" data-i18n="ui.opt.dpi">Image resolution (dpi)</label>
+        <input id="o-dpi" type="number" min="72" max="600" value="150"></div>
+      <div class="field" data-opt="pdf-engine"><label for="o-engine" data-i18n="ui.opt.engine">PDF to DOCX engine</label>
+        <select id="o-engine">
+          <option value="native" data-i18n="ui.opt.engine.native">Built-in</option>
+          <option value="sidecar" id="o-sidecar" data-i18n="ui.opt.engine.sidecar">Separate service</option>
+        </select></div>
+    </div>
+    <div class="row">
+      <button id="go" type="button" class="btn primary" data-i18n="ui.convert" disabled>Convert</button>
+      <button id="stop" type="button" class="btn" data-i18n="ui.cancel" hidden>Cancel</button>
+    </div>
+  </section>
+
+  <section class="card" id="res" aria-labelledby="res-h" hidden>
+    <h2 id="res-h" data-i18n="ui.results.heading">Results</h2>
+    <p id="busy" class="muted" hidden></p>
+    <progress id="bar" max="1" value="0" hidden></progress>
+    <p id="prog" class="muted" role="status"></p>
+    <ul id="results" class="results"></ul>
+    <div class="row"><a id="zip" class="btn" hidden data-i18n="ui.download.all">Download all (zip)</a></div>
+  </section>
+  <div id="live" class="sr" role="status" aria-live="polite"></div>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

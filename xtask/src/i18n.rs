@@ -14,7 +14,8 @@ mod review;
 
 use catalog::{APPS, Catalog, Mode, Policy};
 
-pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR]\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
+pub const USAGE: &str = "usage: cargo xt i18n <command>\n  extract [--dry-run] [--date YYYY-MM-DD] [--refresh-where]\n  check-stale\n  export <app|all> [--mode review|release] [--out DIR]
+  export converter --format json [--out FILE]   (the converter page: ui/i18n.json + icon.png)\n  roundtrip [--out DIR]\n  review-export --batch N [--pass both|latn|cyrl] [--size N | --sizes N,N,...] [--out FILE]\n  review-import <csv> [--date YYYY-MM-DD]\n  coverage\n  check";
 
 pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     let dir = root.join("i18n");
@@ -62,6 +63,20 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
                 "release" => Mode::Release,
                 o => return Err(format!("unknown mode {o:?}")),
             };
+            if let Some(f) = flag("--format") {
+                // The converter page's catalog: ui/i18n.json (and its icon, from brand.toml) next to --out.
+                if f != "json" || *app != "converter" {
+                    return Err("--format json is only available for the converter app".into());
+                }
+                let out = flag("--out")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| root.join("services/convert-api/ui/i18n.json"));
+                let (json, icon) = export::page_assets(root, mode)?;
+                fs::write(&out, &json).map_err(|e| format!("{}: {e}", out.display()))?;
+                let png = out.with_file_name("icon.png");
+                fs::write(&png, icon).map_err(|e| format!("{}: {e}", png.display()))?;
+                return Ok(format!("{} and {} written", out.display(), png.display()));
+            }
             let cat = Catalog::load(&dir)?;
             let chains = export::Chains::load(&dir)?;
             let policy = Policy::load(&dir)?;

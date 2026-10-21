@@ -576,7 +576,7 @@ async fn every_response_carries_the_security_headers() {
         one("zip", g(&format!("{base}/zip")), StatusCode::OK).await;
         one("formats", g("/api/v1/formats"), StatusCode::OK).await;
         one("healthz", h.req("GET", "/healthz", None, None, vec![]), StatusCode::OK).await;
-        for p in ["/", "/app.js", "/app.css", "/i18n.json"] {
+        for p in ["/", "/app.js", "/app.css", "/i18n.json", "/icon.png", "/NotoSans-Regular-uz.ttf"] {
             one(p, h.req("GET", p, None, None, vec![]), StatusCode::OK).await;
         }
         one("404", g("/api/v1/nothing"), StatusCode::NOT_FOUND).await;
