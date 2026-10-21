@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 14:46:06 +0500
+Date: Wed, 21 Oct 2026 17:14:00 +0500
 Subject: [PATCH] core: NumLocale and its tables (separators, month and day
  names, short date)
 
@@ -8,8 +8,8 @@ A Copy enum {EnUs, Ru, UzLatn, UzCyrl} with the Windows NLS data Excel shows. Pa
 never global. En-US is the default and the identity.
 ---
  crates/core/src/lib.rs    |   2 +
- crates/core/src/locale.rs | 179 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 181 insertions(+)
+ crates/core/src/locale.rs | 191 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 193 insertions(+)
  create mode 100644 crates/core/src/locale.rs
 
 diff --git a/crates/core/src/lib.rs b/crates/core/src/lib.rs
@@ -30,10 +30,10 @@ index d5adbc0..e6fe915 100644
  pub use value::{Array, CellError, Value, compare, compare_numbers, compare_text, number_to_text, sort_compare};
 diff --git a/crates/core/src/locale.rs b/crates/core/src/locale.rs
 new file mode 100644
-index 0000000..775d428
+index 0000000..0a9eefd
 --- /dev/null
 +++ b/crates/core/src/locale.rs
-@@ -0,0 +1,179 @@
+@@ -0,0 +1,191 @@
 +//! Number locale: the separators, month and day names and short date of the interface languages
 +//! the display and typed input follow. Anything parsed, calculated or stored stays en-US (the
 +//! locale only changes the text a person sees and types).
@@ -147,15 +147,21 @@ index 0000000..775d428
 +        }
 +    }
 +
-+    /// What built-in format id 14 (`m/d/yyyy`) shows as; `None` keeps the stored code (en-US).
-+    /// Q1 (owner, 2026-10-21): uz shows `dd.mm.yyyy` like ru.
-+    pub fn short_date(self) -> Option<&'static str> {
-+        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy") }
-+    }
-+
-+    /// Same for built-in id 22 (`m/d/yyyy h:mm`).
-+    pub fn short_date_time(self) -> Option<&'static str> {
-+        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy h:mm") }
++    /// What the built-in date formats show as. Excel shows ids 14-17 and 22 in the reader's own forms
++    /// (measured on ru-RU: `10.12.2026`-style `dd.mm.yyyy`, `12.окт.26`, `12.окт`, `окт.26`, `dd.mm.yyyy h:mm`); the
++    /// stored code never changes. `None` keeps the code (en-US, and every other code). Q1 (owner, 2026-10-21): uz is like ru.
++    pub fn builtin_date(self, code: &str) -> Option<&'static str> {
++        if self == NumLocale::EnUs {
++            return None;
++        }
++        match code {
++            "m/d/yyyy" => Some("dd.mm.yyyy"),
++            "m/d/yyyy h:mm" => Some("dd.mm.yyyy h:mm"),
++            "d-mmm-yy" => Some("dd.mmm.yy"),
++            "d-mmm" => Some("dd.mmm"),
++            "mmm-yy" => Some("mmm.yy"),
++            _ => None,
++        }
 +    }
 +}
 +
@@ -170,9 +176,15 @@ index 0000000..775d428
 +        assert_eq!((NumLocale::EnUs.decimal(), NumLocale::EnUs.group(), NumLocale::EnUs.list_sep()), ('.', ',', ','));
 +        for l in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
 +            assert_eq!((l.decimal(), l.group(), l.list_sep()), (',', '\u{a0}', ';'));
-+            assert_eq!(l.short_date(), Some("dd.mm.yyyy"));
++            assert_eq!(l.builtin_date("m/d/yyyy"), Some("dd.mm.yyyy"));
++            assert_eq!(l.builtin_date("m/d/yyyy h:mm"), Some("dd.mm.yyyy h:mm"));
++            assert_eq!(
++                (l.builtin_date("d-mmm-yy"), l.builtin_date("d-mmm"), l.builtin_date("mmm-yy")),
++                (Some("dd.mmm.yy"), Some("dd.mmm"), Some("mmm.yy"))
++            );
++            assert_eq!(l.builtin_date("yyyy-mm-dd"), None);
 +        }
-+        assert_eq!(NumLocale::EnUs.short_date(), None);
++        assert_eq!(NumLocale::EnUs.builtin_date("m/d/yyyy"), None);
 +    }
 +
 +    #[test]

@@ -194,3 +194,27 @@ fn xlsx_parts_are_byte_equal_across_locales() {
         assert_eq!(value(&s, "A5"), Value::text("1.234"));
     }
 }
+
+#[test]
+fn builtin_date_ids_show_the_locale_forms_and_the_stored_code_is_unchanged() {
+    // measured on ru-RU Excel: ids 14, 15, 16, 17 and 22 of 12 October 2026 15:04:05
+    let want = ["12.10.2026", "12.окт.26", "12.окт", "окт.26", "12.10.2026 15:04"];
+    let codes = ["m/d/yyyy", "d-mmm-yy", "d-mmm", "mmm-yy", "m/d/yyyy h:mm"];
+    let mut ru = session(NumLocale::Ru);
+    let mut en = session(NumLocale::EnUs);
+    for (i, code) in codes.iter().enumerate() {
+        for s in [&mut ru, &mut en] {
+            set(s, &format!("A{}", i + 1), "46307.62783564815");
+            fmt(s, &format!("A{}", i + 1), code);
+        }
+    }
+    let r = ru.execute("sheet.read", json!({"range": "A1:A5", "formatted": true})).unwrap();
+    assert_eq!(r["values"], json!(want.map(|w| [w])));
+    let e = en.execute("sheet.read", json!({"range": "A1:A5", "formatted": true})).unwrap();
+    assert_eq!(e["values"], json!([["10/12/2026"], ["12-Oct-26"], ["12-Oct"], ["Oct-26"], ["10/12/2026 15:04"]]));
+    // the codes are what the file stores
+    assert_eq!(
+        ru.doc().unwrap().wb.styles.get(ru.doc().unwrap().wb.sheet(0).unwrap().style_id(CellRef::parse("A2").unwrap())).num_fmt.as_str(),
+        "d-mmm-yy"
+    );
+}

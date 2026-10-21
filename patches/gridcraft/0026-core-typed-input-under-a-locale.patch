@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 14:46:06 +0500
+Date: Wed, 21 Oct 2026 17:14:09 +0500
 Subject: [PATCH] core: typed input under a locale, to_invariant
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -11,11 +11,11 @@ locale text as the en-US input text that means the same, and forces text (leadin
 where only the en-US parser would read a number, so the engine never stores a different number.
 En-US is parse_input unchanged.
 ---
- crates/core/src/parse.rs | 218 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 218 insertions(+)
+ crates/core/src/parse.rs | 222 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 222 insertions(+)
 
 diff --git a/crates/core/src/parse.rs b/crates/core/src/parse.rs
-index b465bea..39d9f56 100644
+index b465bea..26a3e9e 100644
 --- a/crates/core/src/parse.rs
 +++ b/crates/core/src/parse.rs
 @@ -5,6 +5,7 @@
@@ -121,7 +121,7 @@ index b465bea..39d9f56 100644
 +            _ => None,
 +        };
 +    }
-+    let words: Vec<&str> = t.split([' ', ',', '-', '/']).filter(|w| !w.is_empty()).collect();
++    let words: Vec<&str> = t.split([' ', ',', '-', '/', '.']).filter(|w| !w.is_empty()).collect();
 +    let abbr = |m: usize| NumLocale::EnUs.months_abbr().get(m.wrapping_sub(1)).copied();
 +    match words.as_slice() {
 +        [d, m, y] if num(d) && num(y) => Some(format!("{d}-{}-{y}", abbr(month_in(m, loc)?)?)),
@@ -135,7 +135,7 @@ index b465bea..39d9f56 100644
  /// Numeric text as arithmetic coerces it ("1,000", "50%", "$3", "1/2/2020", "10:00").
  pub fn parse_number_text(s: &str) -> Option<f64> {
      parse_number_text_in(s, DateSystem::D1900)
-@@ -398,4 +501,119 @@ mod tests {
+@@ -398,4 +501,123 @@ mod tests {
          assert_eq!(parse_input("2/29/1900", DateSystem::D1904).value, Value::text("2/29/1900"));
          assert_eq!(parse_input("2/29/1904", DateSystem::D1904).value, Value::Number(59.0));
      }
@@ -197,6 +197,10 @@ index b465bea..39d9f56 100644
 +            assert_eq!(pl("3.5", l).value, p(&format!("5/3/{}", current_year())).value);
 +            assert_eq!(pl("10.2026", l).value, Value::Number(46296.0));
 +            assert_eq!(pl("окт 2026", NumLocale::Ru).value, Value::Number(46296.0));
++            // the forms the built-in ids 15-17 show in ru (Excel ru: 12.окт.26, 12.окт, окт.26)
++            assert_eq!(pl("12.окт.26", NumLocale::Ru).value, Value::Number(46307.0));
++            assert_eq!(pl("окт.26", NumLocale::Ru).value, Value::Number(46296.0));
++            assert_eq!(pl("12.окт", NumLocale::Ru).value, p(&format!("10/12/{}", current_year())).value);
 +            // an impossible day or month stays text, also where en-US would read it
 +            assert_eq!(pl("31.02.2026", l).value, Value::text("31.02.2026"));
 +            assert_eq!(pl("10.13.2026", l).value, Value::text("10.13.2026"));

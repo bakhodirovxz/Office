@@ -111,15 +111,21 @@ impl NumLocale {
         }
     }
 
-    /// What built-in format id 14 (`m/d/yyyy`) shows as; `None` keeps the stored code (en-US).
-    /// Q1 (owner, 2026-10-21): uz shows `dd.mm.yyyy` like ru.
-    pub fn short_date(self) -> Option<&'static str> {
-        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy") }
-    }
-
-    /// Same for built-in id 22 (`m/d/yyyy h:mm`).
-    pub fn short_date_time(self) -> Option<&'static str> {
-        if self == NumLocale::EnUs { None } else { Some("dd.mm.yyyy h:mm") }
+    /// What the built-in date formats show as. Excel shows ids 14-17 and 22 in the reader's own forms
+    /// (measured on ru-RU: `10.12.2026`-style `dd.mm.yyyy`, `12.окт.26`, `12.окт`, `окт.26`, `dd.mm.yyyy h:mm`); the
+    /// stored code never changes. `None` keeps the code (en-US, and every other code). Q1 (owner, 2026-10-21): uz is like ru.
+    pub fn builtin_date(self, code: &str) -> Option<&'static str> {
+        if self == NumLocale::EnUs {
+            return None;
+        }
+        match code {
+            "m/d/yyyy" => Some("dd.mm.yyyy"),
+            "m/d/yyyy h:mm" => Some("dd.mm.yyyy h:mm"),
+            "d-mmm-yy" => Some("dd.mmm.yy"),
+            "d-mmm" => Some("dd.mmm"),
+            "mmm-yy" => Some("mmm.yy"),
+            _ => None,
+        }
     }
 }
 
@@ -134,9 +140,15 @@ mod tests {
         assert_eq!((NumLocale::EnUs.decimal(), NumLocale::EnUs.group(), NumLocale::EnUs.list_sep()), ('.', ',', ','));
         for l in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
             assert_eq!((l.decimal(), l.group(), l.list_sep()), (',', '\u{a0}', ';'));
-            assert_eq!(l.short_date(), Some("dd.mm.yyyy"));
+            assert_eq!(l.builtin_date("m/d/yyyy"), Some("dd.mm.yyyy"));
+            assert_eq!(l.builtin_date("m/d/yyyy h:mm"), Some("dd.mm.yyyy h:mm"));
+            assert_eq!(
+                (l.builtin_date("d-mmm-yy"), l.builtin_date("d-mmm"), l.builtin_date("mmm-yy")),
+                (Some("dd.mmm.yy"), Some("dd.mmm"), Some("mmm.yy"))
+            );
+            assert_eq!(l.builtin_date("yyyy-mm-dd"), None);
         }
-        assert_eq!(NumLocale::EnUs.short_date(), None);
+        assert_eq!(NumLocale::EnUs.builtin_date("m/d/yyyy"), None);
     }
 
     #[test]

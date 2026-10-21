@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
-Date: Wed, 21 Oct 2026 15:16:53 +0500
+Date: Wed, 21 Oct 2026 17:14:19 +0500
 Subject: [PATCH] engine: number locale in Prefs, display *_in, CSV save and
  open, sheet.read, copy, paste
 
@@ -15,13 +15,13 @@ not: xlsx parts are byte-equal across locales (test).
  crates/engine/src/cmd/edit.rs    |   7 +-
  crates/engine/src/cmd/file.rs    |  11 +-
  crates/engine/src/cmd/inspect.rs |   2 +-
- crates/engine/src/display.rs     |  58 +++++++--
- crates/engine/src/io.rs          |  58 +++++++--
+ crates/engine/src/display.rs     |  54 ++++++--
+ crates/engine/src/io.rs          |  58 ++++++--
  crates/engine/src/lib.rs         |  12 ++
- crates/engine/tests/numlocale.rs | 196 +++++++++++++++++++++++++++++++
+ crates/engine/tests/numlocale.rs | 220 +++++++++++++++++++++++++++++++
  crates/xlsx/src/csv.rs           |   8 +-
  crates/xlsx/src/lib.rs           |   5 +-
- 9 files changed, 323 insertions(+), 34 deletions(-)
+ 9 files changed, 343 insertions(+), 34 deletions(-)
  create mode 100644 crates/engine/tests/numlocale.rs
 
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
@@ -117,7 +117,7 @@ index 530e10f..56c9d58 100644
                  value_json(&sh.value(c))
              };
 diff --git a/crates/engine/src/display.rs b/crates/engine/src/display.rs
-index 0f70b56..ce3c370 100644
+index 0f70b56..52a6a1c 100644
 --- a/crates/engine/src/display.rs
 +++ b/crates/engine/src/display.rs
 @@ -3,9 +3,9 @@
@@ -132,7 +132,7 @@ index 0f70b56..ce3c370 100644
  
  /// Parsed number formats are cached by code.
  fn parsed(code: &str) -> NumberFormat {
-@@ -28,9 +28,21 @@ pub fn number_format(code: &str) -> NumberFormat {
+@@ -28,9 +28,17 @@ pub fn number_format(code: &str) -> NumberFormat {
      parsed(code)
  }
  
@@ -144,19 +144,15 @@ index 0f70b56..ce3c370 100644
 +}
 +
 +/// Formats a value with a format code as a reader of `loc` sees it. The stored code is never
-+/// rewritten: built-in ids 14 and 22 (`m/d/yyyy`, `m/d/yyyy h:mm`) are shown in the locale's
-+/// short date, as Excel does.
++/// rewritten: built-in date ids 14-17 and 22 are shown in the locale's forms ([`NumLocale::builtin_date`]),
++/// as Excel does.
 +pub fn format_in(v: &Value, code: &str, wb: &Workbook, loc: NumLocale) -> Formatted {
-+    let code = match code {
-+        "m/d/yyyy" => loc.short_date().unwrap_or(code),
-+        "m/d/yyyy h:mm" => loc.short_date_time().unwrap_or(code),
-+        _ => code,
-+    };
++    let code = loc.builtin_date(code).unwrap_or(code);
 +    format_value_in(v, &parsed(code), wb.date_system, loc)
  }
  
  /// What the cell editor and the formula bar start from. Same as `Cell::input_text`, except that a
-@@ -39,15 +51,26 @@ pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
+@@ -39,15 +47,26 @@ pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
  /// `dddd, mmmm d`), an ISO `yyyy-mm-dd` (with `hh:mm:ss` for a time of day; just `hh:mm:ss`
  /// for a time alone) is used instead, and if even that would not read back, the serial.
  pub fn edit_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
@@ -186,7 +182,7 @@ index 0f70b56..ce3c370 100644
      if reads_back(&shown) {
          return shown;
      }
-@@ -82,20 +105,30 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
+@@ -82,20 +101,30 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
  
  /// The text a cell shows (full precision General; the grid narrows General to fit the column).
  pub fn cell_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
@@ -219,7 +215,7 @@ index 0f70b56..ce3c370 100644
      match f.fill {
          Some((_, pos)) => {
              let mut t = f.text;
-@@ -110,6 +143,11 @@ pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
+@@ -110,6 +139,11 @@ pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
  
  /// Tab-separated text of a range, as the system clipboard gets it.
  pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
@@ -231,7 +227,7 @@ index 0f70b56..ce3c370 100644
      let Some(sh) = wb.sheet(sheet) else { return String::new() };
      let mut out = String::new();
      let r = clipboard_range(r);
-@@ -123,7 +161,7 @@ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
+@@ -123,7 +157,7 @@ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
                  out.push('\t');
              }
              first = false;
@@ -419,10 +415,10 @@ index 93e53b1..bbfa4f8 100644
  }
 diff --git a/crates/engine/tests/numlocale.rs b/crates/engine/tests/numlocale.rs
 new file mode 100644
-index 0000000..5ef01df
+index 0000000..cc12b00
 --- /dev/null
 +++ b/crates/engine/tests/numlocale.rs
-@@ -0,0 +1,196 @@
+@@ -0,0 +1,220 @@
 +//! Office overlay (patches/gridcraft/0028, 0029): the number locale in the engine. What a person
 +//! sees (cell text, CSV, PDF, copy) follows `Session.prefs.num_locale`; what is stored (xlsx
 +//! parts, values, format codes) never does.
@@ -618,6 +614,30 @@ index 0000000..5ef01df
 +        assert_eq!(value(&s, "A1"), Value::Number(46307.0));
 +        assert_eq!(value(&s, "A5"), Value::text("1.234"));
 +    }
++}
++
++#[test]
++fn builtin_date_ids_show_the_locale_forms_and_the_stored_code_is_unchanged() {
++    // measured on ru-RU Excel: ids 14, 15, 16, 17 and 22 of 12 October 2026 15:04:05
++    let want = ["12.10.2026", "12.окт.26", "12.окт", "окт.26", "12.10.2026 15:04"];
++    let codes = ["m/d/yyyy", "d-mmm-yy", "d-mmm", "mmm-yy", "m/d/yyyy h:mm"];
++    let mut ru = session(NumLocale::Ru);
++    let mut en = session(NumLocale::EnUs);
++    for (i, code) in codes.iter().enumerate() {
++        for s in [&mut ru, &mut en] {
++            set(s, &format!("A{}", i + 1), "46307.62783564815");
++            fmt(s, &format!("A{}", i + 1), code);
++        }
++    }
++    let r = ru.execute("sheet.read", json!({"range": "A1:A5", "formatted": true})).unwrap();
++    assert_eq!(r["values"], json!(want.map(|w| [w])));
++    let e = en.execute("sheet.read", json!({"range": "A1:A5", "formatted": true})).unwrap();
++    assert_eq!(e["values"], json!([["10/12/2026"], ["12-Oct-26"], ["12-Oct"], ["Oct-26"], ["10/12/2026 15:04"]]));
++    // the codes are what the file stores
++    assert_eq!(
++        ru.doc().unwrap().wb.styles.get(ru.doc().unwrap().wb.sheet(0).unwrap().style_id(CellRef::parse("A2").unwrap())).num_fmt.as_str(),
++        "d-mmm-yy"
++    );
 +}
 diff --git a/crates/xlsx/src/csv.rs b/crates/xlsx/src/csv.rs
 index 47486bf..172a222 100644

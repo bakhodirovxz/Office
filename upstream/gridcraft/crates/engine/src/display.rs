@@ -34,14 +34,10 @@ pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
 }
 
 /// Formats a value with a format code as a reader of `loc` sees it. The stored code is never
-/// rewritten: built-in ids 14 and 22 (`m/d/yyyy`, `m/d/yyyy h:mm`) are shown in the locale's
-/// short date, as Excel does.
+/// rewritten: built-in date ids 14-17 and 22 are shown in the locale's forms ([`NumLocale::builtin_date`]),
+/// as Excel does.
 pub fn format_in(v: &Value, code: &str, wb: &Workbook, loc: NumLocale) -> Formatted {
-    let code = match code {
-        "m/d/yyyy" => loc.short_date().unwrap_or(code),
-        "m/d/yyyy h:mm" => loc.short_date_time().unwrap_or(code),
-        _ => code,
-    };
+    let code = loc.builtin_date(code).unwrap_or(code);
     format_value_in(v, &parsed(code), wb.date_system, loc)
 }
 

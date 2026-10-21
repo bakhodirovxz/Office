@@ -131,7 +131,7 @@ fn localize_date(t: &str, loc: NumLocale) -> Option<String> {
             _ => None,
         };
     }
-    let words: Vec<&str> = t.split([' ', ',', '-', '/']).filter(|w| !w.is_empty()).collect();
+    let words: Vec<&str> = t.split([' ', ',', '-', '/', '.']).filter(|w| !w.is_empty()).collect();
     let abbr = |m: usize| NumLocale::EnUs.months_abbr().get(m.wrapping_sub(1)).copied();
     match words.as_slice() {
         [d, m, y] if num(d) && num(y) => Some(format!("{d}-{}-{y}", abbr(month_in(m, loc)?)?)),
@@ -559,6 +559,10 @@ mod tests {
             assert_eq!(pl("3.5", l).value, p(&format!("5/3/{}", current_year())).value);
             assert_eq!(pl("10.2026", l).value, Value::Number(46296.0));
             assert_eq!(pl("окт 2026", NumLocale::Ru).value, Value::Number(46296.0));
+            // the forms the built-in ids 15-17 show in ru (Excel ru: 12.окт.26, 12.окт, окт.26)
+            assert_eq!(pl("12.окт.26", NumLocale::Ru).value, Value::Number(46307.0));
+            assert_eq!(pl("окт.26", NumLocale::Ru).value, Value::Number(46296.0));
+            assert_eq!(pl("12.окт", NumLocale::Ru).value, p(&format!("10/12/{}", current_year())).value);
             // an impossible day or month stays text, also where en-US would read it
             assert_eq!(pl("31.02.2026", l).value, Value::text("31.02.2026"));
             assert_eq!(pl("10.13.2026", l).value, Value::text("10.13.2026"));
