@@ -70,6 +70,9 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 ## Local environment notes (this machine)
 - Windows 10, 12 cores, **31.8 GB RAM** (upgraded from 11.8 GB, noticed 2026-10-20), Intel UHD 630 (no discrete GPU). No macOS → no iOS simulator.
 - Rust: `~/.cargo/bin` (rustc 1.97.1, `stable-x86_64-pc-windows-gnu`, MSYS2 ucrt64 gcc).
+  MSVC is also installed (2026-10-22, owner OK, VS Community terms): VS 2022 Build Tools at `E:\VS\BuildTools`, Windows 11 SDK
+  (signtool in `C:\Program Files (x86)\Windows Kitsin.0.26100.0d`), toolchain `stable-x86_64-pc-windows-msvc`;
+  `scripts/build.sh ... --msvc` builds into `E:/office-target/p1/msvc/`. gnu stays the default.
   Not on the Bash PATH by default: `export PATH="$HOME/.cargo/bin:$PATH"`.
 - C: has ~34 GB free; build output goes to E: (`CARGO_TARGET_DIR=E:/office-target/<repo>`).
 - Android SDK at `%LOCALAPPDATA%\Android\Sdk`, NDK 27.1, AVDs `HRM_Dev_33`, `HRM_Pixel_8`.
