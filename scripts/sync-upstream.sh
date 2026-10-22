@@ -288,7 +288,7 @@ else
   say ""
   # register + rebase log
   for r in $READY; do n7=${NEW[$r]:0:7}
-    awk -v repo=$r -v d="$DATE" -v n7=$n7 'FNR==NR{ split($0,t,"\t"); if(t[2]==repo){ res[repo "/" t[6]]=t[7]; mn[repo "/" t[6]]=t[10] } next }
+    awk -v repo=$r -v d="$DATE" -v n7=$n7 'FILENAME==ARGV[1]{ split($0,t,"\t"); if(t[2]==repo){ res[repo "/" t[6]]=t[7]; mn[repo "/" t[6]]=t[10] } next }
       /^\| / { n=split($0,c,"|"); id=c[2]; gsub(/ /,"",id)
                if (id in res) { c[11]=" " d " @ " n7 ": " res[id] ", " mn[id] " min "; s=c[1]; for(i=2;i<=n;i++) s=s "|" c[i]; print s; next } }
       {print}' "$TSV" patches/REGISTER.md > "$WORK/REGISTER.new" && cp "$WORK/REGISTER.new" patches/REGISTER.md
