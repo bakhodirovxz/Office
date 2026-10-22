@@ -179,27 +179,25 @@ pub(crate) fn dispatch(app: &mut SheetApp, ctx: &egui::Context, key: Key, physic
         }
         Shortcut::Dialog(name, params) => app.open_dialog(name, params),
         Shortcut::Date | Shortcut::Time => {
-            let loc = app.num_locale();
             let text = app
                 .session
                 .active()
                 .map(|d| {
                     let now = gridcraft_engine::core::date::serial_in_system(d.wb.date_system, gridcraft_engine::calc::now_serial());
                     let (value, format) = if shortcut == Shortcut::Date { (now.floor(), "m/d/yyyy") } else { (now.fract(), "h:mm AM/PM") };
-                    gridcraft_engine::display::format_in(&gridcraft_engine::core::Value::Number(value), format, &d.wb, loc).text
+                    gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(value), format, &d.wb).text
                 })
                 .unwrap_or_default();
             edit_with(app, text);
         }
         Shortcut::FormulaAbove | Shortcut::ValueAbove => {
-            let loc = app.num_locale();
             let Some(above) = active.row.checked_sub(1).map(|r| CellRef::new(r, active.col)) else { return true };
             let text = if shortcut == Shortcut::FormulaAbove {
-                app.session.active().map(|d| gridcraft_engine::display::edit_text_in(&d.wb, sh, above, loc)).unwrap_or_default()
+                app.session.active().map(|d| gridcraft_engine::display::edit_text(&d.wb, sh, above)).unwrap_or_default()
             } else {
                 app.session
                     .active()
-                    .and_then(|d| sh.value_ref(above).map(|v| gridcraft_engine::display::format_in(v, "General", &d.wb, loc).text))
+                    .and_then(|d| sh.value_ref(above).map(|v| gridcraft_engine::display::format(v, "General", &d.wb).text))
                     .unwrap_or_default()
             };
             edit_with(app, text);

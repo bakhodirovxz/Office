@@ -8,7 +8,7 @@ use gridcraft_model::Formula;
 pub fn to_file(f: &Formula) -> String {
     match f.expr() {
         Some(e) => expr_to_file(e),
-        None => f.text().into_owned(),
+        None => f.text.clone(),
     }
 }
 
@@ -130,7 +130,7 @@ mod tests {
         // Found by the command-sequence fuzzer: deleting the anchor of `H5#` left `=#REF!` in
         // the workbook but `ANCHORARRAY(#REF!)` in the file, which read back differently.
         let deleted = Formula::from_expr(Expr::Unary(gridcraft_formula::UnOp::Spill, Box::new(Expr::Error(gridcraft_core::CellError::Ref))));
-        assert_eq!(deleted.text(), "#REF!");
+        assert_eq!(deleted.text, "#REF!");
         assert_eq!(to_file(&deleted), "#REF!");
     }
 

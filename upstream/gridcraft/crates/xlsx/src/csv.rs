@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::parse::parse_input_in;
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, NumLocale, Value};
+use gridcraft_core::parse::parse_input;
+use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, Value};
 use gridcraft_model::{Cell, NumFmt, Sheet, StyleId, Workbook};
 
 use crate::{CsvOptions, IoError};
@@ -143,8 +143,6 @@ pub fn read_csv(bytes: &[u8], opts: &CsvOptions) -> Result<Workbook, IoError> {
     let mut wb = Workbook::new();
     wb.date_system = opts.date_system;
     wb.csv_delimiter = u8::try_from(delim).ok();
-    // A file separated by the locale's decimal cannot hold locale numbers: it is en-US text.
-    let loc = if delim == opts.locale.decimal() { NumLocale::EnUs } else { opts.locale };
     let mut sheet = Sheet::new("Sheet1");
     let mut styles = std::mem::take(&mut wb.styles);
     let mut fmt_cache: Vec<(&'static str, StyleId)> = vec![];
@@ -163,7 +161,7 @@ pub fn read_csv(bytes: &[u8], opts: &CsvOptions) -> Result<Workbook, IoError> {
             }
             let pos = CellRef::new(row, col as u32);
             let cell = if opts.parse_values {
-                let p = parse_input_in(&f, opts.date_system, loc);
+                let p = parse_input(&f, opts.date_system);
                 let style = match p.format {
                     Some(code) => match fmt_cache.iter().find(|(c, _)| *c == code) {
                         Some((_, id)) => *id,

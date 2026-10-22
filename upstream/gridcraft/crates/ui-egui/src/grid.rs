@@ -149,6 +149,8 @@ pub struct GridState {
     pub hscroll: Option<Rect>,
     /// Ctrl+wheel zoom in progress (see [`WheelZoom`]).
     pub wheel_zoom: Option<WheelZoom>,
+    /// A one-finger touch drag in progress: it pans the sheet instead of selecting.
+    pub touch_pan: bool,
 }
 
 /// Ctrl+wheel zoom for one (doc uid, sheet). egui eases a notch in over several frames and
@@ -482,6 +484,10 @@ fn look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut CfCache) -> (
         if st.font.strike {
             style.font.strike = true;
         }
+        // In a differential style General means "not set" (#1163).
+        if st.num_fmt.as_str() != "General" {
+            style.num_fmt = st.num_fmt.clone();
+        }
         for (dst, src) in [
             (&mut style.borders.left, st.borders.left),
             (&mut style.borders.right, st.borders.right),
@@ -525,12 +531,11 @@ fn display_text(
     st: &Style,
     width_px: f32,
     char_w: f32,
-    loc: gridcraft_engine::core::NumLocale,
 ) -> (String, Option<Color32>, bool, Option<(char, usize)>) {
     if sh.show_formulas
         && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref())
     {
-        return (format!("={}", f.text()), None, false, None);
+        return (format!("={}", f.text), None, false, None);
     }
     if !sh.show_zeros && v.as_f64() == Some(0.0) {
         return (String::new(), None, false, None);
@@ -544,12 +549,12 @@ fn display_text(
         && let Value::Number(n) = v
     {
         let max_chars = ((width_px - 4.0) / char_w).floor().max(1.0) as usize;
-        return match gridcraft_engine::numfmt::format_general_fit_in(*n, max_chars.min(11), loc) {
+        return match gridcraft_engine::numfmt::format_general_fit(*n, max_chars.min(11)) {
             Some(t) => (t, None, true, None),
             None => ("#".repeat(max_chars.max(1)), None, true, None),
         };
     }
-    let f = gridcraft_engine::display::format_in(v, code, wb, loc);
+    let f = gridcraft_engine::display::format(v, code, wb);
     (f.text, f.color.map(numfmt_color), f.numeric, f.fill)
 }
 
@@ -637,6 +642,19 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
             }
             view.scroll -= d / z;
         }
+    }
+    // A one-finger touch drag pans the sheet, the content following the finger; it doesn't select.
+    // (Two fingers pinch-zoom through `zoom_delta` above.)
+    if resp.drag_started() && ui.input(|i| i.any_touches()) {
+        app.grid.touch_pan = true;
+    }
+    if app.grid.touch_pan && resp.dragged() && ui.input(|i| i.multi_touch().is_none()) {
+        let z = if paper { make_geo(app, view.scroll).z } else { sh.zoom as f32 / 100.0 * DISPLAY_SCALE };
+        let mut d = resp.drag_delta();
+        if sh.right_to_left {
+            d.x = -d.x;
+        }
+        view.scroll -= d / z;
     }
     // The zoom glides to its step like egui eases a wheel notch (90% of the way in 0.1 s), or goes
     // there at once without animations (as for the selection outline below: View › Animations
@@ -751,8 +769,19 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
     }
     // Interaction.
     let previous_popups = (app.grid.filter_menu, app.grid.list_picker, app.grid.header_menu);
-    crate::paper_view::interact(app, ui, &resp, &geo, sh, &wb);
-    interact(app, ui, &resp, &geo, sh, &wb);
+    // A pan the grid never saw end (it was hidden mid-drag) must not swallow the next press.
+    if app.grid.touch_pan && !resp.dragged() && !resp.drag_stopped() {
+        app.grid.touch_pan = false;
+    }
+    if app.grid.touch_pan {
+        // Skip the frames of a touch pan, its release included.
+        if !resp.dragged() {
+            app.grid.touch_pan = false;
+        }
+    } else {
+        crate::paper_view::interact(app, ui, &resp, &geo, sh, &wb);
+        interact(app, ui, &resp, &geo, sh, &wb);
+    }
     crate::text_box::show(app, ui, &geo, sh);
     if app.editor.as_ref().is_some_and(|e| !e.from_formula_bar) {
         in_cell_editor(app, ui, &geo, sh, &wb);
@@ -1160,8 +1189,7 @@ pub(crate) fn paint_quadrant(
         // Digits fit by the cell's own font and size, not the default 11pt (9pt marks in narrow columns).
         let char_w = p.layout_no_wrap("0".to_string(), font.clone(), Color32::PLACEHOLDER).size().x.max(1.0);
         let avail_w = rect.right() - text_left;
-        let (mut text, ncolor, numeric, fill_char) =
-            display_text(wb, sh, c, &v, st, avail_w / z.max(0.1) * z, char_w, crate::i18n::current_num_locale(p.ctx()));
+        let (mut text, ncolor, numeric, fill_char) = display_text(wb, sh, c, &v, st, avail_w / z.max(0.1) * z, char_w);
         if sh.show_formulas && sh.cell(c).is_some_and(|cell| cell.formula.is_some()) {
             text = crate::formula_locale::display(&text, crate::i18n::current(p.ctx()).formula_locale(), wb, si);
         }
@@ -1176,7 +1204,7 @@ pub(crate) fn paint_quadrant(
                 _ if numeric => HAlign::Right,
                 _ => HAlign::Left,
             },
-            h => h,
+            h => painted_halign(h, geo.rtl),
         };
         let indent = st.align.indent as f32 * 9.0 * z;
         let pad = 2.5 * z;
@@ -1294,7 +1322,7 @@ pub(crate) fn paint_quadrant(
             } else {
                 galley.clone()
             };
-            let pos = rotated_text_pos(*rect, galley.size(), angle, st.align.h, st.align.v, pad, indent);
+            let pos = rotated_text_pos(*rect, galley.size(), angle, painted_halign(st.align.h, geo.rtl), st.align.v, pad, indent);
             let mut shape = egui::epaint::TextShape::new(pos, galley, color);
             shape.angle = angle;
             cp.add(shape);
@@ -1621,8 +1649,9 @@ pub(crate) fn paint_selection(
     if let Some(ed) = &app.editor
         && ed.is_formula()
     {
+        let origin = app.session.active().and_then(|d| d.wb.sheet(ed.sheet)).map_or(sh.name.as_str(), |o| o.name.as_str());
         for (_, _, r, sheet, idx) in crate::editor::formula_refs(&ed.text) {
-            if sheet.as_deref().is_some_and(|s| !s.eq_ignore_ascii_case(&sh.name)) {
+            if !crate::editor::ref_is_on_sheet(sheet.as_deref(), origin, &sh.name) {
                 continue;
             }
             if !range_in_pane(r, rows, cols) {
@@ -2886,9 +2915,6 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                 ("Pick From Drop-down List…", "ui:pickList"),
                 ("Define Name…", "ui:defineName"),
                 ("Link…", "ui:insertLink"),
-                ("-", ""),
-                ("Latin to Cyrillic", "tools.translitCyrl"),
-                ("Cyrillic to Latin", "tools.translitLatn"),
             ];
             if let Some(item) = insert_copied {
                 items.insert(6, item);
@@ -2927,8 +2953,6 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                             app.copy_to_clipboard(ui.ctx(), id);
                         }
                         "edit.paste" => app.paste_from_clipboard(),
-                        // The context menu means "this selection": a single cell must not convert the whole sheet.
-                        other if other.starts_with("tools.translit") => app.run_or_alert(other, json!({"scope": "selection"})),
                         other => app.run_or_alert(other, json!({})),
                     }
                 }
@@ -3339,8 +3363,34 @@ mod selection_fill_tests {
     }
 }
 
+/// The horizontal alignment to paint with. Cells are painted left to right and a right-to-left
+/// sheet is mirrored afterwards, so an explicit Left or Right is swapped first to end up on the
+/// side the user chose: Align Right stays on the right in either sheet direction, as in Excel.
+/// General alignment is resolved from the value before this and follows the sheet direction.
+fn painted_halign(h: HAlign, rtl: bool) -> HAlign {
+    match h {
+        HAlign::Left if rtl => HAlign::Right,
+        HAlign::Right if rtl => HAlign::Left,
+        h => h,
+    }
+}
+
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn explicit_left_and_right_keep_their_side_on_a_right_to_left_sheet() {
+        use super::{HAlign, painted_halign};
+        // Painted before the mirror: swapped, so they land where the user put them.
+        assert_eq!(painted_halign(HAlign::Right, true), HAlign::Left);
+        assert_eq!(painted_halign(HAlign::Left, true), HAlign::Right);
+        // Left-to-right sheets and the other alignments are painted as they are.
+        assert_eq!(painted_halign(HAlign::Right, false), HAlign::Right);
+        assert_eq!(painted_halign(HAlign::Left, false), HAlign::Left);
+        for h in [HAlign::Center, HAlign::Justify, HAlign::Fill] {
+            assert_eq!(painted_halign(h, true), h);
+        }
+    }
     use super::*;
 
     #[test]
@@ -3411,6 +3461,28 @@ mod tests {
         assert_eq!(center_across_end(0, 20, |c| c <= 2), 2);
         assert_eq!(center_across_end(0, 20, |_| false), 0);
         assert_eq!(center_across_end(0, 1, |_| true), 1);
+    }
+
+    #[test]
+    fn conditional_number_format_reaches_the_cell_text() {
+        // #1163: a rule's number format replaces the cell's own; unmatched cells keep theirs.
+        let mut session = gridcraft_engine::Session::new();
+        session.new_workbook();
+        session.execute("range.setValues", json!({"range": "A1", "values": [[1], [3], [4]]})).unwrap();
+        session.execute("home.numberFormat", json!({"range": "A3", "code": "0.0"})).unwrap();
+        let rule = json!({"type": "cellIs", "operator": "greater", "value": "2", "style": {"num_fmt": "0.00"}});
+        session.execute("home.conditionalFormat", json!({"range": "A1:A3", "rule": rule})).unwrap();
+        let wb = session.active().unwrap().wb.clone();
+        let sh = wb.sheet(0).unwrap();
+        let mut cf = CfCache::new();
+        let text = |row: u32, cf: &mut CfCache| {
+            let c = CellRef::new(row, 0);
+            let (lk, _) = look(&wb, 0, sh, c, cf);
+            display_text(&wb, sh, c, &sh.value(c), &lk.style, 200.0, 7.0).0
+        };
+        assert_eq!(text(0, &mut cf), "1");
+        assert_eq!(text(1, &mut cf), "3.00");
+        assert_eq!(text(2, &mut cf), "4.00");
     }
 
     #[test]

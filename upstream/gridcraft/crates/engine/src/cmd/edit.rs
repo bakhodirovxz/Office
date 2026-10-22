@@ -155,7 +155,7 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
         cell.style = style;
         // Formulas whose result is a date/time get a format from functions like TODAY().
         if wb.styles.get(style).num_fmt.as_str() == "General" {
-            let f = cell.formula.as_ref().map(|f| f.text().to_ascii_uppercase()).unwrap_or_default();
+            let f = cell.formula.as_ref().map(|f| f.text.to_ascii_uppercase()).unwrap_or_default();
             let auto = if f.starts_with("TODAY(")
                 || f.starts_with("DATE(")
                 || f.starts_with("EDATE(")
@@ -243,7 +243,7 @@ fn cell_set(s: &mut Session, p: &Json) -> Result<Json> {
             }
             let mut cell = input_to_cell(&input, sheet, range.start, &mut cx.wb)?.unwrap_or_default();
             if let Some(f) = cell.formula.as_mut() {
-                std::sync::Arc::make_mut(f).set_array(Some(range));
+                std::sync::Arc::make_mut(f).array = Some(range);
             }
             let sh = cx.sheet_mut(sheet)?;
             // The array takes the whole range: other cells in it lose their contents.
@@ -338,19 +338,31 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {
     let input = str_param(p, "input").unwrap_or("").to_string();
     let origin = s.doc()?.selection.active;
     edit(s, |cx| {
-        let base = input_to_cell(&input, sheet, origin, &mut cx.wb)?;
+        // Each cell gets what typing the input there gives: the automatic number format where
+        // it's General, its own format otherwise, text where it's Text. That depends only on
+        // the cell's style, so the input is parsed once per style.
+        let mut by_style: std::collections::HashMap<StyleId, Option<Cell>> = std::collections::HashMap::new();
         for r in &ranges {
             if r.count() > 2_000_000 {
                 return Err(bad("range.fill", "range too large"));
             }
             for at in r.iter() {
-                let mut cell = base.clone().unwrap_or_default();
+                let style = cx.wb.sheet(sheet).map(|sh| sh.style_id(at)).unwrap_or_default();
+                let base = match by_style.get(&style) {
+                    Some(c) => c.clone(),
+                    None => {
+                        let c = input_to_cell(&input, sheet, at, &mut cx.wb)?;
+                        by_style.insert(style, c.clone());
+                        c
+                    }
+                };
+                let mut cell = base.unwrap_or_default();
                 if let Some(f) = &cell.formula
-                    && let Some(copy) = f.copied(at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64)
+                    && let Some(e) = f.expr()
                 {
-                    cell.formula = Some(std::sync::Arc::new(copy));
+                    let shifted = gridcraft_formula::adjust::shift_relative(e, at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64);
+                    cell.formula = Some(std::sync::Arc::new(Formula::from_expr(shifted)));
                 }
-                cell.style = cx.wb.sheet(sheet).and_then(|sh| sh.cell(at)).map(|c| c.style).unwrap_or(cell.style);
                 cx.sheet_mut(sheet)?.set_cell(at, cell);
                 cx.touch(sheet, at);
             }
@@ -600,7 +612,8 @@ fn undo(s: &mut Session, p: &Json) -> Result<Json> {
     let now = d.wb.clone();
     for _ in 0..steps {
         let Some(e) = d.undo.pop() else { break };
-        let cur = crate::HistoryEntry { label: e.label.clone(), wb: d.wb.clone(), selection: d.selection.clone() };
+        // Redo goes back to the undone edit's cells, not wherever the user clicked before undoing (#1855).
+        let cur = crate::HistoryEntry { label: e.label.clone(), wb: d.wb.clone(), selection: e.selection.clone() };
         d.redo.push(cur);
         label = e.label.clone();
         d.wb = e.wb;
@@ -659,7 +672,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
     } else {
         (d.wb.clone(), trim(ranges.first().copied().unwrap_or_default()), Vec::new())
     };
-    let text = crate::display::range_text_in(&wb, sheet, range, s.prefs.num_locale);
+    let text = crate::display::range_text(&wb, sheet, range);
     // The HTML rendering is for the host clipboard (UI); it can reach 4 MB, so agents and
     // scripts get it only when they ask for it.
     let html = if p.get("html").and_then(Json::as_bool) == Some(true) { crate::io::range_html(&wb, sheet, range, &text) } else { None };
@@ -796,14 +809,11 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
     let html = str_param(p, "html").map(crate::clip_html::table_cells).unwrap_or_default();
     let h = rows.len();
     let w = rows.iter().map(Vec::len).max().unwrap_or(0);
-    let loc = s.prefs.num_locale;
     edit(s, |cx| {
         for (ri, row) in rows.iter().enumerate() {
             for (ci, v) in row.iter().enumerate() {
                 let Some(c) = at.offset(ri as i64, ci as i64) else { continue };
-                // Text copied from a locale session (or Excel in that locale) is typed in it: `12.10.2026` is 12 October.
-                let typed = gridcraft_core::parse::to_invariant(v, cx.wb.date_system, loc);
-                let mut cell = input_to_cell(&typed, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
+                let mut cell = input_to_cell(v, sheet, c, &mut cx.wb).unwrap_or_else(|_| Some(Cell::value(Value::text(v.as_str()))));
                 if let Some(cl) = cell.as_mut() {
                     numeric_from_html(cl, v, html.get(ri).and_then(|r| r.get(ci)), &mut cx.wb);
                 }
@@ -982,31 +992,30 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                         let mut new = old.clone();
                         let shift = |cell: &Cell| -> Option<std::sync::Arc<Formula>> {
                             let f = cell.formula.as_ref()?;
+                            let e = f.expr()?;
                             if cut_move {
                                 // A moved formula still reads cells on its original sheet. Qualify
                                 // those references before the workbook-wide move adjustment below.
-                                let mut moved = if dest_sheet != clip.sheet {
-                                    Formula::from_expr(f.expr()?.map(&mut |x| match x {
+                                let e = if dest_sheet != clip.sheet {
+                                    e.map(&mut |x| match x {
                                         gridcraft_formula::Expr::Ref(mut r) if r.sheet == gridcraft_formula::SheetSel::Current => {
                                             r.sheet = gridcraft_formula::SheetSel::Named(src_sheet_name.clone());
                                             gridcraft_formula::Expr::Ref(r)
                                         }
                                         other => other,
-                                    }))
+                                    })
                                 } else {
-                                    // The same formula (it means the same wherever it is stored),
-                                    // still sharing its tree.
-                                    if !f.is_parsed() {
-                                        f.expr()?;
-                                    }
-                                    (**f).clone()
+                                    e
                                 };
+                                let mut moved = Formula::from_expr(e);
                                 // The array range moves with its formula.
                                 let (dr, dc) = (dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
-                                moved.set_array(f.array().and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?))));
+                                moved.array = f.array.and_then(|a| Some(RangeRef::new(a.start.offset(dr, dc)?, a.end.offset(dr, dc)?)));
                                 return Some(std::sync::Arc::new(moved));
                             }
-                            Some(std::sync::Arc::new(f.copied(dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64)?))
+                            let moved =
+                                gridcraft_formula::adjust::shift_relative(e, dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
+                            Some(std::sync::Arc::new(Formula::from_expr(moved)))
                         };
                         if link {
                             let sheet_prefix = if dest_sheet == clip.sheet && same_doc {
@@ -1098,7 +1107,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                         _ => None,
                                     }
                                 {
-                                    let text = format!("=({}){sym}{}", f.text(), gridcraft_core::number_to_text(y));
+                                    let text = format!("=({}){sym}{}", f.text, gridcraft_core::number_to_text(y));
                                     new.formula = Some(std::sync::Arc::new(Formula::new(&text)));
                                     new.value = Value::Empty;
                                 }
@@ -1195,24 +1204,20 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
         }
         let on_target = moves_arrays && host.eq_ignore_ascii_case(target);
         let Some(sheet) = wb.sheet_mut(si) else { continue };
-        // Rewritten formulas that are still the same in R1C1 terms keep sharing a tree.
-        let mut runs = gridcraft_model::FormulaRuns::default();
         for (c, f) in keys {
             let Some(expr) = f.expr() else { continue };
             let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
             let text = gridcraft_formula::print(&new);
-            let array = match f.array() {
+            let array = match f.array {
                 Some(a) if on_target => super::sheet::map_range(a, e),
                 a => a,
             };
-            if (text != f.text() || array != f.array())
+            if (text != f.text || array != f.array)
                 && let Some(cell) = sheet.cells.get_mut(c)
             {
-                let mut nf = runs.formula(c, new);
-                nf.set_array(array);
+                let mut nf = Formula::from_expr(new);
+                nf.array = array;
                 cell.formula = Some(std::sync::Arc::new(nf));
-            } else {
-                runs.keep(c, &f);
             }
         }
     }
@@ -1656,7 +1661,7 @@ mod tests {
         s.execute("cell.set", json!({"cell": "H5", "input": "=1+1", "array": true})).unwrap();
         let sh = s.doc().unwrap().wb.active().unwrap();
         let f = sh.cell(CellRef::parse("H5").unwrap()).and_then(|c| c.formula.clone()).unwrap();
-        assert_eq!(f.array(), Some(RangeRef::parse("H5").unwrap()));
+        assert_eq!(f.array, Some(RangeRef::parse("H5").unwrap()));
         assert_eq!(sh.value(CellRef::parse("K20").unwrap()), Value::text("keep"));
     }
 

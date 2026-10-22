@@ -6,22 +6,6 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
-/// The message for a transliteration command's result.
-fn translit_status(lang: i18n::Language, v: &Json) -> String {
-    let n = |x: Option<&Json>| x.and_then(Json::as_u64).unwrap_or(0);
-    let done = n(v.get("cells"));
-    let skipped: u64 = ["lang", "locked", "header"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
-    let formulas = n(v.get("formulasWithText"));
-    let mut m = if done == 0 { lang.tr("Nothing to convert").to_string() } else { lang.tr("{n} cells converted").replace("{n}", &done.to_string()) };
-    if skipped > 0 {
-        m += &format!(". {}", lang.tr("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
-    }
-    if formulas > 0 {
-        m += &format!(". {}", lang.tr("{n} formulas contain text and were not changed").replace("{n}", &formulas.to_string()));
-    }
-    m
-}
-
 pub mod backstage;
 mod border_preview;
 mod cell_pictures;
@@ -38,9 +22,6 @@ pub mod i18n;
 pub mod icons;
 pub mod keymap;
 pub mod keytips;
-pub mod office_overlay;
-#[cfg(test)]
-mod office_overlay_tests;
 pub mod outline;
 pub mod panes;
 pub mod paper_view;
@@ -228,9 +209,31 @@ pub struct Perf {
     last: f64,
 }
 
+/// Which parts of the app's own window chrome are drawn. Everything is on by default; a host
+/// that embeds the sheet in its own window (and owns files itself) can turn off the title bar
+/// and the File tab, whose Backstage view then never opens. Not persisted: it describes the
+/// host, not a user preference.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Chrome {
+    /// The title bar: AutoSave, Home, Save, Undo/Redo, the file name, Comments, Share, Search and
+    /// the theme switch.
+    pub title_bar: bool,
+    /// The ribbon's File tab and the Backstage view it opens (also reached by keyboard and
+    /// commands such as `ui.backstage`).
+    pub file_tab: bool,
+}
+
+impl Default for Chrome {
+    fn default() -> Self {
+        Chrome { title_bar: true, file_tab: true }
+    }
+}
+
 pub struct SheetApp {
     pub session: Session,
     pub ui: UiState,
+    /// The window chrome to draw (see [`Chrome`]).
+    pub chrome: Chrome,
     pub views: HashMap<(u64, usize), SheetView>,
     pub editor: Option<editor::EditState>,
     pub text_box_editor: Option<text_box::EditState>,
@@ -289,6 +292,7 @@ impl SheetApp {
         SheetApp {
             session,
             ui: UiState::default(),
+            chrome: Chrome::default(),
             views: HashMap::new(),
             editor: None,
             text_box_editor: None,
@@ -360,11 +364,6 @@ impl SheetApp {
     /// Runs an engine command (or a UI command) and handles UI requests it makes.
     pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
         let r = self.run_command(id, params);
-        if id.starts_with("tools.translit")
-            && let Ok(v) = &r
-        {
-            self.toast = Some((translit_status(self.ui.language, v), now_ms()));
-        }
         // This copy leaves the system clipboard alone: note what it holds, so Paste can tell
         // that GridCraft's copy is newer while that text is still there.
         if matches!(id, "edit.copy" | "edit.cut") && r.is_ok() {
@@ -776,6 +775,9 @@ impl SheetApp {
     /// Opens the File tab's Backstage view on `page`, committing a cell still being edited first
     /// (File actions work on the whole workbook). A draft that can't be committed keeps the sheet.
     pub fn open_backstage(&mut self, page: backstage::Page) {
+        if !self.chrome.file_tab {
+            return;
+        }
         if !self.commit_edit(0, 0, false, false) {
             return;
         }
@@ -901,13 +903,12 @@ impl SheetApp {
             return;
         }
         let locale = self.ui.language.formula_locale();
-        let num = self.num_locale();
         let current = if sh.cell_pictures.contains_key(&at) {
             String::new()
         } else {
             match sh.cell(at) {
                 Some(c) if c.formula.is_some() => formula_locale::display(&c.input_text(), locale, &d.wb, d.wb.active_sheet),
-                _ => gridcraft_engine::display::edit_text_in(&d.wb, sh, at, num),
+                _ => gridcraft_engine::display::edit_text(&d.wb, sh, at),
             }
         };
         let (text, replace) = match text {
@@ -916,17 +917,11 @@ impl SheetApp {
         };
         let mut ed = editor::EditState::new(d.wb.active_sheet, at, text, replace, from_formula_bar);
         ed.locale = locale;
-        ed.num_locale = num;
         if replace && self.ui.autocomplete && !ed.is_formula() {
             ed.completion = editor::column_completion(sh, at, &ed.text);
         }
         self.editor = Some(ed);
         self.session.mode = if replace { gridcraft_engine::Mode::Enter } else { gridcraft_engine::Mode::Edit };
-    }
-
-    /// The number locale of this session: `GRIDCRAFT_NUM_LOCALE` (tests), else the interface language's.
-    pub(crate) fn num_locale(&self) -> gridcraft_engine::core::NumLocale {
-        gridcraft_engine::env_num_locale().unwrap_or_else(|| self.ui.language.num_locale())
     }
 
     /// Commits the edit; `then` moves the selection (dr, dc) afterwards.
@@ -937,7 +932,7 @@ impl SheetApp {
             Some(full) if full.to_lowercase().starts_with(&ed.text.to_lowercase()) => full.clone(),
             _ => ed.text.clone(),
         };
-        let text = match self.session.active().map(|d| formula_locale::canonical(&text, ed.locale, ed.num_locale, &d.wb, ed.sheet, ed.cell)) {
+        let text = match self.session.active().map(|d| formula_locale::canonical(&text, ed.locale, &d.wb, ed.sheet, ed.cell)) {
             Some(Ok(text)) => text,
             Some(Err(error)) => {
                 self.message = Some(("GridCraft".into(), error.to_string()));
@@ -960,7 +955,19 @@ impl SheetApp {
             }
             self.toast = Some((msg, now_ms()));
         }
-        let r = if fill_selection {
+        // Committing nothing into an empty cell changes nothing: no undo step (#1855, Backspace has
+        // already cleared the cell as its own step).
+        let unchanged = !fill_selection
+            && !array
+            && text.is_empty()
+            && self
+                .session
+                .active()
+                .and_then(|d| d.wb.sheet(ed.sheet))
+                .is_some_and(|sh| sh.cell(ed.cell).is_none_or(|c| c.formula.is_none() && c.value == gridcraft_engine::core::Value::Empty));
+        let r = if unchanged {
+            Ok(json!({}))
+        } else if fill_selection {
             self.session.run("range.fill", json!({"input": text}))
         } else {
             self.session.run("cell.set", json!({"cell": ed.cell.a1(), "input": text, "array": array}))
@@ -1133,15 +1140,17 @@ impl SheetApp {
         text_box::before_ui(self, &ctx);
         // The language the widgets translate with this frame (see `i18n::current`).
         i18n::set_current(&ctx, self.ui.language);
-        // One number locale for the frame: the engine (PDF, CSV, sheet.read, copy), the grid and the editor read it.
-        let num = self.num_locale();
-        self.session.prefs.num_locale = num;
-        i18n::set_current_num_locale(&ctx, num);
         let t = theme::Tokens::get(&ctx);
+        // A host can turn the File tab off while Backstage is already open: close it.
+        if !self.chrome.file_tab {
+            self.backstage = None;
+        }
         if self.backstage.is_none() {
             self.ribbon_keys(&ctx);
         }
-        ribbon::title_bar(self, ui);
+        if self.chrome.title_bar {
+            ribbon::title_bar(self, ui);
+        }
         if self.backstage.is_some() {
             // File tab: the Backstage view replaces everything below the title bar.
             backstage::show(self, ui);

@@ -3,9 +3,9 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use gridcraft_core::{CellRef, NumLocale, RangeRef, Value};
+use gridcraft_core::{CellRef, RangeRef, Value};
 use gridcraft_model::{Sheet, Workbook};
-use gridcraft_numfmt::{Formatted, NumberFormat, format_value_in};
+use gridcraft_numfmt::{Formatted, NumberFormat, format_value};
 
 /// Parsed number formats are cached by code.
 fn parsed(code: &str) -> NumberFormat {
@@ -28,17 +28,9 @@ pub fn number_format(code: &str) -> NumberFormat {
     parsed(code)
 }
 
-/// Formats a value with a format code (en-US).
+/// Formats a value with a format code.
 pub fn format(v: &Value, code: &str, wb: &Workbook) -> Formatted {
-    format_in(v, code, wb, NumLocale::EnUs)
-}
-
-/// Formats a value with a format code as a reader of `loc` sees it. The stored code is never
-/// rewritten: built-in date ids 14-17 and 22 are shown in the locale's forms ([`NumLocale::builtin_date`]),
-/// as Excel does.
-pub fn format_in(v: &Value, code: &str, wb: &Workbook, loc: NumLocale) -> Formatted {
-    let code = loc.builtin_date(code).unwrap_or(code);
-    format_value_in(v, &parsed(code), wb.date_system, loc)
+    format_value(v, &parsed(code), wb.date_system)
 }
 
 /// What the cell editor and the formula bar start from. Same as `Cell::input_text`, except that a
@@ -47,26 +39,15 @@ pub fn format_in(v: &Value, code: &str, wb: &Workbook, loc: NumLocale) -> Format
 /// `dddd, mmmm d`), an ISO `yyyy-mm-dd` (with `hh:mm:ss` for a time of day; just `hh:mm:ss`
 /// for a time alone) is used instead, and if even that would not read back, the serial.
 pub fn edit_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
-    edit_text_in(wb, sheet, c, NumLocale::EnUs)
-}
-
-/// [`edit_text`] in a locale's typing syntax: a number has the locale's decimal and a date its
-/// short form, so confirming the edit unchanged (the UI turns it back with
-/// `core::parse::to_invariant`) keeps the value.
-pub fn edit_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
     let raw = sheet.input_text(c);
     let Some(cell) = sheet.cell(c) else { return raw };
     let Value::Number(n) = &cell.value else { return raw };
     let code = wb.styles.get(cell.style).num_fmt.as_str();
-    if cell.formula.is_some() {
+    if cell.formula.is_some() || !parsed(code).is_date() {
         return raw;
     }
-    if !parsed(code).is_date() {
-        return if loc == NumLocale::EnUs { raw } else { raw.replace('.', &loc.decimal().to_string()) };
-    }
-    let reads_back =
-        |s: &str| matches!(gridcraft_core::parse::parse_input_in(s, wb.date_system, loc).value, Value::Number(m) if (m - n).abs() < 1e-9);
-    let shown = format_in(&cell.value, code, wb, loc).text;
+    let reads_back = |s: &str| matches!(gridcraft_core::parse::parse_input(s, wb.date_system).value, Value::Number(m) if (m - n).abs() < 1e-9);
+    let shown = format(&cell.value, code, wb).text;
     if reads_back(&shown) {
         return shown;
     }
@@ -101,30 +82,26 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
 
 /// The text a cell shows (full precision General; the grid narrows General to fit the column).
 pub fn cell_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
-    cell_text_in(wb, sheet, c, NumLocale::EnUs)
-}
-
-/// [`cell_text`] as a reader of `loc` sees it.
-pub fn cell_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
     if sheet.show_formulas
         && let Some(f) = sheet.cell(c).and_then(|x| x.formula.as_ref())
         && !formula_hidden(wb, sheet, c)
     {
-        return format!("={}", f.text());
+        return format!("={}", f.text);
     }
-    value_text_in(wb, sheet, c, loc)
+    value_text(wb, sheet, c)
 }
 
 /// A cell's value with its number format applied, independent of column width: no `#####`
 /// and no General narrowing (Save As CSV/Text writes this). Formulas give their result.
 pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
-    value_text_in(wb, sheet, c, NumLocale::EnUs)
+    let style = wb.styles.get(sheet.style_id(c));
+    value_text_as(wb, &sheet.value(c), style.num_fmt.as_str())
 }
 
-/// [`value_text`] as a reader of `loc` sees it.
-pub fn value_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
-    let style = wb.styles.get(sheet.style_id(c));
-    let f = format_in(&sheet.value(c), style.num_fmt.as_str(), wb, loc);
+/// [`value_text`] for a value and a format code given apart from a cell (print takes the code
+/// from the cell's effective look, which a conditional format can override).
+pub fn value_text_as(wb: &Workbook, v: &Value, code: &str) -> String {
+    let f = format(v, code, wb);
     match f.fill {
         Some((_, pos)) => {
             let mut t = f.text;
@@ -139,11 +116,6 @@ pub fn value_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -
 
 /// Tab-separated text of a range, as the system clipboard gets it.
 pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
-    range_text_in(wb, sheet, r, NumLocale::EnUs)
-}
-
-/// [`range_text`] as a reader of `loc` sees it (Excel copies the displayed text).
-pub fn range_text_in(wb: &Workbook, sheet: usize, r: RangeRef, loc: NumLocale) -> String {
     let Some(sh) = wb.sheet(sheet) else { return String::new() };
     let mut out = String::new();
     let r = clipboard_range(r);
@@ -157,7 +129,7 @@ pub fn range_text_in(wb: &Workbook, sheet: usize, r: RangeRef, loc: NumLocale) -
                 out.push('\t');
             }
             first = false;
-            let t = cell_text_in(wb, sh, CellRef::new(row, col), loc);
+            let t = cell_text(wb, sh, CellRef::new(row, col));
             if t.contains(['\t', '\n', '"']) {
                 out.push('"');
                 out.push_str(&t.replace('"', "\"\""));

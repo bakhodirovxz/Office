@@ -2,7 +2,7 @@
 //! resolution; writing a zip package deterministically.
 
 use std::collections::HashMap;
-use std::io::{Cursor, Read, Seek, Write};
+use std::io::{Cursor, Read, Write};
 
 use crate::IoError;
 use crate::xml::{self, El};
@@ -14,12 +14,8 @@ pub const MAX_TOTAL: u64 = 1024 * 1024 * 1024;
 /// Most entries accepted in the zip directory.
 pub const MAX_ENTRIES: usize = 200_000;
 
-/// What a package is read from: its bytes in memory, or the file itself.
-pub trait Source: Read + Seek {}
-impl<T: Read + Seek> Source for T {}
-
 pub struct Package<'a> {
-    zip: zip::ZipArchive<Box<dyn Source + 'a>>,
+    zip: zip::ZipArchive<Cursor<&'a [u8]>>,
     /// Lower-case normalized part name → zip index.
     names: HashMap<String, usize>,
     total: u64,
@@ -43,13 +39,7 @@ pub fn normalize(name: &str) -> String {
 
 impl<'a> Package<'a> {
     pub fn open(bytes: &'a [u8]) -> Result<Package<'a>, IoError> {
-        Package::open_reader(Cursor::new(bytes))
-    }
-
-    /// A package whose parts are read from `source` as they are needed (an open file, so no copy
-    /// of the whole package is held while it is read).
-    pub fn open_reader(source: impl Source + 'a) -> Result<Package<'a>, IoError> {
-        let zip = zip::ZipArchive::new(Box::new(source) as Box<dyn Source + 'a>).map_err(|e| IoError::Zip(e.to_string()))?;
+        let zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| IoError::Zip(e.to_string()))?;
         if zip.len() > MAX_ENTRIES {
             return Err(IoError::TooLarge(format!("{} zip entries", zip.len())));
         }

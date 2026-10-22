@@ -163,24 +163,14 @@ fn exec(s: &mut Session, id: &str, params: Value) -> Result<Value, String> {
     r
 }
 
-/// A session whose number locale is `GRIDCRAFT_NUM_LOCALE` (en-US when unset), so `cat`, `convert` and
-/// `run` show and write cells as a reader of that locale sees them.
-fn new_session() -> Session {
-    let mut s = Session::new();
-    if let Some(loc) = gridcraft_engine::env_num_locale() {
-        s.prefs.num_locale = loc;
-    }
-    s
-}
-
 fn open(path: &str) -> Result<Session, String> {
-    let mut s = new_session();
+    let mut s = Session::new();
     exec(&mut s, "file.open", json!({"path": path}))?;
     Ok(s)
 }
 
 fn blank() -> Session {
-    let mut s = new_session();
+    let mut s = Session::new();
     s.new_workbook();
     s
 }
@@ -287,7 +277,7 @@ fn convert(args: &[String]) -> Result<(), String> {
     let mut s = open(input)?;
     activate_sheet(&mut s, a.opt("sheet"))?;
     let d = s.doc().map_err(|e| e.to_string())?;
-    let bytes = gridcraft_engine::io::save_file_bytes_in(&d.wb, out, s.prefs.num_locale).map_err(|e| e.to_string())?;
+    let bytes = gridcraft_engine::io::save_file_bytes(&d.wb, out).map_err(|e| e.to_string())?;
     gridcraft_engine::io::write_file(out, &bytes).map_err(|e| e.to_string())?;
     eprintln!("wrote {out} ({} bytes)", bytes.len());
     Ok(())
@@ -398,7 +388,7 @@ fn run(args: &[String]) -> Result<(), String> {
         (Some(_), Some(_)) => return Err("give --in or --sample, not both".into()),
         (Some(p), None) => open(p)?,
         (None, Some(name)) => {
-            let mut s = new_session();
+            let mut s = Session::new();
             exec(&mut s, "file.new", json!({"sample": name}))?;
             s
         }
@@ -520,7 +510,7 @@ fn mcp(args: &[String]) -> Result<(), String> {
             let session = match (a.opt("in"), a.opt("sample")) {
                 (Some(p), _) => open(p)?,
                 (None, Some(name)) => {
-                    let mut s = new_session();
+                    let mut s = Session::new();
                     exec(&mut s, "file.new", json!({"sample": name}))?;
                     s
                 }

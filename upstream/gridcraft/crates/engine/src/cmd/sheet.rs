@@ -729,15 +729,11 @@ fn delete_sheet(s: &mut Session, p: &Json) -> Result<Json> {
             let keys: Vec<(CellRef, Arc<gridcraft_model::Formula>)> =
                 cx.wb.sheets.get(si).map(|s| s.cells.iter().filter_map(|(c, x)| x.formula.clone().map(|f| (c, f))).collect()).unwrap_or_default();
             let Some(sh) = cx.wb.sheet_mut(si) else { continue };
-            let mut runs = gridcraft_model::FormulaRuns::default();
             for (c, f) in keys {
                 if let Some(e) = f.expr() {
-                    let ne = gridcraft_formula::adjust::delete_sheet(e.clone(), &name, &order);
-                    if ne == e {
-                        // Unchanged: kept as it is (with the tree it shares).
-                        runs.keep(c, &f);
-                    } else if let Some(cell) = sh.cells.get_mut(c) {
-                        cell.formula = Some(Arc::new(runs.formula(c, ne)));
+                    let ne = gridcraft_formula::adjust::delete_sheet(e, &name, &order);
+                    if let Some(cell) = sh.cells.get_mut(c) {
+                        cell.formula = Some(Arc::new(gridcraft_model::Formula::from_expr(ne)));
                     }
                 }
             }
@@ -781,18 +777,14 @@ fn rename_sheet(s: &mut Session, p: &Json) -> Result<Json> {
             let keys: Vec<(CellRef, Arc<gridcraft_model::Formula>)> =
                 cx.wb.sheets.get(si).map(|s| s.cells.iter().filter_map(|(c, x)| x.formula.clone().map(|f| (c, f))).collect()).unwrap_or_default();
             let Some(sh) = cx.wb.sheet_mut(si) else { continue };
-            // Renamed references in a run of formulas keep sharing one tree.
-            let mut runs = gridcraft_model::FormulaRuns::default();
             for (c, f) in keys {
                 if let Some(e) = f.expr() {
                     let ne = gridcraft_formula::adjust::rename_sheet(e, &old, &name);
                     let text = gridcraft_formula::print(&ne);
-                    if text != f.text()
+                    if text != f.text
                         && let Some(cell) = sh.cells.get_mut(c)
                     {
-                        cell.formula = Some(Arc::new(runs.formula(c, ne)));
-                    } else {
-                        runs.keep(c, &f);
+                        cell.formula = Some(Arc::new(gridcraft_model::Formula::from_expr(ne)));
                     }
                 }
             }

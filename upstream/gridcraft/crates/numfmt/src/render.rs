@@ -1,9 +1,9 @@
 //! Rendering a value with a parsed section.
 
-use gridcraft_core::date::{datetime_from_serial, max_serial};
-use gridcraft_core::{DateSystem, NumLocale};
+use gridcraft_core::DateSystem;
+use gridcraft_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, max_serial};
 
-use crate::decimal::{decimal_digits, fixed, fixed_from_digits, format_general_fit_in};
+use crate::decimal::{decimal_digits, fixed, fixed_from_digits, format_general_fit};
 use crate::parse::{DatePart, Section, Tok};
 
 /// Text being built plus the first repeat-fill position.
@@ -46,11 +46,11 @@ pub(crate) fn render_text(sec: &Section, text: &str) -> Out {
 }
 
 /// Renders a number through a General section (literals around the General keyword).
-pub(crate) fn render_general(sec: &Section, v: f64, width: usize, loc: NumLocale) -> Out {
+pub(crate) fn render_general(sec: &Section, v: f64, width: usize) -> Out {
     let mut out = Out::default();
     for t in &sec.toks {
         match t {
-            Tok::General => out.push(&format_general_fit_in(v, width, loc).unwrap_or_else(|| "#".repeat(width.clamp(1, 11)))),
+            Tok::General => out.push(&format_general_fit(v, width).unwrap_or_else(|| "#".repeat(width.clamp(1, 11)))),
             Tok::Fill(c) => out.fill(*c),
             other => out.push(&other.literal_text()),
         }
@@ -59,7 +59,7 @@ pub(crate) fn render_general(sec: &Section, v: f64, width: usize, loc: NumLocale
 }
 
 /// Renders a date/time. `None` when the serial is outside the supported range.
-pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale) -> Option<Out> {
+pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem) -> Option<Out> {
     if !v.is_finite() || !(0.0..max_serial(sys) as f64 + 1.0).contains(&v) {
         return None;
     }
@@ -80,11 +80,8 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
     let second = (ms / 1000) % 60;
     let milli = ms % 1000;
     let pad = |n: i64, w: u8| if w >= 2 { format!("{:0w$}", n, w = w.min(20) as usize) } else { n.to_string() };
-    // A `[$-419]` tag names the month and day for a non-English interface only (the en-US display is unchanged).
-    let names = sec.names.filter(|_| loc != NumLocale::EnUs).unwrap_or(loc);
-    let month_idx = (dt.month as usize).wrapping_sub(1);
-    let month_name = names.months().get(month_idx).copied().unwrap_or("");
-    let day_name = names.weekdays().get(dt.weekday as usize).copied().unwrap_or("");
+    let month_name = MONTHS.get((dt.month as usize).wrapping_sub(1)).copied().unwrap_or("");
+    let day_name = WEEKDAYS.get(dt.weekday as usize).copied().unwrap_or("");
     let mut out = Out::default();
     for t in &sec.toks {
         match t {
@@ -99,13 +96,13 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
                     }
                     DatePart::Month(n) => match n {
                         1 | 2 => pad(dt.month as i64, n),
-                        3 => names.months_abbr().get(month_idx).copied().unwrap_or_default().to_string(),
+                        3 => month_name.chars().take(3).collect(),
                         5 => month_name.chars().take(1).collect(),
                         _ => month_name.to_string(),
                     },
                     DatePart::Day(n) => match n {
                         1 | 2 => pad(dt.day as i64, n),
-                        3 => names.weekdays_abbr().get(dt.weekday as usize).copied().unwrap_or_default().to_string(),
+                        3 => day_name.chars().take(3).collect(),
                         _ => day_name.to_string(),
                     },
                     DatePart::Hour(n) => {
@@ -120,7 +117,7 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
                     DatePart::Minute(n) => pad(minute, n),
                     DatePart::Second(n) => pad(second, n),
                     DatePart::SubSec(n) => {
-                        let mut s = format!("{}{:03}", loc.decimal(), milli);
+                        let mut s = format!(".{:03}", milli);
                         s.truncate(1 + (n as usize).min(3));
                         if n > 3 {
                             s.push_str(&"0".repeat(n as usize - 3));
@@ -145,7 +142,7 @@ pub(crate) fn render_date(sec: &Section, v: f64, sys: DateSystem, loc: NumLocale
 /// Assigns integer digits right-to-left to the placeholders at `idxs`; the leftmost placeholder
 /// takes all remaining digits. `force_zero` shows `0` in the units placeholder when there are no
 /// digits. A blank `?` pads with a space, and so does the thousands separator it would carry.
-fn fill_int(toks: &[Tok], idxs: &[usize], digits: &str, thousands: bool, group: char, force_zero: bool, pieces: &mut [String]) {
+fn fill_int(toks: &[Tok], idxs: &[usize], digits: &str, thousands: bool, force_zero: bool, pieces: &mut [String]) {
     let ds: Vec<char> = digits.chars().collect();
     let mut rem = ds.len();
     let mut pos = 0usize;
@@ -159,7 +156,7 @@ fn fill_int(toks: &[Tok], idxs: &[usize], digits: &str, thousands: bool, group: 
         let mut rev = String::new();
         let push_digit = |c: char, rev: &mut String, pos: &mut usize| {
             if thousands && *pos > 0 && pos.is_multiple_of(3) {
-                rev.push(group);
+                rev.push(',');
             }
             rev.push(c);
             *pos += 1;
@@ -190,7 +187,7 @@ fn fill_int(toks: &[Tok], idxs: &[usize], digits: &str, thousands: bool, group: 
     }
 }
 
-fn with_commas(digits: &str, thousands: bool, group: char) -> String {
+fn with_commas(digits: &str, thousands: bool) -> String {
     if !thousands {
         return digits.to_string();
     }
@@ -198,7 +195,7 @@ fn with_commas(digits: &str, thousands: bool, group: char) -> String {
     let mut s = String::with_capacity(n + n / 3);
     for (i, c) in digits.chars().enumerate() {
         if i > 0 && (n - i).is_multiple_of(3) {
-            s.push(group);
+            s.push(',');
         }
         s.push(c);
     }
@@ -234,8 +231,7 @@ fn digit_indices(toks: &[Tok], range: std::ops::Range<usize>) -> Vec<usize> {
 }
 
 /// Renders a non-negative number through a number section.
-pub(crate) fn render_number(sec: &Section, v: f64, loc: NumLocale) -> Out {
-    let group = loc.group();
+pub(crate) fn render_number(sec: &Section, v: f64) -> Out {
     let mut x = v.abs();
     // Observed: `%` in a scientific section is only a literal (`#%e+#` shows 123456.789 as
     // `1%e+5`).
@@ -258,7 +254,7 @@ pub(crate) fn render_number(sec: &Section, v: f64, loc: NumLocale) -> Out {
     let mut zero = false;
     if sec.fraction {
         lits = vec![None; n];
-        render_fraction(sec, x, group, &mut pieces, &mut lits);
+        render_fraction(sec, x, &mut pieces, &mut lits);
     } else {
         let point = toks.iter().position(|t| matches!(t, Tok::Point));
         let exp = toks.iter().position(|t| matches!(t, Tok::Exp { .. }));
@@ -313,7 +309,7 @@ pub(crate) fn render_number(sec: &Section, v: f64, loc: NumLocale) -> Out {
                     if let Some(b) = before.get_mut(first) {
                         *b = sign.to_string();
                     }
-                    fill_int(toks, &exp_idx, &digits, false, group, false, &mut pieces);
+                    fill_int(toks, &exp_idx, &digits, false, false, &mut pieces);
                 }
                 None => {
                     if let Some(p) = pieces.get_mut(e_at) {
@@ -326,19 +322,19 @@ pub(crate) fn render_number(sec: &Section, v: f64, loc: NumLocale) -> Out {
             fixed(x, frac_idx.len())
         };
         zero = int_s.chars().chain(frac_s.chars()).all(|c| c == '0');
-        fill_int(toks, &int_idx, &int_s, sec.thousands, group, false, &mut pieces);
+        fill_int(toks, &int_idx, &int_s, sec.thousands, false, &mut pieces);
         if int_idx.is_empty()
             && !int_s.is_empty()
             && let Some(p) = point.or(exp)
             && let Some(b) = before.get_mut(p)
         {
-            *b = with_commas(&int_s, sec.thousands, group);
+            *b = with_commas(&int_s, sec.thousands);
         }
         fill_frac(toks, &frac_idx, &frac_s, &mut pieces);
         if let Some(p) = point
             && let Some(s) = pieces.get_mut(p)
         {
-            *s = loc.decimal().to_string();
+            *s = ".".into();
         }
     }
     let mut out = Out::default();
@@ -436,7 +432,7 @@ fn blank_range(toks: &[Tok], range: std::ops::Range<usize>, spaces: bool, pieces
 /// becomes spaces when the whole part or the numerator has a `?`); when the fraction is zero and
 /// the numerator has no `0` placeholder, the separator, numerator, bar and denominator disappear
 /// (or become spaces when any part has a `?`) and the whole part shows at least `0`.
-fn render_fraction(sec: &Section, x: f64, group: char, pieces: &mut [String], lits: &mut [Option<String>]) {
+fn render_fraction(sec: &Section, x: f64, pieces: &mut [String], lits: &mut [Option<String>]) {
     let toks = &sec.toks;
     let is_digit = |i: usize| matches!(toks.get(i), Some(Tok::Digit(_)));
     let Some(slash) = toks.iter().position(|t| matches!(t, Tok::Slash)) else { return };
@@ -484,7 +480,7 @@ fn render_fraction(sec: &Section, x: f64, group: char, pieces: &mut [String], li
     let whole_s = if whole >= 1.0 { fixed(whole, 0).0 } else { String::new() };
     let num_zero_ph = num_idx.iter().any(|&i| toks.get(i) == Some(&Tok::Digit('0')));
     if has_whole && num == 0 && !num_zero_ph {
-        fill_int(toks, &whole_idx, &whole_s, sec.thousands, group, true, pieces);
+        fill_int(toks, &whole_idx, &whole_s, sec.thousands, true, pieces);
         let spaces = has_q(&whole_idx) || has_q(&num_idx) || has_q(&den_idx);
         blank_range(toks, sep_start..den_end, spaces, pieces, lits);
         return;
@@ -493,14 +489,14 @@ fn render_fraction(sec: &Section, x: f64, group: char, pieces: &mut [String], li
         // A zero value shows `0` in a `?` or `0` units place, nothing in a `#` one.
         let units_hash = whole_idx.last().is_some_and(|&i| toks.get(i) == Some(&Tok::Digit('#')));
         let force = whole_s.is_empty() && num == 0 && !units_hash;
-        fill_int(toks, &whole_idx, &whole_s, sec.thousands, group, force, pieces);
+        fill_int(toks, &whole_idx, &whole_s, sec.thousands, force, pieces);
         let whole_shown = whole_idx.iter().any(|&i| pieces.get(i).is_some_and(|p| p.chars().any(|c| c.is_ascii_digit())));
         if !whole_shown {
             let spaces = has_q(&whole_idx) || has_q(&num_idx);
             blank_range(toks, sep_start..num_start, spaces, pieces, lits);
         }
     }
-    fill_int(toks, &num_idx, &num.to_string(), false, group, true, pieces);
+    fill_int(toks, &num_idx, &num.to_string(), false, true, pieces);
     if let Some(p) = pieces.get_mut(slash) {
         *p = "/".into();
     }

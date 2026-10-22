@@ -68,10 +68,6 @@ pub enum IoError {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ReadReport {
     pub warnings: Vec<String>,
-    /// The cells' values come from a full calculation: the workbook asks for none when it opens
-    /// (it has a `calcPr` without `fullCalcOnLoad`, as Excel writes it) and no spilled values had
-    /// to be left out. Its formulas then need not be calculated on open, as Excel doesn't.
-    pub calculated: bool,
 }
 
 impl ReadReport {
@@ -86,13 +82,7 @@ impl ReadReport {
 /// Reads an `.xlsx` / `.xlsm` / `.xltx` / `.xltm` package (the workbook part is found through the
 /// package relationships, so every main-part content type is accepted).
 pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
-    read::read_xlsx(package::Package::open(bytes)?)
-}
-
-/// [`read_xlsx`] from a reader (an open file), which is read as parts are needed: the package's
-/// bytes are not all held in memory while the workbook is built.
-pub fn read_xlsx_reader(source: impl std::io::Read + std::io::Seek) -> Result<(Workbook, ReadReport), IoError> {
-    read::read_xlsx(package::Package::open_reader(source)?)
+    read::read_xlsx(bytes)
 }
 
 /// Which member of the SpreadsheetML family a package is saved as. Only the content type of the
@@ -157,14 +147,11 @@ pub struct CsvOptions {
     pub date_system: DateSystem,
     /// Interpret fields like typed input (numbers, dates, booleans…); otherwise keep text.
     pub parse_values: bool,
-    /// The number locale fields are typed in (`1 234,5`, `12.10.2026`). A file separated by the
-    /// locale's decimal (a comma in ru and uz) is en-US whatever this says; `;` and tab follow it.
-    pub locale: gridcraft_core::NumLocale,
 }
 
 impl Default for CsvOptions {
     fn default() -> Self {
-        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true, locale: gridcraft_core::NumLocale::EnUs }
+        CsvOptions { delimiter: b',', quote: b'"', date_system: DateSystem::D1900, parse_values: true }
     }
 }
 

@@ -93,7 +93,7 @@ fn editing_a_name_renames_it_in_formulas() {
     let names: Vec<&str> = d.wb.names.iter().map(|n| n.name.as_str()).collect();
     assert_eq!(names, ["Other", "Cost"]);
     let b1 = d.wb.active().unwrap().cell(CellRef::parse("B1").unwrap()).and_then(|c| c.formula.clone()).unwrap();
-    assert_eq!(b1.text(), "Cost*2");
+    assert_eq!(b1.text, "Cost*2");
     assert_eq!(v(&s, "B1"), Value::number(42.0));
     assert!(s.execute("formulas.defineName", json!({"name": "X", "oldName": "Missing"})).is_err());
 }
@@ -251,6 +251,22 @@ fn undo_redo() {
     s.execute("edit.redo", json!({})).unwrap();
     assert_eq!(v(&s, "A1"), Value::Number(2.0));
     assert!(s.doc().unwrap().is_dirty());
+}
+
+#[test]
+fn redo_selects_the_redone_cell() {
+    // #1855: type into A1..A3, click A1, undo, redo: the selection follows the edit to A3.
+    let mut s = s();
+    for (cell, text) in [("A1", "first"), ("A2", "second"), ("A3", "third")] {
+        s.execute("selection.set", json!({"cell": cell})).unwrap();
+        s.execute("cell.set", json!({"cell": cell, "input": text})).unwrap();
+    }
+    s.execute("selection.set", json!({"cell": "A1"})).unwrap();
+    s.execute("edit.undo", json!({})).unwrap();
+    assert_eq!(s.doc().unwrap().selection.a1(), "A3");
+    s.execute("edit.redo", json!({})).unwrap();
+    assert_eq!(v(&s, "A3"), Value::from("third"));
+    assert_eq!(s.doc().unwrap().selection.a1(), "A3");
 }
 
 #[test]
@@ -1207,6 +1223,26 @@ fn table_rename_keeps_a_defined_name_with_the_same_name() {
 }
 
 #[test]
+fn table_names_are_limited_to_255_characters() {
+    let mut s = s();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["Qty"], [7]]})).unwrap();
+    s.execute("insert.table", json!({"range": "A1:A2", "header": true, "name": "Original"})).unwrap();
+
+    let name_255 = "ع".repeat(255);
+    s.execute("table.rename", json!({"table": "Original", "name": name_255})).unwrap();
+    assert!(s.doc().unwrap().wb.table(&"ع".repeat(255)).is_some());
+
+    let name_256 = "ع".repeat(256);
+    let error = s.execute("table.rename", json!({"table": &"ع".repeat(255), "name": name_256})).unwrap_err();
+    assert!(error.to_string().contains("not valid"), "{error}");
+    assert!(s.doc().unwrap().wb.table(&"ع".repeat(255)).is_some());
+
+    let name_200 = "ع".repeat(200);
+    s.execute("table.rename", json!({"table": &"ع".repeat(255), "name": name_200})).unwrap();
+    assert!(s.doc().unwrap().wb.table(&"ع".repeat(200)).is_some());
+}
+
+#[test]
 fn slicer_filters_table() {
     let mut s = s();
     s.execute("range.setValues", json!({"range": "A1", "values": [["Region", "Qty"], ["East", 2], ["West", 5], ["East", 3], ["North", 1]]})).unwrap();
@@ -1450,7 +1486,7 @@ fn row_and_column_inserts_move_legacy_array_ranges() {
     s.execute("home.insertRows", json!({"rows": "1:1"})).unwrap();
     let d = s.doc().unwrap();
     let f = d.wb.sheet(0).unwrap().cell(CellRef::new(3, 3)).and_then(|x| x.formula.clone()).unwrap();
-    assert_eq!(f.array(), Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
+    assert_eq!(f.array, Some(gridcraft_core::RangeRef::parse("D4:E4").unwrap()));
     assert_eq!(v(&s, "E4"), Value::Number(14.0));
     reopen(&mut s);
     assert_eq!(v(&s, "E4"), Value::Number(14.0));
@@ -3281,4 +3317,30 @@ fn paste_special_validation_moves_relative_references() {
     s.execute("edit.pasteSpecial", json!({"what": "validation", "at": "C3"})).unwrap();
     assert!(!ok(&mut s, "C3", "5"), "the pasted rule checks C3, not A1");
     assert!(ok(&mut s, "C3", "20"));
+}
+
+#[test]
+fn csv_as_text_keeps_identifier_columns_as_written() {
+    let csv = "gtin,zip,flag,day\n8435392892278,01234,TRUE,2026-03-04\n";
+    let open = |s: &mut Session, extra: serde_json::Value| {
+        let mut p = json!({"name": "feed.csv", "base64": crate::io::base64_encode(csv.as_bytes())});
+        if let (Some(p), Some(extra)) = (p.as_object_mut(), extra.as_object()) {
+            p.extend(extra.clone());
+        }
+        s.execute("file.open", p).unwrap();
+    };
+    let value = |s: &mut Session, cell: &str| s.execute("cell.get", json!({"cell": cell})).unwrap()["value"].clone();
+    // By default fields are typed like typed input: the leading zero is lost and the GTIN is a number.
+    let mut s = s();
+    open(&mut s, json!({}));
+    assert!(value(&mut s, "A2").is_number());
+    assert_eq!(value(&mut s, "B2").as_f64(), Some(1234.0));
+    // With csvAsText every field stays the text the file holds, and saves back unchanged.
+    let mut s = self::s();
+    open(&mut s, json!({"csvAsText": true}));
+    for (cell, text) in [("A2", "8435392892278"), ("B2", "01234"), ("C2", "TRUE"), ("D2", "2026-03-04")] {
+        assert_eq!(value(&mut s, cell), json!(text), "{cell}");
+    }
+    let saved = s.execute("file.saveBytes", json!({"format": "csv"})).unwrap();
+    assert_eq!(crate::io::base64_decode(saved["base64"].as_str().unwrap()).unwrap(), csv.replace('\n', "\r\n").as_bytes());
 }

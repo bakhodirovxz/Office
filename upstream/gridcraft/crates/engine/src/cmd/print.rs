@@ -4,12 +4,12 @@
 //! range plus drawing objects) is split into bands of rows and columns that fit the printable
 //! area at the page scale, honouring manual breaks, repeated title rows/columns, headings, Fit
 //! To and centring. Each page is drawn into a PDF with `gridcraft-pdf`: fills, gridlines,
-//! borders, formatted text (installed TrueType faces embedded as subsets, else the standard 14 PDF fonts), merged cells, wrapping,
+//! borders, formatted text (fonts mapped to the standard 14 PDF fonts), merged cells, wrapping,
 //! overflow into empty neighbours, conditional formats, table styles, charts, images, shapes and
 //! sparklines. Headers and footers support `&L`/`&C`/`&R` sections and the `&P &N &D &T &A &F &Z`
 //! codes.
 
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, NumLocale, RangeRef, Value};
+use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value};
 use gridcraft_model::*;
 use gridcraft_pdf::{Font, Page, PdfDoc, Rgb};
 use serde_json::{Value as Json, json};
@@ -391,16 +391,9 @@ pub struct HfContext {
 
 /// Today's date and the current time as headers and footers show them (`&D`, `&T`).
 pub fn hf_date_time(wb: &Workbook) -> (String, String) {
-    hf_date_time_in(wb, NumLocale::EnUs)
-}
-
-/// [`hf_date_time`] as a reader of `loc` sees it: the short date, and `h:mm` for the time (the
-/// ru and uz time formats have no AM/PM).
-pub fn hf_date_time_in(wb: &Workbook, loc: NumLocale) -> (String, String) {
     let now = gridcraft_core::date::serial_in_system(wb.date_system, gridcraft_calc::now_serial());
-    let date = crate::display::format_in(&Value::Number(now.floor()), "m/d/yyyy", wb, loc).text;
-    let time_code = if loc == NumLocale::EnUs { "h:mm AM/PM" } else { "h:mm" };
-    let time = crate::display::format_in(&Value::Number(now), time_code, wb, loc).text;
+    let date = crate::display::format(&Value::Number(now.floor()), "m/d/yyyy", wb).text;
+    let time = crate::display::format(&Value::Number(now), "h:mm AM/PM", wb).text;
     (date, time)
 }
 
@@ -657,6 +650,10 @@ fn cell_look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut Option<c
         if st.font.underline != Underline::None {
             style.font.underline = st.font.underline;
         }
+        // In a differential style General means "not set" (#1163).
+        if st.num_fmt.as_str() != "General" {
+            style.num_fmt = st.num_fmt.clone();
+        }
         for (dst, src) in [
             (&mut style.borders.left, st.borders.left),
             (&mut style.borders.right, st.borders.right),
@@ -688,7 +685,7 @@ struct PdfMeasure;
 
 impl gridcraft_chart::Measure for PdfMeasure {
     fn text_width(&self, text: &str, size: f32, bold: bool) -> f32 {
-        gridcraft_pdf::text_width(crate::pdf_fonts::for_text(if bold { Font::HelveticaBold } else { Font::Helvetica }, text), size, text)
+        gridcraft_pdf::text_width(if bold { Font::HelveticaBold } else { Font::Helvetica }, size, text)
     }
 }
 
@@ -748,7 +745,7 @@ fn draw_prims(pg: &mut Page, prims: &[gridcraft_chart::Prim], xf: Xf) {
                 pg.circle(px, py, r * k, fill.map(blend), stroke.map(|(c, w)| (blend(c), (w * k).max(0.1))));
             }
             Prim::Text { x, y, text, size, color, bold, align, valign, rotation } => {
-                let font = crate::pdf_fonts::for_text(if *bold { Font::HelveticaBold } else { Font::Helvetica }, text);
+                let font = if *bold { Font::HelveticaBold } else { Font::Helvetica };
                 let size = size * k;
                 let w = gridcraft_pdf::text_width(font, size, text);
                 let dx = match align {
@@ -822,7 +819,6 @@ struct Block<'a> {
     ys: Vec<f32>,
     k: f32,
     scale: f32,
-    loc: NumLocale,
 }
 
 impl Block<'_> {
@@ -878,15 +874,8 @@ fn draw_border(pg: &mut Page, b: &BorderLine, wb: &Workbook, x0: f32, y0: f32, x
     pg.stroke_line_dashed(x0, y0, x1, y1, lw, color, &border_dash(b.style, k));
 }
 
-/// Width Excel would measure for the "does this number fit" decision: glyph advances snapped to
-/// whole pixels at 100% zoom, then scaled with the page (`size` is already scaled by `scale`).
-fn snapped_width(font: Font, size: f32, scale: f32, text: &str) -> f32 {
-    let scale = if scale.is_finite() && scale > 0.0 { scale } else { 1.0 };
-    gridcraft_pdf::text_width_snapped(font, size / scale, text) * scale
-}
-
 fn font_for(style: &Style) -> Font {
-    crate::pdf_fonts::resolve(&style.font.name, style.font.bold, style.font.italic)
+    Font::styled(Font::family_for(&style.font.name), style.font.bold, style.font.italic)
 }
 
 /// Draws the cells of a block: fills, gridlines, data bars, borders and text.
@@ -1075,7 +1064,7 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
     let indent = st.align.indent as f32 * 9.0 * b.k;
     let avail = (w - 2.0 * pad - indent).max(0.0);
     let code = st.num_fmt.as_str();
-    let formatted = crate::display::format_in(&v, code, wb, b.loc);
+    let formatted = crate::display::format(&v, code, wb);
     let mut color = formatted.color.map(numfmt_rgb).or_else(|| rgb_of(st.font.color, wb)).unwrap_or([0, 0, 0]);
     if l.cf.as_ref().and_then(|x| x.style.as_ref()).is_some_and(|s| s.font.color != Color::Auto) {
         color = rgb_of(st.font.color, wb).unwrap_or(color);
@@ -1083,15 +1072,16 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
     let is_num = matches!(v, Value::Number(_));
     let wrap = st.align.wrap;
     let mut text = if sh.show_formulas {
-        crate::display::cell_text_in(wb, sh, c, b.loc)
+        crate::display::cell_text(wb, sh, c)
     } else if code == "General"
         && let Value::Number(n) = v
     {
-        let digit = snapped_width(font, size, b.scale, "0").max(0.1);
+        let digit = gridcraft_pdf::text_width(font, size, "0").max(0.1);
         let max_chars = (avail / digit).floor().max(1.0) as usize;
-        gridcraft_numfmt::format_general_fit_in(n, max_chars.min(11), b.loc).unwrap_or_else(|| "#".repeat(max_chars.min(255)))
+        gridcraft_numfmt::format_general_fit(n, max_chars.min(11)).unwrap_or_else(|| "#".repeat(max_chars.min(255)))
     } else {
-        crate::display::cell_text_in(wb, sh, c, b.loc)
+        // The look's code, which a conditional format can override (#1163).
+        crate::display::value_text_as(wb, &v, code)
     };
     if !wrap {
         text = text.replace(['\n', '\r'], " ");
@@ -1099,16 +1089,13 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
     if text.is_empty() {
         return;
     }
-    // A font that cannot show this text (Cyrillic or Uzbek letters in Helvetica) is swapped for a
-    // face that can, before anything is measured.
-    let font = crate::pdf_fonts::for_text(font, &text);
     let mut tw = gridcraft_pdf::text_width(font, size, &text);
     if st.align.shrink && !wrap && tw > avail && tw > 0.0 {
         size = (size * avail / tw).max(1.0);
         tw = gridcraft_pdf::text_width(font, size, &text);
     }
-    if is_num && !wrap && snapped_width(font, size, b.scale, &text) > avail + 0.01 && !sh.show_formulas {
-        let hash = snapped_width(font, size, b.scale, "#").max(0.1);
+    if is_num && !wrap && tw > avail + 0.01 && !sh.show_formulas {
+        let hash = gridcraft_pdf::text_width(font, size, "#").max(0.1);
         text = "#".repeat(((avail / hash).floor().max(1.0) as usize).min(255));
         tw = gridcraft_pdf::text_width(font, size, &text);
     }
@@ -1334,7 +1321,7 @@ fn draw_objects(pg: &mut Page, wb: &Workbook, si: usize, sh: &Sheet, b: &Block) 
             let fm = &shp.format;
             let text_box = shp.kind == ShapeKind::TextBox;
             let size = fm.font_size.unwrap_or(11.0).clamp(1.0, 4000.0) * b.scale;
-            let font = crate::pdf_fonts::for_text(crate::pdf_fonts::resolve(fm.font.as_deref().unwrap_or(""), fm.bold, fm.italic), &shp.text);
+            let font = Font::styled(Font::family_for(fm.font.as_deref().unwrap_or("")), fm.bold, fm.italic);
             let color = fm.text_color.and_then(|c| rgb_of(c, wb)).unwrap_or([0, 0, 0]);
             let align = fm.align.unwrap_or(if text_box { ShapeTextAlign::Left } else { ShapeTextAlign::Center });
             let anchor = fm.anchor.unwrap_or(if text_box { ShapeTextAnchor::Top } else { ShapeTextAnchor::Middle });
@@ -1423,7 +1410,6 @@ fn draw_header_footer(pg: &mut Page, lay: &SheetLayout, which: gridcraft_model::
             let lines: Vec<&str> = sec.text.split('\n').take(20).collect();
             let n = lines.len() as f32;
             for (j, line) in lines.iter().enumerate() {
-                let font = crate::pdf_fonts::for_text(font, line);
                 let lw = gridcraft_pdf::text_width(font, size, line);
                 let x = match i {
                     0 => l,
@@ -1438,17 +1424,7 @@ fn draw_header_footer(pg: &mut Page, lay: &SheetLayout, which: gridcraft_model::
 }
 
 /// Builds a block for rows × cols positioned at (x, y) on the page.
-fn make_block<'a>(
-    wb: &'a Workbook,
-    si: usize,
-    sh: &'a Sheet,
-    rows: (u32, u32),
-    cols: (u32, u32),
-    x: f32,
-    y: f32,
-    lay: &SheetLayout,
-    loc: NumLocale,
-) -> Block<'a> {
+fn make_block<'a>(wb: &'a Workbook, si: usize, sh: &'a Sheet, rows: (u32, u32), cols: (u32, u32), x: f32, y: f32, lay: &SheetLayout) -> Block<'a> {
     let k = lay.k();
     let mut xs = Vec::with_capacity((cols.1 - cols.0 + 2) as usize);
     let mut acc = x;
@@ -1464,7 +1440,7 @@ fn make_block<'a>(
         acc += sh.row_height(r) * k;
         ys.push(acc);
     }
-    Block { wb, si, sh, rows, cols, xs, ys, k, scale: lay.scale, loc }
+    Block { wb, si, sh, rows, cols, xs, ys, k, scale: lay.scale }
 }
 
 /// Segments of a page along one axis: repeated titles (before the band) then the band.
@@ -1485,16 +1461,11 @@ fn seg_size(sh: &Sheet, seg: (u32, u32), rows: bool) -> f32 {
 
 /// Renders laid-out sheets to a PDF.
 pub fn render_pdf(wb: &Workbook, layouts: &[SheetLayout], file: &str, path: &str) -> (Vec<u8>, usize) {
-    render_pdf_in(wb, layouts, file, path, NumLocale::EnUs)
-}
-
-/// [`render_pdf`] with cell, header and footer text as a reader of `loc` sees it.
-pub fn render_pdf_in(wb: &Workbook, layouts: &[SheetLayout], file: &str, path: &str, loc: NumLocale) -> (Vec<u8>, usize) {
     let mut doc = PdfDoc::new();
     doc.info.title = if wb.props.title.is_empty() { file.to_string() } else { wb.props.title.clone() };
     doc.info.author = wb.props.author.clone();
     let total: usize = layouts.iter().map(|l| l.pages.len()).sum();
-    let (date, time) = hf_date_time_in(wb, loc);
+    let (date, time) = hf_date_time(wb);
     let mut page_no = 0usize;
     for lay in layouts {
         let Some(sh) = wb.sheet(lay.sheet) else { continue };
@@ -1516,7 +1487,7 @@ pub fn render_pdf_in(wb: &Workbook, layouts: &[SheetLayout], file: &str, path: &
             for (rsi, rs) in rsegs.iter().enumerate() {
                 let mut x = ox + lay.heading_w * k;
                 for (csi, cs) in csegs.iter().enumerate() {
-                    let b = make_block(wb, lay.sheet, sh, *rs, *cs, x, y, lay, loc);
+                    let b = make_block(wb, lay.sheet, sh, *rs, *cs, x, y, lay);
                     draw_block(pg, &b, lay.settings.gridlines, &mut cf);
                     if lay.settings.headings {
                         draw_headings(pg, &b, rsi == 0, csi == 0, (ox, oy), (lay.heading_w * k, lay.heading_h * k));
@@ -1559,7 +1530,7 @@ fn build_pdf(s: &Session, p: &Json, cmd: &str) -> Result<(Vec<u8>, usize)> {
     let d = s.doc()?;
     let lays = layouts(&d.wb, &opts);
     let path = d.path.clone().unwrap_or_default();
-    Ok(render_pdf_in(&d.wb, &lays, &d.display_title(), &path, s.prefs.num_locale))
+    Ok(render_pdf(&d.wb, &lays, &d.display_title(), &path))
 }
 
 pub(crate) fn export_pdf(s: &mut Session, p: &Json) -> Result<Json> {
@@ -1967,6 +1938,21 @@ mod tests {
     }
 
     #[test]
+    fn conditional_number_format_prints() {
+        // #1163: a rule's number format replaces the cell's own, whether that is General or not;
+        // cells the rule doesn't match keep theirs.
+        let mut s = s();
+        s.execute("range.setValues", json!({"range": "A1", "values": [[1], [3], [4]]})).unwrap();
+        s.execute("home.numberFormat", json!({"range": "A3", "code": "0.0"})).unwrap();
+        let rule = json!({"type": "cellIs", "operator": "greater", "value": "2", "style": {"num_fmt": "0.00"}});
+        s.execute("home.conditionalFormat", json!({"range": "A1:A3", "rule": rule})).unwrap();
+        let (pdf, _) = pdf_of(&mut s, json!({}));
+        assert!(contains(&pdf, "(1) Tj"), "an unmatched cell keeps General");
+        assert!(contains(&pdf, "(3.00) Tj") && !contains(&pdf, "(3) Tj"), "General cell under the rule");
+        assert!(contains(&pdf, "(4.00) Tj") && !contains(&pdf, "(4.0) Tj"), "formatted cell under the rule");
+    }
+
+    #[test]
     fn export_writes_file() {
         let mut s = s();
         s.execute("cell.set", json!({"cell": "B2", "input": "hello"})).unwrap();
@@ -2177,131 +2163,5 @@ mod tests {
         // Every piece of both headers is rotated, each wrapped along the row height into a few long lines.
         assert_eq!(up + down, blocks.len(), "a header line printed flat: {blocks:?}");
         assert!((1..=3).contains(&up) && (1..=3).contains(&down), "up {up}, down {down}: {blocks:?}");
-    }
-
-    /// The text a viewer extracts from the page content: `<gids> Tj` strings mapped through the
-    /// embedded fonts' `ToUnicode` maps (standard-font `(…) Tj` strings are taken as written).
-    fn extract_text(pdf: &[u8]) -> String {
-        let s = String::from_utf8_lossy(pdf).into_owned();
-        let mut map = std::collections::HashMap::new();
-        for block in s.split("beginbfchar").skip(1) {
-            for line in block.split("endbfchar").next().unwrap().lines().filter(|l| l.starts_with('<')) {
-                let mut it = line.split(['<', '>']).filter(|p| !p.trim().is_empty());
-                let (g, u) = (it.next().unwrap(), it.next().unwrap());
-                let units: Vec<u16> = (0..u.len()).step_by(4).map(|i| u16::from_str_radix(&u[i..i + 4], 16).unwrap()).collect();
-                map.insert(u16::from_str_radix(g, 16).unwrap(), String::from_utf16(&units).unwrap());
-            }
-        }
-        let mut out = String::new();
-        for part in s.split(" Tj").filter(|p| p.ends_with('>') || p.ends_with(')')) {
-            if part.ends_with(')') {
-                out.push_str(part.rsplit('(').next().unwrap().trim_end_matches(')'));
-                continue;
-            }
-            let hex = part.rsplit('<').next().unwrap().trim_end_matches('>');
-            for i in (0..hex.len()).step_by(4) {
-                out.push_str(map.get(&u16::from_str_radix(&hex[i..i + 4], 16).unwrap()).map(String::as_str).unwrap_or("\u{FFFD}"));
-            }
-        }
-        out
-    }
-
-    #[test]
-    fn cyrillic_and_uzbek_cells_export_as_real_text() {
-        let mut s = s();
-        let cells = [("A1", "Привет, мир"), ("A2", "Ўзбекистон Ғ қ ҳ"), ("A3", "Ozbekiston maʼlumot sanʼat"), ("A4", "Hisobot / Отчёт 2026")];
-        for (cell, text) in cells {
-            s.execute("cell.set", json!({"cell": cell, "input": text})).unwrap();
-        }
-        let (pdf, pages) = pdf_of(&mut s, json!({}));
-        assert_eq!(pages, 1);
-        let text = String::from_utf8_lossy(&pdf);
-        assert!(text.contains("/Subtype /Type0") && text.contains("/ToUnicode"));
-        // The standard-font path wrote `(?????? …)` for these.
-        assert!(!text.contains("(?"), "question marks in the text layer");
-        let got = extract_text(&pdf);
-        for (_, want) in cells {
-            assert!(got.contains(want), "{want:?} missing from {got:?}");
-        }
-    }
-
-    #[test]
-    fn latin_one_text_still_uses_the_standard_fonts() {
-        let mut s = s();
-        s.execute("cell.set", json!({"cell": "A1", "input": "café €5"})).unwrap();
-        let (pdf, _) = pdf_of(&mut s, json!({}));
-        assert!(!String::from_utf8_lossy(&pdf).contains("/Type0"));
-        assert!(contains(&pdf, "(caf\\351 \\2005) Tj"));
-    }
-
-    #[test]
-    fn overflow_uses_the_fonts_own_metrics() {
-        // Hack's digits (602) are wider than Helvetica's (556): at some column width the number
-        // fits in Arial (a standard font) but must show `#` in Hack. Only the face's own advance
-        // widths can make that happen.
-        assert!(crate::pdf_fonts::register_font("Zz Wide Test", false, false, epaint_default_fonts::HACK_REGULAR.to_vec()));
-        let mut outcomes = Vec::new();
-        for chars in (40..140).map(|n| n as f64 / 10.0) {
-            let mut row = Vec::new();
-            for font in ["Arial", "Zz Wide Test"] {
-                let mut s = s();
-                s.execute("cell.set", json!({"cell": "A1", "input": "1234567"})).unwrap();
-                s.execute("home.numberFormat", json!({"range": "A1", "code": "0"})).unwrap();
-                s.execute("home.fontName", json!({"range": "A1", "name": font})).unwrap();
-                s.execute("home.columnWidth", json!({"cols": "A:A", "chars": chars})).unwrap();
-                let (pdf, _) = pdf_of(&mut s, json!({}));
-                row.push(extract_text(&pdf));
-            }
-            outcomes.push(row);
-        }
-        assert!(outcomes.iter().any(|r| r[0] == "1234567" && r[1].starts_with('#')), "{outcomes:?}");
-        // Never the other way round, and wide columns fit in both.
-        assert!(outcomes.iter().all(|r| !(r[0].starts_with('#') && r[1] == "1234567")), "{outcomes:?}");
-        assert!(outcomes.last().is_some_and(|r| r[0] == "1234567" && r[1] == "1234567"));
-    }
-
-    /// Office overlay (patch 0029): cell text in the PDF follows `prefs.num_locale`.
-    #[test]
-    fn pdf_text_follows_the_number_locale() {
-        let book = |loc: NumLocale| {
-            let mut s = s();
-            s.prefs.num_locale = loc;
-            for (cell, input) in [("A1", "3500000.5"), ("B1", "3500000.5"), ("A2", "10/12/2026"), ("B2", "46307.75")] {
-                s.execute("cell.set", json!({"cell": cell, "input": input})).unwrap();
-            }
-            s.execute("home.formatCells", json!({"range": "B1", "style": {"num_fmt": "#,##0.00"}})).unwrap();
-            s.execute("home.formatCells", json!({"range": "B2", "style": {"num_fmt": "dddd d mmmm yyyy"}})).unwrap();
-            s.execute("home.columnWidth", json!({"cols": "A:B", "chars": 30})).unwrap();
-            s.execute("pageLayout.pageSetup", json!({"header": "&D", "footer": "&T"})).unwrap();
-            s
-        };
-        let (en, _) = pdf_of(&mut book(NumLocale::EnUs), json!({}));
-        assert!(contains(&en, "(3500000.5) Tj") && contains(&en, "(3,500,000.50) Tj") && contains(&en, "(10/12/2026) Tj"));
-        assert!(contains(&en, "(Monday 12 October 2026) Tj"));
-        for loc in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
-            let (p, _) = pdf_of(&mut book(loc), json!({}));
-            assert!(contains(&p, "(3500000,5) Tj"), "{loc:?}");
-            assert!(contains(&p, "(12.10.2026) Tj"), "{loc:?}");
-            assert!(!contains(&p, "(3500000.5) Tj") && !contains(&p, "(10/12/2026) Tj"), "{loc:?}");
-            // the grouped value uses U+00A0, which the standard font writes as the byte 0xA0
-            assert!(contains(&p, r"(3\240500\240000,50) Tj"), "{loc:?}");
-        }
-        // names: the weekday and month in the locale (Latin names stay in the standard font; Cyrillic ones
-        // are written by the embedded or fallback face, so only the Latin locale is checked as text)
-        let (uz, _) = pdf_of(&mut book(NumLocale::UzLatn), json!({}));
-        assert!(contains(&uz, "(dushanba 12 Oktabr 2026) Tj"));
-    }
-
-    #[test]
-    fn header_date_and_time_use_the_short_forms_of_the_locale() {
-        let wb = Workbook::new();
-        let (en_date, en_time) = hf_date_time_in(&wb, NumLocale::EnUs);
-        assert!(en_date.contains('/') && en_time.ends_with('M'), "{en_date} {en_time}");
-        assert_eq!(hf_date_time_in(&wb, NumLocale::EnUs), hf_date_time(&wb));
-        for loc in [NumLocale::Ru, NumLocale::UzLatn, NumLocale::UzCyrl] {
-            let (date, time) = hf_date_time_in(&wb, loc);
-            assert_eq!((date.len(), date.matches('.').count()), (10, 2), "{date}");
-            assert!(time.contains(':') && !time.contains('M'), "{time}");
-        }
     }
 }

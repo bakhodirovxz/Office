@@ -252,7 +252,8 @@ fn candidates(role: &str) -> Vec<(String, u32)> {
     let mac_sys = "/System/Library/Fonts";
     let mac_sup = "/System/Library/Fonts/Supplemental";
     let win = std::env::var("WINDIR").map(|w| format!("{w}\\Fonts")).unwrap_or_else(|_| "C:\\Windows\\Fonts".into());
-    let lin = ["/usr/share/fonts/truetype", "/usr/share/fonts", "/usr/local/share/fonts", "/usr/share/fonts/TTF"];
+    // ChromeOS's Linux container (Crostini) mounts the host's fonts under `chromeos/` (#1762).
+    let lin = ["/usr/share/fonts/truetype", "/usr/share/fonts", "/usr/local/share/fonts", "/usr/share/fonts/TTF", "/usr/share/fonts/chromeos"];
     let mut v: Vec<(String, u32)> = Vec::new();
     let mut add = |s: String, i: u32| v.push((s, i));
     match role {
@@ -387,15 +388,6 @@ pub fn font_definitions_for_language(language: crate::i18n::Language) -> FontDef
 /// families are recorded in [`crate::fonts`] so [`cell_family`] only names a family egui has.
 pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -> FontDefinitions {
     let mut fonts = FontDefinitions::default();
-    // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
-    // has Latin, Greek and Cyrillic). Only the first call has an effect.
-    if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
-        match crate::office_overlay::FALLBACK_FONTS.first() {
-            // The overlay's face leads, so U+02BB and Uzbek Cyrillic print; Ubuntu Light stays behind it for Greek.
-            Some((_, sans)) => gridcraft_engine::pdf_fonts::set_default_face_with_fallback(sans.to_vec(), ubuntu.font.to_vec()),
-            None => gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec()),
-        };
-    }
     let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
     let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
     let mut bound: Vec<String> = Vec::new();
@@ -443,7 +435,6 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
     if let Some(ui) = fonts.families.get(&FontFamily::Name(UI.into())).cloned() {
         fonts.families.insert(FontFamily::Proportional, ui);
     }
-    crate::office_overlay::append_fallback_fonts(&mut fonts);
     drop_unparseable_fonts(&mut fonts);
     // Only families egui still has data for count as bound (a dropped face can empty a chain).
     bound.retain(|f| fonts.families.get(&FontFamily::Name(f.as_str().into())).is_some_and(|c| !c.is_empty()));
@@ -508,10 +499,10 @@ fn fallback_faces(han: HanOrder) -> Vec<(&'static str, Vec<(String, u32)>)> {
 }
 
 /// Linux directories that hold CJK fonts across distributions: Debian/Ubuntu (`opentype/noto`,
-/// `truetype/wqy`), Fedora (`google-noto-cjk`), Arch (`noto-cjk`, `wenquanyi`), plus local and
-/// flat layouts.
+/// `truetype/wqy`), Fedora (`google-noto-cjk`), Arch (`noto-cjk`, `wenquanyi`), ChromeOS's Linux
+/// container (`chromeos/notocjk`, #1762), plus local and flat layouts.
 #[cfg(not(target_arch = "wasm32"))]
-const LINUX_CJK_DIRS: [&str; 10] = [
+const LINUX_CJK_DIRS: [&str; 11] = [
     "/usr/share/fonts/opentype/noto",
     "/usr/share/fonts/google-noto-cjk",
     "/usr/share/fonts/noto-cjk",
@@ -522,6 +513,7 @@ const LINUX_CJK_DIRS: [&str; 10] = [
     "/usr/share/fonts",
     "/usr/local/share/fonts",
     "/usr/local/share/fonts/noto-cjk",
+    "/usr/share/fonts/chromeos/notocjk",
 ];
 
 /// Japanese Han + Kana faces (Japanese kanji glyph shapes).
@@ -591,7 +583,13 @@ fn thai() -> Vec<(String, u32)> {
     let mac_sys = "/System/Library/Fonts";
     let mac_sup = "/System/Library/Fonts/Supplemental";
     let win = std::env::var("WINDIR").map(|w| format!("{w}\\Fonts")).unwrap_or_else(|_| "C:\\Windows\\Fonts".into());
-    let lin = ["/usr/share/fonts/truetype/noto", "/usr/share/fonts/opentype/noto", "/usr/share/fonts/truetype", "/usr/share/fonts"];
+    let lin = [
+        "/usr/share/fonts/truetype/noto",
+        "/usr/share/fonts/opentype/noto",
+        "/usr/share/fonts/truetype",
+        "/usr/share/fonts",
+        "/usr/share/fonts/chromeos/noto", // ChromeOS's Linux container (#1762)
+    ];
     let mut v: Vec<(String, u32)> = Vec::new();
     v.push((format!("{win}\\LeelawUI.ttf"), 0)); // Leelawadee UI
     v.push((format!("{win}\\tahoma.ttf"), 0)); // Tahoma
@@ -613,7 +611,13 @@ fn hebrew() -> Vec<(String, u32)> {
     let mac_sys = "/System/Library/Fonts";
     let mac_sup = "/System/Library/Fonts/Supplemental";
     let win = std::env::var("WINDIR").map(|w| format!("{w}\\Fonts")).unwrap_or_else(|_| "C:\\Windows\\Fonts".into());
-    let lin = ["/usr/share/fonts/truetype/noto", "/usr/share/fonts/opentype/noto", "/usr/share/fonts/truetype", "/usr/share/fonts"];
+    let lin = [
+        "/usr/share/fonts/truetype/noto",
+        "/usr/share/fonts/opentype/noto",
+        "/usr/share/fonts/truetype",
+        "/usr/share/fonts",
+        "/usr/share/fonts/chromeos/noto", // ChromeOS's Linux container (#1762)
+    ];
     let mut v: Vec<(String, u32)> = Vec::new();
     v.push((format!("{win}\\david.ttf"), 0)); // David
     v.push((format!("{win}\\frank.ttf"), 0)); // FrankRuehl
@@ -667,6 +671,7 @@ fn symbols_more() -> Vec<(String, u32)> {
         "/usr/share/fonts/google-noto-sans-symbols-2-fonts",
         "/usr/share/fonts/google-noto",
         "/usr/local/share/fonts/noto",
+        "/usr/share/fonts/chromeos/noto",
     ] {
         v.push((format!("{d}/NotoSansSymbols2-Regular.ttf"), 0));
     }
@@ -793,16 +798,7 @@ mod tests {
                 return; // no fallback face on this machine (minimal Linux)
             }
             for role in [UI, UI_BOLD, CELL, CELL_BOLD, CELL_ITALIC, CELL_BOLD_ITALIC, SERIF, MONO] {
-                // The office overlay appends its own fallback faces after the script fallbacks (patch 0102).
-                let chain: Vec<String> = fonts
-                    .families
-                    .get(&FontFamily::Name(role.into()))
-                    .map(Vec::as_slice)
-                    .unwrap_or_default()
-                    .iter()
-                    .filter(|k| !k.starts_with("office-fallback"))
-                    .cloned()
-                    .collect();
+                let chain = fonts.families.get(&FontFamily::Name(role.into())).map(Vec::as_slice).unwrap_or_default();
                 assert!(chain.len() >= fb_keys.len(), "{role} chain too short for its fallback");
                 let tail = &chain[chain.len() - fb_keys.len()..];
                 assert_eq!(tail, fb_keys.as_slice(), "{role} must end its chain with the fallback faces");
@@ -905,6 +901,22 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn chromeos_font_layout_is_probed() {
+        // #1762: Crostini mounts the host's fonts under /usr/share/fonts/chromeos, one folder per
+        // family set; a script whose list misses it renders as tofu with the font installed.
+        let probes = |cands: Vec<(String, u32)>, path: &str| cands.iter().any(|(p, _)| p == path);
+        let cros = "/usr/share/fonts/chromeos";
+        assert!(probes(thai(), &format!("{cros}/noto/NotoSansThai-Regular.ttf")));
+        assert!(probes(hebrew(), &format!("{cros}/noto/NotoSansHebrew-Regular.ttf")));
+        assert!(probes(cjk_han_japanese(), &format!("{cros}/notocjk/NotoSansCJK-Regular.ttc")));
+        assert!(probes(cjk_han_simplified(), &format!("{cros}/notocjk/NotoSansCJK-Regular.ttc")));
+        assert!(probes(cjk_hangul(), &format!("{cros}/notocjk/NotoSansCJK-Regular.ttc")));
+        assert!(probes(symbols_more(), &format!("{cros}/noto/NotoSansSymbols2-Regular.ttf")));
+        assert!(probes(candidates(UI), &format!("{cros}/noto/NotoSans-Regular.ttf")));
+        assert!(probes(candidates(CELL), &format!("{cros}/crosextra/Carlito-Regular.ttf")));
     }
 
     #[test]

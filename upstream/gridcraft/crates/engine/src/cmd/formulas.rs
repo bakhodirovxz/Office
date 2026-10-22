@@ -229,7 +229,7 @@ fn valid_name(n: &str) -> bool {
     if !(first.is_alphabetic() || first == '_' || first == '\\') {
         return false;
     }
-    if n.len() > 255 || CellRef::parse(n).is_some() || is_r1c1(n) {
+    if n.chars().count() > 255 || CellRef::parse(n).is_some() || is_r1c1(n) {
         return false;
     }
     n.chars().all(|c| c.is_alphanumeric() || matches!(c, '_' | '.' | '\\' | '?'))
@@ -347,7 +347,7 @@ fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_sc
         for (c, f) in formulas {
             let Some(e) = f.expr().and_then(rename) else { continue };
             let mut nf = Formula::from_expr(e);
-            nf.set_array(f.array());
+            nf.array = f.array;
             if let Some(cell) = sh.cells.get_mut(c) {
                 cell.formula = Some(std::sync::Arc::new(nf));
             }
@@ -496,7 +496,7 @@ fn error_checking(s: &mut Session, _: &Json) -> Result<Json> {
         for (c, cell) in sh.cells.iter() {
             if let Some(e) = cell.value.as_error() {
                 out.push(
-                    json!({"sheet": sh.name, "cell": c.a1(), "error": e.as_str(), "formula": cell.formula.as_ref().map(|f| format!("={}", f.text()))}),
+                    json!({"sheet": sh.name, "cell": c.a1(), "error": e.as_str(), "formula": cell.formula.as_ref().map(|f| format!("={}", f.text))}),
                 );
             }
             if out.len() >= 10_000 {
@@ -519,7 +519,7 @@ fn evaluate_formula(s: &mut Session, p: &Json) -> Result<Json> {
             d.wb.sheet(sheet)
                 .and_then(|sh| sh.cell(at))
                 .and_then(|c| c.formula.as_ref())
-                .map(|f| f.text().into_owned())
+                .map(|f| f.text.clone())
                 .ok_or_else(|| EngineError::Other("The cell has no formula.".into()))?
         }
     };
@@ -609,5 +609,19 @@ mod tests {
         // Absolute references are kept as they are.
         let r = s.execute("formulas.defineName", json!({"name": "First", "refersTo": "=Sheet1!$A$1"})).unwrap();
         assert_eq!(r["refersTo"], "=Sheet1!$A$1");
+    }
+
+    #[test]
+    fn arabic_defined_names_count_characters_not_bytes() {
+        let mut s = Session::new();
+        s.new_workbook();
+        let arabic = |n: usize| "س".repeat(n);
+        for ok in [200, 255] {
+            s.execute("formulas.defineName", json!({"name": arabic(ok), "refersTo": "=1"})).unwrap();
+        }
+        assert!(s.execute("formulas.defineName", json!({"name": arabic(256), "refersTo": "=1"})).is_err());
+        s.execute("range.setValues", json!({"range": "A1", "values": [[format!("ع{}", arabic(199))], [1]]})).unwrap();
+        let r = s.execute("formulas.createFromSelection", json!({"range": "A1:A2", "top": true})).unwrap();
+        assert_eq!(r["created"], 1);
     }
 }

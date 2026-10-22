@@ -290,7 +290,7 @@ fn v(wb: &gridcraft_model::Workbook, sheet: usize, a1: &str) -> Value {
 }
 
 fn ftext(wb: &gridcraft_model::Workbook, a1: &str) -> Option<String> {
-    wb.sheets[0].cell(CellRef::parse(a1).unwrap()).and_then(|c| c.formula.as_ref()).map(|f| f.text().into_owned())
+    wb.sheets[0].cell(CellRef::parse(a1).unwrap()).and_then(|c| c.formula.as_ref()).map(|f| f.text.clone())
 }
 
 #[test]
@@ -333,7 +333,7 @@ fn reads_values_formulas_formats_and_layout() {
         // Array formula: the anchor holds it; the other cell's cached result is dropped so that
         // the formula fills the range on recalculation (as when an .xlsx is read, #156).
         let c5 = wb.sheets[0].cell(CellRef::parse("C5").unwrap()).unwrap().formula.clone().unwrap();
-        assert_eq!((c5.text().as_ref(), c5.array()), ("A5:A6*2", Some(RangeRef::parse("C5:C6").unwrap())));
+        assert_eq!((c5.text.as_str(), c5.array), ("A5:A6*2", Some(RangeRef::parse("C5:C6").unwrap())));
         assert_eq!(ftext(&wb, "C6"), None);
         assert_eq!(v(&wb, 0, "C6"), Value::Empty);
         // Number formats, merges, sizes, names, print area; embedded chart records ignored.
@@ -352,7 +352,7 @@ fn reads_values_formulas_formats_and_layout() {
         assert_eq!(wb.date_system, DateSystem::D1900);
         // The import saves as .xlsx and reads back.
         let (back, _) = read_xlsx(&write_xlsx(&wb).unwrap()).unwrap();
-        assert_eq!(back.sheets[0].cell(CellRef::parse("A3").unwrap()).unwrap().formula.as_ref().unwrap().text(), "B1*2");
+        assert_eq!(back.sheets[0].cell(CellRef::parse("A3").unwrap()).unwrap().formula.as_ref().unwrap().text, "B1*2");
         assert_eq!(back.sheets[0].value(CellRef::parse("C3").unwrap()), Value::from("Hello!"));
     }
     let (wb, _) = read_xls(&compound("Workbook", &sample(true))).unwrap();
@@ -452,6 +452,20 @@ fn hostile_xls_input_never_panics_or_hangs() {
         }
         let _ = read_xls(&b);
     }
+}
+
+#[test]
+fn dialog_sheets_are_skipped_not_read_as_worksheets() {
+    let boundsheet = |pos: u32, name: &str| rec(0x0085, &cat(&[&pos.to_le_bytes(), &[0, 0, name.len() as u8, 0], name.as_bytes()]));
+    let globals = |positions: [u32; 2]| cat(&[&bof(0x0005), &boundsheet(positions[0], "Dialog1"), &boundsheet(positions[1], "Sheet1"), &eof()]);
+    let dialog = cat(&[&bof(0x0010), &rec(0x0081, &[0x10, 0x00]), &rec(0x0203, &cat(&[&cell(0, 0, 0), &1.0f64.to_le_bytes()])), &eof()]);
+    let worksheet = cat(&[&bof(0x0010), &rec(0x0081, &[0x01, 0x04]), &rec(0x0203, &cat(&[&cell(0, 0, 0), &7.0f64.to_le_bytes()])), &eof()]);
+    let first = globals([0; 2]).len() as u32;
+    let stream = cat(&[&globals([first, first + dialog.len() as u32]), &dialog, &worksheet]);
+    let (wb, report) = read_xls(&compound("Workbook", &stream)).unwrap();
+    assert_eq!(wb.sheets.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(), ["Sheet1"]);
+    assert_eq!(v(&wb, 0, "A1"), Value::Number(7.0));
+    assert!(report.warnings.iter().any(|w| w.contains("Dialog sheets")), "{:?}", report.warnings);
 }
 
 #[test]
@@ -593,4 +607,32 @@ fn a_format_shorter_than_its_count_keeps_its_characters() {
     assert_eq!(fmt("A2"), "yyyy-mm-dd");
     assert_eq!(fmt("A3"), "0.000");
     assert!(report.warnings.iter().any(|w| w.contains("declared length")), "{:?}", report.warnings);
+}
+
+fn one_sheet_with(sheet_records: &[u8]) -> Vec<u8> {
+    let globals = |pos: u32| cat(&[&bof(0x0005), &rec(0x0085, &cat(&[&pos.to_le_bytes(), &[0, 0, 6, 0], b"Sheet1"])), &eof()]);
+    let sheet = cat(&[&bof(0x0010), sheet_records, &rec(0x0203, &cat(&[&cell(0, 0, 0), &7.0f64.to_le_bytes()])), &eof()]);
+    compound("Workbook", &cat(&[&globals(globals(0).len() as u32), &sheet]))
+}
+
+#[test]
+fn xls_window2_right_to_left_sheet_opens_right_to_left() {
+    let window2 = |flags: u16| rec(0x023E, &u16s(&[flags, 0, 0, 64, 0, 0, 0, 0, 0]));
+    let view = |file: &[u8]| {
+        let (wb, _) = read_xls(file).unwrap();
+        let sh = &wb.sheets[0];
+        (sh.right_to_left, sh.show_gridlines, sh.show_headings, sh.show_zeros, sh.show_formulas)
+    };
+    assert_eq!(view(&one_sheet_with(&window2(0x0040 | 0x0004))), (true, false, true, false, false));
+    assert_eq!(view(&one_sheet_with(&window2(0x0001 | 0x0002 | 0x0010))), (false, true, false, true, true));
+}
+
+#[test]
+fn xls_short_window2_is_ignored() {
+    for payload in [&[][..], &[0x40][..], &[0x40, 0][..], &[0x40, 0, 0, 0, 0, 0, 0, 0, 0][..]] {
+        let (wb, _) = read_xls(&one_sheet_with(&rec(0x023E, payload))).unwrap();
+        let sh = &wb.sheets[0];
+        assert_eq!((sh.right_to_left, sh.show_gridlines, sh.show_headings, sh.show_zeros), (false, true, true, true));
+        assert_eq!(v(&wb, 0, "A1"), Value::Number(7.0));
+    }
 }

@@ -35,32 +35,10 @@ pub enum Language {
     Cs,
     Fr,
     Sr,
-    #[cfg(office_uz)]
-    #[serde(rename = "uz-latn")]
-    UzLatn,
-    #[cfg(office_uz)]
-    #[serde(rename = "uz-cyrl")]
-    UzCyrl,
 }
 
 impl Language {
-    pub const ALL: [Self; 11 + crate::office_overlay::EXTRA_LANGS] = [
-        Self::En,
-        Self::Es,
-        Self::Zh,
-        Self::Ja,
-        Self::Ko,
-        Self::Ru,
-        Self::PtBr,
-        Self::De,
-        Self::Cs,
-        Self::Fr,
-        Self::Sr,
-        #[cfg(office_uz)]
-        Self::UzLatn,
-        #[cfg(office_uz)]
-        Self::UzCyrl,
-    ];
+    pub const ALL: [Self; 11] = [Self::En, Self::Es, Self::Zh, Self::Ja, Self::Ko, Self::Ru, Self::PtBr, Self::De, Self::Cs, Self::Fr, Self::Sr];
 
     /// The language's own name, shown in the switcher.
     pub fn name(self) -> &'static str {
@@ -76,10 +54,6 @@ impl Language {
             Self::Cs => "Čeština",
             Self::Fr => "Français",
             Self::Sr => "Srpski",
-            #[cfg(office_uz)]
-            Self::UzLatn => crate::office_overlay::NAME_UZ_LATN,
-            #[cfg(office_uz)]
-            Self::UzCyrl => crate::office_overlay::NAME_UZ_CYRL,
         }
     }
 
@@ -97,10 +71,6 @@ impl Language {
             Self::Cs => "cs",
             Self::Fr => "fr",
             Self::Sr => "sr",
-            #[cfg(office_uz)]
-            Self::UzLatn => "uz-latn",
-            #[cfg(office_uz)]
-            Self::UzCyrl => "uz-cyrl",
         }
     }
 
@@ -121,11 +91,6 @@ impl Language {
             "cs" => Some(Self::Cs),
             "fr" => Some(Self::Fr),
             "sr" => Some(Self::Sr),
-            // Uzbek: Latin unless the tag says Cyrillic (`uz-Cyrl-UZ`, or the Linux `uz_UZ@cyrillic`).
-            #[cfg(office_uz)]
-            "uz" if tag.to_ascii_lowercase().contains("cyrl") || tag.to_ascii_lowercase().contains("@cyrillic") => Some(Self::UzCyrl),
-            #[cfg(office_uz)]
-            "uz" => Some(Self::UzLatn),
             _ => None,
         }
     }
@@ -143,30 +108,8 @@ impl Language {
         }
     }
 
-    /// The number locale of displayed and typed numbers and dates: Russian and Uzbek follow their
-    /// language, every other language (Spanish included) keeps en-US.
-    pub fn num_locale(self) -> gridcraft_engine::core::NumLocale {
-        use gridcraft_engine::core::NumLocale;
-        match self {
-            Self::Ru => NumLocale::Ru,
-            #[cfg(office_uz)]
-            Self::UzLatn => NumLocale::UzLatn,
-            #[cfg(office_uz)]
-            Self::UzCyrl => NumLocale::UzCyrl,
-            _ => NumLocale::EnUs,
-        }
-    }
-
     pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
-        use gridcraft_engine::formula::FormulaLocale;
-        if self == Self::Es {
-            FormulaLocale::Es
-        } else if self.num_locale() != gridcraft_engine::core::NumLocale::EnUs {
-            // Russian and Uzbek: `;` between arguments and a decimal comma, as Excel takes them there.
-            FormulaLocale::DecimalComma
-        } else {
-            FormulaLocale::En
-        }
+        if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
     }
 
     /// Translates an interface label; untranslated labels fall back to English.
@@ -180,18 +123,14 @@ impl Language {
             Self::Ja => JAPANESE.iter().find(|(english, _)| *english == text).map(|(_, translated)| *translated),
             Self::Zh => zh::translate(text),
             Self::Ko => ko::translate(text),
-            Self::Ru => ru::translate(text).or_else(|| crate::office_overlay::translate_ru_extra(text)),
+            Self::Ru => ru::translate(text),
             Self::PtBr => pt::translate(text),
             Self::De => de::translate(text),
             Self::Cs => cs::translate(text),
             Self::Fr => fr::translate(text),
             Self::Sr => sr::translate(text),
-            #[cfg(office_uz)]
-            Self::UzLatn => crate::office_overlay::translate_uz_latn(text),
-            #[cfg(office_uz)]
-            Self::UzCyrl => crate::office_overlay::translate_uz_cyrl(text),
         };
-        crate::office_overlay::rebrand(translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label)))
+        translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label))
     }
 }
 
@@ -229,23 +168,8 @@ pub fn current(ctx: &egui::Context) -> Language {
     ctx.data(|d| d.get_temp(lang_key())).unwrap_or_default()
 }
 
-fn num_locale_key() -> egui::Id {
-    egui::Id::new("gridcraft.num_locale")
-}
-
-/// The number locale the current frame draws cell text in (see [`Language::num_locale`]).
-pub fn current_num_locale(ctx: &egui::Context) -> gridcraft_engine::core::NumLocale {
-    ctx.data(|d| d.get_temp(num_locale_key())).unwrap_or_default()
-}
-
-/// Sets the number locale for the current frame, with the language.
-pub fn set_current_num_locale(ctx: &egui::Context, loc: gridcraft_engine::core::NumLocale) {
-    ctx.data_mut(|d| d.insert_temp(num_locale_key(), loc));
-}
-
 /// Sets the language for the current frame; call once per frame before anything is drawn.
 pub fn set_current(ctx: &egui::Context, language: Language) {
-    crate::office_overlay::set_lang(language.code());
     ctx.data_mut(|d| d.insert_temp(lang_key(), language));
 }
 
@@ -721,6 +645,59 @@ mod tests {
         assert_eq!(Language::Sr.tr("Page Layout|Orientation"), "Orijentacija");
         assert_eq!(Language::Sr.tr("Orientation"), "Orijentacija");
         assert_eq!(Language::parse("xx"), None);
+    }
+
+    #[test]
+    fn german_cell_and_header_context_menus_are_fully_translated() {
+        for label in [
+            "Cut",
+            "Copy",
+            "Paste",
+            "Paste Special…",
+            "Insert…",
+            "Delete…",
+            "Clear Contents",
+            "Filter by Selected Cell's Value",
+            "Sort A to Z",
+            "Sort Z to A",
+            "New Comment",
+            "New Note",
+            "Format Cells…",
+            "Pick From Drop-down List…",
+            "Define Name…",
+            "Insert Copied Cells",
+            "Insert Copied Cells…",
+            "Insert Cut Cells",
+            "Insert",
+            "Delete",
+            "Row Height…",
+            "AutoFit Row Height",
+            "Column Width…",
+            "AutoFit Column Width",
+            "Hide",
+            "Unhide",
+            "Group",
+        ] {
+            assert_ne!(Language::De.tr(label), label, "German context menu label missing: {label}");
+        }
+    }
+
+    #[test]
+    fn translations_never_show_the_context_prefix() {
+        // `tr` returns a found translation as it is, so a catalog that keeps `context|` in its
+        // value shows it on screen (File › Options read "Options|Général" in French).
+        for language in Language::ALL {
+            for (english, _) in JAPANESE {
+                let shown = language.tr(english);
+                assert!(!shown.contains('|'), "{} shows a context prefix for {english}: {shown}", language.code());
+            }
+        }
+        assert_eq!(Language::Fr.tr("Options|General"), "Général");
+        assert_eq!(Language::Fr.tr("Options|Save"), "Enregistrer");
+        assert_eq!(Language::Fr.tr("Sheet Options|View"), "Affichage");
+        assert_eq!(Language::Sr.tr("Options|General"), "Opšte");
+        assert_eq!(Language::Sr.tr("Options|Save"), "Sačuvaj");
+        assert_eq!(Language::Sr.tr("Sheet Options|View"), "Prikaz");
     }
 
     #[test]
