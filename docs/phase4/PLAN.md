@@ -6,8 +6,12 @@
 >   - **Q10, MSVC: yes.** Install VS Build Tools and the Windows SDK under the **Visual Studio Community** licence
 >     terms for open-source development. Put it on E: where possible.
 >   - **Q4, signing: internal now, free public later (revised 2026-10-22).**
->     - **Pilot:** the organisation's internal (AD CS / enterprise CA) code-signing certificate, trusted through GPO.
->       This is an owner/IT item.
+>     - **Pilot: unsigned (owner, 2026-10-22, "the internal certificate may be skipped").** The pilot MSI and exes
+>       are not signed. Effects: the MSI's UAC prompt shows "Unknown publisher"; SmartScreen may warn on files that
+>       carry Mark-of-the-Web (downloaded from the internet, not copied from an internal share); AppLocker or WDAC
+>       rules on office PCs could block unsigned binaries, which IT must check. `scripts/sign.ps1` stays ready, and
+>       an internal AD CS certificate can be added later without code changes. WP14/WP15 treat "signature verifies"
+>       as optional for the pilot.
 >     - **Public release (Phase 10): SignPath Foundation's free OSS signing, chosen by the owner** instead of a paid
 >       OV certificate.
 >       - The publisher shown is "SignPath Foundation".
