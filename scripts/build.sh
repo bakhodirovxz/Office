@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# scripts/build.sh <domain|all> <desktop|web|cli|all> [--release]   (PLAN WP3)
+# scripts/build.sh <domain|all|services> <desktop|web|cli|all> [--release] [--msvc]   (PLAN WP3, WP13)
+# --msvc: target x86_64-pc-windows-msvc into $OFFICE_TARGET/msvc/<d> (desktop and cli only; `services` builds convert and convert-api;
+#   `all --msvc` also builds services). Needs VS Build Tools (docs/phase4/msvc.md).
 # One build at a time (build lock), RAM gate, log and wall time. Output on E: only.
 #   logs:  $OFFICE_TARGET/logs/build-<d>-<what>.log     times: $OFFICE_TARGET/logs/times.tsv
 #   cargo target dir per domain: $OFFICE_TARGET/<d>;  web dist: $OFFICE_TARGET/dist/<d>-web (domains/<d>/apps/<d>-web/Trunk.toml)
@@ -10,18 +12,24 @@ set -uo pipefail
 . "$OFFICE_ROOT/scripts/lib/lock.sh"
 cd "$OFFICE_ROOT"
 d=${1:?domain|all}; what=${2:?desktop|web|cli|all}; shift 2
-release=""; for a in "$@"; do [ "$a" = "--release" ] && release=1; done
+release=""; msvc=""; for a in "$@"; do [ "$a" = "--release" ] && release=1; [ "$a" = "--msvc" ] && msvc=1; done
 
 if [ "$d" = all ]; then
-  rc=0; for x in slides pdf docs sheets; do "$0" $x "$what" "$@" || rc=$?; done; exit $rc
+  rc=0; for x in slides pdf docs sheets; do "$0" $x "$what" "$@" || rc=$?; done
+  [ -n "$msvc" ] && { "$0" services cli "$@" || rc=$?; }
+  exit $rc
 fi
 if [ "$what" = all ]; then
-  rc=0; for w in desktop cli web; do "$0" "$d" "$w" "$@" || rc=$?; done; exit $rc
+  ws="desktop cli web"; [ -n "$msvc" ] && ws="desktop cli"
+  [ "$d" = services ] && ws=cli
+  rc=0; for w in $ws; do "$0" "$d" "$w" "$@" || rc=$?; done; exit $rc
 fi
 
 mkdir -p "$OFFICE_TARGET/logs" "$OFFICE_TARGET/dist"
-log="$OFFICE_TARGET/logs/build-$d-$what${release:+-release}.log"
-export CARGO_TARGET_DIR="$OFFICE_TARGET/$d"
+log="$OFFICE_TARGET/logs/build-$d-$what${release:+-release}${msvc:+-msvc}.log"
+export CARGO_TARGET_DIR="$OFFICE_TARGET/${msvc:+msvc/}$d"
+mt=""; [ -n "$msvc" ] && mt="--target x86_64-pc-windows-msvc"
+[ "$what" = web ] && [ -n "$msvc" ] && { echo "--msvc: no web target"; exit 2; }
 export CARGO_BUILD_JOBS=4
 [ "${OFFICE_FONTS:-parity}" = all ] || { [ "$d" = slides ] || unset CRAFT_FONTS_DIR; }
 mf="domains/$d/Cargo.toml"
@@ -30,6 +38,7 @@ mf="domains/$d/Cargo.toml"
 # Brand overlay (WP7): render brand/brand.toml into $OFFICE_OVERLAY_ROOT/<d>/ and point the builds at it. The web page is
 # rendered from index.html.in because build.rs cannot write index.html. OFFICE_NO_OVERLAY=1 builds pristine-like.
 overlay_prepare() {
+  [ "$d" = services ] && return 0
   [ "${OFFICE_NO_OVERLAY:-0}" = 1 ] && { unset OFFICE_OVERLAY_DIR OFFICE_PRODUCT_VERSION OFFICE_PRODUCT_NAME; return 0; }
   (unset CARGO_TARGET_DIR RUSTC_WRAPPER; cargo xt overlay "$d") || return 1
   export OFFICE_OVERLAY_DIR="$OFFICE_OVERLAY_ROOT/$d"
@@ -53,16 +62,19 @@ overlay_prepare() {
 run() {
   ram_gate 6   # two builds may overlap (2-slot lock): free RAM must cover this one plus the running one
   overlay_prepare || return 1
+  # msvc host toolchain (after the overlay step, which uses the default gnu one): build scripts such as winresource pick rc.exe only when the host is msvc
+  [ -n "$msvc" ] && export RUSTUP_TOOLCHAIN=stable-x86_64-pc-windows-msvc
   local t0=$SECONDS; echo "== $d $what ${release:+release} start $(date -Is) fonts=${CRAFT_FONTS_DIR:-unset} wrapper=${RUSTC_WRAPPER:-none} overlay=${OFFICE_OVERLAY_DIR:-none}"
   case "$what" in
-    desktop) cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
-    cli)     cargo build --locked -j 4 ${release:+--release} --manifest-path "$mf" -p "$d-cli" ;;
+    desktop) cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
+    cli)     if [ "$d" = services ]; then cargo build --locked -j 4 $mt ${release:+--release} --manifest-path services/Cargo.toml -p convert -p convert-api
+             else cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-cli"; fi ;;
     web)     # sccache cannot spawn rustc for web-sys (command line too long on Windows), so web builds run without it
              (unset RUSTC_WRAPPER; cd "domains/$d/apps/$d-web" && TRUNK_BUILD_DIST="$OFFICE_TARGET/dist/$d-web" trunk build ${release:+--release} --locked) ;;
     *) echo "unknown target $what"; return 2 ;;
   esac
   local rc=$?; local secs=$((SECONDS - t0))
-  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -Is)" "$d" "$what${release:+-release}" "$rc" "$secs" "wrapper=$([ "$what" = web ] && echo none || echo "${RUSTC_WRAPPER:-none}")" >> "$OFFICE_TARGET/logs/times.tsv"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -Is)" "$d" "$what${release:+-release}${msvc:+-msvc}" "$rc" "$secs" "wrapper=$([ "$what" = web ] && echo none || echo "${RUSTC_WRAPPER:-none}")" >> "$OFFICE_TARGET/logs/times.tsv"
   echo "== $d $what done rc=$rc in ${secs}s"; return $rc
 }
 

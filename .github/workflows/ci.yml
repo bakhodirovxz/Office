@@ -20,6 +20,14 @@ on:
         type: choice
         options: [quick, full, nightly]
         default: quick
+      msvc:
+        description: "also run the MSVC build job (WP13); SignPath signing is separate, signpath_submit below"
+        type: boolean
+        default: false
+      signpath_submit:
+        description: "WP13 stub, DISABLED until the SignPath Foundation project exists: submit the MSVC artefacts for signing"
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -377,3 +385,52 @@ jobs:
       - run: scripts/ci.sh fidelity-directions
         env:
           X2T_URL: ${{ vars.X2T_URL }}
+
+  msvc:
+    # WP13: x86_64-pc-windows-msvc release builds (scripts/build.sh all all --release --msvc). On demand only (input msvc).
+    if: ${{ inputs.msvc }}
+    needs: [queue]
+    runs-on: windows-latest
+    timeout-minutes: 240
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: scripts/ci.sh msvc
+      - id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: msvc-unsigned
+          path: |
+            ${{ env.OFFICE_TARGET }}/msvc/*/x86_64-pc-windows-msvc/release/*.exe
+          if-no-files-found: error
+
+  signpath:
+    # WP13 stub, docs/phase4/signing.md section "Public releases". Public releases are signed by SignPath Foundation from a
+    # CI build of the PUBLIC repo; no key is ever on a runner. DISABLED: needs input signpath_submit, a public repo, the
+    # SignPath project and the secret SIGNPATH_API_TOKEN, none of which exist yet. Verify the action inputs when enabling.
+    if: ${{ inputs.signpath_submit && inputs.msvc }}
+    needs: [msvc]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read   # SignPath reads the uploaded artefact back from this run
+    steps:
+      - uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627   # v2.3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: office-suite
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ needs.msvc.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: msvc-signed
+          path: signed
+          if-no-files-found: error
