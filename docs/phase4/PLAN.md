@@ -701,11 +701,20 @@ A Windows Sandbox or VM run counts as one slot; Playwright does not count.
 
 ### WP11. XDFU in the editors (opt-in, off by default)
 - **Goal:** §10.
+- **Owner decision (2026-10-22): XDFU in the editors is watermark only.** Printing, export, save-as and copy are
+  never blocked.
+  - Every print and every exported or saved copy of a grif document carries the Resolution 766 cl. 12 watermark:
+    copy number, network address, user, and date and time.
+  - The copy number comes from the existing audit counter.
+  - The head-of-unit approval in cl. 38 is a paper procedure, outside the software.
+  - **No print-restriction or copy-restriction features in Phase 4.** `refuse` stays a converter-server option only.
+  - WebView2's built-in Ctrl+P, "Save as" and context menu are still disabled (review-shell m6), because they would
+    produce an unwatermarked copy. Our own Print / Ctrl+P prints with the watermark.
 - **Steps:**
   - extract `crates/xdfu-core` (a pure move; services tests unchanged);
   - the three grif commands;
   - grif detection on open;
-  - refuse and watermark modes through the WP4 hooks;
+  - watermark mode through the WP4 hooks, on print, export and save-as of a grif document;
   - the audit lines;
   - the "off means absent" test per app;
   - i18n rows.
@@ -717,7 +726,8 @@ A Windows Sandbox or VM run counts as one slot; Playwright does not count.
   - per app:
     - `xdfu_off_registers_nothing` passes;
     - with `watermark`, an exported PDF's text contains the copy number and the OS user (`pdf-cli text`);
-    - with `refuse`, `file.print` returns the reason;
+    - with `watermark`, `file.print` of a grif document succeeds and the printed output (print-to-PDF) carries the
+      watermark;
     - the audit chain verifies.
 - **Estimate:** 4 d (3–6). **Tier:** builder; architect review with WP9's (0.5 d).
 
