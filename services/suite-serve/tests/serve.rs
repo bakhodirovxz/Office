@@ -1,0 +1,267 @@
+//! The router in-process: routes, the CSP per route (F8), the cache rules, brotli precompression, and the shell catalog. The shell
+//! files, the brand config and the catalog are the repo's own; the editor dists are small stand-ins written to a temp dir.
+use axum::Router;
+use axum::body::Body;
+use axum::extract::ConnectInfo;
+use axum::http::{HeaderMap, Request, StatusCode};
+use base64::Engine as _;
+use convert::exec::Config as ConvertConfig;
+use convert_api::app::App;
+use convert_api::config::Settings;
+use sha2::{Digest, Sha256};
+use std::net::SocketAddr;
+use std::path::{Path, PathBuf};
+use suite_serve::{Layout, router};
+use tower::ServiceExt;
+
+const SCRIPT: &str = "import init from './x.js'; await init();";
+const STRICT: &str = "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+
+fn repo() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+struct H {
+    dir: PathBuf,
+    router: Router,
+    app: std::sync::Arc<App>,
+}
+impl Drop for H {
+    fn drop(&mut self) {
+        self.app.shutdown();
+        let _ = std::fs::remove_dir_all(&self.dir);
+    }
+}
+
+fn harness(name: &str) -> H {
+    let dir = std::env::temp_dir().join(format!("suite-serve-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let docs = dir.join("dist/docs-web");
+    std::fs::create_dir_all(&docs).unwrap();
+    std::fs::write(
+        docs.join("index.html"),
+        format!("<html><head><script type=\"module\">{SCRIPT}</script><style>b{{}}</style></head></html>"),
+    )
+    .unwrap();
+    std::fs::write(docs.join("docs-web-abc_bg.wasm"), b"\0asm\x01\0\0\0").unwrap();
+    std::fs::write(docs.join("docs-web-abc_bg.wasm.br"), b"fake-brotli").unwrap();
+    // sheets, slides and pdf are not built: their routes are absent
+    let layout = Layout {
+        shell: repo().join("web/shell"),
+        dist: dir.join("dist"),
+        brand: repo().join("brand/brand.toml"),
+    };
+    let s = Settings {
+        work_dir: Some(dir.join("work")),
+        store_dir: Some(dir.join("store")),
+        ..Settings::default()
+    };
+    let app = App::new(s.resolve().unwrap(), ConvertConfig::from_env(), false).unwrap();
+    let cfg = layout.shell_config().unwrap();
+    H {
+        router: router(app.clone(), &layout, cfg),
+        app,
+        dir,
+    }
+}
+
+async fn get(h: &H, uri: &str, extra: &[(&str, &str)]) -> (StatusCode, HeaderMap, Vec<u8>) {
+    let mut r = Request::builder().uri(uri).header("host", "127.0.0.1:8787");
+    for (k, v) in extra {
+        r = r.header(*k, *v);
+    }
+    let mut r = r.body(Body::empty()).unwrap();
+    r.extensions_mut()
+        .insert(ConnectInfo("127.0.0.1:5555".parse::<SocketAddr>().unwrap()));
+    let res = h.router.clone().oneshot(r).await.unwrap();
+    let (st, hd) = (res.status(), res.headers().clone());
+    let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    (st, hd, body.to_vec())
+}
+
+fn hv<'a>(h: &'a HeaderMap, k: &str) -> &'a str {
+    h.get(k).and_then(|v| v.to_str().ok()).unwrap_or("")
+}
+
+/// Every route carries the baseline headers; only the CSP (and the cache rule) differ per route.
+fn baseline(h: &HeaderMap) {
+    assert_eq!(hv(h, "x-content-type-options"), "nosniff");
+    assert_eq!(hv(h, "referrer-policy"), "no-referrer");
+    assert_eq!(hv(h, "cross-origin-resource-policy"), "same-origin");
+    assert_eq!(hv(h, "cross-origin-opener-policy"), "same-origin");
+    assert!(hv(h, "permissions-policy").contains("camera=()"));
+    assert!(h.get("access-control-allow-origin").is_none());
+}
+
+#[tokio::test]
+async fn shell_and_converter_keep_the_strict_csp() {
+    let h = harness("strict");
+    for uri in [
+        "/",
+        "/convert/",
+        "/shell/shell.js",
+        "/shell-config.json",
+        "/api/v1/formats",
+        "/healthz",
+        "/app.js",
+        "/nope",
+    ] {
+        let (st, hd, _) = get(&h, uri, &[]).await;
+        assert_ne!(st, StatusCode::INTERNAL_SERVER_ERROR, "{uri}");
+        assert_eq!(hv(&hd, "content-security-policy"), STRICT, "{uri}");
+        baseline(&hd);
+    }
+    let (st, hd, body) = get(&h, "/", &[]).await;
+    assert_eq!(st, StatusCode::OK);
+    assert!(hv(&hd, "content-type").starts_with("text/html"));
+    assert!(String::from_utf8_lossy(&body).contains("shell/shell.js"));
+    // the converter page moved to /convert/; the bare path redirects
+    let (st, hd, body) = get(&h, "/convert/", &[]).await;
+    assert_eq!(st, StatusCode::OK);
+    assert!(String::from_utf8_lossy(&body).contains("/app.js"));
+    let (st, hd2, _) = get(&h, "/convert", &[]).await;
+    assert_eq!(
+        (st, hv(&hd2, "location")),
+        (StatusCode::PERMANENT_REDIRECT, "/convert/")
+    );
+    let _ = hd;
+}
+
+#[tokio::test]
+async fn editor_routes_get_their_own_csp() {
+    let h = harness("editor");
+    let hash =
+        |s: &str| base64::engine::general_purpose::STANDARD.encode(Sha256::digest(s.as_bytes()));
+    let (st, hd, _) = get(&h, "/docs/", &[]).await;
+    assert_eq!(st, StatusCode::OK);
+    let csp = hv(&hd, "content-security-policy");
+    assert!(
+        csp.contains("script-src 'self' 'wasm-unsafe-eval' 'sha256-")
+            && csp.contains(&hash(SCRIPT)),
+        "{csp}"
+    );
+    assert!(
+        csp.contains(&format!("'sha256-{}'", hash("b{}"))),
+        "inline style hash: {csp}"
+    );
+    assert!(
+        csp.contains("frame-ancestors 'self'")
+            && !csp.contains("'unsafe-inline'")
+            && !csp.contains("'unsafe-eval'"),
+        "{csp}"
+    );
+    assert_eq!(hv(&hd, "cache-control"), "no-cache");
+    baseline(&hd);
+
+    // a hashed file never changes; a client that takes brotli gets the .br next to it
+    let (st, hd, body) = get(
+        &h,
+        "/docs/docs-web-abc_bg.wasm",
+        &[("accept-encoding", "br")],
+    )
+    .await;
+    assert_eq!(st, StatusCode::OK);
+    assert_eq!(hv(&hd, "content-type"), "application/wasm");
+    assert_eq!(hv(&hd, "content-encoding"), "br");
+    assert_eq!(body, b"fake-brotli");
+    assert_eq!(
+        hv(&hd, "cache-control"),
+        "public, max-age=31536000, immutable"
+    );
+    assert!(hv(&hd, "content-security-policy").contains("'wasm-unsafe-eval'"));
+    let (_, hd, body) = get(&h, "/docs/docs-web-abc_bg.wasm", &[]).await;
+    assert!(hd.get("content-encoding").is_none() && body.starts_with(b"\0asm"));
+
+    // no slash: redirect (the page's URLs are relative)
+    let (st, hd, _) = get(&h, "/docs?host=parent", &[]).await;
+    assert_eq!(
+        (st, hv(&hd, "location")),
+        (StatusCode::PERMANENT_REDIRECT, "/docs/?host=parent")
+    );
+    // path traversal stays inside the dist
+    let (st, _, body) = get(&h, "/docs/..%2f..%2fCargo.toml", &[]).await;
+    assert!(st != StatusCode::OK || !String::from_utf8_lossy(&body).contains("[package]"));
+
+    // an editor that is not built is not served, and the answer is the strict one
+    let (st, hd, _) = get(&h, "/sheets/", &[]).await;
+    assert_eq!(st, StatusCode::NOT_FOUND);
+    assert_eq!(hv(&hd, "content-security-policy"), STRICT);
+}
+
+#[test]
+fn shell_config_comes_from_the_brand_file() {
+    let l = Layout {
+        shell: "x".into(),
+        dist: "x".into(),
+        brand: repo().join("brand/brand.toml"),
+    };
+    let c: serde_json::Value = serde_json::from_str(&l.shell_config().unwrap()).unwrap();
+    let brand = std::fs::read_to_string(&l.brand).unwrap();
+    assert!(brand.contains(&format!("name = {}", c["product"])));
+    let ids: Vec<_> = c["apps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| a["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, ["docs", "sheets", "slides", "pdf"]);
+    assert_eq!(c["apps"][0]["route"], "/docs/");
+    assert!(
+        c["apps"][0]["names"]["uz-Cyrl"].is_string() && c["convert"]["names"]["ru"].is_string()
+    );
+    let bad = Layout {
+        brand: "/nonexistent".into(),
+        ..l
+    };
+    assert!(bad.shell_config().is_err());
+}
+
+/// The shell catalog: en is the source; ru and both Uzbek scripts have the same keys and placeholders; Uzbek is a marked agent draft.
+#[test]
+fn shell_catalog_is_complete() {
+    let j: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(repo().join("web/shell/i18n.json")).unwrap())
+            .unwrap();
+    let ph = |s: &str| {
+        let mut v: Vec<_> = s
+            .match_indices('{')
+            .map(|(i, _)| s[i..].split('}').next().unwrap().to_string())
+            .collect();
+        v.sort();
+        v
+    };
+    let en = j["en"].as_object().unwrap();
+    for lang in ["ru", "uz-Latn", "uz-Cyrl"] {
+        let m = j[lang].as_object().unwrap();
+        assert_eq!(
+            m.keys().collect::<Vec<_>>(),
+            en.keys().collect::<Vec<_>>(),
+            "{lang}: keys"
+        );
+        for (k, v) in m {
+            assert!(!v.as_str().unwrap().is_empty(), "{lang} {k}");
+            assert_eq!(
+                ph(v.as_str().unwrap()),
+                ph(en[k].as_str().unwrap()),
+                "{lang} {k}: placeholders"
+            );
+        }
+    }
+    for lang in ["uz-Latn", "uz-Cyrl"] {
+        let s = j["_status"][lang].as_str().unwrap();
+        assert!(
+            s.starts_with("draft:agent-") && !s.contains("owner"),
+            "{lang}: {s}"
+        );
+    }
+    // the Latin alphabet uses U+02BB, never an ASCII apostrophe, inside a word
+    for v in j["uz-Latn"].as_object().unwrap().values() {
+        let s = v.as_str().unwrap();
+        assert!(
+            !s.contains("o'") && !s.contains("g'") && !s.contains("O'"),
+            "{s}"
+        );
+    }
+}

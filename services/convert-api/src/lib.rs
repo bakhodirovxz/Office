@@ -6,4 +6,5 @@ pub mod crypt;
 pub mod gate;
 pub mod jwt;
 pub mod routes;
+pub mod runner;
 pub mod tls;

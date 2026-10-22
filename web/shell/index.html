@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home</title>
+<link rel="stylesheet" href="shell/shell.css">
+</head>
+<body>
+<div id="home">
+  <header class="bar">
+    <h1 id="product"></h1>
+    <label class="search"><span class="sr" data-i18n="home.search"></span>
+      <input id="search" type="search" autocomplete="off" data-i18n-ph="home.search"></label>
+    <label class="lang"><span class="sr" data-i18n="ui.language"></span>
+      <select id="lang">
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+        <option value="uz-Latn">Oʻzbekcha</option>
+        <option value="uz-Cyrl">Ўзбекча</option>
+      </select></label>
+  </header>
+  <main>
+    <section aria-labelledby="h-new">
+      <h2 id="h-new" data-i18n="home.new"></h2>
+      <ul id="cards" class="cards"></ul>
+      <p><button id="open-file" type="button" class="btn" data-i18n="home.open"></button>
+        <span class="muted" data-i18n="home.open.hint"></span>
+        <input id="file" type="file" hidden></p>
+    </section>
+    <section id="sec-templates" aria-labelledby="h-tpl" hidden>
+      <h2 id="h-tpl" data-i18n="home.templates"></h2>
+      <ul id="templates" class="cards"></ul>
+    </section>
+    <section aria-labelledby="h-recent">
+      <h2 id="h-recent" data-i18n="home.recent"></h2>
+      <p class="muted" data-i18n="home.recent.note"></p>
+      <ul id="recent" class="list"></ul>
+      <p id="recent-empty" class="muted" hidden></p>
+    </section>
+    <section aria-labelledby="h-conv">
+      <h2 id="h-conv" data-i18n="home.convert"></h2>
+      <p><a id="convert" class="btn" href="/convert/"></a>
+        <span class="muted" data-i18n="home.convert.hint"></span></p>
+    </section>
+    <p id="error" class="error" role="alert" hidden></p>
+  </main>
+</div>
+<div id="editor" hidden>
+  <div class="bar">
+    <button id="back" type="button" class="btn" data-i18n="ed.back"></button>
+    <strong id="ed-title"></strong>
+    <span id="ed-status" class="muted" role="status"></span>
+  </div>
+  <div id="frames"></div>
+</div>
+<script src="shell/shell.js"></script>
+</body>
+</html>

@@ -17,7 +17,9 @@
 #     16 KiB (16384). The measured delta is our whole layer: carried queue + brand overlay + fallback fonts + Uzbek catalogs
 #     (see docs/phase1/wp6-final.md for the breakdown and the dist numbers).
 #   * Raising any delta_br_max above its measured value + 10% needs a STATUS line with the reason.
-#   * Absolute budgets per editor (the shell's lazy-load budget) belong to Phase 4.
+#   * Phase 4 WP7: the ABSOLUTE budget of an editor is base_br + delta_br_max (the "budget" column of `ci.sh sizes`), and the shell
+#     has its own [shell] row. The lazy-load rule (no .wasm before an editor is opened; opening Docs fetches only the Docs wasm)
+#     is checked by ci/web-smoke/shell.spec.ts (`ci.sh shell`).
 #
 # `domain` is the build domain (dist/<domain>-web); `app` is the upstream product it is built from.
 
@@ -76,3 +78,10 @@ upstream_growth_warn = 0.05
 [npm.uz-translit]
 wasm_br_max = 49152
 js_br_max = 16384
+
+# The home shell (PLAN phase 4 WP7): index.html + shell.js + shell.css + i18n.json + templates.json + the Noto Sans Uz subset,
+# each brotli -q 11 --lgwin=24, summed (`ci.sh sizes` measures web/shell and assets/fonts/fallback directly). No editor wasm is in it.
+# Measured 2026-10-22: 45,417 B brotli (the font is 38,933 of it). br_max = ceil(1.10 x measured / 16 KiB) x 16 KiB. The plan's proposal
+# was 160 KiB; the measured rule gives 64 KiB, which is what stays enforced (raise it only with a STATUS line).
+[shell]
+br_max = 65536

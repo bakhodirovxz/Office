@@ -1,0 +1,32 @@
+[package]
+name = "suite-serve"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "The web host (PLAN phase 4, section 3.1): the home shell, the four editor bundles and the Phase 3 converter router on one origin"
+
+[lints]
+workspace = true
+
+[lib]
+name = "suite_serve"
+
+[[bin]]
+name = "suite-serve"
+path = "src/main.rs"
+
+[dependencies]
+convert-api = { path = "../convert-api" }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+# fs = ServeDir/ServeFile with precompressed_br (the build writes the .br files, scripts/shell-dist.sh)
+tower-http = { version = "0.6", default-features = false, features = ["fs"] }
+serde_json = "1"
+toml = { version = "1", default-features = false, features = ["parse"] }
+sha2 = "0.10"
+base64 = "0.22"
+
+[dev-dependencies]
+convert = { path = "../convert" }
+tower = { version = "0.5", features = ["util"] }

@@ -110,7 +110,10 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         ("cross-origin-resource-policy", "same-origin"),
         ("cross-origin-opener-policy", "same-origin"),
     ] {
-        h.insert(k, HeaderValue::from_static(v));
+        // a route that sets its own value (the editor pages' CSP, the immutable cache of hashed files) keeps it
+        if !h.contains_key(k) {
+            h.insert(k, HeaderValue::from_static(v));
+        }
     }
     if hsts {
         h.insert(
@@ -308,7 +311,22 @@ async fn auth(State(app): State<Arc<App>>, mut req: Request, next: Next) -> Resp
     }
 }
 
+/// The converter alone: its own page at `/`.
 pub fn router(app: Arc<App>) -> Router {
+    router_with(
+        app,
+        Router::new().route("/", get(|| async { converter_page() })),
+    )
+}
+
+/// The converter page (`ui/index.html`). Its assets are served at the root by every router (`/app.js`, `/app.css`, ...).
+pub fn converter_page() -> Response {
+    page("text/html; charset=utf-8", include_str!("../ui/index.html"))
+}
+
+/// The API, the health check and the converter's assets, plus the `extra` routes (a host such as `suite-serve` adds its own pages,
+/// which sit behind the same host/origin guard and may set their own security headers). `extra` must not route the API paths.
+pub fn router_with(app: Arc<App>, extra: Router<Arc<App>>) -> Router {
     let post_limit = (app.r.s.max_batch_mb << 20) as usize + (1 << 20);
     let api = Router::new()
         .route("/formats", get(formats))
@@ -326,10 +344,7 @@ pub fn router(app: Arc<App>) -> Router {
     Router::new()
         .nest("/api/v1", api)
         .route("/healthz", get(healthz))
-        .route(
-            "/",
-            get(|| async { page("text/html; charset=utf-8", include_str!("../ui/index.html")) }),
-        )
+        .merge(extra)
         .route(
             "/app.js",
             get(|| async {

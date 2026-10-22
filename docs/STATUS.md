@@ -1147,3 +1147,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Owner decisions still open:** O8 (the default PDF to DOCX engine; the code default is native), O9 (corpus), O10
   (before XDFU is switched on).
 - **Housekeeping:** `C:\c` (850 KB, synthetic) still exists; delete it by hand. C: has 17 GB free.
+
+## Phase 4 WP7: web shell and `suite-serve` (2026-10-22)
+- `services/suite-serve` mounts the Phase 3 converter router (`convert_api::routes::router_with`) and adds `/` (shell, `web/shell/`), `/convert/` (the converter page) and `/docs/ /sheets/ /slides/ /pdf/` (the trunk dists, `.br` precompressed, hashed files immutable). Editor routes get `'wasm-unsafe-eval'` plus the sha256 of each inline script and style of that dist's `index.html` (computed when the server starts) and `frame-ancestors 'self'`; the shell and the converter keep the strict CSP.
+- Shell: plain HTML/JS/CSS, catalog `web/shell/i18n.json` (en, ru; uz-Latn and uz-Cyrl `draft:agent-sonnet:2026-10-22`, not in the xtask TSV pipeline yet). Recent files in IndexedDB (200 MB cap, oldest dropped). Names and colours come from `brand/brand.toml` through `/shell-config.json`.
+- Budget: `[shell]` 45,417 B brotli measured, `br_max` 65,536. Editors' absolute budgets are `base_br + delta_br_max` (unchanged; headroom 19-27 KB). Spec: `ci/web-smoke/shell.spec.ts` (11 tests, `ci.sh shell`).
+- Open: templates (manifest support is in, `templates.json` is empty), the Slides bridge (WP8: until then Slides opens blank and a file times out with a message), shell catalog into the xtask i18n pipeline.
