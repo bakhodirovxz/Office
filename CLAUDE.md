@@ -1,6 +1,6 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 3 — Converter** (branch `phase-3`, from `phase-2`; Phase 2 gate passed 2026-10-21, owner "go"; plan: docs/phase3/PLAN.md).
+**Current phase: Phase 4 — Unified shell (web + desktop)** (branch `phase-4`, from `phase-3`; Phase 3 gate passed 2026-10-22, owner "go"; plan: docs/phase4/PLAN.md).
 The full brief (mission, constraints, phases, exit gates) is in [docs/BRIEF.md](docs/BRIEF.md).
 Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — keep it current.
 

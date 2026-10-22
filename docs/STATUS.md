@@ -1,6 +1,8 @@
 # Status
 
-**Current phase:** 3 — Converter (branch `phase-3`, plan `docs/phase3/PLAN.md`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
+**Current phase:** 4 — Unified shell (branch `phase-4`, plan `docs/phase4/PLAN.md`). **Phase 3 closed on 2026-10-22** (owner "go"): `ci.sh full` 28/28, the silent-loss ratchet 0 new, gate review and close-out in `docs/phase3/gate-review.md` (§10 carry-forward list). O8 not answered: the code default stays the native PDF → DOCX engine with the D5 fallback.
+
+**Previous:** 3 — Converter (branch `phase-3`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
 Phase 3 owner decisions: this PC only (WP11 deferred), no .ppt, limits accepted, accounts optional (local mode with no login is the default, server mode optional with an operator-configured token issuer), NumLocale in scope (WP14).
 
 **Owner requirement, 2026-10-21: GitHub-like version history and authorship, independent of the HRM.** The brief's
