@@ -42,7 +42,7 @@ pub fn known(id: &str) -> bool {
 
 pub fn enabled(app: &SlideApp, id: &str) -> bool {
     match deckcraft_engine::find_command(id) {
-        Some(c) => (c.enabled)(&app.session).is_ok(),
+        Some(c) => (c.enabled)(&app.session).is_ok() && deckcraft_engine::office_hook::refusal(id, &app.session).is_none(),
         None => crate::UI_COMMANDS.iter().any(|c| c.0 == id),
     }
 }
@@ -378,7 +378,7 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
-fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
+pub(crate) fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
     let layouts: Vec<(String, deckcraft_model::LayoutId)> = app
         .session
         .active()

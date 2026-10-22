@@ -62,6 +62,12 @@ $(sed 's/^/  /' assets/fonts/fallback/OFL.txt)
 
 $(sed 's/^/  /' assets/icons/fluent/LICENSE)
 
+- Hunspell dictionaries en_US and ru_RU (assets/dictionaries/), unmodified, used by the Slides and Docs spell checkers. en_US:
+  SCOWL 2020.12.07, Copyright 2000-2018 Kevin Atkinson, with the Ispell notice (Copyright 1993 Geoff Kuenning), both permissive.
+  ru_RU: Copyright (c) 1997-2008 Alexander I. Lebedev, BSD-style. The notices are in assets/dictionaries/LICENSE-en_US.txt and
+  LICENSE-ru_RU.txt and travel with the dictionaries. Provenance and checksums: assets/dictionaries/SOURCE.md.
+  The licence check: docs/phase4/licences.md.
+
 - Microsoft Edge WebView2 SDK loader, version 1.0.3800.47 (WebView2Loader.dll next to the windows-gnu suite.exe,
   WebView2LoaderStatic.lib linked into the windows-msvc suite.exe), taken unmodified from the crate webview2-com-sys
   0.39.1 (services/Cargo.lock): Copyright (c) Microsoft Corporation, under the licence of the Microsoft.Web.WebView2

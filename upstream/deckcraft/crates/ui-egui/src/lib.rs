@@ -55,6 +55,7 @@ pub mod media;
 pub mod menus;
 pub mod notes;
 pub mod office_overlay;
+pub mod office_toolbar;
 pub mod opening;
 pub mod panes;
 mod preview;
@@ -777,6 +778,10 @@ impl SlideApp {
     /// on the web. `extra` adds `file.export` params (the PDF's layout, slides…). The
     /// presentation keeps its own file. Returns whether a file was written or handed over.
     pub fn export_as(&mut self, fmt: &str, extra: Value) -> bool {
+        if let Some(why) = deckcraft_engine::office_hook::refusal("file.export", &self.session) {
+            self.set_status(why);
+            return false;
+        }
         let Some(slide) = self.session.active().map(|d| d.selection.slide) else { return false };
         let (ext, format, all) = match fmt {
             "pdf" => ("pdf", "pdf", false),
@@ -849,6 +854,10 @@ impl SlideApp {
     /// layout, slides and options) is written to the temporary folder and opened in the system's
     /// PDF viewer, which has the printers; on the web it downloads.
     pub fn print_pdf(&mut self, params: Value) -> bool {
+        if let Some(why) = deckcraft_engine::office_hook::refusal("file.print", &self.session) {
+            self.set_status(why);
+            return false;
+        }
         let Some((title, doc)) = self.session.active().map(|d| (d.title(), d.doc.clone())) else { return false };
         let mut params = if params.is_object() { params } else { json!({}) };
         if self.services.pick_save.is_none() {
@@ -1327,6 +1336,10 @@ impl SlideApp {
     }
 
     pub fn save_as_dialog(&mut self, format: &str) {
+        if let Some(why) = deckcraft_engine::office_hook::refusal("file.saveAs", &self.session) {
+            self.set_status(why);
+            return;
+        }
         let name = self.session.active().map(|d| d.title()).unwrap_or_else(|| "Presentation".into());
         let ext = if format == "pptx" { "pptx" } else { "deckcraft" };
         let suggested = format!("{name}.{ext}");
@@ -1867,7 +1880,9 @@ impl SlideApp {
         self.sync_backstage();
         ribbon::title_bar(self, ui);
         if self.backstage.is_none() && self.session.active().is_some() {
-            ribbon::show(self, ui);
+            if !office_toolbar::show(self, ui) {
+                ribbon::show(self, ui);
+            }
             status::status_bar(self, ui);
         }
         let now = ui.input(|i| i.time);
@@ -2121,6 +2136,8 @@ mod datetime_tests;
 mod inbox_tests;
 #[cfg(test)]
 mod office_overlay_tests;
+#[cfg(test)]
+mod office_toolbar_tests;
 
 #[cfg(test)]
 mod tests {

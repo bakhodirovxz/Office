@@ -92,9 +92,7 @@ try {
       console.log(`INFO  ${app}: the Save icon ${saved ? 'saved ' + saved : 'saved nothing either'}`);
       saved = undefined;
     }
-    // Slides has no host bridge yet (PLAN F7: the deckcraft bridge is Phase 4 work), so it cannot hand its bytes to the shell
-    if (app === 'slides' && !saved) console.log('SKIP  slides: Ctrl+S needs the deckcraft host bridge (not built yet)');
-    else check(`${app}: Ctrl+S saved a file through the host's download handler`, !!saved && fs.existsSync(saved), saved ?? '(no file)');
+    check(`${app}: Ctrl+S saved a file through the host's download handler`, !!saved && fs.existsSync(saved), saved ?? '(no file)');
     await sleep(3000);
     const all = hist().filter((p) => !known.has(p));
     check(`${app}: one Ctrl+S wrote exactly one file`, all.length <= 1, all.join(' | '));

@@ -1,0 +1,1107 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 01:09:42 +0500
+Subject: [PATCH] ui-egui: simplified Slides toolbar, one row of our own
+ instead of the ribbon
+
+office_toolbar.rs draws one row of the controls people use most (new slide, layout, font, size,
+B/I/U, colour, bullets, numbering, alignment, text box, picture, shapes, table, transliterate,
+version history) instead of ribbon::show, with a button that switches to the full ribbon; in the
+full ribbon mode a "Simple ribbon" pill floats over the right end of the tab row. The web build
+always shows the row. Icons are the vendored Fluent UI System Icons (MIT), drawn through
+craft_ui::icons::SvgIconSet and egui_extras' SVG loader. Labels go through the catalogs, so the row
+is translated with the rest of the UI.
+
+The upstream edits are the mod line and a three-line branch at the ribbon call site in lib.rs,
+layout_menu made pub(crate), and the office_overlay helpers for the shared toolbar setting.
+Tests (office_toolbar_tests.rs): every command id still exists, the row shows the designed
+controls and acts, the two buttons switch modes, the pill clears the tabs at 1024 px.
+---
+ Cargo.lock                                 |  88 +++-
+ crates/ui-egui/Cargo.toml                  |   4 +
+ crates/ui-egui/assets/office_icons.bin     | Bin 0 -> 53155 bytes
+ crates/ui-egui/src/lib.rs                  |   7 +-
+ crates/ui-egui/src/office_overlay.rs       |  33 ++
+ crates/ui-egui/src/office_toolbar.rs       | 459 +++++++++++++++++++++
+ crates/ui-egui/src/office_toolbar_tests.rs | 146 +++++++
+ crates/ui-egui/src/ribbon.rs               |   2 +-
+ 8 files changed, 725 insertions(+), 14 deletions(-)
+ create mode 100644 crates/ui-egui/assets/office_icons.bin
+ create mode 100644 crates/ui-egui/src/office_toolbar.rs
+ create mode 100644 crates/ui-egui/src/office_toolbar_tests.rs
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 4ea23bd..736b800 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -438,6 +438,12 @@ version = "1.5.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+ 
++[[package]]
++name = "base64"
++version = "0.21.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
++
+ [[package]]
+ name = "base64"
+ version = "0.22.1"
+@@ -485,6 +491,9 @@ name = "bitflags"
+ version = "2.13.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
++dependencies = [
++ "serde_core",
++]
+ 
+ [[package]]
+ name = "block2"
+@@ -1181,6 +1190,7 @@ dependencies = [
+  "log",
+  "serde",
+  "serde_json",
++ "suite-core",
+  "toml",
+ ]
+ 
+@@ -2429,7 +2439,7 @@ name = "krilla"
+ version = "0.8.2"
+ source = "git+https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320b2d1de657b860b3c8abb44e1f2b32bd8"
+ dependencies = [
+- "base64",
++ "base64 0.22.1",
+  "bumpalo",
+  "flate2",
+  "float-cmp",
+@@ -3408,7 +3418,7 @@ version = "3.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
+ dependencies = [
+- "toml_edit",
++ "toml_edit 0.25.15+spec-1.1.0",
+ ]
+ 
+ [[package]]
+@@ -3684,6 +3694,18 @@ dependencies = [
+  "windows-sys 0.61.2",
+ ]
+ 
++[[package]]
++name = "ron"
++version = "0.8.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
++dependencies = [
++ "base64 0.21.7",
++ "bitflags 2.13.2",
++ "serde",
++ "serde_derive",
++]
++
+ [[package]]
+ name = "rustc-hash"
+ version = "1.1.0"
+@@ -4078,6 +4100,15 @@ dependencies = [
+  "write-fonts",
+ ]
+ 
++[[package]]
++name = "suite-core"
++version = "0.1.0"
++dependencies = [
++ "ron",
++ "serde_json",
++ "toml_edit 0.22.27",
++]
++
+ [[package]]
+ name = "symphonia"
+ version = "0.5.5"
+@@ -4430,12 +4461,18 @@ dependencies = [
+  "indexmap",
+  "serde_core",
+  "serde_spanned",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+  "toml_writer",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_datetime"
++version = "0.6.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
++
+ [[package]]
+ name = "toml_datetime"
+ version = "1.1.1+spec-1.1.0"
+@@ -4445,6 +4482,18 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "toml_edit"
++version = "0.22.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
++dependencies = [
++ "indexmap",
++ "toml_datetime 0.6.11",
++ "toml_write",
++ "winnow 0.7.15",
++]
++
+ [[package]]
+ name = "toml_edit"
+ version = "0.25.15+spec-1.1.0"
+@@ -4452,9 +4501,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614"
+ dependencies = [
+  "indexmap",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
+ [[package]]
+@@ -4463,9 +4512,15 @@ version = "1.1.3+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
+ dependencies = [
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_write"
++version = "0.1.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
++
+ [[package]]
+ name = "toml_writer"
+ version = "1.1.2+spec-1.1.0"
+@@ -5611,6 +5666,15 @@ dependencies = [
+  "xkbcommon-dl",
+ ]
+ 
++[[package]]
++name = "winnow"
++version = "0.7.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "winnow"
+ version = "1.0.4"
+@@ -5783,7 +5847,7 @@ dependencies = [
+  "uds_windows",
+  "uuid",
+  "windows-sys 0.61.2",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_macros",
+  "zbus_names",
+  "zvariant",
+@@ -5835,7 +5899,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d8bf88b4a3ff53e883001e0e0115b297a9d53c31b9c1edd2bfdd853e3428624e"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zvariant",
+ ]
+ 
+@@ -5846,7 +5910,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d1586c021a01ca0a9216dcd874e546382e156a5cbab5fab6cb5f10087e22682a"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_names",
+  "zvariant",
+ ]
+@@ -5996,7 +6060,7 @@ dependencies = [
+  "endi",
+  "enumflags2",
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zcheapstr",
+  "zvariant_derive",
+  "zvariant_utils",
+@@ -6025,5 +6089,5 @@ dependencies = [
+  "quote",
+  "serde",
+  "syn 3.0.6",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index f08fa6c..25c3c76 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -26,6 +26,10 @@ log = { workspace = true }
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ js-sys = "0.3"
+ 
++# the shared per-user settings (the toolbar mode); the web has no settings file
++[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
++suite-core = { path = "../../../../crates/suite-core" }
++
+ [dev-dependencies]
+ egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+ 
+diff --git a/crates/ui-egui/assets/office_icons.bin b/crates/ui-egui/assets/office_icons.bin
+new file mode 100644
+index 0000000000000000000000000000000000000000..879c4b4ab78f1b5d1935ee454f90f3b0f49d5c23
+GIT binary patch
+literal 53155
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index c88bdd1..c2a3791 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -55,6 +55,7 @@ pub mod media;
+ pub mod menus;
+ pub mod notes;
+ pub mod office_overlay;
++pub mod office_toolbar;
+ pub mod opening;
+ pub mod panes;
+ mod preview;
+@@ -1867,7 +1868,9 @@ impl SlideApp {
+         self.sync_backstage();
+         ribbon::title_bar(self, ui);
+         if self.backstage.is_none() && self.session.active().is_some() {
+-            ribbon::show(self, ui);
++            if !office_toolbar::show(self, ui) {
++                ribbon::show(self, ui);
++            }
+             status::status_bar(self, ui);
+         }
+         let now = ui.input(|i| i.time);
+@@ -2121,6 +2124,8 @@ mod datetime_tests;
+ mod inbox_tests;
+ #[cfg(test)]
+ mod office_overlay_tests;
++#[cfg(test)]
++mod office_toolbar_tests;
+ 
+ #[cfg(test)]
+ mod tests {
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index db0d3ec..05e932d 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -134,3 +134,36 @@ pub fn register_document_fonts() {
+         }
+     });
+ }
++
++static TOOLBAR_SIMPLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
++
++/// Should a window start with the simplified toolbar (`office_toolbar`)? The web build always does. Elsewhere it is the shared
++/// `toolbar` setting (`simple` unless `settings.toml` says `full`), read once at the first call. This crate's own tests start
++/// with the upstream ribbon, which is what upstream's UI tests drive; the toolbar tests choose the mode per window.
++pub fn toolbar_default() -> bool {
++    if cfg!(target_arch = "wasm32") {
++        return true;
++    }
++    #[cfg(not(any(target_arch = "wasm32", test)))]
++    {
++        static LOAD: std::sync::Once = std::sync::Once::new();
++        LOAD.call_once(|| set_toolbar_default(suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple));
++    }
++    !cfg!(test) && TOOLBAR_SIMPLE.load(std::sync::atomic::Ordering::Relaxed)
++}
++
++fn set_toolbar_default(simple: bool) {
++    TOOLBAR_SIMPLE.store(simple, std::sync::atomic::Ordering::Relaxed);
++}
++
++/// The user switched: remember it for this process and store it in the shared settings, where the other apps read it at their next start.
++pub(crate) fn toolbar_changed(simple: bool) {
++    set_toolbar_default(simple);
++    #[cfg(not(any(target_arch = "wasm32", test)))]
++    {
++        use suite_core::settings::{ToolbarMode, set_toolbar_mode};
++        if let Err(e) = set_toolbar_mode(if simple { ToolbarMode::Simple } else { ToolbarMode::Full }) {
++            log::warn!("toolbar setting not saved: {e}");
++        }
++    }
++}
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+new file mode 100644
+index 0000000..ad579d7
+--- /dev/null
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -0,0 +1,459 @@
++// Added by the office toolbar patch queue. MIT OR Apache-2.0.
++//! The simplified Slides toolbar (PLAN phase 4 WP3, docs/phase4/toolbar-design.md section 5): one row of the controls people
++//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (desktop); the web build always shows
++//! this row. Icons are Fluent UI System Icons (MIT, `assets/icons/fluent`), rasterised at build time into alpha masks.
++//!
++//! `show` returns whether it drew the row; the call site draws the upstream ribbon otherwise. In the full ribbon mode it
++//! only floats the "Simple ribbon" pill over the right end of the tab row.
++
++use std::sync::OnceLock;
++
++use egui::{Align2, Color32, Context, CornerRadius, Rect, Response, Sense, Ui, WidgetInfo, WidgetType, pos2, vec2};
++use serde_json::{Value, json};
++
++use crate::SlideApp;
++use crate::office_overlay;
++use crate::ribbon;
++use crate::theme::{self, Tokens};
++use crate::widgets;
++
++/// The registry and UI command ids the row runs. `office_toolbar_ids_exist` checks them against the live registry at every
++/// sync, and that this file still names each one.
++pub const IDS: [&str; 20] = [
++    "slide.new",
++    "slide.layout",
++    "format.font",
++    "format.size",
++    "format.bold",
++    "format.italic",
++    "format.underline",
++    "format.color",
++    "format.bullets",
++    "format.numbering",
++    "format.alignLeft",
++    "format.alignCenter",
++    "format.alignRight",
++    "insert.textBox",
++    "app.insertPictureDialog",
++    "shape.insert",
++    "insert.table",
++    "tools.translitCyrl",
++    "tools.translitLatn",
++    "tools.translitAuto",
++];
++
++/// The ids that are ours (not in the engine registry): the history button and the two toggle labels.
++pub const OURS: [&str; 3] = ["office.history", "office.ribbonFull", "office.ribbonSimple"];
++
++/// Below this width the row drops its text labels and keeps the icons and tooltips (the 1366 px laptop case).
++const LABELS_MIN: f32 = 1480.0;
++const ROW_H: f32 = 40.0;
++const BTN_H: f32 = 28.0;
++const ICON: f32 = 18.0;
++
++/// The Fluent icons this row draws, in the order of `assets/office_icons.bin` (`scripts/gen-slides-icon-bitmaps.sh`; a test checks
++/// the names). The SVG loader does not fit the Slides wasm budget (docs/phase4/icons-slides.md), so the icons are rasterised at
++/// build time into 8-bit alpha masks at the sizes in `SIZES`, and drawn as tinted textures.
++#[cfg(test)]
++pub(crate) const ICONS: [&str; 19] = [
++    "slide_add",
++    "slide_layout",
++    "text_bold",
++    "text_italic",
++    "text_underline",
++    "text_color",
++    "text_bullet_list",
++    "text_number_list_ltr",
++    "text_align_left",
++    "text_align_center",
++    "text_align_right",
++    "textbox",
++    "image",
++    "shapes",
++    "table",
++    "translate",
++    "history",
++    "window_header_horizontal",
++    "window_header_horizontal_off",
++];
++pub(crate) const SIZES: [usize; 3] = [20, 28, 40];
++pub(crate) static BIN: &[u8] = include_bytes!("../assets/office_icons.bin");
++
++/// `office_icons.bin`: per icon `name\0`, then the masks of every size in `SIZES`, row by row.
++pub(crate) fn masks(name: &str) -> Option<[&'static [u8]; SIZES.len()]> {
++    let mut rest = BIN;
++    while let Some(z) = rest.iter().position(|b| *b == 0) {
++        let found = &rest[..z] == name.as_bytes();
++        rest = &rest[z + 1..];
++        let mut out: [&[u8]; SIZES.len()] = [&[]; SIZES.len()];
++        for (m, s) in out.iter_mut().zip(SIZES) {
++            let (a, b) = rest.split_at_checked(s * s)?;
++            *m = a;
++            rest = b;
++        }
++        if found {
++            return Some(out);
++        }
++    }
++    None
++}
++
++/// Draw icon `name` centred in `rect` in colour `tint`, from the smallest mask that covers the on-screen pixels.
++fn paint_icon(ui: &Ui, rect: Rect, name: &str, tint: Color32) {
++    let px = (ICON * ui.ctx().pixels_per_point()).ceil() as usize;
++    let at = SIZES.iter().position(|s| *s >= px).unwrap_or(SIZES.len() - 1);
++    let (size, id) = (SIZES[at], egui::Id::new(("office_toolbar_icon", name, SIZES[at])));
++    let texture = match ui.ctx().data(|d| d.get_temp::<egui::TextureHandle>(id)) {
++        Some(t) => t,
++        None => {
++            let Some(mask) = masks(name).map(|m| m[at]) else { return };
++            let rgba: Vec<u8> = mask.iter().flat_map(|a| [255, 255, 255, *a]).collect();
++            let image = egui::ColorImage::from_rgba_unmultiplied([size, size], &rgba);
++            let t = ui.ctx().load_texture(format!("office-toolbar/{name}/{size}"), image, egui::TextureOptions::LINEAR);
++            ui.ctx().data_mut(|d| d.insert_temp(id, t.clone()));
++            t
++        }
++    };
++    let target = Rect::from_center_size(rect.center(), vec2(ICON, ICON));
++    ui.painter().image(texture.id(), target, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), tint);
++}
++
++// ---- the simple/full choice ----
++
++fn mode_id() -> egui::Id {
++    egui::Id::new("office_toolbar_simple")
++}
++
++/// Is the simple row showing? Per window; starts from `office_overlay::toolbar_default`.
++pub fn simple(ctx: &Context) -> bool {
++    ctx.data(|d| d.get_temp::<bool>(mode_id())).unwrap_or_else(office_overlay::toolbar_default)
++}
++
++pub fn set_simple(ctx: &Context, on: bool) {
++    ctx.data_mut(|d| d.insert_temp(mode_id(), on));
++    ctx.request_repaint();
++}
++
++/// What the History button does (version history, PLAN WP10). Until a handler is set the button is disabled.
++static HISTORY: OnceLock<fn(&mut SlideApp)> = OnceLock::new();
++
++pub fn set_history_handler(f: fn(&mut SlideApp)) {
++    let _ = HISTORY.set(f);
++}
++
++// ---- drawing ----
++
++struct Btn<'a> {
++    icon: &'a str,
++    label: &'a str,
++    tip: String,
++    enabled: bool,
++    selected: bool,
++    toggle: bool,
++    split: bool,
++    /// A menu arrow inside the button (the whole button opens the menu).
++    menu: bool,
++    /// A colour bar under the glyph (font colour).
++    bar: Option<Color32>,
++}
++
++impl<'a> Btn<'a> {
++    fn new(icon: &'a str, label: &'a str) -> Self {
++        Btn { icon, label, tip: label.to_string(), enabled: true, selected: false, toggle: false, split: false, menu: false, bar: None }
++    }
++    fn tip(mut self, tip: String) -> Self {
++        self.tip = tip;
++        self
++    }
++    fn enabled(mut self, on: bool) -> Self {
++        self.enabled = on;
++        self
++    }
++    fn toggle(mut self, on: bool) -> Self {
++        self.toggle = true;
++        self.selected = on;
++        self
++    }
++    fn split(mut self) -> Self {
++        self.split = true;
++        self
++    }
++    fn menu(mut self) -> Self {
++        self.menu = true;
++        self
++    }
++    fn bar(mut self, c: Color32) -> Self {
++        self.bar = Some(c);
++        self
++    }
++}
++
++/// One button: the glyph, the label when `labels`, a menu arrow when `split`. Returns the main click area and the arrow's.
++fn button(ui: &mut Ui, b: Btn, labels: bool) -> (Response, Option<Response>) {
++    let t = Tokens::get(ui.ctx());
++    let font = theme::font(12.0);
++    let show_label = labels && !b.label.is_empty();
++    let text_w = if show_label { ui.fonts_mut(|f| f.layout_no_wrap(b.label.to_string(), font.clone(), t.text).size().x) + 4.0 } else { 0.0 };
++    let arrow_w = if b.split { 14.0 } else { 0.0 };
++    let chev_w = if b.menu { 12.0 } else { 0.0 };
++    let main_w = 6.0 + ICON + text_w + chev_w + 6.0;
++    let (rect, resp) = ui.allocate_exact_size(vec2(main_w + arrow_w, BTN_H), Sense::hover());
++    let sense = if b.enabled { Sense::click() } else { Sense::hover() };
++    let main_rect = Rect::from_min_size(rect.min, vec2(main_w, BTN_H));
++    let arrow_rect = Rect::from_min_max(pos2(rect.min.x + main_w, rect.min.y), rect.max);
++    let main = ui.interact(main_rect, resp.id.with("m"), sense);
++    let arrow = b.split.then(|| ui.interact(arrow_rect, resp.id.with("a"), sense));
++    let wash = |r: &Response, selected: bool| {
++        if !b.enabled {
++            None
++        } else if r.is_pointer_button_down_on() {
++            Some(t.pressed)
++        } else if r.hovered() {
++            Some(t.hover)
++        } else if selected {
++            Some(t.selected)
++        } else {
++            None
++        }
++    };
++    let painter = ui.painter_at(rect);
++    if let Some(c) = wash(&main, b.selected) {
++        painter.rect_filled(main_rect, CornerRadius::same(4), c);
++    }
++    if let Some(a) = &arrow
++        && let Some(c) = wash(a, false)
++    {
++        painter.rect_filled(arrow_rect, CornerRadius::same(4), c);
++    }
++    let ink = if b.enabled { t.text } else { t.text_faint };
++    let glyph = Rect::from_min_size(pos2(main_rect.min.x + 6.0, main_rect.min.y), vec2(ICON, BTN_H));
++    paint_icon(ui, if b.bar.is_some() { glyph.translate(vec2(0.0, -2.0)) } else { glyph }, b.icon, ink);
++    if let Some(c) = b.bar {
++        painter.rect_filled(
++            Rect::from_min_size(pos2(glyph.min.x, main_rect.max.y - 6.0), vec2(ICON, 3.0)),
++            CornerRadius::ZERO,
++            if b.enabled { c } else { t.text_faint },
++        );
++    }
++    if show_label {
++        painter.text(pos2(glyph.max.x + 4.0, rect.center().y), Align2::LEFT_CENTER, b.label, font, ink);
++    }
++    if b.split {
++        widgets::chevron(&painter, pos2(arrow_rect.center().x, rect.center().y), 2.8, t.text_dim);
++    }
++    if b.menu {
++        widgets::chevron(&painter, pos2(main_rect.max.x - 11.0, rect.center().y), 2.8, t.text_dim);
++    }
++    let name = b.label.to_string();
++    if b.toggle {
++        main.widget_info(|| WidgetInfo::selected(WidgetType::Button, b.enabled, b.selected, &name));
++    } else {
++        main.widget_info(|| WidgetInfo::labeled(WidgetType::Button, b.enabled, &name));
++    }
++    (main.on_hover_text(b.tip), arrow)
++}
++
++fn separator(ui: &mut Ui) {
++    let t = Tokens::get(ui.ctx());
++    let (rect, _) = ui.allocate_exact_size(vec2(9.0, BTN_H), Sense::hover());
++    ui.painter()
++        .line_segment([pos2(rect.center().x, rect.min.y + 4.0), pos2(rect.center().x, rect.max.y - 4.0)], egui::Stroke::new(1.0, t.separator));
++}
++
++/// `<label> (<shortcut>)` as the ribbon's tooltips read.
++fn tip(id: &str, en: &str) -> String {
++    let label = crate::i18n::t(en);
++    let shortcut =
++        deckcraft_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
++    match shortcut {
++        Some(s) => format!("{label} ({})", ribbon::pretty_shortcut(s)),
++        None => label.to_string(),
++    }
++}
++
++fn run(app: &mut SlideApp, id: &str, params: Value) {
++    let _ = app.run(id, params);
++}
++
++/// A plain command button.
++fn command(app: &mut SlideApp, ui: &mut Ui, labels: bool, icon: &str, en: &str, id: &str) {
++    let label = crate::i18n::t(en);
++    let b = Btn::new(icon, label).tip(tip(id, en)).enabled(ribbon::enabled(app, id));
++    if button(ui, b, labels).0.clicked() {
++        run(app, id, json!({}));
++    }
++}
++
++/// A toggle button whose state comes from `format.state`.
++fn toggle(app: &mut SlideApp, ui: &mut Ui, icon: &str, en: &str, id: &str, on: bool) {
++    let label = crate::i18n::t(en);
++    let b = Btn::new(icon, label).tip(tip(id, en)).enabled(ribbon::enabled(app, id)).toggle(on);
++    if button(ui, b, false).0.clicked() {
++        run(app, id, json!({}));
++    }
++}
++
++/// Draw the toolbar row (`true`), or in the full ribbon mode the pill that goes back to it (`false`: the caller draws the ribbon).
++pub fn show(app: &mut SlideApp, ui: &mut Ui) -> bool {
++    let ctx = ui.ctx().clone();
++    if !simple(&ctx) {
++        full_mode_pill(app, &ctx);
++        return false;
++    }
++    let t = Tokens::get(&ctx);
++    egui::Panel::top("office_toolbar").exact_size(ROW_H).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
++        let labels = ui.available_width() >= LABELS_MIN;
++        let st = ribbon::fmt_state(app);
++        let flag = |k: &str| st.get(k).and_then(Value::as_bool).unwrap_or(false);
++        let align = st.get("align").and_then(Value::as_str).unwrap_or("");
++        egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden).show(ui, |ui| {
++            ui.horizontal_centered(|ui| {
++                ui.spacing_mut().item_spacing.x = 2.0;
++                ui.add_space(8.0);
++                slides_group(app, ui, labels);
++                separator(ui);
++                font_group(app, ui, &st, &flag);
++                separator(ui);
++                toggle(app, ui, "text_bullet_list", "Bullets", "format.bullets", flag("bullets"));
++                toggle(app, ui, "text_number_list_ltr", "Numbering", "format.numbering", flag("numbering"));
++                toggle(app, ui, "text_align_left", "Align Left", "format.alignLeft", align == "l");
++                toggle(app, ui, "text_align_center", "Center", "format.alignCenter", align == "ctr");
++                toggle(app, ui, "text_align_right", "Align Right", "format.alignRight", align == "r");
++                separator(ui);
++                insert_group(app, ui, labels);
++                separator(ui);
++                output_group(app, ui, labels);
++                if !cfg!(target_arch = "wasm32") {
++                    ui.add_space(6.0);
++                    let label = crate::i18n::t("Full ribbon");
++                    if button(ui, Btn::new("window_header_horizontal", label).tip(label.to_string()), true).0.clicked() {
++                        switch(&ctx, false);
++                    }
++                }
++            });
++        });
++    });
++    true
++}
++
++fn switch(ctx: &Context, simple: bool) {
++    set_simple(ctx, simple);
++    office_overlay::toolbar_changed(simple);
++}
++
++fn slides_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
++    let label = crate::i18n::t("New Slide");
++    let b = Btn::new("slide_add", label).tip(tip("slide.new", "New Slide")).enabled(ribbon::enabled(app, "slide.new")).split();
++    let (main, arrow) = button(ui, b, labels);
++    if main.clicked() {
++        run(app, "slide.new", json!({}));
++    }
++    if let Some(a) = arrow {
++        egui::Popup::menu(&a).width(420.0).show(|ui| ribbon::layout_menu(app, ui, "slide.new"));
++    }
++    let label = crate::i18n::t("Layout");
++    let b = Btn::new("slide_layout", label).tip(tip("slide.layout", "Layout")).enabled(ribbon::enabled(app, "slide.layout")).menu();
++    let main = button(ui, b, labels).0;
++    egui::Popup::menu(&main).width(420.0).show(|ui| ribbon::layout_menu(app, ui, "slide.layout"));
++}
++
++fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value, flag: &dyn Fn(&str) -> bool) {
++    let en = ribbon::enabled(app, "format.bold");
++    let font = st.get("font").and_then(Value::as_str).unwrap_or("").to_string();
++    let families = ribbon::font_families(app);
++    widgets::dropdown(ui, "font", &font, 150.0, en, |ui| {
++        for family in &families {
++            if ui.button(family).clicked() {
++                run(app, "format.font", json!({"family": family}));
++                ui.close();
++            }
++        }
++    });
++    let size = st.get("size").and_then(Value::as_f64).map(|s| widgets::fmt_num(s, "")).unwrap_or_default();
++    widgets::dropdown(ui, "size", &size, 52.0, en, |ui| {
++        for s in deckcraft_engine::cmd::format::SIZES.iter().chain([72.0, 80.0, 88.0, 96.0].iter()) {
++            if ui.button(widgets::fmt_num(*s, "")).clicked() {
++                run(app, "format.size", json!({"size": s}));
++                ui.close();
++            }
++        }
++    });
++    ui.add_space(4.0);
++    toggle(app, ui, "text_bold", "Bold", "format.bold", flag("bold"));
++    toggle(app, ui, "text_italic", "Italic", "format.italic", flag("italic"));
++    toggle(app, ui, "text_underline", "Underline", "format.underline", flag("underline"));
++    let label = crate::i18n::t("Font Color");
++    let b = Btn::new("text_color", label).tip(tip("format.color", "Font Color")).enabled(en).split().bar(Color32::from_rgb(0xD8, 0x3F, 0x3F));
++    let (main, arrow) = button(ui, b, false);
++    if main.clicked() {
++        run(app, "format.color", json!({"color": "#C00000"}));
++    }
++    if let Some(a) = arrow {
++        let scheme =
++            app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.scheme())).unwrap_or_else(|| deckcraft_model::Theme::default().colors);
++        widgets::color_popup(&a).show(|ui| {
++            if let Some(Some(c)) = widgets::color_grid(ui, &scheme, None) {
++                run(app, "format.color", json!({"color": ribbon::cref_param(&c)}));
++            }
++        });
++    }
++}
++
++fn insert_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
++    command(app, ui, labels, "textbox", "Text Box", "insert.textBox");
++    command(app, ui, labels, "image", "Picture", "app.insertPictureDialog");
++    let label = crate::i18n::t("Shapes");
++    let b = Btn::new("shapes", label).tip(label.to_string()).enabled(ribbon::enabled(app, "shape.insert")).menu();
++    let main = button(ui, b, labels).0;
++    egui::Popup::menu(&main).show(|ui| {
++        if let Some(p) = ribbon::shapes_gallery(ui) {
++            app.session.set_tool(deckcraft_engine::ToolKind::Shape { preset: p.to_string() });
++        }
++    });
++    let label = crate::i18n::t("Table");
++    let b = Btn::new("table", label).tip(label.to_string()).enabled(ribbon::enabled(app, "insert.table")).menu();
++    let main = button(ui, b, labels).0;
++    egui::Popup::menu(&main).show(|ui| {
++        if let Some((rows, cols)) = ribbon::table_grid_picker(ui) {
++            run(app, "insert.table", json!({"rows": rows, "cols": cols}));
++            ui.close();
++        }
++        ui.separator();
++        if ui.button(crate::i18n::t("Insert Table…")).clicked() {
++            app.dialog = Some(crate::dialogs::Dialog::new("table"));
++            ui.close();
++        }
++    });
++}
++
++fn output_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
++    let label = crate::i18n::t("Transliterate");
++    let b = Btn::new("translate", label).tip(label.to_string()).enabled(ribbon::enabled(app, "tools.translitAuto")).menu();
++    let main = button(ui, b, labels).0;
++    egui::Popup::menu(&main).show(|ui| ribbon::translit_menu(app, ui));
++    let label = crate::i18n::t("Version History");
++    let b = Btn::new("history", label).tip(label.to_string()).enabled(HISTORY.get().is_some());
++    if button(ui, b, labels).0.clicked()
++        && let Some(f) = HISTORY.get()
++    {
++        f(app);
++    }
++}
++
++/// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.
++fn full_mode_pill(app: &SlideApp, ctx: &Context) {
++    if cfg!(target_arch = "wasm32") {
++        return;
++    }
++    let title_h = if app.integrated_titlebar { ribbon::MAC_TITLE_BAR } else { ribbon::TITLE_H };
++    egui::Area::new(egui::Id::new("office_toolbar_pill")).order(egui::Order::Foreground).anchor(Align2::RIGHT_TOP, vec2(-10.0, title_h + 1.0)).show(
++        ctx,
++        |ui| {
++            let label = crate::i18n::t("Simple ribbon");
++            let b = Btn::new("window_header_horizontal_off", label).tip(label.to_string());
++            if button(ui, b, true).0.clicked() {
++                switch(ctx, true);
++            }
++        },
++    );
++}
+diff --git a/crates/ui-egui/src/office_toolbar_tests.rs b/crates/ui-egui/src/office_toolbar_tests.rs
+new file mode 100644
+index 0000000..347a0e4
+--- /dev/null
++++ b/crates/ui-egui/src/office_toolbar_tests.rs
+@@ -0,0 +1,146 @@
++// Added by the office toolbar patch queue. MIT OR Apache-2.0.
++//! Tests of the simplified Slides toolbar (`office_toolbar`): the command ids still exist at this upstream, the row shows what
++//! the design lists, the controls act, and the switch between the row and the full ribbon works.
++#![allow(clippy::unwrap_used, clippy::expect_used)]
++
++use deckcraft_engine::Session;
++use egui_kittest::Harness;
++use egui_kittest::kittest::Queryable;
++use serde_json::json;
++
++use crate::office_toolbar as tb;
++use crate::{Services, SlideApp};
++
++/// A window in the given toolbar mode. `OFFICE_TOOLBAR_PNG_DIR` set: also writes `toolbar-<mode>-<lang>.png` there.
++fn window(simple: bool, size: egui::Vec2, language: &str) -> Harness<'static, SlideApp> {
++    let mut app = SlideApp::new(Session::with_new(), Services::default());
++    app.ui.language = language.into();
++    app.session.execute("slide.layout", &json!({"layout": "blank"})).ok();
++    let mut h = Harness::builder().with_size(size).build_ui_state(
++        |ui, app: &mut SlideApp| {
++            app.logic(ui.ctx());
++            app.ui(ui);
++        },
++        app,
++    );
++    tb::set_simple(&h.ctx, simple);
++    h.run_steps(4);
++    h
++}
++
++fn png(h: &mut Harness<'_, SlideApp>, name: &str) {
++    if let (Ok(dir), Ok(img)) = (std::env::var("OFFICE_TOOLBAR_PNG_DIR"), h.render()) {
++        let _ = std::fs::create_dir_all(&dir);
++        let _ = img.save(std::path::Path::new(&dir).join(name));
++    }
++}
++
++#[test]
++fn office_toolbar_ids_exist() {
++    let source = include_str!("office_toolbar.rs");
++    for id in tb::IDS {
++        assert!(crate::ribbon::known(id), "{id} is not a command at this upstream");
++        assert!(source.contains(&format!("\"{id}\"")), "{id} is listed but the row never uses it");
++    }
++    // Ours are not registry commands: they must stay out of it, or the ids would mean two things.
++    for id in tb::OURS {
++        assert!(!crate::ribbon::known(id), "{id} is now an upstream command");
++    }
++}
++
++/// Every icon the row names has its masks in `office_icons.bin`, and the file holds nothing else.
++#[test]
++fn the_icon_file_matches_the_list() {
++    for name in tb::ICONS {
++        let masks = tb::masks(name).unwrap_or_else(|| panic!("`{name}` is not in office_icons.bin"));
++        assert!(masks[0].iter().any(|a| *a > 128), "`{name}` is empty");
++    }
++    let expected: usize = tb::ICONS.iter().map(|n| n.len() + 1 + tb::SIZES.iter().map(|s| s * s).sum::<usize>()).sum();
++    assert_eq!(tb::BIN.len(), expected);
++}
++
++#[test]
++fn the_simple_row_has_the_designed_controls_and_no_ribbon() {
++    let h = window(true, egui::vec2(1500.0, 700.0), "en");
++    for label in [
++        "New Slide",
++        "Layout",
++        "Bold",
++        "Italic",
++        "Underline",
++        "Font Color",
++        "Bullets",
++        "Numbering",
++        "Align Left",
++        "Center",
++        "Align Right",
++        "Text Box",
++        "Picture",
++        "Shapes",
++        "Table",
++        "Transliterate",
++        "Version History",
++        "Full ribbon",
++    ] {
++        assert!(h.query_by_label(label).is_some(), "missing {label}");
++    }
++    // The upstream ribbon's File tab is not drawn.
++    assert!(h.query_by_label("File").is_none());
++}
++
++#[test]
++fn a_toggle_acts_on_the_selection() {
++    let mut h = window(true, egui::vec2(1500.0, 700.0), "en");
++    let id = h.state_mut().session.execute("shape.insert", &json!({"preset": "rect", "rect": [100, 100, 500, 120], "text": "Salom"})).unwrap()["id"]
++        .as_u64()
++        .unwrap();
++    h.state_mut().session.execute("edit.select", &json!({"ids": [id]})).unwrap();
++    h.run_steps(3);
++    h.get_by_label("Bold").click();
++    h.run_steps(3);
++    let st = h.state_mut().session.execute("format.state", &json!({})).unwrap();
++    assert_eq!(st["bold"], true, "{st}");
++}
++
++#[test]
++fn the_two_buttons_switch_between_the_row_and_the_ribbon() {
++    let mut h = window(true, egui::vec2(1500.0, 700.0), "en");
++    h.get_by_label("Full ribbon").click();
++    h.run_steps(4);
++    assert!(h.query_by_label("File").is_some(), "the upstream ribbon is back");
++    assert!(h.query_by_label("Simple ribbon").is_some());
++    h.get_by_label("Simple ribbon").click();
++    h.run_steps(4);
++    assert!(h.query_by_label("File").is_none(), "the row is back");
++}
++
++/// The pill sits right of the last tab, contextual ones included, at 1024 px.
++#[test]
++fn the_pill_does_not_cover_a_tab_at_1024() {
++    let mut h = window(false, egui::vec2(1024.0, 700.0), "en");
++    let id = h.state_mut().session.execute("shape.insert", &json!({"preset": "rect", "rect": [100, 100, 500, 120], "text": "Salom"})).unwrap()["id"]
++        .as_u64()
++        .unwrap();
++    h.state_mut().session.execute("edit.select", &json!({"ids": [id]})).unwrap();
++    h.run_steps(4);
++    let pill = h.get_by_label("Simple ribbon").rect();
++    let font = crate::theme::font(13.0);
++    let tabs = ["File", "Home", "Insert", "Draw", "Design", "Transitions", "Animations", "Slide Show", "Record", "Review", "View", "Shape Format"];
++    let ink = crate::theme::Tokens::get(&h.ctx).text;
++    let end = h.ctx.fonts_mut(|f| tabs.iter().fold(12.0, |x, name| x + f.layout_no_wrap(name.to_string(), font.clone(), ink).size().x + 18.0 + 2.0));
++    assert!(pill.min.x >= end, "pill starts at {} but the tabs end at {end}", pill.min.x);
++}
++
++#[test]
++fn evidence_screenshots() {
++    for (simple, mode) in [(true, "simple"), (false, "full")] {
++        let mut h = window(simple, egui::vec2(1366.0, 760.0), "uz-latn");
++        let id =
++            h.state_mut().session.execute("shape.insert", &json!({"preset": "rect", "rect": [100, 100, 500, 120], "text": "Salom"})).unwrap()["id"]
++                .as_u64()
++                .unwrap();
++        h.state_mut().session.execute("edit.select", &json!({"ids": [id]})).unwrap();
++        h.run_steps(6);
++        png(&mut h, &format!("slides-{mode}-uz-latn-1366.png"));
++    }
++}
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index c0cbebf..9d0acf6 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -378,7 +378,7 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
+     });
+ }
+ 
+-fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
++pub(crate) fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
+     let layouts: Vec<(String, deckcraft_model::LayoutId)> = app
+         .session
+         .active()

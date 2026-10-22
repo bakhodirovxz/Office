@@ -26,6 +26,10 @@ log = { workspace = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3"
 
+# the shared per-user settings (the toolbar mode); the web has no settings file
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+suite-core = { path = "../../../../crates/suite-core" }
+
 [dev-dependencies]
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
 

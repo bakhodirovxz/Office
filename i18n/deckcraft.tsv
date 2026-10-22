@@ -52,7 +52,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 09e9b295964b		Hide background graphics	Fon grafikasini yashirish	reviewed:agent-opus:2026-10-21	Фон графикасини яшириш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:910	
 0a19be5d2703		Email address:	Elektron pochta manzili:	reviewed:agent-opus:2026-10-21	Электрон почта манзили:	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1135	
 0a42c11b3784		Body	Asosiy matn	reviewed:agent-opus:2026-10-21	Асосий матн	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3283	
-0a83691d1978		Redo	Qayta bajarish	reviewed:agent-opus:2026-10-18	Қайта бажариш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/menus.rs:182	
+0a83691d1978		Redo	Qayta bajarish	reviewed:agent-opus:2026-10-18	Қайта бажариш	reviewed:agent-opus:2026-10-18	Вернуть	draft:agent-sonnet:2026-10-23		P1	deckcraft	crates/ui-egui/src/menus.rs:182	
 0a83d9e8eca0		Add Shape Before	Oldin shakl qoʻshish	reviewed:agent-opus:2026-10-21	Олдин шакл қўшиш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3079	
 0a9800686371		{:.1} MB	{:.1} MB	reviewed:agent-opus:2026-10-18	{:.1} MB	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:920	
 0abe49b26393		Loop Until Next Sound	Keyingi ovozgacha takrorlash	reviewed:agent-opus:2026-10-21	Кейинги овозгача такрорлаш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1725	
@@ -155,7 +155,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 213cc9d25682		New\nSlide	Yangi\nslayd	reviewed:agent-opus:2026-10-21	Янги\nслайд	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1192	
 215136b00255		Frame Slides	Slaydlarni ramkalash	reviewed:agent-opus:2026-10-18	Слайдларни рамкалаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1111	review-agent-2026-10-18: shorter verb
 2198b175545c		{n} Column{}	{n} ta ustun{}	reviewed:agent-opus:2026-10-21	{n} та устун{}	reviewed:agent-opus:2026-10-21		todo		obsolete	deckcraft	crates/ui-egui/src/ribbon.rs:766	
-21b65f732555		New Slide	Yangi slayd	reviewed:agent-opus:2026-10-21	Янги слайд	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/menus.rs:228	
+21b65f732555		New Slide	Yangi slayd	reviewed:agent-opus:2026-10-21	Янги слайд	reviewed:agent-opus:2026-10-21	Создать слайд	draft:agent-sonnet:2026-10-23		P2	deckcraft	crates/ui-egui/src/menus.rs:228	
 21c064e7f700		OK	OK	reviewed:agent-opus:2026-10-18	OK	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/dialogs.rs:1067	
 21f55565c07f		Meadow	Meadow	reviewed:agent-opus:2026-10-21	Meadow	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:277	
 223c27b1d42f		Screenshot	Skrinshot	reviewed:agent-opus:2026-10-21	Скриншот	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1221	
@@ -382,6 +382,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 4e15183b1756		{when} · Resolved	{when} · Hal qilingan	reviewed:agent-opus:2026-10-21	{when} · Ҳал қилинган	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1273	
 4e2da29aee1b		Add Section	Boʻlim qoʻshish	reviewed:agent-opus:2026-10-21	Бўлим қўшиш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:455	
 4e4595080ffd		WordArt style {}	WordArt uslubi {}	reviewed:agent-opus:2026-10-21	WordArt услуби {}	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1275	
+4e78037bf192		Version History	Versiyalar tarixi	reviewed:agent-opus:2026-10-18	Версиялар тарихи	reviewed:agent-opus:2026-10-18	Журнал версий	draft:agent-sonnet:2026-10-23		P1	deckcraft	crates/ui-egui/src/office_toolbar.rs	Phase 4 WP3: Slides toolbar; text copied from wordcraft.tsv
 4ea52942caae		{name}: DeckCraft can't open this kind of file		todo		todo		todo		obsolete	deckcraft	crates/ui-egui/src/lib.rs:194	
 4f25890ee2a3		Vertical	Vertikal	reviewed:agent-opus:2026-10-21	Вертикал	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2368	
 4f27570eece4		AutoCorrect Options…	Avtomatik tuzatish parametrlari…	reviewed:agent-opus:2026-10-21	Автоматик тузатиш параметрлари…	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2167	
@@ -396,7 +397,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 5154bfb0145f		Slides (e.g. 1,3,5):	Slaydlar (masalan, 1,3,5):	reviewed:agent-opus:2026-10-21	Слайдлар (масалан, 1,3,5):	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1960	
 517bf16081bb		F7	F7	reviewed:agent-opus:2026-10-21	F7	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1972	
 520bee6dc3dd		Bottom right	Quyi oʻng	reviewed:agent-opus:2026-10-21	Қуйи ўнг	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:693	
-52128584943c		Underline	Tagi chizilgan	reviewed:agent-opus:2026-10-21	Таги чизилган	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2774	
+52128584943c		Underline	Tagi chizilgan	reviewed:agent-opus:2026-10-21	Таги чизилган	reviewed:agent-opus:2026-10-21	Подчёркнутый	draft:agent-sonnet:2026-10-23		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2774	
 5260e4ac0a9f		Remove bullets and numbering	Markerlar va raqamlashni olib tashlash	reviewed:agent-opus:2026-10-21	Маркерлар ва рақамлашни олиб ташлаш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1342	
 526345b4d50c		Browse	Tanlash	reviewed:agent-opus:2026-10-18	Танлаш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:774	review-agent-2026-10-18: glossary Browse
 52da25d62fd6		Outline View	Struktura rejimi	reviewed:agent-opus:2026-10-21	Структура режими	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:361	
@@ -535,6 +536,7 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 7262a2d31208		Add Shape Below	Pastga shakl qoʻshish	reviewed:agent-opus:2026-10-21	Пастга шакл қўшиш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3081	
 7313b81e4b4e		Source on GitHub	GitHubdagi manba kodi	reviewed:agent-opus:2026-10-18	GitHubдаги манба коди	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1375	review-agent-2026-10-18: suffix joined to the name; "source" = source code
 733776314c40		dropped file	tashlangan fayl	reviewed:agent-opus:2026-10-21	ташланган файл	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/lib.rs:1572	
+7347d67f8019		Full ribbon	Toʻliq lenta	draft:agent-sonnet:2026-10-23	Тўлиқ лента	draft:agent-sonnet:2026-10-23	Полная лента	draft:agent-sonnet:2026-10-23		P1	deckcraft	crates/ui-egui/src/office_toolbar.rs	Phase 4 WP3: Slides toolbar; text copied from wordcraft.tsv
 73a1774befad		Select Slides	Slaydlarni tanlash	reviewed:agent-opus:2026-10-21	Слайдларни танлаш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/engine/src/cmd/slide.rs:31	
 73b1f321c16a		From Right	Oʻngdan	reviewed:agent-opus:2026-10-21	Ўнгдан	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1763	
 73ff187ab07f		Rewind after Playing	Ijrodan keyin boshiga qaytarish	reviewed:agent-opus:2026-10-21	Ижродан кейин бошига қайтариш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:3184	
@@ -939,6 +941,7 @@ ceef39917e06		Spacing after must be a number	Keyingi oraliq son boʻlishi kerak	
 cf42e636abc5		Change to:	Quyidagiga oʻzgartirish:	reviewed:agent-opus:2026-10-21	Қуйидагига ўзгартириш:	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:1829	
 cff7d1eb8054		e.g. 1-3, 5	masalan, 1-3, 5	reviewed:agent-opus:2026-10-18	масалан, 1-3, 5	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1068	
 d044531d6963		Presentations	Taqdimotlar	reviewed:agent-opus:2026-10-18	Тақдимотлар	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:796	
+d094b25b94fd		Simple ribbon	Sodda lenta	draft:agent-sonnet:2026-10-23	Содда лента	draft:agent-sonnet:2026-10-23	Простая лента	draft:agent-sonnet:2026-10-23		P1	deckcraft	crates/ui-egui/src/office_toolbar.rs	Phase 4 WP3: Slides toolbar; text copied from wordcraft.tsv
 d0a2c503b31a		DeckCraft's own format: everything is kept	DeckCraft formati: hamma narsa saqlanadi	reviewed:agent-opus:2026-10-18	DeckCraft формати: ҳамма нарса сақланади	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:216	
 d0ddc30c934f		Accept All ({})	Hammasini qabul qilish ({})	reviewed:agent-opus:2026-10-21	Ҳаммасини қабул қилиш ({})	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:1188	
 d123e18524e9		Top Right	Yuqori oʻng	reviewed:agent-opus:2026-10-21	Юқори ўнг	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:963	
@@ -1037,7 +1040,7 @@ e7f0d3bcda46		Action Settings…	Amal sozlamalari…	reviewed:agent-opus:2026-10
 e807898fc6d9		Bring\nForward	Oldinga\nolib chiqish	reviewed:agent-opus:2026-10-21	Олдинга\nолиб чиқиш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:2491	
 e8aa1ad0c5e6		Album theme	Albom mavzusi	reviewed:agent-opus:2026-10-21	Альбом мавзуси	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:467	
 e8d1987489b5		Half	Yarim	reviewed:agent-opus:2026-10-21	Ярим	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:276	
-e925b00a94ae		Slide Show	Namoyish	reviewed:agent-opus:2026-10-18	Намойиш	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/lib.rs:382	review-agent-2026-10-18: glossary Slide Show
+e925b00a94ae		Slide Show	Namoyish	reviewed:agent-opus:2026-10-18	Намойиш	reviewed:agent-opus:2026-10-18	Показ слайдов	draft:agent-sonnet:2026-10-23		P1	deckcraft	crates/ui-egui/src/lib.rs:382	review-agent-2026-10-18: glossary Slide Show
 e9bb71b2ffcd		End size	Tugash oʻlchami	reviewed:agent-opus:2026-10-21	Тугаш ўлчами	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:600	
 e9e0a13b0b7d		Delete Text	Matnni oʻchirish	reviewed:agent-opus:2026-10-21	Матнни ўчириш	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/engine/src/cmd/text.rs:60	
 ea26d296dfce		Blur	Xiralik	reviewed:agent-opus:2026-10-21	Хиралик	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:269	

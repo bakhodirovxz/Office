@@ -1,0 +1,161 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 01:32:22 +0500
+Subject: [PATCH] spell: search the suite's shared dictionaries folder
+ (settings spell_dictionaries, install folder)
+
+spell::add_search_dir lets the overlay add folders without environment variables (set_var is unsafe in edition 2024 and the UI crate forbids unsafe).
+office_overlay::use_shared_dictionaries adds the folder the shared spell_dictionaries setting names, then dictionaries/ next to the exe, then
+the repository's assets/dictionaries (a development build), once at start-up. The web build and the tests keep the checker's own folders.
+---
+ crates/engine/src/spell.rs                 | 15 ++++++++
+ crates/engine/tests/spell_dirs.rs          | 41 ++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay.rs       | 28 +++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 14 ++++++++
+ 4 files changed, 98 insertions(+)
+ create mode 100644 crates/engine/tests/spell_dirs.rs
+
+diff --git a/crates/engine/src/spell.rs b/crates/engine/src/spell.rs
+index 2c94783..9127614 100644
+--- a/crates/engine/src/spell.rs
++++ b/crates/engine/src/spell.rs
+@@ -477,12 +477,27 @@ fn strip_start(w: &[char], add: &str, strip: &str) -> Option<Vec<char>> {
+     (!v.is_empty()).then_some(v)
+ }
+ 
++static EXTRA_DIRS: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
++
++/// Search `dir` for dictionaries too, right after `DECKCRAFT_DICTIONARIES` and before the system's folders (the suite's shared
++/// dictionaries: `office_overlay`). Call it before the first dictionary is loaded; loaded ones are kept.
++pub fn add_search_dir(dir: PathBuf) {
++    if let Ok(mut dirs) = EXTRA_DIRS.lock()
++        && !dirs.contains(&dir)
++    {
++        dirs.push(dir);
++    }
++}
++
+ /// The folders searched for dictionaries, in order.
+ pub fn search_dirs() -> Vec<PathBuf> {
+     let mut out = vec![];
+     if let Some(v) = std::env::var_os("DECKCRAFT_DICTIONARIES") {
+         out.extend(std::env::split_paths(&v));
+     }
++    if let Ok(dirs) = EXTRA_DIRS.lock() {
++        out.extend(dirs.iter().cloned());
++    }
+     let home = std::env::var_os("HOME").map(PathBuf::from);
+     if cfg!(target_os = "macos") {
+         out.extend(home.iter().map(|h| h.join("Library/Application Support/DeckCraft/Dictionaries")));
+diff --git a/crates/engine/tests/spell_dirs.rs b/crates/engine/tests/spell_dirs.rs
+new file mode 100644
+index 0000000..52d0e7e
+--- /dev/null
++++ b/crates/engine/tests/spell_dirs.rs
+@@ -0,0 +1,41 @@
++// Added by the office shared-dictionaries patch. MIT OR Apache-2.0.
++//! A folder added with `spell::add_search_dir` is searched, so the suite's shared dictionaries are found without environment variables.
++#![allow(clippy::unwrap_used, clippy::expect_used)]
++
++use deckcraft_engine::spell;
++
++#[test]
++fn an_added_search_dir_is_searched() {
++    let dir = std::env::temp_dir().join(format!("deckcraft-dicts-{}", std::process::id()));
++    std::fs::create_dir_all(&dir).unwrap();
++    std::fs::write(dir.join("xx_ZZ.aff"), "SET UTF-8\nTRY esianrtolcdugmphbyfvkwzxjq\n").unwrap();
++    std::fs::write(dir.join("xx_ZZ.dic"), "2\nsalom\ndunyo\n").unwrap();
++    assert!(spell::dictionary("xx-ZZ").is_none(), "nothing yet");
++    spell::add_search_dir(dir.clone());
++    spell::add_search_dir(dir.clone());
++    assert_eq!(spell::search_dirs().iter().filter(|d| **d == dir).count(), 1, "added once");
++    // The cache keeps the miss of the first call, so look the pair up directly.
++    assert!(spell::find_in(&spell::search_dirs(), "xx-ZZ").is_some());
++    let _ = std::fs::remove_dir_all(dir);
++}
++
++/// The dictionaries the suite ships (`assets/dictionaries`, repository root) parse with this checker: common words pass, a typo does not and gets a suggestion.
++#[test]
++fn the_shipped_dictionaries_check_real_words() {
++    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../assets/dictionaries");
++    if !dir.is_dir() {
++        return; // an upstream-only checkout has no suite assets
++    }
++    let load = |stem: &str| {
++        let (aff, dic) = (std::fs::read(dir.join(format!("{stem}.aff"))).unwrap(), std::fs::read(dir.join(format!("{stem}.dic"))).unwrap());
++        spell::Dictionary::parse(&aff, &dic)
++    };
++    let en = load("en_US");
++    assert!(en.check("presentation") && en.check("slides") && en.check("The"));
++    assert!(!en.check("presentaiton"));
++    assert!(en.suggest("presentaiton", 5).iter().any(|s| s == "presentation"));
++    let ru = load("ru_RU");
++    assert!(ru.check("привет") && ru.check("презентация") && ru.check("слайды"));
++    assert!(!ru.check("превет"));
++    assert!(ru.suggest("превет", 8).iter().any(|s| s == "привет"), "{:?}", ru.suggest("превет", 8));
++}
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 05e932d..38a2cc3 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -132,6 +132,7 @@ pub fn register_document_fonts() {
+         if let Some((_, bytes)) = FALLBACK_FONTS.first() {
+             deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
+         }
++        use_shared_dictionaries();
+     });
+ }
+ 
+@@ -167,3 +168,30 @@ pub(crate) fn toolbar_changed(simple: bool) {
+         }
+     }
+ }
++
++/// Where the suite's shared Hunspell dictionaries are (PLAN 5.4), best first: the folder the `spell_dictionaries` setting names,
++/// `dictionaries/` next to the exe (the installer puts them there once, for all apps), then `assets/dictionaries` of the repository
++/// above the exe (a development build). Only folders that exist.
++pub fn dictionary_dirs(setting: &str, exe_dir: Option<&std::path::Path>) -> Vec<std::path::PathBuf> {
++    let mut dirs = Vec::new();
++    if !setting.trim().is_empty() {
++        dirs.push(std::path::PathBuf::from(setting.trim()));
++    }
++    if let Some(exe) = exe_dir {
++        dirs.push(exe.join("dictionaries"));
++        dirs.extend(exe.ancestors().skip(1).take(6).map(|a| a.join("assets/dictionaries")));
++    }
++    dirs.retain(|d| d.is_dir());
++    dirs
++}
++
++/// Point the spell checker at the suite's dictionaries once. The web build has none (no folders) and the tests keep the checker's own.
++fn use_shared_dictionaries() {
++    #[cfg(not(any(target_arch = "wasm32", test)))]
++    {
++        let exe = std::env::current_exe().ok().and_then(|e| e.parent().map(std::path::Path::to_path_buf));
++        for dir in dictionary_dirs(&suite_core::settings::load().spell_dictionaries, exe.as_deref()) {
++            deckcraft_engine::spell::add_search_dir(dir);
++        }
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 97a9dbb..19c179e 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -175,3 +175,17 @@ fn russian_is_offered_only_with_the_overlay_catalog() {
+         assert!(Lang::from_tag("ru").is_none());
+     }
+ }
++
++#[test]
++#[allow(clippy::unwrap_used)]
++fn shared_dictionary_folders_come_in_order() {
++    let root = std::env::temp_dir().join(format!("deckcraft-dictdirs-{}", std::process::id()));
++    let (exe, setting) = (root.join("app"), root.join("chosen"));
++    std::fs::create_dir_all(exe.join("dictionaries")).unwrap();
++    std::fs::create_dir_all(&setting).unwrap();
++    // The setting first, then the install folder; a folder that is not there is left out.
++    assert_eq!(o::dictionary_dirs(setting.to_str().unwrap(), Some(&exe)), vec![setting.clone(), exe.join("dictionaries")]);
++    assert_eq!(o::dictionary_dirs("", Some(&exe)), vec![exe.join("dictionaries")]);
++    assert!(o::dictionary_dirs("  ", None).is_empty());
++    let _ = std::fs::remove_dir_all(root);
++}

@@ -1,0 +1,352 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 00:47:34 +0500
+Subject: [PATCH] deckcraft-web: add an opt-in postMessage host bridge
+ (?host=parent)
+
+A page that frames DeckCraft in an <iframe> (the web shell) can now open a presentation in it,
+ask it to save, and hear about unsaved changes, the way the WordCraft, GridCraft and PDFCraft web
+apps allow for their embedders.
+
+Messages are plain objects with a `type` (the WordCraft bridge's, with the `deckcraft:` prefix):
+  deckcraft:ready       (to host)   {version}
+  deckcraft:open        (from host) {name, bytes}
+  deckcraft:opened      (to host)   {name}
+  deckcraft:requestSave (from host)
+  deckcraft:save        (to host)   {name, bytes}, bytes transferred; a Save is always a .pptx
+  deckcraft:dirty       (to host)   {dirty}
+  deckcraft:failed      (to host)   {error}
+
+Only the parent window is heard or answered, and only on its origin: the page's own, or the one
+named by &parent_origin=. Without ?host=parent, or without a parent, nothing changes. In host mode
+the page starts with a blank presentation instead of the sample deck.
+---
+ apps/deckcraft-web/Cargo.toml      |   2 +-
+ apps/deckcraft-web/src/main.rs     |   2 +
+ apps/deckcraft-web/src/web.rs      |  30 ++++-
+ apps/deckcraft-web/src/web/host.rs | 208 +++++++++++++++++++++++++++++
+ 4 files changed, 238 insertions(+), 4 deletions(-)
+ create mode 100644 apps/deckcraft-web/src/web/host.rs
+
+diff --git a/apps/deckcraft-web/Cargo.toml b/apps/deckcraft-web/Cargo.toml
+index 7014421..e462fb8 100644
+--- a/apps/deckcraft-web/Cargo.toml
++++ b/apps/deckcraft-web/Cargo.toml
+@@ -27,4 +27,4 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
+diff --git a/apps/deckcraft-web/src/main.rs b/apps/deckcraft-web/src/main.rs
+index 6d2b7e9..0b7b946 100644
+--- a/apps/deckcraft-web/src/main.rs
++++ b/apps/deckcraft-web/src/main.rs
+@@ -13,6 +13,8 @@
+ //! - dropped files are read asynchronously by `web::WebShell` and delivered through the inbox;
+ //! - preferences are not persisted.
+ //!
++//! `?host=parent` (inside an `<iframe>`) talks to the embedding page by `postMessage` (`web/host.rs`).
++//!
+ //! URL query flags: `?webgl` forces the WebGL2 backend instead of WebGPU; `?blank` starts with an
+ //! empty presentation instead of the sample deck; `?show` starts the slide show.
+ #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index 809ad67..a62e598 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -4,6 +4,7 @@ use deckcraft_engine::Session;
+ use deckcraft_ui_egui::{Inbox, InboxEvent, InboxFile, Services, SlideApp};
+ use wasm_bindgen::JsCast as _;
+ 
++mod host;
+ const PRESENTATION_EXTS: &[&str] = &["deckcraft", "pptx", "potx", "ppsx", "txt", "md"];
+ const PICTURE_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff"];
+ const AUDIO_EXTS: &[&str] = &["wav", "mp3", "m4a", "aac", "flac", "ogg", "opus", "aif", "aiff"];
+@@ -28,6 +29,10 @@ pub fn start() {
+         {
+             create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
+         }
++        // `?host=parent`: a page framing DeckCraft (the web shell) opens presentations in it and
++        // stores what it saves (`host`).
++        let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
++        let app_bridge = bridge.clone();
+         let result = eframe::WebRunner::new()
+             .start(
+                 canvas,
+@@ -37,9 +42,13 @@ pub fn start() {
+                         log::info!("deckcraft-web {}: wgpu backend {:?}", env!("CARGO_PKG_VERSION"), rs.adapter.get_info().backend);
+                     }
+                     let inbox: Inbox = Inbox::default();
+-                    let mut app = SlideApp::new(Session::new(), services(inbox.clone(), cc.egui_ctx.clone()));
++                    let mut services = services(inbox.clone(), cc.egui_ctx.clone());
++                    if let Some(bridge) = &app_bridge {
++                        bridge.connect(&mut services, cc.egui_ctx.clone());
++                    }
++                    let mut app = SlideApp::new(Session::new(), services);
+                     let q = query();
+-                    if !q.contains("blank") {
++                    if !q.contains("blank") && app_bridge.is_none() {
+                         if let Err(e) = deckcraft_engine::sample::open_sample(&mut app.session) {
+                             log::error!("sample deck: {e}");
+                         }
+@@ -49,10 +58,16 @@ pub fn start() {
+                     if q.contains("show") {
+                         app.start_show(0, false);
+                     }
+-                    Ok(Box::new(WebShell { app, inbox }))
++                    if let Some(bridge) = &app_bridge {
++                        bridge.post_ready();
++                    }
++                    Ok(Box::new(WebShell { app, inbox, bridge: app_bridge }))
+                 }),
+             )
+             .await;
++        if let (Err(e), Some(bridge)) = (&result, &bridge) {
++            bridge.post_failed(&format!("{e:?}"));
++        }
+         if let Some(el) = document.get_element_by_id(LOADING_ID) {
+             match result {
+                 Ok(()) => el.remove(),
+@@ -69,11 +84,17 @@ fn query() -> String {
+     web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
+ }
+ 
++/// The value of the URL's `?key=` parameter.
++fn query_param(key: &str) -> Option<String> {
++    web_sys::UrlSearchParams::new_with_str(&query()).ok()?.get(key)
++}
++
+ /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
+ /// and feed them through the inbox.
+ struct WebShell {
+     app: SlideApp,
+     inbox: Inbox,
++    bridge: Option<host::Bridge>,
+ }
+ 
+ impl eframe::App for WebShell {
+@@ -101,6 +122,9 @@ impl eframe::App for WebShell {
+             });
+         }
+         self.app.logic(ctx);
++        if let Some(bridge) = &self.bridge {
++            bridge.sync(ctx, &mut self.app);
++        }
+     }
+ 
+     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
+diff --git a/apps/deckcraft-web/src/web/host.rs b/apps/deckcraft-web/src/web/host.rs
+new file mode 100644
+index 0000000..5cedb9a
+--- /dev/null
++++ b/apps/deckcraft-web/src/web/host.rs
+@@ -0,0 +1,208 @@
++//! The `postMessage` bridge to a parent page (`?host=parent`), for pages that embed DeckCraft in
++//! an `<iframe>` (the web shell, a document server). The messages are WordCraft's, with the
++//! `deckcraft:` prefix:
++//!
++//! - `deckcraft:ready` (to the parent): `{ version }`, the app is listening; send a file now.
++//! - `deckcraft:open` (from the parent): `{ name, bytes }`, bytes an `ArrayBuffer` or
++//!   `Uint8Array`. The presentation replaces the one shown.
++//! - `deckcraft:opened` (to the parent): `{ name }`, it is shown.
++//! - `deckcraft:requestSave` (from the parent): save now.
++//! - `deckcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
++//!   file DeckCraft would otherwise download. A Save of the presentation always sends a `.pptx`.
++//! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
++//! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
++//!
++//! Only the parent window is heard or answered, and only on its origin: the page's own unless
++//! `&parent_origin=` names another. In host mode the page starts with a blank presentation.
++
++use std::cell::{Cell, RefCell};
++use std::rc::Rc;
++
++use deckcraft_ui_egui::{Services, SlideApp};
++use serde_json::json;
++use wasm_bindgen::JsCast as _;
++use wasm_bindgen::JsValue;
++use wasm_bindgen::closure::Closure;
++
++/// The name a presentation gets when the parent opened none.
++const DEFAULT_NAME: &str = "presentation.pptx";
++
++#[derive(Clone)]
++pub struct Bridge {
++    window: web_sys::Window,
++    parent: web_sys::Window,
++    origin: String,
++    /// The parent asked for a save (or the app tried to download a `.deckcraft`) since the last frame.
++    save_requested: Rc<Cell<bool>>,
++    /// A file from the parent, opened at the next frame.
++    to_open: Rc<RefCell<Option<(String, Vec<u8>)>>>,
++    /// The unsaved-changes state last reported to the parent.
++    reported: Rc<Cell<Option<bool>>>,
++    /// The name of the file the parent opened last.
++    name: Rc<RefCell<String>>,
++}
++
++impl Bridge {
++    /// `None` when the page isn't framed (there is no parent to talk to).
++    pub fn new(parent_origin: Option<String>) -> Option<Self> {
++        let window = web_sys::window()?;
++        let parent = window.parent().ok().flatten()?;
++        if js_sys::Object::is(&parent, &window) {
++            return None;
++        }
++        let origin = match parent_origin.filter(|o| !o.is_empty()) {
++            Some(origin) => origin,
++            None => window.location().origin().ok()?,
++        };
++        Some(Self {
++            window,
++            parent,
++            origin,
++            save_requested: Rc::default(),
++            to_open: Rc::default(),
++            reported: Rc::default(),
++            name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
++        })
++    }
++
++    /// Send saved and exported files to the parent instead of downloading them, and hear files
++    /// and save requests from it.
++    pub fn connect(&self, services: &mut Services, ctx: egui::Context) {
++        self.listen(ctx.clone());
++        let bridge = self.clone();
++        services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
++            // The web app's own Save of an unnamed presentation downloads the native format; the
++            // parent wants a .pptx, so the next frame saves that instead.
++            if name.to_ascii_lowercase().ends_with(".deckcraft") {
++                bridge.save_requested.set(true);
++                ctx.request_repaint();
++            } else if let Err(e) = bridge.post_save(name, bytes) {
++                bridge.post_failed(&e);
++            }
++        }));
++    }
++
++    pub fn post_ready(&self) {
++        self.send(&[("type", "deckcraft:ready".into()), ("version", env!("CARGO_PKG_VERSION").into())]);
++    }
++
++    pub fn post_failed(&self, error: &str) {
++        self.send(&[("type", "deckcraft:failed".into()), ("error", error.into())]);
++    }
++
++    /// After each frame: open a file the parent sent, run a save it asked for, and report the
++    /// unsaved-changes state.
++    pub fn sync(&self, ctx: &egui::Context, app: &mut SlideApp) {
++        if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
++            self.open(app, name, &bytes);
++        }
++        if self.save_requested.replace(false) {
++            self.save(app);
++            ctx.request_repaint();
++        }
++        let dirty = app.session.documents().iter().any(|d| d.is_dirty());
++        if self.reported.get() != Some(dirty) && self.send(&[("type", "deckcraft:dirty".into()), ("dirty", dirty.into())]) {
++            self.reported.set(Some(dirty));
++        }
++    }
++
++    /// The opened file replaces whatever was shown.
++    fn open(&self, app: &mut SlideApp, name: String, bytes: &[u8]) {
++        let before = app.session.documents().len();
++        let data = deckcraft_engine::cmd::base64_encode(bytes);
++        if let Err(e) = app.run("file.openBytes", json!({"name": name, "data": data})) {
++            return self.post_failed(&e);
++        }
++        for _ in 0..before {
++            app.session.close_document(0);
++        }
++        *self.name.borrow_mut() = name.clone();
++        self.send(&[("type", "deckcraft:opened".into()), ("name", name.as_str().into())]);
++    }
++
++    /// Save the shown presentation as a `.pptx` named after the file the parent opened.
++    fn save(&self, app: &mut SlideApp) {
++        let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
++        let name = pptx_name(&self.name.borrow());
++        let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx").map_err(|e| e.to_string()).and_then(|bytes| self.post_save(&name, &bytes));
++        match sent {
++            Ok(()) => {
++                // Clean now; the next frame tells the parent.
++                if let Some(d) = app.session.active_mut() {
++                    d.saved_doc = d.doc.clone();
++                    d.revision += 1;
++                }
++            }
++            Err(e) => self.post_failed(&e),
++        }
++    }
++
++    fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
++        let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
++        let buffer = js_sys::Uint8Array::from(bytes).buffer();
++        let message = message(&[("type", "deckcraft:save".into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
++            .ok_or_else(|| "couldn't build the message".to_string())?;
++        self.parent
++            .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))
++            .map_err(|e| e.as_string().unwrap_or_else(|| format!("{e:?}")))
++    }
++
++    fn listen(&self, ctx: egui::Context) {
++        let bridge = self.clone();
++        let on_message = Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |event: web_sys::MessageEvent| {
++            if event.origin() != bridge.origin || !event.source().is_some_and(|s| js_sys::Object::is(&s, &bridge.parent)) {
++                return;
++            }
++            let data = event.data();
++            match string(&data, "type").as_deref() {
++                Some("deckcraft:open") => {
++                    let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
++                    let Some(bytes) = bytes(&data) else { return };
++                    *bridge.to_open.borrow_mut() = Some((name, bytes));
++                }
++                Some("deckcraft:requestSave") => bridge.save_requested.set(true),
++                _ => return,
++            }
++            ctx.request_repaint();
++        });
++        if self.window.add_event_listener_with_callback("message", on_message.as_ref().unchecked_ref()).is_ok() {
++            // The listener lives as long as the page.
++            on_message.forget();
++        }
++    }
++
++    /// Post a message to the parent; false if it couldn't be sent.
++    fn send(&self, fields: &[(&str, JsValue)]) -> bool {
++        message(fields).is_some_and(|m| self.parent.post_message(&m, &self.origin).is_ok())
++    }
++}
++
++/// `report.ppt` and `report.odp` are saved as `report.pptx`.
++fn pptx_name(opened: &str) -> String {
++    let base = std::path::Path::new(opened).file_stem().map_or_else(|| "presentation".to_string(), |s| s.to_string_lossy().to_string());
++    format!("{base}.pptx")
++}
++
++fn message(fields: &[(&str, JsValue)]) -> Option<js_sys::Object> {
++    let m = js_sys::Object::new();
++    for (key, value) in fields {
++        js_sys::Reflect::set(&m, &JsValue::from_str(key), value).ok()?;
++    }
++    Some(m)
++}
++
++fn string(data: &JsValue, key: &str) -> Option<String> {
++    js_sys::Reflect::get(data, &JsValue::from_str(key)).ok()?.as_string()
++}
++
++/// `bytes` as an `ArrayBuffer` or `Uint8Array`.
++fn bytes(data: &JsValue) -> Option<Vec<u8>> {
++    let bytes = js_sys::Reflect::get(data, &JsValue::from_str("bytes")).ok()?;
++    if let Some(array) = bytes.dyn_ref::<js_sys::Uint8Array>() {
++        Some(array.to_vec())
++    } else if bytes.is_instance_of::<js_sys::ArrayBuffer>() {
++        Some(js_sys::Uint8Array::new(&bytes).to_vec())
++    } else {
++        None
++    }
++}

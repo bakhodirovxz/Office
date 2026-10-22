@@ -21,6 +21,7 @@ pub mod io;
 pub mod keys;
 pub mod links;
 pub mod media_refs;
+pub mod office_hook;
 pub mod recovery;
 pub mod sample;
 pub mod sounds;
@@ -579,7 +580,16 @@ impl Session {
     /// Run command `id`. A panic inside it becomes [`EngineError::Internal`] and leaves the
     /// presentation as it was.
     pub fn execute(&mut self, id: &str, params: &Value) -> Result<Value> {
-        self.guarded(id, |s| s.execute_unguarded(id, params))
+        if self.depth == 0
+            && let Some(why) = office_hook::refusal(id, self)
+        {
+            return Err(EngineError::Disabled(id.into(), why));
+        }
+        let result = self.guarded(id, |s| s.execute_unguarded(id, params));
+        if self.depth == 0 {
+            office_hook::after(id, self, params, &result);
+        }
+        result
     }
 
     fn execute_unguarded(&mut self, id: &str, params: &Value) -> Result<Value> {

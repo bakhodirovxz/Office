@@ -132,5 +132,66 @@ pub fn register_document_fonts() {
         if let Some((_, bytes)) = FALLBACK_FONTS.first() {
             deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
         }
+        use_shared_dictionaries();
     });
+}
+
+static TOOLBAR_SIMPLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Should a window start with the simplified toolbar (`office_toolbar`)? The web build always does. Elsewhere it is the shared
+/// `toolbar` setting (`simple` unless `settings.toml` says `full`), read once at the first call. This crate's own tests start
+/// with the upstream ribbon, which is what upstream's UI tests drive; the toolbar tests choose the mode per window.
+pub fn toolbar_default() -> bool {
+    if cfg!(target_arch = "wasm32") {
+        return true;
+    }
+    #[cfg(not(any(target_arch = "wasm32", test)))]
+    {
+        static LOAD: std::sync::Once = std::sync::Once::new();
+        LOAD.call_once(|| set_toolbar_default(suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple));
+    }
+    !cfg!(test) && TOOLBAR_SIMPLE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+fn set_toolbar_default(simple: bool) {
+    TOOLBAR_SIMPLE.store(simple, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The user switched: remember it for this process and store it in the shared settings, where the other apps read it at their next start.
+pub(crate) fn toolbar_changed(simple: bool) {
+    set_toolbar_default(simple);
+    #[cfg(not(any(target_arch = "wasm32", test)))]
+    {
+        use suite_core::settings::{ToolbarMode, set_toolbar_mode};
+        if let Err(e) = set_toolbar_mode(if simple { ToolbarMode::Simple } else { ToolbarMode::Full }) {
+            log::warn!("toolbar setting not saved: {e}");
+        }
+    }
+}
+
+/// Where the suite's shared Hunspell dictionaries are (PLAN 5.4), best first: the folder the `spell_dictionaries` setting names,
+/// `dictionaries/` next to the exe (the installer puts them there once, for all apps), then `assets/dictionaries` of the repository
+/// above the exe (a development build). Only folders that exist.
+pub fn dictionary_dirs(setting: &str, exe_dir: Option<&std::path::Path>) -> Vec<std::path::PathBuf> {
+    let mut dirs = Vec::new();
+    if !setting.trim().is_empty() {
+        dirs.push(std::path::PathBuf::from(setting.trim()));
+    }
+    if let Some(exe) = exe_dir {
+        dirs.push(exe.join("dictionaries"));
+        dirs.extend(exe.ancestors().skip(1).take(6).map(|a| a.join("assets/dictionaries")));
+    }
+    dirs.retain(|d| d.is_dir());
+    dirs
+}
+
+/// Point the spell checker at the suite's dictionaries once. The web build has none (no folders) and the tests keep the checker's own.
+fn use_shared_dictionaries() {
+    #[cfg(not(any(target_arch = "wasm32", test)))]
+    {
+        let exe = std::env::current_exe().ok().and_then(|e| e.parent().map(std::path::Path::to_path_buf));
+        for dir in dictionary_dirs(&suite_core::settings::load().spell_dictionaries, exe.as_deref()) {
+            deckcraft_engine::spell::add_search_dir(dir);
+        }
+    }
 }

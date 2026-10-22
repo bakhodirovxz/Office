@@ -477,11 +477,26 @@ fn strip_start(w: &[char], add: &str, strip: &str) -> Option<Vec<char>> {
     (!v.is_empty()).then_some(v)
 }
 
+static EXTRA_DIRS: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
+
+/// Search `dir` for dictionaries too, right after `DECKCRAFT_DICTIONARIES` and before the system's folders (the suite's shared
+/// dictionaries: `office_overlay`). Call it before the first dictionary is loaded; loaded ones are kept.
+pub fn add_search_dir(dir: PathBuf) {
+    if let Ok(mut dirs) = EXTRA_DIRS.lock()
+        && !dirs.contains(&dir)
+    {
+        dirs.push(dir);
+    }
+}
+
 /// The folders searched for dictionaries, in order.
 pub fn search_dirs() -> Vec<PathBuf> {
     let mut out = vec![];
     if let Some(v) = std::env::var_os("DECKCRAFT_DICTIONARIES") {
         out.extend(std::env::split_paths(&v));
+    }
+    if let Ok(dirs) = EXTRA_DIRS.lock() {
+        out.extend(dirs.iter().cloned());
     }
     let home = std::env::var_os("HOME").map(PathBuf::from);
     if cfg!(target_os = "macos") {

@@ -55,7 +55,7 @@ base_raw = 35282601          # pristine wasm raw at BASE (re-measured 2026-10-22
 base_gzip = 13953628         # wasm gzip -9
 base_br = 9327609            # wasm brotli -q 11 --lgwin=24
 js_br = 19649                # JS glue brotli
-delta_br_max = 163840        # delta +139,894 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 131072: delta +109,715 B brotli (+1.18 %): 0001 web fix, overlay, 01)
+delta_br_max = 196608        # delta +164,856 B brotli at Phase 4 WP3 (2026-10-23): the Slides toolbar (office_toolbar.rs and 19 icon masks, 4,286 B), the host bridge, the command hook and the shared-dictionaries folder on top of the P2 catalogs; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840, delta +139,894 B at Phase 2 WP12)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 

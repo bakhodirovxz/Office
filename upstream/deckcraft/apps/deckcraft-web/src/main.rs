@@ -13,6 +13,8 @@
 //! - dropped files are read asynchronously by `web::WebShell` and delivered through the inbox;
 //! - preferences are not persisted.
 //!
+//! `?host=parent` (inside an `<iframe>`) talks to the embedding page by `postMessage` (`web/host.rs`).
+//!
 //! URL query flags: `?webgl` forces the WebGL2 backend instead of WebGPU; `?blank` starts with an
 //! empty presentation instead of the sample deck; `?show` starts the slide show.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]

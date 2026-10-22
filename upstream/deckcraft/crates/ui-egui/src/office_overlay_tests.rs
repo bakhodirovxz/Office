@@ -175,3 +175,17 @@ fn russian_is_offered_only_with_the_overlay_catalog() {
         assert!(Lang::from_tag("ru").is_none());
     }
 }
+
+#[test]
+#[allow(clippy::unwrap_used)]
+fn shared_dictionary_folders_come_in_order() {
+    let root = std::env::temp_dir().join(format!("deckcraft-dictdirs-{}", std::process::id()));
+    let (exe, setting) = (root.join("app"), root.join("chosen"));
+    std::fs::create_dir_all(exe.join("dictionaries")).unwrap();
+    std::fs::create_dir_all(&setting).unwrap();
+    // The setting first, then the install folder; a folder that is not there is left out.
+    assert_eq!(o::dictionary_dirs(setting.to_str().unwrap(), Some(&exe)), vec![setting.clone(), exe.join("dictionaries")]);
+    assert_eq!(o::dictionary_dirs("", Some(&exe)), vec![exe.join("dictionaries")]);
+    assert!(o::dictionary_dirs("  ", None).is_empty());
+    let _ = std::fs::remove_dir_all(root);
+}

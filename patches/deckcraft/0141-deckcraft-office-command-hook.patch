@@ -1,0 +1,267 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 01:14:34 +0500
+Subject: [PATCH] engine: office command-hook seam on Session::execute
+
+office_hook.rs adds a process-wide CommandHook (before: a reason to refuse a command; after: the
+outcome of one that ran). Session::execute asks it for the outermost command of an action only, and
+the UI greys a control out through ribbon::enabled and refuses the three paths that bypass the
+dispatcher on the web (export, print, save as). With no hook attached nothing changes: tests assert
+that a command's result is byte-identical.
+---
+ crates/engine/src/lib.rs                   | 12 +++-
+ crates/engine/src/office_hook.rs           | 49 +++++++++++++
+ crates/engine/tests/office_hook.rs         | 81 ++++++++++++++++++++++
+ crates/ui-egui/src/lib.rs                  | 12 ++++
+ crates/ui-egui/src/office_toolbar_tests.rs | 16 +++++
+ crates/ui-egui/src/ribbon.rs               |  2 +-
+ 6 files changed, 170 insertions(+), 2 deletions(-)
+ create mode 100644 crates/engine/src/office_hook.rs
+ create mode 100644 crates/engine/tests/office_hook.rs
+
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 418bff0..6882c9e 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -21,6 +21,7 @@ pub mod io;
+ pub mod keys;
+ pub mod links;
+ pub mod media_refs;
++pub mod office_hook;
+ pub mod recovery;
+ pub mod sample;
+ pub mod sounds;
+@@ -579,7 +580,16 @@ impl Session {
+     /// Run command `id`. A panic inside it becomes [`EngineError::Internal`] and leaves the
+     /// presentation as it was.
+     pub fn execute(&mut self, id: &str, params: &Value) -> Result<Value> {
+-        self.guarded(id, |s| s.execute_unguarded(id, params))
++        if self.depth == 0
++            && let Some(why) = office_hook::refusal(id, self)
++        {
++            return Err(EngineError::Disabled(id.into(), why));
++        }
++        let result = self.guarded(id, |s| s.execute_unguarded(id, params));
++        if self.depth == 0 {
++            office_hook::after(id, self, params, &result);
++        }
++        result
+     }
+ 
+     fn execute_unguarded(&mut self, id: &str, params: &Value) -> Result<Value> {
+diff --git a/crates/engine/src/office_hook.rs b/crates/engine/src/office_hook.rs
+new file mode 100644
+index 0000000..b6e54fe
+--- /dev/null
++++ b/crates/engine/src/office_hook.rs
+@@ -0,0 +1,49 @@
++// Added by the office command-hook patch. MIT OR Apache-2.0.
++//! The command-hook seam (PLAN phase 4 section 4): a policy (XDFU restrictions, the snapshot after a save, Phase 5 permissions)
++//! attaches here and sees every command a user action runs. Nothing is attached by default, and then `Session::execute`
++//! behaves exactly as upstream's does.
++//!
++//! Only the outermost command of an action is offered to the hook: commands that run other commands (`depth > 0`) are one
++//! action, so a policy sees `file.export`, not the steps inside it.
++
++use std::sync::{Arc, RwLock};
++
++use serde_json::Value;
++
++use crate::{Result, Session};
++
++/// What a policy can do.
++pub trait CommandHook: Send + Sync {
++    /// A reason to refuse `id`, or `None` to allow it. Asked before the command runs, and by the UI to grey a control out.
++    /// `id` may also be a UI-level name that is no registry command (`file.print`, for the PDF a print opens).
++    fn before(&self, id: &str, s: &Session) -> Option<String> {
++        let _ = (id, s);
++        None
++    }
++    /// The outcome of command `id` once it ran (a failed one too).
++    fn after(&self, id: &str, s: &Session, params: &Value, result: &Result<Value>) {
++        let _ = (id, s, params, result);
++    }
++}
++
++static HOOK: RwLock<Option<Arc<dyn CommandHook>>> = RwLock::new(None);
++
++/// Attach a policy hook, or with `None` remove it.
++pub fn set_hook(hook: Option<Arc<dyn CommandHook>>) {
++    *HOOK.write().unwrap_or_else(|e| e.into_inner()) = hook;
++}
++
++fn hook() -> Option<Arc<dyn CommandHook>> {
++    HOOK.read().unwrap_or_else(|e| e.into_inner()).clone()
++}
++
++/// Why the hook refuses `id` right now (`None`: allowed, or no hook).
++pub fn refusal(id: &str, s: &Session) -> Option<String> {
++    hook()?.before(id, s)
++}
++
++pub(crate) fn after(id: &str, s: &Session, params: &Value, result: &Result<Value>) {
++    if let Some(h) = hook() {
++        h.after(id, s, params, result);
++    }
++}
+diff --git a/crates/engine/tests/office_hook.rs b/crates/engine/tests/office_hook.rs
+new file mode 100644
+index 0000000..774f9f0
+--- /dev/null
++++ b/crates/engine/tests/office_hook.rs
+@@ -0,0 +1,81 @@
++// Added by the office command-hook patch. MIT OR Apache-2.0.
++//! The command-hook seam: a refusing hook stops a command, the after-hook sees a save, and with no hook (or one that allows
++//! everything) a command's result is byte-identical. The hook is process-wide, so the tests take turns.
++#![allow(clippy::unwrap_used, clippy::expect_used)]
++
++use std::sync::{Arc, Mutex};
++
++use deckcraft_engine::office_hook::{self, CommandHook};
++use deckcraft_engine::{Result, Session};
++use serde_json::{Value, json};
++
++static TURN: Mutex<()> = Mutex::new(());
++
++struct Recorder {
++    refuse: &'static [&'static str],
++    seen: Mutex<Vec<(String, bool)>>,
++}
++
++impl CommandHook for Recorder {
++    fn before(&self, id: &str, _: &Session) -> Option<String> {
++        self.refuse.contains(&id).then(|| "refused by policy".to_string())
++    }
++    fn after(&self, id: &str, _: &Session, _: &Value, result: &Result<Value>) {
++        self.seen.lock().unwrap().push((id.to_string(), result.is_ok()));
++    }
++}
++
++fn recorder(refuse: &'static [&'static str]) -> Arc<Recorder> {
++    Arc::new(Recorder { refuse, seen: Mutex::default() })
++}
++
++fn temp(name: &str) -> String {
++    std::env::temp_dir().join(format!("deckcraft-hook-{}-{name}", std::process::id())).to_string_lossy().to_string()
++}
++
++#[test]
++fn hook_refuses_print() {
++    let _turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
++    let hook = recorder(&["file.export"]);
++    office_hook::set_hook(Some(hook.clone()));
++    let mut s = Session::with_new();
++    let path = temp("print.pdf");
++    let err = s.execute("file.export", &json!({"path": path, "format": "pdf"})).unwrap_err();
++    assert!(err.to_string().contains("refused by policy"), "{err}");
++    assert!(!std::path::Path::new(&path).exists(), "the refused export wrote a file");
++    assert_eq!(office_hook::refusal("file.export", &s).as_deref(), Some("refused by policy"));
++    // Other commands run, and the hook saw them.
++    s.execute("slide.new", &json!({})).unwrap();
++    assert!(hook.seen.lock().unwrap().iter().any(|(id, ok)| id == "slide.new" && *ok));
++    office_hook::set_hook(None);
++    assert!(office_hook::refusal("file.export", &s).is_none());
++    let _ = std::fs::remove_file(path);
++}
++
++#[test]
++fn hook_sees_save() {
++    let _turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
++    let hook = recorder(&[]);
++    office_hook::set_hook(Some(hook.clone()));
++    let mut s = Session::with_new();
++    let path = temp("save.pptx");
++    s.execute("file.save", &json!({"path": path})).unwrap();
++    office_hook::set_hook(None);
++    assert!(hook.seen.lock().unwrap().iter().any(|(id, ok)| id == "file.save" && *ok), "{:?}", hook.seen.lock().unwrap());
++    assert!(std::path::Path::new(&path).exists());
++    let _ = std::fs::remove_file(path);
++}
++
++#[test]
++fn without_a_hook_nothing_changes() {
++    let _turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
++    let bytes = |s: &mut Session| s.execute("file.saveBytes", &json!({"format": "pptx"})).unwrap();
++    let mut s = Session::with_new();
++    s.execute("insert.textBox", &json!({"text": "Salom"})).ok();
++    office_hook::set_hook(None);
++    let plain = bytes(&mut s);
++    office_hook::set_hook(Some(recorder(&[])));
++    let hooked = bytes(&mut s);
++    office_hook::set_hook(None);
++    assert_eq!(plain, hooked);
++}
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index c2a3791..e6205f7 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -778,6 +778,10 @@ impl SlideApp {
+     /// on the web. `extra` adds `file.export` params (the PDF's layout, slides…). The
+     /// presentation keeps its own file. Returns whether a file was written or handed over.
+     pub fn export_as(&mut self, fmt: &str, extra: Value) -> bool {
++        if let Some(why) = deckcraft_engine::office_hook::refusal("file.export", &self.session) {
++            self.set_status(why);
++            return false;
++        }
+         let Some(slide) = self.session.active().map(|d| d.selection.slide) else { return false };
+         let (ext, format, all) = match fmt {
+             "pdf" => ("pdf", "pdf", false),
+@@ -850,6 +854,10 @@ impl SlideApp {
+     /// layout, slides and options) is written to the temporary folder and opened in the system's
+     /// PDF viewer, which has the printers; on the web it downloads.
+     pub fn print_pdf(&mut self, params: Value) -> bool {
++        if let Some(why) = deckcraft_engine::office_hook::refusal("file.print", &self.session) {
++            self.set_status(why);
++            return false;
++        }
+         let Some((title, doc)) = self.session.active().map(|d| (d.title(), d.doc.clone())) else { return false };
+         let mut params = if params.is_object() { params } else { json!({}) };
+         if self.services.pick_save.is_none() {
+@@ -1328,6 +1336,10 @@ impl SlideApp {
+     }
+ 
+     pub fn save_as_dialog(&mut self, format: &str) {
++        if let Some(why) = deckcraft_engine::office_hook::refusal("file.saveAs", &self.session) {
++            self.set_status(why);
++            return;
++        }
+         let name = self.session.active().map(|d| d.title()).unwrap_or_else(|| "Presentation".into());
+         let ext = if format == "pptx" { "pptx" } else { "deckcraft" };
+         let suggested = format!("{name}.{ext}");
+diff --git a/crates/ui-egui/src/office_toolbar_tests.rs b/crates/ui-egui/src/office_toolbar_tests.rs
+index 347a0e4..f391b27 100644
+--- a/crates/ui-egui/src/office_toolbar_tests.rs
++++ b/crates/ui-egui/src/office_toolbar_tests.rs
+@@ -144,3 +144,19 @@ fn evidence_screenshots() {
+         png(&mut h, &format!("slides-{mode}-uz-latn-1366.png"));
+     }
+ }
++
++/// A policy that refuses printing greys it out in the code path the Print page uses.
++#[test]
++fn hook_refuses_print() {
++    struct NoPrint;
++    impl deckcraft_engine::office_hook::CommandHook for NoPrint {
++        fn before(&self, id: &str, _: &Session) -> Option<String> {
++            (id == "file.print").then(|| "Printing is off".to_string())
++        }
++    }
++    let mut app = SlideApp::new(Session::with_new(), Services::default());
++    deckcraft_engine::office_hook::set_hook(Some(std::sync::Arc::new(NoPrint)));
++    let printed = app.print_pdf(json!({}));
++    deckcraft_engine::office_hook::set_hook(None);
++    assert!(!printed);
++}
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 9d0acf6..76fcb53 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -42,7 +42,7 @@ pub fn known(id: &str) -> bool {
+ 
+ pub fn enabled(app: &SlideApp, id: &str) -> bool {
+     match deckcraft_engine::find_command(id) {
+-        Some(c) => (c.enabled)(&app.session).is_ok(),
++        Some(c) => (c.enabled)(&app.session).is_ok() && deckcraft_engine::office_hook::refusal(id, &app.session).is_none(),
+         None => crate::UI_COMMANDS.iter().any(|c| c.0 == id),
+     }
+ }
