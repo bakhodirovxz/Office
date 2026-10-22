@@ -1162,3 +1162,10 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Templates:** five synthetic Uzbek starters in `web/shell/templates/` (buyruq, xizmat xati, tabel, xodimlar ro'yxati, taqdimot) made by `scripts/gen-templates.py`; the names and text are `draft:agent-sonnet:2026-10-23`, not yet reviewed.
 - **Desktop host and shell:** `settings_get`/`settings_set` read and write the shared file; the page may set `lang`, `toolbar` and `latin_alphabet` only, with value checks. The shell treats `lang = auto` as "follow the browser" and shows `uz-Latn-2026` with the `uz-Latn` catalog until WP16.
 - Open: the apps' own start-up reading of the shared values (the per-app lanes and WP6), the installer's single font copy, a settings page in the shell.
+
+### Phase 4 Slides lane (WP3, WP4, WP6, WP8; 2026-10-23)
+- **Patches** deckcraft 0002 (web host bridge), 0140 (simplified toolbar, Fluent icons as 19 alpha masks), 0141 (command hook), 0142 (shared dictionaries folder); REGISTER rows added, `verify-queue.sh deckcraft` and `cargo xt register check` green.
+- **Bridge:** `deckcraft:ready/open/opened/requestSave/save/dirty/failed`, parent-only and same-origin checked; `ci/web-smoke/bridge-slides.spec.ts` 9/9 three runs in a row; shell Slides round trip passes.
+- **Wasm:** slides brotli 9,492,465 B; the SVG loader (+309 KB) cannot fit 19,944 B of headroom, so bitmaps. `delta_br_max` 163,840 to 196,608 (measured delta +164,856 + 10%, rule of budgets.toml): `docs/phase4/icons-slides.md`.
+- **Spell crash:** 0 of 25 GUI runs crashed, quarantine stays: `docs/phase4/spell-crash.md`. Dictionaries en_US, ru_RU shipped (`assets/dictionaries`, `docs/phase4/licences.md`).
+- Not run: full `ci.sh quick` and `ci.sh test deckcraft` (build slots busy); only the new tests ran (14 of 14 pass).
