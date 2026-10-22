@@ -2,6 +2,18 @@
 
 > **Owner decisions and requirements in force (gathered 2026-10-15 … 2026-10-22)**
 > - **Phase 3 gate passed 2026-10-22** ("go"). Carry-forward: `docs/phase3/gate-review.md` §10.6.
+> - **Owner answers to §9 questions, 2026-10-22:**
+>   - **Q10, MSVC: yes.** Install VS Build Tools and the Windows SDK under the **Visual Studio Community** licence
+>     terms for open-source development. Put it on E: where possible.
+>   - **Q4, signing: internal now, public later.** The pilot uses the organisation's internal (enterprise CA)
+>     code-signing certificate, trusted through GPO. A public OV certificate on a hardware token is for the Phase 10
+>     release; procurement starts now. Both certificates are owner/IT items.
+>   - **Q2, default handlers: none for now.** The MSI only registers our apps under "Open with" (§7.2) and changes
+>     no defaults. The GPO default-association XML is still produced and documented as an optional artefact, but it is
+>     not deployed.
+>   - **Q11, offline converter: yes.** The installer ships the four domain CLIs (about +224 MB), so the converter
+>     works without a server.
+>   - **Q7 (O8):** not answered, so the default stays the native PDF → DOCX engine, with the D5 fallback.
 > - **Replace MS Office on Windows 10/11 office PCs, Office 2010+ files** (STATUS "Owner acceptance criteria"). Phase 4
 >   delivers the installable suite: one installer, our own ProgIDs, the **"Open with"** registration, a GPO
 >   default-association XML, and a **signed MSVC** build. The certificate is an owner item.
