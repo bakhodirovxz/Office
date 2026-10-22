@@ -30,10 +30,6 @@ impl Dialog {
 }
 
 fn title(id: &str) -> &'static str {
-    crate::i18n::t(upstream_title(id))
-}
-
-fn upstream_title(id: &str) -> &'static str {
     match id {
         "table" => "Insert Table",
         "slideSize" => "Slide Size",
@@ -132,14 +128,12 @@ fn buttons(ui: &mut Ui, ok_label: &str) -> (bool, bool) {
     ui.add_space(8.0);
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         let t = Tokens::get(ui.ctx());
-        if ui
-            .add(egui::Button::new(egui::RichText::new(crate::i18n::t(ok_label)).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)))
-            .clicked()
+        if ui.add(egui::Button::new(egui::RichText::new(ok_label).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0))).clicked()
             || ui.input(|i| i.key_pressed(egui::Key::Enter))
         {
             ok = true;
         }
-        if ui.add(egui::Button::new(crate::i18n::t("Cancel")).min_size(vec2(72.0, 24.0))).clicked() {
+        if ui.add(egui::Button::new("Cancel").min_size(vec2(72.0, 24.0))).clicked() {
             cancel = true;
         }
     });
@@ -174,7 +168,7 @@ fn restore_preferences(app: &mut SlideApp, d: &Dialog) {
 fn field(ui: &mut Ui, d: &mut Dialog, label: &str, key: &str, default: &str) {
     let mut v = d.get(key, default);
     ui.horizontal(|ui| {
-        ui.add_sized(vec2(120.0, 20.0), egui::Label::new(crate::i18n::t(label)));
+        ui.add_sized(vec2(120.0, 20.0), egui::Label::new(label));
         ui.add(egui::TextEdit::singleline(&mut v).desired_width(180.0));
     });
     d.fields.insert(key.into(), v);
@@ -471,14 +465,7 @@ fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         check(ui, d, "Captions under pictures", "captions", false);
         check(ui, d, "ALL pictures black and white", "grayscale", false);
         ui.label("Album theme");
-        album_choice(
-            ui,
-            d,
-            "album_theme",
-            "theme",
-            "DeckCraft",
-            &ALBUM_THEMES.iter().map(|n| (*n, crate::office_overlay::rebrand(n))).collect::<Vec<_>>(),
-        );
+        album_choice(ui, d, "album_theme", "theme", "DeckCraft", &ALBUM_THEMES.iter().map(|n| (*n, *n)).collect::<Vec<_>>());
     });
     let captions = d.fields.get("captions").is_some_and(|v| v == "1");
     let grayscale = d.fields.get("grayscale").is_some_and(|v| v == "1");
@@ -1606,6 +1593,18 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     d.fields.insert("pdfHidden".into(), hidden.to_string());
                 }
             }
+            let png = matches!(fmt.as_str(), "png" | "pngAll");
+            if png {
+                ui.add_space(4.0);
+                let mut clear = d.get("pngTransparent", "false") == "true";
+                if ui
+                    .checkbox(&mut clear, "Transparent background")
+                    .on_hover_text("Leave the slide background out: only what is on the slide is drawn")
+                    .changed()
+                {
+                    d.fields.insert("pngTransparent".into(), clear.to_string());
+                }
+            }
             let gif_params = if fmt == "gif" { gif_options(app, ui, d) } else { Ok(Value::Null) };
             if let Err(e) = &gif_params {
                 ui.label(egui::RichText::new(e).color(Tokens::get(ui.ctx()).text_dim));
@@ -1631,6 +1630,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 let extra = match fmt.as_str() {
                     "pdf" => pdf_params,
                     "gif" => gif_params,
+                    _ if png && d.get("pngTransparent", "false") == "true" => json!({"transparentBackground": true}),
                     _ => json!({}),
                 };
                 app.export_as(&fmt, extra);
@@ -2083,7 +2083,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             let tab = d.get("tab", "about");
             ui.horizontal(|ui| {
                 for (k, l) in [("about", "About"), ("contributors", "Contributors"), ("models", "Models")] {
-                    if ui.selectable_label(tab == k, crate::i18n::t(l)).clicked() {
+                    if ui.selectable_label(tab == k, l).clicked() {
                         d.fields.insert("tab".into(), k.into());
                     }
                 }
@@ -2108,6 +2108,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             ui.checkbox(&mut pr.ac_days, "Capitalize names of days");
             ui.checkbox(&mut pr.ac_caps_lock, "Correct accidental use of cAPS LOCK key");
             ui.checkbox(&mut pr.ac_fractions, "Replace fractions (1/2) with fraction characters (½)");
+            ui.checkbox(&mut pr.ac_ordinals, "Ordinals (1st) with superscript");
             ui.checkbox(&mut pr.autocorrect, "Replace text as you type");
             ui.add_space(4.0);
             let mut from = d.get("from", "");
@@ -2620,29 +2621,17 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
     ui.vertical_centered(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
         paint_logo(ui.painter(), r);
-        ui.label(egui::RichText::new(crate::office_overlay::app_name()).font(theme::bold(22.0)));
+        ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
         ui.add_space(6.0);
-        ui.label(crate::i18n::t("Presentations and slide shows, rebuilt from scratch in pure Rust."));
-        ui.label(crate::i18n::t("An open-source, clean-room project. Not affiliated with Microsoft."));
-        if !crate::office_overlay::attribution().is_empty() {
-            ui.label(crate::office_overlay::attribution());
-        }
+        ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
+        ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
         ui.add_space(6.0);
-        if crate::office_overlay::COMMUNITY {
-            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-        }
-        if crate::office_overlay::UPSTREAM_LINKS {
-            ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
-        }
+        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
         ui.add_space(6.0);
-        let copyright = if crate::office_overlay::ACTIVE {
-            crate::office_overlay::COPYRIGHT
-        } else {
-            "MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors"
-        };
-        ui.label(egui::RichText::new(copyright).size(11.0).color(t.text_faint));
+        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
     });
 }
 
@@ -2650,7 +2639,7 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
 /// from `[workspace.package] version` (the single source of truth, `cargo xtask version`); the
 /// release workflow sets `DECKCRAFT_BUILD_SHA` / `DECKCRAFT_BUILD_DATE` at build time.
 pub fn version_line() -> String {
-    let mut s = format!("Version {}", crate::office_overlay::VERSION);
+    let mut s = format!("Version {}", env!("CARGO_PKG_VERSION"));
     let sha = option_env!("DECKCRAFT_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
     let date = option_env!("DECKCRAFT_BUILD_DATE").filter(|s| !s.is_empty());
     match (sha, date) {
@@ -2663,12 +2652,6 @@ pub fn version_line() -> String {
 
 /// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
 pub fn paint_logo(p: &egui::Painter, r: Rect) {
-    if crate::office_overlay::paint_logo(p, r) {
-        return;
-    }
-    if crate::office_overlay::paint_logo(p, r) {
-        return;
-    }
     let orange = Color32::from_rgb(0xF2, 0x6B, 0x1D);
     let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
     let card = r.shrink(r.width() * 0.08);
@@ -3248,7 +3231,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 p["with"] = json!(d.get("with", ""));
                 let msg = match app.session.execute("text.replace", &p) {
                     Ok(v) => format!("Replaced {} occurrence(s).", v.get("replaced").and_then(Value::as_u64).unwrap_or(0)),
-                    Err(_) => format!("{} can't find “{text}”.", crate::office_overlay::app_name()),
+                    Err(_) => format!("DeckCraft can't find “{text}”."),
                 };
                 d.fields.insert("status".into(), msg);
                 d.fields.remove("cur");
@@ -3263,7 +3246,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     if find_next {
         let list = app.session.execute("text.find", &q).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
         if list.is_empty() {
-            d.fields.insert("status".into(), format!("{} can't find “{text}”.", crate::office_overlay::app_name()));
+            d.fields.insert("status".into(), format!("DeckCraft can't find “{text}”."));
             d.fields.remove("cur");
         } else {
             let n = d.get("next", "0").parse::<usize>().unwrap_or(0) % list.len();
@@ -3460,6 +3443,47 @@ mod tests {
         assert!(bytes.starts_with(b"GIF89a"));
         assert_eq!(u16::from_le_bytes([bytes[6], bytes[7]]), 960, "medium by default");
         assert!(!bytes.windows(11).any(|w| w == b"NETSCAPE2.0"), "Loop forever unticked: plays once");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The Export… dialog offers "Transparent background" for PNG only, and the picture it
+    /// writes then leaves the slide background out (#784).
+    #[test]
+    fn export_dialog_writes_a_png_with_a_transparent_background() {
+        use egui::vec2;
+        use egui_kittest::kittest::Queryable as _;
+        use serde_json::json;
+
+        use crate::SlideApp;
+        let dir = std::env::temp_dir().join(format!("deckcraft-ui-png-clear-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("slide.png");
+        let picked = path.to_string_lossy().to_string();
+        let services = crate::Services { pick_save: Some(Box::new(move |_: &str| Some(picked.clone()))), ..Default::default() };
+        let mut harness = egui_kittest::Harness::builder().with_size(vec2(1200.0, 900.0)).build_ui_state(
+            |ui, app: &mut SlideApp| {
+                app.logic(ui.ctx());
+                app.ui(ui);
+            },
+            SlideApp::new(deckcraft_engine::Session::with_new(), services),
+        );
+        harness.run_steps(2);
+        harness.state_mut().run("app.exportDialog", json!({})).unwrap();
+        harness.run_steps(2);
+        assert!(harness.query_by_label("Transparent background").is_none(), "PDF has no transparent background");
+        harness.get_by_label("JPEG image (current slide)").click_accesskit();
+        harness.run_steps(2);
+        assert!(harness.query_by_label("Transparent background").is_none(), "nor has JPEG");
+        harness.get_by_label("PNG images (current slide)").click_accesskit();
+        harness.run_steps(2);
+        harness.get_by_label("Transparent background").click_accesskit();
+        harness.run_steps(2);
+        assert_eq!(harness.state().dialog.as_ref().and_then(|d| d.fields.get("pngTransparent")).map(String::as_str), Some("true"));
+        harness.key_press(egui::Key::Enter);
+        harness.run_steps(2);
+        assert!(harness.state().dialog.is_none(), "the dialog closes after exporting");
+        let img = deckcraft_render::decode_image(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!(img.get_pixel(2, 2).0[3], 0, "the background is left out");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

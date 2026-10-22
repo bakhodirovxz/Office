@@ -44,12 +44,7 @@ pub fn instance_id() -> u64 {
     *ID.get_or_init(|| {
         use std::hash::{BuildHasher, Hasher};
         let mut h = std::collections::hash_map::RandomState::new().build_hasher();
-        // std::process::id() panics on wasm32-unknown-unknown ("no pids on this platform"): the web app never started.
-        #[cfg(not(target_arch = "wasm32"))]
-        let pid = std::process::id();
-        #[cfg(target_arch = "wasm32")]
-        let pid = 0;
-        h.write_u32(pid);
+        h.write_u32(std::process::id());
         #[cfg(not(target_arch = "wasm32"))]
         if let Ok(d) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
             h.write_u128(d.as_nanos());
@@ -316,7 +311,10 @@ mod tests {
         let opened = open(&mut s2, &dir).unwrap();
         assert!(s2.documents().iter().all(|d| d.uid != uid), "{opened:?}");
         assert!(lock_path(&dir, other).exists(), "a live owner's lock stays");
-        // Once the owner is gone, its entry is recovered and its lock file cleaned up.
+        // Once the owner is gone, its entry is recovered and its lock file cleaned up. Unlock
+        // rather than only drop: a child spawned meanwhile by a parallel test (mkfifo) shares the
+        // open file and would keep the lock held until it execs.
+        lock.unlock().unwrap();
         drop(lock);
         let mut s3 = Session::new();
         open(&mut s3, &dir).unwrap();

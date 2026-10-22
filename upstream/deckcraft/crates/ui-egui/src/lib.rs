@@ -6,30 +6,6 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
-/// An engine message that is a filled-in `{n}` template, shown in the interface language; any other text comes back as it is.
-fn localize_message(text: String) -> String {
-    for template in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
-        let Some((head, tail)) = template.split_once("{n}") else { continue };
-        if let Some(n) = text.strip_prefix(head).and_then(|r| r.strip_suffix(tail)).filter(|n| n.parse::<usize>().is_ok()) {
-            return i18n::t(template).replace("{n}", n);
-        }
-    }
-    text
-}
-
-/// The status line for a transliteration command's result.
-fn translit_status(v: &Value) -> String {
-    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
-    let done = n(v.get("paragraphs"));
-    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
-    let mut m =
-        if done == 0 { i18n::t("Nothing to convert").to_string() } else { i18n::t("{n} paragraphs converted").replace("{n}", &done.to_string()) };
-    if skipped > 0 {
-        m += &format!(". {}", i18n::t("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
-    }
-    m
-}
-
 pub mod animtimeline;
 pub mod backstage;
 pub mod canvas;
@@ -39,12 +15,10 @@ pub mod dialogs;
 pub mod doc_window;
 pub mod eyedropper;
 pub mod fillui;
-pub mod i18n;
 pub mod icons;
 pub mod media;
 pub mod menus;
 pub mod notes;
-pub mod office_overlay;
 pub mod opening;
 pub mod panes;
 mod preview;
@@ -217,7 +191,7 @@ fn command_for(purpose: FilePurpose, name: &str, bytes: &[u8]) -> Result<&'stati
         FilePurpose::Open => open_command(name),
         FilePurpose::Infer => infer_command(name, bytes),
     };
-    cmd.ok_or_else(|| format!("{name}: {} can't open this kind of file", office_overlay::app_name()))
+    cmd.ok_or_else(|| format!("{name}: DeckCraft can't open this kind of file"))
 }
 
 /// How long a transient status message stays visible.
@@ -300,8 +274,6 @@ pub struct UiState {
     pub comment_focus: Option<(usize, usize)>,
     /// Quick Access Toolbar buttons, left to right.
     pub qat: Vec<qat::QatItem>,
-    /// The interface language: `auto` or a code of [`i18n::LANGUAGES`].
-    pub language: String,
 }
 
 impl Default for UiState {
@@ -333,7 +305,6 @@ impl Default for UiState {
             grayscale: false,
             comment_focus: None,
             qat: qat::defaults(),
-            language: i18n::AUTO.into(),
         }
     }
 }
@@ -424,7 +395,6 @@ pub const UI_COMMANDS: &[(&str, &str, Option<&str>, &str)] = &[
     ("app.about", "About DeckCraft", None, "{}"),
     ("app.palette", "Command Palette", Some("Cmd+Shift+P"), "{}"),
     ("app.preferences", "Preferences…", Some("Cmd+,"), "{}"),
-    ("app.language.set", "Interface Language", None, "{language}"),
     ("app.openDialog", "Open…", None, "{purpose?}"),
     ("app.insertPictureDialog", "Picture from File…", None, "{}"),
     ("app.smartArtPictureDialog", "Insert Picture in SmartArt…", None, "{id?, index}"),
@@ -526,6 +496,8 @@ pub struct SlideApp {
     pub(crate) thumb_drag: Option<(usize, usize)>,
     /// Selection pane: folded groups, renaming, drag and drop.
     pub selpane: selpane::State,
+    /// Arrange ▸ Align: Align to Slide (`true`) or Align Selected Objects, ticked for that selection.
+    pub(crate) align_to: Option<(Vec<deckcraft_model::ShapeId>, bool)>,
     /// View › New Window: a second window on one presentation. `None` when it is closed.
     pub doc_window: Option<doc_window::DocWindow>,
     /// Slide Sorter: folded sections, inline rename, dragging a whole section.
@@ -602,6 +574,7 @@ impl SlideApp {
             ui_fonts: uifonts::UiFonts::default(),
             thumb_drag: None,
             selpane: selpane::State::default(),
+            align_to: None,
             doc_window: None,
             sorter: sorter::State::default(),
             slides_focused: false,
@@ -694,7 +667,6 @@ impl SlideApp {
                     self.pending_copy = Some(t.to_string());
                 }
             }
-            Ok(v) if id.starts_with("tools.translit") => self.set_status(translit_status(v)),
             Ok(_) => {}
             Err(e) => self.set_status(e.clone()),
         }
@@ -775,7 +747,7 @@ impl SlideApp {
             "deckcraft" => ("deckcraft", "deckcraft", false),
             "gif" => ("gif", "gif", false),
             other => {
-                self.set_status(format!("{} can't export “{other}”", office_overlay::app_name()));
+                self.set_status(format!("DeckCraft can't export “{other}”"));
                 return false;
             }
         };
@@ -800,7 +772,8 @@ impl SlideApp {
                 // Every slide for "all slides", one download each, named like the desktop export (#64).
                 let name = self.session.active().map(|d| d.title()).unwrap_or_else(|| "Presentation".into());
                 let mut any = false;
-                for (file, bytes) in web_image_files(&doc, slide, all, &name, ext) {
+                let transparent = extra.get("transparentBackground").and_then(Value::as_bool).unwrap_or(false);
+                for (file, bytes) in web_image_files(&doc, slide, all, &name, ext, transparent) {
                     any = self.download(&file, Ok(bytes)) || any;
                 }
                 return any;
@@ -1029,10 +1002,6 @@ impl SlideApp {
                 return Ok(json!({"printed": self.print_pdf(p.clone())}));
             }
             "app.about" => self.dialog = Some(dialogs::Dialog::new("about")),
-            "app.language.set" => {
-                let code = p.get("language").and_then(Value::as_str).and_then(i18n::normalize_pref).ok_or("missing or unknown `language`")?;
-                self.ui.language = code.into();
-            }
             "app.palette" => self.palette = Some((String::new(), 0)),
             "app.preferences" => self.dialog = Some(dialogs::Dialog::new("preferences")),
             "app.openDialog" => self.pick_and_open(),
@@ -1085,9 +1054,6 @@ impl SlideApp {
             }
             "app.links" => {
                 use deckcraft_engine::links::*;
-                if !(office_overlay::COMMUNITY || office_overlay::UPSTREAM_LINKS) {
-                    return Ok(json!({}));
-                }
                 return Ok(json!({"discord": DISCORD, "website": WEBSITE, "apps": APPS, "appPage": APP_PAGE, "github": GITHUB}));
             }
             _ => return Err(format!("unknown UI command `{id}`")),
@@ -1222,6 +1188,26 @@ impl SlideApp {
         Ok(())
     }
 
+    /// Files the system hands over (the command line, a double-click through the file
+    /// association), opened in order. When the last one is a PowerPoint Show (`.ppsx`), its slide
+    /// show starts at once from where Play from Start begins, as PowerPoint does; anything else
+    /// opens for editing, and File › Open opens a `.ppsx` for editing too. Returns the files that
+    /// couldn't be opened, with the reason.
+    pub fn open_from_system(&mut self, paths: &[String]) -> Vec<(String, String)> {
+        let mut failed = Vec::new();
+        let mut last = None;
+        for p in paths {
+            match self.open_path(p) {
+                Ok(()) => last = Some(p),
+                Err(e) => failed.push((p.clone(), e)),
+            }
+        }
+        if last.is_some_and(|p| p.to_ascii_lowercase().ends_with(".ppsx")) {
+            self.start_show(self.show_start_index(), false);
+        }
+        failed
+    }
+
     /// A presentation was opened from `path`: first in the recent list, shown in Normal view.
     pub(crate) fn note_recent(&mut self, path: &str) {
         self.status = None; // an older error (a missing file just before this one) must not linger
@@ -1353,7 +1339,7 @@ impl SlideApp {
                 }
                 UiRequest::Pane { id } => self.ui.pane = Some(id),
                 UiRequest::StartShow { from } => self.start_show(from, false),
-                UiRequest::Message { text } => self.set_status(localize_message(text)),
+                UiRequest::Message { text } => self.set_status(text),
                 UiRequest::PickFile { purpose } => {
                     if purpose == "saveAs" {
                         self.save_as_dialog("deckcraft");
@@ -1815,7 +1801,6 @@ impl SlideApp {
             ctx.request_repaint();
             return;
         }
-        i18n::set_current(i18n::from_pref(&self.ui.language));
         let t0 = now_ms();
         let t = theme::Tokens::get(&ctx);
         self.tick_media(&ctx);
@@ -2026,8 +2011,16 @@ pub fn now_ms() -> f64 {
 }
 
 /// Images for the browser download: the current slide, or every slide (named `<name>1.png`,
-/// `<name>2.png`... like the native export) when `all`.
-fn web_image_files(doc: &deckcraft_model::Presentation, current: usize, all: bool, name: &str, ext: &str) -> Vec<(String, Vec<u8>)> {
+/// `<name>2.png`... like the native export) when `all`. `transparent` leaves the slide
+/// background out (PNG only, #784).
+fn web_image_files(
+    doc: &deckcraft_model::Presentation,
+    current: usize,
+    all: bool,
+    name: &str,
+    ext: &str,
+    transparent: bool,
+) -> Vec<(String, Vec<u8>)> {
     let slides: Vec<usize> = if all { (0..doc.slides.len()).collect() } else { vec![current] };
     let single = slides.len() == 1;
     let scale = 2.0;
@@ -2036,7 +2029,8 @@ fn web_image_files(doc: &deckcraft_model::Presentation, current: usize, all: boo
         .into_iter()
         .enumerate()
         .map(|(k, i)| {
-            let img = deckcraft_render::render_slide(doc, i, &deckcraft_render::RenderOpts { scale, ..Default::default() });
+            let opts = deckcraft_render::RenderOpts { scale, transparent_background: transparent && ext == "png", ..Default::default() };
+            let img = deckcraft_render::render_slide(doc, i, &opts);
             let bytes = if ext == "png" { img.to_png_at(dpi) } else { img.to_jpeg_at(92, Some(dpi)) };
             let file = if single { format!("{name}.{ext}") } else { format!("{name}{}.{ext}", k + 1) };
             (file, bytes)
@@ -2076,8 +2070,6 @@ mod datetime_tests;
 
 #[cfg(test)]
 mod inbox_tests;
-#[cfg(test)]
-mod office_overlay_tests;
 
 #[cfg(test)]
 mod tests {
@@ -2139,12 +2131,36 @@ mod tests {
             doc.slides.push(first);
         }
         assert_eq!(doc.slides.len(), 3);
-        let all = web_image_files(&doc, 1, true, "Deck", "png");
+        let all = web_image_files(&doc, 1, true, "Deck", "png", false);
         let names: Vec<&str> = all.iter().map(|(n, _)| n.as_str()).collect();
         assert_eq!(names, ["Deck1.png", "Deck2.png", "Deck3.png"]);
-        let one = web_image_files(&doc, 1, false, "Deck", "png");
+        let one = web_image_files(&doc, 1, false, "Deck", "png", false);
         assert_eq!(one.len(), 1);
         assert_eq!(one[0].0, "Deck.png");
+    }
+
+    /// The web PNG download honours "Transparent background" (#784): the slide background is
+    /// left out, so the corner is transparent; a JPEG download stays opaque.
+    #[test]
+    fn web_png_export_can_leave_the_background_transparent() {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+        let got: Rc<RefCell<Vec<(String, Vec<u8>)>>> = Rc::default();
+        let log = got.clone();
+        let services = Services {
+            download: Some(Box::new(move |name: &str, b: &[u8]| log.borrow_mut().push((name.to_string(), b.to_vec())))),
+            ..Default::default()
+        };
+        let mut app = SlideApp::new(Session::with_new(), services);
+        let corner_alpha = |bytes: &[u8]| deckcraft_render::decode_image(bytes).unwrap().get_pixel(2, 2).0[3];
+        assert!(app.export_as("png", json!({})));
+        assert!(app.export_as("png", json!({"transparentBackground": true})));
+        assert!(app.export_as("jpeg", json!({"transparentBackground": true})));
+        let got = got.borrow();
+        assert_eq!(got.len(), 3);
+        assert_eq!(corner_alpha(&got[0].1), 255, "opaque by default");
+        assert_eq!(corner_alpha(&got[1].1), 0, "transparent background");
+        assert_eq!(corner_alpha(&got[2].1), 255, "JPEG has no transparency");
     }
 
     fn title_text(app: &SlideApp) -> String {
