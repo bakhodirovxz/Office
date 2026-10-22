@@ -876,6 +876,12 @@ A Windows Sandbox or VM run counts as one slot; Playwright does not count.
 
 ### WP23. "New user, no instructions" check (owner item: staff)
 - **Goal:** gate item 1 with people (SIZING 4.12).
+- **Owner (2026-10-22): the pilot is tested in the IT department only.** The owner is in IT.
+  - Unsigned binaries and AppLocker/WDAC are not a problem there.
+  - The Win11 and domain test PCs come from IT.
+  - **Limit, stated plainly:** IT staff are not representative of office users. The "no instructions" result
+    therefore overstates ease of use. Record it as such, and repeat the check with 2–3 non-IT office staff before
+    any wider rollout (Phase 5 pilot or Phase 10).
 - **Steps:**
   - a protocol: 5 tasks (a letter, a table with a sum, a 3-slide deck, PDF → Word, find Show/Hide ¶), no help given,
     think-aloud, time and success per task;
