@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:13:13 +0500
-Subject: [PATCH 101/102] ui-egui: turn off upstream community links and show
- the overlay's icon under the overlay
+Subject: [PATCH 03/14] ui-egui: turn off upstream community links and show the
+ overlay's icon under the overlay
 
 With OFFICE_OVERLAY_DIR set at build time: the Discord, website and repository links in About,
 Backstage Home and Account, the Slide Show 'Learn More' group and the app.links answer are gone,
@@ -16,10 +16,10 @@ overlay's icon. Gated on constants from office_overlay; without an overlay the b
  4 files changed, 38 insertions(+), 12 deletions(-)
 
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index f855c45..ff12964 100644
+index 6586b97..77c890a 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
-@@ -735,7 +735,9 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+@@ -738,7 +738,9 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
          });
      }
      ui.add_space(30.0);
@@ -30,7 +30,7 @@ index f855c45..ff12964 100644
  }
  
  /// New: a blank presentation, then every theme and starter template, with a search box.
-@@ -1378,8 +1380,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1388,8 +1390,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
              ) {
                  let _ = app.run("app.about", json!({}));
              }
@@ -46,10 +46,10 @@ index f855c45..ff12964 100644
      });
  }
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index 9071d15..47279b1 100644
+index c770561..e599975 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
-@@ -2627,11 +2627,20 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+@@ -2641,11 +2641,20 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
              ui.label(crate::office_overlay::attribution());
          }
          ui.add_space(6.0);
@@ -74,7 +74,7 @@ index 9071d15..47279b1 100644
      });
  }
  
-@@ -2652,6 +2661,12 @@ pub fn version_line() -> String {
+@@ -2666,6 +2675,12 @@ pub fn version_line() -> String {
  
  /// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
  pub fn paint_logo(p: &egui::Painter, r: Rect) {
@@ -88,10 +88,10 @@ index 9071d15..47279b1 100644
      let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
      let card = r.shrink(r.width() * 0.08);
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 155b139..db3abcd 100644
+index 0b3a686..e796469 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -1051,6 +1051,9 @@ impl SlideApp {
+@@ -1055,6 +1055,9 @@ impl SlideApp {
              }
              "app.links" => {
                  use deckcraft_engine::links::*;
@@ -102,10 +102,10 @@ index 155b139..db3abcd 100644
              }
              _ => return Err(format!("unknown UI command `{id}`")),
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 2045c29..2d4e735 100644
+index 3cdc05e..ee074ef 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
-@@ -2116,11 +2116,13 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
+@@ -2136,11 +2136,13 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
              }
          }
      });

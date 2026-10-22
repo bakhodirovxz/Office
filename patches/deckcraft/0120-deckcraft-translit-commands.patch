@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 12:00:00 +0500
-Subject: [PATCH] translit: Uzbek Latin/Cyrillic commands for slide text and notes (new engine module, uz-translit dependency)
+Subject: [PATCH 10/14] translit: Uzbek Latin/Cyrillic commands for slide text
+ and notes (new engine module, uz-translit dependency)
 
 The command registry is a closed OnceLock (command_specs()), so the three transliteration commands (tools.translitCyrl,
 tools.translitLatn, tools.translitAuto) are a new engine module, crates/engine/src/cmd/translit.rs. It converts the text runs of
@@ -12,15 +13,17 @@ field, break and equation runs are boundaries. One command is one undo step (Ses
  Cargo.lock                        |   5 +
  crates/engine/Cargo.toml          |   2 +
  crates/engine/src/cmd/mod.rs      |   2 +
- crates/engine/src/cmd/translit.rs | 293 ++++++++++++++++++++++++++++++++++++++
- crates/engine/tests/translit.rs   | 273 +++++++++++++++++++++++++++++++++++
+ crates/engine/src/cmd/translit.rs | 293 ++++++++++++++++++++++++++++++
+ crates/engine/tests/translit.rs   | 273 ++++++++++++++++++++++++++++
  5 files changed, 575 insertions(+)
+ create mode 100644 crates/engine/src/cmd/translit.rs
+ create mode 100644 crates/engine/tests/translit.rs
 
 diff --git a/Cargo.lock b/Cargo.lock
-index e2bc796..9a19f30 100644
+index 5f86c9d..4ea23bd 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -972,6 +972,7 @@ dependencies = [
+@@ -973,6 +973,7 @@ dependencies = [
   "serde",
   "serde_json",
   "thiserror 2.0.21",
@@ -28,7 +31,7 @@ index e2bc796..9a19f30 100644
   "zip",
  ]
  
-@@ -4626,6 +4627,10 @@ dependencies = [
+@@ -4627,6 +4628,10 @@ dependencies = [
   "wasm-bindgen",
  ]
  
@@ -650,6 +653,3 @@ index 0000000..d683097
 +        );
 +    }
 +}
--- 
-2.50.0
-

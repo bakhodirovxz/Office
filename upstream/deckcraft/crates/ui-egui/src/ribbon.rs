@@ -75,8 +75,11 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         let has_doc = app.session.active().is_some();
         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
         crate::qat::show(app, &mut child);
-        let title =
-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "DeckCraft".into());
+        let title = app
+            .session
+            .active()
+            .map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" }))
+            .unwrap_or_else(|| crate::office_overlay::app_name().into());
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
         // Right side.
         let mut right = ui.new_child(
@@ -168,14 +171,15 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         let mut x = rect.min.x + 12.0;
         let y = rect.min.y + 2.0;
         {
-            let w = ui.fonts_mut(|f| f.layout_no_wrap("File".to_string(), theme::font(13.0), t.text).size().x) + 18.0;
+            let file = crate::i18n::t("File");
+            let w = ui.fonts_mut(|f| f.layout_no_wrap(file.to_string(), theme::font(13.0), t.text).size().x) + 18.0;
             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
             let resp = ui.interact(r, ui.id().with("tab_file"), Sense::click());
             resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "File"));
             if resp.hovered() {
                 ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
             }
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, "File", theme::font(13.0), t.text);
+            ui.painter().text(r.center(), Align2::CENTER_CENTER, file, theme::font(13.0), t.text);
             if resp.on_hover_text("File (Alt+F)").clicked() {
                 app.open_backstage(crate::backstage::Page::Home);
             }
@@ -184,7 +188,8 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
         for (name, contextual) in all {
             let font = theme::font(13.0);
-            let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 18.0;
+            let shown = crate::i18n::t(name);
+            let w = ui.fonts_mut(|f| f.layout_no_wrap(shown.to_string(), font.clone(), t.text).size().x) + 18.0;
             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
             let resp = ui.interact(r, ui.id().with(("tab", name)), Sense::click());
             let active = app.ui.tab == name;
@@ -193,7 +198,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             }
             let col = if contextual { t.contextual } else { t.text };
             let f = if active { theme::bold(13.0) } else { font };
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, name, f, col);
+            ui.painter().text(r.center(), Align2::CENTER_CENTER, shown, f, col);
             if active {
                 let uw = (w - 20.0).max(16.0);
                 ui.painter().rect_filled(Rect::from_center_size(pos2(r.center().x, r.max.y - 1.0), vec2(uw, 3.0)), CornerRadius::same(1), t.accent);
@@ -252,7 +257,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
 
 fn big(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
     let en = enabled(app, id);
-    let r = big_button(ui, icon, label, en);
+    let r = big_button(ui, icon, crate::i18n::t(label), en);
     if id == "insert.dateTime" {
         let name = label.replace('\n', " ");
         r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, en, &name));
@@ -287,7 +292,7 @@ fn photo_album_button(app: &mut SlideApp, ui: &mut Ui) {
 
 fn small(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
     let en = enabled(app, id);
-    let r = small_button(ui, icon, label, en, false).on_hover_text(tip(id, label));
+    let r = small_button(ui, icon, crate::i18n::t(label), en, false).on_hover_text(tip(id, label));
     if r.clicked() {
         run(app, id, p.clone());
     }
@@ -302,6 +307,7 @@ fn toggle(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, on
 }
 
 fn tip(id: &str, label: &str) -> String {
+    let label = crate::i18n::t(label);
     let sc = deckcraft_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
     match sc {
         Some(s) => format!("{label} ({})", pretty_shortcut(s)),
@@ -763,7 +769,8 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 let r = icon_toggle(ui, Icon::Columns, "Columns", en, false);
                 egui::Popup::menu(&r).show(|ui| {
                     for n in 1..=3 {
-                        if ui.button(format!("{n} Column{}", if n > 1 { "s" } else { "" })).clicked() {
+                        let label = crate::i18n::t(if n > 1 { "{n} Columns" } else { "{n} Column" }).replace("{n}", &n.to_string());
+                        if ui.button(label).clicked() {
                             run(app, "format.columns", json!({"count": n, "spacing": 18}));
                         }
                     }
@@ -1169,9 +1176,16 @@ fn align_to_slide(choice: Option<&(Vec<ShapeId>, bool)>, selection: &[ShapeId]) 
     }
 }
 
+/// Uzbek Latin/Cyrillic transliteration items (ribbon menu and the shape context menu).
+pub fn translit_menu(app: &mut SlideApp, ui: &mut Ui) {
+    menu_item(app, ui, Icon::Language, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
+    menu_item(app, ui, Icon::Language, "Cyrillic to Latin", "tools.translitLatn", json!({}));
+    menu_item(app, ui, Icon::Language, "Auto-detect", "tools.translitAuto", json!({}));
+}
+
 pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
     let en = enabled(app, id);
-    let r = small_button(ui, icon, label, en, false);
+    let r = small_button(ui, icon, crate::i18n::t(label), en, false);
     if r.clicked() {
         run(app, id, p);
         ui.close();
@@ -1495,7 +1509,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
                     paint_theme_tile(p, r, th);
                 }
             },
-            |i| names.get(i).cloned().unwrap_or_default(),
+            |i| names.get(i).map(|n| crate::office_overlay::rebrand(n).to_string()).unwrap_or_default(),
         ) && let Some(n) = names.get(i)
         {
             run(app, "design.theme", json!({"name": n}));
@@ -2133,11 +2147,13 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
             }
         }
     });
-    group(ui, |ui| {
-        if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
-            app.open_url(deckcraft_engine::links::APP_PAGE);
-        }
-    });
+    if crate::office_overlay::UPSTREAM_LINKS {
+        group(ui, |ui| {
+            if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
+                app.open_url(deckcraft_engine::links::APP_PAGE);
+            }
+        });
+    }
 }
 
 fn comment_nav(app: &mut SlideApp, ui: &mut Ui, forward: bool) {
@@ -2169,6 +2185,8 @@ fn review(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Translate, "Translate", false);
         let _ = r.on_hover_text("Translation needs a language model (not bundled)");
         big(app, ui, Icon::Language, "Language", "app.dialog", json!({"id": "language"}));
+        let r = big_button(ui, Icon::Language, crate::i18n::t("Transliterate"), true);
+        egui::Popup::menu(&r).show(|ui| translit_menu(app, ui));
     });
     group(ui, |ui| {
         big(app, ui, Icon::Compare, "Compare", "app.compareDialog", json!({}));
@@ -3037,8 +3055,12 @@ fn table_layout(app: &mut SlideApp, ui: &mut Ui) {
                 toggle(app, ui, Icon::AlignRight, "Align Right", "format.alignRight", false);
             });
             ui.horizontal(|ui| {
-                for (l, a) in [("Top", "top"), ("Center", "middle"), ("Bottom", "bottom")] {
-                    if ui.small_button(l).on_hover_text(format!("Align text to the {l} of the cell").to_lowercase()).clicked() {
+                for (l, a, tip) in [
+                    ("Top", "top", "Align text to the top of the cell"),
+                    ("Center", "middle", "Align text to the center of the cell"),
+                    ("Bottom", "bottom", "Align text to the bottom of the cell"),
+                ] {
+                    if ui.small_button(l).on_hover_text(crate::i18n::t(tip)).clicked() {
                         run(app, "table.cellAlign", json!({"anchor": a}));
                     }
                 }
@@ -3274,7 +3296,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Themes, "Themes", true);
         egui::Popup::menu(&r).show(|ui| {
             for th in deckcraft_model::theme::builtin_themes() {
-                if ui.button(&th.name).clicked() {
+                if ui.button(crate::office_overlay::rebrand(&th.name)).clicked() {
                     run(app, "design.theme", json!({"name": th.name}));
                 }
             }
@@ -3327,7 +3349,8 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Layout, &format!("Slides Per\nPage: {}", app.ui.handout_per_page), true);
         egui::Popup::menu(&r).show(|ui| {
             for n in [1u8, 2, 3, 4, 6, 9] {
-                if ui.selectable_label(app.ui.handout_per_page == n, format!("{n} Slide{}", if n == 1 { "" } else { "s" })).clicked() {
+                let label = crate::i18n::t(if n == 1 { "{n} Slide" } else { "{n} Slides" }).replace("{n}", &n.to_string());
+                if ui.selectable_label(app.ui.handout_per_page == n, label).clicked() {
                     app.ui.handout_per_page = n;
                 }
             }

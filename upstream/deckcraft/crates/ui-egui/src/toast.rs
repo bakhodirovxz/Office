@@ -17,15 +17,21 @@ pub struct Toast {
 
 /// The notice for fonts a presentation uses that aren't installed, or `None` when all are.
 pub fn missing_fonts_message(fonts: &[String]) -> Option<String> {
-    let names = match fonts {
+    let template = match fonts {
         [] => return None,
-        [a] => a.clone(),
-        [a, b] => format!("{a} and {b}"),
-        [a, b, c] => format!("{a}, {b} and {c}"),
-        [a, b, c, rest @ ..] => format!("{a}, {b}, {c} and {} more", rest.len()),
+        [_] => "{a} isn't installed on this computer. Text that uses it is shown in a similar font.",
+        [_, _] => "{a} and {b} aren't installed on this computer. Text that uses them is shown in a similar font.",
+        [_, _, _] => "{a}, {b} and {c} aren't installed on this computer. Text that uses them is shown in a similar font.",
+        _ => "{a}, {b}, {c} and {n} more aren't installed on this computer. Text that uses them is shown in a similar font.",
     };
-    let (it, them) = if fonts.len() == 1 { ("isn't", "it") } else { ("aren't", "them") };
-    Some(format!("{names} {it} installed on this computer. Text that uses {them} is shown in a similar font."))
+    let name = |i: usize| fonts.get(i).map_or("", String::as_str);
+    Some(
+        crate::i18n::t(template)
+            .replace("{a}", name(0))
+            .replace("{b}", name(1))
+            .replace("{c}", name(2))
+            .replace("{n}", &fonts.len().saturating_sub(3).to_string()),
+    )
 }
 
 /// Toast the active presentation's missing fonts, once per opened document.
@@ -90,5 +96,15 @@ mod tests {
         assert!(f(&["Aptos", "Sora"]).unwrap().starts_with("Aptos and Sora aren't installed"));
         assert!(f(&["A", "B", "C"]).unwrap().starts_with("A, B and C aren't"));
         assert!(f(&["A", "B", "C", "D", "E"]).unwrap().starts_with("A, B, C and 2 more aren't"));
+    }
+
+    #[test]
+    fn engine_count_templates_are_matched_and_other_messages_pass_through() {
+        for tpl in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
+            let text = tpl.replace("{n}", "12").replace("{m}", "3");
+            assert_eq!(crate::localize_message(text.clone()), text);
+            assert_eq!(crate::fill_template(tpl, &text.replace("12", "x")), None);
+        }
+        assert_eq!(crate::localize_message("Saved".into()), "Saved");
     }
 }

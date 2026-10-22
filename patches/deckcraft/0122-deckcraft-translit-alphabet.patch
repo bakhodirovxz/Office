@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 23:40:28 +0500
-Subject: [PATCH] engine: latinAlphabet param for the transliteration commands
+Subject: [PATCH 12/14] engine: latinAlphabet param for the transliteration
+ commands
 
 The three tools.translit* commands accept latinAlphabet "1995" (default), "2026" or "auto" and pass it to uz-translit, so
 Slides can write and read the pending 2026 Latin alphabet. Test: 2026 output and a refused value.

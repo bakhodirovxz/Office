@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:12:56 +0500
-Subject: [PATCH 100/102] ui-egui, app: office overlay hook (name, icon,
- version, attribution)
+Subject: [PATCH 02/14] ui-egui, app: office overlay hook (name, icon, version,
+ attribution)
 
 Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
 OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window and
@@ -45,10 +45,10 @@ index dabad8a..809ad67 100644
          }
      });
 diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
-index ef80daa..bd5e16b 100644
+index e40804b..146ae5f 100644
 --- a/apps/deckcraft/src/main.rs
 +++ b/apps/deckcraft/src/main.rs
-@@ -104,7 +104,7 @@ fn services() -> Services {
+@@ -105,7 +105,7 @@ fn services() -> Services {
                  "theme" => d.add_filter("Themes and presentations", &["thmx", "pptx", "potx", "ppsx"]).add_filter("Office Theme", &["thmx"]),
                  _ => d
                      .add_filter("Presentations", &["deckcraft", "pptx", "potx", "ppsx"])
@@ -57,7 +57,7 @@ index ef80daa..bd5e16b 100644
                      .add_filter("PowerPoint", &["pptx", "potx", "ppsx"])
                      .add_filter("Outline", &["txt", "md"]),
              };
-@@ -163,7 +163,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
+@@ -166,7 +166,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
  
  fn app_icon() -> Option<egui::IconData> {
      let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png");
@@ -66,7 +66,7 @@ index ef80daa..bd5e16b 100644
  }
  
  fn main() -> eframe::Result {
-@@ -177,7 +177,7 @@ fn main() -> eframe::Result {
+@@ -180,7 +180,7 @@ fn main() -> eframe::Result {
                  return Ok(());
              }
              Startup::Version => {
@@ -75,7 +75,7 @@ index ef80daa..bd5e16b 100644
                  return Ok(());
              }
              Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
-@@ -197,7 +197,7 @@ fn main() -> eframe::Result {
+@@ -200,7 +200,7 @@ fn main() -> eframe::Result {
      }
      let mut options = eframe::NativeOptions {
          viewport: egui::ViewportBuilder::default()
@@ -237,10 +237,10 @@ index 0000000..25444ee
 +    o
 +}
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index f7bfe25..f855c45 100644
+index 999900d..6586b97 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
-@@ -487,6 +487,7 @@ fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
+@@ -490,6 +490,7 @@ fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
  
  /// A new-presentation tile: a theme preview drawn in code (or a blank slide) over its name.
  fn tile(ui: &mut Ui, label: &str, theme: Option<&deckcraft_model::Theme>, big: bool) -> egui::Response {
@@ -248,7 +248,7 @@ index f7bfe25..f855c45 100644
      let t = Tokens::get(ui.ctx());
      let thumb_w = if big { 200.0 } else { 160.0 };
      let (rect, resp) = ui.allocate_exact_size(vec2(thumb_w + 16.0, thumb_w * 9.0 / 16.0 + 44.0), Sense::click());
-@@ -692,7 +693,7 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+@@ -695,7 +696,7 @@ fn home(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
      ui.horizontal(|ui| {
          let (r, _) = ui.allocate_exact_size(vec2(36.0, 36.0), Sense::hover());
          crate::dialogs::paint_logo(ui.painter(), r);
@@ -257,7 +257,7 @@ index f7bfe25..f855c45 100644
      });
      ui.add_space(18.0);
      ui.horizontal(|ui| {
-@@ -929,11 +930,11 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+@@ -932,11 +933,11 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
      ui.label(RichText::new(&title).font(theme::font(15.0)).color(t.text));
      dim(ui, path.as_deref().unwrap_or("Not saved yet"));
      ui.add_space(14.0);
@@ -271,7 +271,7 @@ index f7bfe25..f855c45 100644
                      bs.file_type = id;
                  }
              }
-@@ -957,7 +958,7 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
+@@ -960,7 +961,7 @@ fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcom
      });
      ui.add_space(8.0);
      if let Some((_, _, detail)) = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type) {
@@ -280,7 +280,7 @@ index f7bfe25..f855c45 100644
      }
  }
  
-@@ -1039,11 +1040,11 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+@@ -1042,11 +1043,11 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
              ui.add_space(6.0);
              dim(
                  ui,
@@ -294,7 +294,7 @@ index f7bfe25..f855c45 100644
              );
              ui.add_space(14.0);
              heading(ui, "Settings");
-@@ -1295,6 +1296,7 @@ fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+@@ -1298,6 +1299,7 @@ fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
                      ui.add_space(8.0);
                      for (id, label, detail) in SAVE_TYPES.iter().filter(|s| s.0 != "pdf") {
                          let selected = bs.file_type == *id;
@@ -302,7 +302,7 @@ index f7bfe25..f855c45 100644
                          let (rect, resp) = ui.allocate_exact_size(vec2(520.0, 46.0), Sense::click());
                          resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, selected, *label));
                          let p = ui.painter();
-@@ -1348,7 +1350,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1358,7 +1360,12 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
              });
              ui.add_space(16.0);
              heading(ui, "User Information");
@@ -316,7 +316,7 @@ index f7bfe25..f855c45 100644
          });
          ui.add_space(40.0);
          ui.vertical(|ui| {
-@@ -1356,7 +1363,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1366,7 +1373,7 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
              ui.horizontal(|ui| {
                  let (r, _) = ui.allocate_exact_size(vec2(40.0, 40.0), Sense::hover());
                  crate::dialogs::paint_logo(ui.painter(), r);
@@ -325,7 +325,7 @@ index f7bfe25..f855c45 100644
              });
              dim(ui, &crate::dialogs::version_line());
              dim(ui, "Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.");
-@@ -1364,8 +1371,8 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1374,8 +1381,8 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
              if task(
                  ui,
                  Icon::Help,
@@ -337,7 +337,7 @@ index f7bfe25..f855c45 100644
                  true,
              ) {
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index 576a229..9071d15 100644
+index 2393bd6..c770561 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
 @@ -30,6 +30,10 @@ impl Dialog {
@@ -367,7 +367,7 @@ index 576a229..9071d15 100644
      });
      let captions = d.fields.get("captions").is_some_and(|v| v == "1");
      let grayscale = d.fields.get("grayscale").is_some_and(|v| v == "1");
-@@ -2607,11 +2618,14 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+@@ -2621,11 +2632,14 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
      ui.vertical_centered(|ui| {
          let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
          paint_logo(ui.painter(), r);
@@ -383,7 +383,7 @@ index 576a229..9071d15 100644
          ui.add_space(6.0);
          ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
          ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-@@ -2625,7 +2639,7 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
+@@ -2639,7 +2653,7 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
  /// from `[workspace.package] version` (the single source of truth, `cargo xtask version`); the
  /// release workflow sets `DECKCRAFT_BUILD_SHA` / `DECKCRAFT_BUILD_DATE` at build time.
  pub fn version_line() -> String {
@@ -392,7 +392,7 @@ index 576a229..9071d15 100644
      let sha = option_env!("DECKCRAFT_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
      let date = option_env!("DECKCRAFT_BUILD_DATE").filter(|s| !s.is_empty());
      match (sha, date) {
-@@ -3217,7 +3231,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+@@ -3231,7 +3245,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                  p["with"] = json!(d.get("with", ""));
                  let msg = match app.session.execute("text.replace", &p) {
                      Ok(v) => format!("Replaced {} occurrence(s).", v.get("replaced").and_then(Value::as_u64).unwrap_or(0)),
@@ -401,7 +401,7 @@ index 576a229..9071d15 100644
                  };
                  d.fields.insert("status".into(), msg);
                  d.fields.remove("cur");
-@@ -3232,7 +3246,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+@@ -3246,7 +3260,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
      if find_next {
          let list = app.session.execute("text.find", &q).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
          if list.is_empty() {
@@ -411,7 +411,7 @@ index 576a229..9071d15 100644
          } else {
              let n = d.get("next", "0").parse::<usize>().unwrap_or(0) % list.len();
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 8867407..155b139 100644
+index eef9b1b..0b3a686 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -19,6 +19,7 @@ pub mod icons;
@@ -431,7 +431,7 @@ index 8867407..155b139 100644
  }
  
  /// How long a transient status message stays visible.
-@@ -744,7 +745,7 @@ impl SlideApp {
+@@ -747,7 +748,7 @@ impl SlideApp {
              "deckcraft" => ("deckcraft", "deckcraft", false),
              "gif" => ("gif", "gif", false),
              other => {
@@ -440,7 +440,7 @@ index 8867407..155b139 100644
                  return false;
              }
          };
-@@ -2037,6 +2038,8 @@ mod datetime_tests;
+@@ -2070,6 +2071,8 @@ mod datetime_tests;
  
  #[cfg(test)]
  mod inbox_tests;
@@ -622,7 +622,7 @@ index 0000000..e2fff62
 +    assert!(crate::dialogs::version_line().starts_with(&format!("Version {}", o::VERSION)));
 +}
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 3e43a68..2045c29 100644
+index 3a679dd..3cdc05e 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
 @@ -75,8 +75,11 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
@@ -639,7 +639,7 @@ index 3e43a68..2045c29 100644
          ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
          // Right side.
          let mut right = ui.new_child(
-@@ -1475,7 +1478,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1495,7 +1498,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
                      paint_theme_tile(p, r, th);
                  }
              },
@@ -648,7 +648,7 @@ index 3e43a68..2045c29 100644
          ) && let Some(n) = names.get(i)
          {
              run(app, "design.theme", json!({"name": n}));
-@@ -3254,7 +3257,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
+@@ -3274,7 +3277,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
          let r = big_button(ui, Icon::Themes, "Themes", true);
          egui::Popup::menu(&r).show(|ui| {
              for th in deckcraft_model::theme::builtin_themes() {
@@ -658,10 +658,10 @@ index 3e43a68..2045c29 100644
                  }
              }
 diff --git a/crates/ui-egui/src/show.rs b/crates/ui-egui/src/show.rs
-index a875773..f06c94d 100644
+index 51f859a..0a4bdb1 100644
 --- a/crates/ui-egui/src/show.rs
 +++ b/crates/ui-egui/src/show.rs
-@@ -1754,7 +1754,9 @@ fn presenter_window(ctx: &egui::Context, show: &mut Show, doc: &Presentation, no
+@@ -1756,7 +1756,9 @@ fn presenter_window(ctx: &egui::Context, show: &mut Show, doc: &Presentation, no
      };
      ctx.show_viewport_immediate(
          egui::ViewportId::from_hash_of("deckcraft_presenter"),

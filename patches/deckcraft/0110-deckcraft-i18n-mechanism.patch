@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sun, 18 Oct 2026 00:35:04 +0500
-Subject: [PATCH] ui-egui: a minimal interface-language mechanism (English-key TSV catalogs from the overlay)
+Subject: [PATCH 06/14] ui-egui: a minimal interface-language mechanism
+ (English-key TSV catalogs from the overlay)
 
 deckcraft has no interface languages, so this adds the smallest mechanism: i18n.rs (new) holds a
 registry of English plus uz-latn and uz-cyrl, each present only when the overlay supplies its
@@ -15,13 +16,14 @@ on the File > Account page. office_overlay.rs reads the current language for the
 picker name carries the export's draft marker while Uzbek rows are unreviewed. Nothing in the
 UI is translated yet: 0111 routes the P1 strings through t().
 ---
- crates/ui-egui/build_office.rs             |  32 ++++-
+ crates/ui-egui/build_office.rs             |  32 +++-
  crates/ui-egui/src/backstage.rs            |  12 ++
- crates/ui-egui/src/i18n.rs                 | 194 +++++++++++++++++++++++++++++
+ crates/ui-egui/src/i18n.rs                 | 194 +++++++++++++++++++++
  crates/ui-egui/src/lib.rs                  |  10 ++
  crates/ui-egui/src/office_overlay.rs       |   2 +-
- crates/ui-egui/src/office_overlay_tests.rs |  37 ++++++
+ crates/ui-egui/src/office_overlay_tests.rs |  37 ++++
  6 files changed, 285 insertions(+), 2 deletions(-)
+ create mode 100644 crates/ui-egui/src/i18n.rs
 
 diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
 index 25444ee..86d43ae 100644
@@ -72,10 +74,10 @@ index 25444ee..86d43ae 100644
 +    o + &uzbek(None)
  }
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index ff12964..127fec1 100644
+index 77c890a..8f883da 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
-@@ -1350,6 +1350,18 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1360,6 +1360,18 @@ fn account(app: &mut SlideApp, ui: &mut Ui) {
                      }
                  }
              });
@@ -295,7 +297,7 @@ index 0000000..562289e
 +    lang.0.catalog().contains_key(s)
 +}
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index db3abcd..075abbd 100644
+index e796469..71e2eeb 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -15,6 +15,7 @@ pub mod dialogs;
@@ -331,7 +333,7 @@ index db3abcd..075abbd 100644
      ("app.openDialog", "Open…", None, "{purpose?}"),
      ("app.insertPictureDialog", "Picture from File…", None, "{}"),
      ("app.smartArtPictureDialog", "Insert Picture in SmartArt…", None, "{id?, index}"),
-@@ -999,6 +1004,10 @@ impl SlideApp {
+@@ -1003,6 +1008,10 @@ impl SlideApp {
                  return Ok(json!({"printed": self.print_pdf(p.clone())}));
              }
              "app.about" => self.dialog = Some(dialogs::Dialog::new("about")),
@@ -342,7 +344,7 @@ index db3abcd..075abbd 100644
              "app.palette" => self.palette = Some((String::new(), 0)),
              "app.preferences" => self.dialog = Some(dialogs::Dialog::new("preferences")),
              "app.openDialog" => self.pick_and_open(),
-@@ -1781,6 +1790,7 @@ impl SlideApp {
+@@ -1805,6 +1814,7 @@ impl SlideApp {
              ctx.request_repaint();
              return;
          }
@@ -408,6 +410,3 @@ index 3091e30..b642624 100644
 +    let old: crate::UiState = serde_json::from_str("{\"tab\":\"View\"}").expect("an old ui.json without `language`");
 +    assert_eq!(old.language, "auto");
 +}
--- 
-2.50.0
-

@@ -258,6 +258,16 @@ fn open_bytes(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"document": i, "missingFonts": s.doc()?.missing_fonts, "damagedMedia": damaged.media, "lostSlides": damaged.slides}))
 }
 
+/// The damage notices as whole-string templates (`{n}`, `{m}`: counts); the UI finds them in [`MESSAGE_TEMPLATES`] and shows the translation.
+pub const DAMAGE_ONE: &str = "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
+pub const DAMAGE_MANY: &str = "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
+pub const SLIDES_ONE: &str =
+    "{n} slide in this file couldn't be read and was left out. It was opened as a repaired copy; save it under a new name to keep the original file.";
+pub const SLIDES_MANY: &str = "{n} slides in this file couldn't be read and were left out. It was opened as a repaired copy; save it under a new name to keep the original file.";
+pub const DAMAGE_AND_SLIDES: &str = "Parts of this presentation couldn't be read: pictures or media files left empty: {n}; slides left out: {m}. It was opened as a repaired copy; save it under a new name to keep the original file.";
+/// Every engine `UiRequest::Message` whose text is a template filled in by the engine.
+pub const MESSAGE_TEMPLATES: [&str; 5] = [DAMAGE_ONE, DAMAGE_MANY, SLIDES_ONE, SLIDES_MANY, DAMAGE_AND_SLIDES];
+
 /// Tell the user which pictures, media and slides a damaged file lost, and mark the copy repaired.
 fn report_damage(s: &mut Session, damaged: &Damage) -> Result<()> {
     if damaged.is_empty() {
@@ -265,25 +275,15 @@ fn report_damage(s: &mut Session, damaged: &Damage) -> Result<()> {
     }
     let st = s.doc_mut()?;
     st.title = format!("{} (Repaired)", st.title);
-    let mut text = String::new();
-    let n = damaged.media.len();
-    if n > 0 {
-        text = format!(
-            "{n} picture{} or media file{} in this presentation couldn't be read and {} empty. ",
-            if n == 1 { "" } else { "s" },
-            if n == 1 { "" } else { "s" },
-            if n == 1 { "is" } else { "are" },
-        );
-    }
-    let n = damaged.slides.len();
-    if n > 0 {
-        text.push_str(&format!(
-            "{n} slide{} in this file couldn't be read and {} left out. ",
-            if n == 1 { "" } else { "s" },
-            if n == 1 { "was" } else { "were" },
-        ));
-    }
-    text.push_str("It was opened as a repaired copy; save it under a new name to keep the original file.");
+    let (media, slides) = (damaged.media.len(), damaged.slides.len());
+    let template = match (media, slides) {
+        (1, 0) => DAMAGE_ONE,
+        (_, 0) => DAMAGE_MANY,
+        (0, 1) => SLIDES_ONE,
+        (0, _) => SLIDES_MANY,
+        _ => DAMAGE_AND_SLIDES,
+    };
+    let text = template.replace("{n}", &(if media > 0 { media } else { slides }).to_string()).replace("{m}", &slides.to_string());
     s.ui_requests.push(crate::UiRequest::Message { text });
     Ok(())
 }

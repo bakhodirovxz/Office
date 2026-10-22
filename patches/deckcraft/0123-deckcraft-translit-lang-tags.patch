@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Wed, 21 Oct 2026 10:08:43 +0500
-Subject: [PATCH] engine: translit skips text runs whose language tag is not
- uz, ru or en
+Subject: [PATCH 13/14] engine: translit skips text runs whose language tag is
+ not uz, ru or en
 
 Each text run is passed to uz-translit with convert = lang_converts(run.props.lang, ConvertRuEn), like the Docs adapter: untagged, uz, ru
 and en runs convert, other tags (de-DE, ...) stay as typed and count in skipped.lang. Test: one paragraph with uz, ru, en and de runs.

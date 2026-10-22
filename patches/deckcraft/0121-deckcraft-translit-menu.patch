@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 15:40:56 +0500
-Subject: [PATCH] ui-egui: Transliterate menu on Review and in the shape and
- text context menu, with a status line
+Subject: [PATCH 11/14] ui-egui: Transliterate menu on Review and in the shape
+ and text context menu, with a status line
 
 Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
 transliteration commands (tools.translitCyrl, tools.translitLatn, tools.translitAuto). Labels go through the interface-language
@@ -61,7 +61,7 @@ index ba66aad..d798595 100644
          let editing = app.session.active().is_some_and(|d| d.selection.text.as_ref().is_some_and(|t| !t.notes));
          if editing {
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 075abbd..f4de26d 100644
+index 71e2eeb..6bec2fd 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -6,6 +6,19 @@
@@ -84,7 +84,7 @@ index 075abbd..f4de26d 100644
  pub mod animtimeline;
  pub mod backstage;
  pub mod canvas;
-@@ -670,6 +683,7 @@ impl SlideApp {
+@@ -673,6 +686,7 @@ impl SlideApp {
                      self.pending_copy = Some(t.to_string());
                  }
              }
@@ -93,11 +93,11 @@ index 075abbd..f4de26d 100644
              Err(e) => self.set_status(e.clone()),
          }
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 49ea68d..9ec9841 100644
+index fb4ee0f..83f6054 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
-@@ -1155,6 +1155,13 @@ pub fn align_menu(app: &mut SlideApp, ui: &mut Ui) {
-     menu_item(app, ui, Icon::DistributeV, "Distribute Vertically", "arrange.distribute", json!({"dir": "vertical"}));
+@@ -1175,6 +1175,13 @@ fn align_to_slide(choice: Option<&(Vec<ShapeId>, bool)>, selection: &[ShapeId])
+     }
  }
  
 +/// Uzbek Latin/Cyrillic transliteration items (ribbon menu and the shape context menu).
@@ -110,7 +110,7 @@ index 49ea68d..9ec9841 100644
  pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
      let en = enabled(app, id);
      let r = small_button(ui, icon, crate::i18n::t(label), en, false);
-@@ -2157,6 +2164,8 @@ fn review(app: &mut SlideApp, ui: &mut Ui) {
+@@ -2177,6 +2184,8 @@ fn review(app: &mut SlideApp, ui: &mut Ui) {
          let r = big_button(ui, Icon::Translate, "Translate", false);
          let _ = r.on_hover_text("Translation needs a language model (not bundled)");
          big(app, ui, Icon::Language, "Language", "app.dialog", json!({"id": "language"}));

@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 19:06:52 +0500
-Subject: [PATCH] engine: do not ask wasm32 for a process id when seeding the
- instance id
+Subject: [PATCH 01/14] engine: do not ask wasm32 for a process id when seeding
+ the instance id
 
 std::process::id() panics on wasm32-unknown-unknown ("no pids on this platform"), so deckcraft-web
 stopped at the loading screen. The random per-process hasher state is still mixed in, as before.
@@ -11,7 +11,7 @@ stopped at the loading screen. The random per-process hasher state is still mixe
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
-index 707d0aa..8149fe7 100644
+index 6996cda..6dae8b6 100644
 --- a/crates/engine/src/recovery.rs
 +++ b/crates/engine/src/recovery.rs
 @@ -44,7 +44,12 @@ pub fn instance_id() -> u64 {

@@ -6,6 +6,40 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+/// An engine message that is a filled-in template (`{n}`, `{m}`: counts), shown in the interface language; any other text comes back as it is.
+fn localize_message(text: String) -> String {
+    deckcraft_engine::cmd::file::MESSAGE_TEMPLATES.iter().find_map(|t| fill_template(t, &text)).unwrap_or(text)
+}
+
+/// The translation of `template` with the counts `text` has in its `{x}` places, or `None` when `text` is not that template.
+fn fill_template(template: &str, text: &str) -> Option<String> {
+    let (mut tpl, mut rest, mut out) = (template, text, i18n::t(template).to_string());
+    while let Some(at) = tpl.find('{') {
+        let key = tpl.get(at..at + 3)?;
+        rest = rest.strip_prefix(&tpl[..at])?;
+        let digits = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+        if digits == 0 {
+            return None;
+        }
+        out = out.replace(key, &rest[..digits]);
+        (rest, tpl) = (&rest[digits..], &tpl[at + 3..]);
+    }
+    (rest == tpl).then_some(out)
+}
+
+/// The status line for a transliteration command's result.
+fn translit_status(v: &Value) -> String {
+    let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
+    let done = n(v.get("paragraphs"));
+    let skipped: u64 = ["lang", "field", "locked"].iter().map(|k| n(v.get("skipped").and_then(|s| s.get(*k)))).sum();
+    let mut m =
+        if done == 0 { i18n::t("Nothing to convert").to_string() } else { i18n::t("{n} paragraphs converted").replace("{n}", &done.to_string()) };
+    if skipped > 0 {
+        m += &format!(". {}", i18n::t("{n} items skipped (other language, locked or field)").replace("{n}", &skipped.to_string()));
+    }
+    m
+}
+
 pub mod animtimeline;
 pub mod backstage;
 pub mod canvas;
@@ -15,10 +49,12 @@ pub mod dialogs;
 pub mod doc_window;
 pub mod eyedropper;
 pub mod fillui;
+pub mod i18n;
 pub mod icons;
 pub mod media;
 pub mod menus;
 pub mod notes;
+pub mod office_overlay;
 pub mod opening;
 pub mod panes;
 mod preview;
@@ -191,7 +227,7 @@ fn command_for(purpose: FilePurpose, name: &str, bytes: &[u8]) -> Result<&'stati
         FilePurpose::Open => open_command(name),
         FilePurpose::Infer => infer_command(name, bytes),
     };
-    cmd.ok_or_else(|| format!("{name}: DeckCraft can't open this kind of file"))
+    cmd.ok_or_else(|| format!("{name}: {} can't open this kind of file", office_overlay::app_name()))
 }
 
 /// How long a transient status message stays visible.
@@ -274,6 +310,8 @@ pub struct UiState {
     pub comment_focus: Option<(usize, usize)>,
     /// Quick Access Toolbar buttons, left to right.
     pub qat: Vec<qat::QatItem>,
+    /// The interface language: `auto` or a code of [`i18n::LANGUAGES`].
+    pub language: String,
 }
 
 impl Default for UiState {
@@ -305,6 +343,7 @@ impl Default for UiState {
             grayscale: false,
             comment_focus: None,
             qat: qat::defaults(),
+            language: i18n::AUTO.into(),
         }
     }
 }
@@ -395,6 +434,7 @@ pub const UI_COMMANDS: &[(&str, &str, Option<&str>, &str)] = &[
     ("app.about", "About DeckCraft", None, "{}"),
     ("app.palette", "Command Palette", Some("Cmd+Shift+P"), "{}"),
     ("app.preferences", "Preferences…", Some("Cmd+,"), "{}"),
+    ("app.language.set", "Interface Language", None, "{language}"),
     ("app.openDialog", "Open…", None, "{purpose?}"),
     ("app.insertPictureDialog", "Picture from File…", None, "{}"),
     ("app.smartArtPictureDialog", "Insert Picture in SmartArt…", None, "{id?, index}"),
@@ -667,6 +707,7 @@ impl SlideApp {
                     self.pending_copy = Some(t.to_string());
                 }
             }
+            Ok(v) if id.starts_with("tools.translit") => self.set_status(translit_status(v)),
             Ok(_) => {}
             Err(e) => self.set_status(e.clone()),
         }
@@ -747,7 +788,7 @@ impl SlideApp {
             "deckcraft" => ("deckcraft", "deckcraft", false),
             "gif" => ("gif", "gif", false),
             other => {
-                self.set_status(format!("DeckCraft can't export “{other}”"));
+                self.set_status(format!("{} can't export “{other}”", office_overlay::app_name()));
                 return false;
             }
         };
@@ -1002,6 +1043,10 @@ impl SlideApp {
                 return Ok(json!({"printed": self.print_pdf(p.clone())}));
             }
             "app.about" => self.dialog = Some(dialogs::Dialog::new("about")),
+            "app.language.set" => {
+                let code = p.get("language").and_then(Value::as_str).and_then(i18n::normalize_pref).ok_or("missing or unknown `language`")?;
+                self.ui.language = code.into();
+            }
             "app.palette" => self.palette = Some((String::new(), 0)),
             "app.preferences" => self.dialog = Some(dialogs::Dialog::new("preferences")),
             "app.openDialog" => self.pick_and_open(),
@@ -1054,6 +1099,9 @@ impl SlideApp {
             }
             "app.links" => {
                 use deckcraft_engine::links::*;
+                if !(office_overlay::COMMUNITY || office_overlay::UPSTREAM_LINKS) {
+                    return Ok(json!({}));
+                }
                 return Ok(json!({"discord": DISCORD, "website": WEBSITE, "apps": APPS, "appPage": APP_PAGE, "github": GITHUB}));
             }
             _ => return Err(format!("unknown UI command `{id}`")),
@@ -1339,7 +1387,7 @@ impl SlideApp {
                 }
                 UiRequest::Pane { id } => self.ui.pane = Some(id),
                 UiRequest::StartShow { from } => self.start_show(from, false),
-                UiRequest::Message { text } => self.set_status(text),
+                UiRequest::Message { text } => self.set_status(localize_message(text)),
                 UiRequest::PickFile { purpose } => {
                     if purpose == "saveAs" {
                         self.save_as_dialog("deckcraft");
@@ -1801,6 +1849,7 @@ impl SlideApp {
             ctx.request_repaint();
             return;
         }
+        i18n::set_current(i18n::from_pref(&self.ui.language));
         let t0 = now_ms();
         let t = theme::Tokens::get(&ctx);
         self.tick_media(&ctx);
@@ -2070,6 +2119,8 @@ mod datetime_tests;
 
 #[cfg(test)]
 mod inbox_tests;
+#[cfg(test)]
+mod office_overlay_tests;
 
 #[cfg(test)]
 mod tests {

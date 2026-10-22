@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sun, 18 Oct 2026 10:00:00 +0500
-Subject: [PATCH] ui-egui: put the sans fallback before the CJK interface face so Latin and Cyrillic keep normal advances
+Subject: [PATCH 08/14] ui-egui: put the sans fallback before the CJK interface
+ face so Latin and Cyrillic keep normal advances
 
 Without Inter in our craft-fonts pin, the interface stack starts with BIZ UDPGothic, which draws Latin and
 Cyrillic with CJK full-width advances: uz-Cyrl ribbon text showed absurd letter spacing. The overlay's Noto Sans
@@ -9,8 +10,8 @@ subset (Latin, Cyrillic, no CJK) is now inserted before that face in the proport
 last everywhere else. CJK text still falls through to the CJK face. Adds a test on the Cyrillic and Latin advances
 and adjusts the order assertion.
 ---
- crates/ui-egui/src/office_overlay.rs       | 10 ++++++++--
- crates/ui-egui/src/office_overlay_tests.rs | 30 ++++++++++++++++++++++++++++--
+ crates/ui-egui/src/office_overlay.rs       | 10 ++++++--
+ crates/ui-egui/src/office_overlay_tests.rs | 30 ++++++++++++++++++++--
  2 files changed, 36 insertions(+), 4 deletions(-)
 
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs

@@ -1,74 +1,108 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Wed, 21 Oct 2026 10:10:27 +0500
-Subject: [PATCH] ui-egui, engine: plural and list fragments become whole
+Subject: [PATCH 14/14] ui-egui, engine: plural and list fragments become whole
  translatable strings
 
 The Columns and Slides pop-ups, the table cell alignment tips, the missing-fonts toast and the damaged-media notice were English
 sentences spliced from pieces (plural s, is/are, and/more, a lower-cased label). Each case is now one whole template with {a}/{b}/{c}/{n}
 placeholders looked up through i18n::t; the engine notice keeps English text and the UI translates it by template.
 ---
- crates/engine/src/cmd/file.rs | 14 +++++++-------
- crates/ui-egui/src/lib.rs     | 13 ++++++++++++-
- crates/ui-egui/src/ribbon.rs  | 14 ++++++++++----
- crates/ui-egui/src/toast.rs   | 30 +++++++++++++++++++++++-------
- 4 files changed, 52 insertions(+), 19 deletions(-)
+ crates/engine/src/cmd/file.rs | 38 +++++++++++++++++------------------
+ crates/ui-egui/src/lib.rs     | 23 ++++++++++++++++++++-
+ crates/ui-egui/src/ribbon.rs  | 14 +++++++++----
+ crates/ui-egui/src/toast.rs   | 30 ++++++++++++++++++++-------
+ 4 files changed, 74 insertions(+), 31 deletions(-)
 
 diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
-index 4761dc1..be74f4e 100644
+index ba56757..9e5b9b7 100644
 --- a/crates/engine/src/cmd/file.rs
 +++ b/crates/engine/src/cmd/file.rs
-@@ -239,6 +239,12 @@ fn open_bytes(s: &mut Session, p: &Value) -> Result<Value> {
-     Ok(json!({"document": i, "missingFonts": s.doc()?.missing_fonts, "damagedMedia": damaged}))
+@@ -258,6 +258,16 @@ fn open_bytes(s: &mut Session, p: &Value) -> Result<Value> {
+     Ok(json!({"document": i, "missingFonts": s.doc()?.missing_fonts, "damagedMedia": damaged.media, "lostSlides": damaged.slides}))
  }
  
-+/// The damaged-media notice as whole-string templates; the UI finds them in [`MESSAGE_TEMPLATES`] and shows the translation.
++/// The damage notices as whole-string templates (`{n}`, `{m}`: counts); the UI finds them in [`MESSAGE_TEMPLATES`] and shows the translation.
 +pub const DAMAGE_ONE: &str = "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
 +pub const DAMAGE_MANY: &str = "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.";
-+/// Every engine `UiRequest::Message` whose text is a `{n}` template filled in by the engine.
-+pub const MESSAGE_TEMPLATES: [&str; 2] = [DAMAGE_ONE, DAMAGE_MANY];
++pub const SLIDES_ONE: &str =
++    "{n} slide in this file couldn't be read and was left out. It was opened as a repaired copy; save it under a new name to keep the original file.";
++pub const SLIDES_MANY: &str = "{n} slides in this file couldn't be read and were left out. It was opened as a repaired copy; save it under a new name to keep the original file.";
++pub const DAMAGE_AND_SLIDES: &str = "Parts of this presentation couldn't be read: pictures or media files left empty: {n}; slides left out: {m}. It was opened as a repaired copy; save it under a new name to keep the original file.";
++/// Every engine `UiRequest::Message` whose text is a template filled in by the engine.
++pub const MESSAGE_TEMPLATES: [&str; 5] = [DAMAGE_ONE, DAMAGE_MANY, SLIDES_ONE, SLIDES_MANY, DAMAGE_AND_SLIDES];
 +
- /// Tell the user which pictures and media a damaged file lost, and mark the copy repaired.
- fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
+ /// Tell the user which pictures, media and slides a damaged file lost, and mark the copy repaired.
+ fn report_damage(s: &mut Session, damaged: &Damage) -> Result<()> {
      if damaged.is_empty() {
-@@ -246,13 +252,7 @@ fn report_damage(s: &mut Session, damaged: &[String]) -> Result<()> {
+@@ -265,25 +275,15 @@ fn report_damage(s: &mut Session, damaged: &Damage) -> Result<()> {
      }
      let st = s.doc_mut()?;
      st.title = format!("{} (Repaired)", st.title);
--    let n = damaged.len();
--    let text = format!(
--        "{n} picture{} or media file{} in this presentation couldn't be read and {} empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
--        if n == 1 { "" } else { "s" },
--        if n == 1 { "" } else { "s" },
--        if n == 1 { "is" } else { "are" },
--    );
-+    let text = (if damaged.len() == 1 { DAMAGE_ONE } else { DAMAGE_MANY }).replace("{n}", &damaged.len().to_string());
+-    let mut text = String::new();
+-    let n = damaged.media.len();
+-    if n > 0 {
+-        text = format!(
+-            "{n} picture{} or media file{} in this presentation couldn't be read and {} empty. ",
+-            if n == 1 { "" } else { "s" },
+-            if n == 1 { "" } else { "s" },
+-            if n == 1 { "is" } else { "are" },
+-        );
+-    }
+-    let n = damaged.slides.len();
+-    if n > 0 {
+-        text.push_str(&format!(
+-            "{n} slide{} in this file couldn't be read and {} left out. ",
+-            if n == 1 { "" } else { "s" },
+-            if n == 1 { "was" } else { "were" },
+-        ));
+-    }
+-    text.push_str("It was opened as a repaired copy; save it under a new name to keep the original file.");
++    let (media, slides) = (damaged.media.len(), damaged.slides.len());
++    let template = match (media, slides) {
++        (1, 0) => DAMAGE_ONE,
++        (_, 0) => DAMAGE_MANY,
++        (0, 1) => SLIDES_ONE,
++        (0, _) => SLIDES_MANY,
++        _ => DAMAGE_AND_SLIDES,
++    };
++    let text = template.replace("{n}", &(if media > 0 { media } else { slides }).to_string()).replace("{m}", &slides.to_string());
      s.ui_requests.push(crate::UiRequest::Message { text });
      Ok(())
  }
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index f4de26d..a676cc3 100644
+index 6bec2fd..c88bdd1 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -6,6 +6,17 @@
+@@ -6,6 +6,27 @@
  #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
  #![forbid(unsafe_code)]
  
-+/// An engine message that is a filled-in `{n}` template, shown in the interface language; any other text comes back as it is.
++/// An engine message that is a filled-in template (`{n}`, `{m}`: counts), shown in the interface language; any other text comes back as it is.
 +fn localize_message(text: String) -> String {
-+    for template in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
-+        let Some((head, tail)) = template.split_once("{n}") else { continue };
-+        if let Some(n) = text.strip_prefix(head).and_then(|r| r.strip_suffix(tail)).filter(|n| n.parse::<usize>().is_ok()) {
-+            return i18n::t(template).replace("{n}", n);
++    deckcraft_engine::cmd::file::MESSAGE_TEMPLATES.iter().find_map(|t| fill_template(t, &text)).unwrap_or(text)
++}
++
++/// The translation of `template` with the counts `text` has in its `{x}` places, or `None` when `text` is not that template.
++fn fill_template(template: &str, text: &str) -> Option<String> {
++    let (mut tpl, mut rest, mut out) = (template, text, i18n::t(template).to_string());
++    while let Some(at) = tpl.find('{') {
++        let key = tpl.get(at..at + 3)?;
++        rest = rest.strip_prefix(&tpl[..at])?;
++        let digits = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
++        if digits == 0 {
++            return None;
 +        }
++        out = out.replace(key, &rest[..digits]);
++        (rest, tpl) = (&rest[digits..], &tpl[at + 3..]);
 +    }
-+    text
++    (rest == tpl).then_some(out)
 +}
 +
  /// The status line for a transliteration command's result.
  fn translit_status(v: &Value) -> String {
      let n = |x: Option<&Value>| x.and_then(Value::as_u64).unwrap_or(0);
-@@ -1342,7 +1353,7 @@ impl SlideApp {
+@@ -1366,7 +1387,7 @@ impl SlideApp {
                  }
                  UiRequest::Pane { id } => self.ui.pane = Some(id),
                  UiRequest::StartShow { from } => self.start_show(from, false),
@@ -78,7 +112,7 @@ index f4de26d..a676cc3 100644
                      if purpose == "saveAs" {
                          self.save_as_dialog("deckcraft");
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 9ec9841..fb22cbe 100644
+index 83f6054..c0cbebf 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
 @@ -769,7 +769,8 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
@@ -91,7 +125,7 @@ index 9ec9841..fb22cbe 100644
                              run(app, "format.columns", json!({"count": n, "spacing": 18}));
                          }
                      }
-@@ -3034,8 +3035,12 @@ fn table_layout(app: &mut SlideApp, ui: &mut Ui) {
+@@ -3054,8 +3055,12 @@ fn table_layout(app: &mut SlideApp, ui: &mut Ui) {
                  toggle(app, ui, Icon::AlignRight, "Align Right", "format.alignRight", false);
              });
              ui.horizontal(|ui| {
@@ -106,7 +140,7 @@ index 9ec9841..fb22cbe 100644
                          run(app, "table.cellAlign", json!({"anchor": a}));
                      }
                  }
-@@ -3324,7 +3329,8 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
+@@ -3344,7 +3349,8 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
          let r = big_button(ui, Icon::Layout, &format!("Slides Per\nPage: {}", app.ui.handout_per_page), true);
          egui::Popup::menu(&r).show(|ui| {
              for n in [1u8, 2, 3, 4, 6, 9] {
@@ -117,7 +151,7 @@ index 9ec9841..fb22cbe 100644
                  }
              }
 diff --git a/crates/ui-egui/src/toast.rs b/crates/ui-egui/src/toast.rs
-index 0dcfb05..bff3fb8 100644
+index 0dcfb05..2f707a0 100644
 --- a/crates/ui-egui/src/toast.rs
 +++ b/crates/ui-egui/src/toast.rs
 @@ -17,15 +17,21 @@ pub struct Toast {
@@ -156,10 +190,10 @@ index 0dcfb05..bff3fb8 100644
 +
 +    #[test]
 +    fn engine_count_templates_are_matched_and_other_messages_pass_through() {
-+        use deckcraft_engine::cmd::file::{DAMAGE_MANY, DAMAGE_ONE};
-+        for (tpl, n) in [(DAMAGE_ONE, "1"), (DAMAGE_MANY, "12")] {
-+            let text = tpl.replace("{n}", n);
++        for tpl in deckcraft_engine::cmd::file::MESSAGE_TEMPLATES {
++            let text = tpl.replace("{n}", "12").replace("{m}", "3");
 +            assert_eq!(crate::localize_message(text.clone()), text);
++            assert_eq!(crate::fill_template(tpl, &text.replace("12", "x")), None);
 +        }
 +        assert_eq!(crate::localize_message("Saved".into()), "Saved");
 +    }
