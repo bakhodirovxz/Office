@@ -2,7 +2,7 @@
 # measured with `brotli -q 11 --lgwin=24` and `gzip -9` (the same tool for the budget and the BASE measurement).
 #
 # Budget per domain = base_br + delta_br_max (wasm brotli). The ratchet is on OUR delta, not on upstream growth:
-#   base_br    pristine upstream brotli at BASE, measured 2026-10-19 (WP6 final) with this tool: a scratch worktree with
+#   base_br    pristine upstream brotli at BASE, measured 2026-10-19 (WP6 final), re-measured 2026-10-22 at the Phase 4 WP0 BASEs (docs/phase4/sync-report.md) with this tool: a scratch worktree with
 #              upstream/<app> replaced by the pristine commit (no queue, no overlay, no catalogs), built through the same domain
 #              wrapper with `OFFICE_NO_OVERLAY=1 scripts/build.sh <d> web --release`. Re-measure at every sync together with
 #              base_sha (`scripts/ci.sh sizes --measure-base` prints the dist numbers to paste in).
@@ -25,48 +25,48 @@
 
 [docs]
 app = "wordcraft"
-base_sha = "eae2421"
+base_sha = "2e6db0b"
 craft_fonts = false
-base_raw = 42219232          # pristine wasm raw at BASE (2026-10-19)
-base_gzip = 15735172         # wasm gzip -9
-base_br = 9377090            # wasm brotli -q 11 --lgwin=24
-js_br = 20548                # JS glue brotli
+base_raw = 44355755          # pristine wasm raw at BASE (re-measured 2026-10-22, Phase 4 WP0 sync)
+base_gzip = 16366483         # wasm gzip -9
+base_br = 9675040            # wasm brotli -q 11 --lgwin=24
+js_br = 20558                # JS glue brotli
 delta_br_max = 196608        # delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [sheets]
 app = "gridcraft"
-base_sha = "f1894c6"
+base_sha = "2ebdf16"
 craft_fonts = false
-base_raw = 18979436          # pristine wasm raw at BASE (2026-10-19)
-base_gzip = 7044454         # wasm gzip -9
-base_br = 4733055            # wasm brotli -q 11 --lgwin=24
-js_br = 20041                # JS glue brotli
+base_raw = 18981462          # pristine wasm raw at BASE (re-measured 2026-10-22, Phase 4 WP0 sync)
+base_gzip = 7036310         # wasm gzip -9
+base_br = 4737395            # wasm brotli -q 11 --lgwin=24
+js_br = 20048                # JS glue brotli
 delta_br_max = 196608        # delta +168,712 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 147456: delta +122,186 B brotli (+2.58 %): queue 0001-0022 + 0103/01)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [slides]
 app = "deckcraft"
-base_sha = "1dc6972"
+base_sha = "fe510bd"
 craft_fonts = true
-base_raw = 35135104          # pristine wasm raw at BASE (2026-10-19)
-base_gzip = 13902137         # wasm gzip -9
-base_br = 9302764            # wasm brotli -q 11 --lgwin=24
-js_br = 19644                # JS glue brotli
+base_raw = 35282601          # pristine wasm raw at BASE (re-measured 2026-10-22, Phase 4 WP0 sync)
+base_gzip = 13953628         # wasm gzip -9
+base_br = 9327609            # wasm brotli -q 11 --lgwin=24
+js_br = 19649                # JS glue brotli
 delta_br_max = 163840        # delta +139,894 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 131072: delta +109,715 B brotli (+1.18 %): 0001 web fix, overlay, 01)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
 [pdf]
 app = "pdfcraft"
-base_sha = "924c4da"
+base_sha = "3e30645"
 craft_fonts = false
-base_raw = 39099122          # pristine wasm raw at BASE (2026-10-19)
-base_gzip = 14393230         # wasm gzip -9
-base_br = 9395853            # wasm brotli -q 11 --lgwin=24
-js_br = 20495                # JS glue brotli
+base_raw = 39292123          # pristine wasm raw at BASE (re-measured 2026-10-22, Phase 4 WP0 sync)
+base_gzip = 14451157         # wasm gzip -9
+base_br = 9435622            # wasm brotli -q 11 --lgwin=24
+js_br = 20537                # JS glue brotli
 delta_br_max = 163840        # delta +137,654 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 114688: delta +97,954 B brotli (+1.04 %): overlay 0100-0102, 0110 ca)
 js_br_max = 24576
 upstream_growth_warn = 0.05
