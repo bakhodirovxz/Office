@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Design only, written 2026-10-22 on branch `phase-4`. **Owner review done 2026-10-22: all three recommendations accepted (§11). The Fluent SVG icons (Appendix B) are accepted for now; the final call comes after the WP23 staff usability check.** |
 | **Implements** | PLAN §2.1–§2.4 (the design WP2 and WP3 build), WP1. The labels feed WP17; the settings key feeds WP5; the keyboard and accessibility rules feed WP18. |
-| **Upstream BASEs read** | wordcraft `eae2421`, gridcraft `f1894c6`, deckcraft `1dc6972`, pdfcraft `924c4da` (the trees under `upstream/` are the **queue applied**). Every `file:line` below is relative to `upstream/` unless it says `domains/`. **WP0 moves every BASE: WP0b re-checks every id and line in §9 and Appendix A.** |
+| **Upstream BASEs read** | wordcraft `eae2421`, gridcraft `f1894c6`, deckcraft `1dc6972`, pdfcraft `924c4da` (the trees under `upstream/` are the **queue applied**). Every `file:line` below is relative to `upstream/` unless it says `domains/`. **WP0 moves every BASE: WP0b re-checks every id and line in §9 and Appendix A.** *WP0b done 2026-10-23 at wordcraft `2e6db0b`, gridcraft `2ebdf16`, deckcraft `fe510bd`, pdfcraft `3e30645`: all 139 Appendix A ids found at their updated lines; the moved lines are updated in place.* |
 | **Mock-ups** | ASCII below, and the same four layouts drawn in [`toolbar-design.html`](toolbar-design.html) (a static page, no external resources; open it in any browser). |
 | **Owner time** | 1–2 hours: the Uzbek summary, the four mock-ups, and the three questions in §11. |
 
@@ -79,8 +79,8 @@ Saqlash, Qaytarish va "Namoyish" tugmasi sarlavha qatorida turadi.
 
 | # | Decision | Why |
 |---|---|---|
-| 1 | **Docs keeps a ribbon, cut to three tabs**: the built-in Home and Insert tabs plus our tab "Hujjat". It is applied as a **preset** through upstream's Customize Ribbon (`tools.customizeRibbon`, `wordcraft/crates/engine/src/cmd/tools.rs:377`). | PLAN F1/§2.2: no hot-file patch. Word users already know Home and Insert, including where ¶ is. Risk R3 ("still a ribbon") is answered by owner question 1 and by WP23. |
-| 2 | **Sheets and Slides get one row of our own** (`office_toolbar.rs` + `office_toolbar.toml`), drawn instead of `ribbon::show` (gridcraft `ui-egui/src/lib.rs:1149`, deckcraft `ui-egui/src/lib.rs:1836`). | PLAN §2.3. Their ribbons have no customization hook (F3), so a preset is not possible. |
+| 1 | **Docs keeps a ribbon, cut to three tabs**: the built-in Home and Insert tabs plus our tab "Hujjat". It is applied as a **preset** through upstream's Customize Ribbon (`tools.customizeRibbon`, `wordcraft/crates/engine/src/cmd/tools.rs:449`). | PLAN F1/§2.2: no hot-file patch. Word users already know Home and Insert, including where ¶ is. Risk R3 ("still a ribbon") is answered by owner question 1 and by WP23. |
+| 2 | **Sheets and Slides get one row of our own** (`office_toolbar.rs` + `office_toolbar.toml`), drawn instead of `ribbon::show` (gridcraft `ui-egui/src/lib.rs:1193`, deckcraft `ui-egui/src/lib.rs:1870`). | PLAN §2.3. Their ribbons have no customization hook (F3), so a preset is not possible. |
 | 3 | **PDF is unchanged.** | PLAN F5/§2.4: there is no ribbon. The mode bar is already task-shaped (`pdfcraft/crates/ui-egui/src/chrome.rs:496-536`). |
 | 4 | **What the title bar already shows is not repeated.** Sheets' title bar has Save/Undo/Redo (`gridcraft/crates/ui-egui/src/ribbon.rs:71-97`). Slides' QAT has Save/Undo/Redo/Start show (`deckcraft/crates/ui-egui/src/qat.rs:59-64`). | The row stays short enough for a 1366 px laptop screen (§4.4). |
 | 5 | **One shared setting** `toolbar = "simple" \| "full"` in `settings.toml` (WP5) drives Docs, Sheets and Slides. Default `simple`. | One choice for the user to learn; owner question 2. |
@@ -128,7 +128,7 @@ Saqlash, Qaytarish va "Namoyish" tugmasi sarlavha qatorida turadi.
     (`:70-82`), and numbers on the QAT (`qat_label`, `:594-601`): Save 1, Undo 2, Redo 3, **¶ 4**, toggle 5. The Home
     and Insert controls keep Word's sequences (`:150-210`).
   - **Our "Hujjat" tab has no Alt letter**: `TAB_LETTERS` lists built-in tabs only. Its commands are reached by their
-    own shortcuts (Ctrl+P, F7), or by the command search: Alt+Q, `tools.search`, `cmd/tools.rs:383-384`. Each command's
+    own shortcuts (Ctrl+P, F7), or by the command search: Alt+Q, `tools.search`, `cmd/tools.rs:455-456`. Each command's
     label is registered, so search finds it by its Uzbek name.
 - **Sheets:**
   - Excel's sequences stay valid in simple mode: the state machine does not need the ribbon to be drawn
@@ -144,13 +144,13 @@ Saqlash, Qaytarish va "Namoyish" tugmasi sarlavha qatorida turadi.
     - Alt,M,H: show formulas;
     - Alt,F,P: print.
   - Our row paints each badge with the full sequence. That reuses `keytip`/`control_keytip`
-    (`gridcraft/crates/ui-egui/src/ribbon.rs:324-340`): a one-word `pub(crate)` hunk each.
-  - **It must also consume `keytip_invoke`** (`invoke`, `:356-363`) for the five `control`-kind ids: `home.fontName`,
+    (`gridcraft/crates/ui-egui/src/ribbon.rs:326-342`): a one-word `pub(crate)` hunk each.
+  - **It must also consume `keytip_invoke`** (`invoke`, `:358-365`) for the five `control`-kind ids: `home.fontName`,
     `home.fontSize`, `home.fillColor`, `home.fontColor` and `home.numberFormat`. Otherwise Alt,H,F,F and the other four
     do nothing in simple mode. A kittest covers it.
 - **Slides:** deckcraft has **no keytip system** (no keytip code in `deckcraft/crates/ui-egui/src`).
   - What exists: Alt+F (File), the shortcuts on each command (Ctrl+B/I/U, Ctrl+L/E/R, F5) and the palette
-    (Ctrl+Shift+P, `deckcraft/crates/ui-egui/src/lib.rs:425`).
+    (Ctrl+Shift+P, `deckcraft/crates/ui-egui/src/lib.rs:435`).
   - We add no keytips. This is a gap to record in WP18.
 - **PDF:** no keytips. Ctrl+K (palette), Ctrl+P, Ctrl+S and Ctrl+D (`pdfcraft/crates/engine/src/commands.rs:186-198`).
 - **Tooltips** show `<label> (<shortcut>)`, built from the registry shortcut, as the apps already do.
@@ -169,12 +169,12 @@ Saqlash, Qaytarish va "Namoyish" tugmasi sarlavha qatorida turadi.
 ### 2.3 Accessibility (requirements for WP2/WP3; WP18 measures them)
 - **Tab order = drawing order**, left to right, group by group, with the toggle last. No custom focus order.
 - **Accessible name** = the translated label, never the icon name. Our buttons call `widget_info` the way upstream's do
-  (`wordcraft/crates/ui-egui/src/ribbon.rs:296`, `gridcraft/crates/ui-egui/src/ribbon.rs:155`). Toggles report
+  (`wordcraft/crates/ui-egui/src/ribbon.rs:409`, `gridcraft/crates/ui-egui/src/ribbon.rs:155`). Toggles report
   their state (`WidgetInfo::selected`): B/I/U, alignment, wrap, merge, filter, show formulas, bullets and ¶.
 - **Targets:** at least 24×24 logical px on desktop. Compact mode (§7): at least 40×40.
 - **Colours:** upstream's theme tokens only. Our toolbar adds no colour of its own.
 - **Unverified, said plainly:** whether Tab moves focus from the canvas into the ribbon or into our row. In gridcraft
-  the grid keeps keyboard focus by design (`ribbon.rs:323`). WP18 measures it with Narrator and keyboard only. The
+  the grid keeps keyboard focus by design (`ribbon.rs:325`). WP18 measures it with Narrator and keyboard only. The
   keyboard path that is known to work is keytips plus shortcuts plus command search (§2.2).
 
 ---
@@ -207,15 +207,15 @@ The same window in full mode: all 13 tabs, as upstream. The QAT button now reads
 | Area | Content | Count |
 |---|---|---|
 | QAT (title bar, every tab) | Save, Undo, Redo, **Show/Hide ¶**, the simple/full toggle | 5 buttons |
-| Tab strip (upstream, right side) | Comments; Editing / Reviewing (the track-changes switch, `wordcraft/crates/ui-egui/src/ribbon.rs:253-269`) | 2 |
+| Tab strip (upstream, right side) | Comments; Editing / Reviewing (the track-changes switch, `wordcraft/crates/ui-egui/src/ribbon.rs:368-393`) | 2 |
 | **Asosiy** (built-in Home, unchanged) | Clipboard, Font, Paragraph (with ¶ showing its state), Styles, Editing, Voice, Editor | 38 keytip controls |
 | **Kiritish** (built-in Insert, unchanged) | Pages, Tables, Illustrations, Links, Comments, Header & Footer, Text, Symbols | 24 keytip controls |
 | **Hujjat** (ours) | Fayl: Print, Export PDF · Sahifa: Orientation, Page Setup · Imlo: Spelling & Grammar · Transliteratsiya: three directions · Tarix: Version History | 9 buttons |
-| Contextual tabs (upstream) | Table Design/Layout, Picture/Shape Format, Equation, Chart/SmartArt Design: still appear on selection (`ribbon.rs:206-212`); hiding tabs does not affect them | — |
+| Contextual tabs (upstream) | Table Design/Layout, Picture/Shape Format, Equation, Chart/SmartArt Design: still appear on selection (`ribbon.rs:288-294`); hiding tabs does not affect them | — |
 
 Every id, with params, labels and its registration line, is in **Appendix A.1**.
 
-The preset's tab and group names are literal text (`ribbon.rs:288-289`). `docs-office` sets them from these reviewed
+The preset's tab and group names are literal text (`ribbon.rs:400-401`). `docs-office` sets them from these reviewed
 rows and re-applies the preset when the interface language changes:
 
 | Name in the preset | en (catalog source) | uz-Latn | uz-Cyrl | ru | Status |
@@ -240,37 +240,37 @@ These 10 built-in tabs are hidden: Draw, Design, Layout, References, Mailings, R
 Everything also stays reachable through Alt+Q command search.
 
 ### 3.4 Findings that shaped the Docs tab
-1. **Custom groups run every command with `{}`** (`wordcraft/crates/ui-egui/src/ribbon.rs:424-444`). They also never
-   show a toggle state (`:431`, `false`). Consequences:
-   - `file.exportPdf` requires `path` (`cmd/file.rs:82-90`), so it **cannot** sit in a custom group.
-     `layout.margins {}` is a no-op (`cmd/page.rs:460-472`), and `layout.size {}` fails (`:515-523`). The Sahifa
+1. **Custom groups run every command with `{}`** (`wordcraft/crates/ui-egui/src/ribbon.rs:569-589`). They also never
+   show a toggle state (`:576`, `false`). Consequences:
+   - `file.exportPdf` requires `path` (`cmd/file.rs:82-94`), so it **cannot** sit in a custom group. *(Changed at wordcraft v0.9.0, 2026-10-22: with no `path` it now pushes `{"open":"exportPdf"}` and the app opens the PDF export dialog, so it can sit in a group after all. The `office.exportPdf` workaround below is optional; see `sync-report.md` and the WP0b notes.)*
+     `layout.margins {}` is a no-op (`cmd/page.rs:486-498`), and `layout.size {}` fails (`:543-551`). The Sahifa
      group therefore uses `layout.orientation` (toggles, `:18-26`) and `layout.pageSetup` (opens the dialog,
      `:42-48`).
    - `ui.dialog` targets (Word Count, Replace) are UI commands, not registry ids. `RibbonLayout::add` refuses them
      (`ribbon.rs:275-278`).
 2. **Export PDF needs no upstream hunk.**
-   - `file.print` opens File › Print (`cmd/file.rs:106-111`, handled at `ui-egui/src/lib.rs:1249-1252`). That page draws
-     the "save a copy" formats, **PDF first**, below the print settings (`ui-egui/src/print_page.rs:220`, `:312-327`).
+   - `file.print` opens File › Print (`cmd/file.rs:111-116`, handled at `ui-egui/src/lib.rs:1426-1429`). That page draws
+     the "save a copy" formats, **PDF first**, below the print settings (`ui-egui/src/print_page.rs:239`, `:335-350`).
    - So `office.exportPdf` (ours, label "Export PDF", a reviewed row) pushes the same `{"open":"print"}`.
    - If WP23 shows staff look for a direct PDF dialog, the fix is one match arm in `handle_request`
-     (`ui-egui/src/lib.rs:1240-1259`): `"exportPdf" => self.export_dialog("pdf")` (the function is at
-     `file_dialogs.rs:282`). That is a carried line in a hot file, so it is not the default.
+     (`ui-egui/src/lib.rs:1415-1437`): `"exportPdf" => self.export_dialog("pdf")` (the function is at
+     `file_dialogs.rs:361`). That is a carried line in a hot file, so it is not the default.
 3. **¶ is on the QAT as well as on Home.**
-   - Home shows its on/off state (`ribbon.rs:944-945`).
-   - The QAT is visible on every tab, so ¶ never hides behind a tab switch. The QAT has no on/off state (`chrome.rs:42-62`).
+   - Home shows its on/off state (`ribbon.rs:1158-1159`).
+   - The QAT is visible on every tab, so ¶ never hides behind a tab switch. The QAT has no on/off state (`chrome.rs:48-68`).
    - Ctrl+Shift+8 works everywhere (`cmd/view.rs:23`).
-4. **Icons.** Custom-group and QAT buttons take their icon from the id's last segment (`ui-egui/src/widgets.rs:367-392`).
+4. **Icons.** Custom-group and QAT buttons take their icon from the id's last segment (`ui-egui/src/widgets.rs:576-601`).
    - `print`, `exportPdf`, `translitCyrl`/`Latn`/`Auto`, `history`, `ribbonFull` and `ribbonSimple` have no icon there,
-     so they draw upstream's fallback: a tile with the first letter (`icons.rs:1437-1442`).
+     so they draw upstream's fallback: a tile with the first letter (`icons.rs:1480-1485`).
    - Accept that for now. If the WP2 screenshots look wrong, add rows to the `ICONS` table in the wordcraft overlay
      patch (data in a hot file).
    - **Update (2026-10-22):** we want Fluent icons here instead of the tile. That needs one small hook hunk in
      `icons.rs` (Appendix B.3 point 6); without it the tile stays.
-5. **Home has a dead button.** "Dictate" (`ribbon.rs:1012`, keytip `keytips.rs:181`) runs `tools.dictate`, which **is not
-   registered at this BASE**. `widgets::enabled` (`widgets.rs:92-105`) therefore greys it out. It is upstream's, and
+5. **Home has a dead button.** "Dictate" (`ribbon.rs:1226`, keytip `keytips.rs:181`) runs `tools.dictate`, which **is not
+   registered at this BASE**. `widgets::enabled` (`widgets.rs:175-188`) therefore greys it out. It is upstream's, and
    we cannot hide one built-in group. Recorded; it is not fixed here.
 6. **Two "Version History" entries could confuse staff.**
-   - Upstream's `file.versions` (`cmd/tools.rs:397`) keeps in-memory versions under File › Info.
+   - Upstream's `file.versions` (`cmd/tools.rs:469`) keeps in-memory versions under File › Info.
    - Ours (`office.history`, WP10) opens the shell's on-disk History panel.
    - WP10 should re-register `file.versions` from `docs-office` to point at ours (F2 allows a re-registration), so
      there is one feature with one name.
@@ -304,7 +304,7 @@ WP3 measures both thresholds.
 |---|---|---|
 | Font | font, size, B, I, U, font colour, fill colour, borders | `home.fontName`, `home.fontSize`, `home.bold`, `home.italic`, `home.underline`, `home.fontColor`, `home.fillColor`, `home.borders` |
 | Alignment | left, centre, right, wrap, merge & centre | `home.alignLeft`, `home.alignCenter`, `home.alignRight`, `home.wrapText`, `home.mergeCenter` |
-| Number | one picker: General, Number, Short Date, Percentage, **Text** (staff numbers and passport series keep their leading zeros), More… | `home.numberFormat` `{"format": …}` (names from `format_code_for`, `ribbon.rs:1117-1143`) |
+| Number | one picker: General, Number, Short Date, Percentage, **Text** (staff numbers and passport series keep their leading zeros), More… | `home.numberFormat` `{"format": …}` (names from `format_code_for`, `ribbon.rs:1119-1145`) |
 | Cells | Insert ▾ (rows, columns, sheet), Delete ▾ (rows, columns) | `home.insertRows`, `home.insertColumns`, `home.insertSheet`, `home.deleteRows`, `home.deleteColumns` |
 | Data | AutoSum, Sort ▾ (A→Z, Z→A), Filter | `formulas.autoSum`, `data.sortAscending`, `data.sortDescending`, `data.filter` |
 | View | Freeze ▾ (panes, top row, first column, unfreeze), Show formulas | `view.freezePanes`, `view.freezeTopRow`, `view.freezeFirstColumn`, `view.unfreezePanes`, `formulas.showFormulas` |
@@ -315,7 +315,7 @@ Labels, params and registration lines: **Appendix A.2**.
 
 The data table is `domains/sheets/office_toolbar.toml`: one entry per control, holding id, params, label key, icon
 and group. It is drawn with upstream's `pub` widgets (`gridcraft/crates/ui-egui/src/widgets.rs:18-109`). The font,
-size and number pickers reuse `font_combo`/`size_combo`/`number_combo` (`ribbon.rs:1064-1143`), each a one-word
+size and number pickers reuse `font_combo`/`size_combo`/`number_combo` (`ribbon.rs:1066-1145`), each a one-word
 `pub(crate)` hunk. Paste stays on Ctrl+V and the context menu, as Excel users expect. It is left off the row on purpose.
 
 ### 4.3 What moves behind the full ribbon
@@ -329,7 +329,7 @@ Page setup is also reachable from Print. Charts are reachable through command se
 ### 4.4 Sheets specifics
 - **Never covers the Excel workload signals** (PLAN §6): the row adds no work per frame beyond drawing about 25 widgets.
   WP12's memory and FPS re-run includes the simple toolbar.
-- **`file.print`** is routed by the app to the system print path (`gridcraft/crates/ui-egui/src/lib.rs:520`, `:572-583`).
+- **`file.print`** is routed by the app to the system print path (`gridcraft/crates/ui-egui/src/lib.rs:543`, `:595-606`).
   Our button uses `app.run_or_alert("file.print", {})` exactly as Ctrl+P does (`keymap.rs:109`).
 
 ---
@@ -361,8 +361,8 @@ Labels and lines: **Appendix A.3**.
 
 Upstream helpers are reused as they are. These are already `pub`:
 - `fmt_state`, `font_families`, `shapes_gallery`, `table_grid_picker` and `translit_menu`
-  (`deckcraft/crates/ui-egui/src/ribbon.rs:331`, `:472`, `:819`, `:1308`, `:1160`);
-- the widgets (`widgets.rs:30-223`).
+  (`deckcraft/crates/ui-egui/src/ribbon.rs:331`, `:472`, `:819`, `:1328`, `:1180`);
+- the widgets (`widgets.rs:30-242`).
 
 `layout_menu` (`ribbon.rs:381`) needs a one-word `pub(crate)` hunk.
 
@@ -389,7 +389,7 @@ Upstream helpers are reused as they are. These are already `pub`:
 Sources:
 - the mode tabs: `pdfcraft/crates/ui-egui/src/chrome.rs:508-514`;
 - the right-hand icons: `:516-531`;
-- the menu: `:541-624`;
+- the menu: `:547-636`;
 - the Home view's recommended tools (`organize, comment, form, edit, protect`): `home.rs:10`.
 
 ### 6.2 Decision
@@ -406,7 +406,7 @@ Sources:
 |---|---|---|
 | Sheets | Q · K · toʻldirish ▾ · tekislash ▾ (L/C/R/wrap/merge) · son formati ▾ · Σ · saralash/filtr ▾ · … | 8 targets of 40 dp; the font pickers go to "…" |
 | Slides | yangi slayd · Q · K · rang ▾ · markerlar · tekislash ▾ · rasm · … | 8 targets |
-| Docs | **No compact row.** The ribbon falls back to upstream's own overflow: tabs go to a » menu (`ribbon.rs:144`, `:272-335`), and groups scroll with edge chevrons (`:395-418`) | If B-3 picks A-web, Docs needs the one-row design (owner question 1's alternative). WP16 measures the 360 dp fit and says so. |
+| Docs | **No compact row.** The ribbon falls back to upstream's own overflow: tabs go to a » menu (`ribbon.rs:144`, `:396-478`), and groups scroll with edge chevrons (`:540-563`) | If B-3 picks A-web, Docs needs the one-row design (owner question 1's alternative). WP16 measures the 360 dp fit and says so. |
 | PDF | the upstream mode bar | WP16 measures whether 5 mode tabs and the 260 px search box fit; they likely do not |
 
 The compact rows are a different `[compact]` list in the same `office_toolbar.toml`, so WP16 can measure them with no
@@ -443,7 +443,7 @@ plainer "Belgilarni koʻrsatish ¶" ("show marks"). If WP23 shows staff miss the
 is one catalog edit, and every app picks it up.
 
 **Where our labels live.** New command labels are registry labels, and the apps translate them through their own
-embedded catalogs (`tl!(s.label)`, `wordcraft/crates/ui-egui/src/ribbon.rs:427`). So the new rows go into the
+embedded catalogs (`tl!(s.label)`, `wordcraft/crates/ui-egui/src/ribbon.rs:572`). So the new rows go into the
 **app** catalogs as well as `i18n/shell.tsv`, or the buttons show English.
 
 ## 9. Command-id verification at the current BASE
@@ -451,9 +451,9 @@ embedded catalogs (`tl!(s.label)`, `wordcraft/crates/ui-egui/src/ribbon.rs:427`)
 - A script indexed every registered id in the four trees:
   - wordcraft `CommandSpec::new("…"`: 629 ids;
   - gridcraft `cmd!(… "…"`: 344 ids;
-  - deckcraft `cmd!(… "…"`: 324 ids, plus the 51 `UI_COMMANDS` (`deckcraft/crates/ui-egui/src/lib.rs:388-445`);
+  - deckcraft `cmd!(… "…"`: 324 ids, plus the 51 `UI_COMMANDS` (`deckcraft/crates/ui-egui/src/lib.rs:398-455`);
   - pdfcraft `c("…"`/`ct("…"`: 192 ids;
-  - wordcraft `ui.*` arms in `WordApp::ui_command` (`wordcraft/crates/ui-egui/src/lib.rs:1299-1560`).
+  - wordcraft `ui.*` arms in `WordApp::ui_command` (`wordcraft/crates/ui-egui/src/lib.rs:1476-1748`).
 - Every id in Appendix A was looked up there. The first registration line is given.
 - The translit ids in Docs are ours (`domains/docs/crates/docs-translit/src/lib.rs:24-26`). In Sheets and Slides they
   come from our carried patch 0120 (`cmd/translit.rs`).
@@ -468,7 +468,7 @@ embedded catalogs (`tl!(s.label)`, `wordcraft/crates/ui-egui/src/ribbon.rs:427`)
 - WP2/WP3's `office_toolbar_ids_exist` tests assert each id in `office_toolbar.toml` and in the Docs preset against the
   live registry.
 - **WP0b re-runs this check after the WP0a sync lands**: every line in Appendix A, plus F4's call sites
-  (`gridcraft/crates/ui-egui/src/lib.rs:1149`, `deckcraft/crates/ui-egui/src/lib.rs:1836`). It records "moved" or
+  (`gridcraft/crates/ui-egui/src/lib.rs:1193`, `deckcraft/crates/ui-egui/src/lib.rs:1870`). It records "moved" or
   "confirmed" in `docs/phase4/wp0-notes.md`.
 
 ## 10. Counts (simple vs full)
@@ -517,11 +517,11 @@ Columns:
 
 | # | Group | Command id | Params / picker | uz-Latn | en | ru | Label status | Registered at BASE |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Fayl | `file.print` | opens File › Print (`{"open":"print"}`) | Chop etish | Print | Печать | reviewed | `wordcraft/crates/engine/src/cmd/file.rs:106` |
+| 1 | Fayl | `file.print` | opens File › Print (`{"open":"print"}`) | Chop etish | Print | Печать | reviewed | `wordcraft/crates/engine/src/cmd/file.rs:111` |
 | 2 | Fayl | `office.exportPdf` | ours: `{"open":"print"}`; that page's first export button is PDF (§3.4) | PDF sifatida eksport qilish | Export PDF | Экспорт в PDF | reviewed | NEW (ours) |
 | 3 | Sahifa | `layout.orientation` | `{}` toggles portrait/landscape | Yoʻnalish | Orientation | Ориентация | reviewed | `wordcraft/crates/engine/src/cmd/page.rs:18` |
 | 4 | Sahifa | `layout.pageSetup` | `{}` opens Page Setup (margins, paper) | Sahifa parametrlari | Page Setup | Параметры страницы | reviewed | `wordcraft/crates/engine/src/cmd/page.rs:42` |
-| 5 | Imlo | `review.spelling` | `{}` next issue | Imlo va grammatika | Spelling & Grammar | Орфография и грамматика | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:57` |
+| 5 | Imlo | `review.spelling` | `{}` next issue | Imlo va grammatika | Spelling & Grammar | Орфография и грамматика | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:59` |
 | 6 | Transliteratsiya | `tools.translitCyrl` | `{}` = scope auto | Lotinchadan kirillchaga | Latin to Cyrillic | С латиницы на кириллицу | reviewed | ours: `domains/docs/crates/docs-translit/src/lib.rs:24` |
 | 7 | Transliteratsiya | `tools.translitLatn` | `{}` = scope auto | Kirillchadan lotinchaga | Cyrillic to Latin | С кириллицы на латиницу | reviewed | ours: `domains/docs/crates/docs-translit/src/lib.rs:25` |
 | 8 | Transliteratsiya | `tools.translitAuto` | `{}` = scope auto | Avtomatik aniqlash | Auto-detect | Автоопределение | reviewed | ours: `domains/docs/crates/docs-translit/src/lib.rs:26` |
@@ -531,17 +531,17 @@ Columns:
 
 | # | Group | Command id | Params / picker | uz-Latn | en | ru | Label status | Registered at BASE |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Tab strip (right) | `view.commentsPane` | upstream, always visible | Izohlar | Comments | Комментарии | reviewed | `wordcraft/crates/engine/src/cmd/view.rs:74` |
-| 2 | Tab strip (right) | `review.trackChanges` | Editing / Reviewing menu `{"value": bool}` | Tahrirlash | Editing | Редактирование | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:27` |
+| 1 | Tab strip (right) | `view.commentsPane` | upstream, always visible | Izohlar | Comments | Комментарии | reviewed | `wordcraft/crates/engine/src/cmd/view.rs:94` |
+| 2 | Tab strip (right) | `review.trackChanges` | Editing / Reviewing menu `{"value": bool}` | Tahrirlash | Editing | Редактирование | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:29` |
 
 #### Docs: Home tab (built-in, unchanged; the controls that carry a keytip, in drawing order)
 
 | # | Group | Command id | Params / picker | uz-Latn | en | ru | Label status | Registered at BASE |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Clipboard | `edit.paste` | split: Keep Text Only, Merge, Paste Special | Qoʻyish | Paste | Вставить | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:64` |
+| 1 | Clipboard | `edit.paste` | split: Keep Text Only, Merge, Paste Special | Qoʻyish | Paste | Вставить | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:76` |
 | 2 | Clipboard | `edit.cut` | — | Kesib olish | Cut | Вырезать | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:62` |
 | 3 | Clipboard | `edit.copy` | — | Nusxalash | Copy | Копировать | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:63` |
-| 4 | Clipboard | `edit.formatPainter` | toggle | Formatni nusxalash | Format Painter | Формат по образцу | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:146` |
+| 4 | Clipboard | `edit.formatPainter` | toggle | Formatni nusxalash | Format Painter | Формат по образцу | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:158` |
 | 5 | Font | `format.font` | combo `{"name"}` | Shrift | Font | Шрифт | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:98` |
 | 6 | Font | `format.size` | combo `{"size"}` | Shrift oʻlchami | Font Size | Размер шрифта | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:99` |
 | 7 | Font | `format.growFont` | — | Shrift oʻlchamini oshirish | Increase Font Size | Увеличить размер шрифта | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:100` |
@@ -556,26 +556,26 @@ Columns:
 | 16 | Font | `format.superscript` | toggle | Yuqori indeks | Superscript | Надстрочный | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:75` |
 | 17 | Font | `format.highlight` | split `{"color"}` | Matnni ajratish rangi | Text Highlight Color | Цвет выделения текста | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:105` |
 | 18 | Font | `format.color` | split `{"color"}` | Shrift rangi | Font Color | Цвет шрифта | reviewed | `wordcraft/crates/engine/src/cmd/format.rs:104` |
-| 19 | Paragraph | `para.bullets` | split `{"kind"}` | Markerlar | Bullets | Маркеры | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:137` |
-| 20 | Paragraph | `para.numbering` | split `{"kind"}` | Raqamlash | Numbering | Нумерация | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:138` |
-| 21 | Paragraph | `para.multilevel` | split `{"kind"}` | Koʻp darajali roʻyxat | Multilevel List | Многоуровневый список | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:140` |
+| 19 | Paragraph | `para.bullets` | split `{"kind"}` | Markerlar | Bullets | Маркеры | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:145` |
+| 20 | Paragraph | `para.numbering` | split `{"kind"}` | Raqamlash | Numbering | Нумерация | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:146` |
+| 21 | Paragraph | `para.multilevel` | split `{"kind"}` | Koʻp darajali roʻyxat | Multilevel List | Многоуровневый список | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:148` |
 | 22 | Paragraph | `para.outdent` | — | Chekinishni kamaytirish | Decrease Indent | Уменьшить отступ | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:41` |
 | 23 | Paragraph | `para.indent` | — | Chekinishni oshirish | Increase Indent | Увеличить отступ | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:40` |
-| 24 | Paragraph | `para.sort` | — | Saralash | Sort | Сортировка | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:167` |
+| 24 | Paragraph | `para.sort` | — | Saralash | Sort | Сортировка | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:175` |
 | 25 | Paragraph | `view.marks` | toggle, **shows its on/off state** | Koʻrsatish/yashirish ¶ | Show/Hide ¶ | Показать/скрыть ¶ | reviewed | `wordcraft/crates/engine/src/cmd/view.rs:18` |
 | 26 | Paragraph | `para.alignLeft` | toggle | Chapga tekislash | Align Left | По левому краю | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:15` |
 | 27 | Paragraph | `para.alignCenter` | toggle | Markaz | Center | По центру | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:16` |
 | 28 | Paragraph | `para.alignRight` | toggle | Oʻngga tekislash | Align Right | По правому краю | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:17` |
 | 29 | Paragraph | `para.justify` | toggle | Kenglik boʻyicha | Justify | По ширине | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:18` |
 | 30 | Paragraph | `para.lineSpacing` | menu `{"value"}` | Satr va xatboshi oraligʻi | Line and Paragraph Spacing | Интервал между строками и абзацами | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:75` |
-| 31 | Paragraph | `para.shading` | split `{"color"}` | Soyalash | Shading | Заливка | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:159` |
-| 32 | Paragraph | `para.borders` | split `{"kind"}` | Chegaralar | Borders | Границы | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:164` |
-| 33 | Styles | `styles.pane` | gallery + pane | Uslublar | Styles | Стили | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:221` |
-| 34 | Editing | `edit.find` | menu: Find, Advanced Find, Go To | Topish | Find | Найти | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:95` |
-| 35 | Editing | `ui.dialog` | `{"name":"replace"}` | Almashtirish | Replace | Заменить | reviewed | `wordcraft/crates/ui-egui/src/lib.rs:1322` (UI command) |
+| 31 | Paragraph | `para.shading` | split `{"color"}` | Soyalash | Shading | Заливка | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:167` |
+| 32 | Paragraph | `para.borders` | split `{"kind"}` | Chegaralar | Borders | Границы | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:172` |
+| 33 | Styles | `styles.pane` | gallery + pane | Uslublar | Styles | Стили | reviewed | `wordcraft/crates/engine/src/cmd/para.rs:229` |
+| 34 | Editing | `edit.find` | menu: Find, Advanced Find, Go To | Topish | Find | Найти | reviewed | `wordcraft/crates/engine/src/cmd/edit.rs:107` |
+| 35 | Editing | `ui.dialog` | `{"name":"replace"}` | Almashtirish | Replace | Заменить | reviewed | `wordcraft/crates/ui-egui/src/lib.rs:1499` (UI command) |
 | 36 | Editing | `select.all` | menu: all, paragraph, sentence | Tanlash | Select | Выделить | reviewed | `wordcraft/crates/engine/src/cmd/caret.rs:53` |
 | 37 | Voice | `tools.dictate` | upstream button, greyed (§3.4 item 5) | Ovoz bilan yozish | Dictate | Диктовка | reviewed | **NOT FOUND** |
-| 38 | Editor | `review.spelling` | — | Muharrir | Editor | Редактор | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:57` |
+| 38 | Editor | `review.spelling` | — | Muharrir | Editor | Редактор | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:59` |
 
 #### Docs: Insert tab (built-in, unchanged; the controls that carry a keytip)
 
@@ -590,19 +590,19 @@ Columns:
 | 7 | Illustrations | `insert.icon` | — | Piktogrammalar | Icons | Значки | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:28` |
 | 8 | Illustrations | `insert.smartArt` | — | SmartArt | SmartArt | SmartArt | reviewed | `wordcraft/crates/engine/src/cmd/smart_art.rs:31` |
 | 9 | Illustrations | `insert.chart` | — | Diagramma | Chart | Диаграмма | reviewed | `wordcraft/crates/engine/src/cmd/chart.rs:30` |
-| 10 | Links | `ui.dialog` | `{"name":"link"}` | Havola | Link | Ссылка | reviewed | `wordcraft/crates/ui-egui/src/lib.rs:1322` (UI command) |
+| 10 | Links | `ui.dialog` | `{"name":"link"}` | Havola | Link | Ссылка | reviewed | `wordcraft/crates/ui-egui/src/lib.rs:1499` (UI command) |
 | 11 | Links | `insert.crossReference` | — | Oʻzaro havola | Cross-reference | Перекрёстная ссылка | reviewed | `wordcraft/crates/engine/src/cmd/citations.rs:344` |
 | 12 | Comments | `review.newComment` | — | Izoh | Comment | Комментарий | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:14` |
 | 13 | Header & Footer | `insert.header` | menu `{"preset"}` | Yuqori kolontitul | Header | Верхний колонтитул | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:51` |
 | 14 | Header & Footer | `insert.footer` | menu `{"preset"}` | Quyi kolontitul | Footer | Нижний колонтитул | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:52` |
 | 15 | Header & Footer | `insert.pageNumber` | menu `{"position","align"}` | Sahifa raqami | Page Number | Номер страницы | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:53` |
 | 16 | Text | `insert.textBox` | — | Matn qutisi | Text Box | Текстовое поле | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:32` |
-| 17 | Text | `insert.quickParts` | menu | Tayyor bloklar | Quick Parts | Готовые блоки | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:458` |
+| 17 | Text | `insert.quickParts` | menu | Tayyor bloklar | Quick Parts | Готовые блоки | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:530` |
 | 18 | Text | `insert.wordArt` | gallery | WordArt | WordArt | WordArt | reviewed | `wordcraft/crates/engine/src/cmd/wordart.rs:22` |
 | 19 | Text | `insert.dropCap` | — | Birinchi katta harf | Drop Cap | Буквица | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:109` |
-| 20 | Text | `insert.signatureLine` | — | Imzo qatori | Signature Line | Строка подписи | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:487` |
+| 20 | Text | `insert.signatureLine` | — | Imzo qatori | Signature Line | Строка подписи | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:560` |
 | 21 | Text | `insert.dateTime` | — | Sana va vaqt | Date & Time | Дата и время | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:99` |
-| 22 | Text | `insert.object` | — | Obyekt | Object | Объект | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:507` |
+| 22 | Text | `insert.object` | — | Obyekt | Object | Объект | reviewed | `wordcraft/crates/engine/src/cmd/tools.rs:580` |
 | 23 | Symbols | `insert.equation` | — | Tenglama | Equation | Уравнение | reviewed | `wordcraft/crates/engine/src/cmd/equation.rs:25` |
 | 24 | Symbols | `insert.symbol` | grid `{"char"}` | Simvol | Symbol | Символ | reviewed | `wordcraft/crates/engine/src/cmd/insert.rs:100` |
 
@@ -648,7 +648,7 @@ Columns:
 | 26 | View | `view.freezeFirstColumn` | menu "Freeze ▾" | Birinchi ustunni qotirish | Freeze First Column | Закрепить первый столбец | reviewed | `gridcraft/crates/engine/src/cmd/view.rs:21` |
 | 27 | View | `view.unfreezePanes` | menu "Freeze ▾" | Qotirishni bekor qilish | Unfreeze Panes | Снять закрепление областей | reviewed | `gridcraft/crates/engine/src/cmd/view.rs:25` |
 | 28 | View | `formulas.showFormulas` | toggle | Formulalarni koʻrsatish | Show Formulas | Показать формулы | reviewed | `gridcraft/crates/engine/src/cmd/formulas.rs:53` |
-| 29 | Output | `file.print` | the app routes it to `print_now` (`lib.rs:520`) | Chop etish | Print | Печать | reviewed | `gridcraft/crates/engine/src/cmd/print.rs:31` |
+| 29 | Output | `file.print` | the app routes it to `print_now` (`lib.rs:543`) | Chop etish | Print | Печать | reviewed | `gridcraft/crates/engine/src/cmd/print.rs:31` |
 | 30 | Output | `tools.translitCyrl` | menu "Transliterate ▾" | Lotinchadan kirillchaga | Latin to Cyrillic | С латиницы на кириллицу | reviewed | `gridcraft/crates/engine/src/cmd/translit.rs:21` (patch 0120) |
 | 31 | Output | `tools.translitLatn` | menu "Transliterate ▾" | Kirillchadan lotinchaga | Cyrillic to Latin | С кириллицы на латиницу | reviewed | `gridcraft/crates/engine/src/cmd/translit.rs:30` (patch 0120) |
 | 32 | Output | `tools.translitAuto` | menu "Transliterate ▾" | Avtomatik aniqlash | Auto-detect | Автоопределение | reviewed | `gridcraft/crates/engine/src/cmd/translit.rs:39` (patch 0120) |
@@ -665,7 +665,7 @@ Columns:
 | 1 | Title bar QAT (upstream) | `file.save` | default QAT (`qat.rs:58-64`) | Saqlash | Save | Сохранить | reviewed | `deckcraft/crates/engine/src/cmd/file.rs:32` |
 | 2 | Title bar QAT (upstream) | `edit.undo` | default QAT | Qaytarish | Undo | Отменить | reviewed | `deckcraft/crates/engine/src/cmd/edit.rs:15` |
 | 3 | Title bar QAT (upstream) | `edit.redo` | default QAT | Qayta bajarish | Redo | — | reviewed; **ru missing** | `deckcraft/crates/engine/src/cmd/edit.rs:16` |
-| 4 | Title bar (upstream) | `show.start` | the "Present" button; QAT "Start from Beginning" | Namoyish | Slide Show | — | reviewed; **ru missing** | `deckcraft/crates/ui-egui/src/lib.rs:411` (UI command) |
+| 4 | Title bar (upstream) | `show.start` | the "Present" button; QAT "Start from Beginning" | Namoyish | Slide Show | — | reviewed; **ru missing** | `deckcraft/crates/ui-egui/src/lib.rs:421` (UI command) |
 
 #### Slides: simplified toolbar (ours)
 
@@ -685,7 +685,7 @@ Columns:
 | 12 | Paragraph | `format.alignCenter` | toggle | Markaz | Center | По центру | reviewed | `deckcraft/crates/engine/src/cmd/format.rs:131` |
 | 13 | Paragraph | `format.alignRight` | toggle | Oʻngga tekislash | Align Right | По правому краю | reviewed | `deckcraft/crates/engine/src/cmd/format.rs:132` |
 | 14 | Insert | `insert.textBox` | — | Matn qutisi | Text Box | Текстовое поле | reviewed | `deckcraft/crates/engine/src/cmd/insert.rs:36` |
-| 15 | Insert | `app.insertPictureDialog` | file picker | Rasm | Picture | Рисунок | reviewed | `deckcraft/crates/ui-egui/src/lib.rs:429` (UI command) |
+| 15 | Insert | `app.insertPictureDialog` | file picker | Rasm | Picture | Рисунок | reviewed | `deckcraft/crates/ui-egui/src/lib.rs:439` (UI command) |
 | 16 | Insert | `shape.insert` | gallery (`shapes_gallery`) | Shakllar | Shapes | Фигуры | reviewed | `deckcraft/crates/engine/src/cmd/insert.rs:17` |
 | 17 | Insert | `insert.table` | grid `{"rows","cols"}` (`table_grid_picker`) | Jadval | Table | Таблица | reviewed | `deckcraft/crates/engine/src/cmd/insert.rs:64` |
 | 18 | Output | `tools.translitCyrl` | menu "Transliterate ▾" (`translit_menu`) | Lotinchadan kirillchaga | Latin to Cyrillic | С латиницы на кириллицу | reviewed | `deckcraft/crates/engine/src/cmd/translit.rs:19` (patch 0120) |
@@ -833,7 +833,7 @@ feature (resvg), which the **app** enables (pdfcraft: `egui_extras` with `featur
    pdfcraft does. No upstream hunk beyond the ones already planned.
 6. **Docs needs one small hunk, contrary to the first assumption.** Custom-group and QAT buttons paint through
    `icons::paint(painter, rect, name, ...)` (`wordcraft/crates/ui-egui/src/icons.rs:75`), a name-to-drawing table whose fallback
-   is the lettered tile (`:1437-1442`). It has no extension point and takes a `Painter`, not a `Ui`. To show Fluent icons on the
+   is the lettered tile (`:1480-1485`). It has no extension point and takes a `Painter`, not a `Ui`. To show Fluent icons on the
    Hujjat tab and the QAT buttons, the fallback arm needs a 2-3 line carried hunk calling an overlay hook (as `0100` does). The
    hook paints a texture it keeps in egui memory (`Painter::image`), because a `Painter` cannot use `Image::paint_at`. Without
    it those nine buttons keep the lettered tile (§3.4 item 4). It is a hot file: WP2 must count it in its "no new upstream
