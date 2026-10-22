@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 23:40:13 +0500
-Subject: [PATCH 2/2] engine, ui-egui: latinAlphabet param for the
+Subject: [PATCH 40/42] engine, ui-egui: latinAlphabet param for the
  transliteration commands; the cell context menu converts the selection only
 
 The three tools.translit* commands accept latinAlphabet "1995" (default), "2026" or "auto" and pass it to uz-translit, so
@@ -15,7 +15,7 @@ Review tab keeps scope auto. Tests: 2026 output, a single-cell selection scope.
  3 files changed, 37 insertions(+), 5 deletions(-)
 
 diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
-index 0cb7b2b..e1e9732 100644
+index 0cb7b2bf..e1e97324 100644
 --- a/crates/engine/src/cmd/translit.rs
 +++ b/crates/engine/src/cmd/translit.rs
 @@ -6,7 +6,7 @@
@@ -76,7 +76,7 @@ index 0cb7b2b..e1e9732 100644
      let t0 = now_ms();
      let sel = target_ranges(s, p)?;
 diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
-index 6325041..e69fa4f 100644
+index 63250418..e69fa4fa 100644
 --- a/crates/engine/tests/translit.rs
 +++ b/crates/engine/tests/translit.rs
 @@ -53,6 +53,25 @@ fn a_selection_converts_only_the_selection_and_a_single_cell_the_sheet() {
@@ -106,10 +106,10 @@ index 6325041..e69fa4f 100644
  fn auto_follows_the_dominant_script() {
      let mut s = session();
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index ed08f4a..c608d0c 100644
+index 94fd0a7c..02a8b1df 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
-@@ -2925,6 +2925,8 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
+@@ -2956,6 +2956,8 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                              app.copy_to_clipboard(ui.ctx(), id);
                          }
                          "edit.paste" => app.paste_from_clipboard(),

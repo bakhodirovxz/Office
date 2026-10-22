@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:56:00 +0500
-Subject: [PATCH 13/22] xlsx: share one string among inline-string cells with
+Subject: [PATCH 13/42] xlsx: share one string among inline-string cells with
  the same short text
 
 Cells of the shared-string table share their string; inline-string cells
@@ -15,7 +15,7 @@ sheet's inline-string and formula-string cells (up to 64 bytes, at most
  2 files changed, 58 insertions(+), 4 deletions(-)
 
 diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
-index c2fb34a..5a5016d 100644
+index c2fb34ad..5a5016d5 100644
 --- a/crates/xlsx/src/sheet_read.rs
 +++ b/crates/xlsx/src/sheet_read.rs
 @@ -37,6 +37,34 @@ struct RowState {
@@ -71,7 +71,7 @@ index c2fb34a..5a5016d 100644
          "e" => v.map(|v| Value::Error(CellError::parse(v.trim()).unwrap_or(CellError::Value))).unwrap_or(Value::Empty),
          "d" => match v.and_then(|v| parse_iso_datetime(v.trim(), cx.date_system)) {
 diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
-index aee82f0..3d435bd 100644
+index aee82f0a..3d435bd6 100644
 --- a/crates/xlsx/src/tests/shared_formulas.rs
 +++ b/crates/xlsx/src/tests/shared_formulas.rs
 @@ -115,3 +115,27 @@ fn runs_are_written_as_shared_formulas() {

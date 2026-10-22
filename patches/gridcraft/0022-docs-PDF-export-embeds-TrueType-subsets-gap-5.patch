@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:30:23 +0500
-Subject: [PATCH 22/22] docs: PDF export embeds TrueType subsets (gap 5)
+Subject: [PATCH 22/42] docs: PDF export embeds TrueType subsets (gap 5)
 
 ---
  docs/file-format-parity.md  | 2 +-
@@ -10,7 +10,7 @@ Subject: [PATCH 22/22] docs: PDF export embeds TrueType subsets (gap 5)
  3 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/docs/file-format-parity.md b/docs/file-format-parity.md
-index 158149f..b9ee3c5 100644
+index 5a758898..1e1a87eb 100644
 --- a/docs/file-format-parity.md
 +++ b/docs/file-format-parity.md
 @@ -56,7 +56,7 @@ and repair-free opening remain unverified.
@@ -23,7 +23,7 @@ index 158149f..b9ee3c5 100644
  | Print | yes | yes (via PDF, system dialog on desktop; PR #143 for web) | |
  | Images of ranges/charts (Copy as Picture) | yes | chart raster in `crates/chart` | No range-to-image command |
 diff --git a/docs/gaps.md b/docs/gaps.md
-index 03e8672..f3d1282 100644
+index 03e8672c..f3d12821 100644
 --- a/docs/gaps.md
 +++ b/docs/gaps.md
 @@ -51,10 +51,10 @@ No alpha blockers: every core workflow passes the [alpha gate](roadmap.md#alpha-
@@ -40,13 +40,13 @@ index 03e8672..f3d1282 100644
  - **Estimate:** 12–20 h. [localization-parity.md](localization-parity.md)
  
 diff --git a/docs/localization-parity.md b/docs/localization-parity.md
-index 09197ff..b557b95 100644
+index 64876633..51279bf2 100644
 --- a/docs/localization-parity.md
 +++ b/docs/localization-parity.md
-@@ -33,7 +33,7 @@ right-to-left sheets and full complex-script support. Part of
-   arrow keys, editor, popups and floating objects follow; text stays left-to-right inside its box
-   (no bidi), and the sheet tabs, horizontal scrollbar and printing/PDF are not mirrored yet. IME input goes
-   through egui/winit and is unverified for Chinese, Japanese and Korean.
+@@ -38,7 +38,7 @@ right-to-left sheets and full complex-script support. Part of
+ - **Names in any script.** Defined names (Define Name, Create from Selection) are limited to
+   255 characters, counted as characters rather than UTF-8 bytes, so a 255-letter Arabic name is
+   accepted as in Excel. Sheet names already counted characters (31).
 -- **PDF export** uses only the 14 standard PDF fonts: non-Latin text cannot export.
 +- **PDF export** embeds installed TrueType faces as subsets (Cyrillic, Greek, Uzbek export); RTL, shaping and CFF-only fonts (most CJK) still do not.
  

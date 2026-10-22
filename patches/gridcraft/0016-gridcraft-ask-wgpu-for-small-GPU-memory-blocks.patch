@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 12:02:20 +0500
-Subject: [PATCH 16/22] gridcraft: ask wgpu for small GPU memory blocks
+Subject: [PATCH 16/42] gridcraft: ask wgpu for small GPU memory blocks
 
 With wgpu's default (performance) memory hints, the DirectX 12 allocator
 reserves GPU memory in blocks of 128 MiB (device) and 64 MiB (host) up
@@ -14,7 +14,7 @@ ask for small blocks (MemoryHints::MemoryUsage).
  1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/apps/gridcraft/src/graphics.rs b/apps/gridcraft/src/graphics.rs
-index 83478ed..85c8e7e 100644
+index 83478edd..85c8e7e2 100644
 --- a/apps/gridcraft/src/graphics.rs
 +++ b/apps/gridcraft/src/graphics.rs
 @@ -7,11 +7,14 @@

@@ -1,7 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 23:57:52 +0500
-Subject: [PATCH] ui-egui: office overlay adds uz-latn and uz-cyrl when its catalogs are present
+Subject: [PATCH 36/42] ui-egui: office overlay adds uz-latn and uz-cyrl when
+ its catalogs are present
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Adds uz-latn (Oʻzbekcha) and uz-cyrl (Ўзбекча) to Language when the overlay supplies their
 catalogs. build_office.rs looks for catalog-uz-latn.tsv and catalog-uz-cyrl.tsv (written by
@@ -13,13 +17,13 @@ name(), code() and tr(), and an early `uz` branch in from_tag() that picks Cyril
 name carries the export's draft marker while Uzbek rows are unreviewed. Without the catalogs
 Language, its tests and the language list are upstream's.
 ---
- crates/ui-egui/build_office.rs             | 57 +++++++++++++++++++++++++++++-
- crates/ui-egui/src/i18n.rs                 | 41 ++++++++++++++++++++-
- crates/ui-egui/src/office_overlay_tests.rs | 18 ++++++++++
+ crates/ui-egui/build_office.rs             | 57 +++++++++++++++++++++-
+ crates/ui-egui/src/i18n.rs                 | 41 +++++++++++++++-
+ crates/ui-egui/src/office_overlay_tests.rs | 18 +++++++
  3 files changed, 114 insertions(+), 2 deletions(-)
 
 diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
-index c50531e..295640e 100644
+index c50531e4..295640e5 100644
 --- a/crates/ui-egui/build_office.rs
 +++ b/crates/ui-egui/build_office.rs
 @@ -95,9 +95,64 @@ fn generate(dir: &Path) -> String {
@@ -95,7 +99,7 @@ index c50531e..295640e 100644
 +    o + &uzbek(None)
  }
 diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
-index b2dcb6f..7d2d7a0 100644
+index 37076cc7..25a00f15 100644
 --- a/crates/ui-egui/src/i18n.rs
 +++ b/crates/ui-egui/src/i18n.rs
 @@ -35,10 +35,32 @@ pub enum Language {
@@ -178,7 +182,7 @@ index b2dcb6f..7d2d7a0 100644
          crate::office_overlay::rebrand(translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label)))
      }
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index dbead09..e9357ef 100644
+index dbead093..e9357ef3 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -99,3 +99,21 @@ fn pdf_default_face_covers_uzbek() {
@@ -203,6 +207,3 @@ index dbead09..e9357ef 100644
 +        assert!(Language::parse("uz-Latn-UZ").is_none());
 +    }
 +}
--- 
-2.50.0
-

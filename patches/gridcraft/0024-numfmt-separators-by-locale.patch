@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 12:00:00 +0500
-Subject: [PATCH] numfmt: decimal and group separators by locale
+Subject: [PATCH 24/42] numfmt: decimal and group separators by locale
 
 format_value_in and format_general_fit_in take a NumLocale: the decimal point, the thousands
 separator, the sub-second point and the General format follow it (same text, same width).
@@ -22,7 +22,7 @@ values, recorded before the change, pins the old output.
  create mode 100644 crates/numfmt/tests/locale_separators.rs
 
 diff --git a/crates/numfmt/src/decimal.rs b/crates/numfmt/src/decimal.rs
-index 67071d4..c7ed6a4 100644
+index 67071d4e..c7ed6a4e 100644
 --- a/crates/numfmt/src/decimal.rs
 +++ b/crates/numfmt/src/decimal.rs
 @@ -4,6 +4,8 @@
@@ -66,7 +66,7 @@ index 67071d4..c7ed6a4 100644
          }
          s.push_str(&format!("E{}{:02}", if e < 0 { '-' } else { '+' }, e.unsigned_abs()));
 diff --git a/crates/numfmt/src/lib.rs b/crates/numfmt/src/lib.rs
-index 6280e1d..6552045 100644
+index 6280e1d2..6552045e 100644
 --- a/crates/numfmt/src/lib.rs
 +++ b/crates/numfmt/src/lib.rs
 @@ -1,5 +1,6 @@
@@ -163,7 +163,7 @@ index 6280e1d..6552045 100644
  }
  
 diff --git a/crates/numfmt/src/render.rs b/crates/numfmt/src/render.rs
-index 4408d38..035de0a 100644
+index 4408d383..035de0ad 100644
 --- a/crates/numfmt/src/render.rs
 +++ b/crates/numfmt/src/render.rs
 @@ -1,9 +1,9 @@
@@ -333,7 +333,7 @@ index 4408d38..035de0a 100644
          *p = "/".into();
      }
 diff --git a/crates/numfmt/src/tests.rs b/crates/numfmt/src/tests.rs
-index e5687f5..2a4b417 100644
+index e5687f5b..2a4b4178 100644
 --- a/crates/numfmt/src/tests.rs
 +++ b/crates/numfmt/src/tests.rs
 @@ -637,7 +637,7 @@ fn text_uncached(v: &Value, code: &str, sys: DateSystem) -> Result<String, CellE
@@ -347,7 +347,7 @@ index e5687f5..2a4b417 100644
  
 diff --git a/crates/numfmt/tests/en_us_golden.rs b/crates/numfmt/tests/en_us_golden.rs
 new file mode 100644
-index 0000000..62cfb71
+index 00000000..62cfb71b
 --- /dev/null
 +++ b/crates/numfmt/tests/en_us_golden.rs
 @@ -0,0 +1,92 @@
@@ -445,7 +445,7 @@ index 0000000..62cfb71
 +}
 diff --git a/crates/numfmt/tests/en_us_golden.tsv b/crates/numfmt/tests/en_us_golden.tsv
 new file mode 100644
-index 0000000..397204f
+index 00000000..397204fe
 --- /dev/null
 +++ b/crates/numfmt/tests/en_us_golden.tsv
 @@ -0,0 +1,1500 @@
@@ -1951,7 +1951,7 @@ index 0000000..397204f
 +00000	2.5	"00003"
 diff --git a/crates/numfmt/tests/locale_separators.rs b/crates/numfmt/tests/locale_separators.rs
 new file mode 100644
-index 0000000..7fa88ba
+index 00000000..7fa88bab
 --- /dev/null
 +++ b/crates/numfmt/tests/locale_separators.rs
 @@ -0,0 +1,61 @@

@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:06:08 +0500
-Subject: [PATCH 100/102] ui-egui, app: office overlay hook (name, icon,
- version, attribution)
+Subject: [PATCH 31/42] ui-egui, app: office overlay hook (name, icon, version,
+ attribution)
 
 Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
 OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window title,
@@ -27,7 +27,7 @@ value is upstream's own.
  create mode 100644 crates/ui-egui/src/office_overlay_tests.rs
 
 diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
-index c0fcb22..5747898 100644
+index c0fcb22d..5747898c 100644
 --- a/apps/gridcraft-web/src/web.rs
 +++ b/apps/gridcraft-web/src/web.rs
 @@ -75,7 +75,10 @@ pub fn start() {
@@ -43,7 +43,7 @@ index c0fcb22..5747898 100644
          }
      });
 diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
-index 7c0eb04..0a55681 100644
+index 7c0eb04e..0a55681e 100644
 --- a/apps/gridcraft/src/main.rs
 +++ b/apps/gridcraft/src/main.rs
 @@ -225,7 +225,7 @@ fn icon() -> Option<egui::IconData> {
@@ -74,7 +74,7 @@ index 7c0eb04..0a55681 100644
          .with_min_inner_size([640.0, 420.0])
          .with_app_id("ai.storyteller.gridcraft")
 diff --git a/crates/ui-egui/build.rs b/crates/ui-egui/build.rs
-index f40007f..047ee7a 100644
+index f40007fb..047ee7a6 100644
 --- a/crates/ui-egui/build.rs
 +++ b/crates/ui-egui/build.rs
 @@ -10,9 +10,13 @@
@@ -93,7 +93,7 @@ index f40007f..047ee7a 100644
          serde_json::from_str::<Value>(t).map_err(|e| e.to_string())
 diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
 new file mode 100644
-index 0000000..c50531e
+index 00000000..c50531e4
 --- /dev/null
 +++ b/crates/ui-egui/build_office.rs
 @@ -0,0 +1,119 @@
@@ -217,7 +217,7 @@ index 0000000..c50531e
 +    o
 +}
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index fb899c7..aa5fd10 100644
+index fb899c70..aa5fd100 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
 @@ -1063,7 +1063,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
@@ -258,7 +258,7 @@ index fb899c7..aa5fd10 100644
      let items: Vec<Json> = d.result.as_ref().and_then(Json::as_array).cloned().unwrap_or_default();
      if items.is_empty() {
 diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
-index 061698d..b2dcb6f 100644
+index 98919f8a..37076cc7 100644
 --- a/crates/ui-egui/src/i18n.rs
 +++ b/crates/ui-egui/src/i18n.rs
 @@ -130,7 +130,7 @@ impl Language {
@@ -279,7 +279,7 @@ index 061698d..b2dcb6f 100644
  }
  
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index f96cdac..6bc16f5 100644
+index f549aec2..2eac3345 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -22,6 +22,9 @@ pub mod i18n;
@@ -294,7 +294,7 @@ index f96cdac..6bc16f5 100644
  pub mod paper_view;
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
 new file mode 100644
-index 0000000..6276a68
+index 00000000..6276a683
 --- /dev/null
 +++ b/crates/ui-egui/src/office_overlay.rs
 @@ -0,0 +1,114 @@
@@ -414,7 +414,7 @@ index 0000000..6276a68
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
 new file mode 100644
-index 0000000..8d9b059
+index 00000000..8d9b059e
 --- /dev/null
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -0,0 +1,25 @@
@@ -444,7 +444,7 @@ index 0000000..8d9b059
 +    assert_eq!(label, if o::ACTIVE { format!("About\n{}", o::app_name()) } else { "About\nGridCraft".to_string() });
 +}
 diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
-index e24105b..6a8d442 100644
+index e24105b4..6a8d4425 100644
 --- a/crates/ui-egui/src/widgets.rs
 +++ b/crates/ui-egui/src/widgets.rs
 @@ -280,8 +280,8 @@ pub fn message_box(app: &mut SheetApp, ctx: &egui::Context) {

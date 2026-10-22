@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:55:38 +0500
-Subject: [PATCH 12/22] model: keep shifted copies of formulas to 16 bytes
+Subject: [PATCH 12/42] model: keep shifted copies of formulas to 16 bytes
 
 Most formula cells of a large sheet hold a shifted copy of a shared tree:
 the tree's pointer and an offset. `Formula` still had room for an own
@@ -38,7 +38,7 @@ and one made an array formula gets a text and tree of its own.
  21 files changed, 133 insertions(+), 71 deletions(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index fe40b40..f731db1 100644
+index fe40b405..f731db1b 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -911,7 +911,7 @@ impl PassHost<'_> {
@@ -51,7 +51,7 @@ index fe40b40..f731db1 100644
              Some(range) => fit_to_range(v, range),
              None => v,
 diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
-index f0b8dbf..53050d5 100644
+index 2a219fb0..314b4e87 100644
 --- a/crates/calc/src/tests.rs
 +++ b/crates/calc/src/tests.rs
 @@ -664,7 +664,7 @@ fn legacy_array_formulas_fill_their_range() {
@@ -64,7 +64,7 @@ index f0b8dbf..53050d5 100644
          t.calc.cells_changed(&mut t.wb, &[(0, c(at))]);
      };
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index da211d3..ec07a77 100644
+index a3908294..a5889083 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
 @@ -243,7 +243,7 @@ fn cell_set(s: &mut Session, p: &Json) -> Result<Json> {
@@ -76,7 +76,7 @@ index da211d3..ec07a77 100644
              }
              let sh = cx.sheet_mut(sheet)?;
              // The array takes the whole range: other cells in it lose their contents.
-@@ -1000,7 +1000,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -1012,7 +1012,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                  };
                                  // The array range moves with its formula.
                                  let (dr, dc) = (dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
@@ -85,7 +85,7 @@ index da211d3..ec07a77 100644
                                  return Some(std::sync::Arc::new(moved));
                              }
                              Some(std::sync::Arc::new(f.copied(dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64)?))
-@@ -1198,15 +1198,15 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
+@@ -1210,15 +1210,15 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
              let Some(expr) = f.expr() else { continue };
              let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
              let text = gridcraft_formula::print(&new);
@@ -104,7 +104,7 @@ index da211d3..ec07a77 100644
                  cell.formula = Some(std::sync::Arc::new(nf));
              } else {
                  runs.keep(c, &f);
-@@ -1653,7 +1653,7 @@ mod tests {
+@@ -1665,7 +1665,7 @@ mod tests {
          s.execute("cell.set", json!({"cell": "H5", "input": "=1+1", "array": true})).unwrap();
          let sh = s.doc().unwrap().wb.active().unwrap();
          let f = sh.cell(CellRef::parse("H5").unwrap()).and_then(|c| c.formula.clone()).unwrap();
@@ -114,7 +114,7 @@ index da211d3..ec07a77 100644
      }
  
 diff --git a/crates/engine/src/cmd/formulas.rs b/crates/engine/src/cmd/formulas.rs
-index 9cb14e9..c988f22 100644
+index bc189445..6d1bd01d 100644
 --- a/crates/engine/src/cmd/formulas.rs
 +++ b/crates/engine/src/cmd/formulas.rs
 @@ -347,7 +347,7 @@ fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_sc
@@ -127,7 +127,7 @@ index 9cb14e9..c988f22 100644
                  cell.formula = Some(std::sync::Arc::new(nf));
              }
 diff --git a/crates/engine/src/cmd/insert.rs b/crates/engine/src/cmd/insert.rs
-index edbdf36..54d0795 100644
+index 5c982ec5..ff5006e4 100644
 --- a/crates/engine/src/cmd/insert.rs
 +++ b/crates/engine/src/cmd/insert.rs
 @@ -234,7 +234,7 @@ fn insert_table(s: &mut Session, p: &Json) -> Result<Json> {
@@ -140,7 +140,7 @@ index edbdf36..54d0795 100644
      if d.wb.sheet(sheet).is_some_and(arrays) {
          return Err(EngineError::Other("Multi-cell array formulas aren't allowed in tables.".into()));
 diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
-index e2aa24a..bdd1b45 100644
+index e2aa24a7..bdd1b45e 100644
 --- a/crates/engine/src/cmd/mod.rs
 +++ b/crates/engine/src/cmd/mod.rs
 @@ -430,7 +430,7 @@ fn check_arrays(old: &Workbook, new: &Workbook) -> Result<()> {
@@ -162,10 +162,10 @@ index e2aa24a..bdd1b45 100644
              _ => false,
          },
 diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
-index 92c1e3b..1c2d857 100644
+index 57f1e62e..f1a805eb 100644
 --- a/crates/engine/src/tests.rs
 +++ b/crates/engine/src/tests.rs
-@@ -1450,7 +1450,7 @@ fn row_and_column_inserts_move_legacy_array_ranges() {
+@@ -1486,7 +1486,7 @@ fn row_and_column_inserts_move_legacy_array_ranges() {
      s.execute("home.insertRows", json!({"rows": "1:1"})).unwrap();
      let d = s.doc().unwrap();
      let f = d.wb.sheet(0).unwrap().cell(CellRef::new(3, 3)).and_then(|x| x.formula.clone()).unwrap();
@@ -175,7 +175,7 @@ index 92c1e3b..1c2d857 100644
      reopen(&mut s);
      assert_eq!(v(&s, "E4"), Value::Number(14.0));
 diff --git a/crates/engine/tests/command_sequence_fuzz.rs b/crates/engine/tests/command_sequence_fuzz.rs
-index 7c06e93..13c9e05 100644
+index 7c06e93f..13c9e05e 100644
 --- a/crates/engine/tests/command_sequence_fuzz.rs
 +++ b/crates/engine/tests/command_sequence_fuzz.rs
 @@ -386,7 +386,7 @@ fn structure_problem(wb: &Workbook, sel: &gridcraft_engine::Selection) -> Option
@@ -197,7 +197,7 @@ index 7c06e93..13c9e05 100644
  
  /// Save to XLSX, reload (recalculating like opening does) and compare sheets, formulas and values.
 diff --git a/crates/engine/tests/formula_templates.rs b/crates/engine/tests/formula_templates.rs
-index 422de02..86b77a6 100644
+index 422de02b..86b77a6f 100644
 --- a/crates/engine/tests/formula_templates.rs
 +++ b/crates/engine/tests/formula_templates.rs
 @@ -50,7 +50,7 @@ fn source() -> Workbook {
@@ -237,7 +237,7 @@ index 422de02..86b77a6 100644
      let (shifted, trees) = sharing(wb);
      assert!(trees < 20, "{trees} trees for {shifted} shifted copies");
 diff --git a/crates/model/src/cell.rs b/crates/model/src/cell.rs
-index e606002..f10de44 100644
+index e6060022..f10de448 100644
 --- a/crates/model/src/cell.rs
 +++ b/crates/model/src/cell.rs
 @@ -20,24 +20,36 @@ use crate::style::StyleId;
@@ -482,7 +482,7 @@ index e606002..f10de44 100644
      fn runs_share_trees_down_columns_and_across_rows() {
          let mut runs = FormulaRuns::default();
 diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
-index 1f8d2f5..8003d34 100644
+index 1f8d2f53..8003d348 100644
 --- a/crates/model/src/workbook.rs
 +++ b/crates/model/src/workbook.rs
 @@ -221,7 +221,7 @@ impl Workbook {
@@ -495,7 +495,7 @@ index 1f8d2f5..8003d34 100644
                      })
                  })
 diff --git a/crates/ui-egui/src/formula_bar.rs b/crates/ui-egui/src/formula_bar.rs
-index 4105648..5d532bc 100644
+index 41056482..5d532bc0 100644
 --- a/crates/ui-egui/src/formula_bar.rs
 +++ b/crates/ui-egui/src/formula_bar.rs
 @@ -76,7 +76,7 @@ fn active_input(app: &SheetApp) -> String {
@@ -508,7 +508,7 @@ index 4105648..5d532bc 100644
              gridcraft_engine::display::edit_text(&d.wb, sh, a)
          };
 diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
-index 9241555..c2fb34a 100644
+index 92415550..c2fb34ad 100644
 --- a/crates/xlsx/src/sheet_read.rs
 +++ b/crates/xlsx/src/sheet_read.rs
 @@ -498,7 +498,7 @@ fn read_formula(cx: &mut Ctx<'_>, st: &mut RowState, f: &El, pos: CellRef, dynam
@@ -521,7 +521,7 @@ index 9241555..c2fb34a 100644
              Some(fm)
          }
 diff --git a/crates/xlsx/src/sheet_write.rs b/crates/xlsx/src/sheet_write.rs
-index c4d1466..8d8948e 100644
+index c4d1466c..8d8948e0 100644
 --- a/crates/xlsx/src/sheet_write.rs
 +++ b/crates/xlsx/src/sheet_write.rs
 @@ -119,11 +119,11 @@ fn shared_formulas(
@@ -566,7 +566,7 @@ index c4d1466..8d8948e 100644
                  let _ = write!(s, "<f t=\"array\" ref=\"{}\">{}</f>", r.a1(), text());
              }
 diff --git a/crates/xlsx/src/tests/array_export.rs b/crates/xlsx/src/tests/array_export.rs
-index adfdace..d931211 100644
+index adfdace0..d931211c 100644
 --- a/crates/xlsx/src/tests/array_export.rs
 +++ b/crates/xlsx/src/tests/array_export.rs
 @@ -90,7 +90,7 @@ fn nonspilling_formulas_preserve_array_evaluation_and_metadata() {
@@ -619,7 +619,7 @@ index adfdace..d931211 100644
  }
  
 diff --git a/crates/xlsx/src/tests/fixtures.rs b/crates/xlsx/src/tests/fixtures.rs
-index bd511cb..54bff43 100644
+index bd511cb8..54bff43e 100644
 --- a/crates/xlsx/src/tests/fixtures.rs
 +++ b/crates/xlsx/src/tests/fixtures.rs
 @@ -34,10 +34,10 @@ fn shared_formulas_and_value_types() {
@@ -636,7 +636,7 @@ index bd511cb..54bff43 100644
      assert!(s.cell(at("C6")).is_none(), "spilled cached values are dropped so the formula can spill");
      // Rows/cells without r continue from the previous position.
 diff --git a/crates/xlsx/src/tests/richdata_tests.rs b/crates/xlsx/src/tests/richdata_tests.rs
-index 9b90032..545d1b7 100644
+index 9b90032a..545d1b7d 100644
 --- a/crates/xlsx/src/tests/richdata_tests.rs
 +++ b/crates/xlsx/src/tests/richdata_tests.rs
 @@ -146,7 +146,7 @@ fn reads_independent_indices_reordered_keys_and_both_relationship_layouts() {
@@ -658,7 +658,7 @@ index 9b90032..545d1b7 100644
          let rels = package.rels("xl/workbook.xml").unwrap();
          assert!(rels.iter().any(|r| r.kind == "rdRichValue"));
 diff --git a/crates/xlsx/src/tests/roundtrip.rs b/crates/xlsx/src/tests/roundtrip.rs
-index 3e9be85..18cbf48 100644
+index bcf7b64b..872feaeb 100644
 --- a/crates/xlsx/src/tests/roundtrip.rs
 +++ b/crates/xlsx/src/tests/roundtrip.rs
 @@ -90,7 +90,7 @@ fn sample() -> Workbook {
@@ -670,7 +670,7 @@ index 3e9be85..18cbf48 100644
      let mut c = Cell::formula(arr);
      c.value = Value::Number(2469.0);
      s.cells.set(at("G2"), c);
-@@ -481,7 +481,7 @@ fn full_roundtrip() {
+@@ -482,7 +482,7 @@ fn full_roundtrip() {
      for (c, cell) in a.cells.iter() {
          let got = b.cell(c).unwrap_or_else(|| panic!("missing {c}"));
          assert_eq!(got.value, cell.value, "value at {c}");
@@ -679,7 +679,7 @@ index 3e9be85..18cbf48 100644
          assert_eq!(formula(got), formula(cell), "formula at {c}");
          assert_eq!(back.styles.get(got.style), wb.styles.get(cell.style), "style at {c}");
      }
-@@ -880,7 +880,7 @@ fn implicit_intersection_is_written_as_single() {
+@@ -881,7 +881,7 @@ fn implicit_intersection_is_written_as_single() {
      let (back, _) = read_xlsx(&bytes).unwrap();
      let sh = back.sheet(0).unwrap();
      assert_eq!(sh.cell(at("D3")).and_then(|c| c.formula.as_ref()).map(|f| f.text().into_owned()).as_deref(), Some("@A1:A3*2"));
@@ -688,7 +688,7 @@ index 3e9be85..18cbf48 100644
  }
  
  #[test]
-@@ -958,7 +958,7 @@ fn let_lambda_parameters_drop_xlpm_on_read() {
+@@ -959,7 +959,7 @@ fn let_lambda_parameters_drop_xlpm_on_read() {
      s.cells.set(at("A1"), Cell { value: Value::Number(2.0), ..Cell::formula(Formula::new("LET(x,1,x+1)")) });
      s.cells.set(at("A2"), Cell { value: Value::Number(6.0), ..Cell::formula(Formula::new("LAMBDA(a,a*2)(3)")) });
      let mut arr = Formula::new("MAP(B1:B2,LAMBDA(v,v+1))");
@@ -698,7 +698,7 @@ index 3e9be85..18cbf48 100644
      let bytes = write_xlsx(&wb).unwrap();
      let (xml, _) = sheet1_xml(&bytes);
 diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
-index 7f96cb5..aee82f0 100644
+index 7f96cb58..aee82f0a 100644
 --- a/crates/xlsx/src/tests/shared_formulas.rs
 +++ b/crates/xlsx/src/tests/shared_formulas.rs
 @@ -95,7 +95,7 @@ fn runs_are_written_as_shared_formulas() {
@@ -720,7 +720,7 @@ index 7f96cb5..aee82f0 100644
      }
      assert!(Arc::ptr_eq(&tree(&back, "B1"), &tree(&back, "B6")));
 diff --git a/crates/xlsx/src/tests/xls_tests.rs b/crates/xlsx/src/tests/xls_tests.rs
-index 3aeeb4f..fa19e85 100644
+index 8b2d52a0..a1296f89 100644
 --- a/crates/xlsx/src/tests/xls_tests.rs
 +++ b/crates/xlsx/src/tests/xls_tests.rs
 @@ -333,7 +333,7 @@ fn reads_values_formulas_formats_and_layout() {
@@ -733,10 +733,10 @@ index 3aeeb4f..fa19e85 100644
          assert_eq!(v(&wb, 0, "C6"), Value::Empty);
          // Number formats, merges, sizes, names, print area; embedded chart records ignored.
 diff --git a/crates/xlsx/src/xls/mod.rs b/crates/xlsx/src/xls/mod.rs
-index e04bcdc..e7226bb 100644
+index 9d22c651..15f3500d 100644
 --- a/crates/xlsx/src/xls/mod.rs
 +++ b/crates/xlsx/src/xls/mod.rs
-@@ -459,7 +459,7 @@ impl SheetState<'_> {
+@@ -460,7 +460,7 @@ impl SheetState<'_> {
                      self.unsupported("syntax GridCraft can't parse yet");
                      return;
                  }
@@ -745,7 +745,7 @@ index e04bcdc..e7226bb 100644
                  if let Some(cell) = self.sheet.cells.get_mut(pos) {
                      cell.formula = Some(Arc::new(f));
                  } else {
-@@ -546,7 +546,7 @@ fn worksheet(
+@@ -548,7 +548,7 @@ fn worksheet(
      // .xlsx is read, so that the formula fills its range on recalculation. If the formula itself
      // couldn't be imported, they keep their values.
      for p in &pending {

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 17:50:27 +0500
-Subject: [PATCH 17/22] model: keep a band's cells in one vector
+Subject: [PATCH 17/42] model: keep a band's cells in one vector
 
 A row held its cells in a vector of its own: a heap allocation per row,
 an entry in the band's row map, and (column, cell) pairs padded to 48
@@ -25,7 +25,7 @@ diffs, JSON) passes unchanged; the JSON form is the same.
  2 files changed, 280 insertions(+), 229 deletions(-)
 
 diff --git a/crates/model/src/store.rs b/crates/model/src/store.rs
-index e500ffd..ffe6d69 100644
+index e500ffdc..ffe6d69e 100644
 --- a/crates/model/src/store.rs
 +++ b/crates/model/src/store.rs
 @@ -1,93 +1,193 @@
@@ -697,7 +697,7 @@ index e500ffd..ffe6d69 100644
          let snap = s.clone();
          s.shrink_to_fit();
 diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
-index be9391c..bba81b7 100644
+index be9391c4..bba81b75 100644
 --- a/crates/model/src/workbook.rs
 +++ b/crates/model/src/workbook.rs
 @@ -204,7 +204,7 @@ impl Workbook {

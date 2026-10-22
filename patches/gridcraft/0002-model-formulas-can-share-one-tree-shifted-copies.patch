@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 02:25:27 +0500
-Subject: [PATCH 02/22] model: formulas can share one tree (shifted copies)
+Subject: [PATCH 02/42] model: formulas can share one tree (shifted copies)
 
 Every formula cell held its own text and syntax tree (about 680 bytes for a typical formula), also
 when a column is one formula filled down or an Excel shared formula: on a 10 MB workbook with
@@ -52,7 +52,7 @@ insert, cut) keeps working unchanged, and any rewrite simply stores a formula of
  27 files changed, 380 insertions(+), 59 deletions(-)
 
 diff --git a/crates/calc/src/eval.rs b/crates/calc/src/eval.rs
-index 0f9cfb0..5301a14 100644
+index 0f9cfb03..5301a144 100644
 --- a/crates/calc/src/eval.rs
 +++ b/crates/calc/src/eval.rs
 @@ -700,7 +700,7 @@ impl<'h> Evaluator<'h> {
@@ -74,7 +74,7 @@ index 0f9cfb0..5301a14 100644
                                      });
                                  (hidden, nested)
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index c69bac2..9d5d5f0 100644
+index fe7f1fe8..ec595e21 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
 @@ -155,7 +155,7 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
@@ -86,7 +86,7 @@ index c69bac2..9d5d5f0 100644
              let auto = if f.starts_with("TODAY(")
                  || f.starts_with("DATE(")
                  || f.starts_with("EDATE(")
-@@ -1095,7 +1095,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -1107,7 +1107,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                          _ => None,
                                      }
                                  {
@@ -95,7 +95,7 @@ index c69bac2..9d5d5f0 100644
                                      new.formula = Some(std::sync::Arc::new(Formula::new(&text)));
                                      new.value = Value::Empty;
                                  }
-@@ -1200,7 +1200,7 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
+@@ -1212,7 +1212,7 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
                  Some(a) if on_target => super::sheet::map_range(a, e),
                  a => a,
              };
@@ -105,7 +105,7 @@ index c69bac2..9d5d5f0 100644
              {
                  let mut nf = Formula::from_expr(new);
 diff --git a/crates/engine/src/cmd/extra.rs b/crates/engine/src/cmd/extra.rs
-index 01e2ac6..3ac7285 100644
+index 01e2ac6e..3ac7285b 100644
 --- a/crates/engine/src/cmd/extra.rs
 +++ b/crates/engine/src/cmd/extra.rs
 @@ -1193,7 +1193,7 @@ fn watch_window(s: &mut Session, p: &Json) -> Result<Json> {
@@ -118,7 +118,7 @@ index 01e2ac6..3ac7285 100644
          .collect();
      Ok(Json::Array(rows))
 diff --git a/crates/engine/src/cmd/forecast.rs b/crates/engine/src/cmd/forecast.rs
-index d25b367..071ab64 100644
+index d25b367b..071ab646 100644
 --- a/crates/engine/src/cmd/forecast.rs
 +++ b/crates/engine/src/cmd/forecast.rs
 @@ -489,7 +489,7 @@ mod tests {
@@ -131,7 +131,7 @@ index d25b367..071ab64 100644
  
      #[test]
 diff --git a/crates/engine/src/cmd/formulas.rs b/crates/engine/src/cmd/formulas.rs
-index 40df72d..9cb14e9 100644
+index 454c545d..bc189445 100644
 --- a/crates/engine/src/cmd/formulas.rs
 +++ b/crates/engine/src/cmd/formulas.rs
 @@ -496,7 +496,7 @@ fn error_checking(s: &mut Session, _: &Json) -> Result<Json> {
@@ -153,7 +153,7 @@ index 40df72d..9cb14e9 100644
          }
      };
 diff --git a/crates/engine/src/cmd/inspect.rs b/crates/engine/src/cmd/inspect.rs
-index f92b48b..530e10f 100644
+index f92b48bd..530e10fd 100644
 --- a/crates/engine/src/cmd/inspect.rs
 +++ b/crates/engine/src/cmd/inspect.rs
 @@ -102,7 +102,7 @@ fn read(s: &mut Session, p: &Json) -> Result<Json> {
@@ -175,7 +175,7 @@ index f92b48b..530e10f 100644
          "input": sh.input_text(c),
          "picture": sh.cell_pictures.get(&c).map(|picture| json!({"mime": picture.mime, "alt": picture.alt, "bytes": picture.data.len()})),
 diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
-index 50865a2..e2aa24a 100644
+index 50865a2b..e2aa24a7 100644
 --- a/crates/engine/src/cmd/mod.rs
 +++ b/crates/engine/src/cmd/mod.rs
 @@ -445,7 +445,7 @@ fn same_content(a: Option<&gridcraft_model::Cell>, b: Option<&gridcraft_model::C
@@ -188,7 +188,7 @@ index 50865a2..e2aa24a 100644
              _ => false,
          },
 diff --git a/crates/engine/src/cmd/sheet.rs b/crates/engine/src/cmd/sheet.rs
-index 7870dee..bea32b3 100644
+index 7870dee4..bea32b36 100644
 --- a/crates/engine/src/cmd/sheet.rs
 +++ b/crates/engine/src/cmd/sheet.rs
 @@ -781,7 +781,7 @@ fn rename_sheet(s: &mut Session, p: &Json) -> Result<Json> {
@@ -201,7 +201,7 @@ index 7870dee..bea32b3 100644
                      {
                          cell.formula = Some(Arc::new(gridcraft_model::Formula::from_expr(ne)));
 diff --git a/crates/engine/src/display.rs b/crates/engine/src/display.rs
-index b90e427..0f70b56 100644
+index 88dc53c7..a0bf2686 100644
 --- a/crates/engine/src/display.rs
 +++ b/crates/engine/src/display.rs
 @@ -86,7 +86,7 @@ pub fn cell_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
@@ -214,7 +214,7 @@ index b90e427..0f70b56 100644
      value_text(wb, sheet, c)
  }
 diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
-index ae499a1..92c1e3b 100644
+index 2ac29065..57f1e62e 100644
 --- a/crates/engine/src/tests.rs
 +++ b/crates/engine/src/tests.rs
 @@ -93,7 +93,7 @@ fn editing_a_name_renames_it_in_formulas() {
@@ -227,7 +227,7 @@ index ae499a1..92c1e3b 100644
      assert!(s.execute("formulas.defineName", json!({"name": "X", "oldName": "Missing"})).is_err());
  }
 diff --git a/crates/engine/tests/command_sequence_fuzz.rs b/crates/engine/tests/command_sequence_fuzz.rs
-index f8cb603..7c06e93 100644
+index f8cb603c..7c06e93f 100644
 --- a/crates/engine/tests/command_sequence_fuzz.rs
 +++ b/crates/engine/tests/command_sequence_fuzz.rs
 @@ -352,7 +352,7 @@ fn content_diff(a: &Workbook, b: &Workbook) -> Option<String> {
@@ -258,7 +258,7 @@ index f8cb603..7c06e93 100644
  }
  
 diff --git a/crates/engine/tests/cross_sheet_cut.rs b/crates/engine/tests/cross_sheet_cut.rs
-index 3f2baaa..874cb27 100644
+index 3f2baaa3..874cb27f 100644
 --- a/crates/engine/tests/cross_sheet_cut.rs
 +++ b/crates/engine/tests/cross_sheet_cut.rs
 @@ -27,7 +27,7 @@ fn value(s: &Session, sheet: &str, cell: &str) -> Value {
@@ -271,7 +271,7 @@ index 3f2baaa..874cb27 100644
  
  fn cut_to(s: &mut Session, source: &str, range: &str, destination: &str, at: &str) {
 diff --git a/crates/model/src/cell.rs b/crates/model/src/cell.rs
-index 8700f9a..e606002 100644
+index 8700f9a2..e6060022 100644
 --- a/crates/model/src/cell.rs
 +++ b/crates/model/src/cell.rs
 @@ -1,44 +1,222 @@
@@ -667,7 +667,7 @@ index 8700f9a..e606002 100644
 +    }
 +}
 diff --git a/crates/model/src/lib.rs b/crates/model/src/lib.rs
-index a76f30f..7d9f2bd 100644
+index a76f30fc..7d9f2bd5 100644
 --- a/crates/model/src/lib.rs
 +++ b/crates/model/src/lib.rs
 @@ -15,7 +15,7 @@ pub mod store;
@@ -680,7 +680,7 @@ index a76f30f..7d9f2bd 100644
  pub use password::PasswordHash;
  pub use preserved::{Preserved, PreservedPart, PreservedRel, PreservedSheet, PreservedXml};
 diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
-index 828ca69..1f8d2f5 100644
+index 828ca692..1f8d2f53 100644
 --- a/crates/model/src/workbook.rs
 +++ b/crates/model/src/workbook.rs
 @@ -219,7 +219,11 @@ impl Workbook {
@@ -697,7 +697,7 @@ index 828ca69..1f8d2f5 100644
                  .collect();
              if fixed.is_empty() {
 diff --git a/crates/ui-egui/src/formula_bar.rs b/crates/ui-egui/src/formula_bar.rs
-index 7f1ad87..4105648 100644
+index 7f1ad87f..41056482 100644
 --- a/crates/ui-egui/src/formula_bar.rs
 +++ b/crates/ui-egui/src/formula_bar.rs
 @@ -89,7 +89,7 @@ fn active_input(app: &SheetApp) -> String {
@@ -710,10 +710,10 @@ index 7f1ad87..4105648 100644
      }
      String::new()
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index 00e0c18..93170f4 100644
+index 106bc668..6472dee2 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
-@@ -529,7 +529,7 @@ fn display_text(
+@@ -535,7 +535,7 @@ fn display_text(
      if sh.show_formulas
          && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref())
      {
@@ -723,7 +723,7 @@ index 00e0c18..93170f4 100644
      if !sh.show_zeros && v.as_f64() == Some(0.0) {
          return (String::new(), None, false, None);
 diff --git a/crates/ui-egui/tests/clipboard.rs b/crates/ui-egui/tests/clipboard.rs
-index 08f83b5..7861d00 100644
+index 08f83b53..7861d003 100644
 --- a/crates/ui-egui/tests/clipboard.rs
 +++ b/crates/ui-egui/tests/clipboard.rs
 @@ -224,7 +224,7 @@ fn ribbon_paste_pastes_the_system_clipboard_like_cmd_v() {
@@ -745,7 +745,7 @@ index 08f83b5..7861d00 100644
  
  #[test]
 diff --git a/crates/ui-egui/tests/formula_locale.rs b/crates/ui-egui/tests/formula_locale.rs
-index 8558693..9c7bb92 100644
+index 85586937..9c7bb92e 100644
 --- a/crates/ui-egui/tests/formula_locale.rs
 +++ b/crates/ui-egui/tests/formula_locale.rs
 @@ -14,7 +14,7 @@ fn app() -> SheetApp {
@@ -758,7 +758,7 @@ index 8558693..9c7bb92 100644
  fn enter(app: &mut SheetApp, text: &str) -> bool {
      app.begin_edit(Some(text.into()), false);
 diff --git a/crates/ui-egui/tests/keytips.rs b/crates/ui-egui/tests/keytips.rs
-index 24be742..5254fb1 100644
+index 1cf286ea..acd57d70 100644
 --- a/crates/ui-egui/tests/keytips.rs
 +++ b/crates/ui-egui/tests/keytips.rs
 @@ -181,7 +181,7 @@ fn legacy_paste_special_keeps_formulas_when_requested() {
@@ -771,7 +771,7 @@ index 24be742..5254fb1 100644
      assert_eq!(value(&h, "E4"), Value::Number(99.0));
      assert!(h.state().editor.is_none());
 diff --git a/crates/xlsx/src/fmla.rs b/crates/xlsx/src/fmla.rs
-index ef26387..3e0de94 100644
+index ef263873..3e0de944 100644
 --- a/crates/xlsx/src/fmla.rs
 +++ b/crates/xlsx/src/fmla.rs
 @@ -8,7 +8,7 @@ use gridcraft_model::Formula;
@@ -793,7 +793,7 @@ index ef26387..3e0de94 100644
      }
  
 diff --git a/crates/xlsx/src/tests/array_export.rs b/crates/xlsx/src/tests/array_export.rs
-index b90b986..adfdace 100644
+index b90b9866..adfdace0 100644
 --- a/crates/xlsx/src/tests/array_export.rs
 +++ b/crates/xlsx/src/tests/array_export.rs
 @@ -89,7 +89,7 @@ fn nonspilling_formulas_preserve_array_evaluation_and_metadata() {
@@ -815,7 +815,7 @@ index b90b986..adfdace 100644
  
  /// Compare both cell and formula metadata, collecting all boundaries in the group on failure.
 diff --git a/crates/xlsx/src/tests/fixtures.rs b/crates/xlsx/src/tests/fixtures.rs
-index 39ea309..bd511cb 100644
+index 39ea3095..bd511cb8 100644
 --- a/crates/xlsx/src/tests/fixtures.rs
 +++ b/crates/xlsx/src/tests/fixtures.rs
 @@ -24,13 +24,13 @@ fn shared_formulas_and_value_types() {
@@ -854,7 +854,7 @@ index 39ea309..bd511cb 100644
      let bytes = crate::write_xlsx(&wb).unwrap();
      let mut pkg = crate::package::Package::open(&bytes).unwrap();
 diff --git a/crates/xlsx/src/tests/richdata_tests.rs b/crates/xlsx/src/tests/richdata_tests.rs
-index c7bd488..9b90032 100644
+index c7bd488f..9b90032a 100644
 --- a/crates/xlsx/src/tests/richdata_tests.rs
 +++ b/crates/xlsx/src/tests/richdata_tests.rs
 @@ -181,7 +181,7 @@ fn pictures_roundtrip_across_sheets_with_and_without_dynamic_arrays() {
@@ -867,10 +867,10 @@ index c7bd488..9b90032 100644
          }
          let rels = package.rels("xl/workbook.xml").unwrap();
 diff --git a/crates/xlsx/src/tests/roundtrip.rs b/crates/xlsx/src/tests/roundtrip.rs
-index 9018029..3e9be85 100644
+index 7c7c1905..bcf7b64b 100644
 --- a/crates/xlsx/src/tests/roundtrip.rs
 +++ b/crates/xlsx/src/tests/roundtrip.rs
-@@ -481,7 +481,8 @@ fn full_roundtrip() {
+@@ -482,7 +482,8 @@ fn full_roundtrip() {
      for (c, cell) in a.cells.iter() {
          let got = b.cell(c).unwrap_or_else(|| panic!("missing {c}"));
          assert_eq!(got.value, cell.value, "value at {c}");
@@ -880,7 +880,7 @@ index 9018029..3e9be85 100644
          assert_eq!(back.styles.get(got.style), wb.styles.get(cell.style), "style at {c}");
      }
      for (c, _) in b.cells.iter() {
-@@ -878,7 +879,7 @@ fn implicit_intersection_is_written_as_single() {
+@@ -879,7 +880,7 @@ fn implicit_intersection_is_written_as_single() {
      assert!(metadata);
      let (back, _) = read_xlsx(&bytes).unwrap();
      let sh = back.sheet(0).unwrap();
@@ -889,7 +889,7 @@ index 9018029..3e9be85 100644
      assert_eq!(sh.cell(at("D3")).and_then(|c| c.formula.as_ref()).and_then(|f| f.array), None);
  }
  
-@@ -965,7 +966,7 @@ fn let_lambda_parameters_drop_xlpm_on_read() {
+@@ -966,7 +967,7 @@ fn let_lambda_parameters_drop_xlpm_on_read() {
      assert!(xml.contains("_xlpm.v"), "{xml}");
      let (back, _) = read_xlsx(&bytes).unwrap();
      let sh = back.sheet(0).unwrap();
@@ -898,7 +898,7 @@ index 9018029..3e9be85 100644
      assert_eq!(text("A1").as_deref(), Some("LET(x,1,x+1)"));
      assert_eq!(text("A2").as_deref(), Some("LAMBDA(a,a*2)(3)"));
      assert_eq!(text("C1").as_deref(), Some("MAP(B1:B2,LAMBDA(v,v+1))"));
-@@ -1004,7 +1005,7 @@ fn table_newline_column_and_backslash_name_survive() {
+@@ -1005,7 +1006,7 @@ fn table_newline_column_and_backslash_name_survive() {
      assert_eq!(s.tables[0].name, "\\_Prime.1");
      assert_eq!(s.tables[0].columns[0].name, "Handle\nBars");
      assert_eq!(s.value(at("A1")), Value::text("Handle\nBars"));
@@ -908,7 +908,7 @@ index 9018029..3e9be85 100644
  }
  
 diff --git a/crates/xlsx/src/tests/xls_tests.rs b/crates/xlsx/src/tests/xls_tests.rs
-index 91e63c1..3aeeb4f 100644
+index da65de01..8b2d52a0 100644
 --- a/crates/xlsx/src/tests/xls_tests.rs
 +++ b/crates/xlsx/src/tests/xls_tests.rs
 @@ -290,7 +290,7 @@ fn v(wb: &gridcraft_model::Workbook, sheet: usize, a1: &str) -> Value {
@@ -939,10 +939,10 @@ index 91e63c1..3aeeb4f 100644
      }
      let (wb, _) = read_xls(&compound("Workbook", &sample(true))).unwrap();
 diff --git a/crates/xlsx/src/xls/mod.rs b/crates/xlsx/src/xls/mod.rs
-index dde8641..e04bcdc 100644
+index ceaf3e26..9d22c651 100644
 --- a/crates/xlsx/src/xls/mod.rs
 +++ b/crates/xlsx/src/xls/mod.rs
-@@ -455,7 +455,7 @@ impl SheetState<'_> {
+@@ -456,7 +456,7 @@ impl SheetState<'_> {
              Ok(e) => {
                  let text = gridcraft_formula::print(&e);
                  let mut f = Formula::new(&text);

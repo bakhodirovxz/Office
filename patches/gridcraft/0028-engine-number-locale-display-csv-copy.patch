@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 12:00:00 +0500
-Subject: [PATCH] engine: number locale in Prefs, display *_in, CSV save and
- open, sheet.read, copy, paste
+Subject: [PATCH 28/42] engine: number locale in Prefs, display *_in, CSV save
+ and open, sheet.read, copy, paste
 
 Session.prefs.num_locale (not saved) picks the locale of displayed and typed text. display::format_in,
 cell_text_in, value_text_in, range_text_in and edit_text_in follow it (built-in ids 14 and 22 show the
@@ -13,22 +13,22 @@ sheet.read formatted, the system clipboard text and pasted text follow the local
 not: xlsx parts are byte-equal across locales (test).
 ---
  crates/engine/src/cmd/edit.rs    |   7 +-
- crates/engine/src/cmd/file.rs    |  11 +-
+ crates/engine/src/cmd/file.rs    |  12 +-
  crates/engine/src/cmd/inspect.rs |   2 +-
- crates/engine/src/display.rs     |  54 ++++++--
- crates/engine/src/io.rs          |  67 ++++++++--
+ crates/engine/src/display.rs     |  61 +++++++--
+ crates/engine/src/io.rs          |  73 ++++++++--
  crates/engine/src/lib.rs         |  12 ++
  crates/engine/tests/numlocale.rs | 220 +++++++++++++++++++++++++++++++
  crates/xlsx/src/csv.rs           |   8 +-
  crates/xlsx/src/lib.rs           |   5 +-
- 9 files changed, 350 insertions(+), 36 deletions(-)
+ 9 files changed, 363 insertions(+), 37 deletions(-)
  create mode 100644 crates/engine/tests/numlocale.rs
 
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index ec07a77..e49f4ee 100644
+index a5889083..282a0e6b 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
-@@ -659,7 +659,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
+@@ -671,7 +671,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
      } else {
          (d.wb.clone(), trim(ranges.first().copied().unwrap_or_default()), Vec::new())
      };
@@ -37,7 +37,7 @@ index ec07a77..e49f4ee 100644
      // The HTML rendering is for the host clipboard (UI); it can reach 4 MB, so agents and
      // scripts get it only when they ask for it.
      let html = if p.get("html").and_then(Json::as_bool) == Some(true) { crate::io::range_html(&wb, sheet, range, &text) } else { None };
-@@ -796,11 +796,14 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
+@@ -808,11 +808,14 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
      let html = str_param(p, "html").map(crate::clip_html::table_cells).unwrap_or_default();
      let h = rows.len();
      let w = rows.iter().map(Vec::len).max().unwrap_or(0);
@@ -54,19 +54,20 @@ index ec07a77..e49f4ee 100644
                      numeric_from_html(cl, v, html.get(ri).and_then(|r| r.get(ci)), &mut cx.wb);
                  }
 diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
-index c30de6b..f642890 100644
+index e13fc325..393a4395 100644
 --- a/crates/engine/src/cmd/file.rs
 +++ b/crates/engine/src/cmd/file.rs
-@@ -66,7 +66,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -66,7 +66,8 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
              crate::io::open_xlsx_file(&name, path, len)?
          }
          _ => {
--            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
-+            let opened = crate::io::open_bytes_calculated_in(&name, &bytes, str_param(p, "password"), s.prefs.num_locale)?;
+-            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
++            let csv_as_text = bool_param(p, "csvAsText").unwrap_or(false);
++            let opened = crate::io::open_bytes_calculated_in(&name, &bytes, str_param(p, "password"), csv_as_text, s.prefs.num_locale)?;
              // The file's bytes are not needed past reading: freed before the first
              // recalculation, which is where opening needs the most memory.
              drop(bytes);
-@@ -125,6 +125,7 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -125,6 +126,7 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
      if std::path::Path::new(&path).extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("pdf")) {
          return super::print::export_pdf(s, &json!({"path": path}));
      }
@@ -74,7 +75,7 @@ index c30de6b..f642890 100644
      let d = s.doc_mut()?;
      // The document's own file keeps the format its content had when opened; any other path
      // goes by its extension. Relative paths to linked workbooks are rewritten for the new folder.
-@@ -132,8 +133,8 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -132,8 +134,8 @@ fn save(s: &mut Session, p: &Json) -> Result<Json> {
      let rebased = crate::io::source_dir(&path).and_then(|f| gridcraft_xlsx::rebase_links(&d.wb, &f));
      let wb = rebased.as_ref().unwrap_or(&d.wb);
      let bytes = match kind {
@@ -85,7 +86,7 @@ index c30de6b..f642890 100644
      };
      crate::io::write_file(&path, &bytes)?;
      // Only a full-fidelity format clears the dirty flag and becomes the document's file.
-@@ -155,7 +156,7 @@ fn save_as(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -155,7 +157,7 @@ fn save_as(s: &mut Session, p: &Json) -> Result<Json> {
  fn save_bytes(s: &mut Session, p: &Json) -> Result<Json> {
      let fmt = str_param(p, "format").unwrap_or("xlsx");
      let d = s.doc()?;
@@ -94,7 +95,7 @@ index c30de6b..f642890 100644
      let name = format!("{}.{fmt}", std::path::Path::new(&d.display_title()).file_stem().and_then(|x| x.to_str()).unwrap_or("Book"));
      Ok(json!({"name": name, "base64": crate::io::base64_encode(&bytes), "bytes": bytes.len()}))
  }
-@@ -180,7 +181,7 @@ fn export(s: &mut Session, p: &Json, ext: &str) -> Result<Json> {
+@@ -180,7 +182,7 @@ fn export(s: &mut Session, p: &Json, ext: &str) -> Result<Json> {
          wb.active_sheet = target_sheet(s, p)?;
      }
      let target = if path.ends_with(&format!(".{ext}")) { path.clone() } else { format!("{path}.{ext}") };
@@ -104,7 +105,7 @@ index c30de6b..f642890 100644
      Ok(json!({"path": target, "bytes": bytes.len()}))
  }
 diff --git a/crates/engine/src/cmd/inspect.rs b/crates/engine/src/cmd/inspect.rs
-index 530e10f..56c9d58 100644
+index 530e10fd..56c9d581 100644
 --- a/crates/engine/src/cmd/inspect.rs
 +++ b/crates/engine/src/cmd/inspect.rs
 @@ -104,7 +104,7 @@ fn read(s: &mut Session, p: &Json) -> Result<Json> {
@@ -117,7 +118,7 @@ index 530e10f..56c9d58 100644
                  value_json(&sh.value(c))
              };
 diff --git a/crates/engine/src/display.rs b/crates/engine/src/display.rs
-index 0f70b56..52a6a1c 100644
+index a0bf2686..5a2c363f 100644
 --- a/crates/engine/src/display.rs
 +++ b/crates/engine/src/display.rs
 @@ -3,9 +3,9 @@
@@ -182,7 +183,7 @@ index 0f70b56..52a6a1c 100644
      if reads_back(&shown) {
          return shown;
      }
-@@ -82,20 +101,30 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
+@@ -82,26 +101,41 @@ pub fn formula_hidden(wb: &Workbook, sheet: &Sheet, c: CellRef) -> bool {
  
  /// The text a cell shows (full precision General; the grid narrows General to fit the column).
  pub fn cell_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
@@ -210,12 +211,24 @@ index 0f70b56..52a6a1c 100644
 +/// [`value_text`] as a reader of `loc` sees it.
 +pub fn value_text_in(wb: &Workbook, sheet: &Sheet, c: CellRef, loc: NumLocale) -> String {
      let style = wb.styles.get(sheet.style_id(c));
--    let f = format(&sheet.value(c), style.num_fmt.as_str(), wb);
-+    let f = format_in(&sheet.value(c), style.num_fmt.as_str(), wb, loc);
+-    value_text_as(wb, &sheet.value(c), style.num_fmt.as_str())
++    value_text_as_in(wb, &sheet.value(c), style.num_fmt.as_str(), loc)
+ }
+ 
+ /// [`value_text`] for a value and a format code given apart from a cell (print takes the code
+ /// from the cell's effective look, which a conditional format can override).
+ pub fn value_text_as(wb: &Workbook, v: &Value, code: &str) -> String {
+-    let f = format(v, code, wb);
++    value_text_as_in(wb, v, code, NumLocale::EnUs)
++}
++
++/// [`value_text_as`] as a reader of `loc` sees it.
++pub fn value_text_as_in(wb: &Workbook, v: &Value, code: &str, loc: NumLocale) -> String {
++    let f = format_in(v, code, wb, loc);
      match f.fill {
          Some((_, pos)) => {
              let mut t = f.text;
-@@ -110,6 +139,11 @@ pub fn value_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
+@@ -116,6 +150,11 @@ pub fn value_text_as(wb: &Workbook, v: &Value, code: &str) -> String {
  
  /// Tab-separated text of a range, as the system clipboard gets it.
  pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
@@ -227,7 +240,7 @@ index 0f70b56..52a6a1c 100644
      let Some(sh) = wb.sheet(sheet) else { return String::new() };
      let mut out = String::new();
      let r = clipboard_range(r);
-@@ -123,7 +157,7 @@ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
+@@ -129,7 +168,7 @@ pub fn range_text(wb: &Workbook, sheet: usize, r: RangeRef) -> String {
                  out.push('\t');
              }
              first = false;
@@ -237,7 +250,7 @@ index 0f70b56..52a6a1c 100644
                  out.push('"');
                  out.push_str(&t.replace('"', "\"\""));
 diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
-index aa2b03b..28792d7 100644
+index 8312fc9f..0afc8d35 100644
 --- a/crates/engine/src/io.rs
 +++ b/crates/engine/src/io.rs
 @@ -2,7 +2,7 @@
@@ -249,59 +262,65 @@ index aa2b03b..28792d7 100644
  use gridcraft_model::{Sheet, Workbook};
  
  use crate::{EngineError, Result};
-@@ -62,8 +62,14 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
+@@ -69,8 +69,20 @@ pub fn open_bytes_with(name: &str, bytes: &[u8], password: Option<&str>, csv_as_
  /// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
  /// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
- pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
-+    open_bytes_calculated_in(name, bytes, password, NumLocale::EnUs)
+ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>, csv_as_text: bool) -> Result<(Workbook, Vec<String>, bool)> {
++    open_bytes_calculated_in(name, bytes, password, csv_as_text, NumLocale::EnUs)
 +}
 +
 +/// [`open_bytes_calculated`] reading CSV and tab-separated text as typed in `loc`. Only delimited
 +/// text depends on it; every other format is locale-free.
-+pub fn open_bytes_calculated_in(name: &str, bytes: &[u8], password: Option<&str>, loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
++pub fn open_bytes_calculated_in(
++    name: &str,
++    bytes: &[u8],
++    password: Option<&str>,
++    csv_as_text: bool,
++    loc: NumLocale,
++) -> Result<(Workbook, Vec<String>, bool)> {
      if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
--        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
-+        let (mut wb, warnings, calculated) = open_plain(name, bytes, loc)?;
+-        let (mut wb, warnings, calculated) = open_plain(name, bytes, csv_as_text)?;
++        let (mut wb, warnings, calculated) = open_plain(name, bytes, csv_as_text, loc)?;
          fit_imported_rows(&mut wb);
          return Ok((wb, warnings, calculated));
      }
-@@ -77,7 +83,7 @@ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -
+@@ -84,7 +96,7 @@ pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>, c
      if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
          return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
      }
--    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
-+    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, loc)?;
+-    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, csv_as_text)?;
++    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, csv_as_text, loc)?;
      fit_imported_rows(&mut wb);
      warnings.insert(0, DECRYPTED_NOTICE.into());
      Ok((wb, warnings, calculated))
-@@ -119,7 +125,7 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
+@@ -126,7 +138,7 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
  }
  
  /// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
--fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
-+fn open_plain(name: &str, bytes: &[u8], loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
+-fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook, Vec<String>, bool)> {
++fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool, loc: NumLocale) -> Result<(Workbook, Vec<String>, bool)> {
      let kind = FileKind::from_path(name);
      let sniffed = gridcraft_xlsx::sniff(bytes);
      if sniffed == gridcraft_xlsx::Format::Xls {
-@@ -160,7 +166,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
+@@ -167,7 +179,7 @@ fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook,
              Ok((wb, vec![], false))
          }
          Some(FileKind::Tsv) => {
--            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
-+            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', locale: loc, ..Default::default() };
+-            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', parse_values: !csv_as_text, ..Default::default() };
++            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', parse_values: !csv_as_text, locale: loc, ..Default::default() };
              let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
              // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
              wb.csv_delimiter = None;
-@@ -168,7 +174,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)>
+@@ -175,7 +187,7 @@ fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook,
              Ok((wb, vec![], false))
          }
          _ => {
--            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
-+            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, locale: loc, ..Default::default() };
+-            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, parse_values: !csv_as_text, ..Default::default() };
++            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, parse_values: !csv_as_text, locale: loc, ..Default::default() };
              let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
              rename_first_sheet(&mut wb, name);
              Ok((wb, vec![], false))
-@@ -192,17 +198,28 @@ fn rename_first_sheet(wb: &mut Workbook, path: &str) {
+@@ -199,17 +211,28 @@ fn rename_first_sheet(wb: &mut Workbook, path: &str) {
  
  /// Encodes a workbook in the format chosen by `path`'s extension.
  pub fn save_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
@@ -331,7 +350,7 @@ index aa2b03b..28792d7 100644
      let sheet = wb.active_sheet;
      match kind {
          // The extension picks the package kind; only the macro-enabled kinds (.xlsm, .xltm) carry
-@@ -214,8 +231,12 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
+@@ -221,8 +244,12 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
          FileKind::Xlsb => Err(EngineError::Other("XLSB is supported for data import only. Save as .xlsx or another supported export format.".into())),
          FileKind::Ods => Err(EngineError::Other("ODS is supported for data import only. Save as .xlsx or another supported export format.".into())),
          // A workbook read from CSV keeps the separator it was read with (a `;` file stays `;`).
@@ -346,7 +365,7 @@ index aa2b03b..28792d7 100644
          FileKind::Json => serde_json::to_vec_pretty(wb).map_err(|e| EngineError::Other(e.to_string())),
          FileKind::Html => to_html(wb, sheet).map(String::into_bytes),
      }
-@@ -224,9 +245,14 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
+@@ -231,9 +258,14 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
  /// [`save_bytes`] for the file at `path`: relative paths to linked workbooks are rewritten for
  /// its folder, so they still name the same files.
  pub fn save_file_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
@@ -363,7 +382,7 @@ index aa2b03b..28792d7 100644
      }
  }
  
-@@ -235,10 +261,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
+@@ -242,10 +274,22 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
      std::path::absolute(path).ok()?.parent().map(std::path::Path::to_path_buf)
  }
  
@@ -387,7 +406,7 @@ index aa2b03b..28792d7 100644
      gridcraft_xlsx::write_csv(sh, delimiter, |c| {
          // General's grid-width formatting rounds large identifiers to scientific notation.
          // Delimited files have no column width, so preserve the whole numeric value instead.
-@@ -246,9 +284,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
+@@ -253,9 +297,10 @@ fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
              && let gridcraft_core::Value::Number(number) = sh.value(c)
              && number.is_finite()
          {
@@ -401,7 +420,7 @@ index aa2b03b..28792d7 100644
      })
      .map_err(|e| EngineError::Other(e.to_string()))
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 93e53b1..bbfa4f8 100644
+index 93e53b19..bbfa4f80 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
 @@ -208,6 +208,17 @@ pub struct Prefs {
@@ -432,7 +451,7 @@ index 93e53b1..bbfa4f8 100644
  }
 diff --git a/crates/engine/tests/numlocale.rs b/crates/engine/tests/numlocale.rs
 new file mode 100644
-index 0000000..cc12b00
+index 00000000..cc12b003
 --- /dev/null
 +++ b/crates/engine/tests/numlocale.rs
 @@ -0,0 +1,220 @@
@@ -657,7 +676,7 @@ index 0000000..cc12b00
 +    );
 +}
 diff --git a/crates/xlsx/src/csv.rs b/crates/xlsx/src/csv.rs
-index 47486bf..172a222 100644
+index 47486bfa..172a2223 100644
 --- a/crates/xlsx/src/csv.rs
 +++ b/crates/xlsx/src/csv.rs
 @@ -2,8 +2,8 @@
@@ -690,7 +709,7 @@ index 47486bf..172a222 100644
                      Some(code) => match fmt_cache.iter().find(|(c, _)| *c == code) {
                          Some((_, id)) => *id,
 diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
-index c5122dc..9e39382 100644
+index c5122dcb..9e393823 100644
 --- a/crates/xlsx/src/lib.rs
 +++ b/crates/xlsx/src/lib.rs
 @@ -157,11 +157,14 @@ pub struct CsvOptions {

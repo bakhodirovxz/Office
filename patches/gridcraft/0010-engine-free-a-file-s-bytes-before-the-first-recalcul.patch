@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:35:34 +0500
-Subject: [PATCH 10/22] engine: free a file's bytes before the first
+Subject: [PATCH 10/42] engine: free a file's bytes before the first
  recalculation
 
 file.open kept the whole file's bytes alive until it returned, through
@@ -13,7 +13,7 @@ once the workbook is read.
  1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
-index 7291ee8..1bc7022 100644
+index 9ddc0561..a12de5a0 100644
 --- a/crates/engine/src/cmd/file.rs
 +++ b/crates/engine/src/cmd/file.rs
 @@ -55,12 +55,16 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
@@ -23,7 +23,7 @@ index 7291ee8..1bc7022 100644
 -    let encrypted = gridcraft_xlsx::sniff(&bytes) == gridcraft_xlsx::Format::Encrypted;
 +    let sniffed = gridcraft_xlsx::sniff(&bytes);
 +    let encrypted = sniffed == gridcraft_xlsx::Format::Encrypted;
-     let (mut wb, warnings) = crate::io::open_bytes_with_password(&name, &bytes, str_param(p, "password"))?;
+     let (mut wb, warnings) = crate::io::open_bytes_with(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
 +    // The file's bytes are not needed past reading: freed before the first recalculation, which is
 +    // where opening needs the most memory.
 +    drop(bytes);

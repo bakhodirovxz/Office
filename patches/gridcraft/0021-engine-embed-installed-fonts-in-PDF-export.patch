@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:30:22 +0500
-Subject: [PATCH 21/22] engine: embed installed fonts in PDF export
+Subject: [PATCH 21/42] engine: embed installed fonts in PDF export
 
 file.exportPdf resolves each cell font to an installed TrueType face
 (name table scan, metric-compatible aliases), measures column overflow
@@ -21,7 +21,7 @@ carries no second copy; the CLI enables bundled-pdf-font.
  create mode 100644 crates/engine/src/pdf_fonts.rs
 
 diff --git a/apps/gridcraft-cli/Cargo.toml b/apps/gridcraft-cli/Cargo.toml
-index 21e9580..81b07b3 100644
+index 21e95800..81b07b30 100644
 --- a/apps/gridcraft-cli/Cargo.toml
 +++ b/apps/gridcraft-cli/Cargo.toml
 @@ -14,7 +14,8 @@ name = "gridcraft-cli"
@@ -35,7 +35,7 @@ index 21e9580..81b07b3 100644
  serde_json = { workspace = true }
  log = { workspace = true }
 diff --git a/crates/engine/Cargo.toml b/crates/engine/Cargo.toml
-index e8ea91c..ddff755 100644
+index e8ea91c2..ddff7552 100644
 --- a/crates/engine/Cargo.toml
 +++ b/crates/engine/Cargo.toml
 @@ -22,8 +22,16 @@ log = { workspace = true }
@@ -56,7 +56,7 @@ index e8ea91c..ddff755 100644
 +[features]
 +bundled-pdf-font = ["dep:epaint_default_fonts"]
 diff --git a/crates/engine/src/cmd/print.rs b/crates/engine/src/cmd/print.rs
-index a10f19d..e521969 100644
+index 8350e56d..0adb1c19 100644
 --- a/crates/engine/src/cmd/print.rs
 +++ b/crates/engine/src/cmd/print.rs
 @@ -4,7 +4,7 @@
@@ -68,7 +68,7 @@ index a10f19d..e521969 100644
  //! overflow into empty neighbours, conditional formats, table styles, charts, images, shapes and
  //! sparklines. Headers and footers support `&L`/`&C`/`&R` sections and the `&P &N &D &T &A &F &Z`
  //! codes.
-@@ -681,7 +681,7 @@ struct PdfMeasure;
+@@ -685,7 +685,7 @@ struct PdfMeasure;
  
  impl gridcraft_chart::Measure for PdfMeasure {
      fn text_width(&self, text: &str, size: f32, bold: bool) -> f32 {
@@ -77,7 +77,7 @@ index a10f19d..e521969 100644
      }
  }
  
-@@ -741,7 +741,7 @@ fn draw_prims(pg: &mut Page, prims: &[gridcraft_chart::Prim], xf: Xf) {
+@@ -745,7 +745,7 @@ fn draw_prims(pg: &mut Page, prims: &[gridcraft_chart::Prim], xf: Xf) {
                  pg.circle(px, py, r * k, fill.map(blend), stroke.map(|(c, w)| (blend(c), (w * k).max(0.1))));
              }
              Prim::Text { x, y, text, size, color, bold, align, valign, rotation } => {
@@ -86,7 +86,7 @@ index a10f19d..e521969 100644
                  let size = size * k;
                  let w = gridcraft_pdf::text_width(font, size, text);
                  let dx = match align {
-@@ -870,8 +870,15 @@ fn draw_border(pg: &mut Page, b: &BorderLine, wb: &Workbook, x0: f32, y0: f32, x
+@@ -874,8 +874,15 @@ fn draw_border(pg: &mut Page, b: &BorderLine, wb: &Workbook, x0: f32, y0: f32, x
      pg.stroke_line_dashed(x0, y0, x1, y1, lw, color, &border_dash(b.style, k));
  }
  
@@ -103,7 +103,7 @@ index a10f19d..e521969 100644
  }
  
  /// Draws the cells of a block: fills, gridlines, data bars, borders and text.
-@@ -1072,7 +1079,7 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
+@@ -1076,7 +1083,7 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
      } else if code == "General"
          && let Value::Number(n) = v
      {
@@ -112,7 +112,7 @@ index a10f19d..e521969 100644
          let max_chars = (avail / digit).floor().max(1.0) as usize;
          gridcraft_numfmt::format_general_fit(n, max_chars.min(11)).unwrap_or_else(|| "#".repeat(max_chars.min(255)))
      } else {
-@@ -1084,13 +1091,16 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
+@@ -1089,13 +1096,16 @@ fn draw_text(pg: &mut Page, b: &Block, c: CellRef, l: &Look, rect: (f32, f32, f3
      if text.is_empty() {
          return;
      }
@@ -131,7 +131,7 @@ index a10f19d..e521969 100644
          text = "#".repeat(((avail / hash).floor().max(1.0) as usize).min(255));
          tw = gridcraft_pdf::text_width(font, size, &text);
      }
-@@ -1316,7 +1326,7 @@ fn draw_objects(pg: &mut Page, wb: &Workbook, si: usize, sh: &Sheet, b: &Block)
+@@ -1321,7 +1331,7 @@ fn draw_objects(pg: &mut Page, wb: &Workbook, si: usize, sh: &Sheet, b: &Block)
              let fm = &shp.format;
              let text_box = shp.kind == ShapeKind::TextBox;
              let size = fm.font_size.unwrap_or(11.0).clamp(1.0, 4000.0) * b.scale;
@@ -140,7 +140,7 @@ index a10f19d..e521969 100644
              let color = fm.text_color.and_then(|c| rgb_of(c, wb)).unwrap_or([0, 0, 0]);
              let align = fm.align.unwrap_or(if text_box { ShapeTextAlign::Left } else { ShapeTextAlign::Center });
              let anchor = fm.anchor.unwrap_or(if text_box { ShapeTextAnchor::Top } else { ShapeTextAnchor::Middle });
-@@ -1405,6 +1415,7 @@ fn draw_header_footer(pg: &mut Page, lay: &SheetLayout, which: gridcraft_model::
+@@ -1410,6 +1420,7 @@ fn draw_header_footer(pg: &mut Page, lay: &SheetLayout, which: gridcraft_model::
              let lines: Vec<&str> = sec.text.split('\n').take(20).collect();
              let n = lines.len() as f32;
              for (j, line) in lines.iter().enumerate() {
@@ -148,7 +148,7 @@ index a10f19d..e521969 100644
                  let lw = gridcraft_pdf::text_width(font, size, line);
                  let x = match i {
                      0 => l,
-@@ -2144,4 +2155,85 @@ mod tests {
+@@ -2164,4 +2175,85 @@ mod tests {
          assert_eq!(up + down, blocks.len(), "a header line printed flat: {blocks:?}");
          assert!((1..=3).contains(&up) && (1..=3).contains(&down), "up {up}, down {down}: {blocks:?}");
      }
@@ -235,7 +235,7 @@ index a10f19d..e521969 100644
 +    }
  }
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 06b1091..93e53b1 100644
+index 06b10910..93e53b19 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
 @@ -16,6 +16,7 @@ pub mod io;
@@ -248,7 +248,7 @@ index 06b1091..93e53b1 100644
  pub mod sample;
 diff --git a/crates/engine/src/pdf_fonts.rs b/crates/engine/src/pdf_fonts.rs
 new file mode 100644
-index 0000000..6f0bed5
+index 00000000..6f0bed59
 --- /dev/null
 +++ b/crates/engine/src/pdf_fonts.rs
 @@ -0,0 +1,360 @@
@@ -613,10 +613,10 @@ index 0000000..6f0bed5
 +    }
 +}
 diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
-index 485b9a2..3075935 100644
+index 08097ba2..0c03f020 100644
 --- a/crates/ui-egui/src/theme.rs
 +++ b/crates/ui-egui/src/theme.rs
-@@ -387,6 +387,11 @@ pub fn font_definitions_for_language(language: crate::i18n::Language) -> FontDef
+@@ -388,6 +388,11 @@ pub fn font_definitions_for_language(language: crate::i18n::Language) -> FontDef
  /// families are recorded in [`crate::fonts`] so [`cell_family`] only names a family egui has.
  pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -> FontDefinitions {
      let mut fonts = FontDefinitions::default();

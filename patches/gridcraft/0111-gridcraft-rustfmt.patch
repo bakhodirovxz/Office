@@ -1,22 +1,22 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: office <office@localhost>
-Date: Sun, 18 Oct 2026 11:00:00 +0500
-Subject: [PATCH] gridcraft: rustfmt the files the patch queue touches (mechanical formatting, regenerate on every sync)
+From: x <a@b>
+Date: Thu, 22 Oct 2026 14:03:08 +0500
+Subject: [PATCH 42/42] gridcraft: rustfmt the files the patch queue touches
+ (mechanical formatting, regenerate on every sync)
 
-`rustfmt --edition 2024` over every .rs file touched by patches 0001-0110, so `cargo fmt --all --check` is clean in CI
-lint. No behaviour change. Always the last patch of the queue: scripts/sync-upstream.sh never rebases it, it
-regenerates it (`--fmt`, or implied when the queue has this patch).
+rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
 ---
- crates/calc/src/recalc.rs                | 12 ++++-----
- crates/engine/src/pdf_fonts.rs           |  7 +++--
- crates/engine/tests/formula_templates.rs |  5 +---
- crates/model/src/store.rs                | 44 +++++++++++++++++++++++++++-----
- crates/pdf/src/embed.rs                  |  3 ++-
- crates/pdf/src/lib.rs                    | 25 +++++++++++++++---
+ crates/calc/src/recalc.rs                | 12 +++----
+ crates/engine/src/pdf_fonts.rs           |  7 ++--
+ crates/engine/tests/formula_templates.rs |  5 +--
+ crates/model/src/store.rs                | 44 ++++++++++++++++++++----
+ crates/pdf/src/embed.rs                  |  3 +-
+ crates/pdf/src/lib.rs                    | 25 +++++++++++---
  6 files changed, 70 insertions(+), 26 deletions(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index 654eccf..93aedb5 100644
+index 654eccf1..93aedb57 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -864,8 +864,7 @@ fn spill_blocked(host: &PassHost<'_>, (sheet, anchor): Key, a: &Array) -> bool {
@@ -53,7 +53,7 @@ index 654eccf..93aedb5 100644
  
  /// Current date-time as a serial (1900 system), from the system clock (browser clock on wasm).
 diff --git a/crates/engine/src/pdf_fonts.rs b/crates/engine/src/pdf_fonts.rs
-index 44d4276..5ed9b26 100644
+index 44d42768..5ed9b26e 100644
 --- a/crates/engine/src/pdf_fonts.rs
 +++ b/crates/engine/src/pdf_fonts.rs
 @@ -120,9 +120,7 @@ fn bundled() -> Option<Font> {
@@ -78,7 +78,7 @@ index 44d4276..5ed9b26 100644
      };
      let data = std::fs::read(path).ok()?;
 diff --git a/crates/engine/tests/formula_templates.rs b/crates/engine/tests/formula_templates.rs
-index 86b77a6..0daec00 100644
+index 86b77a6f..0daec001 100644
 --- a/crates/engine/tests/formula_templates.rs
 +++ b/crates/engine/tests/formula_templates.rs
 @@ -211,10 +211,7 @@ fn inserting_and_deleting_cells() {
@@ -94,7 +94,7 @@ index 86b77a6..0daec00 100644
  
  #[test]
 diff --git a/crates/model/src/store.rs b/crates/model/src/store.rs
-index ffe6d69..ed04f15 100644
+index ffe6d69e..ed04f15b 100644
 --- a/crates/model/src/store.rs
 +++ b/crates/model/src/store.rs
 @@ -109,7 +109,12 @@ impl Band {
@@ -182,7 +182,7 @@ index ffe6d69..ed04f15 100644
              pub fn used_range(&self) -> Option<RangeRef> {
                  let first_band = self.bands.values().next()?;
 diff --git a/crates/pdf/src/embed.rs b/crates/pdf/src/embed.rs
-index 9d932bc..b2d3010 100644
+index 9d932bcf..b2d3010b 100644
 --- a/crates/pdf/src/embed.rs
 +++ b/crates/pdf/src/embed.rs
 @@ -171,7 +171,8 @@ pub(crate) fn write_objects(used: &BTreeMap<u16, BTreeMap<u16, char>>, next: &mu
@@ -196,7 +196,7 @@ index 9d932bc..b2d3010 100644
          let mut w = String::new();
          for g in &gids {
 diff --git a/crates/pdf/src/lib.rs b/crates/pdf/src/lib.rs
-index 03beb8f..6882c19 100644
+index 03beb8f8..6882c19f 100644
 --- a/crates/pdf/src/lib.rs
 +++ b/crates/pdf/src/lib.rs
 @@ -130,10 +130,18 @@ impl Font {

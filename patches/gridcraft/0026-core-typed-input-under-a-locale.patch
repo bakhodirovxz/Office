@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 12:00:00 +0500
-Subject: [PATCH] core: typed input under a locale, to_invariant
+Subject: [PATCH 26/42] core: typed input under a locale, to_invariant
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,7 +15,7 @@ En-US is parse_input unchanged.
  1 file changed, 222 insertions(+)
 
 diff --git a/crates/core/src/parse.rs b/crates/core/src/parse.rs
-index b465bea..26a3e9e 100644
+index b465beaf..26a3e9ea 100644
 --- a/crates/core/src/parse.rs
 +++ b/crates/core/src/parse.rs
 @@ -5,6 +5,7 @@

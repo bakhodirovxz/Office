@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sun, 18 Oct 2026 05:30:00 +0500
-Subject: [PATCH 103/103] xlsx tests: adapt the new upstream malformed-file test to the shared-formula API
+Subject: [PATCH 34/42] xlsx tests: adapt the new upstream malformed-file test
+ to the shared-formula API
 
 Formula.expr and Formula.text are private after the template series (0001-0022); the test
 `hostile_formula_text_does_not_overflow_the_stack` (tests/malformed.rs) reads them as fields. Use expr() and text().
@@ -10,7 +11,7 @@ Formula.expr and Formula.text are private after the template series (0001-0022);
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/crates/xlsx/src/tests/malformed.rs b/crates/xlsx/src/tests/malformed.rs
-index d029aca..04c2a1c 100644
+index d029acaa..04c2a1c8 100644
 --- a/crates/xlsx/src/tests/malformed.rs
 +++ b/crates/xlsx/src/tests/malformed.rs
 @@ -244,7 +244,7 @@ fn hostile_formula_text_does_not_overflow_the_stack() {

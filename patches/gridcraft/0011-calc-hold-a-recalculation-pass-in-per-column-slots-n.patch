@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:55:11 +0500
-Subject: [PATCH 11/22] calc: hold a recalculation pass in per-column slots,
+Subject: [PATCH 11/42] calc: hold a recalculation pass in per-column slots,
  not hash maps
 
 A pass held three maps sized to every formula it calculates: the trees
@@ -23,7 +23,7 @@ keeps them changed.
  1 file changed, 169 insertions(+), 58 deletions(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index 6252486..fe40b40 100644
+index 62524862..fe40b405 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -42,7 +42,7 @@ type HashSet<K> = std::collections::HashSet<K, BuildHasherDefault<FxHasher>>;

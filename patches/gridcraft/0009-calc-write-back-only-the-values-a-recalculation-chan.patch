@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:35:08 +0500
-Subject: [PATCH 09/22] calc: write back only the values a recalculation
+Subject: [PATCH 09/42] calc: write back only the values a recalculation
  changed
 
 A recalculation pass wrote every result through `CellStore::get_mut`,
@@ -20,7 +20,7 @@ nothing now leaves every sheet shared with its snapshots.
  2 files changed, 38 insertions(+), 6 deletions(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index 4d31b83..6252486 100644
+index 4d31b838..62524862 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -1326,21 +1326,24 @@ impl Calc {
@@ -55,11 +55,11 @@ index 4d31b83..6252486 100644
                      for c in r.iter() {
                          sheet.spill.remove(&c);
 diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
-index 196c57d..f0b8dbf 100644
+index 97f7a835..2a219fb0 100644
 --- a/crates/calc/src/tests.rs
 +++ b/crates/calc/src/tests.rs
-@@ -1266,3 +1266,32 @@ fn offset_extreme_arguments_return_ref() {
-         assert_eq!(crate::evaluate(&wb, 0, c("D1"), formula), Value::Number(expected), "{formula}");
+@@ -1294,3 +1294,32 @@ fn median_large_values_recalculate_dependents() {
+         assert!((t.num(cell) + 1.3).abs() < 1e-14);
      }
  }
 +

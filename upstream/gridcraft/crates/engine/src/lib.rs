@@ -16,6 +16,7 @@ pub mod io;
 pub mod links;
 pub mod outline;
 pub mod paper;
+pub mod pdf_fonts;
 pub mod pivot;
 pub mod pivot_calc;
 pub mod sample;
@@ -118,9 +119,17 @@ static NEXT_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::ne
 const UNDO_LIMIT: usize = 100;
 
 impl DocState {
-    pub fn new(mut wb: Workbook, path: Option<String>, title: String) -> DocState {
+    pub fn new(wb: Workbook, path: Option<String>, title: String) -> DocState {
+        DocState::open(wb, path, title, false)
+    }
+    /// [`DocState::new`] for a workbook just read from a file. When `calculated` (its values come
+    /// from a full calculation and it asks for none on open: [`io::open_bytes_calculated`]), its
+    /// values are kept as the file has them, as Excel opens such a file; formulas are calculated
+    /// on open only when needed ([`Calc::open`]).
+    pub fn open(mut wb: Workbook, path: Option<String>, title: String, calculated: bool) -> DocState {
+        wb.shrink_to_fit();
         let mut calc = Calc::new();
-        calc.recalc_all(&mut wb);
+        calc.open(&mut wb, calculated);
         let wb = Arc::new(wb);
         let sel = Selection::at(wb.active().map(|s| s.view_active).unwrap_or_default());
         DocState {
@@ -199,6 +208,17 @@ pub struct Prefs {
     pub user_dictionary: Vec<String>,
     /// View › Show › Formula Bar (an application option in Excel, not saved in the file).
     pub formula_bar: bool,
+    /// The number locale of displayed and typed text (separators, month and day names). The UI sets
+    /// it from the interface language every frame; `GRIDCRAFT_NUM_LOCALE` sets it for sheets-cli.
+    /// Not saved: it is never part of a document.
+    #[serde(skip)]
+    pub num_locale: gridcraft_core::NumLocale,
+}
+
+/// The number locale named by the environment variable `GRIDCRAFT_NUM_LOCALE` (`en`, `ru`, `uz-latn`,
+/// `uz-cyrl`), which overrides the interface language for tests, scripts and the locale matrix.
+pub fn env_num_locale() -> Option<gridcraft_core::NumLocale> {
+    std::env::var("GRIDCRAFT_NUM_LOCALE").ok().and_then(|tag| gridcraft_core::NumLocale::from_tag(&tag))
 }
 
 impl Default for Prefs {
@@ -213,6 +233,7 @@ impl Default for Prefs {
             r1c1: false,
             user_dictionary: vec![],
             formula_bar: true,
+            num_locale: gridcraft_core::NumLocale::EnUs,
         }
     }
 }

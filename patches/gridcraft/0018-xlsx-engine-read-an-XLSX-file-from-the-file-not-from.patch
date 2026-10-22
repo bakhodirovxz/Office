@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 17:50:44 +0500
-Subject: [PATCH 18/22] xlsx, engine: read an XLSX file from the file, not from
+Subject: [PATCH 18/42] xlsx, engine: read an XLSX file from the file, not from
  its bytes
 
 Opening held the whole file in memory while the workbook was built:
@@ -16,23 +16,24 @@ the file (`io::open_xlsx_file`), checking that the file still has the
 size it had. Other formats, base64 input and encrypted workbooks are read
 from their bytes as before.
 ---
- crates/engine/src/cmd/file.rs            | 20 ++++++++++++++++----
+ crates/engine/src/cmd/file.rs            | 21 ++++++++++++++++-----
  crates/engine/src/io.rs                  | 21 +++++++++++++++++++++
  crates/xlsx/src/lib.rs                   |  8 +++++++-
  crates/xlsx/src/package.rs               | 16 +++++++++++++---
  crates/xlsx/src/read.rs                  |  3 +--
  crates/xlsx/src/tests/shared_formulas.rs | 18 ++++++++++++++++++
- 6 files changed, 76 insertions(+), 10 deletions(-)
+ 6 files changed, 76 insertions(+), 11 deletions(-)
 
 diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
-index 5df91b9..c30de6b 100644
+index 1cb62438..e13fc325 100644
 --- a/crates/engine/src/cmd/file.rs
 +++ b/crates/engine/src/cmd/file.rs
-@@ -57,10 +57,22 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -57,11 +57,22 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
      };
      let sniffed = gridcraft_xlsx::sniff(&bytes);
      let encrypted = sniffed == gridcraft_xlsx::Format::Encrypted;
--    let (mut wb, warnings, calculated) = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
+-    let (mut wb, warnings, calculated) =
+-        crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
 -    // The file's bytes are not needed past reading: freed before the first recalculation, which is
 -    // where opening needs the most memory.
 -    drop(bytes);
@@ -45,7 +46,7 @@ index 5df91b9..c30de6b 100644
 +            crate::io::open_xlsx_file(&name, path, len)?
 +        }
 +        _ => {
-+            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
++            let opened = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
 +            // The file's bytes are not needed past reading: freed before the first
 +            // recalculation, which is where opening needs the most memory.
 +            drop(bytes);
@@ -56,10 +57,10 @@ index 5df91b9..c30de6b 100644
      let imported =
          matches!(crate::io::FileKind::from_path(&name), Some(crate::io::FileKind::Ods | crate::io::FileKind::Xlsb | crate::io::FileKind::Xls))
 diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
-index 80c632b..aa2b03b 100644
+index bd08f7ba..8312fc9f 100644
 --- a/crates/engine/src/io.rs
 +++ b/crates/engine/src/io.rs
-@@ -415,6 +415,27 @@ pub fn read_file(path: &str) -> Result<Vec<u8>> {
+@@ -469,6 +469,27 @@ pub fn read_file(path: &str) -> Result<Vec<u8>> {
      std::fs::read(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))
  }
  
@@ -88,7 +89,7 @@ index 80c632b..aa2b03b 100644
  pub fn read_file(path: &str) -> Result<Vec<u8>> {
      Err(EngineError::Other(format!("{path}: no file system in the browser")))
 diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
-index 8216be8..c5122dc 100644
+index 8216be8d..c5122dcb 100644
 --- a/crates/xlsx/src/lib.rs
 +++ b/crates/xlsx/src/lib.rs
 @@ -86,7 +86,13 @@ impl ReadReport {
@@ -107,7 +108,7 @@ index 8216be8..c5122dc 100644
  
  /// Which member of the SpreadsheetML family a package is saved as. Only the content type of the
 diff --git a/crates/xlsx/src/package.rs b/crates/xlsx/src/package.rs
-index 9a28999..3e184ea 100644
+index 9a289990..3e184eac 100644
 --- a/crates/xlsx/src/package.rs
 +++ b/crates/xlsx/src/package.rs
 @@ -2,7 +2,7 @@
@@ -149,7 +150,7 @@ index 9a28999..3e184ea 100644
              return Err(IoError::TooLarge(format!("{} zip entries", zip.len())));
          }
 diff --git a/crates/xlsx/src/read.rs b/crates/xlsx/src/read.rs
-index d193052..af2dc76 100644
+index d1930522..af2dc762 100644
 --- a/crates/xlsx/src/read.rs
 +++ b/crates/xlsx/src/read.rs
 @@ -66,8 +66,7 @@ pub fn find_rel<'r>(rels: &'r [Rel], kind: &str) -> Option<&'r Rel> {
@@ -163,7 +164,7 @@ index d193052..af2dc76 100644
          pkg,
          report: ReadReport::default(),
 diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
-index 86dd9d2..334d7a2 100644
+index 86dd9d25..334d7a27 100644
 --- a/crates/xlsx/src/tests/shared_formulas.rs
 +++ b/crates/xlsx/src/tests/shared_formulas.rs
 @@ -165,3 +165,21 @@ fn a_workbook_calculated_on_save_is_reported_as_calculated() {

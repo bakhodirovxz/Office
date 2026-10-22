@@ -14,6 +14,7 @@ mod pivot_tests;
 mod richdata_tests;
 mod roundtrip;
 mod shape_text_rtl;
+mod shared_formulas;
 mod sheet_names;
 mod smooth_roundtrip;
 mod trendline_roundtrip;

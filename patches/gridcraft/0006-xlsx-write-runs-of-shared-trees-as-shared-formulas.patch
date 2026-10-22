@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 02:25:27 +0500
-Subject: [PATCH 06/22] xlsx: write runs of shared trees as shared formulas
+Subject: [PATCH 06/42] xlsx: write runs of shared trees as shared formulas
 
 Consecutive cells down a column that hold shifted copies of one tree at the same offset from their
 cells are written as one Excel shared formula: the first cell carries the text and `ref`, the
@@ -21,7 +21,7 @@ the same per-cell formulas as saving the original.
  2 files changed, 174 insertions(+), 18 deletions(-)
 
 diff --git a/crates/xlsx/src/sheet_write.rs b/crates/xlsx/src/sheet_write.rs
-index 78e1afa..c4d1466 100644
+index 78e1afaa..c4d1466c 100644
 --- a/crates/xlsx/src/sheet_write.rs
 +++ b/crates/xlsx/src/sheet_write.rs
 @@ -1,9 +1,11 @@
@@ -199,7 +199,7 @@ index 78e1afa..c4d1466 100644
          }
          match &value {
 diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
-index 8e67b98..7f96cb5 100644
+index 8e67b980..7f96cb58 100644
 --- a/crates/xlsx/src/tests/shared_formulas.rs
 +++ b/crates/xlsx/src/tests/shared_formulas.rs
 @@ -1,13 +1,14 @@

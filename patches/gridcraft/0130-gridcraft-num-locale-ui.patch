@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 15:41:52 +0500
-Subject: [PATCH] ui-egui: the interface language sets the number locale of
- typed input and cell text
+Subject: [PATCH 41/42] ui-egui: the interface language sets the number locale
+ of typed input and cell text
 
 Language::num_locale (Ru, Uz-Latn, Uz-Cyrl; every other language, Spanish included, stays en-US), with
 GRIDCRAFT_NUM_LOCALE as the override. Once per frame it goes to Session.prefs and the egui context.
@@ -17,17 +17,17 @@ Russian and Uzbek formulas are entered with ; and a decimal comma (FormulaLocale
  crates/ui-egui/src/editor.rs         |   4 +
  crates/ui-egui/src/formula_bar.rs    |   2 +-
  crates/ui-egui/src/formula_locale.rs |  13 ++-
- crates/ui-egui/src/grid.rs           |   8 +-
+ crates/ui-egui/src/grid.rs           |  10 +-
  crates/ui-egui/src/i18n.rs           |  38 ++++++-
  crates/ui-egui/src/keymap.rs         |   8 +-
  crates/ui-egui/src/lib.rs            |  15 ++-
  crates/ui-egui/src/ribbon.rs         |   3 +-
  crates/ui-egui/tests/num_locale.rs   | 145 +++++++++++++++++++++++++++
- 9 files changed, 224 insertions(+), 12 deletions(-)
+ 9 files changed, 225 insertions(+), 13 deletions(-)
  create mode 100644 crates/ui-egui/tests/num_locale.rs
 
 diff --git a/crates/ui-egui/src/editor.rs b/crates/ui-egui/src/editor.rs
-index 4aada29..6dc4b35 100644
+index 799109f8..68aa9866 100644
 --- a/crates/ui-egui/src/editor.rs
 +++ b/crates/ui-egui/src/editor.rs
 @@ -21,6 +21,9 @@ pub struct EditState {
@@ -49,7 +49,7 @@ index 4aada29..6dc4b35 100644
              text,
              enter_mode,
 diff --git a/crates/ui-egui/src/formula_bar.rs b/crates/ui-egui/src/formula_bar.rs
-index 5d532bc..c7ec7b0 100644
+index 5d532bc0..c7ec7b02 100644
 --- a/crates/ui-egui/src/formula_bar.rs
 +++ b/crates/ui-egui/src/formula_bar.rs
 @@ -78,7 +78,7 @@ fn active_input(app: &SheetApp) -> String {
@@ -62,7 +62,7 @@ index 5d532bc..c7ec7b0 100644
      }
      // A spilled cell shows the anchor's formula greyed out in Excel; we show it plainly.
 diff --git a/crates/ui-egui/src/formula_locale.rs b/crates/ui-egui/src/formula_locale.rs
-index 6e833b9..ab5065e 100644
+index 6e833b95..ab5065ef 100644
 --- a/crates/ui-egui/src/formula_locale.rs
 +++ b/crates/ui-egui/src/formula_locale.rs
 @@ -1,10 +1,12 @@
@@ -111,10 +111,10 @@ index 6e833b9..ab5065e 100644
      let normalized = body.trim().replace(locale.decimal_separator(), ".");
      let number = normalized.strip_suffix('%').unwrap_or(&normalized);
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index c608d0c..0b22091 100644
+index 02a8b1df..217e533f 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
-@@ -525,6 +525,7 @@ fn display_text(
+@@ -531,6 +531,7 @@ fn display_text(
      st: &Style,
      width_px: f32,
      char_w: f32,
@@ -122,7 +122,7 @@ index c608d0c..0b22091 100644
  ) -> (String, Option<Color32>, bool, Option<(char, usize)>) {
      if sh.show_formulas
          && let Some(f) = sh.cell(c).and_then(|x| x.formula.as_ref())
-@@ -543,12 +544,12 @@ fn display_text(
+@@ -549,12 +550,12 @@ fn display_text(
          && let Value::Number(n) = v
      {
          let max_chars = ((width_px - 4.0) / char_w).floor().max(1.0) as usize;
@@ -137,7 +137,7 @@ index c608d0c..0b22091 100644
      (f.text, f.color.map(numfmt_color), f.numeric, f.fill)
  }
  
-@@ -1159,7 +1160,8 @@ pub(crate) fn paint_quadrant(
+@@ -1189,7 +1190,8 @@ pub(crate) fn paint_quadrant(
          // Digits fit by the cell's own font and size, not the default 11pt (9pt marks in narrow columns).
          let char_w = p.layout_no_wrap("0".to_string(), font.clone(), Color32::PLACEHOLDER).size().x.max(1.0);
          let avail_w = rect.right() - text_left;
@@ -147,8 +147,17 @@ index c608d0c..0b22091 100644
          if sh.show_formulas && sh.cell(c).is_some_and(|cell| cell.formula.is_some()) {
              text = crate::formula_locale::display(&text, crate::i18n::current(p.ctx()).formula_locale(), wb, si);
          }
+@@ -3483,7 +3485,7 @@ mod tests {
+         let text = |row: u32, cf: &mut CfCache| {
+             let c = CellRef::new(row, 0);
+             let (lk, _) = look(&wb, 0, sh, c, cf);
+-            display_text(&wb, sh, c, &sh.value(c), &lk.style, 200.0, 7.0).0
++            display_text(&wb, sh, c, &sh.value(c), &lk.style, 200.0, 7.0, gridcraft_engine::core::NumLocale::EnUs).0
+         };
+         assert_eq!(text(0, &mut cf), "1");
+         assert_eq!(text(1, &mut cf), "3.00");
 diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
-index f83d26b..03d8761 100644
+index a999e4d2..fdffaa8a 100644
 --- a/crates/ui-egui/src/i18n.rs
 +++ b/crates/ui-egui/src/i18n.rs
 @@ -143,8 +143,30 @@ impl Language {
@@ -205,7 +214,7 @@ index f83d26b..03d8761 100644
  pub fn set_current(ctx: &egui::Context, language: Language) {
      crate::office_overlay::set_lang(language.code());
 diff --git a/crates/ui-egui/src/keymap.rs b/crates/ui-egui/src/keymap.rs
-index 032db1a..d3dfb3f 100644
+index 032db1a2..d3dfb3f1 100644
 --- a/crates/ui-egui/src/keymap.rs
 +++ b/crates/ui-egui/src/keymap.rs
 @@ -179,25 +179,27 @@ pub(crate) fn dispatch(app: &mut SheetApp, ctx: &egui::Context, key: Key, physic
@@ -240,10 +249,10 @@ index 032db1a..d3dfb3f 100644
              };
              edit_with(app, text);
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 5a223e2..5e2e8a4 100644
+index 322084a4..a74f6df7 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -901,12 +901,13 @@ impl SheetApp {
+@@ -927,12 +927,13 @@ impl SheetApp {
              return;
          }
          let locale = self.ui.language.formula_locale();
@@ -258,7 +267,7 @@ index 5a223e2..5e2e8a4 100644
              }
          };
          let (text, replace) = match text {
-@@ -915,6 +916,7 @@ impl SheetApp {
+@@ -941,6 +942,7 @@ impl SheetApp {
          };
          let mut ed = editor::EditState::new(d.wb.active_sheet, at, text, replace, from_formula_bar);
          ed.locale = locale;
@@ -266,7 +275,7 @@ index 5a223e2..5e2e8a4 100644
          if replace && self.ui.autocomplete && !ed.is_formula() {
              ed.completion = editor::column_completion(sh, at, &ed.text);
          }
-@@ -922,6 +924,11 @@ impl SheetApp {
+@@ -948,6 +950,11 @@ impl SheetApp {
          self.session.mode = if replace { gridcraft_engine::Mode::Enter } else { gridcraft_engine::Mode::Edit };
      }
  
@@ -278,7 +287,7 @@ index 5a223e2..5e2e8a4 100644
      /// Commits the edit; `then` moves the selection (dr, dc) afterwards.
      pub fn commit_edit(&mut self, dr: i64, dc: i64, array: bool, fill_selection: bool) -> bool {
          let Some(ed) = self.editor.take() else { return true };
-@@ -930,7 +937,7 @@ impl SheetApp {
+@@ -956,7 +963,7 @@ impl SheetApp {
              Some(full) if full.to_lowercase().starts_with(&ed.text.to_lowercase()) => full.clone(),
              _ => ed.text.clone(),
          };
@@ -287,7 +296,7 @@ index 5a223e2..5e2e8a4 100644
              Some(Ok(text)) => text,
              Some(Err(error)) => {
                  self.message = Some(("GridCraft".into(), error.to_string()));
-@@ -1126,6 +1133,10 @@ impl SheetApp {
+@@ -1164,6 +1171,10 @@ impl SheetApp {
          text_box::before_ui(self, &ctx);
          // The language the widgets translate with this frame (see `i18n::current`).
          i18n::set_current(&ctx, self.ui.language);
@@ -296,14 +305,14 @@ index 5a223e2..5e2e8a4 100644
 +        self.session.prefs.num_locale = num;
 +        i18n::set_current_num_locale(&ctx, num);
          let t = theme::Tokens::get(&ctx);
-         if self.backstage.is_none() {
-             self.ribbon_keys(&ctx);
+         // A host can turn the File tab off while Backstage is already open: close it.
+         if !self.chrome.file_tab {
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index c3532e1..8b6566f 100644
+index fa08b502..cd930f58 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
-@@ -2475,12 +2475,13 @@ pub fn shortcut(app: &mut SheetApp, key: Key, m: Modifiers) {
-         }
+@@ -2488,12 +2488,13 @@ pub fn shortcut(app: &mut SheetApp, key: Key, m: Modifiers) {
+         },
          Key::Semicolon => {
              // Insert today's date.
 +            let loc = app.num_locale();
@@ -319,7 +328,7 @@ index c3532e1..8b6566f 100644
              app.begin_edit(Some(text), false);
 diff --git a/crates/ui-egui/tests/num_locale.rs b/crates/ui-egui/tests/num_locale.rs
 new file mode 100644
-index 0000000..de60b16
+index 00000000..de60b162
 --- /dev/null
 +++ b/crates/ui-egui/tests/num_locale.rs
 @@ -0,0 +1,145 @@

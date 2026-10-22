@@ -388,6 +388,15 @@ pub fn font_definitions_for_language(language: crate::i18n::Language) -> FontDef
 /// families are recorded in [`crate::fonts`] so [`cell_family`] only names a family egui has.
 pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -> FontDefinitions {
     let mut fonts = FontDefinitions::default();
+    // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
+    // has Latin, Greek and Cyrillic). Only the first call has an effect.
+    if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
+        match crate::office_overlay::FALLBACK_FONTS.first() {
+            // The overlay's face leads, so U+02BB and Uzbek Cyrillic print; Ubuntu Light stays behind it for Greek.
+            Some((_, sans)) => gridcraft_engine::pdf_fonts::set_default_face_with_fallback(sans.to_vec(), ubuntu.font.to_vec()),
+            None => gridcraft_engine::pdf_fonts::set_default_face(ubuntu.font.to_vec()),
+        };
+    }
     let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
     let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
     let mut bound: Vec<String> = Vec::new();
@@ -435,6 +444,7 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
     if let Some(ui) = fonts.families.get(&FontFamily::Name(UI.into())).cloned() {
         fonts.families.insert(FontFamily::Proportional, ui);
     }
+    crate::office_overlay::append_fallback_fonts(&mut fonts);
     drop_unparseable_fonts(&mut fonts);
     // Only families egui still has data for count as bound (a dropped face can empty a chain).
     bound.retain(|f| fonts.families.get(&FontFamily::Name(f.as_str().into())).is_some_and(|c| !c.is_empty()));
@@ -798,7 +808,16 @@ mod tests {
                 return; // no fallback face on this machine (minimal Linux)
             }
             for role in [UI, UI_BOLD, CELL, CELL_BOLD, CELL_ITALIC, CELL_BOLD_ITALIC, SERIF, MONO] {
-                let chain = fonts.families.get(&FontFamily::Name(role.into())).map(Vec::as_slice).unwrap_or_default();
+                // The office overlay appends its own fallback faces after the script fallbacks (patch 0102).
+                let chain: Vec<String> = fonts
+                    .families
+                    .get(&FontFamily::Name(role.into()))
+                    .map(Vec::as_slice)
+                    .unwrap_or_default()
+                    .iter()
+                    .filter(|k| !k.starts_with("office-fallback"))
+                    .cloned()
+                    .collect();
                 assert!(chain.len() >= fb_keys.len(), "{role} chain too short for its fallback");
                 let tail = &chain[chain.len() - fb_keys.len()..];
                 assert_eq!(tail, fb_keys.as_slice(), "{role} must end its chain with the fallback faces");

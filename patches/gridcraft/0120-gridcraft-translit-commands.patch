@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 12:00:00 +0500
-Subject: [PATCH] translit: Uzbek Latin/Cyrillic commands for cell text (new engine module, uz-translit dependency)
+Subject: [PATCH 38/42] translit: Uzbek Latin/Cyrillic commands for cell text
+ (new engine module, uz-translit dependency)
 
 The command registry is a closed OnceLock, so the three transliteration commands (tools.translitCyrl, tools.translitLatn,
 tools.translitAuto) are a new engine module, crates/engine/src/cmd/translit.rs, registered in command_specs(). It converts the
@@ -12,12 +13,14 @@ sheets and sheet names. One command is one undo step (it runs through edit()). T
  Cargo.lock                        |   5 +
  crates/engine/Cargo.toml          |   2 +
  crates/engine/src/cmd/mod.rs      |   2 +
- crates/engine/src/cmd/translit.rs | 190 ++++++++++++++++++++++++++++++++
- crates/engine/tests/translit.rs   | 224 ++++++++++++++++++++++++++++++++++++++
+ crates/engine/src/cmd/translit.rs | 190 +++++++++++++++++++++++++
+ crates/engine/tests/translit.rs   | 224 ++++++++++++++++++++++++++++++
  5 files changed, 423 insertions(+)
+ create mode 100644 crates/engine/src/cmd/translit.rs
+ create mode 100644 crates/engine/tests/translit.rs
 
 diff --git a/Cargo.lock b/Cargo.lock
-index c992b2e..2287809 100644
+index 4940a89c..7c3dfa3e 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -1580,6 +1580,7 @@ dependencies = [
@@ -40,7 +43,7 @@ index c992b2e..2287809 100644
  name = "vello_common"
  version = "0.1.0"
 diff --git a/crates/engine/Cargo.toml b/crates/engine/Cargo.toml
-index ddff755..5f2f6b8 100644
+index ddff7552..5f2f6b8d 100644
 --- a/crates/engine/Cargo.toml
 +++ b/crates/engine/Cargo.toml
 @@ -27,6 +27,8 @@ gridcraft-pdf = { workspace = true }
@@ -53,7 +56,7 @@ index ddff755..5f2f6b8 100644
  [dev-dependencies]
  epaint_default_fonts = { workspace = true }
 diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
-index bdd1b45..78e6576 100644
+index bdd1b45e..78e65762 100644
 --- a/crates/engine/src/cmd/mod.rs
 +++ b/crates/engine/src/cmd/mod.rs
 @@ -19,6 +19,7 @@ pub mod sheet;
@@ -74,7 +77,7 @@ index bdd1b45..78e6576 100644
  }
 diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
 new file mode 100644
-index 0000000..4a1e6e3
+index 00000000..4a1e6e34
 --- /dev/null
 +++ b/crates/engine/src/cmd/translit.rs
 @@ -0,0 +1,190 @@
@@ -270,7 +273,7 @@ index 0000000..4a1e6e3
 +}
 diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
 new file mode 100644
-index 0000000..6325041
+index 00000000..63250418
 --- /dev/null
 +++ b/crates/engine/tests/translit.rs
 @@ -0,0 +1,224 @@
@@ -498,6 +501,3 @@ index 0000000..6325041
 +        );
 +    }
 +}
--- 
-2.50.0
-

@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 15:38:09 +0500
-Subject: [PATCH] formula: FormulaLocale::DecimalComma, the entry syntax of
- Russian and Uzbek
+Subject: [PATCH 27/42] formula: FormulaLocale::DecimalComma, the entry syntax
+ of Russian and Uzbek
 
 ; between arguments, a comma decimal and \ between array columns, as Excel takes them in ru and uz, with the
 English function names. The file still stores SUM(1,2) and 1.5; print_input shows the stored formula in the
@@ -14,7 +14,7 @@ entry syntax. Tests: separators, stored form, strings and sheet names holding ; 
  create mode 100644 crates/formula/tests/decimal_comma_input.rs
 
 diff --git a/crates/formula/src/input.rs b/crates/formula/src/input.rs
-index 8568023..2692d15 100644
+index 8568023e..2692d154 100644
 --- a/crates/formula/src/input.rs
 +++ b/crates/formula/src/input.rs
 @@ -9,6 +9,9 @@ pub enum FormulaLocale {
@@ -57,7 +57,7 @@ index 8568023..2692d15 100644
      let mut out = String::new();
 diff --git a/crates/formula/tests/decimal_comma_input.rs b/crates/formula/tests/decimal_comma_input.rs
 new file mode 100644
-index 0000000..d7216b9
+index 00000000..d7216b98
 --- /dev/null
 +++ b/crates/formula/tests/decimal_comma_input.rs
 @@ -0,0 +1,70 @@

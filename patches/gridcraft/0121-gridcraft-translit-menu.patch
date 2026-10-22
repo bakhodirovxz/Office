@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 15:40:48 +0500
-Subject: [PATCH] ui-egui: Transliterate menu on the Review tab and in the cell
- context menu, with a toast
+Subject: [PATCH 39/42] ui-egui: Transliterate menu on the Review tab and in
+ the cell context menu, with a toast
 
 Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
 transliteration commands (tools.translitCyrl, tools.translitLatn, tools.translitAuto). Labels go through the interface-language
@@ -15,7 +15,7 @@ lookup; the result is shown as a status line ("{n} ... converted", "Nothing to c
  4 files changed, 40 insertions(+), 3 deletions(-)
 
 diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
-index 4a1e6e3..0cb7b2b 100644
+index 4a1e6e34..0cb7b2bf 100644
 --- a/crates/engine/src/cmd/translit.rs
 +++ b/crates/engine/src/cmd/translit.rs
 @@ -19,7 +19,7 @@ pub fn specs() -> Vec<CommandSpec> {
@@ -46,10 +46,10 @@ index 4a1e6e3..0cb7b2b 100644
              None,
              "{scope?: \"auto\"|\"selection\"|\"sheet\"|\"workbook\", range?, apostrophe?: \"official\"|\"ascii\", foreignGuard?: bool}",
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index 93170f4..ed08f4a 100644
+index 6472dee2..94fd0a7c 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
-@@ -2884,6 +2884,9 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
+@@ -2915,6 +2915,9 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                  ("Pick From Drop-down List…", "ui:pickList"),
                  ("Define Name…", "ui:defineName"),
                  ("Link…", "ui:insertLink"),
@@ -60,7 +60,7 @@ index 93170f4..ed08f4a 100644
              if let Some(item) = insert_copied {
                  items.insert(6, item);
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 6bc16f5..5a223e2 100644
+index 2eac3345..322084a4 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -6,6 +6,22 @@
@@ -86,7 +86,7 @@ index 6bc16f5..5a223e2 100644
  pub mod backstage;
  mod border_preview;
  mod cell_pictures;
-@@ -344,6 +360,11 @@ impl SheetApp {
+@@ -367,6 +383,11 @@ impl SheetApp {
      /// Runs an engine command (or a UI command) and handles UI requests it makes.
      pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
          let r = self.run_command(id, params);
@@ -99,10 +99,10 @@ index 6bc16f5..5a223e2 100644
          // that GridCraft's copy is newer while that text is still there.
          if matches!(id, "edit.copy" | "edit.cut") && r.is_ok() {
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 9c6d89e..c3532e1 100644
+index a0ab5a33..fa08b502 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
-@@ -2031,6 +2031,19 @@ fn review(app: &mut SheetApp, ui: &mut Ui) {
+@@ -2033,6 +2033,19 @@ fn review(app: &mut SheetApp, ui: &mut Ui) {
          app.open_dialog("accessibility", json!({}));
      }
      sep(ui);

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 02:25:28 +0500
-Subject: [PATCH 07/22] calc: one dependency-graph entry per run of shared
+Subject: [PATCH 07/42] calc: one dependency-graph entry per run of shared
  formulas
 
 The graph kept, for every formula, a node with its precedent areas and an entry in a hash set per
@@ -26,7 +26,7 @@ Open peak on the 10 MB generated workbook: 352 to 194 MB (40 MB: 1,390 to 751 MB
  1 file changed, 465 insertions(+), 11 deletions(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index a63954f..4d31b83 100644
+index a63954fd..4d31b838 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -186,6 +186,93 @@ impl<T: Copy + Ord> Intervals<T> {

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 02:25:27 +0500
-Subject: [PATCH 05/22] engine: keep shared trees through fill, sort, paste and
+Subject: [PATCH 05/42] engine: keep shared trees through fill, sort, paste and
  structural edits
 
 - Fill, Range Fill, sort and paste make copies with `Formula::copied`, which share the source's
@@ -26,7 +26,7 @@ command and after saving and reopening.
  create mode 100644 crates/engine/tests/formula_templates.rs
 
 diff --git a/crates/engine/src/cmd/data.rs b/crates/engine/src/cmd/data.rs
-index 383624b..5b64679 100644
+index 24bd043f..77d20fb9 100644
 --- a/crates/engine/src/cmd/data.rs
 +++ b/crates/engine/src/cmd/data.rs
 @@ -304,10 +304,9 @@ fn do_sort(s: &mut Session, r: RangeRef, header: bool, keys: Vec<SortKey>, by_co
@@ -43,12 +43,12 @@ index 383624b..5b64679 100644
                  if let Some(picture) = sh.cell_pictures.get(&src) {
                      pictures.push((dst, picture.clone()));
 diff --git a/crates/engine/src/cmd/edit.rs b/crates/engine/src/cmd/edit.rs
-index 9d5d5f0..da211d3 100644
+index ec595e21..a3908294 100644
 --- a/crates/engine/src/cmd/edit.rs
 +++ b/crates/engine/src/cmd/edit.rs
-@@ -346,10 +346,9 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {
-             for at in r.iter() {
-                 let mut cell = base.clone().unwrap_or_default();
+@@ -358,10 +358,9 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {
+                 };
+                 let mut cell = base.unwrap_or_default();
                  if let Some(f) = &cell.formula
 -                    && let Some(e) = f.expr()
 +                    && let Some(copy) = f.copied(at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64)
@@ -57,9 +57,9 @@ index 9d5d5f0..da211d3 100644
 -                    cell.formula = Some(std::sync::Arc::new(Formula::from_expr(shifted)));
 +                    cell.formula = Some(std::sync::Arc::new(copy));
                  }
-                 cell.style = cx.wb.sheet(sheet).and_then(|sh| sh.cell(at)).map(|c| c.style).unwrap_or(cell.style);
                  cx.sheet_mut(sheet)?.set_cell(at, cell);
-@@ -980,30 +979,31 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
+                 cx.touch(sheet, at);
+@@ -992,30 +991,31 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                          let mut new = old.clone();
                          let shift = |cell: &Cell| -> Option<std::sync::Arc<Formula>> {
                              let f = cell.formula.as_ref()?;
@@ -100,7 +100,7 @@ index 9d5d5f0..da211d3 100644
                          };
                          if link {
                              let sheet_prefix = if dest_sheet == clip.sheet && same_doc {
-@@ -1192,6 +1192,8 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
+@@ -1204,6 +1204,8 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
          }
          let on_target = moves_arrays && host.eq_ignore_ascii_case(target);
          let Some(sheet) = wb.sheet_mut(si) else { continue };
@@ -109,7 +109,7 @@ index 9d5d5f0..da211d3 100644
          for (c, f) in keys {
              let Some(expr) = f.expr() else { continue };
              let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
-@@ -1203,9 +1205,11 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
+@@ -1215,9 +1217,11 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
              if (text != f.text() || array != f.array)
                  && let Some(cell) = sheet.cells.get_mut(c)
              {
@@ -123,10 +123,10 @@ index 9d5d5f0..da211d3 100644
          }
      }
 diff --git a/crates/engine/src/cmd/insert.rs b/crates/engine/src/cmd/insert.rs
-index d878e44..edbdf36 100644
+index 9f044613..5c982ec5 100644
 --- a/crates/engine/src/cmd/insert.rs
 +++ b/crates/engine/src/cmd/insert.rs
-@@ -495,9 +495,10 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -496,9 +496,10 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
              // A bare name that is also a defined name resolves to the defined name, so it is not the table.
              let shadowed = cx.wb.name(&old, i).is_some();
              let Some(sh) = cx.wb.sheet_mut(i) else { continue };
@@ -138,7 +138,7 @@ index d878e44..edbdf36 100644
                      gridcraft_formula::Expr::Struct(mut st) if st.table.eq_ignore_ascii_case(&old) => {
                          st.table = name.clone();
                          gridcraft_formula::Expr::Struct(st)
-@@ -505,8 +506,11 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -506,8 +507,11 @@ fn table_rename(s: &mut Session, p: &Json) -> Result<Json> {
                      gridcraft_formula::Expr::Name(n) if !shadowed && n.eq_ignore_ascii_case(&old) => gridcraft_formula::Expr::Name(name.clone()),
                      o => o,
                  });
@@ -153,7 +153,7 @@ index d878e44..edbdf36 100644
              }
          }
 diff --git a/crates/engine/src/cmd/sheet.rs b/crates/engine/src/cmd/sheet.rs
-index bea32b3..62b8738 100644
+index bea32b36..62b87387 100644
 --- a/crates/engine/src/cmd/sheet.rs
 +++ b/crates/engine/src/cmd/sheet.rs
 @@ -729,11 +729,15 @@ fn delete_sheet(s: &mut Session, p: &Json) -> Result<Json> {
@@ -196,7 +196,7 @@ index bea32b3..62b8738 100644
                  }
              }
 diff --git a/crates/engine/src/fill.rs b/crates/engine/src/fill.rs
-index 5848bb0..b6dd512 100644
+index 5848bb0c..b6dd5120 100644
 --- a/crates/engine/src/fill.rs
 +++ b/crates/engine/src/fill.rs
 @@ -5,7 +5,7 @@ use std::sync::Arc;
@@ -222,7 +222,7 @@ index 5848bb0..b6dd512 100644
                      } else if let Some(v) = match per_cell.get(src_i) {
 diff --git a/crates/engine/tests/formula_templates.rs b/crates/engine/tests/formula_templates.rs
 new file mode 100644
-index 0000000..422de02
+index 00000000..422de02b
 --- /dev/null
 +++ b/crates/engine/tests/formula_templates.rs
 @@ -0,0 +1,283 @@

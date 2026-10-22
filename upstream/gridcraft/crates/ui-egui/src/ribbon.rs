@@ -2033,6 +2033,19 @@ fn review(app: &mut SheetApp, ui: &mut Ui) {
         app.open_dialog("accessibility", json!({}));
     }
     sep(ui);
+    let r = big_button(ui, Icon::TextColumns, "Transliterate", "Transliterate", true);
+    egui::Popup::menu(&r).show(|ui| {
+        menu_items(
+            app,
+            ui,
+            &[
+                ("Latin to Cyrillic", "tools.translitCyrl", json!({})),
+                ("Cyrillic to Latin", "tools.translitLatn", json!({})),
+                ("Auto-detect", "tools.translitAuto", json!({})),
+            ],
+        );
+    });
+    sep(ui);
     let __k = big_button(ui, Icon::Comment, "New\nComment", "New Comment", false);
     control_keytip(app, ui, &__k, "dialog:comment");
     if __k.clicked() {
@@ -2475,12 +2488,13 @@ pub fn shortcut(app: &mut SheetApp, key: Key, m: Modifiers) {
         },
         Key::Semicolon => {
             // Insert today's date.
+            let loc = app.num_locale();
             let text = app
                 .session
                 .active()
                 .map(|d| {
                     let today = gridcraft_engine::core::date::serial_in_system(d.wb.date_system, gridcraft_engine::calc::now_serial()).floor();
-                    gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb).text
+                    gridcraft_engine::display::format_in(&gridcraft_engine::core::Value::Number(today), "m/d/yyyy", &d.wb, loc).text
                 })
                 .unwrap_or_default();
             app.begin_edit(Some(text), false);

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 11:58:49 +0500
-Subject: [PATCH 14/22] model: keep a row's cells in a vector sized to them
+Subject: [PATCH 14/42] model: keep a row's cells in a vector sized to them
 
 A row's cells were a B-tree map, whose every node has room for eleven
 cells: 496 bytes for a row of one cell to eleven. Keep them in a vector
@@ -24,7 +24,7 @@ unchanged.
  4 files changed, 557 insertions(+), 48 deletions(-)
 
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 258a1cb..2ac1ef1 100644
+index 258a1cb7..2ac1ef1c 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
 @@ -119,6 +119,7 @@ const UNDO_LIMIT: usize = 100;
@@ -36,7 +36,7 @@ index 258a1cb..2ac1ef1 100644
          calc.recalc_all(&mut wb);
          let wb = Arc::new(wb);
 diff --git a/crates/model/src/store.rs b/crates/model/src/store.rs
-index d6a9c45..e500ffd 100644
+index d6a9c456..e500ffdc 100644
 --- a/crates/model/src/store.rs
 +++ b/crates/model/src/store.rs
 @@ -1,13 +1,15 @@
@@ -746,7 +746,7 @@ index d6a9c45..e500ffd 100644
 +    }
  }
 diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
-index 8003d34..be9391c 100644
+index 8003d348..be9391c4 100644
 --- a/crates/model/src/workbook.rs
 +++ b/crates/model/src/workbook.rs
 @@ -204,6 +204,16 @@ impl Workbook {
@@ -767,7 +767,7 @@ index 8003d34..be9391c 100644
      /// file).
      pub fn apply_name_call_case(&mut self) {
 diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
-index 5a5016d..35b8f3b 100644
+index 5a5016d5..35b8f3b6 100644
 --- a/crates/xlsx/src/sheet_read.rs
 +++ b/crates/xlsx/src/sheet_read.rs
 @@ -89,6 +89,8 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE

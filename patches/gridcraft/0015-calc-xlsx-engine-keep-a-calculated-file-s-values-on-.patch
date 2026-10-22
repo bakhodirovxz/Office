@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 12:02:06 +0500
-Subject: [PATCH 15/22] calc, xlsx, engine: keep a calculated file's values on
+Subject: [PATCH 15/42] calc, xlsx, engine: keep a calculated file's values on
  open, as Excel does
 
 Every workbook was fully calculated when it opened. Excel doesn't: a file
@@ -21,7 +21,7 @@ formats are calculated on open as before.
 ---
  crates/calc/src/recalc.rs                | 30 ++++++++++
  crates/calc/src/tests.rs                 | 46 +++++++++++++++
- crates/engine/src/cmd/file.rs            |  4 +-
+ crates/engine/src/cmd/file.rs            |  5 +-
  crates/engine/src/io.rs                  | 31 ++++++----
  crates/engine/src/lib.rs                 | 11 +++-
  crates/engine/tests/open_calculated.rs   | 75 ++++++++++++++++++++++++
@@ -29,11 +29,11 @@ formats are calculated on open as before.
  crates/xlsx/src/read.rs                  |  1 +
  crates/xlsx/src/sheet_read.rs            |  5 ++
  crates/xlsx/src/tests/shared_formulas.rs | 26 ++++++++
- 10 files changed, 217 insertions(+), 16 deletions(-)
+ 10 files changed, 218 insertions(+), 16 deletions(-)
  create mode 100644 crates/engine/tests/open_calculated.rs
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index f731db1..63b2ec1 100644
+index f731db1b..63b2ec1c 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -1262,6 +1262,27 @@ impl Calc {
@@ -81,10 +81,10 @@ index f731db1..63b2ec1 100644
  /// UTC; the local offset isn't available without platform calls. Falls back to a fixed date only
  /// when no clock is available.
 diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
-index 53050d5..1c9ab63 100644
+index 314b4e87..8c3e8c3b 100644
 --- a/crates/calc/src/tests.rs
 +++ b/crates/calc/src/tests.rs
-@@ -1295,3 +1295,49 @@ fn recalculation_keeps_unchanged_sheets_shared_with_snapshots() {
+@@ -1323,3 +1323,49 @@ fn recalculation_keeps_unchanged_sheets_shared_with_snapshots() {
      assert!(std::sync::Arc::ptr_eq(&t.wb.sheets[0], &snapshot.sheets[0]));
      assert_eq!(t.wb.sheet(1).unwrap().value(c("C1")), Value::Number(6.0));
  }
@@ -135,19 +135,20 @@ index 53050d5..1c9ab63 100644
 +    assert_eq!(opened, fresh, "an untrusted open is a full calculation");
 +}
 diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
-index 1bc7022..5df91b9 100644
+index a12de5a0..1cb62438 100644
 --- a/crates/engine/src/cmd/file.rs
 +++ b/crates/engine/src/cmd/file.rs
-@@ -57,7 +57,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -57,7 +57,8 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
      };
      let sniffed = gridcraft_xlsx::sniff(&bytes);
      let encrypted = sniffed == gridcraft_xlsx::Format::Encrypted;
--    let (mut wb, warnings) = crate::io::open_bytes_with_password(&name, &bytes, str_param(p, "password"))?;
-+    let (mut wb, warnings, calculated) = crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"))?;
+-    let (mut wb, warnings) = crate::io::open_bytes_with(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
++    let (mut wb, warnings, calculated) =
++        crate::io::open_bytes_calculated(&name, &bytes, str_param(p, "password"), bool_param(p, "csvAsText").unwrap_or(false))?;
      // The file's bytes are not needed past reading: freed before the first recalculation, which is
      // where opening needs the most memory.
      drop(bytes);
-@@ -80,7 +80,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
+@@ -80,7 +81,7 @@ fn open(s: &mut Session, p: &Json) -> Result<Json> {
      {
          s.close_document(0);
      }
@@ -157,35 +158,35 @@ index 1bc7022..5df91b9 100644
          doc.content_kind = Some(crate::io::FileKind::Xlsx);
      }
 diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
-index 3e84036..80c632b 100644
+index 14717a3d..bd08f7ba 100644
 --- a/crates/engine/src/io.rs
 +++ b/crates/engine/src/io.rs
-@@ -55,10 +55,17 @@ pub fn open_bytes(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
- /// [`open_bytes`], first decrypting a password-protected workbook with `password`. Errors never
- /// quote the password.
- pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>)> {
-+    open_bytes_calculated(name, bytes, password).map(|(wb, warnings, _)| (wb, warnings))
+@@ -62,10 +62,17 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
+ /// the text it holds, with no number, date or boolean conversion (identifiers such as GTINs, SKUs
+ /// and ZIP codes survive). It does not apply to other formats.
+ pub fn open_bytes_with(name: &str, bytes: &[u8], password: Option<&str>, csv_as_text: bool) -> Result<(Workbook, Vec<String>)> {
++    open_bytes_calculated(name, bytes, password, csv_as_text).map(|(wb, warnings, _)| (wb, warnings))
 +}
 +
-+/// [`open_bytes_with_password`], also telling whether the workbook's values come from a full
++/// [`open_bytes_with`], also telling whether the workbook's values come from a full
 +/// calculation: an XLSX file that asks for none on open ([`gridcraft_xlsx::ReadReport::calculated`]).
 +/// Its formulas then need not be calculated when it opens ([`DocState::open`](crate::DocState::open)).
-+pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>, bool)> {
++pub fn open_bytes_calculated(name: &str, bytes: &[u8], password: Option<&str>, csv_as_text: bool) -> Result<(Workbook, Vec<String>, bool)> {
      if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
--        let (mut wb, warnings) = open_plain(name, bytes)?;
-+        let (mut wb, warnings, calculated) = open_plain(name, bytes)?;
+-        let (mut wb, warnings) = open_plain(name, bytes, csv_as_text)?;
++        let (mut wb, warnings, calculated) = open_plain(name, bytes, csv_as_text)?;
          fit_imported_rows(&mut wb);
 -        return Ok((wb, warnings));
 +        return Ok((wb, warnings, calculated));
      }
      // A scheme no password opens is said straight away, rather than after asking for one.
      let decrypt_error = |e: gridcraft_xlsx::DecryptError| EngineError::Other(decrypt_message(name, e));
-@@ -70,10 +77,10 @@ pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>
+@@ -77,10 +84,10 @@ pub fn open_bytes_with(name: &str, bytes: &[u8], password: Option<&str>, csv_as_
      if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
          return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
      }
--    let (mut wb, mut warnings) = open_plain(name, &plain)?;
-+    let (mut wb, mut warnings, calculated) = open_plain(name, &plain)?;
+-    let (mut wb, mut warnings) = open_plain(name, &plain, csv_as_text)?;
++    let (mut wb, mut warnings, calculated) = open_plain(name, &plain, csv_as_text)?;
      fit_imported_rows(&mut wb);
      warnings.insert(0, DECRYPTED_NOTICE.into());
 -    Ok((wb, warnings))
@@ -193,14 +194,14 @@ index 3e84036..80c632b 100644
  }
  
  /// Excel auto-fits rows to their tallest font when opening a file: rows without a user-set
-@@ -111,13 +118,13 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
+@@ -118,13 +125,13 @@ fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
      }
  }
  
 -/// Parses bytes that aren't encrypted.
--fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+-fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook, Vec<String>)> {
 +/// Parses bytes that aren't encrypted; with whether the values come from a full calculation.
-+fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>, bool)> {
++fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook, Vec<String>, bool)> {
      let kind = FileKind::from_path(name);
      let sniffed = gridcraft_xlsx::sniff(bytes);
      if sniffed == gridcraft_xlsx::Format::Xls {
@@ -210,7 +211,7 @@ index 3e84036..80c632b 100644
      }
      if sniffed == gridcraft_xlsx::Format::LegacyBinary {
          return Err(EngineError::Other(format!(
-@@ -136,12 +143,12 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+@@ -143,12 +150,12 @@ fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook,
      if let Some(import) = import {
          let read = if import == FileKind::Ods { gridcraft_xlsx::read_ods } else { gridcraft_xlsx::read_xlsb };
          let (wb, report) = read(bytes).map_err(|e| EngineError::Other(format!("We can't import '{name}': {e}")))?;
@@ -225,7 +226,7 @@ index 3e84036..80c632b 100644
      }
      match kind {
          Some(FileKind::Json) => {
-@@ -150,7 +157,7 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+@@ -157,7 +164,7 @@ fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook,
              if wb.sheets.is_empty() {
                  wb = Workbook::new();
              }
@@ -233,8 +234,8 @@ index 3e84036..80c632b 100644
 +            Ok((wb, vec![], false))
          }
          Some(FileKind::Tsv) => {
-             let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
-@@ -158,13 +165,13 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
+             let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', parse_values: !csv_as_text, ..Default::default() };
+@@ -165,13 +172,13 @@ fn open_plain(name: &str, bytes: &[u8], csv_as_text: bool) -> Result<(Workbook,
              // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
              wb.csv_delimiter = None;
              rename_first_sheet(&mut wb, name);
@@ -242,7 +243,7 @@ index 3e84036..80c632b 100644
 +            Ok((wb, vec![], false))
          }
          _ => {
-             let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
+             let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, parse_values: !csv_as_text, ..Default::default() };
              let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
              rename_first_sheet(&mut wb, name);
 -            Ok((wb, vec![]))
@@ -251,7 +252,7 @@ index 3e84036..80c632b 100644
      }
  }
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 2ac1ef1..06b1091 100644
+index 2ac1ef1c..06b10910 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
 @@ -118,10 +118,17 @@ static NEXT_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::ne
@@ -276,7 +277,7 @@ index 2ac1ef1..06b1091 100644
          DocState {
 diff --git a/crates/engine/tests/open_calculated.rs b/crates/engine/tests/open_calculated.rs
 new file mode 100644
-index 0000000..5d75295
+index 00000000..5d752953
 --- /dev/null
 +++ b/crates/engine/tests/open_calculated.rs
 @@ -0,0 +1,75 @@
@@ -356,7 +357,7 @@ index 0000000..5d75295
 +    assert_eq!(value(&s, "B1"), Value::Number(4.0));
 +}
 diff --git a/crates/xlsx/src/lib.rs b/crates/xlsx/src/lib.rs
-index 3300f97..8216be8 100644
+index 3300f97f..8216be8d 100644
 --- a/crates/xlsx/src/lib.rs
 +++ b/crates/xlsx/src/lib.rs
 @@ -68,6 +68,10 @@ pub enum IoError {
@@ -371,7 +372,7 @@ index 3300f97..8216be8 100644
  
  impl ReadReport {
 diff --git a/crates/xlsx/src/read.rs b/crates/xlsx/src/read.rs
-index 1a47908..d193052 100644
+index 1a479081..d1930522 100644
 --- a/crates/xlsx/src/read.rs
 +++ b/crates/xlsx/src/read.rs
 @@ -176,6 +176,7 @@ pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
@@ -383,7 +384,7 @@ index 1a47908..d193052 100644
              Some("manual") => CalcMode::Manual,
              Some("autoNoTable") => CalcMode::AutomaticExceptTables,
 diff --git a/crates/xlsx/src/sheet_read.rs b/crates/xlsx/src/sheet_read.rs
-index 35b8f3b..b81756b 100644
+index 35b8f3b6..b81756be 100644
 --- a/crates/xlsx/src/sheet_read.rs
 +++ b/crates/xlsx/src/sheet_read.rs
 @@ -88,6 +88,11 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
@@ -399,7 +400,7 @@ index 35b8f3b..b81756b 100644
      // Rows were filled cell by cell: give back the room kept for more.
      sheet.cells.shrink_to_fit();
 diff --git a/crates/xlsx/src/tests/shared_formulas.rs b/crates/xlsx/src/tests/shared_formulas.rs
-index 3d435bd..86dd9d2 100644
+index 3d435bd6..86dd9d25 100644
 --- a/crates/xlsx/src/tests/shared_formulas.rs
 +++ b/crates/xlsx/src/tests/shared_formulas.rs
 @@ -139,3 +139,29 @@ fn inline_strings_with_the_same_short_text_share_one_string() {

@@ -21,6 +21,9 @@ pub struct EditState {
     pub sheet: usize,
     /// Syntax of this edit, captured when it starts (prevents a language switch reinterpreting it).
     pub locale: gridcraft_engine::formula::FormulaLocale,
+    /// Number locale of this edit, captured with `locale`: the text is typed in it, and the commit
+    /// turns it back into en-US input text for the engine.
+    pub num_locale: gridcraft_engine::core::NumLocale,
     pub cell: CellRef,
     pub text: String,
     /// Started by typing (Enter mode: arrows commit) rather than F2 (Edit mode: arrows move the caret).
@@ -49,6 +52,7 @@ impl EditState {
         EditState {
             sheet,
             locale: Default::default(),
+            num_locale: Default::default(),
             cell,
             text,
             enter_mode,

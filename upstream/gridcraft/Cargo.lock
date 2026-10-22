@@ -1565,6 +1565,7 @@ dependencies = [
 name = "gridcraft-engine"
 version = "0.10.0"
 dependencies = [
+ "epaint_default_fonts",
  "gridcraft-calc",
  "gridcraft-chart",
  "gridcraft-core",
@@ -1579,6 +1580,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "uz-translit",
  "zip",
 ]
 
@@ -1630,6 +1632,9 @@ dependencies = [
 [[package]]
 name = "gridcraft-pdf"
 version = "0.10.0"
+dependencies = [
+ "epaint_default_fonts",
+]
 
 [[package]]
 name = "gridcraft-ui-egui"
@@ -3630,6 +3635,10 @@ dependencies = [
  "serde_core",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "uz-translit"
+version = "0.1.0"
 
 [[package]]
 name = "vello_common"

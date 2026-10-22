@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 02:25:35 +0500
-Subject: [PATCH 08/22] docs: record the shared formula trees decision
+Subject: [PATCH 08/42] docs: record the shared formula trees decision
 
 Why formulas share trees as shifted copies (offset from the tree, not from the cell), where runs
 come from, Excel's limit on shared formulas with sheet references, and the measured effect on the
@@ -11,7 +11,7 @@ generated benchmark workbooks.
  1 file changed, 29 insertions(+), 1 deletion(-)
 
 diff --git a/docs/decisions.md b/docs/decisions.md
-index 7b0a99a..d75e793 100644
+index 7b0a99a3..d75e793a 100644
 --- a/docs/decisions.md
 +++ b/docs/decisions.md
 @@ -70,4 +70,32 @@ to 115% or 100%. That's a large relative step at low zoom and a small one near 4

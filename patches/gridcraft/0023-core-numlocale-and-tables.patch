@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 12:00:00 +0500
-Subject: [PATCH] core: NumLocale and its tables (separators, month and day
- names, short date)
+Subject: [PATCH 23/42] core: NumLocale and its tables (separators, month and
+ day names, short date)
 
 A Copy enum {EnUs, Ru, UzLatn, UzCyrl} with the Windows NLS data Excel shows. Passed explicitly,
 never global. En-US is the default and the identity.
@@ -13,7 +13,7 @@ never global. En-US is the default and the identity.
  create mode 100644 crates/core/src/locale.rs
 
 diff --git a/crates/core/src/lib.rs b/crates/core/src/lib.rs
-index d5adbc0..e6fe915 100644
+index d5adbc07..e6fe9158 100644
 --- a/crates/core/src/lib.rs
 +++ b/crates/core/src/lib.rs
 @@ -5,9 +5,11 @@
@@ -30,7 +30,7 @@ index d5adbc0..e6fe915 100644
  pub use value::{Array, CellError, Value, compare, compare_numbers, compare_text, number_to_text, sort_compare};
 diff --git a/crates/core/src/locale.rs b/crates/core/src/locale.rs
 new file mode 100644
-index 0000000..0a9eefd
+index 00000000..0a9eefd6
 --- /dev/null
 +++ b/crates/core/src/locale.rs
 @@ -0,0 +1,191 @@

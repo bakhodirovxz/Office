@@ -38,7 +38,7 @@ right-to-left sheets and full complex-script support. Part of
 - **Names in any script.** Defined names (Define Name, Create from Selection) are limited to
   255 characters, counted as characters rather than UTF-8 bytes, so a 255-letter Arabic name is
   accepted as in Excel. Sheet names already counted characters (31).
-- **PDF export** uses only the 14 standard PDF fonts: non-Latin text cannot export.
+- **PDF export** embeds installed TrueType faces as subsets (Cyrillic, Greek, Uzbek export); RTL, shaping and CFF-only fonts (most CJK) still do not.
 
 ## Languages
 

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:07:09 +0500
-Subject: [PATCH 102/102] ui-egui, engine: append the overlay's fallback fonts
+Subject: [PATCH 33/42] ui-egui, engine: append the overlay's fallback fonts
  last and use them for PDF export
 
 font_definitions_with appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans,
@@ -15,7 +15,7 @@ so U+02BB and Uzbek Cyrillic are embedded instead of printed as notdef. Adds cma
  3 files changed, 96 insertions(+), 1 deletion(-)
 
 diff --git a/crates/engine/src/pdf_fonts.rs b/crates/engine/src/pdf_fonts.rs
-index 6f0bed5..44d4276 100644
+index 6f0bed59..44d42768 100644
 --- a/crates/engine/src/pdf_fonts.rs
 +++ b/crates/engine/src/pdf_fonts.rs
 @@ -92,6 +92,20 @@ pub fn set_default_face(data: Vec<u8>) -> bool {
@@ -40,7 +40,7 @@ index 6f0bed5..44d4276 100644
  fn bundled() -> Option<Font> {
      #[cfg(any(test, feature = "bundled-pdf-font"))]
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 8d9b059..dbead09 100644
+index 8d9b059e..dbead093 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -23,3 +23,79 @@ fn the_label_lookup_shows_the_overlay_name() {
@@ -124,10 +124,10 @@ index 8d9b059..dbead09 100644
 +    assert!(font.covers(UZBEK_TEXT));
 +}
 diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
-index 3075935..a707a48 100644
+index 0c03f020..a31589cb 100644
 --- a/crates/ui-egui/src/theme.rs
 +++ b/crates/ui-egui/src/theme.rs
-@@ -390,7 +390,11 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
+@@ -391,7 +391,11 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
      // PDF export falls back to the face the grid itself falls back to (egui's Ubuntu Light, which
      // has Latin, Greek and Cyrillic). Only the first call has an effect.
      if let Some(ubuntu) = fonts.font_data.get("Ubuntu-Light") {
@@ -140,7 +140,7 @@ index 3075935..a707a48 100644
      }
      let base_prop: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
      let base_mono: Vec<String> = fonts.families.get(&FontFamily::Monospace).cloned().unwrap_or_default();
-@@ -439,6 +443,7 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
+@@ -440,6 +444,7 @@ pub fn font_definitions_with(language: crate::i18n::Language, used: &[String]) -
      if let Some(ui) = fonts.families.get(&FontFamily::Name(UI.into())).cloned() {
          fonts.families.insert(FontFamily::Proportional, ui);
      }

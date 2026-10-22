@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Fri, 16 Oct 2026 18:44:10 +0500
-Subject: [PATCH 19/22] calc: on open, calculate the formulas the saving
+Subject: [PATCH 19/42] calc: on open, calculate the formulas the saving
  program couldn't
 
 A file's values come from the program that saved it. One without a
@@ -21,7 +21,7 @@ the 432,120 formulas.
  2 files changed, 25 insertions(+), 1 deletion(-)
 
 diff --git a/crates/calc/src/recalc.rs b/crates/calc/src/recalc.rs
-index 63b2ec1..654eccf 100644
+index 63b2ec1c..654eccf1 100644
 --- a/crates/calc/src/recalc.rs
 +++ b/crates/calc/src/recalc.rs
 @@ -1270,11 +1270,18 @@ impl Calc {
@@ -45,10 +45,10 @@ index 63b2ec1..654eccf 100644
          }
          self.calculate_built(wb);
 diff --git a/crates/calc/src/tests.rs b/crates/calc/src/tests.rs
-index 1c9ab63..12a61a3 100644
+index 8c3e8c3b..9413180a 100644
 --- a/crates/calc/src/tests.rs
 +++ b/crates/calc/src/tests.rs
-@@ -1341,3 +1341,20 @@ fn open_keeps_calculated_values_unless_a_formula_needs_calculating() {
+@@ -1369,3 +1369,20 @@ fn open_keeps_calculated_values_unless_a_formula_needs_calculating() {
      Calc::new().open(&mut opened, false);
      assert_eq!(opened, fresh, "an untrusted open is a full calculation");
  }

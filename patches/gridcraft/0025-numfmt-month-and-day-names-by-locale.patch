@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 14:52:30 +0500
-Subject: [PATCH] numfmt: month and day names by locale, [$-xxx] name tags
+Subject: [PATCH 25/42] numfmt: month and day names by locale, [$-xxx] name
+ tags
 
 mmm/mmmm/mmmmm/ddd/dddd use the locale's Windows NLS names. A [$-419] / [$-443] / [$-843] tag
 (LCID, low 16 bits) names the months and days of its section for a non-English interface; the
@@ -14,7 +15,7 @@ digits are not affected, as in Excel. In the en-US interface the tags stay ignor
  create mode 100644 crates/numfmt/tests/locale_names.rs
 
 diff --git a/crates/numfmt/src/parse.rs b/crates/numfmt/src/parse.rs
-index 63e2d30..f4d66ea 100644
+index 63e2d300..f4d66ea7 100644
 --- a/crates/numfmt/src/parse.rs
 +++ b/crates/numfmt/src/parse.rs
 @@ -1,5 +1,7 @@
@@ -108,7 +109,7 @@ index 63e2d30..f4d66ea 100644
      if is_date {
          sec.kind = SecKind::Date;
 diff --git a/crates/numfmt/src/render.rs b/crates/numfmt/src/render.rs
-index 035de0a..46d2840 100644
+index 035de0ad..46d28406 100644
 --- a/crates/numfmt/src/render.rs
 +++ b/crates/numfmt/src/render.rs
 @@ -1,6 +1,6 @@
@@ -151,7 +152,7 @@ index 035de0a..46d2840 100644
                      DatePart::Hour(n) => {
 diff --git a/crates/numfmt/tests/locale_names.rs b/crates/numfmt/tests/locale_names.rs
 new file mode 100644
-index 0000000..3a95ba0
+index 00000000..3a95ba0a
 --- /dev/null
 +++ b/crates/numfmt/tests/locale_names.rs
 @@ -0,0 +1,50 @@

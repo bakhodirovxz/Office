@@ -71,3 +71,31 @@ relative steps keep each notch feeling the same, and the doublings land on 25, 5
 400%. The status bar's Zoom In / Zoom Out buttons and Ctrl+Alt+= / Ctrl+Alt+- keep their 10%
 steps, so the wheel and the buttons now step differently. Whether they should share one ladder
 (this one, Excel's, or another) is left to the maintainers.
+## Formulas that are the same in R1C1 terms share one tree
+
+A formula cell held its own text and syntax tree, about 680 bytes for a typical formula, also when
+a column is one formula filled down or an Excel shared formula; the dependency graph added about
+330 bytes per formula. On large workbooks those two were three quarters of the peak memory
+(measured on a 10 MB workbook with 432,120 formulas: 635 MB at open).
+
+A `Formula` is now either its own text and tree or a *shifted copy*: a shared tree plus the row
+and column offset copy and fill would move it by. The offset is from the tree, not from the cell,
+so a formula means the same wherever its cell is stored: moving cells (sort, insert, cut) needs no
+change, and any edit or rewrite that builds a new formula detaches that cell. The alternative, a
+tree in relative (R1C1) form read against the cell's position, saves the remaining per-cell
+`Arc<Formula>` (about 70 bytes) but needs the position at every one of the hundred-odd places that
+read a formula's text or tree, including `Cell::input_text`, which has none.
+
+Runs come from Excel shared formulas, from ordinary formulas that are exact copies of the formula
+above or to the left (checked with `adjust::is_shifted_copy`, never assumed from text), from fill,
+sort and paste (`Formula::copied`), and from structural rewrites (`FormulaRuns`). Runs are written
+back as shared formulas, except formulas Excel can't read as shared: Excel (observed: Microsoft
+365) refuses to open a workbook whose shared formulas hold a sheet-qualified reference. In the
+dependency graph, consecutive copies down a column at the same offset are one run node whose
+precedent areas move with the row; a run is formed only when the first, last and middle formulas
+confirm those areas, and editing a formula splits it.
+
+Measured on the generated benchmark workbooks (30 sheets, three formula columns): peak memory at
+open 635 → 194 MB (10 MB file), 2,525 → 751 MB (40 MB file), and 1,496 MB and 2,421 MB for the
+80 MB and 120 MB files, which did not open before on a machine with about 5 GB free. Every
+computed value and formula is identical to the previous build's.

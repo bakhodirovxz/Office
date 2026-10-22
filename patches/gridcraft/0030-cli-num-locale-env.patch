@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office-wp14 <wp14@office.invalid>
 Date: Wed, 21 Oct 2026 12:00:00 +0500
-Subject: [PATCH] cli: GRIDCRAFT_NUM_LOCALE sets the number locale of
+Subject: [PATCH 30/42] cli: GRIDCRAFT_NUM_LOCALE sets the number locale of
  sheets-cli sessions
 
 en, ru, uz-latn or uz-cyrl, so cat, convert and run show and write cells as that locale's readers
@@ -11,7 +11,7 @@ see them (the locale matrix, tests). Unset is en-US.
  1 file changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/apps/gridcraft-cli/src/main.rs b/apps/gridcraft-cli/src/main.rs
-index 152ddbc..b0f4115 100644
+index 152ddbcb..b0f41150 100644
 --- a/apps/gridcraft-cli/src/main.rs
 +++ b/apps/gridcraft-cli/src/main.rs
 @@ -163,14 +163,24 @@ fn exec(s: &mut Session, id: &str, params: Value) -> Result<Value, String> {
