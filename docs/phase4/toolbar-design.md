@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Design only, written 2026-10-22 on branch `phase-4`. **Owner review done 2026-10-22: all three recommendations accepted (§11).** |
+| **Status** | Design only, written 2026-10-22 on branch `phase-4`. **Owner review done 2026-10-22: all three recommendations accepted (§11). The Fluent SVG icons (Appendix B) are accepted for now; the final call comes after the WP23 staff usability check.** |
 | **Implements** | PLAN §2.1–§2.4 (the design WP2 and WP3 build), WP1. The labels feed WP17; the settings key feeds WP5; the keyboard and accessibility rules feed WP18. |
 | **Upstream BASEs read** | wordcraft `eae2421`, gridcraft `f1894c6`, deckcraft `1dc6972`, pdfcraft `924c4da` (the trees under `upstream/` are the **queue applied**). Every `file:line` below is relative to `upstream/` unless it says `domains/`. **WP0 moves every BASE: WP0b re-checks every id and line in §9 and Appendix A.** |
 | **Mock-ups** | ASCII below, and the same four layouts drawn in [`toolbar-design.html`](toolbar-design.html) (a static page, no external resources; open it in any browser). |
