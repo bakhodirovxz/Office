@@ -1,0 +1,38 @@
+[package]
+name = "suite-desktop"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "The desktop host (PLAN phase 4, section 3.4, WP9): the home shell in a WebView2 window over an in-process suite-serve, desktop actions over WebView IPC only"
+
+[lints]
+workspace = true
+
+[lib]
+name = "suite_desktop"
+
+[[bin]]
+name = "suite"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = { version = "1", default-features = false, features = ["parse"] }
+
+# The window, the WebView2 control, the native dialogs and the server are Windows-only: on Linux the host would link webkit2gtk (LGPL),
+# which the plan excludes (section 3.4, R16), so the crate builds there as the portable logic only.
+[target.'cfg(windows)'.dependencies]
+convert = { path = "../convert" }
+convert-api = { path = "../convert-api" }
+suite-serve = { path = "../suite-serve" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time"] }
+tao = "0.37"
+wry = "0.57"
+rfd = { version = "0.17", default-features = false }
+
+# test helper: stands in for an editor exe and appends its arguments to $FAKE_EDITOR_LOG
+[[bin]]
+name = "suite-fake-editor"
+path = "tests/support/fake_editor.rs"

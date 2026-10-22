@@ -151,9 +151,13 @@
   }
   let only = '';   // the app the file picker is limited to ('' = any)
   function pick(app) {
+    // desktop host (WebView2): the native dialog and the native editor, over WebView IPC (services/suite-desktop); the answer arrives as 'suite-host'
+    if (window.ipc) { window.ipc.postMessage(JSON.stringify(app ? { type: 'pick', app } : { type: 'pick' })); return; }
     const f = $('file'); only = app; f.value = ''; f.accept = '.' + (app ? EXT[app] : Object.values(EXT).join(' ')).split(' ').join(',.');
     f.click();
   }
+
+  addEventListener('suite-host', (e) => { const d = e.detail || {}; if (d.type === 'opened') fail(d.ok || d.cancelled ? '' : String(d.error)); });
 
   async function main() {
     const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };

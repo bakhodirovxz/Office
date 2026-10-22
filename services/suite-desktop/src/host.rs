@@ -1,0 +1,370 @@
+//! The Windows part: the in-process `suite-serve` on a random loopback port, the single-instance pipe, the WebView2 window and the
+//! browser fallback. Desktop actions reach the host only through the WebView IPC (`Ctx::message`), never through the HTTP port.
+use crate::{Args, Brand, Ctx, Out, Source, Store, nav_ok, origin_ok, reply_script};
+use serde::Deserialize;
+use serde_json::{Value, json};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Duration;
+use tao::dpi::LogicalSize;
+use tao::event::{Event, WindowEvent};
+use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
+use tao::window::WindowBuilder;
+use tokio::io::AsyncReadExt as _;
+use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
+use wry::{NewWindowResponse, WebContext, WebViewBuilder};
+
+enum Ev {
+    Script(String),
+    Focus,
+}
+
+/// What a second launch sends to the running instance, one JSON object per line.
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+enum PipeMsg {
+    Open { path: String },
+    Focus {},
+}
+
+const PIPE_MAX: u64 = 64 * 1024;
+
+fn dialog(level: rfd::MessageLevel, title: &str, text: &str) {
+    rfd::MessageDialog::new()
+        .set_level(level)
+        .set_title(title)
+        .set_description(text)
+        .show();
+}
+
+/// A failed open is told to the user in a dialog (a launch from Explorer has no console to print to). It runs on its own thread.
+fn report(title: &str, v: &Value) {
+    if v["ok"] == false {
+        let (t, e) = (
+            title.to_string(),
+            v["error"].as_str().unwrap_or("error").to_string(),
+        );
+        std::thread::spawn(move || dialog(rfd::MessageLevel::Error, &t, &e));
+    }
+}
+
+fn env_dir(key: &str) -> Option<PathBuf> {
+    std::env::var_os(key)
+        .filter(|v| !v.is_empty())
+        .map(PathBuf::from)
+}
+
+fn alnum(s: &str) -> String {
+    s.chars().filter(char::is_ascii_alphanumeric).collect()
+}
+
+/// Sends the lines to the running instance. False when nobody answers (it is closing, or the name is held by something else).
+fn send(pipe: &str, lines: &[String]) -> bool {
+    use std::io::Write as _;
+    for _ in 0..20 {
+        if let Ok(mut f) = std::fs::OpenOptions::new().write(true).open(pipe) {
+            return f.write_all(lines.join("\n").as_bytes()).is_ok();
+        }
+        std::thread::sleep(Duration::from_millis(100)); // ERROR_PIPE_BUSY while the server makes the next instance
+    }
+    false
+}
+
+async fn pipe_loop(
+    mut server: NamedPipeServer,
+    name: String,
+    ctx: Arc<Ctx>,
+    proxy: Option<EventLoopProxy<Ev>>,
+) {
+    loop {
+        if server.connect().await.is_err() {
+            return;
+        }
+        let Ok(next) = ServerOptions::new()
+            .reject_remote_clients(true)
+            .create(&name)
+        else {
+            return;
+        };
+        let conn = std::mem::replace(&mut server, next);
+        let (ctx, proxy) = (ctx.clone(), proxy.clone());
+        tokio::spawn(async move {
+            let mut buf = vec![];
+            let read = tokio::time::timeout(
+                Duration::from_secs(3),
+                conn.take(PIPE_MAX).read_to_end(&mut buf),
+            )
+            .await;
+            if read.is_err() {
+                return;
+            }
+            for line in String::from_utf8_lossy(&buf)
+                .lines()
+                .filter(|l| !l.trim().is_empty())
+            {
+                // the same checks as for the page: a pipe message is data too
+                if let Ok(PipeMsg::Open { path }) = serde_json::from_str(line) {
+                    let v = ctx.open(&path, Source::User);
+                    report(&ctx.brand.product, &v);
+                    if let Some(p) = &proxy {
+                        let _ = p.send_event(Ev::Script(reply_script(&v)));
+                    }
+                } else if serde_json::from_str::<PipeMsg>(line).is_err() {
+                    break; // not ours: stop reading this connection
+                }
+            }
+            if let Some(p) = &proxy {
+                let _ = p.send_event(Ev::Focus);
+            }
+        });
+    }
+}
+
+struct Served {
+    port: u16,
+}
+
+/// The shell, the editors and the converter on `127.0.0.1:<free port>`, in this process.
+fn serve(
+    rt: &tokio::runtime::Runtime,
+    layout: &suite_serve::Layout,
+    data: &Path,
+) -> Result<Served, String> {
+    let cfg = layout.shell_config()?;
+    rt.block_on(async {
+        for _ in 0..10 {
+            let port = std::net::TcpListener::bind("127.0.0.1:0")
+                .and_then(|l| l.local_addr())
+                .map_err(|e| e.to_string())?
+                .port();
+            let s = convert_api::config::Settings {
+                listen: format!("127.0.0.1:{port}"),
+                work_dir: Some(data.join("work")),
+                store_dir: Some(data.join("store")),
+                ..Default::default()
+            };
+            let resolved = s.resolve()?;
+            let limits = convert_api::tls::ConnLimits::from_settings(&resolved);
+            let addr = resolved.listen;
+            let Ok(listener) = tokio::net::TcpListener::bind(addr).await else {
+                continue;
+            }; // the port was taken meanwhile
+            let app =
+                convert_api::app::App::new(resolved, convert::exec::Config::from_env(), false)?;
+            let router = suite_serve::router(app.clone(), layout, cfg.clone());
+            let sweeper = app.clone();
+            let tick = Duration::from_secs((app.r.s.retention_s / 4).clamp(1, 60));
+            tokio::spawn(async move {
+                loop {
+                    tokio::time::sleep(tick).await;
+                    sweeper.sweep();
+                }
+            });
+            tokio::spawn(convert_api::tls::serve(
+                listener,
+                None,
+                router,
+                limits,
+                std::future::pending(),
+            ));
+            return Ok(Served { port });
+        }
+        Err("no free loopback port".to_string())
+    })
+}
+
+pub fn run(args: Args) -> u8 {
+    match start(args) {
+        Ok(()) => 0,
+        Err(e) => {
+            eprintln!("suite: {e}");
+            dialog(rfd::MessageLevel::Error, "suite", &e);
+            1
+        }
+    }
+}
+
+fn start(args: Args) -> Result<(), String> {
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|e| e.parent().map(Path::to_path_buf))
+        .unwrap_or_default();
+    let dist = args.dist.unwrap_or_else(|| exe_dir.join("dist"));
+    let layout = suite_serve::Layout {
+        shell: args.shell.unwrap_or_else(|| dist.join("shell")),
+        dist,
+        brand: args.brand.unwrap_or_else(|| exe_dir.join("brand.toml")),
+    };
+    let brand_text = std::fs::read_to_string(&layout.brand)
+        .map_err(|e| format!("{}: {e}", layout.brand.display()))?;
+    let brand = Brand::parse(&brand_text)?;
+    let data = env_dir("SUITE_DATA_DIR")
+        .or_else(|| env_dir("LOCALAPPDATA").map(|d| d.join(&brand.product).join("Host")))
+        .ok_or("no data directory (LOCALAPPDATA is not set)")?;
+    let bin_dir = args.bin_dir.unwrap_or(exe_dir);
+    let product = brand.product.clone();
+    let pipe = format!(
+        r"\\.\pipe\{}-host-{}{}",
+        alnum(&brand.id),
+        alnum(&std::env::var("USERNAME").unwrap_or_default()),
+        alnum(&std::env::var("SUITE_INSTANCE").unwrap_or_default())
+    );
+    let ctx = Arc::new(Ctx {
+        brand,
+        store: Store::new(data.clone()),
+        bin_dir,
+        spawn: Box::new(|exe, file| std::process::Command::new(exe).arg(file).spawn().map(drop)),
+    });
+    let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
+    // F14: the first instance owns the pipe. Creating it with `first_pipe_instance` fails when another one exists.
+    let first = {
+        let _g = rt.enter();
+        ServerOptions::new()
+            .first_pipe_instance(true)
+            .reject_remote_clients(true)
+            .create(&pipe)
+    };
+    let server = match first {
+        Ok(s) => Some(s),
+        Err(_) => {
+            let lines: Vec<String> = if args.files.is_empty() {
+                vec![json!({"type": "focus"}).to_string()]
+            } else {
+                args.files
+                    .iter()
+                    .map(|f| json!({"type": "open", "path": f}).to_string())
+                    .collect()
+            };
+            if send(&pipe, &lines) {
+                return Ok(());
+            }
+            // nobody answers: a launch never fails, so open the files here and run without the pipe
+            for f in &args.files {
+                report(&product, &ctx.open(f, Source::User));
+            }
+            if args.files.is_empty() {
+                return Err("another instance holds the pipe and does not answer".into());
+            }
+            return Ok(());
+        }
+    };
+
+    let Served { port } = serve(&rt, &layout, &data)?;
+    let _ = std::fs::create_dir_all(&data);
+    let host_json = data.join("host.json");
+    let _ = std::fs::write(
+        &host_json,
+        json!({"pid": std::process::id(), "port": port}).to_string(),
+    );
+    for f in &args.files {
+        report(&product, &ctx.open(f, Source::User));
+    }
+
+    // WebView2 missing (or forced missing, for tests) -> the default browser
+    let no_webview = args.browser
+        || std::env::var_os("SUITE_FORCE_NO_WEBVIEW2").is_some()
+        || wry::webview_version().is_err();
+    if no_webview {
+        if let Some(s) = server {
+            rt.spawn(pipe_loop(s, pipe, ctx.clone(), None));
+        }
+        return browser_fallback(&product, port, &host_json);
+    }
+
+    let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
+    let proxy = event_loop.create_proxy();
+    if let Some(s) = server {
+        rt.spawn(pipe_loop(s, pipe, ctx.clone(), Some(proxy.clone())));
+    }
+    let window = WindowBuilder::new()
+        .with_title(&product)
+        .with_inner_size(LogicalSize::new(1100.0, 760.0))
+        .build(&event_loop)
+        .map_err(|e| e.to_string())?;
+    let mut web_context = WebContext::new(Some(data.join("webview2")));
+    let ipc_proxy = proxy.clone();
+    let ipc_ctx = ctx.clone();
+    let webview = WebViewBuilder::new_with_web_context(&mut web_context)
+        .with_url(format!("http://127.0.0.1:{port}/"))
+        .with_devtools(false)
+        .with_navigation_handler(move |u| nav_ok(&u, port))
+        .with_new_window_req_handler(|_, _| NewWindowResponse::Deny)
+        .with_ipc_handler(move |req| {
+            // IPC only from our own origin; anything else gets no answer at all
+            if !origin_ok(&req.uri().to_string(), port) {
+                return;
+            }
+            match ipc_ctx.message(req.body()) {
+                Out::Reply(v) => {
+                    let _ = ipc_proxy.send_event(Ev::Script(reply_script(&v)));
+                }
+                Out::Pick(exts) => {
+                    let (ctx, p) = (ipc_ctx.clone(), ipc_proxy.clone());
+                    // the dialog blocks, so it must not run on the UI thread
+                    std::thread::spawn(move || {
+                        let v = match rfd::FileDialog::new().add_filter("*", &exts).pick_file() {
+                            Some(f) => ctx.open(&f.to_string_lossy(), Source::User),
+                            None => json!({"type": "opened", "ok": false, "error": "cancelled", "cancelled": true}),
+                        };
+                        if v["cancelled"] != true {
+                            report(&ctx.brand.product, &v);
+                        }
+                        let _ = p.send_event(Ev::Script(reply_script(&v)));
+                    });
+                }
+            }
+        })
+        .build(&window)
+        .map_err(|e| format!("cannot create the WebView2 window: {e}"))?;
+
+    event_loop.run(move |event, _, flow| {
+        let _keep = (&rt, &web_context);
+        *flow = ControlFlow::Wait;
+        match event {
+            Event::UserEvent(Ev::Script(s)) => {
+                let _ = webview.evaluate_script(&s);
+            }
+            Event::UserEvent(Ev::Focus) => {
+                window.set_minimized(false);
+                window.set_focus();
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                let _ = std::fs::remove_file(&host_json);
+                *flow = ControlFlow::Exit;
+            }
+            _ => {}
+        }
+    })
+}
+
+/// No WebView2: open the default browser on the local URL and say so. The server runs as long as the message is open.
+fn browser_fallback(product: &str, port: u16, host_json: &Path) -> Result<(), String> {
+    let url = format!("http://127.0.0.1:{port}/");
+    // `explorer <url>` opens the default browser; the URL is ours (a fixed loopback address)
+    let opener = std::env::var_os("SUITE_BROWSER").unwrap_or_else(|| "explorer".into());
+    std::process::Command::new(opener)
+        .arg(&url)
+        .spawn()
+        .map_err(|e| format!("cannot open the browser: {e}"))?;
+    if let Some(ms) = std::env::var("SUITE_TEST_EXIT_AFTER_MS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+    {
+        std::thread::sleep(Duration::from_millis(ms)); // test hook: no dialog
+    } else {
+        dialog(
+            rfd::MessageLevel::Warning,
+            product,
+            &format!(
+                "The Microsoft Edge WebView2 Runtime is not installed, so {product} opened in your default browser at {url}\n\n\
+                 Keep this message open while you work. Close it to stop the local server.\n\
+                 Install the WebView2 Runtime to use the {product} window."
+            ),
+        );
+    }
+    let _ = std::fs::remove_file(host_json);
+    Ok(())
+}

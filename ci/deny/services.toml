@@ -7,6 +7,10 @@
 
 [graph]
 all-features = true
+# suite-desktop (WP9) links wry/tao on Windows only. wry pulls kuchikiki (so `selectors`, MPL-2.0), and rfd pulls `option-ext` (MPL-2.0), on
+# Linux/Android only; they never link into anything we ship (the plan excludes a Linux host, R16). cargo-deny unions its targets, so a Linux
+# target here would put those back: the config checks the Windows graph, and CI also runs `--target x86_64-unknown-linux-gnu` for the server.
+targets = ["x86_64-pc-windows-gnu", "x86_64-pc-windows-msvc"]
 
 [licenses]
 confidence-threshold = 0.9
