@@ -175,6 +175,8 @@ test('PDF operations are offered for PDFs only; combine keeps the order the user
   await expect(page.locator('#results li')).toHaveCount(1); // one result for the whole operation
   const card = page.locator('#results li').first();
   await expect(card.locator('.badge')).toHaveText(txt('en', 'state.done'));
+  const done = txt('en', 'state.done');
+  await expect(page.locator('#files tr td:nth-child(4)')).toHaveText([done, done, done]); // n2: the table follows the operation
   const link = card.locator('a.btn');
   await expect(link).toHaveCount(1);
   const [dl] = await Promise.all([page.waitForEvent('download'), link.click()]);

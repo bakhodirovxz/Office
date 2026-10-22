@@ -5,6 +5,24 @@ use serde::Deserialize;
 use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
 
+/// What a provider speaks (PLAN phase 4, 5.6). `Oidc` is the seam for Phase 5 SSO: it parses, and `resolve` refuses it for now.
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ProviderKind {
+    Jwt,
+    Oidc,
+}
+
+/// One `[[providers]]` entry: configuration, never code. `name` is for the operator's logs and the account page; `issuer` is the
+/// `iss` the provider's tokens carry.
+#[derive(Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Provider {
+    pub name: String,
+    pub issuer: String,
+    pub kind: ProviderKind,
+}
+
 #[derive(Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields, default)]
 pub struct Settings {
@@ -18,6 +36,9 @@ pub struct Settings {
     pub iss: Option<String>,
     /// server mode: accept only tokens whose `aud` is (or lists) this
     pub aud: Option<String>,
+    /// server mode: identity providers. Phase 4 knows one `kind = "jwt"` entry, whose `issuer` is the required `iss` (the same as
+    /// setting `iss`; both may be set when equal). `kind = "oidc"` is refused until Phase 5. None by default.
+    pub providers: Vec<Provider>,
     /// server mode: the longest remaining life a token may have when it arrives (it cannot be revoked), default 12 h
     pub max_token_lifetime_s: u64,
     /// Not used since the job keys stopped being written to disk (WP7 review M5). Accepted so that an older config still loads;
@@ -83,6 +104,7 @@ impl Default for Settings {
             secret_file: None,
             iss: None,
             aud: None,
+            providers: vec![],
             max_token_lifetime_s: 12 * 3600,
             key_file: None,
             tls_cert: None,
@@ -267,6 +289,37 @@ impl Settings {
         toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))
     }
 
+    /// The `iss` rule after the providers: the single jwt provider's issuer, or `iss`; refuses what Phase 4 cannot honour.
+    fn provider_issuer(&self) -> Result<Option<String>, String> {
+        if let Some(p) = self.providers.iter().find(|p| p.kind == ProviderKind::Oidc) {
+            return Err(format!(
+                "providers: \"{}\": kind = \"oidc\" is available in a later version",
+                p.name
+            ));
+        }
+        if self
+            .providers
+            .iter()
+            .any(|p| p.name.trim().is_empty() || p.issuer.trim().is_empty())
+        {
+            return Err("providers: name and issuer must not be empty".into());
+        }
+        if self.providers.len() > 1 {
+            return Err("providers: this version takes one provider".into());
+        }
+        if !self.providers.is_empty() && self.auth != "jwt" {
+            return Err("providers belong to server mode (auth = \"jwt\")".into());
+        }
+        match (self.providers.first(), &self.iss) {
+            (Some(p), Some(i)) if p.issuer != *i => Err(format!(
+                "providers: issuer \"{}\" differs from iss = \"{i}\"",
+                p.issuer
+            )),
+            (Some(p), _) => Ok(Some(p.issuer.clone())),
+            (None, i) => Ok(i.clone()),
+        }
+    }
+
     pub fn resolve(self) -> Result<Resolved, String> {
         let listen: SocketAddr = self
             .listen
@@ -285,6 +338,7 @@ impl Settings {
             ));
         }
         let upstream_tls = self.tls == "upstream";
+        let iss = self.provider_issuer()?;
         let auth = match self.auth.as_str() {
             "none" => {
                 if !listen.ip().is_loopback() {
@@ -352,7 +406,7 @@ impl Settings {
                 Auth::Jwt {
                     secret,
                     rules: crate::jwt::Rules {
-                        iss: self.iss.clone(),
+                        iss,
                         aud: self.aud.clone(),
                         max_lifetime_s: self.max_token_lifetime_s,
                     },
@@ -437,6 +491,38 @@ fn msys_path(p: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn providers_are_a_seam_one_jwt_provider_sets_iss_and_oidc_waits() {
+        let toml = |t: &str| toml::from_str::<Settings>(t).unwrap();
+        let p = |kind: &str| {
+            format!(
+                "[[providers]]
+name = \"idp\"
+issuer = \"https://id.test\"
+kind = \"{kind}\"
+"
+            )
+        };
+        // local mode takes none
+        let e = toml(&p("jwt")).resolve().err().unwrap();
+        assert!(e.contains("server mode"), "{e}");
+        let e = toml(&p("oidc")).resolve().err().unwrap();
+        assert!(e.contains("later version"), "{e}");
+        assert!(toml::from_str::<Settings>(&p("saml")).is_err());
+        assert!(toml("").providers.is_empty());
+        let mut s = toml(&p("jwt"));
+        s.auth = "jwt".into();
+        assert_eq!(
+            s.provider_issuer().unwrap().as_deref(),
+            Some("https://id.test")
+        );
+        s.iss = Some("https://other".into());
+        assert!(s.provider_issuer().unwrap_err().contains("differs"));
+        s.providers.push(s.providers[0].clone());
+        s.iss = None;
+        assert!(s.provider_issuer().unwrap_err().contains("one provider"));
+    }
 
     #[test]
     fn auth_none_is_refused_off_loopback_and_xdfu_is_off_only() {

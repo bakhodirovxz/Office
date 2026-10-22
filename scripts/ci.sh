@@ -551,7 +551,10 @@ convert_inputs() {
 convert_ui_steps() {
   step npm-ci npm ci --prefix ci/web-smoke || return 2
   step playwright-converter env CONVERT_API_BIN="$SVC_T/release/convert-api$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" \
-    npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.converter.config.ts
+    npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.converter.config.ts || return 1
+  # server mode over TLS (WP19): a throwaway CA and certificate made with openssl in a temp dir; needs `openssl` on PATH (Git for Windows has it)
+  step playwright-tls env SUITE_SERVE_BIN="$SVC_T/release/suite-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" \
+    npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.tls.config.ts
 }
 job_convert_ui() {
   svc_build || return 1

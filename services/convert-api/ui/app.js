@@ -66,7 +66,8 @@
     const a = $('alert');
     a.replaceChildren();
     if (e.status === 401) {
-      a.append(el('p', { text: t('ui.conn.need_token') }));
+      // a token was sent and refused (expired, wrong secret, wrong scope): say so, not "needs a token"
+      a.append(el('p', { text: t(S.token ? 'ui.conn.token_rejected' : 'ui.conn.need_token') }));
       $('conn').open = true;
     } else {
       const d = e.code === 'network' ? { head: t('err.network', { text: e.message }), details: '' } : describe(e.code, e.message);
@@ -336,6 +337,7 @@
         if (f.state === 'failed') { it.code = f.code; it.message = f.message || ''; }
         if (it.state !== was) announce(it);
       }
+      if (S.op) for (const it of S.sent) it.state = S.op.state; // the table's Status column follows the one operation (n2)
       if (v.state === 'done') { setBusy(false); return; }
       render();
       S.timer = setTimeout(() => poll(0), 1000);
