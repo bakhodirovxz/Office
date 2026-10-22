@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 19:50:12 +0500
-Subject: [PATCH 02/13] wordcraft-web: don't ask the GPU for more texture size
+Subject: [PATCH 02/12] wordcraft-web: don't ask the GPU for more texture size
  than it offers
 
 egui-wgpu's default device descriptor requires max_texture_dimension_2d =

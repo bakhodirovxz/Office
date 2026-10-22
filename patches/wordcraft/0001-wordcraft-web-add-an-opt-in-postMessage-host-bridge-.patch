@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 19:50:07 +0500
-Subject: [PATCH 01/13] wordcraft-web: add an opt-in postMessage host bridge
+Subject: [PATCH 01/12] wordcraft-web: add an opt-in postMessage host bridge
  (?host=parent)
 
 A page that frames WordCraft in an <iframe> can now open a document in it,

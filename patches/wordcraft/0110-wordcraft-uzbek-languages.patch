@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 23:08:07 +0500
-Subject: [PATCH 10/13] ui-egui: office overlay adds uz-latn and uz-cyrl when
+Subject: [PATCH 09/12] ui-egui: office overlay adds uz-latn and uz-cyrl when
  its catalogs are present
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

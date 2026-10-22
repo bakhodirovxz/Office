@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:00:11 +0500
-Subject: [PATCH 06/13] ui-egui, app: office overlay hook (name, icon, version,
+Subject: [PATCH 05/12] ui-egui, app: office overlay hook (name, icon, version,
  attribution)
 
 Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders

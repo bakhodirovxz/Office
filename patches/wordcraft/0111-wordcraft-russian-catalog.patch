@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 23:14:52 +0500
-Subject: [PATCH 11/13] ui-egui: office overlay merges its Russian catalog into
+Subject: [PATCH 10/12] ui-egui: office overlay merges its Russian catalog into
  the ru language
 
 The Russian catalog that `cargo xt i18n export` writes next to overlay.env (upstream's own ru rows plus our rows,

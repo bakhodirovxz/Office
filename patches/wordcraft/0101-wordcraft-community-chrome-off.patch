@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:01:07 +0500
-Subject: [PATCH 07/13] ui-egui: turn off upstream community chrome and the
+Subject: [PATCH 06/12] ui-egui: turn off upstream community chrome and the
  Share and Zotero tabs under the overlay
 
 With OFFICE_OVERLAY_DIR set at build time: the title-bar Discord pill and its Options checkbox,

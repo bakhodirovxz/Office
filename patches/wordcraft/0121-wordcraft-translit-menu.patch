@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 15:40:47 +0500
-Subject: [PATCH 13/13] ui-egui: Transliterate menu in Review > Language and in
+Subject: [PATCH 12/12] ui-egui: Transliterate menu in Review > Language and in
  the text context menu, with a status line
 
 Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
