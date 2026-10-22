@@ -12,12 +12,12 @@ on constants from office_overlay; without an overlay the behaviour is upstream's
 ---
  crates/ui-egui/src/backstage.rs |  5 ++-
  crates/ui-egui/src/chrome.rs    |  2 +-
- crates/ui-egui/src/dialogs.rs   | 23 +++++++++-----
+ crates/ui-egui/src/dialogs.rs   | 23 ++++++++-----
  crates/ui-egui/src/keytips.rs   |  1 +
  crates/ui-egui/src/lib.rs       |  2 +-
  crates/ui-egui/src/options.rs   |  4 ++-
- crates/ui-egui/src/ribbon.rs    | 56 +++++++++++++++++++--------------
- 7 files changed, 58 insertions(+), 35 deletions(-)
+ crates/ui-egui/src/ribbon.rs    | 60 ++++++++++++++++++++-------------
+ 7 files changed, 61 insertions(+), 36 deletions(-)
 
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
 index ac07f842..20aa28bf 100644
@@ -124,7 +124,7 @@ index 2907d7e0..8288192a 100644
      ui.add_space(8.0);
      section(ui, "Start-up");
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 1c45f5f6..1a457da0 100644
+index 1c45f5f6..503f5344 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
 @@ -279,7 +279,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -212,3 +212,14 @@ index 1c45f5f6..1a457da0 100644
      });
      group(ui, "Agents", None, app, |ui, app| {
          big(ui, app, "macros", "Commands", "ui.dialog", json!({"name": "commands"}), false);
+@@ -3222,7 +3232,9 @@ mod tests {
+                 h.run_steps(3);
+                 let buttons: Vec<Rect> =
+                     [tl!("Comments"), tl!("Editing"), tl!("Share")].iter().filter_map(|b| h.query_by_label(b).map(|n| n.rect())).collect();
+-                assert_eq!(buttons.len(), 3, "{lang} {width}: the three buttons are on the strip");
++                // The overlay turns Share off (office_overlay::SHARE): then two buttons are on the strip.
++                let expected = if crate::office_overlay::SHARE { 3 } else { 2 };
++                assert_eq!(buttons.len(), expected, "{lang} {width}: the buttons are on the strip");
+                 assert!(buttons.iter().all(|b| b.right() <= width + 0.5 && b.left() >= 0.0), "{lang} {width}: buttons inside {buttons:?}");
+                 for tab in crate::ribbon::TABS.iter().copied().chain(["Table Design", "Table Layout"]) {
+                     // A group folded into a button can share the tab's name (Draw): only the node on

@@ -63,7 +63,7 @@ index 3c5b0246..6b9712d7 100644
          if id == "file.accessibility" && r.is_ok() {
              self.session.view.accessibility_pane = true;
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 1a457da0..76aa473e 100644
+index 503f5344..c54ce730 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
 @@ -835,6 +835,13 @@ pub(crate) fn caret_unreadable_dictionary(app: &WordApp) -> Option<(std::path::P

@@ -3240,7 +3240,9 @@ mod tests {
                 h.run_steps(3);
                 let buttons: Vec<Rect> =
                     [tl!("Comments"), tl!("Editing"), tl!("Share")].iter().filter_map(|b| h.query_by_label(b).map(|n| n.rect())).collect();
-                assert_eq!(buttons.len(), 3, "{lang} {width}: the three buttons are on the strip");
+                // The overlay turns Share off (office_overlay::SHARE): then two buttons are on the strip.
+                let expected = if crate::office_overlay::SHARE { 3 } else { 2 };
+                assert_eq!(buttons.len(), expected, "{lang} {width}: the buttons are on the strip");
                 assert!(buttons.iter().all(|b| b.right() <= width + 0.5 && b.left() >= 0.0), "{lang} {width}: buttons inside {buttons:?}");
                 for tab in crate::ribbon::TABS.iter().copied().chain(["Table Design", "Table Layout"]) {
                     // A group folded into a button can share the tab's name (Draw): only the node on
