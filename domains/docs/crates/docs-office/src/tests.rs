@@ -151,7 +151,7 @@ fn the_new_commands_only_ask_the_ui() {
     let _g = turn();
     let mut s = session();
     s.run("office.exportPdf", &json!({})).unwrap();
-    assert_eq!(s.ui_requests.pop(), Some(json!({"open": "print"})));
+    assert_eq!(s.ui_requests.pop(), Some(json!({"open": "exportPdf"})), "the PDF save dialog, not the Print page");
     s.run("file.print", &json!({})).unwrap();
     assert_eq!(s.ui_requests.pop(), Some(json!({"open": "print"})));
     assert!(!s.dirty);
@@ -235,4 +235,25 @@ fn multilevel_presets_write_the_interface_language() {
         let r = s.run("list.multilevelPreset", &json!({"preset": "headings"})).unwrap();
         assert_eq!(level_texts(&s, r["num"].as_u64().unwrap()), ["%1", "%1.%2"], "{lang}");
     }
+}
+
+/// Export PDF from our button goes through the guarded `file.exportPdf`: a policy refuses it and the after-hook sees it.
+#[test]
+fn export_pdf_button_is_guarded() {
+    let _g = turn();
+    let mut s = session();
+    let probe = Arc::new(Probe { seen: Mutex::new(Vec::new()) });
+    hooks::set_hook(Some(probe.clone()));
+    s.run("office.exportPdf", &json!({})).unwrap();
+    assert_eq!(*probe.seen.lock().unwrap(), ["file.exportPdf:true"]);
+    struct Refuse;
+    impl CommandHook for Refuse {
+        fn before(&self, id: &str, _: &Session) -> Option<&'static str> {
+            (id == "file.exportPdf").then_some("restricted document")
+        }
+    }
+    hooks::set_hook(Some(Arc::new(Refuse)));
+    s.ui_requests.clear();
+    assert!(matches!(s.run("office.exportPdf", &json!({})), Err(CmdError::Disabled(_))));
+    assert!(s.ui_requests.is_empty());
 }

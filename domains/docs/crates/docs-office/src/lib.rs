@@ -36,11 +36,10 @@ fn desktop_only(_: &Session) -> Option<&'static str> {
     (!mode::toggle_available()).then_some("The web version always shows the simple ribbon")
 }
 
-/// File > Print draws the "save a copy" formats, PDF first, below the print settings (design 3.4 item 2). Upstream's own
-/// `file.exportPdf {}` opens a save dialog instead; switching to it is a one-line change here.
+/// Upstream's `file.exportPdf {}` (no path) opens the PDF save dialog. Run through the registry, so the guarded wrapper
+/// (`before`: a policy can refuse; `after`: the XDFU watermark, the snapshot) sees it.
 fn export_pdf(s: &mut Session, _: &Value) -> CmdResult {
-    s.ui_requests.push(json!({"open": "print"}));
-    Ok(json!({"exported": false}))
+    s.run("file.exportPdf", &json!({}))
 }
 
 /// Opens the shell's History panel (WP10 fills it in). Until then the request is one the UI ignores.

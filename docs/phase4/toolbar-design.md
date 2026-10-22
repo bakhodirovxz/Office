@@ -249,12 +249,12 @@ Everything also stays reachable through Alt+Q command search.
    - `ui.dialog` targets (Word Count, Replace) are UI commands, not registry ids. `RibbonLayout::add` refuses them
      (`ribbon.rs:275-278`).
 2. **Export PDF needs no upstream hunk.**
-   - `file.print` opens File › Print (`cmd/file.rs:111-116`, handled at `ui-egui/src/lib.rs:1426-1429`). That page draws
-     the "save a copy" formats, **PDF first**, below the print settings (`ui-egui/src/print_page.rs:239`, `:335-350`).
-   - So `office.exportPdf` (ours, label "Export PDF", a reviewed row) pushes the same `{"open":"print"}`.
-   - If WP23 shows staff look for a direct PDF dialog, the fix is one match arm in `handle_request`
-     (`ui-egui/src/lib.rs:1415-1437`): `"exportPdf" => self.export_dialog("pdf")` (the function is at
-     `file_dialogs.rs:361`). That is a carried line in a hot file, so it is not the default.
+   - Decision 2026-10-23 (owner's coordinator): "PDF sifatida eksport qilish" saves straight away. `office.exportPdf` (ours, label
+     "Export PDF", a reviewed row) runs upstream's `file.exportPdf {}` through the registry, which with no `path` pushes
+     `{"open":"exportPdf"}`; the app's own arm (`ui-egui/src/lib.rs:1421`) opens the PDF save dialog (`file_dialogs.rs`
+     `export_dialog("pdf")`). No upstream hunk. `exportPdf` is a guarded id, so the WP4 hook sees it (test
+     `export_pdf_button_is_guarded`), and XDFU's watermark applies there later.
+   - The earlier plan (push `{"open":"print"}`, whose page lists PDF first) is dropped.
 3. **¶ is on the QAT as well as on Home.**
    - Home shows its on/off state (`ribbon.rs:1158-1159`).
    - The QAT is visible on every tab, so ¶ never hides behind a tab switch. The QAT has no on/off state (`chrome.rs:48-68`).
@@ -518,7 +518,7 @@ Columns:
 | # | Group | Command id | Params / picker | uz-Latn | en | ru | Label status | Registered at BASE |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Fayl | `file.print` | opens File › Print (`{"open":"print"}`) | Chop etish | Print | Печать | reviewed | `wordcraft/crates/engine/src/cmd/file.rs:111` |
-| 2 | Fayl | `office.exportPdf` | ours: `{"open":"print"}`; that page's first export button is PDF (§3.4) | PDF sifatida eksport qilish | Export PDF | Экспорт в PDF | reviewed | NEW (ours) |
+| 2 | Fayl | `office.exportPdf` | ours: runs `file.exportPdf {}`, which opens the PDF save dialog (§3.4) | PDF sifatida eksport qilish | Export PDF | Экспорт в PDF | reviewed | NEW (ours) |
 | 3 | Sahifa | `layout.orientation` | `{}` toggles portrait/landscape | Yoʻnalish | Orientation | Ориентация | reviewed | `wordcraft/crates/engine/src/cmd/page.rs:18` |
 | 4 | Sahifa | `layout.pageSetup` | `{}` opens Page Setup (margins, paper) | Sahifa parametrlari | Page Setup | Параметры страницы | reviewed | `wordcraft/crates/engine/src/cmd/page.rs:42` |
 | 5 | Imlo | `review.spelling` | `{}` next issue | Imlo va grammatika | Spelling & Grammar | Орфография и грамматика | reviewed | `wordcraft/crates/engine/src/cmd/review.rs:59` |
