@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 15:53:53 +0500
-Subject: [PATCH 102/102] ui-egui: append the overlay's fallback fonts last in
+Subject: [PATCH 3/4] ui-egui: append the overlay's fallback fonts last in
  every interface family
 
 font_definitions_for_platform appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans,

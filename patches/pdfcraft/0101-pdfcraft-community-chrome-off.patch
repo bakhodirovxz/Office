@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 15:53:13 +0500
-Subject: [PATCH 101/102] ui-egui, app: turn off upstream community chrome,
- brand marks and update check under the overlay
+Subject: [PATCH 2/4] ui-egui, app: turn off upstream community chrome, brand
+ marks and update check under the overlay
 
 With OFFICE_OVERLAY_DIR set at build time: the ArtCraft wordmark and mark are not compiled in
 (the overlay icon is drawn instead), the Discord button, the Home community card and the
@@ -22,10 +22,10 @@ is upstream's.
  8 files changed, 61 insertions(+), 31 deletions(-)
 
 diff --git a/apps/pdfcraft/src/main.rs b/apps/pdfcraft/src/main.rs
-index 85f630a4..c8c83f21 100644
+index f78069b5..7ce3c2fa 100644
 --- a/apps/pdfcraft/src/main.rs
 +++ b/apps/pdfcraft/src/main.rs
-@@ -386,7 +386,9 @@ fn app_creator<'a>(
+@@ -390,7 +390,9 @@ fn app_creator<'a>(
          {
              app.motion.source = Some(motion::source());
          }
@@ -37,7 +37,7 @@ index 85f630a4..c8c83f21 100644
          app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));
          #[cfg(target_os = "macos")]
 diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
-index 84e62622..824a37d7 100644
+index e01d752c..568419c4 100644
 --- a/crates/ui-egui/src/chrome.rs
 +++ b/crates/ui-egui/src/chrome.rs
 @@ -67,9 +67,10 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
@@ -67,7 +67,7 @@ index 84e62622..824a37d7 100644
                      }
                  });
 diff --git a/crates/ui-egui/src/commands.rs b/crates/ui-egui/src/commands.rs
-index e3609fcc..7be3b748 100644
+index b769c0c0..f283cfb6 100644
 --- a/crates/ui-egui/src/commands.rs
 +++ b/crates/ui-egui/src/commands.rs
 @@ -207,7 +207,9 @@ impl PdfCraftApp {
@@ -81,7 +81,7 @@ index e3609fcc..7be3b748 100644
                  if let Some(l) = pdfcraft_engine::links::for_command(link) {
                      self.open_url(l.url);
                  }
-@@ -666,7 +668,7 @@ impl PdfCraftApp {
+@@ -672,7 +674,7 @@ impl PdfCraftApp {
              "page.split" => self.dialog = Some(Dialog::Split),
              "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
              "help.about" => self.dialog = Some(Dialog::About),
@@ -90,7 +90,7 @@ index e3609fcc..7be3b748 100644
              _ => return false,
          }
          true
-@@ -759,7 +761,7 @@ fn tab_after(current: Option<usize>, count: usize, forward: bool) -> Option<usiz
+@@ -765,7 +767,7 @@ fn tab_after(current: Option<usize>, count: usize, forward: bool) -> Option<usiz
  
  /// Render a top-level menu's registered commands (with live labels, shortcuts and enablement).
  pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str) {
@@ -100,10 +100,10 @@ index e3609fcc..7be3b748 100644
          let label = crate::i18n::menu_label(spec.id, &label);
          // Open Recent is a submenu of the live recent list, not one action: disabled while the
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index 975d2b0d..e0b94771 100644
+index e0c5f76c..a9ce383f 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
-@@ -1172,10 +1172,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
+@@ -1174,10 +1174,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                              ui.label(egui::RichText::new(crate::office_overlay::attribution()).color(t.text_muted).small());
                          }
                          ui.add_space(12.0);
@@ -198,7 +198,7 @@ index 4e7957e1..ac28d824 100644
      }
      let t = theme::Tokens::get(ctx);
 diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
-index 4f5aaa79..28d7b649 100644
+index c39f4cf0..8ef30059 100644
 --- a/crates/ui-egui/src/widgets.rs
 +++ b/crates/ui-egui/src/widgets.rs
 @@ -500,6 +500,13 @@ pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {

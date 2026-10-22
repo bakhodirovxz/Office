@@ -401,6 +401,7 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
             }
         }
     }
+    crate::office_overlay::append_fallback_fonts(&mut fonts);
     let fallback: Vec<String> = fonts.families[&FontFamily::Proportional].clone();
     for (fam, primary) in [("medium", "Inter-Medium"), ("semibold", "Inter-SemiBold")] {
         let mut stack = vec![primary.to_owned()];

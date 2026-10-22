@@ -56,7 +56,7 @@ const AR_DAYS: [&str; 7] = ["الأحد", "الاثنين", "الثلاثاء", 
 
 /// The languages month and weekday names can be written in (Preferences ▸ Date format ▸ Language):
 /// the interface languages, in the same order and with the same names.
-pub static DATE_LANGUAGES: [DateLanguage; 23] = [
+pub static DATE_LANGUAGES: [DateLanguage; 23 + crate::office_dates::EXTRA] = [
     DateLanguage {
         code: "en",
         name: "English",
@@ -398,6 +398,10 @@ pub static DATE_LANGUAGES: [DateLanguage; 23] = [
         days: ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"],
         days_short: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
     },
+    #[cfg(office_uz)]
+    crate::office_dates::UZ_LATN,
+    #[cfg(office_uz)]
+    crate::office_dates::UZ_CYRL,
 ];
 
 /// The date language for `code` (any case), or `None` when there's none.

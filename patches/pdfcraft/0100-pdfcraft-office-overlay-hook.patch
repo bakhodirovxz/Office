@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 15:52:10 +0500
-Subject: [PATCH 100/102] ui-egui, engine, app: office overlay hook (name,
- icon, version, attribution)
+Subject: [PATCH 1/4] ui-egui, engine, app: office overlay hook (name, icon,
+ version, attribution)
 
 Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
 OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window title,
@@ -27,10 +27,10 @@ is upstream's own.
  create mode 100644 crates/ui-egui/src/office_overlay_tests.rs
 
 diff --git a/apps/pdfcraft/src/main.rs b/apps/pdfcraft/src/main.rs
-index 7a0bb204..85f630a4 100644
+index 721b7da1..f78069b5 100644
 --- a/apps/pdfcraft/src/main.rs
 +++ b/apps/pdfcraft/src/main.rs
-@@ -307,14 +307,14 @@ fn retry_with_gl(choice: RendererChoice, app_started: bool) -> bool {
+@@ -310,14 +310,14 @@ fn retry_with_gl(choice: RendererChoice, app_started: bool) -> bool {
  /// The window and renderer settings for one run.
  fn native_options(integrated: bool, app_frame: bool, renderer: eframe::Renderer) -> eframe::NativeOptions {
      let mut viewport = egui::ViewportBuilder::default()
@@ -216,10 +216,10 @@ index 00000000..4c10bbed
 +    o
 +}
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index 2d240762..975d2b0d 100644
+index 981db214..e0c5f76c 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
-@@ -1155,7 +1155,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
+@@ -1157,7 +1157,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                          ui.horizontal(|ui| {
                              widgets::artcraft_mark(ui, 40.0);
                              ui.vertical(|ui| {
@@ -228,7 +228,7 @@ index 2d240762..975d2b0d 100644
                                  ui.label(crate::i18n::fmt(tl!("Version {v}"), &[("v", &pdfcraft_engine::build_info::version())]));
                              });
                          });
-@@ -1168,6 +1168,9 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
+@@ -1170,6 +1170,9 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                              .color(t.text_muted)
                              .small(),
                          );
@@ -239,10 +239,10 @@ index 2d240762..975d2b0d 100644
                          ui.horizontal(|ui| {
                              ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
 diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
-index 5bb2889c..97ac23db 100644
+index 20c0fd04..60b5a9ed 100644
 --- a/crates/ui-egui/src/i18n/mod.rs
 +++ b/crates/ui-egui/src/i18n/mod.rs
-@@ -436,7 +436,7 @@ pub fn key_name(s: &str) -> &str {
+@@ -481,7 +481,7 @@ pub fn key_name(s: &str) -> &str {
  
  /// Translate an English UI string; unknown strings come back unchanged.
  pub fn tr(lang: Lang, s: &str) -> &str {
@@ -251,7 +251,7 @@ index 5bb2889c..97ac23db 100644
  }
  
  /// How the layers below say their own sentences in the current language.
-@@ -452,12 +452,12 @@ pub fn words(wording: &str) -> String {
+@@ -497,12 +497,12 @@ pub fn words(wording: &str) -> String {
  
  /// Like [`tr`], for an English string that needs a disambiguating `context`.
  pub fn tr_ctx<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
@@ -266,7 +266,7 @@ index 5bb2889c..97ac23db 100644
  }
  
  /// Fill `{name}` placeholders in one pass. Unknown placeholders are left as written, and inserted
-@@ -544,7 +544,7 @@ pub fn command_label(text: &str) -> String {
+@@ -589,7 +589,7 @@ pub fn command_label(text: &str) -> String {
  /// [`command_label`] of the current English label.
  pub fn menu_label(id: &str, label: &str) -> String {
      match current().catalog().id(id) {
@@ -276,7 +276,7 @@ index 5bb2889c..97ac23db 100644
      }
  }
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 79464624..25d597b9 100644
+index 9db92475..bf78d1ed 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -109,6 +109,7 @@ pub use print_ui::{Handling as PrintHandling, PrintDraft, PrinterSource, Which a
@@ -287,16 +287,16 @@ index 79464624..25d597b9 100644
  
  /// [`PdfCraftApp::date_text`] for callers that already borrow other parts of the app.
  pub(crate) fn date_text(session: &Session, fmt: Option<&str>) -> Result<String, String> {
-@@ -143,6 +144,8 @@ mod wheel_pager;
- mod widgets;
- pub mod window_controls;
+@@ -146,6 +147,8 @@ pub mod window_controls;
+ #[cfg(not(target_arch = "wasm32"))]
+ pub mod window_state;
  
 +#[cfg(test)]
 +mod office_overlay_tests;
  #[cfg(all(test, not(target_arch = "wasm32")))]
  mod open_worker_tests;
  
-@@ -3087,7 +3090,7 @@ impl eframe::App for PdfCraftApp {
+@@ -3133,7 +3136,7 @@ impl eframe::App for PdfCraftApp {
              .active
              .and_then(|i| crate::canvas::tab_label(self, i))
              .or_else(|| self.combine_showing().then(|| tl!("Combine files").to_owned()))

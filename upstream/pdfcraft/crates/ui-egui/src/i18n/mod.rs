@@ -147,7 +147,7 @@ fn plural_sl(n: u64) -> usize {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 23] = [
+pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
     LangInfo { code: "en", name: "English", source: "", plural: plural_one_other, rtl: false, catalog: OnceLock::new() },
     LangInfo { code: "ja", name: "日本語", source: include_str!("ja.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },
     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` locales resolve here (see `candidates`).
@@ -210,6 +210,25 @@ pub static LANGUAGES: [LangInfo; 23] = [
     // Vietnamese; every `vi-*` locale (`vi-VN`, `vi_VN.UTF-8`) resolves here. CLDR `vi` counts have
     // one form ("other"), so `@plural` entries list a single form.
     LangInfo { code: "vi", name: "Tiếng Việt", source: include_str!("vi.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },
+    // Uzbek (office overlay): only when the overlay supplies the catalogs.
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-latn",
+        name: crate::office_overlay::NAME_UZ_LATN,
+        source: crate::office_overlay::CATALOG_UZ_LATN,
+        plural: plural_one_other,
+        rtl: false,
+        catalog: OnceLock::new(),
+    },
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-cyrl",
+        name: crate::office_overlay::NAME_UZ_CYRL,
+        source: crate::office_overlay::CATALOG_UZ_CYRL,
+        plural: plural_one_other,
+        rtl: false,
+        catalog: OnceLock::new(),
+    },
 ];
 
 impl LangInfo {
@@ -311,6 +330,10 @@ fn candidates(tag: &str) -> Vec<String> {
         // Chinese by region when no script is given.
         let script = if parts.iter().any(|p| matches!(*p, "tw" | "hk" | "mo")) { "zh-hant" } else { "zh-hans" };
         out.insert(out.len().saturating_sub(1), script.to_string());
+    }
+    if primary == "uz" && !parts.iter().any(|p| matches!(*p, "latn" | "cyrl")) {
+        // Uzbek without a script: Latin, unless a Linux locale says `@cyrillic` (cut off above).
+        out.insert(out.len().saturating_sub(1), if tag.to_ascii_lowercase().contains("@cyrillic") { "uz-cyrl" } else { "uz-latn" }.to_string());
     }
     if primary == "pt" && !out.iter().any(|c| c == "pt-br") {
         // The only Portuguese catalog is Brazilian; other regions use it rather than English.
@@ -481,7 +504,7 @@ pub fn key_name(s: &str) -> &str {
 
 /// Translate an English UI string; unknown strings come back unchanged.
 pub fn tr(lang: Lang, s: &str) -> &str {
-    lang.catalog().plain(s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().plain(s).unwrap_or(s))
 }
 
 /// How the layers below say their own sentences in the current language.
@@ -497,12 +520,12 @@ pub fn words(wording: &str) -> String {
 
 /// Like [`tr`], for an English string that needs a disambiguating `context`.
 pub fn tr_ctx<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
-    lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s))
+    crate::office_overlay::rebrand(lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s)))
 }
 
 /// A string keyed by its command id, falling back to the translation of the English `label`.
 pub fn tr_id<'a>(lang: Lang, id: &str, label: &'a str) -> &'a str {
-    lang.catalog().id(id).unwrap_or_else(|| tr(lang, label))
+    crate::office_overlay::rebrand(lang.catalog().id(id).unwrap_or_else(|| tr(lang, label)))
 }
 
 /// Fill `{name}` placeholders in one pass. Unknown placeholders are left as written, and inserted
@@ -589,7 +612,7 @@ pub fn command_label(text: &str) -> String {
 /// [`command_label`] of the current English label.
 pub fn menu_label(id: &str, label: &str) -> String {
     match current().catalog().id(id) {
-        Some(translated) => translated.to_owned(),
+        Some(translated) => crate::office_overlay::rebrand(translated).to_owned(),
         None => command_label(label),
     }
 }

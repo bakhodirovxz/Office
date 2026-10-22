@@ -1,7 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sun, 18 Oct 2026 00:33:37 +0500
-Subject: [PATCH] ui-egui, engine: office overlay adds uz-latn and uz-cyrl (interface and date names) when its catalogs are present
+Subject: [PATCH 4/4] ui-egui, engine: office overlay adds uz-latn and uz-cyrl
+ (interface and date names) when its catalogs are present
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Adds uz-latn (Oʻzbekcha) and uz-cyrl (Ўзбекча) to the interface languages when the overlay
 supplies their catalogs. ui-egui/build_office.rs looks for catalog-uz-latn.tsv and
@@ -15,18 +19,20 @@ DATE_LANGUAGES stays equal to the interface languages (a test requires it). The 
 the export's draft marker while Uzbek rows are unreviewed. Without the files the language lists
 and their tests are upstream's.
 ---
- crates/engine/build.rs                     | 66 ++++++++++++++++++++++++++++++
- crates/engine/src/dates.rs                 |  6 ++-
+ crates/engine/build.rs                     | 66 ++++++++++++++++++++++
+ crates/engine/src/dates.rs                 |  6 +-
  crates/engine/src/lib.rs                   |  1 +
- crates/engine/src/office_dates.rs          |  7 ++++
- crates/ui-egui/build_office.rs             | 32 ++++++++++++++-
- crates/ui-egui/src/i18n/mod.rs             | 25 ++++++++++-
- crates/ui-egui/src/office_overlay_tests.rs | 22 ++++++++++
+ crates/engine/src/office_dates.rs          |  7 +++
+ crates/ui-egui/build_office.rs             | 32 ++++++++++-
+ crates/ui-egui/src/i18n/mod.rs             | 25 +++++++-
+ crates/ui-egui/src/office_overlay_tests.rs | 22 ++++++++
  7 files changed, 156 insertions(+), 3 deletions(-)
+ create mode 100644 crates/engine/build.rs
+ create mode 100644 crates/engine/src/office_dates.rs
 
 diff --git a/crates/engine/build.rs b/crates/engine/build.rs
 new file mode 100644
-index 0000000..deb883b
+index 00000000..deb883bf
 --- /dev/null
 +++ b/crates/engine/build.rs
 @@ -0,0 +1,66 @@
@@ -97,7 +103,7 @@ index 0000000..deb883b
 +    }
 +}
 diff --git a/crates/engine/src/dates.rs b/crates/engine/src/dates.rs
-index 8c14a5b..40d46b2 100644
+index 8c14a5b1..40d46b2a 100644
 --- a/crates/engine/src/dates.rs
 +++ b/crates/engine/src/dates.rs
 @@ -56,7 +56,7 @@ const AR_DAYS: [&str; 7] = ["الأحد", "الاثنين", "الثلاثاء",
@@ -121,7 +127,7 @@ index 8c14a5b..40d46b2 100644
  
  /// The date language for `code` (any case), or `None` when there's none.
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 3432cd8..f1a002f 100644
+index dfe11b25..182a584b 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
 @@ -27,6 +27,7 @@ pub mod export;
@@ -134,7 +140,7 @@ index 3432cd8..f1a002f 100644
  pub mod printcheck;
 diff --git a/crates/engine/src/office_dates.rs b/crates/engine/src/office_dates.rs
 new file mode 100644
-index 0000000..90b533f
+index 00000000..90b533fd
 --- /dev/null
 +++ b/crates/engine/src/office_dates.rs
 @@ -0,0 +1,7 @@
@@ -146,7 +152,7 @@ index 0000000..90b533f
 +
 +include!(concat!(env!("OUT_DIR"), "/office_dates_gen.rs"));
 diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
-index 4c10bbe..648af72 100644
+index 4c10bbed..648af722 100644
 --- a/crates/ui-egui/build_office.rs
 +++ b/crates/ui-egui/build_office.rs
 @@ -102,6 +102,36 @@ fn generate(dir: &Path) -> String {
@@ -194,7 +200,7 @@ index 4c10bbe..648af72 100644
 +    o + &uzbek(None)
  }
 diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
-index 97ac23d..db78d31 100644
+index 60b5a9ed..2f080cfe 100644
 --- a/crates/ui-egui/src/i18n/mod.rs
 +++ b/crates/ui-egui/src/i18n/mod.rs
 @@ -147,7 +147,7 @@ fn plural_sl(n: u64) -> usize {
@@ -244,7 +250,7 @@ index 97ac23d..db78d31 100644
          // The only Portuguese catalog is Brazilian; other regions use it rather than English.
          out.insert(out.len().saturating_sub(1), "pt-br".to_string());
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 7c9c09c..3cffbd4 100644
+index 7c9c09c5..3cffbd49 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -49,3 +49,25 @@ fn fallback_font_covers_uzbek() {
@@ -273,6 +279,3 @@ index 7c9c09c..3cffbd4 100644
 +        assert!(pdfcraft_engine::dates::date_language("uz-latn").is_none());
 +    }
 +}
--- 
-2.50.0
-
