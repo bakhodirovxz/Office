@@ -93,12 +93,15 @@ changed. The run after the fixes (`run-wp10fix.log`, 90 directions, 117 cases) h
 
 ## 1c. Found in the Phase 3 gate round, carried to Phase 4
 
-### D7. Upstream pdfcraft's Russian "Move down" is garbled
+### D7. Upstream pdfcraft's Russian "Move down" is garbled (FIXED 2026-10-22, Phase 4 WP0)
 `upstream/pdfcraft/crates/ui-egui/src/i18n/ru.tsv:1820` reads `Переместить вdownarrow`, where it should read `Переместить вниз`.
 Our `i18n/pdfcraft.tsv:214` mirrors it with status `upstream`.
 - It needs a one-line carried pdfcraft patch, plus a REGISTER row.
 - It is scheduled with the Phase 4 upstream sync, which has to hand-merge anyway (gate-review M2), because upstream may fix it first.
 - Found by the opus review on 2026-10-22.
+- **Fixed 2026-10-22 (Phase 4 WP0 sync):** carried patch `patches/pdfcraft/0111-pdfcraft-ru-move-down.patch` (one row of
+  `crates/ui-egui/src/i18n/ru.tsv`, REGISTER row `pdfcraft/0111`). Upstream still had the garbled row at v0.11.0 (`3e30645`) and at
+  `origin/HEAD` `88dad98`. `i18n/pdfcraft.tsv` now carries `Переместить вниз` (ru status `upstream`).
 
 ## 1d. Found by the uz Excel measurement (WP14 Q4), carried to Phase 8
 

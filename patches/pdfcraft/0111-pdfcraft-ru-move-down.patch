@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 22 Oct 2026 12:03:21 +0500
+Subject: [PATCH] =?UTF-8?q?ui-egui:=20ru=20catalog,=20"Move=20down"=20read?=
+ =?UTF-8?q?s=20"=D0=9F=D0=B5=D1=80=D0=B5=D0=BC=D0=B5=D1=81=D1=82=D0=B8?=
+ =?UTF-8?q?=D1=82=D1=8C=20=D0=B2=D0=BD=D0=B8=D0=B7"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The Russian row for "Move down" read "Переместить вdownarrow" (an icon name spliced into the word), so the
+Russian interface showed it as such. One catalog cell; no code change.
+---
+ crates/ui-egui/src/i18n/ru.tsv | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crates/ui-egui/src/i18n/ru.tsv b/crates/ui-egui/src/i18n/ru.tsv
+index 73f21aa0..75c16094 100644
+--- a/crates/ui-egui/src/i18n/ru.tsv
++++ b/crates/ui-egui/src/i18n/ru.tsv
+@@ -1819,7 +1819,7 @@
+ 	Rename	Переименовать
+ 	Set to current page ({n})	Установить текущей страницей ({n})
+ 	Move up	Переместить вверх
+-	Move down	Переместить вdownarrow
++	Move down	Переместить вниз
+ 	Indent	Отступ
+ 	Outdent	Убрать отступ
+ 	This document has no form fields.	В этом документе нет полей формы.
