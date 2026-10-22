@@ -154,6 +154,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   - Recent is per browser profile, not per `sub`, and "Disconnect" clears only `sessionStorage`.
   - On a PC or browser profile that two staff share, the second user sees and reopens the first user's documents.
   - PLAN §3.2 chose browser storage on purpose. The leak between users needs an owner decision.
+- **Status: fixed (2026-10-22).** `host.rs`: `.with_incognito(true)`, the old `webview2/` profile folder is deleted at start, and a download handler (`download_target`, `Ctx::saved` in `lib.rs`) writes into the folder WebView2 chose, only for our file types, never over an existing file (`name (1).ext`), and records the path in `history.json`. **Deviation:** no native Save dialog. A blocking modal dialog inside the WebView2 download callback could not be tested here; the file goes to the default downloads folder and the shell shows the status line. `shell.js` picks the Recent source by mode: desktop = the host's `recent` IPC, the language from `settings_get`/`settings_set`, no IndexedDB and no `localStorage`; server mode (a token in `sessionStorage`) and the desktop host's browser fallback (`shell-config.json` carries `"local": true`) = names only in `sessionStorage` (`sh.recent`, 50 names), reopening asks for the file again, and `convert-api/ui/app.js` `disconnect()` clears it; the plain web host keeps the WP7 IndexedDB copies. The orchestrator's wording "server job ids" has no case yet: the shell starts no server job, so only names are stored. The old `shell` IndexedDB is deleted in the first two modes. Tests: `a_download_target_is_checked_and_never_overwrites`, `suite-serve` `shell_config_comes_from_the_brand_file` (the `local` flag), Playwright `shell.spec.ts` (desktop IPC stand-in, names mode), `converter.spec.ts` (Disconnect clears the names). Not tested: the real WebView2 download and incognito on disk (the smoke script checks that no `IndexedDB` folder appears).
 - **Fix:**
   1. `host.rs:287`: add `.with_incognito(true)` (WebView2 InPrivate, `wry-0.57.0/src/webview2/mod.rs:414`). Nothing from the web layer
      is then persisted. The smoke test checks that the `webview2` folder holds no `IndexedDB` after a save.
@@ -169,6 +170,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
 ## Minor
 
 **m1. IPC `open` takes a raw path from the page** (`lib.rs:312`, `lib.rs:90-125`).
+- **Status (2026-10-22): fixed. `lib.rs` `Ctx::open`: from the page only a path in `history.json` (`Store::knows`); `check_file` refuses `:` after the prefix and DOS device names for every source (`dos_device`), and a page path whose canonical form is a share (`is_network_target`). Tests: `open_checks_the_file_and_starts_the_brand_editor`, `streams_and_device_names_are_refused`. The junction case itself (a real directory symlink to a share) is covered by the pure `is_network_target` test only.**
 - **What the checks are:** the page-source rules (drive letter, no UNC, no `..`, a known extension, the file exists) are the only thing
   between page JavaScript and "start an editor on any local file".
 - **Gaps:**
@@ -184,6 +186,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
     result that starts `\\?\UNC\`.
 
 **m2. The editors are same-origin with the shell, so splitting the CSP by route is cosmetic between them.**
+- **Status (2026-10-22): fixed on the shell side. `shell.js` `save`: the file name is reduced to its last component and must have one of the app's own extensions, else `err.type`; the host's `download_target` applies the same allowlist again. Tests: `a_download_target_is_checked_and_never_overwrites`. SmartScreen is on again (m6). The sibling-origin split stays Phase 5.**
 - **The real boundary is the origin.** Any script in `/docs/` can call `top.ipc.postMessage`, read the shell's IndexedDB and drive the
   shell. The IPC origin test even accepts `/docs/?host=parent` (`lib.rs:480`).
 - **Today this needs script execution in our origin, which nothing grants:**
@@ -197,6 +200,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   reach the IPC or Recent.
 
 **m3. The editor cache rule makes a file immutable unless it is the page** (`suite-serve/src/lib.rs:145-156`).
+- **Status (2026-10-22): fixed. `suite-serve/src/lib.rs` `hashed`: `immutable` only for trunk-hashed names, `no-cache` for everything else, 304 included. Tests: `only_trunk_hashed_names_are_immutable`, `cache_frame_and_guard_rules_of_the_routes` (`/docs//`, `/docs/INDEX.HTML`). The harness dist names now carry a 16-digit hash.**
 - **The rule:** `page` is only `/docs/` or `*/index.html`. Everything else that answers 200 gets `max-age=31536000, immutable`.
 - **Names that reach the same `index.html`:** `/docs//`, `/docs/INDEX.HTML` (NTFS is case-insensitive) and `/docs/index.html::$DATA`
   (an ADS). Each is cached for a year. After an upgrade, such a page still names the old `*.js` and `*.wasm`, while the CSP hashes are
@@ -207,6 +211,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   the current dists does). Answer `no-cache` for everything else, 304 included.
 
 **m4. The CSP hashes are computed once, from `index.html`, and that is not always what is served** (`lib.rs:120-126`).
+- **Status (2026-10-22): not in the Phase 4 list; left open (fails closed). Restart after updating the dists.**
 - **When they differ:**
   - `ServeDir::precompressed_br` serves `index.html.br` whenever the client accepts br. A stale `.br` (`scripts/shell-dist.sh --check`
     exists but nothing at start enforces it) therefore serves an older loader with new hashes.
@@ -218,6 +223,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   11 shell specs pass (STATUS:1151-1155).
 
 **m5. `baseline_headers` now keeps any value a route set** (`routes.rs:113-116`). WP7 made this generic so the editor CSP survives.
+- **Status (2026-10-22): fixed. `routes.rs` `baseline_headers`: only `content-security-policy`, `cache-control` and `x-frame-options` may be set by a route; `X-Frame-Options: DENY` is in the baseline and the editor routes send `SAMEORIGIN`. The shell-and-guard test on `suite-serve`'s own routes is `cache_frame_and_guard_rules_of_the_routes` (`Host: evil.example` gives 421, a foreign `Origin` on `POST /api/v1/jobs` gives 403). `x-frame-options` is a third overridable name because the editor layer must loosen it.**
 - **The risk:** any later `extra` route can replace the CSP, COOP or CORP without anyone noticing.
 - **Fix:** let only `content-security-policy` and `cache-control` be overridden, and only by the editor layer. Insert the others
   unconditionally.
@@ -227,9 +233,10 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
     `POST /api/v1/jobs` gives 403. Today the guard is tested only through `convert-api`.
 
 **m6. The WebView2 settings left at their defaults** (`host.rs:287-318`; the defaults are in `wry-0.57.0/src/lib.rs:1768-1769`).
+- **Status (2026-10-22): fixed, except where noted. `host.rs`: accelerator keys off, default context menu off, a download handler (M2), SmartScreen on (`--disable-features=msWebOOUI,msPdfOOUI`). Why: WebView2's own Print and Save as would make a copy without the editor's watermark and would bypass our UI; the editors' own print and export commands are not WebView2 accelerators and stay. Side effect to check in use: browser zoom and reload keys are off too. `blob:` stays in `nav_ok`: whether a blob download link raises NavigationStarting is unverified here, so it was not dropped. Not run against a real WebView2 in this session: the cases in `smoke-desktop.ps1` only start the window and check the server.**
 - **Browser accelerator keys and the default context menu are on.** Ctrl+P prints the page, including a framed editor's canvas.
-  Ctrl+S and "Save as" save the page, and F5 reloads it. This matters little today, but it is a direct XDFU print/copy bypass once
-  WP11 restricts printing in editors hosted in the WebView (R11).
+  Ctrl+S and "Save as" save the page, and F5 reloads it. This matters little today, but WebView2's own print and "Save as" would make a copy without the editor's watermark
+  (owner decision: XDFU is watermark only, WP11), so the accelerators and the menu must go; the fix prevents unwatermarked copies.
 - **Downloads have no handler.** WebView2's default flow applies: the default folder, no extension allowlist, and no SmartScreen,
   because wry passes `--disable-features=...msSmartScreenProtection`.
 - **`nav_ok` allows top-level `about:blank` and `blob:` of our origin** (`lib.rs:169-175`). It does not raise capability today:
@@ -249,6 +256,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   - the user-data folder inherits the user-only ACL of `%LOCALAPPDATA%`.
 
 **m7. Child processes inherit the current directory, and the host does not restrict the DLL search** (`host.rs:216`).
+- **Status (2026-10-22): fixed. Editors start with `current_dir(bin_dir)` (`host.rs` spawn), and `suite.exe` calls `SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)` first thing (`suite_winsec::set_default_dll_directories`, tested). The call inside each editor's start-up stays WP14/WP15 work.**
 - **The scenario:** when Explorer starts `suite.exe` with a file, the current directory can be the document's folder (Downloads). An
   editor that does `LoadLibrary("x.dll")` for a DLL missing from System32 (an optional GPU or compiler DLL) then searches the current
   directory after the system directories.
@@ -258,6 +266,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   - the same call in each editor's start-up belongs in the overlay patches. That is outside this review; I note it for WP14 and WP15.
 
 **m8. `WebView2Loader.dll` for windows-gnu builds** (`docs/phase4/desktop-host.md:10`, `scripts/smoke-desktop.ps1:28-33`).
+- **Status (2026-10-22): fixed in the repo: `.cargo/config.toml` links every windows-msvc build with `/DEPENDENTLOADFLAG:0xA00`; `scripts/gen-legal.sh` (so NOTICE) has a row for the WebView2 loader with the licence named but not copied (the text is in the NuGet package, not in the crate: UNVERIFIED). Still to do at MSI time: ship the msvc build or put the DLL next to `suite.exe` in Program Files, check its signature and pin its SHA-256.**
 - **The import:** the gnu `suite.exe` imports the loader statically, so the Windows loader resolves it before `main`. It looks in the
   application directory first.
 - **Where the risk is:** under `Program Files` (per-machine MSI, admin-only writes) there is none. There are two risky cases:
@@ -276,6 +285,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   - The MSI build checks the DLL's signature and pins its SHA-256.
 
 **m9. Supply chain** (`ci/deny/services.toml:8-13`, `scripts/ci.sh:534`).
+- **Status (2026-10-22): fixed. `scripts/ci.sh` `job_convert` runs `cargo deny` for `x86_64-unknown-linux-gnu` as well (`deny_one` takes a target), and `services/Cargo.lock` has tokio 1.54.1 (only that package changed).**
 - **The Linux run the config describes does not exist.** The comment says "CI also runs `--target x86_64-unknown-linux-gnu` for the
   server", but `job_convert` runs one `deny_one` with the Windows-only `[graph] targets`. WP11's Linux image is no longer deny-checked.
 - **I ran it** (cargo-deny 0.20.2, advisory DB of 2026-10-22). Both `--target x86_64-unknown-linux-gnu` and
@@ -297,6 +307,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
 - **Fix:** add a NOTICE row for the WebView2 SDK with the licence text from the matching NuGet version.
 
 **m10. Test hooks are live in the release binary** (`host.rs:201`, `:210`, `:265`, `:347`, `:352`).
+- **Status (2026-10-22): fixed. `host.rs` `hook()`: the `SUITE_*` variables are read in debug builds only (`cfg(debug_assertions)`); `tests/host.rs` is `cfg(debug_assertions)`. `scripts/smoke-desktop.ps1` therefore needs a debug `suite.exe` (its default).**
 - **The hooks:** `SUITE_BROWSER` starts any executable on the URL, and `SUITE_INSTANCE` changes the pipe name. There are also
   `SUITE_DATA_DIR`, `SUITE_FORCE_NO_WEBVIEW2` and `SUITE_TEST_EXIT_AFTER_MS`.
 - **Why it is minor:** only the same user can set them. Still, an environment variable that picks an executable is a needless
@@ -304,6 +315,7 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
 - **Fix:** compile them only under `cfg(debug_assertions)` or a `test-hooks` feature that the integration tests enable.
 
 **m11. WP19: no regression, two notes for Phase 5** (`config.rs` `provider_issuer`).
+- **Status (2026-10-22): Phase 5 (recorded, not changed): one HS256 secret per provider before a second provider is allowed; show "connected as `<sub>`" in the Connect panel.**
 - **The seam is sound for one provider.** `kind = "oidc"` is refused, and only one entry is allowed. The issuer becomes the enforced
   `iss` (`jwt.rs:96-101`). The guard, the JWT rules, the limits and the TLS paths are unchanged.
 - **Note 1, for Phase 5:** every provider shares the one HS256 `secret_file`. Before more than one provider is allowed, each one needs
@@ -315,12 +327,14 @@ on every start), `host.rs:284` (a persistent `WebContext` under `%LOCALAPPDATA%\
   - **Cheap fix:** show "connected as `<sub>`" in the Connect panel.
 
 **m12. Small hardening on the command line and the brand config** (`lib.rs:61-67`, `:290`, `:365-390`).
+- **Status (2026-10-22): fixed. `Brand::parse` accepts a `bin` only of `[A-Za-z0-9._-]+` starting with a letter or digit (`the_brand_bin_name_must_be_a_plain_file_name`). Nothing in the repo registers `suite.exe` as an "Open with" handler yet: when it does, use `"<exe>" -- "%1"`.**
 - **`brand.toml` `bin`:** it is joined into a path without a check. The file is install-controlled, but reject anything that is not
   `[A-Za-z0-9._-]+`.
 - **The "Open with" command:** register `"<exe>" -- "%1"` if `suite.exe` is ever registered. Explorer's `%1` is always absolute, so this
   is belt and braces.
 
 **m13. The IPC test the plan asked for is missing.**
+- **Status (2026-10-22): partly. `lib.rs` `ipc_message` is the one function the WebView handler calls; `a_page_of_another_origin_cannot_trigger_an_ipc_action` checks that a document of another origin (other port, `blob:`, `about:blank`, `file:`, lookalike hosts) gets no answer and starts nothing. The WebView-level case (a real second server, a real WebView2) was not run.**
 - **What the plan asked for:** WP9's step "a test that a cross-origin page cannot trigger an IPC action".
 - **What exists:** the string unit test `only_our_own_origin_may_send` (`lib.rs:476-492`).
 - **Fix:** add a WebView smoke case. Navigate (by script) to a second loopback server on another port, post `{"type":"history"}`, and

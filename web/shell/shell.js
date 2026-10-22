@@ -1,21 +1,37 @@
 // The home shell (PLAN phase 4, 3.2). Plain JS, no framework, no wasm. An editor is an iframe made the first time it is used
-// (?host=parent) and driven by the postMessage bridge: <prefix>:ready / :open / :save / :dirty / :failed. Recent files are
-// kept in this browser (IndexedDB, capped, oldest dropped first). No product name is written here: it comes from /shell-config.json.
+// (?host=parent) and driven by the postMessage bridge: <prefix>:ready / :open / :save / :dirty / :failed. Recent files, by mode
+// (review M2): in the desktop host the host's own list over IPC (names and paths, no copies); connected to a server, or in the
+// desktop host's browser fallback, names only, in this tab, cleared on Disconnect; in the plain web host, copies in this browser (IndexedDB, capped, oldest dropped first).
+// No product name is written here: it comes from /shell-config.json.
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const CAP = 200 * 1024 * 1024;          // bytes of Recent kept in IndexedDB
   const READY_MS = 60000;                 // an editor that has not said ready by then cannot take a file
   const EXT = { docs: 'docx doc odt rtf txt', sheets: 'xlsx xlsm xls csv ods', slides: 'pptx ppt odp', pdf: 'pdf' };
-  const S = { cfg: null, i18n: {}, lang: 'en', frames: {}, current: null, recent: [], db: null, templates: [] };
+  const S = { cfg: null, i18n: {}, lang: 'en', frames: {}, current: null, recent: [], db: null, templates: [], mode: 'web' };
+  const NAMES_CAP = 50;                   // names mode: names kept in the tab
 
   const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (_) { return null; } };
   const t = (k, p = {}) => String((S.i18n[S.lang] || {})[k] ?? S.i18n.en[k] ?? k).replace(/\{(\w+)\}/g, (m, n) => p[n] ?? m);
   const appName = (a) => a.names[S.lang] || a.names.en;
+  const baseName = (p) => String(p).split(/[\\/]/).pop();
   const appOf = (name) => { const e = name.split('.').pop().toLowerCase(); return S.cfg.apps.find((a) => EXT[a.id].split(' ').includes(e)); };
   const fmtSize = (n) => (n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB');
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
   const fail = (msg) => { const e = $('error'); e.textContent = msg; e.hidden = !msg; if (msg) $('ed-status').textContent = msg; };
+
+  // A request to the desktop host (WebView IPC); the answer arrives as the 'suite-host' event of that type. null on refusal or silence.
+  const host = (msg, type) => new Promise((ok) => {
+    const done = (e) => {
+      const d = e.detail || {};
+      if (d.type === type || d.type === 'rejected') { removeEventListener('suite-host', done); clearTimeout(tm); ok(d.type === type ? d : null); }
+    };
+    const tm = setTimeout(() => { removeEventListener('suite-host', done); ok(null); }, 3000);
+    addEventListener('suite-host', done);
+    window.ipc.postMessage(JSON.stringify(msg));
+  });
+  const session = (k, v) => { try { return v === undefined ? sessionStorage.getItem(k) : v === null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch (_) { return null; } };
 
   // ---- IndexedDB: store "meta" {id, app, name, size, ts}, store "blob" {id -> ArrayBuffer} ----
   const idb = (stores, mode, fn) => new Promise((ok, bad) => {
@@ -33,10 +49,23 @@
     });
   }
   async function loadRecent() {
-    try { S.recent = (await idb(['meta'], 'readonly', (m) => req(m.getAll()))) || []; } catch (_) { S.recent = []; }
+    if (S.mode === 'desktop') {
+      const r = await host({ type: 'recent' }, 'recent');
+      S.recent = ((r && r.items) || []).map((i) => ({ app: i.app, path: i.path, name: baseName(i.path), ts: i.ts * 1000 }));
+    } else if (S.mode === 'names') {
+      try { S.recent = JSON.parse(session('sh.recent') || '[]'); } catch (_) { S.recent = []; }
+    } else {
+      try { S.recent = (await idb(['meta'], 'readonly', (m) => req(m.getAll()))) || []; } catch (_) { S.recent = []; }
+    }
     S.recent.sort((a, b) => b.ts - a.ts);
   }
   async function remember(app, name, bytes) {
+    if (S.mode === 'desktop') return;     // the host's download handler records where the file went
+    if (S.mode === 'names') {            // the name only: no copy of a document stays in the browser
+      const kept = S.recent.filter((r) => !(r.app === app && r.name === name));
+      session('sh.recent', JSON.stringify([{ app, name, ts: Date.now() }, ...kept].slice(0, NAMES_CAP)));
+      return loadRecent();
+    }
     try {
       const old = S.recent.filter((r) => r.app === app && r.name === name).map((r) => r.id);
       let total = S.recent.filter((r) => !old.includes(r.id)).reduce((s, r) => s + r.size, 0) + bytes.byteLength;
@@ -91,8 +120,10 @@
       case 'dirty': f.dirty = !!d.dirty; break;
       case 'failed': fail(t('err.failed', { error: String(d.error) })); break;
       case 'save': {
-        const name = String(d.name), bytes = d.bytes;
+        // only this app's own file types, and no path parts: an editor fed a hostile document cannot make the shell save x.lnk or x.hta
+        const name = baseName(d.name), bytes = d.bytes;
         if (!(bytes instanceof ArrayBuffer)) return;
+        if (!name || !EXT[f.app.id].split(' ').includes(name.split('.').pop().toLowerCase())) return fail(t('err.type'));
         const a = el('a', { href: URL.createObjectURL(new Blob([bytes])), download: name });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
         $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false;
@@ -128,18 +159,23 @@
     const rows = S.recent.filter((r) => r.name.toLowerCase().includes(q));
     $('recent').replaceChildren(...rows.map((r) => el('li', {},
       el('button', { type: 'button', className: 'open', onclick: () => reopen(r) }, r.name),
-      el('span', { className: 'muted' }, fmtSize(r.size) + ' · ' + new Date(r.ts).toLocaleDateString(S.lang)),
-      el('button', { type: 'button', className: 'btn ghost', 'aria-label': t('recent.remove', { name: r.name }), onclick: () => forget(r) }, t('recent.remove.short')))));
+      el('span', { className: 'muted' }, (r.size ? fmtSize(r.size) + ' · ' : '') + new Date(r.ts).toLocaleDateString(S.lang)),
+      // the desktop list is the host's open log: the page cannot edit it
+      ...(S.mode === 'desktop' ? [] : [el('button', { type: 'button', className: 'btn ghost', 'aria-label': t('recent.remove', { name: r.name }), onclick: () => forget(r) }, t('recent.remove.short'))]))));
+    $('recent-note').textContent = t(S.mode === 'desktop' ? 'home.recent.note.desktop' : S.mode === 'names' ? 'home.recent.note.names' : 'home.recent.note');
     const none = $('recent-empty');
     none.hidden = rows.length > 0; none.textContent = t(S.recent.length ? 'home.search.none' : 'home.recent.empty');
   }
   async function reopen(r) {
+    if (S.mode === 'desktop') return window.ipc.postMessage(JSON.stringify({ type: 'open', path: r.path }));
+    if (S.mode === 'names') return pick(r.app);   // no copy is kept: choose the file again
     try {
       const bytes = await idb(['blob'], 'readonly', (b) => req(b.get(r.id)));
       show(S.cfg.apps.find((a) => a.id === r.app), { name: r.name, bytes });
     } catch (_) { fail(t('err.gone', { name: r.name })); }
   }
   async function forget(r) {
+    if (S.mode === 'names') { session('sh.recent', JSON.stringify(S.recent.filter((x) => x !== r))); await loadRecent(); return render(); }
     try { await idb(['meta', 'blob'], 'readwrite', (m, b) => { m.delete(r.id); b.delete(r.id); }); await loadRecent(); } catch (_) { /* ignore */ }
     render();
   }
@@ -157,18 +193,31 @@
     f.click();
   }
 
-  addEventListener('suite-host', (e) => { const d = e.detail || {}; if (d.type === 'opened') fail(d.ok || d.cancelled ? '' : String(d.error)); });
+  addEventListener('suite-host', (e) => {
+    const d = e.detail || {};
+    if (d.type === 'opened') { fail(d.ok || d.cancelled ? '' : String(d.error)); if (d.ok) loadRecent().then(render); }
+    // the host's download handler: where a saved file went (or why it was refused)
+    if (d.type === 'saved') { if (d.ok) $('ed-status').textContent = t('ed.saved', { name: d.name }); else fail(String(d.error)); loadRecent().then(render); }
+  });
 
   async function main() {
     const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };
     [S.cfg, S.i18n] = await Promise.all([get('/shell-config.json'), get('shell/i18n.json')]);
     S.templates = await get('shell/templates.json').catch(() => []);
     const nav = (navigator.language || 'en').toLowerCase();
-    S.lang = store('sh.lang') || (nav.startsWith('uz') ? (nav.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : nav.startsWith('ru') ? 'ru' : 'en');
+    S.mode = window.ipc ? 'desktop' : session('cv.token') || S.cfg.local ? 'names' : 'web';
+    // the desktop keeps the language in the host's settings, not in the WebView's storage
+    const saved = S.mode === 'desktop' ? ((await host({ type: 'settings_get' }, 'settings')) || { values: {} }).values.lang : store('sh.lang');
+    S.lang = saved || (nav.startsWith('uz') ? (nav.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : nav.startsWith('ru') ? 'ru' : 'en');
     if (!S.i18n[S.lang]) S.lang = 'en';
     document.documentElement.style.setProperty('--accent', matchMedia('(prefers-color-scheme: dark)').matches ? S.cfg.accent.dark : S.cfg.accent.light);
-    await openDb().catch(() => {}); await loadRecent();
-    $('lang').onchange = (e) => { S.lang = e.target.value; store('sh.lang', S.lang); render(); };
+    // earlier versions kept document copies in the WebView's IndexedDB: drop that database, it is not used in these modes
+    if (S.mode !== 'web') { try { indexedDB.deleteDatabase('shell'); } catch (_) { /* ignore */ } } else await openDb().catch(() => {});
+    await loadRecent();
+    $('lang').onchange = (e) => {
+      S.lang = e.target.value; render();
+      if (S.mode === 'desktop') host({ type: 'settings_set', key: 'lang', value: S.lang }, 'settings'); else store('sh.lang', S.lang);
+    };
     $('search').oninput = render;
     $('file').onchange = (e) => e.target.files[0] && openPicked(e.target.files[0], only);
     $('open-file').onclick = () => pick('');

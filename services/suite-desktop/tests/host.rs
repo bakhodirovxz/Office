@@ -1,6 +1,6 @@
 //! The real `suite.exe` as a process: the browser fallback when WebView2 is missing (forced by SUITE_FORCE_NO_WEBVIEW2) and the
 //! single-instance hand-off (F14). Editors are stand-ins that log their arguments. No window is ever opened here.
-#![cfg(windows)]
+#![cfg(all(windows, debug_assertions))] // the SUITE_* test hooks exist in debug builds only (review m10)
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};

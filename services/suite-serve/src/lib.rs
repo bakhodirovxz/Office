@@ -41,11 +41,11 @@ impl Layout {
     pub fn shell_config(&self) -> Result<String, String> {
         let text = std::fs::read_to_string(&self.brand)
             .map_err(|e| format!("{}: {e}", self.brand.display()))?;
-        brand_json(&text)
+        brand_json(&text, self.local_key.is_some())
     }
 }
 
-fn brand_json(text: &str) -> Result<String, String> {
+fn brand_json(text: &str, local: bool) -> Result<String, String> {
     let t: toml::Table = text.parse().map_err(|e| format!("brand.toml: {e}"))?;
     let need = |p: &[&str]| -> Result<serde_json::Value, String> {
         let mut v = t.get(p[0]);
@@ -64,6 +64,8 @@ fn brand_json(text: &str) -> Result<String, String> {
     }
     Ok(serde_json::json!({
         "product": need(&["product", "name"])?,
+        // the desktop host's server: the shell keeps no copies of documents in the browser it runs in (review M2)
+        "local": local,
         "accent": {"light": need(&["colors", "accent_light"])?, "dark": need(&["colors", "accent_dark"])?},
         "apps": apps,
         "convert": {"route": "/convert/", "names": need(&["apps", "convert", "names"])?},
@@ -134,6 +136,14 @@ fn editor(route: &str, dir: &Path) -> Option<Router<Arc<App>>> {
     )
 }
 
+/// `docs-web-1a2b3c4d5e6f7a8b_bg.wasm`: `-` and 15 or 16 hex digits (trunk's hash), then `.` or `_`.
+fn hashed(file: &str) -> bool {
+    file.split('-').skip(1).any(|p| {
+        let n = p.bytes().take_while(u8::is_ascii_hexdigit).count();
+        (15..=16).contains(&n) && p[n..].starts_with(['.', '_'])
+    })
+}
+
 async fn editor_headers(State(ed): State<Arc<Editor>>, req: Request, next: Next) -> Response {
     let path = req.uri().path().to_string();
     if path == ed.bare {
@@ -145,15 +155,21 @@ async fn editor_headers(State(ed): State<Arc<Editor>>, req: Request, next: Next)
             .unwrap_or_default();
         return Redirect::permanent(&format!("{}{q}", ed.slash)).into_response();
     }
-    let page = path == ed.slash || path.ends_with("/index.html");
+    // only a file with a trunk content hash in its name is immutable; every other name that may reach `index.html` (`/docs//`,
+    // `/docs/INDEX.HTML`, an NTFS stream) is revalidated, 304 included (review m3)
+    let immutable = hashed(path.rsplit('/').next().unwrap_or(""));
     let mut res = next.run(req).await;
-    res.headers_mut()
-        .insert(header::CONTENT_SECURITY_POLICY, ed.csp.clone());
-    if res.status() == StatusCode::OK {
-        let cc = if page {
-            "no-cache"
-        } else {
+    let h = res.headers_mut();
+    h.insert(header::CONTENT_SECURITY_POLICY, ed.csp.clone());
+    h.insert(
+        header::X_FRAME_OPTIONS,
+        HeaderValue::from_static("SAMEORIGIN"),
+    );
+    if matches!(res.status(), StatusCode::OK | StatusCode::NOT_MODIFIED) {
+        let cc = if immutable {
             "public, max-age=31536000, immutable"
+        } else {
+            "no-cache"
         };
         res.headers_mut()
             .insert(header::CACHE_CONTROL, HeaderValue::from_static(cc));
@@ -264,6 +280,28 @@ pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_trunk_hashed_names_are_immutable() {
+        for f in [
+            "docs-web-1a2b3c4d5e6f7a8b_bg.wasm",
+            "docs-web-1a2b3c4d5e6f7a8.js",
+            "x-ABCDEF0123456789.css",
+        ] {
+            assert!(hashed(f), "{f}");
+        }
+        for f in [
+            "index.html",
+            "",
+            "INDEX.HTML",
+            "index.html::$DATA",
+            "docs-web-abc_bg.wasm",
+            "docs-web-1a2b3c4d5e6f7a8b9c.js",
+            "a1b2c3d4e5f6a7b8.js",
+        ] {
+            assert!(!hashed(f), "{f}");
+        }
+    }
 
     #[test]
     fn hashes_inline_script_and_style_only() {

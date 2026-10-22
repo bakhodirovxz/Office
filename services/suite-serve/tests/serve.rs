@@ -47,8 +47,16 @@ fn harness_with(name: &str, local_key: Option<&str>) -> H {
         format!("<html><head><script type=\"module\">{SCRIPT}</script><style>b{{}}</style></head></html>"),
     )
     .unwrap();
-    std::fs::write(docs.join("docs-web-abc_bg.wasm"), b"\0asm\x01\0\0\0").unwrap();
-    std::fs::write(docs.join("docs-web-abc_bg.wasm.br"), b"fake-brotli").unwrap();
+    std::fs::write(
+        docs.join("docs-web-0123456789abcdef_bg.wasm"),
+        b"\0asm\x01\0\0\0",
+    )
+    .unwrap();
+    std::fs::write(
+        docs.join("docs-web-0123456789abcdef_bg.wasm.br"),
+        b"fake-brotli",
+    )
+    .unwrap();
     // sheets, slides and pdf are not built: their routes are absent
     let layout = Layout {
         shell: repo().join("web/shell"),
@@ -71,7 +79,10 @@ fn harness_with(name: &str, local_key: Option<&str>) -> H {
 }
 
 async fn get(h: &H, uri: &str, extra: &[(&str, &str)]) -> (StatusCode, HeaderMap, Vec<u8>) {
-    let mut r = Request::builder().uri(uri).header("host", "127.0.0.1:8787");
+    let mut r = Request::builder().uri(uri);
+    if !extra.iter().any(|(k, _)| *k == "host") {
+        r = r.header("host", "127.0.0.1:8787");
+    }
     for (k, v) in extra {
         r = r.header(*k, *v);
     }
@@ -163,7 +174,7 @@ async fn editor_routes_get_their_own_csp() {
     // a hashed file never changes; a client that takes brotli gets the .br next to it
     let (st, hd, body) = get(
         &h,
-        "/docs/docs-web-abc_bg.wasm",
+        "/docs/docs-web-0123456789abcdef_bg.wasm",
         &[("accept-encoding", "br")],
     )
     .await;
@@ -176,7 +187,7 @@ async fn editor_routes_get_their_own_csp() {
         "public, max-age=31536000, immutable"
     );
     assert!(hv(&hd, "content-security-policy").contains("'wasm-unsafe-eval'"));
-    let (_, hd, body) = get(&h, "/docs/docs-web-abc_bg.wasm", &[]).await;
+    let (_, hd, body) = get(&h, "/docs/docs-web-0123456789abcdef_bg.wasm", &[]).await;
     assert!(hd.get("content-encoding").is_none() && body.starts_with(b"\0asm"));
 
     // no slash: redirect (the page's URLs are relative)
@@ -193,6 +204,54 @@ async fn editor_routes_get_their_own_csp() {
     let (st, hd, _) = get(&h, "/sheets/", &[]).await;
     assert_eq!(st, StatusCode::NOT_FOUND);
     assert_eq!(hv(&hd, "content-security-policy"), STRICT);
+}
+
+/// Review m3 and m5: odd names for the page are never cached for a year; the frame rule is per route; the Host/Origin guard covers the
+/// routes of this crate and not only those of convert-api.
+#[tokio::test]
+async fn cache_frame_and_guard_rules_of_the_routes() {
+    let h = harness("rules");
+    for uri in ["/docs/", "/docs//", "/docs/INDEX.HTML", "/docs/index.html"] {
+        let (st, hd, _) = get(&h, uri, &[]).await;
+        assert!(
+            !hv(&hd, "cache-control").contains("immutable"),
+            "{uri} {st}: {}",
+            hv(&hd, "cache-control")
+        );
+        if st == StatusCode::OK {
+            assert_eq!(hv(&hd, "cache-control"), "no-cache", "{uri}");
+            assert_eq!(hv(&hd, "x-frame-options"), "SAMEORIGIN", "{uri}");
+        }
+    }
+    // a missing file is no cache entry either
+    let (st, hd, _) = get(&h, "/docs/nope-0123456789abcdef.js", &[]).await;
+    assert_eq!(st, StatusCode::NOT_FOUND);
+    assert!(!hv(&hd, "cache-control").contains("immutable"));
+    for uri in ["/", "/convert/", "/shell/shell.js", "/api/v1/formats"] {
+        assert_eq!(
+            hv(&get(&h, uri, &[]).await.1, "x-frame-options"),
+            "DENY",
+            "{uri}"
+        );
+    }
+    // Host and Origin, on this crate's own routes
+    let (st, ..) = get(&h, "/docs/", &[("host", "evil.example")]).await;
+    assert_eq!(st, StatusCode::MISDIRECTED_REQUEST);
+    for uri in ["/", "/shell-config.json"] {
+        let (st, ..) = get(&h, uri, &[("host", "evil.example:8787")]).await;
+        assert_eq!(st, StatusCode::MISDIRECTED_REQUEST, "{uri}");
+    }
+    let mut r = Request::builder()
+        .method("POST")
+        .uri("/api/v1/jobs")
+        .header("host", "127.0.0.1:8787")
+        .header("origin", "https://evil.example")
+        .body(Body::empty())
+        .unwrap();
+    r.extensions_mut()
+        .insert(ConnectInfo("127.0.0.1:5555".parse::<SocketAddr>().unwrap()));
+    let res = h.router.clone().oneshot(r).await.unwrap();
+    assert_eq!(res.status(), StatusCode::FORBIDDEN);
 }
 
 const KEY: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -270,6 +329,16 @@ fn shell_config_comes_from_the_brand_file() {
     assert!(
         c["apps"][0]["names"]["uz-Cyrl"].is_string() && c["convert"]["names"]["ru"].is_string()
     );
+    // the desktop host's server tells the shell to keep no document copies (review M2); the web host does not
+    assert_eq!(c["local"], false);
+    let desk = Layout {
+        local_key: Some(KEY.into()),
+        shell: l.shell.clone(),
+        dist: l.dist.clone(),
+        brand: l.brand.clone(),
+    };
+    let c: serde_json::Value = serde_json::from_str(&desk.shell_config().unwrap()).unwrap();
+    assert_eq!(c["local"], true);
     let bad = Layout {
         brand: "/nonexistent".into(),
         ..l

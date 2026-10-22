@@ -141,7 +141,7 @@
     $('srv-token').value = '';
     start();
   }
-  function disconnect() { S.token = null; store('sessionStorage', 'cv.token', null); $('srv-token').value = ''; $('srv-url').value = ''; clearError(); start(); }
+  function disconnect() { S.token = null; store('sessionStorage', 'cv.token', null); store('sessionStorage', 'sh.recent', null); /* the shell's Recent names go too (review M2) */ $('srv-token').value = ''; $('srv-url').value = ''; clearError(); start(); }
 
   // ---- files and options ---------------------------------------------------------------------------------------------
   function addFiles(list) {

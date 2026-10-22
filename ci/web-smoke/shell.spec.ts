@@ -198,3 +198,49 @@ for (const e of EDITORS) {
     expect(w.problems).toEqual([]);
   });
 }
+
+// Review M2. The desktop host's IPC is stood in for by a script: the shell must take Recent and the language from the host and
+// keep nothing of its own in the browser.
+test('desktop mode: Recent and the language come from the host, nothing is stored in the browser', async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as any;
+    w.__sent = [];
+    w.ipc = {
+      postMessage(m: string) {
+        const d = JSON.parse(m);
+        w.__sent.push(d);
+        const reply = d.type === 'recent'
+          ? { type: 'recent', items: [{ path: 'C:\Users\u\Docs\Buyruq 1.docx', app: 'docs', ts: 1760000000 }] }
+          : d.type === 'settings_get' ? { type: 'settings', values: { lang: 'ru' } }
+          : d.type === 'settings_set' ? { type: 'settings', values: { lang: d.value } } : null;
+        if (reply) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: reply })), 0);
+      },
+    };
+  });
+  await page.goto(base + '/');
+  await expect(page.locator('#recent li .open')).toHaveText('Buyruq 1.docx');
+  await expect(page.locator('#lang')).toHaveValue('ru');
+  await expect(page.locator('#recent-note')).toHaveText(txt('ru', 'home.recent.note.desktop'));
+  await expect(page.locator('#recent li button.ghost')).toHaveCount(0); // the host's log cannot be edited from the page
+  await page.locator('#recent li .open').click();
+  expect((await page.evaluate(() => (window as any).__sent)).at(-1)).toEqual({ type: 'open', path: 'C:\Users\u\Docs\Buyruq 1.docx' });
+  await page.selectOption('#lang', 'en');
+  await expect.poll(() => page.evaluate(() => (window as any).__sent.at(-1))).toEqual({ type: 'settings_set', key: 'lang', value: 'en' });
+  expect(await page.evaluate(() => localStorage.getItem('sh.lang'))).toBeNull();
+  expect(await page.evaluate(async () => (await indexedDB.databases()).map((d) => d.name))).not.toContain('shell');
+});
+
+test('connected to a server: Recent keeps names only, no IndexedDB, and asks for the file again', async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem('cv.token', 'abc.def.ghi');
+    if (!sessionStorage.getItem('sh.recent')) sessionStorage.setItem('sh.recent', JSON.stringify([{ app: 'docs', name: 'Hisobot.docx', ts: 1760000000000 }]));
+  });
+  await page.goto(base + '/');
+  await expect(page.locator('#recent li .open')).toHaveText('Hisobot.docx');
+  await expect(page.locator('#recent-note')).toHaveText(txt('en', 'home.recent.note.names'));
+  expect(await page.evaluate(async () => (await indexedDB.databases()).map((d) => d.name))).not.toContain('shell');
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.locator('#recent li .open').click()]);
+  expect(chooser).toBeTruthy(); // no copy to reopen: the file picker opens
+  await page.locator('#recent li button.ghost').click();
+  await expect(page.locator('#recent li')).toHaveCount(0);
+});

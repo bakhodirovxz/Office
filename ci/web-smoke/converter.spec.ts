@@ -275,8 +275,10 @@ test('connect to server: the #token= fragment is read and removed; disconnect re
   await expect(page.locator('#conn-mode')).toHaveText(txt('en', 'ui.conn.mode.server'));
   expect(new URL(page.url()).hash).toBe(''); // stripped from the address bar
   await page.locator('#conn summary').click();
+  await page.evaluate(() => sessionStorage.setItem('sh.recent', '[]')); // the shell's Recent names (review M2)
   await page.click('#srv-clear');
   await expect(page.locator('#conn-mode')).toHaveText(txt('en', 'ui.conn.mode.local'));
+  expect(await page.evaluate(() => sessionStorage.getItem('sh.recent'))).toBeNull();
   // a pasted token works too
   await page.fill('#srv-token', 'pasted-token');
   await page.click('#srv-apply');

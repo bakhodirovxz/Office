@@ -64,6 +64,16 @@ impl Brand {
                     .and_then(|a| a.get("bin")),
                 &format!("apps.{id}.bin"),
             )?;
+            // the bin name is joined into a path: a plain file name only (review m12)
+            if !bin.starts_with(|c: char| c.is_ascii_alphanumeric())
+                || !bin
+                    .bytes()
+                    .all(|c| c.is_ascii_alphanumeric() || b"._-".contains(&c))
+            {
+                return Err(format!(
+                    "brand.toml: apps.{id}.bin must be letters, digits, '.', '_' or '-'"
+                ));
+            }
             apps.push(AppDef { id, bin, exts });
         }
         Ok(Brand {
@@ -84,6 +94,35 @@ impl Brand {
 pub enum Source {
     Page,
     User,
+}
+
+/// A reserved DOS device name, with or without an extension (`NUL`, `com1.txt`, `LPT¹`): Windows opens the device, not a file.
+fn dos_device(name: &str) -> bool {
+    let stem = name
+        .split('.')
+        .next()
+        .unwrap_or("")
+        .trim_end_matches(' ')
+        .to_ascii_uppercase();
+    if matches!(
+        stem.as_str(),
+        "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+    ) {
+        return true;
+    }
+    let n = stem
+        .strip_prefix("COM")
+        .or_else(|| stem.strip_prefix("LPT"));
+    n.is_some_and(|n| {
+        let mut c = n.chars();
+        matches!((c.next(), c.next()), (Some(d), None) if ('1'..='9').contains(&d) || "¹²³".contains(d))
+    })
+}
+
+/// A canonical path that leads to a network share (a directory symlink or junction to `\\host\share`).
+fn is_network_target(canonical: &Path) -> bool {
+    let s = canonical.to_string_lossy();
+    s.starts_with(r"\\?\UNC\") || (s.starts_with(r"\\") && !s.starts_with(r"\\?\"))
 }
 
 /// The editor for `path` and the path itself, when it is a file we may open: absolute, no `..`, a known extension, exists.
@@ -108,6 +147,15 @@ pub fn check_file<'a>(
     if !ok_root || !p.is_absolute() || p.components().any(|c| c == Component::ParentDir) {
         return Err("the path must be absolute".into());
     }
+    // no alternate data stream (`a.txt:s.docx`) and no DOS device (`COM1.docx`) after the prefix (review m1)
+    for c in p.components().skip(1) {
+        if let Component::Normal(n) = c {
+            let n = n.to_string_lossy();
+            if n.contains(':') || dos_device(&n) {
+                return Err("this path is not allowed".into());
+            }
+        }
+    }
     let ext = p
         .extension()
         .and_then(|e| e.to_str())
@@ -120,6 +168,10 @@ pub fn check_file<'a>(
         .ok_or("this file type is not supported")?;
     if !p.is_file() {
         return Err("the file does not exist".into());
+    }
+    // a path from the page must not reach a share through a symlink or a junction either
+    if src == Source::Page && std::fs::canonicalize(p).is_ok_and(|c| is_network_target(&c)) {
+        return Err("the path must be absolute".into());
     }
     Ok((app, p.to_path_buf()))
 }
@@ -172,6 +224,44 @@ pub fn nav_ok(url: &str, port: u16) -> bool {
         || url
             .strip_prefix("blob:")
             .is_some_and(|r| origin_ok(r, port))
+}
+
+/// One message from the page, with the address of the document that sent it. A document of any other origin gets no answer at all
+/// and nothing runs (review m13).
+pub fn ipc_message(ctx: &Ctx, uri: &str, port: u16, body: &str) -> Option<Out> {
+    origin_ok(uri, port).then(|| ctx.message(body))
+}
+
+/// Where a download may be written: the folder WebView2 chose, a file type of one of our apps, no stream or device name, and never
+/// over an existing file (`name (1).ext`). A refusal cancels the download (review m6, m2).
+pub fn download_target(brand: &Brand, wanted: &Path) -> Result<PathBuf, String> {
+    let refused = || "this file type cannot be saved".to_string();
+    let name = wanted
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(refused)?;
+    let (stem, ext) = (
+        Path::new(name).file_stem().and_then(|s| s.to_str()),
+        Path::new(name).extension().and_then(|e| e.to_str()),
+    );
+    let (Some(stem), Some(ext)) = (stem, ext) else {
+        return Err(refused());
+    };
+    let known = brand
+        .apps
+        .iter()
+        .any(|a| a.exts.contains(&ext.to_ascii_lowercase().as_str()));
+    let dir = wanted.parent().filter(|d| d.is_absolute());
+    let (true, Some(dir)) = (known && !name.contains(':') && !dos_device(name), dir) else {
+        return Err(refused());
+    };
+    (0..1000)
+        .map(|n| match n {
+            0 => dir.join(name),
+            n => dir.join(format!("{stem} ({n}).{ext}")),
+        })
+        .find(|f| !f.exists())
+        .ok_or_else(|| "too many files with this name".to_string())
 }
 
 /// The script that delivers a reply to the page: `addEventListener('suite-host', e => e.detail)`.
@@ -231,6 +321,11 @@ impl Store {
         h.reverse();
         h
     }
+    /// Whether the host itself has opened or saved this exact path before.
+    pub fn knows(&self, path: &str) -> bool {
+        let h: Vec<Entry> = self.read("history.json");
+        h.iter().any(|e| e.path == path)
+    }
     /// The last `n` different files that still exist, newest first.
     pub fn recent(&self, n: usize) -> Vec<Entry> {
         let mut seen = std::collections::HashSet::new();
@@ -283,9 +378,24 @@ fn now() -> u64 {
 }
 
 impl Ctx {
-    /// Checks the file, starts its editor and records it. The reply carries the file name only.
+    /// A file the host wrote (a download) is recorded like an open, so Recent lists it. The reply carries the file name only.
+    pub fn saved(&self, path: &Path) -> Value {
+        let go = || -> Result<Value, String> {
+            let (app, p) = check_file(&self.brand, &path.to_string_lossy(), Source::User)?;
+            self.store.record(&p, app.id, now());
+            let name = p.file_name().map(|n| n.to_string_lossy().into_owned());
+            Ok(json!({"type": "saved", "ok": true, "app": app.id, "name": name}))
+        };
+        go().unwrap_or_else(|error| json!({"type": "saved", "ok": false, "error": error}))
+    }
+
+    /// Checks the file, starts its editor and records it. The reply carries the file name only. The page may reopen only a file
+    /// the host already knows (history); a path from the command line, the second launch or the native dialog is the user's own.
     pub fn open(&self, path: &str, src: Source) -> Value {
         let go = || -> Result<Value, String> {
+            if src == Source::Page && !self.store.knows(path) {
+                return Err("this file is not in the recent list".into());
+            }
             let (app, p) = check_file(&self.brand, path, src)?;
             let exe = self.bin_dir.join(format!("{}.exe", app.bin));
             if !exe.is_file() {
@@ -520,7 +630,15 @@ bin = "tst-pdf"
         for f in [&doc, &sheet, &txt] {
             std::fs::write(f, b"x").unwrap();
         }
-        let ok = c.open(doc.to_str().unwrap(), Source::Page);
+        // the page may reopen only what the host has opened before (review m1): the first open is the user's
+        let other = dir.join("other.docx");
+        std::fs::write(&other, b"x").unwrap();
+        let refused = c.open(doc.to_str().unwrap(), Source::Page);
+        assert!(
+            refused["error"].as_str().unwrap().contains("recent list"),
+            "{refused}"
+        );
+        let ok = c.open(doc.to_str().unwrap(), Source::User);
         assert_eq!(
             (ok["ok"].clone(), ok["app"].clone(), ok["name"].clone()),
             (true.into(), "docs".into(), "Буйруқ 1.DOCX".into())
@@ -529,6 +647,8 @@ bin = "tst-pdf"
             c.open(sheet.to_str().unwrap(), Source::User)["app"],
             "sheets"
         );
+        assert_eq!(c.open(doc.to_str().unwrap(), Source::Page)["ok"], true);
+        assert_eq!(c.open(other.to_str().unwrap(), Source::Page)["ok"], false);
         let l = log.lock().unwrap();
         assert!(l[0].0.ends_with("tst-docs.exe") && l[0].1 == doc);
         assert!(l[1].0.ends_with("tst-sheets.exe"));
@@ -542,18 +662,127 @@ bin = "tst-pdf"
             "C:\\x\\..\\y.docx",
         ] {
             assert_eq!(c.open(bad, Source::Page)["ok"], false, "{bad}");
+            assert_eq!(c.open(bad, Source::User)["ok"], false, "{bad}");
         }
-        assert_eq!(log.lock().unwrap().len(), 2);
-        // recent and history record both opens, newest first
+        assert_eq!(log.lock().unwrap().len(), 3);
+        // recent and history record every open, newest first
         let r = reply(c.handle(Request::Recent {}));
-        assert_eq!(r["items"][0]["app"], "sheets");
+        assert_eq!(r["items"][0]["app"], "docs");
         assert_eq!(
             reply(c.handle(Request::History {}))["items"]
                 .as_array()
                 .unwrap()
                 .len(),
-            2
+            3
         );
+    }
+
+    /// Review m1: an alternate data stream and a DOS device name are refused from every source, before anything is opened.
+    #[test]
+    #[cfg(windows)]
+    fn streams_and_device_names_are_refused() {
+        let (c, d, log) = ctx("streams");
+        let f = d.join("a.txt");
+        std::fs::write(&f, b"x").unwrap();
+        for bad in [
+            format!("{}:s.docx", f.display()),
+            format!("{}:s:$DATA.docx", f.display()),
+            d.join("COM1.docx").display().to_string(),
+            d.join("nul.xlsx").display().to_string(),
+            d.join("Lpt3 .pdf").display().to_string(),
+            d.join("COM\u{b9}.docx").display().to_string(),
+            d.join("CON.docx").join("x.docx").display().to_string(),
+        ] {
+            for src in [Source::Page, Source::User] {
+                let v = c.open(&bad, src);
+                assert_eq!(v["ok"], false, "{bad}");
+                if src == Source::User {
+                    assert_eq!(v["error"], "this path is not allowed", "{bad}");
+                }
+            }
+        }
+        assert!(log.lock().unwrap().is_empty());
+        assert!(!dos_device("COM10.docx") && !dos_device("console.docx") && dos_device("AUX"));
+        // a canonical path that leads to a share
+        assert!(is_network_target(Path::new(r"\\?\UNC\srv\share\a.docx")));
+        assert!(!is_network_target(Path::new(r"\\?\C:\Users\a.docx")));
+    }
+
+    #[test]
+    fn a_page_of_another_origin_cannot_trigger_an_ipc_action() {
+        let (c, d, log) = ctx("xorigin");
+        let f = d.join("a.docx");
+        std::fs::write(&f, b"x").unwrap();
+        c.open(f.to_str().unwrap(), Source::User); // known to the host, so the page could reopen it
+        let n = log.lock().unwrap().len();
+        let open = serde_json::json!({"type": "open", "path": f}).to_string();
+        let msgs = [open.as_str(), r#"{"type":"history"}"#, r#"{"type":"pick"}"#];
+        for uri in [
+            "http://evil.example/",
+            "http://127.0.0.1:50001/",
+            "http://127.0.0.1:5000.evil.com/",
+            "http://127.0.0.1:5000@evil.com/",
+            "https://127.0.0.1:5000/",
+            "blob:http://127.0.0.1:5000/x",
+            "about:blank",
+            "file:///C:/x.html",
+            "",
+        ] {
+            for m in msgs {
+                assert!(ipc_message(&c, uri, 5000, m).is_none(), "{uri}");
+            }
+        }
+        assert_eq!(log.lock().unwrap().len(), n, "nothing was started");
+        // the same message from our own origin is answered
+        let own = ipc_message(&c, "http://127.0.0.1:5000/docs/?host=parent", 5000, msgs[1]);
+        assert!(matches!(own, Some(Out::Reply(v)) if v["type"] == "history"));
+    }
+
+    /// Review M2, m2, m6: a download goes to a known file type under a name that is not taken.
+    #[test]
+    fn a_download_target_is_checked_and_never_overwrites() {
+        let (c, d, _log) = ctx("download");
+        let want = d.join("Hisobot 2026.XLSX");
+        assert_eq!(download_target(&c.brand, &want).unwrap(), want);
+        std::fs::write(&want, b"x").unwrap();
+        std::fs::write(d.join("Hisobot 2026 (1).XLSX"), b"x").unwrap();
+        assert_eq!(
+            download_target(&c.brand, &want).unwrap(),
+            d.join("Hisobot 2026 (2).XLSX")
+        );
+        for bad in [
+            "x.lnk",
+            "x.hta",
+            "x.exe",
+            "x",
+            "x.docx.exe",
+            "NUL.docx",
+            "a:b.docx",
+        ] {
+            assert!(download_target(&c.brand, &d.join(bad)).is_err(), "{bad}");
+        }
+        assert!(download_target(&c.brand, Path::new("rel.docx")).is_err());
+        // a saved file is listed in Recent like an open
+        let v = c.saved(&want);
+        assert_eq!(
+            (v["ok"].clone(), v["name"].clone()),
+            (true.into(), "Hisobot 2026.XLSX".into())
+        );
+        assert_eq!(
+            reply(c.handle(Request::Recent {}))["items"][0]["app"],
+            "sheets"
+        );
+        assert_eq!(c.saved(&d.join("gone.docx"))["ok"], false);
+    }
+
+    #[test]
+    fn the_brand_bin_name_must_be_a_plain_file_name() {
+        // the Rust strings are TOML text: `\\\\` is one backslash in the value
+        for bin in ["..\\\\evil", "a/b", "a b", "", "x:y", "a\\\\b", ".."] {
+            let t = BRAND.replacen("tst-docs", bin, 1);
+            assert!(Brand::parse(&t).is_err(), "{bin}");
+        }
+        assert!(Brand::parse(&BRAND.replacen("tst-docs", "My_Docs-2.v1", 1)).is_ok());
     }
 
     #[test]
@@ -580,7 +809,7 @@ bin = "tst-pdf"
         let f = d.join("a.pdf");
         std::fs::write(&f, b"x").unwrap();
         std::fs::remove_file(c.bin_dir.join("tst-pdf.exe")).unwrap();
-        let v = c.open(f.to_str().unwrap(), Source::Page);
+        let v = c.open(f.to_str().unwrap(), Source::User);
         assert_eq!(v["ok"], false);
         assert!(v["error"].as_str().unwrap().contains("not installed"));
         match c.handle(Request::Pick {

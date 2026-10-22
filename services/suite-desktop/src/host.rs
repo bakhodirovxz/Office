@@ -1,6 +1,8 @@
 //! The Windows part: the in-process `suite-serve` on a random loopback port, the single-instance pipe, the WebView2 window and the
 //! browser fallback. Desktop actions reach the host only through the WebView IPC (`Ctx::message`), never through the HTTP port.
-use crate::{Args, Brand, Ctx, Out, Source, Store, nav_ok, origin_ok, reply_script};
+use crate::{
+    Args, Brand, Ctx, Out, Source, Store, download_target, ipc_message, nav_ok, reply_script,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::os::windows::fs::OpenOptionsExt as _;
@@ -14,7 +16,7 @@ use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use tao::window::WindowBuilder;
 use tokio::io::AsyncReadExt as _;
 use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
-use wry::{NewWindowResponse, WebContext, WebViewBuilder};
+use wry::{NewWindowResponse, WebContext, WebViewBuilder, WebViewBuilderExtWindows as _};
 
 enum Ev {
     Script(String),
@@ -48,6 +50,17 @@ fn report(title: &str, v: &Value) {
         );
         std::thread::spawn(move || dialog(rfd::MessageLevel::Error, &t, &e));
     }
+}
+
+/// Test hooks (`SUITE_*`) exist in debug builds only: a release binary ignores these variables (review m10), so an environment
+/// variable can neither pick an executable to start nor move the pipe, the data or the browser.
+#[cfg(debug_assertions)]
+fn hook(name: &str) -> Option<std::ffi::OsString> {
+    std::env::var_os(name)
+}
+#[cfg(not(debug_assertions))]
+fn hook(_: &str) -> Option<std::ffi::OsString> {
+    None
 }
 
 fn env_dir(key: &str) -> Option<PathBuf> {
@@ -221,6 +234,8 @@ pub fn run(args: Args) -> u8 {
 }
 
 fn start(args: Args) -> Result<(), String> {
+    // later LoadLibrary calls search the application folder and System32 only, not the current folder or PATH (review m7)
+    let _ = suite_winsec::set_default_dll_directories();
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|e| e.parent().map(Path::to_path_buf))
@@ -235,10 +250,13 @@ fn start(args: Args) -> Result<(), String> {
     let brand_text = std::fs::read_to_string(&layout.brand)
         .map_err(|e| format!("{}: {e}", layout.brand.display()))?;
     let brand = Brand::parse(&brand_text)?;
-    let data = env_dir("SUITE_DATA_DIR")
+    let data = hook("SUITE_DATA_DIR")
+        .filter(|v| !v.is_empty())
+        .map(PathBuf::from)
         .or_else(|| env_dir("LOCALAPPDATA").map(|d| d.join(&brand.product).join("Host")))
         .ok_or("no data directory (LOCALAPPDATA is not set)")?;
     let bin_dir = args.bin_dir.unwrap_or(exe_dir);
+    let editor_cwd = bin_dir.clone();
     let product = brand.product.clone();
     // the name holds the user's SID and session, not USERNAME (which is public and collides between a local and a domain account)
     let (me, session) =
@@ -247,13 +265,21 @@ fn start(args: Args) -> Result<(), String> {
         r"\\.\pipe\{}-host-{}-{session}{}",
         alnum(&brand.id),
         me.as_str(),
-        alnum(&std::env::var("SUITE_INSTANCE").unwrap_or_default())
+        alnum(&hook("SUITE_INSTANCE").unwrap_or_default().to_string_lossy())
     );
     let ctx = Arc::new(Ctx {
         brand,
         store: Store::new(data.clone()),
         bin_dir,
-        spawn: Box::new(|exe, file| std::process::Command::new(exe).arg(file).spawn().map(drop)),
+        // the editor starts in the install folder, not in the folder of the document (review m7: a DLL it loads late must not be
+        // found next to a downloaded file)
+        spawn: Box::new(move |exe, file| {
+            std::process::Command::new(exe)
+                .arg(file)
+                .current_dir(&editor_cwd)
+                .spawn()
+                .map(drop)
+        }),
     });
     let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
     // F14: the first instance owns the pipe. Creating it with `first_pipe_instance` fails when another one exists. Only our user
@@ -311,7 +337,7 @@ fn start(args: Args) -> Result<(), String> {
 
     // WebView2 missing (or forced missing, for tests) -> the default browser
     let no_webview = args.browser
-        || std::env::var_os("SUITE_FORCE_NO_WEBVIEW2").is_some()
+        || hook("SUITE_FORCE_NO_WEBVIEW2").is_some()
         || wry::webview_version().is_err();
     if no_webview {
         if let Some(s) = server {
@@ -330,20 +356,50 @@ fn start(args: Args) -> Result<(), String> {
         .with_inner_size(LogicalSize::new(1100.0, 760.0))
         .build(&event_loop)
         .map_err(|e| e.to_string())?;
+    // Nothing of the web layer is kept (review M2): the WebView runs InPrivate, and what an earlier version left in the profile
+    // (IndexedDB copies of saved documents, one origin per launch) is deleted. This is the only instance, so nothing else uses it.
+    let _ = std::fs::remove_dir_all(data.join("webview2"));
     let mut web_context = WebContext::new(Some(data.join("webview2")));
     let ipc_proxy = proxy.clone();
     let ipc_ctx = ctx.clone();
+    let (dl_ctx, dl_proxy, done_ctx, done_proxy) =
+        (ctx.clone(), proxy.clone(), ctx.clone(), proxy.clone());
     let webview = WebViewBuilder::new_with_web_context(&mut web_context)
         .with_url(&start_url)
+        .with_incognito(true)
         .with_devtools(false)
+        // no browser shortcuts (print, save page, reload) and no context menu: they would bypass our own UI (review m6)
+        .with_browser_accelerator_keys(false)
+        .with_default_context_menus(false)
+        // wry's default also turns SmartScreen off; the downloads are real files now, so it is back on
+        .with_additional_browser_args("--disable-features=msWebOOUI,msPdfOOUI")
+        // a save is a download: only our file types, never over an existing file, and recorded for Recent (review M2, m2, m6)
+        .with_download_started_handler(move |_url, path| match download_target(&dl_ctx.brand, path) {
+            Ok(p) => {
+                *path = p;
+                true
+            }
+            Err(error) => {
+                let v = json!({"type": "saved", "ok": false, "error": error});
+                let _ = dl_proxy.send_event(Ev::Script(reply_script(&v)));
+                false
+            }
+        })
+        .with_download_completed_handler(move |_url, path, ok| {
+            let v = match path {
+                Some(p) if ok => done_ctx.saved(&p),
+                _ => json!({"type": "saved", "ok": false, "error": "the file could not be saved"}),
+            };
+            let _ = done_proxy.send_event(Ev::Script(reply_script(&v)));
+        })
         .with_navigation_handler(move |u| nav_ok(&u, port))
         .with_new_window_req_handler(|_, _| NewWindowResponse::Deny)
         .with_ipc_handler(move |req| {
             // IPC only from our own origin; anything else gets no answer at all
-            if !origin_ok(&req.uri().to_string(), port) {
+            let Some(out) = ipc_message(&ipc_ctx, &req.uri().to_string(), port, req.body()) else {
                 return;
-            }
-            match ipc_ctx.message(req.body()) {
+            };
+            match out {
                 Out::Reply(v) => {
                     let _ = ipc_proxy.send_event(Ev::Script(reply_script(&v)));
                 }
@@ -392,14 +448,13 @@ fn start(args: Args) -> Result<(), String> {
 /// No WebView2: open the default browser on the local URL and say so. The server runs as long as the message is open.
 fn browser_fallback(product: &str, url: &str, host_json: &Path) -> Result<(), String> {
     // `explorer <url>` opens the default browser; the URL is ours (a fixed loopback address)
-    let opener = std::env::var_os("SUITE_BROWSER").unwrap_or_else(|| "explorer".into());
+    let opener = hook("SUITE_BROWSER").unwrap_or_else(|| "explorer".into());
     std::process::Command::new(opener)
         .arg(url)
         .spawn()
         .map_err(|e| format!("cannot open the browser: {e}"))?;
-    if let Some(ms) = std::env::var("SUITE_TEST_EXIT_AFTER_MS")
-        .ok()
-        .and_then(|v| v.parse().ok())
+    if let Some(ms) =
+        hook("SUITE_TEST_EXIT_AFTER_MS").and_then(|v| v.to_str().and_then(|v| v.parse().ok()))
     {
         std::thread::sleep(Duration::from_millis(ms)); // test hook: no dialog
     } else {
