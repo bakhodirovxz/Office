@@ -754,9 +754,12 @@ const OWN: [(&str, &[&str]); 9] = [
 ];
 
 /// deckcraft engine messages (`cmd/file.rs`, patch 0124) that the UI translates by template; the engine tree is not scanned for UI text.
-const OWN_DECK_0124: [&str; 2] = [
+const OWN_DECK_0124: [&str; 5] = [
     "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
     "{n} pictures or media files in this presentation couldn't be read and are empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
+    "{n} slide in this file couldn't be read and was left out. It was opened as a repaired copy; save it under a new name to keep the original file.",
+    "{n} slides in this file couldn't be read and were left out. It was opened as a repaired copy; save it under a new name to keep the original file.",
+    "Parts of this presentation couldn't be read: pictures or media files left empty: {n}; slides left out: {m}. It was opened as a repaired copy; save it under a new name to keep the original file.",
 ];
 
 fn add_own(unis: &mut [Universe]) {
