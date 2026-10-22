@@ -29,7 +29,7 @@ scripts/sync-upstream.sh --apply --gates quick wordcraft deckcraft pdfcraft craf
 The `quick` gate's native check also runs `cargo check --workspace --all-targets` on `upstream/<repo>`, so a new upstream test that no longer compiles against
 our patches fails the sync (it was missed once: gridcraft `malformed.rs` reading `Formula` fields, patch 0103).
 
-Options: `--to <sha>` (one repo), `--gates quick|full`, `--fmt` (regenerate the trailing rustfmt patch, below), `--resolver <name>` (recorded in the log). Exit codes: 0 ok, 1 conflict or gate
+Options: `--to <sha>` (one repo), `--gates quick|full`, `--fmt` (regenerate the trailing rustfmt patch, below), `--resolver <name>` (recorded in the log), `--amend NNNN[,NNNN]` (with `--resolve`, below). Exit codes: 0 ok, 1 conflict or gate
 failure, 2 preflight or infrastructure.
 
 What the script does (PLAN 5.1):
@@ -78,6 +78,12 @@ Our canonical catalogs (`i18n/*.tsv`, keyed by English) are extracted from the u
    markers, `cargo fmt` the touched files if the repo is rustfmt-clean at that spot, then `git -C <path> add <files>`.
 3. The script runs `git am --continue` itself and records the wall time and the conflicted files.
 4. Do not run `git am --continue` or `--abort` yourself while the script waits.
+
+**Semantic conflicts (`--amend NNNN[,NNNN]`).** A patch can apply cleanly and still break the build: upstream added a new caller or test of
+a function whose signature the patch changes (2026-10-22: a new `grid.rs` test calls `display_text` without the locale that gridcraft
+`0130` adds). Find these first with a manual rebase plus `cargo check --workspace --all-targets`, then run with `--resolve --amend 0130`:
+after that patch applies the script prints `AMEND NEEDED: worktree <path> patch <file> ... then 'touch <done-file>'`; edit, `git add`, touch the
+file, and the script amends the patch commit (log result `amended`). Without it the quick gate's all-targets check fails and `--apply` refuses.
 To work by hand instead: `git -C E:/office-upstream/<repo> worktree add --detach <dir> <new>` then `git am -3 patches/<repo>/*.patch`,
 `git am --continue` after each fix, `git format-patch --zero-commit --binary --no-signature`.
 

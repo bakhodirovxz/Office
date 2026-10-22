@@ -9,6 +9,9 @@
 #               and fast-forward the monorepo to the scratch branch sync/<date>-<time>.
 #   --resolve   on a conflict, stop and wait for a resolver (agent or human) working in the printed worktree:
 #               edit, `git add`, and the script runs `git am --continue` itself and records the minutes.
+#   --amend NNNN[,NNNN]  with --resolve: also stop after patch NNNN applies cleanly, for a semantic conflict git cannot see
+#               (a new upstream caller or test of an API the patch changes): edit, `git add`, then `touch <done-file>`
+#               (printed); the script amends the patch commit and records it as `amended`.
 #   --survey    dry-run only: do not stop at the first conflict; commit the conflict markers and carry on, so the
 #               report lists every conflicting patch with file:line. Patches after the first conflict may cascade.
 #   --fmt       regenerate the trailing `NNNN-<repo>-rustfmt.patch`: after the rebase, `rustfmt --edition <ed>` over the .rs
@@ -30,12 +33,12 @@ MAIN="$OFFICE_ROOT"
 cd "$MAIN" || exit 2
 
 ALL="wordcraft gridcraft deckcraft pdfcraft craft-libs"
-MODE=dry GATES=quick RESOLVE=0 SURVEY=0 FMT=0 TO="" RESOLVER="-" REPOS=""
+MODE=dry GATES=quick RESOLVE=0 SURVEY=0 FMT=0 TO="" RESOLVER="-" REPOS="" AMEND=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) MODE=dry;; --apply) MODE=apply;; --resolve) RESOLVE=1;; --survey) SURVEY=1;; --fmt) FMT=1;;
-    --resolver) RESOLVER="$2"; shift;; --to) TO="$2"; shift;; --gates) GATES="$2"; shift;;
-    -h|--help) sed -n 2,24p "$0"; exit 0;;
+    --resolver) RESOLVER="$2"; shift;; --amend) AMEND="$2"; shift;; --to) TO="$2"; shift;; --gates) GATES="$2"; shift;;
+    -h|--help) sed -n 2,27p "$0"; exit 0;;
     all) REPOS="$ALL";; -*) echo "unknown option $1" >&2; exit 2;;
     *) REPOS="$REPOS $1";;
   esac; shift
@@ -44,6 +47,7 @@ REPOS="${REPOS# }"; [ -n "$REPOS" ] || { echo "usage: sync-upstream.sh [--dry-ru
 for r in $REPOS; do case " $ALL " in *" $r "*) ;; *) echo "unknown repo $r" >&2; exit 2;; esac; done
 [ -z "$TO" ] || [ "$(echo $REPOS | wc -w)" = 1 ] || { echo "--to needs exactly one repo" >&2; exit 2; }
 [ "$MODE" = apply ] && [ "$SURVEY" = 1 ] && { echo "--survey is for --dry-run" >&2; exit 2; }
+[ -z "$AMEND" ] || [ "$RESOLVE" = 1 ] || { echo "--amend needs --resolve" >&2; exit 2; }
 case "$GATES" in quick|full) ;; *) echo "--gates quick|full" >&2; exit 2;; esac
 
 DATE=$(date +%F); RUN=$(date +%H%M%S)
@@ -149,6 +153,13 @@ for r in $REPOS; do
     out=$(git -C "$WN" am -3 "$p" 2>&1); rc=$?
     if [ $rc -eq 0 ]; then
       res=clean; echo "$out" | grep -q "Falling back" && res=3way
+      if [[ ",$AMEND," == *",$num,"* ]]; then
+        done_file="$WORK/amend-$r-$num.done"
+        echo ">>> AMEND NEEDED: worktree $WN  patch $pn  (applied $res); edit, 'git -C $WN add <files>', then 'touch $done_file'"
+        while [ ! -e "$done_file" ]; do sleep 15; done
+        git -C "$WN" diff --cached --quiet || git -C "$WN" commit -q --amend --no-edit
+        res=amended
+      fi
       echo -e "$pn\t$res\t-\t0\t$(elapsed $t0)" >> "$WORK/$r.rows"; continue
     fi
     unm=$(git -C "$WN" diff --name-only --diff-filter=U)
@@ -230,12 +241,12 @@ EOM
     i=$((i+1)); il=$(awk -F'\t' -v k=$i '$1==k{print $2}' "$WORK/$r.interdiff"); [ -n "$il" ] || il=0
     say "| ${pn:0:4} | $res | ${locs//,/<br>} | $hunks | $sec | $il |"
     min=$(awk -v s="$sec" 'BEGIN{printf "%.2f", s/60}')
-    echo -e "$DATE\t$r\t${o:0:7}\t$n7\t${NCOMMITS[$r]}\t${pn:0:4}\t$res\t$locs\t$hunks\t$min\t$il\t-\t-\t$([ "$res" = resolved ] && echo "$RESOLVER" || echo script)" >> "$TSV"
+    echo -e "$DATE\t$r\t${o:0:7}\t$n7\t${NCOMMITS[$r]}\t${pn:0:4}\t$res\t$locs\t$hunks\t$min\t$il\t-\t-\t$(case $res in resolved|amended) echo "$RESOLVER";; *) echo script;; esac)" >> "$TSV"
     RESULT_CNT[$res]=$(( ${RESULT_CNT[$res]:-0} + 1 ))
   done < "$WORK/$r.rows"
   say ""
 done
-say "Totals: clean ${RESULT_CNT[clean]:-0}, 3-way ${RESULT_CNT[3way]:-0}, resolved ${RESULT_CNT[resolved]:-0}, conflict ${RESULT_CNT[conflict]:-0}, not-run ${RESULT_CNT[not-run]:-0}"
+say "Totals: clean ${RESULT_CNT[clean]:-0}, 3-way ${RESULT_CNT[3way]:-0}, resolved ${RESULT_CNT[resolved]:-0}, amended ${RESULT_CNT[amended]:-0}, conflict ${RESULT_CNT[conflict]:-0}, not-run ${RESULT_CNT[not-run]:-0}"
 say ""
 
 # ---------------------------------------------------------------- step 4 materialise in scratch
@@ -350,7 +361,7 @@ fi
 cd "$MAIN" || exit 2
 say ""; say "## 6 Outcome"; say ""
 NPATCH=$(awk -F'\t' '{n++} END{print n+0}' "$TSV")
-SUMMARY="$(echo $REPOS | wc -w) repos, $NPATCH patches (clean ${RESULT_CNT[clean]:-0}, 3-way ${RESULT_CNT[3way]:-0}, resolved ${RESULT_CNT[resolved]:-0}), gates $GATES"
+SUMMARY="$(echo $REPOS | wc -w) repos, $NPATCH patches (clean ${RESULT_CNT[clean]:-0}, 3-way ${RESULT_CNT[3way]:-0}, resolved ${RESULT_CNT[resolved]:-0}, amended ${RESULT_CNT[amended]:-0}), gates $GATES"
 if [ $UNRES_ANY = 0 ] && [ $GATE_FAIL = 0 ]; then OK=1; say "**DRY RUN OK: $SUMMARY PASS**"; else OK=0
   say "**DRY RUN INCOMPLETE: $SUMMARY; unresolved conflicts: $(for r in $REPOS; do echo -n "$r=${UNRES[$r]:-0} "; done); gate failures: $GATE_FAIL**"; fi
 total=$(elapsed $t_start); say ""; say "Script wall time: ${total} s"
