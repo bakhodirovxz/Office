@@ -1059,3 +1059,43 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
 - **Found, not fixed:** `services/convert/tests/warnings.rs` fails depending on test order. `sheets_honours_locale` caches the
   probe per tool binary, so the first test's `honour-locale` marker decides for all the others. It fails
   single-threaded too. This came from the D6 commits; WP16 does not cause it.
+
+## Phase 3 gate review, WP13 (2026-10-22)
+Full report: `docs/phase3/gate-review.md`. Architect tier, at HEAD `d67ed47`. **Verdict: not ready for "go" yet.** There are two
+blockers. Everything else measured green.
+- **`ci.sh full`: exit 0, all 28 jobs ok** in 5 h 17 min (run `wp13-full`). The services passed nextest 171 of 171, with the
+  two formerly flaky tests fixed in `15f542b`, `a119148` and `d67ed47`. `convert-e2e`: the API e2e over every `formats`
+  row, `directions.sh` 43/43, Playwright 8 passed. `translit-preserve` 8 of 8 IDENTICAL. The silent-loss ratchet
+  (`fidelity-directions`, run separately) gives 90 directions, 117 cases and 4 silent losses = the D1 baseline, 0 new.
+- **Never silent, broken on purpose** through the CLI, the API and the page: a missing CLI, panic and access-violation
+  crashes, a hang (tool timeout and job deadline), the memory cap, the sidecar down, not configured, 503, 504 and 500,
+  a real 422 (scan and encrypted), a corrupt docx and pdf, an empty file, a password docx/doc/pdf and a 1.5 GiB zip bomb.
+  No case was silent. Message-quality defects are m1-m4 (password .doc and .pdf give exit 1 instead of 9; a garbled OS
+  text when the sidecar is down; a cut-off docx is called "unsupported"; a container path in a sidecar message).
+- **Blockers:**
+  - **B1: PDF combine, split and extract are CLI-only.** There is no API route and no UI control, and the brief lists
+    them. Owner: scope them CLI-only for Phase 3, or 1-2 d to add them.
+  - **B2: a `;` CSV with `01.03.2019` read in an en-US job stores 3 January.** Status ok, no warning. That happens with
+    the API default `locale`, the page in English, or the CLI on a PC with an English display language: the CLI default
+    is the Windows UI language, not the regional format. This is D6 returning; the planned interim warning was never
+    added. About 0.5 d.
+- **Major:**
+  - M1: the page shows `{encoding}`, `{missing} of {total}` and `{copy}` literally.
+  - M2: the next upstream sync is a hand-merge. The dry run gives 53 clean, 6 3-way and 13 conflicts, among them
+    NumLocale 0028 and 0029 (upstream `value_text_as`). Every CLI flag and command id that `convert` uses still exists.
+  - M3-M5 (XDFU, off by default; they block switching XDFU on, not the gate): the docx/xlsx watermark replaces the
+    document's own header (letterhead and grif lost); detection misses headers of unscanned kinds, two-column
+    letterheads and image-only PDFs; the audit chain has no key.
+- **XDFU is off by default** in the CLI, the API config and the UI (measured: a grif document converts with no `xdfu`
+  object and no audit file).
+- **Licences signed off** (`docs/phase3/licences.md`): PyMuPDF 1.26.7 (AGPL) only in the isolated container; the LGPL
+  FFmpeg in the opencv wheel is fine in the container (name its exact source before any image is distributed);
+  LibreOffice and x2t are test references only, never called by the product. `cargo deny` passes for the root, the 4
+  domains and services. The new crates (win32job, ureq, toml, encoding_rs, sys-locale, png, aes-gcm, rustls/ring) are
+  permissive. Clean-room grep is clean.
+- **Matrix:** 80 `formats` rows cover the brief's docs, sheets and slides directions. `.ppt` is excluded by O2 (exit 3,
+  "re-save as .pptx"). The PDF operations are the gap (B1).
+- **Owner decisions:** B1 scope; O8, the default PDF to DOCX engine (WP10 recommends native); O9 corpus (every number
+  is still synthetic); O10 before XDFU is switched on anywhere.
+- **Housekeeping:** C: is at 6.7 GB free. A stray `C:\c\Users\...\scratchpad` (850 KB, synthetic outputs of the review's
+  API runs) could not be removed by the agent; delete it by hand.
