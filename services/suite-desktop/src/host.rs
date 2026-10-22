@@ -255,6 +255,11 @@ fn start(args: Args) -> Result<(), String> {
         .map(PathBuf::from)
         .or_else(|| env_dir("LOCALAPPDATA").map(|d| d.join(&brand.product).join("Host")))
         .ok_or("no data directory (LOCALAPPDATA is not set)")?;
+    // the shared settings.toml (PLAN 5.1); the debug data-dir hook keeps it inside that folder unless SUITE_SETTINGS_DIR says otherwise
+    let settings_dir = match (hook("SUITE_DATA_DIR"), hook("SUITE_SETTINGS_DIR")) {
+        (Some(_), None) => data.clone(),
+        _ => suite_core::settings::dir().unwrap_or_else(|| data.clone()),
+    };
     let bin_dir = args.bin_dir.unwrap_or(exe_dir);
     let editor_cwd = bin_dir.clone();
     let product = brand.product.clone();
@@ -269,7 +274,7 @@ fn start(args: Args) -> Result<(), String> {
     );
     let ctx = Arc::new(Ctx {
         brand,
-        store: Store::new(data.clone()),
+        store: Store::with_settings_dir(data.clone(), settings_dir),
         bin_dir,
         // the editor starts in the install folder, not in the folder of the document (review m7: a DLL it loads late must not be
         // found next to a downloaded file)

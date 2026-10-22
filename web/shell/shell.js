@@ -208,8 +208,9 @@
     S.mode = window.ipc ? 'desktop' : session('cv.token') || S.cfg.local ? 'names' : 'web';
     // the desktop keeps the language in the host's settings, not in the WebView's storage
     const saved = S.mode === 'desktop' ? ((await host({ type: 'settings_get' }, 'settings')) || { values: {} }).values.lang : store('sh.lang');
-    S.lang = saved || (nav.startsWith('uz') ? (nav.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : nav.startsWith('ru') ? 'ru' : 'en');
-    if (!S.i18n[S.lang]) S.lang = 'en';
+    // settings.toml `lang`: 'auto' (the default) follows the browser; 'uz-Latn-2026' has no shell catalog yet and shows uz-Latn
+    S.lang = saved && saved !== 'auto' ? saved : (nav.startsWith('uz') ? (nav.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : nav.startsWith('ru') ? 'ru' : 'en');
+    if (!S.i18n[S.lang]) S.lang = S.lang.startsWith('uz-Latn') ? 'uz-Latn' : 'en';
     document.documentElement.style.setProperty('--accent', matchMedia('(prefers-color-scheme: dark)').matches ? S.cfg.accent.dark : S.cfg.accent.light);
     // earlier versions kept document copies in the WebView's IndexedDB: drop that database, it is not used in these modes
     if (S.mode !== 'web') { try { indexedDB.deleteDatabase('shell'); } catch (_) { /* ignore */ } } else await openDb().catch(() => {});

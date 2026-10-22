@@ -12,7 +12,9 @@ use std::sync::Mutex;
 
 pub const MAX_MESSAGE: usize = 8 * 1024;
 const HISTORY_CAP: usize = 200;
-pub const LANGS: [&str; 4] = ["en", "ru", "uz-Latn", "uz-Cyrl"];
+/// The settings a page may read and change. The rest of `settings.toml` (`server.url` decides where the shell navigates,
+/// `spell_dictionaries` which folder is read) is not the page's to set. Each value is checked by `suite_core::settings::validate`.
+pub const PAGE_SETTINGS: [&str; 3] = ["lang", "toolbar", "latin_alphabet"];
 
 /// (brand.toml key, extensions the editor opens). The lists are those of PLAN section 7.2, which come from the engines.
 const APPS: [(&str, &[&str]); 4] = [
@@ -269,7 +271,7 @@ pub fn reply_script(v: &Value) -> String {
     format!("window.dispatchEvent(new CustomEvent('suite-host',{{detail:{v}}}))")
 }
 
-// ---- the store: <data dir>/history.json (opened files, newest last) and settings.json ----
+// ---- the store: <data dir>/history.json (opened files, newest last); the settings are the shared settings.toml ----
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Entry {
@@ -280,13 +282,20 @@ pub struct Entry {
 
 pub struct Store {
     dir: PathBuf,
+    /// the folder of the shared `settings.toml` (`suite_core::settings::dir()` in the real host)
+    settings_dir: PathBuf,
     lock: Mutex<()>,
 }
 
 impl Store {
+    /// The settings live in `dir` too (tests and the debug data-dir hook stay inside one folder).
     pub fn new(dir: PathBuf) -> Store {
+        Store::with_settings_dir(dir.clone(), dir)
+    }
+    pub fn with_settings_dir(dir: PathBuf, settings_dir: PathBuf) -> Store {
         Store {
             dir,
+            settings_dir,
             lock: Mutex::new(()),
         }
     }
@@ -335,20 +344,24 @@ impl Store {
             .take(n)
             .collect()
     }
+    /// The page-visible settings, from the shared `settings.toml` (defaults when it is missing or damaged).
     pub fn settings(&self) -> std::collections::BTreeMap<String, String> {
-        self.read("settings.json")
+        let all = suite_core::settings::load_in(&self.settings_dir).settings.to_map();
+        PAGE_SETTINGS
+            .iter()
+            .filter_map(|k| all.get(k).map(|v| (k.to_string(), v.clone())))
+            .collect()
     }
-    /// Only the keys in the allowlist, with their allowed values.
+    /// Only the keys in `PAGE_SETTINGS`, with a value `suite-core` accepts.
     pub fn set_setting(&self, key: &str, value: &str) -> Result<(), String> {
-        match key {
-            "lang" if LANGS.contains(&value) => {}
-            _ => return Err("unknown setting or value".into()),
+        if !PAGE_SETTINGS.contains(&key) {
+            return Err("unknown setting or value".into());
         }
         let _g = self.lock.lock();
-        let mut s = self.settings();
-        s.insert(key.into(), value.into());
-        self.write("settings.json", &s);
-        Ok(())
+        suite_core::settings::set_in(&self.settings_dir, key, value).map_err(|e| match e {
+            suite_core::settings::SetError::Io(_) => "the settings file cannot be written".into(),
+            _ => "unknown setting or value".into(),
+        })
     }
 }
 
@@ -830,14 +843,42 @@ bin = "tst-pdf"
                 value: v.into(),
             }))
         };
+        let get = || reply(c.handle(Request::SettingsGet {}))["values"].clone();
+        // nothing saved yet: the defaults of suite-core, and only the three keys a page may see
+        assert_eq!(
+            get(),
+            json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "1995"})
+        );
         assert_eq!(set("lang", "ru")["values"]["lang"], "ru");
-        for (k, v) in [("lang", "xx"), ("cmd", "calc"), ("lang", "")] {
-            assert_eq!(set(k, v)["type"], "rejected");
+        assert_eq!(set("lang", "uz-Latn-2026")["values"]["lang"], "uz-Latn-2026");
+        assert_eq!(set("toolbar", "full")["values"]["toolbar"], "full");
+        assert_eq!(set("latin_alphabet", "2026")["values"]["latin_alphabet"], "2026");
+        for (k, v) in [
+            ("lang", "xx"),
+            ("cmd", "calc"),
+            ("lang", ""),
+            ("lang", "uz"),
+            ("toolbar", "Full"),
+            ("toolbar", ""),
+            ("latin_alphabet", "3000"),
+            // real settings, but not the page's to change
+            ("server.url", "https://example.org"),
+            ("spell_dictionaries", "C:/x"),
+            ("recent.limit", "5"),
+            ("xdfu", "on"),
+        ] {
+            assert_eq!(set(k, v)["type"], "rejected", "{k}={v}");
         }
         assert_eq!(
-            reply(c.handle(Request::SettingsGet {}))["values"]["lang"],
-            "ru"
+            get(),
+            json!({"lang": "uz-Latn-2026", "toolbar": "full", "latin_alphabet": "2026"})
         );
+        // the shared file is what the apps read
+        let shared = suite_core::settings::load_in(&d.join("data")).settings;
+        assert_eq!(shared.toolbar, suite_core::settings::ToolbarMode::Full);
+        assert_eq!(shared.lang.tag(), "uz-Latn-2026");
+        let text = std::fs::read_to_string(d.join("data").join("settings.toml")).unwrap();
+        assert!(!text.contains("server") && !text.contains("xdfu"), "{text}");
     }
 
     #[test]

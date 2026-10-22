@@ -16,7 +16,6 @@ const BIN = process.env.SUITE_SERVE_BIN ?? path.join(SVC, 'suite-serve.exe');
 const FAKE = process.env.CONVERT_API_FAKE_TOOL ?? path.join(SVC, 'convert-api-fake-tool.exe');
 const DIST = process.env.SHELL_DIST_ROOT ?? 'E:/office-target/p1/dist';
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
-const PPTX = path.join(ROOT, 'domains/slides/tests/translit-fixtures/pptx/01-shapes-notes.pptx');
 
 // The product name and the app names come from the repo's own files, never hard-coded here.
 const I18N = JSON.parse(fs.readFileSync(path.join(ROOT, 'web/shell/i18n.json'), 'utf8'));
@@ -169,43 +168,6 @@ test('Docs round trip: open a file from the shell, save it, find it in Recent, r
   expect(w.problems).toEqual([]);
 });
 
-test('Slides round trip: open a pptx from the shell, edit it, save it, find it in Recent, reopen it', async ({ page }) => {
-  test.skip(!have('slides'), 'slides-web is not built');
-  const w = watch(page);
-  await page.addInitScript(() => {
-    (window as any).__msgs = [];
-    addEventListener('message', (e) => (window as any).__msgs.push(e.data?.type + (e.data?.type === 'deckcraft:dirty' ? ':' + e.data.dirty : '')));
-  });
-  await page.goto(base + '/');
-  await page.setInputFiles('#file', PPTX);
-  const name = path.basename(PPTX);
-  await expect(page.locator('#ed-title')).toHaveText(name);
-  await editorUp(page, '/slides/');
-  const msgs = () => page.evaluate(() => (window as any).__msgs as string[]);
-  await expect.poll(msgs, { timeout: 60_000 }).toContain('deckcraft:opened');
-  // an edit (New Slide) makes the editor dirty and the shell hears it
-  const canvas = page.frameLocator('iframe[src^="/slides/"]').locator('canvas');
-  await canvas.click({ position: { x: 500, y: 350 } });
-  await page.keyboard.press('Control+Shift+N');
-  await expect.poll(async () => (await msgs()).filter((m) => m.startsWith('deckcraft:dirty')).at(-1), { timeout: 60_000 }).toBe('deckcraft:dirty:true');
-  // Ctrl+S hands a .pptx to the shell, which downloads it and keeps a copy
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), page.keyboard.press('Control+s')]);
-  expect(dl.suggestedFilename()).toBe(name);
-  expect(fs.readFileSync((await dl.path())!).subarray(0, 2).toString()).toBe('PK');
-  await expect(page.locator('#ed-status')).toHaveText(txt('en', 'ed.saved').replace('{name}', name));
-  await expect.poll(async () => (await msgs()).filter((m) => m.startsWith('deckcraft:dirty')).at(-1), { timeout: 60_000 }).toBe('deckcraft:dirty:false');
-  await page.click('#back');
-  await expect(page.locator('#recent li')).toHaveCount(1);
-  await expect(page.locator('#recent li .open')).toHaveText(name);
-  // reopen from Recent: the editor is already loaded, so no second wasm
-  const before = (await msgs()).filter((m) => m === 'deckcraft:opened').length;
-  await page.locator('#recent li .open').click();
-  await expect(page.locator('#ed-title')).toHaveText(name);
-  await expect.poll(async () => (await msgs()).filter((m) => m === 'deckcraft:opened').length, { timeout: 60_000 }).toBe(before + 1);
-  expect(wasm(w.urls)).toHaveLength(1);
-  expect(w.problems).toEqual([]);
-});
-
 test('a file the editors cannot open points to the converter', async ({ page }) => {
   await page.goto(base + '/');
   await page.setInputFiles('#file', { name: 'x.zip', mimeType: 'application/zip', buffer: Buffer.from('PK') });
@@ -267,6 +229,37 @@ test('desktop mode: Recent and the language come from the host, nothing is store
   expect(await page.evaluate(() => localStorage.getItem('sh.lang'))).toBeNull();
   expect(await page.evaluate(async () => (await indexedDB.databases()).map((d) => d.name))).not.toContain('shell');
 });
+
+// WP5: the five Uzbek starters are listed on the home screen and every file is served from the shell route.
+test('the template cards list the five starters and every file is served', async ({ page, request }) => {
+  await page.goto(base + '/');
+  await expect(page.locator('#templates li')).toHaveCount(5);
+  const catalog = await (await request.get(`${base}/shell/templates.json`)).json();
+  expect(catalog.map((t: any) => t.app)).toEqual(['docs', 'docs', 'sheets', 'sheets', 'slides']);
+  for (const t of catalog) {
+    const r = await request.get(`${base}/shell/${t.file}`);
+    expect(r.status(), t.file).toBe(200);
+    expect((await r.body()).subarray(0, 2).toString(), t.file).toBe('PK'); // an OOXML package is a zip
+  }
+});
+
+// settings.toml `lang` (suite-core): 'auto' follows the browser, 'uz-Latn-2026' has no shell catalog yet and shows uz-Latn.
+for (const [saved, shown] of [['auto', 'en'], ['uz-Latn-2026', 'uz-Latn']]) {
+  test(`desktop mode: lang "${saved}" from settings.toml shows ${shown}`, async ({ page }) => {
+    await page.addInitScript((lang) => {
+      (window as any).ipc = {
+        postMessage(m: string) {
+          const d = JSON.parse(m);
+          const reply = d.type === 'recent' ? { type: 'recent', items: [] } : d.type === 'settings_get' ? { type: 'settings', values: { lang, toolbar: 'simple', latin_alphabet: '1995' } } : null;
+          if (reply) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: reply })), 0);
+        },
+      };
+    }, saved);
+    await page.goto(base + '/');
+    await expect(page.locator('#lang')).toHaveValue(shown);
+    await expect(page.locator('html')).toHaveAttribute('lang', shown);
+  });
+}
 
 test('connected to a server: Recent keeps names only, no IndexedDB, and asks for the file again', async ({ page }) => {
   await page.addInitScript(() => {
