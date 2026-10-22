@@ -346,7 +346,7 @@ fn shell_config_comes_from_the_brand_file() {
     assert!(bad.shell_config().is_err());
 }
 
-/// The shell catalog: en is the source; ru and both Uzbek scripts have the same keys and placeholders; Uzbek is a marked agent draft.
+/// The shell catalog: en is the source; ru and both Uzbek scripts have the same keys and placeholders; Uzbek is marked as an agent draft or an agent review, never an owner review.
 #[test]
 fn shell_catalog_is_complete() {
     let j: serde_json::Value =
@@ -380,7 +380,7 @@ fn shell_catalog_is_complete() {
     for lang in ["uz-Latn", "uz-Cyrl"] {
         let s = j["_status"][lang].as_str().unwrap();
         assert!(
-            s.starts_with("draft:agent-") && !s.contains("owner"),
+            (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-")) && !s.contains("owner"),
             "{lang}: {s}"
         );
     }
