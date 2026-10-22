@@ -346,7 +346,9 @@ impl Store {
     }
     /// The page-visible settings, from the shared `settings.toml` (defaults when it is missing or damaged).
     pub fn settings(&self) -> std::collections::BTreeMap<String, String> {
-        let all = suite_core::settings::load_in(&self.settings_dir).settings.to_map();
+        let all = suite_core::settings::load_in(&self.settings_dir)
+            .settings
+            .to_map();
         PAGE_SETTINGS
             .iter()
             .filter_map(|k| all.get(k).map(|v| (k.to_string(), v.clone())))
@@ -850,9 +852,15 @@ bin = "tst-pdf"
             json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "1995"})
         );
         assert_eq!(set("lang", "ru")["values"]["lang"], "ru");
-        assert_eq!(set("lang", "uz-Latn-2026")["values"]["lang"], "uz-Latn-2026");
+        assert_eq!(
+            set("lang", "uz-Latn-2026")["values"]["lang"],
+            "uz-Latn-2026"
+        );
         assert_eq!(set("toolbar", "full")["values"]["toolbar"], "full");
-        assert_eq!(set("latin_alphabet", "2026")["values"]["latin_alphabet"], "2026");
+        assert_eq!(
+            set("latin_alphabet", "2026")["values"]["latin_alphabet"],
+            "2026"
+        );
         for (k, v) in [
             ("lang", "xx"),
             ("cmd", "calc"),
