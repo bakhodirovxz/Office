@@ -1,0 +1,156 @@
+# Shared services (`crates/suite-core`, Phase 4 WP5)
+
+One small crate that the four apps, the desktop host and the shell share. Permissive dependencies only
+(`toml_edit`, `serde_json`, `ron`; `zip` and `roxmltree` in tests), `#![forbid(unsafe_code)]`, no GUI, no network. It
+lives in the root workspace (`crates/suite-core`); the domain workspaces and `services/` reach it by path
+(`../../crates/suite-core`). Every name (product, data folders, font files) is read from `brand/brand.toml` by
+`build.rs`; none is written in the code.
+
+## Using it from an app lane
+
+```toml
+# in the lane's own crate (a path dependency; the path is relative to that crate)
+suite-core = { path = "<repo>/crates/suite-core" }
+```
+
+```rust
+use suite_core::settings::{self, ToolbarMode};
+
+let mode: ToolbarMode = settings::toolbar_mode();          // Simple unless settings.toml says toolbar = "full"
+settings::set_toolbar_mode(ToolbarMode::Full)?;            // io::Result<()>; atomic; other apps see it at their next start
+let all: settings::Settings = settings::load();            // every key, with defaults; never fails
+let loaded = settings::load_in(&dir);                      // explicit folder, with warnings (tests, the host)
+```
+
+Rules for lanes:
+
+- **Read once at start-up** and keep the value in the app (the plan's `office_overlay::toolbar_simple()` flag). `load()`
+  reads the file every call. Do not call it per frame.
+- **Never fails.** A missing file, an unknown key, a bad value or a corrupt file all give defaults (see below). There is
+  nothing to unwrap. `set_toolbar_mode` returns an error only when the folder cannot be written; show nothing for it, log it.
+- **Web (`wasm32`).** There is no file. `load()` returns the defaults (`Simple`), so the web is always simple. A lane may
+  also guard with `cfg(target_arch = "wasm32")` and skip the call.
+- **PDF ignores `toolbar`.**
+- Tests of an app must not touch the real user file: debug builds honour `SUITE_SETTINGS_DIR=<folder>` (a release build
+  ignores it), or call `settings::load_in` / `settings::set_in` on a temp folder.
+
+## 1. Settings (`suite_core::settings`)
+
+File: `<settings dir>/settings.toml`, where `<settings dir>` is `%APPDATA%\<product>` on Windows (`~/Library/Application
+Support/<product>` on macOS, `$XDG_CONFIG_HOME/<product>` or `~/.config/<product>` elsewhere), and `<product>` is
+`brand.toml` `[product] name`. `settings::dir()` returns it.
+
+| key | values | default | read by |
+|---|---|---|---|
+| `lang` | `auto`, `en`, `ru`, `uz-Latn`, `uz-Latn-2026`, `uz-Cyrl` | `auto` | shell, apps (when the app's own language is "auto") |
+| `latin_alphabet` | `1995`, `2026`, `auto` | `1995` (follows `uz-translit` owner decision O13) | transliteration surfaces |
+| `toolbar` | `simple`, `full` | `simple` | Docs, Sheets, Slides |
+| `spell_dictionaries` | a folder path, up to 1024 bytes, no control characters | empty (the install folder's) | Docs, Slides (WP6) |
+| `xdfu` | `off`, `on` | `off` | editors |
+| `recent.limit` | 0 to 50 | 20 | shell, `recent` |
+| `history.versions` / `.days` | 1 to 1000 / 1 to 3650 | 50 / 90 | history (WP10) |
+| `history.max_mb` | 64 to 102400 | 2048 | history |
+| `history.big_file_mb` / `.big_file_versions` | 1 to 4096 / 1 to 50 | 50 / 5 | history |
+| `server.url` | empty, or `http(s)://...` without spaces, up to 2048 bytes | empty (local mode) | shell |
+
+```toml
+lang = "auto"
+toolbar = "simple"
+[recent]
+limit = 20
+```
+
+Behaviour (each line has a test in `settings.rs`):
+
+- **Typed.** A key has a type and a range. A wrong TOML type (`lang = 5`, `recent.limit = "5"`) or an out-of-range value is a
+  warning in `Loaded::warnings` and that key falls back to its default. The other keys still apply, and the file is not moved.
+- **Corrupt file.** A file that is not TOML, is not UTF-8, is over 1 MiB or is not a regular file is renamed to
+  `settings.toml.corrupt` (the backup; a later one overwrites it) and the defaults apply. The next `set` starts a clean file.
+- **Atomic.** A write goes to `settings.toml.<pid>.tmp` in the same folder and is renamed over the old file. A crash leaves
+  the old file. `set_in` changes only the key it is given: other keys, unknown keys and comments are kept (`toml_edit`).
+- **No lock.** Two processes writing different keys at the same instant can lose one change (last rename wins).
+  Settings change on a click; a reader never sees a half-written file.
+- **Unknown keys** are ignored on read and kept on write.
+
+API summary (all in `suite_core::settings`):
+
+| item | |
+|---|---|
+| `load() -> Settings` | the user's settings, defaults on any problem |
+| `toolbar_mode() -> ToolbarMode` | `load().toolbar` |
+| `set_toolbar_mode(ToolbarMode) -> io::Result<()>` | writes `toolbar` |
+| `dir() -> Option<PathBuf>` | the settings folder |
+| `load_in(&Path) -> Loaded { settings, warnings }` | explicit folder |
+| `set_in(&Path, key, value) -> Result<(), SetError>` | one key by its dotted name, value in text form, validated |
+| `validate(key, value) -> Result<(), SetError>` | the check alone |
+| `Settings::to_map()` / `key_names()` | the flat text form (what the host sends the shell) |
+
+## 2. Language (`suite_core::lang`)
+
+`Lang` is `En | Ru | UzLatn | UzLatn2026 | UzCyrl` with `tag()` (`en`, `ru`, `uz-Latn`, `uz-Latn-2026`, `uz-Cyrl`).
+`LangChoice` is the `lang` setting: `Auto` or `Fixed(Lang)`. `choice.resolve(system_locale)` gives the language to show:
+a fixed choice wins; `Auto` follows the system locale name the caller passes (the app already detects it; this crate does
+no FFI), mapping `uz`, `uz-UZ`, `uz-Latn-UZ` to `uz-Latn`, `uz-Cyrl-UZ` to `uz-Cyrl`, `ru-RU` to `ru`, `en-*` to `en`,
+and anything else (or nothing) to `en`. `Lang::from_locale` is the mapping alone.
+
+The shell shows `uz-Latn-2026` with the `uz-Latn` catalog until WP16 adds a 2026 catalog to it (the converter already has one).
+
+## 3. Recent files (`suite_core::recent`)
+
+Reads the four apps' own lists, read-only, tolerant, with **no upstream change** (PLAN 5.2). `recent::recent()` returns
+`(Vec<Recent { path, app, ts }>, warnings)`, newest first, no duplicates (case-insensitive on Windows), only files that still
+exist, at most `recent.limit`. `sources_in(base, profile)` and `merge(sources, limit, exists)` are the testable pieces.
+
+| app | file (first folder that has it: `<base>/<brand data_dir>`, then the upstream folder) | shape |
+|---|---|---|
+| Docs | `ui.json` in `WordCraft` (or `WORDCRAFT_PROFILE_DIR`) | `{"recent": ["<path>", ...]}` |
+| Sheets | `ui.json` in `GridCraft` | same |
+| Slides | `ui.json` in `DeckCraft` | same |
+| PDF | `data/app.ron` (then `app.ron`) in `PdfCraft` | RON map; key `app` is JSON `{"recent": [{"name","path","pages","size"}]}` |
+
+(The plan named `prefs.json` for gridcraft and deckcraft; the real list is in `ui.json`, checked at the new BASEs.)
+
+The lists carry no time per file, so entries get synthetic times: the list file's modified time minus the position. An app's
+own order is never reversed; across apps, the app whose settings were saved last comes first.
+
+Contract tests `recent_reads_{wordcraft,gridcraft,deckcraft,pdfcraft}` read the vendored upstream sources
+(`upstream/<repo>/...`) and fail if the `recent` field, its serde naming, the file name or the folder name changes, then read a
+fixture of the real shape. A sync that changes a list therefore fails `ci.sh test-ours` instead of silently emptying Recent.
+
+## 4. Fonts (`suite_core::fonts`)
+
+The shared Noto Sans fallback (covers U+02BB, U+02BC and Cyrillic): `fonts::SANS` and `fonts::MONO` are the file names from
+`brand.toml` `[fonts]`, relative to `assets/fonts/`. `fallback_sans()` and `fallback_mono()` find them: `SUITE_FONTS_DIR`,
+then `fonts/` or `assets/fonts/` next to the exe (where the installer puts the one shared copy), then `assets/fonts/` up the
+tree (a development build). The apps keep using their own fallback (patches `*/0102`); this is the lookup the host, the shell
+build and the MSI use so that there is one copy.
+
+## 5. Templates (`suite_core::templates`, `web/shell/templates.json`)
+
+Five clean-room Uzbek starters, made by `scripts/gen-templates.py` (hand-written OOXML, deterministic; `--check` fails on
+drift). They are original text; nothing comes from `corpus/`, and no real name, number, address or organisation appears. Every
+blank is a `[bracket]`. The names and the text are Uzbek UI strings: status `draft:agent-sonnet:2026-10-23` in the catalogue
+until the review pass marks them `reviewed:agent-<model>:<date>`.
+
+| file | app | content |
+|---|---|---|
+| `templates/buyruq.docx` | Docs | Order: organisation, number and date, basis, numbered orders, control clause, signature, acknowledgement lines |
+| `templates/xizmat-xati.docx` | Docs | Official letter: addressee block, outgoing number and date, subject, three paragraphs, enclosure, signature, contact |
+| `templates/tabel.xlsx` | Sheets | Monthly timesheet: 31 day columns, codes I K T S D, `COUNTIF` totals, daily hours, hours total, frozen panes, landscape |
+| `templates/xodimlar-royxati.xlsx` | Sheets | Staff list: 30 numbered rows, date column, filter, `COUNTA` total |
+| `templates/taqdimot.pptx` | Slides | Four 16:9 slides: title, plan, content with sub-points, thanks and questions |
+
+The catalogue entry is `{app, file, status, name:{en,ru,uz-Latn,uz-Cyrl}}`; the shell fetches `shell/<file>`.
+`templates::parse` checks it (known app, `templates/<plain name>.<ext of the app>`, all four names, a status) and the tests open
+every package, parse every XML part and refuse e-mail addresses and long digit runs.
+
+## 6. Desktop host and shell
+
+`services/suite-desktop` keeps its allowlist; `settings_get` and `settings_set` now read and write the same
+`settings.toml` through `suite-core`. The page may set only `lang`, `toolbar` and `latin_alphabet`, each with the value
+check above (anything else, such as `server.url` or `spell_dictionaries`, is refused: they decide where the shell navigates
+and which files are read, and no page needs them yet). `settings_get` returns those three as strings. The shell reads `lang`
+from it (`auto` means: follow the browser language) and still writes it on a change.
+
+Not done here: the apps' own start-up reading of `lang`, the dictionaries folder and `toolbar` in the four
+`office_overlay.rs` files (the per-app lanes and WP6 do it with the API above); the installer's single font copy.
