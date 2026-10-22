@@ -91,6 +91,15 @@ changed. The run after the fixes (`run-wp10fix.log`, 90 directions, 117 cases) h
   then, warn on every csv/tsv input that is not `,`-delimited. With the variable set, the `pdf_en_us` and `csv_one_sheet_en_us` warnings can
   be revisited too.
 
+## 1c. Found in the Phase 3 gate round, carried to Phase 4
+
+### D7. Upstream pdfcraft's Russian "Move down" is garbled
+`upstream/pdfcraft/crates/ui-egui/src/i18n/ru.tsv:1820` reads `Переместить вdownarrow`, where it should read `Переместить вниз`.
+Our `i18n/pdfcraft.tsv:214` mirrors it with status `upstream`.
+- It needs a one-line carried pdfcraft patch, plus a REGISTER row.
+- It is scheduled with the Phase 4 upstream sync, which has to hand-merge anyway (gate-review M2), because upstream may fix it first.
+- Found by the opus review on 2026-10-22.
+
 ## 2. Engine limits that `convert` warns about (kept here for the record; they are not silent)
 
 Each is a row of `data/losses.toml` (code in brackets) or an engine message passed through as `upstream`. They are real defects of the engines, and
