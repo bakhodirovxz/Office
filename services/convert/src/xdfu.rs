@@ -3,10 +3,12 @@
 //!
 //! With `Watermark` or `Refuse` the hook sees every job twice (`hook.rs`):
 //!
-//! 0. A kind that cannot be scanned (`doc`, `xls`, `xlsb`, `odt`, `ods`, `rtf`; `scannable`) is checked on the tool's OUTPUT instead: `before`
+//! 0. A kind that cannot be read directly (no detected kind: the PDF operations) is checked on the tool's OUTPUT instead: `before`
 //!    only notes that the check is deferred, and `after` looks for the grif in the outputs (every output kind we watermark except `png` is
 //!    scannable) before they are watermarked. If neither the input nor the output can be scanned, the job is refused (exit 3,
-//!    `xdfu_cannot_check`): not knowing is not the same as "not marked".
+//!    `xdfu_cannot_check`): not knowing is not the same as "not marked". An image-only PDF (no text on page 1) is the same case:
+//!    refused (`xdfu_no_text_layer`). `odt` and `ods` are read natively (content, styles with the headers, meta); `doc` and `rtf` are
+//!    probed through a conversion to docx, `xls` and `xlsb` through one to xlsx, in `mid/`, so that their headers are looked at too.
 //! 1. `before`: look for the grif ("XDFU", "ХДФУ", "ДСП", "Для служебного пользования", and the Uzbek spellings of the phrase) in the
 //!    places the Rules name: the upper part of page 1, a header, the document properties. Nothing found: the job is an ordinary job
 //!    and the hook forgets it. Found: `Refuse` ends the job with exit 9; `Watermark` checks that the target can carry a watermark
@@ -19,15 +21,19 @@
 //! - `pdf`: a footer line and a diagonal text on every page, with `pdf-cli` (`doc_header_footer`, `doc_watermark`);
 //! - `png`: a strip with the line, drawn by `pdf-cli` (a one-line page rendered at the png's dpi) and appended under the page, plus
 //!   the line as a `tEXt` chunk named `XDFU`. PNG pixels are never covered;
-//! - `docx`: a header, a footer, a diagonal watermark and a custom property `XDFU-copy`, with `docs-cli`;
-//! - `xlsx`: a header and a footer on every sheet (visible in the page layout and on paper), with `sheets-cli`;
-//! - `pptx`: a footer on every slide, with `slides-cli`;
+//! - `docx`: a diagonal watermark and the custom properties `XDFU-copy` and `XDFU-stamp`, with `docs-cli`, then the stamp line as a
+//!   paragraph at the top of the body and at the top of every header and footer part that exists. Nothing is replaced: the document's
+//!   own letterhead, page numbers and grif stay (gate review M3);
+//! - `xlsx`: the stamp line is merged into the centre of every sheet's header and footer (the existing text stays, first-page and
+//!   even-page headers included); a header too long to take it is skipped, and a sheet where none fits fails the job;
+//! - `pptx`: a text box with the stamp line at the bottom of every slide; the slides' own footers stay;
 //! - `txt`, `md`, `csv`, `html`: a first line (a quoted one-field row in csv; a paragraph after `<body>` in html);
 //! - `odt` and `rtf` cannot carry one, so the job is refused before any tool runs.
 //!
-//! `shortcut: for an unscanned input kind the converted output is scanned, not the input, so a grif that the conversion itself drops or
-//! changes (a header the writer does not keep) is missed; the first 8 paragraphs, rows or lines of the output are what is looked at.`
-//! `shortcut: the grif is looked for by text in the top part of the first page, not by layout: the first 8 paragraphs of a docx,
+//! `shortcut: for doc, rtf, xls and xlsb the probe conversion is what the importer keeps; a header that the importer drops is missed
+//! (and so is lost from the result, which defects.md records).`
+//! `shortcut: the grif is looked for by text in the top part of the first page, not by layout: the first 25 paragraphs of a docx
+//! (and every paragraph of a table that has one of them: a two-column letterhead),
 //! the first 5 rows of the first sheet, the top quarter of the first slide, the first 8 lines of page 1. A word that is also an
 //! ordinary word (ДСП is chipboard in Russian) in those places is a false positive; that errs on the safe side.`
 use crate::audit::{self, AuditLog};
@@ -398,18 +404,65 @@ fn properties(p: &mut Package, found: &mut Vec<Evidence>) {
     }
 }
 
-const TOP_PARAGRAPHS: usize = 8;
+const TOP_PARAGRAPHS: usize = 25;
 const TOP_ROWS: usize = 5;
+
+/// The paragraphs at the top of a docx body: the first `TOP_PARAGRAPHS` in reading order, plus every paragraph of a table that has one
+/// of them. A two-column letterhead is a table whose right cell comes after all of the left one (gate review M4).
+fn top_paragraphs(xml: &str) -> Vec<String> {
+    let tg = tags(xml);
+    let mut paras: Vec<(String, Option<usize>)> = vec![];
+    let (mut depth, mut tables, mut cur) = (0usize, 0usize, None);
+    for (k, (name, closing, _, end)) in tg.iter().enumerate() {
+        match (*name, *closing) {
+            ("w:tbl", false) => {
+                if depth == 0 {
+                    tables += 1;
+                    cur = Some(tables);
+                }
+                depth += 1;
+            }
+            ("w:tbl", true) => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    cur = None;
+                }
+            }
+            ("w:p", false) => paras.push((String::new(), cur)),
+            ("w:t", false) => {
+                let next = tg.get(k + 1).map_or(xml.len(), |n| n.2);
+                if let Some(p) = paras.last_mut() {
+                    p.0.push_str(&decode(&xml[*end..next]));
+                }
+            }
+            ("w:tab" | "w:br" | "w:cr", false) => {
+                if let Some(p) = paras.last_mut() {
+                    p.0.push(' ');
+                }
+            }
+            _ => {}
+        }
+    }
+    paras.retain(|p| !p.0.trim().is_empty());
+    let top_tables: std::collections::HashSet<usize> = paras
+        .iter()
+        .take(TOP_PARAGRAPHS)
+        .filter_map(|p| p.1)
+        .collect();
+    paras
+        .into_iter()
+        .enumerate()
+        .filter(|(i, p)| *i < TOP_PARAGRAPHS || p.1.is_some_and(|t| top_tables.contains(&t)))
+        .map(|(_, p)| p.0)
+        .collect()
+}
 
 fn detect_docx(path: &Path) -> Result<Vec<Evidence>, String> {
     let mut p = Package::open(path)?;
     let mut found = vec![];
     if let Some(doc) = p.text("word/document.xml") {
-        for t in paragraphs(&doc, "w:p", "w:t", &["w:tab", "w:br", "w:cr"])
-            .iter()
-            .take(TOP_PARAGRAPHS)
-        {
-            hit(&mut found, t, "first-page-top", "word/document.xml");
+        for t in top_paragraphs(&doc) {
+            hit(&mut found, &t, "first-page-top", "word/document.xml");
         }
     }
     for n in p
@@ -461,9 +514,16 @@ fn detect_xlsx(path: &Path) -> Result<Vec<Evidence>, String> {
         }
     }
     // the top rows of the first sheet
+    // one entry per <si>, empty ones included: a cell's index counts them (gate review m13)
     let shared: Vec<String> = p
         .text("xl/sharedStrings.xml")
-        .map(|x| paragraphs(&x, "si", "t", &[]))
+        .map(|x| {
+            x.split("<si")
+                .skip(1)
+                .filter(|seg| seg.starts_with(['>', ' ', '/']))
+                .map(|seg| paragraphs(seg, "\0", "t", &[]).concat())
+                .collect()
+        })
         .unwrap_or_default();
     let sheet = (|| {
         let wb = p.text("xl/workbook.xml")?;
@@ -573,6 +633,48 @@ fn detect_pptx(path: &Path) -> Result<Vec<Evidence>, String> {
     Ok(found)
 }
 
+/// OpenDocument text and spreadsheets: the top paragraphs of `content.xml`, every header and footer (the only text in `styles.xml`), and
+/// `meta.xml` (title, subject, keywords).
+fn detect_odf(path: &Path) -> Result<Vec<Evidence>, String> {
+    let mut p = Package::open(path)?;
+    let mut found = vec![];
+    if let Some(x) = p.text("content.xml") {
+        let tg = tags(&x);
+        let (mut paras, mut open) = (Vec::<String>::new(), false);
+        for (k, (name, closing, _, end)) in tg.iter().enumerate() {
+            match (*name, *closing) {
+                ("text:p" | "text:h", false) => {
+                    paras.push(String::new());
+                    open = true;
+                }
+                ("text:p" | "text:h", true) => open = false,
+                ("text:s" | "text:tab" | "text:line-break", false) if open => {
+                    paras.last_mut().expect("open").push(' ')
+                }
+                _ => {}
+            }
+            if open && let Some(cur) = paras.last_mut() {
+                let next = tg.get(k + 1).map_or(x.len(), |n| n.2);
+                cur.push_str(&decode(&x[*end..next]));
+            }
+        }
+        for t in paras
+            .iter()
+            .filter(|t| !t.trim().is_empty())
+            .take(TOP_PARAGRAPHS)
+        {
+            hit(&mut found, t, "first-page-top", "content.xml");
+        }
+    }
+    if let Some(x) = p.text("styles.xml") {
+        hit(&mut found, &plain(&x), "header", "styles.xml");
+    }
+    if let Some(x) = p.text("meta.xml") {
+        hit(&mut found, &plain(&x), "properties", "meta.xml");
+    }
+    Ok(found)
+}
+
 fn lines_hit(text: &str, place: &'static str, part: &str, found: &mut Vec<Evidence>) {
     for l in text
         .lines()
@@ -583,19 +685,22 @@ fn lines_hit(text: &str, place: &'static str, part: &str, found: &mut Vec<Eviden
     }
 }
 
-fn detect_pdf(rel: &str, size_mb: f64, tools: &dyn ToolRunner) -> Result<Vec<Evidence>, Failure> {
+/// `(evidence, checkable)`: a PDF whose page 1 has no text (a scan, an image) cannot be read for a grif, which is not the same as
+/// "not marked" (gate review M4); properties that name the grif still count as evidence.
+fn detect_pdf(
+    rel: &str,
+    size_mb: f64,
+    tools: &dyn ToolRunner,
+) -> Result<(Vec<Evidence>, bool), Failure> {
     let mut found = vec![];
     let page1 = tools.run(
         ToolId::Pdf,
         &["text".into(), rel.into(), "--page".into(), "1".into()],
         size_mb,
     )?;
-    lines_hit(
-        &String::from_utf8_lossy(&page1),
-        "first-page-top",
-        "page 1",
-        &mut found,
-    );
+    let page1 = String::from_utf8_lossy(&page1);
+    let checkable = !page1.trim().is_empty();
+    lines_hit(&page1, "first-page-top", "page 1", &mut found);
     let info = tools.run(ToolId::Pdf, &["info".into(), rel.into()], size_mb)?;
     if let Ok(v) = serde_json::from_slice::<Value>(&info) {
         for k in ["title", "author", "subject", "keywords"] {
@@ -604,15 +709,22 @@ fn detect_pdf(rel: &str, size_mb: f64, tools: &dyn ToolRunner) -> Result<Vec<Evi
             }
         }
     }
-    Ok(found)
+    Ok((found, checkable))
 }
 
-/// Kinds `detect` reads. A job whose input kind is not one of these is checked on its output (see the module doc).
+/// Kinds `detect` reads (doc, rtf, xls and xlsb through a probe conversion). A job whose input kind is not one of these is checked on
+/// its output (see the module doc).
 pub fn scannable(kind: Option<Kind>) -> bool {
     matches!(
         kind,
         Some(
             Kind::Docx
+                | Kind::Doc
+                | Kind::Rtf
+                | Kind::Odt
+                | Kind::Ods
+                | Kind::Xls
+                | Kind::Xlsb
                 | Kind::Xlsx
                 | Kind::Pptx
                 | Kind::Pdf
@@ -641,6 +753,17 @@ pub fn detect(
     kind: Option<Kind>,
     tools: &dyn ToolRunner,
 ) -> Result<Vec<Evidence>, Failure> {
+    detect_checked(path, rel, kind, 0, tools).map(|(found, _)| found)
+}
+
+/// Like `detect`, with whether the file could really be read for a grif (`false`: an image-only PDF). `n` numbers the probe file.
+fn detect_checked(
+    path: &Path,
+    rel: &str,
+    kind: Option<Kind>,
+    n: usize,
+    tools: &dyn ToolRunner,
+) -> Result<(Vec<Evidence>, bool), Failure> {
     let unreadable = |e: String| Failure {
         exit: Exit::ToolError,
         msg: format!("the XDFU check could not read the input: {e}"),
@@ -648,10 +771,30 @@ pub fn detect(
     let mb = fs::metadata(path)
         .map(|m| m.len() as f64 / 1_048_576.0)
         .unwrap_or(0.0);
+    // the legacy kinds: what the importer makes of them, as docx or xlsx, in `mid/` (not collected)
+    let probe = |tool: ToolId, ext: &str| -> Result<String, Failure> {
+        let out = format!("mid/xdfu-probe-{n}.{ext}");
+        tools.run(tool, &["convert".into(), rel.into(), out.clone()], mb)?;
+        Ok(out)
+    };
+    let checked = |r: Result<Vec<Evidence>, String>| r.map(|f| (f, true)).map_err(unreadable);
     match kind {
-        Some(Kind::Docx) => detect_docx(path).map_err(unreadable),
-        Some(Kind::Xlsx) => detect_xlsx(path).map_err(unreadable),
-        Some(Kind::Pptx) => detect_pptx(path).map_err(unreadable),
+        Some(Kind::Docx) => checked(detect_docx(path)),
+        Some(Kind::Xlsx) => checked(detect_xlsx(path)),
+        Some(Kind::Pptx) => checked(detect_pptx(path)),
+        Some(Kind::Odt | Kind::Ods) => checked(detect_odf(path)),
+        Some(Kind::Doc | Kind::Rtf) => {
+            let out = probe(ToolId::Docs, "docx")?;
+            let r = checked(detect_docx(&tools_path(path, &out)));
+            let _ = fs::remove_file(tools_path(path, &out));
+            r
+        }
+        Some(Kind::Xls | Kind::Xlsb) => {
+            let out = probe(ToolId::Sheets, "xlsx")?;
+            let r = checked(detect_xlsx(&tools_path(path, &out)));
+            let _ = fs::remove_file(tools_path(path, &out));
+            r
+        }
         Some(Kind::Pdf) => detect_pdf(rel, mb, tools),
         Some(Kind::Html) => {
             let mut b = Vec::new();
@@ -666,7 +809,7 @@ pub fn detect(
             {
                 hit(&mut found, l, "first-lines", "html");
             }
-            Ok(found)
+            Ok((found, true))
         }
         Some(Kind::Txt | Kind::Md | Kind::Csv | Kind::Tsv) => {
             let mut b = Vec::new();
@@ -680,10 +823,18 @@ pub fn detect(
                 "text",
                 &mut found,
             );
-            Ok(found)
+            Ok((found, true))
         }
-        _ => Ok(vec![]),
+        _ => Ok((vec![], true)),
     }
+}
+
+/// The file `rel` names inside the job directory that holds `input` (`<job>/in/x` or `<job>/out/x`).
+fn tools_path(input: &Path, rel: &str) -> PathBuf {
+    input
+        .parent()
+        .and_then(Path::parent)
+        .map_or_else(|| PathBuf::from(rel), |job| job.join(rel))
 }
 
 // ---- the watermark -------------------------------------------------------------------------------------------------------
@@ -829,6 +980,321 @@ fn cmd(id: &str, params: Value) -> String {
     format!("{id}={params}")
 }
 
+/// Rewrite the zip `src` into `dst`: the parts `wants` names go through `edit` (`Some(new text)` replaces the part), every other part is
+/// copied as it is. Returns how many parts were replaced.
+fn rewrite_zip(
+    src: &Path,
+    dst: &Path,
+    wants: impl Fn(&str) -> bool,
+    mut edit: impl FnMut(&str, &str) -> Result<Option<String>, Failure>,
+) -> Result<usize, Failure> {
+    use std::io::Write;
+    let mut zin =
+        zip::ZipArchive::new(fs::File::open(src).map_err(|e| io_err("cannot read the output", e))?)
+            .map_err(|e| io_err("the output package cannot be read", e))?;
+    let mut zout = zip::ZipWriter::new(
+        fs::File::create(dst).map_err(|e| io_err("cannot write the output", e))?,
+    );
+    let mut changed = 0;
+    for i in 0..zin.len() {
+        let name = zin
+            .by_index_raw(i)
+            .map_err(|e| io_err("the output package cannot be read", e))?
+            .name()
+            .map(|n| n.into_owned())
+            .map_err(|e| io_err("the output package has a bad part name", e))?;
+        let new = if wants(&name) {
+            let mut text = String::new();
+            zin.by_index(i)
+                .map_err(|e| io_err("the output package cannot be read", e))?
+                .take(PART_LIMIT)
+                .read_to_string(&mut text)
+                .map_err(|e| io_err("a part of the output is not text", e))?;
+            edit(&name, &text)?
+        } else {
+            None
+        };
+        match new {
+            Some(text) => {
+                zout.start_file(&name, zip::write::SimpleFileOptions::default())
+                    .and_then(|_| zout.write_all(text.as_bytes()).map_err(Into::into))
+                    .map_err(|e| io_err("cannot write the output", e))?;
+                changed += 1;
+            }
+            None => zout
+                .raw_copy_file(
+                    zin.by_index_raw(i)
+                        .map_err(|e| io_err("the output package cannot be read", e))?,
+                )
+                .map_err(|e| io_err("cannot write the output", e))?,
+        }
+    }
+    zout.finish()
+        .map_err(|e| io_err("cannot finish the output", e))?;
+    Ok(changed)
+}
+
+/// `text` with `insert` put right after the end of the first tag that starts with `open` (`<w:body`, `<w:hdr`); an empty element
+/// (`<w:hdr .../>`) is opened and closed around it.
+fn insert_in(text: &str, open: &str, close: &str, insert: &str) -> Option<String> {
+    let at = text.find(open)?;
+    let gt = at + text[at..].find('>')?;
+    Some(if text[..gt].ends_with('/') {
+        format!("{}>{insert}{close}{}", &text[..gt - 1], &text[gt + 1..])
+    } else {
+        format!("{}{insert}{}", &text[..=gt], &text[gt + 1..])
+    })
+}
+
+/// docx: the stamp as the first paragraph of the body and of every header and footer part. Nothing is removed.
+fn stamp_docx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    let para = format!(
+        "<w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"CC0000\"/><w:sz w:val=\"16\"/></w:rPr><w:t xml:space=\"preserve\">{}</w:t></w:r></w:p>",
+        html_escape(line)
+    );
+    let is_hf = |n: &str| {
+        (n.starts_with("word/header") || n.starts_with("word/footer")) && n.ends_with(".xml")
+    };
+    let mut body = false;
+    rewrite_zip(
+        src,
+        dst,
+        |n| n == "word/document.xml" || is_hf(n),
+        |n, text| {
+            let (open, close) = match (n, n.starts_with("word/header")) {
+                ("word/document.xml", _) => ("<w:body", "</w:body>"),
+                (_, true) => ("<w:hdr", "</w:hdr>"),
+                _ => ("<w:ftr", "</w:ftr>"),
+            };
+            let new = insert_in(text, open, close, &para).ok_or_else(|| {
+                io_err(
+                    &format!("{n} has no {open}>"),
+                    "refusing to leave it unmarked",
+                )
+            })?;
+            body |= n == "word/document.xml";
+            Ok(Some(new))
+        },
+    )?;
+    if body {
+        Ok(())
+    } else {
+        fail(
+            Exit::BadOutput,
+            "XDFU watermark: the docx has no word/document.xml to mark",
+        )
+    }
+}
+
+/// A header or footer string of a sheet (`&L..&C..&R..`) with `stamp` (already `&&`-escaped) added at the start of its centre section.
+fn merge_center(existing: &str, stamp: &str) -> String {
+    let c: Vec<char> = existing.chars().collect();
+    let (mut i, mut centre) = (0, None::<usize>);
+    while i < c.len() {
+        if c[i] == '&' && i + 1 < c.len() {
+            match c[i + 1] {
+                'C' => {
+                    centre = Some(i + 2);
+                    break;
+                }
+                '"' => {
+                    i += 2;
+                    while i < c.len() && c[i] != '"' {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                _ => i += 2,
+            }
+        } else {
+            i += 1;
+        }
+    }
+    match centre {
+        Some(at) => {
+            let rest: String = c[at..].iter().collect();
+            // the centre section ends at the next section code
+            let empty = rest.is_empty() || rest.starts_with("&R") || rest.starts_with("&L");
+            let sep = if empty { "" } else { "\n" };
+            format!("{}{stamp}{sep}{rest}", c[..at].iter().collect::<String>())
+        }
+        None => format!("{existing}&C{stamp}"),
+    }
+}
+
+/// One worksheet part with the stamp merged into its header and footer elements (the odd ones always, the even and first-page ones
+/// when the sheet uses them). `Err` when no header or footer can take it within Excel's 255 characters.
+fn stamp_sheet(xml: &str, line: &str) -> Result<String, String> {
+    const NAMES: [&str; 6] = [
+        "oddHeader",
+        "oddFooter",
+        "evenHeader",
+        "evenFooter",
+        "firstHeader",
+        "firstFooter",
+    ];
+    let stamp = line.replace('&', "&&");
+    let (open_tag, inner, span) = match xml.find("<headerFooter") {
+        Some(at) => {
+            let gt = at + xml[at..].find('>').ok_or("a broken headerFooter element")?;
+            let selfclosed = xml[..gt].ends_with('/');
+            let open = xml[at..gt].trim_end_matches('/').to_string();
+            if selfclosed {
+                (open, String::new(), (at, gt + 1))
+            } else {
+                let end = at
+                    + xml[at..]
+                        .find("</headerFooter>")
+                        .ok_or("a broken headerFooter element")?;
+                (
+                    open,
+                    xml[gt + 1..end].to_string(),
+                    (at, end + "</headerFooter>".len()),
+                )
+            }
+        }
+        None => {
+            // after pageSetup and before everything that follows it in the schema
+            let at = [
+                "<rowBreaks",
+                "<colBreaks",
+                "<customProperties",
+                "<cellWatches",
+                "<ignoredErrors",
+                "<smartTags",
+                "<drawing",
+                "<legacyDrawing",
+                "<legacyDrawingHF",
+                "<picture",
+                "<oleObjects",
+                "<controls",
+                "<webPublishItems",
+                "<tableParts",
+                "<extLst",
+                "</worksheet>",
+            ]
+            .iter()
+            .filter_map(|t| xml.find(t))
+            .min()
+            .ok_or("no worksheet end")?;
+            ("<headerFooter".to_string(), String::new(), (at, at))
+        }
+    };
+    let (first, even) = (
+        attr(&format!("{open_tag}>"), "differentFirst").is_some_and(|v| v == "1" || v == "true"),
+        attr(&format!("{open_tag}>"), "differentOddEven").is_some_and(|v| v == "1" || v == "true"),
+    );
+    let mut out = String::new();
+    let mut placed = 0;
+    for name in NAMES {
+        let open = format!("<{name}>");
+        let old = inner.find(&open).and_then(|i| {
+            let from = i + open.len();
+            inner[from..]
+                .find(&format!("</{name}>"))
+                .map(|e| decode(&inner[from..from + e]))
+        });
+        let wanted = old.is_some()
+            || name.starts_with("odd")
+            || (name.starts_with("even") && even)
+            || (name.starts_with("first") && first);
+        if !wanted {
+            continue;
+        }
+        let old = old.unwrap_or_default();
+        let merged = merge_center(&old, &stamp);
+        let value = if merged.chars().count() <= 255 {
+            placed += 1;
+            merged
+        } else {
+            old
+        };
+        if !value.is_empty() {
+            out.push_str(&format!("<{name}>{}</{name}>", html_escape(&value)));
+        }
+    }
+    if placed == 0 {
+        return Err("every header and footer of a sheet is too long to take the stamp".into());
+    }
+    Ok(format!(
+        "{}{open_tag}>{out}</headerFooter>{}",
+        &xml[..span.0],
+        &xml[span.1..]
+    ))
+}
+
+fn stamp_xlsx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    let n = rewrite_zip(
+        src,
+        dst,
+        |n| n.starts_with("xl/worksheets/") && n.ends_with(".xml"),
+        |n, text| {
+            stamp_sheet(text, line)
+                .map(Some)
+                .map_err(|e| io_err(&format!("sheet {n}"), e))
+        },
+    )?;
+    if n == 0 {
+        return fail(
+            Exit::BadOutput,
+            "XDFU watermark: the workbook lists no sheets to mark",
+        );
+    }
+    Ok(())
+}
+
+/// pptx: a text box with the stamp along the bottom edge of every slide. The slides' own footers stay.
+fn stamp_pptx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    let size = {
+        let mut p = Package::open(src).map_err(|e| io_err("cannot read the output", e))?;
+        p.text("ppt/presentation.xml")
+            .and_then(|x| {
+                let t = tags(&x).into_iter().find(|t| t.0 == "p:sldSz")?;
+                let tag = &x[t.2..t.3];
+                Some((
+                    attr(tag, "cx")?.parse::<u64>().ok()?,
+                    attr(tag, "cy")?.parse::<u64>().ok()?,
+                ))
+            })
+            .unwrap_or((9_144_000, 5_143_500))
+    };
+    let h = 300_000u64.min(size.1 / 4);
+    let n = rewrite_zip(
+        src,
+        dst,
+        |n| n.starts_with("ppt/slides/slide") && n.ends_with(".xml"),
+        |n, text| {
+            let id = text
+                .split("<p:cNvPr id=\"")
+                .skip(1)
+                .filter_map(|r| r.split('"').next()?.parse::<u64>().ok())
+                .max()
+                .unwrap_or(1)
+                + 1;
+            let shape = format!(
+                "<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"XDFU stamp\"/><p:cNvSpPr txBox=\"1\"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x=\"0\" y=\"{}\"/><a:ext cx=\"{}\" cy=\"{h}\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></p:spPr><p:txBody><a:bodyPr wrap=\"square\" anchor=\"b\"/><a:lstStyle/><a:p><a:pPr algn=\"ctr\"/><a:r><a:rPr lang=\"en-US\" sz=\"800\" b=\"1\"><a:solidFill><a:srgbClr val=\"CC0000\"/></a:solidFill></a:rPr><a:t>{}</a:t></a:r></a:p></p:txBody></p:sp>",
+                size.1 - h,
+                size.0,
+                html_escape(line)
+            );
+            let at = text.rfind("</p:spTree>").ok_or_else(|| {
+                io_err(
+                    &format!("{n} has no </p:spTree>"),
+                    "refusing to leave it unmarked",
+                )
+            })?;
+            Ok(Some(format!("{}{shape}{}", &text[..at], &text[at..])))
+        },
+    )?;
+    if n == 0 {
+        return fail(
+            Exit::BadOutput,
+            "XDFU watermark: the deck has no slides to mark",
+        );
+    }
+    Ok(())
+}
+
 fn stamp_with_tools(
     ctx: &JobCtx,
     file: &Path,
@@ -857,10 +1323,6 @@ fn stamp_with_tools(
                 s_("--file"),
                 rel_in,
                 s_("--cmd"),
-                cmd("insert.header", json!({"text": line})),
-                s_("--cmd"),
-                cmd("insert.footer", json!({"text": line})),
-                s_("--cmd"),
                 cmd(
                     "design.watermark",
                     json!({"text": format!("XDFU {}", s.copy), "diagonal": true, "color": "CC0000"}),
@@ -873,57 +1335,16 @@ fn stamp_with_tools(
                 s_("--save"),
                 rel_out.clone(),
             ],
-        ),
-        "pptx" => run(
-            ToolId::Slides,
-            vec![
-                s_("run"),
-                s_("--in"),
-                rel_in,
-                s_("--cmd"),
-                cmd(
-                    "design.headerFooter",
-                    json!({"footer": true, "footerText": line, "all": true}),
-                ),
-                s_("--save"),
-                rel_out.clone(),
-            ],
-        ),
-        "xlsx" => {
-            let info = tools.run(
-                ToolId::Sheets,
-                &[s_("info"), rel_in.clone(), s_("--json")],
-                mb,
-            )?;
-            let v: Value = serde_json::from_slice(&info)
-                .map_err(|e| io_err("sheets-cli info did not print JSON", e))?;
-            let names: Vec<String> = v["sheets"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .filter_map(|x| x["name"].as_str().map(String::from))
-                .collect();
-            if names.is_empty() {
-                return fail(
-                    Exit::BadOutput,
-                    "XDFU watermark: the workbook lists no sheets to mark",
-                );
-            }
-            // `&` starts a code in a header, so a literal one is doubled
-            let code = format!("&C{}", line.replace('&', "&&"));
-            let mut argv = vec![s_("run"), s_("--in"), rel_in];
-            for sheet in &names {
-                argv.extend([
-                    s_("--cmd"),
-                    cmd(
-                        "pageLayout.headerFooter",
-                        json!({"sheet": sheet, "header": code, "footer": code}),
-                    ),
-                ]);
-            }
-            argv.extend([s_("--out"), rel_out.clone()]);
-            run(ToolId::Sheets, argv)
-        }
+        )
+        .and_then(|_| {
+            // the tool's output is `tmp`; the stamp paragraphs go into a second copy that replaces it
+            let second = ctx.job_dir.join(format!("mid/xdfu-{n}-stamped.docx"));
+            stamp_docx_parts(&tmp, &second, &line)?;
+            fs::rename(&second, &tmp).map_err(|e| io_err("cannot put the marked file in place", e))
+        }),
+        // no tool: the stamp is merged into the package, so that nothing the document has is replaced (gate review M3)
+        "pptx" => stamp_pptx_parts(&ctx.job_dir.join(&rel_in), &tmp, &line),
+        "xlsx" => stamp_xlsx_parts(&ctx.job_dir.join(&rel_in), &tmp, &line),
         "pdf" => {
             let text = s.ascii_line();
             let steps = json!([
@@ -1274,7 +1695,20 @@ impl JobHook for XdfuHook {
         if self.mode == Mode::Off {
             return Ok(vec![]);
         }
-        if !scannable(ctx.kind) {
+        // every input is looked at: a combine has several, and a job with no detected kind (a PDF operation) takes each file's kind from
+        // its extension, so a grif in the second file is not missed
+        let files = Self::input_files(ctx);
+        let kinds: Vec<Option<Kind>> = files
+            .iter()
+            .map(|(p, _)| {
+                ctx.kind.or_else(|| {
+                    p.extension()
+                        .and_then(|e| e.to_str())
+                        .and_then(Kind::from_ext)
+                })
+            })
+            .collect();
+        if files.is_empty() || !kinds.iter().all(|k| scannable(*k)) {
             // the input cannot be read for a grif: check what the tool makes of it, if that can be read
             if !output_scannable(&ctx.target) {
                 // no detected kind (PDF operations): name the staged input's extension, never an English word
@@ -1307,10 +1741,25 @@ impl JobHook for XdfuHook {
             return Ok(vec![]);
         }
         let mut evidence = vec![];
-        for (path, rel) in Self::input_files(ctx) {
-            evidence.extend(detect(&path, &rel, ctx.kind, tools)?);
+        let mut unchecked = false;
+        for (n, ((path, rel), kind)) in files.into_iter().zip(kinds).enumerate() {
+            let (found, readable) = detect_checked(&path, &rel, kind, n, tools)?;
+            unchecked |= !readable;
+            evidence.extend(found);
         }
         if evidence.is_empty() {
+            if unchecked {
+                // an image-only PDF: nothing to read, which is not the same as "not marked"
+                return self.veto(
+                    ctx,
+                    vec![],
+                    "no_text_layer",
+                    Failure {
+                        exit: Exit::Unsupported,
+                        msg: report::text("xdfu_no_text_layer"),
+                    },
+                );
+            }
             return Ok(vec![]);
         }
         if self.mode == Mode::Refuse {
@@ -1527,18 +1976,15 @@ mod tests {
             Kind::Csv,
             Kind::Tsv,
             Kind::Html,
-        ] {
-            assert!(scannable(Some(k)), "{}", k.ext());
-        }
-        for k in [
+            // read natively (odt, ods) or through a probe conversion (doc, rtf, xls, xlsb): gate review M4
             Kind::Doc,
-            Kind::Xls,
-            Kind::Xlsb,
+            Kind::Rtf,
             Kind::Odt,
             Kind::Ods,
-            Kind::Rtf,
+            Kind::Xls,
+            Kind::Xlsb,
         ] {
-            assert!(!scannable(Some(k)), "{}", k.ext());
+            assert!(scannable(Some(k)), "{}", k.ext());
         }
         assert!(!scannable(None));
         // every output kind that is watermarked can be scanned, except the png (an image)
@@ -1628,5 +2074,218 @@ mod tests {
         for ext in ["odt", "rtf", "xls", "tsv"] {
             assert!(!can_carry(ext), "{ext}");
         }
+    }
+
+    // ---- gate review M3, M4 ----
+
+    fn zip_of(name: &str, parts: &[(&str, &str)]) -> PathBuf {
+        use std::io::Write;
+        let p =
+            std::env::temp_dir().join(format!("convert-xdfu-unit-{}-{name}", std::process::id()));
+        let mut w = zip::ZipWriter::new(fs::File::create(&p).unwrap());
+        for (n, body) in parts {
+            w.start_file(*n, zip::write::SimpleFileOptions::default())
+                .unwrap();
+            w.write_all(body.as_bytes()).unwrap();
+        }
+        w.finish().unwrap();
+        p
+    }
+
+    fn part(zip: &Path, name: &str) -> String {
+        Package::open(zip).unwrap().text(name).unwrap_or_default()
+    }
+
+    fn para(t: &str) -> String {
+        format!("<w:p><w:r><w:t>{t}</w:t></w:r></w:p>")
+    }
+
+    #[test]
+    fn a_grif_in_the_right_cell_of_a_two_column_letterhead_is_found() {
+        // the left cell has 30 lines: the grif in the right cell comes after the 25th paragraph in reading order
+        let left: String = (1..=30)
+            .map(|i| para(&format!("Address line {i}")))
+            .collect();
+        let doc = format!(
+            "<w:document><w:body><w:tbl><w:tr><w:tc>{left}</w:tc><w:tc>{}</w:tc></w:tr></w:tbl>{}</w:body></w:document>",
+            para("Для служебного пользования"),
+            para("Dear sir")
+        );
+        let f = zip_of("letterhead.docx", &[("word/document.xml", &doc)]);
+        let found = detect_docx(&f).unwrap();
+        assert!(
+            found.iter().any(|e| e.place == "first-page-top"),
+            "{found:?}"
+        );
+        // the same words in a paragraph far below the top (no table) are not at the top of the page
+        let body: String = (1..=30).map(|i| para(&format!("Line {i}"))).collect();
+        let doc = format!(
+            "<w:document><w:body>{body}{}</w:body></w:document>",
+            para("ДСП")
+        );
+        let f = zip_of("deep.docx", &[("word/document.xml", &doc)]);
+        assert!(detect_docx(&f).unwrap().is_empty());
+        // a table that starts below the window is not read whole
+        let doc = format!(
+            "<w:document><w:body>{body}<w:tbl><w:tr><w:tc>{}</w:tc></w:tr></w:tbl></w:body></w:document>",
+            para("ДСП")
+        );
+        let f = zip_of("deeptable.docx", &[("word/document.xml", &doc)]);
+        assert!(detect_docx(&f).unwrap().is_empty());
+    }
+
+    #[test]
+    fn odt_and_ods_are_read_natively_headers_and_properties_included() {
+        let content = "<office:document-content><office:body><office:text><text:p>Plain letter</text:p></office:text></office:body></office:document-content>";
+        let styles = "<office:document-styles><office:master-styles><style:master-page><style:header><text:p>Для служебного пользования</text:p></style:header></style:master-page></office:master-styles></office:document-styles>";
+        let f = zip_of(
+            "hdr.odt",
+            &[("content.xml", content), ("styles.xml", styles)],
+        );
+        let found = detect_odf(&f).unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(
+            (found[0].place, found[0].part.as_str()),
+            ("header", "styles.xml")
+        );
+        let body = "<office:document-content><text:p>X<text:s/>D</text:p><text:h>ХДФУ<text:span>!</text:span></text:h></office:document-content>";
+        let meta = "<office:document-meta><office:meta><dc:subject>XDFU</dc:subject></office:meta></office:document-meta>";
+        let f = zip_of("top.ods", &[("content.xml", body), ("meta.xml", meta)]);
+        let places: Vec<_> = detect_odf(&f).unwrap().iter().map(|e| e.place).collect();
+        assert_eq!(places, ["first-page-top", "properties"]);
+        let f = zip_of(
+            "plain.odt",
+            &[("content.xml", content), ("styles.xml", "<a/>")],
+        );
+        assert!(detect_odf(&f).unwrap().is_empty());
+    }
+
+    #[test]
+    fn blank_shared_strings_do_not_shift_the_cell_indexes() {
+        let wb = r#"<workbook><sheets><sheet name="S" r:id="rId1"/></sheets></workbook>"#;
+        let rels = r#"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#;
+        let sst = "<sst><si><t></t></si><si><t>ДСП</t></si></sst>";
+        let sheet = r#"<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>1</v></c></row></sheetData></worksheet>"#;
+        let f = zip_of(
+            "sst.xlsx",
+            &[
+                ("xl/workbook.xml", wb),
+                ("xl/_rels/workbook.xml.rels", rels),
+                ("xl/sharedStrings.xml", sst),
+                ("xl/worksheets/sheet1.xml", sheet),
+            ],
+        );
+        assert_eq!(detect_xlsx(&f).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn the_docx_stamp_is_added_and_the_existing_header_and_footer_survive() {
+        let doc = "<?xml version=\"1.0\"?><w:document xmlns:w=\"x\"><w:body><w:p><w:r><w:t>Body text</w:t></w:r></w:p></w:body></w:document>";
+        let hdr = "<w:hdr xmlns:w=\"x\"><w:p><w:r><w:t>LETTERHEAD Acme &amp; Co</w:t></w:r></w:p></w:hdr>";
+        let ftr = "<w:ftr xmlns:w=\"x\"/>";
+        let src = zip_of(
+            "in.docx",
+            &[
+                ("word/document.xml", doc),
+                ("word/header1.xml", hdr),
+                ("word/footer1.xml", ftr),
+                ("word/media/a.png", "binary"),
+            ],
+        );
+        let dst = src.with_extension("out.docx");
+        stamp_docx_parts(&src, &dst, "XDFU copy 3 | 10.0.0.5 | a&b | now").unwrap();
+        for n in ["word/document.xml", "word/header1.xml", "word/footer1.xml"] {
+            assert!(
+                part(&dst, n).contains("XDFU copy 3 | 10.0.0.5 | a&amp;b"),
+                "{n}"
+            );
+        }
+        assert!(part(&dst, "word/document.xml").contains("Body text"));
+        let h = part(&dst, "word/header1.xml");
+        assert!(
+            h.contains("LETTERHEAD Acme &amp; Co")
+                && h.find("XDFU copy").unwrap() < h.find("LETTERHEAD").unwrap(),
+            "{h}"
+        );
+        assert!(part(&dst, "word/footer1.xml").ends_with("</w:ftr>"));
+        assert_eq!(part(&dst, "word/media/a.png"), "binary");
+        // a package with no body is refused, not left unmarked
+        let bad = zip_of("bad.docx", &[("word/header1.xml", hdr)]);
+        assert!(stamp_docx_parts(&bad, &bad.with_extension("o.docx"), "L").is_err());
+    }
+
+    #[test]
+    fn the_sheet_stamp_merges_into_existing_headers_and_adds_missing_ones() {
+        assert_eq!(merge_center("", "S"), "&CS");
+        assert_eq!(merge_center("&LLeft&RRight", "S"), "&LLeft&RRight&CS");
+        assert_eq!(
+            merge_center("&LLeft&CMid&RRight", "S"),
+            "&LLeft&CS\nMid&RRight"
+        );
+        assert_eq!(merge_center("&C&RRight", "S"), "&CS&RRight");
+        assert_eq!(
+            merge_center("&\"Arial,Bold\"&12Title", "S"),
+            "&\"Arial,Bold\"&12Title&CS"
+        );
+        // none: a header and a footer are added
+        let x =
+            "<worksheet><sheetData/><pageMargins left=\"1\"/><drawing r:id=\"r1\"/></worksheet>";
+        let out = stamp_sheet(x, "A & B").unwrap();
+        assert!(out.contains("<headerFooter><oddHeader>&amp;CA &amp;&amp; B</oddHeader><oddFooter>&amp;CA &amp;&amp; B</oddFooter></headerFooter><drawing"), "{out}");
+        // existing text stays; first-page and even-page headers get the stamp when the sheet uses them
+        let x = "<worksheet><sheetData/><headerFooter differentFirst=\"1\"><oddHeader>&amp;LLetterhead&amp;RДСП</oddHeader><oddFooter>Page &amp;P</oddFooter></headerFooter><tableParts/></worksheet>";
+        let out = stamp_sheet(x, "S").unwrap();
+        assert!(
+            out.contains("<oddHeader>&amp;LLetterhead&amp;RДСП&amp;CS</oddHeader>"),
+            "{out}"
+        );
+        assert!(
+            out.contains("<oddFooter>Page &amp;P&amp;CS</oddFooter>"),
+            "{out}"
+        );
+        assert!(
+            out.contains("<firstHeader>&amp;CS</firstHeader><firstFooter>&amp;CS</firstFooter>"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("evenHeader") && out.ends_with("<tableParts/></worksheet>"),
+            "{out}"
+        );
+        // an empty element
+        assert!(
+            stamp_sheet("<worksheet><sheetData/><headerFooter/></worksheet>", "S")
+                .unwrap()
+                .contains("<oddHeader>&amp;CS</oddHeader>")
+        );
+        // too long for Excel's 255 characters everywhere: an error, not a lost header
+        let long = "x".repeat(250);
+        let x = format!(
+            "<worksheet><headerFooter><oddHeader>&amp;L{long}</oddHeader><oddFooter>&amp;L{long}</oddFooter></headerFooter></worksheet>"
+        );
+        assert!(stamp_sheet(&x, "XDFU copy 3 | 10.0.0.5 | alice | now").is_err());
+    }
+
+    #[test]
+    fn the_pptx_stamp_is_a_new_shape_and_the_slides_own_footer_stays() {
+        let pres = r#"<p:presentation><p:sldSz cx="9144000" cy="6858000"/></p:presentation>"#;
+        let slide = r#"<p:sld><p:cSld><p:spTree><p:sp><p:nvSpPr><p:cNvPr id="7" name="Footer"/></p:nvSpPr><p:txBody><a:p><a:r><a:t>Our footer</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>"#;
+        let src = zip_of(
+            "in.pptx",
+            &[
+                ("ppt/presentation.xml", pres),
+                ("ppt/slides/slide1.xml", slide),
+            ],
+        );
+        let dst = src.with_extension("out.pptx");
+        stamp_pptx_parts(&src, &dst, "XDFU copy 3").unwrap();
+        let out = part(&dst, "ppt/slides/slide1.xml");
+        assert!(
+            out.contains("Our footer")
+                && out.contains("<a:t>XDFU copy 3</a:t>")
+                && out.contains(r#"<p:cNvPr id="8""#),
+            "{out}"
+        );
+        assert!(out.contains(r#"y="6558000""#), "{out}");
+        assert!(out.ends_with("</p:spTree></p:cSld></p:sld>"));
     }
 }

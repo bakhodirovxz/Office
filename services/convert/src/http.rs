@@ -22,6 +22,44 @@ use std::time::{Duration, Instant};
 /// The attempts at a busy (503) sidecar: the first try plus three retries.
 pub const ATTEMPTS: u32 = 4;
 
+/// A readable sentence for a connection error. The OS text of a refused connection arrives in the console code page and is garbled
+/// (gate review m2), so the kinds we know get our own words and the OS text is dropped.
+fn unreachable_text(e: &ureq::Error, base: &str) -> String {
+    use std::io::ErrorKind::*;
+    match e {
+        ureq::Error::Io(io)
+            if matches!(
+                io.kind(),
+                ConnectionRefused | ConnectionReset | ConnectionAborted | NotConnected | TimedOut
+            ) =>
+        {
+            "it is not running or refused the connection".into()
+        }
+        ureq::Error::ConnectionFailed | ureq::Error::HostNotFound => {
+            "it is not running or cannot be reached".into()
+        }
+        ureq::Error::Timeout(_) => "no answer in time".into(),
+        other => other.to_string().replace(base, "<sidecar>"),
+    }
+}
+
+/// A sidecar message without the paths of its container (`/tmp/job-1a2b/in.pdf`, gate review m4).
+pub fn without_paths(msg: &str) -> String {
+    let mut out = String::new();
+    let mut rest = msg;
+    while let Some(i) = rest.find("/tmp/") {
+        out.push_str(&rest[..i]);
+        let tail = &rest[i..];
+        let end = tail
+            .find(|c: char| c.is_whitespace() || matches!(c, '\'' | '"' | ',' | ')'))
+            .unwrap_or(tail.len());
+        out.push_str("<path>");
+        rest = &tail[end..];
+    }
+    out.push_str(rest);
+    out
+}
+
 /// Map a sidecar error answer (`{"code","message"}`) to a failure. Pure, so the table is unit-tested.
 pub fn map_error(status: u16, code: &str, message: &str) -> Failure {
     let (exit, what) = match (status, code) {
@@ -114,7 +152,12 @@ pub fn run_http(
         {
             Ok(r) => r,
             Err(e) => {
-                note(-1, e.to_string().replace(base, "<sidecar>"), steps);
+                let why = unreachable_text(&e, base);
+                note(
+                    -1,
+                    format!("the pdf2docx sidecar did not answer: {why}"),
+                    steps,
+                );
                 let timed_out = matches!(e, ureq::Error::Timeout(_));
                 return fail(
                     if timed_out {
@@ -122,10 +165,7 @@ pub fn run_http(
                     } else {
                         Exit::Missing
                     },
-                    format!(
-                        "the pdf2docx sidecar did not answer: {}",
-                        e.to_string().replace(base, "<sidecar>")
-                    ),
+                    format!("the pdf2docx sidecar did not answer: {why}"),
                 );
             }
         };
@@ -177,7 +217,7 @@ pub fn run_http(
             std::thread::sleep(Duration::from_millis(cfg.http_backoff_ms << attempt));
             continue;
         }
-        return Err(map_error(status, &code, &message));
+        return Err(map_error(status, &code, &without_paths(&message)));
     }
     unreachable!("the loop returns on its last attempt")
 }
@@ -185,6 +225,16 @@ pub fn run_http(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn container_paths_are_cut_out_of_sidecar_messages() {
+        assert_eq!(
+            without_paths("cannot open the PDF: Failed to open file '/tmp/job-jye3px_i/in.pdf'"),
+            "cannot open the PDF: Failed to open file '<path>'"
+        );
+        assert_eq!(without_paths("no paths here"), "no paths here");
+        assert_eq!(without_paths("a /tmp/x/y, b /tmp/z"), "a <path>, b <path>");
+    }
 
     #[test]
     fn error_table() {

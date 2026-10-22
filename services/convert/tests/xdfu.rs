@@ -748,49 +748,311 @@ fn refuse_mode_vetoes_a_doc_with_a_grif_after_the_conversion_and_lets_a_plain_on
     }
 }
 
+/// A legacy input is read on the input now (a probe conversion), so a grif.doc is found whatever the target is; what is refused is a
+/// target that cannot carry the watermark. A plain document of the same kind converts to any target.
 #[test]
-fn when_neither_the_input_nor_the_output_can_be_scanned_the_job_is_refused_under_xdfu() {
-    let Some(e) = Env::new("cannot-check") else {
+fn a_legacy_input_is_checked_whatever_the_target_and_a_target_that_cannot_carry_the_mark_is_refused()
+ {
+    let Some(e) = Env::new("cannot-carry") else {
         return;
     };
     let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Watermark), &audit, false);
+    let r = e.convert(&cfg, &golden("grif.doc"), "odt", "c-odt");
+    assert_eq!(r.code, Exit::Unsupported.code(), "{}", r.message);
+    assert!(r.message.contains("cannot carry"), "{}", r.message);
+    assert!(r.outputs.is_empty() && r.steps.is_empty(), "a tool ran");
+    let cfg_r = e.cfg(Some(Mode::Refuse), &audit, false);
+    let r = e.convert(&cfg_r, &golden("grif.doc"), "odt", "c-odt-r");
+    assert_eq!(r.code, Exit::Rejected.code(), "{}", r.message);
+    for to in ["rtf", "png"] {
+        let r = e.convert(&cfg, &golden("plain.doc"), to, &format!("c-plain-{to}"));
+        assert_eq!(r.code, 0, "plain.doc to {to}: {}", r.message);
+        assert!(xdfu_of(&r).is_none());
+    }
+    assert!(audit::verify(&audit).is_ok());
+}
+
+// ---- gate review M3: the mark is added, nothing the document has is replaced ----------------------------------------------------
+
+fn read_part(zip: &Path, pred: &dyn Fn(&str) -> bool) -> String {
+    let mut z = zip::ZipArchive::new(std::fs::File::open(zip).unwrap()).unwrap();
+    let names: Vec<String> = (0..z.len())
+        .filter_map(|i| {
+            z.by_index_raw(i)
+                .ok()
+                .and_then(|f| f.name().ok().map(|n| n.into_owned()))
+        })
+        .collect();
+    let mut all = String::new();
+    for n in names.iter().filter(|n| pred(n)) {
+        let mut b = Vec::new();
+        z.by_name(n).unwrap().read_to_end(&mut b).unwrap();
+        all.push_str(&String::from_utf8_lossy(&b));
+    }
+    all
+}
+
+#[test]
+fn the_watermark_keeps_the_documents_own_header_footer_and_footer_text() {
+    let Some(e) = Env::new("keep") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Watermark), &audit, false);
+    // docx: a letterhead in the header and a footer, the grif in the body
+    e.fixture("docx", Some("ХДФУ"), "kd-src");
+    e.run_tool(
+        ToolId::Docs,
+        &[
+            "run",
+            "--file",
+            "kd-src.docx",
+            "--cmd",
+            "insert.header={\"text\":\"LETTERHEAD Acme Ltd\"}",
+            "--cmd",
+            "insert.footer={\"text\":\"FOOTER page text\"}",
+            "--save",
+            "kd.docx",
+        ],
+    );
+    let r = e.convert(&cfg, &e.dir.join("kd.docx"), "docx", "kd");
+    assert_eq!(r.code, 0, "{}", r.message);
+    let out = PathBuf::from(&r.outputs[0]);
+    let hf = read_part(&out, &|n| {
+        n.starts_with("word/header") || n.starts_with("word/footer")
+    });
+    assert!(
+        hf.contains("LETTERHEAD Acme Ltd") && hf.contains("FOOTER page text"),
+        "the header or footer was replaced: {hf}"
+    );
+    assert!(hf.contains("XDFU copy"), "{hf}");
+    let body = read_part(&out, &|n| n == "word/document.xml");
+    assert!(
+        body.contains("XDFU copy") && body.contains("ХДФУ"),
+        "{body}"
+    );
+    // a header holding the grif (and a different first page) still carries the grif and the stamp afterwards
+    e.run_tool(
+        ToolId::Docs,
+        &[
+            "run",
+            "--file",
+            "kd-src.docx",
+            "--cmd",
+            "insert.header={\"text\":\"Для служебного пользования\"}",
+            "--save",
+            "kg.docx",
+        ],
+    );
+    let r = e.convert(&cfg, &e.dir.join("kg.docx"), "docx", "kg");
+    assert_eq!(r.code, 0, "{}", r.message);
+    let hf = read_part(&PathBuf::from(&r.outputs[0]), &|n| {
+        n.starts_with("word/header")
+    });
+    assert!(
+        hf.contains("Для служебного пользования") && hf.contains("XDFU copy"),
+        "{hf}"
+    );
+
+    // xlsx: a letterhead on the left of the header and a page number in the footer
+    e.fixture("xlsx", Some("ДСП"), "kx-src");
+    e.run_tool(
+        ToolId::Sheets,
+        &[
+            "run",
+            "--in",
+            "kx-src.xlsx",
+            "--cmd",
+            "pageLayout.headerFooter={\"header\":\"&LLETTERHEAD Acme\",\"footer\":\"Page &P\"}",
+            "--out",
+            "kx.xlsx",
+        ],
+    );
+    let r = e.convert(&cfg, &e.dir.join("kx.xlsx"), "xlsx", "kx");
+    assert_eq!(r.code, 0, "{}", r.message);
+    let sheet = read_part(&PathBuf::from(&r.outputs[0]), &|n| {
+        n.starts_with("xl/worksheets/")
+    });
+    assert!(
+        sheet.contains("LETTERHEAD Acme")
+            && sheet.contains("Page &amp;P")
+            && sheet.contains("XDFU copy"),
+        "{sheet}"
+    );
+
+    // pptx: the slide's own footer
+    e.fixture("pptx", Some("XDFU"), "kp-src");
+    e.run_tool(
+        ToolId::Slides,
+        &[
+            "run",
+            "--in",
+            "kp-src.pptx",
+            "--cmd",
+            "design.headerFooter={\"footer\":true,\"footerText\":\"OUR FOOTER\",\"all\":true}",
+            "--save",
+            "kp.pptx",
+        ],
+    );
+    let r = e.convert(&cfg, &e.dir.join("kp.pptx"), "pptx", "kp");
+    assert_eq!(r.code, 0, "{}", r.message);
+    let slides = read_part(&PathBuf::from(&r.outputs[0]), &|n| {
+        n.starts_with("ppt/slides/slide")
+    });
+    assert!(
+        slides.contains("OUR FOOTER") && slides.contains("XDFU copy"),
+        "{slides}"
+    );
+    // and every mark is audited
+    assert_eq!(audit::verify(&audit).unwrap().lines, 4);
+}
+
+// ---- gate review M4 ---------------------------------------------------------------------------------------------------------------
+
+#[test]
+fn an_image_only_pdf_cannot_be_checked_and_is_refused() {
+    let Some(e) = Env::new("scan") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    // a page with no text at all, as a scan has none
+    std::fs::write(
+        e.dir.join("blank.json"),
+        serde_json::json!([
+            {"tool": "doc_create", "args": {"from": "blank", "pages": 1, "width": 300, "height": 200}},
+            {"tool": "doc_save", "args": {"doc": 1, "path": "blank.pdf", "full": true}}
+        ])
+        .to_string(),
+    )
+    .unwrap();
+    e.run_tool(
+        ToolId::Pdf,
+        &["run", "--script", "blank.json", "--root", "."],
+    );
     for mode in [Mode::Watermark, Mode::Refuse] {
         let cfg = e.cfg(Some(mode), &audit, false);
-        // odt, rtf and png results are not scanned; a plain document is refused too, because nobody can tell that it is plain
-        for (src, to) in [
-            ("grif.doc", "odt"),
-            ("plain.doc", "rtf"),
-            ("plain.doc", "png"),
-        ] {
-            let r = e.convert(&cfg, &golden(src), to, &format!("c-{src}-{to}"));
-            assert_eq!(
-                r.code,
-                Exit::Unsupported.code(),
-                "{src} to {to} ({mode:?}): {}",
-                r.message
-            );
-            assert!(
-                r.message.contains("XDFU") && r.message.contains("cannot be checked"),
-                "{}",
-                r.message
-            );
-            assert!(
-                r.outputs.is_empty() && r.steps.is_empty(),
-                "{src} to {to}: a tool ran"
-            );
-        }
+        let r = e.convert(&cfg, &e.dir.join("blank.pdf"), "txt", "o");
+        assert_eq!(r.code, Exit::Unsupported.code(), "{mode:?}: {}", r.message);
+        assert!(r.message.contains("no text"), "{}", r.message);
+        assert!(r.outputs.is_empty() && r.steps.is_empty(), "a tool ran");
     }
     let log = std::fs::read_to_string(&audit).unwrap();
-    assert!(
-        log.lines().any(|l| l.contains("cannot_check")),
-        "no audit line for the refusal"
-    );
-    assert!(audit::verify(&audit).is_ok());
-    // with xdfu off nothing changes: the same conversion works
+    assert!(log.lines().any(|l| l.contains("no_text_layer")), "{log}");
+    // with xdfu off the same file converts as before
     let off = e.cfg(None, &audit, false);
-    assert_eq!(
-        e.convert(&off, &golden("plain.doc"), "odt", "off-odt").code,
-        0
+    assert_ne!(
+        e.convert(&off, &e.dir.join("blank.pdf"), "txt", "off").code,
+        Exit::Unsupported.code()
+    );
+}
+
+#[test]
+fn a_grif_in_the_header_of_an_odt_and_of_an_rtf_is_found_on_the_input() {
+    let Some(e) = Env::new("legacy-hdr") else {
+        return;
+    };
+    let audit = e.dir.join("audit.jsonl");
+    let cfg = e.cfg(Some(Mode::Refuse), &audit, false);
+    // our writers drop headers for odt and rtf, so both are made by hand
+    std::fs::write(
+        e.dir.join("oh.rtf"),
+        r"{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}{\header\pard\plain XDFU\par}\pard\plain Body text\par}",
+    )
+    .unwrap();
+    {
+        use std::io::Write;
+        let mut w = zip::ZipWriter::new(std::fs::File::create(e.dir.join("oh.odt")).unwrap());
+        let stored = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        for (n, body) in [
+            ("mimetype", "application/vnd.oasis.opendocument.text"),
+            (
+                "content.xml",
+                "<office:document-content><office:body><office:text><text:p>Body text</text:p></office:text></office:body></office:document-content>",
+            ),
+            (
+                "styles.xml",
+                "<office:document-styles><office:master-styles><style:master-page><style:header><text:p>Для служебного пользования</text:p></style:header></style:master-page></office:master-styles></office:document-styles>",
+            ),
+        ] {
+            w.start_file(n, stored).unwrap();
+            w.write_all(body.as_bytes()).unwrap();
+        }
+        w.finish().unwrap();
+    }
+    for f in ["oh.odt", "oh.rtf"] {
+        let r = e.convert(&cfg, &e.dir.join(f), "txt", &format!("o-{f}"));
+        assert_eq!(r.code, Exit::Rejected.code(), "{f}: {}", r.message);
+        let x = xdfu_of(&r).unwrap_or_else(|| panic!("{f}: no xdfu in the report"));
+        assert!(
+            x["evidence"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|v| v["place"] == "header"),
+            "{f}: {x}"
+        );
+    }
+}
+
+// ---- gate review M5: the keyed audit chain ---------------------------------------------------------------------------------------
+
+#[test]
+fn a_keyed_audit_log_verifies_with_its_key_and_a_consistent_rewrite_without_it_does_not() {
+    let Some(e) = Env::new("keyed") else { return };
+    let (audit, key) = (e.dir.join("keyed.jsonl"), e.dir.join("audit.key"));
+    std::fs::write(&key, "0123456789abcdef0123456789abcdef").unwrap();
+    let mut cfg = e.cfg(None, &audit, false);
+    cfg.hooks.push(Arc::new(XdfuHook::new(
+        Mode::Watermark,
+        Arc::new(AuditLog::open_keyed(&audit, false, Some(&key)).unwrap()),
+        true,
+    )));
+    for i in 0..3 {
+        let f = e.fixture("txt", Some("ДСП"), &format!("k{i}"));
+        assert_eq!(e.convert(&cfg, &f, "md", &format!("o{i}")).code, 0);
+    }
+    let bin = env!("CARGO_BIN_EXE_convert");
+    let verify = |p: &Path, key: Option<&Path>| {
+        let mut c = Command::new(bin);
+        c.arg("xdfu-verify").arg(p);
+        if let Some(k) = key {
+            c.arg("--key").arg(k);
+        }
+        c.output().unwrap()
+    };
+    assert!(verify(&audit, Some(&key)).status.success());
+    assert!(
+        !verify(&audit, None).status.success(),
+        "a keyed log must not verify without its key"
+    );
+    // someone with write access changes line 2 and recomputes the plain SHA-256 chain from there: no key, so the HMAC cannot follow
+    let text = std::fs::read_to_string(&audit).unwrap();
+    let mut prev = String::new();
+    let mut out = vec![];
+    for (i, l) in text.lines().enumerate() {
+        let mut o: serde_json::Map<String, serde_json::Value> = serde_json::from_str(l).unwrap();
+        o.remove("hash");
+        if i == 1 {
+            o.insert("user".into(), "mallory".into());
+        }
+        if i >= 1 {
+            o.insert("prev".into(), prev.clone().into());
+        }
+        let body = serde_json::to_string(&o).unwrap();
+        use sha2::{Digest, Sha256};
+        let h: String = Sha256::digest(body.as_bytes())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
+        o.insert("hash".into(), h.clone().into());
+        prev = h;
+        out.push(serde_json::to_string(&o).unwrap());
+    }
+    std::fs::write(&audit, out.join("\n") + "\n").unwrap();
+    let v = verify(&audit, Some(&key));
+    assert!(!v.status.success());
+    assert!(
+        String::from_utf8_lossy(&v.stderr).contains("line"),
+        "{}",
+        String::from_utf8_lossy(&v.stderr)
     );
 }
 
@@ -822,4 +1084,46 @@ fn an_html_input_is_scanned_and_a_grif_in_it_is_found() {
     )
     .unwrap();
     assert!(xdfu_of(&e.convert(&cfg, &hidden, "txt", "html-hidden")).is_none());
+}
+
+/// A combine looks at every input: a grif in the second file is found, and the job is refused (or marked) as a whole.
+#[test]
+fn a_grif_in_the_second_file_of_a_combine_is_found() {
+    let Some(e) = Env::new("combine") else { return };
+    let audit = e.dir.join("audit.jsonl");
+    let plain = e.fixture("pdf", None, "cb-plain");
+    let grif = e.fixture("pdf", Some("ДСП"), "cb-grif");
+    let dest = Dest {
+        out_dir: e.dir.join("o"),
+        out_file: Some(e.dir.join("o/combined.pdf")),
+    };
+    let inputs = vec![plain, grif];
+    let r = job::pdf_op(
+        &e.cfg(Some(Mode::Refuse), &audit, false),
+        "combine",
+        &inputs,
+        plan::pdf_combine(2),
+        &dest,
+    );
+    assert_eq!(r.code, Exit::Rejected.code(), "{}", r.message);
+    assert!(r.outputs.is_empty());
+    let r = job::pdf_op(
+        &e.cfg(Some(Mode::Watermark), &audit, false),
+        "combine",
+        &inputs,
+        plan::pdf_combine(2),
+        &dest,
+    );
+    assert_eq!(r.code, 0, "{}", r.message);
+    assert!(extracted(&e, &PathBuf::from(&r.outputs[0])).contains("XDFU copy"));
+    // two plain files: an ordinary combine
+    let p2 = e.fixture("pdf", None, "cb-plain2");
+    let r = job::pdf_op(
+        &e.cfg(Some(Mode::Refuse), &audit, false),
+        "combine",
+        &[inputs[0].clone(), p2],
+        plan::pdf_combine(2),
+        &dest,
+    );
+    assert_eq!(r.code, 0, "{}", r.message);
 }

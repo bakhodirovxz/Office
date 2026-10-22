@@ -31,13 +31,16 @@ usage:
           a document with the XDFU grif (XDFU, ХДФУ, ДСП, Для служебного пользования) is refused, or converted with a watermark
           (copy number, this computer's address, user, date and time) on every output; each such job goes in the audit log
       --xdfu-audit FILE   the hash-chained audit log (default: your data directory, convert/xdfu-audit.jsonl)
+      --xdfu-audit-key FILE   the operator's key file (32+ random bytes, kept outside the log): the chain becomes an HMAC-SHA256 chain;
+                          without it the chain only stops a naive edit, and this command says so
       --redact            leave file names out of the audit log
   convert pdf combine <a.pdf> <b.pdf>... -o out.pdf
   convert pdf split <in.pdf> (--every N | --before 3,7) --out-dir DIR
   convert pdf extract <in.pdf> --pages 1,3-5 -o out.pdf
   convert formats [--json]
   convert check
-  convert xdfu-verify <audit.jsonl>   check the hash chain of an audit log (exit 1 and the first bad line when it is broken)
+  convert xdfu-verify <audit.jsonl> [--key FILE]   check the hash chain of an audit log (exit 1 and the first bad line when it is broken);
+                          a keyed log needs its key file
 exit codes: 0 ok, 1 tool error, 2 usage, 3 unsupported, 4 timeout, 5 memory cap, 6 tool crashed, 7 tool missing,
             8 output failed validation, 9 input rejected, 10 warnings under --strict";
 
@@ -62,6 +65,7 @@ const VALUE_FLAGS: &[&str] = &[
     "--max-input-mb",
     "--xdfu",
     "--xdfu-audit",
+    "--xdfu-audit-key",
 ];
 const BOOL_FLAGS: &[&str] = &["--json", "--strict", "--keep-work", "--verify", "--redact"];
 
@@ -124,8 +128,8 @@ fn config(a: &Args) -> Result<Config, String> {
     })?;
     let redact = a.flag.iter().any(|f| f == "--redact");
     if mode == xdfu::Mode::Off {
-        if a.val.contains_key("--xdfu-audit") || redact {
-            return Err("--xdfu-audit and --redact need --xdfu watermark or --xdfu refuse".into());
+        if a.val.contains_key("--xdfu-audit") || a.val.contains_key("--xdfu-audit-key") || redact {
+            return Err("--xdfu-audit, --xdfu-audit-key and --redact need --xdfu watermark or --xdfu refuse".into());
         }
     } else {
         let path = a
@@ -133,7 +137,11 @@ fn config(a: &Args) -> Result<Config, String> {
             .get("--xdfu-audit")
             .map(PathBuf::from)
             .unwrap_or_else(xdfu::default_audit_path);
-        let log = audit::AuditLog::open(&path, redact)?;
+        let key = a.val.get("--xdfu-audit-key").map(PathBuf::from);
+        let log = audit::AuditLog::open_keyed(&path, redact, key.as_deref())?;
+        if !log.is_keyed() {
+            eprintln!("convert: warning: {}", audit::UNKEYED_WARNING);
+        }
         eprintln!(
             "convert: XDFU handling is on ({mode:?}); audit log {}",
             log.path().display()
@@ -205,7 +213,7 @@ fn options(a: &Args) -> Result<Options, String> {
     o.locale = match a.val.get("--locale") {
         Some(l) => plan::NumLocale::parse(l)
             .ok_or_else(|| format!("--locale takes en-US, ru, uz-Latn or uz-Cyrl, got '{l}'"))?,
-        None => sys_locale::get_locale()
+        None => regional_format()
             .or_else(|| {
                 ["LC_ALL", "LANG"]
                     .iter()
@@ -215,6 +223,29 @@ fn options(a: &Args) -> Result<Options, String> {
             .unwrap_or_default(),
     };
     Ok(o)
+}
+
+/// The OS locale that formats numbers and dates. On Windows that is the regional format (`HKCU\Control Panel\International\LocaleName`,
+/// what `GetUserDefaultLocaleName` returns), not the display language that `sys_locale` reads. B2, gate review.
+#[cfg(windows)]
+fn regional_format() -> Option<String> {
+    let out = std::process::Command::new("reg")
+        .args([
+            "query",
+            r"HKCU\Control Panel\International",
+            "/v",
+            "LocaleName",
+        ])
+        .output()
+        .ok()?;
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .find(|l| l.contains("LocaleName"))
+        .and_then(|l| l.split_whitespace().last().map(String::from))
+}
+#[cfg(not(windows))]
+fn regional_format() -> Option<String> {
+    sys_locale::get_locale()
 }
 
 fn finish(mut reports: Vec<FileReport>, a: &Args) -> ExitCode {
@@ -433,14 +464,32 @@ fn cmd_check(a: Args) -> ExitCode {
 }
 
 fn cmd_xdfu_verify(args: &[String]) -> ExitCode {
-    let [path] = args else {
-        return usage_err("xdfu-verify takes one audit log file");
+    let (path, key) = match args {
+        [p] => (p, None),
+        [p, f, k] if f == "--key" => (p, Some(k)),
+        _ => return usage_err("xdfu-verify takes one audit log file and optionally --key FILE"),
     };
-    match audit::verify(std::path::Path::new(path)) {
+    let key = match key
+        .map(|k| audit::load_key(std::path::Path::new(k)))
+        .transpose()
+    {
+        Ok(k) => k,
+        Err(e) => {
+            eprintln!("{path}: {e}");
+            return ExitCode::from(Exit::Usage.code());
+        }
+    };
+    match audit::verify_keyed(std::path::Path::new(path), key.as_deref()) {
         Ok(v) => {
             println!(
-                "{path}: the chain is intact, {} lines, last hash {}",
-                v.lines, v.last_hash
+                "{path}: the chain is intact ({}), {} lines, last hash {}",
+                if key.is_some() {
+                    "HMAC checked"
+                } else {
+                    "no key: a rewrite by someone who could write the file would not show"
+                },
+                v.lines,
+                v.last_hash
             );
             ExitCode::SUCCESS
         }
@@ -489,5 +538,14 @@ fn main() -> ExitCode {
         "check" => cmd_check(a),
         "pdf" => cmd_pdf(a),
         _ => cmd_convert(a),
+    }
+}
+
+#[cfg(all(test, windows))]
+mod tests {
+    #[test]
+    fn the_regional_format_is_read_from_the_registry() {
+        let l = super::regional_format().expect("HKCU Control Panel International LocaleName");
+        assert!(l.contains('-'), "{l}");
     }
 }

@@ -166,6 +166,17 @@ pub const STDERR_PATTERNS: &[(&str, Exit, &str)] = &[
         Exit::Rejected,
         "the input is password-protected",
     ),
+    // wordcraft-cli "this document is protected with a password" (.doc); pdfcraft-cli "the document is protected by a password" (gate review m1)
+    (
+        "this document is protected with a password",
+        Exit::Rejected,
+        "the input is password-protected",
+    ),
+    (
+        "document is protected by a password",
+        Exit::Rejected,
+        "the input is password-protected",
+    ),
     (
         "password is incorrect",
         Exit::Rejected,
@@ -844,6 +855,15 @@ mod tests {
         assert_eq!(
             c("The sheet is protected with a password. Unprotect it first"),
             None
+        );
+        // the real strings of wordcraft-cli (.doc) and pdfcraft-cli (gate review m1)
+        assert_eq!(
+            c("wordcraft-cli: this document is protected with a password"),
+            Some(Exit::Rejected)
+        );
+        assert_eq!(
+            c("pdfcraft-cli: the document is protected by a password"),
+            Some(Exit::Rejected)
         );
         assert_eq!(c("Warning: the file is password-protected"), None);
         assert_eq!(c("something new went wrong"), None);

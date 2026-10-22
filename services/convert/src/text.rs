@@ -6,7 +6,7 @@
 //! detector when such a file turns up.`
 use crate::exec::{Exit, Failure, fail};
 use crate::kind::Kind;
-use encoding_rs::{Encoding, UTF_16BE, UTF_16LE, WINDOWS_1251, WINDOWS_1252};
+use encoding_rs::{Encoding, UTF_8, UTF_16BE, UTF_16LE, WINDOWS_1251, WINDOWS_1252};
 use std::fs;
 use std::path::Path;
 
@@ -71,6 +71,7 @@ pub fn label(e: &'static Encoding) -> &'static str {
         "windows-1252" => "cp1252 (windows-1252)",
         "UTF-16LE" => "UTF-16 LE",
         "UTF-16BE" => "UTF-16 BE",
+        "UTF-8" => "UTF-8 (a few damaged bytes were replaced)",
         other => other,
     }
 }
@@ -78,6 +79,15 @@ pub fn label(e: &'static Encoding) -> &'static str {
 /// The decoded text and the encoding it was read as (`None`: it was UTF-8 already and `bytes` is unchanged).
 pub fn to_utf8(bytes: &[u8]) -> Option<(String, &'static Encoding)> {
     let enc = guess(bytes)?;
+    // UTF-8 with a stray bad byte (a paste, a cut multi-byte letter) is UTF-8, not cp1252: keep the letters, replace the bytes (m11)
+    if enc == WINDOWS_1251 || enc == WINDOWS_1252 {
+        let lossy = String::from_utf8_lossy(bytes);
+        let high = bytes.iter().filter(|b| **b >= 0x80).count();
+        let bad = lossy.chars().filter(|c| *c == '\u{fffd}').count();
+        if high >= 16 && bad > 0 && bad * 50 <= high {
+            return Some((lossy.into_owned(), UTF_8));
+        }
+    }
     // `decode` honours a BOM (and drops it); an 8-bit page never fails, a bad UTF-16 pair becomes U+FFFD
     let (text, _, _) = enc.decode(bytes);
     Some((text.into_owned(), enc))
@@ -162,6 +172,22 @@ mod tests {
         let (t, e) = to_utf8(&fr).unwrap();
         assert_eq!(e.name(), "windows-1252");
         assert!(t.contains("caf\u{e9}") && t.contains('\u{20ac}'), "{t}");
+    }
+
+    #[test]
+    fn utf8_with_one_bad_byte_stays_utf8() {
+        let text = "Приказ № 5 по HRM: премии за октябрь, Ходимларни рағбатлантириш";
+        let mut b = text.as_bytes().to_vec();
+        b.insert(10, 0xFF);
+        let (t, e) = to_utf8(&b).unwrap();
+        assert_eq!(e.name(), "UTF-8");
+        assert!(
+            t.contains("премии за октябрь") && t.contains('\u{fffd}'),
+            "{t}"
+        );
+        // real cp1251 is still cp1251
+        let (cyr, _, _) = WINDOWS_1251.encode(text);
+        assert_eq!(to_utf8(&cyr).unwrap().1.name(), "windows-1251");
     }
 
     #[test]

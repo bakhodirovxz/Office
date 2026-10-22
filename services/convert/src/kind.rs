@@ -89,7 +89,7 @@ impl Kind {
         }
     }
 
-    fn from_ext(ext: &str) -> Option<Kind> {
+    pub fn from_ext(ext: &str) -> Option<Kind> {
         let e = ext.to_ascii_lowercase();
         Some(match e.as_str() {
             "docx" | "docm" | "dotx" | "dotm" => Kind::Docx,
@@ -121,6 +121,8 @@ pub struct Detected {
     pub ext_mismatch: bool,
     /// An encrypted OOXML package (an OLE container holding `EncryptedPackage`): needs a password.
     pub password_protected: bool,
+    /// A zip package (magic `PK`, an OOXML or ODF extension) whose central directory cannot be read: cut off or damaged.
+    pub damaged: bool,
 }
 
 #[derive(Debug)]
@@ -168,6 +170,28 @@ pub fn detect(path: &Path) -> Result<Detected, DetectError> {
     } else {
         None
     };
+    if zip_names.is_none()
+        && head.starts_with(b"PK\x03\x04")
+        && let Some(kind) = ext.filter(|k| {
+            matches!(
+                k,
+                Kind::Docx
+                    | Kind::Xlsx
+                    | Kind::Xlsb
+                    | Kind::Pptx
+                    | Kind::Odt
+                    | Kind::Ods
+                    | Kind::Odp
+            )
+        })
+    {
+        return Ok(Detected {
+            kind,
+            ext_mismatch: false,
+            password_protected: false,
+            damaged: true,
+        });
+    }
     let raw_ext = path
         .extension()
         .and_then(|e| e.to_str())
@@ -212,6 +236,7 @@ fn legacy_text(head: &[u8], ext: Option<Kind>) -> Option<Detected> {
         kind,
         ext_mismatch: false,
         password_protected: false,
+        damaged: false,
     })
 }
 
@@ -244,6 +269,7 @@ pub fn detect_bytes(
         kind,
         ext_mismatch: ext.is_some_and(|e| e != kind),
         password_protected: false,
+        damaged: false,
     };
     if head.starts_with(b"%PDF-") {
         return Some(found(Kind::Pdf));
@@ -256,6 +282,7 @@ pub fn detect_bytes(
                 kind,
                 ext_mismatch: false,
                 password_protected: true,
+                damaged: false,
             });
         }
         // an .xls with an embedded Word object holds a WordDocument stream too: when several apps are named, the extension decides

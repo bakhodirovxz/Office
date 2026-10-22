@@ -343,6 +343,8 @@ fn guard_pdf_text(
     .is_err()
     {
         ctl.check()?;
+        // the native result stands, but nobody has checked that its text is complete (gate review m5)
+        p.warn("pdf_text_unchecked", 1);
         return Ok(());
     }
     let pdf_letters = fs::read(&sink)
@@ -1164,6 +1166,17 @@ pub fn convert_source(
     };
     let k: Kind = det.kind;
     let kind = Some(k.ext().to_string());
+    if det.damaged {
+        return failed(
+            &label,
+            t,
+            kind,
+            Failure {
+                exit: Exit::Rejected,
+                msg: "the file is damaged (the zip directory is missing or cut off); open it in its application and save it again".into(),
+            },
+        );
+    }
     if det.password_protected {
         return failed(
             &label,
@@ -1218,6 +1231,13 @@ pub fn convert_source(
             count: 1,
             text: report::text_with("text_transcoded", &[("encoding", enc)]),
         });
+    }
+    // B2: a ru/uz-style CSV read as en-US swaps day and month without a sound
+    if matches!(k, Kind::Csv | Kind::Tsv)
+        && opts.locale == plan::NumLocale::EnUs
+        && crate::csvloc::looks_ru_uz(&crate::csvloc::head(&staged.file), k == Kind::Tsv)
+    {
+        warnings.push(report::warn("csv_locale_mismatch", 1));
     }
     if det.ext_mismatch {
         warnings.push(Warning {

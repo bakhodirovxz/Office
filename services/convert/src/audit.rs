@@ -4,6 +4,11 @@
 //! event's fields, and `hash`: SHA-256 over the line's JSON text without the `hash` field (keys in sorted order, so the text is
 //! the same everywhere). Changing, deleting or inserting a line breaks the chain from there on and `verify` names the line.
 //!
+//! An unkeyed chain only stops a naive edit: whoever can write the file can rewrite lines k..n and recompute every hash (gate review M5).
+//! With an operator key (`open_keyed`, a file kept outside the log) the `hash` is HMAC-SHA256 under that key and every line carries
+//! `alg: "hmac-sha256"`, so a rewrite without the key fails `verify_keyed`. A keyed log is never accepted without its key, and a
+//! line without `alg` is refused under a key (no downgrade).
+//!
 //! Limits, said plainly. A chain proves that the lines it holds were not changed or reordered. It cannot prove that lines were not
 //! cut off at the END of the file, so the operator should record `verify`'s `last_hash` and count somewhere else from time to time.
 //! "Append-only" is a property of how this code writes the file; making the file itself append-only is the operator's job
@@ -63,13 +68,60 @@ pub fn now_secs() -> u64 {
         .unwrap_or(0)
 }
 
-fn hash_of(body: &Map<String, Value>) -> String {
-    let text = serde_json::to_string(body).expect("a JSON object serialises");
-    Sha256::digest(text.as_bytes())
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect()
+const ALG: &str = "hmac-sha256";
+
+/// HMAC-SHA256 (RFC 2104), by hand: the one primitive, so no crate for it.
+fn hmac_sha256(key: &[u8], msg: &[u8]) -> [u8; 32] {
+    let mut k = [0u8; 64];
+    if key.len() > 64 {
+        k[..32].copy_from_slice(&Sha256::digest(key));
+    } else {
+        k[..key.len()].copy_from_slice(key);
+    }
+    let pad = |b: u8| k.map(|x| x ^ b);
+    let inner = Sha256::new()
+        .chain_update(pad(0x36))
+        .chain_update(msg)
+        .finalize();
+    Sha256::new()
+        .chain_update(pad(0x5c))
+        .chain_update(inner)
+        .finalize()
+        .into()
 }
+
+fn hex(b: &[u8]) -> String {
+    b.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// SHA-256 of the line's JSON text, or HMAC-SHA256 under `key`.
+fn hash_of(body: &Map<String, Value>, key: Option<&[u8]>) -> String {
+    let text = serde_json::to_string(body).expect("a JSON object serialises");
+    match key {
+        Some(k) => hex(&hmac_sha256(k, text.as_bytes())),
+        None => hex(&Sha256::digest(text.as_bytes())),
+    }
+}
+
+/// The operator's key: a file of at least 32 bytes (a trailing line break is not part of it).
+pub fn load_key(path: &Path) -> Result<Vec<u8>, String> {
+    let mut b = fs::read(path)
+        .map_err(|e| format!("cannot read the audit key file {}: {e}", path.display()))?;
+    while b.last().is_some_and(|c| matches!(c, b'\r' | b'\n')) {
+        b.pop();
+    }
+    if b.len() < 32 {
+        return Err(format!(
+            "the audit key file {} holds {} bytes; it needs at least 32 random bytes",
+            path.display(),
+            b.len()
+        ));
+    }
+    Ok(b)
+}
+
+/// Said once by the CLI and the API when no key is configured.
+pub const UNKEYED_WARNING: &str = "the XDFU audit log has no key (xdfu_audit_key_file / --xdfu-audit-key): its hash chain only stops a naive edit, because anyone who can write the file can rewrite it and recompute the hashes";
 
 #[derive(Debug)]
 pub struct Verified {
@@ -77,8 +129,13 @@ pub struct Verified {
     pub last_hash: String,
 }
 
-/// Check the whole chain of `path`. `Err` names the first line that does not fit ("line 7: the hash does not match its content").
+/// Check the whole chain of `path`, unkeyed. A keyed log is refused here (it needs `verify_keyed`).
 pub fn verify(path: &Path) -> Result<Verified, String> {
+    verify_keyed(path, None)
+}
+
+/// Check the whole chain of `path` under `key`. `Err` names the first line that does not fit ("line 7: the hash does not match its content").
+pub fn verify_keyed(path: &Path, key: Option<&[u8]>) -> Result<Verified, String> {
     let bytes = fs::read(path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
     let text = String::from_utf8(bytes).map_err(|_| "the log is not valid UTF-8".to_string())?;
     let (mut prev, mut seq) = (GENESIS.to_string(), 0u64);
@@ -98,9 +155,25 @@ pub fn verify(path: &Path) -> Result<Verified, String> {
         if obj.get("seq").and_then(Value::as_u64) != Some(seq + 1) {
             return Err(format!("line {n}: the sequence number is not {}", seq + 1));
         }
-        if hash_of(&obj) != hash {
+        let has_alg = obj.get("alg").and_then(Value::as_str) == Some(ALG);
+        if key.is_none() && has_alg {
             return Err(format!(
-                "line {n}: the hash does not match its content (the line was changed)"
+                "line {n}: the log is keyed (HMAC-SHA256); give the key file"
+            ));
+        }
+        if key.is_some() && !has_alg {
+            return Err(format!(
+                "line {n}: the line is not keyed (HMAC), so the log was rewritten or started without the key"
+            ));
+        }
+        if hash_of(&obj, key) != hash {
+            return Err(format!(
+                "line {n}: the hash does not match its content (the line was changed{})",
+                if key.is_some() {
+                    ", or the key is not the one that wrote the log"
+                } else {
+                    ""
+                }
             ));
         }
         (prev, seq) = (hash, seq + 1);
@@ -116,7 +189,8 @@ struct FileLock(PathBuf);
 
 impl FileLock {
     fn take(log: &Path) -> Result<FileLock, String> {
-        let p = log.with_extension("lock");
+        // `<log>.lock`: a log that is itself named `*.lock` must not be its own lock (gate review m12)
+        let p = PathBuf::from(format!("{}.lock", log.display()));
         for _ in 0..200 {
             match OpenOptions::new().write(true).create_new(true).open(&p) {
                 Ok(_) => return Ok(FileLock(p)),
@@ -146,24 +220,41 @@ impl Drop for FileLock {
 pub struct AuditLog {
     path: PathBuf,
     redact: bool,
+    key: Option<Vec<u8>>,
     mu: Mutex<()>,
 }
 
 impl AuditLog {
     /// Open (and create) the log. An existing log must verify: a damaged chain stops XDFU handling instead of being extended.
     pub fn open(path: &Path, redact: bool) -> Result<AuditLog, String> {
+        AuditLog::open_keyed(path, redact, None)
+    }
+
+    /// `key_file`: the operator's key (`load_key`); `None` keeps the plain SHA-256 chain, which is weaker (`UNKEYED_WARNING`).
+    pub fn open_keyed(
+        path: &Path,
+        redact: bool,
+        key_file: Option<&Path>,
+    ) -> Result<AuditLog, String> {
+        let key = key_file.map(load_key).transpose()?;
         if let Some(dir) = path.parent().filter(|d| !d.as_os_str().is_empty()) {
             fs::create_dir_all(dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
         }
         if path.exists() {
-            verify(path)
+            verify_keyed(path, key.as_deref())
                 .map_err(|e| format!("the audit log {} is damaged: {e}", path.display()))?;
         }
         Ok(AuditLog {
             path: path.to_path_buf(),
             redact,
+            key,
             mu: Mutex::new(()),
         })
+    }
+
+    /// The chain is an HMAC under an operator key.
+    pub fn is_keyed(&self) -> bool {
+        self.key.is_some()
     }
 
     pub fn path(&self) -> &Path {
@@ -209,7 +300,10 @@ impl AuditLog {
         body.insert("ts".into(), utc_iso(now_secs()).into());
         body.insert("prev".into(), prev.into());
         body.insert("event".into(), event.into());
-        let hash = hash_of(&body);
+        if self.key.is_some() {
+            body.insert("alg".into(), ALG.into());
+        }
+        let hash = hash_of(&body, self.key.as_deref());
         body.insert("hash".into(), hash.into());
         let mut line = serde_json::to_string(&body).expect("serialises");
         line.push('\n');
@@ -278,7 +372,7 @@ mod tests {
         let forged = lines[1].replace("\"u2\"", "\"mallory\"");
         let mut obj: Map<String, Value> = serde_json::from_str(&forged).unwrap();
         obj.remove("hash");
-        obj.insert("hash".into(), hash_of(&obj).into());
+        obj.insert("hash".into(), hash_of(&obj, None).into());
         check(
             [
                 lines[0].to_string(),
@@ -298,6 +392,72 @@ mod tests {
         // a damaged log is not extended, and not opened
         fs::write(&p, good.replacen("\"u3\"", "\"x\"", 1)).unwrap();
         assert!(AuditLog::open(&p, false).err().unwrap().contains("damaged"));
+        let _ = fs::remove_dir_all(p.parent().unwrap());
+    }
+
+    #[test]
+    fn hmac_matches_rfc_4231_case_2() {
+        assert_eq!(
+            hex(&hmac_sha256(b"Jefe", b"what do ya want for nothing?")),
+            "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        );
+    }
+
+    /// M5: a consistent rewrite (changed line, every hash after it recomputed) passes the plain chain and fails the keyed one.
+    #[test]
+    fn a_consistent_rewrite_without_the_key_fails_the_hmac_chain() {
+        let p = tmp("hmac");
+        let kf = p.with_file_name("audit.key");
+        fs::create_dir_all(p.parent().unwrap()).unwrap();
+        fs::write(&kf, b"0123456789abcdef0123456789abcdef\n").unwrap();
+        let log = AuditLog::open_keyed(&p, false, Some(&kf)).unwrap();
+        assert!(log.is_keyed());
+        for i in 1..=3u64 {
+            log.append("copy", json!({"user": format!("u{i}")}))
+                .unwrap();
+        }
+        let key = load_key(&kf).unwrap();
+        assert_eq!(verify_keyed(&p, Some(&key)).unwrap().lines, 3);
+        // no key, or another key
+        assert!(verify(&p).unwrap_err().contains("keyed"));
+        assert!(
+            verify_keyed(&p, Some(&[7u8; 32]))
+                .unwrap_err()
+                .starts_with("line 1:")
+        );
+        // the attacker rewrites line 2 and recomputes lines 2..3 with the plain SHA-256 chain (alg field kept or dropped): no good under the key
+        let text = fs::read_to_string(&p).unwrap();
+        let mut prev = serde_json::from_str::<Value>(text.lines().next().unwrap()).unwrap()["hash"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let mut out = vec![text.lines().next().unwrap().to_string()];
+        for l in text.lines().skip(1) {
+            let mut o: Map<String, Value> = serde_json::from_str(l).unwrap();
+            o.remove("hash");
+            if o["user"] == "u2" {
+                o.insert("user".into(), "mallory".into());
+            }
+            o.insert("prev".into(), prev.clone().into());
+            let h = hash_of(&o, None);
+            o.insert("hash".into(), h.clone().into());
+            prev = h;
+            out.push(serde_json::to_string(&o).unwrap());
+        }
+        fs::write(&p, out.join("\n") + "\n").unwrap();
+        let e = verify_keyed(&p, Some(&key)).unwrap_err();
+        assert!(e.starts_with("line 2:"), "{e}");
+        // an unkeyed open of a keyed log, and a keyed open of a rewritten one, are refused
+        assert!(
+            AuditLog::open_keyed(&p, false, Some(&kf))
+                .err()
+                .unwrap()
+                .contains("damaged")
+        );
+        assert!(AuditLog::open(&p, false).err().unwrap().contains("damaged"));
+        // a short key is refused
+        fs::write(&kf, b"short").unwrap();
+        assert!(load_key(&kf).is_err());
         let _ = fs::remove_dir_all(p.parent().unwrap());
     }
 

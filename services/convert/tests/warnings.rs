@@ -171,6 +171,92 @@ fn csv_is_en_us_one_sheet() {
     assert_eq!(codes(&r), ["csv_one_sheet_en_us"], "{}", r.message);
 }
 
+/// B2: a ru/uz-style CSV in an en-US job warns, and names no other code; the same file in a ru job, and an en-US CSV, do not.
+#[test]
+fn a_ru_style_csv_in_an_en_us_job_warns() {
+    let s = Sandbox::new("csvloc");
+    let cfg = s.cfg();
+    std::fs::create_dir_all(&cfg.work_dir).unwrap();
+    let run = |name: &str, body: &str, loc| {
+        let opts = Options {
+            locale: loc,
+            ..Options::default()
+        };
+        let r = job::convert_file(
+            &cfg,
+            &s.file(name, body.as_bytes()),
+            Target::Csv,
+            &opts,
+            &s.dest(),
+        );
+        // the fake tool cannot make every output; the warnings of a failed job are in the report all the same
+        codes(&r)
+            .iter()
+            .filter(|c| **c == "csv_locale_mismatch")
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+    };
+    let excel_ru = "Date;Salary
+01.03.2019;3500000,0
+";
+    assert_eq!(
+        run("staff.csv", excel_ru, NumLocale::EnUs),
+        ["csv_locale_mismatch"]
+    );
+    assert_eq!(
+        run(
+            "staff2.csv",
+            "a	b
+1	2
+",
+            NumLocale::EnUs
+        ),
+        ["csv_locale_mismatch"]
+    );
+    assert_eq!(
+        run(
+            "staff.tsv",
+            "a	b
+01.03.2019	1
+",
+            NumLocale::EnUs
+        ),
+        ["csv_locale_mismatch"]
+    );
+    assert!(run("staff3.csv", excel_ru, NumLocale::Ru).is_empty());
+    assert!(
+        run(
+            "us.csv",
+            "Date,Salary
+1/3/2019,\"3,500.50\"
+",
+            NumLocale::EnUs
+        )
+        .is_empty()
+    );
+    assert!(
+        run(
+            "us.tsv",
+            "a	b
+1/3/2019	3.5
+",
+            NumLocale::EnUs
+        )
+        .is_empty()
+    );
+}
+
+/// m3: a zip with a docx's magic but no central directory is a damaged file (exit 9), not an unsupported one (exit 3).
+#[test]
+fn a_cut_off_docx_is_damaged_not_unsupported() {
+    let s = Sandbox::new("cut");
+    let whole = std::fs::read(s.docx("whole.docx", &[])).unwrap();
+    let cut = s.file("cut.docx", &whole[..whole.len() / 2]);
+    let r = job::convert_file(&s.cfg(), &cut, Target::Pdf, &Options::default(), &s.dest());
+    assert_eq!(r.code, 9, "{}", r.message);
+    assert!(r.message.contains("damaged"), "{}", r.message);
+}
+
 const FOOTER: &str = "<w:ftr><w:p><w:r><w:t>Page 1</w:t></w:r></w:p></w:ftr>";
 const EMPTY_HEADER: &str = "<w:hdr><w:p/></w:hdr>";
 
@@ -460,6 +546,9 @@ fn every_code_has_catalog_text() {
             "pdf_text_missing",
             "pdf_docx_fallback",
             "csv_one_sheet",
+            "csv_locale_mismatch",
+            "xdfu_no_text_layer",
+            "pdf_text_unchecked",
         ]
         .map(String::from),
     );
