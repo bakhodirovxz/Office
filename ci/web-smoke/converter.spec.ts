@@ -204,6 +204,27 @@ test('combine needs two PDFs; split and extract send their fields', async ({ pag
   await expect(page.locator('#results li')).toContainText('beyond');
 });
 
+test('a Russian-format CSV in an English page: the Number format select removes the locale warning', async ({ page }) => {
+  await open(page, 'en');
+  await pick(page, [file('note.txt', GOOD)]);
+  await expect(page.locator('#f-locale')).toBeHidden(); // no csv or spreadsheet among the files
+  await page.click('#clear');
+  const csv = 'Имя;Дата;Сумма\nАнна;01.03.2019;3500000,0\nОлег;15.04.2020;1200,5\n';
+  await pick(page, [file('staff.csv', csv)]);
+  await expect(page.locator('#f-locale')).toBeVisible();
+  await expect(page.locator('#o-locale')).toHaveValue('en-US'); // follows the UI language
+  await page.selectOption('#o-to', 'csv');
+  await page.click('#go');
+  await expect(page.locator('#results .warn')).toContainText(txt('en', 'warning.csv_locale_mismatch').slice(0, 30));
+  await page.selectOption('#o-locale', 'ru');
+  await page.click('#go');
+  await expect(page.locator('#results .badge')).toHaveText(txt('en', 'state.done'));
+  await expect(page.locator('#results .warn')).toHaveCount(0);
+  // the choice survives a change of the page language, and the default follows the language until then
+  await page.selectOption('#lang', 'uz-Latn-2026');
+  await expect(page.locator('#o-locale')).toHaveValue('ru');
+});
+
 test('cancel stops a running conversion and deletes the job', async ({ page }) => {
   await open(page);
   const created = page.waitForResponse((r) => r.url().endsWith('/api/v1/jobs') && r.request().method() === 'POST');

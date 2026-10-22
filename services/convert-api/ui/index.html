@@ -90,6 +90,14 @@
       <div class="field" data-mode="extract" hidden><label for="o-xpages" data-i18n="ui.opt.pages">Pages</label>
         <input id="o-xpages" type="text" autocomplete="off" aria-describedby="o-xpages-hint">
         <span id="o-xpages-hint" class="muted" data-i18n="ui.opt.pages.required"></span></div>
+      <div class="field" id="f-locale" hidden><label for="o-locale" data-i18n="ui.opt.locale">Number format</label>
+        <select id="o-locale">
+          <option value="en-US" data-i18n="ui.opt.locale.en">English (US)</option>
+          <option value="ru" data-i18n="ui.opt.locale.ru">Russian</option>
+          <option value="uz-Latn" data-i18n="ui.opt.locale.uz-Latn">Uzbek (Latin)</option>
+          <option value="uz-Cyrl" data-i18n="ui.opt.locale.uz-Cyrl">Uzbek (Cyrillic)</option>
+        </select>
+        <span class="muted" data-i18n="ui.opt.locale.hint">How numbers and dates in CSV and spreadsheet files are read and written.</span></div>
       <div class="field" data-opt="translit"><label for="o-translit" data-i18n="ui.opt.translit">Transliteration</label>
         <select id="o-translit">
           <option value="" data-i18n="ui.opt.translit.none">None</option>

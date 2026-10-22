@@ -37,8 +37,11 @@
     if (n.startsWith('uz')) return /cyrl|-cy/.test(n) ? 'uz-Cyrl' : 'uz-Latn';
     return n.startsWith('ru') ? 'ru' : 'en';
   }
+  // the number format follows the language until the user picks one
+  const langLocale = (l) => (l === 'ru' ? 'ru' : l === 'uz-Cyrl' ? 'uz-Cyrl' : l.startsWith('uz') ? 'uz-Latn' : 'en-US');
   function setLang(l) {
     S.lang = l;
+    if (!S.localeTouched) $('o-locale').value = langLocale(l);
     store('localStorage', 'cv.lang', l);
     document.documentElement.lang = l;
     $('lang').value = l;
@@ -213,6 +216,7 @@
     sel.disabled = S.running || !tg.list.length;
     const to = sel.value;
     $('f-to').hidden = isOp;
+    $('f-locale').hidden = isOp || !S.items.some((i) => ['csv', 'tsv', 'xlsx', 'xls', 'xlsb', 'ods'].includes(i.ext));
     for (const f of document.querySelectorAll('[data-mode]')) f.hidden = f.dataset.mode !== md;
     for (const f of document.querySelectorAll('[data-opt]')) f.hidden = isOp || !(to && optionAvailable(f.dataset.opt, to));
     const tr = $('o-translit').value;
@@ -239,7 +243,7 @@
       if (md === 'extract') o.pages = $('o-xpages').value.trim();
       return o;
     }
-    const o = { to: $('o-to').value, locale: S.lang }, vis = (n) => !document.querySelector('[data-opt="' + n + '"]').hidden;
+    const o = { to: $('o-to').value, locale: $('o-locale').value }, vis = (n) => !document.querySelector('[data-opt="' + n + '"]').hidden;
     if (vis('translit') && $('o-translit').value) { o.translit = $('o-translit').value; if (vis('alphabet')) o.alphabet = $('o-alphabet').value; }
     if (vis('sheet')) o.sheet = $('o-sheet').value;
     if (vis('pages') && $('o-pages').value.trim()) o.pages = $('o-pages').value.trim();
@@ -375,6 +379,7 @@
     $('srv-apply').addEventListener('click', connect);
     $('srv-clear').addEventListener('click', disconnect);
     for (const id of ['o-to', 'o-translit', 'o-mode']) $(id).addEventListener('change', render);
+    $('o-locale').addEventListener('change', () => { S.localeTouched = true; });
     for (const id of ['o-every', 'o-before', 'o-xpages']) $(id).addEventListener('input', render);
     // Alt+Up / Alt+Down moves the file in focus when the files are being combined
     $('files').addEventListener('keydown', (e) => {
