@@ -1,6 +1,6 @@
 # Phase 3 licence table (WP5, PDF to DOCX sidecar)
 
-Status: **awaiting architect sign-off** (WP5 done-check, PLAN section 3.1). Facts verified 2026-10-21 against the
+Status: **signed off by the architect in the Phase 3 gate review, 2026-10-22** (docs/phase3/gate-review.md §3, with its conditions: PyMuPDF 2.x needs a new check; name the exact FFmpeg source before any image is distributed). Facts verified 2026-10-21 against the
 wheels' own metadata (the pinned files in `sidecars/pdf2docx/requirements.lock`). Not legal advice.
 
 | Component | Licence | Where | Verdict |
