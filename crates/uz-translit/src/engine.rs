@@ -307,12 +307,20 @@ pub(crate) fn convert_segment(
     };
     let to_cyr = dir == Direction::ToCyrillic;
     if opts.latin_alphabet == LatinAlphabet::Auto {
-        // Auto: a paragraph with any of ö ğ ş ç is read as 2026; otherwise 1995 (->L writes 1995)
+        // Auto: ->Cyrillic reads a paragraph with any of ö ğ ş ç as 2026, else 1995; ->Latin writes the product default (O13, m6)
         let new = to_cyr && seg.items.iter().any(|t| is_new_letter(t.c));
-        seg.opts.latin_alphabet = if new {
-            LatinAlphabet::Y2026
+        let dflt = match crate::DEFAULT_LATIN_ALPHABET {
+            LatinAlphabet::Auto => LatinAlphabet::Y1995,
+            d => d,
+        };
+        seg.opts.latin_alphabet = if to_cyr {
+            if new {
+                LatinAlphabet::Y2026
+            } else {
+                LatinAlphabet::Y1995
+            }
         } else {
-            LatinAlphabet::Y1995
+            dflt
         };
     }
     scan::mark(&mut seg.items, to_cyr && opts.roman_numerals, para_start);

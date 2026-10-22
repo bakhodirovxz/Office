@@ -229,7 +229,9 @@ fn options(a: &Args) -> Result<Options, String> {
 /// what `GetUserDefaultLocaleName` returns), not the display language that `sys_locale` reads. B2, gate review.
 #[cfg(windows)]
 fn regional_format() -> Option<String> {
-    let out = std::process::Command::new("reg")
+    // the full path: a `reg.exe` earlier on PATH or in the working directory must not be run (n3)
+    let root = std::env::var_os("SystemRoot").unwrap_or_else(|| r"C:\Windows".into());
+    let out = std::process::Command::new(std::path::Path::new(&root).join(r"System32\reg.exe"))
         .args([
             "query",
             r"HKCU\Control Panel\International",

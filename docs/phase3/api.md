@@ -66,8 +66,7 @@ All under `/api/v1` need the mode's auth. Errors are `{"error": {"code", "messag
 job has **one** entry in `GET /jobs/{id}` (`files[0]`, `n` 0, `name` = the upload names joined by `, `): an operation succeeds or fails as a
 whole. If any upload is refused, that entry is `failed` with the first refused file's code and `name: reason`; nothing runs and nothing
 stays on disk. A page range beyond the document, a split over the page cap (`max_pages_in`) or the part cap (`max_png_out`), and a
-damaged PDF fail the entry with the engine's message. Known limit: with XDFU on, the hook inspects the first file of a combine; a grif
-that is only in a later file is not seen on input (the output's first page is checked as for any PDF).
+damaged PDF fail the entry with the engine's message.
 
 A warning in a report carries `args`, the values of the `{placeholders}` of its message (`text_transcoded`: `encoding`; `pdf_text_missing`:
 `missing`, `total`; `xdfu_copy`: `copy`; `kind_mismatch`: `kind`; `xdfu_no_watermark`: `target`), read back from the engine's English

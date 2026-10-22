@@ -49,6 +49,9 @@ DIRECTIONS += [D("docs.%s2%s" % (s, t), "docs", [_SRC[s]], t) for s, ts in _MISS
 DIRECTIONS += [D("sheets.xlsx2xlsx", "sheets", ["hrm_staff.xlsx"], "xlsx"), D("sheets.xls2csv", "sheets", ["hrm_staff.xls"], "csv")]
 DIRECTIONS += [D("sheets.%s2%s" % (s, t), "sheets", ["hrm_staff." + s], t) for s in ("xlsb", "ods") for t in ("pdf", "csv")]
 DIRECTIONS += [D("sheets.%s2%s" % (s, t), "sheets", ["staff." + s], t) for s in ("csv", "tsv") for t in ("pdf", "xlsx", "csv")]
+# n4: the en-US csv case with a cell comparison. staff.csv is Excel's ru CSV (';', dd.mm.yyyy): read as en-US the dates change, and
+# csv_locale_mismatch must say so (B2); a cell that is simply gone is a csv_cells loss.
+DIRECTIONS += [D("sheets.csv2csv.enus", "sheets", ["staff.csv"], "csv", locale="en-US")]
 DIRECTIONS += [D("slides.pptx2pptx", "slides", ["hrm_deck.pptx"], "pptx")]
 assert len({d["id"] for d in DIRECTIONS}) == len(DIRECTIONS), "duplicate direction ids"
 

@@ -157,3 +157,22 @@ fn official_2026_text_reads_and_round_trips() {
     // ->L writes the tutuq as U+02BC (D-02); everything else comes back as published.
     assert_eq!(l26(cyr), src.replace('\u{2019}', "\u{2bc}"));
 }
+
+#[test]
+fn auto_to_latin_follows_default() {
+    // m6: ->Latin with Auto writes the product default, so flipping DEFAULT_LATIN_ALPHABET (O13) reaches it
+    let auto = Options {
+        latin_alphabet: LatinAlphabet::Auto,
+        ..common::o95()
+    };
+    let dflt = Options {
+        latin_alphabet: uz_translit::DEFAULT_LATIN_ALPHABET,
+        ..common::o95()
+    };
+    for s in ["Шаҳар Ўзбекистон чой ғалаба", "Исҳоқ"] {
+        assert_eq!(
+            convert(s, Direction::ToLatin, &auto),
+            convert(s, Direction::ToLatin, &dflt)
+        );
+    }
+}

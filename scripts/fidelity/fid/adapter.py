@@ -40,14 +40,14 @@ class Adapter:
         return {"mode": self.mode, "convert": str(self.bin) if self.bin else None, "locale": self.locale}
 
     # ---- public
-    def convert(self, src, to, out_dir, translit=None, sheet=None, pdf_engine=None, dpi=None, timeout=600):
+    def convert(self, src, to, out_dir, translit=None, sheet=None, pdf_engine=None, dpi=None, timeout=600, locale=None):
         out_dir = Path(out_dir); shutil.rmtree(out_dir, ignore_errors=True); out_dir.mkdir(parents=True)
         if self.mode == "convert":
             argv = [self.bin, src, "--to", to, "--out-dir", out_dir, "--json", "--timeout", "300"]   # a loaded box trips the 10 s floor
             if translit: argv += ["--translit", translit]
             if sheet: argv += ["--sheet", sheet]
             if pdf_engine: argv += ["--pdf-engine", pdf_engine]
-            if self.locale: argv += ["--locale", self.locale]
+            if locale or self.locale: argv += ["--locale", locale or self.locale]
             if dpi: argv += ["--dpi", dpi]
             return self._run_convert(argv, timeout)
         return self._raw(Path(src), to, out_dir, translit, sheet, dpi, timeout)

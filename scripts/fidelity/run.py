@@ -167,7 +167,9 @@ def csv_load(p):
 
 def _neutral(v):
     """A cell without the locale's own marks: group spaces, the decimal comma and the date slash."""
-    return v.replace("\u00a0", "").replace("\u202f", "").replace(" ", "").replace(",", ".").replace("/", ".")
+    v = v.replace("\u00a0", "").replace("\u202f", "").replace(" ", "").replace(",", ".").replace("/", ".")
+    if re.fullmatch(r"\d{1,2}\.\d{1,2}\.\d{4}", v): v = ".".join(str(int(x)) for x in v.split("."))   # 01.03.2019 -> 1.3.2019
+    return re.sub(r"^(-?\d+)\.0+$", r"\1", v)                                                         # 3500000,0 -> 3500000
 
 
 def csv_compare(ref, cand):
@@ -277,7 +279,7 @@ def main():
             c["craft"] = ad.convert(src, "docx", w / "craft")
             c["craft_txt"] = ad.convert(src, "txt", w / "craft_txt")
         else:
-            c["craft"] = ad.convert(src, d["to"], w / "craft", translit=d.get("translit"))
+            c["craft"] = ad.convert(src, d["to"], w / "craft", translit=d.get("translit"), locale=d.get("locale"))
         print("[craft] %-26s %-28s %-6s code=%s %.2fs" % (d["id"], c["name"], c["craft"]["status"], c["craft"]["code"], time.time() - t0), flush=True)
         # --- Office source PDF (the reference for every pixel/page/text metric) + Office's own conversion
         stem = src.stem
@@ -406,11 +408,13 @@ def main():
                 if o and oq.ok(o): m.update(csv_compare(o, y))
                 elif c["src"].suffix.lower() in (".csv", ".tsv"):   # csv -> csv: the source text is the reference (Office has no "same format" job)
                     m.update(csv_compare(c["src"], y)); m["reference"] = "source fixture"
+                    # n4: against the source text, a changed cell is a loss. Under an explicit locale, a cell that differs only by locale marks (01.03.2019 -> 1/3/2019) must be named by csv_locale_mismatch.
+                    m["csv_losses"] = ([{"feature": "csv_cells", "before": m["cells_ref"], "after": m["cells_equal"] + m["cells_differ_only_by_locale"]}] if m["cells_other_diff"] else [])                         + ([{"feature": "csv_locale", "before": m["cells_ref"], "after": m["cells_equal"]}] if d.get("locale") and m["cells_differ_only_by_locale"] else [])
                 else: m["ref_note"] = "no Office CSV"
                 m["structural_losses"] = S.structural_losses(src_s, S.structure(y), "csv")
             if kind == "translit" and vis:   # the text is SUPPOSED to change: only pagination counts (Phase 2 owns the text checks)
                 vis = {k: vis[k] for k in ("page_match", "pages_ref", "pages_cand")}
-            m["losses"] = (m.get("structural_losses") or []) + losses_of(None, None, vis, tm, translit=(kind == "translit"))
+            m["losses"] = (m.get("structural_losses") or []) + (m.get("csv_losses") or []) + losses_of(None, None, vis, tm, translit=(kind == "translit"))
             return m
 
         if kind in ("pdf", "png", "edit", "text", "csv", "translit"):

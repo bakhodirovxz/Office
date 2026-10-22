@@ -15,6 +15,13 @@ class T(unittest.TestCase):
         self.assertEqual([l["feature"] for l in S.silent_losses(losses, warn)], ["charts"])
         self.assertEqual(len(S.silent_losses(losses, [])), 2)
 
+    def test_csv_locale_loss_is_explained_only_by_csv_locale_mismatch(self):
+        loc = [{"feature": "csv_locale", "before": 10, "after": 6}]
+        self.assertEqual(S.silent_losses(loc, []), loc)
+        self.assertEqual(S.silent_losses(loc, [{"code": "csv_locale_mismatch", "text": "x"}]), [])
+        cells = [{"feature": "csv_cells", "before": 10, "after": 9}]
+        self.assertEqual(S.silent_losses(cells, [{"code": "csv_locale_mismatch", "text": "x"}]), cells)   # a lost cell is not a locale mark
+
     def test_derived_losses_are_explained_only_by_a_warning_that_names_them(self):
         text = [{"feature": "text", "before": 1.0, "after": 0.7}, {"feature": "pagination", "before": 2, "after": 3}]
         self.assertEqual(S.silent_losses(text, []), text)                                        # nothing said at all: silent
