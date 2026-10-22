@@ -1,0 +1,81 @@
+# wordcraft tests after the 2026-10-22 sync (ci.sh quick, overlay on, CRAFT_FONTS_DIR set), excerpt
+30:     Summary [ 148.543s] 21 tests run: 3 passed, 18 failed, 1032 skipped
+31-error: test run failed
+32-wordcraft: quarantined 21 (still failing 18, passed-flaky 0, stale 3, missing 0), unrunnable binaries 0
+33:  quarantine stale: keys::tests::alt_numpad_code_types_its_character_without_keytips passes now; remove the entry
+34:  quarantine stale: fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load passes now; remove the entry
+35:  quarantine stale: fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name passes now; remove the entry
+36---- quarantine-wordcraft: exit 0 in 2065s
+37---- nextest-wordcraft: cargo nextest run --workspace --profile ci --config-file E:/office-target/p1/upstream-wordcraft/nextest-ci.toml --manifest-path upstream/wordcraft/Cargo.toml --target-dir E:/office-target/p1/upstream-wordcraft --build-jobs 4 --test-threads 4 -E not ((binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_are_drawn_in_colour)) | (binary_id(=wordcraft-render) & test(=tests_color_glyphs::emoji_keep_their_colours_on_a_dark_page)) | (binary_id(=wordcraft-ui-egui) & test(=keys::tests::alt_numpad_code_types_its_character_without_keytips)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=page_break_from_the_menu_adds_a_page)) | (binary_id(=wordcraft-ui-egui::breaks_menu) & test(=section_break_from_the_menu_splits_sections)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::audit::untranslated_interface_text)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::bulgarian_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_neutral)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::hungarian_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::swedish_covers_the_entire_existing_interface_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates)) | (binary_id(=wordcraft-fonts) & test(=fontdb::tests_sysfonts::fallback_lookups_are_remembered_until_fonts_load)) | (binary_id(=wordcraft-fonts) & test(=fontdb::tests_sysfonts::fallback_cache_is_dropped_when_a_face_loads_by_its_legacy_family_name)) | (binary_id(=wordcraft-docx::passthrough) & test(=extended_properties_are_kept_without_words_counts_and_personal_ones_follow_the_privacy_setting)) | (binary_id(=wordcraft-formats) & test(=tests::latex_round_trip)) | (binary_id(=wordcraft-ui-egui) & test(=tests::the_default_app_button_shows_only_with_the_hosts_hook)) | (binary_id(=wordcraft-ui-egui) & test(=options::tests::general_start_up_turns_the_start_screen_off_and_on)) | (binary_id(=wordcraft-ui-egui) & test(=tests::start_screen_shows_file_home_and_esc_leaves_no_document)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::polish_covers_every_key_of_every_other_catalog)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::vietnamese_covers_existing_catalog_keys_with_an_explicit_preview_fallback)) | (binary_id(=wordcraft-ui-egui) & test(=i18n::tests::czech_covers_the_entire_existing_interface_catalog)))
+38-    Finished `test` profile [optimized + debuginfo] target(s) in 1.17s
+39-────────────
+40- Nextest run ID 7b436847-f8fa-43f0-8f3a-38906e318e57 with nextest profile: ci
+41-    Starting 3453 tests across 69 binaries (24 tests skipped)
+42:        FAIL [   0.047s] (1572/3453) wordcraft-fonts fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face
+43-  stdout ───
+44-
+45-    running 1 test
+46:    test fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face ... FAILED
+47-
+48-    failures:
+49-
+50-    failures:
+51:        fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face
+52-
+53-    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 73 filtered out; finished in 0.04s
+54-
+55-  stderr ───
+56-
+57:    thread 'fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face' (8872) panicked at crates\fonts\src\fontdb.rs:1893:9:
+58-    assertion failed: bundled.fallback_for_run(&chars, latin.id(), false, false).is_none()
+59-    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+60-
+61:        FAIL [   0.183s] (2675/3453) wordcraft-render tests_color_glyphs::emoji_with_text_effects_stay_drawn
+62-  stdout ───
+63-
+64-    running 1 test
+65:    test tests_color_glyphs::emoji_with_text_effects_stay_drawn ... FAILED
+66-
+67-    failures:
+68-
+69-    failures:
+70:        tests_color_glyphs::emoji_with_text_effects_stay_drawn
+71-
+72-    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 43 filtered out; finished in 0.14s
+73-
+74-  stderr ───
+75-
+76:    thread 'tests_color_glyphs::emoji_with_text_effects_stay_drawn' (28720) panicked at crates\render\src\tests_color_glyphs.rs:94:5:
+77-    assertion `left == right` failed: both emoji use the colour emoji font
+78-      left: 1
+79-     right: 2
+80-    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+81-
+82:        FAIL [   0.230s] (3134/3453) wordcraft-ui-egui ribbon::tests::tab_strip_never_overlaps_the_right_buttons
+83-  stdout ───
+84-
+85-    running 1 test
+86:    test ribbon::tests::tab_strip_never_overlaps_the_right_buttons ... FAILED
+87-
+88-    failures:
+89-
+90-    failures:
+91:        ribbon::tests::tab_strip_never_overlaps_the_right_buttons
+92-
+93-    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 730 filtered out; finished in 0.15s
+94-
+95-  stderr ───
+96-
+97:    thread 'ribbon::tests::tab_strip_never_overlaps_the_right_buttons' (4896) panicked at crates\ui-egui\src\ribbon.rs:3243:17:
+98-    assertion `left == right` failed: en 300: the three buttons are on the strip
+99-      left: 2
+100-     right: 3
+101-    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+102-
+103-────────────
+104:     Summary [ 127.055s] 3453 tests run: 3450 passed, 3 failed, 24 skipped
+105:        FAIL [   0.047s] (1572/3453) wordcraft-fonts fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face
+106-  stdout ───
+107-
+108-    running 1 test
+109:    test fontdb::tests::a_thai_run_with_latin_falls_back_to_one_face ... FAILED
