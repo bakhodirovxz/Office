@@ -16,7 +16,7 @@ mod clipboard;
 mod control_server;
 mod default_apps;
 mod file_dialogs;
-#[cfg(any(target_os = "windows", test))]
+#[cfg(any(target_os = "windows", target_os = "macos", test))]
 mod graphics;
 mod logging;
 mod print;
@@ -260,7 +260,7 @@ fn app_icon() -> Option<egui::IconData> {
     let png: &[u8] = include_bytes!("../../../assets/app-icon/wordcraft-macos-512.png");
     #[cfg(not(target_os = "macos"))]
     let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.wordcraft.png");
-    eframe::icon_data::from_png_bytes(wordcraft_ui_egui::office_overlay::icon_png().unwrap_or(png)).map_err(|e| log::warn!("app icon: {e}")).ok()
+    eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
 }
 
 const USAGE: &str = "\
@@ -338,7 +338,7 @@ fn main() -> eframe::Result {
             }
             "--sample" => sample = true,
             "--version" => {
-                println!("wordcraft {} ({})", wordcraft_ui_egui::office_overlay::VERSION, build_sha());
+                println!("wordcraft {} ({})", env!("CARGO_PKG_VERSION"), build_sha());
                 return Ok(());
             }
             // Before the window opens (#968). Unlike `print!`, a closed stdout can't panic.
@@ -371,7 +371,7 @@ fn main() -> eframe::Result {
     }
     let mut options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title(wordcraft_ui_egui::office_overlay::app_name())
+            .with_title("WordCraft")
             .with_app_id("ai.storyteller.wordcraft")
             .with_inner_size([1440.0, 920.0])
             .with_min_inner_size([760.0, 480.0])
@@ -389,6 +389,9 @@ fn main() -> eframe::Result {
     // FXC, which needs no DLL of ours (#603; see graphics.rs).
     #[cfg(target_os = "windows")]
     graphics::configure(&mut options, eframe::wgpu::Backends::from_env());
+    // Intel Macs: Metal's compiler aborts on wgpu's indirect-validation shaders (#2652).
+    #[cfg(target_os = "macos")]
+    graphics::configure_indirect_validation(&mut options, graphics::skips_indirect_validation(true, cfg!(target_arch = "x86_64")));
     load_user_fonts();
     let restored = saved_window();
     if let Some(window) = restored {
@@ -420,8 +423,6 @@ fn main() -> eframe::Result {
             let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
             let (file_dialog, dialogs) = file_dialogs::hook(&cc.egui_ctx);
             let mut session = Session::new(doc);
-            #[cfg(feature = "office-ext")]
-            docs_translit::install(&mut session);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             load_prefs(&mut app);

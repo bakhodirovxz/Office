@@ -13,7 +13,6 @@ const DOC_EXTS: &[&str] = &["docx", "docm", "dotx", "dotm", "doc", "dot", "odt",
 const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "wmf", "emf"];
 const RECIPIENT_EXTS: &[&str] = wordcraft_engine::cmd::mailings::RECIPIENT_EXTENSIONS;
 mod font_store;
-mod host;
 const CANVAS_ID: &str = "wordcraft_canvas";
 const LOADING_ID: &str = "wordcraft_loading";
 
@@ -30,32 +29,15 @@ pub fn start() {
         };
         let dirty = Rc::new(Cell::new(false));
         let saves = AsyncSaves::default();
-        let mut options = eframe::WebOptions::default();
-        if let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
-            if query().contains("webgl") {
-                create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
-            }
-            // egui-wgpu requires 8192 texels per side, which WebGL2 contexts that report 4096
-            // (Android emulators, some phones) refuse: ask for what the adapter offers, up to that.
-            let egui_descriptor = create.device_descriptor.clone();
-            create.device_descriptor = std::sync::Arc::new(move |adapter| {
-                let mut descriptor = egui_descriptor(adapter);
-                let offered = adapter.limits().max_texture_dimension_2d;
-                descriptor.required_limits.max_texture_dimension_2d = descriptor.required_limits.max_texture_dimension_2d.min(offered);
-                descriptor
-            });
-        }
-        // `?host=parent`: a page framing WordCraft (a document server, say) opens documents in it
-        // and stores what it saves (`host`).
-        let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
-        // A framing page guards leaving itself (and reloads this frame to recover, which a guard here
-        // would turn into a prompt).
-        if bridge.is_none()
-            && let Err(e) = guard_unload(dirty.clone(), saves.clone())
-        {
+        if let Err(e) = guard_unload(dirty.clone(), saves.clone()) {
             log::error!("no unsaved-changes guard: {e}");
         }
-        let app_bridge = bridge.clone();
+        let mut options = eframe::WebOptions::default();
+        if query().contains("webgl")
+            && let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup
+        {
+            create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
+        }
         let result = eframe::WebRunner::new()
             .start(
                 canvas,
@@ -74,43 +56,37 @@ pub fn start() {
                     // The browser's locale picks the new document's paper, the units and the
                     // decimal separator (#838).
                     let region = wordcraft_ui_egui::i18n::system_region();
-                    let sample = app_bridge.is_none() && query().contains("sample");
+                    let sample = query().contains("sample");
                     let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
                     let mut session = Session::new(doc);
-                    #[cfg(feature = "office-ext")]
-                    docs_translit::install(&mut session);
                     session.system_region = region;
                     let messages = Rc::new(RefCell::new(Vec::new()));
-                    let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
-                    if let Some(bridge) = &app_bridge {
-                        bridge.connect(&mut services, inbox.clone(), cc.egui_ctx.clone());
-                    }
-                    let mut app = WordApp::new(session, services);
+                    let mut app = WordApp::new(session, services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone()));
                     // Pasted pictures wait apart from dropped files: the app inserts one only when the page is the edit target (#1349).
                     app.services.pasted = Some(pasted);
                     app.autosave = false;
+                    // Preferences from an earlier visit (#2132), as the desktop app reads `ui.json`.
+                    let stored = stored_prefs();
+                    crate::prefs::restore(&mut app, stored.as_deref());
+                    // A region chosen in File › Options replaces the browser's for the first blank
+                    // document too (#838).
+                    if !sample && app.session.prefs.region.is_some() {
+                        let doc = app.session.blank_document();
+                        app.session.set_document(doc);
+                    }
+                    let prefs = crate::prefs::PrefsSync::new(stored);
                     // No document to show: start on File › Home, as the desktop app does (#766).
-                    // In host mode the parent sends the document to edit.
-                    if !sample && app_bridge.is_none() {
+                    if !sample {
                         app.start_screen();
                     }
-                    if let Some(bridge) = &app_bridge {
-                        bridge.post_ready();
-                    }
-                    Ok(Box::new(WebShell { app, inbox, messages, bridge: app_bridge }))
+                    Ok(Box::new(WebShell { app, inbox, messages, prefs }))
                 }),
             )
             .await;
-        if let (Err(e), Some(bridge)) = (&result, &bridge) {
-            bridge.post_failed(&format!("{e:?}"));
-        }
         if let Some(el) = document.get_element_by_id(LOADING_ID) {
             match result {
                 Ok(()) => el.remove(),
-                Err(e) => el.set_inner_html(&format!(
-                    "<p>{} failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>",
-                    wordcraft_ui_egui::office_overlay::app_name()
-                )),
+                Err(e) => el.set_inner_html(&format!("<p>WordCraft failed to start: {e:?}</p><p>A browser with WebGPU or WebGL2 is required.</p>")),
             }
         }
     });
@@ -120,18 +96,22 @@ fn query() -> String {
     web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
 }
 
-/// The value of the URL's `?key=` parameter.
-fn query_param(key: &str) -> Option<String> {
-    web_sys::UrlSearchParams::new_with_str(&query()).ok()?.get(key)
-}
-
 /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
 /// and feed them through the inbox.
 struct WebShell {
     app: WordApp,
     inbox: Inbox,
     messages: Rc<RefCell<Vec<String>>>,
-    bridge: Option<host::Bridge>,
+    prefs: crate::prefs::PrefsSync,
+}
+
+fn local_storage() -> Option<web_sys::Storage> {
+    web_sys::window()?.local_storage().ok()?
+}
+
+/// The preferences stored on an earlier visit, if the browser allows storage.
+fn stored_prefs() -> Option<String> {
+    local_storage()?.get_item(crate::prefs::KEY).ok()?
 }
 
 impl eframe::App for WebShell {
@@ -156,8 +136,16 @@ impl eframe::App for WebShell {
             self.app.status(msg);
         }
         self.app.logic(ctx);
-        if let Some(bridge) = &self.bridge {
-            bridge.sync(ctx, &mut self.app);
+        // Store changed preferences straight away: a reload or closed tab runs no exit code (#2132).
+        if let Some(json) = self.prefs.changed(&self.app) {
+            match local_storage() {
+                Some(store) => {
+                    if let Err(e) = store.set_item(crate::prefs::KEY, &json) {
+                        log::warn!("preferences: cannot save: {e:?}");
+                    }
+                }
+                None => log::warn!("preferences: browser storage is unavailable"),
+            }
         }
     }
 
@@ -236,13 +224,23 @@ fn services(inbox: Inbox, ctx: egui::Context, dirty: Rc<Cell<bool>>, saves: Asyn
             } else {
                 rfd::AsyncFileDialog::new().add_filter("Documents", DOC_EXTS)
             };
+            let many = purpose == "font";
             wasm_bindgen_futures::spawn_local(async move {
-                let Some(file) = dialog.pick_file().await else {
-                    return;
-                };
-                let bytes = file.read().await;
-                inbox.lock().unwrap_or_else(|e| e.into_inner()).push((file.file_name(), bytes));
-                ctx.request_repaint();
+                // Add Font takes every selected file (#1789); the others one.
+                let files = if many { dialog.pick_files().await.unwrap_or_default() } else { dialog.pick_file().await.into_iter().collect() };
+                for file in files.into_iter().take(MAX_PICKED_FILES) {
+                    let mut bytes = file.read().await;
+                    let mut pending = inbox.lock().unwrap_or_else(|e| e.into_inner());
+                    // Fonts waiting for the app to drain them stay under a byte cap. A file
+                    // over it is queued empty, so Add Font reports that file on its own.
+                    let held: usize = pending.iter().map(|(_, b)| b.len()).fold(0, usize::saturating_add);
+                    if many && held.saturating_add(bytes.len()) > MAX_PENDING_PICKED_BYTES {
+                        bytes = Vec::new();
+                    }
+                    pending.push((file.file_name(), bytes));
+                    drop(pending);
+                    ctx.request_repaint();
+                }
             });
         })),
         // Exports ask for a name; the browser decides where the download goes.
@@ -262,6 +260,10 @@ fn services(inbox: Inbox, ctx: egui::Context, dirty: Rc<Cell<bool>>, saves: Asyn
     }
 }
 
+/// Most files one multi-select pick (Add Font) reads.
+const MAX_PICKED_FILES: usize = 2000;
+/// Most bytes of picked fonts held in the inbox before the app drains them.
+const MAX_PENDING_PICKED_BYTES: usize = 256 << 20;
 /// Most local fonts one Load System Installed Fonts installs (a designer's machine has thousands).
 const MAX_SYSTEM_FONTS: usize = 500;
 /// Most font bytes one Load System Installed Fonts reads into memory (wasm memory is small).
@@ -451,6 +453,7 @@ fn trigger_save_file_picker(
     let prom: js_sys::Promise = prom_val.dyn_into().map_err(|_| "not a promise".to_string())?;
 
     let bytes_vec = bytes.to_vec();
+    let window = window.clone();
     let saves = saves.clone();
     let ctx = ctx.clone();
     let name = name.to_string();
@@ -472,13 +475,10 @@ fn trigger_save_file_picker(
             Err(e) => {
                 let err_name =
                     js_sys::Reflect::get(&e, &wasm_bindgen::JsValue::from_str("name")).ok().and_then(|v| v.as_string()).unwrap_or_default();
-                if err_name == "AbortError" {
-                    log::debug!("save picker cancelled");
-                    SaveOutcome::Cancelled
-                } else {
-                    log::error!("showSaveFilePicker error: {e:?}");
-                    SaveOutcome::Failed(format!("{e:?}"))
-                }
+                // A browser can expose the picker but reject its promise (for example in
+                // a cross-origin iframe). Use the same download path as an absent API;
+                // cancelling a picker must never start an unwanted download (#1246).
+                crate::save_fallback::picker_rejected(&err_name, || trigger_anchor_download(&window, &name, &bytes_vec))
             }
         };
         saves.finish(ticket, outcome);
