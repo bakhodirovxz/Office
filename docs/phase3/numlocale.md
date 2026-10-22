@@ -282,6 +282,18 @@ Owner answers of 2026-10-21, taken before WP14 was built:
   - `,` remains one choice away: `convert --locale en-US`, or the constant `LOCALE_CSV_LIST_SEPARATOR = false` in
     `engine/src/io.rs` (patch 0028).
   - A file opened from CSV keeps its own separator either way.
+- **Q4 follow-ups** (the differences measured under the real uz cultures, "Excel COM rows for uz" at the end of section 13).
+  **Decided by the orchestrator (owner-delegated, 2026-10-22):**
+  - **Q4-a. uz built-in ids 15-17 keep the `.` forms** (`12.Okt.26`, `12.Okt`, `Okt.26`), not Excel uz's `-` (`12-Okt-26`).
+    This is consistent with Q1's dot habit for ids 14 and 22. No change to `NumLocale::builtin_date` (patch 0023).
+  - **Q4-b. The uz AM/PM designators go to Phase 8** (`docs/phase3/defects.md` D8). Excel uz shows `TO`/`TK` (Cyrl `ТО`/`ТК`);
+    ours shows `AM`/`PM` (`upstream/gridcraft/crates/numfmt/src/render.rs:133`, `DatePart::AmPm`). Low: only the 12-hour
+    format codes are affected, and the stored value is right.
+  - **Q4-c. The auto-assigned formats of typed dates and times go to Phase 8** as a `parse_input` design item
+    (`docs/phase3/defects.md` D9). Excel uz gives `hh:mm` for a typed `10:30`, `dd-mmm-yy` for `12 okt 2026` and the short
+    date for `2026-10-12`. Ours gives `h:mm`, `d-mmm-yy` and `yyyy-mm-dd`. The serial is the same in every case; only the
+    format the cell receives differs. `parse_input` (`core/src/parse.rs`) is shared with en-US, so this is a design change,
+    not a one-line fix.
 
 ## 13. Built (2026-10-21)
 
@@ -413,6 +425,6 @@ Equal in both cultures: General, `0.0`, `#,##0.0` and `#,##0.00` (U+0020 against
 **Conclusions.**
 - No data-integrity bug. Invariance, formula storage, decimal, group and list separators, month and weekday names, sub-seconds and the CSV delimiter and decimal all agree with Excel under real uz-Latn-UZ and uz-Cyrl-UZ. The uz tables of section 2 hold.
 - Every other difference is a decision already taken (Q1 `dd.mm.yyyy`, D3 calc stays en-US, English month leniency) or one of the items below.
-- **Bug (low): AM/PM designators.** Excel uz shows `TK` for PM (measured, Cyrl `ТК`); .NET NLS gives `TO|TK` for uz-Latn-UZ, so AM is `TO`. Ours keeps `AM`/`PM` in every locale: `upstream/gridcraft/crates/numfmt/src/render.rs:133` (`DatePart::AmPm`), in the tree of patches 0024/0025 (`patches/gridcraft/0025-*`). Ru is unaffected (NLS ru has no AM/PM, section 2). The fix is two strings per uz locale in `NumLocale`. Not patched here.
-- **Open (minor): built-in forms of ids 15-17.** Excel uz uses `-` (`12-Okt-26`), not `.`. `NumLocale::builtin_date`, `upstream/gridcraft/crates/core/src/locale.rs:124-126` (patch `patches/gridcraft/0023-*`), gives uz the ru forms. Q1 decided only ids 14 and 22. If the owner wants Excel parity, uz ids 15-17 become `dd-mmm-yy`, `dd-mmm`, `mmm-yy`.
-- **Open (minor): uz auto formats.** Excel uz gives typed times `hh:mm` and typed `d mmm yyyy` dates `dd-mmm-yy`. Ours give `h:mm` and `d-mmm-yy`. The auto formats come from `parse_input` (`core/src/parse.rs`), shared with en-US, so changing them is a design decision, not a one-line fix.
+- **Bug (low): AM/PM designators.** Excel uz shows `TK` for PM (measured, Cyrl `ТК`); .NET NLS gives `TO|TK` for uz-Latn-UZ, so AM is `TO`. Ours keeps `AM`/`PM` in every locale: `upstream/gridcraft/crates/numfmt/src/render.rs:133` (`DatePart::AmPm`), in the tree of patches 0024/0025 (`patches/gridcraft/0025-*`). Ru is unaffected (NLS ru has no AM/PM, section 2). The fix is two strings per uz locale in `NumLocale`. Not patched here. **Decided: Phase 8 (Q4-b, D8).**
+- **Open (minor): built-in forms of ids 15-17.** Excel uz uses `-` (`12-Okt-26`), not `.`. `NumLocale::builtin_date`, `upstream/gridcraft/crates/core/src/locale.rs:124-126` (patch `patches/gridcraft/0023-*`), gives uz the ru forms. Q1 decided only ids 14 and 22. If the owner wants Excel parity, uz ids 15-17 become `dd-mmm-yy`, `dd-mmm`, `mmm-yy`. **Decided: keep `.` (Q4-a).**
+- **Open (minor): uz auto formats.** Excel uz gives typed times `hh:mm` and typed `d mmm yyyy` dates `dd-mmm-yy`. Ours give `h:mm` and `d-mmm-yy`. The auto formats come from `parse_input` (`core/src/parse.rs`), shared with en-US, so changing them is a design decision, not a one-line fix. **Decided: Phase 8, a `parse_input` design item (Q4-c, D9).**

@@ -1,6 +1,6 @@
 # Status
 
-**Current phase:** 3 — Converter (branch `phase-3`, plan `docs/phase3/PLAN.md`). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
+**Current phase:** 3 — Converter (branch `phase-3`, plan `docs/phase3/PLAN.md`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
 Phase 3 owner decisions: this PC only (WP11 deferred), no .ppt, limits accepted, accounts optional (local mode with no login is the default, server mode optional with an operator-configured token issuer), NumLocale in scope (WP14).
 
 **Owner requirement, 2026-10-21: GitHub-like version history and authorship, independent of the HRM.** The brief's
@@ -1099,3 +1099,49 @@ blockers. Everything else measured green.
   is still synthetic); O10 before XDFU is switched on anywhere.
 - **Housekeeping:** C: is at 6.7 GB free. A stray `C:\c\Users\...\scratchpad` (850 KB, synthetic outputs of the review's
   API runs) could not be removed by the agent; delete it by hand.
+
+## Phase 3 close-out (2026-10-22)
+Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d7b9582`. **Verdict: READY for the owner's "go".**
+- **Blockers fixed.**
+  - **B1:** `POST /api/v1/jobs` takes `options.op` = combine, split or extract (`73d8e67`), and the page has an
+    Operation select with order buttons.
+  - Measured with the real tools: a combine through the API, and through the page in Chromium after reordering, gives one
+    4-page PDF in the order the user set.
+  - **B2:** a ru/uz-style CSV read in an en-US job warns `csv_locale_mismatch` on the CLI, the API and the page (`827eced`).
+    The CLI default now comes from the Windows regional format, and the page has a Number format select that follows its
+    language (`6cc3623`).
+- **Majors.** Fixed:
+  - M1 (warning placeholders filled);
+  - M3 (the XDFU stamp no longer replaces headers);
+  - M4 (wider detection; an image-only PDF is refused);
+  - M5 (HMAC-SHA256 audit chain with an operator key).
+
+  M2 (the upstream sync hand-merge) goes to Phase 4.
+- **Minors.**
+  - Fixed: m1-m4, m7, m8, m11, m12.
+  - Partly fixed: m5 and m13.
+  - Open (latent): m6, before O13 flips the alphabet.
+  - Deferred: m9, m10, m14.
+  - New: n1-n4. All are small: a stale api.md line, the file table's status in combine mode, `reg` by bare name, and no en-US
+    csv case in the ratchet.
+- **Never silent, re-run:** a password `.doc` and PDF now give exit 9; a cut-off docx is "damaged", exit 9, and the API
+  rejects it at POST; sidecar down gives a clean sentence with no OS text and no path; a real sidecar error carries no
+  container path through the API. 20 cases, none silent.
+- **`ci.sh full`: all 28 jobs ok** (run `p3close-full`, 1 h 34 min). Services nextest 206 of 206. `convert-e2e`:
+  `directions.sh` 43/43 and Playwright 12 passed. `translit-preserve` 8 of 8.
+- **Ratchet** (`fidelity-directions`): 90 directions, 117 cases, 4 silent losses = the D1 baseline, 0 new.
+- **Q4 decisions** (owner-delegated, taken by the orchestrator, `numlocale.md` section 12):
+  - Q4-a: uz ids 15-17 keep the `.` forms.
+  - Q4-b: uz AM/PM goes to Phase 8 as D8.
+  - Q4-c: uz auto formats go to Phase 8 as D9, a `parse_input` design item.
+- **Carried to Phase 4:**
+  - the upstream sync (M2, 13 conflicts, gridcraft 0028/0029 against `value_text_as`);
+  - D7 (pdfcraft ru "Move down");
+  - D1, D8, D9 and m9 to Phase 8;
+  - the deferred minors;
+  - Phase 2 M3 (Android phone open);
+  - server mode over TLS in a real browser, not exercised end to end;
+  - the corpus (O9).
+- **Owner decisions still open:** O8 (the default PDF to DOCX engine; the code default is native), O9 (corpus), O10
+  (before XDFU is switched on).
+- **Housekeeping:** `C:\c` (850 KB, synthetic) still exists; delete it by hand. C: has 17 GB free.

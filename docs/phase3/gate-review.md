@@ -8,7 +8,10 @@ sync dry run. No product code was changed.
 Gate items (BRIEF Phase 3, PLAN 9.3): (1) every supported direction works from CLI, API and UI; (2) the fidelity table
 exists; (3) failures are reported to the user and never fail silently.
 
-**Verdict: NOT READY for "go" yet.** Two findings block the gate (B1: the PDF operations are CLI-only; B2: a silent date swap
+**Close-out (2026-10-22, section 10): READY for the owner's "go".** B1 and B2 are fixed, as are M1 and M3-M5. M2 is
+the Phase 4 sync. `ci.sh full` is 28 of 28 ok at `d7b9582`, and the ratchet shows 0 new silent losses.
+
+Original verdict at `d67ed47`: **NOT READY for "go" yet.** Two findings block the gate (B1: the PDF operations are CLI-only; B2: a silent date swap
 in CSV input). B1 needs an owner decision or 1-2 days of work; B2 is about half a day. `ci.sh full`: exit 0, 28 of 28 jobs (section 5);
 the silent-loss ratchet: 0 new (section 5). Licences: signed off
 with conditions (section 3). Sync: the patch queue does not rebase cleanly on today's upstream (13 conflicts), but every CLI
@@ -387,3 +390,183 @@ synthetic-only caveat that the owner already knows (O9).
 - Housekeeping: my API runs wrote their `work_dir` under `C:\c\Users\uge226\AppData\Local\Temp\claude\…\scratchpad\`
   (an MSYS path written into a TOML file, 850 KB of synthetic outputs). The safety check stopped me from removing
   `C:\c`. The owner can delete that folder.
+
+---
+
+## 10. Close-out (2026-10-22)
+
+This section re-verifies every finding of this review against the code at `d7b9582`. The fix work since `93dc8b2` is
+`73d8e67`, `c73eb91`, `827eced`, `3d5fea8`, `a2df6f9`, `4b9adf6`, `6cc3623`, `23ce913` and `d7b9582`. Architect tier (opus).
+No product code was changed in the close-out. The evidence that is not in the repo (synthetic files only) is under
+`E:/office-target/p3/gate/close/`:
+- `cli-matrix.tsv` and `api-matrix.tsv`;
+- the two UI screenshots and `ui-combined.pdf`;
+- `sidecar-real-garbage.report.json`;
+- the scripts that made them.
+
+### 10.1 Status of every finding
+
+| # | Status | Commit | Where (at `d7b9582`) | Test / measurement |
+|---|---|---|---|---|
+| **B1** | **fixed** | `73d8e67` | `options.op` = `combine`/`split`/`extract`. Parsing: `services/convert-api/src/routes.rs:452-522`; file counts: `:938-948`; `formats` lists the 3 operations: `:388-390`. `app.rs:820-930` (`PdfOp`, `pdf_op` through the same `job::run_job`). Page: `ui/index.html:78-90`, `ui/app.js:185-243` (mode select, order buttons, Alt+Up/Down) | `convert-api/tests/api.rs:1248` (combine keeps the upload order), `:1287` (split, extract), `:1327` (21 bad option and file cases), `:1402` (caps), `:1452` (server mode: token, nothing readable at rest); `ci/web-smoke/converter.spec.ts:148`, `:187`. Measured with real tools: 10.2 rows 12-15 |
+| **B2** | **fixed** | `827eced`, `6cc3623` | Warning `csv_locale_mismatch`: `services/convert/src/csvloc.rs:50-64`, `job.rs:1235-1241` (csv/tsv in an en-US job). CLI default from the regional format: `main.rs:213-245` (`HKCU\Control Panel\International\LocaleName`). Page: a Number format select, defaulting to the page language, `ui/app.js:44`, `:246`, `:382` | `csvloc.rs` unit tests (4), `tests/warnings.rs:176`, `main.rs:547`, `converter.spec.ts:207`. Measured: 10.2 rows 8-11 and 18 |
+| **M1** | **fixed** | `73d8e67` | `convert-api/src/app.rs:198-225` (`warning_args`: the values read back from the filled English template), `:709-716`; `ui/app.js:79-83` | `app.rs:1074` (every placeholder of every code), `api.rs:1553`, `converter.spec.ts:129` (5 languages, no `{x}` left). A `shortcut` is recorded at `app.rs:201`: `report::Warning` should carry `args` itself |
+| **M2** | **deferred to Phase 4** | - | the sync is a hand-merge of 13 patches (gridcraft `0028`/`0029` against upstream `value_text_as`) | carry-forward, 10.6 |
+| **M3** (XDFU) | **fixed** | `827eced` | **docx:** the stamp paragraph is prepended to the body and to every `word/header*.xml`/`footer*.xml` (`xdfu.rs:1050-1088`); `insert.header`/`insert.footer` are no longer used. **xlsx:** merged into the centre section of every header and footer, first-page and even-page ones included (`:1090-1225`). **pptx:** a text box; the slide's own footers stay (`:1247-1296`) | `tests/xdfu.rs:797`: a letterhead header, a first-page header holding the grif, the xlsx left section and a pptx footer are all kept and stamped. Unit tests `xdfu.rs:2199-2260` |
+| **M4** (XDFU) | **fixed** | `827eced` | Window: 25 paragraphs, plus every paragraph of a table that starts in it (`xdfu.rs:407-459`). odt/ods read natively, `styles.xml` headers included (`:638-676`). doc/rtf/xls/xlsb probed through docx/xlsx in `mid/` (`:776-789`). An image-only PDF is refused with `xdfu_no_text_layer` (`:1724-1760`). Every input of a combine is checked (`:1680`) | `tests/xdfu.rs:662`, `:725`, `:754`, `:912`, `:947`, `:1060`, `:1091`. The remaining limit is stated as a `shortcut` (`xdfu.rs:33-38`): a header that the legacy importer drops is missed |
+| **M5** (XDFU) | **fixed** | `827eced`, `4b9adf6` | HMAC-SHA256 under an operator key file (`audit.rs:71-121`). A keyed log is never accepted without its key, and there is no downgrade. The key is `xdfu_audit_key_file` in the API config (`config.rs:363`) and `--xdfu-audit-key` in the CLI. An unkeyed log is announced at start (`audit.rs:124`). api.md wording corrected (`api.md:326-327`), including the limit that lines cut off the end are not detected | `audit.rs:443` (RFC 4231 case 2), `:452` (a consistent rewrite without the key fails), `tests/xdfu.rs:998` |
+| m1 | fixed | `827eced` | `exec.rs:175-182`: the two exact upstream phrases are `Rejected` | `exec.rs:850`. Measured exit 9 for `.doc` and for PDF to txt/docx/png: 10.2 rows 1-4 |
+| m2 | fixed | `827eced` | `http.rs:33`, `:150-170`: refused or timed out gives our own sentence; the OS text stays in the step's stderr tail | 10.2 row 7, CLI and API |
+| m3 | fixed | `827eced`, `4b9adf6` | `kind.rs:124-125`, `:192` (`damaged`); `job.rs:1169-1176`; rejected at `POST`: `routes.rs:807` | `tests/warnings.rs:251`, `api.rs:1562`; 10.2 row 6 |
+| m4 | fixed | `827eced`, `73d8e67` | `http.rs:46-60` cuts container paths out of sidecar messages. The API `Redactor` also removes Unix roots (`app.rs:170-172`) | `http.rs:230`, `app.rs:1100`. Measured with my own real sidecar on `garbage.pdf`: CLI exit 3, message "…Failed to open file '<path>'"; through the API, 0 occurrences of `/tmp/` in `GET /jobs/{id}`. The local CLI report keeps the raw path in the step's `stderr_tail`, by design |
+| m5 | fixed (the silent part); rest deferred to Phase 5 | `827eced` | `job.rs:343-348`: a failed `pdf-cli text` probe now warns `pdf_text_unchecked` | `tests/warnings.rs:551` (the code set). Deferred to Phase 5 (server config): make the sidecar fallback an explicit operator switch, never used for an XDFU-flagged job |
+| m6 | still open (latent) | - | `crates/uz-translit/src/engine.rs:309-316` still hard-codes 1995 for `auto` to Latin | No effect while `DEFAULT_LATIN_ALPHABET` is 1995 (`lib.rs:59`). It must be fixed before O13 flips the default. Carried (10.6) |
+| m7 | fixed | `827eced` | `docs/UPSTREAM.md:137-140`: the XDFU commands and tools; `--cmd` is `id={params}` | read |
+| m8 | fixed | `73d8e67` | `ui/app.js:99-113`, `:283-284` (`download()` in both modes, so a 404 is shown); `:371-397` (a catalog load failure is shown); `:119` (`#token=` only for https or loopback) | `converter.spec.ts:71`, `:271` |
+| m9 | deferred to Phase 8 | - | `scan.rs:53` counts only `xl/charts/chart*.xml`, so an ods with charts converted to pdf under ru loses the `pdf_en_us` note | fidelity item |
+| m10 | deferred to the Phase 4 sync | - | `exec.rs:287-330`: still one CSV probe; the PDF path is not probed | re-check when the synced sheets-cli is probed |
+| m11 | fixed | `827eced` | `text.rs:59`: lossy UTF-8 when nearly all high bytes form valid sequences | `text.rs:178` |
+| m12 | fixed | `827eced`, `4b9adf6` | `audit.rs:187-215`: `<log>.lock`, `create_new`, and a stale lock is taken over by rename. `:303-311`: the `copy` line is written only after the mark is produced | `audit.rs:509` |
+| m13 (XDFU) | partly fixed; the rest is deferred until before XDFU is switched on (O10) | `827eced` | Fixed: empty `<si>` entries are kept (`xdfu.rs:517-521`, test `:2176`). Open: `x:`-prefixed SpreadsheetML and xlsx text boxes are not scanned; `api.md:291` still claims the pdf subject and keywords; the PDF mark is a full save (`xdfu.rs:1354`, `"full": true`), which breaks an existing signature | - |
+| m14 | deferred to Phase 10 | - | `sidecars/pdf2docx/SOURCES.md:15-16` unchanged | before any image is distributed |
+
+**New findings of the close-out.** All are minor, and none blocks the gate.
+
+| # | Where | Finding | Fix |
+|---|---|---|---|
+| n1 | `docs/phase3/api.md:69-70` | Still says "with XDFU on, the hook inspects the first file of a combine". Stale since `827eced`: the hook reads every file of `in/` (`xdfu.rs:1680`, test `tests/xdfu.rs:1091`), and the API's `pdf_op` uses the same `job::run_job` (`app.rs:914-929`) | delete the sentence |
+| n2 | `services/convert-api/ui/app.js:321`, `:331-334` | In combine/split/extract mode the file table's Status column stays "Waiting" after the job is done. The upload rows are set to `queued`, and `poll` updates only `S.op`. The result card is right ("Done", the download link). Seen in `close/ui-combine-real-en.png` | in `poll`, copy `S.op.state` onto the `S.sent` rows; add one Playwright assertion |
+| n3 | `services/convert/src/main.rs:231-245` | The CLI default locale runs `reg` by bare name on every run without `--locale` | call `%SystemRoot%\System32\reg.exe`, or `GetUserDefaultLocaleName` through the already-linked `windows` crate |
+| n4 | `scripts/fidelity/fid/directions.py` | The ratchet still has no en-US csv case with a cell comparison (section 5 asked for one with the B2 fix). B2 is guarded by `tests/warnings.rs:176` and `converter.spec.ts:207` instead, so a regression is caught in `convert` and `convert-e2e`, not by the ratchet | add the case in Phase 4 |
+
+### 10.2 Never silent: the changed cases, re-run
+
+**Binaries.** The release `E:/office-target/p1/services/release/convert.exe` and `convert-api.exe` were rebuilt under the
+build lock at 07:36, by the `fidelity-directions` run's `build-services` step. The `convert-api.exe` from 07:20 predated
+the page changes of `6cc3623`/`23ce913`, which it embeds. The domain CLIs are the release builds.
+
+**Setup.** My own `convert-api` on 127.0.0.1:18791 (API), :18793 (UI) and :18794 (real sidecar), each stopped by its PID
+afterwards. The sidecar URL points at a closed port, except for the m4 run, which used my own `office/pdf2docx:dev`
+container (removed afterwards).
+
+**Inputs.** The review's `locked.doc`, `locked.docx`, `locked.pdf`, `corrupt.docx` and `garbage.pdf`; `staff.csv` (Excel 16's
+own ru CSV, synthetic); `uz_cyrl.pdf` and `uz_latn.pdf` (2 pages each).
+
+| # | Case | CLI | API | UI |
+|---|---|---|---|---|
+| 1 | password `.doc` to pdf | **exit 9** "the input is password-protected (docs-cli: wordcraft-cli: this document is protected with a password)" (+ `doc_import_loss`) | `failed` 9, same | - |
+| 2-4 | password PDF to txt / docx (native) / png | **exit 9** / 9 / 9 "the input is password-protected (pdf-cli: …protected by a password)" | `failed` 9 (txt, docx) | - |
+| 5 | password `.docx` (control) | exit 9 | - | - |
+| 6 | cut-off docx | **exit 9** "the file is damaged (the zip directory is missing or cut off); open it in its application and save it again" | **rejected at POST**, 9, same text | - |
+| 7 | sidecar down | exit 7 "the pdf2docx sidecar did not answer: it is not running or refused the connection". **No OS text and no path** in the report or on stderr | `failed` 7, same, no path | - |
+| 8 | `;` CSV, `--locale en-US`, to xlsx | exit 0, `warn`, **`csv_locale_mismatch`** | `done` + `csv_locale_mismatch`, both with no `locale` (the API default is en-US) and with `locale: en-US` | - |
+| 9 | the same, to csv | exit 0, `warn`, `csv_locale_mismatch` | - | - |
+| 10 | the same, `--locale ru` | ok, no warning | `locale: ru`: `done`, no warning | - |
+| 11 | the same, no `--locale` (this PC's regional format is ru-RU) | ok, no warning (ru is read from the registry) | - | - |
+| 12 | `pdf combine` uz_cyrl + uz_latn | exit 0, `combined.pdf`, 4 pages | `op: combine`: `done`, `combined.pdf` 159,694 B, `%PDF-` | **Real tools, Chromium.** The order was changed with the up button (uz_latn first). The card shows `Done`; the download is `combined.pdf`, 159,697 B, 4 pages. Page 1 reads "BUYRUQ" (Latin) and page 3 "БУЙРУҚ": the order the user set. No console error. `close/ui-combine-real-en.png` |
+| 13 | `op: split`, `every: 1` | - | `done`: `uz_cyrl-p1.pdf`, `uz_cyrl-p2.pdf` | - |
+| 14 | `op: extract`, `pages: "2"` | - | `done`: `uz_latn-pages.pdf` | - |
+| 15 | `op: combine` with one file | - | **400** `bad_options` "combine needs at least two PDF files" | - |
+| 16 | control: `hrm_letter.docx` to pdf | ok | `done`, 104,150 B | - |
+| 17 | reverse probe: an en-US `,` CSV (`3/1/2019`, `"3,500,000.50"`) read under `--locale ru`, to xlsx | ok, no warning. The cells are 43525 (1 March 2019), 3500000.5 and 1200.75: **the same cells as under en-US**, so this direction does not swap | - | - |
+| 18 | `;` CSV in the page | - | - | The Number format select follows the page language (uz-Latn gives `uz-Latn`, en gives `en-US`). In English the card shows "Warning: This CSV looks like it is in the Russian or Uzbek format …". `close/ui-csv-mismatch-en.png` |
+| 19 | m4: real sidecar, `garbage.pdf` | exit 3, "…Failed to open file '<path>'" | `failed` 3, the same message, no `/tmp/` anywhere in the job JSON | - |
+| 20 | real sidecar, `locked.pdf` | exit 9 "the PDF is encrypted (pdf2docx sidecar 422 encrypted)…" | - | - |
+
+No case was silent. Every changed case now has the exit code and the wording that the review asked for.
+
+### 10.3 `ci.sh full` on `d7b9582`
+
+`scripts/ci.sh --run p3close-full full`, started 2026-10-22 07:35 on the shared tree at HEAD `d7b9582` (clean; the only
+edits during the run were to the four docs files of this close-out). Finished 09:09. **All 28 jobs ok**, 1 h 34 min (sccache
+warm; the WP13 run took 5 h 17 min). Summary `E:/office-target/p1/ci/p3close-full/summary.md`, one log per job next to it.
+
+| Job | Result | Seconds | Notes |
+|---|---|---|---|
+| queue | ok | 8 | |
+| lint | ok | 339 | upstream clippy: 1/2/2/1 warnings, all baselined |
+| gen-check | ok | 5 | |
+| deny | ok | 13 | root + 4 domains |
+| brand | ok | 305 | |
+| i18n | ok | 6 | the converter rows of `c73eb91`, `3d5fea8`, `6cc3623`, `23ce913` included |
+| test-ours | ok | 644 | nextest 178/93/44/43/71 passed (1, 2, 0, 0, 4 skipped) |
+| test wordcraft / gridcraft / deckcraft / pdfcraft | ok | 250 / 143 / 100 / 376 | |
+| check docs / sheets / slides / pdf | ok | 34 / 23 / 58 / 36 | desktop + wasm32 |
+| bind | ok | 109 | |
+| convert | ok | 208 | services clippy `-D warnings`; nextest **206 of 206** (171 at WP13; the new tests of the fix commits); cargo-deny services "advisories ok, bans ok, licenses ok, sources ok" |
+| convert-e2e | ok | 244 | API e2e 2 of 2 (every `formats` row over HTTP, then a hard kill leaves `work/` empty); `directions.sh` 43 PASS / 0 FAIL (combine, combine-3, split, split-before, extract included); Playwright converter spec **12 passed**, 1 skipped (screenshots need `UI_SHOTS`) |
+| build docs / sheets / slides / pdf | ok | 358 / 123 / 1,073 / 264 | desktop, web, cli |
+| translit-npm | ok | 14 | |
+| translit-preserve | ok | 127 | 8 of 8 IDENTICAL |
+| sizes | ok | 447 | brotli headroom unchanged: docs 19,271 B, sheets 21,869, slides 26,935, pdf 22,771, npm 18,364 |
+| brand (binaries) | ok | 303 | |
+| web-smoke | ok | 11 | 4 passed |
+| actionlint | ok | 1 | |
+
+Disk over both runs: C: 18 → 17 GB free, E: 83 GB free (never near the 5 GB stop).
+
+### 10.4 The silent-loss ratchet (`fidelity-directions`, nightly)
+
+`scripts/ci.sh --run p3close-fid fidelity-directions` at `d7b9582`, started 07:36 next to the full run: **ok, exit 0,
+866 s**.
+- **Builds:** services 27 s; CLIs docs 3 s, sheets 2 s, slides 127 s, pdf 5 s.
+- **`run.py --directions all`:** **90 directions, 117 cases, 4 silent losses**, 689 s, with the MS Office 16 reference (14 new
+  Office conversions, the rest from its cache, in its own PIDs).
+- **`silent_baseline.py check`:** "4 now, 4 in the baseline, 0 new, 0 gone". The 4 are D1 (txt to docx/odt/rtf/pdf page count).
+- **Files:** log `E:/office-target/p1/ci/p3close-fid/fidelity-directions.log`; JSON
+  `E:/office-target/p1/fidelity-directions/summary.json`.
+- **Office:** the owner's WINWORD (PID 24216, started 2026-10-21 15:03) was not touched, and no Office process of the run is
+  left.
+
+### 10.5 PLAN 9.3: the final gate table
+
+| Gate item | Evidence | Status |
+|---|---|---|
+| Every supported direction works from the **CLI** | `services/convert/tests/plan_golden.rs` (job `convert`); `services/convert/tests/directions.sh` (job `convert-e2e`, combine, split and extract included); all 80 `formats` rows in `docs/phase3/fidelity.md` 3.3; 10.2 rows 1-12 | **proven** (10.3 `convert`, `convert-e2e`) |
+| … from the **API** | `convert-api/tests/e2e.rs:246` (every `formats` row over HTTP, job `convert-e2e`); PDF operations `api.rs:1248`, `:1287`, `:1327`, `:1402`, `:1452`; 10.2 API column (real tools: combine, split, extract) | **proven**, PDF operations included (B1 fixed) |
+| … from the **UI** | `ci/web-smoke/converter.spec.ts` (job `convert-e2e`; PDF operations `:148`, `:187`; number format `:207`); the real-tool UI runs (section 4, and 10.2 rows 12 and 18) | **proven**, PDF operations included (B1 fixed) |
+| **The fidelity table exists** | `docs/phase3/fidelity.md` (one row per `formats` row; Office 16, LibreOffice 7.4.7 and x2t 8.2.3 references; the PDF to DOCX candidates); `docs/phase3/evidence/fidelity-summary.json` | **proven on the SYNTHETIC set only. Open: the corpus (O9) was not delivered**, so no claim is made about real HRM documents |
+| **Failures are reported, never silent** | `services/convert/tests/fault.rs`, `convert-api/tests/{api,hardening}.rs`; section 4 (22 cases × 3 surfaces) and 10.2 (20 changed cases); the ratchet 10.4 (4 = D1, 0 new); `defects.md` D2-D6 fixed, D1 accepted (Phase 8) | **proven**: B2 fixed (`csv_locale_mismatch`, 10.2 rows 8-11 and 18), m1-m4 fixed |
+| Brief task 2: PDF to DOCX sidecar, isolated, never linked | `sidecars/pdf2docx/` (internal network, read-only, limits); section 3 licence sign-off; `cargo deny` (10.3) | **proven**. O8 (the default engine) is still the owner's; the code default is `native` (`plan.rs:107-111`), as WP10 recommends |
+| Brief task 3: transliteration, formatting kept | `services/convert/tests/translit_e2e.rs`; job `translit-preserve` (10.3); the UI translit run (section 4) | **proven** (10.3) |
+| Brief task 4: batch, queue with progress, zip, limits, timeouts, cleanup | `convert-api/tests/api.rs`, `hardening.rs`, `e2e.rs` (a hard kill leaves `work/` empty); section 4 rows 4 and 20 | **proven** |
+| XDFU (PLAN 10, opt-in) | off by default everywhere (section 2.3); M3-M5 fixed (10.1) | **built, off**. Switching it on needs O10 and the m13 rest |
+
+### 10.6 Carry-forward to Phase 4
+
+1. **The upstream sync with hand-merge (M2).** 13 conflicting patches, 6 3-way. Among them are gridcraft `0028` (display/CSV)
+   and `0029` (PDF/print) against upstream's new `value_text_as` (#1163). After the merge: re-run the NumLocale tests, the
+   WP14 matrix, `ci.sh convert-e2e`, and the m10 locale probe.
+2. **D7.** Upstream pdfcraft's ru "Move down" (`Переместить вdownarrow`) needs a one-line carried patch with the sync,
+   unless upstream fixes it first (`defects.md` D7).
+3. **To Phase 8:** D1 (txt page count, the 4 ratchet entries), D8 (uz AM/PM designators), D9 (uz auto formats of typed
+   dates and times, a `parse_input` design item), and m9 (ODF charts and `pdf_en_us`).
+4. **Deferred minors:**
+   - m5 rest (the fallback as an operator switch, never under XDFU), Phase 5;
+   - m6 (fix before O13 flips the alphabet default);
+   - m10 (with the sync);
+   - m13 rest (before XDFU is switched on, O10);
+   - m14 (Phase 10, before an image is distributed);
+   - the close-out's n1-n4 (small; n1 is a one-line doc fix, n2 a few lines of `app.js`).
+5. **M3 from Phase 2:** opening on an Android phone (`docs/phase2/gate-review.md`). Android is deferred by the owner
+   (2026-10-20).
+6. **Server mode** (JWT plus TLS) has not been exercised end to end in a real browser over TLS. Only
+   `convert-api/tests/{tls,hardening}.rs` and the token tests of the page (`converter.spec.ts:271`, `:285`) cover it.
+7. **The corpus (O9) is not delivered.** Every fidelity number is on the synthetic set.
+8. Housekeeping: `C:\c` (850 KB, synthetic outputs of section 4) still exists; the owner can delete it. The config guard
+   against MSYS paths (`convert-api/src/config.rs:376`, `:427`) stops it from happening again.
+
+### 10.7 Verdict
+
+**READY for the owner's "go".**
+- Both blockers are fixed and measured on all three surfaces: B1 (PDF operations in the API and the page) and B2
+  (`csv_locale_mismatch`, and the CLI default taken from the regional format).
+- M1, M3, M4 and M5 are fixed. M2 is the Phase 4 sync, by design.
+- `ci.sh full` is 28 of 28 ok on `d7b9582`.
+- The ratchet shows 4 silent losses, which is the D1 baseline: 0 new.
+- No re-run case was silent.
+
+What remains does not block the gate, and is listed in 10.6:
+- **Owner items:** O8 (the default PDF to DOCX engine; the code default is native, as recommended), O9 (corpus, so every
+  fidelity number stays synthetic) and O10 (before XDFU is switched on anywhere).
+- **Small fixes:** n1-n4, m6 and the deferred minors.

@@ -100,6 +100,36 @@ Our `i18n/pdfcraft.tsv:214` mirrors it with status `upstream`.
 - It is scheduled with the Phase 4 upstream sync, which has to hand-merge anyway (gate-review M2), because upstream may fix it first.
 - Found by the opus review on 2026-10-22.
 
+## 1d. Found by the uz Excel measurement (WP14 Q4), carried to Phase 8
+
+Both were measured on 2026-10-22 under the real uz-Latn-UZ and uz-Cyrl-UZ Windows cultures. The evidence is
+`docs/phase3/numlocale.md` ("Excel COM rows for uz", end of section 13) and the raw data in `docs/phase3/evidence/uz-excel/`.
+The decision (Q4-b, Q4-c in `numlocale.md` section 12) was taken by the orchestrator on 2026-10-22, owner-delegated. Neither
+changes a stored value: the converter's outputs (xlsx, csv) keep the same numbers and serials.
+
+### D8. uz AM/PM designators are the English ones
+
+- Excel uz shows `3:04 TK` for `h:mm AM/PM` (Cyrl `ТК`; .NET NLS for uz-Latn-UZ gives `TO`/`TK`). Ours shows `3:04 PM` in every
+  locale.
+- Where: `upstream/gridcraft/crates/numfmt/src/render.rs:133` (`DatePart::AmPm`), in the tree of patches 0024/0025. ru is not
+  affected (NLS ru has no AM/PM designators).
+- Fix: two strings per uz locale in `NumLocale`, used by `DatePart::AmPm`, plus a golden row per uz locale. A carried gridcraft
+  patch with a REGISTER row.
+- Severity low: only the 12-hour format codes are affected, and only in the display, CSV and PDF text.
+- **Carried to Phase 8.**
+
+### D9. Auto-assigned formats of typed dates and times differ from Excel uz
+
+- When a date or time is typed into a cell, `parse_input` gives the cell a format. Excel uz gives `hh:mm` for `10:30`,
+  `dd-mmm-yy` for `12 okt 2026` and the Windows short date for `2026-10-12`. Ours gives `h:mm`, `d-mmm-yy` and `yyyy-mm-dd`.
+  The serial is the same in every case; so `9:30` shows as `09:30` in Excel uz and `9:30` here.
+- Where: `parse_input` (`upstream/gridcraft/crates/core/src/parse.rs`, patch 0026 `parse_input_in`), shared with en-US.
+- Fix: a design item. The auto format should become per locale, with the en-US results unchanged (the en-US golden must
+  stay byte-equal). It is not a one-line fix.
+- This affects the sheets editor's typed input and the cells of a CSV/TSV the converter reads under a uz locale (a csv to
+  xlsx job gives a `10:30` cell the format `h:mm`). The values are the same; only the cell format differs.
+- **Carried to Phase 8, as a `parse_input` design item.**
+
 ## 2. Engine limits that `convert` warns about (kept here for the record; they are not silent)
 
 Each is a row of `data/losses.toml` (code in brackets) or an engine message passed through as `upstream`. They are real defects of the engines, and
