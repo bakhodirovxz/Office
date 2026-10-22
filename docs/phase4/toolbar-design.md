@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Design only, written 2026-10-22 on branch `phase-4`. No product code, no builds. Waiting for the owner's review (PLAN Q5). |
+| **Status** | Design only, written 2026-10-22 on branch `phase-4`. **Owner review done 2026-10-22: all three recommendations accepted (§11).** |
 | **Implements** | PLAN §2.1–§2.4 (the design WP2 and WP3 build), WP1. The labels feed WP17; the settings key feeds WP5; the keyboard and accessibility rules feed WP18. |
 | **Upstream BASEs read** | wordcraft `eae2421`, gridcraft `f1894c6`, deckcraft `1dc6972`, pdfcraft `924c4da` (the trees under `upstream/` are the **queue applied**). Every `file:line` below is relative to `upstream/` unless it says `domains/`. **WP0 moves every BASE: WP0b re-checks every id and line in §9 and Appendix A.** |
 | **Mock-ups** | ASCII below, and the same four layouts drawn in [`toolbar-design.html`](toolbar-design.html) (a static page, no external resources; open it in any browser). |
@@ -472,9 +472,9 @@ in the registry, outside `#[cfg(test)]`.
 ## 11. Owner review (Q5)
 | # | Question | Recommendation | Owner's answer |
 |---|---|---|---|
-| 1 | Docs: three-tab preset (Asosiy, Kiritish, Hujjat), or a one-row toolbar like Sheets (+2 d, R3)? | Preset now; WP23 decides whether to switch | _pending_ |
-| 2 | One toolbar setting for all apps, or one per app? | One setting | _pending_ |
-| 3 | Slides: Print not on the simplified row (Ctrl+P, File › Print, QAT)? | Yes | _pending_ |
+| 1 | Docs: three-tab preset (Asosiy, Kiritish, Hujjat), or a one-row toolbar like Sheets (+2 d, R3)? | Preset now; WP23 decides whether to switch | **Three-tab preset** (owner, 2026-10-22) |
+| 2 | One toolbar setting for all apps, or one per app? | One setting | **One setting for all apps** (owner, 2026-10-22) |
+| 3 | Slides: Print not on the simplified row (Ctrl+P, File › Print, QAT)? | Yes | **Yes, Print stays off the row** (owner, 2026-10-22) |
 
 Label wording stays delegated to the agent (`reviewed:agent-*`). The owner only reports problems found in use.
 

@@ -24,6 +24,9 @@
 >     not deployed.
 >   - **Q11, offline converter: yes.** The installer ships the four domain CLIs (about +224 MB), so the converter
 >     works without a server.
+>   - **Q5, toolbar review (2026-10-22): all three recommendations accepted.** Docs keeps a three-tab preset (Asosiy,
+>     Kiritish, Hujjat). One toolbar setting covers all apps. Print stays off the Slides simple row. See
+>     `docs/phase4/toolbar-design.md` §11.
 >   - **Q7 (O8):** not answered, so the default stays the native PDF → DOCX engine, with the D5 fallback.
 > - **Replace MS Office on Windows 10/11 office PCs, Office 2010+ files** (STATUS "Owner acceptance criteria"). Phase 4
 >   delivers the installable suite: one installer, our own ProgIDs, the **"Open with"** registration, a GPO
@@ -549,7 +552,7 @@ A Windows Sandbox or VM run counts as one slot; Playwright does not count.
   - mockups as screenshots (the HTML shell's design tokens and the egui toolbars as image mockups);
   - label wording in 4 languages (drafts);
   - the owner reviews the layout (Q5).
-- **Files:** `docs/phase4/toolbar.md`, `docs/phase4/evidence/toolbar/`.
+- **Files:** `docs/phase4/toolbar-design.md`, `docs/phase4/evidence/toolbar/`.
 - **Done-check:** `test -s docs/phase4/toolbar.md && grep -c "^| " docs/phase4/toolbar.md` ≥ 40 (rows of command
   ids); the owner's answer is recorded in the file.
 - **Estimate:** 2 d (1.5–3). **Tier:** architect; owner 1–2 h.
