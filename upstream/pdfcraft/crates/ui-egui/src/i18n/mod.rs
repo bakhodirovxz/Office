@@ -147,7 +147,7 @@ fn plural_sl(n: u64) -> usize {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
+pub static LANGUAGES: [LangInfo; 23] = [
     LangInfo { code: "en", name: "English", source: "", plural: plural_one_other, rtl: false, catalog: OnceLock::new() },
     LangInfo { code: "ja", name: "日本語", source: include_str!("ja.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },
     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` locales resolve here (see `candidates`).
@@ -210,25 +210,6 @@ pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
     // Vietnamese; every `vi-*` locale (`vi-VN`, `vi_VN.UTF-8`) resolves here. CLDR `vi` counts have
     // one form ("other"), so `@plural` entries list a single form.
     LangInfo { code: "vi", name: "Tiếng Việt", source: include_str!("vi.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },
-    // Uzbek (office overlay): only when the overlay supplies the catalogs.
-    #[cfg(office_uz)]
-    LangInfo {
-        code: "uz-latn",
-        name: crate::office_overlay::NAME_UZ_LATN,
-        source: crate::office_overlay::CATALOG_UZ_LATN,
-        plural: plural_one_other,
-        rtl: false,
-        catalog: OnceLock::new(),
-    },
-    #[cfg(office_uz)]
-    LangInfo {
-        code: "uz-cyrl",
-        name: crate::office_overlay::NAME_UZ_CYRL,
-        source: crate::office_overlay::CATALOG_UZ_CYRL,
-        plural: plural_one_other,
-        rtl: false,
-        catalog: OnceLock::new(),
-    },
 ];
 
 impl LangInfo {
@@ -331,10 +312,6 @@ fn candidates(tag: &str) -> Vec<String> {
         let script = if parts.iter().any(|p| matches!(*p, "tw" | "hk" | "mo")) { "zh-hant" } else { "zh-hans" };
         out.insert(out.len().saturating_sub(1), script.to_string());
     }
-    if primary == "uz" && !parts.iter().any(|p| matches!(*p, "latn" | "cyrl")) {
-        // Uzbek without a script: Latin, unless a Linux locale says `@cyrillic` (cut off above).
-        out.insert(out.len().saturating_sub(1), if tag.to_ascii_lowercase().contains("@cyrillic") { "uz-cyrl" } else { "uz-latn" }.to_string());
-    }
     if primary == "pt" && !out.iter().any(|c| c == "pt-br") {
         // The only Portuguese catalog is Brazilian; other regions use it rather than English.
         out.insert(out.len().saturating_sub(1), "pt-br".to_string());
@@ -413,9 +390,23 @@ fn first_supported(list: &str) -> Option<Lang> {
     list.split(['(', ')', ',', '"', '\n']).map(str::trim).filter(|s| !s.is_empty()).find_map(lang_from_tag)
 }
 
+/// The first supported language among BCP 47 tags in preference order, as the browser lists them
+/// in `navigator.languages` (#2954). Only the first few tags are looked at: the list is short in
+/// practice, and a page can't make Auto walk an unbounded one.
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+fn first_supported_tag<S: AsRef<str>>(tags: impl IntoIterator<Item = S>) -> Option<Lang> {
+    tags.into_iter().take(32).find_map(|tag| lang_from_tag(tag.as_ref().trim()))
+}
+
+/// The browser's preferred languages, as the desktop builds use the system's: `navigator.languages`
+/// in order, then `navigator.language` (kept within the 32 tags `first_supported_tag` reads).
+/// English when the browser offers none we have a catalog for.
 #[cfg(target_arch = "wasm32")]
 fn detect_system_lang() -> Lang {
-    Lang::EN
+    let Some(navigator) = web_sys::window().map(|w| w.navigator()) else { return Lang::EN };
+    let mut tags: Vec<String> = navigator.languages().iter().take(31).filter_map(|v| v.as_string()).collect();
+    tags.extend(navigator.language());
+    first_supported_tag(&tags).unwrap_or(Lang::EN)
 }
 
 thread_local! {
@@ -434,7 +425,38 @@ pub fn set_current(lang: Lang) {
 /// `label` as it reads inside a sentence ("add a text box"): lowercased, except in languages
 /// that capitalise nouns (German), where lowercasing would misspell it.
 pub fn in_sentence(label: &str) -> std::borrow::Cow<'_, str> {
-    if current().code() == "de" { std::borrow::Cow::Borrowed(label) } else { std::borrow::Cow::Owned(label.to_lowercase()) }
+    match current().code() {
+        "de" => std::borrow::Cow::Borrowed(label),
+        "tr" => std::borrow::Cow::Owned(label.chars().flat_map(lower_turkish).collect()),
+        _ => std::borrow::Cow::Owned(label.to_lowercase()),
+    }
+}
+
+/// The translation of `english` in upper case, for section titles. Rust's case mapping knows no
+/// language, and Turkish has a dotted and a dotless i (`i` ↔ `İ`, `ı` ↔ `I`): "Gelişmiş" must
+/// become "GELİŞMİŞ", not "GELIŞMIŞ". A label without a Turkish row is still English and keeps
+/// the English rule.
+pub fn upper_label(english: &str) -> String {
+    let lang = current();
+    let shown = tr(lang, english);
+    if lang.code() == "tr" && has(lang, english) { shown.chars().flat_map(upper_turkish).collect() } else { shown.to_uppercase() }
+}
+
+fn upper_turkish(c: char) -> std::char::ToUppercase {
+    match c {
+        'i' => 'İ'.to_uppercase(),
+        'ı' => 'I'.to_uppercase(),
+        c => c.to_uppercase(),
+    }
+}
+
+fn lower_turkish(c: char) -> std::char::ToLowercase {
+    match c {
+        // `İ`.to_lowercase() is "i" plus a combining dot above.
+        'İ' => 'i'.to_lowercase(),
+        'I' => 'ı'.to_lowercase(),
+        c => c.to_lowercase(),
+    }
 }
 
 pub fn current() -> Lang {
@@ -459,7 +481,7 @@ pub fn key_name(s: &str) -> &str {
 
 /// Translate an English UI string; unknown strings come back unchanged.
 pub fn tr(lang: Lang, s: &str) -> &str {
-    crate::office_overlay::rebrand(lang.catalog().plain(s).unwrap_or(s))
+    lang.catalog().plain(s).unwrap_or(s)
 }
 
 /// How the layers below say their own sentences in the current language.
@@ -475,12 +497,12 @@ pub fn words(wording: &str) -> String {
 
 /// Like [`tr`], for an English string that needs a disambiguating `context`.
 pub fn tr_ctx<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
-    crate::office_overlay::rebrand(lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s)))
+    lang.catalog().contextual(context, s).unwrap_or_else(|| tr(lang, s))
 }
 
 /// A string keyed by its command id, falling back to the translation of the English `label`.
 pub fn tr_id<'a>(lang: Lang, id: &str, label: &'a str) -> &'a str {
-    crate::office_overlay::rebrand(lang.catalog().id(id).unwrap_or_else(|| tr(lang, label)))
+    lang.catalog().id(id).unwrap_or_else(|| tr(lang, label))
 }
 
 /// Fill `{name}` placeholders in one pass. Unknown placeholders are left as written, and inserted
@@ -567,7 +589,7 @@ pub fn command_label(text: &str) -> String {
 /// [`command_label`] of the current English label.
 pub fn menu_label(id: &str, label: &str) -> String {
     match current().catalog().id(id) {
-        Some(translated) => crate::office_overlay::rebrand(translated).to_owned(),
+        Some(translated) => translated.to_owned(),
         None => command_label(label),
     }
 }
@@ -640,6 +662,21 @@ mod tests {
         assert_eq!(first_supported("(\n    \"ja-JP\",\n    \"en-US\"\n)\n"), Some(JA()));
         assert_eq!(first_supported("(\n    \"fr-FR\",\n    \"en-US\"\n)\n"), Lang::from_code("fr"));
         assert_eq!(first_supported("("), None);
+    }
+
+    /// #2954: the web build's Auto language follows the browser's preferred languages in order,
+    /// skipping ones without a catalog, and is English only when none is supported.
+    #[test]
+    fn browser_language_list_is_followed_in_order() {
+        assert_eq!(first_supported_tag(["it-IT", "en-US"]), Lang::from_code("it"));
+        assert_eq!(first_supported_tag(["xx-YY", "ja", "fr-FR"]), Some(JA()));
+        assert_eq!(first_supported_tag(["zh-TW"]), Lang::from_code("zh-hant"));
+        assert_eq!(first_supported_tag(["en-GB", "fr-FR"]), Some(Lang::EN));
+        assert_eq!(first_supported_tag([" pt-PT "]), Lang::from_code("pt-br"));
+        assert_eq!(first_supported_tag(["", "xx"]), None);
+        assert_eq!(first_supported_tag(Vec::<String>::new()), None);
+        let long = std::iter::repeat_n("xx", 10_000).chain(["fr"]);
+        assert_eq!(first_supported_tag(long), None, "only the first tags are read");
     }
 
     #[test]
@@ -1982,6 +2019,20 @@ mod tests {
         set_current(Lang::from_code("de").expect("de registered"));
         assert_eq!(in_sentence("Textfeld"), "Textfeld");
         set_current(Lang::EN);
+    }
+
+    #[test]
+    fn turkish_keeps_its_dotted_and_dotless_i_when_changing_case() {
+        set_current(Lang::from_code("tr").expect("tr registered"));
+        assert_eq!(upper_label("Advanced"), "GELİŞMİŞ");
+        assert_eq!(upper_label("Signatures"), "İMZALAR");
+        // A label with no Turkish row is still English and keeps the English rule.
+        assert_eq!(upper_label("Untranslated title"), "UNTRANSLATED TITLE");
+        assert_eq!(in_sentence("İmza Alanı"), "imza alanı");
+        assert_eq!(in_sentence("Işık"), "ışık");
+        set_current(Lang::EN);
+        assert_eq!(upper_label("Advanced"), "ADVANCED");
+        assert_eq!(in_sentence("Image"), "image");
     }
 
     #[test]

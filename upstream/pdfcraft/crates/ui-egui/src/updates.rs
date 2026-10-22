@@ -109,7 +109,7 @@ impl PdfCraftApp {
 
 /// The Updates dialog.
 pub(crate) fn dialog(app: &mut PdfCraftApp, ctx: &egui::Context) {
-    if !crate::office_overlay::UPDATE_CHECK || !app.updates.open {
+    if !app.updates.open {
         return;
     }
     let t = theme::Tokens::get(ctx);

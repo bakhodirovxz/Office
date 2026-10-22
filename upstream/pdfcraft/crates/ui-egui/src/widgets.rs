@@ -272,7 +272,7 @@ pub fn section_title(ui: &mut egui::Ui, text: &str) {
     let t = Tokens::get(ui.ctx());
     ui.add_space(10.0);
     // Section titles across every panel go through here, so one translation point covers them.
-    ui.label(egui::RichText::new(tl!(text).to_uppercase()).font(theme::semibold(10.5)).color(t.text_faint).extra_letter_spacing(0.6));
+    ui.label(egui::RichText::new(crate::i18n::upper_label(text)).font(theme::semibold(10.5)).color(t.text_faint).extra_letter_spacing(0.6));
     ui.add_space(2.0);
 }
 
@@ -500,13 +500,6 @@ pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {
 }
 
 /// The ArtCraft wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
-/// With the office overlay the mark is not compiled in: nothing is drawn.
-#[cfg(office_overlay)]
-pub fn artcraft_logo(ui: &mut egui::Ui, _height: f32) -> Response {
-    ui.allocate_response(egui::Vec2::ZERO, egui::Sense::hover())
-}
-
-#[cfg(not(office_overlay))]
 pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
     let dark = ui.visuals().dark_mode;
     let (uri, bytes): (&str, &'static [u8]) = if dark {
@@ -518,13 +511,6 @@ pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
 }
 
 /// The ArtCraft mark (brand blue, works on light and dark), `size` points square.
-/// With the office overlay the overlay's own icon is drawn instead.
-#[cfg(office_overlay)]
-pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
-    crate::office_overlay::logo(ui, size)
-}
-
-#[cfg(not(office_overlay))]
 pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     ui.add(
         egui::Image::from_bytes("bytes://artcraft-mark.svg", include_bytes!("../../../docs/brand/artcraft-mark.svg"))
@@ -537,9 +523,6 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
 /// Returns the registry command of the one clicked.
 pub fn community_links(ui: &mut egui::Ui) -> Option<&'static str> {
     let mut clicked = None;
-    if !(crate::office_overlay::COMMUNITY || crate::office_overlay::UPSTREAM_LINKS) {
-        return clicked;
-    }
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = vec2(8.0, 8.0);
         for (i, l) in pdfcraft_engine::links::LINKS.iter().enumerate() {

@@ -207,9 +207,7 @@ impl PdfCraftApp {
                 }
                 self.dialog = Some(Dialog::NumberPages);
             }
-            link if (crate::office_overlay::COMMUNITY || crate::office_overlay::UPSTREAM_LINKS)
-                && pdfcraft_engine::links::for_command(link).is_some() =>
-            {
+            link if pdfcraft_engine::links::for_command(link).is_some() => {
                 if let Some(l) = pdfcraft_engine::links::for_command(link) {
                     self.open_url(l.url);
                 }
@@ -629,7 +627,13 @@ impl PdfCraftApp {
             "create.clipboard" => self.create_from_clipboard(),
             "optimize.reduce" => self.reduce_file_size(),
             "page.duplicate" => {
-                self.apply_edit(Edit::DuplicatePages { pages: targets });
+                self.apply_edit(Edit::DuplicatePages { pages: targets, at: None });
+            }
+            // Two or more selected pages reverse among themselves; otherwise the whole document.
+            "page.reverse" => {
+                let all = active.and_then(|i| self.views.get(i)).map_or(0, |v| v.page_count());
+                let pages = if targets.len() >= 2 { targets } else { (0..all).collect() };
+                self.apply_edit(Edit::ReversePages { pages });
             }
             "ocr.enhance_camera" => {
                 // The corners start on the document's edges when they can be found, else
@@ -668,7 +672,7 @@ impl PdfCraftApp {
             "page.split" => self.dialog = Some(Dialog::Split),
             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
             "help.about" => self.dialog = Some(Dialog::About),
-            "help.check_updates" if crate::office_overlay::UPDATE_CHECK => self.check_for_updates(),
+            "help.check_updates" => self.check_for_updates(),
             _ => return false,
         }
         true
@@ -761,7 +765,7 @@ fn tab_after(current: Option<usize>, count: usize, forward: bool) -> Option<usiz
 
 /// Render a top-level menu's registered commands (with live labels, shortcuts and enablement).
 pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str) {
-    for spec in commands::menu(menu).filter(|s| !crate::office_overlay::hidden_command(s.id)) {
+    for spec in commands::menu(menu) {
         let label = commands::current_label(spec, &app.session, app.active_ids().map(|(_, id)| id));
         let label = crate::i18n::menu_label(spec.id, &label);
         // Open Recent is a submenu of the live recent list, not one action: disabled while the
@@ -775,17 +779,19 @@ pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str
             let mut open: Option<String> = None;
             let mut clear = false;
             ui.menu_button(label, |ui| {
-                for r in &app.recent {
-                    if ui.button(&r.name).on_hover_text(&r.path).clicked() {
-                        open = Some(r.path.clone());
+                crate::chrome::scroll_menu(ui, |ui| {
+                    for r in &app.recent {
+                        if ui.button(&r.name).on_hover_text(&r.path).clicked() {
+                            open = Some(r.path.clone());
+                            ui.close();
+                        }
+                    }
+                    ui.separator();
+                    if ui.button(tl!("Clear Recent Files")).clicked() {
+                        clear = true;
                         ui.close();
                     }
-                }
-                ui.separator();
-                if ui.button(tl!("Clear Recent Files")).clicked() {
-                    clear = true;
-                    ui.close();
-                }
+                })
             });
             if let Some(p) = open {
                 app.open_recent(&p);

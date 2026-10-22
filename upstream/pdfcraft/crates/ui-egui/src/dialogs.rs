@@ -354,17 +354,20 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                             let ends = doc.revision_ends();
                             if ends.len() > 1 {
                                 ui.label(egui::RichText::new(tl!("Revisions")).color(t.text_muted));
-                                ui.horizontal_wrapped(|ui| {
-                                    ui.label(ends.len().to_string());
-                                    for n in (1..ends.len()).rev().take(12) {
-                                        if ui
-                                            .small_button(crate::i18n::fmt(tl!("View revision {n}"), &[("n", &n.to_string())]))
-                                            .on_hover_text(tl!("Open the file as it was saved then"))
-                                            .clicked()
-                                        {
-                                            open_revision = Some(n);
+                                // Reserve the full wrapped height before the grid starts the next row.
+                                ui.vertical(|ui| {
+                                    ui.horizontal_wrapped(|ui| {
+                                        ui.label(ends.len().to_string());
+                                        for n in (1..ends.len()).rev().take(12) {
+                                            if ui
+                                                .small_button(crate::i18n::fmt(tl!("View revision {n}"), &[("n", &n.to_string())]))
+                                                .on_hover_text(tl!("Open the file as it was saved then"))
+                                                .clicked()
+                                            {
+                                                open_revision = Some(n);
+                                            }
                                         }
-                                    }
+                                    });
                                 });
                                 ui.end_row();
                             }
@@ -738,8 +741,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 match action {
                     Some(crate::sign_ui::CertAction::Trust(c)) => app.trust_certificate(*c),
                     Some(crate::sign_ui::CertAction::Export(c)) => {
-                        let pem = crate::sign_ui::certificate_pem(&c);
-                        app.write_files(&[(format!("{}.cer", c.display_name()), std::sync::Arc::new(pem.into_bytes()))], "Export certificate");
+                        app.export_certificate(&c);
                     }
                     None => {}
                 }
@@ -1155,7 +1157,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                         ui.horizontal(|ui| {
                             widgets::artcraft_mark(ui, 40.0);
                             ui.vertical(|ui| {
-                                ui.label(egui::RichText::new(crate::office_overlay::app_name()).font(theme::semibold(20.0)));
+                                ui.label(egui::RichText::new("PdfCraft").font(theme::semibold(20.0)));
                                 ui.label(crate::i18n::fmt(tl!("Version {v}"), &[("v", &pdfcraft_engine::build_info::version())]));
                             });
                         });
@@ -1168,16 +1170,11 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                             .color(t.text_muted)
                             .small(),
                         );
-                        if !crate::office_overlay::attribution().is_empty() {
-                            ui.label(egui::RichText::new(crate::office_overlay::attribution()).color(t.text_muted).small());
-                        }
                         ui.add_space(12.0);
-                        if crate::office_overlay::COMMUNITY {
-                            ui.horizontal(|ui| {
-                                ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
-                                widgets::artcraft_logo(ui, 16.0);
-                            });
-                        }
+                        ui.horizontal(|ui| {
+                            ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
+                            widgets::artcraft_logo(ui, 16.0);
+                        });
                         ui.add_space(6.0);
                         if let Some(cmd) = widgets::community_links(ui) {
                             link_command = Some(cmd);
