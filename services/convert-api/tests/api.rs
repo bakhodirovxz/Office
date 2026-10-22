@@ -1557,3 +1557,36 @@ async fn warnings_carry_the_values_of_their_placeholders() {
     );
     assert_eq!(w(1, "kind_mismatch")["args"]["kind"], "txt");
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_cut_off_docx_is_rejected_at_post_as_damaged() {
+    let h = H::local("damaged", |_| {});
+    let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    w.start_file(
+        "word/document.xml",
+        zip::write::SimpleFileOptions::default(),
+    )
+    .unwrap();
+    std::io::Write::write_all(&mut w, &vec![b'x'; 20_000]).unwrap();
+    let mut z = w.finish().unwrap().into_inner();
+    z.truncate(z.len() / 2);
+    let (st, _, v) = h
+        .post(
+            &[("cut.docx", &z), ("ok.txt", TXT)],
+            json!({"to": "pdf"}),
+            None,
+        )
+        .await;
+    assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+    assert_eq!(v["files"][0]["error"]["code"], 9, "{v}");
+    assert!(
+        v["files"][0]["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("damaged"),
+        "{v}"
+    );
+    let d = h.wait_done(v["job"].as_str().unwrap(), None).await;
+    assert_eq!(d["files"][0]["state"], "failed");
+    assert_eq!(d["files"][1]["state"], "done"); // the rest of the batch runs
+}

@@ -1847,21 +1847,30 @@ impl JobHook for XdfuHook {
         let (user, client) = self.who(ctx);
         let mut e = self.event(ctx, &user, &client, &evidence);
         e["outputs"] = outputs.len().into();
-        let copy = self.audit.append("copy", e).map_err(|m| Failure {
-            exit: Exit::ToolError,
-            msg: format!("XDFU audit log: {m}"),
-        })?;
-        self.note_with(ctx, |n| n.copy = Some(copy));
-        let stamp = Stamp {
-            copy,
-            client,
-            user,
-            when: audit::utc_text(audit::now_secs()),
-        };
-        let mut strips = Strips(HashMap::new());
-        for (n, f) in outputs.iter().enumerate() {
-            mark(ctx, f, n, &stamp, tools, &mut strips)?;
-        }
+        // the line is written after the marking has worked; a failed marking leaves a `copy_failed` line and no copy (gate review m12)
+        let (copy, ()) = self
+            .audit
+            .append_after("copy", e, |copy| {
+                self.note_with(ctx, |n| n.copy = Some(copy));
+                let stamp = Stamp {
+                    copy,
+                    client,
+                    user,
+                    when: audit::utc_text(audit::now_secs()),
+                };
+                let mut strips = Strips(HashMap::new());
+                for (n, f) in outputs.iter().enumerate() {
+                    mark(ctx, f, n, &stamp, tools, &mut strips)?;
+                }
+                Ok::<(), Failure>(())
+            })
+            .map_err(|e| match e {
+                audit::Appended::Log(m) => Failure {
+                    exit: Exit::ToolError,
+                    msg: format!("XDFU audit log: {m}"),
+                },
+                audit::Appended::Produce(f) => f,
+            })?;
         Ok(vec![Warning {
             code: "xdfu_copy".into(),
             count: 1,

@@ -48,6 +48,12 @@ pub struct Failure {
     pub msg: String,
 }
 
+impl std::fmt::Display for Failure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.msg)
+    }
+}
+
 pub fn fail<T>(exit: Exit, msg: impl Into<String>) -> Result<T, Failure> {
     Err(Failure {
         exit,

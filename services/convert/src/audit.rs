@@ -200,7 +200,12 @@ impl FileLock {
                         .and_then(|m| m.modified())
                         .is_ok_and(|t| t.elapsed().is_ok_and(|e| e > Duration::from_secs(30)))
                     {
-                        let _ = fs::remove_file(&p);
+                        // renamed, not deleted: of two processes that both saw the stale lock only one rename succeeds
+                        let gone =
+                            PathBuf::from(format!("{}.stale-{}", p.display(), std::process::id()));
+                        if fs::rename(&p, &gone).is_ok() {
+                            let _ = fs::remove_file(&gone);
+                        }
                     }
                     std::thread::sleep(Duration::from_millis(50));
                 }
@@ -286,9 +291,42 @@ impl AuditLog {
     /// Append one event. `fields` is a JSON object; `file` is dropped when the log was opened with `redact`. Returns the line's `seq`,
     /// which the converter also uses as the copy number. The line is on disk when this returns.
     pub fn append(&self, event: &str, fields: Value) -> Result<u64, String> {
+        match self.append_after(event, fields, |_| Ok::<(), String>(())) {
+            Ok((seq, ())) => Ok(seq),
+            Err(Appended::Log(m)) => Err(m),
+            Err(Appended::Produce(m)) => Err(m),
+        }
+    }
+
+    /// Reserve the next `seq`, run `produce(seq)` (the work the line vouches for, for example the watermark with that copy number),
+    /// and write the `event` line only when it succeeded. When it failed, a `<event>_failed` line with the reason is written instead, so
+    /// the log never records something that was not produced (gate review m12). The log stays locked meanwhile: `produce` should be quick.
+    pub fn append_after<T, E: std::fmt::Display>(
+        &self,
+        event: &str,
+        fields: Value,
+        produce: impl FnOnce(u64) -> Result<T, E>,
+    ) -> Result<(u64, T), Appended<E>> {
         let _g = self.mu.lock().unwrap_or_else(|e| e.into_inner());
-        let _lock = FileLock::take(&self.path)?;
-        let (seq, prev) = self.tail()?;
+        let _lock = FileLock::take(&self.path).map_err(Appended::Log)?;
+        let (seq, prev) = self.tail().map_err(Appended::Log)?;
+        let n = seq + 1;
+        let mut fields = fields;
+        let (event, made) = match produce(n) {
+            Ok(t) => (event.to_string(), Ok(t)),
+            Err(e) => {
+                if let Value::Object(m) = &mut fields {
+                    m.insert("reason".into(), e.to_string().into());
+                }
+                (format!("{event}_failed"), Err(e))
+            }
+        };
+        self.write_line(n, &prev, &event, fields)
+            .map_err(Appended::Log)?;
+        made.map(|t| (n, t)).map_err(Appended::Produce)
+    }
+
+    fn write_line(&self, seq: u64, prev: &str, event: &str, fields: Value) -> Result<(), String> {
         let mut body = match fields {
             Value::Object(m) => m,
             _ => Map::new(),
@@ -296,7 +334,7 @@ impl AuditLog {
         if self.redact {
             body.remove("file");
         }
-        body.insert("seq".into(), (seq + 1).into());
+        body.insert("seq".into(), seq.into());
         body.insert("ts".into(), utc_iso(now_secs()).into());
         body.insert("prev".into(), prev.into());
         body.insert("event".into(), event.into());
@@ -314,9 +352,15 @@ impl AuditLog {
             .map_err(|e| format!("cannot open the audit log: {e}"))?;
         f.write_all(line.as_bytes())
             .and_then(|_| f.sync_data())
-            .map_err(|e| format!("cannot write the audit log: {e}"))?;
-        Ok(seq + 1)
+            .map_err(|e| format!("cannot write the audit log: {e}"))
     }
+}
+
+/// Why `append_after` failed: the log itself, or the work it was to vouch for.
+#[derive(Debug)]
+pub enum Appended<E> {
+    Log(String),
+    Produce(E),
 }
 
 #[cfg(test)]
@@ -459,6 +503,31 @@ mod tests {
         fs::write(&kf, b"short").unwrap();
         assert!(load_key(&kf).is_err());
         let _ = fs::remove_dir_all(p.parent().unwrap());
+    }
+
+    #[test]
+    fn a_failed_production_leaves_a_failed_line_and_never_a_copy() {
+        let p = tmp("after");
+        let log = AuditLog::open(&p, false).unwrap();
+        let ok = log.append_after("copy", json!({"n": 1}), |seq| Ok::<_, String>(seq * 10));
+        assert!(matches!(ok, Ok((1, 10))));
+        let bad = log.append_after("copy", json!({"n": 2}), |_| {
+            Err::<(), _>("mark failed".to_string())
+        });
+        assert!(matches!(bad, Err(Appended::Produce(ref m)) if m == "mark failed"));
+        let text = fs::read_to_string(&p).unwrap();
+        let events: Vec<String> = text
+            .lines()
+            .map(|l| {
+                serde_json::from_str::<Value>(l).unwrap()["event"]
+                    .as_str()
+                    .unwrap()
+                    .into()
+            })
+            .collect();
+        assert_eq!(events, ["copy", "copy_failed"]);
+        assert!(text.contains("mark failed"));
+        verify(&p).unwrap(); // the chain is unbroken
     }
 
     #[test]

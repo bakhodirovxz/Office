@@ -44,6 +44,9 @@ pub struct Settings {
     /// the hash-chained audit log of XDFU jobs. Required in server mode, and it must be on storage that survives a restart (not the
     /// RAM disk of `work_dir`); local mode defaults to the user's data directory.
     pub xdfu_audit_file: Option<PathBuf>,
+    /// the operator's key of the audit log's hash chain (HMAC-SHA256): 32 or more random bytes, kept outside the log. Without it the
+    /// chain only stops a naive edit and the server says so at start.
+    pub xdfu_audit_key_file: Option<PathBuf>,
     /// leave file names out of the audit log
     pub xdfu_redact: bool,
     pub cpu_slots: Option<usize>,
@@ -92,6 +95,7 @@ impl Default for Settings {
             store_dir: None,
             xdfu: "off".into(),
             xdfu_audit_file: None,
+            xdfu_audit_key_file: None,
             xdfu_redact: false,
             cpu_slots: None,
             mem_budget_mb: 12 * 1024,
@@ -356,6 +360,9 @@ impl Settings {
             }
             other => return Err(format!("auth = \"{other}\": expected \"none\" or \"jwt\"")),
         };
+        if let Some(k) = &self.xdfu_audit_key_file {
+            check_audit_key(k)?;
+        }
         let work_dir = self
             .work_dir
             .clone()
@@ -398,6 +405,23 @@ impl Settings {
             s: self,
         })
     }
+}
+
+/// The audit key: the 32 random bytes of `read_key` in any of its spellings, or longer raw random bytes. A passphrase is refused.
+fn check_audit_key(path: &Path) -> Result<(), String> {
+    let raw = std::fs::read(path)
+        .map_err(|e| format!("cannot read xdfu_audit_key_file {}: {e}", path.display()))?;
+    if read_key(path).is_ok() {
+        return Ok(());
+    }
+    let distinct = raw.iter().collect::<std::collections::BTreeSet<_>>().len();
+    let printable = raw
+        .iter()
+        .all(|c| (0x20..0x7f).contains(c) || matches!(c, b'\r' | b'\n'));
+    if raw.len() >= 32 && !printable && distinct >= 16 {
+        return Ok(());
+    }
+    Err("xdfu_audit_key_file must hold 32 or more random bytes (raw, or 64 hex characters, or base64 of 32 bytes), not a passphrase".into())
 }
 
 /// `/c/Users/me/x` or `\c\Users\me`: a Git-Bash path written into a config file. Windows reads it as `C:\c\Users\...` on the current
@@ -579,6 +603,42 @@ mod tests {
         ] {
             assert!(!msys_path(ok), "{ok}");
         }
+    }
+
+    #[test]
+    fn the_audit_key_file_is_checked_like_key_file() {
+        let dir = std::env::temp_dir().join(format!("capi-akey-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let with = |name: &str, bytes: &[u8]| {
+            std::fs::write(dir.join(name), bytes).unwrap();
+            Settings {
+                xdfu_audit_key_file: Some(dir.join(name)),
+                ..Settings::default()
+            }
+            .resolve()
+            .map(|_| ())
+        };
+        let random: Vec<u8> = (0..48u8)
+            .map(|i| i.wrapping_mul(37).wrapping_add(11) | 0x80)
+            .collect();
+        assert!(with("raw48", &random).is_ok());
+        assert!(with("raw32", &random[..32]).is_ok());
+        assert!(
+            with("pass", b"correct horse battery staple, long enough")
+                .unwrap_err()
+                .contains("passphrase")
+        );
+        assert!(with("short", &random[..20]).is_err());
+        assert!(with("same", &[7u8; 40]).is_err());
+        assert!(
+            Settings {
+                xdfu_audit_key_file: Some(dir.join("missing")),
+                ..Settings::default()
+            }
+            .resolve()
+            .is_err()
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

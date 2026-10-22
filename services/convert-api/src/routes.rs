@@ -804,6 +804,13 @@ fn precheck(
         DetectError::NotUtf8 => (None, Exit::Unsupported.code(), "unsupported input: the text is not UTF-8 (cp1251 or UTF-16?); re-save it as UTF-8".into()),
     })?;
     let k = det.kind;
+    if det.damaged {
+        return Err((
+            Some(k),
+            Exit::Rejected.code(),
+            "the file is damaged (the zip directory is missing or cut off); open it in its application and save it again".into(),
+        ));
+    }
     if det.password_protected {
         return Err((
             Some(k),

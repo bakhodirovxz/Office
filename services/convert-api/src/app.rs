@@ -413,7 +413,14 @@ impl App {
                 r.s.xdfu_audit_file
                     .clone()
                     .unwrap_or_else(convert::xdfu::default_audit_path);
-            let log = convert::audit::AuditLog::open(&path, r.s.xdfu_redact)?;
+            let log = convert::audit::AuditLog::open_keyed(
+                &path,
+                r.s.xdfu_redact,
+                r.s.xdfu_audit_key_file.as_deref(),
+            )?;
+            if !log.is_keyed() {
+                eprintln!("convert-api: warning: {}", convert::audit::UNKEYED_WARNING);
+            }
             eprintln!(
                 "convert-api: XDFU handling is ON ({:?}); audit log {}",
                 r.xdfu,
