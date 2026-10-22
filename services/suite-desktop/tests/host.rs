@@ -91,11 +91,14 @@ impl Drop for Kill {
     }
 }
 
-fn http_get(port: u16, path: &str) -> String {
+fn http_get(port: u16, path: &str, cookie: Option<&str>) -> String {
     let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+    let cookie = cookie
+        .map(|c| format!("Cookie: {c}\r\n"))
+        .unwrap_or_default();
     write!(
         s,
-        "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+        "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{cookie}Connection: close\r\n\r\n"
     )
     .unwrap();
     let mut out = String::new();
@@ -111,20 +114,39 @@ fn without_webview2_the_browser_opens_on_the_local_url_and_the_file_goes_to_its_
     c.env("SUITE_TEST_EXIT_AFTER_MS", "4000");
     let mut host = Kill(c.spawn().unwrap());
     let port = e.port();
-    assert_eq!(
-        e.wait("browser.log").trim(),
-        format!("http://127.0.0.1:{port}/")
+    // the browser is opened on the key URL (review M1): 64 hex digits, never in host.json
+    let url = e.wait("browser.log");
+    let key = url
+        .trim()
+        .strip_prefix(&format!("http://127.0.0.1:{port}/_k/"))
+        .unwrap_or_else(|| panic!("{url}"))
+        .to_string();
+    assert!(
+        key.len() == 64 && key.bytes().all(|b| b.is_ascii_hexdigit()),
+        "{key}"
     );
+    assert!(!e.wait("data/host.json").contains(&key));
     // the file name arrives intact (spaces, Cyrillic)
     assert_eq!(e.wait("editor.log").trim(), doc.to_str().unwrap());
     // the shell config comes from the brand file, and the server answers on that port
-    let r = http_get(port, "/shell-config.json");
+    let cookie = format!("k={key}");
+    let r = http_get(port, "/shell-config.json", Some(&cookie));
     assert!(
         r.starts_with("HTTP/1.1 200") && r.contains("\"product\":\"Suite\""),
         "{r}"
     );
     // the desktop actions are not on HTTP
-    assert!(http_get(port, "/ipc").starts_with("HTTP/1.1 404"));
+    assert!(http_get(port, "/ipc", Some(&cookie)).starts_with("HTTP/1.1 404"));
+    // another local user finds the port but has no key: 403 everywhere, and the key URL sets the cookie only for the right key
+    for p in ["/", "/shell-config.json", "/api/v1/formats", "/ipc"] {
+        assert!(http_get(port, p, None).starts_with("HTTP/1.1 403"), "{p}");
+    }
+    assert!(http_get(port, &format!("/_k/{}", "0".repeat(64)), None).starts_with("HTTP/1.1 403"));
+    let r = http_get(port, &format!("/_k/{key}"), None);
+    assert!(
+        r.starts_with("HTTP/1.1 303") && r.to_lowercase().contains("httponly; samesite=strict"),
+        "{r}"
+    );
     assert!(host.0.wait().unwrap().success());
 }
 

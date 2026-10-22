@@ -7,13 +7,13 @@ use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
+use suite_winsec::{Sid, create_user_only_pipe, pipe_server_sid};
 use tao::dpi::LogicalSize;
 use tao::event::{Event, WindowEvent};
 use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use tao::window::WindowBuilder;
 use tokio::io::AsyncReadExt as _;
 use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
-use suite_winsec::{Sid, create_user_only_pipe, pipe_server_sid};
 use wry::{NewWindowResponse, WebContext, WebViewBuilder};
 
 enum Ev {
@@ -56,6 +56,13 @@ fn env_dir(key: &str) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
+/// A fresh 256-bit key for this launch (review M1), as 64 hex digits. It is never written to disk.
+fn new_key() -> Result<String, String> {
+    let mut b = [0u8; 32];
+    getrandom::getrandom(&mut b).map_err(|e| format!("no random numbers: {e}"))?;
+    Ok(b.iter().map(|x| format!("{x:02x}")).collect())
+}
+
 fn alnum(s: &str) -> String {
     s.chars().filter(char::is_ascii_alphanumeric).collect()
 }
@@ -81,8 +88,16 @@ fn send(pipe: &str, lines: &[String], ours: &Sid) -> bool {
             if !server_is(ours, pipe_server_sid(&f)) {
                 return false;
             }
-            return f.write_all(lines.join("
-").as_bytes()).is_ok();
+            return f
+                .write_all(
+                    lines
+                        .join(
+                            "
+",
+                        )
+                        .as_bytes(),
+                )
+                .is_ok();
         }
         std::thread::sleep(Duration::from_millis(100)); // ERROR_PIPE_BUSY while the server makes the next instance
     }
@@ -215,6 +230,7 @@ fn start(args: Args) -> Result<(), String> {
         shell: args.shell.unwrap_or_else(|| dist.join("shell")),
         dist,
         brand: args.brand.unwrap_or_else(|| exe_dir.join("brand.toml")),
+        local_key: Some(new_key()?),
     };
     let brand_text = std::fs::read_to_string(&layout.brand)
         .map_err(|e| format!("{}: {e}", layout.brand.display()))?;
@@ -287,6 +303,11 @@ fn start(args: Args) -> Result<(), String> {
     for f in &args.files {
         report(&product, &ctx.open(f, Source::User));
     }
+    // the first request sets the cookie that every later request needs (M1); the key stays in this process and the opener's command line
+    let start_url = format!(
+        "http://127.0.0.1:{port}/_k/{}",
+        layout.local_key.as_deref().unwrap_or_default()
+    );
 
     // WebView2 missing (or forced missing, for tests) -> the default browser
     let no_webview = args.browser
@@ -296,7 +317,7 @@ fn start(args: Args) -> Result<(), String> {
         if let Some(s) = server {
             rt.spawn(pipe_loop(s, pipe, me, ctx.clone(), None));
         }
-        return browser_fallback(&product, port, &host_json);
+        return browser_fallback(&product, &start_url, &host_json);
     }
 
     let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
@@ -313,7 +334,7 @@ fn start(args: Args) -> Result<(), String> {
     let ipc_proxy = proxy.clone();
     let ipc_ctx = ctx.clone();
     let webview = WebViewBuilder::new_with_web_context(&mut web_context)
-        .with_url(format!("http://127.0.0.1:{port}/"))
+        .with_url(&start_url)
         .with_devtools(false)
         .with_navigation_handler(move |u| nav_ok(&u, port))
         .with_new_window_req_handler(|_, _| NewWindowResponse::Deny)
@@ -369,12 +390,11 @@ fn start(args: Args) -> Result<(), String> {
 }
 
 /// No WebView2: open the default browser on the local URL and say so. The server runs as long as the message is open.
-fn browser_fallback(product: &str, port: u16, host_json: &Path) -> Result<(), String> {
-    let url = format!("http://127.0.0.1:{port}/");
+fn browser_fallback(product: &str, url: &str, host_json: &Path) -> Result<(), String> {
     // `explorer <url>` opens the default browser; the URL is ours (a fixed loopback address)
     let opener = std::env::var_os("SUITE_BROWSER").unwrap_or_else(|| "explorer".into());
     std::process::Command::new(opener)
-        .arg(&url)
+        .arg(url)
         .spawn()
         .map_err(|e| format!("cannot open the browser: {e}"))?;
     if let Some(ms) = std::env::var("SUITE_TEST_EXIT_AFTER_MS")
@@ -383,11 +403,12 @@ fn browser_fallback(product: &str, port: u16, host_json: &Path) -> Result<(), St
     {
         std::thread::sleep(Duration::from_millis(ms)); // test hook: no dialog
     } else {
+        let shown = url.split("/_k/").next().unwrap_or(url); // the key stays off the screen
         dialog(
             rfd::MessageLevel::Warning,
             product,
             &format!(
-                "The Microsoft Edge WebView2 Runtime is not installed, so {product} opened in your default browser at {url}\n\n\
+                "The Microsoft Edge WebView2 Runtime is not installed, so {product} opened in your default browser at {shown}\n\n\
                  Keep this message open while you work. Close it to stop the local server.\n\
                  Install the WebView2 Runtime to use the {product} window."
             ),
@@ -423,12 +444,9 @@ mod tests {
                 r"\\.\pipe\suite-host-test-{}-{session}-{delivered}",
                 std::process::id()
             );
-            let server = create_user_only_pipe(
-                ServerOptions::new().first_pipe_instance(true),
-                &name,
-                &me,
-            )
-            .unwrap();
+            let server =
+                create_user_only_pipe(ServerOptions::new().first_pipe_instance(true), &name, &me)
+                    .unwrap();
             let reader = tokio::spawn(async move {
                 server.connect().await.unwrap();
                 let mut buf = vec![];

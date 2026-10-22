@@ -32,6 +32,7 @@ async fn main() -> ExitCode {
         shell: shell.unwrap_or_else(|| dist.join("shell")),
         dist,
         brand,
+        local_key: None,
     };
     let cfg = match layout.shell_config() {
         Ok(c) => c,

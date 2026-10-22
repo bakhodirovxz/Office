@@ -34,6 +34,10 @@ impl Drop for H {
 }
 
 fn harness(name: &str) -> H {
+    harness_with(name, None)
+}
+
+fn harness_with(name: &str, local_key: Option<&str>) -> H {
     let dir = std::env::temp_dir().join(format!("suite-serve-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let docs = dir.join("dist/docs-web");
@@ -50,6 +54,7 @@ fn harness(name: &str) -> H {
         shell: repo().join("web/shell"),
         dist: dir.join("dist"),
         brand: repo().join("brand/brand.toml"),
+        local_key: local_key.map(str::to_string),
     };
     let s = Settings {
         work_dir: Some(dir.join("work")),
@@ -190,12 +195,66 @@ async fn editor_routes_get_their_own_csp() {
     assert_eq!(hv(&hd, "content-security-policy"), STRICT);
 }
 
+const KEY: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+/// Review M1: with a key, nothing is served without the cookie; `/_k/<key>` hands the cookie out; without a key (the web host) the
+/// paths behave as before.
+#[tokio::test]
+async fn desktop_key_gates_every_request() {
+    let h = harness_with("key", Some(KEY));
+    for uri in [
+        "/",
+        "/shell-config.json",
+        "/api/v1/formats",
+        "/healthz",
+        "/docs/",
+        "/nope",
+    ] {
+        assert_eq!(get(&h, uri, &[]).await.0, StatusCode::FORBIDDEN, "{uri}");
+        let bad = [("cookie", "k=wrong; other=1")];
+        assert_eq!(get(&h, uri, &bad).await.0, StatusCode::FORBIDDEN, "{uri}");
+    }
+    // a wrong key, or the key in a place other than the path, sets nothing
+    let (st, hd, _) = get(&h, "/_k/wrong", &[]).await;
+    assert!(st == StatusCode::FORBIDDEN && hd.get("set-cookie").is_none());
+    let (st, ..) = get(&h, &format!("/?k={KEY}"), &[]).await;
+    assert_eq!(st, StatusCode::FORBIDDEN);
+    // the key URL: a redirect home that sets an HttpOnly, SameSite=Strict cookie
+    let (st, hd, _) = get(&h, &format!("/_k/{KEY}"), &[]).await;
+    assert_eq!((st, hv(&hd, "location")), (StatusCode::SEE_OTHER, "/"));
+    let c = hv(&hd, "set-cookie");
+    assert_eq!(c, format!("k={KEY}; Path=/; HttpOnly; SameSite=Strict"));
+    assert_eq!(hv(&hd, "referrer-policy"), "no-referrer");
+    // with the cookie the normal answers (and their security headers) come back
+    let ok = [("cookie", format!("a=b; k={KEY}"))];
+    let ok: Vec<(&str, &str)> = ok.iter().map(|(k, v)| (*k, v.as_str())).collect();
+    for uri in [
+        "/",
+        "/shell-config.json",
+        "/api/v1/formats",
+        "/healthz",
+        "/docs/",
+    ] {
+        let (st, hd, _) = get(&h, uri, &ok).await;
+        assert_eq!(st, StatusCode::OK, "{uri}");
+        baseline(&hd);
+    }
+    // no key configured: the web host answers without a cookie, and `/_k/` is just an unknown path
+    let web = harness("nokey");
+    assert_eq!(get(&web, "/", &[]).await.0, StatusCode::OK);
+    assert_eq!(
+        get(&web, &format!("/_k/{KEY}"), &[]).await.0,
+        StatusCode::NOT_FOUND
+    );
+}
+
 #[test]
 fn shell_config_comes_from_the_brand_file() {
     let l = Layout {
         shell: "x".into(),
         dist: "x".into(),
         brand: repo().join("brand/brand.toml"),
+        local_key: None,
     };
     let c: serde_json::Value = serde_json::from_str(&l.shell_config().unwrap()).unwrap();
     let brand = std::fs::read_to_string(&l.brand).unwrap();

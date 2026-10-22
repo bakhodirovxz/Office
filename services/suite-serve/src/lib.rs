@@ -7,7 +7,7 @@
 //! and the converter keep the strict CSP.
 use axum::Router;
 use axum::extract::{Request, State};
-use axum::http::{HeaderValue, StatusCode, header};
+use axum::http::{HeaderValue, Method, StatusCode, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::get;
@@ -30,6 +30,9 @@ pub struct Layout {
     pub shell: PathBuf,
     pub dist: PathBuf,
     pub brand: PathBuf,
+    /// Desktop mode (review M1): a per-launch secret, 64 hex digits. `GET /_k/<key>` sets it as an `HttpOnly` cookie and every
+    /// other request needs that cookie, so another local user who finds the port gets 403. `None` (the web host) changes nothing.
+    pub local_key: Option<String>,
 }
 
 impl Layout {
@@ -165,6 +168,48 @@ async fn no_cache(req: Request, next: Next) -> Response {
     res
 }
 
+/// Equal in time that does not depend on where the first difference is (the length is not secret).
+fn same(a: &str, b: &str) -> bool {
+    a.len() == b.len() && a.bytes().zip(b.bytes()).fold(0u8, |d, (x, y)| d | (x ^ y)) == 0
+}
+
+/// The desktop gate (M1). It sits outside the Host/Origin guard, so its answers carry only the headers set here.
+async fn local_gate(State(key): State<Arc<str>>, req: Request, next: Next) -> Response {
+    let plain = [
+        (header::CACHE_CONTROL, "no-store"),
+        (header::REFERRER_POLICY, "no-referrer"),
+        (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+    ];
+    if let Some(k) = req.uri().path().strip_prefix("/_k/") {
+        if req.method() == Method::GET && same(k, &key) {
+            let cookie = format!("k={key}; Path=/; HttpOnly; SameSite=Strict");
+            return (
+                StatusCode::SEE_OTHER,
+                plain,
+                [
+                    (header::LOCATION, "/".to_string()),
+                    (header::SET_COOKIE, cookie),
+                ],
+            )
+                .into_response();
+        }
+        return (StatusCode::FORBIDDEN, plain).into_response();
+    }
+    let has_key = req
+        .headers()
+        .get_all(header::COOKIE)
+        .iter()
+        .filter_map(|v| v.to_str().ok())
+        .flat_map(|v| v.split(';'))
+        .filter_map(|c| c.trim().strip_prefix("k="))
+        .any(|v| same(v, &key));
+    if has_key {
+        next.run(req).await
+    } else {
+        (StatusCode::FORBIDDEN, plain).into_response()
+    }
+}
+
 /// The converter API router plus the shell and the editors. An editor whose dist is not built is not mounted (404).
 pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
     let mut extra: Router<Arc<App>> = Router::new();
@@ -200,7 +245,20 @@ pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
             get(|| async { convert_api::routes::converter_page() }),
         )
         .layer(middleware::from_fn(no_cache));
-    convert_api::routes::router_with(app, extra.merge(shell))
+    let router = convert_api::routes::router_with(app, extra.merge(shell));
+    match &layout.local_key {
+        Some(k) => {
+            assert!(
+                k.len() >= 32 && k.bytes().all(|c| c.is_ascii_alphanumeric()),
+                "local_key must be 32 or more letters and digits"
+            );
+            router.layer(middleware::from_fn_with_state(
+                Arc::<str>::from(k.as_str()),
+                local_gate,
+            ))
+        }
+        None => router,
+    }
 }
 
 #[cfg(test)]

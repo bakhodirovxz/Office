@@ -50,7 +50,8 @@ try {
     $hj = Join-Path $data 'host.json'
     if (-not $tServe -and (Test-Path $hj)) {
       $port = (Get-Content $hj -Raw | ConvertFrom-Json).port
-      try { if ((Invoke-WebRequest "http://127.0.0.1:$port/shell-config.json" -UseBasicParsing).StatusCode -eq 200) { $tServe = $sw.ElapsedMilliseconds } } catch {}
+      # the server answers 403 without the per-launch key cookie (review M1): any HTTP answer means it is up
+      try { Invoke-WebRequest "http://127.0.0.1:$port/shell-config.json" -UseBasicParsing | Out-Null } catch { if ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 403) { $tServe = $sw.ElapsedMilliseconds; $noKey = 403 } }
     }
     Start-Sleep -Milliseconds 25
   }
@@ -64,7 +65,7 @@ try {
   $ed = @($tree | Where-Object { $_.Name -eq "$binDocs.exe" })
   $title = (Get-Process -Id $p.Id).MainWindowTitle
   "window_title=[$title] host_ws_mb=$host_mb webview2_procs=$($wv.Count) webview2_ws_mb=$wvmb"
-  "start_to_window_ms=$tWin start_to_server_ms=$tServe"
+  "start_to_window_ms=$tWin start_to_server_ms=$tServe request_without_key=$noKey"
   "editor_started($binDocs)=$($ed.Count -ge 1) tree_ws_mb_incl_editor=$mb"
   # second launch: must exit 0 and start the Sheets editor from the running instance
   $sw2 = [Diagnostics.Stopwatch]::StartNew()

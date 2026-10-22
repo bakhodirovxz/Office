@@ -29,6 +29,7 @@ convert-api = { path = "../convert-api" }
 suite-serve = { path = "../suite-serve" }
 suite-winsec = { path = "../suite-winsec" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time"] }
+getrandom = "0.2"
 tao = "0.37"
 wry = "0.57"
 rfd = { version = "0.17", default-features = false }

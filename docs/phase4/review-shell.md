@@ -110,6 +110,8 @@ The weak spots are all **cross-user on a shared Windows host** (RDS, fast user s
 names), `routes.rs:271` (every client is the principal `local`). Phase 3 noted the same thing for `convert-api` as documentation
 only (review-wp7 m2). Now `suite.exe` runs that server on every desktop for as long as the home window is open.
 
+**Status: fixed (2026-10-22).** The reviewer's design: `suite_serve::Layout.local_key`, the `local_gate` middleware outside the guard (`suite-serve/src/lib.rs`), constant-time compare, the key from `getrandom` in `host.rs` `new_key`, the WebView and the browser fallback start at `/_k/<key>`. Tests: `desktop_key_gates_every_request` (403 without or with a wrong cookie, on `/`, the API, `/healthz`, the editors and unknown paths; 303 plus the exact `HttpOnly; SameSite=Strict` cookie for the right key; 200 with the cookie; no key configured gives the old behaviour and `/_k/` is a 404), and the process test in `suite-desktop/tests/host.rs`. `scripts/smoke-desktop.ps1` now treats a 403 without the key as "the server is up" and prints it.
+
 - **Who can connect:** `netstat -ano` shows the port to every user. A user B in another RDS session, or a session left signed in by
   fast user switching, then has the same access as the owner. The Host/Origin guard does not stop B, because B sends whatever `Host`
   B likes.
