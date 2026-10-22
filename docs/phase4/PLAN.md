@@ -5,9 +5,20 @@
 > - **Owner answers to §9 questions, 2026-10-22:**
 >   - **Q10, MSVC: yes.** Install VS Build Tools and the Windows SDK under the **Visual Studio Community** licence
 >     terms for open-source development. Put it on E: where possible.
->   - **Q4, signing: internal now, public later.** The pilot uses the organisation's internal (enterprise CA)
->     code-signing certificate, trusted through GPO. A public OV certificate on a hardware token is for the Phase 10
->     release; procurement starts now. Both certificates are owner/IT items.
+>   - **Q4, signing: internal now, free public later (revised 2026-10-22).**
+>     - **Pilot:** the organisation's internal (AD CS / enterprise CA) code-signing certificate, trusted through GPO.
+>       This is an owner/IT item.
+>     - **Public release (Phase 10): SignPath Foundation's free OSS signing, chosen by the owner** instead of a paid
+>       OV certificate.
+>       - The publisher shown is "SignPath Foundation".
+>       - Requirements: an OSI licence; no proprietary components; binaries built by CI from the public GitHub repo,
+>         which means enabling GitHub Actions with a Windows runner (every push needs the owner's OK); a
+>         code-signing policy page; manual approval per release.
+>     - **Other platforms:**
+>       - Linux packages are signed with our own GPG key (free).
+>       - Android APKs use our own signing key (free); Play Store costs $25 once.
+>       - Apple (macOS/iOS) needs the $99/yr Apple Developer Program and has no free route; it is out of scope
+>         while there is no Mac.
 >   - **Q2, default handlers: none for now.** The MSI only registers our apps under "Open with" (§7.2) and changes
 >     no defaults. The GPO default-association XML is still produced and documented as an optional artefact, but it is
 >     not deployed.
