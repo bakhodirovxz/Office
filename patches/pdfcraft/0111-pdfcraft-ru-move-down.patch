@@ -10,10 +10,26 @@ Content-Transfer-Encoding: 8bit
 
 The Russian row for "Move down" read "Переместить вdownarrow" (an icon name spliced into the word), so the
 Russian interface showed it as such. One catalog cell; no code change.
----
- crates/ui-egui/src/i18n/ru.tsv | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
+ATTRIBUTION.toml carries the catalog's new SHA-256, so the xtask assets check (the_real_manifest_passes) still passes.
+---
+ ATTRIBUTION.toml               | 2 +-
+ crates/ui-egui/src/i18n/ru.tsv | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ATTRIBUTION.toml b/ATTRIBUTION.toml
+index db3dd612..bb56120e 100644
+--- a/ATTRIBUTION.toml
++++ b/ATTRIBUTION.toml
+@@ -140,7 +140,7 @@ licence = "MIT OR Apache-2.0"
+ licence_file = "LICENSE-MIT"
+ kind = "translation"
+ usage = "Russian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
+-sha256 = "27e02e7bb3d378bceca76988a9dceaa68d974f57cbee962954deca6184cf62aa"
++sha256 = "685252d7725e151dd3a5426141f8dedef425af4e270f77b723e70d18c090c495"
+ 
+ [[asset]]
+ path = "crates/ui-egui/src/i18n/hu.tsv"
 diff --git a/crates/ui-egui/src/i18n/ru.tsv b/crates/ui-egui/src/i18n/ru.tsv
 index 73f21aa0..75c16094 100644
 --- a/crates/ui-egui/src/i18n/ru.tsv
