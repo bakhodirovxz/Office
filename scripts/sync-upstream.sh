@@ -301,7 +301,8 @@ else
   say ""; say "## 5 Gates ($GATES)"; say ""
   gate() { # <name> <PASS|FAIL|INFRA> <detail>
     GATE[$1]=$2; say "- $1: **$2** $3"; [ "$2" = PASS ] || GATE_FAIL=1; }
-  wait_no_rustc() { while tasklist //FI "IMAGENAME eq rustc.exe" 2>/dev/null | grep -qi rustc.exe; do echo "another rustc.exe is running; waiting"; sleep 20; done; }
+  # One slot: wait for any foreign rustc (the Phase 1 rule). Two slots: the build lock already bounds the load.
+  wait_no_rustc() { [ "${OFFICE_LOCK_SLOTS:-2}" -gt 1 ] && return 0; while tasklist //FI "IMAGENAME eq rustc.exe" 2>/dev/null | grep -qi rustc.exe; do echo "another rustc.exe is running; waiting"; sleep 20; done; }
 
   out=$(scripts/verify-queue.sh $READY 2>&1); rc=$?
   gate verify-queue $([ $rc = 0 ] && echo PASS || echo FAIL) "$(echo "$out" | tr '\n' ';')"
