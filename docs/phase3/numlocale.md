@@ -184,9 +184,7 @@ Round-trip and test risk of D5:
 | C8 | `1.234`, `ddd` | `.FormulaLocal "1.234"`; `.Text` of `ddd` | text or number; `Пн` |
 | C9 | arrays | `.Formula = "={1,2;3,4}"`, then read `.FormulaLocal` | array column separator |
 
-uz rows can be checked against Excel only through `[$-443]`/`[$-843]` tags on the ru-RU account. A real
-uz-Latn-UZ culture needs a culture switch or a second Windows user (Q4). Until then, uz separators rest on NLS and
-CLDR, which agree.
+uz rows were first checked only through `[$-443]`/`[$-843]` tags on the ru-RU account. After Q4 was approved (2026-10-22) they were measured under real uz-Latn-UZ and uz-Cyrl-UZ cultures (end of section 13).
 
 ## 8. Patch split (functional 0023-0030 before the overlay; overlay 0130 after 0122; category `i18n`)
 
@@ -357,7 +355,7 @@ Typed input (Excel `.FormulaLocal` against our UI commit path, 27 inputs, ru and
 | C7 `ss.0` | decimal comma (`00,9`), as implemented |
 | C8 `1.234`, `ddd` | `1.234` text; `ddd` is `Пн`; both as implemented |
 | C9 arrays | `.Formula = "=SUM({1,2;3,4})"` reads back `.FormulaLocal` `=SUM({1\2;3\4})`, so `\` is right |
-| uz rows | **not run**: they need a Windows culture change (Q4). The uz-Latn and uz-Cyrl outputs rest on NLS, CLDR and the `[$-443]`/`[$-843]` tags measured on the ru account |
+| uz rows | measured 2026-10-22 under uz-Latn-UZ and uz-Cyrl-UZ: see "Excel COM rows for uz" at the end of section 13 |
 
 Windows notes: COM's `.NumberFormat` takes the culture's own separators and letters (`'#,##0.00'` and `'m/d/yyyy'` are refused on ru-RU), so the format cases go in through xlsx files with en-US codes.
 
@@ -374,3 +372,47 @@ en-US after is inside the spread of before in both workloads (PDF +1.3 %, CSV -7
 ### Still en-US
 
 Chart axes and data labels, AutoFilter lists, pivot and slicer labels, HTML export, Format Cells samples, status-bar aggregates, row autofit widths, `[$-F800]`, wordcraft DATE fields, `TEXT()` pictures, `VALUE`/`DATEVALUE` and the text of `&` concatenation, function names, `TRUE`/`FALSE`/error names, and the `/` and `-` of date codes (Excel ru shows them as `.`).
+
+
+### Excel COM rows for uz (Q4, measured 2026-10-22)
+
+Method: `Set-Culture uz-Latn-UZ`, then `uz-Cyrl-UZ`, each with a fresh Excel started through COM (own PID only) running `spikes/locale/excel_wp14.ps1`. Both cultures exist on this Windows 10. The Windows culture was restored to ru-RU afterwards, and the `HKCU\Control Panel\International` export is byte-identical to the backup (0 diff lines). Excel reports `decsep` `,`, `listsep` `;`, thousands U+0020 (as in ru) and the Windows short date `dd/MM/yyyy`. Raw data is in `docs/phase3/evidence/uz-excel/`: `excel_uz-*.tsv` is Excel, `ours_*.txt` is our typed-input path (`parse_input_in` and `FormulaLocale::DecimalComma`, run through a throwaway probe crate), `table.md` holds the display rows. "Ours" display is `sheets-cli cat` of the same `locale_cases` and `wp14_cases` files with `GRIDCRAFT_NUM_LOCALE=uz-latn|uz-cyrl`. U+0020, U+00A0 and U+202F are compared as equal.
+
+**Display (44 rows, C1/C6/C7/C8).** 33 of 44 equal in uz-Latn and 33 of 44 in uz-Cyrl. The same 11 differ in both:
+
+| Case | Excel uz | ours | Class |
+|---|---|---|---|
+| id 14 / id 22 | `12/10/2026` / `12/10/2026 15:04` | `12.10.2026` / `12.10.2026 15:04` | different (expected): owner Q1 chose `dd.mm.yyyy` |
+| id 15 / 16 / 17 | `12-Okt-26` / `12-Okt` / `Okt-26` (Cyrl `12-окт-26`...) | `12.Okt.26` / `12.Okt` / `Okt.26` | different (expected, follows Q1: uz copies ru's `.`; Excel uz uses `-`) |
+| custom `m/d/yyyy` | `10/12/2026` | `12.10.2026` | different (expected): known custom-code limitation, same as ru |
+| `h:mm AM/PM`, `h:mm:ss AM/PM` | `3:04 TK` (Cyrl `ТК`) | `3:04 PM` | **different (bug, low)**: see conclusions |
+| `TEXT(...,"#,##0.00")` | `3500000,50.00` | `3,500,000.50` | different (expected): calc stays en-US (D3, R5) |
+| `TEXT(DATE,"dd mmmm yyyy")` | `12 Oktabr 2026` | `12 October 2026` | different (expected), same reason |
+| `3500000.5&""` | `3500000,5` | `3500000.5` | different (expected), same reason |
+
+Equal in both cultures: General, `0.0`, `#,##0.0` and `#,##0.00` (U+0020 against U+00A0), `0.00%`, `0.00E+00`, negatives, fractions `# ?/?`, ISO date, `dd.mm.yyyy` as a literal code, `d mmmm yyyy` (`12 Oktabr 2026` / `12 октябр 2026`), `dddd, d mmm yyyy` (`dushanba, 12 Okt 2026` / `душанба, 12 окт 2026`), `ddd` (`Dush` / `душ`), `dddd`, `mmm`, `mmmm`, `mmmmm` (`O` / `о`), the `[$-419]`, `[$-443]`, `[$-843]`, `[$-409]` tags, the `₽` and `so'm` currency tags, accounting, `mm:ss.0` and `ss.0` (`00:00,9`: C7 confirmed for uz), and the list-separator row. The uz month and weekday tables of section 2 therefore equal Excel's own names (before, they were only tag-checked).
+
+**Invariance (C2).** The four xlsx files saved by `sheets-cli` under en, ru, uz-Latn and uz-Cyrl, opened in Excel under uz-Latn-UZ and again under uz-Cyrl-UZ: 72 cells, `.Value2`, `.Formula` and `.NumberFormat` equal to the en file in every case.
+
+**Formulas (C4) and arrays (C9).** Same under both uz cultures, and equal to our `DecimalComma` output: `=SUM(1;2)` stores `SUM(1,2)` = 3, `=1,5+1` stores `1.5+1` = 2.5, `=IF(1>0;"a;b";"c,d")` keeps its strings, `=SUM(1,2)` stores `SUM(1.2)`, `=ROUND(2,675;2)` stores `ROUND(2.675,2)`. Arrays: `.FormulaLocal` reads `=SUM({1\2;3\4})`, so `\` is right for uz too.
+
+**CSV (C5).** `xlCSV` and `xlCSVUTF8` under both uz cultures: delimiter `;`, decimal `,`, a field with `;` quoted, BOM only in UTF8, group byte 0x20. Ours: delimiter and decimal equal, group byte U+00A0 (known and deliberate, as for ru). The date cell differs only because the test cell is the custom `m/d/yyyy` (Excel `10/12/2026`, ours `12.10.2026`).
+
+**Typed input (C3), 27 inputs.** uz-Latn and uz-Cyrl are identical apart from the month-name spelling. Equal (value and meaning): `3,5`; `1 234,5`; `1.234` (text); `1,234` (1.234); `12/10/2026` (46307); `2026-10-12` (46307); `10.13.2026` and `31.02.2026` (text); `25,5%`; `(1 234)`; `1,5E3`; `10:30`; `TRUE`; `12 okt 2026`, `12 oktabr 2026`, `okt 2026` (Cyrl: `12 окт 2026`, `12 октябр 2026`, `окт 2026`); `1 23 456` and `1,234,567` (text); `-1 234,50`. Different:
+
+| Input | Excel uz | ours | Class |
+|---|---|---|---|
+| `12.10.2026`, `12.10.26`, `12.10`, `10.2026`, `12.10.2026 15:00` | text (the Windows uz date separator is `/`) | date, D.M.Y | different (expected, Q1): the owner's dot habit. Both are safe: no wrong month |
+| `3.5` | text `3.5` | 3 May (46145) | different (expected): ru reads `3.5` as a date, uz does not |
+| `12 Oct 2026` | text | date | different (expected): English month names stay accepted (design leniency, as in ru) |
+| `$5,5` | text | 5.5 with `"$"#,##0.00` | different (expected): leniency, as in ru |
+| auto format of `2026-10-12` | `dd/mm/yyyy` | `yyyy-mm-dd` | different (minor): same serial; Excel changes it to the short date |
+| auto format of `12 okt 2026` | `dd-mmm-yy` | `d-mmm-yy` | different (minor): day leading zero |
+| auto format of `10:30` | `hh:mm` | `h:mm` | different (minor): Windows uz short time is `HH:mm`, so `9:30` shows `09:30` in Excel |
+
+**Conclusions.**
+- No data-integrity bug. Invariance, formula storage, decimal, group and list separators, month and weekday names, sub-seconds and the CSV delimiter and decimal all agree with Excel under real uz-Latn-UZ and uz-Cyrl-UZ. The uz tables of section 2 hold.
+- Every other difference is a decision already taken (Q1 `dd.mm.yyyy`, D3 calc stays en-US, English month leniency) or one of the items below.
+- **Bug (low): AM/PM designators.** Excel uz shows `TK` for PM (measured, Cyrl `ТК`); .NET NLS gives `TO|TK` for uz-Latn-UZ, so AM is `TO`. Ours keeps `AM`/`PM` in every locale: `upstream/gridcraft/crates/numfmt/src/render.rs:133` (`DatePart::AmPm`), in the tree of patches 0024/0025 (`patches/gridcraft/0025-*`). Ru is unaffected (NLS ru has no AM/PM, section 2). The fix is two strings per uz locale in `NumLocale`. Not patched here.
+- **Open (minor): built-in forms of ids 15-17.** Excel uz uses `-` (`12-Okt-26`), not `.`. `NumLocale::builtin_date`, `upstream/gridcraft/crates/core/src/locale.rs:124-126` (patch `patches/gridcraft/0023-*`), gives uz the ru forms. Q1 decided only ids 14 and 22. If the owner wants Excel parity, uz ids 15-17 become `dd-mmm-yy`, `dd-mmm`, `mmm-yy`.
+- **Open (minor): uz auto formats.** Excel uz gives typed times `hh:mm` and typed `d mmm yyyy` dates `dd-mmm-yy`. Ours give `h:mm` and `d-mmm-yy`. The auto formats come from `parse_input` (`core/src/parse.rs`), shared with en-US, so changing them is a design decision, not a one-line fix.

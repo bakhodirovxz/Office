@@ -16,8 +16,11 @@ try {
   $ws = $wb.Worksheets.Item(1)
 
   # C3 typed input: FormulaLocal parses like typing into the cell
+  # month-name inputs follow the culture: ru by default, Latin or Cyrillic Uzbek when the culture is uz
+  $names = @("12 окт 2026","12 октябрь 2026","окт 2026")
+  if ((Get-Culture).Name -like 'uz-Latn*') { $names = @('12 okt 2026','12 oktabr 2026','okt 2026') } elseif ((Get-Culture).Name -like 'uz-Cyrl*') { $names = @("12 окт 2026","12 октябр 2026","окт 2026") }
   $typed = @('3,5','3.5','1 234,5','1.234','1,234','12.10.2026','12/10/2026','12.10.26','12.10','10.13.2026','31.02.2026','2026-10-12',
-             '12.10.2026 15:00','25,5%','(1 234)','1,5E3','10:30','TRUE',"12 окт 2026","12 октябрь 2026",'12 Oct 2026','окт 2026','10.2026','1 23 456','1,234,567','-1 234,50','$5,5')
+             '12.10.2026 15:00','25,5%','(1 234)','1,5E3','10:30','TRUE',$names[0],$names[1],'12 Oct 2026',$names[2],'10.2026','1 23 456','1,234,567','-1 234,50','$5,5')
   $r = 1
   foreach ($t in $typed) {
     $c = $ws.Cells.Item($r, 1)

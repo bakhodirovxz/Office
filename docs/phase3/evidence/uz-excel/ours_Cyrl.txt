@@ -1,0 +1,32 @@
+T	3,5	Number(3.5)	None
+T	3.5	Number(46145.0)	Some("d-mmm")
+T	1 234,5	Number(1234.5)	Some("#,##0.00")
+T	1.234	Text("1.234")	None
+T	1,234	Number(1.234)	None
+T	12.10.2026	Number(46307.0)	Some("m/d/yyyy")
+T	12/10/2026	Number(46307.0)	Some("m/d/yyyy")
+T	12.10.26	Number(46307.0)	Some("m/d/yyyy")
+T	12.10	Number(46307.0)	Some("d-mmm")
+T	10.13.2026	Text("10.13.2026")	None
+T	31.02.2026	Text("31.02.2026")	None
+T	2026-10-12	Number(46307.0)	Some("yyyy-mm-dd")
+T	12.10.2026 15:00	Number(46307.625)	Some("m/d/yyyy h:mm")
+T	25,5%	Number(0.255)	Some("0.00%")
+T	(1 234)	Number(-1234.0)	Some("#,##0")
+T	1,5E3	Number(1500.0)	Some("0.00E+00")
+T	10:30	Number(0.4375)	Some("h:mm")
+T	TRUE	Bool(true)	None
+T	12 окт 2026	Number(46307.0)	Some("d-mmm-yy")
+T	12 октябр 2026	Number(46307.0)	Some("d-mmm-yy")
+T	12 Oct 2026	Number(46307.0)	Some("d-mmm-yy")
+T	окт 2026	Number(46296.0)	Some("mmm-yy")
+T	10.2026	Number(46296.0)	Some("mmm-yy")
+T	1 23 456	Text("1 23 456")	None
+T	1,234,567	Text("1,234,567")	None
+T	-1 234,50	Number(-1234.5)	Some("#,##0.00")
+T	$5,5	Number(5.5)	Some("\"$\"#,##0.00")
+F	=SUM(1;2)	Ok("SUM(1,2)")
+F	=1,5+1	Ok("1.5+1")
+F	=IF(1>0;"a;b";"c,d")	Ok("IF(1>0,\"a;b\",\"c,d\")")
+F	=SUM(1,2)	Ok("SUM(1.2)")
+F	=ROUND(2,675;2)	Ok("ROUND(2.675,2)")

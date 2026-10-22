@@ -1,0 +1,85 @@
+﻿culture	uz-Cyrl-UZ	decsep=,	listsep=;
+thousep_codepoint	U+0020
+typed	3,5	type=Double	value2=3.5	fmt=General	text=3,5
+typed	3.5	type=String	value2=3.5	fmt=General	text=3.5
+typed	1 234,5	type=Double	value2=1234.5	fmt=# ##0,00	text=1 234,50
+typed	1.234	type=String	value2=1.234	fmt=General	text=1.234
+typed	1,234	type=Double	value2=1.234	fmt=General	text=1,234
+typed	12.10.2026	type=String	value2=12.10.2026	fmt=General	text=12.10.2026
+typed	12/10/2026	type=Double	value2=46307	fmt=dd/mm/yyyy	text=########
+typed	12.10.26	type=String	value2=12.10.26	fmt=General	text=12.10.26
+typed	12.10	type=String	value2=12.10	fmt=General	text=12.10
+typed	10.13.2026	type=String	value2=10.13.2026	fmt=General	text=10.13.2026
+typed	31.02.2026	type=String	value2=31.02.2026	fmt=General	text=31.02.2026
+typed	2026-10-12	type=Double	value2=46307	fmt=dd/mm/yyyy	text=########
+typed	12.10.2026 15:00	type=String	value2=12.10.2026 15:00	fmt=General	text=12.10.2026 15:00
+typed	25,5%	type=Double	value2=0.255	fmt=0,00%	text=25,50%
+typed	(1 234)	type=Double	value2=-1234	fmt=# ##0	text=-1 234
+typed	1,5E3	type=Double	value2=1500	fmt=0,00E+00	text=1,50E+03
+typed	10:30	type=Double	value2=0.4375	fmt=hh:mm	text=10:30
+typed	TRUE	type=Boolean	value2=True	fmt=General	text=TRUE
+typed	12 окт 2026	type=Double	value2=46307	fmt=dd-mmm-yy	text=12-окт-26
+typed	12 октябр 2026	type=Double	value2=46307	fmt=dd-mmm-yy	text=12-окт-26
+typed	12 Oct 2026	type=String	value2=12 Oct 2026	fmt=General	text=12 Oct 2026
+typed	окт 2026	type=Double	value2=46296	fmt=mmm-yy	text=окт-26
+typed	10.2026	type=String	value2=10.2026	fmt=General	text=10.2026
+typed	1 23 456	type=String	value2=1 23 456	fmt=General	text=1 23 456
+typed	1,234,567	type=String	value2=1,234,567	fmt=General	text=1,234,567
+typed	-1 234,50	type=Double	value2=-1234.5	fmt=# ##0,00	text=-1 234,50
+typed	$5,5	type=String	value2=$5,5	fmt=General	text=$5,5
+formula	=SUM(1;2)	Formula==SUM(1,2)	value2=3	text=3
+formula	=1,5+1	Formula==1.5+1	value2=2.5	text=2,5
+formula	=IF(1>0;"a;b";"c,d")	Formula==IF(1>0,"a;b","c,d")	value2=a;b	text=a;b
+formula	=SUM(1,2)	Formula==SUM(1.2)	value2=1.2	text=1,2
+formula	=ROUND(2,675;2)	Formula==ROUND(2.675,2)	value2=2.68	text=2,68
+array	=SUM({1,2;3,4}) via .Formula	FormulaLocal==SUM({1\2;3\4})
+text	locale_cases.xlsx	general_big	3500000,5
+text	locale_cases.xlsx	general_frac	0,1234567
+text	locale_cases.xlsx	zero_dot_zero	3500000,0
+text	locale_cases.xlsx	grp_1dp	3 500 000,5
+text	locale_cases.xlsx	grp_2dp	3 500 000,50
+text	locale_cases.xlsx	pct	25,50%
+text	locale_cases.xlsx	sci	1,23E+04
+text	locale_cases.xlsx	date_iso	2026-10-12
+text	locale_cases.xlsx	date_dmy	12.10.2026
+text	locale_cases.xlsx	date_long	12 октябр 2026
+text	locale_cases.xlsx	date_dddd	душанба, 12 окт 2026
+text	locale_cases.xlsx	time_ampm	3:04:05 ТК
+text	locale_cases.xlsx	tag419_num	3 500 000,50
+text	locale_cases.xlsx	tag443_num	3 500 000,50
+text	locale_cases.xlsx	tag419_date	12 Октябрь 2026
+text	locale_cases.xlsx	tag443_date	12 Oktabr 2026
+text	locale_cases.xlsx	tag_ru_cur	₽ 3 500 000,50
+text	locale_cases.xlsx	tag_uz_cur	3 500 000,50 so'm
+text	locale_cases.xlsx	accounting	                                                                               3 500 000,50 
+text	locale_cases.xlsx	f_text_num	3500000,50.00
+text	locale_cases.xlsx	f_text_date	12 октябр 2026
+text	locale_cases.xlsx	f_concat_num	3500000,5
+text	locale_cases.xlsx	f_concat_date	46307
+text	locale_cases.xlsx	f_sum_list	3
+text	wp14_cases.xlsx	id14	12/10/2026
+text	wp14_cases.xlsx	id15	12-окт-26
+text	wp14_cases.xlsx	id16	12-окт
+text	wp14_cases.xlsx	id17	окт-26
+text	wp14_cases.xlsx	id22	12/10/2026 15:04
+text	wp14_cases.xlsx	custom_mdy	10/12/2026
+text	wp14_cases.xlsx	mmss_0	00:00,9
+text	wp14_cases.xlsx	ss_0	00,9
+text	wp14_cases.xlsx	ddd	душ
+text	wp14_cases.xlsx	dddd	душанба
+text	wp14_cases.xlsx	mmm	окт
+text	wp14_cases.xlsx	mmmm	октябр
+text	wp14_cases.xlsx	mmmmm	о
+text	wp14_cases.xlsx	ampm	3:04 ТК
+text	wp14_cases.xlsx	tag843_date	12 октябр 2026
+text	wp14_cases.xlsx	tag409_date	12 October 2026
+text	wp14_cases.xlsx	gen_neg	-1234,5
+text	wp14_cases.xlsx	neg_grp	-1 234,50
+text	wp14_cases.xlsx	fr	3 3/4
+text	wp14_cases.xlsx	sci_neg	-1,23E-04
+csv	xlCSV	hex=33 35 30 30 30 30 30 2C 35 3B 33 20 35 30 30 20 30 30 30 2C 35 30 3B 31 30 2F 31 32 2F 32 30 32 36 3B 22 78 3B 79 22 0D 0A
+csv	xlCSVUTF8	hex=EF BB BF 33 35 30 30 30 30 30 2C 35 3B 33 20 35 30 30 20 30 30 30 2C 35 30 3B 31 30 2F 31 32 2F 32 30 32 36 3B 22 78 3B 79 22 0D 0A
+invariance	uz-latn vs en	cells=72	equal=True
+invariance	ru vs en	cells=72	equal=True
+invariance	uz-cyrl vs en	cells=72	equal=True
+invariance	en vs en	cells=72	equal=True
