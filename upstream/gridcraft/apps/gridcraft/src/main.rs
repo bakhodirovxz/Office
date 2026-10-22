@@ -255,6 +255,7 @@ fn main() -> eframe::Result<()> {
         println!("{} {}", gridcraft_ui_egui::office_overlay::app_name(), gridcraft_ui_egui::office_overlay::VERSION);
         return Ok(());
     }
+    gridcraft_ui_egui::office_toolbar::init();
     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
     let mut sample: Option<String> = None;
     let mut files: Vec<String> = Vec::new();

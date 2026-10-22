@@ -14,6 +14,7 @@ pub mod display;
 pub mod fill;
 pub mod io;
 pub mod links;
+pub mod office_hook;
 pub mod outline;
 pub mod paper;
 pub mod pdf_fonts;
@@ -337,6 +338,14 @@ impl Session {
     /// Runs a command by id. Undoable commands record a history step when the workbook changed.
     /// Panics inside commands are caught and reported; the workbook is restored.
     pub fn execute(&mut self, id: &str, params: Json) -> Result<Json> {
+        let Some(hook) = office_hook::installed() else { return self.execute_inner(id, params) };
+        hook.before(self, id, &params).map_err(|why| EngineError::Disabled(id.to_string(), why))?;
+        let result = self.execute_inner(id, params.clone());
+        hook.after(self, id, &params, &result);
+        result
+    }
+
+    fn execute_inner(&mut self, id: &str, params: Json) -> Result<Json> {
         let spec = find_command(id).ok_or_else(|| EngineError::UnknownCommand(id.to_string()))?;
         if let Err(why) = (spec.enabled)(self) {
             return Err(EngineError::Disabled(id.to_string(), why));

@@ -33,6 +33,8 @@ gridcraft-xlsx = { workspace = true, features = ["test-support"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # The desktop's preferred language for the first-run interface language.
 sys-locale = { workspace = true }
+# office overlay (patches/gridcraft/0140): the shared settings.toml (toolbar mode); the web has no file and is always simple
+suite-core = { path = "../../../../crates/suite-core" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # Read the browser's preferred language for the first-run web interface language.

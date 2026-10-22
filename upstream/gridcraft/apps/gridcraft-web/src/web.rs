@@ -10,6 +10,7 @@ const LOADING_ID: &str = "gridcraft_loading";
 
 pub fn start() {
     eframe::WebLogger::init(log::LevelFilter::Info).ok();
+    gridcraft_ui_egui::office_toolbar::init();
     wasm_bindgen_futures::spawn_local(async {
         let Some(document) = web_sys::window().and_then(|w| w.document()) else {
             log::error!("no document");

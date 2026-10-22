@@ -41,6 +41,7 @@ pub mod keytips;
 pub mod office_overlay;
 #[cfg(test)]
 mod office_overlay_tests;
+pub mod office_toolbar;
 pub mod outline;
 pub mod panes;
 pub mod paper_view;
@@ -1190,7 +1191,7 @@ impl SheetApp {
             // File tab: the Backstage view replaces everything below the title bar.
             backstage::show(self, ui);
         } else {
-            ribbon::show(self, ui);
+            office_toolbar::show(self, ui);
             widgets::notice_bar(self, ui);
             if self.session.prefs.formula_bar {
                 formula_bar::show(self, ui);

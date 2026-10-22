@@ -323,7 +323,7 @@ fn act(app: &mut SheetApp, id: &str, params: serde_json::Value) {
 }
 
 /// Keytips are painted, not focusable widgets: the grid retains keyboard focus.
-fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
+pub(crate) fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
     let Some(rest) = app.keytips.prefix().and_then(|prefix| sequence.strip_prefix(prefix)).filter(|s| !s.is_empty()) else { return };
     let t = Tokens::get(ui.ctx());
     let painter = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Tooltip, egui::Id::new("ribbon_keytips"))).with_clip_rect(ui.clip_rect());
@@ -335,7 +335,7 @@ fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
 }
 
 /// Paint the badge for a control that runs command `id`, when the armed prefix matches.
-fn control_keytip(app: &SheetApp, ui: &Ui, response: &egui::Response, id: &str) {
+pub(crate) fn control_keytip(app: &SheetApp, ui: &Ui, response: &egui::Response, id: &str) {
     if let Some(sequence) = keytip_table::control_badge(app.keytips.prefix().unwrap_or_default(), id) {
         keytip(app, ui, sequence, response.rect.center_bottom());
     }
@@ -480,7 +480,7 @@ pub(crate) fn editable_combo(
     result
 }
 
-fn menu_items(app: &mut SheetApp, ui: &mut Ui, items: &[(&str, &str, serde_json::Value)]) {
+pub(crate) fn menu_items(app: &mut SheetApp, ui: &mut Ui, items: &[(&str, &str, serde_json::Value)]) {
     for (label, id, p) in items {
         if *label == "-" {
             ui.separator();
@@ -1063,7 +1063,7 @@ fn home(app: &mut SheetApp, ui: &mut Ui) {
     });
 }
 
-fn font_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+pub(crate) fn font_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
     let name = st.font.name.clone();
     let resp = ui.add_sized([150.0, 24.0], egui::Button::new(egui::RichText::new(&name).font(theme::ui_font(12.5))));
     control_keytip(app, ui, &resp, "home.fontName");
@@ -1094,7 +1094,7 @@ pub const FONTS: &[&str] = &[
     "Verdana",
 ];
 
-fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+pub(crate) fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
     let size = st.font.size;
     let label = if size.fract() == 0.0 { format!("{}", size as i32) } else { format!("{size}") };
     let resp = ui.add_sized([52.0, 24.0], egui::Button::new(egui::RichText::new(&label).font(theme::ui_font(12.5))));
@@ -1117,6 +1117,15 @@ fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
 }
 
 fn number_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+    number_combo_of(
+        app,
+        ui,
+        st,
+        &["General", "Number", "Currency", "Accounting", "Short Date", "Long Date", "Time", "Percentage", "Fraction", "Scientific", "Text"],
+    );
+}
+
+pub(crate) fn number_combo_of(app: &mut SheetApp, ui: &mut Ui, st: &Style, names: &[&str]) {
     let code = st.num_fmt.as_str().to_string();
     let kind = gridcraft_engine::display::number_format(&code).kind();
     let current = format!("{kind:?}");
@@ -1125,7 +1134,6 @@ fn number_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
     let resp = ui.add_sized([150.0, 24.0], egui::Button::new(egui::RichText::new(lang.tr(&current)).font(theme::ui_font(12.5))));
     control_keytip(app, ui, &resp, "home.numberFormat");
     let forced = invoke(app, "home.numberFormat");
-    let names = ["General", "Number", "Currency", "Accounting", "Short Date", "Long Date", "Time", "Percentage", "Fraction", "Scientific", "Text"];
     let items: Vec<(&str, String)> = names
         .iter()
         .map(|n| {

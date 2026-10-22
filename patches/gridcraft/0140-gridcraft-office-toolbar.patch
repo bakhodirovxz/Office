@@ -1,0 +1,1411 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 04:06:56 +0500
+Subject: [PATCH 43/44] ui-egui: the simplified Sheets toolbar, one row of Fluent
+ icons drawn instead of the ribbon
+
+A new office_toolbar.rs draws the row (font, alignment, number, cells, data, view, output groups, width-aware, with a
+Full ribbon / Simple ribbon toggle that writes the shared settings.toml). ribbon.rs shares its pickers and keytip helpers
+(pub(crate)); lib.rs has the one call-site line; the apps call office_toolbar::init() at start. Icons are alpha masks in
+office_icons.bin. Without the overlay or before init() upstream's ribbon is drawn.
+---
+ Cargo.lock                             |  86 +++-
+ apps/gridcraft-web/src/web.rs          |   1 +
+ apps/gridcraft/src/main.rs             |   1 +
+ crates/ui-egui/Cargo.toml              |   2 +
+ crates/ui-egui/src/lib.rs              |   3 +-
+ crates/ui-egui/src/office_icons.bin    | Bin 0 -> 69962 bytes
+ crates/ui-egui/src/office_toolbar.rs   | 614 +++++++++++++++++++++++++
+ crates/ui-egui/src/ribbon.rs           |  20 +-
+ crates/ui-egui/tests/office_toolbar.rs | 253 ++++++++++
+ 9 files changed, 962 insertions(+), 18 deletions(-)
+ create mode 100644 crates/ui-egui/src/office_icons.bin
+ create mode 100644 crates/ui-egui/src/office_toolbar.rs
+ create mode 100644 crates/ui-egui/tests/office_toolbar.rs
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 7c3dfa3e..314d306f 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -431,6 +431,12 @@ version = "1.5.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+ 
++[[package]]
++name = "base64"
++version = "0.21.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
++
+ [[package]]
+ name = "bit-set"
+ version = "0.10.0"
+@@ -457,6 +463,9 @@ name = "bitflags"
+ version = "2.13.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
++dependencies = [
++ "serde_core",
++]
+ 
+ [[package]]
+ name = "block-buffer"
+@@ -1652,6 +1661,7 @@ dependencies = [
+  "serde",
+  "serde_json",
+  "skrifa",
++ "suite-core",
+  "sys-locale",
+  "toml",
+  "web-sys",
+@@ -2828,7 +2838,7 @@ version = "3.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
+ dependencies = [
+- "toml_edit",
++ "toml_edit 0.25.15+spec-1.1.0",
+ ]
+ 
+ [[package]]
+@@ -3032,6 +3042,18 @@ dependencies = [
+  "windows-sys 0.61.2",
+ ]
+ 
++[[package]]
++name = "ron"
++version = "0.8.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
++dependencies = [
++ "base64",
++ "bitflags 2.13.2",
++ "serde",
++ "serde_derive",
++]
++
+ [[package]]
+ name = "rustc-hash"
+ version = "1.1.0"
+@@ -3365,6 +3387,15 @@ version = "1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+ 
++[[package]]
++name = "suite-core"
++version = "0.1.0"
++dependencies = [
++ "ron",
++ "serde_json",
++ "toml_edit 0.22.27",
++]
++
+ [[package]]
+ name = "syn"
+ version = "2.0.119"
+@@ -3490,12 +3521,18 @@ dependencies = [
+  "indexmap",
+  "serde_core",
+  "serde_spanned",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+  "toml_writer",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_datetime"
++version = "0.6.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
++
+ [[package]]
+ name = "toml_datetime"
+ version = "1.1.1+spec-1.1.0"
+@@ -3505,6 +3542,18 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "toml_edit"
++version = "0.22.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
++dependencies = [
++ "indexmap",
++ "toml_datetime 0.6.11",
++ "toml_write",
++ "winnow 0.7.15",
++]
++
+ [[package]]
+ name = "toml_edit"
+ version = "0.25.15+spec-1.1.0"
+@@ -3512,9 +3561,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614"
+ dependencies = [
+  "indexmap",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
+ [[package]]
+@@ -3523,9 +3572,15 @@ version = "1.1.3+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
+ dependencies = [
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_write"
++version = "0.1.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
++
+ [[package]]
+ name = "toml_writer"
+ version = "1.1.2+spec-1.1.0"
+@@ -4427,6 +4482,15 @@ dependencies = [
+  "xkbcommon-dl",
+ ]
+ 
++[[package]]
++name = "winnow"
++version = "0.7.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "winnow"
+ version = "1.0.4"
+@@ -4570,7 +4634,7 @@ dependencies = [
+  "uds_windows",
+  "uuid",
+  "windows-sys 0.61.2",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_macros",
+  "zbus_names",
+  "zvariant",
+@@ -4622,7 +4686,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d8bf88b4a3ff53e883001e0e0115b297a9d53c31b9c1edd2bfdd853e3428624e"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zvariant",
+ ]
+ 
+@@ -4633,7 +4697,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d1586c021a01ca0a9216dcd874e546382e156a5cbab5fab6cb5f10087e22682a"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_names",
+  "zvariant",
+ ]
+@@ -4729,7 +4793,7 @@ dependencies = [
+  "endi",
+  "enumflags2",
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zcheapstr",
+  "zvariant_derive",
+  "zvariant_utils",
+@@ -4758,5 +4822,5 @@ dependencies = [
+  "quote",
+  "serde",
+  "syn 3.0.6",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
+index 5747898c..b3d8ac30 100644
+--- a/apps/gridcraft-web/src/web.rs
++++ b/apps/gridcraft-web/src/web.rs
+@@ -10,6 +10,7 @@ const LOADING_ID: &str = "gridcraft_loading";
+ 
+ pub fn start() {
+     eframe::WebLogger::init(log::LevelFilter::Info).ok();
++    gridcraft_ui_egui::office_toolbar::init();
+     wasm_bindgen_futures::spawn_local(async {
+         let Some(document) = web_sys::window().and_then(|w| w.document()) else {
+             log::error!("no document");
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index 0a55681e..950ecacb 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -255,6 +255,7 @@ fn main() -> eframe::Result<()> {
+         println!("{} {}", gridcraft_ui_egui::office_overlay::app_name(), gridcraft_ui_egui::office_overlay::VERSION);
+         return Ok(());
+     }
++    gridcraft_ui_egui::office_toolbar::init();
+     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
+     let mut sample: Option<String> = None;
+     let mut files: Vec<String> = Vec::new();
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 85a24dda..1de0a742 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -33,6 +33,8 @@ gridcraft-xlsx = { workspace = true, features = ["test-support"] }
+ [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ # The desktop's preferred language for the first-run interface language.
+ sys-locale = { workspace = true }
++# office overlay (patches/gridcraft/0140): the shared settings.toml (toolbar mode); the web has no file and is always simple
++suite-core = { path = "../../../../crates/suite-core" }
+ 
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ # Read the browser's preferred language for the first-run web interface language.
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index a74f6df7..829ea387 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -41,6 +41,7 @@ pub mod keytips;
+ pub mod office_overlay;
+ #[cfg(test)]
+ mod office_overlay_tests;
++pub mod office_toolbar;
+ pub mod outline;
+ pub mod panes;
+ pub mod paper_view;
+@@ -1190,7 +1191,7 @@ impl SheetApp {
+             // File tab: the Backstage view replaces everything below the title bar.
+             backstage::show(self, ui);
+         } else {
+-            ribbon::show(self, ui);
++            office_toolbar::show(self, ui);
+             widgets::notice_bar(self, ui);
+             if self.session.prefs.formula_bar {
+                 formula_bar::show(self, ui);
+diff --git a/crates/ui-egui/src/office_icons.bin b/crates/ui-egui/src/office_icons.bin
+new file mode 100644
+index 0000000000000000000000000000000000000000..437651fc1554e76c7542eed0a1e7df13b9d015b5
+GIT binary patch
+literal 69962
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+new file mode 100644
+index 00000000..07c40170
+--- /dev/null
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -0,0 +1,614 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The simplified Sheets toolbar: one row drawn instead of the ribbon (patch 0140; docs/phase4/toolbar-design.md section 4).
++//!
++//! - `show` is the one call site in `lib.rs`. With the overlay off, or in full mode, it draws upstream's ribbon.
++//! - The row reuses upstream's pickers and menus (`ribbon.rs`), so every command, keytip badge and popup is upstream's own.
++//! - Fluent icons (MIT, `assets/icons/fluent`) are 8-bit alpha masks in `office_icons.bin` (`scripts/embed-toolbar-icons.sh`), drawn as
++//!   tinted textures. The SVG loader would add about 309 KB brotli to the wasm (docs/phase4/icons-wasm.md, sheets-toolbar-wasm.md).
++//! - Width: labels drop when the row does not fit, and then the rightmost groups move into a "..." menu. Fit is measured
++//!   from the real text widths, so it holds in every language.
++//! - The mode is a process-wide flag, read at start from the shared `settings.toml` (suite-core, key `toolbar`) and written by the toggle.
++
++use std::sync::OnceLock;
++use std::sync::atomic::{AtomicU8, Ordering};
++
++use egui::{Align, Color32, Layout, Rect, Response, Sense, Ui, pos2, vec2};
++use gridcraft_engine::model::{HAlign, Style, Underline};
++use serde_json::{Value, json};
++
++use crate::theme::{self, Tokens};
++use crate::widgets::color_palette;
++use crate::{SheetApp, office_overlay, ribbon};
++
++/// A menu entry: English label, command id (`dialog:<name>` opens a dialog), params as JSON text.
++type Entry = (&'static str, &'static str, &'static str);
++
++#[derive(Clone, Copy)]
++enum Kind {
++    Font,
++    Size,
++    Number,
++    /// A button that shows its on-state.
++    Toggle,
++    /// Font colour and fill colour: a button, an arrow, and the colour bar under the glyph.
++    Color,
++    Borders,
++    Menu(&'static [Entry]),
++    Button,
++}
++
++struct Item {
++    kind: Kind,
++    /// The command the item runs (for a menu: its first entry), also the keytip target and the tooltip's shortcut.
++    id: &'static str,
++    icon: &'static str,
++    /// English label: the tooltip, the accessible name, and the text next to the icon when the row is wide.
++    label: &'static str,
++    group: u8,
++    /// Shows its label beside the icon while the row is wide.
++    text: bool,
++}
++
++const fn item(kind: Kind, id: &'static str, icon: &'static str, label: &'static str, group: u8, text: bool) -> Item {
++    Item { kind, id, icon, label, group, text }
++}
++
++const INSERT: &[Entry] = &[
++    ("Insert Sheet Rows", "home.insertRows", "{}"),
++    ("Insert Sheet Columns", "home.insertColumns", "{}"),
++    ("Insert Sheet", "home.insertSheet", "{}"),
++];
++const DELETE: &[Entry] = &[("Delete Sheet Rows", "home.deleteRows", "{}"), ("Delete Sheet Columns", "home.deleteColumns", "{}")];
++const SORT: &[Entry] = &[("Sort A to Z", "data.sortAscending", "{}"), ("Sort Z to A", "data.sortDescending", "{}")];
++const FREEZE: &[Entry] = &[
++    ("Freeze Panes", "view.freezePanes", "{}"),
++    ("Freeze Top Row", "view.freezeTopRow", "{}"),
++    ("Freeze First Column", "view.freezeFirstColumn", "{}"),
++    ("Unfreeze Panes", "view.unfreezePanes", "{}"),
++];
++const TRANSLIT: &[Entry] = &[
++    ("Latin to Cyrillic", "tools.translitCyrl", "{}"),
++    ("Cyrillic to Latin", "tools.translitLatn", "{}"),
++    ("Auto-detect", "tools.translitAuto", "{}"),
++];
++/// The number picker's short list; "More Number Formats..." opens Format Cells.
++const NUMBER_NAMES: &[&str] = &["General", "Number", "Short Date", "Percentage", "Text"];
++const BORDER_PRESETS: &[(&str, &str)] = &[
++    ("Bottom Border", "bottom"),
++    ("Top Border", "top"),
++    ("Left Border", "left"),
++    ("Right Border", "right"),
++    ("No Border", "none"),
++    ("All Borders", "all"),
++    ("Outside Borders", "outside"),
++    ("Thick Outside Borders", "thickOutside"),
++    ("Bottom Double Border", "doubleBottom"),
++    ("Thick Bottom Border", "thickBottom"),
++    ("Top and Bottom Border", "topBottom"),
++    ("Top and Thick Bottom Border", "topThickBottom"),
++    ("Top and Double Bottom Border", "topDoubleBottom"),
++    ("Inside Borders", "inside"),
++];
++
++/// Left to right. Ids that are ours (`office.*`) are checked by `tests/office_toolbar.rs` only when the command exists.
++const ITEMS: &[Item] = &[
++    item(Kind::Font, "home.fontName", "", "Font", 0, false),
++    item(Kind::Size, "home.fontSize", "", "Font Size", 0, false),
++    item(Kind::Toggle, "home.bold", "text_bold", "Bold", 0, false),
++    item(Kind::Toggle, "home.italic", "text_italic", "Italic", 0, false),
++    item(Kind::Toggle, "home.underline", "text_underline", "Underline", 0, false),
++    item(Kind::Color, "home.fontColor", "text_color", "Font Color", 0, false),
++    item(Kind::Color, "home.fillColor", "paint_bucket", "Fill Color", 0, false),
++    item(Kind::Borders, "home.borders", "border_all", "Borders", 0, false),
++    item(Kind::Toggle, "home.alignLeft", "text_align_left", "Align Left", 1, false),
++    item(Kind::Toggle, "home.alignCenter", "text_align_center", "Center", 1, false),
++    item(Kind::Toggle, "home.alignRight", "text_align_right", "Align Right", 1, false),
++    item(Kind::Toggle, "home.wrapText", "text_wrap", "Wrap Text", 1, false),
++    item(Kind::Toggle, "home.mergeCenter", "table_cells_merge", "Merge & Center", 1, false),
++    item(Kind::Number, "home.numberFormat", "", "Number Format", 2, false),
++    item(Kind::Menu(INSERT), "home.insertRows", "table_insert_row", "Insert", 3, true),
++    item(Kind::Menu(DELETE), "home.deleteRows", "table_delete_row", "Delete", 3, true),
++    item(Kind::Button, "formulas.autoSum", "autosum", "AutoSum", 4, false),
++    item(Kind::Menu(SORT), "data.sortAscending", "arrow_sort_up", "Sort", 4, true),
++    item(Kind::Toggle, "data.filter", "filter", "Filter", 4, true),
++    item(Kind::Menu(FREEZE), "view.freezePanes", "table_freeze_column_and_row", "Freeze Panes", 5, true),
++    item(Kind::Toggle, "formulas.showFormulas", "math_formula", "Show Formulas", 5, false),
++    item(Kind::Button, "file.print", "print", "Print", 6, true),
++    item(Kind::Menu(TRANSLIT), "tools.translitAuto", "translate", "Transliterate", 6, true),
++    // Ours (WP10): hidden until the command is registered.
++    item(Kind::Button, "office.history", "history", "Version History", 6, true),
++];
++
++const H: f32 = 28.0;
++const ICON: f32 = 16.0;
++const GAP: f32 = 2.0;
++const SEP: f32 = 13.0;
++const CARD_H: f32 = 40.0;
++
++// ---------------------------------------------------------------------------------------------------------------- mode
++
++/// 1 = simple, anything else = full. Full until [`init`] runs, so an app or test that never calls it keeps upstream's ribbon.
++static MODE: AtomicU8 = AtomicU8::new(0);
++/// The toggle is offered: the overlay is on, or a host/test has set the mode.
++static OFFERED: AtomicU8 = AtomicU8::new(0);
++
++/// Reads the shared setting once, at start-up. Without the overlay it does nothing: upstream's ribbon stays.
++pub fn init() {
++    if office_overlay::ACTIVE {
++        set_simple(read_mode());
++    }
++}
++
++/// True when the simple toolbar is shown.
++pub fn simple() -> bool {
++    MODE.load(Ordering::Relaxed) == 1
++}
++
++/// Sets the mode for this process only (a host that reads the shared settings itself, and tests).
++pub fn set_simple(on: bool) {
++    MODE.store(u8::from(on), Ordering::Relaxed);
++    OFFERED.store(1, Ordering::Relaxed);
++}
++
++fn offered() -> bool {
++    !cfg!(target_arch = "wasm32") && (office_overlay::ACTIVE || OFFERED.load(Ordering::Relaxed) == 1)
++}
++
++/// The toggle button: switches at once and remembers the choice for the next start.
++fn toggle_mode(on: bool) {
++    set_simple(on);
++    #[cfg(not(target_arch = "wasm32"))]
++    {
++        let tag = if on { "simple" } else { "full" };
++        let result = match settings_dir() {
++            Some(dir) => suite_core::settings::set_in(&dir, "toolbar", tag).map_err(|e| std::io::Error::other(e.to_string())),
++            None => suite_core::settings::set_toolbar_mode(if on {
++                suite_core::settings::ToolbarMode::Simple
++            } else {
++                suite_core::settings::ToolbarMode::Full
++            }),
++        };
++        if let Err(e) = result {
++            log::warn!("could not write the toolbar mode: {e}");
++        }
++    }
++}
++
++/// Reads and writes `settings.toml` in `dir` instead of the user's folder (tests, and a host that keeps its own).
++#[cfg(not(target_arch = "wasm32"))]
++pub fn use_settings_dir(dir: std::path::PathBuf) {
++    *SETTINGS_DIR.lock().unwrap_or_else(|e| e.into_inner()) = Some(dir);
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++static SETTINGS_DIR: std::sync::Mutex<Option<std::path::PathBuf>> = std::sync::Mutex::new(None);
++
++#[cfg(not(target_arch = "wasm32"))]
++fn settings_dir() -> Option<std::path::PathBuf> {
++    SETTINGS_DIR.lock().unwrap_or_else(|e| e.into_inner()).clone()
++}
++
++/// The shared setting (`toolbar` in settings.toml, suite-core). The web has no file and is always simple.
++fn read_mode() -> bool {
++    #[cfg(not(target_arch = "wasm32"))]
++    return match settings_dir() {
++        Some(dir) => suite_core::settings::load_in(&dir).settings.toolbar,
++        None => suite_core::settings::toolbar_mode(),
++    } == suite_core::settings::ToolbarMode::Simple;
++    #[cfg(target_arch = "wasm32")]
++    true
++}
++
++// -------------------------------------------------------------------------------------------------------------- icons
++
++const BIN: &[u8] = include_bytes!("office_icons.bin");
++/// The raster sizes in `office_icons.bin`, in pixels, per icon in this order.
++const SIZES: [usize; 3] = [20, 28, 40];
++
++type Masks = [&'static [u8]; SIZES.len()];
++
++/// `office_icons.bin`: per icon `name ` and then the masks of every size in `SIZES`.
++fn table() -> &'static [(&'static str, Masks)] {
++    static T: OnceLock<Vec<(&'static str, Masks)>> = OnceLock::new();
++    T.get_or_init(|| {
++        let mut out = Vec::new();
++        let mut rest = BIN;
++        while let Some(z) = rest.iter().position(|b| *b == 0) {
++            let name = std::str::from_utf8(&rest[..z]).unwrap_or("");
++            rest = &rest[z + 1..];
++            let mut masks: Masks = [&[]; SIZES.len()];
++            for (m, s) in masks.iter_mut().zip(SIZES) {
++                let (a, b) = rest.split_at((s * s).min(rest.len()));
++                *m = a;
++                rest = b;
++            }
++            out.push((name, masks));
++        }
++        out
++    })
++}
++
++/// Every icon name the toolbar draws (a test checks each is embedded).
++pub fn icon_names() -> impl Iterator<Item = &'static str> {
++    ITEMS.iter().map(|i| i.icon).filter(|n| !n.is_empty()).chain([
++        "chevron_down",
++        "more_horizontal",
++        "window_header_horizontal",
++        "window_header_horizontal_off",
++    ])
++}
++
++pub fn has_icon(name: &str) -> bool {
++    table().iter().any(|(n, masks)| *n == name && masks.iter().zip(SIZES).all(|(m, s)| m.len() == s * s) && masks[0].iter().any(|a| *a > 128))
++}
++
++/// Every command id the row runs (the registry test reads it).
++pub fn command_ids() -> impl Iterator<Item = &'static str> {
++    ITEMS.iter().flat_map(|i| match i.kind {
++        Kind::Menu(entries) => entries.iter().map(|e| e.1).collect::<Vec<_>>(),
++        _ => vec![i.id],
++    })
++}
++
++/// Draws icon `name` centred on `center`, `size` logical points square, in colour `tint`. A name that is not in the table draws nothing.
++fn paint_icon(ui: &Ui, center: egui::Pos2, name: &str, size: f32, tint: Color32) {
++    let Some((_, masks)) = table().iter().find(|(n, _)| *n == name) else { return };
++    let px = (size * ui.ctx().pixels_per_point()).ceil() as usize;
++    let i = SIZES.iter().position(|s| *s >= px).unwrap_or(SIZES.len() - 1);
++    let (side, mask) = (SIZES[i], masks[i]);
++    let id = egui::Id::new(("office-toolbar-icon", name, side));
++    let ctx = ui.ctx();
++    let tex = match ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)) {
++        Some(t) => t,
++        None => {
++            let rgba: Vec<u8> = mask.iter().flat_map(|a| [255, 255, 255, *a]).collect();
++            let image = egui::ColorImage::from_rgba_unmultiplied([side, side], &rgba);
++            let t = ctx.load_texture(format!("office-toolbar/{name}/{side}"), image, egui::TextureOptions::LINEAR);
++            ctx.data_mut(|d| d.insert_temp(id, t.clone()));
++            t
++        }
++    };
++    let rect = Rect::from_center_size(center, vec2(size, size));
++    ui.painter().image(tex.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), tint);
++}
++
++// ------------------------------------------------------------------------------------------------------------- widgets
++
++fn text_w(ui: &Ui, text: &str) -> f32 {
++    ui.painter().layout_no_wrap(text.to_string(), theme::ui_font(12.5), Color32::WHITE).size().x
++}
++
++fn shortcut(id: &str) -> Option<String> {
++    let s = gridcraft_engine::find_command(id)?.shortcut?;
++    Some(s.replace("Cmd+", if cfg!(target_os = "macos") { "\u{2318}" } else { "Ctrl+" }))
++}
++
++fn tip(app: &SheetApp, label: &str, id: &str) -> String {
++    let l = app.ui.language.tr(label);
++    shortcut(id).map_or_else(|| l.to_string(), |s| format!("{l} ({s})"))
++}
++
++/// Width of an icon button with optional label and chevron.
++fn tool_w(label_w: Option<f32>, chevron: bool) -> f32 {
++    let w = 6.0 + ICON + label_w.map_or(0.0, |w| 5.0 + w) + if chevron { 4.0 + 10.0 } else { 0.0 } + 6.0;
++    w.max(H)
++}
++
++fn hover_fill(ui: &Ui, resp: &Response, on: bool, rect: Rect) {
++    let t = Tokens::get(ui.ctx());
++    if resp.is_pointer_button_down_on() {
++        ui.painter().rect_filled(rect, 4.0, t.pressed);
++    } else if on {
++        ui.painter().rect_filled(rect, 4.0, t.pressed);
++        ui.painter().rect_stroke(rect, 4.0, egui::Stroke::new(1.0, t.separator), egui::StrokeKind::Inside);
++    } else if resp.hovered() {
++        ui.painter().rect_filled(rect, 4.0, t.hover);
++    }
++}
++
++/// An icon button with an optional label and a chevron. `name` is the accessible name; `on` is reported as selected.
++fn tool(ui: &mut Ui, icon: &str, label: Option<&str>, chevron: bool, on: Option<bool>, name: &str, tip: String) -> Response {
++    let t = Tokens::get(ui.ctx());
++    let w = tool_w(label.map(|l| text_w(ui, l)), chevron);
++    let (rect, resp) = ui.allocate_exact_size(vec2(w, H), Sense::click());
++    hover_fill(ui, &resp, on == Some(true), rect);
++    let mut x = rect.left() + 6.0 + ICON / 2.0;
++    paint_icon(ui, pos2(x, rect.center().y), icon, ICON, t.text);
++    x += ICON / 2.0 + 5.0;
++    if let Some(l) = label {
++        ui.painter().text(pos2(x, rect.center().y), egui::Align2::LEFT_CENTER, l, theme::ui_font(12.5), t.text);
++    }
++    if chevron {
++        paint_icon(ui, pos2(rect.right() - 11.0, rect.center().y + 1.0), "chevron_down", 10.0, t.text_dim);
++    }
++    resp.widget_info(|| match on {
++        Some(on) => egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, name),
++        None => egui::WidgetInfo::labeled(egui::WidgetType::Button, true, name),
++    });
++    resp.on_hover_text(tip)
++}
++
++/// A button plus an arrow (colours, borders). Returns (main clicked, arrow response).
++fn split(ui: &mut Ui, icon: &str, bar: Option<Color32>, name: &str, tip: String) -> (bool, Response) {
++    let t = Tokens::get(ui.ctx());
++    let (rect, _) = ui.allocate_exact_size(vec2(H + 14.0, H), Sense::hover());
++    let main = Rect::from_min_size(rect.min, vec2(H, H));
++    let arrow = Rect::from_min_max(pos2(main.right(), rect.top()), rect.max);
++    let m = ui.interact(main, ui.id().with((name, "main")), Sense::click());
++    let a = ui.interact(arrow, ui.id().with((name, "arrow")), Sense::click());
++    if m.hovered() || a.hovered() {
++        ui.painter().rect_filled(rect, 4.0, t.hover);
++        ui.painter()
++            .line_segment([pos2(main.right(), rect.top() + 4.0), pos2(main.right(), rect.bottom() - 4.0)], egui::Stroke::new(1.0, t.separator));
++    }
++    paint_icon(ui, main.center() - vec2(0.0, 2.0), icon, ICON, t.text);
++    if let Some(c) = bar {
++        ui.painter().rect_filled(Rect::from_min_size(pos2(main.left() + 6.0, main.bottom() - 7.0), vec2(16.0, 3.0)), 0.0, c);
++    }
++    paint_icon(ui, pos2(arrow.center().x, arrow.center().y + 1.0), "chevron_down", 10.0, t.text_dim);
++    m.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, name));
++    a.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, format!("{name} \u{25be}")));
++    (m.on_hover_text(tip).clicked(), a)
++}
++
++/// Consumes the one-shot keytip request for control `id` (Alt,H,H and Alt,H,F,C open the colour popups).
++fn invoke(app: &mut SheetApp, id: &str) -> bool {
++    let hit = app.ui.keytip_invoke == Some(id);
++    if hit {
++        app.ui.keytip_invoke = None;
++    }
++    hit
++}
++
++fn popup_command(forced: bool, clicked: bool) -> Option<egui::SetOpenCommand> {
++    if forced { Some(egui::SetOpenCommand::Bool(true)) } else { clicked.then_some(egui::SetOpenCommand::Toggle) }
++}
++
++fn params(text: &str) -> Value {
++    serde_json::from_str(text).unwrap_or(Value::Null)
++}
++
++fn entries(list: &[Entry]) -> Vec<(&str, &str, Value)> {
++    list.iter().map(|(label, id, p)| (*label, *id, params(p))).collect()
++}
++
++fn is_on(app: &SheetApp, st: &Style, id: &str) -> bool {
++    let sheet = || app.session.active().and_then(|d| d.wb.active().map(|sh| (d, sh)));
++    match id {
++        "home.bold" => st.font.bold,
++        "home.italic" => st.font.italic,
++        "home.underline" => st.font.underline != Underline::None,
++        "home.alignLeft" => st.align.h == HAlign::Left,
++        "home.alignCenter" => st.align.h == HAlign::Center,
++        "home.alignRight" => st.align.h == HAlign::Right,
++        "home.wrapText" => st.align.wrap,
++        "home.mergeCenter" => sheet().is_some_and(|(d, sh)| sh.merge_at(d.selection.active).is_some()),
++        "data.filter" => sheet().is_some_and(|(_, sh)| sh.autofilter.is_some()),
++        "formulas.showFormulas" => sheet().is_some_and(|(_, sh)| sh.show_formulas),
++        _ => false,
++    }
++}
++
++fn shown(item: &Item) -> bool {
++    item.id != "office.history" || gridcraft_engine::find_command(item.id).is_some()
++}
++
++/// The item's label as drawn (or `None` for an icon-only item).
++fn label_of(app: &SheetApp, item: &Item, labels: bool) -> Option<String> {
++    (labels && item.text).then(|| app.ui.language.tr(item.label).to_string())
++}
++
++fn item_w(ui: &Ui, app: &SheetApp, item: &Item, labels: bool) -> f32 {
++    match item.kind {
++        Kind::Font | Kind::Number => 150.0,
++        Kind::Size => 52.0,
++        Kind::Color | Kind::Borders => H + 14.0,
++        Kind::Menu(_) => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), true),
++        Kind::Toggle | Kind::Button => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), false),
++    }
++}
++
++fn draw_item(app: &mut SheetApp, ui: &mut Ui, item: &Item, st: &Style, labels: bool) {
++    let name = app.ui.language.tr(item.label).to_string();
++    let label = label_of(app, item, labels);
++    match item.kind {
++        Kind::Font => ribbon::font_combo(app, ui, st),
++        Kind::Size => ribbon::size_combo(app, ui, st),
++        Kind::Number => ribbon::number_combo_of(app, ui, st, NUMBER_NAMES),
++        Kind::Toggle | Kind::Button => {
++            let on = matches!(item.kind, Kind::Toggle).then(|| is_on(app, st, item.id));
++            let r = tool(ui, item.icon, label.as_deref(), false, on, &name, tip(app, item.label, item.id));
++            ribbon::control_keytip(app, ui, &r, item.id);
++            if r.clicked() {
++                app.run_or_alert(item.id, json!({}));
++            }
++        }
++        Kind::Menu(list) => {
++            let r = tool(ui, item.icon, label.as_deref(), true, None, &name, tip(app, item.label, item.id));
++            let targets: Vec<&str> = list.iter().map(|e| e.1).collect();
++            for sequence in crate::keytips::keytip_table::group_extension(app.keytips.prefix().unwrap_or_default(), &targets) {
++                ribbon::keytip(app, ui, sequence, r.rect.center_bottom());
++            }
++            egui::Popup::menu(&r).show(|ui| ribbon::menu_items(app, ui, &entries(list)));
++        }
++        Kind::Color => {
++            let (last, bar_id) =
++                if item.id == "home.fillColor" { (app.grid.last_fill.clone(), "Fill") } else { (app.grid.last_font_color.clone(), "Font") };
++            let bar = gridcraft_engine::model::Color::from_hex(&last).and_then(|c| c.resolve(&Default::default())).map(theme::color32);
++            let (clicked, arrow) = split(ui, item.icon, bar, &name, tip(app, item.label, item.id));
++            ribbon::control_keytip(app, ui, &arrow, item.id);
++            if clicked {
++                app.run_or_alert(item.id, json!({"color": last}));
++            }
++            let forced = invoke(app, item.id);
++            let none_label = if bar_id == "Fill" { "No Fill" } else { "Automatic" };
++            let colors = app.session.active().map(|d| d.wb.theme.colors).unwrap_or(gridcraft_engine::model::Theme::default().colors);
++            egui::Popup::menu(&arrow).open_memory(popup_command(forced, arrow.clicked())).show(|ui| {
++                if let Some(c) = color_palette(ui, &colors, none_label) {
++                    if c != "none" {
++                        if bar_id == "Fill" {
++                            app.grid.last_fill = c.clone();
++                        } else {
++                            app.grid.last_font_color = c.clone();
++                        }
++                    }
++                    let c = if bar_id == "Font" && c == "none" { "auto".to_string() } else { c };
++                    app.run_or_alert(item.id, json!({"color": c}));
++                    ui.close();
++                }
++            });
++        }
++        Kind::Borders => {
++            let (clicked, arrow) = split(ui, item.icon, None, &name, tip(app, item.label, item.id));
++            ribbon::control_keytip(app, ui, &arrow, item.id);
++            if clicked {
++                app.run_or_alert("home.borders", json!({"preset": app.grid.last_border.clone()}));
++            }
++            egui::Popup::menu(&arrow).show(|ui| {
++                for (label, preset) in BORDER_PRESETS {
++                    if crate::border_preview::preset_button(ui, label, preset).clicked() {
++                        app.grid.last_border = preset.to_string();
++                        app.run_or_alert("home.borders", json!({"preset": preset}));
++                    }
++                }
++                ui.separator();
++                if ui.button(app.ui.language.tr("More Borders…")).clicked() {
++                    app.open_dialog("formatCells", json!({"tab": "Border"}));
++                }
++            });
++        }
++    }
++}
++
++/// How the row is laid out at a given width: labels on or off, and how many items stay in the row.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct Plan {
++    pub labels: bool,
++    pub shown: usize,
++    pub total: usize,
++}
++
++fn visible() -> Vec<&'static Item> {
++    ITEMS.iter().filter(|i| shown(i)).collect()
++}
++
++fn row_w(ui: &Ui, app: &SheetApp, items: &[&Item], labels: bool) -> f32 {
++    let mut w = 0.0;
++    for (i, it) in items.iter().enumerate() {
++        w += item_w(ui, app, it, labels) + GAP;
++        if i > 0 && items[i - 1].group != it.group {
++            w += SEP;
++        }
++    }
++    w
++}
++
++/// The width left for the items in a window `window_w` wide: the card's margins, the toggle and its gaps are outside it.
++fn room_for(window_w: f32, toggle_w: f32) -> f32 {
++    window_w - 40.0 - toggle_w - 2.0 * GAP - 10.0
++}
++
++/// `room` is the width for the items; the toggle and the "..." button are outside it.
++fn plan(ui: &Ui, app: &SheetApp, items: &[&Item], room: f32) -> Plan {
++    let total = items.len();
++    if row_w(ui, app, items, true) <= room {
++        return Plan { labels: true, shown: total, total };
++    }
++    // The left groups (fonts, alignment, number) never move into the menu; below their width the row is clipped.
++    let keep = items.iter().take_while(|i| i.group < 3).count();
++    let mut shown = total;
++    while shown > keep && row_w(ui, app, &items[..shown], false) + if shown < total { H + GAP } else { 0.0 } > room {
++        shown -= 1;
++    }
++    Plan { labels: false, shown, total }
++}
++
++/// The plan the last drawn row used (the width tests read it).
++pub fn last_plan() -> Option<Plan> {
++    *LAST_PLAN.lock().unwrap_or_else(|e| e.into_inner())
++}
++
++static LAST_PLAN: std::sync::Mutex<Option<Plan>> = std::sync::Mutex::new(None);
++
++fn toggle_w(ui: &Ui, app: &SheetApp) -> f32 {
++    if offered() { tool_w(Some(text_w(ui, app.ui.language.tr("Full ribbon"))), false) } else { 0.0 }
++}
++
++/// The overflow menu: a flat entry for a button or toggle, a submenu for a menu.
++fn overflow(app: &mut SheetApp, ui: &mut Ui, items: &[&Item]) {
++    for it in items {
++        match it.kind {
++            Kind::Menu(list) => {
++                let label = app.ui.language.tr(it.label).to_string();
++                ui.menu_button(label, |ui| ribbon::menu_items(app, ui, &entries(list)));
++            }
++            _ => ribbon::menu_items(app, ui, &[(it.label, it.id, json!({}))]),
++        }
++    }
++}
++
++/// The row, in place of upstream's ribbon. Full mode (or no overlay): upstream's ribbon, with a pill to go back.
++pub fn show(app: &mut SheetApp, ui: &mut Ui) {
++    if !simple() {
++        let top = ui.cursor().top();
++        ribbon::show(app, ui);
++        if offered() {
++            simple_pill(app, ui, top);
++        }
++        return;
++    }
++    let t = Tokens::get(ui.ctx());
++    let st = app.session.active().and_then(|d| Some(d.wb.styles.get(d.wb.active()?.style_id(d.selection.active)).clone())).unwrap_or_default();
++    egui::Panel::top("ribbon")
++        .exact_size(CARD_H + 10.0)
++        .frame(egui::Frame::NONE.fill(t.window).inner_margin(egui::Margin { left: 10, right: 10, top: 4, bottom: 6 }))
++        .show(ui, |ui| {
++            let card = Rect::from_min_size(ui.cursor().min, vec2(ui.available_width(), CARD_H));
++            ui.painter().rect_filled(card, 10.0, t.ribbon);
++            ui.painter().rect_stroke(card, 10.0, egui::Stroke::new(1.0, t.ribbon_border), egui::StrokeKind::Inside);
++            let inner = card.shrink2(vec2(10.0, 0.0));
++            let items = visible();
++            let tw = toggle_w(ui, app);
++            let room = room_for(ui.max_rect().width() + 20.0, tw);
++            let plan = plan(ui, app, &items, room);
++            *LAST_PLAN.lock().unwrap_or_else(|e| e.into_inner()) = Some(plan);
++            let row = Rect::from_min_max(inner.min, pos2(inner.right() - tw - 10.0, inner.bottom()));
++            ui.scope_builder(egui::UiBuilder::new().max_rect(row).layout(Layout::left_to_right(Align::Center)), |ui| {
++                ui.set_clip_rect(ui.clip_rect().intersect(row));
++                ui.spacing_mut().item_spacing = vec2(GAP, 0.0);
++                for (i, it) in items[..plan.shown].iter().enumerate() {
++                    if i > 0 && items[i - 1].group != it.group {
++                        let (r, _) = ui.allocate_exact_size(vec2(SEP - GAP, 20.0), Sense::hover());
++                        ui.painter().line_segment([pos2(r.center().x, r.top()), pos2(r.center().x, r.bottom())], egui::Stroke::new(1.0, t.separator));
++                    }
++                    draw_item(app, ui, it, &st, plan.labels);
++                }
++                if plan.shown < plan.total {
++                    let name = app.ui.language.tr("More commands").to_string();
++                    let more = tool(ui, "more_horizontal", None, false, None, &name, name.clone());
++                    egui::Popup::menu(&more).show(|ui| overflow(app, ui, &items[plan.shown..]));
++                }
++            });
++            if tw > 0.0 {
++                let slot = Rect::from_min_max(pos2(inner.right() - tw, inner.top()), inner.max);
++                ui.scope_builder(egui::UiBuilder::new().max_rect(slot).layout(Layout::left_to_right(Align::Center)), |ui| {
++                    let name = app.ui.language.tr("Full ribbon").to_string();
++                    if tool(ui, "window_header_horizontal", Some(&name), false, None, &name, name.clone()).clicked() {
++                        toggle_mode(false);
++                    }
++                });
++            }
++        });
++}
++
++/// Full mode: a small "Simple ribbon" pill at the right end of the tab row. An `Area`, so `ribbon.rs` is untouched.
++fn simple_pill(app: &mut SheetApp, ui: &mut Ui, top: f32) {
++    let label = app.ui.language.tr("Simple ribbon").to_string();
++    let w = tool_w(Some(text_w(ui, &label)), false);
++    let at = pos2(ui.max_rect().right() - w - 14.0, top + 3.0);
++    egui::Area::new(egui::Id::new("office_simple_pill")).order(egui::Order::Foreground).fixed_pos(at).show(ui.ctx(), |ui| {
++        if tool(ui, "window_header_horizontal_off", Some(&label), false, None, &label, label.clone()).clicked() {
++            toggle_mode(true);
++        }
++    });
++}
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index cd930f58..e7a5708d 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -323,7 +323,7 @@ fn act(app: &mut SheetApp, id: &str, params: serde_json::Value) {
+ }
+ 
+ /// Keytips are painted, not focusable widgets: the grid retains keyboard focus.
+-fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
++pub(crate) fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
+     let Some(rest) = app.keytips.prefix().and_then(|prefix| sequence.strip_prefix(prefix)).filter(|s| !s.is_empty()) else { return };
+     let t = Tokens::get(ui.ctx());
+     let painter = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Tooltip, egui::Id::new("ribbon_keytips"))).with_clip_rect(ui.clip_rect());
+@@ -335,7 +335,7 @@ fn keytip(app: &SheetApp, ui: &Ui, sequence: &str, at: egui::Pos2) {
+ }
+ 
+ /// Paint the badge for a control that runs command `id`, when the armed prefix matches.
+-fn control_keytip(app: &SheetApp, ui: &Ui, response: &egui::Response, id: &str) {
++pub(crate) fn control_keytip(app: &SheetApp, ui: &Ui, response: &egui::Response, id: &str) {
+     if let Some(sequence) = keytip_table::control_badge(app.keytips.prefix().unwrap_or_default(), id) {
+         keytip(app, ui, sequence, response.rect.center_bottom());
+     }
+@@ -480,7 +480,7 @@ pub(crate) fn editable_combo(
+     result
+ }
+ 
+-fn menu_items(app: &mut SheetApp, ui: &mut Ui, items: &[(&str, &str, serde_json::Value)]) {
++pub(crate) fn menu_items(app: &mut SheetApp, ui: &mut Ui, items: &[(&str, &str, serde_json::Value)]) {
+     for (label, id, p) in items {
+         if *label == "-" {
+             ui.separator();
+@@ -1063,7 +1063,7 @@ fn home(app: &mut SheetApp, ui: &mut Ui) {
+     });
+ }
+ 
+-fn font_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
++pub(crate) fn font_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+     let name = st.font.name.clone();
+     let resp = ui.add_sized([150.0, 24.0], egui::Button::new(egui::RichText::new(&name).font(theme::ui_font(12.5))));
+     control_keytip(app, ui, &resp, "home.fontName");
+@@ -1094,7 +1094,7 @@ pub const FONTS: &[&str] = &[
+     "Verdana",
+ ];
+ 
+-fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
++pub(crate) fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+     let size = st.font.size;
+     let label = if size.fract() == 0.0 { format!("{}", size as i32) } else { format!("{size}") };
+     let resp = ui.add_sized([52.0, 24.0], egui::Button::new(egui::RichText::new(&label).font(theme::ui_font(12.5))));
+@@ -1117,6 +1117,15 @@ fn size_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+ }
+ 
+ fn number_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
++    number_combo_of(
++        app,
++        ui,
++        st,
++        &["General", "Number", "Currency", "Accounting", "Short Date", "Long Date", "Time", "Percentage", "Fraction", "Scientific", "Text"],
++    );
++}
++
++pub(crate) fn number_combo_of(app: &mut SheetApp, ui: &mut Ui, st: &Style, names: &[&str]) {
+     let code = st.num_fmt.as_str().to_string();
+     let kind = gridcraft_engine::display::number_format(&code).kind();
+     let current = format!("{kind:?}");
+@@ -1125,7 +1134,6 @@ fn number_combo(app: &mut SheetApp, ui: &mut Ui, st: &Style) {
+     let resp = ui.add_sized([150.0, 24.0], egui::Button::new(egui::RichText::new(lang.tr(&current)).font(theme::ui_font(12.5))));
+     control_keytip(app, ui, &resp, "home.numberFormat");
+     let forced = invoke(app, "home.numberFormat");
+-    let names = ["General", "Number", "Currency", "Accounting", "Short Date", "Long Date", "Time", "Percentage", "Fraction", "Scientific", "Text"];
+     let items: Vec<(&str, String)> = names
+         .iter()
+         .map(|n| {
+diff --git a/crates/ui-egui/tests/office_toolbar.rs b/crates/ui-egui/tests/office_toolbar.rs
+new file mode 100644
+index 00000000..12ffa30f
+--- /dev/null
++++ b/crates/ui-egui/tests/office_toolbar.rs
+@@ -0,0 +1,253 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The simplified Sheets toolbar (patch 0140; docs/phase4/toolbar-design.md section 4): every command id is still registered,
++//! the row runs commands, Excel's keytip sequences reach the five picker controls, the layout follows the window width, and
++//! the toggle switches and remembers the mode. The mode is process-wide, so the tests take a lock.
++
++use std::sync::{Mutex, MutexGuard};
++
++use egui::{Event, Key, Modifiers, os::OperatingSystem};
++use egui_kittest::kittest::Queryable as _;
++use gridcraft_engine::Session;
++use gridcraft_engine::core::CellRef;
++use gridcraft_ui_egui::i18n::Language;
++use gridcraft_ui_egui::keytips::keytip_table;
++use gridcraft_ui_egui::{SheetApp, office_toolbar};
++
++type Harness = egui_kittest::Harness<'static, SheetApp>;
++
++static LOCK: Mutex<()> = Mutex::new(());
++
++fn lock() -> MutexGuard<'static, ()> {
++    LOCK.lock().unwrap_or_else(|e| e.into_inner())
++}
++
++fn settings_dir(name: &str) -> std::path::PathBuf {
++    let dir = std::env::temp_dir().join(format!("office-toolbar-{name}-{}", std::process::id()));
++    let _ = std::fs::remove_dir_all(&dir);
++    std::fs::create_dir_all(&dir).expect("settings dir");
++    office_toolbar::use_settings_dir(dir.clone());
++    dir
++}
++
++fn harness(width: f32, language: Language) -> Harness {
++    let mut s = Session::new();
++    s.new_workbook();
++    let mut app = SheetApp::new(s, Default::default());
++    app.ui.language = language;
++    let mut h = egui_kittest::Harness::builder().with_os(OperatingSystem::Nix).with_size(egui::vec2(width, 800.0)).build_ui_state(
++        |ui, app: &mut SheetApp| {
++            app.logic(ui.ctx());
++            app.ui(ui);
++        },
++        app,
++    );
++    h.run_steps(4);
++    h
++}
++
++fn key_event(key: Key, pressed: bool) -> Event {
++    Event::Key { key, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE }
++}
++
++fn key(h: &mut Harness, k: Key) {
++    h.input_mut().events.extend([key_event(k, true), key_event(k, false)]);
++    h.run_steps(2);
++}
++
++fn sequence(h: &mut Harness, letters: &[Key]) {
++    key(h, Key::F10);
++    for &k in letters {
++        h.input_mut().events.extend([key_event(k, true), Event::Text(k.name().to_ascii_lowercase()), key_event(k, false)]);
++        h.run_steps(2);
++    }
++    h.run_steps(3);
++}
++
++fn style_of(h: &Harness, cell: &str) -> gridcraft_engine::model::Style {
++    let d = h.state().session.active().expect("doc");
++    let sh = d.wb.active().expect("sheet");
++    d.wb.styles.get(sh.style_id(CellRef::parse(cell).expect("cell"))).clone()
++}
++
++/// The check that makes a sync fail CI instead of conflicting: every id the row runs is a registered command, every icon is
++/// embedded, and the five picker controls still have keytip sequences. Ids that are ours (`office.*`) are WP10's.
++#[test]
++fn office_toolbar_ids_exist() {
++    let ids: Vec<&str> = gridcraft_engine::command_specs().iter().map(|c| c.id).collect();
++    let mut checked = 0;
++    for id in office_toolbar::command_ids() {
++        if id.starts_with("office.") {
++            continue;
++        }
++        assert!(ids.contains(&id), "the toolbar runs `{id}`, which is not registered any more");
++        checked += 1;
++    }
++    assert_eq!(checked, 32, "the design lists 32 upstream ids (toolbar-design.md A.2); update both together");
++    for name in office_toolbar::icon_names() {
++        assert!(office_toolbar::has_icon(name), "icon `{name}` is not embedded");
++    }
++    for id in ["home.fontName", "home.fontSize", "home.fillColor", "home.fontColor", "home.numberFormat"] {
++        assert!(!keytip_table::sequences_for(id).is_empty(), "no keytip sequence reaches `{id}`");
++    }
++}
++
++#[test]
++fn the_row_replaces_the_ribbon_and_runs_commands() {
++    let _g = lock();
++    settings_dir("run");
++    office_toolbar::set_simple(true);
++    let mut h = harness(1600.0, Language::En);
++    assert!(h.query_all_by_label("Insert").count() >= 1, "the row has the Insert menu");
++    assert_eq!(h.query_all_by_label("Draw").count(), 0, "no ribbon tab");
++    h.get_by_label("Bold").click();
++    h.run_steps(3);
++    assert!(style_of(&h, "A1").font.bold, "Bold in the row bolds the cell");
++    h.get_by_label("Center").click();
++    h.run_steps(3);
++    assert_eq!(style_of(&h, "A1").align.h, gridcraft_engine::model::HAlign::Center);
++    h.get_by_label("Show Formulas").click();
++    h.run_steps(3);
++    assert!(h.state().session.active().expect("doc").wb.active().expect("sheet").show_formulas);
++    assert!(h.state().message.is_none() && h.state().toast.is_none());
++}
++
++#[test]
++fn excels_keytips_reach_the_five_pickers() {
++    let _g = lock();
++    settings_dir("keys");
++    office_toolbar::set_simple(true);
++    // Alt,H,F,F: the font list opens ("Calibri" is on the picker button and in the list)
++    let mut h = harness(1600.0, Language::En);
++    sequence(&mut h, &[Key::H, Key::F, Key::F]);
++    assert!(h.query_all_by_label("Calibri").count() >= 2, "HFF must open the font list in the simple row");
++    // Alt,H,F,S: the size picker takes a typed size
++    let mut h = harness(1600.0, Language::En);
++    sequence(&mut h, &[Key::H, Key::F, Key::S]);
++    h.input_mut().events.push(Event::Text("13.5".into()));
++    h.run_steps(2);
++    key(&mut h, Key::Enter);
++    h.run_steps(3);
++    assert_eq!(style_of(&h, "A1").font.size, 13.5);
++    // Alt,H,H: the fill palette opens, an arrow walk and Enter apply the highlighted swatch
++    let mut h = harness(1600.0, Language::En);
++    sequence(&mut h, &[Key::H, Key::H]);
++    key(&mut h, Key::ArrowDown);
++    key(&mut h, Key::ArrowRight);
++    key(&mut h, Key::Enter);
++    h.run_steps(3);
++    assert_eq!(h.state().grid.last_fill, "#000000", "HH must reach the fill palette");
++    // Alt,H,F,C: the font colour palette
++    let mut h = harness(1600.0, Language::En);
++    sequence(&mut h, &[Key::H, Key::F, Key::C]);
++    key(&mut h, Key::ArrowDown);
++    key(&mut h, Key::ArrowRight);
++    key(&mut h, Key::Enter);
++    h.run_steps(3);
++    assert_eq!(h.state().grid.last_font_color, "#000000", "HFC must reach the font colour palette");
++    // Alt,H,N: the number list opens with the short list of the design
++    let mut h = harness(1600.0, Language::En);
++    sequence(&mut h, &[Key::H, Key::N]);
++    assert!(h.query_all_by_label_contains("Percentage").count() >= 1, "HN must open the number list");
++    assert_eq!(h.query_all_by_label_contains("Scientific").count(), 0, "the simple picker lists the short set only");
++    assert!(h.state().message.is_none() && h.state().toast.is_none(), "no error box");
++}
++
++/// Sweeps the window width and prints where the labels drop and where the "..." menu starts, per language.
++/// Measured, not estimated (PLAN WP3): `cargo test -p gridcraft-ui-egui --test office_toolbar widths -- --nocapture`.
++#[test]
++fn widths_follow_the_text_and_the_toggle_never_overflows() {
++    let _g = lock();
++    settings_dir("width");
++    office_toolbar::set_simple(true);
++    let langs: Vec<(&str, Language)> = vec![
++        ("en", Language::En),
++        ("ru", Language::Ru),
++        #[cfg(office_uz)]
++        ("uz-Latn", Language::UzLatn),
++        #[cfg(office_uz)]
++        ("uz-Cyrl", Language::UzCyrl),
++    ];
++    for (name, lang) in langs {
++        let mut labels_from = None;
++        let mut all_from = None;
++        let mut prev: Option<(bool, usize)> = None;
++        for w in (600..=2000).step_by(20) {
++            let h = harness(w as f32, lang);
++            let plan = office_toolbar::last_plan().expect("a plan");
++            assert!(h.query_by_label(lang.tr("Full ribbon")).is_some(), "{name} {w}: the toggle is always there");
++            if plan.shown < plan.total {
++                assert!(h.query_by_label(lang.tr("More commands")).is_some(), "{name} {w}: items moved to the menu but there is no menu button");
++            }
++            if let Some((l, s)) = prev {
++                assert!(plan.shown >= s && (plan.labels || !l), "{name} {w}: the row must only grow with the window");
++            }
++            prev = Some((plan.labels, plan.shown));
++            if plan.labels && labels_from.is_none() {
++                labels_from = Some(w);
++            }
++            if plan.shown == plan.total && all_from.is_none() {
++                all_from = Some(w);
++            }
++        }
++        println!("WIDTHS {name}: labels from {labels_from:?} px, every item in the row from {all_from:?} px");
++        assert!(labels_from.is_some() && all_from.is_some(), "{name}: the row fits at 2000 px");
++    }
++}
++
++#[test]
++fn the_toggle_switches_and_is_remembered() {
++    let _g = lock();
++    let dir = settings_dir("toggle");
++    office_toolbar::set_simple(true);
++    let mut h = harness(1600.0, Language::En);
++    h.get_by_label("Full ribbon").click();
++    h.run_steps(4);
++    assert!(!office_toolbar::simple());
++    let text = std::fs::read_to_string(dir.join("settings.toml")).expect("settings.toml written");
++    assert!(text.contains("toolbar = \"full\""), "{text}");
++    // full mode shows the pill, and it goes back
++    h.get_by_label("Simple ribbon").click();
++    h.run_steps(4);
++    assert!(office_toolbar::simple());
++    assert!(std::fs::read_to_string(dir.join("settings.toml")).expect("settings.toml").contains("toolbar = \"simple\""));
++}
++
++/// Evidence for docs/phase4/evidence/toolbar: `OFFICE_SHOT_DIR=<dir> cargo test -p gridcraft-ui-egui --test office_toolbar evidence -- --ignored`.
++/// Simple and full mode in every language the build has, a narrow window, and the full ribbon at 1024 px with a contextual tab.
++#[test]
++#[ignore]
++fn evidence_screenshots() {
++    let _g = lock();
++    settings_dir("shots");
++    let dir = std::path::PathBuf::from(std::env::var("OFFICE_SHOT_DIR").expect("OFFICE_SHOT_DIR"));
++    std::fs::create_dir_all(&dir).expect("dir");
++    let langs: Vec<(&str, Language)> = vec![
++        ("en", Language::En),
++        ("ru", Language::Ru),
++        #[cfg(office_uz)]
++        ("uz-Latn", Language::UzLatn),
++        #[cfg(office_uz)]
++        ("uz-Cyrl", Language::UzCyrl),
++    ];
++    for (name, lang) in langs {
++        for (mode, simple) in [("simple", true), ("full", false)] {
++            office_toolbar::set_simple(simple);
++            let mut h = harness(1700.0, lang);
++            h.run_steps(3);
++            h.render().expect("render").save(dir.join(format!("sheets-{mode}-{name}.png"))).expect("save");
++        }
++    }
++    office_toolbar::set_simple(true);
++    for w in [1400.0, 1000.0] {
++        let mut h = harness(w, Language::En);
++        h.run_steps(3);
++        h.render().expect("render").save(dir.join(format!("sheets-simple-en-{w}px.png"))).expect("save");
++    }
++    // the pill against a contextual tab at 1024 px: a table selection adds "Table Design"
++    office_toolbar::set_simple(false);
++    let mut h = harness(1024.0, Language::En);
++    h.state_mut().run("cell.set", serde_json::json!({"cell": "A1", "input": "x"})).expect("cell");
++    let _ = h.state_mut().run("home.formatAsTable", serde_json::json!({"range": "A1:B3"}));
++    h.run_steps(4);
++    h.render().expect("render").save(dir.join("sheets-full-en-1024px-contextual.png")).expect("save");
++}
