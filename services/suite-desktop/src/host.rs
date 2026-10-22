@@ -371,8 +371,7 @@ fn start(args: Args) -> Result<(), String> {
         // no browser shortcuts (print, save page, reload) and no context menu: they would bypass our own UI (review m6)
         .with_browser_accelerator_keys(false)
         .with_default_context_menus(false)
-        // wry's default also turns SmartScreen off; the downloads are real files now, so it is back on
-        .with_additional_browser_args("--disable-features=msWebOOUI,msPdfOOUI")
+        // SmartScreen stays off (wry's default): this WebView loads no remote content, and the downloads are the user's own documents
         // a save is a download: only our file types, never over an existing file, and recorded for Recent (review M2, m2, m6)
         .with_download_started_handler(move |_url, path| match download_target(&dl_ctx.brand, path) {
             Ok(p) => {

@@ -24,6 +24,8 @@ const txt = (key: string) => I18N.en[key];
 const SECRET = crypto.randomBytes(48);
 const b64u = (b: Buffer | string) => Buffer.from(b).toString('base64url');
 /** An HS256 token the way the issuer makes it (the server's jwt.rs: scope "convert", exp required). */
+// Long-lived on purpose (the server accepts up to 12 h): a run on a VM that is paused or whose clock steps must not outlive its tokens.
+const TTL = 11 * 3600;
 function mint(expIn: number): string {
   const head = b64u(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = b64u(JSON.stringify({ sub: 'tls-user', scope: 'convert', exp: Math.floor(Date.now() / 1000) + expIn }));
@@ -119,7 +121,7 @@ test('plain HTTP only redirects to the https public_url', async () => {
 });
 
 test('the #token= flow: conversion, fetch+blob download, PDF combine, with the token in no URL', async () => {
-  const token = mint(3600);
+  const token = mint(TTL);
   const { ctx, page, log, problems } = await open();
   await page.goto(`${base}/convert/#token=${token}`);
   await expect(page.locator('#conn-mode')).toHaveText(txt('ui.conn.mode.server'));
@@ -156,7 +158,7 @@ test('the #token= flow: conversion, fetch+blob download, PDF combine, with the t
 });
 
 test('the paste field connects, and Disconnect returns the page to local mode', async () => {
-  const token = mint(3600);
+  const token = mint(TTL);
   const { ctx, page, log } = await open();
   await page.goto(`${base}/convert/`);
   await expect(page.locator('#alert')).toContainText(txt('ui.conn.need_token'));
@@ -177,7 +179,7 @@ test('the paste field connects, and Disconnect returns the page to local mode', 
 });
 
 test('an expired token and a token signed with another secret give a clear message', async () => {
-  for (const token of [mint(-600), mint(3600).replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'))]) {
+  for (const token of [mint(-600), mint(TTL).replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'))]) {
     const { ctx, page } = await open();
     await page.goto(`${base}/convert/#token=${token}`);
     await expect(page.locator('#alert')).toContainText(txt('ui.conn.token_rejected'));
