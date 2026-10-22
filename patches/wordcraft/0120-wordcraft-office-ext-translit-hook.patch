@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 12:00:00 +0500
-Subject: [PATCH] office-ext: install hook for the Docs transliteration commands, and a column-selection arm
+Subject: [PATCH 12/13] office-ext: install hook for the Docs transliteration
+ commands, and a column-selection arm
 
 The three apps (wordcraft, wordcraft-web, wordcraft-cli) call docs_translit::install(&mut session) right after
 Session::new, behind an empty `office-ext` feature: the upstream workspace compiles the call out with clean check-cfg,
@@ -22,7 +23,7 @@ caret, and the commands would then read the empty selection as "convert the whol
  7 files changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/apps/wordcraft-cli/Cargo.toml b/apps/wordcraft-cli/Cargo.toml
-index 7f9b25d..41f3def 100644
+index 7f9b25df..41f3defb 100644
 --- a/apps/wordcraft-cli/Cargo.toml
 +++ b/apps/wordcraft-cli/Cargo.toml
 @@ -13,6 +13,10 @@ path = "src/main.rs"
@@ -37,10 +38,10 @@ index 7f9b25d..41f3def 100644
  wordcraft-doc = { workspace = true }
  wordcraft-engine = { workspace = true }
 diff --git a/apps/wordcraft-cli/src/main.rs b/apps/wordcraft-cli/src/main.rs
-index 4230645..13cee7d 100644
+index 446b902f..657d783b 100644
 --- a/apps/wordcraft-cli/src/main.rs
 +++ b/apps/wordcraft-cli/src/main.rs
-@@ -101,6 +101,8 @@ fn text_args<S: AsRef<OsStr>>(raw: &[S]) -> Result<(Vec<String>, Option<PathBuf>
+@@ -164,6 +164,8 @@ fn positionals<'a>(args: &'a [String], specs: &[OptionSpec]) -> Vec<&'a String>
  /// same paper (#1381).
  fn session(doc: wordcraft_doc::Document) -> Session {
      let mut s = Session::new(doc);
@@ -50,7 +51,7 @@ index 4230645..13cee7d 100644
      s
  }
 diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
-index 36242e7..43175ec 100644
+index 4a2a9d01..c8571529 100644
 --- a/apps/wordcraft-web/Cargo.toml
 +++ b/apps/wordcraft-web/Cargo.toml
 @@ -13,6 +13,10 @@ workspace = true
@@ -65,7 +66,7 @@ index 36242e7..43175ec 100644
  wordcraft-engine = { workspace = true }
  wordcraft-ui-egui = { workspace = true }
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 382837a..ee22981 100644
+index 1576a09b..0a1cfba6 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
 @@ -77,6 +77,8 @@ pub fn start() {
@@ -78,7 +79,7 @@ index 382837a..ee22981 100644
                      let messages = Rc::new(RefCell::new(Vec::new()));
                      let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
 diff --git a/apps/wordcraft/Cargo.toml b/apps/wordcraft/Cargo.toml
-index 911da17..eefc853 100644
+index 40e0d7a9..f31d0690 100644
 --- a/apps/wordcraft/Cargo.toml
 +++ b/apps/wordcraft/Cargo.toml
 @@ -10,6 +10,10 @@ description = "WordCraft desktop app"
@@ -93,10 +94,10 @@ index 911da17..eefc853 100644
  wordcraft-doc = { workspace = true }
  wordcraft-engine = { workspace = true }
 diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
-index f737a82..dd83650 100644
+index 1d1cbb6d..c39a515b 100644
 --- a/apps/wordcraft/src/main.rs
 +++ b/apps/wordcraft/src/main.rs
-@@ -420,6 +420,8 @@ fn main() -> eframe::Result {
+@@ -423,6 +423,8 @@ fn main() -> eframe::Result {
              let doc = if sample { wordcraft_engine::sample::sample_document() } else { wordcraft_engine::blank_document(&region) };
              let (file_dialog, dialogs) = file_dialogs::hook(&cc.egui_ctx);
              let mut session = Session::new(doc);
@@ -106,10 +107,10 @@ index f737a82..dd83650 100644
              let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
              load_prefs(&mut app);
 diff --git a/crates/engine/src/cmd/column.rs b/crates/engine/src/cmd/column.rs
-index 2fc5595..93255a4 100644
+index 1a9fe17d..a032cc2d 100644
 --- a/crates/engine/src/cmd/column.rs
 +++ b/crates/engine/src/cmd/column.rs
-@@ -175,7 +175,9 @@ pub(crate) fn dispatch(s: &mut Session, id: &str, mutates: bool, run: fn(&mut Se
+@@ -182,7 +182,9 @@ pub(crate) fn dispatch(s: &mut Session, id: &str, mutates: bool, run: fn(&mut Se
              delete(s, &segs)?;
              super::sel_result(s)
          }
@@ -120,6 +121,3 @@ index 2fc5595..93255a4 100644
          _ if id.starts_with("format.") || id.starts_with("para.") || id == "select.column" => run(s, v),
          // Pasting formatting (the format painter) leaves the text alone.
          _ if mutates && (id.starts_with("text.") || (id.starts_with("edit.paste") && id != "edit.pasteFormat")) => {
--- 
-2.50.0
-

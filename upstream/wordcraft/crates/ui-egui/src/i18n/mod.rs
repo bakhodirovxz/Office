@@ -52,7 +52,7 @@ pub struct LangInfo {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 23] = [
+pub static LANGUAGES: [LangInfo; 23 + crate::office_overlay::EXTRA_LANGS] = [
     LangInfo { code: "en", name: "English", source: "", prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
     // Simplified Chinese; `zh`, `zh-CN`, `zh-SG` and `zh-Hans-*` resolve here (see `candidates`).
     LangInfo {
@@ -131,8 +131,15 @@ pub static LANGUAGES: [LangInfo; 23] = [
     // German, neutral across Germany, Austria and Switzerland; `de`, `de-DE`, `de-AT`, `de-CH` …
     // resolve here.
     LangInfo { code: "de", name: "Deutsch", source: include_str!("de.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
-    // Russian; `ru`, `ru-RU`, `ru_RU.UTF-8` and other regions resolve here.
-    LangInfo { code: "ru", name: "Русский", source: include_str!("ru.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+    // Russian; `ru`, `ru-RU`, `ru_RU.UTF-8` and other regions resolve here. The overlay's export holds upstream's rows plus ours.
+    LangInfo {
+        code: "ru",
+        name: "Русский",
+        source: if crate::office_overlay::CATALOG_RU.is_empty() { include_str!("ru.tsv") } else { crate::office_overlay::CATALOG_RU },
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
     LangInfo {
         code: "tr",
         name: "Türkçe",
@@ -165,6 +172,25 @@ pub static LANGUAGES: [LangInfo; 23] = [
     LangInfo { code: "sv", name: "Svenska", source: include_str!("sv.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
     // Croatian; `hr`, `hr-HR` and `hr_HR.UTF-8` resolve here.
     LangInfo { code: "hr", name: "Hrvatski", source: include_str!("hr.tsv"), prefer_hans: false, editing_lang: None, catalog: OnceLock::new() },
+    // Uzbek (office overlay): only when the overlay supplies the catalogs.
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-latn",
+        name: crate::office_overlay::NAME_UZ_LATN,
+        source: crate::office_overlay::CATALOG_UZ_LATN,
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
+    #[cfg(office_uz)]
+    LangInfo {
+        code: "uz-cyrl",
+        name: crate::office_overlay::NAME_UZ_CYRL,
+        source: crate::office_overlay::CATALOG_UZ_CYRL,
+        prefer_hans: false,
+        editing_lang: None,
+        catalog: OnceLock::new(),
+    },
 ];
 
 impl LangInfo {
@@ -279,6 +305,10 @@ fn candidates(tag: &str) -> Vec<String> {
     for n in (1..=parts.len()).rev() {
         out.push(parts.get(..n).unwrap_or_default().join("-"));
     }
+    if primary == "uz" && !parts.iter().any(|p| matches!(*p, "latn" | "cyrl")) {
+        // Uzbek without a script: Latin, unless a Linux locale says `@cyrillic` (cut off above).
+        out.insert(out.len().saturating_sub(1), if tag.to_ascii_lowercase().contains("@cyrillic") { "uz-cyrl" } else { "uz-latn" }.to_string());
+    }
     if primary == "zh" && !parts.iter().any(|p| matches!(*p, "hans" | "hant")) {
         // Chinese by region when no script is given.
         let script = if parts.iter().any(|p| matches!(*p, "tw" | "hk" | "mo")) { "zh-hant" } else { "zh-hans" };
@@ -372,7 +402,7 @@ pub fn trc<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
     if pseudo::on() {
         return pseudo::mark(s);
     }
-    lang.catalog().in_context(context, s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().in_context(context, s).unwrap_or(s))
 }
 
 /// Lowercase translated interface labels and UI search queries in the current language.
@@ -400,7 +430,7 @@ pub fn tr(lang: Lang, s: &str) -> &str {
     if pseudo::on() {
         return pseudo::mark(s);
     }
-    lang.catalog().plain(s).unwrap_or(s)
+    crate::office_overlay::rebrand(lang.catalog().plain(s).unwrap_or(s))
 }
 
 /// A style's name as the interface shows it: built-in styles (`Normal`, `Heading 2`, `TOC 3`) in

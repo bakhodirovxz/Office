@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 19:50:40 +0500
-Subject: [PATCH 3/5] ui-egui: handle ImeEvent::DeleteSurrounding so Android
+Subject: [PATCH 03/13] ui-egui: handle ImeEvent::DeleteSurrounding so Android
  autocorrect replaces the word
 
 eframe's web text agent reports a keyboard that deletes text around the
@@ -17,10 +17,10 @@ document and in an equation being edited. Adds a unit test.
  1 file changed, 37 insertions(+)
 
 diff --git a/crates/ui-egui/src/keys.rs b/crates/ui-egui/src/keys.rs
-index 8723b5a..012180d 100644
+index 865059a3..85de2f08 100644
 --- a/crates/ui-egui/src/keys.rs
 +++ b/crates/ui-egui/src/keys.rs
-@@ -301,6 +301,15 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
+@@ -340,6 +340,15 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                      }
                      continue;
                  }
@@ -36,8 +36,8 @@ index 8723b5a..012180d 100644
                  egui::Event::Paste(t) => {
                      let _ = app.run("equation.type", json!({"text": t}));
                      continue;
-@@ -328,6 +337,16 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
-                     let _ = app.run("text.insert", json!({"text": text}));
+@@ -371,6 +380,16 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
+                     type_text(app, &text);
                  }
              }
 +            // A keyboard replacing a word (Android autocorrect, completion: "teh " becomes "the ")
@@ -53,7 +53,7 @@ index 8723b5a..012180d 100644
              egui::Event::Paste(t) => {
                  // Mod+Alt+V arrives as a paste too (the shell reads the clipboard): Paste Special.
                  let m = ctx.input(|i| i.modifiers);
-@@ -713,6 +732,24 @@ mod tests {
+@@ -925,6 +944,24 @@ mod tests {
          assert_eq!(a.ui.keytips, crate::keytips::Phase::Tabs);
      }
  

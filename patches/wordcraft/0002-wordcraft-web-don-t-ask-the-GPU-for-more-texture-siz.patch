@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 19:50:12 +0500
-Subject: [PATCH 2/5] wordcraft-web: don't ask the GPU for more texture size
+Subject: [PATCH 02/13] wordcraft-web: don't ask the GPU for more texture size
  than it offers
 
 egui-wgpu's default device descriptor requires max_texture_dimension_2d =
@@ -17,7 +17,7 @@ adapter reports, keeping every other limit as egui-wgpu sets it.
  1 file changed, 13 insertions(+), 4 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 55fa229..a46c92f 100644
+index 7fe71cae..8ae74659 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
 @@ -31,10 +31,19 @@ pub fn start() {

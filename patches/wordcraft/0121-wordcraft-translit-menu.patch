@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 20 Oct 2026 15:40:47 +0500
-Subject: [PATCH] ui-egui: Transliterate menu in Review > Language and in the
- text context menu, with a status line
+Subject: [PATCH 13/13] ui-egui: Transliterate menu in Review > Language and in
+ the text context menu, with a status line
 
 Menu entries "Transliterate" (Latin to Cyrillic, Cyrillic to Latin, Auto-detect) in the Review tab and in the context menu, calling the three
 transliteration commands (tools.translitCyrl, tools.translitLatn, tools.translitAuto). Labels go through the interface-language
@@ -14,10 +14,10 @@ lookup; the result is shown as a status line ("{n} ... converted", "Nothing to c
  3 files changed, 28 insertions(+)
 
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index d1747a92..e79d0756 100644
+index 9070048d..3b385317 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
-@@ -2891,6 +2891,9 @@ fn context_menu(app: &mut WordApp, ui: &mut Ui) {
+@@ -3180,6 +3180,9 @@ fn context_menu(app: &mut WordApp, ui: &mut Ui) {
      item(ui, app, "Paragraph…", "ui.dialog", json!({"name": "paragraph"}));
      item(ui, app, "Link…", "ui.dialog", json!({"name": "link"}));
      item(ui, app, "New Comment", "review.newComment", json!({}));
@@ -28,7 +28,7 @@ index d1747a92..e79d0756 100644
          ui.separator();
          item(ui, app, tl!("Update Field"), "references.updateFields", json!({}));
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 3769d366..daf9c381 100644
+index 3c5b0246..6b9712d7 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -20,6 +20,18 @@ macro_rules! tl {
@@ -50,7 +50,7 @@ index 3769d366..daf9c381 100644
  pub mod a11y;
  pub mod a11y_pane;
  pub mod async_saves;
-@@ -795,6 +807,11 @@ impl WordApp {
+@@ -901,6 +913,11 @@ impl WordApp {
              self.select_inserted_picture(&r);
          }
          let r = system_clipboard::explain(self, id, r);
@@ -63,10 +63,10 @@ index 3769d366..daf9c381 100644
          if id == "file.accessibility" && r.is_ok() {
              self.session.view.accessibility_pane = true;
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index bc1f11a0..fa09d27e 100644
+index 1a457da0..76aa473e 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
-@@ -654,6 +654,13 @@ pub(crate) fn caret_missing_dictionary(app: &WordApp) -> Option<&'static str> {
+@@ -835,6 +835,13 @@ pub(crate) fn caret_unreadable_dictionary(app: &WordApp) -> Option<(std::path::P
  /// (French, German…) shows checked above it. Set Proofing Language… opens the Language dialog
  /// with every language and Set As Default, and Language Preferences… opens Options › Language
  /// (#860: the short list alone left no way to pick French).
@@ -80,7 +80,7 @@ index bc1f11a0..fa09d27e 100644
  pub(crate) fn language_menu(ui: &mut Ui, app: &mut WordApp) {
      let st = app.session.run("format.state", &json!({})).unwrap_or_default();
      // The selection's own language; else (nothing set on the text) the one it gets from its
-@@ -1771,6 +1778,7 @@ fn review(app: &mut WordApp, ui: &mut Ui) {
+@@ -2001,6 +2008,7 @@ fn review(app: &mut WordApp, ui: &mut Ui) {
      group(ui, "Language", None, app, |ui, app| {
          big(ui, app, "translate", "Translate", "review.translate", json!({}), false);
          menu_button(ui, app, "language", Some("Language"), "Language", true, "", language_menu);

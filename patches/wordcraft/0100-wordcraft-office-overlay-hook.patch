@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:00:11 +0500
-Subject: [PATCH 100/102] ui-egui, app: office overlay hook (name, icon,
- version, attribution)
+Subject: [PATCH 06/13] ui-egui, app: office overlay hook (name, icon, version,
+ attribution)
 
 Adds a build-script/overlay module pair (build_office.rs, office_overlay.rs) that renders
 OFFICE_OVERLAY_DIR/overlay.env into constants, and routes the app name, window title,
@@ -26,10 +26,10 @@ through rebrand(), so every catalog string shows the overlay's name and the upst
  create mode 100644 crates/ui-egui/src/office_overlay_tests.rs
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index a46c92f..382837a 100644
+index 8ae74659..1576a09b 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
-@@ -105,7 +105,10 @@ pub fn start() {
+@@ -115,7 +115,10 @@ pub fn start() {
          if let Some(el) = document.get_element_by_id(LOADING_ID) {
              match result {
                  Ok(()) => el.remove(),
@@ -42,7 +42,7 @@ index a46c92f..382837a 100644
          }
      });
 diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
-index e7b5330..f737a82 100644
+index db5b2488..1d1cbb6d 100644
 --- a/apps/wordcraft/src/main.rs
 +++ b/apps/wordcraft/src/main.rs
 @@ -260,7 +260,7 @@ fn app_icon() -> Option<egui::IconData> {
@@ -73,7 +73,7 @@ index e7b5330..f737a82 100644
              .with_inner_size([1440.0, 920.0])
              .with_min_inner_size([760.0, 480.0])
 diff --git a/crates/ui-egui/build.rs b/crates/ui-egui/build.rs
-index f40007f..047ee7a 100644
+index f40007fb..047ee7a6 100644
 --- a/crates/ui-egui/build.rs
 +++ b/crates/ui-egui/build.rs
 @@ -10,9 +10,13 @@
@@ -92,7 +92,7 @@ index f40007f..047ee7a 100644
          serde_json::from_str::<Value>(t).map_err(|e| e.to_string())
 diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
 new file mode 100644
-index 0000000..81e68ae
+index 00000000..81e68ae6
 --- /dev/null
 +++ b/crates/ui-egui/build_office.rs
 @@ -0,0 +1,119 @@
@@ -216,10 +216,10 @@ index 0000000..81e68ae
 +    o
 +}
 diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
-index c057992..b07b7ed 100644
+index b5b63d14..87554859 100644
 --- a/crates/ui-egui/src/chrome.rs
 +++ b/crates/ui-egui/src/chrome.rs
-@@ -347,7 +347,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+@@ -380,7 +380,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
              // Centred title.
              let title = if !app.has_document() {
                  // No document open (#1129): the app's name alone.
@@ -229,10 +229,10 @@ index c057992..b07b7ed 100644
                  format!(
                      "{} — {}",
 diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
-index c636f4c..a691242 100644
+index ae635970..24779881 100644
 --- a/crates/ui-egui/src/dialogs.rs
 +++ b/crates/ui-egui/src/dialogs.rs
-@@ -2382,7 +2382,10 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+@@ -2685,7 +2685,10 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                  _ => {
                      ui.label(egui::RichText::new(tl!("WordCraft")).font(semibold(22.0)));
                      let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
@@ -245,7 +245,7 @@ index c636f4c..a691242 100644
                          "A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team."
                      ));
 diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
-index 092e376..10cc80a 100644
+index 092e3768..10cc80a2 100644
 --- a/crates/ui-egui/src/i18n/mod.rs
 +++ b/crates/ui-egui/src/i18n/mod.rs
 @@ -372,7 +372,7 @@ pub fn trc<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
@@ -267,7 +267,7 @@ index 092e376..10cc80a 100644
  
  /// A style's name as the interface shows it: built-in styles (`Normal`, `Heading 2`, `TOC 3`) in
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 8749972..f1aa1a9 100644
+index 9925f4bd..3ec938e0 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -63,6 +63,7 @@ pub mod keys;
@@ -278,7 +278,7 @@ index 8749972..f1aa1a9 100644
  pub mod options;
  pub mod panes;
  pub mod paste_picture;
-@@ -2035,9 +2036,9 @@ impl WordApp {
+@@ -2246,9 +2247,9 @@ impl WordApp {
              ctx.open_url(egui::OpenUrl::new_tab(url));
          }
          let title = if self.has_document() {
@@ -290,7 +290,7 @@ index 8749972..f1aa1a9 100644
          };
          if title != self.sent_title {
              ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
-@@ -2446,6 +2447,8 @@ fn control_click_as_secondary(events: &mut [egui::Event], held: &mut bool) {
+@@ -2690,6 +2691,8 @@ fn control_click_as_secondary(events: &mut [egui::Event], held: &mut bool) {
      }
  }
  
@@ -301,7 +301,7 @@ index 8749972..f1aa1a9 100644
  
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
 new file mode 100644
-index 0000000..593f574
+index 00000000..593f574d
 --- /dev/null
 +++ b/crates/ui-egui/src/office_overlay.rs
 @@ -0,0 +1,104 @@
@@ -411,7 +411,7 @@ index 0000000..593f574
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
 new file mode 100644
-index 0000000..349c85e
+index 00000000..349c85e8
 --- /dev/null
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -0,0 +1,27 @@

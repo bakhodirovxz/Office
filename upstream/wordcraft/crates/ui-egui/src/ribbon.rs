@@ -279,7 +279,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     // Format) may be stored while the selection moved away, and a tab may have been hidden.
     let user_tabs = app.session.ribbon.tabs().into_owned();
     let mut tabs: Vec<(String, bool)> = vec![("File".to_string(), false)];
-    tabs.extend(user_tabs.iter().filter(|e| !e.hidden).map(|e| (e.name.clone(), e.custom)));
+    tabs.extend(
+        user_tabs
+            .iter()
+            .filter(|e| !e.hidden && (crate::office_overlay::ZOTERO || e.custom || e.name != "Zotero"))
+            .map(|e| (e.name.clone(), e.custom)),
+    );
     for ct in contextual_tabs(&app.session) {
         if ct == "Outlining" {
             tabs.insert(1.min(tabs.len()), (ct.to_string(), false));
@@ -315,8 +320,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                     let share_button = if level < 2 { share_full } else { 30.0 };
                     let editing = crate::widgets::icon_text_button_width(ui, editing_label, regular(12.0), true, labels);
                     let comment = crate::widgets::icon_text_button_width(ui, comments, regular(12.0), false, labels);
-                    // The gaps (6 + 4 + 8) and the strip's margin.
-                    spaced(share_button) + spaced(editing) + spaced(comment) + 18.0 + 12.0
+                    // The gaps (4 + 8) and the strip's margin; Share and its gap of 6 only when the overlay shows it.
+                    let share_part = if crate::office_overlay::SHARE { spaced(share_button) + 6.0 } else { 0.0 };
+                    share_part + spaced(editing) + spaced(comment) + 12.0 + 12.0
                 };
                 let button_levels = [button_widths(0), button_widths(1), button_widths(2)];
                 let labels: Vec<&str> = tabs.iter().map(|(tab, custom)| if *custom { tab.as_str() } else { tl!(tab) }).collect();
@@ -337,26 +343,28 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                     // tabs took clicks that did nothing, so the empty window had no way back to
                     // the Start screen (#3045).
                     ui.add_enabled_ui(app.has_document(), |ui| {
-                        let (share_size, share_text) =
-                            if plan.buttons < 2 { (((share_w + 36.0).max(74.0), 24.0), true) } else { ((30.0, 24.0), false) };
-                        let (r, resp) = ui.allocate_exact_size(vec2(share_size.0, share_size.1), Sense::click());
-                        ui.painter().rect_filled(r, 4.0, if resp.hovered() { t.accent_text } else { t.accent });
-                        let icon_x = if share_text { r.min.x + 14.0 } else { r.center().x };
-                        icons::paint(
-                            ui.painter(),
-                            Rect::from_center_size(pos2(icon_x, r.center().y), vec2(14.0, 14.0)),
-                            "share",
-                            t.on_accent,
-                            t.on_accent,
-                        );
-                        if share_text {
-                            ui.painter().text(pos2(r.min.x + 26.0, r.center().y), Align2::LEFT_CENTER, share, medium(12.0), t.on_accent);
+                        if crate::office_overlay::SHARE {
+                            let (share_size, share_text) =
+                                if plan.buttons < 2 { (((share_w + 36.0).max(74.0), 24.0), true) } else { ((30.0, 24.0), false) };
+                            let (r, resp) = ui.allocate_exact_size(vec2(share_size.0, share_size.1), Sense::click());
+                            ui.painter().rect_filled(r, 4.0, if resp.hovered() { t.accent_text } else { t.accent });
+                            let icon_x = if share_text { r.min.x + 14.0 } else { r.center().x };
+                            icons::paint(
+                                ui.painter(),
+                                Rect::from_center_size(pos2(icon_x, r.center().y), vec2(14.0, 14.0)),
+                                "share",
+                                t.on_accent,
+                                t.on_accent,
+                            );
+                            if share_text {
+                                ui.painter().text(pos2(r.min.x + 26.0, r.center().y), Align2::LEFT_CENTER, share, medium(12.0), t.on_accent);
+                            }
+                            resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, share));
+                            if resp.on_hover_text(tl!("Export a copy to share (PDF, Word document)")).clicked() {
+                                let _ = app.run("ui.backstage", json!({"value": true, "page": "export"}));
+                            }
+                            ui.add_space(6.0);
                         }
-                        resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, share));
-                        if resp.on_hover_text(tl!("Export a copy to share (PDF, Word document)")).clicked() {
-                            let _ = app.run("ui.backstage", json!({"value": true, "page": "export"}));
-                        }
-                        ui.add_space(6.0);
                         let track = app.session.doc.settings.track_changes;
                         let mode = if plan.buttons == 0 {
                             crate::widgets::icon_text_menu_button(ui, "pencil", editing_label, regular(12.0))
@@ -827,6 +835,13 @@ pub(crate) fn caret_unreadable_dictionary(app: &WordApp) -> Option<(std::path::P
 /// (French, German…) shows checked above it. Set Proofing Language… opens the Language dialog
 /// with every language and Set As Default, and Language Preferences… opens Options › Language
 /// (#860: the short list alone left no way to pick French).
+/// Uzbek Latin/Cyrillic transliteration (the commands come from the office extension; greyed out without it).
+pub(crate) fn translit_menu(ui: &mut Ui, app: &mut WordApp) {
+    mi(ui, app, "Latin to Cyrillic", "tools.translitCyrl", json!({}));
+    mi(ui, app, "Cyrillic to Latin", "tools.translitLatn", json!({}));
+    mi(ui, app, "Auto-detect", "tools.translitAuto", json!({}));
+}
+
 pub(crate) fn language_menu(ui: &mut Ui, app: &mut WordApp) {
     let st = app.session.run("format.state", &json!({})).unwrap_or_default();
     // The selection's own language; else (nothing set on the text) the one it gets from its
@@ -1993,6 +2008,7 @@ fn review(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Language", None, app, |ui, app| {
         big(ui, app, "translate", "Translate", "review.translate", json!({}), false);
         menu_button(ui, app, "language", Some("Language"), "Language", true, "", language_menu);
+        menu_button(ui, app, "language", Some("Transliterate"), "Transliterate", true, "", translit_menu);
     });
     group(ui, "Comments", None, app, |ui, app| {
         big(ui, app, "newComment", "New\nComment", "review.newComment", json!({}), false);
@@ -2232,7 +2248,9 @@ fn outlining(app: &mut WordApp, ui: &mut Ui) {
 fn help(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Help", None, app, |ui, app| {
         big(ui, app, "help", "Help", "ui.dialog", json!({"name": "about"}), false);
-        big(ui, app, "discord", "Community\nDiscord", "ui.discord", json!({}), false);
+        if crate::office_overlay::COMMUNITY {
+            big(ui, app, "discord", "Community\nDiscord", "ui.discord", json!({}), false);
+        }
     });
     group(ui, "Agents", None, app, |ui, app| {
         big(ui, app, "macros", "Commands", "ui.dialog", json!({"name": "commands"}), false);

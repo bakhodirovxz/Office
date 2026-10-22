@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 20:38:14 +0500
-Subject: [PATCH 5/5] wordcraft-web: hand the unsaved document to the host when
- the page is hidden
+Subject: [PATCH 05/13] wordcraft-web: hand the unsaved document to the host
+ when the page is hidden
 
 A phone browser kills or freezes a backgrounded tab without warning, and
 a lost WebGL context cannot be redrawn, so work in the editor could be
@@ -22,7 +22,7 @@ host can reload the page on its copy.
  1 file changed, 67 insertions(+), 4 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 943434c..9919be3 100644
+index 943434c9..9919be3e 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -9,8 +9,12 @@

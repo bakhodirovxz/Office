@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: bakhodirovxz <bohodirovasadbek1@gmail.com>
 Date: Thu, 15 Oct 2026 19:50:07 +0500
-Subject: [PATCH 1/5] wordcraft-web: add an opt-in postMessage host bridge
+Subject: [PATCH 01/13] wordcraft-web: add an opt-in postMessage host bridge
  (?host=parent)
 
 A page that frames WordCraft in an <iframe> can now open a document in it,
@@ -30,29 +30,29 @@ empty document instead of File > Home.
  create mode 100644 apps/wordcraft-web/src/web/host.rs
 
 diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
-index d9b44aa..36242e7 100644
+index 9152db33..4a2a9d01 100644
 --- a/apps/wordcraft-web/Cargo.toml
 +++ b/apps/wordcraft-web/Cargo.toml
 @@ -29,4 +29,4 @@ rfd = { workspace = true }
  wasm-bindgen = "0.2"
  wasm-bindgen-futures = "0.4"
  js-sys = "0.3"
--web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList"] }
-+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "MessageEvent", "UrlSearchParams"] }
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "UrlSearchParams"] }
 diff --git a/apps/wordcraft-web/src/main.rs b/apps/wordcraft-web/src/main.rs
-index 2f4283d..d0253bb 100644
+index 39c2f981..9dac6906 100644
 --- a/apps/wordcraft-web/src/main.rs
 +++ b/apps/wordcraft-web/src/main.rs
-@@ -7,6 +7,7 @@
- //! Differences from the desktop app: no TCP control channel; Open and Insert › Pictures use the
+@@ -8,6 +8,7 @@
  //! browser file picker (bytes arrive through `Services::inbox`); Save and Export download.
+ //! Preferences (theme, interface size, editing options…) are kept in `localStorage` (`prefs`).
  //! URL flags: `?webgl` forces WebGL2; `?sample` opens the sample document.
 +//! `?host=parent` (inside an `<iframe>`) talks to the embedding page by `postMessage` (`web/host.rs`).
  #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
  
- #[cfg(target_arch = "wasm32")]
+ #[cfg(any(target_arch = "wasm32", test))]
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 0e40099..55fa229 100644
+index b2e698ca..7fe71cae 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
 @@ -13,6 +13,7 @@ const DOC_EXTS: &[&str] = &["docx", "docm", "dotx", "dotm", "doc", "dot", "odt",
@@ -90,7 +90,7 @@ index 0e40099..55fa229 100644
          let result = eframe::WebRunner::new()
              .start(
                  canvas,
-@@ -56,23 +65,34 @@ pub fn start() {
+@@ -56,12 +65,16 @@ pub fn start() {
                      // The browser's locale picks the new document's paper, the units and the
                      // decimal separator (#838).
                      let region = wordcraft_ui_egui::i18n::system_region();
@@ -109,17 +109,20 @@ index 0e40099..55fa229 100644
                      // Pasted pictures wait apart from dropped files: the app inserts one only when the page is the edit target (#1349).
                      app.services.pasted = Some(pasted);
                      app.autosave = false;
+@@ -76,13 +89,20 @@ pub fn start() {
+                     }
+                     let prefs = crate::prefs::PrefsSync::new(stored);
                      // No document to show: start on File › Home, as the desktop app does (#766).
 -                    if !sample {
 +                    // In host mode the parent sends the document to edit.
 +                    if !sample && app_bridge.is_none() {
                          app.start_screen();
                      }
--                    Ok(Box::new(WebShell { app, inbox, messages }))
+-                    Ok(Box::new(WebShell { app, inbox, messages, prefs }))
 +                    if let Some(bridge) = &app_bridge {
 +                        bridge.post_ready();
 +                    }
-+                    Ok(Box::new(WebShell { app, inbox, messages, bridge: app_bridge }))
++                    Ok(Box::new(WebShell { app, inbox, messages, prefs, bridge: app_bridge }))
                  }),
              )
              .await;
@@ -129,7 +132,7 @@ index 0e40099..55fa229 100644
          if let Some(el) = document.get_element_by_id(LOADING_ID) {
              match result {
                  Ok(()) => el.remove(),
-@@ -86,12 +106,18 @@ fn query() -> String {
+@@ -96,6 +116,11 @@ fn query() -> String {
      web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
  }
  
@@ -141,17 +144,18 @@ index 0e40099..55fa229 100644
  /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)
  /// and feed them through the inbox.
  struct WebShell {
-     app: WordApp,
+@@ -103,6 +128,7 @@ struct WebShell {
      inbox: Inbox,
      messages: Rc<RefCell<Vec<String>>>,
+     prefs: crate::prefs::PrefsSync,
 +    bridge: Option<host::Bridge>,
  }
  
- impl eframe::App for WebShell {
-@@ -116,6 +142,9 @@ impl eframe::App for WebShell {
-             self.app.status(msg);
+ fn local_storage() -> Option<web_sys::Storage> {
+@@ -147,6 +173,9 @@ impl eframe::App for WebShell {
+                 None => log::warn!("preferences: browser storage is unavailable"),
+             }
          }
-         self.app.logic(ctx);
 +        if let Some(bridge) = &self.bridge {
 +            bridge.sync(ctx, &mut self.app);
 +        }
@@ -160,7 +164,7 @@ index 0e40099..55fa229 100644
      fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
 new file mode 100644
-index 0000000..943434c
+index 00000000..943434c9
 --- /dev/null
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -0,0 +1,175 @@

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 17 Oct 2026 16:01:41 +0500
-Subject: [PATCH 102/102] ui-egui: append the overlay's fallback fonts last in
+Subject: [PATCH 08/13] ui-egui: append the overlay's fallback fonts last in
  every interface family
 
 font_definitions_language appends the Noto Sans / Noto Sans Mono subsets (office-fallback-sans,
@@ -13,7 +13,7 @@ upstream's metrics stay unchanged. Adds the cmap coverage test fallback_font_cov
  2 files changed, 66 insertions(+)
 
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 349c85e..76210c1 100644
+index 349c85e8..76210c1b 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
 @@ -25,3 +25,68 @@ fn the_about_blurb_loses_its_upstream_sentence_through_the_catalog_lookup() {
@@ -86,10 +86,10 @@ index 349c85e..76210c1 100644
 +    }
 +}
 diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
-index d67361e..80bd66d 100644
+index b9c12394..48308f74 100644
 --- a/crates/ui-egui/src/theme.rs
 +++ b/crates/ui-egui/src/theme.rs
-@@ -514,6 +514,7 @@ pub fn font_definitions_language(prefer_hans: bool, prefer_korean: bool, system_
+@@ -574,6 +574,7 @@ pub fn font_definitions_language(prefer_hans: bool, prefer_korean: bool, system_
      #[cfg(target_arch = "wasm32")]
      let _ = system_cjk;
      // Symbols and emoji fall back to egui's defaults (kept in the families).

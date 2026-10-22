@@ -1,7 +1,7 @@
 repo=wordcraft
 url=https://github.com/storytold/wordcraft
-sha=eae242176108d328c5dd81fbc10370c51ab90706
-tree=b7052e656b77dccf3a0a278b70c686a52c8502f3
-date=2026-10-15T21:24:56-06:00
-describe=v0.7.0-274-geae2421
-synced=2026-10-17
+sha=2e6db0bd88795e80375176c01665cff7dbe2b057
+tree=a75fd56c09b03af2d2c1190a82d5404c040ebcc7
+date=2026-10-19T22:18:50-04:00
+describe=v0.9.0
+synced=2026-10-22
