@@ -1,0 +1,119 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 12:00:00 +0500
+Subject: [PATCH 13/13] office-ext: second install call (docs-office) and the ribbon/icon hook
+
+The three apps call docs_office::install(&mut session) after docs_translit::install, behind the same empty `office-ext` feature
+(`cargo xt gen-domain` adds the dependency). The desktop and web apps also hand docs-office's two UI functions to ui-egui once:
+office_overlay::set_ext(ribbon_frame, paint_icon). ribbon.rs calls office_overlay::ribbon_frame(&mut session) at the top of
+`show` every frame (the simple-ribbon preset is applied after the preferences are loaded, and again when the interface language
+changes); icons.rs asks office_overlay::paint_icon first (docs-office draws the Fluent bitmaps for ten command-icon names, false for
+every other). With no extension set both calls do nothing.
+---
+ apps/wordcraft-cli/src/main.rs       |  2 ++
+ apps/wordcraft-web/src/web.rs        |  4 ++++
+ apps/wordcraft/src/main.rs           |  4 ++++
+ crates/ui-egui/src/icons.rs          |  3 +++
+ crates/ui-egui/src/office_overlay.rs | 22 ++++++++++++++++++++++
+ crates/ui-egui/src/ribbon.rs         |  1 +
+ 6 files changed, 36 insertions(+)
+
+diff --git a/apps/wordcraft-cli/src/main.rs b/apps/wordcraft-cli/src/main.rs
+index 657d783..5322014 100644
+--- a/apps/wordcraft-cli/src/main.rs
++++ b/apps/wordcraft-cli/src/main.rs
+@@ -166,6 +166,8 @@ fn session(doc: wordcraft_doc::Document) -> Session {
+     let mut s = Session::new(doc);
+     #[cfg(feature = "office-ext")]
+     docs_translit::install(&mut s);
++    #[cfg(feature = "office-ext")]
++    docs_office::install(&mut s);
+     s.system_region = system_region();
+     s
+ }
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 0a1cfba..54c5167 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -79,6 +79,10 @@ pub fn start() {
+                     let mut session = Session::new(doc);
+                     #[cfg(feature = "office-ext")]
+                     docs_translit::install(&mut session);
++                    #[cfg(feature = "office-ext")]
++                    docs_office::install(&mut session);
++                    #[cfg(feature = "office-ext")]
++                    wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
+                     session.system_region = region;
+                     let messages = Rc::new(RefCell::new(Vec::new()));
+                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index c39a515..dd07630 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -425,6 +425,10 @@ fn main() -> eframe::Result {
+             let mut session = Session::new(doc);
+             #[cfg(feature = "office-ext")]
+             docs_translit::install(&mut session);
++            #[cfg(feature = "office-ext")]
++            docs_office::install(&mut session);
++            #[cfg(feature = "office-ext")]
++            wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
+             session.system_region = region;
+             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+             load_prefs(&mut app);
+diff --git a/crates/ui-egui/src/icons.rs b/crates/ui-egui/src/icons.rs
+index 4a462a0..dae0f08 100644
+--- a/crates/ui-egui/src/icons.rs
++++ b/crates/ui-egui/src/icons.rs
+@@ -73,6 +73,9 @@ impl Pen<'_> {
+ 
+ /// Paint icon `name` into `r`. `c` is the line colour; the accent comes from the theme.
+ pub fn paint(p: &Painter, r: Rect, name: &str, c: Color32, accent: Color32) {
++    if crate::office_overlay::paint_icon(p, r, name, c) {
++        return;
++    }
+     let pen = Pen { p, r, c, a: accent, w: 1.25 };
+     if let Some(kind) = name.strip_prefix("shape.")
+         && shape(&pen, kind)
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 593f574..91bb4d5 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -102,3 +102,25 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
+         }
+     }
+ }
++
++/// What the domain's extension crate (docs-office) hooks into the ribbon, set once at start-up by the apps behind `office-ext`:
++/// a per-frame callback (interface language code, catalog lookup) and a painter for the icons upstream has none of.
++type FrameHook = fn(&mut wordcraft_engine::Session, &str, &dyn Fn(&str) -> String);
++type IconHook = fn(&egui::Painter, egui::Rect, &str, egui::Color32) -> bool;
++static EXT: std::sync::OnceLock<(FrameHook, IconHook)> = std::sync::OnceLock::new();
++
++pub fn set_ext(frame: FrameHook, icon: IconHook) {
++    let _ = EXT.set((frame, icon));
++}
++
++/// Called by the ribbon every frame; a no-op without an extension.
++pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
++    if let Some((frame, _)) = EXT.get() {
++        frame(s, &lang_code(), &|k| crate::i18n::t(k).to_string());
++    }
++}
++
++/// Draw icon `name` if the extension has one; false lets upstream draw it.
++pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
++    EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
++}
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index c54ce73..2621eab 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -247,6 +247,7 @@ pub fn in_table_public(app: &WordApp) -> bool {
+ }
+ 
+ pub fn show(app: &mut WordApp, ui: &mut Ui) {
++    crate::office_overlay::ribbon_frame(&mut app.session);
+     let t = Tokens::get(ui.ctx());
+     if app.session.view.read_mode {
+         reading_toolbar(app, ui, t);

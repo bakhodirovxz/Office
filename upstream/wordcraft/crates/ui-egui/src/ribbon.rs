@@ -247,6 +247,7 @@ pub fn in_table_public(app: &WordApp) -> bool {
 }
 
 pub fn show(app: &mut WordApp, ui: &mut Ui) {
+    crate::office_overlay::ribbon_frame(&mut app.session);
     let t = Tokens::get(ui.ctx());
     if app.session.view.read_mode {
         reading_toolbar(app, ui, t);

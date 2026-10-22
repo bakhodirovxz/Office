@@ -79,6 +79,10 @@ pub fn start() {
                     let mut session = Session::new(doc);
                     #[cfg(feature = "office-ext")]
                     docs_translit::install(&mut session);
+                    #[cfg(feature = "office-ext")]
+                    docs_office::install(&mut session);
+                    #[cfg(feature = "office-ext")]
+                    wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
                     session.system_region = region;
                     let messages = Rc::new(RefCell::new(Vec::new()));
                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());

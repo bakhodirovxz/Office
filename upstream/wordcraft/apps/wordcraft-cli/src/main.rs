@@ -166,6 +166,8 @@ fn session(doc: wordcraft_doc::Document) -> Session {
     let mut s = Session::new(doc);
     #[cfg(feature = "office-ext")]
     docs_translit::install(&mut s);
+    #[cfg(feature = "office-ext")]
+    docs_office::install(&mut s);
     s.system_region = system_region();
     s
 }

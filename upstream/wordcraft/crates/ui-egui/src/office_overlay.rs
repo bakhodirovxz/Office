@@ -102,3 +102,25 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
         }
     }
 }
+
+/// What the domain's extension crate (docs-office) hooks into the ribbon, set once at start-up by the apps behind `office-ext`:
+/// a per-frame callback (interface language code, catalog lookup) and a painter for the icons upstream has none of.
+type FrameHook = fn(&mut wordcraft_engine::Session, &str, &dyn Fn(&str) -> String);
+type IconHook = fn(&egui::Painter, egui::Rect, &str, egui::Color32) -> bool;
+static EXT: std::sync::OnceLock<(FrameHook, IconHook)> = std::sync::OnceLock::new();
+
+pub fn set_ext(frame: FrameHook, icon: IconHook) {
+    let _ = EXT.set((frame, icon));
+}
+
+/// Called by the ribbon every frame; a no-op without an extension.
+pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
+    if let Some((frame, _)) = EXT.get() {
+        frame(s, &lang_code(), &|k| crate::i18n::t(k).to_string());
+    }
+}
+
+/// Draw icon `name` if the extension has one; false lets upstream draw it.
+pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
+    EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
+}
