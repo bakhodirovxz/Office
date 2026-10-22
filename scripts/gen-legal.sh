@@ -55,6 +55,13 @@ Third-party material added by this layer
 
 $(sed 's/^/  /' assets/fonts/fallback/OFL.txt)
 
+- Fluent UI System Icons, a subset of 84 SVG icons (assets/icons/fluent/svg/, version 1.1.344 of
+  @fluentui/svg-icons), unmodified: Copyright (c) 2020 Microsoft Corporation, MIT License. Used for the toolbar
+  icons of our layer. Only the glyphs are used, no Microsoft Office logo or artwork. Provenance and checksums:
+  assets/icons/fluent/SOURCE.md. The licence text follows.
+
+$(sed 's/^/  /' assets/icons/fluent/LICENSE)
+
 Third-party material carried by the vendored applications (full lists in each upstream NOTICE below)
 
 - Foxit standard-14 substitute fonts (FoxitSans, FoxitFixed, FoxitDingbats and their styles, in
