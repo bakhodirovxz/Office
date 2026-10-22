@@ -24,6 +24,7 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
 wordcraft-fonts = { path = "../../../../upstream/wordcraft/crates/fonts" }
 docs-translit = { path = "../../crates/docs-translit", optional = true }
+docs-office = { path = "../../crates/docs-office", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 eframe = { version = "0.36", default-features = false , features = ["default_fonts", "wgpu", "accesskit"] }
@@ -35,5 +36,5 @@ web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlE
 
 # office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
 [features]
-office-ext = ["dep:docs-translit"]
+office-ext = ["dep:docs-translit", "dep:docs-office"]
 default = ["office-ext"]

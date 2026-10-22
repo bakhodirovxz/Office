@@ -1,0 +1,26 @@
+# Phase 4 WP2/WP4: the simplified Docs ribbon (a preset through Customize Ribbon), its toggle, and the command-hook seam.
+# Our crate: the logic lives here; upstream only gets the install hook (patches/wordcraft/0120) and the frame/icon hook (0122).
+[package]
+name = "docs-office"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Simplified ribbon preset, simple/full toggle and command hooks for the wordcraft engine"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
+egui = "0.36"
+serde_json = { version = "1", features = ["float_roundtrip"] }
+
+# The shared per-user settings (WP5): desktop only, the web build has no toggle and no file.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+suite-core = { path = "../../../../crates/suite-core" }
+
+[dev-dependencies]
+wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+docs-translit = { path = "../docs-translit" }

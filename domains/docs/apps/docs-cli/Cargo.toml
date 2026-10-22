@@ -24,8 +24,9 @@ wordcraft-zotero = { path = "../../../../upstream/wordcraft/crates/zotero" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 sys-locale = "0.3"
 docs-translit = { path = "../../crates/docs-translit", optional = true }
+docs-office = { path = "../../crates/docs-office", optional = true }
 
 # office overlay (patches/wordcraft/0120): the domain build turns this on and adds the docs-translit dependency
 [features]
-office-ext = ["dep:docs-translit"]
+office-ext = ["dep:docs-translit", "dep:docs-office"]
 default = ["office-ext"]

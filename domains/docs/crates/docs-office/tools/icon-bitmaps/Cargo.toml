@@ -1,0 +1,12 @@
+# Dev tool, not part of any build: rasterises the Fluent icons the Docs ribbon uses into 8-bit alpha masks (assets/icons.bin).
+# Run: scripts/gen-docs-icon-bitmaps.sh. resvg is a dev dependency only; no SVG code reaches the apps (docs/phase4/icons-wasm.md).
+[package]
+name = "icon-bitmaps"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+resvg = { version = "0.45", default-features = false }
+
+[workspace]

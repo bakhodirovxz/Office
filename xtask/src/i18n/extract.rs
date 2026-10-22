@@ -726,7 +726,11 @@ fn deck_universe(root: &Path) -> Universe {
 
 /// UI strings that our carried UI patches (`patches/*/0121`) add. Upstream's catalogs do not hold them, so without this list
 /// every extract would mark their rows obsolete.
-const OWN: [(&str, &[&str]); 9] = [
+const OWN: [(&str, &[&str]); 12] = [
+    // Phase 4 WP2 (domains/docs/crates/docs-office): the ribbon preset's toggle labels and group name.
+    ("Full ribbon", &["wordcraft"]),
+    ("Simple ribbon", &["wordcraft"]),
+    ("History", &["wordcraft"]),
     ("Transliterate", &["wordcraft", "gridcraft", "deckcraft"]),
     (
         "Latin to Cyrillic",
