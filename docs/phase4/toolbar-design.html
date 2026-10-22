@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="uz-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toolbar mock-ups</title>
+<!-- Phase 4 WP1. Static mock-ups of docs/phase4/toolbar-design.md. No external resources. MIT OR Apache-2.0. -->
+<style>
+:root {
+  --bg: #f4f5f7; --card: #ffffff; --chrome: #eceef1; --ribbon: #fbfbfc; --text: #1d2327; --dim: #5b6670;
+  --border: #d5dae0; --accent: #0f766e; --accent-soft: #e3f3f1; --ours: #0f766e; --grey: #a7b0b8; --warn: #9a5b00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15181b; --card: #1e2226; --chrome: #23282d; --ribbon: #1b1f23; --text: #e6e9ec; --dim: #9aa5ae;
+    --border: #3a4148; --accent: #5ec4b6; --accent-soft: #1d3532; --ours: #5ec4b6; --grey: #5d666e; --warn: #e0a24a;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15181b; --card: #1e2226; --chrome: #23282d; --ribbon: #1b1f23; --text: #e6e9ec; --dim: #9aa5ae;
+  --border: #3a4148; --accent: #5ec4b6; --accent-soft: #1d3532; --ours: #5ec4b6; --grey: #5d666e; --warn: #e0a24a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 32px 0 6px; }
+p, li { color: var(--dim); max-width: 80ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 4px; font-size: 13px; color: var(--dim); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: var(--card); }
+.sw.ours { border: 2px solid var(--ours); background: var(--accent-soft); }
+.sw.dead { background: repeating-linear-gradient(45deg, var(--card), var(--card) 3px, var(--grey) 3px, var(--grey) 4px); }
+.scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+.win { min-width: 1180px; font-size: 12.5px; }
+.bar { display: flex; align-items: center; gap: 4px; padding: 5px 10px; background: var(--chrome); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.bar .title { flex: 1; text-align: center; color: var(--dim); }
+.tabs { display: flex; gap: 2px; padding: 0 10px; background: var(--chrome); border-bottom: 1px solid var(--border); }
+.tab { padding: 6px 10px; color: var(--dim); }
+.tab.on { color: var(--text); font-weight: 600; box-shadow: inset 0 -3px 0 var(--accent); }
+.tab.ours { color: var(--ours); }
+.tabs .right { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+.ribbon { display: flex; align-items: stretch; padding: 6px 8px 2px; background: var(--ribbon); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.grp { display: flex; flex-direction: column; padding: 0 8px; border-right: 1px solid var(--border); }
+.grp:last-child { border-right: 0; }
+.grp .cmds { display: flex; gap: 3px; align-items: flex-start; flex: 1; }
+.grp .name { text-align: center; font-size: 11px; color: var(--dim); padding: 3px 0 2px; }
+.col { display: flex; flex-direction: column; gap: 3px; }
+.b { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border: 1px solid transparent; border-radius: 5px; color: var(--text); }
+.b.big { flex-direction: column; justify-content: center; min-width: 58px; min-height: 52px; text-align: center; white-space: normal; line-height: 1.15; }
+.b.box { border-color: var(--border); background: var(--card); }
+.b.ours { border: 2px solid var(--ours); background: var(--accent-soft); }
+.b.on { background: var(--accent-soft); border-color: var(--accent); }
+.b.dead { color: var(--grey); background: repeating-linear-gradient(45deg, transparent, transparent 3px, var(--chrome) 3px, var(--chrome) 4px); }
+.i { font-weight: 700; min-width: 14px; text-align: center; }
+.row { display: flex; flex-wrap: wrap; row-gap: 6px; align-items: center; gap: 4px; padding: 6px 10px; background: var(--ribbon); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 6px; }
+.spacer { flex: 1; }
+.canvas { height: 46px; display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 12px; }
+.note { font-size: 13px; color: var(--dim); margin: 6px 0 0; }
+.pin { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 9px; background: var(--accent); color: var(--card); vertical-align: middle; }
+.toggle { padding: 4px 10px; border-radius: 14px; border: 2px solid var(--ours); color: var(--ours); font-weight: 600; background: var(--accent-soft); }
+.mode { padding: 12px 10px; color: var(--dim); }
+.mode.on { color: var(--text); font-weight: 600; box-shadow: inset 0 -3px 0 var(--accent); }
+.search { border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--dim); background: var(--card); min-width: 260px; }
+footer { margin-top: 36px; font-size: 12px; color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+<h1>Sodda asboblar paneli: maketlar</h1>
+<p>Phase 4 WP1. Four mock-ups for the owner's review (PLAN Q5). The labels are the reviewed uz-Latn catalog strings;
+the ones marked <em>draft</em> in <code>toolbar-design.md</code> §8 are new. The layout is schematic, not pixel-exact:
+WP2/WP3 take real screenshots.</p>
+<div class="legend">
+  <span><i class="sw"></i> upstream (unchanged)</span>
+  <span><i class="sw ours"></i> ours (new or moved)</span>
+  <span><i class="sw dead"></i> greyed upstream button (§3.4 item 5)</span>
+</div>
+
+<h2>1. Hujjatlar (Docs): uch yorliqli sodda lenta</h2>
+<p>The Asosiy tab in front. ¶ is on the Quick Access Toolbar (always visible) and on Asosiy (shows its state).</p>
+<div class="scroll"><div class="win">
+  <div class="bar">
+    <span class="b box">💾</span><span class="b box">↶ ▾</span><span class="b box">↷</span>
+    <span class="b ours" title="Koʻrsatish/yashirish ¶ (Ctrl+Shift+8; Alt, 4)">¶</span>
+    <span class="b ours">⇱ Toʻliq lenta</span><span class="b">⋯</span>
+    <span class="title">Buyruq 12.docx — Suite Hujjatlar</span><span>–&nbsp;&nbsp;□&nbsp;&nbsp;×</span>
+  </div>
+  <div class="tabs">
+    <span class="tab">Fayl</span><span class="tab on">Asosiy</span><span class="tab">Kiritish</span><span class="tab ours">Hujjat</span>
+    <span class="right"><span class="b box">💬 Izohlar</span><span class="b box">✎ Tahrirlash ▾</span></span>
+  </div>
+  <div class="ribbon">
+    <div class="grp"><div class="cmds"><span class="b big">📋<br>Qoʻyish ▾</span><div class="col"><span class="b">✂ Kesib olish</span><span class="b">⧉ Nusxalash</span><span class="b">🖌 Formatni nusxalash</span></div></div><div class="name">Almashinuv buferi</div></div>
+    <div class="grp"><div class="cmds"><div class="col"><span><span class="b box">Times New Roman ▾</span> <span class="b box">14 ▾</span> <span class="b">A+</span><span class="b">A−</span><span class="b">Aa</span></span><span><span class="b"><span class="i">Q</span></span><span class="b"><span class="i"><i>K</i></span></span><span class="b"><span class="i"><u>T</u></span>▾</span><span class="b"><s>S</s></span><span class="b">x₂</span><span class="b">x²</span><span class="b">🖍▾</span><span class="b">A▾</span></span></div></div><div class="name">Shrift</div></div>
+    <div class="grp"><div class="cmds"><div class="col"><span><span class="b">•▾</span><span class="b">1.▾</span><span class="b">≣▾</span><span class="b">⇤</span><span class="b">⇥</span><span class="b">⇅</span><span class="b on" title="Koʻrsatish/yashirish ¶">¶</span></span><span><span class="b">⯇</span><span class="b">≡</span><span class="b">⯈</span><span class="b">☰</span><span class="b">↕▾</span><span class="b">▦▾</span><span class="b">▭▾</span></span></div></div><div class="name">Xatboshi</div></div>
+    <div class="grp"><div class="cmds"><span class="b box big">Oddiy</span><span class="b box big">Sarlavha 1</span><span class="b box big">Sarlavha 2</span></div><div class="name">Uslublar</div></div>
+    <div class="grp"><div class="cmds"><div class="col"><span class="b">🔍 Topish ▾</span><span class="b">⇄ Almashtirish</span><span class="b">⬚ Tanlash ▾</span></div></div><div class="name">Tahrirlash</div></div>
+    <div class="grp"><div class="cmds"><span class="b big dead">🎙<br>Ovoz bilan yozish</span></div><div class="name">Ovoz</div></div>
+    <div class="grp"><div class="cmds"><span class="b big">✓<br>Muharrir</span></div><div class="name">Muharrir</div></div>
+  </div>
+  <div class="canvas">document</div>
+</div></div>
+<p class="note">The same window with <b>Hujjat</b> in front (our tab; every button is a reviewed label):</p>
+<div class="scroll"><div class="win">
+  <div class="tabs">
+    <span class="tab">Fayl</span><span class="tab">Asosiy</span><span class="tab">Kiritish</span><span class="tab on ours">Hujjat</span>
+    <span class="right"><span class="b box">💬 Izohlar</span><span class="b box">✎ Tahrirlash ▾</span></span>
+  </div>
+  <div class="ribbon">
+    <div class="grp"><div class="cmds"><span class="b big ours">🖶<br>Chop etish</span><span class="b big ours">PDF<br>PDF sifatida eksport qilish</span></div><div class="name">Fayl</div></div>
+    <div class="grp"><div class="cmds"><span class="b big ours">⤾<br>Yoʻnalish</span><span class="b big ours">▭<br>Sahifa parametrlari</span></div><div class="name">Sahifa</div></div>
+    <div class="grp"><div class="cmds"><span class="b big ours">✓<br>Imlo va grammatika</span></div><div class="name">Imlo</div></div>
+    <div class="grp"><div class="cmds"><span class="b big ours">A→А<br>Lotinchadan kirillchaga</span><span class="b big ours">А→A<br>Kirillchadan lotinchaga</span><span class="b big ours">⇄<br>Avtomatik aniqlash</span></div><div class="name">Transliteratsiya</div></div>
+    <div class="grp"><div class="cmds"><span class="b big ours">🕓<br>Versiyalar tarixi</span></div><div class="name">Tarix</div></div>
+  </div>
+  <div class="canvas">document</div>
+</div></div>
+<p class="note">Full mode: all 13 upstream tabs come back, and the QAT button reads “Sodda lenta”. Keyboard: Alt shows
+F / H / N and the QAT numbers 1–5; the Hujjat tab has no Alt letter (its commands: Ctrl+P, F7, Alt+Q search).</p>
+
+<h2>2. Jadvallar (Sheets): bitta qator</h2>
+<p>On screen the row is one line; it wraps here only when this page is narrower than the app window.</p>
+<div class="scroll"><div class="win">
+  <div class="bar">
+    <span>Avtosaqlash ○</span><span class="b box">⌂</span><span class="b box">💾</span><span class="b box">↶ ▾</span><span class="b box">↷</span><span class="b">⋯</span>
+    <span class="title">Tabel_oktyabr.xlsx •</span><span class="b">🔍</span><span class="b box">Ulashish ▾</span><span class="b">💬</span><span class="b">◐</span>
+  </div>
+  <div class="row">
+    <span class="b box ours">Calibri ▾</span><span class="b box ours">11 ▾</span>
+    <span class="b ours"><span class="i">Q</span></span><span class="b ours"><i class="i">K</i></span><span class="b ours"><u class="i">T</u></span>
+    <span class="b ours">A▾</span><span class="b ours" title="Toʻldirish rangi">▒▾</span><span class="b ours" title="Chegaralar">▦▾</span>
+    <span class="sep"></span>
+    <span class="b ours">⯇</span><span class="b ours">≡</span><span class="b ours">⯈</span><span class="b ours" title="Matnni oʻrash">↵</span><span class="b ours" title="Birlashtirish va markazlash">⊞</span>
+    <span class="sep"></span>
+    <span class="b box ours">Umumiy ▾</span>
+    <span class="sep"></span>
+    <span class="b ours">⊕ Kiritish ▾</span><span class="b ours">⊖ Oʻchirish ▾</span>
+    <span class="sep"></span>
+    <span class="b ours" title="Avtoyigʻindi">Σ ▾</span><span class="b ours">⇅ Saralash ▾</span><span class="b ours">⏷ Filtr</span>
+    <span class="sep"></span>
+    <span class="b ours">❄ Qotirish ▾</span><span class="b ours" title="Formulalarni koʻrsatish">ƒx</span>
+    <span class="sep"></span>
+    <span class="b ours">🖶 Chop etish</span><span class="b ours">⇄ Transliteratsiya ▾</span><span class="b ours">🕓 Versiyalar tarixi</span>
+    <span class="spacer"></span><span class="toggle">Toʻliq lenta</span>
+  </div>
+  <div class="bar"><span class="b box">A1</span><span>ƒx</span><span class="title" style="text-align:left">formula bar</span></div>
+  <div class="canvas">grid · sheet tabs</div>
+</div></div>
+<p class="note">Below about 1500 px the menu buttons drop their text (icon, tooltip and accessible name stay); below about
+1100 px items from the right go into a “…” menu. The toggle never overflows. Excel’s Alt sequences keep working
+(Alt, H, 1 = Qalin).</p>
+<p class="note">Full mode: upstream’s ribbon, unchanged, with a small <span class="pin">Sodda lenta</span> pill at the
+right end of the tab row.</p>
+
+<h2>3. Taqdimotlar (Slides): bitta qator</h2>
+<div class="scroll"><div class="win">
+  <div class="bar">
+    <span class="b box">⌂</span><span class="b box">💾</span><span class="b box">⇪</span><span class="b box">↶</span><span class="b box">↷</span><span class="b box">▶</span>
+    <span class="title">Hisobot 2026.pptx</span><span class="b">🔍</span><span class="b box" style="border-radius:14px">Namoyish qilish</span><span class="b">💬</span><span class="b">◐</span>
+  </div>
+  <div class="row">
+    <span class="b ours">＋ Yangi slayd ▾</span><span class="b ours">▤ Maket ▾</span>
+    <span class="sep"></span>
+    <span class="b box ours">Calibri ▾</span><span class="b box ours">24 ▾</span>
+    <span class="b ours"><span class="i">Q</span></span><span class="b ours"><i class="i">K</i></span><span class="b ours"><u class="i">T</u></span><span class="b ours">A▾</span>
+    <span class="sep"></span>
+    <span class="b ours" title="Markerlar">•</span><span class="b ours" title="Raqamlash">1.</span><span class="b ours">⯇</span><span class="b ours">≡</span><span class="b ours">⯈</span>
+    <span class="sep"></span>
+    <span class="b ours">T Matn qutisi</span><span class="b ours">🖼 Rasm</span><span class="b ours">◇ Shakllar ▾</span><span class="b ours">▦ Jadval ▾</span>
+    <span class="sep"></span>
+    <span class="b ours">⇄ Transliteratsiya ▾</span><span class="b ours">🕓 Versiyalar tarixi</span>
+    <span class="spacer"></span><span class="toggle">Toʻliq lenta</span>
+  </div>
+  <div class="canvas">thumbnails · slide · notes</div>
+</div></div>
+<p class="note">Save, Undo, Redo and the slide show are on the title bar already (upstream’s QAT and “Namoyish qilish”).
+Print is not on the row (owner question 3): Ctrl+P, File › Print.</p>
+
+<h2>4. PDF: oʻzgarishsiz</h2>
+<div class="scroll"><div class="win">
+  <div class="bar"><span class="b box">Buyruq_12.pdf ×</span><span class="b box">Hisobot.pdf ×</span><span class="b">＋</span><span class="title"></span><span>–&nbsp;&nbsp;□&nbsp;&nbsp;×</span></div>
+  <div class="tabs" style="align-items:center">
+    <span class="b">☰ Menyu</span><span class="sep"></span>
+    <span class="mode">Barcha vositalar</span><span class="mode on">Oʻqish</span><span class="mode">Tahrirlash</span><span class="mode">Aylantirish</span><span class="mode">Elektron imzo</span>
+    <span class="right"><span class="search">🔍 Vositalar va buyruqlarni topish</span><span class="b">ⓘ</span><span class="b">💾</span><span class="b">🖶</span></span>
+  </div>
+  <div class="canvas">Home (recommended tools, recent files) or the document with the right rail</div>
+</div></div>
+<p class="note">No change, no toggle. WP23 checks that staff find “PDF → Word” (Aylantirish). If they do not, Home’s
+recommended list puts the export tool first (a one-line carried change).</p>
+
+<footer>Source of truth: <code>docs/phase4/toolbar-design.md</code> (command ids, file:line at the BASEs, label status).
+Product name from <code>brand/brand.toml</code> (working name).</footer>
+</main>
+</body>
+</html>
