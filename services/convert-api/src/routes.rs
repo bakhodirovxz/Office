@@ -109,9 +109,16 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         // nobody else's page may embed or probe our responses
         ("cross-origin-resource-policy", "same-origin"),
         ("cross-origin-opener-policy", "same-origin"),
+        // engines without CSP frame-ancestors; the editor routes of suite-serve loosen it to SAMEORIGIN for the shell's iframe
+        ("x-frame-options", "DENY"),
     ] {
-        // a route that sets its own value (the editor pages' CSP, the immutable cache of hashed files) keeps it
-        if !h.contains_key(k) {
+        // Only these three may be set by a route: the editor pages' CSP, the cache rule of hashed files and the frame rule of the
+        // editors (suite-serve). Everything else is always the baseline value, so a later route cannot weaken it (review m5).
+        let routed = matches!(
+            k,
+            "content-security-policy" | "cache-control" | "x-frame-options"
+        );
+        if !(routed && h.contains_key(k)) {
             h.insert(k, HeaderValue::from_static(v));
         }
     }

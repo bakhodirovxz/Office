@@ -210,7 +210,7 @@ test('desktop mode: Recent and the language come from the host, nothing is store
         const d = JSON.parse(m);
         w.__sent.push(d);
         const reply = d.type === 'recent'
-          ? { type: 'recent', items: [{ path: 'C:\Users\u\Docs\Buyruq 1.docx', app: 'docs', ts: 1760000000 }] }
+          ? { type: 'recent', items: [{ path: 'C:/Users/u/Docs/Buyruq 1.docx', app: 'docs', ts: 1760000000 }] }
           : d.type === 'settings_get' ? { type: 'settings', values: { lang: 'ru' } }
           : d.type === 'settings_set' ? { type: 'settings', values: { lang: d.value } } : null;
         if (reply) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: reply })), 0);
@@ -223,7 +223,7 @@ test('desktop mode: Recent and the language come from the host, nothing is store
   await expect(page.locator('#recent-note')).toHaveText(txt('ru', 'home.recent.note.desktop'));
   await expect(page.locator('#recent li button.ghost')).toHaveCount(0); // the host's log cannot be edited from the page
   await page.locator('#recent li .open').click();
-  expect((await page.evaluate(() => (window as any).__sent)).at(-1)).toEqual({ type: 'open', path: 'C:\Users\u\Docs\Buyruq 1.docx' });
+  expect((await page.evaluate(() => (window as any).__sent)).at(-1)).toEqual({ type: 'open', path: 'C:/Users/u/Docs/Buyruq 1.docx' });
   await page.selectOption('#lang', 'en');
   await expect.poll(() => page.evaluate(() => (window as any).__sent.at(-1))).toEqual({ type: 'settings_set', key: 'lang', value: 'en' });
   expect(await page.evaluate(() => localStorage.getItem('sh.lang'))).toBeNull();

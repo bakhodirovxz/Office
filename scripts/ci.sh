@@ -52,7 +52,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui sidecars fidelity-directions msvc"
+JOBS="queue lint gen-check deny brand i18n test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell sidecars fidelity-directions msvc"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -233,10 +233,10 @@ job_gen_check() {
 }
 
 # One deny run. Prints "ok <name>" or "FAIL <name>"; rc 0 ok, 1 findings, 2 infrastructure.
-deny_one() { # <name> <manifest> <config>
-  local name="$1" manifest="$2" cfg="$3" out rc
+deny_one() { # <name> <manifest> <config> [target triple: overrides the config's [graph] targets]
+  local name="$1" manifest="$2" cfg="$3" target="${4:-}" out rc
   [ -f "$manifest" ] || { echo "INFRA $name: $manifest missing"; return 2; }
-  out=$(cargo deny --manifest-path "$manifest" --config "$cfg" check --hide-inclusion-graph \
+  out=$(cargo deny --manifest-path "$manifest" ${target:+--target "$target"} --config "$cfg" check --hide-inclusion-graph \
         -A unmatched-skip -A license-not-encountered -A advisory-not-detected 2>&1); rc=$?
   echo "$out" >>"$JOB_LOG"
   if [ $rc -eq 0 ]; then echo "ok $name"; return 0; fi
@@ -532,6 +532,8 @@ job_convert() {
   command -v cargo-deny >/dev/null 2>&1 || { note "cargo-deny not found on PATH"; return 2; }
   mkdir -p "$OFFICE_CACHE/advisory-db"
   line=$(deny_one services services/Cargo.toml ci/deny/services.toml); r=$?; echo "$line" | tee -a "$JOB_LOG"; [ $r -gt $rc ] && rc=$r
+  # the server image is built for Linux (WP11): its graph has no wry, tao or rfd (review m9), and is checked on its own
+  line=$(deny_one services-linux services/Cargo.toml ci/deny/services.toml x86_64-unknown-linux-gnu); r=$?; echo "$line" | tee -a "$JOB_LOG"; [ $r -gt $rc ] && rc=$r
   return $rc
 }
 

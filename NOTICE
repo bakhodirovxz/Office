@@ -145,6 +145,14 @@ Third-party material added by this layer
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
+- Microsoft Edge WebView2 SDK loader, version 1.0.3800.47 (WebView2Loader.dll next to the windows-gnu suite.exe,
+  WebView2LoaderStatic.lib linked into the windows-msvc suite.exe), taken unmodified from the crate webview2-com-sys
+  0.39.1 (services/Cargo.lock): Copyright (c) Microsoft Corporation, under the licence of the Microsoft.Web.WebView2
+  NuGet package (BSD-3-Clause style). The crate declares MIT for its own bindings; the binaries are Microsoft's.
+  The exact licence text is the LICENSE.txt of that NuGet package and is not in the crate: copy it here and pin the
+  DLL's SHA-256 when the MSI is built (docs/phase4/review-shell.md m8, m9; UNVERIFIED until then). The WebView2
+  Runtime itself is not shipped; it is a Windows component.
+
 Third-party material carried by the vendored applications (full lists in each upstream NOTICE below)
 
 - Foxit standard-14 substitute fonts (FoxitSans, FoxitFixed, FoxitDingbats and their styles, in
