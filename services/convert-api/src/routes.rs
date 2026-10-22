@@ -1,5 +1,5 @@
 //! The routes (PLAN 5.1), the auth and header middleware (5.5) and the error type.
-use crate::app::{App, FileState, Job, StoredInput, estimate_mb, ip_key, run_file};
+use crate::app::{App, FileState, Job, PdfOp, StoredInput, Work, estimate_mb, ip_key, run_file};
 use crate::config::Auth;
 use crate::jwt;
 use axum::body::{Body, Bytes};
@@ -14,7 +14,7 @@ use convert::job::InputSource;
 use convert::kind::{self, DetectError};
 use convert::names::safe_name;
 use convert::plan::{
-    self, Options, PageSpec, PdfEngine, PlanError, SheetSel, Target, Translit, TranslitDir,
+    self, Options, PageSpec, PdfEngine, PlanError, SheetSel, SplitBy, Target, Translit, TranslitDir,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -383,6 +383,12 @@ async fn formats(State(app): State<Arc<App>>) -> Json<Value> {
         "maxPagesIn": app.cfg.caps.max_pages_in, "maxPngOut": app.cfg.caps.max_png_out, "retentionSeconds": s.retention_s,
         "activeJobsPerUser": s.per_user_active,
     });
+    // PDF operations of POST /jobs (options.op); `files` is how many PDFs the operation takes, `options` its other fields
+    v["pdfOps"] = json!([
+        {"op": "combine", "from": "pdf", "to": "pdf", "files": {"min": 2}, "options": []},
+        {"op": "split", "from": "pdf", "to": "pdf", "files": {"min": 1, "max": 1}, "options": ["every", "before"]},
+        {"op": "extract", "from": "pdf", "to": "pdf", "files": {"min": 1, "max": 1}, "options": ["pages"]},
+    ]);
     // the page preselects it in the Latin alphabet menu
     v["defaults"] = json!({ "alphabet": convert::plan::DEFAULT_ALPHABET });
     Json(v)
@@ -441,7 +447,12 @@ async fn healthz(State(app): State<Arc<App>>, h: axum::http::HeaderMap) -> Json<
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct OptionsIn {
-    to: String,
+    /// the target format; absent for a PDF operation
+    to: Option<String>,
+    /// a PDF operation instead of a conversion: combine (all files, in upload order), split (`every` or `before`), extract (`pages`)
+    op: Option<String>,
+    every: Option<u32>,
+    before: Option<Vec<u32>>,
     translit: Option<String>,
     alphabet: Option<String>,
     apostrophe: Option<String>,
@@ -453,8 +464,76 @@ struct OptionsIn {
     locale: Option<String>,
 }
 
-fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
-    let target = Target::parse(&o.to).ok_or(format!("unknown target '{}'", o.to))?;
+enum Parsed {
+    Convert(Target, Options),
+    Op(PdfOp),
+}
+
+fn parse_op(o: &OptionsIn, op: &str) -> Result<PdfOp, String> {
+    if let Some(t) = o.to.as_deref().filter(|t| *t != "pdf") {
+        return Err(format!(
+            "a PDF operation writes PDF; to takes pdf or nothing, got '{t}'"
+        ));
+    }
+    for (set, name) in [
+        (o.translit.is_some(), "translit"),
+        (o.alphabet.is_some(), "alphabet"),
+        (o.apostrophe.is_some(), "apostrophe"),
+        (o.sheet.is_some(), "sheet"),
+        (o.dpi.is_some(), "dpi"),
+        (o.pdf_engine.is_some(), "pdfEngine"),
+        (o.locale.is_some(), "locale"),
+    ] {
+        if set {
+            return Err(format!("{name} does not apply to a PDF operation"));
+        }
+    }
+    let only = |ok: bool, name: &str| {
+        if ok {
+            Ok(())
+        } else {
+            Err(format!("{name} does not apply to op {op}"))
+        }
+    };
+    match op {
+        "combine" => {
+            only(o.pages.is_none(), "pages")?;
+            only(o.every.is_none() && o.before.is_none(), "every and before")?;
+            Ok(PdfOp::Combine)
+        }
+        "split" => {
+            only(o.pages.is_none(), "pages")?;
+            match (o.every, &o.before) {
+                (Some(n), None) if n >= 1 => Ok(PdfOp::Split(SplitBy::Every(n))),
+                (None, Some(v)) if !v.is_empty() && v.iter().all(|&b| b >= 2) => {
+                    Ok(PdfOp::Split(SplitBy::Before(v.clone())))
+                }
+                _ => Err("split needs exactly one of every (a number from 1) or before (page numbers from 2, like [3, 7])".into()),
+            }
+        }
+        "extract" => {
+            only(o.every.is_none() && o.before.is_none(), "every and before")?;
+            let p = o
+                .pages
+                .as_deref()
+                .ok_or("extract needs pages, like \"1,3-5\"")?;
+            Ok(PdfOp::Extract(PageSpec::parse(p)?))
+        }
+        x => Err(format!("op takes combine, split or extract, got '{x}'")),
+    }
+}
+
+fn parse_options(o: OptionsIn) -> Result<Parsed, String> {
+    if let Some(op) = &o.op {
+        return parse_op(&o, op).map(Parsed::Op);
+    }
+    if o.every.is_some() || o.before.is_some() {
+        return Err("every and before need op split".into());
+    }
+    let to =
+        o.to.as_deref()
+            .ok_or("options.to is required (or options.op for a PDF operation)")?;
+    let target = Target::parse(to).ok_or(format!("unknown target '{to}'"))?;
     let mut opts = Options::default();
     if let Some(t) = &o.translit {
         let dir = match t.as_str() {
@@ -510,7 +589,7 @@ fn parse_options(o: OptionsIn) -> Result<(Target, Options), String> {
             "locale takes en-US, ru, uz-Latn or uz-Cyrl, got '{l}'"
         ))?;
     }
-    Ok((target, opts))
+    Ok(Parsed::Convert(target, opts))
 }
 
 struct Upload {
@@ -678,8 +757,8 @@ fn precheck(
     job: &crate::app::Job,
     n: usize,
     up: &Upload,
-    target: Target,
-    opts: &Options,
+    // None for a PDF operation: the file must be a PDF and there is no conversion to plan
+    conv: Option<(Target, &Options)>,
     budget: &mut u64,
 ) -> Result<Checked, (Option<kind::Kind>, u8, String)> {
     let dir = app
@@ -735,10 +814,25 @@ fn precheck(
     let sha256 = convert::scan::sha256_file(&file).map_err(io)?;
     let scan =
         convert::scan::scan_with(&file, budget).map_err(|f| (Some(k), f.exit.code(), f.msg))?;
-    plan::plan(k, target, opts).map_err(|e| {
-        let (c, m) = exit_of(&e);
-        (Some(k), c, m)
-    })?;
+    match conv {
+        Some((target, opts)) => {
+            plan::plan(k, target, opts).map_err(|e| {
+                let (c, m) = exit_of(&e);
+                (Some(k), c, m)
+            })?;
+        }
+        None if k != kind::Kind::Pdf => {
+            return Err((
+                Some(k),
+                Exit::Unsupported.code(),
+                format!(
+                    "unsupported input: a PDF operation takes PDF files only, and this file is .{}",
+                    k.ext()
+                ),
+            ));
+        }
+        None => {}
+    }
     Ok(Checked {
         kind: k,
         est_mb: estimate_mb(k, up.size),
@@ -831,7 +925,25 @@ async fn create_inner(
     let parsed: OptionsIn =
         serde_json::from_str(&options.ok_or_else(|| bad("the options field is required".into()))?)
             .map_err(|e| bad(format!("options: {e}")))?;
-    let (target, opts) = parse_options(parsed).map_err(bad)?;
+    let (target, opts, op) = match parse_options(parsed).map_err(bad)? {
+        Parsed::Convert(t, o) => (t, o, None),
+        Parsed::Op(op) => {
+            // the files are parts of one operation: combine takes two or more, split and extract exactly one
+            let ok = if matches!(op, PdfOp::Combine) {
+                uploads.len() >= 2
+            } else {
+                uploads.len() == 1
+            };
+            if !ok {
+                return Err(bad(if matches!(op, PdfOp::Combine) {
+                    "combine needs at least two PDF files".into()
+                } else {
+                    "split and extract take exactly one PDF file".into()
+                }));
+            }
+            (Target::Pdf, Options::default(), Some(op))
+        }
+    };
 
     // the prechecks read and inflate the upload, so they wait for a CPU slot like a conversion does, but not for ever
     let _cpu = tokio::time::timeout(
@@ -850,7 +962,7 @@ async fn create_inner(
     // one inflate budget for the whole request: 50 times what was uploaded, between 256 MiB and 2 GiB (WP7 review M1)
     let mut budget = (uploaded.saturating_mul(50)).clamp(256 << 20, 2 << 30);
     let checks = {
-        let (app, job, opts) = (app.clone(), job.clone(), opts.clone());
+        let (app, job, opts, is_op) = (app.clone(), job.clone(), opts.clone(), op.is_some());
         let names: Vec<(String, u64)> = uploads.iter().map(|u| (u.name.clone(), u.size)).collect();
         tokio::task::spawn_blocking(move || {
             names
@@ -862,8 +974,7 @@ async fn create_inner(
                         &job,
                         n,
                         &Upload { name, size },
-                        target,
-                        &opts,
+                        (!is_op).then_some((target, &opts)),
                         &mut budget,
                     )
                 })
@@ -894,7 +1005,58 @@ async fn create_inner(
     let mut rejected = vec![];
     {
         let mut st = job.st.lock().unwrap();
-        for (n, (up, chk)) in uploads.iter().zip(&checks).enumerate() {
+        // a PDF operation is one task over all the uploads: one entry in the status, and it fails as a whole
+        if let Some(op) = &op {
+            let names: Vec<String> = uploads.iter().map(|u| u.name.clone()).collect();
+            let mut f = FileState {
+                n: 0,
+                name: names.join(", "),
+                kind: Some("pdf".into()),
+                target: "pdf".into(),
+                state: "queued",
+                step: None,
+                report: None,
+                outputs: vec![],
+                in_bytes: uploaded,
+            };
+            for (up, chk) in uploads.iter().zip(&checks) {
+                match chk {
+                    Ok(_) => answer.push(json!({"n": answer.len(), "name": up.name, "kind": "pdf", "target": "pdf"})),
+                    Err((k, code, msg)) => answer.push(json!({"n": answer.len(), "name": up.name, "kind": k.map(|k| k.ext()), "error": {"code": code, "message": app.redact.scrub(msg)}})),
+                }
+            }
+            // the first refused file stops the operation; its name is in the message so that the user knows which one
+            if let Some((code, msg)) = uploads.iter().zip(&checks).find_map(|(u, c)| {
+                c.as_ref()
+                    .err()
+                    .map(|(_, c, m)| (c, format!("{}: {m}", u.name)))
+            }) {
+                f.state = "failed";
+                let mut rep =
+                    crate::app::convert_failed(&f.name, Target::Pdf, Exit::ToolError, &msg);
+                rep.code = *code;
+                rep.kind = Some("pdf".into());
+                f.report = Some(app.public_report(&rep, &[]));
+                rejected = (0..uploads.len()).collect();
+            } else {
+                let est = estimate_mb(kind::Kind::Pdf, uploaded);
+                runnable.push((
+                    0,
+                    est,
+                    Work::Pdf {
+                        op: op.clone(),
+                        names,
+                    },
+                ));
+            }
+            st.files.push(f);
+        }
+        for (n, (up, chk)) in uploads
+            .iter()
+            .zip(&checks)
+            .enumerate()
+            .filter(|_| op.is_none())
+        {
             let mut f = FileState {
                 n,
                 name: up.name.clone(),
@@ -910,7 +1072,15 @@ async fn create_inner(
                 Ok(c) => {
                     f.kind = Some(c.kind.ext().into());
                     answer.push(json!({"n": n, "name": up.name, "kind": c.kind.ext(), "target": target.ext()}));
-                    runnable.push((n, c.est_mb, c.verdict.clone()));
+                    runnable.push((
+                        n,
+                        c.est_mb,
+                        Work::Convert {
+                            target,
+                            opts: opts.clone(),
+                            verdict: c.verdict.clone(),
+                        },
+                    ));
                 }
                 Err((k, code, msg)) => {
                     f.kind = k.map(|k| k.ext().to_string());
@@ -934,17 +1104,8 @@ async fn create_inner(
     let (a, j, client) = (app.clone(), job.clone(), client.to_string());
     tokio::spawn(async move {
         let mut set = tokio::task::JoinSet::new();
-        for (n, est, verdict) in runnable {
-            set.spawn(run_file(
-                a.clone(),
-                j.clone(),
-                n,
-                target,
-                opts.clone(),
-                est,
-                client.clone(),
-                verdict,
-            ));
+        for (n, est, work) in runnable {
+            set.spawn(run_file(a.clone(), j.clone(), n, work, est, client.clone()));
         }
         while set.join_next().await.is_some() {}
         a.finish(&j);

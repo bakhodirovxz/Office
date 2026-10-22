@@ -360,6 +360,17 @@ impl Settings {
             .work_dir
             .clone()
             .unwrap_or_else(|| std::env::temp_dir().join("convert-api-work"));
+        for (name, d) in [
+            ("work_dir", Some(&work_dir)),
+            ("store_dir", self.store_dir.as_ref()),
+        ] {
+            if let Some(d) = d.filter(|d| cfg!(windows) && msys_path(&d.to_string_lossy())) {
+                return Err(format!(
+                    "{name} = \"{}\" is an MSYS path (/c/Users/...); on Windows it would land in C:\\c\\...; write C:/Users/... instead",
+                    d.display()
+                ));
+            }
+        }
         let store_dir = self.store_dir.clone().unwrap_or_else(|| {
             let name = work_dir.file_name().map_or("convert-api-work".into(), |n| {
                 n.to_string_lossy().into_owned()
@@ -387,6 +398,16 @@ impl Settings {
             s: self,
         })
     }
+}
+
+/// `/c/Users/me/x` or `\c\Users\me`: a Git-Bash path written into a config file. Windows reads it as `C:\c\Users\...` on the current
+/// drive, so a job store would silently appear in a stray folder.
+fn msys_path(p: &str) -> bool {
+    let b = p.as_bytes();
+    b.len() >= 3
+        && matches!(b[0], b'/' | b'\\')
+        && b[1].is_ascii_alphabetic()
+        && matches!(b[2], b'/' | b'\\')
 }
 
 #[cfg(test)]
@@ -541,6 +562,23 @@ mod tests {
             Settings::default().resolve().unwrap().store_dir,
             Settings::default().resolve().unwrap().work_dir
         );
+    }
+
+    #[test]
+    fn an_msys_path_is_told_apart_from_a_windows_one() {
+        for bad in ["/c/Users/x/work", "\\c\\Users\\x"] {
+            assert!(msys_path(bad), "{bad}");
+        }
+        for ok in [
+            "C:/Users/x",
+            "C:\\Users",
+            "<server-path>",
+            "/s",
+            "//host/share/x",
+            "relative/c/x",
+        ] {
+            assert!(!msys_path(ok), "{ok}");
+        }
     }
 
     #[test]

@@ -53,8 +53,9 @@
       <p id="drop-hint" class="muted"></p>
     </div>
     <p id="files-none" class="muted" data-i18n="ui.files.none">No files chosen yet.</p>
+    <p id="order-hint" class="muted" hidden><strong data-i18n="ui.order.heading">Order of the files</strong> <span data-i18n="ui.order.hint"></span></p>
     <div class="scroll" id="files-wrap" hidden>
-      <table>
+      <table aria-describedby="order-hint">
         <thead><tr>
           <th scope="col" data-i18n="ui.col.file">File</th>
           <th scope="col" data-i18n="ui.col.type">Type</th>
@@ -71,8 +72,24 @@
   <section class="card" aria-labelledby="opt-h">
     <h2 id="opt-h" data-i18n="ui.opt.heading">Options</h2>
     <div class="grid2">
-      <div class="field"><label for="o-to" data-i18n="ui.opt.target">Convert to</label><select id="o-to"></select>
+      <div class="field" id="f-mode" hidden><label for="o-mode" data-i18n="ui.opt.mode">Operation</label>
+        <select id="o-mode">
+          <option value="convert" data-i18n="ui.opt.mode.convert">Convert</option>
+          <option value="combine" data-i18n="ui.opt.mode.combine">Combine into one PDF</option>
+          <option value="split" data-i18n="ui.opt.mode.split">Split</option>
+          <option value="extract" data-i18n="ui.opt.mode.extract">Extract pages</option>
+        </select>
+        <p id="op-note" class="muted" role="status" hidden></p></div>
+      <div class="field" id="f-to"><label for="o-to" data-i18n="ui.opt.target">Convert to</label><select id="o-to"></select>
         <p id="o-to-none" class="muted" data-i18n="ui.opt.target.none" hidden></p></div>
+      <div class="field" data-mode="split" hidden><label for="o-every" data-i18n="ui.opt.split.every">Pages per part</label>
+        <input id="o-every" type="number" min="1" step="1" inputmode="numeric" aria-describedby="o-split-hint"></div>
+      <div class="field" data-mode="split" hidden><label for="o-before" data-i18n="ui.opt.split.before">Or start a new part at pages</label>
+        <input id="o-before" type="text" autocomplete="off" aria-describedby="o-split-hint">
+        <span id="o-split-hint" class="muted" data-i18n="ui.opt.split.hint"></span></div>
+      <div class="field" data-mode="extract" hidden><label for="o-xpages" data-i18n="ui.opt.pages">Pages</label>
+        <input id="o-xpages" type="text" autocomplete="off" aria-describedby="o-xpages-hint">
+        <span id="o-xpages-hint" class="muted" data-i18n="ui.opt.pages.required"></span></div>
       <div class="field" data-opt="translit"><label for="o-translit" data-i18n="ui.opt.translit">Transliteration</label>
         <select id="o-translit">
           <option value="" data-i18n="ui.opt.translit.none">None</option>

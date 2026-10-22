@@ -40,7 +40,7 @@ All under `/api/v1` need the mode's auth. Errors are `{"error": {"code", "messag
 
 | Method, path | Answer |
 |---|---|
-| `GET /api/v1/formats` | `convert formats --json` plus `limits` |
+| `GET /api/v1/formats` | `convert formats --json` plus `limits`, `defaults` and `pdfOps` (the PDF operations below, with how many files each takes) |
 | `POST /api/v1/jobs` | multipart: `files` (1..30, repeated, also `files[]`) and `options` (JSON, at most 64 KiB, checked while it streams). `202 {job, files:[{n, name, kind, target} or {n, name, kind, error:{code, message}}]}` and `Location`. A file that is unsupported, password-protected, a zip bomb or an unreadable type is rejected **on its own**; the rest run |
 | `GET /api/v1/jobs/{id}` | `{job, state: queued\|running\|done, progress:{done,total}, files:[{n, name, kind, target, state: queued\|running\|done\|failed, step, code, message, warnings, outputs:[{id, name, size}]}]}`; a file also has `xdfu` when the XDFU hook found a grif |
 | `GET /api/v1/jobs/{id}/files/{n}/{id}` | one output, `Content-Disposition: attachment` with an RFC 5987 `filename*` |
@@ -49,8 +49,29 @@ All under `/api/v1` need the mode's auth. Errors are `{"error": {"code", "messag
 | `GET /healthz` | local mode, or a valid token: `{ok, tools:{name:bool}, sidecars:{pdf2docx:null\|bool}, queue:{active,max}}`, no paths. Server mode without a valid token: `{"ok":true}` only |
 | `GET /`, `/app.js`, `/app.css`, `/i18n.json`, ... | the UI files (WP8) |
 
-`options` (unknown keys are a 400): `to` (required), `translit` (`cyrl\|latn\|auto`), `alphabet` (`1995\|2026\|auto`), `apostrophe`
+`options` (unknown keys are a 400): `to` (required unless `op`), `translit` (`cyrl\|latn\|auto`), `alphabet` (`1995\|2026\|auto`), `apostrophe`
 (`official\|ascii`), `sheet`, `pages`, `dpi` (72-600), `pdfEngine` (`native\|sidecar`), `locale` (`en-US\|ru\|uz-Latn\|uz-Cyrl`, default `en-US`; the UI sends its language; how numbers and dates in csv, tsv and spreadsheets are read and written). Same meaning as the CLI flags.
+
+**PDF operations.** `options.op` replaces `to` and turns the upload into one operation over PDF files (the same plans as the CLI's
+`convert pdf`; the same limits, auth, encryption at rest, XDFU hook and redaction as a conversion):
+
+| `op` | Files | Other fields | Output |
+|---|---|---|---|
+| `combine` | 2 or more, **combined in upload order** | none | `combined.pdf` |
+| `split` | exactly 1 | `every` (pages per part, from 1) **or** `before` (split points, page numbers from 2, like `[3, 7]`) | one PDF per part, named after the input |
+| `extract` | exactly 1 | `pages` (required, like `"1,3-5"`) | `<name>-pages.pdf` |
+
+`to` may be `pdf` or absent; `translit`, `alphabet`, `apostrophe`, `sheet`, `dpi`, `pdfEngine` and `locale` are a 400 with an operation. The
+`202` lists every upload (`files[i]`, with `error` when that one is refused, for example a file that is not a PDF by content), but the
+job has **one** entry in `GET /jobs/{id}` (`files[0]`, `n` 0, `name` = the upload names joined by `, `): an operation succeeds or fails as a
+whole. If any upload is refused, that entry is `failed` with the first refused file's code and `name: reason`; nothing runs and nothing
+stays on disk. A page range beyond the document, a split over the page cap (`max_pages_in`) or the part cap (`max_png_out`), and a
+damaged PDF fail the entry with the engine's message. Known limit: with XDFU on, the hook inspects the first file of a combine; a grif
+that is only in a later file is not seen on input (the output's first page is checked as for any PDF).
+
+A warning in a report carries `args`, the values of the `{placeholders}` of its message (`text_transcoded`: `encoding`; `pdf_text_missing`:
+`missing`, `total`; `xdfu_copy`: `copy`; `kind_mismatch`: `kind`; `xdfu_no_watermark`: `target`), read back from the engine's English
+text, so that the page can fill its own localised sentence.
 
 Statuses of `POST`: 202; 400 bad multipart, options, no files; 409 `too_large_for_server` (the file needs more memory than the whole
 budget); 413 `file_too_large`, `batch_too_large`, `too_many_files`, or a `Content-Length` over the request limit; 408
@@ -60,7 +81,7 @@ budget); 413 `file_too_large`, `batch_too_large`, `too_many_files`, or a `Conten
 
 **Reports carry ids and names, never server paths.** `input` is the sanitised upload name, `outputs` are the download names. Every
 string in a report (messages, tool stderr tails, warnings) goes through `Redactor`, which replaces the configured work, store, temp
-and tool directories and the sidecar's address with `<server>` and any remaining `X:\...` path with `<path>`. The sidecar's address
+and tool directories and the sidecar's address with `<server>` any remaining `X:\...` path, and any path under a well-known Unix directory (`/tmp/...`, a sidecar container path), with `<path>`. The garbled console-code-page text of an operating-system connection error is replaced by a plain sentence and the error number. The sidecar's address
 is also left out of the messages themselves.
 
 **Names.** A client name is never a path. Uploads are stored as `in/<n>` and outputs as `out/<n>/<k>`. The name goes through
@@ -263,13 +284,13 @@ setting is the operator's (the server config, or the local user's `--xdfu` flag 
 
 - **Detection** (before any tool runs): the grif "XDFU", "ХДФУ", "ДСП", "Для служебного пользования", or the Uzbek phrase in Latin or
   Cyrillic ("Xizmat doirasida foydalanish uchun", "Хизмат доирасида фойдаланиш учун"), in any case and spacing ("X D F U", "Х.Д.Ф.У.",
-  a Latin x for a Cyrillic х), as a whole word. Looked for in the places the Rules name: the top of page 1 (the first 8 paragraphs of a
-  docx, the first 5 rows of the first sheet, the top quarter of the first slide, the first 8 lines of page 1 of a pdf, the first 8 lines
-  of a txt, md or csv), a header (docx headers, sheet headers and footers, slide masters and layouts) and the document properties
+  a Latin x for a Cyrillic х), as a whole word. Looked for in the places the Rules name: the top of page 1 (the first 25 paragraphs of a
+  docx plus every paragraph of a table that has one of them (a two-column letterhead), the first 5 rows of the first sheet, the top quarter of the first slide, the first 25 lines of page 1 of a pdf, the first 25 lines
+  of a txt, md or csv), a header (docx headers, odt/ods master-page headers, sheet headers and footers, slide masters and layouts) and the document properties
   (docx, xlsx, pptx core, app and custom properties; the pdf title, author, subject and keywords). The report gets
   `xdfu: {detected: true, mode, copy, refused, evidence: [{place, part, marker}]}`; the evidence names the place and the marker, never
   document text. An html page is read as text (its head, styles and scripts are not text on the page).
-- **Kinds that cannot be scanned** (`doc`, `xls`, `xlsb`, `odt`, `ods`, `rtf`): the check moves to the tool's OUTPUT. `before` only notes that
+- **Legacy kinds** (gate review M4): `odt` and `ods` are read natively (content, styles with the headers, meta); `doc` and `rtf` are probed through a conversion to docx, `xls` and `xlsb` through one to xlsx, in `mid/`, so their headers are looked at on the input. An image-only PDF (no text on page 1) cannot be read: the job is refused with exit 3 and `xdfu_no_text_layer`, an audit line with reason `no_text_layer`. **Kinds that cannot be scanned at all** (a job with no detected kind): the check moves to the tool's OUTPUT. `before` only notes that
   the check is deferred; `after` looks for the grif in the outputs (docx, xlsx, pptx, pdf, txt, md, csv, html: every output we
   watermark except png), in the same places, before they are watermarked. Found: `refuse` vetoes the job (exit 9, after the
   conversion, nothing returned) and `watermark` marks the output as for any other input. Not found: an ordinary job, no `xdfu` in the
@@ -287,9 +308,9 @@ setting is the operator's (the server config, or the local user's `--xdfu` flag 
   |---|---|
   | `pdf` | a footer line and a diagonal text on every page (`pdf-cli`: `doc_header_footer`, `doc_watermark`). Western European text only, so other characters in a user name become `_` with a short digest |
   | `png` | a strip with the line appended under the page (a one-line page rendered by `pdf-cli` at the png's dpi; the page pixels are never covered), and the line as a `tEXt` chunk `XDFU` |
-  | `docx` | a header, a footer, a diagonal watermark and the custom properties `XDFU-copy` and `XDFU-stamp` (`docs-cli`) |
-  | `xlsx` | a header and a footer on every sheet (`sheets-cli`); they show in the page layout and on paper |
-  | `pptx` | a footer on every slide (`slides-cli`) |
+  | `docx` | a diagonal watermark and the custom properties `XDFU-copy` and `XDFU-stamp` (`docs-cli`), and the stamp line as a paragraph at the top of the body and of every header and footer part (nothing is replaced: the letterhead and the grif in the header stay) |
+  | `xlsx` | the stamp merged into the centre of every sheet's header and footer, first-page and even-page ones included; the existing text stays. A header too long for Excel's 255 characters is skipped; a sheet where none fits fails the job |
+  | `pptx` | a text box with the stamp along the bottom of every slide; the slides' own footers stay |
   | `txt`, `md` | a first line (a first paragraph in md) |
   | `csv` | a first row of one quoted field |
   | `html` | a paragraph right after `<body>` |
@@ -300,9 +321,9 @@ setting is the operator's (the server config, or the local user's `--xdfu` flag 
 - **Audit log** (`services/convert/src/audit.rs`): JSON lines, append-only, hash-chained. Each line has `seq`, `ts` (UTC), `prev` (the
   hash of the line before, 64 zeros first), `event` (`copy`, or `refused` with a `reason` of `mode` or `cannot_carry`), `user`,
   `client`, `host`, `job` (the API job id and file number, or the converter's own id), `file` (left out with `xdfu_redact` or `--redact`),
-  `kind`, `target`, `places`, `outputs`, and `hash`, which is SHA-256 over the line without its `hash`. Never any content. Verify with
-  `convert xdfu-verify FILE`: it prints the line count and the last hash, or the first bad line (exit 1). A changed, deleted, inserted
-  or reordered line breaks the chain from that line on. Two limits: lines cut off the END of the file are not detected (record the
+  `kind`, `target`, `places`, `outputs`, and `hash`, which is SHA-256 over the line without its `hash`, or, with an operator key, HMAC-SHA256 under it (the line then has `alg: "hmac-sha256"`). Never any content. Verify with
+  `convert xdfu-verify FILE [--key KEYFILE]`: it prints the line count and the last hash, or the first bad line (exit 1). A changed, deleted, inserted
+  or reordered line breaks the chain from that line on. **Without a key** (`xdfu_audit_key_file` in the API config, `--xdfu-audit-key FILE` in the CLI; 32+ random bytes kept outside the log) the chain is plain SHA-256, so whoever can write the file can rewrite lines k..n and recompute the hashes, and the server and the CLI say so at start. **With a key** a rewrite without it fails `xdfu-verify --key`, and a keyed log is never accepted without its key. Two limits: lines cut off the END of the file are not detected (record the
   last hash elsewhere from time to time), and "append-only" is how this code writes the file: make the file append-only for the
   service account (an ACL that grants append but not write; `chattr +a`). A damaged log is not extended: the server and the CLI refuse
   to start with it. Two processes may share a log (a lock file serialises them).

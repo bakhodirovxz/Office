@@ -126,6 +126,84 @@ test('a warning shows in the user language', async ({ page }) => {
   await expect(row(page, 'memo.docx').locator('.warn')).toHaveText(txt('ru', 'ui.warning', { text: txt('ru', 'warning.kind_mismatch', { kind: 'txt' }) }));
 });
 
+test('no warning shows a placeholder that was never filled, in any language', async ({ page }) => {
+  // cp1251 text (text_transcoded: {encoding}) and a text file under a .docx name (kind_mismatch: {kind})
+  const cp1251 = Buffer.from([0xcf, 0xf0, 0xe8, 0xe2, 0xe5, 0xf2, 0x2c, 0x20, 0xec, 0xe8, 0xf0, 0x21, 0x20, 0xdd, 0xf2, 0xee, 0x20, 0xee, 0xe1, 0xfb, 0xf7, 0xed, 0xfb, 0xe9, 0x0a]);
+  for (const lang of ['en', 'ru', 'uz-Latn', 'uz-Latn-2026', 'uz-Cyrl']) {
+    await page.goto(base + '/');
+    await page.selectOption('#lang', lang);
+    await expect(page.locator('#go')).toHaveText(txt(lang, 'ui.convert'));
+    await pick(page, [file('old.txt', cp1251), file('memo.docx', GOOD)]);
+    await page.selectOption('#o-to', 'pdf');
+    await page.click('#go');
+    await expect(page.locator('#results .warn')).toHaveCount(2);
+    const shown = await page.locator('#results').innerText();
+    expect(shown, lang).not.toMatch(/\{\w+\}/);
+    expect(shown, lang).toMatch(/windows-1251|cp1251/i); // the encoding the engine named is in the sentence
+  }
+});
+
+const pdfFile = (name: string, pages: number) => file(name, `%PDF-1.4\n%% PAGES=${pages}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n`);
+
+test('PDF operations are offered for PDFs only; combine keeps the order the user sets (buttons and keyboard)', async ({ page }) => {
+  const problems = await open(page);
+  await pick(page, [file('note.txt', GOOD)]);
+  await expect(page.locator('#f-mode')).toBeHidden(); // not every file is a PDF
+  await page.click('#clear');
+  await pick(page, [pdfFile('b.pdf', 3), pdfFile('a.pdf', 2), pdfFile('c.pdf', 4)]);
+  await expect(page.locator('#f-mode')).toBeVisible();
+  await expect(page.locator('#o-mode option')).toHaveText([txt('en', 'ui.opt.mode.convert'), txt('en', 'ui.opt.mode.combine'), txt('en', 'ui.opt.mode.split'), txt('en', 'ui.opt.mode.extract')]);
+  await expect(page.locator('#f-to')).toBeVisible();
+  await page.selectOption('#o-mode', 'combine');
+  await expect(page.locator('#f-to')).toBeHidden();
+  const names = () => page.locator('#files th.name').allInnerTexts();
+  expect(await names()).toEqual(['1. b.pdf', '2. a.pdf', '3. c.pdf']);
+  await expect(page.locator('#order-hint')).toContainText(txt('en', 'ui.order.heading'));
+  // the first row cannot go up, the last cannot go down
+  await expect(page.getByRole('button', { name: txt('en', 'ui.order.up', { name: 'b.pdf' }) })).toBeDisabled();
+  await expect(page.getByRole('button', { name: txt('en', 'ui.order.down', { name: 'c.pdf' }) })).toBeDisabled();
+  // button: a.pdf up; focus stays on that row's control and the move is announced
+  await page.getByRole('button', { name: txt('en', 'ui.order.up', { name: 'a.pdf' }) }).click();
+  expect(await names()).toEqual(['1. a.pdf', '2. b.pdf', '3. c.pdf']);
+  await expect(page.locator('#live')).toHaveText(txt('en', 'ui.order.moved', { name: 'a.pdf', pos: '1', total: '3' }));
+  await expect(page.locator('#files tr').first().locator('[data-act="down"]')).toBeFocused(); // "up" is disabled at the top
+  // keyboard: Alt+ArrowDown on a focused control of b.pdf's row moves b.pdf down (the buttons themselves are native)
+  await page.getByRole('button', { name: txt('en', 'ui.order.down', { name: 'b.pdf' }) }).focus();
+  await page.keyboard.press('Alt+ArrowDown');
+  expect(await names()).toEqual(['1. a.pdf', '2. c.pdf', '3. b.pdf']);
+  await page.click('#go');
+  await expect(page.locator('#results li')).toHaveCount(1); // one result for the whole operation
+  const card = page.locator('#results li').first();
+  await expect(card.locator('.badge')).toHaveText(txt('en', 'state.done'));
+  const link = card.locator('a.btn');
+  await expect(link).toHaveCount(1);
+  const [dl] = await Promise.all([page.waitForEvent('download'), link.click()]);
+  expect(dl.suggestedFilename()).toBe('combined.pdf');
+  // the page counts of the inputs, in the order the page showed them (a=2, c=4, b=3; the stand-in tool writes them down)
+  expect(/ORDER=([\d,]+)/.exec(fs.readFileSync((await dl.path())!, 'latin1'))![1]).toBe('2,4,3');
+  expect(problems).toEqual([]);
+});
+
+test('combine needs two PDFs; split and extract send their fields', async ({ page }) => {
+  await open(page);
+  await pick(page, [pdfFile('x.pdf', 5)]);
+  await page.selectOption('#o-mode', 'combine');
+  await expect(page.locator('#op-note')).toHaveText(txt('en', 'ui.pdfop.min_files'));
+  await expect(page.locator('#go')).toBeDisabled();
+  await page.selectOption('#o-mode', 'split');
+  await expect(page.locator('#go')).toBeDisabled(); // needs a number or the pages to start at
+  await page.fill('#o-every', '2');
+  await expect(page.locator('#go')).toBeEnabled();
+  await page.click('#go');
+  await expect(page.locator('#results li .badge')).toHaveText(txt('en', 'state.done'));
+  await expect(page.locator('#results li a.btn')).toHaveCount(3); // 5 pages, 2 per part
+  await page.selectOption('#o-mode', 'extract');
+  await page.fill('#o-xpages', '2-9'); // beyond the last page: the failure is shown with the engine's words
+  await page.click('#go');
+  await expect(page.locator('#results li .badge')).toHaveText(txt('en', 'state.failed'));
+  await expect(page.locator('#results li')).toContainText('beyond');
+});
+
 test('cancel stops a running conversion and deletes the job', async ({ page }) => {
   await open(page);
   const created = page.waitForResponse((r) => r.url().endsWith('/api/v1/jobs') && r.request().method() === 'POST');

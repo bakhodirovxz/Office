@@ -8,7 +8,7 @@ use axum::http::StatusCode;
 use convert::exec::{Class, Config as ConvertConfig, Exit, Failure, fail, limits};
 use convert::job::{self, FileReport, InputSource, JobMeta, OutputSink};
 use convert::kind::{Family, Kind};
-use convert::plan::{Options, Target};
+use convert::plan::{self, Options, PageSpec, SplitBy, Target};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::io::Read;
@@ -167,8 +167,65 @@ impl Limiter {
     }
 }
 
+/// Top-level Unix directories whose paths are removed from client text (a sidecar's container paths such as `/tmp/job-x/in.pdf`).
+const UNIX_ROOTS: [&str; 10] = [
+    "tmp", "var", "home", "root", "srv", "usr", "opt", "mnt", "run", "proc",
+];
+
+/// The OS error text of a failed connection arrives in the console code page and is garbled (`io: ����… (os error 10061)`).
+/// It is replaced by our own words; the code stays.
+fn clean_os_text(s: &str) -> String {
+    let mut out = s.to_string();
+    while let Some(end) = out.find("(os error ") {
+        let Some(close) = out[end..].find(')').map(|c| end + c + 1) else {
+            break;
+        };
+        let code: String = out[end + 10..close - 1]
+            .chars()
+            .filter(char::is_ascii_digit)
+            .collect();
+        let start = out[..end].rfind("io: ").unwrap_or(end);
+        let what = match code.as_str() {
+            "10061" | "111" | "61" => "the connection was refused (nothing is listening there)",
+            "10060" | "110" | "60" => "the connection timed out",
+            "10054" | "104" | "54" => "the connection was reset",
+            _ => "a network error occurred",
+        };
+        out.replace_range(start..close, &format!("{what} (error {code})"));
+    }
+    out
+}
+
+/// The values behind the `{name}` placeholders of a warning's English template, read back from the finished text
+/// (`report::text_with` filled it). None when the code has no placeholder or the text does not follow the template (an upstream
+/// message). `shortcut: the report carries only the filled text; give Warning an args field in the convert crate and drop this.`
+pub fn warning_args(code: &str, text: &str) -> Option<Value> {
+    let tpl = convert::report::text(code);
+    let mut parts = tpl.split('{').map(|p| p.split_once('}'));
+    let first = tpl.split('{').next()?;
+    let mut rest = text.strip_prefix(first)?;
+    let mut out = serde_json::Map::new();
+    parts.next();
+    let mut it = parts.peekable();
+    while let Some(p) = it.next() {
+        let (name, lit) = p?;
+        let v = if lit.is_empty() {
+            rest
+        } else {
+            &rest[..rest.find(lit)?]
+        };
+        out.insert(name.into(), Value::String(v.into()));
+        rest = &rest[v.len()..];
+        rest = rest.strip_prefix(lit)?;
+        if it.peek().is_none() && !rest.is_empty() {
+            return None;
+        }
+    }
+    (!out.is_empty()).then_some(Value::Object(out))
+}
+
 /// Removes server paths from text that goes to a client (PLAN 5.4): the configured roots first, then anything that still
-/// looks like a drive path. `shortcut: Unix absolute paths are removed only when they sit under a configured root.`
+/// looks like a drive path or sits under a well-known Unix directory (`UNIX_ROOTS`). `shortcut: other Unix paths are removed only when they sit under a configured root.`
 pub struct Redactor {
     roots: Vec<String>,
 }
@@ -189,7 +246,7 @@ impl Redactor {
     }
 
     pub fn scrub(&self, s: &str) -> String {
-        let mut out = s.to_string();
+        let mut out = clean_os_text(s);
         for r in &self.roots {
             let rl = r.to_ascii_lowercase();
             while let Some(i) = out.to_ascii_lowercase().find(&rl) {
@@ -201,13 +258,20 @@ impl Redactor {
         let mut res = String::new();
         let mut i = 0;
         while i < b.len() {
-            let drive = b[i].is_ascii_alphabetic()
-                && b.get(i + 1) == Some(&':')
-                && matches!(b.get(i + 2), Some('\\' | '/'))
-                && (i == 0 || !b[i - 1].is_alphanumeric());
+            let unix = b[i] == '/'
+                && (i == 0 || !(b[i - 1].is_alphanumeric() || "/._-".contains(b[i - 1])))
+                && UNIX_ROOTS.iter().any(|r| {
+                    let p: Vec<char> = format!("/{r}/").chars().collect();
+                    b.get(i..i + p.len()) == Some(&p[..])
+                });
+            let drive = unix
+                || b[i].is_ascii_alphabetic()
+                    && b.get(i + 1) == Some(&':')
+                    && matches!(b.get(i + 2), Some('\\' | '/'))
+                    && (i == 0 || !b[i - 1].is_alphanumeric());
             if drive {
                 res.push_str("<path>");
-                i += 3;
+                i += if unix { 1 } else { 3 };
                 while i < b.len() && !b[i].is_whitespace() && !"\"'<>|)".contains(b[i]) {
                     i += 1;
                 }
@@ -635,6 +699,15 @@ impl App {
     /// The report a client may see: ids and names, never a server path.
     pub fn public_report(&self, rep: &FileReport, outputs: &[OutputEntry]) -> Value {
         let mut v = serde_json::to_value(rep).expect("report serialises");
+        // the page fills the placeholders of its own (localised) warning text from `args`
+        for w in v["warnings"].as_array_mut().into_iter().flatten() {
+            if let Some(args) = warning_args(
+                w["code"].as_str().unwrap_or(""),
+                w["text"].as_str().unwrap_or(""),
+            ) {
+                w["args"] = args;
+            }
+        }
         v["outputs"] = json!(outputs.iter().map(|o| o.name.clone()).collect::<Vec<_>>());
         self.redact.scrub_value(&mut v);
         v
@@ -737,19 +810,138 @@ impl Drop for DropInput {
     }
 }
 
-/// One file of a job: wait for a CPU slot (fairly, by user), then for its memory, then convert. Waiting ends at the job's deadline.
-#[allow(clippy::too_many_arguments)] // shortcut: one call shape for the supervisor; fold into a struct when a 9th arrives
+/// A PDF operation of `POST /jobs` (`options.op`); the steps are the convert crate's own, as the CLI's `convert pdf` plans them.
+#[derive(Clone)]
+pub enum PdfOp {
+    Combine,
+    Split(SplitBy),
+    Extract(PageSpec),
+}
+
+impl PdfOp {
+    fn steps(&self, count: usize) -> Vec<convert::plan::Step> {
+        match self {
+            PdfOp::Combine => plan::pdf_combine(count),
+            PdfOp::Split(by) => plan::pdf_split(by),
+            PdfOp::Extract(p) => plan::pdf_extract(p),
+        }
+    }
+    /// the output name stem
+    fn stem(&self, first: &str) -> String {
+        let s = Path::new(first)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("output");
+        match self {
+            PdfOp::Combine => "combined".into(),
+            PdfOp::Split(_) => s.into(),
+            PdfOp::Extract(_) => format!("{s}-pages"),
+        }
+    }
+}
+
+/// What one task of a job does.
+pub enum Work {
+    Convert {
+        target: Target,
+        opts: Options,
+        verdict: Arc<convert::scan::Verdict>,
+    },
+    /// a PDF operation over all the uploads (their names, in order); the job has one file entry (0) for it
+    Pdf { op: PdfOp, names: Vec<String> },
+}
+
+/// Copies the stored (maybe encrypted) PDFs into a private directory for the operation, and removes it at the end.
+struct OpStage(PathBuf);
+impl Drop for OpStage {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+fn pdf_op(
+    a: &App,
+    j: &Job,
+    op: &PdfOp,
+    names: &[String],
+    s: &JobSink,
+    meta: &JobMeta,
+) -> FileReport {
+    let count = names.len();
+    let label = j.st.lock().unwrap().files[0].name.clone();
+    let stage = OpStage(
+        a.r.work_dir
+            .join(format!("stage-{}-op-{}", std::process::id(), j.id)),
+    );
+    let prep = || -> std::io::Result<Vec<(PathBuf, String)>> {
+        std::fs::create_dir_all(&stage.0)?;
+        (0..count)
+            .map(|n| {
+                let src = StoredInput {
+                    name: String::new(),
+                    path: j.in_path(n),
+                    codec: j.codec.clone(),
+                    role: Job::in_role(n),
+                };
+                let f = stage.0.join(format!("in{n}.pdf"));
+                std::io::copy(&mut src.open()?, &mut std::fs::File::create(&f)?)?;
+                let inner = if matches!(op, PdfOp::Combine) {
+                    format!("in/input{}.pdf", n + 1)
+                } else {
+                    "in/input.pdf".into()
+                };
+                Ok((f, inner))
+            })
+            .collect()
+    };
+    let inputs = match prep() {
+        Ok(i) => i,
+        Err(e) => {
+            return convert_failed(
+                &label,
+                Target::Pdf,
+                Exit::ToolError,
+                &format!("cannot read the upload: {e}"),
+            );
+        }
+    };
+    job::guarded(&label, "pdf", || {
+        job::run_job(
+            &a.cfg,
+            job::JobSpec {
+                label: label.clone(),
+                kind: Some("pdf".into()),
+                target: "pdf".into(),
+                inputs,
+                origins: vec![],
+                steps: Ok(op.steps(count)),
+                stem: op.stem(names.first().map_or("", String::as_str)),
+                meta: meta.clone(),
+                ..job::JobSpec::new(s)
+            },
+        )
+    })
+}
+
+/// One task of a job: wait for a CPU slot (fairly, by user), then for its memory, then convert. Waiting ends at the job's deadline.
 pub async fn run_file(
     app: Arc<App>,
     job: Arc<Job>,
     n: usize,
-    target: Target,
-    opts: Options,
+    work: Work,
     est_mb: u64,
     client: String,
-    verdict: Arc<convert::scan::Verdict>,
 ) {
-    let _input = DropInput(job.clone(), n);
+    let _inputs: Vec<DropInput> = match &work {
+        Work::Pdf { names, .. } => (0..names.len())
+            .map(|i| DropInput(job.clone(), i))
+            .collect(),
+        Work::Convert { .. } => vec![DropInput(job.clone(), n)],
+    };
+    let target = match &work {
+        Work::Convert { target, .. } => *target,
+        Work::Pdf { .. } => Target::Pdf,
+    };
     let set = |f: &dyn Fn(&mut FileState)| f(&mut job.st.lock().unwrap().files[n]);
     let name = job.st.lock().unwrap().files[n].name.clone();
     let give_up = |exit: Exit, why: &str| {
@@ -799,12 +991,18 @@ pub async fn run_file(
             client: Some(client),
             cancel: Some(j.cancel.clone()),
             deadline: Some(j.deadline),
-            verdict: Some(verdict),
+            verdict: match &work {
+                Work::Convert { verdict, .. } => Some(verdict.clone()),
+                Work::Pdf { .. } => None,
+            },
             reference: Some(format!("{}/{}", j.id, n)),
         };
-        job::guarded(&input.name, target.ext(), || {
-            job::convert_source(&a.cfg, &input, target, &opts, &*s, &meta)
-        })
+        match &work {
+            Work::Convert { opts, .. } => job::guarded(&input.name, target.ext(), || {
+                job::convert_source(&a.cfg, &input, target, opts, &*s, &meta)
+            }),
+            Work::Pdf { op, names } => pdf_op(&a, &j, op, names, &s, &meta),
+        }
     })
     .await
     .unwrap_or_else(|e| {
@@ -864,6 +1062,48 @@ pub fn convert_failed(label: &str, target: Target, exit: Exit, msg: &str) -> Fil
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn warning_args_read_back_every_placeholder_of_every_code() {
+        for code in convert::report::codes() {
+            let tpl = convert::report::text(&code);
+            let names: Vec<&str> = tpl
+                .split('{')
+                .skip(1)
+                .filter_map(|p| p.split_once('}').map(|x| x.0))
+                .collect();
+            if names.is_empty() {
+                continue;
+            }
+            let fill: Vec<(&str, String)> = names.iter().map(|n| (*n, format!("v-{n}"))).collect();
+            let f: Vec<(&str, &str)> = fill.iter().map(|(k, v)| (*k, v.as_str())).collect();
+            let text = convert::report::text_with(&code, &f);
+            let args = warning_args(&code, &text).unwrap_or_else(|| panic!("{code}: {text}"));
+            for (k, v) in &fill {
+                assert_eq!(args[*k], json!(v), "{code}.{k}");
+            }
+        }
+        assert!(warning_args("text_transcoded", "some upstream words").is_none());
+    }
+
+    #[test]
+    fn container_paths_and_garbled_os_text_do_not_reach_the_client() {
+        let r = Redactor::new(&[]);
+        let m =
+            "cannot open the PDF: Failed to open file '/tmp/job-jye3px_i/in.pdf' (and/or /var/x)";
+        let c = r.scrub(m);
+        assert!(
+            !c.contains("/tmp/") && !c.contains("/var/") && c.contains("and/or"),
+            "{c}"
+        );
+        let o = r.scrub(
+            "the pdf2docx sidecar did not answer: io: \u{fffd}\u{fffd}\u{fffd} (os error 10061)",
+        );
+        assert_eq!(
+            o,
+            "the pdf2docx sidecar did not answer: the connection was refused (nothing is listening there) (error 10061)"
+        );
+    }
 
     #[test]
     fn ipv6_counts_by_its_64_and_the_limiter_map_is_capped() {

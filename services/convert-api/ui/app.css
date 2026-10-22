@@ -63,3 +63,5 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .msg { color: var(--err-fg); font-weight: 600; }
 .warn { background: var(--warn-bg); color: var(--warn-fg); border-radius: 6px; padding: 4px 8px; }
 @media (max-width: 30rem) { .bar { flex-wrap: wrap; } .bar-end { margin-left: 0; width: 100%; } }
+td.acts { white-space: nowrap; }
+td.acts .btn { margin-inline-start: 4px; min-width: 40px; }

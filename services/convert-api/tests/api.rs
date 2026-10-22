@@ -1222,3 +1222,338 @@ async fn startup_sweeps_what_a_dead_server_left() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// ---- PDF operations (options.op) -----------------------------------------------------------------------------------------
+
+/// A stand-in PDF the fake tool counts: `PAGES=n` is its page count.
+fn pdf(pages: u32) -> Vec<u8> {
+    format!("%PDF-1.4\n%% PAGES={pages}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n").into_bytes()
+}
+
+async fn output(h: &H, id: &str, n: usize, k: usize, t: Option<&str>) -> (HeaderMap, Vec<u8>) {
+    let (st, hd, b) = h
+        .send(h.req(
+            "GET",
+            &format!("/api/v1/jobs/{id}/files/{n}/{k}"),
+            t,
+            None,
+            vec![],
+        ))
+        .await;
+    assert_eq!(st, StatusCode::OK);
+    (hd, b)
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn combine_keeps_the_upload_order_and_makes_one_output() {
+    let h = H::local("op-combine", |_| {});
+    let (st, hd, v) = h
+        .post(
+            &[("b.pdf", &pdf(3)), ("a.pdf", &pdf(2))],
+            json!({"op": "combine"}),
+            None,
+        )
+        .await;
+    assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+    check_headers("op 202", &hd, false);
+    assert_eq!(v["files"][0]["name"], "b.pdf");
+    assert_eq!(v["files"][1]["kind"], "pdf");
+    let id = v["job"].as_str().unwrap().to_string();
+    let done = h.wait_done(&id, None).await;
+    assert_eq!(done["progress"], json!({"done": 1, "total": 1}), "{done}");
+    assert_eq!(done["files"][0]["state"], "done", "{done}");
+    assert_eq!(done["files"][0]["outputs"].as_array().unwrap().len(), 1);
+    assert_eq!(done["files"][0]["outputs"][0]["name"], "combined.pdf");
+    let (hd, body) = output(&h, &id, 0, 0, None).await;
+    check_headers("op output", &hd, false);
+    assert_eq!(hd["content-type"], "application/pdf");
+    assert!(
+        String::from_utf8_lossy(&body).contains("ORDER=3,2"),
+        "the files were combined in the order sent"
+    );
+    let (st, hd, zip) = h
+        .send(h.req("GET", &format!("/api/v1/jobs/{id}/zip"), None, None, vec![]))
+        .await;
+    assert_eq!(st, StatusCode::OK);
+    check_headers("op zip", &hd, false);
+    let z = zip::ZipArchive::new(std::io::Cursor::new(zip)).unwrap();
+    let names: Vec<String> = z.file_names().map(|n| n.unwrap().into_owned()).collect();
+    assert_eq!(names, ["combined.pdf", "report.json"]);
+    h.json("DELETE", &format!("/api/v1/jobs/{id}"), None).await;
+    assert!(h.work_entries().is_empty(), "{:?}", h.work_entries());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn split_and_extract_make_the_right_outputs() {
+    let h = H::local("op-split", |_| {});
+    let run = |opts: Value| {
+        let h = &h;
+        async move {
+            let (st, _, v) = h.post(&[("x.pdf", &pdf(5))], opts, None).await;
+            assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+            h.wait_done(v["job"].as_str().unwrap(), None).await
+        }
+    };
+    let d = run(json!({"op": "split", "every": 2})).await;
+    assert_eq!(d["files"][0]["state"], "done", "{d}");
+    let outs = d["files"][0]["outputs"].as_array().unwrap();
+    assert_eq!(outs.len(), 3);
+    let names: std::collections::HashSet<_> =
+        outs.iter().map(|o| o["name"].as_str().unwrap()).collect();
+    assert_eq!(names.len(), 3, "distinct names: {names:?}");
+    let d = run(json!({"op": "split", "before": [3, 5]})).await;
+    assert_eq!(d["files"][0]["outputs"].as_array().unwrap().len(), 3, "{d}");
+    let d = run(json!({"op": "extract", "pages": "1,3-4"})).await;
+    assert_eq!(d["files"][0]["state"], "done", "{d}");
+    assert_eq!(d["files"][0]["outputs"][0]["name"], "x-pages.pdf");
+    // a page range beyond the document is a failed job with the tool's message, not a silent empty file
+    let d = run(json!({"op": "extract", "pages": "2-9"})).await;
+    assert_eq!(d["files"][0]["state"], "failed", "{d}");
+    assert_eq!(d["files"][0]["outputs"], json!([]));
+    assert!(
+        d["files"][0]["message"]
+            .as_str()
+            .unwrap()
+            .contains("beyond"),
+        "{d}"
+    );
+    // a split point past the last page is a usage error from the planner
+    let d = run(json!({"op": "split", "before": [9]})).await;
+    assert_eq!(d["files"][0]["state"], "failed", "{d}");
+    assert_eq!(d["files"][0]["code"], 2, "{d}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn pdf_operations_validate_their_options_and_files() {
+    let h = H::local("op-bad", |_| {});
+    let a = pdf(2);
+    let one: &[(&str, &[u8])] = &[("a.pdf", &a)];
+    let two: &[(&str, &[u8])] = &[("a.pdf", &a), ("b.pdf", &a)];
+    type Files<'a> = &'a [(&'a str, &'a [u8])];
+    let cases: Vec<(Files, Value)> = vec![
+        (one, json!({"op": "combine"})),
+        (two, json!({"op": "split", "every": 2})),
+        (two, json!({"op": "extract", "pages": "1"})),
+        (one, json!({"op": "shuffle"})),
+        (one, json!({"op": "extract"})),
+        (one, json!({"op": "extract", "pages": "0"})),
+        (one, json!({"op": "extract", "pages": "3-1"})),
+        (one, json!({"op": "extract", "pages": "a,b"})),
+        (one, json!({"op": "extract", "pages": "1", "every": 2})),
+        (one, json!({"op": "split"})),
+        (one, json!({"op": "split", "every": 0})),
+        (one, json!({"op": "split", "every": 2, "before": [3]})),
+        (one, json!({"op": "split", "before": [1]})),
+        (one, json!({"op": "split", "before": []})),
+        (one, json!({"op": "split", "every": 2, "pages": "1"})),
+        (two, json!({"op": "combine", "pages": "1"})),
+        (two, json!({"op": "combine", "to": "docx"})),
+        (two, json!({"op": "combine", "locale": "ru"})),
+        (two, json!({"op": "combine", "translit": "cyrl"})),
+        (one, json!({"to": "pdf", "every": 2})),
+        (one, json!({"to": "pdf", "before": [2]})),
+    ];
+    for (files, opts) in cases {
+        let (st, _, v) = h.post(files, opts.clone(), None).await;
+        assert_eq!(st, StatusCode::BAD_REQUEST, "{opts}: {v}");
+        assert_eq!(v["error"]["code"], "bad_options", "{opts}");
+    }
+    assert!(
+        h.work_entries().is_empty(),
+        "nothing is left: {:?}",
+        h.work_entries()
+    );
+    // `to` may say pdf
+    let (st, _, v) = h
+        .post(two, json!({"op": "combine", "to": "pdf"}), None)
+        .await;
+    assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+    // a non-PDF in a combine: told per file, and the whole operation fails with that file's code
+    let (st, _, v) = h
+        .post(
+            &[("a.pdf", &a), ("n.txt", TXT)],
+            json!({"op": "combine"}),
+            None,
+        )
+        .await;
+    assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+    assert!(v["files"][0].get("error").is_none());
+    assert_eq!(v["files"][1]["error"]["code"], 3);
+    let d = h.wait_done(v["job"].as_str().unwrap(), None).await;
+    assert_eq!(d["files"][0]["state"], "failed", "{d}");
+    assert_eq!(d["files"][0]["code"], 3);
+    assert!(
+        d["files"][0]["message"].as_str().unwrap().contains("PDF"),
+        "{d}"
+    );
+    assert_eq!(d["files"][0]["outputs"], json!([]));
+    // junk with a .pdf name is not a PDF either
+    let (_, _, v) = h
+        .post(
+            &[("a.pdf", &a), ("b.pdf", &[0u8, 1, 2, 250][..])],
+            json!({"op": "combine"}),
+            None,
+        )
+        .await;
+    assert_eq!(v["files"][1]["error"]["code"], 3, "{v}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn pdf_operations_respect_the_caps() {
+    let h = H::local("op-caps", |_| {});
+    let run = |pages: u32, opts: Value| {
+        let h = &h;
+        async move {
+            let (st, _, v) = h.post(&[("big.pdf", &pdf(pages))], opts, None).await;
+            assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+            h.wait_done(v["job"].as_str().unwrap(), None).await
+        }
+    };
+    // 501 pages is over max_pages_in (500); 300 one-page parts is over max_png_out (200)
+    for (pages, opts, why) in [
+        (501, json!({"op": "split", "every": 100}), "pages"),
+        (300, json!({"op": "split", "every": 1}), "files"),
+    ] {
+        let d = run(pages, opts).await;
+        assert_eq!(d["files"][0]["state"], "failed", "{why}: {d}");
+        assert_eq!(d["files"][0]["code"], 9, "{why}: {d}");
+        assert!(
+            d["files"][0]["message"]
+                .as_str()
+                .unwrap()
+                .contains("over the limit"),
+            "{why}: {d}"
+        );
+        assert_eq!(d["files"][0]["outputs"], json!([]));
+    }
+    // more files than a batch allows is refused before anything runs
+    let a = pdf(1);
+    let many: Vec<(String, &[u8])> = (0..31)
+        .map(|i| (format!("{i}.pdf"), a.as_slice()))
+        .collect();
+    let refs: Vec<(&str, &[u8])> = many.iter().map(|(n, b)| (n.as_str(), *b)).collect();
+    let (st, _, v) = h.post(&refs, json!({"op": "combine"}), None).await;
+    assert!(st.is_client_error(), "{st}: {v}");
+    // oversize: a combine counts every file against the per-file limit
+    let h = H::local("op-size", |s| s.max_file_mb = 1);
+    let big = vec![b'x'; 2 << 20];
+    let (st, _, _) = h
+        .post(
+            &[("a.pdf", &pdf(1)), ("b.pdf", &big)],
+            json!({"op": "combine"}),
+            None,
+        )
+        .await;
+    assert_eq!(st, StatusCode::PAYLOAD_TOO_LARGE);
+    assert!(h.work_entries().is_empty(), "{:?}", h.work_entries());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn pdf_operations_need_a_token_in_server_mode_and_store_nothing_readable() {
+    let h = H::server("op-auth", |_| {});
+    let (a, b) = (pdf(1), pdf(4));
+    let files: &[(&str, &[u8])] = &[("a.pdf", &a), ("b.pdf", &b)];
+    let (st, hd, _) = h.post(files, json!({"op": "combine"}), None).await;
+    assert_eq!(st, StatusCode::UNAUTHORIZED);
+    check_headers("op 401", &hd, true);
+    let t = h.token("alice");
+    let (st, hd, v) = h.post(files, json!({"op": "combine"}), Some(&t)).await;
+    assert_eq!(st, StatusCode::ACCEPTED, "{v}");
+    check_headers("op 202", &hd, true);
+    let id = v["job"].as_str().unwrap().to_string();
+    // another user sees nothing
+    let t2 = h.token("bob");
+    assert_eq!(
+        h.json("GET", &format!("/api/v1/jobs/{id}"), Some(&t2))
+            .await
+            .0,
+        StatusCode::NOT_FOUND
+    );
+    h.wait_done(&id, Some(&t)).await;
+    let mut stored = vec![];
+    all_files(&h.dir.join("work"), &mut stored);
+    assert!(!stored.is_empty());
+    for f in &stored {
+        let bytes = std::fs::read(f).unwrap();
+        assert!(
+            !bytes.windows(5).any(|w| w == b"%PDF-" || w == b"ORDER"),
+            "plaintext in {}",
+            f.display()
+        );
+    }
+    assert!(
+        stored.iter().all(|f| !f.parent().unwrap().ends_with("in")),
+        "inputs are deleted: {stored:?}"
+    );
+    let (hd, body) = output(&h, &id, 0, 0, Some(&t)).await;
+    check_headers("op output", &hd, true);
+    assert!(String::from_utf8_lossy(&body).contains("ORDER=1,4"));
+    // a refused operation (non-PDF) leaves no input behind either
+    let (_, _, v) = h
+        .post(
+            &[("a.pdf", &a), ("n.txt", TXT)],
+            json!({"op": "combine"}),
+            Some(&t),
+        )
+        .await;
+    h.wait_done(v["job"].as_str().unwrap(), Some(&t)).await;
+    let mut stored = vec![];
+    all_files(&h.dir.join("work"), &mut stored);
+    assert!(
+        stored.iter().all(|f| !f.parent().unwrap().ends_with("in")),
+        "{stored:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn formats_lists_the_pdf_operations() {
+    let h = H::local("op-formats", |_| {});
+    let (_, v) = h.json("GET", "/api/v1/formats", None).await;
+    let ops: Vec<&str> = v["pdfOps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| o["op"].as_str().unwrap())
+        .collect();
+    assert_eq!(ops, ["combine", "split", "extract"]);
+    assert_eq!(v["pdfOps"][0]["files"]["min"], 2);
+    assert_eq!(v["pdfOps"][2]["options"], json!(["pages"]));
+}
+
+// ---- warning arguments (the page fills {encoding}, {missing}, ... from them) ------------------------------------------------
+
+#[tokio::test(flavor = "multi_thread")]
+async fn warnings_carry_the_values_of_their_placeholders() {
+    let h = H::local("warn-args", |_| {});
+    // cp1251 text: "Привет, мир! Это обычный текст для проверки."
+    let cp1251: &[u8] = &[
+        0xcf, 0xf0, 0xe8, 0xe2, 0xe5, 0xf2, 0x2c, 0x20, 0xec, 0xe8, 0xf0, 0x21, 0x20, 0xdd, 0xf2,
+        0xee, 0x20, 0xee, 0xe1, 0xfb, 0xf7, 0xed, 0xfb, 0xe9, 0x20, 0xf2, 0xe5, 0xea, 0xf1, 0xf2,
+        0x20, 0xe4, 0xeb, 0xff, 0x20, 0xef, 0xf0, 0xee, 0xe2, 0xe5, 0xf0, 0xea, 0xe8, 0x2e, 0x0a,
+    ];
+    let (_, _, v) = h
+        .post(
+            &[("old.txt", cp1251), ("memo.docx", TXT)],
+            json!({"to": "pdf"}),
+            None,
+        )
+        .await;
+    let d = h.wait_done(v["job"].as_str().unwrap(), None).await;
+    let w = |n: usize, code: &str| {
+        d["files"][n]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|w| w["code"] == code)
+            .unwrap_or_else(|| panic!("{code}: {d}"))
+            .clone()
+    };
+    let enc = w(0, "text_transcoded");
+    assert!(
+        enc["args"]["encoding"]
+            .as_str()
+            .is_some_and(|e| !e.is_empty()),
+        "{enc}"
+    );
+    assert_eq!(w(1, "kind_mismatch")["args"]["kind"], "txt");
+}
