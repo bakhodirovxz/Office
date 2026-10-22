@@ -2526,6 +2526,7 @@ dependencies = [
  "serde",
  "serde_json",
  "suite-serve",
+ "suite-winsec",
  "tao",
  "tokio",
  "toml 1.1.8+spec-1.1.0",
@@ -2546,6 +2547,14 @@ dependencies = [
  "toml 1.1.8+spec-1.1.0",
  "tower",
  "tower-http",
+]
+
+[[package]]
+name = "suite-winsec"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

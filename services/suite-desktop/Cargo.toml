@@ -27,6 +27,7 @@ toml = { version = "1", default-features = false, features = ["parse"] }
 convert = { path = "../convert" }
 convert-api = { path = "../convert-api" }
 suite-serve = { path = "../suite-serve" }
+suite-winsec = { path = "../suite-winsec" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time"] }
 tao = "0.37"
 wry = "0.57"

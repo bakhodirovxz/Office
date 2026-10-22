@@ -3,6 +3,7 @@
 use crate::{Args, Brand, Ctx, Out, Source, Store, nav_ok, origin_ok, reply_script};
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,6 +13,7 @@ use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use tao::window::WindowBuilder;
 use tokio::io::AsyncReadExt as _;
 use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
+use suite_winsec::{Sid, create_user_only_pipe, pipe_server_sid};
 use wry::{NewWindowResponse, WebContext, WebViewBuilder};
 
 enum Ev {
@@ -58,12 +60,29 @@ fn alnum(s: &str) -> String {
     s.chars().filter(char::is_ascii_alphanumeric).collect()
 }
 
-/// Sends the lines to the running instance. False when nobody answers (it is closing, or the name is held by something else).
-fn send(pipe: &str, lines: &[String]) -> bool {
+/// `SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION`: whoever holds the other end can learn who we are but cannot act as us (B1).
+const SQOS_IDENTIFICATION: u32 = 0x0010_0000 | 0x0001_0000;
+
+/// A server may receive our paths only when its process runs as `ours`. Any failure to find that out counts as "not ours".
+fn server_is(ours: &Sid, server: std::io::Result<Sid>) -> bool {
+    server.is_ok_and(|s| &s == ours)
+}
+
+/// Sends the lines to the running instance. False when nobody answers (it is closing, or the name is held by something else, or by
+/// another user: then nothing at all is written).
+fn send(pipe: &str, lines: &[String], ours: &Sid) -> bool {
     use std::io::Write as _;
     for _ in 0..20 {
-        if let Ok(mut f) = std::fs::OpenOptions::new().write(true).open(pipe) {
-            return f.write_all(lines.join("\n").as_bytes()).is_ok();
+        let f = std::fs::OpenOptions::new()
+            .write(true)
+            .security_qos_flags(SQOS_IDENTIFICATION)
+            .open(pipe);
+        if let Ok(mut f) = f {
+            if !server_is(ours, pipe_server_sid(&f)) {
+                return false;
+            }
+            return f.write_all(lines.join("
+").as_bytes()).is_ok();
         }
         std::thread::sleep(Duration::from_millis(100)); // ERROR_PIPE_BUSY while the server makes the next instance
     }
@@ -73,6 +92,7 @@ fn send(pipe: &str, lines: &[String]) -> bool {
 async fn pipe_loop(
     mut server: NamedPipeServer,
     name: String,
+    owner: Sid,
     ctx: Arc<Ctx>,
     proxy: Option<EventLoopProxy<Ev>>,
 ) {
@@ -80,10 +100,11 @@ async fn pipe_loop(
         if server.connect().await.is_err() {
             return;
         }
-        let Ok(next) = ServerOptions::new()
-            .reject_remote_clients(true)
-            .create(&name)
-        else {
+        let Ok(next) = create_user_only_pipe(
+            ServerOptions::new().reject_remote_clients(true),
+            &name,
+            &owner,
+        ) else {
             return;
         };
         let conn = std::mem::replace(&mut server, next);
@@ -203,10 +224,13 @@ fn start(args: Args) -> Result<(), String> {
         .ok_or("no data directory (LOCALAPPDATA is not set)")?;
     let bin_dir = args.bin_dir.unwrap_or(exe_dir);
     let product = brand.product.clone();
+    // the name holds the user's SID and session, not USERNAME (which is public and collides between a local and a domain account)
+    let (me, session) =
+        Sid::current().map_err(|e| format!("cannot read the user identity: {e}"))?;
     let pipe = format!(
-        r"\\.\pipe\{}-host-{}{}",
+        r"\\.\pipe\{}-host-{}-{session}{}",
         alnum(&brand.id),
-        alnum(&std::env::var("USERNAME").unwrap_or_default()),
+        me.as_str(),
         alnum(&std::env::var("SUITE_INSTANCE").unwrap_or_default())
     );
     let ctx = Arc::new(Ctx {
@@ -216,13 +240,17 @@ fn start(args: Args) -> Result<(), String> {
         spawn: Box::new(|exe, file| std::process::Command::new(exe).arg(file).spawn().map(drop)),
     });
     let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-    // F14: the first instance owns the pipe. Creating it with `first_pipe_instance` fails when another one exists.
+    // F14: the first instance owns the pipe. Creating it with `first_pipe_instance` fails when another one exists. Only our user
+    // may open it (a protected DACL), so no other user can connect to it, and a name taken by someone else is not trusted (B1).
     let first = {
         let _g = rt.enter();
-        ServerOptions::new()
-            .first_pipe_instance(true)
-            .reject_remote_clients(true)
-            .create(&pipe)
+        create_user_only_pipe(
+            ServerOptions::new()
+                .first_pipe_instance(true)
+                .reject_remote_clients(true),
+            &pipe,
+            &me,
+        )
     };
     let server = match first {
         Ok(s) => Some(s),
@@ -235,7 +263,7 @@ fn start(args: Args) -> Result<(), String> {
                     .map(|f| json!({"type": "open", "path": f}).to_string())
                     .collect()
             };
-            if send(&pipe, &lines) {
+            if send(&pipe, &lines, &me) {
                 return Ok(());
             }
             // nobody answers: a launch never fails, so open the files here and run without the pipe
@@ -266,7 +294,7 @@ fn start(args: Args) -> Result<(), String> {
         || wry::webview_version().is_err();
     if no_webview {
         if let Some(s) = server {
-            rt.spawn(pipe_loop(s, pipe, ctx.clone(), None));
+            rt.spawn(pipe_loop(s, pipe, me, ctx.clone(), None));
         }
         return browser_fallback(&product, port, &host_json);
     }
@@ -274,7 +302,7 @@ fn start(args: Args) -> Result<(), String> {
     let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
     let proxy = event_loop.create_proxy();
     if let Some(s) = server {
-        rt.spawn(pipe_loop(s, pipe, ctx.clone(), Some(proxy.clone())));
+        rt.spawn(pipe_loop(s, pipe, me, ctx.clone(), Some(proxy.clone())));
     }
     let window = WindowBuilder::new()
         .with_title(&product)
@@ -367,4 +395,57 @@ fn browser_fallback(product: &str, port: u16, host_json: &Path) -> Result<(), St
     }
     let _ = std::fs::remove_file(host_json);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn foreign() -> Sid {
+        Sid::from_string("S-1-5-18").unwrap() // LocalSystem stands in for another identity
+    }
+
+    #[test]
+    fn a_server_run_by_another_identity_is_refused() {
+        let (me, _) = Sid::current().unwrap();
+        assert!(server_is(&me, Ok(me.clone())));
+        assert!(!server_is(&me, Ok(foreign())));
+        assert!(!server_is(&me, Err(std::io::Error::other("access denied"))));
+    }
+
+    /// The real client path against a real pipe server: with a matching identity the line arrives; when the server's identity is
+    /// not the expected one, `send` writes nothing and says so (the caller then opens the files itself).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn send_writes_only_to_a_server_of_our_own_identity() {
+        let (me, session) = Sid::current().unwrap();
+        for (expected, delivered) in [(me.clone(), true), (foreign(), false)] {
+            let name = format!(
+                r"\\.\pipe\suite-host-test-{}-{session}-{delivered}",
+                std::process::id()
+            );
+            let server = create_user_only_pipe(
+                ServerOptions::new().first_pipe_instance(true),
+                &name,
+                &me,
+            )
+            .unwrap();
+            let reader = tokio::spawn(async move {
+                server.connect().await.unwrap();
+                let mut buf = vec![];
+                let _ = tokio::time::timeout(
+                    Duration::from_secs(3),
+                    server.take(1024).read_to_end(&mut buf),
+                )
+                .await;
+                buf
+            });
+            let (n, ex) = (name.clone(), expected.clone());
+            let sent = tokio::task::spawn_blocking(move || send(&n, &["hello".into()], &ex))
+                .await
+                .unwrap();
+            assert_eq!(sent, delivered);
+            let got = reader.await.unwrap();
+            assert_eq!(got, if delivered { b"hello".to_vec() } else { vec![] });
+        }
+    }
 }

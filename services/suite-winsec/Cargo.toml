@@ -1,0 +1,26 @@
+[package]
+name = "suite-winsec"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "The few Win32 security calls the desktop host needs (user SID, pipe server identity, user-only pipe DACL, DLL search) behind a safe API. The only crate of the services workspace that may contain unsafe code, in one module"
+
+# Not `workspace = true`: the workspace forbids unsafe code, and `forbid` cannot be lifted for one module. Here it is `deny`, and
+# only `sys.rs` carries an `allow`. Every unsafe block there has a SAFETY comment (docs/phase4/desktop-host.md).
+[lints.rust]
+unsafe_code = "deny"
+
+[target.'cfg(windows)'.dependencies]
+tokio = { version = "1", features = ["net"] }
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Pipes",
+    "Win32_System_Threading",
+] }
+
+[target.'cfg(windows)'.dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "net"] }

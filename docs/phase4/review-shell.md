@@ -53,6 +53,8 @@ The weak spots are all **cross-user on a shared Windows host** (RDS, fast user s
 ### B1. The single-instance pipe can be squatted by another user, who then receives every file path and blocks the app
 `host.rs:206-211` (the name), `host.rs:220-226` (`first_pipe_instance`), `host.rs:227-249` (the fallback), `host.rs:62-71` (`send`).
 
+**Status: fixed (2026-10-22).** The reviewer's fix as written: client `send` (`host.rs` `SQOS_IDENTIFICATION`, `server_is`) opens with SQOS identification and checks the server's SID before writing; the server creates every instance with `D:P(A;;GA;;;<SID>)` (`suite_winsec::create_user_only_pipe`); the name is `<id>-host-<SID>-<session>`. Tests: `host::tests::a_server_run_by_another_identity_is_refused` (injected foreign SID and an error), `host::tests::send_writes_only_to_a_server_of_our_own_identity` (real pipe, matching SID delivers, foreign SID writes nothing), `suite-winsec/tests/pipe.rs` (SID round trip, a client sees the real server SID, a second first-instance is refused), and the `a_second_launch_hands_its_file_to_the_running_instance` process test. The only `unsafe` is in `services/suite-winsec/src/sys.rs`. The SID comparison is by bytes, which is what `EqualSid` does. A real second account was not available, so the DACL refusing another user is by construction (SDDL), not observed.
+
 - **The name is predictable:** `\\.\pipe\suite-host-<USERNAME>`. `USERNAME` is no secret. `query user` lists every session on an RDS
   host, and domain account names are public inside the domain.
 - **What `first_pipe_instance(true)` checks:** only that *no* pipe with that name exists. It does not check who created it.
