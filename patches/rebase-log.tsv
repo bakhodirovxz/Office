@@ -44,3 +44,16 @@ date	repo	from_sha	to_sha	upstream_commits	patch	result	conflicted_files	conflic
 2026-10-22	deckcraft	1dc6972	fe510bd	60	0122	clean	-	0	0.01	0	-	-	script
 2026-10-22	deckcraft	1dc6972	fe510bd	60	0123	clean	-	0	0.01	0	-	-	script
 2026-10-22	deckcraft	1dc6972	fe510bd	60	0124	resolved	crates/engine/src/cmd/file.rs:261	2	0.31	80	-	-	agent-opus
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0001	resolved	apps/wordcraft-web/Cargo.toml:32,apps/wordcraft-web/src/web.rs:96	4	0.44	22	-	-	agent-opus
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0002	clean	-	0	0.12	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0003	3way	-	0	0.04	2	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0004	3way	-	0	0.03	2	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0005	clean	-	0	0.10	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0100	clean	-	0	0.06	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0101	resolved	crates/ui-egui/src/ribbon.rs:340	2	0.44	97	-	-	agent-opus
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0102	clean	-	0	0.06	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0103	clean	-	0	0.06	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0110	clean	-	0	0.07	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0111	clean	-	0	0.04	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0120	clean	-	0	0.06	0	-	-	script
+2026-10-22	wordcraft	eae2421	2e6db0b	281	0121	clean	-	0	0.06	0	-	-	script
