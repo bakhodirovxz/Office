@@ -41,6 +41,8 @@ pub mod keytips;
 pub mod office_overlay;
 #[cfg(test)]
 mod office_overlay_tests;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod office_history;
 pub mod office_toolbar;
 pub mod outline;
 pub mod panes;
@@ -1234,7 +1236,7 @@ impl SheetApp {
         {
             self.grid.last_autosave = now;
             self.store_view_state();
-            let _ = self.session.run("file.save", json!({}));
+            let _ = self.session.run("file.save", json!({"autosave": true}));
         }
         // Window title.
         if let Some(d) = self.session.active() {

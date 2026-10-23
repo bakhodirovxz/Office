@@ -16,6 +16,11 @@ pub trait Hook: Send + Sync {
     fn before(&self, _session: &Session, _id: &str, _params: &Json) -> std::result::Result<(), String> {
         Ok(())
     }
+    /// Runs the command: `run(session, params)` is the former path. A hook that must change the session around the command (a stamp
+    /// on a copy being made, restored afterwards) overrides this; the default just runs it. Called between `before` and `after`.
+    fn wrap(&self, session: &mut Session, _id: &str, params: &Json, run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>) -> Result<Json> {
+        run(session, params.clone())
+    }
     /// Called after the command ran (also when it failed), with its result.
     fn after(&self, _session: &Session, _id: &str, _params: &Json, _result: &Result<Json>) {}
 }

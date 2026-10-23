@@ -1,0 +1,964 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 21:00:00 +0500
+Subject: [PATCH 46/46] office layer: version snapshot on save, office.history
+ and the XDFU watermark
+
+PLAN WP10/WP11 for Sheets, on the 0141 hook. The hook gains `wrap` (default: run the command), the engine gains
+`register_command` (a command found by id but not listed), and the new ui-egui/src/office_history.rs (desktop only,
+installed from main) fills them: a snapshot after file.save/file.saveAs of the document's own file (autosave at most
+every 5 minutes per file), the `office.history` command, and with xdfu = on the watermark of every copy of a grif
+workbook (print, PDF/CSV/HTML export, save as, file.saveBytes) with the copy number from the audit chain, plus
+`office.xdfu.insertGrif`. Nothing is refused. With xdfu off nothing XDFU exists. Autosave passes `autosave: true`.
+---
+ Cargo.lock                              |  89 ++++++++-
+ apps/gridcraft/src/main.rs              |   1 +
+ crates/engine/src/cmd/mod.rs            |   9 +
+ crates/engine/src/lib.rs                |   4 +-
+ crates/engine/src/office_hook.rs        |   5 +
+ crates/engine/tests/office_hook.rs      |   2 +-
+ crates/ui-egui/Cargo.toml               |   2 +
+ crates/ui-egui/src/lib.rs               |   4 +-
+ crates/ui-egui/src/office_history.rs    | 326 ++++++++++++++++++++++++++++++++
+ crates/ui-egui/tests/office_history.rs  |  55 ++++++
+ crates/ui-egui/tests/office_xdfu.rs     | 164 ++++++++++++++++
+ crates/ui-egui/tests/office_xdfu_off.rs |  53 ++++++
+ 12 files changed, 700 insertions(+), 14 deletions(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 314d306..9698561 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -129,7 +129,7 @@ checksum = "35f0f96ce78e38c3dc6d8948aa8163d06385be74000f3c7a95bf1eef35d3ea32"
+ dependencies = [
+  "cipher",
+  "cpubits",
+- "cpufeatures",
++ "cpufeatures 0.3.1",
+ ]
+ 
+ [[package]]
+@@ -467,6 +467,15 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "block-buffer"
++version = "0.10.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++dependencies = [
++ "generic-array",
++]
++
+ [[package]]
+ name = "block-buffer"
+ version = "0.12.1"
+@@ -634,7 +643,7 @@ version = "0.5.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e8cf2a2c93cd704877c0858356ed03480ff301ee950b43f1cbe4573b088bfa6c"
+ dependencies = [
+- "crypto-common",
++ "crypto-common 0.2.2",
+  "inout",
+ ]
+ 
+@@ -742,6 +751,15 @@ version = "0.1.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "15b85f9c39137c3a891689859392b1bd49812121d0d61c9caf00d46ed5ce06ae"
+ 
++[[package]]
++name = "cpufeatures"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++dependencies = [
++ "libc",
++]
++
+ [[package]]
+ name = "cpufeatures"
+ version = "0.3.1"
+@@ -816,6 +834,16 @@ version = "0.2.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+ 
++[[package]]
++name = "crypto-common"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++dependencies = [
++ "generic-array",
++ "typenum",
++]
++
+ [[package]]
+ name = "crypto-common"
+ version = "0.2.2"
+@@ -855,14 +883,24 @@ dependencies = [
+  "rayon",
+ ]
+ 
++[[package]]
++name = "digest"
++version = "0.10.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++dependencies = [
++ "block-buffer 0.10.4",
++ "crypto-common 0.1.7",
++]
++
+ [[package]]
+ name = "digest"
+ version = "0.11.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+ dependencies = [
+- "block-buffer",
+- "crypto-common",
++ "block-buffer 0.12.1",
++ "crypto-common 0.2.2",
+ ]
+ 
+ [[package]]
+@@ -1342,6 +1380,16 @@ dependencies = [
+  "slab",
+ ]
+ 
++[[package]]
++name = "generic-array"
++version = "0.14.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
++dependencies = [
++ "typenum",
++ "version_check",
++]
++
+ [[package]]
+ name = "gethostname"
+ version = "1.1.0"
+@@ -1627,7 +1675,7 @@ dependencies = [
+  "gridcraft-formula",
+  "serde",
+  "serde_json",
+- "sha2",
++ "sha2 0.11.0",
+  "thiserror 2.0.21",
+ ]
+ 
+@@ -1665,6 +1713,7 @@ dependencies = [
+  "sys-locale",
+  "toml",
+  "web-sys",
++ "xdfu-core",
+  "zbus",
+ ]
+ 
+@@ -1695,7 +1744,7 @@ dependencies = [
+  "gridcraft-model",
+  "quick-xml",
+  "sha1",
+- "sha2",
++ "sha2 0.11.0",
+  "thiserror 2.0.21",
+  "zip",
+ ]
+@@ -3210,8 +3259,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+ dependencies = [
+  "cfg-if",
+- "cpufeatures",
+- "digest",
++ "cpufeatures 0.3.1",
++ "digest 0.11.3",
++]
++
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures 0.2.17",
++ "digest 0.10.7",
+ ]
+ 
+ [[package]]
+@@ -3221,8 +3281,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+ dependencies = [
+  "cfg-if",
+- "cpufeatures",
+- "digest",
++ "cpufeatures 0.3.1",
++ "digest 0.11.3",
+ ]
+ 
+ [[package]]
+@@ -3393,6 +3453,7 @@ version = "0.1.0"
+ dependencies = [
+  "ron",
+  "serde_json",
++ "sha2 0.10.9",
+  "toml_edit 0.22.27",
+ ]
+ 
+@@ -4572,6 +4633,14 @@ version = "0.3.11"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
+ 
++[[package]]
++name = "xdfu-core"
++version = "0.1.0"
++dependencies = [
++ "serde_json",
++ "sha2 0.10.9",
++]
++
+ [[package]]
+ name = "xkbcommon-dl"
+ version = "0.4.2"
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index 950ecac..f7a7e75 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -256,6 +256,7 @@ fn main() -> eframe::Result<()> {
+         return Ok(());
+     }
+     gridcraft_ui_egui::office_toolbar::init();
++    gridcraft_ui_egui::office_history::init();
+     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
+     let mut sample: Option<String> = None;
+     let mut files: Vec<String> = Vec::new();
+diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
+index 78e6576..a634c60 100644
+--- a/crates/engine/src/cmd/mod.rs
++++ b/crates/engine/src/cmd/mod.rs
+@@ -181,6 +181,15 @@ pub fn register_test_command(id: &'static str, run: Run) {
+     test_commands().push(spec);
+ }
+ 
++/// Registers a command of the office layer (`office.history`, `office.xdfu.insertGrif`): found by `find_command` and run by
++/// `Session::execute`, not listed by `command_specs`. Needs a workbook, is not journaled and not undoable (an edit it makes goes
++/// through the commands it calls).
++pub fn register_command(id: &'static str, label: &'static str, params: &'static str, run: Run) {
++    let spec: &'static CommandSpec =
++        Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: false }));
++    test_commands().push(spec);
++}
++
+ fn test_commands() -> std::sync::MutexGuard<'static, Vec<&'static CommandSpec>> {
+     #[allow(clippy::unwrap_used)] // a poisoned test registry has no meaningful recovery
+     match TEST_COMMANDS.lock() {
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index df16f1a..dab40de 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -32,7 +32,7 @@ use gridcraft_model::Workbook;
+ use serde::Serialize;
+ use serde_json::Value as Json;
+ 
+-pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_test_command};
++pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_command, register_test_command};
+ pub use gridcraft_calc as calc;
+ pub use gridcraft_core as core;
+ pub use gridcraft_formula as formula;
+@@ -340,7 +340,7 @@ impl Session {
+     pub fn execute(&mut self, id: &str, params: Json) -> Result<Json> {
+         let Some(hook) = office_hook::installed() else { return self.execute_inner(id, params) };
+         hook.before(self, id, &params).map_err(|why| EngineError::Disabled(id.to_string(), why))?;
+-        let result = self.execute_inner(id, params.clone());
++        let result = hook.wrap(self, id, &params, &mut |s, p| s.execute_inner(id, p));
+         hook.after(self, id, &params, &result);
+         result
+     }
+diff --git a/crates/engine/src/office_hook.rs b/crates/engine/src/office_hook.rs
+index 770f82e..bf21907 100644
+--- a/crates/engine/src/office_hook.rs
++++ b/crates/engine/src/office_hook.rs
+@@ -16,6 +16,11 @@ pub trait Hook: Send + Sync {
+     fn before(&self, _session: &Session, _id: &str, _params: &Json) -> std::result::Result<(), String> {
+         Ok(())
+     }
++    /// Runs the command: `run(session, params)` is the former path. A hook that must change the session around the command (a stamp
++    /// on a copy being made, restored afterwards) overrides this; the default just runs it. Called between `before` and `after`.
++    fn wrap(&self, session: &mut Session, _id: &str, params: &Json, run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>) -> Result<Json> {
++        run(session, params.clone())
++    }
+     /// Called after the command ran (also when it failed), with its result.
+     fn after(&self, _session: &Session, _id: &str, _params: &Json, _result: &Result<Json>) {}
+ }
+diff --git a/crates/engine/tests/office_hook.rs b/crates/engine/tests/office_hook.rs
+index 65c5073..608fd86 100644
+--- a/crates/engine/tests/office_hook.rs
++++ b/crates/engine/tests/office_hook.rs
+@@ -56,7 +56,7 @@ fn hook_sees_save() {
+ #[test]
+ fn guarded_ids_exist() {
+     let ids: Vec<&str> = command_specs().iter().map(|c| c.id).collect();
+-    for id in ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "edit.copy", "edit.cut"] {
++    for id in ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "file.saveBytes", "edit.copy", "edit.cut"] {
+         assert!(ids.contains(&id), "{id} is not registered");
+     }
+     assert!(ids.iter().any(|id| id.starts_with("file.print")) && ids.iter().any(|id| id.starts_with("file.export")));
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 1de0a74..fc187f9 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -35,6 +35,8 @@ gridcraft-xlsx = { workspace = true, features = ["test-support"] }
+ sys-locale = { workspace = true }
+ # office overlay (patches/gridcraft/0140): the shared settings.toml (toolbar mode); the web has no file and is always simple
+ suite-core = { path = "../../../../crates/suite-core" }
++# office overlay (patches/gridcraft/0143): the XDFU grif finder, stamp line and keyed audit chain
++xdfu-core = { path = "../../../../crates/xdfu-core" }
+ 
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ # Read the browser's preferred language for the first-run web interface language.
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 829ea38..fe10cd5 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -41,6 +41,8 @@ pub mod keytips;
+ pub mod office_overlay;
+ #[cfg(test)]
+ mod office_overlay_tests;
++#[cfg(not(target_arch = "wasm32"))]
++pub mod office_history;
+ pub mod office_toolbar;
+ pub mod outline;
+ pub mod panes;
+@@ -1234,7 +1236,7 @@ impl SheetApp {
+         {
+             self.grid.last_autosave = now;
+             self.store_view_state();
+-            let _ = self.session.run("file.save", json!({}));
++            let _ = self.session.run("file.save", json!({"autosave": true}));
+         }
+         // Window title.
+         if let Some(d) = self.session.active() {
+diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
+new file mode 100644
+index 0000000..8506815
+--- /dev/null
++++ b/crates/ui-egui/src/office_history.rs
+@@ -0,0 +1,326 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
++//! `office.history` command behind the toolbar's Version History button, and the XDFU watermark (WP11).
++//!
++//! XDFU is watermark only (owner decision 2026-10-22): nothing is ever refused. When `xdfu = on` and the open workbook carries a grif
++//! (XDFU, ХДФУ, ДСП in the first five rows of the first sheet or in its headers and footers), every copy made by print, PDF/CSV/HTML
++//! export, save-as, or `file.saveBytes` (the web host's download) is stamped with the Resolution 766 cl. 12 line: copy number (the keyed
++//! audit chain's next `seq`), network address, user, date and time. The working file is not a copy: a plain save is never stamped.
++//! Formats with page setup (xlsx, json, pdf, print) get the line as the first line of the centre footer for the duration of the
++//! command, restored afterwards; csv, tsv, txt and html get it as their first line. `edit.copy` and `edit.cut` are not blocked and
++//! carry no mark (clipboard text has no place for one).
++//! With `xdfu = off` nothing XDFU is registered, no check runs and no audit file is created.
++//!
++//! Desktop only; `init` installs the hook once, from the app's `main`.
++
++use std::path::{Path, PathBuf};
++use std::sync::{Arc, Mutex, OnceLock};
++use std::time::{Duration, Instant};
++
++use gridcraft_engine::cmd::print::{codes_to_fields, join_header_footer, split_header_footer};
++use gridcraft_engine::core::RangeRef;
++use gridcraft_engine::model::Workbook;
++use gridcraft_engine::office_hook::{self, Hook};
++use gridcraft_engine::{EngineError, Result, Session, register_command};
++use serde_json::{Value as Json, json};
++use suite_core::history::{self, Store};
++use xdfu_core::audit::{Appended, now_secs, utc_text};
++use xdfu_core::{Issuer, Stamp};
++
++/// An autosave (`file.save` with `autosave: true`, every ~2 s while dirty) snapshots at most this often per document. An explicit save
++/// always snapshots (the store itself skips a file whose bytes did not change).
++const AUTOSAVE_EVERY: Duration = Duration::from_secs(300);
++
++static STORE: OnceLock<Option<Store>> = OnceLock::new();
++static XDFU: OnceLock<Xdfu> = OnceLock::new();
++static LAST_SNAPSHOT: Mutex<Vec<(String, Instant)>> = Mutex::new(Vec::new());
++
++struct Xdfu {
++    log: PathBuf,
++    key: PathBuf,
++    issuer: Mutex<Option<Issuer>>,
++}
++
++struct Layer;
++
++/// Reads the shared settings and installs the layer. Without the overlay it does nothing (upstream's behaviour).
++pub fn init() {
++    if crate::office_overlay::ACTIVE {
++        let on = suite_core::settings::load().xdfu;
++        install(Store::from_settings(), if on { history::xdfu_audit_paths() } else { None });
++    }
++}
++
++/// Installs the layer once per process. `store` takes the snapshots (`None`: no history); `audit` is the XDFU audit log and key paths
++/// (`None`: XDFU off, nothing of it is registered). Returns false when a layer is already installed.
++pub fn install(store: Option<Store>, audit: Option<(PathBuf, PathBuf)>) -> bool {
++    if STORE.set(store).is_err() {
++        return false;
++    }
++    register_command("office.history", "Version History", "{} (opens the History panel for the document's file)", history_cmd);
++    if let Some((log, key)) = audit {
++        let _ = XDFU.set(Xdfu { log, key, issuer: Mutex::new(None) });
++        register_command(
++            "office.xdfu.insertGrif",
++            "Insert XDFU grif",
++            "{grif?: \"XDFU\"|\"ХДФУ\"|\"ДСП\"} → {grif, copy}: the first sheet's header, right section, with \"Nusxa N\" from the audit counter",
++            insert_grif,
++        );
++    }
++    office_hook::install(Box::new(Layer))
++}
++
++fn bad(cmd: &str, msg: &str) -> EngineError {
++    EngineError::BadParams { cmd: cmd.into(), msg: msg.into() }
++}
++
++fn history_cmd(s: &mut Session, _: &Json) -> Result<Json> {
++    let path = s.doc()?.path.clone().ok_or_else(|| bad("office.history", "Save the file first, then open its version history."))?;
++    history::open_panel(Path::new(&path)).map_err(|e| EngineError::Internal("office.history".into(), e.to_string()))?;
++    Ok(json!({"path": path}))
++}
++
++impl Hook for Layer {
++    fn wrap(&self, s: &mut Session, id: &str, params: &Json, run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>) -> Result<Json> {
++        let Some(x) = XDFU.get() else { return run(s, params.clone()) };
++        let Some((event, ext)) = copy_kind(s, id, params) else { return run(s, params.clone()) };
++        if !has_grif(s) {
++            return run(s, params.clone());
++        }
++        let name = s.active().map(|d| d.display_title()).unwrap_or_default();
++        x.issue(event, &name, |stamp| make_copy(s, run, params, &ext, stamp))
++    }
++
++    fn after(&self, s: &Session, id: &str, params: &Json, result: &Result<Json>) {
++        if !matches!(id, "file.save" | "file.saveAs") {
++            return;
++        }
++        let (Ok(out), Some(Some(store)), Some(d)) = (result, STORE.get(), s.active()) else { return };
++        // Only the document's own file is versioned: a csv/pdf copy, or a save that opened the Save As dialog, is not.
++        let (Some(path), Some(saved)) = (d.path.as_deref(), out.get("path").and_then(Json::as_str)) else { return };
++        if saved != path {
++            return;
++        }
++        let autosave = params.get("autosave").and_then(Json::as_bool) == Some(true);
++        let now = Instant::now();
++        let mut last = LAST_SNAPSHOT.lock().unwrap_or_else(|e| e.into_inner());
++        let at = last.iter().position(|(p, _)| p == path);
++        if autosave && at.is_some_and(|i| now.duration_since(last[i].1) < AUTOSAVE_EVERY) {
++            return;
++        }
++        match at {
++            Some(i) => last[i].1 = now,
++            None => last.push((path.to_string(), now)),
++        }
++        drop(last);
++        if let Err(e) = store.snapshot(Path::new(path), None) {
++            eprintln!("office: version snapshot of {path} failed: {e}");
++        }
++    }
++}
++
++// ---------------------------------------------------------------- XDFU: which commands make a copy
++
++/// `(audit event, output extension)` when the command makes a copy of the workbook, else `None`.
++fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, String)> {
++    let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
++    let ext = |x: &str| Path::new(x).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
++    match id {
++        "file.print" => Some(("print", "pdf".into())),
++        "file.exportPdf" => Some(("export", "pdf".into())),
++        "file.exportCsv" => Some(("export", "csv".into())),
++        "file.exportHtml" => Some(("export", "html".into())),
++        // The working file itself is not a copy; a save to another path (a first save, a pdf, a csv) is.
++        "file.save" | "file.saveAs" => {
++            let path = path?;
++            if s.active()?.path.as_deref() == Some(path) { None } else { Some(("save_as", ext(path))) }
++        }
++        "file.saveBytes" => Some(("download", p.get("format").and_then(Json::as_str).unwrap_or("xlsx").to_ascii_lowercase())),
++        _ => None,
++    }
++}
++
++/// The first five rows of the first sheet and its headers and footers hold a grif.
++fn has_grif(s: &Session) -> bool {
++    let Some(sh) = s.active().and_then(|d| d.wb.sheet(0)) else { return false };
++    let mut text = String::new();
++    for (_, c) in sh.cells.iter_range(RangeRef::rows(0, 4)) {
++        text.push_str(&c.input_text());
++        text.push('\n');
++    }
++    let p = &sh.print;
++    for spec in [&p.header, &p.footer, &p.first_header, &p.first_footer, &p.even_header, &p.even_footer] {
++        for part in split_header_footer(spec) {
++            // drop the `&X` codes that sit against the text (`&BXDFU`)
++            let mut it = part.chars();
++            while let Some(c) = it.next() {
++                if c == '&' {
++                    it.next();
++                } else {
++                    text.push(c);
++                }
++            }
++            text.push('\n');
++        }
++    }
++    xdfu_core::find_grif(&text).is_some()
++}
++
++impl Xdfu {
++    /// Runs `produce` with the stamp of the next copy and writes the audit line when it succeeded. The copy is made whatever happens
++    /// to the log (nothing is refused): an unusable log goes to stderr and the stamp then carries copy number 0.
++    fn issue<T>(&self, event: &str, file: &str, produce: impl FnOnce(&Stamp) -> Result<T>) -> Result<T> {
++        let mut guard = self.issuer.lock().unwrap_or_else(|e| e.into_inner());
++        if guard.is_none() {
++            match Issuer::open(&self.log, Some(&self.key)) {
++                Ok(i) => *guard = Some(i),
++                Err(e) => eprintln!("office: XDFU audit log {} unusable: {e}", self.log.display()),
++            }
++        }
++        let mut produce = Some(produce);
++        let mut slot: Option<Result<T>> = None;
++        if let Some(i) = guard.as_ref() {
++            let r = i.issue(event, file, |st| {
++                let out = (produce.take().expect("produce runs once"))(st);
++                let ok = out.is_ok();
++                slot = Some(out);
++                if ok { Ok(()) } else { Err("the copy was not made") }
++            });
++            if let Err(Appended::Log(e)) = r {
++                eprintln!("office: XDFU audit write failed: {e}");
++            }
++        }
++        match slot {
++            Some(r) => r,
++            None => {
++                let st = Stamp { copy: 0, client: xdfu_core::machine_addr(), user: xdfu_core::os_user(), when: utc_text(now_secs()) };
++                (produce.take().expect("produce did not run"))(&st)
++            }
++        }
++    }
++}
++
++/// Runs the copying command with the stamp in place and the working document back as it was afterwards.
++fn make_copy(
++    s: &mut Session,
++    run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>,
++    params: &Json,
++    ext: &str,
++    stamp: &Stamp,
++) -> Result<Json> {
++    let line = if ext == "pdf" { stamp.ascii_line() } else { stamp.line() };
++    let text = matches!(ext, "csv" | "tsv" | "txt" | "html" | "htm");
++    let swapped = if text { None } else { stamp_footers(s, &line) };
++    let r = run(s, params.clone());
++    if let Some((orig, stamped)) = swapped
++        && let Ok(d) = s.doc_mut()
++    {
++        if Arc::ptr_eq(&d.wb, &stamped) {
++            d.wb = orig.clone();
++        }
++        // a save to a new xlsx makes the stamped workbook "the saved one": the working document stays clean
++        if Arc::ptr_eq(&d.saved, &stamped) {
++            d.saved = orig;
++        }
++    }
++    let mut out = r?;
++    if text {
++        stamp_output(&mut out, if ext == "htm" { "html" } else { ext }, &line)?;
++    }
++    Ok(out)
++}
++
++/// The workbook with `line` at the top of every sheet's centre footer (in the variants the sheet uses). Returns (original, stamped).
++fn stamp_footers(s: &mut Session, line: &str) -> Option<(Arc<Workbook>, Arc<Workbook>)> {
++    let d = s.doc_mut().ok()?;
++    let orig = d.wb.clone();
++    let mut wb = (*orig).clone();
++    for sh in &mut wb.sheets {
++        let p = &mut Arc::make_mut(sh).print;
++        p.footer = with_stamp(&p.footer, line);
++        if p.different_odd_even {
++            p.even_footer = with_stamp(&p.even_footer, line);
++        }
++        if p.different_first {
++            p.first_footer = with_stamp(&p.first_footer, line);
++        }
++    }
++    let stamped = Arc::new(wb);
++    d.wb = stamped.clone();
++    Some((orig, stamped))
++}
++
++/// The stamp as the first line of the centre section: footers sit on their last line, so the stamp is above anything on the sides.
++fn with_stamp(footer: &str, line: &str) -> String {
++    let mut sec = split_header_footer(footer);
++    let line = line.replace('&', "&&");
++    sec[1] = if !sec[1].is_empty() {
++        format!("{line}\n{}", sec[1])
++    } else if !sec[0].is_empty() || !sec[2].is_empty() {
++        format!("{line}\n ")
++    } else {
++        line
++    };
++    join_header_footer(&sec)
++}
++
++/// csv, tsv, txt and html copies: the line goes on top of the produced file (`path`) or bytes (`base64`). A copy that cannot be stamped
++/// is deleted rather than left unmarked.
++fn stamp_output(out: &mut Json, ext: &str, line: &str) -> Result<()> {
++    let fail = |m: String| EngineError::Internal("office.xdfu".into(), m);
++    if let Some(b64) = out.get("base64").and_then(Json::as_str) {
++        let old = gridcraft_engine::io::base64_decode(b64).ok_or_else(|| fail("bad base64".into()))?;
++        let new = xdfu_core::stamp_text(&old, ext, line).map_err(fail)?;
++        out["base64"] = json!(gridcraft_engine::io::base64_encode(&new));
++        out["bytes"] = json!(new.len());
++    } else if let Some(path) = out.get("path").and_then(Json::as_str).map(str::to_string) {
++        let done = std::fs::read(&path)
++            .map_err(|e| e.to_string())
++            .and_then(|old| xdfu_core::stamp_text(&old, ext, line))
++            .and_then(|new| std::fs::write(&path, &new).map(|()| new.len()).map_err(|e| e.to_string()));
++        match done {
++            Ok(n) => out["bytes"] = json!(n),
++            Err(e) => {
++                let _ = std::fs::remove_file(&path);
++                return Err(fail(e));
++            }
++        }
++    }
++    Ok(())
++}
++
++// ---------------------------------------------------------------- office.xdfu.insertGrif
++
++fn insert_grif(s: &mut Session, p: &Json) -> Result<Json> {
++    const CMD: &str = "office.xdfu.insertGrif";
++    let Some(x) = XDFU.get() else { return Err(bad(CMD, "XDFU is off")) };
++    let grif = match p.get("grif").and_then(Json::as_str) {
++        None => "XDFU",
++        Some(g) if ["XDFU", "ХДФУ", "ДСП"].contains(&g) => g,
++        Some(g) => return Err(bad(CMD, &format!("`grif` must be XDFU, ХДФУ or ДСП, not `{g}`"))),
++    };
++    let (name, print) = {
++        let d = s.doc()?;
++        (d.display_title(), d.wb.sheet(0).ok_or_else(|| bad(CMD, "the workbook has no sheet"))?.print.clone())
++    };
++    x.issue("grif_inserted", &name, |st| {
++        if st.copy == 0 {
++            return Err(EngineError::Other("the XDFU audit log is unusable: no copy number".into()));
++        }
++        let mut pages = vec![("odd", &print.header)];
++        if print.different_first {
++            pages.push(("first", &print.first_header));
++        }
++        for (page, spec) in pages {
++            // keep what the right section held, unless it is an earlier grif (then this replaces it)
++            let old = codes_to_fields(&split_header_footer(spec)[2]);
++            let keep = if xdfu_core::find_grif(&old).is_some() { String::new() } else { old };
++            let mut text = format!("{grif}\nNusxa {}", st.copy);
++            if !keep.is_empty() {
++                text = format!("{text}\n{keep}");
++            }
++            s.execute("pageLayout.headerFooter", json!({"sheet": 0, "page": page, "part": "header", "section": "right", "text": text}))?;
++        }
++        Ok(json!({"grif": grif, "copy": st.copy}))
++    })
++}
+diff --git a/crates/ui-egui/tests/office_history.rs b/crates/ui-egui/tests/office_history.rs
+new file mode 100644
+index 0000000..b26da6e
+--- /dev/null
++++ b/crates/ui-egui/tests/office_history.rs
+@@ -0,0 +1,55 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Version snapshots through the command hook (patch 0143), with a store in a temporary folder and XDFU off. The hook is process-wide,
++//! so this file is its own test binary.
++use gridcraft_engine::{Session, find_command};
++use gridcraft_ui_egui::office_history;
++use serde_json::json;
++use suite_core::history::{Limits, Store};
++
++fn store(root: &std::path::Path) -> Store {
++    Store::new(root.join("history"), Limits { versions: 50, days: 365, max_bytes: 1 << 30, big_file_bytes: 50 << 20, big_file_versions: 5 })
++}
++
++#[test]
++fn save_snapshot_list_restore_round_trip() {
++    let dir = std::env::temp_dir().join(format!("office-history-{}", std::process::id()));
++    let _ = std::fs::remove_dir_all(&dir);
++    std::fs::create_dir_all(&dir).unwrap();
++    assert!(office_history::install(Some(store(&dir)), None));
++    assert!(find_command("office.history").is_some(), "the toolbar button needs the command");
++    assert!(find_command("office.xdfu.insertGrif").is_none(), "XDFU is off");
++
++    let mut s = Session::new();
++    s.new_workbook();
++    // no file yet: the command says so instead of opening a panel
++    let e = s.execute("office.history", json!({})).unwrap_err().to_string();
++    assert!(e.contains("Save the file first"), "{e}");
++
++    let file = dir.join("book.xlsx");
++    let path = file.to_string_lossy().to_string();
++    let set = |s: &mut Session, v: i64| s.execute("range.setValues", json!({"range": "A1", "values": [[v]]})).unwrap();
++    let reader = store(&dir); // a second handle on the same folder
++    set(&mut s, 1);
++    s.execute("file.saveAs", json!({"path": path})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 1, "save as snapshots the new file");
++    let v1 = std::fs::read(&file).unwrap();
++
++    set(&mut s, 2);
++    s.execute("file.save", json!({"autosave": true})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 1, "an autosave right after a snapshot adds nothing");
++    s.execute("file.save", json!({})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 2, "an explicit save always snapshots");
++    set(&mut s, 3);
++    s.execute("file.save", json!({})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 3);
++
++    // a csv copy is not a version of the document
++    s.execute("file.exportCsv", json!({"path": dir.join("copy.csv").to_string_lossy()})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 3);
++
++    reader.restore(&file, 1).unwrap();
++    assert_eq!(std::fs::read(&file).unwrap(), v1, "the file is v1 again");
++    assert_eq!(reader.list(&file).unwrap().len(), 4, "restoring adds a version, it destroys none");
++    assert!(reader.verify(&file).is_ok());
++    let _ = std::fs::remove_dir_all(&dir);
++}
+diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
+new file mode 100644
+index 0000000..ace58fd
+--- /dev/null
++++ b/crates/ui-egui/tests/office_xdfu.rs
+@@ -0,0 +1,164 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The XDFU watermark through the command hook (patch 0143): every copy of a grif workbook carries the Resolution 766 cl. 12 line with a
++//! copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the tests share
++//! one audit log, so they run one at a time.
++use std::path::PathBuf;
++use std::sync::{Mutex, MutexGuard, Once};
++
++use gridcraft_engine::{Session, find_command};
++use gridcraft_ui_egui::office_history;
++use serde_json::{Value, json};
++use xdfu_core::audit;
++
++static LOCK: Mutex<()> = Mutex::new(());
++
++fn dir() -> PathBuf {
++    std::env::temp_dir().join(format!("office-xdfu-{}", std::process::id()))
++}
++fn log() -> PathBuf {
++    dir().join("xdfu-audit.jsonl")
++}
++fn lines() -> u64 {
++    if log().exists() { audit::verify(&log()).expect("the audit chain verifies").lines } else { 0 }
++}
++
++/// One test at a time, with the layer installed on first use.
++fn start() -> MutexGuard<'static, ()> {
++    static ONCE: Once = Once::new();
++    let g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
++    ONCE.call_once(|| {
++        let _ = std::fs::remove_dir_all(dir());
++        std::fs::create_dir_all(dir()).unwrap();
++        assert!(office_history::install(None, Some((log(), dir().join("xdfu-audit.key")))));
++    });
++    g
++}
++
++fn book(first: &str) -> Session {
++    let mut s = Session::new();
++    s.new_workbook();
++    s.execute("range.setValues", json!({"range": "A1", "values": [[first], ["Budget"], [1.5]]})).unwrap();
++    s
++}
++fn bytes(v: &Value) -> Vec<u8> {
++    gridcraft_engine::io::base64_decode(v["base64"].as_str().expect("base64")).unwrap()
++}
++fn has(hay: &[u8], needle: &str) -> bool {
++    hay.windows(needle.len()).any(|w| w == needle.as_bytes())
++}
++/// The copy number in the first `XDFU copy N | ` of `hay`.
++fn copy_no(hay: &[u8]) -> u64 {
++    let text = String::from_utf8_lossy(hay);
++    let at = text.find("XDFU copy ").expect("a stamp") + "XDFU copy ".len();
++    text[at..].split(' ').next().unwrap().parse().expect("copy number")
++}
++fn footer_of(p: &PathBuf) -> String {
++    let mut t = Session::new();
++    t.execute("file.open", json!({"path": p.to_string_lossy()})).unwrap();
++    let f = t.doc().unwrap().wb.sheet(0).unwrap().print.footer.clone();
++    f
++}
++
++#[test]
++fn exported_pdf_carries_copy_number_and_user() {
++    let _g = start();
++    let mut s = book("XDFU");
++    let before = lines();
++    let out = bytes(&s.execute("file.exportPdf", json!({})).unwrap());
++    let n = copy_no(&out);
++    assert_eq!(n, before + 1, "the copy number is the audit counter");
++    assert!(has(&out, &format!("(XDFU copy {n} | ")) && has(&out, &format!(" | {} | ", xdfu_core::os_user())), "number and OS user are in the PDF text");
++    assert_eq!(lines(), before + 1);
++    // the working workbook is as it was: no footer left behind
++    assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.footer, "");
++}
++
++#[test]
++fn print_of_a_grif_workbook_succeeds_and_is_stamped() {
++    let _g = start();
++    let mut s = book("\u{414}\u{421}\u{41f}");
++    s.execute("pageLayout.headerFooter", json!({"footer": "&LDept&RPage &P"})).unwrap();
++    s.doc_mut().unwrap().saved = s.doc().unwrap().wb.clone();
++    let out = bytes(&s.execute("file.print", json!({})).unwrap());
++    assert!(has(&out, "(XDFU copy ") && has(&out, "(Dept) Tj") && has(&out, "(Page 1) Tj"), "the stamp joins the footer it found");
++    assert!(!s.doc().unwrap().is_dirty());
++    assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.footer, "&LDept&RPage &P");
++}
++
++#[test]
++fn csv_html_saveas_and_download_are_stamped_and_the_working_file_is_not() {
++    let _g = start();
++    let mut s = book("\u{425}.\u{414}.\u{424}.\u{423}.");
++    let d = dir();
++    let work = d.join("work.xlsx");
++    // the first save of an untitled workbook is a new copy, so it is stamped
++    let before = lines();
++    s.execute("file.saveAs", json!({"path": work.to_string_lossy()})).unwrap();
++    assert_eq!(lines(), before + 1);
++    assert!(footer_of(&work).contains("XDFU copy"), "the saved xlsx carries the stamp");
++    assert!(!s.doc().unwrap().is_dirty() && s.doc().unwrap().path.as_deref() == work.to_str());
++    assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.footer, "", "the working document keeps its own footer");
++
++    // the working file is saved plainly: no stamp, no audit line
++    let n = lines();
++    s.execute("range.setValues", json!({"range": "B2", "values": [[7]]})).unwrap();
++    s.execute("file.save", json!({})).unwrap();
++    s.execute("file.saveAs", json!({"path": work.to_string_lossy()})).unwrap();
++    assert_eq!(lines(), n, "saving the working file writes no audit line");
++
++    let csv = d.join("a.csv");
++    s.execute("file.exportCsv", json!({"path": csv.to_string_lossy()})).unwrap();
++    let csv = std::fs::read(csv).unwrap();
++    assert!(csv.starts_with(b"\"XDFU copy "), "{}", String::from_utf8_lossy(&csv));
++    s.execute("file.exportHtml", json!({"path": d.join("a.html").to_string_lossy()})).unwrap();
++    assert!(has(&std::fs::read(d.join("a.html")).unwrap(), "XDFU copy"));
++    s.execute("file.saveAs", json!({"path": d.join("b.csv").to_string_lossy()})).unwrap();
++    assert!(std::fs::read(d.join("b.csv")).unwrap().starts_with(b"\"XDFU copy "));
++    s.execute("file.saveAs", json!({"path": d.join("c.pdf").to_string_lossy()})).unwrap();
++    assert!(has(&std::fs::read(d.join("c.pdf")).unwrap(), "(XDFU copy "));
++    let dl = bytes(&s.execute("file.saveBytes", json!({"format": "csv"})).unwrap());
++    assert!(dl.starts_with(b"\"XDFU copy "));
++    let dl = bytes(&s.execute("file.saveBytes", json!({"format": "xlsx"})).unwrap());
++    let tmp = d.join("dl.xlsx");
++    std::fs::write(&tmp, dl).unwrap();
++    assert!(footer_of(&tmp).contains("XDFU copy"));
++    assert_eq!(lines(), n + 6);
++    // copy and cut are not blocked (and cannot carry a mark)
++    assert!(s.execute("edit.copy", json!({"range": "A1"})).is_ok() && s.execute("edit.cut", json!({"range": "B2"})).is_ok());
++    let all = std::fs::read_to_string(log()).unwrap();
++    assert!(audit::verify(&log()).is_ok() && all.contains("\"export\"") && all.contains("save_as") && all.contains("download"));
++}
++
++#[test]
++fn a_workbook_without_a_grif_is_never_stamped() {
++    let _g = start();
++    let mut s = book("Quarterly report");
++    let before = lines();
++    let out = bytes(&s.execute("file.exportPdf", json!({})).unwrap());
++    assert!(!has(&out, "XDFU"));
++    s.execute("file.exportCsv", json!({"path": dir().join("plain.csv").to_string_lossy()})).unwrap();
++    assert_eq!(std::fs::read(dir().join("plain.csv")).unwrap(), b"Quarterly report\r\nBudget\r\n1.5\r\n");
++    s.execute("file.print", json!({})).unwrap();
++    s.execute("file.saveBytes", json!({})).unwrap();
++    assert_eq!(lines(), before, "no audit line for a non-grif workbook");
++}
++
++#[test]
++fn insert_grif_writes_the_header_and_takes_a_copy_number() {
++    let _g = start();
++    assert!(find_command("office.xdfu.insertGrif").is_some());
++    let mut s = book("Budget");
++    s.execute("pageLayout.headerFooter", json!({"header": "&LTitle&RPage &P"})).unwrap();
++    let before = lines();
++    assert!(s.execute("office.xdfu.insertGrif", json!({"grif": "nope"})).is_err());
++    let r = s.execute("office.xdfu.insertGrif", json!({"grif": "\u{425}\u{414}\u{424}\u{423}"})).unwrap();
++    assert_eq!(r["copy"], before + 1);
++    let h = s.doc().unwrap().wb.sheet(0).unwrap().print.header.clone();
++    assert_eq!(h, format!("&LTitle&R\u{425}\u{414}\u{424}\u{423}\nNusxa {}\nPage &P", before + 1));
++    assert_eq!(lines(), before + 1);
++    // a workbook that now carries a grif in its header is stamped on export
++    let out = bytes(&s.execute("file.exportPdf", json!({})).unwrap());
++    assert!(has(&out, "(XDFU copy ") && has(&out, "(Nusxa "));
++    s.execute("edit.undo", json!({})).unwrap();
++    assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.header, "&LTitle&RPage &P", "undoable");
++}
+diff --git a/crates/ui-egui/tests/office_xdfu_off.rs b/crates/ui-egui/tests/office_xdfu_off.rs
+new file mode 100644
+index 0000000..28878ae
+--- /dev/null
++++ b/crates/ui-egui/tests/office_xdfu_off.rs
+@@ -0,0 +1,53 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! XDFU off means absent (patch 0143): no command, no check, no audit file, and the bytes of every copy are those of a run without the
++//! layer. Its own test binary: the hook is process-wide, and the reference run has to happen before it is installed.
++use gridcraft_engine::{Session, find_command};
++use gridcraft_ui_egui::office_history;
++use serde_json::json;
++
++fn grif_book() -> Session {
++    let mut s = Session::new();
++    s.new_workbook();
++    s.execute("range.setValues", json!({"range": "A1", "values": [["XDFU"], ["Budget"], [1.5]]})).unwrap();
++    s.execute("pageLayout.headerFooter", json!({"footer": "&LDept&RPage &P"})).unwrap();
++    s
++}
++
++fn copies(dir: &std::path::Path, tag: &str) -> Vec<Vec<u8>> {
++    let mut s = grif_book();
++    let b64 = |v: serde_json::Value| gridcraft_engine::io::base64_decode(v["base64"].as_str().unwrap()).unwrap();
++    let csv = dir.join(format!("{tag}.csv"));
++    s.execute("file.exportCsv", json!({"path": csv.to_string_lossy()})).unwrap();
++    let html = dir.join(format!("{tag}.html"));
++    s.execute("file.exportHtml", json!({"path": html.to_string_lossy()})).unwrap();
++    let pdf_path = dir.join(format!("{tag}.pdf"));
++    s.execute("file.exportPdf", json!({"path": pdf_path.to_string_lossy()})).unwrap();
++    vec![
++        b64(s.execute("file.exportPdf", json!({})).unwrap()),
++        b64(s.execute("file.print", json!({})).unwrap()),
++        b64(s.execute("file.saveBytes", json!({"format": "xlsx"})).unwrap()),
++        b64(s.execute("file.saveBytes", json!({"format": "csv"})).unwrap()),
++        std::fs::read(csv).unwrap(),
++        std::fs::read(html).unwrap(),
++        std::fs::read(pdf_path).unwrap(),
++    ]
++}
++
++#[test]
++fn xdfu_off_registers_nothing() {
++    let dir = std::env::temp_dir().join(format!("office-xdfu-off-{}", std::process::id()));
++    let _ = std::fs::remove_dir_all(&dir);
++    std::fs::create_dir_all(&dir).unwrap();
++    let before = copies(&dir, "before");
++    assert_eq!(before, copies(&dir, "again"), "the copies are reproducible, so they can be compared");
++
++    assert!(office_history::install(None, None));
++    assert!(find_command("office.xdfu.insertGrif").is_none());
++    let after = copies(&dir, "after");
++    assert_eq!(before, after, "bytes of every copy are identical with the layer installed");
++    assert!(!after[0].windows(9).any(|w| w == b"XDFU copy"), "no stamp");
++    assert!(!dir.join("xdfu-audit.jsonl").exists(), "no audit file");
++    let mut s = grif_book();
++    assert!(s.execute("office.xdfu.insertGrif", json!({})).is_err(), "the command does not exist");
++    let _ = std::fs::remove_dir_all(&dir);
++}

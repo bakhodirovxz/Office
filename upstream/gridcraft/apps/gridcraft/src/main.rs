@@ -256,6 +256,7 @@ fn main() -> eframe::Result<()> {
         return Ok(());
     }
     gridcraft_ui_egui::office_toolbar::init();
+    gridcraft_ui_egui::office_history::init();
     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
     let mut sample: Option<String> = None;
     let mut files: Vec<String> = Vec::new();

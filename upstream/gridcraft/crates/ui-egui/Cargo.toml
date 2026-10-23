@@ -35,6 +35,8 @@ gridcraft-xlsx = { workspace = true, features = ["test-support"] }
 sys-locale = { workspace = true }
 # office overlay (patches/gridcraft/0140): the shared settings.toml (toolbar mode); the web has no file and is always simple
 suite-core = { path = "../../../../crates/suite-core" }
+# office overlay (patches/gridcraft/0143): the XDFU grif finder, stamp line and keyed audit chain
+xdfu-core = { path = "../../../../crates/xdfu-core" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # Read the browser's preferred language for the first-run web interface language.

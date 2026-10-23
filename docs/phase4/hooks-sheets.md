@@ -35,11 +35,34 @@ pub fn install(hook: Box<dyn Hook>) -> bool   // once per process; false when on
 | Save, Save As | backstage, Ctrl+S, `file.save` / `file.saveAs` through `run_command` (`lib.rs:403` does the after-save bookkeeping) | yes | `file.save` after-hook = snapshot |
 | AutoSave | `lib.rs:1230-1239` `self.session.run("file.save")` every 2 s while dirty | yes | the after-hook runs per autosave; the snapshot policy must throttle (WP10) |
 | Copy, Cut | ribbon, Ctrl+C/X, context menu: `copy_to_clipboard` -> `run_command("edit.copy" / "edit.cut")` (`lib.rs:451-470`); drag-move `session.run("edit.cut")` (`grid.rs:2320`) | yes | guarded by id; the text reaches `ctx.copy_text` only after a successful `execute`, so a refusal puts nothing on the clipboard |
-| Download (web host, Backstage "download a copy") | `file.saveBytes` (`backstage.rs:911`, `lib.rs:783`) is a **query** that returns the whole file | yes, **but it is not in the guarded list** | add `file.saveBytes` to the guarded set in WP11 (it is an export in all but name) |
+| Download (web host, Backstage "download a copy") | `file.saveBytes` (`backstage.rs:911`, `lib.rs:783`) is a **query** that returns the whole file | yes | stamped like an export (patch 0143; `guarded_ids_exist` lists it). The web build installs no hook (desktop only), so the web download stays unstamped: stated limit |
 | Text copied out of the cell editor or the formula bar | egui's own `TextEdit` Ctrl+C/Ctrl+X handling | **no** | stated limit: it copies the text of one cell being edited, not a range. Not closed in Phase 4 |
 | Operating-system screenshots, Print Screen, a phone camera | outside the process | no | stated limit (R11) |
 | `ui.screenshot {path}` on the control channel | `control.rs:362`: a PNG of the window | no | the control channel exists only when the app is started with `--control` / `GRIDCRAFT_CONTROL_PORT`; the host never passes it. Stated limit |
 | Drag a cell range out of the window, OLE | not implemented by the app | n/a | none |
 
-Reading of the result: one real gap to close in WP11 (`file.saveBytes`), and four stated limits. No UI path needed a
+Reading of the result: the one real gap (`file.saveBytes`) is closed by 0143, and four stated limits remain. No UI path needed a
 one-line carried call: the dispatcher is the only door for copy, cut, print, export and save.
+
+## What 0143 does with the seam (WP10 and WP11, Sheets)
+
+XDFU in the editors is **watermark only** (owner, 2026-10-22): nothing is refused. The hook trait gained `wrap(session, id, params, run)`
+(default: run the command), because a stamp has to be in the workbook while the command runs and be taken out afterwards.
+`crates/ui-egui/src/office_history.rs` (desktop only, `init()` from `main`) installs the hook:
+
+- **Snapshot.** `after` of `file.save` / `file.saveAs`, when the saved path is the document's own path: `Store::snapshot`. Errors go to
+  stderr. The autosave timer passes `{"autosave": true}`; such a save snapshots at most every 5 minutes per file. An explicit save
+  always snapshots (the store skips bytes it already has). `office.history` calls `open_panel`, or says to save the file first.
+- **Watermark** (only with `xdfu = on` and a grif in the first five rows of the first sheet or in its headers and footers). Stamped, with
+  the copy number from `Issuer::issue` (the audit line exists only if the copy was made): `file.print`, `file.exportPdf`,
+  `file.exportCsv`, `file.exportHtml`, `file.saveAs` and `file.save` to a path other than the document's own (xlsx, json, pdf, csv, ...)
+  and `file.saveBytes`. xlsx, json, pdf and print get the line as the first line of the centre footer of every sheet while the command
+  runs (restored afterwards; the document stays clean); csv, tsv, txt and html get it as the first line. A plain `file.save` of the
+  working file is not a copy and is not stamped.
+- **Limits that remain:** `edit.copy` / `edit.cut` are not blocked and carry no mark (clipboard text has nowhere to put one); the
+  bypasses of the table above; the headless CLI and MCP never install the layer; a copy whose audit log cannot be opened is still made,
+  with copy number 0 and a message on stderr (nothing is refused); a workbook with the grif only below row 5 or on another sheet is not
+  recognised.
+- `office.xdfu.insertGrif {grif?}` (registered only when XDFU is on) writes the grif and `Nusxa N` (the audit counter) into the right
+  section of the first sheet's header, above what was there, through `pageLayout.headerFooter` (so it is undoable).
+- Tests (own binaries, the hook is process-wide): `office_history.rs`, `office_xdfu.rs`, `office_xdfu_off.rs` in `crates/ui-egui/tests`.

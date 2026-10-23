@@ -32,7 +32,7 @@ use gridcraft_model::Workbook;
 use serde::Serialize;
 use serde_json::Value as Json;
 
-pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_test_command};
+pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_command, register_test_command};
 pub use gridcraft_calc as calc;
 pub use gridcraft_core as core;
 pub use gridcraft_formula as formula;
@@ -340,7 +340,7 @@ impl Session {
     pub fn execute(&mut self, id: &str, params: Json) -> Result<Json> {
         let Some(hook) = office_hook::installed() else { return self.execute_inner(id, params) };
         hook.before(self, id, &params).map_err(|why| EngineError::Disabled(id.to_string(), why))?;
-        let result = self.execute_inner(id, params.clone());
+        let result = hook.wrap(self, id, &params, &mut |s, p| s.execute_inner(id, p));
         hook.after(self, id, &params, &result);
         result
     }

@@ -181,6 +181,15 @@ pub fn register_test_command(id: &'static str, run: Run) {
     test_commands().push(spec);
 }
 
+/// Registers a command of the office layer (`office.history`, `office.xdfu.insertGrif`): found by `find_command` and run by
+/// `Session::execute`, not listed by `command_specs`. Needs a workbook, is not journaled and not undoable (an edit it makes goes
+/// through the commands it calls).
+pub fn register_command(id: &'static str, label: &'static str, params: &'static str, run: Run) {
+    let spec: &'static CommandSpec =
+        Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: false }));
+    test_commands().push(spec);
+}
+
 fn test_commands() -> std::sync::MutexGuard<'static, Vec<&'static CommandSpec>> {
     #[allow(clippy::unwrap_used)] // a poisoned test registry has no meaningful recovery
     match TEST_COMMANDS.lock() {
