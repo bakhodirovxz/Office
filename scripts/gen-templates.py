@@ -326,9 +326,11 @@ def tabel():
     sh.s(tr, 2, "Jami", 8)
     for c in (35, 36, 37, 38, 39):
         sh.f(tr, c, f"SUM({col(c)}{first}:{col(c)}{lastrow})", 8)
-    sh.s(tr + 2, 1, f"Shartli belgilar: I – ish kuni, K – kasallik, T – ta{T}til, S – sababsiz kelmaslik, D – dam olish kuni. Har bir kunga belgini kiriting, jami ustunlar avtomatik hisoblanadi.", 7)
-    sh.s(tr + 4, 2, "Tabelni yuritgan: [lavozimi, F.I.Sh.]  ____________", 5)
-    sh.s(tr + 5, 2, "Rahbar: [lavozimi, F.I.Sh.]  ____________", 5)
+    # the legend starts in D, not A: text that overflows out of the frozen A:C pane is clipped at the split
+    sh.s(tr + 2, 4, f"Shartli belgilar: I – ish kuni, K – kasallik, T – ta{T}til, S – sababsiz kelmaslik, D – dam olish kuni.", 7)
+    sh.s(tr + 3, 4, "Har bir kunga belgini kiriting, jami ustunlar avtomatik hisoblanadi.", 7)
+    sh.s(tr + 5, 2, "Tabelni yuritgan: [lavozimi, F.I.Sh.]  ____________", 5)
+    sh.s(tr + 6, 2, "Rahbar: [lavozimi, F.I.Sh.]  ____________", 5)
     widths = [(1, 1, 5), (2, 2, 28), (3, 3, 20), (4, 34, 3.6), (35, 39, 12)]
     return xlsx("Ish vaqti tabeli", "Tabel", sh, widths, {4: 45}, pane=(3, 4), print_landscape=True)
 
