@@ -1,4 +1,4 @@
-//! `suite.exe`: the desktop host (PLAN phase 4, section 3.4, WP9). No console window: the Windows subsystem.
+//! `hoshiya.exe`: the desktop host (PLAN phase 4, section 3.4, WP9). No console window: the Windows subsystem.
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
 fn main() -> std::process::ExitCode {
@@ -12,7 +12,7 @@ fn main() -> std::process::ExitCode {
         #[cfg(not(windows))]
         Ok(_) => {
             eprintln!(
-                "suite: the desktop host is Windows only (a Linux host would link webkit2gtk, PLAN R16)"
+                "the desktop host is Windows only (a Linux host would link webkit2gtk, PLAN R16)"
             );
             std::process::ExitCode::from(2)
         }

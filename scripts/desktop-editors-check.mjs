@@ -1,10 +1,10 @@
-// Review m6 follow-up: with WebView2's browser accelerator keys and context menu off, do the web editors inside suite.exe still
-// print, save and zoom on their own? Drives the real suite.exe (debug build: the SUITE_* hooks) over the WebView2 remote
+// Review m6 follow-up: with WebView2's browser accelerator keys and context menu off, do the web editors inside hoshiya.exe still
+// print, save and zoom on their own? Drives the real hoshiya.exe (debug build: the SUITE_* hooks) over the WebView2 remote
 // debugging port, for Docs, Sheets and Slides:
 //   - Ctrl+P: the editor's own print UI opens (the canvas changes) and no new browser window appears;
 //   - Ctrl+S: the editor hands its bytes to the shell, the host's download handler writes the file, history.json records it;
 //   - zoom: Ctrl+Plus, Ctrl+Minus and Ctrl+wheel leave devicePixelRatio alone (the editor zooms its own canvas).
-// Usage: node scripts/desktop-editors-check.mjs [suite.exe] [dist dir]      (needs ci/web-smoke/node_modules)
+// Usage: node scripts/desktop-editors-check.mjs [hoshiya.exe] [dist dir]      (needs ci/web-smoke/node_modules)
 // It writes one file per editor into the downloads folder (the host's default) and deletes exactly the files history.json lists.
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
@@ -15,7 +15,7 @@ import * as net from 'node:net';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..');
 const { chromium } = createRequire(path.join(ROOT, 'ci/web-smoke/package.json'))('playwright');
-const EXE = process.argv[2] ?? 'E:/office-target/p1/services/debug/suite.exe';
+const EXE = process.argv[2] ?? 'E:/office-target/p1/services/debug/hoshiya.exe';
 const DIST = process.argv[3] ?? 'E:/office-target/p1/dist';
 const free = () => new Promise((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => ok(p)); }); });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -28,11 +28,11 @@ const port = await free();
 // the windows-gnu build imports WebView2Loader.dll: it must sit next to the exe (the msvc build links it statically)
 const app = path.join(dir, 'app');
 fs.mkdirSync(app);
-fs.copyFileSync(EXE, path.join(app, 'suite.exe'));
+fs.copyFileSync(EXE, path.join(app, 'hoshiya.exe'));
 const find = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? find(path.join(d, e.name)) : e.name === 'WebView2Loader.dll' && path.basename(d) === 'x64' ? [path.join(d, e.name)] : []));
 const loader = fs.existsSync(path.join(path.dirname(EXE), 'WebView2Loader.dll')) ? path.join(path.dirname(EXE), 'WebView2Loader.dll') : find(path.join(path.dirname(EXE), 'build'))[0];
 if (loader) fs.copyFileSync(loader, path.join(app, 'WebView2Loader.dll'));
-const host = spawn(path.join(app, 'suite.exe'), ['--dist', DIST, '--shell', path.join(DIST, 'shell'), '--brand', path.join(ROOT, 'brand/brand.toml'), '--bin-dir', dir], {
+const host = spawn(path.join(app, 'hoshiya.exe'), ['--dist', DIST, '--shell', path.join(DIST, 'shell'), '--brand', path.join(ROOT, 'brand/brand.toml'), '--bin-dir', dir], {
   env: { ...process.env, SUITE_DATA_DIR: data, SUITE_INSTANCE: 'edchk' + process.pid, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port} --remote-allow-origins=*` },
   stdio: ['ignore', 'ignore', 'inherit'],
 });

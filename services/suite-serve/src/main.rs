@@ -38,7 +38,7 @@ async fn main() -> ExitCode {
         Ok(c) => c,
         Err(e) => return convert_api::runner::refuse(e),
     };
-    convert_api::runner::run("suite-serve", config.as_deref(), move |app| {
+    convert_api::runner::run("hoshiya-serve", config.as_deref(), move |app| {
         suite_serve::router(app, &layout, cfg)
     })
     .await

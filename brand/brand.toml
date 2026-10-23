@@ -1,14 +1,14 @@
-# The one brand config (docs/phase1/designs/brand.md section 2). This file is the ONLY place that contains the working
-# name. Owner decision B-1 (final product name) is deferred. `cargo xt brand check` validates it,
+# The one brand config (docs/phase1/designs/brand.md section 2). This file is the ONLY place that contains the product
+# name (decided by the owner, 2026-10-23: ADR B-1). `cargo xt brand check` validates it,
 # `cargo xt overlay <app>` renders it into $OFFICE_OVERLAY_ROOT/<app>/.
 schema = 1
 
 [product]
-id = "suite"
-name = "Suite"
+id = "hoshiya"
+name = "Hoshiya"
 version = "0.1.0"
-vendor = "Suite contributors"
-copyright = "Copyright (c) the Suite contributors. MIT OR Apache-2.0."
+vendor = "Hoshiya contributors"
+copyright = "Copyright (c) the Hoshiya contributors. MIT OR Apache-2.0."
 
 # Plain text only (brand licence: "You may say, in plain text, that your work is based on ..."). The owner reviews the wording.
 [attribution]
@@ -20,58 +20,58 @@ uz-Cyrl = "WordCraft, GridCraft, DeckCraft ва PdfCraft (ArtCraft жамоас�
 [apps.docs]
 upstream = "wordcraft"
 upstream_names = ["WordCraft"]
-bin = "suite-docs"
-cli = "suite-docs-cli"
-app_id = "suite.docs"
-aumid = "Suite.Docs"
-data_dir = "Suite/Docs"
+bin = "hoshiya-docs"
+cli = "hoshiya-docs-cli"
+app_id = "hoshiya.docs"
+aumid = "Hoshiya.Docs"
+data_dir = "Hoshiya/Docs"
 pictogram = "lines"
-names = { en = "Suite Docs", ru = "Suite Документы", uz-Latn = "Suite Hujjatlar", uz-Cyrl = "Suite Ҳужжатлар" }
+names = { en = "Hoshiya Docs", ru = "Hoshiya Документы", uz-Latn = "Hoshiya Hujjatlar", uz-Cyrl = "Ҳошия Ҳужжатлар" }
 
 [apps.sheets]
 upstream = "gridcraft"
 upstream_names = ["GridCraft"]
-bin = "suite-sheets"
-cli = "suite-sheets-cli"
-app_id = "suite.sheets"
-aumid = "Suite.Sheets"
-data_dir = "Suite/Sheets"
+bin = "hoshiya-sheets"
+cli = "hoshiya-sheets-cli"
+app_id = "hoshiya.sheets"
+aumid = "Hoshiya.Sheets"
+data_dir = "Hoshiya/Sheets"
 pictogram = "grid"
-names = { en = "Suite Sheets", ru = "Suite Таблицы", uz-Latn = "Suite Jadvallar", uz-Cyrl = "Suite Жадваллар" }
+names = { en = "Hoshiya Sheets", ru = "Hoshiya Таблицы", uz-Latn = "Hoshiya Jadvallar", uz-Cyrl = "Ҳошия Жадваллар" }
 
 [apps.slides]
 upstream = "deckcraft"
 upstream_names = ["DeckCraft"]
-bin = "suite-slides"
-cli = "suite-slides-cli"
-app_id = "suite.slides"
-aumid = "Suite.Slides"
-data_dir = "Suite/Slides"
+bin = "hoshiya-slides"
+cli = "hoshiya-slides-cli"
+app_id = "hoshiya.slides"
+aumid = "Hoshiya.Slides"
+data_dir = "Hoshiya/Slides"
 pictogram = "slide"
-names = { en = "Suite Slides", ru = "Suite Презентации", uz-Latn = "Suite Taqdimotlar", uz-Cyrl = "Suite Тақдимотлар" }
+names = { en = "Hoshiya Slides", ru = "Hoshiya Презентации", uz-Latn = "Hoshiya Taqdimotlar", uz-Cyrl = "Ҳошия Тақдимотлар" }
 
 [apps.pdf]
 upstream = "pdfcraft"
 upstream_names = ["PdfCraft"]
-bin = "suite-pdf"
-cli = "suite-pdf-cli"
-app_id = "suite.pdf"
-aumid = "Suite.Pdf"
-data_dir = "Suite/Pdf"
-storage_key = "suite-pdf"
+bin = "hoshiya-pdf"
+cli = "hoshiya-pdf-cli"
+app_id = "hoshiya.pdf"
+aumid = "Hoshiya.Pdf"
+data_dir = "Hoshiya/Pdf"
+storage_key = "hoshiya-pdf"
 pictogram = "page"
-names = { en = "Suite PDF", ru = "Suite PDF", uz-Latn = "Suite PDF", uz-Cyrl = "Suite PDF" }
+names = { en = "Hoshiya PDF", ru = "Hoshiya PDF", uz-Latn = "Hoshiya PDF", uz-Cyrl = "Ҳошия PDF" }
 
 [apps.convert]
 upstream = ""   # no engine: our own thin layer (services/convert)
 upstream_names = []
-bin = "suite-convert"
-cli = "suite-convert-cli"
-app_id = "suite.convert"
-aumid = "Suite.Convert"
-data_dir = "Suite/Convert"
+bin = "hoshiya-convert"
+cli = "hoshiya-convert-cli"
+app_id = "hoshiya.convert"
+aumid = "Hoshiya.Convert"
+data_dir = "Hoshiya/Convert"
 pictogram = "page"
-names = { en = "Suite Convert", ru = "Suite Конвертер", uz-Latn = "Suite Konvertor", uz-Cyrl = "Suite Конвертор" }
+names = { en = "Hoshiya Convert", ru = "Hoshiya Конвертер", uz-Latn = "Hoshiya Konvertor", uz-Cyrl = "Ҳошия Конвертор" }
 
 # Placeholders until the owner chooses (ADR App. B).
 [colors]

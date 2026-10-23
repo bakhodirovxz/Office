@@ -6,6 +6,6 @@ xt = "run -q -p xtask --"
 target-dir = "E:/office-target/p1/core"
 
 # windows-msvc: static imports resolve in the application directory and System32 only, never the current directory or PATH
-# (review m8). Applies to every msvc build in this tree, suite.exe and the editors.
+# (review m8). Applies to every msvc build in this tree, hoshiya.exe and the editors.
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "link-arg=/DEPENDENTLOADFLAG:0xA00"]

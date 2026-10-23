@@ -1,5 +1,5 @@
-Suite
-Copyright (c) 2026 Suite contributors.
+Hoshiya
+Copyright (c) 2026 Hoshiya contributors.
 Licensed under the MIT License or the Apache License, Version 2.0, at your option
 (LICENSE-MIT, LICENSE-APACHE). This applies to the files of our layer: crates/, xtask/, domains/,
 scripts/, brand/, i18n/ and the patch files in patches/.
@@ -151,8 +151,8 @@ Third-party material added by this layer
   LICENSE-ru_RU.txt and travel with the dictionaries. Provenance and checksums: assets/dictionaries/SOURCE.md.
   The licence check: docs/phase4/licences.md.
 
-- Microsoft Edge WebView2 SDK loader, version 1.0.3800.47 (WebView2Loader.dll next to the windows-gnu suite.exe,
-  WebView2LoaderStatic.lib linked into the windows-msvc suite.exe), taken unmodified from the crate webview2-com-sys
+- Microsoft Edge WebView2 SDK loader, version 1.0.3800.47 (WebView2Loader.dll next to the windows-gnu hoshiya.exe,
+  WebView2LoaderStatic.lib linked into the windows-msvc hoshiya.exe), taken unmodified from the crate webview2-com-sys
   0.39.1 (services/Cargo.lock): Copyright (c) Microsoft Corporation, under the licence of the Microsoft.Web.WebView2
   NuGet package (BSD-3-Clause style). The crate declares MIT for its own bindings; the binaries are Microsoft's.
   The exact licence text is the LICENSE.txt of that NuGet package and is not in the crate: copy it here and pin the

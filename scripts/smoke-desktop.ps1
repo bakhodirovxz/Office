@@ -1,10 +1,10 @@
-﻿# Desktop host smoke (PLAN phase 4, WP9): start suite.exe with a docx on the command line, record the time to the window and the
+﻿# Desktop host smoke (PLAN phase 4, WP9): start hoshiya.exe with a docx on the command line, record the time to the window and the
 # time until the local server answers, the memory of the host and its WebView2 processes, check the editor was started with the
-# Cyrillic path, then launch a second suite.exe with an xlsx and check it was handed to the running instance. Kills only what it started.
-#   powershell -File scripts/smoke-desktop.ps1 [-Exe <suite.exe>] [-Dist <dist dir>] [-Docs <docs.exe>] [-Sheets <sheets.exe>]
+# Cyrillic path, then launch a second hoshiya.exe with an xlsx and check it was handed to the running instance. Kills only what it started.
+#   powershell -File scripts/smoke-desktop.ps1 [-Exe <hoshiya.exe>] [-Dist <dist dir>] [-Docs <docs.exe>] [-Sheets <sheets.exe>]
 # The editors here are the unbranded Phase 1 desktop builds, copied under the brand's exe names into a temp bin dir.
 param(
-  [string]$Exe = "E:\office-target\p1\services\debug\suite.exe",
+  [string]$Exe = "E:\office-target\p1\services\debug\hoshiya.exe",
   [string]$Dist = "E:\office-target\p1\dist",
   [string]$Docs = "E:\office-target\p1\docs\release\docs.exe",
   [string]$Sheets = "E:\office-target\p1\sheets\release\sheets.exe",
@@ -25,9 +25,9 @@ $xlsx = Join-Path $work 'Hisobot 2026.xlsx'
 # a minimal valid xlsx is not available offline: the editor may refuse it, the hand-off is what is checked
 [IO.File]::WriteAllBytes($xlsx, [byte[]](0x50, 0x4B, 5, 6) + (New-Object byte[] 18))
 
-# the windows-gnu build imports WebView2Loader.dll (the msvc build links it statically): it must sit next to suite.exe
+# the windows-gnu build imports WebView2Loader.dll (the msvc build links it statically): it must sit next to hoshiya.exe
 $app = Join-Path $root 'app'; New-Item -ItemType Directory -Force $app | Out-Null
-Copy-Item $Exe (Join-Path $app 'suite.exe'); $Exe = Join-Path $app 'suite.exe'
+Copy-Item $Exe (Join-Path $app 'hoshiya.exe'); $Exe = Join-Path $app 'hoshiya.exe'
 $loader = Join-Path (Split-Path $Exe) 'WebView2Loader.dll'
 $src = if (Test-Path (Join-Path (Split-Path $OrigExe) 'WebView2Loader.dll')) { Join-Path (Split-Path $OrigExe) 'WebView2Loader.dll' } else { (Get-ChildItem -Recurse (Join-Path (Split-Path $OrigExe) 'build') -Filter WebView2Loader.dll | Where-Object { $_.Directory.Name -eq 'x64' } | Select-Object -First 1).FullName }
 Copy-Item $src $loader

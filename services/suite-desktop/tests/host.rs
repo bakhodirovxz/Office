@@ -1,4 +1,4 @@
-//! The real `suite.exe` as a process: the browser fallback when WebView2 is missing (forced by SUITE_FORCE_NO_WEBVIEW2) and the
+//! The real host exe as a process: the browser fallback when WebView2 is missing (forced by SUITE_FORCE_NO_WEBVIEW2) and the
 //! single-instance hand-off (F14). Editors are stand-ins that log their arguments. No window is ever opened here.
 #![cfg(all(windows, debug_assertions))] // the SUITE_* test hooks exist in debug builds only (review m10)
 use std::io::{Read, Write};
@@ -15,11 +15,16 @@ fn repo() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
+fn brand() -> suite_desktop::Brand {
+    suite_desktop::Brand::parse(&std::fs::read_to_string(repo().join("brand/brand.toml")).unwrap()).unwrap()
+}
+
 fn env(name: &str) -> Env {
     let dir = std::env::temp_dir().join(format!("suite-host-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("bin")).unwrap();
-    for b in ["suite-docs", "suite-sheets"] {
+    let brand = brand();
+    for b in [&brand.app("docs").unwrap().bin, &brand.app("sheets").unwrap().bin] {
         std::fs::copy(
             env!("CARGO_BIN_EXE_suite-fake-editor"),
             dir.join("bin").join(format!("{b}.exe")),
@@ -35,7 +40,7 @@ fn env(name: &str) -> Env {
 
 impl Env {
     fn cmd(&self, files: &[&Path]) -> Command {
-        let mut c = Command::new(env!("CARGO_BIN_EXE_suite"));
+        let mut c = Command::new(env!("CARGO_BIN_EXE_hoshiya"));
         c.arg("--dist")
             .arg(self.dir.join("dist"))
             .arg("--shell")
@@ -132,7 +137,7 @@ fn without_webview2_the_browser_opens_on_the_local_url_and_the_file_goes_to_its_
     let cookie = format!("k={key}");
     let r = http_get(port, "/shell-config.json", Some(&cookie));
     assert!(
-        r.starts_with("HTTP/1.1 200") && r.contains("\"product\":\"Suite\""),
+        r.starts_with("HTTP/1.1 200") && r.contains(&format!("\"product\":\"{}\"", brand().product)),
         "{r}"
     );
     // the desktop actions are not on HTTP

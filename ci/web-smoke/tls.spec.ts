@@ -14,7 +14,7 @@ import * as path from 'node:path';
 // Run with: npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.tls.config.ts
 const ROOT = path.resolve(__dirname, '../..');
 const SVC = process.env.CONVERT_SERVICES_DIR ?? 'E:/office-target/p1/services/release';
-const BIN = process.env.SUITE_SERVE_BIN ?? path.join(SVC, 'suite-serve.exe');
+const BIN = process.env.SUITE_SERVE_BIN ?? path.join(SVC, 'hoshiya-serve.exe');
 const FAKE = process.env.CONVERT_API_FAKE_TOOL ?? path.join(SVC, 'convert-api-fake-tool.exe');
 const OPENSSL = process.env.OPENSSL ?? 'openssl';
 

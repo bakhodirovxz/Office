@@ -267,8 +267,13 @@ pub fn run(args: Args) -> u8 {
     match start(args) {
         Ok(()) => 0,
         Err(e) => {
-            eprintln!("suite: {e}");
-            dialog(rfd::MessageLevel::Error, "suite", &e);
+            // the title is the exe's own name, so no product name is written here
+            let me = std::env::current_exe()
+                .ok()
+                .and_then(|p| p.file_stem().map(|s| s.to_string_lossy().into_owned()))
+                .unwrap_or_default();
+            eprintln!("{me}: {e}");
+            dialog(rfd::MessageLevel::Error, &me, &e);
             1
         }
     }

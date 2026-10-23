@@ -12,8 +12,9 @@ workspace = true
 [lib]
 name = "suite_desktop"
 
+# The exe is named after the product (brand/brand.toml [product] id); cargo cannot read that file, so the literal is kept in step by hand.
 [[bin]]
-name = "suite"
+name = "hoshiya"
 path = "src/main.rs"
 
 [dependencies]

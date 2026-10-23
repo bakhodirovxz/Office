@@ -1,6 +1,6 @@
 {
   "en": {
-    "app.name": "Suite Convert",
+    "app.name": "Hoshiya Convert",
     "err.bad_host": "The server refused this address.",
     "err.bad_multipart": "The upload was malformed.",
     "err.bad_options": "The options are not valid.",
@@ -151,7 +151,7 @@
     "warning.xls_pdf_chart_page": "Opening the legacy .xls format drops charts, so the PDF can have fewer pages than the same workbook saved as .xlsx."
   },
   "ru": {
-    "app.name": "Suite Конвертер",
+    "app.name": "Hoshiya Конвертер",
     "err.bad_host": "Сервер отклонил этот адрес.",
     "err.bad_multipart": "Запрос на загрузку сформирован неверно.",
     "err.bad_options": "Параметры указаны неверно.",
@@ -302,7 +302,7 @@
     "warning.xls_pdf_chart_page": "При открытии старого формата .xls диаграммы теряются, поэтому в PDF может быть меньше страниц, чем у той же книги, сохранённой в формате .xlsx."
   },
   "uz-Latn": {
-    "app.name": "Suite Konvertor",
+    "app.name": "Hoshiya Konvertor",
     "err.bad_host": "Server bu manzilni rad etdi.",
     "err.bad_multipart": "Yuklash soʻrovi notoʻgʻri tuzilgan.",
     "err.bad_options": "Parametrlar notoʻgʻri.",
@@ -453,7 +453,7 @@
     "warning.xls_pdf_chart_page": "Eski .xls formatini ochishda diagrammalar yoʻqoladi, shuning uchun PDF faylda sahifalar shu ish kitobining .xlsx formatida saqlangan nusxasidagidan kamroq boʻlishi mumkin."
   },
   "uz-Cyrl": {
-    "app.name": "Suite Конвертор",
+    "app.name": "Ҳошия Конвертор",
     "err.bad_host": "Сервер бу манзилни рад этди.",
     "err.bad_multipart": "Юклаш сўрови нотўғри тузилган.",
     "err.bad_options": "Параметрлар нотўғри.",
@@ -604,7 +604,7 @@
     "warning.xls_pdf_chart_page": "Эски .xls форматини очишда диаграммалар йўқолади, шунинг учун PDF файлда саҳифалар шу иш китобининг .xlsx форматида сақланган нусхасидагидан камроқ бўлиши мумкин."
   },
   "uz-Latn-2026": {
-    "app.name": "Suite Konvertor",
+    "app.name": "Hoshiya Konvertor",
     "err.bad_host": "Server bu manzilni rad etdi.",
     "err.bad_multipart": "Yuklaş sörovi notöğri tuzilgan.",
     "err.bad_options": "Parametrlar notöğri.",

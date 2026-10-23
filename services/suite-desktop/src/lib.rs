@@ -532,7 +532,7 @@ pub struct Args {
 
 pub const USAGE: &str = "usage: suite [--dist DIR] [--shell DIR] [--brand FILE] [--bin-dir DIR] [--browser] [--] [FILE...]";
 
-/// Anything that is not a flag is a file, so `suite.exe "C:\Users\Имя\Hisobot 2026.xlsx"` works as "Open with" calls it.
+/// Anything that is not a flag is a file, so `hoshiya.exe "C:\Users\Имя\Hisobot 2026.xlsx"` works as "Open with" calls it.
 pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Args, String> {
     let mut a = Args::default();
     let mut it = args.into_iter();

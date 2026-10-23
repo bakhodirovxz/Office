@@ -555,7 +555,7 @@ convert_ui_steps() {
   step playwright-converter env CONVERT_API_BIN="$SVC_T/release/convert-api$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" \
     npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.converter.config.ts || return 1
   # server mode over TLS (WP19): a throwaway CA and certificate made with openssl in a temp dir; needs `openssl` on PATH (Git for Windows has it)
-  step playwright-tls env SUITE_SERVE_BIN="$SVC_T/release/suite-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" \
+  step playwright-tls env SUITE_SERVE_BIN="$SVC_T/release/hoshiya-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" \
     npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.tls.config.ts
 }
 job_convert_ui() {
@@ -573,7 +573,7 @@ job_shell() {
   bstep nextest-suite-serve env CARGO_TARGET_DIR="$SVC_T" cargo nextest run --manifest-path services/Cargo.toml -p suite-serve --locked --profile ci --config-file ci/nextest.toml --build-jobs 4 --test-threads 4 || rc=1
   step shell-dist bash scripts/shell-dist.sh || return 2
   step npm-ci npm ci --prefix ci/web-smoke || return 2
-  step playwright-shell env SUITE_SERVE_BIN="$SVC_T/release/suite-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" SHELL_DIST_ROOT="${CI_DIST_ROOT:-$OFFICE_TARGET/dist}"     npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.shell.config.ts || rc=1
+  step playwright-shell env SUITE_SERVE_BIN="$SVC_T/release/hoshiya-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/release/convert-api-fake-tool$EXE" SHELL_DIST_ROOT="${CI_DIST_ROOT:-$OFFICE_TARGET/dist}"     npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.shell.config.ts || rc=1
   step sizes job_sizes || rc=1
   return $rc
 }

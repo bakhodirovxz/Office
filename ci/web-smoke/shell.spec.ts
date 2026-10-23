@@ -12,7 +12,7 @@ import * as path from 'node:path';
 // with the assembled shell in <root>/shell: scripts/shell-dist.sh).
 const ROOT = path.resolve(__dirname, '../..');
 const SVC = process.env.CONVERT_SERVICES_DIR ?? 'E:/office-target/p1/services/release';
-const BIN = process.env.SUITE_SERVE_BIN ?? path.join(SVC, 'suite-serve.exe');
+const BIN = process.env.SUITE_SERVE_BIN ?? path.join(SVC, 'hoshiya-serve.exe');
 const FAKE = process.env.CONVERT_API_FAKE_TOOL ?? path.join(SVC, 'convert-api-fake-tool.exe');
 const DIST = process.env.SHELL_DIST_ROOT ?? 'E:/office-target/p1/dist';
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');

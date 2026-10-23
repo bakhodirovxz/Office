@@ -13,7 +13,7 @@ workspace = true
 name = "suite_serve"
 
 [[bin]]
-name = "suite-serve"
+name = "hoshiya-serve"
 path = "src/main.rs"
 
 [dependencies]
