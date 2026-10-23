@@ -22,6 +22,20 @@ sample, 10 s, `formulas.calculateNow`, sample, 10 s), the same files `E:/office-
   of w40 and w120 equals round 2 (31.9 vs 31.7 s, 93.5 vs 95.7 s); w80 sits on the slower of round 2's two clusters (64-66 vs 63 s) and not on the
   faster one (40 s). A re-run on an idle machine is needed before the gate review claims "open time not longer". The toolbar and the hook run after
   the open, and `Session::execute` takes its former path with no hook, so I expect no change, but that is an expectation, not a measurement.
+- **Idle re-run, 2026-10-23 (owed item closed).** No build, test or browser process was running (CPU about 10 %, the only listed `others` is the owner's idle WINWORD
+  from 2026-10-21, which could not be stopped), same binary (`sheets.exe`, built 2026-10-23 04:18 from the Phase 4 queue), same protocol, `GRIDCRAFT_NO_PREFS=1`, w80,
+  3 runs (`spikes/xlsx-bench/gui_mem_p4.py`, raw data `E:/office-target/p4/guard/mem_p4.jsonl`, labels `idle_w80_r1..3`):
+
+  | run | open s | steady private WS MB | peak WS MB | steady after F9 MB | F9 s |
+  |---|---|---|---|---|---|
+  | 1 | 62.9 | 903.9 | 996.8 | 906.1 | 9.4 |
+  | 2 | 60.2 | 903.8 | 984.8 | 905.6 | 9.3 |
+  | 3 | 60.2 | 904.8 | 984.8 | 906.6 | 9.2 |
+  | median | **60.2** | **903.9** (+0.1 % on 903) | 984.8 | 906.1 | 9.3 |
+
+  Open time is **60.2-62.9 s: at or slightly below round 2's slower cluster (62.8-63.4 s) and not on its faster cluster (39.8-40.4 s)**. All three idle runs sit in the
+  slow cluster, so the busy-machine spread (74-160 s) was load, and the gap to the fast cluster is not new: it is round 2's, and its cause (the two clusters) was never
+  found. Verdict: open time is **not longer than round 2's slower cluster**; whether it equals the faster one is unknown, and the memory gate stands (+0.1 %).
 - Excel's own reference (742 MB steady on w80) is unchanged from round 2 and was not re-measured.
 
 ## 2. The wall (F18)
