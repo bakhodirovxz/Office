@@ -16,7 +16,8 @@ fn repo() -> PathBuf {
 }
 
 fn brand() -> suite_desktop::Brand {
-    suite_desktop::Brand::parse(&std::fs::read_to_string(repo().join("brand/brand.toml")).unwrap()).unwrap()
+    suite_desktop::Brand::parse(&std::fs::read_to_string(repo().join("brand/brand.toml")).unwrap())
+        .unwrap()
 }
 
 fn env(name: &str) -> Env {
@@ -24,7 +25,10 @@ fn env(name: &str) -> Env {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("bin")).unwrap();
     let brand = brand();
-    for b in [&brand.app("docs").unwrap().bin, &brand.app("sheets").unwrap().bin] {
+    for b in [
+        &brand.app("docs").unwrap().bin,
+        &brand.app("sheets").unwrap().bin,
+    ] {
         std::fs::copy(
             env!("CARGO_BIN_EXE_suite-fake-editor"),
             dir.join("bin").join(format!("{b}.exe")),
@@ -137,7 +141,8 @@ fn without_webview2_the_browser_opens_on_the_local_url_and_the_file_goes_to_its_
     let cookie = format!("k={key}");
     let r = http_get(port, "/shell-config.json", Some(&cookie));
     assert!(
-        r.starts_with("HTTP/1.1 200") && r.contains(&format!("\"product\":\"{}\"", brand().product)),
+        r.starts_with("HTTP/1.1 200")
+            && r.contains(&format!("\"product\":\"{}\"", brand().product)),
         "{r}"
     );
     // the desktop actions are not on HTTP

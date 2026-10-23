@@ -380,7 +380,8 @@ fn shell_catalog_is_complete() {
     for lang in ["uz-Latn", "uz-Cyrl"] {
         let s = j["_status"][lang].as_str().unwrap();
         assert!(
-            (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-")) && !s.contains("owner"),
+            (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-"))
+                && !s.contains("owner"),
             "{lang}: {s}"
         );
     }

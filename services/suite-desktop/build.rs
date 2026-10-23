@@ -4,7 +4,8 @@
 use std::path::Path;
 
 fn main() {
-    let root = Path::new(&std::env::var("CARGO_MANIFEST_DIR").expect("cargo sets it")).join("../..");
+    let root =
+        Path::new(&std::env::var("CARGO_MANIFEST_DIR").expect("cargo sets it")).join("../..");
     let brand = root.join("brand/brand.toml");
     let ico = root.join("brand/logo/windows/hoshiya.ico");
     println!("cargo:rerun-if-changed=build.rs");
@@ -14,10 +15,15 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }
-    let text = std::fs::read_to_string(&brand).unwrap_or_else(|e| panic!("{}: {e}", brand.display()));
+    let text =
+        std::fs::read_to_string(&brand).unwrap_or_else(|e| panic!("{}: {e}", brand.display()));
     let doc: toml::Table = text.parse().unwrap_or_else(|e| panic!("brand.toml: {e}"));
     let p = &doc["product"];
-    let get = |k: &str| p[k].as_str().unwrap_or_else(|| panic!("brand.toml: product.{k}")).to_string();
+    let get = |k: &str| {
+        p[k].as_str()
+            .unwrap_or_else(|| panic!("brand.toml: product.{k}"))
+            .to_string()
+    };
     let exe = format!("{}.exe", get("id"));
     let mut res = winresource::WindowsResource::new();
     res.set_icon(&ico.to_string_lossy())
