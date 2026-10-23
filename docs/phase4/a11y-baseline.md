@@ -81,3 +81,11 @@ not measured separately.
 - Desktop UIA: `powershell -File scripts/uia-dump.ps1 -Exe E:\office-target\p1\slides\release\slides.exe -File <pptx> -Out slides.txt`
   (Docs needs `-Invoke "Continue without restoring"` when stale recovery drafts exist; Sheets needs `-Wait 15`).
 - The shell assertions are in `ci/web-smoke/shell.spec.ts` (`scripts/ci.sh shell`).
+
+## 5. Checks run for this change
+
+`ci.sh shell convert-ui i18n` could not complete as one command: both build slots were held by the other builders for over an hour
+(its job step waited on `E:/office-target/p1`). The parts that need no cargo build ran directly: `shell-dist.sh` plus the shell
+Playwright spec (19 passed, including the new aria-label and focus assertions), the converter Playwright spec (12 passed, 1 skipped screenshot test),
+`cargo xt i18n lint` (0 errors). `verify-queue all` (82 patches, all trees OK) and `cargo xt register check` (82 rows) passed after the
+deckcraft 0140 change.

@@ -18,6 +18,8 @@
   const baseName = (p) => String(p).split(/[\\/]/).pop();
   const appOf = (name) => { const e = name.split('.').pop().toLowerCase(); return S.cfg.apps.find((a) => EXT[a.id].split(' ').includes(e)); };
   const fmtSize = (n) => (n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB');
+  // A repeated button text ("New", "Use") gets the card's name, so a screen reader list tells the buttons apart; the visible text stays first in it.
+  const named = (btn, what) => { btn.setAttribute('aria-label', `${btn.textContent}: ${what}`); return btn; };
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
   const fail = (msg) => { const e = $('error'); e.textContent = msg; e.hidden = !msg; if (msg) $('ed-status').textContent = msg; };
 
@@ -107,8 +109,13 @@
     S.current = a; $('ed-title').textContent = file ? file.name : appName(a);
     $('ed-status').textContent = f.ready ? '' : t('ed.loading', { app: appName(a) });
     $('home').hidden = true; $('editor').hidden = false; document.title = appName(a);
+    $('back').focus(); // the focused card is hidden now: keep the keyboard user's place, one Tab from the editor
   }
-  function home() { $('editor').hidden = true; $('home').hidden = false; S.current = null; render(); }
+  function home() {
+    const prev = S.current;
+    $('editor').hidden = true; $('home').hidden = false; S.current = null; render();
+    if (prev) $('cards').querySelectorAll('button')[Math.max(S.cfg.apps.findIndex((x) => x.id === prev.id), 0)]?.focus(); // back where the user left
+  }
 
   addEventListener('message', (ev) => {
     if (ev.origin !== location.origin) return;
@@ -151,10 +158,10 @@
     document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
     $('convert').textContent = S.cfg.convert.names[S.lang] || S.cfg.convert.names.en;
     $('cards').replaceChildren(...S.cfg.apps.map((a) => el('li', {}, el('span', { className: 'name' }, appName(a)),
-      el('button', { type: 'button', className: 'btn', onclick: () => (a.id === 'pdf' ? pick('pdf') : show(a)) }, t(a.id === 'pdf' ? 'home.open.pdf' : 'home.new.doc')))));
+      named(el('button', { type: 'button', className: 'btn', onclick: () => (a.id === 'pdf' ? pick('pdf') : show(a)) }, t(a.id === 'pdf' ? 'home.open.pdf' : 'home.new.doc')), appName(a)))));
     $('sec-templates').hidden = !S.templates.length;
     $('templates').replaceChildren(...S.templates.map((x) => el('li', {}, el('span', { className: 'name' }, x.name[S.lang] || x.name.en),
-      el('button', { type: 'button', className: 'btn ghost', onclick: () => useTemplate(x) }, t('home.use')))));
+      named(el('button', { type: 'button', className: 'btn ghost', onclick: () => useTemplate(x) }, t('home.use')), x.name[S.lang] || x.name.en))));
     const q = $('search').value.trim().toLowerCase();
     const rows = S.recent.filter((r) => r.name.toLowerCase().includes(q));
     $('recent').replaceChildren(...rows.map((r) => el('li', {},

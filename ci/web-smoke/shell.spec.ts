@@ -73,6 +73,8 @@ test('the home screen loads with no editor bundle', async ({ page }) => {
   const cards = page.locator('#cards li');
   await expect(cards).toHaveCount(4);
   for (const [i, id] of EDITORS.entries()) await expect(cards.nth(i).locator('.name')).toHaveText(appName(id));
+  // a repeated button text still tells a screen reader which app it belongs to (WP18)
+  for (const [i, id] of EDITORS.entries()) await expect(cards.nth(i).getByRole('button')).toHaveAttribute('aria-label', new RegExp(appName(id)));
   await expect(page.locator('#recent-empty')).toHaveText(txt('en', 'home.recent.empty'));
   await expect(page.locator('#convert')).toHaveText(appName('convert'));
   await page.waitForLoadState('networkidle');
@@ -118,6 +120,7 @@ test('opening Docs fetches only the Docs bundle, under its own CSP', async ({ pa
   await page.goto(base + '/');
   await page.locator('#cards li').first().getByRole('button').click();
   await expect(page.locator('#editor')).toBeVisible();
+  await expect(page.locator('#back')).toBeFocused(); // the focused card is hidden: the keyboard user keeps a place (WP18)
   await editorUp(page, '/docs/');
   const w2 = wasm(w.urls);
   expect(w2).toHaveLength(1);
@@ -127,6 +130,7 @@ test('opening Docs fetches only the Docs bundle, under its own CSP', async ({ pa
   // back to the home screen keeps the editor; a second New restarts it from the HTTP cache, still only the Docs wasm
   await page.click('#back');
   await expect(page.locator('#home')).toBeVisible();
+  await expect(page.locator('#cards li').first().getByRole('button')).toBeFocused();
   await page.locator('#cards li').first().getByRole('button').click();
   await editorUp(page, '/docs/');
   expect(wasm(w.urls).every((u) => u === w2[0])).toBe(true);
