@@ -24,6 +24,7 @@ path = "src/bin/fake_tool.rs"
 [dependencies]
 # Ours (MIT OR Apache-2.0, no dependencies): only for DEFAULT_LATIN_ALPHABET, the one default switch (O13).
 uz-translit = { path = "../../crates/uz-translit" }
+xdfu-core = { path = "../../crates/xdfu-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"

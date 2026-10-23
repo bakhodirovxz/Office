@@ -25,6 +25,10 @@ fn main() {
         "cargo:rustc-env=SUITE_PRODUCT={}",
         get(&["product", "name"])
     );
+    println!(
+        "cargo:rustc-env=SUITE_PRODUCT_ID={}",
+        get(&["product", "id"])
+    );
     for app in ["docs", "sheets", "slides", "pdf"] {
         println!(
             "cargo:rustc-env=SUITE_DATA_DIR_{}={}",

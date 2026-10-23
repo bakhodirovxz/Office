@@ -3,6 +3,7 @@
 //! - [`settings`]: the per-user `settings.toml` (typed keys, atomic writes, a corrupt file is set aside, never fatal).
 //! - [`lang`]: the five UI languages and how `lang = "auto"` resolves.
 //! - [`recent`]: the recent files, read from the four apps' own lists (they stay the owners; nothing is written to them).
+//! - [`history`]: the local version history (snapshots on save, a hash-chained index, restore, retention).
 //! - [`fonts`]: where the shared Noto fallback fonts are.
 //! - [`templates`]: the catalogue of the starter documents (`web/shell/templates.json`).
 //!
@@ -10,6 +11,7 @@
 #![forbid(unsafe_code)]
 
 pub mod fonts;
+pub mod history;
 pub mod lang;
 pub mod recent;
 pub mod settings;

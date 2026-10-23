@@ -49,109 +49,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode {
-    Off,
-    Watermark,
-    Refuse,
-}
-
-impl Mode {
-    pub fn parse(s: &str) -> Result<Mode, String> {
-        match s {
-            "off" => Ok(Mode::Off),
-            "watermark" => Ok(Mode::Watermark),
-            "refuse" => Ok(Mode::Refuse),
-            other => Err(format!(
-                "xdfu = \"{other}\": expected \"off\", \"watermark\" or \"refuse\""
-            )),
-        }
-    }
-}
-
-// ---- finding the grif ----------------------------------------------------------------------------------------------------
-
-/// Lowercase alphanumeric words of `text`: everything else separates them.
-fn words(text: &str) -> Vec<String> {
-    text.to_lowercase()
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|w| !w.is_empty())
-        .map(String::from)
-        .collect()
-}
-
-/// Latin letters that look like Cyrillic ones, folded to the Cyrillic letter (a grif typed with a Latin "x" or "c" is still a grif).
-fn fold_cyrillic(w: &str) -> String {
-    w.chars()
-        .map(|c| match c {
-            'a' => 'а',
-            'c' => 'с',
-            'e' => 'е',
-            'k' => 'к',
-            'm' => 'м',
-            'o' => 'о',
-            'p' => 'р',
-            't' => 'т',
-            'x' => 'х',
-            'y' => 'у',
-            c => c,
-        })
-        .collect()
-}
-
-const PHRASES: [(&str, &str); 3] = [
-    ("для служебного пользования", "Для служебного пользования"),
-    (
-        "xizmat doirasida foydalanish uchun",
-        "Xizmat doirasida foydalanish uchun",
-    ),
-    (
-        "хизмат доирасида фойдаланиш учун",
-        "Хизмат доирасида фойдаланиш учун",
-    ),
-];
-
-/// The grif marker found in `text`, if any. Case and spacing do not matter: "xdfu", "X D F U", "Х.Д.Ф.У." and "ДСП" all match, as
-/// do the phrase "для служебного пользования" and its Uzbek forms. A code must stand alone as a word (or as spaced single letters),
-/// so "ДСПЕ" or "xdfux" do not match.
-pub fn find_grif(text: &str) -> Option<&'static str> {
-    let w = words(text);
-    let codes = |s: &str| -> Option<&'static str> {
-        match fold_cyrillic(s).as_str() {
-            "хдфу" => Some("ХДФУ"),
-            "дсп" => Some("ДСП"),
-            _ if s == "xdfu" => Some("XDFU"),
-            _ => None,
-        }
-    };
-    // whole words
-    if let Some(m) = w.iter().find_map(|x| codes(x)) {
-        return Some(m);
-    }
-    // single letters in a row ("Х.Д.Ф.У.", "D S P"), also after another one-letter word ("a x d f u")
-    let mut run: Vec<char> = vec![];
-    for x in w.iter().map(Some).chain([None]) {
-        match x {
-            Some(x) if x.chars().count() == 1 => run.extend(x.chars()),
-            _ => {
-                for len in [3, 4] {
-                    if let Some(m) = run
-                        .windows(len)
-                        .find_map(|win| codes(&win.iter().collect::<String>()))
-                    {
-                        return Some(m);
-                    }
-                }
-                run.clear();
-            }
-        }
-    }
-    let joined = format!(" {} ", w.join(" "));
-    PHRASES
-        .iter()
-        .find(|(p, _)| joined.contains(&format!(" {p} ")))
-        .map(|(_, shown)| *shown)
-}
+pub use xdfu_core::{Mode, Stamp, default_audit_path, find_grif, machine_addr, machine_name, os_user};
 
 #[derive(Clone, Debug)]
 pub struct Evidence {
@@ -847,69 +745,6 @@ pub fn can_carry(ext: &str) -> bool {
     )
 }
 
-pub struct Stamp {
-    pub copy: u64,
-    pub client: String,
-    pub user: String,
-    pub when: String,
-}
-
-fn one_line(s: &str) -> String {
-    s.chars()
-        .map(|c| if c.is_control() { '_' } else { c })
-        .take(64)
-        .collect()
-}
-
-impl Stamp {
-    /// `XDFU copy 17 | 10.0.0.5 | alice | 2026-10-21 10:15:03 UTC`
-    pub fn line(&self) -> String {
-        format!(
-            "XDFU copy {} | {} | {} | {}",
-            self.copy,
-            one_line(&self.client),
-            one_line(&self.user),
-            self.when
-        )
-    }
-    /// The same for outputs whose fonts cover Western European text only (pdf, png): anything else becomes `_`, and a user name
-    /// that had to change gets a short digest so that two such names stay apart.
-    pub fn ascii_line(&self) -> String {
-        let a = |s: &str| -> String {
-            one_line(s)
-                .chars()
-                .map(|c| {
-                    if c.is_ascii_graphic() && !matches!(c, '<' | '>') || c == ' ' {
-                        c
-                    } else {
-                        '_'
-                    }
-                })
-                .collect()
-        };
-        let user = a(&self.user);
-        let user = if user == one_line(&self.user) {
-            user
-        } else {
-            format!("{user}~{}", &digest(&self.user)[..6])
-        };
-        format!(
-            "XDFU copy {} | {} | {} | {}",
-            self.copy,
-            a(&self.client),
-            user,
-            self.when
-        )
-    }
-}
-
-fn digest(s: &str) -> String {
-    use sha2::{Digest, Sha256};
-    Sha256::digest(s.as_bytes())
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect()
-}
 
 fn io_err(what: &str, e: impl std::fmt::Display) -> Failure {
     Failure {
@@ -927,38 +762,10 @@ fn html_escape(s: &str) -> String {
 
 fn stamp_text_file(path: &Path, ext: &str, line: &str) -> Result<(), Failure> {
     let old = fs::read(path).map_err(|e| io_err("cannot read the output", e))?;
-    let bom: &[u8] = if old.starts_with(b"\xEF\xBB\xBF") {
-        b"\xEF\xBB\xBF"
-    } else {
-        b""
-    };
-    let body = &old[bom.len()..];
-    let mut new = bom.to_vec();
-    match ext {
-        "csv" => new.extend_from_slice(format!("\"{}\"\r\n", line.replace('"', "\"\"")).as_bytes()),
-        "md" => new.extend_from_slice(format!("{line}\n\n").as_bytes()),
-        "html" => {
-            let text = String::from_utf8_lossy(body).into_owned();
-            let lower = text.to_ascii_lowercase();
-            let at = lower
-                .find("<body")
-                .and_then(|i| lower[i..].find('>').map(|j| i + j + 1))
-                .ok_or_else(|| {
-                    io_err(
-                        "the html output has no <body>",
-                        "refusing to leave it unmarked",
-                    )
-                })?;
-            let mark = format!(
-                "<p style=\"color:#b00;font-weight:bold\">{}</p>",
-                html_escape(line)
-            );
-            new.extend_from_slice(format!("{}{}{}", &text[..at], mark, &text[at..]).as_bytes());
-            return fs::write(path, new).map_err(|e| io_err("cannot write the output", e));
-        }
-        _ => new.extend_from_slice(format!("{line}\n").as_bytes()),
-    }
-    new.extend_from_slice(body);
+    let new = xdfu_core::stamp_text(&old, ext, line).map_err(|e| Failure {
+        exit: Exit::ToolError,
+        msg: format!("XDFU watermark: {e}"),
+    })?;
     fs::write(path, new).map_err(|e| io_err("cannot write the output", e))
 }
 
@@ -1565,42 +1372,6 @@ pub struct XdfuHook {
     local: bool,
     machine: String,
     jobs: Mutex<HashMap<String, Note>>,
-}
-
-/// Where the CLI keeps the audit log when `--xdfu-audit` is not given: the user's data directory.
-pub fn default_audit_path() -> PathBuf {
-    let base = std::env::var_os("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("XDG_DATA_HOME").map(PathBuf::from))
-        .or_else(|| {
-            std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local").join("share"))
-        });
-    base.map_or_else(
-        || PathBuf::from("xdfu-audit.jsonl"),
-        |b| b.join("convert").join("xdfu-audit.jsonl"),
-    )
-}
-
-pub fn os_user() -> String {
-    ["USERNAME", "USER", "LOGNAME"]
-        .iter()
-        .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
-        .unwrap_or_else(|| "unknown".into())
-}
-
-pub fn machine_name() -> String {
-    ["COMPUTERNAME", "HOSTNAME"]
-        .iter()
-        .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
-        .unwrap_or_else(|| "unknown".into())
-}
-
-/// The address this computer reaches the network with: the source address a UDP socket would use towards a public address (nothing
-/// is sent). Falls back to the loopback address on a computer with no route.
-pub fn machine_addr() -> String {
-    std::net::UdpSocket::bind("0.0.0.0:0")
-        .and_then(|s| s.connect("192.0.2.1:9").and_then(|_| s.local_addr()))
-        .map_or_else(|_| "127.0.0.1".into(), |a| a.ip().to_string())
 }
 
 impl XdfuHook {

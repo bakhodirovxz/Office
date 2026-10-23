@@ -306,6 +306,7 @@ dependencies = [
  "ureq",
  "uz-translit",
  "win32job",
+ "xdfu-core",
  "zip",
 ]
 
@@ -2542,6 +2543,7 @@ version = "0.1.0"
 dependencies = [
  "ron",
  "serde_json",
+ "sha2",
  "toml_edit 0.22.27",
 ]
 
@@ -3834,6 +3836,14 @@ dependencies = [
  "libc",
  "once_cell",
  "pkg-config",
+]
+
+[[package]]
+name = "xdfu-core"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]
