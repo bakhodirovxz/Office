@@ -200,7 +200,30 @@ pub enum Request {
         path: String,
     },
     Recent {},
+    /// the documents that have saved versions (WP10)
     History {},
+    HistoryVersions {
+        path: String,
+    },
+    /// a read-only copy of a version, opened in its editor
+    HistoryView {
+        path: String,
+        v: u64,
+    },
+    HistoryRestore {
+        path: String,
+        v: u64,
+    },
+    /// a copy of a version in the downloads folder
+    HistoryCopy {
+        path: String,
+        v: u64,
+    },
+    HistoryName {
+        path: String,
+        v: u64,
+        name: String,
+    },
     SettingsGet {},
     SettingsSet {
         key: String,
@@ -270,6 +293,20 @@ pub fn download_target(brand: &Brand, wanted: &Path) -> Result<PathBuf, String> 
         })
         .find(|f| !f.exists())
         .ok_or_else(|| "too many files with this name".to_string())
+}
+
+/// The shell route that shows the History panel of `path` (percent-encoded, only unreserved characters stay).
+pub fn history_fragment(path: &str) -> String {
+    let enc: String = path
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (b as char).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect();
+    format!("#history={enc}")
 }
 
 /// The script that delivers a reply to the page: `addEventListener('suite-host', e => e.detail)`.
@@ -384,7 +421,13 @@ pub struct Ctx {
     /// the folder with the editor exes
     pub bin_dir: PathBuf,
     pub spawn: Spawn,
+    /// the local version history (`None`: unavailable, every history message then answers with an error)
+    pub history: Option<HStore>,
+    /// where "save a copy" of a version goes
+    pub downloads: PathBuf,
 }
+
+type HStore = suite_core::history::Store;
 
 pub enum Out {
     Reply(Value),
@@ -404,6 +447,10 @@ impl Ctx {
         let go = || -> Result<Value, String> {
             let (app, p) = check_file(&self.brand, &path.to_string_lossy(), Source::User)?;
             self.store.record(&p, app.id, now());
+            // an editor in the window saved: that is a version too (an error is not the download's problem)
+            if let Some(h) = &self.history {
+                let _ = h.snapshot(&p, None);
+            }
             let name = p.file_name().map(|n| n.to_string_lossy().into_owned());
             Ok(json!({"type": "saved", "ok": true, "app": app.id, "name": name}))
         };
@@ -472,6 +519,78 @@ impl Ctx {
         }
     }
 
+    /// The history store and the file for a path from the page: it must be the path of a document that has versions, and satisfy the
+    /// path rules (the file must still exist: restoring a deleted file is not done yet).
+    fn history_target(&self, path: &str) -> Result<(&HStore, &AppDef, PathBuf), String> {
+        let h = self
+            .history
+            .as_ref()
+            .ok_or("the version history is not available")?;
+        // the store keeps the canonical path (`\\?\C:\...`): the page may send it with or without the prefix
+        let same = |d: &str| d == path || d.strip_prefix(r"\\?\") == Some(path);
+        if !h.documents().iter().any(|d| same(&d.path)) {
+            return Err("this file has no saved versions".into());
+        }
+        let (app, p) = check_file(&self.brand, path, Source::Page)?;
+        Ok((h, app, p))
+    }
+
+    /// Runs one history action. A refused path is `rejected`; a failed action is the message's own type with `ok: false`.
+    fn history_op(
+        &self,
+        ty: &str,
+        path: &str,
+        f: impl FnOnce(&HStore, &AppDef, &Path) -> Result<Value, String>,
+    ) -> Value {
+        let (h, app, p) = match self.history_target(path) {
+            Ok(t) => t,
+            Err(error) => return json!({"type": "rejected", "error": error}),
+        };
+        match f(h, app, &p) {
+            Ok(mut v) => {
+                v["type"] = json!(ty);
+                v["ok"] = json!(true);
+                v
+            }
+            Err(error) => json!({"type": ty, "ok": false, "error": error}),
+        }
+    }
+
+    /// Version `v` as `name (v3 view).ext` in `dir` (or the first free `name (v3 view) (n).ext`).
+    fn write_version_copy(
+        &self,
+        h: &HStore,
+        p: &Path,
+        v: u64,
+        dir: &Path,
+        suffix: &str,
+    ) -> Result<PathBuf, String> {
+        let bytes = h.read(p, v).map_err(|e| e.to_string())?;
+        let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
+        let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("");
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        let to = download_target(
+            &self.brand,
+            &dir.join(format!("{stem} (v{v}{suffix}).{ext}")),
+        )?;
+        std::fs::write(&to, bytes).map_err(|e| e.to_string())?;
+        Ok(to)
+    }
+
+    fn history_view(&self, path: &str, v: u64) -> Value {
+        self.history_op("history_view", path, |h, app, p| {
+            let exe = self.bin_dir.join(format!("{}.exe", app.bin));
+            if !exe.is_file() {
+                return Err(format!("the editor {}.exe is not installed", app.bin));
+            }
+            // read-only by being a copy: the version in the history and the document stay as they are
+            let to = self.write_version_copy(h, p, v, &self.store.dir.join("temp"), " view")?;
+            (self.spawn)(&exe, &to).map_err(|e| format!("cannot start the editor: {e}"))?;
+            let name = to.file_name().map(|n| n.to_string_lossy().into_owned());
+            Ok(json!({"v": v, "name": name, "copy": true}))
+        })
+    }
+
     pub fn handle(&self, req: Request) -> Out {
         let items = |v: Vec<Entry>| {
             v.into_iter()
@@ -499,7 +618,52 @@ impl Ctx {
             }
             Request::OpenInExcel { path } => self.open_in_excel(&path, Source::Page),
             Request::Recent {} => json!({"type": "recent", "items": items(self.store.recent(20))}),
-            Request::History {} => json!({"type": "history", "items": items(self.store.history())}),
+            // the open log stays internal (it is the whitelist of `open`); the page sees the documents that have versions
+            Request::History {} => {
+                let docs = self.history.as_ref().map(HStore::documents).unwrap_or_default();
+                let items: Vec<Value> = docs
+                    .iter()
+                    .map(|d| {
+                        let ext = Path::new(&d.path)
+                            .extension()
+                            .and_then(|e| e.to_str())
+                            .map(str::to_ascii_lowercase)
+                            .unwrap_or_default();
+                        let app = self.brand.apps.iter().find(|a| a.exts.contains(&ext.as_str()));
+                        json!({"path": d.path, "app": app.map(|a| a.id), "versions": d.versions, "ts": d.last_time, "size": d.size})
+                    })
+                    .collect();
+                json!({"type": "history", "items": items})
+            }
+            Request::HistoryVersions { path } => {
+                self.history_op("history_versions", &path, |h, _, p| {
+                    let items: Vec<Value> = h
+                        .list(p)
+                        .map_err(|e| e.to_string())?
+                        .iter()
+                        .map(suite_core::history::Version::to_json)
+                        .collect();
+                    let verified = h.verify(p);
+                    Ok(json!({"path": path, "items": items, "verified": verified.is_ok(), "problem": verified.err()}))
+                })
+            }
+            Request::HistoryView { path, v } => self.history_view(&path, v),
+            Request::HistoryRestore { path, v } => {
+                self.history_op("history_restore", &path, |h, _, p| {
+                    let made = h.restore(p, v).map_err(|e| e.to_string())?;
+                    Ok(json!({"version": made.to_json()}))
+                })
+            }
+            Request::HistoryCopy { path, v } => self.history_op("history_copy", &path, |h, _, p| {
+                let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
+                Ok(json!({"v": v, "path": to}))
+            }),
+            Request::HistoryName { path, v, name } => {
+                self.history_op("history_name", &path, |h, _, p| {
+                    h.name(p, v, &name).map_err(|e| e.to_string())?;
+                    Ok(json!({"v": v}))
+                })
+            }
             Request::SettingsGet {} => json!({"type": "settings", "values": self.store.settings()}),
             Request::SettingsSet { key, value } => match self.store.set_setting(&key, &value) {
                 Ok(()) => json!({"type": "settings", "values": self.store.settings()}),
@@ -527,10 +691,12 @@ pub struct Args {
     pub bin_dir: Option<PathBuf>,
     /// open the default browser instead of a window
     pub browser: bool,
+    /// show the History panel for this file (an editor's "Version history" command)
+    pub history: Option<String>,
     pub files: Vec<String>,
 }
 
-pub const USAGE: &str = "usage: suite [--dist DIR] [--shell DIR] [--brand FILE] [--bin-dir DIR] [--browser] [--] [FILE...]";
+pub const USAGE: &str = "usage: suite [--dist DIR] [--shell DIR] [--brand FILE] [--bin-dir DIR] [--browser] [--history FILE] [--] [FILE...]";
 
 /// Anything that is not a flag is a file, so `hoshiya.exe "C:\Users\Имя\Hisobot 2026.xlsx"` works as "Open with" calls it.
 pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Args, String> {
@@ -554,6 +720,7 @@ pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Args, String
             "--shell" => a.shell = Some(val()?),
             "--brand" => a.brand = Some(val()?),
             "--bin-dir" => a.bin_dir = Some(val()?),
+            "--history" => a.history = Some(val()?.to_string_lossy().into_owned()),
             _ => return Err(USAGE.into()),
         }
     }
@@ -611,6 +778,13 @@ bin = "tst-pdf"
                 l.lock().unwrap().push((e.to_path_buf(), f.to_path_buf()));
                 Ok(())
             }),
+            history: Some(HStore::new(
+                d.join("hist"),
+                suite_core::history::Limits::from(
+                    &suite_core::settings::Settings::default().history,
+                ),
+            )),
+            downloads: d.join("downloads"),
         };
         (c, d, log)
     }
@@ -726,15 +900,15 @@ bin = "tst-pdf"
             assert_eq!(c.open(bad, Source::User)["ok"], false, "{bad}");
         }
         assert_eq!(log.lock().unwrap().len(), 3);
-        // recent and history record every open, newest first
+        // recent and the (internal) open log record every open, newest first; the page's History lists documents with versions only
         let r = reply(c.handle(Request::Recent {}));
         assert_eq!(r["items"][0]["app"], "docs");
-        assert_eq!(
+        assert_eq!(c.store.history().len(), 3);
+        assert!(
             reply(c.handle(Request::History {}))["items"]
                 .as_array()
                 .unwrap()
-                .len(),
-            3
+                .is_empty()
         );
     }
 
@@ -1038,6 +1212,147 @@ bin = "tst-pdf"
         assert!(s(&["--nope"]).is_err());
         assert!(s(&["--dist"]).is_err());
         assert_eq!(s(&[]).unwrap(), Args::default());
+    }
+
+    /// WP10: the page lists, views, restores, copies and names versions, for documents that have versions only.
+    #[test]
+    fn the_history_messages() {
+        let (c, d, log) = ctx("hist");
+        let doc = d.join("Hisobot.docx");
+        let other = d.join("other.docx");
+        std::fs::write(&other, b"o").unwrap();
+        let h = c.history.as_ref().unwrap();
+        std::fs::write(&doc, b"one").unwrap();
+        h.snapshot(&doc, Some("first")).unwrap();
+        std::fs::write(&doc, b"two").unwrap();
+        h.snapshot(&doc, None).unwrap();
+        let p = doc.to_str().unwrap();
+        let send = |v: Value| reply(c.message(&v.to_string()));
+
+        // the list is the documents that have versions, not the open log
+        c.store.record(&other, "docs", 1);
+        let l = send(json!({"type": "history"}));
+        assert_eq!(l["items"].as_array().unwrap().len(), 1, "{l}");
+        assert_eq!(
+            (
+                l["items"][0]["path"]
+                    .as_str()
+                    .map(|x| x.trim_start_matches(r"\\?\")),
+                l["items"][0]["app"].as_str(),
+                l["items"][0]["versions"].as_u64()
+            ),
+            (Some(p), Some("docs"), Some(2))
+        );
+        let v = send(json!({"type": "history_versions", "path": p}));
+        assert_eq!(
+            (
+                v["ok"].clone(),
+                v["verified"].clone(),
+                v["items"].as_array().unwrap().len()
+            ),
+            (json!(true), json!(true), 2),
+            "{v}"
+        );
+        assert_eq!(v["items"][0]["message"], "first");
+
+        // refused: unknown fields, a path with no history, a bad path, a bad version
+        for body in [
+            json!({"type": "history_versions", "path": p, "x": 1}),
+            json!({"type": "history_restore", "path": p}),
+            json!({"type": "history_name", "path": p, "v": 1}),
+            json!({"type": "history_view", "path": p, "v": -1}),
+        ] {
+            assert_eq!(send(body.clone())["type"], "rejected", "{body}");
+        }
+        for path in [
+            other.to_str().unwrap(),
+            r"C:\nowhere\a.docx",
+            r"\\h\s\a.docx",
+            "a.docx",
+            "",
+        ] {
+            for ty in [
+                "history_versions",
+                "history_restore",
+                "history_copy",
+                "history_view",
+            ] {
+                let r = send(json!({"type": ty, "path": path, "v": 1}));
+                assert_eq!(r["type"], "rejected", "{ty} {path}: {r}");
+            }
+        }
+        assert_eq!(
+            send(json!({"type": "history_name", "path": other, "v": 1, "name": "x"}))["type"],
+            "rejected"
+        );
+
+        // name
+        let r = send(json!({"type": "history_name", "path": p, "v": 1, "name": "Final"}));
+        assert_eq!(r["ok"], true, "{r}");
+        assert_eq!(
+            send(json!({"type": "history_versions", "path": p}))["items"][0]["name"],
+            "Final"
+        );
+
+        // view: a copy opened in the editor, the document untouched
+        let r = send(json!({"type": "history_view", "path": p, "v": 1}));
+        assert_eq!(
+            (r["ok"].clone(), r["name"].as_str()),
+            (json!(true), Some("Hisobot (v1 view).docx")),
+            "{r}"
+        );
+        let copy = d.join("data/temp/Hisobot (v1 view).docx");
+        assert_eq!(std::fs::read(&copy).unwrap(), b"one");
+        assert_eq!(log.lock().unwrap().last().unwrap().1, copy);
+        assert_eq!(std::fs::read(&doc).unwrap(), b"two");
+
+        // copy: into the downloads folder, never over a file
+        let r = send(json!({"type": "history_copy", "path": p, "v": 1}));
+        assert_eq!(r["ok"], true, "{r}");
+        assert_eq!(
+            std::fs::read(d.join("downloads/Hisobot (v1).docx")).unwrap(),
+            b"one"
+        );
+        let r = send(json!({"type": "history_copy", "path": p, "v": 1}));
+        assert_eq!(
+            std::fs::read(d.join("downloads/Hisobot (v1) (1).docx")).unwrap(),
+            b"one",
+            "{r}"
+        );
+        assert_eq!(
+            send(json!({"type": "history_copy", "path": p, "v": 99}))["ok"],
+            false
+        );
+
+        // restore round trip: the file has the old bytes, and the list has a new version; the current content is kept
+        let r = send(json!({"type": "history_restore", "path": p, "v": 1}));
+        assert_eq!(
+            (r["ok"].clone(), r["version"]["restored_from"].clone()),
+            (json!(true), json!(1)),
+            "{r}"
+        );
+        assert_eq!(std::fs::read(&doc).unwrap(), b"one");
+        let v = send(json!({"type": "history_versions", "path": p}));
+        assert_eq!(v["items"].as_array().unwrap().len(), 3, "{v}");
+        assert_eq!(c.history.as_ref().unwrap().read(&doc, 2).unwrap(), b"two");
+        // the next page-visible call sees the same
+        assert_eq!(send(json!({"type": "history"}))["items"][0]["versions"], 3);
+    }
+
+    #[test]
+    fn a_save_from_the_window_is_a_version_and_the_fragment_is_encoded() {
+        let (c, d, _log) = ctx("dlsnap");
+        let f = d.join("Ҳисобот 1.docx");
+        std::fs::write(&f, b"abc").unwrap();
+        assert_eq!(c.saved(&f)["ok"], true);
+        assert_eq!(c.history.as_ref().unwrap().list(&f).unwrap().len(), 1);
+        assert_eq!(
+            history_fragment(r"C:\a b\x#.docx"),
+            "#history=C%3A%5Ca%20b%5Cx%23.docx"
+        );
+        let a = parse_args(["--history".to_string(), "X.docx".into()]).unwrap();
+        assert_eq!(a.history.as_deref(), Some("X.docx"));
+        assert!(parse_args(["--history".to_string()]).is_err());
     }
 
     #[test]

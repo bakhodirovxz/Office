@@ -178,3 +178,28 @@ fn a_second_launch_hands_its_file_to_the_running_instance() {
         "the first instance is still running"
     );
 }
+
+#[test]
+fn history_on_the_command_line_opens_the_panel_route_and_a_second_launch_forwards_it() {
+    let e = env("history");
+    let doc = e.file("Буйруқ 1.docx");
+    let mut c = e.cmd(&[]);
+    c.arg("--history")
+        .arg(&doc)
+        .env("SUITE_TEST_EXIT_AFTER_MS", "20000");
+    let mut first = Kill(c.spawn().unwrap());
+    let port = e.port();
+    // the start URL carries the route; the editors are not started by --history
+    let url = e.wait("browser.log").trim().trim_matches('"').to_string(); // cmd echoes the quotes
+    let want = suite_desktop::history_fragment(doc.to_str().unwrap());
+    assert!(
+        url.starts_with(&format!("http://127.0.0.1:{port}/_k/")) && url.ends_with(&want),
+        "{url}"
+    );
+    assert!(!e.dir.join("editor.log").exists());
+    // a second launch hands the request to the running instance and exits at once
+    let t = Instant::now();
+    let second = e.cmd(&[]).arg("--history").arg(&doc).status().unwrap();
+    assert!(second.success() && t.elapsed() < Duration::from_secs(10));
+    assert!(first.0.try_wait().unwrap().is_none());
+}

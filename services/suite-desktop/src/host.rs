@@ -1,7 +1,8 @@
 //! The Windows part: the in-process `suite-serve` on a random loopback port, the single-instance pipe, the WebView2 window and the
 //! browser fallback. Desktop actions reach the host only through the WebView IPC (`Ctx::message`), never through the HTTP port.
 use crate::{
-    Args, Brand, Ctx, Out, Source, Store, download_target, ipc_message, nav_ok, reply_script,
+    Args, Brand, Ctx, Out, Source, Store, check_file, download_target, history_fragment,
+    ipc_message, nav_ok, reply_script,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -27,7 +28,13 @@ enum Ev {
 #[derive(Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 enum PipeMsg {
-    Open { path: String },
+    Open {
+        path: String,
+    },
+    /// show the History panel of this file
+    History {
+        path: String,
+    },
     Focus {},
 }
 
@@ -94,6 +101,18 @@ Open it in Excel?"
     v
 }
 
+/// The `--history` request: the file is checked like one from the command line; the shell is told to show its panel (`show_history`
+/// event) and navigates to `#history=<path>` itself. A bad path is told to the user in a dialog.
+fn show_history(ctx: &Ctx, path: &str) -> Option<Value> {
+    match check_file(&ctx.brand, path, Source::User) {
+        Ok(_) => Some(json!({"type": "show_history", "path": path})),
+        Err(error) => {
+            report(&ctx.brand.product, &json!({"ok": false, "error": error}));
+            None
+        }
+    }
+}
+
 /// Test hooks (`SUITE_*`) exist in debug builds only: a release binary ignores these variables (review m10), so an environment
 /// variable can neither pick an executable to start nor move the pipe, the data or the browser.
 #[cfg(debug_assertions)]
@@ -112,6 +131,18 @@ fn env_dir(key: &str) -> Option<PathBuf> {
 }
 
 /// A fresh 256-bit key for this launch (review M1), as 64 hex digits. It is never written to disk.
+/// The version history of this user. The debug data-dir hook keeps it inside that folder.
+fn history_store(data: &Path, settings_dir: &Path) -> Option<suite_core::history::Store> {
+    if hook("SUITE_DATA_DIR").is_none() {
+        return suite_core::history::Store::from_settings();
+    }
+    let h = suite_core::settings::load_in(settings_dir).settings.history;
+    Some(suite_core::history::Store::new(
+        data.join("history"),
+        suite_core::history::Limits::from(&h),
+    ))
+}
+
 fn new_key() -> Result<String, String> {
     let mut b = [0u8; 32];
     getrandom::getrandom(&mut b).map_err(|e| format!("no random numbers: {e}"))?;
@@ -197,6 +228,12 @@ async fn pipe_loop(
                 if let Ok(PipeMsg::Open { path }) = serde_json::from_str(line) {
                     let v = open_and_report(&ctx, &path);
                     if let Some(p) = &proxy {
+                        let _ = p.send_event(Ev::Script(reply_script(&v)));
+                    }
+                } else if let Ok(PipeMsg::History { path }) = serde_json::from_str(line) {
+                    if let Some(p) = &proxy
+                        && let Some(v) = show_history(&ctx, &path)
+                    {
                         let _ = p.send_event(Ev::Script(reply_script(&v)));
                     }
                 } else if serde_json::from_str::<PipeMsg>(line).is_err() {
@@ -320,8 +357,11 @@ fn start(args: Args) -> Result<(), String> {
     );
     let ctx = Arc::new(Ctx {
         brand,
-        store: Store::with_settings_dir(data.clone(), settings_dir),
+        store: Store::with_settings_dir(data.clone(), settings_dir.clone()),
         bin_dir,
+        history: history_store(&data, &settings_dir),
+        downloads: env_dir("USERPROFILE")
+            .map_or_else(|| data.join("downloads"), |d| d.join("Downloads")),
         // the editor starts in the install folder, not in the folder of the document (review m7: a DLL it loads late must not be
         // found next to a downloaded file)
         spawn: Box::new(move |exe, file| {
@@ -348,14 +388,17 @@ fn start(args: Args) -> Result<(), String> {
     let server = match first {
         Ok(s) => Some(s),
         Err(_) => {
-            let lines: Vec<String> = if args.files.is_empty() {
-                vec![json!({"type": "focus"}).to_string()]
-            } else {
-                args.files
-                    .iter()
-                    .map(|f| json!({"type": "open", "path": f}).to_string())
-                    .collect()
-            };
+            let mut lines: Vec<String> = args
+                .files
+                .iter()
+                .map(|f| json!({"type": "open", "path": f}).to_string())
+                .collect();
+            if let Some(h) = &args.history {
+                lines.push(json!({"type": "history", "path": h}).to_string());
+            }
+            if lines.is_empty() {
+                lines.push(json!({"type": "focus"}).to_string());
+            }
             if send(&pipe, &lines, &me) {
                 return Ok(());
             }
@@ -363,7 +406,7 @@ fn start(args: Args) -> Result<(), String> {
             for f in &args.files {
                 open_and_report(&ctx, f);
             }
-            if args.files.is_empty() {
+            if args.files.is_empty() && args.history.is_none() {
                 return Err("another instance holds the pipe and does not answer".into());
             }
             return Ok(());
@@ -381,8 +424,15 @@ fn start(args: Args) -> Result<(), String> {
         open_and_report(&ctx, f);
     }
     // the first request sets the cookie that every later request needs (M1); the key stays in this process and the opener's command line
+    // `--history FILE` opens the shell on the History panel of that file (a fragment survives the redirect of /_k/)
+    let fragment = args
+        .history
+        .as_deref()
+        .and_then(|h| show_history(&ctx, h))
+        .map(|_| history_fragment(args.history.as_deref().unwrap_or_default()))
+        .unwrap_or_default();
     let start_url = format!(
-        "http://127.0.0.1:{port}/_k/{}",
+        "http://127.0.0.1:{port}/_k/{}{fragment}",
         layout.local_key.as_deref().unwrap_or_default()
     );
 
@@ -410,6 +460,8 @@ fn start(args: Args) -> Result<(), String> {
     // Nothing of the web layer is kept (review M2): the WebView runs InPrivate, and what an earlier version left in the profile
     // (IndexedDB copies of saved documents, one origin per launch) is deleted. This is the only instance, so nothing else uses it.
     let _ = std::fs::remove_dir_all(data.join("webview2"));
+    // read-only copies of old versions (History > View); a copy an editor still holds stays
+    let _ = std::fs::remove_dir_all(data.join("temp"));
     let mut web_context = WebContext::new(Some(data.join("webview2")));
     let ipc_proxy = proxy.clone();
     let ipc_ctx = ctx.clone();

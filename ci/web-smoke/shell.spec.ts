@@ -349,3 +349,118 @@ for (const [guard, ok] of [['wall', false], ['links', true]] as const) {
     await expect.poll(() => page.evaluate(() => (window as any).__sent.at(-1))).toEqual({ type: 'open_in_excel', path: file });
   });
 }
+
+// WP10. The History panel against a scripted host: the document list, the versions with the chain mark, View, Restore after a confirm,
+// Save a copy and Name; the panel opens from the route and from the host's show_history event. Without a host it only says so.
+test('desktop mode: the History panel lists, views, restores after a confirm, copies and names', async ({ page }) => {
+  const w = watch(page);
+  await page.addInitScript(() => {
+    const w = window as any;
+    w.__sent = [];
+    const user = 'C:\\Users\\u\\Hisobot.docx', kept = '\\\\?\\' + user; // the store keeps the canonical (verbatim) path
+    const vers: any[] = [
+      { v: 1, parent: null, sha256: 'a'.repeat(64), size: 2048, time: 1760000000, author: 'u', message: 'first', name: null, restored_from: null },
+      { v: 2, parent: 1, sha256: 'b'.repeat(64), size: 4096, time: 1760003600, author: 'u', message: null, name: null, restored_from: null },
+    ];
+    w.ipc = {
+      postMessage(m: string) {
+        const d = JSON.parse(m);
+        w.__sent.push(d);
+        let r: any = null;
+        if (d.type === 'settings_get') r = { type: 'settings', values: { lang: 'ru' } };
+        else if (d.type === 'recent') r = { type: 'recent', items: [] };
+        else if (d.type === 'history') r = { type: 'history', items: [{ path: kept, app: 'docs', versions: vers.length, ts: vers.at(-1).time, size: vers.at(-1).size }] };
+        else if (d.type === 'history_versions') r = d.path === user || d.path === kept ? { type: 'history_versions', ok: true, path: d.path, items: vers, verified: !w.__damaged, problem: w.__damaged ? 'version 1: the stored bytes are missing' : null } : { type: 'rejected', error: 'this file has no saved versions' };
+        else if (d.type === 'history_view') r = { type: 'history_view', ok: true, v: d.v, name: `Hisobot (v${d.v} view).docx`, copy: true };
+        else if (d.type === 'history_copy') r = { type: 'history_copy', ok: true, v: d.v, path: `C:\\Users\\u\\Downloads\\Hisobot (v${d.v}).docx` };
+        else if (d.type === 'history_name') { vers.find((x) => x.v === d.v).name = d.name || null; r = { type: 'history_name', ok: true, v: d.v }; }
+        else if (d.type === 'history_restore') { const n = { ...vers.find((x) => x.v === d.v), v: vers.length + 1, parent: vers.length, restored_from: d.v, message: `Restored from version ${d.v}` }; vers.push(n); r = { type: 'history_restore', ok: true, version: n }; }
+        if (r) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: r })), 0);
+      },
+    };
+  });
+  const KEPT = '\\\\?\\C:\\Users\\u\\Hisobot.docx';
+  await page.goto(base + '/#history=' + encodeURIComponent('C:\\Users\\u\\Hisobot.docx'));
+  await expect(page.locator('#history')).toBeVisible();
+  await expect(page.locator('#home')).toBeHidden();
+  await expect(page.locator('#hist-title')).toHaveText(txt('ru', 'hist.title'));
+  await expect(page.locator('#hist-docs li .open')).toHaveText('Hisobot.docx');
+  await expect(page.locator('#hist-docs li .open')).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator('#hist-body')).toContainText(txt('ru', 'hist.diff.note'));
+  const rows = page.locator('#hist-vers li');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText(txt('ru', 'hist.version').replace('{v}', '2')); // newest first
+  await expect(rows.nth(0)).toContainText('bbbbbbbb');
+  await expect(rows.nth(1)).toContainText('first');
+  await expect(page.locator('#hist-chain')).toHaveText(txt('ru', 'hist.chain.ok'));
+  const sent = () => page.evaluate(() => (window as any).__sent);
+  const act = (key: string, v: number) => page.getByRole('button', { name: `${txt('ru', key)}: ${txt('ru', 'hist.version').replace('{v}', String(v))}` });
+
+  // View: a read-only copy, said on screen
+  await act('hist.view', 1).click();
+  await expect(page.locator('#hist-msg')).toContainText('Hisobot (v1 view).docx');
+  expect((await sent()).at(-1)).toEqual({ type: 'history_view', path: KEPT, v: 1 });
+
+  // Restore: a confirm first; Cancel and Esc do nothing, the confirm sends the message and the list gains a version
+  await act('hist.restore', 1).click();
+  const dlg = page.locator('#hist-restore');
+  await expect(dlg).toBeVisible();
+  await expect(dlg).toContainText(txt('ru', 'hist.restore.body').replace('{v}', '1'));
+  await dlg.getByRole('button', { name: txt('ru', 'hist.cancel') }).click();
+  await expect(dlg).toBeHidden();
+  await act('hist.restore', 1).click();
+  await page.keyboard.press('Escape');
+  await expect(dlg).toBeHidden();
+  expect((await sent()).filter((m: any) => m.type === 'history_restore')).toHaveLength(0);
+  await act('hist.restore', 1).click();
+  await dlg.getByRole('button', { name: txt('ru', 'hist.restore.ok') }).click();
+  await expect(rows).toHaveCount(3);
+  await expect(page.locator('#hist-msg')).toHaveText(txt('ru', 'hist.restored').replace('{from}', '1').replace('{v}', '3'));
+  expect((await sent()).filter((m: any) => m.type === 'history_restore')).toEqual([{ type: 'history_restore', path: KEPT, v: 1 }]);
+  await expect(page.locator('#h-vers')).toBeFocused();
+
+  // Save a copy
+  await act('hist.copy', 2).click();
+  await expect(page.locator('#hist-msg')).toContainText('Hisobot (v2).docx');
+
+  // Name
+  await act('hist.name', 2).click();
+  const nd = page.locator('#hist-name');
+  await expect(nd).toBeVisible();
+  await nd.getByLabel(txt('ru', 'hist.name.label')).fill('Final');
+  await nd.getByRole('button', { name: txt('ru', 'hist.name.ok') }).click();
+  await expect(page.locator('#hist-vers .tag.name')).toHaveText('Final');
+  expect((await sent()).filter((m: any) => m.type === 'history_name')).toEqual([{ type: 'history_name', path: KEPT, v: 2, name: 'Final' }]);
+
+  // a damaged chain is marked, in the page's language
+  await page.evaluate(() => { (window as any).__damaged = true; });
+  await page.locator('#hist-docs li .open').click();
+  const problem = 'version 1: the stored bytes are missing';
+  await expect(page.locator('#hist-chain')).toHaveText(txt('ru', 'hist.chain.bad').replace('{problem}', problem));
+  await page.evaluate(() => { const s = document.getElementById('lang') as HTMLSelectElement; s.value = 'en'; s.dispatchEvent(new Event('change')); }); // the selector is on the hidden home screen
+  await expect(page.locator('#hist-chain')).toHaveText(txt('en', 'hist.chain.bad').replace('{problem}', problem));
+  await expect(page.locator('#h-vers')).toHaveText(txt('en', 'hist.vers').replace('{name}', 'Hisobot.docx'));
+
+  // back to the home screen; the nav entry and the host's show_history event open the panel again
+  await page.locator('#hist-back').click();
+  await expect(page.locator('#home')).toBeVisible();
+  await expect(page.locator('#history')).toBeHidden();
+  await page.locator('#nav-history').click();
+  await expect(page.locator('#history')).toBeVisible();
+  await page.locator('#hist-back').click();
+  await page.evaluate(() => dispatchEvent(new CustomEvent('suite-host', { detail: { type: 'show_history', path: 'C:\\Users\\u\\Hisobot.docx' } })));
+  await expect(page.locator('#hist-vers li')).toHaveCount(3);
+  // a file without versions says so
+  await page.evaluate(() => { location.hash = '#history=' + encodeURIComponent('C:\\Users\\u\\other.docx'); });
+  await expect(page.locator('#hist-msg')).toContainText('other.docx');
+  await expect(page.locator('#hist-ver-sec')).toBeHidden();
+  expect(w.problems).toEqual([]);
+});
+
+test('without the desktop host the History route only says it needs the app', async ({ page }) => {
+  await page.goto(base + '/#history');
+  await expect(page.locator('#history')).toBeVisible();
+  await expect(page.locator('#hist-web')).toHaveText(txt('en', 'hist.web'));
+  await expect(page.locator('#hist-body')).toBeHidden();
+  await expect(page.locator('#nav-history')).toBeHidden();
+});
