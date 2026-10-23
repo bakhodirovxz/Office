@@ -193,9 +193,22 @@
     f.click();
   }
 
+  // F18 (PLAN 6): what the host's pre-open guard found in a workbook. A workbook over the wall is refused (error), external links only
+  // warn (notice); each offers Excel when the host found it. The text is ours (guard.*); the host sends the code, not the sentence.
+  function guardNote(d) {
+    const g = $('guard'), b = $('guard-excel');
+    g.hidden = !d.guard;
+    if (!d.guard) return;
+    const sheets = S.cfg.apps.find((a) => a.id === 'sheets');
+    $('guard-text').textContent = t('guard.' + d.guard, { app: sheets ? appName(sheets) : '' });
+    g.className = d.ok ? 'muted' : 'error';
+    b.hidden = !d.excel;
+    b.onclick = () => host({ type: 'open_in_excel', path: d.path }, 'excel').then((r) => { if (r && !r.ok) fail(String(r.error)); });
+  }
+
   addEventListener('suite-host', (e) => {
     const d = e.detail || {};
-    if (d.type === 'opened') { fail(d.ok || d.cancelled ? '' : String(d.error)); if (d.ok) loadRecent().then(render); }
+    if (d.type === 'opened') { guardNote(d); fail(d.ok || d.cancelled || d.guard ? '' : String(d.error)); if (d.ok || d.guard) loadRecent().then(render); }
     // the host's download handler: where a saved file went (or why it was refused)
     if (d.type === 'saved') { if (d.ok) $('ed-status').textContent = t('ed.saved', { name: d.name }); else fail(String(d.error)); loadRecent().then(render); }
   });

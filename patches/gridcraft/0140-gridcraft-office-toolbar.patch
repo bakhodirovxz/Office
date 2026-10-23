@@ -1152,7 +1152,7 @@ index cd930f58..e7a5708d 100644
          .map(|n| {
 diff --git a/crates/ui-egui/tests/office_toolbar.rs b/crates/ui-egui/tests/office_toolbar.rs
 new file mode 100644
-index 00000000..12ffa30f
+index 00000000..f87ec398
 --- /dev/null
 +++ b/crates/ui-egui/tests/office_toolbar.rs
 @@ -0,0 +1,253 @@
@@ -1390,7 +1390,7 @@ index 00000000..12ffa30f
 +    for (name, lang) in langs {
 +        for (mode, simple) in [("simple", true), ("full", false)] {
 +            office_toolbar::set_simple(simple);
-+            let mut h = harness(1700.0, lang);
++            let mut h = harness(1900.0, lang);
 +            h.run_steps(3);
 +            h.render().expect("render").save(dir.join(format!("sheets-{mode}-{name}.png"))).expect("save");
 +        }

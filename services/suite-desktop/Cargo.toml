@@ -21,11 +21,12 @@ serde = { version = "1", features = ["derive"] }
 suite-core = { path = "../../crates/suite-core" }
 serde_json = "1"
 toml = { version = "1", default-features = false, features = ["parse"] }
+# the pre-open guard reads a workbook's zip directory with the converter's scanner (portable: no window, no server)
+convert = { path = "../convert" }
 
 # The window, the WebView2 control, the native dialogs and the server are Windows-only: on Linux the host would link webkit2gtk (LGPL),
 # which the plan excludes (section 3.4, R16), so the crate builds there as the portable logic only.
 [target.'cfg(windows)'.dependencies]
-convert = { path = "../convert" }
 convert-api = { path = "../convert-api" }
 suite-serve = { path = "../suite-serve" }
 suite-winsec = { path = "../suite-winsec" }
@@ -39,3 +40,6 @@ rfd = { version = "0.17", default-features = false }
 [[bin]]
 name = "suite-fake-editor"
 path = "tests/support/fake_editor.rs"
+
+[dev-dependencies]
+zip = { version = "9", default-features = false, features = ["deflate"] }

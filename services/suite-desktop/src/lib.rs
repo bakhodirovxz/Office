@@ -5,6 +5,8 @@
 //! Trust boundary: the page is our own shell, but a message is still data. `ipc::parse` accepts only the types in `Request`, with
 //! exactly their fields, in at most `MAX_MESSAGE` bytes. A path is checked again by `check_file` before anything is started, and
 //! only an editor named in `brand.toml` is ever started.
+pub mod guard;
+
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::path::{Component, Path, PathBuf, Prefix};
@@ -192,6 +194,10 @@ pub enum Request {
     Pick {
         #[serde(default)]
         app: Option<String>,
+    },
+    /// start Excel on a workbook the guard stopped (or warned about); only a file in the history, only a Sheets file
+    OpenInExcel {
+        path: String,
     },
     Recent {},
     History {},
@@ -416,15 +422,54 @@ impl Ctx {
             if !exe.is_file() {
                 return Err(format!("the editor {}.exe is not installed", app.bin));
             }
-            (self.spawn)(&exe, &p).map_err(|e| format!("cannot start the editor: {e}"))?;
-            self.store.record(&p, app.id, now());
             let name = p
                 .file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_default();
-            Ok(json!({"type": "opened", "ok": true, "app": app.id, "name": name}))
+            // F18: a workbook over the wall is never handed to Sheets to fail silently; external links are said, not hidden
+            let verdict = guard::check(app.id, &p);
+            if verdict == guard::Verdict::Wall {
+                // listed in Recent, so the page can offer Excel for it later
+                self.store.record(&p, app.id, now());
+                return Ok(
+                    json!({"type": "opened", "ok": false, "error": guard::WALL_TEXT, "guard": "wall", "excel": guard::excel_exe().is_some(), "app": app.id, "name": name, "path": path}),
+                );
+            }
+            (self.spawn)(&exe, &p).map_err(|e| format!("cannot start the editor: {e}"))?;
+            self.store.record(&p, app.id, now());
+            let mut reply = json!({"type": "opened", "ok": true, "app": app.id, "name": name});
+            if let Some(code) = verdict.code() {
+                reply["guard"] = json!(code);
+                reply["warning"] = json!(guard::LINKS_TEXT);
+                reply["excel"] = json!(guard::excel_exe().is_some());
+                reply["path"] = json!(path);
+            }
+            Ok(reply)
         };
         go().unwrap_or_else(|error| json!({"type": "opened", "ok": false, "error": error}))
+    }
+
+    /// Starts Excel on a Sheets workbook. The page may name only a file the host already knows; Excel must be installed.
+    pub fn open_in_excel(&self, path: &str, src: Source) -> Value {
+        let go = || -> Result<(), String> {
+            if src == Source::Page && !self.store.knows(path) {
+                return Err("this file is not in the recent list".into());
+            }
+            let (app, p) = check_file(&self.brand, path, src)?;
+            if app.id != "sheets" {
+                return Err("this file is not a workbook".into());
+            }
+            let excel = guard::excel_exe().ok_or("Excel is not installed")?;
+            std::process::Command::new(excel)
+                .arg(&p)
+                .spawn()
+                .map(|_| ())
+                .map_err(|e| format!("cannot start Excel: {e}"))
+        };
+        match go() {
+            Ok(()) => json!({"type": "excel", "ok": true}),
+            Err(error) => json!({"type": "excel", "ok": false, "error": error}),
+        }
     }
 
     pub fn handle(&self, req: Request) -> Out {
@@ -452,6 +497,7 @@ impl Ctx {
                 };
                 return Out::Pick(exts);
             }
+            Request::OpenInExcel { path } => self.open_in_excel(&path, Source::Page),
             Request::Recent {} => json!({"type": "recent", "items": items(self.store.recent(20))}),
             Request::History {} => json!({"type": "history", "items": items(self.store.history())}),
             Request::SettingsGet {} => json!({"type": "settings", "values": self.store.settings()}),
@@ -690,6 +736,91 @@ bin = "tst-pdf"
                 .len(),
             3
         );
+    }
+
+    fn zip_file(path: &Path, parts: &[(&str, u64)]) {
+        use std::io::Write;
+        let mut z = zip::ZipWriter::new(std::fs::File::create(path).unwrap());
+        let o = zip::write::SimpleFileOptions::default().compression_level(Some(1));
+        for (name, size) in parts {
+            z.start_file(*name, o.large_file(*size > u32::MAX as u64))
+                .unwrap();
+            let chunk = vec![0u8; 1 << 20];
+            let mut left = *size;
+            while left > 0 {
+                let n = left.min(chunk.len() as u64) as usize;
+                z.write_all(&chunk[..n]).unwrap();
+                left -= n as u64;
+            }
+        }
+        z.finish().unwrap();
+    }
+
+    /// F18: a workbook over the wall never reaches Sheets, is listed in Recent and says so; external links open with a warning.
+    #[test]
+    fn the_guard_stops_a_workbook_over_the_wall_and_warns_about_links() {
+        let (c, d, log) = ctx("guard");
+        let wall = d.join("katta.xlsx");
+        zip_file(
+            &wall,
+            &[
+                ("xl/workbook.xml", 100),
+                ("xl/worksheets/sheet1.xml", guard::MAX_PART + 1),
+            ],
+        );
+        let v = c.open(wall.to_str().unwrap(), Source::User);
+        assert_eq!(
+            (v["ok"].clone(), v["guard"].clone(), v["error"].clone()),
+            (false.into(), "wall".into(), guard::WALL_TEXT.into()),
+            "{v}"
+        );
+        assert_eq!(v["excel"], guard::excel_exe().is_some());
+        assert!(log.lock().unwrap().is_empty(), "the editor was not started");
+        assert_eq!(
+            c.store.history().len(),
+            1,
+            "listed, so the page can offer Excel"
+        );
+        // the page may then ask for Excel for it, and only for a workbook
+        let missing = c.open_in_excel(&d.join("other.xlsx").display().to_string(), Source::Page);
+        assert!(
+            missing["error"].as_str().unwrap().contains("recent list"),
+            "{missing}"
+        );
+
+        let linked = d.join("bog.xlsx");
+        zip_file(
+            &linked,
+            &[
+                ("xl/workbook.xml", 100),
+                ("xl/externalLinks/externalLink1.xml", 100),
+            ],
+        );
+        let v = c.open(linked.to_str().unwrap(), Source::User);
+        assert_eq!(
+            (v["ok"].clone(), v["guard"].clone(), v["warning"].clone()),
+            (true.into(), "links".into(), guard::LINKS_TEXT.into()),
+            "{v}"
+        );
+        assert_eq!(
+            log.lock().unwrap().len(),
+            1,
+            "a linked workbook still opens"
+        );
+
+        let plain = d.join("oddiy.xlsx");
+        zip_file(&plain, &[("xl/workbook.xml", 100)]);
+        let v = c.open(plain.to_str().unwrap(), Source::User);
+        assert!(
+            v["ok"] == true && v["guard"].is_null() && v["warning"].is_null(),
+            "{v}"
+        );
+
+        let doc = d.join("a.docx");
+        std::fs::write(&doc, b"x").unwrap();
+        c.open(doc.to_str().unwrap(), Source::User);
+        let not_sheets = c.open_in_excel(doc.to_str().unwrap(), Source::Page);
+        assert_eq!(not_sheets["error"], "this file is not a workbook");
     }
 
     /// Review m1: an alternate data stream and a DOS device name are refused from every source, before anything is opened.

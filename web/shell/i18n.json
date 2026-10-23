@@ -5,6 +5,12 @@
     "uz-Latn": "reviewed:agent-opus:2026-10-23",
     "uz-Cyrl": "reviewed:agent-opus:2026-10-23"
   },
+  "_draft": {
+    "status": "draft:agent-sonnet:2026-10-23",
+    "note": "rows whose ru and uz text are agent drafts, not yet reviewed (the _status block above covers the other rows)",
+    "keys": ["guard.wall", "guard.links", "guard.excel"],
+    "langs": ["ru", "uz-Latn", "uz-Cyrl"]
+  },
   "en": {
     "ui.language": "Language",
     "home.search": "Search recent files",
@@ -32,7 +38,10 @@
     "err.failed": "The editor could not start: {error}",
     "err.gone": "{name} is not available any more.",
     "recent.remove": "Remove {name} from the list",
-    "recent.remove.short": "Remove"
+    "recent.remove.short": "Remove",
+    "guard.wall": "This workbook is larger than {app} can open yet. Open it in Excel.",
+    "guard.links": "Links to other workbooks are kept but not updated.",
+    "guard.excel": "Open in Excel"
   },
   "ru": {
     "ui.language": "Язык",
@@ -61,7 +70,10 @@
     "err.failed": "Не удалось запустить редактор: {error}",
     "err.gone": "Файл {name} больше недоступен.",
     "recent.remove": "Убрать {name} из списка",
-    "recent.remove.short": "Убрать"
+    "recent.remove.short": "Убрать",
+    "guard.wall": "Эта книга пока слишком велика для программы «{app}». Откройте её в Excel.",
+    "guard.links": "Ссылки на другие книги сохраняются, но не обновляются.",
+    "guard.excel": "Открыть в Excel"
   },
   "uz-Latn": {
     "ui.language": "Til",
@@ -90,7 +102,10 @@
     "err.failed": "Muharrirni ishga tushirib boʻlmadi: {error}",
     "err.gone": "{name} fayli endi mavjud emas.",
     "recent.remove": "{name} faylini roʻyxatdan olib tashlash",
-    "recent.remove.short": "Olib tashlash"
+    "recent.remove.short": "Olib tashlash",
+    "guard.wall": "Bu ish kitobi {app} hozircha ocha oladigan hajmdan katta. Uni Excelda oching.",
+    "guard.links": "Boshqa ish kitoblariga havolalar saqlanadi, lekin yangilanmaydi.",
+    "guard.excel": "Excelda ochish"
   },
   "uz-Cyrl": {
     "ui.language": "Тил",
@@ -119,6 +134,9 @@
     "err.failed": "Муҳаррирни ишга тушириб бўлмади: {error}",
     "err.gone": "{name} файли энди мавжуд эмас.",
     "recent.remove": "{name} файлини рўйхатдан олиб ташлаш",
-    "recent.remove.short": "Олиб ташлаш"
+    "recent.remove.short": "Олиб ташлаш",
+    "guard.wall": "Бу иш китоби {app} ҳозирча оча оладиган ҳажмдан катта. Уни Excelда очинг.",
+    "guard.links": "Бошқа иш китобларига ҳаволалар сақланади, лекин янгиланмайди.",
+    "guard.excel": "Excelда очиш"
   }
 }

@@ -232,7 +232,7 @@ fn evidence_screenshots() {
     for (name, lang) in langs {
         for (mode, simple) in [("simple", true), ("full", false)] {
             office_toolbar::set_simple(simple);
-            let mut h = harness(1700.0, lang);
+            let mut h = harness(1900.0, lang);
             h.run_steps(3);
             h.render().expect("render").save(dir.join(format!("sheets-{mode}-{name}.png"))).expect("save");
         }

@@ -313,3 +313,35 @@ test('connected to a server: Recent keeps names only, no IndexedDB, and asks for
   await page.locator('#recent li button.ghost').click();
   await expect(page.locator('#recent li')).toHaveCount(0);
 });
+
+// F18 / WP12: what the desktop host's pre-open guard reports is shown in the shell, translated, with an "Open in Excel" button when the
+// host found Excel. The host is stood in for by a script; the guard itself is tested in services/suite-desktop (`guard.rs`, `lib.rs`).
+for (const [guard, ok] of [['wall', false], ['links', true]] as const) {
+  test(`desktop mode: the host's "${guard}" guard result is shown with an Open in Excel button`, async ({ page }) => {
+    const file = 'C:/Users/u/Docs/Hisobot 2026.xlsx';
+    await page.addInitScript(([g, okay, f]) => {
+      const w = window as any;
+      w.__sent = [];
+      w.ipc = {
+        postMessage(m: string) {
+          const d = JSON.parse(m);
+          w.__sent.push(d);
+          const reply = d.type === 'recent' ? { type: 'recent', items: [{ path: f, app: 'sheets', ts: 1760000000 }] }
+            : d.type === 'settings_get' ? { type: 'settings', values: { lang: 'uz-Latn' } }
+            : d.type === 'open' ? { type: 'opened', ok: okay, guard: g, excel: true, app: 'sheets', name: 'Hisobot 2026.xlsx', path: f, error: 'x' }
+            : d.type === 'open_in_excel' ? { type: 'excel', ok: true } : null;
+          if (reply) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: reply })), 0);
+        },
+      };
+    }, [guard, ok, file] as const);
+    await page.goto(base + '/');
+    await page.locator('#recent li .open').click();
+    const sheets = appName('sheets', 'uz-Latn');
+    await expect(page.locator('#guard-text')).toHaveText(txt('uz-Latn', `guard.${guard}`).replace('{app}', sheets));
+    await expect(page.locator('#guard-excel')).toHaveText(txt('uz-Latn', 'guard.excel'));
+    await expect(page.locator('#error')).toBeHidden();
+    if (process.env.GUARD_SHOT_DIR) await page.screenshot({ fullPage: true, path: path.join(process.env.GUARD_SHOT_DIR, `shell-guard-${guard}-uz-latn.png`) });
+    await page.locator('#guard-excel').click();
+    await expect.poll(() => page.evaluate(() => (window as any).__sent.at(-1))).toEqual({ type: 'open_in_excel', path: file });
+  });
+}

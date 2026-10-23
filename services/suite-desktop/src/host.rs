@@ -43,13 +43,55 @@ fn dialog(level: rfd::MessageLevel, title: &str, text: &str) {
 
 /// A failed open is told to the user in a dialog (a launch from Explorer has no console to print to). It runs on its own thread.
 fn report(title: &str, v: &Value) {
-    if v["ok"] == false {
+    if v["ok"] == false && v["guard"].is_null() {
         let (t, e) = (
             title.to_string(),
             v["error"].as_str().unwrap_or("error").to_string(),
         );
         std::thread::spawn(move || dialog(rfd::MessageLevel::Error, &t, &e));
     }
+}
+
+/// Opens a file for the user (the command line, the second launch, the native dialog) and tells them what went wrong, or what the
+/// guard found (`crate::guard`): the wall and the external links, each with an offer to open the file in Excel.
+fn open_and_report(ctx: &Arc<Ctx>, path: &str) -> Value {
+    let v = ctx.open(path, Source::User);
+    report(&ctx.brand.product, &v);
+    if let Some(guard) = v["guard"].as_str().map(str::to_string) {
+        let (ctx, path, excel) = (ctx.clone(), path.to_string(), v["excel"] == true);
+        std::thread::spawn(move || {
+            let title = ctx.brand.product.clone();
+            let (text, level) = match guard.as_str() {
+                "wall" => (crate::guard::WALL_TEXT, rfd::MessageLevel::Error),
+                _ => (crate::guard::LINKS_TEXT, rfd::MessageLevel::Warning),
+            };
+            if !excel {
+                dialog(level, &title, text);
+                return;
+            }
+            let ask = rfd::MessageDialog::new()
+                .set_level(level)
+                .set_title(&title)
+                .set_description(format!(
+                    "{text}
+
+Open it in Excel?"
+                ))
+                .set_buttons(rfd::MessageButtons::YesNo)
+                .show();
+            if ask == rfd::MessageDialogResult::Yes {
+                let r = ctx.open_in_excel(&path, Source::User);
+                if r["ok"] == false {
+                    dialog(
+                        rfd::MessageLevel::Error,
+                        &title,
+                        r["error"].as_str().unwrap_or("error"),
+                    );
+                }
+            }
+        });
+    }
+    v
 }
 
 /// Test hooks (`SUITE_*`) exist in debug builds only: a release binary ignores these variables (review m10), so an environment
@@ -153,8 +195,7 @@ async fn pipe_loop(
             {
                 // the same checks as for the page: a pipe message is data too
                 if let Ok(PipeMsg::Open { path }) = serde_json::from_str(line) {
-                    let v = ctx.open(&path, Source::User);
-                    report(&ctx.brand.product, &v);
+                    let v = open_and_report(&ctx, &path);
                     if let Some(p) = &proxy {
                         let _ = p.send_event(Ev::Script(reply_script(&v)));
                     }
@@ -315,7 +356,7 @@ fn start(args: Args) -> Result<(), String> {
             }
             // nobody answers: a launch never fails, so open the files here and run without the pipe
             for f in &args.files {
-                report(&product, &ctx.open(f, Source::User));
+                open_and_report(&ctx, f);
             }
             if args.files.is_empty() {
                 return Err("another instance holds the pipe and does not answer".into());
@@ -332,7 +373,7 @@ fn start(args: Args) -> Result<(), String> {
         json!({"pid": std::process::id(), "port": port}).to_string(),
     );
     for f in &args.files {
-        report(&product, &ctx.open(f, Source::User));
+        open_and_report(&ctx, f);
     }
     // the first request sets the cookie that every later request needs (M1); the key stays in this process and the opener's command line
     let start_url = format!(
@@ -412,12 +453,9 @@ fn start(args: Args) -> Result<(), String> {
                     // the dialog blocks, so it must not run on the UI thread
                     std::thread::spawn(move || {
                         let v = match rfd::FileDialog::new().add_filter("*", &exts).pick_file() {
-                            Some(f) => ctx.open(&f.to_string_lossy(), Source::User),
+                            Some(f) => open_and_report(&ctx, &f.to_string_lossy()),
                             None => json!({"type": "opened", "ok": false, "error": "cancelled", "cancelled": true}),
                         };
-                        if v["cancelled"] != true {
-                            report(&ctx.brand.product, &v);
-                        }
                         let _ = p.send_event(Ev::Script(reply_script(&v)));
                     });
                 }

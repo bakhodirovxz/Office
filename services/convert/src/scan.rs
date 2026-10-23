@@ -462,6 +462,25 @@ pub fn sha256_file(path: &Path) -> std::io::Result<String> {
     Ok(h.finalize().iter().map(|b| format!("{b:02x}")).collect())
 }
 
+/// The central directory of a zip package and the file's length, without inflating a byte (the desktop host's pre-open guard reads
+/// this). `None` when `path` is not a readable zip.
+pub fn directory(path: &Path) -> Option<(Vec<Entry>, u64)> {
+    let f = File::open(path).ok()?;
+    let len = f.metadata().ok()?.len();
+    let mut z = zip::ZipArchive::new(f).ok()?;
+    let mut entries = Vec::with_capacity(z.len().min(MAX_ENTRIES));
+    for i in 0..z.len().min(MAX_ENTRIES) {
+        let e = z.by_index_raw(i).ok()?;
+        entries.push(Entry {
+            name: e.name().map(|n| n.into_owned()).unwrap_or_default(),
+            size: e.size(),
+            compressed: e.compressed_size(),
+            start: e.data_start().unwrap_or(u64::MAX),
+        });
+    }
+    Some((entries, len))
+}
+
 /// Scan a file by content: anything that is not a zip package comes back as `inspected: false`.
 pub fn scan(path: &Path) -> Result<Scan, Failure> {
     let mut unlimited = u64::MAX;

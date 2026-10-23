@@ -1169,3 +1169,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Wasm:** slides brotli 9,492,465 B; the SVG loader (+309 KB) cannot fit 19,944 B of headroom, so bitmaps. `delta_br_max` 163,840 to 196,608 (measured delta +164,856 + 10%, rule of budgets.toml): `docs/phase4/icons-slides.md`.
 - **Spell crash:** 0 of 25 GUI runs crashed, quarantine stays: `docs/phase4/spell-crash.md`. Dictionaries en_US, ru_RU shipped (`assets/dictionaries`, `docs/phase4/licences.md`).
 - Not run: full `ci.sh quick` and `ci.sh test deckcraft` (build slots busy); only the new tests ran (14 of 14 pass).
+
+### Phase 4 Sheets lane (WP3, WP4, WP12; 2026-10-23)
+- **Patches** gridcraft 0140 (simple toolbar: new `office_toolbar.rs`, 25 Fluent icons as alpha masks in `office_icons.bin`, the Full ribbon / Simple ribbon toggle through suite-core's `toolbar` key; 20 added and 7 removed lines in pre-existing upstream files besides Cargo.lock) and 0141 (command hook on `Session::execute`, no-op until installed); REGISTER rows added, `verify-queue.sh gridcraft` ok (44 patches).
+- **Wasm:** the SVG loader (+309 KB, `docs/phase4/icons-wasm.md`) cannot fit 24,492 B of headroom, so bitmaps (5 KB brotli). Sheets brotli 4,943,443 B (+33,932 B); `delta_br_max` 196,608 to 229,376 (measured delta +206,048 + 10 %, the budgets.toml rule). My own with/without-loader build did not reproduce the +309 KB and is not cited: `docs/phase4/sheets-toolbar-wasm.md`.
+- **Width thresholds measured**, not the design's 1,500 / 1,100 estimates: labels from 1,640 px (en) to 1,820 px (ru, uz-Cyrl), every item in the row from about 1,320 px.
+- **Keytips:** Alt,H,F,F / F,S / H / F,C / N reach the five picker controls in simple mode (kittest, `tests/office_toolbar.rs`).
+- **WP12:** memory gate passed (w40 573, w80 904.5, w120 1,241 MB steady, all within +1.3 % of round 2); open time not clean (machine busy), idle re-run owed. The shell host now stops a workbook over the 1 GiB wall before Sheets starts, warns about external links, and offers Excel. The GUI's own message at the wall is clear, so no carried message fix: `docs/phase4/excel-guard.md`.
+- Hook bypass list for Sheets: `docs/phase4/hooks-sheets.md` (WP11 must also guard `file.saveBytes`).
+- Catalog: five new gridcraft rows and five ru gaps filled, all `draft:agent-sonnet:2026-10-23`; shell `guard.*` rows likewise (`_draft` block in `web/shell/i18n.json`).
+- Not done: the simple toolbar's "Version History" button appears only once WP10 registers `office.history`; no Alt-letter badges on the new "Full ribbon" toggle.
