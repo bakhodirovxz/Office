@@ -1,0 +1,957 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 12:00:00 +0500
+Subject: [PATCH] office layer: version snapshot on save and the XDFU watermark
+
+PLAN WP10/WP11 for Slides, on the 0141 hook. The hook gains `wrap` (default: run the command), the engine gains
+`register_command` (a command found by id, not listed), and the new ui-egui/src/office_history.rs (desktop only,
+installed from main) fills them: a snapshot after file.save/file.saveAs of the document's own file, the Version History
+button handler, and with xdfu = on the watermark of every copy of a grif presentation (export in all formats, print,
+save as, save as template, file.saveBytes) with the copy number from the audit chain, plus office.xdfu.insertGrif.
+Nothing is refused. With xdfu off nothing XDFU exists. print_pdf passes `print: true` so the audit says "print".
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 736b800..a9a74b6 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -495,6 +495,15 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "block-buffer"
++version = "0.10.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++dependencies = [
++ "generic-array",
++]
++
+ [[package]]
+ name = "block2"
+ version = "0.5.1"
+@@ -829,6 +838,15 @@ dependencies = [
+  "windows 0.54.0",
+ ]
+ 
++[[package]]
++name = "cpufeatures"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++dependencies = [
++ "libc",
++]
++
+ [[package]]
+ name = "craft-pdf"
+ version = "0.1.0"
+@@ -887,6 +905,16 @@ version = "0.2.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+ 
++[[package]]
++name = "crypto-common"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++dependencies = [
++ "generic-array",
++ "typenum",
++]
++
+ [[package]]
+ name = "cursor-icon"
+ version = "1.2.0"
+@@ -1186,12 +1214,14 @@ dependencies = [
+  "deckcraft-text",
+  "egui",
+  "egui_kittest",
++ "hayro-syntax",
+  "js-sys",
+  "log",
+  "serde",
+  "serde_json",
+  "suite-core",
+  "toml",
++ "xdfu-core",
+ ]
+ 
+ [[package]]
+@@ -1244,6 +1274,16 @@ dependencies = [
+  "rayon",
+ ]
+ 
++[[package]]
++name = "digest"
++version = "0.10.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++dependencies = [
++ "block-buffer",
++ "crypto-common",
++]
++
+ [[package]]
+ name = "dispatch"
+ version = "0.2.0"
+@@ -1763,6 +1803,16 @@ dependencies = [
+  "slab",
+ ]
+ 
++[[package]]
++name = "generic-array"
++version = "0.14.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
++dependencies = [
++ "typenum",
++ "version_check",
++]
++
+ [[package]]
+ name = "gethostname"
+ version = "1.1.0"
+@@ -3891,6 +3941,17 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures",
++ "digest",
++]
++
+ [[package]]
+ name = "shlex"
+ version = "2.0.1"
+@@ -4106,6 +4167,7 @@ version = "0.1.0"
+ dependencies = [
+  "ron",
+  "serde_json",
++ "sha2",
+  "toml_edit 0.22.27",
+ ]
+ 
+@@ -4577,6 +4639,12 @@ dependencies = [
+  "rustc-hash 2.1.3",
+ ]
+ 
++[[package]]
++name = "typenum"
++version = "1.20.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
++
+ [[package]]
+ name = "uds_windows"
+ version = "1.2.1"
+@@ -5757,6 +5825,14 @@ version = "0.3.11"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
+ 
++[[package]]
++name = "xdfu-core"
++version = "0.1.0"
++dependencies = [
++ "serde_json",
++ "sha2",
++]
++
+ [[package]]
+ name = "xkbcommon-dl"
+ version = "0.4.2"
+diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
+index 146ae5f..f37b46f 100644
+--- a/apps/deckcraft/src/main.rs
++++ b/apps/deckcraft/src/main.rs
+@@ -185,6 +185,7 @@ fn main() -> eframe::Result {
+             }
+             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
+         };
++    deckcraft_ui_egui::office_history::init();
+     log::info!("DeckCraft {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+     // The log file lives under the settings directory; opened after the arguments, so `--help` and
+     // `--version` leave no file behind. Records logged until now are written to it first.
+diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
+index c72f477..5faa209 100644
+--- a/crates/engine/src/cmd/mod.rs
++++ b/crates/engine/src/cmd/mod.rs
+@@ -197,7 +197,19 @@ pub fn command_specs() -> &'static [CommandSpec] {
+ }
+ 
+ pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
+-    command_specs().iter().find(|c| c.id == id)
++    command_specs().iter().find(|c| c.id == id).or_else(|| office_commands().iter().copied().find(|c| c.id == id))
++}
++
++fn office_commands() -> std::sync::MutexGuard<'static, Vec<&'static CommandSpec>> {
++    static EXTRA: std::sync::Mutex<Vec<&'static CommandSpec>> = std::sync::Mutex::new(Vec::new());
++    EXTRA.lock().unwrap_or_else(|e| e.into_inner())
++}
++
++/// Registers a command of the office layer (`office.xdfu.insertGrif`): found by `find_command` and run by `Session::execute`, not
++/// listed by `command_specs`. Needs a presentation, is undoable (it edits through `Session::edit`), is not journaled.
++pub fn register_command(id: &'static str, label: &'static str, params: &'static str, run: Run) {
++    let spec = Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: true }));
++    office_commands().push(spec);
+ }
+ 
+ pub(crate) fn param_keys(doc: &str) -> std::result::Result<Vec<&str>, String> {
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 6882c9e..942262c 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -36,7 +36,7 @@ use deckcraft_model::{Presentation, Shape, ShapeId, Slide, SlideId};
+ use serde::{Deserialize, Serialize};
+ use serde_json::Value;
+ 
+-pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
++pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_command};
+ pub use deckcraft_geom as geom;
+ pub use deckcraft_media as media;
+ pub use deckcraft_model as model;
+@@ -585,8 +585,11 @@ impl Session {
+         {
+             return Err(EngineError::Disabled(id.into(), why));
+         }
+-        let result = self.guarded(id, |s| s.execute_unguarded(id, params));
+-        if self.depth == 0 {
++        let outer = self.depth == 0;
++        let result = self.guarded(id, |s| {
++            if outer { office_hook::wrap(id, s, params, &mut |s| s.execute_unguarded(id, params)) } else { s.execute_unguarded(id, params) }
++        });
++        if outer {
+             office_hook::after(id, self, params, &result);
+         }
+         result
+diff --git a/crates/engine/src/office_hook.rs b/crates/engine/src/office_hook.rs
+index b6e54fe..48c581c 100644
+--- a/crates/engine/src/office_hook.rs
++++ b/crates/engine/src/office_hook.rs
+@@ -20,6 +20,13 @@ pub trait CommandHook: Send + Sync {
+         let _ = (id, s);
+         None
+     }
++    /// Runs the command: `run(session)` is the former path. A hook that must change the presentation around a command (a stamp on
++    /// a copy being made, taken out afterwards) overrides this; the default just runs it. Called for the outermost command, after
++    /// `before` and before `after`.
++    fn wrap(&self, id: &str, s: &mut Session, params: &Value, run: &mut dyn FnMut(&mut Session) -> Result<Value>) -> Result<Value> {
++        let _ = (id, params);
++        run(s)
++    }
+     /// The outcome of command `id` once it ran (a failed one too).
+     fn after(&self, id: &str, s: &Session, params: &Value, result: &Result<Value>) {
+         let _ = (id, s, params, result);
+@@ -47,3 +54,10 @@ pub(crate) fn after(id: &str, s: &Session, params: &Value, result: &Result<Value
+         h.after(id, s, params, result);
+     }
+ }
++
++pub(crate) fn wrap(id: &str, s: &mut Session, params: &Value, run: &mut dyn FnMut(&mut Session) -> Result<Value>) -> Result<Value> {
++    match hook() {
++        Some(h) => h.wrap(id, s, params, run),
++        None => run(s),
++    }
++}
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 25c3c76..0345dba 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -29,9 +29,13 @@ js-sys = "0.3"
+ # the shared per-user settings (the toolbar mode); the web has no settings file
+ [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ suite-core = { path = "../../../../crates/suite-core" }
++# office overlay (patches/deckcraft/0143): the XDFU grif finder, stamp line and keyed audit chain
++xdfu-core = { path = "../../../../crates/xdfu-core" }
+ 
+ [dev-dependencies]
+ egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
++# office overlay (patches/deckcraft/0143): reads the text of a stamped PDF in tests/office_xdfu.rs
++hayro-syntax = { version = "=0.7.2", default-features = false, features = ["std"] }
+ 
+ [build-dependencies]
+ serde_json = { workspace = true }
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index e6205f7..de142eb 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -54,6 +54,8 @@ pub mod icons;
+ pub mod media;
+ pub mod menus;
+ pub mod notes;
++#[cfg(not(target_arch = "wasm32"))]
++pub mod office_history;
+ pub mod office_overlay;
+ pub mod office_toolbar;
+ pub mod opening;
+@@ -870,6 +872,8 @@ impl SlideApp {
+         if let Some(o) = params.as_object_mut() {
+             o.insert("path".into(), json!(path));
+             o.insert("format".into(), json!("pdf"));
++            // lets the office layer tell a print from an export (audit event); file.export ignores it
++            o.insert("print".into(), json!(true));
+         }
+         match self.run("file.export", params) {
+             Ok(_) => {
+diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
+new file mode 100644
+index 0000000..bbb5fd6
+--- /dev/null
++++ b/crates/ui-egui/src/office_history.rs
+@@ -0,0 +1,308 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
++//! Version History button's handler, and the XDFU watermark (WP11).
++//!
++//! XDFU is watermark only (owner decision 2026-10-22): nothing is ever refused. When `xdfu = on` and the open presentation carries a
++//! grif (XDFU, ХДФУ, ДСП in a text box in the top quarter of slide 1 or in its title), every copy made by print, export (PDF, PNG,
++//! JPEG, GIF, PPTX, deckcraft, outline), save-as, save-as-template or `file.saveBytes` is stamped with the Resolution 766 cl. 12 line:
++//! copy number (the keyed audit chain's next `seq`), network address, user, date and time. The stamp is a text box along the bottom
++//! of every slide, present only while the command runs; the working presentation is put back afterwards. An outline copy gets the
++//! line as its first line. A plain `file.save` of the working file is not a copy and is not stamped; `edit.copy` / `edit.cut` are not
++//! blocked and carry no mark. With `xdfu = off` nothing XDFU is registered, no check runs and no audit file is created.
++//!
++//! Desktop only; `init` installs the hook once, from the app's `main`. The web build installs none.
++
++use std::path::{Path, PathBuf};
++use std::sync::{Arc, Mutex, OnceLock};
++
++use deckcraft_engine::cmd::file::format_for_path;
++use deckcraft_engine::model::style::{ColorRef, Fill};
++use deckcraft_engine::model::text::{Run, RunProps};
++use deckcraft_engine::model::{Geom, Presentation, Rgba, Shape, ShapeId, TextBody};
++use deckcraft_engine::geom::Xfrm;
++use deckcraft_engine::office_hook::{self, CommandHook};
++use deckcraft_engine::{EngineError, Result, Session, register_command};
++use serde_json::{Value as Json, json};
++use suite_core::history::{self, Store};
++use xdfu_core::audit::{Appended, now_secs, utc_text};
++use xdfu_core::{Issuer, Stamp};
++
++use crate::SlideApp;
++
++static STORE: OnceLock<Option<Store>> = OnceLock::new();
++static XDFU: OnceLock<Xdfu> = OnceLock::new();
++
++struct Xdfu {
++    log: PathBuf,
++    key: PathBuf,
++    issuer: Mutex<Option<Issuer>>,
++}
++
++struct Layer;
++
++/// Reads the shared settings and installs the layer. Without the overlay it does nothing (upstream's behaviour).
++pub fn init() {
++    if crate::office_overlay::ACTIVE {
++        crate::office_toolbar::set_history_handler(open_history);
++        let on = suite_core::settings::load().xdfu;
++        install(Store::from_settings(), if on { history::xdfu_audit_paths() } else { None });
++    }
++}
++
++/// Installs the layer once per process. `store` takes the snapshots (`None`: no history); `audit` is the XDFU audit log and key paths
++/// (`None`: XDFU off, nothing of it is registered). Returns false when a layer is already installed.
++pub fn install(store: Option<Store>, audit: Option<(PathBuf, PathBuf)>) -> bool {
++    if STORE.set(store).is_err() {
++        return false;
++    }
++    if let Some((log, key)) = audit {
++        let _ = XDFU.set(Xdfu { log, key, issuer: Mutex::new(None) });
++        register_command(
++            "office.xdfu.insertGrif",
++            "Insert XDFU grif",
++            "{grif?: \"XDFU\"|\"ХДФУ\"|\"ДСП\"} → {grif, copy}: a text box at the top right of slide 1 with the grif and \"Nusxa N\" from the audit counter",
++            insert_grif,
++        );
++    }
++    office_hook::set_hook(Some(Arc::new(Layer)));
++    true
++}
++
++/// The Version History button: the panel for the presentation's file, or a message when it has none yet.
++fn open_history(app: &mut SlideApp) {
++    let Some(path) = app.session.active().and_then(|d| d.path.clone()) else {
++        app.notify(crate::i18n::t("Save the file first, then open its version history."));
++        return;
++    };
++    if let Err(e) = history::open_panel(Path::new(&path)) {
++        app.notify(e.to_string());
++    }
++}
++
++impl CommandHook for Layer {
++    fn wrap(&self, id: &str, s: &mut Session, params: &Json, run: &mut dyn FnMut(&mut Session) -> Result<Json>) -> Result<Json> {
++        let Some(x) = XDFU.get() else { return run(s) };
++        let Some((event, kind)) = copy_kind(s, id, params) else { return run(s) };
++        if !has_grif(s) {
++            return run(s);
++        }
++        let name = s.active().map(|d| d.title()).unwrap_or_default();
++        x.issue(event, &name, |stamp| make_copy(s, run, &kind, stamp))
++    }
++
++    fn after(&self, id: &str, s: &Session, _params: &Json, result: &Result<Json>) {
++        if !matches!(id, "file.save" | "file.saveAs") {
++            return;
++        }
++        let (Ok(out), Some(Some(store)), Some(d)) = (result, STORE.get(), s.active()) else { return };
++        // Only the document's own file is versioned: `needsPath` (the Save As dialog was requested) saved nothing. Slides has no
++        // timed autosave of the file (AutoRecover writes its own folder), so every save here is an explicit one.
++        let (Some(path), Some(saved)) = (d.path.as_deref(), out.get("path").and_then(Json::as_str)) else { return };
++        if saved != path {
++            return;
++        }
++        if let Err(e) = store.snapshot(Path::new(path), None) {
++            eprintln!("office: version snapshot of {path} failed: {e}");
++        }
++    }
++}
++
++// ---------------------------------------------------------------- XDFU: which commands make a copy
++
++/// What a copy is written as; decides the form of the stamp.
++struct Kind {
++    /// Rendered outputs (pdf, png, jpeg, gif) get the ASCII line: the fonts of the renderer are the ones the line must survive.
++    ascii: bool,
++    /// An outline is plain text: the line goes on top of the produced file or bytes.
++    text: bool,
++}
++
++/// `(audit event, kind)` when the command makes a copy of the presentation, else `None`.
++fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, Kind)> {
++    let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
++    let own = s.active()?.path.as_deref();
++    let format = |path: Option<&str>| -> String {
++        p.get("format").and_then(Json::as_str).map(str::to_ascii_lowercase).unwrap_or_else(|| path.map(|x| format_for_path(x).to_string()).unwrap_or_else(|| "deckcraft".into()))
++    };
++    let (event, fmt) = match id {
++        "file.export" => (if p.get("print").and_then(Json::as_bool) == Some(true) { "print" } else { "export" }, format(path)),
++        // A save to another path (a first save, a copy under a new name, a template) is a copy; the working file itself is not.
++        "file.saveAs" | "file.save" if path.is_some() && path != own => ("save_as", format(path)),
++        "file.saveTemplate" if path.is_some() => ("save_as", format(path)),
++        "file.saveBytes" => ("download", format(None)),
++        _ => return None,
++    };
++    Some((event, Kind { ascii: matches!(fmt.as_str(), "pdf" | "png" | "jpeg" | "jpg" | "gif"), text: matches!(fmt.as_str(), "outline" | "txt") }))
++}
++
++/// Slide 1 carries a grif: in the title, or in a text box whose top edge is in the top quarter of the slide.
++fn has_grif(s: &Session) -> bool {
++    let Some(d) = s.active() else { return false };
++    let Some(slide) = d.doc.slides.first() else { return false };
++    let quarter = d.doc.slide_size.height / 4.0;
++    let mut text = String::new();
++    for sh in &slide.shapes {
++        let (Some(body), false) = (&sh.text, sh.hidden) else { continue };
++        let title = sh.ph.as_ref().is_some_and(|p| p.kind.is_title());
++        if title || sh.xfrm.is_some_and(|x| x.y < quarter) {
++            text.push_str(&body.text());
++            text.push('\n');
++        }
++    }
++    xdfu_core::find_grif(&text).is_some()
++}
++
++impl Xdfu {
++    /// Runs `produce` with the stamp of the next copy and writes the audit line when it succeeded. The copy is made whatever happens
++    /// to the log (nothing is refused): an unusable log goes to stderr and the stamp then carries copy number 0.
++    fn issue<T>(&self, event: &str, file: &str, produce: impl FnOnce(&Stamp) -> Result<T>) -> Result<T> {
++        let mut guard = self.issuer.lock().unwrap_or_else(|e| e.into_inner());
++        if guard.is_none() {
++            match Issuer::open(&self.log, Some(&self.key)) {
++                Ok(i) => *guard = Some(i),
++                Err(e) => eprintln!("office: XDFU audit log {} unusable: {e}", self.log.display()),
++            }
++        }
++        let mut produce = Some(produce);
++        let mut slot: Option<Result<T>> = None;
++        if let Some(i) = guard.as_ref() {
++            let r = i.issue(event, file, |st| {
++                let out = (produce.take().expect("produce runs once"))(st);
++                let ok = out.is_ok();
++                slot = Some(out);
++                if ok { Ok(()) } else { Err("the copy was not made") }
++            });
++            if let Err(Appended::Log(e)) = r {
++                eprintln!("office: XDFU audit write failed: {e}");
++            }
++        }
++        match slot {
++            Some(r) => r,
++            None => {
++                let st = Stamp { copy: 0, client: xdfu_core::machine_addr(), user: xdfu_core::os_user(), when: utc_text(now_secs()) };
++                (produce.take().expect("produce did not run"))(&st)
++            }
++        }
++    }
++}
++
++/// Runs the copying command with the stamp in place and the working presentation back as it was afterwards.
++fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> Result<Json>, kind: &Kind, stamp: &Stamp) -> Result<Json> {
++    let line = if kind.ascii { stamp.ascii_line() } else { stamp.line() };
++    let swapped = if kind.text { None } else { stamp_slides(s, &line) };
++    let r = run(s);
++    if let Some((orig, stamped)) = swapped
++        && let Ok(d) = s.doc_mut()
++    {
++        if Arc::ptr_eq(&d.doc, &stamped) {
++            d.doc = orig.clone();
++        }
++        // a save under a new name makes the stamped presentation "the saved one": the working document stays clean
++        if Arc::ptr_eq(&d.saved_doc, &stamped) {
++            d.saved_doc = orig;
++        }
++        d.revision += 1;
++    }
++    let mut out = r?;
++    if kind.text {
++        stamp_output(&mut out, &line)?;
++    }
++    Ok(out)
++}
++
++/// A red bold text box of `size` pt along the bottom of the slide.
++fn stamp_shape(doc: &mut Presentation, text: &str, size: f64) -> Option<Shape> {
++    let (w, h) = (doc.slide_size.width, doc.slide_size.height);
++    let mut body = TextBody::from_text(text);
++    body.body.wrap = Some(true);
++    let props = RunProps { size: Some(size), bold: Some(true), fill: Some(Fill::solid(ColorRef::rgb(Rgba::rgb(0xB0, 0, 0)))), ..Default::default() };
++    for para in &mut body.paragraphs {
++        para.runs = vec![Run::with(para.text(), props.clone())];
++    }
++    Some(Shape {
++        id: ShapeId(doc.alloc_id()?),
++        name: "XDFU stamp".into(),
++        xfrm: Some(Xfrm::new(10.0, h - 22.0, w - 20.0, 18.0)),
++        text_box: true,
++        text: Some(body),
++        geom: Geom::preset("rect"),
++        ..Default::default()
++    })
++}
++
++/// The presentation with the stamp on every slide, made the active one. Returns (original, stamped).
++fn stamp_slides(s: &mut Session, line: &str) -> Option<(Arc<Presentation>, Arc<Presentation>)> {
++    let d = s.doc_mut().ok()?;
++    let orig = d.doc.clone();
++    let mut doc = (*orig).clone();
++    for i in 0..doc.slides.len() {
++        let shape = stamp_shape(&mut doc, line, 8.0)?;
++        Arc::make_mut(&mut doc.slides[i]).shapes.push(shape);
++    }
++    let stamped = Arc::new(doc);
++    d.doc = stamped.clone();
++    d.revision += 1;
++    Some((orig, stamped))
++}
++
++/// An outline copy: the line goes on top of the produced file (`path`) or bytes (`data`, base64). A copy that cannot be stamped is
++/// deleted rather than left unmarked.
++fn stamp_output(out: &mut Json, line: &str) -> Result<()> {
++    let fail = |m: String| EngineError::Internal("office.xdfu".into(), m);
++    if let Some(b64) = out.get("data").and_then(Json::as_str) {
++        let old = deckcraft_engine::cmd::base64_decode(b64).ok_or_else(|| fail("bad base64".into()))?;
++        let new = xdfu_core::stamp_text(&old, "txt", line).map_err(fail)?;
++        out["data"] = json!(deckcraft_engine::cmd::base64_encode(&new));
++        out["bytes"] = json!(new.len());
++    } else if let Some(path) = out.get("path").and_then(Json::as_str).map(str::to_string) {
++        let done = std::fs::read(&path)
++            .map_err(|e| e.to_string())
++            .and_then(|old| xdfu_core::stamp_text(&old, "txt", line))
++            .and_then(|new| std::fs::write(&path, &new).map(|()| new.len()).map_err(|e| e.to_string()));
++        match done {
++            Ok(n) => out["bytes"] = json!(n),
++            Err(e) => {
++                let _ = std::fs::remove_file(&path);
++                return Err(fail(e));
++            }
++        }
++    }
++    Ok(())
++}
++
++// ---------------------------------------------------------------- office.xdfu.insertGrif
++
++fn insert_grif(s: &mut Session, p: &Json) -> Result<Json> {
++    const CMD: &str = "office.xdfu.insertGrif";
++    let bad = |msg: &str| EngineError::BadParams { cmd: CMD.into(), msg: msg.into() };
++    let Some(x) = XDFU.get() else { return Err(bad("XDFU is off")) };
++    let grif = match p.get("grif").and_then(Json::as_str) {
++        None => "XDFU",
++        Some(g) if ["XDFU", "ХДФУ", "ДСП"].contains(&g) => g,
++        Some(g) => return Err(bad(&format!("`grif` must be XDFU, ХДФУ or ДСП, not `{g}`"))),
++    };
++    let (name, width) = {
++        let d = s.doc()?;
++        if d.doc.slides.is_empty() {
++            return Err(bad("the presentation has no slide"));
++        }
++        (d.title(), d.doc.slide_size.width)
++    };
++    x.issue("grif_inserted", &name, |st| {
++        if st.copy == 0 {
++            return Err(EngineError::Other("the XDFU audit log is unusable: no copy number".into()));
++        }
++        let text = format!("{grif}\nNusxa {}", st.copy);
++        s.edit(|doc, _| {
++            let mut shape = stamp_shape(doc, &text, 14.0).ok_or_else(|| bad("no free shape id"))?;
++            shape.name = "XDFU grif".into();
++            shape.xfrm = Some(Xfrm::new(width - 170.0, 10.0, 160.0, 40.0));
++            let slide = Arc::make_mut(&mut doc.slides[0]);
++            // a grif inserted before is replaced, not stacked
++            slide.shapes.retain(|sh| sh.name != "XDFU grif");
++            slide.shapes.push(shape);
++            Ok(())
++        })?;
++        Ok(json!({"grif": grif, "copy": st.copy}))
++    })
++}
+diff --git a/crates/ui-egui/tests/office_history.rs b/crates/ui-egui/tests/office_history.rs
+new file mode 100644
+index 0000000..b27c25b
+--- /dev/null
++++ b/crates/ui-egui/tests/office_history.rs
+@@ -0,0 +1,50 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! Version snapshots through the command hook (patch 0143), with a store in a temporary folder and XDFU off. The hook is process-wide,
++//! so this file is its own test binary.
++use deckcraft_engine::{Session, find_command};
++use deckcraft_ui_egui::office_history;
++use serde_json::json;
++use suite_core::history::{Limits, Store};
++
++fn store(root: &std::path::Path) -> Store {
++    Store::new(root.join("history"), Limits { versions: 50, days: 365, max_bytes: 1 << 30, big_file_bytes: 50 << 20, big_file_versions: 5 })
++}
++
++#[test]
++fn save_snapshot_list_restore_round_trip() {
++    let dir = std::env::temp_dir().join(format!("office-history-{}", std::process::id()));
++    let _ = std::fs::remove_dir_all(&dir);
++    std::fs::create_dir_all(&dir).unwrap();
++    assert!(office_history::install(Some(store(&dir)), None));
++    assert!(find_command("office.xdfu.insertGrif").is_none(), "XDFU is off");
++
++    let mut s = Session::new();
++    s.execute("file.new", &json!({})).unwrap();
++    let file = dir.join("deck.pptx");
++    let path = file.to_string_lossy().to_string();
++    let add = |s: &mut Session, t: &str| s.execute("insert.textBox", &json!({"rect": [40.0, 300.0, 300.0, 40.0], "text": t})).unwrap();
++    let reader = store(&dir); // a second handle on the same folder
++    add(&mut s, "one");
++    s.execute("file.saveAs", &json!({"path": path})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 1, "save as snapshots the new file");
++    let v1 = std::fs::read(&file).unwrap();
++
++    add(&mut s, "two");
++    s.execute("file.save", &json!({})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 2, "an explicit save snapshots");
++    s.execute("file.save", &json!({})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 2, "the same bytes again add nothing");
++    add(&mut s, "three");
++    s.execute("file.save", &json!({})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 3);
++
++    // an export is not a version of the document
++    s.execute("file.export", &json!({"path": dir.join("copy.txt").to_string_lossy(), "format": "outline"})).unwrap();
++    assert_eq!(reader.list(&file).unwrap().len(), 3);
++
++    reader.restore(&file, 1).unwrap();
++    assert_eq!(std::fs::read(&file).unwrap(), v1, "the file is v1 again");
++    assert_eq!(reader.list(&file).unwrap().len(), 4, "restoring adds a version, it destroys none");
++    assert!(reader.verify(&file).is_ok());
++    let _ = std::fs::remove_dir_all(&dir);
++}
+diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
+new file mode 100644
+index 0000000..8c9028f
+--- /dev/null
++++ b/crates/ui-egui/tests/office_xdfu.rs
+@@ -0,0 +1,227 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! The XDFU watermark through the command hook (patch 0143): every copy of a grif presentation carries the Resolution 766 cl. 12 line
++//! with a copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the
++//! tests share one audit log, so they run one at a time.
++use std::collections::HashMap;
++use std::path::PathBuf;
++use std::sync::{Mutex, MutexGuard, Once};
++
++use deckcraft_engine::{EngineError, Session, find_command};
++use deckcraft_ui_egui::office_history;
++use hayro_syntax::content::ops::TypedInstruction;
++use hayro_syntax::object::{Dict, Object, Stream};
++use serde_json::{Value, json};
++use xdfu_core::audit;
++
++static LOCK: Mutex<()> = Mutex::new(());
++
++fn dir() -> PathBuf {
++    std::env::temp_dir().join(format!("office-xdfu-{}", std::process::id()))
++}
++fn log() -> PathBuf {
++    dir().join("xdfu-audit.jsonl")
++}
++fn lines() -> u64 {
++    if log().exists() { audit::verify(&log()).expect("the audit chain verifies").lines } else { 0 }
++}
++
++/// One test at a time, with the layer installed on first use.
++fn start() -> MutexGuard<'static, ()> {
++    static ONCE: Once = Once::new();
++    let g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
++    ONCE.call_once(|| {
++        let _ = std::fs::remove_dir_all(dir());
++        std::fs::create_dir_all(dir()).unwrap();
++        assert!(office_history::install(None, Some((log(), dir().join("xdfu-audit.key")))));
++    });
++    g
++}
++
++/// A one-slide deck with `first` as a text box at the top of the slide and "Budget" lower down.
++fn deck(first: &str) -> Session {
++    let mut s = Session::new();
++    s.execute("file.new", &json!({})).unwrap();
++    s.execute("insert.textBox", &json!({"rect": [600.0, 10.0, 300.0, 40.0], "text": first})).unwrap();
++    s.execute("insert.textBox", &json!({"rect": [60.0, 200.0, 300.0, 40.0], "text": "Budget"})).unwrap();
++    s
++}
++fn path(name: &str) -> String {
++    dir().join(name).to_string_lossy().to_string()
++}
++fn export(s: &mut Session, name: &str, extra: Value) -> Result<Value, EngineError> {
++    let mut p = json!({"path": path(name)});
++    p.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
++    s.execute("file.export", &p)
++}
++fn has_stamp_shape(s: &Session) -> bool {
++    s.doc().unwrap().doc.slides.iter().any(|sl| sl.shapes.iter().any(|sh| sh.name == "XDFU stamp"))
++}
++
++/// The text a PDF shows, read through each font's ToUnicode map.
++fn pdf_text(bytes: Vec<u8>) -> String {
++    let pdf = hayro_syntax::Pdf::new(bytes).unwrap();
++    let mut all = String::new();
++    for page in pdf.pages().iter() {
++        let fonts = page.raw().get::<Dict<'_>>(b"Resources").unwrap().get::<Dict<'_>>(b"Font").unwrap();
++        let mut maps: HashMap<Vec<u8>, HashMap<u16, String>> = HashMap::new();
++        for key in fonts.keys() {
++            let font = fonts.get::<Dict<'_>>(key.clone()).unwrap();
++            let cmap = font.get::<Stream<'_>>(b"ToUnicode").unwrap().decoded().unwrap().into_owned();
++            let cmap = std::str::from_utf8(&cmap).unwrap();
++            let mut mapping = HashMap::new();
++            let mut in_char_map = false;
++            for line in cmap.lines() {
++                if line.ends_with("beginbfchar") {
++                    in_char_map = true;
++                } else if line == "endbfchar" {
++                    in_char_map = false;
++                } else if in_char_map {
++                    let parts: Vec<_> = line.split_whitespace().collect();
++                    let cid = u16::from_str_radix(parts[0].trim_matches(['<', '>']), 16).unwrap();
++                    let units: Vec<u16> = parts[1]
++                        .trim_matches(['<', '>'])
++                        .as_bytes()
++                        .chunks(4)
++                        .map(|c| u16::from_str_radix(std::str::from_utf8(c).unwrap(), 16).unwrap())
++                        .collect();
++                    mapping.insert(cid, String::from_utf16(&units).unwrap());
++                }
++            }
++            maps.insert(key.to_vec(), mapping);
++        }
++        let mut current: Vec<u8> = vec![];
++        let mut ops = page.typed_operations();
++        while let Some(op) = ops.next() {
++            let mut show = |b: &[u8]| {
++                if let Some(m) = maps.get(&current) {
++                    for pair in b.chunks_exact(2) {
++                        all.push_str(m.get(&u16::from_be_bytes([pair[0], pair[1]])).map_or("?", String::as_str));
++                    }
++                }
++            };
++            match op {
++                TypedInstruction::TextFont(f) => current = f.0.to_vec(),
++                TypedInstruction::ShowText(v) => show(v.0.as_bytes()),
++                TypedInstruction::ShowTexts(vs) => {
++                    for v in vs.0.iter::<Object<'_>>() {
++                        if let Object::String(v) = v {
++                            show(v.as_bytes());
++                        }
++                    }
++                }
++                _ => {}
++            }
++        }
++        all.push('\n');
++    }
++    all
++}
++
++/// The copy number in the first `XDFU copy N | ` of `text`.
++fn copy_no(text: &str) -> u64 {
++    let at = text.find("XDFU copy ").expect("a stamp") + "XDFU copy ".len();
++    text[at..].split(' ').next().unwrap().parse().expect("copy number")
++}
++
++#[test]
++fn exported_pdf_carries_copy_number_and_user() {
++    let _g = start();
++    let mut s = deck("XDFU");
++    let before = lines();
++    export(&mut s, "a.pdf", json!({"format": "pdf"})).unwrap();
++    let text = pdf_text(std::fs::read(path("a.pdf")).unwrap());
++    let n = copy_no(&text);
++    assert_eq!(n, before + 1, "the copy number is the audit counter: {text}");
++    assert!(text.contains(&format!(" | {} | ", xdfu_core::os_user())), "the OS user is in the PDF text: {text}");
++    assert_eq!(lines(), before + 1);
++    assert!(!has_stamp_shape(&s), "the working presentation has no stamp left in it");
++}
++
++#[test]
++fn print_of_a_grif_deck_succeeds_and_is_stamped() {
++    let _g = start();
++    let mut s = deck("\u{414}\u{421}\u{41f}");
++    let before = lines();
++    export(&mut s, "print.pdf", json!({"format": "pdf", "print": true})).unwrap();
++    assert!(pdf_text(std::fs::read(path("print.pdf")).unwrap()).contains("XDFU copy "));
++    assert_eq!(lines(), before + 1);
++    assert!(std::fs::read_to_string(log()).unwrap().contains("\"print\""));
++}
++
++#[test]
++fn every_copy_is_stamped_and_the_working_file_is_not() {
++    let _g = start();
++    let mut s = deck("\u{425}.\u{414}.\u{424}.\u{423}.");
++    // the first save of an untitled deck is a new copy, so it is stamped; the deck stays clean
++    let n = lines();
++    s.execute("file.saveAs", &json!({"path": path("work.pptx")})).unwrap();
++    assert_eq!(lines(), n + 1);
++    let mut t = Session::new();
++    t.execute("file.open", &json!({"path": path("work.pptx")})).unwrap();
++    let stamped = t.doc().unwrap().doc.slides[0].shapes.iter().any(|sh| sh.text.as_ref().is_some_and(|b| b.text().starts_with("XDFU copy ")));
++    assert!(stamped, "the saved pptx carries the stamp");
++    assert!(!s.doc().unwrap().is_dirty() && s.doc().unwrap().path.as_deref() == Some(path("work.pptx").as_str()));
++    assert!(!has_stamp_shape(&s), "the working document keeps its own shapes");
++
++    // the working file is saved plainly: no stamp, no audit line
++    s.execute("insert.textBox", &json!({"rect": [60.0, 300.0, 100.0, 30.0], "text": "more"})).unwrap();
++    s.execute("file.save", &json!({})).unwrap();
++    s.execute("file.saveAs", &json!({"path": path("work.pptx")})).unwrap();
++    assert_eq!(lines(), n + 1, "saving the working file writes no audit line");
++
++    // png, jpeg, gif, pptx, deckcraft and outline exports, a template and two downloads: one audit line each
++    for (file, format) in [("a.png", "png"), ("a.jpg", "jpeg"), ("a.gif", "gif"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft"), ("a.txt", "outline")] {
++        export(&mut s, file, json!({"format": format})).unwrap();
++    }
++    assert!(std::fs::read_to_string(path("a.txt")).unwrap().starts_with("XDFU copy "));
++    s.execute("file.saveTemplate", &json!({"path": path("t.potx")})).unwrap();
++    let dl = s.execute("file.saveBytes", &json!({"format": "outline"})).unwrap();
++    assert!(deckcraft_engine::cmd::base64_decode(dl["data"].as_str().unwrap()).unwrap().starts_with(b"XDFU copy "));
++    s.execute("file.saveBytes", &json!({"format": "pptx"})).unwrap();
++    assert_eq!(lines(), n + 1 + 9);
++    assert!(!has_stamp_shape(&s));
++    // copy is not refused (it may have nothing selected, which is not a refusal)
++    assert!(!matches!(s.execute("edit.copy", &json!({})), Err(EngineError::Disabled(..))));
++    let all = std::fs::read_to_string(log()).unwrap();
++    assert!(audit::verify(&log()).is_ok() && all.contains("\"export\"") && all.contains("save_as") && all.contains("download"));
++}
++
++#[test]
++fn a_deck_without_a_grif_is_never_stamped() {
++    let _g = start();
++    // a grif low on slide 1 is not in its top quarter
++    let mut s = deck("Quarterly report");
++    s.execute("insert.textBox", &json!({"rect": [60.0, 450.0, 300.0, 40.0], "text": "XDFU"})).unwrap();
++    let before = lines();
++    export(&mut s, "plain.pdf", json!({"format": "pdf"})).unwrap();
++    assert!(!pdf_text(std::fs::read(path("plain.pdf")).unwrap()).contains("XDFU copy"));
++    export(&mut s, "plain.txt", json!({"format": "outline"})).unwrap();
++    assert!(!std::fs::read_to_string(path("plain.txt")).unwrap().contains("XDFU copy"));
++    export(&mut s, "plain.png", json!({"format": "png"})).unwrap();
++    s.execute("file.saveBytes", &json!({})).unwrap();
++    assert_eq!(lines(), before, "no audit line for a non-grif deck");
++}
++
++#[test]
++fn insert_grif_adds_a_box_and_takes_a_copy_number() {
++    let _g = start();
++    assert!(find_command("office.xdfu.insertGrif").is_some());
++    let mut s = deck("Budget");
++    let before = lines();
++    assert!(s.execute("office.xdfu.insertGrif", &json!({"grif": "nope"})).is_err());
++    let r = s.execute("office.xdfu.insertGrif", &json!({"grif": "\u{425}\u{414}\u{424}\u{423}"})).unwrap();
++    assert_eq!(r["copy"], before + 1);
++    let text = |s: &Session| {
++        s.doc().unwrap().doc.slides[0].shapes.iter().filter(|sh| sh.name == "XDFU grif").map(|sh| sh.text.as_ref().unwrap().text()).collect::<Vec<_>>()
++    };
++    assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)]);
++    assert_eq!(lines(), before + 1);
++    // the deck now carries a grif in its top quarter, so a PDF of it is stamped; inserting again replaces the box
++    export(&mut s, "g.pdf", json!({"format": "pdf"})).unwrap();
++    let pdf = pdf_text(std::fs::read(path("g.pdf")).unwrap());
++    assert!(pdf.contains("XDFU copy ") && pdf.contains("Nusxa "), "{pdf}");
++    s.execute("office.xdfu.insertGrif", &json!({})).unwrap();
++    assert_eq!(text(&s).len(), 1);
++    s.execute("edit.undo", &json!({})).unwrap();
++    assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)], "undoable");
++}
+diff --git a/crates/ui-egui/tests/office_xdfu_off.rs b/crates/ui-egui/tests/office_xdfu_off.rs
+new file mode 100644
+index 0000000..60c98e8
+--- /dev/null
++++ b/crates/ui-egui/tests/office_xdfu_off.rs
+@@ -0,0 +1,47 @@
++// Added by the office overlay patch queue. MIT OR Apache-2.0.
++//! XDFU off means absent (patch 0143): no command, no check, no audit file, and the bytes of every copy are those of a run without the
++//! layer. Its own test binary: the hook is process-wide, and the reference run has to happen before it is installed.
++use deckcraft_engine::{Session, find_command};
++use deckcraft_ui_egui::office_history;
++use serde_json::json;
++
++fn grif_deck() -> Session {
++    let mut s = Session::new();
++    s.execute("file.new", &json!({})).unwrap();
++    s.execute("insert.textBox", &json!({"rect": [700.0, 10.0, 200.0, 40.0], "text": "XDFU"})).unwrap();
++    s
++}
++
++fn copies(dir: &std::path::Path, tag: &str) -> Vec<Vec<u8>> {
++    let mut s = grif_deck();
++    let out = |name: &str| dir.join(format!("{tag}-{name}")).to_string_lossy().to_string();
++    let mut v = vec![];
++    for (file, format) in [("a.pdf", "pdf"), ("a.png", "png"), ("a.txt", "outline"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft")] {
++        s.execute("file.export", &json!({"path": out(file), "format": format})).unwrap();
++        v.push(std::fs::read(out(file)).unwrap());
++    }
++    s.execute("file.export", &json!({"path": out("print.pdf"), "format": "pdf", "print": true})).unwrap();
++    v.push(std::fs::read(out("print.pdf")).unwrap());
++    let dl = s.execute("file.saveBytes", &json!({"format": "pptx"})).unwrap();
++    v.push(deckcraft_engine::cmd::base64_decode(dl["data"].as_str().unwrap()).unwrap());
++    v
++}
++
++#[test]
++fn xdfu_off_registers_nothing() {
++    let dir = std::env::temp_dir().join(format!("office-xdfu-off-{}", std::process::id()));
++    let _ = std::fs::remove_dir_all(&dir);
++    std::fs::create_dir_all(&dir).unwrap();
++    let before = copies(&dir, "before");
++    assert_eq!(before, copies(&dir, "again"), "the copies are reproducible, so they can be compared");
++
++    assert!(office_history::install(None, None));
++    assert!(find_command("office.xdfu.insertGrif").is_none());
++    let after = copies(&dir, "after");
++    assert_eq!(before, after, "bytes of every copy are identical with the layer installed");
++    assert!(!after[2].windows(9).any(|w| w == b"XDFU copy"), "no stamp in the outline");
++    assert!(!dir.join("xdfu-audit.jsonl").exists(), "no audit file");
++    let mut s = grif_deck();
++    assert!(s.execute("office.xdfu.insertGrif", &json!({})).is_err(), "the command does not exist");
++    let _ = std::fs::remove_dir_all(&dir);
++}

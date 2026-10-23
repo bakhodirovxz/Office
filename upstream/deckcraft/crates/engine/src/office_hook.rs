@@ -20,6 +20,13 @@ pub trait CommandHook: Send + Sync {
         let _ = (id, s);
         None
     }
+    /// Runs the command: `run(session)` is the former path. A hook that must change the presentation around a command (a stamp on
+    /// a copy being made, taken out afterwards) overrides this; the default just runs it. Called for the outermost command, after
+    /// `before` and before `after`.
+    fn wrap(&self, id: &str, s: &mut Session, params: &Value, run: &mut dyn FnMut(&mut Session) -> Result<Value>) -> Result<Value> {
+        let _ = (id, params);
+        run(s)
+    }
     /// The outcome of command `id` once it ran (a failed one too).
     fn after(&self, id: &str, s: &Session, params: &Value, result: &Result<Value>) {
         let _ = (id, s, params, result);
@@ -45,5 +52,12 @@ pub fn refusal(id: &str, s: &Session) -> Option<String> {
 pub(crate) fn after(id: &str, s: &Session, params: &Value, result: &Result<Value>) {
     if let Some(h) = hook() {
         h.after(id, s, params, result);
+    }
+}
+
+pub(crate) fn wrap(id: &str, s: &mut Session, params: &Value, run: &mut dyn FnMut(&mut Session) -> Result<Value>) -> Result<Value> {
+    match hook() {
+        Some(h) => h.wrap(id, s, params, run),
+        None => run(s),
     }
 }

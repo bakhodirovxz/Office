@@ -54,6 +54,8 @@ pub mod icons;
 pub mod media;
 pub mod menus;
 pub mod notes;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod office_history;
 pub mod office_overlay;
 pub mod office_toolbar;
 pub mod opening;
@@ -870,6 +872,8 @@ impl SlideApp {
         if let Some(o) = params.as_object_mut() {
             o.insert("path".into(), json!(path));
             o.insert("format".into(), json!("pdf"));
+            // lets the office layer tell a print from an export (audit event); file.export ignores it
+            o.insert("print".into(), json!(true));
         }
         match self.run("file.export", params) {
             Ok(_) => {

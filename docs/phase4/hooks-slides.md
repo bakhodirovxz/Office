@@ -51,3 +51,32 @@ Every user path to a guarded action, and what happens on it.
 
 The bridge's own Save (`deckcraft:requestSave`, Ctrl+S in the web shell) does not run `file.save`: it writes `.pptx` bytes through
 `save_bytes` and posts them to the shell. It is a web path in the table above.
+
+## What 0143 does with the seam (WP10 and WP11, Slides)
+
+XDFU in the editors is **watermark only** (owner, 2026-10-22): nothing is refused. The hook trait gained `wrap(id, session, params, run)`
+(default: run the command; offered for the outermost command only, like `before` and `after`), because a stamp has to be in the
+presentation while the command runs and be taken out afterwards, and the engine gained `register_command` (a command found by id, not
+listed). `crates/ui-egui/src/office_history.rs` (desktop only, `office_history::init()` from `main`, only with the brand overlay) installs
+the hook:
+
+- **Snapshot.** `after` of `file.save` / `file.saveAs`, when the command saved the document's own path: `Store::snapshot`. Errors go to
+  stderr. Slides has no timed autosave of the file (AutoRecover writes its own folder through `file.recovery.save`, which is not hooked),
+  so every save is an explicit one and always snapshots (the store skips bytes it already has); there is no throttle. The Version
+  History button calls `open_panel(path)` through `office_toolbar::set_history_handler`; an unsaved presentation gets the toast
+  "Save the file first, then open its version history.".
+- **Watermark** (only with `xdfu = on` and a grif: XDFU, ХДФУ or ДСП in the title of slide 1 or in a text box on slide 1 whose top edge is
+  in the top quarter of the slide; a grif lower down or on another slide is not recognised). Stamped, with the copy number from
+  `Issuer::issue` (the audit line exists only if the copy was made): `file.export` in every format (pdf, png, jpeg, gif, pptx, deckcraft,
+  outline), the Print page's PDF (`file.export` with `print: true`, audit event `print`), `file.saveAs` and `file.save` to a path other than
+  the document's own, `file.saveTemplate` and `file.saveBytes`. The stamp is a red 8 pt text box along the bottom of every slide, present
+  only while the command runs (the working presentation, its saved state and dirty flag are put back; pdf, png, jpeg and gif use the ASCII
+  form of the line); an outline gets the line as its first line. A plain `file.save` of the working file is not a copy and is not stamped.
+- `office.xdfu.insertGrif {grif?}` (registered only when XDFU is on) puts a red text box named "XDFU grif" at the top right of slide 1
+  with the grif and `Nusxa N` (the audit counter); a second call replaces it. It is undoable.
+- **Limits that remain:** the web build installs no hook (desktop only), so the web branches of `save_as_dialog`, `export_as`, `print_pdf`
+  (`save_bytes` / `pdf_bytes` + download, the table above) and the shell bridge's Save are not stamped; `edit.copy` / `edit.cut` are not
+  blocked and carry no mark; the headless CLI and MCP never install the layer; a copy whose audit log cannot be opened is still made, with
+  copy number 0 and a message on stderr; after a stamped Save As the document is bound to the stamped file, and its next plain save
+  rewrites that file without the stamp (the in-memory working copy is never stamped).
+- Tests (own binaries, the hook is process-wide): `office_history.rs`, `office_xdfu.rs`, `office_xdfu_off.rs` in `crates/ui-egui/tests`.

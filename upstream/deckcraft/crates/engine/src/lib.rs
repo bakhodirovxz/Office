@@ -36,7 +36,7 @@ use deckcraft_model::{Presentation, Shape, ShapeId, Slide, SlideId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
+pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command, register_command};
 pub use deckcraft_geom as geom;
 pub use deckcraft_media as media;
 pub use deckcraft_model as model;
@@ -585,8 +585,11 @@ impl Session {
         {
             return Err(EngineError::Disabled(id.into(), why));
         }
-        let result = self.guarded(id, |s| s.execute_unguarded(id, params));
-        if self.depth == 0 {
+        let outer = self.depth == 0;
+        let result = self.guarded(id, |s| {
+            if outer { office_hook::wrap(id, s, params, &mut |s| s.execute_unguarded(id, params)) } else { s.execute_unguarded(id, params) }
+        });
+        if outer {
             office_hook::after(id, self, params, &result);
         }
         result

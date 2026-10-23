@@ -29,9 +29,13 @@ js-sys = "0.3"
 # the shared per-user settings (the toolbar mode); the web has no settings file
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 suite-core = { path = "../../../../crates/suite-core" }
+# office overlay (patches/deckcraft/0143): the XDFU grif finder, stamp line and keyed audit chain
+xdfu-core = { path = "../../../../crates/xdfu-core" }
 
 [dev-dependencies]
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+# office overlay (patches/deckcraft/0143): reads the text of a stamped PDF in tests/office_xdfu.rs
+hayro-syntax = { version = "=0.7.2", default-features = false, features = ["std"] }
 
 [build-dependencies]
 serde_json = { workspace = true }
