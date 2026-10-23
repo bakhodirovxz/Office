@@ -555,7 +555,7 @@ fn own_private_deps(path: &Path) -> Res<BTreeSet<(String, String)>> {
         let shared: Vec<_> = pkgs
             .iter()
             .filter(|p| !closure.contains(&ident(p)) && !OWN_ROOTS.contains(&ident(p).0.as_str()))
-            .flat_map(|p| deps_of(p))
+            .flat_map(&deps_of)
             .filter(|q| closure.contains(q))
             .collect();
         if shared.is_empty() {
