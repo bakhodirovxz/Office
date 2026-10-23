@@ -3,7 +3,7 @@
 
 # Two slots (OFFICE_LOCK_SLOTS, default 2; 31.8 GB RAM): $OFFICE_TARGET/BUILD.lock.1 and .2. Two different cargo target
 # dirs may build at once; one target dir never builds twice (a slot's `target` file holds its CARGO_TARGET_DIR).
-_lock_base() { echo "${OFFICE_TARGET:-E:/office-target/p1}/BUILD.lock"; }
+_lock_base() { echo "${OFFICE_LOCK_DIR:-${OFFICE_TARGET:-E:/office-target/p1}}/BUILD.lock"; }   # OFFICE_LOCK_DIR: a build in its own OFFICE_TARGET still shares the global slots
 _lock_key() { echo "${CARGO_TARGET_DIR:-${OFFICE_TARGET:-E:/office-target/p1}}"; }
 
 # Stale = the owner pid is gone (kill -0), or no pid file after 2 min (the owner died between mkdir and writing it).

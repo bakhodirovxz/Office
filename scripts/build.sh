@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/build.sh <domain|all|services> <desktop|web|cli|all> [--release] [--msvc]   (PLAN WP3, WP13)
-# --msvc: target x86_64-pc-windows-msvc into $OFFICE_TARGET/msvc/<d> (desktop and cli only; `services` builds convert and convert-api;
+# --msvc: target x86_64-pc-windows-msvc into $OFFICE_TARGET/msvc/<d> (desktop and cli only; `services` builds convert, convert-api, hoshiya (suite-desktop) and hoshiya-serve;
 #   `all --msvc` also builds services). Needs VS Build Tools (docs/phase4/msvc.md).
 # One build at a time (build lock), RAM gate, log and wall time. Output on E: only.
 #   logs:  $OFFICE_TARGET/logs/build-<d>-<what>.log     times: $OFFICE_TARGET/logs/times.tsv
@@ -67,7 +67,7 @@ run() {
   local t0=$SECONDS; echo "== $d $what ${release:+release} start $(date -Is) fonts=${CRAFT_FONTS_DIR:-unset} wrapper=${RUSTC_WRAPPER:-none} overlay=${OFFICE_OVERLAY_DIR:-none}"
   case "$what" in
     desktop) cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
-    cli)     if [ "$d" = services ]; then cargo build --locked -j 4 $mt ${release:+--release} --manifest-path services/Cargo.toml -p convert -p convert-api
+    cli)     if [ "$d" = services ]; then cargo build --locked -j 4 $mt ${release:+--release} --manifest-path services/Cargo.toml -p convert -p convert-api -p suite-desktop -p suite-serve
              else cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-cli"; fi ;;
     web)     # sccache cannot spawn rustc for web-sys (command line too long on Windows), so web builds run without it
              (unset RUSTC_WRAPPER; cd "domains/$d/apps/$d-web" && TRUNK_BUILD_DIST="$OFFICE_TARGET/dist/$d-web" trunk build ${release:+--release} --locked) ;;
