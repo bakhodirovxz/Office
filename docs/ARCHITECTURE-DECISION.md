@@ -637,7 +637,7 @@ Design:
 The ArtCraft names and logos are not open source (`docs/brand/LICENSE-brand.txt` in each app; logo files
 `artcraft-*.svg/png` in `docs/brand/`, listed for this ADR).
 
-- [ ] Product name chosen by the owner (B-1), with uz-Latn, uz-Cyrl, ru and en forms.
+- [x] Product name chosen by the owner (B-1): **Hoshiya** (2026-10-23). uz-Latn Hoshiya, uz-Cyrl Ҳошия; ru and en keep the Latin "Hoshiya".
 - [ ] No ArtCraft, WordCraft, GridCraft, DeckCraft or PdfCraft in user-visible strings, window titles, About dialogs,
       installer UI, web `<title>`/favicon, error strings ("WordCraft failed to start", [mobile-a0]) or i18n catalogs.
       A CI grep over UI strings and assets. Crate names (`wordcraft-engine`) are code identifiers and stay.
@@ -818,6 +818,8 @@ Other risks tracked but outside the top 12:
 | Translit golden list | Approval of the ≥500-pair Phase 2 golden list and the exceptions dictionary (BRIEF Phase 2: "the owner must approve") | **Delegated to the agent** (2026-10-20). Rows are marked `reviewed:agent-<model>:<date>`, never as an owner approval. The owner reports problems found in use |
 | Android / mobile timing | The emulator could not open the 108-page file; the owner calls the emulator itself problematic | **Android deferred** (2026-10-20). Work goes to the converter (Phase 3) and the remaining UI translations first; mobile is revisited later. This lowers mobile in the priority order for now |
 | Others | B-7…B-14 | Still open: asked again in the Phase 1 report |
+
+- **B-1, product name (owner, 2026-10-23): Hoshiya.** The word means a page margin or border in Uzbek. uz-Cyrl Ҳошия; ru and en keep the Latin form. It is applied only through `brand/brand.toml`.
 
 ## Sources
 

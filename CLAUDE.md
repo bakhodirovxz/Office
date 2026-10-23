@@ -6,7 +6,8 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 
 ## Gate decisions in force (ADR Appendix C)
 - Our layer is licensed **MIT OR Apache-2.0**.
-- **Product name: deferred.** Use the neutral working name from the one brand config. Never hard-code a name.
+- **Product name: Hoshiya** (owner, 2026-10-23; B-1 closed). uz-Cyrl form: Ҳошия. The name lives only in the one brand
+  config (`brand/brand.toml`). Never hard-code it.
 - **Repo layout:** W2 build domains. Upstream is a vendored pristine snapshot plus a patch queue in `patches/`.
   Never hand-edit `upstream/`.
 - **Single licence exception: MPL-2.0 for the symphonia crates only** (deckcraft audio). They stay unmodified, and
