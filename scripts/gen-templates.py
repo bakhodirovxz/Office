@@ -139,16 +139,17 @@ def buyruq():
         para(run("BUYRUQ", bold=True, size=16), align="center", after=240, before=120),
         para(run("[Sana]") + run("№ [raqam]", tab_before=True), tabs=right, after=60),
         para(run("[Shahar yoki aholi punkti]"), align="center", after=240),
-        para(run("[Buyruqning mavzusi: nima haqida]", bold=True), after=240),
-        para(run("[Asos: hujjatning nomi, sanasi va raqami]ga muvofiq, BUYURAMAN:"), first=567, after=120),
+        para(run("[Buyruqning mavzusi] toʻgʻrisida", bold=True), after=240),
+        para(run("[Buyruq chiqarishning sababi yoki maqsadi: qisqacha] hamda [asos boʻlgan hujjatning nomi, sanasi va raqami] asosida"), first=567, after=120),
+        para(run("BUYURAMAN:", bold=True), after=120, keep=True),
         para(run("1. [Birinchi topshiriq: kim, nima qiladi, qaysi muddatgacha]."), first=567),
         para(run("2. [Ikkinchi topshiriq]."), first=567),
-        para(run("3. [Uchinchi topshiriq]."), first=567, after=120),
-        para(run("Buyruqning bajarilishini nazorat qilish [lavozim, F.I.Sh.]ga yuklansin."), first=567, after=480),
-        para(run("[Rahbarning lavozimi]") + run("[F.I.Sh.]", tab_before=True), tabs=right, after=480),
-        para(run("Buyruq bilan tanishdim:", italic=True), after=120, keep=True),
-        para(run("[Lavozim]  ____________  [F.I.Sh.]  [sana]"), after=60),
-        para(run("[Lavozim]  ____________  [F.I.Sh.]  [sana]"), after=60),
+        para(run("3. Mazkur buyruq ijrosini nazorat qilish [lavozimi, F.I.Sh.] zimmasiga yuklansin."), first=567, after=240),
+        para(run("Asos: [ariza, bildirishnoma yoki boshqa hujjat, uning sanasi va raqami]."), after=480),
+        para(run("[Rahbarning lavozimi]") + run("____________  [I.Sh. Familiya]", tab_before=True), tabs=right, after=480),
+        para(run("Buyruq bilan tanishib chiqdim:", italic=True), after=120, keep=True),
+        para(run("[Lavozimi]  ____________  [F.I.Sh.]  [sana]"), after=60),
+        para(run("[Lavozimi]  ____________  [F.I.Sh.]  [sana]"), after=60),
     ]
     return docx("Buyruq", "".join(b))
 
@@ -156,22 +157,22 @@ def buyruq():
 def xizmat_xati():
     right = [("right", 9354)]
     b = [
-        para(run("[Qabul qiluvchining lavozimi]"), align="right", after=0, ind_left=4536),
-        para(run("[Tashkilot nomi]"), align="right", after=0, ind_left=4536),
-        para(run("[F.I.Sh.]", bold=True), align="right", after=360, ind_left=4536),
-        para(run("[Tashkilot nomi], [boʻlim nomi]"), after=0),
+        para(run("[Tashkilot nomi], [boʻlim nomi]", bold=True), after=0),
         para(run("Chiqish raqami: [raqam]") + run("Sana: [sana]", tab_before=True), tabs=right, after=360),
+        para(run("[Qabul qiluvchi tashkilot nomi]"), align="right", after=0, ind_left=4536),
+        para(run("[Qabul qiluvchining lavozimi]"), align="right", after=0, ind_left=4536),
+        para(run("[I.Sh. Familiya]ga", bold=True), align="right", after=360, ind_left=4536),
         para(run("XIZMAT XATI", bold=True, size=16), align="center", after=240),
-        para(run("Mavzu: [xatning mavzusi]", bold=True), after=240),
-        para(run("Hurmatli [ism, otasining ismi]!", bold=False), align="center", after=240),
+        para(run("[Xatning qisqacha mazmuni] toʻgʻrisida", bold=True), after=240),
+        para(run("Hurmatli [ismi, otasining ismi]!"), align="center", after=240),
         para(run("[Birinchi xatboshi: xatning maqsadi, nima uchun murojaat qilinayotgani.]"), first=567, after=120),
-        para(run("[Ikkinchi xatboshi: zarur maʼlumotlar: sana, miqdor, asos.]"), first=567, after=120),
+        para(run("[Ikkinchi xatboshi: zarur maʼlumotlar (sana, miqdor, asos).]"), first=567, after=120),
         para(run("[Oxirgi xatboshi: soʻrov yoki taklif va javob muddati.]"), first=567, after=360),
-        para(run("Ilova: [ilova nomi va varaqlar soni]"), after=360),
+        para(run("Ilova: [ilova nomi], [varaqlar soni] varaqda."), after=360),
         para(run("Hurmat bilan,"), after=240, keep=True),
-        para(run("[Rahbarning lavozimi]") + run("[F.I.Sh.]", tab_before=True), tabs=right, after=480),
+        para(run("[Rahbarning lavozimi]") + run("____________  [I.Sh. Familiya]", tab_before=True), tabs=right, after=480),
         para(run("Ijrochi: [F.I.Sh.]", italic=True, size=11), after=0),
-        para(run("Aloqa: [telefon raqami yoki ichki raqam]", italic=True, size=11), after=0),
+        para(run("Tel.: [telefon yoki ichki raqam]", italic=True, size=11), after=0),
     ]
     return docx("Xizmat xati", "".join(b))
 
@@ -296,13 +297,13 @@ def xlsx(title, sheet_name, sh, widths, heights, pane=None, autofilter=None, pri
 def tabel():
     sh = Sheet()
     last = 3 + 31 + 5  # A..C, 31 day columns, 5 totals -> AM
-    sh.s(1, 1, "ISHCHILAR TABELI", 4)
+    sh.s(1, 1, "ISH VAQTINI HISOBGA OLISH TABELI", 4)
     sh.merges.append(f"A1:{col(last)}1")
     sh.s(2, 1, "Tashkilot: [Tashkilot nomi]", 5)
     sh.s(2, 10, "Hisobot oyi: [oy, yil]", 5)
-    sh.s(2, 30, "Kunlik ish soati:", 5)
+    sh.s(2, 27, "Kunlik ish soati:", 5)  # from AA, so the label has room before the number in AG
     sh.n(2, 33, 8, 3)
-    heads = ["№", "F.I.Sh.", "Lavozimi"] + [str(d) for d in range(1, 32)] + ["Ishlangan kunlar", "Ishlangan soat", "Kasallik (kun)", f"Ta{T}til (kun)", "Sababsiz (kun)"]
+    heads = ["№", "F.I.Sh.", "Lavozimi"] + [str(d) for d in range(1, 32)] + ["Ishlangan kunlar", "Ishlangan soatlar", "Kasallik (kun)", f"Ta{T}til (kun)", "Sababsiz kelmagan (kun)"]
     for i, h in enumerate(heads, 1):
         if 4 <= i <= 34:
             sh.n(4, i, i - 3, 1)
@@ -325,11 +326,11 @@ def tabel():
     sh.s(tr, 2, "Jami", 8)
     for c in (35, 36, 37, 38, 39):
         sh.f(tr, c, f"SUM({col(c)}{first}:{col(c)}{lastrow})", 8)
-    sh.s(tr + 2, 1, f"Belgilar: I – ishlagan, K – kasal, T – ta{T}til, S – sababsiz kelmagan, D – dam olish. Kunlarga belgini kiriting, jami sonlar oʻzi hisoblanadi.", 7)
-    sh.s(tr + 4, 2, "Tabelni yuritgan: [lavozim, F.I.Sh.]", 5)
-    sh.s(tr + 5, 2, "Rahbar: [lavozim, F.I.Sh.]", 5)
+    sh.s(tr + 2, 1, f"Shartli belgilar: I – ish kuni, K – kasallik, T – ta{T}til, S – sababsiz kelmaslik, D – dam olish kuni. Har bir kunga belgini kiriting, jami ustunlar avtomatik hisoblanadi.", 7)
+    sh.s(tr + 4, 2, "Tabelni yuritgan: [lavozimi, F.I.Sh.]  ____________", 5)
+    sh.s(tr + 5, 2, "Rahbar: [lavozimi, F.I.Sh.]  ____________", 5)
     widths = [(1, 1, 5), (2, 2, 28), (3, 3, 20), (4, 34, 3.6), (35, 39, 12)]
-    return xlsx("Tabel", "Tabel", sh, widths, {4: 45}, pane=(3, 4), print_landscape=True)
+    return xlsx("Ish vaqti tabeli", "Tabel", sh, widths, {4: 45}, pane=(3, 4), print_landscape=True)
 
 
 def xodimlar():
@@ -338,7 +339,7 @@ def xodimlar():
     sh.merges.append("A1:G1")
     sh.s(2, 1, "Tashkilot: [Tashkilot nomi]", 5)
     sh.s(2, 5, "Sana: [sana]", 5)
-    heads = ["№", "F.I.Sh.", "Lavozimi", "Boʻlim", "Ishga qabul qilingan sana", "Telefon", "Izoh"]
+    heads = ["№", "F.I.Sh.", "Lavozimi", "Boʻlimi", "Ishga qabul qilingan sana", "Telefon raqami", "Izoh"]
     for i, h in enumerate(heads, 1):
         sh.s(4, i, h, 1)
     first, lastrow = 5, 34
@@ -347,14 +348,14 @@ def xodimlar():
         if r - first < 3:
             sh.s(r, 2, f"[F.I.Sh. {r - first + 1}]", 2)
             sh.s(r, 3, "[Lavozim]", 2)
-            sh.s(r, 4, "[Boʻlim]", 2)
+            sh.s(r, 4, "[Boʻlimi]", 2)
         else:
             for c in (2, 3, 4):
                 sh.blank(r, c, 2)
         sh.blank(r, 5, 6)
         sh.blank(r, 6, 2)
         sh.blank(r, 7, 2)
-    sh.s(lastrow + 2, 2, "Jami xodimlar:", 5)
+    sh.s(lastrow + 2, 2, "Jami xodimlar soni:", 5)
     sh.f(lastrow + 2, 3, f"COUNTA(B{first}:B{lastrow})", 5)
     widths = [(1, 1, 5), (2, 2, 30), (3, 3, 24), (4, 4, 20), (5, 5, 16), (6, 6, 16), (7, 7, 24)]
     return xlsx("Xodimlar roʻyxati", "Xodimlar", sh, widths, {4: 32}, pane=(0, 4), autofilter=f"A4:G{lastrow}")
@@ -418,8 +419,8 @@ def pptx():
         f'{HDR}<p:sldMaster xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}"><p:cSld><p:bg><p:bgPr><a:solidFill><a:schemeClr val="bg1"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>'
         '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
         '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>'
-        + sp_ph(2, "Title", '<p:ph type="title"/>', '<a:p><a:r><a:rPr lang="en-US"/><a:t>Title</a:t></a:r></a:p>', (762000, 457200), (10668000, 1143000))
-        + sp_ph(3, "Body", '<p:ph type="body" idx="1"/>', '<a:p><a:pPr lvl="0"/><a:r><a:rPr lang="en-US"/><a:t>Text</a:t></a:r></a:p>', (762000, 1828800), (10668000, 4343400))
+        + sp_ph(2, "Title", '<p:ph type="title"/>', pp("Sarlavha"), (762000, 457200), (10668000, 1143000))
+        + sp_ph(3, "Body", '<p:ph type="body" idx="1"/>', pp("Matn"), (762000, 1828800), (10668000, 4343400))
         + '</p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>'
         '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/><p:sldLayoutId id="2147483650" r:id="rId2"/></p:sldLayoutIdLst>'
         f'<p:txStyles><p:titleStyle>{lvl_style("lvl1pPr", 4000, True, False)}</p:titleStyle>'
@@ -438,20 +439,20 @@ def pptx():
     lay_title = layout(
         "Sarlavha slaydi",
         "title",
-        sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("Title"), (1219200, 2057400), (9753600, 1371600))
-        + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("Subtitle"), (1219200, 3657600), (9753600, 1143000)),
+        sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("Sarlavha"), (1219200, 2057400), (9753600, 1371600))
+        + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("Kichik sarlavha"), (1219200, 3657600), (9753600, 1143000)),
     )
     lay_body = layout(
         "Sarlavha va matn",
         "obj",
-        sp_ph(2, "Title", '<p:ph type="title"/>', pp("Title"))
-        + sp_ph(3, "Content", '<p:ph idx="1"/>', pp("Text")),
+        sp_ph(2, "Title", '<p:ph type="title"/>', pp("Sarlavha"))
+        + sp_ph(3, "Content", '<p:ph idx="1"/>', pp("Matn")),
     )
     slides = [
-        (1, slide_xml(sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("[Taqdimot sarlavhasi]")) + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("[Taqdimotchi: F.I.Sh., lavozim]") + pp("[Sana]")))),
+        (1, slide_xml(sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("[Taqdimot sarlavhasi]")) + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("[Maʼruzachi: F.I.Sh., lavozimi]") + pp("[Sana]")))),
         (2, slide_xml(sp_ph(2, "Title", '<p:ph type="title"/>', pp("Reja")) + sp_ph(3, "Content", '<p:ph idx="1"/>', pp("[Birinchi masala]") + pp("[Ikkinchi masala]") + pp("[Uchinchi masala]") + pp("Xulosa va savollar")))),
         (2, slide_xml(sp_ph(2, "Title", '<p:ph type="title"/>', pp("[Birinchi masala]")) + sp_ph(3, "Content", '<p:ph idx="1"/>', pp("[Asosiy fikr]") + pp("[Dalil yoki raqam]", 1) + pp("[Dalil yoki raqam]", 1) + pp("[Keyingi qadam]")))),
-        (1, slide_xml(sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("Eʼtiboringiz uchun rahmat!")) + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("Savollaringiz bormi?") + pp("[Aloqa: telefon yoki elektron manzil]")))),
+        (1, slide_xml(sp_ph(2, "Title", '<p:ph type="ctrTitle"/>', pp("Eʼtiboringiz uchun rahmat!")) + sp_ph(3, "Subtitle", '<p:ph type="subTitle" idx="1"/>', pp("Savollaringiz bormi?") + pp("[Aloqa: telefon yoki elektron pochta]")))),
     ]
     pres = (
         f'{HDR}<p:presentation xmlns:a="{NS_A}" xmlns:r="{NS_R}" xmlns:p="{NS_P}" saveSubsetFonts="1">'
@@ -502,13 +503,13 @@ FILES = {
     "taqdimot.pptx": pptx,
 }
 
-# the names and the template text are uz-Latn / uz-Cyrl UI strings: the Cyrillic is by hand, not machine-trusted, until the review pass
-STATUS = "draft:agent-sonnet:2026-10-23"
+# the names and the template text are uz-Latn / uz-Cyrl UI strings; their review is delegated to the agent (CLAUDE.md)
+STATUS = "reviewed:agent-opus:2026-10-23"
 
 CATALOG_ITEMS = [
     ("docs", "buyruq.docx", {"en": "Order (buyruq)", "ru": "Приказ (buyruq)", "uz-Latn": "Buyruq", "uz-Cyrl": "Буйруқ"}),
     ("docs", "xizmat-xati.docx", {"en": "Official letter (xizmat xati)", "ru": "Служебное письмо (xizmat xati)", "uz-Latn": "Xizmat xati", "uz-Cyrl": "Хизмат хати"}),
-    ("sheets", "tabel.xlsx", {"en": "Timesheet (tabel)", "ru": "Табель учёта рабочего времени", "uz-Latn": "Ishchilar tabeli", "uz-Cyrl": "Ишчилар табели"}),
+    ("sheets", "tabel.xlsx", {"en": "Timesheet (tabel)", "ru": "Табель учёта рабочего времени", "uz-Latn": "Ish vaqti tabeli", "uz-Cyrl": "Иш вақти табели"}),
     ("sheets", "xodimlar-royxati.xlsx", {"en": "Staff list", "ru": "Список сотрудников", "uz-Latn": "Xodimlar roʻyxati", "uz-Cyrl": "Ходимлар рўйхати"}),
     ("slides", "taqdimot.pptx", {"en": "Simple presentation", "ru": "Простая презентация", "uz-Latn": "Oddiy taqdimot", "uz-Cyrl": "Оддий тақдимот"}),
 ]

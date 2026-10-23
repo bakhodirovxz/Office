@@ -5,12 +5,6 @@
     "uz-Latn": "reviewed:agent-opus:2026-10-23",
     "uz-Cyrl": "reviewed:agent-opus:2026-10-23"
   },
-  "_draft": {
-    "status": "draft:agent-sonnet:2026-10-23",
-    "note": "rows whose ru and uz text are agent drafts, not yet reviewed (the _status block above covers the other rows)",
-    "keys": ["guard.wall", "guard.links", "guard.excel"],
-    "langs": ["ru", "uz-Latn", "uz-Cyrl"]
-  },
   "en": {
     "ui.language": "Language",
     "home.search": "Search recent files",
@@ -103,9 +97,9 @@
     "err.gone": "{name} fayli endi mavjud emas.",
     "recent.remove": "{name} faylini roʻyxatdan olib tashlash",
     "recent.remove.short": "Olib tashlash",
-    "guard.wall": "Bu ish kitobi {app} hozircha ocha oladigan hajmdan katta. Uni Excelda oching.",
+    "guard.wall": "Bu ish kitobi hozircha {app} ocha oladigan hajmdan katta. Uni Excel dasturida oching.",
     "guard.links": "Boshqa ish kitoblariga havolalar saqlanadi, lekin yangilanmaydi.",
-    "guard.excel": "Excelda ochish"
+    "guard.excel": "Excel dasturida ochish"
   },
   "uz-Cyrl": {
     "ui.language": "Тил",
@@ -135,8 +129,8 @@
     "err.gone": "{name} файли энди мавжуд эмас.",
     "recent.remove": "{name} файлини рўйхатдан олиб ташлаш",
     "recent.remove.short": "Олиб ташлаш",
-    "guard.wall": "Бу иш китоби {app} ҳозирча оча оладиган ҳажмдан катта. Уни Excelда очинг.",
+    "guard.wall": "Бу иш китоби ҳозирча {app} оча оладиган ҳажмдан катта. Уни Excel дастурида очинг.",
     "guard.links": "Бошқа иш китобларига ҳаволалар сақланади, лекин янгиланмайди.",
-    "guard.excel": "Excelда очиш"
+    "guard.excel": "Excel дастурида очиш"
   }
 }

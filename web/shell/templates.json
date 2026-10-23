@@ -2,7 +2,7 @@
   {
     "app": "docs",
     "file": "templates/buyruq.docx",
-    "status": "draft:agent-sonnet:2026-10-23",
+    "status": "reviewed:agent-opus:2026-10-23",
     "name": {
       "en": "Order (buyruq)",
       "ru": "Приказ (buyruq)",
@@ -13,7 +13,7 @@
   {
     "app": "docs",
     "file": "templates/xizmat-xati.docx",
-    "status": "draft:agent-sonnet:2026-10-23",
+    "status": "reviewed:agent-opus:2026-10-23",
     "name": {
       "en": "Official letter (xizmat xati)",
       "ru": "Служебное письмо (xizmat xati)",
@@ -24,18 +24,18 @@
   {
     "app": "sheets",
     "file": "templates/tabel.xlsx",
-    "status": "draft:agent-sonnet:2026-10-23",
+    "status": "reviewed:agent-opus:2026-10-23",
     "name": {
       "en": "Timesheet (tabel)",
       "ru": "Табель учёта рабочего времени",
-      "uz-Latn": "Ishchilar tabeli",
-      "uz-Cyrl": "Ишчилар табели"
+      "uz-Latn": "Ish vaqti tabeli",
+      "uz-Cyrl": "Иш вақти табели"
     }
   },
   {
     "app": "sheets",
     "file": "templates/xodimlar-royxati.xlsx",
-    "status": "draft:agent-sonnet:2026-10-23",
+    "status": "reviewed:agent-opus:2026-10-23",
     "name": {
       "en": "Staff list",
       "ru": "Список сотрудников",
@@ -46,7 +46,7 @@
   {
     "app": "slides",
     "file": "templates/taqdimot.pptx",
-    "status": "draft:agent-sonnet:2026-10-23",
+    "status": "reviewed:agent-opus:2026-10-23",
     "name": {
       "en": "Simple presentation",
       "ru": "Простая презентация",
