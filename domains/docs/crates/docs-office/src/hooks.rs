@@ -1,5 +1,5 @@
 //! The command-hook seam (PLAN section 4, F2): XDFU restrictions, the snapshot after a save and Phase 5 permissions attach here.
-//! Nothing is attached in Phase 4 WP4; WP10 and WP11 call `set_hook`.
+//! `layer.rs` (WP10, WP11) attaches the version snapshot and the XDFU watermark with `set_hook`.
 //!
 //! The guarded ids are re-registered with wrappers. `Registry::new` keeps the last spec of an id, so the wrapper replaces
 //! upstream's handler, and the original `enabled` and `run` pointers are kept in a table the wrappers index by a const
@@ -16,6 +16,12 @@ pub trait CommandHook: Send + Sync {
     fn before(&self, id: &str, s: &Session) -> Option<&'static str> {
         let _ = (id, s);
         None
+    }
+    /// Runs the original command: `run(session)`. A policy that must change the session around it (a stamp on a copy being made,
+    /// restored afterwards) overrides this; the default just runs it. Called before `after`.
+    fn wrap(&self, id: &str, s: &mut Session, params: &Value, run: &mut dyn FnMut(&mut Session) -> CmdResult) -> CmdResult {
+        let _ = (id, params);
+        run(s)
     }
     fn after(&self, id: &str, s: &Session, params: &Value, result: &CmdResult) {
         let _ = (id, s, params, result);
@@ -56,8 +62,12 @@ fn enabled<const N: usize>(s: &Session) -> Option<&'static str> {
 
 fn run<const N: usize>(s: &mut Session, v: &Value) -> CmdResult {
     let Some((_, orig)) = ORIGINALS.get().and_then(|o| o[N]) else { return Err(wordcraft_engine::CmdError::Unknown(GUARDED[N].into())) };
-    let result = orig(s, v);
-    if let Some(h) = hook() {
+    let h = hook();
+    let result = match &h {
+        Some(h) => h.wrap(GUARDED[N], s, v, &mut |s| orig(s, v)),
+        None => orig(s, v),
+    };
+    if let Some(h) = h {
         h.after(GUARDED[N], s, v, &result);
     }
     result

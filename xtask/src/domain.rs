@@ -489,7 +489,7 @@ fn read_lock(path: &Path) -> Res<Pkgs> {
 }
 
 /// Our shared crates whose private dependencies are ours, not upstream's drift.
-const OWN_ROOTS: [&str; 1] = ["suite-core"];
+const OWN_ROOTS: [&str; 2] = ["suite-core", "xdfu-core"];
 
 /// "name", "name version" or "name version (source)": a dependency entry of a lock package, as (name, version).
 fn dep_key(entry: &str) -> (String, Option<String>) {

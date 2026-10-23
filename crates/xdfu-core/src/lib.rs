@@ -293,6 +293,72 @@ impl Issuer {
     }
 }
 
+/// An [`Issuer`] opened on first use, for an editor that never refuses a copy (the owner's watermark-only decision): when the audit log is
+/// unusable the copy is still made, with copy number 0, and the reason goes to stderr.
+pub struct LazyIssuer {
+    log: PathBuf,
+    key: PathBuf,
+    issuer: std::sync::Mutex<Option<Issuer>>,
+}
+
+impl LazyIssuer {
+    pub fn new(log: PathBuf, key: PathBuf) -> LazyIssuer {
+        LazyIssuer {
+            log,
+            key,
+            issuer: std::sync::Mutex::new(None),
+        }
+    }
+
+    /// `produce` runs once with the stamp; its result is returned whatever happens to the log. The audit line is written only when it succeeded.
+    pub fn issue<T, E: std::fmt::Display>(
+        &self,
+        event: &str,
+        file: &str,
+        produce: impl FnOnce(&Stamp) -> Result<T, E>,
+    ) -> Result<T, E> {
+        let mut guard = self.issuer.lock().unwrap_or_else(|e| e.into_inner());
+        if guard.is_none() {
+            match Issuer::open(&self.log, Some(&self.key)) {
+                Ok(i) => *guard = Some(i),
+                Err(e) => eprintln!(
+                    "office: XDFU audit log {} unusable: {e}",
+                    self.log.display()
+                ),
+            }
+        }
+        let mut produce = Some(produce);
+        let mut slot: Option<Result<T, E>> = None;
+        if let Some(i) = guard.as_ref() {
+            let r = i.issue(event, file, |st| {
+                let out = (produce.take().expect("runs once"))(st);
+                let ok = out.is_ok();
+                slot = Some(out);
+                if ok {
+                    Ok(())
+                } else {
+                    Err("the copy was not made")
+                }
+            });
+            if let Err(audit::Appended::Log(e)) = r {
+                eprintln!("office: XDFU audit write failed: {e}");
+            }
+        }
+        match slot {
+            Some(r) => r,
+            None => {
+                let st = Stamp {
+                    copy: 0,
+                    client: machine_addr(),
+                    user: os_user(),
+                    when: audit::utc_text(audit::now_secs()),
+                };
+                (produce.take().expect("did not run"))(&st)
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

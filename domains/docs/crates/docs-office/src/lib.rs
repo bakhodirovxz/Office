@@ -9,6 +9,8 @@ use wordcraft_engine::{CmdResult, CommandSpec, Registry, Session};
 
 pub mod hooks;
 pub mod icons;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod layer;
 pub mod levels;
 pub mod mode;
 pub mod preset;
@@ -42,10 +44,29 @@ fn export_pdf(s: &mut Session, _: &Value) -> CmdResult {
     s.run("file.exportPdf", &json!({}))
 }
 
-/// Opens the shell's History panel (WP10 fills it in). Until then the request is one the UI ignores.
-fn history(s: &mut Session, _: &Value) -> CmdResult {
-    s.ui_requests.push(json!({"open": "history"}));
-    Ok(json!({"opened": false}))
+/// Opens the shell's History panel for the document's file (desktop). The web build has no panel: the request is one the UI ignores.
+fn history(s: &mut Session, v: &Value) -> CmdResult {
+    #[cfg(not(target_arch = "wasm32"))]
+    return layer::open_history(s, v);
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = v;
+        s.ui_requests.push(json!({"open": "history"}));
+        Ok(json!({"opened": false}))
+    }
+}
+
+/// Upstream's Version History keeps copies in memory (`save`, `restore`). Without those parameters the Backstage entry opens our
+/// on-disk History instead, so staff see one feature; an unsaved document falls back to upstream's list.
+static VERSIONS: std::sync::OnceLock<fn(&mut Session, &Value) -> CmdResult> = std::sync::OnceLock::new();
+
+fn versions(s: &mut Session, v: &Value) -> CmdResult {
+    let orig = VERSIONS.get().copied().expect("recorded by extend");
+    #[cfg(not(target_arch = "wasm32"))]
+    if s.path.is_some() && v.get("save").is_none() && v.get("restore").is_none() {
+        return layer::open_history(s, v);
+    }
+    orig(s, v)
 }
 
 pub fn specs() -> Vec<CommandSpec> {
@@ -64,6 +85,12 @@ pub fn extend(reg: &Registry) -> Option<Registry> {
     }
     let mut all = reg.all().to_vec();
     all.extend(specs());
+    #[cfg(not(target_arch = "wasm32"))]
+    all.extend(layer::specs());
+    if let Some(c) = reg.get("file.versions") {
+        VERSIONS.get_or_init(|| c.run);
+        all.push(CommandSpec { run: versions, ..c.clone() });
+    }
     all.extend(hooks::wrapped(reg));
     all.extend(levels::wrapped(reg));
     Some(Registry::new(all))
@@ -73,6 +100,8 @@ pub fn extend(reg: &Registry) -> Option<Registry> {
 pub fn install(s: &mut Session) {
     #[cfg(not(target_arch = "wasm32"))]
     mode::default_store(settings::store());
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    layer::init();
     if let Some(r) = extend(&s.registry) {
         s.registry = std::sync::Arc::new(r);
     }
@@ -81,3 +110,5 @@ pub fn install(s: &mut Session) {
 
 #[cfg(test)]
 mod tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod layer_tests;

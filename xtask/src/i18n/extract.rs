@@ -726,11 +726,13 @@ fn deck_universe(root: &Path) -> Universe {
 
 /// UI strings that our carried UI patches (`patches/*/0121`) add. Upstream's catalogs do not hold them, so without this list
 /// every extract would mark their rows obsolete.
-const OWN: [(&str, &[&str]); 15] = [
+const OWN: [(&str, &[&str]); 16] = [
     // Phase 4 WP2 (domains/docs/crates/docs-office): the ribbon preset's toggle labels and group name.
     ("Full ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
     ("Simple ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
     ("History", &["wordcraft"]),
+    // Phase 4 WP10 (docs-office layer.rs, gridcraft 0143): the message of Version History on a document with no file yet.
+    ("Save the file first, then open its version history.", &["wordcraft", "gridcraft"]),
     // Phase 4 WP3 (patch deckcraft/0140): the Slides toolbar's version history button.
     ("Version History", &["gridcraft", "deckcraft"]),
     // Phase 4 WP3 (patches/gridcraft/0140): the Sheets simple toolbar's pickers.
