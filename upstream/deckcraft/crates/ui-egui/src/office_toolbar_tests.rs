@@ -86,6 +86,10 @@ fn the_simple_row_has_the_designed_controls_and_no_ribbon() {
     }
     // The upstream ribbon's File tab is not drawn.
     assert!(h.query_by_label("File").is_none());
+    // The split buttons' arrows are controls of their own and carry a name too.
+    for label in ["New Slide \u{25be}", "Font Color \u{25be}"] {
+        assert!(h.query_by_label(label).is_some(), "missing {label}");
+    }
 }
 
 #[test]

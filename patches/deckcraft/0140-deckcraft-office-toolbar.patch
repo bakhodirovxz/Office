@@ -23,9 +23,9 @@ controls and acts, the two buttons switch modes, the pill clears the tabs at 102
  crates/ui-egui/src/lib.rs                  |   7 +-
  crates/ui-egui/src/office_overlay.rs       |  33 ++
  crates/ui-egui/src/office_toolbar.rs       | 463 +++++++++++++++++++++
- crates/ui-egui/src/office_toolbar_tests.rs | 146 +++++++
+ crates/ui-egui/src/office_toolbar_tests.rs | 150 +++++++
  crates/ui-egui/src/ribbon.rs               |   2 +-
- 8 files changed, 729 insertions(+), 14 deletions(-)
+ 8 files changed, 733 insertions(+), 14 deletions(-)
  create mode 100644 crates/ui-egui/assets/office_icons.bin
  create mode 100644 crates/ui-egui/src/office_toolbar.rs
  create mode 100644 crates/ui-egui/src/office_toolbar_tests.rs
@@ -949,7 +949,7 @@ new file mode 100644
 index 0000000..347a0e4
 --- /dev/null
 +++ b/crates/ui-egui/src/office_toolbar_tests.rs
-@@ -0,0 +1,146 @@
+@@ -0,0 +1,150 @@
 +// Added by the office toolbar patch queue. MIT OR Apache-2.0.
 +//! Tests of the simplified Slides toolbar (`office_toolbar`): the command ids still exist at this upstream, the row shows what
 +//! the design lists, the controls act, and the switch between the row and the full ribbon works.
@@ -1038,6 +1038,10 @@ index 0000000..347a0e4
 +    }
 +    // The upstream ribbon's File tab is not drawn.
 +    assert!(h.query_by_label("File").is_none());
++    // The split buttons' arrows are controls of their own and carry a name too.
++    for label in ["New Slide \u{25be}", "Font Color \u{25be}"] {
++        assert!(h.query_by_label(label).is_some(), "missing {label}");
++    }
 +}
 +
 +#[test]
