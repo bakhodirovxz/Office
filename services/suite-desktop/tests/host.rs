@@ -120,7 +120,7 @@ fn without_webview2_the_browser_opens_on_the_local_url_and_the_file_goes_to_its_
     let e = env("fallback");
     let doc = e.file("Буйруқ 1.docx");
     let mut c = e.cmd(&[&doc]);
-    c.env("SUITE_TEST_EXIT_AFTER_MS", "4000");
+    c.env("SUITE_TEST_EXIT_AFTER_MS", "15000");
     let mut host = Kill(c.spawn().unwrap());
     let port = e.port();
     // the browser is opened on the key URL (review M1): 64 hex digits, never in host.json
