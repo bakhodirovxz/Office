@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 23 Oct 2026 19:00:00 +0500
+Subject: [PATCH 45/45] ui-egui test: count only the grid's textured meshes in
+ the cell-picture test
+
+The simplified toolbar (0140) draws its icons as textured meshes, so `image_meshes` in tests/cell_pictures.rs saw
+2 meshes instead of the one picture (`pictures_fit_current_geometry_and_selection_cannot_erase_them`). Keep the
+meshes that touch the grid rectangle.
+---
+ crates/ui-egui/tests/cell_pictures.rs | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/crates/ui-egui/tests/cell_pictures.rs b/crates/ui-egui/tests/cell_pictures.rs
+index c35bdf0..820ea44 100644
+--- a/crates/ui-egui/tests/cell_pictures.rs
++++ b/crates/ui-egui/tests/cell_pictures.rs
+@@ -45,6 +45,8 @@ fn confirm(h: &mut egui_kittest::Harness<'static, SheetApp>) {
+ }
+ 
+ fn image_meshes(h: &egui_kittest::Harness<'static, SheetApp>) -> Vec<(Rect, Rect)> {
++    // only the grid: the simplified toolbar (patch 0140) draws its icons as textured meshes above it
++    let grid = h.state().grid.rect;
+     h.output()
+         .shapes
+         .iter()
+@@ -54,7 +56,7 @@ fn image_meshes(h: &egui_kittest::Harness<'static, SheetApp>) -> Vec<(Rect, Rect
+                 for vertex in &mesh.vertices {
+                     bounds.extend_with(vertex.pos);
+                 }
+-                Some((bounds, shape.clip_rect))
++                grid.is_none_or(|g| g.intersects(bounds)).then_some((bounds, shape.clip_rect))
+             }
+             _ => None,
+         })
+-- 
+2.45.0

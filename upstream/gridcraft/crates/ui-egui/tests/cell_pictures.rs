@@ -45,6 +45,8 @@ fn confirm(h: &mut egui_kittest::Harness<'static, SheetApp>) {
 }
 
 fn image_meshes(h: &egui_kittest::Harness<'static, SheetApp>) -> Vec<(Rect, Rect)> {
+    // only the grid: the simplified toolbar (patch 0140) draws its icons as textured meshes above it
+    let grid = h.state().grid.rect;
     h.output()
         .shapes
         .iter()
@@ -54,7 +56,7 @@ fn image_meshes(h: &egui_kittest::Harness<'static, SheetApp>) -> Vec<(Rect, Rect
                 for vertex in &mesh.vertices {
                     bounds.extend_with(vertex.pos);
                 }
-                Some((bounds, shape.clip_rect))
+                grid.is_none_or(|g| g.intersects(bounds)).then_some((bounds, shape.clip_rect))
             }
             _ => None,
         })
