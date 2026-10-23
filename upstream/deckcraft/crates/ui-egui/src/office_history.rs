@@ -24,19 +24,12 @@ use deckcraft_engine::office_hook::{self, CommandHook};
 use deckcraft_engine::{EngineError, Result, Session, register_command};
 use serde_json::{Value as Json, json};
 use suite_core::history::{self, Store};
-use xdfu_core::audit::{Appended, now_secs, utc_text};
-use xdfu_core::{Issuer, Stamp};
+use xdfu_core::{LazyIssuer, Stamp};
 
 use crate::SlideApp;
 
 static STORE: OnceLock<Option<Store>> = OnceLock::new();
-static XDFU: OnceLock<Xdfu> = OnceLock::new();
-
-struct Xdfu {
-    log: PathBuf,
-    key: PathBuf,
-    issuer: Mutex<Option<Issuer>>,
-}
+static XDFU: OnceLock<LazyIssuer> = OnceLock::new();
 
 struct Layer;
 
@@ -56,7 +49,7 @@ pub fn install(store: Option<Store>, audit: Option<(PathBuf, PathBuf)>) -> bool 
         return false;
     }
     if let Some((log, key)) = audit {
-        let _ = XDFU.set(Xdfu { log, key, issuer: Mutex::new(None) });
+        let _ = XDFU.set(LazyIssuer::new(log, key));
         register_command(
             "office.xdfu.insertGrif",
             "Insert XDFU grif",
@@ -150,40 +143,6 @@ fn has_grif(s: &Session) -> bool {
         }
     }
     xdfu_core::find_grif(&text).is_some()
-}
-
-impl Xdfu {
-    /// Runs `produce` with the stamp of the next copy and writes the audit line when it succeeded. The copy is made whatever happens
-    /// to the log (nothing is refused): an unusable log goes to stderr and the stamp then carries copy number 0.
-    fn issue<T>(&self, event: &str, file: &str, produce: impl FnOnce(&Stamp) -> Result<T>) -> Result<T> {
-        let mut guard = self.issuer.lock().unwrap_or_else(|e| e.into_inner());
-        if guard.is_none() {
-            match Issuer::open(&self.log, Some(&self.key)) {
-                Ok(i) => *guard = Some(i),
-                Err(e) => eprintln!("office: XDFU audit log {} unusable: {e}", self.log.display()),
-            }
-        }
-        let mut produce = Some(produce);
-        let mut slot: Option<Result<T>> = None;
-        if let Some(i) = guard.as_ref() {
-            let r = i.issue(event, file, |st| {
-                let out = (produce.take().expect("produce runs once"))(st);
-                let ok = out.is_ok();
-                slot = Some(out);
-                if ok { Ok(()) } else { Err("the copy was not made") }
-            });
-            if let Err(Appended::Log(e)) = r {
-                eprintln!("office: XDFU audit write failed: {e}");
-            }
-        }
-        match slot {
-            Some(r) => r,
-            None => {
-                let st = Stamp { copy: 0, client: xdfu_core::machine_addr(), user: xdfu_core::os_user(), when: utc_text(now_secs()) };
-                (produce.take().expect("produce did not run"))(&st)
-            }
-        }
-    }
 }
 
 /// Runs the copying command with the stamp in place and the working presentation back as it was afterwards.
