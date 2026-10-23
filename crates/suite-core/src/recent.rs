@@ -46,7 +46,7 @@ impl App {
         }
     }
 
-    /// The branded folder (`brand.toml` `data_dir`, e.g. `Suite/Docs`).
+    /// The branded folder (`brand.toml` `data_dir`, for example `<Product>/Docs`).
     const fn brand_dir(self) -> &'static str {
         match self {
             App::Docs => env!("SUITE_DATA_DIR_DOCS"),

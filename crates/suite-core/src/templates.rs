@@ -165,7 +165,7 @@ mod tests {
                 _ => "ppt/presentation.xml",
             };
             for i in 0..z.len() {
-                let name = z.by_index(i).unwrap().name().to_string();
+                let name = z.by_index(i).unwrap().name().unwrap().to_string();
                 if name.ends_with(".xml") || name.ends_with(".rels") {
                     let xml = part(&mut z, &name);
                     roxmltree::Document::parse(&xml)
@@ -202,7 +202,7 @@ mod tests {
             let mut text = String::new();
             for i in 0..z.len() {
                 let mut f = z.by_index(i).unwrap();
-                if f.name().ends_with(".xml") {
+                if f.name().unwrap().ends_with(".xml") {
                     let mut xml = String::new();
                     f.read_to_string(&mut xml).unwrap();
                     // the visible text only: ids and sizes in the markup are long numbers too

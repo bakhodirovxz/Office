@@ -488,9 +488,119 @@ fn read_lock(path: &Path) -> Res<Pkgs> {
     Ok(m)
 }
 
+/// Our shared crates whose private dependencies are ours, not upstream's drift.
+const OWN_ROOTS: [&str; 1] = ["suite-core"];
+
+/// "name", "name version" or "name version (source)": a dependency entry of a lock package, as (name, version).
+fn dep_key(entry: &str) -> (String, Option<String>) {
+    let mut it = entry.split_whitespace();
+    (
+        it.next().unwrap_or_default().to_string(),
+        it.next().map(str::to_string),
+    )
+}
+
+/// Packages of the domain lock that only our own roots (`OWN_ROOTS`) pull in: the closure of the roots minus anything a
+/// package outside that closure also depends on. Those are recorded as ours; they never reach an upstream build.
+fn own_private_deps(path: &Path) -> Res<BTreeSet<(String, String)>> {
+    let doc = read_doc(path)?;
+    let pkgs = doc
+        .get("package")
+        .and_then(Item::as_array_of_tables)
+        .ok_or("lock: no packages")?;
+    let ident = |p: &toml_edit::Table| {
+        let f = |k| {
+            p.get(k)
+                .and_then(Item::as_str)
+                .unwrap_or_default()
+                .to_string()
+        };
+        (f("name"), f("version"))
+    };
+    let deps_of = |p: &toml_edit::Table| -> Vec<(String, String)> {
+        let arr = p.get("dependencies").and_then(Item::as_array);
+        let mut out = Vec::new();
+        for e in arr.into_iter().flatten().filter_map(|v| v.as_str()) {
+            let (n, v) = dep_key(e);
+            // a bare name means the only version of that package
+            for q in pkgs
+                .iter()
+                .map(ident)
+                .filter(|q| q.0 == n && v.as_ref().is_none_or(|v| *v == q.1))
+            {
+                out.push(q);
+            }
+        }
+        out
+    };
+    let mut closure: BTreeSet<(String, String)> = BTreeSet::new();
+    let mut todo: Vec<(String, String)> = pkgs
+        .iter()
+        .map(ident)
+        .filter(|i| OWN_ROOTS.contains(&i.0.as_str()))
+        .collect();
+    while let Some(i) = todo.pop() {
+        let p = pkgs
+            .iter()
+            .find(|p| ident(p) == i)
+            .ok_or("lock: dangling dependency")?;
+        for q in deps_of(p) {
+            if closure.insert(q.clone()) {
+                todo.push(q);
+            }
+        }
+    }
+    // drop anything that a package outside the closure (and not a root) depends on
+    loop {
+        let shared: Vec<_> = pkgs
+            .iter()
+            .filter(|p| !closure.contains(&ident(p)) && !OWN_ROOTS.contains(&ident(p).0.as_str()))
+            .flat_map(|p| deps_of(p))
+            .filter(|q| closure.contains(q))
+            .collect();
+        if shared.is_empty() {
+            break;
+        }
+        for q in shared {
+            closure.remove(&q);
+            // what q pulls in is shared too, unless another member still needs it: recompute from the roots next round
+        }
+        // recompute reachability through the remaining members only
+        let mut reach = BTreeSet::new();
+        let mut todo: Vec<_> = pkgs
+            .iter()
+            .map(ident)
+            .filter(|i| OWN_ROOTS.contains(&i.0.as_str()))
+            .collect();
+        while let Some(i) = todo.pop() {
+            let p = pkgs
+                .iter()
+                .find(|p| ident(p) == i)
+                .ok_or("lock: dangling dependency")?;
+            for q in deps_of(p) {
+                if closure.contains(&q) && reach.insert(q.clone()) {
+                    todo.push(q);
+                }
+            }
+        }
+        closure = reach;
+    }
+    Ok(closure)
+}
+
 /// `cargo xt lockdiff <domain-lock> <upstream-lock>`
 pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
-    let (d, u) = (read_lock(domain)?, read_lock(upstream)?);
+    let (mut d, u) = (read_lock(domain)?, read_lock(upstream)?);
+    // our own crates' private dependencies are ours, not drift: count them out and report the number
+    let own = own_private_deps(domain)?;
+    for (n, v) in &own {
+        for ((dn, _), vs) in d.iter_mut() {
+            if dn == n && !u.iter().any(|((un, _), uv)| un == n && uv.contains(v)) {
+                vs.remove(v);
+            }
+        }
+    }
+    d.retain(|_, vs| !vs.is_empty());
     let (mut changes, mut removed, mut foreign) = (Vec::new(), 0usize, Vec::new());
     for ((name, src), vers) in &d {
         match u.get(&(name.clone(), src.clone())) {
@@ -513,9 +623,11 @@ pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
         }
     }
     let line = format!(
-        "{} version changes, {removed} removed (dev/xtask), {} foreign additions",
+        "{} version changes, {removed} removed (dev/xtask), {} foreign additions, {} ours via {}",
         changes.len(),
-        foreign.len()
+        foreign.len(),
+        own.len(),
+        OWN_ROOTS.join("+")
     );
     if changes.is_empty() && foreign.is_empty() {
         Ok(line)
@@ -534,6 +646,55 @@ pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lockdiff_counts_private_deps_of_our_roots_as_ours() {
+        let dir = std::env::temp_dir().join(format!("lockdiff-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let reg = "source = \"registry+https://github.com/rust-lang/crates.io-index\"";
+        let lock = |extra: &str| {
+            format!(
+                "version = 4
+[[package]]
+name = \"app\"
+version = \"1.0.0\"
+dependencies = [\"shared\"]
+                 [[package]]
+name = \"shared\"
+version = \"1.0.0\"
+{reg}
+{extra}"
+            )
+        };
+        let up = dir.join("up.lock");
+        fs::write(&up, lock("")).unwrap();
+        let own = format!(
+            "[[package]]
+name = \"suite-core\"
+version = \"0.1.0\"
+dependencies = [\"priv\", \"shared\"]
+             [[package]]
+name = \"priv\"
+version = \"2.0.0\"
+{reg}
+"
+        );
+        let ok = dir.join("ok.lock");
+        fs::write(&ok, lock(&own)).unwrap();
+        assert!(lockdiff(&ok, &up).unwrap().contains("1 ours"));
+        // a package that upstream code also depends on is not private to us
+        let bad = dir.join("bad.lock");
+        fs::write(
+            &bad,
+            lock(&own).replace(
+                "dependencies = [\"shared\"]",
+                "dependencies = [\"shared\", \"priv\"]",
+            ),
+        )
+        .unwrap();
+        assert!(lockdiff(&bad, &up).is_err());
+        fs::remove_dir_all(&dir).ok();
+    }
 
     #[test]
     fn extensions_add_an_optional_path_dependency_and_a_default_feature() {
