@@ -1,0 +1,62 @@
+﻿Custom		focusable=True	enabled=True	60,83,1 440x37
+Button	Home	focusable=True	enabled=True	70,90,24x22
+Button	Save (Ctrl+S)	focusable=True	enabled=True	96,90,24x22
+Button	Export	focusable=True	enabled=True	122,90,24x22
+Button	Undo (Ctrl+Z)	focusable=False	enabled=False	148,90,24x22
+Button	Redo (Ctrl+Y)	focusable=False	enabled=False	174,90,24x22
+Button	Start from Beginning (Ctrl+Shift+Enter)	focusable=True	enabled=True	200,90,24x22
+Button	Customize Quick Access Toolbar	focusable=True	enabled=True	226,90,24x22
+Button	Search commands (⇧⌘P)	focusable=True	enabled=True	1 466,90,24x22
+Button	  Present  	focusable=True	enabled=True	1 376,88,84x26
+Button	Comments	focusable=True	enabled=True	1 346,90,24x22
+Button	Light/Dark appearance	focusable=True	enabled=True	1 316,90,24x22
+Button	New Slide	focusable=True	enabled=True	68,126,30x28
+Custom		focusable=True	enabled=True	98,126,14x28
+Button	Layout	focusable=True	enabled=True	114,126,42x28
+Button	Bold	focusable=False	enabled=False	379,126,30x28
+Button	Italic	focusable=False	enabled=False	411,126,30x28
+Button	Underline	focusable=False	enabled=False	443,126,30x28
+Button	Font Color	focusable=False	enabled=False	475,126,30x28
+Button	Bullets	focusable=False	enabled=False	532,126,30x28
+Button	Numbering	focusable=False	enabled=False	564,126,30x28
+Button	Align Left	focusable=False	enabled=False	596,126,30x28
+Button	Center	focusable=False	enabled=False	628,126,30x28
+Button	Align Right	focusable=False	enabled=False	660,126,30x28
+Button	Text Box	focusable=True	enabled=True	703,126,30x28
+Button	Picture	focusable=True	enabled=True	735,126,30x28
+Button	Shapes	focusable=True	enabled=True	767,126,42x28
+Button	Table	focusable=True	enabled=True	811,126,42x28
+Button	Transliterate	focusable=True	enabled=True	866,126,42x28
+Button	Version History	focusable=False	enabled=False	910,126,30x28
+Button	Full ribbon	focusable=True	enabled=True	948,126,94x28
+Custom		focusable=True	enabled=True	177,958,132x22
+Custom		focusable=True	enabled=True	1 466,959,26x20
+Text	120%	focusable=True	enabled=True	1 432,961,30x16
+Custom		focusable=True	enabled=True	1 402,959,26x20
+Slider		focusable=True	enabled=True	1 298,960,100x22
+Custom		focusable=True	enabled=True	1 268,959,26x20
+Custom		focusable=True	enabled=True	1 230,959,26x20
+Custom		focusable=True	enabled=True	1 200,959,26x20
+Custom		focusable=True	enabled=True	1 170,959,26x20
+Custom		focusable=True	enabled=True	1 140,959,26x20
+Custom		focusable=True	enabled=True	1 036,959,91x20
+Custom		focusable=True	enabled=True	969,959,63x20
+Custom		focusable=True	enabled=True	60,169,231x123
+Custom		focusable=True	enabled=True	60,296,231x40
+Custom		focusable=True	enabled=True	289,161,6x794
+Edit		focusable=True	enabled=True	300,885,1 192x35
+Custom		focusable=True	enabled=True	292,875,1 208x6
+Custom		focusable=True	enabled=True	292,161,1 208x717
+--- tab walk
+tab1	Pane	[]	24932
+tab2	Button	[Ташкент 10°C Mostly cloudy, High 22°, Low 4°, See full forecast]	24932
+tab3	Button	[See more events]	24932
+tab4	Button	[Widgets: Trending in UEFA Champions League, Final Sporting CP 2 LASK 3, Final Club Brugge 3 Lens 0, See more in UEFA Champions League]	24932
+tab5	Button	[Widgets: Suggested for you, W1DOW -0.10% 837.15, AW01 -0.26% 736.77, USD/INR +0.13% 94.94, See watchlist suggestions]	24932
+tab6	Pane	[Экран блокировки]	24932
+tab7	Button	[Ташкент 10°C Mostly cloudy, High 22°, Low 4°, See full forecast]	24932
+tab8	Button	[See more events]	24932
+tab9	Button	[Widgets: Trending in UEFA Champions League, Final Sporting CP 2 LASK 3, Final Club Brugge 3 Lens 0, See more in UEFA Champions League]	24932
+tab10	Button	[Widgets: Suggested for you, W1DOW -0.10% 837.15, AW01 -0.26% 736.77, USD/INR +0.13% 94.94, See watchlist suggestions]	24932
+tab11	Pane	[Экран блокировки]	24932
+tab12	Button	[Ташкент 10°C Mostly cloudy, High 22°, Low 4°, See full forecast]	24932

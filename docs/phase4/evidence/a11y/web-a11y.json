@@ -1,0 +1,728 @@
+{
+ "contrast": [
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "fg on bg",
+   "fg": "#1b1f23",
+   "bg": "#ffffff",
+   "ratio": 16.58
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "muted on bg",
+   "fg": "#5b6570",
+   "bg": "#ffffff",
+   "ratio": 5.93
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "muted on card",
+   "fg": "#5b6570",
+   "bg": "#f3f5f7",
+   "ratio": 5.43
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "fg on card",
+   "fg": "#1b1f23",
+   "bg": "#f3f5f7",
+   "ratio": 15.17
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "on-accent on accent",
+   "fg": "#ffffff",
+   "bg": "#1E4FA3",
+   "ratio": 7.77
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "accent on bg",
+   "fg": "#1E4FA3",
+   "bg": "#ffffff",
+   "ratio": 7.77
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "accent on card",
+   "fg": "#1E4FA3",
+   "bg": "#f3f5f7",
+   "ratio": 7.11
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "err on bg",
+   "fg": "#b3261e",
+   "bg": "#ffffff",
+   "ratio": 6.54
+  },
+  {
+   "surface": "shell",
+   "mode": "light",
+   "pair": "line on bg",
+   "fg": "#d5dae0",
+   "bg": "#ffffff",
+   "ratio": 1.41
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "fg on bg",
+   "fg": "#e8ebee",
+   "bg": "#14181c",
+   "ratio": 14.91
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "muted on bg",
+   "fg": "#9aa5b1",
+   "bg": "#14181c",
+   "ratio": 7.13
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "muted on card",
+   "fg": "#9aa5b1",
+   "bg": "#1e242a",
+   "ratio": 6.26
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "fg on card",
+   "fg": "#e8ebee",
+   "bg": "#1e242a",
+   "ratio": 13.09
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "on-accent on accent",
+   "fg": "#101828",
+   "bg": "#6C9BF0",
+   "ratio": 6.41
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "accent on bg",
+   "fg": "#6C9BF0",
+   "bg": "#14181c",
+   "ratio": 6.44
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "accent on card",
+   "fg": "#6C9BF0",
+   "bg": "#1e242a",
+   "ratio": 5.66
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "err on bg",
+   "fg": "#f2b8b5",
+   "bg": "#14181c",
+   "ratio": 10.45
+  },
+  {
+   "surface": "shell",
+   "mode": "dark",
+   "pair": "line on bg",
+   "fg": "#333b44",
+   "bg": "#14181c",
+   "ratio": 1.57
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "fg on bg",
+   "fg": "#1b2528",
+   "bg": "#f4f6f7",
+   "ratio": 14.44
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "fg on card",
+   "fg": "#1b2528",
+   "bg": "#ffffff",
+   "ratio": 15.65
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "muted on bg",
+   "fg": "#4d5b60",
+   "bg": "#f4f6f7",
+   "ratio": 6.5
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "muted on card",
+   "fg": "#4d5b60",
+   "bg": "#ffffff",
+   "ratio": 7.04
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "on-accent on accent",
+   "fg": "#ffffff",
+   "bg": "#1e4fa3",
+   "ratio": 7.77
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "accent on card",
+   "fg": "#1e4fa3",
+   "bg": "#ffffff",
+   "ratio": 7.77
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "focus on card",
+   "fg": "#1d4ed8",
+   "bg": "#ffffff",
+   "ratio": 6.7
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "focus on bg",
+   "fg": "#1d4ed8",
+   "bg": "#f4f6f7",
+   "ratio": 6.18
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "warn-fg on warn-bg",
+   "fg": "#5c4300",
+   "bg": "#fff4d6",
+   "ratio": 8.49
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "err-fg on err-bg",
+   "fg": "#7a1212",
+   "bg": "#fde8e8",
+   "ratio": 9.3
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "ok-fg on card",
+   "fg": "#14532d",
+   "bg": "#ffffff",
+   "ratio": 9.11
+  },
+  {
+   "surface": "converter",
+   "mode": "light",
+   "pair": "line on card",
+   "fg": "#c9d2d5",
+   "bg": "#ffffff",
+   "ratio": 1.54
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "fg on bg",
+   "fg": "#e8eeef",
+   "bg": "#121819",
+   "ratio": 15.3
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "fg on card",
+   "fg": "#e8eeef",
+   "bg": "#1b2325",
+   "ratio": 13.63
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "muted on bg",
+   "fg": "#aebbbf",
+   "bg": "#121819",
+   "ratio": 9.11
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "muted on card",
+   "fg": "#aebbbf",
+   "bg": "#1b2325",
+   "ratio": 8.11
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "on-accent on accent",
+   "fg": "#101828",
+   "bg": "#6c9bf0",
+   "ratio": 6.41
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "accent on card",
+   "fg": "#6c9bf0",
+   "bg": "#1b2325",
+   "ratio": 5.77
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "focus on card",
+   "fg": "#8ab4ff",
+   "bg": "#1b2325",
+   "ratio": 7.65
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "focus on bg",
+   "fg": "#8ab4ff",
+   "bg": "#121819",
+   "ratio": 8.59
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "warn-fg on warn-bg",
+   "fg": "#f6dc8f",
+   "bg": "#3a2f0b",
+   "ratio": 9.77
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "err-fg on err-bg",
+   "fg": "#ffc9c9",
+   "bg": "#3d1717",
+   "ratio": 10.84
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "ok-fg on card",
+   "fg": "#8de0a6",
+   "bg": "#1b2325",
+   "ratio": 10.16
+  },
+  {
+   "surface": "converter",
+   "mode": "dark",
+   "pair": "line on card",
+   "fg": "#3a474a",
+   "bg": "#1b2325",
+   "ratio": 1.66
+  }
+ ],
+ "walks": {
+  "shell-light": [
+   {
+    "id": "search",
+    "tag": "input[search]",
+    "name": "Поиск среди недавних файлов",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 234,
+    "h": 37,
+    "visible": true
+   },
+   {
+    "id": "lang",
+    "tag": "select[select-one]",
+    "name": "Язык English Русский Oʻzbekcha Ўзбекча",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 115,
+    "h": 38,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Открыть PDF",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "open-file",
+    "tag": "button[button]",
+    "name": "Открыть файл",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 140,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "convert",
+    "tag": "a",
+    "name": "Hoshiya Конвертер",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 177,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "(none: focus left the page or sits on body)",
+    "name": "",
+    "ring": true,
+    "w": 99,
+    "h": 99
+   }
+  ],
+  "converter-light": [
+   {
+    "id": "lang",
+    "tag": "select[select-one]",
+    "name": "Язык",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 170,
+    "h": 42,
+    "visible": true
+   },
+   {
+    "id": "conn-h",
+    "tag": "summary",
+    "name": "Подключение к серверу",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 830,
+    "h": 24,
+    "visible": true
+   },
+   {
+    "id": "pick",
+    "tag": "input[file]",
+    "name": "Выберите файлы",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 1,
+    "h": 1,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "(none: focus left the page or sits on body)",
+    "name": "",
+    "ring": true,
+    "w": 99,
+    "h": 99
+   }
+  ],
+  "shell-dark": [
+   {
+    "id": "search",
+    "tag": "input[search]",
+    "name": "Поиск среди недавних файлов",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 234,
+    "h": 37,
+    "visible": true
+   },
+   {
+    "id": "lang",
+    "tag": "select[select-one]",
+    "name": "Язык English Русский Oʻzbekcha Ўзбекча",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 115,
+    "h": 38,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Новый",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Открыть PDF",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "open-file",
+    "tag": "button[button]",
+    "name": "Открыть файл",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 140,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "button[button]",
+    "name": "Использовать",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 193,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "convert",
+    "tag": "a",
+    "name": "Hoshiya Конвертер",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 177,
+    "h": 41,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "(none: focus left the page or sits on body)",
+    "name": "",
+    "ring": true,
+    "w": 99,
+    "h": 99
+   }
+  ],
+  "converter-dark": [
+   {
+    "id": "lang",
+    "tag": "select[select-one]",
+    "name": "Язык",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 170,
+    "h": 42,
+    "visible": true
+   },
+   {
+    "id": "conn-h",
+    "tag": "summary",
+    "name": "Подключение к серверу",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 830,
+    "h": 24,
+    "visible": true
+   },
+   {
+    "id": "pick",
+    "tag": "input[file]",
+    "name": "Выберите файлы",
+    "ring": true,
+    "ringPx": "3px solid",
+    "w": 1,
+    "h": 1,
+    "visible": true
+   },
+   {
+    "id": "",
+    "tag": "(none: focus left the page or sits on body)",
+    "name": "",
+    "ring": true,
+    "w": 99,
+    "h": 99
+   }
+  ]
+ },
+ "landmarks": {
+  "lang": "ru",
+  "main": true,
+  "h1": true,
+  "title": "Hoshiya Конвертер"
+ },
+ "editorFrame": {
+  "ariaNodes": 0,
+  "bodyChildren": [
+   "canvas#wordcraft_canvas",
+   "input"
+  ],
+  "canvas": 1,
+  "tabbable": [
+   "canvas:0"
+  ]
+ },
+ "editorAria": "- textbox",
+ "tabIntoEditor": [
+  "iframe:/docs/?host=parent"
+ ],
+ "afterEscape": {
+  "editorVisible": true,
+  "active": "iframe"
+ },
+ "afterShiftTab": "iframe"
+}

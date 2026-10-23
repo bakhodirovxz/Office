@@ -1,0 +1,64 @@
+﻿Custom		focusable=True	enabled=True	34,57,1 440x37
+Text	AutoSave	focusable=False	enabled=True	42,67,52x17
+Custom		focusable=True	enabled=True	100,67,30x16
+Custom		focusable=True	enabled=True	142,62,26x26
+Custom		focusable=True	enabled=True	174,62,26x26
+Custom		focusable=True	enabled=True	206,62,26x26
+Custom		focusable=True	enabled=True	238,62,14x26
+Custom		focusable=True	enabled=True	258,62,26x26
+Custom		focusable=True	enabled=True	290,62,26x26
+Custom		focusable=True	enabled=True	1 438,62,28x26
+Custom		focusable=True	enabled=True	1 359,64,72x23
+Custom		focusable=True	enabled=True	1 325,62,28x26
+CheckBox	Dark Mode	focusable=True	enabled=True	1 291,62,28x26
+Button	Calibri	focusable=True	enabled=True	54,107,150x24
+Button	11	focusable=True	enabled=True	206,107,52x24
+Button	Bold	focusable=True	enabled=True	260,105,28x28
+Button	Italic	focusable=True	enabled=True	290,105,28x28
+Button	Underline	focusable=True	enabled=True	320,105,28x28
+Button	Font Color	focusable=True	enabled=True	350,105,28x28
+Button	Font Color ▾	focusable=True	enabled=True	378,105,14x28
+Button	Fill Color	focusable=True	enabled=True	394,105,28x28
+Button	Fill Color ▾	focusable=True	enabled=True	422,105,14x28
+Button	Borders	focusable=True	enabled=True	438,105,28x28
+Button	Borders ▾	focusable=True	enabled=True	466,105,14x28
+Button	Align Left	focusable=True	enabled=True	495,105,28x28
+Button	Center	focusable=True	enabled=True	525,105,28x28
+Button	Align Right	focusable=True	enabled=True	555,105,28x28
+Button	Wrap Text	focusable=True	enabled=True	585,105,28x28
+Button	Merge & Center	focusable=True	enabled=True	615,105,28x28
+Button	General	focusable=True	enabled=True	658,107,150x24
+Button	Insert	focusable=True	enabled=True	823,105,42x28
+Button	Delete	focusable=True	enabled=True	867,105,42x28
+Button	AutoSum	focusable=True	enabled=True	924,105,28x28
+Button	Sort	focusable=True	enabled=True	954,105,42x28
+Button	Filter	focusable=True	enabled=True	998,105,28x28
+Button	Freeze Panes	focusable=True	enabled=True	1 041,105,42x28
+Button	Show Formulas	focusable=True	enabled=True	1 085,105,28x28
+Button	Print	focusable=True	enabled=True	1 128,105,28x28
+Button	Transliterate	focusable=True	enabled=True	1 158,105,42x28
+Button	Full ribbon	focusable=True	enabled=True	1 361,105,92x28
+Edit		focusable=True	enabled=True	48,151,96x17
+Custom		focusable=True	enabled=True	144,152,14x16
+Custom		focusable=True	enabled=True	168,149,22x22
+Custom		focusable=True	enabled=True	194,149,22x22
+Custom		focusable=True	enabled=True	220,149,26x22
+Text	Shahar	focusable=True	enabled=True	260,151,39x17
+Custom		focusable=True	enabled=True	254,148,1 188x24
+Custom		focusable=True	enabled=True	1 446,149,20x22
+Text	Ready	focusable=False	enabled=True	46,936,33x17
+Text	100%	focusable=True	enabled=True	1 431,936,30x17
+Custom		focusable=True	enabled=True	1 403,935,18x18
+Slider		focusable=True	enabled=True	1 297,933,100x22
+Custom		focusable=True	enabled=True	1 273,935,18x18
+Custom		focusable=True	enabled=True	1 231,934,26x20
+Custom		focusable=True	enabled=True	1 199,934,26x20
+Custom		focusable=True	enabled=True	1 167,934,26x20
+Custom		focusable=True	enabled=True	42,903,24x24
+Custom		focusable=True	enabled=True	66,903,24x24
+Button	All sheets	focusable=True	enabled=True	90,903,24x24
+Custom		focusable=True	enabled=True	122,905,80x30
+Custom		focusable=True	enabled=True	939,902,26x26
+Custom		focusable=True	enabled=True	973,908,486x14
+Custom		focusable=True	enabled=True	34,175,1 426x724
+Custom		focusable=True	enabled=True	1 460,196,14x703

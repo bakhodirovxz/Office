@@ -1,0 +1,110 @@
+﻿Custom		focusable=True	enabled=True	248,92,1 422x37
+Text	Avtosaqlash	focusable=False	enabled=True	248,103,66x14
+Custom		focusable=True	enabled=True	316,102,30x16
+Custom		focusable=True	enabled=True	356,98,26x24
+Custom		focusable=True	enabled=True	384,98,26x24
+Custom		focusable=True	enabled=True	426,98,26x24
+Custom		focusable=True	enabled=True	454,98,26x24
+Custom		focusable=True	enabled=True	482,98,26x24
+Custom		focusable=True	enabled=True	510,98,26x24
+Button	Hisob	focusable=True	enabled=True	1 644,97,26x26
+Custom		focusable=True	enabled=True	1 374,97,260x26
+Button	01-split-runs — Saqlandi	focusable=True	enabled=True	882,97,153x26
+Button	Tahrirlash	focusable=True	enabled=True	1 563,133,106x22
+Button	Izohlar	focusable=True	enabled=True	1 483,133,74x22
+Button	Fayl	focusable=True	enabled=True	248,130,42x30
+Button	Asosiy	focusable=True	enabled=True	292,130,58x30
+Button	Kiritish	focusable=True	enabled=True	352,130,59x30
+Button	Hujjat	focusable=True	enabled=True	414,130,52x30
+Custom		focusable=True	enabled=True	249,165,1 422x83
+Button	Qoʻyish (⌘V)	focusable=True	enabled=True	249,165,62x66
+Button	Kesib olish	focusable=True	enabled=False	312,165,88x22
+Button	Nusxalash	focusable=True	enabled=True	312,187,86x22
+Button	Formatni nusxalash	focusable=True	enabled=True	312,209,68x22
+Custom		focusable=True	enabled=True	389,234,11x11
+Edit		focusable=True	enabled=True	414,165,134x21
+Custom		focusable=True	enabled=True	548,165,16x21
+Edit		focusable=True	enabled=True	565,165,36x21
+Custom		focusable=True	enabled=True	601,165,16x21
+Button	Shrift oʻlchamini oshirish	focusable=True	enabled=True	621,165,24x22
+Button	Shrift oʻlchamini kamaytirish	focusable=True	enabled=True	646,165,24x22
+Button	Harf registri	focusable=True	enabled=True	671,165,34x22
+Button	Barcha formatlashni tozalash	focusable=True	enabled=True	706,165,24x22
+Button	Fonetik izoh	focusable=True	enabled=True	731,165,24x22
+Button	Qalin	focusable=True	enabled=True	414,190,24x22
+Button	Kursiv	focusable=True	enabled=True	439,190,24x22
+Button	Tagi chizilgan	focusable=True	enabled=True	464,190,24x22
+Custom		focusable=True	enabled=True	489,190,11x22
+Button	Ustidan chizilgan	focusable=True	enabled=True	501,190,24x22
+Button	Quyi indeks	focusable=True	enabled=True	526,190,24x22
+Button	Yuqori indeks	focusable=True	enabled=True	551,190,24x22
+Button	Belgi chegarasi	focusable=True	enabled=True	576,190,24x22
+Button	Belgilarni oʻrab olish	focusable=True	enabled=True	601,190,24x22
+Button	Matn effektlari va tipografiya	focusable=True	enabled=True	630,190,34x22
+Button	Matnni ajratish rangi	focusable=True	enabled=True	665,190,24x22
+Custom		focusable=True	enabled=True	690,190,11x22
+Button	Shrift rangi	focusable=True	enabled=True	702,190,24x22
+Custom		focusable=True	enabled=True	727,190,11x22
+Custom		focusable=True	enabled=True	743,234,11x11
+Button	Markerlar	focusable=True	enabled=True	768,165,24x22
+Custom		focusable=True	enabled=True	793,165,11x22
+Button	Raqamlash	focusable=True	enabled=True	805,165,24x22
+Custom		focusable=True	enabled=True	830,165,11x22
+Button	Koʻp darajali roʻyxat	focusable=True	enabled=True	842,165,24x22
+Custom		focusable=True	enabled=True	867,165,11x22
+Button	Chekinishni kamaytirish	focusable=True	enabled=True	883,165,24x22
+Button	Chekinishni oshirish	focusable=True	enabled=True	908,165,24x22
+Button	Saralash	focusable=True	enabled=True	937,165,24x22
+Button	Koʻrsatish/yashirish ¶	focusable=True	enabled=True	962,165,24x22
+Button	Chapga tekislash	focusable=True	enabled=True	768,190,24x22
+Button	Markaz	focusable=True	enabled=True	793,190,24x22
+Button	Oʻngga tekislash	focusable=True	enabled=True	818,190,24x22
+Button	Kenglik boʻyicha	focusable=True	enabled=True	843,190,24x22
+Button	Matn yoʻnalishi: chapdan oʻngga	focusable=True	enabled=True	872,190,24x22
+Button	Matn yoʻnalishi: oʻngdan chapga	focusable=True	enabled=True	897,190,24x22
+Button	Satr va xatboshi oraligʻi	focusable=True	enabled=True	926,190,34x22
+Button	Soyalash	focusable=True	enabled=True	961,190,24x22
+Custom		focusable=True	enabled=True	986,190,11x22
+Button	Chegaralar	focusable=True	enabled=True	998,190,24x22
+Custom		focusable=True	enabled=True	1 023,190,11x22
+Custom		focusable=True	enabled=True	1 022,234,11x11
+Button	Sarlavha 1	focusable=True	enabled=True	1 050,168,74x60
+Button	Sarlavha	focusable=True	enabled=True	1 126,168,74x60
+Button	Kichik sarlavha	focusable=True	enabled=True	1 202,168,74x60
+Custom		focusable=True	enabled=True	1 277,167,14x20
+Custom		focusable=True	enabled=True	1 277,187,14x20
+Custom		focusable=True	enabled=True	1 277,208,14x20
+Custom		focusable=True	enabled=True	1 281,234,11x11
+Button	Topish	focusable=True	enabled=True	1 306,165,76x22
+Button	Almashtirish	focusable=True	enabled=True	1 306,187,96x22
+Button	Tanlash	focusable=True	enabled=True	1 306,209,81x22
+Custom		focusable=True	enabled=True	1 416,165,107x66
+Custom		focusable=True	enabled=True	1 536,165,58x66
+Button	Sahifa 1 / 1	focusable=True	enabled=True	253,991,57x16
+Button	25 ta soʻz	focusable=True	enabled=True	324,991,53x16
+Button	Ruscha	focusable=True	enabled=True	392,991,40x16
+Custom		focusable=True	enabled=True	1 629,991,37x16
+Custom		focusable=True	enabled=True	1 607,990,18x18
+Slider		focusable=True	enabled=True	1 493,988,110x22
+Custom		focusable=True	enabled=True	1 471,990,18x18
+Button	Veb-maket	focusable=True	enabled=True	1 435,989,22x20
+Button	Bosma maket	focusable=True	enabled=True	1 409,989,22x20
+Button	Oʻqish rejimi	focusable=True	enabled=True	1 383,989,22x20
+Button	Fokus	focusable=True	enabled=True	1 313,989,58x20
+Document	01-split-runs	focusable=True	enabled=True	262,276,1 404x1 158
+ Text		focusable=False	enabled=True	∞,∞,-∞x-∞
+ Group		focusable=False	enabled=True	∞,∞,-∞x-∞
+ Group		focusable=False	enabled=True	∞,∞,-∞x-∞
+ Group		focusable=False	enabled=True	∞,∞,-∞x-∞
+ Group		focusable=False	enabled=True	∞,∞,-∞x-∞
+ Group		focusable=False	enabled=True	∞,∞,-∞x-∞
+ScrollBar		focusable=False	enabled=True	1 670,276,10x710
+Custom		focusable=True	enabled=True	240,254,22x22
+Custom		focusable=True	enabled=True	670,258,13x15
+Custom		focusable=True	enabled=True	1 301,258,13x15
+Custom		focusable=True	enabled=True	684,258,615x15
+Custom		focusable=True	enabled=True	674,264,12x12
+Custom		focusable=True	enabled=True	674,256,12x10
+Custom		focusable=True	enabled=True	1 298,264,12x12
+Custom		focusable=True	enabled=True	244,365,15x8
+Custom		focusable=True	enabled=True	244,1 337,15x8

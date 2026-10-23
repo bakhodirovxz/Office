@@ -1,0 +1,67 @@
+﻿Custom		focusable=True	enabled=True	42,57,1 422x37
+Button	Главная	focusable=True	enabled=True	42,61,28x28
+TabItem	form.pdf	focusable=True	enabled=True	74,57,117x37
+Custom		focusable=True	enabled=True	165,65,20x20
+Button	Открыть	focusable=True	enabled=True	199,60,93x30
+Button	Тема оформления: Светло-серый	focusable=True	enabled=True	1 436,61,28x28
+Button	Горячие клавиши	focusable=True	enabled=True	1 404,61,28x28
+Button	Меню	focusable=True	enabled=True	45,103,76x30
+Button	Все инструменты	focusable=True	enabled=True	139,96,141x48
+Button	Чтение	focusable=True	enabled=True	283,96,70x48
+Button	Редактирование	focusable=True	enabled=True	355,96,132x48
+Button	Конвертация	focusable=True	enabled=True	490,96,109x48
+Button	Электронная подпись	focusable=True	enabled=True	601,96,169x48
+Button	Печать (Ctrl+P)	focusable=True	enabled=True	1 431,104,32x32
+Button	Сохранить (Ctrl+S)	focusable=True	enabled=True	1 395,104,32x32
+Button	Свойства документа (Ctrl+D)	focusable=True	enabled=True	1 359,104,32x32
+Button	Найти инструменты и команды	focusable=True	enabled=True	1 087,104,260x32
+Button	Комментарии	focusable=True	enabled=True	1 434,152,34x34
+Button	Закладки	focusable=True	enabled=True	1 434,190,34x34
+Button	Миниатюры страниц	focusable=True	enabled=True	1 434,228,34x34
+Button	Поля формы	focusable=True	enabled=True	1 434,266,34x34
+Button	Слои	focusable=True	enabled=True	1 434,304,34x34
+Button	Вложения	focusable=True	enabled=True	1 434,342,34x34
+Button	Подписи	focusable=True	enabled=True	1 434,380,34x34
+Button	Теги	focusable=True	enabled=True	1 434,418,34x34
+Button	Уменьшить (Ctrl+−)	focusable=True	enabled=True	1 435,936,32x32
+Button	Увеличить (Ctrl++)	focusable=True	enabled=True	1 435,902,32x32
+Button	Отображение страниц: Одна страница	focusable=True	enabled=True	1 435,868,32x32
+Button	Повернуть вид по часовой стрелке (Ctrl+Shift++)	focusable=True	enabled=True	1 435,834,32x32
+Button	Переключить по странице / по ширине	focusable=True	enabled=True	1 435,800,32x32
+Edit	Масштаб	focusable=True	enabled=True	1 434,784,34x13
+Button	Следующая страница	focusable=True	enabled=True	1 436,746,30x30
+Button	Предыдущая страница	focusable=True	enabled=True	1 436,714,30x30
+Button	Следующий вид (Ctrl+])	focusable=True	enabled=False	1 436,682,30x30
+Button	Предыдущий вид (Ctrl+[)	focusable=True	enabled=False	1 436,650,30x30
+Text	1	focusable=False	enabled=True	1 448,635,4x13
+Edit		focusable=True	enabled=True	1 435,609,32x23
+TabItem	Инструменты	focusable=True	enabled=True	34,143,105x26
+Text	Все инструменты	focusable=False	enabled=True	49,182,212x26
+Button	Закрыть панель	focusable=True	enabled=True	269,182,26x26
+Button	Экспортировать PDF	focusable=True	enabled=True	49,232,246x34
+Button	Заполнить и подписать	focusable=True	enabled=True	49,272,246x34
+Button	Редактировать PDF	focusable=True	enabled=True	49,312,246x34
+Button	Создать PDF	focusable=True	enabled=True	49,352,246x34
+Button	Объединить файлы	focusable=True	enabled=True	49,392,246x34
+Button	Организовать страницы	focusable=True	enabled=True	49,432,246x34
+Button	Добавить комментарии	focusable=True	enabled=True	49,472,246x34
+Button	Сканирование и OCR	focusable=True	enabled=True	49,512,246x34
+Button	Защитить PDF	focusable=True	enabled=True	49,552,246x34
+Button	Скрыть в PDF	focusable=True	enabled=True	49,592,246x34
+Button	Сжать PDF	focusable=True	enabled=True	49,632,246x34
+Button	Подготовить форму	focusable=True	enabled=True	49,672,246x34
+Button	Добавить штамп	focusable=True	enabled=True	49,712,246x34
+Button	Использовать сертификат	focusable=True	enabled=True	49,752,246x34
+Text	Показать больше	focusable=True	enabled=True	49,796,112x16
+Button	Закрыть	focusable=True	enabled=True	1 391,153,22x22
+Button	Выделять поля	focusable=True	enabled=True	1 264,150,119x28
+Text	Этот документ содержит 5 интерактивных полей формы.	focusable=False	enabled=True	348,156,365x16
+Custom		focusable=True	enabled=True	310,191,1 117x1 358
+ScrollBar		focusable=False	enabled=True	1 419,191,8x786
+Separator	Изменить размеры панелей	focusable=True	enabled=True	303,143,10x834
+Button	Выделение (V)	focusable=True	enabled=True	331,212,32x32
+Button	Рука (H)	focusable=True	enabled=True	331,246,32x32
+Button	Добавить стикер	focusable=True	enabled=True	331,280,32x32
+Button	Выделить	focusable=True	enabled=True	331,314,32x32
+Button	Рисовать	focusable=True	enabled=True	331,348,32x32
+Button	Заполнить и подписать	focusable=True	enabled=True	331,382,32x32
