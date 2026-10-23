@@ -42,5 +42,10 @@ rfd = { version = "0.17", default-features = false }
 name = "suite-fake-editor"
 path = "tests/support/fake_editor.rs"
 
+[build-dependencies]
+# the product name and version info come from brand/brand.toml, the icon from brand/logo
+toml = { version = "1", default-features = false, features = ["parse"] }
+winresource = "0.1"
+
 [dev-dependencies]
 zip = { version = "9", default-features = false, features = ["deflate"] }

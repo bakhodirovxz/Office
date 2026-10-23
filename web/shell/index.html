@@ -4,12 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
+<link rel="icon" href="shell/favicon.ico" sizes="48x48">
+<link rel="icon" href="shell/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="shell/apple-touch-icon.png">
+<link rel="manifest" href="shell/site.webmanifest">
+<meta name="theme-color" content="#1E4FA3">
 <link rel="stylesheet" href="shell/shell.css">
 </head>
 <body>
 <div id="home">
   <header class="bar">
-    <h1 id="product"></h1>
+    <picture class="logo"><source media="(prefers-color-scheme: dark)" srcset="shell/logo-dark.svg"><img src="shell/logo-light.svg" alt="" height="32"></picture>
+    <h1 id="product" class="sr"></h1>
     <label class="search"><span class="sr" data-i18n="home.search"></span>
       <input id="search" type="search" autocomplete="off" data-i18n-ph="home.search"></label>
     <label class="lang"><span class="sr" data-i18n="ui.language"></span>

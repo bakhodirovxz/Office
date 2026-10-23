@@ -3,13 +3,13 @@
 
 :root {
   --bg: #f4f6f7; --card: #ffffff; --fg: #1b2528; --muted: #4d5b60; --line: #c9d2d5;
-  --accent: #0f766e; --on-accent: #ffffff; --warn-bg: #fff4d6; --warn-fg: #5c4300; --err-bg: #fde8e8; --err-fg: #7a1212;
+  --accent: #1e4fa3; --on-accent: #ffffff; --warn-bg: #fff4d6; --warn-fg: #5c4300; --err-bg: #fde8e8; --err-fg: #7a1212;
   --ok-fg: #14532d; --focus: #1d4ed8;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121819; --card: #1b2325; --fg: #e8eeef; --muted: #aebbbf; --line: #3a474a;
-    --accent: #5ec4b6; --on-accent: #08201d; --warn-bg: #3a2f0b; --warn-fg: #f6dc8f; --err-bg: #3d1717; --err-fg: #ffc9c9;
+    --accent: #6c9bf0; --on-accent: #101828; --warn-bg: #3a2f0b; --warn-fg: #f6dc8f; --err-bg: #3d1717; --err-fg: #ffc9c9;
     --ok-fg: #8de0a6; --focus: #8ab4ff;
   }
 }

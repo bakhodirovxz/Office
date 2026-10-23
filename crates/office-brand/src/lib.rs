@@ -41,6 +41,10 @@ pub struct Brand {
     pub accent_light: [u8; 3],
     pub accent_dark: [u8; 3],
     pub icon_fg: [u8; 3],
+    /// The margin line of the mark: the accent on the left edge of every app icon.
+    pub accent_margin: [u8; 3],
+    /// Text colour, and the dark surface the dark accent is checked against.
+    pub ink: [u8; 3],
     /// community, share, zotero, update_check, upstream_links, contributors_tab
     pub chrome: [bool; 6],
     pub links: [String; 3],
@@ -157,7 +161,17 @@ impl Brand {
             &["id", "name", "version", "vendor", "copyright"],
         )?;
         let c = table(root, "colors")?;
-        only_keys(c, "[colors]", &["accent_light", "accent_dark", "icon_fg"])?;
+        only_keys(
+            c,
+            "[colors]",
+            &[
+                "accent_light",
+                "accent_dark",
+                "icon_fg",
+                "accent_margin",
+                "ink",
+            ],
+        )?;
         let ch = table(root, "chrome")?;
         let keys = [
             "community",
@@ -260,6 +274,11 @@ impl Brand {
                 "[colors].accent_dark",
             )?,
             icon_fg: hex(&string(c, "[colors]", "icon_fg")?, "[colors].icon_fg")?,
+            accent_margin: hex(
+                &string(c, "[colors]", "accent_margin")?,
+                "[colors].accent_margin",
+            )?,
+            ink: hex(&string(c, "[colors]", "ink")?, "[colors].ink")?,
             chrome,
             links: [
                 string(l, "[links]", "website")?,
@@ -337,6 +356,19 @@ impl Brand {
                 "colors.accent_light: contrast {r:.2} against icon_fg < 4.5"
             ));
         }
+        let r = contrast(self.accent_dark, self.ink);
+        if r < 4.5 {
+            return Err(format!(
+                "colors.accent_dark: contrast {r:.2} against ink < 4.5"
+            ));
+        }
+        // the margin line is a graphic on the accent: WCAG 1.4.11 asks for 3:1
+        let r = contrast(self.accent_margin, self.accent_light);
+        if r < 3.0 {
+            return Err(format!(
+                "colors.accent_margin: contrast {r:.2} against accent_light < 3"
+            ));
+        }
         let mut seen = BTreeSet::new();
         for a in &self.apps {
             for v in [&a.bin, &a.app_id, &a.aumid, &a.data_dir] {
@@ -392,6 +424,7 @@ impl Brand {
         }
         kv("ACCENT_LIGHT", &h(self.accent_light));
         kv("ACCENT_DARK", &h(self.accent_dark));
+        kv("ACCENT_MARGIN", &h(self.accent_margin));
         let names = [
             "COMMUNITY",
             "SHARE",
@@ -429,41 +462,41 @@ impl Brand {
             }
             fs::write(path, bytes).map_err(|e| format!("{name}: {e}"))
         };
-        let (acc, fg) = (self.accent_light, self.icon_fg);
+        let (acc, fg, mar) = (self.accent_light, self.icon_fg, self.accent_margin);
         w("overlay.env", self.overlay_env(app).as_bytes())?;
         for size in icons::PNG_SIZES {
             w(
                 &format!("icon-{size}.png"),
-                &icons::png_bytes(&render_icon(app.pictogram, size, acc, fg))?,
+                &icons::png_bytes(&render_icon(app.pictogram, size, acc, fg, mar))?,
             )?;
         }
         w(
             "icon.ico",
-            &ico_bytes(app.pictogram, &icons::ICO_SIZES, acc, fg)?,
+            &ico_bytes(app.pictogram, &icons::ICO_SIZES, acc, fg, mar)?,
         )?;
         w(
             "favicon.ico",
-            &ico_bytes(app.pictogram, &[16, 32, 48], acc, fg)?,
+            &ico_bytes(app.pictogram, &[16, 32, 48], acc, fg, mar)?,
         )?;
         w(
             "icon-document.ico",
-            &ico_bytes(Pictogram::Page, &icons::ICO_SIZES, acc, fg)?,
+            &ico_bytes(Pictogram::Page, &icons::ICO_SIZES, acc, fg, mar)?,
         )?;
         w(
             "logo-128.rgba",
-            &icons::rgba_bytes(&render_icon(app.pictogram, 128, acc, fg)),
+            &icons::rgba_bytes(&render_icon(app.pictogram, 128, acc, fg, mar)),
         )?;
         w(
             "icon-192.png",
-            &icons::png_bytes(&render_icon(app.pictogram, 192, acc, fg))?,
+            &icons::png_bytes(&render_icon(app.pictogram, 192, acc, fg, mar))?,
         )?;
         w(
             "apple-touch-icon.png",
-            &icons::png_bytes(&render_icon(app.pictogram, 180, acc, fg))?,
+            &icons::png_bytes(&render_icon(app.pictogram, 180, acc, fg, mar))?,
         )?;
         w(
             "icon-maskable-512.png",
-            &icons::png_bytes(&icons::render_maskable(app.pictogram, 512, acc, fg))?,
+            &icons::png_bytes(&icons::render_maskable(app.pictogram, 512, acc, fg, mar))?,
         )?;
         for (dst, src) in [
             ("fallback-sans.ttf", &self.fallback_sans),
@@ -527,10 +560,17 @@ mod tests {
             Pictogram::Page,
         ] {
             for s in icons::PNG_SIZES {
-                let pm = render_icon(p, s, [15, 118, 110], [255, 255, 255]);
+                let pm = render_icon(p, s, [30, 79, 163], [255, 255, 255], [233, 162, 59]);
                 assert_eq!(pm.width(), s);
             }
-            let ico = ico_bytes(p, &icons::ICO_SIZES, [15, 118, 110], [255, 255, 255]).unwrap();
+            let ico = ico_bytes(
+                p,
+                &icons::ICO_SIZES,
+                [30, 79, 163],
+                [255, 255, 255],
+                [233, 162, 59],
+            )
+            .unwrap();
             assert_eq!(&ico[..4], &[0, 0, 1, 0]);
         }
     }

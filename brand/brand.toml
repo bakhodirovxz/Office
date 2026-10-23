@@ -73,11 +73,14 @@ data_dir = "Hoshiya/Convert"
 pictogram = "page"
 names = { en = "Hoshiya Convert", ru = "Hoshiya Конвертер", uz-Latn = "Hoshiya Konvertor", uz-Cyrl = "Ҳошия Конвертор" }
 
-# Placeholders until the owner chooses (ADR App. B).
+# The Hoshiya logo pack (brand/logo/README.txt). accent_dark is the accent on a dark surface (checked against ink, 4.5:1);
+# accent_margin is the mark's orange bar, drawn down the left edge of every app icon (checked against accent_light, 3:1).
 [colors]
-accent_light = "#0F766E"
-accent_dark = "#5EC4B6"
+accent_light = "#1E4FA3"
+accent_dark = "#6C9BF0"
 icon_fg = "#FFFFFF"
+accent_margin = "#E9A23B"
+ink = "#101828"
 
 # Upstream community chrome. All off in our builds.
 [chrome]

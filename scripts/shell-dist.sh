@@ -15,6 +15,11 @@ if [ "$check" = 0 ]; then
   rm -rf "$SHELL_OUT"; mkdir -p "$SHELL_OUT"
   cp -r web/shell/. "$SHELL_OUT/"
   cp assets/fonts/fallback/NotoSans-Regular-uz.ttf "$SHELL_OUT/"
+  # the logo pack is the only source of brand art (brand/logo): favicon, touch icon, PWA icons, header lockups
+  L=brand/logo
+  cp "$L/web/favicon.ico" "$L/web/favicon.svg" "$L/web/apple-touch-icon.png" "$L/web/icon-192.png" "$L/web/icon-512.png" "$L/web/icon-maskable-512.png" "$SHELL_OUT/"
+  cp "$L/svg/hoshiya-lockup-light.svg" "$SHELL_OUT/logo-light.svg"; cp "$L/svg/hoshiya-lockup-dark.svg" "$SHELL_OUT/logo-dark.svg"
+  sed 's#"/icon#"icon#' "$L/web/site.webmanifest" > "$SHELL_OUT/site.webmanifest"
 fi
 
 bad=0

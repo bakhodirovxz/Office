@@ -1,5 +1,5 @@
-//! Placeholder icon generator: a rounded square in the accent colour with a white pictogram, drawn from one vector
-//! description at every size (strokes are pixel-snapped at 32 px and below). The art is ours, MIT OR Apache-2.0.
+//! App icon generator: a rounded square in the accent colour with a white pictogram and the margin line (the logo
+//! mark's accent) down its left edge, drawn from one vector description at every size (strokes are pixel-snapped at 32 px and below). The art is ours, MIT OR Apache-2.0.
 
 use tiny_skia::{FillRule, Paint, PathBuilder, Pixmap, Rect, Transform};
 
@@ -82,6 +82,11 @@ impl Canvas<'_> {
                 None,
             );
         }
+    }
+
+    /// The margin line of the logo mark (its orange bar), down the left edge, clear of every pictogram.
+    fn margin_line(&mut self, c: [u8; 3]) {
+        self.rect(0.11, 0.22, 0.17, 0.78, c);
     }
 
     fn pictogram(&mut self, p: Pictogram, fg: [u8; 3], bg: [u8; 3]) {
@@ -171,7 +176,13 @@ fn rounded_square(pm: &mut Pixmap, size: f32, c: [u8; 3]) {
 }
 
 /// A rounded square in `accent` with the white pictogram.
-pub fn render_icon(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pixmap {
+pub fn render_icon(
+    p: Pictogram,
+    size: u32,
+    accent: [u8; 3],
+    fg: [u8; 3],
+    margin: [u8; 3],
+) -> Pixmap {
     let mut pm = Pixmap::new(size, size).expect("icon size is non-zero");
     rounded_square(&mut pm, size as f32, accent);
     let mut cv = Canvas {
@@ -181,11 +192,18 @@ pub fn render_icon(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pix
         snap: size <= 32,
     };
     cv.pictogram(p, fg, accent);
+    cv.margin_line(margin);
     pm
 }
 
 /// Full-bleed accent background, pictogram inside the central 80 % (maskable icons keep a safe zone).
-pub fn render_maskable(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) -> Pixmap {
+pub fn render_maskable(
+    p: Pictogram,
+    size: u32,
+    accent: [u8; 3],
+    fg: [u8; 3],
+    margin: [u8; 3],
+) -> Pixmap {
     let mut pm = Pixmap::new(size, size).expect("icon size is non-zero");
     pm.fill(tiny_skia::Color::from_rgba8(
         accent[0], accent[1], accent[2], 255,
@@ -197,6 +215,7 @@ pub fn render_maskable(p: Pictogram, size: u32, accent: [u8; 3], fg: [u8; 3]) ->
         snap: false,
     };
     cv.pictogram(p, fg, accent);
+    cv.margin_line(margin);
     pm
 }
 
@@ -220,10 +239,11 @@ pub fn ico_bytes(
     sizes: &[u32],
     accent: [u8; 3],
     fg: [u8; 3],
+    margin: [u8; 3],
 ) -> Result<Vec<u8>, String> {
     let mut images: Vec<(u32, Vec<u8>)> = Vec::new();
     for &s in sizes {
-        let pm = render_icon(p, s, accent, fg);
+        let pm = render_icon(p, s, accent, fg, margin);
         let data = if s >= 64 {
             png_bytes(&pm)?
         } else {

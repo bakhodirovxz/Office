@@ -448,6 +448,7 @@ pub fn page_assets(root: &Path, mode: Mode) -> Result<(String, Vec<u8>), String>
         128,
         brand.accent_light,
         brand.icon_fg,
+        brand.accent_margin,
     ))?;
     Ok((json, icon))
 }

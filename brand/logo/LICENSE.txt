@@ -1,0 +1,2 @@
+The Hoshiya name and logo are the owner's brand. All rights reserved; usage terms to be decided by the owner.
+This is not MIT OR Apache-2.0 code: the licence of the rest of this repository does not apply to the files in this folder.

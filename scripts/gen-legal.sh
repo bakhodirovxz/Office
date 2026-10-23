@@ -31,7 +31,10 @@ $NAME
 Copyright (c) 2026 $VENDOR.
 Licensed under the MIT License or the Apache License, Version 2.0, at your option
 (LICENSE-MIT, LICENSE-APACHE). This applies to the files of our layer: crates/, xtask/, domains/,
-scripts/, brand/, i18n/ and the patch files in patches/.
+scripts/, brand/ (except brand/logo/), i18n/ and the patch files in patches/.
+
+The $NAME name and logo (brand/logo/) are the owner's brand, not licensed under the terms above: all rights reserved,
+usage terms to be decided by the owner (brand/logo/LICENSE.txt).
 
 $ATTR
 

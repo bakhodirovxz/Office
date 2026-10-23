@@ -604,7 +604,7 @@
     "warning.xls_pdf_chart_page": "Эски .xls форматини очишда диаграммалар йўқолади, шунинг учун PDF файлда саҳифалар шу иш китобининг .xlsx форматида сақланган нусхасидагидан камроқ бўлиши мумкин."
   },
   "uz-Latn-2026": {
-    "app.name": "Hoshiya Konvertor",
+    "app.name": "Hoşiya Konvertor",
     "err.bad_host": "Server bu manzilni rad etdi.",
     "err.bad_multipart": "Yuklaş sörovi notöğri tuzilgan.",
     "err.bad_options": "Parametrlar notöğri.",
