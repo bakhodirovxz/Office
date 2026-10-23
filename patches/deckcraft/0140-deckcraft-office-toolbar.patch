@@ -22,10 +22,10 @@ controls and acts, the two buttons switch modes, the pill clears the tabs at 102
  crates/ui-egui/assets/office_icons.bin     | Bin 0 -> 53155 bytes
  crates/ui-egui/src/lib.rs                  |   7 +-
  crates/ui-egui/src/office_overlay.rs       |  33 ++
- crates/ui-egui/src/office_toolbar.rs       | 459 +++++++++++++++++++++
+ crates/ui-egui/src/office_toolbar.rs       | 463 +++++++++++++++++++++
  crates/ui-egui/src/office_toolbar_tests.rs | 146 +++++++
  crates/ui-egui/src/ribbon.rs               |   2 +-
- 8 files changed, 725 insertions(+), 14 deletions(-)
+ 8 files changed, 729 insertions(+), 14 deletions(-)
  create mode 100644 crates/ui-egui/assets/office_icons.bin
  create mode 100644 crates/ui-egui/src/office_toolbar.rs
  create mode 100644 crates/ui-egui/src/office_toolbar_tests.rs
@@ -480,7 +480,7 @@ new file mode 100644
 index 0000000..ad579d7
 --- /dev/null
 +++ b/crates/ui-egui/src/office_toolbar.rs
-@@ -0,0 +1,459 @@
+@@ -0,0 +1,463 @@
 +// Added by the office toolbar patch queue. MIT OR Apache-2.0.
 +//! The simplified Slides toolbar (PLAN phase 4 WP3, docs/phase4/toolbar-design.md section 5): one row of the controls people
 +//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (desktop); the web build always shows
@@ -732,6 +732,10 @@ index 0000000..ad579d7
 +        main.widget_info(|| WidgetInfo::selected(WidgetType::Button, b.enabled, b.selected, &name));
 +    } else {
 +        main.widget_info(|| WidgetInfo::labeled(WidgetType::Button, b.enabled, &name));
++    }
++    // The split arrow is its own control: a screen reader needs a name for it too.
++    if let Some(a) = &arrow {
++        a.widget_info(|| WidgetInfo::labeled(WidgetType::Button, b.enabled, format!("{name} \u{25be}")));
 +    }
 +    (main.on_hover_text(b.tip), arrow)
 +}

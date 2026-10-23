@@ -250,6 +250,10 @@ fn button(ui: &mut Ui, b: Btn, labels: bool) -> (Response, Option<Response>) {
     } else {
         main.widget_info(|| WidgetInfo::labeled(WidgetType::Button, b.enabled, &name));
     }
+    // The split arrow is its own control: a screen reader needs a name for it too.
+    if let Some(a) = &arrow {
+        a.widget_info(|| WidgetInfo::labeled(WidgetType::Button, b.enabled, format!("{name} \u{25be}")));
+    }
     (main.on_hover_text(b.tip), arrow)
 }
 
