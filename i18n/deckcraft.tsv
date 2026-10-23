@@ -138,7 +138,6 @@ id	context	source_en	uz_latn	uz_latn_status	uz_cyrl	uz_cyrl_status	ru	ru_status	
 1d2b951f47bb		Enter a scheme name.	Sxema nomini kiriting.	reviewed:agent-opus:2026-10-21	Схема номини киритинг.	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:564	
 1d2c3896202a		No presentation is open.	Hech qanday taqdimot ochiq emas.	reviewed:agent-opus:2026-10-18	Ҳеч қандай тақдимот очиқ эмас.	reviewed:agent-opus:2026-10-18		todo		P1	deckcraft	crates/ui-egui/src/backstage.rs:1026	
 1d6f62aa3b7e		A-	A-	reviewed:agent-opus:2026-10-21	A-	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/show.rs:1850	
-1db6423a324a		the copy was not made		todo		todo		todo		P2	deckcraft	crates/ui-egui/src/office_history.rs:173	
 1e152d2e9c33		[Stop Previous Sound]	[Oldingi ovozni toʻxtatish]	reviewed:agent-opus:2026-10-21	[Олдинги овозни тўхтатиш]	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/ribbon.rs:1699	
 1e3c4b158a33		Scale Y	Y boʻyicha masshtab	reviewed:agent-opus:2026-10-21	Y бўйича масштаб	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/panes.rs:683	
 1e8c747cf2b5		With	Nimaga	reviewed:agent-opus:2026-10-21	Нимага	reviewed:agent-opus:2026-10-21		todo		P2	deckcraft	crates/ui-egui/src/dialogs.rs:2105	
