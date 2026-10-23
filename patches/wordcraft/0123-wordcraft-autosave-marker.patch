@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: AutoSave marks its file.save with autosave: true
+
+PLAN WP10: AutoSave runs `file.save` every few seconds while the document is dirty, with the same empty parameters as Ctrl+S.
+The snapshot hook in docs-office must tell the two apart (an explicit save always makes a version, an autosave at most one in
+five minutes), so the timer passes `{"autosave": true}`. `file.save` ignores the key.
+---
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 6b9712d..fb8659c 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -2164,7 +2164,7 @@ impl WordApp {
+     fn autosave_tick(&mut self, now: f64) {
+         if self.autosaves() && self.session.dirty && now - self.last_autosave > 2500.0 && now - self.canvas.caret_visible_since > 1500.0 {
+             self.last_autosave = now;
+-            if let Err(e) = self.session.run("file.save", &json!({})) {
++            if let Err(e) = self.session.run("file.save", &json!({"autosave": true})) {
+                 log::warn!("AutoSave failed: {e}");
+                 self.autosave_path = None;
+                 self.status(i18n::fmt(tl!("AutoSave failed: {error}. Save the document to turn AutoSave back on."), &[("error", &e.to_string())]));
