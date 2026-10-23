@@ -1,67 +1,92 @@
 # Phase 4 integration pass (2026-10-23)
 
-Status: **stopped, not green.** E: reached 0 bytes free during `build all` (the stop rule is 5 GB), so the full gate did not finish.
-This file records what ran, the reds fixed at their root, and what is still owed. Wall times are on a machine that other agents' builds
-shared the whole time (see "Contention").
+Status: **green on HEAD.** Every job of the gate ran and passed (table below). Wall times are real, measured on this PC; the machine was shared with
+other agents' builds for the first part of the day (see "Contention") and idle for the final run.
 
-## Reds from the lane reports, fixed
+## Reds from the lane reports, fixed at the root
 
-| Red | Root cause | Fix (commit) |
+| Red | Root cause | Fix |
 |---|---|---|
-| `lockdiff-docs` | `suite-core` (toml_edit, ron, base64 0.21, ...) is in the domain lock; lockdiff counted its private deps as drift | `xtask/src/domain.rs`: packages only `suite-core` pulls in are counted as ours (a package any other package also needs is still drift); output says "N ours via suite-core"; unit test. docs/sheets/slides: 6 ours, 0 drift (03626b3, clippy fix in a later commit) |
-| `deny root` | `zip 2.6.1` (suite-core dev-dependency): RUSTSEC-2026-0367 / 0368 | `zip` 9 in `crates/suite-core` (the same major as services), two `.name()` call sites adapted; `cargo deny` root, docs, sheets, slides, pdf and services all ok (03626b3, 126a782 for the services lock) |
-| `brand-grep` | a doc comment in `recent.rs:49` carried the working name | comment reworded (03626b3); after the Hoshiya rename 0 hits |
-| `shell.spec.ts` "template cards", "lang uz-Latn-2026" | not reproducible on HEAD: 19 of 19 pass against the current shell, the reviewed templates and fresh `shell-dist` output. The failing run had a stale `dist/shell` copy (it is only refreshed by `scripts/shell-dist.sh`) | no code change; `ci.sh shell` run int3b |
-| cargo deny for the new deps | ron, toml_edit, getrandom, the suite-core path deps and the dictionaries | `deny` job ok for root + 4 domains (13 s, 35 s); services `ci/deny/services.toml` ok (also after the new `winresource`/`toml` build-dependencies); dictionary licences were already in NOTICE (`docs/phase4/licences.md`) |
+| `lockdiff-docs` | `suite-core` (toml_edit, ron, base64 0.21, ...) is in the domain lock; lockdiff counted its private deps as drift | `xtask/src/domain.rs`: packages only `suite-core` pulls in count as ours (a package any other package also needs is still drift); output "N ours via suite-core"; unit test. docs/sheets/slides 6 ours, 0 drift; pdf 0 (03626b3, 6ef6158) |
+| `deny root` | `zip 2.6.1`, a `suite-core` dev-dependency: RUSTSEC-2026-0367 / 0368 | `zip` 9 (the services' major), two `.name()` call sites adapted. deny ok for root, 4 domains and services (03626b3) |
+| `brand-grep` | a doc comment in `recent.rs:49` carried the name | reworded; after the rename 0 hits (03626b3) |
+| `shell.spec.ts` "template cards", "lang uz-Latn-2026" | not reproducible on HEAD: 19 of 19 pass (int3b, again in int5). The failing run used a stale `dist/shell` copy, which only `scripts/shell-dist.sh` refreshes | no code change |
+| cargo deny, new deps | ron, toml_edit, getrandom, suite-core path deps, dictionaries | root + 4 domains + services ok, also after the new `winresource` and `toml` build-dependencies of the host; dictionary licences are in NOTICE and `licences.md` |
 
-Found and fixed while running the gate:
-- `lint`: clippy `redundant_closure` in my lockdiff code (fixed). `layers-*`/`assets-*` for wordcraft, gridcraft and deckcraft failed with
-  "os error 267" because sccache served an `xtask.exe` built in the deleted WP0 sync worktree (the path is baked in with `env!("CARGO_MANIFEST_DIR")`).
-  Rebuilt the three xtasks without sccache (`touch upstream/<app>/xtask/src/main.rs`, `RUSTC_WRAPPER= cargo build -p xtask`); no repo change. Not yet re-run.
-- `convert` fmt: 6 rustfmt hunks in `services/suite-desktop` and `suite-serve` (fixed).
-- `suite-desktop` host test `without_webview2_...` raced a loaded machine (exit hook 4 s): now 15 s.
+Found by running the full gate, and fixed:
+- **gridcraft test `cell_pictures::pictures_fit_current_geometry_and_selection_cannot_erase_them`** (the Sheets lane could not run `test gridcraft`): the simplified
+  toolbar of patch 0140 draws its icons as textured meshes, so the test counted 2 meshes instead of the picture. New carried patch **gridcraft/0142** (1 file,
+  +3/-1, the test's `image_meshes` keeps only meshes that touch the grid), REGISTER row, `verify-queue` ok (45 patches), `register check` ok (a890da1).
+- **pdfcraft `about_dialog_has_contributors_and_models_tabs` and `simplified_chinese_about_tabs_and_credit_controls`; lint `layers-*`/`assets-*` os error 267.**
+  One cause: sccache served build scripts and `xtask.exe` that were compiled in the deleted WP0 worktree (`E:/office-target/p1/sync/wp0-main/...`) with
+  `env!("CARGO_MANIFEST_DIR")` baked in, so they looked for `contributors/` and the xtask workspace in a folder that no longer exists. Fixed in the build
+  environment, not in the repo: `touch` the `build.rs` or xtask `main.rs` and rebuild that package once with `RUSTC_WRAPPER=` empty. After that both tests pass and
+  `test pdfcraft` is green. The poisoned entries are still in the sccache store, so a **fresh checkout elsewhere may hit it again**; clearing `E:/office-cache/sccache`
+  would remove them (not done: it is shared and slow to refill).
+- `lint`: clippy `redundant_closure` in the new lockdiff code (6ef6158); `convert`: rustfmt in the host crates (068bbd8); the host test
+  `without_webview2_...` raced a loaded machine with its 4 s exit hook, now 15 s (8f0f2c2).
 
-## Job table (this tree, runs int1 to int4)
+## Final job table (HEAD a890da1 plus this docs commit; runs int5 and int6, `E:/office-target/p1/ci/int5` and `int6` `summary.md`)
 
-| Job | Result | Wall | Note |
+| Job | Result | Wall | Notes |
 |---|---|---|---|
-| queue | ok | 880 s (int2); 10,279 s (int3) | verify-queue and register check take seconds; the rest was waiting for a build slot behind another agent's `ci.sh quick` |
+| queue | ok | 880 s | (int2; includes a build-slot wait) |
 | gen-check (gen-domain, lockdiff x4) | ok | 35 s | |
-| deny (root + 4 domains) | ok | 13-35 s | services deny ok inside `convert` |
-| brand (brand-grep, brand-scan-bin) | ok | 631 s | run before the logo/rename commits' binaries; rerun owed after `build all` |
-| convert-ui (services release build, converter spec, TLS spec) | ok | 298 s | |
-| shell (suite-serve nextest, shell-dist, 19 Playwright, sizes) | ok | 1,572 s | stale editor dists (built before the rename); rerun owed on fresh dists |
-| sizes | ok | 719 s (inside shell) | docs 9,853,705 / 9,871,648 B; sheets 4,943,443 / 4,966,771; slides 9,492,465 / 9,524,217; pdf 9,569,362 / 9,599,462; shell 48,443 / 65,536 |
-| convert | **fail** (first run: fmt, fixed) | 1,076 s; rerun 813 s | rerun: clippy ok; nextest 236/239, the 3 failures are load timeouts (`containment::killing_convert_kills_the_tool_it_started`, `empty_file` 41 s, the host test above); all three passed in the int3b-era run (927 s). Rerun owed on a quiet machine |
-| build all (4 desktop, web, CLI) | **fail: disk full** | 2,285 s | `build-docs-desktop` ok (1,557 s); everything after died with os error 112 |
-| test-ours, test x4, check x4, bind, convert-e2e, translit-npm, translit-preserve, web-smoke, actionlint, i18n, lint, brand (after builds) | **not run** | - | blocked by the disk |
+| deny (root + 4 domains) | ok | 35 s | services deny inside `convert` |
+| build all (4 desktop, 4 web, 4 CLI; release, gnu) | ok | 4,219 s | docs web 844 s, slides web 713 s, pdf desktop 503 s; mostly cached |
+| test-ours | ok | 1,903 s | root 38 s, domains docs 769 s, sheets 282 s, slides 468 s, pdf 341 s |
+| test wordcraft | ok | 2,347 s | |
+| test gridcraft | ok | 240 s (int6, after 0142) | int5: 1 failure, the one fixed by 0142 |
+| test deckcraft | ok | 2,115 s | |
+| test pdfcraft | ok | 3,247 s (int6) | int5: 2 failures, the stale build script above |
+| check docs / sheets / slides / pdf | ok | 188 / 824 / 135 / 137 s | |
+| bind | ok | 451 s | |
+| convert (clippy, nextest 239/239, deny) | ok | 136 s | on a quiet machine; the earlier 3 timeouts were load |
+| convert-e2e | ok | 369 s | |
+| convert-ui | ok | 298 s | (int3b) |
+| shell (suite-serve nextest, shell-dist, 19 Playwright, sizes) | ok | 493 s | |
+| sizes | ok | 456 s | docs 9,852,663 / 9,871,648 B (headroom 18,985), sheets 4,941,891 / 4,966,771, slides 9,490,727 / 9,524,217, pdf 9,570,718 / 9,599,462, shell 48,443 / 65,536 |
+| translit-npm / translit-preserve | ok | 21 s / 128 s | |
+| web-smoke | ok | 14 s | |
+| actionlint | ok | 1 s | |
+| i18n | ok | 6 s | |
+| brand (brand-grep + scan of the fresh binaries) | ok | 330 s | |
+| lint (fmt, clippy -D warnings, layers, assets, upstream clippy ratchet) | ok | 349 s | upstream clippy: wordcraft 1, gridcraft 3, deckcraft 2, pdfcraft 1 warnings, all baselined |
 
-## Hoshiya rename and logo (commits 800ee09, 126a782)
+Disk policy: E: never fell below 62 GB in the final runs, so the step "delete upstream test binaries older than 24 h" was not needed and nothing was deleted
+(a watchdog loop ran during int5 and logged no action).
 
-See the report: `brand/brand.toml` names, bins, app ids, aumids, data dirs; `hoshiya.exe` and `hoshiya-serve.exe`; logo pack in `brand/logo/`
-(owner's brand, `LICENSE.txt`, excluded from the MIT/Apache claim in NOTICE); `[colors]` accent_light #1E4FA3, accent_dark #6C9BF0,
-accent_margin #E9A23B, ink #101828 with two new contrast checks; app icons with the margin line (`docs/phase4/evidence/brand/`); exe icon and
-version info from the brand file (checked on the built `hoshiya.exe`); shell favicon, manifest and header lockup.
+## Desktop checks with the rebuilt exes
 
-## Templates (web, through the shell, real editors)
+- `scripts/smoke-desktop.ps1`: window title `Hoshiya`, start to window 3,582 ms, to server 3,040 ms, request without the key 403, editor started (`hoshiya-docs`),
+  second launch handed to the running instance (`hoshiya-sheets`), no `hoshiya.exe` left behind. Host 39 MB, WebView2 291 MB (6 processes), tree with the editor 679 MB.
+- `scripts/desktop-editors-check.mjs`: **16/16** for Docs, Sheets and Slides (Ctrl+P opens the editor's own print UI and no browser window, Ctrl+S writes exactly one file through the
+  host's download handler, browser zoom stays put).
+- **Shared toolbar setting across two apps** (`scripts/toolbar-share-check.py`, the real `%APPDATA%\Hoshiya\settings.toml`, which did not exist before and was deleted after;
+  screenshots in `docs/phase4/evidence/toolbar-shared/`): Sheets starts simple; its "Full ribbon" button writes `toolbar = "full"` and the ribbon switches; Slides, started
+  afterwards, opens with the full ribbon; its "Simple ribbon" button writes `toolbar = "simple"`; Sheets, started afterwards, opens simple again.
+- **5 templates through `hoshiya.exe`** (`scripts/desktop-templates-check.mjs`, 8/8; screenshots in `docs/phase4/evidence/templates/desktop/`): each opens in its editor with no page
+  error and no CSP violation. The editors run in the host's WebView2, as the shell does.
 
-`ci/web-smoke/templates.spec.ts` (new) opens each of the 5 starters from the home screen and reaches the editor's open message with no page
-error and no CSP violation; screenshots in `docs/phase4/evidence/templates/`. Looked at by hand: Docs (buyruq, xizmat xati) and Slides (taqdimot)
-show the Uzbek text with oʻ, gʻ and the apostrophe forms and no tofu. Sheets: frozen panes hold in tabel (3 columns, 4 rows) and xodimlar (4 rows);
-the tabel legend was clipped at the frozen split, so it now starts in column D (`scripts/gen-templates.py`, `tabel.xlsx` regenerated). COUNTIF totals
-computed with the Sheets CLI on a copy with D5:H5 = I,I,K,T,S: AI..AM = 2, 16, 1, 1, 1 and the Jami row the same; empty rows show 0.
-Slides shows the editor's "Arial isn't installed" notice (taqdimot uses Arial; that is the web editor's normal message for any pptx).
-**Desktop through the shell was not run** (needs the rebuilt `hoshiya.exe` and editors).
+## Templates (web and desktop)
 
-## Owed (not done, with the reason)
+All five open in Docs, Sheets and Slides (web: `ci/web-smoke/templates.spec.ts` 5/5 on the fresh dists; desktop: above). Looked at by hand: Uzbek text with the oʻ, gʻ and apostrophe
+forms renders with no tofu; frozen panes hold (tabel 3 columns and 4 rows, xodimlar 4 rows); COUNTIF totals compute (Sheets CLI on a copy with D5:H5 = I, I, K, T, S: AI..AM = 2, 16, 1, 1, 1,
+Jami row the same; empty rows 0). One fix: the tabel legend was clipped at the frozen split, so it now starts in column D (a698257). Slides shows the editor's own "Arial isn't installed"
+notice for taqdimot (any pptx that uses Arial does).
 
-- Full gate on HEAD (disk).
-- `scripts/smoke-desktop.ps1`, `scripts/desktop-editors-check.mjs` (Slides included), the shared-toolbar-setting check across two apps, the desktop template run: need the rebuilt exes.
-- WP12 w80 GUI open-time re-run: the machine was never idle (other agents built throughout), and E: is full. `docs/phase4/excel-guard.md` is unchanged.
+## WP12 (w80 GUI open time, idle machine)
 
-## Contention (why times are long)
+3 runs, same protocol, same binary: open 62.9 / 60.2 / 60.2 s, steady private WS 903.9 / 903.8 / 904.8 MB (+0.1 %), peak 996.8 / 984.8 / 984.8 MB. At or slightly below round 2's slower cluster,
+not on its faster one (39.8-40.4 s); that two-cluster spread was never explained. See `docs/phase4/excel-guard.md`.
 
-Two `ci.sh quick` runs from other sessions held the p1 build slot for hours (WP0 run 20261023-023719 from 02:37; its `test pdfcraft` took
-14,663 s), and p4 clean-checkout nextest runs were active. The lock rule "one build per target dir" serialises everything on `E:/office-target/p1`.
-Upstream test targets are very large: `upstream-gridcraft` 152 GB, `upstream-pdfcraft` 88 GB, `upstream-deckcraft` 87 GB, `upstream-wordcraft` 51 GB
-(per-test debug executables of about 540 MB each), which is what filled E:.
+## Hoshiya rename and logo
+
+Commits 800ee09 (names, bins, ids, `hoshiya.exe`, `hoshiya-serve.exe`) and 126a782 (logo pack in `brand/logo/`, palette, icons, exe icon and version info, shell favicon, manifest and lockup).
+Left as `suite-*` on purpose: crate and package names (`suite-core`, `suite-desktop`, `suite-serve`, `suite-winsec`, `suite-fake-editor`), the `SUITE_*` test-hook variables and the
+`suite-host` event name. All are internal, none is brand.
+
+## Contention (why the early times are long)
+
+Until about 14:00 two `ci.sh quick` runs from other sessions held the `E:/office-target/p1` build slot for hours (the WP0 run's `test pdfcraft` took 14,663 s). At 14:34 E: filled up
+(upstream test targets of 50-150 GB each); the coordinator freed 78 GB, and the machine was then idle for the w80 run and the final gate.
