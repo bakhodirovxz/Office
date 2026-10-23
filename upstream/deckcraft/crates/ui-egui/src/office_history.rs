@@ -13,7 +13,7 @@
 //! Desktop only; `init` installs the hook once, from the app's `main`. The web build installs none.
 
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, OnceLock};
 
 use deckcraft_engine::cmd::file::format_for_path;
 use deckcraft_engine::model::style::{ColorRef, Fill};

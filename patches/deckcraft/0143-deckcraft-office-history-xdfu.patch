@@ -301,7 +301,7 @@ index e6205f7..de142eb 100644
              Ok(_) => {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..54f6c17
+index 0000000..e6c26e9
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
 @@ -0,0 +1,267 @@
@@ -320,7 +320,7 @@ index 0000000..54f6c17
 +//! Desktop only; `init` installs the hook once, from the app's `main`. The web build installs none.
 +
 +use std::path::{Path, PathBuf};
-+use std::sync::{Arc, Mutex, OnceLock};
++use std::sync::{Arc, OnceLock};
 +
 +use deckcraft_engine::cmd::file::format_for_path;
 +use deckcraft_engine::model::style::{ColorRef, Fill};
