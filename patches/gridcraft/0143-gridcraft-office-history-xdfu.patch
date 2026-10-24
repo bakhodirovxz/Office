@@ -330,10 +330,10 @@ index 829ea38..b291023 100644
          if let Some(d) = self.session.active() {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..5836cca
+index 0000000..6dd8cc3
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
-@@ -0,0 +1,279 @@
+@@ -0,0 +1,281 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
 +//! `office.history` command behind the toolbar's Version History button, and the XDFU watermark (WP11).
@@ -351,7 +351,7 @@ index 0000000..5836cca
 +
 +use std::path::{Path, PathBuf};
 +use std::sync::{Arc, Mutex, OnceLock};
-+use std::time::{Duration, SystemTime};
++use std::time::{Duration, Instant};
 +
 +use gridcraft_engine::cmd::print::{codes_to_fields, join_header_footer, split_header_footer};
 +use gridcraft_engine::core::RangeRef;
@@ -368,7 +368,7 @@ index 0000000..5836cca
 +
 +static STORE: OnceLock<Option<Store>> = OnceLock::new();
 +static XDFU: OnceLock<LazyIssuer> = OnceLock::new();
-+static LAST_SNAPSHOT: Mutex<Vec<(String, SystemTime)>> = Mutex::new(Vec::new());
++static LAST_SNAPSHOT: Mutex<Vec<(String, Instant)>> = Mutex::new(Vec::new());
 +
 +struct Layer;
 +
@@ -431,10 +431,12 @@ index 0000000..5836cca
 +            return;
 +        }
 +        let autosave = params.get("autosave").and_then(Json::as_bool) == Some(true);
-+        let now = SystemTime::now();
++        // this module is desktop only (never built for wasm32), where `Instant::now` is fine
++        #[allow(clippy::disallowed_methods)]
++        let now = Instant::now();
 +        let mut last = LAST_SNAPSHOT.lock().unwrap_or_else(|e| e.into_inner());
 +        let at = last.iter().position(|(p, _)| p == path);
-+        if autosave && at.is_some_and(|i| now.duration_since(last[i].1).unwrap_or_default() < AUTOSAVE_EVERY) {
++        if autosave && at.is_some_and(|i| now.duration_since(last[i].1) < AUTOSAVE_EVERY) {
 +            return;
 +        }
 +        match at {

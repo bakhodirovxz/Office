@@ -15,7 +15,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant};
 
 use gridcraft_engine::cmd::print::{codes_to_fields, join_header_footer, split_header_footer};
 use gridcraft_engine::core::RangeRef;
@@ -32,7 +32,7 @@ const AUTOSAVE_EVERY: Duration = Duration::from_secs(300);
 
 static STORE: OnceLock<Option<Store>> = OnceLock::new();
 static XDFU: OnceLock<LazyIssuer> = OnceLock::new();
-static LAST_SNAPSHOT: Mutex<Vec<(String, SystemTime)>> = Mutex::new(Vec::new());
+static LAST_SNAPSHOT: Mutex<Vec<(String, Instant)>> = Mutex::new(Vec::new());
 
 struct Layer;
 
@@ -95,10 +95,12 @@ impl Hook for Layer {
             return;
         }
         let autosave = params.get("autosave").and_then(Json::as_bool) == Some(true);
-        let now = SystemTime::now();
+        // this module is desktop only (never built for wasm32), where `Instant::now` is fine
+        #[allow(clippy::disallowed_methods)]
+        let now = Instant::now();
         let mut last = LAST_SNAPSHOT.lock().unwrap_or_else(|e| e.into_inner());
         let at = last.iter().position(|(p, _)| p == path);
-        if autosave && at.is_some_and(|i| now.duration_since(last[i].1).unwrap_or_default() < AUTOSAVE_EVERY) {
+        if autosave && at.is_some_and(|i| now.duration_since(last[i].1) < AUTOSAVE_EVERY) {
             return;
         }
         match at {
