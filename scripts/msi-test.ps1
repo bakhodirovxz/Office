@@ -71,10 +71,13 @@ public static class Shell {
   [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
   // a .reg export (UTF-16) as a set of "key<TAB>value line"; every key header is an entry too, hex continuation lines are joined
   public static HashSet<string> RegSet(string path) {
-    var s = new HashSet<string>(StringComparer.Ordinal); string key = ""; string pend = null;
+    var s = new HashSet<string>(StringComparer.Ordinal); string key = ""; var sb = new StringBuilder(); bool cont = false;
     foreach (var raw in File.ReadLines(path, Encoding.Unicode)) {
-      var l = raw; if (pend != null) { l = pend + l.TrimStart(); pend = null; }
-      if (l.EndsWith("\\")) { pend = l.Substring(0, l.Length - 1); continue; }
+      // binary values run over tens of thousands of "\" lines: string concat here was quadratic (hours on a 290 MB HKLM dump)
+      var part = cont ? raw.TrimStart() : raw; if (!cont) sb.Clear();
+      cont = part.EndsWith("\\"); sb.Append(part, 0, cont ? part.Length - 1 : part.Length);
+      if (cont) continue;
+      var l = sb.ToString();
       if (l.Length == 0 || l.StartsWith("Windows Registry Editor")) continue;
       if (l.StartsWith("[")) { key = l.Substring(1, l.Length - 2); s.Add(key + "\t"); } else s.Add(key + "\t" + l);
     }
@@ -83,6 +86,8 @@ public static class Shell {
   public static List<string> SymDiff(HashSet<string> a, HashSet<string> b) {
     var r = new List<string>(); foreach (var x in a) if (!b.Contains(x)) r.Add("- " + x); foreach (var x in b) if (!a.Contains(x)) r.Add("+ " + x); r.Sort(StringComparer.Ordinal); return r;
   }
+  // b minus a, in C#: a PowerShell pipeline over a few million export lines takes far too long
+  public static List<string> Minus(HashSet<string> b, HashSet<string> a) { var r = new List<string>(); foreach (var x in b) if (!a.Contains(x)) r.Add(x); return r; }
 }
 '@
 [void][Shell]::SetProcessDPIAware()
@@ -290,7 +295,7 @@ if (-not $KeepInstalled) {
   # blocking: a line the INSTALL added (A -> B, ours) that is still there after uninstall. The shell's own per-user artefacts of opening
   # files (OpenWithList, MuiCache, AppCompat store, association toasts) appear only after B and are reported as info, not counted.
   $hb = [Shell]::RegSet("$Work\B-hklm.reg"); $ub = [Shell]::RegSet("$Work\B-hkcu.reg")
-  $added = @(@($hb | Where-Object { -not $da.Contains($_) }) + @($ub | Where-Object { -not $ua.Contains($_) }) | Where-Object { $_ -match $mine })
+  $added = @(@([Shell]::Minus($hb, $da)) + @([Shell]::Minus($ub, $ua)) | Where-Object { $_ -match $mine })
   $residue = @($added | Where-Object { $dc.Contains($_) -or $uc2.Contains($_) })
   $ours = @($dd + $ud | Where-Object { $_ -match $mine })
   $other = @($dd + $ud | Where-Object { $_ -notmatch $mine })
