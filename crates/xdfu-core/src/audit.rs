@@ -323,11 +323,15 @@ impl AuditLog {
         };
         // a second process may have taken over a lock held > 30 s while `produce` ran: chain onto the tail as it is now, not as it was
         let (tail_seq, tail_hash) = self.tail().map_err(Appended::Log)?;
-        let (line_seq, prev) = if tail_seq + 1 == n { (n, prev) } else { (tail_seq + 1, tail_hash) };
-        if line_seq != n {
-            if let Value::Object(m) = &mut fields {
-                m.insert("copy".into(), n.into());
-            }
+        let (line_seq, prev) = if tail_seq + 1 == n {
+            (n, prev)
+        } else {
+            (tail_seq + 1, tail_hash)
+        };
+        if line_seq != n
+            && let Value::Object(m) = &mut fields
+        {
+            m.insert("copy".into(), n.into());
         }
         self.write_line(line_seq, &prev, &event, fields)
             .map_err(Appended::Log)?;
