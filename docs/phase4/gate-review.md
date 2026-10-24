@@ -112,6 +112,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   file). The string `hist.viewed` promises the copy does not touch history. Nothing of the original document is lost.
 - Fix: make the copy read-only and skip snapshots of paths under the data folder's `temp`. Needs one GUI check that all
   three editors open a read-only file and refuse its save cleanly, so not done here.
+- Fixed in `39e77a4`: the View copy is written read-only and `Ctx::saved` takes no snapshot of a file under `temp` (test: `the_history_messages`). Not checked: that each editor refuses a save of a read-only file cleanly (needs one GUI run).
 
 **F8 (was minor, raised): the History panel could act on the wrong document. Fixed `a59dffb`.**
 - Where: `web/shell/history.js:20-28`, `:72-79` (before).
@@ -136,6 +137,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
 - **F12. Restoring while the document is open in our editor is silently undone** by the editor's next save (Sheets
   autosaves every ~2 s while dirty). Both states stay in history. Fix (smallest): "close the document first" in
   `hist.restore.body`.
+- Fixed in `39e77a4` (documentation choice, no code): `hist.restore.body` now says to close the document in the editor first, in all four languages (`i18n/shell.tsv`, status `reviewed:agent-sonnet:2026-10-24`). An open editor is still not told about the restore.
 - **F13. Patch `gridcraft/0144` has no effect:** `history_cmd` returns `EngineError::BadParams`, whose Display adds
   "invalid parameters for `office.history`: ", so the whole-string catalog lookup never matches and the toast stays
   English (`patches/gridcraft/0143-...patch:407`; upstream `crates/engine/src/lib.rs:49`). The test checks `contains`.
@@ -150,6 +152,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   local user could then drive the trusted page and its IPC. Needs the variable set in the victim's environment. Fix: in
   release builds refuse (or fall back to the browser) when `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` or
   `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` is set; correct the comment.
+- Fixed in `39e77a4`: a release build refuses to open the window while either variable is set (`host.rs` `start`, `webview2_env_override`, test `webview2_env_that_changes_the_browser_is_found`); the comment at `host.rs:116-117` is corrected. The debug build still honours them (the desktop checks use them). Not run: a release build with the variable set.
 - **F16. Another local user can stop the host from starting** by creating the predictable pipe name first
   (`host.rs:352-357`, `:409-411`): `send` correctly refuses the foreign server, then a launch with no files returns an
   error and no window opens. Fix: carry on as a full instance with no pipe server.
@@ -182,6 +185,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
 - **F22. Slides' window title has no file name** (owner's MSI run: `hoshiya-slides: title [Hoshiya Slides]`, also for the
   second window), unlike Docs, Sheets and PDF. With two presentations open the taskbar cannot tell them apart. Open; a
   title-setting line in the deckcraft overlay (carried patch) is the likely fix, not investigated.
+- Fixed in `39e77a4`: carried patch `deckcraft/0144` sends `<file name> — <product>` as the window title (test `the_window_title_has_the_file_name_once_a_file_is_open`). Not re-run on the MSI.
 
 ### Info
 
