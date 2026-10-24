@@ -72,7 +72,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   `$PSScriptRoot` is empty in param defaults under 5.1 `-File`/RunAs, so earlier owner runs never started. The re-run at
   14:38 passed with 0 failed checks (section 7).
 
-**F3. The MSI ships about 900 crates' code without their MIT/Apache notices; the WebView2 loader's licence text is still missing.**
+**F3. The MSI ships about 900 crates' code without their MIT/Apache notices; the WebView2 loader's licence text is still missing.** **Fixed in bdb77d6** (cargo-about 0.9.2: `packaging/windows/THIRD-PARTY-NOTICES.txt`, 702 crates, installed as `licensesTHIRD-PARTY-NOTICES.txt` with `WebView2-LICENSE.txt`; `ci.sh notices` fails on a stale file or an unlicensed crate).
 - Where: `NOTICE` lists our layer, fonts, icons, dictionaries, the MPL crates and the upstream NOTICE files, but no
   per-crate copyright/permission notices; `scripts/build-msi.ps1:51-78` stages only ours, the logo licence, the upstream
   LICENSE/NOTICE/ATTRIBUTION files and a VC runtime note. `NOTICE:157-163` says the WebView2 SDK licence text must be
