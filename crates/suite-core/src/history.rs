@@ -297,7 +297,13 @@ fn parse_doc(text: &str) -> Result<Doc, String> {
                 let ver = Version {
                     v,
                     parent: u("parent"),
-                    sha256: s("sha256").ok_or(format!("line {n}: no sha256"))?,
+                    // joined under objects/: only a hash, never `..\` or an absolute path
+                    sha256: s("sha256")
+                        .filter(|h| {
+                            h.len() == 64
+                                && h.bytes().all(|c| matches!(c, b'0'..=b'9' | b'a'..=b'f'))
+                        })
+                        .ok_or(format!("line {n}: no sha256"))?,
                     size: u("size").unwrap_or(0),
                     time: u("time").unwrap_or(0),
                     author: s("author").unwrap_or_default(),
@@ -581,11 +587,16 @@ impl Store {
         let l = &self.limits;
         let t = now();
         let mut docs: BTreeMap<String, Doc> = BTreeMap::new();
+        // an index that cannot be read (torn last line, AV lock) still owns its objects: step 3 must not delete them
+        let mut all_read = true;
         for e in fs::read_dir(self.root.join("docs"))?.filter_map(Result::ok) {
-            if let Some(id) = e.file_name().to_string_lossy().strip_suffix(".jsonl")
-                && let Ok(d) = self.read_doc_id(id)
-            {
-                docs.insert(id.to_string(), d);
+            if let Some(id) = e.file_name().to_string_lossy().strip_suffix(".jsonl") {
+                match self.read_doc_id(id) {
+                    Ok(d) => {
+                        docs.insert(id.to_string(), d);
+                    }
+                    Err(_) => all_read = false,
+                }
             }
         }
         // 1. per document: the last N versions, or those of the last D days, whichever keeps more; a big file keeps only a few
@@ -648,6 +659,9 @@ impl Store {
             )?;
         }
         // 3. delete the bytes nothing refers to
+        if !all_read {
+            return Ok(());
+        }
         let used: BTreeSet<String> = docs
             .values()
             .flat_map(|d| d.live().into_iter().map(|v| v.sha256.clone()))
@@ -751,6 +765,42 @@ mod tests {
         let l = s.list(&f).unwrap();
         assert_eq!(s.read(&f, l[1].v).unwrap(), b"edited, never snapshotted");
         assert_eq!(l[1].message.as_deref(), Some("Before restore"));
+    }
+
+    #[test]
+    fn a_torn_index_keeps_its_objects_when_another_document_prunes() {
+        let t = T::new("torn");
+        let s = t.store(roomy());
+        let (a, b) = (t.file("a.docx", b"a1"), t.file("b.docx", b"b1"));
+        s.snapshot(&b, None).unwrap();
+        // a power cut during append: half a line at the end of b's index
+        let idx = s.doc_file(&doc_id(&b));
+        let mut text = fs::read_to_string(&idx).unwrap();
+        text.push_str("{\"kind\":\"vers");
+        fs::write(&idx, text).unwrap();
+        s.snapshot(&a, None).unwrap();
+        assert!(
+            s.object(&sha(b"b1")).is_file(),
+            "b's bytes must survive a's prune"
+        );
+    }
+
+    #[test]
+    fn an_index_sha256_that_is_not_a_hash_is_refused() {
+        // a well-chained line (its hash recomputed) whose sha256 would leave objects/
+        let mut m = Map::new();
+        for (k, v) in [
+            ("kind", json!("version")),
+            ("v", json!(1)),
+            ("sha256", json!(r"..\..\secret")),
+            ("prev", json!(GENESIS)),
+        ] {
+            m.insert(k.into(), v);
+        }
+        let h = line_hash(&m);
+        m.insert("hash".into(), h.into());
+        let err = parse_doc(&format!("{}\n", Value::Object(m))).err().unwrap();
+        assert!(err.contains("no sha256"), "{err}");
     }
 
     #[test]
