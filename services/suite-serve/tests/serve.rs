@@ -378,12 +378,14 @@ fn shell_catalog_is_complete() {
         }
     }
     // statuses live in the catalog (i18n/shell.tsv columns uz_latn_status, uz_cyrl_status), not in the exported JSON
-    let tsv = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../i18n/shell.tsv")).unwrap();
+    let tsv = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../i18n/shell.tsv"))
+        .unwrap();
     for line in tsv.lines().skip(1) {
         let f: Vec<&str> = line.split('\t').collect();
         for s in [f[4], f[6]] {
             assert!(
-                (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-")) && !s.contains("owner"),
+                (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-"))
+                    && !s.contains("owner"),
                 "{}: {s}",
                 f[1]
             );
