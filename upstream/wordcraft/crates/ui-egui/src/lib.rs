@@ -913,6 +913,8 @@ impl WordApp {
             self.select_inserted_picture(&r);
         }
         let r = system_clipboard::explain(self, id, r);
+        // Engine-side messages of our office layer (docs-office) are English: look them up in the catalog here.
+        let r = if matches!(id, "office.history" | "file.versions") { r.map_err(|e| tl!(&e).to_string()) } else { r };
         if id.starts_with("tools.translit")
             && let Ok(v) = &r
         {

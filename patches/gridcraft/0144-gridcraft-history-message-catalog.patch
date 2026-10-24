@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 14:00:00 +0500
+Subject: [PATCH] ui-egui: look up Version History's error message in the catalog
+
+PLAN WP17: the "Save the file first, then open its version history." message of `office.history` (office_history.rs, 0143)
+reached the toast as English text although the string is in i18n/gridcraft.tsv. `run` now passes the command's error
+through the catalog.
+---
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index b291023..bc7dc51 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -386,6 +386,8 @@ impl SheetApp {
+     /// Runs an engine command (or a UI command) and handles UI requests it makes.
+     pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
+         let r = self.run_command(id, params);
++        // The history layer's message (office_history.rs) is English: look it up in the catalog.
++        let r = if id == "office.history" { r.map_err(|e| self.ui.language.tr(&e).to_string()) } else { r };
+         if id.starts_with("tools.translit")
+             && let Ok(v) = &r
+         {
+-- 
+2.0

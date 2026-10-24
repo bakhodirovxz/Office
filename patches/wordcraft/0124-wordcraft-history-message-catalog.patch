@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 14:00:00 +0500
+Subject: [PATCH] ui-egui: look up Version History's error message in the catalog
+
+PLAN WP17: the "Save the file first, then open its version history." message of docs-office (layer.rs) reached the status line
+as English text although the string is in i18n/wordcraft.tsv. Version History (`office.history`, `file.versions`) now passes its
+error through the catalog in `run`.
+---
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index fb8659c..7f52821 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -913,6 +913,8 @@ impl WordApp {
+             self.select_inserted_picture(&r);
+         }
+         let r = system_clipboard::explain(self, id, r);
++        // Engine-side messages of our office layer (docs-office) are English: look them up in the catalog here.
++        let r = if matches!(id, "office.history" | "file.versions") { r.map_err(|e| tl!(&e).to_string()) } else { r };
+         if id.starts_with("tools.translit")
+             && let Ok(v) = &r
+         {
+-- 
+2.0

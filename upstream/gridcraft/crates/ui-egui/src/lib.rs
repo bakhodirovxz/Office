@@ -386,6 +386,8 @@ impl SheetApp {
     /// Runs an engine command (or a UI command) and handles UI requests it makes.
     pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
         let r = self.run_command(id, params);
+        // The history layer's message (office_history.rs) is English: look it up in the catalog.
+        let r = if id == "office.history" { r.map_err(|e| self.ui.language.tr(&e).to_string()) } else { r };
         if id.starts_with("tools.translit")
             && let Ok(v) = &r
         {
