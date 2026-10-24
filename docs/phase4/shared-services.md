@@ -162,13 +162,14 @@ for `auto`, with no file, in the web build and in tests. Where it applies:
 
 | app | patch | where | rule |
 |---|---|---|---|
-| Docs | `wordcraft/0126` | `i18n::detect_system_lang` | the app's own `language` is `auto`: after `WORDCRAFT_LANGUAGE`, before the OS language |
-| PDF | `pdfcraft/0112` | `i18n::detect_system_lang` (desktop) | the app's own `language` is `auto`: before the OS language |
-| Slides | `deckcraft/0145` | `i18n::from_pref` | the app's own `language` is `auto`; Slides' `auto` has always been English, so shared `auto` stays English (no system detection) |
-| Sheets | `gridcraft/0145` | `load_prefs` in `apps/gridcraft/src/main.rs` | Sheets has no `auto` value (a first run saves the system language into `ui.json`), so a fixed shared `lang` wins over the saved one at each start |
+| Docs | `wordcraft/0126` | `office_overlay::start_language`, called in `apps/wordcraft/src/main.rs` after `load_prefs` | a fixed shared `lang` replaces `ui.language` (even a saved fixed one); `auto` keeps it |
+| PDF | `pdfcraft/0112` | the same, in `apps/pdfcraft/src/main.rs` after the saved preferences are restored | same |
+| Slides | `deckcraft/0145` | the same, in `apps/deckcraft/src/main.rs` after `load_prefs`; Slides' own `auto` has always been English, so shared `auto` stays English (no system detection) | same |
+| Sheets | `gridcraft/0145` | `load_prefs` in `apps/gridcraft/src/main.rs` (Sheets has no `auto` value: a first run saves the system language into `ui.json`) | same |
 
-A shared `auto` leaves every app on its own detection. The web builds never read the file. **An in-app language change does
-not write back** to `settings.toml` (the table above says the apps only read `lang`; the shell is the writer): it is kept in the
-app's own `ui.json`, applies at once and later starts, and wins over the shared value in Docs, PDF and Slides. The one
-exception is Sheets: with a fixed shared `lang`, an in-app change lasts for the session and the next start follows the
-shell again. Check: the `office_overlay` test `shared_lang_picks_the_catalog_language` in each app (the choice-to-code map and the app's registered language; tests never read the real settings file). Not checked: a real window opened with `lang = "ru"` (no desktop session in this run).
+**One rule for all four apps** (main session, 2026-10-24): a fixed shared `lang` (anything but `auto`) always wins at start; the
+app's own saved language applies only when the shared `lang` is `auto`; an in-app language change applies for the session and is
+**not written back** to `settings.toml` (the shell is the only writer; the apps only read `lang`). A shared language the app
+does not register (for example `uz-*` without the overlay catalogs) is ignored and the saved one stays. The web builds never
+read the file. The in-app change still lands in the app's own `ui.json`, but a fixed shared `lang` overrides it at the next start.
+Check: the `office_overlay` tests `shared_lang_picks_the_catalog_language` (the choice-to-code map and the app's registered language) and `shared_lang_wins_over_the_saved_language_at_start` (the precedence) in each app; tests never read the real settings file. Not checked: a real window opened with `lang = "ru"` (no desktop session in this run).

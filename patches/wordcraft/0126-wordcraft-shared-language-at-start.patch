@@ -1,12 +1,20 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 24 Oct 2026 18:00:00 +0500
-Subject: [PATCH] ui-egui: the shared lang setting picks the language when the app's own is auto
+Subject: [PATCH] ui-egui: a fixed shared lang setting wins over the saved
+ language at start
 
-Gate review (brief task 5, owner 2026-10-24): the apps did not read lang from settings.toml. office_overlay::shared_lang_code reads it once (suite-core, native only; None for auto, no file, the web and tests); detect_system_lang uses it after WORDCRAFT_LANGUAGE and before the OS language. Adds the suite-core dependency (native) and its lock entries.
+Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang once (suite-core, native only; None for auto, no file, the web and tests). main.rs applies office_overlay::start_language after load_prefs: a fixed shared lang always wins over the saved language, auto keeps it; an in-app change holds for the session and is not written back. Adds the suite-core dependency (native) and its lock entries.
 ---
+ Cargo.lock                                 | 172 ++++++++++++++++++---
+ apps/wordcraft/src/main.rs                 |   2 +
+ crates/ui-egui/Cargo.toml                  |   4 +
+ crates/ui-egui/src/office_overlay.rs       |  36 +++++
+ crates/ui-egui/src/office_overlay_tests.rs |  32 ++++
+ 5 files changed, 222 insertions(+), 24 deletions(-)
+
 diff --git a/Cargo.lock b/Cargo.lock
-index 201438f..75c1e6e 100644
+index 31028fe..7bf4129 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -129,7 +129,7 @@ checksum = "35f0f96ce78e38c3dc6d8948aa8163d06385be74000f3c7a95bf1eef35d3ea32"
@@ -396,6 +404,19 @@ index 201438f..75c1e6e 100644
 - "winnow",
 + "winnow 1.0.4",
  ]
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index 86b5e3c..f23e1c7 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -434,6 +434,8 @@ fn main() -> eframe::Result {
+             session.system_region = region;
+             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+             load_prefs(&mut app);
++            // office overlay (patches/wordcraft/0126): a fixed shared `lang` wins over the saved language at each start.
++            app.ui.language = wordcraft_ui_egui::office_overlay::start_language(&app.ui.language);
+             load_user_dictionary(&mut app);
+             // A region chosen in File › Options replaces the system's for the first blank
+             // document too (#838).
 diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
 index 48ed412..8e97fe5 100644
 --- a/crates/ui-egui/Cargo.toml
@@ -411,26 +432,11 @@ index 48ed412..8e97fe5 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  # The browser clock (`SystemTime::now()`/`Instant::now()` panic on wasm32).
  js-sys = "0.3"
-diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
-index b9e5b79..287086b 100644
---- a/crates/ui-egui/src/i18n/mod.rs
-+++ b/crates/ui-egui/src/i18n/mod.rs
-@@ -349,6 +349,10 @@ fn detect_system_lang() -> Lang {
-     if let Some(l) = std::env::var("WORDCRAFT_LANGUAGE").ok().and_then(|v| lang_from_tag(&v)) {
-         return l;
-     }
-+    // office overlay (patches/wordcraft/0126): the shared `lang` setting; `auto` and the web fall through to the system.
-+    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
-+        return l;
-+    }
-     let tags: Vec<String> = sys_locale::get_locales().take(16).collect();
-     first_supported(tags.iter().map(String::as_str)).unwrap_or(Lang::EN)
- }
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 08c3b41..b239bc1 100644
+index 08c3b41..cd723b7 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -143,3 +143,29 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value)
+@@ -143,3 +143,39 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value)
  pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
      EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
  }
@@ -449,6 +455,16 @@ index 08c3b41..b239bc1 100644
 +    None
 +}
 +
++/// The `language` setting at start: a fixed shared `lang` always wins over the app's saved one, `auto` (`None`) keeps it. A change
++/// made in the app afterwards holds for the session only; the shell is the one writer of `settings.toml`.
++pub fn start_language(own: &str) -> String {
++    language_at_start(own, shared_lang_code())
++}
++
++pub(crate) fn language_at_start(own: &str, shared: Option<&str>) -> String {
++    shared.and_then(crate::i18n::normalize_pref).map_or_else(|| own.to_string(), str::to_string)
++}
++
 +#[cfg(not(target_arch = "wasm32"))]
 +pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
 +    use suite_core::lang::{Lang, LangChoice};
@@ -461,13 +477,23 @@ index 08c3b41..b239bc1 100644
 +    }
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index ce63b24..a3b2bba 100644
+index ce63b24..d3b7e33 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
-@@ -133,3 +133,25 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
+@@ -133,3 +133,35 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
      }
      assert!(checked > 1000, "{checked} upstream rows checked");
  }
++
++/// A fixed shared `lang` beats the saved language (also a fixed one); `auto` and a language the app does not register keep it.
++#[test]
++fn shared_lang_wins_over_the_saved_language_at_start() {
++    assert_eq!(o::language_at_start("auto", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", None), "de");
++    assert_eq!(o::language_at_start("auto", None), "auto");
++    assert_eq!(o::language_at_start("de", Some("xx")), "de");
++}
 +
 +/// The shared `lang` setting reaches the app's catalog language (patches/wordcraft/0126): `auto` leaves the app's own choice, a fixed
 +/// language maps to the code the app registers.

@@ -155,9 +155,7 @@ impl Lang {
 
 /// Resolve the `language` setting: a language code, or [`AUTO`] (and anything unknown or not built in) for English.
 pub fn from_pref(pref: &str) -> Lang {
-    // office overlay (patches/deckcraft/0145): `auto` follows the shared `lang` setting (English without one).
-    let shared = || crate::office_overlay::shared_lang_code().and_then(Lang::from_tag);
-    Lang::from_tag(pref).or_else(|| pref.eq_ignore_ascii_case(AUTO).then(shared).flatten()).unwrap_or(Lang::EN)
+    Lang::from_tag(pref).unwrap_or(Lang::EN)
 }
 
 /// The canonical `language` setting for user input: [`AUTO`] or a registered code. `None` for anything else, so the caller keeps the setting.

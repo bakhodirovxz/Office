@@ -1,12 +1,20 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 24 Oct 2026 18:00:00 +0500
-Subject: [PATCH] ui-egui: the shared lang setting picks the language when the app's own is auto
+Subject: [PATCH] ui-egui: a fixed shared lang setting wins over the saved
+ language at start
 
-Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang (suite-core, native only); the desktop detect_system_lang uses it before the OS language. Adds the suite-core dependency (native) and its lock entries.
+Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang once (suite-core, native only; None for auto, no file, the web and tests). main.rs applies office_overlay::start_language after the saved preferences are restored: a fixed shared lang always wins over the saved language, auto keeps it; an in-app change holds for the session and is not written back. Adds the suite-core dependency (native) and its lock entries.
 ---
+ Cargo.lock                                 | 108 ++++++++++++++++-----
+ apps/pdfcraft/src/main.rs                  |   2 +
+ crates/ui-egui/Cargo.toml                  |   2 +
+ crates/ui-egui/src/office_overlay.rs       |  36 +++++++
+ crates/ui-egui/src/office_overlay_tests.rs |  32 ++++++
+ 5 files changed, 157 insertions(+), 23 deletions(-)
+
 diff --git a/Cargo.lock b/Cargo.lock
-index 150de22..bf7fe69 100644
+index e9505ab..3d9331a 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -475,6 +475,12 @@ version = "1.0.0"
@@ -306,6 +314,19 @@ index 150de22..bf7fe69 100644
 - "winnow",
 + "winnow 1.0.4",
  ]
+diff --git a/apps/pdfcraft/src/main.rs b/apps/pdfcraft/src/main.rs
+index 7ce3c2f..35cb803 100644
+--- a/apps/pdfcraft/src/main.rs
++++ b/apps/pdfcraft/src/main.rs
+@@ -380,6 +380,8 @@ fn app_creator<'a>(
+         if let Some(json) = cc.storage.and_then(|s| s.get_string("pdfcraft").or_else(|| s.get_string(LEGACY_STORAGE_KEY))) {
+             app.restore(&json);
+         }
++        // office overlay (patches/pdfcraft/0112): a fixed shared `lang` wins over the saved language at each start.
++        app.language = pdfcraft_ui_egui::office_overlay::start_language(&app.language);
+         app.window_state = pdfcraft_ui_egui::window_state::WindowState::started_with(cc.storage);
+         app.integrated_titlebar = integrated;
+         app.window_controls = window_controls;
 diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
 index 42e9474..8b6b757 100644
 --- a/crates/ui-egui/Cargo.toml
@@ -319,26 +340,11 @@ index 42e9474..8b6b757 100644
  
  [target.'cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))'.dependencies]
  # Discover configured font directories without linking libfontconfig or running a subprocess.
-diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
-index 2f080cf..cfb6397 100644
---- a/crates/ui-egui/src/i18n/mod.rs
-+++ b/crates/ui-egui/src/i18n/mod.rs
-@@ -366,6 +366,10 @@ pub fn system_lang() -> Lang {
- 
- #[cfg(not(target_arch = "wasm32"))]
- fn detect_system_lang() -> Lang {
-+    // office overlay (patches/pdfcraft/0112): the shared `lang` setting; `auto` falls through to the system.
-+    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
-+        return l;
-+    }
-     for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
-         if let Some(l) = std::env::var(var).ok().and_then(|v| language_override(&v)) {
-             return l;
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 60cbdbd..9936a24 100644
+index 60cbdbd..073917a 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -126,3 +126,29 @@ pub fn hidden_command(id: &str) -> bool {
+@@ -126,3 +126,39 @@ pub fn hidden_command(id: &str) -> bool {
          _ => false,
      }
  }
@@ -357,6 +363,16 @@ index 60cbdbd..9936a24 100644
 +    None
 +}
 +
++/// The `language` setting at start: a fixed shared `lang` always wins over the app's saved one, `auto` (`None`) keeps it. A change
++/// made in the app afterwards holds for the session only; the shell is the one writer of `settings.toml`.
++pub fn start_language(own: &str) -> String {
++    language_at_start(own, shared_lang_code())
++}
++
++pub(crate) fn language_at_start(own: &str, shared: Option<&str>) -> String {
++    shared.and_then(crate::i18n::normalize_pref).map_or_else(|| own.to_string(), str::to_string)
++}
++
 +#[cfg(not(target_arch = "wasm32"))]
 +pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
 +    use suite_core::lang::{Lang, LangChoice};
@@ -369,13 +385,23 @@ index 60cbdbd..9936a24 100644
 +    }
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 3cffbd4..4a007a8 100644
+index 3cffbd4..36fa77a 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
-@@ -71,3 +71,25 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+@@ -71,3 +71,35 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
          assert!(pdfcraft_engine::dates::date_language("uz-latn").is_none());
      }
  }
++
++/// A fixed shared `lang` beats the saved language (also a fixed one); `auto` and a language the app does not register keep it.
++#[test]
++fn shared_lang_wins_over_the_saved_language_at_start() {
++    assert_eq!(o::language_at_start("auto", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", None), "de");
++    assert_eq!(o::language_at_start("auto", None), "auto");
++    assert_eq!(o::language_at_start("de", Some("xx")), "de");
++}
 +
 +/// The shared `lang` setting reaches the app's catalog language (patches/pdfcraft/0112): `auto` leaves the app's own choice, a fixed
 +/// language maps to the code the app registers.

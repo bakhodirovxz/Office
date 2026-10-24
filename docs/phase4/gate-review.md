@@ -497,6 +497,7 @@ section 4 into `ci/` (the desktop one needs a desktop session, like the `desktop
 
 1. "Always" by hand on this PC (right-click a .docx > Open with > Hoshiya Docs > Always, check a double-click, then put Word back); then Windows 11 and the domain VM with the same script.
 2. Brief task 5, the apps' language from settings: done in 6413f7a (owner 2026-10-24); nothing to decide.
+   Follow-up (main session, 2026-10-24): one rule for all four apps, a fixed shared `lang` always wins at start, the saved language applies only for `auto`, an in-app change is session-only (shared-services.md 6.1); `ci.sh deny` pdf red on RUSTSEC-2026-0387 fixed by crypto-bigint 0.7.6 (+ ctutils 0.4.5) in the carried lock patch pdfcraft/0900.
 3. F3: OK to add `cargo about` (dev tool, permissive) for the third-party notices before the MSI goes to IT.
 4. WP23 staff sessions.
 5. The handle design for the B-3 pack: write it now (architect, ~0.5 d) or with the B-3 decision at Phase 6.

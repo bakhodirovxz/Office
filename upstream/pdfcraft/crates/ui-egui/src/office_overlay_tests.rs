@@ -72,6 +72,16 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
     }
 }
 
+/// A fixed shared `lang` beats the saved language (also a fixed one); `auto` and a language the app does not register keep it.
+#[test]
+fn shared_lang_wins_over_the_saved_language_at_start() {
+    assert_eq!(o::language_at_start("auto", Some("en")), "en");
+    assert_eq!(o::language_at_start("de", Some("en")), "en");
+    assert_eq!(o::language_at_start("de", None), "de");
+    assert_eq!(o::language_at_start("auto", None), "auto");
+    assert_eq!(o::language_at_start("de", Some("xx")), "de");
+}
+
 /// The shared `lang` setting reaches the app's catalog language (patches/pdfcraft/0112): `auto` leaves the app's own choice, a fixed
 /// language maps to the code the app registers.
 #[test]

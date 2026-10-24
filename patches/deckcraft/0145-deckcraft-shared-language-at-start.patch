@@ -1,30 +1,34 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Sat, 24 Oct 2026 18:00:00 +0500
-Subject: [PATCH] ui-egui: the shared lang setting picks the language when the app's own is auto
+Subject: [PATCH] ui-egui: a fixed shared lang setting wins over the saved
+ language at start
 
-Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang; i18n::from_pref resolves auto to it (English without one, as before).
+Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang once (suite-core, native only; None for auto, no file, the web and tests). main.rs applies office_overlay::start_language after load_prefs: a fixed shared lang always wins over the saved language, auto keeps it; an in-app change holds for the session and is not written back.
 ---
-diff --git a/crates/ui-egui/src/i18n.rs b/crates/ui-egui/src/i18n.rs
-index 9b394c5..39d713b 100644
---- a/crates/ui-egui/src/i18n.rs
-+++ b/crates/ui-egui/src/i18n.rs
-@@ -155,7 +155,9 @@ impl Lang {
- 
- /// Resolve the `language` setting: a language code, or [`AUTO`] (and anything unknown or not built in) for English.
- pub fn from_pref(pref: &str) -> Lang {
--    Lang::from_tag(pref).unwrap_or(Lang::EN)
-+    // office overlay (patches/deckcraft/0145): `auto` follows the shared `lang` setting (English without one).
-+    let shared = || crate::office_overlay::shared_lang_code().and_then(Lang::from_tag);
-+    Lang::from_tag(pref).or_else(|| pref.eq_ignore_ascii_case(AUTO).then(shared).flatten()).unwrap_or(Lang::EN)
- }
- 
- /// The canonical `language` setting for user input: [`AUTO`] or a registered code. `None` for anything else, so the caller keeps the setting.
+ apps/deckcraft/src/main.rs                 |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 36 ++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 33 ++++++++++++++++++++
+ 3 files changed, 71 insertions(+)
+
+diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
+index 732559b..b79c2ce 100644
+--- a/apps/deckcraft/src/main.rs
++++ b/apps/deckcraft/src/main.rs
+@@ -254,6 +254,8 @@ fn main() -> eframe::Result {
+         Box::new(move |cc| {
+             let mut app = SlideApp::new(Session::new(), services());
+             load_prefs(&mut app);
++            // office overlay (patches/deckcraft/0145): a fixed shared `lang` wins over the saved language at each start.
++            app.ui.language = deckcraft_ui_egui::office_overlay::start_language(&app.ui.language);
+             // AutoRecover: reopen what a previous run left unsaved, then keep it current.
+             if std::env::var_os("DECKCRAFT_NO_RECOVERY").is_none() {
+                 app.session.recovery_dir = deckcraft_engine::recovery::default_dir();
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 38a2cc3..7fafba8 100644
+index 38a2cc3..43af098 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -195,3 +195,29 @@ fn use_shared_dictionaries() {
+@@ -195,3 +195,39 @@ fn use_shared_dictionaries() {
          }
      }
  }
@@ -43,6 +47,16 @@ index 38a2cc3..7fafba8 100644
 +    None
 +}
 +
++/// The `language` setting at start: a fixed shared `lang` always wins over the app's saved one, `auto` (`None`) keeps it. A change
++/// made in the app afterwards holds for the session only; the shell is the one writer of `settings.toml`.
++pub fn start_language(own: &str) -> String {
++    language_at_start(own, shared_lang_code())
++}
++
++pub(crate) fn language_at_start(own: &str, shared: Option<&str>) -> String {
++    shared.and_then(crate::i18n::normalize_pref).map_or_else(|| own.to_string(), str::to_string)
++}
++
 +#[cfg(not(target_arch = "wasm32"))]
 +pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
 +    use suite_core::lang::{Lang, LangChoice};
@@ -55,13 +69,23 @@ index 38a2cc3..7fafba8 100644
 +    }
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 19c179e..9b249a5 100644
+index 19c179e..23ec915 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
-@@ -189,3 +189,26 @@ fn shared_dictionary_folders_come_in_order() {
+@@ -189,3 +189,36 @@ fn shared_dictionary_folders_come_in_order() {
      assert!(o::dictionary_dirs("  ", None).is_empty());
      let _ = std::fs::remove_dir_all(root);
  }
++
++/// A fixed shared `lang` beats the saved language (also a fixed one); `auto` and a language the app does not register keep it.
++#[test]
++fn shared_lang_wins_over_the_saved_language_at_start() {
++    assert_eq!(o::language_at_start("auto", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", Some("en")), "en");
++    assert_eq!(o::language_at_start("de", None), "de");
++    assert_eq!(o::language_at_start("auto", None), "auto");
++    assert_eq!(o::language_at_start("de", Some("xx")), "de");
++}
 +
 +/// The shared `lang` setting reaches the app's catalog language (patches/deckcraft/0145): `auto` leaves the app's own choice, a fixed
 +/// language maps to the code the app registers.

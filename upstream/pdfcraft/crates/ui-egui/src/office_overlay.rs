@@ -141,6 +141,16 @@ pub fn shared_lang_code() -> Option<&'static str> {
     None
 }
 
+/// The `language` setting at start: a fixed shared `lang` always wins over the app's saved one, `auto` (`None`) keeps it. A change
+/// made in the app afterwards holds for the session only; the shell is the one writer of `settings.toml`.
+pub fn start_language(own: &str) -> String {
+    language_at_start(own, shared_lang_code())
+}
+
+pub(crate) fn language_at_start(own: &str, shared: Option<&str>) -> String {
+    shared.and_then(crate::i18n::normalize_pref).map_or_else(|| own.to_string(), str::to_string)
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
     use suite_core::lang::{Lang, LangChoice};

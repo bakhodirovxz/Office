@@ -254,6 +254,8 @@ fn main() -> eframe::Result {
         Box::new(move |cc| {
             let mut app = SlideApp::new(Session::new(), services());
             load_prefs(&mut app);
+            // office overlay (patches/deckcraft/0145): a fixed shared `lang` wins over the saved language at each start.
+            app.ui.language = deckcraft_ui_egui::office_overlay::start_language(&app.ui.language);
             // AutoRecover: reopen what a previous run left unsaved, then keep it current.
             if std::env::var_os("DECKCRAFT_NO_RECOVERY").is_none() {
                 app.session.recovery_dir = deckcraft_engine::recovery::default_dir();

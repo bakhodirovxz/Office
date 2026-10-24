@@ -434,6 +434,8 @@ fn main() -> eframe::Result {
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             load_prefs(&mut app);
+            // office overlay (patches/wordcraft/0126): a fixed shared `lang` wins over the saved language at each start.
+            app.ui.language = wordcraft_ui_egui::office_overlay::start_language(&app.ui.language);
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).
