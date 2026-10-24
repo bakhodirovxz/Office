@@ -22,8 +22,11 @@ Content (PLAN Q2 / B-11): Docs for `.docx .doc .rtf .odt`, Slides for `.pptx`, P
 Excel-workload track is done. The identifiers are the ProgIDs the MSI registers (`<aumid>.Document`), so the policy only has an effect on a PC where the MSI is installed.
 
 How it behaves, so nobody is surprised:
-- The policy file is applied at the **first sign-in of a new user profile** (and by DISM for new profiles). Users who already chose a default keep it; on Windows 10/11
-  the per-user `UserChoice` wins over the policy file for an existing profile. This is Windows behaviour, not ours.
+- Two different mechanisms (Windows behaviour, not ours):
+  - the **GPO** is processed on domain-joined PCs only, at **every sign-in of every user**: it sets the listed types to our apps again each time, so a
+    user's own choice for those types lasts only until the next sign-in. Enable it only in an OU where that is wanted;
+  - **DISM import** changes the defaults of **new** profiles only; existing users keep their `UserChoice`.
+  (Corrected in the Phase 4 gate review; to be confirmed on the domain test VM, docs/phase4/windows-verification.md.)
 - Windows 11: the same file works; the Settings UI shows our app only after the MSI is installed.
 - To try it on one PC (needs an elevated prompt, changes the defaults of *new* profiles): `Dism /Online /Import-DefaultAppAssociations:packaging\windows\default-associations.xml`;
   undo with `Dism /Online /Remove-DefaultAppAssociations`.
