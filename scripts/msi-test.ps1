@@ -4,7 +4,8 @@
 # xlsx, pptx and pdf with the registered command line from paths with spaces and Cyrillic, checks the single-instance behaviour, drives the
 # shell's "Open with > Always" for .docx, uninstalls, and diffs the registry before/after. Result lines: OPENWITH, REGISTRY, OPEN, SINGLE, ALWAYS, UNINSTALL.
 # Reversible: the only per-user state it touches is HKCU ...\FileExts\.docx (UserChoice written by the SHELL when the dialog is driven);
-# it is exported first and the key's UserChoice and our OpenWithList entries are removed again. It never writes UserChoice itself.
+# the dialog is driven only when .docx has no UserChoice yet, and that UserChoice is deleted again and checked. It never writes UserChoice
+# itself. The shell's OpenWithList/MuiCache entries from opening files stay (reported as info). Screenshots stay in -Work: review them first.
 # Exit code = number of failed checks (3 = not elevated, 2 = bad input).
 param(
   [Parameter(Mandatory)][string]$Msi,
@@ -87,7 +88,8 @@ function Shot($name) {
   $b = [Windows.Forms.SystemInformation]::VirtualScreen
   $bmp = New-Object Drawing.Bitmap $b.Width, $b.Height; $g = [Drawing.Graphics]::FromImage($bmp)
   $g.CopyFromScreen($b.Location, [Drawing.Point]::Empty, $b.Size); $g.Dispose()
-  $bmp.Save((Join-Path $Evidence "$name.png"), [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
+  # whole virtual screen (other windows of a work PC included): kept in $Work; look before copying any into the evidence folder
+  $bmp.Save((Join-Path $Work "$name.png"), [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
 }
 Add-Type -AssemblyName System.Windows.Forms
 function Snap($tag) {
@@ -116,7 +118,7 @@ foreach ($a in $apps) {
 Write-Host "== before ($(Get-Date -Format s))"
 $ucBefore = @{}; foreach ($e in 'docx', 'xlsx', 'pptx', 'pdf') { $ucBefore[$e] = "$(UC $e)|$(Dflt $e)" }
 $fileExtsDocx = 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.docx'
-reg export $fileExtsDocx "$Work\fileexts-docx-before.reg" /y 2>$null | Out-Null
+if (Test-Path "Registry::HKEY_CURRENT_USER\$($fileExtsDocx.Substring(5))") { reg export $fileExtsDocx "$Work\fileexts-docx-before.reg" /y | Out-Null }   # absent on a fresh profile; reg's stderr would be terminating under 'Stop'
 $existing = @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall' | ForEach-Object { Get-ChildItem $_ -ErrorAction SilentlyContinue } | Where-Object { (Get-ItemProperty $_.PSPath).DisplayName -eq $productName })
 if ($existing) { Write-Host "a $productName package is already installed; uninstall it first"; Stop-Transcript | Out-Null; exit 2 }
 Snap 'A'
@@ -225,6 +227,8 @@ Start-Sleep 1
 # ---- "Always": the SHELL writes UserChoice; this only drives its dialog (UI Automation) and then checks a plain double-click
 Write-Host '== always'
 $alwaysLine = 'ALWAYS docx not run (-NoAlways)'
+# an existing .docx UserChoice is never driven: the shell's hashed, deny-ACL'd key cannot be put back by a script
+if (-not $NoAlways -and $ucBefore['docx'] -notlike '|*') { $NoAlways = $true; $alwaysLine = 'ALWAYS docx not run (.docx already has a UserChoice; left untouched)' }
 if (-not $NoAlways) {
   Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
   $docx = Join-Path $desk $apps[0].file; $ac = $apps[0]
@@ -258,9 +262,11 @@ if (-not $NoAlways) {
   } else { $alwaysLine = "ALWAYS docx NOT DRIVEN (dialog automation found: window=$([bool]$win) item=$([bool]$item) done=$done; UserChoice=[$uc]) - do it by hand: right-click a .docx > Open with > $($ac.name) > Always" }
   Get-Process OpenWith -ErrorAction SilentlyContinue | Stop-Process -Force; Stop-Process -Id $dlg.Id -Force -ErrorAction SilentlyContinue
   foreach ($a in $apps) { Procs $a.bin | Stop-Process -Force -ErrorAction SilentlyContinue }
-  # revert: UserChoice written by the shell and our OpenWithList entries (the state before was "no UserChoice", checked above)
-  if ($ucBefore['docx'] -like '|*') { Remove-Item "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.docx\UserChoice" -Force -ErrorAction SilentlyContinue -Confirm:$false }
-  else { Write-Host '  .docx had a UserChoice before the test: NOT touched, restore it from ' "$Work\fileexts-docx-before.reg by hand if the test changed it" }
+  # revert: the UserChoice the shell wrote (the state before was "no UserChoice", checked above). reg.exe, not Remove-Item: the key
+  # carries a deny-SetValue ACE that makes PowerShell's writable open fail silently. Our OpenWithList entries are shell artefacts (info).
+  $ucKey = "$fileExtsDocx\UserChoice"
+  if (UC 'docx') { try { & reg.exe delete $ucKey /f 2>&1 | Out-Null } catch {} }   # 5.1: native stderr under 'Stop' throws; the check below decides
+  Res ((UC 'docx') -eq '') "ALWAYS revert (.docx UserChoice removed again; if FAIL: reg delete `"$ucKey`" /f)"
 }
 Write-Host $alwaysLine; if ($alwaysLine -match 'FAIL') { $fails++ }
 
@@ -276,15 +282,20 @@ if (-not $KeepInstalled) {
   $ua = [Shell]::RegSet("$Work\A-hkcu.reg"); $uc2 = [Shell]::RegSet("$Work\C-hkcu.reg"); $ud = [Shell]::SymDiff($ua, $uc2)
   # ours = mentions the product, its ProgIDs / exes / codes, or is one of the extension keys we wrote to
   $exts = ($apps | ForEach-Object { $_.ext } | ForEach-Object { [regex]::Escape($_) }) -join '|'
-  $mine = "$productName|$productId|$([regex]::Escape($productCode))|" + (($apps | ForEach-Object { [regex]::Escape($_.progid) + '|' + [regex]::Escape($_.bin) }) -join '|') + "|\\\.($exts)(\\OpenWithProgids)?\t"
+  $mine = "$productName|$productId|" + $(if ($productCode) { "$([regex]::Escape($productCode))|" }) + (($apps | ForEach-Object { [regex]::Escape($_.progid) + '|' + [regex]::Escape($_.bin) }) -join '|') + "|\\\.($exts)(\\OpenWithProgids)?\t"
+  # blocking: a line the INSTALL added (A -> B, ours) that is still there after uninstall. The shell's own per-user artefacts of opening
+  # files (OpenWithList, MuiCache, AppCompat store, association toasts) appear only after B and are reported as info, not counted.
+  $hb = [Shell]::RegSet("$Work\B-hklm.reg"); $ub = [Shell]::RegSet("$Work\B-hkcu.reg")
+  $added = @(@($hb | Where-Object { -not $da.Contains($_) }) + @($ub | Where-Object { -not $ua.Contains($_) }) | Where-Object { $_ -match $mine })
+  $residue = @($added | Where-Object { $dc.Contains($_) -or $uc2.Contains($_) })
   $ours = @($dd + $ud | Where-Object { $_ -match $mine })
   $other = @($dd + $ud | Where-Object { $_ -notmatch $mine })
-  Set-Content (Join-Path $Evidence 'uninstall-diff-ours.txt') $ours -Encoding UTF8; Set-Content (Join-Path $Evidence 'uninstall-diff-other-machine-noise.txt') $other -Encoding UTF8
-  Res (($ours.Count + $left.Count) -eq 0) "UNINSTALL registry diff $($ours.Count) (files left: $($left.Count); other changes on the machine during the run, not ours: $($other.Count))"
-  $ours | Select-Object -First 30 | ForEach-Object { Write-Host "  ours: $_" }
-  # what the installer wrote: A -> B
-  $db = [Shell]::SymDiff($da, [Shell]::RegSet("$Work\B-hklm.reg")) | Where-Object { $_ -match $mine }
-  Set-Content (Join-Path $Evidence 'install-added.txt') $db -Encoding UTF8; Write-Host "  install added $($db.Count) registry lines (install-added.txt)"
+  # the A/C diffs stay in $Work: they hold every unrelated change on this PC during the run (MRU file names); only counts go to evidence
+  Set-Content (Join-Path $Evidence 'uninstall-residue.txt') $residue -Encoding UTF8; Set-Content (Join-Path $Work 'uninstall-diff-ours-incl-shell.txt') $ours -Encoding UTF8; Set-Content (Join-Path $Work 'uninstall-diff-other-machine-noise.txt') $other -Encoding UTF8
+  Res (($residue.Count + $left.Count) -eq 0) "UNINSTALL residue $($residue.Count) of $($added.Count) installed registry lines (files left: $($left.Count); info: product-related shell artefacts $($ours.Count - $residue.Count), other changes on the machine $($other.Count), both in $Work)"
+  $residue | Select-Object -First 30 | ForEach-Object { Write-Host "  left: $_" }
+  Set-Content (Join-Path $Evidence 'install-added.txt') $added -Encoding UTF8; Write-Host "  install added $($added.Count) registry lines (install-added.txt)"
+  Remove-Item "$Work\*-hkcu.reg" -Force -ErrorAction SilentlyContinue   # whole-HKCU dumps: personal data, not kept
 }
 Write-Host "== done: $fails failed check(s)"
 Stop-Transcript | Out-Null
