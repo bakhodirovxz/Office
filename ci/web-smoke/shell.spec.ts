@@ -415,6 +415,7 @@ test('desktop mode: the History panel lists, views, restores after a confirm, co
   await act('hist.restore', 1).click();
   await dlg.getByRole('button', { name: txt('ru', 'hist.restore.ok') }).click();
   await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toContainText(txt('ru', 'hist.restoredtag').replace('{v}', '1')); // the stored English message is shown in the page language
   await expect(page.locator('#hist-msg')).toHaveText(txt('ru', 'hist.restored').replace('{from}', '1').replace('{v}', '3'));
   expect((await sent()).filter((m: any) => m.type === 'history_restore')).toEqual([{ type: 'history_restore', path: KEPT, v: 1 }]);
   await expect(page.locator('#h-vers')).toBeFocused();

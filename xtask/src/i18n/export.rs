@@ -388,9 +388,44 @@ pub fn build_page_json(
     policy: &Policy,
     names: &BTreeMap<String, String>,
 ) -> String {
-    let rows = cat.app_rows("converter");
+    build_scope_json(cat, "converter", &PAGE_LOCALES, chains, mode, policy, names)
+}
+
+/// Locales of the shell page (`web/shell/i18n.json`): the shell's picker has no uz-Latn-2026 entry yet.
+const SHELL_LOCALES: [(&str, &str); 4] = [
+    ("en", "en"),
+    ("ru", "ru"),
+    ("uz-Latn", "uz-latn"),
+    ("uz-Cyrl", "uz-cyrl"),
+];
+
+/// `web/shell/i18n.json` from `i18n/shell.tsv`, same shape and fallback rules as the converter page.
+pub fn shell_json(root: &Path, mode: Mode) -> Result<String, String> {
+    let dir = root.join("i18n");
+    Ok(build_scope_json(
+        &Catalog::load(&dir)?,
+        "shell",
+        &SHELL_LOCALES,
+        &Chains::load(&dir)?,
+        mode,
+        &Policy::load(&dir)?,
+        &BTreeMap::new(),
+    ))
+}
+
+/// One page catalog `{locale: {context: text}}` of the scope `scope` for the given locales.
+pub fn build_scope_json(
+    cat: &Catalog,
+    scope: &str,
+    locales: &[(&str, &str)],
+    chains: &Chains,
+    mode: Mode,
+    policy: &Policy,
+    names: &BTreeMap<String, String>,
+) -> String {
+    let rows = cat.app_rows(scope);
     let mut out = String::from("{\n");
-    for (i, (loc, key)) in PAGE_LOCALES.iter().enumerate() {
+    for (i, (loc, key)) in locales.iter().enumerate() {
         let mut m: BTreeMap<String, String> = BTreeMap::new();
         for row in &rows {
             if row.context.is_empty() || row.context.starts_with('@') {
@@ -400,9 +435,9 @@ pub fn build_page_json(
                 Some(row.source.clone())
             } else if *key == LATN_2026 {
                 let own = Chains(BTreeMap::from([("uz-cyrl".into(), vec!["uz-cyrl".into()])]));
-                resolve(row, "converter", "uz-cyrl", &own, mode, policy).map(|r| latn_2026(&r.0))
+                resolve(row, scope, "uz-cyrl", &own, mode, policy).map(|r| latn_2026(&r.0))
             } else {
-                resolve(row, "converter", key, chains, mode, policy).map(|r| r.0)
+                resolve(row, scope, key, chains, mode, policy).map(|r| r.0)
             };
             if let Some(v) = v {
                 m.entry(row.context.clone()).or_insert(v);
@@ -421,7 +456,7 @@ pub fn build_page_json(
             .map(|(k, v)| format!("    {}: {}", json_str(k), json_str(v)))
             .collect();
         out.push_str(&body.join(",\n"));
-        out.push_str(if i + 1 < PAGE_LOCALES.len() {
+        out.push_str(if i + 1 < locales.len() {
             "\n  },\n"
         } else {
             "\n  }\n"
@@ -1247,5 +1282,22 @@ mod tests {
             "icon.png is stale"
         );
         assert!(icon.starts_with(b"\x89PNG"));
+    }
+
+    #[test]
+    fn the_committed_shell_catalog_is_current() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let json = shell_json(root, Mode::Review).unwrap();
+        let have = fs::read_to_string(root.join("web/shell/i18n.json"))
+            .unwrap()
+            .replace(
+                "
+", "
+",
+            );
+        assert!(
+            have == json,
+            "web/shell/i18n.json is stale: run `cargo xt i18n export shell --format json`"
+        );
     }
 }

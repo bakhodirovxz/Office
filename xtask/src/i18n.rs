@@ -65,8 +65,18 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             };
             if let Some(f) = flag("--format") {
                 // The converter page's catalog: ui/i18n.json (and its icon, from brand.toml) next to --out.
+                if f == "json" && *app == "shell" {
+                    let out = flag("--out")
+                        .map(PathBuf::from)
+                        .unwrap_or_else(|| root.join("web/shell/i18n.json"));
+                    fs::write(&out, export::shell_json(root, mode)?)
+                        .map_err(|e| format!("{}: {e}", out.display()))?;
+                    return Ok(format!("{} written", out.display()));
+                }
                 if f != "json" || *app != "converter" {
-                    return Err("--format json is only available for the converter app".into());
+                    return Err(
+                        "--format json is only available for the converter and shell apps".into(),
+                    );
                 }
                 let out = flag("--out")
                     .map(PathBuf::from)

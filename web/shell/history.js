@@ -26,6 +26,12 @@
     addEventListener('suite-host', done);
     window.ipc.postMessage(JSON.stringify(msg));
   });
+  // The store keeps these two messages in English (suite-core history.rs); they are shown in the page language, the stored data is unchanged.
+  const note = (v) => {
+    const m = /^Restored from version (\d+)$/.exec(v.message || '');
+    if (m) return t('hist.restoredtag', { v: m[1] });
+    return v.message === 'Before restore' ? t('hist.beforerestore') : v.message || t('hist.restoredtag', { v: v.restored_from });
+  };
   const fails = (d, type) => (d.type !== type || d.ok === false ? (say(String(d.error || t('hist.silent')), true), true) : false);
 
   function renderDocs() {
@@ -52,7 +58,7 @@
         ...(v.v === newest ? [' ', el('span', { className: 'tag' }, t('hist.latest'))] : []),
         ...(v.name ? [' ', el('span', { className: 'tag name' }, v.name)] : []),
         el('div', { className: 'muted' }, t('hist.meta', { time: when(v.time), author: v.author, size: size(v.size), hash: String(v.sha256).slice(0, 8) })),
-        ...(v.message || v.restored_from ? [el('div', { className: 'muted' }, v.message || t('hist.restoredtag', { v: v.restored_from }))] : [])),
+        ...(v.message || v.restored_from ? [el('div', { className: 'muted' }, note(v))] : [])),
       el('div', { className: 'acts' },
         btn('hist.view', v, () => view(v)), btn('hist.restore', v, () => restore(v)),
         btn('hist.copy', v, () => copy(v)), btn('hist.name', v, () => rename(v))))));
