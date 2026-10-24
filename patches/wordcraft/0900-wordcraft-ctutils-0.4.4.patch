@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 10:00:00 +0500
+Subject: [PATCH] wordcraft: ctutils 0.4.4 (RUSTSEC-2026-0385)
+
+RUSTSEC-2026-0385: ctutils 0.4.3 to 0.4.4 in Cargo.lock only.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 31028fe..201438f 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -945,9 +945,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "ctutils"
+-version = "0.4.3"
++version = "0.4.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "03bb0e1cc970d482d121d9a1744999169b69a07470b3d644a7894e53fcaf4574"
++checksum = "12218662ccac37d9714f2191252553d67585b97df8c839cbe49e0bde278dc865"
+ dependencies = [
+  "cmov",
+ ]
+-- 
+2.0
