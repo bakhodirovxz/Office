@@ -1,0 +1,400 @@
+﻿HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.csv\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.csv\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.doc\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.doc\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.docm\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.docm\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.docx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.docx\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dot\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dot\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dotm\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dotm\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dotx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.dotx\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.htm\OpenWithProgIds	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.html\OpenWithProgIds	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.markdown	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.markdown\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.markdown\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.md	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.md\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.md\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.ods\OpenWithProgIDs	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.odt\OpenWithProgIDs	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.pdf\OpenWithProgids	"Hoshiya.Pdf.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.potx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.potx\OpenWithProgids	"Hoshiya.Slides.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.ppsx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.ppsx\OpenWithProgids	"Hoshiya.Slides.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.pptx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.pptx\OpenWithProgids	"Hoshiya.Slides.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.rtf\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.rtf\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.tsv\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.tsv\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.txt\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.txt\OpenWithProgids	"Hoshiya.Docs.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xls\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xls\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsb\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsb\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsm\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsm\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlsx\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlt\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xlt\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xltm\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xltm\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xltx\OpenWithProgids	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\.xltx\OpenWithProgids	"Hoshiya.Sheets.Document"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe	"FriendlyAppName"="Hoshiya Docs"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\DefaultIcon	@="C:\\Program Files\\Hoshiya\\hoshiya-docs.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-docs.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".docx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".docm"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".dotx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".dotm"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".doc"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".dot"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".odt"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".rtf"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".txt"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".md"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".markdown"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".html"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-docs.exe\SupportedTypes	".htm"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe	"FriendlyAppName"="Hoshiya PDF"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\DefaultIcon	@="C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\SupportedTypes	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-pdf.exe\SupportedTypes	".pdf"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe	"FriendlyAppName"="Hoshiya Sheets"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\DefaultIcon	@="C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xlsx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xlsm"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xltx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xltm"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xls"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xlt"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".xlsb"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".ods"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".csv"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-sheets.exe\SupportedTypes	".tsv"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe	"FriendlyAppName"="Hoshiya Slides"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\DefaultIcon	@="C:\\Program Files\\Hoshiya\\hoshiya-slides.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-slides.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\SupportedTypes	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\SupportedTypes	".pptx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\SupportedTypes	".potx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Applications\hoshiya-slides.exe\SupportedTypes	".ppsx"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document	@="Hoshiya Docs documents"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document	"AppUserModelID"="Hoshiya.Docs"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\DefaultIcon	@="C:\\Program Files\\Hoshiya\\icons\\hoshiya-docs-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Docs.Document\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-docs.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document	@="Hoshiya PDF pdf viewer"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document	"AppUserModelID"="Hoshiya.Pdf"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\DefaultIcon	@="C:\\Program Files\\Hoshiya\\icons\\hoshiya-pdf-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Pdf.Document\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document	@="Hoshiya Sheets spreadsheets"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document	"AppUserModelID"="Hoshiya.Sheets"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\DefaultIcon	@="C:\\Program Files\\Hoshiya\\icons\\hoshiya-sheets-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Sheets.Document\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document	@="Hoshiya Slides presentations"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document	"AppUserModelID"="Hoshiya.Slides"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\DefaultIcon	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\DefaultIcon	@="C:\\Program Files\\Hoshiya\\icons\\hoshiya-slides-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\shell	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\shell\open	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\shell\open\command	
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Hoshiya.Slides.Document\shell\open\command	@="\"C:\\Program Files\\Hoshiya\\hoshiya-slides.exe\" \"%1\""
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Installer\Products\215803CD2D070C15C9EEF8505B70940D	"ProductName"="Hoshiya"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Installer\Products\215803CD2D070C15C9EEF8505B70940D	"ProductIcon"="C:\\Windows\\Installer\\{DC308512-70D2-51C0-9CEE-8F05B50749D0}\\AppIcon"
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Installer\Products\215803CD2D070C15C9EEF8505B70940D\SourceList	"PackageName"="hoshiya-0.1.0-x64.msi"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities	"ApplicationName"="Hoshiya Docs"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities	"ApplicationDescription"="Hoshiya Docs - documents"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities	"ApplicationIcon"="C:\\Program Files\\Hoshiya\\hoshiya-docs.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".docx"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".docm"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".dotx"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".dotm"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".doc"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".dot"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".odt"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".rtf"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".txt"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".md"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".markdown"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".html"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Docs\Capabilities\FileAssociations	".htm"="Hoshiya.Docs.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities	"ApplicationName"="Hoshiya PDF"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities	"ApplicationDescription"="Hoshiya PDF - pdf viewer"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities	"ApplicationIcon"="C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities\FileAssociations	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Pdf\Capabilities\FileAssociations	".pdf"="Hoshiya.Pdf.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities	"ApplicationName"="Hoshiya Sheets"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities	"ApplicationDescription"="Hoshiya Sheets - spreadsheets"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities	"ApplicationIcon"="C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xlsx"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xlsm"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xltx"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xltm"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xls"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xlt"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".xlsb"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".ods"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".csv"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Sheets\Capabilities\FileAssociations	".tsv"="Hoshiya.Sheets.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities	"ApplicationName"="Hoshiya Slides"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities	"ApplicationDescription"="Hoshiya Slides - presentations"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities	"ApplicationIcon"="C:\\Program Files\\Hoshiya\\hoshiya-slides.exe,0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities\FileAssociations	
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities\FileAssociations	".pptx"="Hoshiya.Slides.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities\FileAssociations	".potx"="Hoshiya.Slides.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Hoshiya\Slides\Capabilities\FileAssociations	".ppsx"="Hoshiya.Slides.Document"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-docs.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-docs.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-docs.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-pdf.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-pdf.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-sheets.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-sheets.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-slides.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-slides.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-slides.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\convert\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dictionaries\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\docs-web\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\pdf-web\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\sheets-web\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\shell\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\dist\\slides-web\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\fonts\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\icons\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-fonts\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-libs\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\deckcraft\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\gridcraft\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Program Files\\Hoshiya\\licenses\\upstream\\wordcraft\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\Windows\\Installer\\{DC308512-70D2-51C0-9CEE-8F05B50749D0}\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\Folders	"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Hoshiya\\"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\0454CAADFDFD19053B8245CB4F2AE25D	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\gridcraft\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\07FC4E24265E3D15E91A28C007424905	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates.json"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\092D83B132BFD2F5287995657DF19C25	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\index.html.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\0994D1C3B2C71E95DACFE7000B5EB7B7	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\137EFE5B1119E715F9C89D71DA7512A1	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\14BED8DBE210C8F5080017ADB7677EA4	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\deckcraft\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\15FBA1AC14C133F54A6CA03DFB6C3E96	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\wordcraft\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\16853CF5D619BCE5AB8A7D1DD484C3EE	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\hoshiya-convert.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\182F28754A79B4B55BAE0F1C8B858969	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\logo-light.svg"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\1AE5BBF172081B359BCB5BDD26AB1AC4	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\icon-192.png"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\1BA47C3B9DF669158858D04FD7F7B67A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\fonts\\OFL.txt"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\1C0BC0183B57ED956B4E436B5734D12B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\slides-web-ee77b54670761893.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\1F762ED6F8BC1A658A6F3D211AE7158A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\vcruntime140.dll"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\220017E3C40421553BA311D9FC615CB9	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\icons\\hoshiya-slides-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\2417B7B12EB557159ACC178CE60E02E3	"215803CD2D070C15C9EEF8505B70940D"="22:\\Software\\Classes\\Hoshiya.Slides.Document\\"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\25F9C8E5E3693755E874C51BF07988F0	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-fonts\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\29C2899C29F95DB5EA2346939F5EA0EB	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\wordcraft\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\2AE02CD26E76E965AB6617EBAB544012	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\SOURCE.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\2C3132C998705F05EAB5B46D9CA97B64	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\ru_RU.dic"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\2D7911C25ABD95B54938FDFC7BB9FBD2	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\index.html.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\2F2F48D25481ECC579D28F75CAD44082	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-fonts\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\310CD93190B6BE1569CF62B04551C6AC	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\tabel.xlsx"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\31C283BD4EFD15C5DA43893FF0B3C00C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\shell.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\32F4A36F254195A52954CC6D63FC72EC	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\index.html"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\34F844E5264DF4858A431C27ED45E05C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\apple-touch-icon.png"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3603D6C15AC43615A92FC4252096C2C4	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya-slides.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\36C0E4379065EEF5A9F31AAC56A0C56C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\sheets-cli.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\39093D21F200AD155AC48AFAD6B905DA	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya-serve.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\39288791B0EAB68598AA57023433B04A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\gridcraft\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3AB8686254067695AA526584B281822C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\logo-LICENSE.txt"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3B2B6727236C7125E8F0E4CB535B6885	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\buyruq.docx"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3B7F35B9B4DDB7D598FE921A25EE7116	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\gridcraft\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3BDE020CEEF997E599692ED24DBBDA4C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\LICENSE-en_US.txt"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3D9FF79FABECACA58AD389D992DCA2C3	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-fonts\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3DB1E62182C99B859AE58FF1ADBB947F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\index.html.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3E02E611F3A9EE153BC242D64B7E9CF0	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\3EB7C16E0CA14DC58B10BA9BB85B86A1	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\pdf-cli.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\40218921E9F3ABF55A9C09F4337B5E81	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\slides-cli.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\44AF64B837EAE5D55B39F1E02185D0D2	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\favicon-1abe3b0c9144911.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\472CC457199D497589156B083A467027	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\icon-512.png"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4842058897EED255F84B474C91C9C08D	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\favicon-87a02b58566e30c8.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\486B02FE4D8BF1F559230DE4EDEC5DEF	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\sheets-web-18ea7b29fa22b23d.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4AA0FF0CF2093EE56BFDB8DDFF6C34AE	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\slides-web-ee77b54670761893_bg.wasm"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4B443F8C0A83A275B9902D3B8A69AC2B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\history.css"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4B83B39AB070C4057A98AEE0E68481CC	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\en_US.aff"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4C5E8FEF49F05C554B96E2870AB47813	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\taqdimot.pptx"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4DCC324DD9531C85481A119B0B38E719	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4E7DC9CD3F0F29C5BB65CA8303A54DAD	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\i18n.json"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\4FD6E639908FDD45085EB7202CD03E5F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\516C3D55E82840754AB415C12342938A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-libs\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\555B3297A439F62539D1D5D4F6C3215A	"215803CD2D070C15C9EEF8505B70940D"="22:\\Software\\Classes\\Hoshiya.Docs.Document\\"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\559B9B93E2EA4D55DB5E40D95824525E	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\NOTICE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\58083A580C3490A50B57022273679984	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\xizmat-xati.docx"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\594917108B7BE045EA47CC1F7CEBABA6	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\logo-dark.svg"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\5E5A16CD59F6C6951A8A08EE1491104A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\LICENSE-ru_RU.txt"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\5EAA5C87F2AD3EB598CB2E748914651A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\sheets-web-18ea7b29fa22b23d.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\5FF4286136FB95057A9D52585BD389B2	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\deckcraft\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\6927E81C41891525F9F73A1165E79385	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\index.html"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\6A7CD98F2E75EBD569946DA9D66ADDCA	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\docs-web-12635770b23446ca_bg.wasm"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\6BCEC9BF6F6E9A05A86B8F04655B3815	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\docs-web-12635770b23446ca.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\6D94071061B0DBE5586B1526AD3775BA	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\pdf-web-9135438f4bdf4ebe_bg.wasm"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\6DF9509C816158055B7B827498005A65	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\icons\\hoshiya-pdf-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\7236A6C3ADB529258BEB2EB0839605D0	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\history.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\75BEFAE64D3B8DF5D8FD48C0F4DD481F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\7AF5019B0488FC75AA62FF8666E22C1E	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\slides-web-ee77b54670761893.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\7E96B6F5E2A1874599D55385C929C911	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\shell.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\7EEE84C46C4BF7C5F965AEC9A479394B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\icon-maskable-512.png"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\829BDF9A5FE9BCF5BAD17DF421C5EEEE	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\history.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\87DB9A74C88D69B5FBCF39D7335D4A11	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\shell.css.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\8925FF89A5F75F45EBE8290992EA35C2	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-libs\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\8B5D4CC64B636375991ABD628C48E45D	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\pdf-web-9135438f4bdf4ebe.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\8CF65B15E433A4F55AFA8DB9E98ECCAD	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\icons\\hoshiya.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\8E072A2F2102FC95DB03AF555B6AE67B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\slides-web\\slides-web-ee77b54670761893_bg.wasm.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\906181701F179225B91DED9881A57499	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\vc-redist.txt"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\90F6368214FF6865BB9D7CCA5CA2F62F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\pdfcraft\\ATTRIBUTION.toml"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\915D3644E141CC3548BB31EC6EB45C6E	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\deckcraft\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\96B7C8233A7154258AFAE1433B4652D1	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates\\xodimlar-royxati.xlsx"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\97727C2FFC3842C598BBB2D368FA1E61	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\docs-web-12635770b23446ca.js.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\982F4EB0807CF9F57BBF9177B14DB266	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\icons\\hoshiya-sheets-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\9AA695732B0D374518DC254191B458BB	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\fonts\\SOURCE.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\9B3D1C13962A7785B808E716FEB2E64F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\gridcraft\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\9F90DD631B577D25182175BFC3B1A5A3	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\sheets-web-18ea7b29fa22b23d_bg.wasm.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\A45E340E5D56B7359BEEFDC508D8D883	"215803CD2D070C15C9EEF8505B70940D"="22:\\Software\\Classes\\Hoshiya.Pdf.Document\\"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\AA5499BB61DFA4258A73339BD389957C	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\docs-web-12635770b23446ca_bg.wasm.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\AC0FD9B86CFED77598CAFDA9D774E752	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\vcruntime140.dll"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\AEB77CD6C802147579A56E2298803648	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\wordcraft\\LICENSE-MIT"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B45AD678BABA48A5588A2283BE07CDBA	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\index.html.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B5040F8BB696941598B9701B748B2293	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B523EA16B8AA4EB59BDE227427C6D92B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\fonts\\NotoSansMono-Regular-uz.ttf"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B6FCAF450B0AA105A94F62FF34F03DBF	"215803CD2D070C15C9EEF8505B70940D"="22:\\Software\\Classes\\Hoshiya.Sheets.Document\\"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B9DE0998A6A0D1452A470AA2535CD254	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\index.html"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\B9EF70AF518D06155BC924A7C9B5D017	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\wordcraft\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\C3CF15975AF8F345EA4B14DAB1C81F3D	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\NotoSans-Regular-uz.ttf.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\C41F09A4B7FFEDC5AB04E68CCF61BEA8	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\index.html"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\C4FFCD1948D83015487B11A10A8B6064	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\icons\\hoshiya-docs-document.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\C835CFBA8D35AAD568288E112EED7EC2	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\ru_RU.aff"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\CD3B9FFF52DF8C95CBE36B3C671ACEA4	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\favicon-64979a38335d5d00.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\CEA6927E4276A0557A9EE8B8253E8F90	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-libs\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\CF08C156ADF713B5BBF43134410173BD	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\templates.json.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\D0D8FB196DDA70D5B9C506828A7BA259	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\index.html.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\D20247DCEAE9BB052AD3CA5AFABD9A34	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\pdf-web-9135438f4bdf4ebe_bg.wasm.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\D247D45F0CD0B855789BA812CD214D48	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\craft-libs\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\D8C20FD5729DAD454B1C1C2B0617B0D6	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\shell.css"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\D988E3D82DC65CE5A8C05A76CEA9F244	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\pdf-web-9135438f4bdf4ebe.js"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\DCC89D55D2998075C83E04460B5B2989	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\brand.toml"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\DDAF0377807EF2452942653E065A930B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\docs-cli.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E0B146115375B935CAF30488F9BC44EB	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\sheets-web\\sheets-web-18ea7b29fa22b23d_bg.wasm"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E13399DF4E630F958AD34A48C8701D15	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\licenses\\upstream\\deckcraft\\ATTRIBUTION.md"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E21D75E8AAAD7965892E1FAD4EE5D1F9	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\fonts\\NotoSans-Regular-uz.ttf"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E5198CC917A0DC15A972BC7CC1BE0C95	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E6004A13E98F8AB529B74A89CCE3962A	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\LICENSE-APACHE"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\E98E9DFC2D010B25186225804A82C2BF	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\i18n.json.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\EAB59FB4E21BB135092796BDBB0D14E7	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\pdf-web\\favicon-9eaacd13540c97aa.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\EE2C898C7C16A3A5784834ACB41656D5	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\vcruntime140_1.dll"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\F38DA9099F0ADDF52A12886E84E6EF29	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\hoshiya-docs.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\F392BA4CF52540E5BA8993B3940F7154	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\favicon.svg"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\F42E6149F3BFB9952812EC1D8BCDC6C9	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\convert\\vcruntime140_1.dll"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\F7A469DC986D2A05DB13003AEBFAAD4B	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dictionaries\\en_US.dic"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\FAD119A0A8D15775AB9DB13DD2B5A0AD	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\favicon.ico"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\FB86AD15245C95051955E2AC62D71E14	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\NotoSans-Regular-uz.ttf"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\FC443FF4AFFC4C756831B0FB87F2E76F	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\site.webmanifest"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\FC4F5084A4F2E2952ABA092F02DD0EDB	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\docs-web\\index.html"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Components\FD92929610306455CB080341EEFAC674	"215803CD2D070C15C9EEF8505B70940D"="C:\\Program Files\\Hoshiya\\dist\\shell\\history.css.br"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products\215803CD2D070C15C9EEF8505B70940D\InstallProperties	"Publisher"="Hoshiya contributors"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products\215803CD2D070C15C9EEF8505B70940D\InstallProperties	"DisplayName"="Hoshiya"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"AuthorizedCDFPrefix"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Comments"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Contact"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"DisplayVersion"="0.1.0"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"HelpLink"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"HelpTelephone"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"InstallDate"="20261024"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"InstallLocation"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"InstallSource"="E:\\office-target\\p1\\wp14\\msi\\"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"ModifyPath"=hex(2):4d,00,73,00,69,00,45,00,78,00,65,00,63,00,2e,00,65,00,78,00,65,00,20,00,2f,00,49,00,7b,00,44,00,43,00,33,00,30,00,38,00,35,00,31,00,32,00,2d,00,37,00,30,00,44,00,32,00,2d,00,35,00,31,00,43,00,30,00,2d,00,39,00,43,00,45,00,45,00,2d,00,38,00,46,00,30,00,35,00,42,00,35,00,30,00,37,00,34,00,39,00,44,00,30,00,7d,00,00,00
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Publisher"="Hoshiya contributors"
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Readme"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Size"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"EstimatedSize"=dword:000830d0
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"UninstallString"=hex(2):4d,00,73,00,69,00,45,00,78,00,65,00,63,00,2e,00,65,00,78,00,65,00,20,00,2f,00,49,00,7b,00,44,00,43,00,33,00,30,00,38,00,35,00,31,00,32,00,2d,00,37,00,30,00,44,00,32,00,2d,00,35,00,31,00,43,00,30,00,2d,00,39,00,43,00,45,00,45,00,2d,00,38,00,46,00,30,00,35,00,42,00,35,00,30,00,37,00,34,00,39,00,44,00,30,00,7d,00,00,00
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"URLInfoAbout"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"URLUpdateInfo"=""
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"VersionMajor"=dword:00000000
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"VersionMinor"=dword:00000001
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"WindowsInstaller"=dword:00000001
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Version"=dword:00010000
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"Language"=dword:00000409
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{DC308512-70D2-51C0-9CEE-8F05B50749D0}	"DisplayName"="Hoshiya"
+HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications	"Hoshiya Docs"="Software\\Hoshiya\\Docs\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications	"Hoshiya Sheets"="Software\\Hoshiya\\Sheets\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications	"Hoshiya Slides"="Software\\Hoshiya\\Slides\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications	"Hoshiya PDF"="Software\\Hoshiya\\Pdf\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-docs.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-docs.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-docs.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-pdf.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-pdf.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-pdf.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-sheets.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-sheets.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-sheets.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-slides.exe	
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\hoshiya-slides.exe	@="C:\\Program Files\\Hoshiya\\hoshiya-slides.exe"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\RegisteredApplications	"Hoshiya Docs"="Software\\Hoshiya\\Docs\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\RegisteredApplications	"Hoshiya Sheets"="Software\\Hoshiya\\Sheets\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\RegisteredApplications	"Hoshiya Slides"="Software\\Hoshiya\\Slides\\Capabilities"
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\RegisteredApplications	"Hoshiya PDF"="Software\\Hoshiya\\Pdf\\Capabilities"
