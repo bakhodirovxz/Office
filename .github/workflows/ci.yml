@@ -24,6 +24,14 @@ on:
         description: "also run the MSVC build job (WP13); SignPath signing is separate, signpath_submit below"
         type: boolean
         default: false
+      desktop:
+        description: "also run the desktop checks (hoshiya.exe templates, editors and shared-toolbar checks); needs a self-hosted Windows runner with an interactive desktop session"
+        type: boolean
+        default: false
+      msi:
+        description: "also build the suite MSI (WP14: MSVC builds + WiX); the install test is scripts/msi-test.ps1, elevated, run by the owner"
+        type: boolean
+        default: false
       signpath_submit:
         description: "WP13 stub, DISABLED until the SignPath Foundation project exists: submit the MSVC artefacts for signing"
         type: boolean
@@ -406,6 +414,59 @@ jobs:
           name: msvc-unsigned
           path: |
             ${{ env.OFFICE_TARGET }}/msvc/*/x86_64-pc-windows-msvc/release/*.exe
+          if-no-files-found: error
+
+  shell:
+    # Phase 4 WP7/WP22: suite-serve tests, the .br files, the shell Playwright spec and the templates spec, sizes. The editor dists must be built
+    # on the runner first (the build jobs above); the self-hosted Windows runner keeps $OFFICE_TARGET/dist between runs.
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [convert]
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
+      - run: scripts/ci.sh disk-guard shell
+
+  desktop:
+    # Phase 4 WP22, on demand (input desktop): drives the real hoshiya.exe and the editor exes, so it needs an interactive desktop session.
+    # Restores the user's settings.toml afterwards (toolbar-share-check.py uses the real one).
+    if: ${{ inputs.desktop }}
+    needs: [queue]
+    runs-on: [self-hosted, windows, x64]   # the runner must run in an interactive desktop session
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: scripts/ci.sh disk-guard desktop
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: desktop-checks
+          path: ${{ env.OFFICE_TARGET }}/ci/${{ github.run_id }}/desktop
+          if-no-files-found: ignore
+
+  msi:
+    # Phase 4 WP14, on demand (input msi): MSVC release builds, shell dist, overlay, WiX 5.0.2 (scripts/build-msi.ps1). Builds the MSI; nothing is installed.
+    if: ${{ inputs.msi }}
+    needs: [queue]
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: scripts/ci.sh disk-guard msi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: msi-unsigned
+          path: ${{ env.OFFICE_TARGET }}/msi/*.msi
           if-no-files-found: error
 
   signpath:
