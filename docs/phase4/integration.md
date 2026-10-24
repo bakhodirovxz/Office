@@ -21,8 +21,7 @@ Found by running the full gate, and fixed:
   One cause: sccache served build scripts and `xtask.exe` that were compiled in the deleted WP0 worktree (`E:/office-target/p1/sync/wp0-main/...`) with
   `env!("CARGO_MANIFEST_DIR")` baked in, so they looked for `contributors/` and the xtask workspace in a folder that no longer exists. Fixed in the build
   environment, not in the repo: `touch` the `build.rs` or xtask `main.rs` and rebuild that package once with `RUSTC_WRAPPER=` empty. After that both tests pass and
-  `test pdfcraft` is green. The poisoned entries are still in the sccache store, so a **fresh checkout elsewhere may hit it again**; clearing `E:/office-cache/sccache`
-  would remove them (not done: it is shared and slow to refill).
+  `test pdfcraft` is green. The poisoned entries lived in the shared sccache store; **fixed at the root (WP22)**: `scripts/env.sh` now gives each checkout its own store (`E:/office-cache/sccache-<cksum of OFFICE_ROOT>`), so entries from a deleted worktree can never be served to another checkout, and the old shared `E:/office-cache/sccache` was deleted. Cost: a new checkout starts with a cold cache. Verified: `cargo xt register check` builds and runs `xtask` from a clean invocation (sccache reports the new location).
 - `lint`: clippy `redundant_closure` in the new lockdiff code (6ef6158); `convert`: rustfmt in the host crates (068bbd8); the host test
   `without_webview2_...` raced a loaded machine with its 4 s exit hook, now 15 s (8f0f2c2).
 
