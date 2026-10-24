@@ -9,12 +9,16 @@
 # Exit code = number of failed checks (3 = not elevated, 2 = bad input).
 param(
   [Parameter(Mandatory)][string]$Msi,
-  [string]$Evidence = (Join-Path $PSScriptRoot '..\docs\phase4\evidence\openwith'),
+  [string]$Evidence = '',
   [string]$Work = (Join-Path $env:TEMP 'hoshiya-msi-test'),
-  [string]$Fixtures = (Join-Path $PSScriptRoot '..'),
+  [string]$Fixtures = '',
   [switch]$NoAlways, [switch]$NoScreens, [switch]$KeepInstalled
 )
 $ErrorActionPreference = 'Stop'
+# 5.1 leaves $PSScriptRoot empty in param defaults (seen with -File under RunAs), so resolve the script dir here
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+if (-not $Evidence) { $Evidence = Join-Path $here '..\docs\phase4\evidence\openwith' }
+if (-not $Fixtures) { $Fixtures = Join-Path $here '..' }
 $me = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not $me.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host 'NOT ELEVATED: start PowerShell as administrator (a per-machine MSI needs it).'; exit 3 }
 if (-not (Test-Path -LiteralPath $Msi)) { Write-Host "no such msi: $Msi"; exit 2 }
@@ -26,7 +30,7 @@ $fails = 0
 function Res($ok, $line) { if ($ok) { Write-Host "$line ok" } else { Write-Host "$line FAIL"; $script:fails++ } }
 
 # ---- brand.toml names (the same regex reader as build-msi.ps1)
-$toml = Get-Content (Join-Path $PSScriptRoot '..\brand\brand.toml') -Raw -Encoding UTF8
+$toml = Get-Content (Join-Path $here '..\brand\brand.toml') -Raw -Encoding UTF8
 function Sec($n) { [regex]::Match($toml, "(?ms)^\[$([regex]::Escape($n))\]\s*\r?\n(.*?)(?=^\[|\z)").Groups[1].Value }
 function Key($s, $k) { [regex]::Match($s, "(?m)^$k\s*=\s*`"([^`"]*)`"").Groups[1].Value }
 $prod = Sec 'product'; $productName = Key $prod 'name'; $productId = Key $prod 'id'
