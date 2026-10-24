@@ -377,13 +377,17 @@ fn shell_catalog_is_complete() {
             );
         }
     }
-    for lang in ["uz-Latn", "uz-Cyrl"] {
-        let s = j["_status"][lang].as_str().unwrap();
-        assert!(
-            (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-"))
-                && !s.contains("owner"),
-            "{lang}: {s}"
-        );
+    // statuses live in the catalog (i18n/shell.tsv columns uz_latn_status, uz_cyrl_status), not in the exported JSON
+    let tsv = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../i18n/shell.tsv")).unwrap();
+    for line in tsv.lines().skip(1) {
+        let f: Vec<&str> = line.split('\t').collect();
+        for s in [f[4], f[6]] {
+            assert!(
+                (s.starts_with("draft:agent-") || s.starts_with("reviewed:agent-")) && !s.contains("owner"),
+                "{}: {s}",
+                f[1]
+            );
+        }
     }
     // the Latin alphabet uses U+02BB, never an ASCII apostrophe, inside a word
     for v in j["uz-Latn"].as_object().unwrap().values() {
