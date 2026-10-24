@@ -349,6 +349,10 @@ fn detect_system_lang() -> Lang {
     if let Some(l) = std::env::var("WORDCRAFT_LANGUAGE").ok().and_then(|v| lang_from_tag(&v)) {
         return l;
     }
+    // office overlay (patches/wordcraft/0126): the shared `lang` setting; `auto` and the web fall through to the system.
+    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
+        return l;
+    }
     let tags: Vec<String> = sys_locale::get_locales().take(16).collect();
     first_supported(tags.iter().map(String::as_str)).unwrap_or(Lang::EN)
 }

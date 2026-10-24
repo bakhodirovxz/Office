@@ -126,3 +126,29 @@ pub fn hidden_command(id: &str) -> bool {
         _ => false,
     }
 }
+
+/// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
+/// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
+/// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.
+#[cfg(not(any(target_arch = "wasm32", test)))]
+pub fn shared_lang_code() -> Option<&'static str> {
+    static CODE: std::sync::OnceLock<Option<&'static str>> = std::sync::OnceLock::new();
+    *CODE.get_or_init(|| code_of(suite_core::settings::load().lang))
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+pub fn shared_lang_code() -> Option<&'static str> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
+    use suite_core::lang::{Lang, LangChoice};
+    match choice {
+        LangChoice::Auto => None,
+        LangChoice::Fixed(Lang::En) => Some("en"),
+        LangChoice::Fixed(Lang::Ru) => Some("ru"),
+        LangChoice::Fixed(Lang::UzLatn | Lang::UzLatn2026) => Some("uz-latn"),
+        LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
+    }
+}

@@ -133,3 +133,20 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
     }
     assert!(checked > 1000, "{checked} upstream rows checked");
 }
+
+/// The shared `lang` setting reaches the app's catalog language (patches/wordcraft/0126): `auto` leaves the app's own choice, a fixed
+/// language maps to the code the app registers.
+#[test]
+fn shared_lang_picks_the_catalog_language() {
+    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
+    assert_eq!(o::code_of(Auto), None);
+    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
+    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
+        assert_eq!(o::code_of(choice), Some(code));
+        if let Some(l) = crate::i18n::Lang::from_code(code) {
+            assert_eq!(l.code(), code);
+        } else {
+            assert!(code.starts_with("uz") && !cfg!(office_uz), "{code} must be registered");
+        }
+    }
+}

@@ -34,6 +34,10 @@ sys-locale = { version = "0.3", features = ["js"] }
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = "=5.19.0"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# office overlay (patches/wordcraft/0126): the shared settings.toml (the `lang` setting); the web has no file
+suite-core = { path = "../../../../crates/suite-core" }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # The browser clock (`SystemTime::now()`/`Instant::now()` panic on wasm32).
 js-sys = "0.3"

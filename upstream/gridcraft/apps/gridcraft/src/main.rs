@@ -102,7 +102,9 @@ fn load_prefs(app: &mut SheetApp) {
         return;
     }
     // First run (or a ui.json without a usable language): follow the desktop's language.
-    app.ui.language = gridcraft_ui_egui::i18n::Language::system();
+    // office overlay (patches/gridcraft/0145): a language chosen in the shell (shared `lang`) wins over the saved one at each start.
+    let shared = gridcraft_ui_egui::office_overlay::shared_lang_code().and_then(gridcraft_ui_egui::i18n::Language::parse);
+    app.ui.language = shared.unwrap_or_else(gridcraft_ui_egui::i18n::Language::system);
     // ...and its light or dark appearance (#239), until a theme is chosen and saved in ui.json.
     app.ui.system_theme = true;
     let Some(dir) = config_dir() else { return };
@@ -110,7 +112,7 @@ fn load_prefs(app: &mut SheetApp) {
         && let Ok(ui) = serde_json::from_slice::<gridcraft_ui_egui::UiState>(&b)
     {
         let saved = serde_json::from_slice(&b).ok().and_then(|v| gridcraft_ui_egui::i18n::saved_language(&v));
-        let language = saved.unwrap_or(app.ui.language);
+        let language = shared.or(saved).unwrap_or(app.ui.language);
         app.ui = ui;
         app.ui.language = language;
     }

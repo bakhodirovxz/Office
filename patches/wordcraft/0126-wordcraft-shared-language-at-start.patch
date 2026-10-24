@@ -1,0 +1,487 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 18:00:00 +0500
+Subject: [PATCH] ui-egui: the shared lang setting picks the language when the app's own is auto
+
+Gate review (brief task 5, owner 2026-10-24): the apps did not read lang from settings.toml. office_overlay::shared_lang_code reads it once (suite-core, native only; None for auto, no file, the web and tests); detect_system_lang uses it after WORDCRAFT_LANGUAGE and before the OS language. Adds the suite-core dependency (native) and its lock entries.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 201438f..75c1e6e 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -129,7 +129,7 @@ checksum = "35f0f96ce78e38c3dc6d8948aa8163d06385be74000f3c7a95bf1eef35d3ea32"
+ dependencies = [
+  "cipher",
+  "cpubits",
+- "cpufeatures",
++ "cpufeatures 0.3.1",
+ ]
+ 
+ [[package]]
+@@ -452,6 +452,12 @@ version = "1.5.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+ 
++[[package]]
++name = "base64"
++version = "0.21.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
++
+ [[package]]
+ name = "base64"
+ version = "0.22.1"
+@@ -499,6 +505,18 @@ name = "bitflags"
+ version = "2.13.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
++dependencies = [
++ "serde_core",
++]
++
++[[package]]
++name = "block-buffer"
++version = "0.10.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++dependencies = [
++ "generic-array",
++]
+ 
+ [[package]]
+ name = "block-buffer"
+@@ -710,7 +728,7 @@ version = "0.5.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e8cf2a2c93cd704877c0858356ed03480ff301ee950b43f1cbe4573b088bfa6c"
+ dependencies = [
+- "crypto-common",
++ "crypto-common 0.2.2",
+  "inout",
+ ]
+ 
+@@ -851,6 +869,15 @@ version = "0.1.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "15b85f9c39137c3a891689859392b1bd49812121d0d61c9caf00d46ed5ce06ae"
+ 
++[[package]]
++name = "cpufeatures"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++dependencies = [
++ "libc",
++]
++
+ [[package]]
+ name = "cpufeatures"
+ version = "0.3.1"
+@@ -934,6 +961,16 @@ version = "0.2.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+ 
++[[package]]
++name = "crypto-common"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++dependencies = [
++ "generic-array",
++ "typenum",
++]
++
+ [[package]]
+ name = "crypto-common"
+ version = "0.2.2"
+@@ -982,15 +1019,25 @@ dependencies = [
+  "rayon",
+ ]
+ 
++[[package]]
++name = "digest"
++version = "0.10.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++dependencies = [
++ "block-buffer 0.10.4",
++ "crypto-common 0.1.7",
++]
++
+ [[package]]
+ name = "digest"
+ version = "0.11.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+ dependencies = [
+- "block-buffer",
++ "block-buffer 0.12.1",
+  "const-oid",
+- "crypto-common",
++ "crypto-common 0.2.2",
+  "ctutils",
+ ]
+ 
+@@ -1536,6 +1583,16 @@ dependencies = [
+  "slab",
+ ]
+ 
++[[package]]
++name = "generic-array"
++version = "0.14.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
++dependencies = [
++ "typenum",
++ "version_check",
++]
++
+ [[package]]
+ name = "gethostname"
+ version = "1.1.0"
+@@ -1901,7 +1958,7 @@ version = "0.13.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "6303bc9732ae41b04cb554b844a762b4115a61bfaa81e3e83050991eeb56863f"
+ dependencies = [
+- "digest",
++ "digest 0.11.3",
+ ]
+ 
+ [[package]]
+@@ -2216,7 +2273,7 @@ name = "krilla"
+ version = "0.8.2"
+ source = "git+https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320b2d1de657b860b3c8abb44e1f2b32bd8"
+ dependencies = [
+- "base64",
++ "base64 0.22.1",
+  "bumpalo",
+  "flate2",
+  "float-cmp",
+@@ -2883,7 +2940,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
+ dependencies = [
+  "libc",
+- "windows-sys 0.52.0",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -3142,7 +3199,7 @@ version = "3.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
+ dependencies = [
+- "toml_edit",
++ "toml_edit 0.25.15+spec-1.1.0",
+ ]
+ 
+ [[package]]
+@@ -3441,6 +3498,18 @@ dependencies = [
+  "windows-sys 0.61.2",
+ ]
+ 
++[[package]]
++name = "ron"
++version = "0.8.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
++dependencies = [
++ "base64 0.21.7",
++ "bitflags 2.13.2",
++ "serde",
++ "serde_derive",
++]
++
+ [[package]]
+ name = "rustc-hash"
+ version = "1.1.0"
+@@ -3633,8 +3702,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+ dependencies = [
+  "cfg-if",
+- "cpufeatures",
+- "digest",
++ "cpufeatures 0.3.1",
++ "digest 0.11.3",
++]
++
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures 0.2.17",
++ "digest 0.10.7",
+ ]
+ 
+ [[package]]
+@@ -3644,8 +3724,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+ dependencies = [
+  "cfg-if",
+- "cpufeatures",
+- "digest",
++ "cpufeatures 0.3.1",
++ "digest 0.11.3",
+ ]
+ 
+ [[package]]
+@@ -3857,6 +3937,16 @@ dependencies = [
+  "write-fonts",
+ ]
+ 
++[[package]]
++name = "suite-core"
++version = "0.1.0"
++dependencies = [
++ "ron",
++ "serde_json",
++ "sha2 0.10.9",
++ "toml_edit 0.22.27",
++]
++
+ [[package]]
+ name = "syn"
+ version = "2.0.119"
+@@ -4026,12 +4116,18 @@ dependencies = [
+  "indexmap",
+  "serde_core",
+  "serde_spanned",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+  "toml_writer",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_datetime"
++version = "0.6.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
++
+ [[package]]
+ name = "toml_datetime"
+ version = "1.1.1+spec-1.1.0"
+@@ -4041,6 +4137,18 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "toml_edit"
++version = "0.22.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
++dependencies = [
++ "indexmap",
++ "toml_datetime 0.6.11",
++ "toml_write",
++ "winnow 0.7.15",
++]
++
+ [[package]]
+ name = "toml_edit"
+ version = "0.25.15+spec-1.1.0"
+@@ -4048,9 +4156,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614"
+ dependencies = [
+  "indexmap",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
+ [[package]]
+@@ -4059,9 +4167,15 @@ version = "1.1.3+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
+ dependencies = [
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_write"
++version = "0.1.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
++
+ [[package]]
+ name = "toml_writer"
+ version = "1.1.2+spec-1.1.0"
+@@ -5086,6 +5200,15 @@ dependencies = [
+  "xkbcommon-dl",
+ ]
+ 
++[[package]]
++name = "winnow"
++version = "0.7.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "winnow"
+ version = "1.0.4"
+@@ -5212,7 +5335,7 @@ name = "wordcraft-docx"
+ version = "0.9.0"
+ dependencies = [
+  "aes",
+- "base64",
++ "base64 0.22.1",
+  "cfb",
+  "getrandom 0.3.4",
+  "hmac",
+@@ -5221,7 +5344,7 @@ dependencies = [
+  "proptest",
+  "quick-xml",
+  "sha1",
+- "sha2",
++ "sha2 0.11.0",
+  "thiserror 2.0.21",
+  "unicode-bidi",
+  "wordcraft-doc",
+@@ -5391,6 +5514,7 @@ dependencies = [
+  "log",
+  "serde",
+  "serde_json",
++ "suite-core",
+  "sys-locale",
+  "toml",
+  "unicode-bidi",
+@@ -5596,7 +5720,7 @@ dependencies = [
+  "uds_windows",
+  "uuid",
+  "windows-sys 0.61.2",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_macros",
+  "zbus_names",
+  "zvariant",
+@@ -5648,7 +5772,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d8bf88b4a3ff53e883001e0e0115b297a9d53c31b9c1edd2bfdd853e3428624e"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zvariant",
+ ]
+ 
+@@ -5659,7 +5783,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d1586c021a01ca0a9216dcd874e546382e156a5cbab5fab6cb5f10087e22682a"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_names",
+  "zvariant",
+ ]
+@@ -5815,7 +5939,7 @@ dependencies = [
+  "endi",
+  "enumflags2",
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zcheapstr",
+  "zvariant_derive",
+  "zvariant_utils",
+@@ -5844,5 +5968,5 @@ dependencies = [
+  "quote",
+  "serde",
+  "syn 3.0.6",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 48ed412..8e97fe5 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -34,6 +34,10 @@ sys-locale = { version = "0.3", features = ["js"] }
+ [target.'cfg(target_os = "linux")'.dependencies]
+ zbus = "=5.19.0"
+ 
++[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
++# office overlay (patches/wordcraft/0126): the shared settings.toml (the `lang` setting); the web has no file
++suite-core = { path = "../../../../crates/suite-core" }
++
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ # The browser clock (`SystemTime::now()`/`Instant::now()` panic on wasm32).
+ js-sys = "0.3"
+diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
+index b9e5b79..287086b 100644
+--- a/crates/ui-egui/src/i18n/mod.rs
++++ b/crates/ui-egui/src/i18n/mod.rs
+@@ -349,6 +349,10 @@ fn detect_system_lang() -> Lang {
+     if let Some(l) = std::env::var("WORDCRAFT_LANGUAGE").ok().and_then(|v| lang_from_tag(&v)) {
+         return l;
+     }
++    // office overlay (patches/wordcraft/0126): the shared `lang` setting; `auto` and the web fall through to the system.
++    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
++        return l;
++    }
+     let tags: Vec<String> = sys_locale::get_locales().take(16).collect();
+     first_supported(tags.iter().map(String::as_str)).unwrap_or(Lang::EN)
+ }
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 08c3b41..b239bc1 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -143,3 +143,29 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value)
+ pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
+     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
+ }
++
++/// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
++/// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
++/// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    static CODE: std::sync::OnceLock<Option<&'static str>> = std::sync::OnceLock::new();
++    *CODE.get_or_init(|| code_of(suite_core::settings::load().lang))
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    None
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
++    use suite_core::lang::{Lang, LangChoice};
++    match choice {
++        LangChoice::Auto => None,
++        LangChoice::Fixed(Lang::En) => Some("en"),
++        LangChoice::Fixed(Lang::Ru) => Some("ru"),
++        LangChoice::Fixed(Lang::UzLatn | Lang::UzLatn2026) => Some("uz-latn"),
++        LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index ce63b24..6187a31 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -133,3 +133,20 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
+     }
+     assert!(checked > 1000, "{checked} upstream rows checked");
+ }
++
++/// The shared `lang` setting reaches the app's catalog language (patches/wordcraft/0126): `auto` leaves the app's own choice, a fixed
++/// language maps to the code the app registers.
++#[test]
++fn shared_lang_picks_the_catalog_language() {
++    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
++    assert_eq!(o::code_of(Auto), None);
++    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
++    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
++        assert_eq!(o::code_of(choice), Some(code));
++        if let Some(l) = crate::i18n::Lang::from_code(code) {
++            assert_eq!(l.code(), code);
++        } else {
++            assert!(code.starts_with("uz") && !cfg!(office_uz), "{code} must be registered");
++        }
++    }
++}

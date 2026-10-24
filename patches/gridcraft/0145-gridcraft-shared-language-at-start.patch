@@ -1,0 +1,89 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 18:00:00 +0500
+Subject: [PATCH] desktop: the shared lang setting wins over the saved language at start
+
+Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang; load_prefs uses it over ui.json's language (Sheets has no auto value). A shared auto leaves the saved or system language.
+---
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index f7a7e75..302517f 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -102,7 +102,9 @@ fn load_prefs(app: &mut SheetApp) {
+         return;
+     }
+     // First run (or a ui.json without a usable language): follow the desktop's language.
+-    app.ui.language = gridcraft_ui_egui::i18n::Language::system();
++    // office overlay (patches/gridcraft/0145): a language chosen in the shell (shared `lang`) wins over the saved one at each start.
++    let shared = gridcraft_ui_egui::office_overlay::shared_lang_code().and_then(gridcraft_ui_egui::i18n::Language::parse);
++    app.ui.language = shared.unwrap_or_else(gridcraft_ui_egui::i18n::Language::system);
+     // ...and its light or dark appearance (#239), until a theme is chosen and saved in ui.json.
+     app.ui.system_theme = true;
+     let Some(dir) = config_dir() else { return };
+@@ -110,7 +112,7 @@ fn load_prefs(app: &mut SheetApp) {
+         && let Ok(ui) = serde_json::from_slice::<gridcraft_ui_egui::UiState>(&b)
+     {
+         let saved = serde_json::from_slice(&b).ok().and_then(|v| gridcraft_ui_egui::i18n::saved_language(&v));
+-        let language = saved.unwrap_or(app.ui.language);
++        let language = shared.or(saved).unwrap_or(app.ui.language);
+         app.ui = ui;
+         app.ui.language = language;
+     }
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 6276a68..a3e041e 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -112,3 +112,29 @@ thread_local! {
+ pub fn set_lang(code: &'static str) {
+     LANG_CODE.set(code);
+ }
++
++/// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
++/// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
++/// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    static CODE: std::sync::OnceLock<Option<&'static str>> = std::sync::OnceLock::new();
++    *CODE.get_or_init(|| code_of(suite_core::settings::load().lang))
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    None
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
++    use suite_core::lang::{Lang, LangChoice};
++    match choice {
++        LangChoice::Auto => None,
++        LangChoice::Fixed(Lang::En) => Some("en"),
++        LangChoice::Fixed(Lang::Ru) => Some("ru"),
++        LangChoice::Fixed(Lang::UzLatn | Lang::UzLatn2026) => Some("uz-latn"),
++        LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 35a8458..b6bb88f 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -130,3 +130,19 @@ fn russian_gets_our_rows_and_keeps_upstreams() {
+         assert_eq!(ru.tr("Transliterate"), "Transliterate");
+     }
+ }
++
++/// The shared `lang` setting reaches the app's catalog language (patches/gridcraft/0145): `auto` leaves the app's own choice, a fixed
++/// language maps to the code the app registers.
++#[test]
++fn shared_lang_picks_the_catalog_language() {
++    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
++    assert_eq!(o::code_of(Auto), None);
++    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
++    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
++        assert_eq!(o::code_of(choice), Some(code));
++        match crate::i18n::Language::parse(code) {
++            Some(l) => assert_eq!(l.code(), code),
++            None => assert!(code.starts_with("uz") && !cfg!(office_uz), "{code} must be registered"),
++        }
++    }
++}

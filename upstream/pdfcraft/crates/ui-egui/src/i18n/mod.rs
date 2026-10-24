@@ -366,6 +366,10 @@ pub fn system_lang() -> Lang {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn detect_system_lang() -> Lang {
+    // office overlay (patches/pdfcraft/0112): the shared `lang` setting; `auto` falls through to the system.
+    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
+        return l;
+    }
     for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
         if let Some(l) = std::env::var(var).ok().and_then(|v| language_override(&v)) {
             return l;

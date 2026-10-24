@@ -189,3 +189,21 @@ fn shared_dictionary_folders_come_in_order() {
     assert!(o::dictionary_dirs("  ", None).is_empty());
     let _ = std::fs::remove_dir_all(root);
 }
+
+/// The shared `lang` setting reaches the app's catalog language (patches/deckcraft/0145): `auto` leaves the app's own choice, a fixed
+/// language maps to the code the app registers.
+#[test]
+fn shared_lang_picks_the_catalog_language() {
+    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
+    assert_eq!(o::code_of(Auto), None);
+    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
+    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
+        assert_eq!(o::code_of(choice), Some(code));
+        let l = crate::i18n::from_pref(code);
+        if l != crate::i18n::Lang::EN {
+            assert_eq!(l.code(), code);
+        } else {
+            assert!(code == "en" || (code == "ru" && !cfg!(office_ru)) || (code.starts_with("uz") && !cfg!(office_uz)), "{code} must be registered");
+        }
+    }
+}

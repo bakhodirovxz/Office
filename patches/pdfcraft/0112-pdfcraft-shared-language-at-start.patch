@@ -1,0 +1,395 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 18:00:00 +0500
+Subject: [PATCH] ui-egui: the shared lang setting picks the language when the app's own is auto
+
+Gate review (brief task 5, owner 2026-10-24): office_overlay::shared_lang_code reads the shared lang (suite-core, native only); the desktop detect_system_lang uses it before the OS language. Adds the suite-core dependency (native) and its lock entries.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 150de22..bf7fe69 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -475,6 +475,12 @@ version = "1.0.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "fd307490d624467aa6f74b0eabb77633d1f758a7b25f12bceb0b22e08d9726f6"
+ 
++[[package]]
++name = "base64"
++version = "0.21.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
++
+ [[package]]
+ name = "base64"
+ version = "0.22.1"
+@@ -1593,7 +1599,7 @@ dependencies = [
+  "pollster 1.0.1",
+  "profiling",
+  "raw-window-handle",
+- "ron",
++ "ron 0.12.2",
+  "serde",
+  "static_assertions",
+  "wasm-bindgen",
+@@ -1619,7 +1625,7 @@ dependencies = [
+  "log",
+  "nohash-hasher",
+  "profiling",
+- "ron",
++ "ron 0.12.2",
+  "serde",
+  "smallvec",
+  "unicode-segmentation",
+@@ -1887,7 +1893,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
+ dependencies = [
+  "libc",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -3308,7 +3314,7 @@ dependencies = [
+  "objc2-foundation 0.3.2",
+  "png 0.18.1",
+  "thiserror 2.0.21",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -4389,6 +4395,7 @@ dependencies = [
+  "serde",
+  "serde_json",
+  "skrifa 0.44.0",
++ "suite-core",
+  "sys-locale",
+  "toml",
+  "unicode-bidi",
+@@ -4792,7 +4799,7 @@ version = "3.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
+ dependencies = [
+- "toml_edit",
++ "toml_edit 0.25.15+spec-1.1.0",
+ ]
+ 
+ [[package]]
+@@ -4934,7 +4941,7 @@ dependencies = [
+  "once_cell",
+  "socket2",
+  "tracing",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -5293,6 +5300,18 @@ dependencies = [
+  "digest 0.11.3",
+ ]
+ 
++[[package]]
++name = "ron"
++version = "0.8.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
++dependencies = [
++ "base64 0.21.7",
++ "bitflags 2.13.2",
++ "serde",
++ "serde_derive",
++]
++
+ [[package]]
+ name = "ron"
+ version = "0.12.2"
+@@ -5484,7 +5503,7 @@ dependencies = [
+  "errno",
+  "libc",
+  "linux-raw-sys 0.12.1",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -5554,7 +5573,7 @@ dependencies = [
+  "security-framework",
+  "security-framework-sys",
+  "webpki-root-certs",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -6209,7 +6228,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
+ dependencies = [
+  "libc",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -6306,6 +6325,16 @@ version = "2.6.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+ 
++[[package]]
++name = "suite-core"
++version = "0.1.0"
++dependencies = [
++ "ron 0.8.1",
++ "serde_json",
++ "sha2 0.10.9",
++ "toml_edit 0.22.27",
++]
++
+ [[package]]
+ name = "svgtypes"
+ version = "0.15.3"
+@@ -6428,10 +6457,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+ dependencies = [
+  "fastrand",
+- "getrandom 0.3.4",
++ "getrandom 0.4.3",
+  "once_cell",
+  "rustix 1.1.5",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -6646,12 +6675,18 @@ dependencies = [
+  "indexmap",
+  "serde_core",
+  "serde_spanned",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+  "toml_writer",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_datetime"
++version = "0.6.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
++
+ [[package]]
+ name = "toml_datetime"
+ version = "1.1.1+spec-1.1.0"
+@@ -6661,6 +6696,18 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "toml_edit"
++version = "0.22.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
++dependencies = [
++ "indexmap",
++ "toml_datetime 0.6.11",
++ "toml_write",
++ "winnow 0.7.15",
++]
++
+ [[package]]
+ name = "toml_edit"
+ version = "0.25.15+spec-1.1.0"
+@@ -6668,9 +6715,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614"
+ dependencies = [
+  "indexmap",
+- "toml_datetime",
++ "toml_datetime 1.1.1+spec-1.1.0",
+  "toml_parser",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
+ [[package]]
+@@ -6679,9 +6726,15 @@ version = "1.1.3+spec-1.1.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
+ dependencies = [
+- "winnow",
++ "winnow 1.0.4",
+ ]
+ 
++[[package]]
++name = "toml_write"
++version = "0.1.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
++
+ [[package]]
+ name = "toml_writer"
+ version = "1.1.2+spec-1.1.0"
+@@ -6800,7 +6853,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
+ dependencies = [
+  "memoffset",
+  "tempfile",
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -7514,7 +7567,7 @@ version = "0.1.11"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
+ dependencies = [
+- "windows-sys 0.60.2",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+@@ -7843,6 +7896,15 @@ dependencies = [
+  "xkbcommon-dl",
+ ]
+ 
++[[package]]
++name = "winnow"
++version = "0.7.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
++dependencies = [
++ "memchr",
++]
++
+ [[package]]
+ name = "winnow"
+ version = "1.0.4"
+@@ -8096,7 +8158,7 @@ dependencies = [
+  "uds_windows",
+  "uuid",
+  "windows-sys 0.61.2",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_macros",
+  "zbus_names",
+  "zvariant",
+@@ -8148,7 +8210,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d8bf88b4a3ff53e883001e0e0115b297a9d53c31b9c1edd2bfdd853e3428624e"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zvariant",
+ ]
+ 
+@@ -8159,7 +8221,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d1586c021a01ca0a9216dcd874e546382e156a5cbab5fab6cb5f10087e22682a"
+ dependencies = [
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zbus_names",
+  "zvariant",
+ ]
+@@ -8303,7 +8365,7 @@ dependencies = [
+  "endi",
+  "enumflags2",
+  "serde",
+- "winnow",
++ "winnow 1.0.4",
+  "zcheapstr",
+  "zvariant_derive",
+  "zvariant_utils",
+@@ -8332,5 +8394,5 @@ dependencies = [
+  "quote",
+  "serde",
+  "syn 3.0.6",
+- "winnow",
++ "winnow 1.0.4",
+ ]
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 42e9474..8b6b757 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -44,6 +44,8 @@ getrandom = "0.4"
+ arboard = { version = "3.6", default-features = false, features = ["image-data"] }
+ # Waits for native file pickers off the UI thread (already in the tree through wgpu).
+ pollster = "1.0"
++# office overlay (patches/pdfcraft/0112): the shared settings.toml (the `lang` setting); the web has no file
++suite-core = { path = "../../../../crates/suite-core" }
+ 
+ [target.'cfg(all(unix, not(target_os = "macos"), not(target_arch = "wasm32")))'.dependencies]
+ # Discover configured font directories without linking libfontconfig or running a subprocess.
+diff --git a/crates/ui-egui/src/i18n/mod.rs b/crates/ui-egui/src/i18n/mod.rs
+index 2f080cf..cfb6397 100644
+--- a/crates/ui-egui/src/i18n/mod.rs
++++ b/crates/ui-egui/src/i18n/mod.rs
+@@ -366,6 +366,10 @@ pub fn system_lang() -> Lang {
+ 
+ #[cfg(not(target_arch = "wasm32"))]
+ fn detect_system_lang() -> Lang {
++    // office overlay (patches/pdfcraft/0112): the shared `lang` setting; `auto` falls through to the system.
++    if let Some(l) = crate::office_overlay::shared_lang_code().and_then(lang_from_tag) {
++        return l;
++    }
+     for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
+         if let Some(l) = std::env::var(var).ok().and_then(|v| language_override(&v)) {
+             return l;
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 60cbdbd..9936a24 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -126,3 +126,29 @@ pub fn hidden_command(id: &str) -> bool {
+         _ => false,
+     }
+ }
++
++/// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
++/// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
++/// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    static CODE: std::sync::OnceLock<Option<&'static str>> = std::sync::OnceLock::new();
++    *CODE.get_or_init(|| code_of(suite_core::settings::load().lang))
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_lang_code() -> Option<&'static str> {
++    None
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static str> {
++    use suite_core::lang::{Lang, LangChoice};
++    match choice {
++        LangChoice::Auto => None,
++        LangChoice::Fixed(Lang::En) => Some("en"),
++        LangChoice::Fixed(Lang::Ru) => Some("ru"),
++        LangChoice::Fixed(Lang::UzLatn | Lang::UzLatn2026) => Some("uz-latn"),
++        LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 3cffbd4..d9776e4 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -71,3 +71,20 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+         assert!(pdfcraft_engine::dates::date_language("uz-latn").is_none());
+     }
+ }
++
++/// The shared `lang` setting reaches the app's catalog language (patches/pdfcraft/0112): `auto` leaves the app's own choice, a fixed
++/// language maps to the code the app registers.
++#[test]
++fn shared_lang_picks_the_catalog_language() {
++    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
++    assert_eq!(o::code_of(Auto), None);
++    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
++    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
++        assert_eq!(o::code_of(choice), Some(code));
++        if let Some(l) = crate::i18n::Lang::from_code(code) {
++            assert_eq!(l.code(), code);
++        } else {
++            assert!(code.starts_with("uz") && !cfg!(office_uz), "{code} must be registered");
++        }
++    }
++}
