@@ -14,7 +14,7 @@ use xdfu_core::audit;
 
 use crate::layer;
 
-static TURN: Mutex<()> = Mutex::new(());
+pub(crate) static TURN: Mutex<()> = Mutex::new(());
 
 struct T {
     dir: PathBuf,
@@ -209,6 +209,27 @@ fn watermark_carries_copy_number_and_user_and_nothing_is_refused() {
     plain.run("file.exportPdf", &json!({"path": t.p("n.pdf")})).unwrap();
     assert!(!pdf_text(&t.p("n.pdf")).contains("XDFU copy"));
     assert_eq!(t.lines(), 4);
+}
+
+#[test]
+fn printing_to_paper_carries_the_stamp_and_an_audit_line() {
+    let t = T::new("paper");
+    layer::configure(None, t.audit());
+    let mut s = session("XDFU");
+    // what the Print dialog's Submit does: the PDF through the print hook, not the `file.printPdf` command
+    let (bytes, _) = layer::print_wrap(&mut s, &mut |s| s.print_pdf(&json!({}))).unwrap();
+    std::fs::write(t.p("paper.pdf"), bytes).unwrap();
+    let text = pdf_text(&t.p("paper.pdf"));
+    assert_eq!(copy_no(&text), 1, "{text}");
+    assert_eq!(t.lines(), 1);
+    assert_eq!(s.doc.settings.watermark, None);
+    // a job that fails is neither stamped nor counted as a copy, and the error comes through
+    let r = layer::print_wrap(&mut s, &mut |_| Err(wordcraft_engine::CmdError::Failed("no".into())));
+    assert!(r.is_err());
+    // no grif: printed as it is
+    let mut plain = session("Hello");
+    layer::print_wrap(&mut plain, &mut |s| s.print_pdf(&json!({}))).unwrap();
+    assert_eq!(t.lines(), 2, "the failed job left a print_failed line, the plain one nothing");
 }
 
 #[test]

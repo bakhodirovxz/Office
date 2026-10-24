@@ -120,6 +120,25 @@ pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
     }
 }
 
+/// A print job's PDF: `(bytes, plan)` of `Session::print_pdf`.
+pub type PrintJob = Result<(Vec<u8>, wordcraft_engine::print::PrintPlan), wordcraft_engine::CmdError>;
+type PrintHook = fn(&mut wordcraft_engine::Session, &mut dyn FnMut(&mut wordcraft_engine::Session) -> PrintJob) -> PrintJob;
+static PRINT: std::sync::OnceLock<PrintHook> = std::sync::OnceLock::new();
+
+/// The extension sees every PDF that goes to a physical printer (XDFU watermark and audit line), like it sees an export.
+pub fn set_print_hook(h: PrintHook) {
+    let _ = PRINT.set(h);
+}
+
+/// `Session::print_pdf`, through the extension's print hook when there is one.
+pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value) -> PrintJob {
+    let mut run = |s: &mut wordcraft_engine::Session| s.print_pdf(params);
+    match PRINT.get() {
+        Some(h) => h(s, &mut run),
+        None => run(s),
+    }
+}
+
 /// Draw icon `name` if the extension has one; false lets upstream draw it.
 pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))

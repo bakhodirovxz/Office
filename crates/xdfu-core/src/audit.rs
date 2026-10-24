@@ -321,7 +321,15 @@ impl AuditLog {
                 (format!("{event}_failed"), Err(e))
             }
         };
-        self.write_line(n, &prev, &event, fields)
+        // a second process may have taken over a lock held > 30 s while `produce` ran: chain onto the tail as it is now, not as it was
+        let (tail_seq, tail_hash) = self.tail().map_err(Appended::Log)?;
+        let (line_seq, prev) = if tail_seq + 1 == n { (n, prev) } else { (tail_seq + 1, tail_hash) };
+        if line_seq != n {
+            if let Value::Object(m) = &mut fields {
+                m.insert("copy".into(), n.into());
+            }
+        }
+        self.write_line(line_seq, &prev, &event, fields)
             .map_err(Appended::Log)?;
         made.map(|t| (n, t)).map_err(Appended::Produce)
     }
@@ -503,6 +511,27 @@ mod tests {
         fs::write(&kf, b"short").unwrap();
         assert!(load_key(&kf).is_err());
         let _ = fs::remove_dir_all(p.parent().unwrap());
+    }
+
+    #[test]
+    fn a_lock_taken_over_during_production_keeps_the_chain_intact() {
+        let p = tmp("takeover");
+        let a = AuditLog::open(&p, false).unwrap();
+        let b = AuditLog::open(&p, false).unwrap();
+        a.append("export", serde_json::json!({})).unwrap();
+        let lock = PathBuf::from(format!("{}.lock", p.display()));
+        // the other process took the stale lock and wrote its line while `a` was still producing
+        let (n, ()) = a
+            .append_after("print", serde_json::json!({}), |_| {
+                fs::remove_file(&lock).unwrap();
+                b.append("export", serde_json::json!({})).map(|_| ())
+            })
+            .ok()
+            .unwrap();
+        assert_eq!(n, 2, "the copy number that was stamped");
+        let v = verify(&p).expect("chain verifies");
+        assert_eq!(v.lines, 3);
+        let _ = fs::remove_file(&p);
     }
 
     #[test]

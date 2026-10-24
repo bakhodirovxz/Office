@@ -5,7 +5,7 @@ Subject: [PATCH] ui-egui: look up Version History's error message in the catalog
 
 PLAN WP17: the "Save the file first, then open its version history." message of `office.history` (office_history.rs, 0143)
 reached the toast as English text although the string is in i18n/gridcraft.tsv. `run` now passes the command's error
-through the catalog.
+through the catalog; the message is an `EngineError::Other` (a `BadParams` Display adds a prefix and the whole-string lookup never matched).
 ---
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
 index b291023..bc7dc51 100644
@@ -20,5 +20,18 @@ index b291023..bc7dc51 100644
          if id.starts_with("tools.translit")
              && let Ok(v) = &r
          {
+diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
+index 6dd8cc3..a496afb 100644
+--- a/crates/ui-egui/src/office_history.rs
++++ b/crates/ui-egui/src/office_history.rs
+@@ -68,7 +68,7 @@ fn bad(cmd: &str, msg: &str) -> EngineError {
+ }
+ 
+ fn history_cmd(s: &mut Session, _: &Json) -> Result<Json> {
+-    let path = s.doc()?.path.clone().ok_or_else(|| bad("office.history", "Save the file first, then open its version history."))?;
++    let path = s.doc()?.path.clone().ok_or_else(|| EngineError::Other("Save the file first, then open its version history.".into()))?;
+     history::open_panel(Path::new(&path)).map_err(|e| EngineError::Internal("office.history".into(), e.to_string()))?;
+     Ok(json!({"path": path}))
+ }
 -- 
 2.0

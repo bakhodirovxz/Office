@@ -68,7 +68,7 @@ fn bad(cmd: &str, msg: &str) -> EngineError {
 }
 
 fn history_cmd(s: &mut Session, _: &Json) -> Result<Json> {
-    let path = s.doc()?.path.clone().ok_or_else(|| bad("office.history", "Save the file first, then open its version history."))?;
+    let path = s.doc()?.path.clone().ok_or_else(|| EngineError::Other("Save the file first, then open its version history.".into()))?;
     history::open_panel(Path::new(&path)).map_err(|e| EngineError::Internal("office.history".into(), e.to_string()))?;
     Ok(json!({"path": path}))
 }

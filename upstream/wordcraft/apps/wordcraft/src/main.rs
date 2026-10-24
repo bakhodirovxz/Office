@@ -429,6 +429,8 @@ fn main() -> eframe::Result {
             docs_office::install(&mut session);
             #[cfg(feature = "office-ext")]
             wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
+            #[cfg(feature = "office-ext")]
+            wordcraft_ui_egui::office_overlay::set_print_hook(docs_office::print_wrap);
             session.system_region = region;
             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
             load_prefs(&mut app);

@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 24 Oct 2026 15:00:00 +0500
+Subject: [PATCH] ui-egui: send the PDF of a print to a physical printer through the office print hook
+
+Gate review F4: File > Print > Submit renders its PDF with `Session::print_pdf` (printing.rs), not through the guarded
+`file.printPdf` command, so with XDFU on a paper copy had no watermark and no audit line. `office_overlay::print_pdf` now
+calls an extension hook when the app sets one (`set_print_hook`, set with `set_ext` behind `office-ext`); docs-office
+(`print_wrap`) stamps and audits it. Without the hook it is `Session::print_pdf` as before. Printing is never blocked.
+---
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 54c5167..f839464 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -83,6 +83,8 @@ pub fn start() {
+                     docs_office::install(&mut session);
+                     #[cfg(feature = "office-ext")]
+                     wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
++                    #[cfg(feature = "office-ext")]
++                    wordcraft_ui_egui::office_overlay::set_print_hook(docs_office::print_wrap);
+                     session.system_region = region;
+                     let messages = Rc::new(RefCell::new(Vec::new()));
+                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index dd07630..86b5e3c 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -429,6 +429,8 @@ fn main() -> eframe::Result {
+             docs_office::install(&mut session);
+             #[cfg(feature = "office-ext")]
+             wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
++            #[cfg(feature = "office-ext")]
++            wordcraft_ui_egui::office_overlay::set_print_hook(docs_office::print_wrap);
+             session.system_region = region;
+             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+             load_prefs(&mut app);
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 91bb4d5..08c3b41 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -120,6 +120,25 @@ pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
+     }
+ }
+ 
++/// A print job's PDF: `(bytes, plan)` of `Session::print_pdf`.
++pub type PrintJob = Result<(Vec<u8>, wordcraft_engine::print::PrintPlan), wordcraft_engine::CmdError>;
++type PrintHook = fn(&mut wordcraft_engine::Session, &mut dyn FnMut(&mut wordcraft_engine::Session) -> PrintJob) -> PrintJob;
++static PRINT: std::sync::OnceLock<PrintHook> = std::sync::OnceLock::new();
++
++/// The extension sees every PDF that goes to a physical printer (XDFU watermark and audit line), like it sees an export.
++pub fn set_print_hook(h: PrintHook) {
++    let _ = PRINT.set(h);
++}
++
++/// `Session::print_pdf`, through the extension's print hook when there is one.
++pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value) -> PrintJob {
++    let mut run = |s: &mut wordcraft_engine::Session| s.print_pdf(params);
++    match PRINT.get() {
++        Some(h) => h(s, &mut run),
++        None => run(s),
++    }
++}
++
+ /// Draw icon `name` if the extension has one; false lets upstream draw it.
+ pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
+     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
+diff --git a/crates/ui-egui/src/printing.rs b/crates/ui-egui/src/printing.rs
+index 805eabf..ffc7301 100644
+--- a/crates/ui-egui/src/printing.rs
++++ b/crates/ui-egui/src/printing.rs
+@@ -162,7 +162,7 @@ pub fn submit(app: &mut crate::WordApp, params: &serde_json::Value) -> Result<se
+     }
+     let colour = if app.ui.print_backgrounds { None } else { app.session.doc.settings.page_color.take() };
+     let picture = if app.ui.print_backgrounds { None } else { app.session.doc.settings.page_picture.take() };
+-    let pdf = app.session.print_pdf(&pdf_params).map_err(|error| error.to_string());
++    let pdf = crate::office_overlay::print_pdf(&mut app.session, &pdf_params).map_err(|error| error.to_string());
+     if colour.is_some() {
+         app.session.doc.settings.page_color = colour;
+     }
+-- 
+2.0

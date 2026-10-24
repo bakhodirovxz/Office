@@ -19,6 +19,7 @@ mod settings;
 
 pub use icons::paint_icon;
 pub use mode::Mode;
+pub use layer::print_wrap;
 pub use preset::{FULL, SIMPLE, sync as ribbon_frame};
 
 pub const EXPORT_PDF: &str = "office.exportPdf";

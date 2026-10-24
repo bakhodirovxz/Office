@@ -124,6 +124,25 @@ impl CommandHook for Layer {
     }
 }
 
+type PrintJob = Result<(Vec<u8>, wordcraft_engine::print::PrintPlan), CmdError>;
+
+/// A print to a physical printer (the Print dialog's Submit; upstream renders its PDF with `Session::print_pdf`, not the `file.printPdf`
+/// command): with XDFU on and a grif in the document the pages carry the stamp and the audit log gets a `print` line. Never refuses.
+pub fn print_wrap(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> PrintJob) -> PrintJob {
+    let Some(x) = config().and_then(|c| c.xdfu.is_some().then_some(c)) else { return run(s) };
+    if !has_grif(s) {
+        return run(s);
+    }
+    let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    x.xdfu.as_ref().expect("checked").issue("print", &name, |stamp| {
+        let before = s.doc.settings.watermark.clone();
+        s.doc.settings.watermark = Some(Watermark { text: stamp.ascii_line().chars().take(200).collect(), ..Watermark::default() });
+        let r = run(s);
+        s.doc.settings.watermark = before;
+        r
+    })
+}
+
 /// `(audit event, output extension)` when the command makes a copy of the document, else `None`.
 fn copy_kind(s: &Session, id: &str, p: &Value) -> Option<(&'static str, String)> {
     let path = p.get("path").and_then(Value::as_str).filter(|x| !x.is_empty())?;

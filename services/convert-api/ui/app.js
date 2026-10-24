@@ -395,6 +395,7 @@
     d.addEventListener('drop', (e) => { if (!S.running) addFiles(e.dataTransfer.files); });
     if (S.token) $('conn').open = false;
     await start();
+    if ($('pick').files.length) { addFiles($('pick').files); $('pick').value = ''; } // picked before the listener above existed
     // without the catalog every text would show as its key: say so in plain English (this one text cannot come from the catalog)
     if (!i18nOk) { $('alert').replaceChildren(el('p', { text: 'The page texts could not be loaded. Reload the page.' })); $('alert').hidden = false; }
   }

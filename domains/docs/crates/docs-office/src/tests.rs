@@ -8,7 +8,8 @@ use crate::mode::{self, Mode};
 use crate::preset;
 
 /// The mode and the hook are process-wide: tests that touch them take turns (nextest also gives each its own process).
-static TURN: Mutex<()> = Mutex::new(());
+/// The same lock as `layer_tests`, which also installs a hook.
+use crate::layer_tests::TURN;
 
 fn turn() -> MutexGuard<'static, ()> {
     let g = TURN.lock().unwrap_or_else(|e| e.into_inner());
