@@ -585,6 +585,9 @@ const SKIP_CALLEES2: [&str; 8] = [
     "var",
 ];
 
+/// Literals that look like text but are not UI: the arrow's accessibility name in patch deckcraft/0140 (no words to translate).
+const NON_UI: [&str; 1] = ["{name} \u{25be}"];
+
 /// Is this literal shaped like something a user reads (not an id, path, format debug or XML)?
 pub fn looks_like_ui(s: &str) -> bool {
     let t = s.trim();
@@ -592,6 +595,9 @@ pub fn looks_like_ui(s: &str) -> bool {
         return false;
     }
     let first = t.chars().next().unwrap_or(' ');
+    if NON_UI.contains(&t) {
+        return false;
+    }
     let spaced = t.contains(' ');
     if !(first.is_uppercase() || spaced) {
         return false;
@@ -638,9 +644,9 @@ fn deck_universe(root: &Path) -> Universe {
     let mut p1: BTreeMap<String, String> = BTreeMap::new();
     for (rel, toks) in &srcs {
         let file = rel.rsplit('/').next().unwrap_or("");
-        // Our own mechanism modules (patches 0100/0110) hold error text and registry names, not interface strings.
-        let is_ui =
-            rel.starts_with("crates/ui-egui") && !matches!(file, "i18n.rs" | "office_overlay.rs");
+        // Our own mechanism modules (patches 0100/0110, 0143 office_history.rs: XDFU/API errors, grif literals) hold error text and registry names, not interface strings.
+        let is_ui = rel.starts_with("crates/ui-egui")
+            && !matches!(file, "i18n.rs" | "office_overlay.rs" | "office_history.rs");
         let mut stack: Vec<String> = Vec::new();
         for (i, t) in toks.iter().enumerate() {
             if t.is_punct('(') {
@@ -734,7 +740,7 @@ const OWN: [(&str, &[&str]); 16] = [
     // Phase 4 WP10 (docs-office layer.rs, gridcraft 0143): the message of Version History on a document with no file yet.
     (
         "Save the file first, then open its version history.",
-        &["wordcraft", "gridcraft"],
+        &["wordcraft", "gridcraft", "deckcraft"],
     ),
     // Phase 4 WP3 (patch deckcraft/0140): the Slides toolbar's version history button.
     ("Version History", &["gridcraft", "deckcraft"]),
@@ -1100,8 +1106,8 @@ pub fn merge_report(
         }
     }
     for (scope, rows) in cat.scopes.iter_mut() {
-        // the glossary and our own converter catalog have no upstream to disappear from
-        if scope == "glossary" || scope == "converter" {
+        // the glossary and our own converter and shell catalogs have no upstream to disappear from
+        if matches!(scope.as_str(), "glossary" | "converter" | "shell") {
             continue;
         }
         for r in rows.iter_mut() {
