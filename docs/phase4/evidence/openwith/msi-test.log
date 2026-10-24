@@ -1,0 +1,56 @@
+﻿**********************
+Начало записи сценария Windows PowerShell
+Время начала: 20261024143814
+Имя пользователя: <domain>\<user>
+Запуск от имени пользователя: <domain>\<user>
+Имя конфигурации: 
+Компьютер: <pc> (Microsoft Windows NT 10.0.19045.0)
+Ведущее приложение: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File C:\Users\<user>\Desktop\office\scripts\msi-test.ps1 -Msi E:\office-target\p1\wp14\msi\hoshiya-0.1.0-x64.msi -Work E:\office-target\msitest-work
+ИД процесса: 13292
+PSVersion: 5.1.19041.6456
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.6456
+BuildVersion: 10.0.19041.6456
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+== before (2026-10-24T14:38:14)
+== install
+INSTALL exit 0 ok
+== registry
+REGISTRY 27 extension registrations, 4 ProgIDs, 4 Capabilities, 5 shortcuts, no default changed, ok
+== open with
+  .docx: 15 handlers; ours: C:\Program Files\Hoshiya\hoshiya-docs.exe|Hoshiya Docs|True
+OPENWITH docx ok
+  .xlsx: 16 handlers; ours: C:\Program Files\Hoshiya\hoshiya-sheets.exe|Hoshiya Sheets|True
+OPENWITH xlsx ok
+  .pptx: 16 handlers; ours: C:\Program Files\Hoshiya\hoshiya-slides.exe|Hoshiya Slides|True
+OPENWITH pptx ok
+  .pdf: 17 handlers; ours: C:\Program Files\Hoshiya\hoshiya-pdf.exe|Hoshiya PDF|True
+OPENWITH pdf ok
+== open
+  hoshiya-docs: title [Буйруқ 1 - Hoshiya Hujjatlar]
+  hoshiya-sheets: title [Hisobot 2026.xlsx]
+  hoshiya-slides: title [Hoshiya Slides]
+  hoshiya-pdf: title [Ҳисобот 1.pdf — Hoshiya PDF]
+OPEN spaces+cyrillic 4/4 ok
+== single instance
+  docs: processes=2, second title [Ikkinchi hujjat - Hoshiya Hujjatlar], first still [Буйруқ 1 - Hoshiya Hujjatlar]
+  sheets: processes=2, second title [Ikkinchi jadval.xlsx], first still [Hisobot 2026.xlsx]
+  slides: processes=2, second title [Hoshiya Slides], first still [Hoshiya Slides]
+  pdf: second launch exited=True, processes=1, first title [Ҳисобот 1.pdf — Hoshiya PDF]
+SINGLE docs new-window ok, sheets new-window ok, slides new-window ok, pdf tab ok
+== always
+ALWAYS revert (.docx UserChoice removed again; if FAIL: reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.docx\UserChoice" /f) ok
+ALWAYS docx NOT DRIVEN (dialog automation found: window=False item=False done=False; UserChoice=[]) - do it by hand: right-click a .docx > Open with > Hoshiya Docs > Always
+== uninstall
+UNINSTALL exit 0 ok
+UNINSTALL residue 0 of 400 installed registry lines (files left: 0; info: product-related shell artefacts 0, other changes on the machine 87, both in E:\office-target\msitest-work) ok
+  install added 400 registry lines (install-added.txt)
+== done: 0 failed check(s)
+**********************
+Конец записи протокола Windows PowerShell
+Время окончания: 20261024144209
+**********************
