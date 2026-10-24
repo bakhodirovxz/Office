@@ -32,6 +32,13 @@ struct App(SlideApp);
 impl eframe::App for App {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.0.logic(ctx);
+        // The OS title (taskbar, Alt+Tab) carries the file name, as in the other editors; sent on change only.
+        let title = window_title(&self.0.session);
+        let id = egui::Id::new("office_window_title");
+        if ctx.data(|d| d.get_temp::<String>(id)).as_deref() != Some(title.as_str()) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
+            ctx.data_mut(|d| d.insert_temp(id, title));
+        }
     }
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
         self.0.raw_input_hook(raw);
@@ -52,6 +59,12 @@ impl eframe::App for App {
         #[cfg(target_os = "macos")]
         std::process::exit(0);
     }
+}
+
+/// "<file name> - <product>" for the active presentation, the product name alone with none open.
+fn window_title(session: &Session) -> String {
+    let app = deckcraft_ui_egui::office_overlay::app_name();
+    session.active().map_or_else(|| app.to_owned(), |d| format!("{} \u{2014} {app}", d.title()))
 }
 
 /// The per-user settings directory: `ui.json`, `prefs.json` and `logs/` live here.
@@ -273,6 +286,15 @@ fn main() -> eframe::Result {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_window_title_has_the_file_name_once_a_file_is_open() {
+        let app = deckcraft_ui_egui::office_overlay::app_name();
+        let mut s = Session::new();
+        assert_eq!(window_title(&s), app);
+        s.add_document(deckcraft_engine::DocState::new(Default::default(), Some("C:/x/Plan.pptx".into()), String::new()));
+        assert_eq!(window_title(&s), format!("Plan \u{2014} {app}"));
+    }
 
     /// #279: on macOS the process ends inside `on_exit`, before eframe would tear the window down.
     /// The check runs in a child (this test binary again), since on macOS it ends the process.

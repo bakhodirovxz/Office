@@ -295,6 +295,18 @@ pub fn download_target(brand: &Brand, wanted: &Path) -> Result<PathBuf, String> 
         .ok_or_else(|| "too many files with this name".to_string())
 }
 
+/// WebView2 reads these from the environment and they beat what the host sets: extra browser arguments can open an unauthenticated
+/// remote-debugging port on loopback, and a browser folder picks the executable (gate review F15). The first one `is_set` says is
+/// set. Only a release build asks; the debug build's checks use the arguments on purpose.
+pub fn webview2_env_override(is_set: impl Fn(&str) -> bool) -> Option<&'static str> {
+    [
+        "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+        "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER",
+    ]
+    .into_iter()
+    .find(|k| is_set(k))
+}
+
 /// The shell route that shows the History panel of `path` (percent-encoded, only unreserved characters stay).
 pub fn history_fragment(path: &str) -> String {
     let enc: String = path
@@ -448,7 +460,12 @@ impl Ctx {
             let (app, p) = check_file(&self.brand, &path.to_string_lossy(), Source::User)?;
             self.store.record(&p, app.id, now());
             // an editor in the window saved: that is a version too (an error is not the download's problem)
-            if let Some(h) = &self.history {
+            // a View copy (temp, deleted at the next start) is not a document with a history (F7)
+            if let Some(h) = self
+                .history
+                .as_ref()
+                .filter(|_| !p.starts_with(self.store.dir.join("temp")))
+            {
                 let _ = h.snapshot(&p, None);
             }
             let name = p.file_name().map(|n| n.to_string_lossy().into_owned());
@@ -583,8 +600,13 @@ impl Ctx {
             if !exe.is_file() {
                 return Err(format!("the editor {}.exe is not installed", app.bin));
             }
-            // read-only by being a copy: the version in the history and the document stay as they are
+            // a read-only copy: the editor refuses its save, and the version in the history and the document stay as they are (F7)
             let to = self.write_version_copy(h, p, v, &self.store.dir.join("temp"), " view")?;
+            let mut perm = std::fs::metadata(&to)
+                .map_err(|e| e.to_string())?
+                .permissions();
+            perm.set_readonly(true);
+            std::fs::set_permissions(&to, perm).map_err(|e| e.to_string())?;
             (self.spawn)(&exe, &to).map_err(|e| format!("cannot start the editor: {e}"))?;
             let name = to.file_name().map(|n| n.to_string_lossy().into_owned());
             Ok(json!({"v": v, "name": name, "copy": true}))
@@ -1303,6 +1325,16 @@ bin = "tst-pdf"
         );
         let copy = d.join("data/temp/Hisobot (v1 view).docx");
         assert_eq!(std::fs::read(&copy).unwrap(), b"one");
+        assert!(std::fs::metadata(&copy).unwrap().permissions().readonly());
+        // a save report for a View copy takes no snapshot
+        assert_eq!(c.saved(&copy)["ok"], true);
+        assert!(
+            c.history
+                .as_ref()
+                .unwrap()
+                .list(&copy)
+                .map_or(true, |l| l.is_empty())
+        );
         assert_eq!(log.lock().unwrap().last().unwrap().1, copy);
         assert_eq!(std::fs::read(&doc).unwrap(), b"two");
 
@@ -1353,6 +1385,16 @@ bin = "tst-pdf"
         let a = parse_args(["--history".to_string(), "X.docx".into()]).unwrap();
         assert_eq!(a.history.as_deref(), Some("X.docx"));
         assert!(parse_args(["--history".to_string()]).is_err());
+    }
+
+    #[test]
+    fn webview2_env_that_changes_the_browser_is_found() {
+        assert_eq!(webview2_env_override(|_| false), None);
+        assert_eq!(
+            webview2_env_override(|k| k == "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"),
+            Some("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+        );
+        assert!(webview2_env_override(|k| k.ends_with("EXECUTABLE_FOLDER")).is_some());
     }
 
     #[test]

@@ -114,7 +114,8 @@ fn show_history(ctx: &Ctx, path: &str) -> Option<Value> {
 }
 
 /// Test hooks (`SUITE_*`) exist in debug builds only: a release binary ignores these variables (review m10), so an environment
-/// variable can neither pick an executable to start nor move the pipe, the data or the browser.
+/// variable can neither pick an executable to start nor move the pipe, the data or the browser. The `WEBVIEW2_*` variables are
+/// WebView2's own, not ours: a release build refuses to open the window while one that changes the browser is set (see `start`).
 #[cfg(debug_assertions)]
 fn hook(name: &str) -> Option<std::ffi::OsString> {
     std::env::var_os(name)
@@ -445,6 +446,13 @@ fn start(args: Args) -> Result<(), String> {
             rt.spawn(pipe_loop(s, pipe, me, ctx.clone(), None));
         }
         return browser_fallback(&product, &start_url, &host_json);
+    }
+
+    #[cfg(not(debug_assertions))]
+    if let Some(k) = crate::webview2_env_override(|k| std::env::var_os(k).is_some()) {
+        return Err(format!(
+            "{k} is set in the environment; remove it to start the window"
+        ));
     }
 
     let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
