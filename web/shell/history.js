@@ -20,7 +20,8 @@
   const host = (msg, type) => new Promise((ok) => {
     const done = (e) => {
       const d = e.detail || {};
-      if (d.type === type || d.type === 'rejected') { removeEventListener('suite-host', done); clearTimeout(tm); ok(d); }
+      // a version list for another document answers another request (copy and view replies carry their output path instead)
+      if ((d.type === type && (type !== 'history_versions' || d.path === msg.path)) || d.type === 'rejected') { removeEventListener('suite-host', done); clearTimeout(tm); ok(d); }
     };
     const tm = setTimeout(() => { removeEventListener('suite-host', done); ok({ type: 'rejected', error: t('hist.silent') }); }, 20000);
     addEventListener('suite-host', done);
@@ -70,7 +71,9 @@
     renderDocs();
   }
   async function loadVersions(focus) {
-    const d = await host({ type: 'history_versions', path: S.path }, 'history_versions');
+    const p = S.path;
+    const d = await host({ type: 'history_versions', path: p }, 'history_versions');
+    if (p !== S.path) return;   // another document was chosen meanwhile: its own request renders
     if (d.type === 'rejected') { S.vers = []; $('hist-ver-sec').hidden = true; say(t('hist.nodoc', { name: base(S.path) })); return; }
     if (fails(d, 'history_versions')) return;
     S.vers = d.items; S.verified = d.verified; S.problem = d.problem; renderVersions();
