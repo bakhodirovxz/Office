@@ -160,13 +160,7 @@ fn has_grif(s: &Session) -> bool {
 }
 
 /// Runs the copying command with the stamp in place and the working document back as it was afterwards.
-fn make_copy(
-    s: &mut Session,
-    run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>,
-    params: &Json,
-    ext: &str,
-    stamp: &Stamp,
-) -> Result<Json> {
+fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>, params: &Json, ext: &str, stamp: &Stamp) -> Result<Json> {
     let line = if ext == "pdf" { stamp.ascii_line() } else { stamp.line() };
     let text = matches!(ext, "csv" | "tsv" | "txt" | "html" | "htm");
     let swapped = if text { None } else { stamp_footers(s, &line) };

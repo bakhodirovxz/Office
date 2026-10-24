@@ -16,10 +16,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 use deckcraft_engine::cmd::file::format_for_path;
+use deckcraft_engine::geom::Xfrm;
 use deckcraft_engine::model::style::{ColorRef, Fill};
 use deckcraft_engine::model::text::{Run, RunProps};
 use deckcraft_engine::model::{Geom, Presentation, Rgba, Shape, ShapeId, TextBody};
-use deckcraft_engine::geom::Xfrm;
 use deckcraft_engine::office_hook::{self, CommandHook};
 use deckcraft_engine::{EngineError, Result, Session, register_command};
 use serde_json::{Value as Json, json};
@@ -115,7 +115,10 @@ fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, Kind)> {
     let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
     let own = s.active()?.path.as_deref();
     let format = |path: Option<&str>| -> String {
-        p.get("format").and_then(Json::as_str).map(str::to_ascii_lowercase).unwrap_or_else(|| path.map(|x| format_for_path(x).to_string()).unwrap_or_else(|| "deckcraft".into()))
+        p.get("format")
+            .and_then(Json::as_str)
+            .map(str::to_ascii_lowercase)
+            .unwrap_or_else(|| path.map(|x| format_for_path(x).to_string()).unwrap_or_else(|| "deckcraft".into()))
     };
     let (event, fmt) = match id {
         "file.export" => (if p.get("print").and_then(Json::as_bool) == Some(true) { "print" } else { "export" }, format(path)),

@@ -67,7 +67,10 @@ fn exported_pdf_carries_copy_number_and_user() {
     let out = bytes(&s.execute("file.exportPdf", json!({})).unwrap());
     let n = copy_no(&out);
     assert_eq!(n, before + 1, "the copy number is the audit counter");
-    assert!(has(&out, &format!("(XDFU copy {n} | ")) && has(&out, &format!(" | {} | ", xdfu_core::os_user())), "number and OS user are in the PDF text");
+    assert!(
+        has(&out, &format!("(XDFU copy {n} | ")) && has(&out, &format!(" | {} | ", xdfu_core::os_user())),
+        "number and OS user are in the PDF text"
+    );
     assert_eq!(lines(), before + 1);
     // the working workbook is as it was: no footer left behind
     assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.footer, "");

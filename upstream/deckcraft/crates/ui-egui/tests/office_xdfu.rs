@@ -170,7 +170,9 @@ fn every_copy_is_stamped_and_the_working_file_is_not() {
     assert_eq!(lines(), n + 1, "saving the working file writes no audit line");
 
     // png, jpeg, gif, pptx, deckcraft and outline exports, a template and two downloads: one audit line each
-    for (file, format) in [("a.png", "png"), ("a.jpg", "jpeg"), ("a.gif", "gif"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft"), ("a.txt", "outline")] {
+    for (file, format) in
+        [("a.png", "png"), ("a.jpg", "jpeg"), ("a.gif", "gif"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft"), ("a.txt", "outline")]
+    {
         export(&mut s, file, json!({"format": format})).unwrap();
     }
     assert!(std::fs::read_to_string(path("a.txt")).unwrap().starts_with("XDFU copy "));
@@ -212,7 +214,12 @@ fn insert_grif_adds_a_box_and_takes_a_copy_number() {
     let r = s.execute("office.xdfu.insertGrif", &json!({"grif": "\u{425}\u{414}\u{424}\u{423}"})).unwrap();
     assert_eq!(r["copy"], before + 1);
     let text = |s: &Session| {
-        s.doc().unwrap().doc.slides[0].shapes.iter().filter(|sh| sh.name == "XDFU grif").map(|sh| sh.text.as_ref().unwrap().text()).collect::<Vec<_>>()
+        s.doc().unwrap().doc.slides[0]
+            .shapes
+            .iter()
+            .filter(|sh| sh.name == "XDFU grif")
+            .map(|sh| sh.text.as_ref().unwrap().text())
+            .collect::<Vec<_>>()
     };
     assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)]);
     assert_eq!(lines(), before + 1);

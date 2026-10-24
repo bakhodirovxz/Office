@@ -179,10 +179,10 @@ index 146ae5f..f37b46f 100644
      // The log file lives under the settings directory; opened after the arguments, so `--help` and
      // `--version` leave no file behind. Records logged until now are written to it first.
 diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
-index c72f477..5faa209 100644
+index c72f477..ed79df8 100644
 --- a/crates/engine/src/cmd/mod.rs
 +++ b/crates/engine/src/cmd/mod.rs
-@@ -197,7 +197,19 @@ pub fn command_specs() -> &'static [CommandSpec] {
+@@ -197,7 +197,20 @@ pub fn command_specs() -> &'static [CommandSpec] {
  }
  
  pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
@@ -198,7 +198,8 @@ index c72f477..5faa209 100644
 +/// Registers a command of the office layer (`office.xdfu.insertGrif`): found by `find_command` and run by `Session::execute`, not
 +/// listed by `command_specs`. Needs a presentation, is undoable (it edits through `Session::edit`), is not journaled.
 +pub fn register_command(id: &'static str, label: &'static str, params: &'static str, run: Run) {
-+    let spec = Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: true }));
++    let spec =
++        Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: true }));
 +    office_commands().push(spec);
  }
  
@@ -301,10 +302,10 @@ index e6205f7..de142eb 100644
              Ok(_) => {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..e6c26e9
+index 0000000..c2cdb1a
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
-@@ -0,0 +1,267 @@
+@@ -0,0 +1,270 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
 +//! Version History button's handler, and the XDFU watermark (WP11).
@@ -323,10 +324,10 @@ index 0000000..e6c26e9
 +use std::sync::{Arc, OnceLock};
 +
 +use deckcraft_engine::cmd::file::format_for_path;
++use deckcraft_engine::geom::Xfrm;
 +use deckcraft_engine::model::style::{ColorRef, Fill};
 +use deckcraft_engine::model::text::{Run, RunProps};
 +use deckcraft_engine::model::{Geom, Presentation, Rgba, Shape, ShapeId, TextBody};
-+use deckcraft_engine::geom::Xfrm;
 +use deckcraft_engine::office_hook::{self, CommandHook};
 +use deckcraft_engine::{EngineError, Result, Session, register_command};
 +use serde_json::{Value as Json, json};
@@ -422,7 +423,10 @@ index 0000000..e6c26e9
 +    let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
 +    let own = s.active()?.path.as_deref();
 +    let format = |path: Option<&str>| -> String {
-+        p.get("format").and_then(Json::as_str).map(str::to_ascii_lowercase).unwrap_or_else(|| path.map(|x| format_for_path(x).to_string()).unwrap_or_else(|| "deckcraft".into()))
++        p.get("format")
++            .and_then(Json::as_str)
++            .map(str::to_ascii_lowercase)
++            .unwrap_or_else(|| path.map(|x| format_for_path(x).to_string()).unwrap_or_else(|| "deckcraft".into()))
 +    };
 +    let (event, fmt) = match id {
 +        "file.export" => (if p.get("print").and_then(Json::as_bool) == Some(true) { "print" } else { "export" }, format(path)),
@@ -630,10 +634,10 @@ index 0000000..b27c25b
 +}
 diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
 new file mode 100644
-index 0000000..8c9028f
+index 0000000..81ec0b2
 --- /dev/null
 +++ b/crates/ui-egui/tests/office_xdfu.rs
-@@ -0,0 +1,227 @@
+@@ -0,0 +1,234 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The XDFU watermark through the command hook (patch 0143): every copy of a grif presentation carries the Resolution 766 cl. 12 line
 +//! with a copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the
@@ -806,7 +810,9 @@ index 0000000..8c9028f
 +    assert_eq!(lines(), n + 1, "saving the working file writes no audit line");
 +
 +    // png, jpeg, gif, pptx, deckcraft and outline exports, a template and two downloads: one audit line each
-+    for (file, format) in [("a.png", "png"), ("a.jpg", "jpeg"), ("a.gif", "gif"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft"), ("a.txt", "outline")] {
++    for (file, format) in
++        [("a.png", "png"), ("a.jpg", "jpeg"), ("a.gif", "gif"), ("a.pptx", "pptx"), ("a.deckcraft", "deckcraft"), ("a.txt", "outline")]
++    {
 +        export(&mut s, file, json!({"format": format})).unwrap();
 +    }
 +    assert!(std::fs::read_to_string(path("a.txt")).unwrap().starts_with("XDFU copy "));
@@ -848,7 +854,12 @@ index 0000000..8c9028f
 +    let r = s.execute("office.xdfu.insertGrif", &json!({"grif": "\u{425}\u{414}\u{424}\u{423}"})).unwrap();
 +    assert_eq!(r["copy"], before + 1);
 +    let text = |s: &Session| {
-+        s.doc().unwrap().doc.slides[0].shapes.iter().filter(|sh| sh.name == "XDFU grif").map(|sh| sh.text.as_ref().unwrap().text()).collect::<Vec<_>>()
++        s.doc().unwrap().doc.slides[0]
++            .shapes
++            .iter()
++            .filter(|sh| sh.name == "XDFU grif")
++            .map(|sh| sh.text.as_ref().unwrap().text())
++            .collect::<Vec<_>>()
 +    };
 +    assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)]);
 +    assert_eq!(lines(), before + 1);

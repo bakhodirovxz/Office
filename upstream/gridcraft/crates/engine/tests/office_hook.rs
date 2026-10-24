@@ -56,7 +56,9 @@ fn hook_sees_save() {
 #[test]
 fn guarded_ids_exist() {
     let ids: Vec<&str> = command_specs().iter().map(|c| c.id).collect();
-    for id in ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "file.saveBytes", "edit.copy", "edit.cut"] {
+    for id in
+        ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "file.saveBytes", "edit.copy", "edit.cut"]
+    {
         assert!(ids.contains(&id), "{id} is not registered");
     }
     assert!(ids.iter().any(|id| id.starts_with("file.print")) && ids.iter().any(|id| id.starts_with("file.export")));

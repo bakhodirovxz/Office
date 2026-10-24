@@ -208,7 +208,8 @@ fn office_commands() -> std::sync::MutexGuard<'static, Vec<&'static CommandSpec>
 /// Registers a command of the office layer (`office.xdfu.insertGrif`): found by `find_command` and run by `Session::execute`, not
 /// listed by `command_specs`. Needs a presentation, is undoable (it edits through `Session::edit`), is not journaled.
 pub fn register_command(id: &'static str, label: &'static str, params: &'static str, run: Run) {
-    let spec = Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: true }));
+    let spec =
+        Box::leak(Box::new(CommandSpec { id, label, menu: &[], shortcut: None, params, enabled: has_doc, run, journal: false, undoable: true }));
     office_commands().push(spec);
 }
 

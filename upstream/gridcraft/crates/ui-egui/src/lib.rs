@@ -38,11 +38,11 @@ pub mod i18n;
 pub mod icons;
 pub mod keymap;
 pub mod keytips;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod office_history;
 pub mod office_overlay;
 #[cfg(test)]
 mod office_overlay_tests;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod office_history;
 pub mod office_toolbar;
 pub mod outline;
 pub mod panes;

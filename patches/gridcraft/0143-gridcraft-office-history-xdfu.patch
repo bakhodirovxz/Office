@@ -279,15 +279,17 @@ index 770f82e..bf21907 100644
      fn after(&self, _session: &Session, _id: &str, _params: &Json, _result: &Result<Json>) {}
  }
 diff --git a/crates/engine/tests/office_hook.rs b/crates/engine/tests/office_hook.rs
-index 65c5073..608fd86 100644
+index 65c5073..67d6f73 100644
 --- a/crates/engine/tests/office_hook.rs
 +++ b/crates/engine/tests/office_hook.rs
-@@ -56,7 +56,7 @@ fn hook_sees_save() {
+@@ -56,7 +56,9 @@ fn hook_sees_save() {
  #[test]
  fn guarded_ids_exist() {
      let ids: Vec<&str> = command_specs().iter().map(|c| c.id).collect();
 -    for id in ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "edit.copy", "edit.cut"] {
-+    for id in ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "file.saveBytes", "edit.copy", "edit.cut"] {
++    for id in
++        ["file.print", "file.exportPdf", "file.exportCsv", "file.exportHtml", "file.saveAs", "file.save", "file.saveBytes", "edit.copy", "edit.cut"]
++    {
          assert!(ids.contains(&id), "{id} is not registered");
      }
      assert!(ids.iter().any(|id| id.starts_with("file.print")) && ids.iter().any(|id| id.starts_with("file.export")));
@@ -305,18 +307,18 @@ index 1de0a74..fc187f9 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  # Read the browser's preferred language for the first-run web interface language.
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index 829ea38..fe10cd5 100644
+index 829ea38..b291023 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -41,6 +41,8 @@ pub mod keytips;
+@@ -38,6 +38,8 @@ pub mod i18n;
+ pub mod icons;
+ pub mod keymap;
+ pub mod keytips;
++#[cfg(not(target_arch = "wasm32"))]
++pub mod office_history;
  pub mod office_overlay;
  #[cfg(test)]
  mod office_overlay_tests;
-+#[cfg(not(target_arch = "wasm32"))]
-+pub mod office_history;
- pub mod office_toolbar;
- pub mod outline;
- pub mod panes;
 @@ -1234,7 +1236,7 @@ impl SheetApp {
          {
              self.grid.last_autosave = now;
@@ -328,10 +330,10 @@ index 829ea38..fe10cd5 100644
          if let Some(d) = self.session.active() {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..d8d0e55
+index 0000000..09228ea
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,279 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
 +//! `office.history` command behind the toolbar's Version History button, and the XDFU watermark (WP11).
@@ -494,13 +496,7 @@ index 0000000..d8d0e55
 +}
 +
 +/// Runs the copying command with the stamp in place and the working document back as it was afterwards.
-+fn make_copy(
-+    s: &mut Session,
-+    run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>,
-+    params: &Json,
-+    ext: &str,
-+    stamp: &Stamp,
-+) -> Result<Json> {
++fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session, Json) -> Result<Json>, params: &Json, ext: &str, stamp: &Stamp) -> Result<Json> {
 +    let line = if ext == "pdf" { stamp.ascii_line() } else { stamp.line() };
 +    let text = matches!(ext, "csv" | "tsv" | "txt" | "html" | "htm");
 +    let swapped = if text { None } else { stamp_footers(s, &line) };
@@ -680,10 +676,10 @@ index 0000000..b26da6e
 +}
 diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
 new file mode 100644
-index 0000000..ace58fd
+index 0000000..11cea4b
 --- /dev/null
 +++ b/crates/ui-egui/tests/office_xdfu.rs
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,167 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The XDFU watermark through the command hook (patch 0143): every copy of a grif workbook carries the Resolution 766 cl. 12 line with a
 +//! copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the tests share
@@ -753,7 +749,10 @@ index 0000000..ace58fd
 +    let out = bytes(&s.execute("file.exportPdf", json!({})).unwrap());
 +    let n = copy_no(&out);
 +    assert_eq!(n, before + 1, "the copy number is the audit counter");
-+    assert!(has(&out, &format!("(XDFU copy {n} | ")) && has(&out, &format!(" | {} | ", xdfu_core::os_user())), "number and OS user are in the PDF text");
++    assert!(
++        has(&out, &format!("(XDFU copy {n} | ")) && has(&out, &format!(" | {} | ", xdfu_core::os_user())),
++        "number and OS user are in the PDF text"
++    );
 +    assert_eq!(lines(), before + 1);
 +    // the working workbook is as it was: no footer left behind
 +    assert_eq!(s.doc().unwrap().wb.sheet(0).unwrap().print.footer, "");
