@@ -32,6 +32,11 @@
 >     Kiritish, Hujjat). One toolbar setting covers all apps. Print stays off the Slides simple row. See
 >     `docs/phase4/toolbar-design.md` §11.
 >   - **Q7 (O8):** not answered, so the default stays the native PDF → DOCX engine, with the D5 fallback.
+> - **Owner answers to the WP24 gate review, 2026-10-24** (`docs/phase4/gate-review.md`):
+>   - **Brief task 5, app language:** fix it in Phase 4. The four apps read `lang` from `settings.toml` at start.
+>   - **F3, licence notices:** OK to use `cargo-about` (MIT OR Apache-2.0, version pinned) to generate the MSI's
+>     third-party notices. The WebView2 licence text is added too.
+>   - **B-3 handle design:** written at the start of Phase 6, together with the B-3 decision.
 > - **Replace MS Office on Windows 10/11 office PCs, Office 2010+ files** (STATUS "Owner acceptance criteria"). Phase 4
 >   delivers the installable suite: one installer, our own ProgIDs, the **"Open with"** registration, a GPO
 >   default-association XML, and a **signed MSVC** build. The certificate is an owner item.
