@@ -5,22 +5,9 @@ Subject: [PATCH] ui-egui: send the PDF of a print to a physical printer through 
 
 Gate review F4: File > Print > Submit renders its PDF with `Session::print_pdf` (printing.rs), not through the guarded
 `file.printPdf` command, so with XDFU on a paper copy had no watermark and no audit line. `office_overlay::print_pdf` now
-calls an extension hook when the app sets one (`set_print_hook`, set with `set_ext` behind `office-ext`); docs-office
+calls an extension hook when the app sets one (`set_print_hook`, set with `set_ext` behind `office-ext` in the desktop app; the wasm build has no XDFU layer); docs-office
 (`print_wrap`) stamps and audits it. Without the hook it is `Session::print_pdf` as before. Printing is never blocked.
 ---
-diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 54c5167..f839464 100644
---- a/apps/wordcraft-web/src/web.rs
-+++ b/apps/wordcraft-web/src/web.rs
-@@ -83,6 +83,8 @@ pub fn start() {
-                     docs_office::install(&mut session);
-                     #[cfg(feature = "office-ext")]
-                     wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
-+                    #[cfg(feature = "office-ext")]
-+                    wordcraft_ui_egui::office_overlay::set_print_hook(docs_office::print_wrap);
-                     session.system_region = region;
-                     let messages = Rc::new(RefCell::new(Vec::new()));
-                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
 diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
 index dd07630..86b5e3c 100644
 --- a/apps/wordcraft/src/main.rs

@@ -91,6 +91,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   The bypass list in `hooks-docs.md` (WP10/WP11 section) does not name it. Sheets and Slides prints do go through their hooks.
 - Fix: a one-hunk carried wordcraft patch so `print_to_system` gets its PDF through the layer, plus a test; add the line
   to the bypass list until then. **Before XDFU is switched on** (with m13 of Phase 3 and F5).
+- Fixed in `5905293`: carried patch `wordcraft/0125` routes the Print dialog's PDF through a hook; `docs-office` `print_wrap` stamps it and writes the `print` audit line, never blocks (test `printing_to_paper_carries_the_stamp_and_an_audit_line`). The bypass line in `hooks-docs.md` was not added (no longer a bypass).
 
 **F5. XDFU: the audit lock is held for a whole export, and a 30 s "stale" takeover breaks the chain.** Open, XDFU.
 - Where: `crates/xdfu-core/src/audit.rs:199-209`, `:310-326` (sub-agent; I read the lock code, not a run).
@@ -98,6 +99,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   chain breaks, and from then on every copy is "copy 0" with no audit line (stderr only). A waiter that gives up after 10 s
   also issues copy 0.
 - Fix: reserve the seq under the lock (`<event>_begin`), release, produce, then append the result line under the lock.
+- Fixed in `5905293` (partly): `append_after` re-reads the tail after `produce` and chains onto it, with `copy` = the stamped number when it differs from the line's `seq`, so a takeover no longer breaks the chain (test `a_lock_taken_over_during_production_keeps_the_chain_intact`). The lock is still held during `produce`; the `_begin` design was not done.
 
 **F6. The GPO for default associations was described as one-time; it applies at every sign-in. Fixed `4d0e6ca` (docs).**
 - Where: `packaging/windows/README.md:25-26` (before).
@@ -142,6 +144,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   "invalid parameters for `office.history`: ", so the whole-string catalog lookup never matches and the toast stays
   English (`patches/gridcraft/0143-...patch:407`; upstream `crates/engine/src/lib.rs:49`). The test checks `contains`.
   Fix: `EngineError::Other(msg)`.
+  Fixed in `5905293`: `gridcraft/0144` now also makes the message an `EngineError::Other`; catalog key at `i18n/gridcraft.tsv:219` matches the string exactly. Not covered by a UI test (the toast path needs egui).
 - **F14. History lock and retention** (`history.rs:219-243`, `:628-661`): a stale-lock takeover by delete can remove a
   fresh lock, and `Drop` removes whatever lock is there; the newest version of every document ever saved is kept forever
   (deleted files, View copies, `name (n).ext` downloads) with no way to delete a document's history (personal data on
@@ -181,6 +184,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   `integration.md` (WP22 table), **not proven**. Moving the listeners above the first `await` did **not** make my host runs
   reliable (the event can also fire before the script runs at all), so I reverted that change; the fix belongs in the specs
   (wait for the page to be initialised).
+  Fixed in `5905293`: product-side guard, after `init()` has attached its listeners it adds any `#pick.files` already chosen (`app.js`, after `await start()`), which also covers the event that fired before the script ran.
 
 - **F22. Slides' window title has no file name** (owner's MSI run: `hoshiya-slides: title [Hoshiya Slides]`, also for the
   second window), unlike Docs, Sheets and PDF. With two presentations open the taskbar cannot tell them apart. Open; a

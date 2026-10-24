@@ -19,6 +19,7 @@ mod settings;
 
 pub use icons::paint_icon;
 pub use mode::Mode;
+#[cfg(not(target_arch = "wasm32"))]
 pub use layer::print_wrap;
 pub use preset::{FULL, SIMPLE, sync as ribbon_frame};
 
