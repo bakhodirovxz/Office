@@ -89,3 +89,22 @@ Left as `suite-*` on purpose: crate and package names (`suite-core`, `suite-desk
 
 Until about 14:00 two `ci.sh quick` runs from other sessions held the `E:/office-target/p1` build slot for hours (the WP0 run's `test pdfcraft` took 14,663 s). At 14:34 E: filled up
 (upstream test targets of 50-150 GB each); the coordinator freed 78 GB, and the machine was then idle for the w80 run and the final gate.
+
+## WP22 final check (2026-10-24, HEAD after the "rustfmt: suite-serve test" commit; run `E:/office-target/p1/ci/final2/summary.md`)
+
+`scripts/ci.sh quick convert convert-e2e shell sizes i18n deny` in one invocation (the multi-job quirk is fixed: every job named runs, also after a profile). Docs and Sheets web were rebuilt first (`build docs web`, `build sheets web`, both ok) because wordcraft/0124 and gridcraft/0144 touch their UI.
+
+| Job | Result | Wall | Notes |
+|---|---|---|---|
+| queue | ok | 7 s | verify-queue 88 patches / 88 rows |
+| lint | ok | 88 s | upstream clippy ratchet: only baselined warnings |
+| gen-check | ok | 17 s | |
+| deny | ok | 11 s | root + 4 domains; ctutils 0.4.4 |
+| brand | ok | 305 s | |
+| i18n | ok | 5 s | lint 0 errors, roundtrip OK, check-stale OK; shell 63 rows, 1 draft (`hist.beforerestore`, needs the opus review) |
+| convert | ok | 57 s | the first run failed on rustfmt of the suite-serve test, fixed and rerun |
+| convert-e2e | ok | 209 s | one `tls.spec.ts` "#token= flow" timeout in an earlier run (`#o-to` stayed disabled for 60 s) did not recur in this run; treat as a flake to watch, not explained |
+| shell | ok | 539 s | 21 Playwright tests, including the new templates spec |
+| sizes | ok | 457 s | |
+
+`quick`'s own per-domain `check` and `test` jobs were not triggered (they follow the diff, and no domain source other than the two UI lines changed); `check docs` and `check sheets` were run by hand and are ok. Not run here: `desktop` and `msi` (new on-demand jobs; they need a desktop session and an hour of MSVC builds; syntax and actionlint only), and `uz-Latn-2026` in the apps (deferred, STATUS).
