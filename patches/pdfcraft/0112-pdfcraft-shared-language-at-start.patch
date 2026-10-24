@@ -369,10 +369,10 @@ index 60cbdbd..9936a24 100644
 +    }
 +}
 diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 3cffbd4..d9776e4 100644
+index 3cffbd4..4a007a8 100644
 --- a/crates/ui-egui/src/office_overlay_tests.rs
 +++ b/crates/ui-egui/src/office_overlay_tests.rs
-@@ -71,3 +71,20 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+@@ -71,3 +71,25 @@ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
          assert!(pdfcraft_engine::dates::date_language("uz-latn").is_none());
      }
  }
@@ -381,10 +381,15 @@ index 3cffbd4..d9776e4 100644
 +/// language maps to the code the app registers.
 +#[test]
 +fn shared_lang_picks_the_catalog_language() {
-+    use suite_core::lang::{Lang as S, LangChoice::{Auto, Fixed}};
++    use suite_core::lang::{
++        Lang as S,
++        LangChoice::{Auto, Fixed},
++    };
 +    assert_eq!(o::code_of(Auto), None);
 +    assert_eq!(o::shared_lang_code(), None, "tests never read the user's settings");
-+    for (choice, code) in [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")] {
++    for (choice, code) in
++        [(Fixed(S::En), "en"), (Fixed(S::Ru), "ru"), (Fixed(S::UzLatn), "uz-latn"), (Fixed(S::UzLatn2026), "uz-latn"), (Fixed(S::UzCyrl), "uz-cyrl")]
++    {
 +        assert_eq!(o::code_of(choice), Some(code));
 +        if let Some(l) = crate::i18n::Lang::from_code(code) {
 +            assert_eq!(l.code(), code);

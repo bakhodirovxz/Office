@@ -152,5 +152,23 @@ check above (anything else, such as `server.url` or `spell_dictionaries`, is ref
 and which files are read, and no page needs them yet). `settings_get` returns those three as strings. The shell reads `lang`
 from it (`auto` means: follow the browser language) and still writes it on a change.
 
-Not done here: the apps' own start-up reading of `lang`, the dictionaries folder and `toolbar` in the four
-`office_overlay.rs` files (the per-app lanes and WP6 do it with the API above); the installer's single font copy.
+Not done here: the dictionaries folder in Docs (WP6); the installer's single font copy.
+
+### 6.1 The apps' language at start (WP24 gate review, owner 2026-10-24)
+
+Each app's `office_overlay.rs` has `shared_lang_code()`: `suite_core::settings::load().lang`, read once, mapped to the code the
+app registers (`en`, `ru`, `uz-latn`, `uz-cyrl`; `uz-Latn-2026` shows `uz-latn` until the apps get a 2026 catalog). It is `None`
+for `auto`, with no file, in the web build and in tests. Where it applies:
+
+| app | patch | where | rule |
+|---|---|---|---|
+| Docs | `wordcraft/0126` | `i18n::detect_system_lang` | the app's own `language` is `auto`: after `WORDCRAFT_LANGUAGE`, before the OS language |
+| PDF | `pdfcraft/0112` | `i18n::detect_system_lang` (desktop) | the app's own `language` is `auto`: before the OS language |
+| Slides | `deckcraft/0145` | `i18n::from_pref` | the app's own `language` is `auto`; Slides' `auto` has always been English, so shared `auto` stays English (no system detection) |
+| Sheets | `gridcraft/0145` | `load_prefs` in `apps/gridcraft/src/main.rs` | Sheets has no `auto` value (a first run saves the system language into `ui.json`), so a fixed shared `lang` wins over the saved one at each start |
+
+A shared `auto` leaves every app on its own detection. The web builds never read the file. **An in-app language change does
+not write back** to `settings.toml` (the table above says the apps only read `lang`; the shell is the writer): it is kept in the
+app's own `ui.json`, applies at once and later starts, and wins over the shared value in Docs, PDF and Slides. The one
+exception is Sheets: with a fixed shared `lang`, an in-app change lasts for the session and the next start follows the
+shell again. Check: the `office_overlay` test `shared_lang_picks_the_catalog_language` in each app (the choice-to-code map and the app's registered language; tests never read the real settings file). Not checked: a real window opened with `lang = "ru"` (no desktop session in this run).

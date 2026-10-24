@@ -5305,6 +5305,7 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+ "suite-core",
  "sys-locale",
  "toml",
  "unicode-bidi",
