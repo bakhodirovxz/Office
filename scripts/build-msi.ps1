@@ -64,7 +64,7 @@ foreach ($dll in 'vcruntime140.dll', 'vcruntime140_1.dll') {
   if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Microsoft') { throw "$src : not a valid Microsoft signature ($($sig.Status))" }
   Copy-Item $src $stage; Copy-Item $src "$stage\convert"
 }
-Set-Content "$stage\licenses\vc-redist.txt" "vcruntime140.dll and vcruntime140_1.dll (Microsoft Visual C++ 2015-2022 runtime, $(Split-Path (Split-Path (Split-Path $VcRedist)) -Leaf)) are redistributed unmodified, app-local, as the Visual Studio distributable code (VC\Redist\MSVC). They are Authenticode-signed by Microsoft." -Encoding UTF8
+Set-Content "$stage\licenses\vc-redist.txt" "vcruntime140.dll and vcruntime140_1.dll (Microsoft Visual C++ 2015-2022 runtime, $(Split-Path (Split-Path (Split-Path $VcRedist)) -Leaf)) are redistributed unmodified, app-local, as the Visual Studio distributable code (VC\Redist\MSVC). They are Authenticode-signed by Microsoft. Terms: https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution (files under VC\Redist, unmodified, for licensed Visual Studio users); see also NOTICE." -Encoding UTF8
 Copy-Item (Join-Path $repo 'brand\logo\windows\hoshiya.ico') "$stage\icons\$id.ico"
 Copy-Item (Join-Path $repo 'brand\brand.toml') $stage
 Copy-Item (Src "$Dist\shell") "$stage\dist\shell" -Recurse
@@ -73,6 +73,9 @@ Copy-Item (Join-Path $repo 'assets\dictionaries') "$stage\dictionaries" -Recurse
 Copy-Item (Join-Path $repo 'assets\fonts\fallback\*') "$stage\fonts" -Recurse
 foreach ($f in 'NOTICE', 'LICENSE-MIT', 'LICENSE-APACHE') { Copy-Item (Join-Path $repo $f) $stage }
 Copy-Item (Join-Path $repo 'brand\logo\LICENSE.txt') "$stage\licenses\logo-LICENSE.txt"
+# Third-party crate notices (gate F3): the committed file is the output of scripts/gen-notices.sh; ci.sh job_msi runs `gen-notices.sh --check` first, so it is current.
+$tpn = Join-Path $repo 'packaging\windows\THIRD-PARTY-NOTICES.txt'; if (-not (Test-Path $tpn)) { throw "missing $tpn (scripts/gen-notices.sh)" }
+Copy-Item $tpn "$stage\licenses\THIRD-PARTY-NOTICES.txt"; Copy-Item (Join-Path $repo 'packaging\windows\WebView2-LICENSE.txt') "$stage\licenses\WebView2-LICENSE.txt"
 foreach ($u in 'wordcraft', 'gridcraft', 'deckcraft', 'pdfcraft', 'craft-libs', 'craft-fonts') {
   New-Item -ItemType Directory -Force "$stage\licenses\upstream\$u" | Out-Null
   Get-ChildItem "$repo\upstream\$u" -File | Where-Object { $_.Name -match '^(LICENSE|NOTICE|ATTRIBUTION)' } | Copy-Item -Destination "$stage\licenses\upstream\$u"

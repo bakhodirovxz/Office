@@ -9,6 +9,7 @@
 #   lint                     fmt + clippy -D warnings (root), fmt/layers/assets (upstream trees), upstream clippy ratchet (fails on new warnings only)
 #   gen-check                cargo xt gen-domain --check all; lockdiff x4
 #   deny                     cargo-deny x5 (root + 4 domains), one config each
+#   notices                  NOTICE/LICENSE-MIT current (gen-legal --check); THIRD-PARTY-NOTICES.txt current and every shipped crate has a licence (gen-notices --check, cargo-about, minutes)
 #   brand                    cargo xt brand-grep + logo-include check
 #   i18n                     cargo xt i18n lint + roundtrip + check-stale
 #   test <app|all>           upstream-workspace debug tests: nextest + quarantine, overlay ON; doctests
@@ -55,7 +56,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell sidecars fidelity-directions msvc"
+JOBS="queue lint gen-check deny notices brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell sidecars fidelity-directions msvc"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -261,6 +262,11 @@ job_deny() {
   done
   [ $rc -ne 0 ] && DETAIL="deny findings, see $JOB_LOG"
   return $rc
+}
+
+job_notices() {
+  step gen-legal bash scripts/gen-legal.sh --check || return 1
+  step gen-notices bash scripts/gen-notices.sh --check || return 1
 }
 
 job_brand() {
@@ -606,6 +612,7 @@ job_msvc() { bstep build-msvc scripts/build.sh all all --release --msvc; }
 job_msi() {
   skip_no_build "needs the MSVC builds, WiX and the web dists" && return 0
   job_msvc || return 1
+  job_notices || return 1
   step shell-dist bash scripts/shell-dist.sh || return 2
   bstep overlay-all env -u CARGO_TARGET_DIR -u RUSTC_WRAPPER cargo xt overlay all || return 1
   step build-msi powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-msi.ps1 -Target "$(cygpath -w "$OFFICE_TARGET")" || return 1
@@ -728,12 +735,13 @@ profile_jobs() { # prints "job args" lines
            # transliteration surface (uz-translit golden/property tests, docs-translit incl. preservation, npm package, xlsx/pptx checks)
            if translit_changed; then echo test-ours; echo translit-npm; echo translit-preserve; fi
            # converter (Phase 3): services/** -> convert; sidecars/** -> sidecars; the page or its strings -> the Playwright spec (i18n runs always)
+           diff_has '^(Cargo\.lock|domains/[a-z]+/Cargo\.lock|services/Cargo\.lock|about\.toml|scripts/gen-(notices|legal)|packaging/windows/(THIRD|WebView2))' && echo notices
            diff_has '^services/' && echo convert
            diff_has '^sidecars/' && echo sidecars
            diff_has '^(i18n/converter\.tsv|services/convert-api/ui/)' && echo convert-ui
            diff_has '^(web/shell/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell;;
     full|nightly)
-      echo "test-ours"
+      echo "test-ours"; echo notices
       for a in $APPS; do echo "test $a"; done
       for d in $DOMAINS; do echo "check $d"; done
       echo bind; echo convert; echo convert-e2e; echo shell
@@ -750,6 +758,7 @@ dispatch() { # <job> [args]
     lint) run_job lint job_lint;;
     gen-check) run_job gen-check job_gen_check;;
     deny) run_job deny job_deny;;
+    notices) run_job notices job_notices;;
     brand) run_job brand job_brand;;
     i18n) run_job i18n job_i18n;;
     test) run_job "test${1:+ $1}" job_test "$@";;
