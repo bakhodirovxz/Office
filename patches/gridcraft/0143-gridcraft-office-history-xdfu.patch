@@ -330,7 +330,7 @@ index 829ea38..b291023 100644
          if let Some(d) = self.session.active() {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..09228ea
+index 0000000..5836cca
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
 @@ -0,0 +1,279 @@
@@ -351,7 +351,7 @@ index 0000000..09228ea
 +
 +use std::path::{Path, PathBuf};
 +use std::sync::{Arc, Mutex, OnceLock};
-+use std::time::{Duration, Instant};
++use std::time::{Duration, SystemTime};
 +
 +use gridcraft_engine::cmd::print::{codes_to_fields, join_header_footer, split_header_footer};
 +use gridcraft_engine::core::RangeRef;
@@ -368,7 +368,7 @@ index 0000000..09228ea
 +
 +static STORE: OnceLock<Option<Store>> = OnceLock::new();
 +static XDFU: OnceLock<LazyIssuer> = OnceLock::new();
-+static LAST_SNAPSHOT: Mutex<Vec<(String, Instant)>> = Mutex::new(Vec::new());
++static LAST_SNAPSHOT: Mutex<Vec<(String, SystemTime)>> = Mutex::new(Vec::new());
 +
 +struct Layer;
 +
@@ -431,10 +431,10 @@ index 0000000..09228ea
 +            return;
 +        }
 +        let autosave = params.get("autosave").and_then(Json::as_bool) == Some(true);
-+        let now = Instant::now();
++        let now = SystemTime::now();
 +        let mut last = LAST_SNAPSHOT.lock().unwrap_or_else(|e| e.into_inner());
 +        let at = last.iter().position(|(p, _)| p == path);
-+        if autosave && at.is_some_and(|i| now.duration_since(last[i].1) < AUTOSAVE_EVERY) {
++        if autosave && at.is_some_and(|i| now.duration_since(last[i].1).unwrap_or_default() < AUTOSAVE_EVERY) {
 +            return;
 +        }
 +        match at {
@@ -676,15 +676,15 @@ index 0000000..b26da6e
 +}
 diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
 new file mode 100644
-index 0000000..11cea4b
+index 0000000..ca3c3a3
 --- /dev/null
 +++ b/crates/ui-egui/tests/office_xdfu.rs
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,166 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The XDFU watermark through the command hook (patch 0143): every copy of a grif workbook carries the Resolution 766 cl. 12 line with a
 +//! copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the tests share
 +//! one audit log, so they run one at a time.
-+use std::path::PathBuf;
++use std::path::{Path, PathBuf};
 +use std::sync::{Mutex, MutexGuard, Once};
 +
 +use gridcraft_engine::{Session, find_command};
@@ -734,11 +734,10 @@ index 0000000..11cea4b
 +    let at = text.find("XDFU copy ").expect("a stamp") + "XDFU copy ".len();
 +    text[at..].split(' ').next().unwrap().parse().expect("copy number")
 +}
-+fn footer_of(p: &PathBuf) -> String {
++fn footer_of(p: &Path) -> String {
 +    let mut t = Session::new();
 +    t.execute("file.open", json!({"path": p.to_string_lossy()})).unwrap();
-+    let f = t.doc().unwrap().wb.sheet(0).unwrap().print.footer.clone();
-+    f
++    t.doc().unwrap().wb.sheet(0).unwrap().print.footer.clone()
 +}
 +
 +#[test]

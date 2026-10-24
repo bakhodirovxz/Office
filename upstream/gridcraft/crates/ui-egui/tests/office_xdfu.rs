@@ -2,7 +2,7 @@
 //! The XDFU watermark through the command hook (patch 0143): every copy of a grif workbook carries the Resolution 766 cl. 12 line with a
 //! copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the tests share
 //! one audit log, so they run one at a time.
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, Once};
 
 use gridcraft_engine::{Session, find_command};
@@ -52,11 +52,10 @@ fn copy_no(hay: &[u8]) -> u64 {
     let at = text.find("XDFU copy ").expect("a stamp") + "XDFU copy ".len();
     text[at..].split(' ').next().unwrap().parse().expect("copy number")
 }
-fn footer_of(p: &PathBuf) -> String {
+fn footer_of(p: &Path) -> String {
     let mut t = Session::new();
     t.execute("file.open", json!({"path": p.to_string_lossy()})).unwrap();
-    let f = t.doc().unwrap().wb.sheet(0).unwrap().print.footer.clone();
-    f
+    t.doc().unwrap().wb.sheet(0).unwrap().print.footer.clone()
 }
 
 #[test]

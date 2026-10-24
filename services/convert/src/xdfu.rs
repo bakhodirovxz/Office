@@ -49,7 +49,9 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-pub use xdfu_core::{Mode, Stamp, default_audit_path, find_grif, machine_addr, machine_name, os_user};
+pub use xdfu_core::{
+    Mode, Stamp, default_audit_path, find_grif, machine_addr, machine_name, os_user,
+};
 
 #[derive(Clone, Debug)]
 pub struct Evidence {
@@ -744,7 +746,6 @@ pub fn can_carry(ext: &str) -> bool {
         "txt" | "md" | "csv" | "html" | "docx" | "xlsx" | "pptx" | "pdf" | "png"
     )
 }
-
 
 fn io_err(what: &str, e: impl std::fmt::Display) -> Failure {
     Failure {
