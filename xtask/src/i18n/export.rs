@@ -1290,11 +1290,7 @@ mod tests {
         let json = shell_json(root, Mode::Review).unwrap();
         let have = fs::read_to_string(root.join("web/shell/i18n.json"))
             .unwrap()
-            .replace(
-                "
-", "
-",
-            );
+            .replace("\r\n", "\n");
         assert!(
             have == json,
             "web/shell/i18n.json is stale: run `cargo xt i18n export shell --format json`"

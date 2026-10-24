@@ -616,7 +616,7 @@ job_msi() {
 # (not a service account). The editor dists must exist (ci.sh build <d> web) and the debug host carries the SUITE_* hooks the scripts use.
 # toolbar-share-check.py starts Sheets and Slides in turn and screenshots them; it clicks only when TOOLBAR_SHARE_CLICKS="x y" is set (screen-dependent).
 job_desktop() {
-  local rc=0 exe="$SVC_T/debug/hoshiya$EXE" out="$RUN_DIR/desktop" cfg="${APPDATA:-}/Hoshiya/settings.toml" bak="" d
+  local rc=0 exe="$SVC_T/debug/hoshiya$EXE" out="$RUN_DIR/desktop" cfg="${APPDATA:-}/$(toml_get brand/brand.toml product name)/settings.toml" bak="" d
   skip_no_build "needs a desktop session and the built host" && return 0
   mkdir -p "$out"
   bstep build-host-debug env CARGO_TARGET_DIR="$SVC_T" cargo build --locked --manifest-path services/Cargo.toml -p suite-desktop --bin hoshiya || return 1
