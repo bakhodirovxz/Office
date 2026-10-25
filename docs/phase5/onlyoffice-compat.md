@@ -5,7 +5,7 @@ does: **Supported**, **Partial** (works with a stated limit), or **Not supported
 "HRB" says whether hr-backend sends or needs it today (`docs/phase0/hrm-current-state.md` §4, owner confirmed unchanged
 2026-10-25). Plan: `docs/phase5/PLAN.md`.
 
-**Status of this file: skeleton (2026-10-25).** Nothing is built yet. "Target" is the Phase 5 plan's intent; "Verified"
+**Status of this file (2026-10-25).** WP5 (`api.js`, the wrapper page) is built; the rows it implements name their test in "Verified" (the spec is `ci/web-smoke/docserver.spec.ts`, Chromium, two sites, TLS). Everything else is still the plan's intent. "Target" is the Phase 5 plan's intent; "Verified"
 stays "—" until a named test passes, and WP16 fills it in. A row's target changes only with the plan.
 
 **Clean-room.** Field names come from ONLYOFFICE's **public** Docs API documentation (the editor config, events,
@@ -20,11 +20,11 @@ relies on it), **—** (not used).
 
 | Field | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
-| `documentType` (`word`, `cell`, `slide`, `pdf`) | sent (`hrm-current-state.md:252`) | P | Selects the editor (`/docs/`, `/sheets/`, `/slides/`, `/pdf/`). Only `word`/docx is in the gate; the others open but lack read-only and save acknowledgement until their bridges get them | WP5, WP6 | — |
-| `type` (`desktop`, `mobile`, `embedded`) | sent as `mobile` on `device=mobile` (`:264`) | P | `mobile` accepted, layout from the viewport; editing is **not** forced to view; `embedded` treated as view | WP5 | — |
-| `width`, `height` | — (client-side) | S | Applied to the iframe | WP5 | — |
+| `documentType` (`word`, `cell`, `slide`, `pdf`) | sent (`hrm-current-state.md:252`) | P | Selects the editor (`/docs/`, `/sheets/`, `/slides/`, `/pdf/`). Only `word`/docx is in the gate; the others open but lack read-only and save acknowledgement until their bridges get them. The wrapper picks the frame from the session's `editor` and the shell's prefix table | WP5, WP6 | docx only: docserver.spec (xlsx, pptx, pdf not run) |
+| `type` (`desktop`, `mobile`, `embedded`) | sent as `mobile` on `device=mobile` (`:264`) | P | `mobile` accepted and **ignored** (`api.js` makes the same frame; layout comes from the viewport); editing is **not** forced to view; `embedded` treated as view (not yet) | WP5 | — |
+| `width`, `height` | — (client-side) | S | Applied to the iframe by `api.js` (number = px, a CSS length, default 100%) | WP5 | — (implemented, no test) |
 | `token` | sent: HS256 over the whole config, no `exp` (`:265`) | S | HS256 only, `alg` pinned; the verified payload is the only source of truth; `exp` required (PLAN Q4) | WP3 | — |
-| `events` | uses | S | Kept on the page, never sent to the server, never signed (`:312`) | WP5 | — |
+| `events` | uses | S | Kept on the page, never sent to the server, never signed (`:312`); `api.js` strips it from the config it posts | WP5 | docserver.spec: the POST to `/ds/session` has no `events` key |
 
 ## 2. `document`
 
@@ -50,9 +50,9 @@ relies on it), **—** (not used).
 | `mode` (`edit`, `view`) | sent (`:258`) | S | `view` → read-only session | WP3, WP7 | — |
 | `callbackUrl` | sent for edit configs, omitted for view (`:259`) | S | Through the per-provider callback allowlist; a config without it is accepted as view only | WP4, WP7 | — |
 | `user.id` | sent `emp-{id}` / `user-{id}` (`:260`) | S | The session `sub`; echoed in callback `users[]`; the audit actor | WP3 | — |
-| `user.name` | sent | P | Shown as the author of tracked changes and comments; no presence list | WP5 | — |
+| `user.name` | sent | P | Reaches the session; **not yet** passed on to the editor (no author name in tracked changes until the bridge has a message for it); no presence list | WP5, WP6 | — |
 | `user.group`, `user.image` | — | N | Ignored | — | — |
-| `lang` | sent `ru` (`:261`) | P | Sets the editor language when the user has no own choice | WP5 | — |
+| `lang` | sent `ru` (`:261`) | P | Used for the wrapper's own messages (ru, uz-Latn, uz-Cyrl, en) through the shell catalog; **not yet** passed to the editor (no bridge message) | WP5 | docserver.spec: the wrapper's error text is Russian for `lang: ru` (seen in the page snapshot, not asserted) |
 | `region`, `location` | — | N | Ignored (number formats follow the language) | — | — |
 | `coEditing.mode`, `coEditing.change` | — (`:267`) | N | One editor per session; no co-editing (Phase 9) | — | — |
 | `recent`, `templates`, `createUrl` | — (`:268`) | N | Ignored | — | — |
@@ -65,7 +65,7 @@ relies on it), **—** (not used).
 | Field | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
 | `forcesave` | sent `true` (`:262`) | P | Ignored as a switch: every explicit save and host `requestSave` sends status 6 | WP4 | — |
-| `uiTheme` | sent (`:263`) | P | `theme-dark` → dark, anything else → light | WP5 | — |
+| `uiTheme` | sent (`:263`) | P | `theme-dark` → dark, anything else → light. **Not wired in WP5**: the wrapper does not pass it on (no bridge message) | WP5 | — |
 | `autosave` | — | P | Autosave is a recovery copy on our server only; the HRM sees saves (6) and the close (2) | WP4, WP6 | — |
 | `anonymous`, `comments`, `compactHeader`, `compactToolbar`, `compatibleFeatures`, `customer`, `features`, `feedback`, `goback`, `help`, `hideNotes`, `hideRightMenu`, `hideRulers`, `integrationMode`, `logo`, `macros`, `macrosMode`, `mentionShare`, `mobile`, `review`, `submitForm`, `toolbarHideFileName`, `toolbarNoTabs`, `unit`, `zoom` | — | N | Ignored; the product chrome and toolbar come from our own settings | — | — |
 
@@ -73,13 +73,14 @@ relies on it), **—** (not used).
 
 | Event | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
-| `onAppReady` | uses (`:307`) | S | When the editor bridge is ready | WP5 | — |
-| `onDocumentReady` | uses | S | When the document is open | WP5 | — |
-| `onDocumentStateChange` | uses (stub) | S | `{data: true|false}` on dirty changes | WP5 | — |
-| `onError` | uses (`:307`) | S | `{data: {errorCode, errorDescription}}` (the spike sent `{status}`, `hr-backend-prompt.md:830`) | WP5 | — |
-| `onWarning` | uses | S | Callback failures and size refusals | WP5 | — |
+| `onAppReady` | uses (`:307`) | S | When the editor bridge is ready (`<prefix>:ready`) | WP5 | docserver.spec (event reaches the host; ready is implied by the document opening) |
+| `onDocumentReady` | uses | S | When the editor reports the document open (`<prefix>:opened`) | WP5 | docserver.spec: host banner `ready` |
+| `onDocumentStateChange` | uses (stub) | S | `{data: true|false}` on every `<prefix>:dirty` of the editor | WP5 | docserver.spec: events logged after a save (dirty values themselves not asserted) |
+| `onError` | uses (`:307`) | S | `{data: {errorCode, errorDescription}}` (the spike sent `{status}`, `hr-backend-prompt.md:830`). Codes: -20 token or origin refused (401, 403), -4 document not loaded, -1 anything else | WP5 | docserver.spec: tampered token → `-20`, no editor frame, no session |
+| `onWarning` | uses | S | Wired: `{warningCode, warningDescription}`, 1 = host did not accept a save (needs WP4's callback), 2 = recovery copy not stored | WP5 | — |
+| `onSaved`, `onClosed` (ours, non-standard) | — | S | `onSaved {version, sha256, callback}` after the server stored a save (`callback`: `unknown` until WP4); `onClosed {status}` after the session closed | WP5 | docserver.spec |
 | `onReady` (old name) | — | N | Not emitted | — | — |
-| `onRequestClose` | — | P | Emitted when the user closes; the host then calls `destroyEditor()` | WP5 | — |
+| `onRequestClose` | — | P | `api.js` relays it; **nothing in the editors triggers it yet** (no close control in the editor chrome), so the host has no way to see it today | WP5 | — |
 | `onRequestHistory`, `onRequestHistoryData`, `onRequestHistoryClose`, `onRequestRestore` | — (`:268`) | N | Version history is ours (PLAN §6), not driven by the host | — | — |
 | `onRequestRename`, `onRequestSaveAs`, `onRequestInsertImage`, `onRequestOpen`, `onRequestCreateNew`, `onRequestEditRights`, `onRequestSharingSettings`, `onRequestUsers`, `onRequestSendNotify`, `onRequestReferenceData`, `onRequestSelectDocument`, `onRequestSelectSpreadsheet`, `onMakeActionLink`, `onMetaChange`, `onDownloadAs`, `onInfo`, `onOutdatedVersion`, `onCollaborativeChanges`, `onPluginsReady` | — | N | Not emitted | — | — |
 
@@ -87,10 +88,10 @@ relies on it), **—** (not used).
 
 | Method | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
-| `destroyEditor()` | uses (`:308`) | S | Removes the iframe and listeners; an open session is closed (status 2 or 4) | WP5 | — |
-| `requestSave()` (ours, non-standard) | — | S | Asks the editor to save now (status 6) | WP5 | — |
-| `close()` (ours, non-standard) | — | S | Closes the session (status 2 or 4) | WP5 | — |
-| `downloadAs`, `insertImage`, `refreshHistory`, `setHistoryData`, `requestClose`, `setActionLink`, `setFavorite`, `setReferenceData`, `setRequestedDocument`, `setRequestedSpreadsheet`, `setRevisedFile`, `setSharingSettings`, `setUsers`, `showMessage`, `denyEditingRights`, `startFilling` | — | N | Not present (calling one throws "not supported") | — | — |
+| `destroyEditor()` | uses (`:308`) | S | Closes the session first (status 2 or 4; a second close answers the first), waits for `onClosed` for at most 3 s with the frame hidden, then puts the original placeholder element back and removes the listeners | WP5 | docserver.spec |
+| `requestSave()` (ours, non-standard) | — | S | Asks the editor to save now; the server stores the version (status 6 callback is WP4) | WP5 | docserver.spec: `onSaved`, version 2 on disk |
+| `close()` (ours, non-standard) | — | S | Closes the session (status 2 or 4); the host gets `onClosed {status}` (non-standard event) | WP5 | docserver.spec: status 2 after a save |
+| `downloadAs`, `insertImage`, `refreshHistory`, `setHistoryData`, `requestClose`, `setActionLink`, `setFavorite`, `setReferenceData`, `setRequestedDocument`, `setRequestedSpreadsheet`, `setRevisedFile`, `setSharingSettings`, `setUsers`, `showMessage`, `denyEditingRights`, `startFilling` | — | N | Present and throws "not supported" | WP5 | docserver.spec: `downloadAs` |
 
 ## 7. Save callback (our server → the host)
 
@@ -120,4 +121,4 @@ relies on it), **—** (not used).
 | Conversion API | — | N | Our converter has its own API (`docs/phase3/api.md`) | — | — |
 | Document Builder | — | N | — | — | — |
 | WOPI | — | N | Rejected for now (`hrm-integration-design.md:313-314`) | — | — |
-| Script path `/web-apps/apps/api/documents/api.js` | uses (`:305`) | S | Alias of `/ds/api.js` | WP5 | — |
+| Script path `/web-apps/apps/api/documents/api.js` | uses (`:305`) | S | Alias of `/ds/api.js` (same bytes, `Cross-Origin-Resource-Policy: cross-origin`, cached 5 min on 200 only) | WP5 | `services/suite-serve/tests/docserver.rs`; docserver.spec loads the host page through it |

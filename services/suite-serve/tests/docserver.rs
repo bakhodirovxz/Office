@@ -155,7 +155,11 @@ async fn framing_and_corp_rules_with_the_docserver_on() {
         let cached = uri.ends_with("api.js");
         assert_eq!(
             hv(&hd, "cache-control"),
-            if cached { "public, max-age=300" } else { "no-store" },
+            if cached {
+                "public, max-age=300"
+            } else {
+                "no-store"
+            },
             "{uri}"
         );
         // always, on every route

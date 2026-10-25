@@ -16,7 +16,7 @@
   } catch (e) { /* no host origin: nothing will be accepted */ }
   if (!HOST || window.parent === window) return;
 
-  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
+  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
   status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:#555';
   document.body.style.cssText = 'margin:0;height:100vh;overflow:hidden';
@@ -32,7 +32,7 @@
   async function refusal(r) {
     var e = new Error('HTTP ' + r.status);
     e.status = r.status;
-    try { e.code = (await r.json()).error; } catch (x) { /* not JSON */ }
+    try { var j = (await r.json()).error; e.code = j.code; e.message += ': ' + j.message; } catch (x) { /* not our JSON */ }
     return e;
   }
   // 401 and 403 -> -20 (the ONLYOFFICE code for a rejected token), no document -> -4, anything else -> -1
@@ -101,12 +101,13 @@
   }
 
   async function closeSession() {
-    if (S.closed) return;
+    // asked twice (close(), then destroyEditor()): the second asker gets the first answer
+    if (S.closed) return S.closing.then(emit.bind(null, 'onClosed'));
     S.closed = true;
     clearTimeout(S.timer);
     // before the session exists there is nothing to end
-    try { emit('onClosed', S.sid ? await (await api('/close', { method: 'POST' })).json() : { status: 4 }); }
-    catch (e) { emit('onClosed', { status: 0 }); }
+    S.closing = (S.sid ? api('/close', { method: 'POST' }).then(function (r) { return r.json(); }) : Promise.resolve({ status: 4 })).catch(function () { return { status: 0 }; });
+    emit('onClosed', await S.closing);
   }
 
   async function start(cfg, origin) {
@@ -121,7 +122,7 @@
       var r = await fetch('/ds/session', { method: 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: origin, config: cfg }) });
       if (!r.ok) throw await refusal(r);
       s = await r.json();
-    } catch (e) { return fail(codeOf(e), e.code === 'bad_config' ? 'the configuration was refused' : 'the session was refused'); }
+    } catch (e) { return fail(codeOf(e), (e.code === 'bad_config' ? 'the configuration was refused' : 'the session was refused') + ' (' + e.message + ')'); }
     S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
     renewSoon(s.expires);
     var app = apps.find(function (a) { return a.route === '/' + s.editor + '/'; });

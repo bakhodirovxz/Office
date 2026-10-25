@@ -16,15 +16,24 @@ const EDITOR_HTML: &str = include_str!("../static/editor.html");
 const EDITOR_JS: &str = include_str!("../static/editor.js");
 
 async fn api_js() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/javascript; charset=utf-8")], API_JS)
+    (
+        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+        API_JS,
+    )
 }
 
 async fn editor_html() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], EDITOR_HTML)
+    (
+        [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        EDITOR_HTML,
+    )
 }
 
 async fn editor_js() -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/javascript; charset=utf-8")], EDITOR_JS)
+    (
+        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+        EDITOR_JS,
+    )
 }
 
 async fn not_found() -> ApiError {
@@ -63,17 +72,18 @@ impl Docserver {
                 }
                 r
             }));
-        let frame = Router::new()
-            .route("/ds/editor", get(editor_html))
-            .layer(middleware::map_response(move |mut r: Response| {
-                let csp = csp.clone();
-                async move {
-                    let h = r.headers_mut();
-                    h.insert(header::CONTENT_SECURITY_POLICY, csp);
-                    h.insert(header::X_FRAME_OPTIONS, NO_FRAME_OPTIONS);
-                    r
-                }
-            }));
+        let frame =
+            Router::new()
+                .route("/ds/editor", get(editor_html))
+                .layer(middleware::map_response(move |mut r: Response| {
+                    let csp = csp.clone();
+                    async move {
+                        let h = r.headers_mut();
+                        h.insert(header::CONTENT_SECURITY_POLICY, csp);
+                        h.insert(header::X_FRAME_OPTIONS, NO_FRAME_OPTIONS);
+                        r
+                    }
+                }));
         Router::new()
             .merge(embed)
             .merge(frame)
