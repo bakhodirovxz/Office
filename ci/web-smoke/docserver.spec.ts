@@ -437,10 +437,14 @@ test('History panel: list after two saves, name, restore, download, Esc; compare
   await rows.last().getByRole('button', { name: /^Restore/ }).click();
   await w.locator('#hist-restore').getByRole('button', { name: 'Cancel' }).click();
   await expect(rows).toHaveCount(n);
+  // ... and the editor is reloaded with the restored version (else its next save would overwrite it)
+  let docLoads = 0;
+  page.on('request', (r) => { if (/\/ds\/session\/[^/]+\/document$/.test(new URL(r.url()).pathname)) docLoads++; });
   await rows.last().getByRole('button', { name: /^Restore/ }).click();
   await w.locator('#hist-restore').getByRole('button', { name: 'Restore', exact: true }).click();
   await expect(panel.locator('#hist-msg')).toContainText('restored as new version');
   await expect.poll(() => rows.count()).toBeGreaterThan(n);
+  expect(docLoads).toBe(1);
 
   // Esc closes the panel and puts the focus back on the button that opened it
   await w.locator('#hist-vers button').first().focus();

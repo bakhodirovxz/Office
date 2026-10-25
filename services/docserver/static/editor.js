@@ -63,17 +63,20 @@
     S.frame.contentWindow.postMessage(Object.assign({ type: S.prefix + ':' + type }, extra), location.origin, transfer || []);
   }
 
+  // sends the session's newest version to the editor: at start, and after a restore (else the editor's next save would overwrite it)
+  async function openInEditor() {
+    var bytes = await getDocument();
+    var ext = '.' + S.fileType;
+    toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly, canDownload: S.canDownload, canPrint: S.canPrint }, [bytes]);
+  }
+
   async function onEditor(d) {
     switch (d.type.slice(S.prefix.length + 1)) {
       case 'ready':
         if (S.started) return;
         S.started = true;
         emit('onAppReady', {});
-        try {
-          var bytes = await getDocument();
-          var ext = '.' + S.fileType;
-          toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly, canDownload: S.canDownload, canPrint: S.canPrint }, [bytes]);
-        } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
+        try { await openInEditor(); } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
         break;
       case 'opened': status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); break;
       case 'dirty':
@@ -149,6 +152,7 @@
     if (!yes) return;
     hfail(async function () {
       var r = await (await api('/history/' + v.v + '/restore', { method: 'POST' })).json();
+      await openInEditor();
       hsay(t('hist.restored', { from: v.v, v: r.version.v }));
       await hload();
     });
