@@ -173,7 +173,10 @@ impl Docserver {
     pub fn callback_closed(&self, sid: &str) -> Option<Cb> {
         let rec = self.load_session(sid)?;
         let c = rec.closed.as_ref().filter(|c| !c.notified)?;
-        let r = if c.status == 4 {
+        // a view session has nothing to report (PLAN 5): no callback, and no failure for a config that has no callbackUrl
+        let r = if !rec.perms.edit {
+            Cb::Ok
+        } else if c.status == 4 {
             self.send_callback(&rec, 4, None)
         } else if let Some(v) = rec.versions.last() {
             let q = Queued {

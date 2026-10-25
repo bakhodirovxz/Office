@@ -410,7 +410,7 @@ async fn config_field_refusals_and_modes() {
             (StatusCode::OK, Some("view"), Some(false)),
             "{what}"
         );
-        for route in ["save", "autosave"] {
+        for route in ["save", "autosave", "dirty"] {
             let (s, _) = call(
                 &r,
                 "POST",

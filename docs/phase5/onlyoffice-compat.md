@@ -36,11 +36,11 @@ relies on it), **—** (not used).
 [redacted: HRM security detail]
 | `info.*` (`owner`, `uploaded`, `favorite`, `folder`, `sharingSettings`) | — (`:267`) | N | Ignored | — | — |
 | `referenceData` | — (`:267`) | N | Ignored | — | — |
-| `permissions.edit` | sent | S | `false` → view session (server refuses save) | WP3, WP7 | — |
-| `permissions.download` | sent `true` | P | `false` → the editor's Save a copy / export refused through the bridge flag; best effort on the web | WP7 | — |
-| `permissions.print` | sent `true` | P | `false` → print refused through the bridge flag; best effort | WP7 | — |
-| `permissions.review` | sent `false` | P | `true` with `edit:false` → Docs opens with tracked changes forced on (after the gate) | WP7 | — |
-| `permissions.comment` | sent `= edit` | P | With `edit:true`: part of editing. Comment-only (`edit:false`) is **not supported**: opened as view | WP7 | — |
+| `permissions.edit` | sent | S | `false` → view session: the server refuses save, autosave and dirty (403) and sends no callback (not even status 4 on close); the wrapper opens the editor with `readOnly: true`, so typing, Save and exports are refused | WP3, WP7 | auth.rs `config_field_refusals_and_modes`; outbound.rs `a_view_session_reads_and_sends_no_callback`; docserver.spec: WP7 view session |
+| `permissions.download` | sent `true` | P | Server: the version-history download route needs it. Editor: **no bridge flag exists** (0127 has only `readOnly`), so `false` is not enforced for an edit session. A view session refuses exports through `readOnly` whatever `download` says (stricter than asked; a view session with `download:true` cannot export) | WP7 | — |
+| `permissions.print` | sent `true` | P | **Not enforced**: the editors have no bridge flag for print. Accepted and stored on the session | WP7 | — |
+| `permissions.review` | sent `false` | P | Not supported yet: `review:true` with `edit:false` opens as a plain view session (read-only). Forced tracked changes need a wasm-safe policy layer (PLAN F9), after the gate | WP7 | — |
+| `permissions.comment` | sent `= edit` | P | With `edit:true`: part of editing. Comment-only (`edit:false`) is **not supported**: opened as view (read-only) | WP7 | — |
 | `permissions.copy`, `chat`, `fillForms`, `modifyContentControl`, `modifyFilter`, `protect`, `commentGroups`, `reviewGroups`, `userInfoGroups`, `editCommentAuthorOnly`, `deleteCommentAuthorOnly` | — | N | Ignored | — | — |
 
 ## 3. `editorConfig`
@@ -48,7 +48,7 @@ relies on it), **—** (not used).
 | Field | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
 | `mode` (`edit`, `view`) | sent (`:258`) | S | `view` → read-only session | WP3, WP7 | — |
-| `callbackUrl` | sent for edit configs, omitted for view (`:259`) | S | Through the per-provider callback allowlist; a config without it is accepted as view only | WP4, WP7 | — |
+| `callbackUrl` | sent for edit configs, omitted for view (`:259`) | S | Through the per-provider callback allowlist; a config without it is accepted as view only (`mode` and `permissions.edit` are then reported as view and the editor opens read-only) | WP4, WP7 | outbound.rs `a_view_session_reads_and_sends_no_callback` (the fake backend's `mode=view` config), auth.rs; docserver.spec: WP7 view session |
 | `user.id` | sent `emp-{id}` / `user-{id}` (`:260`) | S | The session `sub`; echoed in callback `users[]`; the audit actor | WP3 | — |
 | `user.name` | sent | P | Reaches the session; **not yet** passed on to the editor (no author name in tracked changes until the bridge has a message for it); no presence list | WP5, WP6 | — |
 | `user.group`, `user.image` | — | N | Ignored | — | — |
