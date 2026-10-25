@@ -264,6 +264,12 @@ impl Config {
                 let listen: SocketAddr = l.parse().map_err(|_| {
                     format!("docserver: internal_listen = \"{l}\" is not an ip:port")
                 })?;
+                if listen.port() == 0 {
+                    return Err("docserver: internal_listen needs a fixed port (not 0)".into());
+                }
+                if listen.ip().is_unspecified() {
+                    eprintln!("docserver: warning: internal_listen {listen} listens on every interface; bind it to the Docker network address and never publish it with -p");
+                }
                 if Some(listen) == main_listen {
                     return Err("docserver: internal_listen is the public listen address".into());
                 }
@@ -333,6 +339,13 @@ impl Config {
             let mut frame_origins = vec![];
             for o in &p.frame_origins {
                 let o = origin(o, &at("frame_origins"), false)?;
+                // a page served over plain http could be rewritten in transit and then frame the editor with a live session
+                if let Some(h) = o.strip_prefix("http://") {
+                    let host = h.rsplit_once(':').filter(|(_, p)| p.parse::<u16>().is_ok()).map_or(h, |(h, _)| h);
+                    if !["localhost", "127.0.0.1", "[::1]"].contains(&host) {
+                        return Err(format!("docserver: {}: \"{o}\" is plain http; use https (http is accepted for localhost only)", at("frame_origins")));
+                    }
+                }
                 if !frame_origins.contains(&o) {
                     frame_origins.push(o);
                 }
@@ -660,6 +673,10 @@ frame_origins = ["https://app.test"]
             "ws://a.test",
             "'self'",
             "https://a.test,https://b.test",
+            "http://app.test",
+            "http://app.test:8080",
+            "http://127.0.0.2:3000",
+            "http://localhost.evil.test",
         ] {
             refused(
                 &d,
@@ -677,14 +694,36 @@ frame_origins = ["https://app.test"]
                         "https://App.Test",
                         "http://localhost:3000",
                         "https://app.test",
+                        "http://127.0.0.1",
+                        "http://[::1]:5173",
                     ]),
                 );
             })
             .unwrap();
         assert_eq!(
             ds.frame_ancestors(),
-            "'self' https://app.test http://localhost:3000"
+            "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173"
         );
+    }
+
+    #[test]
+    fn internal_listen_port_and_mapped_ranges() {
+        let d = Dir::new("internal2");
+        let go = |listen: &'static str, allow: &'static str| {
+            d.toml(&move |t| {
+                t.insert("internal_listen".into(), listen.into());
+                t.insert("internal_allow".into(), strings(&[allow]));
+            })
+        };
+        assert!(go("127.0.0.1:0", "127.0.0.0/8").err().unwrap().contains("not 0"));
+        // a v4-mapped prefix cannot be written as a v6 range: refused with the key named, never half understood
+        let e = go("127.0.0.1:9000", "::ffff:172.18.0.0/112").err().unwrap();
+        assert!(e.contains("internal_allow"), "{e}");
+        // a mapped single address is the v4 address
+        let ds = go("127.0.0.1:9000", "::ffff:172.18.0.4").unwrap();
+        assert!(ds.internal_allows("172.18.0.4".parse().unwrap()));
+        assert!(!ds.internal_allows("172.18.0.5".parse().unwrap()));
+        assert!(go("[::]:9000", "10.0.0.0/8").is_ok(), "warns, does not refuse");
     }
 
     #[test]

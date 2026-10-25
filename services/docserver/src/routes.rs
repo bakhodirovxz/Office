@@ -200,6 +200,26 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn mapped_ipv6_peers_are_judged_as_their_ipv4_address() {
+        let r = ds().internal_router();
+        let get = |peer: &str| {
+            let r = r.clone();
+            let peer: SocketAddr = format!("[{peer}]:4000").parse().unwrap();
+            async move {
+                let mut req = Request::builder()
+                    .uri("/ds/files/s/1")
+                    .body(Body::empty())
+                    .unwrap();
+                req.extensions_mut().insert(ConnectInfo(peer));
+                r.oneshot(req).await.unwrap().status()
+            }
+        };
+        assert_eq!(get("::ffff:172.18.3.4").await, StatusCode::UNAUTHORIZED, "allowed: on to the token check");
+        assert_eq!(get("::ffff:8.8.8.8").await, StatusCode::FORBIDDEN);
+        assert_eq!(get("::1").await, StatusCode::FORBIDDEN);
+    }
+
     #[test]
     fn the_frame_csp_differs_from_the_baseline_in_frame_ancestors_only() {
         let framed = ds().frame_csp();
