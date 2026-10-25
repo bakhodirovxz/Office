@@ -237,11 +237,14 @@ their bridges (§13.2 R6).
 |---|---|---|---|---|
 | `editorConfig.mode = "view"` or `permissions.edit = false` | save and autosave 403; no callbacks | opened with `readOnly` (WP6) | yes | supported (target) |
 | config without `callbackUrl` | accepted only as view | read-only | no | supported (target); HRB keeps these on ONLYOFFICE until this ships (`hr-backend-prompt.md:503-504`) |
-| `permissions.download = false` | version download and compare return 403 (edit sessions too; audited as `perm.refused`) | "Save a copy" / export refused through the bridge flag | no | partial |
-| `permissions.print = false` | — | print refused through the bridge flag | no | partial |
+| `permissions.download = false` | version download and compare return 403 (edit sessions too; audited as `perm.refused`) | Save As and the exports greyed out and refused through `canDownload:false` (patch wordcraft/0128; docs only) | no | supported for docx |
+| `permissions.print = false` | — | Print greyed out and refused (Ctrl+P too) through `canPrint:false` (0128; docs only) | no | supported for docx |
 | `permissions.review = true` with `edit = false` | as edit | Docs starts with tracked changes on and the toggle refused; needs a wasm-safe policy layer (F9) | no | partial, after the gate |
 | `permissions.comment = true` with `edit = false` | as view | — | no | not supported in Phase 5 |
 | `mode = "edit"`, `edit = true` | full | full | yes | supported (target) |
+
+Same semantics as ONLYOFFICE: the editor's own buttons and shortcuts go, but the browser's own print command (and a screenshot) cannot be blocked from a page, so `print:false` is a convenience, not DRM.
+Sheets, Slides and PDF ignore the two flags until they get the same bridge patch.
 
 HRB sends `review:false` and `comment = edit` (`hrm-current-state.md:257`), so the pilot needs only the two
 supported rows.

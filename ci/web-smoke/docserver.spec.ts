@@ -320,3 +320,45 @@ test('WP7 view session: read-only editor, typing refused, nothing is sent', asyn
   expect(problems).toEqual([]);
   await ctx.close();
 });
+
+// permissions.download / permissions.print = false in an EDIT session: the wrapper tells the editor (patch 0128), which withholds Save As,
+// the exports and Print. Probed by key: F12 (Save As) is a download, which the wrapper would POST to /save; Ctrl+P opens the Print page.
+// Like ONLYOFFICE, only the editor's own entries go: the browser's own print command cannot be blocked from a page.
+for (const [label, query, blocked] of [['control (both true)', '', false], ['download:false print:false', '&download=0&print=0', true]] as const) {
+  test(`WP18 edit session ${label}: ${blocked ? 'no Save As, export or Print' : 'Save As and Print are reachable'}`, async () => {
+    const { ctx, page, problems } = await open();
+    const posts: string[] = [];
+    page.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/ds/session/')) posts.push(new URL(r.url()).pathname.split('/').pop()!); });
+    await page.goto(`${HOST}/host?kind=files&id=1${query}`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const rec = record(sessions()[0]);
+    expect([rec.mode, rec.perms.edit, rec.perms.download, rec.perms.print]).toEqual(['edit', true, !blocked, !blocked]);
+    const luma = async () => {
+      const b64 = (await page.locator('iframe').first().screenshot()).toString('base64');
+      return page.evaluate(async (s) => {
+        const img = new Image(); img.src = 'data:image/png;base64,' + s; await img.decode();
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, c.width, c.height).data; let t = 0;
+        for (let i = 0; i < d.length; i += 4) t += d[i] + d[i + 1] + d[i + 2];
+        return t / (d.length / 4) / 3;
+      }, b64);
+    };
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+    await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+    const before = await luma();
+    await page.keyboard.press('Control+p');
+    await page.waitForTimeout(2500);
+    const shift = Math.abs((await luma()) - before);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+    await page.keyboard.press('F12');
+    await page.waitForTimeout(2500);
+    const saves = posts.filter((p) => p === 'save').length;
+    console.log(`WP18 ${label}: print page luma shift ${shift.toFixed(1)}, Save As posts ${saves}`);
+    if (blocked) { expect(shift).toBeLessThan(1); expect(saves).toBe(0); } else { expect(shift).toBeGreaterThan(5); expect(saves).toBeGreaterThan(0); }
+    expect(problems).toEqual([]);
+    await ctx.close();
+  });
+}

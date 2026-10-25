@@ -22,7 +22,7 @@
 <div id="ph"></div>
 <script>
   // Cross-site host page (hrm-current-state.md:302-319): api.js comes from the document server's origin, the editor config from
-  // this origin. Query: ?kind=files|order-acts|letters (default files) ?id=<n> ?mode=view ?device=mobile ?tamper=1
+  // this origin. Query: ?kind=files|order-acts|letters (default files) ?id=<n> ?mode=view ?device=mobile ?download=0 ?print=0 ?tamper=1
   var qs = new URLSearchParams(location.search);
   var log = window.__hrmLog = [];
   function setState(s, detail) {
@@ -36,7 +36,7 @@
   s.src = '{{DOCSERVER}}/web-apps/apps/api/documents/api.js';
   s.onload = async function () {
     var q = new URLSearchParams();
-    ['mode', 'device', 'theme'].forEach(function (k) { if (qs.get(k)) q.set(k, qs.get(k)); });
+    ['mode', 'device', 'theme', 'download', 'print'].forEach(function (k) { if (qs.get(k)) q.set(k, qs.get(k)); });
     var url = '/' + (qs.get('kind') || 'files') + '/' + (qs.get('id') || '1') + '/editor-config?' + q;
     var cfg = await (await fetch(url)).json();
     if (qs.get('tamper')) {

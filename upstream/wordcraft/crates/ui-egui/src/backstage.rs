@@ -81,7 +81,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             ui.add_space(if mac { 12.0 } else { 6.0 });
             for (id, label, icon) in PAGES {
                 // No document open (#1129): Info, Save, Save As, Print and Export are greyed out.
-                let on = has_document || works_without_document(id);
+                let on = (has_document || works_without_document(id)) && !app.blocked(&format!("backstage.{id}"));
                 let (r, resp) = ui.add_enabled_ui(on, |ui| ui.allocate_exact_size(vec2(200.0, 38.0), Sense::click())).inner;
                 resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, on, tl!(label)));
                 let active = app.ui.backstage_page == id;
@@ -152,6 +152,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     egui::CentralPanel::default()
         .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { t.ribbon }).inner_margin(egui::Margin::symmetric(40, 30)))
         .show(ui, |ui| {
+            // A page the host withholds (Save As, Print, Export) falls back to Home.
+            if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
+                app.ui.backstage_page = "home".into();
+            }
             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
             if app.ui.backstage_page == "print" {
                 export_page(app, ui);

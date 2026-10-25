@@ -126,3 +126,56 @@ test('5 autosave: handed over while dirty after the period, nothing while clean'
   expect(a.bytes).toMatch(/^80,75:\d{4,}/);
   expect(await lastDirty(page)).toBe(true); // an autosave is not a save
 });
+
+// Patch 0128: canDownload / canPrint withhold the editor's own Save As, exports and Print (default true). Probed with the
+// keyboard: F12 is Save As (a download, so a wordcraft:save message), Ctrl+P opens the Print page (the whole frame repaints).
+const lumaOf = async (page: Page) => {
+  const png = (await page.locator('#ed').screenshot()).toString('base64');
+  return page.evaluate(async (b64) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data; let s = 0;
+    for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2];
+    return s / (d.length / 4) / 3;
+  }, png);
+};
+async function probe(page: Page) {
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  const before = await lumaOf(page);
+  await page.keyboard.press('Control+p');
+  await page.waitForTimeout(2500);
+  const printShift = Math.abs((await lumaOf(page)) - before);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  await page.keyboard.press('F12');
+  await page.waitForTimeout(2500);
+  return { printShift, saves: await count(page, 'wordcraft:save') };
+}
+
+test('6 canDownload/canPrint default true: Print opens and Save As reaches the host', async ({ page }) => {
+  await open(page);
+  const r = await probe(page);
+  expect(r.printShift).toBeGreaterThan(5);
+  expect(r.saves).toBeGreaterThan(0);
+});
+
+test('7 canDownload:false and canPrint:false: Print does not open, Save As sends nothing, Save still works', async ({ page }) => {
+  await open(page, { canDownload: false, canPrint: false });
+  const r = await probe(page);
+  expect(r.printShift).toBeLessThan(1);
+  expect(r.saves).toBe(0);
+  await type(page);
+  await send(page, { type: 'wordcraft:requestSave' });
+  await waitFor(page, 'wordcraft:save'); // the host's own save is not a download
+});
+
+test('8 the flags are per open: a later open without them restores both', async ({ page }) => {
+  await open(page, { canDownload: false, canPrint: false });
+  await open(page);
+  await waitFor(page, 'wordcraft:opened', 2);
+  const r = await probe(page);
+  expect(r.printShift).toBeGreaterThan(5);
+  expect(r.saves).toBeGreaterThan(0);
+});

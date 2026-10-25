@@ -7,6 +7,9 @@
 //!   `readOnly: true` opens it read only: the document is held under Restrict Editing's read-only
 //!   protection (typing, paste and every editing command are refused, and Stop Protection doesn't
 //!   lift it), and Save, Save As and the exports are refused. Absent or false opens it editable.
+//!   `canDownload: false` withholds Save As and the exports, `canPrint: false` Print (greyed out,
+//!   and their keyboard shortcuts refused); both default to true. The browser's own print command
+//!   can't be blocked from a page, so this only removes the editor's own entries.
 //! - `wordcraft:opened` (to the parent): `{ name }`, a document has replaced the one shown.
 //! - `wordcraft:requestSave` (from the parent): save now, as File › Save does.
 //! - `wordcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
@@ -56,6 +59,9 @@ pub struct Bridge {
     autosave: Rc<Cell<bool>>,
     /// The parent opened the document read only (`wordcraft:open { readOnly }`).
     read_only: Rc<Cell<bool>>,
+    /// `wordcraft:open { canDownload }` and `{ canPrint }`: false withholds Save As and the exports, or Print.
+    can_download: Rc<Cell<bool>>,
+    can_print: Rc<Cell<bool>>,
     /// Files sent as `wordcraft:save` that the parent hasn't answered with `wordcraft:saved` yet.
     pending: Rc<Cell<u32>>,
     /// Answers (`ok`) received since the last frame.
@@ -89,6 +95,8 @@ impl Bridge {
             save_requested: Rc::default(),
             autosave: Rc::default(),
             read_only: Rc::default(),
+            can_download: Rc::new(Cell::new(true)),
+            can_print: Rc::new(Cell::new(true)),
             pending: Rc::default(),
             acks: Rc::default(),
             last_autosave: Rc::default(),
@@ -111,6 +119,11 @@ impl Bridge {
             bridge.post_file("wordcraft:save", name, bytes)?;
             bridge.pending.set(bridge.pending.get() + 1);
             Ok(())
+        }));
+        let bridge = self.clone();
+        services.blocked = Some(Box::new(move |id: &str| {
+            (!bridge.can_download.get() && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
+                || (!bridge.can_print.get() && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
         }));
         // Keep the hook the web shell installed (the leave-page guard reads it).
         let bridge = self.clone();
@@ -262,6 +275,8 @@ impl Bridge {
                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
                     let Some(bytes) = bytes(&data) else { return };
                     bridge.read_only.set(bool_field(&data, "readOnly"));
+                    bridge.can_download.set(flag(&data, "canDownload"));
+                    bridge.can_print.set(flag(&data, "canPrint"));
                     *bridge.name.borrow_mut() = name.clone();
                     inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
                 }
@@ -297,6 +312,11 @@ fn string(data: &JsValue, key: &str) -> Option<String> {
 
 fn bool_field(data: &JsValue, key: &str) -> bool {
     js_sys::Reflect::get(data, &JsValue::from_str(key)).ok().and_then(|v| v.as_bool()).unwrap_or(false)
+}
+
+/// A boolean field that is true unless the parent sent `false`.
+fn flag(data: &JsValue, key: &str) -> bool {
+    js_sys::Reflect::get(data, &JsValue::from_str(key)).ok().and_then(|v| v.as_bool()).unwrap_or(true)
 }
 
 /// `bytes` as an `ArrayBuffer` or `Uint8Array`.

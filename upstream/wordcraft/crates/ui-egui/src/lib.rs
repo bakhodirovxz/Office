@@ -145,6 +145,9 @@ pub struct Services {
     /// Web: hand PDF bytes to the browser's print dialog (no download or intermediate file).
     /// Desktop uses `print_native` instead. An error means nothing was opened.
     pub print: Option<Box<dyn Fn(&[u8]) -> Result<(), String>>>,
+    /// Web: commands the host withholds, by id (a Backstage page as `backstage.<page>`). They are
+    /// greyed out and refused by `run`; scripts (`execute`) are not affected.
+    pub blocked: Option<Box<dyn Fn(&str) -> bool>>,
     /// Desktop: the picture on the system clipboard, if any — egui's paste only carries text
     /// (#45). Read when Paste finds no text; see [`paste_picture`].
     pub clipboard_picture: Option<Box<dyn Fn() -> Option<paste_picture::ClipboardPicture>>>,
@@ -758,6 +761,11 @@ impl WordApp {
         self.ui.start_screen
     }
 
+    /// Whether the host withholds this command (see [`Services::blocked`]).
+    pub(crate) fn blocked(&self, id: &str) -> bool {
+        self.services.blocked.as_ref().is_some_and(|b| b(id))
+    }
+
     /// Whether a document is open: false from a Start screen launch until the user creates or
     /// opens one (#1129).
     pub fn has_document(&self) -> bool {
@@ -862,6 +870,11 @@ impl WordApp {
         // close, New or Open counts it as a change (#1348). A draft the document refuses is not
         // part of it: saving and exporting go on without it (the refusal stays on the status
         // line), and replacing the document asks Save / Don't Save / Cancel about it.
+        if self.blocked(id) {
+            let e = format!("{id} is not available in this session");
+            self.status(e.clone());
+            return Err(e);
+        }
         let refused = if flushes_comment_drafts(id, &params) { panes::flush_comment_drafts(self).err() } else { None };
         if id == "file.recover" && params.as_object().is_none_or(|p| p.is_empty()) {
             self.ui.backstage = true;

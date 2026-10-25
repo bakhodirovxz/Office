@@ -375,7 +375,7 @@ async fn editor_config(
             "key": format!("{}v{updated_at}_{}", kind.key_prefix(pk), rand_hex(4)), // fresh suffix on every open [S:254]
             "title": name,
             "url": format!("{backend}/docs-file/{file_token}"),
-            "permissions": {"edit": edit, "download": true, "print": true, "review": false, "comment": edit}, // [S:257]
+            "permissions": {"edit": edit, "download": q.get("download").is_none_or(|v| v != "0"), "print": q.get("print").is_none_or(|v| v != "0"), "review": false, "comment": edit}, // [S:257]
         },
         "editorConfig": editor,
     });

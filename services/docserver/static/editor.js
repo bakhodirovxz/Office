@@ -72,7 +72,7 @@
         try {
           var bytes = await getDocument();
           var ext = '.' + S.fileType;
-          toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly }, [bytes]);
+          toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly, canDownload: S.canDownload, canPrint: S.canPrint }, [bytes]);
         } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
         break;
       case 'opened': status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); break;
@@ -132,7 +132,9 @@
       if (!r.ok) throw await refusal(r);
       s = await r.json();
     } catch (e) { return fail(codeOf(e), (e.code === 'bad_config' ? 'the configuration was refused' : 'the session was refused') + ' (' + e.message + ')'); }
-    S.readOnly = !(s.perms && s.perms.edit); S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
+    S.readOnly = !(s.perms && s.perms.edit);
+    // permissions.download / print hide the editor's own Save As, export and Print entries (as ONLYOFFICE hides its buttons); the browser's own print cannot be blocked.
+    S.canDownload = !(s.perms && s.perms.download === false); S.canPrint = !(s.perms && s.perms.print === false); S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
     renewSoon(s.expires);
     var app = apps.find(function (a) { return a.route === '/' + s.editor + '/'; });
     if (!app) return fail(-1, 'no editor for this document type');

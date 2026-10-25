@@ -1,0 +1,156 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 25 Oct 2026 14:00:00 +0500
+Subject: [PATCH] wordcraft-web: host bridge can withhold Save As, the exports
+ and Print
+
+PLAN phase 5 section 5 (permissions.download / permissions.print). wordcraft:open gets two optional
+booleans, canDownload and canPrint (default true: an absent field changes nothing). canDownload:false
+withholds Save As and the PDF and image exports, canPrint:false Print: the commands are greyed out
+(ribbon, Backstage pages, Quick Access), refused by run (so Ctrl+P, Ctrl+Shift+S and F12 do nothing),
+and a Backstage page left open on one of them falls back to Home. Save stays (it goes to the host).
+New Services::blocked hook; scripts (execute) are not affected. The browser's own print command
+cannot be blocked from a page.
+---
+diff --git a/apps/wordcraft-web/src/web/host.rs b/upstream/wordcraft/apps/wordcraft-web/src/web/host.rs
+index c7f06cb..bddeb90 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -7,6 +7,9 @@
+ //!   `readOnly: true` opens it read only: the document is held under Restrict Editing's read-only
+ //!   protection (typing, paste and every editing command are refused, and Stop Protection doesn't
+ //!   lift it), and Save, Save As and the exports are refused. Absent or false opens it editable.
++//!   `canDownload: false` withholds Save As and the exports, `canPrint: false` Print (greyed out,
++//!   and their keyboard shortcuts refused); both default to true. The browser's own print command
++//!   can't be blocked from a page, so this only removes the editor's own entries.
+ //! - `wordcraft:opened` (to the parent): `{ name }`, a document has replaced the one shown.
+ //! - `wordcraft:requestSave` (from the parent): save now, as File › Save does.
+ //! - `wordcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
+@@ -56,6 +59,9 @@ pub struct Bridge {
+     autosave: Rc<Cell<bool>>,
+     /// The parent opened the document read only (`wordcraft:open { readOnly }`).
+     read_only: Rc<Cell<bool>>,
++    /// `wordcraft:open { canDownload }` and `{ canPrint }`: false withholds Save As and the exports, or Print.
++    can_download: Rc<Cell<bool>>,
++    can_print: Rc<Cell<bool>>,
+     /// Files sent as `wordcraft:save` that the parent hasn't answered with `wordcraft:saved` yet.
+     pending: Rc<Cell<u32>>,
+     /// Answers (`ok`) received since the last frame.
+@@ -89,6 +95,8 @@ impl Bridge {
+             save_requested: Rc::default(),
+             autosave: Rc::default(),
+             read_only: Rc::default(),
++            can_download: Rc::new(Cell::new(true)),
++            can_print: Rc::new(Cell::new(true)),
+             pending: Rc::default(),
+             acks: Rc::default(),
+             last_autosave: Rc::default(),
+@@ -112,6 +120,11 @@ impl Bridge {
+             bridge.pending.set(bridge.pending.get() + 1);
+             Ok(())
+         }));
++        let bridge = self.clone();
++        services.blocked = Some(Box::new(move |id: &str| {
++            (!bridge.can_download.get() && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
++                || (!bridge.can_print.get() && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
++        }));
+         // Keep the hook the web shell installed (the leave-page guard reads it).
+         let bridge = self.clone();
+         let previous = services.on_dirty.take();
+@@ -262,6 +275,8 @@ impl Bridge {
+                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
+                     let Some(bytes) = bytes(&data) else { return };
+                     bridge.read_only.set(bool_field(&data, "readOnly"));
++                    bridge.can_download.set(flag(&data, "canDownload"));
++                    bridge.can_print.set(flag(&data, "canPrint"));
+                     *bridge.name.borrow_mut() = name.clone();
+                     inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
+                 }
+@@ -299,6 +314,11 @@ fn bool_field(data: &JsValue, key: &str) -> bool {
+     js_sys::Reflect::get(data, &JsValue::from_str(key)).ok().and_then(|v| v.as_bool()).unwrap_or(false)
+ }
+ 
++/// A boolean field that is true unless the parent sent `false`.
++fn flag(data: &JsValue, key: &str) -> bool {
++    js_sys::Reflect::get(data, &JsValue::from_str(key)).ok().and_then(|v| v.as_bool()).unwrap_or(true)
++}
++
+ /// `bytes` as an `ArrayBuffer` or `Uint8Array`.
+ fn bytes(data: &JsValue) -> Option<Vec<u8>> {
+     let bytes = js_sys::Reflect::get(data, &JsValue::from_str("bytes")).ok()?;
+diff --git a/crates/ui-egui/src/backstage.rs b/upstream/wordcraft/crates/ui-egui/src/backstage.rs
+index 20aa28b..710dc57 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -81,7 +81,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+             ui.add_space(if mac { 12.0 } else { 6.0 });
+             for (id, label, icon) in PAGES {
+                 // No document open (#1129): Info, Save, Save As, Print and Export are greyed out.
+-                let on = has_document || works_without_document(id);
++                let on = (has_document || works_without_document(id)) && !app.blocked(&format!("backstage.{id}"));
+                 let (r, resp) = ui.add_enabled_ui(on, |ui| ui.allocate_exact_size(vec2(200.0, 38.0), Sense::click())).inner;
+                 resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, on, tl!(label)));
+                 let active = app.ui.backstage_page == id;
+@@ -152,6 +152,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+     egui::CentralPanel::default()
+         .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { t.ribbon }).inner_margin(egui::Margin::symmetric(40, 30)))
+         .show(ui, |ui| {
++            // A page the host withholds (Save As, Print, Export) falls back to Home.
++            if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
++                app.ui.backstage_page = "home".into();
++            }
+             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
+             if app.ui.backstage_page == "print" {
+                 export_page(app, ui);
+diff --git a/crates/ui-egui/src/lib.rs b/upstream/wordcraft/crates/ui-egui/src/lib.rs
+index 7f52821..8b0bb59 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -145,6 +145,9 @@ pub struct Services {
+     /// Web: hand PDF bytes to the browser's print dialog (no download or intermediate file).
+     /// Desktop uses `print_native` instead. An error means nothing was opened.
+     pub print: Option<Box<dyn Fn(&[u8]) -> Result<(), String>>>,
++    /// Web: commands the host withholds, by id (a Backstage page as `backstage.<page>`). They are
++    /// greyed out and refused by `run`; scripts (`execute`) are not affected.
++    pub blocked: Option<Box<dyn Fn(&str) -> bool>>,
+     /// Desktop: the picture on the system clipboard, if any — egui's paste only carries text
+     /// (#45). Read when Paste finds no text; see [`paste_picture`].
+     pub clipboard_picture: Option<Box<dyn Fn() -> Option<paste_picture::ClipboardPicture>>>,
+@@ -758,6 +761,11 @@ impl WordApp {
+         self.ui.start_screen
+     }
+ 
++    /// Whether the host withholds this command (see [`Services::blocked`]).
++    pub(crate) fn blocked(&self, id: &str) -> bool {
++        self.services.blocked.as_ref().is_some_and(|b| b(id))
++    }
++
+     /// Whether a document is open: false from a Start screen launch until the user creates or
+     /// opens one (#1129).
+     pub fn has_document(&self) -> bool {
+@@ -862,6 +870,11 @@ impl WordApp {
+         // close, New or Open counts it as a change (#1348). A draft the document refuses is not
+         // part of it: saving and exporting go on without it (the refusal stays on the status
+         // line), and replacing the document asks Save / Don't Save / Cancel about it.
++        if self.blocked(id) {
++            let e = format!("{id} is not available in this session");
++            self.status(e.clone());
++            return Err(e);
++        }
+         let refused = if flushes_comment_drafts(id, &params) { panes::flush_comment_drafts(self).err() } else { None };
+         if id == "file.recover" && params.as_object().is_none_or(|p| p.is_empty()) {
+             self.ui.backstage = true;
+diff --git a/crates/ui-egui/src/widgets.rs b/upstream/wordcraft/crates/ui-egui/src/widgets.rs
+index f27f5c0..833409b 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -173,6 +173,9 @@ fn keytip_badge(ui: &Ui, rect: Rect, id: &str, name: &str) {
+ 
+ /// Whether a command exists and is enabled.
+ pub fn enabled(app: &WordApp, id: &str) -> bool {
++    if app.blocked(id) {
++        return false;
++    }
+     // No document open (#1129): only what opens one, Help and the settings.
+     if !app.has_document() && !crate::works_without_document(id) {
+         return false;
