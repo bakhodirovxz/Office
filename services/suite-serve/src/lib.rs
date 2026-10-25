@@ -309,23 +309,47 @@ pub fn router_ds(
     }
 }
 
-/// Starts the docserver's internal listener (F4) on a socket `Docserver::bind_internal` already bound, with the same connection
-/// limits as the public one. Call it inside the runtime, from the router builder.
-pub fn spawn_internal(app: &Arc<App>, ds: &Arc<Docserver>, l: std::net::TcpListener) {
-    let Ok(l) = tokio::net::TcpListener::from_std(l) else {
-        return;
-    };
+/// Starts the docserver's internal listener (F4) on a socket the caller already bound (and turned into a tokio listener, so a failure
+/// to do so is a refusal to start), with the same connection limits as the public one. Call it inside the runtime. If the serve task
+/// ends or panics it says so on stderr: the internal file route is then gone.
+pub fn spawn_internal(app: &Arc<App>, ds: &Arc<Docserver>, l: tokio::net::TcpListener) {
     println!(
         "docserver internal listener on http://{}",
         l.local_addr().map(|a| a.to_string()).unwrap_or_default()
     );
-    tokio::spawn(convert_api::tls::serve(
+    let task = tokio::spawn(convert_api::tls::serve(
         l,
         None,
         ds.internal_router(),
         convert_api::tls::ConnLimits::from_settings(&app.r),
         std::future::pending(),
     ));
+    tokio::spawn(async move {
+        match task.await {
+            Ok(()) => eprintln!("docserver: the internal listener stopped"),
+            Err(e) => eprintln!("docserver: the internal listener failed: {e}"),
+        }
+    });
+}
+
+/// The docserver's secrets must differ from the converter's own `secret_file` (compared as the config reads it: trailing white space
+/// trimmed): one leaked key must not open both token systems. Names the key, never a value.
+pub fn check_secrets_distinct(s: &convert_api::config::Settings, ds: &Docserver) -> Result<(), String> {
+    let Some(path) = &s.secret_file else {
+        return Ok(());
+    };
+    let own = std::fs::read(path).map_err(|e| format!("cannot read secret_file: {e}"))?;
+    let own = own.trim_ascii_end();
+    if ds.server_secret == own {
+        return Err("docserver: server_secret_file holds the same secret as the converter's secret_file".into());
+    }
+    if let Some(p) = ds.providers.iter().find(|p| p.secret == own) {
+        return Err(format!(
+            "docserver: provider \"{}\": secret_file holds the same secret as the converter's secret_file",
+            p.name
+        ));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -363,5 +387,48 @@ mod tests {
         assert!(
             csp.contains("'wasm-unsafe-eval' 'sha256-") && csp.contains("frame-ancestors 'self'")
         );
+    }
+
+    #[test]
+    fn the_docserver_secrets_differ_from_the_converters() {
+        let d = std::env::temp_dir().join(format!("serve-secrets-{}", std::process::id()));
+        std::fs::create_dir_all(&d).unwrap();
+        let w = |f: &str, b: u8, nl: bool| {
+            let mut v = vec![b; 40];
+            if nl {
+                v.push(b'\n');
+            }
+            std::fs::write(d.join(f), v).unwrap();
+            d.join(f).to_string_lossy().replace('\\', "/")
+        };
+        let (conv, server, prov) = (w("conv", b'c', true), w("server", b's', false), w("prov", b'p', false));
+        let ds = |server: &str, prov: &str| {
+            let t: toml::Table = format!(
+                "server_secret_file = \"{server}\"
+data_dir = \"x\"
+[[providers]]
+name = \"one\"
+issuer = \"i\"
+secret_file = \"{prov}\"
+fetch_allow = [\"http://api:8000\"]
+frame_origins = [\"https://app.test\"]
+"
+            )
+            .parse()
+            .unwrap();
+            Docserver::from_table(t, None).unwrap()
+        };
+        let s = convert_api::config::Settings {
+            secret_file: Some(conv.clone().into()),
+            ..Default::default()
+        };
+        assert!(check_secrets_distinct(&s, &ds(&server, &prov)).is_ok());
+        // the same key, with and without the trailing newline the config trims
+        let same = w("same", b'c', false);
+        let e = check_secrets_distinct(&s, &ds(&same, &prov)).unwrap_err();
+        assert!(e.contains("server_secret_file") && !e.contains("cccc"), "{e}");
+        let e = check_secrets_distinct(&s, &ds(&server, &same)).unwrap_err();
+        assert!(e.contains("provider \"one\""), "{e}");
+        assert!(check_secrets_distinct(&convert_api::config::Settings::default(), &ds(&same, &prov)).is_ok());
     }
 }

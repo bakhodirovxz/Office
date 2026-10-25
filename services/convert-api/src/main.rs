@@ -14,5 +14,8 @@ async fn main() -> ExitCode {
         [f, path] if f == "--config" => Some(path.as_str()),
         _ => return runner::refuse(USAGE),
     };
+    if let Err(e) = runner::refuse_docserver_section(config) {
+        return runner::refuse(e);
+    }
     runner::run("convert-api", config, convert_api::routes::router).await
 }

@@ -58,7 +58,7 @@ async fn main() -> ExitCode {
     .await
 }
 
-type Mounted = (Arc<Docserver>, Option<std::net::TcpListener>);
+type Mounted = (Arc<Docserver>, Option<tokio::net::TcpListener>);
 
 fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
     let s = Settings::load(path.as_ref())?;
@@ -66,6 +66,12 @@ fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
         return Ok(None);
     };
     let ds = Arc::new(Docserver::from_table(t, s.listen.parse().ok())?);
-    let l = ds.bind_internal()?;
+    suite_serve::check_secrets_distinct(&s, &ds)?;
+    // bound and handed to the runtime here, so a failure on either step stops the start
+    let l = ds
+        .bind_internal()?
+        .map(tokio::net::TcpListener::from_std)
+        .transpose()
+        .map_err(|e| format!("docserver: internal listener: {e}"))?;
     Ok(Some((ds, l)))
 }

@@ -242,6 +242,7 @@ supported rows.
   `office.craft_enabled`, `OFFICE_CRAFT_PILOT_USER_IDS`, `OFFICE_CRAFT_KINDS=file`, `OFFICE_CRAFT_FILE_TYPES=docx`,
   `OFFICE_EDITOR_PUBLIC_URL_CRAFT`, `CRAFT_CALLBACK_ALLOWED_HOSTS`, `CRAFT_DOCSERVER_INTERNAL_URL` (= our internal
   listener).
+- **Internal listener:** never publish `internal_listen` with Docker `-p`; bind it to the Docker network address and allow only the HRB container's subnet or IP in `internal_allow`, not a /16 that contains the bridge gateway.
 - **Fallback:** `office.craft_enabled=false` takes effect on the next config request with no restart; sessions already
   open keep saving (`hr-backend-prompt.md:526-527`).
 - **Pilot documents are HRM data:** handled like `corpus/` (`docs/ARCHITECTURE-DECISION.md:430-432`); no document

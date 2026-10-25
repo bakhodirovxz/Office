@@ -14,6 +14,17 @@ pub fn refuse(m: impl std::fmt::Display) -> ExitCode {
     ExitCode::from(2)
 }
 
+/// `convert-api` alone must not start on a config that has a `[docserver]` section: it would run without the routes the operator
+/// configured and look healthy. `hoshiya-serve` mounts that section.
+pub fn refuse_docserver_section(config: Option<&str>) -> Result<(), String> {
+    match config.map(|p| Settings::load(p.as_ref())).transpose()? {
+        Some(s) if s.docserver.is_some() => {
+            Err("the [docserver] section is served by hoshiya-serve, not by convert-api".into())
+        }
+        _ => Ok(()),
+    }
+}
+
 /// A panic message can quote document text (a failed assertion prints its values), so the default hook, which prints the message,
 /// is replaced by one that prints the location only (WP7 review m14). `job::guarded` still reports the panic to the client.
 pub fn quiet_panics() {
@@ -117,5 +128,25 @@ pub async fn run(
     match served {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => refuse(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_api_refuses_a_docserver_section() {
+        let d = std::env::temp_dir().join(format!("runner-ds-{}", std::process::id()));
+        std::fs::create_dir_all(&d).unwrap();
+        let (with, without) = (d.join("with.toml"), d.join("without.toml"));
+        std::fs::write(&with, "[docserver]
+data_dir = \"x\"
+").unwrap();
+        std::fs::write(&without, "").unwrap();
+        let e = refuse_docserver_section(with.to_str()).unwrap_err();
+        assert!(e.contains("[docserver]") && e.contains("hoshiya-serve"), "{e}");
+        assert!(refuse_docserver_section(without.to_str()).is_ok());
+        assert!(refuse_docserver_section(None).is_ok());
     }
 }
