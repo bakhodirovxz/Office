@@ -55,9 +55,9 @@ fn unauthorized() -> ApiError {
 
 /// The request's client address, as the router's guard layer set it (behind a trusted proxy, the forwarded one). The internal listener has
 /// no such layer: its callers count as one client.
-type Cl = Option<Extension<Client>>;
+pub(crate) type Cl = Option<Extension<Client>>;
 
-fn client(c: Cl) -> Client {
+pub(crate) fn client(c: Cl) -> Client {
     c.map_or_else(
         || Client {
             ip: "internal".into(),
@@ -85,18 +85,20 @@ fn not_found() -> ApiError {
 }
 
 /// Runs blocking disk work off the async workers.
-async fn blk<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Result<T, ApiError> {
+pub(crate) async fn blk<T: Send + 'static>(
+    f: impl FnOnce() -> T + Send + 'static,
+) -> Result<T, ApiError> {
     tokio::task::spawn_blocking(f)
         .await
         .map_err(|e| ApiError::internal(e.to_string()))
 }
 
-fn json_ok(v: Value) -> Res {
+pub(crate) fn json_ok(v: Value) -> Res {
     Ok((StatusCode::OK, axum::Json(v)).into_response())
 }
 
 /// The session a request may use: a valid session token for `sid`, and the session on disk agreeing with it.
-fn authorize(
+pub(crate) fn authorize(
     ds: &Docserver,
     h: &HeaderMap,
     sid: &str,

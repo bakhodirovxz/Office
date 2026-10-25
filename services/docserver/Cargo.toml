@@ -28,6 +28,8 @@ tokio = { version = "1", features = ["rt"] }
 hmac = "0.12"
 sha2 = "0.10"
 getrandom = "0.2"
+# the server version store: the id API and keyed chain of suite-core history
+suite-core = { path = "../../crates/suite-core" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time"] }

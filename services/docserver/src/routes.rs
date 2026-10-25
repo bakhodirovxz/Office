@@ -89,6 +89,7 @@ impl Docserver {
             .merge(frame)
             .route("/ds/editor.js", get(editor_js))
             .merge(self.session_routes())
+            .merge(self.history_routes())
     }
 
     /// The router of the internal listener (F4): the token-bound file route and nothing else, for the configured addresses only.

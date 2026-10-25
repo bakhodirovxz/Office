@@ -21,6 +21,7 @@
 #   shell                    web shell (Phase 4 WP7): suite-serve tests, shell-dist.sh (.br files), the shell Playwright spec, sizes
 #   translit-npm             uz-translit npm package: build, size budget, node tests, Chromium smoke (nothing is published)
 #   translit-preserve        xlsx/pptx formatting preservation of the transliteration (scripts/translit/preserve-check.sh, release sheets/slides CLIs)
+#   hrm-bookmarks            WP9: synthetic decree/letter/report `_hrm_*` bookmarks survive edit+save and translit (scripts/hrm-bookmarks, release docs-cli)
 #   translit-perf (nightly)  108-page docx: perf_108 in release, fails when command -> layout exceeds 2 s
 #   web-smoke                Playwright smoke over every dist
 #   actionlint               lint .github/workflows/ci.yml
@@ -56,7 +57,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny notices brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell sidecars fidelity-directions msvc"
+JOBS="queue lint gen-check deny notices brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve hrm-bookmarks translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell sidecars fidelity-directions msvc"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -502,6 +503,12 @@ job_translit_preserve() {
   bstep preserve-check scripts/translit/preserve-check.sh
 }
 
+# WP9 (Phase 5): `_hrm_*` bookmarks of synthetic HRM-shaped documents survive open -> edit -> save and Latin <-> Cyrillic through the docs CLI.
+job_hrm_bookmarks() {
+  bstep build-docs-cli scripts/build.sh docs cli --release || return 1
+  bstep hrm-bookmarks python -I scripts/hrm-bookmarks/hrm_bookmarks.py "$OFFICE_TARGET/docs/release/docs-cli$EXE"
+}
+
 # N1 budget (Phase 2 WP10): the 108-page docx, command -> finished layout, must stay under 2 s (the test asserts it).
 # Ignored in the normal test runs, so only the nightly profile runs it.
 job_translit_perf() {
@@ -769,6 +776,7 @@ dispatch() { # <job> [args]
     sizes) run_job sizes job_sizes "$@";;
     translit-npm) run_job translit-npm job_translit_npm;;
     translit-preserve) run_job translit-preserve job_translit_preserve;;
+    hrm-bookmarks) run_job hrm-bookmarks job_hrm_bookmarks;;
     translit-perf) run_job translit-perf job_translit_perf;;
     web-smoke) run_job web-smoke job_web_smoke;;
     actionlint) run_job actionlint job_actionlint;;

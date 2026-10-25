@@ -6,6 +6,7 @@ mod api;
 pub mod audit;
 pub mod callback;
 pub mod config;
+pub mod history;
 pub mod ooxml;
 pub mod outbound;
 pub mod routes;
