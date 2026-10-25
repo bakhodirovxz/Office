@@ -7,7 +7,7 @@ export PATH="$HOME/.cargo/bin:$PATH" CARGO_NET_GIT_FETCH_WITH_CLI=true CARGO_HTT
 HERE=$(cd "$(dirname "$0")" && pwd -W); REPO=$(cd "$HERE/../.." && pwd -W)
 T=${OFFICE_TARGET:-E:/office-target/p5}
 DOCS_DIST=${DOCS_DIST:-$T/dist/docs-web}      # patch 0127 (the bridge) is in this one
-SHELL_DIST=${SHELL_DIST:-$T/dist-wp7/shell}
+SHELL_DIST=${SHELL_DIST:-$T/dist/shell}       # needs history-ui.js (web History panel)
 RUST_IMAGE=${RUST_IMAGE:-rust:1-slim-bookworm}
 CTX=$T/image-ctx
 mkdir -p "$T/linux" "$CTX/dist"
