@@ -12,8 +12,9 @@ Kit (all in this repo, copied to `E:\office-target\wp23-kit\` with the MSI):
 | `docs/phase4/wp23/fixtures/namuna-hisobot.pdf` | the T4 input: 1 page, heading, paragraph, 3x4 table, 31 KB, made by our own converter from invented text (no corpus, no personal data) |
 | `scripts/wp23-reset.ps1` | resets the current user's product state between participants (section 6) |
 
-Uzbek and Russian text in the cards and in `README.uz-Latn.txt` of the kit: `reviewed:agent-sonnet:2026-10-25` (draft; the main
-session re-reviews it, as for every agent-reviewed string).
+Uzbek and Russian text in the cards and in `README.uz-Latn.txt` of the kit: drafted `agent-sonnet:2026-10-25`, re-reviewed
+`reviewed:agent-opus:2026-10-25` (the intro said "Xato qilish mumkin emas" / "Ошибиться нельзя", i.e. "you must not make
+mistakes"; now "there are no wrong actions here").
 
 ## 1. Limit, stated plainly
 
