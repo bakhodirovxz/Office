@@ -248,6 +248,132 @@ supported rows.
   PDF wait for Q7.
 - **Not in Phase 5:** branches or merges of documents; live attribution (Phase 9).
 
+### 6.1 `docs-diff` (WP12, `domains/docs/crates/docs-diff`)
+
+`docs-diff OLD.docx NEW.docx [--json] [--pretty] [--timings]` prints one JSON document on stdout. Exit status as
+diff(1): 0 no differences, 1 differences, 2 trouble (message on stderr). Both files are read at once (two threads) with
+the upstream reader; nothing is written.
+
+**Units.** The body, and the paragraphs of its tables in reading order, become one unit per paragraph: the text as it
+reads with every tracked change accepted (deleted runs dropped, fields as their result, a picture as U+FFFC), its run
+formatting (`CharProps::formatting`, adjacent equal runs merged) and its paragraph formatting (`ParaProps::formatting`).
+A paragraph deleted as a whole with tracking on is invisible once accepted; it is kept aside as a "ghost" for blame.
+
+**Alignment (options and choice).**
+- *Plain Myers or LCS on paragraph hashes:* minimal, but blank paragraphs and repeated short lines ("", "1.", a
+  repeated heading) become anchors and cut real edits into pieces; Myers' trace is O(D²) memory and LCS O(N·M).
+- *Similarity alignment from the start (word bags for every pair):* O(N·M) comparisons, about 4 M for two 2,000-paragraph
+  versions, and unstable on documents that repeat themselves.
+- **Chosen: patience anchors, Myers inside the gaps, then pairing by similarity** (`crates/seq-diff`, shared with Sheets).
+  Common prefix and suffix are taken first (a version diff is mostly that); paragraphs whose text is unique on both
+  sides are anchors, reduced to the longest run increasing on both sides; each gap is aligned the same way, and a gap
+  with no unique paragraph falls back to Myers capped at 2,048 edits (beyond: a rewrite). Unique anchors are what keep
+  boilerplate from matching across sections, and a moved unique paragraph falls out of the increasing run by itself.
+  Decided by: the version-history case is "few edits in a long document", where this is linear in practice and gives
+  the alignment a reader expects; the cost is that it is not always the minimal edit script (tested: never longer than
+  the LCS, and Myers is exact on the fallback, `seq-diff` tests).
+- **Moves:** a deleted and an inserted unit anywhere in the document with the same text (at least 3 characters) are one
+  `move`. **Edits:** inside a gap the rest pair by word similarity (Dice on word multisets ≥ 0.5, monotone best total,
+  gaps up to 250,000 pairs); a gap of exactly one deleted and one inserted unit always pairs (a table cell, a short
+  line). A pair gets a word-level diff (words, space runs and punctuation; Uzbek apostrophes inside words).
+- **Format:** aligned units with equal text but different formatting are `format`; the equal stretches of `modify` and
+  `move` pairs are checked too. Formatting compares the JSON of the upstream property structs, so the output names the
+  changed properties without a hand-kept list.
+- **Blame:** the authors of the tracked changes (`w:ins`, `w:del`, `w:rPrChange`, `w:pPrChange`) in the new version's
+  paragraph; for a deletion, the authors of the ghosts in that gap. A document without tracked changes has no blame: the
+  History panel shows the version's author (the history index) instead.
+
+**Output (schema 1; annotated example, `//` comments are not part of it).** Keys in alphabetical order (serde_json); optional keys are left out, not `null`.
+```json
+{"tool": "docs-diff", "schema": 1,
+ "a": {"paragraphs": 1957}, "b": {"paragraphs": 1958},
+ "stats": {"inserted": 1, "deleted": 0, "modified": 1, "moved": 1, "format": 1, "equal": 1953},
+ "changes": [                                    // in the new version's order; deletions where they were
+   {"op": "insert", "b": 3, "path": "3", "text": "…", "authors": ["…"]},
+   {"op": "delete", "a": 2, "path": "2", "text": "…", "authors": ["…"]},
+   {"op": "modify", "a": 1, "b": 1, "path": "1", "spans": [{"eq": "The quick "}, {"del": "brown"}, {"ins": "red"}],
+    "format": {…}, "authors": ["…"]},
+   {"op": "move", "a": 4, "b": 1, "from": "4", "path": "1", "text": "…", "format": {…}},
+   {"op": "format", "a": 0, "b": 0, "path": "0", "text": "…",
+    "format": {"para": {"style": [null, "Heading1"]},
+               "runs": [{"start": 4, "end": 9, "text": "quick", "props": {"bold": [null, true]}}]}}]}
+```
+`a`/`b` are unit indices in the old/new version; `path` is the block path in the new version (`from` in the old):
+`12` = body block 12, `5/r1c2/0` = paragraph 0 of row 1, cell 2 of the table at body block 5. Run `start`/`end` are
+character (Unicode scalar) offsets in the new paragraph's text. `props` values are `[old, new]`.
+
+### 6.2 `sheets-diff` (WP12, `domains/sheets/crates/sheets-diff`)
+
+`sheets-diff OLD NEW [--json] [--pretty] [--timings]`, the same exit status. Reads `.xlsx`/`.xlsm`, `.xlsb`, `.ods`
+and `.xls` by content (the upstream readers); a password-protected workbook is an error.
+- **Sheets** match by name; a missing and a new sheet with the same cells are a `rename`.
+- **Cell key:** a formula in R1C1 form (position-free, so `=A3*2` pushed down to `=A4*2` by an inserted row is not a
+  change), else the value; plus the resolved style. A formula's cached result is shown but not compared: a version
+  saved without results, or by another app, would otherwise show every formula as changed. The readers share one tree
+  among a run of R1C1-equal formulas, so the R1C1 text is printed once per run (this cut the w40 diff from 12.0 to
+  1.5 s).
+- **Columns** align on a hash of their cells only when the column counts differ and at least half the columns match
+  exactly; otherwise they pair by position. **Rows** then align on a hash of their cells over the paired columns
+  (`seq-diff`, as Docs). In a gap, rows (or columns) pair by position when as many were replaced as inserted (edited
+  in place), else by cell overlap ≥ 0.5 (gaps up to 40,000 pairs), else by position.
+- Unpaired rows and columns are reported once, as runs; their cells are listed after the changed cells, with one side
+  `null`. At most 10,000 cells per sheet; the rest are counted in `truncated`.
+```json
+{"tool": "sheets-diff", "schema": 1,
+ "a": {"sheets": 2, "cells": 26}, "b": {"sheets": 3, "cells": 30},
+ "stats": {"sheets": {"equal": 1, "modified": 1, "inserted": 1, "deleted": 0, "renamed": 1},
+           "cells": 5, "rows": {"inserted": 1, "deleted": 0}, "cols": {"inserted": 0, "deleted": 0}},
+ "sheets": [
+   {"op": "modify", "name": "Budget",
+    "rows": {"inserted": [[4, 1]], "deleted": []},        // [first row (1-based), count]
+    "cols": {"inserted": [], "deleted": []},              // [first column letter, count]
+    "cells": [{"a": "B4", "b": "B5", "old": {"value": "3"}, "new": {"value": "5"}},
+              {"a": "D4", "b": "D4", "old": {"formula": "=B4*C4"}, "new": {"formula": "=B4*C4*1.1"}, "format": true},
+              {"b": "A4", "old": null, "new": {"value": "Rake"}}],
+    "truncated": 0},                                      // only when cells were left out
+   {"op": "rename", "name": "Hints", "from": "Notes"},
+   {"op": "insert", "name": "Extra", "cells": 3},
+   {"op": "delete", "name": "Old", "cells": 0}]}
+```
+A cell side is `null` (no cell) or `{"formula"?: "=…", "value"?: "…"}` (the value as the engine displays it, without
+the number format: a date shows as its serial). `format: true` = the resolved styles differ.
+
+### 6.3 Measured (WP12, 2026-10-25; release builds, this PC; both files read in parallel)
+
+| Pair | Wall | Read both | Diff | Result |
+|---|---|---|---|---|
+| 108-page docx (`uz108-latn`, synthetic, 1,957 paragraphs) vs itself | 65 ms (median of 5) | 43 ms | 10 ms | equal |
+| … vs a copy with 6 edits (insert, move, word added, cell cleared, bold, cell left empty) | 77 ms | 47 ms | 11 ms | 6 changes, all found |
+| … vs `uz108-cyrl` (every paragraph different) | 106 ms | 45 ms | 44 ms | 1,957 deleted + 1,933 inserted, 1 MB JSON |
+| w40 (openpyxl bench, 32 sheets, 5,184,467 cells) vs itself | 30.0 s | 28.4 s | 1.4 s | equal |
+| w40 vs w40_app (10,000 rows appended to S01, 3 formulas on Summary) | 31.3 s | 29.6 s | 1.5 s | rows 19202-29201 and columns F-H inserted, found once; 90,003 cells listed up to 10,000 per sheet, 650 KB JSON; peak working set about 0.8 GB |
+| w40 vs Excel's re-save of it (dates get another number format) | 37.3 s (before the exit fix) | 28.4 s | 6.5 s | 576,000 format-only cells, 25 MB JSON |
+
+Process start and exit of either tool: 6-8 ms (D7's cost of a separate process). The tools skip freeing the two models
+at exit (that cost about 8 s on w40). Single runs for the workbooks; another worktree's builds shared the PC, so the
+wall times can be a few seconds high. Reading dominates Sheets: the diff is
+a few seconds even when a tenth of the cells differ. The files are the existing synthetic fixtures
+(`scripts/translit/make-108.py`, `docs/phase0/xlsx-bench.md`), not corpus documents.
+
+### 6.4 WP12 limits and follow-ups
+- **Done in WP12, desktop:** the History panel compares any two versions (From/To and Compare; `history_compare` IPC
+  runs `<bin_dir>/<app>-diff.exe` off the UI thread on temp copies, removed afterwards; 10-minute page timeout). Docs
+  changes show as Added/Deleted/Changed/Moved/Formatting with `<ins>`/`<del>` words and the authors; Sheets as per-sheet
+  runs of inserted/deleted rows and columns and a Cell/Before/After table. Checked with a mocked host in a browser
+  (golden outputs, en and uz-Latn); not yet in the real WebView2 window (needs the tools in the MSI, below).
+- **Server compare route:** not added in WP12 (the docserver was being changed in parallel). It is a new
+  `GET /ds/session/{sid}/history/{a}/compare/{b}` next to `history.rs:237-242` that writes the two versions to a temp
+  dir and runs the domain binary like the desktop host does (`suite-desktop` `history_compare`), with the binary path
+  from the docserver config. The web History panel then uses the same renderer.
+- **Packaging:** the MSI does not ship `docs-diff.exe`/`sheets-diff.exe` yet; the desktop Compare view says "the
+  compare tool … is not installed" until it does (`packaging/windows`, next MSI).
+- Docs: headers, footers, notes, comments and text boxes are not compared (body and tables only); a move that is also
+  edited shows as a deletion and an insertion; a changed picture with the same place is not seen (U+FFFC on both
+  sides); a merged or split table cell shows as paragraph changes.
+- Sheets: merges, column widths, names, charts, comments, validation and conditional formats are not compared; values
+  are shown without their number format; a sheet renamed and edited shows as a deletion and an insertion.
+- Slides and PDF diffs: Q7, later phase.
+
 ---
 
 ## 7. Deployment on the test environment (WP10, WP17)

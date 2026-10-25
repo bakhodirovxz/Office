@@ -1,0 +1,28 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 6
+  },
+  "changes": [
+    {
+      "a": 4,
+      "b": 1,
+      "from": "4",
+      "op": "move",
+      "path": "1",
+      "text": "The pond was cleaned twice, in April and in September."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 5,
+    "format": 0,
+    "inserted": 0,
+    "modified": 0,
+    "moved": 1
+  },
+  "tool": "docs-diff"
+}

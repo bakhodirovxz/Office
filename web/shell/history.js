@@ -1,5 +1,6 @@
 // The History panel of the shell (PLAN phase 4, 5.5, WP10). Route #history or #history=<urlencoded path>. Plain JS; the desktop host does
-// the work over WebView IPC (history, history_versions, history_view, history_restore, history_copy, history_name); in the browser or
+// the work over WebView IPC (history, history_versions, history_view, history_restore, history_copy, history_name, history_compare:
+// phase 5 WP12, the domain diff tools); in the browser or
 // connected to a server there is no host and the panel only says so. Strings: shell/i18n.json (keys hist.*); the language is the page's.
 (() => {
   'use strict';
@@ -17,13 +18,13 @@
   const say = (msg, bad) => { const e = $('hist-msg'); e.textContent = msg; e.className = bad ? 'error' : 'muted'; e.setAttribute('role', bad ? 'alert' : 'status'); };
 
   // One request to the host; its answer is the 'suite-host' event of that type. null (and a message) on refusal or silence.
-  const host = (msg, type) => new Promise((ok) => {
+  const host = (msg, type, wait = 20000) => new Promise((ok) => {
     const done = (e) => {
       const d = e.detail || {};
       // a version list for another document answers another request (copy and view replies carry their output path instead)
       if ((d.type === type && (type !== 'history_versions' || d.path === msg.path)) || d.type === 'rejected') { removeEventListener('suite-host', done); clearTimeout(tm); ok(d); }
     };
-    const tm = setTimeout(() => { removeEventListener('suite-host', done); ok({ type: 'rejected', error: t('hist.silent') }); }, 20000);
+    const tm = setTimeout(() => { removeEventListener('suite-host', done); ok({ type: 'rejected', error: t('hist.silent') }); }, wait);
     addEventListener('suite-host', done);
     window.ipc.postMessage(JSON.stringify(msg));
   });
@@ -63,7 +64,77 @@
       el('div', { className: 'acts' },
         btn('hist.view', v, () => view(v)), btn('hist.restore', v, () => restore(v)),
         btn('hist.copy', v, () => copy(v)), btn('hist.name', v, () => rename(v))))));
+    // Compare any two: newest-first lists, the one before the latest against the latest by default (kept across redraws)
+    const order = [...S.vers].sort((x, y) => y.v - x.v);
+    $('hist-cmp-bar').hidden = order.length < 2;
+    for (const [id, dflt] of [['hist-cmp-a', order[1]], ['hist-cmp-b', order[0]]]) {
+      const sel = $(id);
+      const keep = order.some((v) => String(v.v) === sel.value) ? sel.value : dflt && String(dflt.v);
+      sel.replaceChildren(...order.map((v) => el('option', { value: String(v.v) }, t('hist.version', { v: v.v }) + (v.name ? ' \u00b7 ' + v.name : ''))));
+      if (keep) sel.value = keep;
+    }
   }
+
+  // ---- Compare (phase 5 WP12): the JSON of docs-diff / sheets-diff (docs/phase5/PLAN.md 6.1, 6.2), drawn as text nodes only ----
+  const MAX_ITEMS = 500;
+  const colNum = (s) => [...s].reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0);
+  const colName = (n) => { let s = ''; for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
+  // [[first, count], ...] as "4, 7\u20139" (rows numbered, columns lettered)
+  const runList = (runs, col) => runs.map(([f, n]) => {
+    if (n === 1) return String(f);
+    return col ? `${f}\u2013${colName(colNum(f) + n - 1)}` : `${f}\u2013${f + n - 1}`;
+  }).join(', ');
+  const tag = (op, key) => el('span', { className: 'tag op-' + op }, t(key));
+  const by = (c) => (c.authors && c.authors.length ? [' ', el('span', { className: 'muted' }, t('hist.cmp.by', { who: c.authors.join(', ') }))] : []);
+  const text = (s) => (s ? s : t('hist.cmp.empty'));
+  const OPS = { insert: 'hist.cmp.ins', delete: 'hist.cmp.del', modify: 'hist.cmp.mod', move: 'hist.cmp.move', format: 'hist.cmp.fmt' };
+  const docItems = (diff) => (diff.changes || []).map((c) => {
+    const body = c.op === 'modify'
+      ? el('span', { className: 'diff' }, ...c.spans.map((s) => (s.ins != null ? el('ins', {}, s.ins) : s.del != null ? el('del', {}, s.del) : document.createTextNode(s.eq))))
+      : el('span', { className: c.op === 'delete' ? 'diff gone' : 'diff' }, text(c.text));
+    return el('li', {}, tag(c.op, OPS[c.op] || 'hist.cmp.mod'), ...(c.format && c.op !== 'format' ? [' ', tag('format', 'hist.cmp.fmt')] : []), ' ', body, ...by(c));
+  });
+  const cellText = (x) => (x == null ? '\u2014' : x.formula ? x.formula + (x.value ? ' = ' + x.value : '') : x.value);
+  const sheetItems = (diff) => (diff.sheets || []).map((s) => {
+    if (s.op === 'insert') return el('li', {}, tag('insert', 'hist.cmp.ins'), ' ', t('hist.cmp.sheet.ins', { name: s.name }));
+    if (s.op === 'delete') return el('li', {}, tag('delete', 'hist.cmp.del'), ' ', t('hist.cmp.sheet.del', { name: s.name }));
+    if (s.op === 'rename') return el('li', {}, tag('modify', 'hist.cmp.mod'), ' ', t('hist.cmp.sheet.ren', { from: s.from, name: s.name }));
+    const lines = [['rows', 'inserted', 'hist.cmp.rows.ins', false], ['rows', 'deleted', 'hist.cmp.rows.del', false],
+      ['cols', 'inserted', 'hist.cmp.cols.ins', true], ['cols', 'deleted', 'hist.cmp.cols.del', true]]
+      .filter(([k, w]) => s[k] && s[k][w] && s[k][w].length)
+      .map(([k, w, key, col]) => el('div', {}, t(key, { list: runList(s[k][w], col) })));
+    const cells = (s.cells || []).slice(0, MAX_ITEMS).map((c) => el('tr', {},
+      el('td', {}, c.a && c.b && c.a !== c.b ? `${c.a} \u2192 ${c.b}` : c.b || c.a || ''),
+      el('td', {}, cellText(c.old)), el('td', {}, cellText(c.new) + (c.format ? ' ' + t('hist.cmp.fmtflag') : ''))));
+    const more = (s.cells || []).length - cells.length + (s.truncated || 0);
+    return el('li', { className: 'sheet' }, el('strong', {}, t('hist.cmp.sheet', { name: s.name })), ...lines,
+      ...(cells.length ? [el('table', { className: 'cells' },
+        el('thead', {}, el('tr', {}, ...['hist.cmp.cell', 'hist.cmp.before', 'hist.cmp.after'].map((k) => aria(el('th', {}, t(k)), { scope: 'col' })))),
+        el('tbody', {}, ...cells))] : []),
+      ...(more > 0 ? [el('div', { className: 'muted' }, t('hist.cmp.more', { n: more }))] : []));
+  });
+  function renderCompare() {
+    const d = S.cmp;
+    if (!d) return;
+    $('hist-cmp-sec').hidden = false;
+    $('h-cmp').textContent = t('hist.cmp.title', { a: d.a, b: d.b });
+    const items = d.app === 'sheets' ? sheetItems(d.diff) : docItems(d.diff);
+    $('hist-cmp-none').hidden = items.length > 0;
+    $('hist-cmp').replaceChildren(...items.slice(0, MAX_ITEMS),
+      ...(items.length > MAX_ITEMS ? [el('li', { className: 'muted' }, t('hist.cmp.more', { n: items.length - MAX_ITEMS }))] : []));
+  }
+  async function compare() {
+    const [a, b] = [+$('hist-cmp-a').value, +$('hist-cmp-b').value];
+    if (a === b) { say(t('hist.cmp.same'), true); return; }
+    say(t('hist.cmp.busy'));
+    // a large workbook takes about a minute to read twice
+    const d = await host({ type: 'history_compare', path: S.path, a, b }, 'history_compare', 600000);
+    if (fails(d, 'history_compare')) return;
+    say('');
+    S.cmp = d; renderCompare();
+    $('h-cmp').focus();
+  }
+  function closeCompare() { S.cmp = null; $('hist-cmp-sec').hidden = true; }
 
   async function loadDocs() {
     const d = await host({ type: 'history' }, 'history');
@@ -80,7 +151,7 @@
     if (focus) $('h-vers').focus();
   }
   async function choose(path, focus) {
-    S.path = path; say('');
+    S.path = path; say(''); closeCompare();
     renderDocs();
     await loadVersions(focus);
   }
@@ -142,11 +213,13 @@
     $('nav-history').hidden = !desktop;
     $('nav-history').onclick = () => { location.hash = '#history'; };
     $('hist-back').onclick = leave;
+    $('hist-cmp-go').onclick = compare;
+    $('hist-cmp-close').onclick = () => { closeCompare(); $('hist-cmp-go').focus(); };
     addEventListener('hashchange', route);
     // the host asks for a file's panel (a second launch with --history FILE)
     addEventListener('suite-host', (e) => { const d = e.detail || {}; if (d.type === 'show_history' && typeof d.path === 'string') location.hash = '#history=' + encodeURIComponent(d.path); });
     // shell.js sets the page language after this script ran, and again when the user changes it: redraw the dynamic parts
-    new MutationObserver(() => { if (opened()) { renderDocs(); if (S.vers.length) renderVersions(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    new MutationObserver(() => { if (opened()) { renderDocs(); if (S.vers.length) renderVersions(); renderCompare(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     route();
   }
   init();

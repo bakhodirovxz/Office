@@ -1,0 +1,57 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 6
+  },
+  "changes": [
+    {
+      "a": 0,
+      "b": 0,
+      "format": {
+        "para": {
+          "style": [
+            null,
+            "Heading1"
+          ]
+        }
+      },
+      "op": "format",
+      "path": "0",
+      "text": "Annual garden report"
+    },
+    {
+      "a": 1,
+      "b": 1,
+      "format": {
+        "runs": [
+          {
+            "end": 9,
+            "props": {
+              "bold": [
+                null,
+                true
+              ]
+            },
+            "start": 4,
+            "text": "quick"
+          }
+        ]
+      },
+      "op": "format",
+      "path": "1",
+      "text": "The quick brown fox jumps over the lazy dog."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 4,
+    "format": 2,
+    "inserted": 0,
+    "modified": 0,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

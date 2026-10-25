@@ -1,0 +1,47 @@
+{
+  "a": {
+    "cells": 26,
+    "sheets": 3
+  },
+  "b": {
+    "cells": 29,
+    "sheets": 3
+  },
+  "schema": 1,
+  "sheets": [
+    {
+      "from": "Notes",
+      "name": "Hints",
+      "op": "rename"
+    },
+    {
+      "cells": 3,
+      "name": "Extra",
+      "op": "insert"
+    },
+    {
+      "cells": 0,
+      "name": "Old",
+      "op": "delete"
+    }
+  ],
+  "stats": {
+    "cells": 0,
+    "cols": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "rows": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "sheets": {
+      "deleted": 1,
+      "equal": 1,
+      "inserted": 1,
+      "modified": 0,
+      "renamed": 1
+    }
+  },
+  "tool": "sheets-diff"
+}

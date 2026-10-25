@@ -71,7 +71,6 @@
   <main>
     <p id="hist-web" hidden data-i18n="hist.web"></p>
     <div id="hist-body">
-      <p class="muted" data-i18n="hist.diff.note"></p>
       <p id="hist-msg" class="muted" role="status"></p>
       <section aria-labelledby="h-docs">
         <h2 id="h-docs" data-i18n="hist.docs"></h2>
@@ -81,7 +80,18 @@
       <section id="hist-ver-sec" aria-labelledby="h-vers" hidden>
         <h2 id="h-vers" tabindex="-1"></h2>
         <p id="hist-chain" role="status"></p>
+        <div id="hist-cmp-bar" class="cmpbar" hidden>
+          <label><span data-i18n="hist.cmp.from"></span> <select id="hist-cmp-a"></select></label>
+          <label><span data-i18n="hist.cmp.to"></span> <select id="hist-cmp-b"></select></label>
+          <button id="hist-cmp-go" type="button" class="btn" data-i18n="hist.compare"></button>
+        </div>
         <ul id="hist-vers" class="list vers"></ul>
+      </section>
+      <section id="hist-cmp-sec" aria-labelledby="h-cmp" hidden>
+        <h2 id="h-cmp" tabindex="-1"></h2>
+        <p id="hist-cmp-none" class="muted" hidden data-i18n="hist.cmp.none"></p>
+        <ul id="hist-cmp" class="list cmp"></ul>
+        <p><button id="hist-cmp-close" type="button" class="btn ghost" data-i18n="hist.cmp.close"></button></p>
       </section>
     </div>
   </main>

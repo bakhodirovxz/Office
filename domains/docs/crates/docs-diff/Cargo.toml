@@ -1,0 +1,19 @@
+# Phase 5 WP12: `docs-diff a.docx b.docx`, the Docs diff engine as a domain binary (PLAN phase 5, D7 and section 6).
+# Our crate: reads both files with the upstream reader (read only) and aligns them with crates/seq-diff.
+[package]
+name = "docs-diff"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Paragraph and run level diff of two Word documents, with blame from tracked-change authors"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+wordcraft-docx = { path = "../../../../upstream/wordcraft/crates/docx" }
+seq-diff = { path = "../../../../crates/seq-diff" }
+serde_json = { version = "1", features = ["float_roundtrip"] }

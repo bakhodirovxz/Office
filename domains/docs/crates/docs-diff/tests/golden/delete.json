@@ -1,0 +1,26 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 5
+  },
+  "changes": [
+    {
+      "a": 2,
+      "op": "delete",
+      "path": "2",
+      "text": "Tomatoes grew well this year, and the beans were late."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 1,
+    "equal": 5,
+    "format": 0,
+    "inserted": 0,
+    "modified": 0,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

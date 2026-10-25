@@ -1,0 +1,19 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 6
+  },
+  "changes": [],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 6,
+    "format": 0,
+    "inserted": 0,
+    "modified": 0,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

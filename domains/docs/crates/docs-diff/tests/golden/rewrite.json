@@ -1,0 +1,68 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 2
+  },
+  "changes": [
+    {
+      "a": 0,
+      "op": "delete",
+      "path": "0",
+      "text": "Annual garden report"
+    },
+    {
+      "a": 1,
+      "op": "delete",
+      "path": "1",
+      "text": "The quick brown fox jumps over the lazy dog."
+    },
+    {
+      "a": 2,
+      "op": "delete",
+      "path": "2",
+      "text": "Tomatoes grew well this year, and the beans were late."
+    },
+    {
+      "a": 3,
+      "op": "delete",
+      "path": "3",
+      "text": "Oʻzbekiston bogʻlarida olma va oʻrik pishdi."
+    },
+    {
+      "a": 4,
+      "op": "delete",
+      "path": "4",
+      "text": "The pond was cleaned twice, in April and in September."
+    },
+    {
+      "a": 5,
+      "op": "delete",
+      "path": "5",
+      "text": "Next year we plant more pumpkins."
+    },
+    {
+      "b": 0,
+      "op": "insert",
+      "path": "0",
+      "text": "Completely different words here."
+    },
+    {
+      "b": 1,
+      "op": "insert",
+      "path": "1",
+      "text": "Nothing in common at all."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 6,
+    "equal": 0,
+    "format": 0,
+    "inserted": 2,
+    "modified": 0,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

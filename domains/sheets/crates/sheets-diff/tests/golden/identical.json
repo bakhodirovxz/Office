@@ -1,0 +1,31 @@
+{
+  "a": {
+    "cells": 26,
+    "sheets": 2
+  },
+  "b": {
+    "cells": 26,
+    "sheets": 2
+  },
+  "schema": 1,
+  "sheets": [],
+  "stats": {
+    "cells": 0,
+    "cols": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "rows": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "sheets": {
+      "deleted": 0,
+      "equal": 2,
+      "inserted": 0,
+      "modified": 0,
+      "renamed": 0
+    }
+  },
+  "tool": "sheets-diff"
+}

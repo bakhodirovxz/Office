@@ -1,0 +1,34 @@
+{
+  "a": {
+    "paragraphs": 10
+  },
+  "b": {
+    "paragraphs": 10
+  },
+  "changes": [
+    {
+      "a": 6,
+      "b": 6,
+      "op": "modify",
+      "path": "3/r1c1/0",
+      "spans": [
+        {
+          "del": "12"
+        },
+        {
+          "ins": "15"
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 9,
+    "format": 0,
+    "inserted": 0,
+    "modified": 1,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

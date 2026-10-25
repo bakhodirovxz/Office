@@ -1,0 +1,21 @@
+# Phase 5 WP12: `sheets-diff a.xlsx b.xlsx`, the Sheets diff engine as a domain binary (PLAN phase 5, D7 and section 6).
+# Our crate: reads both workbooks with the upstream readers (read only) and aligns rows and columns with crates/seq-diff.
+[package]
+name = "sheets-diff"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Per-sheet diff of two workbooks: cells, formulas, sheets, inserted and deleted rows and columns"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+gridcraft-core = { path = "../../../../upstream/gridcraft/crates/core" }
+gridcraft-formula = { path = "../../../../upstream/gridcraft/crates/formula" }
+gridcraft-model = { path = "../../../../upstream/gridcraft/crates/model" }
+gridcraft-xlsx = { path = "../../../../upstream/gridcraft/crates/xlsx" }
+seq-diff = { path = "../../../../crates/seq-diff" }
+serde_json = { version = "1", features = ["float_roundtrip"] }

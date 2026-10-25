@@ -513,6 +513,12 @@ fn start(args: Args) -> Result<(), String> {
                 Out::Reply(v) => {
                     let _ = ipc_proxy.send_event(Ev::Script(reply_script(&v)));
                 }
+                Out::Work(work) => {
+                    let p = ipc_proxy.clone();
+                    std::thread::spawn(move || {
+                        let _ = p.send_event(Ev::Script(reply_script(&work())));
+                    });
+                }
                 Out::Pick(exts) => {
                     let (ctx, p) = (ipc_ctx.clone(), ipc_proxy.clone());
                     // the dialog blocks, so it must not run on the UI thread
