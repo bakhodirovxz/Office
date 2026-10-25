@@ -195,7 +195,12 @@ impl Env {
 
     /// `open`, and the signed editor config the page was given.
     async fn open_cfg(&self) -> (String, String, Value) {
-        let url = format!("{}/files/7/editor-config", self.hrm.base_url());
+        self.open_q("").await
+    }
+
+    /// `open_cfg` with a query on the editor-config route (`mode=view`).
+    async fn open_q(&self, q: &str) -> (String, String, Value) {
+        let url = format!("{}/files/7/editor-config?{q}", self.hrm.base_url());
         let cfg: Value = tokio::task::spawn_blocking(move || {
             let a: ureq::Agent = ureq::Agent::config_builder().proxy(None).build().into();
             serde_json::from_slice(
@@ -300,6 +305,33 @@ async fn open_save_close_reopen_against_the_hrb_harness() {
     let (sid2, tok2) = e.open().await;
     assert_eq!(e.get_doc(&sid2, &tok2).await.1, v2);
     assert!(e.hrm.rejected().is_empty(), "{:?}", e.hrm.rejected());
+}
+
+/// PLAN 5, WP7: a view session (the backend's mode=view config has no callbackUrl) reads, cannot write, and sends the backend nothing.
+#[tokio::test]
+async fn a_view_session_reads_and_sends_no_callback() {
+    let e = env("view", |_| {}).await;
+    let (sid, tok, cfg) = e.open_q("mode=view").await;
+    assert!(cfg["editorConfig"].get("callbackUrl").is_none());
+    assert_eq!(e.get_doc(&sid, &tok).await, (StatusCode::OK, docx("v1")));
+    for route in ["dirty", "save", "autosave"] {
+        let (s, _) = e.post(&sid, &tok, route, docx("v2")).await;
+        assert_eq!(s, StatusCode::FORBIDDEN, "{route}");
+    }
+    // closing is not a failure for the page: no status 4, no "failed"
+    let (s, v) = e.post(&sid, &tok, "close", vec![]).await;
+    assert_eq!(
+        (
+            s,
+            v["status"].as_u64(),
+            v["callback"].as_str(),
+            v["dirty"].as_bool()
+        ),
+        (StatusCode::OK, Some(4), Some("ok"), Some(false)),
+        "{v}"
+    );
+    assert!(e.hrm.received().is_empty() && e.hrm.rejected().is_empty());
+    assert_eq!(e.hrm.object(Kind::File, 7), Some(docx("v1")));
 }
 
 #[tokio::test]
