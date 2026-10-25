@@ -142,10 +142,11 @@ impl Docserver {
     pub fn version_backend(&self) -> Box<dyn VersionBackend> {
         let mut mac = Hmac::<Sha256>::new_from_slice(&self.server_secret).expect("any key length");
         mac.update(b"docserver history chain v1");
-        Box::new(LocalBackend::new(
-            self.data_dir.join("history"),
-            &mac.finalize().into_bytes(),
-        ))
+        let mut b = LocalBackend::new(self.data_dir.join("history"), &mac.finalize().into_bytes());
+        if let Some(k) = &self.at_rest {
+            b.0 = b.0.with_sealer(k.clone());
+        }
+        Box::new(b)
     }
 }
 
@@ -179,9 +180,15 @@ async fn list(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> R
 }
 
 async fn view(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: HeaderMap) -> Res {
-    let rec = authorize(&ds, &h, &sid, true, "history.view", &client(cl))?;
+    let cl = client(cl);
+    let rec = authorize(&ds, &h, &sid, true, "history.view", &cl)?;
     need(rec.perms.download)?;
-    let b = blk(move || ds.version_backend().read(&doc_id(&rec), v)).await??;
+    let b = blk(move || {
+        let b = ds.version_backend().read(&doc_id(&rec), v)?;
+        ds.issue_copy(&rec, b, &cl.ip, "download")
+            .map_err(ApiError::from)
+    })
+    .await??;
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], b).into_response())
 }
 

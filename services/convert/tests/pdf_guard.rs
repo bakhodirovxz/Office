@@ -79,10 +79,19 @@ impl Sandbox {
         Sandbox(p)
     }
     fn run(&self, pdf_text: &str, sidecar_url: Option<&str>) -> FileReport {
+        self.run_with(pdf_text, sidecar_url, |c| c.pdf_fallback = true)
+    }
+    fn run_with(
+        &self,
+        pdf_text: &str,
+        sidecar_url: Option<&str>,
+        set: impl FnOnce(&mut Config),
+    ) -> FileReport {
         std::fs::write(self.0.join("in.pdf"), format!("%PDF-1.4\n{pdf_text}")).unwrap();
         let mut c = Config::from_env();
         c.work_dir = self.0.join("work");
         c.pdf2docx_url = sidecar_url.map(String::from);
+        set(&mut c);
         for t in ToolId::ALL {
             c.tools
                 .insert(t, env!("CARGO_BIN_EXE_convert-fake-tool").into());
@@ -188,5 +197,37 @@ fn an_unreachable_sidecar_keeps_the_native_file_and_warns() {
     assert!(
         !docx_text(&r).contains("Rahimov"),
         "the native docx was put back"
+    );
+}
+
+#[test]
+fn the_sidecar_fallback_is_an_operator_switch_and_never_serves_an_xdfu_job() {
+    use convert::audit::AuditLog;
+    use convert::xdfu::{Mode, XdfuHook};
+    let s = Sandbox::new("switch");
+    let url = sidecar(&format!("{BODY}Rahimov Karimov Aliyev {BODY}"));
+    let lost = format!("{BODY}{COLUMN} {BODY}");
+    let used = |r: &FileReport| r.steps.iter().any(|st| st.tool == "pdf2docx");
+    // switch off (the default): the sidecar answers, but it is not asked
+    let r = s.run_with(&lost, Some(&url), |c| assert!(!c.pdf_fallback));
+    assert!(!used(&r), "{:?}", r.warnings);
+    assert!(r.warnings.iter().any(|w| w.code == "pdf_text_missing"));
+    // switch on, an ordinary file with the XDFU hook installed: the fallback runs
+    let hook = |c: &mut Config| {
+        c.pdf_fallback = true;
+        c.hooks.push(std::sync::Arc::new(XdfuHook::new(
+            Mode::Watermark,
+            std::sync::Arc::new(AuditLog::open(&s.0.join("audit.jsonl"), false).unwrap()),
+            true,
+        )));
+    };
+    assert!(used(&s.run_with(&lost, Some(&url), hook)));
+    // switch on, a file that carries the grif: never
+    let r = s.run_with(&format!("XDFU {lost}"), Some(&url), hook);
+    assert!(!used(&r), "{:?}", r.warnings);
+    assert!(
+        r.warnings.iter().all(|w| w.code != "pdf_docx_fallback"),
+        "{:?}",
+        r.warnings
     );
 }

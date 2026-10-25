@@ -45,7 +45,7 @@ use crate::report::{self, Warning};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Seek, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -72,12 +72,22 @@ impl Evidence {
 
 const PART_LIMIT: u64 = 32 << 20;
 
-struct Package(zip::ZipArchive<fs::File>);
+struct Package<R: Read + Seek = fs::File>(zip::ZipArchive<R>);
 
+fn open_file(path: &Path) -> Result<fs::File, String> {
+    fs::File::open(path).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
 impl Package {
     fn open(path: &Path) -> Result<Package, String> {
-        let f = fs::File::open(path).map_err(|e| e.to_string())?;
-        zip::ZipArchive::new(f)
+        Package::new(open_file(path)?)
+    }
+}
+
+impl<R: Read + Seek> Package<R> {
+    fn new(r: R) -> Result<Package<R>, String> {
+        zip::ZipArchive::new(r)
             .map(Package)
             .map_err(|e| format!("the package cannot be read: {e}"))
     }
@@ -292,7 +302,7 @@ fn hit(found: &mut Vec<Evidence>, text: &str, place: &'static str, part: &str) {
 }
 
 /// The OOXML document properties: core, app and custom parts, all text.
-fn properties(p: &mut Package, found: &mut Vec<Evidence>) {
+fn properties<R: Read + Seek>(p: &mut Package<R>, found: &mut Vec<Evidence>) {
     for part in [
         "docProps/core.xml",
         "docProps/app.xml",
@@ -357,8 +367,8 @@ fn top_paragraphs(xml: &str) -> Vec<String> {
         .collect()
 }
 
-fn detect_docx(path: &Path) -> Result<Vec<Evidence>, String> {
-    let mut p = Package::open(path)?;
+fn detect_docx(src: impl Read + Seek) -> Result<Vec<Evidence>, String> {
+    let mut p = Package::new(src)?;
     let mut found = vec![];
     if let Some(doc) = p.text("word/document.xml") {
         for t in top_paragraphs(&doc) {
@@ -380,8 +390,8 @@ fn detect_docx(path: &Path) -> Result<Vec<Evidence>, String> {
     Ok(found)
 }
 
-fn detect_xlsx(path: &Path) -> Result<Vec<Evidence>, String> {
-    let mut p = Package::open(path)?;
+fn detect_xlsx(src: impl Read + Seek) -> Result<Vec<Evidence>, String> {
+    let mut p = Package::new(src)?;
     let mut found = vec![];
     // headers and footers of every sheet
     for n in p
@@ -478,8 +488,8 @@ fn detect_xlsx(path: &Path) -> Result<Vec<Evidence>, String> {
     Ok(found)
 }
 
-fn detect_pptx(path: &Path) -> Result<Vec<Evidence>, String> {
-    let mut p = Package::open(path)?;
+fn detect_pptx(src: impl Read + Seek) -> Result<Vec<Evidence>, String> {
+    let mut p = Package::new(src)?;
     let mut found = vec![];
     for n in p.names().into_iter().filter(|n| {
         (n.starts_with("ppt/slideMasters/") || n.starts_with("ppt/slideLayouts/"))
@@ -535,8 +545,8 @@ fn detect_pptx(path: &Path) -> Result<Vec<Evidence>, String> {
 
 /// OpenDocument text and spreadsheets: the top paragraphs of `content.xml`, every header and footer (the only text in `styles.xml`), and
 /// `meta.xml` (title, subject, keywords).
-fn detect_odf(path: &Path) -> Result<Vec<Evidence>, String> {
-    let mut p = Package::open(path)?;
+fn detect_odf(src: impl Read + Seek) -> Result<Vec<Evidence>, String> {
+    let mut p = Package::new(src)?;
     let mut found = vec![];
     if let Some(x) = p.text("content.xml") {
         let tg = tags(&x);
@@ -679,19 +689,19 @@ fn detect_checked(
     };
     let checked = |r: Result<Vec<Evidence>, String>| r.map(|f| (f, true)).map_err(unreadable);
     match kind {
-        Some(Kind::Docx) => checked(detect_docx(path)),
-        Some(Kind::Xlsx) => checked(detect_xlsx(path)),
-        Some(Kind::Pptx) => checked(detect_pptx(path)),
-        Some(Kind::Odt | Kind::Ods) => checked(detect_odf(path)),
+        Some(Kind::Docx) => checked(open_file(path).and_then(detect_docx)),
+        Some(Kind::Xlsx) => checked(open_file(path).and_then(detect_xlsx)),
+        Some(Kind::Pptx) => checked(open_file(path).and_then(detect_pptx)),
+        Some(Kind::Odt | Kind::Ods) => checked(open_file(path).and_then(detect_odf)),
         Some(Kind::Doc | Kind::Rtf) => {
             let out = probe(ToolId::Docs, "docx")?;
-            let r = checked(detect_docx(&tools_path(path, &out)));
+            let r = checked(open_file(&tools_path(path, &out)).and_then(detect_docx));
             let _ = fs::remove_file(tools_path(path, &out));
             r
         }
         Some(Kind::Xls | Kind::Xlsb) => {
             let out = probe(ToolId::Sheets, "xlsx")?;
-            let r = checked(detect_xlsx(&tools_path(path, &out)));
+            let r = checked(open_file(&tools_path(path, &out)).and_then(detect_xlsx));
             let _ = fs::remove_file(tools_path(path, &out));
             r
         }
@@ -747,6 +757,35 @@ pub fn can_carry(ext: &str) -> bool {
     )
 }
 
+/// The document server's entry (WP14): the grif found in a docx, xlsx or pptx held in memory, in the places `detect` reads; `Err` when
+/// the package cannot be read or the type is not one of the three (not knowing is not the same as "not marked").
+pub fn grif_in_ooxml(bytes: &[u8], ext: &str) -> Result<Option<&'static str>, String> {
+    let r = std::io::Cursor::new(bytes);
+    let found = match ext {
+        "docx" => detect_docx(r),
+        "xlsx" => detect_xlsx(r),
+        "pptx" => detect_pptx(r),
+        _ => return Err(format!("a .{ext} document cannot be checked for the grif")),
+    }?;
+    Ok(found.first().map(|e| e.marker))
+}
+
+/// The document server's stamp (WP14): `line` put into a docx, xlsx or pptx held in memory, the same way the converter does (no tool).
+pub fn stamp_ooxml(bytes: &[u8], ext: &str, line: &str) -> Result<Vec<u8>, String> {
+    let (r, mut out) = (
+        std::io::Cursor::new(bytes),
+        std::io::Cursor::new(Vec::new()),
+    );
+    match ext {
+        "docx" => stamp_docx_io(r, &mut out, line),
+        "xlsx" => stamp_xlsx_io(r, &mut out, line),
+        "pptx" => stamp_pptx_io(r, &mut out, line),
+        _ => return Err(format!("a .{ext} document cannot carry the stamp")),
+    }
+    .map_err(|f| f.msg)?;
+    Ok(out.into_inner())
+}
+
 fn io_err(what: &str, e: impl std::fmt::Display) -> Failure {
     Failure {
         exit: Exit::ToolError,
@@ -791,18 +830,14 @@ fn cmd(id: &str, params: Value) -> String {
 /// Rewrite the zip `src` into `dst`: the parts `wants` names go through `edit` (`Some(new text)` replaces the part), every other part is
 /// copied as it is. Returns how many parts were replaced.
 fn rewrite_zip(
-    src: &Path,
-    dst: &Path,
+    src: impl Read + Seek,
+    dst: impl std::io::Write + Seek,
     wants: impl Fn(&str) -> bool,
     mut edit: impl FnMut(&str, &str) -> Result<Option<String>, Failure>,
 ) -> Result<usize, Failure> {
-    use std::io::Write;
     let mut zin =
-        zip::ZipArchive::new(fs::File::open(src).map_err(|e| io_err("cannot read the output", e))?)
-            .map_err(|e| io_err("the output package cannot be read", e))?;
-    let mut zout = zip::ZipWriter::new(
-        fs::File::create(dst).map_err(|e| io_err("cannot write the output", e))?,
-    );
+        zip::ZipArchive::new(src).map_err(|e| io_err("the output package cannot be read", e))?;
+    let mut zout = zip::ZipWriter::new(dst);
     let mut changed = 0;
     for i in 0..zin.len() {
         let name = zin
@@ -842,6 +877,30 @@ fn rewrite_zip(
     Ok(changed)
 }
 
+/// The file-to-file form of the `stamp_*_io` functions.
+fn on_files(
+    src: &Path,
+    dst: &Path,
+    f: impl FnOnce(fs::File, fs::File) -> Result<(), Failure>,
+) -> Result<(), Failure> {
+    f(
+        fs::File::open(src).map_err(|e| io_err("cannot read the output", e))?,
+        fs::File::create(dst).map_err(|e| io_err("cannot write the output", e))?,
+    )
+}
+
+fn stamp_docx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    on_files(src, dst, |s, d| stamp_docx_io(s, d, line))
+}
+
+fn stamp_xlsx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    on_files(src, dst, |s, d| stamp_xlsx_io(s, d, line))
+}
+
+fn stamp_pptx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+    on_files(src, dst, |s, d| stamp_pptx_io(s, d, line))
+}
+
 /// `text` with `insert` put right after the end of the first tag that starts with `open` (`<w:body`, `<w:hdr`); an empty element
 /// (`<w:hdr .../>`) is opened and closed around it.
 fn insert_in(text: &str, open: &str, close: &str, insert: &str) -> Option<String> {
@@ -855,7 +914,7 @@ fn insert_in(text: &str, open: &str, close: &str, insert: &str) -> Option<String
 }
 
 /// docx: the stamp as the first paragraph of the body and of every header and footer part. Nothing is removed.
-fn stamp_docx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+fn stamp_docx_io(src: impl Read + Seek, dst: impl Write + Seek, line: &str) -> Result<(), Failure> {
     let para = format!(
         "<w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val=\"CC0000\"/><w:sz w:val=\"16\"/></w:rPr><w:t xml:space=\"preserve\">{}</w:t></w:r></w:p>",
         html_escape(line)
@@ -1031,7 +1090,7 @@ fn stamp_sheet(xml: &str, line: &str) -> Result<String, String> {
     ))
 }
 
-fn stamp_xlsx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+fn stamp_xlsx_io(src: impl Read + Seek, dst: impl Write + Seek, line: &str) -> Result<(), Failure> {
     let n = rewrite_zip(
         src,
         dst,
@@ -1052,9 +1111,10 @@ fn stamp_xlsx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
 }
 
 /// pptx: a text box with the stamp along the bottom edge of every slide. The slides' own footers stay.
-fn stamp_pptx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
+fn stamp_pptx_io(src: impl Read + Seek, dst: impl Write + Seek, line: &str) -> Result<(), Failure> {
+    let mut src = src;
     let size = {
-        let mut p = Package::open(src).map_err(|e| io_err("cannot read the output", e))?;
+        let mut p = Package::new(&mut src).map_err(|e| io_err("cannot read the output", e))?;
         p.text("ppt/presentation.xml")
             .and_then(|x| {
                 let t = tags(&x).into_iter().find(|t| t.0 == "p:sldSz")?;
@@ -1066,6 +1126,8 @@ fn stamp_pptx_parts(src: &Path, dst: &Path, line: &str) -> Result<(), Failure> {
             })
             .unwrap_or((9_144_000, 5_143_500))
     };
+    src.rewind()
+        .map_err(|e| io_err("cannot read the output", e))?;
     let h = 300_000u64.min(size.1 / 4);
     let n = rewrite_zip(
         src,
@@ -1650,6 +1712,10 @@ impl JobHook for XdfuHook {
         }])
     }
 
+    fn flagged(&self, ctx: &JobCtx) -> bool {
+        self.jobs.lock().unwrap().contains_key(&ctx.job_id)
+    }
+
     fn finish(&self, ctx: &JobCtx) -> Option<Value> {
         let n = self.jobs.lock().unwrap().remove(&ctx.job_id)?;
         Some(json!({
@@ -1893,7 +1959,7 @@ mod tests {
             para("Dear sir")
         );
         let f = zip_of("letterhead.docx", &[("word/document.xml", &doc)]);
-        let found = detect_docx(&f).unwrap();
+        let found = open_file(&f).and_then(detect_docx).unwrap();
         assert!(
             found.iter().any(|e| e.place == "first-page-top"),
             "{found:?}"
@@ -1905,14 +1971,14 @@ mod tests {
             para("ДСП")
         );
         let f = zip_of("deep.docx", &[("word/document.xml", &doc)]);
-        assert!(detect_docx(&f).unwrap().is_empty());
+        assert!(open_file(&f).and_then(detect_docx).unwrap().is_empty());
         // a table that starts below the window is not read whole
         let doc = format!(
             "<w:document><w:body>{body}<w:tbl><w:tr><w:tc>{}</w:tc></w:tr></w:tbl></w:body></w:document>",
             para("ДСП")
         );
         let f = zip_of("deeptable.docx", &[("word/document.xml", &doc)]);
-        assert!(detect_docx(&f).unwrap().is_empty());
+        assert!(open_file(&f).and_then(detect_docx).unwrap().is_empty());
     }
 
     #[test]
@@ -1923,7 +1989,7 @@ mod tests {
             "hdr.odt",
             &[("content.xml", content), ("styles.xml", styles)],
         );
-        let found = detect_odf(&f).unwrap();
+        let found = open_file(&f).and_then(detect_odf).unwrap();
         assert_eq!(found.len(), 1);
         assert_eq!(
             (found[0].place, found[0].part.as_str()),
@@ -1932,13 +1998,18 @@ mod tests {
         let body = "<office:document-content><text:p>X<text:s/>D</text:p><text:h>ХДФУ<text:span>!</text:span></text:h></office:document-content>";
         let meta = "<office:document-meta><office:meta><dc:subject>XDFU</dc:subject></office:meta></office:document-meta>";
         let f = zip_of("top.ods", &[("content.xml", body), ("meta.xml", meta)]);
-        let places: Vec<_> = detect_odf(&f).unwrap().iter().map(|e| e.place).collect();
+        let places: Vec<_> = open_file(&f)
+            .and_then(detect_odf)
+            .unwrap()
+            .iter()
+            .map(|e| e.place)
+            .collect();
         assert_eq!(places, ["first-page-top", "properties"]);
         let f = zip_of(
             "plain.odt",
             &[("content.xml", content), ("styles.xml", "<a/>")],
         );
-        assert!(detect_odf(&f).unwrap().is_empty());
+        assert!(open_file(&f).and_then(detect_odf).unwrap().is_empty());
     }
 
     #[test]
@@ -1956,7 +2027,7 @@ mod tests {
                 ("xl/worksheets/sheet1.xml", sheet),
             ],
         );
-        assert_eq!(detect_xlsx(&f).unwrap().len(), 1);
+        assert_eq!(open_file(&f).and_then(detect_xlsx).unwrap().len(), 1);
     }
 
     #[test]

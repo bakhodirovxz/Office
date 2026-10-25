@@ -164,6 +164,8 @@ struct Progress {
     warnings: Vec<Warning>,
     translit: Option<serde_json::Value>,
     verified: Option<bool>,
+    /// a hook says the job is XDFU (marked, or not checkable): the sidecar fallback is not used
+    xdfu: bool,
 }
 
 impl Progress {
@@ -375,7 +377,7 @@ fn guard_pdf_text(
             ),
         })
     };
-    if cfg.pdf2docx_url.is_none() {
+    if cfg.pdf2docx_url.is_none() || !cfg.pdf_fallback || p.xdfu {
         warn_missing(p, missing);
         return Ok(());
     }
@@ -970,6 +972,7 @@ pub fn run_job(cfg: &Config, spec: JobSpec) -> FileReport {
         for h in &cfg.hooks {
             p.warnings.extend(h.before(&jctx, &runner)?);
         }
+        p.xdfu = cfg.hooks.iter().any(|h| h.flagged(&jctx));
         let declared = run_plan(cfg, &ctl, job.path(), steps, mb, &mut p)?;
         // pdf -> docx with the native engine has no stdout to look at (pdf -> txt does): a scan gives a docx without a single word
         if spec.kind.as_deref() == Some("pdf")

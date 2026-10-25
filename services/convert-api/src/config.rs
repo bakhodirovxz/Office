@@ -72,6 +72,9 @@ pub struct Settings {
     pub xdfu_audit_key_file: Option<PathBuf>,
     /// leave file names out of the audit log
     pub xdfu_redact: bool,
+    /// redo a native pdf to docx that lost text with the pdf2docx sidecar (needs `CONVERT_PDF2DOCX_URL`). Off by default; never used for
+    /// an XDFU job.
+    pub pdf_fallback: bool,
     pub cpu_slots: Option<usize>,
     pub mem_budget_mb: u64,
     pub queue_max: usize,
@@ -122,6 +125,7 @@ impl Default for Settings {
             xdfu_audit_file: None,
             xdfu_audit_key_file: None,
             xdfu_redact: false,
+            pdf_fallback: false,
             cpu_slots: None,
             mem_budget_mb: 12 * 1024,
             queue_max: 100,

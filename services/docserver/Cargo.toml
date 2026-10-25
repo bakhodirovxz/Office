@@ -28,6 +28,10 @@ tokio = { version = "1", features = ["rt"] }
 hmac = "0.12"
 sha2 = "0.10"
 getrandom = "0.2"
+# at-rest encryption (WP14): the AEAD convert-api already uses
+aes-gcm = "0.10"
+# XDFU stamping (WP14): the grif finder, the stamp line and the keyed copy chain
+xdfu-core = { path = "../../crates/xdfu-core" }
 # the server version store: the id API and keyed chain of suite-core history
 suite-core = { path = "../../crates/suite-core" }
 
