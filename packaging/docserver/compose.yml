@@ -1,0 +1,56 @@
+# Local rehearsal of the document server (WP10). Run through rehearse.sh, which makes the secrets, the throwaway CA and the staged
+# build context first (all under $REHEARSE_DIR). Topology: browser -> traefik (TLS) -> docserver <- internal listener <- fakehrm.
+name: hoshiya-rehearsal
+networks:
+  backend_net:
+    name: backend_net_rehearsal
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.50.0/24
+services:
+  traefik:
+    image: traefik:v3.1
+    command: ["--configFile=/etc/traefik/traefik.yml"]
+    ports: ["127.0.0.1:18443:443"]
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ${REHEARSE_DIR}/certs:/certs:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks:
+      backend_net: { ipv4_address: 172.29.50.5 }
+  docserver:
+    image: hoshiya-docserver:rehearsal
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:size=256m,uid=10002"]
+    volumes:
+      - ${REHEARSE_DIR}/config:/etc/hoshiya:ro
+      - ${REHEARSE_DIR}/secrets:/run/secrets:ro
+      - docserver-data:/data
+    # no "ports": the public side is Traefik only, and the internal listener (172.29.50.10:8780) is never published
+    networks:
+      backend_net: { ipv4_address: 172.29.50.10 }
+  fakehrm:
+    image: hoshiya-fakehrm:rehearsal
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      FAKE_HRM_ADDR: "0.0.0.0:8790"
+      FAKE_HRM_DOCSERVER: "https://127.0.0.1:18443"
+      FAKE_HRM_BACKEND_URL: "http://fakehrm:8790"
+      FAKE_HRM_INTERNAL_BASE: "http://172.29.50.10:8780"
+      FAKE_HRM_ALLOWED_HOSTS: "172.29.50.10"
+      FAKE_HRM_EXP: "1"
+      FAKE_HRM_TEST_API: "1"
+    # the host page and the /__test/ routes for the browser run; the document server reaches it by name on backend_net
+    ports: ["127.0.0.1:8790:8790"]
+    networks:
+      backend_net: { ipv4_address: 172.29.50.20 }
+volumes:
+  docserver-data:

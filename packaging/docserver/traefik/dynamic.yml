@@ -1,0 +1,22 @@
+tls:
+  # IP-address clients send no SNI, so the certificate must be the default one
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/server.pem
+        keyFile: /certs/server.key
+  certificates:
+    - certFile: /certs/server.pem
+      keyFile: /certs/server.key
+http:
+  routers:
+    docserver:
+      rule: "PathPrefix(`/`)"
+      entryPoints: [websecure]
+      service: docserver
+      tls: {}
+  services:
+    docserver:
+      loadBalancer:
+        servers:
+          - url: "http://docserver:8787"

@@ -1,0 +1,24 @@
+# Operator config of the rehearsal (compose.yml). The same shape as the example in docs/phase5/deploy.md.
+listen = "0.0.0.0:8787"
+auth = "jwt"
+secret_file = "/run/secrets/converter-secret"
+tls = "upstream"
+trusted_proxies = ["172.29.50.5/32"]          # Traefik
+public_url = "https://127.0.0.1:18443"
+work_dir = "/tmp/work"
+store_dir = "/data/store"
+
+[docserver]
+server_secret_file = "/run/secrets/server-secret"
+audit_key_file = "/run/secrets/audit-key"
+data_dir = "/data/docserver"
+internal_listen = "172.29.50.10:8780"          # this container's address on backend_net; never published
+internal_allow = ["172.29.50.20/32"]           # the harness only
+
+[[docserver.providers]]
+name = "fake"
+issuer = "fake"
+secret_file = "/run/secrets/provider-secret"
+fetch_allow = [{ url = "http://fakehrm:8790", internal = true }]
+callback_allow = [{ url = "http://fakehrm:8790", internal = true }]
+frame_origins = ["http://localhost:8790"]

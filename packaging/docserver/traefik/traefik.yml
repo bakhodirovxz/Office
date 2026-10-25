@@ -1,0 +1,9 @@
+# Static config: one TLS entry point, the file provider only (no docker socket).
+entryPoints:
+  websecure:
+    address: ":443"
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+log:
+  level: INFO
