@@ -27,7 +27,7 @@ any wider rollout (Phase 5 pilot or Phase 10). With 2-3 people and one session e
 Desktop (P1-P3), one test PC, the same PC for everyone, reset between participants:
 
 1. Install the MSI (kit README): per-machine, needs one UAC click. It is not signed, so SmartScreen shows "Windows protected your PC":
-   More info, then Run anyway. Check the SHA-256 first (it is in the kit `SHA256.txt`; it starts `2430CB40`, ends `A97E`).
+   More info, then Run anyway. Check the SHA-256 first (it is in the kit `SHA256.txt`; it starts `80E7C9B0`, ends `C317`; MSI built 2026-10-25 with the F10 fix 5e2e4b1).
 2. Run `wp23-reset.ps1 -Yes` once before the first participant (creates the `WP23` folder on the Desktop and puts the PDF in it).
 3. Leave the desktop empty: no app is open. The participant sees the Start menu and the Desktop with the `WP23` folder.
 4. Screen recording only if the participant agrees; do not keep it with a name. Otherwise take notes on the observer sheet.
