@@ -32,6 +32,12 @@ pub enum SessErr {
     NotFound,
     /// 403
     Forbidden,
+    /// 413
+    TooLarge,
+    /// 415: not a document of the session's type, or a zip bomb; the text names the reason, never the content
+    BadDocument(String),
+    /// 502: the provider could not be reached or refused (the text never holds a URL)
+    Upstream(String),
     /// 500; the text goes to stderr only
     Io(String),
 }
@@ -66,6 +72,9 @@ pub struct Closed {
     pub at: u64,
     /// the callback status the close stands for: 2 (saved since open) or 4 (nothing saved)
     pub status: u8,
+    /// the callback for this close has been sent, or queued (status 2) or tried (status 4): a second close sends nothing
+    #[serde(default)]
+    pub notified: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -94,6 +103,19 @@ pub struct SessionRecord {
     pub versions: Vec<VersionRec>,
     pub saved_since_open: bool,
     pub closed: Option<Closed>,
+    /// the highest version the provider has acknowledged with `{"error":0}`; a later version is unsaved on the provider's side
+    #[serde(default)]
+    pub acked: u64,
+    /// the status 1 callback went out
+    #[serde(default)]
+    pub dirty_sent: bool,
+}
+
+impl SessionRecord {
+    /// A version exists that the provider has not acknowledged: the document stays dirty.
+    pub fn dirty(&self) -> bool {
+        self.versions.last().is_some_and(|v| v.n > self.acked)
+    }
 }
 
 pub fn hex(b: &[u8]) -> String {
@@ -156,7 +178,7 @@ fn flag(o: Option<&Value>, field: &str, default: bool) -> Result<bool, SessErr> 
 
 /// A fetch or callback URL: exact `scheme://host:port` (the default port when none is written) in `list`, no user info. The DNS and
 /// address checks belong to the outbound client (WP4); this one needs no network.
-fn url_allowed(u: &str, list: &[Allow], field: &str) -> Result<(), SessErr> {
+pub(crate) fn url_allowed(u: &str, list: &[Allow], field: &str) -> Result<bool, SessErr> {
     if u.len() > 2048 || !u.bytes().all(|c| c.is_ascii_graphic()) || u.contains('\\') {
         return Err(bad(field, "not a plain URL"));
     }
@@ -172,10 +194,10 @@ fn url_allowed(u: &str, list: &[Allow], field: &str) -> Result<(), SessErr> {
     } else {
         format!("{o}:{}", if o.starts_with("https") { 443 } else { 80 })
     };
-    if list.iter().any(|a| a.origin == o) {
-        Ok(())
-    } else {
-        Err(bad(field, "this address is not on the provider's list"))
+    // the entry's `internal` flag: whether the outbound client may connect to a private address for this URL
+    match list.iter().find(|a| a.origin == o) {
+        Some(a) => Ok(a.internal),
+        None => Err(bad(field, "this address is not on the provider's list")),
     }
 }
 
@@ -325,6 +347,8 @@ impl Docserver {
             versions: vec![],
             saved_since_open: false,
             closed: None,
+            acked: 0,
+            dirty_sent: false,
         };
         let _g = lock();
         let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
@@ -365,6 +389,9 @@ impl Docserver {
         let n = rec.versions.len() as u64 + 1;
         let dir = self.session_dir(sid).ok_or(SessErr::NotFound)?;
         write_atomic(&dir.join(format!("v{n}.bin")), bytes)?;
+        if n == 1 {
+            rec.acked = 1; // the document as the provider gave it is, by definition, what the provider has
+        }
         let v = VersionRec {
             n,
             sha256: sha256_hex(bytes),
@@ -411,10 +438,74 @@ impl Docserver {
         let c = Closed {
             at: now,
             status: if rec.saved_since_open { 2 } else { 4 },
+            notified: false,
         };
         rec.closed = Some(c.clone());
         rec.last_activity = now;
         self.store(&rec)?;
         Ok(c)
+    }
+}
+
+impl Docserver {
+    pub(crate) fn provider(&self, name: &str) -> Option<&Provider> {
+        self.providers.iter().find(|p| p.name == name)
+    }
+
+    /// Fetches version 1 from the provider when the session has none yet (WP4, S6-S9). The fetch runs outside the lock; two racing
+    /// opens may each fetch and the second adds a version 2 with the same bytes. `shortcut: harmless, and the wrapper opens once.`
+    pub fn ensure_document(&self, sid: &str, now: u64) -> Result<(), SessErr> {
+        let rec = self.load_session(sid).ok_or(SessErr::NotFound)?;
+        if !rec.versions.is_empty() {
+            return Ok(());
+        }
+        let p = self.provider(&rec.provider).ok_or(SessErr::NotFound)?;
+        let internal = url_allowed(&rec.document_url, &p.fetch_allow, "document.url")?;
+        let cap = self.max_document_mb << 20;
+        // the provider's file token is in the URL path (some providers): the log line names the host only
+        let host = crate::outbound::host_only(&rec.document_url);
+        let bytes = self
+            .fetch_bytes(&rec.document_url, internal, cap)
+            .map_err(|e| {
+                eprintln!("docserver: fetch from {host} failed: {e}");
+                match e {
+                    crate::outbound::OutErr::TooLarge => SessErr::TooLarge,
+                    e => SessErr::Upstream(e.to_string()),
+                }
+            })?;
+        crate::ooxml::check(&bytes, &rec.file_type, cap).map_err(|e| {
+            eprintln!("docserver: the document from {host} was refused");
+            Self::doc_err(e)
+        })?;
+        eprintln!("docserver: document.fetch {host} {} bytes", bytes.len());
+        self.put_version(sid, &bytes, &rec.provider, false, now)?;
+        Ok(())
+    }
+
+    pub(crate) fn doc_err(e: crate::ooxml::DocErr) -> SessErr {
+        match e {
+            crate::ooxml::DocErr::TooLarge => SessErr::TooLarge,
+            crate::ooxml::DocErr::Bad(m) => SessErr::BadDocument(m),
+        }
+    }
+
+    /// Records the provider's acknowledgement of version `n`.
+    pub(crate) fn mark_acked(&self, sid: &str, n: u64) {
+        let _g = lock();
+        if let Some(mut rec) = self.load_session(sid)
+            && rec.acked < n
+        {
+            rec.acked = n;
+            let _ = self.store(&rec);
+        }
+    }
+
+    /// Edits a stored session under the lock (the callback code's flags).
+    pub(crate) fn update_session(&self, sid: &str, f: impl FnOnce(&mut SessionRecord)) {
+        let _g = lock();
+        if let Some(mut rec) = self.load_session(sid) {
+            f(&mut rec);
+            let _ = self.store(&rec);
+        }
     }
 }

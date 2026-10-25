@@ -29,6 +29,15 @@ impl From<SessErr> for ApiError {
                 "forbidden",
                 "this session may not do that",
             ),
+            SessErr::TooLarge => ApiError::new(
+                StatusCode::PAYLOAD_TOO_LARGE,
+                "too_large",
+                "the document is too large",
+            ),
+            SessErr::BadDocument(m) => {
+                ApiError::new(StatusCode::UNSUPPORTED_MEDIA_TYPE, "bad_document", m)
+            }
+            SessErr::Upstream(m) => ApiError::new(StatusCode::BAD_GATEWAY, "fetch_failed", m),
             SessErr::Io(m) => ApiError::internal(m),
         }
     }
@@ -125,7 +134,13 @@ async fn renew(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
 }
 
 async fn document(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
-    let rec = authorize(&ds, &h, &sid, false)?;
+    let mut rec = authorize(&ds, &h, &sid, false)?;
+    if rec.versions.is_empty() {
+        // the first call of a new session: fetch the provider's document (WP4)
+        let (d, s) = (ds.clone(), sid.clone());
+        blk(move || d.ensure_document(&s, now())).await??;
+        rec = ds.load_session(&sid).ok_or_else(not_found)?;
+    }
     let n = rec.versions.last().map(|v| v.n).ok_or_else(|| {
         ApiError::new(
             StatusCode::NOT_FOUND,
@@ -139,28 +154,10 @@ async fn document(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], b).into_response())
 }
 
-/// The body of a save: a document of the session's type within the size cap (the deeper OOXML checks come with WP4).
+/// The body of a save: a document of the session's type within the size cap, a sound package of that type (S9).
 fn check_body(ds: &Docserver, rec: &SessionRecord, b: &[u8]) -> Result<(), ApiError> {
-    let magic: &[u8] = if rec.file_type == "pdf" {
-        b"%PDF-"
-    } else {
-        b"PK\x03\x04"
-    };
-    if b.len() as u64 > ds.max_document_mb << 20 {
-        return Err(ApiError::new(
-            StatusCode::PAYLOAD_TOO_LARGE,
-            "too_large",
-            "the document is too large",
-        ));
-    }
-    if !b.starts_with(magic) {
-        return Err(ApiError::new(
-            StatusCode::UNSUPPORTED_MEDIA_TYPE,
-            "bad_document",
-            "not a document of this session's type",
-        ));
-    }
-    Ok(())
+    crate::ooxml::check(b, &rec.file_type, ds.max_document_mb << 20)
+        .map_err(|e| Docserver::doc_err(e).into())
 }
 
 async fn save(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
@@ -169,9 +166,26 @@ async fn save(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes)
         return Err(SessErr::Forbidden.into());
     }
     check_body(&ds, &rec, &body)?;
-    let v = blk(move || ds.put_version(&sid, &body, &rec.user_id, true, now())).await??;
-    // WP4 sends the callback (status 6) here and reports ok / failed; until then the editor is told it is not confirmed.
-    json_ok(json!({"version": v.n, "sha256": v.sha256, "callback": "unknown"}))
+    // the answer comes after the provider's reply (the async-save ticket, 3.3): ok, failed or unknown; the version is kept either way
+    let (v, cb, dirty) = blk(move || {
+        let v = ds.put_version(&sid, &body, &rec.user_id, true, now())?;
+        let rec = ds.load_session(&sid).ok_or(SessErr::NotFound)?;
+        let cb = ds.callback_saved(&rec, &v);
+        let dirty = ds.load_session(&sid).is_some_and(|r| r.dirty());
+        Ok::<_, SessErr>((v, cb, dirty))
+    })
+    .await??;
+    json_ok(json!({"version": v.n, "sha256": v.sha256, "callback": cb.as_str(), "dirty": dirty}))
+}
+
+/// `POST /ds/session/{sid}/dirty`: the editor's first change; the status 1 callback, once.
+async fn dirty(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    let rec = authorize(&ds, &h, &sid, false)?;
+    if !rec.perms.edit {
+        return Err(SessErr::Forbidden.into());
+    }
+    let cb = blk(move || ds.callback_dirty(&sid)).await?;
+    json_ok(json!({"callback": cb.map(|c| c.as_str())}))
 }
 
 async fn autosave(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
@@ -186,9 +200,15 @@ async fn autosave(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: By
 
 async fn close(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
     authorize(&ds, &h, &sid, true)?;
-    let c = blk(move || ds.close_session(&sid, now())).await??;
-    // WP4 sends the callback for this status (2 or 4) here.
-    json_ok(json!({"status": c.status}))
+    let (c, cb, dirty) = blk(move || {
+        let c = ds.close_session(&sid, now())?;
+        // status 2 is queued and retried until the provider acknowledges it; 4 is one try
+        let cb = ds.callback_closed(&sid);
+        let dirty = ds.load_session(&sid).is_some_and(|r| r.dirty());
+        Ok::<_, SessErr>((c, cb, dirty))
+    })
+    .await??;
+    json_ok(json!({"status": c.status, "callback": cb.map(|c| c.as_str()), "dirty": dirty}))
 }
 
 /// `GET /ds/files/{sid}/{ver}?t=<file token>`: the bytes of one version, for the token bound to exactly that sid, ver and digest.
@@ -227,6 +247,7 @@ impl Docserver {
             .route("/ds/session/{sid}/document", get(document))
             .route("/ds/session/{sid}/save", post(save).layer(cap))
             .route("/ds/session/{sid}/autosave", post(autosave).layer(cap))
+            .route("/ds/session/{sid}/dirty", post(dirty))
             .route("/ds/session/{sid}/close", post(close))
             .with_state(self.clone())
     }

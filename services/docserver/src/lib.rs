@@ -3,7 +3,10 @@
 //! until WP3 and later fill them (WP3: `sessions` and `tokens`, the session routes of `routes`). Nothing here is mounted unless the config file has a `[docserver]` section.
 #![forbid(unsafe_code)]
 mod api;
+pub mod callback;
 pub mod config;
+pub mod ooxml;
+pub mod outbound;
 pub mod routes;
 pub mod sessions;
 pub mod tokens;

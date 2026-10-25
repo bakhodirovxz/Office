@@ -120,6 +120,9 @@ mod tests {
             data_dir: "d".into(),
             max_document_mb: 50,
             callback_timeout_s: 60,
+            fetch_timeout_s: 60,
+            internal_url: None,
+            lookup: crate::outbound::system_lookup(),
             internal: Some(Internal {
                 listen: "127.0.0.1:9000".parse().unwrap(),
                 allow: vec![Cidr::parse("172.18.0.0/16").unwrap()],

@@ -48,6 +48,7 @@ async fn main() -> ExitCode {
     };
     convert_api::runner::run("hoshiya-serve", config.as_deref(), move |app| match ds {
         Some((ds, internal)) => {
+            ds.spawn_retry_loop();
             if let Some(l) = internal {
                 suite_serve::spawn_internal(&app, &ds, l);
             }

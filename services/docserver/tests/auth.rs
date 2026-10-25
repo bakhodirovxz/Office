@@ -19,8 +19,30 @@ use tower::ServiceExt;
 
 const PROV_SECRET: &str = "pppppppppppppppppppppppppppppppppppppppp";
 const SERVER_SECRET: &str = "ssssssssssssssssssssssssssssssssssssssss";
-const DOC: &[u8] = b"PK\x03\x04 synthetic docx v1";
-const DOC2: &[u8] = b"PK\x03\x04 synthetic docx v2, saved";
+/// A real (tiny) docx package: the server checks the main part. `tag` makes the bytes differ.
+fn package(tag: &[u8]) -> Vec<u8> {
+    use std::io::Write;
+    let mut w = zip::ZipWriter::new(std::io::Cursor::new(vec![]));
+    for (n, b) in [
+        ("[Content_Types].xml", &b"x"[..]),
+        ("word/document.xml", tag),
+    ] {
+        w.start_file(n, zip::write::SimpleFileOptions::default())
+            .unwrap();
+        w.write_all(b).unwrap();
+    }
+    w.finish().unwrap().into_inner()
+}
+
+fn doc() -> &'static [u8] {
+    static D: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    D.get_or_init(|| package(b"synthetic docx v1"))
+}
+
+fn doc2() -> &'static [u8] {
+    static D: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    D.get_or_init(|| package(b"synthetic docx v2, saved"))
+}
 
 fn dir(name: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("docserver-auth-{name}-{}", std::process::id()));
@@ -148,7 +170,7 @@ async fn session(ds: &Arc<Docserver>, r: &Router, payload: &Value) -> (String, S
     let (s, v) = open(r, payload).await;
     assert_eq!(s, StatusCode::OK, "{v}");
     let sid = v["sid"].as_str().unwrap().to_string();
-    ds.put_version(&sid, DOC, "one", false, now()).unwrap();
+    ds.put_version(&sid, doc(), "one", false, now()).unwrap();
     (sid, v["token"].as_str().unwrap().to_string())
 }
 
@@ -392,7 +414,7 @@ async fn config_field_refusals_and_modes() {
                 "POST",
                 &format!("/ds/session/{sid}/{route}"),
                 Some(&tok),
-                DOC2,
+                doc2(),
             )
             .await;
             assert_eq!(s, StatusCode::FORBIDDEN, "{what} {route}");
@@ -407,7 +429,7 @@ async fn config_field_refusals_and_modes() {
         .await;
         assert_eq!(
             (s, b.as_slice()),
-            (StatusCode::OK, DOC),
+            (StatusCode::OK, doc()),
             "{what}: a view session still reads"
         );
         let (s, b) = call(
@@ -607,17 +629,24 @@ async fn every_route_checks_its_token() {
     ];
     for (m, route) in routes {
         let uri = format!("/ds/session/{a}/{route}");
-        let (s, _) = call(&r, m, &uri, None, DOC2).await;
+        let (s, _) = call(&r, m, &uri, None, doc2()).await;
         assert_eq!(s, StatusCode::UNAUTHORIZED, "{route}: no token");
         for (what, tok) in &forged {
-            let (s, _) = call(&r, m, &uri, Some(tok), DOC2).await;
+            let (s, _) = call(&r, m, &uri, Some(tok), doc2()).await;
             assert_eq!(s, StatusCode::UNAUTHORIZED, "{route}: {what}");
         }
         // S24: another session's token, and a sid that does not exist, are the same answer
-        let (s1, b1) = call(&r, m, &uri, Some(&tb), DOC2).await;
+        let (s1, b1) = call(&r, m, &uri, Some(&tb), doc2()).await;
         let ghost = format!("/ds/session/{}/{route}", "0".repeat(32));
-        let (s2, b2) = call(&r, m, &ghost, Some(&ta), DOC2).await;
-        let (s3, b3) = call(&r, m, &format!("/ds/session/nope/{route}"), Some(&ta), DOC2).await;
+        let (s2, b2) = call(&r, m, &ghost, Some(&ta), doc2()).await;
+        let (s3, b3) = call(
+            &r,
+            m,
+            &format!("/ds/session/nope/{route}"),
+            Some(&ta),
+            doc2(),
+        )
+        .await;
         assert_eq!(
             (s1, s2, s3),
             (
@@ -638,13 +667,13 @@ async fn every_route_checks_its_token() {
         b"",
     )
     .await;
-    assert_eq!((s, body.as_slice()), (StatusCode::OK, DOC));
+    assert_eq!((s, body.as_slice()), (StatusCode::OK, doc()));
     let (s, body) = call(
         &r,
         "POST",
         &format!("/ds/session/{a}/save"),
         Some(&ta),
-        DOC2,
+        doc2(),
     )
     .await;
     assert_eq!(
@@ -659,7 +688,7 @@ async fn every_route_checks_its_token() {
         b"",
     )
     .await;
-    assert_eq!(body, DOC, "B still has its own document");
+    assert_eq!(body, doc(), "B still has its own document");
     let (s, body) = call(
         &r,
         "POST",
@@ -702,7 +731,14 @@ async fn every_route_checks_its_token() {
     .await;
     assert_eq!((s, js(&body)["status"].as_u64()), (StatusCode::OK, Some(2)));
     for (m, route) in routes.iter().filter(|(_, r)| *r != "close") {
-        let (s, _) = call(&r, m, &format!("/ds/session/{a}/{route}"), Some(&ta), DOC2).await;
+        let (s, _) = call(
+            &r,
+            m,
+            &format!("/ds/session/{a}/{route}"),
+            Some(&ta),
+            doc2(),
+        )
+        .await;
         assert_eq!(s, StatusCode::NOT_FOUND, "{route} after close");
     }
     let (s, body) = call(
@@ -782,7 +818,7 @@ async fn file_token_bindings() {
         "POST",
         &format!("/ds/session/{a}/save"),
         Some(&ta),
-        DOC2,
+        doc2(),
     )
     .await;
     let sha = |sid: &str, n: u64| {
@@ -806,9 +842,9 @@ async fn file_token_bindings() {
     };
     let good = ds.mint_file_token(&a, 2, &sha(&a, 2), t);
     let (s, body) = get(a.clone(), 2, good.clone()).await;
-    assert_eq!((s, body.as_slice()), (StatusCode::OK, DOC2));
+    assert_eq!((s, body.as_slice()), (StatusCode::OK, doc2()));
     let (s, body) = get(a.clone(), 1, ds.mint_file_token(&a, 1, &sha(&a, 1), t)).await;
-    assert_eq!((s, body.as_slice()), (StatusCode::OK, DOC));
+    assert_eq!((s, body.as_slice()), (StatusCode::OK, doc()));
     // another ver, another sid, the wrong digest: 404; the token of version 1 on version 2
     assert_eq!(
         get(a.clone(), 1, good.clone()).await.0,
@@ -896,7 +932,7 @@ async fn sessions_survive_a_restart() {
         "POST",
         &format!("/ds/session/{sid}/save"),
         Some(&tok),
-        DOC2,
+        doc2(),
     )
     .await;
     assert_eq!(s, StatusCode::OK);
@@ -914,7 +950,7 @@ async fn sessions_survive_a_restart() {
     .await;
     assert_eq!(
         (s, body.as_slice()),
-        (StatusCode::OK, DOC2),
+        (StatusCode::OK, doc2()),
         "the saved version is there"
     );
     let (s, _) = call(
@@ -1021,7 +1057,7 @@ mod hrb {
         let mut c = Config::generated("http://127.0.0.1:1");
         c.include_exp = include_exp;
         let h = FakeHrm::start(c).await.unwrap();
-        h.add_file(Kind::File, 7, "report.docx", DOC.to_vec());
+        h.add_file(Kind::File, 7, "report.docx", doc().to_vec());
         h
     }
 
@@ -1064,7 +1100,7 @@ mod hrb {
         );
         // WP4 will do this fetch; here the document URL of the signed config is followed once to see it is the real file route
         let bytes = fetch(rec.document_url.clone()).await;
-        assert_eq!(bytes, DOC);
+        assert_eq!(bytes, doc());
         ds.put_version(&rec.sid, &bytes, "one", false, now())
             .unwrap();
         let tok = v["token"].as_str().unwrap();
@@ -1076,7 +1112,7 @@ mod hrb {
             b"",
         )
         .await;
-        assert_eq!((s, body), (StatusCode::OK, DOC.to_vec()));
+        assert_eq!((s, body), (StatusCode::OK, doc().to_vec()));
         // a view record of the same backend
         h.set_access(Kind::File, 7, false, false);
         let cfg = editor_config(&h, 7).await;

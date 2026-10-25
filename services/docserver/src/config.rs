@@ -58,10 +58,15 @@ pub struct Config {
     pub data_dir: Option<PathBuf>,
     pub max_document_mb: u64,
     pub callback_timeout_s: u64,
+    /// total time allowed for fetching a document (seconds)
+    pub fetch_timeout_s: u64,
     /// `ip:port` of the internal listener that serves the saved-file route only (F4); needs `internal_allow`
     pub internal_listen: Option<String>,
     /// IPs or CIDRs that may use the internal listener
     pub internal_allow: Vec<String>,
+    /// `http://host:port` the provider uses to reach the internal listener; it goes into the saved-file URL of a callback. Default: the
+    /// `internal_listen` address (an unspecified one as 127.0.0.1)
+    pub internal_url: Option<String>,
     pub encrypt_at_rest: bool,
     pub providers: Vec<ProviderConfig>,
 }
@@ -73,8 +78,10 @@ impl Default for Config {
             data_dir: None,
             max_document_mb: 50,
             callback_timeout_s: 60,
+            fetch_timeout_s: 60,
             internal_listen: None,
             internal_allow: vec![],
+            internal_url: None,
             encrypt_at_rest: false,
             providers: vec![],
         }
@@ -113,9 +120,14 @@ pub struct Docserver {
     pub data_dir: PathBuf,
     pub max_document_mb: u64,
     pub callback_timeout_s: u64,
+    pub fetch_timeout_s: u64,
     pub internal: Option<Internal>,
+    /// how the provider reaches the internal listener (no trailing slash); None without one
+    pub internal_url: Option<String>,
     pub encrypt_at_rest: bool,
     pub providers: Vec<Provider>,
+    /// the name lookup of every outbound request; the system resolver unless a test replaces it
+    pub lookup: crate::outbound::Lookup,
 }
 
 fn read_secret(path: &Path, key: &str) -> Result<Vec<u8>, String> {
@@ -254,6 +266,13 @@ impl Config {
         if !(1..=600).contains(&self.callback_timeout_s) {
             return Err("docserver: callback_timeout_s must be 1 to 600".into());
         }
+        if !(1..=600).contains(&self.fetch_timeout_s) {
+            return Err("docserver: fetch_timeout_s must be 1 to 600".into());
+        }
+        // a security option that does nothing is worse than a refusal (WP14 implements it)
+        if self.encrypt_at_rest {
+            return Err("docserver: encrypt_at_rest is not implemented yet".into());
+        }
         let internal = match (&self.internal_listen, self.internal_allow.is_empty()) {
             (None, true) => None,
             (None, false) => return Err("docserver: internal_allow needs internal_listen".into()),
@@ -286,6 +305,25 @@ impl Config {
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 Some(Internal { listen, allow })
+            }
+        };
+        let internal_url = match (&internal, &self.internal_url) {
+            (None, Some(_)) => return Err("docserver: internal_url needs internal_listen".into()),
+            (None, None) => None,
+            (Some(i), None) => {
+                let ip = if i.listen.ip().is_unspecified() {
+                    "127.0.0.1".parse().expect("literal")
+                } else {
+                    i.listen.ip()
+                };
+                Some(format!("http://{}", SocketAddr::new(ip, i.listen.port())))
+            }
+            (Some(_), Some(u)) => {
+                let o = origin(u, "internal_url", true)?;
+                if !o.starts_with("http://") {
+                    return Err("docserver: internal_url must be a plain http://host:port (the listener has no TLS)".into());
+                }
+                Some(o)
             }
         };
         if self.providers.is_empty() {
@@ -379,9 +417,12 @@ impl Config {
             data_dir,
             max_document_mb: self.max_document_mb,
             callback_timeout_s: self.callback_timeout_s,
+            fetch_timeout_s: self.fetch_timeout_s,
             internal,
+            internal_url,
             encrypt_at_rest: self.encrypt_at_rest,
             providers,
+            lookup: crate::outbound::system_lookup(),
         })
     }
 }
@@ -789,6 +830,25 @@ frame_origins = ["https://app.test"]
         assert!(
             !ds.internal_allows("172.19.0.7".parse().unwrap())
                 && !ds.internal_allows("127.0.0.1".parse().unwrap())
+        );
+    }
+
+    #[test]
+    fn encrypt_at_rest_is_refused_until_it_is_implemented() {
+        let d = Dir::new("encrypt");
+        refused(
+            &d,
+            &|t| {
+                t.insert("encrypt_at_rest".into(), true.into());
+            },
+            "encrypt_at_rest is not implemented yet",
+        );
+        refused(
+            &d,
+            &|t| {
+                t.insert("fetch_timeout_s".into(), 0.into());
+            },
+            "fetch_timeout_s",
         );
     }
 

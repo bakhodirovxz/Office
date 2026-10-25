@@ -14,6 +14,11 @@ name = "docserver"
 
 [dependencies]
 convert-api = { path = "../convert-api" }
+# the zip central-directory scan against zip bombs (`scan::scan_entries`), the same rules as the converter
+convert = { path = "../convert" }
+zip = { version = "9", default-features = false, features = ["deflate"] }
+# the outbound client of the fetch and the callbacks (same crate and features as convert-api; no TLS yet, see outbound.rs)
+ureq = { version = "3", default-features = false }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 serde = { version = "1", features = ["derive"] }
 toml = { version = "1", default-features = false, features = ["parse", "serde"] }
@@ -25,9 +30,7 @@ sha2 = "0.10"
 getrandom = "0.2"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time"] }
 tower = { version = "0.5", features = ["util"] }
 fake-hrm = { path = "../fake-hrm" }
-# blocking client for the fake backend's routes, as fake-hrm's own tests
-ureq = { version = "3", default-features = false }
 base64 = "0.22"
