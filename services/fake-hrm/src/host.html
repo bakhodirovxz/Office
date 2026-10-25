@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake host page</title>
+<style>
+  html, body { margin: 0; height: 100%; font: 14px system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { padding: 8px 12px; background: #1f3a5f; color: #fff; display: flex; gap: 16px; align-items: center; }
+  #banner { padding: 4px 10px; border-radius: 4px; background: #666; }
+  body[data-state="ready"] #banner { background: #2e7d32; }
+  body[data-state="saved"] #banner { background: #0d47a1; }
+  body[data-state="closed"] #banner { background: #4e342e; }
+  body[data-state="error"] #banner { background: #b71c1c; }
+  #ph { flex: 1; min-height: 0; }
+</style>
+</head>
+<body data-state="loading">
+<header><strong>Fake host</strong><span id="banner">loading</span><span id="detail"></span></header>
+<div id="ph"></div>
+<script>
+  // Cross-site host page (hrm-current-state.md:302-319): api.js comes from the document server's origin, the editor config from
+  // this origin. Query: ?kind=files|order-acts|letters (default files) ?id=<n> ?mode=view ?device=mobile ?tamper=1
+  var qs = new URLSearchParams(location.search);
+  var log = window.__hrmLog = [];
+  function setState(s, detail) {
+    document.body.dataset.state = s;
+    document.getElementById('banner').textContent = s;
+    document.getElementById('detail').textContent = detail || '';
+    log.push({ t: Math.round(performance.now()), state: s, detail: detail || '' });
+  }
+  window.__t0 = performance.now();
+  var s = document.createElement('script');
+  s.src = '{{DOCSERVER}}/web-apps/apps/api/documents/api.js';
+  s.onload = async function () {
+    var q = new URLSearchParams();
+    ['mode', 'device', 'theme'].forEach(function (k) { if (qs.get(k)) q.set(k, qs.get(k)); });
+    var url = '/' + (qs.get('kind') || 'files') + '/' + (qs.get('id') || '1') + '/editor-config?' + q;
+    var cfg = await (await fetch(url)).json();
+    if (qs.get('tamper')) {
+      var t = cfg.token, i = t.length - 5;
+      cfg.token = t.slice(0, i) + (t[i] === 'A' ? 'B' : 'A') + t.slice(i + 1);
+    }
+    // events are the one key outside the token (hrm-current-state.md:312)
+    cfg.events = {
+      onDocumentReady: function () { setState('ready', 'ready in ' + Math.round(performance.now() - window.__t0) + ' ms'); },
+      onDocumentStateChange: function (e) { log.push({ t: Math.round(performance.now()), dirty: e.data }); },
+      onClosed: function (e) { setState('closed', 'closed status ' + e.data.status); },
+      onSaved: function (e) { setState('saved', 'saved v' + e.data.version); },
+      onError: function (e) { window.__error = e.data; setState('error', (e.data.status || '') + ' ' + (e.data.message || '')); },
+    };
+    window.__editor = new DocsAPI.DocEditor('ph', cfg);
+  };
+  s.onerror = function () { setState('error', 'api.js failed to load'); };
+  document.head.appendChild(s);
+</script>
+</body>
+</html>

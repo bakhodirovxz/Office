@@ -660,6 +660,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "fake-hrm"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "hmac",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "ureq",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
