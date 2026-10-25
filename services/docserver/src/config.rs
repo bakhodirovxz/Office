@@ -268,7 +268,9 @@ impl Config {
                     return Err("docserver: internal_listen needs a fixed port (not 0)".into());
                 }
                 if listen.ip().is_unspecified() {
-                    eprintln!("docserver: warning: internal_listen {listen} listens on every interface; bind it to the Docker network address and never publish it with -p");
+                    eprintln!(
+                        "docserver: warning: internal_listen {listen} listens on every interface; bind it to the Docker network address and never publish it with -p"
+                    );
                 }
                 if Some(listen) == main_listen {
                     return Err("docserver: internal_listen is the public listen address".into());
@@ -341,9 +343,15 @@ impl Config {
                 let o = origin(o, &at("frame_origins"), false)?;
                 // a page served over plain http could be rewritten in transit and then frame the editor with a live session
                 if let Some(h) = o.strip_prefix("http://") {
-                    let host = h.rsplit_once(':').filter(|(_, p)| p.parse::<u16>().is_ok()).map_or(h, |(h, _)| h);
+                    let host = h
+                        .rsplit_once(':')
+                        .filter(|(_, p)| p.parse::<u16>().is_ok())
+                        .map_or(h, |(h, _)| h);
                     if !["localhost", "127.0.0.1", "[::1]"].contains(&host) {
-                        return Err(format!("docserver: {}: \"{o}\" is plain http; use https (http is accepted for localhost only)", at("frame_origins")));
+                        return Err(format!(
+                            "docserver: {}: \"{o}\" is plain http; use https (http is accepted for localhost only)",
+                            at("frame_origins")
+                        ));
                     }
                 }
                 if !frame_origins.contains(&o) {
@@ -715,7 +723,12 @@ frame_origins = ["https://app.test"]
                 t.insert("internal_allow".into(), strings(&[allow]));
             })
         };
-        assert!(go("127.0.0.1:0", "127.0.0.0/8").err().unwrap().contains("not 0"));
+        assert!(
+            go("127.0.0.1:0", "127.0.0.0/8")
+                .err()
+                .unwrap()
+                .contains("not 0")
+        );
         // a v4-mapped prefix cannot be written as a v6 range: refused with the key named, never half understood
         let e = go("127.0.0.1:9000", "::ffff:172.18.0.0/112").err().unwrap();
         assert!(e.contains("internal_allow"), "{e}");
@@ -723,7 +736,10 @@ frame_origins = ["https://app.test"]
         let ds = go("127.0.0.1:9000", "::ffff:172.18.0.4").unwrap();
         assert!(ds.internal_allows("172.18.0.4".parse().unwrap()));
         assert!(!ds.internal_allows("172.18.0.5".parse().unwrap()));
-        assert!(go("[::]:9000", "10.0.0.0/8").is_ok(), "warns, does not refuse");
+        assert!(
+            go("[::]:9000", "10.0.0.0/8").is_ok(),
+            "warns, does not refuse"
+        );
     }
 
     #[test]

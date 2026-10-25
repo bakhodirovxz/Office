@@ -62,7 +62,7 @@ type Mounted = (Arc<Docserver>, Option<tokio::net::TcpListener>);
 
 fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
     let s = Settings::load(path.as_ref())?;
-    let Some(t) = s.docserver else {
+    let Some(t) = s.docserver.clone() else {
         return Ok(None);
     };
     let ds = Arc::new(Docserver::from_table(t, s.listen.parse().ok())?);

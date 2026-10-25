@@ -207,7 +207,7 @@ impl Docserver {
         for p in &self.providers {
             match jwt::verify_with(&p.secret, token, p.require_exp) {
                 Ok(v) => {
-                    // HRB's tokens carry no `iss`: the secret already names the provider. When one is there it must be ours.
+                    // Tokens of some providers carry no `iss`: the secret already names the provider. When one is there it must be ours.
                     if v.get("iss").is_some_and(|i| i.as_str() != Some(&p.issuer)) {
                         return Err(SessErr::Unauthorized);
                     }
@@ -236,8 +236,15 @@ impl Docserver {
     ) -> Result<SessionRecord, SessErr> {
         let (p, c) = self.open_config(token, now)?;
         // cross-provider isolation: the page that handed us the config must be one of THIS provider's frame origins
-        if !p.frame_origins.iter().any(|o| o.eq_ignore_ascii_case(origin)) {
-            eprintln!("docserver: auth.fail: config message origin is not a frame origin of provider \"{}\"", p.name);
+        if !p
+            .frame_origins
+            .iter()
+            .any(|o| o.eq_ignore_ascii_case(origin))
+        {
+            eprintln!(
+                "docserver: auth.fail: config message origin is not a frame origin of provider \"{}\"",
+                p.name
+            );
             return Err(SessErr::Forbidden);
         }
         let doc = match c.get("document") {
@@ -253,7 +260,9 @@ impl Docserver {
             .to_ascii_lowercase();
         let (editor, dtype) =
             editor_for(&ft).ok_or_else(|| bad("document.fileType", "not a supported type"))?;
-        if c.get("documentType").is_some_and(|d| d.as_str() != Some(dtype)) {
+        if c.get("documentType")
+            .is_some_and(|d| d.as_str() != Some(dtype))
+        {
             return Err(bad("documentType", "does not match document.fileType"));
         }
         let url = text(doc.get("url"), "document.url", 2048)?
@@ -275,8 +284,8 @@ impl Docserver {
             128,
         )?
         .unwrap_or_else(|| user_id.clone());
-        let title =
-            text(doc.get("title"), "document.title", 255)?.unwrap_or_else(|| format!("document.{ft}"));
+        let title = text(doc.get("title"), "document.title", 255)?
+            .unwrap_or_else(|| format!("document.{ft}"));
         let mode = match ec.get("mode").and_then(Value::as_str) {
             None | Some("edit") => "edit",
             Some("view") => "view",
@@ -382,7 +391,10 @@ impl Docserver {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
         write_atomic(
-            &self.session_dir(sid).ok_or(SessErr::NotFound)?.join("autosave.bin"),
+            &self
+                .session_dir(sid)
+                .ok_or(SessErr::NotFound)?
+                .join("autosave.bin"),
             bytes,
         )?;
         rec.last_activity = now;

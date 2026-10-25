@@ -140,12 +140,19 @@ mod tests {
         let d = std::env::temp_dir().join(format!("runner-ds-{}", std::process::id()));
         std::fs::create_dir_all(&d).unwrap();
         let (with, without) = (d.join("with.toml"), d.join("without.toml"));
-        std::fs::write(&with, "[docserver]
+        std::fs::write(
+            &with,
+            "[docserver]
 data_dir = \"x\"
-").unwrap();
+",
+        )
+        .unwrap();
         std::fs::write(&without, "").unwrap();
         let e = refuse_docserver_section(with.to_str()).unwrap_err();
-        assert!(e.contains("[docserver]") && e.contains("hoshiya-serve"), "{e}");
+        assert!(
+            e.contains("[docserver]") && e.contains("hoshiya-serve"),
+            "{e}"
+        );
         assert!(refuse_docserver_section(without.to_str()).is_ok());
         assert!(refuse_docserver_section(None).is_ok());
     }

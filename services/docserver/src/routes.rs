@@ -215,7 +215,11 @@ mod tests {
                 r.oneshot(req).await.unwrap().status()
             }
         };
-        assert_eq!(get("::ffff:172.18.3.4").await, StatusCode::UNAUTHORIZED, "allowed: on to the token check");
+        assert_eq!(
+            get("::ffff:172.18.3.4").await,
+            StatusCode::UNAUTHORIZED,
+            "allowed: on to the token check"
+        );
         assert_eq!(get("::ffff:8.8.8.8").await, StatusCode::FORBIDDEN);
         assert_eq!(get("::1").await, StatusCode::FORBIDDEN);
     }

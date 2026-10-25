@@ -334,14 +334,20 @@ pub fn spawn_internal(app: &Arc<App>, ds: &Arc<Docserver>, l: tokio::net::TcpLis
 
 /// The docserver's secrets must differ from the converter's own `secret_file` (compared as the config reads it: trailing white space
 /// trimmed): one leaked key must not open both token systems. Names the key, never a value.
-pub fn check_secrets_distinct(s: &convert_api::config::Settings, ds: &Docserver) -> Result<(), String> {
+pub fn check_secrets_distinct(
+    s: &convert_api::config::Settings,
+    ds: &Docserver,
+) -> Result<(), String> {
     let Some(path) = &s.secret_file else {
         return Ok(());
     };
     let own = std::fs::read(path).map_err(|e| format!("cannot read secret_file: {e}"))?;
     let own = own.trim_ascii_end();
     if ds.server_secret == own {
-        return Err("docserver: server_secret_file holds the same secret as the converter's secret_file".into());
+        return Err(
+            "docserver: server_secret_file holds the same secret as the converter's secret_file"
+                .into(),
+        );
     }
     if let Some(p) = ds.providers.iter().find(|p| p.secret == own) {
         return Err(format!(
@@ -401,7 +407,11 @@ mod tests {
             std::fs::write(d.join(f), v).unwrap();
             d.join(f).to_string_lossy().replace('\\', "/")
         };
-        let (conv, server, prov) = (w("conv", b'c', true), w("server", b's', false), w("prov", b'p', false));
+        let (conv, server, prov) = (
+            w("conv", b'c', true),
+            w("server", b's', false),
+            w("prov", b'p', false),
+        );
         let ds = |server: &str, prov: &str| {
             let t: toml::Table = format!(
                 "server_secret_file = \"{server}\"
@@ -426,9 +436,15 @@ frame_origins = [\"https://app.test\"]
         // the same key, with and without the trailing newline the config trims
         let same = w("same", b'c', false);
         let e = check_secrets_distinct(&s, &ds(&same, &prov)).unwrap_err();
-        assert!(e.contains("server_secret_file") && !e.contains("cccc"), "{e}");
+        assert!(
+            e.contains("server_secret_file") && !e.contains("cccc"),
+            "{e}"
+        );
         let e = check_secrets_distinct(&s, &ds(&server, &same)).unwrap_err();
         assert!(e.contains("provider \"one\""), "{e}");
-        assert!(check_secrets_distinct(&convert_api::config::Settings::default(), &ds(&same, &prov)).is_ok());
+        assert!(
+            check_secrets_distinct(&convert_api::config::Settings::default(), &ds(&same, &prov))
+                .is_ok()
+        );
     }
 }

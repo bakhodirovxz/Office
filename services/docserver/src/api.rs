@@ -89,7 +89,11 @@ fn authorize(
 /// the signed payload of the token is used, and `origin` must be a frame origin of the provider that signed it (403 otherwise).
 async fn create(State(ds): Ds, body: Bytes) -> Res {
     let v: Value = serde_json::from_slice(&body).map_err(|_| {
-        ApiError::new(StatusCode::BAD_REQUEST, "bad_request", "the body must be JSON")
+        ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "bad_request",
+            "the body must be JSON",
+        )
     })?;
     let tok = v
         .pointer("/config/token")
@@ -97,7 +101,11 @@ async fn create(State(ds): Ds, body: Bytes) -> Res {
         .filter(|t| t.len() <= 16384)
         .ok_or_else(unauthorized)?
         .to_string();
-    let origin = v.get("origin").and_then(Value::as_str).unwrap_or("").to_string();
+    let origin = v
+        .get("origin")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
     let t = now();
     let (rec, token) = blk(move || {
         let rec = ds.create_session(&tok, &origin, t)?;
@@ -105,8 +113,10 @@ async fn create(State(ds): Ds, body: Bytes) -> Res {
         Ok::<_, SessErr>((rec, token))
     })
     .await??;
-    json_ok(json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
-                   "perms": rec.perms, "title": rec.title, "expires": rec.expires}))
+    json_ok(
+        json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
+                   "perms": rec.perms, "title": rec.title, "expires": rec.expires}),
+    )
 }
 
 async fn renew(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
@@ -215,7 +225,7 @@ impl Docserver {
             )
             .route("/ds/session/{sid}/renew", post(renew))
             .route("/ds/session/{sid}/document", get(document))
-            .route("/ds/session/{sid}/save", post(save).layer(cap.clone()))
+            .route("/ds/session/{sid}/save", post(save).layer(cap))
             .route("/ds/session/{sid}/autosave", post(autosave).layer(cap))
             .route("/ds/session/{sid}/close", post(close))
             .with_state(self.clone())

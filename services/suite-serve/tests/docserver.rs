@@ -88,7 +88,12 @@ async fn send(h: &H, method: &str, uri: &str) -> (StatusCode, HeaderMap) {
     send_with(h, method, uri, &[]).await
 }
 
-async fn send_with(h: &H, method: &str, uri: &str, extra: &[(&str, &str)]) -> (StatusCode, HeaderMap) {
+async fn send_with(
+    h: &H,
+    method: &str,
+    uri: &str,
+    extra: &[(&str, &str)],
+) -> (StatusCode, HeaderMap) {
     let mut b = Request::builder()
         .method(method)
         .uri(uri)
@@ -210,7 +215,15 @@ async fn api_js_is_a_plain_script_load() {
     // from another site is refused by the converter's origin guard. api.js must stay a classic script, never `type=module` or CORS.
     let h = harness("origin", true);
     let (st, _) = send(&h, "GET", "/ds/api.js").await;
-    assert_eq!(st, StatusCode::NOT_IMPLEMENTED, "no Origin reaches the route");
+    assert_eq!(
+        st,
+        StatusCode::NOT_IMPLEMENTED,
+        "no Origin reaches the route"
+    );
     let (st, _) = send_with(&h, "GET", "/ds/api.js", &[("origin", "https://app.test")]).await;
-    assert_eq!(st, StatusCode::FORBIDDEN, "Origin https://app.test is not our origin");
+    assert_eq!(
+        st,
+        StatusCode::FORBIDDEN,
+        "Origin https://app.test is not our origin"
+    );
 }
