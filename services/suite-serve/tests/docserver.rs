@@ -85,12 +85,18 @@ frame_origins = ["https://app.test", "http://localhost:3000"]
 }
 
 async fn send(h: &H, method: &str, uri: &str) -> (StatusCode, HeaderMap) {
-    let mut r = Request::builder()
+    send_with(h, method, uri, &[]).await
+}
+
+async fn send_with(h: &H, method: &str, uri: &str, extra: &[(&str, &str)]) -> (StatusCode, HeaderMap) {
+    let mut b = Request::builder()
         .method(method)
         .uri(uri)
-        .header("host", "127.0.0.1:8787")
-        .body(Body::empty())
-        .unwrap();
+        .header("host", "127.0.0.1:8787");
+    for (k, v) in extra {
+        b = b.header(*k, *v);
+    }
+    let mut r = b.body(Body::empty()).unwrap();
     r.extensions_mut()
         .insert(ConnectInfo("127.0.0.1:5555".parse::<SocketAddr>().unwrap()));
     let res = h.router.clone().oneshot(r).await.unwrap();
@@ -133,7 +139,15 @@ async fn framing_and_corp_rules_with_the_docserver_on() {
     let h = harness("on", true);
     for (m, uri) in DS_ROUTES {
         let (st, hd) = send(&h, m, uri).await;
-        assert_eq!(st, StatusCode::NOT_IMPLEMENTED, "{uri}");
+        // api.js and the wrapper page are stubs until WP5; the session routes check their token (WP3)
+        let want = match uri {
+            "/ds/session" => StatusCode::BAD_REQUEST,
+            u if u.starts_with("/ds/session/") => StatusCode::UNAUTHORIZED,
+            _ => StatusCode::NOT_IMPLEMENTED,
+        };
+        assert_eq!(st, want, "{uri}");
+        // an error is never cached, api.js included
+        assert_eq!(hv(&hd, "cache-control"), "no-store", "{uri}");
         // always, on every route
         assert_eq!(hv(&hd, "x-content-type-options"), "nosniff", "{uri}");
         assert_eq!(
@@ -188,4 +202,15 @@ async fn framing_and_corp_rules_with_the_docserver_on() {
             "{uri}"
         );
     }
+}
+
+#[tokio::test]
+async fn api_js_is_a_plain_script_load() {
+    // WP5 note: `<script src>` sends no Origin header, so api.js loads; a request carrying one (fetch, a module script, a form)
+    // from another site is refused by the converter's origin guard. api.js must stay a classic script, never `type=module` or CORS.
+    let h = harness("origin", true);
+    let (st, _) = send(&h, "GET", "/ds/api.js").await;
+    assert_eq!(st, StatusCode::NOT_IMPLEMENTED, "no Origin reaches the route");
+    let (st, _) = send_with(&h, "GET", "/ds/api.js", &[("origin", "https://app.test")]).await;
+    assert_eq!(st, StatusCode::FORBIDDEN, "Origin https://app.test is not our origin");
 }

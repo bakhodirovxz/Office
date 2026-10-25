@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 async fn stub() -> ApiError {
     ApiError::new(
-        StatusCode::UNAUTHORIZED,
+        StatusCode::NOT_IMPLEMENTED,
         "not_implemented",
         "this route is not available in this build yet",
     )
@@ -42,15 +42,17 @@ impl Docserver {
             .route("/ds/api.js", get(stub))
             .route("/web-apps/apps/api/documents/api.js", get(stub))
             .layer(middleware::map_response(|mut r: Response| async move {
-                let h = r.headers_mut();
-                h.insert(
+                r.headers_mut().insert(
                     "cross-origin-resource-policy",
                     HeaderValue::from_static("cross-origin"),
                 );
-                h.insert(
-                    header::CACHE_CONTROL,
-                    HeaderValue::from_static("public, max-age=300"),
-                );
+                // only a good answer is cached; an error keeps the baseline no-store
+                if matches!(r.status(), StatusCode::OK | StatusCode::NOT_MODIFIED) {
+                    r.headers_mut().insert(
+                        header::CACHE_CONTROL,
+                        HeaderValue::from_static("public, max-age=300"),
+                    );
+                }
                 r
             }));
         let frame = Router::new()
