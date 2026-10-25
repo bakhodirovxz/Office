@@ -16,7 +16,7 @@
   } catch (e) { /* no host origin: nothing will be accepted */ }
   if (!HOST || window.parent === window) return;
 
-  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
+  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, readOnly: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
   status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:#555';
   document.body.style.cssText = 'margin:0;height:100vh;overflow:hidden';
@@ -72,7 +72,7 @@
         try {
           var bytes = await getDocument();
           var ext = '.' + S.fileType;
-          toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes }, [bytes]);
+          toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly }, [bytes]);
         } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
         break;
       case 'opened': status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); break;
@@ -83,16 +83,20 @@
         break;
       case 'failed': fail(-1, String(d.error)); break;
       case 'save':
-        if (!(d.bytes instanceof ArrayBuffer)) return;
+        // every save is answered with exactly one `saved`, in order (the editor keeps the document dirty until then)
+        var ok = false;
         try {
+          if (!(d.bytes instanceof ArrayBuffer)) throw new Error('no bytes');
           var r = await (await api('/save', { method: 'POST', body: d.bytes })).json();
           // saved means the host acknowledged it: "failed" and "unknown" (no answer in time) are not, and the document stays dirty
-          if (r.callback === 'ok' && !r.dirty) emit('onSaved', r);
+          ok = r.callback === 'ok' && !r.dirty;
+          if (ok) emit('onSaved', r);
           else {
             emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
             emit('onDocumentStateChange', true);
           }
         } catch (e) { fail(codeOf(e), 'the document could not be saved'); }
+        toEditor('saved', { ok: ok });
         break;
       case 'autosave':
         if (!(d.bytes instanceof ArrayBuffer)) return;
@@ -128,7 +132,7 @@
       if (!r.ok) throw await refusal(r);
       s = await r.json();
     } catch (e) { return fail(codeOf(e), (e.code === 'bad_config' ? 'the configuration was refused' : 'the session was refused') + ' (' + e.message + ')'); }
-    S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
+    S.readOnly = !(s.perms && s.perms.edit); S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
     renewSoon(s.expires);
     var app = apps.find(function (a) { return a.route === '/' + s.editor + '/'; });
     if (!app) return fail(-1, 'no editor for this document type');

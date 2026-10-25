@@ -232,7 +232,8 @@ test('S23: the host refuses the callback -> the page hears "not saved" and the d
     expect(record(sdir).versions.map((v: any) => v.n)).toEqual([1, 2]);
     const hrm1 = await hrmState();
     expect(hrm1.received.length).toBe(hrm0.received.length);
-    expect(hrm1.rejected.length).toBe(hrm0.rejected.length + 1);
+    // the refused save (6) and, since the failed save marks the document unsaved (`saved {ok:false}`), the first-change callback (1)
+    expect(hrm1.rejected.length).toBe(hrm0.rejected.length + 2);
   } finally {
     await fetch(`http://127.0.0.1:${hrmPort}/__test/callback-secret`, { method: 'POST', body: '' });
   }
@@ -291,5 +292,31 @@ test('a tampered config token ends in onError -20 and no editor', async () => {
   expect(await page.evaluate(() => (window as any).__error)).toMatchObject({ errorCode: -20 });
   expect(page.frames().some((f) => f.url().includes('/docs/'))).toBe(false);
   expect(sessions().length).toBe(0);
+  await ctx.close();
+});
+
+// WP7: the view row. The host sends mode=view (no callbackUrl, edit:false); the wrapper opens the editor read-only, so typing is refused
+// and neither a save nor an autosave nor a callback leaves the page. (The server refuses them too: auth.rs, 403.)
+test('WP7 view session: read-only editor, typing refused, nothing is sent', async () => {
+  const { ctx, page, problems } = await open();
+  const posts: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/ds/session/')) posts.push(new URL(r.url()).pathname.split('/').pop()!); });
+  await page.goto(`${HOST}/host?kind=files&id=1&mode=view`);
+  await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+  const hrm0 = await hrmState();
+  const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+  await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+  await page.keyboard.type('xyz');
+  await page.keyboard.press('Control+s');
+  await page.evaluate(() => (window as any).__editor.requestSave());
+  await page.waitForTimeout(2000);
+  expect(await page.evaluate(() => (window as any).__dirty)).not.toBe(true);
+  expect(posts.filter((p) => p !== 'close' && p !== 'renew')).toEqual([]);
+  const [sdir] = sessions();
+  const rec = record(sdir);
+  expect([rec.mode, rec.perms.edit]).toEqual(['view', false]);
+  expect(rec.versions.map((v: any) => v.n)).toEqual([1]);
+  expect((await hrmState()).received.length).toBe(hrm0.received.length);
+  expect(problems).toEqual([]);
   await ctx.close();
 });
