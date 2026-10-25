@@ -16,7 +16,7 @@ test('open, edit, save, close, reopen, download', async () => {
       const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
       const problems: string[] = [];
       page.on('pageerror', (e) => problems.push(e.message));
-      await page.goto(`${HOST}/host?kind=files&id=1`);
+      await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);
       await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
       expect(await page.locator('body').getAttribute('data-state'), await page.locator('#detail').textContent() ?? '').toBe('ready');
       return { page, problems };
@@ -47,6 +47,22 @@ test('open, edit, save, close, reopen, download', async () => {
     const bytes = Buffer.from(await (await fetch(url)).arrayBuffer());
     expect(bytes.subarray(0, 4).toString('latin1')).toBe('PK\x03\x04');
     expect(sha(bytes)).toBe(s1.objects[key]);
+
+    // WP12: one more save in the reopened session, then History > Compare draws a real docs diff made by docs-diff in the image (not the 501)
+    const ed2 = again.page.frames().find((f) => f.url().startsWith('https://127.0.0.1:18443/docs/'))!;
+    await ed2.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+    await again.page.keyboard.type('y');
+    await expect.poll(() => again.page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+    await again.page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => again.page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('saved');
+    const w = again.page.frames().find((f) => f.url().includes('/ds/editor'))!;
+    await w.getByRole('button', { name: 'History', exact: true }).click();
+    await expect.poll(() => w.locator('#hist-vers > li').count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+    await w.getByRole('button', { name: 'Compare', exact: true }).click();
+    await expect(w.locator('#hist-cmp-sec')).toBeVisible({ timeout: 60_000 });
+    expect(await w.locator('#hist-msg').textContent()).not.toContain('not installed');
+    await expect(w.locator('#hist-cmp > li').first()).toBeVisible();
+    await expect(w.locator('#hist-cmp ins, #hist-cmp del').first()).toBeVisible();
     expect(problems.concat(again.problems)).toEqual([]);
     console.log(`download ${bytes.length} bytes sha256 ${sha(bytes).slice(0, 12)} (was ${s0.objects[key].slice(0, 12)})`);
   } finally {

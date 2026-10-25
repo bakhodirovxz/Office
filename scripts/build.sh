@@ -68,7 +68,8 @@ run() {
   case "$what" in
     desktop) cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-desktop" ;;
     cli)     if [ "$d" = services ]; then cargo build --locked -j 4 $mt ${release:+--release} --manifest-path services/Cargo.toml -p convert -p convert-api -p suite-desktop -p suite-serve
-             else cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-cli"; fi ;;
+             else dp=""; case "$d" in docs|sheets) dp="-p $d-diff";; esac   # WP12 compare tools, shipped next to the apps
+                  cargo build --locked -j 4 $mt ${release:+--release} --manifest-path "$mf" -p "$d-cli" $dp; fi ;;
     web)     # sccache cannot spawn rustc for web-sys (command line too long on Windows), so web builds run without it
              (unset RUSTC_WRAPPER; cd "domains/$d/apps/$d-web" && TRUNK_BUILD_DIST="$OFFICE_TARGET/dist/$d-web" trunk build ${release:+--release} --locked) ;;
     *) echo "unknown target $what"; return 2 ;;

@@ -167,7 +167,7 @@ foreach ($e in 'docx', 'xlsx', 'pptx', 'pdf') { if ("$(UC $e)|$(Dflt $e)" -ne $u
 $menu = Get-ChildItem "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\$productName" -Filter *.lnk -ErrorAction SilentlyContinue
 if ($menu.Count -ne 5) { Write-Host "  Start menu shortcuts: $($menu.Count) (want 5)"; $regOk = $false }
 Res $regOk "REGISTRY $nKeys extension registrations, 4 ProgIDs, 4 Capabilities, 5 shortcuts, no default changed,"
-foreach ($f in 'dist\shell\index.html', 'dist\docs-web', 'dictionaries\en_US.dic', 'fonts\NotoSans-Regular-uz.ttf', 'NOTICE', 'brand.toml', 'convert\docs-cli.exe', 'licenses\logo-LICENSE.txt') { if (-not (Test-Path (Join-Path $instDir $f))) { Write-Host "  file missing: $f"; $fails++ } }
+foreach ($f in 'dist\shell\index.html', 'dist\docs-web', 'dictionaries\en_US.dic', 'fonts\NotoSans-Regular-uz.ttf', 'NOTICE', 'brand.toml', 'convert\docs-cli.exe', 'docs-diff.exe', 'sheets-diff.exe', 'licenses\logo-LICENSE.txt') { if (-not (Test-Path (Join-Path $instDir $f))) { Write-Host "  file missing: $f"; $fails++ } }
 
 # ---- Open with (the shell's own enumeration), and the real dialogs for the screenshots
 Write-Host '== open with'

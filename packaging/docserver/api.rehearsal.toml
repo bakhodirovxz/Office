@@ -12,6 +12,7 @@ store_dir = "/data/store"
 server_secret_file = "/run/secrets/server-secret"
 audit_key_file = "/run/secrets/audit-key"
 data_dir = "/data/docserver"
+diff_bin_dir = "/app/diff"                    # docs-diff, sheets-diff (History > Compare)
 internal_listen = "172.29.50.10:8780"          # this container's address on backend_net; never published
 internal_allow = ["172.29.50.20/32"]           # the harness only
 

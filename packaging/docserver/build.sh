@@ -19,6 +19,17 @@ docker run --rm -v "$REPO:/repo:ro" -v "$T/svc-vendor:/vendor:ro" -v "$T/svc-ven
   -v "$T/linux:/target" -e CARGO_TARGET_DIR=/target -w /repo/services "$RUST_IMAGE" \
   cargo build --release --locked --offline -p suite-serve -p fake-hrm
 
+# WP12 compare tools: docs-diff and sheets-diff live in the docs and sheets domain workspaces (own Cargo.lock each), vendored apart
+for d in docs sheets; do
+  [ -d "$T/$d-vendor" ] || (cd "$REPO/domains/$d" && cargo vendor --locked "$T/$d-vendor" > "$T/$d-vendor.toml")
+  sed "s|^directory = .*|directory = \"/vendor\"|" "$T/$d-vendor.toml" > "$T/$d-vendor-ctr.toml"; printf '[net]
+offline = true
+' >> "$T/$d-vendor-ctr.toml"
+  mkdir -p "$T/linux-$d"
+  docker run --rm -v "$REPO:/repo:ro" -v "$T/$d-vendor:/vendor:ro" -v "$T/$d-vendor-ctr.toml:/usr/local/cargo/config.toml:ro"     -v "$T/linux-$d:/target" -e CARGO_TARGET_DIR=/target -w "/repo/domains/$d" "$RUST_IMAGE"     cargo build --release --locked --offline -p "$d-diff"
+done
+mkdir -p "$CTX/diff"; cp "$T/linux-docs/release/docs-diff" "$T/linux-sheets/release/sheets-diff" "$CTX/diff/"
+
 cp "$T/linux/release/hoshiya-serve" "$T/linux/release/fake-hrm" "$CTX/"
 rm -rf "$CTX/dist" && mkdir -p "$CTX/dist" && cp -r "$DOCS_DIST" "$CTX/dist/docs-web" && cp -r "$SHELL_DIST" "$CTX/dist/shell"
 cp "$REPO/brand/brand.toml" "$CTX/brand.toml"

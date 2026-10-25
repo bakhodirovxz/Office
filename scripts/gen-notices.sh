@@ -17,6 +17,7 @@ run() { # <label> <manifest>
   args+=("$1=$tmp/$1.json")
 }
 for d in docs sheets slides pdf; do run "$d-desktop" "domains/$d/apps/$d-desktop/Cargo.toml"; run "$d-cli" "domains/$d/apps/$d-cli/Cargo.toml"; done
+for d in docs sheets; do run "$d-diff" "domains/$d/crates/$d-diff/Cargo.toml"; done
 for p in suite-desktop suite-serve convert convert-api; do run "$p" "services/$p/Cargo.toml"; done
 out=packaging/windows/THIRD-PARTY-NOTICES.txt
 if [ "${1:-}" = "--check" ]; then

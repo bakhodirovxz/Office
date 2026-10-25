@@ -394,10 +394,15 @@ a few seconds even when a tenth of the cells differ. The files are the existing 
   enforcement point. The rows and the diff renderers are `web/shell/history-ui.js`, shared with the desktop panel and
   loaded by the wrapper from `/shell/` together with `shell.css` and `history.css` (same origin, CSP unchanged). Esc
   closes the panel and the focus returns to the button. A restore reloads the editor with the restored version, so the
-  editor's next save cannot overwrite it. Tests: `ci/web-smoke/docserver.spec.ts` "History panel". The Docker image
-  does not carry the two binaries yet (Linux builds of both are needed).
-- **Packaging:** the MSI does not ship `docs-diff.exe`/`sheets-diff.exe` yet; the desktop Compare view says "the
-  compare tool … is not installed" until it does (`packaging/windows`, next MSI).
+  editor's next save cannot overwrite it. Tests: `ci/web-smoke/docserver.spec.ts` "History panel".
+- **Packaging: done (Phase 5).** MSI: `scripts/build.sh docs|sheets cli` now also builds `-p docs-diff` / `-p sheets-diff`
+  (MSVC release); `scripts/build-msi.ps1` stages them as `docs-diff.exe` / `sheets-diff.exe` next to the app exes (the
+  `<bin_dir>` that `history_compare` uses), `gen-notices.sh` adds both to the cargo-about run (`THIRD-PARTY-NOTICES.txt`
+  regenerated), `msi-test.ps1` checks the two files after install. Docker image: `packaging/docserver/build.sh` vendors
+  the docs and sheets workspaces apart (`cargo vendor --locked`, built offline in `rust:1-slim-bookworm`), puts
+  `docs-diff` and `sheets-diff` (Linux, 3.5 and 2.5 MB) in `/app/diff`, and `api.rehearsal.toml` / `deploy.md` set
+  `diff_bin_dir = "/app/diff"`. `cargo deny --target x86_64-unknown-linux-gnu` on both domain workspaces: ok. The compose
+  rehearsal (3 runs) ends with a History > Compare that draws a real docs diff (`ci/web-smoke/docserver-compose.spec.ts`).
 - Docs: headers, footers, notes, comments and text boxes are not compared (body and tables only); a move that is also
   edited shows as a deletion and an insertion; a changed picture with the same place is not seen (U+FFFC on both
   sides); a merged or split table cell shows as paragraph changes.

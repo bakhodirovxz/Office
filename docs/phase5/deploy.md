@@ -6,7 +6,7 @@ needs the owner's OK (PLAN section 7, WP17).
 
 ## Image
 
-- `hoshiya-docserver:rehearsal`: `debian:bookworm-slim` + one 12 MB static-ish binary + `dist/docs-web` + `dist/shell`. Runs as uid 10002
+- `hoshiya-docserver:rehearsal`: `debian:bookworm-slim` + one 12 MB static-ish binary + `docs-diff` and `sheets-diff` in `/app/diff` (History > Compare) + `dist/docs-web` + `dist/shell`. Runs as uid 10002
   (`USER`), with `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`; writable: the `/data` volume and a `/tmp` tmpfs only.
   `HEALTHCHECK` = `GET /healthz` over the container's own loopback (the one request `tls = "upstream"` answers without the proxy).
 - Build offline-in-container (the dev PC's proxy breaks TLS inside containers): `packaging/docserver/build.sh` runs `cargo vendor --locked`
@@ -55,6 +55,7 @@ store_dir = "/data/store"
 server_secret_file = "/run/secrets/server-secret"  # >= 32 bytes, different from every provider secret
 audit_key_file = "/run/secrets/audit-key"          # kept outside the data volume
 data_dir = "/data/docserver"
+diff_bin_dir = "/app/diff"                         # docs-diff and sheets-diff (History > Compare); unset = 501
 internal_listen = "<this container's IP on backend_net>:8780"   # never publish with -p
 internal_allow = ["<the HR backend container IP>/32"]          # not a /16 that contains the bridge gateway
 

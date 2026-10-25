@@ -43,6 +43,8 @@
     <Component Id="C_pdf"><File Id="F_pdf" Source="$(var.Stage)\hoshiya-pdf.exe" KeyPath="yes">
       <Shortcut Id="S_pdf" Directory="AppMenuDir" Name="Hoshiya PDF" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Pdf" /></Shortcut>
     </File></Component>
+    <Component Id="C_docs_diff"><File Id="F_docs_diff" Source="$(var.Stage)\docs-diff.exe" KeyPath="yes" /></Component>
+    <Component Id="C_sheets_diff"><File Id="F_sheets_diff" Source="$(var.Stage)\sheets-diff.exe" KeyPath="yes" /></Component>
     <Component Id="C_brand"><File Id="F_brand" Source="$(var.Stage)\brand.toml" KeyPath="yes" /></Component>
     <Component Id="C_vcruntime140_dll"><File Id="F_vcruntime140_dll" Source="$(var.Stage)\vcruntime140.dll" KeyPath="yes" /></Component>
     <Component Id="C_vcruntime140_1_dll"><File Id="F_vcruntime140_1_dll" Source="$(var.Stage)\vcruntime140_1.dll" KeyPath="yes" /></Component>

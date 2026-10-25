@@ -55,6 +55,7 @@ Copy-Item (Src "$svc\convert.exe") "$stage\convert\$convertBin.exe"
 foreach ($a in $apps) {
   Copy-Item (Src "$Target\msvc\$($a.k)\$msvc\$($a.k).exe") "$stage\$($a.bin).exe"
   Copy-Item (Src "$Target\msvc\$($a.k)\$msvc\$($a.k)-cli.exe") "$stage\convert\$($a.k)-cli.exe"   # services/convert looks for <domain>-cli.exe next to itself
+  if ($a.k -in 'docs', 'sheets') { Copy-Item (Src "$Target\msvc\$($a.k)\$msvc\$($a.k)-diff.exe") "$stage\$($a.k)-diff.exe" }   # history_compare runs <bin_dir>\<app>-diff.exe (WP12)
   Copy-Item (Src "$Target\overlay\$($a.k)\icon-document.ico") "$stage\icons\$($a.bin)-document.ico"
 }
 # The MSVC exes import VCRUNTIME140*.dll (dumpbin /dependents); a clean Windows 10 has no VC++ redistributable, so ship the two DLLs app-local
@@ -124,6 +125,7 @@ foreach ($a in $apps) {
   L "      <Shortcut Id=`"S_$($a.k)`" Directory=`"AppMenuDir`" Name=`"$(X $a.name)`" WorkingDirectory=`"INSTALLFOLDER`" Advertise=`"no`"><ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$(X $a.aumid)`" /></Shortcut>"
   L '    </File></Component>'
 }
+foreach ($k in 'docs', 'sheets') { L "    <Component Id=`"C_$k`_diff`"><File Id=`"F_$k`_diff`" Source=`"`$(var.Stage)\$k-diff.exe`" KeyPath=`"yes`" /></Component>" }
 L '    <Component Id="C_brand"><File Id="F_brand" Source="$(var.Stage)\brand.toml" KeyPath="yes" /></Component>'
 foreach ($f in 'vcruntime140.dll', 'vcruntime140_1.dll') { L "    <Component Id=`"C_$($f -replace '\W','_')`"><File Id=`"F_$($f -replace '\W','_')`" Source=`"`$(var.Stage)\$f`" KeyPath=`"yes`" /></Component>" }
 foreach ($f in 'NOTICE', 'LICENSE-MIT', 'LICENSE-APACHE') { L "    <Component Id=`"C_$($f -replace '\W','_')`"><File Id=`"F_$($f -replace '\W','_')`" Source=`"`$(var.Stage)\$f`" KeyPath=`"yes`" /></Component>" }

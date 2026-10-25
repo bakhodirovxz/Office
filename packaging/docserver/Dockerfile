@@ -5,6 +5,7 @@ FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2
 RUN useradd --system --uid 10002 --no-create-home --shell /usr/sbin/nologin hoshiya \
  && mkdir /data /app && chown hoshiya /data
 COPY --chmod=0755 hoshiya-serve /app/hoshiya-serve
+COPY --chmod=0755 diff /app/diff
 COPY dist /app/dist
 COPY brand.toml /app/brand/brand.toml
 USER 10002
