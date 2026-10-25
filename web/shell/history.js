@@ -8,13 +8,10 @@
   const desktop = !!window.ipc;
   const S = { i18n: null, docs: [], path: '', vers: [], was: 'home' };
   const t = (k, p = {}) => String(((S.i18n || {})[document.documentElement.lang] || {})[k] ?? ((S.i18n || {}).en || {})[k] ?? k).replace(/\{(\w+)\}/g, (m, n) => p[n] ?? m);
-  const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+  const { el, aria, size, when } = HistUI;
   const plain = (p) => String(p).replace(/^\\\\\?\\/, '');          // the store keeps \\?\C:\..., the user knows C:\...
   const same = (a, b) => plain(a).toLowerCase() === plain(b).toLowerCase();
   const base = (p) => plain(p).split(/[\\/]/).pop();
-  const size = (n) => (n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(1) + ' MB');
-  const when = (s) => new Date(s * 1000).toLocaleString(document.documentElement.lang);
-  const aria = (e, attrs) => { for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
   const say = (msg, bad) => { const e = $('hist-msg'); e.textContent = msg; e.className = bad ? 'error' : 'muted'; e.setAttribute('role', bad ? 'alert' : 'status'); };
 
   // One request to the host; its answer is the 'suite-host' event of that type. null (and a message) on refusal or silence.
@@ -28,12 +25,7 @@
     addEventListener('suite-host', done);
     window.ipc.postMessage(JSON.stringify(msg));
   });
-  // The store keeps these two messages in English (suite-core history.rs); they are shown in the page language, the stored data is unchanged.
-  const note = (v) => {
-    const m = /^Restored from version (\d+)$/.exec(v.message || '');
-    if (m) return t('hist.restoredtag', { v: m[1] });
-    return v.message === 'Before restore' ? t('hist.beforerestore') : v.message || t('hist.restoredtag', { v: v.restored_from });
-  };
+  const ui = HistUI.make(t);
   const fails = (d, type) => (d.type !== type || d.ok === false ? (say(String(d.error || t('hist.silent')), true), true) : false);
 
   function renderDocs() {
@@ -51,77 +43,21 @@
     const c = $('hist-chain');
     c.textContent = verified ? t('hist.chain.ok') : t('hist.chain.bad', { problem: problem || '' });
     c.className = verified ? 'ok' : 'error';
-    const newest = Math.max(...S.vers.map((v) => v.v));
-    // a repeated button text gets the version it belongs to, so a screen reader list tells the buttons apart
-    const btn = (key, v, fn) => aria(el('button', { type: 'button', className: 'btn ghost', onclick: fn }, t(key)), { 'aria-label': `${t(key)}: ${t('hist.version', { v: v.v })}` });
-    $('hist-vers').replaceChildren(...[...S.vers].reverse().map((v) => el('li', {},
-      el('div', { className: 'vinfo' },
-        el('strong', {}, t('hist.version', { v: v.v })),
-        ...(v.v === newest ? [' ', el('span', { className: 'tag' }, t('hist.latest'))] : []),
-        ...(v.name ? [' ', el('span', { className: 'tag name' }, v.name)] : []),
-        el('div', { className: 'muted' }, t('hist.meta', { time: when(v.time), author: v.author, size: size(v.size), hash: String(v.sha256).slice(0, 8) })),
-        ...(v.message || v.restored_from ? [el('div', { className: 'muted' }, note(v))] : [])),
-      el('div', { className: 'acts' },
-        btn('hist.view', v, () => view(v)), btn('hist.restore', v, () => restore(v)),
-        btn('hist.copy', v, () => copy(v)), btn('hist.name', v, () => rename(v))))));
-    // Compare any two: newest-first lists, the one before the latest against the latest by default (kept across redraws)
-    const order = [...S.vers].sort((x, y) => y.v - x.v);
-    $('hist-cmp-bar').hidden = order.length < 2;
-    for (const [id, dflt] of [['hist-cmp-a', order[1]], ['hist-cmp-b', order[0]]]) {
-      const sel = $(id);
-      const keep = order.some((v) => String(v.v) === sel.value) ? sel.value : dflt && String(dflt.v);
-      sel.replaceChildren(...order.map((v) => el('option', { value: String(v.v) }, t('hist.version', { v: v.v }) + (v.name ? ' \u00b7 ' + v.name : ''))));
-      if (keep) sel.value = keep;
-    }
+    $('hist-vers').replaceChildren(...ui.versionRows(S.vers, (v) => [
+      ui.vbtn('hist.view', v, () => view(v)), ui.vbtn('hist.restore', v, () => restore(v)),
+      ui.vbtn('hist.copy', v, () => copy(v)), ui.vbtn('hist.name', v, () => rename(v))]));
+    $('hist-cmp-bar').hidden = !ui.fillSelects($('hist-cmp-a'), $('hist-cmp-b'), S.vers);
   }
 
-  // ---- Compare (phase 5 WP12): the JSON of docs-diff / sheets-diff (docs/phase5/PLAN.md 6.1, 6.2), drawn as text nodes only ----
-  const MAX_ITEMS = 500;
-  const colNum = (s) => [...s].reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0);
-  const colName = (n) => { let s = ''; for (; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
-  // [[first, count], ...] as "4, 7\u20139" (rows numbered, columns lettered)
-  const runList = (runs, col) => runs.map(([f, n]) => {
-    if (n === 1) return String(f);
-    return col ? `${f}\u2013${colName(colNum(f) + n - 1)}` : `${f}\u2013${f + n - 1}`;
-  }).join(', ');
-  const tag = (op, key) => el('span', { className: 'tag op-' + op }, t(key));
-  const by = (c) => (c.authors && c.authors.length ? [' ', el('span', { className: 'muted' }, t('hist.cmp.by', { who: c.authors.join(', ') }))] : []);
-  const text = (s) => (s ? s : t('hist.cmp.empty'));
-  const OPS = { insert: 'hist.cmp.ins', delete: 'hist.cmp.del', modify: 'hist.cmp.mod', move: 'hist.cmp.move', format: 'hist.cmp.fmt' };
-  const docItems = (diff) => (diff.changes || []).map((c) => {
-    const body = c.op === 'modify'
-      ? el('span', { className: 'diff' }, ...c.spans.map((s) => (s.ins != null ? el('ins', {}, s.ins) : s.del != null ? el('del', {}, s.del) : document.createTextNode(s.eq))))
-      : el('span', { className: c.op === 'delete' ? 'diff gone' : 'diff' }, text(c.text));
-    return el('li', {}, tag(c.op, OPS[c.op] || 'hist.cmp.mod'), ...(c.format && c.op !== 'format' ? [' ', tag('format', 'hist.cmp.fmt')] : []), ' ', body, ...by(c));
-  });
-  const cellText = (x) => (x == null ? '\u2014' : x.formula ? x.formula + (x.value ? ' = ' + x.value : '') : x.value);
-  const sheetItems = (diff) => (diff.sheets || []).map((s) => {
-    if (s.op === 'insert') return el('li', {}, tag('insert', 'hist.cmp.ins'), ' ', t('hist.cmp.sheet.ins', { name: s.name }));
-    if (s.op === 'delete') return el('li', {}, tag('delete', 'hist.cmp.del'), ' ', t('hist.cmp.sheet.del', { name: s.name }));
-    if (s.op === 'rename') return el('li', {}, tag('modify', 'hist.cmp.mod'), ' ', t('hist.cmp.sheet.ren', { from: s.from, name: s.name }));
-    const lines = [['rows', 'inserted', 'hist.cmp.rows.ins', false], ['rows', 'deleted', 'hist.cmp.rows.del', false],
-      ['cols', 'inserted', 'hist.cmp.cols.ins', true], ['cols', 'deleted', 'hist.cmp.cols.del', true]]
-      .filter(([k, w]) => s[k] && s[k][w] && s[k][w].length)
-      .map(([k, w, key, col]) => el('div', {}, t(key, { list: runList(s[k][w], col) })));
-    const cells = (s.cells || []).slice(0, MAX_ITEMS).map((c) => el('tr', {},
-      el('td', {}, c.a && c.b && c.a !== c.b ? `${c.a} \u2192 ${c.b}` : c.b || c.a || ''),
-      el('td', {}, cellText(c.old)), el('td', {}, cellText(c.new) + (c.format ? ' ' + t('hist.cmp.fmtflag') : ''))));
-    const more = (s.cells || []).length - cells.length + (s.truncated || 0);
-    return el('li', { className: 'sheet' }, el('strong', {}, t('hist.cmp.sheet', { name: s.name })), ...lines,
-      ...(cells.length ? [el('table', { className: 'cells' },
-        el('thead', {}, el('tr', {}, ...['hist.cmp.cell', 'hist.cmp.before', 'hist.cmp.after'].map((k) => aria(el('th', {}, t(k)), { scope: 'col' })))),
-        el('tbody', {}, ...cells))] : []),
-      ...(more > 0 ? [el('div', { className: 'muted' }, t('hist.cmp.more', { n: more }))] : []));
-  });
+  // ---- Compare (phase 5 WP12): the renderers are shared with the server wrapper (history-ui.js) ----
   function renderCompare() {
     const d = S.cmp;
     if (!d) return;
     $('hist-cmp-sec').hidden = false;
     $('h-cmp').textContent = t('hist.cmp.title', { a: d.a, b: d.b });
-    const items = d.app === 'sheets' ? sheetItems(d.diff) : docItems(d.diff);
+    const items = ui.compareItems(d);
     $('hist-cmp-none').hidden = items.length > 0;
-    $('hist-cmp').replaceChildren(...items.slice(0, MAX_ITEMS),
-      ...(items.length > MAX_ITEMS ? [el('li', { className: 'muted' }, t('hist.cmp.more', { n: items.length - MAX_ITEMS }))] : []));
+    $('hist-cmp').replaceChildren(...items);
   }
   async function compare() {
     const [a, b] = [+$('hist-cmp-a').value, +$('hist-cmp-b').value];

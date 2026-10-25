@@ -386,7 +386,6 @@ test('desktop mode: the History panel lists, views, restores after a confirm, co
   await expect(page.locator('#hist-title')).toHaveText(txt('ru', 'hist.title'));
   await expect(page.locator('#hist-docs li .open')).toHaveText('Hisobot.docx');
   await expect(page.locator('#hist-docs li .open')).toHaveAttribute('aria-current', 'true');
-  await expect(page.locator('#hist-body')).toContainText(txt('ru', 'hist.diff.note'));
   const rows = page.locator('#hist-vers li');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toContainText(txt('ru', 'hist.version').replace('{v}', '2')); // newest first

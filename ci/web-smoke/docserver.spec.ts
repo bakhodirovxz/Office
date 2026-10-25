@@ -35,6 +35,24 @@ const sessions = () => {
 };
 const record = (s: string) => JSON.parse(fs.readFileSync(path.join(s, 'session.json'), 'utf8'));
 
+// (Re)start the server on the same ports and data dir; `extra` lines go into [docserver] (e.g. diff_bin_dir) and are kept by later restarts.
+let extraDs: string[] = [], baseToml = '';
+async function startDs(extra: string[] = extraDs) {
+  extraDs = extra;
+  // [docserver] keys must come before the [[docserver.providers]] table
+  fs.writeFileSync(path.join(dir, 'api.toml'), baseToml.replace('[[docserver.providers]]', extra.join('\n') + '\n[[docserver.providers]]'));
+  const env = { ...process.env } as Record<string, string>;
+  for (const t of ['DOCS', 'SHEETS', 'SLIDES', 'PDF']) env[`CONVERT_${t}_CLI`] = 'unused';
+  ds = spawn(DS_BIN, ['--config', path.join(dir, 'api.toml'), '--dist', DIST, '--brand', path.join(ROOT, 'brand/brand.toml')], { env });
+  await new Promise<void>((ok, bad) => {
+    let out = '';
+    ds.stdout!.on('data', (d) => { out += d; if (/listening on https:/.test(out)) ok(); });
+    ds.stderr!.on('data', (d) => { out += d; dsLog += d; });
+    ds.on('exit', (c) => bad(new Error(`server exited early (${c}): ${out}`)));
+    setTimeout(() => bad(new Error('server did not start: ' + out)), 20000);
+  });
+}
+
 test.beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-spec-'));
   const ssl = (...a: string[]) => execFileSync(OPENSSL, a, { cwd: dir, stdio: 'pipe' });
@@ -63,24 +81,15 @@ test.beforeAll(async () => {
   fs.writeFileSync(path.join(dir, 'converter-secret'), crypto.randomBytes(48));
   fs.writeFileSync(path.join(dir, 'audit-key'), crypto.randomBytes(48).toString('hex'));
   const f = (n: string) => path.join(dir, n).replace(/\\/g, '/');
-  fs.writeFileSync(path.join(dir, 'api.toml'), [
+  baseToml = [
     `listen = "127.0.0.1:${dsPort}"`, 'auth = "jwt"', `secret_file = "${f('converter-secret')}"`, `tls_cert = "${f('server.pem')}"`, `tls_key = "${f('server.key')}"`, `public_url = "${DS}"`,
     'trusted_proxies = []', `work_dir = "${f('work')}"`, `store_dir = "${f('store')}"`,
     '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('data')}"`, `audit_key_file = "${f('audit-key')}"`, `internal_listen = "127.0.0.1:${intPort}"`, 'internal_allow = ["127.0.0.1"]',
     '[[docserver.providers]]', 'name = "fake"', 'issuer = "fake"', `secret_file = "${f('provider-secret')}"`,
     `fetch_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`,
     `callback_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`, `frame_origins = ["${HOST}"]`,
-  ].join('\n'));
-  const env = { ...process.env } as Record<string, string>;
-  for (const t of ['DOCS', 'SHEETS', 'SLIDES', 'PDF']) env[`CONVERT_${t}_CLI`] = 'unused';
-  ds = spawn(DS_BIN, ['--config', path.join(dir, 'api.toml'), '--dist', DIST, '--brand', path.join(ROOT, 'brand/brand.toml')], { env });
-  await new Promise<void>((ok, bad) => {
-    let out = '';
-    ds.stdout!.on('data', (d) => { out += d; if (/listening on https:/.test(out)) ok(); });
-    ds.stderr!.on('data', (d) => { out += d; dsLog += d; });
-    ds.on('exit', (c) => bad(new Error(`server exited early (${c}): ${out}`)));
-    setTimeout(() => bad(new Error('server did not start: ' + out)), 20000);
-  });
+  ].join('\n');
+  await startDs();
 
   // a page on a site that is NOT a frame origin of the provider, for the framing refusal (S13)
   stray = http.createServer((_, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<!doctype html><iframe id="w" src="${DS}/ds/editor#o=${encodeURIComponent(`http://127.0.0.1:${strayPort}`)}"></iframe>`));
@@ -362,3 +371,134 @@ for (const [label, query, blocked] of [['control (both true)', '', false], ['dow
     await ctx.close();
   });
 }
+
+// ---- the History panel of the wrapper (PLAN 6.4): the session token lives in the wrapper page only, so the panel is drawn there ----
+const FAKE_DIFF = process.env.FAKE_DIFF_BIN ?? exe('fake_diff');
+const wrapperOf = (page: Page) => page.frames().find((f) => f.url().startsWith(`${DS}/ds/editor`))!;
+// open an edit session on the fake backend's document and save twice, so the history holds two edited versions besides the opening one
+async function twoSaves(page: Page, query = '') {
+  await page.goto(`${HOST}/host?kind=files&id=1&lang=en${query}`);
+  await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+  const [sdir] = sessions();
+  const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+  for (const [i, ch] of ['x', 'y'].entries()) {
+    await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+    await page.keyboard.type(ch);
+    await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => record(sdir).versions.length, { timeout: 30_000 }).toBe(i + 2);
+  }
+  return wrapperOf(page);
+}
+
+test('History panel: list after two saves, name, restore, download, Esc; compare says 501 without the tools, draws a diff with them', async () => {
+  const { ctx, page, problems } = await open();
+  const w = await twoSaves(page);
+  const opener = w.getByRole('button', { name: 'History', exact: true });
+  await expect(opener).toHaveAttribute('aria-expanded', 'false');
+  await opener.click();
+  const panel = w.locator('#hist-panel');
+  await expect(panel).toBeVisible();
+  await expect(opener).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toHaveAttribute('role', 'dialog');
+  expect(await w.evaluate(() => document.activeElement?.id)).toBe('hist-h');
+  const rows = panel.locator('#hist-vers > li');
+  await expect.poll(() => rows.count()).toBeGreaterThanOrEqual(2);
+  const n = await rows.count();
+  await expect(rows.first()).toContainText(`Version ${n}`);
+  await expect(rows.first()).toContainText(/latest/i);
+  // every control of an edit + download session, each with the version in its label
+  for (const b of ['Save a copy', 'Restore', 'Name']) await expect(rows.first().getByRole('button', { name: `${b}: Version ${n}` })).toBeVisible();
+
+  // compare without the tool configured: the server's 501 text is shown, nothing is drawn
+  await panel.getByRole('button', { name: 'Compare', exact: true }).click();
+  await expect(panel.locator('#hist-msg')).toContainText('not installed');
+  await expect(panel.locator('#hist-msg')).toHaveAttribute('role', 'alert');
+  await expect(panel.locator('#hist-cmp-sec')).toBeHidden();
+  // the same version on both sides is refused before any request
+  await w.selectOption('#hist-cmp-a', String(n));
+  await panel.getByRole('button', { name: 'Compare', exact: true }).click();
+  await expect(panel.locator('#hist-msg')).toContainText('different');
+
+  // name: a dialog, then the tag shows in the row
+  await rows.first().getByRole('button', { name: `Name: Version ${n}` }).click();
+  await w.locator('#hist-name input').fill('Reviewed');
+  await w.locator('#hist-name').getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(rows.first().locator('.tag.name')).toHaveText('Reviewed');
+
+  // download: the bytes of that version, named after the document
+  const dl = page.waitForEvent('download');
+  await rows.last().getByRole('button', { name: /^Save a copy/ }).click();
+  const got = await dl;
+  expect(got.suggestedFilename()).toBe('01-split-runs-v1.docx');
+  expect(fs.readFileSync((await got.path())!).subarray(0, 2).toString('latin1')).toBe('PK');
+
+  // restore: confirmation first (cancel changes nothing), then a new version on top
+  await rows.last().getByRole('button', { name: /^Restore/ }).click();
+  await w.locator('#hist-restore').getByRole('button', { name: 'Cancel' }).click();
+  await expect(rows).toHaveCount(n);
+  await rows.last().getByRole('button', { name: /^Restore/ }).click();
+  await w.locator('#hist-restore').getByRole('button', { name: 'Restore', exact: true }).click();
+  await expect(panel.locator('#hist-msg')).toContainText('restored as new version');
+  await expect.poll(() => rows.count()).toBeGreaterThan(n);
+
+  // Esc closes the panel and puts the focus back on the button that opened it
+  await w.locator('#hist-vers button').first().focus();
+  await page.keyboard.press('Escape');
+  await expect(panel).toHaveCount(0);
+  await expect(opener).toHaveAttribute('aria-expanded', 'false');
+  expect(await w.evaluate(() => document.activeElement?.textContent)).toBe('History');
+  await ctx.close();
+
+  // the tools configured: a fresh session on a restarted server draws the diff
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin, { recursive: true });
+  fs.copyFileSync(FAKE_DIFF, path.join(bin, 'docs-diff' + (process.platform === 'win32' ? '.exe' : '')));
+  ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+  fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });   // so sessions()[0] is the new one
+  await startDs([`diff_bin_dir = "${bin.replace(/\\/g, '/')}"`]);
+  const again = await open();
+  const w2 = await twoSaves(again.page);
+  await w2.getByRole('button', { name: 'History', exact: true }).click();
+  await expect.poll(() => w2.locator('#hist-vers > li').count()).toBeGreaterThanOrEqual(2);
+  await w2.getByRole('button', { name: 'Compare', exact: true }).click();
+  const items = w2.locator('#hist-cmp > li');
+  await expect(items).toHaveCount(1);
+  await expect(items.first()).toContainText('fake-diff change');
+  await expect(items.first()).toContainText('Added');
+  expect(await w2.evaluate(() => document.activeElement?.id)).toBe('h-cmp');
+  await w2.getByRole('button', { name: 'Close the comparison' }).click();
+  await expect(w2.locator('#hist-cmp-sec')).toBeHidden();
+  // the only console noise: the browser's line for the 501 answered on purpose above
+  expect(problems.filter((p) => !/status of 501/.test(p))).toEqual([]);
+  expect(again.problems).toEqual([]);
+  await again.ctx.close();
+});
+
+test('History panel: download:false shows no download or compare controls; a view session shows no restore or name', async () => {
+  const a = await open();
+  const w = await twoSaves(a.page, '&download=0');
+  await w.getByRole('button', { name: 'History', exact: true }).click();
+  const rows = w.locator('#hist-vers > li');
+  await expect.poll(() => rows.count()).toBeGreaterThanOrEqual(2);
+  await expect(rows.first().getByRole('button', { name: /^Restore/ })).toBeVisible();
+  await expect(rows.first().getByRole('button', { name: /^Name/ })).toBeVisible();
+  await expect(w.getByRole('button', { name: /^Save a copy/ })).toHaveCount(0);
+  await expect(w.getByRole('button', { name: 'Compare', exact: true })).toHaveCount(0);
+  await expect(w.locator('#hist-cmp-bar')).toHaveCount(0);
+  expect(a.problems).toEqual([]);
+  await a.ctx.close();
+
+  // a view session (edit:false): download and compare stay, restore and name go. (The server refuses the routes too: tests/history.rs.)
+  const b = await open();
+  await b.page.goto(`${HOST}/host?kind=files&id=1&mode=view&lang=en`);
+  await expect.poll(() => state(b.page), { timeout: 90_000 }).toBe('ready');
+  const wv = wrapperOf(b.page);
+  await wv.getByRole('button', { name: 'History', exact: true }).click();
+  await expect.poll(() => wv.locator('#hist-vers > li').count()).toBeGreaterThanOrEqual(1);
+  await expect(wv.getByRole('button', { name: /^Restore/ })).toHaveCount(0);
+  await expect(wv.getByRole('button', { name: /^Name/ })).toHaveCount(0);
+  await expect(wv.getByRole('button', { name: /^Save a copy/ }).first()).toBeVisible();
+  expect(b.problems).toEqual([]);
+  await b.ctx.close();
+});

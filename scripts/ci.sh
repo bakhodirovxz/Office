@@ -436,7 +436,7 @@ npm_sizes() {
 shell_sizes() {
   local B=web/budgets.toml f raw=0 br=0 max
   max=$(toml_get "$B" shell br_max)
-  for f in web/shell/index.html web/shell/shell.js web/shell/shell.css web/shell/history.js web/shell/history.css web/shell/i18n.json web/shell/templates.json assets/fonts/fallback/NotoSans-Regular-uz.ttf; do
+  for f in web/shell/index.html web/shell/shell.js web/shell/shell.css web/shell/history.js web/shell/history-ui.js web/shell/history.css web/shell/i18n.json web/shell/templates.json assets/fonts/fallback/NotoSans-Regular-uz.ttf; do
     raw=$((raw+$(bytes "$f"))); br=$((br+$(br_bytes "$f")))
   done
   printf '%-7s %-9s %12s %12s %12s %12s %12s
@@ -612,11 +612,11 @@ job_docserver() {
   bstep clippy-docserver env CARGO_TARGET_DIR="$SVC_T" cargo clippy --manifest-path $m -p docserver -p fake-hrm -p suite-serve --all-targets --locked -j 6 -- -D warnings || rc=1
   bstep test-docserver env CARGO_TARGET_DIR="$SVC_T" cargo test --manifest-path $m -p docserver -p fake-hrm -p suite-serve --locked -j 4 || rc=1
   if skip_no_build "Playwright specs need the built binaries and dists"; then :; else
-    bstep build-docserver-bins env CARGO_TARGET_DIR="$SVC_T" cargo build --manifest-path $m -p suite-serve -p fake-hrm --locked -j 6 || return 1
+    bstep build-docserver-bins env CARGO_TARGET_DIR="$SVC_T" cargo build --manifest-path $m -p suite-serve -p fake-hrm -p docserver --bins --locked -j 6 || return 1
     [ -d "$dist/shell" ] || step shell-dist bash scripts/shell-dist.sh || return 2
     [ -d "$dist/docs-web" ] || { note "no $dist/docs-web (run: scripts/ci.sh build docs web)"; return 2; }
     [ -x ci/web-smoke/node_modules/.bin/playwright ] || [ -x ci/web-smoke/node_modules/.bin/playwright.cmd ] || step npm-ci npm ci --prefix ci/web-smoke || return 2
-    pw_step playwright-docserver playwright.docserver.config.ts DS_BIN="$SVC_T/debug/hoshiya-serve$EXE" FAKE_HRM_BIN="$SVC_T/debug/fake-hrm$EXE" DIST="$dist" || rc=1
+    pw_step playwright-docserver playwright.docserver.config.ts DS_BIN="$SVC_T/debug/hoshiya-serve$EXE" FAKE_HRM_BIN="$SVC_T/debug/fake-hrm$EXE" FAKE_DIFF_BIN="$SVC_T/debug/fake_diff$EXE" DIST="$dist" || rc=1
     pw_step playwright-bridge-docs playwright.bridge-docs.config.ts DOCS_DIST="$dist/docs-web" || rc=1
   fi
   if [ "$rehearsal" = 1 ]; then

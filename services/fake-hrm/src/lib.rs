@@ -358,7 +358,7 @@ async fn editor_config(
     ); // [S:256]
     let mut editor = json!({
         "mode": if edit { "edit" } else { "view" },
-        "lang": "ru", // [S:261]
+        "lang": q.get("lang").map_or("ru", String::as_str), // [S:261]; ?lang=en lets a UI test read English strings
         "user": {"id": "emp-1", "name": "Synthetic User"}, // [S:260]
         "customization": {
             "forcesave": edit, // [S:262]

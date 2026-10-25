@@ -388,10 +388,14 @@ a few seconds even when a tenth of the cells differ. The files are the existing 
   tool runs with a 120 s deadline (killed) and a 16 MiB cap on its JSON, and the folder is removed on every path. Errors:
   422 `compare_failed` (exit 2, with the tool's message), 502 `compare_too_large`, 504 `compare_timeout`. Answer:
   `{"ok":true,"a","b","app","diff":<schema 1>}`, the shape the desktop `history_compare` reply already has.
-  **Not done: the web panel.** There is no web History panel: `web/shell/history.js` talks to the desktop host over IPC only
-  (`hist-web` just says so), and the server session token lives in the wrapper page's memory (`editor.js`), out of the
-  shell's reach. A web panel is new UI inside the wrapper (it can reuse `renderCompare`'s `docItems`/`sheetItems`) and
-  is left for an owner decision. The Docker image does not carry the two binaries yet (Linux builds of both are needed).
+  **Web panel: done (Phase 5, after WP16).** The session token lives in the wrapper page only, so the panel is drawn there
+  (`services/docserver/static/editor.js`): a "History" button in a slim bar above the editor opens a side panel with the
+  versions, Save a copy and Compare (only with `download`), Restore and Name (only with `edit`); the server stays the
+  enforcement point. The rows and the diff renderers are `web/shell/history-ui.js`, shared with the desktop panel and
+  loaded by the wrapper from `/shell/` together with `shell.css` and `history.css` (same origin, CSP unchanged). Esc
+  closes the panel and the focus returns to the button. Restoring in an open session does not reload the editor (the
+  dialog says to close the document first). Tests: `ci/web-smoke/docserver.spec.ts` "History panel". The Docker image
+  does not carry the two binaries yet (Linux builds of both are needed).
 - **Packaging:** the MSI does not ship `docs-diff.exe`/`sheets-diff.exe` yet; the desktop Compare view says "the
   compare tool … is not installed" until it does (`packaging/windows`, next MSI).
 - Docs: headers, footers, notes, comments and text boxes are not compared (body and tables only); a move that is also

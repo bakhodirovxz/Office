@@ -1,5 +1,5 @@
 //! Test-only stand-in for `docs-diff` / `sheets-diff` (tests/history.rs copies it to `<dir>/docs-diff`). The first file's text picks the
-//! behaviour: SLEEP (hangs), FAIL (exit 2 with a message), BIG (17 MB of output); anything else prints a small result and exits 1 (0 when
+//! behaviour: SLEEP (hangs), FAIL (exit 2 with a message), BIG (17 MB of output); anything else prints a small result (with one `changes` entry when the files differ) and exits 1 (0 when
 //! the files are equal).
 use std::io::Write;
 
@@ -17,9 +17,15 @@ fn main() {
     } else {
         let b = std::fs::read(&a[1]).unwrap_or_default();
         println!(
-            "{{\"tool\":\"fake-diff\",\"schema\":1,\"same\":{},\"a_len\":{}}}",
+            "{{\"tool\":\"fake-diff\",\"schema\":1,\"same\":{},\"a_len\":{},\"changes\":{}}}",
             text == b,
-            text.len()
+            text.len(),
+            // one docs-diff change when the files differ, so a panel has something to draw
+            if text == b {
+                "[]"
+            } else {
+                "[{\"op\":\"insert\",\"text\":\"fake-diff change\"}]"
+            }
         );
         std::process::exit(if text == b { 0 } else { 1 });
     }
