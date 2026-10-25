@@ -6,6 +6,7 @@
 //! Routes (session token, `Authorization: Bearer`):
 //!   `GET  /ds/session/{sid}/history`                 `{"versions":[...]}`, oldest first
 //!   `GET  /ds/session/{sid}/history/{v}`             the bytes of version v (needs the `download` permission)
+//!   `GET  /ds/session/{sid}/history/{a}/compare/{b}` the JSON of `docs-diff`/`sheets-diff` (schema 1) for a and b (needs `download`)
 //!   `POST /ds/session/{sid}/history/{v}/restore`     v becomes a new version, and a new version of the session (needs `edit`)
 //!   `POST /ds/session/{sid}/history/{v}/name`        body `{"name": "..."}`, an empty name clears it (needs `edit`)
 use crate::Docserver;
@@ -23,7 +24,7 @@ use hmac::{Hmac, Mac};
 use serde_json::{Value, json};
 use sha2::Sha256;
 use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::path::{Path as FsPath, PathBuf};
 use std::sync::Arc;
 use suite_core::history::{Limits, Store, Version};
 
@@ -166,7 +167,20 @@ pub(crate) fn record(ds: &Docserver, rec: &SessionRecord, bytes: &[u8], by: &str
     }
 }
 
-fn need(ok: bool) -> Result<(), ApiError> {
+/// A permission the session lacks: 403, and one `perm.refused` audit line (the session by reference, never its token).
+fn need(
+    ds: &Docserver,
+    rec: &SessionRecord,
+    route: &str,
+    perm: &str,
+    ok: bool,
+) -> Result<(), ApiError> {
+    if !ok {
+        ds.audit(
+            "perm.refused",
+            json!({"route": route, "perm": perm, "session": crate::audit::sid_ref(&rec.sid), "user": rec.user_id}),
+        );
+    }
     ok.then_some(()).ok_or_else(|| SessErr::Forbidden.into())
 }
 
@@ -182,7 +196,7 @@ async fn list(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> R
 async fn view(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: HeaderMap) -> Res {
     let cl = client(cl);
     let rec = authorize(&ds, &h, &sid, true, "history.view", &cl)?;
-    need(rec.perms.download)?;
+    need(&ds, &rec, "history.view", "download", rec.perms.download)?;
     let b = blk(move || {
         let b = ds.version_backend().read(&doc_id(&rec), v)?;
         ds.issue_copy(&rec, b, &cl.ip, "download")
@@ -194,7 +208,7 @@ async fn view(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: Hea
 
 async fn restore(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: HeaderMap) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "history.restore", &client(cl))?;
-    need(rec.perms.edit)?;
+    need(&ds, &rec, "history.restore", "edit", rec.perms.edit)?;
     let out = blk(move || {
         let b = ds.version_backend();
         let id = doc_id(&rec);
@@ -221,7 +235,7 @@ async fn name(
     body: Bytes,
 ) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "history.name", &client(cl))?;
-    need(rec.perms.edit)?;
+    need(&ds, &rec, "history.name", "edit", rec.perms.edit)?;
     let name = serde_json::from_slice::<Value>(&body)
         .ok()
         .and_then(|j| j.get("name")?.as_str().map(str::to_string))
@@ -240,11 +254,176 @@ async fn name(
     json_ok(json!({"ok": true}))
 }
 
+/// The tool's JSON is read up to this many bytes; a longer answer is refused (a diff of two huge workbooks must not fill the memory).
+const DIFF_MAX_OUT: u64 = 16 << 20;
+
+fn compare_err(status: StatusCode, code: &'static str, m: impl Into<String>) -> ApiError {
+    ApiError::new(status, code, m)
+}
+
+/// A scratch folder inside the session folder, removed on drop (also on an error or a panic).
+struct Scratch(PathBuf);
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// Runs `exe A B --json`: exit 0 or 1 is a result, anything else (or a timeout, or too much output) is an error. The child is killed on
+/// the deadline.
+fn run_diff(exe: &FsPath, a: &FsPath, b: &FsPath, secs: u64) -> Result<Value, ApiError> {
+    use std::io::Read;
+    use std::process::{Command, Stdio};
+    let mut cmd = Command::new(exe);
+    cmd.arg(a)
+        .arg(b)
+        .arg("--json")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    }
+    let mut child = cmd.spawn().map_err(|e| {
+        compare_err(
+            StatusCode::BAD_GATEWAY,
+            "compare_failed",
+            format!("cannot start the compare tool: {e}"),
+        )
+    })?;
+    // read both pipes to the end (a full pipe would stall the tool) but keep only the first `cap` bytes
+    fn drain<R: Read + Send + 'static>(r: Option<R>, cap: u64) -> std::thread::JoinHandle<Vec<u8>> {
+        std::thread::spawn(move || {
+            let mut keep = vec![];
+            if let Some(mut r) = r {
+                let _ = r.by_ref().take(cap + 1).read_to_end(&mut keep);
+                let _ = std::io::copy(&mut r, &mut std::io::sink());
+            }
+            keep
+        })
+    }
+    let out = drain(child.stdout.take(), DIFF_MAX_OUT);
+    let err = drain(child.stderr.take(), 2048);
+    let end = std::time::Instant::now() + std::time::Duration::from_secs(secs);
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(s)) => break s,
+            Ok(None) if std::time::Instant::now() < end => {
+                std::thread::sleep(std::time::Duration::from_millis(25))
+            }
+            Ok(None) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(compare_err(
+                    StatusCode::GATEWAY_TIMEOUT,
+                    "compare_timeout",
+                    "the compare tool took too long",
+                ));
+            }
+            Err(e) => return Err(ApiError::internal(e.to_string())),
+        }
+    };
+    let (out, err) = (
+        out.join().unwrap_or_default(),
+        err.join().unwrap_or_default(),
+    );
+    if !matches!(status.code(), Some(0 | 1)) {
+        let m = String::from_utf8_lossy(&err).trim().to_string();
+        let m = if m.is_empty() {
+            "the compare tool failed".into()
+        } else {
+            m
+        };
+        return Err(compare_err(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "compare_failed",
+            m,
+        ));
+    }
+    if out.len() as u64 > DIFF_MAX_OUT {
+        return Err(compare_err(
+            StatusCode::BAD_GATEWAY,
+            "compare_too_large",
+            "the result of the comparison is too large",
+        ));
+    }
+    serde_json::from_slice(&out).map_err(|_| {
+        compare_err(
+            StatusCode::BAD_GATEWAY,
+            "compare_failed",
+            "the compare tool gave no result",
+        )
+    })
+}
+
+async fn compare(
+    State(ds): Ds,
+    cl: Cl,
+    Path((sid, a, b)): Path<(String, u64, u64)>,
+    h: HeaderMap,
+) -> Res {
+    let rec = authorize(&ds, &h, &sid, true, "history.compare", &client(cl))?;
+    // a comparison shows the text of both versions, so it is a download as far as the permission goes
+    need(&ds, &rec, "history.compare", "download", rec.perms.download)?;
+    let app = match rec.editor.as_str() {
+        app @ ("docs" | "sheets") => app.to_string(),
+        _ => {
+            return Err(compare_err(
+                StatusCode::NOT_IMPLEMENTED,
+                "not_supported",
+                "comparing versions is not supported for this kind of file",
+            ));
+        }
+    };
+    let exe = ds
+        .diff_bin_dir
+        .as_ref()
+        .map(|d| d.join(format!("{app}-diff{}", std::env::consts::EXE_SUFFIX)))
+        .filter(|p| p.is_file())
+        .ok_or_else(|| {
+            compare_err(
+                StatusCode::NOT_IMPLEMENTED,
+                "not_configured",
+                "the compare tool is not installed on this server",
+            )
+        })?;
+    let out = blk(move || {
+        // `read` opens the sealed objects: the plaintext copies live in the session folder only, and go when this scope ends
+        let backend = ds.version_backend();
+        let id = doc_id(&rec);
+        let (ba, bb) = (backend.read(&id, a)?, backend.read(&id, b)?);
+        let base = ds.session_dir(&rec.sid).ok_or(HistErr::NotFound)?;
+        let ext: String = rec
+            .file_type
+            .chars()
+            .filter(char::is_ascii_alphanumeric)
+            .take(8)
+            .collect();
+        let mut rnd = [0u8; 8];
+        getrandom::getrandom(&mut rnd).map_err(|e| HistErr::Io(e.to_string()))?;
+        let dir = Scratch(base.join(format!("compare-{}", crate::sessions::hex(&rnd))));
+        std::fs::create_dir_all(&dir.0)?;
+        let (fa, fb) = (
+            dir.0.join(format!("a.{ext}")),
+            dir.0.join(format!("b.{ext}")),
+        );
+        std::fs::write(&fa, ba)?;
+        std::fs::write(&fb, bb)?;
+        let diff = run_diff(&exe, &fa, &fb, ds.diff_timeout_s);
+        Ok::<_, HistErr>(diff.map(|d| json!({"ok": true, "a": a, "b": b, "app": app, "diff": d})))
+    })
+    .await??;
+    json_ok(out?)
+}
+
 impl Docserver {
     pub(crate) fn history_routes<S: Clone + Send + Sync + 'static>(self: &Arc<Self>) -> Router<S> {
         Router::new()
             .route("/ds/session/{sid}/history", get(list))
             .route("/ds/session/{sid}/history/{v}", get(view))
+            .route("/ds/session/{sid}/history/{a}/compare/{b}", get(compare))
             .route("/ds/session/{sid}/history/{v}/restore", post(restore))
             .route(
                 "/ds/session/{sid}/history/{v}/name",

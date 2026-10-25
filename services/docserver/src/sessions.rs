@@ -224,7 +224,7 @@ impl Docserver {
         Ok(write_atomic(path, &self.to_store(path, bytes)?)?)
     }
 
-    fn session_dir(&self, sid: &str) -> Option<PathBuf> {
+    pub(crate) fn session_dir(&self, sid: &str) -> Option<PathBuf> {
         valid_sid(sid).then(|| self.data_dir.join("sessions").join(sid))
     }
 

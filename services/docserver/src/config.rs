@@ -78,6 +78,8 @@ pub struct Config {
     pub audit_file: Option<PathBuf>,
     /// the operator's key of the audit chain (32 bytes or more, kept outside the data directory); without it the chain only stops a naive edit
     pub audit_key_file: Option<PathBuf>,
+    /// the folder holding `docs-diff` and `sheets-diff` (the History compare route); unset: the route answers 501
+    pub diff_bin_dir: Option<PathBuf>,
     /// leave document titles out of the audit log
     pub redact: bool,
     /// session create attempts per client address and minute
@@ -103,6 +105,7 @@ impl Default for Config {
             xdfu: "off".into(),
             audit_file: None,
             audit_key_file: None,
+            diff_bin_dir: None,
             redact: false,
             rate_create_per_min: 30,
             rate_auth_fail_per_min: 20,
@@ -151,6 +154,10 @@ pub struct Docserver {
     pub at_rest: Option<std::sync::Arc<crate::atrest::AtRest>>,
     /// the XDFU stamping, when `xdfu` is not `off`
     pub xdfu: Option<std::sync::Arc<crate::xdfu::Xdfu>>,
+    /// where `docs-diff` and `sheets-diff` are (`diff_bin_dir`)
+    pub diff_bin_dir: Option<PathBuf>,
+    /// how long one compare may run (seconds)
+    pub diff_timeout_s: u64,
     pub providers: Vec<Provider>,
     /// the audit log and the rate limits (WP8)
     pub watch: std::sync::Arc<crate::audit::Watch>,
@@ -534,6 +541,8 @@ impl Config {
             internal_url,
             at_rest,
             xdfu,
+            diff_bin_dir: self.diff_bin_dir.clone(),
+            diff_timeout_s: 120,
             providers,
             watch,
             lookup: crate::outbound::system_lookup(),

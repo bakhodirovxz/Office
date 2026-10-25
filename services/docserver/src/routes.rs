@@ -150,6 +150,8 @@ mod tests {
             }),
             at_rest: None,
             xdfu: None,
+            diff_bin_dir: None,
+            diff_timeout_s: 120,
             providers: vec![Provider {
                 name: "p".into(),
                 issuer: "i".into(),

@@ -237,7 +237,7 @@ their bridges (§13.2 R6).
 |---|---|---|---|---|
 | `editorConfig.mode = "view"` or `permissions.edit = false` | save and autosave 403; no callbacks | opened with `readOnly` (WP6) | yes | supported (target) |
 | config without `callbackUrl` | accepted only as view | read-only | no | supported (target); HRB keeps these on ONLYOFFICE until this ships (`hr-backend-prompt.md:503-504`) |
-| `permissions.download = false` | no server download route exists to refuse | "Save a copy" / export refused through the bridge flag | no | partial |
+| `permissions.download = false` | version download and compare return 403 (edit sessions too; audited as `perm.refused`) | "Save a copy" / export refused through the bridge flag | no | partial |
 | `permissions.print = false` | — | print refused through the bridge flag | no | partial |
 | `permissions.review = true` with `edit = false` | as edit | Docs starts with tracked changes on and the toggle refused; needs a wasm-safe policy layer (F9) | no | partial, after the gate |
 | `permissions.comment = true` with `edit = false` | as view | — | no | not supported in Phase 5 |
@@ -378,10 +378,17 @@ a few seconds even when a tenth of the cells differ. The files are the existing 
   changes show as Added/Deleted/Changed/Moved/Formatting with `<ins>`/`<del>` words and the authors; Sheets as per-sheet
   runs of inserted/deleted rows and columns and a Cell/Before/After table. Checked with a mocked host in a browser
   (golden outputs, en and uz-Latn); not yet in the real WebView2 window (needs the tools in the MSI, below).
-- **Server compare route:** not added in WP12 (the docserver was being changed in parallel). It is a new
-  `GET /ds/session/{sid}/history/{a}/compare/{b}` next to `history.rs:237-242` that writes the two versions to a temp
-  dir and runs the domain binary like the desktop host does (`suite-desktop` `history_compare`), with the binary path
-  from the docserver config. The web History panel then uses the same renderer.
+- **Server compare route: done (Phase 5, after WP16).** `GET /ds/session/{sid}/history/{a}/compare/{b}` in `history.rs`
+  (needs `download`, since it shows both texts). `[docserver] diff_bin_dir` names the folder of `docs-diff` and
+  `sheets-diff`; unset or a missing binary: 501 `not_configured`; slides and PDF: 501 `not_supported`. The versions are
+  copied (opened through the at-rest sealer) into `<data_dir>/sessions/<sid>/compare-<rand>/`, never anywhere else, the
+  tool runs with a 120 s deadline (killed) and a 16 MiB cap on its JSON, and the folder is removed on every path. Errors:
+  422 `compare_failed` (exit 2, with the tool's message), 502 `compare_too_large`, 504 `compare_timeout`. Answer:
+  `{"ok":true,"a","b","app","diff":<schema 1>}`, the shape the desktop `history_compare` reply already has.
+  **Not done: the web panel.** There is no web History panel: `web/shell/history.js` talks to the desktop host over IPC only
+  (`hist-web` just says so), and the server session token lives in the wrapper page's memory (`editor.js`), out of the
+  shell's reach. A web panel is new UI inside the wrapper (it can reuse `renderCompare`'s `docItems`/`sheetItems`) and
+  is left for an owner decision. The Docker image does not carry the two binaries yet (Linux builds of both are needed).
 - **Packaging:** the MSI does not ship `docs-diff.exe`/`sheets-diff.exe` yet; the desktop Compare view says "the
   compare tool … is not installed" until it does (`packaging/windows`, next MSI).
 - Docs: headers, footers, notes, comments and text boxes are not compared (body and tables only); a move that is also
