@@ -39,6 +39,8 @@ pub struct Settings {
     /// server mode: identity providers. Phase 4 knows one `kind = "jwt"` entry, whose `issuer` is the required `iss` (the same as
     /// setting `iss`; both may be set when equal). `kind = "oidc"` is refused until Phase 5. None by default.
     pub providers: Vec<Provider>,
+    /// The `[docserver]` section, opaque here: the `docserver` crate checks it, and `suite-serve` mounts it (PLAN phase 5, WP2).
+    pub docserver: Option<toml::Table>,
     /// server mode: the longest remaining life a token may have when it arrives (it cannot be revoked), default 12 h
     pub max_token_lifetime_s: u64,
     /// Not used since the job keys stopped being written to disk (WP7 review M5). Accepted so that an older config still loads;
@@ -105,6 +107,7 @@ impl Default for Settings {
             iss: None,
             aud: None,
             providers: vec![],
+            docserver: None,
             max_token_lifetime_s: 12 * 3600,
             key_file: None,
             tls_cert: None,
@@ -182,6 +185,10 @@ impl Cidr {
             None => max,
         };
         Ok(Cidr { addr, prefix })
+    }
+
+    pub fn prefix_len(&self) -> u8 {
+        self.prefix
     }
 
     pub fn contains(&self, ip: IpAddr) -> bool {

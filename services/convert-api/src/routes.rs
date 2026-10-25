@@ -93,7 +93,10 @@ pub struct Client {
     pub key: String,
 }
 
-const CSP: &str = "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+pub const CSP: &str = "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+
+/// The value of `X-Frame-Options` that means "send none" (see `baseline_headers`).
+pub const NO_FRAME_OPTIONS: HeaderValue = HeaderValue::from_static("");
 
 /// Every response gets the same baseline headers (PLAN 5.5), errors and static files included. No CORS header is ever set.
 pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
@@ -112,14 +115,29 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         // engines without CSP frame-ancestors; the editor routes of suite-serve loosen it to SAMEORIGIN for the shell's iframe
         ("x-frame-options", "DENY"),
     ] {
-        // Only these three may be set by a route: the editor pages' CSP, the cache rule of hashed files and the frame rule of the
-        // editors (suite-serve). Everything else is always the baseline value, so a later route cannot weaken it (review m5).
-        let routed = matches!(
-            k,
-            "content-security-policy" | "cache-control" | "x-frame-options"
-        );
-        if !(routed && h.contains_key(k)) {
+        // A route may set only these: the editor pages' CSP, the cache rule of hashed files, the frame rule of the editors
+        // (suite-serve), and CORP when it is exactly `cross-origin` (the embed script of the docserver). Everything else is always
+        // the baseline value, so a later route cannot weaken it (review m5).
+        let routed = match k {
+            "content-security-policy" | "cache-control" | "x-frame-options" => h.contains_key(k),
+            "cross-origin-resource-policy" => h.get(k).is_some_and(|v| v == "cross-origin"),
+            _ => false,
+        };
+        if !routed {
             h.insert(k, HeaderValue::from_static(v));
+        }
+    }
+    // A route that lists other origins in `frame-ancestors` sends an empty X-Frame-Options (`NO_FRAME_OPTIONS`) to have none: DENY or
+    // SAMEORIGIN would block those origins in engines that still read it. Honoured only beside such a CSP; otherwise it is DENY.
+    let framed = h
+        .get("content-security-policy")
+        .and_then(|v| v.to_str().ok())
+        .is_some_and(|c| c.contains("frame-ancestors") && !c.contains("frame-ancestors 'none'"));
+    if h.get("x-frame-options").is_some_and(|v| v.is_empty()) {
+        if framed {
+            h.remove("x-frame-options");
+        } else {
+            h.insert("x-frame-options", HeaderValue::from_static("DENY"));
         }
     }
     if hsts {
@@ -1455,4 +1473,57 @@ async fn zip(
         "converted.zip",
         job.zip_size.load(std::sync::atomic::Ordering::Relaxed),
     ))
+}
+
+#[cfg(test)]
+mod header_tests {
+    use super::*;
+    use axum::http::HeaderMap;
+
+    fn run(set: &[(&'static str, &'static str)]) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        for (k, v) in set {
+            h.insert(*k, HeaderValue::from_static(v));
+        }
+        baseline_headers(&mut h, false);
+        h
+    }
+
+    #[test]
+    fn corp_is_loosened_only_to_cross_origin_and_no_frame_options_needs_a_framing_csp() {
+        assert_eq!(run(&[])["cross-origin-resource-policy"], "same-origin");
+        assert_eq!(
+            run(&[("cross-origin-resource-policy", "cross-origin")])["cross-origin-resource-policy"],
+            "cross-origin"
+        );
+        for weaker in ["cross-site", "", "*"] {
+            assert_eq!(
+                run(&[("cross-origin-resource-policy", weaker)])["cross-origin-resource-policy"],
+                "same-origin"
+            );
+        }
+        for k in [
+            "cross-origin-opener-policy",
+            "x-content-type-options",
+            "referrer-policy",
+            "permissions-policy",
+        ] {
+            let before = run(&[])[k].clone();
+            assert_eq!(run(&[(k, "unsafe-none")])[k], before, "{k}");
+        }
+        let framed = run(&[
+            (
+                "content-security-policy",
+                "default-src 'self'; frame-ancestors 'self' https://a.test",
+            ),
+            ("x-frame-options", ""),
+        ]);
+        assert!(framed.get("x-frame-options").is_none());
+        // an empty value beside the strict CSP (or none) is not "no protection": it becomes DENY
+        assert_eq!(run(&[("x-frame-options", "")])["x-frame-options"], "DENY");
+        assert_eq!(
+            run(&[("content-security-policy", CSP), ("x-frame-options", "")])["x-frame-options"],
+            "DENY"
+        );
+    }
 }

@@ -38,6 +38,7 @@ fn no_hrm_names_in_code() {
         svc.join("convert-api/src"),
         svc.join("convert-api/ui"),
         svc.join("suite-serve/src"),
+        svc.join("docserver/src"),
         root.join("web/shell"),
         root.join("crates"),
     ] {
