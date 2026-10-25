@@ -6,14 +6,14 @@ use axum::extract::{ConnectInfo, Request, State};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
+use axum::routing::get;
 use convert_api::routes::{ApiError, CSP, NO_FRAME_OPTIONS, baseline_headers};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 async fn stub() -> ApiError {
     ApiError::new(
-        StatusCode::NOT_IMPLEMENTED,
+        StatusCode::UNAUTHORIZED,
         "not_implemented",
         "this route is not available in this build yet",
     )
@@ -67,18 +67,12 @@ impl Docserver {
         Router::new()
             .merge(embed)
             .merge(frame)
-            .route("/ds/session", post(stub))
-            .route("/ds/session/{sid}/renew", post(stub))
-            .route("/ds/session/{sid}/document", get(stub))
-            .route("/ds/session/{sid}/save", post(stub))
-            .route("/ds/session/{sid}/autosave", post(stub))
-            .route("/ds/session/{sid}/close", post(stub))
+            .merge(self.session_routes())
     }
 
     /// The router of the internal listener (F4): the token-bound file route and nothing else, for the configured addresses only.
     pub fn internal_router(self: &Arc<Self>) -> Router {
-        Router::new()
-            .route("/ds/files/{sid}/{ver}", get(stub))
+        self.file_route()
             .fallback(not_found)
             .layer(middleware::from_fn_with_state(self.clone(), internal_gate))
             .layer(middleware::map_response(|mut r: Response| async move {
@@ -167,7 +161,7 @@ mod tests {
         let ok = "172.18.3.4";
         assert_eq!(
             call(r.clone(), "GET", "/ds/files/s/1?t=x", ok).await.0,
-            StatusCode::NOT_IMPLEMENTED
+            StatusCode::UNAUTHORIZED
         );
         // nothing else exists there: not the public routes, not the health check, not the editors
         for (m, uri) in [

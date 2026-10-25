@@ -1,0 +1,408 @@
+//! Sessions on disk (PLAN phase 5, D2) and the opening of one from a provider's signed config (3.2, S3, S5, 8).
+//!
+//! Layout, under `<data_dir>/sessions/<sid>/` (the `sid` is 32 lower-case hex characters, 128 random bits):
+//!   `session.json`  the `SessionRecord`: validated config fields, permissions, the version list, the close state; no token
+//!   `v<N>.bin`      version N of the document, N from 1 (1 is the document as opened, then one per save)
+//!   `autosave.bin`  the last recovery copy (not a version)
+//! Every write goes to a `.tmp` file, is synced, then renamed over the target. All changes run under one process-wide lock; there
+//! is no state in memory, so a restart loses nothing.
+use crate::Docserver;
+use crate::config::{Allow, Provider, origin};
+use crate::tokens::ct_eq;
+use convert_api::jwt::{self, JwtError};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+
+/// The longest a config token may be valid, and the session's absolute life when the token has no `exp` (Q4).
+pub const MAX_SESSION_S: u64 = 12 * 3600;
+
+static LOCK: Mutex<()> = Mutex::new(());
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum SessErr {
+    /// 401: the credential is missing or bad (one answer for every reason)
+    Unauthorized,
+    /// 400, naming the field and never its value
+    Bad(String),
+    /// 404: no such session, or not yours
+    NotFound,
+    /// 403
+    Forbidden,
+    /// 500; the text goes to stderr only
+    Io(String),
+}
+
+impl From<std::io::Error> for SessErr {
+    fn from(e: std::io::Error) -> Self {
+        SessErr::Io(e.to_string())
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Perms {
+    pub edit: bool,
+    pub download: bool,
+    pub print: bool,
+    pub review: bool,
+    pub comment: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct VersionRec {
+    pub n: u64,
+    pub sha256: String,
+    pub size: u64,
+    pub at: u64,
+    /// the user (`sub`) who saved it; the provider for version 1
+    pub by: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Closed {
+    pub at: u64,
+    /// the callback status the close stands for: 2 (saved since open) or 4 (nothing saved)
+    pub status: u8,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SessionRecord {
+    /// format version of this file
+    pub v: u32,
+    pub sid: String,
+    pub provider: String,
+    pub user_id: String,
+    pub user_name: String,
+    /// the provider's `document.key`, echoed in the callbacks (WP4)
+    pub key: String,
+    pub title: String,
+    pub file_type: String,
+    /// `docs`, `sheets`, `slides` or `pdf`: the editor prefix
+    pub editor: String,
+    pub mode: String,
+    pub perms: Perms,
+    /// where WP4 fetches version 1 from; it carries the provider's own token, so it is never logged or returned
+    pub document_url: String,
+    pub callback_url: Option<String>,
+    pub created: u64,
+    /// absolute end of the session: the config's `exp`, or 12 h; no session token outlives it
+    pub expires: u64,
+    pub last_activity: u64,
+    pub versions: Vec<VersionRec>,
+    pub saved_since_open: bool,
+    pub closed: Option<Closed>,
+}
+
+pub fn hex(b: &[u8]) -> String {
+    b.iter().map(|x| format!("{x:02x}")).collect()
+}
+
+pub fn sha256_hex(b: &[u8]) -> String {
+    hex(&Sha256::digest(b))
+}
+
+pub fn valid_sid(s: &str) -> bool {
+    s.len() == 32 && s.bytes().all(|c| matches!(c, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+fn lock() -> std::sync::MutexGuard<'static, ()> {
+    LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    let tmp = path.with_extension("tmp");
+    let mut f = std::fs::File::create(&tmp)?;
+    f.write_all(bytes)?;
+    f.sync_all()?;
+    std::fs::rename(&tmp, path)
+}
+
+fn bad(field: &str, why: &str) -> SessErr {
+    SessErr::Bad(format!("{field}: {why}"))
+}
+
+/// `[0-9A-Za-z._=-]`, 1 to 128 characters (the DocsAPI `document.key` rule).
+fn key_ok(k: &str) -> bool {
+    (1..=128).contains(&k.len())
+        && k.bytes()
+            .all(|c| c.is_ascii_alphanumeric() || b"._=-".contains(&c))
+}
+
+fn text(v: Option<&Value>, field: &str, max: usize) -> Result<Option<String>, SessErr> {
+    match v {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(s))
+            if !s.is_empty() && s.chars().count() <= max && !s.chars().any(char::is_control) =>
+        {
+            Ok(Some(s.clone()))
+        }
+        _ => Err(bad(field, "must be a plain text of 1 to a limited length")),
+    }
+}
+
+fn flag(o: Option<&Value>, field: &str, default: bool) -> Result<bool, SessErr> {
+    match o.and_then(|p| p.get(field)) {
+        None | Some(Value::Null) => Ok(default),
+        Some(Value::Bool(b)) => Ok(*b),
+        _ => Err(bad(
+            &format!("document.permissions.{field}"),
+            "must be true or false",
+        )),
+    }
+}
+
+/// A fetch or callback URL: exact `scheme://host:port` (the default port when none is written) in `list`, no user info. The DNS and
+/// address checks belong to the outbound client (WP4); this one needs no network.
+fn url_allowed(u: &str, list: &[Allow], field: &str) -> Result<(), SessErr> {
+    if u.len() > 2048 || !u.bytes().all(|c| c.is_ascii_graphic()) || u.contains('\\') {
+        return Err(bad(field, "not a plain URL"));
+    }
+    let (scheme, rest) = u.split_once("://").ok_or_else(|| bad(field, "not a URL"))?;
+    let auth = &rest[..rest.find(['/', '?', '#']).unwrap_or(rest.len())];
+    let o = origin(&format!("{scheme}://{auth}"), field, false)
+        .map_err(|_| bad(field, "not an allowed URL"))?;
+    let o = if o
+        .rsplit_once(':')
+        .is_some_and(|(_, p)| p.parse::<u16>().is_ok())
+    {
+        o
+    } else {
+        format!("{o}:{}", if o.starts_with("https") { 443 } else { 80 })
+    };
+    if list.iter().any(|a| a.origin == o) {
+        Ok(())
+    } else {
+        Err(bad(field, "this address is not on the provider's list"))
+    }
+}
+
+/// The editor prefix and the DocsAPI `documentType` for a file type, or None when it is not served.
+fn editor_for(file_type: &str) -> Option<(&'static str, &'static str)> {
+    match file_type {
+        "docx" => Some(("docs", "word")),
+        "xlsx" => Some(("sheets", "cell")),
+        "pptx" => Some(("slides", "slide")),
+        "pdf" => Some(("pdf", "pdf")),
+        _ => None,
+    }
+}
+
+fn rand_sid() -> Result<String, SessErr> {
+    let mut b = [0u8; 16];
+    getrandom::getrandom(&mut b).map_err(|e| SessErr::Io(e.to_string()))?;
+    Ok(hex(&b))
+}
+
+impl Docserver {
+    fn session_dir(&self, sid: &str) -> Option<PathBuf> {
+        valid_sid(sid).then(|| self.data_dir.join("sessions").join(sid))
+    }
+
+    /// Verifies a config token against the providers' secrets (the unique secret picks the provider) and returns the provider and the
+    /// signed payload. Only that payload is used afterwards (S5). One refusal for every reason.
+    fn open_config(&self, token: &str, now: u64) -> Result<(&Provider, Value), SessErr> {
+        for p in &self.providers {
+            match jwt::verify_with(&p.secret, token, p.require_exp) {
+                Ok(v) => {
+                    // HRB's tokens carry no `iss`: the secret already names the provider. When one is there it must be ours.
+                    if v.get("iss").is_some_and(|i| i.as_str() != Some(&p.issuer)) {
+                        return Err(SessErr::Unauthorized);
+                    }
+                    if v.get("exp")
+                        .and_then(Value::as_u64)
+                        .is_some_and(|e| e > now + MAX_SESSION_S)
+                    {
+                        return Err(SessErr::Unauthorized);
+                    }
+                    return Ok((p, v));
+                }
+                Err(JwtError::BadSignature) => continue,
+                Err(_) => return Err(SessErr::Unauthorized),
+            }
+        }
+        Err(SessErr::Unauthorized)
+    }
+
+    /// `POST /ds/session`: opens a session from a provider's signed config; `origin` is the wrapper's `event.origin` of the config message. Writes `session.json`; version 1 comes with the fetch
+    /// (WP4, `put_version`).
+    pub fn create_session(
+        &self,
+        token: &str,
+        origin: &str,
+        now: u64,
+    ) -> Result<SessionRecord, SessErr> {
+        let (p, c) = self.open_config(token, now)?;
+        // cross-provider isolation: the page that handed us the config must be one of THIS provider's frame origins
+        if !p.frame_origins.iter().any(|o| o.eq_ignore_ascii_case(origin)) {
+            eprintln!("docserver: auth.fail: config message origin is not a frame origin of provider \"{}\"", p.name);
+            return Err(SessErr::Forbidden);
+        }
+        let doc = match c.get("document") {
+            Some(d @ Value::Object(_)) => d,
+            _ => return Err(bad("document", "is required")),
+        };
+        let ec = c.get("editorConfig").unwrap_or(&Value::Null);
+        let key = text(doc.get("key"), "document.key", 128)?
+            .filter(|k| key_ok(k))
+            .ok_or_else(|| bad("document.key", "1 to 128 characters of 0-9 A-Z a-z . _ = -"))?;
+        let ft = text(doc.get("fileType"), "document.fileType", 8)?
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        let (editor, dtype) =
+            editor_for(&ft).ok_or_else(|| bad("document.fileType", "not a supported type"))?;
+        if c.get("documentType").is_some_and(|d| d.as_str() != Some(dtype)) {
+            return Err(bad("documentType", "does not match document.fileType"));
+        }
+        let url = text(doc.get("url"), "document.url", 2048)?
+            .ok_or_else(|| bad("document.url", "is required"))?;
+        url_allowed(&url, &p.fetch_allow, "document.url")?;
+        let callback_url = text(ec.get("callbackUrl"), "editorConfig.callbackUrl", 2048)?;
+        if let Some(u) = &callback_url {
+            url_allowed(u, &p.callback_allow, "editorConfig.callbackUrl")?;
+        }
+        let user = ec.get("user");
+        let user_id = match user.and_then(|u| u.get("id")) {
+            Some(Value::Number(n)) => Some(n.to_string()),
+            v => text(v, "editorConfig.user.id", 128)?,
+        }
+        .ok_or_else(|| bad("editorConfig.user.id", "is required"))?;
+        let user_name = text(
+            user.and_then(|u| u.get("name")),
+            "editorConfig.user.name",
+            128,
+        )?
+        .unwrap_or_else(|| user_id.clone());
+        let title =
+            text(doc.get("title"), "document.title", 255)?.unwrap_or_else(|| format!("document.{ft}"));
+        let mode = match ec.get("mode").and_then(Value::as_str) {
+            None | Some("edit") => "edit",
+            Some("view") => "view",
+            _ => return Err(bad("editorConfig.mode", "must be edit or view")),
+        };
+        let pm = doc.get("permissions");
+        // edit needs all three: the mode, the permission and a callback to save to (a config without one is a view)
+        let edit = mode == "edit" && flag(pm, "edit", true)? && callback_url.is_some();
+        let perms = Perms {
+            edit,
+            download: flag(pm, "download", true)?,
+            print: flag(pm, "print", true)?,
+            review: flag(pm, "review", false)?,
+            comment: flag(pm, "comment", false)?,
+        };
+        let expires = c
+            .get("exp")
+            .and_then(Value::as_u64)
+            .map_or(now + MAX_SESSION_S, |e| e.min(now + MAX_SESSION_S));
+        let rec = SessionRecord {
+            v: 1,
+            sid: rand_sid()?,
+            provider: p.name.clone(),
+            user_id,
+            user_name,
+            key,
+            title,
+            file_type: ft,
+            editor: editor.into(),
+            mode: if edit { "edit" } else { "view" }.into(),
+            perms,
+            document_url: url,
+            callback_url,
+            created: now,
+            expires,
+            last_activity: now,
+            versions: vec![],
+            saved_since_open: false,
+            closed: None,
+        };
+        let _g = lock();
+        let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
+        std::fs::create_dir_all(&dir)?; // the sid is fresh: a collision at 128 bits is not a case
+        self.store(&rec)?;
+        Ok(rec)
+    }
+
+    pub fn load_session(&self, sid: &str) -> Option<SessionRecord> {
+        let b = std::fs::read(self.session_dir(sid)?.join("session.json")).ok()?;
+        serde_json::from_slice(&b).ok()
+    }
+
+    fn store(&self, rec: &SessionRecord) -> Result<(), SessErr> {
+        let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
+        let b = serde_json::to_vec_pretty(rec).map_err(|e| SessErr::Io(e.to_string()))?;
+        Ok(write_atomic(&dir.join("session.json"), &b)?)
+    }
+
+    /// An open (not closed) session, for a change. Call under the lock.
+    fn open_session(&self, sid: &str) -> Result<SessionRecord, SessErr> {
+        self.load_session(sid)
+            .filter(|r| r.closed.is_none())
+            .ok_or(SessErr::NotFound)
+    }
+
+    /// Adds `bytes` as the next version (1 is the opened document). `saved` marks a user save, which makes the close a status 2.
+    pub fn put_version(
+        &self,
+        sid: &str,
+        bytes: &[u8],
+        by: &str,
+        saved: bool,
+        now: u64,
+    ) -> Result<VersionRec, SessErr> {
+        let _g = lock();
+        let mut rec = self.open_session(sid)?;
+        let n = rec.versions.len() as u64 + 1;
+        let dir = self.session_dir(sid).ok_or(SessErr::NotFound)?;
+        write_atomic(&dir.join(format!("v{n}.bin")), bytes)?;
+        let v = VersionRec {
+            n,
+            sha256: sha256_hex(bytes),
+            size: bytes.len() as u64,
+            at: now,
+            by: by.into(),
+        };
+        rec.versions.push(v.clone());
+        rec.saved_since_open |= saved;
+        rec.last_activity = now;
+        self.store(&rec)?;
+        Ok(v)
+    }
+
+    /// Version `n` of a session, checked against the digest in the record.
+    pub fn read_version(&self, sid: &str, n: u64) -> Option<Vec<u8>> {
+        let rec = self.load_session(sid)?;
+        let v = rec.versions.iter().find(|v| v.n == n)?;
+        let b = std::fs::read(self.session_dir(sid)?.join(format!("v{n}.bin"))).ok()?;
+        ct_eq(sha256_hex(&b).as_bytes(), v.sha256.as_bytes()).then_some(b)
+    }
+
+    pub fn put_autosave(&self, sid: &str, bytes: &[u8], now: u64) -> Result<(), SessErr> {
+        let _g = lock();
+        let mut rec = self.open_session(sid)?;
+        write_atomic(
+            &self.session_dir(sid).ok_or(SessErr::NotFound)?.join("autosave.bin"),
+            bytes,
+        )?;
+        rec.last_activity = now;
+        self.store(&rec)
+    }
+
+    /// Closes a session: status 2 when something was saved since open, else 4. Closing twice answers the first status.
+    pub fn close_session(&self, sid: &str, now: u64) -> Result<Closed, SessErr> {
+        let _g = lock();
+        let mut rec = self.load_session(sid).ok_or(SessErr::NotFound)?;
+        if let Some(c) = &rec.closed {
+            return Ok(c.clone());
+        }
+        let c = Closed {
+            at: now,
+            status: if rec.saved_since_open { 2 } else { 4 },
+        };
+        rec.closed = Some(c.clone());
+        rec.last_activity = now;
+        self.store(&rec)?;
+        Ok(c)
+    }
+}

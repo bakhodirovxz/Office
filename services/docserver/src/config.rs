@@ -131,7 +131,7 @@ fn read_secret(path: &Path, key: &str) -> Result<Vec<u8>, String> {
 /// `scheme://host[:port]` and nothing else: http or https, a plain host name, an IPv4 address or a bracketed IPv6 address, no user
 /// info, path, query, fragment, wildcard or separator that could change a CSP source list. Returns the lower-case form; with
 /// `need_port` the port must be written out.
-fn origin(s: &str, key: &str, need_port: bool) -> Result<String, String> {
+pub(crate) fn origin(s: &str, key: &str, need_port: bool) -> Result<String, String> {
     let bad = |why: &str| {
         format!("docserver: {key}: \"{s}\" is not a scheme://host[:port] origin ({why})")
     };
