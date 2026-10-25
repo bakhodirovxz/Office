@@ -144,15 +144,24 @@ async fn framing_and_corp_rules_with_the_docserver_on() {
     let h = harness("on", true);
     for (m, uri) in DS_ROUTES {
         let (st, hd) = send(&h, m, uri).await;
-        // api.js and the wrapper page are stubs until WP5; the session routes check their token (WP3)
+        // the session routes check their token (WP3)
         let want = match uri {
             "/ds/session" => StatusCode::BAD_REQUEST,
             u if u.starts_with("/ds/session/") => StatusCode::UNAUTHORIZED,
-            _ => StatusCode::NOT_IMPLEMENTED,
+            _ => StatusCode::OK,
         };
         assert_eq!(st, want, "{uri}");
-        // an error is never cached, api.js included
-        assert_eq!(hv(&hd, "cache-control"), "no-store", "{uri}");
+        // only a good answer from api.js is cached; an error is never cached
+        let cached = uri.ends_with("api.js");
+        assert_eq!(
+            hv(&hd, "cache-control"),
+            if cached {
+                "public, max-age=300"
+            } else {
+                "no-store"
+            },
+            "{uri}"
+        );
         // always, on every route
         assert_eq!(hv(&hd, "x-content-type-options"), "nosniff", "{uri}");
         assert_eq!(
@@ -215,15 +224,33 @@ async fn api_js_is_a_plain_script_load() {
     // from another site is refused by the converter's origin guard. api.js must stay a classic script, never `type=module` or CORS.
     let h = harness("origin", true);
     let (st, _) = send(&h, "GET", "/ds/api.js").await;
-    assert_eq!(
-        st,
-        StatusCode::NOT_IMPLEMENTED,
-        "no Origin reaches the route"
-    );
+    assert_eq!(st, StatusCode::OK, "no Origin reaches the route");
     let (st, _) = send_with(&h, "GET", "/ds/api.js", &[("origin", "https://app.test")]).await;
     assert_eq!(
         st,
         StatusCode::FORBIDDEN,
         "Origin https://app.test is not our origin"
     );
+}
+
+#[tokio::test]
+async fn embed_files_are_served_with_the_right_types() {
+    let h = harness("files", true);
+    for (uri, ct) in [
+        ("/ds/api.js", "text/javascript"),
+        ("/web-apps/apps/api/documents/api.js", "text/javascript"),
+        ("/ds/editor.js", "text/javascript"),
+        ("/ds/editor", "text/html"),
+    ] {
+        let (st, hd) = send(&h, "GET", uri).await;
+        assert_eq!(st, StatusCode::OK, "{uri}");
+        assert!(hv(&hd, "content-type").starts_with(ct), "{uri}");
+    }
+    // the scripts the wrapper page loads are plain same-origin files under the strict script CSP: no inline script, no CORP opening
+    let (_, hd) = send(&h, "GET", "/ds/editor.js").await;
+    assert_eq!(hv(&hd, "cross-origin-resource-policy"), "same-origin");
+    assert_eq!(hv(&hd, "content-security-policy"), STRICT);
+    // the host-facing script never mentions a product name: it takes its origin from where it was loaded
+    let api = include_str!("../../docserver/static/api.js");
+    assert!(!api.to_lowercase().contains("hoshiya"));
 }
