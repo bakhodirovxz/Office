@@ -142,6 +142,7 @@ mod tests {
             fetch_timeout_s: 60,
             internal_url: None,
             lookup: crate::outbound::system_lookup(),
+            watch: Arc::new(crate::audit::Watch::off()),
             internal: Some(Internal {
                 listen: "127.0.0.1:9000".parse().unwrap(),
                 allow: vec![Cidr::parse("172.18.0.0/16").unwrap()],

@@ -18,6 +18,7 @@ use std::time::{Duration, Instant};
 use tower::ServiceExt;
 
 const SERVER_SECRET: &str = "ssssssssssssssssssssssssssssssssssssssss";
+const AUDIT_KEY: &str = "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk";
 const PROV_SECRET: &str = "pppppppppppppppppppppppppppppppppppppppp";
 
 fn package(parts: &[(&str, &[u8])]) -> Vec<u8> {
@@ -48,12 +49,16 @@ fn dir(name: &str) -> PathBuf {
 fn make(d: &Path, prov_secret: &str, allow: &str, internal_base: &str) -> Docserver {
     std::fs::write(d.join("server.key"), SERVER_SECRET).unwrap();
     std::fs::write(d.join("prov.key"), prov_secret).unwrap();
+    std::fs::write(d.join("audit.key"), AUDIT_KEY).unwrap();
     let p = |f: &str| d.join(f).to_string_lossy().replace('\\', "/");
     let t: toml::Table = format!(
         r#"server_secret_file = "{}"
 data_dir = "{}"
 internal_listen = "127.0.0.1:19999"
 internal_allow = ["127.0.0.0/8"]
+audit_key_file = "{}"
+rate_create_per_min = 100000
+rate_auth_fail_per_min = 100000
 [[providers]]
 name = "one"
 issuer = "https://issuer.test"
@@ -64,6 +69,7 @@ frame_origins = ["https://app.test"]
 "#,
         p("server.key"),
         p("data"),
+        p("audit.key"),
         p("prov.key"),
     )
     .parse()
@@ -84,6 +90,18 @@ async fn call(
     bearer: Option<&str>,
     body: Vec<u8>,
 ) -> (StatusCode, Vec<u8>) {
+    call_from(r, None, method, uri, bearer, body).await
+}
+
+/// `client`: the address the router's guard layer would have set (none: the tests' single anonymous client).
+async fn call_from(
+    r: &Router,
+    client: Option<&str>,
+    method: &str,
+    uri: &str,
+    bearer: Option<&str>,
+    body: Vec<u8>,
+) -> (StatusCode, Vec<u8>) {
     let mut b = Request::builder().method(method).uri(uri);
     if let Some(t) = bearer {
         b = b.header("authorization", format!("Bearer {t}"));
@@ -91,6 +109,12 @@ async fn call(
     let mut req = b.body(Body::from(body)).unwrap();
     req.extensions_mut()
         .insert(ConnectInfo("127.0.0.1:4000".parse::<SocketAddr>().unwrap()));
+    if let Some(c) = client {
+        req.extensions_mut().insert(convert_api::routes::Client {
+            ip: c.into(),
+            key: c.into(),
+        });
+    }
     let res = r.clone().oneshot(req).await.unwrap();
     let s = res.status();
     (
@@ -165,6 +189,12 @@ impl Env {
 
     /// Opens the document of the fake backend as its host page would: the HRB-signed config to `POST /ds/session`.
     async fn open(&self) -> (String, String) {
+        let (sid, tok, _) = self.open_cfg().await;
+        (sid, tok)
+    }
+
+    /// `open`, and the signed editor config the page was given.
+    async fn open_cfg(&self) -> (String, String, Value) {
         let url = format!("{}/files/7/editor-config", self.hrm.base_url());
         let cfg: Value = tokio::task::spawn_blocking(move || {
             let a: ureq::Agent = ureq::Agent::config_builder().proxy(None).build().into();
@@ -187,6 +217,7 @@ impl Env {
         (
             v["sid"].as_str().unwrap().into(),
             v["token"].as_str().unwrap().into(),
+            cfg,
         )
     }
 
@@ -950,4 +981,232 @@ async fn callback_round_trip_on_loopback() {
         ms[10], ms[19]
     );
     assert!(ms[10] < 1000.0);
+}
+
+// ---- WP8: the audit log and the rate limits (S15, S16, S17) ----
+
+fn audit_lines(d: &Path) -> Vec<Value> {
+    std::fs::read_to_string(d.join("data/audit.jsonl"))
+        .unwrap()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect()
+}
+
+#[tokio::test]
+async fn the_audit_chain_covers_a_full_flow_verifies_and_holds_no_secret() {
+    let e = env("audit", |_| {}).await;
+    let (sid, tok, cfg) = e.open_cfg().await;
+    // one refused call before the flow, from a named client
+    let (s, _) = call_from(
+        &e.r,
+        Some("203.0.113.9"),
+        "POST",
+        &format!("/ds/session/{sid}/renew"),
+        Some("not.a.token"),
+        vec![],
+    )
+    .await;
+    assert_eq!(s, StatusCode::UNAUTHORIZED);
+    assert_eq!(e.get_doc(&sid, &tok).await.0, StatusCode::OK);
+    assert_eq!(e.post(&sid, &tok, "dirty", vec![]).await.0, StatusCode::OK);
+    assert_eq!(
+        e.post(&sid, &tok, "save", docx("v2")).await.0,
+        StatusCode::OK
+    );
+    assert_eq!(e.post(&sid, &tok, "close", vec![]).await.0, StatusCode::OK);
+
+    // S16: the keyed chain verifies, the events are those of the flow, and a rewritten line fails
+    let log = e.d.join("data/audit.jsonl");
+    let key = convert::audit::load_key(&e.d.join("audit.key")).unwrap();
+    let v = convert::audit::verify_keyed(&log, Some(&key)).unwrap();
+    let l = audit_lines(&e.d);
+    let events: Vec<_> = l.iter().map(|x| x["event"].as_str().unwrap()).collect();
+    assert_eq!(v.lines as usize, events.len());
+    assert_eq!(
+        events,
+        [
+            "session.create",
+            "auth.fail",
+            "document.fetch",
+            "callback",
+            "save",
+            "callback",
+            "close",
+            "callback"
+        ]
+    );
+    assert!(
+        convert::audit::verify(&log).is_err(),
+        "an unkeyed check must refuse a keyed log"
+    );
+    let good = std::fs::read_to_string(&log).unwrap();
+    std::fs::write(&log, good.replacen("\"status\":6", "\"status\":2", 1)).unwrap();
+    assert!(
+        convert::audit::verify_keyed(&log, Some(&key))
+            .unwrap_err()
+            .contains("line 6")
+    );
+    std::fs::write(&log, &good).unwrap();
+
+    // what the lines say
+    let find = |ev: &str| l.iter().find(|x| x["event"] == ev).unwrap().clone();
+    let c = find("session.create");
+    assert_eq!(
+        (
+            c["provider"].as_str(),
+            c["user"].as_str(),
+            c["mode"].as_str()
+        ),
+        (Some("one"), Some("emp-1"), Some("edit"))
+    );
+    assert_eq!(c["file"], "report.docx");
+    assert_eq!(c["key_ref"].as_str().unwrap().len(), 16);
+    assert_eq!(find("auth.fail")["client"], "203.0.113.9");
+    let f = find("document.fetch");
+    assert_eq!(
+        (f["result"].as_str(), f["size"].as_u64()),
+        (Some("ok"), Some(docx("v1").len() as u64))
+    );
+    assert_eq!(f["host"].as_str(), Some(e.hrm.base_url()));
+    assert_eq!(f["sha256"].as_str().unwrap().len(), 64);
+    let cbs: Vec<_> = l
+        .iter()
+        .filter(|x| x["event"] == "callback")
+        .map(|x| (x["status"].as_u64().unwrap(), x["result"].as_str().unwrap()))
+        .collect();
+    assert_eq!(cbs, [(1, "ok"), (6, "ok"), (2, "ok")]);
+    assert_eq!(find("save")["version"], 2);
+    assert_eq!(find("close")["status"], 2);
+
+    // S17: no token, secret, session id, query string, URL token or document byte in the log
+    let text = std::fs::read_to_string(&log).unwrap();
+    let file_token = cfg["document"]["url"]
+        .as_str()
+        .unwrap()
+        .rsplit('/')
+        .next()
+        .unwrap()
+        .to_string();
+    for needle in [
+        sid.as_str(),
+        tok.as_str(),
+        cfg["token"].as_str().unwrap(),
+        file_token.as_str(),
+        "not.a.token",
+        PROV_SECRET,
+        SERVER_SECRET,
+        AUDIT_KEY,
+        "Bearer",
+        "/ds/files",
+        "synthetic",
+    ] {
+        assert!(!text.contains(needle), "the audit log holds {needle}");
+    }
+    assert!(!text.contains('?'), "a query string in the audit log");
+    assert!(text.contains(&docserver::audit::sid_ref(&sid)));
+}
+
+#[tokio::test]
+async fn redact_leaves_the_title_out_of_the_audit_log() {
+    let d = dir("redact");
+    let log = convert::audit::AuditLog::open(&d.join("r.jsonl"), true).unwrap();
+    log.append(
+        "session.create",
+        json!({"file": "secret-name.docx", "user": "u"}),
+    )
+    .unwrap();
+    let text = std::fs::read_to_string(d.join("r.jsonl")).unwrap();
+    assert!(!text.contains("secret-name") && text.contains("\"user\""));
+}
+
+#[tokio::test]
+async fn session_creation_and_failed_auth_are_limited_per_client_address() {
+    let e = env("limits", |ds| {
+        let log = convert::audit::AuditLog::open(&ds.data_dir.join("limits.jsonl"), false).unwrap();
+        ds.watch = Arc::new(docserver::audit::Watch::new(Some(log), 3, 3));
+    })
+    .await;
+    let lines = |e: &Env| {
+        std::fs::read_to_string(e.ds.data_dir.join("limits.jsonl"))
+            .unwrap_or_default()
+            .lines()
+            .map(|l| serde_json::from_str::<Value>(l).unwrap())
+            .collect::<Vec<_>>()
+    };
+    let (sid, tok, cfg) = e.open_cfg().await; // the anonymous client's first create
+    let body = json!({"origin": "https://app.test", "config": cfg})
+        .to_string()
+        .into_bytes();
+    // S15, create: 3 per minute per client; the 4th is 429, another client is not affected
+    let mut codes = vec![];
+    for _ in 0..4 {
+        let c = Some("198.51.100.1");
+        codes.push(
+            call_from(&e.r, c, "POST", "/ds/session", None, body.clone())
+                .await
+                .0
+                .as_u16(),
+        );
+    }
+    assert_eq!(codes, [200, 200, 200, 429]);
+    let c2 = Some("198.51.100.2");
+    assert_eq!(
+        call_from(&e.r, c2, "POST", "/ds/session", None, body.clone())
+            .await
+            .0,
+        StatusCode::OK
+    );
+    // failed auth: 3 per minute per client, then 429 instead of 401; the same client's valid token still works (only failures count)
+    let renew = format!("/ds/session/{sid}/renew");
+    let bad = |c: &'static str| {
+        let (r, uri) = (e.r.clone(), renew.clone());
+        async move {
+            call_from(&r, Some(c), "POST", &uri, Some("x.y.z"), vec![])
+                .await
+                .0
+                .as_u16()
+        }
+    };
+    let mut codes = vec![];
+    for _ in 0..5 {
+        codes.push(bad("192.0.2.7").await);
+    }
+    assert_eq!(codes, [401, 401, 401, 429, 429]);
+    assert_eq!(bad("192.0.2.8").await, 401);
+    let (s, _) = call_from(&e.r, Some("192.0.2.7"), "POST", &renew, Some(&tok), vec![]).await;
+    assert_eq!(s, StatusCode::OK);
+    // the audit log: 3 auth.fail lines for .7, and ONE limit.hit per kind and client however many requests were refused
+    let l = lines(&e);
+    let hits: Vec<_> = l
+        .iter()
+        .filter(|x| x["event"] == "limit.hit")
+        .map(|x| (x["kind"].as_str().unwrap(), x["client"].as_str().unwrap()))
+        .collect();
+    assert_eq!(hits, [("create", "198.51.100.1"), ("auth", "192.0.2.7")]);
+    let fails = |c: &str| {
+        l.iter()
+            .filter(|x| x["event"] == "auth.fail" && x["client"] == c)
+            .count()
+    };
+    assert_eq!((fails("192.0.2.7"), fails("192.0.2.8")), (3, 1));
+}
+
+#[tokio::test]
+async fn a_refused_fetch_is_an_ssrf_block_in_the_audit_log() {
+    let d = dir("ssrf-audit");
+    let (ds, r) = plain(&d, "\"http://127.0.0.1:80\"", |_| {});
+    let (s, _) = doc_status(&r, &ds, "http://127.0.0.1:80/f").await;
+    assert_eq!(s, StatusCode::BAD_GATEWAY);
+    let l = audit_lines(&d);
+    let b = l
+        .iter()
+        .find(|x| x["event"] == "ssrf.block")
+        .expect("an ssrf.block line");
+    assert_eq!(
+        (b["phase"].as_str(), b["host"].as_str()),
+        (Some("fetch"), Some("http://127.0.0.1:80"))
+    );
+    let key = convert::audit::load_key(&d.join("audit.key")).unwrap();
+    convert::audit::verify_keyed(&d.join("data/audit.jsonl"), Some(&key)).unwrap();
 }

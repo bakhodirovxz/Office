@@ -199,6 +199,7 @@ their bridges (§13.2 R6).
   OOXML main part must match `fileType`.
 - **Rate limits.** Session creation and failed auth per client address, through the converter's limiter
   (`services/convert-api/src/routes.rs:295-318`).
+- **WP8 as built.** Audit file `<data_dir>/audit.jsonl` (`audit_file`, `audit_key_file`, `redact`); an existing log that does not verify stops the start; no key = a warning. Sessions and document keys appear as a 16-hex digest (`session`, `key_ref`), never the id. Events: `session.create`, `document.fetch` (also failed/refused), `save`, `callback` (every try, retries included), `close`, `auth.fail`, `ssrf.block` (fetch and callback), `limit.hit`. Limits per client address (the guard layer's key): `rate_create_per_min` 30, `rate_auth_fail_per_min` 20; only failures count, over the limit the answer is 429 and one `limit.hit` line per client and kind per minute is written (a flood does not fill the log). A failed audit write is said on stderr and does not fail the request.
 - **Audit log.** One keyed chain (`AuditLog::open_keyed`, F11) with: `session.create` (provider, `user.id`, a hash of
   `document.key`, mode and permissions, client address), `document.fetch` (host, size, sha256), `save` (version,
   sha256, size), `callback` (status, result, host+path), `close`, `auth.fail`, `ssrf.block`, `limit.hit`. Never tokens,

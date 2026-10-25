@@ -2,8 +2,10 @@
 //! provider's config token on create, our session token on the others, our file token on the file route. A session token for
 //! another session, and a session that does not exist, get the same 404 (no existence oracle, S24).
 use crate::Docserver;
-use crate::sessions::{SessErr, SessionRecord, valid_sid};
+use crate::audit::sid_ref;
+use crate::sessions::{SessErr, SessionRecord, sha256_hex, valid_sid};
 use crate::tokens::ct_eq;
+use axum::Extension;
 use axum::Router;
 use axum::body::Bytes;
 use axum::extract::{DefaultBodyLimit, Path, Request, State};
@@ -11,7 +13,7 @@ use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use convert_api::jwt::now;
-use convert_api::routes::ApiError;
+use convert_api::routes::{ApiError, Client};
 use serde_json::{Value, json};
 use std::sync::Arc;
 
@@ -51,6 +53,33 @@ fn unauthorized() -> ApiError {
     )
 }
 
+/// The request's client address, as the router's guard layer set it (behind a trusted proxy, the forwarded one). The internal listener has
+/// no such layer: its callers count as one client.
+type Cl = Option<Extension<Client>>;
+
+fn client(c: Cl) -> Client {
+    c.map_or_else(
+        || Client {
+            ip: "internal".into(),
+            key: "internal".into(),
+        },
+        |c| c.0,
+    )
+}
+
+/// A refused credential: audited and counted against the client (S15, S16). Over the limit the answer is 429 instead of `base`.
+fn denied(ds: &Docserver, route: &str, c: &Client, why: &str, base: ApiError) -> ApiError {
+    match ds.auth_failed(route, &c.ip, &c.key, why) {
+        Ok(()) => base,
+        Err(secs) => ApiError::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            "rate_limited",
+            "too many failed attempts",
+        )
+        .retry(secs),
+    }
+}
+
 fn not_found() -> ApiError {
     ApiError::new(StatusCode::NOT_FOUND, "not_found", "no such session")
 }
@@ -72,15 +101,20 @@ fn authorize(
     h: &HeaderMap,
     sid: &str,
     allow_closed: bool,
+    route: &str,
+    cl: &Client,
 ) -> Result<SessionRecord, ApiError> {
     let t = now();
+    let no = |why: &str| denied(ds, route, cl, why, unauthorized());
     let tok = h
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
         .filter(|t| t.len() <= 8192)
-        .ok_or_else(unauthorized)?;
-    let c = ds.session_claims(tok, t).ok_or_else(unauthorized)?;
+        .ok_or_else(|| no("no bearer token"))?;
+    let c = ds
+        .session_claims(tok, t)
+        .ok_or_else(|| no("bad session token"))?;
     if c.sid != sid || !valid_sid(sid) {
         return Err(not_found());
     }
@@ -89,14 +123,23 @@ fn authorize(
         return Err(not_found());
     }
     if t > rec.expires {
-        return Err(unauthorized());
+        return Err(no("session expired"));
     }
     Ok(rec)
 }
 
 /// `POST /ds/session`, body `{"origin": "<event.origin of the config message>", "config": {..., "token": "<provider JWT>"}}`: only
 /// the signed payload of the token is used, and `origin` must be a frame origin of the provider that signed it (403 otherwise).
-async fn create(State(ds): Ds, body: Bytes) -> Res {
+async fn create(State(ds): Ds, cl: Cl, body: Bytes) -> Res {
+    let cl = client(cl);
+    if let Err(secs) = ds.create_allowed(&cl.ip, &cl.key) {
+        return Err(ApiError::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            "rate_limited",
+            "too many sessions opened from this address",
+        )
+        .retry(secs));
+    }
     let v: Value = serde_json::from_slice(&body).map_err(|_| {
         ApiError::new(
             StatusCode::BAD_REQUEST,
@@ -108,7 +151,7 @@ async fn create(State(ds): Ds, body: Bytes) -> Res {
         .pointer("/config/token")
         .and_then(Value::as_str)
         .filter(|t| t.len() <= 16384)
-        .ok_or_else(unauthorized)?
+        .ok_or_else(|| denied(&ds, "create", &cl, "no config token", unauthorized()))?
         .to_string();
     let origin = v
         .get("origin")
@@ -116,25 +159,37 @@ async fn create(State(ds): Ds, body: Bytes) -> Res {
         .unwrap_or("")
         .to_string();
     let t = now();
+    let d = ds.clone();
     let (rec, token) = blk(move || {
-        let rec = ds.create_session(&tok, &origin, t)?;
-        let token = ds.mint_session_token(&rec, t);
+        let rec = d.create_session(&tok, &origin, t)?;
+        let token = d.mint_session_token(&rec, t);
         Ok::<_, SessErr>((rec, token))
     })
-    .await??;
+    .await?
+    .map_err(|e| match e {
+        SessErr::Unauthorized => denied(&ds, "create", &cl, "config token refused", e.into()),
+        SessErr::Forbidden => denied(&ds, "create", &cl, "origin is not a frame origin", e.into()),
+        e => e.into(),
+    })?;
+    ds.audit(
+        "session.create",
+        json!({"session": sid_ref(&rec.sid), "provider": rec.provider, "user": rec.user_id,
+               "key_ref": &sha256_hex(rec.key.as_bytes())[..16], "mode": rec.mode, "perms": rec.perms,
+               "client": cl.ip, "file": rec.title}),
+    );
     json_ok(
         json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
                    "perms": rec.perms, "title": rec.title, "expires": rec.expires}),
     )
 }
 
-async fn renew(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
-    let rec = authorize(&ds, &h, &sid, false)?;
+async fn renew(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    let rec = authorize(&ds, &h, &sid, false, "renew", &client(cl))?;
     json_ok(json!({"token": ds.mint_session_token(&rec, now()), "expires": rec.expires}))
 }
 
-async fn document(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
-    let mut rec = authorize(&ds, &h, &sid, false)?;
+async fn document(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    let mut rec = authorize(&ds, &h, &sid, false, "document", &client(cl))?;
     if rec.versions.is_empty() {
         // the first call of a new session: fetch the provider's document (WP4)
         let (d, s) = (ds.clone(), sid.clone());
@@ -160,8 +215,8 @@ fn check_body(ds: &Docserver, rec: &SessionRecord, b: &[u8]) -> Result<(), ApiEr
         .map_err(|e| Docserver::doc_err(e).into())
 }
 
-async fn save(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
-    let rec = authorize(&ds, &h, &sid, false)?;
+async fn save(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
+    let rec = authorize(&ds, &h, &sid, false, "save", &client(cl))?;
     if !rec.perms.edit {
         return Err(SessErr::Forbidden.into());
     }
@@ -169,6 +224,10 @@ async fn save(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes)
     // the answer comes after the provider's reply (the async-save ticket, 3.3): ok, failed or unknown; the version is kept either way
     let (v, cb, dirty) = blk(move || {
         let v = ds.put_version(&sid, &body, &rec.user_id, true, now())?;
+        ds.audit(
+            "save",
+            json!({"session": sid_ref(&sid), "version": v.n, "sha256": v.sha256, "size": v.size, "user": rec.user_id}),
+        );
         let rec = ds.load_session(&sid).ok_or(SessErr::NotFound)?;
         let cb = ds.callback_saved(&rec, &v);
         let dirty = ds.load_session(&sid).is_some_and(|r| r.dirty());
@@ -179,8 +238,8 @@ async fn save(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes)
 }
 
 /// `POST /ds/session/{sid}/dirty`: the editor's first change; the status 1 callback, once.
-async fn dirty(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
-    let rec = authorize(&ds, &h, &sid, false)?;
+async fn dirty(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    let rec = authorize(&ds, &h, &sid, false, "dirty", &client(cl))?;
     if !rec.perms.edit {
         return Err(SessErr::Forbidden.into());
     }
@@ -188,8 +247,14 @@ async fn dirty(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
     json_ok(json!({"callback": cb.map(|c| c.as_str())}))
 }
 
-async fn autosave(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
-    let rec = authorize(&ds, &h, &sid, false)?;
+async fn autosave(
+    State(ds): Ds,
+    cl: Cl,
+    Path(sid): Path<String>,
+    h: HeaderMap,
+    body: Bytes,
+) -> Res {
+    let rec = authorize(&ds, &h, &sid, false, "autosave", &client(cl))?;
     if !rec.perms.edit {
         return Err(SessErr::Forbidden.into());
     }
@@ -198,10 +263,14 @@ async fn autosave(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap, body: By
     json_ok(json!({"ok": true}))
 }
 
-async fn close(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
-    authorize(&ds, &h, &sid, true)?;
+async fn close(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    let rec = authorize(&ds, &h, &sid, true, "close", &client(cl))?;
     let (c, cb, dirty) = blk(move || {
         let c = ds.close_session(&sid, now())?;
+        ds.audit(
+            "close",
+            json!({"session": sid_ref(&sid), "status": c.status, "user": rec.user_id}),
+        );
         // status 2 is queued and retried until the provider acknowledges it; 4 is one try
         let cb = ds.callback_closed(&sid);
         let dirty = ds.load_session(&sid).is_some_and(|r| r.dirty());
@@ -212,15 +281,19 @@ async fn close(State(ds): Ds, Path(sid): Path<String>, h: HeaderMap) -> Res {
 }
 
 /// `GET /ds/files/{sid}/{ver}?t=<file token>`: the bytes of one version, for the token bound to exactly that sid, ver and digest.
-async fn file(State(ds): Ds, Path((sid, ver)): Path<(String, u64)>, req: Request) -> Res {
+async fn file(State(ds): Ds, cl: Cl, Path((sid, ver)): Path<(String, u64)>, req: Request) -> Res {
+    let cl = client(cl);
+    let no = |why: &str| denied(&ds, "file", &cl, why, unauthorized());
     let t = req
         .uri()
         .query()
         .and_then(|q| q.split('&').find_map(|p| p.strip_prefix("t=")))
         .filter(|t| t.len() <= 8192)
-        .ok_or_else(unauthorized)?
+        .ok_or_else(|| no("no file token"))?
         .to_string();
-    let c = ds.file_claims(&t, now()).ok_or_else(unauthorized)?;
+    let c = ds
+        .file_claims(&t, now())
+        .ok_or_else(|| no("bad file token"))?;
     let b = blk(move || {
         let rec = ds.load_session(&sid)?;
         let v = rec.versions.iter().find(|v| v.n == ver)?;

@@ -8,6 +8,7 @@
 //! The body is the DocsAPI callback body, signed the way the HR backend verifies it: `token` in the body is a JWT of the body, and
 //! `Authorization: Bearer` is a JWT of `{"payload": body}`, both with the provider's secret. Logs carry host and path only.
 use crate::Docserver;
+use crate::audit::sid_ref;
 use crate::outbound::{OutErr, host_path};
 use crate::sessions::{SessionRecord, VersionRec, url_allowed, valid_sid};
 use convert_api::jwt::{now, sign};
@@ -93,6 +94,10 @@ impl Docserver {
                 "docserver: callback to {} refused: no longer on the list",
                 host_path(cb_url)
             );
+            self.audit(
+                "ssrf.block",
+                json!({"session": sid_ref(&rec.sid), "phase": "callback", "target": host_path(cb_url), "reason": "not on the callback list"}),
+            );
             return Cb::Failed;
         };
         let t = now();
@@ -119,6 +124,12 @@ impl Docserver {
             &json!({"payload": signed, "exp": t + TOKEN_TTL_S}),
         );
         let r = self.post_json(cb_url, internal, &bearer, body.to_string().as_bytes());
+        if let Err(OutErr::Blocked(w)) = &r {
+            self.audit(
+                "ssrf.block",
+                json!({"session": sid_ref(&rec.sid), "phase": "callback", "target": host_path(cb_url), "reason": w}),
+            );
+        }
         let (res, why) = match r {
             Ok((200, b)) if serde_json::from_slice::<Value>(&b).is_ok_and(|v| v["error"] == 0) => {
                 (Cb::Ok, "ok".to_string())
@@ -130,6 +141,10 @@ impl Docserver {
         eprintln!(
             "docserver: callback status {status} to {}: {why}",
             host_path(cb_url)
+        );
+        self.audit(
+            "callback",
+            json!({"session": sid_ref(&rec.sid), "status": status, "result": res.as_str(), "target": host_path(cb_url), "reason": why}),
         );
         res
     }

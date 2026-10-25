@@ -73,6 +73,8 @@ fn build(
 data_dir = "{}"
 internal_listen = "127.0.0.1:19999"
 internal_allow = ["127.0.0.0/8"]
+rate_create_per_min = 100000
+rate_auth_fail_per_min = 100000
 [[providers]]
 name = "one"
 issuer = "https://issuer.test"

@@ -464,20 +464,32 @@ impl Docserver {
         let cap = self.max_document_mb << 20;
         // the provider's file token is in the URL path (some providers): the log line names the host only
         let host = crate::outbound::host_only(&rec.document_url);
+        let sref = crate::audit::sid_ref(sid);
         let bytes = self
             .fetch_bytes(&rec.document_url, internal, cap)
             .map_err(|e| {
                 eprintln!("docserver: fetch from {host} failed: {e}");
+                let (event, why) = match &e {
+                    crate::outbound::OutErr::Blocked(w) => ("ssrf.block", w.clone()),
+                    e => ("document.fetch", e.to_string()),
+                };
+                self.audit(
+                    event,
+                    serde_json::json!({"session": sref, "phase": "fetch", "host": host, "result": "failed", "reason": why}),
+                );
                 match e {
                     crate::outbound::OutErr::TooLarge => SessErr::TooLarge,
                     e => SessErr::Upstream(e.to_string()),
                 }
             })?;
+        let fetched = |r: &str| serde_json::json!({"session": sref, "host": host, "result": r, "size": bytes.len(), "sha256": sha256_hex(&bytes)});
         crate::ooxml::check(&bytes, &rec.file_type, cap).map_err(|e| {
             eprintln!("docserver: the document from {host} was refused");
+            self.audit("document.fetch", fetched("refused"));
             Self::doc_err(e)
         })?;
         eprintln!("docserver: document.fetch {host} {} bytes", bytes.len());
+        self.audit("document.fetch", fetched("ok"));
         self.put_version(sid, &bytes, &rec.provider, false, now)?;
         Ok(())
     }

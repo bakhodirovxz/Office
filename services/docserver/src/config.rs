@@ -68,6 +68,16 @@ pub struct Config {
     /// `internal_listen` address (an unspecified one as 127.0.0.1)
     pub internal_url: Option<String>,
     pub encrypt_at_rest: bool,
+    /// the audit log (default `<data_dir>/audit.jsonl`); an existing log must verify or the server does not start
+    pub audit_file: Option<PathBuf>,
+    /// the operator's key of the audit chain (32 bytes or more, kept outside the data directory); without it the chain only stops a naive edit
+    pub audit_key_file: Option<PathBuf>,
+    /// leave document titles out of the audit log
+    pub redact: bool,
+    /// session create attempts per client address and minute
+    pub rate_create_per_min: u32,
+    /// failed authentications per client address and minute; over it the answer is 429
+    pub rate_auth_fail_per_min: u32,
     pub providers: Vec<ProviderConfig>,
 }
 
@@ -83,6 +93,11 @@ impl Default for Config {
             internal_allow: vec![],
             internal_url: None,
             encrypt_at_rest: false,
+            audit_file: None,
+            audit_key_file: None,
+            redact: false,
+            rate_create_per_min: 30,
+            rate_auth_fail_per_min: 20,
             providers: vec![],
         }
     }
@@ -126,6 +141,8 @@ pub struct Docserver {
     pub internal_url: Option<String>,
     pub encrypt_at_rest: bool,
     pub providers: Vec<Provider>,
+    /// the audit log and the rate limits (WP8)
+    pub watch: std::sync::Arc<crate::audit::Watch>,
     /// the name lookup of every outbound request; the system resolver unless a test replaces it
     pub lookup: crate::outbound::Lookup,
 }
@@ -268,6 +285,14 @@ impl Config {
         }
         if !(1..=600).contains(&self.fetch_timeout_s) {
             return Err("docserver: fetch_timeout_s must be 1 to 600".into());
+        }
+        if !(1..=100_000).contains(&self.rate_create_per_min)
+            || !(1..=100_000).contains(&self.rate_auth_fail_per_min)
+        {
+            return Err(
+                "docserver: rate_create_per_min and rate_auth_fail_per_min must be 1 to 100000"
+                    .into(),
+            );
         }
         // a security option that does nothing is worse than a refusal (WP14 implements it)
         if self.encrypt_at_rest {
@@ -412,6 +437,27 @@ impl Config {
                 p.name
             );
         }
+        let audit_path = self
+            .audit_file
+            .clone()
+            .unwrap_or_else(|| data_dir.join("audit.jsonl"));
+        let log = convert::audit::AuditLog::open_keyed(
+            &audit_path,
+            self.redact,
+            self.audit_key_file.as_deref(),
+        )
+        .map_err(|e| format!("docserver: {e}"))?;
+        if !log.is_keyed() {
+            eprintln!(
+                "docserver: warning: audit_key_file is not set: the audit chain only stops a naive edit, because anyone who can write {} can rewrite it and recompute the hashes",
+                audit_path.display()
+            );
+        }
+        let watch = std::sync::Arc::new(crate::audit::Watch::new(
+            Some(log),
+            self.rate_create_per_min,
+            self.rate_auth_fail_per_min,
+        ));
         Ok(Docserver {
             server_secret,
             data_dir,
@@ -422,6 +468,7 @@ impl Config {
             internal_url,
             encrypt_at_rest: self.encrypt_at_rest,
             providers,
+            watch,
             lookup: crate::outbound::system_lookup(),
         })
     }
@@ -496,6 +543,46 @@ frame_origins = ["https://app.test"]
             !e.contains(&"s".repeat(32)) && !e.contains(&"a".repeat(32)),
             "a secret leaked: {e}"
         );
+    }
+
+    #[test]
+    fn the_audit_log_and_the_limits_are_checked_at_start() {
+        let d = Dir::new("audit");
+        // a damaged log is not extended: the server does not start
+        std::fs::create_dir_all(d.path("data")).unwrap();
+        std::fs::write(
+            d.path("data/audit.jsonl"),
+            "not json
+",
+        )
+        .unwrap();
+        refused(&d, &|_| {}, "damaged");
+        std::fs::remove_file(d.path("data/audit.jsonl")).unwrap();
+        // a key file that is too short, and limits out of range
+        refused(
+            &d,
+            &|t| {
+                t.insert("audit_key_file".into(), d.path("short").into());
+            },
+            "audit key",
+        );
+        std::fs::write(d.path("short"), "tiny").unwrap();
+        refused(
+            &d,
+            &|t| {
+                t.insert("audit_key_file".into(), d.path("short").into());
+            },
+            "at least 32",
+        );
+        refused(
+            &d,
+            &|t| {
+                t.insert("rate_auth_fail_per_min".into(), 0.into());
+            },
+            "rate_create_per_min",
+        );
+        let ds = d.toml(&|_| {}).unwrap();
+        assert!(ds.watch.auth_rl.hit("x").is_ok() && d.0.join("data").is_dir());
     }
 
     #[test]

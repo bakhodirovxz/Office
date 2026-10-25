@@ -61,11 +61,12 @@ test.beforeAll(async () => {
   fs.writeFileSync(path.join(dir, 'server-secret'), crypto.randomBytes(48));
   fs.writeFileSync(path.join(dir, 'provider-secret'), secret);
   fs.writeFileSync(path.join(dir, 'converter-secret'), crypto.randomBytes(48));
+  fs.writeFileSync(path.join(dir, 'audit-key'), crypto.randomBytes(48).toString('hex'));
   const f = (n: string) => path.join(dir, n).replace(/\\/g, '/');
   fs.writeFileSync(path.join(dir, 'api.toml'), [
     `listen = "127.0.0.1:${dsPort}"`, 'auth = "jwt"', `secret_file = "${f('converter-secret')}"`, `tls_cert = "${f('server.pem')}"`, `tls_key = "${f('server.key')}"`, `public_url = "${DS}"`,
     'trusted_proxies = []', `work_dir = "${f('work')}"`, `store_dir = "${f('store')}"`,
-    '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('data')}"`, `internal_listen = "127.0.0.1:${intPort}"`, 'internal_allow = ["127.0.0.1"]',
+    '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('data')}"`, `audit_key_file = "${f('audit-key')}"`, `internal_listen = "127.0.0.1:${intPort}"`, 'internal_allow = ["127.0.0.1"]',
     '[[docserver.providers]]', 'name = "fake"', 'issuer = "fake"', `secret_file = "${f('provider-secret')}"`,
     `fetch_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`,
     `callback_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`, `frame_origins = ["${HOST}"]`,
@@ -186,6 +187,18 @@ test('cross-site: api.js, session, the document is shown, save, close; no CSP vi
   expect(hrm2.received.slice(hrm0.received.length).map((r) => r.status)).toEqual([6, 2]);
   expect(hrm2.received.at(-1)!.sha256).toBe(sha(path.join(sdir, 'v2.bin')));
   expect(hrm2.rejected).toEqual(hrm0.rejected);
+
+  // S16/S17: the audit log has the events of this run, and neither it nor the server's stderr holds a token, a secret, a session id
+  // or a query string
+  const audit = fs.readFileSync(path.join(dir, 'data/audit.jsonl'), 'utf8');
+  const events = audit.trim().split(/\r?\n/).map((l) => JSON.parse(l).event);
+  for (const e of ['session.create', 'document.fetch', 'callback', 'save', 'close']) expect(events).toContain(e);
+  const secrets = ['provider-secret', 'server-secret', 'audit-key'].map((n) => fs.readFileSync(path.join(dir, n), 'latin1').trim());
+  for (const [what, text] of [['audit log', audit], ['server stderr', dsLog]]) {
+    for (const needle of [path.basename(sdir), ...secrets, 'Bearer', '?t=', '/ds/files']) expect(text, what).not.toContain(needle);
+    expect(text, what).not.toMatch(/eyJ[A-Za-z0-9_-]{10,}/);
+  }
+  expect(audit).not.toContain('?');
   // the host's events stay on its page: the config the server got is the signed one, with the origin api.js saw
   expect(created.length).toBe(1);
   const sent = JSON.parse(created[0]);

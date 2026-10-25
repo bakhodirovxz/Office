@@ -3,6 +3,7 @@
 //! are served by `routes`, the session handlers are in `api` (WP3: `sessions` and `tokens`). Nothing here is mounted unless the config file has a `[docserver]` section.
 #![forbid(unsafe_code)]
 mod api;
+pub mod audit;
 pub mod callback;
 pub mod config;
 pub mod ooxml;
