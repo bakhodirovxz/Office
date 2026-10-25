@@ -1,5 +1,5 @@
 //! The route table (PLAN phase 5, 3.1) with the security headers of the cross-site rules (F5), and the internal listener's router
-//! (F4). The handlers are stubs that answer 501; WP3 and later replace them one by one. The header rules do not depend on them.
+//! (F4). The embed script and the wrapper page (WP5) are static files of this crate; the session handlers are in `api`.
 use crate::Docserver;
 use axum::Router;
 use axum::extract::{ConnectInfo, Request, State};
@@ -11,12 +11,20 @@ use convert_api::routes::{ApiError, CSP, NO_FRAME_OPTIONS, baseline_headers};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-async fn stub() -> ApiError {
-    ApiError::new(
-        StatusCode::NOT_IMPLEMENTED,
-        "not_implemented",
-        "this route is not available in this build yet",
-    )
+const API_JS: &str = include_str!("../static/api.js");
+const EDITOR_HTML: &str = include_str!("../static/editor.html");
+const EDITOR_JS: &str = include_str!("../static/editor.js");
+
+async fn api_js() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/javascript; charset=utf-8")], API_JS)
+}
+
+async fn editor_html() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], EDITOR_HTML)
+}
+
+async fn editor_js() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/javascript; charset=utf-8")], EDITOR_JS)
 }
 
 async fn not_found() -> ApiError {
@@ -39,8 +47,8 @@ impl Docserver {
         let csp = HeaderValue::from_str(&self.frame_csp())
             .expect("frame origins are checked to be plain origins");
         let embed = Router::new()
-            .route("/ds/api.js", get(stub))
-            .route("/web-apps/apps/api/documents/api.js", get(stub))
+            .route("/ds/api.js", get(api_js))
+            .route("/web-apps/apps/api/documents/api.js", get(api_js))
             .layer(middleware::map_response(|mut r: Response| async move {
                 r.headers_mut().insert(
                     "cross-origin-resource-policy",
@@ -56,7 +64,7 @@ impl Docserver {
                 r
             }));
         let frame = Router::new()
-            .route("/ds/editor", get(stub))
+            .route("/ds/editor", get(editor_html))
             .layer(middleware::map_response(move |mut r: Response| {
                 let csp = csp.clone();
                 async move {
@@ -69,6 +77,7 @@ impl Docserver {
         Router::new()
             .merge(embed)
             .merge(frame)
+            .route("/ds/editor.js", get(editor_js))
             .merge(self.session_routes())
     }
 
