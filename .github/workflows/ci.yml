@@ -431,6 +431,21 @@ jobs:
       - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
       - run: scripts/ci.sh disk-guard shell
 
+  docserver:
+    # Phase 5 WP16: fmt, clippy, tests of docserver/fake-hrm/suite-serve, the docserver and bridge-docs Playwright specs. Needs the docs-web dist
+    # and shell/ on the runner (as the shell job). The Docker rehearsal is on demand: run `scripts/ci.sh docserver rehearsal` on a box with Docker.
+    if: ${{ inputs.profile != 'quick' }}
+    needs: [convert]
+    runs-on: [self-hosted, windows, x64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ hashFiles('services/Cargo.lock', 'domains/*/Cargo.lock') }}
+      - run: npm ci --prefix ci/web-smoke && npm exec --prefix ci/web-smoke -- playwright install --with-deps chromium
+      - run: scripts/ci.sh disk-guard docserver
+
   desktop:
     # Phase 4 WP22, on demand (input desktop): drives the real hoshiya.exe and the editor exes, so it needs an interactive desktop session.
     # Restores the user's settings.toml afterwards (toolbar-share-check.py uses the real one).
