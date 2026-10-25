@@ -393,8 +393,8 @@ a few seconds even when a tenth of the cells differ. The files are the existing 
   versions, Save a copy and Compare (only with `download`), Restore and Name (only with `edit`); the server stays the
   enforcement point. The rows and the diff renderers are `web/shell/history-ui.js`, shared with the desktop panel and
   loaded by the wrapper from `/shell/` together with `shell.css` and `history.css` (same origin, CSP unchanged). Esc
-  closes the panel and the focus returns to the button. Restoring in an open session does not reload the editor (the
-  dialog says to close the document first). Tests: `ci/web-smoke/docserver.spec.ts` "History panel". The Docker image
+  closes the panel and the focus returns to the button. A restore reloads the editor with the restored version, so the
+  editor's next save cannot overwrite it. Tests: `ci/web-smoke/docserver.spec.ts` "History panel". The Docker image
   does not carry the two binaries yet (Linux builds of both are needed).
 - **Packaging:** the MSI does not ship `docs-diff.exe`/`sheets-diff.exe` yet; the desktop Compare view says "the
   compare tool … is not installed" until it does (`packaging/windows`, next MSI).
