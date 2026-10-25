@@ -108,6 +108,7 @@ and `application/octet-stream` for markup, so a downloaded html file can never r
 | `xdfu_audit_file` | - | the XDFU audit log. Required in server mode, on storage that survives a restart (not the RAM disk of `work_dir`); local mode defaults to `<user data dir>/convert/xdfu-audit.jsonl` |
 | `xdfu_audit_key_file` | - | the operator's key of the audit log: 32 or more random bytes (raw, 64 hex characters or base64), kept outside the log and its directory. With it every line is an HMAC-SHA256 and `convert xdfu-verify --key FILE` is needed to check the log; without it the server prints a warning at start, because anyone who can write the log can rewrite it and recompute an unkeyed chain. A passphrase is refused |
 | `xdfu_redact` | `false` | leave file names out of the audit log |
+| `pdf_fallback` | `false` | redo a native PDF to DOCX that lost text with the pdf2docx sidecar (needs `CONVERT_PDF2DOCX_URL`). An operator switch (gate review m5); the CLI reads `CONVERT_PDF_FALLBACK=1`. Never used for a job whose input carries the grif or cannot be checked for it |
 | `cpu_slots` | `clamp(cores/3, 1, 4)` | concurrent conversions |
 | `mem_budget_mb` | 12288 | each conversion reserves its estimate first (sheets 20 MB per input MB, others 40, plus 256, capped at the tool cap) |
 | `queue_max`, `per_user_active` | 100, 3 | active jobs in total, and per `sub` |

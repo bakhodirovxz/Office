@@ -52,6 +52,10 @@ pub trait JobHook: Send + Sync {
     ) -> Result<Vec<Warning>, Failure> {
         Ok(vec![])
     }
+    /// The job's input carries the grif, or could not be checked for it: XDFU rules apply to it (no sidecar fallback).
+    fn flagged(&self, _ctx: &JobCtx) -> bool {
+        false
+    }
     /// The job is over, whatever its result. The hook forgets the job; what it returns goes into the report as `xdfu`.
     fn finish(&self, _ctx: &JobCtx) -> Option<serde_json::Value> {
         None

@@ -262,6 +262,9 @@ pub struct Config {
     pub verify: bool,
     /// the pdf2docx sidecar (`CONVERT_PDF2DOCX_URL`), e.g. `http://127.0.0.1:18080`
     pub pdf2docx_url: Option<String>,
+    /// the operator's switch (`CONVERT_PDF_FALLBACK=1`; the API's `pdf_fallback`): a native pdf to docx that lost text is redone by the
+    /// sidecar. Off by default, and never used for a job that carries the XDFU grif (gate review m5).
+    pub pdf_fallback: bool,
     /// first wait after a busy (503) sidecar; doubles on each retry
     pub http_backoff_ms: u64,
     /// extra variables passed through (fonts); the rest of the environment is cleared
@@ -355,6 +358,8 @@ impl Config {
             pdf2docx_url: std::env::var("CONVERT_PDF2DOCX_URL")
                 .ok()
                 .filter(|u| !u.is_empty()),
+            pdf_fallback: std::env::var("CONVERT_PDF_FALLBACK")
+                .is_ok_and(|v| matches!(v.as_str(), "1" | "true" | "on" | "yes")),
             http_backoff_ms: 1000,
             pass_env: pass
                 .iter()

@@ -67,7 +67,13 @@ pub struct Config {
     /// `http://host:port` the provider uses to reach the internal listener; it goes into the saved-file URL of a callback. Default: the
     /// `internal_listen` address (an unspecified one as 127.0.0.1)
     pub internal_url: Option<String>,
+    /// seal session files, versions, autosave and history objects under `data_dir` (WP14); needs `encrypt_key_file`
     pub encrypt_at_rest: bool,
+    /// the at-rest key: 32 random bytes or more, kept outside `data_dir`, different from every other secret
+    pub encrypt_key_file: Option<PathBuf>,
+    /// `"off"` (default: nothing is registered or stamped) or `"watermark"`: every download or callback copy of a document that carries
+    /// the grif gets the cl. 12 stamp (WP14). Needs `encrypt_at_rest` and `audit_key_file`. `"refuse"` is a converter-server option only.
+    pub xdfu: String,
     /// the audit log (default `<data_dir>/audit.jsonl`); an existing log must verify or the server does not start
     pub audit_file: Option<PathBuf>,
     /// the operator's key of the audit chain (32 bytes or more, kept outside the data directory); without it the chain only stops a naive edit
@@ -93,6 +99,8 @@ impl Default for Config {
             internal_allow: vec![],
             internal_url: None,
             encrypt_at_rest: false,
+            encrypt_key_file: None,
+            xdfu: "off".into(),
             audit_file: None,
             audit_key_file: None,
             redact: false,
@@ -139,7 +147,10 @@ pub struct Docserver {
     pub internal: Option<Internal>,
     /// how the provider reaches the internal listener (no trailing slash); None without one
     pub internal_url: Option<String>,
-    pub encrypt_at_rest: bool,
+    /// the at-rest key, when `encrypt_at_rest` is on
+    pub at_rest: Option<std::sync::Arc<crate::atrest::AtRest>>,
+    /// the XDFU stamping, when `xdfu` is not `off`
+    pub xdfu: Option<std::sync::Arc<crate::xdfu::Xdfu>>,
     pub providers: Vec<Provider>,
     /// the audit log and the rate limits (WP8)
     pub watch: std::sync::Arc<crate::audit::Watch>,
@@ -294,10 +305,47 @@ impl Config {
                     .into(),
             );
         }
-        // a security option that does nothing is worse than a refusal (WP14 implements it)
-        if self.encrypt_at_rest {
-            return Err("docserver: encrypt_at_rest is not implemented yet".into());
+        let xdfu_mode =
+            xdfu_core::Mode::parse(&self.xdfu).map_err(|e| format!("docserver: {e}"))?;
+        if xdfu_mode == xdfu_core::Mode::Refuse {
+            return Err("docserver: xdfu = \"refuse\" is an option of the converter server only; use \"watermark\"".into());
         }
+        // a security option that does nothing is worse than a refusal
+        if self.encrypt_key_file.is_some() && !self.encrypt_at_rest {
+            return Err("docserver: encrypt_key_file is set but encrypt_at_rest is false".into());
+        }
+        if xdfu_mode != xdfu_core::Mode::Off && !self.encrypt_at_rest {
+            return Err(
+                "docserver: xdfu needs encrypt_at_rest = true (PLAN phase 5, section 4)".into(),
+            );
+        }
+        if xdfu_mode != xdfu_core::Mode::Off && self.audit_key_file.is_none() {
+            return Err(
+                "docserver: xdfu needs audit_key_file: the copy numbers come from a keyed chain"
+                    .into(),
+            );
+        }
+        let at_rest_key = if self.encrypt_at_rest {
+            let k = need(&self.encrypt_key_file, "encrypt_key_file")?;
+            let k = read_secret(&k, "encrypt_key_file")?;
+            if k == server_secret {
+                return Err(
+                    "docserver: encrypt_key_file holds the same secret as server_secret_file"
+                        .into(),
+                );
+            }
+            if let Some(a) = &self.audit_key_file
+                && xdfu_core::audit::load_key(a).is_ok_and(|a| a == k)
+            {
+                return Err(
+                    "docserver: encrypt_key_file holds the same secret as audit_key_file".into(),
+                );
+            }
+            Some(k)
+        } else {
+            crate::atrest::refuse_encrypted_data(&data_dir)?;
+            None
+        };
         let internal = match (&self.internal_listen, self.internal_allow.is_empty()) {
             (None, true) => None,
             (None, false) => return Err("docserver: internal_allow needs internal_listen".into()),
@@ -370,6 +418,12 @@ impl Config {
             if secret == server_secret {
                 return Err(format!(
                     "docserver: {} holds the same secret as server_secret_file",
+                    at("secret_file")
+                ));
+            }
+            if at_rest_key.as_deref() == Some(&secret[..]) {
+                return Err(format!(
+                    "docserver: {} holds the same secret as encrypt_key_file",
                     at("secret_file")
                 ));
             }
@@ -453,6 +507,18 @@ impl Config {
                 audit_path.display()
             );
         }
+        let at_rest = at_rest_key
+            .map(|k| {
+                let a = crate::atrest::AtRest::new(&k);
+                a.init(&data_dir).map(|()| std::sync::Arc::new(a))
+            })
+            .transpose()?;
+        let xdfu = (xdfu_mode != xdfu_core::Mode::Off)
+            .then(|| {
+                crate::xdfu::Xdfu::open(&data_dir, self.audit_key_file.as_deref())
+                    .map(std::sync::Arc::new)
+            })
+            .transpose()?;
         let watch = std::sync::Arc::new(crate::audit::Watch::new(
             Some(log),
             self.rate_create_per_min,
@@ -466,7 +532,8 @@ impl Config {
             fetch_timeout_s: self.fetch_timeout_s,
             internal,
             internal_url,
-            encrypt_at_rest: self.encrypt_at_rest,
+            at_rest,
+            xdfu,
             providers,
             watch,
             lookup: crate::outbound::system_lookup(),
@@ -921,22 +988,87 @@ frame_origins = ["https://app.test"]
     }
 
     #[test]
-    fn encrypt_at_rest_is_refused_until_it_is_implemented() {
+    fn encryption_and_xdfu_options_are_checked() {
         let d = Dir::new("encrypt");
+        std::fs::write(d.path("enc"), [b'e'; 40]).unwrap();
+        std::fs::write(d.path("short"), [b'e'; 10]).unwrap();
+        std::fs::write(d.path("akey"), [b'k'; 40]).unwrap();
+        let on = |t: &mut toml::Table, key: &str| {
+            t.insert("encrypt_at_rest".into(), true.into());
+            t.insert("encrypt_key_file".into(), d.path(key).into());
+        };
         refused(
             &d,
             &|t| {
                 t.insert("encrypt_at_rest".into(), true.into());
             },
-            "encrypt_at_rest is not implemented yet",
+            "encrypt_key_file is required",
         );
         refused(
             &d,
             &|t| {
-                t.insert("fetch_timeout_s".into(), 0.into());
+                t.insert("encrypt_key_file".into(), d.path("enc").into());
             },
-            "fetch_timeout_s",
+            "encrypt_key_file is set but encrypt_at_rest is false",
         );
+        refused(
+            &d,
+            &|t| on(t, "short"),
+            "encrypt_key_file must hold at least 32 bytes",
+        );
+        refused(
+            &d,
+            &|t| on(t, "server"),
+            "same secret as server_secret_file",
+        );
+        refused(&d, &|t| on(t, "a"), "same secret as encrypt_key_file");
+        refused(
+            &d,
+            &|t| {
+                on(t, "enc");
+                t.insert("audit_key_file".into(), d.path("enc").into());
+            },
+            "same secret as audit_key_file",
+        );
+        for (mode, needle) in [
+            ("refuse", "converter server only"),
+            ("on", "expected \"off\""),
+            ("watermark", "xdfu needs encrypt_at_rest"),
+        ] {
+            refused(
+                &d,
+                &|t| {
+                    t.insert("xdfu".into(), mode.into());
+                },
+                needle,
+            );
+        }
+        refused(
+            &d,
+            &|t| {
+                on(t, "enc");
+                t.insert("xdfu".into(), "watermark".into());
+            },
+            "xdfu needs audit_key_file",
+        );
+        // the good combinations
+        let ds = d.toml(&|t| on(t, "enc")).unwrap();
+        assert!(ds.at_rest.is_some() && ds.xdfu.is_none());
+        let ds = d
+            .toml(&|t| {
+                on(t, "enc");
+                t.insert("xdfu".into(), "watermark".into());
+                t.insert("audit_key_file".into(), d.path("akey").into());
+            })
+            .unwrap();
+        assert!(ds.at_rest.is_some() && ds.xdfu.is_some());
+        // the data folder now belongs to that key
+        refused(
+            &d,
+            &|t| on(t, "akey"),
+            "not the key this data_dir was encrypted with",
+        );
+        refused(&d, &|_| {}, "holds encrypted data");
     }
 
     #[test]

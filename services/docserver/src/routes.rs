@@ -148,7 +148,8 @@ mod tests {
                 listen: "127.0.0.1:9000".parse().unwrap(),
                 allow: vec![Cidr::parse("172.18.0.0/16").unwrap()],
             }),
-            encrypt_at_rest: false,
+            at_rest: None,
+            xdfu: None,
             providers: vec![Provider {
                 name: "p".into(),
                 issuer: "i".into(),

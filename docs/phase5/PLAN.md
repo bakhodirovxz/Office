@@ -191,8 +191,25 @@ their bridges (§13.2 R6).
 - **Config-token replay.** A config token may be presented again within its `exp` and opens another session. No one-time index:
   the token already grants access to that document for its whole life, and `exp` is at most 12 h, which bounds it (decision,
   2026-10-25).
-- **`encrypt_at_rest = true` is refused at start-up** ("not implemented yet") until WP14 implements it: a security option that is
-  silently ignored is not acceptable (decision, 2026-10-25).
+- **Encryption at rest and XDFU stamping (WP14, as built).** `encrypt_at_rest = true` with `encrypt_key_file` (32 random bytes or more, kept
+  outside `data_dir`, refused if equal to `server_secret_file`, `audit_key_file` or any provider secret) seals `session.json`, `v<N>.bin`,
+  `autosave.bin` and the history objects (`history/objects/<sha>`) with AES-256-GCM (`services/docserver/src/atrest.rs`; the AEAD
+  `convert-api` already uses). Format: `"DSAR1"`, a random 12-byte nonce, ciphertext and tag; the authenticated header is the magic plus
+  the file's name under `data_dir`, so a file moved over another fails. A file that does not open (wrong key, damaged, plaintext) is
+  refused, never served as it is. `at-rest.check` (sealed text) in `data_dir` is checked at start: a wrong key, encryption switched off
+  over encrypted data, or switched on over plaintext data stops the start. Not sealed, and holding no document bytes: the history index
+  (`history/docs/*.jsonl`: versions, authors, times), the retry queue and the audit logs. **Threat model:** this protects the data folder
+  against theft of the disk or the volume, and against a copy or a backup of it. It does not protect against someone who is root on
+  the running host (the key is in the server's memory and the key file must be readable by it), and not against anyone who can use
+  the server's own routes with a valid session token. `xdfu = "watermark"` (default `"off"`: nothing is built, registered or
+  stamped; `"refuse"` is a converter-server option only) needs `encrypt_at_rest` and `audit_key_file`. A copy that leaves the
+  server (a history version downloaded with the `download` permission, or the saved file a callback hands to the provider) of a
+  docx, xlsx or pptx that carries the grif gets the cl. 12 stamp line (copy number, the requester's network address, the session's
+  user name, UTC time) through the converter's stamping, and one line in the keyed chain `<data_dir>/xdfu-audit.jsonl` whose `seq`
+  is the copy number. A document without the grif is served as it is and logs nothing. A copy that cannot be checked or stamped
+  (a pdf, a damaged package) or logged is refused. The editor's own load (`/document`) is the working copy, not a copy, and is
+  not stamped. The sidecar fallback of the PDF to DOCX guard (gate review m5) is the operator's switch `pdf_fallback` (API config) or
+  `CONVERT_PDF_FALLBACK=1` (CLI), off by default, and never used for a job that carries the grif or cannot be checked for it.
 - **Size limits.** Fetch cap `max_document_mb` (default 50, the HRB cap `hr-backend-prompt.md:342`, and phase3 O3), by
   `Content-Length` first, then by counted bytes. The same cap on save and autosave bodies. Zip magic plus the
   converter's central-directory check against zip bombs (phase3 PLAN §5.5, `docs/phase3/PLAN.md:448-450`), and the

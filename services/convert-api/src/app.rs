@@ -438,6 +438,7 @@ impl App {
             )));
         }
         cfg.work_dir = r.work_dir.clone();
+        cfg.pdf_fallback = r.s.pdf_fallback;
         cfg.max_input_mb = r.s.max_file_mb.max(r.s.max_xlsx_mb);
         cfg.job_timeout_s = r.s.job_timeout_s;
         // server mode: fonts come from the image, not from a user profile

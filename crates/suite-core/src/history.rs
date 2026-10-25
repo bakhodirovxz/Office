@@ -103,7 +103,17 @@ pub struct Verified {
     pub last_hash: String,
 }
 
+/// Seals the stored document bytes (the server's encryption at rest, Phase 5 WP14). `name` is authenticated with the bytes. The index
+/// files hold version metadata only and are not sealed.
+pub trait Sealer: Send + Sync {
+    fn seal(&self, name: &str, plain: &[u8]) -> io::Result<Vec<u8>>;
+    fn open(&self, name: &str, sealed: &[u8]) -> io::Result<Vec<u8>>;
+    /// bytes a sealed file is longer than its plaintext
+    fn overhead(&self) -> usize;
+}
+
 pub struct Store {
+    sealer: Option<std::sync::Arc<dyn Sealer>>,
     root: PathBuf,
     limits: Limits,
     author: String,
@@ -392,6 +402,7 @@ fn parse_doc(text: &str, key: Option<&[u8]>) -> Result<Doc, String> {
 impl Store {
     pub fn new(root: PathBuf, limits: Limits) -> Store {
         Store {
+            sealer: None,
             root,
             limits,
             author: os_user(),
@@ -404,6 +415,21 @@ impl Store {
     pub fn with_key(mut self, key: &[u8]) -> Store {
         self.key = Some(key.to_vec());
         self
+    }
+
+    /// Keep the version bytes sealed on disk (`objects/`).
+    pub fn with_sealer(mut self, sealer: std::sync::Arc<dyn Sealer>) -> Store {
+        self.sealer = Some(sealer);
+        self
+    }
+
+    /// The stored bytes of an object, opened when the store is sealed (a file that does not open is an error, never plaintext).
+    fn get_object(&self, sha: &str) -> io::Result<Vec<u8>> {
+        let b = fs::read(self.object(sha))?;
+        match &self.sealer {
+            Some(s) => s.open(&format!("history/objects/{sha}"), &b),
+            None => Ok(b),
+        }
     }
 
     /// The clock the retention rules read (tests, or the server's own time source).
@@ -510,11 +536,18 @@ impl Store {
 
     fn put_object(&self, sha: &str, bytes: &[u8]) -> io::Result<()> {
         let p = self.object(sha);
-        if p.is_file() && p.metadata().is_ok_and(|m| m.len() == bytes.len() as u64) {
+        let extra = self.sealer.as_ref().map_or(0, |s| s.overhead());
+        if p.is_file()
+            && p.metadata()
+                .is_ok_and(|m| m.len() == (bytes.len() + extra) as u64)
+        {
             return Ok(());
         }
         fs::create_dir_all(self.root.join("objects"))?;
-        write_atomic(&p, bytes)
+        match &self.sealer {
+            Some(s) => write_atomic(&p, &s.seal(&format!("history/objects/{sha}"), bytes)?),
+            None => write_atomic(&p, bytes),
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -603,7 +636,7 @@ impl Store {
         let doc = self.read_doc_id(id)?;
         match doc.all.get(&v) {
             Some((ver, false)) => {
-                let b = fs::read(self.object(&ver.sha256))?;
+                let b = self.get_object(&ver.sha256)?;
                 if sha(&b) != ver.sha256 {
                     return Err(bad(format!(
                         "version {v}: the stored bytes do not match their hash"
@@ -688,7 +721,8 @@ impl Store {
         let text = fs::read_to_string(self.doc_file(id)).map_err(|e| e.to_string())?;
         let doc = parse_doc(&text, self.key.as_deref())?;
         for v in doc.live() {
-            let b = fs::read(self.object(&v.sha256))
+            let b = self
+                .get_object(&v.sha256)
                 .map_err(|_| format!("version {}: the stored bytes are missing", v.v))?;
             if sha(&b) != v.sha256 {
                 return Err(format!(

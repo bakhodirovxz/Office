@@ -219,6 +219,11 @@ fn rand_sid() -> Result<String, SessErr> {
 }
 
 impl Docserver {
+    /// `write_atomic` of `bytes` sealed for `path` when encryption at rest is on.
+    fn write_stored(&self, path: &Path, bytes: &[u8]) -> Result<(), SessErr> {
+        Ok(write_atomic(path, &self.to_store(path, bytes)?)?)
+    }
+
     fn session_dir(&self, sid: &str) -> Option<PathBuf> {
         valid_sid(sid).then(|| self.data_dir.join("sessions").join(sid))
     }
@@ -358,14 +363,16 @@ impl Docserver {
     }
 
     pub fn load_session(&self, sid: &str) -> Option<SessionRecord> {
-        let b = std::fs::read(self.session_dir(sid)?.join("session.json")).ok()?;
+        let b = self
+            .read_stored(&self.session_dir(sid)?.join("session.json"))
+            .ok()?;
         serde_json::from_slice(&b).ok()
     }
 
     fn store(&self, rec: &SessionRecord) -> Result<(), SessErr> {
         let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
         let b = serde_json::to_vec_pretty(rec).map_err(|e| SessErr::Io(e.to_string()))?;
-        Ok(write_atomic(&dir.join("session.json"), &b)?)
+        self.write_stored(&dir.join("session.json"), &b)
     }
 
     /// An open (not closed) session, for a change. Call under the lock.
@@ -388,7 +395,7 @@ impl Docserver {
         let mut rec = self.open_session(sid)?;
         let n = rec.versions.len() as u64 + 1;
         let dir = self.session_dir(sid).ok_or(SessErr::NotFound)?;
-        write_atomic(&dir.join(format!("v{n}.bin")), bytes)?;
+        self.write_stored(&dir.join(format!("v{n}.bin")), bytes)?;
         if n == 1 {
             rec.acked = 1; // the document as the provider gave it is, by definition, what the provider has
         }
@@ -411,14 +418,16 @@ impl Docserver {
     pub fn read_version(&self, sid: &str, n: u64) -> Option<Vec<u8>> {
         let rec = self.load_session(sid)?;
         let v = rec.versions.iter().find(|v| v.n == n)?;
-        let b = std::fs::read(self.session_dir(sid)?.join(format!("v{n}.bin"))).ok()?;
+        let b = self
+            .read_stored(&self.session_dir(sid)?.join(format!("v{n}.bin")))
+            .ok()?;
         ct_eq(sha256_hex(&b).as_bytes(), v.sha256.as_bytes()).then_some(b)
     }
 
     pub fn put_autosave(&self, sid: &str, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
-        write_atomic(
+        self.write_stored(
             &self
                 .session_dir(sid)
                 .ok_or(SessErr::NotFound)?
