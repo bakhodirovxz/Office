@@ -128,10 +128,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
 - **F9. The index `sha256` was joined under `objects/` unchecked. Fixed `00c7f5c`:** 64 lowercase hex digits or the line
   is refused (test `an_index_sha256_that_is_not_a_hash_is_refused`). Needed write access to the user's own store, so no
   privilege boundary was crossed.
-- **F10. History of documents on network or mapped drives is refused (plausible, not run).** `history.rs:174`, `:445` store
-  `fs::canonicalize`, which is `\\?\UNC\...` for a mapped drive; `history_target` checks it as a page path, which refuses
-  UNC (`suite-desktop/src/lib.rs:146`, `:177-179`). Office files often live on file servers. Fix: once the page path
-  matched a stored path, check it as a user path. Test on a mapped `H:` first.
+- **F10. History of documents on network or mapped drives was refused. Fixed in the commit that follows `5798231`, measured on a `net use` mapped drive.** Before: opening the panel for `H:\a.docx` answered a 'no saved versions' text (the store lists `\?\UNC\srv\share\a.docx`, compared as a string), and once matched, `check_file(.., Source::Page)` refused any canonical UNC path; a Recent reopen from the page failed the same way. Saving and opening from the editor were never affected (history errors are ignored there). Fix in `services/suite-desktop/src/lib.rs`: a drive-letter path matches a stored document by `doc_id`; a path the host already knows (history store, Recent) is checked as a user path. An unknown share path from the page is still refused.
 - **F11. History IPC runs on the WebView UI thread** (`host.rs:499-507`). Listing verifies by hashing every live version
   (`history.rs:538-546`, up to the 2 GB cap); the page gives up after 20 s (`history.js:25`) while the host may still
   finish a restore, so the user may retry. Fix: run `history_*` on a worker as `Pick` does; list with size checks only.

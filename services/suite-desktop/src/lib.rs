@@ -481,7 +481,8 @@ impl Ctx {
             if src == Source::Page && !self.store.knows(path) {
                 return Err("this file is not in the recent list".into());
             }
-            let (app, p) = check_file(&self.brand, path, src)?;
+            // a file the host knows is the user's own, also on a mapped drive (F10)
+            let (app, p) = check_file(&self.brand, path, Source::User)?;
             let exe = self.bin_dir.join(format!("{}.exe", app.bin));
             if !exe.is_file() {
                 return Err(format!("the editor {}.exe is not installed", app.bin));
@@ -519,7 +520,7 @@ impl Ctx {
             if src == Source::Page && !self.store.knows(path) {
                 return Err("this file is not in the recent list".into());
             }
-            let (app, p) = check_file(&self.brand, path, src)?;
+            let (app, p) = check_file(&self.brand, path, Source::User)?;
             if app.id != "sheets" {
                 return Err("this file is not a workbook".into());
             }
@@ -545,10 +546,19 @@ impl Ctx {
             .ok_or("the version history is not available")?;
         // the store keeps the canonical path (`\\?\C:\...`): the page may send it with or without the prefix
         let same = |d: &str| d == path || d.strip_prefix(r"\\?\") == Some(path);
-        if !h.documents().iter().any(|d| same(&d.path)) {
+        // a mapped drive (`H:\a.docx`) is stored as `\\?\UNC\srv\share\a.docx`: a drive-letter path matches by document id (this
+        // touches only the user's own drive, never a UNC path from the page)
+        let drive = matches!(Path::new(path).components().next(), Some(Component::Prefix(p)) if matches!(p.kind(), Prefix::Disk(_) | Prefix::VerbatimDisk(_)));
+        let id = drive.then(|| suite_core::history::doc_id(Path::new(path)));
+        if !h
+            .documents()
+            .iter()
+            .any(|d| same(&d.path) || id.as_deref() == Some(d.id.as_str()))
+        {
             return Err("this file has no saved versions".into());
         }
-        let (app, p) = check_file(&self.brand, path, Source::Page)?;
+        // the store holds only files the user opened, so a share is allowed here (F10)
+        let (app, p) = check_file(&self.brand, path, Source::User)?;
         Ok((h, app, p))
     }
 
@@ -1143,6 +1153,47 @@ bin = "tst-pdf"
         assert!(check_file(&b, r"\\.\C:\x.docx", Source::User).is_err());
         assert!(check_file(&b, r"C:a.docx", Source::User).is_err());
         assert!(check_file(&b, r"\a.docx", Source::User).is_err());
+    }
+
+    /// F10: a document on a share (UNC) or a mapped drive keeps its history and can be reopened from the page. The share is the
+    /// machine's own admin share (`\localhost\C$`), a mapped drive comes from `SUITE_TEST_MAPPED_DIR` (a folder on a mapped
+    /// drive); the test is skipped when neither is reachable.
+    #[test]
+    #[cfg(windows)]
+    fn a_document_on_a_share_or_mapped_drive_keeps_its_history() {
+        let (c, d, _log) = ctx("f10");
+        let s = d.to_string_lossy().into_owned();
+        let unc = PathBuf::from(format!(r"\localhost\{}${}", &s[..1], &s[2..]));
+        let mut dirs = vec![unc];
+        dirs.extend(std::env::var_os("SUITE_TEST_MAPPED_DIR").map(PathBuf::from));
+        let h = c.history.as_ref().unwrap();
+        let send = |v: Value| reply(c.message(&v.to_string()));
+        let mut ran = 0;
+        for dir in dirs.iter().filter(|d| d.is_dir()) {
+            ran += 1;
+            let doc = dir.join(format!("f10-{ran}.docx"));
+            std::fs::write(&doc, b"one").unwrap();
+            assert_eq!(c.open(doc.to_str().unwrap(), Source::User)["ok"], true);
+            h.snapshot(&doc, None).unwrap();
+            // the page asks as the user typed the path, and as the store lists it (`\?\...`)
+            let stored = h.documents()[0].path.clone();
+            for p in [doc.to_str().unwrap(), stored.as_str()] {
+                let v = send(json!({"type": "history_versions", "path": p}));
+                assert_eq!(v["ok"], true, "{p}: {v}");
+            }
+            // Recent lists the path as the user opened it
+            assert_eq!(c.open(doc.to_str().unwrap(), Source::Page)["ok"], true);
+            // a share path that has no versions is still refused for the page
+            let other = dir.join(format!("f10-other-{ran}.docx"));
+            std::fs::write(&other, b"o").unwrap();
+            let v = send(json!({"type": "history_versions", "path": other}));
+            assert_eq!(v["type"], "rejected", "{v}");
+            std::fs::remove_file(&doc).unwrap();
+            std::fs::remove_file(&other).unwrap();
+        }
+        if ran == 0 {
+            eprintln!("skipped: no share reachable");
+        }
     }
 
     #[test]
