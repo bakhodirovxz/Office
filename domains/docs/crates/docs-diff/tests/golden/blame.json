@@ -1,0 +1,46 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 5
+  },
+  "changes": [
+    {
+      "a": 2,
+      "authors": [
+        "Alice Example"
+      ],
+      "b": 2,
+      "op": "modify",
+      "path": "2",
+      "spans": [
+        {
+          "eq": "Tomatoes grew well this year, and the beans were late."
+        },
+        {
+          "ins": " Peppers too."
+        }
+      ]
+    },
+    {
+      "a": 4,
+      "authors": [
+        "Bob Example"
+      ],
+      "op": "delete",
+      "path": "4",
+      "text": "The pond was cleaned twice, in April and in September."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 1,
+    "equal": 4,
+    "format": 0,
+    "inserted": 0,
+    "modified": 1,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

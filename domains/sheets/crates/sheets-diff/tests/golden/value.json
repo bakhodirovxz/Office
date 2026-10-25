@@ -1,0 +1,56 @@
+{
+  "a": {
+    "cells": 26,
+    "sheets": 2
+  },
+  "b": {
+    "cells": 26,
+    "sheets": 2
+  },
+  "schema": 1,
+  "sheets": [
+    {
+      "cells": [
+        {
+          "a": "B3",
+          "b": "B3",
+          "new": {
+            "value": "7"
+          },
+          "old": {
+            "value": "2"
+          }
+        }
+      ],
+      "cols": {
+        "deleted": [],
+        "inserted": []
+      },
+      "name": "Budget",
+      "op": "modify",
+      "rows": {
+        "deleted": [],
+        "inserted": []
+      }
+    }
+  ],
+  "stats": {
+    "cells": 1,
+    "cols": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "rows": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "sheets": {
+      "deleted": 0,
+      "equal": 1,
+      "inserted": 0,
+      "modified": 1,
+      "renamed": 0
+    }
+  },
+  "tool": "sheets-diff"
+}

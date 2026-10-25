@@ -1,0 +1,26 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 7
+  },
+  "changes": [
+    {
+      "b": 3,
+      "op": "insert",
+      "path": "3",
+      "text": "A new paragraph about the apple harvest."
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 6,
+    "format": 0,
+    "inserted": 1,
+    "modified": 0,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

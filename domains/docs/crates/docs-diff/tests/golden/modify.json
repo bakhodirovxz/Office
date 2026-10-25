@@ -1,0 +1,49 @@
+{
+  "a": {
+    "paragraphs": 6
+  },
+  "b": {
+    "paragraphs": 6
+  },
+  "changes": [
+    {
+      "a": 1,
+      "b": 1,
+      "op": "modify",
+      "path": "1",
+      "spans": [
+        {
+          "eq": "The quick "
+        },
+        {
+          "del": "brown"
+        },
+        {
+          "ins": "red"
+        },
+        {
+          "eq": " fox jumps over the "
+        },
+        {
+          "del": "lazy"
+        },
+        {
+          "ins": "sleeping"
+        },
+        {
+          "eq": " dog."
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "stats": {
+    "deleted": 0,
+    "equal": 5,
+    "format": 0,
+    "inserted": 0,
+    "modified": 1,
+    "moved": 0
+  },
+  "tool": "docs-diff"
+}

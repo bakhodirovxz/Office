@@ -1,0 +1,79 @@
+{
+  "a": {
+    "cells": 26,
+    "sheets": 2
+  },
+  "b": {
+    "cells": 22,
+    "sheets": 2
+  },
+  "schema": 1,
+  "sheets": [
+    {
+      "cells": [
+        {
+          "a": "A2",
+          "new": null,
+          "old": {
+            "value": "Seeds"
+          }
+        },
+        {
+          "a": "B2",
+          "new": null,
+          "old": {
+            "value": "4"
+          }
+        },
+        {
+          "a": "C2",
+          "new": null,
+          "old": {
+            "value": "2.5"
+          }
+        },
+        {
+          "a": "D2",
+          "new": null,
+          "old": {
+            "formula": "=B2*C2"
+          }
+        }
+      ],
+      "cols": {
+        "deleted": [],
+        "inserted": []
+      },
+      "name": "Budget",
+      "op": "modify",
+      "rows": {
+        "deleted": [
+          [
+            2,
+            1
+          ]
+        ],
+        "inserted": []
+      }
+    }
+  ],
+  "stats": {
+    "cells": 4,
+    "cols": {
+      "deleted": 0,
+      "inserted": 0
+    },
+    "rows": {
+      "deleted": 1,
+      "inserted": 0
+    },
+    "sheets": {
+      "deleted": 0,
+      "equal": 1,
+      "inserted": 0,
+      "modified": 1,
+      "renamed": 0
+    }
+  },
+  "tool": "sheets-diff"
+}
