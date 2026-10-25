@@ -12,6 +12,7 @@
   body[data-state="ready"] #banner { background: #2e7d32; }
   body[data-state="saved"] #banner { background: #0d47a1; }
   body[data-state="closed"] #banner { background: #4e342e; }
+  body[data-state="warning"] #banner { background: #e65100; }
   body[data-state="error"] #banner { background: #b71c1c; }
   #ph { flex: 1; min-height: 0; }
 </style>
@@ -45,7 +46,8 @@
     // events are the one key outside the token (hrm-current-state.md:312)
     cfg.events = {
       onDocumentReady: function () { setState('ready', 'ready in ' + Math.round(performance.now() - window.__t0) + ' ms'); },
-      onDocumentStateChange: function (e) { log.push({ t: Math.round(performance.now()), dirty: e.data }); },
+      onDocumentStateChange: function (e) { window.__dirty = e.data; log.push({ t: Math.round(performance.now()), dirty: e.data }); },
+      onWarning: function (e) { window.__warning = e.data; setState('warning', e.data.warningDescription || ''); },
       onClosed: function (e) { setState('closed', 'closed status ' + e.data.status); },
       onSaved: function (e) { setState('saved', 'saved v' + e.data.version); },
       onError: function (e) { window.__error = e.data; setState('error', (e.data.status || '') + ' ' + (e.data.message || '')); },

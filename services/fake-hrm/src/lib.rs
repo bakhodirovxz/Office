@@ -87,6 +87,8 @@ pub struct Config {
     pub docserver_public_url: String,
     /// `httpx.Client(timeout=30)` [S:291]
     pub download_timeout: Duration,
+    /// Browser-test routes (`GET /__test/state`, `POST /__test/callback-secret`). Off by default: not part of the surveyed backend.
+    pub test_api: bool,
 }
 
 impl Config {
@@ -102,6 +104,7 @@ impl Config {
             mobile_edit: false,
             docserver_public_url: "http://localhost:0".into(),
             download_timeout: Duration::from_secs(30),
+            test_api: false,
         }
     }
 }
@@ -224,6 +227,8 @@ impl FakeHrm {
             .route("/{seg}/{pk}/save-callback", post(save_callback)) // [S:272-275]
             .route("/docs-file/{token}", get(file_route)) // [S:256]
             .route("/host", get(host_page))
+            .route("/__test/state", get(test_state))
+            .route("/__test/callback-secret", post(test_secret))
             .with_state(shared.clone());
         let task = tokio::spawn(async move {
             let _ = axum::serve(l, app).await;
@@ -413,6 +418,35 @@ async fn file_route(State(st): State<Arc<Shared>>, Path(token): Path<String>) ->
             .into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
+}
+
+/// Test-only (`Config::test_api`): what the backend holds and has accepted, for a browser test that cannot reach the in-process API.
+async fn test_state(State(st): State<Arc<Shared>>) -> Response {
+    if !st.cfg().test_api {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    let g = st.inner();
+    let digest = |b: &[u8]| {
+        Sha256::digest(b)
+            .iter()
+            .map(|x| format!("{x:02x}"))
+            .collect::<String>()
+    };
+    Json(json!({
+        "received": g.received.iter().map(|r| json!({"kind": r.kind.segment(), "id": r.id, "status": r.status, "bytes": r.bytes, "sha256": r.sha256})).collect::<Vec<_>>(),
+        "rejected": g.rejected.iter().map(|r| r.reason.clone()).collect::<Vec<_>>(),
+        "objects": g.objects.iter().map(|(k, v)| (k.clone(), digest(v))).collect::<HashMap<_, _>>(),
+    }))
+    .into_response()
+}
+
+/// Test-only: the body is the secret callbacks are verified with from now on; an empty body restores `ds_secret`.
+async fn test_secret(State(st): State<Arc<Shared>>, body: String) -> Response {
+    if !st.cfg().test_api {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    st.inner().cb_secret_override = (!body.is_empty()).then_some(body);
+    StatusCode::NO_CONTENT.into_response()
 }
 
 async fn host_page(State(st): State<Arc<Shared>>) -> Response {

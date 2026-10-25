@@ -13,10 +13,10 @@ import * as path from 'node:path';
 // Run with: npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.docserver.config.ts
 // Env: DS_BIN (hoshiya-serve), FAKE_HRM_BIN, DIST (trunk dists + shell/, default E:/office-target/p1/dist), OPENSSL.
 //
-// The server's fetch of document.url is WP4's. Until it lands, this spec stands in for it: it watches the session directory and writes
-// version 1 itself, with the bytes it downloads from the fake backend's file route (the URL in a freshly made editor config).
+// The server fetches version 1 itself from the fake backend's file route (WP4); the fake backend runs with its test-only
+// /__test/ routes (FAKE_HRM_TEST_API=1), which show what it received and let a case break its callback verification.
 const ROOT = path.resolve(__dirname, '../..');
-const TARGET = process.env.OFFICE_TARGET ?? 'E:/office-target/p5-wp5';
+const TARGET = process.env.OFFICE_TARGET ?? 'E:/office-target/p5/services';
 const exe = (n: string) => path.join(TARGET, 'debug', n + (process.platform === 'win32' ? '.exe' : ''));
 const DS_BIN = process.env.DS_BIN ?? exe('hoshiya-serve');
 const HRM_BIN = process.env.FAKE_HRM_BIN ?? exe('fake-hrm');
@@ -25,8 +25,8 @@ const OPENSSL = process.env.OPENSSL ?? 'openssl';
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
 
 const free = () => new Promise<number>((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = (s.address() as net.AddressInfo).port; s.close(() => ok(p)); }); });
-let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, shim: NodeJS.Timeout, stray: http.Server;
-let dsPort: number, hrmPort: number, strayPort: number;
+let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server;
+let dsPort: number, hrmPort: number, strayPort: number, intPort: number;
 let DS: string, HOST: string;
 
 const sessions = () => {
@@ -46,12 +46,12 @@ test.beforeAll(async () => {
   fs.writeFileSync(path.join(dir, 'ext.cnf'), 'subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\nbasicConstraints=CA:FALSE\n');
   ssl('x509', '-req', '-in', 'leaf.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-days', '2', '-sha256', '-extfile', 'ext.cnf', '-out', 'server.pem');
   const pin = crypto.createHash('sha256').update(new crypto.X509Certificate(fs.readFileSync(path.join(dir, 'server.pem'))).publicKey.export({ type: 'spki', format: 'der' })).digest('base64');
-  [dsPort, hrmPort, strayPort] = [await free(), await free(), await free()];
+  [dsPort, hrmPort, strayPort, intPort] = [await free(), await free(), await free(), await free()];
   DS = `https://127.0.0.1:${dsPort}`;
   HOST = `http://localhost:${hrmPort}`;
 
   // the fake backend first: it generates the secret the provider entry of the server must hold
-  hrm = spawn(HRM_BIN, [DOCX], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${hrmPort}`, FAKE_HRM_EXP: '1' } });
+  hrm = spawn(HRM_BIN, [DOCX], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
   const secret = await new Promise<string>((ok, bad) => {
     let err = '';
     hrm.stderr!.on('data', (d) => { err += d; const m = /\(secret ([0-9a-f]+),/.exec(err); if (m) ok(m[1]); });
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
   fs.writeFileSync(path.join(dir, 'api.toml'), [
     `listen = "127.0.0.1:${dsPort}"`, 'auth = "jwt"', `secret_file = "${f('converter-secret')}"`, `tls_cert = "${f('server.pem')}"`, `tls_key = "${f('server.key')}"`, `public_url = "${DS}"`,
     'trusted_proxies = []', `work_dir = "${f('work')}"`, `store_dir = "${f('store')}"`,
-    '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('data')}"`,
+    '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('data')}"`, `internal_listen = "127.0.0.1:${intPort}"`, 'internal_allow = ["127.0.0.1"]',
     '[[docserver.providers]]', 'name = "fake"', 'issuer = "fake"', `secret_file = "${f('provider-secret')}"`,
     `fetch_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`,
     `callback_allow = [{ url = "http://127.0.0.1:${hrmPort}", internal = true }]`, `frame_origins = ["${HOST}"]`,
@@ -76,29 +76,10 @@ test.beforeAll(async () => {
   await new Promise<void>((ok, bad) => {
     let out = '';
     ds.stdout!.on('data', (d) => { out += d; if (/listening on https:/.test(out)) ok(); });
-    ds.stderr!.on('data', (d) => { out += d; });
+    ds.stderr!.on('data', (d) => { out += d; dsLog += d; });
     ds.on('exit', (c) => bad(new Error(`server exited early (${c}): ${out}`)));
     setTimeout(() => bad(new Error('server did not start: ' + out)), 20000);
   });
-
-  // the stand-in for WP4's fetch
-  let bytes: Buffer | null = null;
-  const fetchDoc = async () => {
-    const cfg = await (await fetch(`http://127.0.0.1:${hrmPort}/files/1/editor-config`)).json();
-    return Buffer.from(await (await fetch(cfg.document.url)).arrayBuffer());
-  };
-  shim = setInterval(async () => {
-    for (const s of sessions()) {
-      try {
-        const r = record(s);
-        if (r.versions.length || fs.existsSync(path.join(s, 'v1.bin'))) continue;
-        bytes ??= await fetchDoc();
-        fs.writeFileSync(path.join(s, 'v1.bin'), bytes);
-        r.versions = [{ n: 1, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), size: bytes.length, at: Math.floor(Date.now() / 1000), by: 'fake' }];
-        fs.writeFileSync(path.join(s, 'session.json'), JSON.stringify(r));
-      } catch { /* the server is writing the file: next tick */ }
-    }
-  }, 25);
 
   // a page on a site that is NOT a frame origin of the provider, for the framing refusal (S13)
   stray = http.createServer((_, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<!doctype html><iframe id="w" src="${DS}/ds/editor#o=${encodeURIComponent(`http://127.0.0.1:${strayPort}`)}"></iframe>`));
@@ -107,7 +88,6 @@ test.beforeAll(async () => {
   browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${pin}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
 });
 test.afterAll(async () => {
-  clearInterval(shim);
   await browser?.close();
   stray?.close();
   ds?.kill(); hrm?.kill();
@@ -125,6 +105,8 @@ async function open(): Promise<{ ctx: BrowserContext; page: Page; problems: stri
   return { ctx, page, problems };
 }
 const state = (page: Page) => page.locator('body').getAttribute('data-state');
+const hrmState = async () => (await fetch(`http://127.0.0.1:${hrmPort}/__test/state`)).json() as Promise<{ received: { status: number; id: number; sha256: string; bytes: number }[]; rejected: string[]; objects: Record<string, string> }>;
+const sha = (f: string) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 const log = (page: Page) => page.evaluate(() => (window as any).__hrmLog as any[]);
 
 test('cross-site: api.js, session, the document is shown, save, close; no CSP violation', async () => {
@@ -162,7 +144,17 @@ test('cross-site: api.js, session, the document is shown, save, close; no CSP vi
   const [sdir] = sessions();
   const rec = record(sdir);
   expect(rec.title).toBe('01-split-runs.docx');
+  // version 1 is the server's own fetch from the backend's file route
   expect(rec.versions.length).toBe(1);
+  expect(sha(path.join(sdir, 'v1.bin'))).toBe(sha(DOCX));
+  const hrm0 = await hrmState();
+  const object = 'files/1/01-split-runs.docx';
+
+  // the first change of the session: the wrapper tells the server, the server sends callback status 1 (once)
+  await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+  await page.keyboard.type('x');
+  await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+  await expect.poll(() => /callback status 1 to .*: ok/.test(dsLog), { timeout: 15_000 }).toBe(true);
   // (the editor frame shares the wrapper's origin and keeps its own settings in localStorage: only a token-shaped value would be wrong)
   const jwtLike = '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*$';
   expect(await wrapper.evaluate((re) => [...Object.values(localStorage), ...Object.values(sessionStorage)].filter((v) => new RegExp(re).test(v) || /Bearer/.test(v)).length + document.cookie.length, jwtLike)).toBe(0);
@@ -178,12 +170,22 @@ test('cross-site: api.js, session, the document is shown, save, close; no CSP vi
   expect(after.versions.map((v: any) => v.n)).toEqual([1, 2]);
   expect(fs.readFileSync(path.join(sdir, 'v2.bin')).subarray(0, 4).toString('latin1')).toBe('PK\x03\x04');
   expect((await log(page)).length).toBeGreaterThan(l0);
+  // the backend really got it: a status 6 whose download from our internal file route succeeded, and its stored object changed
+  const hrm1 = await hrmState();
+  expect(hrm1.received.slice(hrm0.received.length).map((r) => r.status)).toEqual([6]);
+  expect(hrm1.rejected).toEqual(hrm0.rejected);
+  expect(hrm1.objects[object]).toBe(sha(path.join(sdir, 'v2.bin')));
+  expect(hrm1.objects[object]).not.toBe(sha(DOCX));
 
   // close: the server answers 2 (a save happened since open)
   await page.evaluate(() => (window as any).__editor.close());
   await expect.poll(() => state(page)).toBe('closed');
   expect(await page.locator('#detail').textContent()).toBe('closed status 2');
   expect(record(sdir).closed.status).toBe(2);
+  const hrm2 = await hrmState();
+  expect(hrm2.received.slice(hrm0.received.length).map((r) => r.status)).toEqual([6, 2]);
+  expect(hrm2.received.at(-1)!.sha256).toBe(sha(path.join(sdir, 'v2.bin')));
+  expect(hrm2.rejected).toEqual(hrm0.rejected);
   // the host's events stay on its page: the config the server got is the signed one, with the origin api.js saw
   expect(created.length).toBe(1);
   const sent = JSON.parse(created[0]);
@@ -196,6 +198,31 @@ test('cross-site: api.js, session, the document is shown, save, close; no CSP vi
   expect(await page.evaluate(() => document.getElementById('ph')!.tagName)).toBe('DIV');
   console.log(`MEASURED page load -> onDocumentReady ${readyMs} ms; requestSave -> onSaved ${saveMs} ms`);
   expect(problems).toEqual([]);
+  await ctx.close();
+});
+
+test('S23: the host refuses the callback -> the page hears "not saved" and the document stays dirty', async () => {
+  const { ctx, page } = await open();
+  await page.goto(`${HOST}/host?kind=files&id=1`);
+  await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+  const hrm0 = await hrmState();
+  // the backend now verifies callbacks with another secret: it answers 401 {"error":1}
+  await fetch(`http://127.0.0.1:${hrmPort}/__test/callback-secret`, { method: 'POST', body: 'not-the-provider-secret' });
+  try {
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => state(page), { timeout: 30_000 }).toBe('warning');
+    expect(await page.evaluate(() => (window as any).__warning)).toMatchObject({ warningCode: 1 });
+    expect(await page.evaluate(() => (window as any).__dirty)).toBe(true);
+    // no "saved" was ever shown, the server holds the version, and the backend accepted nothing
+    expect((await log(page)).some((e) => e.state === 'saved')).toBe(false);
+    const [sdir] = sessions();
+    expect(record(sdir).versions.map((v: any) => v.n)).toEqual([1, 2]);
+    const hrm1 = await hrmState();
+    expect(hrm1.received.length).toBe(hrm0.received.length);
+    expect(hrm1.rejected.length).toBe(hrm0.rejected.length + 1);
+  } finally {
+    await fetch(`http://127.0.0.1:${hrmPort}/__test/callback-secret`, { method: 'POST', body: '' });
+  }
   await ctx.close();
 });
 

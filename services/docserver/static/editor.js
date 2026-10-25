@@ -16,7 +16,7 @@
   } catch (e) { /* no host origin: nothing will be accepted */ }
   if (!HOST || window.parent === window) return;
 
-  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, i18n: {}, lang: 'en', title: 'document', fileType: '' };
+  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
   status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:#555';
   document.body.style.cssText = 'margin:0;height:100vh;overflow:hidden';
@@ -56,13 +56,8 @@
     }, wait * 1000);
   }
 
-  async function getDocument() {
-    // the server may still be fetching the file from the host: a few short retries on "not loaded yet"
-    for (var i = 0; ; i++) {
-      try { return await (await api('/document')).arrayBuffer(); }
-      catch (e) { if (e.code !== 'no_document' || i >= 20) throw e; await new Promise(function (ok) { setTimeout(ok, 250); }); }
-    }
-  }
+  // the first call of a session makes the server fetch the file from the host and answers when it is stored
+  async function getDocument() { return (await api('/document')).arrayBuffer(); }
 
   function toEditor(type, extra, transfer) {
     S.frame.contentWindow.postMessage(Object.assign({ type: S.prefix + ':' + type }, extra), location.origin, transfer || []);
@@ -81,15 +76,22 @@
         } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
         break;
       case 'opened': status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); break;
-      case 'dirty': emit('onDocumentStateChange', !!d.dirty); break;
+      case 'dirty':
+        emit('onDocumentStateChange', !!d.dirty);
+        // the first change of the session: the host learns of it once (callback status 1); best effort, the server sends it once
+        if (d.dirty && !S.dirtySent) { S.dirtySent = true; api('/dirty', { method: 'POST' }).catch(function () { S.dirtySent = false; }); }
+        break;
       case 'failed': fail(-1, String(d.error)); break;
       case 'save':
         if (!(d.bytes instanceof ArrayBuffer)) return;
         try {
           var r = await (await api('/save', { method: 'POST', body: d.bytes })).json();
-          emit('onSaved', r);
-          // "failed" comes with the host callback (WP4); "unknown" is a save the server holds but the host has not been told of
-          if (r.callback === 'failed') emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
+          // saved means the host acknowledged it: "failed" and "unknown" (no answer in time) are not, and the document stays dirty
+          if (r.callback === 'ok' && !r.dirty) emit('onSaved', r);
+          else {
+            emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
+            emit('onDocumentStateChange', true);
+          }
         } catch (e) { fail(codeOf(e), 'the document could not be saved'); }
         break;
       case 'autosave':
@@ -107,7 +109,10 @@
     clearTimeout(S.timer);
     // before the session exists there is nothing to end
     S.closing = (S.sid ? api('/close', { method: 'POST' }).then(function (r) { return r.json(); }) : Promise.resolve({ status: 4 })).catch(function () { return { status: 0 }; });
-    emit('onClosed', await S.closing);
+    var c = await S.closing;
+    // a close the host did not acknowledge is queued by the server and retried; the host page is told it is not saved yet
+    if (c.callback === 'failed' || c.callback === 'unknown' || c.dirty) emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
+    emit('onClosed', c);
   }
 
   async function start(cfg, origin) {
