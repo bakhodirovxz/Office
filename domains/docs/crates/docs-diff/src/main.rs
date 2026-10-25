@@ -34,6 +34,8 @@ fn main() -> ExitCode {
     if flag("--timings") {
         eprintln!("read_ms={} diff_ms={}", (t1 - t0).as_millis(), (t2 - t1).as_millis());
     }
+    // two large models take seconds to free; the process ends now anyway
+    std::mem::forget((a, b));
     let same = out["changes"].as_array().is_some_and(Vec::is_empty);
     ExitCode::from(if same { 0 } else { 1 })
 }

@@ -1,8 +1,8 @@
 /* The History panel (WP10). Uses the colour tokens of shell.css. */
 #hist-title { margin: 0; font-size: 1.25rem; font-weight: 700; flex: 1 1 auto; }
 #history[hidden], #hist-body[hidden] { display: none; }
-#hist-title:focus, #h-vers:focus { outline: none; }
-#hist-title:focus-visible, #h-vers:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#hist-title:focus, #h-vers:focus, #h-cmp:focus { outline: none; }
+#hist-title:focus-visible, #h-vers:focus-visible, #h-cmp:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .list .open[aria-current] { font-weight: 700; }
 .list .open:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #hist-chain.ok { color: var(--fg); }
@@ -18,3 +18,15 @@ dialog { background: var(--bg); color: var(--fg); border: 1px solid var(--muted)
 dialog::backdrop { background: rgba(0, 0, 0, .45); }
 dialog input[type=text] { font: inherit; width: 100%; padding: 6px 8px; border: 1px solid var(--muted); border-radius: 6px; background: var(--bg); color: var(--fg); }
 dialog input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* Compare (phase 5 WP12): insertions underlined, deletions struck through, so colour is not the only cue */
+#hist-cmp-sec[hidden], #hist-cmp-bar[hidden] { display: none; }
+.cmpbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.cmpbar select { font: inherit; padding: 4px 6px; border: 1px solid var(--muted); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.cmpbar select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cmp li { flex-wrap: wrap; align-items: baseline; overflow-wrap: anywhere; }
+.cmp .diff { flex: 1 1 20rem; min-width: 0; }
+.cmp ins { text-decoration: underline; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.cmp del, .cmp .gone { text-decoration: line-through; color: var(--muted); }
+.cmp .sheet { display: block; }
+.cmp table.cells { border-collapse: collapse; margin-top: 6px; width: 100%; font-size: .9rem; }
+.cmp .cells th, .cmp .cells td { border: 1px solid var(--line); padding: 2px 6px; text-align: left; vertical-align: top; }

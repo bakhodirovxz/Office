@@ -224,6 +224,12 @@ pub enum Request {
         v: u64,
         name: String,
     },
+    /// the diff of versions `a` (old) and `b` (new) by the editor's diff tool (`docs-diff`, `sheets-diff`; phase 5 WP12)
+    HistoryCompare {
+        path: String,
+        a: u64,
+        b: u64,
+    },
     SettingsGet {},
     SettingsSet {
         key: String,
@@ -445,6 +451,8 @@ pub enum Out {
     Reply(Value),
     /// the host must show the file dialog for these extensions (it blocks, so not on the UI thread)
     Pick(Vec<&'static str>),
+    /// slow work (a diff of two large versions): the host runs it off the UI thread and sends what it returns
+    Work(Box<dyn FnOnce() -> Value + Send>),
 }
 
 fn now() -> u64 {
@@ -623,6 +631,75 @@ impl Ctx {
         })
     }
 
+    /// The diff of two versions, by `<bin_dir>/<app>-diff.exe` on copies in the temp folder. The checks run now; the tool runs
+    /// in [`Out::Work`] (a 40 MB workbook takes about a minute).
+    fn history_compare(&self, path: &str, a: u64, b: u64) -> Out {
+        const TY: &str = "history_compare";
+        let (h, app, p) = match self.history_target(path) {
+            Ok(t) => t,
+            Err(error) => return Out::Reply(json!({"type": "rejected", "error": error})),
+        };
+        let prep = || -> Result<(PathBuf, PathBuf, PathBuf, PathBuf), String> {
+            if !matches!(app.id, "docs" | "sheets") {
+                return Err("comparing versions is not available for this kind of file".into());
+            }
+            let exe = self.bin_dir.join(format!("{}-diff.exe", app.id));
+            if !exe.is_file() {
+                return Err(format!(
+                    "the compare tool {}-diff.exe is not installed",
+                    app.id
+                ));
+            }
+            let (ba, bb) = (
+                h.read(&p, a).map_err(|e| e.to_string())?,
+                h.read(&p, b).map_err(|e| e.to_string())?,
+            );
+            let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("");
+            let dir = self.store.dir.join("temp").join(format!(
+                "compare-{}-{a}-{b}-{}",
+                std::process::id(),
+                now()
+            ));
+            std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+            let (fa, fb) = (dir.join(format!("a.{ext}")), dir.join(format!("b.{ext}")));
+            let written = std::fs::write(&fa, ba).and_then(|()| std::fs::write(&fb, bb));
+            if let Err(e) = written {
+                let _ = std::fs::remove_dir_all(&dir);
+                return Err(e.to_string());
+            }
+            Ok((exe, dir, fa, fb))
+        };
+        let (exe, dir, fa, fb) = match prep() {
+            Ok(t) => t,
+            Err(error) => return Out::Reply(json!({"type": TY, "ok": false, "error": error})),
+        };
+        let app = app.id;
+        Out::Work(Box::new(move || {
+            let mut cmd = std::process::Command::new(&exe);
+            cmd.arg(&fa).arg(&fb).arg("--json");
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW: no console flashes up over the shell
+            }
+            let out = cmd.output();
+            let _ = std::fs::remove_dir_all(&dir);
+            // the tool's exit status is diff(1)'s: 0 equal, 1 different, 2 trouble
+            let diff = match out {
+                Ok(o) if matches!(o.status.code(), Some(0 | 1)) => {
+                    serde_json::from_slice::<Value>(&o.stdout)
+                        .map_err(|e| format!("the compare tool gave no result: {e}"))
+                }
+                Ok(o) => Err(String::from_utf8_lossy(&o.stderr).trim().to_string()),
+                Err(e) => Err(format!("cannot start the compare tool: {e}")),
+            };
+            match diff {
+                Ok(d) => json!({"type": TY, "ok": true, "a": a, "b": b, "app": app, "diff": d}),
+                Err(error) => json!({"type": TY, "ok": false, "error": error}),
+            }
+        }))
+    }
+
     pub fn handle(&self, req: Request) -> Out {
         let items = |v: Vec<Entry>| {
             v.into_iter()
@@ -690,6 +767,7 @@ impl Ctx {
                 let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
                 Ok(json!({"v": v, "path": to}))
             }),
+            Request::HistoryCompare { path, a, b } => return self.history_compare(&path, a, b),
             Request::HistoryName { path, v, name } => {
                 self.history_op("history_name", &path, |h, _, p| {
                     h.name(p, v, &name).map_err(|e| e.to_string())?;
@@ -825,6 +903,7 @@ bin = "tst-pdf"
         match o {
             Out::Reply(v) => v,
             Out::Pick(_) => panic!("pick"),
+            Out::Work(w) => w(),
         }
     }
 
@@ -1285,6 +1364,65 @@ bin = "tst-pdf"
         assert!(s(&["--nope"]).is_err());
         assert!(s(&["--dist"]).is_err());
         assert_eq!(s(&[]).unwrap(), Args::default());
+    }
+
+    /// Phase 5 WP12: Compare runs `<app>-diff.exe` on copies of the two versions, off the UI thread; the checks answer at once
+    /// and the copies are removed afterwards.
+    #[test]
+    fn history_compare_checks() {
+        let (c, d, _) = ctx("hist-cmp");
+        let doc = d.join("Hisobot.docx");
+        let h = c.history.as_ref().unwrap();
+        for body in [&b"one"[..], b"two"] {
+            std::fs::write(&doc, body).unwrap();
+            h.snapshot(&doc, None).unwrap();
+        }
+        let p = doc.to_str().unwrap();
+        let send = |v: Value| reply(c.message(&v.to_string()));
+        let leftovers = || {
+            std::fs::read_dir(d.join("data/temp")).map_or(0, |r| {
+                r.flatten()
+                    .filter(|e| e.file_name().to_string_lossy().starts_with("compare-"))
+                    .count()
+            })
+        };
+        // no tool next to the editors: an error at once, no work started
+        let r = send(json!({"type": "history_compare", "path": p, "a": 1, "b": 2}));
+        assert_eq!(
+            (r["type"].as_str(), r["ok"].as_bool()),
+            (Some("history_compare"), Some(false)),
+            "{r}"
+        );
+        assert!(
+            r["error"].as_str().unwrap().contains("docs-diff.exe"),
+            "{r}"
+        );
+        // refused: a path without versions, a missing field
+        assert_eq!(
+            send(json!({"type": "history_compare", "path": r"C:
+owhere.docx", "a": 1, "b": 2}))["type"],
+            "rejected"
+        );
+        assert_eq!(
+            send(json!({"type": "history_compare", "path": p, "a": 1}))["type"],
+            "rejected"
+        );
+        // with a tool: a version that does not exist fails before anything is written
+        std::fs::write(c.bin_dir.join("docs-diff.exe"), b"not a program").unwrap();
+        let r = send(json!({"type": "history_compare", "path": p, "a": 1, "b": 9}));
+        assert_eq!(r["ok"], false, "{r}");
+        // the tool runs in the work part; one that cannot start is an error, and the copies are gone either way
+        let r = send(json!({"type": "history_compare", "path": p, "a": 1, "b": 2}));
+        assert_eq!(r["ok"], false, "{r}");
+        assert!(
+            r["error"]
+                .as_str()
+                .unwrap()
+                .starts_with("cannot start the compare tool"),
+            "{r}"
+        );
+        assert_eq!(leftovers(), 0);
+        assert_eq!(std::fs::read(&doc).unwrap(), b"two");
     }
 
     /// WP10: the page lists, views, restores, copies and names versions, for documents that have versions only.

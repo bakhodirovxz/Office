@@ -338,22 +338,29 @@ and `.xls` by content (the upstream readers); a password-protected workbook is a
 A cell side is `null` (no cell) or `{"formula"?: "=…", "value"?: "…"}` (the value as the engine displays it, without
 the number format: a date shows as its serial). `format: true` = the resolved styles differ.
 
-### 6.3 Measured (WP12, 2026-10-25; release, this PC, idle; both files read in parallel)
+### 6.3 Measured (WP12, 2026-10-25; release builds, this PC; both files read in parallel)
 
 | Pair | Wall | Read both | Diff | Result |
 |---|---|---|---|---|
-| 108-page docx (`uz108-latn`, synthetic, 1,957 paragraphs) vs itself | 144 ms (median of 5) | 87 ms | 18 ms | equal |
-| … vs a copy with 6 edits (insert, move, word added, cell cleared, bold, cell left empty) | 83 ms | 59 ms | 12 ms | 6 changes, all found |
-| … vs `uz108-cyrl` (every paragraph different) | 152 ms | 66 ms | 63 ms | 1,957 deleted + 1,933 inserted, 1 MB JSON |
-| w40 (openpyxl bench, 32 sheets, 5,184,467 cells) vs itself | 32.8 s | 29.0 s | 1.5 s | equal |
-| w40 vs w40_app (10,000 rows appended, 3 formulas on Summary) | see below | | | |
-| w40 vs Excel's re-save of it (dates get another number format) | 38.5 s | 29.7 s | 6.3 s | 576,000 format-only cells, 25 MB JSON |
+| 108-page docx (`uz108-latn`, synthetic, 1,957 paragraphs) vs itself | 65 ms (median of 5) | 43 ms | 10 ms | equal |
+| … vs a copy with 6 edits (insert, move, word added, cell cleared, bold, cell left empty) | 77 ms | 47 ms | 11 ms | 6 changes, all found |
+| … vs `uz108-cyrl` (every paragraph different) | 106 ms | 45 ms | 44 ms | 1,957 deleted + 1,933 inserted, 1 MB JSON |
+| w40 (openpyxl bench, 32 sheets, 5,184,467 cells) vs itself | 30.0 s | 28.4 s | 1.4 s | equal |
+| w40 vs w40_app (10,000 rows appended to S01, 3 formulas on Summary) | 31.3 s | 29.6 s | 1.5 s | rows 19202-29201 and columns F-H inserted, found once; 90,003 cells listed up to 10,000 per sheet, 650 KB JSON; peak working set about 0.8 GB |
+| w40 vs Excel's re-save of it (dates get another number format) | 37.3 s (before the exit fix) | 28.4 s | 6.5 s | 576,000 format-only cells, 25 MB JSON |
 
-Process start and exit of either tool: 6-8 ms (D7's cost of a separate process). Reading dominates Sheets: the diff is
+Process start and exit of either tool: 6-8 ms (D7's cost of a separate process). The tools skip freeing the two models
+at exit (that cost about 8 s on w40). Single runs for the workbooks; another worktree's builds shared the PC, so the
+wall times can be a few seconds high. Reading dominates Sheets: the diff is
 a few seconds even when a tenth of the cells differ. The files are the existing synthetic fixtures
 (`scripts/translit/make-108.py`, `docs/phase0/xlsx-bench.md`), not corpus documents.
 
 ### 6.4 WP12 limits and follow-ups
+- **Done in WP12, desktop:** the History panel compares any two versions (From/To and Compare; `history_compare` IPC
+  runs `<bin_dir>/<app>-diff.exe` off the UI thread on temp copies, removed afterwards; 10-minute page timeout). Docs
+  changes show as Added/Deleted/Changed/Moved/Formatting with `<ins>`/`<del>` words and the authors; Sheets as per-sheet
+  runs of inserted/deleted rows and columns and a Cell/Before/After table. Checked with a mocked host in a browser
+  (golden outputs, en and uz-Latn); not yet in the real WebView2 window (needs the tools in the MSI, below).
 - **Server compare route:** not added in WP12 (the docserver was being changed in parallel). It is a new
   `GET /ds/session/{sid}/history/{a}/compare/{b}` next to `history.rs:237-242` that writes the two versions to a temp
   dir and runs the domain binary like the desktop host does (`suite-desktop` `history_compare`), with the binary path
