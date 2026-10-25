@@ -1,6 +1,9 @@
 # Office suite on the Craft engines — agent working rules
 
 **Current phase: Phase 4 — Unified shell (web + desktop)** (branch `phase-4`, from `phase-3`; Phase 3 gate passed 2026-10-22, owner "go"; plan: docs/phase4/PLAN.md).
+**Phase 5 started early, in parallel** (owner, 2026-10-25): branch `phase-5` (worktree `E:/office-wt/phase-5`), plan
+docs/phase5/PLAN.md. The Phase 4 gate stays open until WP23 and its report: Phase 4 fixes go on `phase-4` and are
+merged forward into `phase-5`, never the other way. The Phase 5 gate still comes after the Phase 4 "go".
 The full brief (mission, constraints, phases, exit gates) is in [docs/BRIEF.md](docs/BRIEF.md).
 Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — keep it current.
 
