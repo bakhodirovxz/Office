@@ -24,7 +24,12 @@
 //! as a new version. Pruning appends a `prune` line, so the chain keeps every event ever made; only the bytes go away. A named version is
 //! never pruned, nor is the newest one of a document.
 //!
-//! Diffs between versions are Phase 5; this module lists, reads, restores and names.
+//! Two APIs share one store: the path API (desktop: the id is `doc_id(path)`, the author is the OS user) and the id API (server:
+//! `snapshot_bytes`, `list_id`, `read_id`, `restore_id`, `name_id`; no file, the author is given per call). With `with_key` the chain is
+//! an HMAC-SHA256 under a server key, so whoever can write the folder but lacks the key cannot rewrite a history that still verifies.
+//! A torn last line (power cut during an append) is cut off before the next append, and stale `.tmp` files are swept.
+//!
+//! Diffs between versions are Phase 5 (WP12); this module lists, reads, restores and names.
 
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
@@ -102,7 +107,13 @@ pub struct Store {
     root: PathBuf,
     limits: Limits,
     author: String,
+    /// the chain key; `None` is the unkeyed local chain
+    key: Option<Vec<u8>>,
+    clock: fn() -> u64,
 }
+
+/// A `.tmp` file older than this is a leftover of a crashed write.
+const TMP_MAX_AGE_S: u64 = 600;
 
 fn now() -> u64 {
     SystemTime::now()
@@ -181,8 +192,41 @@ pub fn doc_id(path: &Path) -> String {
     sha(s.as_bytes())[..32].to_string()
 }
 
-fn line_hash(body: &Map<String, Value>) -> String {
-    sha(serde_json::to_string(body).expect("serialises").as_bytes())
+/// HMAC-SHA256 (RFC 2104) by hand, so suite-core takes no new dependency.
+fn hmac_sha256(key: &[u8], msg: &[u8]) -> Vec<u8> {
+    let mut k = [0u8; 64];
+    if key.len() > 64 {
+        k[..32].copy_from_slice(&Sha256::digest(key));
+    } else {
+        k[..key.len()].copy_from_slice(key);
+    }
+    let pad = |b: u8| k.iter().map(|x| x ^ b).collect::<Vec<u8>>();
+    let inner = Sha256::new()
+        .chain_update(pad(0x36))
+        .chain_update(msg)
+        .finalize();
+    Sha256::new()
+        .chain_update(pad(0x5c))
+        .chain_update(inner)
+        .finalize()
+        .to_vec()
+}
+
+fn line_hash(key: Option<&[u8]>, body: &Map<String, Value>) -> String {
+    let text = serde_json::to_string(body).expect("serialises");
+    match key {
+        Some(k) => hex(&hmac_sha256(k, text.as_bytes())),
+        None => sha(text.as_bytes()),
+    }
+}
+
+/// Ids name files under `docs/`: only a plain token, never a path.
+fn valid_id(id: &str) -> bool {
+    (1..=64).contains(&id.len()) && id.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-')
+}
+
+fn missing(m: impl Into<String>) -> io::Error {
+    io::Error::new(io::ErrorKind::NotFound, m.into())
 }
 
 /// Write `bytes` to `to` through a temporary file in the same folder.
@@ -267,7 +311,7 @@ impl Doc {
     }
 }
 
-fn parse_doc(text: &str) -> Result<Doc, String> {
+fn parse_doc(text: &str, key: Option<&[u8]>) -> Result<Doc, String> {
     let (mut lines, mut all) = (vec![], BTreeMap::new());
     let mut prev = GENESIS.to_string();
     for (i, raw) in text.lines().filter(|l| !l.trim().is_empty()).enumerate() {
@@ -284,7 +328,7 @@ fn parse_doc(text: &str) -> Result<Doc, String> {
             .remove("hash")
             .and_then(|h| h.as_str().map(String::from))
             .ok_or(format!("line {n}: no hash"))?;
-        if line_hash(&m) != hash {
+        if line_hash(key, &m) != hash {
             return Err(format!(
                 "line {n}: the hash does not match the line (edited)"
             ));
@@ -351,7 +395,21 @@ impl Store {
             root,
             limits,
             author: os_user(),
+            key: None,
+            clock: now,
         }
+    }
+
+    /// Chain the history under a server key (HMAC); a chain written without it, or with another key, fails verification.
+    pub fn with_key(mut self, key: &[u8]) -> Store {
+        self.key = Some(key.to_vec());
+        self
+    }
+
+    /// The clock the retention rules read (tests, or the server's own time source).
+    pub fn with_clock(mut self, clock: fn() -> u64) -> Store {
+        self.clock = clock;
+        self
     }
 
     /// The store of the user's data folder with the retention of `settings.toml`.
@@ -376,8 +434,11 @@ impl Store {
     }
 
     fn read_doc_id(&self, id: &str) -> io::Result<Doc> {
+        if !valid_id(id) {
+            return Err(bad("invalid document id"));
+        }
         match fs::read_to_string(self.doc_file(id)) {
-            Ok(t) => parse_doc(&t).map_err(bad),
+            Ok(t) => parse_doc(&t, self.key.as_deref()).map_err(bad),
             Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(Doc {
                 lines: vec![],
                 all: BTreeMap::new(),
@@ -386,16 +447,40 @@ impl Store {
         }
     }
 
-    fn append(&self, id: &str, doc: &mut Doc, kind: &str, fields: Value) -> io::Result<()> {
+    /// `read_doc_id` for a change, under the lock: a torn last line (no newline after it) is cut off first.
+    fn read_doc_for_write(&self, id: &str) -> io::Result<Doc> {
+        if valid_id(id) {
+            let f = self.doc_file(id);
+            if let Ok(b) = fs::read(&f)
+                && b.last().is_some_and(|c| *c != b'\n')
+            {
+                let keep = b.iter().rposition(|c| *c == b'\n').map_or(0, |i| i + 1);
+                OpenOptions::new()
+                    .write(true)
+                    .open(&f)?
+                    .set_len(keep as u64)?;
+            }
+        }
+        self.read_doc_id(id)
+    }
+
+    fn append(
+        &self,
+        id: &str,
+        doc: &mut Doc,
+        kind: &str,
+        author: &str,
+        fields: Value,
+    ) -> io::Result<()> {
         let mut body = match fields {
             Value::Object(m) => m,
             _ => Map::new(),
         };
         body.insert("kind".into(), kind.into());
-        body.insert("time".into(), now().into());
-        body.insert("author".into(), self.author.clone().into());
+        body.insert("time".into(), (self.clock)().into());
+        body.insert("author".into(), author.into());
         body.insert("prev".into(), doc.tail().into());
-        let hash = line_hash(&body);
+        let hash = line_hash(self.key.as_deref(), &body);
         body.insert("hash".into(), hash.into());
         let mut line = serde_json::to_string(&body).expect("serialises");
         line.push('\n');
@@ -407,14 +492,17 @@ impl Store {
         f.write_all(line.as_bytes())?;
         f.sync_data()?;
         // keep the in-memory view in step: re-parse the one line through the same code
-        let again = parse_doc(&format!(
-            "{}{}",
-            doc.lines
-                .iter()
-                .map(|l| serde_json::to_string(l).unwrap() + "\n")
-                .collect::<String>(),
-            line
-        ))
+        let again = parse_doc(
+            &format!(
+                "{}{}",
+                doc.lines
+                    .iter()
+                    .map(|l| serde_json::to_string(l).unwrap() + "\n")
+                    .collect::<String>(),
+                line
+            ),
+            self.key.as_deref(),
+        )
         .map_err(bad)?;
         *doc = again;
         Ok(())
@@ -429,17 +517,19 @@ impl Store {
         write_atomic(&p, bytes)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn add_version(
         &self,
-        path: &Path,
+        id: &str,
+        label: &str,
         bytes: &[u8],
+        author: &str,
         message: Option<&str>,
         restored_from: Option<u64>,
         force: bool,
     ) -> io::Result<Option<Version>> {
         let _lock = Lock::take(&self.root)?;
-        let id = doc_id(path);
-        let mut doc = self.read_doc_id(&id)?;
+        let mut doc = self.read_doc_for_write(id)?;
         let sha = sha(bytes);
         let latest = doc.live().last().map(|v| (v.v, v.sha256.clone()));
         if !force && latest.as_ref().is_some_and(|(_, h)| *h == sha) {
@@ -448,21 +538,21 @@ impl Store {
         self.put_object(&sha, bytes)?;
         let v = doc.all.keys().next_back().map_or(1, |l| l + 1);
         let parent = latest.map(|(p, _)| p);
-        let full = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
         let msg: Option<String> = message.map(|m| {
             m.chars()
                 .filter(|c| !c.is_control())
                 .take(MAX_MESSAGE)
                 .collect()
         });
-        let mut f = json!({"v": v, "parent": parent, "sha256": sha, "size": bytes.len(), "path": full.to_string_lossy()});
+        let mut f =
+            json!({"v": v, "parent": parent, "sha256": sha, "size": bytes.len(), "path": label});
         if let Some(m) = msg.filter(|m| !m.is_empty()) {
             f["message"] = m.into();
         }
         if let Some(r) = restored_from {
             f["restored_from"] = r.into();
         }
-        self.append(&id, &mut doc, "version", f)?;
+        self.append(id, &mut doc, "version", author, f)?;
         let made = doc.all[&v].0.clone();
         self.prune_locked()?;
         Ok(Some(made))
@@ -471,22 +561,46 @@ impl Store {
     /// Record the file as a new version. `None` when the file's bytes are those of the newest version (nothing changed).
     pub fn snapshot(&self, path: &Path, message: Option<&str>) -> io::Result<Option<Version>> {
         let bytes = fs::read(path)?;
-        self.add_version(path, &bytes, message, None, false)
+        let full = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        let label = full.to_string_lossy();
+        self.add_version(
+            &doc_id(path),
+            &label,
+            &bytes,
+            &self.author,
+            message,
+            None,
+            false,
+        )
+    }
+
+    /// Id API: record `bytes` as a new version of document `id` by `author`. `None` when they are the newest version's bytes.
+    pub fn snapshot_bytes(
+        &self,
+        id: &str,
+        bytes: &[u8],
+        author: &str,
+        message: Option<&str>,
+    ) -> io::Result<Option<Version>> {
+        self.add_version(id, "", bytes, author, message, None, false)
     }
 
     /// The live versions of the document at `path`, oldest first.
     pub fn list(&self, path: &Path) -> io::Result<Vec<Version>> {
-        Ok(self
-            .read_doc_id(&doc_id(path))?
-            .live()
-            .into_iter()
-            .cloned()
-            .collect())
+        self.list_id(&doc_id(path))
+    }
+
+    pub fn list_id(&self, id: &str) -> io::Result<Vec<Version>> {
+        Ok(self.read_doc_id(id)?.live().into_iter().cloned().collect())
     }
 
     /// The bytes of version `v`, checked against its hash.
     pub fn read(&self, path: &Path, v: u64) -> io::Result<Vec<u8>> {
-        let doc = self.read_doc_id(&doc_id(path))?;
+        self.read_id(&doc_id(path), v)
+    }
+
+    pub fn read_id(&self, id: &str, v: u64) -> io::Result<Vec<u8>> {
+        let doc = self.read_doc_id(id)?;
         match doc.all.get(&v) {
             Some((ver, false)) => {
                 let b = fs::read(self.object(&ver.sha256))?;
@@ -497,10 +611,10 @@ impl Store {
                 }
                 Ok(b)
             }
-            Some(_) => Err(bad(format!(
+            Some(_) => Err(missing(format!(
                 "version {v} was removed by the retention rules"
             ))),
-            None => Err(bad(format!("no version {v}"))),
+            None => Err(missing(format!("no version {v}"))),
         }
     }
 
@@ -508,29 +622,58 @@ impl Store {
     /// record them as a new version. Nothing already recorded changes.
     pub fn restore(&self, path: &Path, v: u64) -> io::Result<Version> {
         let old = self.read(path, v)?;
+        let id = doc_id(path);
+        let full = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        let label = full.to_string_lossy();
         if let Ok(cur) = fs::read(path) {
-            self.add_version(path, &cur, Some("Before restore"), None, false)?;
+            self.add_version(
+                &id,
+                &label,
+                &cur,
+                &self.author,
+                Some("Before restore"),
+                None,
+                false,
+            )?;
         }
         write_atomic(path, &old)?;
         let msg = format!("Restored from version {v}");
-        self.add_version(path, &old, Some(&msg), Some(v), true)?
+        self.add_version(&id, &label, &old, &self.author, Some(&msg), Some(v), true)?
+            .ok_or_else(|| bad("restore recorded nothing"))
+    }
+
+    /// Id API restore: version `v` becomes a new newest version (nothing is rewritten). The caller puts the bytes where the
+    /// document lives (the server: a new session version).
+    pub fn restore_id(&self, id: &str, v: u64, author: &str) -> io::Result<Version> {
+        let old = self.read_id(id, v)?;
+        let msg = format!("Restored from version {v}");
+        self.add_version(id, "", &old, author, Some(&msg), Some(v), true)?
             .ok_or_else(|| bad("restore recorded nothing"))
     }
 
     /// Give version `v` a name (kept for good, never pruned); an empty name clears it.
     pub fn name(&self, path: &Path, v: u64, name: &str) -> io::Result<()> {
+        self.name_id(&doc_id(path), v, name, &self.author)
+    }
+
+    pub fn name_id(&self, id: &str, v: u64, name: &str, author: &str) -> io::Result<()> {
         let _lock = Lock::take(&self.root)?;
-        let id = doc_id(path);
-        let mut doc = self.read_doc_id(&id)?;
+        let mut doc = self.read_doc_for_write(id)?;
         if !doc.all.get(&v).is_some_and(|(_, d)| !d) {
-            return Err(bad(format!("no version {v}")));
+            return Err(missing(format!("no version {v}")));
         }
         let name: String = name
             .chars()
             .filter(|c| !c.is_control())
             .take(MAX_NAME)
             .collect();
-        self.append(&id, &mut doc, "name", json!({"v": v, "name": name.trim()}))
+        self.append(
+            id,
+            &mut doc,
+            "name",
+            author,
+            json!({"v": v, "name": name.trim()}),
+        )
     }
 
     /// Check the chain of the document at `path`, and that every live version's bytes are there and match their hash.
@@ -539,8 +682,11 @@ impl Store {
     }
 
     pub fn verify_id(&self, id: &str) -> Result<Verified, String> {
+        if !valid_id(id) {
+            return Err("invalid document id".into());
+        }
         let text = fs::read_to_string(self.doc_file(id)).map_err(|e| e.to_string())?;
-        let doc = parse_doc(&text)?;
+        let doc = parse_doc(&text, self.key.as_deref())?;
         for v in doc.live() {
             let b = fs::read(self.object(&v.sha256))
                 .map_err(|_| format!("version {}: the stored bytes are missing", v.v))?;
@@ -582,10 +728,32 @@ impl Store {
         out
     }
 
+    /// Delete the `.tmp` files a crashed write left in `objects/` and `docs/` (older than ten minutes: a live write is not touched).
+    fn sweep_tmp(&self, t: u64) {
+        for d in ["objects", "docs"] {
+            for e in fs::read_dir(self.root.join(d))
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+            {
+                let age = e
+                    .metadata()
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|m| m.duration_since(UNIX_EPOCH).ok())
+                    .map_or(0, |m| t.saturating_sub(m.as_secs()));
+                if e.file_name().to_string_lossy().ends_with(".tmp") && age > TMP_MAX_AGE_S {
+                    let _ = fs::remove_file(e.path());
+                }
+            }
+        }
+    }
+
     /// Apply the retention rules to every document, then delete the bytes no live version uses. Called after each new version.
     fn prune_locked(&self) -> io::Result<()> {
         let l = &self.limits;
-        let t = now();
+        let t = (self.clock)();
+        self.sweep_tmp(t);
         let mut docs: BTreeMap<String, Doc> = BTreeMap::new();
         // an index that cannot be read (torn last line, AV lock) still owns its objects: step 3 must not delete them
         let mut all_read = true;
@@ -655,6 +823,7 @@ impl Store {
                 id,
                 d,
                 "prune",
+                &self.author,
                 json!({"drop": set.iter().collect::<Vec<_>>()}),
             )?;
         }
@@ -797,9 +966,11 @@ mod tests {
         ] {
             m.insert(k.into(), v);
         }
-        let h = line_hash(&m);
+        let h = line_hash(None, &m);
         m.insert("hash".into(), h.into());
-        let err = parse_doc(&format!("{}\n", Value::Object(m))).err().unwrap();
+        let err = parse_doc(&format!("{}\n", Value::Object(m)), None)
+            .err()
+            .unwrap();
         assert!(err.contains("no sha256"), "{err}");
     }
 
@@ -941,5 +1112,192 @@ mod tests {
         s.name(&f, 1, "").unwrap();
         assert_eq!(s.list(&f).unwrap()[0].name, None);
         assert!(s.name(&f, 7, "x").is_err() && s.read(&f, 7).is_err());
+    }
+
+    fn at(ts: u64) -> fn() -> u64 {
+        // fn pointers cannot capture: three fixed clocks are enough for the age tests
+        match ts {
+            0 => || 1_000_000,
+            1 => || 1_000_000 + 100 * 86_400,
+            _ => now,
+        }
+    }
+
+    #[test]
+    fn restore_is_a_new_version_server() {
+        let t = T::new("idrt");
+        let s = t.store(roomy()).with_key(b"server key");
+        let id = "0123456789abcdef0123456789abcdef";
+        let v1 = s
+            .snapshot_bytes(id, b"one", "alice", Some("first"))
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            (v1.v, v1.author.as_str(), v1.path.as_str()),
+            (1, "alice", "")
+        );
+        assert!(s.snapshot_bytes(id, b"one", "bob", None).unwrap().is_none());
+        s.snapshot_bytes(id, b"two", "bob", None).unwrap().unwrap();
+        let before = fs::read_to_string(s.doc_file(id)).unwrap();
+        let r = s.restore_id(id, 1, "carol").unwrap();
+        assert_eq!(
+            (r.v, r.parent, r.restored_from, r.author.as_str()),
+            (3, Some(2), Some(1), "carol")
+        );
+        assert_eq!(s.read_id(id, 3).unwrap(), b"one");
+        assert!(
+            fs::read_to_string(s.doc_file(id))
+                .unwrap()
+                .starts_with(&before),
+            "append-only"
+        );
+        assert_eq!(s.list_id(id).unwrap().len(), 3);
+        s.name_id(id, 2, " keep ", "dave").unwrap();
+        assert_eq!(s.list_id(id).unwrap()[1].name.as_deref(), Some("keep"));
+        assert_eq!(s.verify_id(id).unwrap().lines, 4);
+        assert_eq!(
+            s.read_id(id, 9).unwrap_err().kind(),
+            io::ErrorKind::NotFound
+        );
+        assert!(
+            s.snapshot_bytes("../x", b"a", "a", None).is_err(),
+            "an id is never a path"
+        );
+    }
+
+    #[test]
+    fn torn_index_is_repaired() {
+        let t = T::new("repair");
+        let s = t.store(roomy());
+        let id = "aa11";
+        s.snapshot_bytes(id, b"one", "a", None).unwrap();
+        let idx = s.doc_file(id);
+        let mut text = fs::read_to_string(&idx).unwrap();
+        text.push_str("{\"kind\":\"vers");
+        fs::write(&idx, text).unwrap();
+        assert!(
+            s.list_id(id).is_err() && s.verify_id(id).is_err(),
+            "a reader sees the damage"
+        );
+        let v = s.snapshot_bytes(id, b"two", "a", None).unwrap().unwrap();
+        assert_eq!(v.v, 2);
+        assert_eq!(s.verify_id(id).unwrap().lines, 2);
+        assert_eq!(s.read_id(id, 1).unwrap(), b"one");
+    }
+
+    #[test]
+    fn keyed_chain_rewrite_fails() {
+        let t = T::new("keyed");
+        let id = "bb22";
+        let s = t.store(roomy()).with_key(b"k1");
+        s.snapshot_bytes(id, b"one", "a", None).unwrap();
+        s.snapshot_bytes(id, b"two", "a", None).unwrap();
+        assert!(s.verify_id(id).is_ok());
+        // an attacker without the key re-chains the file with the plain SHA-256 rule after editing a line
+        let text = fs::read_to_string(s.doc_file(id)).unwrap();
+        let mut prev = GENESIS.to_string();
+        let forged: String = text
+            .lines()
+            .map(|l| {
+                let Value::Object(mut m) = serde_json::from_str::<Value>(l).unwrap() else {
+                    panic!()
+                };
+                m.remove("hash");
+                m.insert("prev".into(), prev.clone().into());
+                m.insert("author".into(), "mallory".into());
+                prev = line_hash(None, &m);
+                m.insert("hash".into(), prev.clone().into());
+                format!(
+                    "{}
+",
+                    Value::Object(m)
+                )
+            })
+            .collect();
+        fs::write(s.doc_file(id), forged).unwrap();
+        assert!(s.verify_id(id).is_err());
+        // the same file read without any key verifies, so the key is what protects it; and another key fails too
+        assert!(t.store(roomy()).verify_id(id).is_ok());
+        assert!(t.store(roomy()).with_key(b"k2").verify_id(id).is_err());
+        // an untouched keyed chain fails under the wrong key
+        let id2 = "cc33";
+        s.snapshot_bytes(id2, b"x", "a", None).unwrap();
+        assert!(t.store(roomy()).verify_id(id2).is_err());
+        assert!(t.store(roomy()).with_key(b"k1").verify_id(id2).is_ok());
+    }
+
+    #[test]
+    fn hmac_matches_rfc4231_case_2() {
+        assert_eq!(
+            hex(&hmac_sha256(b"Jefe", b"what do ya want for nothing?")),
+            "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        );
+    }
+
+    #[test]
+    fn retention_by_count_and_by_age_server() {
+        let t = T::new("ret");
+        let lim = |versions, days| Limits {
+            versions,
+            days,
+            ..roomy()
+        };
+        // count: days = 0 keeps only the last 3 (and a named one)
+        let s = t.store(lim(3, 0));
+        for i in 0..6u8 {
+            s.snapshot_bytes("d1", &[i], "a", None).unwrap();
+            if i == 0 {
+                s.name_id("d1", 1, "named", "a").unwrap();
+            }
+        }
+        assert_eq!(
+            s.list_id("d1")
+                .unwrap()
+                .iter()
+                .map(|v| v.v)
+                .collect::<Vec<_>>(),
+            [1, 4, 5, 6]
+        );
+        // age: 50 versions allowed, but the clock moves 100 days on, so old ones go once a new one is saved
+        let s = t.store(lim(1, 90)).with_clock(at(0));
+        for i in 0..3u8 {
+            s.snapshot_bytes("d2", &[i], "a", None).unwrap();
+        }
+        assert_eq!(
+            s.list_id("d2").unwrap().len(),
+            3,
+            "within 90 days and over the count: kept by age"
+        );
+        let s = t.store(lim(1, 90)).with_clock(at(1));
+        s.snapshot_bytes("d2", &[9], "a", None).unwrap();
+        assert_eq!(
+            s.list_id("d2")
+                .unwrap()
+                .iter()
+                .map(|v| v.v)
+                .collect::<Vec<_>>(),
+            [4],
+            "only the newest is left"
+        );
+        assert!(s.verify_id("d2").is_ok());
+    }
+
+    #[test]
+    fn stale_tmp_files_are_swept() {
+        let t = T::new("tmp");
+        let s = t.store(roomy());
+        s.snapshot_bytes("d1", b"a", "a", None).unwrap();
+        let (old, fresh) = (
+            s.root.join("objects/.x.1.0.tmp"),
+            s.root.join("objects/.y.1.1.tmp"),
+        );
+        fs::write(&old, b"half").unwrap();
+        fs::write(&fresh, b"half").unwrap();
+        let f = fs::OpenOptions::new().write(true).open(&old).unwrap();
+        f.set_modified(SystemTime::now() - Duration::from_secs(2 * TMP_MAX_AGE_S))
+            .unwrap();
+        drop(f);
+        s.snapshot_bytes("d1", b"b", "a", None).unwrap();
+        assert!(!old.exists() && fresh.exists(), "only the stale one goes");
     }
 }

@@ -376,6 +376,7 @@ impl Docserver {
         rec.saved_since_open |= saved;
         rec.last_activity = now;
         self.store(&rec)?;
+        crate::history::record(self, &rec, bytes, by);
         Ok(v)
     }
 

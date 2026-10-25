@@ -4,6 +4,7 @@
 #![forbid(unsafe_code)]
 mod api;
 pub mod config;
+pub mod history;
 pub mod routes;
 pub mod sessions;
 pub mod tokens;
