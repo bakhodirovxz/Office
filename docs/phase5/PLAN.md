@@ -117,8 +117,9 @@ HRM api (Docker network) ──GET http://<internal listener>/ds/files/{sid}/{ve
 | `GET /ds/editor` | public | none | the wrapper page; `frame-ancestors 'self' <provider frame_origins>`; strict script CSP with hashes |
 | `POST /ds/session` | public | **config token** (provider secret) | body `{config}`; rate-limited per client address; returns `{sid, token, editor, mode, perms, title}` |
 | `POST /ds/session/{sid}/renew` | public | session token | a fresh session token; absolute cap = the config's `exp` or 12 h |
-| `GET /ds/session/{sid}/document` | public | session token | the current version's bytes |
+| `GET /ds/session/{sid}/document` | public | session token | the current version's bytes; the first call of a session fetches version 1 from the provider (WP4: 502 on a fetch failure, 413 over the cap, 415 for a bad package) |
 | `POST /ds/session/{sid}/save` | public | session token, `edit` | body cap, zip and OOXML type check; new version; callback status 6 (`forcesavetype` 1); answers `{version, callback: ok\|failed\|unknown}` |
+| `POST /ds/session/{sid}/dirty` | public | session token, `edit` | the editor's first change: callback status 1, once per session (WP4) |
 | `POST /ds/session/{sid}/autosave` | public | session token, `edit` | recovery copy only, no callback (as the spike, `main.rs:190-200`) |
 | `POST /ds/session/{sid}/close` | public | session token | callback status 2 (saved since open) or 4 (nothing saved); a failed status 2 goes to the retry queue |
 | `GET /ds/files/{sid}/{ver}?t=` | **internal** (and public only if configured) | **file token** | what the HRM downloads after a callback (F4) |
@@ -144,6 +145,9 @@ their bridges (§13.2 R6).
   ignored (`hrm-current-state.md:312`).
 - A session token for session A never reads session B: wrong sid → 404, the same answer as no session (no oracle).
 - A file token is bound to `sid`, `ver` and the version's `sha256`.
+- **`iss` is optional** (decision, 2026-10-25): HRB tokens carry none, and the provider is identified by its unique secret. When
+  an `iss` is present it must equal the provider's configured issuer. Question for HRB in section 9: add `iss`?
+- **Config-token replay within `exp` is accepted** (no one-time index): see section 4.
 
 ### 3.3 Callbacks
 
@@ -157,9 +161,16 @@ their bridges (§13.2 R6).
 
 - **Async-save ticket.** A save answers only after the callback reply. `{"error":0}` → `saved {ok:true}` to the editor.
   Anything else → `saved {ok:false}`, the document stays dirty, and the wrapper shows a plain message.
-- **Retry.** A failed status 2 is queued on disk and retried at 1, 5, 15 and 60 min, then hourly for 24 h; each try is
-  an audit line. Status 6 is not retried by the server: the user still has the dirty document and saves again.
-- **Logging.** Host and path only; never the query, a token or bytes (HRB rule `hr-backend-prompt.md:113-115`).
+- **Retry (as built, WP4).** A status 2 is written to `<data_dir>/queue/<sid>.json` BEFORE its first try and removed when the
+  provider answers `{"error":0}`. A failed try is retried after 1, 5, 15 and 60 min, then hourly, until 24 h after the close;
+  then the entry is marked `gave_up` and the version stays on disk. A background thread (15 s tick, `spawn_retry_loop`) runs
+  the due entries, also after a restart. Each try is a log line (host and path) and, with WP8, an audit line. `{"error":0}`
+  is the only success: HTTP errors, `{"error":1}`, redirects and refused addresses are "failed"; only a timeout (default 60 s,
+  `callback_timeout_s`) is "unknown". The record keeps `acked` (the highest acknowledged version); a version above it is dirty. Status 6 is not retried by the server: the user still has the dirty document and saves again.
+- **Body and tokens (as built).** `{key, status, users:[user.id], url, forcesavetype}`; `url` (status 2 and 6) is
+  `<internal_url>/ds/files/<sid>/<ver>?t=<file token>`, `internal_url` defaulting to the internal listener's address. `body.token`
+  is a JWT of the body and `Authorization: Bearer` a JWT of `{"payload": body}`, both with the provider secret and `exp` 10 min.
+- **Logging.** Host and path only (the fetch logs the host only: some providers put their file token in the path); never the query, a token or bytes (HRB rule `hr-backend-prompt.md:113-115`).
 
 ---
 
@@ -170,6 +181,18 @@ their bridges (§13.2 R6).
   a private, loopback, link-local (169.254.0.0/16, fe80::/10), CGNAT, unique-local or IPv4-mapped address. Metadata
   addresses (169.254.169.254, fd00:ec2::254) are refused even for an `internal` entry. No userinfo, no redirects, a
   connect timeout (5 s) and a total timeout. Ranges reuse `convert_api::config::Cidr` (`config.rs:157-200`).
+- **Deny ranges (as built, `outbound.rs`).** The name is resolved once by our own resolver; if ANY answer is denied the whole name
+  is refused, and the connection goes to the checked addresses only. Allowed only for an `internal = true` entry: 127/8, 10/8,
+  172.16/12, 192.168/16, 169.254/16 (except the metadata address), 100.64/10, `::1`, fc00::/7, fe80::/10. Never, even then:
+  169.254.169.254 and fd00:ec2::254, 0/8, `::`, `::/96`, multicast, 240/4 and 255.255.255.255, 192.0.0/24, 192.0.2/24,
+  198.18/15, 198.51.100/24, 203.0.113/24, fec0::/10, 2002::/16 (6to4), 64:ff9b::/32 (NAT64), Teredo, 2001:db8::/32.
+  IPv4-mapped addresses are judged as their IPv4 address. The outbound client is plain `http` only for now (no TLS feature in
+  the workspace's ureq); an `https` entry is refused at request time (open question, section 9).
+- **Config-token replay.** A config token may be presented again within its `exp` and opens another session. No one-time index:
+  the token already grants access to that document for its whole life, and `exp` is at most 12 h, which bounds it (decision,
+  2026-10-25).
+- **`encrypt_at_rest = true` is refused at start-up** ("not implemented yet") until WP14 implements it: a security option that is
+  silently ignored is not acceptable (decision, 2026-10-25).
 - **Size limits.** Fetch cap `max_document_mb` (default 50, the HRB cap `hr-backend-prompt.md:342`, and phase3 O3), by
   `Content-Length` first, then by counted bytes. The same cap on save and autosave bodies. Zip magic plus the
   converter's central-directory check against zip bombs (phase3 PLAN §5.5, `docs/phase3/PLAN.md:448-450`), and the
@@ -286,6 +309,8 @@ each is answered by the owner, the HRM team, or WP17 on the box with the owner p
 | H10 | Which document is authoritative after an editor save of a decree (Word or the DB field)? | design Q5 `hrm-integration-design.md:382-383` | a decree pilot only |
 | H11 | Is mobile editing allowed for HR documents once ONLYOFFICE is replaced (today forced to view)? | design Q9 `hrm-integration-design.md:389` | Phase 6 |
 | H12 | One HRM-generated decree, letter and report (anonymised, into `corpus/`) for the bookmark test. | `SIZING.md:277` | WP9 second half |
+| H13 | Can HRB add an `iss` claim to its config tokens? (We accept tokens without one; the secret names the provider.) | WP4 decision, PLAN 3.2 | optional |
+| H14 | Is the document server reached over plain `http` on the Docker network (as today), or does any fetch or callback need `https`? The outbound client has no TLS yet. | WP4 | WP10 |
 
 ---
 
