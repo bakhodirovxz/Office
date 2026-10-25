@@ -1,0 +1,23 @@
+[package]
+name = "docserver"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "The document server (PLAN phase 5, WP2): config with its refusals, the /ds/ routes, the internal listener and the cross-site framing rules. Mounted by suite-serve only when the config has a [docserver] section"
+
+[lints]
+workspace = true
+
+[lib]
+name = "docserver"
+
+[dependencies]
+convert-api = { path = "../convert-api" }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+serde = { version = "1", features = ["derive"] }
+toml = { version = "1", default-features = false, features = ["parse", "serde"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tower = { version = "0.5", features = ["util"] }

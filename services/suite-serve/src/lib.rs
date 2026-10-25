@@ -13,6 +13,8 @@ use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::get;
 use base64::Engine as _;
 use convert_api::app::App;
+use convert_api::routes::NO_FRAME_OPTIONS;
+use docserver::Docserver;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -95,6 +97,11 @@ fn inline_blocks<'a>(html: &'a str, tag: &str) -> Vec<&'a str> {
 
 /// The CSP of an editor page (F8).
 pub fn editor_csp(index_html: &str) -> String {
+    editor_csp_for(index_html, "'self'")
+}
+
+/// The same with a given `frame-ancestors` source list: the docserver adds its providers' origins (PLAN phase 5, F5).
+pub fn editor_csp_for(index_html: &str, ancestors: &str) -> String {
     let hashes = |tag| {
         inline_blocks(index_html, tag)
             .iter()
@@ -108,7 +115,7 @@ pub fn editor_csp(index_html: &str) -> String {
     };
     format!(
         "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'{}; style-src 'self'{}; img-src 'self' data: blob:; \
-         object-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'",
+         object-src 'none'; frame-ancestors {ancestors}; base-uri 'none'; form-action 'self'",
         hashes("script"),
         hashes("style")
     )
@@ -118,16 +125,23 @@ struct Editor {
     bare: String,
     slash: String,
     csp: HeaderValue,
+    /// the docserver is on: other origins may frame the page, so no X-Frame-Options
+    cross_site: bool,
 }
 
 /// An editor route: the dist, precompressed `.br` files when present, its own CSP, and the cache rule: `index.html` is revalidated,
 /// every other file of a trunk dist has a content hash in its name and never changes.
-fn editor(route: &str, dir: &Path) -> Option<Router<Arc<App>>> {
+fn editor(route: &str, dir: &Path, ds: Option<&Docserver>) -> Option<Router<Arc<App>>> {
     let html = std::fs::read_to_string(dir.join("index.html")).ok()?;
     let ed = Arc::new(Editor {
         bare: format!("/{route}"),
         slash: format!("/{route}/"),
-        csp: HeaderValue::from_str(&editor_csp(&html)).ok()?,
+        csp: HeaderValue::from_str(&match ds {
+            Some(d) => editor_csp_for(&html, &d.frame_ancestors()),
+            None => editor_csp(&html),
+        })
+        .ok()?,
+        cross_site: ds.is_some(),
     });
     Some(
         Router::new()
@@ -163,7 +177,11 @@ async fn editor_headers(State(ed): State<Arc<Editor>>, req: Request, next: Next)
     h.insert(header::CONTENT_SECURITY_POLICY, ed.csp.clone());
     h.insert(
         header::X_FRAME_OPTIONS,
-        HeaderValue::from_static("SAMEORIGIN"),
+        if ed.cross_site {
+            NO_FRAME_OPTIONS
+        } else {
+            HeaderValue::from_static("SAMEORIGIN")
+        },
     );
     if matches!(res.status(), StatusCode::OK | StatusCode::NOT_MODIFIED) {
         let cc = if immutable {
@@ -228,10 +246,21 @@ async fn local_gate(State(key): State<Arc<str>>, req: Request, next: Next) -> Re
 
 /// The converter API router plus the shell and the editors. An editor whose dist is not built is not mounted (404).
 pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
+    router_ds(app, layout, shell_config, None)
+}
+
+/// `router`, plus the docserver's `/ds/` routes when it is configured. Without it nothing changes: no `/ds/` route, and the editors
+/// keep `frame-ancestors 'self'`. With it the editors may also be framed by the providers' `frame_origins` (F5).
+pub fn router_ds(
+    app: Arc<App>,
+    layout: &Layout,
+    shell_config: String,
+    ds: Option<Arc<Docserver>>,
+) -> Router {
     let mut extra: Router<Arc<App>> = Router::new();
     for (route, dist, _) in EDITORS {
         let dir = layout.dist.join(dist);
-        match editor(route, &dir) {
+        match editor(route, &dir, ds.as_deref()) {
             Some(r) => extra = extra.merge(r),
             None => eprintln!(
                 "suite-serve: /{route}/ is not served: {}/index.html is missing",
@@ -261,6 +290,9 @@ pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
             get(|| async { convert_api::routes::converter_page() }),
         )
         .layer(middleware::from_fn(no_cache));
+    if let Some(d) = &ds {
+        extra = extra.merge(d.routes());
+    }
     let router = convert_api::routes::router_with(app, extra.merge(shell));
     match &layout.local_key {
         Some(k) => {
@@ -275,6 +307,25 @@ pub fn router(app: Arc<App>, layout: &Layout, shell_config: String) -> Router {
         }
         None => router,
     }
+}
+
+/// Starts the docserver's internal listener (F4) on a socket `Docserver::bind_internal` already bound, with the same connection
+/// limits as the public one. Call it inside the runtime, from the router builder.
+pub fn spawn_internal(app: &Arc<App>, ds: &Arc<Docserver>, l: std::net::TcpListener) {
+    let Ok(l) = tokio::net::TcpListener::from_std(l) else {
+        return;
+    };
+    println!(
+        "docserver internal listener on http://{}",
+        l.local_addr().map(|a| a.to_string()).unwrap_or_default()
+    );
+    tokio::spawn(convert_api::tls::serve(
+        l,
+        None,
+        ds.internal_router(),
+        convert_api::tls::ConnLimits::from_settings(&app.r),
+        std::future::pending(),
+    ));
 }
 
 #[cfg(test)]

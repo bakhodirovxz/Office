@@ -1,7 +1,7 @@
 # Services workspace (PLAN phase 3, section 2.1; F12). Own lock, own policy: ci/deny/services.toml.
 # Excluded from the root workspace (Cargo.toml `exclude`). Links no engine: it runs the domain CLIs as processes.
 [workspace]
-members = ["convert", "convert-api", "suite-serve", "suite-desktop", "suite-winsec"]
+members = ["convert", "convert-api", "docserver", "suite-serve", "suite-desktop", "suite-winsec"]
 resolver = "3"
 
 [workspace.package]

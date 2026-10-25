@@ -18,6 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 convert-api = { path = "../convert-api" }
+docserver = { path = "../docserver" }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 # fs = ServeDir/ServeFile with precompressed_br (the build writes the .br files, scripts/shell-dist.sh)
@@ -30,3 +31,4 @@ base64 = "0.22"
 [dev-dependencies]
 convert = { path = "../convert" }
 tower = { version = "0.5", features = ["util"] }
+toml = { version = "1", default-features = false, features = ["parse", "serde"] }

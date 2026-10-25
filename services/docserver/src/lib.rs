@@ -1,0 +1,8 @@
+//! `docserver`: the document server of Phase 5 (PLAN phase 5, WP2). This step holds the configuration with every refusal to start
+//! (`config`) and the route table with its security headers (`routes`); the handlers behind the routes are stubs that answer 501
+//! until WP3 and later fill them. Nothing here is mounted unless the config file has a `[docserver]` section.
+#![forbid(unsafe_code)]
+pub mod config;
+pub mod routes;
+
+pub use config::{Allow, Docserver, Internal, Provider};

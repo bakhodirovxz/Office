@@ -588,6 +588,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "docserver"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "convert-api",
+ "serde",
+ "tokio",
+ "toml 1.1.8+spec-1.1.0",
+ "tower",
+]
+
+[[package]]
 name = "dom_query"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2576,6 +2588,7 @@ dependencies = [
  "base64 0.22.1",
  "convert",
  "convert-api",
+ "docserver",
  "serde_json",
  "sha2",
  "tokio",

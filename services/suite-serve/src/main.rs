@@ -1,7 +1,10 @@
 //! `suite-serve [--config FILE] [--dist DIR] [--shell DIR] [--brand FILE]`: the web host (PLAN phase 4, 3.1). The API flags are
 //! those of `convert-api`; local mode (no config) is `auth = "none"` on 127.0.0.1:8787.
+use convert_api::config::Settings;
+use docserver::Docserver;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::Arc;
 use suite_serve::Layout;
 
 const USAGE: &str = "usage: suite-serve [--config FILE] [--dist DIR] [--shell DIR] [--brand FILE]\n  --dist   the trunk dists, <domain>-web/ each (default: dist)\n  --shell  the assembled shell (scripts/shell-dist.sh; default: <dist>/shell)\n  --brand  brand/brand.toml (default: brand/brand.toml)";
@@ -38,8 +41,31 @@ async fn main() -> ExitCode {
         Ok(c) => c,
         Err(e) => return convert_api::runner::refuse(e),
     };
-    convert_api::runner::run("hoshiya-serve", config.as_deref(), move |app| {
-        suite_serve::router(app, &layout, cfg)
+    // the optional [docserver] section: checked and its internal listener bound before anything starts
+    let ds = match config.as_deref().map(setup_docserver).transpose() {
+        Ok(d) => d.flatten(),
+        Err(e) => return convert_api::runner::refuse(e),
+    };
+    convert_api::runner::run("hoshiya-serve", config.as_deref(), move |app| match ds {
+        Some((ds, internal)) => {
+            if let Some(l) = internal {
+                suite_serve::spawn_internal(&app, &ds, l);
+            }
+            suite_serve::router_ds(app, &layout, cfg, Some(ds))
+        }
+        None => suite_serve::router(app, &layout, cfg),
     })
     .await
+}
+
+type Mounted = (Arc<Docserver>, Option<std::net::TcpListener>);
+
+fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
+    let s = Settings::load(path.as_ref())?;
+    let Some(t) = s.docserver else {
+        return Ok(None);
+    };
+    let ds = Arc::new(Docserver::from_table(t, s.listen.parse().ok())?);
+    let l = ds.bind_internal()?;
+    Ok(Some((ds, l)))
 }
