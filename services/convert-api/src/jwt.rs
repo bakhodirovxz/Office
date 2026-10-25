@@ -55,6 +55,12 @@ pub fn sign(secret: &[u8], payload: &Value) -> String {
 /// Verify an HS256 token and return its payload. `alg` must be exactly `HS256` (so `none` and every other algorithm is
 /// rejected), `exp` must be present and not past (60 s leeway) and `nbf`, when present, not in the future (60 s leeway).
 pub fn verify(secret: &[u8], token: &str) -> Result<Value, JwtError> {
+    verify_with(secret, token, true)
+}
+
+/// `verify`, where a token without `exp` is accepted when `require_exp` is false (a docserver provider that opted out). An `exp`
+/// that is present but not a number is refused either way.
+pub fn verify_with(secret: &[u8], token: &str, require_exp: bool) -> Result<Value, JwtError> {
     let parts: Vec<&str> = token.split('.').collect();
     if parts.len() != 3 {
         return Err(JwtError::Malformed);
@@ -73,18 +79,21 @@ pub fn verify(secret: &[u8], token: &str) -> Result<Value, JwtError> {
         serde_json::from_slice(&B64.decode(parts[1]).map_err(|_| JwtError::Malformed)?)
             .map_err(|_| JwtError::Malformed)?;
     let t = now();
-    match payload.get("exp").and_then(Value::as_u64) {
-        None => Err(JwtError::NoExpiry),
-        Some(exp) if exp + LEEWAY_S < t => Err(JwtError::Expired),
-        Some(_)
-            if payload
-                .get("nbf")
-                .is_some_and(|n| n.as_u64().is_none_or(|n| n > t + LEEWAY_S)) =>
-        {
-            Err(JwtError::NotYetValid)
-        }
-        Some(_) => Ok(payload),
+    match payload.get("exp") {
+        None if !require_exp => {}
+        e => match e.and_then(Value::as_u64) {
+            None => return Err(JwtError::NoExpiry),
+            Some(exp) if exp + LEEWAY_S < t => return Err(JwtError::Expired),
+            Some(_) => {}
+        },
     }
+    if payload
+        .get("nbf")
+        .is_some_and(|n| n.as_u64().is_none_or(|n| n > t + LEEWAY_S))
+    {
+        return Err(JwtError::NotYetValid);
+    }
+    Ok(payload)
 }
 
 /// A verified token as the API needs it: the user (`sub`). Needs `scope == "convert"`, and `iss` when the operator set one.
@@ -137,6 +146,17 @@ mod tests {
         assert_eq!(verify(b"s3", &sign(b"s3", &cfg)).unwrap(), cfg);
         let wrapped = json!({"payload": {"key": "k1", "status": 6}, "exp": now() + 60});
         assert_eq!(verify(b"s3", &sign(b"s3", &wrapped)).unwrap(), wrapped);
+    }
+
+    #[test]
+    fn exp_optional_only_when_asked() {
+        let t = sign(b"s3", &json!({"a": 1}));
+        assert_eq!(verify(b"s3", &t), Err(JwtError::NoExpiry));
+        assert!(verify_with(b"s3", &t, false).is_ok());
+        let bad = sign(b"s3", &json!({"exp": "soon"}));
+        assert_eq!(verify_with(b"s3", &bad, false), Err(JwtError::NoExpiry));
+        let past = sign(b"s3", &json!({"exp": now() - 3600}));
+        assert_eq!(verify_with(b"s3", &past, false), Err(JwtError::Expired));
     }
 
     #[test]
