@@ -1246,3 +1246,6 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 
 ### Phase 5: owner decision Q12 (2026-10-26)
 - The provider's working copy (the callback file route) is no longer XDFU-stamped; only history downloads are, so stamps do not pile up on save and reopen. With xdfu on, pdf copies stay refused. Test `wp14.rs::a_download_of_a_grif_document_carries_the_stamp_the_callback_copy_does_not`; docserver tests green, clippy clean.
+
+### Phase 5: History panel visual review (2026-10-26)
+- Reviewed screenshots (360 and 1366 px, light/dark, uz-Latn/ru; `DS_SHOTS=<dir>` on the docserver spec): the Compare selects overflowed the panel at 360 px; fixed in `history.css` (labels stack, selects shrink). Shell budget 58394 / 65536.

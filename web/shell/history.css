@@ -21,7 +21,8 @@ dialog input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2
 /* Compare (phase 5 WP12): insertions underlined, deletions struck through, so colour is not the only cue */
 #hist-cmp-sec[hidden], #hist-cmp-bar[hidden] { display: none; }
 .cmpbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
-.cmpbar select { font: inherit; padding: 4px 6px; border: 1px solid var(--muted); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.cmpbar label { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.cmpbar select { min-width: 0; max-width: 100%; flex: 1 1 auto; text-overflow: ellipsis; font: inherit; padding: 4px 6px; border: 1px solid var(--muted); border-radius: 6px; background: var(--bg); color: var(--fg); }
 .cmpbar select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .cmp li { flex-wrap: wrap; align-items: baseline; overflow-wrap: anywhere; }
 .cmp .diff { flex: 1 1 20rem; min-width: 0; }
@@ -30,3 +31,5 @@ dialog input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2
 .cmp .sheet { display: block; }
 .cmp table.cells { border-collapse: collapse; margin-top: 6px; width: 100%; font-size: .9rem; }
 .cmp .cells th, .cmp .cells td { border: 1px solid var(--line); padding: 2px 6px; text-align: left; vertical-align: top; }
+/* phone width: one control per line, the selects never wider than the panel */
+@media (max-width: 30rem) { .cmpbar label { flex-direction: column; align-items: stretch; width: 100%; gap: 2px; } }

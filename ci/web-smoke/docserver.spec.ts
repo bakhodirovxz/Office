@@ -377,7 +377,7 @@ const FAKE_DIFF = process.env.FAKE_DIFF_BIN ?? exe('fake_diff');
 const wrapperOf = (page: Page) => page.frames().find((f) => f.url().startsWith(`${DS}/ds/editor`))!;
 // open an edit session on the fake backend's document and save twice, so the history holds two edited versions besides the opening one
 async function twoSaves(page: Page, query = '') {
-  await page.goto(`${HOST}/host?kind=files&id=1&lang=en${query}`);
+  await page.goto(`${HOST}/host?kind=files&id=1${/lang=/.test(query) ? '' : '&lang=en'}${query}`);
   await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
   const [sdir] = sessions();
   const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
@@ -505,4 +505,58 @@ test('History panel: download:false shows no download or compare controls; a vie
   await expect(wv.getByRole('button', { name: /^Save a copy/ }).first()).toBeVisible();
   expect(b.problems).toEqual([]);
   await b.ctx.close();
+});
+
+// ---- screenshots of the History panel for the visual review; only when DS_SHOTS=<dir> is set (CI writes nothing) ----
+// 1366x768 and 360x740, light and dark, uz-Latn and ru: the panel, the Name and Restore dialogs, the 501 message, a compare result.
+const SHOTS = process.env.DS_SHOTS;
+test('History panel: screenshots (DS_SHOTS)', async () => {
+  test.skip(!SHOTS, 'set DS_SHOTS=<dir> to capture');
+  fs.mkdirSync(SHOTS!, { recursive: true });
+  const views = [['1366', { width: 1366, height: 768 }], ['360', { width: 360, height: 740 }]] as const;
+  const schemes = ['light', 'dark'] as const;
+  // the loop body runs the shots for every viewport and scheme on one open session
+  async function round(lang: string, withTools: boolean) {
+    fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });   // so sessions()[0] is this one
+    const { ctx, page } = await open();
+    const w = await twoSaves(page, `&lang=${lang}`);
+    await w.locator('button[aria-controls=hist-panel]').click();
+    const rows = w.locator('#hist-vers > li');
+    await expect.poll(() => rows.count()).toBeGreaterThanOrEqual(3);
+    await rows.nth(1).getByRole('button').nth(2).click();   // Name
+    await w.locator('#hist-name input').fill('Reviewed by the head of department');
+    await w.locator('#hist-name button[value=ok]').click();
+    await expect(rows.nth(1).locator('.tag.name')).toBeVisible();
+    const snap = async (what: string) => {
+      for (const [vn, vp] of views) for (const sc of schemes) {
+        await page.setViewportSize(vp); await page.emulateMedia({ colorScheme: sc });
+        if (what === 'compare') await w.locator('#h-cmp').scrollIntoViewIfNeeded();
+        await page.waitForTimeout(250);
+        await page.screenshot({ path: path.join(SHOTS!, `${what}-${lang}-${vn}-${sc}.png`) });
+      }
+    };
+    if (!withTools) {
+      await snap('panel');
+      await rows.first().getByRole('button').nth(2).click();   // Name dialog
+      await snap('name'); await w.locator('#hist-name button[value=""]').click();
+      await rows.last().getByRole('button').nth(1).click();    // Restore dialog
+      await snap('restore'); await w.locator('#hist-restore button[value=""]').click();
+      await w.locator('#hist-cmp-go').click();
+      await expect(w.locator('#hist-msg')).toHaveAttribute('role', 'alert');
+      await snap('501');
+    } else {
+      await w.locator('#hist-cmp-go').click();
+      await expect(w.locator('#hist-cmp > li').first()).toBeVisible();
+      await snap('compare');
+    }
+    await ctx.close();
+  }
+  for (const lang of ['uz-Latn', 'ru']) await round(lang, false);
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin, { recursive: true });
+  fs.copyFileSync(FAKE_DIFF, path.join(bin, 'docs-diff' + (process.platform === 'win32' ? '.exe' : '')));
+  ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+  fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });
+  await startDs([`diff_bin_dir = "${bin.replace(/\\/g, '/')}"`]);
+  for (const lang of ['uz-Latn', 'ru']) await round(lang, true);
 });
