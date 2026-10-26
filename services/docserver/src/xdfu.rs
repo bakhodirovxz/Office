@@ -1,10 +1,10 @@
 //! XDFU on the server (PLAN phase 5, WP14; Resolution 766 cl. 12). Off by default: with `xdfu = "off"` nothing here is built, nothing is
 //! registered and no byte is changed.
 //!
-//! On: a copy that leaves the server (a history version downloaded by a user, or the saved file a callback hands to the provider) is
-//! checked for the grif (convert's `grif_in_ooxml`, the same places and rules as the converter). A document without it is served as it is
-//! and nothing is logged. A document with it gets the stamp line (copy number, network address, user, time) through the converter's
-//! docx/xlsx/pptx stamping, and one line in `<data_dir>/xdfu-audit.jsonl`, a keyed chain whose `seq` is the copy number. The log line is
+//! On: a copy that leaves the system (a history version downloaded by a user) is checked for the grif (convert's
+//! `grif_in_ooxml`, the same places and rules as the converter). The provider's working copy (the file a callback hands over) is never
+//! stamped (owner, 2026-10-26: the stamps would pile up). A document without the grif is served as it is and nothing is logged. A
+//! document with it gets the stamp line (copy number, network address, user, time) through the converter's docx/xlsx/pptx stamping, and one line in `<data_dir>/xdfu-audit.jsonl`, a keyed chain whose `seq` is the copy number. The log line is
 //! written only when the stamped copy was produced. A copy that cannot be checked (a pdf, a damaged package) or stamped, or a log that
 //! cannot be written, is refused: no unmarked copy of a document that may be marked leaves the server.
 //!
@@ -32,7 +32,7 @@ impl Xdfu {
 
 impl Docserver {
     /// `bytes` as a copy for `client` (a network address) of the session `rec`: unchanged unless xdfu is on and the document has the
-    /// grif. `kind` is `download` or `callback`.
+    /// grif. `kind` is `download` (the provider's working copy from a callback is never stamped, owner 2026-10-26).
     pub(crate) fn issue_copy(
         &self,
         rec: &SessionRecord,

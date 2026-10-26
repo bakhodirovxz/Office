@@ -296,25 +296,18 @@ async fn file(State(ds): Ds, cl: Cl, Path((sid, ver)): Path<(String, u64)>, req:
     let c = ds
         .file_claims(&t, now())
         .ok_or_else(|| no("bad file token"))?;
-    // the peer's address, for the stamp of a copy; the internal listener has no client layer
-    let addr = match cl.ip.as_str() {
-        "internal" => req
-            .extensions()
-            .get::<axum::extract::ConnectInfo<std::net::SocketAddr>>()
-            .map_or_else(|| "unknown".into(), |c| c.0.ip().to_string()),
-        ip => ip.to_string(),
-    };
+    // the provider's working copy is never stamped (owner, 2026-10-26): stamps would pile up as it is saved and reopened; only copies
+    // that leave the system (a history download) are
     let b = blk(move || {
         let rec = ds.load_session(&sid)?;
         let v = rec.versions.iter().find(|v| v.n == ver)?;
         if c.sid != sid || c.ver != ver || !ct_eq(c.sha256.as_bytes(), v.sha256.as_bytes()) {
             return None;
         }
-        let b = ds.read_version(&sid, ver)?;
-        Some(ds.issue_copy(&rec, b, &addr, "callback"))
+        ds.read_version(&sid, ver)
     })
     .await?
-    .ok_or_else(not_found)??;
+    .ok_or_else(not_found)?;
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], b).into_response())
 }
 

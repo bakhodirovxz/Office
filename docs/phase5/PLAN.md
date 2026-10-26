@@ -623,7 +623,8 @@ in this repo.
 - **Estimate:** 7 (5/7/10). **Tier:** architect (design), builder (UI). **Not a gate item** (Q8).
 
 ### WP14. XDFU on the server (off by default)
-- **Scope:** server stamping of a download or callback copy of a grif document (xdfu-core `stamp_text`, the keyed
+- **Scope:** server stamping of a downloaded copy of a grif document (the provider's working copy from a callback is not
+  stamped, Q12) (xdfu-core `stamp_text`, the keyed
   issuer), at-rest encryption, the phase 3 m5 remainder (the sidecar fallback as an operator switch, never for an XDFU
   job, `docs/phase3/gate-review.md:422`). EDS/E-IMZO, the registry and the grif-removal workflow stay design-only (Q9).
 - **Done-check:** `xdfu_off_registers_nothing` for the docserver; stamped-copy tests as in gridcraft/0143.
@@ -736,3 +737,4 @@ unknown, and the deckcraft bridge (−3) is already done. Risk buffer as SIZING:
 | **Q9** | XDFU server features and EDS (phase3 O10, O11) | all in Phase 5 / split | **Phase 5: server stamping and encryption at rest, off by default.** E-IMZO, the registry and the grif-removal workflow move to a later phase until O10/O11 are answered. |
 | **Q10** | Retention of working copies on our server | — | **24 h after a good close, 7 days for an abandoned session**, no backups of the data folder. |
 | Q11 | HRB-side names (`CRAFT_*` env names, `editorProvider: "craft"`) | keep / rename | HRM's own config, not our brand, so **the HRM team's call**. Our code names neither (B-1 note, ADR App. B). |
+| **Q12** | XDFU stamp on the provider's working copy (callback) and on pdf copies | stamp / not | **Not stamped** (stamps would pile up on save and reopen); only copies that leave the system (downloads) are. With xdfu on, **pdf copies are refused** (no pdf grif check on the server yet). Owner, 2026-10-26. |

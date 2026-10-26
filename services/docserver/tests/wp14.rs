@@ -196,11 +196,12 @@ async fn xdfu_off_registers_nothing() {
 }
 
 #[tokio::test]
-async fn download_and_callback_copies_of_a_grif_document_carry_the_stamp() {
+async fn a_download_of_a_grif_document_carries_the_stamp_the_callback_copy_does_not() {
     let d = dir("stamp");
     let ds = on(&d, true);
     let (r, ri) = (ds.routes::<()>(), ds.internal_router());
-    let (sid, tok) = session(&ds, &r, "k1", &docx("Х.Д.Ф.У. buyruq")).await;
+    let marked = docx("Х.Д.Ф.У. buyruq");
+    let (sid, tok) = session(&ds, &r, "k1", &marked).await;
     let (sid2, tok2) = session(&ds, &r, "k2", &docx("ordinary text")).await;
 
     let (s, down) = call(&r, &format!("/ds/session/{sid}/history/1"), Some(&tok)).await;
@@ -212,14 +213,9 @@ async fn download_and_callback_copies_of_a_grif_document_carry_the_stamp() {
         "{xml}"
     );
     assert!(xml.contains("Х.Д.Ф.У. buyruq") && xml.contains(MARK));
+    // the provider's working copy comes back as saved: no stamp, no copy number (owner, 2026-10-26)
     let (s, cb) = call(&ri, &file_url(&ds, &sid, 1), None).await;
-    assert_eq!(s, StatusCode::OK);
-    // the callback copy is the next copy, with the peer's address
-    let xml = part(&cb, "word/document.xml");
-    assert!(
-        xml.contains("XDFU copy 2 | 127.0.0.1 | Ali Valiyev | "),
-        "{xml}"
-    );
+    assert_eq!((s, cb), (StatusCode::OK, marked));
 
     // a document without the grif is served as it is and nothing is logged
     let plain = docx("ordinary text");
@@ -228,7 +224,12 @@ async fn download_and_callback_copies_of_a_grif_document_carry_the_stamp() {
     let (s, b) = call(&ri, &file_url(&ds, &sid2, 1), None).await;
     assert_eq!((s, b), (StatusCode::OK, plain));
 
-    // the copy log is the keyed chain: two lines, and it does not verify without the key
+    // a second download is copy 2
+    let (s, down) = call(&r, &format!("/ds/session/{sid}/history/1"), Some(&tok)).await;
+    assert_eq!(s, StatusCode::OK);
+    assert!(part(&down, "word/document.xml").contains("XDFU copy 2 | "));
+
+    // the copy log is the keyed chain: the two downloads only, and it does not verify without the key
     let log = d.join("data/xdfu-audit.jsonl");
     let key = convert::audit::load_key(&d.join("audit.key")).unwrap();
     assert_eq!(
@@ -239,7 +240,7 @@ async fn download_and_callback_copies_of_a_grif_document_carry_the_stamp() {
     );
     assert!(convert::audit::verify_keyed(&log, None).is_err());
     let text = std::fs::read_to_string(&log).unwrap();
-    assert!(text.contains("\"kind\":\"download\"") && text.contains("\"kind\":\"callback\""));
+    assert!(text.contains("\"kind\":\"download\"") && !text.contains("\"kind\":\"callback\""));
     assert!(
         !text.contains(MARK) && !text.contains("Ali Valiyev"),
         "no content, no name"
