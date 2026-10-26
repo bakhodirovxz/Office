@@ -412,7 +412,7 @@ test('History panel: list after two saves, name, restore, download, Esc; compare
 
   // compare without the tool configured: the server's 501 text is shown, nothing is drawn
   await panel.getByRole('button', { name: 'Compare', exact: true }).click();
-  await expect(panel.locator('#hist-msg')).toContainText('not installed');
+  await expect(panel.locator('#hist-msg')).toHaveText('The compare tool is not installed on this server.');
   await expect(panel.locator('#hist-msg')).toHaveAttribute('role', 'alert');
   await expect(panel.locator('#hist-cmp-sec')).toBeHidden();
   // the same version on both sides is refused before any request

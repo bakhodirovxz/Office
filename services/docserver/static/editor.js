@@ -170,12 +170,18 @@
       await hload();
     });
   }
+  // the compare route's error codes (history.rs) in the user's language; any other refusal keeps the server's text
+  var CMP_ERR = { not_configured: 'hist.cmp.err.missing', not_supported: 'hist.cmp.err.kind', compare_timeout: 'hist.cmp.err.timeout',
+    compare_too_large: 'hist.cmp.err.large', compare_failed: 'hist.cmp.err.failed' };
   async function hcompare() {
     var a = +$h('hist-cmp-a').value, b = +$h('hist-cmp-b').value;
     if (a === b) return hsay(t('hist.cmp.same'), true);
     hsay(t('hist.cmp.busy'));
     hfail(async function () {
-      var d = await (await api('/history/' + a + '/compare/' + b)).json();
+      var r;
+      try { r = await api('/history/' + a + '/compare/' + b); }
+      catch (e) { if (CMP_ERR[e.code]) e.message = t(CMP_ERR[e.code]); throw e; }
+      var d = await r.json();
       var items = H.ui.compareItems(d);
       hsay('');
       $h('hist-cmp-sec').hidden = false;
