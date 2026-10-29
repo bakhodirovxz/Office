@@ -15,7 +15,7 @@ WP23 usability finding (owner, 2026-10-29): after a crash Docs opened File > Rec
  7 files changed, 132 insertions(+), 45 deletions(-)
 
 diff --git a/Cargo.lock b/Cargo.lock
-index 75c1e6e..9166b62 100644
+index 7bf4129..a9a28d2 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -2378,6 +2378,10 @@ version = "1.0.0"
@@ -64,7 +64,7 @@ index 8e97fe5..ecf10cf 100644
  # Linux only, where winit reports no system theme: the desktop portal's light/dark answer (see
  # `desktop_theme.rs`). Already in the tree, with these features, through egui's own accessibility
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index 56c1e08..790a556 100644
+index c937029..6399175 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
 @@ -31,7 +31,6 @@ fn back_chevron_c(band_min_x: f32, center_y: f32, fullscreen: bool, content_left
@@ -91,9 +91,9 @@ index 56c1e08..790a556 100644
 -        .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { t.ribbon }).inner_margin(egui::Margin::symmetric(40, 30)))
 +        .frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30)))
          .show(ui, |ui| {
-             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
-             if app.ui.backstage_page == "print" {
-@@ -172,12 +171,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+             // A page the host withholds (Save As, Print, Export) falls back to Home.
+             if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
+@@ -176,12 +175,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
          });
  }
  
@@ -110,7 +110,7 @@ index 56c1e08..790a556 100644
      if app.session.password.is_some() {
          ui.label(tl!("Recovery is disabled while this document has a password."));
      }
-@@ -192,34 +191,15 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
+@@ -196,34 +195,15 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
          ui.label(tl!("No recovery copies."));
      }
      let busy = app.session.recovery_busy();
@@ -151,7 +151,7 @@ index 56c1e08..790a556 100644
          if ui.button(tl!("Continue without restoring")).clicked() {
              let _ = app.run("ui.backstage", json!({"value": false}));
              app.canvas.want_focus = true;
-@@ -620,10 +600,11 @@ mod tests {
+@@ -624,10 +604,11 @@ mod tests {
          let (app, root) = recovery_app();
          let mut h = recovery_harness(app);
          settle_recovery(&mut h);
@@ -166,7 +166,7 @@ index 56c1e08..790a556 100644
          assert_eq!(h.state().session.recovery_documents().len(), 1);
          h.state_mut().run("file.recover", json!({})).unwrap();
          h.run_steps(4);
-@@ -650,38 +631,49 @@ mod tests {
+@@ -654,38 +635,49 @@ mod tests {
          let (app, root) = recovery_app();
          let mut h = recovery_harness(app);
          settle_recovery(&mut h);
@@ -233,10 +233,10 @@ index a40aebe..4faea71 100644
 +	{app} recovered the following documents. Save the ones you want to keep.	{app} восстановил следующие документы. Сохраните те, которые нужно оставить.
 +	Version created from the last AutoSave	Версия, созданная при последнем автосохранении
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index e7355ff..73d8a2e 100644
+index d4da787..6e61cd9 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -630,6 +630,8 @@ pub struct WordApp {
+@@ -633,6 +633,8 @@ pub struct WordApp {
      /// between, such as an Undo, starts a new one).
      pub(crate) info_editing: Option<(&'static str, u64)>,
      recovery_seen: bool,
@@ -245,7 +245,7 @@ index e7355ff..73d8a2e 100644
      /// Started on the Start screen with nothing to open (#1129): the id of the placeholder
      /// blank document the session holds until the user creates or opens one. While it is still
      /// the session's document, no document is open: the window shows no page and only the File
-@@ -658,6 +660,12 @@ impl SaveChoice {
+@@ -661,6 +663,12 @@ impl SaveChoice {
      }
  }
  
@@ -258,7 +258,7 @@ index e7355ff..73d8a2e 100644
  impl WordApp {
      pub fn new(mut session: Session, services: Services) -> Self {
          crate::office_overlay::replace_placeholder_author(&mut session.author);
-@@ -733,6 +741,7 @@ impl WordApp {
+@@ -736,6 +744,7 @@ impl WordApp {
              file_browser: file_browser::State::default(),
              info_editing: None,
              recovery_seen: false,
@@ -266,7 +266,7 @@ index e7355ff..73d8a2e 100644
              no_document: None,
              comment_drafts: Default::default(),
          }
-@@ -1663,7 +1672,7 @@ impl WordApp {
+@@ -1676,7 +1685,7 @@ impl WordApp {
                      let Some(info) = self.session.recovery_documents().into_iter().find(|d| d.id == id) else {
                          return Some(Err("no such recovery copy".into()));
                      };
@@ -275,7 +275,7 @@ index e7355ff..73d8a2e 100644
                      json!({"pending": "discardRecovery"})
                  }
              }
-@@ -2048,11 +2057,10 @@ impl WordApp {
+@@ -2061,11 +2070,10 @@ impl WordApp {
          }
          if !self.recovery_seen && self.session.recovery_ready() {
              self.recovery_seen = true;
