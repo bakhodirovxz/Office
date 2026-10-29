@@ -202,6 +202,18 @@ fn rg_stroke(c: Rgb) -> String {
     format!("{} {} {} RG\n", n(c[0]), n(c[1]), n(c[2]))
 }
 
+/// office overlay (pdfcraft/0118): the standard font a text box's `/DA` names (`/TiRo`, `/Cour`); Helvetica for `/Helv` and
+/// any other name, as before.
+pub fn da_font(d: &Dict) -> crate::OverlayFont {
+    let da = d.get(b"DA").and_then(|o| o.as_string()).map(|s| String::from_utf8_lossy(&s.bytes).into_owned()).unwrap_or_default();
+    da.split_whitespace().find_map(|t| t.strip_prefix('/')).map_or(crate::OverlayFont::Helvetica, crate::OverlayFont::from_resource)
+}
+
+/// office overlay (pdfcraft/0118): the width of `s` at `size` in `font` (Helvetica: upstream's measure, unchanged).
+pub fn da_width(font: crate::OverlayFont, s: &str, size: f64) -> f64 {
+    if font == crate::OverlayFont::Helvetica { text_width(s, size) } else { font.std14().text_width(s, size) }
+}
+
 /// `/DA` of a text box: (text colour, font size). Defaults to black 12 pt.
 pub fn parse_da(d: &Dict) -> (Rgb, f64) {
     let da = d.get(b"DA").and_then(|o| o.as_string()).map(|s| String::from_utf8_lossy(&s.bytes).into_owned()).unwrap_or_default();
@@ -732,25 +744,29 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 ));
             }
             let text = d.get(b"Contents").and_then(|o| o.as_string()).map(PdfString::to_text).unwrap_or_default();
+            // office overlay (pdfcraft/0118): drawn in the font `/DA` names; Helvetica keeps upstream's measure.
+            let font = da_font(d);
+            let measure = |s: &str, size: f64| da_width(font, s, size);
             let pad = 2.0 + bw;
             let width = (rect[2] - rect[0] - 2.0 * pad).max(1.0);
             let q = d.int(b"Q").unwrap_or(0);
             c.push_str(&format!(
-                "{} {} {} {} re W n\nBT\n/Helv {} Tf\n{}",
+                "{} {} {} {} re W n\nBT\n/{} {} Tf\n{}",
                 n(rect[0]),
                 n(rect[1]),
                 n(rect[2] - rect[0]),
                 n(rect[3] - rect[1]),
+                font.resource(),
                 n(size),
                 rg(text_color)
             ));
             let mut out = c.into_bytes();
             let mut y = rect[3] - pad - size * 0.9;
-            for line in wrap(&text, size, width) {
+            for line in pdfcraft_fonts::wrap_with(&text, size, width, measure) {
                 if y < rect[1] - size {
                     break;
                 }
-                let lw = text_width(&line, size);
+                let lw = measure(&line, size);
                 let x = match q {
                     1 => rect[0] + pad + (width - lw) / 2.0,
                     2 => rect[2] - pad - lw,
@@ -762,13 +778,13 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 y -= size * 1.2;
             }
             out.extend_from_slice(b"ET\n");
-            let mut font = Dict::new();
-            font.set(b"Type".to_vec(), Object::name("Font"));
-            font.set(b"Subtype".to_vec(), Object::name("Type1"));
-            font.set(b"BaseFont".to_vec(), Object::name("Helvetica"));
-            font.set(b"Encoding".to_vec(), Object::name("WinAnsiEncoding"));
+            let mut fd = Dict::new();
+            fd.set(b"Type".to_vec(), Object::name("Font"));
+            fd.set(b"Subtype".to_vec(), Object::name("Type1"));
+            fd.set(b"BaseFont".to_vec(), Object::name(font.std14().base_font()));
+            fd.set(b"Encoding".to_vec(), Object::name("WinAnsiEncoding"));
             let mut fonts = Dict::new();
-            fonts.set(b"Helv".to_vec(), Object::Dict(font));
+            fonts.set(font.resource().as_bytes().to_vec(), Object::Dict(fd));
             res.set(b"Font".to_vec(), Object::Dict(fonts));
             let mut stream = form(full, &out, res);
             if let Some(m) = matrix {

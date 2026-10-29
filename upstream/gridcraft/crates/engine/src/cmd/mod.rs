@@ -472,10 +472,12 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
         return;
     }
     let default = sh.default_row_height;
+    // office overlay (gridcraft/0151): sizes are compared with the workbook's Normal font (12 pt in a new workbook), not Calibri's 11.
+    let base = wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.size.max(1.0);
     // Fast path: rows of default-size, unwrapped, single-line content keep the default height.
     let plain = sh.cells.row(row, 0, gridcraft_core::MAX_COLS - 1).all(|(_, cell)| {
         let st = wb.styles.get(cell.style);
-        st.font.size <= gridcraft_model::DEFAULT_FONT_SIZE && !st.align.wrap && !cell.value.as_text().is_some_and(|t| t.contains('\n'))
+        st.font.size <= base && !st.align.wrap && !cell.value.as_text().is_some_and(|t| t.contains('\n'))
     });
     if plain {
         if sh.rows.get(&row).is_some_and(|i| i.size.is_some())
@@ -495,7 +497,7 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
     for (c, cell) in sh.cells.row(row, 0, gridcraft_core::MAX_COLS - 1) {
         let st = wb.styles.get(cell.style);
         let size = st.font.size;
-        let line = (size * 1.8).round().max(default * size / gridcraft_model::DEFAULT_FONT_SIZE);
+        let line = (size * 1.8).round().max(default * size / base);
         let mut lines = 1.0f32;
         if !cell.value.is_empty() || cell.formula.is_some() {
             let text = crate::display::cell_text(wb, sh, CellRef::new(row, c));
@@ -509,7 +511,7 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
             } else {
                 explicit
             };
-        } else if st.font.size <= gridcraft_model::DEFAULT_FONT_SIZE {
+        } else if st.font.size <= base {
             continue;
         }
         let h = if lines > 1.0 { (size * 96.0 / 72.0 * 1.22 * lines + 5.0).ceil() } else { line };

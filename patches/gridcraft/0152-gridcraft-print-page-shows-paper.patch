@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] backstage: the Print page shows the sheet's paper and orientation
+
+WP23 usability finding: the Sheets Print page did not say what it prints on: the paper and orientation are set only in Page Setup. The page now shows the active sheet's paper and orientation (dim text, the page's own style) above the Page Setup link.
+---
+ crates/ui-egui/src/backstage.rs | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 6a40e6e..3ec1bfa 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -733,6 +733,12 @@ fn print(app: &mut SheetApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+                 bs.preview_page = 0;
+             }
+             ui.add_space(8.0);
++            // office overlay (gridcraft/0152, WP23): the paper and orientation are set in Page Setup; the page shows them, so
++            // it says what the sheet prints on (A4 for a new workbook in an Uzbek or Russian interface).
++            if let Some(sh) = app.session.active().and_then(|d| d.wb.active()) {
++                let landscape = sh.print.orientation == gridcraft_engine::model::Orientation::Landscape;
++                dim(ui, &format!("{} · {}", sh.print.paper, lang.tr(if landscape { "Landscape" } else { "Portrait" })));
++            }
+             if ui.link(lang.tr("Page Setup…")).clicked() {
+                 app.open_dialog("pageSetup", json!({}));
+             }

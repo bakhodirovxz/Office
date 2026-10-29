@@ -298,9 +298,6 @@ fn main() -> eframe::Result<()> {
     {
         log::warn!("sample {s}: {e}");
     }
-    if session.documents().is_empty() {
-        session.new_workbook();
-    }
     let mut app = SheetApp::new(session, services());
     app.watch_desktop_theme();
     app.after_engine(); // Show warnings from the sample.
@@ -308,6 +305,11 @@ fn main() -> eframe::Result<()> {
     load_prefs(&mut app);
     // office overlay (patches/gridcraft/0148): the shared `theme` (the shell's setting) wins over the saved one at each start.
     gridcraft_ui_egui::office_overlay::start_theme(&mut app.ui);
+    // office overlay (gridcraft/0151): the blank Book1 is made once the interface language is known: its paper follows it.
+    if app.session.documents().is_empty() {
+        app.session.prefs.num_locale = app.ui.language.num_locale();
+        app.session.new_workbook();
+    }
     // Files named on the command line (a double-click on Windows and Linux) open as File › Open
     // opens them: a password-protected one asks for its password, and errors are shown, not
     // only logged. Each replaces the untouched blank Book1, as a file opened from Finder does.

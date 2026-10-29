@@ -1,0 +1,296 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] annot, ui-egui: added text and new text boxes start in Times 12 pt; a text box keeps the font its /DA names
+
+Owner decision 2026-10-29 (docs/phase4/design-system.md, "Revised"): text the user adds starts in Times New Roman 12 pt. In a PDF that is the standard-14 Times (Times-Roman, `/TiRo`): nothing is embedded, Windows viewers show Times New Roman and the renderer's own standard-font substitute draws it elsewhere. The Add Text tool's default style and new text boxes, typewriter text and callouts use it; a text box's appearance, rich text and refit now follow the font its /DA names, so a colour or size change keeps it and boxes already in a file keep their Helvetica (measured exactly as before).
+---
+ crates/annot/src/appearance.rs   | 34 +++++++++++++++++++++++++---------
+ crates/annot/src/lib.rs          | 40 +++++++++++++++++++++++++++++++++-------
+ crates/annot/src/tests.rs        | 35 +++++++++++++++++++++++++++++------
+ crates/ui-egui/src/content_ui.rs |  3 ++-
+ 4 files changed, 89 insertions(+), 23 deletions(-)
+
+diff --git a/crates/annot/src/appearance.rs b/crates/annot/src/appearance.rs
+index 3e1dd4a..33c3ab9 100644
+--- a/crates/annot/src/appearance.rs
++++ b/crates/annot/src/appearance.rs
+@@ -202,6 +202,18 @@ fn rg_stroke(c: Rgb) -> String {
+     format!("{} {} {} RG\n", n(c[0]), n(c[1]), n(c[2]))
+ }
+ 
++/// office overlay (pdfcraft/0118): the standard font a text box's `/DA` names (`/TiRo`, `/Cour`); Helvetica for `/Helv` and
++/// any other name, as before.
++pub fn da_font(d: &Dict) -> crate::OverlayFont {
++    let da = d.get(b"DA").and_then(|o| o.as_string()).map(|s| String::from_utf8_lossy(&s.bytes).into_owned()).unwrap_or_default();
++    da.split_whitespace().find_map(|t| t.strip_prefix('/')).map_or(crate::OverlayFont::Helvetica, crate::OverlayFont::from_resource)
++}
++
++/// office overlay (pdfcraft/0118): the width of `s` at `size` in `font` (Helvetica: upstream's measure, unchanged).
++pub fn da_width(font: crate::OverlayFont, s: &str, size: f64) -> f64 {
++    if font == crate::OverlayFont::Helvetica { text_width(s, size) } else { font.std14().text_width(s, size) }
++}
++
+ /// `/DA` of a text box: (text colour, font size). Defaults to black 12 pt.
+ pub fn parse_da(d: &Dict) -> (Rgb, f64) {
+     let da = d.get(b"DA").and_then(|o| o.as_string()).map(|s| String::from_utf8_lossy(&s.bytes).into_owned()).unwrap_or_default();
+@@ -732,25 +744,29 @@ pub fn build(d: &Dict) -> Option<Stream> {
+                 ));
+             }
+             let text = d.get(b"Contents").and_then(|o| o.as_string()).map(PdfString::to_text).unwrap_or_default();
++            // office overlay (pdfcraft/0118): drawn in the font `/DA` names; Helvetica keeps upstream's measure.
++            let font = da_font(d);
++            let measure = |s: &str, size: f64| da_width(font, s, size);
+             let pad = 2.0 + bw;
+             let width = (rect[2] - rect[0] - 2.0 * pad).max(1.0);
+             let q = d.int(b"Q").unwrap_or(0);
+             c.push_str(&format!(
+-                "{} {} {} {} re W n\nBT\n/Helv {} Tf\n{}",
++                "{} {} {} {} re W n\nBT\n/{} {} Tf\n{}",
+                 n(rect[0]),
+                 n(rect[1]),
+                 n(rect[2] - rect[0]),
+                 n(rect[3] - rect[1]),
++                font.resource(),
+                 n(size),
+                 rg(text_color)
+             ));
+             let mut out = c.into_bytes();
+             let mut y = rect[3] - pad - size * 0.9;
+-            for line in wrap(&text, size, width) {
++            for line in pdfcraft_fonts::wrap_with(&text, size, width, measure) {
+                 if y < rect[1] - size {
+                     break;
+                 }
+-                let lw = text_width(&line, size);
++                let lw = measure(&line, size);
+                 let x = match q {
+                     1 => rect[0] + pad + (width - lw) / 2.0,
+                     2 => rect[2] - pad - lw,
+@@ -762,13 +778,13 @@ pub fn build(d: &Dict) -> Option<Stream> {
+                 y -= size * 1.2;
+             }
+             out.extend_from_slice(b"ET\n");
+-            let mut font = Dict::new();
+-            font.set(b"Type".to_vec(), Object::name("Font"));
+-            font.set(b"Subtype".to_vec(), Object::name("Type1"));
+-            font.set(b"BaseFont".to_vec(), Object::name("Helvetica"));
+-            font.set(b"Encoding".to_vec(), Object::name("WinAnsiEncoding"));
++            let mut fd = Dict::new();
++            fd.set(b"Type".to_vec(), Object::name("Font"));
++            fd.set(b"Subtype".to_vec(), Object::name("Type1"));
++            fd.set(b"BaseFont".to_vec(), Object::name(font.std14().base_font()));
++            fd.set(b"Encoding".to_vec(), Object::name("WinAnsiEncoding"));
+             let mut fonts = Dict::new();
+-            fonts.set(b"Helv".to_vec(), Object::Dict(font));
++            fonts.set(font.resource().as_bytes().to_vec(), Object::Dict(fd));
+             res.set(b"Font".to_vec(), Object::Dict(fonts));
+             let mut stream = form(full, &out, res);
+             if let Some(m) = matrix {
+diff --git a/crates/annot/src/lib.rs b/crates/annot/src/lib.rs
+index 587cd44..cac3fba 100644
+--- a/crates/annot/src/lib.rs
++++ b/crates/annot/src/lib.rs
+@@ -494,6 +494,10 @@ impl Shape {
+     }
+ }
+ 
++/// office overlay (pdfcraft/0118): the font of new text boxes, typewriter text and callouts: Times (Times New Roman where
++/// installed), owner decision 2026-10-29. A standard-14 font, so nothing is embedded; boxes already in a file keep theirs.
++pub const NEW_TEXT_FONT: OverlayFont = OverlayFont::Times;
++
+ /// The standard fonts of redaction overlay text.
+ #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+ pub enum OverlayFont {
+@@ -523,6 +527,15 @@ impl OverlayFont {
+         }
+     }
+ 
++    /// office overlay (pdfcraft/0118): the standard-14 face drawn for this font (its upright regular style).
++    pub fn std14(self) -> pdfcraft_fonts::Std14 {
++        match self {
++            OverlayFont::Helvetica => pdfcraft_fonts::Std14::Helvetica,
++            OverlayFont::Times => pdfcraft_fonts::Std14::TimesRoman,
++            OverlayFont::Courier => pdfcraft_fonts::Std14::Courier,
++        }
++    }
++
+     pub fn from_resource(n: &str) -> OverlayFont {
+         match n {
+             "TiRo" | "Times-Roman" | "TimesRoman" => OverlayFont::Times,
+@@ -1199,7 +1212,10 @@ pub fn add_annotation(doc: &mut Document, new: &NewAnnotation, meta: &Meta) -> R
+             }
+             let size = if font_size.is_finite() && *font_size > 0.0 { font_size.clamp(1.0, 400.0) } else { 12.0 };
+             let [r, g, b] = style.color.map(|x| x.clamp(0.0, 1.0));
+-            d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
++            d.set(
++                b"DA".to_vec(),
++                PdfString::literal(format!("{} {} {} rg /{} {} Tf", n(r), n(g), n(b), NEW_TEXT_FONT.resource(), n(size)).into_bytes()),
++            );
+             d.set(b"Q".to_vec(), Object::Int(0));
+             if let Some(f) = style.fill {
+                 d.set(b"C".to_vec(), rgb(f));
+@@ -1471,6 +1487,11 @@ pub(crate) fn n(v: f64) -> String {
+ fn rich_text(d: &mut Dict) {
+     let text = d.get(b"Contents").and_then(|c| c.as_string()).map(PdfString::to_text).unwrap_or_default();
+     let (col, size) = appearance::parse_da(d);
++    let family = match appearance::da_font(d) {
++        OverlayFont::Helvetica => "Helvetica",
++        OverlayFont::Times => "Times New Roman",
++        OverlayFont::Courier => "Courier",
++    };
+     let hex = format!(
+         "#{:02X}{:02X}{:02X}",
+         (col[0].clamp(0.0, 1.0) * 255.0).round() as u8,
+@@ -1485,13 +1506,13 @@ fn rich_text(d: &mut Dict) {
+     let esc = |s: &str| s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;");
+     let body: String = text.split('\n').map(|line| format!("<p dir=\"ltr\">{}</p>", esc(line.trim_end_matches('\r')))).collect();
+     let style = format!(
+-        "font-size:{}pt;text-align:{align};color:{hex};font-weight:normal;font-style:normal;font-family:Helvetica;font-stretch:normal",
++        "font-size:{}pt;text-align:{align};color:{hex};font-weight:normal;font-style:normal;font-family:{family};font-stretch:normal",
+         n(size)
+     );
+     let rc = format!(
+         "<?xml version=\"1.0\"?><body xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:xfa=\"http://www.xfa.org/schema/xfa-data/1.0/\" xfa:spec=\"2.0.2\" style=\"{style}\">{body}</body>"
+     );
+-    d.set(b"DS".to_vec(), PdfString::text(&format!("font: Helvetica {}pt; text-align:{align}; color:{hex}", n(size))));
++    d.set(b"DS".to_vec(), PdfString::text(&format!("font: {family} {}pt; text-align:{align}; color:{hex}", n(size))));
+     d.set(b"RC".to_vec(), PdfString::text(&rc));
+ }
+ 
+@@ -1576,6 +1597,8 @@ fn fitted_box(doc: &Document, r: ObjRef, text: &str) -> Option<[f64; 4]> {
+     let d = annot_dict(doc, r);
+     let nums = |key: &[u8]| -> Option<Vec<f64>> { d.get(key)?.as_array()?.iter().map(|o| o.as_f64()).collect() };
+     let (_, size) = appearance::parse_da(&d);
++    // office overlay (pdfcraft/0118): measured in the box's own font, as the appearance draws it.
++    let font = appearance::da_font(&d);
+     let pad = 2.0 + border_width_of(&d);
+     let rect = nums(b"Rect").filter(|v| v.len() == 4 && v.iter().all(|x| x.is_finite()))?;
+     let rect = [rect[0], rect[1], rect[2], rect[3]];
+@@ -1592,10 +1615,10 @@ fn fitted_box(doc: &Document, r: ObjRef, text: &str) -> Option<[f64; 4]> {
+         w
+     } else {
+         // No usable old width: fall back to the creation-time width (at most 300 pt).
+-        let longest = text.lines().map(|l| appearance::text_width(l, size)).fold(0.0, f64::max);
++        let longest = text.lines().map(|l| appearance::da_width(font, l, size)).fold(0.0, f64::max);
+         (longest + 2.0 * pad + 4.0).clamp(40.0, 300.0)
+     };
+-    let lines = appearance::wrap(text, size, (w - 2.0 * pad).max(1.0)).len().max(1) as f64;
++    let lines = pdfcraft_fonts::wrap_with(text, size, (w - 2.0 * pad).max(1.0), |s, z| appearance::da_width(font, s, z)).len().max(1) as f64;
+     Some([x0, top - lines * size * 1.2 - 2.0 * pad - 2.0, x0 + w, top])
+ }
+ 
+@@ -1911,7 +1934,9 @@ pub fn set_style(
+             if free_text {
+                 let (_, size) = appearance::parse_da(d);
+                 let [r, g, b] = c.map(|x| x.clamp(0.0, 1.0));
+-                d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
++                // The box keeps its font (pdfcraft/0118: this always wrote Helvetica).
++                let font = appearance::da_font(d).resource();
++                d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /{font} {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
+                 rich_text(d);
+             } else {
+                 d.set(b"C".to_vec(), rgb(c));
+@@ -1963,7 +1988,8 @@ pub fn set_font_size(doc: &mut Document, page: usize, index: usize, size: f64, m
+     let before = d;
+     doc.update_dict(r, |d| {
+         let (col, _) = appearance::parse_da(d);
+-        d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(col[0]), n(col[1]), n(col[2]), n(size)).into_bytes()));
++        let font = appearance::da_font(d).resource();
++        d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /{font} {} Tf", n(col[0]), n(col[1]), n(col[2]), n(size)).into_bytes()));
+         rich_text(d);
+         touch(d, meta);
+     })?;
+diff --git a/crates/annot/src/tests.rs b/crates/annot/src/tests.rs
+index 4a4dfb1..310d164 100644
+--- a/crates/annot/src/tests.rs
++++ b/crates/annot/src/tests.rs
+@@ -131,9 +131,9 @@ fn every_tool_creates_a_drawable_comment() {
+     // The arrow's rectangle includes the arrowhead and the stroke.
+     let r = rect(&all[9]);
+     assert!(r[0] < 50.0 && r[2] > 150.0 + 1.0);
+-    // The text box draws its contents in Helvetica.
++    // The text box draws its contents in Times (pdfcraft/0118; it was Helvetica).
+     assert!(ap_content(&doc, &all[11]).contains("(hello) Tj"));
+-    assert!(ap_content(&doc, &all[11]).contains("/Helv 14 Tf"));
++    assert!(ap_content(&doc, &all[11]).contains("/TiRo 14 Tf"));
+     // The note is a fixed-size icon with a closed pop-up.
+     assert_eq!(all[1].int(b"F"), Some(28));
+     let entries = annots(&doc, page_refs(&doc).unwrap()[0]);
+@@ -337,7 +337,8 @@ fn text_box_text_and_colour_changes_are_drawn() {
+     let doc = reopen(&doc);
+     let d = &list(&doc, 0)[t];
+     assert_eq!(text(d, b"Contents"), "Caf\u{e9} (draft) \u{2014} 100%");
+-    assert_eq!(text(d, b"DA"), "1 0 0 rg /Helv 12 Tf");
++    // pdfcraft/0118: new text boxes are Times (`/TiRo`), and a colour change keeps the font.
++    assert_eq!(text(d, b"DA"), "1 0 0 rg /TiRo 12 Tf");
+     let n = d.get(b"AP").unwrap().as_dict().unwrap().reference(b"N").unwrap();
+     let Object::Stream(s) = &*doc.get(n) else { panic!() };
+     let raw = s.decoded().unwrap();
+@@ -346,7 +347,7 @@ fn text_box_text_and_colour_changes_are_drawn() {
+     assert!(raw.windows(needle.len()).any(|w| w == needle), "{}", String::from_utf8_lossy(&raw));
+     assert!(String::from_utf8_lossy(&raw).contains("1 0 0 rg"));
+     // Rich text follows the plain text and the style.
+-    assert_eq!(text(d, b"DS"), "font: Helvetica 12pt; text-align:left; color:#FF0000");
++    assert_eq!(text(d, b"DS"), "font: Times New Roman 12pt; text-align:left; color:#FF0000");
+     let rc = text(d, b"RC");
+     assert!(rc.starts_with("<?xml") && rc.contains("<p dir=\"ltr\">Caf\u{e9} (draft) \u{2014} 100%</p>") && rc.contains("color:#FF0000"), "{rc}");
+ }
+@@ -355,7 +356,8 @@ fn text_box_text_and_colour_changes_are_drawn() {
+ /// the wrap width and top edge stay, the height fits the wrapped lines.
+ fn expected_box(top: f64, w: f64, text: &str, size: f64, border: f64) -> [f64; 4] {
+     let pad = 2.0 + border;
+-    let lines = appearance::wrap(text, size, w - 2.0 * pad).len().max(1) as f64;
++    // pdfcraft/0118: new boxes are Times, measured as the appearance draws them.
++    let lines = pdfcraft_fonts::wrap_with(text, size, w - 2.0 * pad, |s, z| appearance::da_width(NEW_TEXT_FONT, s, z)).len().max(1) as f64;
+     [0.0, top - lines * size * 1.2 - 2.0 * pad - 2.0, w, 0.0]
+ }
+ 
+@@ -1317,7 +1319,7 @@ fn text_box_font_size_changes_the_da_and_grows_the_box() {
+     set_font_size(&mut doc, 0, t, 24.0, &meta("")).unwrap();
+     let doc = reopen(&doc);
+     let d = &list(&doc, 0)[t];
+-    assert_eq!(text(d, b"DA"), "1 0 0 rg /Helv 24 Tf");
++    assert_eq!(text(d, b"DA"), "1 0 0 rg /TiRo 24 Tf", "pdfcraft/0118: a size change keeps the font");
+     assert!(text(d, b"DS").contains("24pt") && text(d, b"RC").contains("font-size:24pt"));
+     assert_eq!(props(&doc, 0, t).unwrap().font_size, Some(24.0));
+     assert!(height(&doc) > before, "the box grows");
+@@ -1382,3 +1384,24 @@ fn free_text_properties_show_legacy_or_absent_border_width() {
+     .unwrap();
+     assert_eq!(props(&doc, 0, index).unwrap().width, Some(4.0));
+ }
++
++/// office overlay (pdfcraft/0118): new text boxes are Times 12 pt by default (`/TiRo`, a Times-Roman resource, wrapped with the
++/// Times widths); a box already in a file keeps its Helvetica.
++#[test]
++fn new_text_boxes_are_times_and_old_ones_keep_helvetica() {
++    let mut doc = fixture();
++    let t = add_annotation(&mut doc, &new(0, Shape::TextBox { rect: [0.0, 0.0, 300.0, 100.0], font_size: 12.0 }), &meta("t")).unwrap();
++    let doc = reopen(&doc);
++    let d = &list(&doc, 0)[t];
++    assert!(text(d, b"DA").ends_with("/TiRo 12 Tf"), "{}", text(d, b"DA"));
++    assert_eq!(appearance::da_font(d), OverlayFont::Times);
++    let n = d.get(b"AP").unwrap().as_dict().unwrap().reference(b"N").unwrap();
++    let Object::Stream(s) = &*doc.get(n) else { panic!() };
++    let res = s.dict.get(b"Resources").unwrap().as_dict().unwrap().get(b"Font").unwrap().as_dict().unwrap().clone();
++    let tiro = res.get(b"TiRo").unwrap().as_dict().unwrap().clone();
++    assert_eq!(tiro.name(b"BaseFont"), Some(&b"Times-Roman"[..]));
++    let mut old = Dict::new();
++    old.set(b"DA".to_vec(), PdfString::literal(b"0 g /Helv 12 Tf".to_vec()));
++    assert_eq!(appearance::da_font(&old), OverlayFont::Helvetica);
++    assert!(appearance::da_width(OverlayFont::Times, "Salom dunyo", 12.0) < appearance::da_width(OverlayFont::Helvetica, "Salom dunyo", 12.0));
++}
+diff --git a/crates/ui-egui/src/content_ui.rs b/crates/ui-egui/src/content_ui.rs
+index 5f5ef32..61f3e7f 100644
+--- a/crates/ui-egui/src/content_ui.rs
++++ b/crates/ui-egui/src/content_ui.rs
+@@ -233,7 +233,8 @@ impl MoveBackground {
+ 
+ /// Text style for new text (the panel's Format controls set it).
+ pub fn default_style() -> AddedText {
+-    AddedText { size: 12.0, ..AddedText::default() }
++    // office overlay (pdfcraft/0118): added text starts in Times (Times New Roman where installed), 12 pt (owner decision 2026-10-29).
++    AddedText { size: 12.0, family: pdfcraft_engine::FontFamily::Times, ..AddedText::default() }
+ }
+ 
+ /// Display-space rect → screen.

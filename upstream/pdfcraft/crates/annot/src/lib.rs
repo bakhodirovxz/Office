@@ -494,6 +494,10 @@ impl Shape {
     }
 }
 
+/// office overlay (pdfcraft/0118): the font of new text boxes, typewriter text and callouts: Times (Times New Roman where
+/// installed), owner decision 2026-10-29. A standard-14 font, so nothing is embedded; boxes already in a file keep theirs.
+pub const NEW_TEXT_FONT: OverlayFont = OverlayFont::Times;
+
 /// The standard fonts of redaction overlay text.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum OverlayFont {
@@ -520,6 +524,15 @@ impl OverlayFont {
             OverlayFont::Helvetica => "Helv",
             OverlayFont::Times => "TiRo",
             OverlayFont::Courier => "Cour",
+        }
+    }
+
+    /// office overlay (pdfcraft/0118): the standard-14 face drawn for this font (its upright regular style).
+    pub fn std14(self) -> pdfcraft_fonts::Std14 {
+        match self {
+            OverlayFont::Helvetica => pdfcraft_fonts::Std14::Helvetica,
+            OverlayFont::Times => pdfcraft_fonts::Std14::TimesRoman,
+            OverlayFont::Courier => pdfcraft_fonts::Std14::Courier,
         }
     }
 
@@ -1199,7 +1212,10 @@ pub fn add_annotation(doc: &mut Document, new: &NewAnnotation, meta: &Meta) -> R
             }
             let size = if font_size.is_finite() && *font_size > 0.0 { font_size.clamp(1.0, 400.0) } else { 12.0 };
             let [r, g, b] = style.color.map(|x| x.clamp(0.0, 1.0));
-            d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
+            d.set(
+                b"DA".to_vec(),
+                PdfString::literal(format!("{} {} {} rg /{} {} Tf", n(r), n(g), n(b), NEW_TEXT_FONT.resource(), n(size)).into_bytes()),
+            );
             d.set(b"Q".to_vec(), Object::Int(0));
             if let Some(f) = style.fill {
                 d.set(b"C".to_vec(), rgb(f));
@@ -1471,6 +1487,11 @@ pub(crate) fn n(v: f64) -> String {
 fn rich_text(d: &mut Dict) {
     let text = d.get(b"Contents").and_then(|c| c.as_string()).map(PdfString::to_text).unwrap_or_default();
     let (col, size) = appearance::parse_da(d);
+    let family = match appearance::da_font(d) {
+        OverlayFont::Helvetica => "Helvetica",
+        OverlayFont::Times => "Times New Roman",
+        OverlayFont::Courier => "Courier",
+    };
     let hex = format!(
         "#{:02X}{:02X}{:02X}",
         (col[0].clamp(0.0, 1.0) * 255.0).round() as u8,
@@ -1485,13 +1506,13 @@ fn rich_text(d: &mut Dict) {
     let esc = |s: &str| s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;");
     let body: String = text.split('\n').map(|line| format!("<p dir=\"ltr\">{}</p>", esc(line.trim_end_matches('\r')))).collect();
     let style = format!(
-        "font-size:{}pt;text-align:{align};color:{hex};font-weight:normal;font-style:normal;font-family:Helvetica;font-stretch:normal",
+        "font-size:{}pt;text-align:{align};color:{hex};font-weight:normal;font-style:normal;font-family:{family};font-stretch:normal",
         n(size)
     );
     let rc = format!(
         "<?xml version=\"1.0\"?><body xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:xfa=\"http://www.xfa.org/schema/xfa-data/1.0/\" xfa:spec=\"2.0.2\" style=\"{style}\">{body}</body>"
     );
-    d.set(b"DS".to_vec(), PdfString::text(&format!("font: Helvetica {}pt; text-align:{align}; color:{hex}", n(size))));
+    d.set(b"DS".to_vec(), PdfString::text(&format!("font: {family} {}pt; text-align:{align}; color:{hex}", n(size))));
     d.set(b"RC".to_vec(), PdfString::text(&rc));
 }
 
@@ -1576,6 +1597,8 @@ fn fitted_box(doc: &Document, r: ObjRef, text: &str) -> Option<[f64; 4]> {
     let d = annot_dict(doc, r);
     let nums = |key: &[u8]| -> Option<Vec<f64>> { d.get(key)?.as_array()?.iter().map(|o| o.as_f64()).collect() };
     let (_, size) = appearance::parse_da(&d);
+    // office overlay (pdfcraft/0118): measured in the box's own font, as the appearance draws it.
+    let font = appearance::da_font(&d);
     let pad = 2.0 + border_width_of(&d);
     let rect = nums(b"Rect").filter(|v| v.len() == 4 && v.iter().all(|x| x.is_finite()))?;
     let rect = [rect[0], rect[1], rect[2], rect[3]];
@@ -1592,10 +1615,10 @@ fn fitted_box(doc: &Document, r: ObjRef, text: &str) -> Option<[f64; 4]> {
         w
     } else {
         // No usable old width: fall back to the creation-time width (at most 300 pt).
-        let longest = text.lines().map(|l| appearance::text_width(l, size)).fold(0.0, f64::max);
+        let longest = text.lines().map(|l| appearance::da_width(font, l, size)).fold(0.0, f64::max);
         (longest + 2.0 * pad + 4.0).clamp(40.0, 300.0)
     };
-    let lines = appearance::wrap(text, size, (w - 2.0 * pad).max(1.0)).len().max(1) as f64;
+    let lines = pdfcraft_fonts::wrap_with(text, size, (w - 2.0 * pad).max(1.0), |s, z| appearance::da_width(font, s, z)).len().max(1) as f64;
     Some([x0, top - lines * size * 1.2 - 2.0 * pad - 2.0, x0 + w, top])
 }
 
@@ -1911,7 +1934,9 @@ pub fn set_style(
             if free_text {
                 let (_, size) = appearance::parse_da(d);
                 let [r, g, b] = c.map(|x| x.clamp(0.0, 1.0));
-                d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
+                // The box keeps its font (pdfcraft/0118: this always wrote Helvetica).
+                let font = appearance::da_font(d).resource();
+                d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /{font} {} Tf", n(r), n(g), n(b), n(size)).into_bytes()));
                 rich_text(d);
             } else {
                 d.set(b"C".to_vec(), rgb(c));
@@ -1963,7 +1988,8 @@ pub fn set_font_size(doc: &mut Document, page: usize, index: usize, size: f64, m
     let before = d;
     doc.update_dict(r, |d| {
         let (col, _) = appearance::parse_da(d);
-        d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /Helv {} Tf", n(col[0]), n(col[1]), n(col[2]), n(size)).into_bytes()));
+        let font = appearance::da_font(d).resource();
+        d.set(b"DA".to_vec(), PdfString::literal(format!("{} {} {} rg /{font} {} Tf", n(col[0]), n(col[1]), n(col[2]), n(size)).into_bytes()));
         rich_text(d);
         touch(d, meta);
     })?;

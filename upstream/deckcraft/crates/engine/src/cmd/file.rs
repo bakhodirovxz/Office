@@ -72,6 +72,19 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
+/// office overlay (deckcraft/0152): the font of new decks' headings and body (owner decision 2026-10-29). Not bundled: Windows
+/// has it; elsewhere the renderer substitutes a metric-compatible serif.
+pub const NEW_DECK_FONT: &str = "Times New Roman";
+
+/// office overlay (deckcraft/0152): a new deck with no theme chosen: the default theme with Times New Roman as its heading and
+/// body Latin font. Only the typeface changes; the slide text sizes stay. A chosen theme or template keeps its own fonts.
+pub fn new_deck_theme() -> deckcraft_model::Theme {
+    let mut t = deckcraft_model::Theme::default();
+    t.fonts.major.latin = NEW_DECK_FONT.into();
+    t.fonts.minor.latin = NEW_DECK_FONT.into();
+    t
+}
+
 fn theme_named(name: &str) -> Option<deckcraft_model::Theme> {
     deckcraft_model::theme::builtin_themes().into_iter().find(|t| t.name.eq_ignore_ascii_case(name))
 }
@@ -110,7 +123,7 @@ fn new(s: &mut Session, p: &Value) -> Result<Value> {
         let chosen = crate::templates::find(name).map(|t| t.name);
         (doc, chosen)
     } else {
-        let theme = theme_name.and_then(theme_named).unwrap_or_default();
+        let theme = theme_name.and_then(theme_named).unwrap_or_else(new_deck_theme);
         (defaults::blank_presentation(size, theme, !bool_or(p, "blank", false)), None)
     };
     let slides = doc.slides.len();

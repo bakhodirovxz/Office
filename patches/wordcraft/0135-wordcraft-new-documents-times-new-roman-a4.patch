@@ -1,0 +1,148 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] engine: new documents are Times New Roman 12 pt; an Uzbek or Russian interface starts them on A4
+
+Owner decisions 2026-10-29 (docs/phase4/design-system.md, "Revised"; Q6): a new blank document is set in Times New Roman 12 pt (docDefaults run font and size, and the body theme font, so Design › Fonts and Style Sets keep it); opened files and the templates keep their own fonts. An Uzbek or Russian interface starts new documents on A4 whatever the system region says (an English interface in the US got Letter); a region chosen in Options still wins. Session::set_interface_a4 is set by the UI from the interface language, as set_editing_language is, and resizes the untouched start document at once.
+---
+ crates/engine/src/session.rs | 34 ++++++++++++++++++++++++++++++++++
+ crates/engine/src/tests.rs   | 33 +++++++++++++++++++++++++++++++++
+ crates/ui-egui/src/lib.rs    |  2 ++
+ 3 files changed, 69 insertions(+)
+
+diff --git a/crates/engine/src/session.rs b/crates/engine/src/session.rs
+index 9acbcd5..3d4ad70 100644
+--- a/crates/engine/src/session.rs
++++ b/crates/engine/src/session.rs
+@@ -459,6 +459,10 @@ pub struct Session {
+     /// browser's locale on the web); headless sessions keep `en-US`. A region the user chose
+     /// ([`Prefs::region`]) wins: read it with [`Session::region`].
+     pub system_region: wordcraft_geom::Region,
++    /// office overlay (wordcraft/0135): the interface is Uzbek or Russian, so new documents start on A4 whatever the system
++    /// region says (owner decision Q6, 2026-10-29); a region chosen in Options still wins. Set by the front end with
++    /// [`Session::set_interface_a4`].
++    pub interface_a4: bool,
+     /// Custom keyboard shortcuts (`tools.customizeKeyboard`); the front end saves them too.
+     pub keymap: crate::KeyMap,
+     /// Custom ribbon and Quick Access Toolbar (`tools.customizeRibbon`); the front end saves it too.
+@@ -679,6 +683,7 @@ impl Session {
+             also_selected: Vec::new(),
+             prefs: Prefs::default(),
+             system_region: Default::default(),
++            interface_a4: false,
+             keymap: crate::KeyMap::default(),
+             ribbon: crate::RibbonLayout::default(),
+             editing_lang: None,
+@@ -927,6 +932,24 @@ impl Session {
+         }
+     }
+ 
++    /// office overlay (wordcraft/0135): an Uzbek or Russian interface (`a4`) starts new documents on A4, an English one on
++    /// the system region's paper. An untouched blank document (the one a start shows) takes the new paper at once.
++    pub fn set_interface_a4(&mut self, a4: bool) {
++        if self.interface_a4 == a4 {
++            return;
++        }
++        self.interface_a4 = a4;
++        let untouched = self.path.is_none() && !self.dirty && self.history.is_empty() && self.redo.is_empty();
++        if untouched && self.doc.plain_text(StoryRef::Body).trim().is_empty() && self.doc.paragraph_count() <= 1 && self.doc.body.len() <= 1 {
++            let (_, w, h) = self.region().paper();
++            let s = &mut self.doc.last_section;
++            // Keep a landscape page landscape.
++            (s.page_w, s.page_h) = if s.page_w > s.page_h { (h, w) } else { (w, h) };
++            self.rev = self.rev.wrapping_add(1);
++            self.relayout();
++        }
++    }
++
+     /// Snapshot for undo before a change.
+     pub fn checkpoint(&mut self, label: &str) {
+         if label == "Typing" && self.typing_open {
+@@ -1081,6 +1104,7 @@ impl Session {
+     pub fn region(&self) -> wordcraft_geom::Region {
+         match self.prefs.region.as_deref() {
+             Some(tag) => wordcraft_geom::Region::from_tag(tag),
++            None if self.interface_a4 => wordcraft_geom::Region { letter: Some(false), ..self.system_region.clone() },
+             None => self.system_region.clone(),
+         }
+     }
+@@ -1203,6 +1227,7 @@ impl Session {
+             read_aloud: _,
+             prefs: _,
+             system_region: _,
++            interface_a4: _,
+             keymap: _,
+             ribbon: _,
+             // A preference for new documents, like `prefs`: not part of this document.
+@@ -1509,5 +1534,14 @@ pub fn blank_document(region: &wordcraft_geom::Region) -> Document {
+     let (_, w, h) = region.paper();
+     d.last_section.page_w = w;
+     d.last_section.page_h = h;
++    // office overlay (wordcraft/0135): new documents are set in Times New Roman 12 pt (owner decision 2026-10-29); the body
++    // theme font follows, so Design › Fonts and Style Sets keep it. Opened files and the templates keep their own fonts.
++    d.styles.default_chr.font = Some(NEW_DOCUMENT_FONT.into());
++    d.styles.default_chr.size = Some(12.0);
++    d.settings.minor_font = NEW_DOCUMENT_FONT.into();
+     d
+ }
++
++/// office overlay (wordcraft/0135): the font of new blank documents. Not bundled: Windows has it; elsewhere the layout
++/// substitutes the metric-compatible Liberation Serif or Tinos (`wordcraft_fonts::word`).
++pub const NEW_DOCUMENT_FONT: &str = "Times New Roman";
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 4031e23..1d2b4ab 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -7256,6 +7256,39 @@ fn bibliography_sorts_polish_authors() {
+     assert!(at("Lis") < at("Łukasiewicz") && at("Łukasiewicz") < at("Mazur"), "{t}");
+ }
+ 
++/// office overlay (wordcraft/0135): a new blank document is Times New Roman 12 pt (the body theme font too); an Uzbek or
++/// Russian interface starts it on A4 even where the system region uses Letter, an English one keeps the region's paper,
++/// and a region chosen in Options still wins. Opened files keep their own fonts.
++#[test]
++fn new_documents_are_times_new_roman_12_on_the_interface_paper() {
++    let mut s = s();
++    run(&mut s, "file.new", json!({}));
++    let c = s.doc.styles.resolve_char(None, &Default::default());
++    assert_eq!((c.font.as_str(), c.size), ("Times New Roman", 12.0));
++    assert_eq!(s.doc.settings.minor_font, "Times New Roman");
++    let paper = |s: &Session| wordcraft_geom::paper_name(s.doc.last_section.page_w, s.doc.last_section.page_h);
++    assert_eq!(paper(&s), Some("Letter"), "en-US system, English interface");
++    // The untouched blank document takes the interface's paper at once; File › New keeps it.
++    s.set_interface_a4(true);
++    assert_eq!(paper(&s), Some("A4"));
++    run(&mut s, "file.new", json!({}));
++    assert_eq!(paper(&s), Some("A4"));
++    // A document with text keeps its paper when the language changes back.
++    run(&mut s, "text.insert", json!({"text": "Salom"}));
++    s.set_interface_a4(false);
++    assert_eq!(paper(&s), Some("A4"));
++    run(&mut s, "file.new", json!({}));
++    assert_eq!(paper(&s), Some("Letter"));
++    // A region chosen in Options wins over the interface.
++    s.set_interface_a4(true);
++    run(&mut s, "file.options", json!({"region": "en-US"}));
++    run(&mut s, "file.new", json!({}));
++    assert_eq!(paper(&s), Some("Letter"));
++    // A file keeps its font: the templates are not Times New Roman.
++    run(&mut s, "file.new", json!({"template": "letter"}));
++    assert_ne!(s.doc.styles.default_chr.font.as_deref(), Some("Times New Roman"));
++}
++
+ /// A new blank document takes its paper from the region, and lengths are shown in the region's
+ /// unit with its decimal separator; an explicit Measurement units choice still wins (#838).
+ #[test]
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 707338f..ce807c5 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1967,6 +1967,8 @@ impl WordApp {
+         // (a Polish interface: Polish spelling, grammar and hyphenation from the first word).
+         if self.applied_editing != Some(lang) {
+             self.session.set_editing_language(lang.editing_lang());
++            // office overlay (wordcraft/0135): an Uzbek or Russian interface starts new documents on A4 (owner decision Q6).
++            self.session.set_interface_a4(matches!(lang.code(), "ru" | "uz-latn" | "uz-cyrl"));
+             self.applied_editing = Some(lang);
+         }
+         options::sync(self);

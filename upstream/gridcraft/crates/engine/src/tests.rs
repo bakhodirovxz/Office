@@ -3344,3 +3344,29 @@ fn csv_as_text_keeps_identifier_columns_as_written() {
     let saved = s.execute("file.saveBytes", json!({"format": "csv"})).unwrap();
     assert_eq!(crate::io::base64_decode(saved["base64"].as_str().unwrap()).unwrap(), csv.replace('\n', "\r\n").as_bytes());
 }
+
+/// office overlay (gridcraft/0151): a new workbook is Times New Roman 12 pt with Excel's 15.75 pt (21 px) rows for that font; its
+/// sheets print on A4 in an Uzbek or Russian interface and on Letter in English; Insert Sheet matches the workbook; a 12 pt cell
+/// keeps the default row height.
+#[test]
+fn new_workbooks_are_times_new_roman_12_on_the_interface_paper() {
+    let mut s = Session::new();
+    s.new_workbook();
+    {
+        let wb = &s.doc().unwrap().wb;
+        let f = &wb.styles.get(gridcraft_model::StyleId::DEFAULT).font;
+        assert_eq!((f.name.as_str(), f.size), ("Times New Roman", 12.0));
+        let sh = wb.active().unwrap();
+        assert_eq!((sh.default_row_height, sh.print.paper.as_str()), (21.0, "Letter"));
+    }
+    s.prefs.num_locale = gridcraft_core::NumLocale::UzLatn;
+    s.new_workbook();
+    assert_eq!(s.doc().unwrap().wb.active().unwrap().print.paper, "A4");
+    s.execute("cell.set", json!({"cell": "A1", "input": "matn"})).unwrap();
+    assert!(s.doc().unwrap().wb.active().unwrap().rows.get(&0).is_none_or(|r| r.size.is_none()), "12 pt text keeps the default row");
+    s.execute("home.insertSheet", json!({})).unwrap();
+    let sh = s.doc().unwrap().wb.active().unwrap();
+    assert_eq!((sh.default_row_height, sh.print.paper.as_str()), (21.0, "A4"));
+    s.prefs.num_locale = gridcraft_core::NumLocale::Ru;
+    assert_eq!(s.new_sheet_paper(), "A4");
+}

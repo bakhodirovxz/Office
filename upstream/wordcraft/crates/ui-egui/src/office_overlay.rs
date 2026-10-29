@@ -144,6 +144,23 @@ pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32
     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
 }
 
+/// Upstream's placeholder user name (`Session::new`).
+pub const PLACEHOLDER_AUTHOR: &str = "WordCraft User";
+
+/// office overlay (wordcraft/0137, WP23 finding): upstream's placeholder user name is not shown or written into files: the
+/// system account's name replaces it until Options sets one, as Word takes the Windows user's. Not in tests; on the web there is
+/// no account name, so the placeholder stays there.
+pub fn replace_placeholder_author(author: &mut String) {
+    #[cfg(not(any(target_arch = "wasm32", test)))]
+    if author == PLACEHOLDER_AUTHOR
+        && let Some(name) = std::env::var("USERNAME").or_else(|_| std::env::var("USER")).ok().map(|n| n.trim().to_string()).filter(|n| !n.is_empty())
+    {
+        *author = name;
+    }
+    #[cfg(any(target_arch = "wasm32", test))]
+    let _ = author;
+}
+
 /// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
 /// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
 /// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.

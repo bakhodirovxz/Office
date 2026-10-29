@@ -192,7 +192,8 @@ impl Backstage {
             print_layout: "slides",
             print_hidden: false,
             print_frame: true,
-            print_paper: "letter",
+            // office overlay (deckcraft/0153): A4 in an Uzbek or Russian interface, Letter in English (owner decision Q6).
+            print_paper: if matches!(crate::i18n::current().code(), "ru" | "uz-latn" | "uz-cyrl") { "a4" } else { "letter" },
             print_landscape: false,
             preview_page: 0,
             export: ExportTask::Pdf,
@@ -1093,6 +1094,10 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
             ui.add_space(4.0);
             // PowerPoint prints full-page slides on slide-shaped pages; paper and orientation are
             // for notes pages and handouts.
+            if bs.print_layout == "slides" {
+                // office overlay (deckcraft/0153, WP23): say why the two boxes below are greyed out.
+                dim(ui, "Paper and orientation apply to notes pages and handouts.");
+            }
             ui.add_enabled_ui(bs.print_layout != "slides", |ui| {
                 let paper = deckcraft_engine::cmd::file::PAPERS.iter().find(|p| p.0 == bs.print_paper).map_or("Letter", |p| p.1);
                 egui::ComboBox::from_id_salt("backstage_print_paper").width(240.0).selected_text(crate::i18n::t(paper)).show_ui(ui, |ui| {

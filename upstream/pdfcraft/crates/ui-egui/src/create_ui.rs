@@ -137,9 +137,11 @@ impl PdfCraftApp {
         self.open_created_bytes("Clipboard.pdf", created.map_err(|e| e.to_string()))
     }
 
-    /// Create ▸ Blank page: a new untitled US Letter document.
+    /// Create ▸ Blank page: a new untitled document on the interface's paper (pdfcraft/0119: A4 for Uzbek and Russian, US
+    /// Letter for English).
     pub(crate) fn create_blank(&mut self) {
-        let created = self.session.create_blank(612.0, 792.0, 1).map_err(|e| e.to_string());
+        let (w, h) = pdfcraft_engine::print::PAPERS[crate::print_ui::interface_paper()].1;
+        let created = self.session.create_blank(w, h, 1).map_err(|e| e.to_string());
         if let Err(e) = self.open_created_bytes("Untitled.pdf", created) {
             self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e.to_string())]);
         }

@@ -131,9 +131,9 @@ fn every_tool_creates_a_drawable_comment() {
     // The arrow's rectangle includes the arrowhead and the stroke.
     let r = rect(&all[9]);
     assert!(r[0] < 50.0 && r[2] > 150.0 + 1.0);
-    // The text box draws its contents in Helvetica.
+    // The text box draws its contents in Times (pdfcraft/0118; it was Helvetica).
     assert!(ap_content(&doc, &all[11]).contains("(hello) Tj"));
-    assert!(ap_content(&doc, &all[11]).contains("/Helv 14 Tf"));
+    assert!(ap_content(&doc, &all[11]).contains("/TiRo 14 Tf"));
     // The note is a fixed-size icon with a closed pop-up.
     assert_eq!(all[1].int(b"F"), Some(28));
     let entries = annots(&doc, page_refs(&doc).unwrap()[0]);
@@ -337,7 +337,8 @@ fn text_box_text_and_colour_changes_are_drawn() {
     let doc = reopen(&doc);
     let d = &list(&doc, 0)[t];
     assert_eq!(text(d, b"Contents"), "Caf\u{e9} (draft) \u{2014} 100%");
-    assert_eq!(text(d, b"DA"), "1 0 0 rg /Helv 12 Tf");
+    // pdfcraft/0118: new text boxes are Times (`/TiRo`), and a colour change keeps the font.
+    assert_eq!(text(d, b"DA"), "1 0 0 rg /TiRo 12 Tf");
     let n = d.get(b"AP").unwrap().as_dict().unwrap().reference(b"N").unwrap();
     let Object::Stream(s) = &*doc.get(n) else { panic!() };
     let raw = s.decoded().unwrap();
@@ -346,7 +347,7 @@ fn text_box_text_and_colour_changes_are_drawn() {
     assert!(raw.windows(needle.len()).any(|w| w == needle), "{}", String::from_utf8_lossy(&raw));
     assert!(String::from_utf8_lossy(&raw).contains("1 0 0 rg"));
     // Rich text follows the plain text and the style.
-    assert_eq!(text(d, b"DS"), "font: Helvetica 12pt; text-align:left; color:#FF0000");
+    assert_eq!(text(d, b"DS"), "font: Times New Roman 12pt; text-align:left; color:#FF0000");
     let rc = text(d, b"RC");
     assert!(rc.starts_with("<?xml") && rc.contains("<p dir=\"ltr\">Caf\u{e9} (draft) \u{2014} 100%</p>") && rc.contains("color:#FF0000"), "{rc}");
 }
@@ -355,7 +356,8 @@ fn text_box_text_and_colour_changes_are_drawn() {
 /// the wrap width and top edge stay, the height fits the wrapped lines.
 fn expected_box(top: f64, w: f64, text: &str, size: f64, border: f64) -> [f64; 4] {
     let pad = 2.0 + border;
-    let lines = appearance::wrap(text, size, w - 2.0 * pad).len().max(1) as f64;
+    // pdfcraft/0118: new boxes are Times, measured as the appearance draws them.
+    let lines = pdfcraft_fonts::wrap_with(text, size, w - 2.0 * pad, |s, z| appearance::da_width(NEW_TEXT_FONT, s, z)).len().max(1) as f64;
     [0.0, top - lines * size * 1.2 - 2.0 * pad - 2.0, w, 0.0]
 }
 
@@ -1317,7 +1319,7 @@ fn text_box_font_size_changes_the_da_and_grows_the_box() {
     set_font_size(&mut doc, 0, t, 24.0, &meta("")).unwrap();
     let doc = reopen(&doc);
     let d = &list(&doc, 0)[t];
-    assert_eq!(text(d, b"DA"), "1 0 0 rg /Helv 24 Tf");
+    assert_eq!(text(d, b"DA"), "1 0 0 rg /TiRo 24 Tf", "pdfcraft/0118: a size change keeps the font");
     assert!(text(d, b"DS").contains("24pt") && text(d, b"RC").contains("font-size:24pt"));
     assert_eq!(props(&doc, 0, t).unwrap().font_size, Some(24.0));
     assert!(height(&doc) > before, "the box grows");
@@ -1381,4 +1383,25 @@ fn free_text_properties_show_legacy_or_absent_border_width() {
     })
     .unwrap();
     assert_eq!(props(&doc, 0, index).unwrap().width, Some(4.0));
+}
+
+/// office overlay (pdfcraft/0118): new text boxes are Times 12 pt by default (`/TiRo`, a Times-Roman resource, wrapped with the
+/// Times widths); a box already in a file keeps its Helvetica.
+#[test]
+fn new_text_boxes_are_times_and_old_ones_keep_helvetica() {
+    let mut doc = fixture();
+    let t = add_annotation(&mut doc, &new(0, Shape::TextBox { rect: [0.0, 0.0, 300.0, 100.0], font_size: 12.0 }), &meta("t")).unwrap();
+    let doc = reopen(&doc);
+    let d = &list(&doc, 0)[t];
+    assert!(text(d, b"DA").ends_with("/TiRo 12 Tf"), "{}", text(d, b"DA"));
+    assert_eq!(appearance::da_font(d), OverlayFont::Times);
+    let n = d.get(b"AP").unwrap().as_dict().unwrap().reference(b"N").unwrap();
+    let Object::Stream(s) = &*doc.get(n) else { panic!() };
+    let res = s.dict.get(b"Resources").unwrap().as_dict().unwrap().get(b"Font").unwrap().as_dict().unwrap().clone();
+    let tiro = res.get(b"TiRo").unwrap().as_dict().unwrap().clone();
+    assert_eq!(tiro.name(b"BaseFont"), Some(&b"Times-Roman"[..]));
+    let mut old = Dict::new();
+    old.set(b"DA".to_vec(), PdfString::literal(b"0 g /Helv 12 Tf".to_vec()));
+    assert_eq!(appearance::da_font(&old), OverlayFont::Helvetica);
+    assert!(appearance::da_width(OverlayFont::Times, "Salom dunyo", 12.0) < appearance::da_width(OverlayFont::Helvetica, "Salom dunyo", 12.0));
 }

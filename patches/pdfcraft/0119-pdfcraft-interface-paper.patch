@@ -1,0 +1,112 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: the first print and Create › Blank page use A4 in an Uzbek or Russian interface
+
+Owner decision Q6 (2026-10-29): the Print dialog's first paper is A4 in an Uzbek or Russian interface and US Letter in English (it was US Letter in every language); a paper the user picks is kept for the session. Create ▸ Blank page makes an A4 page in those interfaces.
+---
+ crates/ui-egui/src/create_ui.rs |  6 ++++--
+ crates/ui-egui/src/print_ui.rs  | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/crates/ui-egui/src/create_ui.rs b/crates/ui-egui/src/create_ui.rs
+index 63f8035..d67e5bd 100644
+--- a/crates/ui-egui/src/create_ui.rs
++++ b/crates/ui-egui/src/create_ui.rs
+@@ -137,9 +137,11 @@ impl PdfCraftApp {
+         self.open_created_bytes("Clipboard.pdf", created.map_err(|e| e.to_string()))
+     }
+ 
+-    /// Create ▸ Blank page: a new untitled US Letter document.
++    /// Create ▸ Blank page: a new untitled document on the interface's paper (pdfcraft/0119: A4 for Uzbek and Russian, US
++    /// Letter for English).
+     pub(crate) fn create_blank(&mut self) {
+-        let created = self.session.create_blank(612.0, 792.0, 1).map_err(|e| e.to_string());
++        let (w, h) = pdfcraft_engine::print::PAPERS[crate::print_ui::interface_paper()].1;
++        let created = self.session.create_blank(w, h, 1).map_err(|e| e.to_string());
+         if let Err(e) = self.open_created_bytes("Untitled.pdf", created) {
+             self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e.to_string())]);
+         }
+diff --git a/crates/ui-egui/src/print_ui.rs b/crates/ui-egui/src/print_ui.rs
+index f4e039d..3456efa 100644
+--- a/crates/ui-egui/src/print_ui.rs
++++ b/crates/ui-egui/src/print_ui.rs
+@@ -76,6 +76,8 @@ pub struct PrintDraft {
+     pub as_image: bool,
+     pub dpi: f64,
+     pub paper: usize,
++    /// office overlay (pdfcraft/0119): the user chose the paper, so opening Print again keeps it rather than the interface's.
++    pub paper_picked: bool,
+     /// The sheet shown in the preview (0-based).
+     pub sheet: usize,
+     pub current_page: usize,
+@@ -129,6 +131,7 @@ impl Default for PrintDraft {
+             as_image: false,
+             dpi: 300.0,
+             paper: 0,
++            paper_picked: false,
+             sheet: 0,
+             current_page: 0,
+             driver_options: None,
+@@ -142,6 +145,13 @@ impl Default for PrintDraft {
+     }
+ }
+ 
++/// office overlay (pdfcraft/0119): the [`PAPERS`] index a first print and Create ▸ Blank page use: A4 in an Uzbek or Russian
++/// interface, US Letter in English (owner decision Q6).
++pub(crate) fn interface_paper() -> usize {
++    let a4 = matches!(crate::i18n::current().code(), "ru" | "uz-latn" | "uz-cyrl");
++    if a4 { PAPERS.iter().position(|p| p.0 == "A4").unwrap_or(0) } else { 0 }
++}
++
+ impl PrintDraft {
+     /// The engine settings for this draft (page count and labels from the document).
+     pub fn settings(&self, count: usize, labels: &[String]) -> Result<print::Settings, String> {
+@@ -305,6 +315,7 @@ impl PdfCraftApp {
+         let current = self.views[i].current;
+         let selected: Vec<usize> = self.views[i].selected.iter().copied().collect();
+         let keep = std::mem::take(&mut self.print_draft);
++        let paper = if keep.paper_picked { keep.paper } else { interface_paper() };
+         // Picked pages are what Print is for (Acrobat's "Selected pages"); without any, a choice
+         // left over from another document falls back to the whole document.
+         let which = match (selected.is_empty(), keep.which) {
+@@ -319,6 +330,7 @@ impl PdfCraftApp {
+             printers_loading,
+             printer_picked: false,
+             units: self.units,
++            paper,
+             printer: default,
+             current_page: current,
+             sheet: 0,
+@@ -911,6 +923,7 @@ pub(crate) fn body(
+                         ui.selectable_value(&mut d.paper, i, tl!(name));
+                     }
+                 });
++                d.paper_picked |= d.paper != before;
+                 // Label stock gets the label layout (cut, turned upright, fitted).
+                 if d.paper != before && d.paper == print::LABEL_PAPER {
+                     d.handling = Handling::Label;
+@@ -1244,6 +1257,23 @@ pub(crate) fn body(
+ mod tests {
+     use super::*;
+ 
++    /// office overlay (pdfcraft/0118, 0119): the first print and Create ▸ Blank page use A4 in a Russian or Uzbek interface and
++    /// US Letter in English; added text starts in Times 12 pt.
++    #[test]
++    fn first_print_uses_the_interface_paper_and_added_text_is_times() {
++        crate::i18n::set_current(crate::i18n::Lang::EN);
++        assert_eq!(PAPERS[interface_paper()].0, "US Letter");
++        for code in ["ru", "uz-latn", "uz-cyrl"] {
++            // Built without the overlay, the app has no Uzbek interface.
++            let Some(lang) = crate::i18n::Lang::from_code(code) else { continue };
++            crate::i18n::set_current(lang);
++            assert_eq!(PAPERS[interface_paper()].0, "A4", "{code}");
++        }
++        crate::i18n::set_current(crate::i18n::Lang::EN);
++        let style = crate::content_ui::default_style();
++        assert_eq!((style.family, style.size), (pdfcraft_engine::FontFamily::Times, 12.0));
++    }
++
+     #[test]
+     fn current_page_preview_uses_positions_and_selection_guards() {
+         for labels in [["i", "ii", "iii", "1", "2"], ["1", "1", "1", "1", "1"], ["1", "2", "3", "4", "5"]] {

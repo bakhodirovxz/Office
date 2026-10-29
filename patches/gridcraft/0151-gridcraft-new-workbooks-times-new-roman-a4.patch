@@ -1,0 +1,274 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] engine: new workbooks are Times New Roman 12 pt with 15.75 pt rows; their sheets print on A4 in an Uzbek or Russian interface
+
+Owner decisions 2026-10-29 (docs/phase4/design-system.md, "Revised"; Q6): a new workbook's Normal font is Times New Roman 12 pt, with the 15.75 pt (21 px) default row height Excel gives that font; its sheets print on A4 in an Uzbek or Russian interface and on Letter in English (from the number locale, which follows the interface language). The desktop app makes the blank Book1 after the preferences, once that language is known. Insert Sheet takes the active sheet's paper and the Normal font's row height. Automatic row heights compare sizes with the workbook's Normal font instead of a fixed 11 pt, so 12 pt text keeps the default row (files with an 11 pt Normal font behave as before). Opened files keep their own fonts, rows and paper.
+---
+ apps/gridcraft/src/main.rs     |  8 +++++---
+ crates/engine/src/cmd/mod.rs   |  8 +++++---
+ crates/engine/src/cmd/print.rs | 26 ++++++++++++++------------
+ crates/engine/src/cmd/sheet.rs |  8 +++++++-
+ crates/engine/src/lib.rs       | 22 ++++++++++++++++++++--
+ crates/engine/src/tests.rs     | 26 ++++++++++++++++++++++++++
+ crates/model/src/lib.rs        |  6 ++++++
+ crates/model/src/workbook.rs   | 10 ++++++++++
+ 8 files changed, 93 insertions(+), 21 deletions(-)
+
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index 302517f..10257ae 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -298,14 +298,16 @@ fn main() -> eframe::Result<()> {
+     {
+         log::warn!("sample {s}: {e}");
+     }
+-    if session.documents().is_empty() {
+-        session.new_workbook();
+-    }
+     let mut app = SheetApp::new(session, services());
+     app.watch_desktop_theme();
+     app.after_engine(); // Show warnings from the sample.
+     let control_port = control_port;
+     load_prefs(&mut app);
++    // office overlay (gridcraft/0151): the blank Book1 is made once the interface language is known: its paper follows it.
++    if app.session.documents().is_empty() {
++        app.session.prefs.num_locale = app.ui.language.num_locale();
++        app.session.new_workbook();
++    }
+     // Files named on the command line (a double-click on Windows and Linux) open as File › Open
+     // opens them: a password-protected one asks for its password, and errors are shown, not
+     // only logged. Each replaces the untouched blank Book1, as a file opened from Finder does.
+diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
+index a634c60..9404050 100644
+--- a/crates/engine/src/cmd/mod.rs
++++ b/crates/engine/src/cmd/mod.rs
+@@ -472,10 +472,12 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
+         return;
+     }
+     let default = sh.default_row_height;
++    // office overlay (gridcraft/0151): sizes are compared with the workbook's Normal font (12 pt in a new workbook), not Calibri's 11.
++    let base = wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.size.max(1.0);
+     // Fast path: rows of default-size, unwrapped, single-line content keep the default height.
+     let plain = sh.cells.row(row, 0, gridcraft_core::MAX_COLS - 1).all(|(_, cell)| {
+         let st = wb.styles.get(cell.style);
+-        st.font.size <= gridcraft_model::DEFAULT_FONT_SIZE && !st.align.wrap && !cell.value.as_text().is_some_and(|t| t.contains('\n'))
++        st.font.size <= base && !st.align.wrap && !cell.value.as_text().is_some_and(|t| t.contains('\n'))
+     });
+     if plain {
+         if sh.rows.get(&row).is_some_and(|i| i.size.is_some())
+@@ -495,7 +497,7 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
+     for (c, cell) in sh.cells.row(row, 0, gridcraft_core::MAX_COLS - 1) {
+         let st = wb.styles.get(cell.style);
+         let size = st.font.size;
+-        let line = (size * 1.8).round().max(default * size / gridcraft_model::DEFAULT_FONT_SIZE);
++        let line = (size * 1.8).round().max(default * size / base);
+         let mut lines = 1.0f32;
+         if !cell.value.is_empty() || cell.formula.is_some() {
+             let text = crate::display::cell_text(wb, sh, CellRef::new(row, c));
+@@ -509,7 +511,7 @@ pub fn auto_row_height(wb: &mut Workbook, si: usize, row: u32) {
+             } else {
+                 explicit
+             };
+-        } else if st.font.size <= gridcraft_model::DEFAULT_FONT_SIZE {
++        } else if st.font.size <= base {
+             continue;
+         }
+         let h = if lines > 1.0 { (size * 96.0 / 72.0 * 1.22 * lines + 5.0).ceil() } else { line };
+diff --git a/crates/engine/src/cmd/print.rs b/crates/engine/src/cmd/print.rs
+index 9b1f3ae..ec3912d 100644
+--- a/crates/engine/src/cmd/print.rs
++++ b/crates/engine/src/cmd/print.rs
+@@ -1868,18 +1868,19 @@ mod tests {
+         let mut s = s();
+         let rows: Vec<Vec<Json>> = (1..=300).map(|i| vec![json!(i)]).collect();
+         s.execute("range.setValues", json!({"range": "A1", "values": rows})).unwrap();
+-        // 684pt of printable height / 15pt rows = 45 rows per page → 7 pages.
++        // 684pt of printable height / 15.75pt rows (a new workbook's Times New Roman 12, gridcraft/0151; 15pt for Calibri 11)
++        // = 43 rows per page → 7 pages.
+         let (pdf, pages) = pdf_of(&mut s, json!({}));
+         assert_eq!(pages, 7);
+         assert!(pdf.starts_with(b"%PDF-1.7"));
+         assert!(contains(&pdf, "/Count 7"));
+         let pv = s.execute("file.printPreview", json!({})).unwrap();
+         assert_eq!(pv["pages"], 7);
+-        assert_eq!(pv["pageList"][0]["rows"], "1:45");
+-        assert_eq!(pv["pageList"][1]["rows"], "46:90");
+-        assert_eq!(s.execute("file.printPreview", json!({"page": 7})).unwrap()["page"]["rows"], "271:300");
++        assert_eq!(pv["pageList"][0]["rows"], "1:43");
++        assert_eq!(pv["pageList"][1]["rows"], "44:86");
++        assert_eq!(s.execute("file.printPreview", json!({"page": 7})).unwrap()["page"]["rows"], "259:300");
+         assert!(s.execute("file.printPreview", json!({"page": 8})).is_err());
+-        // Landscape: 504pt / 15 = 33 rows per page → 10 pages.
++        // Landscape: 504pt / 15.75 = 32 rows per page → 10 pages.
+         s.execute("pageLayout.pageSetup", json!({"orientation": "landscape"})).unwrap();
+         assert_eq!(pdf_of(&mut s, json!({})).1, 10);
+         // Fit to one page.
+@@ -1890,8 +1891,8 @@ mod tests {
+         s.execute("pageLayout.pageSetup", json!({"scale": 100, "rowBreaks": [11], "titleRows": "1:1"})).unwrap();
+         let pv = s.execute("file.printPreview", json!({})).unwrap();
+         assert_eq!(pv["pageList"][0]["rows"], "1:10");
+-        // Title row takes one line on later pages: 44 body rows.
+-        assert_eq!(pv["pageList"][1]["rows"], "11:54");
++        // Title row takes one line on later pages: 42 body rows.
++        assert_eq!(pv["pageList"][1]["rows"], "11:52");
+     }
+ 
+     #[test]
+@@ -1900,11 +1901,11 @@ mod tests {
+         let rows: Vec<Vec<Json>> = (0..60).map(|r| (0..15).map(|c| json!(r * 100 + c)).collect()).collect();
+         s.execute("range.setValues", json!({"range": "A1", "values": rows})).unwrap();
+         let pv = s.execute("file.printPreview", json!({})).unwrap();
+-        // 511.2pt / 48pt = 10 columns per page; 45 rows per page.
++        // 511.2pt / 48pt = 10 columns per page; 43 rows per page (15.75pt rows, gridcraft/0151).
+         assert_eq!(pv["pages"], 4);
+-        assert_eq!(pv["pageList"][0]["range"], "A1:J45");
+-        assert_eq!(pv["pageList"][1]["range"], "A46:J60");
+-        assert_eq!(pv["pageList"][2]["range"], "K1:O45");
++        assert_eq!(pv["pageList"][0]["range"], "A1:J43");
++        assert_eq!(pv["pageList"][1]["range"], "A44:J60");
++        assert_eq!(pv["pageList"][2]["range"], "K1:O43");
+     }
+ 
+     #[test]
+@@ -1950,7 +1951,8 @@ mod tests {
+         assert!(contains(&pdf, "(Left Sheet1) Tj"));
+         assert!(contains(&pdf, "(Page 1 of 1) Tj"));
+         assert!(contains(&pdf, "(Book1) Tj"));
+-        assert!(contains(&pdf, "/Helvetica-Bold"));
++        // A new workbook's bold Times New Roman is the standard Times-Bold (gridcraft/0151; Calibri gave Helvetica-Bold).
++        assert!(contains(&pdf, "/Times-Bold"));
+         let cx = HfContext {
+             page: 3,
+             pages: 9,
+diff --git a/crates/engine/src/cmd/sheet.rs b/crates/engine/src/cmd/sheet.rs
+index 62b8738..67f0b92 100644
+--- a/crates/engine/src/cmd/sheet.rs
++++ b/crates/engine/src/cmd/sheet.rs
+@@ -656,7 +656,13 @@ fn insert_sheet(s: &mut Session, p: &Json) -> Result<Json> {
+     let idx = edit_doc(d, |cx| {
+         // Excel inserts before the active sheet; the "+" button appends after it.
+         let at = before.unwrap_or(cx.wb.active_sheet + 1).min(cx.wb.sheets.len());
+-        cx.wb.sheets.insert(at, Arc::new(Sheet::new(name.clone())));
++        // office overlay (gridcraft/0151): a new sheet matches its workbook: the active sheet's paper, the Normal font's rows.
++        let mut sheet = Sheet::new(name.clone());
++        if let Some(active) = cx.wb.sheet(cx.wb.active_sheet) {
++            sheet.print.paper = active.print.paper.clone();
++        }
++        sheet.default_row_height = cx.wb.new_sheet_row_height();
++        cx.wb.sheets.insert(at, Arc::new(sheet));
+         // Names scoped to later sheets shift.
+         for n in cx.wb.names.iter_mut() {
+             if let Some(sc) = n.scope.as_mut()
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index dab40de..efa08be 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -228,8 +228,8 @@ impl Default for Prefs {
+             enter_direction: "down".into(),
+             autocomplete: true,
+             user_name: "GridCraft User".into(),
+-            default_font: gridcraft_model::DEFAULT_FONT.into(),
+-            default_font_size: gridcraft_model::DEFAULT_FONT_SIZE,
++            default_font: gridcraft_model::NEW_WORKBOOK_FONT.into(),
++            default_font_size: gridcraft_model::NEW_WORKBOOK_FONT_SIZE,
+             sheets_in_new_workbook: 1,
+             r1c1: false,
+             user_dictionary: vec![],
+@@ -328,9 +328,27 @@ impl Session {
+             let name = wb.next_sheet_name();
+             wb.sheets.push(Arc::new(gridcraft_model::Sheet::new(name)));
+         }
++        // office overlay (gridcraft/0151): a new workbook is set in Times New Roman 12 pt with rows as high as Excel makes them
++        // for it, and its sheets print on the interface's paper (owner decisions 2026-10-29). Opened files keep their own.
++        let mut normal = wb.styles.get(gridcraft_model::StyleId::DEFAULT).clone();
++        normal.font.name = gridcraft_model::NEW_WORKBOOK_FONT.into();
++        normal.font.size = gridcraft_model::NEW_WORKBOOK_FONT_SIZE;
++        wb.styles = gridcraft_model::StyleTable::with_default(normal);
++        let paper = self.new_sheet_paper();
++        for sh in wb.sheets.iter_mut() {
++            let sh = Arc::make_mut(sh);
++            sh.default_row_height = gridcraft_model::NEW_WORKBOOK_ROW_HEIGHT;
++            sh.print.paper = paper.into();
++        }
+         self.add_document(DocState::new(wb, None, format!("Book{n}")))
+     }
+ 
++    /// office overlay (gridcraft/0151): the paper a new workbook's sheets start on: A4 in an Uzbek or Russian interface, Letter
++    /// in English (owner decision Q6). The number locale follows the interface language ([`Prefs::num_locale`]).
++    pub fn new_sheet_paper(&self) -> &'static str {
++        if self.prefs.num_locale == gridcraft_core::NumLocale::EnUs { "Letter" } else { "A4" }
++    }
++
+     pub fn commands(&self) -> Vec<CommandInfo> {
+         command_specs().iter().map(|c| c.info(self)).collect()
+     }
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index f1a805e..14489bc 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -3344,3 +3344,29 @@ fn csv_as_text_keeps_identifier_columns_as_written() {
+     let saved = s.execute("file.saveBytes", json!({"format": "csv"})).unwrap();
+     assert_eq!(crate::io::base64_decode(saved["base64"].as_str().unwrap()).unwrap(), csv.replace('\n', "\r\n").as_bytes());
+ }
++
++/// office overlay (gridcraft/0151): a new workbook is Times New Roman 12 pt with Excel's 15.75 pt (21 px) rows for that font; its
++/// sheets print on A4 in an Uzbek or Russian interface and on Letter in English; Insert Sheet matches the workbook; a 12 pt cell
++/// keeps the default row height.
++#[test]
++fn new_workbooks_are_times_new_roman_12_on_the_interface_paper() {
++    let mut s = Session::new();
++    s.new_workbook();
++    {
++        let wb = &s.doc().unwrap().wb;
++        let f = &wb.styles.get(gridcraft_model::StyleId::DEFAULT).font;
++        assert_eq!((f.name.as_str(), f.size), ("Times New Roman", 12.0));
++        let sh = wb.active().unwrap();
++        assert_eq!((sh.default_row_height, sh.print.paper.as_str()), (21.0, "Letter"));
++    }
++    s.prefs.num_locale = gridcraft_core::NumLocale::UzLatn;
++    s.new_workbook();
++    assert_eq!(s.doc().unwrap().wb.active().unwrap().print.paper, "A4");
++    s.execute("cell.set", json!({"cell": "A1", "input": "matn"})).unwrap();
++    assert!(s.doc().unwrap().wb.active().unwrap().rows.get(&0).is_none_or(|r| r.size.is_none()), "12 pt text keeps the default row");
++    s.execute("home.insertSheet", json!({})).unwrap();
++    let sh = s.doc().unwrap().wb.active().unwrap();
++    assert_eq!((sh.default_row_height, sh.print.paper.as_str()), (21.0, "A4"));
++    s.prefs.num_locale = gridcraft_core::NumLocale::Ru;
++    assert_eq!(s.new_sheet_paper(), "A4");
++}
+diff --git a/crates/model/src/lib.rs b/crates/model/src/lib.rs
+index 7d9f2bd..746b08a 100644
+--- a/crates/model/src/lib.rs
++++ b/crates/model/src/lib.rs
+@@ -31,3 +31,9 @@ pub use workbook::{CalcMode, CalcSettings, DefinedName, DocProps, Workbook};
+ /// (e.g. the metric-compatible Carlito) when it isn't installed.
+ pub const DEFAULT_FONT: &str = "Calibri";
+ pub const DEFAULT_FONT_SIZE: f32 = 11.0;
++/// office overlay (gridcraft/0151): the Normal font of new workbooks (owner decision 2026-10-29). Not bundled: Windows has it;
++/// elsewhere the renderers substitute a metric-compatible serif (Liberation Serif, Tinos) when one is installed.
++pub const NEW_WORKBOOK_FONT: &str = "Times New Roman";
++pub const NEW_WORKBOOK_FONT_SIZE: f32 = 12.0;
++/// The default row height Excel gives that font: 15.75 pt (21 px) where Calibri 11 has 15 pt (20 px).
++pub const NEW_WORKBOOK_ROW_HEIGHT: f32 = 21.0;
+diff --git a/crates/model/src/workbook.rs b/crates/model/src/workbook.rs
+index bba81b7..512879f 100644
+--- a/crates/model/src/workbook.rs
++++ b/crates/model/src/workbook.rs
+@@ -162,6 +162,16 @@ impl Workbook {
+     pub fn active(&self) -> Option<&Sheet> {
+         self.sheet(self.active_sheet)
+     }
++    /// office overlay (gridcraft/0151): the default row height of a sheet added to this workbook: the height Excel gives the
++    /// new-workbook font when that is the Normal font, else the Calibri 11 one (the height upstream always used).
++    pub fn new_sheet_row_height(&self) -> f32 {
++        let f = &self.styles.get(crate::StyleId::DEFAULT).font;
++        if f.name == crate::NEW_WORKBOOK_FONT && f.size == crate::NEW_WORKBOOK_FONT_SIZE {
++            crate::NEW_WORKBOOK_ROW_HEIGHT
++        } else {
++            crate::DEFAULT_ROW_HEIGHT
++        }
++    }
+     /// A fresh sheet name `SheetN` not in use.
+     pub fn next_sheet_name(&self) -> String {
+         (1..).map(|n| format!("Sheet{n}")).find(|n| self.sheet_index(n).is_none()).unwrap_or_else(|| "Sheet".into())

@@ -459,6 +459,10 @@ pub struct Session {
     /// browser's locale on the web); headless sessions keep `en-US`. A region the user chose
     /// ([`Prefs::region`]) wins: read it with [`Session::region`].
     pub system_region: wordcraft_geom::Region,
+    /// office overlay (wordcraft/0135): the interface is Uzbek or Russian, so new documents start on A4 whatever the system
+    /// region says (owner decision Q6, 2026-10-29); a region chosen in Options still wins. Set by the front end with
+    /// [`Session::set_interface_a4`].
+    pub interface_a4: bool,
     /// Custom keyboard shortcuts (`tools.customizeKeyboard`); the front end saves them too.
     pub keymap: crate::KeyMap,
     /// Custom ribbon and Quick Access Toolbar (`tools.customizeRibbon`); the front end saves it too.
@@ -679,6 +683,7 @@ impl Session {
             also_selected: Vec::new(),
             prefs: Prefs::default(),
             system_region: Default::default(),
+            interface_a4: false,
             keymap: crate::KeyMap::default(),
             ribbon: crate::RibbonLayout::default(),
             editing_lang: None,
@@ -927,6 +932,24 @@ impl Session {
         }
     }
 
+    /// office overlay (wordcraft/0135): an Uzbek or Russian interface (`a4`) starts new documents on A4, an English one on
+    /// the system region's paper. An untouched blank document (the one a start shows) takes the new paper at once.
+    pub fn set_interface_a4(&mut self, a4: bool) {
+        if self.interface_a4 == a4 {
+            return;
+        }
+        self.interface_a4 = a4;
+        let untouched = self.path.is_none() && !self.dirty && self.history.is_empty() && self.redo.is_empty();
+        if untouched && self.doc.plain_text(StoryRef::Body).trim().is_empty() && self.doc.paragraph_count() <= 1 && self.doc.body.len() <= 1 {
+            let (_, w, h) = self.region().paper();
+            let s = &mut self.doc.last_section;
+            // Keep a landscape page landscape.
+            (s.page_w, s.page_h) = if s.page_w > s.page_h { (h, w) } else { (w, h) };
+            self.rev = self.rev.wrapping_add(1);
+            self.relayout();
+        }
+    }
+
     /// Snapshot for undo before a change.
     pub fn checkpoint(&mut self, label: &str) {
         if label == "Typing" && self.typing_open {
@@ -1081,6 +1104,7 @@ impl Session {
     pub fn region(&self) -> wordcraft_geom::Region {
         match self.prefs.region.as_deref() {
             Some(tag) => wordcraft_geom::Region::from_tag(tag),
+            None if self.interface_a4 => wordcraft_geom::Region { letter: Some(false), ..self.system_region.clone() },
             None => self.system_region.clone(),
         }
     }
@@ -1203,6 +1227,7 @@ impl Session {
             read_aloud: _,
             prefs: _,
             system_region: _,
+            interface_a4: _,
             keymap: _,
             ribbon: _,
             // A preference for new documents, like `prefs`: not part of this document.
@@ -1509,5 +1534,14 @@ pub fn blank_document(region: &wordcraft_geom::Region) -> Document {
     let (_, w, h) = region.paper();
     d.last_section.page_w = w;
     d.last_section.page_h = h;
+    // office overlay (wordcraft/0135): new documents are set in Times New Roman 12 pt (owner decision 2026-10-29); the body
+    // theme font follows, so Design › Fonts and Style Sets keep it. Opened files and the templates keep their own fonts.
+    d.styles.default_chr.font = Some(NEW_DOCUMENT_FONT.into());
+    d.styles.default_chr.size = Some(12.0);
+    d.settings.minor_font = NEW_DOCUMENT_FONT.into();
     d
 }
+
+/// office overlay (wordcraft/0135): the font of new blank documents. Not bundled: Windows has it; elsewhere the layout
+/// substitutes the metric-compatible Liberation Serif or Tinos (`wordcraft_fonts::word`).
+pub const NEW_DOCUMENT_FONT: &str = "Times New Roman";

@@ -1,0 +1,290 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: File › Print holds only printing, Print first and primary, labelled odd/even list; Recover and account tip translated; no placeholder user name
+
+WP23 usability finding (docs/phase4/design-system.md 1.1 #4 and the name leaks): File › Print shared its function with Export, so the page ended with eleven "save a copy" buttons; the odd/even list had no label and read as a second page list; Print and "Save these pages as PDF…" were two equal buttons below the printer; Print Markup sat above everything; three settings, the Recover page and the title bar's account tip were English in every language. Print now has its own page in the app's own widgets: Print (accent, primary) and Save as PDF first, then the printer and copies, Pages with a labelled "Odd or even pages" list, Orientation, Scale to paper size, Print Markup and the page count; the formats stay on File › Export. The missing Russian rows go into ru.tsv (the suite catalog carries the Uzbek ones). Upstream's placeholder user name "WordCraft User" is replaced by the system account's name until Options sets one, as Word takes the Windows user's (not in tests; the web has no account name and keeps it).
+---
+ crates/ui-egui/src/backstage.rs      | 22 +++-------------------
+ crates/ui-egui/src/chrome.rs         |  5 ++++-
+ crates/ui-egui/src/i18n/ru.tsv       | 18 ++++++++++++++++++
+ crates/ui-egui/src/lib.rs            | 14 +++++++++++---
+ crates/ui-egui/src/office_overlay.rs | 17 +++++++++++++++++
+ crates/ui-egui/src/print_page.rs     | 55 ++++++++++++++++++++++++++++++++-----------------------
+ 6 files changed, 85 insertions(+), 46 deletions(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 94799c8..56c1e08 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -154,7 +154,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+         .show(ui, |ui| {
+             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
+             if app.ui.backstage_page == "print" {
+-                export_page(app, ui);
++                heading(ui, "Print");
++                crate::print_page::show(app, ui);
+                 return;
+             }
+             egui::ScrollArea::vertical().show(ui, |ui| match app.ui.backstage_page.as_str() {
+@@ -164,7 +165,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 "saveAs" => save_as_page(app, ui),
+                 "info" => info_page(app, ui),
+                 "recover" => recovery_page(app, ui),
+-                "print" | "export" => export_page(app, ui),
++                "export" => export_page(app, ui),
+                 "options" => crate::options::page(app, ui),
+                 _ => home_page(app, ui),
+             });
+@@ -496,23 +497,6 @@ fn info_page(app: &mut WordApp, ui: &mut Ui) {
+ }
+ 
+ fn export_page(app: &mut WordApp, ui: &mut Ui) {
+-    if app.ui.backstage_page == "print" {
+-        heading(ui, "Print");
+-        // Print Markup (a print setting, as in Word): the comments beside each page.
+-        let mut markup = app.session.prefs.print_markup;
+-        if ui
+-            .checkbox(&mut markup, tl!("Print Markup"))
+-            .on_hover_text(tl!(
+-                "Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text."
+-            ))
+-            .changed()
+-        {
+-            let _ = app.run("file.printMarkup", json!({"value": markup}));
+-        }
+-        ui.add_space(12.0);
+-        crate::print_page::show(app, ui);
+-        return;
+-    }
+     heading(ui, "Export");
+     ui.label(tl!("Save a copy in another format. Printing goes through a PDF you can print from any viewer."));
+     ui.add_space(12.0);
+diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
+index 0df6f41..221d660 100644
+--- a/crates/ui-egui/src/chrome.rs
++++ b/crates/ui-egui/src/chrome.rs
+@@ -322,7 +322,10 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl!("Account")));
+                     let initials: String = app.session.user_initials().chars().take(2).collect();
+                     ui.painter().text(r.center(), Align2::CENTER_CENTER, initials, semibold(10.5), t.on_accent);
+-                    if resp.on_hover_text(format!("{} — set your name in File › Options", app.session.author)).clicked() {
++                    if resp
++                        .on_hover_text(crate::i18n::fmt(tl!("{name} — set your name in File › Options"), &[("name", &app.session.author)]))
++                        .clicked()
++                    {
+                         let _ = app.run("ui.backstage", json!({"value": true, "page": "options", "pane": "general"}));
+                     }
+                     ui.add_space(8.0);
+diff --git a/crates/ui-egui/src/i18n/ru.tsv b/crates/ui-egui/src/i18n/ru.tsv
+index cd064b4..a40aebe 100644
+--- a/crates/ui-egui/src/i18n/ru.tsv
++++ b/crates/ui-egui/src/i18n/ru.tsv
+@@ -2697,3 +2697,21 @@ preview	Title	Пример
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Введите размер в любых единицах, например 5 cm или 300 px. Другая сторона изменится вместе с ней, и рисунок сохранит пропорции.
+ 
+ 	Import…	Импорт…
++
++# office overlay (wordcraft/0136): File › Print and File › Recover wording, the title bar's account tip
++	Auto orientation	Автоматическая ориентация
++	Scale to paper size	Масштаб по размеру бумаги
++	No Scaling	Без масштабирования
++	Odd or even pages	Нечётные или чётные страницы
++	Printing goes through a PDF: save it, then print it from any viewer.	Печать идёт через PDF: сохраните его и распечатайте из любой программы просмотра.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Принтер, двусторонняя печать и число страниц на листе выбираются в системном окне печати.
++	Recover documents	Восстановление документов
++	Restore opens an unsaved copy. Your original file stays unchanged.	При восстановлении открывается несохранённая копия. Исходный файл не изменяется.
++	Recovery is disabled while this document has a password.	Восстановление отключено, пока у документа есть пароль.
++	Local recovery is unavailable or still loading.	Локальное восстановление недоступно или ещё загружается.
++	No recovery copies.	Копий для восстановления нет.
++	Recovery copy	Копия для восстановления
++	Restore	Восстановить
++	Discard…	Отказаться…
++	Continue without restoring	Продолжить без восстановления
++	{name} — set your name in File › Options	{name} — укажите своё имя в разделе Файл › Параметры
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index ce807c5..e7355ff 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -659,7 +659,8 @@ impl SaveChoice {
+ }
+ 
+ impl WordApp {
+-    pub fn new(session: Session, services: Services) -> Self {
++    pub fn new(mut session: Session, services: Services) -> Self {
++        crate::office_overlay::replace_placeholder_author(&mut session.author);
+         // Numeral › System follows the system locale, found here rather than in layout.
+         if let Some(tag) = sys_locale::get_locale() {
+             wordcraft_engine::set_system_locale(&tag);
+@@ -805,6 +806,8 @@ impl WordApp {
+         if !author.trim().is_empty() {
+             self.session.author = author;
+         }
++        // office overlay (wordcraft/0137): a name saved before is never the placeholder again.
++        crate::office_overlay::replace_placeholder_author(&mut self.session.author);
+         self.session.initials = std::mem::take(&mut self.ui.initials).chars().take(wordcraft_engine::cmd::options::MAX_INITIALS_CHARS).collect();
+         for w in std::mem::take(&mut self.ui.dictionary).iter().take(MAX_DICTIONARY) {
+             let w = w.trim();
+@@ -5261,7 +5264,9 @@ mod tests {
+     #[test]
+     fn the_print_button_shows_only_with_a_print_hook() {
+         use egui_kittest::kittest::Queryable;
+-        const BLURB: &str = "Send the document straight to the system print dialog, or save a copy in another format below.";
++        // wordcraft/0136: the page holds only printing; the hookless page says printing goes through a PDF.
++        const BLURB: &str = "The printer, two-sided printing and pages per sheet are chosen in the system print dialog.";
++        const NO_HOOK: &str = "Printing goes through a PDF: save it, then print it from any viewer.";
+         for hook in [false, true] {
+             let printed = std::rc::Rc::new(std::cell::Cell::new(0));
+             let mut a = app();
+@@ -5286,7 +5291,10 @@ mod tests {
+             }
+             assert!(h.state().ui.backstage && h.state().ui.backstage_page == "print", "the Print page is open");
+             assert_eq!(h.query_by_label(BLURB).is_some(), hook, "hook {hook}: the Print button's blurb");
+-            assert!(h.query_by_label("PDF document (*.pdf)").is_some(), "hook {hook}: the page rendered its export choices");
++            assert_eq!(h.query_by_label(NO_HOOK).is_some(), !hook, "hook {hook}: the PDF route is explained without a hook");
++            assert!(h.query_by_label("PDF document (*.pdf)").is_none(), "hook {hook}: the export choices are on File › Export only");
++            assert!(h.query_by_label("Odd or even pages").is_some(), "hook {hook}: the odd/even list has a label");
++            assert!(h.query_by_label("Print Markup").is_some(), "hook {hook}: Print Markup is among the settings");
+             if hook {
+                 // The page's own Print button (the backstage list has a Print entry too): the last.
+                 let buttons: Vec<_> = h.query_all(egui_kittest::kittest::By::new().role(egui::accesskit::Role::Button).label("Print")).collect();
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index cd723b7..aed01ca 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -144,6 +144,23 @@ pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32
+     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
+ }
+ 
++/// Upstream's placeholder user name (`Session::new`).
++pub const PLACEHOLDER_AUTHOR: &str = "WordCraft User";
++
++/// office overlay (wordcraft/0137, WP23 finding): upstream's placeholder user name is not shown or written into files: the
++/// system account's name replaces it until Options sets one, as Word takes the Windows user's. Not in tests; on the web there is
++/// no account name, so the placeholder stays there.
++pub fn replace_placeholder_author(author: &mut String) {
++    #[cfg(not(any(target_arch = "wasm32", test)))]
++    if author == PLACEHOLDER_AUTHOR
++        && let Some(name) = std::env::var("USERNAME").or_else(|_| std::env::var("USER")).ok().map(|n| n.trim().to_string()).filter(|n| !n.is_empty())
++    {
++        *author = name;
++    }
++    #[cfg(any(target_arch = "wasm32", test))]
++    let _ = author;
++}
++
+ /// The shared `lang` setting (`settings.toml`, PLAN 5.1) as this app's language code (`en`, `ru`, `uz-latn`, `uz-cyrl`), read once.
+ /// `None` for `auto`, with no file, in the web build and in tests: the app keeps its own detection there. `uz-Latn-2026` has no
+ /// catalog in the apps yet (STATUS, deferred) and shows the `uz-latn` one.
+diff --git a/crates/ui-egui/src/print_page.rs b/crates/ui-egui/src/print_page.rs
+index 9d09388..6ba2df3 100644
+--- a/crates/ui-egui/src/print_page.rs
++++ b/crates/ui-egui/src/print_page.rs
+@@ -147,25 +147,15 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 ui.spacing_mut().item_spacing.y = 8.0;
+                 let native = app.services.print_native.is_some();
+                 let hook = native || app.services.print.is_some();
+-                if native {
+-                    if let Some(discover) = &app.services.printers {
+-                        crate::printing::show(&mut app.printing, ui, discover, |label| crate::i18n::t(label).to_owned());
+-                    }
+-                    app.ui.print.copies = app.printing.settings.copies;
+-                } else if hook {
+-                    ui.label(tl!("Send the document straight to the system print dialog, or save a copy in another format below."));
+-                    ui.label(
+-                        egui::RichText::new(tl!("The printer, two-sided printing and pages per sheet are chosen in that dialog.")).color(t.text_dim),
+-                    );
+-                } else {
+-                    ui.label(tl!("Save a copy in another format. Printing goes through a PDF you can print from any viewer."));
+-                }
+-                ui.add_space(4.0);
++                // office overlay (wordcraft/0136, WP23 usability finding): the actions come first and Print is the primary
++                // one; the page holds only printing (the other formats are on File › Export).
+                 if hook
+                     && ui
+                         .add_enabled(
+                             !native || app.printing.ready(),
+-                            egui::Button::new(egui::RichText::new(tl!("Print")).font(medium(13.5))).min_size(vec2(320.0, 34.0)),
++                            egui::Button::new(egui::RichText::new(tl!("Print")).font(medium(13.5)).color(t.on_accent))
++                                .fill(t.accent)
++                                .min_size(vec2(320.0, 34.0)),
+                         )
+                         .clicked()
+                 {
+@@ -178,13 +168,26 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 {
+                     app.print_pdf_dialog();
+                 }
++                if !hook {
++                    ui.label(egui::RichText::new(tl!("Printing goes through a PDF: save it, then print it from any viewer.")).color(t.text_dim));
++                }
+                 ui.add_space(6.0);
+ 
+                 if native {
++                    if let Some(discover) = &app.services.printers {
++                        crate::printing::show(&mut app.printing, ui, discover, |label| crate::i18n::t(label).to_owned());
++                    }
++                    app.ui.print.copies = app.printing.settings.copies;
+                     if app.ui.print.copies > 1 {
+                         ui.add_enabled(!app.printing.busy(), egui::Checkbox::new(&mut app.ui.print.collate, tl!("Collate copies")));
+                     }
+                 } else {
++                    if hook {
++                        ui.label(
++                            egui::RichText::new(tl!("The printer, two-sided printing and pages per sheet are chosen in the system print dialog."))
++                                .color(t.text_dim),
++                        );
++                    }
+                     ui.label(egui::RichText::new(tl!("Copies")).font(medium(13.0)));
+                     ui.horizontal(|ui| {
+                         let mut n = app.ui.print.copies;
+@@ -209,6 +212,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                             .char_limit(wordcraft_engine::print::MAX_SPEC_CHARS),
+                     );
+                 }
++                // The odd/even filter had no label: it read as a second, unexplained page list.
++                ui.label(egui::RichText::new(tl!("Odd or even pages")).font(medium(13.0)));
+                 choice(ui, "print_parity", &mut app.ui.print.parity, &PARITIES);
+                 ui.label(egui::RichText::new(tl!("Orientation")).font(medium(13.0)));
+                 choice(ui, "print_orientation", &mut app.ui.print.orientation, &ORIENTATIONS);
+@@ -217,6 +222,17 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 let papers: Vec<(&str, &str)> =
+                     std::iter::once((NO_SCALING, "No Scaling")).chain(wordcraft_geom::PAPER_SIZES.iter().map(|(n, _, _)| (*n, *n))).collect();
+                 choice(ui, "print_paper", &mut app.ui.print.paper, &papers);
++                // Print Markup (a print setting, as in Word): the comments beside each page.
++                let mut markup = app.session.prefs.print_markup;
++                if ui
++                    .checkbox(&mut markup, tl!("Print Markup"))
++                    .on_hover_text(tl!(
++                        "Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text."
++                    ))
++                    .changed()
++                {
++                    let _ = app.run("file.printMarkup", json!({"value": markup}));
++                }
+ 
+                 match wordcraft_engine::print::plan(&app.ui.print.params(), total, current) {
+                     Ok(plan) => {
+@@ -230,13 +246,6 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                         ui.label(egui::RichText::new(e.to_string()).color(t.red));
+                     }
+                 }
+-                ui.add_space(8.0);
+-                ui.separator();
+-                ui.add_space(4.0);
+-                if hook {
+-                    ui.label(tl!("Or save a copy in another format:"));
+-                }
+-                export_formats(app, ui);
+             });
+         });
+         ui.add_space(24.0);
+@@ -331,7 +340,7 @@ fn preview(app: &mut WordApp, ui: &mut Ui, lay: &DocLayout, total: usize) {
+ /// The export "format" of a Word 2003 XML Document: an `.xml` file saved with `format: "wordml2003"`.
+ pub(crate) const EXPORT_WORD_2003: &str = "wordml2003";
+ 
+-/// The "save a copy" formats (File › Export, and below the settings on the Print page).
++/// The "save a copy" formats (File › Export).
+ pub fn export_formats(app: &mut WordApp, ui: &mut Ui) {
+     for (label, ext) in [
+         ("PDF document (*.pdf)", "pdf"),
