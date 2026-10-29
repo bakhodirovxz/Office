@@ -3,6 +3,7 @@
 # widths, header and footer with a PAGE field. Writes <name>.docx, <name>.pdf and <name>.truth.json per fixture.
 #   p2d_latn / p2d_cyrl / p2d_ru : the order (uz-Latn, uz-Cyrl, ru)
 #   p2d_overimage                 : a stamp picture behind the text plus a text box drawn over it (known words STAMPWORD, SIGNWORD)
+#   p2d_letter                    : a letter with a numbered table, four fonts and a stamp over the signature (positioned output)
 #   p2d_widths                    : table with known column widths and merged cells
 # ASCII-only source; the texts come from content.json at run time. Synthetic only.
 param([Parameter(Mandatory)][string]$Dir, [string]$Png = "")
@@ -87,6 +88,27 @@ try {
     Add-HeaderFooter $d "HRM / overimage"
     Truth "p2d_overimage" @{ lang = "latn"; kind = "overimage"; known_words = @("STAMPWORD", "SIGNWORD"); col_widths_pt = @() }
     Save-Fixture $wd $d "p2d_overimage"
+    # ---- a letter with a stamp (owner report 2026-10-29: Word output moved the text): a two-row centred title, a numbered
+    # table, paragraphs in three more fonts, a two-row footer and a stamp picture over the signature, so the native engine
+    # keeps the page as positioned text boxes. fid/positions.py measures where the words land.
+    $d = Setup-Doc $wd
+    Para $d ($T.title_lat + " " + $T.head_lat + " " + $T.place_lat) 1 0 1
+    $tb = $d.Tables.Add($d.Range($d.Content.End - 1, $d.Content.End - 1), 11, 2); $tb.Borders.Enable = $true; $tb.AllowAutoFit = $false
+    $tb.Range.ParagraphFormat.FirstLineIndent = 0; $tb.Range.ParagraphFormat.Alignment = 0; $tb.Range.ParagraphFormat.LineSpacingRule = 0; $tb.Range.Font.Size = 12
+    $tb.Columns.Item(1).Width = 30; $tb.Columns.Item(2).Width = 300
+    for ($r = 1; $r -le 11; $r++) { $tb.Cell($r, 1).Range.Text = [string]$r; $tb.Cell($r, 2).Range.Text = '"' + $T.names[$r % 5] + '" AJ' }
+    $fonts = @(@("Calibri", 11, 3), @("Verdana", 10, 0), @("Arial", 12, 2))
+    for ($k = 0; $k -lt 3; $k++) {
+        Para $d $T.p_lat[$k] $fonts[$k][2] 0 0
+        $r = $d.Paragraphs.Item($d.Paragraphs.Count - 1).Range; $r.Font.Name = $fonts[$k][0]; $r.Font.Size = $fonts[$k][1]
+    }
+    Para $d "SIGNWORD" 0 0 1
+    $pic = $d.Shapes.AddPicture($Png, $false, $true, 60, 0, 150, 85, $d.Paragraphs.Item($d.Paragraphs.Count - 1).Range)
+    $pic.WrapFormat.Type = 5; $pic.RelativeVerticalPosition = 2; $pic.Top = -30
+    $ft = $d.Paragraphs.Item($d.Paragraphs.Count).Range; $ft.Text = $T.dept[0] + " " + $T.place_lat; $ft.Font.Size = 9
+    $ft.ParagraphFormat.Alignment = 0; $ft.ParagraphFormat.FirstLineIndent = 0; $ft.ParagraphFormat.RightIndent = 300
+    Truth "p2d_letter" @{ lang = "latn"; kind = "letter"; known_words = @("SIGNWORD"); col_widths_pt = @(30, 300) }
+    Save-Fixture $wd $d "p2d_letter"
     # ---- table widths and merged cells (known w:gridCol)
     $W5 = @(24, 70, 150, 110, 60)
     $d = Setup-Doc $wd

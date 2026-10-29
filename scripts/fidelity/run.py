@@ -26,6 +26,7 @@ from fid import structure as S                                   # noqa: E402
 from fid.adapter import Adapter                                  # noqa: E402
 from fid.directions import select                                # noqa: E402
 from fid.p2d import docx_info, p2d_metrics                       # noqa: E402
+from fid.positions import compare as position_metrics            # noqa: E402
 from fid.refs import Soffice, X2T, app_of, office_batch          # noqa: E402
 from fid.util import CLI, rasterise, pdf_pages, pdf_text, text_metrics, pix_metrics, visual_metrics, run  # noqa: E402
 
@@ -58,6 +59,14 @@ def office_source(src, work):
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(b"\xef\xbb\xbf" + text.encode("utf-8"))
     return out
+
+
+def positions(src_pdf, printed_pdf):
+    """Where the words of the source PDF land in the printed docx (fid/positions.py); needs pypdf on the harness machine."""
+    try:
+        return position_metrics(src_pdf, printed_pdf)["total"]
+    except ImportError:
+        return {"note": "pypdf not installed: no position metrics"}
 
 
 def key(p):
@@ -476,6 +485,7 @@ def main():
                 yp = ypdf.get((id(c), eng, y))
                 if yp and oq.ok(yp):
                     m["visual"] = visual_metrics(c["src"], yp, w / "png", "%s-%s" % (eng, Path(y).stem))
+                    m["positions"] = positions(c["src"], yp)
                 else:
                     m["visual"] = {"note": "Office could not render the output: " + (oq.error(yp) if yp else "no job")[:100]}
                 return m

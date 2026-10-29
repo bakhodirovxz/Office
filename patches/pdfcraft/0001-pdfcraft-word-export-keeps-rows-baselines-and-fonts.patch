@@ -1,0 +1,515 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] export: Word positioned pages keep each row's place, baseline
+ and font
+
+Owner report 2026-10-29: PDF to Word kept the text editable but moved it. On a page kept as positioned text boxes
+(text overlapping a stamp or picture) every paragraph was one box exactly as wide as the PDF text, with no font, so the
+reader's default font (Arial in our Docs, Calibri in Word) rewrapped it: rows ran onto the rows below, paragraph rows
+were rewrapped at the reader's line height and the first baseline sat 3 pt low.
+- edit: ReadingBlocks also returns the reading lines its blocks index into.
+- engine: export blocks carry the font family and, for paragraphs of several visual rows, each row's text and box.
+- export: `family()` maps a PDF font name to Word's family name; runs get w:rFonts. An upright positioned paragraph is one
+  box with one paragraph per row, indented to the row's left edge, with an exact line height that puts each row's
+  bottom (and so its baseline) where the page has it; the box reaches the page's right edge so a slightly wider
+  substitute font does not wrap a row.
+---
+ crates/edit/src/text.rs      |   5 +-
+ crates/engine/src/compare.rs |  23 ++++++
+ crates/engine/src/tests.rs   |  38 ++++++++++
+ crates/export/src/lib.rs     | 173 ++++++++++++++++++++++++++++++++++++++-----
+ crates/export/src/pptx.rs    |   7 ++
+ 5 files changed, 227 insertions(+), 19 deletions(-)
+
+diff --git a/crates/edit/src/text.rs b/crates/edit/src/text.rs
+index 2672592..f995638 100644
+--- a/crates/edit/src/text.rs
++++ b/crates/edit/src/text.rs
+@@ -2075,6 +2075,9 @@ pub fn reading_blocks(doc: &Document, page: usize) -> Result<Vec<TextBlock>, Edi
+ pub struct ReadingBlocks {
+     /// The paragraphs, as [`reading_blocks`] returns them.
+     pub blocks: Vec<TextBlock>,
++    /// The lines the blocks' [`TextBlock::lines`] and [`TextBlock::rows`] index into (Export to
++    /// Word places each visual row where the page shows it).
++    pub lines: Vec<TextLine>,
+     /// The page draws forms nested deeper than [`MAX_FORM_DEPTH`], or more of them than
+     /// [`MAX_FORM_VISITS`]. Reading leaves those out to stay bounded on hostile files, so their
+     /// text is missing from `blocks`; [`crate::reading_images`] walks the same forms and misses
+@@ -2085,7 +2088,7 @@ pub struct ReadingBlocks {
+ /// [`reading_blocks`], saying whether the limits that bound reading left text out.
+ pub fn reading_blocks_checked(doc: &Document, page: usize) -> Result<ReadingBlocks, EditError> {
+     let (lines, truncated) = reading_lines(doc, page)?;
+-    Ok(ReadingBlocks { blocks: regions::group_reading_blocks(&lines), truncated })
++    Ok(ReadingBlocks { blocks: regions::group_reading_blocks(&lines), lines, truncated })
+ }
+ 
+ // An ideographic space carries intentional Japanese spacing, including paragraph indentation.
+diff --git a/crates/engine/src/compare.rs b/crates/engine/src/compare.rs
+index f0ed2b4..0ce4c33 100644
+--- a/crates/engine/src/compare.rs
++++ b/crates/engine/src/compare.rs
+@@ -197,13 +197,36 @@ impl crate::Document {
+                 if reading.truncated {
+                     truncated.push(i);
+                 }
++                let lines = reading.lines;
+                 let blocks = reading
+                     .blocks
+                     .into_iter()
+                     .filter(|b| !b.text.trim().is_empty())
+                     .map(|b| {
+                         let f = b.base_font.to_ascii_lowercase();
++                        // A paragraph of several visual rows keeps each row's text and box, so the
++                        // positioned Word layout can put every row where the page shows it.
++                        let texts: Vec<&str> = b.editor_text.split('\n').collect();
++                        let rows = if b.rows.len() > 1 && texts.len() == b.rows.len() {
++                            b.rows
++                                .iter()
++                                .zip(&texts)
++                                .map(|(row, t)| {
++                                    let r = row
++                                        .iter()
++                                        .filter_map(|i| lines.get(*i))
++                                        .map(|l| l.rect)
++                                        .reduce(|a, c| [a[0].min(c[0]), a[1].min(c[1]), a[2].max(c[2]), a[3].max(c[3])])?;
++                                    Some((t.trim_end().to_string(), visible_rect(r)))
++                                })
++                                .collect::<Option<Vec<_>>>()
++                                .unwrap_or_default()
++                        } else {
++                            Vec::new()
++                        };
+                         pdfcraft_export::Block {
++                            font: pdfcraft_export::family(&b.base_font),
++                            rows,
+                             text: b.text,
+                             rect: visible_rect(b.rect),
+                             size: b.size * unit,
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index f125c41..042f88a 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -4008,6 +4008,44 @@ BT /F1 11 Tf 0 g 72 650 Td (Black body text that is long enough to be the body s
+     assert!(blocks.iter().any(|b| b.text == "Annual Report" && b.color == [0.05, 0.23, 0.18]), "{blocks:?}");
+ }
+ 
++#[test]
++fn office_export_keeps_a_paragraphs_rows_and_font_family() {
++    // The owner's report (2026-10-29): Word export moved text. The positioned layout needs every
++    // visual row with its own box, and the font the page sets the text in.
++    let content = "BT /F1 12 Tf 72 700 Td (First row of a paragraph that runs on) Tj 0 -14 Td (to its second row.) Tj ET";
++    let objs = [
++        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
++        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
++        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>".into(),
++        format!("<< /Length {} >>\nstream\n{content}\nendstream", content.len()),
++        "<< /Type /Font /Subtype /Type1 /BaseFont /TimesNewRomanPSMT >>".into(),
++    ];
++    let mut pdf = b"%PDF-1.7\n".to_vec();
++    let mut offsets = Vec::new();
++    for (i, o) in objs.iter().enumerate() {
++        offsets.push(pdf.len());
++        pdf.extend_from_slice(format!("{} 0 obj\n{o}\nendobj\n", i + 1).as_bytes());
++    }
++    let xref = pdf.len();
++    pdf.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes());
++    for o in offsets {
++        pdf.extend_from_slice(format!("{o:010} 00000 n \n").as_bytes());
++    }
++    pdf.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objs.len() + 1).as_bytes());
++    let mut s = Session::new();
++    let id = s.open("rows.pdf", None, Arc::new(pdf), None).unwrap();
++    let pages = s.get(id).unwrap().export_pages();
++    let b = &pages[0].blocks;
++    assert_eq!(b.len(), 1, "{b:?}");
++    assert_eq!(b[0].text, "First row of a paragraph that runs on to its second row.");
++    assert_eq!(b[0].font, "Times New Roman");
++    let rows: Vec<&str> = b[0].rows.iter().map(|r| r.0.as_str()).collect();
++    assert_eq!(rows, ["First row of a paragraph that runs on", "to its second row."], "{b:?}");
++    let (r0, r1) = (b[0].rows[0].1, b[0].rows[1].1);
++    assert!((r0[0] - 72.0).abs() < 0.01 && (r1[0] - 72.0).abs() < 0.01, "{r0:?} {r1:?}");
++    assert!(((r0[1] - r1[1]) - 14.0).abs() < 0.01, "rows keep the page's 14 pt line pitch: {r0:?} {r1:?}");
++}
++
+ #[test]
+ fn office_export_positions_follow_the_displayed_crop_rotation_and_units() {
+     use pdfcraft_cos::{Document as CosDocument, ObjRef, Object, SaveOptions, write_full};
+diff --git a/crates/export/src/lib.rs b/crates/export/src/lib.rs
+index 30299b2..9aa0a99 100644
+--- a/crates/export/src/lib.rs
++++ b/crates/export/src/lib.rs
+@@ -15,7 +15,7 @@ pub use pptx::pptx;
+ pub use zip::Zip;
+ 
+ /// A paragraph of a page.
+-#[derive(Clone, Debug, PartialEq)]
++#[derive(Clone, Debug, Default, PartialEq)]
+ pub struct Block {
+     pub text: String,
+     /// [x0, y0, x1, y1] on the displayed page in points (y up).
+@@ -28,9 +28,38 @@ pub struct Block {
+     pub color: [f64; 3],
+     /// Counterclockwise baseline angle in user space (degrees).
+     pub rotation: f64,
++    /// The font family the page sets the text in ([`family`]), empty when unknown.
++    pub font: String,
++    /// The visual rows, each with its own box (like `rect`), when the paragraph has more than one.
++    pub rows: Vec<(String, [f64; 4])>,
+ }
+ 
+-/// An image of a page.
++/// The font family of a PDF font name, as Word names it: the subset tag, the style suffix and
++/// the PostScript `PS`/`MT` marks dropped, and the words of the name split apart
++/// (`ABCDEF+TimesNewRomanPS-BoldMT` is `Times New Roman`, `Arial,Bold` is `Arial`).
++pub fn family(base_font: &str) -> String {
++    let name = match base_font.split_once('+') {
++        Some((tag, rest)) if tag.len() == 6 && tag.bytes().all(|c| c.is_ascii_uppercase()) => rest,
++        _ => base_font,
++    };
++    let name = name.split([',', '-']).next().unwrap_or_default();
++    let name = name.strip_suffix("MT").unwrap_or(name);
++    let name = name.strip_suffix("PS").unwrap_or(name);
++    // The text is already Unicode: a symbol font would show it through its own private code points.
++    if ["Symbol", "Wingdings", "Webdings", "ZapfDingbats", "Dingbats"].iter().any(|f| name.starts_with(f)) {
++        return String::new();
++    }
++    let mut out = String::new();
++    let mut lower = false;
++    for c in name.chars() {
++        if c.is_uppercase() && lower {
++            out.push(' ');
++        }
++        lower = c.is_lowercase();
++        out.push(c);
++    }
++    out
++}
+ #[derive(Clone, Debug, PartialEq)]
+ pub struct Image {
+     /// "png" or "jpg".
+@@ -458,9 +487,14 @@ pub(crate) fn hex(c: [f64; 3]) -> Option<String> {
+     (r | g | b != 0).then(|| format!("{r:02X}{g:02X}{b:02X}"))
+ }
+ 
+-/// A formatted text run (shared by paragraphs and table cells).
+-fn run_xml(text: &str, size: f64, bold: bool, italic: bool, color: [f64; 3]) -> String {
++/// A formatted text run (shared by paragraphs and table cells); an empty `font` leaves the
++/// family to the reader's default.
++fn run_xml(text: &str, font: &str, size: f64, bold: bool, italic: bool, color: [f64; 3]) -> String {
+     let mut rpr = String::new();
++    if !font.is_empty() {
++        let f = esc(font);
++        rpr.push_str(&format!("<w:rFonts w:ascii=\"{f}\" w:hAnsi=\"{f}\" w:cs=\"{f}\" w:eastAsia=\"{f}\"/>"));
++    }
+     if bold {
+         rpr.push_str("<w:b/>");
+     }
+@@ -497,7 +531,7 @@ fn docx_table(t: &Table) -> String {
+             let w: i64 = widths.iter().take(c.span.min(widths.len())).sum();
+             s.push_str(&format!(
+                 "<w:tc><w:tcPr><w:tcW w:w=\"{w}\" w:type=\"dxa\"/>{span}</w:tcPr><w:p>{}</w:p></w:tc>",
+-                run_xml(&c.text, c.size, c.bold, c.italic, c.color)
++                run_xml(&c.text, "", c.size, c.bold, c.italic, c.color)
+             ));
+         }
+         // Pad the grid so every row covers all columns (Word rejects short rows).
+@@ -585,6 +619,40 @@ fn picture_xml(n: usize, name: &str, (cx, cy): (i64, i64), rotation: Option<f64>
+     )
+ }
+ 
++/// An upright paragraph as one floating text box that keeps the page's rows: each visual row is
++/// a paragraph indented to the row's left edge, with an exact line height that puts its bottom
++/// (and so its baseline, Word and our layout keep the descent below it) where the row's bottom is
++/// on the page. The box reaches the page's right edge, so a substituted font that sets the row a
++/// little wider does not wrap it onto the next row.
++fn upright_text_box(page: &Page, b: &Block, id: usize, z: i32) -> String {
++    let single = [(b.text.clone(), b.rect)];
++    let rows: &[(String, [f64; 4])] = if b.rows.is_empty() { &single } else { &b.rows };
++    let left = layout_number(rows.iter().map(|r| r.1[0]).fold(b.rect[0], f64::min));
++    let top = layout_number(page.height - rows[0].1[3]);
++    let mut bottom = top;
++    let mut paras = String::new();
++    for (text, r) in rows {
++        let row_bottom = layout_number(page.height - r[1]);
++        // A row that does not sit below the one before (overlapping rows) gets its own height.
++        let line = if row_bottom - bottom >= 1.0 { row_bottom - bottom } else { layout_number(r[3] - r[1]).max(1.0) };
++        bottom += line;
++        let indent = ((r[0] - left).max(0.0) * 20.0).round().min(31680.0) as i64;
++        paras.push_str(&format!(
++            "<w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\" w:line=\"{}\" w:lineRule=\"exact\"/><w:ind w:left=\"{indent}\"/></w:pPr>{}</w:p>",
++            (line * 20.0).round().clamp(20.0, 31680.0) as i64,
++            run_xml(text, &b.font, b.size, b.bold, b.italic, b.color)
++        ));
++    }
++    let w = layout_number((page.width - left).max(b.rect[2] - b.rect[0])).max(1.0);
++    let h = (bottom - top).max(1.0);
++    let style = format!(
++        "position:absolute;margin-left:{left:.3}pt;margin-top:{top:.3}pt;width:{w:.3}pt;height:{h:.3}pt;z-index:{z};mso-position-horizontal-relative:page;mso-position-vertical-relative:page"
++    );
++    format!(
++        "<w:r><w:pict><v:rect id=\"Text{id}\" style=\"{style}\" filled=\"f\" stroked=\"f\"><v:textbox inset=\"0,0,0,0\" style=\"mso-fit-shape-to-text:t\"><w:txbxContent>{paras}</w:txbxContent></v:textbox><w10:wrap type=\"none\"/></v:rect></w:pict></w:r>"
++    )
++}
++
+ fn positioned_page<'a>(page: &'a Page, media: &mut Vec<(String, &'a Image)>, shape_id: &mut usize) -> String {
+     // One 1 pt paragraph anchors the whole page. Shapes never reserve body space, so even a
+     // page-sized watermark cannot push the invoice footer onto another page.
+@@ -592,28 +660,26 @@ fn positioned_page<'a>(page: &'a Page, media: &mut Vec<(String, &'a Image)>, sha
+     let body = body_size(std::slice::from_ref(page)).max(1.0);
+     for b in &page.blocks {
+         *shape_id = shape_id.saturating_add(1);
++        let z = if b.size >= 2.0 * body { -2 } else { 1 };
++        if b.rotation.abs() <= 0.1 {
++            s.push_str(&upright_text_box(page, b, *shape_id, z));
++            continue;
++        }
+         let rotation = layout_number(-b.rotation).rem_euclid(360.0);
+         let (sin, cos) = rotation.to_radians().sin_cos();
+         let (bw, bh) = (layout_number(b.rect[2] - b.rect[0]).max(1.0), layout_number(b.rect[3] - b.rect[1]).max(1.0));
+-        let h = if b.rotation.abs() > 0.1 { layout_number(b.size).max(1.0) } else { bh };
++        let h = layout_number(b.size).max(1.0);
+         // Recover the unrotated width from the axis-aligned box. Use the larger axis so
+         // quarter turns and 45-degree watermarks do not divide by (nearly) zero.
+-        let w = if b.rotation.abs() <= 0.1 {
+-            bw
+-        } else if cos.abs() >= sin.abs() {
+-            (bw - h * sin.abs()) / cos.abs()
+-        } else {
+-            (bh - h * cos.abs()) / sin.abs()
+-        };
++        let w = if cos.abs() >= sin.abs() { (bw - h * sin.abs()) / cos.abs() } else { (bh - h * cos.abs()) / sin.abs() };
+         let w = layout_number(w).max(1.0);
+         let (x, y) = (layout_number(b.rect[0] + (bw - w) / 2.0), layout_number(page.height - b.rect[3] + (bh - h) / 2.0));
+-        let z = if b.size >= 2.0 * body { -2 } else { 1 };
+         let style = format!(
+             "position:absolute;margin-left:{x:.3}pt;margin-top:{y:.3}pt;width:{w:.3}pt;height:{h:.3}pt;rotation:{rotation:.3};z-index:{z};mso-position-horizontal-relative:page;mso-position-vertical-relative:page"
+         );
+         s.push_str(&format!(
+             "<w:r><w:pict><v:rect id=\"Text{}\" style=\"{style}\" filled=\"f\" stroked=\"f\"><v:textbox inset=\"0,0,0,0\" style=\"mso-fit-shape-to-text:t\"><w:txbxContent><w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\"/></w:pPr>{}</w:p></w:txbxContent></v:textbox><w10:wrap type=\"none\"/></v:rect></w:pict></w:r>",
+-            shape_id, run_xml(&b.text, b.size, b.bold, b.italic, b.color)
++            shape_id, run_xml(&b.text, &b.font, b.size, b.bold, b.italic, b.color)
+         ));
+     }
+     for im in &page.images {
+@@ -669,7 +735,7 @@ pub fn docx(pages: &[Page], title: &str) -> Vec<u8> {
+     let mut media: Vec<(String, &Image)> = Vec::new();
+     // Word needs a paragraph between adjacent tables and after the last one in the body.
+     let mut after_table = false;
+-    let run = |b: &Block| run_xml(&b.text, b.size, b.bold, b.italic, b.color);
++    let run = |b: &Block| run_xml(&b.text, &b.font, b.size, b.bold, b.italic, b.color);
+     let mut shape_id = 0usize;
+     for (page_index, page) in pages.iter().enumerate() {
+         let (pw, _) = word_page_size(page);
+@@ -895,6 +961,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         Page {
+             width: 612.0,
+@@ -976,6 +1043,7 @@ mod tests {
+             italic: false,
+             color: [0.8; 3],
+             rotation: 0.0,
++            ..Default::default()
+         });
+         p.images = page().images;
+         let xml = part(&docx(&[p], "Invoice"), "word/document.xml");
+@@ -992,6 +1060,60 @@ mod tests {
+         assert!(xml.contains("<wp:anchor ") && xml.contains("behindDoc=\"1\"") && xml.contains("<a:blip r:embed=\"rIdImg1\"/>"), "{xml}");
+     }
+ 
++    #[test]
++    fn font_family_comes_from_the_pdf_font_name() {
++        assert_eq!(family("XKKBFX+TimesNewRomanPSMT"), "Times New Roman");
++        assert_eq!(family("XPXPMT+TimesNewRomanPS-BoldMT"), "Times New Roman");
++        assert_eq!(family("ArialMT"), "Arial");
++        assert_eq!(family("Arial,BoldItalic"), "Arial");
++        assert_eq!(family("HUMSKS+Calibri-Bold"), "Calibri");
++        assert_eq!(family("CourierNewPSMT"), "Courier New");
++        assert_eq!(family("SegoeUI"), "Segoe UI");
++        assert_eq!(family("Verdana"), "Verdana");
++        assert_eq!(family("SymbolMT"), "", "symbol fonts are left to the reader");
++        assert_eq!(family(""), "");
++    }
++
++    /// The owner's report (2026-10-29): Word output of a letter with stamps kept the text editable
++    /// but moved it. Each text box was as wide as the PDF's text and had no font, so the reader's
++    /// default (wider) font wrapped rows onto the rows below, and a paragraph's rows were rewrapped
++    /// at the reader's own line height.
++    #[test]
++    fn word_positioned_rows_keep_their_font_place_and_line() {
++        let mut p = page();
++        p.images[0].rect = [72.0, 380.0, 272.0, 530.0];
++        let row = |t: &str, x0: f64, y0: f64, x1: f64| (t.to_string(), [x0, y0, x1, y0 + 14.0]);
++        // Three rows 18 pt apart, the last one centred under the others (indented by 40 pt).
++        let rows =
++            vec![row("First row of a paragraph", 72.0, 500.0, 300.0), row("second row", 72.0, 482.0, 140.0), row("centred", 112.0, 464.0, 160.0)];
++        p.blocks = vec![Block {
++            text: "First row of a paragraph second row centred".into(),
++            rect: [72.0, 464.0, 300.0, 514.0],
++            size: 12.0,
++            font: "Times New Roman".into(),
++            rows,
++            ..Default::default()
++        }];
++        let xml = part(&docx(&[p.clone()], "Letter"), "word/document.xml");
++        let tb = xml.split("<v:rect ").nth(1).unwrap();
++        assert!(tb.contains("margin-left:72.000pt;margin-top:278.000pt"), "the box starts at the first row's top: {tb}");
++        assert!(tb.contains("width:540.000pt;height:50.000pt"), "the box reaches the page edge and holds the rows: {tb}");
++        assert_eq!(tb.matches("<w:p>").count(), 3, "one paragraph per visual row: {tb}");
++        // Row 1: its own height (14 pt); rows 2 and 3: 18 pt from the bottom of the row above.
++        assert!(
++            tb.contains("w:line=\"280\" w:lineRule=\"exact\"/><w:ind w:left=\"0\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Times New Roman\""),
++            "{tb}"
++        );
++        assert_eq!(tb.matches("w:line=\"360\" w:lineRule=\"exact\"").count(), 2, "{tb}");
++        assert!(tb.contains("<w:ind w:left=\"800\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Times New Roman\" w:hAnsi=\"Times New Roman\" w:cs=\"Times New Roman\" w:eastAsia=\"Times New Roman\"/><w:sz w:val=\"24\"/></w:rPr><w:t xml:space=\"preserve\">centred<"), "{tb}");
++        // A one-row paragraph is its box: top at the row's top, one exact line of the row's height.
++        p.blocks[0].rows.clear();
++        p.blocks[0].rect = [72.0, 500.0, 300.0, 514.0];
++        let xml = part(&docx(&[p], "Letter"), "word/document.xml");
++        assert!(xml.contains("margin-left:72.000pt;margin-top:278.000pt;width:540.000pt;height:14.000pt"), "{xml}");
++        assert!(xml.contains("w:line=\"280\" w:lineRule=\"exact\""), "{xml}");
++    }
++
+     #[test]
+     fn word_rotated_pages_keep_separate_page_sizes_and_unique_shapes() {
+         let mut p = table_page();
+@@ -1038,6 +1160,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         });
+         let xml = part(&docx(&[p.clone()], "Receipt\u{1}"), "word/document.xml");
+         assert!(xml.contains(">Total 4.50\tGBP</w:t>"), "{xml}");
+@@ -1091,6 +1214,7 @@ mod tests {
+             italic: true,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         });
+         let r = rtf(&[p]);
+         assert!(r.starts_with("{\\rtf1") && r.ends_with('}'));
+@@ -1108,6 +1232,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         Page {
+             width: 612.0,
+@@ -1131,6 +1256,7 @@ mod tests {
+                     italic: false,
+                     color: [0.0; 3],
+                     rotation: 0.0,
++                    ..Default::default()
+                 },
+             ],
+             images: Vec::new(),
+@@ -1182,7 +1308,16 @@ mod tests {
+             .map(|i| {
+                 let (row, col) = (i / 2, i / 2 + i % 2);
+                 let (x, y) = (10.0 + col as f64 * 20.0, 10_000.0 - row as f64 * 14.0);
+-                Block { text: "x".into(), rect: [x, y, x + 8.0, y + 12.0], size: 11.0, bold: false, italic: false, color: [0.0; 3], rotation: 0.0 }
++                Block {
++                    text: "x".into(),
++                    rect: [x, y, x + 8.0, y + 12.0],
++                    size: 11.0,
++                    bold: false,
++                    italic: false,
++                    color: [0.0; 3],
++                    rotation: 0.0,
++                    ..Default::default()
++                }
+             })
+             .collect();
+         let started = std::time::Instant::now();
+@@ -1209,6 +1344,7 @@ mod tests {
+                             italic: false,
+                             color: [0.0; 3],
+                             rotation: 0.0,
++                            ..Default::default()
+                         }
+                     })
+                 })
+@@ -1222,7 +1358,7 @@ mod tests {
+     }
+ 
+     fn block(t: &str, x0: f64, y0: f64, x1: f64, y1: f64) -> Block {
+-        Block { text: t.into(), rect: [x0, y0, x1, y1], size: 12.0, bold: false, italic: false, color: [0.0; 3], rotation: 0.0 }
++        Block { text: t.into(), rect: [x0, y0, x1, y1], size: 12.0, bold: false, italic: false, color: [0.0; 3], rotation: 0.0, ..Default::default() }
+     }
+ 
+     /// #2806: a sentence whose link is set in another colour or font runs on as separate blocks
+@@ -1300,6 +1436,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         let p = Page {
+             width: 612.0,
+diff --git a/crates/export/src/pptx.rs b/crates/export/src/pptx.rs
+index fc02c20..bef9d6c 100644
+--- a/crates/export/src/pptx.rs
++++ b/crates/export/src/pptx.rs
+@@ -369,6 +369,7 @@ mod tests {
+                     italic: false,
+                     color: [0.1, 0.2, 0.3],
+                     rotation: 0.0,
++                    ..Default::default()
+                 },
+                 Block {
+                     text: "Revenue grew 25% year over year across all regions.".into(),
+@@ -378,6 +379,7 @@ mod tests {
+                     italic: false,
+                     color: [0.0; 3],
+                     rotation: 0.0,
++                    ..Default::default()
+                 },
+                 Block {
+                     text: "Operational expenses remained flat.".into(),
+@@ -387,6 +389,7 @@ mod tests {
+                     italic: true,
+                     color: [0.0; 3],
+                     rotation: 0.0,
++                    ..Default::default()
+                 },
+             ],
+             images: vec![Image {
+@@ -509,6 +512,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         let table_page = Page {
+             width: 612.0,
+@@ -609,6 +613,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         let mut blocks = vec![huge("Title", f64::MAX, 500.0)];
+         for k in 0..40 {
+@@ -674,6 +679,7 @@ mod tests {
+             italic: false,
+             color: [0.0; 3],
+             rotation: 0.0,
++            ..Default::default()
+         };
+         let p = Page {
+             width: 720.0,
+@@ -688,6 +694,7 @@ mod tests {
+                     italic: false,
+                     color: [0.0; 3],
+                     rotation: 0.0,
++                    ..Default::default()
+                 },
+                 // Table where one cell has a very large number (e.g. 36 pt callout in the table)
+                 cell("Metric", 72.0, 400.0, 100.0, 12.0),

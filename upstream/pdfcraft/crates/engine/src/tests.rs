@@ -4009,6 +4009,44 @@ BT /F1 11 Tf 0 g 72 650 Td (Black body text that is long enough to be the body s
 }
 
 #[test]
+fn office_export_keeps_a_paragraphs_rows_and_font_family() {
+    // The owner's report (2026-10-29): Word export moved text. The positioned layout needs every
+    // visual row with its own box, and the font the page sets the text in.
+    let content = "BT /F1 12 Tf 72 700 Td (First row of a paragraph that runs on) Tj 0 -14 Td (to its second row.) Tj ET";
+    let objs = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>".into(),
+        format!("<< /Length {} >>\nstream\n{content}\nendstream", content.len()),
+        "<< /Type /Font /Subtype /Type1 /BaseFont /TimesNewRomanPSMT >>".into(),
+    ];
+    let mut pdf = b"%PDF-1.7\n".to_vec();
+    let mut offsets = Vec::new();
+    for (i, o) in objs.iter().enumerate() {
+        offsets.push(pdf.len());
+        pdf.extend_from_slice(format!("{} 0 obj\n{o}\nendobj\n", i + 1).as_bytes());
+    }
+    let xref = pdf.len();
+    pdf.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes());
+    for o in offsets {
+        pdf.extend_from_slice(format!("{o:010} 00000 n \n").as_bytes());
+    }
+    pdf.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objs.len() + 1).as_bytes());
+    let mut s = Session::new();
+    let id = s.open("rows.pdf", None, Arc::new(pdf), None).unwrap();
+    let pages = s.get(id).unwrap().export_pages();
+    let b = &pages[0].blocks;
+    assert_eq!(b.len(), 1, "{b:?}");
+    assert_eq!(b[0].text, "First row of a paragraph that runs on to its second row.");
+    assert_eq!(b[0].font, "Times New Roman");
+    let rows: Vec<&str> = b[0].rows.iter().map(|r| r.0.as_str()).collect();
+    assert_eq!(rows, ["First row of a paragraph that runs on", "to its second row."], "{b:?}");
+    let (r0, r1) = (b[0].rows[0].1, b[0].rows[1].1);
+    assert!((r0[0] - 72.0).abs() < 0.01 && (r1[0] - 72.0).abs() < 0.01, "{r0:?} {r1:?}");
+    assert!(((r0[1] - r1[1]) - 14.0).abs() < 0.01, "rows keep the page's 14 pt line pitch: {r0:?} {r1:?}");
+}
+
+#[test]
 fn office_export_positions_follow_the_displayed_crop_rotation_and_units() {
     use pdfcraft_cos::{Document as CosDocument, ObjRef, Object, SaveOptions, write_full};
     let mut pdf = CosDocument::open(Arc::new(fixture(1))).unwrap();
