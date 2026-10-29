@@ -1197,8 +1197,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Language rule unified, crypto-bigint (2026-10-24):** one rule in Docs, PDF, Slides and Sheets: a fixed shared `lang` always wins at start (`office_overlay::start_language`, called in each app's `main.rs` after the saved prefs; Sheets in `load_prefs`), the app's saved language applies only when the shared `lang` is `auto`, an in-app change is session-only and never written back; tests `shared_lang_wins_over_the_saved_language_at_start` (wordcraft/0126, pdfcraft/0112, deckcraft/0145 rewritten; web unaffected). `ci.sh deny` pdf: RUSTSEC-2026-0387 fixed by crypto-bigint 0.7.5 to 0.7.6 (needs ctutils 0.4.5) in the carried lock patch `pdfcraft/0900-pdfcraft-crypto-bigint-0.7.6.patch` (renamed from the ctutils one) and `domains/pdf/Cargo.lock`; lockdiff unchanged (0 version changes); third-party notices regenerated. 94 patches, 94 rows.
 
 ### Phase 4 fix: PDF to Word moved the text (owner report, 2026-10-29; branch `p4-pdf2docx`)
-- **Which pipeline made what.** The owner's three files (kept under `E:/office-target/owner-1593/`, a 103-page official document
-  with a header table and stamps; nothing of it is in the repo). The "Downloads" docx is **Microsoft Word's own PDF Reflow**
+- **Which pipeline made what.** The owner's three files (a 103-page document; nothing of it is in the repo). The "Downloads" docx is **Microsoft Word's own PDF Reflow**
   (`docProps/custom.xml` Converter = SolidFramework, the source PDF from PDF-XChange), not ours. `orig.pdf` is **our Docs
   export** of that docx (byte-identical when re-exported with the p1 build). The "Desktop" docx is **our native engine**
   (`pdfcraft_export::docx`, all 103 pages in the positioned layout: one VML text box per paragraph, 4,125 boxes). Its
