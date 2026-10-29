@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft-web: ?lang= sets the interface language at start
+
+The web shell (web/shell/shell.js) opens each editor with ?lang=<shell language>. Slides has no browser detection (the 'auto' setting means English), so apps/deckcraft-web reads the parameter after SlideApp::new and sets the language from the tag (uz-Latn, uz-Cyrl, ru, en). Without the parameter nothing changes. The other three editors read navigator.language, which their index.html answers with the same parameter (domains/*/apps/*-web/index.html.in).
+---
+ apps/deckcraft-web/src/web.rs | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index a62e598..5bfa8e9 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -47,6 +47,10 @@ pub fn start() {
+                         bridge.connect(&mut services, cc.egui_ctx.clone());
+                     }
+                     let mut app = SlideApp::new(Session::new(), services);
++                    // `?lang=`: the web shell's language (Slides has no browser detection of its own).
++                    if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
++                        app.ui.language = lang.code().to_string();
++                    }
+                     let q = query();
+                     if !q.contains("blank") && app_bridge.is_none() {
+                         if let Err(e) = deckcraft_engine::sample::open_sample(&mut app.session) {

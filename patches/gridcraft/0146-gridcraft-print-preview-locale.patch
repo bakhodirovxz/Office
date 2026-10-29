@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] backstage: the print preview formats cells in the interface locale; sample workbook names are translated
+
+Phase 4 i18n pass: paint_page called display::cell_text (en-US), so the print preview showed '5 March 2026' and '7,502.50' while the grid showed the Uzbek or Russian style; it now calls cell_text_in with the session's number locale (the one the PDF already uses). The new-workbook tiles show lang.tr(title) for the three sample names (rows existed, the call did not use them). The print-page labels (printing.rs through translate) and the Options 'Editing' heading had no catalog rows: xtask OWN_GRID_0146 adds them.
+---
+ crates/ui-egui/src/backstage.rs | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 922baab..6a40e6e 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -333,7 +333,7 @@ fn new_tiles(app: &mut SheetApp, ui: &mut Ui, out: &mut Outcome) {
+             out.close = true;
+         }
+         for (i, (name, title)) in gridcraft_engine::sample::SAMPLES.iter().enumerate() {
+-            if tile(ui, title, Some(i)).clicked() {
++            if tile(ui, lang.tr(title), Some(i)).clicked() {
+                 app.run_or_alert("file.new", json!({"sample": name}));
+                 out.close = true;
+             }
+@@ -756,7 +756,7 @@ fn print(app: &mut SheetApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
+             p.rect_filled(rect, 2.0, t.grid_bg);
+             p.rect_stroke(rect, 2.0, Stroke::new(1.0, t.ribbon_border), StrokeKind::Inside);
+             if let Some(d) = app.session.active() {
+-                paint_page(p, rect, w, page, &d.wb, &t);
++                paint_page(p, rect, w, page, &d.wb, &t, app.num_locale());
+             }
+             let sheet = page.get("sheet").and_then(Json::as_str).unwrap_or("");
+             let range = page.get("range").and_then(Json::as_str).unwrap_or("");
+@@ -786,7 +786,7 @@ const PREVIEW_COLS: u32 = 60;
+ 
+ /// Draws one printed page in miniature: the cells' displayed text at the page's print scale,
+ /// inside the sheet's margins. `paper_w` is the page width in points.
+-fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gridcraft_engine::model::Workbook, t: &Tokens) {
++fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gridcraft_engine::model::Workbook, t: &Tokens, loc: gridcraft_engine::core::NumLocale) {
+     let Some(range) = page.get("range").and_then(Json::as_str).and_then(gridcraft_engine::core::RangeRef::parse) else { return };
+     let Some(sh) = page.get("sheet").and_then(Json::as_str).and_then(|n| wb.sheet_index(n)).and_then(|i| wb.sheets.get(i)) else { return };
+     // Preview pixels per point, and per sheet pixel (sheet geometry is 96 dpi: 0.75 pt per pixel).
+@@ -825,7 +825,7 @@ fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gri
+                 break;
+             }
+             let cell = gridcraft_engine::core::CellRef::new(row, col);
+-            let text = gridcraft_engine::display::cell_text(wb, sh, cell);
++            let text = gridcraft_engine::display::cell_text_in(wb, sh, cell, loc);
+             if !text.is_empty() {
+                 let numeric = sh.value(cell).as_f64().is_some();
+                 // Text runs on over empty neighbours, as on the sheet; numbers stay in their cell.
