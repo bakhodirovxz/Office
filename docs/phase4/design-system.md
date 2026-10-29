@@ -498,3 +498,5 @@ These stay app-owned and are **not** themed: document content, the paper itself 
 | Q5 | Multi-colour icons in the Sheets and Slides full ribbons | keep their colours · recolour to `icon` and `accent` | **Keep for now.** The simple toolbars, which are the default, are already monochrome and tinted. |
 | Q6 | Default paper size | **A4 for uz/ru**, Letter for en-US · keep Letter | **A4.** |
 | Q7 | PDF's pill-shaped buttons | **become standard 4-radius buttons** · keep pills | Standard, for one button shape everywhere. |
+
+**Decided (owner, 2026-10-29): every recommendation above is accepted** — Q1 System, Q2 one brand colour, Q3 neutral rail, Q4 font sizes later, Q5 keep the coloured icons, Q6 A4 for uz/ru, Q7 standard buttons.
