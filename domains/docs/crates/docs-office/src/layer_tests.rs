@@ -136,24 +136,53 @@ fn save_snapshot_list_restore_round_trip() {
     let mut s = session("First");
     let f = t.p("a.docx");
     s.run("file.save", &json!({"path": f})).unwrap();
+    // the history thread reads the file when it gets to it: a save before that shares the version (WP23)
+    assert!(layer::flush_snapshots(SETTLE));
     s.run("text.insert", &json!({"text": " edited"})).unwrap();
     s.run("file.save", &json!({})).unwrap();
     let path = PathBuf::from(&f);
+    assert!(layer::flush_snapshots(SETTLE));
     assert_eq!(store.list(&path).unwrap().len(), 2);
     // an autosave right after an explicit save makes no version, an explicit save does
     s.run("text.insert", &json!({"text": " more"})).unwrap();
     s.run("file.save", &json!({"autosave": true})).unwrap();
+    assert!(layer::flush_snapshots(SETTLE));
     assert_eq!(store.list(&path).unwrap().len(), 2);
     s.run("file.save", &json!({})).unwrap();
+    assert!(layer::flush_snapshots(SETTLE));
     assert_eq!(store.list(&path).unwrap().len(), 3);
     // a pdf copy is not a version of the document
     s.run("file.exportPdf", &json!({"path": t.p("a.pdf")})).unwrap();
+    assert!(layer::flush_snapshots(SETTLE));
     assert_eq!(store.list(&path).unwrap().len(), 3);
     let v1 = store.read(&path, 1).unwrap();
     store.restore(&path, 1).unwrap();
     assert_eq!(std::fs::read(&path).unwrap(), v1);
     assert_eq!(store.list(&path).unwrap().len(), 4);
     assert_eq!(store.verify(&path).unwrap().lines, 4);
+}
+
+const SETTLE: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// WP23 "Save freezes the app": the snapshot ran inside `file.save` on the UI thread and waited for the store (its lock, then a prune
+/// over every document's index). A store held by another process now delays only the version, never the save.
+#[test]
+fn a_busy_history_store_does_not_hold_up_the_save() {
+    let t = T::new("busy");
+    let store = Store::new(t.dir.join("store"), roomy());
+    layer::configure(Some(Store::new(t.dir.join("store"), roomy())), None);
+    std::fs::create_dir_all(t.dir.join("store")).unwrap();
+    let lock = t.dir.join("store").join(".lock");
+    std::fs::write(&lock, b"").unwrap();
+    let mut s = session("First");
+    let f = t.p("busy.docx");
+    let started = std::time::Instant::now();
+    s.run("file.save", &json!({"path": f})).unwrap();
+    let took = started.elapsed();
+    assert!(took < std::time::Duration::from_secs(2), "the save waited {took:?} for the history store");
+    std::fs::remove_file(&lock).unwrap();
+    assert!(layer::flush_snapshots(SETTLE));
+    assert_eq!(store.list(&PathBuf::from(&f)).unwrap().len(), 1, "the version is recorded once the store is free");
 }
 
 #[test]

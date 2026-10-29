@@ -47,7 +47,7 @@ test('2026 alphabet (cases from tests/alphabet2026.rs)', () => {
   const o = { latinAlphabet: '2026' };
   assert.equal(toLatin('шаҳар чой ўзбек ғалаба', o), 'şahar çoy özbek ğalaba');
   assert.equal(toLatin('Исҳоқ асҳоб ИСҲОҚ', o), 'Ishoq ashob ISHOQ');
-  assert.equal(toLatin('Шаҳар Ўзбекистон'), 'Shahar Oʻzbekiston'); // default 1995
+  assert.equal(toLatin('Шаҳар Ўзбекистон'), 'Şahar Özbekiston'); // default 2026 (O13)
   assert.equal(toCyrillic('özbek ğalaba şahar çoy'), 'ўзбек ғалаба шаҳар чой');
   assert.equal(toCyrillic('özbek ğalaba şahar çoy', o), 'ўзбек ғалаба шаҳар чой');
   assert.equal(toCyrillic('Oʻzbek Özbek Shahar Şahar'), 'Ўзбек Ўзбек Шаҳар Шаҳар'); // 1995 reads both

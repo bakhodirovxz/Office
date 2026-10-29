@@ -197,13 +197,36 @@ impl crate::Document {
                 if reading.truncated {
                     truncated.push(i);
                 }
+                let lines = reading.lines;
                 let blocks = reading
                     .blocks
                     .into_iter()
                     .filter(|b| !b.text.trim().is_empty())
                     .map(|b| {
                         let f = b.base_font.to_ascii_lowercase();
+                        // A paragraph of several visual rows keeps each row's text and box, so the
+                        // positioned Word layout can put every row where the page shows it.
+                        let texts: Vec<&str> = b.editor_text.split('\n').collect();
+                        let rows = if b.rows.len() > 1 && texts.len() == b.rows.len() {
+                            b.rows
+                                .iter()
+                                .zip(&texts)
+                                .map(|(row, t)| {
+                                    let r = row
+                                        .iter()
+                                        .filter_map(|i| lines.get(*i))
+                                        .map(|l| l.rect)
+                                        .reduce(|a, c| [a[0].min(c[0]), a[1].min(c[1]), a[2].max(c[2]), a[3].max(c[3])])?;
+                                    Some((t.trim_end().to_string(), visible_rect(r)))
+                                })
+                                .collect::<Option<Vec<_>>>()
+                                .unwrap_or_default()
+                        } else {
+                            Vec::new()
+                        };
                         pdfcraft_export::Block {
+                            font: pdfcraft_export::family(&b.base_font),
+                            rows,
                             text: b.text,
                             rect: visible_rect(b.rect),
                             size: b.size * unit,

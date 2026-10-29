@@ -16,6 +16,11 @@ const MAX_FILES: usize = 16;
 const DISK_BUDGET: u64 = 2 << 30;
 /// Times a record lock held for a moment (by a process being started) is tried again.
 const LOCK_RETRIES: u32 = 10;
+/// office overlay (WP23): marks a record the start page has offered once; a newer generation removes it.
+const OFFERED: &str = "offered";
+/// office overlay (WP23): an offered record whose newest generation is this old is removed at discovery (Office keeps unsaved
+/// drafts 4 days; a week covers a holiday).
+const EXPIRE: Duration = Duration::from_secs(7 * 24 * 3600);
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -180,9 +185,15 @@ impl Store {
                     fs::remove_file(entry.path()).map_err(|e| e.to_string())?;
                 }
             }
+            let mut expired = false;
             for path in Self::files(&dir)? {
                 match read_snapshot(&path) {
-                    Ok(s) if s.info.id == id && Some(s.generation) == generation(&path) => {
+                    Ok(mut s) if s.info.id == id && Some(s.generation) == generation(&path) => {
+                        s.info.offered = dir.join(OFFERED).exists();
+                        // Never a record this window holds: it may be the restored document's only copy.
+                        expired = s.info.offered
+                            && guard.is_some()
+                            && fs::metadata(&path).and_then(|m| m.modified()).ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > EXPIRE);
                         entries.insert(id.to_string(), Entry { info: s.info, path });
                         break;
                     }
@@ -197,6 +208,13 @@ impl Store {
                 }
             }
             drop(guard);
+            if expired {
+                entries.remove(id);
+                if let Err(e) = self.discard(id) {
+                    log::warn!("recovery: cannot remove expired record: {e}");
+                }
+                continue;
+            }
             // A crash before the first commit leaves no document to recover. Reclaim
             // that slot only under a fresh lock and the discard path's entry checks.
             if Self::files(&dir)?.is_empty()
@@ -207,6 +225,27 @@ impl Store {
         }
         self.entries = entries;
         if unreadable { Err("Some recovery files could not be read. Earlier valid copies are listed when available.".into()) } else { Ok(()) }
+    }
+    /// Marks the records as offered (office overlay, WP23). A record another instance holds is skipped.
+    fn offer(&mut self, ids: &[String]) -> Result<(), String> {
+        for id in ids {
+            if !self.entries.contains_key(id) {
+                continue;
+            }
+            let _guard = if self.locks.contains_key(id) {
+                None
+            } else {
+                match self.lock(id) {
+                    Ok(f) => Some(f),
+                    Err(_) => continue,
+                }
+            };
+            private_file(&self.root.join(id).join(OFFERED), false).map_err(|e| e.to_string())?;
+            if let Some(e) = self.entries.get_mut(id) {
+                e.info.offered = true;
+            }
+        }
+        Ok(())
     }
     fn inventory(&self) -> Vec<RecoveryInfo> {
         let mut v: Vec<_> = self.entries.values().map(|e| e.info.clone()).collect();
@@ -267,6 +306,8 @@ impl Store {
             // A new generation is never written over the last valid file.
             fs::rename(&tmp, &final_path).map_err(|e| e.to_string())?;
             sync_dir(&dir).map_err(|e| e.to_string())?;
+            // office overlay (WP23): new work is offered again after a crash.
+            let _ = fs::remove_file(dir.join(OFFERED));
             self.entries.insert(s.info.id.clone(), Entry { info: s.info, path: final_path.clone() });
             for old in Self::files(&dir)?.into_iter().filter(|p| p != &final_path && Some(p) != previous.as_ref()) {
                 if let Err(e) = fs::remove_file(old) {
@@ -301,6 +342,7 @@ impl Store {
             let entry = entry.map_err(|e| e.to_string())?;
             let name = entry.file_name();
             let known = name == "owner.lock"
+                || name == OFFERED
                 || generation(&entry.path()).is_some()
                 || name.to_str().is_some_and(|n| n.strip_prefix("pending-").and_then(|n| n.strip_suffix(".tmp")).is_some_and(id_ok));
             if !known || !entry.file_type().map_err(|e| e.to_string())?.is_file() {
@@ -318,6 +360,10 @@ impl Store {
             }
         }
         sync_dir(&dir).map_err(|e| e.to_string())?;
+        match fs::remove_file(dir.join(OFFERED)) {
+            Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e.to_string()),
+            _ => {}
+        }
         self.entries.remove(id);
         self.locks.remove(id);
         fs::remove_file(dir.join("owner.lock")).map_err(|e| e.to_string())?;
@@ -348,6 +394,9 @@ enum Job {
     Scan,
     Load(String, (u64, u64)),
     Discard(String),
+    Offer(Vec<String>),
+    /// A clean exit: discard these records (office overlay, WP23).
+    Close(Vec<String>),
 }
 enum Outcome {
     Done,
@@ -370,6 +419,10 @@ pub(crate) struct Recovery {
     revision: Option<u64>,
     due: Instant,
     alive: bool,
+    /// Records this window made or restored: a clean exit removes them (office overlay, WP23).
+    mine: Vec<String>,
+    /// Records of documents that left the editor with no unsaved changes, still to be discarded.
+    released: Vec<String>,
 }
 impl Recovery {
     pub fn start(root: PathBuf, wake: Arc<dyn Fn() + Send + Sync>) -> Result<Self, String> {
@@ -397,6 +450,9 @@ impl Recovery {
                         Job::Scan => store.scan().map(|_| Outcome::Done),
                         Job::Load(id, expected) => store.load(&id).map(|s| Outcome::Loaded(Box::new(s), expected)),
                         Job::Discard(id) => store.discard(&id).map(|_| Outcome::Discarded(id)),
+                        Job::Offer(ids) => store.offer(&ids).map(|_| Outcome::Done),
+                        // Every record is tried; the first failure is reported.
+                        Job::Close(ids) => ids.iter().filter_map(|id| store.discard(id).err()).next().map_or(Ok(Outcome::Done), Err),
                     };
                     if events.send(Event { documents: store.inventory(), outcome: result }).is_err() {
                         break;
@@ -417,6 +473,8 @@ impl Recovery {
             revision: None,
             due: Instant::now() + INTERVAL,
             alive: true,
+            mine: Vec::new(),
+            released: Vec::new(),
         })
     }
     fn queue(&mut self, job: Job) -> Result<(), String> {
@@ -466,6 +524,7 @@ impl Recovery {
         }
     }
     pub fn adopt(&mut self, id: String, document: u64, revision: u64) {
+        self.mine.push(id.clone());
         self.id = Some(id);
         self.document = Some(document);
         self.revision = Some(revision);
@@ -480,6 +539,13 @@ impl Recovery {
         if self.busy || !self.ready || !self.alive {
             return Ok(());
         }
+        if let Some(id) = self.released.pop() {
+            let r = self.queue(Job::Discard(id.clone()));
+            if r.is_err() {
+                self.released.push(id);
+            }
+            return r;
+        }
         if !s.dirty || s.password.is_some() {
             if let Some(id) = self.id.clone() {
                 self.queue(Job::Discard(id))?;
@@ -491,15 +557,59 @@ impl Recovery {
         }
         let id = match &self.id {
             Some(id) => id.clone(),
-            None => new_id()?,
+            None => {
+                let id = new_id()?;
+                self.mine.push(id.clone());
+                id
+            }
         };
         let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled draft".into());
-        let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso() };
+        let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso(), offered: false };
         self.queue(Job::Save(Box::new(Snapshot { version: 1, info, generation: 0, document: s.doc.clone() })))?;
         self.id = Some(id);
         self.revision = Some(s.rev());
         self.due = now + INTERVAL;
         Ok(())
+    }
+    /// The document leaves the editor with no unsaved changes (saved, then replaced in one step): its copy holds nothing
+    /// the file lacks, so the next tick discards it (office overlay, WP23).
+    pub fn release(&mut self) {
+        if let Some(id) = self.id.take() {
+            self.released.push(id);
+            self.revision = None;
+        }
+    }
+    /// The start page showed the listed copies.
+    pub fn offer(&mut self) -> Result<(), String> {
+        let ids: Vec<String> = self.documents.iter().filter(|d| !d.offered).map(|d| d.id.clone()).collect();
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.queue(Job::Offer(ids))
+    }
+    /// A clean exit: waits (bounded) for the job in flight, then discards this window's records.
+    pub fn close(&mut self) -> Result<(), String> {
+        const WAIT: Duration = Duration::from_secs(5);
+        if !self.alive {
+            return Ok(());
+        }
+        if self.busy {
+            self.rx.recv_timeout(WAIT).map_err(|e| e.to_string())?;
+            self.busy = false;
+        }
+        let mut ids = std::mem::take(&mut self.mine);
+        ids.append(&mut self.released);
+        ids.sort();
+        ids.dedup();
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.queue(Job::Close(ids))?;
+        let e = self.rx.recv_timeout(WAIT).map_err(|e| e.to_string())?;
+        self.busy = false;
+        self.documents = e.documents;
+        self.id = None;
+        e.outcome.map(|_| ())
     }
     pub fn document_is(&self, document: u64) -> bool {
         self.document == Some(document)
@@ -600,7 +710,7 @@ mod tests {
     fn snapshot(id: &str, text: &str) -> Snapshot {
         Snapshot {
             version: 1,
-            info: RecoveryInfo { id: id.into(), name: "Synthetic draft".into(), saved_at: crate::cmd::now_iso() },
+            info: RecoveryInfo { id: id.into(), name: "Synthetic draft".into(), saved_at: crate::cmd::now_iso(), offered: false },
             generation: 0,
             document: Document::from_text(text),
         }
@@ -912,5 +1022,90 @@ mod tests {
         s.run("file.encrypt", &json!({"password": "synthetic-password"})).unwrap();
         settle(&mut s);
         assert_eq!(s.recovery_documents().len(), 1);
+    }
+
+    // office overlay (WP23): the rules below follow Office's AutoRecover model.
+
+    #[test]
+    fn clean_exit_removes_this_windows_copies_and_keeps_a_crashed_windows() {
+        let t = Temp::new();
+        let crashed = new_id().unwrap();
+        Store::new(t.0.clone()).unwrap().save(snapshot(&crashed, "A crashed window's draft")).unwrap();
+        let mut s = session(&t.0);
+        assert_eq!(s.recovery_documents().len(), 1);
+        s.run("text.insert", &json!({"text": "First draft"})).unwrap();
+        save_now(&mut s);
+        // A switch with unsaved changes keeps that copy (scripts switch without asking) until the clean exit.
+        s.run("file.new", &json!({})).unwrap();
+        s.run("text.insert", &json!({"text": "Second draft"})).unwrap();
+        save_now(&mut s);
+        assert_eq!(s.recovery_documents().len(), 3);
+        s.recovery_close();
+        drop(s);
+        let s = session(&t.0);
+        let left: Vec<String> = s.recovery_documents().into_iter().map(|d| d.id).collect();
+        assert_eq!(left, [crashed]);
+    }
+
+    #[test]
+    fn a_saved_document_replaced_in_the_same_step_leaves_no_copy() {
+        let t = Temp::new();
+        let root = t.0.join("profile");
+        let mut s = session(&root);
+        s.run("text.insert", &json!({"text": "Draft"})).unwrap();
+        save_now(&mut s);
+        assert_eq!(s.recovery_documents().len(), 1);
+        // Save Changes › Save, then the New it asked about: no frame (no tick) in between.
+        s.run("file.save", &json!({"path": t.0.join("saved.docx")})).unwrap();
+        s.run("file.new", &json!({})).unwrap();
+        settle(&mut s);
+        assert!(s.recovery_documents().is_empty());
+        assert!(fs::read_dir(&root).unwrap().next().is_none());
+    }
+
+    #[test]
+    fn an_offered_copy_is_listed_but_not_offered_again_until_new_work() {
+        let t = Temp::new();
+        let id = new_id().unwrap();
+        Store::new(t.0.clone()).unwrap().save(snapshot(&id, "Draft")).unwrap();
+        let mut s = session(&t.0);
+        assert!(!s.recovery_documents()[0].offered);
+        s.recovery_offer();
+        settle(&mut s);
+        assert!(s.recovery_documents()[0].offered);
+        drop(s);
+        let mut s = session(&t.0);
+        assert!(s.recovery_documents()[0].offered, "the next start lists it as offered");
+        // Restored and edited: the new generation is new work, offered again after a crash.
+        s.run("file.recover", &json!({"restore": id})).unwrap();
+        settle(&mut s);
+        s.run("text.insert", &json!({"text": "More work. "})).unwrap();
+        save_now(&mut s);
+        drop(s);
+        let s = session(&t.0);
+        assert_eq!(s.recovery_documents().len(), 1);
+        assert!(!s.recovery_documents()[0].offered);
+    }
+
+    #[test]
+    fn offered_copies_expire_after_a_week_and_unoffered_ones_never() {
+        let t = Temp::new();
+        let (seen, unseen) = (new_id().unwrap(), new_id().unwrap());
+        let mut store = Store::new(t.0.clone()).unwrap();
+        store.save(snapshot(&seen, "Seen")).unwrap();
+        store.save(snapshot(&unseen, "Never seen")).unwrap();
+        store.offer(std::slice::from_ref(&seen)).unwrap();
+        drop(store);
+        let old = std::time::SystemTime::now() - EXPIRE - Duration::from_secs(60);
+        for id in [&seen, &unseen] {
+            for p in Store::files(&t.0.join(id)).unwrap() {
+                File::options().write(true).open(p).unwrap().set_modified(old).unwrap();
+            }
+        }
+        let mut store = Store::new(t.0.clone()).unwrap();
+        store.scan().unwrap();
+        let left: Vec<String> = store.inventory().into_iter().map(|d| d.id).collect();
+        assert_eq!(left, [unseen]);
+        assert!(!t.0.join(&seen).exists(), "the expired record's folder is gone");
     }
 }

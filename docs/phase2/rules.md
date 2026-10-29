@@ -1270,7 +1270,7 @@ Evidence:
 
 The default Latin alphabet is **one line** in `crates/uz-translit/src/lib.rs`:
 
-    pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y1995;
+    pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y2026;
 
 Every surface follows it:
 - the library: `LatinAlphabet::default()` and `Options::default()`;
@@ -1279,8 +1279,12 @@ Every surface follows it:
 - the converter CLI `--alphabet` and the API `alphabet`, when absent, through `convert::plan::DEFAULT_ALPHABET` (`services/convert/src/plan.rs`);
 - the converter page: `/api/v1/formats` returns `defaults.alphabet`. The page preselects it in the Latin alphabet menu and marks it "(default)" (`ui.opt.alphabet.default`).
 
-**Not switched (2026-10-21):** the law is not in force. Switch it on the entry-into-force date (publication + 6 months), after re-checking §15.0 against the published text. With the switch:
-- rebuild the products;
-- update the prose that names 1995 as the default: the `LatinAlphabet` doc comments, `ci/npm/README.md`, and the `// default 1995` assertion in `ci/npm/uz-translit.test.mjs` (that npm test checks the package default on purpose, so it changes with it).
+**Switched 2026-10-29 by owner decision (O13 taken): the default is now `Y2026`.** The law is not yet in force (it enters into force 6 months after official publication; the earlier plan was to switch on that date). The owner chose to switch now. What changed with the switch:
+- `DEFAULT_LATIN_ALPHABET` is `Y2026`. docs-translit, the wasm/npm package, the converter CLI/API and the page follow it unchanged.
+- m6 (`--alphabet auto` towards Latin hard-coded 1995) was already resolved in `engine.rs`: `Auto` ->Latin writes `DEFAULT_LATIN_ALPHABET` (test `auto_to_latin_follows_default`), so it now writes 2026.
+- `suite-core` `settings.rs`: the mirror `LatinAlphabet` default is `Y2026`. An absent or invalid value is 2026; a stored `latin_alphabet = "1995"` stays 1995 (test `alphabet_defaults_to_2026_and_a_stored_1995_stays`).
+- Prose updated: the `LatinAlphabet` doc comments, `ci/npm/README.md`, and the `// default` assertion in `ci/npm/uz-translit.test.mjs`.
+- The uz-translit tests pin 1995 themselves, so they did not depend on the default. 1995 is still read and written on request (`latinAlphabet: "1995"`).
+- Products must be rebuilt to carry the new default.
 
 The page's browser-language guess maps `uz` to "Oʻzbekcha (1995)". That is a UI-language choice, separate from O13, and stays until the owner decides otherwise.

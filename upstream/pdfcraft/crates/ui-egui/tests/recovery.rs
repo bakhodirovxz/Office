@@ -271,6 +271,7 @@ fn a_failed_metadata_write_keeps_the_completed_snapshot_recoverable() {
         saved_at: 1,
         encrypted: false,
         instance: None,
+        offered_at: None,
     };
     // A directory at the sidecar path makes its atomic rename fail after the PDF was written.
     std::fs::create_dir_all(s.dir().join("snapshot.json")).unwrap();
@@ -430,4 +431,36 @@ fn the_recovery_folder_is_owner_only() {
     std::fs::set_permissions(earlier.dir(), std::fs::Permissions::from_mode(0o755)).unwrap();
     earlier.claim();
     assert_eq!(mode(&earlier), 0o700);
+}
+
+/// office overlay (WP23): a snapshot first offered over a week ago is removed at the next start; a dismissed newer one is offered again.
+#[test]
+fn a_snapshot_offered_a_week_ago_expires_and_a_newer_one_is_offered_again() {
+    let s = store("expiry");
+    let bytes = fixture(1);
+    let meta = |key: &str, offered_at| pdfcraft_ui_egui::RecoveryMeta {
+        key: key.into(),
+        name: format!("{key}.pdf"),
+        path: None,
+        saved_at: 1,
+        encrypted: false,
+        instance: None,
+        offered_at,
+    };
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+    s.write(&meta("old", Some(now - pdfcraft_ui_egui::EXPIRE_SECS - 60)), &bytes).unwrap();
+    s.write(&meta("recent", Some(now - 60)), &bytes).unwrap();
+    s.write(&meta("new", None), &bytes).unwrap();
+    let mut app = PdfCraftApp::new();
+    app.enable_recovery(s.clone());
+    let mut keys: Vec<String> = app.recoverable.iter().map(|m| m.key.clone()).collect();
+    keys.sort();
+    assert_eq!(keys, ["new", "recent"]);
+    assert!(!s.dir().join("old.pdf").exists() && !s.dir().join("old.json").exists());
+    assert!(app.recoverable.iter().all(|m| m.offered_at.is_some()));
+    drop(app);
+    let listed = s.list();
+    assert_eq!(listed.len(), 2);
+    assert!(listed.iter().all(|m| m.offered_at.is_some()), "the first offer is kept in the sidecar");
+    s.clear();
 }

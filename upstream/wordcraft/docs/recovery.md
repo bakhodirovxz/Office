@@ -1,7 +1,12 @@
 # Local document recovery
 
 Desktop WordCraft periodically keeps a local copy of unsaved work, including new drafts.
-File › Recover lists available copies. The page opens at startup when copies are found.
+File › Recover lists available copies. At startup the page opens once for copies that no
+earlier start has offered: in practice the copies an unclean exit (crash, kill, power loss) left
+behind, because a clean exit removes its window's own copies. A copy a start has offered is
+marked `offered` in its folder and is not offered again, unless a newer generation (new work)
+is written to it. An offered copy whose newest generation is older than 7 days is removed at
+discovery; a copy never offered is never removed by age (office overlay, WP23).
 Restore opens an unsaved document with no file path. Save As chooses where to keep it.
 Recovery never writes to the original document. AutoSave's permission to write to an earlier
 file is cleared on restore.
@@ -10,7 +15,11 @@ Continue without restoring leaves copies available. Discard asks for confirmatio
 the selected copy, including its retained generation. It does not delete the editing document.
 After discarding that document's copy, another copy is made only after a further edit.
 A successful save removes that document's recovery copy on the next worker cycle while it
-remains open. Copies left after switching documents can still be explicitly discarded.
+remains open, and so does replacing a document that has no unsaved changes (Save, then Open,
+New or Close in one step). A switch away from unsaved changes (a script, or Don't Save) keeps
+that copy until the window exits cleanly. A clean exit (the window closes after Save or Don't
+Save) waits a few seconds at most for the worker and removes every copy that window made or
+restored; copies of other windows and of crashed sessions stay (office overlay, WP23).
 
 Documents with a password do not get plaintext recovery copies. Applying a password waits for
 any pending snapshot, removes the current document's recovery generations, and fails if cleanup

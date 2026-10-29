@@ -1,6 +1,6 @@
 //! Engine-level tests of the Docs transliteration commands (headless `Session`, no UI).
 use serde_json::json;
-use uz_translit::{Direction, Options, convert};
+use uz_translit::{Direction, LatinAlphabet, Options, convert};
 use wordcraft_doc::para::OBJ;
 use wordcraft_doc::props::CharProps;
 use wordcraft_doc::{
@@ -65,6 +65,13 @@ fn cyr(t: &str) -> String {
 }
 fn lat(t: &str) -> String {
     convert(t, Direction::ToLatin, &Options::default())
+}
+/// 1995 pinned: tests of 1995 digraphs (sh, ch, o') do not depend on the default alphabet (O13).
+fn o95() -> Options {
+    Options {
+        latin_alphabet: LatinAlphabet::Y1995,
+        ..Options::default()
+    }
 }
 /// The runs that hold text, as (props, text).
 fn runs(p: &Paragraph) -> Vec<(CharProps, String)> {
@@ -188,10 +195,10 @@ fn a_digraph_split_across_bold_and_plain_runs_converts_as_one_letter() {
     let whole: String = pieces.iter().map(|(t, _)| *t).collect();
     let mut s = session(vec![para(&pieces)]);
     s.sel = Selection::caret(Pos::body(0, 0));
-    s.run(CYRL, &json!({})).unwrap();
+    s.run(CYRL, &json!({"latinAlphabet": "1995"})).unwrap();
     assert_eq!(
         text(&s, 0),
-        cyr(&whole),
+        convert(&whole, Direction::ToCyrillic, &o95()),
         "the same text as converting the unsplit paragraph"
     );
     assert!(
@@ -204,8 +211,9 @@ fn a_digraph_split_across_bold_and_plain_runs_converts_as_one_letter() {
     assert_eq!(total, p(&s, 0).text.len());
     assert!(p(&s, 0).runs.iter().all(|r| r.len > 0));
     // Back to Latin.
-    s.run(LATN, &json!({})).unwrap();
-    assert_eq!(text(&s, 0), lat(&cyr(&whole)));
+    s.run(LATN, &json!({"latinAlphabet": "1995"})).unwrap();
+    let cyrillic = convert(&whole, Direction::ToCyrillic, &o95());
+    assert_eq!(text(&s, 0), convert(&cyrillic, Direction::ToLatin, &o95()));
 }
 
 #[test]
@@ -524,7 +532,7 @@ fn a_tracked_deletion_inside_a_digraph_is_not_a_boundary() {
         ("h", Default::default()),
     ])]);
     s.sel = Selection::caret(Pos::body(0, 0));
-    s.run(CYRL, &json!({})).unwrap();
+    s.run(CYRL, &json!({"latinAlphabet": "1995"})).unwrap();
     let live: String = runs(p(&s, 0))
         .iter()
         .filter(|(c, _)| c.del.is_none())

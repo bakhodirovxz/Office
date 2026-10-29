@@ -1046,7 +1046,7 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
   no transliteration effect) **all match**. The tutuq code point is not stated anywhere; output stays U+02BC (D-02).
 - **Crate:** no rule change. The whole official 2026 paragraph converts correctly and round-trips. Added golden
   SRC-017..025 and `official_2026_text_reads_and_round_trips`.
-- **Default switch (O13):** one line, `DEFAULT_LATIN_ALPHABET` in `crates/uz-translit/src/lib.rs`, still `Y1995`. The
+- **Default switch (O13):** one line, `DEFAULT_LATIN_ALPHABET` in `crates/uz-translit/src/lib.rs`, was `Y1995`, **now `Y2026` (see the 2026-10-29 entry)**. The
   library, docs-translit, wasm, the converter CLI/API (`convert::plan::DEFAULT_ALPHABET`) and the page (via
   `/api/v1/formats` `defaults.alphabet`) follow it. The tests pin 1995 themselves.
   - **Not measured:** a run of the suite with the switch flipped was not done; the agent's permission check refused even a
@@ -1124,7 +1124,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Minors.**
   - Fixed: m1-m4, m7, m8, m11, m12.
   - Partly fixed: m5 and m13.
-  - Open (latent): m6, before O13 flips the alphabet.
+  - m6: resolved (engine.rs follows `DEFAULT_LATIN_ALPHABET`; test `auto_to_latin_follows_default`).
   - Deferred: m9, m10, m14.
   - New: n1-n4. All are small: a stale api.md line, the file table's status in combine mode, `reg` by bare name, and no en-US
     csv case in the ratchet.
@@ -1194,6 +1194,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **WP24 gate review (done; fixes landed):** review 7f1b3f1; fixes 5905293 (paper print stamp, audit takeover, Version History message, converter picked file), 39e77a4 (Slides title, History View copy read-only, restore text, WebView2 overrides), bdb77d6, e719099 (print hook desktop only); **brief task 5 closed in 6413f7a (code d3deade)** (owner 2026-10-24): the four apps read the shared `lang` at start (wordcraft/0126, gridcraft/0145, deckcraft/0145, pdfcraft/0112), applied when the app's own language is `auto` (Sheets has no `auto`: a fixed shared `lang` wins at each start); an in-app change does not write back to `settings.toml`; Slides' `auto` stays English; uz-Latn-2026 stays shell-only. Details: `docs/phase4/shared-services.md` section 6.1. 94 patches, 94 rows.
   **F10 fixed** (mapped drive / UNC): the host trusts a file it already knows (Recent, History) as the user's own, and matches a drive-letter path to a stored `\?\UNC\...` document by id; test `a_document_on_a_share_or_mapped_drive_keeps_its_history` (run on a real `net use` drive). Before: History said "no saved versions", Recent reopen was refused.
 - **WP23 kit ready (2026-10-25), sessions pending (IT staff, owner).** Protocol and results table `docs/phase4/usability.md`; printable cards uz-Latn/ru, observer sheet and the T4 PDF in `docs/phase4/wp23/` (abecb11; wording re-reviewed 483317f: the intro said "you must not make mistakes"); `scripts/wp23-reset.ps1` clears the current user's product folders between participants (dry run by default, `-Yes` deletes; tested on a fake profile only). Kit for the owner: `E:\office-target\wp23-kit\`, with the MSI rebuilt for the F10 fix (SHA-256 `80E7C9B0…C317`; it differs from the install-tested `2430CB40…A97E` build only in `hoshiya.exe`, so the install test was not re-run). Limits: the web session runs only on the owner's PC (local mode binds loopback; LAN needs server mode with TLS + token), the T4 converter download lands in Downloads, and the click paths of T4/T5 are read from code, not clicked.
+- **WP23 findings 1-2 (owner's MSI use, 2026-10-27; fixed on branch `p4-recovery`, 2026-10-29).** (1) Docs opened File › Recover at every start with stale copies, also of other files: upstream opens the page whenever a copy exists and removes a copy only when the still-open document is saved, so Don't Save, Save + Open/Close in one step and "Continue without restoring" left copies that came back forever. New carried patch `wordcraft/0129` (Office's AutoRecover model): the page opens once per copy (an `offered` marker; a newer generation clears it, so a later crash is offered again); a clean exit (`on_exit`) removes the window's own copies; a document replaced with no unsaved changes releases its copy; an offered copy older than 7 days is removed (never one not yet offered, never one the window holds). (2) Save froze the window: the docs-office version snapshot ran inside `file.save` on the UI thread and pruned the whole history store, 2,672 documents in the owner's profile, nearly all temp outputs of converter test runs (the converter's sandboxed CLI passes the real `%LOCALAPPDATA%` for fonts, so it recorded history). Fix in `docs-office/layer.rs`: snapshots run on one background thread (`flush_snapshots` at exit, 10 s at most), and a `WORDCRAFT_NO_PREFS` run (the converter's) keeps no history. Measured with the built release exe over the control port, on a copy of that store: save blocked the UI 29.8 s / 50.6 s (local disk), 44.5 s (from the Recover page), 51.8 s (mapped drive `net use` to the local admin share), next saves 1.0-4.2 s; after: 0.12-0.65 s in every case. Recovery run with the built exe (isolated profile): before, the page opened at starts 2, 3 and 5 and Don't Save + exit kept the draft; after, only at start 2 (after the kill), and Don't Save + exit removes it. PDF (different mechanism, already cleans on clean quit) gets the same 7-day expiry for a dismissed dialog (`pdfcraft/0113`; the dialog is its only way to the snapshots, so a dismissed one is still offered again within the week); Slides reopens leftovers as tabs (resolved by Save / Don't Save) and Sheets has no crash recovery: not changed. Tests (overlay on): wordcraft engine `recovery` 18/18 (4 new), ui-egui `recovery` 3/3 (new `recovery_page_opens_once_for_the_same_copies`), docs-office 21/21 (new `a_busy_history_store_does_not_hold_up_the_save`), pdfcraft ui-egui `--test recovery` 13/13 (new `a_snapshot_offered_a_week_ago_expires_and_a_newer_one_is_offered_again`); `verify-queue.sh wordcraft pdfcraft` OK, `cargo xt register check` 96/96. Full workspace suites and clippy not run (E: was down to 4 GB free). Not done: the owner's own history store still holds the 2,672 test documents (their data folder; `scripts/wp23-reset.ps1 -Yes` clears it); the upstream docx save itself still runs on the UI thread (0.1-0.4 s here; a multi-MB document not measured). 96 patches, 96 rows.
 - **Language rule unified, crypto-bigint (2026-10-24):** one rule in Docs, PDF, Slides and Sheets: a fixed shared `lang` always wins at start (`office_overlay::start_language`, called in each app's `main.rs` after the saved prefs; Sheets in `load_prefs`), the app's saved language applies only when the shared `lang` is `auto`, an in-app change is session-only and never written back; tests `shared_lang_wins_over_the_saved_language_at_start` (wordcraft/0126, pdfcraft/0112, deckcraft/0145 rewritten; web unaffected). `ci.sh deny` pdf: RUSTSEC-2026-0387 fixed by crypto-bigint 0.7.5 to 0.7.6 (needs ctutils 0.4.5) in the carried lock patch `pdfcraft/0900-pdfcraft-crypto-bigint-0.7.6.patch` (renamed from the ctutils one) and `domains/pdf/Cargo.lock`; lockdiff unchanged (0 version changes); third-party notices regenerated. 94 patches, 94 rows.
 
 ## Phase 5 (started early, in parallel; branch `phase-5`, worktree `E:/office-wt/phase-5`)
@@ -1249,3 +1250,53 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 
 ### Phase 5: History panel visual review (2026-10-26)
 - Reviewed screenshots (360 and 1366 px, light/dark, uz-Latn/ru; `DS_SHOTS=<dir>` on the docserver spec): the Compare selects overflowed the panel at 360 px; fixed in `history.css` (labels stack, selects shrink). Shell budget 58394 / 65536.
+
+## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
+- Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
+  plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
+- `DEFAULT_LATIN_ALPHABET` = `Y2026`; docs-translit, wasm/npm, converter CLI/API/page follow it. `suite-core` settings default
+  is 2026; a stored "1995" stays. m6 closed. Explicit `1995` still works everywhere. Branch `p4-alphabet`, merged (9123a0e).
+
+### Phase 4 fix: PDF to Word moved the text (owner report, 2026-10-29; branch `p4-pdf2docx`)
+- **Which pipeline made what.** The owner's three files (a 103-page document; nothing of it is in the repo). The "Downloads" docx is **Microsoft Word's own PDF Reflow**
+  (`docProps/custom.xml` Converter = SolidFramework, the source PDF from PDF-XChange), not ours. `orig.pdf` is **our Docs
+  export** of that docx (byte-identical when re-exported with the p1 build). The "Desktop" docx is **our native engine**
+  (`pdfcraft_export::docx`, all 103 pages in the positioned layout: one VML text box per paragraph, 4,125 boxes). Its
+  title is the PDF's file name, so it came from the **PDF app's Export to Word**. The converter (`convert --to docx`,
+  CLI, API and the shell page) makes the same document apart from the title "input"; the pdf2docx sidecar was not used.
+- **Where it breaks: in the docx itself**, and our rendering makes it worse. The boxes were exactly as wide as the PDF
+  text and had no font. Our Docs fell back to Arial and Word to Calibri, which rewrapped the rows. Measured with
+  `scripts/fidelity/fid/positions.py` (source words matched to the words of the docx printed again; pypdf, measurement only).
+  103 pages, 20,991 words; before -> after:
+
+  | printed by | words moved >3 pt | rows starting >3 pt off | source rows split | printed rows merged | words over words | dy p90 |
+  |---|---|---|---|---|---|---|
+  | our Docs | 43.4% -> 0.0% | 51.1% -> 0.1% | 59.0% -> 0.0% | 27.7% -> 0.0% | 18.3% -> 0.3% | 18.2 -> 0.02 pt |
+  | Word 16 | 94.8% -> 0.0% | 43.8% -> 0.9% | 26.6% -> 0.7% | 25.5% -> 0.1% | 8.0% -> 0.2% | 17.5 -> 0.85 pt |
+
+  Pages with any class over 5%: ours 102 -> 0, Word 101 -> 2. Control: Word against our Docs printing the source docx moves 2.5%
+  of the words and splits 1.4% of the rows (the measurement floor).
+- **Failure classes (before).** (1) No font in the runs, so the reader's default font is used (Arial in our Docs, Calibri in Word,
+  where the PDF set Times New Roman, Calibri, Verdana and Arial). (2) Boxes as wide as the PDF text: a wider font wraps the row onto the row below, which gives the split
+  rows and the text over text. (3) The rows of a multi-row paragraph were rewrapped at the reader's line height: merged
+  rows, and table rows 10 and 11 run together. (4) The first baseline sat about 3 pt low in Word (single spacing, not the
+  PDF's ascent).
+- **Fix: carried patch `pdfcraft/0001`** (5 files, +227/-19; REGISTER row). edit: `ReadingBlocks` also returns its lines.
+  engine `compare.rs`: export blocks carry the font family and each visual row's text and box. export: `family()`
+  (`ABCDEF+TimesNewRomanPS-BoldMT` becomes Times New Roman; symbol fonts are left out) and `w:rFonts` on every run (flow pages too).
+  A new `upright_text_box` writes one box per paragraph with one paragraph per row: left indent = the row's x, exact line
+  height = the distance between row bottoms (Word and our layout keep the descent below the line), and the box reaches the
+  page's right edge. Rotated text keeps the old path.
+- **Tests:** export `font_family_comes_from_the_pdf_font_name` and `word_positioned_rows_keep_their_font_place_and_line`
+  (31 of 31 pass); engine `office_export_keeps_a_paragraphs_rows_and_font_family` (14 of 14 `export` tests pass);
+  `test_fid.py` Positions self-test.
+- **New fixture `p2d_letter`** (`gen_pdf2docx.ps1`, Word-made, synthetic: a two-row centred title, an 11-row numbered
+  table, Calibri, Verdana and Arial paragraphs, a stamp over the signature). It reproduces the owner's classes. Before ->
+  after, our Docs: moved 20.4% -> 0, rows split 60% -> 0, merged 43.5% -> 0, text over text 15.3% -> 0. Word: moved 4.5% -> 0,
+  split 10% -> 0. `p2d_overimage`, our Docs: moved 15.4% -> 0, split 40% -> 0; Word: split 23.1% -> 0.
+  `run.py` now records `positions` for every pdf2docx output. Flow-mode fixtures (latn, cyrl, widths): the paragraph and
+  table counts, text similarity and column widths are unchanged; only `w:rFonts` is added.
+- **Remains:** (a) vector graphics (table rules, lines) are not exported, so positioned pages lose their table borders;
+  (b) cells joined into one row ("10" and the cell text) get one space instead of the column gap; (c) the release `pdf.exe` /
+  MSI were not rebuilt (only `pdf-cli` at `E:/office-target/p4-pdf2docx/pdf/release`); (d) LibreOffice not measured
+  (Docker daemon down); (e) the owner should re-run Export to Word on the real file after the next MSI.

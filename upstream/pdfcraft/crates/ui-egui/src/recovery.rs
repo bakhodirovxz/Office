@@ -27,6 +27,10 @@ use crate::PdfCraftApp;
 /// How often unsaved changes are written to the recovery folder.
 pub const AUTOSAVE_SECS: f64 = 60.0;
 
+/// office overlay (WP23): a snapshot the start dialog first offered this long ago is removed at the next start (Office keeps unsaved
+/// drafts 4 days; a week covers a holiday). One never offered is never removed by age.
+pub const EXPIRE_SECS: u64 = 7 * 24 * 3600;
+
 /// What a recovery entry records next to the PDF bytes.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct RecoveryMeta {
@@ -42,6 +46,9 @@ pub struct RecoveryMeta {
     /// snapshots from before it.
     #[serde(default)]
     pub instance: Option<String>,
+    /// When the start dialog first offered the snapshot (office overlay, WP23). A later autosave writes the sidecar without it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub offered_at: Option<u64>,
 }
 
 /// The recovery folder.
@@ -229,6 +236,7 @@ impl RecoveryStore {
                     // This is only a display hint; opening the PDF still detects encryption.
                     encrypted: false,
                     instance: None,
+                    offered_at: None,
                 }
             }));
         }
@@ -285,6 +293,30 @@ impl PdfCraftApp {
     pub fn enable_recovery(&mut self, store: RecoveryStore) {
         store.claim();
         self.recoverable = store.list();
+        // office overlay (WP23): the dialog is the only way to these snapshots, so a dismissed one is offered again, for a week.
+        let now = now_secs();
+        self.recoverable.retain(|m| match m.offered_at {
+            Some(at) if now.saturating_sub(at) > EXPIRE_SECS => {
+                store.remove(&m.key);
+                false
+            }
+            _ => true,
+        });
+        for m in self.recoverable.iter_mut().filter(|m| m.offered_at.is_none()) {
+            // A snapshot without readable metadata keeps it that way: recovering it repairs the sidecar (`repair_meta`).
+            let sidecar = store.dir().join(format!("{}.json", m.key));
+            let readable = std::fs::read(&sidecar).ok().and_then(|b| serde_json::from_slice::<RecoveryMeta>(&b).ok()).is_some_and(|x| x.key == m.key);
+            if !readable {
+                continue;
+            }
+            m.offered_at = Some(now);
+            let written = serde_json::to_vec_pretty(&*m)
+                .map_err(std::io::Error::other)
+                .and_then(|json| crate::editing::write_atomically(&sidecar.to_string_lossy(), &json));
+            if let Err(e) = written {
+                log::warn!("couldn't mark recovery snapshot {} as offered: {e}", m.key);
+            }
+        }
         if !self.recoverable.is_empty() {
             self.dialog = Some(crate::Dialog::Recovery);
         }
@@ -296,8 +328,15 @@ impl PdfCraftApp {
         let Some(store) = self.recovery.clone() else { return };
         for snap in self.session.autosave_snapshots() {
             let key = self.recovery_keys.entry(snap.doc).or_insert_with(|| format!("{}-{}-{}", now_secs(), std::process::id(), snap.doc.0)).clone();
-            let meta =
-                RecoveryMeta { key, name: snap.name, path: snap.path, saved_at: now_secs(), encrypted: snap.encrypted, instance: store.instance() };
+            let meta = RecoveryMeta {
+                key,
+                name: snap.name,
+                path: snap.path,
+                saved_at: now_secs(),
+                encrypted: snap.encrypted,
+                instance: store.instance(),
+                offered_at: None,
+            };
             if let Err(e) = store.write(&meta, &snap.bytes) {
                 log::warn!("autosave failed: {e}");
             }

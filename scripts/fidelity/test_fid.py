@@ -160,5 +160,42 @@ Stop-Process -Id $child.Id -Force
         self.assertLess(text_metrics("one two three four", "one two")["chars_kept"], 0.6)
 
 
+def _pdf(path, rows):
+    """A one-page Helvetica PDF: rows of (text, x, baseline y up, size)."""
+    content = " ".join("BT /F1 %g Tf %g %g Td (%s) Tj ET" % (sz, x, y, t) for t, x, y, sz in rows)
+    objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            "<< /Length %d >>\nstream\n%s\nendstream" % (len(content), content), "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    out, offs = b"%PDF-1.7\n", []
+    for i, o in enumerate(objs):
+        offs.append(len(out)); out += ("%d 0 obj\n%s\nendobj\n" % (i + 1, o)).encode()
+    x = len(out)
+    out += ("xref\n0 %d\n0000000000 65535 f \n" % (len(objs) + 1)).encode() + b"".join(b"%010d 00000 n \n" % o for o in offs)
+    out += ("trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objs) + 1, x)).encode()
+    Path(path).write_bytes(out)
+
+
+class Positions(unittest.TestCase):
+    def test_positions_find_moved_split_and_overlapping_rows(self):
+        try:
+            import pypdf  # noqa: F401
+        except ImportError:
+            self.skipTest("pypdf not installed")
+        import tempfile
+        from fid.positions import compare
+        with tempfile.TemporaryDirectory() as t:
+            truth = [("alpha beta gamma", 72, 700, 12), ("delta epsilon", 72, 686, 12)]
+            _pdf(t + "/t.pdf", truth)
+            _pdf(t + "/same.pdf", truth)
+            # the first row wraps after "beta" onto the second row's baseline, on top of it
+            _pdf(t + "/bad.pdf", [("alpha beta", 72, 700, 12), ("gamma", 72, 686, 12), ("delta epsilon", 72, 686, 12)])
+            same = compare(t + "/t.pdf", t + "/same.pdf")["total"]
+            self.assertEqual((same["matched"], same["moved"], same["lines_split"], same["overlap_words"]), (1.0, 0.0, 0.0, 0.0))
+            bad = compare(t + "/t.pdf", t + "/bad.pdf")["total"]
+            self.assertEqual(bad["lines_split"], 0.5)        # 1 of 2 source rows ends up on two baselines
+            self.assertEqual(bad["moved"], 0.2)              # gamma: 1 of 5 words
+            self.assertGreater(bad["overlap_words"], 0)      # gamma is drawn over delta
+
+
 if __name__ == "__main__":
     unittest.main()
