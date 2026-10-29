@@ -433,7 +433,16 @@ pub fn borders(e: &El) -> Borders {
 
 /// Margins element (`w:tblCellMar`, `w:tcMar`) → [top, left, bottom, right].
 pub fn margins(e: &El) -> [f32; 4] {
-    margin_sides(e).map(|side| side.unwrap_or(0.0))
+    margins_over(e, [0.0; 4])
+}
+
+/// Word's cell margins when nothing sets them: [top, left, bottom, right], points (0, 108 tw).
+pub const WORD_CELL_MARGINS: [f32; 4] = [0.0, 5.4, 0.0, 5.4];
+
+/// A margins element over `base`: the sides it leaves out keep `base`'s.
+pub fn margins_over(e: &El, base: [f32; 4]) -> [f32; 4] {
+    let sides = margin_sides(e);
+    std::array::from_fn(|i| sides[i].unwrap_or(base[i]))
 }
 
 fn margin_sides(e: &El) -> [Option<f32>; 4] {
@@ -462,6 +471,7 @@ impl PropCtx {
                 }
                 "w:jc" => t.align = k.attr("w:val").map(align),
                 "w:tblInd" => t.indent = tw(k, "w:w"),
+                "w:tblCellSpacing" => t.cell_spacing = tw(k, "w:w").map(|v| v.clamp(0.0, 1584.0)).filter(|v| *v > 0.0),
                 "w:tblBorders" => t.borders = Some(borders(k)),
                 "w:shd" => t.shading = self.shd_fill(k),
                 "w:tblLayout" => t.fixed = k.attr("w:type") == Some("fixed"),

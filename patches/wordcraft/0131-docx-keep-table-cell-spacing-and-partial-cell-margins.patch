@@ -1,0 +1,166 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] docx: keep table cell spacing and partial cell margins on save
+
+Owner finding (usability test 2026-10-29): tables made in Word lose their layout. Two pieces of
+table markup did not survive a save (docs/phase4/tables.md in the product repo):
+
+- Allow spacing between cells (w:tblCellSpacing in w:tblPr, ECMA-376 Part 1 17.4; Word also repeats it
+  in every w:trPr) was not read, so a save dropped it. TableProps::cell_spacing (points) reads it from
+  w:tblPr and the writer puts it back in its CT_TblPr place, between w:jc and w:tblInd. Layout still
+  ignores it (the cells are drawn without the spacing, as before).
+- A w:tblCellMar (in w:tblPr or a row's w:tblPrEx) sets only the sides it names (17.4: the other
+  sides keep the inherited values). Sides it left out were read as 0, so Word's w:tblPrEx margins with
+  top and bottom only (tables without a style, older documents) were saved with left = right = 0 and
+  Word then drew every cell's text against its cell edge. The left-out sides now keep the table style's
+  margins (else Word's 0 / 108 tw), and for a row exception the table's.
+
+Tests: table_cell_spacing_round_trips, partial_exception_cell_margins_keep_the_other_sides.
+---
+ crates/doc/src/props.rs                      |  3 +++
+ crates/docx/src/read/props.rs                | 12 +++++++++++-
+ crates/docx/src/read/story.rs                | 23 ++++++++++++++++++++++-
+ crates/docx/src/write/props.rs               |  4 ++++
+ crates/docx/tests/row_property_exceptions.rs | 29 +++++++++++++++++++++++++++++
+ 5 files changed, 69 insertions(+), 2 deletions(-)
+
+diff --git a/crates/doc/src/props.rs b/crates/doc/src/props.rs
+index d9bef64..48a28c4 100644
+--- a/crates/doc/src/props.rs
++++ b/crates/doc/src/props.rs
+@@ -1124,6 +1124,9 @@ pub struct TableProps {
+     pub align: Option<Align>,
+     /// Indent from the left margin, points.
+     pub indent: Option<f32>,
++    /// Spacing between cells (`w:tblCellSpacing`), points. Kept for saving; not laid out yet.
++    #[serde(skip_serializing_if = "Option::is_none")]
++    pub cell_spacing: Option<f32>,
+     pub borders: Option<Borders>,
+     /// Default cell margins (top, left, bottom, right), points.
+     pub cell_margins: Option<[f32; 4]>,
+diff --git a/crates/docx/src/read/props.rs b/crates/docx/src/read/props.rs
+index 4d924c0..6984972 100644
+--- a/crates/docx/src/read/props.rs
++++ b/crates/docx/src/read/props.rs
+@@ -433,7 +433,16 @@ pub fn borders(e: &El) -> Borders {
+ 
+ /// Margins element (`w:tblCellMar`, `w:tcMar`) → [top, left, bottom, right].
+ pub fn margins(e: &El) -> [f32; 4] {
+-    margin_sides(e).map(|side| side.unwrap_or(0.0))
++    margins_over(e, [0.0; 4])
++}
++
++/// Word's cell margins when nothing sets them: [top, left, bottom, right], points (0, 108 tw).
++pub const WORD_CELL_MARGINS: [f32; 4] = [0.0, 5.4, 0.0, 5.4];
++
++/// A margins element over `base`: the sides it leaves out keep `base`'s.
++pub fn margins_over(e: &El, base: [f32; 4]) -> [f32; 4] {
++    let sides = margin_sides(e);
++    std::array::from_fn(|i| sides[i].unwrap_or(base[i]))
+ }
+ 
+ fn margin_sides(e: &El) -> [Option<f32>; 4] {
+@@ -462,6 +471,7 @@ impl PropCtx {
+                 }
+                 "w:jc" => t.align = k.attr("w:val").map(align),
+                 "w:tblInd" => t.indent = tw(k, "w:w"),
++                "w:tblCellSpacing" => t.cell_spacing = tw(k, "w:w").map(|v| v.clamp(0.0, 1584.0)).filter(|v| *v > 0.0),
+                 "w:tblBorders" => t.borders = Some(borders(k)),
+                 "w:shd" => t.shading = self.shd_fill(k),
+                 "w:tblLayout" => t.fixed = k.attr("w:type") == Some("fixed"),
+diff --git a/crates/docx/src/read/story.rs b/crates/docx/src/read/story.rs
+index 8c3a555..60fb029 100644
+--- a/crates/docx/src/read/story.rs
++++ b/crates/docx/src/read/story.rs
+@@ -1823,8 +1823,22 @@ impl Reader<'_> {
+ 
+     fn read_table(&mut self, sc: &mut StoryCtx, t: &El, rels: &Rels, depth: usize) -> Option<Table> {
+         let mut table = Table::default();
++        // A w:tblCellMar (table or row exception) changes only the sides it names; the others keep
++        // the table's (for an exception), else its style's, else Word's. Word writes `w:tblPrEx`
++        // margins with top and bottom only: read as 0, a save turned the left and right ones off.
++        let style_margins = |props: &wordcraft_doc::props::TableProps, doc: &wordcraft_doc::Document| {
++            props
++                .style
++                .as_deref()
++                .and_then(|id| doc.styles.table_style(id))
++                .and_then(|s| s.parts.cell_margins)
++                .unwrap_or(super::props::WORD_CELL_MARGINS)
++        };
+         if let Some(p) = t.child("w:tblPr") {
+             table.props = self.pc.tblpr(p);
++            if let Some(m) = p.child("w:tblCellMar") {
++                table.props.cell_margins = Some(super::props::margins_over(m, style_margins(&table.props, &self.doc)));
++            }
+             if let Some(ch) = p.child("w:tblPrChange") {
+                 let old = ch.child("w:tblPr").map(|o| self.pc.tblpr(o)).unwrap_or_default();
+                 table.props.fmt_change = PropChange::boxed(self.revision(RevisionKind::Format, ch), old);
+@@ -1841,7 +1855,14 @@ impl Reader<'_> {
+         collect(t, "w:tr", &mut rows, &mut Vec::new(), 0);
+         for (tr, row_controls) in rows.into_iter().take(MAX_ROWS) {
+             let mut row = Row { props: tr.child("w:trPr").map(trpr).unwrap_or_default(), cells: Vec::new(), controls: row_controls };
+-            row.props.exceptions = tr.child("w:tblPrEx").map(|e| Box::new(self.pc.tblpr(e)));
++            row.props.exceptions = tr.child("w:tblPrEx").map(|e| {
++                let mut x = self.pc.tblpr(e);
++                if let Some(m) = e.child("w:tblCellMar") {
++                    let base = table.props.cell_margins.unwrap_or_else(|| style_margins(&table.props, &self.doc));
++                    x.cell_margins = Some(super::props::margins_over(m, base));
++                }
++                Box::new(x)
++            });
+             if let Some(ch) = tr.child("w:trPr").and_then(|p| p.child("w:trPrChange")) {
+                 let old = ch.child("w:trPr").map(trpr).unwrap_or_default();
+                 row.props.fmt_change = PropChange::boxed(self.revision(RevisionKind::Format, ch), old);
+diff --git a/crates/docx/src/write/props.rs b/crates/docx/src/write/props.rs
+index 14937ee..f9a4727 100644
+--- a/crates/docx/src/write/props.rs
++++ b/crates/docx/src/write/props.rs
+@@ -483,6 +483,10 @@ fn tblpr_inner(w: &mut W, t: &TableProps) {
+     if let Some(a) = t.align {
+         w.val("w:jc", align_val(if a == Align::Justify || a == Align::Distribute { Align::Left } else { a }));
+     }
++    // The CT_TblPr sequence (ECMA-376 Part 1, 17.4) puts it between jc and tblInd.
++    if let Some(s) = t.cell_spacing {
++        w.empty("w:tblCellSpacing", &[("w:w", &twips(s)), ("w:type", "dxa")]);
++    }
+     if let Some(i) = t.indent {
+         w.empty("w:tblInd", &[("w:w", &twips(i)), ("w:type", "dxa")]);
+     }
+diff --git a/crates/docx/tests/row_property_exceptions.rs b/crates/docx/tests/row_property_exceptions.rs
+index ce962c2..74909e2 100644
+--- a/crates/docx/tests/row_property_exceptions.rs
++++ b/crates/docx/tests/row_property_exceptions.rs
+@@ -54,3 +54,32 @@ fn an_empty_row_exception_element_is_kept() {
+     let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
+     assert!(xml.contains("<w:tblPrEx></w:tblPrEx>") || xml.contains("<w:tblPrEx/>"), "{xml}");
+ }
++
++/// Allow spacing between cells (`w:tblCellSpacing`, ECMA-376 Part 1 §17.4) survives a save in
++/// its `w:tblPr` place (between `w:jc` and `w:tblInd`); Word also repeats it in each `w:trPr`.
++#[test]
++fn table_cell_spacing_round_trips() {
++    let sp = r#"<w:tblCellSpacing w:w="28" w:type="dxa"/>"#;
++    let body = format!(
++        r#"<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:jc w:val="center"/>{sp}<w:tblInd w:w="100" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:trPr>{sp}</w:trPr><w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/></w:tcPr><w:p/></w:tc></w:tr></w:tbl><w:p/>"#
++    );
++    let d = wordcraft_docx::read(&docx(&body)).unwrap();
++    let t = d.body.iter().find_map(|b| b.as_table()).unwrap();
++    assert!(t.props.cell_spacing.is_some_and(|s| (s - 1.4).abs() < 1e-4), "{:?}", t.props.cell_spacing);
++    let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
++    assert!(xml.contains(r#"<w:jc w:val="center"/><w:tblCellSpacing w:w="28" w:type="dxa"/><w:tblInd w:w="100" w:type="dxa"/>"#), "{xml}");
++}
++
++/// A row exception's `w:tblCellMar` with top and bottom only (as Word writes it for tables without
++/// a style) keeps the left and right margins: saved as 0 they made Word draw the text against the
++/// cell edges.
++#[test]
++fn partial_exception_cell_margins_keep_the_other_sides() {
++    let ex = r#"<w:tblPrEx><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPrEx>"#;
++    let body = format!(r#"<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid>{}</w:tbl><w:p/>"#, row(ex, "A"));
++    let d = wordcraft_docx::read(&docx(&body)).unwrap();
++    let t = d.body.iter().find_map(|b| b.as_table()).unwrap();
++    assert_eq!(t.rows[0].props.exceptions.as_ref().and_then(|x| x.cell_margins), Some([0.0, 5.4, 0.0, 5.4]));
++    let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
++    assert!(xml.contains(r#"<w:left w:w="108" w:type="dxa"/>"#) && !xml.contains(r#"<w:left w:w="0" w:type="dxa"/>"#), "{xml}");
++}

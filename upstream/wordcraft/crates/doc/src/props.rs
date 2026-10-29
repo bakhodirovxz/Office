@@ -1124,6 +1124,9 @@ pub struct TableProps {
     pub align: Option<Align>,
     /// Indent from the left margin, points.
     pub indent: Option<f32>,
+    /// Spacing between cells (`w:tblCellSpacing`), points. Kept for saving; not laid out yet.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cell_spacing: Option<f32>,
     pub borders: Option<Borders>,
     /// Default cell margins (top, left, bottom, right), points.
     pub cell_margins: Option<[f32; 4]>,

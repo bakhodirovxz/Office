@@ -54,3 +54,32 @@ fn an_empty_row_exception_element_is_kept() {
     let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
     assert!(xml.contains("<w:tblPrEx></w:tblPrEx>") || xml.contains("<w:tblPrEx/>"), "{xml}");
 }
+
+/// Allow spacing between cells (`w:tblCellSpacing`, ECMA-376 Part 1 §17.4) survives a save in
+/// its `w:tblPr` place (between `w:jc` and `w:tblInd`); Word also repeats it in each `w:trPr`.
+#[test]
+fn table_cell_spacing_round_trips() {
+    let sp = r#"<w:tblCellSpacing w:w="28" w:type="dxa"/>"#;
+    let body = format!(
+        r#"<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:jc w:val="center"/>{sp}<w:tblInd w:w="100" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:trPr>{sp}</w:trPr><w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/></w:tcPr><w:p/></w:tc></w:tr></w:tbl><w:p/>"#
+    );
+    let d = wordcraft_docx::read(&docx(&body)).unwrap();
+    let t = d.body.iter().find_map(|b| b.as_table()).unwrap();
+    assert!(t.props.cell_spacing.is_some_and(|s| (s - 1.4).abs() < 1e-4), "{:?}", t.props.cell_spacing);
+    let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
+    assert!(xml.contains(r#"<w:jc w:val="center"/><w:tblCellSpacing w:w="28" w:type="dxa"/><w:tblInd w:w="100" w:type="dxa"/>"#), "{xml}");
+}
+
+/// A row exception's `w:tblCellMar` with top and bottom only (as Word writes it for tables without
+/// a style) keeps the left and right margins: saved as 0 they made Word draw the text against the
+/// cell edges.
+#[test]
+fn partial_exception_cell_margins_keep_the_other_sides() {
+    let ex = r#"<w:tblPrEx><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPrEx>"#;
+    let body = format!(r#"<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid>{}</w:tbl><w:p/>"#, row(ex, "A"));
+    let d = wordcraft_docx::read(&docx(&body)).unwrap();
+    let t = d.body.iter().find_map(|b| b.as_table()).unwrap();
+    assert_eq!(t.rows[0].props.exceptions.as_ref().and_then(|x| x.cell_margins), Some([0.0, 5.4, 0.0, 5.4]));
+    let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
+    assert!(xml.contains(r#"<w:left w:w="108" w:type="dxa"/>"#) && !xml.contains(r#"<w:left w:w="0" w:type="dxa"/>"#), "{xml}");
+}

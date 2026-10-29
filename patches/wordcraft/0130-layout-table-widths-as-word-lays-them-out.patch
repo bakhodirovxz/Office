@@ -1,0 +1,243 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] layout: table column widths as Word lays them out (spanning cells, legacy compatibility modes, tables past the column)
+
+Owner finding (usability test 2026-10-29): tables made in Word lose their layout. Measured against
+Word 16's own PDF of 29 Word-made tables (docs/phase4/tables.md in the product repo); three causes in
+layout_table, all in AutoFit (w:tblLayout autofit, ECMA-376 Part 1 17.4: the preferred widths of the
+table and cells, then the cell contents, give the final column widths):
+
+- column_content: a cell spanning grid columns (w:gridSpan) needed an even share of its longest word
+  from every column it spans, so a narrow column under a merged cell (forms, timesheets, rows with
+  their own cell boundaries) grew past its w:gridCol width and its neighbours shrank. Each column now
+  needs its share in proportion to its grid width, so the columns grow only when together they are
+  too narrow for the cell. Without a grid the even share stays.
+- In compatibility mode 14 and below (w:compatSetting compatibilityMode, [MS-DOCX]) Word hangs the
+  table out by its cell margins on both sides, so percentage (w:tblW/w:tcW type pct) and AutoFit
+  widths are taken of the text column plus the first cell's left and the table's right cell margin:
+  Word writes a 9571 tw grid for a 100% table in a 9355 tw column in mode 14, 9355 in mode 15.
+- A table with a preferred width of its own (w:tblW dxa or pct, which Word writes once columns are
+  sized by hand) is no longer squeezed into the column when it is over 1.5 times as wide: Word lets it
+  run past the margin and the page edge. Tables with w:tblW auto keep the old rule.
+
+Tests: a_cell_spanning_a_narrow_column_keeps_the_grid,
+legacy_mode_percentage_tables_take_the_cell_margins_too,
+a_preferred_table_width_wider_than_the_column_stands (each fails without the change).
+---
+ crates/layout/src/table.rs | 58 ++++++++++++++++++++++++++++++++-------------
+ crates/layout/src/tests.rs | 84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 126 insertions(+), 16 deletions(-)
+
+diff --git a/crates/layout/src/table.rs b/crates/layout/src/table.rs
+index 2b3cd1c..c81ce89 100644
+--- a/crates/layout/src/table.rs
++++ b/crates/layout/src/table.rs
+@@ -372,9 +372,16 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
+     };
+     apply_cell_widths(t, &mut grid);
+     let mut total: f32 = grid.iter().sum();
++    let margins_def = default_margins(t, style.as_ref());
++    // Word 2010 and earlier (compatibility mode 14 and below) hang the table out by its cell
++    // margins so that the cell text, not the border, spans the text column: percentage and
++    // AutoFit widths are taken of that wider room (Word writes a 100% table in a 9355 tw column
++    // with a 9571 tw grid). Mode 15 puts the border at the margin instead.
++    let hang = if ctx.doc.settings.compat_mode < 15 { (first_cell_left_margin_in(t, margins_def) + margins_def[3]).clamp(0.0, 1584.0) } else { 0.0 };
++    let room = avail + hang;
+     // A top-level table in an inherited header or footer takes its share of the defining
+     // section's width (`Ctx::pct_base`).
+-    let pct_base = if depth <= 1 { ctx.pct_base.unwrap_or(avail) } else { avail };
++    let pct_base = if depth <= 1 { ctx.pct_base.map_or(room, |b| b + hang) } else { room };
+     let target = match (t.props.width_pct, t.props.width) {
+         // Word keeps a percentage past 100%; the cap only bounds hostile input.
+         (Some(p), _) if p > 0.0 => Some(pct_base * (p / 100.0).min(MAX_WIDTH_SHARE)),
+@@ -391,7 +398,9 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
+         }
+         total = tw;
+     }
+-    if total > avail * 1.5 && !t.props.fixed {
++    // A table with a preferred width of its own (Word writes one once columns are sized by hand)
++    // keeps it past the margin and the page edge: Word lets such a table run off the page.
++    if total > avail * 1.5 && !t.props.fixed && t.props.width.is_none() && t.props.width_pct.is_none() {
+         let k = avail / total.max(1.0);
+         grid.iter_mut().for_each(|w| *w *= k);
+         total = avail;
+@@ -399,13 +408,13 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
+     if !t.props.fixed {
+         // Measuring lays paragraphs out once more; it mustn't count their equations twice.
+         let eq_count = ctx.eq_count;
+-        let content = column_content(ctx, t, style.as_ref(), depth);
++        let content = column_content(ctx, t, style.as_ref(), depth, Some(&grid));
+         ctx.eq_count = eq_count;
+         if let Some(content) = content {
+-            autofit(&mut grid, &content, t, avail);
++            autofit(&mut grid, &content, t, room);
+             // Never wider than the room it had, however long an unbreakable word.
+             let fitted: f32 = grid.iter().sum();
+-            let cap = avail.max(total);
++            let cap = room.max(total);
+             if fitted > cap {
+                 grid.iter_mut().for_each(|w| *w *= cap / fitted);
+             }
+@@ -421,7 +430,6 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
+     colx.push(acc);
+     // Word 2013 and later (compatibility mode 15) put the table's border at the margin (plus its
+     // indent); earlier modes line the first cell's text up with it instead.
+-    let margins_def = default_margins(t, style.as_ref());
+     let indent = t.props.indent.unwrap_or(0.0);
+     // The style's borders, overlaid by the table's own side by side.
+     let mut tborders = style.as_ref().and_then(|s| s.parts.borders).unwrap_or_default();
+@@ -1097,9 +1105,10 @@ fn region_text(st: &TableStyleProps, region: Region) -> CellText {
+ }
+ 
+ /// Each column's narrowest and widest content, cell margins included: its longest word and its
+-/// longest line. A cell spanning columns shares what they lack between them; nested tables count
+-/// with their own. `None` when every cell is empty.
+-fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, depth: usize) -> Option<Vec<(f32, f32)>> {
++/// longest line. A cell spanning columns shares what they lack between them, in proportion to
++/// their `grid` widths when given (else evenly); nested tables count with their own. `None` when
++/// every cell is empty.
++fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, depth: usize, grid: Option<&[f32]>) -> Option<Vec<(f32, f32)>> {
+     let margins_def = default_margins(t, style);
+     let mut cols = vec![(0.0f32, 0.0f32); t.cols().max(1)];
+     let mut spanning = Vec::new();
+@@ -1123,12 +1132,29 @@ fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, dep
+         }
+     }
+     for (g, span, need) in spanning {
+-        let Some(cs) = cols.get_mut(g..(g + span).min(t.cols())) else { continue };
+-        let n = cs.len().max(1) as f32;
+-        let (have_lo, have_hi) = cs.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
+-        for c in cs {
+-            c.0 += (need.0 - have_lo).max(0.0) / n;
+-            c.1 += (need.1 - have_hi).max(0.0) / n;
++        let end = (g + span).min(t.cols());
++        let Some(cs) = cols.get_mut(g..end) else { continue };
++        // With a grid, each column needs its share of the cell in proportion to its width, so
++        // the columns grow only when together they are too narrow for the cell (Word keeps a
++        // narrow column under a merged header). An even share of what they lack would push a
++        // narrow column past its width and squeeze its neighbours.
++        let weights = grid.and_then(|gr| gr.get(g..end)).filter(|w| w.len() == cs.len() && w.iter().all(|x| x.is_finite() && *x >= 0.0));
++        let sum = weights.map_or(0.0, |w| w.iter().sum::<f32>());
++        match weights {
++            Some(ws) if sum > 0.0 => {
++                for (c, w) in cs.iter_mut().zip(ws) {
++                    c.0 = c.0.max(need.0 * w / sum);
++                    c.1 = c.1.max(need.1 * w / sum);
++                }
++            }
++            _ => {
++                let n = cs.len().max(1) as f32;
++                let (have_lo, have_hi) = cs.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
++                for c in cs {
++                    c.0 += (need.0 - have_lo).max(0.0) / n;
++                    c.1 += (need.1 - have_hi).max(0.0) / n;
++                }
++            }
+         }
+     }
+     any.then_some(cols)
+@@ -1152,7 +1178,7 @@ fn blocks_content(ctx: &mut Ctx, blocks: &Blocks, text: Option<&CellText>, depth
+                     (width, width)
+                 } else {
+                     let style = table_style(ctx, nt);
+-                    let cols = column_content(ctx, nt, style.as_ref(), depth + 1).unwrap_or_default();
++                    let cols = column_content(ctx, nt, style.as_ref(), depth + 1, Some(&nt.grid)).unwrap_or_default();
+                     let (l, h) = cols.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
+                     (width.max(l), width.max(h))
+                 }
+diff --git a/crates/layout/src/tests.rs b/crates/layout/src/tests.rs
+index 174dde1..ac4bb7a 100644
+--- a/crates/layout/src/tests.rs
++++ b/crates/layout/src/tests.rs
+@@ -1317,6 +1317,90 @@ fn a_vertical_merge_lays_out_as_one_cell() {
+     assert_eq!((hit.2, hit.3), (0, 0));
+ }
+ 
++/// The left and right edges of row `row`'s cells in the only table on page 1.
++fn row_cell_edges(l: &DocLayout, row: usize) -> Vec<(f32, f32)> {
++    l.pages[0]
++        .items
++        .iter()
++        .filter_map(|i| if let Placed::Cell { rect, row: r, .. } = i { (*r == row).then_some((rect.x, rect.x + rect.w)) } else { None })
++        .collect()
++}
++
++fn width_cell(w: f32, span: u32, text: &str) -> wordcraft_doc::table::Cell {
++    let mut c = wordcraft_doc::table::Cell::with_text(text);
++    c.props.width = Some(w);
++    c.props.span = span;
++    c
++}
++
++/// A cell spanning a narrow grid column (Word: per-row cell widths, Split Cells) leaves the grid
++/// alone when the columns it spans are wide enough together: before, each spanned column needed
++/// an even share of the cell's longest word, so the 14 pt column grew at its neighbours' cost.
++#[test]
++fn a_cell_spanning_a_narrow_column_keeps_the_grid() {
++    let mut d = Document::from_text(
++        "before
++after",
++    );
++    let grid = [56.7, 85.05, 14.15, 99.25, 170.1];
++    let mut t = Table::new(2, 5, 425.25);
++    t.grid = grid.to_vec();
++    t.rows[0].cells = vec![width_cell(56.7, 1, "1."), width_cell(198.45, 3, "Karimov Aziz Botirovich"), width_cell(170.1, 1, "x")];
++    t.rows[1].cells = vec![width_cell(56.7, 1, "2."), width_cell(99.2, 2, "a"), width_cell(99.25, 1, "b"), width_cell(170.1, 1, "y")];
++    d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
++    let l = lay(&d);
++    let x0 = row_cell_edges(&l, 1)[0].0;
++    let mut at = x0;
++    let mut want = vec![x0];
++    for w in grid {
++        at += w;
++        want.push(at);
++    }
++    let r1 = row_cell_edges(&l, 1);
++    // Row 1 starts its third cell where grid column 3 starts: columns 1 and 2 kept their widths.
++    assert!((r1[2].0 - want[3]).abs() < 0.05, "{r1:?} {want:?}");
++    assert!((r1[3].1 - want[5]).abs() < 0.05, "{r1:?} {want:?}");
++}
++
++/// Word 2010 and earlier (compatibility mode 14 and below) hang a table out by its cell margins on
++/// both sides, and a 100% table spans the text column plus those margins; mode 15 puts the borders
++/// at the margins.
++#[test]
++fn legacy_mode_percentage_tables_take_the_cell_margins_too() {
++    for (mode, left, right) in [(15u32, 72.0f32, 540.0f32), (14, 72.0 - 5.4, 540.0 + 5.4)] {
++        let mut d = Document::from_text(
++            "before
++after",
++        );
++        d.settings.compat_mode = mode;
++        let mut t = Table::new(1, 2, 468.0);
++        t.props.width_pct = Some(100.0);
++        for c in &mut t.rows[0].cells {
++            c.props.width = None;
++            c.props.width_pct = Some(50.0);
++        }
++        d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
++        let e = row_cell_edges(&lay(&d), 0);
++        assert!((e[0].0 - left).abs() < 0.3 && (e[1].1 - right).abs() < 0.3, "mode {mode}: {e:?}");
++    }
++}
++
++/// A table whose own preferred width is more than the text column keeps it, even past the page
++/// edge (Word lets such a table run off the page); it used to be squeezed into the column once it
++/// passed 1.5 times its width.
++#[test]
++fn a_preferred_table_width_wider_than_the_column_stands() {
++    let mut d = Document::from_text(
++        "before
++after",
++    );
++    let mut t = Table::new(1, 6, 748.8);
++    t.props.width = Some(748.8);
++    d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
++    let e = row_cell_edges(&lay(&d), 0);
++    assert!((e[5].1 - e[0].0 - 748.8).abs() < 0.5, "{e:?}");
++}
++
+ /// A 1×3 table after "before" whose middle cell holds `text` running `dir`.
+ fn turned_table(dir: TextDirection, text: &str, row: Option<f32>) -> Document {
+     let mut d = Document::from_text("before\nafter");
