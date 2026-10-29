@@ -31,3 +31,9 @@ pub use workbook::{CalcMode, CalcSettings, DefinedName, DocProps, Workbook};
 /// (e.g. the metric-compatible Carlito) when it isn't installed.
 pub const DEFAULT_FONT: &str = "Calibri";
 pub const DEFAULT_FONT_SIZE: f32 = 11.0;
+/// office overlay (gridcraft/0151): the Normal font of new workbooks (owner decision 2026-10-29). Not bundled: Windows has it;
+/// elsewhere the renderers substitute a metric-compatible serif (Liberation Serif, Tinos) when one is installed.
+pub const NEW_WORKBOOK_FONT: &str = "Times New Roman";
+pub const NEW_WORKBOOK_FONT_SIZE: f32 = 12.0;
+/// The default row height Excel gives that font: 15.75 pt (21 px) where Calibri 11 has 15 pt (20 px).
+pub const NEW_WORKBOOK_ROW_HEIGHT: f32 = 21.0;

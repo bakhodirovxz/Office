@@ -2697,3 +2697,21 @@ preview	Title	Пример
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Введите размер в любых единицах, например 5 cm или 300 px. Другая сторона изменится вместе с ней, и рисунок сохранит пропорции.
 
 	Import…	Импорт…
+
+# office overlay (wordcraft/0136): File › Print and File › Recover wording, the title bar's account tip
+	Auto orientation	Автоматическая ориентация
+	Scale to paper size	Масштаб по размеру бумаги
+	No Scaling	Без масштабирования
+	Odd or even pages	Нечётные или чётные страницы
+	Printing goes through a PDF: save it, then print it from any viewer.	Печать идёт через PDF: сохраните его и распечатайте из любой программы просмотра.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Принтер, двусторонняя печать и число страниц на листе выбираются в системном окне печати.
+	Recover documents	Восстановление документов
+	Restore opens an unsaved copy. Your original file stays unchanged.	При восстановлении открывается несохранённая копия. Исходный файл не изменяется.
+	Recovery is disabled while this document has a password.	Восстановление отключено, пока у документа есть пароль.
+	Local recovery is unavailable or still loading.	Локальное восстановление недоступно или ещё загружается.
+	No recovery copies.	Копий для восстановления нет.
+	Recovery copy	Копия для восстановления
+	Restore	Восстановить
+	Discard…	Отказаться…
+	Continue without restoring	Продолжить без восстановления
+	{name} — set your name in File › Options	{name} — укажите своё имя в разделе Файл › Параметры

@@ -656,7 +656,13 @@ fn insert_sheet(s: &mut Session, p: &Json) -> Result<Json> {
     let idx = edit_doc(d, |cx| {
         // Excel inserts before the active sheet; the "+" button appends after it.
         let at = before.unwrap_or(cx.wb.active_sheet + 1).min(cx.wb.sheets.len());
-        cx.wb.sheets.insert(at, Arc::new(Sheet::new(name.clone())));
+        // office overlay (gridcraft/0151): a new sheet matches its workbook: the active sheet's paper, the Normal font's rows.
+        let mut sheet = Sheet::new(name.clone());
+        if let Some(active) = cx.wb.sheet(cx.wb.active_sheet) {
+            sheet.print.paper = active.print.paper.clone();
+        }
+        sheet.default_row_height = cx.wb.new_sheet_row_height();
+        cx.wb.sheets.insert(at, Arc::new(sheet));
         // Names scoped to later sheets shift.
         for n in cx.wb.names.iter_mut() {
             if let Some(sc) = n.scope.as_mut()

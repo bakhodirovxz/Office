@@ -158,7 +158,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             }
             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
             if app.ui.backstage_page == "print" {
-                export_page(app, ui);
+                heading(ui, "Print");
+                crate::print_page::show(app, ui);
                 return;
             }
             egui::ScrollArea::vertical().show(ui, |ui| match app.ui.backstage_page.as_str() {
@@ -168,7 +169,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 "saveAs" => save_as_page(app, ui),
                 "info" => info_page(app, ui),
                 "recover" => recovery_page(app, ui),
-                "print" | "export" => export_page(app, ui),
+                "export" => export_page(app, ui),
                 "options" => crate::options::page(app, ui),
                 _ => home_page(app, ui),
             });
@@ -500,23 +501,6 @@ fn info_page(app: &mut WordApp, ui: &mut Ui) {
 }
 
 fn export_page(app: &mut WordApp, ui: &mut Ui) {
-    if app.ui.backstage_page == "print" {
-        heading(ui, "Print");
-        // Print Markup (a print setting, as in Word): the comments beside each page.
-        let mut markup = app.session.prefs.print_markup;
-        if ui
-            .checkbox(&mut markup, tl!("Print Markup"))
-            .on_hover_text(tl!(
-                "Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text."
-            ))
-            .changed()
-        {
-            let _ = app.run("file.printMarkup", json!({"value": markup}));
-        }
-        ui.add_space(12.0);
-        crate::print_page::show(app, ui);
-        return;
-    }
     heading(ui, "Export");
     ui.label(tl!("Save a copy in another format. Printing goes through a PDF you can print from any viewer."));
     ui.add_space(12.0);

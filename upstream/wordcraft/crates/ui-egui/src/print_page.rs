@@ -147,25 +147,15 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 ui.spacing_mut().item_spacing.y = 8.0;
                 let native = app.services.print_native.is_some();
                 let hook = native || app.services.print.is_some();
-                if native {
-                    if let Some(discover) = &app.services.printers {
-                        crate::printing::show(&mut app.printing, ui, discover, |label| crate::i18n::t(label).to_owned());
-                    }
-                    app.ui.print.copies = app.printing.settings.copies;
-                } else if hook {
-                    ui.label(tl!("Send the document straight to the system print dialog, or save a copy in another format below."));
-                    ui.label(
-                        egui::RichText::new(tl!("The printer, two-sided printing and pages per sheet are chosen in that dialog.")).color(t.text_dim),
-                    );
-                } else {
-                    ui.label(tl!("Save a copy in another format. Printing goes through a PDF you can print from any viewer."));
-                }
-                ui.add_space(4.0);
+                // office overlay (wordcraft/0136, WP23 usability finding): the actions come first and Print is the primary
+                // one; the page holds only printing (the other formats are on File › Export).
                 if hook
                     && ui
                         .add_enabled(
                             !native || app.printing.ready(),
-                            egui::Button::new(egui::RichText::new(tl!("Print")).font(medium(13.5))).min_size(vec2(320.0, 34.0)),
+                            egui::Button::new(egui::RichText::new(tl!("Print")).font(medium(13.5)).color(t.on_accent))
+                                .fill(t.accent)
+                                .min_size(vec2(320.0, 34.0)),
                         )
                         .clicked()
                 {
@@ -178,13 +168,26 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 {
                     app.print_pdf_dialog();
                 }
+                if !hook {
+                    ui.label(egui::RichText::new(tl!("Printing goes through a PDF: save it, then print it from any viewer.")).color(t.text_dim));
+                }
                 ui.add_space(6.0);
 
                 if native {
+                    if let Some(discover) = &app.services.printers {
+                        crate::printing::show(&mut app.printing, ui, discover, |label| crate::i18n::t(label).to_owned());
+                    }
+                    app.ui.print.copies = app.printing.settings.copies;
                     if app.ui.print.copies > 1 {
                         ui.add_enabled(!app.printing.busy(), egui::Checkbox::new(&mut app.ui.print.collate, tl!("Collate copies")));
                     }
                 } else {
+                    if hook {
+                        ui.label(
+                            egui::RichText::new(tl!("The printer, two-sided printing and pages per sheet are chosen in the system print dialog."))
+                                .color(t.text_dim),
+                        );
+                    }
                     ui.label(egui::RichText::new(tl!("Copies")).font(medium(13.0)));
                     ui.horizontal(|ui| {
                         let mut n = app.ui.print.copies;
@@ -209,6 +212,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                             .char_limit(wordcraft_engine::print::MAX_SPEC_CHARS),
                     );
                 }
+                // The odd/even filter had no label: it read as a second, unexplained page list.
+                ui.label(egui::RichText::new(tl!("Odd or even pages")).font(medium(13.0)));
                 choice(ui, "print_parity", &mut app.ui.print.parity, &PARITIES);
                 ui.label(egui::RichText::new(tl!("Orientation")).font(medium(13.0)));
                 choice(ui, "print_orientation", &mut app.ui.print.orientation, &ORIENTATIONS);
@@ -217,6 +222,17 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 let papers: Vec<(&str, &str)> =
                     std::iter::once((NO_SCALING, "No Scaling")).chain(wordcraft_geom::PAPER_SIZES.iter().map(|(n, _, _)| (*n, *n))).collect();
                 choice(ui, "print_paper", &mut app.ui.print.paper, &papers);
+                // Print Markup (a print setting, as in Word): the comments beside each page.
+                let mut markup = app.session.prefs.print_markup;
+                if ui
+                    .checkbox(&mut markup, tl!("Print Markup"))
+                    .on_hover_text(tl!(
+                        "Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text."
+                    ))
+                    .changed()
+                {
+                    let _ = app.run("file.printMarkup", json!({"value": markup}));
+                }
 
                 match wordcraft_engine::print::plan(&app.ui.print.params(), total, current) {
                     Ok(plan) => {
@@ -230,13 +246,6 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         ui.label(egui::RichText::new(e.to_string()).color(t.red));
                     }
                 }
-                ui.add_space(8.0);
-                ui.separator();
-                ui.add_space(4.0);
-                if hook {
-                    ui.label(tl!("Or save a copy in another format:"));
-                }
-                export_formats(app, ui);
             });
         });
         ui.add_space(24.0);
@@ -331,7 +340,7 @@ fn preview(app: &mut WordApp, ui: &mut Ui, lay: &DocLayout, total: usize) {
 /// The export "format" of a Word 2003 XML Document: an `.xml` file saved with `format: "wordml2003"`.
 pub(crate) const EXPORT_WORD_2003: &str = "wordml2003";
 
-/// The "save a copy" formats (File › Export, and below the settings on the Print page).
+/// The "save a copy" formats (File › Export).
 pub fn export_formats(app: &mut WordApp, ui: &mut Ui) {
     for (label, ext) in [
         ("PDF document (*.pdf)", "pdf"),

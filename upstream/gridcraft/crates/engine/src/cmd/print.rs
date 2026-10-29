@@ -1868,18 +1868,19 @@ mod tests {
         let mut s = s();
         let rows: Vec<Vec<Json>> = (1..=300).map(|i| vec![json!(i)]).collect();
         s.execute("range.setValues", json!({"range": "A1", "values": rows})).unwrap();
-        // 684pt of printable height / 15pt rows = 45 rows per page → 7 pages.
+        // 684pt of printable height / 15.75pt rows (a new workbook's Times New Roman 12, gridcraft/0151; 15pt for Calibri 11)
+        // = 43 rows per page → 7 pages.
         let (pdf, pages) = pdf_of(&mut s, json!({}));
         assert_eq!(pages, 7);
         assert!(pdf.starts_with(b"%PDF-1.7"));
         assert!(contains(&pdf, "/Count 7"));
         let pv = s.execute("file.printPreview", json!({})).unwrap();
         assert_eq!(pv["pages"], 7);
-        assert_eq!(pv["pageList"][0]["rows"], "1:45");
-        assert_eq!(pv["pageList"][1]["rows"], "46:90");
-        assert_eq!(s.execute("file.printPreview", json!({"page": 7})).unwrap()["page"]["rows"], "271:300");
+        assert_eq!(pv["pageList"][0]["rows"], "1:43");
+        assert_eq!(pv["pageList"][1]["rows"], "44:86");
+        assert_eq!(s.execute("file.printPreview", json!({"page": 7})).unwrap()["page"]["rows"], "259:300");
         assert!(s.execute("file.printPreview", json!({"page": 8})).is_err());
-        // Landscape: 504pt / 15 = 33 rows per page → 10 pages.
+        // Landscape: 504pt / 15.75 = 32 rows per page → 10 pages.
         s.execute("pageLayout.pageSetup", json!({"orientation": "landscape"})).unwrap();
         assert_eq!(pdf_of(&mut s, json!({})).1, 10);
         // Fit to one page.
@@ -1890,8 +1891,8 @@ mod tests {
         s.execute("pageLayout.pageSetup", json!({"scale": 100, "rowBreaks": [11], "titleRows": "1:1"})).unwrap();
         let pv = s.execute("file.printPreview", json!({})).unwrap();
         assert_eq!(pv["pageList"][0]["rows"], "1:10");
-        // Title row takes one line on later pages: 44 body rows.
-        assert_eq!(pv["pageList"][1]["rows"], "11:54");
+        // Title row takes one line on later pages: 42 body rows.
+        assert_eq!(pv["pageList"][1]["rows"], "11:52");
     }
 
     #[test]
@@ -1900,11 +1901,11 @@ mod tests {
         let rows: Vec<Vec<Json>> = (0..60).map(|r| (0..15).map(|c| json!(r * 100 + c)).collect()).collect();
         s.execute("range.setValues", json!({"range": "A1", "values": rows})).unwrap();
         let pv = s.execute("file.printPreview", json!({})).unwrap();
-        // 511.2pt / 48pt = 10 columns per page; 45 rows per page.
+        // 511.2pt / 48pt = 10 columns per page; 43 rows per page (15.75pt rows, gridcraft/0151).
         assert_eq!(pv["pages"], 4);
-        assert_eq!(pv["pageList"][0]["range"], "A1:J45");
-        assert_eq!(pv["pageList"][1]["range"], "A46:J60");
-        assert_eq!(pv["pageList"][2]["range"], "K1:O45");
+        assert_eq!(pv["pageList"][0]["range"], "A1:J43");
+        assert_eq!(pv["pageList"][1]["range"], "A44:J60");
+        assert_eq!(pv["pageList"][2]["range"], "K1:O43");
     }
 
     #[test]
@@ -1950,7 +1951,8 @@ mod tests {
         assert!(contains(&pdf, "(Left Sheet1) Tj"));
         assert!(contains(&pdf, "(Page 1 of 1) Tj"));
         assert!(contains(&pdf, "(Book1) Tj"));
-        assert!(contains(&pdf, "/Helvetica-Bold"));
+        // A new workbook's bold Times New Roman is the standard Times-Bold (gridcraft/0151; Calibri gave Helvetica-Bold).
+        assert!(contains(&pdf, "/Times-Bold"));
         let cx = HfContext {
             page: 3,
             pages: 9,

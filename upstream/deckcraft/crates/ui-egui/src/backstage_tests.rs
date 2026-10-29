@@ -561,3 +561,20 @@ fn print_slides_follow_the_settings() {
     bs.print_layout = "slides";
     assert_eq!(print_page_size(&bs, &doc), (doc.slide_size.width as f32, doc.slide_size.height as f32), "slides print slide-shaped");
 }
+
+/// office overlay (deckcraft/0152, 0153): a new deck is set in Times New Roman (theme heading and body fonts); notes pages and
+/// handouts print on A4 in an Uzbek or Russian interface and on Letter in English.
+#[test]
+fn new_decks_are_times_new_roman_and_print_on_the_interface_paper() {
+    let s = Session::with_new();
+    let theme = &s.doc().unwrap().doc.masters[0].theme;
+    assert_eq!((theme.fonts.major.latin.as_str(), theme.fonts.minor.latin.as_str()), ("Times New Roman", "Times New Roman"));
+    assert_eq!(Backstage::new(Page::Print, (1, Some(0))).print_paper, "letter");
+    // Built without the overlay, the app has no Uzbek or Russian interface.
+    for code in ["ru", "uz-latn", "uz-cyrl"] {
+        let Some(lang) = crate::i18n::Lang::from_tag(code) else { continue };
+        crate::i18n::set_current(lang);
+        assert_eq!(Backstage::new(Page::Print, (1, Some(0))).print_paper, "a4", "{code}");
+    }
+    crate::i18n::set_current(crate::i18n::Lang::EN);
+}

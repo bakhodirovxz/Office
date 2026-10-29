@@ -733,6 +733,12 @@ fn print(app: &mut SheetApp, ui: &mut Ui, bs: &mut Backstage, out: &mut Outcome)
                 bs.preview_page = 0;
             }
             ui.add_space(8.0);
+            // office overlay (gridcraft/0152, WP23): the paper and orientation are set in Page Setup; the page shows them, so
+            // it says what the sheet prints on (A4 for a new workbook in an Uzbek or Russian interface).
+            if let Some(sh) = app.session.active().and_then(|d| d.wb.active()) {
+                let landscape = sh.print.orientation == gridcraft_engine::model::Orientation::Landscape;
+                dim(ui, &format!("{} · {}", sh.print.paper, lang.tr(if landscape { "Landscape" } else { "Portrait" })));
+            }
             if ui.link(lang.tr("Page Setup…")).clicked() {
                 app.open_dialog("pageSetup", json!({}));
             }
