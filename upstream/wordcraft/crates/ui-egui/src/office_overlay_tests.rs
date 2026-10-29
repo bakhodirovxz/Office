@@ -165,3 +165,17 @@ fn shared_lang_picks_the_catalog_language() {
         }
     }
 }
+
+/// The shared `theme` beats the saved interface theme at start, `system` included (patches/wordcraft/0132); tests and the web read none.
+#[test]
+fn shared_theme_wins_over_the_saved_theme_at_start() {
+    use crate::theme::Appearance;
+    use suite_core::settings::Theme;
+    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
+    for own in Appearance::ALL {
+        assert_eq!(o::theme_at_start(own, None), own);
+        for shared in [Theme::System, Theme::Light, Theme::Dark] {
+            assert_eq!(o::theme_at_start(own, Some(shared.tag())).code(), shared.tag());
+        }
+    }
+}

@@ -1608,6 +1608,8 @@ impl SlideApp {
             ctx.set_zoom_factor(scale);
         }
         if !self.styled {
+            // office overlay (patches/deckcraft/0149): the shared `theme` at the first frame, where the OS light/dark is known.
+            self.ui.brightness = crate::office_overlay::start_brightness(ctx, self.ui.brightness);
             theme::install_fonts_with(ctx, &self.ui_fonts.faces);
             self.styled = true;
             self.restyle = true;

@@ -179,3 +179,25 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
     }
 }
+
+/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
+/// the app keeps its own choice there.
+#[cfg(not(any(target_arch = "wasm32", test)))]
+pub fn shared_theme_code() -> Option<&'static str> {
+    Some(suite_core::settings::load().theme.tag())
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+pub fn shared_theme_code() -> Option<&'static str> {
+    None
+}
+
+/// The interface theme at start (patches/wordcraft/0132): the shared `theme` always wins over the one saved in `ui.json`, `system`
+/// included, so the shell is the one place to change it. A change made in the app afterwards holds for the session only.
+pub fn start_theme(own: crate::theme::Appearance) -> crate::theme::Appearance {
+    theme_at_start(own, shared_theme_code())
+}
+
+pub(crate) fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
+    shared.and_then(crate::theme::Appearance::from_code).unwrap_or(own)
+}
