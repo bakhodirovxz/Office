@@ -2715,3 +2715,6 @@ preview	Title	Пример
 	Discard…	Отказаться…
 	Continue without restoring	Продолжить без восстановления
 	{name} — set your name in File › Options	{name} — укажите своё имя в разделе Файл › Параметры
+	Document Recovery	Восстановление документов
+	{app} recovered the following documents. Save the ones you want to keep.	{app} восстановил следующие документы. Сохраните те, которые нужно оставить.
+	Version created from the last AutoSave	Версия, созданная при последнем автосохранении

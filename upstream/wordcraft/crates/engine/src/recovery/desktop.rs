@@ -563,7 +563,7 @@ impl Recovery {
                 id
             }
         };
-        let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled draft".into());
+        let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default(); // empty: the UI names an untitled document in its language
         let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso(), offered: false };
         self.queue(Job::Save(Box::new(Snapshot { version: 1, info, generation: 0, document: s.doc.clone() })))?;
         self.id = Some(id);
