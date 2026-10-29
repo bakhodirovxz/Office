@@ -26,8 +26,6 @@
 
   class ApiErr extends Error { constructor(code, message, status) { super(message); this.code = code; this.status = status || 0; } }
 
-  // The server's default Latin alphabet (uz-translit DEFAULT_LATIN_ALPHABET, owner decision O13); null until /formats answers.
-  const defAlphabet = () => (S.fmts && S.fmts.defaults && S.fmts.defaults.alphabet) || null;
 
   // ---- language ------------------------------------------------------------------------------------------------------
   function guessLang() {
@@ -48,7 +46,6 @@
     document.title = t('app.name');
     $('appname').textContent = t('app.name');
     for (const e of document.querySelectorAll('[data-i18n]')) e.textContent = t(e.dataset.i18n);
-    for (const o of $('o-alphabet').options) if (o.value === defAlphabet()) o.textContent = t('ui.opt.alphabet.default', { alphabet: o.textContent });
     const sc = $('o-sidecar'); if (sc && S.health && S.health.sidecars && S.health.sidecars.pdf2docx === false) sc.textContent = t('ui.opt.engine.sidecar') + ' (' + t('ui.opt.engine.unavailable') + ')';
     render();
   }
@@ -220,8 +217,6 @@
     $('f-locale').hidden = isOp || !S.items.some((i) => ['csv', 'tsv', 'xlsx', 'xls', 'xlsb', 'ods'].includes(i.ext));
     for (const f of document.querySelectorAll('[data-mode]')) f.hidden = f.dataset.mode !== md;
     for (const f of document.querySelectorAll('[data-opt]')) f.hidden = isOp || !(to && optionAvailable(f.dataset.opt, to));
-    const tr = $('o-translit').value;
-    document.querySelector('[data-opt="alphabet"]').hidden = isOp || !tr || document.querySelector('[data-opt="translit"]').hidden;
     // what the operation still needs, said next to the choice and not only by a disabled button
     const n = S.items.length;
     const need = md === 'combine' && n < 2 ? 'ui.pdfop.min_files' : (md === 'split' || md === 'extract') && n !== 1 ? 'ui.pdfop.one_file' : null;
@@ -245,7 +240,7 @@
       return o;
     }
     const o = { to: $('o-to').value, locale: $('o-locale').value }, vis = (n) => !document.querySelector('[data-opt="' + n + '"]').hidden;
-    if (vis('translit') && $('o-translit').value) { o.translit = $('o-translit').value; if (vis('alphabet')) o.alphabet = $('o-alphabet').value; }
+    if (vis('translit') && $('o-translit').value) { o.translit = $('o-translit').value; } // the server's default alphabet: writes 2026 (owner, 2026-10-29: no 1995 choice)
     if (vis('sheet')) o.sheet = $('o-sheet').value;
     if (vis('pages') && $('o-pages').value.trim()) o.pages = $('o-pages').value.trim();
     if (vis('dpi') && $('o-dpi').value) o.dpi = Number($('o-dpi').value);
@@ -364,7 +359,6 @@
     // api() adds the Authorization header in server mode: without a token the server answers only {ok:true} (no tool list, no sidecar state)
     try { S.health = await (await api('/healthz')).json(); } catch (_) { /* shown by the next call if the server is really down */ }
     try { S.fmts = await (await api('/api/v1/formats')).json(); } catch (e) { showError(e); }
-    if (defAlphabet()) $('o-alphabet').value = defAlphabet();
     setLang(S.lang);
   }
   async function init() {

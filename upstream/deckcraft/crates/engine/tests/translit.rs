@@ -302,3 +302,12 @@ fn timing_on_a_large_deck() {
         );
     }
 }
+
+#[test]
+fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
+    let mut s = session();
+    let a = add(&mut s, "Шаҳар ўғил");
+    deselect(&mut s);
+    s.execute(LATN, &json!({})).unwrap();
+    assert_eq!(text_of(&s, 0, a), "Şahar öğil");
+}

@@ -103,7 +103,8 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
     };
     let latin_alphabet = match str_param(p, "latinAlphabet") {
-        None | Some("1995") => LatinAlphabet::Y1995,
+        None => LatinAlphabet::default(), // the suite default (O13): writes 2026, reads 1995 or 2026 per paragraph
+        Some("1995") => LatinAlphabet::Y1995,
         Some("2026") => LatinAlphabet::Y2026,
         Some("auto") => LatinAlphabet::Auto,
         Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),

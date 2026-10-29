@@ -257,10 +257,8 @@ test('the language switch changes the page, the name and the document language, 
   const all26 = Object.values(I18N['uz-Latn-2026']).join(' ');
   expect(all26).toMatch(/[şçöğ]/i);
   expect(all26).not.toMatch(/ʻ/);
-  // the Latin alphabet menu preselects and marks the server's default (DEFAULT_LATIN_ALPHABET, owner decision O13)
-  const def = (await (await page.request.get(`${base}/api/v1/formats`)).json()).defaults.alphabet;
-  await expect(page.locator('#o-alphabet')).toHaveValue(def);
-  await expect(page.locator(`#o-alphabet option[value="${def}"]`)).toHaveText(txt('en', 'ui.opt.alphabet.default', { alphabet: def }));
+  // no Latin alphabet menu: the server's default writes 2026 (owner, 2026-10-29: "1995 kerak emas")
+  await expect(page.locator('#o-alphabet')).toHaveCount(0);
   await page.selectOption('#lang', 'uz-Cyrl');
   await page.reload();
   await expect(page.locator('#lang')).toHaveValue('uz-Cyrl'); // remembered

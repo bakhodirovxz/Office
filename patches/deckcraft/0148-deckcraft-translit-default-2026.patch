@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 18:00:00 +0500
+Subject: [PATCH] translit: without latinAlphabet the suite default is used (writes 2026)
+
+Owner decision O13 (2026-10-29): Latin is written in the 2026 alphabet. tools.translit* took 1995 when the param
+was left out (the ribbon and the context menu never pass it); now LatinAlphabet::default() from uz-translit (Auto:
+->Latin writes 2026, ->Cyrillic reads each paragraph as 1995 or 2026). Explicit "1995" still writes 1995.
+---
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index bae7408..497de54 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -209,7 +209,8 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
+         Some(o) => return Err(bad(id, format!("`apostrophe` must be official or ascii, not `{o}`"))),
+     };
+     let latin_alphabet = match str_param(p, "latinAlphabet") {
+-        None | Some("1995") => LatinAlphabet::Y1995,
++        None => LatinAlphabet::default(), // the suite default (O13): writes 2026, reads 1995 or 2026 per paragraph
++        Some("1995") => LatinAlphabet::Y1995,
+         Some("2026") => LatinAlphabet::Y2026,
+         Some("auto") => LatinAlphabet::Auto,
+         Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index 4fb5e47..313aa11 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -302,3 +302,12 @@ fn timing_on_a_large_deck() {
+         );
+     }
+ }
++
++#[test]
++fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
++    let mut s = session();
++    let a = add(&mut s, "Шаҳар ўғил");
++    deselect(&mut s);
++    s.execute(LATN, &json!({})).unwrap();
++    assert_eq!(text_of(&s, 0, a), "Şahar öğil");
++}

@@ -160,13 +160,13 @@ fn official_2026_text_reads_and_round_trips() {
 
 #[test]
 fn auto_to_latin_follows_default() {
-    // m6: ->Latin with Auto writes the product default, so flipping DEFAULT_LATIN_ALPHABET (O13) reaches it
+    // m6: ->Latin with Auto writes the product default, so flipping LATIN_WRITE_DEFAULT (O13) reaches it
     let auto = Options {
         latin_alphabet: LatinAlphabet::Auto,
         ..common::o95()
     };
     let dflt = Options {
-        latin_alphabet: uz_translit::DEFAULT_LATIN_ALPHABET,
+        latin_alphabet: uz_translit::LATIN_WRITE_DEFAULT,
         ..common::o95()
     };
     for s in ["Шаҳар Ўзбекистон чой ғалаба", "Исҳоқ"] {
@@ -175,4 +175,15 @@ fn auto_to_latin_follows_default() {
             convert(s, Direction::ToLatin, &dflt)
         );
     }
+}
+
+#[test]
+fn the_default_reads_1995_and_2026_latin_and_writes_2026() {
+    // O13: the default writes 2026, but ->Cyrillic must still read the 1995 text that exists today (sh, ch, oʻ, gʻ)
+    let o = Options::default();
+    assert_eq!(o.latin_alphabet, LatinAlphabet::Auto);
+    assert_eq!(uz_translit::LATIN_WRITE_DEFAULT, LatinAlphabet::Y2026);
+    assert_eq!(convert("Toshkent shahri, Oʻzbekiston, choy", Direction::ToCyrillic, &o), "Тошкент шаҳри, Ўзбекистон, чой");
+    assert_eq!(convert("Toşkent şahri, Özbekiston, çoy", Direction::ToCyrillic, &o), "Тошкент шаҳри, Ўзбекистон, чой");
+    assert_eq!(convert("Тошкент шаҳри, Ўзбекистон, чой", Direction::ToLatin, &o), "Toşkent şahri, Özbekiston, çoy");
 }
