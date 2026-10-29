@@ -16,10 +16,10 @@ Owner decisions 2026-10-29 (docs/phase4/design-system.md, "Revised"; Q6): a new 
  8 files changed, 93 insertions(+), 21 deletions(-)
 
 diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
-index 302517f..10257ae 100644
+index 4e9ce66..c184e83 100644
 --- a/apps/gridcraft/src/main.rs
 +++ b/apps/gridcraft/src/main.rs
-@@ -298,14 +298,16 @@ fn main() -> eframe::Result<()> {
+@@ -298,9 +298,6 @@ fn main() -> eframe::Result<()> {
      {
          log::warn!("sample {s}: {e}");
      }
@@ -29,8 +29,10 @@ index 302517f..10257ae 100644
      let mut app = SheetApp::new(session, services());
      app.watch_desktop_theme();
      app.after_engine(); // Show warnings from the sample.
-     let control_port = control_port;
+@@ -308,6 +305,11 @@ fn main() -> eframe::Result<()> {
      load_prefs(&mut app);
+     // office overlay (patches/gridcraft/0148): the shared `theme` (the shell's setting) wins over the saved one at each start.
+     gridcraft_ui_egui::office_overlay::start_theme(&mut app.ui);
 +    // office overlay (gridcraft/0151): the blank Book1 is made once the interface language is known: its paper follows it.
 +    if app.session.documents().is_empty() {
 +        app.session.prefs.num_locale = app.ui.language.num_locale();

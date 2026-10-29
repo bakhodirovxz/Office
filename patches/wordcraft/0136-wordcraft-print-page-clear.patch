@@ -149,7 +149,7 @@ index ce807c5..e7355ff 100644
                  // The page's own Print button (the backstage list has a Print entry too): the last.
                  let buttons: Vec<_> = h.query_all(egui_kittest::kittest::By::new().role(egui::accesskit::Role::Button).label("Print")).collect();
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index cd723b7..aed01ca 100644
+index 3da30e5..55277d3 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
 @@ -144,6 +144,23 @@ pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32
