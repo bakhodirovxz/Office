@@ -441,6 +441,8 @@ fn main() -> eframe::Result {
             load_prefs(&mut app);
             // office overlay (patches/wordcraft/0126): a fixed shared `lang` wins over the saved language at each start.
             app.ui.language = wordcraft_ui_egui::office_overlay::start_language(&app.ui.language);
+            // office overlay (patches/wordcraft/0132): the shared `theme` (the shell's setting) wins over the saved one at each start.
+            app.ui.theme = wordcraft_ui_egui::office_overlay::start_theme(app.ui.theme);
             load_user_dictionary(&mut app);
             // A region chosen in File › Options replaces the system's for the first blank
             // document too (#838).

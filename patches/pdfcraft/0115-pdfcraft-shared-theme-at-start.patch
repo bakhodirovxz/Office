@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 18:00:00 +0500
+Subject: [PATCH] ui-egui: the shared theme setting wins over the saved theme preference at start
+
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+app in its own palette. office_overlay::shared_theme_code reads the shared settings.toml `theme` (system, light or
+dark) through suite-core (native only; None in the web build and in tests); main.rs calls
+set_theme_preference(office_overlay::start_theme(..)) after the saved preferences and the shared language: `system` is
+upstream's ThemePreference::System (follows the OS live). An in-app change holds for the session only.
+---
+ apps/pdfcraft/src/main.rs                  |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 28 ++++++++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 14 ++++++++++++++
+ 3 files changed, 44 insertions(+)
+
+diff --git a/apps/pdfcraft/src/main.rs b/apps/pdfcraft/src/main.rs
+index 35cb803..9868a5f 100644
+--- a/apps/pdfcraft/src/main.rs
++++ b/apps/pdfcraft/src/main.rs
+@@ -382,6 +382,8 @@ fn app_creator<'a>(
+         }
+         // office overlay (patches/pdfcraft/0112): a fixed shared `lang` wins over the saved language at each start.
+         app.language = pdfcraft_ui_egui::office_overlay::start_language(&app.language);
++        // office overlay (patches/pdfcraft/0115): the shared `theme` (the shell's setting) wins over the saved one at each start.
++        app.set_theme_preference(pdfcraft_ui_egui::office_overlay::start_theme(app.theme_preference));
+         app.window_state = pdfcraft_ui_egui::window_state::WindowState::started_with(cc.storage);
+         app.integrated_titlebar = integrated;
+         app.window_controls = window_controls;
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 073917a..9fb6839 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -162,3 +162,31 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
+         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
+     }
+ }
++
++/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
++/// the app keeps its own choice there.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    Some(suite_core::settings::load().theme.tag())
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    None
++}
++
++/// The theme preference at start (patches/pdfcraft/0115): the shared `theme` always wins over the saved one, `system` included, so
++/// the shell is the one place to change it. A change made in the app afterwards holds for the session only.
++pub fn start_theme(own: crate::theme::ThemePreference) -> crate::theme::ThemePreference {
++    theme_at_start(own, shared_theme_code())
++}
++
++pub(crate) fn theme_at_start(own: crate::theme::ThemePreference, shared: Option<&str>) -> crate::theme::ThemePreference {
++    use crate::theme::ThemePreference;
++    match shared {
++        Some("system") => ThemePreference::System,
++        Some("light") => ThemePreference::Light,
++        Some("dark") => ThemePreference::Dark,
++        _ => own,
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 36fa77a..9f86997 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -103,3 +103,17 @@ fn shared_lang_picks_the_catalog_language() {
+         }
+     }
+ }
++
++/// The shared `theme` beats the saved theme preference at start, `system` included (patches/pdfcraft/0115); tests and the web read none.
++#[test]
++fn shared_theme_wins_over_the_saved_theme_at_start() {
++    use crate::theme::ThemePreference::{Dark, Light, System};
++    use suite_core::settings::Theme;
++    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
++    for own in [System, Light, Dark] {
++        assert_eq!(o::theme_at_start(own, None), own);
++        for (shared, want) in [(Theme::System, System), (Theme::Light, Light), (Theme::Dark, Dark)] {
++            assert_eq!(o::theme_at_start(own, Some(shared.tag())), want);
++        }
++    }
++}

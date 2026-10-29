@@ -1,10 +1,13 @@
 @font-face { font-family: "Noto Sans Uz"; src: url("NotoSans-Regular-uz.ttf") format("truetype"); font-display: swap; }
 :root {
   --accent: #1E4FA3; --on-accent: #fff; --bg: #fff; --fg: #1b1f23; --muted: #5b6570; --card: #f3f5f7; --line: #d5dae0; --err: #b3261e;
-  color-scheme: light dark;
+  color-scheme: light;
 }
+/* the shared `theme` setting: shell.js sets data-theme to the light or dark it resolves (system = the OS choice); a page
+   that links this file without setting data-theme (the docserver editor page) follows the OS as before */
+:root[data-theme=dark] { --accent: #6C9BF0; --on-accent: #101828; --bg: #14181c; --fg: #e8ebee; --muted: #9aa5b1; --card: #1e242a; --line: #333b44; --err: #f2b8b5; color-scheme: dark; }
 @media (prefers-color-scheme: dark) {
-  :root { --accent: #6C9BF0; --on-accent: #101828; --bg: #14181c; --fg: #e8ebee; --muted: #9aa5b1; --card: #1e242a; --line: #333b44; --err: #f2b8b5; }
+  :root:not([data-theme]) { --accent: #6C9BF0; --on-accent: #101828; --bg: #14181c; --fg: #e8ebee; --muted: #9aa5b1; --card: #1e242a; --line: #333b44; --err: #f2b8b5; color-scheme: dark; }
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }

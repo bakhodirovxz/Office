@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 18:00:00 +0500
+Subject: [PATCH] ui-egui: the shared theme setting wins over the saved interface theme at start
+
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+app in its own palette. office_overlay::shared_theme_code reads the shared settings.toml `theme` (system, light or
+dark) through suite-core (native only; None in the web build and in tests); main.rs applies office_overlay::start_theme
+after start_language: the shared value replaces ui.theme, `system` included (upstream's Appearance::System follows the
+OS live). An in-app change holds for the session only.
+---
+ apps/wordcraft/src/main.rs                 |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 22 ++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 14 ++++++++++++++
+ 3 files changed, 38 insertions(+)
+
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index d5679ad..62d7f3c 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -441,6 +441,8 @@ fn main() -> eframe::Result {
+             load_prefs(&mut app);
+             // office overlay (patches/wordcraft/0126): a fixed shared `lang` wins over the saved language at each start.
+             app.ui.language = wordcraft_ui_egui::office_overlay::start_language(&app.ui.language);
++            // office overlay (patches/wordcraft/0132): the shared `theme` (the shell's setting) wins over the saved one at each start.
++            app.ui.theme = wordcraft_ui_egui::office_overlay::start_theme(app.ui.theme);
+             load_user_dictionary(&mut app);
+             // A region chosen in File › Options replaces the system's for the first blank
+             // document too (#838).
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index cd723b7..3da30e5 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -179,3 +179,25 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
+         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
+     }
+ }
++
++/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
++/// the app keeps its own choice there.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    Some(suite_core::settings::load().theme.tag())
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    None
++}
++
++/// The interface theme at start (patches/wordcraft/0132): the shared `theme` always wins over the one saved in `ui.json`, `system`
++/// included, so the shell is the one place to change it. A change made in the app afterwards holds for the session only.
++pub fn start_theme(own: crate::theme::Appearance) -> crate::theme::Appearance {
++    theme_at_start(own, shared_theme_code())
++}
++
++pub(crate) fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
++    shared.and_then(crate::theme::Appearance::from_code).unwrap_or(own)
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index d3b7e33..934f285 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -165,3 +165,17 @@ fn shared_lang_picks_the_catalog_language() {
+         }
+     }
+ }
++
++/// The shared `theme` beats the saved interface theme at start, `system` included (patches/wordcraft/0132); tests and the web read none.
++#[test]
++fn shared_theme_wins_over_the_saved_theme_at_start() {
++    use crate::theme::Appearance;
++    use suite_core::settings::Theme;
++    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
++    for own in Appearance::ALL {
++        assert_eq!(o::theme_at_start(own, None), own);
++        for shared in [Theme::System, Theme::Light, Theme::Dark] {
++            assert_eq!(o::theme_at_start(own, Some(shared.tag())).code(), shared.tag());
++        }
++    }
++}

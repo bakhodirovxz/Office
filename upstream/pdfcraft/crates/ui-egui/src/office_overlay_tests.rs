@@ -103,3 +103,17 @@ fn shared_lang_picks_the_catalog_language() {
         }
     }
 }
+
+/// The shared `theme` beats the saved theme preference at start, `system` included (patches/pdfcraft/0115); tests and the web read none.
+#[test]
+fn shared_theme_wins_over_the_saved_theme_at_start() {
+    use crate::theme::ThemePreference::{Dark, Light, System};
+    use suite_core::settings::Theme;
+    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
+    for own in [System, Light, Dark] {
+        assert_eq!(o::theme_at_start(own, None), own);
+        for (shared, want) in [(Theme::System, System), (Theme::Light, Light), (Theme::Dark, Dark)] {
+            assert_eq!(o::theme_at_start(own, Some(shared.tag())), want);
+        }
+    }
+}

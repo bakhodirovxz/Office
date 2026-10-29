@@ -513,3 +513,29 @@ section 3 stay rejected. What stays:
   each app's own style (section 7's common layout is dropped).
 - Default document font (owner, 2026-10-29): Times New Roman 12 pt for new documents in all four apps (Slides: the
   typeface only, its slide sizes stay).
+
+## 10. Implemented (branch `p4-theme`, 2026-10-29)
+
+**The global theme.** `settings.toml` has `theme = "system" | "light" | "dark"` (default `system`,
+`crates/suite-core/src/settings.rs`, `Theme`). The shell's header has a select for it; the shell page applies it at once and
+each app applies it at its next start to its own palette. Details, patches and the rule (every value wins at start, `system`
+included) are in `shared-services.md` section 6.2. The web editors do not read it (no settings file on the web).
+
+**Our additions inside the apps: inventory.** Each item was read for colours, radii, sizes, fonts and frames of its own.
+
+| addition | where | finding | change |
+|---|---|---|---|
+| Sheets simple toolbar | gridcraft `office_toolbar.rs` (0140) | every colour from `Tokens` (`t.text`, `t.hover`, `t.pressed`, `t.separator`, `t.ribbon`, `t.ribbon_border`, `t.window`); hover radius 4 as upstream's ribbon buttons (`widgets.rs:22-38`); card radius 10 and fill/stroke as upstream's ribbon card (`ribbon.rs:231-232`); label font `ui_font(12.5)` as upstream's ribbon labels (`ribbon.rs:741`); the colour bars show the cell's last colour | none |
+| Slides simple toolbar | deckcraft `office_toolbar.rs` (0140) | colours from `Tokens` (`t.chrome`, `t.hover`, `t.pressed`, `t.selected`, `t.text`, `t.text_faint`, `t.separator`); hover radius 4 as upstream's ribbon (`ribbon.rs:1404`); label font `theme::font(12.0)` as upstream's small ribbon buttons (`widgets.rs:117-120`); the one literal, the font-colour bar `#D83F3F`, is upstream's own Font Color default (`ribbon.rs:572`) | none |
+| Docs "Hujjat" tab, QAT buttons, Fluent icons | docs-office `preset.rs`, `icons.rs:57-79` (0122 hook) | drawn by upstream's ribbon; our icons are alpha masks tinted with the colour upstream passes (`paint_icon(.., c)`) | none |
+| Translit menus | wordcraft/gridcraft/deckcraft 0121 | upstream `menu_button` / `Popup::menu` and the app's menu items | none |
+| Version History (Docs, Sheets, Slides) | docs-office `lib.rs:51-73`, gridcraft/deckcraft `office_history.rs` (0143) | no egui UI: it opens the shell's History page (`web/shell/history.css`, shell tokens), which now follows the theme setting | none (follows via the shell) |
+| XDFU | docs-office `hooks.rs`/`levels.rs`, `office_history.rs` | a watermark in the document's copies (document content, not interface) | none |
+| Recovery (Docs 0129, PDF 0113) | engine and tests only | the Recover pages are upstream's | none |
+| Print to paper (Docs 0125) | docs-office print hook | no UI of ours | none |
+| Brand logo, app name, attribution | deckcraft `office_overlay.rs:114-124`, pdfcraft `office_overlay.rs:107-116`, pdfcraft `dialogs.rs:1173-1174`, deckcraft 0100 | logos are untinted brand images where upstream drew its own; the name and the attribution use upstream's fonts and `t.text` / `t.text_muted` | none |
+| Community chrome off (0101 ×4) | upstream code wrapped in `if COMMUNITY` | upstream's own styling, unchanged | none |
+| Shell home and History page | `web/shell/shell.css`, `history.css` | the shell's own look (brand tokens); followed `prefers-color-scheme` only | now follows the `theme` setting |
+
+Phase 5's web History panel (`services/docserver/static/editor.js`, `web/shell/history-ui.js`, branch `phase-5`) was not
+changed here; what it needs is in STATUS (2026-10-29, theme).

@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 18:00:00 +0500
+Subject: [PATCH] desktop: the shared theme setting wins over the saved interface theme at start
+
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+app in its own palette. office_overlay::shared_theme_code reads the shared settings.toml `theme` (system, light or
+dark) through suite-core (native only; None in the web build and in tests); main.rs calls
+office_overlay::start_theme(&mut app.ui) after load_prefs: `system` sets system_theme (follows the OS live), light and
+dark set system_theme = false and dark. An in-app change holds for the session only.
+---
+ apps/gridcraft/src/main.rs                 |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 29 +++++++++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 18 ++++++++++++++++++
+ 3 files changed, 49 insertions(+)
+
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index 302517f..4e9ce66 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -306,6 +306,8 @@ fn main() -> eframe::Result<()> {
+     app.after_engine(); // Show warnings from the sample.
+     let control_port = control_port;
+     load_prefs(&mut app);
++    // office overlay (patches/gridcraft/0148): the shared `theme` (the shell's setting) wins over the saved one at each start.
++    gridcraft_ui_egui::office_overlay::start_theme(&mut app.ui);
+     // Files named on the command line (a double-click on Windows and Linux) open as File › Open
+     // opens them: a password-protected one asks for its password, and errors are shown, not
+     // only logged. Each replaces the untouched blank Book1, as a file opened from Finder does.
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index a3e041e..4dafaa6 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -138,3 +138,32 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
+         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
+     }
+ }
++
++/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
++/// the app keeps its own choice there.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    Some(suite_core::settings::load().theme.tag())
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    None
++}
++
++/// The interface theme at start (patches/gridcraft/0148): the shared `theme` always wins over the one saved in `ui.json`, `system`
++/// included, so the shell is the one place to change it. A change made in the app afterwards holds for the session only.
++pub fn start_theme(ui: &mut crate::UiState) {
++    theme_at_start(ui, shared_theme_code());
++}
++
++pub(crate) fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
++    match shared {
++        Some("system") => ui.system_theme = true,
++        Some(mode @ ("light" | "dark")) => {
++            ui.system_theme = false;
++            ui.dark = mode == "dark";
++        }
++        _ => {}
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 023d71a..6de58f2 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -151,3 +151,21 @@ fn shared_lang_picks_the_catalog_language() {
+         }
+     }
+ }
++
++/// The shared `theme` beats the saved interface theme at start, `system` included (patches/gridcraft/0148); tests and the web read none.
++#[test]
++fn shared_theme_wins_over_the_saved_theme_at_start() {
++    use suite_core::settings::Theme;
++    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
++    for (system_theme, dark) in [(true, false), (true, true), (false, false), (false, true)] {
++        let own = crate::UiState { system_theme, dark, ..Default::default() };
++        let mut ui = own.clone();
++        o::theme_at_start(&mut ui, None);
++        assert_eq!(ui.theme_mode(), own.theme_mode());
++        for shared in [Theme::System, Theme::Light, Theme::Dark] {
++            let mut ui = own.clone();
++            o::theme_at_start(&mut ui, Some(shared.tag()));
++            assert_eq!(ui.theme_mode(), shared.tag());
++        }
++    }
++}

@@ -95,7 +95,11 @@
     "home.use": "Use",
     "recent.remove": "Remove {name} from the list",
     "recent.remove.short": "Remove",
-    "ui.language": "Language"
+    "theme.dark": "Dark theme",
+    "theme.light": "Light theme",
+    "theme.system": "System theme",
+    "ui.language": "Language",
+    "ui.theme": "Theme"
   },
   "ru": {
     "ed.back": "Главная",
@@ -193,7 +197,11 @@
     "home.use": "Использовать",
     "recent.remove": "Убрать {name} из списка",
     "recent.remove.short": "Убрать",
-    "ui.language": "Язык"
+    "theme.dark": "Тёмная тема",
+    "theme.light": "Светлая тема",
+    "theme.system": "Системная тема",
+    "ui.language": "Язык",
+    "ui.theme": "Тема"
   },
   "uz-Latn": {
     "ed.back": "Asosiy",
@@ -291,7 +299,11 @@
     "home.use": "Foydalanish",
     "recent.remove": "{name} faylini roʻyxatdan olib tashlash",
     "recent.remove.short": "Olib tashlash",
-    "ui.language": "Til"
+    "theme.dark": "Qorongʻi mavzu",
+    "theme.light": "Yorugʻ mavzu",
+    "theme.system": "Tizim mavzusi",
+    "ui.language": "Til",
+    "ui.theme": "Mavzu"
   },
   "uz-Cyrl": {
     "ed.back": "Асосий",
@@ -389,6 +401,10 @@
     "home.use": "Фойдаланиш",
     "recent.remove": "{name} файлини рўйхатдан олиб ташлаш",
     "recent.remove.short": "Олиб ташлаш",
-    "ui.language": "Тил"
+    "theme.dark": "Қоронғи мавзу",
+    "theme.light": "Ёруғ мавзу",
+    "theme.system": "Тизим мавзуси",
+    "ui.language": "Тил",
+    "ui.theme": "Мавзу"
   }
 }

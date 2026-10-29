@@ -222,3 +222,24 @@ fn shared_lang_picks_the_catalog_language() {
         }
     }
 }
+
+/// The shared `theme` beats the saved appearance at start; `system` takes the OS answer and keeps the saved one when the OS gives
+/// none (patches/deckcraft/0149). Tests and the web read no setting.
+#[test]
+fn shared_theme_wins_over_the_saved_appearance_at_start() {
+    use crate::theme::Brightness::{Dark, Light};
+    use egui::Theme;
+    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
+    for own in [Light, Dark] {
+        for os in [None, Some(Theme::Light), Some(Theme::Dark)] {
+            assert_eq!(o::brightness_at_start(own, None, os), own);
+            assert_eq!(o::brightness_at_start(own, Some("light"), os), Light);
+            assert_eq!(o::brightness_at_start(own, Some("dark"), os), Dark);
+        }
+        assert_eq!(o::brightness_at_start(own, Some("system"), Some(Theme::Dark)), Dark);
+        assert_eq!(o::brightness_at_start(own, Some("system"), Some(Theme::Light)), Light);
+        assert_eq!(o::brightness_at_start(own, Some("system"), None), own);
+    }
+    let tags = [suite_core::settings::Theme::System, suite_core::settings::Theme::Light, suite_core::settings::Theme::Dark].map(|t| t.tag());
+    assert_eq!(tags, ["system", "light", "dark"], "the tags this hook matches");
+}

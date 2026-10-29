@@ -45,6 +45,7 @@ Support/<product>` on macOS, `$XDG_CONFIG_HOME/<product>` or `~/.config/<product
 | `lang` | `auto`, `en`, `ru`, `uz-Latn`, `uz-Latn-2026`, `uz-Cyrl` | `auto` | shell, apps (when the app's own language is "auto") |
 | `latin_alphabet` | `1995`, `2026`, `auto` | `1995` (follows `uz-translit` owner decision O13) | transliteration surfaces |
 | `toolbar` | `simple`, `full` | `simple` | Docs, Sheets, Slides |
+| `theme` | `system`, `light`, `dark` | `system` (owner, 2026-10-29) | shell, all four apps at start (section 6.2) |
 | `spell_dictionaries` | a folder path, up to 1024 bytes, no control characters | empty (the install folder's) | Docs, Slides (WP6) |
 | `xdfu` | `off`, `on` | `off` | editors |
 | `recent.limit` | 0 to 50 | 20 | shell, `recent` |
@@ -147,10 +148,10 @@ every package, parse every XML part and refuse e-mail addresses and long digit r
 ## 6. Desktop host and shell
 
 `services/suite-desktop` keeps its allowlist; `settings_get` and `settings_set` now read and write the same
-`settings.toml` through `suite-core`. The page may set only `lang`, `toolbar` and `latin_alphabet`, each with the value
+`settings.toml` through `suite-core`. The page may set only `lang`, `toolbar`, `latin_alphabet` and `theme`, each with the value
 check above (anything else, such as `server.url` or `spell_dictionaries`, is refused: they decide where the shell navigates
-and which files are read, and no page needs them yet). `settings_get` returns those three as strings. The shell reads `lang`
-from it (`auto` means: follow the browser language) and still writes it on a change.
+and which files are read, and no page needs them yet). `settings_get` returns those four as strings. The shell reads `lang`
+from it (`auto` means: follow the browser language) and `theme`, and writes either on a change.
 
 Not done here: the dictionaries folder in Docs (WP6); the installer's single font copy.
 
@@ -173,3 +174,29 @@ app's own saved language applies only when the shared `lang` is `auto`; an in-ap
 does not register (for example `uz-*` without the overlay catalogs) is ignored and the saved one stays. The web builds never
 read the file. The in-app change still lands in the app's own `ui.json`, but a fixed shared `lang` overrides it at the next start.
 Check: the `office_overlay` tests `shared_lang_picks_the_catalog_language` (the choice-to-code map and the app's registered language) and `shared_lang_wins_over_the_saved_language_at_start` (the precedence) in each app; tests never read the real settings file. Not checked: a real window opened with `lang = "ru"` (no desktop session in this run).
+
+### 6.2 One theme for the shell and the apps (owner, 2026-10-29)
+
+The owner kept each app's own look (`design-system.md`, "Revised") and asked for one place to choose light or dark. The key is
+`theme = "system" | "light" | "dark"` (default `system` = follow the OS). The shell's header has a select for it next to the
+language (`web/shell/index.html`, `#theme`). On the desktop the host writes it to `settings.toml`; on the web the browser keeps it
+(`localStorage` `sh.theme`). The shell page applies it at once (`shell.js` `applyTheme`: `<html data-theme>`, the logo, the accent;
+`system` follows `prefers-color-scheme` live). The apps read it once at start through `office_overlay::shared_theme_code()`
+(native only; `None` in the web build and in tests) and apply it to their **own** light or dark palette:
+
+| app | patch | where | what `system` does |
+|---|---|---|---|
+| Docs | `wordcraft/0132` | `office_overlay::start_theme`, `apps/wordcraft/src/main.rs` after `start_language` | upstream's `Appearance::System`: follows the OS live |
+| Sheets | `gridcraft/0148` | `office_overlay::start_theme(&mut app.ui)`, `apps/gridcraft/src/main.rs` after `load_prefs` | upstream's `system_theme = true`: follows the OS live |
+| Slides | `deckcraft/0149` | `main.rs` calls `office_overlay::load_start_theme`; `SlideApp::logic` applies `start_brightness` at the first frame | Slides has only Light and Dark: the OS answer at the first frame (not followed live; restart to follow a later OS change) |
+| PDF | `pdfcraft/0115` | `office_overlay::start_theme`, `apps/pdfcraft/src/main.rs` after `start_language` (`set_theme_preference`) | upstream's `ThemePreference::System`: follows the OS live |
+
+**Rule.** Unlike `lang`, every value wins at start, `system` included: `system` is a choice here (the owner's default), not
+"no opinion", and the shell is the one place to change the theme. An in-app change (View or Options) holds for the session and
+lands in the app's own `ui.json`, but the shared value replaces it at the next start. Nothing is written back to `settings.toml`.
+With no file the default `system` applies, so Slides and PDF, whose upstream default is Light, now follow the OS on the desktop.
+The web editors do not read the setting (no file; the shell does not pass it): Docs and Sheets follow the browser's
+`prefers-color-scheme`, Slides and PDF their own default.
+Check: `suite-core` `theme_defaults_to_system_and_a_bad_value_costs_only_the_theme` and `the_map_round_trips_through_set`;
+`suite-desktop` `missing_editor_and_pick_and_settings`; in each app the `office_overlay` test `shared_theme_wins_over_the_saved_*`;
+the shell smoke tests `desktop mode: the theme from settings.toml ...` and `web mode: the theme is kept by the browser ...`.

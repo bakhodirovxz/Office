@@ -16,7 +16,7 @@ pub const MAX_MESSAGE: usize = 8 * 1024;
 const HISTORY_CAP: usize = 200;
 /// The settings a page may read and change. The rest of `settings.toml` (`server.url` decides where the shell navigates,
 /// `spell_dictionaries` which folder is read) is not the page's to set. Each value is checked by `suite_core::settings::validate`.
-pub const PAGE_SETTINGS: [&str; 3] = ["lang", "toolbar", "latin_alphabet"];
+pub const PAGE_SETTINGS: [&str; 4] = ["lang", "toolbar", "latin_alphabet", "theme"];
 
 /// (brand.toml key, extensions the editor opens). The lists are those of PLAN section 7.2, which come from the engines.
 const APPS: [(&str, &[&str]); 4] = [
@@ -1303,10 +1303,10 @@ bin = "tst-pdf"
             }))
         };
         let get = || reply(c.handle(Request::SettingsGet {}))["values"].clone();
-        // nothing saved yet: the defaults of suite-core, and only the three keys a page may see
+        // nothing saved yet: the defaults of suite-core, and only the keys a page may see
         assert_eq!(
             get(),
-            json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "2026"})
+            json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "2026", "theme": "system"})
         );
         assert_eq!(set("lang", "ru")["values"]["lang"], "ru");
         assert_eq!(
@@ -1318,6 +1318,7 @@ bin = "tst-pdf"
             set("latin_alphabet", "1995")["values"]["latin_alphabet"],
             "1995"
         );
+        assert_eq!(set("theme", "dark")["values"]["theme"], "dark");
         for (k, v) in [
             ("lang", "xx"),
             ("cmd", "calc"),
@@ -1326,6 +1327,8 @@ bin = "tst-pdf"
             ("toolbar", "Full"),
             ("toolbar", ""),
             ("latin_alphabet", "3000"),
+            ("theme", "Dark"),
+            ("theme", "blue"),
             // real settings, but not the page's to change
             ("server.url", "https://example.org"),
             ("spell_dictionaries", "C:/x"),
@@ -1336,11 +1339,12 @@ bin = "tst-pdf"
         }
         assert_eq!(
             get(),
-            json!({"lang": "uz-Latn-2026", "toolbar": "full", "latin_alphabet": "1995"})
+            json!({"lang": "uz-Latn-2026", "toolbar": "full", "latin_alphabet": "1995", "theme": "dark"})
         );
         // the shared file is what the apps read
         let shared = suite_core::settings::load_in(&d.join("data")).settings;
         assert_eq!(shared.toolbar, suite_core::settings::ToolbarMode::Full);
+        assert_eq!(shared.theme, suite_core::settings::Theme::Dark);
         assert_eq!(shared.lang.tag(), "uz-Latn-2026");
         let text = std::fs::read_to_string(d.join("data").join("settings.toml")).unwrap();
         assert!(!text.contains("server") && !text.contains("xdfu"), "{text}");
