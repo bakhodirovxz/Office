@@ -1227,7 +1227,7 @@ bin = "tst-pdf"
         // nothing saved yet: the defaults of suite-core, and only the three keys a page may see
         assert_eq!(
             get(),
-            json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "1995"})
+            json!({"lang": "auto", "toolbar": "simple", "latin_alphabet": "2026"})
         );
         assert_eq!(set("lang", "ru")["values"]["lang"], "ru");
         assert_eq!(
@@ -1236,8 +1236,8 @@ bin = "tst-pdf"
         );
         assert_eq!(set("toolbar", "full")["values"]["toolbar"], "full");
         assert_eq!(
-            set("latin_alphabet", "2026")["values"]["latin_alphabet"],
-            "2026"
+            set("latin_alphabet", "1995")["values"]["latin_alphabet"],
+            "1995"
         );
         for (k, v) in [
             ("lang", "xx"),
@@ -1257,7 +1257,7 @@ bin = "tst-pdf"
         }
         assert_eq!(
             get(),
-            json!({"lang": "uz-Latn-2026", "toolbar": "full", "latin_alphabet": "2026"})
+            json!({"lang": "uz-Latn-2026", "toolbar": "full", "latin_alphabet": "1995"})
         );
         // the shared file is what the apps read
         let shared = suite_core::settings::load_in(&d.join("data")).settings;

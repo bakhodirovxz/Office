@@ -8,7 +8,7 @@ export type Direction = "cyrl" | "latn";
 export interface TranslitOptions {
   /** Latin output apostrophes: U+02BB/U+02BC ("official", default) or U+0027 ("ascii"). */
   apostrophe?: "official" | "ascii";
-  /** Which Latin alphabet is written (->latn) or read (->cyrl). Default: uz-translit DEFAULT_LATIN_ALPHABET ("1995"). */
+  /** Which Latin alphabet is written (->latn) or read (->cyrl). Default: uz-translit DEFAULT_LATIN_ALPHABET ("2026"). */
   latinAlphabet?: "1995" | "2026" | "auto";
   /** ->cyrl: copy words with c (not in ch), w or diacritics unchanged. Default true. */
   foreignGuard?: boolean;

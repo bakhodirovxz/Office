@@ -20,7 +20,7 @@ rulesVersion(): string   // store it with converted text
 
 | option          | values                                | default           |                                                                       |
 |-----------------|---------------------------------------|-------------------|-----------------------------------------------------------------------|
-| `latinAlphabet` | `"1995"`, `"2026"`, `"auto"`          | `"1995"`          | alphabet written by `toLatin`, read by `toCyrillic` (`auto`: per paragraph) |
+| `latinAlphabet` | `"1995"`, `"2026"`, `"auto"`          | `"2026"`          | alphabet written by `toLatin`, read by `toCyrillic` (`auto`: per paragraph) |
 | `apostrophe`    | `"official"`, `"ascii"`               | `"official"`      | Latin output: o&#x2BB; g&#x2BB; (U+02BB/U+02BC) or plain `'`           |
 | `foreignGuard`  | boolean                               | `true`            | `toCyrillic` keeps words with c, w or diacritics unchanged            |
 | `romanNumerals` | boolean                               | `true`            | `toCyrillic` keeps Roman numerals                                     |
