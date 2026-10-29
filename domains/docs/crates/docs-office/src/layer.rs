@@ -10,8 +10,8 @@
 //! `edit.cut` are not blocked and carry no mark (clipboard text has no place for one).
 //! With `xdfu = off` nothing XDFU is registered, no check runs and no audit file is created.
 
-use std::path::Path;
-use std::sync::{Arc, Mutex, RwLock};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, OnceLock, RwLock, mpsc};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
@@ -46,12 +46,58 @@ pub fn xdfu_on() -> bool {
 }
 
 /// Reads the shared settings and installs the layer, once per process. (Not in this crate's own tests: they call [`configure`].)
+/// `WORDCRAFT_NO_PREFS` (the converter's sandboxed CLI runs, isolated test runs) keeps no history: a conversion output is not a version
+/// of the user's document, and 2.6k of them in the history made every later save slow (WP23).
 pub fn init() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         let on = suite_core::settings::load().xdfu;
-        configure(Store::from_settings(), if on { history::xdfu_audit_paths() } else { None });
+        let store = if std::env::var_os("WORDCRAFT_NO_PREFS").is_some() { None } else { Store::from_settings() };
+        configure(store, if on { history::xdfu_audit_paths() } else { None });
     });
+}
+
+enum Job {
+    Snapshot(Arc<Config>, PathBuf),
+    Flush(mpsc::Sender<()>),
+}
+
+/// The version snapshots run on one thread, in save order: the store reads and prunes every document's index under its lock, which
+/// held the UI thread 4 to 50 s per save with a 2.6k-document history (WP23 "Save freezes the app"). The thread reads the file when it
+/// gets to the job, so saves made before that share one version (the newest bytes).
+fn snapshots() -> &'static Mutex<mpsc::Sender<Job>> {
+    static TX: OnceLock<Mutex<mpsc::Sender<Job>>> = OnceLock::new();
+    TX.get_or_init(|| {
+        let (tx, rx) = mpsc::channel::<Job>();
+        // A thread that cannot start drops `rx`: every send then fails and is logged, and saves go on.
+        let _ = std::thread::Builder::new()
+            .name("office-history".into())
+            .spawn(move || {
+                for job in rx {
+                    match job {
+                        Job::Snapshot(c, path) => {
+                            if let Some(store) = &c.store
+                                && let Err(e) = store.snapshot(&path, None)
+                            {
+                                eprintln!("office: version snapshot of {} failed: {e}", path.display());
+                            }
+                        }
+                        Job::Flush(done) => {
+                            let _ = done.send(());
+                        }
+                    }
+                }
+            })
+            .inspect_err(|e| eprintln!("office: no history thread: {e}"));
+        Mutex::new(tx)
+    })
+}
+
+/// Waits (at most `limit`) until the snapshots queued so far are written: at exit, and in tests. True when they are.
+pub fn flush_snapshots(limit: Duration) -> bool {
+    let (done, wait) = mpsc::channel();
+    let sent = snapshots().lock().unwrap_or_else(|e| e.into_inner()).send(Job::Flush(done)).is_ok();
+    sent && wait.recv_timeout(limit).is_ok()
 }
 
 /// Installs the layer: `store` takes the snapshots (`None`: no history); `audit` is the XDFU audit log and key paths (`None`: XDFU off,
@@ -100,7 +146,7 @@ impl CommandHook for Layer {
             return;
         }
         let Some(c) = config() else { return };
-        let (Ok(out), Some(store), Some(path)) = (result, c.store.as_ref(), s.path.as_deref()) else { return };
+        let (Ok(out), Some(_), Some(path)) = (result, c.store.as_ref(), s.path.as_deref()) else { return };
         // Only the document's own file is versioned: a pdf or txt copy, or a save that opened the Save As dialog, is not.
         if out.get("saved") != Some(&json!(true)) || out.get("path").and_then(Value::as_str) != Some(&path.to_string_lossy()) {
             return;
@@ -118,8 +164,8 @@ impl CommandHook for Layer {
             None => last.push((key.clone(), now)),
         }
         drop(last);
-        if let Err(e) = store.snapshot(Path::new(&key), None) {
-            eprintln!("office: version snapshot of {key} failed: {e}");
+        if snapshots().lock().unwrap_or_else(|e| e.into_inner()).send(Job::Snapshot(c, PathBuf::from(key))).is_err() {
+            eprintln!("office: the history thread is gone; no version recorded");
         }
     }
 }

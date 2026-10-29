@@ -1103,6 +1103,13 @@ impl Session {
 
     /// Replace the document (open/new).
     pub fn set_document(&mut self, doc: Document) {
+        // office overlay (WP23): a document replaced with no unsaved changes (Save, then Open/New/Close) leaves no recovery copy.
+        #[cfg(not(target_arch = "wasm32"))]
+        if !self.dirty
+            && let Some(r) = &mut self.recovery
+        {
+            r.release();
+        }
         self.autocap = None;
         self.document_id = self.document_id.wrapping_add(1);
         self.bib_style = doc_bib_style(&doc);

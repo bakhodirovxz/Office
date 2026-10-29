@@ -1,0 +1,159 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: a recovery snapshot offered a week ago expires
+
+WP23 (the Docs recovery finding, checked in every editor): the start dialog offers every leftover snapshot, and one dismissed
+with Escape or a click outside is offered again at each start with no end. The dialog is the only way to the snapshots, so a
+dismissed one is still offered again, but the sidecar records when it was first offered (`offered_at`) and 7 days later the
+next start removes it. A snapshot without readable metadata is not marked (recovering it repairs the sidecar), so it never
+expires; a later autosave writes the sidecar without the mark.
+---
+ crates/ui-egui/src/lib.rs        |  2 +-
+ crates/ui-egui/src/recovery.rs   | 43 +++++++++++++++++++++++++++++++++++++++++--
+ crates/ui-egui/tests/recovery.rs | 33 +++++++++++++++++++++++++++++++++
+ 3 files changed, 75 insertions(+), 3 deletions(-)
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index bf78d1e..f99e907 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -157,7 +157,7 @@ use pdfcraft_engine::{DocId, Session};
+ pub use canvas::{DocView, RasterMemory};
+ pub use editing::{CloseRequest, SaveTarget};
+ pub use files::{ExtractDraft, FilePurpose, FileRequest, RotateDraft, SplitDraft, SplitMode, SplitPlan};
+-pub use recovery::{AUTOSAVE_SECS, RecoveryMeta, RecoveryStore};
++pub use recovery::{AUTOSAVE_SECS, EXPIRE_SECS, RecoveryMeta, RecoveryStore};
+ use theme::{ThemeKind, ThemePreference};
+ 
+ /// Top-level workspace modes (Acrobat's mode bar).
+diff --git a/crates/ui-egui/src/recovery.rs b/crates/ui-egui/src/recovery.rs
+index 3d5f78a..e5239a9 100644
+--- a/crates/ui-egui/src/recovery.rs
++++ b/crates/ui-egui/src/recovery.rs
+@@ -27,6 +27,10 @@ use crate::PdfCraftApp;
+ /// How often unsaved changes are written to the recovery folder.
+ pub const AUTOSAVE_SECS: f64 = 60.0;
+ 
++/// office overlay (WP23): a snapshot the start dialog first offered this long ago is removed at the next start (Office keeps unsaved
++/// drafts 4 days; a week covers a holiday). One never offered is never removed by age.
++pub const EXPIRE_SECS: u64 = 7 * 24 * 3600;
++
+ /// What a recovery entry records next to the PDF bytes.
+ #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+ pub struct RecoveryMeta {
+@@ -42,6 +46,9 @@ pub struct RecoveryMeta {
+     /// snapshots from before it.
+     #[serde(default)]
+     pub instance: Option<String>,
++    /// When the start dialog first offered the snapshot (office overlay, WP23). A later autosave writes the sidecar without it.
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub offered_at: Option<u64>,
+ }
+ 
+ /// The recovery folder.
+@@ -229,6 +236,7 @@ impl RecoveryStore {
+                     // This is only a display hint; opening the PDF still detects encryption.
+                     encrypted: false,
+                     instance: None,
++                    offered_at: None,
+                 }
+             }));
+         }
+@@ -285,6 +293,30 @@ impl PdfCraftApp {
+     pub fn enable_recovery(&mut self, store: RecoveryStore) {
+         store.claim();
+         self.recoverable = store.list();
++        // office overlay (WP23): the dialog is the only way to these snapshots, so a dismissed one is offered again, for a week.
++        let now = now_secs();
++        self.recoverable.retain(|m| match m.offered_at {
++            Some(at) if now.saturating_sub(at) > EXPIRE_SECS => {
++                store.remove(&m.key);
++                false
++            }
++            _ => true,
++        });
++        for m in self.recoverable.iter_mut().filter(|m| m.offered_at.is_none()) {
++            // A snapshot without readable metadata keeps it that way: recovering it repairs the sidecar (`repair_meta`).
++            let sidecar = store.dir().join(format!("{}.json", m.key));
++            let readable = std::fs::read(&sidecar).ok().and_then(|b| serde_json::from_slice::<RecoveryMeta>(&b).ok()).is_some_and(|x| x.key == m.key);
++            if !readable {
++                continue;
++            }
++            m.offered_at = Some(now);
++            let written = serde_json::to_vec_pretty(&*m)
++                .map_err(std::io::Error::other)
++                .and_then(|json| crate::editing::write_atomically(&sidecar.to_string_lossy(), &json));
++            if let Err(e) = written {
++                log::warn!("couldn't mark recovery snapshot {} as offered: {e}", m.key);
++            }
++        }
+         if !self.recoverable.is_empty() {
+             self.dialog = Some(crate::Dialog::Recovery);
+         }
+@@ -296,8 +328,15 @@ impl PdfCraftApp {
+         let Some(store) = self.recovery.clone() else { return };
+         for snap in self.session.autosave_snapshots() {
+             let key = self.recovery_keys.entry(snap.doc).or_insert_with(|| format!("{}-{}-{}", now_secs(), std::process::id(), snap.doc.0)).clone();
+-            let meta =
+-                RecoveryMeta { key, name: snap.name, path: snap.path, saved_at: now_secs(), encrypted: snap.encrypted, instance: store.instance() };
++            let meta = RecoveryMeta {
++                key,
++                name: snap.name,
++                path: snap.path,
++                saved_at: now_secs(),
++                encrypted: snap.encrypted,
++                instance: store.instance(),
++                offered_at: None,
++            };
+             if let Err(e) = store.write(&meta, &snap.bytes) {
+                 log::warn!("autosave failed: {e}");
+             }
+diff --git a/crates/ui-egui/tests/recovery.rs b/crates/ui-egui/tests/recovery.rs
+index a259ca3..4eaebc6 100644
+--- a/crates/ui-egui/tests/recovery.rs
++++ b/crates/ui-egui/tests/recovery.rs
+@@ -271,6 +271,7 @@ fn a_failed_metadata_write_keeps_the_completed_snapshot_recoverable() {
+         saved_at: 1,
+         encrypted: false,
+         instance: None,
++        offered_at: None,
+     };
+     // A directory at the sidecar path makes its atomic rename fail after the PDF was written.
+     std::fs::create_dir_all(s.dir().join("snapshot.json")).unwrap();
+@@ -431,3 +432,35 @@ fn the_recovery_folder_is_owner_only() {
+     earlier.claim();
+     assert_eq!(mode(&earlier), 0o700);
+ }
++
++/// office overlay (WP23): a snapshot first offered over a week ago is removed at the next start; a dismissed newer one is offered again.
++#[test]
++fn a_snapshot_offered_a_week_ago_expires_and_a_newer_one_is_offered_again() {
++    let s = store("expiry");
++    let bytes = fixture(1);
++    let meta = |key: &str, offered_at| pdfcraft_ui_egui::RecoveryMeta {
++        key: key.into(),
++        name: format!("{key}.pdf"),
++        path: None,
++        saved_at: 1,
++        encrypted: false,
++        instance: None,
++        offered_at,
++    };
++    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
++    s.write(&meta("old", Some(now - pdfcraft_ui_egui::EXPIRE_SECS - 60)), &bytes).unwrap();
++    s.write(&meta("recent", Some(now - 60)), &bytes).unwrap();
++    s.write(&meta("new", None), &bytes).unwrap();
++    let mut app = PdfCraftApp::new();
++    app.enable_recovery(s.clone());
++    let mut keys: Vec<String> = app.recoverable.iter().map(|m| m.key.clone()).collect();
++    keys.sort();
++    assert_eq!(keys, ["new", "recent"]);
++    assert!(!s.dir().join("old.pdf").exists() && !s.dir().join("old.json").exists());
++    assert!(app.recoverable.iter().all(|m| m.offered_at.is_some()));
++    drop(app);
++    let listed = s.list();
++    assert_eq!(listed.len(), 2);
++    assert!(listed.iter().all(|m| m.offered_at.is_some()), "the first offer is kept in the sidecar");
++    s.clear();
++}
