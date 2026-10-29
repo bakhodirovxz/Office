@@ -1,0 +1,386 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 20:00:00 +0500
+Subject: [PATCH] ui-egui, engine: crash recovery opens a Document Recovery task pane, not a full page; local time; untitled copies named in the UI language
+
+WP23 usability finding (owner, 2026-10-29): after a crash Docs opened File > Recover over the whole window (black page, raw ISO UTC time, plain white buttons, near-invisible headers), covering the document just double-clicked; the unsaved copy was named "Untitled draft" in English. Now a start with copies not yet offered opens the document as usual and shows a "Document Recovery" pane on the left, as Word does: the app's name from the overlay, one card per copy (name that restores on click or Enter, "Version created from the last AutoSave", time in local time as dd.mm.yyyy HH:MM, Open and Discard...), and Close. The pane marks the copies offered when shown (0129 unchanged). File > Recover keeps the list, now on the normal backstage background with the same cards. The engine stores an empty name for an untitled document; the UI shows the translated "Document1" (old copies holding "Untitled draft" map to it too). The local time comes from the new `crates/local-stamp` (ours; the one OS call lives there, the app crates keep forbidding unsafe code); the web build shows UTC.
+---
+ Cargo.lock                            |  5 ++++
+ crates/engine/src/recovery/desktop.rs |  2 +-
+ crates/ui-egui/Cargo.toml             |  2 ++
+ crates/ui-egui/src/backstage.rs       | 72 +++++++++++++++++++++++----------------------------
+ crates/ui-egui/src/i18n/ru.tsv        |  3 +++
+ crates/ui-egui/src/lib.rs             | 16 +++++++++---
+ crates/ui-egui/src/panes.rs           | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 132 insertions(+), 45 deletions(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 75c1e6e..9166b62 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2378,6 +2378,10 @@ version = "1.0.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
+ 
++[[package]]
++name = "local-stamp"
++version = "0.1.0"
++
+ [[package]]
+ name = "lock_api"
+ version = "0.4.14"
+@@ -5511,6 +5515,7 @@ dependencies = [
+  "egui_kittest",
+  "image",
+  "js-sys",
++ "local-stamp",
+  "log",
+  "serde",
+  "serde_json",
+diff --git a/crates/engine/src/recovery/desktop.rs b/crates/engine/src/recovery/desktop.rs
+index 387591e..42a5be8 100644
+--- a/crates/engine/src/recovery/desktop.rs
++++ b/crates/engine/src/recovery/desktop.rs
+@@ -563,7 +563,7 @@ impl Recovery {
+                 id
+             }
+         };
+-        let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled draft".into());
++        let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default(); // empty: the UI names an untitled document in its language
+         let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso(), offered: false };
+         self.queue(Job::Save(Box::new(Snapshot { version: 1, info, generation: 0, document: s.doc.clone() })))?;
+         self.id = Some(id);
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 8e97fe5..ecf10cf 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -27,6 +27,8 @@ image = { workspace = true }
+ # The system's preferred interface languages (#8) and region (#838). Native: OS APIs; wasm:
+ # the browser's languages (`js`).
+ sys-locale = { version = "0.3", features = ["js"] }
++# office overlay (WP23): the Document Recovery pane shows a copy's time in local time
++local-stamp = { path = "../../../../crates/local-stamp" }
+ 
+ # Linux only, where winit reports no system theme: the desktop portal's light/dark answer (see
+ # `desktop_theme.rs`). Already in the tree, with these features, through egui's own accessibility
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 56c1e08..790a556 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -31,7 +31,6 @@ fn back_chevron_c(band_min_x: f32, center_y: f32, fullscreen: bool, content_left
+ 
+ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+     let t = Tokens::get(ui.ctx());
+-    let recovery = app.ui.backstage_page == "recover";
+     // No document open (#1129): only the pages that open or create one, and Options.
+     let has_document = app.has_document();
+     if !has_document && !works_without_document(&app.ui.backstage_page) {
+@@ -42,7 +41,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+         .exact_size(200.0)
+         // Fixed width, as in Word: without this egui shows a resize handle that does nothing (#502).
+         .resizable(false)
+-        .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { APP_COLOR }).inner_margin(egui::Margin {
++        .frame(egui::Frame::NONE.fill(APP_COLOR).inner_margin(egui::Margin {
+             left: 0,
+             right: 0,
+             top: if mac { 0 } else { 12 },
+@@ -150,7 +149,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+             });
+         });
+     egui::CentralPanel::default()
+-        .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { t.ribbon }).inner_margin(egui::Margin::symmetric(40, 30)))
++        .frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30)))
+         .show(ui, |ui| {
+             // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
+             if app.ui.backstage_page == "print" {
+@@ -172,12 +171,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+         });
+ }
+ 
+-/// Recovery is a separate copy. Leaving this page never discards it.
++/// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
+ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
+-    ui.visuals_mut().override_text_color = Some(egui::Color32::WHITE);
++    let t = Tokens::get(ui.ctx());
+     heading(ui, "Recover documents");
+-    ui.label(tl!("Restore opens an unsaved copy. Your original file stays unchanged."));
+-    ui.add_space(20.0);
++    ui.label(egui::RichText::new(tl!("Restore opens an unsaved copy. Your original file stays unchanged.")).color(t.text_dim));
++    ui.add_space(16.0);
+     if app.session.password.is_some() {
+         ui.label(tl!("Recovery is disabled while this document has a password."));
+     }
+@@ -192,34 +191,15 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
+         ui.label(tl!("No recovery copies."));
+     }
+     let busy = app.session.recovery_busy();
+-    egui::Grid::new("recovery_documents").min_col_width(180.0).spacing(vec2(24.0, 16.0)).show(ui, |ui| {
+-        if !documents.is_empty() {
+-            ui.strong(tl!("Document"));
+-            ui.strong(tl!("Recovery copy"));
+-            ui.end_row();
+-        }
+-        for doc in documents {
+-            ui.label(&doc.name);
+-            ui.label(&doc.saved_at);
+-            ui.add_enabled_ui(!busy, |ui| {
+-                // Buttons keep the theme's own text colour: the page-wide white override is
+-                // for labels on the black background and would bleach button labels (#1895).
+-                ui.visuals_mut().override_text_color = None;
+-                ui.horizontal(|ui| {
+-                    if ui.button(tl!("Restore")).clicked() {
+-                        let _ = app.run("file.recover", json!({"restore": doc.id}));
+-                    }
+-                    if ui.button(tl!("Discard…")).clicked() {
+-                        let _ = app.run("ui.recoveryDiscard", json!({"id": doc.id}));
+-                    }
+-                });
+-            });
+-            ui.end_row();
++    ui.scope(|ui| {
++        ui.set_max_width(420.0);
++        for doc in &documents {
++            crate::panes::recovery_card(app, ui, doc, busy);
++            ui.add_space(8.0);
+         }
+     });
+-    ui.add_space(20.0);
++    ui.add_space(12.0);
+     ui.horizontal(|ui| {
+-        ui.visuals_mut().override_text_color = None;
+         if ui.button(tl!("Continue without restoring")).clicked() {
+             let _ = app.run("ui.backstage", json!({"value": false}));
+             app.canvas.want_focus = true;
+@@ -620,10 +600,11 @@ mod tests {
+         let (app, root) = recovery_app();
+         let mut h = recovery_harness(app);
+         settle_recovery(&mut h);
+-        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
+-        h.get_by_label("Continue without restoring").click();
++        assert!(h.state().recovery_pane && !h.state().ui.backstage, "the pane opens beside the document, not the page");
++        assert!(h.query_by_label("Document Recovery").is_some());
++        h.get_all_by_label("Close").last().unwrap().click();
+         h.run_steps(4);
+-        assert!(!h.state().ui.backstage);
++        assert!(!h.state().recovery_pane && !h.state().ui.backstage);
+         assert_eq!(h.state().session.recovery_documents().len(), 1);
+         h.state_mut().run("file.recover", json!({})).unwrap();
+         h.run_steps(4);
+@@ -650,38 +631,49 @@ mod tests {
+         let (app, root) = recovery_app();
+         let mut h = recovery_harness(app);
+         settle_recovery(&mut h);
+-        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
+-        h.get_by_label("Continue without restoring").click();
++        assert!(h.state().recovery_pane && !h.state().ui.backstage);
++        h.get_all_by_label("Close").last().unwrap().click();
+         h.run_steps(4);
++        assert!(!h.state().recovery_pane);
+         drop(h);
+         let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
+         app.session.enable_recovery(root.clone(), std::sync::Arc::new(|| {})).unwrap();
+         let mut h = recovery_harness(app);
+         settle_recovery(&mut h);
+-        assert!(!h.state().ui.backstage, "the page is not offered again");
++        assert!(!h.state().recovery_pane && !h.state().ui.backstage, "the pane is not offered again");
+         assert_eq!(h.state().session.recovery_documents().len(), 1, "File › Recover still lists the copy");
+         drop(h);
+         let _ = std::fs::remove_dir_all(root);
+     }
+ 
++    /// An untitled copy is named in the interface language (older copies hold "Untitled draft"), and the time is local.
++    #[test]
++    fn recovery_names_and_times_are_shown_for_people() {
++        assert_eq!(crate::recovery_name(""), "Document1");
++        assert_eq!(crate::recovery_name("Untitled draft"), "Document1");
++        assert_eq!(crate::recovery_name("Plan.docx"), "Plan.docx");
++        assert_eq!(local_stamp::local_stamp("2026-10-11T10:42:00Z").len(), 16);
++    }
++
+     #[test]
+     #[cfg(not(target_arch = "wasm32"))]
+     fn recovery_restore_uses_save_changes_and_resets_autosave_permission() {
+         let (app, root) = recovery_app();
+         let mut h = recovery_harness(app);
+         settle_recovery(&mut h);
++        h.state_mut().recovery_pane = false;
+         h.state_mut().execute("text.insert", json!({"text": "Current unsaved work"})).unwrap();
+         h.state_mut().autosave_path = Some(root.join("must-not-write.docx"));
+         h.state_mut().run("file.recover", json!({})).unwrap();
+         h.run_steps(4);
+         assert_eq!(h.state().session.recovery_documents().len(), 1);
+-        h.get_by_label("Restore").click();
++        h.get_by_label("Synthetic draft").click();
+         h.run_steps(4);
+         assert!(matches!(h.state().dialog, Some(crate::dialogs::Dialog::SaveChanges { .. })));
+         h.get_by_label("Cancel").click();
+         h.run_steps(4);
+         assert_eq!(h.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Current unsaved work");
+-        h.get_by_label("Restore").click();
++        h.get_by_label("Synthetic draft").click();
+         h.run_steps(4);
+         h.get_by_label("Don't Save").click();
+         settle_recovery(&mut h);
+diff --git a/crates/ui-egui/src/i18n/ru.tsv b/crates/ui-egui/src/i18n/ru.tsv
+index a40aebe..4faea71 100644
+--- a/crates/ui-egui/src/i18n/ru.tsv
++++ b/crates/ui-egui/src/i18n/ru.tsv
+@@ -2715,3 +2715,6 @@ preview	Title	Пример
+ 	Discard…	Отказаться…
+ 	Continue without restoring	Продолжить без восстановления
+ 	{name} — set your name in File › Options	{name} — укажите своё имя в разделе Файл › Параметры
++	Document Recovery	Восстановление документов
++	{app} recovered the following documents. Save the ones you want to keep.	{app} восстановил следующие документы. Сохраните те, которые нужно оставить.
++	Version created from the last AutoSave	Версия, созданная при последнем автосохранении
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index e7355ff..73d8a2e 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -630,6 +630,8 @@ pub struct WordApp {
+     /// between, such as an Undo, starts a new one).
+     pub(crate) info_editing: Option<(&'static str, u64)>,
+     recovery_seen: bool,
++    /// office overlay (WP23): the Document Recovery pane is open (panes.rs).
++    recovery_pane: bool,
+     /// Started on the Start screen with nothing to open (#1129): the id of the placeholder
+     /// blank document the session holds until the user creates or opens one. While it is still
+     /// the session's document, no document is open: the window shows no page and only the File
+@@ -658,6 +660,12 @@ impl SaveChoice {
+     }
+ }
+ 
++/// The name a recovery copy shows (office overlay, WP23): an untitled document has none stored (older copies hold
++/// "Untitled draft"), and is named in the interface language like the title bar does.
++pub(crate) fn recovery_name(stored: &str) -> String {
++    if stored.is_empty() || stored == "Untitled draft" { tl!("Document1").into() } else { stored.to_string() }
++}
++
+ impl WordApp {
+     pub fn new(mut session: Session, services: Services) -> Self {
+         crate::office_overlay::replace_placeholder_author(&mut session.author);
+@@ -733,6 +741,7 @@ impl WordApp {
+             file_browser: file_browser::State::default(),
+             info_editing: None,
+             recovery_seen: false,
++            recovery_pane: false,
+             no_document: None,
+             comment_drafts: Default::default(),
+         }
+@@ -1663,7 +1672,7 @@ impl WordApp {
+                     let Some(info) = self.session.recovery_documents().into_iter().find(|d| d.id == id) else {
+                         return Some(Err("no such recovery copy".into()));
+                     };
+-                    self.dialog = Some(dialogs::Dialog::DiscardRecovery { id: info.id, name: info.name });
++                    self.dialog = Some(dialogs::Dialog::DiscardRecovery { id: info.id, name: recovery_name(&info.name) });
+                     json!({"pending": "discardRecovery"})
+                 }
+             }
+@@ -2048,11 +2057,10 @@ impl WordApp {
+         }
+         if !self.recovery_seen && self.session.recovery_ready() {
+             self.recovery_seen = true;
+-            // office overlay (WP23): the page opens once for copies an earlier start has not offered (a crash leaves them;
++            // office overlay (WP23): the Document Recovery pane opens once for copies an earlier start has not offered (a crash leaves them;
+             // a clean exit removes its own); File › Recover still lists them all.
+             if self.session.recovery_documents().iter().any(|d| !d.offered) && !self.session.dirty {
+-                self.ui.backstage = true;
+-                self.ui.backstage_page = "recover".into();
++                self.recovery_pane = true;
+                 self.session.recovery_offer();
+             }
+         }
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 8fe22cd..8d4ad23 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -27,6 +27,14 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 crate::dialogs_smart_art::text_pane(app, ui);
+             });
+     }
++    // office overlay (WP23): the Document Recovery pane, as Word shows it after a crash; the document stays in view.
++    if app.recovery_pane {
++        egui::Panel::left("recovery_pane")
++            .default_size(280.0)
++            .resizable(true)
++            .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
++            .show(ui, |ui| recovery(app, ui));
++    }
+     if app.session.view.nav_pane {
+         egui::Panel::left("nav_pane")
+             .default_size(260.0)
+@@ -106,6 +114,75 @@ pub(crate) fn header(ui: &mut Ui, title: &str) -> bool {
+     close
+ }
+ 
++/// Document Recovery task pane (office overlay, WP23): one card per copy, as in Word. Closing it keeps every copy;
++/// File › Recover lists them later.
++fn recovery(app: &mut WordApp, ui: &mut Ui) {
++    if header(ui, "Document Recovery") {
++        close_recovery(app);
++        return;
++    }
++    let t = Tokens::get(ui.ctx());
++    ui.label(egui::RichText::new(crate::i18n::fmt(
++        tl!("{app} recovered the following documents. Save the ones you want to keep."),
++        &[("app", crate::office_overlay::app_name())],
++    )));
++    ui.add_space(8.0);
++    let documents = app.session.recovery_documents();
++    if documents.is_empty() {
++        ui.label(egui::RichText::new(tl!("No recovery copies.")).color(t.text_dim));
++    }
++    let busy = app.session.recovery_busy();
++    let height = (ui.available_height() - 40.0).max(60.0);
++    egui::ScrollArea::vertical().max_height(height).show(ui, |ui| {
++        for doc in &documents {
++            recovery_card(app, ui, doc, busy);
++            ui.add_space(6.0);
++        }
++    });
++    ui.add_space(8.0);
++    if ui.button(tl!("Close")).clicked() {
++        close_recovery(app);
++    }
++}
++
++fn close_recovery(app: &mut WordApp) {
++    app.recovery_pane = false;
++    app.canvas.want_focus = true;
++}
++
++/// One recovery copy: its name (a button that restores it), when it was made in local time, and Open / Discard….
++/// Used by the pane and by File › Recover.
++pub(crate) fn recovery_card(app: &mut WordApp, ui: &mut Ui, doc: &wordcraft_engine::recovery::RecoveryInfo, busy: bool) {
++    let t = Tokens::get(ui.ctx());
++    egui::Frame::NONE.fill(t.input).stroke(Stroke::new(1.0, t.border)).corner_radius(6).inner_margin(8).show(ui, |ui| {
++        ui.set_width(ui.available_width());
++        ui.add_enabled_ui(!busy, |ui| {
++            let mut job = egui::text::LayoutJob::single_section(
++                crate::recovery_name(&doc.name),
++                egui::TextFormat { font_id: semibold(13.5), color: t.text, ..Default::default() },
++            );
++            job.wrap.max_width = ui.available_width();
++            job.wrap.max_rows = 2;
++            let mut open = ui.add(egui::Button::new(job).frame(false)).on_hover_text(tl!("Open")).clicked();
++            ui.label(egui::RichText::new(tl!("Version created from the last AutoSave")).small().color(t.text_dim));
++            ui.label(egui::RichText::new(local_stamp::local_stamp(&doc.saved_at)).small().color(t.text_dim));
++            ui.horizontal(|ui| {
++                open |= ui.small_button(tl!("Open")).clicked();
++                if ui.small_button(tl!("Discard…")).clicked() {
++                    let _ = app.run("ui.recoveryDiscard", json!({"id": doc.id}));
++                }
++            });
++            if open {
++                let _ = app.run("file.recover", json!({"restore": doc.id}));
++                // A pending Save changes? question keeps the pane for the answer; otherwise the copy is on its way in.
++                if app.dialog.is_none() {
++                    app.recovery_pane = false;
++                }
++            }
++        });
++    });
++}
++
+ fn nav(app: &mut WordApp, ui: &mut Ui) {
+     if header(ui, "Navigation") {
+         let _ = app.run("view.navigationPane", json!({"value": false}));
