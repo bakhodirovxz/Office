@@ -1285,3 +1285,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (`editor.js:21`) moved to `var(--muted)`, and, to follow the Docs look rather than the shell's, Docs' accent and
   radii (wordcraft `theme.rs`: accent `#3B5BDB`, widget radius 4, window radius 8, body 12.5 px) instead of the shell's
   brand blue and 16 px type.
+- **Checked:** suite-core 42 tests (new `theme_defaults_to_system_and_a_bad_value_costs_only_the_theme`), suite-desktop lib 22,
+  clippy clean on both; overlay tests with the overlay ON: Docs 8/8 (+22 upstream theme tests), Sheets 8/8, Slides 12/12
+  (+ upstream `preferences_cancel_restores_the_settings_done_keeps_them`), PDF 7/7; shell smoke 16 passed, 11 skipped (no
+  editor dists here). Real debug windows, isolated profile (APPDATA in a temp folder), Windows set to light: Docs `ui.theme`
+  = dark with `theme = "dark"`, and light with `theme = "light"` over a `ui.json` that saved dark (its `uiScale` 150 was read,
+  so the file was loaded); PDF `ui.state` Dark/Dark and System/Light; Sheets and Slides screenshots dark, light/system.
+  Screenshots: `docs/phase4/evidence/theme/` (11, synthetic, no user or file names). Docs was built without `office-ext`
+  (the domain build failed on a transient file error under disk pressure), so its Hujjat tab is not in the picture.
+- **Not checked:** clippy on gridcraft/deckcraft/pdfcraft (the hooks mirror the Docs code, which is clean); a Windows switch
+  to dark while `system` is chosen (the owner's PC; upstream follows it live in Docs, Sheets and PDF); the MSI.
