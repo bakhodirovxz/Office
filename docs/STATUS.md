@@ -1349,3 +1349,22 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   Merge checks: all four apps `cargo check --tests` on p4-print after its rebase; phase-5 suite-core 48/0 and
   suite-desktop 23+3/0 after the theme merge; wordcraft/0136 regenerated on the phase-5 queue (context lines only).
   Open: the Docs Recover page names an unsaved copy "Untitled draft" in English (engine `recovery/desktop.rs`, no i18n).
+- **WP23: Docs Document Recovery pane (branch `p4-recover-pane`, 2026-10-29; wordcraft/0137, 118 patches, 118 rows).** After a crash Docs no
+  longer opens File > Recover over the window: it opens the document as usual and shows a Word-style "Document Recovery" pane on
+  the left (`panes.rs`): the app name from the overlay, one card per copy (name, "Version created from the last AutoSave", time in
+  local time `dd.mm.yyyy HH:MM`, Open, Discard... with the old confirm), Close. Clicking the name or Open restores; the pane is
+  marked offered when shown (0129 unchanged: once per copy, 7-day expiry, clean exit removes own copies). File > Recover has the
+  same cards on the normal backstage background (no black page). The engine stores an empty name for an untitled document;
+  the UI shows the translated "Document1" (old copies holding "Untitled draft" map to it). Local time: new crate
+  `crates/local-stamp` (the one OS call, Windows `GetTimeZoneInformation` / unix `localtime_r`; app crates keep forbidding
+  unsafe code; web shows UTC); it adds one package to the wordcraft and docs-domain locks (`lockdiff` 0 foreign). 3 new strings
+  (ru in the carried `ru.tsv`, uz in `i18n/wordcraft.tsv`, `reviewed:agent-sonnet:2026-10-29`).
+  Tests (overlay on, debug): ui-egui `recovery` 4/4 (the three old ones rewritten for the pane, new
+  `recovery_names_and_times_are_shown_for_people`), engine `recovery` 18/18, `local-stamp` 3/3; `verify-queue.sh wordcraft`,
+  `register check`, `i18n check-stale` and `lint` (0 errors) pass. Evidence `docs/phase4/evidence/recover/` (built debug exe,
+  isolated profile, synthetic text, crash by kill then restart; uz-Latn and ru, light): pane and File > Recover page.
+  Not done / not checked: the full ui-egui suite and clippy; Sheets/Slides/PDF unchanged; two or more cards and a named
+  (saved-file) card were not photographed; the local zone's offset is read as of now (a copy from the other half of the year
+  across a DST change is off by one hour); the web build has no pane test and shows UTC; dd.mm.yyyy is used for every language
+  (no per-locale date order); the pane is not shown if the window starts with unsaved changes (as 0129 required for the page);
+  Android and the web were not built.
