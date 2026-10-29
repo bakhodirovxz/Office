@@ -322,7 +322,10 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl!("Account")));
                     let initials: String = app.session.user_initials().chars().take(2).collect();
                     ui.painter().text(r.center(), Align2::CENTER_CENTER, initials, semibold(10.5), t.on_accent);
-                    if resp.on_hover_text(format!("{} — set your name in File › Options", app.session.author)).clicked() {
+                    if resp
+                        .on_hover_text(crate::i18n::fmt(tl!("{name} — set your name in File › Options"), &[("name", &app.session.author)]))
+                        .clicked()
+                    {
                         let _ = app.run("ui.backstage", json!({"value": true, "page": "options", "pane": "general"}));
                     }
                     ui.add_space(8.0);

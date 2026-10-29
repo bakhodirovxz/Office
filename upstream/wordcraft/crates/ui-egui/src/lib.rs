@@ -659,7 +659,8 @@ impl SaveChoice {
 }
 
 impl WordApp {
-    pub fn new(session: Session, services: Services) -> Self {
+    pub fn new(mut session: Session, services: Services) -> Self {
+        crate::office_overlay::replace_placeholder_author(&mut session.author);
         // Numeral › System follows the system locale, found here rather than in layout.
         if let Some(tag) = sys_locale::get_locale() {
             wordcraft_engine::set_system_locale(&tag);
@@ -805,6 +806,8 @@ impl WordApp {
         if !author.trim().is_empty() {
             self.session.author = author;
         }
+        // office overlay (wordcraft/0137): a name saved before is never the placeholder again.
+        crate::office_overlay::replace_placeholder_author(&mut self.session.author);
         self.session.initials = std::mem::take(&mut self.ui.initials).chars().take(wordcraft_engine::cmd::options::MAX_INITIALS_CHARS).collect();
         for w in std::mem::take(&mut self.ui.dictionary).iter().take(MAX_DICTIONARY) {
             let w = w.trim();
@@ -1967,6 +1970,8 @@ impl WordApp {
         // (a Polish interface: Polish spelling, grammar and hyphenation from the first word).
         if self.applied_editing != Some(lang) {
             self.session.set_editing_language(lang.editing_lang());
+            // office overlay (wordcraft/0135): an Uzbek or Russian interface starts new documents on A4 (owner decision Q6).
+            self.session.set_interface_a4(matches!(lang.code(), "ru" | "uz-latn" | "uz-cyrl"));
             self.applied_editing = Some(lang);
         }
         options::sync(self);
@@ -5259,7 +5264,9 @@ mod tests {
     #[test]
     fn the_print_button_shows_only_with_a_print_hook() {
         use egui_kittest::kittest::Queryable;
-        const BLURB: &str = "Send the document straight to the system print dialog, or save a copy in another format below.";
+        // wordcraft/0136: the page holds only printing; the hookless page says printing goes through a PDF.
+        const BLURB: &str = "The printer, two-sided printing and pages per sheet are chosen in the system print dialog.";
+        const NO_HOOK: &str = "Printing goes through a PDF: save it, then print it from any viewer.";
         for hook in [false, true] {
             let printed = std::rc::Rc::new(std::cell::Cell::new(0));
             let mut a = app();
@@ -5284,7 +5291,10 @@ mod tests {
             }
             assert!(h.state().ui.backstage && h.state().ui.backstage_page == "print", "the Print page is open");
             assert_eq!(h.query_by_label(BLURB).is_some(), hook, "hook {hook}: the Print button's blurb");
-            assert!(h.query_by_label("PDF document (*.pdf)").is_some(), "hook {hook}: the page rendered its export choices");
+            assert_eq!(h.query_by_label(NO_HOOK).is_some(), !hook, "hook {hook}: the PDF route is explained without a hook");
+            assert!(h.query_by_label("PDF document (*.pdf)").is_none(), "hook {hook}: the export choices are on File › Export only");
+            assert!(h.query_by_label("Odd or even pages").is_some(), "hook {hook}: the odd/even list has a label");
+            assert!(h.query_by_label("Print Markup").is_some(), "hook {hook}: Print Markup is among the settings");
             if hook {
                 // The page's own Print button (the backstage list has a Print entry too): the last.
                 let buttons: Vec<_> = h.query_all(egui_kittest::kittest::By::new().role(egui::accesskit::Role::Button).label("Print")).collect();

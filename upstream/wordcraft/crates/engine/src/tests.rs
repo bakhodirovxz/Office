@@ -7256,6 +7256,39 @@ fn bibliography_sorts_polish_authors() {
     assert!(at("Lis") < at("Łukasiewicz") && at("Łukasiewicz") < at("Mazur"), "{t}");
 }
 
+/// office overlay (wordcraft/0135): a new blank document is Times New Roman 12 pt (the body theme font too); an Uzbek or
+/// Russian interface starts it on A4 even where the system region uses Letter, an English one keeps the region's paper,
+/// and a region chosen in Options still wins. Opened files keep their own fonts.
+#[test]
+fn new_documents_are_times_new_roman_12_on_the_interface_paper() {
+    let mut s = s();
+    run(&mut s, "file.new", json!({}));
+    let c = s.doc.styles.resolve_char(None, &Default::default());
+    assert_eq!((c.font.as_str(), c.size), ("Times New Roman", 12.0));
+    assert_eq!(s.doc.settings.minor_font, "Times New Roman");
+    let paper = |s: &Session| wordcraft_geom::paper_name(s.doc.last_section.page_w, s.doc.last_section.page_h);
+    assert_eq!(paper(&s), Some("Letter"), "en-US system, English interface");
+    // The untouched blank document takes the interface's paper at once; File › New keeps it.
+    s.set_interface_a4(true);
+    assert_eq!(paper(&s), Some("A4"));
+    run(&mut s, "file.new", json!({}));
+    assert_eq!(paper(&s), Some("A4"));
+    // A document with text keeps its paper when the language changes back.
+    run(&mut s, "text.insert", json!({"text": "Salom"}));
+    s.set_interface_a4(false);
+    assert_eq!(paper(&s), Some("A4"));
+    run(&mut s, "file.new", json!({}));
+    assert_eq!(paper(&s), Some("Letter"));
+    // A region chosen in Options wins over the interface.
+    s.set_interface_a4(true);
+    run(&mut s, "file.options", json!({"region": "en-US"}));
+    run(&mut s, "file.new", json!({}));
+    assert_eq!(paper(&s), Some("Letter"));
+    // A file keeps its font: the templates are not Times New Roman.
+    run(&mut s, "file.new", json!({"template": "letter"}));
+    assert_ne!(s.doc.styles.default_chr.font.as_deref(), Some("Times New Roman"));
+}
+
 /// A new blank document takes its paper from the region, and lengths are shown in the region's
 /// unit with its decimal separator; an explicit Measurement units choice still wins (#838).
 #[test]

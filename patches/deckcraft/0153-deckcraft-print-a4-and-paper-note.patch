@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] backstage: notes and handouts print on A4 in an Uzbek or Russian interface; the greyed paper boxes are explained
+
+Owner decision Q6 (2026-10-29): notes pages and handouts print on A4 in an Uzbek or Russian interface; Letter stays for English (the Print page defaulted to Letter in every language). WP23: with Full Page Slides the paper and orientation boxes are greyed out without a word; a dim line now says they apply to notes pages and handouts.
+---
+ crates/ui-egui/src/backstage.rs       |  7 ++++++-
+ crates/ui-egui/src/backstage_tests.rs | 17 +++++++++++++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index a0845c8..2499bf1 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -192,7 +192,8 @@ impl Backstage {
+             print_layout: "slides",
+             print_hidden: false,
+             print_frame: true,
+-            print_paper: "letter",
++            // office overlay (deckcraft/0153): A4 in an Uzbek or Russian interface, Letter in English (owner decision Q6).
++            print_paper: if matches!(crate::i18n::current().code(), "ru" | "uz-latn" | "uz-cyrl") { "a4" } else { "letter" },
+             print_landscape: false,
+             preview_page: 0,
+             export: ExportTask::Pdf,
+@@ -1093,6 +1094,10 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+             ui.add_space(4.0);
+             // PowerPoint prints full-page slides on slide-shaped pages; paper and orientation are
+             // for notes pages and handouts.
++            if bs.print_layout == "slides" {
++                // office overlay (deckcraft/0153, WP23): say why the two boxes below are greyed out.
++                dim(ui, "Paper and orientation apply to notes pages and handouts.");
++            }
+             ui.add_enabled_ui(bs.print_layout != "slides", |ui| {
+                 let paper = deckcraft_engine::cmd::file::PAPERS.iter().find(|p| p.0 == bs.print_paper).map_or("Letter", |p| p.1);
+                 egui::ComboBox::from_id_salt("backstage_print_paper").width(240.0).selected_text(crate::i18n::t(paper)).show_ui(ui, |ui| {
+diff --git a/crates/ui-egui/src/backstage_tests.rs b/crates/ui-egui/src/backstage_tests.rs
+index c29ef47..cba100f 100644
+--- a/crates/ui-egui/src/backstage_tests.rs
++++ b/crates/ui-egui/src/backstage_tests.rs
+@@ -561,3 +561,20 @@ fn print_slides_follow_the_settings() {
+     bs.print_layout = "slides";
+     assert_eq!(print_page_size(&bs, &doc), (doc.slide_size.width as f32, doc.slide_size.height as f32), "slides print slide-shaped");
+ }
++
++/// office overlay (deckcraft/0152, 0153): a new deck is set in Times New Roman (theme heading and body fonts); notes pages and
++/// handouts print on A4 in an Uzbek or Russian interface and on Letter in English.
++#[test]
++fn new_decks_are_times_new_roman_and_print_on_the_interface_paper() {
++    let s = Session::with_new();
++    let theme = &s.doc().unwrap().doc.masters[0].theme;
++    assert_eq!((theme.fonts.major.latin.as_str(), theme.fonts.minor.latin.as_str()), ("Times New Roman", "Times New Roman"));
++    assert_eq!(Backstage::new(Page::Print, (1, Some(0))).print_paper, "letter");
++    // Built without the overlay, the app has no Uzbek or Russian interface.
++    for code in ["ru", "uz-latn", "uz-cyrl"] {
++        let Some(lang) = crate::i18n::Lang::from_tag(code) else { continue };
++        crate::i18n::set_current(lang);
++        assert_eq!(Backstage::new(Page::Print, (1, Some(0))).print_paper, "a4", "{code}");
++    }
++    crate::i18n::set_current(crate::i18n::Lang::EN);
++}

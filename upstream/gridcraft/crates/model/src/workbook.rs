@@ -162,6 +162,16 @@ impl Workbook {
     pub fn active(&self) -> Option<&Sheet> {
         self.sheet(self.active_sheet)
     }
+    /// office overlay (gridcraft/0151): the default row height of a sheet added to this workbook: the height Excel gives the
+    /// new-workbook font when that is the Normal font, else the Calibri 11 one (the height upstream always used).
+    pub fn new_sheet_row_height(&self) -> f32 {
+        let f = &self.styles.get(crate::StyleId::DEFAULT).font;
+        if f.name == crate::NEW_WORKBOOK_FONT && f.size == crate::NEW_WORKBOOK_FONT_SIZE {
+            crate::NEW_WORKBOOK_ROW_HEIGHT
+        } else {
+            crate::DEFAULT_ROW_HEIGHT
+        }
+    }
     /// A fresh sheet name `SheetN` not in use.
     pub fn next_sheet_name(&self) -> String {
         (1..).map(|n| format!("Sheet{n}")).find(|n| self.sheet_index(n).is_none()).unwrap_or_else(|| "Sheet".into())

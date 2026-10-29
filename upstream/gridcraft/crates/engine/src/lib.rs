@@ -228,8 +228,8 @@ impl Default for Prefs {
             enter_direction: "down".into(),
             autocomplete: true,
             user_name: "GridCraft User".into(),
-            default_font: gridcraft_model::DEFAULT_FONT.into(),
-            default_font_size: gridcraft_model::DEFAULT_FONT_SIZE,
+            default_font: gridcraft_model::NEW_WORKBOOK_FONT.into(),
+            default_font_size: gridcraft_model::NEW_WORKBOOK_FONT_SIZE,
             sheets_in_new_workbook: 1,
             r1c1: false,
             user_dictionary: vec![],
@@ -328,7 +328,25 @@ impl Session {
             let name = wb.next_sheet_name();
             wb.sheets.push(Arc::new(gridcraft_model::Sheet::new(name)));
         }
+        // office overlay (gridcraft/0151): a new workbook is set in Times New Roman 12 pt with rows as high as Excel makes them
+        // for it, and its sheets print on the interface's paper (owner decisions 2026-10-29). Opened files keep their own.
+        let mut normal = wb.styles.get(gridcraft_model::StyleId::DEFAULT).clone();
+        normal.font.name = gridcraft_model::NEW_WORKBOOK_FONT.into();
+        normal.font.size = gridcraft_model::NEW_WORKBOOK_FONT_SIZE;
+        wb.styles = gridcraft_model::StyleTable::with_default(normal);
+        let paper = self.new_sheet_paper();
+        for sh in wb.sheets.iter_mut() {
+            let sh = Arc::make_mut(sh);
+            sh.default_row_height = gridcraft_model::NEW_WORKBOOK_ROW_HEIGHT;
+            sh.print.paper = paper.into();
+        }
         self.add_document(DocState::new(wb, None, format!("Book{n}")))
+    }
+
+    /// office overlay (gridcraft/0151): the paper a new workbook's sheets start on: A4 in an Uzbek or Russian interface, Letter
+    /// in English (owner decision Q6). The number locale follows the interface language ([`Prefs::num_locale`]).
+    pub fn new_sheet_paper(&self) -> &'static str {
+        if self.prefs.num_locale == gridcraft_core::NumLocale::EnUs { "Letter" } else { "A4" }
     }
 
     pub fn commands(&self) -> Vec<CommandInfo> {

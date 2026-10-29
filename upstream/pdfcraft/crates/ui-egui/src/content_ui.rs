@@ -233,7 +233,8 @@ impl MoveBackground {
 
 /// Text style for new text (the panel's Format controls set it).
 pub fn default_style() -> AddedText {
-    AddedText { size: 12.0, ..AddedText::default() }
+    // office overlay (pdfcraft/0118): added text starts in Times (Times New Roman where installed), 12 pt (owner decision 2026-10-29).
+    AddedText { size: 12.0, family: pdfcraft_engine::FontFamily::Times, ..AddedText::default() }
 }
 
 /// Display-space rect → screen.

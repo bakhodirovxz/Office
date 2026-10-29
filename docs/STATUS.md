@@ -1295,3 +1295,50 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (the domain build failed on a transient file error under disk pressure), so its Hujjat tab is not in the picture.
 - **Not checked:** clippy on gridcraft/deckcraft/pdfcraft (the hooks mirror the Docs code, which is clean); a Windows switch
   to dark while `system` is chosen (the owner's PC; upstream follows it live in Docs, Sheets and PDF); the MSI.
+### Phase 4 fix (2026-10-29): clear print pages, Times New Roman 12 for new documents, A4 for uz/ru (branch `p4-print`)
+- **Owner decisions taken** (`design-system.md`, "Revised"; Q6): each app keeps its own look; new documents are Times New
+  Roman 12 pt (Slides: typeface only); A4 is the first paper for uz/ru, Letter stays for en-US. Plus the WP23 print finding
+  (`usability.md` finding 3).
+- **Docs (wordcraft/0135, 0136).** `blank_document` sets the docDefaults run font and size and the body theme font to Times
+  New Roman 12 (so Design › Fonts and Style Sets keep it); templates and opened files keep theirs. `Session::set_interface_a4`
+  (set by the UI from the interface language, like the editing language) makes new documents A4 for uz/ru whatever the
+  system region says; a region chosen in Options still wins; the untouched start document is resized at once. Print has its
+  own page (it shared `export_page` with Export): Print (accent, first) and Save as PDF, then printer/copies, Pages with a
+  labelled "Odd or even pages" list, Orientation, Scale to paper size, Print Markup and the page count; the 11 format buttons
+  stay on Export only. ru rows (upstream `ru.tsv`) and uz rows for the three untranslated settings, the Recover page and the
+  title bar's account tip. The placeholder author "WordCraft User" becomes the Windows account name (`USERNAME`) until
+  Options sets one, as Word does (web: no account name, the placeholder stays).
+- **Sheets (gridcraft/0151, 0152).** A new workbook's Normal font is Times New Roman 12 pt with 21 px (15.75 pt) default
+  rows, the height Excel gives that font (Calibri 11: 20 px / 15 pt); its sheets are A4 when the number locale (= the
+  interface language) is ru/uz; the desktop Book1 is made after the prefs so it knows the language; Insert Sheet takes the
+  active sheet's paper and the Normal font's row height; autofit compares sizes with the workbook's Normal font instead of
+  a fixed 11 pt (so 12 pt text keeps the default row; 11 pt workbooks unchanged). Consequence: 43 rows per Letter page
+  instead of 45 (three print tests updated). The Print page shows the sheet's paper and orientation above Page Setup.
+- **Slides (deckcraft/0152, 0153).** `file.new` without a theme: the default theme with Times New Roman major/minor Latin
+  fonts, sizes unchanged; a chosen theme/template keeps its fonts. Notes/handouts print on A4 for uz/ru; a dim line explains
+  why paper and orientation are greyed for full-page slides.
+- **PDF (pdfcraft/0118, 0119).** Add Text's default style and new text boxes, typewriter text and callouts are standard-14
+  Times 12 (`/TiRo`, nothing embedded); a box keeps the font its /DA names on colour/size changes, and the appearance,
+  rich text and refit measure with that font (Helvetica boxes are measured exactly as before). The Print dialog's first
+  paper and Create › Blank page are A4 for uz/ru (a picked paper is kept for the session).
+- **Font fallback where Times New Roman is missing (not changed, no font files added).** Docs web: the bundled Source Serif 4
+  (not metric-compatible; see the tables entry above). Sheets: Liberation Serif or Tinos when installed (PDF export maps it
+  to std-14 Times); the web grid draws with the bundled UI faces. Slides web: only Inter is embedded, so new decks show a sans
+  face on the web. PDF: std-14 Times is drawn by hayro's own standard-font substitutes on every platform.
+- **Tests (overlay on, debug).** wordcraft engine lib 787/787 (new `new_documents_are_times_new_roman_12_on_the_interface_paper`),
+  doc 173/173, ui-egui lib 720 pass + 12 failing that are all in `ci/quarantine.toml` (brand overlay, catalog coverage);
+  `the_print_button_shows_only_with_a_print_hook` rewritten (no export list on Print, labelled odd/even, Print Markup).
+  gridcraft engine lib 306/306 (new `new_workbooks_are_times_new_roman_12_on_the_interface_paper`; three print tests moved to
+  43 rows a Letter page and `/Times-Bold`) plus all 24 engine integration suites and model 26/26; ui-egui lib 103 pass + 1
+  quarantined (brand). The gridcraft ui-egui integration suites were stopped: their debug binaries filled 30 GB of E: with
+  under 7 GB left. deckcraft engine lib 332/332; ui-egui `backstage` 18 pass + 1 quarantined (new
+  `new_decks_are_times_new_roman_and_print_on_the_interface_paper`). pdfcraft annot lib 46/46 (new `new_text_boxes_are_times_and_old_ones_keep_helvetica`; four /Helv asserts moved to /TiRo), ui-egui `print_ui`+`content_ui` 9/9 (new `first_print_uses_the_interface_paper_and_added_text_is_times`). `verify-queue` for the four
+  apps, `cargo xt register check` (117/117 after the rebase on the p4-theme merge), `i18n lint` (0 errors), `check-stale` and `roundtrip` pass.
+- **Evidence** (`docs/phase4/evidence/print/`, isolated profile, account name set to a neutral word): Docs print page uz-Latn
+  and ru, new Docs document (Times New Roman 12 in the font box, A4 ruler), Sheets print page uz-Latn and ru ("A4 · Kitob"
+  above Page Setup), new Sheets workbook (Times New Roman 12). Sheets ru still shows "Grayscale" in English (a gridcraft ru
+  catalog gap, not touched here). Slides and PDF were not built or photographed (E: fell under 7 GB while other agents built; their defaults are covered by the tests above).
+- **Not done / open:** Sheets' default column width stays 64 px (Excel gives about 72 px for a Times New Roman 12 Normal
+  font, so columns look narrower here than in Excel for new workbooks); sheets made by analysis tools (pivot, solver,
+  forecast) keep Letter and 20 px rows; A4 follows the interface language, not the units (an en-US Windows with a uz
+  interface still shows inches in Docs).
