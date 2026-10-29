@@ -500,3 +500,16 @@ These stay app-owned and are **not** themed: document content, the paper itself 
 | Q7 | PDF's pill-shaped buttons | **become standard 4-radius buttons** · keep pills | Standard, for one button shape everywhere. |
 
 **Decided (owner, 2026-10-29): every recommendation above is accepted** — Q1 System, Q2 one brand colour, Q3 neutral rail, Q4 font sizes later, Q5 keep the coloured icons, Q6 A4 for uz/ru, Q7 standard buttons.
+
+**Revised (owner, 2026-10-29, later the same day): no single design language.** Each app keeps its own look (upstream
+colours, rail, buttons, fonts). This replaces Q2, Q3 and Q7 above and the "one token set" of sections 4-5; options B/C of
+section 3 stay rejected. What stays:
+- **One global theme, changed in one place:** a shared `theme` setting (System · Light · Dark, default System, Q1) in
+  suite-core, set from the shell's settings; every app applies it to its own light/dark palette, like the shared `lang`.
+- **Our own additions follow the host app's design language:** anything our layer adds inside an app (version history,
+  recovery, transliteration, XDFU, the simple toolbars, the web History panel) draws with that app's own `Tokens`,
+  widgets and spacing, never with colours or shapes of its own.
+- Q4 (font sizes later), Q5 (keep the coloured icons) and Q6 (A4 for uz/ru) stand. Print pages are made clear inside
+  each app's own style (section 7's common layout is dropped).
+- Default document font (owner, 2026-10-29): Times New Roman 12 pt for new documents in all four apps (Slides: the
+  typeface only, its slide sizes stay).
