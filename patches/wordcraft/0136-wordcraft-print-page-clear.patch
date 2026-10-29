@@ -14,11 +14,11 @@ WP23 usability finding (docs/phase4/design-system.md 1.1 #4 and the name leaks):
  6 files changed, 85 insertions(+), 46 deletions(-)
 
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index 94799c8..56c1e08 100644
+index 9fad029..c937029 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
-@@ -154,7 +154,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
-         .show(ui, |ui| {
+@@ -158,7 +158,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+             }
              // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
              if app.ui.backstage_page == "print" {
 -                export_page(app, ui);
@@ -27,7 +27,7 @@ index 94799c8..56c1e08 100644
                  return;
              }
              egui::ScrollArea::vertical().show(ui, |ui| match app.ui.backstage_page.as_str() {
-@@ -164,7 +165,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+@@ -168,7 +169,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                  "saveAs" => save_as_page(app, ui),
                  "info" => info_page(app, ui),
                  "recover" => recovery_page(app, ui),
@@ -36,7 +36,7 @@ index 94799c8..56c1e08 100644
                  "options" => crate::options::page(app, ui),
                  _ => home_page(app, ui),
              });
-@@ -496,23 +497,6 @@ fn info_page(app: &mut WordApp, ui: &mut Ui) {
+@@ -500,23 +501,6 @@ fn info_page(app: &mut WordApp, ui: &mut Ui) {
  }
  
  fn export_page(app: &mut WordApp, ui: &mut Ui) {
@@ -103,10 +103,10 @@ index cd064b4..a40aebe 100644
 +	Continue without restoring	Продолжить без восстановления
 +	{name} — set your name in File › Options	{name} — укажите своё имя в разделе Файл › Параметры
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index ce807c5..e7355ff 100644
+index a8bbfa8..d4da787 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
-@@ -659,7 +659,8 @@ impl SaveChoice {
+@@ -662,7 +662,8 @@ impl SaveChoice {
  }
  
  impl WordApp {
@@ -116,7 +116,7 @@ index ce807c5..e7355ff 100644
          // Numeral › System follows the system locale, found here rather than in layout.
          if let Some(tag) = sys_locale::get_locale() {
              wordcraft_engine::set_system_locale(&tag);
-@@ -805,6 +806,8 @@ impl WordApp {
+@@ -813,6 +814,8 @@ impl WordApp {
          if !author.trim().is_empty() {
              self.session.author = author;
          }
@@ -125,7 +125,7 @@ index ce807c5..e7355ff 100644
          self.session.initials = std::mem::take(&mut self.ui.initials).chars().take(wordcraft_engine::cmd::options::MAX_INITIALS_CHARS).collect();
          for w in std::mem::take(&mut self.ui.dictionary).iter().take(MAX_DICTIONARY) {
              let w = w.trim();
-@@ -5261,7 +5264,9 @@ mod tests {
+@@ -5274,7 +5277,9 @@ mod tests {
      #[test]
      fn the_print_button_shows_only_with_a_print_hook() {
          use egui_kittest::kittest::Queryable;
@@ -136,7 +136,7 @@ index ce807c5..e7355ff 100644
          for hook in [false, true] {
              let printed = std::rc::Rc::new(std::cell::Cell::new(0));
              let mut a = app();
-@@ -5286,7 +5291,10 @@ mod tests {
+@@ -5299,7 +5304,10 @@ mod tests {
              }
              assert!(h.state().ui.backstage && h.state().ui.backstage_page == "print", "the Print page is open");
              assert_eq!(h.query_by_label(BLURB).is_some(), hook, "hook {hook}: the Print button's blurb");
