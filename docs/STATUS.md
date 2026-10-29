@@ -1396,3 +1396,10 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   font, so columns look narrower here than in Excel for new workbooks); sheets made by analysis tools (pivot, solver,
   forecast) keep Letter and 20 px rows; A4 follows the interface language, not the units (an en-US Windows with a uz
   interface still shows inches in Docs).
+- **MSI rebuilt from phase-4 `2bb7c0d` (2026-10-29)**, with the alphabet (always 2026), recovery, tables, PDF->Word,
+  i18n, shared theme and TNR 12 / A4 / print page fixes: `E:\office-target\p1\msi\hoshiya-0.1.0-x64.msi`, 201.8 MB,
+  SHA-256 `139DA156…A548` (web release dists, MSVC release builds, shell dist, WiX all rc 0). Not install-tested here.
+  Same version 0.1.0 and ProductCode as the earlier builds, so the installed copy must be uninstalled first.
+  Merge checks: all four apps `cargo check --tests` on p4-print after its rebase; phase-5 suite-core 48/0 and
+  suite-desktop 23+3/0 after the theme merge; wordcraft/0136 regenerated on the phase-5 queue (context lines only).
+  Open: the Docs Recover page names an unsaved copy "Untitled draft" in English (engine `recovery/desktop.rs`, no i18n).
