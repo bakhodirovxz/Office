@@ -1823,8 +1823,22 @@ impl Reader<'_> {
 
     fn read_table(&mut self, sc: &mut StoryCtx, t: &El, rels: &Rels, depth: usize) -> Option<Table> {
         let mut table = Table::default();
+        // A w:tblCellMar (table or row exception) changes only the sides it names; the others keep
+        // the table's (for an exception), else its style's, else Word's. Word writes `w:tblPrEx`
+        // margins with top and bottom only: read as 0, a save turned the left and right ones off.
+        let style_margins = |props: &wordcraft_doc::props::TableProps, doc: &wordcraft_doc::Document| {
+            props
+                .style
+                .as_deref()
+                .and_then(|id| doc.styles.table_style(id))
+                .and_then(|s| s.parts.cell_margins)
+                .unwrap_or(super::props::WORD_CELL_MARGINS)
+        };
         if let Some(p) = t.child("w:tblPr") {
             table.props = self.pc.tblpr(p);
+            if let Some(m) = p.child("w:tblCellMar") {
+                table.props.cell_margins = Some(super::props::margins_over(m, style_margins(&table.props, &self.doc)));
+            }
             if let Some(ch) = p.child("w:tblPrChange") {
                 let old = ch.child("w:tblPr").map(|o| self.pc.tblpr(o)).unwrap_or_default();
                 table.props.fmt_change = PropChange::boxed(self.revision(RevisionKind::Format, ch), old);
@@ -1841,7 +1855,14 @@ impl Reader<'_> {
         collect(t, "w:tr", &mut rows, &mut Vec::new(), 0);
         for (tr, row_controls) in rows.into_iter().take(MAX_ROWS) {
             let mut row = Row { props: tr.child("w:trPr").map(trpr).unwrap_or_default(), cells: Vec::new(), controls: row_controls };
-            row.props.exceptions = tr.child("w:tblPrEx").map(|e| Box::new(self.pc.tblpr(e)));
+            row.props.exceptions = tr.child("w:tblPrEx").map(|e| {
+                let mut x = self.pc.tblpr(e);
+                if let Some(m) = e.child("w:tblCellMar") {
+                    let base = table.props.cell_margins.unwrap_or_else(|| style_margins(&table.props, &self.doc));
+                    x.cell_margins = Some(super::props::margins_over(m, base));
+                }
+                Box::new(x)
+            });
             if let Some(ch) = tr.child("w:trPr").and_then(|p| p.child("w:trPrChange")) {
                 let old = ch.child("w:trPr").map(trpr).unwrap_or_default();
                 row.props.fmt_change = PropChange::boxed(self.revision(RevisionKind::Format, ch), old);

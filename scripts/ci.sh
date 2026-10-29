@@ -34,7 +34,8 @@
 #   msi (on demand)          msvc release builds + shell-dist + cargo xt overlay all + scripts/build-msi.ps1 (WiX 5.0.2); builds only, never installs (the install test is scripts/msi-test.ps1, elevated, by the owner)
 #   msvc (on demand)         x86_64-pc-windows-msvc release builds of the 4 desktop apps, 4 CLIs, convert, convert-api (scripts/build.sh all all --release --msvc); needs VS Build Tools. Not part of any profile
 #   sidecars                 docker build + test.sh of sidecars/pdf2docx and sidecars/soffice (nightly; quick when sidecars/** changed); fails when Docker is down
-#   fidelity-directions (nightly)  scripts/fidelity/run.py --directions all; fails on a NEW "loss without warning" vs ci/fidelity/silent-baseline.json
+#   fidelity-directions (nightly)  scripts/fidelity/run.py --directions all; fails on a NEW "loss without warning" vs ci/fidelity/silent-baseline.json;
+#                                  then Docs tables against ci/fidelity/tables-golden.json (scripts/fidelity/tables.py --golden)
 #   fidelity, xlsx-bench (nightly), sync-dry-run (weekly)
 # Domains: docs(wordcraft) sheets(gridcraft) slides(deckcraft) pdf(pdfcraft). Apps are the upstream names.
 #
@@ -687,6 +688,8 @@ job_fidelity_directions() {
   step fidelity-run env $(cli_env) PYTHONIOENCODING=utf-8 python -I scripts/fidelity/run.py --directions all --out "$out" \
     --convert-bin "$SVC_T/release/convert$EXE" "${extra[@]}" || return 2
   step silent-baseline python -I scripts/fidelity/silent_baseline.py check "$out/summary.json" || rc=1
+  # Docs tables against Word's recorded rule positions (no Office needed; docs/phase4/tables.md)
+  step tables-golden env PYTHONIOENCODING=utf-8 python -I scripts/fidelity/tables.py --golden ci/fidelity/tables-golden.json     --out "$out/tables" --cli "$OFFICE_TARGET/docs/release/docs-cli$EXE" || rc=1
   return $rc
 }
 

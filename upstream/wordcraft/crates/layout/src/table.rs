@@ -372,9 +372,16 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
     };
     apply_cell_widths(t, &mut grid);
     let mut total: f32 = grid.iter().sum();
+    let margins_def = default_margins(t, style.as_ref());
+    // Word 2010 and earlier (compatibility mode 14 and below) hang the table out by its cell
+    // margins so that the cell text, not the border, spans the text column: percentage and
+    // AutoFit widths are taken of that wider room (Word writes a 100% table in a 9355 tw column
+    // with a 9571 tw grid). Mode 15 puts the border at the margin instead.
+    let hang = if ctx.doc.settings.compat_mode < 15 { (first_cell_left_margin_in(t, margins_def) + margins_def[3]).clamp(0.0, 1584.0) } else { 0.0 };
+    let room = avail + hang;
     // A top-level table in an inherited header or footer takes its share of the defining
     // section's width (`Ctx::pct_base`).
-    let pct_base = if depth <= 1 { ctx.pct_base.unwrap_or(avail) } else { avail };
+    let pct_base = if depth <= 1 { ctx.pct_base.map_or(room, |b| b + hang) } else { room };
     let target = match (t.props.width_pct, t.props.width) {
         // Word keeps a percentage past 100%; the cap only bounds hostile input.
         (Some(p), _) if p > 0.0 => Some(pct_base * (p / 100.0).min(MAX_WIDTH_SHARE)),
@@ -391,7 +398,9 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
         }
         total = tw;
     }
-    if total > avail * 1.5 && !t.props.fixed {
+    // A table with a preferred width of its own (Word writes one once columns are sized by hand)
+    // keeps it past the margin and the page edge: Word lets such a table run off the page.
+    if total > avail * 1.5 && !t.props.fixed && t.props.width.is_none() && t.props.width_pct.is_none() {
         let k = avail / total.max(1.0);
         grid.iter_mut().for_each(|w| *w *= k);
         total = avail;
@@ -399,13 +408,13 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
     if !t.props.fixed {
         // Measuring lays paragraphs out once more; it mustn't count their equations twice.
         let eq_count = ctx.eq_count;
-        let content = column_content(ctx, t, style.as_ref(), depth);
+        let content = column_content(ctx, t, style.as_ref(), depth, Some(&grid));
         ctx.eq_count = eq_count;
         if let Some(content) = content {
-            autofit(&mut grid, &content, t, avail);
+            autofit(&mut grid, &content, t, room);
             // Never wider than the room it had, however long an unbreakable word.
             let fitted: f32 = grid.iter().sum();
-            let cap = avail.max(total);
+            let cap = room.max(total);
             if fitted > cap {
                 grid.iter_mut().for_each(|w| *w *= cap / fitted);
             }
@@ -421,7 +430,6 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
     colx.push(acc);
     // Word 2013 and later (compatibility mode 15) put the table's border at the margin (plus its
     // indent); earlier modes line the first cell's text up with it instead.
-    let margins_def = default_margins(t, style.as_ref());
     let indent = t.props.indent.unwrap_or(0.0);
     // The style's borders, overlaid by the table's own side by side.
     let mut tborders = style.as_ref().and_then(|s| s.parts.borders).unwrap_or_default();
@@ -1097,9 +1105,10 @@ fn region_text(st: &TableStyleProps, region: Region) -> CellText {
 }
 
 /// Each column's narrowest and widest content, cell margins included: its longest word and its
-/// longest line. A cell spanning columns shares what they lack between them; nested tables count
-/// with their own. `None` when every cell is empty.
-fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, depth: usize) -> Option<Vec<(f32, f32)>> {
+/// longest line. A cell spanning columns shares what they lack between them, in proportion to
+/// their `grid` widths when given (else evenly); nested tables count with their own. `None` when
+/// every cell is empty.
+fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, depth: usize, grid: Option<&[f32]>) -> Option<Vec<(f32, f32)>> {
     let margins_def = default_margins(t, style);
     let mut cols = vec![(0.0f32, 0.0f32); t.cols().max(1)];
     let mut spanning = Vec::new();
@@ -1123,12 +1132,29 @@ fn column_content(ctx: &mut Ctx, t: &Table, style: Option<&TableStyleProps>, dep
         }
     }
     for (g, span, need) in spanning {
-        let Some(cs) = cols.get_mut(g..(g + span).min(t.cols())) else { continue };
-        let n = cs.len().max(1) as f32;
-        let (have_lo, have_hi) = cs.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
-        for c in cs {
-            c.0 += (need.0 - have_lo).max(0.0) / n;
-            c.1 += (need.1 - have_hi).max(0.0) / n;
+        let end = (g + span).min(t.cols());
+        let Some(cs) = cols.get_mut(g..end) else { continue };
+        // With a grid, each column needs its share of the cell in proportion to its width, so
+        // the columns grow only when together they are too narrow for the cell (Word keeps a
+        // narrow column under a merged header). An even share of what they lack would push a
+        // narrow column past its width and squeeze its neighbours.
+        let weights = grid.and_then(|gr| gr.get(g..end)).filter(|w| w.len() == cs.len() && w.iter().all(|x| x.is_finite() && *x >= 0.0));
+        let sum = weights.map_or(0.0, |w| w.iter().sum::<f32>());
+        match weights {
+            Some(ws) if sum > 0.0 => {
+                for (c, w) in cs.iter_mut().zip(ws) {
+                    c.0 = c.0.max(need.0 * w / sum);
+                    c.1 = c.1.max(need.1 * w / sum);
+                }
+            }
+            _ => {
+                let n = cs.len().max(1) as f32;
+                let (have_lo, have_hi) = cs.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
+                for c in cs {
+                    c.0 += (need.0 - have_lo).max(0.0) / n;
+                    c.1 += (need.1 - have_hi).max(0.0) / n;
+                }
+            }
         }
     }
     any.then_some(cols)
@@ -1152,7 +1178,7 @@ fn blocks_content(ctx: &mut Ctx, blocks: &Blocks, text: Option<&CellText>, depth
                     (width, width)
                 } else {
                     let style = table_style(ctx, nt);
-                    let cols = column_content(ctx, nt, style.as_ref(), depth + 1).unwrap_or_default();
+                    let cols = column_content(ctx, nt, style.as_ref(), depth + 1, Some(&nt.grid)).unwrap_or_default();
                     let (l, h) = cols.iter().fold((0.0, 0.0), |(l, h), c| (l + c.0, h + c.1));
                     (width.max(l), width.max(h))
                 }

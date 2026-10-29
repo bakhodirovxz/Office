@@ -483,6 +483,10 @@ fn tblpr_inner(w: &mut W, t: &TableProps) {
     if let Some(a) = t.align {
         w.val("w:jc", align_val(if a == Align::Justify || a == Align::Distribute { Align::Left } else { a }));
     }
+    // The CT_TblPr sequence (ECMA-376 Part 1, 17.4) puts it between jc and tblInd.
+    if let Some(s) = t.cell_spacing {
+        w.empty("w:tblCellSpacing", &[("w:w", &twips(s)), ("w:type", "dxa")]);
+    }
     if let Some(i) = t.indent {
         w.empty("w:tblInd", &[("w:w", &twips(i)), ("w:type", "dxa")]);
     }
