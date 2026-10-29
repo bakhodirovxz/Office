@@ -1317,6 +1317,90 @@ fn a_vertical_merge_lays_out_as_one_cell() {
     assert_eq!((hit.2, hit.3), (0, 0));
 }
 
+/// The left and right edges of row `row`'s cells in the only table on page 1.
+fn row_cell_edges(l: &DocLayout, row: usize) -> Vec<(f32, f32)> {
+    l.pages[0]
+        .items
+        .iter()
+        .filter_map(|i| if let Placed::Cell { rect, row: r, .. } = i { (*r == row).then_some((rect.x, rect.x + rect.w)) } else { None })
+        .collect()
+}
+
+fn width_cell(w: f32, span: u32, text: &str) -> wordcraft_doc::table::Cell {
+    let mut c = wordcraft_doc::table::Cell::with_text(text);
+    c.props.width = Some(w);
+    c.props.span = span;
+    c
+}
+
+/// A cell spanning a narrow grid column (Word: per-row cell widths, Split Cells) leaves the grid
+/// alone when the columns it spans are wide enough together: before, each spanned column needed
+/// an even share of the cell's longest word, so the 14 pt column grew at its neighbours' cost.
+#[test]
+fn a_cell_spanning_a_narrow_column_keeps_the_grid() {
+    let mut d = Document::from_text(
+        "before
+after",
+    );
+    let grid = [56.7, 85.05, 14.15, 99.25, 170.1];
+    let mut t = Table::new(2, 5, 425.25);
+    t.grid = grid.to_vec();
+    t.rows[0].cells = vec![width_cell(56.7, 1, "1."), width_cell(198.45, 3, "Karimov Aziz Botirovich"), width_cell(170.1, 1, "x")];
+    t.rows[1].cells = vec![width_cell(56.7, 1, "2."), width_cell(99.2, 2, "a"), width_cell(99.25, 1, "b"), width_cell(170.1, 1, "y")];
+    d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
+    let l = lay(&d);
+    let x0 = row_cell_edges(&l, 1)[0].0;
+    let mut at = x0;
+    let mut want = vec![x0];
+    for w in grid {
+        at += w;
+        want.push(at);
+    }
+    let r1 = row_cell_edges(&l, 1);
+    // Row 1 starts its third cell where grid column 3 starts: columns 1 and 2 kept their widths.
+    assert!((r1[2].0 - want[3]).abs() < 0.05, "{r1:?} {want:?}");
+    assert!((r1[3].1 - want[5]).abs() < 0.05, "{r1:?} {want:?}");
+}
+
+/// Word 2010 and earlier (compatibility mode 14 and below) hang a table out by its cell margins on
+/// both sides, and a 100% table spans the text column plus those margins; mode 15 puts the borders
+/// at the margins.
+#[test]
+fn legacy_mode_percentage_tables_take_the_cell_margins_too() {
+    for (mode, left, right) in [(15u32, 72.0f32, 540.0f32), (14, 72.0 - 5.4, 540.0 + 5.4)] {
+        let mut d = Document::from_text(
+            "before
+after",
+        );
+        d.settings.compat_mode = mode;
+        let mut t = Table::new(1, 2, 468.0);
+        t.props.width_pct = Some(100.0);
+        for c in &mut t.rows[0].cells {
+            c.props.width = None;
+            c.props.width_pct = Some(50.0);
+        }
+        d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
+        let e = row_cell_edges(&lay(&d), 0);
+        assert!((e[0].0 - left).abs() < 0.3 && (e[1].1 - right).abs() < 0.3, "mode {mode}: {e:?}");
+    }
+}
+
+/// A table whose own preferred width is more than the text column keeps it, even past the page
+/// edge (Word lets such a table run off the page); it used to be squeezed into the column once it
+/// passed 1.5 times its width.
+#[test]
+fn a_preferred_table_width_wider_than_the_column_stands() {
+    let mut d = Document::from_text(
+        "before
+after",
+    );
+    let mut t = Table::new(1, 6, 748.8);
+    t.props.width = Some(748.8);
+    d.insert_block(StoryRef::Body, &Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
+    let e = row_cell_edges(&lay(&d), 0);
+    assert!((e[5].1 - e[0].0 - 748.8).abs() < 0.5, "{e:?}");
+}
+
 /// A 1×3 table after "before" whose middle cell holds `text` running `dir`.
 fn turned_table(dir: TextDirection, text: &str, row: Option<f32>) -> Document {
     let mut d = Document::from_text("before\nafter");

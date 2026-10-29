@@ -56,8 +56,8 @@ const COLUMNS: [&str; 11] = [
     "last rebase",
     "drop when",
 ];
-const CATEGORIES: [&str; 9] = [
-    "mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "translit", "parked",
+const CATEGORIES: [&str; 10] = [
+    "mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "translit", "fidelity", "parked",
 ];
 
 /// Every `patches/<repo>/NNNN-*.patch` must have exactly one row in `patches/REGISTER.md` and the other way round.

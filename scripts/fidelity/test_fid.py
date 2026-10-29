@@ -6,9 +6,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fid import structure as S                      # noqa: E402
 from fid.p2d import width_error                     # noqa: E402
 from fid.util import text_metrics                   # noqa: E402
+from fid import tablexml                             # noqa: E402
 
 
 class T(unittest.TestCase):
+    def test_table_markup_losses_ignore_same_meaning_spellings(self):
+        before = {"border:none/0": 1, "trHeight:567/None": 2, "tblCellSpacing:28/dxa": 1, "gridCol:283": 1}
+        after = {"border:nil/0": 1, "trHeight:567/atLeast": 2, "gridCol:300": 1}
+        self.assertEqual(tablexml.losses(before, after), {"tblCellSpacing:28/dxa": [1, 0], "gridCol:283": [1, 0]})
+
+    def test_table_rules_cluster_thick_lines_to_their_centre(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("fid_tables", Path(__file__).resolve().parent / "tables.py")
+        t = importlib.util.module_from_spec(spec); spec.loader.exec_module(t)
+        self.assertEqual(t.cluster([10, 11, 12, 40, 70, 71]), [11.0, 40.0, 70.5])
+        self.assertEqual(t.rule_err([10.0, 100.0], [10.5, 120.0])["missed"], 1)   # 20 px = 15 pt away
+
     def test_silent_losses(self):
         losses = [{"feature": "comments", "before": 1, "after": 0}, {"feature": "charts", "before": 1, "after": 0}]
         warn = [{"code": "upstream", "text": "Warning: comments are not imported"}]

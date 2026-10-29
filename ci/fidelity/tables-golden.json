@@ -1,0 +1,64 @@
+{
+ "_about": "Rule positions (pt from the page's top-left, page 1) of Word 16's PDF of each fixture of scripts/fidelity/fid/table_fixtures.py, recorded by tables.py --record. Numbers only; no Word output is kept.",
+ "tol_pt": 1.5,
+ "spans_narrow": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 141.8, 226.5, 240.8, 340.1, 510.4 ],
+  "horizontal_pt": [ 70.5, 84.8, 99.0, 113.2, 141.4, 155.6 ]
+ },
+ "form_card": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 165.8, 182.2, 203.2, 214.5, 221.2, 246.8, 297.0, 325.9, 349.5, 363.0, 411.8, 420.0, 445.5, 553.1, 555.0, 564.8, 579.8 ],
+  "horizontal_pt": [ 70.5, 84.8, 112.9, 141.0, 155.2, 183.0, 197.2, 239.2, 253.9 ],
+  "tol_pt": 2.0,
+  "note": "Word widens grid column 6 by 2.7 pt for a word that overflows its two columns by about 0.6 pt and takes it back from other columns; our AutoFit grows the two columns by what is missing only (up to 1.9 pt apart)"
+ },
+ "compat14_autofit_long": {
+  "pages": 1,
+  "vertical_pt": [ 79.5, 99.0, 429.0, 508.1, 558.0 ],
+  "horizontal_pt": [ 70.5, 98.2, 126.8, 168.8, 183.0, 197.2 ]
+ },
+ "compat14_pct100": {
+  "pages": 1,
+  "vertical_pt": [ 79.5, 198.8, 318.8, 438.0, 558.0 ],
+  "horizontal_pt": [ 70.5, 98.2, 140.2, 154.5, 183.0, 197.2 ]
+ },
+ "compat14_pct80": {
+  "pages": 1,
+  "vertical_pt": [ 79.5, 117.8, 309.0, 462.0 ],
+  "horizontal_pt": [ 70.5, 84.8, 99.0, 113.2, 127.5, 141.8 ]
+ },
+ "compat15_autofit_long": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 105.0, 424.1, 502.5, 552.4 ],
+  "horizontal_pt": [ 70.5, 98.2, 126.8, 168.8, 183.0, 197.2 ]
+ },
+ "compat14_grid_dxa": {
+  "pages": 1,
+  "vertical_pt": [ 79.5, 198.8, 318.8, 438.0, 558.0 ],
+  "horizontal_pt": [ 70.5, 98.2, 140.2, 154.5, 183.0, 197.2 ]
+ },
+ "wide_dxa": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 210.0, 334.5, 459.4, 584.2 ],
+  "horizontal_pt": [ 70.5, 98.2, 126.8, 141.0, 168.8 ]
+ },
+ "wide_auto160": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 153.0, 250.1, 341.6, 426.0, 489.0, 552.4 ],
+  "horizontal_pt": [ 70.5, 98.2, 140.2, 168.8, 210.4 ],
+  "known_gap": "w:tblW auto with cell widths past the text column: Word fits the table into the column with its own width split (not proportional, not by content); we keep the widths below 1.5 times the column and scale them evenly above"
+ },
+ "wide_auto120": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 157.5, 245.6, 330.8, 411.8, 482.2, 552.4 ],
+  "horizontal_pt": [ 70.5, 98.2, 140.2, 168.8, 210.4 ],
+  "known_gap": "w:tblW auto with cell widths past the text column: Word fits the table into the column with its own width split (not proportional, not by content); we keep the widths below 1.5 times the column and scale them evenly above"
+ },
+ "cell_spacing": {
+  "pages": 1,
+  "vertical_pt": [ 84.8, 88.1, 238.5, 241.5, 393.8, 397.5, 549.0, 552.4 ],
+  "horizontal_pt": [ 70.5, 73.5, 87.8, 91.5, 119.2, 123.0, 136.9, 140.2, 168.4, 171.8 ],
+  "known_gap": "tblCellSpacing is kept on save but not laid out (cells drawn without the spacing)"
+ }
+}
