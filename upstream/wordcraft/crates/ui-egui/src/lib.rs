@@ -633,6 +633,8 @@ pub struct WordApp {
     /// between, such as an Undo, starts a new one).
     pub(crate) info_editing: Option<(&'static str, u64)>,
     recovery_seen: bool,
+    /// office overlay (WP23): the Document Recovery pane is open (panes.rs).
+    recovery_pane: bool,
     /// Started on the Start screen with nothing to open (#1129): the id of the placeholder
     /// blank document the session holds until the user creates or opens one. While it is still
     /// the session's document, no document is open: the window shows no page and only the File
@@ -659,6 +661,12 @@ impl SaveChoice {
             _ => return None,
         })
     }
+}
+
+/// The name a recovery copy shows (office overlay, WP23): an untitled document has none stored (older copies hold
+/// "Untitled draft"), and is named in the interface language like the title bar does.
+pub(crate) fn recovery_name(stored: &str) -> String {
+    if stored.is_empty() || stored == "Untitled draft" { tl!("Document1").into() } else { stored.to_string() }
 }
 
 impl WordApp {
@@ -736,6 +744,7 @@ impl WordApp {
             file_browser: file_browser::State::default(),
             info_editing: None,
             recovery_seen: false,
+            recovery_pane: false,
             no_document: None,
             comment_drafts: Default::default(),
         }
@@ -1676,7 +1685,7 @@ impl WordApp {
                     let Some(info) = self.session.recovery_documents().into_iter().find(|d| d.id == id) else {
                         return Some(Err("no such recovery copy".into()));
                     };
-                    self.dialog = Some(dialogs::Dialog::DiscardRecovery { id: info.id, name: info.name });
+                    self.dialog = Some(dialogs::Dialog::DiscardRecovery { id: info.id, name: recovery_name(&info.name) });
                     json!({"pending": "discardRecovery"})
                 }
             }
@@ -2061,11 +2070,10 @@ impl WordApp {
         }
         if !self.recovery_seen && self.session.recovery_ready() {
             self.recovery_seen = true;
-            // office overlay (WP23): the page opens once for copies an earlier start has not offered (a crash leaves them;
+            // office overlay (WP23): the Document Recovery pane opens once for copies an earlier start has not offered (a crash leaves them;
             // a clean exit removes its own); File › Recover still lists them all.
             if self.session.recovery_documents().iter().any(|d| !d.offered) && !self.session.dirty {
-                self.ui.backstage = true;
-                self.ui.backstage_page = "recover".into();
+                self.recovery_pane = true;
                 self.session.recovery_offer();
             }
         }

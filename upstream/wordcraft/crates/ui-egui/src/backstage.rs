@@ -31,7 +31,6 @@ fn back_chevron_c(band_min_x: f32, center_y: f32, fullscreen: bool, content_left
 
 pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
-    let recovery = app.ui.backstage_page == "recover";
     // No document open (#1129): only the pages that open or create one, and Options.
     let has_document = app.has_document();
     if !has_document && !works_without_document(&app.ui.backstage_page) {
@@ -42,7 +41,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         .exact_size(200.0)
         // Fixed width, as in Word: without this egui shows a resize handle that does nothing (#502).
         .resizable(false)
-        .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { APP_COLOR }).inner_margin(egui::Margin {
+        .frame(egui::Frame::NONE.fill(APP_COLOR).inner_margin(egui::Margin {
             left: 0,
             right: 0,
             top: if mac { 0 } else { 12 },
@@ -150,7 +149,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
             });
         });
     egui::CentralPanel::default()
-        .frame(egui::Frame::NONE.fill(if recovery { egui::Color32::BLACK } else { t.ribbon }).inner_margin(egui::Margin::symmetric(40, 30)))
+        .frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30)))
         .show(ui, |ui| {
             // A page the host withholds (Save As, Print, Export) falls back to Home.
             if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
@@ -176,12 +175,12 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         });
 }
 
-/// Recovery is a separate copy. Leaving this page never discards it.
+/// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
-    ui.visuals_mut().override_text_color = Some(egui::Color32::WHITE);
+    let t = Tokens::get(ui.ctx());
     heading(ui, "Recover documents");
-    ui.label(tl!("Restore opens an unsaved copy. Your original file stays unchanged."));
-    ui.add_space(20.0);
+    ui.label(egui::RichText::new(tl!("Restore opens an unsaved copy. Your original file stays unchanged.")).color(t.text_dim));
+    ui.add_space(16.0);
     if app.session.password.is_some() {
         ui.label(tl!("Recovery is disabled while this document has a password."));
     }
@@ -196,34 +195,15 @@ fn recovery_page(app: &mut WordApp, ui: &mut Ui) {
         ui.label(tl!("No recovery copies."));
     }
     let busy = app.session.recovery_busy();
-    egui::Grid::new("recovery_documents").min_col_width(180.0).spacing(vec2(24.0, 16.0)).show(ui, |ui| {
-        if !documents.is_empty() {
-            ui.strong(tl!("Document"));
-            ui.strong(tl!("Recovery copy"));
-            ui.end_row();
-        }
-        for doc in documents {
-            ui.label(&doc.name);
-            ui.label(&doc.saved_at);
-            ui.add_enabled_ui(!busy, |ui| {
-                // Buttons keep the theme's own text colour: the page-wide white override is
-                // for labels on the black background and would bleach button labels (#1895).
-                ui.visuals_mut().override_text_color = None;
-                ui.horizontal(|ui| {
-                    if ui.button(tl!("Restore")).clicked() {
-                        let _ = app.run("file.recover", json!({"restore": doc.id}));
-                    }
-                    if ui.button(tl!("Discard…")).clicked() {
-                        let _ = app.run("ui.recoveryDiscard", json!({"id": doc.id}));
-                    }
-                });
-            });
-            ui.end_row();
+    ui.scope(|ui| {
+        ui.set_max_width(420.0);
+        for doc in &documents {
+            crate::panes::recovery_card(app, ui, doc, busy);
+            ui.add_space(8.0);
         }
     });
-    ui.add_space(20.0);
+    ui.add_space(12.0);
     ui.horizontal(|ui| {
-        ui.visuals_mut().override_text_color = None;
         if ui.button(tl!("Continue without restoring")).clicked() {
             let _ = app.run("ui.backstage", json!({"value": false}));
             app.canvas.want_focus = true;
@@ -624,10 +604,11 @@ mod tests {
         let (app, root) = recovery_app();
         let mut h = recovery_harness(app);
         settle_recovery(&mut h);
-        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
-        h.get_by_label("Continue without restoring").click();
+        assert!(h.state().recovery_pane && !h.state().ui.backstage, "the pane opens beside the document, not the page");
+        assert!(h.query_by_label("Document Recovery").is_some());
+        h.get_all_by_label("Close").last().unwrap().click();
         h.run_steps(4);
-        assert!(!h.state().ui.backstage);
+        assert!(!h.state().recovery_pane && !h.state().ui.backstage);
         assert_eq!(h.state().session.recovery_documents().len(), 1);
         h.state_mut().run("file.recover", json!({})).unwrap();
         h.run_steps(4);
@@ -654,18 +635,28 @@ mod tests {
         let (app, root) = recovery_app();
         let mut h = recovery_harness(app);
         settle_recovery(&mut h);
-        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
-        h.get_by_label("Continue without restoring").click();
+        assert!(h.state().recovery_pane && !h.state().ui.backstage);
+        h.get_all_by_label("Close").last().unwrap().click();
         h.run_steps(4);
+        assert!(!h.state().recovery_pane);
         drop(h);
         let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
         app.session.enable_recovery(root.clone(), std::sync::Arc::new(|| {})).unwrap();
         let mut h = recovery_harness(app);
         settle_recovery(&mut h);
-        assert!(!h.state().ui.backstage, "the page is not offered again");
+        assert!(!h.state().recovery_pane && !h.state().ui.backstage, "the pane is not offered again");
         assert_eq!(h.state().session.recovery_documents().len(), 1, "File › Recover still lists the copy");
         drop(h);
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    /// An untitled copy is named in the interface language (older copies hold "Untitled draft"), and the time is local.
+    #[test]
+    fn recovery_names_and_times_are_shown_for_people() {
+        assert_eq!(crate::recovery_name(""), "Document1");
+        assert_eq!(crate::recovery_name("Untitled draft"), "Document1");
+        assert_eq!(crate::recovery_name("Plan.docx"), "Plan.docx");
+        assert_eq!(local_stamp::local_stamp("2026-10-11T10:42:00Z").len(), 16);
     }
 
     #[test]
@@ -674,18 +665,19 @@ mod tests {
         let (app, root) = recovery_app();
         let mut h = recovery_harness(app);
         settle_recovery(&mut h);
+        h.state_mut().recovery_pane = false;
         h.state_mut().execute("text.insert", json!({"text": "Current unsaved work"})).unwrap();
         h.state_mut().autosave_path = Some(root.join("must-not-write.docx"));
         h.state_mut().run("file.recover", json!({})).unwrap();
         h.run_steps(4);
         assert_eq!(h.state().session.recovery_documents().len(), 1);
-        h.get_by_label("Restore").click();
+        h.get_by_label("Synthetic draft").click();
         h.run_steps(4);
         assert!(matches!(h.state().dialog, Some(crate::dialogs::Dialog::SaveChanges { .. })));
         h.get_by_label("Cancel").click();
         h.run_steps(4);
         assert_eq!(h.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Current unsaved work");
-        h.get_by_label("Restore").click();
+        h.get_by_label("Synthetic draft").click();
         h.run_steps(4);
         h.get_by_label("Don't Save").click();
         settle_recovery(&mut h);

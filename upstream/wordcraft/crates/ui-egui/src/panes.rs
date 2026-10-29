@@ -27,6 +27,14 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 crate::dialogs_smart_art::text_pane(app, ui);
             });
     }
+    // office overlay (WP23): the Document Recovery pane, as Word shows it after a crash; the document stays in view.
+    if app.recovery_pane {
+        egui::Panel::left("recovery_pane")
+            .default_size(280.0)
+            .resizable(true)
+            .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
+            .show(ui, |ui| recovery(app, ui));
+    }
     if app.session.view.nav_pane {
         egui::Panel::left("nav_pane")
             .default_size(260.0)
@@ -104,6 +112,75 @@ pub(crate) fn header(ui: &mut Ui, title: &str) -> bool {
     });
     ui.add_space(4.0);
     close
+}
+
+/// Document Recovery task pane (office overlay, WP23): one card per copy, as in Word. Closing it keeps every copy;
+/// File › Recover lists them later.
+fn recovery(app: &mut WordApp, ui: &mut Ui) {
+    if header(ui, "Document Recovery") {
+        close_recovery(app);
+        return;
+    }
+    let t = Tokens::get(ui.ctx());
+    ui.label(egui::RichText::new(crate::i18n::fmt(
+        tl!("{app} recovered the following documents. Save the ones you want to keep."),
+        &[("app", crate::office_overlay::app_name())],
+    )));
+    ui.add_space(8.0);
+    let documents = app.session.recovery_documents();
+    if documents.is_empty() {
+        ui.label(egui::RichText::new(tl!("No recovery copies.")).color(t.text_dim));
+    }
+    let busy = app.session.recovery_busy();
+    let height = (ui.available_height() - 40.0).max(60.0);
+    egui::ScrollArea::vertical().max_height(height).show(ui, |ui| {
+        for doc in &documents {
+            recovery_card(app, ui, doc, busy);
+            ui.add_space(6.0);
+        }
+    });
+    ui.add_space(8.0);
+    if ui.button(tl!("Close")).clicked() {
+        close_recovery(app);
+    }
+}
+
+fn close_recovery(app: &mut WordApp) {
+    app.recovery_pane = false;
+    app.canvas.want_focus = true;
+}
+
+/// One recovery copy: its name (a button that restores it), when it was made in local time, and Open / Discard….
+/// Used by the pane and by File › Recover.
+pub(crate) fn recovery_card(app: &mut WordApp, ui: &mut Ui, doc: &wordcraft_engine::recovery::RecoveryInfo, busy: bool) {
+    let t = Tokens::get(ui.ctx());
+    egui::Frame::NONE.fill(t.input).stroke(Stroke::new(1.0, t.border)).corner_radius(6).inner_margin(8).show(ui, |ui| {
+        ui.set_width(ui.available_width());
+        ui.add_enabled_ui(!busy, |ui| {
+            let mut job = egui::text::LayoutJob::single_section(
+                crate::recovery_name(&doc.name),
+                egui::TextFormat { font_id: semibold(13.5), color: t.text, ..Default::default() },
+            );
+            job.wrap.max_width = ui.available_width();
+            job.wrap.max_rows = 2;
+            let mut open = ui.add(egui::Button::new(job).frame(false)).on_hover_text(tl!("Open")).clicked();
+            ui.label(egui::RichText::new(tl!("Version created from the last AutoSave")).small().color(t.text_dim));
+            ui.label(egui::RichText::new(local_stamp::local_stamp(&doc.saved_at)).small().color(t.text_dim));
+            ui.horizontal(|ui| {
+                open |= ui.small_button(tl!("Open")).clicked();
+                if ui.small_button(tl!("Discard…")).clicked() {
+                    let _ = app.run("ui.recoveryDiscard", json!({"id": doc.id}));
+                }
+            });
+            if open {
+                let _ = app.run("file.recover", json!({"restore": doc.id}));
+                // A pending Save changes? question keeps the pane for the answer; otherwise the copy is on its way in.
+                if app.dialog.is_none() {
+                    app.recovery_pane = false;
+                }
+            }
+        });
+    });
 }
 
 fn nav(app: &mut WordApp, ui: &mut Ui) {
