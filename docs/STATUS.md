@@ -1333,7 +1333,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   quarantined (brand). The gridcraft ui-egui integration suites were stopped: their debug binaries filled 30 GB of E: with
   under 7 GB left. deckcraft engine lib 332/332; ui-egui `backstage` 18 pass + 1 quarantined (new
   `new_decks_are_times_new_roman_and_print_on_the_interface_paper`). pdfcraft annot lib 46/46 (new `new_text_boxes_are_times_and_old_ones_keep_helvetica`; four /Helv asserts moved to /TiRo), ui-egui `print_ui`+`content_ui` 9/9 (new `first_print_uses_the_interface_paper_and_added_text_is_times`). `verify-queue` for the four
-  apps, `cargo xt register check` (113/113), `i18n lint` (0 errors), `check-stale` and `roundtrip` pass.
+  apps, `cargo xt register check` (117/117 after the rebase on the p4-theme merge), `i18n lint` (0 errors), `check-stale` and `roundtrip` pass.
 - **Evidence** (`docs/phase4/evidence/print/`, isolated profile, account name set to a neutral word): Docs print page uz-Latn
   and ru, new Docs document (Times New Roman 12 in the font box, A4 ruler), Sheets print page uz-Latn and ru ("A4 · Kitob"
   above Page Setup), new Sheets workbook (Times New Roman 12). Sheets ru still shows "Grayscale" in English (a gridcraft ru
