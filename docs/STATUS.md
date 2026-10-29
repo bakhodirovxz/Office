@@ -1046,7 +1046,7 @@ Still missing for Phase 2: `vendor-notes/uz-translit-onlyoffice/` (the rule seed
   no transliteration effect) **all match**. The tutuq code point is not stated anywhere; output stays U+02BC (D-02).
 - **Crate:** no rule change. The whole official 2026 paragraph converts correctly and round-trips. Added golden
   SRC-017..025 and `official_2026_text_reads_and_round_trips`.
-- **Default switch (O13):** one line, `DEFAULT_LATIN_ALPHABET` in `crates/uz-translit/src/lib.rs`, still `Y1995`. The
+- **Default switch (O13):** one line, `DEFAULT_LATIN_ALPHABET` in `crates/uz-translit/src/lib.rs`, was `Y1995`, **now `Y2026` (see the 2026-10-29 entry)**. The
   library, docs-translit, wasm, the converter CLI/API (`convert::plan::DEFAULT_ALPHABET`) and the page (via
   `/api/v1/formats` `defaults.alphabet`) follow it. The tests pin 1995 themselves.
   - **Not measured:** a run of the suite with the switch flipped was not done; the agent's permission check refused even a
@@ -1124,7 +1124,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Minors.**
   - Fixed: m1-m4, m7, m8, m11, m12.
   - Partly fixed: m5 and m13.
-  - Open (latent): m6, before O13 flips the alphabet.
+  - m6: resolved (engine.rs follows `DEFAULT_LATIN_ALPHABET`; test `auto_to_latin_follows_default`).
   - Deferred: m9, m10, m14.
   - New: n1-n4. All are small: a stale api.md line, the file table's status in combine mode, `reg` by bare name, and no en-US
     csv case in the ratchet.
@@ -1195,3 +1195,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   **F10 fixed** (mapped drive / UNC): the host trusts a file it already knows (Recent, History) as the user's own, and matches a drive-letter path to a stored `\?\UNC\...` document by id; test `a_document_on_a_share_or_mapped_drive_keeps_its_history` (run on a real `net use` drive). Before: History said "no saved versions", Recent reopen was refused.
 - **WP23 kit ready (2026-10-25), sessions pending (IT staff, owner).** Protocol and results table `docs/phase4/usability.md`; printable cards uz-Latn/ru, observer sheet and the T4 PDF in `docs/phase4/wp23/` (abecb11; wording re-reviewed 483317f: the intro said "you must not make mistakes"); `scripts/wp23-reset.ps1` clears the current user's product folders between participants (dry run by default, `-Yes` deletes; tested on a fake profile only). Kit for the owner: `E:\office-target\wp23-kit\`, with the MSI rebuilt for the F10 fix (SHA-256 `80E7C9B0…C317`; it differs from the install-tested `2430CB40…A97E` build only in `hoshiya.exe`, so the install test was not re-run). Limits: the web session runs only on the owner's PC (local mode binds loopback; LAN needs server mode with TLS + token), the T4 converter download lands in Downloads, and the click paths of T4/T5 are read from code, not clicked.
 - **Language rule unified, crypto-bigint (2026-10-24):** one rule in Docs, PDF, Slides and Sheets: a fixed shared `lang` always wins at start (`office_overlay::start_language`, called in each app's `main.rs` after the saved prefs; Sheets in `load_prefs`), the app's saved language applies only when the shared `lang` is `auto`, an in-app change is session-only and never written back; tests `shared_lang_wins_over_the_saved_language_at_start` (wordcraft/0126, pdfcraft/0112, deckcraft/0145 rewritten; web unaffected). `ci.sh deny` pdf: RUSTSEC-2026-0387 fixed by crypto-bigint 0.7.5 to 0.7.6 (needs ctutils 0.4.5) in the carried lock patch `pdfcraft/0900-pdfcraft-crypto-bigint-0.7.6.patch` (renamed from the ctutils one) and `domains/pdf/Cargo.lock`; lockdiff unchanged (0 version changes); third-party notices regenerated. 94 patches, 94 rows.
+
+## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
+- Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
+  plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
+- `DEFAULT_LATIN_ALPHABET` = `Y2026`; docs-translit, wasm/npm, converter CLI/API/page follow it. `suite-core` settings default
+  is 2026; a stored "1995" stays. m6 closed. Explicit `1995` still works everywhere. Branch `p4-alphabet`, not merged.

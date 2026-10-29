@@ -13,7 +13,7 @@
 //!
 //! ```toml
 //! lang = "auto"              # auto | en | ru | uz-Latn | uz-Latn-2026 | uz-Cyrl
-//! latin_alphabet = "1995"    # 1995 | 2026 | auto: the Latin alphabet the transliteration writes
+//! latin_alphabet = "2026"    # 2026 | 1995 | auto: the Latin alphabet the transliteration writes
 //! toolbar = "simple"         # simple | full: Docs, Sheets and Slides (PDF ignores it; the web is always simple)
 //! spell_dictionaries = ""    # a folder with the dictionaries; empty = the install folder's
 //! xdfu = "off"               # off | on
@@ -63,9 +63,10 @@ impl ToolbarMode {
 /// The Latin alphabet the transliteration writes (mirrors `uz_translit::LatinAlphabet`; this crate does not link it).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum LatinAlphabet {
-    /// The alphabet in force (oʻ gʻ sh ch). Owner decision O13 switches the default on the 2026 law's date.
-    #[default]
+    /// The 1995 alphabet (oʻ gʻ sh ch). An explicit choice; stored as "1995" and kept.
     Y1995,
+    /// The default (owner decision O13, 2026-10-29): an absent or invalid value is 2026.
+    #[default]
     Y2026,
     Auto,
 }
@@ -218,9 +219,9 @@ fn apply(s: &mut Settings, key: &str, v: &str) {
         "lang" => s.lang = LangChoice::parse(v).unwrap_or_default(),
         "latin_alphabet" => {
             s.latin_alphabet = match v {
-                "2026" => LatinAlphabet::Y2026,
+                "1995" => LatinAlphabet::Y1995,
                 "auto" => LatinAlphabet::Auto,
-                _ => LatinAlphabet::Y1995,
+                _ => LatinAlphabet::Y2026,
             }
         }
         "toolbar" => {
@@ -480,6 +481,15 @@ pub(crate) mod tests {
         assert_eq!(l.settings.lang, LangChoice::Auto);
         assert!(!l.settings.xdfu);
         assert_eq!(l.settings.server_url, "");
+    }
+
+    #[test]
+    fn alphabet_defaults_to_2026_and_a_stored_1995_stays() {
+        let d = tmp("alphabet");
+        assert_eq!(load_in(&d).settings.latin_alphabet, LatinAlphabet::Y2026);
+        std::fs::write(d.join(FILE_NAME), "latin_alphabet = \"1995\"
+").unwrap();
+        assert_eq!(load_in(&d).settings.latin_alphabet, LatinAlphabet::Y1995);
     }
 
     #[test]

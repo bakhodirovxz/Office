@@ -45,18 +45,18 @@ pub enum Apostrophe {
 /// 2026 only (sh, ch, o', g' are not digraphs), `Auto` picks per paragraph.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LatinAlphabet {
-    /// The alphabet in force: oʻ gʻ sh ch, and s + tutuq + h for сҳ.
+    /// The 1995 alphabet: oʻ gʻ sh ch, and s + tutuq + h for сҳ. Still read everywhere; written when chosen.
     Y1995,
-    /// The 2026 reform (law signed 2026-10-21, in force six months after publication): ö ğ ş ç, and plain sh for сҳ.
+    /// The 2026 reform (law signed 2026-10-21, in force six months after publication): ö ğ ş ç, and plain sh for сҳ. The default (O13).
     Y2026,
-    /// ->Latin writes 1995. ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
+    /// ->Latin writes the product default (`DEFAULT_LATIN_ALPHABET`). ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
     Auto,
 }
 
 /// The default Latin alphabet of every product surface: the library, docs-translit, the converter CLI, API and page,
-/// and the wasm package. Owner decision O13 (docs/phase3/PLAN.md): switch it to `Y2026` on the law's entry-into-force
-/// date. This is the one line to change (rules.md section 15.4).
-pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y1995;
+/// and the wasm package. Owner decision O13: switched to `Y2026` on 2026-10-29 (rules.md section 15.4), before the
+/// law is in force. This is the one line to change.
+pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y2026;
 
 impl Default for LatinAlphabet {
     fn default() -> Self {
