@@ -9,7 +9,7 @@
   const CAP = 200 * 1024 * 1024;          // bytes of Recent kept in IndexedDB
   const READY_MS = 60000;                 // an editor that has not said ready by then cannot take a file
   const EXT = { docs: 'docx doc odt rtf txt', sheets: 'xlsx xlsm xls csv ods', slides: 'pptx ppt odp', pdf: 'pdf' };
-  const S = { cfg: null, i18n: {}, lang: 'en', frames: {}, current: null, recent: [], db: null, templates: [], mode: 'web' };
+  const S = { cfg: null, i18n: {}, lang: 'en', theme: 'system', frames: {}, current: null, recent: [], db: null, templates: [], mode: 'web' };
   const NAMES_CAP = 50;                   // names mode: names kept in the tab
 
   const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (_) { return null; } };
@@ -148,12 +148,25 @@
     show(a, { name: file.name, bytes: await file.arrayBuffer() });
   }
 
+  // ---- the theme: light or dark on <html data-theme>, the logo and the accent follow ----
+  const darkOs = matchMedia('(prefers-color-scheme: dark)');
+  function applyTheme() {
+    const dark = S.theme === 'dark' || (S.theme !== 'light' && darkOs.matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    $('logo-dark').media = dark ? 'all' : 'not all';
+    if (S.cfg) document.documentElement.style.setProperty('--accent', dark ? S.cfg.accent.dark : S.cfg.accent.light);
+  }
+  // before the first paint: the browser's saved choice (web) or the OS (desktop, until the host answers)
+  S.theme = (!window.ipc && store('sh.theme')) || 'system';
+  applyTheme();
+
   // ---- rendering ----
   function render() {
     document.documentElement.lang = S.lang;
     document.title = S.cfg.product;
     $('product').textContent = S.cfg.product;
     $('lang').value = S.lang;
+    $('theme').value = S.theme;
     document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
     document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
     $('convert').textContent = S.cfg.convert.names[S.lang] || S.cfg.convert.names.en;
@@ -227,11 +240,14 @@
     const nav = (navigator.language || 'en').toLowerCase();
     S.mode = window.ipc ? 'desktop' : session('cv.token') || S.cfg.local ? 'names' : 'web';
     // the desktop keeps the language in the host's settings, not in the WebView's storage
-    const saved = S.mode === 'desktop' ? ((await host({ type: 'settings_get' }, 'settings')) || { values: {} }).values.lang : store('sh.lang');
+    const settings = S.mode === 'desktop' ? ((await host({ type: 'settings_get' }, 'settings')) || { values: {} }).values : {};
+    const saved = S.mode === 'desktop' ? settings.lang : store('sh.lang');
     // settings.toml `lang`: 'auto' (the default) follows the browser; 'uz-Latn-2026' has no shell catalog yet and shows uz-Latn
     S.lang = saved && saved !== 'auto' ? saved : (nav.startsWith('uz') ? (nav.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : nav.startsWith('ru') ? 'ru' : 'en');
     if (!S.i18n[S.lang]) S.lang = S.lang.startsWith('uz-Latn') ? 'uz-Latn' : 'en';
-    document.documentElement.style.setProperty('--accent', matchMedia('(prefers-color-scheme: dark)').matches ? S.cfg.accent.dark : S.cfg.accent.light);
+    S.theme = (S.mode === 'desktop' ? settings.theme : store('sh.theme')) || 'system';
+    applyTheme();
+    darkOs.addEventListener('change', applyTheme);
     // earlier versions kept document copies in the WebView's IndexedDB: drop that database, it is not used in these modes
     if (S.mode !== 'web') { try { indexedDB.deleteDatabase('shell'); } catch (_) { /* ignore */ } } else await openDb().catch(() => {});
     await loadRecent();
@@ -240,6 +256,11 @@
       // editors read the language when they start: drop the idle ones so the next open follows the new language (an editor with unsaved work keeps its own until it is reopened)
       for (const [id, fr] of Object.entries(S.frames)) if (!fr.dirty) { fr.el.remove(); delete S.frames[id]; }
       if (S.mode === 'desktop') host({ type: 'settings_set', key: 'lang', value: S.lang }, 'settings'); else store('sh.lang', S.lang);
+    };
+    // settings.toml `theme` (system | light | dark): the apps read it when they start, the shell applies it now
+    $('theme').onchange = (e) => {
+      S.theme = e.target.value; applyTheme();
+      if (S.mode === 'desktop') host({ type: 'settings_set', key: 'theme', value: S.theme }, 'settings'); else store('sh.theme', S.theme);
     };
     $('search').oninput = render;
     $('file').onchange = (e) => e.target.files[0] && openPicked(e.target.files[0], only);

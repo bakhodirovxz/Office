@@ -331,6 +331,49 @@ for (const [saved, shown] of [['auto', 'en'], ['uz-Latn-2026', 'uz-Latn']]) {
   });
 }
 
+// settings.toml `theme` (owner 2026-10-29): the shell applies it at once and the apps at their next start. Desktop: the host keeps it;
+// web: the browser does. `system` follows the OS (prefers-color-scheme).
+test('desktop mode: the theme from settings.toml is applied and a change goes to the host', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.addInitScript(() => {
+    const w = window as any;
+    w.__sent = [];
+    w.ipc = {
+      postMessage(m: string) {
+        const d = JSON.parse(m);
+        w.__sent.push(d);
+        const reply = d.type === 'recent' ? { type: 'recent', items: [] }
+          : d.type === 'settings_get' ? { type: 'settings', values: { lang: 'en', theme: 'dark' } }
+          : d.type === 'settings_set' ? { type: 'settings', values: { [d.key]: d.value } } : null;
+        if (reply) setTimeout(() => dispatchEvent(new CustomEvent('suite-host', { detail: reply })), 0);
+      },
+    };
+  });
+  await page.goto(base + '/');
+  await expect(page.locator('#theme')).toHaveValue('dark');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(20, 24, 28)');
+  await page.selectOption('#theme', 'system');
+  await expect.poll(() => page.evaluate(() => (window as any).__sent.at(-1))).toEqual({ type: 'settings_set', key: 'theme', value: 'system' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('sh.theme'))).toBeNull();
+});
+
+test('web mode: the theme is kept by the browser and light wins over a dark OS', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto(base + '/');
+  await expect(page.locator('#theme')).toHaveValue('system');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.selectOption('#theme', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await page.reload();
+  await expect(page.locator('#theme')).toHaveValue('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+
 test('connected to a server: Recent keeps names only, no IndexedDB, and asks for the file again', async ({ page }) => {
   await page.addInitScript(() => {
     sessionStorage.setItem('cv.token', 'abc.def.ghi');

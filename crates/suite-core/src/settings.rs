@@ -15,6 +15,7 @@
 //! lang = "auto"              # auto | en | ru | uz-Latn | uz-Latn-2026 | uz-Cyrl
 //! latin_alphabet = "2026"    # 2026 | 1995 | auto: the Latin alphabet the transliteration writes
 //! toolbar = "simple"         # simple | full: Docs, Sheets and Slides (PDF ignores it; the web is always simple)
+//! theme = "system"           # system | light | dark: the shell and every app, each in its own palette (read at start)
 //! spell_dictionaries = ""    # a folder with the dictionaries; empty = the install folder's
 //! xdfu = "off"               # off | on
 //! [recent]
@@ -60,6 +61,26 @@ impl ToolbarMode {
     }
 }
 
+/// The interface theme of the shell and the four apps (owner, 2026-10-29). Each app applies it to its own light or dark palette
+/// at start; `System` follows the operating system's light/dark choice.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Theme {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+impl Theme {
+    pub const fn tag(self) -> &'static str {
+        match self {
+            Theme::System => "system",
+            Theme::Light => "light",
+            Theme::Dark => "dark",
+        }
+    }
+}
+
 /// The Latin alphabet the transliteration writes (mirrors `uz_translit::LatinAlphabet`; this crate does not link it).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum LatinAlphabet {
@@ -96,6 +117,7 @@ pub struct Settings {
     pub lang: LangChoice,
     pub latin_alphabet: LatinAlphabet,
     pub toolbar: ToolbarMode,
+    pub theme: Theme,
     pub spell_dictionaries: String,
     /// XDFU is opt-in and off by default everywhere.
     pub xdfu: bool,
@@ -111,6 +133,7 @@ impl Default for Settings {
             lang: LangChoice::Auto,
             latin_alphabet: LatinAlphabet::default(),
             toolbar: ToolbarMode::Simple,
+            theme: Theme::System,
             spell_dictionaries: String::new(),
             xdfu: false,
             recent_limit: 20,
@@ -144,6 +167,7 @@ const KEYS: &[(&str, Ty)] = &[
     ("lang", Ty::Choice(LANG_TAGS)),
     ("latin_alphabet", Ty::Choice(&["1995", "2026", "auto"])),
     ("toolbar", Ty::Choice(&["simple", "full"])),
+    ("theme", Ty::Choice(&["system", "light", "dark"])),
     ("spell_dictionaries", Ty::Text(1024)),
     ("xdfu", Ty::Choice(&["off", "on"])),
     ("recent.limit", Ty::Int(0, 50)),
@@ -231,6 +255,13 @@ fn apply(s: &mut Settings, key: &str, v: &str) {
                 ToolbarMode::Simple
             }
         }
+        "theme" => {
+            s.theme = match v {
+                "light" => Theme::Light,
+                "dark" => Theme::Dark,
+                _ => Theme::System,
+            }
+        }
         "spell_dictionaries" => s.spell_dictionaries = v.into(),
         "xdfu" => s.xdfu = v == "on",
         "recent.limit" => s.recent_limit = n(),
@@ -252,6 +283,7 @@ impl Settings {
             ("lang", self.lang.tag().to_string()),
             ("latin_alphabet", self.latin_alphabet.tag().into()),
             ("toolbar", self.toolbar.tag().into()),
+            ("theme", self.theme.tag().into()),
             ("spell_dictionaries", self.spell_dictionaries.clone()),
             ("xdfu", if self.xdfu { "on" } else { "off" }.into()),
             ("recent.limit", self.recent_limit.to_string()),
@@ -487,9 +519,34 @@ pub(crate) mod tests {
     fn alphabet_defaults_to_2026_and_a_stored_1995_stays() {
         let d = tmp("alphabet");
         assert_eq!(load_in(&d).settings.latin_alphabet, LatinAlphabet::Y2026);
-        std::fs::write(d.join(FILE_NAME), "latin_alphabet = \"1995\"
-").unwrap();
+        std::fs::write(d.join(FILE_NAME), "latin_alphabet = \"1995\"\n").unwrap();
         assert_eq!(load_in(&d).settings.latin_alphabet, LatinAlphabet::Y1995);
+    }
+
+    #[test]
+    fn theme_defaults_to_system_and_a_bad_value_costs_only_the_theme() {
+        let d = tmp("theme");
+        assert_eq!(load_in(&d).settings.theme, Theme::System);
+        for (tag, want) in [
+            ("light", Theme::Light),
+            ("dark", Theme::Dark),
+            ("system", Theme::System),
+        ] {
+            set_in(&d, "theme", tag).unwrap();
+            assert_eq!(load_in(&d).settings.theme, want);
+            assert_eq!(want.tag(), tag);
+        }
+        assert!(matches!(
+            set_in(&d, "theme", "Dark"),
+            Err(SetError::BadValue(_))
+        ));
+        std::fs::write(d.join(FILE_NAME), "theme = \"blue\"\ntoolbar = \"full\"\n").unwrap();
+        let l = load_in(&d);
+        assert_eq!(
+            (l.settings.theme, l.settings.toolbar),
+            (Theme::System, ToolbarMode::Full)
+        );
+        assert_eq!(l.warnings.len(), 1, "{:?}", l.warnings);
     }
 
     #[test]
@@ -642,6 +699,7 @@ pub(crate) mod tests {
         let d = tmp("map");
         let want = Settings {
             toolbar: ToolbarMode::Full,
+            theme: Theme::Dark,
             lang: LangChoice::Fixed(Lang::UzLatn2026),
             recent_limit: 0,
             xdfu: true,

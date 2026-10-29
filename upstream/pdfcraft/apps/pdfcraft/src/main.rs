@@ -382,6 +382,8 @@ fn app_creator<'a>(
         }
         // office overlay (patches/pdfcraft/0112): a fixed shared `lang` wins over the saved language at each start.
         app.language = pdfcraft_ui_egui::office_overlay::start_language(&app.language);
+        // office overlay (patches/pdfcraft/0115): the shared `theme` (the shell's setting) wins over the saved one at each start.
+        app.set_theme_preference(pdfcraft_ui_egui::office_overlay::start_theme(app.theme_preference));
         app.window_state = pdfcraft_ui_egui::window_state::WindowState::started_with(cc.storage);
         app.integrated_titlebar = integrated;
         app.window_controls = window_controls;

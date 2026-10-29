@@ -306,6 +306,8 @@ fn main() -> eframe::Result<()> {
     app.after_engine(); // Show warnings from the sample.
     let control_port = control_port;
     load_prefs(&mut app);
+    // office overlay (patches/gridcraft/0148): the shared `theme` (the shell's setting) wins over the saved one at each start.
+    gridcraft_ui_egui::office_overlay::start_theme(&mut app.ui);
     // Files named on the command line (a double-click on Windows and Linux) open as File › Open
     // opens them: a password-protected one asks for its password, and errors are shown, not
     // only logged. Each replaces the untouched blank Book1, as a file opened from Finder does.

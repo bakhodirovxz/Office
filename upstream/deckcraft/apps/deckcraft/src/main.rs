@@ -256,6 +256,8 @@ fn main() -> eframe::Result {
             load_prefs(&mut app);
             // office overlay (patches/deckcraft/0145): a fixed shared `lang` wins over the saved language at each start.
             app.ui.language = deckcraft_ui_egui::office_overlay::start_language(&app.ui.language);
+            // office overlay (patches/deckcraft/0149): the shared `theme` (the shell's setting), applied at the first frame.
+            deckcraft_ui_egui::office_overlay::load_start_theme();
             // AutoRecover: reopen what a previous run left unsaved, then keep it current.
             if std::env::var_os("DECKCRAFT_NO_RECOVERY").is_none() {
                 app.session.recovery_dir = deckcraft_engine::recovery::default_dir();

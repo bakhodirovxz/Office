@@ -151,3 +151,21 @@ fn shared_lang_picks_the_catalog_language() {
         }
     }
 }
+
+/// The shared `theme` beats the saved interface theme at start, `system` included (patches/gridcraft/0148); tests and the web read none.
+#[test]
+fn shared_theme_wins_over_the_saved_theme_at_start() {
+    use suite_core::settings::Theme;
+    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
+    for (system_theme, dark) in [(true, false), (true, true), (false, false), (false, true)] {
+        let own = crate::UiState { system_theme, dark, ..Default::default() };
+        let mut ui = own.clone();
+        o::theme_at_start(&mut ui, None);
+        assert_eq!(ui.theme_mode(), own.theme_mode());
+        for shared in [Theme::System, Theme::Light, Theme::Dark] {
+            let mut ui = own.clone();
+            o::theme_at_start(&mut ui, Some(shared.tag()));
+            assert_eq!(ui.theme_mode(), shared.tag());
+        }
+    }
+}

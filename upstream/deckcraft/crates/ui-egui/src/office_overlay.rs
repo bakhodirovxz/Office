@@ -231,3 +231,41 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
     }
 }
+
+/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
+/// the app keeps its own choice there.
+#[cfg(not(any(target_arch = "wasm32", test)))]
+pub fn shared_theme_code() -> Option<&'static str> {
+    Some(suite_core::settings::load().theme.tag())
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+pub fn shared_theme_code() -> Option<&'static str> {
+    None
+}
+
+static START_THEME: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
+
+/// Reads the shared `theme` for the first frame (patches/deckcraft/0149). Only the app's `main` calls it, so the UI tests that run
+/// frames never see a user's setting.
+pub fn load_start_theme() {
+    if let Some(code) = shared_theme_code() {
+        let _ = START_THEME.set(code);
+    }
+}
+
+/// The appearance at the first frame (patches/deckcraft/0149): the shared `theme` always wins over the one saved in `ui.json`, so the
+/// shell is the one place to change it. `system` takes the light or dark the OS reports then (upstream has no system mode: it is
+/// not followed live). A change made in the app afterwards holds for the session only.
+pub fn start_brightness(ctx: &egui::Context, own: crate::theme::Brightness) -> crate::theme::Brightness {
+    brightness_at_start(own, START_THEME.get().copied(), ctx.system_theme())
+}
+
+pub(crate) fn brightness_at_start(own: crate::theme::Brightness, shared: Option<&str>, system: Option<egui::Theme>) -> crate::theme::Brightness {
+    use crate::theme::Brightness;
+    match (shared, system) {
+        (Some("light"), _) | (Some("system"), Some(egui::Theme::Light)) => Brightness::Light,
+        (Some("dark"), _) | (Some("system"), Some(egui::Theme::Dark)) => Brightness::Dark,
+        _ => own,
+    }
+}

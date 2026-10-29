@@ -15,7 +15,7 @@
 <body>
 <div id="home">
   <header class="bar">
-    <picture class="logo"><source media="(prefers-color-scheme: dark)" srcset="shell/logo-dark.svg"><img src="shell/logo-light.svg" alt="" height="32"></picture>
+    <picture class="logo"><source id="logo-dark" media="(prefers-color-scheme: dark)" srcset="shell/logo-dark.svg"><img src="shell/logo-light.svg" alt="" height="32"></picture>
     <h1 id="product" class="sr"></h1>
     <label class="search"><span class="sr" data-i18n="home.search"></span>
       <input id="search" type="search" autocomplete="off" data-i18n-ph="home.search"></label>
@@ -26,6 +26,12 @@
         <option value="ru">Русский</option>
         <option value="uz-Latn">Oʻzbekcha</option>
         <option value="uz-Cyrl">Ўзбекча</option>
+      </select></label>
+    <label class="lang"><span class="sr" data-i18n="ui.theme"></span>
+      <select id="theme">
+        <option value="system" data-i18n="theme.system"></option>
+        <option value="light" data-i18n="theme.light"></option>
+        <option value="dark" data-i18n="theme.dark"></option>
       </select></label>
   </header>
   <main>

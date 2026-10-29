@@ -1,0 +1,119 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 18:00:00 +0500
+Subject: [PATCH] ui-egui: the shared theme setting picks the appearance at the first frame
+
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+app in its own palette. main.rs calls office_overlay::load_start_theme, which reads the shared settings.toml `theme`
+through suite-core (native only; tests and the web never call it, so UI tests that run frames see no user setting).
+SlideApp::logic applies office_overlay::start_brightness in its one-time style block, where egui knows the OS
+light/dark: light and dark are taken as they are, `system` takes the OS answer (upstream has only Light and Dark, so it
+is not followed live) and keeps the saved one when the OS gives none. An in-app change holds for the session only.
+---
+ apps/deckcraft/src/main.rs                 |  2 ++
+ crates/ui-egui/src/lib.rs                  |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 38 ++++++++++++++++++++++++++++++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 21 +++++++++++++++++++++
+ 4 files changed, 63 insertions(+)
+
+diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
+index b79c2ce..4d2a8e2 100644
+--- a/apps/deckcraft/src/main.rs
++++ b/apps/deckcraft/src/main.rs
+@@ -256,6 +256,8 @@ fn main() -> eframe::Result {
+             load_prefs(&mut app);
+             // office overlay (patches/deckcraft/0145): a fixed shared `lang` wins over the saved language at each start.
+             app.ui.language = deckcraft_ui_egui::office_overlay::start_language(&app.ui.language);
++            // office overlay (patches/deckcraft/0149): the shared `theme` (the shell's setting), applied at the first frame.
++            deckcraft_ui_egui::office_overlay::load_start_theme();
+             // AutoRecover: reopen what a previous run left unsaved, then keep it current.
+             if std::env::var_os("DECKCRAFT_NO_RECOVERY").is_none() {
+                 app.session.recovery_dir = deckcraft_engine::recovery::default_dir();
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index de142eb..3e09973 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1608,6 +1608,8 @@ impl SlideApp {
+             ctx.set_zoom_factor(scale);
+         }
+         if !self.styled {
++            // office overlay (patches/deckcraft/0149): the shared `theme` at the first frame, where the OS light/dark is known.
++            self.ui.brightness = crate::office_overlay::start_brightness(ctx, self.ui.brightness);
+             theme::install_fonts_with(ctx, &self.ui_fonts.faces);
+             self.styled = true;
+             self.restyle = true;
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 43af098..5d72e3d 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -231,3 +231,41 @@ pub(crate) fn code_of(choice: suite_core::lang::LangChoice) -> Option<&'static s
+         LangChoice::Fixed(Lang::UzCyrl) => Some("uz-cyrl"),
+     }
+ }
++
++/// The shared `theme` setting (`settings.toml`: `system`, `light` or `dark`; owner 2026-10-29). `None` in the web build and in tests:
++/// the app keeps its own choice there.
++#[cfg(not(any(target_arch = "wasm32", test)))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    Some(suite_core::settings::load().theme.tag())
++}
++
++#[cfg(any(target_arch = "wasm32", test))]
++pub fn shared_theme_code() -> Option<&'static str> {
++    None
++}
++
++static START_THEME: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
++
++/// Reads the shared `theme` for the first frame (patches/deckcraft/0149). Only the app's `main` calls it, so the UI tests that run
++/// frames never see a user's setting.
++pub fn load_start_theme() {
++    if let Some(code) = shared_theme_code() {
++        let _ = START_THEME.set(code);
++    }
++}
++
++/// The appearance at the first frame (patches/deckcraft/0149): the shared `theme` always wins over the one saved in `ui.json`, so the
++/// shell is the one place to change it. `system` takes the light or dark the OS reports then (upstream has no system mode: it is
++/// not followed live). A change made in the app afterwards holds for the session only.
++pub fn start_brightness(ctx: &egui::Context, own: crate::theme::Brightness) -> crate::theme::Brightness {
++    brightness_at_start(own, START_THEME.get().copied(), ctx.system_theme())
++}
++
++pub(crate) fn brightness_at_start(own: crate::theme::Brightness, shared: Option<&str>, system: Option<egui::Theme>) -> crate::theme::Brightness {
++    use crate::theme::Brightness;
++    match (shared, system) {
++        (Some("light"), _) | (Some("system"), Some(egui::Theme::Light)) => Brightness::Light,
++        (Some("dark"), _) | (Some("system"), Some(egui::Theme::Dark)) => Brightness::Dark,
++        _ => own,
++    }
++}
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 23ec915..3a8683f 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -222,3 +222,24 @@ fn shared_lang_picks_the_catalog_language() {
+         }
+     }
+ }
++
++/// The shared `theme` beats the saved appearance at start; `system` takes the OS answer and keeps the saved one when the OS gives
++/// none (patches/deckcraft/0149). Tests and the web read no setting.
++#[test]
++fn shared_theme_wins_over_the_saved_appearance_at_start() {
++    use crate::theme::Brightness::{Dark, Light};
++    use egui::Theme;
++    assert_eq!(o::shared_theme_code(), None, "tests never read the user's settings");
++    for own in [Light, Dark] {
++        for os in [None, Some(Theme::Light), Some(Theme::Dark)] {
++            assert_eq!(o::brightness_at_start(own, None, os), own);
++            assert_eq!(o::brightness_at_start(own, Some("light"), os), Light);
++            assert_eq!(o::brightness_at_start(own, Some("dark"), os), Dark);
++        }
++        assert_eq!(o::brightness_at_start(own, Some("system"), Some(Theme::Dark)), Dark);
++        assert_eq!(o::brightness_at_start(own, Some("system"), Some(Theme::Light)), Light);
++        assert_eq!(o::brightness_at_start(own, Some("system"), None), own);
++    }
++    let tags = [suite_core::settings::Theme::System, suite_core::settings::Theme::Light, suite_core::settings::Theme::Dark].map(|t| t.tag());
++    assert_eq!(tags, ["system", "light", "dark"], "the tags this hook matches");
++}
