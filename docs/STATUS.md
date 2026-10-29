@@ -1200,4 +1200,48 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
 - `DEFAULT_LATIN_ALPHABET` = `Y2026`; docs-translit, wasm/npm, converter CLI/API/page follow it. `suite-core` settings default
-  is 2026; a stored "1995" stays. m6 closed. Explicit `1995` still works everywhere. Branch `p4-alphabet`, not merged.
+  is 2026; a stored "1995" stays. m6 closed. Explicit `1995` still works everywhere. Branch `p4-alphabet`, merged (9123a0e).
+
+### Phase 4 fix: PDF to Word moved the text (owner report, 2026-10-29; branch `p4-pdf2docx`)
+- **Which pipeline made what.** The owner's three files (a 103-page document; nothing of it is in the repo). The "Downloads" docx is **Microsoft Word's own PDF Reflow**
+  (`docProps/custom.xml` Converter = SolidFramework, the source PDF from PDF-XChange), not ours. `orig.pdf` is **our Docs
+  export** of that docx (byte-identical when re-exported with the p1 build). The "Desktop" docx is **our native engine**
+  (`pdfcraft_export::docx`, all 103 pages in the positioned layout: one VML text box per paragraph, 4,125 boxes). Its
+  title is the PDF's file name, so it came from the **PDF app's Export to Word**. The converter (`convert --to docx`,
+  CLI, API and the shell page) makes the same document apart from the title "input"; the pdf2docx sidecar was not used.
+- **Where it breaks: in the docx itself**, and our rendering makes it worse. The boxes were exactly as wide as the PDF
+  text and had no font. Our Docs fell back to Arial and Word to Calibri, which rewrapped the rows. Measured with
+  `scripts/fidelity/fid/positions.py` (source words matched to the words of the docx printed again; pypdf, measurement only).
+  103 pages, 20,991 words; before -> after:
+
+  | printed by | words moved >3 pt | rows starting >3 pt off | source rows split | printed rows merged | words over words | dy p90 |
+  |---|---|---|---|---|---|---|
+  | our Docs | 43.4% -> 0.0% | 51.1% -> 0.1% | 59.0% -> 0.0% | 27.7% -> 0.0% | 18.3% -> 0.3% | 18.2 -> 0.02 pt |
+  | Word 16 | 94.8% -> 0.0% | 43.8% -> 0.9% | 26.6% -> 0.7% | 25.5% -> 0.1% | 8.0% -> 0.2% | 17.5 -> 0.85 pt |
+
+  Pages with any class over 5%: ours 102 -> 0, Word 101 -> 2. Control: Word against our Docs printing the source docx moves 2.5%
+  of the words and splits 1.4% of the rows (the measurement floor).
+- **Failure classes (before).** (1) No font in the runs, so the reader's default font is used (Arial in our Docs, Calibri in Word,
+  where the PDF set Times New Roman, Calibri, Verdana and Arial). (2) Boxes as wide as the PDF text: a wider font wraps the row onto the row below, which gives the split
+  rows and the text over text. (3) The rows of a multi-row paragraph were rewrapped at the reader's line height: merged
+  rows, and table rows 10 and 11 run together. (4) The first baseline sat about 3 pt low in Word (single spacing, not the
+  PDF's ascent).
+- **Fix: carried patch `pdfcraft/0001`** (5 files, +227/-19; REGISTER row). edit: `ReadingBlocks` also returns its lines.
+  engine `compare.rs`: export blocks carry the font family and each visual row's text and box. export: `family()`
+  (`ABCDEF+TimesNewRomanPS-BoldMT` becomes Times New Roman; symbol fonts are left out) and `w:rFonts` on every run (flow pages too).
+  A new `upright_text_box` writes one box per paragraph with one paragraph per row: left indent = the row's x, exact line
+  height = the distance between row bottoms (Word and our layout keep the descent below the line), and the box reaches the
+  page's right edge. Rotated text keeps the old path.
+- **Tests:** export `font_family_comes_from_the_pdf_font_name` and `word_positioned_rows_keep_their_font_place_and_line`
+  (31 of 31 pass); engine `office_export_keeps_a_paragraphs_rows_and_font_family` (14 of 14 `export` tests pass);
+  `test_fid.py` Positions self-test.
+- **New fixture `p2d_letter`** (`gen_pdf2docx.ps1`, Word-made, synthetic: a two-row centred title, an 11-row numbered
+  table, Calibri, Verdana and Arial paragraphs, a stamp over the signature). It reproduces the owner's classes. Before ->
+  after, our Docs: moved 20.4% -> 0, rows split 60% -> 0, merged 43.5% -> 0, text over text 15.3% -> 0. Word: moved 4.5% -> 0,
+  split 10% -> 0. `p2d_overimage`, our Docs: moved 15.4% -> 0, split 40% -> 0; Word: split 23.1% -> 0.
+  `run.py` now records `positions` for every pdf2docx output. Flow-mode fixtures (latn, cyrl, widths): the paragraph and
+  table counts, text similarity and column widths are unchanged; only `w:rFonts` is added.
+- **Remains:** (a) vector graphics (table rules, lines) are not exported, so positioned pages lose their table borders;
+  (b) cells joined into one row ("10" and the cell text) get one space instead of the column gap; (c) the release `pdf.exe` /
+  MSI were not rebuilt (only `pdf-cli` at `E:/office-target/p4-pdf2docx/pdf/release`); (d) LibreOffice not measured
+  (Docker daemon down); (e) the owner should re-run Export to Word on the real file after the next MSI.

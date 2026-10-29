@@ -35,7 +35,7 @@ DIRECTIONS = [
     D("pdf.extract", "pdf", ["order.pdf"], "pdf", "pdfop", op="extract", arg="1,3-4"),
     D("pdf.pdf2png", "pdf", ["order.pdf", "p2d_cyrl.pdf"], "png", "pdftext", op="png"),
     D("pdf.pdf2txt", "pdf", ["p2d_latn.pdf", "p2d_cyrl.pdf"], "txt", "pdftext", op="txt"),
-    D("pdf.pdf2docx", "pdf", ["p2d_latn.pdf", "p2d_cyrl.pdf", "p2d_ru.pdf", "p2d_overimage.pdf", "p2d_widths.pdf"], "docx", "pdf2docx"),
+    D("pdf.pdf2docx", "pdf", ["p2d_latn.pdf", "p2d_cyrl.pdf", "p2d_ru.pdf", "p2d_overimage.pdf", "p2d_letter.pdf", "p2d_widths.pdf"], "docx", "pdf2docx"),
     D("pdf.edge", "pdf", ["empty.pdf", "truncated.pdf", "scan.pdf"], "docx", "edge"),
 ]
 

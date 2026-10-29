@@ -2075,6 +2075,9 @@ pub fn reading_blocks(doc: &Document, page: usize) -> Result<Vec<TextBlock>, Edi
 pub struct ReadingBlocks {
     /// The paragraphs, as [`reading_blocks`] returns them.
     pub blocks: Vec<TextBlock>,
+    /// The lines the blocks' [`TextBlock::lines`] and [`TextBlock::rows`] index into (Export to
+    /// Word places each visual row where the page shows it).
+    pub lines: Vec<TextLine>,
     /// The page draws forms nested deeper than [`MAX_FORM_DEPTH`], or more of them than
     /// [`MAX_FORM_VISITS`]. Reading leaves those out to stay bounded on hostile files, so their
     /// text is missing from `blocks`; [`crate::reading_images`] walks the same forms and misses
@@ -2085,7 +2088,7 @@ pub struct ReadingBlocks {
 /// [`reading_blocks`], saying whether the limits that bound reading left text out.
 pub fn reading_blocks_checked(doc: &Document, page: usize) -> Result<ReadingBlocks, EditError> {
     let (lines, truncated) = reading_lines(doc, page)?;
-    Ok(ReadingBlocks { blocks: regions::group_reading_blocks(&lines), truncated })
+    Ok(ReadingBlocks { blocks: regions::group_reading_blocks(&lines), lines, truncated })
 }
 
 // An ideographic space carries intentional Japanese spacing, including paragraph indentation.

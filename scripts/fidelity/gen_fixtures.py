@@ -70,7 +70,7 @@ def main():
         ps("gen_word_excel.ps1", out)
     if not (out / "staff.tsv").exists():
         tsv_from_csv(out / "staff.csv", out / "staff.tsv")
-    if not (out / "p2d_widths.pdf").exists():
+    if not all((out / f).exists() for f in ("p2d_widths.pdf", "p2d_letter.pdf")):
         ps("gen_pdf2docx.ps1", out, "-Png", out / "sample.png")
     for t in TRANSLIT:
         shutil.copy2(REPO / t, out / Path(t).name)
