@@ -659,6 +659,27 @@ mod tests {
         let _ = std::fs::remove_dir_all(root);
     }
 
+    /// office overlay (WP23): Continue without restoring keeps the copy, and the next start doesn't open the page for it.
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn recovery_page_opens_once_for_the_same_copies() {
+        let (app, root) = recovery_app();
+        let mut h = recovery_harness(app);
+        settle_recovery(&mut h);
+        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
+        h.get_by_label("Continue without restoring").click();
+        h.run_steps(4);
+        drop(h);
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
+        app.session.enable_recovery(root.clone(), std::sync::Arc::new(|| {})).unwrap();
+        let mut h = recovery_harness(app);
+        settle_recovery(&mut h);
+        assert!(!h.state().ui.backstage, "the page is not offered again");
+        assert_eq!(h.state().session.recovery_documents().len(), 1, "File › Recover still lists the copy");
+        drop(h);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
     fn recovery_restore_uses_save_changes_and_resets_autosave_permission() {

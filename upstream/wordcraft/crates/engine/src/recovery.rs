@@ -9,6 +9,9 @@ pub struct RecoveryInfo {
     pub id: String,
     pub name: String,
     pub saved_at: String,
+    /// Already offered at an earlier start: File › Recover lists it, the start page does not (office overlay, WP23).
+    #[serde(default)]
+    pub offered: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -23,6 +26,25 @@ impl Session {
     pub fn enable_recovery(&mut self, root: std::path::PathBuf, wake: std::sync::Arc<dyn Fn() + Send + Sync>) -> Result<(), String> {
         self.recovery = Some(Recovery::start(root, wake)?);
         Ok(())
+    }
+    /// The start page has shown the listed copies: they are not offered at a later start (office overlay, WP23).
+    pub fn recovery_offer(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(r) = &mut self.recovery
+            && let Err(e) = r.offer()
+        {
+            log::warn!("recovery: {e}");
+        }
+    }
+    /// A clean exit (the window closed after Save / Don't Save): remove the copies this window made or restored.
+    /// Waits for the worker, a few seconds at most (office overlay, WP23).
+    pub fn recovery_close(&mut self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(r) = &mut self.recovery
+            && let Err(e) = r.close()
+        {
+            log::warn!("recovery: {e}");
+        }
     }
     pub fn recovery_documents(&self) -> Vec<RecoveryInfo> {
         #[cfg(not(target_arch = "wasm32"))]

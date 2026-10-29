@@ -1,0 +1,504 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 29 Oct 2026 12:00:00 +0500
+Subject: [PATCH] engine, ui-egui: crash recovery follows Office's AutoRecover
+ model
+
+WP23 finding (owner, 2026-10-27): every start opened File > Recover with old copies, also of other documents, because the page
+opened whenever any copy existed and copies were only removed by a save of the still-open document. Now: the start page opens
+once for copies no earlier start has offered (an `offered` marker in the record; a newer generation removes it); File > Recover
+still lists them. A clean exit (on_exit) removes the copies the window made or restored; a document replaced with no unsaved
+changes (Save, then Open/New/Close in one step) releases its copy. An offered record older than 7 days is removed at
+discovery; a never-offered or held record never is. on_exit also waits (10 s at most) for the docs-office history thread.
+---
+ apps/wordcraft/src/main.rs            |   5 +++
+ crates/engine/src/recovery.rs         |  22 ++++++++++++
+ crates/engine/src/recovery/desktop.rs | 203 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ crates/engine/src/session.rs          |   7 ++++
+ crates/ui-egui/src/backstage.rs       |  21 +++++++++++
+ crates/ui-egui/src/lib.rs             |   5 ++-
+ docs/recovery.md                      |  13 +++++--
+ 7 files changed, 269 insertions(+), 7 deletions(-)
+
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index f23e1c7..d5679ad 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -94,6 +94,11 @@ impl eframe::App for App {
+     }
+     fn on_exit(&mut self) {
+         print::finish_pending_jobs();
++        // office overlay (WP23): a clean exit leaves no recovery copy of this window's work (it was saved, or the user chose
++        // Don't Save), and the version snapshot of the last save is written before the process ends.
++        self.0.session.recovery_close();
++        #[cfg(feature = "office-ext")]
++        docs_office::flush_snapshots(std::time::Duration::from_secs(10));
+         save_prefs(&self.0);
+         if let Some(key_file) = &self.2 {
+             key_file.remove();
+diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
+index cf03a45..9c120e2 100644
+--- a/crates/engine/src/recovery.rs
++++ b/crates/engine/src/recovery.rs
+@@ -9,6 +9,9 @@ pub struct RecoveryInfo {
+     pub id: String,
+     pub name: String,
+     pub saved_at: String,
++    /// Already offered at an earlier start: File › Recover lists it, the start page does not (office overlay, WP23).
++    #[serde(default)]
++    pub offered: bool,
+ }
+ 
+ #[cfg(not(target_arch = "wasm32"))]
+@@ -24,6 +27,25 @@ impl Session {
+         self.recovery = Some(Recovery::start(root, wake)?);
+         Ok(())
+     }
++    /// The start page has shown the listed copies: they are not offered at a later start (office overlay, WP23).
++    pub fn recovery_offer(&mut self) {
++        #[cfg(not(target_arch = "wasm32"))]
++        if let Some(r) = &mut self.recovery
++            && let Err(e) = r.offer()
++        {
++            log::warn!("recovery: {e}");
++        }
++    }
++    /// A clean exit (the window closed after Save / Don't Save): remove the copies this window made or restored.
++    /// Waits for the worker, a few seconds at most (office overlay, WP23).
++    pub fn recovery_close(&mut self) {
++        #[cfg(not(target_arch = "wasm32"))]
++        if let Some(r) = &mut self.recovery
++            && let Err(e) = r.close()
++        {
++            log::warn!("recovery: {e}");
++        }
++    }
+     pub fn recovery_documents(&self) -> Vec<RecoveryInfo> {
+         #[cfg(not(target_arch = "wasm32"))]
+         if let Some(r) = &self.recovery {
+diff --git a/crates/engine/src/recovery/desktop.rs b/crates/engine/src/recovery/desktop.rs
+index 676a6ed..387591e 100644
+--- a/crates/engine/src/recovery/desktop.rs
++++ b/crates/engine/src/recovery/desktop.rs
+@@ -16,6 +16,11 @@ const MAX_FILES: usize = 16;
+ const DISK_BUDGET: u64 = 2 << 30;
+ /// Times a record lock held for a moment (by a process being started) is tried again.
+ const LOCK_RETRIES: u32 = 10;
++/// office overlay (WP23): marks a record the start page has offered once; a newer generation removes it.
++const OFFERED: &str = "offered";
++/// office overlay (WP23): an offered record whose newest generation is this old is removed at discovery (Office keeps unsaved
++/// drafts 4 days; a week covers a holiday).
++const EXPIRE: Duration = Duration::from_secs(7 * 24 * 3600);
+ 
+ #[derive(Serialize, Deserialize)]
+ #[serde(rename_all = "camelCase")]
+@@ -180,9 +185,15 @@ impl Store {
+                     fs::remove_file(entry.path()).map_err(|e| e.to_string())?;
+                 }
+             }
++            let mut expired = false;
+             for path in Self::files(&dir)? {
+                 match read_snapshot(&path) {
+-                    Ok(s) if s.info.id == id && Some(s.generation) == generation(&path) => {
++                    Ok(mut s) if s.info.id == id && Some(s.generation) == generation(&path) => {
++                        s.info.offered = dir.join(OFFERED).exists();
++                        // Never a record this window holds: it may be the restored document's only copy.
++                        expired = s.info.offered
++                            && guard.is_some()
++                            && fs::metadata(&path).and_then(|m| m.modified()).ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age > EXPIRE);
+                         entries.insert(id.to_string(), Entry { info: s.info, path });
+                         break;
+                     }
+@@ -197,6 +208,13 @@ impl Store {
+                 }
+             }
+             drop(guard);
++            if expired {
++                entries.remove(id);
++                if let Err(e) = self.discard(id) {
++                    log::warn!("recovery: cannot remove expired record: {e}");
++                }
++                continue;
++            }
+             // A crash before the first commit leaves no document to recover. Reclaim
+             // that slot only under a fresh lock and the discard path's entry checks.
+             if Self::files(&dir)?.is_empty()
+@@ -208,6 +226,27 @@ impl Store {
+         self.entries = entries;
+         if unreadable { Err("Some recovery files could not be read. Earlier valid copies are listed when available.".into()) } else { Ok(()) }
+     }
++    /// Marks the records as offered (office overlay, WP23). A record another instance holds is skipped.
++    fn offer(&mut self, ids: &[String]) -> Result<(), String> {
++        for id in ids {
++            if !self.entries.contains_key(id) {
++                continue;
++            }
++            let _guard = if self.locks.contains_key(id) {
++                None
++            } else {
++                match self.lock(id) {
++                    Ok(f) => Some(f),
++                    Err(_) => continue,
++                }
++            };
++            private_file(&self.root.join(id).join(OFFERED), false).map_err(|e| e.to_string())?;
++            if let Some(e) = self.entries.get_mut(id) {
++                e.info.offered = true;
++            }
++        }
++        Ok(())
++    }
+     fn inventory(&self) -> Vec<RecoveryInfo> {
+         let mut v: Vec<_> = self.entries.values().map(|e| e.info.clone()).collect();
+         v.sort_by(|a, b| b.saved_at.cmp(&a.saved_at).then(a.id.cmp(&b.id)));
+@@ -267,6 +306,8 @@ impl Store {
+             // A new generation is never written over the last valid file.
+             fs::rename(&tmp, &final_path).map_err(|e| e.to_string())?;
+             sync_dir(&dir).map_err(|e| e.to_string())?;
++            // office overlay (WP23): new work is offered again after a crash.
++            let _ = fs::remove_file(dir.join(OFFERED));
+             self.entries.insert(s.info.id.clone(), Entry { info: s.info, path: final_path.clone() });
+             for old in Self::files(&dir)?.into_iter().filter(|p| p != &final_path && Some(p) != previous.as_ref()) {
+                 if let Err(e) = fs::remove_file(old) {
+@@ -301,6 +342,7 @@ impl Store {
+             let entry = entry.map_err(|e| e.to_string())?;
+             let name = entry.file_name();
+             let known = name == "owner.lock"
++                || name == OFFERED
+                 || generation(&entry.path()).is_some()
+                 || name.to_str().is_some_and(|n| n.strip_prefix("pending-").and_then(|n| n.strip_suffix(".tmp")).is_some_and(id_ok));
+             if !known || !entry.file_type().map_err(|e| e.to_string())?.is_file() {
+@@ -318,6 +360,10 @@ impl Store {
+             }
+         }
+         sync_dir(&dir).map_err(|e| e.to_string())?;
++        match fs::remove_file(dir.join(OFFERED)) {
++            Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e.to_string()),
++            _ => {}
++        }
+         self.entries.remove(id);
+         self.locks.remove(id);
+         fs::remove_file(dir.join("owner.lock")).map_err(|e| e.to_string())?;
+@@ -348,6 +394,9 @@ enum Job {
+     Scan,
+     Load(String, (u64, u64)),
+     Discard(String),
++    Offer(Vec<String>),
++    /// A clean exit: discard these records (office overlay, WP23).
++    Close(Vec<String>),
+ }
+ enum Outcome {
+     Done,
+@@ -370,6 +419,10 @@ pub(crate) struct Recovery {
+     revision: Option<u64>,
+     due: Instant,
+     alive: bool,
++    /// Records this window made or restored: a clean exit removes them (office overlay, WP23).
++    mine: Vec<String>,
++    /// Records of documents that left the editor with no unsaved changes, still to be discarded.
++    released: Vec<String>,
+ }
+ impl Recovery {
+     pub fn start(root: PathBuf, wake: Arc<dyn Fn() + Send + Sync>) -> Result<Self, String> {
+@@ -397,6 +450,9 @@ impl Recovery {
+                         Job::Scan => store.scan().map(|_| Outcome::Done),
+                         Job::Load(id, expected) => store.load(&id).map(|s| Outcome::Loaded(Box::new(s), expected)),
+                         Job::Discard(id) => store.discard(&id).map(|_| Outcome::Discarded(id)),
++                        Job::Offer(ids) => store.offer(&ids).map(|_| Outcome::Done),
++                        // Every record is tried; the first failure is reported.
++                        Job::Close(ids) => ids.iter().filter_map(|id| store.discard(id).err()).next().map_or(Ok(Outcome::Done), Err),
+                     };
+                     if events.send(Event { documents: store.inventory(), outcome: result }).is_err() {
+                         break;
+@@ -417,6 +473,8 @@ impl Recovery {
+             revision: None,
+             due: Instant::now() + INTERVAL,
+             alive: true,
++            mine: Vec::new(),
++            released: Vec::new(),
+         })
+     }
+     fn queue(&mut self, job: Job) -> Result<(), String> {
+@@ -466,6 +524,7 @@ impl Recovery {
+         }
+     }
+     pub fn adopt(&mut self, id: String, document: u64, revision: u64) {
++        self.mine.push(id.clone());
+         self.id = Some(id);
+         self.document = Some(document);
+         self.revision = Some(revision);
+@@ -480,6 +539,13 @@ impl Recovery {
+         if self.busy || !self.ready || !self.alive {
+             return Ok(());
+         }
++        if let Some(id) = self.released.pop() {
++            let r = self.queue(Job::Discard(id.clone()));
++            if r.is_err() {
++                self.released.push(id);
++            }
++            return r;
++        }
+         if !s.dirty || s.password.is_some() {
+             if let Some(id) = self.id.clone() {
+                 self.queue(Job::Discard(id))?;
+@@ -491,16 +557,60 @@ impl Recovery {
+         }
+         let id = match &self.id {
+             Some(id) => id.clone(),
+-            None => new_id()?,
++            None => {
++                let id = new_id()?;
++                self.mine.push(id.clone());
++                id
++            }
+         };
+         let name = s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled draft".into());
+-        let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso() };
++        let info = RecoveryInfo { id: id.clone(), name, saved_at: crate::cmd::now_iso(), offered: false };
+         self.queue(Job::Save(Box::new(Snapshot { version: 1, info, generation: 0, document: s.doc.clone() })))?;
+         self.id = Some(id);
+         self.revision = Some(s.rev());
+         self.due = now + INTERVAL;
+         Ok(())
+     }
++    /// The document leaves the editor with no unsaved changes (saved, then replaced in one step): its copy holds nothing
++    /// the file lacks, so the next tick discards it (office overlay, WP23).
++    pub fn release(&mut self) {
++        if let Some(id) = self.id.take() {
++            self.released.push(id);
++            self.revision = None;
++        }
++    }
++    /// The start page showed the listed copies.
++    pub fn offer(&mut self) -> Result<(), String> {
++        let ids: Vec<String> = self.documents.iter().filter(|d| !d.offered).map(|d| d.id.clone()).collect();
++        if ids.is_empty() {
++            return Ok(());
++        }
++        self.queue(Job::Offer(ids))
++    }
++    /// A clean exit: waits (bounded) for the job in flight, then discards this window's records.
++    pub fn close(&mut self) -> Result<(), String> {
++        const WAIT: Duration = Duration::from_secs(5);
++        if !self.alive {
++            return Ok(());
++        }
++        if self.busy {
++            self.rx.recv_timeout(WAIT).map_err(|e| e.to_string())?;
++            self.busy = false;
++        }
++        let mut ids = std::mem::take(&mut self.mine);
++        ids.append(&mut self.released);
++        ids.sort();
++        ids.dedup();
++        if ids.is_empty() {
++            return Ok(());
++        }
++        self.queue(Job::Close(ids))?;
++        let e = self.rx.recv_timeout(WAIT).map_err(|e| e.to_string())?;
++        self.busy = false;
++        self.documents = e.documents;
++        self.id = None;
++        e.outcome.map(|_| ())
++    }
+     pub fn document_is(&self, document: u64) -> bool {
+         self.document == Some(document)
+     }
+@@ -600,7 +710,7 @@ mod tests {
+     fn snapshot(id: &str, text: &str) -> Snapshot {
+         Snapshot {
+             version: 1,
+-            info: RecoveryInfo { id: id.into(), name: "Synthetic draft".into(), saved_at: crate::cmd::now_iso() },
++            info: RecoveryInfo { id: id.into(), name: "Synthetic draft".into(), saved_at: crate::cmd::now_iso(), offered: false },
+             generation: 0,
+             document: Document::from_text(text),
+         }
+@@ -913,4 +1023,89 @@ mod tests {
+         settle(&mut s);
+         assert_eq!(s.recovery_documents().len(), 1);
+     }
++
++    // office overlay (WP23): the rules below follow Office's AutoRecover model.
++
++    #[test]
++    fn clean_exit_removes_this_windows_copies_and_keeps_a_crashed_windows() {
++        let t = Temp::new();
++        let crashed = new_id().unwrap();
++        Store::new(t.0.clone()).unwrap().save(snapshot(&crashed, "A crashed window's draft")).unwrap();
++        let mut s = session(&t.0);
++        assert_eq!(s.recovery_documents().len(), 1);
++        s.run("text.insert", &json!({"text": "First draft"})).unwrap();
++        save_now(&mut s);
++        // A switch with unsaved changes keeps that copy (scripts switch without asking) until the clean exit.
++        s.run("file.new", &json!({})).unwrap();
++        s.run("text.insert", &json!({"text": "Second draft"})).unwrap();
++        save_now(&mut s);
++        assert_eq!(s.recovery_documents().len(), 3);
++        s.recovery_close();
++        drop(s);
++        let s = session(&t.0);
++        let left: Vec<String> = s.recovery_documents().into_iter().map(|d| d.id).collect();
++        assert_eq!(left, [crashed]);
++    }
++
++    #[test]
++    fn a_saved_document_replaced_in_the_same_step_leaves_no_copy() {
++        let t = Temp::new();
++        let root = t.0.join("profile");
++        let mut s = session(&root);
++        s.run("text.insert", &json!({"text": "Draft"})).unwrap();
++        save_now(&mut s);
++        assert_eq!(s.recovery_documents().len(), 1);
++        // Save Changes › Save, then the New it asked about: no frame (no tick) in between.
++        s.run("file.save", &json!({"path": t.0.join("saved.docx")})).unwrap();
++        s.run("file.new", &json!({})).unwrap();
++        settle(&mut s);
++        assert!(s.recovery_documents().is_empty());
++        assert!(fs::read_dir(&root).unwrap().next().is_none());
++    }
++
++    #[test]
++    fn an_offered_copy_is_listed_but_not_offered_again_until_new_work() {
++        let t = Temp::new();
++        let id = new_id().unwrap();
++        Store::new(t.0.clone()).unwrap().save(snapshot(&id, "Draft")).unwrap();
++        let mut s = session(&t.0);
++        assert!(!s.recovery_documents()[0].offered);
++        s.recovery_offer();
++        settle(&mut s);
++        assert!(s.recovery_documents()[0].offered);
++        drop(s);
++        let mut s = session(&t.0);
++        assert!(s.recovery_documents()[0].offered, "the next start lists it as offered");
++        // Restored and edited: the new generation is new work, offered again after a crash.
++        s.run("file.recover", &json!({"restore": id})).unwrap();
++        settle(&mut s);
++        s.run("text.insert", &json!({"text": "More work. "})).unwrap();
++        save_now(&mut s);
++        drop(s);
++        let s = session(&t.0);
++        assert_eq!(s.recovery_documents().len(), 1);
++        assert!(!s.recovery_documents()[0].offered);
++    }
++
++    #[test]
++    fn offered_copies_expire_after_a_week_and_unoffered_ones_never() {
++        let t = Temp::new();
++        let (seen, unseen) = (new_id().unwrap(), new_id().unwrap());
++        let mut store = Store::new(t.0.clone()).unwrap();
++        store.save(snapshot(&seen, "Seen")).unwrap();
++        store.save(snapshot(&unseen, "Never seen")).unwrap();
++        store.offer(std::slice::from_ref(&seen)).unwrap();
++        drop(store);
++        let old = std::time::SystemTime::now() - EXPIRE - Duration::from_secs(60);
++        for id in [&seen, &unseen] {
++            for p in Store::files(&t.0.join(id)).unwrap() {
++                File::options().write(true).open(p).unwrap().set_modified(old).unwrap();
++            }
++        }
++        let mut store = Store::new(t.0.clone()).unwrap();
++        store.scan().unwrap();
++        let left: Vec<String> = store.inventory().into_iter().map(|d| d.id).collect();
++        assert_eq!(left, [unseen]);
++        assert!(!t.0.join(&seen).exists(), "the expired record's folder is gone");
++    }
+ }
+diff --git a/crates/engine/src/session.rs b/crates/engine/src/session.rs
+index 671a53c..9acbcd5 100644
+--- a/crates/engine/src/session.rs
++++ b/crates/engine/src/session.rs
+@@ -1103,6 +1103,13 @@ impl Session {
+ 
+     /// Replace the document (open/new).
+     pub fn set_document(&mut self, doc: Document) {
++        // office overlay (WP23): a document replaced with no unsaved changes (Save, then Open/New/Close) leaves no recovery copy.
++        #[cfg(not(target_arch = "wasm32"))]
++        if !self.dirty
++            && let Some(r) = &mut self.recovery
++        {
++            r.release();
++        }
+         self.autocap = None;
+         self.document_id = self.document_id.wrapping_add(1);
+         self.bib_style = doc_bib_style(&doc);
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 20aa28b..94799c8 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -659,6 +659,27 @@ mod tests {
+         let _ = std::fs::remove_dir_all(root);
+     }
+ 
++    /// office overlay (WP23): Continue without restoring keeps the copy, and the next start doesn't open the page for it.
++    #[test]
++    #[cfg(not(target_arch = "wasm32"))]
++    fn recovery_page_opens_once_for_the_same_copies() {
++        let (app, root) = recovery_app();
++        let mut h = recovery_harness(app);
++        settle_recovery(&mut h);
++        assert!(h.state().ui.backstage && h.state().ui.backstage_page == "recover");
++        h.get_by_label("Continue without restoring").click();
++        h.run_steps(4);
++        drop(h);
++        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Services::default());
++        app.session.enable_recovery(root.clone(), std::sync::Arc::new(|| {})).unwrap();
++        let mut h = recovery_harness(app);
++        settle_recovery(&mut h);
++        assert!(!h.state().ui.backstage, "the page is not offered again");
++        assert_eq!(h.state().session.recovery_documents().len(), 1, "File › Recover still lists the copy");
++        drop(h);
++        let _ = std::fs::remove_dir_all(root);
++    }
++
+     #[test]
+     #[cfg(not(target_arch = "wasm32"))]
+     fn recovery_restore_uses_save_changes_and_resets_autosave_permission() {
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 7f52821..707338f 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -2043,9 +2043,12 @@ impl WordApp {
+         }
+         if !self.recovery_seen && self.session.recovery_ready() {
+             self.recovery_seen = true;
+-            if !self.session.recovery_documents().is_empty() && !self.session.dirty {
++            // office overlay (WP23): the page opens once for copies an earlier start has not offered (a crash leaves them;
++            // a clean exit removes its own); File › Recover still lists them all.
++            if self.session.recovery_documents().iter().any(|d| !d.offered) && !self.session.dirty {
+                 self.ui.backstage = true;
+                 self.ui.backstage_page = "recover".into();
++                self.session.recovery_offer();
+             }
+         }
+         if let Some(wait) = self.session.recovery_wait() {
+diff --git a/docs/recovery.md b/docs/recovery.md
+index 00ce845..d0c3c4b 100644
+--- a/docs/recovery.md
++++ b/docs/recovery.md
+@@ -1,7 +1,12 @@
+ # Local document recovery
+ 
+ Desktop WordCraft periodically keeps a local copy of unsaved work, including new drafts.
+-File › Recover lists available copies. The page opens at startup when copies are found.
++File › Recover lists available copies. At startup the page opens once for copies that no
++earlier start has offered: in practice the copies an unclean exit (crash, kill, power loss) left
++behind, because a clean exit removes its window's own copies. A copy a start has offered is
++marked `offered` in its folder and is not offered again, unless a newer generation (new work)
++is written to it. An offered copy whose newest generation is older than 7 days is removed at
++discovery; a copy never offered is never removed by age (office overlay, WP23).
+ Restore opens an unsaved document with no file path. Save As chooses where to keep it.
+ Recovery never writes to the original document. AutoSave's permission to write to an earlier
+ file is cleared on restore.
+@@ -10,7 +15,11 @@ Continue without restoring leaves copies available. Discard asks for confirmatio
+ the selected copy, including its retained generation. It does not delete the editing document.
+ After discarding that document's copy, another copy is made only after a further edit.
+ A successful save removes that document's recovery copy on the next worker cycle while it
+-remains open. Copies left after switching documents can still be explicitly discarded.
++remains open, and so does replacing a document that has no unsaved changes (Save, then Open,
++New or Close in one step). A switch away from unsaved changes (a script, or Don't Save) keeps
++that copy until the window exits cleanly. A clean exit (the window closes after Save or Don't
++Save) waits a few seconds at most for the worker and removes every copy that window made or
++restored; copies of other windows and of crashed sessions stay (office overlay, WP23).
+ 
+ Documents with a password do not get plaintext recovery copies. Applying a password waits for
+ any pending snapshot, removes the current document's recovery generations, and fails if cleanup

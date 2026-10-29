@@ -94,6 +94,11 @@ impl eframe::App for App {
     }
     fn on_exit(&mut self) {
         print::finish_pending_jobs();
+        // office overlay (WP23): a clean exit leaves no recovery copy of this window's work (it was saved, or the user chose
+        // Don't Save), and the version snapshot of the last save is written before the process ends.
+        self.0.session.recovery_close();
+        #[cfg(feature = "office-ext")]
+        docs_office::flush_snapshots(std::time::Duration::from_secs(10));
         save_prefs(&self.0);
         if let Some(key_file) = &self.2 {
             key_file.remove();

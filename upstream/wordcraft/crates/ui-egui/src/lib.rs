@@ -2043,9 +2043,12 @@ impl WordApp {
         }
         if !self.recovery_seen && self.session.recovery_ready() {
             self.recovery_seen = true;
-            if !self.session.recovery_documents().is_empty() && !self.session.dirty {
+            // office overlay (WP23): the page opens once for copies an earlier start has not offered (a crash leaves them;
+            // a clean exit removes its own); File › Recover still lists them all.
+            if self.session.recovery_documents().iter().any(|d| !d.offered) && !self.session.dirty {
                 self.ui.backstage = true;
                 self.ui.backstage_page = "recover".into();
+                self.session.recovery_offer();
             }
         }
         if let Some(wait) = self.session.recovery_wait() {
