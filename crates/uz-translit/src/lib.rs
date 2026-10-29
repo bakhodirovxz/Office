@@ -47,16 +47,21 @@ pub enum Apostrophe {
 pub enum LatinAlphabet {
     /// The 1995 alphabet: oʻ gʻ sh ch, and s + tutuq + h for сҳ. Still read everywhere; written when chosen.
     Y1995,
-    /// The 2026 reform (law signed 2026-10-21, in force six months after publication): ö ğ ş ç, and plain sh for сҳ. The default (O13).
+    /// The 2026 reform (law signed 2026-10-21, in force six months after publication): ö ğ ş ç, and plain sh for сҳ. Written by default (O13, [`LATIN_WRITE_DEFAULT`]).
     Y2026,
-    /// ->Latin writes the product default (`DEFAULT_LATIN_ALPHABET`). ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
+    /// ->Latin writes [`LATIN_WRITE_DEFAULT`] (2026). ->Cyrillic reads a paragraph as 2026 if it has any of ö ğ ş ç, else as 1995.
     Auto,
 }
 
 /// The default Latin alphabet of every product surface: the library, docs-translit, the converter CLI, API and page,
-/// and the wasm package. Owner decision O13: switched to `Y2026` on 2026-10-29 (rules.md section 15.4), before the
-/// law is in force. This is the one line to change.
-pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Y2026;
+/// the wasm package, and the Sheets/Slides commands. `Auto`: ->Latin writes [`LATIN_WRITE_DEFAULT`]; ->Cyrillic reads each
+/// paragraph as written (2026 if it has ö ğ ş ç, else 1995), so the 1995 text that exists today still converts
+/// (`Y2026` here read "sh" as s + h and "o'" as o + tutuq).
+pub const DEFAULT_LATIN_ALPHABET: LatinAlphabet = LatinAlphabet::Auto;
+
+/// The alphabet ->Latin writes by default. Owner decision O13: switched to `Y2026` on 2026-10-29 (rules.md section 15.4),
+/// before the law is in force. This is the one line to change.
+pub const LATIN_WRITE_DEFAULT: LatinAlphabet = LatinAlphabet::Y2026;
 
 impl Default for LatinAlphabet {
     fn default() -> Self {
@@ -78,7 +83,7 @@ impl LatinAlphabet {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Options {
     pub apostrophe: Apostrophe,
-    /// ->Latin: which Latin alphabet to write (default: [`DEFAULT_LATIN_ALPHABET`]).
+    /// ->Latin: which Latin alphabet to write; ->Cyrillic: which to read (default: [`DEFAULT_LATIN_ALPHABET`], Auto).
     pub latin_alphabet: LatinAlphabet,
     /// ->Cyrillic: copy words with c (not in ch), w or diacritic Latin letters unchanged (R14).
     pub foreign_latin_guard: bool,

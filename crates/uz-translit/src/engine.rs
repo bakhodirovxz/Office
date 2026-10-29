@@ -309,10 +309,7 @@ pub(crate) fn convert_segment(
     if opts.latin_alphabet == LatinAlphabet::Auto {
         // Auto: ->Cyrillic reads a paragraph with any of ö ğ ş ç as 2026, else 1995; ->Latin writes the product default (O13, m6)
         let new = to_cyr && seg.items.iter().any(|t| is_new_letter(t.c));
-        let dflt = match crate::DEFAULT_LATIN_ALPHABET {
-            LatinAlphabet::Auto => LatinAlphabet::Y1995,
-            d => d,
-        };
+        let dflt = crate::LATIN_WRITE_DEFAULT;
         seg.opts.latin_alphabet = if to_cyr {
             if new {
                 LatinAlphabet::Y2026

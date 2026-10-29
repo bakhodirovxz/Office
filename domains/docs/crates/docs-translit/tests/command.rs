@@ -137,7 +137,7 @@ fn auto_follows_the_dominant_script() {
     s.run("tools.translitAuto", &json!({})).unwrap();
     assert_eq!(text(&s, 0), cyr("Shahar bola"));
     s.run("tools.translitAuto", &json!({})).unwrap();
-    assert_eq!(text(&s, 0), "Shahar bola");
+    assert_eq!(text(&s, 0), "Şahar bola"); // ->Latin writes 2026 (O13, owner 2026-10-29)
 }
 
 #[test]

@@ -1208,6 +1208,15 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
 - `DEFAULT_LATIN_ALPHABET` = `Y2026`; docs-translit, wasm/npm, converter CLI/API/page follow it. `suite-core` settings default
   is 2026; a stored "1995" stays. m6 closed. Explicit `1995` still works everywhere. Branch `p4-alphabet`, merged (9123a0e).
+- **Corrected the same day.** `Y2026` as the default also made ->Cyrillic read 2026 only: "Toshkent shahri, Oʻzbekiston,
+  choy" became "Тосҳкент сҳаҳри, Оъзбекистон, choy" (Docs, converter, npm; never in an MSI). Now `DEFAULT_LATIN_ALPHABET` =
+  `Auto` and the new `LATIN_WRITE_DEFAULT` = `Y2026`: ->Latin writes 2026, ->Cyrillic reads each paragraph as 2026 if it
+  has ö ğ ş ç, else 1995 (test `the_default_reads_1995_and_2026_latin_and_writes_2026`).
+- Sheets and Slides wrote 1995: `tools.translit*` took `Y1995` when `latinAlphabet` was left out, and their menus never
+  pass it. Fixed by gridcraft/0147 and deckcraft/0148 (the suite default; a test each).
+- Owner, 2026-10-29: "Doim 2026 rejimida ishlasin. 1995 kerak emas." The converter page's Latin alphabet menu is removed
+  (its 4 catalog rows too); the CLI/API `alphabet` parameter stays for scripts. The suite-core `latin_alphabet` setting
+  is read by no app (found here); left as it is.
 
 ### Phase 4 fix: PDF to Word moved the text (owner report, 2026-10-29; branch `p4-pdf2docx`)
 - **Which pipeline made what.** The owner's three files (a 103-page document; nothing of it is in the repo). The "Downloads" docx is **Microsoft Word's own PDF Reflow**

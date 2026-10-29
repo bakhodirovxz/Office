@@ -241,3 +241,11 @@ fn timing_on_a_large_sheet() {
         );
     }
 }
+
+#[test]
+fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
+    let mut s = session();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["Шаҳар ўғил"]]})).unwrap();
+    s.execute(LATN, json!({"scope": "selection", "range": "A1"})).unwrap();
+    assert_eq!(text(&s, "A1"), "Şahar öğil");
+}
