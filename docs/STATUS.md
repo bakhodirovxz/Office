@@ -1262,3 +1262,26 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   MSI were not rebuilt (only `pdf-cli` at `E:/office-target/p4-pdf2docx/pdf/release`); (d) LibreOffice not measured
   (Docker daemon down); (e) the owner should re-run Export to Word on the real file after the next MSI.
 - **Docs tables made in Word (owner finding 2026-10-29, branch `p4-tables`, not merged):** `corpus/` is still missing (O9), so Word 16 built 29 synthetic table documents through COM (`scripts/fidelity/gen_word_tables.ps1`; the files stay on E:) and `scripts/fidelity/tables.py` compared our rendering with Word's PDF (table rule positions, pixels) and the saved docx with the source (markup counts, Word's re-render). Before: 35 of 237 column rules and 18 of 257 row rules more than 3 pt off; after: 2 and 9 (cell spacing, one letter). Fixed by **wordcraft/0130** (AutoFit: spanning cells share by grid width; compatibility mode <= 14 percentage/AutoFit room adds the cell margins; a table with its own `w:tblW` past 1.5x the column is no longer squeezed) and **wordcraft/0131** (`w:tblCellSpacing` kept on save; partial `w:tblCellMar` sides keep the style's/table's instead of 0). Word's re-render of our saved files: 21 of 23 at 0.00 % before, 29 of 29 after. Golden check without Office: `tables.py --golden ci/fidelity/tables-golden.json` (11 hand-written fixtures; before 7 fail, after 8 ok + 3 known gaps), in the nightly `fidelity-directions` job. Not fixed: cell spacing layout, Word's split for `tblW` auto tables past the column, and **the web editor's Times New Roman substitute (Source Serif 4): rows taller, a 60-row table 4 to 5 pages** (owner decision: metric-compatible fonts do not fit the docs headroom). Not measured: `.doc`/`.rtf` (Word's SaveAs to them hangs headless here). An owner file (best a `.doc`) is asked for. Details: `docs/phase4/tables.md`.
+
+### Phase 4: one theme setting for the shell and the four apps (owner, 2026-10-29; branch `p4-theme`)
+- **Owner decision (design-system.md, Revised):** each app keeps its own look; one global theme, changed in one place; our
+  own additions follow the host app's design language.
+- **Setting:** `settings.toml` `theme = "system" | "light" | "dark"`, default `system` (`crates/suite-core/src/settings.rs`,
+  `Theme`). The desktop host lets the page read and set it (`PAGE_SETTINGS`). The shell header has a select next to the
+  language; the shell page applies it at once (`<html data-theme>`, logo, accent; `system` follows the OS live). On the web
+  the browser keeps it (`localStorage` `sh.theme`).
+- **Apps (read once at start, native only, never in tests):** Docs wordcraft/0132 (`Appearance`), Sheets gridcraft/0148
+  (`system_theme`/`dark`), Slides deckcraft/0149 (first frame; Slides has no system mode, so `system` = the OS answer at
+  start, not live), PDF pdfcraft/0115 (`ThemePreference`). Every value wins over the app's saved one, `system` included;
+  an in-app change holds for the session. With no file the default `system` applies, so Slides and PDF (upstream default
+  Light) now follow Windows. Details: shared-services.md 6.2.
+- **Our additions:** inventory in design-system.md section 10. The simple toolbars, the Docs tab and icons, translit menus,
+  logos/attribution already use the host's `Tokens`, radii and fonts; History opens the shell page, which now follows the
+  setting. Nothing in the apps needed a change.
+- **Not done:** the web editors do not get the setting (the shell passes only `?lang=`; Docs/Sheets follow the browser,
+  Slides/PDF their own default). Phase 5's web History panel (`services/docserver/static/editor.js`,
+  `web/shell/history-ui.js`) was not touched; it needs: `data-theme` on its page root from the setting (shell.css keeps an
+  OS fallback for a page without it, so a merge forward does not break it), its hard-coded status colour `#555`
+  (`editor.js:21`) moved to `var(--muted)`, and, to follow the Docs look rather than the shell's, Docs' accent and
+  radii (wordcraft `theme.rs`: accent `#3B5BDB`, widget radius 4, window radius 8, body 12.5 px) instead of the shell's
+  brand blue and 16 px type.
