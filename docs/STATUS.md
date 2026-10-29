@@ -1422,3 +1422,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   across a DST change is off by one hour); the web build has no pane test and shows UTC; dd.mm.yyyy is used for every language
   (no per-locale date order); the pane is not shown if the window starts with unsaved changes (as 0129 required for the page);
   Android and the web were not built.
+- **MSI rebuilt from phase-4 `ab62c5a` (2026-10-29, late)** with the Document Recovery pane (wordcraft/0137):
+  `E:\office-target\p1\msi\hoshiya-0.1.0-x64.msi`, 201.8 MB, SHA-256 `9B804E90…0646` (Docs web + MSVC rebuilt, shell
+  dist, WiX all rc 0). It replaces the `139DA156…A548` build. Not install-tested here. wordcraft/0137 regenerated on the
+  phase-5 queue; wordcraft `cargo check --tests` on phase-5 OK.
