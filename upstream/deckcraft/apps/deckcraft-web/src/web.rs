@@ -47,6 +47,10 @@ pub fn start() {
                         bridge.connect(&mut services, cc.egui_ctx.clone());
                     }
                     let mut app = SlideApp::new(Session::new(), services);
+                    // `?lang=`: the web shell's language (Slides has no browser detection of its own).
+                    if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
+                        app.ui.language = lang.code().to_string();
+                    }
                     let q = query();
                     if !q.contains("blank") && app_bridge.is_none() {
                         if let Err(e) = deckcraft_engine::sample::open_sample(&mut app.session) {

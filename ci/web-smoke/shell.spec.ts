@@ -99,6 +99,34 @@ test('language switch: ru and uz-Cyrl texts, and the choice is kept', async ({ p
   await expect(page.locator('#h-recent')).toHaveText(txt('uz-Latn', 'home.recent'));
 });
 
+// The editors take the shell's language: the frame gets ?lang= and the editor page answers navigator.language with it (a Slides
+// editor has no browser detection of its own, the others read navigator.language).
+for (const [i, e] of EDITORS.entries()) {
+  if (e === 'pdf') continue; // PDF has no blank document: its card asks for a file, so its page is checked on its own below
+  test(`${e}: the editor frame follows the shell language`, async ({ page }) => {
+    test.skip(!have(e), `${e}-web is not built`);
+    await page.goto(base + '/');
+    await page.selectOption('#lang', 'uz-Latn');
+    await page.locator('#cards li').nth(i).getByRole('button').click();
+    await expect(page.locator('iframe')).toHaveAttribute('src', /[?&]lang=uz-Latn(&|$)/);
+    const frame = page.frames().find((f) => f.url().includes(`/${e}/`))!;
+    await frame.waitForLoadState('domcontentloaded');
+    expect(await frame.evaluate(() => [navigator.language, navigator.languages[0]])).toEqual(['uz-Latn', 'uz-Latn']);
+    // changing the language drops the idle frame, so the next open starts in the new one
+    await page.click('#back');
+    await page.selectOption('#lang', 'ru');
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page.locator('#cards li').nth(i).getByRole('button').click();
+    await expect(page.locator('iframe')).toHaveAttribute('src', /[?&]lang=ru(&|$)/);
+  });
+}
+
+test('pdf: the editor page answers navigator.language with ?lang=', async ({ page }) => {
+  test.skip(!have('pdf'), 'pdf-web is not built');
+  await page.goto(`${base}/pdf/?host=parent&lang=uz-Cyrl`);
+  expect(await page.evaluate(() => [navigator.language, navigator.languages[0]])).toEqual(['uz-Cyrl', 'uz-Cyrl']);
+});
+
 test('headers per route: strict on the shell and the converter, wasm only on an editor', async ({ page }) => {
   const csp = async (p: string) => (await page.request.get(base + p)).headers()['content-security-policy'];
   const strict = await csp('/');
