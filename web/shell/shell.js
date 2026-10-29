@@ -85,7 +85,7 @@
   function frameOf(a) {
     if (S.frames[a.id]) return S.frames[a.id];
     const f = { app: a, ready: false, dirty: false, pending: null, timer: 0 };
-    f.el = el('iframe', { src: a.route + '?host=parent', title: appName(a) });
+    f.el = el('iframe', { src: a.route + '?host=parent&lang=' + encodeURIComponent(S.lang), title: appName(a) });
     $('frames').append(f.el);
     return (S.frames[a.id] = f);
   }
@@ -237,6 +237,8 @@
     await loadRecent();
     $('lang').onchange = (e) => {
       S.lang = e.target.value; render();
+      // editors read the language when they start: drop the idle ones so the next open follows the new language (an editor with unsaved work keeps its own until it is reopened)
+      for (const [id, fr] of Object.entries(S.frames)) if (!fr.dirty) { fr.el.remove(); delete S.frames[id]; }
       if (S.mode === 'desktop') host({ type: 'settings_set', key: 'lang', value: S.lang }, 'settings'); else store('sh.lang', S.lang);
     };
     $('search').oninput = render;

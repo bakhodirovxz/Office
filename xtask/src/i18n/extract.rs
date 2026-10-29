@@ -782,8 +782,62 @@ const OWN_DECK_0124: [&str; 5] = [
     "Parts of this presentation couldn't be read: pictures or media files left empty: {n}; slides left out: {m}. It was opened as a repaired copy; save it under a new name to keep the original file.",
 ];
 
+/// Sheets strings that no upstream language table holds, so the table scan cannot see them: the print page wording
+/// (`printing.rs`, passed through `translate`) and the Options heading (patch gridcraft/0146). (context, English)
+const OWN_GRID_0146: [(&str, &str); 19] = [
+    ("Options", "Editing"),
+    ("", "Printer"),
+    ("", "Select a printer"),
+    ("", "Refresh printers"),
+    ("", "Copies"),
+    ("", "Two-sided printing"),
+    ("", "Printer default"),
+    ("", "One-sided"),
+    ("", "Two-sided: long edge"),
+    ("", "Two-sided: short edge"),
+    ("", "Grayscale"),
+    ("", "Finding printers…"),
+    ("", "No printers found. Configure a system printer or export a PDF."),
+    ("", "Printer discovery failed."),
+    ("", "Submitting print job…"),
+    ("", "Print job submitted."),
+    ("", "Print job submitted: {receipt}"),
+    ("", "Print failed: {error}"),
+    ("", "Print failed: the printing worker stopped."),
+];
+
+/// Slides strings the literal scan cannot see (patch deckcraft/0146): the starter names (`engine/src/templates.rs`), the
+/// paper names (`pdf/src/lib.rs`) and a one-word label that ends in a colon (the scan reads that shape as an id).
+const OWN_DECK_0146: [&str; 11] = [
+    "Slides:",
+    "Briefing",
+    "Lesson",
+    "Pitch",
+    "Field Notes",
+    "Quarterly",
+    "Evening Talk",
+    "Letter (8.5 × 11 in)",
+    "A4 (210 × 297 mm)",
+    "Legal (8.5 × 14 in)",
+    "A3 (297 × 420 mm)",
+];
+
 fn add_own(unis: &mut [Universe]) {
+    for u in unis.iter_mut().filter(|u| u.app == "gridcraft") {
+        for (ctx, en) in OWN_GRID_0146 {
+            let e = u.keys.entry((ctx.to_string(), en.to_string())).or_default();
+            if e.where_.is_empty() {
+                e.where_ = "patches/gridcraft/0146".into();
+            }
+        }
+    }
     for u in unis.iter_mut().filter(|u| u.app == "deckcraft") {
+        for en in OWN_DECK_0146 {
+            let e = u.keys.entry((String::new(), en.to_string())).or_default();
+            if e.where_.is_empty() {
+                e.where_ = "patches/deckcraft/0146".into();
+            }
+        }
         for en in OWN_DECK_0124 {
             let e = u.keys.entry((String::new(), en.to_string())).or_default();
             if e.where_.is_empty() {

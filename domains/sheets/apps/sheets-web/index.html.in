@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>{{APP_NAME}}</title>
+  <script>
+    /* The web shell passes ?lang=; the editor reads its language from navigator.language(s), so answer with the shell's. */
+    (() => { const l = new URLSearchParams(location.search).get('lang'); if (!l) return;
+      try { Object.defineProperty(navigator, 'language', { get: () => l, configurable: true }); Object.defineProperty(navigator, 'languages', { get: () => [l], configurable: true }); } catch (_) { /* keep the browser's */ } })();
+  </script>
   <link data-trunk rel="icon" href="{{FAVICON}}" />
   <link data-trunk rel="rust" data-bin="sheets-web" data-wasm-opt="z" data-weak-refs />
   <style>
