@@ -9,6 +9,10 @@
  */
 (function () {
   'use strict';
+  // the shared theme: ?theme=light|dark from the shell, else the OS (embedded in a host with no setting)
+  var th = new URLSearchParams(location.search).get('theme'), mq = window.matchMedia('(prefers-color-scheme: dark)');
+  document.documentElement.dataset.theme = th === 'dark' || (th !== 'light' && mq.matches) ? 'dark' : 'light';
+  if (th !== 'light' && th !== 'dark') mq.addEventListener('change', function (e) { document.documentElement.dataset.theme = e.matches ? 'dark' : 'light'; });
   var HOST = null;
   try {
     var m = /^#o=(.+)$/.exec(location.hash);
@@ -18,7 +22,7 @@
 
   var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, readOnly: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
-  status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:#555';
+  status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:var(--muted)';
   document.body.style.cssText = 'margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column';
   document.body.appendChild(status);
   var t = function (k, p) { return String((S.i18n[S.lang] || {})[k] || (S.i18n.en || {})[k] || k).replace(/\{(\w+)\}/g, function (a, n) { return (p || {})[n] == null ? a : p[n]; }); };
@@ -217,7 +221,7 @@
       E('ul', { id: 'hist-vers', className: 'list vers' }), ...(can ? [cmpSec] : []));
     H.panel.setAttribute('role', 'dialog');
     H.panel.setAttribute('aria-labelledby', 'hist-h');
-    H.panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:min(36rem,100%);overflow:auto;padding:12px 16px;background:var(--bg);color:var(--fg);border-left:1px solid var(--line);box-shadow:-4px 0 12px rgba(0,0,0,.25);z-index:10';
+    H.panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:min(36rem,100%);overflow:auto;padding:12px 16px;background:var(--bg);color:var(--fg);border-left:1px solid var(--line);box-shadow:-4px 0 12px var(--shadow,rgba(0,0,0,.25));z-index:10';
     document.body.appendChild(H.panel);
     H.opener.setAttribute('aria-expanded', 'true');
     h1.focus();
@@ -271,6 +275,7 @@
     var app = apps.find(function (a) { return a.route === '/' + s.editor + '/'; });
     if (!app) return fail(-1, 'no editor for this document type');
     S.prefix = app.prefix;
+    document.documentElement.dataset.app = s.editor;   // history.css: the host app's look
     status.textContent = t('ed.loading', { app: app.names[S.lang] || app.names.en });
     S.frame = document.createElement('iframe');
     S.frame.src = app.route + '?host=parent';

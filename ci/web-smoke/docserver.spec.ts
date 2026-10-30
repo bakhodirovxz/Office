@@ -23,6 +23,7 @@ const HRM_BIN = process.env.FAKE_HRM_BIN ?? exe('fake-hrm');
 const DIST = process.env.DIST ?? 'E:/office-target/p1/dist';
 const OPENSSL = process.env.OPENSSL ?? 'openssl';
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
+const XLSX = path.join(ROOT, 'domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx');   // files/2
 
 const free = () => new Promise<number>((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = (s.address() as net.AddressInfo).port; s.close(() => ok(p)); }); });
 let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server;
@@ -69,7 +70,7 @@ test.beforeAll(async () => {
   HOST = `http://localhost:${hrmPort}`;
 
   // the fake backend first: it generates the secret the provider entry of the server must hold
-  hrm = spawn(HRM_BIN, [DOCX], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
+  hrm = spawn(HRM_BIN, [DOCX, XLSX], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
   const secret = await new Promise<string>((ok, bad) => {
     let err = '';
     hrm.stderr!.on('data', (d) => { err += d; const m = /\(secret ([0-9a-f]+),/.exec(err); if (m) ok(m[1]); });
@@ -559,4 +560,57 @@ test('History panel: screenshots (DS_SHOTS)', async () => {
   fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });
   await startDs([`diff_bin_dir = "${bin.replace(/\\/g, '/')}"`]);
   for (const lang of ['uz-Latn', 'ru']) await round(lang, true);
+});
+
+// ---- the panel follows the HOST app's look (owner, 2026-10-29): data-app + data-theme on the wrapper, tokens from history.css ----
+// Expected values are upstream's own theme tokens (wordcraft/gridcraft theme.rs); DS_SHOTS=<dir> also saves the screenshots.
+const LOOK = {
+  docs: { id: 1, light: { accent: [59, 91, 219], bg: 'rgb(250, 250, 250)' }, dark: { accent: [122, 147, 240], bg: 'rgb(38, 38, 38)' }, radius: '4px' },
+  sheets: { id: 2, light: { accent: [16, 124, 65], bg: 'rgb(255, 255, 255)' }, dark: { accent: [92, 197, 135], bg: 'rgb(51, 51, 51)' }, radius: '4px' },
+} as const;
+test('History panel takes the host app look and the theme (data-app, data-theme, ?theme=)', async () => {
+  // the page alone: ?theme= wins over the OS, no param follows the OS
+  const solo = await open();
+  await solo.page.emulateMedia({ colorScheme: 'dark' });
+  await solo.page.goto(`${DS}/ds/editor?theme=light`);
+  expect(await solo.page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
+  await solo.page.goto(`${DS}/ds/editor`);
+  expect(await solo.page.evaluate(() => document.documentElement.dataset.theme)).toBe('dark');
+  await solo.ctx.close();
+  for (const [app, L] of Object.entries(LOOK)) {
+    const { ctx, page, problems } = await open();
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto(`${HOST}/host?kind=files&id=${L.id}&lang=en`);
+    // the Sheets editor never sent its ready message on the p5 dist here (not a bridge for it yet, PLAN R6): the panel is the wrapper's, so it opens anyway
+    if (app === 'docs') await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    else await expect.poll(() => page.frames().some((f) => f.url().startsWith(`${DS}/ds/editor`)), { timeout: 30_000 }).toBe(true);
+    const w = wrapperOf(page);
+    await expect(w.getByRole('button', { name: 'History', exact: true })).toBeVisible({ timeout: 60_000 });
+    await w.getByRole('button', { name: 'History', exact: true }).click();
+    const panel = w.locator('#hist-panel');
+    await expect(panel).toBeVisible();
+    // Sheets has a row only once its editor has fetched the file, which may take a while: not needed for the look
+    await expect(panel.locator('#hist-vers > li').first()).toBeVisible({ timeout: 60_000 }).catch((e) => { if (app === 'docs') throw e; });
+    for (const scheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme: scheme });
+      await expect.poll(() => w.evaluate(() => document.documentElement.dataset.theme)).toBe(scheme);
+      expect(await w.evaluate(() => document.documentElement.dataset.app)).toBe(app);
+      const got = await w.evaluate(() => {
+        const cs = (e: Element) => getComputedStyle(e);
+        const p = document.getElementById('hist-panel')!;
+        return { bg: cs(p).backgroundColor, accent: cs(p.querySelector('.btn')!).borderTopColor, radius: cs(p.querySelector('.btn')!).borderTopLeftRadius, font: cs(p).fontSize, root: cs(document.documentElement).fontSize };
+      });
+      expect(got.bg).toBe(L[scheme].bg);
+      expect(got.accent).toBe(`rgb(${L[scheme].accent.join(', ')})`);
+      expect(got.radius).toBe(L.radius);
+      expect(got).toMatchObject({ root: '12.5px', font: '12.5px' });
+      if (process.env.DS_SHOTS) {
+        fs.mkdirSync(process.env.DS_SHOTS, { recursive: true });
+        await page.waitForTimeout(250);
+        await page.screenshot({ path: path.join(process.env.DS_SHOTS, `panel-${app}-${scheme}.png`) });
+      }
+    }
+    expect(problems).toEqual([]);
+    await ctx.close();
+  }
 });
