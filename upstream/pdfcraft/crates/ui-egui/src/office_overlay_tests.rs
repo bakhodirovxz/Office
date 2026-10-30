@@ -117,3 +117,11 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
         }
     }
 }
+
+/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/pdfcraft/0120).
+#[test]
+fn web_theme_param_keeps_own_on_garbage() {
+    use crate::theme::ThemePreference::{Dark, Light};
+    assert_eq!(o::theme_at_start(Light, Some("bogus")), Light);
+    assert_eq!(o::theme_at_start(Light, Some("dark")), Dark);
+}

@@ -96,6 +96,8 @@ pub fn start() {
                     // Preferences from an earlier visit (#2132), as the desktop app reads `ui.json`.
                     let stored = stored_prefs();
                     crate::prefs::restore(&mut app, stored.as_deref());
+                    // `?theme=` (patches/wordcraft/0138): the web shell's theme; without it the saved or browser's one stays.
+                    app.ui.theme = wordcraft_ui_egui::office_overlay::theme_at_start(app.ui.theme, query_param("theme").as_deref());
                     // A region chosen in File › Options replaces the browser's for the first blank
                     // document too (#838).
                     if !sample && app.session.prefs.region.is_some() {

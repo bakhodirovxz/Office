@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 30 Oct 2026 12:00:00 +0500
+Subject: [PATCH] gridcraft-web: ?theme= from the web shell sets the interface theme at start
+
+Owner request 2026-10-30: the web editors get the shell's theme too. The shell opens the editor frame with &theme=<system|light|dark>; gridcraft-web applies it after the browser default through office_overlay::theme_at_start (now pub). A missing or unknown value keeps today's behaviour. Pure parse test in office_overlay_tests.
+---
+ apps/gridcraft-web/src/web.rs              |  2 ++
+ crates/ui-egui/src/office_overlay.rs       |  2 +-
+ crates/ui-egui/src/office_overlay_tests.rs | 10 ++++++++++
+ 3 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
+index b3d8ac3..d1f4f75 100644
+--- a/apps/gridcraft-web/src/web.rs
++++ b/apps/gridcraft-web/src/web.rs
+@@ -50,6 +50,8 @@ pub fn start() {
+                     }
+                     let mut app = SheetApp::new(session, services);
+                     app.ui.system_theme = true;
++                    // `?theme=` (patches/gridcraft/0153): the web shell's theme; without it the browser's colour scheme stays.
++                    gridcraft_ui_egui::office_overlay::theme_at_start(&mut app.ui, query_param("theme").as_deref());
+                     // Follow the browser's language, except a CJK one: the web build has no system
+                     // CJK fonts (none are bundled), so that interface would render as tofu.
+                     let browser = gridcraft_ui_egui::i18n::Language::system();
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 4dafaa6..82e1770 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -157,7 +157,7 @@ pub fn start_theme(ui: &mut crate::UiState) {
+     theme_at_start(ui, shared_theme_code());
+ }
+ 
+-pub(crate) fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
++pub fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
+     match shared {
+         Some("system") => ui.system_theme = true,
+         Some(mode @ ("light" | "dark")) => {
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 6de58f2..f4ca85f 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -169,3 +169,13 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
+         }
+     }
+ }
++
++/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/gridcraft/0153).
++#[test]
++fn web_theme_param_keeps_own_on_garbage() {
++    let mut ui = crate::UiState { system_theme: true, ..Default::default() };
++    o::theme_at_start(&mut ui, Some("bogus"));
++    assert_eq!(ui.theme_mode(), "system");
++    o::theme_at_start(&mut ui, Some("dark"));
++    assert_eq!(ui.theme_mode(), "dark");
++}

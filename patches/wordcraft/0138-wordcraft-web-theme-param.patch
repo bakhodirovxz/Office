@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 30 Oct 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: ?theme= from the web shell sets the interface theme at start
+
+Owner request 2026-10-30: the web editors get the shell's theme too. The shell opens the editor frame with &theme=<system|light|dark>; wordcraft-web applies it after the saved prefs through office_overlay::theme_at_start (now pub). A missing or unknown value keeps today's behaviour. Pure parse test in office_overlay_tests.
+---
+ apps/wordcraft-web/src/web.rs              |  2 ++
+ crates/ui-egui/src/office_overlay.rs       |  2 +-
+ crates/ui-egui/src/office_overlay_tests.rs | 11 +++++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 54c5167..6926787 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -96,6 +96,8 @@ pub fn start() {
+                     // Preferences from an earlier visit (#2132), as the desktop app reads `ui.json`.
+                     let stored = stored_prefs();
+                     crate::prefs::restore(&mut app, stored.as_deref());
++                    // `?theme=` (patches/wordcraft/0138): the web shell's theme; without it the saved or browser's one stays.
++                    app.ui.theme = wordcraft_ui_egui::office_overlay::theme_at_start(app.ui.theme, query_param("theme").as_deref());
+                     // A region chosen in File › Options replaces the browser's for the first blank
+                     // document too (#838).
+                     if !sample && app.session.prefs.region.is_some() {
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 55277d3..9e76eb4 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -215,6 +215,6 @@ pub fn start_theme(own: crate::theme::Appearance) -> crate::theme::Appearance {
+     theme_at_start(own, shared_theme_code())
+ }
+ 
+-pub(crate) fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
++pub fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
+     shared.and_then(crate::theme::Appearance::from_code).unwrap_or(own)
+ }
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 934f285..19d659f 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -179,3 +179,14 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
+         }
+     }
+ }
++
++/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/wordcraft/0138).
++#[test]
++fn web_theme_param_keeps_own_on_garbage() {
++    use crate::theme::Appearance;
++    for own in Appearance::ALL {
++        assert_eq!(o::theme_at_start(own, Some("bogus")), own);
++        assert_eq!(o::theme_at_start(own, Some("")), own);
++        assert_eq!(o::theme_at_start(own, Some("dark")).code(), "dark");
++    }
++}

@@ -223,6 +223,14 @@ fn shared_lang_picks_the_catalog_language() {
     }
 }
 
+/// The web `?theme=` value reaches the first-frame hook; anything else is ignored (patches/deckcraft/0154).
+#[test]
+fn web_theme_param_is_validated() {
+    assert_eq!(o::start_theme_param(Some("dark")), Some("dark"));
+    assert_eq!(o::start_theme_param(Some("bogus")), None);
+    assert_eq!(o::start_theme_param(None), None);
+}
+
 /// The shared `theme` beats the saved appearance at start; `system` takes the OS answer and keeps the saved one when the OS gives
 /// none (patches/deckcraft/0149). Tests and the web read no setting.
 #[test]

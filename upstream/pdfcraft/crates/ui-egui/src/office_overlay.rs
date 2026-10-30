@@ -181,7 +181,7 @@ pub fn start_theme(own: crate::theme::ThemePreference) -> crate::theme::ThemePre
     theme_at_start(own, shared_theme_code())
 }
 
-pub(crate) fn theme_at_start(own: crate::theme::ThemePreference, shared: Option<&str>) -> crate::theme::ThemePreference {
+pub fn theme_at_start(own: crate::theme::ThemePreference, shared: Option<&str>) -> crate::theme::ThemePreference {
     use crate::theme::ThemePreference;
     match shared {
         Some("system") => ThemePreference::System,

@@ -1372,3 +1372,24 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   `E:\office-target\p1\msi\hoshiya-0.1.0-x64.msi`, 201.8 MB, SHA-256 `9B804E90…0646` (Docs web + MSVC rebuilt, shell
   dist, WiX all rc 0). It replaces the `139DA156…A548` build. Not install-tested here. wordcraft/0137 regenerated on the
   phase-5 queue; wordcraft `cargo check --tests` on phase-5 OK.
+### Phase 4: the web editors follow the shell theme (owner, 2026-10-30; branch `p4-webtheme`)
+- **Shell:** `web/shell/shell.js` opens each editor frame with `?host=parent&lang=..&theme=<system|light|dark>`. A theme change
+  drops the idle editor frames (as a language change does), so the next open starts in the new theme; a frame with unsaved work
+  keeps its theme until reopened (no live switch: the editors read `?theme=` once at start).
+- **Editors (carried patches, category `brand`; 122 patches, 122 rows):** Docs wordcraft/0138 (`Appearance`, after the saved
+  prefs), Sheets gridcraft/0153 (`system_theme`/`dark`, replaces the browser-colour default), Slides deckcraft/0154 (feeds the
+  0149 first-frame hook; `system` = the browser's answer at start), PDF pdfcraft/0120 (`ThemePreference`, after the saved
+  state). A missing or unknown value keeps today's behaviour. `theme_at_start` made `pub` in three overlays.
+- **Tests (overlay ON, native):** Docs 9/9, Sheets 9/9, Slides 13/13, PDF 8/8 in `office_overlay_tests` (new: three
+  `web_theme_param_keeps_own_on_garbage`, one `web_theme_param_is_validated`). Shell Playwright, new
+  `the editor frame follows the shell theme`: with the existing language and theme tests 9/9 (`-g "theme|language"`; the full
+  spec was not re-run). `verify-queue.sh all` and `cargo xt register check` pass.
+- **Web wasm brotli (release, `ci.sh sizes`, budget = base_br + delta_br_max):** Docs 9,862,707 (budget 9,871,648, headroom
+  8,941), Sheets 4,940,175 (4,966,771; 26,596), PDF 9,570,483 (9,599,462; 28,979), Slides 9,495,548 with the fonts (headroom
+  about 28,700; the first Slides build lacked `upstream/craft-fonts` in this worktree and is not comparable). The p1 dists are
+  older trees: Docs 9,862,588 -> 9,862,707 (+119 B), Sheets 4,942,108 -> 4,940,175, PDF 9,569,970 -> 9,570,483 (+513 B),
+  Slides 9,482,519 -> 9,495,548 (includes the print patches merged since). The change itself is a few hundred bytes per app.
+- **Evidence:** `docs/phase4/evidence/theme/web-{docs-dark,docs-light,sheets-dark,slides-dark}-via-shell.png` (blank
+  documents; the Docs light shot ran with a dark browser scheme, so the param beat the browser). PDF web was not
+  screenshotted (it has no blank document).
+- **Not checked:** a live switch in an open editor; the MSI; a real-device browser.
