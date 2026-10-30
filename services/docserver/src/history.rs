@@ -312,10 +312,11 @@ fn run_diff(exe: &FsPath, a: &FsPath, b: &FsPath, secs: u64) -> Result<Value, Ap
         cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
     }
     let mut child = cmd.spawn().map_err(|e| {
+        eprintln!("docserver: cannot start the compare tool: {e}");
         compare_err(
             StatusCode::BAD_GATEWAY,
             "compare_failed",
-            format!("cannot start the compare tool: {e}"),
+            "the compare tool could not be started",
         )
     })?;
     // read both pipes to the end (a full pipe would stall the tool) but keep only the first `cap` bytes
@@ -355,16 +356,16 @@ fn run_diff(exe: &FsPath, a: &FsPath, b: &FsPath, secs: u64) -> Result<Value, Ap
         err.join().unwrap_or_default(),
     );
     if !matches!(status.code(), Some(0 | 1)) {
-        let m = String::from_utf8_lossy(&err).trim().to_string();
-        let m = if m.is_empty() {
-            "the compare tool failed".into()
-        } else {
-            m
-        };
+        // the tool's stderr may name server paths: it goes to the log (session id hidden), not to the browser (F8)
+        let mut text = String::from_utf8_lossy(&err).trim().to_string();
+        if let Some(dir) = a.parent().and_then(|p| p.parent()) {
+            text = text.replace(&dir.display().to_string(), "<session>");
+        }
+        eprintln!("docserver: compare tool failed: {text}");
         return Err(compare_err(
             StatusCode::UNPROCESSABLE_ENTITY,
             "compare_failed",
-            m,
+            "the compare tool could not compare these versions",
         ));
     }
     if out.len() as u64 > DIFF_MAX_OUT {

@@ -483,18 +483,22 @@ impl Docserver {
         let bytes = self
             .fetch_bytes(&rec.document_url, internal, cap)
             .map_err(|e| {
-                eprintln!("docserver: fetch from {host} failed: {e}");
+                // ureq's text for a transport error may hold the URL with its query: neither log nor browser gets it (F7)
                 let (event, why) = match &e {
                     crate::outbound::OutErr::Blocked(w) => ("ssrf.block", w.clone()),
+                    crate::outbound::OutErr::Unreachable(_) => {
+                        ("document.fetch", "unreachable".to_string())
+                    }
                     e => ("document.fetch", e.to_string()),
                 };
+                eprintln!("docserver: fetch from {host} failed: {why}");
                 self.audit(
                     event,
                     serde_json::json!({"session": sref, "phase": "fetch", "host": host, "result": "failed", "reason": why}),
                 );
                 match e {
                     crate::outbound::OutErr::TooLarge => SessErr::TooLarge,
-                    e => SessErr::Upstream(e.to_string()),
+                    _ => SessErr::Upstream("the document could not be fetched".into()),
                 }
             })?;
         let fetched = |r: &str| serde_json::json!({"session": sref, "host": host, "result": r, "size": bytes.len(), "sha256": sha256_hex(&bytes)});

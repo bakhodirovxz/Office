@@ -405,7 +405,7 @@ async fn compare_runs_the_diff_tool_on_copies_and_cleans_up() {
         j["error"]["message"]
             .as_str()
             .unwrap()
-            .contains("not a valid document")
+            .contains("could not compare")
     );
     let (s, j) = compare_of(&r, &sid, &tok, 4, 2).await;
     assert_eq!(
