@@ -152,6 +152,8 @@ mod tests {
             xdfu: None,
             diff_bin_dir: None,
             diff_timeout_s: 120,
+            keep_closed_s: 24 * 3600,
+            keep_abandoned_s: 7 * 86_400,
             providers: vec![Provider {
                 name: "p".into(),
                 issuer: "i".into(),
@@ -160,6 +162,7 @@ mod tests {
                 callback_allow: vec![],
                 frame_origins: vec!["https://app.test".into()],
                 require_exp: true,
+                keep_history: false,
             }],
         })
     }

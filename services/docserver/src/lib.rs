@@ -10,6 +10,7 @@ pub mod config;
 pub mod history;
 pub mod ooxml;
 pub mod outbound;
+pub mod retention;
 pub mod routes;
 pub mod sessions;
 pub mod tokens;

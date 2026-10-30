@@ -75,6 +75,10 @@ pub struct Closed {
     /// the callback for this close has been sent, or queued (status 2) or tried (status 4): a second close sends nothing
     #[serde(default)]
     pub notified: bool,
+    /// the provider answered `{"error":0}` to this close's callback (a view session, which sends none, counts): a good close, deleted
+    /// `keep_closed_hours` later by the retention sweep
+    #[serde(default)]
+    pub acked: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -130,7 +134,7 @@ pub fn valid_sid(s: &str) -> bool {
     s.len() == 32 && s.bytes().all(|c| matches!(c, b'0'..=b'9' | b'a'..=b'f'))
 }
 
-fn lock() -> std::sync::MutexGuard<'static, ()> {
+pub(crate) fn lock() -> std::sync::MutexGuard<'static, ()> {
     LOCK.lock().unwrap_or_else(|e| e.into_inner())
 }
 
@@ -449,6 +453,7 @@ impl Docserver {
             at: now,
             status: if rec.saved_since_open { 2 } else { 4 },
             notified: false,
+            acked: false,
         };
         rec.closed = Some(c.clone());
         rec.last_activity = now;

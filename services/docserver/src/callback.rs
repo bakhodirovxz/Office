@@ -62,7 +62,7 @@ impl Queued {
 }
 
 impl Docserver {
-    fn queue_path(&self, sid: &str) -> Option<PathBuf> {
+    pub(crate) fn queue_path(&self, sid: &str) -> Option<PathBuf> {
         valid_sid(sid).then(|| self.data_dir.join("queue").join(format!("{sid}.json")))
     }
 
@@ -193,9 +193,10 @@ impl Docserver {
         } else {
             Cb::Ok
         };
-        self.update_session(sid, |r| {
-            if let Some(c) = &mut r.closed {
+        self.update_session(sid, |rec| {
+            if let Some(c) = &mut rec.closed {
                 c.notified = true;
+                c.acked |= r == Cb::Ok;
             }
         });
         Some(r)
@@ -206,7 +207,12 @@ impl Docserver {
         let r = self.send_callback(rec, 2, Some(v));
         let path = self.queue_path(&q.sid).expect("a valid sid");
         if r == Cb::Ok {
-            self.mark_acked(&q.sid, v.n);
+            self.update_session(&q.sid, |rec| {
+                rec.acked = rec.acked.max(v.n);
+                if let Some(c) = &mut rec.closed {
+                    c.acked = true;
+                }
+            });
             let _ = std::fs::remove_file(path);
             return r;
         }
