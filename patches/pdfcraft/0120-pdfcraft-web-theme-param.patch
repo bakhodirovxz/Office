@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 30 Oct 2026 12:00:00 +0500
+Subject: [PATCH] pdfcraft-web: ?theme= from the web shell sets the theme preference at start
+
+Owner request 2026-10-30: the web editors get the shell's theme too. The shell opens the editor frame with &theme=<system|light|dark>; pdfcraft-web applies it after the saved state through office_overlay::theme_at_start (now pub). A missing or unknown value keeps today's behaviour. Pure parse test in office_overlay_tests.
+---
+ apps/pdfcraft-web/src/main.rs              | 2 ++
+ crates/ui-egui/src/office_overlay.rs       | 2 +-
+ crates/ui-egui/src/office_overlay_tests.rs | 8 ++++++++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/apps/pdfcraft-web/src/main.rs b/apps/pdfcraft-web/src/main.rs
+index 73d14f4..a35d73f 100644
+--- a/apps/pdfcraft-web/src/main.rs
++++ b/apps/pdfcraft-web/src/main.rs
+@@ -27,6 +27,8 @@ fn main() {
+                     if let Some(json) = cc.storage.and_then(|s| s.get_string("pdfcraft").or_else(|| s.get_string("printcraft"))) {
+                         app.restore(&json);
+                     }
++                    // `?theme=` (patches/pdfcraft/0120): the web shell's theme; without it the saved one stays.
++                    app.set_theme_preference(pdfcraft_ui_egui::office_overlay::theme_at_start(app.theme_preference, query_param("theme").as_deref()));
+                     // `?file=<url>` opens a PDF from a URL (same-origin or CORS-enabled).
+                     if let Some(url) = query_param("file") {
+                         let inbox = app.startup_inbox.clone();
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 9fb6839..3fb4d9b 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -181,7 +181,7 @@ pub fn start_theme(own: crate::theme::ThemePreference) -> crate::theme::ThemePre
+     theme_at_start(own, shared_theme_code())
+ }
+ 
+-pub(crate) fn theme_at_start(own: crate::theme::ThemePreference, shared: Option<&str>) -> crate::theme::ThemePreference {
++pub fn theme_at_start(own: crate::theme::ThemePreference, shared: Option<&str>) -> crate::theme::ThemePreference {
+     use crate::theme::ThemePreference;
+     match shared {
+         Some("system") => ThemePreference::System,
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 9f86997..26a78c9 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -117,3 +117,11 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
+         }
+     }
+ }
++
++/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/pdfcraft/0120).
++#[test]
++fn web_theme_param_keeps_own_on_garbage() {
++    use crate::theme::ThemePreference::{Dark, Light};
++    assert_eq!(o::theme_at_start(Light, Some("bogus")), Light);
++    assert_eq!(o::theme_at_start(Light, Some("dark")), Dark);
++}

@@ -121,6 +121,21 @@ for (const [i, e] of EDITORS.entries()) {
   });
 }
 
+// The editors take the shell's theme: the frame gets &theme=, and a change drops the idle frame so the next open starts in it.
+test('the editor frame follows the shell theme', async ({ page }) => {
+  const i = EDITORS.findIndex((e) => e !== 'pdf' && have(e));
+  test.skip(i < 0, 'no editor is built');
+  await page.goto(base + '/');
+  await page.selectOption('#theme', 'dark');
+  await page.locator('#cards li').nth(i).getByRole('button').click();
+  await expect(page.locator('iframe')).toHaveAttribute('src', /[?&]theme=dark(&|$)/);
+  await page.click('#back');
+  await page.selectOption('#theme', 'light');
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await page.locator('#cards li').nth(i).getByRole('button').click();
+  await expect(page.locator('iframe')).toHaveAttribute('src', /[?&]theme=light(&|$)/);
+});
+
 test('pdf: the editor page answers navigator.language with ?lang=', async ({ page }) => {
   test.skip(!have('pdf'), 'pdf-web is not built');
   await page.goto(`${base}/pdf/?host=parent&lang=uz-Cyrl`);

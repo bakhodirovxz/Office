@@ -215,6 +215,6 @@ pub fn start_theme(own: crate::theme::Appearance) -> crate::theme::Appearance {
     theme_at_start(own, shared_theme_code())
 }
 
-pub(crate) fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
+pub fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
     shared.and_then(crate::theme::Appearance::from_code).unwrap_or(own)
 }

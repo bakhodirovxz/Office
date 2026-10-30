@@ -169,3 +169,13 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
         }
     }
 }
+
+/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/gridcraft/0153).
+#[test]
+fn web_theme_param_keeps_own_on_garbage() {
+    let mut ui = crate::UiState { system_theme: true, ..Default::default() };
+    o::theme_at_start(&mut ui, Some("bogus"));
+    assert_eq!(ui.theme_mode(), "system");
+    o::theme_at_start(&mut ui, Some("dark"));
+    assert_eq!(ui.theme_mode(), "dark");
+}

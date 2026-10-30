@@ -254,6 +254,17 @@ pub fn load_start_theme() {
     }
 }
 
+/// The web shell's `?theme=` (patches/deckcraft/0154): feeds the same first-frame hook as the desktop setting. Unknown values are ignored.
+pub fn set_start_theme(param: Option<&str>) {
+    if let Some(code) = start_theme_param(param) {
+        let _ = START_THEME.set(code);
+    }
+}
+
+pub(crate) fn start_theme_param(param: Option<&str>) -> Option<&'static str> {
+    ["system", "light", "dark"].into_iter().find(|c| Some(*c) == param)
+}
+
 /// The appearance at the first frame (patches/deckcraft/0149): the shared `theme` always wins over the one saved in `ui.json`, so the
 /// shell is the one place to change it. `system` takes the light or dark the OS reports then (upstream has no system mode: it is
 /// not followed live). A change made in the app afterwards holds for the session only.
