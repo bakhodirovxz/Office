@@ -33,3 +33,22 @@ dialog input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2
 .cmp .cells th, .cmp .cells td { border: 1px solid var(--line); padding: 2px 6px; text-align: left; vertical-align: top; }
 /* phone width: one control per line, the selects never wider than the panel */
 @media (max-width: 30rem) { .cmpbar label { flex-direction: column; align-items: stretch; width: 100%; gap: 2px; } }
+/* The wrapper's panel follows the HOST app's look (owner, 2026-10-29): editor.js sets <html data-app> (docs|sheets|slides|pdf) and
+   <html data-theme> (light|dark). Values: upstream/<app>/crates/ui-egui/src/theme*.rs (panel -> --bg, ribbon/card -> --card,
+   border -> --line, text_dim -> --muted). Slides and PDF have no error token; they take the Office red pair of Sheets. */
+:root[data-app] { font-size: 12.5px; --r-widget: 4px; --r-window: 8px; --err: #C42B1C; --on-accent: #fff; --shadow: rgba(0, 0, 0, .25); }
+:root[data-app][data-theme=dark] { --err: #F1705F; --shadow: rgba(0, 0, 0, .6); }
+:root[data-app] #hist-panel { font-size: 1rem; }
+:root[data-app] .btn, :root[data-app] select, :root[data-app] dialog input[type=text] { border-radius: var(--r-widget); }
+:root[data-app] dialog { border-radius: var(--r-window); }
+:root[data-app=docs][data-theme=light] { --accent: #3B5BDB; --bg: #FAFAFA; --fg: #242424; --muted: #616161; --card: #F9F9F9; --line: #E1E1E1; }
+:root[data-app=docs][data-theme=dark] { --accent: #7A93F0; --on-accent: #11162E; --bg: #262626; --fg: #EEEEEE; --muted: #C8C8C8; --card: #292929; --line: #3A3A3A; }
+:root[data-app=sheets] { --r-window: 10px; }
+:root[data-app=sheets][data-theme=light] { --accent: #107C41; --bg: #FFFFFF; --fg: #242424; --muted: #616161; --card: #F3F3F3; --line: #E0E0E0; }
+:root[data-app=sheets][data-theme=dark] { --accent: #5CC587; --on-accent: #0F2A1B; --bg: #333333; --fg: #EEEEEE; --muted: #B0B0B0; --card: #292929; --line: #484848; }
+:root[data-app=slides] { --r-widget: 5px; --r-window: 10px; }
+:root[data-app=slides][data-theme=light] { --accent: #D95A1A; --bg: #FFFFFF; --fg: #242424; --muted: #5C5C5C; --card: #F5F5F5; --line: #E1E1E1; }
+:root[data-app=slides][data-theme=dark] { --accent: #F26B1D; --bg: #333333; --fg: #EEEEEE; --muted: #BBBBBB; --card: #262626; --line: #484848; }
+:root[data-app=pdf] { --r-widget: 6px; --r-window: 10px; }
+:root[data-app=pdf][data-theme=light] { --accent: #1B63E0; --bg: #FFFFFF; --fg: #222226; --muted: #5E5E66; --card: #F1F1F3; --line: #DADADE; }
+:root[data-app=pdf][data-theme=dark] { --accent: #4B8BF5; --on-accent: #0E1A33; --bg: #26262A; --fg: #ECECEF; --muted: #AEAEB6; --card: #2E2E33; --line: #3C3C43; }
