@@ -1261,6 +1261,20 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - [docs/phase5/security-rehearsal.md](phase5/security-rehearsal.md): §10 is 19 green, 3 partial (S14, S19, S21), S18 missing (no retention sweep: nothing stored is ever deleted, F1, high, needs a design), S22 not run (no cargo-deny/audit here), S25 owner/HRM.
 - Fixed with tests: plaintext compare copies left by a crash (F2), session ids in two error log lines (F3, S17), a frame origin with its default port refused every session (F6); S1 test gap closed. Open: F1, F4 (rate-limit key behind a front proxy), F5 (history shared per key), F7/F8 (error texts).
 
+### Phase 5: retention sweep (F1, S18) and the proxy-chain deployment fix (F4) (2026-10-30; branch `p5-retention`)
+- `services/docserver/src/retention.rs`: sweep at start and hourly. A session folder goes 24 h after a close the provider
+  acknowledged, 7 days after the last activity otherwise, never while a status 2 is queued. `[docserver] keep_closed_hours = 24`,
+  `keep_abandoned_days = 7`. Its history document and unshared blobs go with it (new `suite_core::history::Store::forget_id`) unless
+  another session of the key is on disk or the provider has `history = "keep"` (default `"session"`; PLAN §4 "Retention").
+  One `retention.sweep` audit line with counts only.
+- F4: `traefik.yml` `forwardedHeaders.trustedIPs` (operator value, loopback in the rehearsal); `deploy.md` "Client addresses behind
+  proxies": `trusted_proxies` must list Traefik and every front proxy in `trustedIPs`.
+- Measured: services `cargo test -p docserver -p fake-hrm -p suite-serve -p convert-api` 169 passed, 0 failed (was 165; 4 new sweep
+  tests); `cargo test -p suite-core` 49 passed (1 new); `cargo test -p suite-desktop` 26 passed; clippy `-D warnings` on docserver clean;
+  Playwright `playwright.docserver.config.ts` (`DIST=E:/office-target/p5/dist`) 17 passed, 1 skipped (2.2 min).
+- Not checked: the sweep thread in a running server over hours (the tests inject the clock); the real proxy chain on `<test-host>` (WP17);
+  sessions closed before this change have `acked` false and wait the 7 days.
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

@@ -8,6 +8,9 @@ them again on the gate commit.
 missing), 1 owner/HRM (S25). Two rows changed in this rehearsal: S1 was partial (now green, test added) and S17 was failing on
 two error paths (now green, fixed). The biggest open item is data retention: nothing on the server is ever deleted (F1).
 
+**Update 2026-10-30 (branch `p5-retention`):** F1 fixed (the retention sweep), so S18 is green: 20 green, 3 partial, 1 not run, 1
+owner/HRM. F4's deployment files are done; the real proxy chain is still checked in WP17.
+
 ## 1. Test runs
 
 | Run | Before (0e3b630) | After (this branch) |
@@ -46,7 +49,7 @@ does not exist under that name, but a test under another name proves the row; it
 | S15 | green | `outbound.rs:1156` | |
 | S16 | green | `outbound.rs:1029` (chain verifies, a rewritten line fails); `docserver.spec.ts:201` | |
 | S17 | green (was failing) | `docserver.spec.ts:201` (stderr and audit of a full run); new `docserver/tests/no_ids_in_logs.rs` (every log macro of the crate) | Fixed F3. |
-| S18 | **missing** | encryption part green: `docserver/tests/wp14.rs:264`, `wp14.rs:317` | No sweep exists (F1); no clock-injected sweep test. |
+| S18 | green (was missing) | sweep: `docserver/src/retention.rs:242` (clock-injected: closed+acked 25 h gone, 23 h kept, abandoned 7 d gone, status 2 queued kept at 60 d, a given-up status 2 under the 7-day rule, history doc and its own blobs gone, a shared blob kept, one count-only audit line), `retention.rs:311` (a key still open elsewhere keeps its history), `retention.rs:326` (`history = "keep"`); `crates/suite-core/src/history.rs:1340` (`forget_id`); encryption part: `docserver/tests/wp14.rs:264`, `wp14.rs:317` | Fixed F1 (branch `p5-retention`). |
 | S19 | partial | `convert-api/tests/tls.rs:69` (TLS, HSTS, plain HTTP refused) on converter routes; the docserver spec runs over built-in TLS | `ci/web-smoke/tls.spec.ts` is not extended to `/ds/editor`; `tls = "upstream"` with `/ds/` is only in `docserver-compose.spec.ts` (Docker, not run here) and asserts no header. |
 | S20 | green | `suite-serve/tests/docserver.rs:128` | |
 | S21 | partial | `convert-api/tests/no_hrm_names.rs:33` scans `docserver/src` | `docserver/static/` (api.js, editor.js) is not scanned. It holds no HRM name today, only "ONLYOFFICE" (the clean-room note and API-compatibility comments), which the scan would flag: scanning it needs an allow rule (owner/reviewer call). |
@@ -61,7 +64,21 @@ Severity is for the pilot set-up (one provider, Traefik in front, internal netwo
 
 ### High
 
-**F1. Nothing the server stores is ever deleted (S18; open, needs a design).**
+**F1. Nothing the server stores is ever deleted (S18; fixed on `p5-retention`).**
+
+*Fix.*
+- `docserver/src/retention.rs`: a sweep at start and hourly (`spawn_sweep_loop`, `suite-serve/src/main.rs`).
+  - A session folder goes `keep_closed_hours` (24) after a close the provider acknowledged (`Closed::acked`, set from the close's
+    callback answer in `callback.rs`). Any other folder goes `keep_abandoned_days` (7) after its last activity.
+  - A status 2 still queued (`queue/<sid>.json`, not given up) is never swept; an unreadable queue entry counts as queued.
+  - Each decision and deletion runs under the session lock that every request's change holds.
+- History: a swept session's history document and its unshared blobs are deleted too (`Store::forget_id`, new and narrow in
+  `suite-core`), unless another session of the key is still on disk or the provider has `history = "keep"` (default `"session"`).
+  The reasons and the trade-off are in PLAN §4 "Retention".
+- Audit: one `retention.sweep` line with counts per sweep that deleted something; no ids (S17 scan still green).
+- Not addressed: the history store's own limits for `history = "keep"` providers (last 50 or 90 days, newest kept) are unchanged.
+
+*The finding as reported:*
 - `sessions/<sid>/` (every version, `autosave.bin`, `session.json` with the provider's document URL and its token) has no
   sweep at all: no code in `docserver/src` deletes a session folder.
 - The history store keeps the newest version of every document id for ever: the per-document rule keeps the last 50 or the
@@ -89,7 +106,11 @@ when the process is killed (OOM, power loss, `docker kill` during the 120 s comp
 they stay readable on disk, and F1 means nothing removes them later. Fix: `sweep_compare_leftovers` at start
 (`history.rs:172`, called from `config.rs:535`). Test: `history.rs:524`.
 
-**F4. The rate-limit key collapses behind an untrusted proxy chain (open, deployment).** The client key is the rightmost
+**F4. The rate-limit key collapses behind an untrusted proxy chain (deployment files fixed on `p5-retention`; the real chain is
+checked in WP17).** `traefik.yml` now sets `entryPoints.websecure.forwardedHeaders.trustedIPs`, marked `OPERATOR` (loopback only in
+the rehearsal: no front proxy). `deploy.md` "Client addresses behind proxies" says how the two lists line up. Correction to the fix
+below: with a front proxy, our `trusted_proxies` must list Traefik **and** the front proxy, because Traefik appends the front proxy's
+address after the browser's, and the docserver stops at the first untrusted address from the right. The client key is the rightmost
 `X-Forwarded-For` entry that is not a trusted proxy (`convert-api/src/routes.rs:183-190`), counted per IPv4 address or IPv6
 /64 (`convert-api/src/app.rs:120`). This is correct with browser → Traefik → docserver. If another proxy (an HRM nginx, a
 load balancer) sits in front of Traefik, Traefik's own default discards the client's forwarded header and reports that proxy
@@ -110,7 +131,8 @@ view-only included (`download` defaults to true), lists and downloads every past
 versions made before that user was given access. ONLYOFFICE leaves history to the host (`setHistoryData`), so a host written
 for it does not expect this. With the HRM's per-open keys nothing crosses sessions today. A provider with stable keys would
 expose old versions across users. Options: a per-provider `history = "off" | "session" | "key"` switch, or tie it to F1's
-decision.
+decision. *F1 added `history = "session" | "keep"` (retention only): with `"session"` a key's history lives as long as one of its
+sessions does. Sharing between concurrent sessions of one key is unchanged, so F5 stays open.*
 
 ### Low
 
