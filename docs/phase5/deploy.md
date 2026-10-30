@@ -46,7 +46,7 @@ listen = "0.0.0.0:8787"
 auth = "jwt"
 secret_file = "/run/secrets/converter-secret"     # >= 32 bytes
 tls = "upstream"                                   # TLS ends at Traefik
-trusted_proxies = ["<traefik container IP>/32"]
+trusted_proxies = ["<traefik container IP>/32"]    # plus every entry of Traefik's trustedIPs (see below)
 public_url = "https://docs.example.org"            # the public host name (the Host check and redirect target)
 work_dir = "/tmp/work"
 store_dir = "/data/store"
@@ -58,6 +58,8 @@ data_dir = "/data/docserver"
 diff_bin_dir = "/app/diff"                         # docs-diff and sheets-diff (History > Compare); unset = 501
 internal_listen = "<this container's IP on backend_net>:8780"   # never publish with -p
 internal_allow = ["<the HR backend container IP>/32"]          # not a /16 that contains the bridge gateway
+keep_closed_hours = 24                             # retention: a session 24 h after a close the backend acknowledged (default)
+keep_abandoned_days = 7                            # any other session 7 days after its last activity (default)
 
 [[docserver.providers]]
 name = "hrm"                                        # example: any backend that signs the config token (HS256)
@@ -66,12 +68,49 @@ secret_file = "/run/secrets/provider-secret"       # = the backend's CRAFT_DOCSE
 fetch_allow = [{ url = "http://api:8000", internal = true }]
 callback_allow = [{ url = "http://api:8000", internal = true }]
 frame_origins = ["https://hr.example.org"]         # the SPA origin that may frame the editor
+history = "session"                                # default: a key's history goes with its last session (new key per open)
 ```
 
 Compose service (the parts that matter): `image`, `read_only: true`, `cap_drop: [ALL]`, `tmpfs: /tmp`, a volume on `/data`, the config and
 secrets mounted read-only, a fixed IPv4 address on `backend_net` (so `internal_listen`, `internal_allow` and `trusted_proxies` can name
 addresses), no `ports`. Traefik routes the public host name to `http://<service>:8787` with `tls`. The backend is told the internal URL
 (`http://<service IP>:8780`) as its `CRAFT_DOCSERVER_INTERNAL_URL`.
+
+## Client addresses behind proxies (security rehearsal F4)
+
+The rate limits (`rate_create_per_min`, `rate_auth_fail_per_min`) and the audit log's `client` count per client address (an IPv4
+address, or an IPv6 /64). The docserver takes it from `X-Forwarded-For` only when the connection comes from an address in its own
+`trusted_proxies`, and then reads the header from the right: the first address that is not itself in `trusted_proxies` is the client.
+Traefik builds that header. It appends the address it was connected from, and keeps what came before only when that peer is in its
+`entryPoints.websecure.forwardedHeaders.trustedIPs` (`packaging/docserver/traefik/traefik.yml`); from anyone else it drops the
+incoming header.
+
+The two lists must describe the same chain:
+
+| Chain | Traefik `trustedIPs` | docserver `trusted_proxies` |
+|---|---|---|
+| browser → Traefik → docserver (the rehearsal) | none (the file lists only the loopback) | Traefik |
+| browser → front proxy (an HRM nginx, a load balancer) → Traefik → docserver | the front proxy | Traefik **and** the front proxy |
+
+What goes wrong when they do not:
+- **Front proxy missing from Traefik's `trustedIPs`** (Traefik's default): Traefik drops the browser's address and reports the front
+  proxy as the client. Every user then has **one shared rate-limit key**: 30 session opens a minute for the whole organisation, and 20
+  bad or expired tokens from anyone give everyone 429 for a minute. The audit log names the proxy for every request.
+- **Front proxy in `trustedIPs` but not in `trusted_proxies`**: the header reads `<browser>, <front proxy>`; the docserver stops at the
+  front proxy, which it does not trust, and the result is the same single key.
+- **A list wider than the real proxies** (a whole /16, or an address a user can reach Traefik from): that sender can write any
+  `X-Forwarded-For` and pick its own rate-limit key, so the limits stop holding. Keep both lists to the proxies' own addresses.
+
+The front proxy's address is site-specific: it is marked `OPERATOR` in `traefik.yml`. On `<test-host>` it is checked in WP17 (two clients
+behind the front proxy must get separate keys: the audit line's `client` differs). Not checked here: there is no front proxy on this PC.
+
+## Retention
+
+A sweep thread deletes `sessions/<sid>/` `keep_closed_hours` (24) after a close the provider acknowledged, and `keep_abandoned_days` (7)
+after the last activity of any other session; never while a status 2 callback is still queued for retry
+(`services/docserver/src/retention.rs`). It runs at start and then hourly, and writes one `retention.sweep` audit line with counts when
+it deleted something. The session's history goes with it unless the provider has `history = "keep"`. Back-ups of `data_dir` would
+defeat this (Q10: no back-ups of the data folder).
 
 ## Gaps and notes
 

@@ -2,6 +2,14 @@
 entryPoints:
   websecure:
     address: ":443"
+    # Who may hand Traefik a client address in X-Forwarded-For (security rehearsal F4; docs/phase5/deploy.md,
+    # "Client addresses behind proxies"). OPERATOR VALUE: the proxy in front of Traefik, when there is one.
+    # Every entry here must also be in the docserver's `trusted_proxies`, next to Traefik's own address.
+    # The rehearsal has no front proxy (the browser connects to Traefik), so it lists only the loopback, which never
+    # connects here: the same as Traefik's default of trusting no one.
+    forwardedHeaders:
+      trustedIPs:
+        - "127.0.0.1/32"   # OPERATOR: replace with the front proxy's address, e.g. "10.0.0.5/32"; as narrow as possible
 providers:
   file:
     filename: /etc/traefik/dynamic.yml

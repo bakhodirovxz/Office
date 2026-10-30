@@ -63,6 +63,10 @@ pub trait VersionBackend: Send + Sync {
     /// Version `v` becomes a new newest version; the caller moves the bytes to the live document.
     fn restore(&self, doc: &str, v: u64, author: &str) -> Result<Version, HistErr>;
     fn name(&self, doc: &str, v: u64, name: &str, author: &str) -> Result<(), HistErr>;
+    /// Delete the document's history whole (the retention sweep); `false` when there was none. A backend we do not own keeps its own.
+    fn forget(&self, _doc: &str) -> Result<bool, HistErr> {
+        Ok(false)
+    }
 }
 
 pub struct LocalBackend(Store);
@@ -101,6 +105,9 @@ impl VersionBackend for LocalBackend {
     }
     fn name(&self, doc: &str, v: u64, name: &str, author: &str) -> Result<(), HistErr> {
         Ok(self.0.name_id(doc, v, name, author)?)
+    }
+    fn forget(&self, doc: &str) -> Result<bool, HistErr> {
+        Ok(self.0.forget_id(doc)?)
     }
 }
 

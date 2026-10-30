@@ -228,6 +228,19 @@ their bridges (§13.2 R6).
 - **Retention.** A session's copies are deleted 24 h after a successful close, and 7 days after the last activity of an
   abandoned session (Q10). Encrypted at rest with an operator key when `encrypt_at_rest = true` or `xdfu != "off"`
   (reuses `services/convert-api/src/crypt.rs`).
+  - Built (security rehearsal F1, `services/docserver/src/retention.rs`): a sweep at start and hourly. "Successful close" = the
+    provider answered `{"error":0}` to the close's status 2 or 4 (`Closed::acked`). Everything else (never closed, close not
+    acknowledged, a status 2 the retry queue gave up on) is abandoned: 7 days after the last activity. A status 2 still queued is
+    never swept. `[docserver] keep_closed_hours = 24` (1 to 8760) and `keep_abandoned_days = 7` (1 to 365).
+  - **History goes with the session** (decision, 2026-10-30). Our history is keyed by provider and `document.key` (§6), and the
+    HRM sends a new key on every open, so a swept session's history can never be reached again; keeping it would keep every HR
+    document ever opened. When a session folder is swept, its history document and the bytes no other document uses are deleted
+    too (`suite_core::history::Store::forget_id`), unless another session of the same key is still on disk. A provider with stable
+    keys sets `history = "keep"` in its `[[docserver.providers]]` entry; its histories then follow only the store's own limits (last
+    50 or 90 days). The default is `"session"`.
+  - Trade-off: in an HRM session our history lives only as long as the session (the HRM's store is the record, Q6/D6). In standalone
+    server mode the operator must set `history = "keep"` for providers whose keys are stable, or history stops at the session's end.
+    The append-only chain is not rewritten: a forgotten document is gone whole, and other documents' chains are untouched.
 
 ---
 

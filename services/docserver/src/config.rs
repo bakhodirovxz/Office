@@ -43,10 +43,19 @@ pub struct ProviderConfig {
     /// refuse config tokens without `exp` (default true)
     #[serde(default = "yes")]
     pub require_exp: bool,
+    /// `"session"` (default): a document's history goes with the last session of its `document.key` (the retention sweep), right
+    /// for a provider that sends a new key on every open. `"keep"`: the history stays under the store's own limits, for a provider
+    /// with stable keys.
+    #[serde(default = "session")]
+    pub history: String,
 }
 
 fn yes() -> bool {
     true
+}
+
+fn session() -> String {
+    "session".into()
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -86,6 +95,10 @@ pub struct Config {
     pub rate_create_per_min: u32,
     /// failed authentications per client address and minute; over it the answer is 429
     pub rate_auth_fail_per_min: u32,
+    /// a session folder is deleted this long after a close the provider acknowledged (PLAN phase 5, Q10)
+    pub keep_closed_hours: u64,
+    /// any other session folder (never closed, or its close not acknowledged) is deleted this long after its last activity (Q10)
+    pub keep_abandoned_days: u64,
     pub providers: Vec<ProviderConfig>,
 }
 
@@ -109,6 +122,8 @@ impl Default for Config {
             redact: false,
             rate_create_per_min: 30,
             rate_auth_fail_per_min: 20,
+            keep_closed_hours: 24,
+            keep_abandoned_days: 7,
             providers: vec![],
         }
     }
@@ -131,6 +146,8 @@ pub struct Provider {
     pub callback_allow: Vec<Allow>,
     pub frame_origins: Vec<String>,
     pub require_exp: bool,
+    /// `history = "keep"`: the retention sweep leaves this provider's histories alone
+    pub keep_history: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -158,6 +175,9 @@ pub struct Docserver {
     pub diff_bin_dir: Option<PathBuf>,
     /// how long one compare may run (seconds)
     pub diff_timeout_s: u64,
+    /// the retention sweep's two periods, in seconds (`keep_closed_hours`, `keep_abandoned_days`)
+    pub keep_closed_s: u64,
+    pub keep_abandoned_s: u64,
     pub providers: Vec<Provider>,
     /// the audit log and the rate limits (WP8)
     pub watch: std::sync::Arc<crate::audit::Watch>,
@@ -312,6 +332,12 @@ impl Config {
                     .into(),
             );
         }
+        if !(1..=8760).contains(&self.keep_closed_hours) {
+            return Err("docserver: keep_closed_hours must be 1 to 8760".into());
+        }
+        if !(1..=365).contains(&self.keep_abandoned_days) {
+            return Err("docserver: keep_abandoned_days must be 1 to 365".into());
+        }
         let xdfu_mode =
             xdfu_core::Mode::parse(&self.xdfu).map_err(|e| format!("docserver: {e}"))?;
         if xdfu_mode == xdfu_core::Mode::Refuse {
@@ -456,6 +482,16 @@ impl Config {
                 ));
             }
             let callback_allow = allow_list(&p.callback_allow, &at("callback_allow"))?;
+            let keep_history = match p.history.as_str() {
+                "session" => false,
+                "keep" => true,
+                _ => {
+                    return Err(format!(
+                        "docserver: {} must be \"session\" or \"keep\"",
+                        at("history")
+                    ));
+                }
+            };
             if p.frame_origins.is_empty() {
                 return Err(format!(
                     "docserver: {} must list at least one origin",
@@ -496,6 +532,7 @@ impl Config {
                 callback_allow,
                 frame_origins,
                 require_exp: p.require_exp,
+                keep_history,
             });
         }
         for p in providers.iter().filter(|p| !p.require_exp) {
@@ -550,6 +587,8 @@ impl Config {
             xdfu,
             diff_bin_dir: self.diff_bin_dir.clone(),
             diff_timeout_s: 120,
+            keep_closed_s: self.keep_closed_hours * 3600,
+            keep_abandoned_s: self.keep_abandoned_days * 86_400,
             providers,
             watch,
             lookup: crate::outbound::system_lookup(),
@@ -1098,6 +1137,10 @@ frame_origins = ["https://app.test"]
             ("max_document_mb", 501),
             ("callback_timeout_s", 0),
             ("callback_timeout_s", 601),
+            ("keep_closed_hours", 0),
+            ("keep_closed_hours", 8761),
+            ("keep_abandoned_days", 0),
+            ("keep_abandoned_days", 366),
         ] {
             refused(
                 &d,
@@ -1114,12 +1157,30 @@ frame_origins = ["https://app.test"]
             },
             "server_secret",
         );
+        refused(
+            &d,
+            &|t| {
+                prov(t).insert("history".into(), "forever".into());
+            },
+            "providers[0].history must be",
+        );
+        let ds = d.toml(&|_| {}).unwrap();
+        assert_eq!(
+            (ds.keep_closed_s, ds.keep_abandoned_s),
+            (24 * 3600, 7 * 86_400)
+        );
+        assert!(
+            !ds.providers[0].keep_history,
+            "the default deletes history with its session"
+        );
         let ds = d
             .toml(&|t| {
                 t.insert("max_document_mb".into(), 500.into());
                 prov(t).insert("require_exp".into(), false.into());
+                prov(t).insert("history".into(), "keep".into());
             })
             .unwrap();
         assert!(!ds.providers[0].require_exp && ds.max_document_mb == 500);
+        assert!(ds.providers[0].keep_history);
     }
 }

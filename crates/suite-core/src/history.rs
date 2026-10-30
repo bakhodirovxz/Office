@@ -709,6 +709,26 @@ impl Store {
         )
     }
 
+    /// Id API: delete document `id` whole (its index file, then every object no other document uses). This is not a rewrite of the
+    /// chain: the document is gone, and the other documents' chains are untouched. For a server whose sessions end; the path API never
+    /// calls it. `false` when there was no such document.
+    pub fn forget_id(&self, id: &str) -> io::Result<bool> {
+        if !valid_id(id) {
+            return Err(bad("invalid document id"));
+        }
+        if !self.doc_file(id).exists() {
+            return Ok(false);
+        }
+        let _lock = Lock::take(&self.root)?;
+        match fs::remove_file(self.doc_file(id)) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(false),
+            r => r?,
+        }
+        // the usual pass after a change: the retention rules, then the bytes nothing refers to any more
+        self.prune_locked()?;
+        Ok(true)
+    }
+
     /// Check the chain of the document at `path`, and that every live version's bytes are there and match their hash.
     pub fn verify(&self, path: &Path) -> Result<Verified, String> {
         self.verify_id(&doc_id(path))
@@ -1314,6 +1334,22 @@ mod tests {
             "only the newest is left"
         );
         assert!(s.verify_id("d2").is_ok());
+    }
+
+    #[test]
+    fn forget_id_removes_the_document_and_only_its_own_bytes() {
+        let t = T::new("forget");
+        let s = t.store(roomy());
+        s.snapshot_bytes("d1", b"shared", "a", None).unwrap();
+        s.snapshot_bytes("d1", b"only-d1", "a", None).unwrap();
+        s.snapshot_bytes("d2", b"shared", "a", None).unwrap();
+        assert!(s.forget_id("d1").unwrap());
+        assert!(s.list_id("d1").unwrap().is_empty());
+        assert!(!s.object(&sha(b"only-d1")).exists(), "its own bytes go");
+        assert!(s.object(&sha(b"shared")).exists(), "bytes d2 uses stay");
+        assert!(s.verify_id("d2").is_ok());
+        assert!(!s.forget_id("d1").unwrap(), "a second forget finds nothing");
+        assert!(s.forget_id("../x").is_err());
     }
 
     #[test]

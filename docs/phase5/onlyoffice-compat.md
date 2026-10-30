@@ -88,7 +88,7 @@ relies on it), **—** (not used).
 | `onSaved`, `onClosed` (ours, non-standard) | — | S | `onSaved {version, sha256, callback}` after the server stored a save (`callback`: `unknown` until WP4); `onClosed {status}` after the session closed | WP5 | spec: "cross-site ..." (banners `saved`, `closed status 2`) |
 | `onReady` (old name) | — | N | Not emitted | — | — |
 | `onRequestClose` | — | P | `api.js` relays it; **nothing in the editors triggers it yet** (no close control in the editor chrome), so the host has no way to see it today | WP5 | — (no test) |
-| `onRequestHistory`, `onRequestHistoryData`, `onRequestHistoryClose`, `onRequestRestore` | — (`:268`) | N | Version history is ours (PLAN §6), not driven by the host | — | — |
+| `onRequestHistory`, `onRequestHistoryData`, `onRequestHistoryClose`, `onRequestRestore` | — (`:268`) | N | Version history is ours (PLAN §6), not driven by the host. It is kept per provider and `document.key`, and deleted with the key's last session by the retention sweep unless the provider entry says `history = "keep"` (for stable keys; PLAN §4 "Retention") | — | docserver `retention.rs` tests (sweep with history; `history = "keep"`) |
 | `onRequestRename`, `onRequestSaveAs`, `onRequestInsertImage`, `onRequestOpen`, `onRequestCreateNew`, `onRequestEditRights`, `onRequestSharingSettings`, `onRequestUsers`, `onRequestSendNotify`, `onRequestReferenceData`, `onRequestSelectDocument`, `onRequestSelectSpreadsheet`, `onMakeActionLink`, `onMetaChange`, `onDownloadAs`, `onInfo`, `onOutdatedVersion`, `onCollaborativeChanges`, `onPluginsReady` | — | N | Not emitted | — | — |
 
 ## 6. Methods (on the `DocEditor` object)
