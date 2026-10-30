@@ -3,6 +3,7 @@
 
   python -I scripts/hrm-bookmarks/hrm_bookmarks.py <docs-cli> [--keep DIR]     generate, round-trip, check; exit 1 on any loss
   python -I scripts/hrm-bookmarks/hrm_bookmarks.py --gen DIR                   only write the fixtures
+  python -I scripts/hrm-bookmarks/hrm_bookmarks.py --check ORIG SAVED [B1|T1]  compare one saved file with its original (the Playwright round trip)
 
 Names are the ones HRB syncs (docs/phase0/hr-backend-prompt.md:109-111). HRB uses them in the body only (hrm-current-state.md:153),
 so no header/footer bookmarks. Per fixture: B1 = open -> edit text at the end -> save (F13/R4 test); T1 = open -> translitCyrl -> save;
@@ -103,12 +104,39 @@ def cli(exe, src, dst, *cmds):
     return res.returncode == 0 and os.path.exists(dst), res.stderr.strip()[-300:]
 
 
+CYR = re.compile('[Ѐ-ӿ]')
+
+
+def verdict(key, want, got):
+    """'survived' or the reason not; want/got are anchors() entries. key: B1/T2 = text unchanged, T1 = Cyrillic."""
+    txt, ps, pe, ctx = want
+    if got is None: return 'LOST'
+    if (got[1], got[2]) != (ps, pe) or bool(got[0].strip('\n')) != bool(txt.strip('\n')): return f'MOVED paras {got[1]}-{got[2]} vs {ps}-{pe}, text {got[0]!r} vs {txt!r}'
+    if key == 'T1': return 'survived' if not txt.strip() or CYR.search(got[0]) else f'MOVED not Cyrillic {got[0]!r}'
+    if got[0] != txt or (key == 'B1' and got[3] != ctx): return f'MOVED text {got[0]!r} vs {txt!r}; before {got[3]!r} vs {ctx!r}'
+    return 'survived'
+
+
+def check(orig, saved, key):
+    """--check mode (web round trip): every bookmark of ORIG must survive in SAVED; exit 1 on a loss."""
+    base, now = anchors(orig), anchors(saved)
+    xml = zipfile.ZipFile(saved).read('word/document.xml').decode()
+    bad = 0 if ('Qoshimcha' in xml if key == 'B1' else CYR.search(xml)) else 1   # the edit / translit really happened
+    if bad: print(f'FAIL {key}: the saved file does not show the edit')
+    for name in base:
+        v = verdict(key, base[name], now.get(name))
+        bad += v != 'survived'
+        print(f'{"ok  " if v == "survived" else "FAIL"} {name:13} {key}: {v}')
+    print('RESULT', 'all bookmarks survived' if not bad else f'{bad} problem(s)')
+    return 1 if bad else 0
+
+
 def main():
     argv = sys.argv[1:]
     if argv[:1] == ['--gen']: gen(argv[1]); return 0
+    if argv[:1] == ['--check']: return check(argv[1], argv[2], argv[3] if len(argv) > 3 else 'B1')
     exe = argv[0]; keep = argv[argv.index('--keep') + 1] if '--keep' in argv else None
     tmp = keep or tempfile.mkdtemp(); gen(tmp); bad = 0
-    cyr = re.compile('[Ѐ-ӿ]')
     for n in FIXTURES:
         src = f'{tmp}/{n}.docx'; base = anchors(src)
         steps = {}
@@ -121,16 +149,11 @@ def main():
             ok, err = cli(exe, f'{tmp}/{n}.T1.docx', f'{tmp}/{n}.T2.docx', 'tools.translitLatn={}')
             if ok: steps['T2'] = anchors(f'{tmp}/{n}.T2.docx')
             else: print(f'FAIL {n} T2: CLI error {err}'); bad += 1
-        for name, (txt, ps, pe, ctx) in base.items():
+        for name in base:
             for key in ('B1', 'T1', 'T2'):
-                got = steps.get(key, {}).get(name)
-                if got is None: v = 'LOST'
-                elif (got[1], got[2]) != (ps, pe) or bool(got[0].strip('\n')) != bool(txt.strip('\n')): v = f'MOVED paras {got[1]}-{got[2]} vs {ps}-{pe}, text {got[0]!r} vs {txt!r}'
-                elif key == 'T1': v = 'survived' if not txt.strip() or cyr.search(got[0]) else f'MOVED not Cyrillic {got[0]!r}'
-                elif got[0] != txt or (key == 'B1' and got[3] != ctx): v = f'MOVED text {got[0]!r} vs {txt!r}; before {got[3]!r} vs {ctx!r}'
-                else: v = 'survived'
+                v = verdict(key, base[name], steps.get(key, {}).get(name))
                 if v != 'survived': bad += 1
-                print(f'{"ok  " if v == "survived" else "FAIL"} {n:7} {name:13} {key}: {v} (len {len(txt)}, zero-length={not txt})')
+                print(f'{"ok  " if v == "survived" else "FAIL"} {n:7} {name:13} {key}: {v} (len {len(base[name][0])}, zero-length={not base[name][0]})')
     print('RESULT', 'all bookmarks survived' if not bad else f'{bad} problem(s)')
     return 1 if bad else 0
 

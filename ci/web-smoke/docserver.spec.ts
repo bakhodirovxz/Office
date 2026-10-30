@@ -29,6 +29,11 @@ const free = () => new Promise<number>((ok) => { const s = net.createServer().li
 let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server;
 let dsPort: number, hrmPort: number, strayPort: number, intPort: number;
 let DS: string, HOST: string;
+// WP9: synthetic `_hrm_*` documents (scripts/hrm-bookmarks), files/3.. on the fake backend
+const BM_PY = path.join(ROOT, 'scripts/hrm-bookmarks/hrm_bookmarks.py');
+const PYTHON = process.env.PYTHON ?? 'python';
+const BM_DOCS = ['decree', 'letter', 'report'];
+let bmDir: string;
 
 const sessions = () => {
   const d = path.join(dir, 'data/sessions');
@@ -70,7 +75,9 @@ test.beforeAll(async () => {
   HOST = `http://localhost:${hrmPort}`;
 
   // the fake backend first: it generates the secret the provider entry of the server must hold
-  hrm = spawn(HRM_BIN, [DOCX, XLSX], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
+  bmDir = path.join(dir, 'bm');
+  execFileSync(PYTHON, ['-I', BM_PY, '--gen', bmDir]);
+  hrm = spawn(HRM_BIN, [DOCX, XLSX, ...BM_DOCS.map((n) => path.join(bmDir, n + '.docx'))], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
   const secret = await new Promise<string>((ok, bad) => {
     let err = '';
     hrm.stderr!.on('data', (d) => { err += d; const m = /\(secret ([0-9a-f]+),/.exec(err); if (m) ok(m[1]); });
@@ -615,3 +622,38 @@ test('History panel takes the host app look and the theme (data-app, data-theme,
     await ctx.close();
   }
 });
+
+// ---- WP9: the `_hrm_*` bookmarks through the embedded Docs editor (F15, R4). The checker is the CLI half's (hrm_bookmarks.py --check) ----
+// B1: type at the end of the document (outside every bookmark), save; T1: run Latin -> Cyrillic through the command search (Alt+Q), save.
+for (const [i, name] of BM_DOCS.entries()) {
+  for (const [key, label] of [['B1', 'edit and save'], ['T1', 'Latin to Cyrillic and save']] as const) {
+    test(`WP9 ${name}: _hrm_* bookmarks survive ${label} in the embed`, async () => {
+      const { ctx, page, problems } = await open();
+      await page.goto(`${HOST}/host?kind=files&id=${i + 3}`);
+      await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+      const [sdir] = sessions();
+      const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+      await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+      if (key === 'B1') {
+        await page.keyboard.press('Control+End');
+        await page.keyboard.type(' Qoshimcha matn.');
+      } else {
+        await page.keyboard.press('Alt+q');
+        await page.keyboard.type('tools.translitCyrl');
+        await page.keyboard.press('Enter');
+      }
+      await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+      await page.evaluate(() => (window as any).__editor.requestSave());
+      await expect.poll(() => state(page), { timeout: 30_000 }).toBe('saved');
+      // what the fake backend stored is the server's version 2, byte for byte
+      const object = `files/${i + 3}/${name}.docx`;
+      expect((await hrmState()).objects[object]).toBe(sha(path.join(sdir, 'v2.bin')));
+      const out = execFileSync(PYTHON, ['-I', BM_PY, '--check', path.join(bmDir, name + '.docx'), path.join(sdir, 'v2.bin'), key], { encoding: 'utf8' });
+      console.log(`WP9 ${name} ${key}:
+${out}`);
+      expect(out).toContain('all bookmarks survived');
+      expect(problems).toEqual([]);
+      await ctx.close();
+    });
+  }
+}
