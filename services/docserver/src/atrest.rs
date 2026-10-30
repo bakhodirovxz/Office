@@ -120,16 +120,17 @@ impl Docserver {
             .replace(std::path::MAIN_SEPARATOR, "/")
     }
 
+    fn log_name(&self, path: &Path) -> String {
+        log_name(self.sealed_name(path))
+    }
+
     /// The bytes of a stored file, opened when encryption is on. A file that does not open is an error, never plaintext.
     pub(crate) fn read_stored(&self, path: &Path) -> Result<Vec<u8>> {
         let b = std::fs::read(path)?;
         match &self.at_rest {
             None => Ok(b),
             Some(k) => k.open(&self.sealed_name(path), &b).inspect_err(|e| {
-                eprintln!(
-                    "docserver: refusing to serve {}: {e}",
-                    self.sealed_name(path)
-                );
+                eprintln!("docserver: refusing to serve {}: {e}", self.log_name(path));
             }),
         }
     }
@@ -140,5 +141,27 @@ impl Docserver {
             None => Ok(bytes.to_vec()),
             Some(k) => k.seal(&self.sealed_name(path), bytes),
         }
+    }
+}
+
+/// A sealed name for a log line: a session folder appears as its `sid_ref`, never the id (S17).
+fn log_name(n: String) -> String {
+    match n.strip_prefix("sessions/").and_then(|r| r.split_once('/')) {
+        Some((sid, rest)) => format!("sessions/{}/{rest}", crate::audit::sid_ref(sid)),
+        None => n,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn log_names_hide_the_session_id() {
+        let sid = "0123456789abcdef0123456789abcdef";
+        let n = super::log_name(format!("sessions/{sid}/v1.bin"));
+        assert_eq!(n, format!("sessions/{}/v1.bin", crate::audit::sid_ref(sid)));
+        assert_eq!(
+            super::log_name("history/objects/ab".into()),
+            "history/objects/ab"
+        );
     }
 }

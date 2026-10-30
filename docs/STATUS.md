@@ -1257,6 +1257,10 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 ### Phase 5: History panel visual review (2026-10-26)
 - Reviewed screenshots (360 and 1366 px, light/dark, uz-Latn/ru; `DS_SHOTS=<dir>` on the docserver spec): the Compare selects overflowed the panel at 360 px; fixed in `history.css` (labels stack, selects shrink). Shell budget 58394 / 65536.
 
+### Phase 5 WP18 rehearsal: security checklist and attacker review (2026-10-30; branch `p5-secreview`)
+- [docs/phase5/security-rehearsal.md](phase5/security-rehearsal.md): §10 is 19 green, 3 partial (S14, S19, S21), S18 missing (no retention sweep: nothing stored is ever deleted, F1, high, needs a design), S22 not run (no cargo-deny/audit here), S25 owner/HRM.
+- Fixed with tests: plaintext compare copies left by a crash (F2), session ids in two error log lines (F3, S17), a frame origin with its default port refused every session (F6); S1 test gap closed. Open: F1, F4 (rate-limit key behind a front proxy), F5 (history shared per key), F7/F8 (error texts).
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

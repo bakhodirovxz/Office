@@ -465,6 +465,12 @@ impl Config {
             let mut frame_origins = vec![];
             for o in &p.frame_origins {
                 let o = origin(o, &at("frame_origins"), false)?;
+                // the browser's event.origin never writes the default port: a stored ":443" would refuse every session (create's check)
+                let o = match (o.strip_suffix(":443"), o.strip_suffix(":80")) {
+                    (Some(b), _) if b.starts_with("https://") => b.to_string(),
+                    (_, Some(b)) if b.starts_with("http://") => b.to_string(),
+                    _ => o,
+                };
                 // a page served over plain http could be rewritten in transit and then frame the editor with a live session
                 if let Some(h) = o.strip_prefix("http://") {
                     let host = h
@@ -526,6 +532,7 @@ impl Config {
                     .map(std::sync::Arc::new)
             })
             .transpose()?;
+        crate::history::sweep_compare_leftovers(&data_dir);
         let watch = std::sync::Arc::new(crate::audit::Watch::new(
             Some(log),
             self.rate_create_per_min,
@@ -908,13 +915,16 @@ frame_origins = ["https://app.test"]
                         "https://app.test",
                         "http://127.0.0.1",
                         "http://[::1]:5173",
+                        // the default port written out: event.origin never carries it, so the stored origin must not either
+                        "https://app.test:443",
+                        "http://localhost:80",
                     ]),
                 );
             })
             .unwrap();
         assert_eq!(
             ds.frame_ancestors(),
-            "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173"
+            "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173 http://localhost"
         );
     }
 

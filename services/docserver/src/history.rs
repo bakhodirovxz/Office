@@ -162,8 +162,26 @@ pub(crate) fn record(ds: &Docserver, rec: &SessionRecord, bytes: &[u8], by: &str
     if let Err(e) = ds.version_backend().snapshot(&doc_id(rec), bytes, by) {
         eprintln!(
             "docserver: history: snapshot of session {} failed: {e:?}",
-            rec.sid
+            crate::audit::sid_ref(&rec.sid)
         );
+    }
+}
+
+/// Removes the plaintext compare copies a crash left behind: the `Scratch` guard runs on drop only, so a killed process leaves them in
+/// the session folder (also with `encrypt_at_rest`). Called once at start, before any request.
+pub(crate) fn sweep_compare_leftovers(data_dir: &FsPath) {
+    let Ok(sessions) = std::fs::read_dir(data_dir.join("sessions")) else {
+        return;
+    };
+    for e in sessions
+        .flatten()
+        .filter_map(|s| std::fs::read_dir(s.path()).ok())
+        .flatten()
+        .flatten()
+    {
+        if e.file_name().to_string_lossy().starts_with("compare-") {
+            let _ = std::fs::remove_dir_all(e.path());
+        }
     }
 }
 

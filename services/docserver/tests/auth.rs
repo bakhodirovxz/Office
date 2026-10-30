@@ -754,6 +754,62 @@ async fn every_route_checks_its_token() {
     assert_eq!((s, js(&body)["status"].as_u64()), (StatusCode::OK, Some(2)));
 }
 
+/// S1/S24 for the routes `every_route_checks_its_token` does not walk: `dirty` and the five history routes (WP18 rehearsal).
+#[tokio::test]
+async fn dirty_and_history_routes_check_their_token() {
+    let d = dir("s1b");
+    let ds = std_ds(&d);
+    let r = ds.routes::<()>();
+    let (a, ta) = session(&ds, &r, &config()).await;
+    let (_, tb) = session(&ds, &r, &config()).await;
+    let t = now();
+    let sess = |exp: u64| {
+        sign(
+            &subkey("session"),
+            &json!({"purpose": "session", "sid": a, "sub": "emp-1", "prov": "one", "exp": exp}),
+        )
+    };
+    let mut tampered = ta.clone().into_bytes();
+    let i = tampered.len() - 3;
+    tampered[i] = if tampered[i] == b'A' { b'B' } else { b'A' };
+    let forged = [
+        ("tampered", String::from_utf8(tampered).unwrap()),
+        ("expired", sess(t - 120)),
+        ("lifetime too long", sess(t + 86400)),
+        ("a file token", ds.mint_file_token(&a, 1, "00", t)),
+        ("a config token", sign(PROV_SECRET.as_bytes(), &config())),
+    ];
+    for (m, route) in [
+        ("POST", "dirty"),
+        ("GET", "history"),
+        ("GET", "history/1"),
+        ("GET", "history/1/compare/1"),
+        ("POST", "history/1/restore"),
+        ("POST", "history/1/name"),
+    ] {
+        let uri = format!("/ds/session/{a}/{route}");
+        let body = br#"{"name":"x"}"#;
+        assert_eq!(
+            call(&r, m, &uri, None, body).await.0,
+            StatusCode::UNAUTHORIZED,
+            "{route}: no token"
+        );
+        for (what, tok) in &forged {
+            let (s, _) = call(&r, m, &uri, Some(tok), body).await;
+            assert_eq!(s, StatusCode::UNAUTHORIZED, "{route}: {what}");
+        }
+        let (s1, b1) = call(&r, m, &uri, Some(&tb), body).await;
+        let ghost = format!("/ds/session/{}/{route}", "0".repeat(32));
+        let (s2, b2) = call(&r, m, &ghost, Some(&ta), body).await;
+        assert_eq!(
+            (s1, s2),
+            (StatusCode::NOT_FOUND, StatusCode::NOT_FOUND),
+            "{route}"
+        );
+        assert_eq!(b1, b2, "{route}: the 404 bodies differ");
+    }
+}
+
 #[tokio::test]
 async fn session_token_never_outlives_the_config() {
     let d = dir("cap");
