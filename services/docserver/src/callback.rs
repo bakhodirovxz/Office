@@ -271,13 +271,7 @@ impl Docserver {
         let mut n = 0;
         for e in dir.flatten() {
             let sid = e.file_name().to_string_lossy().into_owned();
-            let owed = self.load_session(&sid).is_some_and(|r| {
-                r.perms.edit
-                    && !r.versions.is_empty()
-                    && r.closed
-                        .as_ref()
-                        .is_some_and(|c| c.status == 2 && !c.notified && !c.acked)
-            });
+            let owed = self.load_session(&sid).is_some_and(|r| owes_status_2(&r));
             if owed && self.queued(&sid).is_none() && self.callback_closed(&sid).is_some() {
                 n += 1;
             }
@@ -296,4 +290,13 @@ impl Docserver {
             }
         });
     }
+}
+
+/// A status 2 whose sending never started (see `recover_unnotified`); the retention sweep keeps such a session too.
+pub(crate) fn owes_status_2(r: &crate::sessions::SessionRecord) -> bool {
+    r.perms.edit
+        && !r.versions.is_empty()
+        && r.closed
+            .as_ref()
+            .is_some_and(|c| c.status == 2 && !c.notified && !c.acked)
 }

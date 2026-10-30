@@ -25,6 +25,10 @@ const SWEEP_EVERY_S: u64 = 3600;
 impl Docserver {
     /// Whether the session is due for deletion at `now`.
     fn expired(&self, rec: &SessionRecord, now: u64) -> bool {
+        // a status 2 not sent yet (a crash before its callback): `recover_unnotified` sends it at start, so never sweep it first
+        if crate::callback::owes_status_2(rec) {
+            return false;
+        }
         if self.queue_path(&rec.sid).is_some_and(|p| p.exists())
             && !self.queued(&rec.sid).is_some_and(|q| q.gave_up)
         {
@@ -305,6 +309,20 @@ history = "{history}"
         assert_eq!(audit_lines(&dir.0).len(), 1);
         assert_eq!(ds.sweep(T0 + 26 * H), 1);
         assert!(!there(&ds, &closed_young) && !object(&ds, b"shared"));
+    }
+
+    #[test]
+    fn a_status_2_never_sent_is_not_swept() {
+        let (ds, _dir) = server("owed", "session");
+        let sid = open(&ds, "k-owed", T0 - 30 * D, b"owed");
+        ds.put_version(&sid, b"owed-2", "u1", true, T0 - 30 * D)
+            .unwrap();
+        ds.close_session(&sid, T0 - 30 * D).unwrap();
+        assert!(crate::callback::owes_status_2(
+            &ds.load_session(&sid).unwrap()
+        ));
+        assert_eq!(ds.sweep(T0), 0);
+        assert!(there(&ds, &sid));
     }
 
     #[test]
