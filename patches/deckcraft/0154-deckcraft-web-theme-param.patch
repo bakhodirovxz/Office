@@ -1,0 +1,66 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 30 Oct 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft-web: ?theme= from the web shell sets the appearance at the first frame
+
+Owner request 2026-10-30: the web editors get the shell's theme too. The shell opens the editor frame with &theme=<system|light|dark>; deckcraft-web feeds it to the 0149 first-frame hook (set_start_theme); system takes the OS answer at start. A missing or unknown value keeps today's behaviour. Pure parse test in office_overlay_tests.
+---
+ apps/deckcraft-web/src/web.rs              |  2 ++
+ crates/ui-egui/src/office_overlay.rs       | 11 +++++++++++
+ crates/ui-egui/src/office_overlay_tests.rs |  8 ++++++++
+ 3 files changed, 21 insertions(+)
+
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index 5bfa8e9..22a4470 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -46,6 +46,8 @@ pub fn start() {
+                     if let Some(bridge) = &app_bridge {
+                         bridge.connect(&mut services, cc.egui_ctx.clone());
+                     }
++                    // `?theme=` (patches/deckcraft/0154): the web shell's theme, applied at the first frame.
++                    deckcraft_ui_egui::office_overlay::set_start_theme(query_param("theme").as_deref());
+                     let mut app = SlideApp::new(Session::new(), services);
+                     // `?lang=`: the web shell's language (Slides has no browser detection of its own).
+                     if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 5d72e3d..1befaad 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -254,6 +254,17 @@ pub fn load_start_theme() {
+     }
+ }
+ 
++/// The web shell's `?theme=` (patches/deckcraft/0154): feeds the same first-frame hook as the desktop setting. Unknown values are ignored.
++pub fn set_start_theme(param: Option<&str>) {
++    if let Some(code) = start_theme_param(param) {
++        let _ = START_THEME.set(code);
++    }
++}
++
++pub(crate) fn start_theme_param(param: Option<&str>) -> Option<&'static str> {
++    ["system", "light", "dark"].into_iter().find(|c| Some(*c) == param)
++}
++
+ /// The appearance at the first frame (patches/deckcraft/0149): the shared `theme` always wins over the one saved in `ui.json`, so the
+ /// shell is the one place to change it. `system` takes the light or dark the OS reports then (upstream has no system mode: it is
+ /// not followed live). A change made in the app afterwards holds for the session only.
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 3a8683f..571323f 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -223,6 +223,14 @@ fn shared_lang_picks_the_catalog_language() {
+     }
+ }
+ 
++/// The web `?theme=` value reaches the first-frame hook; anything else is ignored (patches/deckcraft/0154).
++#[test]
++fn web_theme_param_is_validated() {
++    assert_eq!(o::start_theme_param(Some("dark")), Some("dark"));
++    assert_eq!(o::start_theme_param(Some("bogus")), None);
++    assert_eq!(o::start_theme_param(None), None);
++}
++
+ /// The shared `theme` beats the saved appearance at start; `system` takes the OS answer and keeps the saved one when the OS gives
+ /// none (patches/deckcraft/0149). Tests and the web read no setting.
+ #[test]

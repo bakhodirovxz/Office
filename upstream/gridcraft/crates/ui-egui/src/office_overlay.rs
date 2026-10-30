@@ -157,7 +157,7 @@ pub fn start_theme(ui: &mut crate::UiState) {
     theme_at_start(ui, shared_theme_code());
 }
 
-pub(crate) fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
+pub fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
     match shared {
         Some("system") => ui.system_theme = true,
         Some(mode @ ("light" | "dark")) => {

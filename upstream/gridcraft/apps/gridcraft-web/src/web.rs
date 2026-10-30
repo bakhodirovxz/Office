@@ -50,6 +50,8 @@ pub fn start() {
                     }
                     let mut app = SheetApp::new(session, services);
                     app.ui.system_theme = true;
+                    // `?theme=` (patches/gridcraft/0153): the web shell's theme; without it the browser's colour scheme stays.
+                    gridcraft_ui_egui::office_overlay::theme_at_start(&mut app.ui, query_param("theme").as_deref());
                     // Follow the browser's language, except a CJK one: the web build has no system
                     // CJK fonts (none are bundled), so that interface would render as tofu.
                     let browser = gridcraft_ui_egui::i18n::Language::system();

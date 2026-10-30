@@ -85,7 +85,7 @@
   function frameOf(a) {
     if (S.frames[a.id]) return S.frames[a.id];
     const f = { app: a, ready: false, dirty: false, pending: null, timer: 0 };
-    f.el = el('iframe', { src: a.route + '?host=parent&lang=' + encodeURIComponent(S.lang), title: appName(a) });
+    f.el = el('iframe', { src: a.route + '?host=parent&lang=' + encodeURIComponent(S.lang) + '&theme=' + S.theme, title: appName(a) });
     $('frames').append(f.el);
     return (S.frames[a.id] = f);
   }
@@ -260,6 +260,8 @@
     // settings.toml `theme` (system | light | dark): the apps read it when they start, the shell applies it now
     $('theme').onchange = (e) => {
       S.theme = e.target.value; applyTheme();
+      // editors read the theme when they start: drop the idle ones, as for the language (one with unsaved work keeps its own until reopened)
+      for (const [id, fr] of Object.entries(S.frames)) if (!fr.dirty) { fr.el.remove(); delete S.frames[id]; }
       if (S.mode === 'desktop') host({ type: 'settings_set', key: 'theme', value: S.theme }, 'settings'); else store('sh.theme', S.theme);
     };
     $('search').oninput = render;

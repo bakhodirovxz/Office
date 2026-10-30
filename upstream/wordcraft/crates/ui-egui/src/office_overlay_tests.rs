@@ -179,3 +179,14 @@ fn shared_theme_wins_over_the_saved_theme_at_start() {
         }
     }
 }
+
+/// The web `?theme=` value: a known tag wins, anything else keeps the app's own (patches/wordcraft/0138).
+#[test]
+fn web_theme_param_keeps_own_on_garbage() {
+    use crate::theme::Appearance;
+    for own in Appearance::ALL {
+        assert_eq!(o::theme_at_start(own, Some("bogus")), own);
+        assert_eq!(o::theme_at_start(own, Some("")), own);
+        assert_eq!(o::theme_at_start(own, Some("dark")).code(), "dark");
+    }
+}

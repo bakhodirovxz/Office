@@ -27,6 +27,8 @@ fn main() {
                     if let Some(json) = cc.storage.and_then(|s| s.get_string("pdfcraft").or_else(|| s.get_string("printcraft"))) {
                         app.restore(&json);
                     }
+                    // `?theme=` (patches/pdfcraft/0120): the web shell's theme; without it the saved one stays.
+                    app.set_theme_preference(pdfcraft_ui_egui::office_overlay::theme_at_start(app.theme_preference, query_param("theme").as_deref()));
                     // `?file=<url>` opens a PDF from a URL (same-origin or CORS-enabled).
                     if let Some(url) = query_param("file") {
                         let inbox = app.startup_inbox.clone();
