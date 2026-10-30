@@ -9,10 +9,11 @@
  */
 (function () {
   'use strict';
-  // the shared theme: ?theme=light|dark from the shell, else the OS (embedded in a host with no setting)
+  // the shared theme: ?theme=light|dark from the shell, else the OS (embedded in a host with no setting); the host's uiTheme replaces it in start()
   var th = new URLSearchParams(location.search).get('theme'), mq = window.matchMedia('(prefers-color-scheme: dark)');
-  document.documentElement.dataset.theme = th === 'dark' || (th !== 'light' && mq.matches) ? 'dark' : 'light';
-  if (th !== 'light' && th !== 'dark') mq.addEventListener('change', function (e) { document.documentElement.dataset.theme = e.matches ? 'dark' : 'light'; });
+  function applyTheme() { document.documentElement.dataset.theme = th === 'dark' || (th !== 'light' && mq.matches) ? 'dark' : 'light'; }
+  applyTheme();
+  mq.addEventListener('change', applyTheme);
   var HOST = null;
   try {
     var m = /^#o=(.+)$/.exec(location.hash);
@@ -261,6 +262,9 @@
     var lang = String((cfg.editorConfig && cfg.editorConfig.lang) || navigator.language || 'en').toLowerCase();
     S.lang = lang.startsWith('ru') ? 'ru' : lang.startsWith('uz') ? (lang.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : 'en';
     document.documentElement.lang = S.lang;
+    // editorConfig.customization.uiTheme, ONLYOFFICE names (theme-dark, theme-classic-light, default-dark, ...): wins over ?theme= and the OS; any other name keeps them
+    var ui = /-(dark|light)$/.exec(String((cfg.editorConfig && cfg.editorConfig.customization && cfg.editorConfig.customization.uiTheme) || ''));
+    if (ui) { th = ui[1]; applyTheme(); }
     var s;
     try {
       var r = await fetch('/ds/session', { method: 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: origin, config: cfg }) });
@@ -278,7 +282,7 @@
     document.documentElement.dataset.app = s.editor;   // history.css: the host app's look
     status.textContent = t('ed.loading', { app: app.names[S.lang] || app.names.en });
     S.frame = document.createElement('iframe');
-    S.frame.src = app.route + '?host=parent';
+    S.frame.src = app.route + '?host=parent&theme=' + (th === 'dark' || th === 'light' ? th : 'system');   // read once by the editor at start
     S.frame.title = s.title;
     S.frame.allow = 'clipboard-read; clipboard-write; fullscreen';
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';

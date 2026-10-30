@@ -568,7 +568,7 @@ const LOOK = {
   docs: { id: 1, light: { accent: [59, 91, 219], bg: 'rgb(250, 250, 250)' }, dark: { accent: [122, 147, 240], bg: 'rgb(38, 38, 38)' }, radius: '4px' },
   sheets: { id: 2, light: { accent: [16, 124, 65], bg: 'rgb(255, 255, 255)' }, dark: { accent: [92, 197, 135], bg: 'rgb(51, 51, 51)' }, radius: '4px' },
 } as const;
-test('History panel takes the host app look and the theme (data-app, data-theme, ?theme=)', async () => {
+test('History panel takes the host app look and the theme (data-app, data-theme, ?theme=, uiTheme)', async () => {
   // the page alone: ?theme= wins over the OS, no param follows the OS
   const solo = await open();
   await solo.page.emulateMedia({ colorScheme: 'dark' });
@@ -577,38 +577,39 @@ test('History panel takes the host app look and the theme (data-app, data-theme,
   await solo.page.goto(`${DS}/ds/editor`);
   expect(await solo.page.evaluate(() => document.documentElement.dataset.theme)).toBe('dark');
   await solo.ctx.close();
-  for (const [app, L] of Object.entries(LOOK)) {
+  // in a session the host's editorConfig.customization.uiTheme wins over the OS (fake HRM: ?theme=dark -> theme-dark, else
+  // theme-classic-light), and the wrapper hands it to the editor as ?theme=
+  for (const [app, L] of Object.entries(LOOK)) for (const scheme of ['light', 'dark'] as const) {
     const { ctx, page, problems } = await open();
     await page.setViewportSize({ width: 1366, height: 768 });
-    await page.goto(`${HOST}/host?kind=files&id=${L.id}&lang=en`);
+    await page.emulateMedia({ colorScheme: scheme === 'dark' ? 'light' : 'dark' });
+    await page.goto(`${HOST}/host?kind=files&id=${L.id}&lang=en&theme=${scheme}`);
     // the Sheets editor never sent its ready message on the p5 dist here (not a bridge for it yet, PLAN R6): the panel is the wrapper's, so it opens anyway
     if (app === 'docs') await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
     else await expect.poll(() => page.frames().some((f) => f.url().startsWith(`${DS}/ds/editor`)), { timeout: 30_000 }).toBe(true);
     const w = wrapperOf(page);
     await expect(w.getByRole('button', { name: 'History', exact: true })).toBeVisible({ timeout: 60_000 });
+    expect(await w.locator('iframe').first().getAttribute('src')).toMatch(new RegExp(`[?&]theme=${scheme}(&|$)`));
     await w.getByRole('button', { name: 'History', exact: true }).click();
     const panel = w.locator('#hist-panel');
     await expect(panel).toBeVisible();
     // Sheets has a row only once its editor has fetched the file, which may take a while: not needed for the look
     await expect(panel.locator('#hist-vers > li').first()).toBeVisible({ timeout: 60_000 }).catch((e) => { if (app === 'docs') throw e; });
-    for (const scheme of ['light', 'dark'] as const) {
-      await page.emulateMedia({ colorScheme: scheme });
-      await expect.poll(() => w.evaluate(() => document.documentElement.dataset.theme)).toBe(scheme);
-      expect(await w.evaluate(() => document.documentElement.dataset.app)).toBe(app);
-      const got = await w.evaluate(() => {
-        const cs = (e: Element) => getComputedStyle(e);
-        const p = document.getElementById('hist-panel')!;
-        return { bg: cs(p).backgroundColor, accent: cs(p.querySelector('.btn')!).borderTopColor, radius: cs(p.querySelector('.btn')!).borderTopLeftRadius, font: cs(p).fontSize, root: cs(document.documentElement).fontSize };
-      });
-      expect(got.bg).toBe(L[scheme].bg);
-      expect(got.accent).toBe(`rgb(${L[scheme].accent.join(', ')})`);
-      expect(got.radius).toBe(L.radius);
-      expect(got).toMatchObject({ root: '12.5px', font: '12.5px' });
-      if (process.env.DS_SHOTS) {
-        fs.mkdirSync(process.env.DS_SHOTS, { recursive: true });
-        await page.waitForTimeout(250);
-        await page.screenshot({ path: path.join(process.env.DS_SHOTS, `panel-${app}-${scheme}.png`) });
-      }
+    expect(await w.evaluate(() => document.documentElement.dataset.theme)).toBe(scheme);
+    expect(await w.evaluate(() => document.documentElement.dataset.app)).toBe(app);
+    const got = await w.evaluate(() => {
+      const cs = (e: Element) => getComputedStyle(e);
+      const p = document.getElementById('hist-panel')!;
+      return { bg: cs(p).backgroundColor, accent: cs(p.querySelector('.btn')!).borderTopColor, radius: cs(p.querySelector('.btn')!).borderTopLeftRadius, font: cs(p).fontSize, root: cs(document.documentElement).fontSize };
+    });
+    expect(got.bg).toBe(L[scheme].bg);
+    expect(got.accent).toBe(`rgb(${L[scheme].accent.join(', ')})`);
+    expect(got.radius).toBe(L.radius);
+    expect(got).toMatchObject({ root: '12.5px', font: '12.5px' });
+    if (process.env.DS_SHOTS) {
+      fs.mkdirSync(process.env.DS_SHOTS, { recursive: true });
+      await page.waitForTimeout(250);
+      await page.screenshot({ path: path.join(process.env.DS_SHOTS, `panel-${app}-${scheme}.png`) });
     }
     expect(problems).toEqual([]);
     await ctx.close();
