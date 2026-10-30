@@ -1462,3 +1462,15 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   fail there on its 404). Note: the fake HRM sends `theme-classic-light` unless asked for dark; if the real HRM does the same,
   its users get light whatever the OS, as in ONLYOFFICE. Not checked: the editor inside the wrapper actually drawing the theme
   (the p5 dist editors predate the four patches); the real HRM's value.
+
+### Phase 5 WP9 web half: `_hrm_*` bookmarks and translit in the embed (2026-10-30)
+- **Done.** `scripts/hrm-bookmarks/hrm_bookmarks.py --check ORIG SAVED [B1|T1]` reuses the CLI half's checker (name, zero-length vs
+  non-empty, paragraph anchors, range text; T1 needs Cyrillic; it also fails when the saved file does not show the edit).
+  `ci/web-smoke/docserver.spec.ts` serves the synthetic decree, letter and report as `files/3..5` of the fake HRM and runs, per
+  document, B1 (Ctrl+End, type outside every bookmark, `requestSave`) and T1 (Alt+Q command search, `tools.translitCyrl`, save).
+  The saved file is the server's `v2.bin`, asserted byte-equal (sha256) to the object the fake HRM holds after its callback.
+- **Result: no bookmark lost.** 6/6 new cases pass (all 7 distinct names: `_hrm_desc_`, `_plan_`, `_sig_`, `_agree_`, `_rsmry_`,
+  `_rtask_`, `_rcont_`; zero-length ones included, also in tables); 4-7 s each. Whole `docserver.spec.ts`: 17 passed, 1 skipped
+  (`DS_SHOTS`), `DIST=E:/office-target/p5/dist`. No upstream patch needed.
+- **Not checked:** real HRM decrees (H12); header/footer bookmarks (HRB uses body only); typing inside a bookmark range; the
+  p5 dist docs editor predates the latest patches (0137, 0138); `ci.sh` job wiring (the spec runs inside the existing `docserver` job).
