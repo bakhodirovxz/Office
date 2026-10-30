@@ -720,7 +720,7 @@ async fn names_that_resolve_to_a_denied_range_are_refused_unless_the_entry_is_in
     ] {
         let (s, m) = doc_status(&r, &ds, url).await;
         assert_eq!(s, StatusCode::BAD_GATEWAY, "{url}");
-        assert!(m.contains("refused"), "{url}: {m}");
+        assert!(m.contains("could not be fetched"), "{url}: {m}");
     }
     // every range, behind a name; the answer list is replaced for each case
     for ip in denied {
@@ -728,7 +728,7 @@ async fn names_that_resolve_to_a_denied_range_are_refused_unless_the_entry_is_in
         let (ds, r) = plain(&d, allow, |ds| ds.lookup = lookup);
         let (s, m) = doc_status(&r, &ds, "http://deny.test:80/f").await;
         assert_eq!(s, StatusCode::BAD_GATEWAY, "{ip}");
-        assert!(m.contains("refused"), "{ip}: {m}");
+        assert!(m.contains("could not be fetched"), "{ip}: {m}");
     }
     // the decimal form of 127.0.0.1 as getaddrinfo resolves it
     let (lookup, _) = stub(&[("2130706433", vec![vec!["127.0.0.1"]])]);
@@ -785,7 +785,7 @@ async fn an_internal_entry_may_reach_a_private_address_but_never_metadata_or_mul
     for n in ["meta.test", "mixed.test"] {
         let (s, m) = doc_status(&r, &ds, &format!("http://{n}:{port}/f")).await;
         assert_eq!(s, StatusCode::BAD_GATEWAY, "{n}");
-        assert!(m.contains("refused"), "{n}: {m}");
+        assert!(m.contains("could not be fetched"), "{n}: {m}");
     }
     assert_eq!(
         hits.load(Ordering::SeqCst),
@@ -822,7 +822,7 @@ async fn redirects_are_not_followed_and_urls_outside_the_list_are_not_accepted()
     let (ds, r) = plain(&d, &int(&format!("http://{red}")), |_| {});
     let (s, m) = doc_status(&r, &ds, &format!("http://{red}/f")).await;
     assert_eq!(s, StatusCode::BAD_GATEWAY);
-    assert!(m.contains("redirect"), "{m}");
+    assert!(m.contains("could not be fetched"), "{m}");
     assert_eq!(
         target_hits.load(Ordering::SeqCst),
         0,
@@ -1241,4 +1241,31 @@ async fn a_refused_fetch_is_an_ssrf_block_in_the_audit_log() {
     );
     let key = convert::audit::load_key(&d.join("audit.key")).unwrap();
     convert::audit::verify_keyed(&d.join("data/audit.jsonl"), Some(&key)).unwrap();
+}
+
+/// A crash between `close_session` and `callback_closed` leaves `closed` with `notified = false`: the next start sends status 2 once.
+#[tokio::test]
+async fn a_close_that_died_before_its_callback_sends_status_2_once_at_start() {
+    let mut e = env("crash-close", |_| {}).await;
+    let (sid, tok) = e.open().await;
+    e.get_doc(&sid, &tok).await;
+    let v2 = docx("v2");
+    e.ds.put_version(&sid, &v2, "two", true, now()).unwrap();
+    e.ds.close_session(&sid, now()).unwrap();
+    assert!(e.hrm.received().is_empty());
+    e.restart();
+    let ds = e.ds.clone();
+    let n = tokio::task::spawn_blocking(move || ds.recover_unnotified())
+        .await
+        .unwrap();
+    assert_eq!(n, 1);
+    let got = e.hrm.received();
+    assert_eq!((got.len(), got[0].status, got[0].bytes), (1, 2, v2.len()));
+    assert!(e.ds.queued(&sid).is_none());
+    // a second start finds it notified and acknowledged
+    let ds = e.ds.clone();
+    let n = tokio::task::spawn_blocking(move || ds.recover_unnotified())
+        .await
+        .unwrap();
+    assert_eq!((n, e.hrm.received().len()), (0, 1));
 }

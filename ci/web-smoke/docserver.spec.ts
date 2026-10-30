@@ -281,6 +281,33 @@ test('S14: a foreign frame cannot feed the host page or the wrapper', async () =
   await ctx.close();
 });
 
+test('S14: a foreign frame cannot drive the wrapper with editor bridge messages', async () => {
+  const { ctx, page, problems } = await open();
+  await page.goto(`${HOST}/host?kind=files&id=1`);
+  await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+  const hrm0 = await hrmState();
+  const versions = record(sessions()[0]).versions.length;
+  // a sibling frame posts every bridge message type under every app prefix to the wrapper (the host page's first frame)
+  await page.evaluate(() => new Promise<void>((ok) => {
+    const f = document.createElement('iframe');
+    f.srcdoc = '<script>' +
+      'var w=parent.frames[0];["wordcraft","gridcraft","deckcraft","pdfcraft"].forEach(function(p){' +
+      '["save","dirty","failed","ready","opened"].forEach(function(t){' +
+      'w.postMessage({type:p+":"+t,dirty:true,error:"forged",bytes:new ArrayBuffer(8)},"*");});});<' + '/script>';
+    f.onload = () => ok();
+    document.body.appendChild(f);
+  }));
+  await page.waitForTimeout(1500);
+  expect(await state(page)).toBe('ready');
+  const rec = record(sessions()[0]);
+  expect(rec.versions.length).toBe(versions);   // no save
+  expect(rec.dirty_sent).toBeFalsy();           // no first-change callback
+  const hrm1 = await hrmState();
+  expect([hrm1.received.length, hrm1.rejected.length]).toEqual([hrm0.received.length, hrm0.rejected.length]);
+  expect(problems).toEqual([]);
+  await ctx.close();
+});
+
 test('S13: a page on a site that is not a frame origin cannot frame the wrapper or the editor', async () => {
   const { ctx, page } = await open();
   const refusals: string[] = [];

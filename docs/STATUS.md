@@ -1275,6 +1275,18 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not checked: the sweep thread in a running server over hours (the tests inject the clock); the real proxy chain on `<test-host>` (WP17);
   sessions closed before this change have `acked` false and wait the 7 days.
 
+### Phase 5: security rehearsal, open items closed (2026-10-30; branch `p5-sec2`)
+- Crash gap (PLAN R3): `callback.rs` `recover_unnotified`, run at start by `spawn_retry_loop`. A session closed with status 2 and
+  `notified = false`, `acked = false` (and no queue entry) gets its status 2 through the normal queue. At-least-once: a crash after
+  the provider acted but before `acked` is written can repeat the same version.
+- S14 (Playwright, foreign frame posts `<prefix>:save` etc.), S21 (`docserver/static/` scanned, `onlyoffice` allowed on comment
+  lines only), S19 built-in TLS half (`tls.spec.ts`: `/ds/editor` HSTS, plain HTTP 308). F7 and F8: fixed texts to the browser,
+  detail in the log without ids. S rows: 22 green, 1 partial (S19), 1 not run (S22), 1 owner/HRM (S25).
+- Measured: services tests 170 passed, 0 failed (was 169; 1 new); clippy `-D warnings` on docserver clean; Playwright docserver
+  18 passed, 1 skipped (was 17+1; 1 new); Playwright tls (debug build) 6 passed.
+- Not checked: S19 behind Traefik (Docker, TLS-intercepting proxy); S22 (tools missing); the crash recovery in a real process kill
+  (tested by a record written to disk, then a restart); F5 unchanged by design.
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

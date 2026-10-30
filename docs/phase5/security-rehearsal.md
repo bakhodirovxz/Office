@@ -11,6 +11,9 @@ two error paths (now green, fixed). The biggest open item is data retention: not
 **Update 2026-10-30 (branch `p5-retention`):** F1 fixed (the retention sweep), so S18 is green: 20 green, 3 partial, 1 not run, 1
 owner/HRM. F4's deployment files are done; the real proxy chain is still checked in WP17.
 
+**Update 2026-10-30 (branch `p5-sec2`):** S14 and S21 are green, S19 is narrower (built-in TLS half done), F7 and F8 are fixed, and
+the crash gap between `close_session` and `callback_closed` is closed: 22 green, 1 partial (S19), 1 not run (S22), 1 owner/HRM (S25).
+
 ## 1. Test runs
 
 | Run | Before (0e3b630) | After (this branch) |
@@ -45,14 +48,14 @@ does not exist under that name, but a test under another name proves the row; it
 | S11 | green | `auth.rs:867` | |
 | S12 | green | `docserver/src/routes.rs:188` | |
 | S13 | green | `suite-serve/tests/docserver.rs:143` (headers, no CORS); `ci/web-smoke/docserver.spec.ts:277` (unlisted site cannot frame the wrapper or `/docs/`) | |
-| S14 | partial | `docserver.spec.ts:253` (a foreign sibling frame posts `docs:event`, `docs:config`, `docs:close`, `docs:ready`) | Not tested: a foreign frame posting editor bridge messages (`<prefix>:save`, `:dirty`) to the wrapper. The code checks it (`static/editor.js`, message listener: `ev.source === S.frame.contentWindow`). |
+| S14 | green (was partial) | `docserver.spec.ts:253` (a foreign sibling frame posts `docs:event`, `docs:config`, `docs:close`, `docs:ready`); new `docserver.spec.ts:284` (the same frame posts `<prefix>:save`, `:dirty`, `:failed`, `:ready`, `:opened` for all four prefixes to the wrapper: no version, no status 1, no callback, state stays `ready`) | The wrapper checks `ev.source === S.frame.contentWindow` (`static/editor.js:301`). |
 | S15 | green | `outbound.rs:1156` | |
 | S16 | green | `outbound.rs:1029` (chain verifies, a rewritten line fails); `docserver.spec.ts:201` | |
 | S17 | green (was failing) | `docserver.spec.ts:201` (stderr and audit of a full run); new `docserver/tests/no_ids_in_logs.rs` (every log macro of the crate) | Fixed F3. |
 | S18 | green (was missing) | sweep: `docserver/src/retention.rs:242` (clock-injected: closed+acked 25 h gone, 23 h kept, abandoned 7 d gone, status 2 queued kept at 60 d, a given-up status 2 under the 7-day rule, history doc and its own blobs gone, a shared blob kept, one count-only audit line), `retention.rs:311` (a key still open elsewhere keeps its history), `retention.rs:326` (`history = "keep"`); `crates/suite-core/src/history.rs:1340` (`forget_id`); encryption part: `docserver/tests/wp14.rs:264`, `wp14.rs:317` | Fixed F1 (branch `p5-retention`). |
-| S19 | partial | `convert-api/tests/tls.rs:69` (TLS, HSTS, plain HTTP refused) on converter routes; the docserver spec runs over built-in TLS | `ci/web-smoke/tls.spec.ts` is not extended to `/ds/editor`; `tls = "upstream"` with `/ds/` is only in `docserver-compose.spec.ts` (Docker, not run here) and asserts no header. |
+| S19 | partial (built-in TLS half done) | `convert-api/tests/tls.rs:69` (converter routes); new `ci/web-smoke/tls.spec.ts:129` (`/ds/editor` over built-in TLS: 200, HSTS `max-age=31536000`; plain HTTP to `/ds/editor?x=1` gets 308 to the https `public_url`) | `tls = "upstream"` behind Traefik is only in `docserver-compose.spec.ts` (Docker, not run: TLS-intercepting proxy) and asserts no header. |
 | S20 | green | `suite-serve/tests/docserver.rs:128` | |
-| S21 | partial | `convert-api/tests/no_hrm_names.rs:33` scans `docserver/src` | `docserver/static/` (api.js, editor.js) is not scanned. It holds no HRM name today, only "ONLYOFFICE" (the clean-room note and API-compatibility comments), which the scan would flag: scanning it needs an allow rule (owner/reviewer call). |
+| S21 | green (was partial) | `convert-api/tests/no_hrm_names.rs:36` now scans `docserver/static/` too; there, and only there, the word `onlyoffice` is allowed on comment lines (clean-room note, API-compatibility remarks). Code, strings and every other name still fail the scan. | |
 | S22 | not run | — | `cargo-deny` and `cargo-audit` are not installed on this machine (`scripts/ci.sh:259` says the same). Not installed system-wide, as instructed. |
 | S23 | green | `docserver.spec.ts:227` (401 `{"error":1}`); `outbound.rs:515` (500, `{"error":1}`, a silent provider = unknown); `outbound.rs:338` | The "sleeps 70 s" case runs as an 8 s hang against a short configured `callback_timeout_s`. |
 | S24 | green | `auth.rs:569`, `auth.rs:759`, `history.rs:204` | |
@@ -150,12 +153,12 @@ refused every open with 403 (onError -20), while `frame-ancestors` allowed the f
 but the kind that would cost a day in WP17. Fix: `config.rs:468` drops `:443` for https and `:80` for http. Test:
 `config.rs:882`.
 
-**F7. Fetch errors reach the browser verbatim (open).** `SessErr::Upstream(e.to_string())` (`sessions.rs:492`, answered as 502
+**F7. Fetch errors reach the browser verbatim (fixed).** *Fix: `sessions.rs:485-500` answers every failed provider fetch (except TooLarge) with the fixed text "the document could not be fetched" (502 `fetch_failed`); the log and audit line carry only `unreachable` for a transport error (ureq's text may hold the URL and query). Tests in `outbound.rs` match the fixed text.* The finding as reported: `SessErr::Upstream(e.to_string())` (`sessions.rs:492`, answered as 502
 by `api.rs:42`) carries ureq's error text: "host not found", "connection refused", timeouts. The user learns the state of the
 provider's internal host. The URL is provider-signed, so the user cannot pick the target. A fixed text ("the document could
 not be fetched") for `Unreachable` would do. Not changed here because `outbound.rs` tests match parts of these texts.
 
-**F8. The compare tool's stderr goes to the browser (open).** On a tool failure the first 2 KB of its stderr is the error message
+**F8. The compare tool's stderr goes to the browser (fixed).** *Fix: `history.rs` `run_diff`: the browser gets "the compare tool could not compare these versions" (and a fixed text when the tool cannot start); stderr and the spawn error go to the log with the session folder path replaced by `<session>` (no sid). Test: `history.rs` compare case.* The finding as reported: On a tool failure the first 2 KB of its stderr is the error message
 (`history.rs:351`). It may name server paths (`.../sessions/<sid>/compare-.../a.docx`). Prefer a fixed text and log the
 stderr (with `sid_ref`).
 
@@ -203,6 +206,8 @@ stderr (with `sid_ref`).
   detected; that is outside the stated threat model (disk theft and copies).
 
 ## 4. Not checked, and why
+
+- **Crash gap (data loss, R3), fixed on `p5-sec2`:** `callback.rs` `recover_unnotified`, run once by `spawn_retry_loop` before its loop. A session `closed` with status 2, `notified = false`, `acked = false`, edit rights, a version, and no queue entry gets `callback_closed` (queue entry, send, `notified` written). `notified` is written only after the attempt; `acked` is written when the provider answers `{"error":0}`. So an acked record or a queued one is never resent. Window left: a crash after the provider acted but before `acked` reaches disk can send status 2 twice (at-least-once; the provider gets the same version). Status 4 (no changes) is not resent. Test: `outbound.rs` `a_close_that_died_before_its_callback_sends_status_2_once_at_start`. Not checked: a crash during the retry loop's own send (the queue entry covers it, by reading).
 
 - **S22:** `cargo deny` / `cargo audit` not installed (not installed system-wide, as instructed). Run them in CI or after the
   owner OKs installing them under `~/.cargo/bin`.

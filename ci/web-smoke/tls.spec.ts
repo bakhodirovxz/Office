@@ -51,12 +51,18 @@ test.beforeAll(async () => {
   ssl('x509', '-req', '-in', 'leaf.csr', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-days', '2', '-sha256', '-extfile', 'ext.cnf', '-out', 'server.pem');
   const pin = crypto.createHash('sha256').update(new crypto.X509Certificate(fs.readFileSync(path.join(dir, 'server.pem'))).publicKey.export({ type: 'spki', format: 'der' })).digest('base64');
   fs.writeFileSync(path.join(dir, 'secret'), SECRET);
+  for (const n of ['server-secret', 'provider-secret']) fs.writeFileSync(path.join(dir, n), crypto.randomBytes(48));
+  fs.writeFileSync(path.join(dir, 'audit-key'), crypto.randomBytes(48).toString('hex'));
   [port, httpPort] = [await free(), await free()];
   base = `https://localhost:${port}`;
   const f = (n: string) => path.join(dir, n).replace(/\\/g, '/');
   fs.writeFileSync(path.join(dir, 'api.toml'), [
     `listen = "127.0.0.1:${port}"`, 'auth = "jwt"', `secret_file = "${f('secret')}"`, `tls_cert = "${f('server.pem')}"`, `tls_key = "${f('server.key')}"`,
     `public_url = "${base}"`, `redirect_listen = "127.0.0.1:${httpPort}"`, 'trusted_proxies = []', `work_dir = "${f('work')}"`, `store_dir = "${f('store')}"`, 'max_file_mb = 1',
+    // the document server on the same TLS listener (S19): only /ds/editor is fetched, no provider is ever contacted
+    '[docserver]', `server_secret_file = "${f('server-secret')}"`, `data_dir = "${f('ds-data')}"`, `audit_key_file = "${f('audit-key')}"`,
+    '[[docserver.providers]]', 'name = "fake"', 'issuer = "fake"', `secret_file = "${f('provider-secret')}"`,
+    'fetch_allow = [{ url = "http://127.0.0.1:9", internal = true }]', 'callback_allow = [{ url = "http://127.0.0.1:9", internal = true }]', 'frame_origins = ["https://hr.example"]',
   ].join('\n'));
   fs.mkdirSync(path.join(dir, 'dist'));
   const env = { ...process.env } as Record<string, string>;
@@ -118,6 +124,17 @@ test('plain HTTP only redirects to the https public_url', async () => {
   await page.goto(`http://127.0.0.1:${httpPort}/convert/`);
   expect(page.url()).toBe(`${base}/convert/`);
   await ctx.close();
+});
+
+test('S19: /ds/editor over built-in TLS carries HSTS, and plain HTTP to it is redirected', async () => {
+  const { ctx, page } = await open();
+  const res = await page.goto(`${base}/ds/editor`);
+  expect(res!.status(), await res!.text()).toBe(200);
+  expect(res!.headers()['strict-transport-security']).toMatch(/^max-age=31536000/);
+  await ctx.close();
+  const r = await new Promise<http.IncomingMessage>((ok, bad) => { http.get({ host: '127.0.0.1', port: httpPort, path: '/ds/editor?x=1', headers: { host: 'evil.example' } }, ok).on('error', bad); });
+  expect([r.statusCode, r.headers.location]).toEqual([308, `${base}/ds/editor?x=1`]);
+  r.resume();
 });
 
 test('the #token= flow: conversion, fetch+blob download, PDF combine, with the token in no URL', async () => {

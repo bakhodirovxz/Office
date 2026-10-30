@@ -261,10 +261,35 @@ impl Docserver {
         n
     }
 
-    /// A thread that calls `retry_due` every 15 s for the life of the process.
+    /// At start: a status 2 owed by a session whose process died between `close_session` and `callback_closed`
+    /// (`closed` with `notified = false`). `notified` is written only after the attempt, so a record that is also `acked`
+    /// was delivered, and one with a queue entry is the retry loop's. Status 4 carries no data and is not resent.
+    pub fn recover_unnotified(&self) -> usize {
+        let Ok(dir) = std::fs::read_dir(self.data_dir.join("sessions")) else {
+            return 0;
+        };
+        let mut n = 0;
+        for e in dir.flatten() {
+            let sid = e.file_name().to_string_lossy().into_owned();
+            let owed = self.load_session(&sid).is_some_and(|r| {
+                r.perms.edit
+                    && !r.versions.is_empty()
+                    && r.closed
+                        .as_ref()
+                        .is_some_and(|c| c.status == 2 && !c.notified && !c.acked)
+            });
+            if owed && self.queued(&sid).is_none() && self.callback_closed(&sid).is_some() {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    /// A thread that recovers owed status 2 once, then calls `retry_due` every 15 s for the life of the process.
     pub fn spawn_retry_loop(self: &Arc<Self>) {
         let ds = self.clone();
         std::thread::spawn(move || {
+            ds.recover_unnotified();
             loop {
                 std::thread::sleep(std::time::Duration::from_secs(15));
                 ds.retry_due(now());
