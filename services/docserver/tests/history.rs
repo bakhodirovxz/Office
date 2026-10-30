@@ -37,6 +37,13 @@ fn build_with(name: &str, extra: &str, diff_timeout_s: u64) -> (Arc<Docserver>, 
     std::fs::write(d.join("server.key"), SERVER_SECRET).unwrap();
     std::fs::write(d.join("prov.key"), PROV_SECRET).unwrap();
     std::fs::write(d.join("atrest.key"), "a".repeat(40)).unwrap();
+    let mut ds = open_at(&d, extra);
+    ds.diff_timeout_s = diff_timeout_s;
+    (Arc::new(ds), d)
+}
+
+/// The server over the folder `d` as it is (a restart: nothing is removed first).
+fn open_at(d: &std::path::Path, extra: &str) -> Docserver {
     let p = |f: &str| d.join(f).to_string_lossy().replace('\\', "/");
     let extra = extra.replace("{d}", &d.to_string_lossy().replace(char::from(92), "/"));
     let t: toml::Table = format!(
@@ -60,9 +67,7 @@ require_exp = true
     )
     .parse()
     .unwrap();
-    let mut ds = Docserver::from_table(t, None).unwrap();
-    ds.diff_timeout_s = diff_timeout_s;
-    (Arc::new(ds), d)
+    Docserver::from_table(t, None).unwrap()
 }
 
 fn config(key: &str, edit: bool) -> Value {
@@ -512,5 +517,30 @@ async fn compare_hands_the_tool_plaintext_while_the_store_stays_sealed() {
         !holds(&d.join("data"), b"a secret sentence"),
         "plaintext left on disk"
     );
+    let _ = std::fs::remove_dir_all(d);
+}
+
+#[tokio::test]
+async fn compare_copies_a_crash_left_behind_are_removed_at_start() {
+    let extra = "encrypt_at_rest = true\nencrypt_key_file = \"{d}/atrest.key\"";
+    let (ds, d) = build_with("cmpcrash", extra, 5);
+    let r = ds.routes::<()>();
+    let (sid, _) = session(&ds, &r, "k1", true).await;
+    // what a compare leaves when the process dies before its scratch guard runs: plaintext copies in the session folder
+    let scratch = d
+        .join("data/sessions")
+        .join(&sid)
+        .join("compare-0011223344556677");
+    std::fs::create_dir_all(&scratch).unwrap();
+    std::fs::write(scratch.join("a.docx"), b"a secret sentence").unwrap();
+    drop((r, ds));
+    let _restarted = open_at(&d, extra);
+    assert_eq!(leftovers(&d, &sid), 0);
+    assert!(
+        !holds(&d.join("data"), b"a secret sentence"),
+        "plaintext left on disk"
+    );
+    // the session itself is untouched
+    assert!(d.join("data/sessions").join(&sid).join("v1.bin").is_file());
     let _ = std::fs::remove_dir_all(d);
 }
