@@ -1436,3 +1436,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Checks.** `cargo xt i18n lint` 0 errors, `roundtrip` OK, `check-stale` OK, `extract --dry-run` 0 changes, `check` OK
   (8,236 rows), xtask i18n unit tests 59/59.
 - **Not checked.** No native speaker has read these rows; no screenshots in ru.
+- **MSI gate leftovers (F20), branch `p4-msi` (2026-10-31).** `wix msi validate` now has no ICE errors (was ICE43 x5, ICE57 x5): the five Start
+  menu shortcuts moved to own components with an HKCU KeyPath. File and OpenWith components are byte-identical in the tables to
+  the a638aef MSI, UpgradeCode frozen, `RemoveExistingProducts` right after `InstallValidate`, so an in-place upgrade should work
+  (static check only). `build-msi.ps1` now checks the VC runtime imports with dumpbin on every build and has `-Out`. `msi-test.ps1`:
+  recommended-handlers filter, `AppActivate` check, tracked PDF fixture. Test MSI (not installed) `E:\office-target\p4-msi-test\`,
+  SHA-256 `DEC278B6...A887`. Not run: install, upgrade, the msi-test changes.
