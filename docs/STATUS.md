@@ -1393,3 +1393,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   documents; the Docs light shot ran with a dark browser scheme, so the param beat the browser). PDF web was not
   screenshotted (it has no blank document).
 - **Not checked:** a live switch in an open editor; the MSI; a real-device browser.
+
+### Phase 4: gate-review carry-over (branch `p4-carry`, 2026-10-31; F11, F16, F17, F20, F21)
+- **F20 MSI upgrade:** `UpgradeCode` frozen in `brand.toml` (`{2EA291EA-35AE-59D4-AB3E-09D1AE815A49}`, the value the MSI the owner runs already has); `ProductCode="*"` and `MajorUpgrade AllowSameVersionUpgrades="yes"`, so the next build upgrades the installed 0.1.0 without an uninstall. Chosen over a growing version because the same-version flag also upgrades the copy installed today (same 0.1.0). Release versions still bump `brand.toml version`. Built `hoshiya-0.1.0-x64.msi` (201.8 MB, from the p1 MSVC outputs; not an install test); its ProductCode differs from the shipped one, UpgradeCode equal. `wix msi validate`: ICE43/ICE57 errors on five shortcut components (open), ICE61 warning (expected). Signing store default now `CurrentUser`; `msi-test.ps1` uninstalls in a `finally`.
+- **F16/F17/F11/F21:** pipe squatter no longer stops a plain launch (test); cookie name per launch (tests); History IPC on a worker and a size-only listing (test); converter listeners before the first await (Playwright 13 passed, 1 skipped).
+- **Tests:** `suite-desktop` 23 lib + 3 host + others, `suite-serve` 26, `suite-core history` 9, `office-brand` 4, converter spec 13/13 (+1 skipped screenshots), all green.
+- **Not checked:** an install or upgrade of the MSI (elevation); a real WebView window for F11/F16; a 2 GB History document; the cause of the F21 host-run losses.

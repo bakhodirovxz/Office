@@ -191,6 +191,37 @@ fn send(pipe: &str, lines: &[String], ours: &Sid) -> bool {
     false
 }
 
+/// What a launch does when the pipe already exists.
+#[derive(Debug, PartialEq)]
+enum HandOver {
+    /// the running instance has the request
+    Done,
+    /// nobody answers and there are files: open them in this process, no window
+    OpenHere,
+    /// nobody answers and there is nothing to open: run as a full instance without a pipe server
+    CarryOn,
+}
+
+fn hand_over(files: &[String], history: Option<&str>, pipe: &str, me: &Sid) -> HandOver {
+    let mut lines: Vec<String> = files
+        .iter()
+        .map(|f| json!({"type": "open", "path": f}).to_string())
+        .collect();
+    if let Some(h) = history {
+        lines.push(json!({"type": "history", "path": h}).to_string());
+    }
+    if lines.is_empty() {
+        lines.push(json!({"type": "focus"}).to_string());
+    }
+    if send(pipe, &lines, me) {
+        HandOver::Done
+    } else if files.is_empty() && history.is_none() {
+        HandOver::CarryOn
+    } else {
+        HandOver::OpenHere
+    }
+}
+
 async fn pipe_loop(
     mut server: NamedPipeServer,
     name: String,
@@ -388,30 +419,18 @@ fn start(args: Args) -> Result<(), String> {
     };
     let server = match first {
         Ok(s) => Some(s),
-        Err(_) => {
-            let mut lines: Vec<String> = args
-                .files
-                .iter()
-                .map(|f| json!({"type": "open", "path": f}).to_string())
-                .collect();
-            if let Some(h) = &args.history {
-                lines.push(json!({"type": "history", "path": h}).to_string());
-            }
-            if lines.is_empty() {
-                lines.push(json!({"type": "focus"}).to_string());
-            }
-            if send(&pipe, &lines, &me) {
+        Err(_) => match hand_over(&args.files, args.history.as_deref(), &pipe, &me) {
+            HandOver::Done => return Ok(()),
+            HandOver::OpenHere => {
+                // nobody answers: a launch never fails, so open the files here and run without the pipe
+                for f in &args.files {
+                    open_and_report(&ctx, f);
+                }
                 return Ok(());
             }
-            // nobody answers: a launch never fails, so open the files here and run without the pipe
-            for f in &args.files {
-                open_and_report(&ctx, f);
-            }
-            if args.files.is_empty() && args.history.is_none() {
-                return Err("another instance holds the pipe and does not answer".into());
-            }
-            return Ok(());
-        }
+            // F16: the name is held by something that is not our instance; a plain launch still starts, just without the pipe server
+            HandOver::CarryOn => None,
+        },
     };
 
     let Served { port } = serve(&rt, &layout, &data)?;
@@ -506,6 +525,24 @@ fn start(args: Args) -> Result<(), String> {
         .with_new_window_req_handler(|_, _| NewWindowResponse::Deny)
         .with_ipc_handler(move |req| {
             // IPC only from our own origin; anything else gets no answer at all
+            // F11: History reads, hashes and rewrites whole documents (up to the size cap), so it runs on a worker like Pick; the page
+            // matches the reply by the path it echoes
+            let history = serde_json::from_str::<serde_json::Value>(req.body())
+                .is_ok_and(|v| v["type"].as_str().is_some_and(|t| t.starts_with("history_")));
+            if history {
+                let (ctx, p, uri, body) = (
+                    ipc_ctx.clone(),
+                    ipc_proxy.clone(),
+                    req.uri().to_string(),
+                    req.body().clone(),
+                );
+                std::thread::spawn(move || {
+                    if let Some(Out::Reply(v)) = ipc_message(&ctx, &uri, port, &body) {
+                        let _ = p.send_event(Ev::Script(reply_script(&v)));
+                    }
+                });
+                return;
+            }
             let Some(out) = ipc_message(&ipc_ctx, &req.uri().to_string(), port, req.body()) else {
                 return;
             };
@@ -627,5 +664,35 @@ mod tests {
             let got = reader.await.unwrap();
             assert_eq!(got, if delivered { b"hello".to_vec() } else { vec![] });
         }
+    }
+
+    /// F16: a pipe name squatted by a foreign server never stops a plain launch; files are still opened in-process.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_squatted_pipe_name_does_not_stop_a_launch() {
+        let (me, session) = Sid::current().unwrap();
+        let name = format!(
+            r"\\.\pipe\suite-host-test-{}-{session}-squat",
+            std::process::id()
+        );
+        let _squatter =
+            create_user_only_pipe(ServerOptions::new().first_pipe_instance(true), &name, &me)
+                .unwrap();
+        let second = {
+            let _g = tokio::runtime::Handle::current().enter();
+            create_user_only_pipe(ServerOptions::new().first_pipe_instance(true), &name, &me)
+        };
+        assert!(second.is_err(), "the name is taken");
+        // the squatter is not run by the identity we expect, so nothing is sent to it
+        let (n, with_file) = (name.clone(), name.clone());
+        let plain = tokio::task::spawn_blocking(move || hand_over(&[], None, &n, &foreign()))
+            .await
+            .unwrap();
+        assert_eq!(plain, HandOver::CarryOn);
+        let got = tokio::task::spawn_blocking(move || {
+            hand_over(&["a.docx".to_string()], None, &with_file, &foreign())
+        })
+        .await
+        .unwrap();
+        assert_eq!(got, HandOver::OpenHere);
     }
 }
