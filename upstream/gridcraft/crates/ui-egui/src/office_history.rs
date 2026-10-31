@@ -117,6 +117,16 @@ impl Hook for Layer {
 // ---------------------------------------------------------------- XDFU: which commands make a copy
 
 /// `(audit event, output extension)` when the command makes a copy of the workbook, else `None`.
+/// The same file by name: Windows paths ignore case and take `/` for `\`.
+fn same_path(a: &str, b: &str) -> bool {
+    if cfg!(windows) {
+        let n = |p: &str| p.replace('/', "\\").to_lowercase();
+        n(a) == n(b)
+    } else {
+        a == b
+    }
+}
+
 fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, String)> {
     let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
     let ext = |x: &str| Path::new(x).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
@@ -128,7 +138,7 @@ fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, String)> 
         // The working file itself is not a copy; a save to another path (a first save, a pdf, a csv) is.
         "file.save" | "file.saveAs" => {
             let path = path?;
-            if s.active()?.path.as_deref() == Some(path) { None } else { Some(("save_as", ext(path))) }
+            if s.active()?.path.as_deref().is_some_and(|own| same_path(own, path)) { None } else { Some(("save_as", ext(path))) }
         }
         "file.saveBytes" => Some(("download", p.get("format").and_then(Json::as_str).unwrap_or("xlsx").to_ascii_lowercase())),
         _ => None,
@@ -309,5 +319,13 @@ mod tests {
         stamp_output(&mut out, "csv", "XDFU copy 1").unwrap();
         assert!(std::fs::read_to_string(dir.join("ok.csv")).unwrap().starts_with("\"XDFU copy 1\""));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_working_file_is_found_by_name_on_windows() {
+        assert!(same_path("a/b.xlsx", "a/b.xlsx"));
+        assert!(!same_path("a/b.xlsx", "a/c.xlsx"));
+        // Windows only: another case or slash direction is the same file
+        assert_eq!(same_path(r"C:\Users\a\X.xlsx", "c:/users/a/x.xlsx"), cfg!(windows));
     }
 }
