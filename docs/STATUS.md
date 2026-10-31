@@ -1448,7 +1448,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   every other font keeps the 7 px the model already assumes (Calibri 11, Excel's value). No other font table was invented.
 - Calibri 11: 64 px before and after. Times New Roman 12: 64 px before, 72 px after (new workbooks, and xlsx files in that font
   without `defaultColWidth`).
-- A file with `defaultColWidth` keeps it exactly; `<col width>` is untouched (still converted with 7 px digits, as before). The
+- Stored widths (`defaultColWidth` and `<col width>`, read and write) use that same digit width (ECMA-376 18.3.1.13), so a
+  Times New Roman 12 column and the default agree; Calibri 11 files convert exactly as before (7 px). Note a stored width includes
+  the padding: 9.0 reads as 72 px in Times New Roman 12, while 8.43 reads as 67 px. `.xls` column widths still use 7 px. The
   writer omits `defaultColWidth` when the width equals what a reader derives from the Normal font.
 - Tests: engine lib (new-workbook assert in `new_workbooks_are_times_new_roman_12_on_the_interface_paper`), xlsx lib
   `default_col_width_follows_the_normal_font`. Not checked: on-screen look, Excel opening a saved TNR 12 file.

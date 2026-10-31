@@ -116,7 +116,7 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
                     }
                 }
                 if let Some(w) = e.attr_f64("defaultColWidth") {
-                    let px = col_width_to_px(w);
+                    let px = col_width_to_px(w, mdw_of(cx));
                     if px > 0.0 {
                         sheet.default_col_width = px;
                     }
@@ -338,6 +338,12 @@ fn read_views(e: &El, sheet: &mut Sheet) {
     }
 }
 
+/// Maximum digit width of the workbook's Normal font (ECMA-376 18.3.1.13), the unit stored widths are counted in.
+fn mdw_of(cx: &Ctx<'_>) -> f64 {
+    let f = &cx.styles.get(gridcraft_model::StyleId::DEFAULT).font;
+    gridcraft_model::max_digit_width(&f.name, f.size)
+}
+
 fn read_cols(cx: &Ctx<'_>, e: &El, sheet: &mut Sheet) {
     for c in e.kids("col") {
         let (Some(min), Some(max)) = (c.attr_u32("min"), c.attr_u32("max")) else { continue };
@@ -348,7 +354,7 @@ fn read_cols(cx: &Ctx<'_>, e: &El, sheet: &mut Sheet) {
         let mut info = LineInfo::default();
         // A width without `customWidth` that equals the default is just the default.
         if let Some(w) = c.attr_f64("width") {
-            let px = col_width_to_px(w);
+            let px = col_width_to_px(w, mdw_of(cx));
             if c.flag("customWidth", false) || px != sheet.default_col_width {
                 info.size = Some(px);
             }

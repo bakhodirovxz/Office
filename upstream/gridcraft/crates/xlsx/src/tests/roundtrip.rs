@@ -1189,4 +1189,22 @@ fn default_col_width_follows_the_normal_font() {
     assert_eq!(px(&wb), 100.0);
     assert_eq!(gridcraft_model::default_col_width_px("Calibri", 11.0, 10.0), 80.0);
     assert_eq!(gridcraft_model::default_col_width_px("Times New Roman", 12.0, 10.0), 88.0);
+    // <col width> uses the same digit width: Calibri 7 px (unchanged), Times New Roman 12 8 px.
+    let col_px = |wb: &Workbook| read_xlsx(&write_xlsx(wb).unwrap()).unwrap().0.sheets[0].cols.get(&0).and_then(|c| c.size);
+    let mut cal = Workbook::new();
+    Arc::make_mut(&mut cal.sheets[0]).cols.insert(0, LineInfo { size: Some(80.0), ..Default::default() });
+    let bytes = write_xlsx(&cal).unwrap();
+    let xml = String::from_utf8_lossy(&Package::open(&bytes).unwrap().read("xl/worksheets/sheet1.xml").unwrap().unwrap()).into_owned();
+    assert!(xml.contains("width=\"11.421875\""), "{xml}");
+    assert_eq!(col_px(&cal), Some(80.0));
+    assert_eq!(crate::tables::col_width_to_px(9.0, 8.0), 72.0);
+    let mut n = wb.styles.get(StyleId::DEFAULT).clone();
+    n.font.name = "Times New Roman".into();
+    n.font.size = 12.0;
+    let mut tnr = Workbook::new();
+    tnr.styles = StyleTable::with_default(n);
+    for px in [20.0, 72.0, 100.0, 133.0] {
+        Arc::make_mut(&mut tnr.sheets[0]).cols.insert(0, LineInfo { size: Some(px), ..Default::default() });
+        assert_eq!(col_px(&tnr), Some(px), "px {px}");
+    }
 }
