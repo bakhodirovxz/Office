@@ -12,8 +12,13 @@ Rust tests are `file::test_name` under `services/docserver/tests/` (or `services
 plan's intent; a row's target changes only with the plan.
 
 **Verified 2026-10-25 against commit 7f10ad8** (every test name below was grepped in that tree; pass/fail = the WP16 job run, see
-`docs/STATUS.md`). The field names are **not** yet re-checked against the public DocsAPI pages (WP16 had no network step for it):
-that stays open for the gate review.
+`docs/STATUS.md`). **Names re-checked 2026-10-31 against the public DocsAPI pages** (config, editorConfig, customization, document,
+permissions, events, methods, callback handler; read through a summarising fetch, so spellings are worth one more look at the
+gate): no misspelled or invented name; ours are labelled as ours (`requestSave`, `close`, `onSaved`, `onClosed`). Differences
+in meaning, by design: public status 1 is sent on each user connect or disconnect (ours once, on the first dirty), and public
+status 2 about 10 s after the last editor leaves (ours at close after a save). Not checked: the onError/onWarning code values
+(the public page links elsewhere), `info.*`, `embedded.*`, the `documentType`/`type` values, the JWT pages. Public fields not
+listed below are ignored (for example `customization.spellcheck`, `chat`, `ai`, events `onRequestRefreshFile`, `onSubmit`).
 
 **Clean-room.** Field names come from ONLYOFFICE's **public** Docs API documentation (the editor config, events,
 methods and callback reference pages) and from HRB's own use of them. No ONLYOFFICE source code (AGPL) was read, copied
@@ -72,7 +77,7 @@ relies on it), **—** (not used).
 | Field | HRB | Target | Our behaviour | WP | Verified |
 |---|---|---|---|---|---|
 | `forcesave` | sent `true` (`:262`) | P | Ignored as a switch: every explicit save and host `requestSave` sends status 6 | WP4 | spec: "cross-site ..." (`requestSave()` gives callback status 6); outbound.rs::open_save_close_reopen_against_the_hrb_harness |
-| `uiTheme` | sent (`:263`) | P | A name ending in `-dark` (`theme-dark`, `default-dark`, `theme-contrast-dark`) → dark, in `-light` (`theme-light`, `theme-classic-light`, `default-light`) → light; it wins over the OS. Any other name (`theme-system`, missing) → the OS. The wrapper (`editor.js`) applies it to its own pages and passes it to the editor as `?theme=`, read once at start. The real HRM sends what the fake does, `theme-classic-light` unless dark is chosen (owner, 2026-10-30), so HRM users get light whatever the OS, as with ONLYOFFICE | WP5 | spec: docserver "History panel takes the host app look and the theme" (wrapper `data-theme` and the editor frame's `?theme=`, OS set to the opposite) |
+| `uiTheme` | sent (`:263`) | P | A name ending in `-dark` (`theme-dark`, `default-dark`, `theme-contrast-dark`) or `theme-night` → dark, in `-light` (`theme-light`, `theme-classic-light`, `default-light`) or `theme-white` → light; it wins over the OS. Any other name (`theme-system`, `theme-gray`, missing) → the OS. The wrapper (`editor.js`) applies it to its own pages and passes it to the editor as `?theme=`, read once at start. The real HRM sends what the fake does, `theme-classic-light` unless dark is chosen (owner, 2026-10-30), so HRM users get light whatever the OS, as with ONLYOFFICE | WP5 | spec: docserver "History panel takes the host app look and the theme" (wrapper `data-theme` and the editor frame's `?theme=`, OS set to the opposite) |
 | `autosave` | — | P | Autosave is a recovery copy on our server only; the HRM sees saves (6) and the close (2) | WP4, WP6 | bridge-docs.spec: "5 autosave ..." (bytes are handed over after the period only while dirty); outbound.rs::save_bodies_are_capped_and_checked (the autosave route); the HRM seeing no callback for an autosave: — |
 | `anonymous`, `comments`, `compactHeader`, `compactToolbar`, `compatibleFeatures`, `customer`, `features`, `feedback`, `goback`, `help`, `hideNotes`, `hideRightMenu`, `hideRulers`, `integrationMode`, `logo`, `macros`, `macrosMode`, `mentionShare`, `mobile`, `review`, `submitForm`, `toolbarHideFileName`, `toolbarNoTabs`, `unit`, `zoom` | — | N | Ignored; the product chrome and toolbar come from our own settings | — | — |
 

@@ -263,8 +263,10 @@
     S.lang = lang.startsWith('ru') ? 'ru' : lang.startsWith('uz') ? (lang.includes('cyrl') ? 'uz-Cyrl' : 'uz-Latn') : 'en';
     document.documentElement.lang = S.lang;
     // editorConfig.customization.uiTheme, ONLYOFFICE names (theme-dark, theme-classic-light, default-dark, ...): wins over ?theme= and the OS; any other name keeps them
-    var ui = /-(dark|light)$/.exec(String((cfg.editorConfig && cfg.editorConfig.customization && cfg.editorConfig.customization.uiTheme) || ''));
-    if (ui) { th = ui[1]; applyTheme(); }
+    // theme-white and theme-night are the public defaults for light and dark without the suffix
+    var un = String((cfg.editorConfig && cfg.editorConfig.customization && cfg.editorConfig.customization.uiTheme) || '');
+    var ui = un === 'theme-white' ? 'light' : un === 'theme-night' ? 'dark' : (/-(dark|light)$/.exec(un) || [])[1];
+    if (ui) { th = ui; applyTheme(); }
     var s;
     try {
       var r = await fetch('/ds/session', { method: 'POST', credentials: 'omit', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: origin, config: cfg }) });
