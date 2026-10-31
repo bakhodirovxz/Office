@@ -675,7 +675,7 @@ impl Ctx {
                         .iter()
                         .map(suite_core::history::Version::to_json)
                         .collect();
-                    let verified = h.verify(p);
+                    let verified = h.verify_quick(p); // sizes only: hashing every version blocks (F11)
                     Ok(json!({"path": path, "items": items, "verified": verified.is_ok(), "problem": verified.err()}))
                 })
             }
