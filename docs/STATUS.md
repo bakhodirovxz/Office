@@ -1399,3 +1399,25 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **F16/F17/F11/F21:** pipe squatter no longer stops a plain launch (test); cookie name per launch (tests); History IPC on a worker and a size-only listing (test); converter listeners before the first await (Playwright 13 passed, 1 skipped).
 - **Tests:** `suite-desktop` 23 lib + 3 host + others, `suite-serve` 26, `suite-core history` 9, `office-brand` 4, converter spec 13/13 (+1 skipped screenshots), all green.
 - **Not checked:** an install or upgrade of the MSI (elevation); a real WebView window for F11/F16; a 2 GB History document; the cause of the F21 host-run losses.
+### Phase 4: translation gaps in Sheets, Slides and PDF, Slides tooltips, a test that was not broken (branch `p4-l10n`, 2026-10-31)
+- **Cause of the Russian gaps.** Slides has no upstream Russian, Sheets only 398 upstream rows and PDF 2,318: every other row
+  had an empty `ru` and showed English. Filled in `i18n/*.tsv` (status `reviewed:agent-sonnet:2026-10-31`, never an owner
+  review; drafted by sonnet sub-agents against the glossary, MS Office ru terms): Sheets 447 rows, Slides 1,118 rows (the 15
+  obsolete rows left empty), PDF 312 rows (incl. 8 three-form plurals). Placeholders and `\n` checked per row by script.
+  Docs not asked for (43 rows still empty). uz-Latn and uz-Cyrl had no gaps (`cargo xt i18n coverage`: 1 todo row per app,
+  none visible); the four Slides strings that say "DeckCraft" stay uz todo (brand text).
+- **"Grayscale" in Sheets ru (and 493 other shared rows).** The shared row had ru only for Docs (`ru_apps = wordcraft`), a
+  restriction that exists to keep the upstream round trip exact. `export.rs::resolve` now applies `ru_apps` only under the
+  owner-only policy used by `roundtrip`; real builds lend the row to every app that has it (Sheets ru export 398 to 996 rows).
+- **Slides tooltips.** Not in the catalog problem: the shared widget sinks (`icon_toggle`, `color_split`, swatches, gallery,
+  shape/freeform/icon/warp/table-style tiles, selection pane buttons, thesaurus, corner hint) passed literals unchanged.
+  Carried patch `deckcraft/0155` wraps them in `i18n::t`. Computed labels (preset names, icon names) translate only where the
+  catalog has the text; not audited one by one.
+- **`backstage::tests::every_page_renders` is a Slides (deckcraft ui-egui) test, not Docs, and nothing broke.** It passes with
+  the overlay off (19/19 `backstage::tests`) and fails with the overlay on because it looks for the hard-coded "About
+  DeckCraft" while the overlay shows the product name. It is the existing quarantine entry (`ci/quarantine.toml`,
+  class brand-overlay, since 2026-10-18); the test is what is wrong, left as is.
+- **Checks.** `cargo xt i18n lint` 0 errors, `roundtrip` OK, `check-stale` OK, `extract --dry-run` 0 changes, `check` OK,
+  xtask i18n unit tests 59/59. Slides `office_overlay_tests` + `russian_*` 13/13 (overlay on).
+- **Not checked.** Screenshots in ru/uz, quality of the 1,877 Russian strings by a native reader, PDF overlay tests, size
+  budgets (no web app rebuilt), Docs.
