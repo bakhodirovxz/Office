@@ -550,8 +550,8 @@ test('desktop mode: the History panel lists, views, restores after a confirm, co
   expect((await sent()).filter((m: any) => m.type === 'history_forget')).toHaveLength(0);
   await page.locator('#hist-forget').click();
   await fd.getByRole('button', { name: txt('en', 'hist.forget.ok') }).click();
-  expect((await sent()).filter((m: any) => m.type === 'history_forget')).toEqual([{ type: 'history_forget', path: KEPT }]);
   await expect(page.locator('#hist-msg')).toHaveText(txt('en', 'hist.forgot').replace('{name}', 'Hisobot.docx'));
+  expect((await sent()).filter((m: any) => m.type === 'history_forget')).toEqual([{ type: 'history_forget', path: KEPT }]);
   await expect(page.locator('#hist-ver-sec')).toBeHidden();
   await expect(page.locator('#hist-docs li')).toHaveCount(0);
   expect(w.problems).toEqual([]);
