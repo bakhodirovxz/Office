@@ -80,7 +80,9 @@ impl CommandHook for Layer {
             return run(s);
         }
         let name = s.active().map(|d| d.title()).unwrap_or_default();
-        x.issue(event, &name, |stamp| make_copy(s, run, &kind, stamp))
+        // a copy that cannot carry the stamp (no free shape id left) is still made, and the audit line says it was not stamped
+        let event = if kind.text || can_stamp(s) { event.to_string() } else { format!("{event}_unstamped") };
+        x.issue(&event, &name, |stamp| make_copy(s, run, &kind, stamp))
     }
 
     fn after(&self, id: &str, s: &Session, _params: &Json, result: &Result<Json>) {
@@ -152,6 +154,9 @@ fn has_grif(s: &Session) -> bool {
 fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> Result<Json>, kind: &Kind, stamp: &Stamp) -> Result<Json> {
     let line = if kind.ascii { stamp.ascii_line() } else { stamp.line() };
     let swapped = if kind.text { None } else { stamp_slides(s, &line) };
+    if !kind.text && swapped.is_none() {
+        eprintln!("office: XDFU: no free shape id, the copy is left unstamped");
+    }
     let r = run(s);
     if let Some((orig, stamped)) = swapped
         && let Ok(d) = s.doc_mut()
@@ -170,6 +175,11 @@ fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> Result<Json>,
         stamp_output(&mut out, &line)?;
     }
     Ok(out)
+}
+
+/// `stamp_slides` has a shape id for every slide.
+fn can_stamp(s: &Session) -> bool {
+    s.active().is_some_and(|d| d.doc.next_id.max(1).checked_add(d.doc.slides.len() as u32).is_some())
 }
 
 /// A red bold text box of `size` pt along the bottom of the slide.
@@ -207,15 +217,18 @@ fn stamp_slides(s: &mut Session, line: &str) -> Option<(Arc<Presentation>, Arc<P
     Some((orig, stamped))
 }
 
-/// An outline copy: the line goes on top of the produced file (`path`) or bytes (`data`, base64). A copy that cannot be stamped is
-/// deleted rather than left unmarked.
+/// An outline copy: the line goes on top of the produced file (`path`) or bytes (`data`, base64). Nothing is ever refused: a copy that
+/// cannot be stamped is kept as it was produced and the reason goes to stderr (a documented limit of XDFU).
 fn stamp_output(out: &mut Json, line: &str) -> Result<()> {
-    let fail = |m: String| EngineError::Internal("office.xdfu".into(), m);
     if let Some(b64) = out.get("data").and_then(Json::as_str) {
-        let old = deckcraft_engine::cmd::base64_decode(b64).ok_or_else(|| fail("bad base64".into()))?;
-        let new = xdfu_core::stamp_text(&old, "txt", line).map_err(fail)?;
-        out["data"] = json!(deckcraft_engine::cmd::base64_encode(&new));
-        out["bytes"] = json!(new.len());
+        let old = deckcraft_engine::cmd::base64_decode(b64).ok_or_else(|| EngineError::Internal("office.xdfu".into(), "bad base64".into()))?;
+        match xdfu_core::stamp_text(&old, "txt", line) {
+            Ok(new) => {
+                out["data"] = json!(deckcraft_engine::cmd::base64_encode(&new));
+                out["bytes"] = json!(new.len());
+            }
+            Err(e) => eprintln!("office: XDFU stamp of the outline download failed, the copy is left unstamped: {e}"),
+        }
     } else if let Some(path) = out.get("path").and_then(Json::as_str).map(str::to_string) {
         let done = std::fs::read(&path)
             .map_err(|e| e.to_string())
@@ -223,10 +236,7 @@ fn stamp_output(out: &mut Json, line: &str) -> Result<()> {
             .and_then(|new| std::fs::write(&path, &new).map(|()| new.len()).map_err(|e| e.to_string()));
         match done {
             Ok(n) => out["bytes"] = json!(n),
-            Err(e) => {
-                let _ = std::fs::remove_file(&path);
-                return Err(fail(e));
-            }
+            Err(e) => eprintln!("office: XDFU stamp of {path} failed, the copy is left unstamped: {e}"),
         }
     }
     Ok(())
@@ -267,4 +277,24 @@ fn insert_grif(s: &mut Session, p: &Json) -> Result<Json> {
         })?;
         Ok(json!({"grif": grif, "copy": st.copy}))
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_outline_copy_that_cannot_be_stamped_is_kept_and_not_refused() {
+        let gone = std::env::temp_dir().join(format!("office-stamp-output-{}.txt", std::process::id()));
+        let _ = std::fs::remove_file(&gone);
+        let mut out = json!({"path": gone.to_string_lossy(), "bytes": 3});
+        assert!(stamp_output(&mut out, "XDFU copy 1").is_ok());
+        assert_eq!(out["bytes"], 3);
+        assert!(!gone.exists());
+        std::fs::write(&gone, "body").unwrap();
+        let mut out = json!({"path": gone.to_string_lossy()});
+        stamp_output(&mut out, "XDFU copy 1").unwrap();
+        assert_eq!(std::fs::read_to_string(&gone).unwrap(), "XDFU copy 1\nbody");
+        let _ = std::fs::remove_file(&gone);
+    }
 }

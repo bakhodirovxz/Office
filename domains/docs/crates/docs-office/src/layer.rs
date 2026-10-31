@@ -197,10 +197,20 @@ fn copy_kind(s: &Session, id: &str, p: &Value) -> Option<(&'static str, String)>
         "file.printPdf" => Some(("print", "pdf".into())),
         "file.exportPdf" => Some(("export", "pdf".into())),
         "file.exportPng" => Some(("export", "png".into())),
-        "file.saveAs" | "file.saveTemplate" => Some(("save_as", ext)),
-        // The working file itself is not a copy; a save to another path is.
-        "file.save" if s.path.as_deref() != Some(Path::new(path)) => Some(("save_as", ext)),
+        "file.saveTemplate" => Some(("save_as", ext)),
+        // The working file itself is not a copy (Save As onto it included); a save to another path is.
+        "file.save" | "file.saveAs" if !s.path.as_deref().is_some_and(|own| same_path(own, Path::new(path))) => Some(("save_as", ext)),
         _ => None,
+    }
+}
+
+/// The same file by name: Windows paths ignore case and take `/` for `\\`.
+fn same_path(a: &Path, b: &Path) -> bool {
+    if cfg!(windows) {
+        let n = |p: &Path| p.to_string_lossy().replace('/', "\\").to_lowercase();
+        n(a) == n(b)
+    } else {
+        a == b
     }
 }
 
@@ -235,19 +245,28 @@ fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> CmdResult, pa
     let r = run(s);
     s.doc.settings.watermark = before;
     let out = r?;
-    if text && let Some(path) = params.get("path").and_then(Value::as_str) {
-        let ext = if ext == "htm" { "html" } else { ext };
-        // a copy that cannot be stamped is deleted rather than left unmarked
-        let done = std::fs::read(path)
-            .map_err(|e| e.to_string())
-            .and_then(|old| xdfu_core::stamp_text(&old, ext, &line))
-            .and_then(|new| std::fs::write(path, new).map_err(|e| e.to_string()));
-        if let Err(e) = done {
-            let _ = std::fs::remove_file(path);
-            return Err(CmdError::Failed(format!("XDFU stamp: {e}")));
-        }
+    if text && let Some(path) = output_path(&out, params) {
+        stamp_written(path, ext, &line);
     }
     Ok(out)
+}
+
+/// The file the command really wrote (it reports it), else the one that was asked for.
+pub(crate) fn output_path<'a>(out: &'a Value, params: &'a Value) -> Option<&'a str> {
+    out.get("path").or_else(|| params.get("path")).and_then(Value::as_str)
+}
+
+/// Puts the stamp line on top of a text copy. Nothing is ever refused: a copy that cannot be stamped is kept as it was written and the
+/// reason goes to stderr (a documented limit of XDFU).
+pub(crate) fn stamp_written(path: &str, ext: &str, line: &str) {
+    let ext = if ext == "htm" { "html" } else { ext };
+    let done = std::fs::read(path)
+        .map_err(|e| e.to_string())
+        .and_then(|old| xdfu_core::stamp_text(&old, ext, line))
+        .and_then(|new| std::fs::write(path, new).map_err(|e| e.to_string()));
+    if let Err(e) = done {
+        eprintln!("office: XDFU stamp of {path} failed, the copy is left unstamped: {e}");
+    }
 }
 
 fn insert_grif(s: &mut Session, p: &Value) -> CmdResult {

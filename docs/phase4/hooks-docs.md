@@ -45,7 +45,11 @@ No upstream patch except `wordcraft/0123` (AutoSave passes `{"autosave": true}` 
   store in wasm): no snapshots and no stamp there. A save-as binds the document to the copy, so its next plain save rewrites that file without the
   stamp. `edit.copy` / `edit.cut` and the read-mode Copy key carry no mark (clipboard text has no place for one) and are not blocked. Screenshots and
   the OS clipboard are outside the editor. A grif below the 25th paragraph is not recognised. The save-as dialog's `file.save` with no path only
-  asks for a path and makes no copy.
+  asks for a path and makes no copy. `mailings.finish {path}` (merge output) is not stamped: the command is not in the copy list. The desktop host's in-window
+  editors (the web build of each editor, run inside the WebView) install no layer, so what they save or export is not stamped either; only
+  the native editor windows are. A text copy (txt, md, html) whose stamp cannot be written is kept as it was produced, with the
+  reason on stderr: nothing is ever refused, so XDFU never deletes a copy or fails a command. The audit line of such a copy says the copy was
+  issued, not that it carries the stamp (Slides records `<event>_unstamped` when no shape id is left for the stamp box).
 - Tests: `layer_tests.rs` (`save_snapshot_list_restore_round_trip`, `xdfu_off_registers_nothing`, `watermark_carries_copy_number_and_user_and_nothing_is_refused`,
   `insert_grif_writes_a_right_aligned_paragraph_with_the_copy_number`, `version_history_opens_the_panel_only_for_a_saved_document`); the PDF text is read
   with hayro-syntax through each font's ToUnicode map, the same way as in the Slides test.

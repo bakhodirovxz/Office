@@ -1554,3 +1554,6 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (static check only). `build-msi.ps1` now checks the VC runtime imports with dumpbin on every build and has `-Out`. `msi-test.ps1`:
   recommended-handlers filter, `AppActivate` check, tracked PDF fixture. Test MSI (not installed) `E:\office-target\p4-msi-test\`,
   SHA-256 `DEC278B6...A887`. Not run: install, upgrade, the msi-test changes.
+### Phase 5 XDFU gate fixes F18, F19 (2026-10-31, branch `p5-xdfu`, `ca62fce`)
+- **Done.** Docs Save As onto the working path is no copy (case-insensitive on Windows); text stamping never refuses or deletes a copy (Docs, gridcraft 0143, deckcraft 0143 amended in place); Docs stamps the reported output path; deckcraft logs `<event>_unstamped` when no shape id is left; `mailings.finish` and the in-window editors added to the limits in `docs/phase4/hooks-docs.md`. XDFU stays off by default; F4, F5 and m13 still gate switching it on.
+- **Not checked:** Sheets and Slides still compare the working path exactly (case); a real Windows drive-case run of Save As.

@@ -232,3 +232,17 @@ fn insert_grif_adds_a_box_and_takes_a_copy_number() {
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)], "undoable");
 }
+
+#[test]
+fn a_copy_that_cannot_be_stamped_is_made_and_recorded_as_unstamped() {
+    let _g = start();
+    let mut s = deck("XDFU");
+    // every shape id is in use: the stamp box cannot be added, the copy is still made
+    std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc).next_id = u32::MAX;
+    let before = lines();
+    export(&mut s, "full.pdf", json!({"format": "pdf"})).unwrap();
+    assert!(!pdf_text(std::fs::read(path("full.pdf")).unwrap()).contains("XDFU copy "));
+    assert_eq!(lines(), before + 1);
+    let last = std::fs::read_to_string(log()).unwrap().lines().last().unwrap().to_string();
+    assert!(last.contains("\"export_unstamped\""), "{last}");
+}
