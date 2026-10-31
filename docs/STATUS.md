@@ -1422,8 +1422,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   and ru, new Docs document (Times New Roman 12 in the font box, A4 ruler), Sheets print page uz-Latn and ru ("A4 · Kitob"
   above Page Setup), new Sheets workbook (Times New Roman 12). Sheets ru still shows "Grayscale" in English (a gridcraft ru
   catalog gap, not touched here). Slides and PDF were not built or photographed (E: fell under 7 GB while other agents built; their defaults are covered by the tests above).
-- **Not done / open:** Sheets' default column width stays 64 px (Excel gives about 72 px for a Times New Roman 12 Normal
-  font, so columns look narrower here than in Excel for new workbooks); sheets made by analysis tools (pivot, solver,
+- **Not done / open:** (default column width: answered by gridcraft/0154, see the last section); sheets made by analysis tools (pivot, solver,
   forecast) keep Letter and 20 px rows; A4 follows the interface language, not the units (an en-US Windows with a uz
   interface still shows inches in Docs).
 - **MSI rebuilt from phase-4 `2bb7c0d` (2026-10-29)**, with the alphabet (always 2026), recovery, tables, PDF->Word,
@@ -1557,3 +1556,16 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 ### Phase 5 XDFU gate fixes F18, F19 (2026-10-31, branch `p5-xdfu`, `ca62fce`)
 - **Done.** Docs Save As onto the working path is no copy (case-insensitive on Windows); text stamping never refuses or deletes a copy (Docs, gridcraft 0143, deckcraft 0143 amended in place); Docs stamps the reported output path; deckcraft logs `<event>_unstamped` when no shape id is left; `mailings.finish` and the in-window editors added to the limits in `docs/phase4/hooks-docs.md`. XDFU stays off by default; F4, F5 and m13 still gate switching it on.
 - **Not checked:** Sheets and Slides still compare the working path exactly (case); a real Windows drive-case run of Save As.
+
+## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
+- Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
+  font's maximum digit width plus 5 px padding, rounded up to 8 px. Digit width: Times New Roman 0.5 em (12 pt = 16 px gives 8 px);
+  every other font keeps the 7 px the model already assumes (Calibri 11, Excel's value). No other font table was invented.
+- Calibri 11: 64 px before and after. Times New Roman 12: 64 px before, 72 px after (new workbooks, and xlsx files in that font
+  without `defaultColWidth`).
+- Stored widths (`defaultColWidth` and `<col width>`, read and write) use that same digit width (ECMA-376 18.3.1.13), so a
+  Times New Roman 12 column and the default agree; Calibri 11 files convert exactly as before (7 px). Note a stored width includes
+  the padding: 9.0 reads as 72 px in Times New Roman 12, while 8.43 reads as 67 px. `.xls` column widths still use 7 px. The
+  writer omits `defaultColWidth` when the width equals what a reader derives from the Normal font.
+- Tests: engine lib (new-workbook assert in `new_workbooks_are_times_new_roman_12_on_the_interface_paper`), xlsx lib
+  `default_col_width_follows_the_normal_font`. Not checked: on-screen look, Excel opening a saved TNR 12 file.

@@ -338,6 +338,7 @@ impl Session {
         for sh in wb.sheets.iter_mut() {
             let sh = Arc::make_mut(sh);
             sh.default_row_height = gridcraft_model::NEW_WORKBOOK_ROW_HEIGHT;
+            sh.default_col_width = gridcraft_model::default_col_width_px(gridcraft_model::NEW_WORKBOOK_FONT, gridcraft_model::NEW_WORKBOOK_FONT_SIZE, 8.0);
             sh.print.paper = paper.into();
         }
         self.add_document(DocState::new(wb, None, format!("Book{n}")))

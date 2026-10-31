@@ -169,6 +169,7 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
     let mut rels = Rels::default();
     let Some(sheet) = wb.sheet(si) else { return (String::new(), rels) };
     let nstyles = wb.styles.len() as u32;
+    let mdw = gridcraft_model::max_digit_width(&wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.size);
     let sid = |s: gridcraft_model::StyleId| if s.0 < nstyles { s.0 } else { 0 };
 
     // Table header cells must hold the column names.
@@ -292,8 +293,10 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
     let max_row_outline = sheet.rows.values().map(|r| r.outline).max().unwrap_or(0);
     let max_col_outline = sheet.cols.values().map(|r| r.outline).max().unwrap_or(0);
     s.push_str("<sheetFormatPr");
-    if (sheet.default_col_width - gridcraft_model::DEFAULT_COL_WIDTH).abs() > 0.01 {
-        let _ = write!(s, " defaultColWidth=\"{}\"", num(px_to_col_width(sheet.default_col_width)));
+    // Omitted when it is what a reader derives from the Normal font (so Excel derives the same width itself).
+    let nf = &wb.styles.get(gridcraft_model::StyleId::DEFAULT).font;
+    if (sheet.default_col_width - gridcraft_model::default_col_width_px(&nf.name, nf.size, 8.0)).abs() > 0.01 {
+        let _ = write!(s, " defaultColWidth=\"{}\"", num(px_to_col_width(sheet.default_col_width, mdw)));
     }
     let _ = write!(s, " defaultRowHeight=\"{}\"", num(px_to_pt(sheet.default_row_height)));
     if (sheet.default_row_height - gridcraft_model::DEFAULT_ROW_HEIGHT).abs() > 0.01 {
@@ -314,7 +317,7 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
         let flush = |s: &mut String, r: (u32, u32, LineInfo)| {
             let (a, b, i) = r;
             let w = i.size.unwrap_or(sheet.default_col_width);
-            let _ = write!(s, "<col min=\"{}\" max=\"{}\" width=\"{}\"", a + 1, b + 1, num(px_to_col_width(w)));
+            let _ = write!(s, "<col min=\"{}\" max=\"{}\" width=\"{}\"", a + 1, b + 1, num(px_to_col_width(w, mdw)));
             if let Some(st) = i.style {
                 let _ = write!(s, " style=\"{}\"", sid(st));
             }

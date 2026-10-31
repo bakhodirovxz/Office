@@ -277,25 +277,25 @@ pub fn file_function_name(name: &str) -> Option<String> {
 // ---------------------------------------------------------------- units
 
 /// Column width as stored in a file (characters including padding) → model width (px).
-pub fn col_width_to_px(w: f64) -> f32 {
+pub fn col_width_to_px(w: f64, mdw: f64) -> f32 {
     if !w.is_finite() || w <= 0.0 {
         return 0.0;
     }
     let w = w.min(255.0);
-    (((256.0 * w + (128.0f64 / 7.0).trunc()) / 256.0) * 7.0).trunc() as f32
+    (((256.0 * w + (128.0f64 / mdw).trunc()) / 256.0) * mdw).trunc() as f32
 }
 
 /// Model width (px) → stored column width.
-pub fn px_to_col_width(px: f32) -> f64 {
+pub fn px_to_col_width(px: f32, mdw: f64) -> f64 {
     let px = (px.max(0.0) as f64).round().min(1790.0);
-    let back = |w: f64| col_width_to_px(w) as f64;
-    let chars = if px > 12.0 { ((px - 5.0) / 7.0 * 100.0 + 0.5).trunc() / 100.0 } else { px / 12.0 };
-    let w = ((chars * 7.0 + 5.0) / 7.0 * 256.0).trunc() / 256.0;
+    let back = |w: f64| col_width_to_px(w, mdw) as f64;
+    let chars = if px > 12.0 { ((px - 5.0) / mdw * 100.0 + 0.5).trunc() / 100.0 } else { px / 12.0 };
+    let w = ((chars * mdw + 5.0) / mdw * 256.0).trunc() / 256.0;
     if back(w) == px {
         return w;
     }
     // Smallest stored width that reads back as `px`.
-    let s = (px * 256.0 / 7.0 - 18.0).ceil().max(0.0);
+    let s = (px * 256.0 / mdw - (128.0f64 / mdw).trunc()).ceil().max(0.0);
     s / 256.0
 }
 
@@ -317,10 +317,10 @@ mod tests {
 
     #[test]
     fn widths() {
-        assert_eq!(col_width_to_px(9.140625), 64.0);
-        assert_eq!(px_to_col_width(64.0), 9.140625);
+        assert_eq!(col_width_to_px(9.140625, 7.0), 64.0);
+        assert_eq!(px_to_col_width(64.0, 7.0), 9.140625);
         for px in 0..400 {
-            assert_eq!(col_width_to_px(px_to_col_width(px as f32)), px as f32, "px {px}");
+            assert_eq!(col_width_to_px(px_to_col_width(px as f32, 7.0), 7.0), px as f32, "px {px}");
         }
         assert_eq!(pt_to_px(15.0), 20.0);
         assert_eq!(px_to_pt(20.0), 15.0);

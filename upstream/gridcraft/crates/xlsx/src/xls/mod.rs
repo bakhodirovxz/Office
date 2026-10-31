@@ -697,7 +697,7 @@ fn sheet_record(rec: &Record<'_>, st: &mut SheetState<'_>, budget: &mut Budget, 
                 return Ok(());
             }
             let mut info = LineInfo::default();
-            let px = col_width_to_px(f64::from(width) / 256.0);
+            let px = col_width_to_px(f64::from(width) / 256.0, 7.0);
             if flags & 0x0002 != 0 || px != st.sheet.default_col_width {
                 info.size = Some(px);
             }
