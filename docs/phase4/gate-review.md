@@ -132,6 +132,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
 - **F11. History IPC runs on the WebView UI thread** (`host.rs:499-507`). Listing verifies by hashing every live version
   (`history.rs:538-546`, up to the 2 GB cap); the page gives up after 20 s (`history.js:25`) while the host may still
   finish a restore, so the user may retry. Fix: run `history_*` on a worker as `Pick` does; list with size checks only.
+  Fixed in `f488c00`: every `history_*` IPC message runs on a worker thread (`host.rs`, the IPC handler) and answers through the event-loop proxy; the listing uses `Store::verify_quick` (presence and size, no hashing; test in `a_tampered_line_is_detected`). Restore, copy and view still hash what they read. Not measured on a 2 GB document; not run in a real window.
 - **F12. Restoring while the document is open in our editor is silently undone** by the editor's next save (Sheets
   autosaves every ~2 s while dirty). Both states stay in history. Fix (smallest): "close the document first" in
   `hist.restore.body`.
@@ -155,9 +156,11 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
 - **F16. Another local user can stop the host from starting** by creating the predictable pipe name first
   (`host.rs:352-357`, `:409-411`): `send` correctly refuses the foreign server, then a launch with no files returns an
   error and no window opens. Fix: carry on as a full instance with no pipe server.
+  Fixed in `f488c00`: `hand_over` returns `CarryOn` when nobody answers and there is nothing to open, and the host runs with no pipe server (`host.rs`, test `a_squatted_pipe_name_does_not_stop_a_launch`). With files it still opens them in-process and exits, as before.
 - **F17. Browser fallback only: the `k` cookie is not port-scoped** (`services/suite-serve/src/lib.rs:201`): a page of
   another local user on another 127.0.0.1 port is same-site and can overwrite it (DoS) or ride it to our static files and
   converter. The WebView path is unaffected (no other origin loads in it). Fix: a per-launch cookie name.
+  Fixed in `f488c00`: the cookie is `k<hash of the launch key>` (`suite_serve::cookie_name`); the old `k=` is no longer accepted (tests `desktop_key_gates_every_request`, desktop `tests/host.rs`, fixed in `39d8a52`).
 - **F18. XDFU: Docs Save As onto its own working path is treated as a copy** (`docs-office/src/layer.rs:135`, no
   `path == s.path` check; Sheets and Slides have it), and the `file.save` comparison at `:137` is case-sensitive on Windows.
 - **F19. XDFU: text-output stamping fails closed** (the copy is deleted and the command fails: `layer.rs:173-183`,
@@ -172,6 +175,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   `msi-test.ps1`: OPENWITH uses filter 0 (all handlers) where the right-click menu shows the recommended ones (`:164`),
   `AppActivate('Рабочий стол')` is not checked before keystrokes (`:181-184`), no try/finally around install..uninstall,
   the editors run elevated in the test, and the PDF fixture comes from git-ignored `spikes/` (`:37`).
+  Fixed in `f488c00` (partly): (1) `MajorUpgrade AllowSameVersionUpgrades="yes"` with `ProductCode="*"` (a new code per build), so a rebuilt MSI replaces the installed one with no uninstall; (2) `UpgradeCode` is frozen in `brand.toml [product] upgrade_code` (the value the pilot MSIs already carry, `{2EA291EA-...}`), the script no longer derives either code; (3) `build-msi.ps1 -SignStore` defaults to `CurrentUser` like `sign.ps1` and `signing.md`; (4) try/finally around install..uninstall in `msi-test.ps1`; (5) `wix msi validate` runs (below). ICE result: ICE43/ICE57 errors on the five shortcut components (non-advertised shortcuts keyed on a file; a per-machine install with Start-menu shortcuts), ICE60 warnings, and ICE61 (expected: same-version upgrades). Still open: ICE43/57, the VC runtime list check, the OPENWITH filter, the `AppActivate` check, elevated editors, the `spikes/` fixture. Not run: any install or upgrade (needs elevation).
 - **F21. The converter page drops a file chosen before its script has attached its listeners.** Found while scripting the
   desktop flow: right after navigating to `/convert/`, `setInputFiles` was lost in 4 of 6 host runs (the page showed "no
   files yet", `#o-to` empty and disabled); waiting for the page's load plus 3 s made 2 of 2 runs pass. `init()` attaches
@@ -181,6 +185,7 @@ radius; **info** = recorded, no action needed now. "XDFU" = matters only when `x
   reliable (the event can also fire before the script runs at all), so I reverted that change; the fix belongs in the specs
   (wait for the page to be initialised).
   Fixed in `5905293`: product-side guard, after `init()` has attached its listeners it adds any `#pick.files` already chosen (`app.js`, after `await start()`), which also covers the event that fired before the script ran.
+  Further in `f488c00`: all listeners are now attached before the first `await` (the i18n fetch moved below them), so a file chosen while the catalog or the format list loads is added at once and `start()` renders again; the post-`start()` guard stays for a change event that fired before the script ran. New spec `a file chosen before the page texts arrive...` (`converter.spec.ts`, i18n delayed 1.5 s) passes, but it also passes with the earlier guard alone, so it is regression cover, not proof. The cause of the 4-in-6 host losses is still not found.
 
 - **F22. Slides' window title has no file name** (owner's MSI run: `hoshiya-slides: title [Hoshiya Slides]`, also for the
   second window), unlike Docs, Sheets and PDF. With two presentations open the taskbar cannot tell them apart. Open; a
