@@ -27,22 +27,33 @@
     </Feature>
   </Package>
   <Fragment><ComponentGroup Id="Core" Directory="INSTALLFOLDER">
-    <Component Id="C_host"><File Id="F_host" Source="$(var.Stage)\hoshiya.exe" KeyPath="yes">
-      <Shortcut Id="S_host" Directory="AppMenuDir" Name="Hoshiya" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya" /></Shortcut>
-    </File><RemoveFolder Id="R_menu" Directory="AppMenuDir" On="uninstall" /></Component>
+    <Component Id="C_host"><File Id="F_host" Source="$(var.Stage)\hoshiya.exe" KeyPath="yes" /></Component>
     <Component Id="C_serve"><File Id="F_serve" Source="$(var.Stage)\hoshiya-serve.exe" KeyPath="yes" /></Component>
-    <Component Id="C_docs"><File Id="F_docs" Source="$(var.Stage)\hoshiya-docs.exe" KeyPath="yes">
-      <Shortcut Id="S_docs" Directory="AppMenuDir" Name="Hoshiya Docs" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Docs" /></Shortcut>
-    </File></Component>
-    <Component Id="C_sheets"><File Id="F_sheets" Source="$(var.Stage)\hoshiya-sheets.exe" KeyPath="yes">
-      <Shortcut Id="S_sheets" Directory="AppMenuDir" Name="Hoshiya Sheets" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Sheets" /></Shortcut>
-    </File></Component>
-    <Component Id="C_slides"><File Id="F_slides" Source="$(var.Stage)\hoshiya-slides.exe" KeyPath="yes">
-      <Shortcut Id="S_slides" Directory="AppMenuDir" Name="Hoshiya Slides" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Slides" /></Shortcut>
-    </File></Component>
-    <Component Id="C_pdf"><File Id="F_pdf" Source="$(var.Stage)\hoshiya-pdf.exe" KeyPath="yes">
-      <Shortcut Id="S_pdf" Directory="AppMenuDir" Name="Hoshiya PDF" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Pdf" /></Shortcut>
-    </File></Component>
+    <Component Id="C_docs"><File Id="F_docs" Source="$(var.Stage)\hoshiya-docs.exe" KeyPath="yes" /></Component>
+    <Component Id="C_sheets"><File Id="F_sheets" Source="$(var.Stage)\hoshiya-sheets.exe" KeyPath="yes" /></Component>
+    <Component Id="C_slides"><File Id="F_slides" Source="$(var.Stage)\hoshiya-slides.exe" KeyPath="yes" /></Component>
+    <Component Id="C_pdf"><File Id="F_pdf" Source="$(var.Stage)\hoshiya-pdf.exe" KeyPath="yes" /></Component>
+    <Component Id="SC_host" Guid="*">
+      <Shortcut Id="S_host" Directory="AppMenuDir" Name="Hoshiya" Target="[INSTALLFOLDER]hoshiya.exe" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya" /></Shortcut>
+      <RemoveFolder Id="R_menu" Directory="AppMenuDir" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Hoshiya\Shortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <Component Id="SC_docs" Guid="*">
+      <Shortcut Id="S_docs" Directory="AppMenuDir" Name="Hoshiya Docs" Target="[INSTALLFOLDER]hoshiya-docs.exe" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Docs" /></Shortcut>
+      <RegistryValue Root="HKCU" Key="Software\Hoshiya\Docs\Shortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <Component Id="SC_sheets" Guid="*">
+      <Shortcut Id="S_sheets" Directory="AppMenuDir" Name="Hoshiya Sheets" Target="[INSTALLFOLDER]hoshiya-sheets.exe" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Sheets" /></Shortcut>
+      <RegistryValue Root="HKCU" Key="Software\Hoshiya\Sheets\Shortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <Component Id="SC_slides" Guid="*">
+      <Shortcut Id="S_slides" Directory="AppMenuDir" Name="Hoshiya Slides" Target="[INSTALLFOLDER]hoshiya-slides.exe" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Slides" /></Shortcut>
+      <RegistryValue Root="HKCU" Key="Software\Hoshiya\Slides\Shortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <Component Id="SC_pdf" Guid="*">
+      <Shortcut Id="S_pdf" Directory="AppMenuDir" Name="Hoshiya PDF" Target="[INSTALLFOLDER]hoshiya-pdf.exe" WorkingDirectory="INSTALLFOLDER" Advertise="no"><ShortcutProperty Key="System.AppUserModel.ID" Value="Hoshiya.Pdf" /></Shortcut>
+      <RegistryValue Root="HKCU" Key="Software\Hoshiya\Pdf\Shortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
     <Component Id="C_docs_diff"><File Id="F_docs_diff" Source="$(var.Stage)\docs-diff.exe" KeyPath="yes" /></Component>
     <Component Id="C_sheets_diff"><File Id="F_sheets_diff" Source="$(var.Stage)\sheets-diff.exe" KeyPath="yes" /></Component>
     <Component Id="C_brand"><File Id="F_brand" Source="$(var.Stage)\brand.toml" KeyPath="yes" /></Component>

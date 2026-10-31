@@ -6,6 +6,10 @@
 # Reversible: the only per-user state it touches is HKCU ...\FileExts\.docx (UserChoice written by the SHELL when the dialog is driven);
 # the dialog is driven only when .docx has no UserChoice yet, and that UserChoice is deleted again and checked. It never writes UserChoice
 # itself. The shell's OpenWithList/MuiCache entries from opening files stay (reported as info). Screenshots stay in -Work: review them first.
+# Elevation note: the editors are started from this elevated session, so they run elevated too (a medium-integrity launch from an elevated
+# shell needs a helper such as `runas /trustlevel` or a scheduled task, which would change what is measured). Results are valid for the registry,
+# the command lines and the windows; they do not show the medium-integrity behaviour of an ordinary double-click.
+# Fixtures are tracked files only (docs/phase4/wp23/fixtures for the PDF).
 # Exit code = number of failed checks (3 = not elevated, 2 = bad input).
 param(
   [Parameter(Mandatory)][string]$Msi,
@@ -39,7 +43,7 @@ $apps = @(
   @{ k = 'docs';   test = 'docx'; file = 'Буйруқ 1.docx';    second = 'Ikkinchi hujjat.docx'; src = 'docs\phase0\mobile-b\d-saved-desktop.docx';  ext = 'docx docm dotx dotm doc dot odt rtf txt md markdown html htm' },
   @{ k = 'sheets'; test = 'xlsx'; file = 'Hisobot 2026.xlsx'; second = 'Ikkinchi jadval.xlsx';  src = 'web\shell\templates\tabel.xlsx';               ext = 'xlsx xlsm xltx xltm xls xlt xlsb ods csv tsv' },
   @{ k = 'slides'; test = 'pptx'; file = 'Taqdimot 1.pptx';   second = 'Ikkinchi taqdimot.pptx'; src = 'web\shell\templates\taqdimot.pptx';          ext = 'pptx potx ppsx' },
-  @{ k = 'pdf';    test = 'pdf';  file = 'Ҳисобот 1.pdf';    second = 'Ikkinchi hisobot.pdf';  src = 'spikes\workspace\src\pdfcraft\crates\ui-egui\tests\data\form.pdf'; ext = 'pdf' }
+  @{ k = 'pdf';    test = 'pdf';  file = 'Ҳисобот 1.pdf';    second = 'Ikkinchi hisobot.pdf';  src = 'docs\phase4\wp23\fixtures\namuna-hisobot.pdf'; ext = 'pdf' }
 )
 foreach ($a in $apps) { $s = Sec "apps.$($a.k)"; $a.bin = Key $s 'bin'; $a.aumid = Key $s 'aumid'; $a.data = (Key $s 'data_dir') -replace '/', '\'; $a.progid = "$($a.aumid).Document"; $a.ext = $a.ext -split ' '
   $a.name = [regex]::Match($s, 'names\s*=\s*\{[^}]*\ben\s*=\s*"([^"]*)"').Groups[1].Value }
@@ -174,9 +178,10 @@ foreach ($f in 'dist\shell\index.html', 'dist\docs-web', 'dictionaries\en_US.dic
 # ---- Open with (the shell's own enumeration), and the real dialogs for the screenshots
 Write-Host '== open with'
 foreach ($a in $apps) {
-  $list = [Shell]::Handlers(".$($a.test)", 0)
+  $all = [Shell]::Handlers(".$($a.test)", 0).Count
+  $list = [Shell]::Handlers(".$($a.test)", 1)   # filter 1 = the recommended handlers, what the right-click Open with menu lists
   $mine = @($list | Where-Object { $_ -like "*\$($a.bin).exe|*" -or $_ -like "*|$($a.name)|*" })
-  Write-Host "  .$($a.test): $($list.Count) handlers; ours: $($mine -join '; ')"
+  Write-Host "  .$($a.test): $($list.Count) recommended ($all in all); ours: $($mine -join '; ')"
   Res ($mine.Count -ge 1) "OPENWITH $($a.test)"
 }
 if (-not $NoScreens) {
@@ -191,7 +196,7 @@ if (-not $NoScreens) {
     $ws = New-Object -ComObject Shell.Application
     foreach ($a in @($apps[0])) {
       Start-Process explorer.exe -ArgumentList "/select,`"$(Join-Path $desk $a.file)`""; Start-Sleep -Seconds 4
-      $sh = New-Object -ComObject WScript.Shell; [void]$sh.AppActivate('Рабочий стол'); Start-Sleep -Milliseconds 500
+      $sh = New-Object -ComObject WScript.Shell; if (-not $sh.AppActivate('Рабочий стол')) { throw 'Explorer window not found (AppActivate); keystrokes would go elsewhere' }; Start-Sleep -Milliseconds 500
       $sh.SendKeys('+{F10}'); Start-Sleep -Milliseconds 800; Shot "explorer-menu-$($a.test)"
       $sh.SendKeys('h'); Start-Sleep -Milliseconds 800; $sh.SendKeys('{RIGHT}'); Start-Sleep -Milliseconds 800; Shot "explorer-openwith-submenu-$($a.test)"
       $sh.SendKeys('{ESC}{ESC}{ESC}')

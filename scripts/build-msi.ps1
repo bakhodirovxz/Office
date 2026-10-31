@@ -1,11 +1,12 @@
 # Build the suite MSI (PLAN phase 4, WP14, 7.1-7.2): stage the MSVC release builds under the brand's exe names, generate
 # packaging/windows/suite.wxs and default-associations.xml from brand/brand.toml, run WiX 5.0.2 (pinned, scripts/tools.lock).
 # Nothing here installs anything. The product name, exe names, AUMIDs and the codes all come from brand.toml.
-#   powershell -File scripts/build-msi.ps1 [-Target E:\office-target\p1] [-Wix <wix.exe>] [-SignThumbprint <sha1>]
+#   powershell -File scripts/build-msi.ps1 [-Target E:\office-target\p1] [-Out <dir>] [-Wix <wix.exe>] [-SignThumbprint <sha1>]
 # Inputs: `scripts/build.sh all all --release --msvc` ($Target\msvc), the web dists + `scripts/shell-dist.sh` ($Dist), `cargo xt overlay all` ($Target\overlay).
 param(
   [string]$Target = 'E:\office-target\p1',
   [string]$Dist = (Join-Path $Target 'dist'),   # web dists + shell (scripts/shell-dist.sh)
+  [string]$Out = (Join-Path $Target 'msi'),     # stage, wxs build dir and the .msi go here; point it elsewhere to build a test MSI beside an installed one
   [string]$Wix = 'E:\office-tools\wix-5.0.2\PFiles64\WiX Toolset v5.0\bin\wix.exe',
   [string]$VcRedist = ((Get-Item 'E:\VS\BuildTools\VC\Redist\MSVC\14.*\x64\Microsoft.VC143.CRT' | Sort-Object { $_.Parent.Parent.Name } | Select-Object -Last 1).FullName),
   [string]$SignThumbprint,
@@ -13,7 +14,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path "$PSScriptRoot\..").Path
-$out = Join-Path $Target 'msi'; $stage = Join-Path $out 'stage'
+$out = $Out; $stage = Join-Path $out 'stage'
 $pk = Join-Path $repo 'packaging\windows'; New-Item -ItemType Directory -Force $pk | Out-Null
 
 # ---- brand.toml (the few keys we need; the file is flat enough for a section regex)
@@ -60,6 +61,18 @@ foreach ($dll in 'vcruntime140.dll', 'vcruntime140_1.dll') {
   Copy-Item $src $stage; Copy-Item $src "$stage\convert"
 }
 Set-Content "$stage\licenses\vc-redist.txt" "vcruntime140.dll and vcruntime140_1.dll (Microsoft Visual C++ 2015-2022 runtime, $(Split-Path (Split-Path (Split-Path $VcRedist)) -Leaf)) are redistributed unmodified, app-local, as the Visual Studio distributable code (VC\Redist\MSVC). They are Authenticode-signed by Microsoft. Terms: https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution (files under VC\Redist, unmodified, for licensed Visual Studio users); see also NOTICE." -Encoding UTF8
+# Check, every build, that the exes import exactly the VC runtime DLLs we ship (a new msvcp140.dll import would otherwise crash on a clean PC).
+# dumpbin /dependents from the pinned Build Tools; the UCRT (api-ms-win-crt-*, ucrtbase) is part of Windows 10 and is not matched here.
+$dumpbin = Get-ChildItem 'E:\VS\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe' -ErrorAction SilentlyContinue | Select-Object -Last 1
+if (-not $dumpbin) { throw 'dumpbin.exe not found under E:\VS\BuildTools (needed to check the VC runtime imports)' }
+$shipped = @('vcruntime140.dll', 'vcruntime140_1.dll')
+$imports = Get-ChildItem $stage -Recurse -Filter *.exe | ForEach-Object {
+  $deps = & $dumpbin.FullName /nologo /dependents $_.FullName; if ($LASTEXITCODE) { throw "dumpbin failed on $($_.FullName)" }
+  $deps | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -match '^(vcruntime|msvcp|concrt|vccorlib|mfc|vcomp|vcamp)\w*\.dll$' }
+} | Sort-Object -Unique
+if (-not $imports) { throw 'dumpbin found no VC runtime imports at all: the parse is broken, not the exes' }
+$diff = Compare-Object $shipped $imports
+if ($diff) { throw "VC runtime DLL list is out of date (<= shipped, => imported by the exes): $(($diff | ForEach-Object { $_.SideIndicator + ' ' + $_.InputObject }) -join ', ')" }
 Copy-Item (Join-Path $repo 'brand\logo\windows\hoshiya.ico') "$stage\icons\$id.ico"
 Copy-Item (Join-Path $repo 'brand\brand.toml') $stage
 Copy-Item (Src "$Dist\shell") "$stage\dist\shell" -Recurse
@@ -110,14 +123,17 @@ L '  </Package>'
 
 # Core: the host (with the Start menu entries) and the editors
 L '  <Fragment><ComponentGroup Id="Core" Directory="INSTALLFOLDER">'
-L "    <Component Id=`"C_host`"><File Id=`"F_host`" Source=`"`$(var.Stage)\$id.exe`" KeyPath=`"yes`">"
-L "      <Shortcut Id=`"S_host`" Directory=`"AppMenuDir`" Name=`"$(X $name)`" WorkingDirectory=`"INSTALLFOLDER`" Advertise=`"no`"><ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$(X $name)`" /></Shortcut>"
-L '    </File><RemoveFolder Id="R_menu" Directory="AppMenuDir" On="uninstall" /></Component>'
+L "    <Component Id=`"C_host`"><File Id=`"F_host`" Source=`"`$(var.Stage)\$id.exe`" KeyPath=`"yes`" /></Component>"
 L "    <Component Id=`"C_serve`"><File Id=`"F_serve`" Source=`"`$(var.Stage)\$id-serve.exe`" KeyPath=`"yes`" /></Component>"
-foreach ($a in $apps) {
-  L "    <Component Id=`"C_$($a.k)`"><File Id=`"F_$($a.k)`" Source=`"`$(var.Stage)\$($a.bin).exe`" KeyPath=`"yes`">"
-  L "      <Shortcut Id=`"S_$($a.k)`" Directory=`"AppMenuDir`" Name=`"$(X $a.name)`" WorkingDirectory=`"INSTALLFOLDER`" Advertise=`"no`"><ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$(X $a.aumid)`" /></Shortcut>"
-  L '    </File></Component>'
+foreach ($a in $apps) { L "    <Component Id=`"C_$($a.k)`"><File Id=`"F_$($a.k)`" Source=`"`$(var.Stage)\$($a.bin).exe`" KeyPath=`"yes`" /></Component>" }
+# Start menu shortcuts: own components, keyed on an HKCU value: ICE43/ICE57 treat ProgramMenuFolder shortcuts as per-user data even in a per-machine package, and reject an HKLM or file KeyPath (checked with `wix msi validate`, an HKLM KeyPath fails both). New GUIDs ("*"). The value is written for the installing user only; non-advertised shortcuts never trigger repair, so the shortcut files, which sit in the all-users folder, do not depend on it.
+$sc = @(@{ k = 'host'; name = $name; aumid = $name; key = "Software\$name\Shortcut"; file = "$id.exe" }) + @($apps | ForEach-Object { @{ k = $_.k; name = $_.name; aumid = $_.aumid; key = "Software\$($_.data)\Shortcut"; file = "$($_.bin).exe" } })
+foreach ($c in $sc) {
+  L "    <Component Id=`"SC_$($c.k)`" Guid=`"*`">"
+  L "      <Shortcut Id=`"S_$($c.k)`" Directory=`"AppMenuDir`" Name=`"$(X $c.name)`" Target=`"[INSTALLFOLDER]$($c.file)`" WorkingDirectory=`"INSTALLFOLDER`" Advertise=`"no`"><ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$(X $c.aumid)`" /></Shortcut>"
+  if ($c.k -eq 'host') { L '      <RemoveFolder Id="R_menu" Directory="AppMenuDir" On="uninstall" />' }
+  L "      <RegistryValue Root=`"HKCU`" Key=`"$(X $c.key)`" Name=`"installed`" Type=`"integer`" Value=`"1`" KeyPath=`"yes`" />"
+  L '    </Component>'
 }
 foreach ($k in 'docs', 'sheets') { L "    <Component Id=`"C_$k`_diff`"><File Id=`"F_$k`_diff`" Source=`"`$(var.Stage)\$k-diff.exe`" KeyPath=`"yes`" /></Component>" }
 L '    <Component Id="C_brand"><File Id="F_brand" Source="$(var.Stage)\brand.toml" KeyPath="yes" /></Component>'
