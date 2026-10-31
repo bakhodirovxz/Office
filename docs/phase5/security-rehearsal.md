@@ -12,7 +12,7 @@ two error paths (now green, fixed). The biggest open item is data retention: not
 owner/HRM. F4's deployment files are done; the real proxy chain is still checked in WP17.
 
 **Update 2026-10-30 (branch `p5-sec2`):** S14 and S21 are green, S19 is narrower (built-in TLS half done), F7 and F8 are fixed, and
-the crash gap between `close_session` and `callback_closed` is closed: 22 green, 1 partial (S19), 1 not run (S22), 1 owner/HRM (S25).
+the crash gap between `close_session` and `callback_closed` is closed: 22 green, 1 partial (S19), 1 not run (S22), 1 owner/HRM (S25). **2026-10-31:** S22 green, so 23 green.
 
 ## 1. Test runs
 
@@ -56,7 +56,7 @@ does not exist under that name, but a test under another name proves the row; it
 | S19 | partial (built-in TLS half done) | `convert-api/tests/tls.rs:69` (converter routes); new `ci/web-smoke/tls.spec.ts:129` (`/ds/editor` over built-in TLS: 200, HSTS `max-age=31536000`; plain HTTP to `/ds/editor?x=1` gets 308 to the https `public_url`) | `tls = "upstream"` behind Traefik is only in `docserver-compose.spec.ts` (Docker, not run: TLS-intercepting proxy) and asserts no header. |
 | S20 | green | `suite-serve/tests/docserver.rs:128` | |
 | S21 | green (was partial) | `convert-api/tests/no_hrm_names.rs:36` now scans `docserver/static/` too; there, and only there, the word `onlyoffice` is allowed on comment lines (clean-room note, API-compatibility remarks). Code, strings and every other name still fail the scan. | |
-| S22 | not run | — | `cargo-deny` and `cargo-audit` are not installed on this machine (`scripts/ci.sh:259` says the same). Not installed system-wide, as instructed. |
+| S22 | green (2026-10-31) | `scripts/ci.sh deny`; `cargo deny` on `services/Cargo.toml` with `ci/deny/services.toml` (host and `x86_64-unknown-linux-gnu`) | The pinned `cargo-deny` 0.20.2 (`scripts/tools.lock`) was already in `E:/office-tools/bin`, only off the PATH. root, docs, sheets, slides, pdf: ok; services (docserver, fake-hrm, suite-serve, convert): `advisories ok, bans ok, licenses ok, sources ok` on both targets, duplicate-version warnings only. `cargo-audit` is not used: `cargo deny check advisories` reads the same RustSec database (owner left the choice to the agent, 2026-10-31). |
 | S23 | green | `docserver.spec.ts:227` (401 `{"error":1}`); `outbound.rs:515` (500, `{"error":1}`, a silent provider = unknown); `outbound.rs:338` | The "sleeps 70 s" case runs as an 8 s hang against a short configured `callback_timeout_s`. |
 | S24 | green | `auth.rs:569`, `auth.rs:759`, `history.rs:204` | |
 | S25 | owner/HRM, not ours | — | HRB PR-1, PR-2 on `<test-host>`. |
@@ -209,8 +209,7 @@ stderr (with `sid_ref`).
 
 - **Crash gap (data loss, R3), fixed on `p5-sec2`:** `callback.rs` `recover_unnotified`, run once by `spawn_retry_loop` before its loop. A session `closed` with status 2, `notified = false`, `acked = false`, edit rights, a version, and no queue entry gets `callback_closed` (queue entry, send, `notified` written). `notified` is written only after the attempt; `acked` is written when the provider answers `{"error":0}`. So an acked record or a queued one is never resent. Window left: a crash after the provider acted but before `acked` reaches disk can send status 2 twice (at-least-once; the provider gets the same version). Status 4 (no changes) is not resent. Test: `outbound.rs` `a_close_that_died_before_its_callback_sends_status_2_once_at_start`. Not checked: a crash during the retry loop's own send (the queue entry covers it, by reading).
 
-- **S22:** `cargo deny` / `cargo audit` not installed (not installed system-wide, as instructed). Run them in CI or after the
-  owner OKs installing them under `~/.cargo/bin`.
+- **S22:** green since 2026-10-31 (see the row): the pinned `cargo-deny` from `E:/office-tools/bin`; `cargo-audit` not needed.
 - **The Docker compose rehearsal** (`packaging/docserver/rehearse.sh`, `docserver-compose.spec.ts`): not run. Docker's
   network sits behind the TLS-intercepting proxy, and the image build takes long. So `tls = "upstream"` behind real Traefik
   and the forwarded-header behaviour of F4 are reasoned from the code and the configs, not measured.

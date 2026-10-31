@@ -231,7 +231,7 @@ their bridges (§13.2 R6).
   - Built (security rehearsal F1, `services/docserver/src/retention.rs`): a sweep at start and hourly. "Successful close" = the
     provider answered `{"error":0}` to the close's status 2 or 4 (`Closed::acked`). Everything else (never closed, close not
     acknowledged, a status 2 the retry queue gave up on) is abandoned: 7 days after the last activity. A status 2 still queued is
-    never swept. `[docserver] keep_closed_hours = 24` (1 to 8760) and `keep_abandoned_days = 7` (1 to 365).
+    never swept. `[docserver] keep_closed_hours = 168` (7 days, owner 2026-10-31; 1 to 8760) and `keep_abandoned_days = 7` (1 to 365).
   - **History goes with the session** (decision, 2026-10-30). Our history is keyed by provider and `document.key` (§6), and the
     HRM sends a new key on every open, so a swept session's history can never be reached again; keeping it would keep every HR
     document ever opened. When a session folder is swept, its history document and the bytes no other document uses are deleted
@@ -741,13 +741,13 @@ unknown, and the deckcraft bridge (−3) is already done. Risk buffer as SIZING:
 |---|---|---|---|
 | **Q1** | **Which HRM document flow is the pilot** (`BRIEF.md:571`). **Assumed (a) until the owner says otherwise; a change affects WP1, WP9, WP17 only.** | (a) HRB `files` docx (folders module); (b) an order-act decree in draft; (c) letters or reports | **(a) `files` docx.** No Word↔DB sync, no locked statuses, no bookmark dependence (F15; `hrm-current-state.md:203-217`); HRB's defaults already match (`OFFICE_CRAFT_KINDS=file`, `OFFICE_CRAFT_FILE_TYPES=docx`, `hr-backend-prompt.md:345-346`). The decree comes second, after WP9 passes on a real HRM decree (H12). |
 | **Q2** | Pilot users and client | which SPA gets `editor=auto` + `editorUrl`; who | **hr-frontend-v2 only** (it has the env URL and an e2e spec, `hrm-current-state.md:310-314`); 2–3 IT staff by `OFFICE_CRAFT_PILOT_USER_IDS`; the mobile app unchanged, so it stays on ONLYOFFICE. |
-| **Q3** | Who runs HRB PR-0 … PR-3, and when | the HRM team / an agent with `hr-backend-prompt.md` / later | **Start now** with the prompt as written (`SIZING.md:279`). PR-4 … PR-8 are not needed for the gate. |
+| **Q3** | Who runs HRB PR-0 … PR-3, and when | the HRM team / an agent with `hr-backend-prompt.md` / later | **Start now** with the prompt as written (`SIZING.md:279`). PR-4 … PR-8 are not needed for the gate. **Owner, 2026-10-31:** a Claude Code session on the HRM server does PR-0 … PR-3 with `docs/phase0/hr-backend-prompt.md`. |
 | **Q4** | Config token expiry | require `exp` / accept none per provider | **Require `exp`, at most 12 h** (F1). HRB's PR-3 `exp` commit becomes required. Without it a captured edit config is replayable for as long as its document URL token lives (1 h, `hrm-current-state.md:256`). |
 | **Q5** | Deployment on `<test-host>` | container behind Traefik / a separate VM | **Container on `backend_net` behind the existing Traefik**, `tls = "upstream"`, internal listener for `api` only (§7). Needs the host name (H4) and your deploy OK. |
 | **Q6** | Version history in HRM sessions | HRM store / ours | **The HRM's store is the record when configured**; ours in standalone server mode (D6). Neither is a gate item. |
 | **Q7** | Diff scope in Phase 5 | all four / Docs + Sheets | **Docs + Sheets in Phase 5**; Slides and PDF later (Phase 8 or 9). |
-| **Q8** | SSO and desktop sign-in/sync in the Phase 5 gate | in / after | **After the pilot gate** (WP13). HRB has no OAuth server until PR-6/PR-7; the seam stays. |
+| **Q8** | SSO and desktop sign-in/sync in the Phase 5 gate | in / after | **After the pilot gate** (WP13). HRB has no OAuth server until PR-6/PR-7; the seam stays. **Owner, 2026-10-31: after the pilot gate.** |
 | **Q9** | XDFU server features and EDS (phase3 O10, O11) | all in Phase 5 / split | **Phase 5: server stamping and encryption at rest, off by default.** E-IMZO, the registry and the grif-removal workflow move to a later phase until O10/O11 are answered. |
-| **Q10** | Retention of working copies on our server | — | **24 h after a good close, 7 days for an abandoned session**, no backups of the data folder. |
+| **Q10** | Retention of working copies on our server | — | **24 h after a good close, 7 days for an abandoned session**, no backups of the data folder. **Owner, 2026-10-31: 7 days for both** (`keep_closed_hours = 168`). |
 | Q11 | HRB-side names (`CRAFT_*` env names, `editorProvider: "craft"`) | keep / rename | HRM's own config, not our brand, so **the HRM team's call**. Our code names neither (B-1 note, ADR App. B). |
 | **Q12** | XDFU stamp on the provider's working copy (callback) and on pdf copies | stamp / not | **Not stamped** (stamps would pile up on save and reopen); only copies that leave the system (downloads) are. With xdfu on, **pdf copies are refused** (no pdf grif check on the server yet). Owner, 2026-10-26. |

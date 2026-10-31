@@ -122,7 +122,7 @@ impl Default for Config {
             redact: false,
             rate_create_per_min: 30,
             rate_auth_fail_per_min: 20,
-            keep_closed_hours: 24,
+            keep_closed_hours: 168, // 7 days, as abandoned sessions (owner, 2026-10-31)
             keep_abandoned_days: 7,
             providers: vec![],
         }
@@ -1167,7 +1167,7 @@ frame_origins = ["https://app.test"]
         let ds = d.toml(&|_| {}).unwrap();
         assert_eq!(
             (ds.keep_closed_s, ds.keep_abandoned_s),
-            (24 * 3600, 7 * 86_400)
+            (7 * 86_400, 7 * 86_400)
         );
         assert!(
             !ds.providers[0].keep_history,

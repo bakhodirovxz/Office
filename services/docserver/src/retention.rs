@@ -1,7 +1,7 @@
 //! The retention sweep (PLAN phase 5, section 4 "Retention", Q10, S18): what the server stores is deleted when it is no longer needed.
 //!
 //! A session folder `sessions/<sid>/` goes
-//! - `keep_closed_hours` (24) after a good close: closed, and the provider answered `{"error":0}` to the close's callback (`Closed::acked`);
+//! - `keep_closed_hours` (168, 7 days) after a good close: closed, and the provider answered `{"error":0}` to the close's callback (`Closed::acked`);
 //! - `keep_abandoned_days` (7) after its last activity otherwise: never closed, or its close never acknowledged (a status 2 the retry
 //!   queue gave up on falls here, so the operator has the rest of the 7 days to recover it from the folder);
 //! - never while a status 2 is still in the retry queue (`queue/<sid>.json` without `gave_up`; an unreadable entry counts as queued).
@@ -154,6 +154,7 @@ mod tests {
         }
     }
 
+    // keep_closed_hours = 24 (not the 7-day default) so the tests tell a good close from an abandoned session
     fn server(name: &str, history: &str) -> (Docserver, Dir) {
         let d = std::env::temp_dir().join(format!("docserver-ret-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
@@ -164,6 +165,7 @@ mod tests {
         let t: toml::Table = format!(
             r#"server_secret_file = "{}"
 data_dir = "{}"
+keep_closed_hours = 24
 [[providers]]
 name = "one"
 issuer = "https://issuer.test"

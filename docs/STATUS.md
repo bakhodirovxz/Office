@@ -1569,3 +1569,12 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   writer omits `defaultColWidth` when the width equals what a reader derives from the Normal font.
 - Tests: engine lib (new-workbook assert in `new_workbooks_are_times_new_roman_12_on_the_interface_paper`), xlsx lib
   `default_col_width_follows_the_normal_font`. Not checked: on-screen look, Excel opening a saved TNR 12 file.
+### Phase 5: owner answers (2026-10-31)
+- **Q10 retention:** 7 days for both. `keep_closed_hours` default 24 → 168 (`services/docserver/src/config.rs`), docs updated
+  (`deploy.md`, `PLAN.md`, `retention.rs`); `keep_abandoned_days` stays 7.
+- **S22 dependency check:** the agent's choice. The pinned `cargo-deny` 0.20.2 was already in `E:/office-tools/bin` (off the
+  PATH). `ci.sh deny` ok for root and the four domains; the services workspace ok on the host and Linux targets (advisories,
+  bans, licenses, sources; duplicate warnings only). `cargo-audit` is not added: deny's advisories check reads the same RustSec
+  database. Security rehearsal now: 23 green, 1 partial (S19, Docker), 1 HRM team (S25).
+- **Q3:** a Claude Code session on the HRM server does HRB PR-0 … PR-3 with `docs/phase0/hr-backend-prompt.md`.
+- **Q8:** SSO and desktop sign-in after the pilot gate. **R6** (Sheets/Slides/PDF bridges) after the gate: confirmed.

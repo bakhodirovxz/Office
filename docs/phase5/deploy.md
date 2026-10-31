@@ -58,7 +58,7 @@ data_dir = "/data/docserver"
 diff_bin_dir = "/app/diff"                         # docs-diff and sheets-diff (History > Compare); unset = 501
 internal_listen = "<this container's IP on backend_net>:8780"   # never publish with -p
 internal_allow = ["<the HR backend container IP>/32"]          # not a /16 that contains the bridge gateway
-keep_closed_hours = 24                             # retention: a session 24 h after a close the backend acknowledged (default)
+keep_closed_hours = 168                            # retention: a session 7 days after a close the backend acknowledged (default)
 keep_abandoned_days = 7                            # any other session 7 days after its last activity (default)
 
 [[docserver.providers]]
@@ -106,7 +106,7 @@ behind the front proxy must get separate keys: the audit line's `client` differs
 
 ## Retention
 
-A sweep thread deletes `sessions/<sid>/` `keep_closed_hours` (24) after a close the provider acknowledged, and `keep_abandoned_days` (7)
+A sweep thread deletes `sessions/<sid>/` `keep_closed_hours` (168, 7 days) after a close the provider acknowledged, and `keep_abandoned_days` (7)
 after the last activity of any other session; never while a status 2 callback is still queued for retry
 (`services/docserver/src/retention.rs`). It runs at start and then hourly, and writes one `retention.sweep` audit line with counts when
 it deleted something. The session's history goes with it unless the provider has `history = "keep"`. Back-ups of `data_dir` would
