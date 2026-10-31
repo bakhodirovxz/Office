@@ -1421,3 +1421,9 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   xtask i18n unit tests 59/59. Slides `office_overlay_tests` + `russian_*` 13/13 (overlay on).
 - **Not checked.** Screenshots in ru/uz, quality of the 1,877 Russian strings by a native reader, PDF overlay tests, size
   budgets (no web app rebuilt), Docs.
+- **MSI rebuilt from phase-4 `a638aef` (2026-10-31)** with p4-carry and p4-l10n: `E:\office-target\p1\msi\hoshiya-0.1.0-x64.msi`,
+  201.9 MB, SHA-256 `A5F72131…A6E2`. Overlay, web release, `ci.sh sizes`, MSVC release, shell dist and WiX all rc 0.
+  Size headroom (brotli, under budget): Docs 10,005 B, Sheets 14,246 B, Slides 9,377 B (was about 28 KB before the Russian
+  rows), PDF 30,230 B, shell 9,901 B. Slides now has under 10 KB left for the next catalog growth. UpgradeCode is the frozen
+  one, the same as the owner's installed `9B804E90…0646` build, so it should upgrade in place; the in-place upgrade is not
+  tested here.
