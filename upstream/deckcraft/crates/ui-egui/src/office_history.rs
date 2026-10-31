@@ -112,6 +112,16 @@ struct Kind {
     text: bool,
 }
 
+/// The same file by name: Windows paths ignore case and take `/` for `\`.
+fn same_path(a: &str, b: &str) -> bool {
+    if cfg!(windows) {
+        let n = |p: &str| p.replace('/', "\\").to_lowercase();
+        n(a) == n(b)
+    } else {
+        a == b
+    }
+}
+
 /// `(audit event, kind)` when the command makes a copy of the presentation, else `None`.
 fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, Kind)> {
     let path = p.get("path").and_then(Json::as_str).filter(|x| !x.is_empty());
@@ -125,7 +135,7 @@ fn copy_kind(s: &Session, id: &str, p: &Json) -> Option<(&'static str, Kind)> {
     let (event, fmt) = match id {
         "file.export" => (if p.get("print").and_then(Json::as_bool) == Some(true) { "print" } else { "export" }, format(path)),
         // A save to another path (a first save, a copy under a new name, a template) is a copy; the working file itself is not.
-        "file.saveAs" | "file.save" if path.is_some() && path != own => ("save_as", format(path)),
+        "file.saveAs" | "file.save" if path.is_some_and(|p| !own.is_some_and(|o| same_path(o, p))) => ("save_as", format(path)),
         "file.saveTemplate" if path.is_some() => ("save_as", format(path)),
         "file.saveBytes" => ("download", format(None)),
         _ => return None,
@@ -296,5 +306,13 @@ mod tests {
         stamp_output(&mut out, "XDFU copy 1").unwrap();
         assert_eq!(std::fs::read_to_string(&gone).unwrap(), "XDFU copy 1\nbody");
         let _ = std::fs::remove_file(&gone);
+    }
+
+    #[test]
+    fn the_working_file_is_found_by_name_on_windows() {
+        assert!(same_path("a/b.pptx", "a/b.pptx"));
+        assert!(!same_path("a/b.pptx", "a/c.pptx"));
+        // Windows only: another case or slash direction is the same file
+        assert_eq!(same_path(r"C:\Users\a\X.pptx", "c:/users/a/x.pptx"), cfg!(windows));
     }
 }
