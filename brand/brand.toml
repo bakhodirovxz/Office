@@ -7,6 +7,8 @@ schema = 1
 id = "hoshiya"
 name = "Hoshiya"
 version = "0.1.0"
+# MSI UpgradeCode: FROZEN. Never change it, or a new MSI no longer upgrades the installed one. (It is the value the first pilot MSIs derived from the id.)
+upgrade_code = "{2EA291EA-35AE-59D4-AB3E-09D1AE815A49}"
 vendor = "Hoshiya contributors"
 copyright = "Copyright (c) the Hoshiya contributors. MIT OR Apache-2.0."
 

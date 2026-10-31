@@ -316,3 +316,12 @@ test('screenshots in en, ru, uz-Latn, uz-Latn-2026 and uz-Cyrl', async ({ page }
     await page.screenshot({ path: path.join(process.env.UI_SHOTS!, `converter-${lang}.png`), fullPage: true });
   }
 });
+
+test('a file chosen before the page texts arrive is kept and the target list fills in (F21)', async ({ page }) => {
+  await page.route('**/i18n.json', async (route) => { await new Promise((r) => setTimeout(r, 1500)); await route.continue(); });
+  await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
+  await pick(page, [file('note.txt', GOOD)]); // chosen while /i18n.json is still on its way
+  await expect(page.locator('#o-to')).toBeEnabled({ timeout: 10000 });
+  await expect(page.locator('#o-to option[value="pdf"]')).toHaveCount(1);
+  await expect(page.locator('#files tr')).toHaveCount(1);
+});

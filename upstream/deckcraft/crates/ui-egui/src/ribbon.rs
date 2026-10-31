@@ -664,7 +664,7 @@ fn smartart_gallery(
                             };
                             ui.add(egui::Label::new(egui::RichText::new(*label).small()).truncate().selectable(false));
                             r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, *label));
-                            r.on_hover_text(*label)
+                            r.on_hover_text(crate::i18n::t(label))
                         })
                         .inner;
                     if r.hovered() {
@@ -831,7 +831,7 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
                         ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
                     }
                     paint_preset(ui.painter(), r.shrink(4.0), p.name, Color32::TRANSPARENT, t.text);
-                    if resp.on_hover_text(p.label).clicked() {
+                    if resp.on_hover_text(crate::i18n::t(p.label)).clicked() {
                         out = Some(p.name);
                     }
                 }
@@ -842,7 +842,7 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
                             ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
                         }
                         paint_freeform_icon(ui.painter(), r.shrink(5.0), name, t.text);
-                        if resp.on_hover_text(label).clicked() {
+                        if resp.on_hover_text(crate::i18n::t(label)).clicked() {
                             out = Some(name);
                         }
                     }
@@ -1404,7 +1404,7 @@ fn icon_cell(app: &mut SlideApp, ui: &mut Ui, icon: &deckcraft_engine::icons::Ic
         ui.painter().rect_filled(r, CornerRadius::same(4), hover);
     }
     paint_icon(ui.painter(), r.shrink(6.0), icon, color);
-    if resp.on_hover_text(icon.label).clicked() {
+    if resp.on_hover_text(crate::i18n::t(icon.label)).clicked() {
         let _ = app.run("insert.icon", json!({"name": icon.name}));
         ui.close();
     }
@@ -2364,7 +2364,7 @@ fn warp_tile(ui: &mut Ui, preset: &str, label: &str, selected: bool) -> bool {
         ui.painter().rect_filled(rect, CornerRadius::same(3), t.hover);
     }
     paint_warp_icon(ui.painter(), rect.shrink(4.0), (!preset.is_empty()).then_some(preset), t.text);
-    resp.on_hover_text(label).clicked()
+    resp.on_hover_text(crate::i18n::t(label)).clicked()
 }
 
 /// The preset's guides, or two straight lines for No Transform.
@@ -2837,7 +2837,7 @@ fn table_design(app: &mut SlideApp, ui: &mut Ui) {
                 for (id, label) in &styles {
                     let (r, resp) = ui.allocate_exact_size(vec2(48.0, 36.0), Sense::click());
                     paint_table_style(ui.painter(), r.shrink(2.0), id, &sc);
-                    if resp.on_hover_text(label).clicked() {
+                    if resp.on_hover_text(crate::i18n::t(label)).clicked() {
                         run(app, "table.style", json!({"style": id}));
                         ui.close();
                     }
@@ -3558,7 +3558,7 @@ fn smooth_corners_row(app: &mut SlideApp, ui: &mut egui::Ui) {
         ui.label("Smooth Corners");
         let mut pct = state.1;
         let resp = ui.add_enabled(usable, egui::Slider::new(&mut pct, 0.0..=100.0).suffix("%").integer());
-        let resp = if usable { resp } else { resp.on_disabled_hover_text("For rectangles and rounded rectangles") };
+        let resp = if usable { resp } else { resp.on_disabled_hover_text(crate::i18n::t("For rectangles and rounded rectangles")) };
         if resp.changed() {
             state.1 = pct;
             ui.data_mut(|d| d.insert_temp(key, state));

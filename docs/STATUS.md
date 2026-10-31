@@ -1478,6 +1478,33 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   screenshotted (it has no blank document).
 - **Not checked:** a live switch in an open editor; the MSI; a real-device browser.
 
+### Phase 4: gate-review carry-over (branch `p4-carry`, 2026-10-31; F11, F16, F17, F20, F21)
+- **F20 MSI upgrade:** `UpgradeCode` frozen in `brand.toml` (`{2EA291EA-35AE-59D4-AB3E-09D1AE815A49}`, the value the MSI the owner runs already has); `ProductCode="*"` and `MajorUpgrade AllowSameVersionUpgrades="yes"`, so the next build upgrades the installed 0.1.0 without an uninstall. Chosen over a growing version because the same-version flag also upgrades the copy installed today (same 0.1.0). Release versions still bump `brand.toml version`. Built `hoshiya-0.1.0-x64.msi` (201.8 MB, from the p1 MSVC outputs; not an install test); its ProductCode differs from the shipped one, UpgradeCode equal. `wix msi validate`: ICE43/ICE57 errors on five shortcut components (open), ICE61 warning (expected). Signing store default now `CurrentUser`; `msi-test.ps1` uninstalls in a `finally`.
+- **F16/F17/F11/F21:** pipe squatter no longer stops a plain launch (test); cookie name per launch (tests); History IPC on a worker and a size-only listing (test); converter listeners before the first await (Playwright 13 passed, 1 skipped).
+- **Tests:** `suite-desktop` 23 lib + 3 host + others, `suite-serve` 26, `suite-core history` 9, `office-brand` 4, converter spec 13/13 (+1 skipped screenshots), all green.
+- **Not checked:** an install or upgrade of the MSI (elevation); a real WebView window for F11/F16; a 2 GB History document; the cause of the F21 host-run losses.
+### Phase 4: translation gaps in Sheets, Slides and PDF, Slides tooltips, a test that was not broken (branch `p4-l10n`, 2026-10-31)
+- **Cause of the Russian gaps.** Slides has no upstream Russian, Sheets only 398 upstream rows and PDF 2,318: every other row
+  had an empty `ru` and showed English. Filled in `i18n/*.tsv` (status `reviewed:agent-sonnet:2026-10-31`, never an owner
+  review; drafted by sonnet sub-agents against the glossary, MS Office ru terms): Sheets 447 rows, Slides 1,118 rows (the 15
+  obsolete rows left empty), PDF 312 rows (incl. 8 three-form plurals). Placeholders and `\n` checked per row by script.
+  Docs not asked for (43 rows still empty). uz-Latn and uz-Cyrl had no gaps (`cargo xt i18n coverage`: 1 todo row per app,
+  none visible); the four Slides strings that say "DeckCraft" stay uz todo (brand text).
+- **"Grayscale" in Sheets ru (and 493 other shared rows).** The shared row had ru only for Docs (`ru_apps = wordcraft`), a
+  restriction that exists to keep the upstream round trip exact. `export.rs::resolve` now applies `ru_apps` only under the
+  owner-only policy used by `roundtrip`; real builds lend the row to every app that has it (Sheets ru export 398 to 996 rows).
+- **Slides tooltips.** Not in the catalog problem: the shared widget sinks (`icon_toggle`, `color_split`, swatches, gallery,
+  shape/freeform/icon/warp/table-style tiles, selection pane buttons, thesaurus, corner hint) passed literals unchanged.
+  Carried patch `deckcraft/0155` wraps them in `i18n::t`. Computed labels (preset names, icon names) translate only where the
+  catalog has the text; not audited one by one.
+- **`backstage::tests::every_page_renders` is a Slides (deckcraft ui-egui) test, not Docs, and nothing broke.** It passes with
+  the overlay off (19/19 `backstage::tests`) and fails with the overlay on because it looks for the hard-coded "About
+  DeckCraft" while the overlay shows the product name. It is the existing quarantine entry (`ci/quarantine.toml`,
+  class brand-overlay, since 2026-10-18); the test is what is wrong, left as is.
+- **Checks.** `cargo xt i18n lint` 0 errors, `roundtrip` OK, `check-stale` OK, `extract --dry-run` 0 changes, `check` OK,
+  xtask i18n unit tests 59/59. Slides `office_overlay_tests` + `russian_*` 13/13 (overlay on).
+- **Not checked.** Screenshots in ru/uz, quality of the 1,877 Russian strings by a native reader, PDF overlay tests, size
+  budgets (no web app rebuilt), Docs.
 ## Phase 5: web History panel follows the host app's look (branch `p5-histlook`, 2026-10-30)
 - Owner decision 2026-10-29 (each app keeps its design language), the to-do of `design-system.md` section 10. The wrapper (`services/docserver/static/editor.js`) sets `<html data-theme>` (`?theme=light|dark` on the wrapper URL, else `prefers-color-scheme`, followed live) and `<html data-app>` (`docs|sheets|slides|pdf`, the session's editor). `web/shell/history.css` holds one small variable set per app and scheme (`--accent --bg --fg --muted --card --line --on-accent`, `--r-widget`, `--r-window`, 12.5 px body) taken from upstream `theme*.rs` (Docs `#3B5BDB`/`#7A93F0`, radius 4/8; Sheets `#107C41`/`#5CC587`, 4/10; Slides `#D95A1A`/`#F26B1D`, 5/10; PDF `#1B63E0`/`#4B8BF5`, 6/10). Status text `#555` -> `var(--muted)`; the panel shadow is `--shadow` (.25 light, .6 dark). The shell's own History page has no `data-app`, so it is unchanged.
 - Test: `docserver.spec.ts` "History panel takes the host app look and the theme": `?theme=` and OS fallback on the bare wrapper; over Docs and Sheets, light and dark, panel background, accent, widget radius and 12.5 px match the tokens. Whole spec 11 passed, 1 skipped (screenshots, needs `DS_SHOTS`); the screenshots test also passes. Screenshots: `docs/phase5/evidence/history-look/panel-{docs,sheets}-{light,dark}.png` (synthetic fixtures).

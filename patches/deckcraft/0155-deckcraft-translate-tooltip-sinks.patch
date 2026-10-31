@@ -1,0 +1,153 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 31 Oct 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: tooltips of icon toggles, colour splits, galleries, swatches and shape tiles go through the catalog
+
+Owner testing the MSI (ru, uz): most Slides toolbar and ribbon tooltips stayed English. The ribbon helpers already translated the label of tip(id, label), but the shared widget sinks (icon_toggle, color_split, the colour swatches, gallery tiles) and about a dozen tile hovers (shape presets, freeform tools, icon cells, warp tiles, table styles, selection pane buttons, thesaurus buttons, the corner-smoothing hint) passed their literal on as is. Each now wraps its text in crate::i18n::t (unknown text is returned unchanged, so English is untouched). Literal strings were already catalog rows; labels computed elsewhere (shape presets, icon names) translate only where the catalog has them.
+---
+ crates/ui-egui/src/panes.rs   |  4 ++--
+ crates/ui-egui/src/ribbon.rs  | 14 +++++++-------
+ crates/ui-egui/src/selpane.rs |  2 +-
+ crates/ui-egui/src/widgets.rs |  6 ++++--
+ 4 files changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 2b4149a..9dd4df8 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -1388,7 +1388,7 @@ fn designer(app: &mut SlideApp, ui: &mut Ui) {
+             Stroke::new(if resp.hovered() { 2.5 } else { 1.0 }, if resp.hovered() { t.accent } else { t.border }),
+             egui::StrokeKind::Outside,
+         );
+-        let clicked = resp.on_hover_text(tip).clicked();
++        let clicked = resp.on_hover_text(crate::i18n::t(tip)).clicked();
+         ui.add_space(8.0);
+         clicked
+     };
+@@ -1557,7 +1557,7 @@ fn thesaurus(app: &mut SlideApp, ui: &mut Ui) {
+     for sense in senses {
+         ui.label(egui::RichText::new(&sense.word).font(theme::bold(13.0)));
+         for syn in sense.synonyms {
+-            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(if editing { "Insert" } else { "Look up" });
++            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(crate::i18n::t(if editing { "Insert" } else { "Look up" }));
+             if r.clicked() {
+                 if editing {
+                     run(app, "review.replaceWord", json!({"with": syn}));
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 520e29f..d06c8d2 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -664,7 +664,7 @@ fn smartart_gallery(
+                             };
+                             ui.add(egui::Label::new(egui::RichText::new(*label).small()).truncate().selectable(false));
+                             r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, *label));
+-                            r.on_hover_text(*label)
++                            r.on_hover_text(crate::i18n::t(label))
+                         })
+                         .inner;
+                     if r.hovered() {
+@@ -831,7 +831,7 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
+                         ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
+                     }
+                     paint_preset(ui.painter(), r.shrink(4.0), p.name, Color32::TRANSPARENT, t.text);
+-                    if resp.on_hover_text(p.label).clicked() {
++                    if resp.on_hover_text(crate::i18n::t(p.label)).clicked() {
+                         out = Some(p.name);
+                     }
+                 }
+@@ -842,7 +842,7 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
+                             ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
+                         }
+                         paint_freeform_icon(ui.painter(), r.shrink(5.0), name, t.text);
+-                        if resp.on_hover_text(label).clicked() {
++                        if resp.on_hover_text(crate::i18n::t(label)).clicked() {
+                             out = Some(name);
+                         }
+                     }
+@@ -1404,7 +1404,7 @@ fn icon_cell(app: &mut SlideApp, ui: &mut Ui, icon: &deckcraft_engine::icons::Ic
+         ui.painter().rect_filled(r, CornerRadius::same(4), hover);
+     }
+     paint_icon(ui.painter(), r.shrink(6.0), icon, color);
+-    if resp.on_hover_text(icon.label).clicked() {
++    if resp.on_hover_text(crate::i18n::t(icon.label)).clicked() {
+         let _ = app.run("insert.icon", json!({"name": icon.name}));
+         ui.close();
+     }
+@@ -2364,7 +2364,7 @@ fn warp_tile(ui: &mut Ui, preset: &str, label: &str, selected: bool) -> bool {
+         ui.painter().rect_filled(rect, CornerRadius::same(3), t.hover);
+     }
+     paint_warp_icon(ui.painter(), rect.shrink(4.0), (!preset.is_empty()).then_some(preset), t.text);
+-    resp.on_hover_text(label).clicked()
++    resp.on_hover_text(crate::i18n::t(label)).clicked()
+ }
+ 
+ /// The preset's guides, or two straight lines for No Transform.
+@@ -2837,7 +2837,7 @@ fn table_design(app: &mut SlideApp, ui: &mut Ui) {
+                 for (id, label) in &styles {
+                     let (r, resp) = ui.allocate_exact_size(vec2(48.0, 36.0), Sense::click());
+                     paint_table_style(ui.painter(), r.shrink(2.0), id, &sc);
+-                    if resp.on_hover_text(label).clicked() {
++                    if resp.on_hover_text(crate::i18n::t(label)).clicked() {
+                         run(app, "table.style", json!({"style": id}));
+                         ui.close();
+                     }
+@@ -3558,7 +3558,7 @@ fn smooth_corners_row(app: &mut SlideApp, ui: &mut egui::Ui) {
+         ui.label("Smooth Corners");
+         let mut pct = state.1;
+         let resp = ui.add_enabled(usable, egui::Slider::new(&mut pct, 0.0..=100.0).suffix("%").integer());
+-        let resp = if usable { resp } else { resp.on_disabled_hover_text("For rectangles and rounded rectangles") };
++        let resp = if usable { resp } else { resp.on_disabled_hover_text(crate::i18n::t("For rectangles and rounded rectangles")) };
+         if resp.changed() {
+             state.1 = pct;
+             ui.data_mut(|d| d.insert_temp(key, state));
+diff --git a/crates/ui-egui/src/selpane.rs b/crates/ui-egui/src/selpane.rs
+index 7951658..713e625 100644
+--- a/crates/ui-egui/src/selpane.rs
++++ b/crates/ui-egui/src/selpane.rs
+@@ -114,7 +114,7 @@ fn small_icon_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> egu
+     }
+     ui.painter().rect_stroke(rect, CornerRadius::same(4), Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
+     icons::paint(ui.painter(), rect.shrink(4.0), icon, t.text, !enabled);
+-    resp.on_hover_text(label)
++    resp.on_hover_text(crate::i18n::t(label))
+ }
+ 
+ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index 763a51a..e059547 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -176,6 +176,7 @@ pub fn check_item(ui: &mut Ui, label: &str, enabled: bool, on: bool) -> Response
+ /// A square icon toggle (B, I, U, alignment…).
+ pub fn icon_toggle(ui: &mut Ui, icon: Icon, tip: &str, enabled: bool, on: bool) -> Response {
+     let t = Tokens::get(ui.ctx());
++    let tip = crate::i18n::t(tip);
+     let (rect, resp) = ui.allocate_exact_size(vec2(24.0, 22.0), if enabled { Sense::click() } else { Sense::hover() });
+     let painter = ui.painter_at(rect);
+     if let Some(c) = bg(ui, &resp, on, &t) {
+@@ -190,6 +191,7 @@ pub fn icon_toggle(ui: &mut Ui, icon: Icon, tip: &str, enabled: bool, on: bool)
+ /// Icon with a colour bar under it and a dropdown arrow (Font Color, Highlight, Shape Fill…).
+ pub fn color_split(ui: &mut Ui, icon: Icon, tip: &str, color: Color32, enabled: bool) -> (Response, Response) {
+     let t = Tokens::get(ui.ctx());
++    let tip = crate::i18n::t(tip);
+     let (rect, resp) = ui.allocate_exact_size(vec2(34.0, 22.0), Sense::hover());
+     let main = ui.interact(Rect::from_min_size(rect.min, vec2(23.0, 22.0)), resp.id.with("m"), if enabled { Sense::click() } else { Sense::hover() });
+     let arrow = ui.interact(
+@@ -317,7 +319,7 @@ pub fn color_grid(ui: &mut Ui, scheme: &ColorScheme, none_label: Option<&str>) -
+             Stroke::new(if resp.hovered() { 2.0 } else { 1.0 }, if resp.hovered() { t.accent } else { t.border }),
+             egui::StrokeKind::Inside,
+         );
+-        resp.on_hover_text(tip).clicked()
++        resp.on_hover_text(crate::i18n::t(tip)).clicked()
+     };
+     egui::Grid::new("theme_colors").spacing(vec2(3.0, 1.0)).show(ui, |ui| {
+         for slot in slots {
+@@ -417,7 +419,7 @@ pub fn gallery(
+         if sel {
+             painter.rect_stroke(rect.expand(1.0), CornerRadius::same(4), Stroke::new(1.5, t.accent), egui::StrokeKind::Inside);
+         }
+-        if resp.on_hover_text(tip(i)).clicked() {
++        if resp.on_hover_text(crate::i18n::t(&tip(i))).clicked() {
+             clicked = Some(i);
+         }
+     }

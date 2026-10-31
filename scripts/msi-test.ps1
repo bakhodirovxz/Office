@@ -142,6 +142,8 @@ $inst = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App P
 $instDir = if ($inst) { Split-Path $inst } else { "$env:ProgramFiles\$productName" }
 Snap 'B'
 
+$testsDone = $false
+try {
 # ---- registration
 Write-Host '== registry'
 $regOk = $true; $nKeys = 0
@@ -278,6 +280,13 @@ if (-not $NoAlways) {
   Res ((UC 'docx') -eq '') "ALWAYS revert (.docx UserChoice removed again; if FAIL: reg delete `"$ucKey`" /f)"
 }
 Write-Host $alwaysLine; if ($alwaysLine -match 'FAIL') { $fails++ }
+$testsDone = $true
+} finally {   # a failed check or a thrown error must not leave the package installed
+  if (-not $testsDone -and -not $KeepInstalled) {
+    Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith($instDir, [StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Process msiexec.exe -ArgumentList "/x `"$Msi`" /qn /norestart /l*v `"$Work\uninstall-after-error.log`"" -Wait | Out-Null
+  }
+}
 
 # ---- uninstall
 Write-Host '== uninstall'

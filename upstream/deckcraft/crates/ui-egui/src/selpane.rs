@@ -114,7 +114,7 @@ fn small_icon_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> egu
     }
     ui.painter().rect_stroke(rect, CornerRadius::same(4), Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
     icons::paint(ui.painter(), rect.shrink(4.0), icon, t.text, !enabled);
-    resp.on_hover_text(label)
+    resp.on_hover_text(crate::i18n::t(label))
 }
 
 pub fn show(app: &mut SlideApp, ui: &mut Ui) {

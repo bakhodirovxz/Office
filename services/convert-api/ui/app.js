@@ -364,9 +364,6 @@
   async function init() {
     readFragment();
     S.token = store('sessionStorage', 'cv.token') || null;
-    let i18nOk = true;
-    try { const r = await fetch('/i18n.json'); if (!r.ok) throw new Error(String(r.status)); S.i18n = await r.json(); } catch (_) { S.i18n = {}; i18nOk = false; }
-    S.lang = guessLang();
     $('lang').addEventListener('change', (e) => setLang(e.target.value));
     $('pick').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
     $('clear').addEventListener('click', () => { S.items = []; S.job = null; render(); });
@@ -388,6 +385,11 @@
     for (const ev of ['dragleave', 'drop']) d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); });
     d.addEventListener('drop', (e) => { if (!S.running) addFiles(e.dataTransfer.files); });
     if (S.token) $('conn').open = false;
+    // Every listener above is attached before the first await, so a file chosen while the catalog and the format list load is added at
+    // once (render() copes with a missing catalog and format list; start() renders again). Nothing may be awaited above this line.
+    let i18nOk = true;
+    try { const r = await fetch('/i18n.json'); if (!r.ok) throw new Error(String(r.status)); S.i18n = await r.json(); } catch (_) { S.i18n = {}; i18nOk = false; }
+    S.lang = guessLang();
     await start();
     if ($('pick').files.length) { addFiles($('pick').files); $('pick').value = ''; } // picked before the listener above existed
     // without the catalog every text would show as its key: say so in plain English (this one text cannot come from the catalog)

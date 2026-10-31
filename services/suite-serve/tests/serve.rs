@@ -11,6 +11,7 @@ use convert_api::config::Settings;
 use sha2::{Digest, Sha256};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
+use suite_serve::cookie_name;
 use suite_serve::{Layout, router};
 use tower::ServiceExt;
 
@@ -270,8 +271,16 @@ async fn desktop_key_gates_every_request() {
         "/nope",
     ] {
         assert_eq!(get(&h, uri, &[]).await.0, StatusCode::FORBIDDEN, "{uri}");
-        let bad = [("cookie", "k=wrong; other=1")];
-        assert_eq!(get(&h, uri, &bad).await.0, StatusCode::FORBIDDEN, "{uri}");
+        let bad = [(
+            "cookie",
+            format!("{}=wrong; k={KEY}; other=1", cookie_name(KEY)),
+        )];
+        let bad: Vec<(&str, &str)> = bad.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        assert_eq!(
+            get(&h, uri, &bad[..]).await.0,
+            StatusCode::FORBIDDEN,
+            "{uri}"
+        );
     }
     // a wrong key, or the key in a place other than the path, sets nothing
     let (st, hd, _) = get(&h, "/_k/wrong", &[]).await;
@@ -282,10 +291,19 @@ async fn desktop_key_gates_every_request() {
     let (st, hd, _) = get(&h, &format!("/_k/{KEY}"), &[]).await;
     assert_eq!((st, hv(&hd, "location")), (StatusCode::SEE_OTHER, "/"));
     let c = hv(&hd, "set-cookie");
-    assert_eq!(c, format!("k={KEY}; Path=/; HttpOnly; SameSite=Strict"));
+    assert_eq!(
+        c,
+        format!(
+            "{}={KEY}; Path=/; HttpOnly; SameSite=Strict",
+            cookie_name(KEY)
+        )
+    );
+    // the old fixed name is not accepted, and two launches use different names
+    assert!(!c.starts_with("k="));
+    assert_ne!(cookie_name(KEY), cookie_name(&KEY.replace('0', "1")));
     assert_eq!(hv(&hd, "referrer-policy"), "no-referrer");
     // with the cookie the normal answers (and their security headers) come back
-    let ok = [("cookie", format!("a=b; k={KEY}"))];
+    let ok = [("cookie", format!("a=b; {}={KEY}", cookie_name(KEY)))];
     let ok: Vec<(&str, &str)> = ok.iter().map(|(k, v)| (*k, v.as_str())).collect();
     for uri in [
         "/",

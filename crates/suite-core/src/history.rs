@@ -735,20 +735,40 @@ impl Store {
     }
 
     pub fn verify_id(&self, id: &str) -> Result<Verified, String> {
+        self.verify_with(id, true)
+    }
+
+    /// Like `verify`, but a live version's bytes are checked by presence and size only (no hashing): cheap enough for a listing.
+    /// shortcut: a same-size corruption passes; restore, copy and view still hash the bytes they read.
+    pub fn verify_quick(&self, path: &Path) -> Result<Verified, String> {
+        self.verify_with(&doc_id(path), false)
+    }
+
+    fn verify_with(&self, id: &str, hash: bool) -> Result<Verified, String> {
         if !valid_id(id) {
             return Err("invalid document id".into());
         }
         let text = fs::read_to_string(self.doc_file(id)).map_err(|e| e.to_string())?;
         let doc = parse_doc(&text, self.key.as_deref())?;
         for v in doc.live() {
-            let b = self
-                .get_object(&v.sha256)
-                .map_err(|_| format!("version {}: the stored bytes are missing", v.v))?;
-            if sha(&b) != v.sha256 {
-                return Err(format!(
-                    "version {}: the stored bytes do not match their hash",
-                    v.v
-                ));
+            let missing = || format!("version {}: the stored bytes are missing", v.v);
+            if hash {
+                let b = self.get_object(&v.sha256).map_err(|_| missing())?;
+                if sha(&b) != v.sha256 {
+                    return Err(format!(
+                        "version {}: the stored bytes do not match their hash",
+                        v.v
+                    ));
+                }
+            } else {
+                let m = fs::metadata(self.object(&v.sha256)).map_err(|_| missing())?;
+                let sealed = self.sealer.as_ref().map_or(0, |s| s.overhead() as u64);
+                if m.len() != v.size + sealed {
+                    return Err(format!(
+                        "version {}: the stored bytes do not match their size",
+                        v.v
+                    ));
+                }
             }
         }
         Ok(Verified {
@@ -1057,6 +1077,12 @@ mod tests {
         fs::write(s.object(&sha(b"a")), b"x").unwrap();
         assert!(s.verify(&f).unwrap_err().contains("do not match"));
         assert!(s.read(&f, 1).is_err());
+        // the listing's quick check sees a wrong size or a missing file, not a same-size swap
+        assert!(s.verify_quick(&f).is_ok());
+        fs::write(s.object(&sha(b"a")), b"xy").unwrap();
+        assert!(s.verify_quick(&f).unwrap_err().contains("size"));
+        fs::remove_file(s.object(&sha(b"a"))).unwrap();
+        assert!(s.verify_quick(&f).unwrap_err().contains("missing"));
     }
 
     #[test]

@@ -207,6 +207,15 @@ fn same(a: &str, b: &str) -> bool {
     a.len() == b.len() && a.bytes().zip(b.bytes()).fold(0u8, |d, (x, y)| d | (x ^ y)) == 0
 }
 
+/// F17: cookies are not scoped by port, so a page on another 127.0.0.1 port could overwrite a fixed name. The name is derived from
+/// the per-launch key (not guessable without it).
+pub fn cookie_name(key: &str) -> String {
+    use std::hash::{DefaultHasher, Hash, Hasher};
+    let mut h = DefaultHasher::new();
+    key.hash(&mut h);
+    format!("k{:016x}", h.finish())
+}
+
 /// The desktop gate (M1). It sits outside the Host/Origin guard, so its answers carry only the headers set here.
 async fn local_gate(State(key): State<Arc<str>>, req: Request, next: Next) -> Response {
     let plain = [
@@ -214,9 +223,10 @@ async fn local_gate(State(key): State<Arc<str>>, req: Request, next: Next) -> Re
         (header::REFERRER_POLICY, "no-referrer"),
         (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
     ];
+    let name = cookie_name(&key);
     if let Some(k) = req.uri().path().strip_prefix("/_k/") {
         if req.method() == Method::GET && same(k, &key) {
-            let cookie = format!("k={key}; Path=/; HttpOnly; SameSite=Strict");
+            let cookie = format!("{name}={key}; Path=/; HttpOnly; SameSite=Strict");
             return (
                 StatusCode::SEE_OTHER,
                 plain,
@@ -235,7 +245,11 @@ async fn local_gate(State(key): State<Arc<str>>, req: Request, next: Next) -> Re
         .iter()
         .filter_map(|v| v.to_str().ok())
         .flat_map(|v| v.split(';'))
-        .filter_map(|c| c.trim().strip_prefix("k="))
+        .filter_map(|c| {
+            c.trim()
+                .strip_prefix(name.as_str())
+                .and_then(|r| r.strip_prefix('='))
+        })
         .any(|v| same(v, &key));
     if has_key {
         next.run(req).await

@@ -130,7 +130,8 @@ pub fn resolve(
         let v = row.value(&step);
         if v.is_empty()
             || !exportable(row.status(&step), mode, policy)
-            || (step == "ru" && !row.ru_in_app(app))
+            // ru_apps keeps the upstream round trip exact (OWNER_ONLY); a real build lends one app's upstream ru to the others
+            || (step == "ru" && !row.ru_in_app(app) && policy == &Policy::OWNER_ONLY)
         {
             continue;
         }

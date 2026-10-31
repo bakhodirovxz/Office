@@ -138,7 +138,7 @@ fn without_webview2_the_browser_opens_on_the_local_url_and_the_file_goes_to_its_
     // the file name arrives intact (spaces, Cyrillic)
     assert_eq!(e.wait("editor.log").trim(), doc.to_str().unwrap());
     // the shell config comes from the brand file, and the server answers on that port
-    let cookie = format!("k={key}");
+    let cookie = format!("{}={key}", suite_serve::cookie_name(&key));
     let r = http_get(port, "/shell-config.json", Some(&cookie));
     assert!(
         r.starts_with("HTTP/1.1 200")

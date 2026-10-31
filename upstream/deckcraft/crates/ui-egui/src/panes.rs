@@ -1388,7 +1388,7 @@ fn designer(app: &mut SlideApp, ui: &mut Ui) {
             Stroke::new(if resp.hovered() { 2.5 } else { 1.0 }, if resp.hovered() { t.accent } else { t.border }),
             egui::StrokeKind::Outside,
         );
-        let clicked = resp.on_hover_text(tip).clicked();
+        let clicked = resp.on_hover_text(crate::i18n::t(tip)).clicked();
         ui.add_space(8.0);
         clicked
     };
@@ -1557,7 +1557,7 @@ fn thesaurus(app: &mut SlideApp, ui: &mut Ui) {
     for sense in senses {
         ui.label(egui::RichText::new(&sense.word).font(theme::bold(13.0)));
         for syn in sense.synonyms {
-            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(if editing { "Insert" } else { "Look up" });
+            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(crate::i18n::t(if editing { "Insert" } else { "Look up" }));
             if r.clicked() {
                 if editing {
                     run(app, "review.replaceWord", json!({"with": syn}));
