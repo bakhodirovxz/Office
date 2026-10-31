@@ -1427,3 +1427,12 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   rows), PDF 30,230 B, shell 9,901 B. Slides now has under 10 KB left for the next catalog growth. UpgradeCode is the frozen
   one, the same as the owner's installed `9B804E90…0646` build, so it should upgrade in place; the in-place upgrade is not
   tested here.
+
+### Phase 4: Russian for the Docs gaps (branch `p4-ru-docs`, 2026-10-31)
+- `i18n/wordcraft.tsv`: the 43 active rows with an empty `ru` are filled (status `reviewed:agent-sonnet:2026-10-31`, never an
+  owner review). 17 are names that stay as written (citation styles APA, MLA, IEEE..., paper sizes such as "Letter   8.50" ×
+  11.00""); the rest are short Word-style Russian (levels, spelling/grammar hints, bookmark and page prompts, GOST sort modes).
+  Empty active wordcraft `ru` rows now: 0. Uzbek and English rows untouched.
+- **Checks.** `cargo xt i18n lint` 0 errors, `roundtrip` OK, `check-stale` OK, `extract --dry-run` 0 changes, `check` OK
+  (8,236 rows), xtask i18n unit tests 59/59.
+- **Not checked.** No native speaker has read these rows; no screenshots in ru.
