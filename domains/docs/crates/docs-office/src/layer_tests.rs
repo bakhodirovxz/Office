@@ -241,6 +241,34 @@ fn watermark_carries_copy_number_and_user_and_nothing_is_refused() {
 }
 
 #[test]
+fn save_as_onto_the_working_path_is_not_a_copy_and_a_failed_text_stamp_is_not_a_refusal() {
+    let t = T::new("own");
+    layer::configure(None, t.audit());
+    let mut s = session("XDFU");
+    // the first save as binds the document to the file and is a copy
+    s.run("file.saveAs", &json!({"path": t.p("w.docx")})).unwrap();
+    assert_eq!(t.lines(), 1);
+    // Save As onto the working path is a plain save, not a copy; on Windows the case and the slash do not matter
+    s.run("file.saveAs", &json!({"path": t.p("w.docx")})).unwrap();
+    assert_eq!(t.lines(), 1);
+    if cfg!(windows) {
+        s.run("file.saveAs", &json!({"path": t.p("W.DOCX").replace('\\', "/")})).unwrap();
+        s.run("file.save", &json!({"path": t.p("W.docx")})).unwrap();
+        assert_eq!(t.lines(), 1);
+    }
+    // a text copy whose stamp cannot be written is kept and the command succeeds
+    layer::stamp_written(&t.p("missing.txt"), "txt", "XDFU copy 9");
+    assert!(!std::path::Path::new(&t.p("missing.txt")).exists());
+    let p = t.p("kept.txt");
+    std::fs::write(&p, b"body").unwrap();
+    layer::stamp_written(&p, "txt", "XDFU copy 9");
+    assert_eq!(std::fs::read_to_string(&p).unwrap(), "XDFU copy 9\nbody");
+    // the stamp goes on the file the command reported
+    assert_eq!(layer::output_path(&json!({"path": "real.txt"}), &json!({"path": "asked.txt"})), Some("real.txt"));
+    assert_eq!(layer::output_path(&json!({}), &json!({"path": "asked.txt"})), Some("asked.txt"));
+}
+
+#[test]
 fn printing_to_paper_carries_the_stamp_and_an_audit_line() {
     let t = T::new("paper");
     layer::configure(None, t.audit());

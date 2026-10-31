@@ -302,10 +302,10 @@ index e6205f7..de142eb 100644
              Ok(_) => {
 diff --git a/crates/ui-egui/src/office_history.rs b/crates/ui-egui/src/office_history.rs
 new file mode 100644
-index 0000000..c2cdb1a
+index 0000000..dc7b21a
 --- /dev/null
 +++ b/crates/ui-egui/src/office_history.rs
-@@ -0,0 +1,270 @@
+@@ -0,0 +1,300 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The office layer on the command hook (patch 0143): a version snapshot after every save of the document's file (PLAN WP10), the
 +//! Version History button's handler, and the XDFU watermark (WP11).
@@ -388,7 +388,9 @@ index 0000000..c2cdb1a
 +            return run(s);
 +        }
 +        let name = s.active().map(|d| d.title()).unwrap_or_default();
-+        x.issue(event, &name, |stamp| make_copy(s, run, &kind, stamp))
++        // a copy that cannot carry the stamp (no free shape id left) is still made, and the audit line says it was not stamped
++        let event = if kind.text || can_stamp(s) { event.to_string() } else { format!("{event}_unstamped") };
++        x.issue(&event, &name, |stamp| make_copy(s, run, &kind, stamp))
 +    }
 +
 +    fn after(&self, id: &str, s: &Session, _params: &Json, result: &Result<Json>) {
@@ -460,6 +462,9 @@ index 0000000..c2cdb1a
 +fn make_copy(s: &mut Session, run: &mut dyn FnMut(&mut Session) -> Result<Json>, kind: &Kind, stamp: &Stamp) -> Result<Json> {
 +    let line = if kind.ascii { stamp.ascii_line() } else { stamp.line() };
 +    let swapped = if kind.text { None } else { stamp_slides(s, &line) };
++    if !kind.text && swapped.is_none() {
++        eprintln!("office: XDFU: no free shape id, the copy is left unstamped");
++    }
 +    let r = run(s);
 +    if let Some((orig, stamped)) = swapped
 +        && let Ok(d) = s.doc_mut()
@@ -478,6 +483,11 @@ index 0000000..c2cdb1a
 +        stamp_output(&mut out, &line)?;
 +    }
 +    Ok(out)
++}
++
++/// `stamp_slides` has a shape id for every slide.
++fn can_stamp(s: &Session) -> bool {
++    s.active().is_some_and(|d| d.doc.next_id.max(1).checked_add(d.doc.slides.len() as u32).is_some())
 +}
 +
 +/// A red bold text box of `size` pt along the bottom of the slide.
@@ -515,15 +525,18 @@ index 0000000..c2cdb1a
 +    Some((orig, stamped))
 +}
 +
-+/// An outline copy: the line goes on top of the produced file (`path`) or bytes (`data`, base64). A copy that cannot be stamped is
-+/// deleted rather than left unmarked.
++/// An outline copy: the line goes on top of the produced file (`path`) or bytes (`data`, base64). Nothing is ever refused: a copy that
++/// cannot be stamped is kept as it was produced and the reason goes to stderr (a documented limit of XDFU).
 +fn stamp_output(out: &mut Json, line: &str) -> Result<()> {
-+    let fail = |m: String| EngineError::Internal("office.xdfu".into(), m);
 +    if let Some(b64) = out.get("data").and_then(Json::as_str) {
-+        let old = deckcraft_engine::cmd::base64_decode(b64).ok_or_else(|| fail("bad base64".into()))?;
-+        let new = xdfu_core::stamp_text(&old, "txt", line).map_err(fail)?;
-+        out["data"] = json!(deckcraft_engine::cmd::base64_encode(&new));
-+        out["bytes"] = json!(new.len());
++        let old = deckcraft_engine::cmd::base64_decode(b64).ok_or_else(|| EngineError::Internal("office.xdfu".into(), "bad base64".into()))?;
++        match xdfu_core::stamp_text(&old, "txt", line) {
++            Ok(new) => {
++                out["data"] = json!(deckcraft_engine::cmd::base64_encode(&new));
++                out["bytes"] = json!(new.len());
++            }
++            Err(e) => eprintln!("office: XDFU stamp of the outline download failed, the copy is left unstamped: {e}"),
++        }
 +    } else if let Some(path) = out.get("path").and_then(Json::as_str).map(str::to_string) {
 +        let done = std::fs::read(&path)
 +            .map_err(|e| e.to_string())
@@ -531,10 +544,7 @@ index 0000000..c2cdb1a
 +            .and_then(|new| std::fs::write(&path, &new).map(|()| new.len()).map_err(|e| e.to_string()));
 +        match done {
 +            Ok(n) => out["bytes"] = json!(n),
-+            Err(e) => {
-+                let _ = std::fs::remove_file(&path);
-+                return Err(fail(e));
-+            }
++            Err(e) => eprintln!("office: XDFU stamp of {path} failed, the copy is left unstamped: {e}"),
 +        }
 +    }
 +    Ok(())
@@ -575,6 +585,26 @@ index 0000000..c2cdb1a
 +        })?;
 +        Ok(json!({"grif": grif, "copy": st.copy}))
 +    })
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn an_outline_copy_that_cannot_be_stamped_is_kept_and_not_refused() {
++        let gone = std::env::temp_dir().join(format!("office-stamp-output-{}.txt", std::process::id()));
++        let _ = std::fs::remove_file(&gone);
++        let mut out = json!({"path": gone.to_string_lossy(), "bytes": 3});
++        assert!(stamp_output(&mut out, "XDFU copy 1").is_ok());
++        assert_eq!(out["bytes"], 3);
++        assert!(!gone.exists());
++        std::fs::write(&gone, "body").unwrap();
++        let mut out = json!({"path": gone.to_string_lossy()});
++        stamp_output(&mut out, "XDFU copy 1").unwrap();
++        assert_eq!(std::fs::read_to_string(&gone).unwrap(), "XDFU copy 1\nbody");
++        let _ = std::fs::remove_file(&gone);
++    }
 +}
 diff --git a/crates/ui-egui/tests/office_history.rs b/crates/ui-egui/tests/office_history.rs
 new file mode 100644
@@ -634,10 +664,10 @@ index 0000000..b27c25b
 +}
 diff --git a/crates/ui-egui/tests/office_xdfu.rs b/crates/ui-egui/tests/office_xdfu.rs
 new file mode 100644
-index 0000000..81ec0b2
+index 0000000..9fe1320
 --- /dev/null
 +++ b/crates/ui-egui/tests/office_xdfu.rs
-@@ -0,0 +1,234 @@
+@@ -0,0 +1,248 @@
 +// Added by the office overlay patch queue. MIT OR Apache-2.0.
 +//! The XDFU watermark through the command hook (patch 0143): every copy of a grif presentation carries the Resolution 766 cl. 12 line
 +//! with a copy number from the keyed audit chain, and nothing is ever refused. Its own test binary (the hook is process-wide); the
@@ -871,6 +901,20 @@ index 0000000..81ec0b2
 +    assert_eq!(text(&s).len(), 1);
 +    s.execute("edit.undo", &json!({})).unwrap();
 +    assert_eq!(text(&s), vec![format!("\u{425}\u{414}\u{424}\u{423}\nNusxa {}", before + 1)], "undoable");
++}
++
++#[test]
++fn a_copy_that_cannot_be_stamped_is_made_and_recorded_as_unstamped() {
++    let _g = start();
++    let mut s = deck("XDFU");
++    // every shape id is in use: the stamp box cannot be added, the copy is still made
++    std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc).next_id = u32::MAX;
++    let before = lines();
++    export(&mut s, "full.pdf", json!({"format": "pdf"})).unwrap();
++    assert!(!pdf_text(std::fs::read(path("full.pdf")).unwrap()).contains("XDFU copy "));
++    assert_eq!(lines(), before + 1);
++    let last = std::fs::read_to_string(log()).unwrap().lines().last().unwrap().to_string();
++    assert!(last.contains("\"export_unstamped\""), "{last}");
 +}
 diff --git a/crates/ui-egui/tests/office_xdfu_off.rs b/crates/ui-egui/tests/office_xdfu_off.rs
 new file mode 100644
