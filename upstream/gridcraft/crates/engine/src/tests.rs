@@ -3358,6 +3358,7 @@ fn new_workbooks_are_times_new_roman_12_on_the_interface_paper() {
         assert_eq!((f.name.as_str(), f.size), ("Times New Roman", 12.0));
         let sh = wb.active().unwrap();
         assert_eq!((sh.default_row_height, sh.print.paper.as_str()), (21.0, "Letter"));
+        assert_eq!(sh.default_col_width, 72.0, "TNR 12: 8 chars of 8 px + 5 px, rounded up to 8");
     }
     s.prefs.num_locale = gridcraft_core::NumLocale::UzLatn;
     s.new_workbook();

@@ -1901,11 +1901,11 @@ mod tests {
         let rows: Vec<Vec<Json>> = (0..60).map(|r| (0..15).map(|c| json!(r * 100 + c)).collect()).collect();
         s.execute("range.setValues", json!({"range": "A1", "values": rows})).unwrap();
         let pv = s.execute("file.printPreview", json!({})).unwrap();
-        // 511.2pt / 48pt = 10 columns per page; 43 rows per page (15.75pt rows, gridcraft/0151).
+        // 511.2pt / 54pt = 9 columns per page (72 px = 54pt, Times New Roman 12, gridcraft/0154; 10 at 48pt for Calibri 11); 43 rows per page (15.75pt rows, gridcraft/0151).
         assert_eq!(pv["pages"], 4);
-        assert_eq!(pv["pageList"][0]["range"], "A1:J43");
-        assert_eq!(pv["pageList"][1]["range"], "A44:J60");
-        assert_eq!(pv["pageList"][2]["range"], "K1:O43");
+        assert_eq!(pv["pageList"][0]["range"], "A1:I43");
+        assert_eq!(pv["pageList"][1]["range"], "A44:I60");
+        assert_eq!(pv["pageList"][2]["range"], "J1:O43");
     }
 
     #[test]

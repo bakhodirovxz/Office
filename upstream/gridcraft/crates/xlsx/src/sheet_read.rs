@@ -120,9 +120,10 @@ pub fn read_sheet(cx: &mut Ctx<'_>, part: &str, name: &str) -> Result<Sheet, IoE
                     if px > 0.0 {
                         sheet.default_col_width = px;
                     }
-                } else if let Some(b) = e.attr_f64("baseColWidth") {
-                    let px = ((b.clamp(0.0, 255.0) * 7.0 + 5.0) / 8.0).ceil() * 8.0;
-                    sheet.default_col_width = px as f32;
+                } else {
+                    // Neither width given: the spec's derivation from the Normal font (baseColWidth defaults to 8).
+                    let f = &cx.styles.get(gridcraft_model::StyleId::DEFAULT).font;
+                    sheet.default_col_width = gridcraft_model::default_col_width_px(&f.name, f.size, e.attr_f64("baseColWidth").unwrap_or(8.0));
                 }
             }
             "cols" => read_cols(cx, e, &mut sheet),

@@ -1166,3 +1166,27 @@ fn doc_props_keep_boundary_whitespace() {
     let (back, _) = read_xlsx(&write_xlsx(&wb).unwrap()).unwrap();
     assert_eq!(back.props, wb.props);
 }
+
+/// Default column width follows the Normal font (ECMA-376 18.3.1.81): explicit values are kept, baseColWidth/nothing derive.
+#[test]
+fn default_col_width_follows_the_normal_font() {
+    use gridcraft_model::{StyleId, StyleTable};
+    let px = |wb: &Workbook| read_xlsx(&write_xlsx(wb).unwrap()).unwrap().0.sheets[0].default_col_width;
+    // Calibri 11: 64 px, and nothing written.
+    let mut wb = Workbook::new();
+    assert_eq!(px(&wb), 64.0);
+    // Times New Roman 12 (a new workbook): 72 px; written without defaultColWidth, derived back from the font.
+    let mut n = wb.styles.get(StyleId::DEFAULT).clone();
+    n.font.name = "Times New Roman".into();
+    n.font.size = 12.0;
+    wb.styles = StyleTable::with_default(n);
+    Arc::make_mut(&mut wb.sheets[0]).default_col_width = 72.0;
+    let bytes = write_xlsx(&wb).unwrap();
+    assert!(!String::from_utf8_lossy(&Package::open(&bytes).unwrap().read("xl/worksheets/sheet1.xml").unwrap().unwrap()).contains("defaultColWidth"));
+    assert_eq!(px(&wb), 72.0);
+    // An explicit width survives in any Normal font.
+    Arc::make_mut(&mut wb.sheets[0]).default_col_width = 100.0;
+    assert_eq!(px(&wb), 100.0);
+    assert_eq!(gridcraft_model::default_col_width_px("Calibri", 11.0, 10.0), 80.0);
+    assert_eq!(gridcraft_model::default_col_width_px("Times New Roman", 12.0, 10.0), 88.0);
+}

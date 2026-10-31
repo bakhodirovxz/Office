@@ -1338,8 +1338,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   and ru, new Docs document (Times New Roman 12 in the font box, A4 ruler), Sheets print page uz-Latn and ru ("A4 · Kitob"
   above Page Setup), new Sheets workbook (Times New Roman 12). Sheets ru still shows "Grayscale" in English (a gridcraft ru
   catalog gap, not touched here). Slides and PDF were not built or photographed (E: fell under 7 GB while other agents built; their defaults are covered by the tests above).
-- **Not done / open:** Sheets' default column width stays 64 px (Excel gives about 72 px for a Times New Roman 12 Normal
-  font, so columns look narrower here than in Excel for new workbooks); sheets made by analysis tools (pivot, solver,
+- **Not done / open:** (default column width: answered by gridcraft/0154, see the last section); sheets made by analysis tools (pivot, solver,
   forecast) keep Letter and 20 px rows; A4 follows the interface language, not the units (an en-US Windows with a uz
   interface still shows inches in Docs).
 - **MSI rebuilt from phase-4 `2bb7c0d` (2026-10-29)**, with the alphabet (always 2026), recovery, tables, PDF->Word,
@@ -1442,3 +1441,14 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (static check only). `build-msi.ps1` now checks the VC runtime imports with dumpbin on every build and has `-Out`. `msi-test.ps1`:
   recommended-handlers filter, `AppActivate` check, tracked PDF fixture. Test MSI (not installed) `E:\office-target\p4-msi-test\`,
   SHA-256 `DEC278B6...A887`. Not run: install, upgrade, the msi-test changes.
+
+## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
+- Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
+  font's maximum digit width plus 5 px padding, rounded up to 8 px. Digit width: Times New Roman 0.5 em (12 pt = 16 px gives 8 px);
+  every other font keeps the 7 px the model already assumes (Calibri 11, Excel's value). No other font table was invented.
+- Calibri 11: 64 px before and after. Times New Roman 12: 64 px before, 72 px after (new workbooks, and xlsx files in that font
+  without `defaultColWidth`).
+- A file with `defaultColWidth` keeps it exactly; `<col width>` is untouched (still converted with 7 px digits, as before). The
+  writer omits `defaultColWidth` when the width equals what a reader derives from the Normal font.
+- Tests: engine lib (new-workbook assert in `new_workbooks_are_times_new_roman_12_on_the_interface_paper`), xlsx lib
+  `default_col_width_follows_the_normal_font`. Not checked: on-screen look, Excel opening a saved TNR 12 file.
