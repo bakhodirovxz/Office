@@ -455,7 +455,8 @@ test('desktop mode: the History panel lists, views, restores after a confirm, co
         let r: any = null;
         if (d.type === 'settings_get') r = { type: 'settings', values: { lang: 'ru' } };
         else if (d.type === 'recent') r = { type: 'recent', items: [] };
-        else if (d.type === 'history') r = { type: 'history', items: [{ path: kept, app: 'docs', versions: vers.length, ts: vers.at(-1).time, size: vers.at(-1).size }] };
+        else if (d.type === 'history_forget') { w.__gone = true; r = { type: 'history_forget', ok: true, path: d.path }; }
+        else if (d.type === 'history') r = { type: 'history', items: w.__gone ? [] : [{ path: kept, app: 'docs', versions: vers.length, ts: vers.at(-1).time, size: vers.at(-1).size }] };
         else if (d.type === 'history_versions') r = d.path === user || d.path === kept ? { type: 'history_versions', ok: true, path: d.path, items: vers, verified: !w.__damaged, problem: w.__damaged ? 'version 1: the stored bytes are missing' : null } : { type: 'rejected', error: 'this file has no saved versions' };
         else if (d.type === 'history_view') r = { type: 'history_view', ok: true, v: d.v, name: `Hisobot (v${d.v} view).docx`, copy: true };
         else if (d.type === 'history_copy') r = { type: 'history_copy', ok: true, v: d.v, path: `C:\\Users\\u\\Downloads\\Hisobot (v${d.v}).docx` };
@@ -539,7 +540,20 @@ test('desktop mode: the History panel lists, views, restores after a confirm, co
   // a file without versions says so
   await page.evaluate(() => { location.hash = '#history=' + encodeURIComponent('C:\\Users\\u\\other.docx'); });
   await expect(page.locator('#hist-msg')).toContainText('other.docx');
+  // Delete the history: Cancel sends nothing, the confirm sends history_forget, and the document leaves the list
+  await page.evaluate(() => { location.hash = '#history=' + encodeURIComponent('C:\\Users\\u\\Hisobot.docx'); });
+  await expect(page.locator('#hist-vers li')).toHaveCount(3);
+  const fd = page.locator('#hist-forget-dlg');
+  await page.locator('#hist-forget').click();
+  await expect(fd).toBeVisible();
+  await fd.getByRole('button', { name: txt('en', 'hist.cancel') }).click();
+  expect((await sent()).filter((m: any) => m.type === 'history_forget')).toHaveLength(0);
+  await page.locator('#hist-forget').click();
+  await fd.getByRole('button', { name: txt('en', 'hist.forget.ok') }).click();
+  expect((await sent()).filter((m: any) => m.type === 'history_forget')).toEqual([{ type: 'history_forget', path: KEPT }]);
+  await expect(page.locator('#hist-msg')).toHaveText(txt('en', 'hist.forgot').replace('{name}', 'Hisobot.docx'));
   await expect(page.locator('#hist-ver-sec')).toBeHidden();
+  await expect(page.locator('#hist-docs li')).toHaveCount(0);
   expect(w.problems).toEqual([]);
 });
 

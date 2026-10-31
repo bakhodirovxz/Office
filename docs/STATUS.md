@@ -1537,3 +1537,6 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   rows), PDF 30,230 B, shell 9,901 B. Slides now has under 10 KB left for the next catalog growth. UpgradeCode is the frozen
   one, the same as the owner's installed `9B804E90…0646` build, so it should upgrade in place; the in-place upgrade is not
   tested here.
+
+### Phase 5: gate finding F14, history lock and "delete this document's history" (2026-10-31, branch `p5-f14`)
+- Lock ownership (token in `.lock`, `Drop` and takeover never remove another process's lock), `.tmp` sweep already present (WP11), and a desktop `history_forget` message plus a confirm-guarded "Delete history" button in the shell History panel (reuses `Store::forget_id`). Details and tests: `docs/phase4/gate-review.md` F14.

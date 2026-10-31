@@ -260,15 +260,28 @@ pub fn write_atomic(to: &Path, bytes: &[u8]) -> io::Result<()> {
     r
 }
 
-struct Lock(PathBuf);
+/// The lock file holds its owner's token, so a process removes only a lock it made (a takeover or a `Drop` never deletes another's).
+struct Lock(PathBuf, String);
 
 impl Lock {
     fn take(root: &Path) -> io::Result<Lock> {
+        static N: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         fs::create_dir_all(root)?;
         let p = root.join(".lock");
+        let token = format!(
+            "{}.{}.{}",
+            std::process::id(),
+            N.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        );
         for _ in 0..200 {
             match OpenOptions::new().write(true).create_new(true).open(&p) {
-                Ok(_) => return Ok(Lock(p)),
+                Ok(mut f) => {
+                    f.write_all(token.as_bytes())?;
+                    return Ok(Lock(p, token));
+                }
                 Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
                     let old = fs::metadata(&p)
                         .and_then(|m| m.modified())
@@ -276,7 +289,7 @@ impl Lock {
                         .and_then(|t| t.elapsed().ok())
                         .is_some_and(|a| a > Duration::from_secs(30));
                     if old {
-                        let _ = fs::remove_file(&p);
+                        Self::take_over(&p, &token);
                     } else {
                         std::thread::sleep(Duration::from_millis(50));
                     }
@@ -289,11 +302,28 @@ impl Lock {
             "the history store is locked by another process",
         ))
     }
+
+    /// Clear a stale lock. The rename is atomic, so one process wins; if what it moved is not the stale file (a fresh lock made
+    /// in between), it is put back and nothing is deleted.
+    fn take_over(p: &Path, token: &str) {
+        let stale = fs::read(p).ok();
+        let aside = p.with_file_name(format!(".lock.{token}.stale"));
+        if fs::rename(p, &aside).is_err() {
+            return;
+        }
+        if fs::read(&aside).ok() == stale {
+            let _ = fs::remove_file(&aside);
+        } else if fs::hard_link(&aside, p).is_ok() {
+            let _ = fs::remove_file(&aside);
+        }
+    }
 }
 
 impl Drop for Lock {
     fn drop(&mut self) {
-        let _ = fs::remove_file(&self.0);
+        if fs::read(&self.0).is_ok_and(|t| t == self.1.as_bytes()) {
+            let _ = fs::remove_file(&self.0);
+        }
     }
 }
 
@@ -1395,5 +1425,36 @@ mod tests {
         drop(f);
         s.snapshot_bytes("d1", b"b", "a", None).unwrap();
         assert!(!old.exists() && fresh.exists(), "only the stale one goes");
+    }
+
+    #[test]
+    fn a_lock_is_removed_only_by_its_owner() {
+        let t = T::new("lock");
+        let root = t.store(roomy()).root.clone();
+        let a = Lock::take(&root).unwrap();
+        // another process took the stale lock over: our Drop must leave its file alone
+        fs::write(root.join(".lock"), b"other").unwrap();
+        drop(a);
+        assert_eq!(fs::read(root.join(".lock")).unwrap(), b"other");
+        // a stale lock is taken over; a fresh one is not
+        let f = fs::OpenOptions::new()
+            .write(true)
+            .open(root.join(".lock"))
+            .unwrap();
+        f.set_modified(SystemTime::now() - Duration::from_secs(60))
+            .unwrap();
+        drop(f);
+        let b = Lock::take(&root).unwrap();
+        assert_eq!(fs::read(root.join(".lock")).unwrap(), b.1.as_bytes());
+        drop(b);
+        assert!(!root.join(".lock").exists(), "its own lock goes");
+        assert_eq!(
+            fs::read_dir(&root)
+                .unwrap()
+                .filter_map(Result::ok)
+                .filter(|e| e.file_name().to_string_lossy().ends_with(".stale"))
+                .count(),
+            0
+        );
     }
 }

@@ -86,6 +86,7 @@
       <section id="hist-ver-sec" aria-labelledby="h-vers" hidden>
         <h2 id="h-vers" tabindex="-1"></h2>
         <p id="hist-chain" role="status"></p>
+        <p><button id="hist-forget" type="button" class="btn ghost" data-i18n="hist.forget"></button></p>
         <div id="hist-cmp-bar" class="cmpbar" hidden>
           <label><span data-i18n="hist.cmp.from"></span> <select id="hist-cmp-a"></select></label>
           <label><span data-i18n="hist.cmp.to"></span> <select id="hist-cmp-b"></select></label>
@@ -114,6 +115,14 @@
       <h2 id="hist-name-title"></h2>
       <p><label><span data-i18n="hist.name.label"></span><br><input id="hist-name-input" type="text" maxlength="200" autocomplete="off"></label></p>
       <p><button type="submit" value="ok" class="btn" data-i18n="hist.name.ok"></button>
+        <button type="submit" value="" class="btn ghost" data-i18n="hist.cancel"></button></p>
+    </form>
+  </dialog>
+  <dialog id="hist-forget-dlg" aria-labelledby="hist-forget-title">
+    <form method="dialog">
+      <h2 id="hist-forget-title"></h2>
+      <p data-i18n="hist.forget.body"></p>
+      <p><button type="submit" value="ok" class="btn" data-i18n="hist.forget.ok"></button>
         <button type="submit" value="" class="btn ghost" data-i18n="hist.cancel"></button></p>
     </form>
   </dialog>

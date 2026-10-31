@@ -224,6 +224,10 @@ pub enum Request {
         v: u64,
         name: String,
     },
+    /// delete a document's whole history (not the file); works for a file that is gone too
+    HistoryForget {
+        path: String,
+    },
     /// the diff of versions `a` (old) and `b` (new) by the editor's diff tool (`docs-diff`, `sheets-diff`; phase 5 WP12)
     HistoryCompare {
         path: String,
@@ -545,9 +549,8 @@ impl Ctx {
         }
     }
 
-    /// The history store and the file for a path from the page: it must be the path of a document that has versions, and satisfy the
-    /// path rules (the file must still exist: restoring a deleted file is not done yet).
-    fn history_target(&self, path: &str) -> Result<(&HStore, &AppDef, PathBuf), String> {
+    /// The history store and the id of the document a path from the page names: it must be a document that has versions.
+    fn history_doc(&self, path: &str) -> Result<(&HStore, String), String> {
         let h = self
             .history
             .as_ref()
@@ -558,13 +561,17 @@ impl Ctx {
         // touches only the user's own drive, never a UNC path from the page)
         let drive = matches!(Path::new(path).components().next(), Some(Component::Prefix(p)) if matches!(p.kind(), Prefix::Disk(_) | Prefix::VerbatimDisk(_)));
         let id = drive.then(|| suite_core::history::doc_id(Path::new(path)));
-        if !h
-            .documents()
+        h.documents()
             .iter()
-            .any(|d| same(&d.path) || id.as_deref() == Some(d.id.as_str()))
-        {
-            return Err("this file has no saved versions".into());
-        }
+            .find(|d| same(&d.path) || id.as_deref() == Some(d.id.as_str()))
+            .map(|d| (h, d.id.clone()))
+            .ok_or_else(|| "this file has no saved versions".into())
+    }
+
+    /// The history store and the file for a path from the page: it must be the path of a document that has versions, and satisfy the
+    /// path rules (the file must still exist: restoring a deleted file is not done yet).
+    fn history_target(&self, path: &str) -> Result<(&HStore, &AppDef, PathBuf), String> {
+        let (h, _) = self.history_doc(path)?;
         // the store holds only files the user opened, so a share is allowed here (F10)
         let (app, p) = check_file(&self.brand, path, Source::User)?;
         Ok((h, app, p))
@@ -729,7 +736,11 @@ impl Ctx {
             Request::Recent {} => json!({"type": "recent", "items": items(self.store.recent(20))}),
             // the open log stays internal (it is the whitelist of `open`); the page sees the documents that have versions
             Request::History {} => {
-                let docs = self.history.as_ref().map(HStore::documents).unwrap_or_default();
+                let docs = self
+                    .history
+                    .as_ref()
+                    .map(HStore::documents)
+                    .unwrap_or_default();
                 let items: Vec<Value> = docs
                     .iter()
                     .map(|d| {
@@ -763,10 +774,12 @@ impl Ctx {
                     Ok(json!({"version": made.to_json()}))
                 })
             }
-            Request::HistoryCopy { path, v } => self.history_op("history_copy", &path, |h, _, p| {
-                let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
-                Ok(json!({"v": v, "path": to}))
-            }),
+            Request::HistoryCopy { path, v } => {
+                self.history_op("history_copy", &path, |h, _, p| {
+                    let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
+                    Ok(json!({"v": v, "path": to}))
+                })
+            }
             Request::HistoryCompare { path, a, b } => return self.history_compare(&path, a, b),
             Request::HistoryName { path, v, name } => {
                 self.history_op("history_name", &path, |h, _, p| {
@@ -774,6 +787,13 @@ impl Ctx {
                     Ok(json!({"v": v}))
                 })
             }
+            Request::HistoryForget { path } => match self
+                .history_doc(&path)
+                .and_then(|(h, id)| h.forget_id(&id).map_err(|e| e.to_string()))
+            {
+                Ok(_) => json!({"type": "history_forget", "ok": true, "path": path}),
+                Err(error) => json!({"type": "rejected", "error": error}),
+            },
             Request::SettingsGet {} => json!({"type": "settings", "values": self.store.settings()}),
             Request::SettingsSet { key, value } => match self.store.set_setting(&key, &value) {
                 Ok(()) => json!({"type": "settings", "values": self.store.settings()}),
@@ -1427,6 +1447,37 @@ owhere.docx", "a": 1, "b": 2}))["type"],
         );
         assert_eq!(leftovers(), 0);
         assert_eq!(std::fs::read(&doc).unwrap(), b"two");
+    }
+
+    /// F14: the page can delete a document's whole history, also after the file itself is gone; the file is never touched.
+    #[test]
+    fn history_forget_deletes_the_history_only() {
+        let (c, d, _) = ctx("forget");
+        let (doc, keep) = (d.join("gone.docx"), d.join("keep.docx"));
+        let h = c.history.as_ref().unwrap();
+        std::fs::write(&doc, b"one").unwrap();
+        std::fs::write(&keep, b"k").unwrap();
+        h.snapshot(&doc, None).unwrap();
+        h.snapshot(&keep, None).unwrap();
+        std::fs::remove_file(&doc).unwrap();
+        let send = |v: Value| reply(c.message(&v.to_string()));
+        let (p, k) = (doc.to_str().unwrap(), keep.to_str().unwrap());
+        let r = send(json!({"type": "history_forget", "path": p}));
+        assert_eq!(
+            (r["type"].as_str(), r["ok"].clone()),
+            (Some("history_forget"), json!(true)),
+            "{r}"
+        );
+        assert_eq!(h.documents().len(), 1);
+        assert_eq!(
+            send(json!({"type": "history_forget", "path": p}))["type"],
+            "rejected"
+        );
+        assert_eq!(
+            send(json!({"type": "history_versions", "path": k}))["ok"],
+            true
+        );
+        assert_eq!(std::fs::read(&keep).unwrap(), b"k");
     }
 
     /// WP10: the page lists, views, restores, copies and names versions, for documents that have versions only.

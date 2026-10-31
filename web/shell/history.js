@@ -1,5 +1,5 @@
 // The History panel of the shell (PLAN phase 4, 5.5, WP10). Route #history or #history=<urlencoded path>. Plain JS; the desktop host does
-// the work over WebView IPC (history, history_versions, history_view, history_restore, history_copy, history_name, history_compare:
+// the work over WebView IPC (history, history_versions, history_view, history_restore, history_copy, history_name, history_forget, history_compare:
 // phase 5 WP12, the domain diff tools); in the browser or
 // connected to a server there is no host and the panel only says so. Strings: shell/i18n.json (keys hist.*); the language is the page's.
 (() => {
@@ -111,6 +111,16 @@
     say(t('hist.restored', { from: v.v, v: d.version.v }));
     await loadDocs(); await loadVersions(true);
   }
+  async function forget() {
+    $('hist-forget-title').textContent = t('hist.forget.title', { name: base(S.path) });
+    if (!(await ask($('hist-forget-dlg')))) return;
+    const gone = S.path;
+    const d = await host({ type: 'history_forget', path: gone }, 'history_forget');
+    if (fails(d, 'history_forget')) return;
+    S.path = ''; S.vers = []; closeCompare(); $('hist-ver-sec').hidden = true;
+    await loadDocs();
+    say(t('hist.forgot', { name: base(gone) }));
+  }
   async function rename(v) {
     $('hist-name-title').textContent = t('hist.name.title', { v: v.v });
     $('hist-name-input').value = v.name || '';
@@ -150,6 +160,7 @@
     $('nav-history').onclick = () => { location.hash = '#history'; };
     $('hist-back').onclick = leave;
     $('hist-cmp-go').onclick = compare;
+    $('hist-forget').onclick = forget;
     $('hist-cmp-close').onclick = () => { closeCompare(); $('hist-cmp-go').focus(); };
     addEventListener('hashchange', route);
     // the host asks for a file's panel (a second launch with --history FILE)
