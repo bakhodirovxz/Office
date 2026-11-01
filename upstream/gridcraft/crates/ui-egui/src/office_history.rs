@@ -91,7 +91,7 @@ impl Hook for Layer {
         let (Ok(out), Some(Some(store)), Some(d)) = (result, STORE.get(), s.active()) else { return };
         // Only the document's own file is versioned: a csv/pdf copy, or a save that opened the Save As dialog, is not.
         let (Some(path), Some(saved)) = (d.path.as_deref(), out.get("path").and_then(Json::as_str)) else { return };
-        if saved != path {
+        if !same_path(saved, path) {
             return;
         }
         let autosave = params.get("autosave").and_then(Json::as_bool) == Some(true);
