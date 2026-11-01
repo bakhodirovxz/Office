@@ -1618,3 +1618,8 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   ("Saved: <name>") still comes from the real touch path (File > Save). Editor taps are fixed device pixels (canvas, no accessibility nodes, plan section 8). The glide path is imprecise (stray `o`/`f` around `hello world` in the document).
 - **Done-check** (`HRM_Pixel_8`, shell + Docs, synthetic `01-split-runs.docx`, dist `E:/office-target/p5/dist`): `shell-home` 3.1 s, `open` 9.2 s, `type` 10.6 s (five key taps + glide), `save` 7.9 s: all pass;
   the saved docx contains `hello` and `world`. JSON `docs/phase6/evidence/rig/2026-11-01T09-10-48-shell-docs-412.json`; recordings `docs/phase6/evidence/rig/docs-*-412.mp4` (copies; originals on E:).
+
+### Phase 6 WP2 step 1: M3 measurement (2026-11-02, branch `p6-m3`)
+- Emulator `opened` (median of 3): 412 dp 17.5 s (1 page) vs 24.7 s (108 pages); 360 dp 26.6 s vs 26.4 s. The emulator noise exceeds the document effect; the stall is not reproduced as one 240 s task.
+- Native layout of the 108-page file (110 pages): 255 ms cold, 38 ms warm cache: shaping is 85 %, pagination plus all passes 15 %. Web Layout is not cheaper (233 ms).
+- Recommendation: (a) always, then (c) slice the shaping warm-up; (b) refuted, (d) not needed unless pagination matters on a phone. Details `docs/phase6/m3.md`.

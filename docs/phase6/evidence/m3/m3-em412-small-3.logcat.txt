@@ -1,0 +1,1 @@
+11-01 09:46:19.690  2413  2413 I Zygote  : Process 4711 exited due to signal 9 (Killed)

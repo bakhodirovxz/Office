@@ -1,0 +1,8 @@
+11-01 09:43:01.298  2413  2413 I Zygote  : Process 4412 exited due to signal 9 (Killed)
+11-01 09:43:05.716   234   234 I lowmemorykiller: lmkd data connection established
+11-01 09:43:05.838   234   234 I lowmemorykiller: Wakeup counter is reset from 0 to 0
+11-01 09:43:05.838   234   234 I lowmemorykiller: Using psi monitors for memory pressure detection
+11-01 09:43:05.838   234   234 I lowmemorykiller: Properties reinitilized
+11-01 09:43:05.839  4512  4512 I lowmemorykiller: lmkd updated properties successfully
+11-01 09:43:05.839   234   234 I lowmemorykiller: lmkd data connection dropped
+11-01 09:43:05.839   234   234 I lowmemorykiller: closing lmkd data connection

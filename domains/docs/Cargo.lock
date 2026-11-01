@@ -1024,6 +1024,8 @@ dependencies = [
  "wasm-bindgen",
  "wordcraft-doc",
  "wordcraft-engine",
+ "wordcraft-fonts",
+ "wordcraft-layout",
  "wordcraft-render",
  "zip",
 ]
