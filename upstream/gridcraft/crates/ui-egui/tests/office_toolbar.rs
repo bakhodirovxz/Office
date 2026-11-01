@@ -116,10 +116,10 @@ fn excels_keytips_reach_the_five_pickers() {
     let _g = lock();
     settings_dir("keys");
     office_toolbar::set_simple(true);
-    // Alt,H,F,F: the font list opens ("Calibri" is on the picker button and in the list)
+    // Alt,H,F,F: the font list opens ("Times New Roman" is on the picker button and in the list)
     let mut h = harness(1600.0, Language::En);
     sequence(&mut h, &[Key::H, Key::F, Key::F]);
-    assert!(h.query_all_by_label("Calibri").count() >= 2, "HFF must open the font list in the simple row");
+    assert!(h.query_all_by_label("Times New Roman").count() >= 2, "HFF must open the font list in the simple row");
     // Alt,H,F,S: the size picker takes a typed size
     let mut h = harness(1600.0, Language::En);
     sequence(&mut h, &[Key::H, Key::F, Key::S]);
