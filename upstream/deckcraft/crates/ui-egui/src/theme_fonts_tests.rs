@@ -130,7 +130,7 @@ fn typing_a_name_replaces_the_scheme_name() {
     h.run_steps(2);
     assert!(h.state().dialog.is_none(), "status: {:?}", h.state().status);
     assert_eq!(scheme(&h).name, "Talk");
-    assert_eq!(scheme(&h).major.latin, "Inter");
-    assert_eq!(scheme(&h).minor.latin, "Inter");
+    assert_eq!(scheme(&h).major.latin, "Times New Roman"); // office overlay (deckcraft/0152): the default theme font
+    assert_eq!(scheme(&h).minor.latin, "Times New Roman");
     assert_eq!(undo_len(&h), n + 1);
 }

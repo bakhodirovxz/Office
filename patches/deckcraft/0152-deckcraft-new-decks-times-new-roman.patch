@@ -41,3 +41,17 @@ index 9e5b9b7..a4c9c80 100644
          (defaults::blank_presentation(size, theme, !bool_or(p, "blank", false)), None)
      };
      let slides = doc.slides.len();
+diff --git a/crates/ui-egui/src/theme_fonts_tests.rs b/crates/ui-egui/src/theme_fonts_tests.rs
+index adee8b9..87cce1a 100644
+--- a/crates/ui-egui/src/theme_fonts_tests.rs
++++ b/crates/ui-egui/src/theme_fonts_tests.rs
+@@ -130,7 +130,7 @@ fn typing_a_name_replaces_the_scheme_name() {
+     h.run_steps(2);
+     assert!(h.state().dialog.is_none(), "status: {:?}", h.state().status);
+     assert_eq!(scheme(&h).name, "Talk");
+-    assert_eq!(scheme(&h).major.latin, "Inter");
+-    assert_eq!(scheme(&h).minor.latin, "Inter");
++    assert_eq!(scheme(&h).major.latin, "Times New Roman"); // office overlay (deckcraft/0152): the default theme font
++    assert_eq!(scheme(&h).minor.latin, "Times New Roman");
+     assert_eq!(undo_len(&h), n + 1);
+ }
