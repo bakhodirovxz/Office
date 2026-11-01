@@ -636,3 +636,20 @@ fn xls_short_window2_is_ignored() {
         assert_eq!(v(&wb, 0, "A1"), Value::Number(7.0));
     }
 }
+
+#[test]
+fn xls_column_width_uses_the_normal_font_digit_width() {
+    // FONT: height (twips), grbit, colour, weight, escapement, underline, family, charset, reserved, name.
+    let font = |name: &str, pt: u16| rec(0x0031, &cat(&[&u16s(&[pt * 20, 0, 0, 400, 0]), &[0, 0, 0, 0, name.len() as u8, 0], name.as_bytes()]));
+    // COLINFO column 0, width 9 characters (Excel stores width in 1/256 character), custom width.
+    let colinfo = rec(0x007D, &u16s(&[0, 0, 9 * 256, 0, 0x0002, 0]));
+    let px = |font_rec: &[u8]| {
+        let globals = |pos: u32| cat(&[&bof(0x0005), font_rec, &rec(0x0085, &cat(&[&pos.to_le_bytes(), &[0, 0, 6, 0], b"Sheet1"])), &eof()]);
+        let sheet = cat(&[&bof(0x0010), &colinfo, &rec(0x0203, &cat(&[&cell(0, 0, 0), &7.0f64.to_le_bytes()])), &eof()]);
+        let (wb, _) = read_xls(&compound("Workbook", &cat(&[&globals(globals(0).len() as u32), &sheet]))).unwrap();
+        wb.sheets[0].cols.get(&0).and_then(|c| c.size)
+    };
+    assert_eq!(px(&font("Arial", 10)), Some(63.0));
+    assert_eq!(px(&[]), Some(63.0));
+    assert_eq!(px(&font("Times New Roman", 12)), Some(72.0));
+}

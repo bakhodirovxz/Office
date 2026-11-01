@@ -3,7 +3,7 @@ From: office <office@localhost>
 Date: Sat, 31 Oct 2026 12:00:00 +0500
 Subject: [PATCH] gridcraft: the default column width follows the Normal font
 
-ECMA-376 18.3.1.81 and 18.3.1.13: the default width is baseColWidth (8) characters of the Normal font digit width plus 5 px, rounded up to 8 px, and stored widths (default and <col width>) are counted in that digit width. New workbooks (Times New Roman 12, digit 8 px) get 72 px; xlsx without defaultColWidth derive it from their Normal font; explicit widths are kept; Calibri 11 stays at 7 px.
+ECMA-376 18.3.1.81 and 18.3.1.13: the default width is baseColWidth (8) characters of the Normal font digit width plus 5 px, rounded up to 8 px, and stored widths (default and <col width>) are counted in that digit width. New workbooks (Times New Roman 12, digit 8 px) get 72 px; xlsx without defaultColWidth derive it from their Normal font; explicit widths are kept; Calibri 11 stays at 7 px. The .xls reader counts COLINFO widths in the digit width of its first FONT record (the Normal font), 7 px when there is none.
 ---
  crates/engine/src/cmd/print.rs  |  8 ++---
  crates/engine/src/lib.rs        |  1 +
@@ -13,8 +13,9 @@ ECMA-376 18.3.1.81 and 18.3.1.13: the default width is baseColWidth (8) characte
  crates/xlsx/src/sheet_write.rs  |  9 +++--
  crates/xlsx/src/tables.rs       | 20 +++++------
  ...crates/xlsx/src/tests/roundtrip.rs   | 42 ++++++++++++++++++++++
- crates/xlsx/src/xls/mod.rs      |  2 +-
- 9 files changed, 89 insertions(+), 23 deletions(-)
+ crates/xlsx/src/tests/xls_tests.rs     | 17 +++++++++
+ crates/xlsx/src/xls/mod.rs      | 10 +++++-
+ 10 files changed, 114 insertions(+), 23 deletions(-)
 
 diff --git a/crates/engine/src/cmd/print.rs b/crates/engine/src/cmd/print.rs
 index ec3912d..6dc013b 100644
@@ -260,16 +261,63 @@ index 872feae..22bb6a3 100644
 +        assert_eq!(col_px(&tnr), Some(px), "px {px}");
 +    }
 +}
+diff --git a/crates/xlsx/src/tests/xls_tests.rs b/crates/xlsx/src/tests/xls_tests.rs
+index a1296f8..d7bf74c 100644
+--- a/crates/xlsx/src/tests/xls_tests.rs
++++ b/crates/xlsx/src/tests/xls_tests.rs
+@@ -636,3 +636,20 @@ fn xls_short_window2_is_ignored() {
+         assert_eq!(v(&wb, 0, "A1"), Value::Number(7.0));
+     }
+ }
++
++#[test]
++fn xls_column_width_uses_the_normal_font_digit_width() {
++    // FONT: height (twips), grbit, colour, weight, escapement, underline, family, charset, reserved, name.
++    let font = |name: &str, pt: u16| rec(0x0031, &cat(&[&u16s(&[pt * 20, 0, 0, 400, 0]), &[0, 0, 0, 0, name.len() as u8, 0], name.as_bytes()]));
++    // COLINFO column 0, width 9 characters (Excel stores width in 1/256 character), custom width.
++    let colinfo = rec(0x007D, &u16s(&[0, 0, 9 * 256, 0, 0x0002, 0]));
++    let px = |font_rec: &[u8]| {
++        let globals = |pos: u32| cat(&[&bof(0x0005), font_rec, &rec(0x0085, &cat(&[&pos.to_le_bytes(), &[0, 0, 6, 0], b"Sheet1"])), &eof()]);
++        let sheet = cat(&[&bof(0x0010), &colinfo, &rec(0x0203, &cat(&[&cell(0, 0, 0), &7.0f64.to_le_bytes()])), &eof()]);
++        let (wb, _) = read_xls(&compound("Workbook", &cat(&[&globals(globals(0).len() as u32), &sheet]))).unwrap();
++        wb.sheets[0].cols.get(&0).and_then(|c| c.size)
++    };
++    assert_eq!(px(&font("Arial", 10)), Some(63.0));
++    assert_eq!(px(&[]), Some(63.0));
++    assert_eq!(px(&font("Times New Roman", 12)), Some(72.0));
++}
 diff --git a/crates/xlsx/src/xls/mod.rs b/crates/xlsx/src/xls/mod.rs
-index 15f3500..9bf6a76 100644
+index 15f3500..c12f94c 100644
 --- a/crates/xlsx/src/xls/mod.rs
 +++ b/crates/xlsx/src/xls/mod.rs
-@@ -697,7 +697,7 @@ fn sheet_record(rec: &Record<'_>, st: &mut SheetState<'_>, budget: &mut Budget,
+@@ -128,6 +128,8 @@ struct Globals {
+     links: Links,
+     names: Vec<Lbl>,
+     precision_as_displayed: bool,
++    /// The first FONT record is the Normal font; its digit width is the unit of column widths.
++    normal_font: Option<(String, f32)>,
+ }
+ 
+ /// Reads an Excel 97-2003 workbook. Inspect the report's warnings for what was skipped.
+@@ -276,6 +278,11 @@ fn globals(stream: &[u8], budget: &mut Budget, report: &mut ReadReport) -> Resul
+                 c.u16()?;
+                 g.xf_formats.push(c.u16()?);
+             }
++            0x0031 if g.normal_font.is_none() => {
++                let size = f32::from(c.u16()?) / 20.0;
++                c.skip(12)?;
++                g.normal_font = Some((c.short_string()?, size));
++            }
+             0x00FC => g.sst = shared_strings(&mut c, budget)?,
+             0x01AE => {
+                 let _ctab = c.u16()?;
+@@ -697,7 +704,8 @@ fn sheet_record(rec: &Record<'_>, st: &mut SheetState<'_>, budget: &mut Budget,
                  return Ok(());
              }
              let mut info = LineInfo::default();
 -            let px = col_width_to_px(f64::from(width) / 256.0);
-+            let px = col_width_to_px(f64::from(width) / 256.0, 7.0);
++            let px =
++                col_width_to_px(f64::from(width) / 256.0, st.g.normal_font.as_ref().map_or(7.0, |(n, s)| gridcraft_model::max_digit_width(n, *s)));
              if flags & 0x0002 != 0 || px != st.sheet.default_col_width {
                  info.size = Some(px);
              }
