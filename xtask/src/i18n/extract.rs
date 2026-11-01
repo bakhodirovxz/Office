@@ -797,7 +797,10 @@ const OWN_GRID_0146: [(&str, &str); 19] = [
     ("", "Two-sided: short edge"),
     ("", "Grayscale"),
     ("", "Finding printers…"),
-    ("", "No printers found. Configure a system printer or export a PDF."),
+    (
+        "",
+        "No printers found. Configure a system printer or export a PDF.",
+    ),
     ("", "Printer discovery failed."),
     ("", "Submitting print job…"),
     ("", "Print job submitted."),

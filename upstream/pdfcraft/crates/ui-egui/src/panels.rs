@@ -13,7 +13,8 @@ const COLLAPSED_TOOLS: usize = 14;
 /// A tool group the list shows: a planned one only when some of its tools already work, and the tools that do not work
 /// yet are not listed at all (no milestone jargon in front of the user).
 pub(crate) fn listed(g: &ToolGroup) -> bool {
-    !matches!(g.availability, Availability::Planned(_)) || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
+    !matches!(g.availability, Availability::Planned(_))
+        || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
 }
 
 fn hue(g: &ToolGroup) -> Color32 {

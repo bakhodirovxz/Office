@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: x <a@b>
+Date: Sun, 1 Nov 2026 12:00:00 +0500
+Subject: [PATCH] pdfcraft: rustfmt the files patches added after the first rustfmt pass
+
+rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
+---
+
+diff --git a/crates/ui-egui/src/panels.rs b/crates/ui-egui/src/panels.rs
+index 1e893eb..9933c21 100644
+--- a/crates/ui-egui/src/panels.rs
++++ b/crates/ui-egui/src/panels.rs
+@@ -13,7 +13,8 @@ const COLLAPSED_TOOLS: usize = 14;
+ /// A tool group the list shows: a planned one only when some of its tools already work, and the tools that do not work
+ /// yet are not listed at all (no milestone jargon in front of the user).
+ pub(crate) fn listed(g: &ToolGroup) -> bool {
+-    !matches!(g.availability, Availability::Planned(_)) || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
++    !matches!(g.availability, Availability::Planned(_))
++        || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
+ }
+ 
+ fn hue(g: &ToolGroup) -> Color32 {

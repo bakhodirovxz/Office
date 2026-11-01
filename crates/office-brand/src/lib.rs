@@ -158,7 +158,14 @@ impl Brand {
         only_keys(
             p,
             "[product]",
-            &["id", "name", "version", "vendor", "copyright", "upgrade_code"],
+            &[
+                "id",
+                "name",
+                "version",
+                "vendor",
+                "copyright",
+                "upgrade_code",
+            ],
         )?;
         let c = table(root, "colors")?;
         only_keys(

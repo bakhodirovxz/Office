@@ -1222,7 +1222,9 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     done = true;
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let save = ui.add(egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
+                    let save = ui.add(
+                        egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)),
+                    );
                     if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         if app.save_all() {
                             app.quit_confirmed = true;
@@ -1251,7 +1253,9 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     done = true;
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let save = ui.add(egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
+                    let save = ui.add(
+                        egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)),
+                    );
                     if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         app.save();
                         // In the browser a save is a download: the presentation stays "unsaved".
@@ -1854,7 +1858,8 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                             ui.add_space(16.0);
                             ui.label(egui::RichText::new(crate::i18n::t("Change to:")).weak());
                             for to in &sug {
-                                let r = ui.small_button(to.as_str()).on_hover_text(crate::i18n::t("Click to change this one; Shift-click to change all"));
+                                let r =
+                                    ui.small_button(to.as_str()).on_hover_text(crate::i18n::t("Click to change this one; Shift-click to change all"));
                                 if r.clicked() {
                                     let all = ui.input(|i| i.modifiers.shift);
                                     if item.get("notes").and_then(Value::as_bool).unwrap_or(false) {

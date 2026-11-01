@@ -169,7 +169,10 @@ pub fn write_sheet(wb: &Workbook, si: usize, selected: bool, out: &mut Out) -> (
     let mut rels = Rels::default();
     let Some(sheet) = wb.sheet(si) else { return (String::new(), rels) };
     let nstyles = wb.styles.len() as u32;
-    let mdw = gridcraft_model::max_digit_width(&wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.size);
+    let mdw = gridcraft_model::max_digit_width(
+        &wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.name,
+        wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.size,
+    );
     let sid = |s: gridcraft_model::StyleId| if s.0 < nstyles { s.0 } else { 0 };
 
     // Table header cells must hold the column names.
