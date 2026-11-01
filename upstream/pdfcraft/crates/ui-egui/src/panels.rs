@@ -117,16 +117,13 @@ fn tool_row(ui: &mut egui::Ui, t: &Tokens, g: &ToolGroup) -> egui::Response {
     };
     let clipped =
         row_label(ui, tl!(g.label), theme::regular(13.5), t.text, body.left_center() + vec2(36.0, 0.0), rect.width() - 36.0 - right_reserved);
-    match (g.badge, g.availability) {
-        (Some(b), _) => {
-            let font = theme::semibold(9.5);
-            let badge = tl!(b);
-            let w = ui.fonts_mut(|f| f.layout_no_wrap(badge.to_string(), font.clone(), Color32::WHITE).size().x);
-            let r = Rect::from_center_size(body.right_center() - vec2(w / 2.0 + 10.0, 0.0), vec2(w + 10.0, 16.0));
-            ui.painter().rect_filled(r, CornerRadius::same(4), t.badge_new);
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, badge, font, Color32::WHITE);
-        }
-        _ => {}
+    if let Some(b) = g.badge {
+        let font = theme::semibold(9.5);
+        let badge = tl!(b);
+        let w = ui.fonts_mut(|f| f.layout_no_wrap(badge.to_string(), font.clone(), Color32::WHITE).size().x);
+        let r = Rect::from_center_size(body.right_center() - vec2(w / 2.0 + 10.0, 0.0), vec2(w + 10.0, 16.0));
+        ui.painter().rect_filled(r, CornerRadius::same(4), t.badge_new);
+        ui.painter().text(r.center(), Align2::CENTER_CENTER, badge, font, Color32::WHITE);
     }
     let tip = match g.availability {
         Availability::Ready | Availability::Planned(_) => tl!("Available").to_string(),
