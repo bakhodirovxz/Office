@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 1 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: a keyboard move to a far column scrolls the cell into view at any zoom
+
+The scroll-into-view step for a column took the smaller of two distances in different units: the overshoot in sheet pixels
+(divided by the zoom) and the cell's left offset in screen pixels. Below 100 % the screen figure is the smaller one, so the
+view stopped short by (1 - zoom) of the distance and the cell sat at, or past, the right edge (Ctrl+Shift+Right to CV1 in
+a 72 px default column workbook at 80 %: tests/selection_scroll.rs). The offset now divides by the zoom too.
+---
+
+diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
+index 217e533..d9dcb9b 100644
+--- a/crates/ui-egui/src/grid.rs
++++ b/crates/ui-egui/src/grid.rs
+@@ -710,7 +710,7 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
+             if cr.left() < area.left() {
+                 view.scroll.x -= (area.left() - cr.left()) / geo.z;
+             } else if cr.right() > area.right() - 2.0 {
+-                view.scroll.x += ((cr.right() - area.right() + 2.0) / geo.z).min(cr.left() - area.left());
++                view.scroll.x += ((cr.right() - area.right() + 2.0) / geo.z).min((cr.left() - area.left()) / geo.z);
+             }
+         }
+         view.scroll = view.scroll.max(egui::Vec2::ZERO);

@@ -710,7 +710,7 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
             if cr.left() < area.left() {
                 view.scroll.x -= (area.left() - cr.left()) / geo.z;
             } else if cr.right() > area.right() - 2.0 {
-                view.scroll.x += ((cr.right() - area.right() + 2.0) / geo.z).min(cr.left() - area.left());
+                view.scroll.x += ((cr.right() - area.right() + 2.0) / geo.z).min((cr.left() - area.left()) / geo.z);
             }
         }
         view.scroll = view.scroll.max(egui::Vec2::ZERO);

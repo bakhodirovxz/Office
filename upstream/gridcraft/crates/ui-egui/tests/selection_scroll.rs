@@ -39,14 +39,13 @@ fn key(h: &mut Harness, k: Key, m: Modifiers) {
     h.run_steps(2);
 }
 
-/// Whether the cell's leading edge is on screen (a whole cell can sit a few pixels under the edge when
-/// scrolling far down widens the row headings; the grid rect here is wider than the area the app scrolls
-/// within, so the centre of a wide column such as the 72 px default of a Times New Roman workbook can fall under the edge).
+/// Whether the cell's centre is on screen (a whole cell can sit a few pixels under the edge when
+/// scrolling far down widens the row headings).
 fn visible(h: &Harness, a1: &str) -> bool {
     let app = h.state();
     let sheet = app.session.active().unwrap().wb.active().unwrap();
     let geo = Geo::new(sheet, app.grid.rect.unwrap(), app.view().scroll);
-    geo.cells.contains(geo.cell_rect(sheet, CellRef::parse(a1).unwrap()).left_center() + egui::vec2(4.0, 0.0))
+    geo.cells.contains(geo.cell_rect(sheet, CellRef::parse(a1).unwrap()).center())
 }
 
 fn assert_extended(h: &Harness, anchor: &str, moving_end: &str) {
