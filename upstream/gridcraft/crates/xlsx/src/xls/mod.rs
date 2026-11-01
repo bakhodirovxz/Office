@@ -128,6 +128,8 @@ struct Globals {
     links: Links,
     names: Vec<Lbl>,
     precision_as_displayed: bool,
+    /// The first FONT record is the Normal font; its digit width is the unit of column widths.
+    normal_font: Option<(String, f32)>,
 }
 
 /// Reads an Excel 97-2003 workbook. Inspect the report's warnings for what was skipped.
@@ -275,6 +277,11 @@ fn globals(stream: &[u8], budget: &mut Budget, report: &mut ReadReport) -> Resul
             0x00E0 if g.xf_formats.len() < MAX_XFS => {
                 c.u16()?;
                 g.xf_formats.push(c.u16()?);
+            }
+            0x0031 if g.normal_font.is_none() => {
+                let size = f32::from(c.u16()?) / 20.0;
+                c.skip(12)?;
+                g.normal_font = Some((c.short_string()?, size));
             }
             0x00FC => g.sst = shared_strings(&mut c, budget)?,
             0x01AE => {
@@ -697,7 +704,8 @@ fn sheet_record(rec: &Record<'_>, st: &mut SheetState<'_>, budget: &mut Budget, 
                 return Ok(());
             }
             let mut info = LineInfo::default();
-            let px = col_width_to_px(f64::from(width) / 256.0, 7.0);
+            let px =
+                col_width_to_px(f64::from(width) / 256.0, st.g.normal_font.as_ref().map_or(7.0, |(n, s)| gridcraft_model::max_digit_width(n, *s)));
             if flags & 0x0002 != 0 || px != st.sheet.default_col_width {
                 info.size = Some(px);
             }

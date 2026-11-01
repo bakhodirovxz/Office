@@ -401,7 +401,7 @@ index 0000000..dc7b21a
 +        // Only the document's own file is versioned: `needsPath` (the Save As dialog was requested) saved nothing. Slides has no
 +        // timed autosave of the file (AutoRecover writes its own folder), so every save here is an explicit one.
 +        let (Some(path), Some(saved)) = (d.path.as_deref(), out.get("path").and_then(Json::as_str)) else { return };
-+        if saved != path {
++        if !same_path(saved, path) {
 +            return;
 +        }
 +        if let Err(e) = store.snapshot(Path::new(path), None) {
