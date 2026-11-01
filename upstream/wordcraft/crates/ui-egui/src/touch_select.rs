@@ -8,8 +8,8 @@
 use egui::{Color32, Order, Pos2, Rect, Vec2, pos2, vec2};
 use serde_json::json;
 
-use crate::theme::Tokens;
 use crate::WordApp;
+use crate::theme::Tokens;
 use wordcraft_doc::Pos;
 use wordcraft_engine::Selection;
 use wordcraft_layout::DocLayout;
@@ -390,7 +390,13 @@ mod tests {
 
         // The mouse: a right-click opens the menu and no handles are drawn.
         let m = pos2(at.x + 5.0, at.y);
-        frame(&mut h, vec![Event::PointerMoved(m), Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: true, modifiers: Default::default() }]);
+        frame(
+            &mut h,
+            vec![
+                Event::PointerMoved(m),
+                Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: true, modifiers: Default::default() },
+            ],
+        );
         frame(&mut h, vec![Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: false, modifiers: Default::default() }]);
         h.run_steps(2);
         assert!(h.state().canvas.context_menu_open, "right-click keeps the desktop menu");

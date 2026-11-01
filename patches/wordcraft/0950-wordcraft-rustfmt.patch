@@ -96,3 +96,47 @@ index 6399175..ac03a3f 100644
  }
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index 112f41b..d634157 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+     let pointer_click = resp.clicked_by(egui::PointerButton::Primary);
+     let accesskit_click = resp.clicked() && !pointer_click && !keyboard_click;
+     // A finger scrolling the page doesn't take the keyboard (that would raise the soft one).
+-    let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
++    let focus_click = pointer_click
++        || accesskit_click
++        || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
+     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
+         resp.request_focus();
+     }
+diff --git a/crates/ui-egui/src/touch_select.rs b/crates/ui-egui/src/touch_select.rs
+index 44a463f..37396ee 100644
+--- a/crates/ui-egui/src/touch_select.rs
++++ b/crates/ui-egui/src/touch_select.rs
+@@ -8,8 +8,8 @@
+ use egui::{Color32, Order, Pos2, Rect, Vec2, pos2, vec2};
+ use serde_json::json;
+ 
+-use crate::theme::Tokens;
+ use crate::WordApp;
++use crate::theme::Tokens;
+ use wordcraft_doc::Pos;
+ use wordcraft_engine::Selection;
+ use wordcraft_layout::DocLayout;
+@@ -390,7 +390,13 @@ mod tests {
+ 
+         // The mouse: a right-click opens the menu and no handles are drawn.
+         let m = pos2(at.x + 5.0, at.y);
+-        frame(&mut h, vec![Event::PointerMoved(m), Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: true, modifiers: Default::default() }]);
++        frame(
++            &mut h,
++            vec![
++                Event::PointerMoved(m),
++                Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: true, modifiers: Default::default() },
++            ],
++        );
+         frame(&mut h, vec![Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: false, modifiers: Default::default() }]);
+         h.run_steps(2);
+         assert!(h.state().canvas.context_menu_open, "right-click keeps the desktop menu");

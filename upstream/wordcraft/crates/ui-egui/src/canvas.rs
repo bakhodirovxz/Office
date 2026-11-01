@@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let pointer_click = resp.clicked_by(egui::PointerButton::Primary);
     let accesskit_click = resp.clicked() && !pointer_click && !keyboard_click;
     // A finger scrolling the page doesn't take the keyboard (that would raise the soft one).
-    let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
+    let focus_click = pointer_click
+        || accesskit_click
+        || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
         resp.request_focus();
     }
