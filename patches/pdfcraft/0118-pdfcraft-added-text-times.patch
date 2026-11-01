@@ -1,15 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Thu, 29 Oct 2026 12:00:00 +0500
-Subject: [PATCH] annot, ui-egui: added text and new text boxes start in Times 12 pt; a text box keeps the font its /DA names
+Subject: [PATCH] annot, ui-egui: added text and new text boxes start in Times
+ 12 pt; a text box keeps the font its /DA names
 
 Owner decision 2026-10-29 (docs/phase4/design-system.md, "Revised"): text the user adds starts in Times New Roman 12 pt. In a PDF that is the standard-14 Times (Times-Roman, `/TiRo`): nothing is embedded, Windows viewers show Times New Roman and the renderer's own standard-font substitute draws it elsewhere. The Add Text tool's default style and new text boxes, typewriter text and callouts use it; a text box's appearance, rich text and refit now follow the font its /DA names, so a colour or size change keeps it and boxes already in a file keep their Helvetica (measured exactly as before).
 ---
- crates/annot/src/appearance.rs   | 34 +++++++++++++++++++++++++---------
- crates/annot/src/lib.rs          | 40 +++++++++++++++++++++++++++++++++-------
- crates/annot/src/tests.rs        | 35 +++++++++++++++++++++++++++++------
- crates/ui-egui/src/content_ui.rs |  3 ++-
- 4 files changed, 89 insertions(+), 23 deletions(-)
+ crates/annot/src/appearance.rs        | 34 +++++++++++++++++------
+ crates/annot/src/lib.rs               | 40 ++++++++++++++++++++++-----
+ crates/annot/src/tests.rs             | 35 +++++++++++++++++++----
+ crates/automation/tests/automation.rs |  4 +--
+ crates/ui-egui/src/content_ui.rs      |  3 +-
+ 5 files changed, 91 insertions(+), 25 deletions(-)
 
 diff --git a/crates/annot/src/appearance.rs b/crates/annot/src/appearance.rs
 index 3e1dd4a..33c3ab9 100644
@@ -280,6 +282,28 @@ index 4a4dfb1..310d164 100644
 +    assert_eq!(appearance::da_font(&old), OverlayFont::Helvetica);
 +    assert!(appearance::da_width(OverlayFont::Times, "Salom dunyo", 12.0) < appearance::da_width(OverlayFont::Helvetica, "Salom dunyo", 12.0));
 +}
+diff --git a/crates/automation/tests/automation.rs b/crates/automation/tests/automation.rs
+index cbf40f1..d4ab58c 100644
+--- a/crates/automation/tests/automation.rs
++++ b/crates/automation/tests/automation.rs
+@@ -2892,7 +2892,7 @@ fn fill_sign_text_font_size_is_saved_and_validated() {
+     let annotations = pdf.resolve(page.dict.get(b"Annots").unwrap());
+     let annotation = pdf.resolve(annotations.as_array().unwrap().first().unwrap());
+     let da = annotation.as_dict().unwrap().get(b"DA").unwrap().as_string().unwrap();
+-    assert!(da.bytes.windows(b"/Helv 24 Tf".len()).any(|w| w == b"/Helv 24 Tf"), "saved annotation uses the requested font size");
++    assert!(da.bytes.windows(b"/TiRo 24 Tf".len()).any(|w| w == b"/TiRo 24 Tf"), "saved annotation uses the requested font size");
+     for size in [0, 3, 301] {
+         assert!(matches!(
+             a.call("fill_sign_add", &json!({ "doc": doc, "page": 1, "type": "text", "at": [20, 80], "text": "No", "font_size": size })),
+@@ -4426,7 +4426,7 @@ fn text_box_font_size_through_the_tool() {
+         .filter_map(|o| o.as_dict().and_then(|d| d.get(b"DA")?.as_string().map(|s| String::from_utf8_lossy(&s.bytes).into_owned())))
+         .collect();
+     assert_eq!(sizes.len(), 1, "{sizes:?}");
+-    assert!(sizes[0].ends_with("/Helv 30 Tf"), "{sizes:?}");
++    assert!(sizes[0].ends_with("/TiRo 30 Tf"), "{sizes:?}");
+     assert_eq!(ok(&mut a, "edit_undo", json!({ "doc": doc }))["undone"], "Change comment properties");
+ }
+ 
 diff --git a/crates/ui-egui/src/content_ui.rs b/crates/ui-egui/src/content_ui.rs
 index 5f5ef32..61f3e7f 100644
 --- a/crates/ui-egui/src/content_ui.rs

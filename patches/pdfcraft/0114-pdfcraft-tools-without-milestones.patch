@@ -1,14 +1,16 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Thu, 29 Oct 2026 12:00:00 +0500
-Subject: [PATCH] ui-egui: the tool panels show no milestone banner or badges; tools that are not built are not listed
+Subject: [PATCH] ui-egui: the tool panels show no milestone banner or badges;
+ tools that are not built are not listed
 
 Phase 4 i18n pass: the Edit tool showed 'Coming in milestone M7. Items marked Ready work today.', a green Ready badge on every working tool and a grey M12 badge on the others. Now a tool that is planned only (catalog Availability::Planned) is not listed (panels, command palette), a group is listed when at least one of its tools works, Ready tools carry no badge, the banner is gone, and running a planned command by id says 'is not available yet' instead of naming a milestone. The AI-provider badge stays.
 ---
  crates/ui-egui/src/lib.rs     |  2 +-
  crates/ui-egui/src/palette.rs |  6 ++--
- crates/ui-egui/src/panels.rs  | 66 ++++++++++++++++---------------------------
- 3 files changed, 29 insertions(+), 45 deletions(-)
+ crates/ui-egui/src/panels.rs  | 66 +++++++++++++----------------------
+ crates/ui-egui/tests/ui.rs    |  4 ++-
+ 4 files changed, 32 insertions(+), 46 deletions(-)
 
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
 index f99e907..4ac9d77 100644
@@ -172,3 +174,18 @@ index 0f2c601..c4d0bd5 100644
                  let resp = theme::hand(resp).on_hover_text(format!("{} — {}", tl!(item.label), item.command));
                  if item.actions.is_empty() {
                      if resp.clicked() {
+diff --git a/crates/ui-egui/tests/ui.rs b/crates/ui-egui/tests/ui.rs
+index d30ab1b..11dbf67 100644
+--- a/crates/ui-egui/tests/ui.rs
++++ b/crates/ui-egui/tests/ui.rs
+@@ -120,7 +120,9 @@ fn every_catalog_tool_is_listed_after_view_more() {
+     let mut h = harness(|_| {});
+     h.get_by_label("View more").click();
+     h.run_steps(3);
+-    for g in pdfcraft_engine::catalog::TOOL_GROUPS {
++    // office overlay (pdfcraft/0114): a planned group with no working tool is not listed
++    let planned = |a: pdfcraft_engine::catalog::Availability| matches!(a, pdfcraft_engine::catalog::Availability::Planned(_));
++    for g in pdfcraft_engine::catalog::TOOL_GROUPS.iter().filter(|g| !planned(g.availability) || g.sections.iter().flat_map(|s| s.items).any(|i| !planned(i.availability))) {
+         assert!(h.query_all_by_label(g.label).count() >= 1, "tool {} missing from All tools", g.label);
+     }
+ }
