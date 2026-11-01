@@ -1623,3 +1623,12 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Emulator `opened` (median of 3): 412 dp 17.5 s (1 page) vs 24.7 s (108 pages); 360 dp 26.6 s vs 26.4 s. The emulator noise exceeds the document effect; the stall is not reproduced as one 240 s task.
 - Native layout of the 108-page file (110 pages): 255 ms cold, 38 ms warm cache: shaping is 85 %, pagination plus all passes 15 %. Web Layout is not cheaper (233 ms).
 - Recommendation: (a) always, then (c) slice the shaping warm-up; (b) refuted, (d) not needed unless pagination matters on a phone. Details `docs/phase6/m3.md`.
+
+### Phase 6 WP2 step 2: M3 fix (a) + (c) (2026-11-02, branch `p6-m3fix`)
+- (a) The shell covers the Docs/Slides editor with "Opening <file>…" (new `ed.opening`, reviewed:agent-opus:2026-11-02) from the hand-over until
+  `<prefix>:opened`; before, the status cleared at `ready` and the blank or frozen editor showed for 3-25 s. Cache headers: already immutable for hashed files (curl-checked), no change.
+- (c) Carried patch `wordcraft/0142` (layout `warm`, engine `Session::warm_layout`, wordcraft-web 25 ms slices per frame, `opened` after them; 0950 regenerated).
+  Native: layout after the warm-up 64 ms vs 290 ms cold. Desktop 6x CPU, 108 pages: longest task 5.6-6.7 s → 3.8-4.1 s; `opened` about equal (12.0 s idle);
+  **the "108-page `opened` ≤ 1.5x the 1-page" target is not met** (12.0 s vs 9.9 s); no task > 200 ms in the 10 s after `opened` (5 of 6 runs; one 207 ms under host load).
+  Emulator `HRM_Pixel_8`: opens, page 1 shows, a tap places the caret and a key types there (recorded). The rest of the `opened` frame is mostly UI work, not
+  layout (status bar walks the whole body every frame via `Document::start_of`/`end_of`); next steps in `docs/phase6/m3.md` section 5.

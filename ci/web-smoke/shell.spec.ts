@@ -190,8 +190,11 @@ test('Docs round trip: open a file from the shell, save it, find it in Recent, r
   await page.setInputFiles('#file', DOCX);
   const name = path.basename(DOCX);
   await expect(page.locator('#ed-title')).toHaveText(name);
+  // phase 6 M3: the editor is covered, the file named, until it says opened
+  await expect(page.locator('#ed-cover')).toHaveText(txt('en', 'ed.opening').replace('{name}', name));
   await editorUp(page, '/docs/');
   await expect.poll(() => page.evaluate(() => (window as any).__msgs), { timeout: 60_000 }).toContain('wordcraft:opened');
+  await expect(page.locator('#ed-cover')).toBeHidden();
   // Ctrl+S in the editor hands the bytes to the shell, which downloads them and keeps a copy
   const frame = page.frameLocator('iframe[src^="/docs/"]').locator('canvas');
   await frame.click({ position: { x: 300, y: 300 } });

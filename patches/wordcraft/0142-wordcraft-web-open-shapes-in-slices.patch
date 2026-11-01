@@ -1,0 +1,419 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 2 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: shape an opened document in slices before its
+ first layout
+
+Phase 6 WP2 step 2, option (c) (docs/phase6/PLAN.md section 7, docs/phase6/m3.md): opening a large document was one main-thread task of seconds on a phone (the whole layout in the first frame; 85 % of it is shaping paragraphs). layout: `warm()` lays the body's paragraphs and tables out into the LayoutCache under the keys the first pass will look up, for about a budget per call, and returns when done; `layout()` then mostly paginates. The pass's walk-state set-up moves into `pass_ctx`/`new_ctx` so the warm-up starts from the same field context, notes hash and list counters. engine: `Session::warm_layout` with the options `layout()` uses (now built in one place, `layout_options`). wordcraft-web: after a document opens the shell runs 25 ms slices per frame (the plan's 8-10 ms lost about 60 % of the warm-up to frame overhead at 6x CPU), draws nothing meanwhile and posts `wordcraft:opened` only after the frame that shows it. Desktop apps never call it; their layout is unchanged.
+---
+ apps/wordcraft-web/src/web.rs      |  26 ++++++-
+ apps/wordcraft-web/src/web/host.rs |   6 +-
+ crates/engine/src/session.rs       |  58 ++++++++------
+ crates/layout/src/lib.rs           | 120 +++++++++++++++++++++++------
+ crates/layout/src/tests_warm.rs    |  65 ++++++++++++++++
+ 5 files changed, 224 insertions(+), 51 deletions(-)
+ create mode 100644 crates/layout/src/tests_warm.rs
+
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 6926787..cf608d0 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -113,7 +113,7 @@ pub fn start() {
+                     if let Some(bridge) = &app_bridge {
+                         bridge.post_ready();
+                     }
+-                    Ok(Box::new(WebShell { app, inbox, messages, prefs, bridge: app_bridge }))
++                    Ok(Box::new(WebShell { app, inbox, messages, prefs, bridge: app_bridge, warm: None }))
+                 }),
+             )
+             .await;
+@@ -149,8 +149,14 @@ struct WebShell {
+     messages: Rc<RefCell<Vec<String>>>,
+     prefs: crate::prefs::PrefsSync,
+     bridge: Option<host::Bridge>,
++    /// office overlay (wordcraft/0142): a document just opened, shaped over frames before it is shown.
++    warm: Option<wordcraft_engine::layout::Warm>,
+ }
+ 
++/// office overlay (wordcraft/0142): shaping time per frame while a document opens. The plan's 8-10 ms left about 60 % of the
++/// warm-up to frame overhead at 6x CPU (108-page docx: 6.6 s); 25 ms takes 4.7 s and stays under the 50 ms long-task line.
++const WARM_SLICE_MS: f64 = 25.0;
++
+ fn local_storage() -> Option<web_sys::Storage> {
+     web_sys::window()?.local_storage().ok()?
+ }
+@@ -181,7 +187,19 @@ impl eframe::App for WebShell {
+         for msg in msgs {
+             self.app.status(msg);
+         }
++        let shown = self.app.session.document_id();
+         self.app.logic(ctx);
++        // office overlay (wordcraft/0142): a large document's first layout was one task of seconds on a phone, frames
++        // stopped and the page stayed grey. Its paragraphs are shaped in slices first; the layout then mostly paginates.
++        if self.app.session.document_id() != shown {
++            self.warm = Some(Default::default());
++        }
++        if let Some(w) = &mut self.warm {
++            if self.app.session.warm_layout(w, WARM_SLICE_MS) {
++                self.warm = None;
++            }
++            ctx.request_repaint();
++        }
+         // Store changed preferences straight away: a reload or closed tab runs no exit code (#2132).
+         if let Some(json) = self.prefs.changed(&self.app) {
+             match local_storage() {
+@@ -194,7 +212,7 @@ impl eframe::App for WebShell {
+             }
+         }
+         if let Some(bridge) = &self.bridge {
+-            bridge.sync(ctx, &mut self.app);
++            bridge.sync(ctx, &mut self.app, self.warm.is_some());
+         }
+     }
+ 
+@@ -203,6 +221,10 @@ impl eframe::App for WebShell {
+     }
+ 
+     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
++        // office overlay (wordcraft/0142): nothing is drawn while the opened document is shaped (the host shows "Opening").
++        if self.warm.is_some() {
++            return;
++        }
+         self.app.ui(ui);
+     }
+ }
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index bddeb90..97d87af 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -151,10 +151,10 @@ impl Bridge {
+     }
+ 
+     /// After each frame: run a save the parent asked for, and tell it when another document is
+-    /// shown.
+-    pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp) {
++    /// shown (office overlay, wordcraft/0142: not while it is still being shaped, `warming`).
++    pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp, warming: bool) {
+         let id = app.session.document_id();
+-        if self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
++        if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
+             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
+         }
+         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
+diff --git a/crates/engine/src/session.rs b/crates/engine/src/session.rs
+index 3d4ad70..89bfd06 100644
+--- a/crates/engine/src/session.rs
++++ b/crates/engine/src/session.rs
+@@ -810,20 +810,12 @@ impl Session {
+ 
+     /// The current layout (recomputed when the document or view changed).
+     pub fn layout(&mut self) -> Arc<DocLayout> {
+-        let mode = if self.view.read_mode { ViewMode::Read } else { self.view.mode };
+-        let width = match mode {
+-            ViewMode::Read => self.view.read_width,
+-            ViewMode::Web => self.view.web_width,
+-            _ => DRAFT_WIDTH,
+-        };
+-        let height = if self.view.read_mode { self.view.read_height } else { 0.0 };
+-        let spacing = if self.view.read_mode { self.view.read_line_spacing.map(f32::to_bits) } else { None };
++        let opts = self.layout_options();
++        let (width, height, mode, typing) = (opts.web_width, opts.read_height, opts.view, opts.typing_word);
++        let spacing = opts.read_line_spacing.map(f32::to_bits);
+         // Deletions in balloons depend on the view (the Comments pane, Read Mode, side by side), so
+         // a view change that moves them in or out of the text lays it out again.
+-        let hide_deleted = !self.view.show_markup;
+-        let deleted = (hide_deleted, self.prefs.markup.hidden_deletions(), self.revisions_in_balloons());
+-        let outline = (mode == ViewMode::Outline).then(|| self.view.outline.view());
+-        let typing = self.typing_word();
++        let deleted = (opts.hide_deleted, opts.hide_marked, opts.deletions_in_balloons);
+         if let Some((r, w, h, m, sp, l, pf, o, hd, n, t)) = &self.layout
+             && *r == self.rev
+             && (*w == width || mode == ViewMode::Print)
+@@ -833,31 +825,51 @@ impl Session {
+             && *pf == self.view.proofing
+             && *n == self.view.numeral
+             && *hd == deleted
+-            && *o == outline
++            && *o == opts.outline
+             && *t == typing
+         {
+             return l.clone();
+         }
+-        let opts = LayoutOptions {
++        let l = Arc::new(wordcraft_layout::layout(&self.doc, &mut self.cache, &opts));
++        self.layout = Some((self.rev, width, height, mode, spacing, l.clone(), self.view.proofing, opts.outline, deleted, self.view.numeral, typing));
++        l
++    }
++
++    /// office overlay (wordcraft/0142): shape the document into the layout cache for about
++    /// `budget_ms` ([`wordcraft_layout::warm`]), so the next [`Session::layout`] mostly paginates.
++    /// True when done. The web app calls it over frames after an open; nothing else does.
++    pub fn warm_layout(&mut self, w: &mut wordcraft_layout::Warm, budget_ms: f64) -> bool {
++        let opts = self.layout_options();
++        wordcraft_layout::warm(&self.doc, &mut self.cache, &opts, w, budget_ms)
++    }
++
++    /// What [`Session::layout`] lays the document out with.
++    fn layout_options(&mut self) -> LayoutOptions {
++        let mode = if self.view.read_mode { ViewMode::Read } else { self.view.mode };
++        let width = match mode {
++            ViewMode::Read => self.view.read_width,
++            ViewMode::Web => self.view.web_width,
++            _ => DRAFT_WIDTH,
++        };
++        let height = if self.view.read_mode { self.view.read_height } else { 0.0 };
++        let spacing = if self.view.read_mode { self.view.read_line_spacing.map(f32::to_bits) } else { None };
++        LayoutOptions {
+             view: mode,
+             web_width: width,
+             read_height: height,
+             read_line_spacing: spacing.map(f32::from_bits),
+             show_hidden: self.view.marks || self.prefs.marks.hidden,
+-            hide_deleted,
+-            hide_marked: deleted.1,
+-            deletions_in_balloons: deleted.2,
++            hide_deleted: !self.view.show_markup,
++            hide_marked: self.prefs.markup.hidden_deletions(),
++            deletions_in_balloons: self.revisions_in_balloons(),
+             proofing: self.view.proofing,
+             numeral: self.view.numeral.resolve(SYSTEM_LOCALE.get().map(String::as_str)),
+             comment_balloons: false,
+             field_codes: self.view.field_codes,
+-            outline: outline.clone(),
++            outline: (mode == ViewMode::Outline).then(|| self.view.outline.view()),
+             proof: wordcraft_layout::ProofOptions { grammar: self.prefs.mark_grammar, spelling: self.prefs.spelling() },
+-            typing_word: typing,
+-        };
+-        let l = Arc::new(wordcraft_layout::layout(&self.doc, &mut self.cache, &opts));
+-        self.layout = Some((self.rev, width, height, mode, spacing, l.clone(), self.view.proofing, outline, deleted, self.view.numeral, typing));
+-        l
++            typing_word: self.typing_word(),
++        }
+     }
+ 
+     /// The recorded word while the caret and the word are as typing left them; else drops it.
+diff --git a/crates/layout/src/lib.rs b/crates/layout/src/lib.rs
+index a60c5f9..1a880a3 100644
+--- a/crates/layout/src/lib.rs
++++ b/crates/layout/src/lib.rs
+@@ -2156,17 +2156,70 @@ pub fn layout(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions) ->
+     l
+ }
+ 
+-/// One layout pass, numbering footnotes restarted on each page by `note_pages` ([`note_info`]),
+-/// with `totals` assumed for the page totals in the body. With `may_repeat`, a pass whose body
+-/// shows totals that turn out different asks to be done again.
+-fn layout_pass(
+-    doc: &Document,
+-    cache: &mut LayoutCache,
+-    opts: &LayoutOptions,
+-    note_pages: &HashMap<u32, usize>,
+-    totals: &Totals,
+-    may_repeat: bool,
+-) -> Pass {
++/// office overlay (wordcraft/0142): how far [`warm`] has got, carried from one slice to the next.
++#[derive(Default)]
++pub struct Warm {
++    /// The next body block.
++    next: usize,
++    /// The field context and notes hash of the first pass, taken on the first slice.
++    start: Option<(FieldCtx, u64)>,
++    counters: Counters,
++    eq_count: u32,
++}
++
++/// office overlay (wordcraft/0142): lay the body's paragraphs and tables out into `cache` as the
++/// first pass of [`layout`] will look them up, for about `budget_ms` per call (a table is one
++/// step), so that a large document is shaped over several frames and the [`layout`] that follows
++/// mostly paginates. Returns true when the body is done. Only the cache is filled: [`layout`]'s
++/// result is the same with or without it.
++/// shortcut: Print Layout only, at each section's first-column width; paragraphs with page fields,
++/// text beside floats, notes and other column widths miss and are laid out by the pass as before.
++pub fn warm(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions, w: &mut Warm, budget_ms: f64) -> bool {
++    let t0 = now_ms();
++    if opts.view != ViewMode::Print {
++        return true;
++    }
++    let (fields, notes_hash) = match w.start.take() {
++        Some(start) => start,
++        None => {
++            let ctx = pass_ctx(doc, cache, opts, &HashMap::new(), &Totals::first_guess(doc.sections().len()));
++            (ctx.fields, ctx.notes_hash)
++        }
++    };
++    let sections = doc.sections();
++    let mut ctx = new_ctx(doc, cache, opts, fields, notes_hash);
++    ctx.counters = std::mem::take(&mut w.counters);
++    ctx.eq_count = w.eq_count;
++    while let Some(b) = doc.body.get(w.next) {
++        let block = w.next;
++        w.next += 1;
++        let Some((_, sect)) = sections.get(sections.partition_point(|(end, _)| *end < block)) else { continue };
++        ctx.grid = para::Grid::of(doc, sect);
++        let width = sect.column_boxes().first().map_or_else(|| sect.text_width(), |c| c.1);
++        // As the pass places them (`place_para_in_flow`, `place_table`), so list numbers count alike.
++        match &**b {
++            Block::Para(p) => {
++                let label = ctx.next_label(p);
++                if !has_page_fields(p) {
++                    ctx.para_labelled(p, width, None, &[], label);
++                }
++            }
++            Block::Table(t) => {
++                table::layout_table(&mut ctx, StoryRef::Body, t, &[block as u32], width, 1);
++            }
++        }
++        if now_ms() - t0 >= budget_ms {
++            break;
++        }
++    }
++    let done = w.next >= doc.body.len();
++    (w.start, w.counters, w.eq_count) = (Some((ctx.fields, ctx.notes_hash)), ctx.counters, ctx.eq_count);
++    done
++}
++
++/// The walk state a layout pass starts from: the cache emptied if the document's styles or the
++/// options changed, and the field context with `totals` assumed.
++fn pass_ctx<'a>(doc: &'a Document, cache: &'a mut LayoutCache, opts: &'a LayoutOptions, note_pages: &HashMap<u32, usize>, totals: &Totals) -> Ctx<'a> {
+     let env = env_hash(doc, opts);
+     if env != cache.env {
+         cache.paras.clear();
+@@ -2181,22 +2234,27 @@ fn layout_pass(
+         v.sort_by_key(|(a, ..)| *a);
+         v
+     });
+-    let mut ctx = Ctx {
++    let fields = FieldCtx {
++        page: 1,
++        pages: totals.pages,
++        section_pages: totals.section(0),
++        section: 1,
++        notes: Arc::new(notes),
++        title: doc.core.title.as_str().into(),
++        author: doc.core.creator.as_str().into(),
++        ..Default::default()
++    };
++    new_ctx(doc, cache, opts, fields, notes_hash)
++}
++
++fn new_ctx<'a>(doc: &'a Document, cache: &'a mut LayoutCache, opts: &'a LayoutOptions, fields: FieldCtx, notes_hash: u64) -> Ctx<'a> {
++    Ctx {
+         doc,
+         cache,
+         opts,
+         hide_deleted: opts.hides_deleted(StoryRef::Body),
+         counters: Counters::default(),
+-        fields: FieldCtx {
+-            page: 1,
+-            pages: totals.pages,
+-            section_pages: totals.section(0),
+-            section: 1,
+-            notes: Arc::new(notes),
+-            title: doc.core.title.as_str().into(),
+-            author: doc.core.creator.as_str().into(),
+-            ..Default::default()
+-        },
++        fields,
+         notes_hash,
+         numbers: HashMap::new(),
+         eq_count: 0,
+@@ -2213,7 +2271,21 @@ fn layout_pass(
+         header_tables: HashMap::new(),
+         footer_wraps: HashMap::new(),
+         pin: None,
+-    };
++    }
++}
++
++/// One layout pass, numbering footnotes restarted on each page by `note_pages` ([`note_info`]),
++/// with `totals` assumed for the page totals in the body. With `may_repeat`, a pass whose body
++/// shows totals that turn out different asks to be done again.
++fn layout_pass(
++    doc: &Document,
++    cache: &mut LayoutCache,
++    opts: &LayoutOptions,
++    note_pages: &HashMap<u32, usize>,
++    totals: &Totals,
++    may_repeat: bool,
++) -> Pass {
++    let mut ctx = pass_ctx(doc, cache, opts, note_pages, totals);
+     let sections = doc.sections();
+     let web = matches!(opts.view, ViewMode::Web | ViewMode::Draft | ViewMode::Outline);
+     let read = opts.view == ViewMode::Read;
+@@ -4606,3 +4678,5 @@ mod tests_styleref;
+ mod tests_textbox;
+ #[cfg(test)]
+ mod tests_vertical;
++#[cfg(test)]
++mod tests_warm;
+diff --git a/crates/layout/src/tests_warm.rs b/crates/layout/src/tests_warm.rs
+new file mode 100644
+index 0000000..ad8d88e
+--- /dev/null
++++ b/crates/layout/src/tests_warm.rs
+@@ -0,0 +1,65 @@
++//! office overlay (wordcraft/0142): [`warm`] in slices leaves [`layout`]'s result unchanged.
++use super::*;
++use wordcraft_doc::props::NumRef;
++use wordcraft_doc::{Pos, Table};
++
++/// A long document with what goes into a paragraph's cache key: list numbers in the body and in a
++/// table cell, a page field, and a two-column section.
++fn mixed() -> Document {
++    let text: Vec<String> =
++        (0..400).map(|i| format!("Paragraph {i}: the quick brown fox jumps over the lazy dog {} times, then rests.", i * 7)).collect();
++    let mut d = Document::from_text(&text.join("\n"));
++    let num = d.numbering.add_list(wordcraft_doc::ListKind::Numbered);
++    let listed = |p: &mut wordcraft_doc::props::ParaProps| p.numbering = Some(NumRef { num, level: 0 });
++    d.format_paragraphs(&Pos::body(10, 0), &Pos::body(40, 0), &listed).unwrap();
++    let mut t = Table::new(2, 2, 400.0);
++    let mut cell = Paragraph::with_text("A numbered cell", Default::default());
++    cell.props.numbering = Some(NumRef { num, level: 0 });
++    t.rows[0].cells[0].blocks = vec![wordcraft_doc::para_block(cell)];
++    d.body.insert(25, Arc::new(Block::Table(t)));
++    let page = InlineObject::Field { instr: "PAGE".into(), result: String::new(), locked: false, dirty: false, code: false, form: String::new() };
++    d.para_mut(StoryRef::Body, &Path::top(100)).unwrap().insert_object(0, page, &Default::default()).unwrap();
++    let mut s = wordcraft_doc::section::SectionProps::default();
++    s.columns.count = 2;
++    d.para_mut(StoryRef::Body, &Path::top(200)).unwrap().section = Some(Box::new(s));
++    d
++}
++
++/// Warm `d` one block per slice (a zero budget), then lay it out: (layout, slices, paragraphs the
++/// warm-up shaped, paragraphs the layout still had to).
++fn sliced(d: &Document, opts: &LayoutOptions) -> (DocLayout, usize, u64, u64) {
++    let (mut cache, mut w, mut slices) = (LayoutCache::new(), Warm::default(), 1);
++    while !warm(d, &mut cache, opts, &mut w, 0.0) {
++        slices += 1;
++    }
++    let shaped = cache.misses;
++    let l = layout(d, &mut cache, opts);
++    (l, slices, shaped, cache.misses - shaped)
++}
++
++#[test]
++fn warm_in_slices_gives_the_same_layout() {
++    let d = mixed();
++    // Proofing on as in the editors: spelling marks are part of a paragraph's layout.
++    for opts in [LayoutOptions::default(), LayoutOptions { proofing: true, ..Default::default() }] {
++        let cold = layout(&d, &mut LayoutCache::new(), &opts);
++        assert!(cold.pages.len() > 5);
++        let (l, slices, shaped, missed) = sliced(&d, &opts);
++        assert_eq!(format!("{:?}", cold.pages), format!("{:?}", l.pages));
++        assert_eq!(cold.index, l.index);
++        assert!(slices > 300, "one block per slice: {slices}");
++        // The pass finds everything the warm-up shaped, table cells and list numbers included:
++        // only the paragraph with a page field (its key holds the page) is left to it.
++        assert!(shaped > 400, "warm-up shaped {shaped}");
++        assert_eq!(missed, 1, "the pass still laid out {missed} paragraphs");
++    }
++}
++
++#[test]
++fn warm_leaves_other_views_to_the_layout() {
++    let d = mixed();
++    let opts = LayoutOptions { view: ViewMode::Web, web_width: 360.0, ..Default::default() };
++    let mut cache = LayoutCache::new();
++    assert!(warm(&d, &mut cache, &opts, &mut Warm::default(), 0.0));
++    assert!(cache.is_empty());
++}

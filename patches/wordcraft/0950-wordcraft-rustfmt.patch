@@ -1,14 +1,14 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: x <a@b>
 Date: Sun, 1 Nov 2026 12:00:00 +0500
-Subject: [PATCH] wordcraft: rustfmt the files patches added after the first rustfmt pass
+Subject: [PATCH] wordcraft: rustfmt the files patches added after the first
+ rustfmt pass
 
 rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
----
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index bddeb90..8159ae9 100644
+index 97d87af..bcd3114 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -122,8 +122,10 @@ impl Bridge {
@@ -24,6 +24,25 @@ index bddeb90..8159ae9 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
+diff --git a/crates/layout/src/lib.rs b/crates/layout/src/lib.rs
+index 1a880a3..7df43b1 100644
+--- a/crates/layout/src/lib.rs
++++ b/crates/layout/src/lib.rs
+@@ -2219,7 +2219,13 @@ pub fn warm(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions, w: &m
+ 
+ /// The walk state a layout pass starts from: the cache emptied if the document's styles or the
+ /// options changed, and the field context with `totals` assumed.
+-fn pass_ctx<'a>(doc: &'a Document, cache: &'a mut LayoutCache, opts: &'a LayoutOptions, note_pages: &HashMap<u32, usize>, totals: &Totals) -> Ctx<'a> {
++fn pass_ctx<'a>(
++    doc: &'a Document,
++    cache: &'a mut LayoutCache,
++    opts: &'a LayoutOptions,
++    note_pages: &HashMap<u32, usize>,
++    totals: &Totals,
++) -> Ctx<'a> {
+     let env = env_hash(doc, opts);
+     if env != cache.env {
+         cache.paras.clear();
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
 index 6399175..ac03a3f 100644
 --- a/crates/ui-egui/src/backstage.rs

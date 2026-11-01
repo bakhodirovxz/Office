@@ -1,0 +1,81 @@
+{
+  "run": "2026-11-01T23-25-57",
+  "avd": "HRM_Pixel_8",
+  "dp": 412,
+  "dist": "E:\\office-target\\p6-m3fix\\dist",
+  "versions": {
+    "avd_api": "36",
+    "size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "chrome": "133.0.6943.137",
+    "webview_package": "133.0.6943.137",
+    "webview_active": "com.google.android.webview, 133.0.6943.137",
+    "gboard": "15.1.08.726012951-preload-x86_64"
+  },
+  "gboard": {
+    "installed": true,
+    "default_ime": "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME",
+    "enabled_subtypes": [
+      "English (United States)",
+      "Russian (Russia)",
+      "Uzbek"
+    ],
+    "want": {
+      "English": true,
+      "Russian": true,
+      "Uzbek (latin)": true
+    }
+  },
+  "items": [
+    {
+      "id": "shell-home",
+      "app": "docs",
+      "status": "pass",
+      "notes": {},
+      "ms": 3306,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-shell-home-412.mp4",
+        "bytes": 45302,
+        "sha256": "eb69c2bcf8909d7c412a08168af656d7953e4422b24c2493e1cbf4ed160aba1f"
+      }
+    },
+    {
+      "id": "open-108",
+      "app": "docs",
+      "status": "pass",
+      "notes": {
+        "cover_while_opening": "Opening uz108-latn.docx…",
+        "ready_ms": 4437,
+        "opened_ms": 19230,
+        "cover_after_opened": false
+      },
+      "ms": 30867,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-open-108-412.mp4",
+        "bytes": 251093,
+        "sha256": "a30fc6fbcaef4c5eba9a97dee0dc7414027180e1125363101c88941adba3dbc6"
+      }
+    },
+    {
+      "id": "tap-caret",
+      "app": "docs",
+      "status": "pass",
+      "notes": {
+        "anr_dialog_dismissed": false,
+        "typed_made_dirty": true
+      },
+      "ms": 22480,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-tap-caret-412.mp4",
+        "bytes": 204754,
+        "sha256": "01692ea24add401864dfd3f5702f1a8fd1a166a14cd63444540080b708bd1cf2"
+      }
+    }
+  ],
+  "screenshots": [
+    "E:\\office-wt\\p6-m3fix\\docs\\phase6\\evidence\\rig\\2026-11-01T23-25-57-m3-opening.png",
+    "E:\\office-wt\\p6-m3fix\\docs\\phase6\\evidence\\rig\\2026-11-01T23-25-57-m3-page1.png",
+    "E:\\office-wt\\p6-m3fix\\docs\\phase6\\evidence\\rig\\2026-11-01T23-25-57-m3-tapped.png",
+    "E:\\office-wt\\p6-m3fix\\docs\\phase6\\evidence\\rig\\2026-11-01T23-25-57-m3-typed.png"
+  ]
+}

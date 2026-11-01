@@ -6,7 +6,7 @@
 //   forward <avd>                  adb forward 9222 -> Chrome DevTools (CDP)
 //   shot <avd> [file]              screencap PNG
 //   glide <avd> <word>             glide-type a word on the on-screen keyboard (EN layout, 1080x2400 @ 420 dpi calibration)
-//   run <checklist> --avd <avd> [--dist <dist>] [--out <dir>]   run scripts/mobile/checklists/<checklist>.mjs: JSON + one recording per item
+//   run <checklist> --avd <avd> [--dist <dist>] [--out <dir>] [--cdp-port 9222]   run scripts/mobile/checklists/<checklist>.mjs: JSON + one recording per item
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -44,14 +44,15 @@ async function run(listName) {
   L.gboardEnable(ser); await L.sleep(3000); L.gboardEnable(ser); // the first call can land before Gboard registers its subtypes on a fresh AVD
   const serve = await L.startServe({ root: ROOT, dist });
   L.reverse(ser, serve.port);
-  const cdpUrl = L.forwardCdp(ser);
+  const cdpPort = Number(opt('--cdp-port', 9222)); // another agent's emulator may hold 9222
+  const cdpUrl = L.forwardCdp(ser, cdpPort);
   const shots = [];
   const result = { run: runId, avd: name, dp, dist, versions: L.versions(ser), gboard: L.gboardState(ser), items: [] };
   let browser;
   try {
     L.openInChrome(ser, 'about:blank'); await L.sleep(3000);
     L.chromeFirstRun(ser); await L.sleep(2000);
-    L.forwardCdp(ser);
+    L.forwardCdp(ser, cdpPort);
     // tabs left by earlier runs are closed through the DevTools HTTP endpoint (Playwright's page.close hangs on Android Chrome)
     const tabs = (await (await fetch(`${cdpUrl}/json/list`)).json()).filter((t) => t.type === 'page');
     for (const t of tabs.slice(1)) await fetch(`${cdpUrl}/json/close/${t.id}`).catch(() => {});

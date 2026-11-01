@@ -810,20 +810,12 @@ impl Session {
 
     /// The current layout (recomputed when the document or view changed).
     pub fn layout(&mut self) -> Arc<DocLayout> {
-        let mode = if self.view.read_mode { ViewMode::Read } else { self.view.mode };
-        let width = match mode {
-            ViewMode::Read => self.view.read_width,
-            ViewMode::Web => self.view.web_width,
-            _ => DRAFT_WIDTH,
-        };
-        let height = if self.view.read_mode { self.view.read_height } else { 0.0 };
-        let spacing = if self.view.read_mode { self.view.read_line_spacing.map(f32::to_bits) } else { None };
+        let opts = self.layout_options();
+        let (width, height, mode, typing) = (opts.web_width, opts.read_height, opts.view, opts.typing_word);
+        let spacing = opts.read_line_spacing.map(f32::to_bits);
         // Deletions in balloons depend on the view (the Comments pane, Read Mode, side by side), so
         // a view change that moves them in or out of the text lays it out again.
-        let hide_deleted = !self.view.show_markup;
-        let deleted = (hide_deleted, self.prefs.markup.hidden_deletions(), self.revisions_in_balloons());
-        let outline = (mode == ViewMode::Outline).then(|| self.view.outline.view());
-        let typing = self.typing_word();
+        let deleted = (opts.hide_deleted, opts.hide_marked, opts.deletions_in_balloons);
         if let Some((r, w, h, m, sp, l, pf, o, hd, n, t)) = &self.layout
             && *r == self.rev
             && (*w == width || mode == ViewMode::Print)
@@ -833,31 +825,51 @@ impl Session {
             && *pf == self.view.proofing
             && *n == self.view.numeral
             && *hd == deleted
-            && *o == outline
+            && *o == opts.outline
             && *t == typing
         {
             return l.clone();
         }
-        let opts = LayoutOptions {
+        let l = Arc::new(wordcraft_layout::layout(&self.doc, &mut self.cache, &opts));
+        self.layout = Some((self.rev, width, height, mode, spacing, l.clone(), self.view.proofing, opts.outline, deleted, self.view.numeral, typing));
+        l
+    }
+
+    /// office overlay (wordcraft/0142): shape the document into the layout cache for about
+    /// `budget_ms` ([`wordcraft_layout::warm`]), so the next [`Session::layout`] mostly paginates.
+    /// True when done. The web app calls it over frames after an open; nothing else does.
+    pub fn warm_layout(&mut self, w: &mut wordcraft_layout::Warm, budget_ms: f64) -> bool {
+        let opts = self.layout_options();
+        wordcraft_layout::warm(&self.doc, &mut self.cache, &opts, w, budget_ms)
+    }
+
+    /// What [`Session::layout`] lays the document out with.
+    fn layout_options(&mut self) -> LayoutOptions {
+        let mode = if self.view.read_mode { ViewMode::Read } else { self.view.mode };
+        let width = match mode {
+            ViewMode::Read => self.view.read_width,
+            ViewMode::Web => self.view.web_width,
+            _ => DRAFT_WIDTH,
+        };
+        let height = if self.view.read_mode { self.view.read_height } else { 0.0 };
+        let spacing = if self.view.read_mode { self.view.read_line_spacing.map(f32::to_bits) } else { None };
+        LayoutOptions {
             view: mode,
             web_width: width,
             read_height: height,
             read_line_spacing: spacing.map(f32::from_bits),
             show_hidden: self.view.marks || self.prefs.marks.hidden,
-            hide_deleted,
-            hide_marked: deleted.1,
-            deletions_in_balloons: deleted.2,
+            hide_deleted: !self.view.show_markup,
+            hide_marked: self.prefs.markup.hidden_deletions(),
+            deletions_in_balloons: self.revisions_in_balloons(),
             proofing: self.view.proofing,
             numeral: self.view.numeral.resolve(SYSTEM_LOCALE.get().map(String::as_str)),
             comment_balloons: false,
             field_codes: self.view.field_codes,
-            outline: outline.clone(),
+            outline: (mode == ViewMode::Outline).then(|| self.view.outline.view()),
             proof: wordcraft_layout::ProofOptions { grammar: self.prefs.mark_grammar, spelling: self.prefs.spelling() },
-            typing_word: typing,
-        };
-        let l = Arc::new(wordcraft_layout::layout(&self.doc, &mut self.cache, &opts));
-        self.layout = Some((self.rev, width, height, mode, spacing, l.clone(), self.view.proofing, outline, deleted, self.view.numeral, typing));
-        l
+            typing_word: self.typing_word(),
+        }
     }
 
     /// The recorded word while the caret and the word are as typing left them; else drops it.

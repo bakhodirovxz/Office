@@ -153,10 +153,10 @@ impl Bridge {
     }
 
     /// After each frame: run a save the parent asked for, and tell it when another document is
-    /// shown.
-    pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp) {
+    /// shown (office overlay, wordcraft/0142: not while it is still being shaped, `warming`).
+    pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp, warming: bool) {
         let id = app.session.document_id();
-        if self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
+        if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
         }
         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
