@@ -1,0 +1,3 @@
+--------- beginning of main
+11-01 23:03:13.096 18904 18977 I HARNESS : config fetched 1767 bytes from http://10.0.2.2:52022/files/1/editor-config
+11-01 23:03:14.498 18904 19005 I HARNESS : event {"ev":"boot","origin":"https://10.0.2.2:52021","url":"https://10.0.2.2:52021/","docOrigin":"https://10.0.2.2:52021"}

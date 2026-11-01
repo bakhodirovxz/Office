@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The emulator's host alias only; the test CA (res/raw/test_ca.pem) is generated per run by run.mjs and never committed. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/test_ca" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

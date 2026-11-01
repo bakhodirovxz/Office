@@ -18,6 +18,7 @@ export const AVD_HOME_360 = path.join(P6, 'avd');
 export const AVDS = {
   HRM_Pixel_8: { port: 5554, dp: 412, size: '1080x2400', home: null },
   HRM_360: { port: 5556, dp: 360, size: '1080x2400', home: AVD_HOME_360 },
+  HRM_Dev_33: { port: 5560, dp: 393, size: '1080x2400', home: null }, // WP4: API 33 google_apis image (WebView embed proof)
 };
 export const serial = (n) => `emulator-${AVDS[n].port}`;
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

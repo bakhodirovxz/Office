@@ -1,0 +1,9 @@
+convert-api: ******************************************************************************
+convert-api: WARNING: cannot tell whether work_dir E:/office-target/p6-webview/run-1793573975042/env/work is RAM-backed. On Windows put it on a RAM disk and turn on
+convert-api: BitLocker for the system volume (page file, crash dumps); on Linux use a tmpfs (docs/phase3/api.md).
+convert-api: ******************************************************************************
+convert-api: note: store_dir E:/office-target/p6-webview/run-1793573975042/env/store is not on a RAM disk; it holds ciphertext only, which is fine, but size it for store_max_mb
+docserver: document.fetch http://127.0.0.1:51265 14122 bytes
+docserver: callback status 1 to http://127.0.0.1:51265/files/1/save-callback: ok
+docserver: callback status 6 to http://127.0.0.1:51265/files/1/save-callback: ok
+docserver: callback status 2 to http://127.0.0.1:51265/files/1/save-callback: ok

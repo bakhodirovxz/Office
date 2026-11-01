@@ -2,7 +2,7 @@
 //! Manual runs: `fake-hrm [file.docx ...]` registers each file as `files/1`, `files/2`, ... and serves on
 //! FAKE_HRM_ADDR (default 127.0.0.1:8790). Env: FAKE_HRM_DOCSERVER (origin of the document server), FAKE_HRM_INTERNAL_BASE
 //! (callback download base), FAKE_HRM_ALLOWED_HOSTS (comma list), FAKE_HRM_BEARER=1 (PR-1 fallback), FAKE_HRM_EXP=1,
-//! FAKE_HRM_TEST_API=1 (the /__test/ routes of the browser specs), FAKE_HRM_BACKEND_URL (host of document.url and callbackUrl; a container's
+//! FAKE_HRM_TEST_API=1 (the /__test/ routes of the browser specs), FAKE_HRM_MOBILE_EDIT=1, FAKE_HRM_BACKEND_URL (host of document.url and callbackUrl; a container's
 //! own name, default: the bound address).
 //! Secrets are generated at start and printed to stderr: this is a test tool, run it only on a developer machine.
 use fake_hrm::{Config, FakeHrm, Kind};
@@ -24,6 +24,7 @@ async fn main() -> std::io::Result<()> {
     cfg.include_exp = env("FAKE_HRM_EXP", "0") == "1";
     cfg.internal_backend_url = std::env::var("FAKE_HRM_BACKEND_URL").ok();
     cfg.test_api = env("FAKE_HRM_TEST_API", "0") == "1";
+    cfg.mobile_edit = env("FAKE_HRM_MOBILE_EDIT", "0") == "1"; // post-PR-3 HRM: device=mobile stays editable for the Craft provider
     let hrm = FakeHrm::start_on(&env("FAKE_HRM_ADDR", "127.0.0.1:8790"), cfg).await?;
     for (i, p) in std::env::args().skip(1).enumerate() {
         let name = std::path::Path::new(&p)

@@ -1623,3 +1623,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Emulator `opened` (median of 3): 412 dp 17.5 s (1 page) vs 24.7 s (108 pages); 360 dp 26.6 s vs 26.4 s. The emulator noise exceeds the document effect; the stall is not reproduced as one 240 s task.
 - Native layout of the 108-page file (110 pages): 255 ms cold, 38 ms warm cache: shaping is 85 %, pagination plus all passes 15 %. Web Layout is not cheaper (233 ms).
 - Recommendation: (a) always, then (c) slice the shaping warm-up; (b) refuted, (d) not needed unless pagination matters on a phone. Details `docs/phase6/m3.md`.
+
+### Phase 6 WP4: WebView embed proof (2026-11-02, branch `p6-webview`)
+- Test-only APK `ci/android-harness/` (aapt2, javac, d8, apksigner; no Gradle, no downloads) does what MOB does: inline HTML, `loadDataWithBaseURL(baseUrl = docserver)`, `new DocsAPI.DocEditor`. Run on AVD `HRM_Dev_33` (API 33, WebView 109, Gboard 12.4): open, type Latin (`salom`) and Cyrillic (`привет`) with Gboard taps, save (callback status 6, received once), close (status 2); the saved docx holds both texts.
+- Origin: with `baseUrl` = the Document Server the page origin is the Document Server's own origin (`location.origin`, `ancestorOrigins`), so the operator must list the Document Server's own public origin in `frame_origins` besides the SPA origin (session create answers 403 otherwise; verified). WebGL2 works in all three nested frames and the editor canvas is WebGL2. Details and limits `docs/phase6/webview-embed.md`.

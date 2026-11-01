@@ -1,0 +1,159 @@
+{
+  "avd": "HRM_Dev_33",
+  "steps": {
+    "open": {
+      "ready": true,
+      "boot": {
+        "ev": "boot",
+        "origin": "https://10.0.2.2:51264",
+        "url": "https://10.0.2.2:51264/",
+        "docOrigin": "https://10.0.2.2:51264"
+      }
+    },
+    "frames": [
+      {
+        "origin": "https://10.0.2.2:51264",
+        "frame": "E071FD791503524DCF03179026571790",
+        "value": {
+          "href": "https://10.0.2.2:51264/docs/?host=parent&theme=light",
+          "origin": "https://10.0.2.2:51264",
+          "ancestors": [
+            "https://10.0.2.2:51264",
+            "https://10.0.2.2:51264"
+          ],
+          "isSecureContext": true,
+          "webgl1": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)"
+          },
+          "webgl2": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "canvases": 1,
+          "sample": [
+            "1082x1997"
+          ],
+          "canvasIs2d": [
+            "webgl2"
+          ]
+        }
+      },
+      {
+        "origin": "https://10.0.2.2:51264",
+        "frame": "247A5D5A0DE4399C7C2F92C6AE4B2B45",
+        "value": {
+          "href": "https://10.0.2.2:51264/ds/editor#o=https%3A%2F%2F10.0.2.2%3A51264",
+          "origin": "https://10.0.2.2:51264",
+          "ancestors": [
+            "https://10.0.2.2:51264"
+          ],
+          "isSecureContext": true,
+          "webgl1": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)"
+          },
+          "webgl2": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "canvases": 0,
+          "sample": [],
+          "canvasIs2d": []
+        }
+      },
+      {
+        "origin": "https://10.0.2.2:51264",
+        "frame": "9DFF00E14C568E04209B3B6210871434",
+        "value": {
+          "href": "https://10.0.2.2:51264/",
+          "origin": "https://10.0.2.2:51264",
+          "ancestors": [],
+          "isSecureContext": true,
+          "webgl1": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)"
+          },
+          "webgl2": {
+            "renderer": "Android Emulator OpenGL ES Translator (Google SwiftShader)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "canvases": 0,
+          "sample": [],
+          "canvasIs2d": []
+        }
+      }
+    ],
+    "type": {
+      "latin": "salom",
+      "cyrillic": "привет",
+      "dirty": [
+        false,
+        true
+      ]
+    },
+    "save": {
+      "saved": [
+        {
+          "ev": "saved",
+          "v": 2
+        }
+      ],
+      "hrm_received_since_open": [
+        6
+      ],
+      "hrm_rejected": []
+    },
+    "close": {
+      "closed": [
+        {
+          "ev": "closed",
+          "status": 2
+        }
+      ]
+    },
+    "ds_callback_log": [
+      "docserver: callback status 1 to http://127.0.0.1:51265/files/1/save-callback: ok",
+      "docserver: callback status 6 to http://127.0.0.1:51265/files/1/save-callback: ok",
+      "docserver: callback status 2 to http://127.0.0.1:51265/files/1/save-callback: ok"
+    ],
+    "docx": {
+      "has_latin": true,
+      "has_cyrillic": true,
+      "tail": "AR CHIROYLI Shohrux, Chilonzor, Yoqub, YOSHLARsalom привет\r\n"
+    },
+    "frame_origins_negative": {
+      "frame_origins": [
+        "https://hrm.example.test"
+      ],
+      "ready": false,
+      "events": [
+        "boot"
+      ],
+      "ds_log": [
+        "docserver: auth.fail: config message origin is not a frame origin of provider \"fake\"",
+        "docserver: auth.fail create: origin is not a frame origin (client 127.0.0.1)"
+      ]
+    }
+  },
+  "notes": [],
+  "docserver": "https://10.0.2.2:51264",
+  "fake_hrm": "http://10.0.2.2:51265",
+  "frame_origins": [
+    "https://10.0.2.2:51264"
+  ],
+  "versions": {
+    "avd_api": "33",
+    "size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "chrome": "109.0.5414.123",
+    "webview_package": "109.0.5414.123",
+    "webview_active": "com.google.android.webview, 109.0.5414.123",
+    "gboard": "12.4.05.482060964-preload-x86_64"
+  },
+  "recording": {
+    "file": "E:\\office-wt\\p6-webview\\docs\\phase6\\evidence\\webview\\webview-embed.mp4",
+    "bytes": 1663839,
+    "sha256": "7ac58438f0a98b902c46543ea26d8baffdaf4cf38f5a6f455b87e1893b3c782e"
+  }
+}
