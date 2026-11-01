@@ -94,6 +94,7 @@ pub mod table_resize;
 pub mod table_ruler;
 pub mod theme;
 mod touch_scroll;
+pub mod touch_select;
 pub mod widgets;
 pub mod window_close;
 pub mod window_geometry;
