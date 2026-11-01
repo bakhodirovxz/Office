@@ -72,14 +72,14 @@ const samples = [];
 const ed = () => page.frames().find((f) => f.url().includes('/docs/'));
 const edState = () => ed()?.evaluate(() => ({ wasm: Math.max(0, ...window.__mems.map((x) => x.buffer.byteLength)), lt: window.__lt, inst: window.__marks.instantiated, now: performance.now() })).catch(() => null);
 const start = Date.now();
-let opened = false;
+let opened = false, openedAt = 0;
 while (Date.now() - start < TMO) {
   await page.waitForTimeout(500);
   const [m, s] = await Promise.all([cdp.send('Performance.getMetrics'), page.evaluate(() => ({ marks: window.__marks })).then(async (r) => ({ ...r, wasm: (await edState())?.wasm ?? 0 }))]);
   const heap = m.metrics.find((x) => x.name === 'JSHeapUsedSize').value;
   samples.push([Date.now() - start, Math.round(heap / 1048576), s ? Math.round(s.wasm / 1048576) : null]);
-  if (s && s.marks['wordcraft:opened'] && !opened) { opened = true; }
-  if (opened && Date.now() - start > 0) {
+  if (s && s.marks['wordcraft:opened'] && !opened) { opened = true; openedAt = Date.now(); }
+  if (opened && Date.now() - openedAt > 10500) { // the done-check window (10 s after opened) is always recorded
     // settle: no long task for 3 s after opened
     const st = await edState(); const lt = st?.lt.at(-1);
     if (lt && st.now - (lt[0] + lt[1]) > 3000) break;
@@ -99,6 +99,8 @@ const res = {
   ms: { wasm_instantiated: rel(fin.marks.instantiated), ready: rel(fin.marks['wordcraft:ready']), opened: rel(fin.marks['wordcraft:opened']), last_longtask_end: rel(last), cap_hit: rel(fin.marks.capHit) },
   longtasks: lts.length, longest_ms: lts.length ? Math.round(Math.max(...lts.map(([, d]) => d))) : 0,
   busy_ms_by_10s: (() => { const b = {}; for (const [st, d] of lts) { const k = Math.floor((st - t0) / 10000) * 10; b[k] = (b[k] || 0) + Math.round(d); } return b; })(),
+  // plan section 7 done-check: the longest main-thread task starting in the 10 s after `opened` (no input is sent)
+  max_task_10s_after_opened_ms: fin.marks['wordcraft:opened'] == null ? null : Math.round(Math.max(0, ...lts.filter(([st]) => st >= fin.marks['wordcraft:opened'] && st < fin.marks['wordcraft:opened'] + 10000).map(([, d]) => d))),
   top_longtasks: lts.slice().sort((a, b) => b[1] - a[1]).slice(0, 5).map(([s, d]) => [rel(s), Math.round(d)]),
   wasm_mb_max: Math.round(Math.max(0, ...fin.mem) / 1048576), heap_mb_max: Math.max(...samples.map((x) => x[1])),
   opened: !!fin.marks['wordcraft:opened'], elapsed_s: Math.round((Date.now() - start) / 100) / 10,

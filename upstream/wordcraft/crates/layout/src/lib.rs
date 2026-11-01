@@ -2156,17 +2156,76 @@ pub fn layout(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions) -> 
     l
 }
 
-/// One layout pass, numbering footnotes restarted on each page by `note_pages` ([`note_info`]),
-/// with `totals` assumed for the page totals in the body. With `may_repeat`, a pass whose body
-/// shows totals that turn out different asks to be done again.
-fn layout_pass(
-    doc: &Document,
-    cache: &mut LayoutCache,
-    opts: &LayoutOptions,
+/// office overlay (wordcraft/0142): how far [`warm`] has got, carried from one slice to the next.
+#[derive(Default)]
+pub struct Warm {
+    /// The next body block.
+    next: usize,
+    /// The field context and notes hash of the first pass, taken on the first slice.
+    start: Option<(FieldCtx, u64)>,
+    counters: Counters,
+    eq_count: u32,
+}
+
+/// office overlay (wordcraft/0142): lay the body's paragraphs and tables out into `cache` as the
+/// first pass of [`layout`] will look them up, for about `budget_ms` per call (a table is one
+/// step), so that a large document is shaped over several frames and the [`layout`] that follows
+/// mostly paginates. Returns true when the body is done. Only the cache is filled: [`layout`]'s
+/// result is the same with or without it.
+/// shortcut: Print Layout only, at each section's first-column width; paragraphs with page fields,
+/// text beside floats, notes and other column widths miss and are laid out by the pass as before.
+pub fn warm(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions, w: &mut Warm, budget_ms: f64) -> bool {
+    let t0 = now_ms();
+    if opts.view != ViewMode::Print {
+        return true;
+    }
+    let (fields, notes_hash) = match w.start.take() {
+        Some(start) => start,
+        None => {
+            let ctx = pass_ctx(doc, cache, opts, &HashMap::new(), &Totals::first_guess(doc.sections().len()));
+            (ctx.fields, ctx.notes_hash)
+        }
+    };
+    let sections = doc.sections();
+    let mut ctx = new_ctx(doc, cache, opts, fields, notes_hash);
+    ctx.counters = std::mem::take(&mut w.counters);
+    ctx.eq_count = w.eq_count;
+    while let Some(b) = doc.body.get(w.next) {
+        let block = w.next;
+        w.next += 1;
+        let Some((_, sect)) = sections.get(sections.partition_point(|(end, _)| *end < block)) else { continue };
+        ctx.grid = para::Grid::of(doc, sect);
+        let width = sect.column_boxes().first().map_or_else(|| sect.text_width(), |c| c.1);
+        // As the pass places them (`place_para_in_flow`, `place_table`), so list numbers count alike.
+        match &**b {
+            Block::Para(p) => {
+                let label = ctx.next_label(p);
+                if !has_page_fields(p) {
+                    ctx.para_labelled(p, width, None, &[], label);
+                }
+            }
+            Block::Table(t) => {
+                table::layout_table(&mut ctx, StoryRef::Body, t, &[block as u32], width, 1);
+            }
+        }
+        if now_ms() - t0 >= budget_ms {
+            break;
+        }
+    }
+    let done = w.next >= doc.body.len();
+    (w.start, w.counters, w.eq_count) = (Some((ctx.fields, ctx.notes_hash)), ctx.counters, ctx.eq_count);
+    done
+}
+
+/// The walk state a layout pass starts from: the cache emptied if the document's styles or the
+/// options changed, and the field context with `totals` assumed.
+fn pass_ctx<'a>(
+    doc: &'a Document,
+    cache: &'a mut LayoutCache,
+    opts: &'a LayoutOptions,
     note_pages: &HashMap<u32, usize>,
     totals: &Totals,
-    may_repeat: bool,
-) -> Pass {
+) -> Ctx<'a> {
     let env = env_hash(doc, opts);
     if env != cache.env {
         cache.paras.clear();
@@ -2181,22 +2240,27 @@ fn layout_pass(
         v.sort_by_key(|(a, ..)| *a);
         v
     });
-    let mut ctx = Ctx {
+    let fields = FieldCtx {
+        page: 1,
+        pages: totals.pages,
+        section_pages: totals.section(0),
+        section: 1,
+        notes: Arc::new(notes),
+        title: doc.core.title.as_str().into(),
+        author: doc.core.creator.as_str().into(),
+        ..Default::default()
+    };
+    new_ctx(doc, cache, opts, fields, notes_hash)
+}
+
+fn new_ctx<'a>(doc: &'a Document, cache: &'a mut LayoutCache, opts: &'a LayoutOptions, fields: FieldCtx, notes_hash: u64) -> Ctx<'a> {
+    Ctx {
         doc,
         cache,
         opts,
         hide_deleted: opts.hides_deleted(StoryRef::Body),
         counters: Counters::default(),
-        fields: FieldCtx {
-            page: 1,
-            pages: totals.pages,
-            section_pages: totals.section(0),
-            section: 1,
-            notes: Arc::new(notes),
-            title: doc.core.title.as_str().into(),
-            author: doc.core.creator.as_str().into(),
-            ..Default::default()
-        },
+        fields,
         notes_hash,
         numbers: HashMap::new(),
         eq_count: 0,
@@ -2213,7 +2277,21 @@ fn layout_pass(
         header_tables: HashMap::new(),
         footer_wraps: HashMap::new(),
         pin: None,
-    };
+    }
+}
+
+/// One layout pass, numbering footnotes restarted on each page by `note_pages` ([`note_info`]),
+/// with `totals` assumed for the page totals in the body. With `may_repeat`, a pass whose body
+/// shows totals that turn out different asks to be done again.
+fn layout_pass(
+    doc: &Document,
+    cache: &mut LayoutCache,
+    opts: &LayoutOptions,
+    note_pages: &HashMap<u32, usize>,
+    totals: &Totals,
+    may_repeat: bool,
+) -> Pass {
+    let mut ctx = pass_ctx(doc, cache, opts, note_pages, totals);
     let sections = doc.sections();
     let web = matches!(opts.view, ViewMode::Web | ViewMode::Draft | ViewMode::Outline);
     let read = opts.view == ViewMode::Read;
@@ -4606,3 +4684,5 @@ mod tests_styleref;
 mod tests_textbox;
 #[cfg(test)]
 mod tests_vertical;
+#[cfg(test)]
+mod tests_warm;

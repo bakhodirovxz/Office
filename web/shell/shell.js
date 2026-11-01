@@ -82,9 +82,16 @@
   }
 
   // ---- editors ----
+  // Editors that post <prefix>:opened once the opened document is drawn: until then a cover names the file (phase 6 M3, a large
+  // document on a phone takes seconds; the editor's frame is blank or frozen meanwhile). The others clear the status on ready.
+  const SAYS_OPENED = ['docs', 'slides'];
+  function cover() {
+    const f = S.current && S.frames[S.current.id], name = f ? f.opening : '';
+    $('ed-cover').hidden = !name; $('ed-cover').textContent = name ? t('ed.opening', { name }) : '';
+  }
   function frameOf(a) {
     if (S.frames[a.id]) return S.frames[a.id];
-    const f = { app: a, ready: false, dirty: false, pending: null, timer: 0 };
+    const f = { app: a, ready: false, dirty: false, pending: null, timer: 0, opening: '' };
     f.el = el('iframe', { src: a.route + '?host=parent&lang=' + encodeURIComponent(S.lang) + '&theme=' + S.theme, title: appName(a) });
     $('frames').append(f.el);
     return (S.frames[a.id] = f);
@@ -100,14 +107,16 @@
     if (f && f.dirty && !confirm(t('ed.dirty'))) return;
     if (f && !file && f.ready) { f.ready = false; f.dirty = false; f.el.contentWindow.location.reload(); }
     f = frameOf(a);
+    f.opening = file && SAYS_OPENED.includes(a.id) ? file.name : '';
     if (file) {
       f.pending = file; clearTimeout(f.timer);
-      f.timer = setTimeout(() => { if (f.pending) fail(t('err.bridge', { app: appName(a) })); }, READY_MS);
+      f.timer = setTimeout(() => { if (f.pending) { f.opening = ''; cover(); fail(t('err.bridge', { app: appName(a) })); } }, READY_MS);
       if (f.ready) post(f, file);
     }
     for (const x of Object.values(S.frames)) x.el.hidden = x !== f;
     S.current = a; $('ed-title').textContent = file ? file.name : appName(a);
-    $('ed-status').textContent = f.ready ? '' : t('ed.loading', { app: appName(a) });
+    $('ed-status').textContent = f.opening ? t('ed.opening', { name: f.opening }) : f.ready ? '' : t('ed.loading', { app: appName(a) });
+    cover();
     $('home').hidden = true; $('editor').hidden = false; document.title = appName(a);
     $('back').focus(); // the focused card is hidden now: keep the keyboard user's place, one Tab from the editor
   }
@@ -123,9 +132,10 @@
     const d = ev.data;
     if (!f || !d || typeof d.type !== 'string' || !d.type.startsWith(f.app.prefix + ':')) return;
     switch (d.type.slice(f.app.prefix.length + 1)) {
-      case 'ready': f.ready = true; $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
+      case 'ready': f.ready = true; if (!f.opening) $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
+      case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } break;
       case 'dirty': f.dirty = !!d.dirty; break;
-      case 'failed': fail(t('err.failed', { error: String(d.error) })); break;
+      case 'failed': f.opening = ''; cover(); fail(t('err.failed', { error: String(d.error) })); break;
       case 'save': {
         // only this app's own file types, and no path parts: an editor fed a hostile document cannot make the shell save x.lnk or x.hta
         const name = baseName(d.name), bytes = d.bytes;

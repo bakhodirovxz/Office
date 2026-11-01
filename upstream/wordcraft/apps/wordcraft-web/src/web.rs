@@ -113,7 +113,7 @@ pub fn start() {
                     if let Some(bridge) = &app_bridge {
                         bridge.post_ready();
                     }
-                    Ok(Box::new(WebShell { app, inbox, messages, prefs, bridge: app_bridge }))
+                    Ok(Box::new(WebShell { app, inbox, messages, prefs, bridge: app_bridge, warm: None }))
                 }),
             )
             .await;
@@ -149,7 +149,13 @@ struct WebShell {
     messages: Rc<RefCell<Vec<String>>>,
     prefs: crate::prefs::PrefsSync,
     bridge: Option<host::Bridge>,
+    /// office overlay (wordcraft/0142): a document just opened, shaped over frames before it is shown.
+    warm: Option<wordcraft_engine::layout::Warm>,
 }
+
+/// office overlay (wordcraft/0142): shaping time per frame while a document opens. The plan's 8-10 ms left about 60 % of the
+/// warm-up to frame overhead at 6x CPU (108-page docx: 6.6 s); 25 ms takes 4.7 s and stays under the 50 ms long-task line.
+const WARM_SLICE_MS: f64 = 25.0;
 
 fn local_storage() -> Option<web_sys::Storage> {
     web_sys::window()?.local_storage().ok()?
@@ -181,7 +187,19 @@ impl eframe::App for WebShell {
         for msg in msgs {
             self.app.status(msg);
         }
+        let shown = self.app.session.document_id();
         self.app.logic(ctx);
+        // office overlay (wordcraft/0142): a large document's first layout was one task of seconds on a phone, frames
+        // stopped and the page stayed grey. Its paragraphs are shaped in slices first; the layout then mostly paginates.
+        if self.app.session.document_id() != shown {
+            self.warm = Some(Default::default());
+        }
+        if let Some(w) = &mut self.warm {
+            if self.app.session.warm_layout(w, WARM_SLICE_MS) {
+                self.warm = None;
+            }
+            ctx.request_repaint();
+        }
         // Store changed preferences straight away: a reload or closed tab runs no exit code (#2132).
         if let Some(json) = self.prefs.changed(&self.app) {
             match local_storage() {
@@ -194,7 +212,7 @@ impl eframe::App for WebShell {
             }
         }
         if let Some(bridge) = &self.bridge {
-            bridge.sync(ctx, &mut self.app);
+            bridge.sync(ctx, &mut self.app, self.warm.is_some());
         }
     }
 
@@ -203,6 +221,10 @@ impl eframe::App for WebShell {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        // office overlay (wordcraft/0142): nothing is drawn while the opened document is shaped (the host shows "Opening").
+        if self.warm.is_some() {
+            return;
+        }
         self.app.ui(ui);
     }
 }

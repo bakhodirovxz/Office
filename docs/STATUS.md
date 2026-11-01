@@ -1627,3 +1627,11 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 ### Phase 6 WP4: WebView embed proof (2026-11-02, branch `p6-webview`)
 - Test-only APK `ci/android-harness/` (aapt2, javac, d8, apksigner; no Gradle, no downloads) does what MOB does: inline HTML, `loadDataWithBaseURL(baseUrl = docserver)`, `new DocsAPI.DocEditor`. Run on AVD `HRM_Dev_33` (API 33, WebView 109, Gboard 12.4): open, type Latin (`salom`) and Cyrillic (`привет`) with Gboard taps, save (callback status 6, received once), close (status 2); the saved docx holds both texts.
 - Origin: with `baseUrl` = the Document Server the page origin is the Document Server's own origin (`location.origin`, `ancestorOrigins`), so the operator must list the Document Server's own public origin in `frame_origins` besides the SPA origin (session create answers 403 otherwise; verified). WebGL2 works in all three nested frames and the editor canvas is WebGL2. Details and limits `docs/phase6/webview-embed.md`.
+### Phase 6 WP2 step 2: M3 fix (a) + (c) (2026-11-02, branch `p6-m3fix`)
+- (a) The shell covers the Docs/Slides editor with "Opening <file>…" (new `ed.opening`, reviewed:agent-opus:2026-11-02) from the hand-over until
+  `<prefix>:opened`; before, the status cleared at `ready` and the blank or frozen editor showed for 3-25 s. Cache headers: already immutable for hashed files (curl-checked), no change.
+- (c) Carried patch `wordcraft/0142` (layout `warm`, engine `Session::warm_layout`, wordcraft-web 25 ms slices per frame, `opened` after them; 0950 regenerated).
+  Native: layout after the warm-up 64 ms vs 290 ms cold. Desktop 6x CPU, 108 pages: longest task 5.6-6.7 s → 3.8-4.1 s; `opened` about equal (12.0 s idle);
+  **the "108-page `opened` ≤ 1.5x the 1-page" target is not met** (12.0 s vs 9.9 s); no task > 200 ms in the 10 s after `opened` (5 of 6 runs; one 207 ms under host load).
+  Emulator `HRM_Pixel_8`: opens, page 1 shows, a tap places the caret and a key types there (recorded). The rest of the `opened` frame is mostly UI work, not
+  layout (status bar walks the whole body every frame via `Document::start_of`/`end_of`); next steps in `docs/phase6/m3.md` section 5.
