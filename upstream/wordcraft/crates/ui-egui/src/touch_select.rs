@@ -1,0 +1,444 @@
+//! Selection handles and the long-press action bar for a touch screen (wordcraft/0139).
+//!
+//! A finger can't aim at a character, so a text selection shows two round handles under its ends
+//! that are dragged to resize it, and a long press (which selects the word, see `touch_scroll`)
+//! opens a bar of Cut / Copy / Paste / Select All instead of the desktop context menu. Nothing
+//! here is drawn or routed unless the last pointer was a finger.
+
+use egui::{Color32, Order, Pos2, Rect, Vec2, pos2, vec2};
+use serde_json::json;
+
+use crate::theme::Tokens;
+use crate::WordApp;
+use wordcraft_doc::Pos;
+use wordcraft_engine::Selection;
+use wordcraft_layout::DocLayout;
+
+/// Handle knob radius, and how far its centre hangs below the line's bottom (points).
+const R: f32 = 11.0;
+const DROP: f32 = R + 3.0;
+/// Hit target of a handle: Android's 48 dp.
+const TARGET: f32 = 48.0;
+/// Height of the action bar and its gap to the selection.
+const BAR_H: f32 = 48.0;
+const GAP: f32 = 8.0;
+
+#[derive(Clone, Debug, Default)]
+pub struct TouchSelect {
+    /// The last pointer was a finger.
+    pub touch: bool,
+    drag: Option<Drag>,
+    /// A long press asked for the bar; it shows once the finger lifts.
+    pending: bool,
+    /// The selection the bar was opened for: it goes when the selection changes.
+    bar: Option<Selection>,
+}
+
+#[derive(Clone, Debug)]
+struct Drag {
+    /// The end that stays put.
+    fixed: Pos,
+    /// Knob centre minus finger, so the finger never covers the text it chooses.
+    grab: Vec2,
+    /// Height of the dragged end's line on screen.
+    line_h: f32,
+}
+
+impl TouchSelect {
+    /// A handle is being dragged.
+    pub fn dragging(&self) -> bool {
+        self.drag.is_some()
+    }
+
+    /// The canvas saw a long press: open the action bar (not the context menu) once the finger lifts.
+    pub fn long_pressed(&mut self) {
+        self.pending = true;
+    }
+
+    /// The bar is open for `sel` (tests).
+    #[cfg(test)]
+    fn bar_open(&self, sel: &Selection) -> bool {
+        self.bar.as_ref() == Some(sel)
+    }
+}
+
+/// Where a selection end is on screen: the line's bottom and the line's height.
+fn end_at(page_hint: usize, layout: &DocLayout, rects: &[Rect], scale: f32, pos: &Pos) -> Option<(Pos2, f32)> {
+    let c = layout.caret_on(pos, page_hint)?;
+    let pr = rects.get(c.page)?;
+    let s = layout.pages.get(c.page).map_or(scale, |page| crate::canvas::page_screen_scale(*pr, page, scale));
+    Some((pos2(pr.min.x + c.x * s, pr.min.y + (c.top + c.height) * s), c.height * s))
+}
+
+/// The two handles (start, end) of a text selection as (position, line bottom, line height); none
+/// for a caret, a selected object, whole cells, a composition or while a dialog is up.
+fn handles(app: &WordApp, layout: &DocLayout, rects: &[Rect], scale: f32) -> Option<[(Pos, Pos2, f32); 2]> {
+    if !app.canvas.tsel.touch
+        || app.session.sel.is_collapsed()
+        || app.dialog.is_some()
+        || !app.canvas.ime_preedit.is_empty()
+        || crate::objects::selected(app).is_some()
+        || app.session.cell_range().is_some()
+    {
+        return None;
+    }
+    let (a, b) = app.session.sel.ordered();
+    let (pa, ha) = end_at(app.session.page_hint, layout, rects, scale, &a)?;
+    let (pb, hb) = end_at(app.session.page_hint, layout, rects, scale, &b)?;
+    Some([(a, pa, ha), (b, pb, hb)])
+}
+
+fn knob(bottom: Pos2) -> Pos2 {
+    bottom + vec2(0.0, DROP)
+}
+
+/// Routes a finger's press and drag first: a press on a handle (or on something floating above
+/// the page, like the action bar) is taken here; `true` while it is. Call at the top of `mouse()`,
+/// before the press is held back for scrolling.
+pub fn pointer(app: &mut WordApp, ui: &egui::Ui, layout: &DocLayout, rects: &[Rect], scale: f32) -> bool {
+    let (touch, mouse_press, start, finger, up, pinch) = ui.input(|i| {
+        let touch = i.events.iter().any(|e| matches!(e, egui::Event::Touch { .. }));
+        let mouse_press = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pressed: true, .. }));
+        let start = i.events.iter().find_map(|e| match e {
+            egui::Event::Touch { phase: egui::TouchPhase::Start, pos, .. } if i.pointer.primary_pressed() => Some(*pos),
+            _ => None,
+        });
+        (touch, mouse_press, start, crate::touch_scroll::finger_pos(i), i.pointer.primary_released() || !i.any_touches(), i.multi_touch().is_some())
+    });
+    if touch {
+        app.canvas.tsel.touch = true;
+    } else if mouse_press {
+        app.canvas.tsel.touch = false;
+    }
+    if let Some(drag) = app.canvas.tsel.drag.clone() {
+        if up || pinch {
+            app.canvas.tsel.drag = None;
+            app.canvas.dragging = false;
+            // Gboard counts corrections from the text it saw since the caret last moved.
+            app.canvas.ime_reset = true;
+            app.canvas.tsel.pending = true;
+            return true;
+        }
+        let Some(finger) = finger else { return true };
+        let target = finger + drag.grab - vec2(0.0, DROP + drag.line_h / 2.0);
+        let target = app.canvas.viewport.map_or(target, |vp| vp.clamp(target));
+        if let Some((page, x, y)) = crate::canvas::page_at(rects, layout, scale, target)
+            && let Some(pos) = layout.hit(page, x, y, drag.fixed.story)
+            && (app.session.sel.focus != pos || app.session.sel.anchor != drag.fixed)
+        {
+            let _ = app.session.run("select.range", &json!({"anchor": drag.fixed, "focus": pos}));
+            app.session.page_hint = page;
+            app.canvas.caret_visible_since = crate::now_ms();
+        }
+        return true;
+    }
+    let Some(at) = start else { return false };
+    // Something above the page (the bar, a menu): its own press, not the document's.
+    if ui.ctx().layer_id_at(at).is_some_and(|l| l.order != Order::Background) {
+        return true;
+    }
+    // A new press in the document puts the bar away (a long press opens it again).
+    app.canvas.tsel.pending = false;
+    app.canvas.tsel.bar = None;
+    let Some(ends) = handles(app, layout, rects, scale) else { return false };
+    let focus = app.session.sel.focus.clone();
+    let grabbed = ends
+        .iter()
+        .enumerate()
+        .map(|(i, (pos, bottom, h))| (i, knob(*bottom), *h, *pos == focus))
+        .filter(|(_, k, ..)| Rect::from_center_size(*k, Vec2::splat(TARGET)).contains(at))
+        // The nearer knob wins; a tie goes to the focus end.
+        .min_by(|a, b| a.1.distance(at).total_cmp(&b.1.distance(at)).then(b.3.cmp(&a.3)));
+    let Some((i, k, line_h, _)) = grabbed else { return false };
+    app.canvas.tsel.drag = Some(Drag { fixed: ends[1 - i].0.clone(), grab: k - at, line_h });
+    // The drag is a drag-select: the edge auto-scroll and the toolbar's waiting follow from this.
+    app.canvas.dragging = true;
+    true
+}
+
+/// Paints the handles and the action bar. Call where the mini toolbar is drawn.
+pub fn show(app: &mut WordApp, ctx: &egui::Context, layout: &DocLayout, rects: &[Rect], scale: f32, viewport: Rect) {
+    if !app.canvas.tsel.touch {
+        return;
+    }
+    if app.canvas.tsel.pending && !app.canvas.dragging {
+        app.canvas.tsel.pending = false;
+        app.canvas.tsel.bar = Some(app.session.sel.clone());
+    }
+    let t = Tokens::get(ctx);
+    let ends = handles(app, layout, rects, scale);
+    if let Some(ends) = &ends {
+        let painter = ctx.layer_painter(egui::LayerId::new(Order::Middle, egui::Id::new("wc_touch_handles"))).with_clip_rect(viewport);
+        for (_, bottom, _) in ends {
+            painter.line_segment([*bottom, knob(*bottom)], egui::Stroke::new(2.0, t.accent));
+            painter.circle_filled(knob(*bottom), R, t.accent);
+            painter.circle_stroke(knob(*bottom), R, egui::Stroke::new(1.0, Color32::WHITE.gamma_multiply(0.7)));
+        }
+    }
+    if app.canvas.tsel.bar.as_ref() != Some(&app.session.sel)
+        || app.canvas.dragging
+        || app.dialog.is_some()
+        || app.ui.backstage
+        || app.canvas.context_menu_open
+    {
+        return;
+    }
+    // Above the selection's first line; below the handles when there is no room above.
+    let anchor = match (app.canvas.mini_anchor, &ends) {
+        (Some(a), _) => a,
+        (None, Some(e)) => Rect::from_two_pos(e[0].1 - vec2(0.0, e[0].2), e[0].1),
+        (None, None) => {
+            let f = app.session.sel.focus.clone();
+            let Some((bottom, h)) = end_at(app.session.page_hint, layout, rects, scale, &f) else { return };
+            Rect::from_two_pos(bottom - vec2(0.0, h), bottom)
+        }
+    };
+    if !anchor.is_finite() || !viewport.is_positive() {
+        return;
+    }
+    let above = anchor.min.y - GAP - BAR_H;
+    let y = if above >= viewport.top() { above } else { (anchor.max.y + DROP + R + GAP).min(viewport.bottom() - BAR_H) };
+    egui::Area::new(egui::Id::new("wc_touch_bar"))
+        .order(Order::Middle)
+        .constrain_to(viewport)
+        .fixed_pos(pos2(anchor.min.x.max(viewport.left()), y.max(viewport.top())))
+        .show(ctx, |ui| {
+            egui::Frame::popup(ui.style()).show(ui, |ui| {
+                ui.spacing_mut().interact_size.y = BAR_H - 12.0;
+                ui.horizontal(|ui| {
+                    for (label, id) in [("Cut", "edit.cut"), ("Copy", "edit.copy"), ("Paste", "edit.paste"), ("Select All", "select.all")] {
+                        if ui.add_enabled(crate::widgets::enabled(app, id), egui::Button::new(tl!(label))).clicked() {
+                            let _ = app.run(id, json!({}));
+                            // Select All keeps the bar for the new selection; the others are done.
+                            app.canvas.tsel.bar = (id == "select.all").then(|| app.session.sel.clone());
+                        }
+                    }
+                    // The rest (spelling, synonyms, Transliterate ...) is the context menu, at the caret.
+                    if ui.button("\u{2026}").clicked() {
+                        app.canvas.context_menu_from_keys = true;
+                        app.canvas.tsel.bar = None;
+                    }
+                });
+            });
+        });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use egui::{Event, PointerButton, TouchDeviceId, TouchId, TouchPhase};
+    use egui_kittest::Harness;
+    use egui_kittest::kittest::Queryable;
+
+    fn app(text: &str, size: Vec2) -> Harness<'static, WordApp> {
+        let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::from_text(text)), Default::default());
+        let mut h = Harness::builder().with_size(size).build_ui_state(
+            |ui, app: &mut WordApp| {
+                let ctx = ui.ctx().clone();
+                app.logic(&ctx);
+                app.ui(ui);
+            },
+            a,
+        );
+        h.run_steps(4);
+        h
+    }
+
+    fn touch(phase: TouchPhase, pos: Pos2) -> Event {
+        Event::Touch { device_id: TouchDeviceId(0), id: TouchId(0), phase, pos, force: None }
+    }
+
+    fn button(pressed: bool, pos: Pos2) -> Event {
+        Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() }
+    }
+
+    /// One frame holding all of `events` (the harness would give each its own).
+    fn frame(h: &mut Harness<'static, WordApp>, events: Vec<Event>) {
+        h.input_mut().events.extend(events);
+        h.step();
+    }
+
+    fn down(h: &mut Harness<'static, WordApp>, at: Pos2) {
+        frame(h, vec![Event::PointerMoved(at), button(true, at), touch(TouchPhase::Start, at)]);
+    }
+
+    fn drag(h: &mut Harness<'static, WordApp>, to: Pos2) {
+        frame(h, vec![Event::PointerMoved(to), touch(TouchPhase::Move, to)]);
+    }
+
+    fn up(h: &mut Harness<'static, WordApp>, at: Pos2) {
+        frame(h, vec![button(false, at), Event::PointerGone, touch(TouchPhase::End, at)]);
+    }
+
+    /// The line's bottom and height on screen for a position.
+    fn end(h: &mut Harness<'static, WordApp>, pos: &Pos) -> (Pos2, f32) {
+        let app = h.state_mut();
+        let layout = app.session.layout();
+        let rects = app.canvas.page_rects.clone();
+        end_at(app.session.page_hint, &layout, &rects, app.canvas.scale, pos).expect("the position is laid out")
+    }
+
+    fn at_off(p: &Pos, off: usize) -> Pos {
+        Pos { off, ..p.clone() }
+    }
+
+    /// A selected word: the end handle is pressed (no scroll, no caret move, no word select), dragged
+    /// along the line and onto the next, then past the start so the selection flips; lifting resets
+    /// the IME and opens the bar.
+    #[test]
+    fn dragging_a_handle_extends_the_selection_and_flips() {
+        let mut h = app("alpha beta gamma delta\nepsilon zeta", vec2(1440.0, 900.0));
+        h.state_mut().run("select.text", json!({"text": "beta"})).unwrap();
+        h.step();
+        let (a, b) = h.state().session.sel.ordered();
+        let before = h.state().session.sel.clone();
+        let scroll = h.state().canvas.scroll_offset;
+
+        let (bottom, _) = end(&mut h, &b);
+        down(&mut h, knob(bottom));
+        assert!(h.state().canvas.tsel.dragging(), "a press on the knob grabs the handle");
+        for _ in 0..5 {
+            h.step();
+        }
+        assert_eq!(h.state().session.sel, before, "holding a handle neither selects nor moves the caret");
+        assert_eq!(h.state().canvas.scroll_offset, scroll, "nor scrolls");
+
+        let end_of_gamma = at_off(&b, 16);
+        let (to, _) = end(&mut h, &end_of_gamma);
+        drag(&mut h, knob(to));
+        assert_eq!(h.state().session.sel.focus, end_of_gamma);
+        assert_eq!(h.state().session.sel.anchor, a, "the other end stays put");
+        // Down onto the next paragraph.
+        let next = Pos::body(1, 4);
+        let (to, _) = end(&mut h, &next);
+        drag(&mut h, knob(to));
+        assert_eq!(h.state().session.sel.focus, next);
+        up(&mut h, knob(to));
+        assert!(h.state().canvas.ime_reset, "the IME restarts from the new selection");
+        assert!(!h.state().canvas.tsel.dragging());
+        assert!(h.state().canvas.tsel.bar_open(&h.state().session.sel), "the bar comes back when the finger lifts");
+
+        // Grab the end again and carry it left of the other end: the selection flips.
+        let (_, b2) = h.state().session.sel.ordered();
+        let (bottom, _) = end(&mut h, &b2);
+        down(&mut h, knob(bottom));
+        let left = at_off(&a, 2);
+        let (to, _) = end(&mut h, &left);
+        drag(&mut h, knob(to));
+        assert_eq!(h.state().session.sel.focus, left);
+        assert_eq!(h.state().session.sel.anchor, a);
+        assert_eq!(h.state().session.sel.ordered().0, left);
+        up(&mut h, knob(to));
+    }
+
+    /// The handle follows the finger across a page break.
+    #[test]
+    fn dragging_a_handle_across_a_page_break() {
+        let mut h = app("one two three\nfour five six", vec2(1000.0, 2000.0));
+        h.state_mut().run("select.text", json!({"text": "four"})).unwrap();
+        h.state_mut().run("select.collapse", json!({})).unwrap();
+        h.state_mut().run("insert.pageBreak", json!({})).unwrap();
+        h.run_steps(3);
+        h.state_mut().run("select.text", json!({"text": "two"})).unwrap();
+        h.run_steps(2);
+        let (_, b) = h.state().session.sel.ordered();
+        let (bottom, _) = end(&mut h, &b);
+        down(&mut h, knob(bottom));
+        // The last paragraph (on page 2) holds "six".
+        let six = {
+            let app = h.state_mut();
+            let pos = Pos::body(app.session.doc.body.len() - 1, 0);
+            let off = app.session.doc.para_at(&pos).map_or(0, |p| p.text.len());
+            Pos { off, ..pos }
+        };
+        let (to, _) = end(&mut h, &six);
+        drag(&mut h, knob(to));
+        assert_eq!(h.state().session.sel.focus, six);
+        let layout = h.state_mut().session.layout();
+        assert_eq!(layout.caret_on(&six, 1).map(|c| c.page), Some(1), "the focus is on the second page");
+        up(&mut h, knob(to));
+    }
+
+    /// A long press selects the word and opens the bar when the finger lifts, but not the desktop
+    /// menu; a button of the bar works; a right-click still opens the menu and a mouse draws no handles.
+    #[test]
+    fn long_press_opens_the_bar_not_the_menu_and_the_mouse_is_unchanged() {
+        let mut h = app("alpha beta gamma delta", vec2(1440.0, 900.0));
+        let p = h.state().session.sel.focus.clone();
+        let (bottom, hh) = end(&mut h, &at_off(&p, 13));
+        let at = pos2(bottom.x, bottom.y - hh / 2.0);
+        down(&mut h, at);
+        for _ in 0..5 {
+            h.step();
+        }
+        up(&mut h, at);
+        h.run_steps(2);
+        let sel = h.state().session.sel.clone();
+        assert_eq!((sel.ordered().0.off, sel.ordered().1.off), (11, 17), "the word under the finger (with its space, as a double-click)");
+        assert!(!h.state().canvas.context_menu_open, "no desktop menu");
+        assert!(!egui::Popup::is_any_open(&h.ctx), "no popup of any kind");
+        assert!(h.state().canvas.tsel.bar_open(&sel), "the action bar instead");
+
+        // A button of the bar, pressed with a finger.
+        let bar = h.ctx.memory(|m| m.area_rect(egui::Id::new("wc_touch_bar"))).expect("the bar is shown");
+        let all = h.query_all_by_label("Select All").map(|n| n.rect()).find(|r| bar.contains_rect(*r)).expect("Select All is on the bar");
+        down(&mut h, all.center());
+        up(&mut h, all.center());
+        h.run_steps(2);
+        let (s, e) = h.state().session.sel.ordered();
+        assert_eq!((s.off, e.off), (0, 22), "Select All from the bar selects everything");
+
+        // The mouse: a right-click opens the menu and no handles are drawn.
+        let m = pos2(at.x + 5.0, at.y);
+        frame(&mut h, vec![Event::PointerMoved(m), Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: true, modifiers: Default::default() }]);
+        frame(&mut h, vec![Event::PointerButton { pos: m, button: PointerButton::Secondary, pressed: false, modifiers: Default::default() }]);
+        h.run_steps(2);
+        assert!(h.state().canvas.context_menu_open, "right-click keeps the desktop menu");
+        assert!(!h.state().canvas.tsel.touch);
+        let app = h.state_mut();
+        let (layout, rects, scale) = (app.session.layout(), app.canvas.page_rects.clone(), app.canvas.scale);
+        assert!(handles(app, &layout, &rects, scale).is_none(), "a mouse draws no handles");
+    }
+
+    /// Cyrillic typed over a selection made with the handles replaces it.
+    #[test]
+    fn cyrillic_typed_over_the_selection_replaces_it() {
+        let mut h = app("alpha beta gamma", vec2(1440.0, 900.0));
+        h.state_mut().run("select.text", json!({"text": "beta"})).unwrap();
+        h.state_mut().canvas.tsel.touch = true;
+        h.state_mut().canvas.want_focus = true;
+        h.run_steps(2);
+        let (_, b) = h.state().session.sel.ordered();
+        let (bottom, _) = end(&mut h, &b);
+        down(&mut h, knob(bottom));
+        up(&mut h, knob(bottom));
+        h.run_steps(2);
+        frame(&mut h, vec![Event::Text("Салом ў".into())]);
+        h.run_steps(2);
+        let app = h.state();
+        let text = app.session.doc.para_at(&app.session.sel.focus).map(|p| p.text.to_string()).unwrap_or_default();
+        assert_eq!(text, "alpha Салом ў gamma");
+    }
+
+    /// No handles for a caret, whole cells or a selected object; two for a text selection.
+    #[test]
+    fn handles_are_for_text_selections_only() {
+        let mut h = app("alpha beta", vec2(1440.0, 900.0));
+        h.state_mut().canvas.tsel.touch = true;
+        let shown = |h: &mut Harness<'static, WordApp>| {
+            h.run_steps(2);
+            let app = h.state_mut();
+            let (layout, rects, scale) = (app.session.layout(), app.canvas.page_rects.clone(), app.canvas.scale);
+            handles(app, &layout, &rects, scale).is_some()
+        };
+        assert!(!shown(&mut h), "a caret");
+        h.state_mut().run("select.text", json!({"text": "beta"})).unwrap();
+        assert!(shown(&mut h), "a text selection");
+        h.state_mut().run("insert.table", json!({"rows": 2, "cols": 2})).unwrap();
+        h.state_mut().run("table.selectCell", json!({})).unwrap();
+        assert!(!shown(&mut h), "whole cells");
+        h.state_mut().run("select.collapse", json!({})).unwrap();
+        h.state_mut().run("insert.shape", json!({"kind": "ellipse"})).unwrap();
+        assert!(!shown(&mut h), "a selected object");
+    }
+}

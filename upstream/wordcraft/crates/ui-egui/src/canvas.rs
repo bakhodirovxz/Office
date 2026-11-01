@@ -66,7 +66,7 @@ pub struct CanvasState {
     pub caret_visible_since: f64,
     /// The caret's colour and the fingerprint of where it was worked out ([`caret_color_at`]).
     caret_bg: Option<(u64, Color32)>,
-    dragging: bool,
+    pub(crate) dragging: bool,
     /// Alt+drag: where the column (block) selection started (page, x, y) and its last end.
     column_drag: Option<((usize, f32, f32), (usize, f32, f32))>,
     /// The last primary press on the page (time, screen point, clicks in a row), to count
@@ -126,6 +126,8 @@ pub struct CanvasState {
     pub(crate) wheel: crate::scroll::CanvasScroll,
     /// One-finger scrolling on a touch screen.
     pub(crate) touch: crate::touch_scroll::TouchScroll,
+    /// Selection handles and the long-press action bar for a finger.
+    pub(crate) tsel: crate::touch_select::TouchSelect,
     /// Middle-click scrolling (#1065).
     pub(crate) auto_scroll: crate::autoscroll::AutoScroll,
     /// The scroll offset and its maximum at the end of last frame.
@@ -274,6 +276,7 @@ impl Default for CanvasState {
             alt_code_echo: None,
             wheel: Default::default(),
             touch: Default::default(),
+            tsel: Default::default(),
             auto_scroll: Default::default(),
             scroll_offset: egui::Vec2::ZERO,
             scroll_max: egui::Vec2::ZERO,
@@ -1631,7 +1634,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let pointer_click = resp.clicked_by(egui::PointerButton::Primary);
     let accesskit_click = resp.clicked() && !pointer_click && !keyboard_click;
     // A finger scrolling the page doesn't take the keyboard (that would raise the soft one).
-    let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled());
+    let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
         resp.request_focus();
     }
@@ -1667,6 +1670,11 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         crate::content_controls::clicks(app, &resp);
     }
     let secondary_clicked = resp.secondary_clicked() && !middle_gesture;
+    // A long press on a finger opens the action bar, not the desktop menu (touch_select).
+    let long_touch = resp.long_touched() && !middle_gesture;
+    if long_touch {
+        app.canvas.tsel.long_pressed();
+    }
     // Selected table cells: a right-click off them drops them, even between the selection's ends
     // (beside a selected column), so the menu acts on the cell clicked.
     if secondary_clicked
@@ -1723,7 +1731,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     } else if secondary_clicked {
         app.canvas.context_menu_at = resp.interact_pointer_pos();
     }
-    let open = if secondary_clicked || from_keys {
+    let open = if (secondary_clicked && !long_touch) || from_keys {
         Some(egui::SetOpenCommand::Bool(true))
     } else if resp.clicked() {
         Some(egui::SetOpenCommand::Bool(false))
@@ -1763,9 +1771,11 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     crate::mini_toolbar::track_dismissal(app, ui.ctx(), area);
     if let Some(sel) = app.canvas.mini_anchor
         && app.ui.mini_toolbar
+        && !app.canvas.tsel.touch
     {
         crate::mini_toolbar::show(app, ui.ctx(), sel, out.inner_rect);
     }
+    crate::touch_select::show(app, ui.ctx(), &layout, &rects, geo.scale, out.inner_rect);
     if app.session.view.read_mode {
         // Fixed navigation chrome, independent of the horizontally moving columns.
         let step = app.session.view.read_width * app.canvas.scale + GAP;
@@ -2318,6 +2328,10 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
 fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
     // A pen or the eraser (Draw tab) owns the pointer.
     if crate::ink::pointer(app, ui, resp, rects, layout, scale) {
+        return;
+    }
+    // A finger on a selection handle (or on the action bar above the page) is not the document's.
+    if crate::touch_select::pointer(app, ui, layout, rects, scale) {
         return;
     }
     // A finger's press waits to see whether it is a tap, a scroll or a long press (touch_scroll).

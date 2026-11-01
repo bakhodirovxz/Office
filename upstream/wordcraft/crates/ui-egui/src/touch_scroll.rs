@@ -163,7 +163,7 @@ impl TouchScroll {
 
 /// Where the finger is, from this frame's events (a lifted finger leaves the pointer without a
 /// position, and a slow frame can hold the whole gesture).
-fn finger_pos(input: &InputState) -> Option<Pos2> {
+pub(crate) fn finger_pos(input: &InputState) -> Option<Pos2> {
     input
         .events
         .iter()
