@@ -1,0 +1,176 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: x <a@b>
+Date: Sun, 1 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft: rustfmt the files patches added after the first rustfmt pass
+
+rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
+---
+
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 2499bf1..9c7d4cb 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -780,7 +780,10 @@ fn open_page(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+         ui.vertical(|ui| {
+             ui.set_width(230.0);
+             place_row(ui, Icon::Recent, "Recent", true, 220.0);
+-            if place_row(ui, Icon::OpenFolder, "Browse", false, 220.0).on_hover_text(crate::i18n::t("Open a presentation from a folder (Ctrl+O)")).clicked() {
++            if place_row(ui, Icon::OpenFolder, "Browse", false, 220.0)
++                .on_hover_text(crate::i18n::t("Open a presentation from a folder (Ctrl+O)"))
++                .clicked()
++            {
+                 let _ = app.run("app.openDialog", json!({}));
+             }
+             if app.session.recovery_dir.is_some() {
+@@ -884,7 +887,8 @@ fn info(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+                     let Some(draft) = bs.props.get_mut(i) else { continue };
+                     let l = ui.label(RichText::new(crate::i18n::t(label)).color(t.text_dim));
+                     let id = ui.make_persistent_id(("backstage_prop", *key));
+-                    let resp = ui.add(egui::TextEdit::singleline(draft).id(id).hint_text(crate::i18n::t(hint)).desired_width(300.0)).labelled_by(l.id);
++                    let resp =
++                        ui.add(egui::TextEdit::singleline(draft).id(id).hint_text(crate::i18n::t(hint)).desired_width(300.0)).labelled_by(l.id);
+                     if resp.lost_focus() && *draft != saved {
+                         // Commit first: a click on another field takes the focus before this one is drawn.
+                         let mut p = serde_json::Map::new();
+@@ -1074,7 +1078,9 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
+             ui.add_space(4.0);
+             ui.horizontal(|ui| {
+                 let l = ui.label(crate::i18n::t("Slides:"));
+-                let r = ui.add(egui::TextEdit::singleline(&mut bs.print_range).hint_text(crate::i18n::t("e.g. 1-3, 5")).desired_width(176.0)).labelled_by(l.id);
++                let r = ui
++                    .add(egui::TextEdit::singleline(&mut bs.print_range).hint_text(crate::i18n::t("e.g. 1-3, 5")).desired_width(176.0))
++                    .labelled_by(l.id);
+                 if r.changed() {
+                     // Typing a range picks Custom Range, as in PowerPoint.
+                     bs.print_scope = if bs.print_range.trim().is_empty() { PrintScope::All } else { PrintScope::Custom };
+diff --git a/crates/ui-egui/src/dialogs.rs b/crates/ui-egui/src/dialogs.rs
+index 61c694e..2b0f001 100644
+--- a/crates/ui-egui/src/dialogs.rs
++++ b/crates/ui-egui/src/dialogs.rs
+@@ -1222,7 +1222,9 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+                     done = true;
+                 }
+                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+-                    let save = ui.add(egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
++                    let save = ui.add(
++                        egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)),
++                    );
+                     if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                         if app.save_all() {
+                             app.quit_confirmed = true;
+@@ -1251,7 +1253,9 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+                     done = true;
+                 }
+                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+-                    let save = ui.add(egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
++                    let save = ui.add(
++                        egui::Button::new(egui::RichText::new(crate::i18n::t("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)),
++                    );
+                     if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                         app.save();
+                         // In the browser a save is a download: the presentation stays "unsaved".
+@@ -1854,7 +1858,8 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
+                             ui.add_space(16.0);
+                             ui.label(egui::RichText::new(crate::i18n::t("Change to:")).weak());
+                             for to in &sug {
+-                                let r = ui.small_button(to.as_str()).on_hover_text(crate::i18n::t("Click to change this one; Shift-click to change all"));
++                                let r =
++                                    ui.small_button(to.as_str()).on_hover_text(crate::i18n::t("Click to change this one; Shift-click to change all"));
+                                 if r.clicked() {
+                                     let all = ui.input(|i| i.modifiers.shift);
+                                     if item.get("notes").and_then(Value::as_bool).unwrap_or(false) {
+diff --git a/crates/ui-egui/src/menus.rs b/crates/ui-egui/src/menus.rs
+index 636c2a5..ee2da1b 100644
+--- a/crates/ui-egui/src/menus.rs
++++ b/crates/ui-egui/src/menus.rs
+@@ -111,7 +111,12 @@ pub fn palette(app: &mut SlideApp, ctx: &egui::Context) {
+         .anchor(egui::Align2::CENTER_TOP, egui::vec2(0.0, 90.0))
+         .fixed_size(egui::vec2(520.0, 380.0))
+         .show(ctx, |ui| {
+-            let r = ui.add(egui::TextEdit::singleline(&mut query).hint_text(crate::i18n::t("Search commands…")).desired_width(f32::INFINITY).font(theme::font(15.0)));
++            let r = ui.add(
++                egui::TextEdit::singleline(&mut query)
++                    .hint_text(crate::i18n::t("Search commands…"))
++                    .desired_width(f32::INFINITY)
++                    .font(theme::font(15.0)),
++            );
+             r.request_focus();
+             let q = query.to_lowercase();
+             let items = palette_items(&app.session, &q);
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 9dd4df8..c7d7128 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -1024,7 +1024,9 @@ fn animation(app: &mut SlideApp, ui: &mut Ui) {
+     });
+     ui.separator();
+     if anims.is_empty() {
+-        ui.label(egui::RichText::new(crate::i18n::t("Select an object on the slide and add an animation from the Animations tab.")).color(t.text_dim));
++        ui.label(
++            egui::RichText::new(crate::i18n::t("Select an object on the slide and add an animation from the Animations tab.")).color(t.text_dim),
++        );
+         return;
+     }
+     let bars = animtimeline::bars(anims.len(), &effects);
+@@ -1174,7 +1176,9 @@ fn revisions(app: &mut SlideApp, ui: &mut Ui) {
+     let changes = v["changes"].as_array().cloned().unwrap_or_default();
+     ui.label(egui::RichText::new(format!("Compared with {}", v["name"].as_str().unwrap_or("?"))).color(t.text_dim));
+     if v["byPosition"].as_bool() == Some(true) {
+-        ui.label(egui::RichText::new(crate::i18n::t("Not a copy of this presentation: slides are matched by position.")).size(11.0).color(t.text_faint));
++        ui.label(
++            egui::RichText::new(crate::i18n::t("Not a copy of this presentation: slides are matched by position.")).size(11.0).color(t.text_faint),
++        );
+     }
+     ui.add_space(4.0);
+     if changes.is_empty() {
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index d06c8d2..2efb2c9 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -364,7 +364,8 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
+             small(app, ui, Icon::Copy, "Copy", "edit.copy", json!({}));
+             let on = app.session.painter.is_some();
+             let en = enabled(app, "format.painter");
+-            let r = small_button(ui, Icon::FormatPainter, "Format", en, on).on_hover_text(crate::i18n::t("Format Painter (double-click to keep it on)"));
++            let r =
++                small_button(ui, Icon::FormatPainter, "Format", en, on).on_hover_text(crate::i18n::t("Format Painter (double-click to keep it on)"));
+             if r.double_clicked() {
+                 run(app, "format.painter", json!({"sticky": true}));
+             } else if r.clicked() {
+@@ -578,7 +579,11 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+                         run(app, "format.color", json!({"color": cref_param(&c)}));
+                     }
+                 });
+-                if ui.add_enabled(en, egui::Button::new(crate::i18n::t("Font…")).min_size(vec2(52.0, 22.0))).on_hover_text(crate::i18n::t("Font")).clicked() {
++                if ui
++                    .add_enabled(en, egui::Button::new(crate::i18n::t("Font…")).min_size(vec2(52.0, 22.0)))
++                    .on_hover_text(crate::i18n::t("Font"))
++                    .clicked()
++                {
+                     run(app, "format.fontDialog", json!({}));
+                 }
+             });
+@@ -807,7 +812,11 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+                 });
+                 let r = icon_toggle(ui, Icon::SmartArt, "Convert to SmartArt", enabled(app, "smartArt.fromText"), false);
+                 egui::Popup::menu(&r).show(|ui| smartart_gallery(app, ui, "smartArt.fromText", json!({}), "", "", "", None));
+-                if ui.add_enabled(en, egui::Button::new(crate::i18n::t("Paragraph…")).min_size(vec2(88.0, 22.0))).on_hover_text(crate::i18n::t("Paragraph")).clicked() {
++                if ui
++                    .add_enabled(en, egui::Button::new(crate::i18n::t("Paragraph…")).min_size(vec2(88.0, 22.0)))
++                    .on_hover_text(crate::i18n::t("Paragraph"))
++                    .clicked()
++                {
+                     run(app, "format.paragraphDialog", json!({}));
+                 }
+             });
+@@ -3110,7 +3119,8 @@ fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
+     };
+     let at = row.min(n.saturating_sub(1));
+     group(ui, |ui| {
+-        if big_button(ui, Icon::SmartArt, "Text\nPane", gid.is_some()).on_hover_text(crate::i18n::t("Type and organise the diagram's text")).clicked() {
++        if big_button(ui, Icon::SmartArt, "Text\nPane", gid.is_some()).on_hover_text(crate::i18n::t("Type and organise the diagram's text")).clicked()
++        {
+             run(app, "view.pane", json!({"pane": "smartart", "toggle": true}));
+         }
+         rows(ui, |ui| {

@@ -41,12 +41,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         .exact_size(200.0)
         // Fixed width, as in Word: without this egui shows a resize handle that does nothing (#502).
         .resizable(false)
-        .frame(egui::Frame::NONE.fill(APP_COLOR).inner_margin(egui::Margin {
-            left: 0,
-            right: 0,
-            top: if mac { 0 } else { 12 },
-            bottom: 12,
-        }))
+        .frame(egui::Frame::NONE.fill(APP_COLOR).inner_margin(egui::Margin { left: 0, right: 0, top: if mac { 0 } else { 12 }, bottom: 12 }))
         .show(ui, |ui| {
             let back = if mac {
                 // macOS (#222): the Backstage covers the title bar, so its top band is the title
@@ -148,31 +143,29 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 }
             });
         });
-    egui::CentralPanel::default()
-        .frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30)))
-        .show(ui, |ui| {
-            // A page the host withholds (Save As, Print, Export) falls back to Home.
-            if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
-                app.ui.backstage_page = "home".into();
-            }
-            // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
-            if app.ui.backstage_page == "print" {
-                heading(ui, "Print");
-                crate::print_page::show(app, ui);
-                return;
-            }
-            egui::ScrollArea::vertical().show(ui, |ui| match app.ui.backstage_page.as_str() {
-                "home" => home_page(app, ui),
-                "new" => new_page(app, ui),
-                "open" => open_page(app, ui),
-                "saveAs" => save_as_page(app, ui),
-                "info" => info_page(app, ui),
-                "recover" => recovery_page(app, ui),
-                "export" => export_page(app, ui),
-                "options" => crate::options::page(app, ui),
-                _ => home_page(app, ui),
-            });
+    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.ribbon).inner_margin(egui::Margin::symmetric(40, 30))).show(ui, |ui| {
+        // A page the host withholds (Save As, Print, Export) falls back to Home.
+        if app.blocked(&format!("backstage.{}", app.ui.backstage_page)) {
+            app.ui.backstage_page = "home".into();
+        }
+        // The Print page fills the pane and scrolls its settings and its preview itself (#1156).
+        if app.ui.backstage_page == "print" {
+            heading(ui, "Print");
+            crate::print_page::show(app, ui);
+            return;
+        }
+        egui::ScrollArea::vertical().show(ui, |ui| match app.ui.backstage_page.as_str() {
+            "home" => home_page(app, ui),
+            "new" => new_page(app, ui),
+            "open" => open_page(app, ui),
+            "saveAs" => save_as_page(app, ui),
+            "info" => info_page(app, ui),
+            "recover" => recovery_page(app, ui),
+            "export" => export_page(app, ui),
+            "options" => crate::options::page(app, ui),
+            _ => home_page(app, ui),
         });
+    });
 }
 
 /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.

@@ -27,7 +27,13 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 fn parse_utc(iso: &str) -> Option<i64> {
     let n = |r: std::ops::Range<usize>| iso.get(r)?.parse::<i64>().ok();
     let b = iso.as_bytes();
-    if b.len() < 19 || b[4] != b'-' || b[7] != b'-' || b[10] != b'T' || b[13] != b':' || b[16] != b':' {
+    if b.len() < 19
+        || b[4] != b'-'
+        || b[7] != b'-'
+        || b[10] != b'T'
+        || b[13] != b':'
+        || b[16] != b':'
+    {
         return None;
     }
     let (mo, d, h, mi, s) = (n(5..7)?, n(8..10)?, n(11..13)?, n(14..16)?, n(17..19)?);
@@ -56,7 +62,15 @@ fn offset_secs(_unix: i64) -> i64 {
         unsafe extern "system" {
             fn GetTimeZoneInformation(info: *mut Tzi) -> u32;
         }
-        let mut t = Tzi { bias: 0, _std_name: [0; 32], _std_date: [0; 8], std_bias: 0, _dst_name: [0; 32], _dst_date: [0; 8], dst_bias: 0 };
+        let mut t = Tzi {
+            bias: 0,
+            _std_name: [0; 32],
+            _std_date: [0; 8],
+            std_bias: 0,
+            _dst_name: [0; 32],
+            _dst_date: [0; 8],
+            dst_bias: 0,
+        };
         // SAFETY: `Tzi` matches TIME_ZONE_INFORMATION (172 bytes); the call only writes into it.
         let id = unsafe { GetTimeZoneInformation(&mut t) };
         let extra = match id {
@@ -77,7 +91,11 @@ fn offset_secs(_unix: i64) -> i64 {
         unsafe extern "C" {
             fn localtime_r(t: *const i64, out: *mut Tm) -> *mut Tm;
         }
-        let mut tm = Tm { fields: [0; 9], gmtoff: 0, _zone: std::ptr::null() };
+        let mut tm = Tm {
+            fields: [0; 9],
+            gmtoff: 0,
+            _zone: std::ptr::null(),
+        };
         // SAFETY: `Tm` is glibc/musl/macOS `struct tm` (nine ints, tm_gmtoff, tm_zone); localtime_r fills only it.
         let ok = unsafe { !localtime_r(&_unix, &mut tm).is_null() };
         return if ok { tm.gmtoff as i64 } else { 0 };
@@ -88,7 +106,9 @@ fn offset_secs(_unix: i64) -> i64 {
 
 /// `dd.mm.yyyy HH:MM` in local time; the input unchanged when it is not an ISO UTC time.
 pub fn local_stamp(iso: &str) -> String {
-    let Some(u) = parse_utc(iso) else { return iso.to_string() };
+    let Some(u) = parse_utc(iso) else {
+        return iso.to_string();
+    };
     stamp_at(u + offset_secs(u))
 }
 
@@ -108,7 +128,10 @@ mod tests {
         assert_eq!(u, 1_793_076_038);
         assert_eq!(stamp_at(u), "27.10.2026 04:40");
         assert_eq!(stamp_at(u + 5 * 3600), "27.10.2026 09:40");
-        assert_eq!(stamp_at(parse_utc("2024-02-29T23:59:59Z").unwrap() + 60), "01.03.2024 00:00");
+        assert_eq!(
+            stamp_at(parse_utc("2024-02-29T23:59:59Z").unwrap() + 60),
+            "01.03.2024 00:00"
+        );
     }
 
     #[test]

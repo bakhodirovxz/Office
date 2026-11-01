@@ -311,9 +311,8 @@ impl Lock {
         if fs::rename(p, &aside).is_err() {
             return;
         }
-        if fs::read(&aside).ok() == stale {
-            let _ = fs::remove_file(&aside);
-        } else if fs::hard_link(&aside, p).is_ok() {
+        // Our own stale file: delete it. Anything else: put it back first, and delete the copy only once it is back.
+        if fs::read(&aside).ok() == stale || fs::hard_link(&aside, p).is_ok() {
             let _ = fs::remove_file(&aside);
         }
     }

@@ -3,7 +3,7 @@ From: office <office@localhost>
 Date: Thu, 29 Oct 2026 18:00:00 +0500
 Subject: [PATCH] desktop: the shared theme setting wins over the saved interface theme at start
 
-Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the suite shell), each
 app in its own palette. office_overlay::shared_theme_code reads the shared settings.toml `theme` (system, light or
 dark) through suite-core (native only; None in the web build and in tests); main.rs calls
 office_overlay::start_theme(&mut app.ui) after load_prefs: `system` sets system_theme (follows the OS live), light and

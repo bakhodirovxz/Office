@@ -183,7 +183,20 @@ fn the_default_reads_1995_and_2026_latin_and_writes_2026() {
     let o = Options::default();
     assert_eq!(o.latin_alphabet, LatinAlphabet::Auto);
     assert_eq!(uz_translit::LATIN_WRITE_DEFAULT, LatinAlphabet::Y2026);
-    assert_eq!(convert("Toshkent shahri, Oʻzbekiston, choy", Direction::ToCyrillic, &o), "Тошкент шаҳри, Ўзбекистон, чой");
-    assert_eq!(convert("Toşkent şahri, Özbekiston, çoy", Direction::ToCyrillic, &o), "Тошкент шаҳри, Ўзбекистон, чой");
-    assert_eq!(convert("Тошкент шаҳри, Ўзбекистон, чой", Direction::ToLatin, &o), "Toşkent şahri, Özbekiston, çoy");
+    assert_eq!(
+        convert(
+            "Toshkent shahri, Oʻzbekiston, choy",
+            Direction::ToCyrillic,
+            &o
+        ),
+        "Тошкент шаҳри, Ўзбекистон, чой"
+    );
+    assert_eq!(
+        convert("Toşkent şahri, Özbekiston, çoy", Direction::ToCyrillic, &o),
+        "Тошкент шаҳри, Ўзбекистон, чой"
+    );
+    assert_eq!(
+        convert("Тошкент шаҳри, Ўзбекистон, чой", Direction::ToLatin, &o),
+        "Toşkent şahri, Özbekiston, çoy"
+    );
 }
