@@ -1,0 +1,101 @@
+{
+  "run": "2026-11-01T09-10-48",
+  "avd": "HRM_Pixel_8",
+  "dp": 412,
+  "dist": "E:\\office-target\\p5\\dist",
+  "versions": {
+    "avd_api": "36",
+    "size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "chrome": "133.0.6943.137",
+    "webview_package": "133.0.6943.137",
+    "webview_active": "com.google.android.webview, 133.0.6943.137",
+    "gboard": "15.1.08.726012951-preload-x86_64"
+  },
+  "gboard": {
+    "installed": true,
+    "default_ime": "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME",
+    "enabled_subtypes": [
+      "English (United States)",
+      "Russian (Russia)",
+      "Uzbek"
+    ],
+    "want": {
+      "English": true,
+      "Russian": true,
+      "Uzbek (latin)": true
+    }
+  },
+  "items": [
+    {
+      "id": "shell-home",
+      "app": "docs",
+      "status": "pass",
+      "notes": {
+        "cards": 4,
+        "viewport": {
+          "w": 412,
+          "h": 784,
+          "dpr": 2.625
+        }
+      },
+      "ms": 3122,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-shell-home-412.mp4",
+        "bytes": 91069,
+        "sha256": "65ce61871078f637340978dede4d66b178a004b223367bf8517d7bbe9f186e31"
+      }
+    },
+    {
+      "id": "open",
+      "app": "docs",
+      "status": "pass",
+      "notes": {},
+      "ms": 9191,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-open-412.mp4",
+        "bytes": 257858,
+        "sha256": "0a837ac5d1329042b94f430e367a70ef8722e145cda7b0cf05bde508a7fc8af9"
+      }
+    },
+    {
+      "id": "type",
+      "app": "docs",
+      "status": "pass",
+      "notes": {
+        "glide": {
+          "points": 145
+        }
+      },
+      "ms": 10584,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-type-412.mp4",
+        "bytes": 276867,
+        "sha256": "79627116fb54fe1a1624dc8bc54b259ad7a5cef861a8259ec56c3b0d223e03f0"
+      }
+    },
+    {
+      "id": "save",
+      "app": "docs",
+      "status": "pass",
+      "notes": {
+        "status": "Saved: 01-split-runs.docx",
+        "saved_bytes": 10148,
+        "saved_text_has_hello": true,
+        "saved_text_has_world": true
+      },
+      "ms": 7943,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\docs-save-412.mp4",
+        "bytes": 304474,
+        "sha256": "b7b84b4a9095f3e4490f49ba147e915e7ca3b5d56eba5905b40085830c040749"
+      }
+    }
+  ],
+  "screenshots": [
+    "E:\\office-wt\\p6-rig\\docs\\phase6\\evidence\\rig\\2026-11-01T09-10-48-shell-home.png",
+    "E:\\office-wt\\p6-rig\\docs\\phase6\\evidence\\rig\\2026-11-01T09-10-48-docs-opened.png",
+    "E:\\office-wt\\p6-rig\\docs\\phase6\\evidence\\rig\\2026-11-01T09-10-48-docs-typed.png",
+    "E:\\office-wt\\p6-rig\\docs\\phase6\\evidence\\rig\\2026-11-01T09-10-48-docs-saved.png"
+  ]
+}

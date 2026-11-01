@@ -1578,3 +1578,43 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   database. Security rehearsal now: 23 green, 1 partial (S19, Docker), 1 HRM team (S25).
 - **Q3:** a Claude Code session on the HRM server does HRB PR-0 … PR-3 with `docs/phase0/hr-backend-prompt.md`.
 - **Q8:** SSO and desktop sign-in after the pilot gate. **R6** (Sheets/Slides/PDF bridges) after the gate: confirmed.
+
+### Phase 6: kick-off (2026-11-01)
+- **Merge-forward rule:** `phase-4` -> `phase-5` -> `phase-6`, never the other way. Phase 4 and 5 fixes go on their own branches and are merged
+  forward; `phase-6` was at `2b72bb1` (merge of `phase-5`), nothing newer on `phase-5` at kick-off. Rig work: branch `p6-rig` (worktree `E:/office-wt/p6-rig`).
+- **Baseline `scripts/ci.sh quick` on `phase-6` (run `p6-wp0`, `E:/office-target/p1/ci/p6-wp0/`): exit 1.** ok: queue, gen-check, deny, i18n.
+  Red before any Phase 6 change: `lint` (fmt drift in root 8 hunks, wordcraft 11, gridcraft 11, deckcraft 21, pdfcraft 9; `clippy-root`:
+  `crates/suite-core/src/history.rs:314,316` `if_same_then_else`; upstream clippy pdfcraft: 1 new warning not in the baseline) and `brand`
+  (`brand-grep`: 4 hits, the word of the working name in the "shared theme at start" patches `patches/{deckcraft/0149,gridcraft/0148,pdfcraft/0115,wordcraft/0132}`, rule W).
+  These are carried debts, not caused by the rig; no `test`/`check` job was reached in this run.
+- **Baseline `scripts/ci.sh sizes`** (dist under `E:/office-target/p1/dist`, whatever commit was last built there, not rebuilt for this run; brotli, headroom = budget - brotli):
+
+| domain | brotli | budget | headroom | js_br / max |
+|---|---|---|---|---|
+| docs | 9,861,643 | 9,871,648 | **10,005 B** | 20,767 / 24,576 |
+| sheets | 4,952,525 | 4,966,771 | 14,246 B | 20,054 / 24,576 |
+| slides | 9,514,840 | 9,524,217 | **9,377 B** | 19,922 / 24,576 |
+| pdf | 9,569,232 | 9,599,462 | 30,230 B | 20,543 / 24,576 |
+| shell (src) | 60,559 | 65,536 | 4,977 B | |
+| npm | 30,817 | 49,152 | 18,335 B | 3,142 / 16,384 |
+
+  `sizes`: exit 0 (all within budget).
+
+  Docs and Slides have about 10 KB left: any Phase 6 patch that adds wasm or JS needs a budget decision (plan section 9).
+- **Browser and WebView on both emulators** (API 36 Google Play image, x86_64, Gboard 15.1.08.726012951): Chrome **133.0.6943.137**;
+  Android System WebView **133.0.6943.137** (`com.google.android.webview`, the active provider). `HRM_Pixel_8` 1080x2400 @ 420 dpi = 412 dp;
+  `HRM_360` 1080x2400 @ 480 dpi = 360 dp. Chrome 133 on the emulator (swiftshader_indirect) starts the Docs editor with no command-line override (the Phase 0 4096 texture limit did not bite).
+
+### Phase 6 WP1: emulator rig `scripts/mobile/` (2026-11-01, branch `p6-rig`)
+- `node scripts/mobile/rig.mjs <cmd>`: `create360` (writes the 360 dp AVD under `E:/office-target/p6/avd`, no avdmanager in this SDK; boots, verified 1080x2400 @ 480),
+  `start|stop <avd>` (`-gpu swiftshader_indirect -no-snapshot-save`, `emu kill` of that serial only), `versions`, `gboard [--enable]`, `forward` (CDP on 9222),
+  `shot`, `glide <avd> <word>` (emulator-console `event send`, 14 ms steps), `run <checklist> --avd <avd> [--dist <dist>]` (JSON + one `screenrecord` per item, named
+  `<app>-<item>-<dp>.mp4` under `E:/office-target/p6/evidence/`, SHA-256 list in `docs/phase6/evidence/SHA256SUMS`, JSON and screenshots in `docs/phase6/evidence/rig/`).
+  `scripts/mobile-m3.mjs --cdp [url] [--serial s] [--dist d]` drives the emulator's Chrome over CDP (adb reverse, logcat excerpt for renderer kills); 1-page control on `HRM_Pixel_8`: `opened` 7.2 s.
+- Gboard: English, Russian and Uzbek (Latin) are enabled through the Android IME subtype setting (`enabled_input_methods`, hashes from `dumpsys input_method`); after that Gboard's own
+  `dumpsys` list shows all three. Stylus-handwriting onboarding is switched off (it popped up over the editor). Gboard's internal language list is private: the glide and key
+  coordinates in `lib.mjs` (`EN_LAYOUT`) are calibrated for 1080x2400 @ 420 dpi only; the 360 dp AVD and the RU/UZ layouts need their own map (`--layout`/`layout` option, read off `rig.mjs shot`).
+- Limits found: Chrome's own download to `/sdcard/Download` fails on this image ("1 download failed"), so the rig reads the saved bytes from the blob the shell passes to the download; the shell status line
+  ("Saved: <name>") still comes from the real touch path (File > Save). Editor taps are fixed device pixels (canvas, no accessibility nodes, plan section 8). The glide path is imprecise (stray `o`/`f` around `hello world` in the document).
+- **Done-check** (`HRM_Pixel_8`, shell + Docs, synthetic `01-split-runs.docx`, dist `E:/office-target/p5/dist`): `shell-home` 3.1 s, `open` 9.2 s, `type` 10.6 s (five key taps + glide), `save` 7.9 s: all pass;
+  the saved docx contains `hello` and `world`. JSON `docs/phase6/evidence/rig/2026-11-01T09-10-48-shell-docs-412.json`; recordings `docs/phase6/evidence/rig/docs-*-412.mp4` (copies; originals on E:).
