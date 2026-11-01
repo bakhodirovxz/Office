@@ -120,7 +120,12 @@ fn every_catalog_tool_is_listed_after_view_more() {
     let mut h = harness(|_| {});
     h.get_by_label("View more").click();
     h.run_steps(3);
-    for g in pdfcraft_engine::catalog::TOOL_GROUPS {
+    // office overlay (pdfcraft/0114): a planned group with no working tool is not listed
+    let planned = |a: pdfcraft_engine::catalog::Availability| matches!(a, pdfcraft_engine::catalog::Availability::Planned(_));
+    for g in pdfcraft_engine::catalog::TOOL_GROUPS
+        .iter()
+        .filter(|g| !planned(g.availability) || g.sections.iter().flat_map(|s| s.items).any(|i| !planned(i.availability)))
+    {
         assert!(h.query_all_by_label(g.label).count() >= 1, "tool {} missing from All tools", g.label);
     }
 }

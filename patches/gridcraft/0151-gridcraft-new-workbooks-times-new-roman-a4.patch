@@ -1,19 +1,22 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Thu, 29 Oct 2026 12:00:00 +0500
-Subject: [PATCH] engine: new workbooks are Times New Roman 12 pt with 15.75 pt rows; their sheets print on A4 in an Uzbek or Russian interface
+Subject: [PATCH] engine: new workbooks are Times New Roman 12 pt with 15.75 pt
+ rows; their sheets print on A4 in an Uzbek or Russian interface
 
 Owner decisions 2026-10-29 (docs/phase4/design-system.md, "Revised"; Q6): a new workbook's Normal font is Times New Roman 12 pt, with the 15.75 pt (21 px) default row height Excel gives that font; its sheets print on A4 in an Uzbek or Russian interface and on Letter in English (from the number locale, which follows the interface language). The desktop app makes the blank Book1 after the preferences, once that language is known. Insert Sheet takes the active sheet's paper and the Normal font's row height. Automatic row heights compare sizes with the workbook's Normal font instead of a fixed 11 pt, so 12 pt text keeps the default row (files with an 11 pt Normal font behave as before). Opened files keep their own fonts, rows and paper.
 ---
- apps/gridcraft/src/main.rs     |  8 +++++---
- crates/engine/src/cmd/mod.rs   |  8 +++++---
- crates/engine/src/cmd/print.rs | 26 ++++++++++++++------------
- crates/engine/src/cmd/sheet.rs |  8 +++++++-
- crates/engine/src/lib.rs       | 22 ++++++++++++++++++++--
- crates/engine/src/tests.rs     | 26 ++++++++++++++++++++++++++
- crates/model/src/lib.rs        |  6 ++++++
- crates/model/src/workbook.rs   | 10 ++++++++++
- 8 files changed, 93 insertions(+), 21 deletions(-)
+ apps/gridcraft/src/main.rs             |  8 +++++---
+ crates/engine/src/cmd/mod.rs           |  8 +++++---
+ crates/engine/src/cmd/print.rs         | 26 ++++++++++++++------------
+ crates/engine/src/cmd/sheet.rs         |  8 +++++++-
+ crates/engine/src/lib.rs               | 22 ++++++++++++++++++++--
+ crates/engine/src/tests.rs             | 26 ++++++++++++++++++++++++++
+ crates/model/src/lib.rs                |  6 ++++++
+ crates/model/src/workbook.rs           | 10 ++++++++++
+ crates/ui-egui/tests/keytips.rs        | 10 +++++-----
+ crates/ui-egui/tests/office_toolbar.rs |  4 ++--
+ 10 files changed, 100 insertions(+), 28 deletions(-)
 
 diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
 index 4e9ce66..c184e83 100644
@@ -274,3 +277,57 @@ index bba81b7..512879f 100644
      /// A fresh sheet name `SheetN` not in use.
      pub fn next_sheet_name(&self) -> String {
          (1..).map(|n| format!("Sheet{n}")).find(|n| self.sheet_index(n).is_none()).unwrap_or_else(|| "Sheet".into())
+diff --git a/crates/ui-egui/tests/keytips.rs b/crates/ui-egui/tests/keytips.rs
+index acd57d7..e68f135 100644
+--- a/crates/ui-egui/tests/keytips.rs
++++ b/crates/ui-egui/tests/keytips.rs
+@@ -514,9 +514,9 @@ fn control_keytips_open_dropdowns_and_run_handlers() {
+     let mut h = harness(blank());
+     sequence(&mut h, &[Key::H, Key::F, Key::F], false);
+     assert!(h.state().message.is_none() && h.state().toast.is_none(), "HFF must not raise an error box");
+-    // "Calibri" appears twice: once on the combo button (the current font) and
++    // "Times New Roman" appears twice: once on the combo button (the current font) and
+     // once inside the opened dropdown — a single node would mean it stayed closed.
+-    assert!(h.query_all_by_label("Calibri").count() >= 2, "HFF must open the font dropdown");
++    assert!(h.query_all_by_label("Times New Roman").count() >= 2, "HFF must open the font dropdown");
+ 
+     // WVF toggles the formula bar: pure UI state, no engine command exists.
+     let mut h = harness(blank());
+@@ -549,17 +549,17 @@ fn editable_combos_filter_by_typing_and_move_by_arrows() {
+     assert_eq!(h.query_all_by_label("Arial").count(), 1, "Enter must apply Arial and close the popup");
+     assert_eq!(h.query_all_by_label("Georgia").count(), 0);
+ 
+-    // Arrows alone move through the full list: Calibri -> Cambria -> Candara -> Consolas.
++    // Arrows alone move through the full list: Times New Roman -> Trebuchet MS -> Verdana.
+     let mut h = harness(blank());
+     sequence(&mut h, &[Key::H, Key::F, Key::F], false);
+     h.run_steps(3);
+-    for _ in 0..3 {
++    for _ in 0..2 {
+         key(&mut h, Key::ArrowDown);
+     }
+     key(&mut h, Key::Enter);
+     h.run_steps(3);
+     assert!(h.state().message.is_none() && h.state().toast.is_none());
+-    assert_eq!(h.query_all_by_label("Consolas").count(), 1, "Down x3 from Calibri must land on Consolas");
++    assert_eq!(h.query_all_by_label("Verdana").count(), 1, "Down x2 from Times New Roman must land on Verdana");
+ 
+     // Size combo: type a custom size not in the list, Enter applies it.
+     let mut h = harness(blank());
+diff --git a/crates/ui-egui/tests/office_toolbar.rs b/crates/ui-egui/tests/office_toolbar.rs
+index f87ec39..96fdaae 100644
+--- a/crates/ui-egui/tests/office_toolbar.rs
++++ b/crates/ui-egui/tests/office_toolbar.rs
+@@ -116,10 +116,10 @@ fn excels_keytips_reach_the_five_pickers() {
+     let _g = lock();
+     settings_dir("keys");
+     office_toolbar::set_simple(true);
+-    // Alt,H,F,F: the font list opens ("Calibri" is on the picker button and in the list)
++    // Alt,H,F,F: the font list opens ("Times New Roman" is on the picker button and in the list)
+     let mut h = harness(1600.0, Language::En);
+     sequence(&mut h, &[Key::H, Key::F, Key::F]);
+-    assert!(h.query_all_by_label("Calibri").count() >= 2, "HFF must open the font list in the simple row");
++    assert!(h.query_all_by_label("Times New Roman").count() >= 2, "HFF must open the font list in the simple row");
+     // Alt,H,F,S: the size picker takes a typed size
+     let mut h = harness(1600.0, Language::En);
+     sequence(&mut h, &[Key::H, Key::F, Key::S]);

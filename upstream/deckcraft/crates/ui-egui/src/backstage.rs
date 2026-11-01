@@ -780,7 +780,10 @@ fn open_page(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
         ui.vertical(|ui| {
             ui.set_width(230.0);
             place_row(ui, Icon::Recent, "Recent", true, 220.0);
-            if place_row(ui, Icon::OpenFolder, "Browse", false, 220.0).on_hover_text(crate::i18n::t("Open a presentation from a folder (Ctrl+O)")).clicked() {
+            if place_row(ui, Icon::OpenFolder, "Browse", false, 220.0)
+                .on_hover_text(crate::i18n::t("Open a presentation from a folder (Ctrl+O)"))
+                .clicked()
+            {
                 let _ = app.run("app.openDialog", json!({}));
             }
             if app.session.recovery_dir.is_some() {
@@ -884,7 +887,8 @@ fn info(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
                     let Some(draft) = bs.props.get_mut(i) else { continue };
                     let l = ui.label(RichText::new(crate::i18n::t(label)).color(t.text_dim));
                     let id = ui.make_persistent_id(("backstage_prop", *key));
-                    let resp = ui.add(egui::TextEdit::singleline(draft).id(id).hint_text(crate::i18n::t(hint)).desired_width(300.0)).labelled_by(l.id);
+                    let resp =
+                        ui.add(egui::TextEdit::singleline(draft).id(id).hint_text(crate::i18n::t(hint)).desired_width(300.0)).labelled_by(l.id);
                     if resp.lost_focus() && *draft != saved {
                         // Commit first: a click on another field takes the focus before this one is drawn.
                         let mut p = serde_json::Map::new();
@@ -1074,7 +1078,9 @@ fn print(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
             ui.add_space(4.0);
             ui.horizontal(|ui| {
                 let l = ui.label(crate::i18n::t("Slides:"));
-                let r = ui.add(egui::TextEdit::singleline(&mut bs.print_range).hint_text(crate::i18n::t("e.g. 1-3, 5")).desired_width(176.0)).labelled_by(l.id);
+                let r = ui
+                    .add(egui::TextEdit::singleline(&mut bs.print_range).hint_text(crate::i18n::t("e.g. 1-3, 5")).desired_width(176.0))
+                    .labelled_by(l.id);
                 if r.changed() {
                     // Typing a range picks Custom Range, as in PowerPoint.
                     bs.print_scope = if bs.print_range.trim().is_empty() { PrintScope::All } else { PrintScope::Custom };

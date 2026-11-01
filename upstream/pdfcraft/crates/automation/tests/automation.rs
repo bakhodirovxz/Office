@@ -2892,7 +2892,7 @@ fn fill_sign_text_font_size_is_saved_and_validated() {
     let annotations = pdf.resolve(page.dict.get(b"Annots").unwrap());
     let annotation = pdf.resolve(annotations.as_array().unwrap().first().unwrap());
     let da = annotation.as_dict().unwrap().get(b"DA").unwrap().as_string().unwrap();
-    assert!(da.bytes.windows(b"/Helv 24 Tf".len()).any(|w| w == b"/Helv 24 Tf"), "saved annotation uses the requested font size");
+    assert!(da.bytes.windows(b"/TiRo 24 Tf".len()).any(|w| w == b"/TiRo 24 Tf"), "saved annotation uses the requested font size");
     for size in [0, 3, 301] {
         assert!(matches!(
             a.call("fill_sign_add", &json!({ "doc": doc, "page": 1, "type": "text", "at": [20, 80], "text": "No", "font_size": size })),
@@ -4426,7 +4426,7 @@ fn text_box_font_size_through_the_tool() {
         .filter_map(|o| o.as_dict().and_then(|d| d.get(b"DA")?.as_string().map(|s| String::from_utf8_lossy(&s.bytes).into_owned())))
         .collect();
     assert_eq!(sizes.len(), 1, "{sizes:?}");
-    assert!(sizes[0].ends_with("/Helv 30 Tf"), "{sizes:?}");
+    assert!(sizes[0].ends_with("/TiRo 30 Tf"), "{sizes:?}");
     assert_eq!(ok(&mut a, "edit_undo", json!({ "doc": doc }))["undone"], "Change comment properties");
 }
 

@@ -792,7 +792,15 @@ const PREVIEW_COLS: u32 = 60;
 
 /// Draws one printed page in miniature: the cells' displayed text at the page's print scale,
 /// inside the sheet's margins. `paper_w` is the page width in points.
-fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gridcraft_engine::model::Workbook, t: &Tokens, loc: gridcraft_engine::core::NumLocale) {
+fn paint_page(
+    p: &egui::Painter,
+    rect: Rect,
+    paper_w: f32,
+    page: &Json,
+    wb: &gridcraft_engine::model::Workbook,
+    t: &Tokens,
+    loc: gridcraft_engine::core::NumLocale,
+) {
     let Some(range) = page.get("range").and_then(Json::as_str).and_then(gridcraft_engine::core::RangeRef::parse) else { return };
     let Some(sh) = page.get("sheet").and_then(Json::as_str).and_then(|n| wb.sheet_index(n)).and_then(|i| wb.sheets.get(i)) else { return };
     // Preview pixels per point, and per sheet pixel (sheet geometry is 96 dpi: 0.75 pt per pixel).

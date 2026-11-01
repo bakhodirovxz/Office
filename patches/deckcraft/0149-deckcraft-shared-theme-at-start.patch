@@ -3,7 +3,7 @@ From: office <office@localhost>
 Date: Thu, 29 Oct 2026 18:00:00 +0500
 Subject: [PATCH] ui-egui: the shared theme setting picks the appearance at the first frame
 
-Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the Hoshiya shell), each
+Owner decision 2026-10-29 (design-system.md, Revised): one global theme, changed in one place (the suite shell), each
 app in its own palette. main.rs calls office_overlay::load_start_theme, which reads the shared settings.toml `theme`
 through suite-core (native only; tests and the web never call it, so UI tests that run frames see no user setting).
 SlideApp::logic applies office_overlay::start_brightness in its one-time style block, where egui knows the OS

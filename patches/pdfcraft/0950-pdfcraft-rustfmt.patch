@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: x <a@b>
+Date: Sun, 1 Nov 2026 12:00:00 +0500
+Subject: [PATCH] pdfcraft: rustfmt the files patches added after the first rustfmt pass
+
+rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
+---
+
+diff --git a/crates/ui-egui/src/panels.rs b/crates/ui-egui/src/panels.rs
+index c4d0bd5..c8ac80e 100644
+--- a/crates/ui-egui/src/panels.rs
++++ b/crates/ui-egui/src/panels.rs
+@@ -13,7 +13,8 @@ const COLLAPSED_TOOLS: usize = 14;
+ /// A tool group the list shows: a planned one only when some of its tools already work, and the tools that do not work
+ /// yet are not listed at all (no milestone jargon in front of the user).
+ pub(crate) fn listed(g: &ToolGroup) -> bool {
+-    !matches!(g.availability, Availability::Planned(_)) || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
++    !matches!(g.availability, Availability::Planned(_))
++        || g.sections.iter().flat_map(|s| s.items).any(|i| !matches!(i.availability, Availability::Planned(_)))
+ }
+ 
+ fn hue(g: &ToolGroup) -> Color32 {
+diff --git a/crates/ui-egui/tests/ui.rs b/crates/ui-egui/tests/ui.rs
+index 11dbf67..571750b 100644
+--- a/crates/ui-egui/tests/ui.rs
++++ b/crates/ui-egui/tests/ui.rs
+@@ -122,7 +122,10 @@ fn every_catalog_tool_is_listed_after_view_more() {
+     h.run_steps(3);
+     // office overlay (pdfcraft/0114): a planned group with no working tool is not listed
+     let planned = |a: pdfcraft_engine::catalog::Availability| matches!(a, pdfcraft_engine::catalog::Availability::Planned(_));
+-    for g in pdfcraft_engine::catalog::TOOL_GROUPS.iter().filter(|g| !planned(g.availability) || g.sections.iter().flat_map(|s| s.items).any(|i| !planned(i.availability))) {
++    for g in pdfcraft_engine::catalog::TOOL_GROUPS
++        .iter()
++        .filter(|g| !planned(g.availability) || g.sections.iter().flat_map(|s| s.items).any(|i| !planned(i.availability)))
++    {
+         assert!(h.query_all_by_label(g.label).count() >= 1, "tool {} missing from All tools", g.label);
+     }
+ }
