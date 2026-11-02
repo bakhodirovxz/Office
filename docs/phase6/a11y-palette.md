@@ -54,3 +54,8 @@ Playwright, `ci/web-smoke/a11y-palette.spec.ts` (shell) and the docserver spec c
 button, the palette opens, `ariaSnapshot` lists named options, Bold run on a selection makes the saved docx bold, F6 leaves the
 editor. TalkBack on a phone or emulator was **not** run (the emulator is busy with WP8): the DOM uses standard roles
 (dialog, combobox, listbox, option) that TalkBack and NVDA read, but speech output is unverified.
+
+## Numbers (2026-11-03, after merging phase-6 e26ff8e)
+
+- Docs wasm brotli 9,882,041 B against the budget 9,904,416 B (headroom 22,375 B). Shell sources 64,609 B of 65,536 B (headroom 927 B; `palette.js` is 1,457 B brotli).
+- Playwright: shell spec 28 pass; docserver spec 19 pass, 1 skipped; `a11y-palette.spec.ts` 4 pass. In the Bold case the fixture's bold-run count goes from 34 to 23: Bold toggled a selection that was mostly bold already; the change is the evidence that the command ran on the selection.
