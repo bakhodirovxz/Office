@@ -290,19 +290,14 @@ fn a_pointer_event_after_a_touch_keeps_the_phone_layout_until_the_grace_is_over(
     assert!(!on(vec![button], 12.0), "a mouse two seconds later");
 }
 
-/// A document opens for reading: no bottom toolbar, the Edit button bottom right (56 dp, 16 dp from the edges), no Undo and Redo; the pencil and
-/// "Done editing" switch the two.
+/// A document opens for editing; Done editing shows it for reading (no bottom toolbar, the Edit button bottom right, 56 dp, 16 dp from the edges, no
+/// Undo and Redo) and the pencil brings editing back.
 #[test]
-fn a_document_opens_for_reading_and_the_pencil_starts_editing() {
+fn a_document_opens_for_editing_done_editing_reads_and_the_pencil_edits() {
     let (mut s, ctx) = (session(), egui::Context::default());
     let mut time = 1.0;
     let _ = run_frame_as(&mut s, &ctx, vec![], time);
-    assert!(reading(&ctx) && !is_editing(&ctx, &s), "a document opens for reading");
-    let fab = ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().expect("the pencil is offered");
-    assert_eq!(fab.size(), vec2(FAB, FAB));
-    assert_eq!((360.0 - fab.max.x, 640.0 - fab.max.y), (FAB_GAP, FAB_GAP));
-    let _ = tap_at(&mut s, &ctx, fab.center(), &mut time);
-    assert!(is_editing(&ctx, &s) && !reading(&ctx), "the pencil starts editing");
+    assert!(is_editing(&ctx, &s) && !reading(&ctx), "a document opens for editing");
     assert!(ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().is_none(), "no pencil while editing");
     // More > Done editing is the first row of the menu
     set_sheet(&ctx, Some(Sheet::Menu));
@@ -311,10 +306,16 @@ fn a_document_opens_for_reading_and_the_pencil_starts_editing() {
     let _ = tap_at(&mut s, &ctx, pos2(180.0, top + HEAD + 24.0), &mut time);
     assert!(reading(&ctx) && !is_editing(&ctx, &s), "Done editing goes back to reading");
     assert_eq!(open_sheet(&ctx), None);
-    // another document replacing this one opens for reading again
-    set_editing(&ctx, &s, true);
-    s.set_document(wordcraft_doc::Document::new());
+    let fab = ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().expect("the pencil is offered");
+    assert_eq!(fab.size(), vec2(FAB, FAB));
+    assert_eq!((360.0 - fab.max.x, 640.0 - fab.max.y), (FAB_GAP, FAB_GAP));
+    let _ = tap_at(&mut s, &ctx, fab.center(), &mut time);
+    assert!(is_editing(&ctx, &s) && !reading(&ctx), "the pencil starts editing");
+    // another document replacing a document that is being read opens for editing
+    set_editing(&ctx, &s, false);
     assert!(!is_editing(&ctx, &s));
+    s.set_document(wordcraft_doc::Document::new());
+    assert!(is_editing(&ctx, &s));
 }
 
 /// A session that cannot edit (read-only protection, what a view session gets) has no pencil and stays in reading.

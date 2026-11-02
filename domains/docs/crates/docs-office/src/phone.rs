@@ -127,10 +127,10 @@ pub fn take_back() -> bool {
 
 // ---------------------------------------------------------------------------------------------------------------- reading first
 
-/// A document opens for reading (no caret, no keyboard, no toolbar); the pencil switches to editing, "Done editing" back. The state belongs to one
-/// document: another one replacing it opens for reading again.
-fn editing_id() -> Id {
-    Id::new("docs-office-phone-editing")
+/// A document opens for editing (owner decision 2026-11-03); "Done editing" switches to reading (no caret, no keyboard, no toolbar), the pencil back. The
+/// state belongs to one document: another one replacing it opens for editing again.
+fn reading_doc_id() -> Id {
+    Id::new("docs-office-phone-reading-doc")
 }
 
 fn reading_id() -> Id {
@@ -148,11 +148,11 @@ pub fn can_edit(s: &Session) -> bool {
 }
 
 pub fn is_editing(ctx: &Context, s: &Session) -> bool {
-    can_edit(s) && ctx.data(|d| d.get_temp::<Option<u64>>(editing_id())).flatten() == Some(s.document_id())
+    can_edit(s) && ctx.data(|d| d.get_temp::<Option<u64>>(reading_doc_id())).flatten() != Some(s.document_id())
 }
 
 pub fn set_editing(ctx: &Context, s: &Session, on: bool) {
-    ctx.data_mut(|d| d.insert_temp(editing_id(), on.then(|| s.document_id())));
+    ctx.data_mut(|d| d.insert_temp(reading_doc_id(), (!on).then(|| s.document_id())));
 }
 
 /// The page is for reading this frame: the app lets no tap reach it and gives it no keyboard focus (wordcraft/0143). Set by `chrome`.

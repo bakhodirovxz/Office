@@ -94,13 +94,15 @@ the two reference apps (public UX only, nothing copied from them): one bar, a do
 ### 9.1 What the phone shows now
 | State | Top row (the only bar) | Page | Bottom | Floating |
 |---|---|---|---|---|
-| reading (default) | Back arrow, file name (ellipsis, dirty dot), More | the whole screen below the row; no caret, no soft keyboard, a tap does nothing; a finger drag scrolls | none | round Edit (pencil) button, 56 dp, accent, 16 dp from the right and bottom edges |
-| editing | Back, name, Undo, Redo, More | as before, the caret goes where the finger taps | the contextual toolbar of section 2 (caret, text, table and picture sets unchanged) | none |
+| reading (after Done editing) | Back arrow, file name (ellipsis, dirty dot), More | the whole screen below the row; no caret, no soft keyboard, a tap does nothing; a finger drag scrolls | none | round Edit (pencil) button, 56 dp, accent, 16 dp from the right and bottom edges |
+| editing (default) | Back, name, Undo, Redo, More | as before, the caret goes where the finger taps | the contextual toolbar of section 2 (caret, text, table and picture sets unchanged) | none |
 - **Back** is the shell's Home (`wordcraft:back`); in the standalone page (no `?host=parent`) there is no arrow. **More** in editing leads with **Done editing** (back to reading), then Save, Save As, Find,
   Desktop layout; the Print/Web Layout switch is gone (the phone is always Web Layout, the rest is "Desktop layout").
 - **No pencil** when the session cannot edit: the host's read-only open (view sessions, `FAKE_HRM_MOBILE_EDIT` off, PLAN O7) sets Restrict Editing's read-only protection and `phone::can_edit` reads that. Such a
   document stays in reading however it is asked (unit test). Side effect: no text selection or copy in a view-only document on a phone.
-- **Opening another document** (shell New or Open: `Session::set_document` changes `document_id`) starts in reading again; the editing state belongs to one document.
+- **Edit first (owner decision 2026-11-03, branch `p6-editfirst`):** every document that can be edited opens in editing, with the bottom toolbar. The state kept is the id of the document the user switched to reading (`phone.rs` `reading_doc_id`), so **Opening another document** (shell New or Open: `Session::set_document` changes `document_id`) starts in editing again. More > Done editing still gives reading, the pencil brings editing back. A view session still opens in reading with no pencil. A blank New document is now ready to type in (the open question of 9.4 is closed).
+- **No keyboard on open:** the page's `want_focus` starts true, which would focus the canvas and send IME output (a soft keyboard on a device). Patch **wordcraft/0145** (`office_overlay.rs` `phone_chrome`, +4/-1) drops `want_focus` and the canvas focus when the document id changes, so the caret sits at the document start and the keyboard comes with the user's first tap.
+- **Saved toast:** the "Saved: <name>" status line is in the header that phone mode hides, so on a phone the shell shows it as a toast (`#toast`, `role="status"` `aria-live="polite"`, centred 72 px above the bottom, i.e. above the 48 dp toolbar, 2 s then a 0.3 s fade) from the same `save` message and the same translated string (`ed.saved`); `shell.js` `toast`, `shell.css` `#toast`. Desktop keeps the header line only. An error still brings the header back.
 - **Sheets** have a grab handle, a header (title left, close right, 48 dp target) and close on a tap outside (as before). **Format** has two tabs, "Text" (B I U S, size, four colours, highlights) and "Paragraph" (Normal, Heading 1 and 2 drawn in that
   style's size and weight, four alignments, bullets, numbering, indent minus and plus); its height is that of the taller tab, so it does not jump. Size and indent rows are icon only (their long
   translated names were cut with an ellipsis at 360 dp); a long bottom-toolbar label is set down to 9 dp before it is cut.
@@ -119,7 +121,7 @@ the two reference apps (public UX only, nothing copied from them): one bar, a do
 | paper colour | `lib.rs:2276`, the phone branch of `WordApp::ui` |
 | `wordcraft:phone { on }`, `wordcraft:back` | `host.rs` `sync` (:165-170); `web.rs:94` `set_shell`; the shell: `web/shell/shell.js` `bars` (:27) and the cases `phone` and `back` (:146), `shell.css` `#editor.phone > .bar` |
 - Patch 0143: 5 files, +45/-9; hot files `canvas.rs` +3/-2 and `lib.rs` +3/-1. 0140 is unchanged (the third function pointer of `set_phone` is in 0143). `0950-wordcraft-rustfmt.patch` was regenerated (7 files, +53/-38; it now also formats `web.rs` and `office_overlay.rs`).
-- The shell hides its header only while the editor says phone mode (`.phone`); desktop and the other editors keep it. An error (`#error`) shows the header again, it is the only place the message is. The "Saved <name>" status line is in that header too, so on a phone there is no such line (the browser's download is the feedback).
+- The shell hides its header only while the editor says phone mode (`.phone`); desktop and the other editors keep it. An error (`#error`) shows the header again, it is the only place the message is. The "Saved <name>" status line is in that header too: on a phone it is the toast above.
 - Strings: one new catalog row, "Done editing" (`i18n/wordcraft.tsv`, `reviewed:agent-sonnet:2026-11-02`, in `OWN` of `xtask/src/i18n/extract.rs`); "Text", "Paragraph", "Close" and "Back" were in the catalog.
 
 ### 9.3 Measured
@@ -134,6 +136,6 @@ the two reference apps (public UX only, nothing copied from them): one bar, a do
 ### 9.4 Not verified, and what the Chromium proxy cannot say
 - A real phone or the emulator: touch feel, whether the pencil is reachable with one thumb, the soft keyboard coming up on the first tap in editing (Chromium has no soft keyboard; in reading no input rectangle is sent, so no keyboard is asked for), Android WebView. No emulator was started (the rule of this task).
 - The software-GL frames of headless Chromium take 0.5 s and more, so a 60 ms tap on a word is sometimes read as a long press (word selected, handles). The script therefore taps beside the text. A device is not expected to do this.
-- A new blank document (shell New) also opens in reading with the pencil: one more tap before typing. Not changed because New and Open look the same to the layout; a decision for the owner.
+- (Closed 2026-11-03: documents now open in editing, see 9.1.) The soft keyboard not appearing by itself on open is reasoned from the code (no focus, no IME output), not seen on a device.
 - The page's shadow lines at the bottom and right edge of a short page stay.
 - Picture shots: the scripted taps are position based and the page scrolls when a caret is placed low on the screen, so in most `*-picture.png` the tap landed on a table row (row selected, table toolbar) and not on the picture. The picture selection with its toolbar (Wrap Text, Size, Delete, More) is in `412-light-uz-Latn-picture.png` (from a run with the same script, only `--table-y` differed). Table, edit, sheets, menu and reading shots were checked in all 8 sets.
