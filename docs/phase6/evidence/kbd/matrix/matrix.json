@@ -1,0 +1,65 @@
+[
+  {
+    "id": "uz-apostrophes",
+    "note": "oʻgʻil with U+02BB from the oʻ and gʻ keys, then the apostrophe key (U+02BC)",
+    "expect": "oʻgʻilʼ",
+    "ms": 10731,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\uz-apostrophes.png",
+    "recording": "kbd-uz-apostrophes-360.mp4",
+    "sha256": "b66862fcdeb9ea08e02e32b2af71d39c704a40a355fa7e254dd2a200fa52695d"
+  },
+  {
+    "id": "latin",
+    "note": "hello world on the EN layout",
+    "expect": "hello world",
+    "ms": 14883,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\latin.png",
+    "recording": "kbd-latin-360.mp4",
+    "sha256": "59d511a506d061bf69e6bbeb09b291f893f8d6f1f9cdeb33458bc83e11e0eccc"
+  },
+  {
+    "id": "autocorrect",
+    "note": "wolrd + space (Gboard replaces the word: delete-surrounding + commit)",
+    "expect": "world ",
+    "ms": 12605,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\autocorrect.png",
+    "recording": "kbd-autocorrect-360.mp4",
+    "sha256": "de7f7573a2d680c8f479b47597443b26806e69f965934adfc3f830fb235dfdb9"
+  },
+  {
+    "id": "glide",
+    "note": "glide-typed \"hello\" (emulator console touch injection)",
+    "expect": "hello",
+    "ms": 10368,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\glide.png",
+    "recording": "kbd-glide-360.mp4",
+    "sha256": "b88e376fa014c4d997a7c67c66a6fc519949fdb777de2f1a924ff2aedf44a292"
+  },
+  {
+    "id": "backspace",
+    "note": "xyz then Backspace once",
+    "expect": "xy",
+    "ms": 9551,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\backspace.png",
+    "recording": "kbd-backspace-360.mp4",
+    "sha256": "83384fc4e1f6635f55c881f94aff9e1fdfc26c2526553978695bdeb7170a5e60"
+  },
+  {
+    "id": "cyrillic-yo",
+    "note": "RU layout: салом дунё with ё from the long-press popup of е",
+    "expect": "салом дунё",
+    "ms": 15828,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\cyrillic-yo.png",
+    "recording": "kbd-cyrillic-yo-360.mp4",
+    "sha256": "1e0a4851e4128b0ca18bf031f00748389aed182b0a7f3041dcaa61afabe1b44a"
+  },
+  {
+    "id": "enter",
+    "note": "ok, Enter, no (Enter makes a paragraph although the agent is an <input>)",
+    "expect": "ok\nokz",
+    "ms": 9040,
+    "screenshot": "E:\\office-target\\p6-kbd\\matrix\\enter.png",
+    "recording": "kbd-enter-360.mp4",
+    "sha256": "a6bff5bf6b948f607be3ec2ebb91eec255833c5d7f32690633d7c6f730436f05"
+  }
+]

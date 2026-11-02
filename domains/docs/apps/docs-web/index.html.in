@@ -9,6 +9,22 @@
     (() => { const l = new URLSearchParams(location.search).get('lang'); if (!l) return;
       try { Object.defineProperty(navigator, 'language', { get: () => l, configurable: true }); Object.defineProperty(navigator, 'languages', { get: () => [l], configurable: true }); } catch (_) { /* keep the browser's */ } })();
   </script>
+  <script>
+    /* Soft keyboard hidden by the user stays hidden (PLAN phase 6 section 6, WP7). Cause, proven on the emulator (docs/phase6/keyboard.md): Chrome re-raises the keyboard
+       after a touch sequence that the page fully consumed while a text input is focused, and eframe-0.36.2 does exactly that (preventDefault on touchstart/move/end) and
+       keeps its text agent focused after Back (events.rs:797-804, 603). So (1) when the visual viewport grows (keyboard hidden; `top` is the shell, same origin) the agent is blurred: eframe then sees no focus and
+       does not refocus it, and a tap puts it back (canvas.focus + the frame's agent.focus, with the tap's user activation); (2) while a touch has moved 10 px,
+       focus()/blur() of the canvas and agent are no-ops until just after its touchend, so a scroll or a handle drag cannot refocus it either. */
+    (() => { let x0 = 0, y0 = 0, quiet = false, vv = visualViewport, h;
+      try { vv = top.visualViewport; } catch (_) { /* cross-origin embed: the frame's own viewport */ }
+      h = vv.height;
+      const t = (e) => e.touches[0] ?? e.changedTouches[0], els = () => [document.querySelector('canvas'), document.querySelector('input[type=text]')].filter(Boolean);
+      vv.addEventListener('resize', () => { const a = document.querySelector('input[type=text]'); if (a && vv.height > h + 80 && document.activeElement === a) a.blur(); h = vv.height; });
+      addEventListener('touchstart', (e) => { x0 = t(e).clientX; y0 = t(e).clientY; }, true);
+      addEventListener('touchmove', (e) => { if (!quiet && Math.hypot(t(e).clientX - x0, t(e).clientY - y0) > 10) { quiet = true; for (const el of els()) el.focus = el.blur = () => {}; } }, true);
+      addEventListener('touchend', () => { if (quiet) setTimeout(() => { quiet = false; for (const el of els()) { delete el.focus; delete el.blur; } }, 0); }, true);
+    })();
+  </script>
   <link data-trunk rel="icon" href="{{FAVICON}}" />
   <link data-trunk rel="rust" data-bin="docs-web" data-wasm-opt="z" data-weak-refs />
   <style>

@@ -1623,3 +1623,10 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Emulator `opened` (median of 3): 412 dp 17.5 s (1 page) vs 24.7 s (108 pages); 360 dp 26.6 s vs 26.4 s. The emulator noise exceeds the document effect; the stall is not reproduced as one 240 s task.
 - Native layout of the 108-page file (110 pages): 255 ms cold, 38 ms warm cache: shaping is 85 %, pagination plus all passes 15 %. Web Layout is not cheaper (233 ms).
 - Recommendation: (a) always, then (c) slice the shaping warm-up; (b) refuted, (d) not needed unless pagination matters on a phone. Details `docs/phase6/m3.md`.
+
+### Phase 6 WP7: keyboard, IME and viewport (2026-11-02, branch `p6-kbd`)
+- Full write-up and evidence: `docs/phase6/keyboard.md`, `docs/phase6/evidence/kbd/`. `HRM_360`, Chrome 133, Gboard 15.1, dist from `phase-6` HEAD. The emulator needed `wm size 540x1200` + `wm density 240` (still 360 dp, DPR 1.5): at 1080x2400 software GL starved the guest (ANR dialogs, lost taps).
+- A0 keyboard matrix on HEAD: 7 of 7 rows pass (Uzbek U+02BB/U+02BC, Latin, autocorrect `wolrd ` -> `world ` (F8 resolved), glide, Backspace, Cyrillic with `ё`, Enter makes paragraphs); each with a recording and the saved docx text.
+- F5 "keyboard reappears after a swipe": reproduced (4 runs); root is Chrome re-raising the keyboard after a fully `preventDefault`ed touch sequence over a focused text input (reproduced on a plain page; eframe's refocus calls are a second path). Fixed in page code only: `index.html.in` of the four editors (agent blurred when the visual viewport grows; focus/blur no-ops while a touch has moved). No upstream patch, no eframe fork. After: two swipes keep the keyboard hidden, a tap raises it. WebView not tested.
+- Caret above the keyboard at the page bottom: PASS with the current viewport meta; `interactive-widget=resizes-content` tried and not shipped (leaves 120 px of editor with the desktop ribbon); re-test with WP2.
+- Cost: wasm/JS 0 B; `index.html` +718 B brotli per editor. New rig pieces: `kbd-matrix/-swipe/-caret/-probe.mjs`, `session.mjs`, RU/UZ maps, layout fingerprints, `RIG_SCALE`.

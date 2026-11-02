@@ -30,8 +30,11 @@ export function adb(ser, ...a) {
 export const screencap = (ser) => spawnSync('adb', ['-s', ser, 'exec-out', 'screencap', '-p'], { maxBuffer: 1 << 28 }).stdout;
 // one string for the device shell (quoting survives adb's argument joining)
 export const sh = (ser, cmd) => adb(ser, 'shell', cmd).replace(/\r/g, '').trim();
-export const tap = (ser, x, y) => sh(ser, `input tap ${Math.round(x)} ${Math.round(y)}`);
-export const swipe = (ser, x1, y1, x2, y2, ms = 300) => sh(ser, `input swipe ${x1} ${y1} ${x2} ${y2} ${ms}`);
+// Every coordinate the rig takes is in the 1080x2400 panel space; RIG_SCALE=0.5 maps them onto a `wm size 540x1200` / `wm density 240` display (same 360 dp,
+// a quarter of the pixels: the software GL of the emulator starves the guest at full size, see docs/phase6/keyboard.md).
+export const SCALE = Number(process.env.RIG_SCALE ?? 1);
+export const tap = (ser, x, y) => sh(ser, `input tap ${Math.round(x * SCALE)} ${Math.round(y * SCALE)}`);
+export const swipe = (ser, x1, y1, x2, y2, ms = 300) => sh(ser, `input swipe ${Math.round(x1 * SCALE)} ${Math.round(y1 * SCALE)} ${Math.round(x2 * SCALE)} ${Math.round(y2 * SCALE)} ${ms}`);
 
 /** Tap the first UI node whose text/content-desc matches `re` (uiautomator dump). Returns false when absent. */
 export function tapText(ser, re) {
@@ -160,6 +163,38 @@ export const EN_LAYOUT = (() => {
   [...'zxcvbnm'].forEach((c, i) => (m[c] = [218 + 107.1 * i, 2022]));
   return m;
 })();
+// Gboard 15.1 key centres read off `rig.mjs shot` on HRM_360 (1080x2400 @ 480 dpi, 360 dp). The keys are laid out by screen width in px, so EN is
+// the same map as on the 412 dp AVD (checked on both). RU is ЙЦУКЕН (12/12/9 keys); UZ is O‘zbek (lotin) QWERTY with oʻ and gʻ keys (11/11/7).
+export const KEY = { shift: [86, 2022], backspace: [994, 2022], sym: [86, 2174], comma: [216, 2174], globe: [324, 2174], space: [592, 2174], period: [816, 2174], enter: [994, 2174] };
+export const RU_LAYOUT = (() => {
+  const m = {};
+  [...'йцукенгшщзх'].forEach((c, i) => (m[c] = [55 + 97 * i, 1720]));
+  [...'фывапролджэ'].forEach((c, i) => (m[c] = [62 + 96.4 * i, 1870]));
+  [...'ячсмитьбю'].forEach((c, i) => (m[c] = [173 + 91.8 * i, 2022]));
+  return m;
+})();
+export const UZ_LAYOUT = (() => {
+  const m = { ...EN_LAYOUT };
+  [...'qwertyuiop'].forEach((c, i) => (m[c] = [55 + 96.8 * i, 1720]));
+  m['ò'] = [1023, 1720];                       // the oʻ key (U+02BB after it)
+  [...'asdfghjkl'].forEach((c, i) => (m[c] = [55 + 96.8 * i, 1870]));
+  m['ğ'] = [926, 1870]; m['ʼ'] = [1026, 1870]; // the gʻ key, and the apostrophe key (U+02BC)
+  return m;
+})();
+/** Coarse fingerprint of the keyboard's key area (36x14 grey cells of the raw screencap): tells the Gboard layouts apart (EN / RU / UZ), which the accessibility tree does not. */
+export function kbdFingerprint(ser) {
+  const r = spawnSync('adb', ['-s', ser, 'exec-out', 'screencap'], { maxBuffer: 1 << 28 }).stdout;
+  const w = r.readUInt32LE(0), h = r.readUInt32LE(4), px = r.subarray(12);
+  const y0 = Math.floor(h * 0.655), y1 = Math.floor(h * 0.86), fp = [];
+  for (let gy = 0; gy < 14; gy++) for (let gx = 0; gx < 36; gx++) {
+    let sum = 0, n = 0;
+    for (let y = y0 + Math.floor((y1 - y0) * gy / 14); y < y0 + Math.floor((y1 - y0) * (gy + 1) / 14); y += 2)
+      for (let x = Math.floor(w * gx / 36); x < Math.floor(w * (gx + 1) / 36); x += 2) { const i = (y * w + x) * 4; sum += px[i] + px[i + 1] + px[i + 2]; n++; }
+    fp.push(sum / n / 3);
+  }
+  return fp;
+}
+export const fpDist = (a, b) => a.reduce((s, v, i) => s + Math.abs(v - b[i]), 0) / a.length;
 /** Glide `word` over the on-screen keyboard through the emulator console (14 ms steps, ~18 px spacing, dwell on the last key). */
 export async function glide(name, word, { layout = EN_LAYOUT, stepMs = 14 } = {}) {
   const [W, H] = AVDS[name].size.split('x').map(Number);
@@ -179,6 +214,20 @@ export async function glide(name, word, { layout = EN_LAYOUT, stepMs = 14 } = {}
   await ev(3, 57, -1); await ev(1, 330, 0); await ev(0, 0, 0);
   c.close();
   return { points: dense.length };
+}
+
+/** Touch down at (x, y) (1080x2400 panel space), hold `holdMs` while `during()` runs (a screenshot of the long-press popup), optionally slide to (x2, y2), release. */
+export async function hold(name, [x, y], { holdMs = 1200, during = async () => {}, to = null } = {}) {
+  const [W, H] = AVDS[name].size.split('x').map(Number);
+  const raw = (px, py) => [Math.round(px / W * 32767), Math.round(py / H * 32767)];
+  const c = await consoleOpen(AVDS[name].port);
+  const ev = (t, k, v) => c.cmd(`event send ${t}:${k}:${v}`);
+  const [rx, ry] = raw(x, y);
+  await ev(3, 47, 0); await ev(3, 57, 4321); await ev(3, 53, rx); await ev(3, 54, ry); await ev(3, 58, 100); await ev(1, 330, 1); await ev(0, 0, 0);
+  await sleep(holdMs); await during();
+  if (to) { for (let k = 1; k <= 8; k++) { const [qx, qy] = raw(x + (to[0] - x) * k / 8, y + (to[1] - y) * k / 8); await ev(3, 53, qx); await ev(3, 54, qy); await ev(0, 0, 0); await sleep(60); } await sleep(300); }
+  await ev(3, 57, -1); await ev(1, 330, 0); await ev(0, 0, 0);
+  c.close();
 }
 
 /** hoshiya-serve on a free port from a built dist (same invocation as ci/web-smoke/shell.spec.ts). */
