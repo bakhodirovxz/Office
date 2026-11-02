@@ -1,0 +1,123 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: x <a@b>
+Date: Mon, 2 Nov 2026 05:03:33 +0500
+Subject: [PATCH] doc: start_of/end_of stop at the first/last paragraph
+ instead of collecting every path
+
+Phase 6 WP2 follow-up (docs/phase6/m3.md section 5, next step 1): the status bar asks `Session::selects_whole_story` every frame, which called `Document::start_of` and `end_of`, and each collected the path of every paragraph in the body (para_paths) to keep one. On the 108-page fixture that is a large part of the 2.6 s of non-layout work in the first frame, and an idle cost of every frame of a big document. `edge_para` walks the same blocks in the same order with the same depth limit, forwards or backwards, and returns at the first paragraph found; the result is identical (empty tables and cells are skipped, the fallback path is unchanged). New test compares both edges with `para_paths` on tables, nested tables, empty cells, the walk depth limit, a text box and a footnote story.
+---
+ crates/doc/src/lib.rs   | 33 +++++++++++++++++++++++++--
+ crates/doc/src/tests.rs | 49 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+), 2 deletions(-)
+
+diff --git a/crates/doc/src/lib.rs b/crates/doc/src/lib.rs
+index d313f6b..9dd824a 100644
+--- a/crates/doc/src/lib.rs
++++ b/crates/doc/src/lib.rs
+@@ -892,11 +892,11 @@ impl Document {
+ 
+     /// First and last positions of a story.
+     pub fn start_of(&self, s: StoryRef) -> Pos {
+-        let path = self.para_paths(s).into_iter().next().unwrap_or_else(|| Path::top(0));
++        let path = self.story(s).and_then(|bl| edge_para(bl, &mut Vec::new(), 0, false)).unwrap_or_else(|| Path::top(0));
+         Pos { story: s, path, off: 0 }
+     }
+     pub fn end_of(&self, s: StoryRef) -> Pos {
+-        let path = self.para_paths(s).pop().unwrap_or_else(|| Path::top(0));
++        let path = self.story(s).and_then(|bl| edge_para(bl, &mut Vec::new(), 0, true)).unwrap_or_else(|| Path::top(0));
+         let off = self.para(s, &path).map(|p| p.len()).unwrap_or(0);
+         Pos { story: s, path, off }
+     }
+@@ -1476,6 +1476,35 @@ fn walk(bl: &Blocks, prefix: &mut Vec<u32>, out: &mut Vec<Path>, depth: usize) {
+     }
+ }
+ 
++/// The first (or, with `last`, the final) paragraph [`walk`] would yield, without visiting the rest.
++fn edge_para(bl: &Blocks, prefix: &mut Vec<u32>, depth: usize, last: bool) -> Option<Path> {
++    if depth > PARA_WALK_DEPTH {
++        return None;
++    }
++    let order = |n: usize| -> Vec<usize> { if last { (0..n).rev().collect() } else { (0..n).collect() } };
++    for i in order(bl.len()) {
++        prefix.push(i as u32);
++        let found = match &*bl[i] {
++            Block::Para(_) => Some(Path(prefix.clone())),
++            Block::Table(t) => order(t.rows.len()).into_iter().find_map(|r| {
++                order(t.rows[r].cells.len()).into_iter().find_map(|c| {
++                    prefix.push(r as u32);
++                    prefix.push(c as u32);
++                    let f = edge_para(&t.rows[r].cells[c].blocks, prefix, depth + 1, last);
++                    prefix.pop();
++                    prefix.pop();
++                    f
++                })
++            }),
++        };
++        prefix.pop();
++        if found.is_some() {
++            return found;
++        }
++    }
++    None
++}
++
+ /// [`walk`] for the paragraphs from path `a` to `b` inclusive, skipping the blocks outside.
+ pub(crate) fn walk_between(bl: &Blocks, prefix: &mut Vec<u32>, out: &mut Vec<Path>, depth: usize, (a, b): (&[u32], &[u32])) {
+     use std::cmp::Ordering::{Greater, Less};
+diff --git a/crates/doc/src/tests.rs b/crates/doc/src/tests.rs
+index 9443756..3ed63a6 100644
+--- a/crates/doc/src/tests.rs
++++ b/crates/doc/src/tests.rs
+@@ -457,3 +457,52 @@ fn custom_props_set_get_remove() {
+     assert!(!d.remove_custom_prop("other"));
+     assert_eq!(d.custom_props.len(), 1);
+ }
++
++/// `start_of`/`end_of` stop at the first/last paragraph; they must name what `para_paths` would.
++fn assert_story_edges(d: &Document, s: StoryRef) {
++    let all = d.para_paths(s);
++    let first = all.first().cloned().unwrap_or_else(|| Path::top(0));
++    let last = all.last().cloned().unwrap_or_else(|| Path::top(0));
++    let len = d.para(s, &last).map(|p| p.len()).unwrap_or(0);
++    assert_eq!(d.start_of(s), Pos { story: s, path: first, off: 0 });
++    assert_eq!(d.end_of(s), Pos { story: s, path: last, off: len });
++}
++
++#[test]
++fn start_and_end_of_match_the_paragraph_walk_on_nested_structures() {
++    let para = |t: &str| para_block(Paragraph::with_text(t, CharProps::default()));
++    let table = |cells: Vec<Blocks>| {
++        let mut t = Table::new(1, cells.len(), 100.0);
++        for (c, b) in cells.into_iter().enumerate() {
++            t.rows[0].cells[c].blocks = b;
++        }
++        Arc::new(Block::Table(t))
++    };
++    let mut d = Document::from_text("plain");
++    assert_story_edges(&d, StoryRef::Body);
++    // Table first and last, the outer cells empty at the edges, a nested table inside.
++    d.body = vec![
++        table(vec![vec![], nested_tables(2, vec![para("deep first")]), vec![para("x"), para("cell last")], vec![]]),
++        para("mid"),
++        table(vec![vec![], vec![para("tail table")], vec![]]),
++    ];
++    assert_story_edges(&d, StoryRef::Body);
++    assert_eq!(d.start_of(StoryRef::Body).path, Path(vec![0, 0, 1, 0, 0, 0, 0, 0, 0, 0]));
++    assert_eq!(d.end_of(StoryRef::Body).path, Path(vec![2, 0, 1, 0]));
++    // Only tables, all cells empty: no paragraph, so the fallback path.
++    d.body = vec![table(vec![vec![], vec![]])];
++    assert_story_edges(&d, StoryRef::Body);
++    // Past the walk's depth limit the walk sees nothing, and so do the edges.
++    d.body = nested_tables(PARA_WALK_DEPTH + 3, vec![para("too deep")]);
++    assert!(d.para_paths(StoryRef::Body).is_empty());
++    assert_story_edges(&d, StoryRef::Body);
++    d.body = nested_tables(PARA_WALK_DEPTH, vec![para("at the limit"), para("second")]);
++    assert_eq!(d.para_paths(StoryRef::Body).len(), 2);
++    assert_story_edges(&d, StoryRef::Body);
++    // Text box and footnote stories.
++    let tb = d.add_part(PartKind::TextBox, vec![table(vec![vec![para("a")], vec![para("b")]]), para("tail")]);
++    let fn_ = d.add_part(PartKind::Footnote, vec![para("note one"), para("note two")]);
++    assert_story_edges(&d, StoryRef::Part(tb));
++    assert_story_edges(&d, StoryRef::Part(fn_));
++    assert_story_edges(&d, StoryRef::Part(fn_ + 100));
++}

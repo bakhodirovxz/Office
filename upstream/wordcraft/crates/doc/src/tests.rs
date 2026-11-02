@@ -457,3 +457,52 @@ fn custom_props_set_get_remove() {
     assert!(!d.remove_custom_prop("other"));
     assert_eq!(d.custom_props.len(), 1);
 }
+
+/// `start_of`/`end_of` stop at the first/last paragraph; they must name what `para_paths` would.
+fn assert_story_edges(d: &Document, s: StoryRef) {
+    let all = d.para_paths(s);
+    let first = all.first().cloned().unwrap_or_else(|| Path::top(0));
+    let last = all.last().cloned().unwrap_or_else(|| Path::top(0));
+    let len = d.para(s, &last).map(|p| p.len()).unwrap_or(0);
+    assert_eq!(d.start_of(s), Pos { story: s, path: first, off: 0 });
+    assert_eq!(d.end_of(s), Pos { story: s, path: last, off: len });
+}
+
+#[test]
+fn start_and_end_of_match_the_paragraph_walk_on_nested_structures() {
+    let para = |t: &str| para_block(Paragraph::with_text(t, CharProps::default()));
+    let table = |cells: Vec<Blocks>| {
+        let mut t = Table::new(1, cells.len(), 100.0);
+        for (c, b) in cells.into_iter().enumerate() {
+            t.rows[0].cells[c].blocks = b;
+        }
+        Arc::new(Block::Table(t))
+    };
+    let mut d = Document::from_text("plain");
+    assert_story_edges(&d, StoryRef::Body);
+    // Table first and last, the outer cells empty at the edges, a nested table inside.
+    d.body = vec![
+        table(vec![vec![], nested_tables(2, vec![para("deep first")]), vec![para("x"), para("cell last")], vec![]]),
+        para("mid"),
+        table(vec![vec![], vec![para("tail table")], vec![]]),
+    ];
+    assert_story_edges(&d, StoryRef::Body);
+    assert_eq!(d.start_of(StoryRef::Body).path, Path(vec![0, 0, 1, 0, 0, 0, 0, 0, 0, 0]));
+    assert_eq!(d.end_of(StoryRef::Body).path, Path(vec![2, 0, 1, 0]));
+    // Only tables, all cells empty: no paragraph, so the fallback path.
+    d.body = vec![table(vec![vec![], vec![]])];
+    assert_story_edges(&d, StoryRef::Body);
+    // Past the walk's depth limit the walk sees nothing, and so do the edges.
+    d.body = nested_tables(PARA_WALK_DEPTH + 3, vec![para("too deep")]);
+    assert!(d.para_paths(StoryRef::Body).is_empty());
+    assert_story_edges(&d, StoryRef::Body);
+    d.body = nested_tables(PARA_WALK_DEPTH, vec![para("at the limit"), para("second")]);
+    assert_eq!(d.para_paths(StoryRef::Body).len(), 2);
+    assert_story_edges(&d, StoryRef::Body);
+    // Text box and footnote stories.
+    let tb = d.add_part(PartKind::TextBox, vec![table(vec![vec![para("a")], vec![para("b")]]), para("tail")]);
+    let fn_ = d.add_part(PartKind::Footnote, vec![para("note one"), para("note two")]);
+    assert_story_edges(&d, StoryRef::Part(tb));
+    assert_story_edges(&d, StoryRef::Part(fn_));
+    assert_story_edges(&d, StoryRef::Part(fn_ + 100));
+}

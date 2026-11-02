@@ -892,11 +892,11 @@ impl Document {
 
     /// First and last positions of a story.
     pub fn start_of(&self, s: StoryRef) -> Pos {
-        let path = self.para_paths(s).into_iter().next().unwrap_or_else(|| Path::top(0));
+        let path = self.story(s).and_then(|bl| edge_para(bl, &mut Vec::new(), 0, false)).unwrap_or_else(|| Path::top(0));
         Pos { story: s, path, off: 0 }
     }
     pub fn end_of(&self, s: StoryRef) -> Pos {
-        let path = self.para_paths(s).pop().unwrap_or_else(|| Path::top(0));
+        let path = self.story(s).and_then(|bl| edge_para(bl, &mut Vec::new(), 0, true)).unwrap_or_else(|| Path::top(0));
         let off = self.para(s, &path).map(|p| p.len()).unwrap_or(0);
         Pos { story: s, path, off }
     }
@@ -1474,6 +1474,35 @@ fn walk(bl: &Blocks, prefix: &mut Vec<u32>, out: &mut Vec<Path>, depth: usize) {
         }
         prefix.pop();
     }
+}
+
+/// The first (or, with `last`, the final) paragraph [`walk`] would yield, without visiting the rest.
+fn edge_para(bl: &Blocks, prefix: &mut Vec<u32>, depth: usize, last: bool) -> Option<Path> {
+    if depth > PARA_WALK_DEPTH {
+        return None;
+    }
+    let order = |n: usize| -> Vec<usize> { if last { (0..n).rev().collect() } else { (0..n).collect() } };
+    for i in order(bl.len()) {
+        prefix.push(i as u32);
+        let found = match &*bl[i] {
+            Block::Para(_) => Some(Path(prefix.clone())),
+            Block::Table(t) => order(t.rows.len()).into_iter().find_map(|r| {
+                order(t.rows[r].cells.len()).into_iter().find_map(|c| {
+                    prefix.push(r as u32);
+                    prefix.push(c as u32);
+                    let f = edge_para(&t.rows[r].cells[c].blocks, prefix, depth + 1, last);
+                    prefix.pop();
+                    prefix.pop();
+                    f
+                })
+            }),
+        };
+        prefix.pop();
+        if found.is_some() {
+            return found;
+        }
+    }
+    None
 }
 
 /// [`walk`] for the paragraphs from path `a` to `b` inclusive, skipping the blocks outside.
