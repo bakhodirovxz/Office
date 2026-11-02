@@ -116,4 +116,6 @@ pub fn install(s: &mut Session) {
 #[cfg(test)]
 mod tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
+mod plugin_allowlist_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod layer_tests;

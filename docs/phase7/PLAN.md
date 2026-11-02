@@ -160,6 +160,7 @@ id = "uz-translit"            # [a-z0-9-.]{3,64}; unique per install; the produc
 version = "1.0.0"             # semver
 api = 1                       # host API major this plugin was built for
 apps = ["docs"]
+events = ["selectionChanged"] # "documentOpened" | "documentSaved" | "selectionChanged"
 publisher = "…"               # free text, shown in the install dialog
 name.en = "Transliteration (plugin)"   # also name.ru, name."uz-Latn", name."uz-Cyrl"; missing ones fall back to en
 
@@ -183,12 +184,18 @@ group.en = "Plugins"
 id = "fields"
 title.en = "Template fields"
 
-events = ["selectionChanged"] # "documentOpened" | "documentSaved" | "selectionChanged"
 [settings]                    # defaults; admin config or the user's settings override (§8)
 ```
 
 Validation (WP1) refuses: unknown keys, an `api` the host does not support, more than 16 commands / 8 toolbar items / 2 panels,
 labels over 64 characters, a `memory_mb` over the cap, network entries that are not `https://host[:port]` origins.
+WP1 additions after coding the parser (the crate is the reference; `docs/plugins.md` section 2 lists all of it): `events` and
+other top-level keys must precede the first table header (as the example now shows; after a `[[panel]]` TOML makes them panel
+keys, which the strict parser then refuses); ids, versions, apps, languages (`en` required) and icon names are checked; every
+user-visible string refuses control and bidi/invisible characters (label spoofing in the install dialog); `network` origins
+must be lowercase DNS names with at least two labels (no IP literal, no `localhost`, no userinfo/path); a command that reads
+the document needs `document` of `read` or `write`; `params` and `[settings]` are size-capped (1 KiB, 4 KiB); a package may
+hold only the four flat names of §4.1 (`check_package`).
 
 ### 4.2 Binary ABI
 
@@ -294,8 +301,15 @@ Deny by default. Allowed prefixes (Docs registry counts in brackets, grep of `Co
 print, export), `edit.*` (31: the system clipboard and the user's undo stack), `tools.*` (11, macros among them), `mailings.*`
 (`mailings.finish {path}` writes files), `insert.textFromFile`, `insert.picture`, `link.*`, `view.*`, `readAloud.*`, `ui.*`,
 `office.*`, `plugin.*` (no plugin runs another), `review` accept/reject-all, and **any params object with a `path`, `dir`, `file`
-or `url` key**. The list is data in `plugin-api`, with a test that every allowed id exists in the registry and that no allowed
-spec's `params` string mentions a path or URL (WP1).
+or `url` key** (WP1: also `uri`, `href`, `src`, any depth, any case; a value that is an array of non-negative integers is a
+node path and passes, so `document.paragraph {path: [3]}` works). The list is data in `plugin-api`, with a test that every
+exception and read id exists in the registry and that no allowed spec's `params` string mentions a path or URL (WP1; the test
+lives in `docs-office` because the data crate cannot link an engine). **WP1 result against the real registry (633 commands):
+306 allowed.** The test found nine more exceptions the plan text missed, all taking a path, file or bytes: `font.add`,
+`font.loadSystem`, `font.remove`, `insert.link` (a link target can be a file or script URL), `insert.object`,
+`review.compare`, `review.combine`, `styles.organizer`, `styles.copyFrom`. Families with no allowed prefix stay refused
+(`layout.`, `arrange.`, `hf.`, `design.`, `picture.`, `shape.`, `outline.`, `references.` and the rest); adding one is a
+reviewed change to `plugin_api::allow::PREFIXES`.
 
 ### 5.3 Grants
 

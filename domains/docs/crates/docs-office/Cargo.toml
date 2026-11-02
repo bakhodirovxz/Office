@@ -27,3 +27,5 @@ xdfu-core = { path = "../../../../crates/xdfu-core" }
 # reads the text of an exported PDF in the XDFU tests (the version wordcraft crates/pdf uses)
 hayro-syntax = { version = "=0.7.2", default-features = false, features = ["std"] }
 docs-translit = { path = "../docs-translit" }
+# the plugin allowlist is data in plugin-api; this crate can see the real registry it must match (Phase 7 WP1)
+plugin-api = { path = "../../../../crates/plugin-api" }
