@@ -201,7 +201,7 @@ hold only the four flat names of §4.1 (`check_package`).
 
 | Item | Rule |
 |---|---|
-| Imports | exactly `env.memory` (memory, required; the host creates it with `maximum = memory_mb`) and optionally `hoshiya_v1.log(ptr, len)` (debug text, rate-limited, never shown to users). **Anything else refuses the load.** The `hoshiya_v1` namespace string is ABI, not branding, and is fixed forever like an opcode. |
+| Imports | exactly `env.memory` (memory, required; the host creates it with `maximum = memory_mb`) and optionally `plugin_v1.log(ptr, len)` (debug text, rate-limited, never shown to users). **Anything else refuses the load.** The `plugin_v1` namespace is neutral on purpose (the product name lives only in `brand/brand.toml`, so a rename never breaks plugins) and is fixed forever like an opcode. |
 | Exports | `api_version() -> i32` (= 1), `alloc(len: i32) -> i32`, `free(ptr: i32, len: i32)`, `call(ptr: i32, len: i32) -> i64` (the answer as `ptr << 32 | len`). No exported memory. |
 | Message | `u32 header_len, header (UTF-8 JSON), u32 blob_count, per blob: u32 len, bytes`. JSON for small structured data; blobs for the text map. |
 | Limits per round | input and output 32 MiB each, 16 rounds per invocation, time budget 5 s per round (admin may lower), memory `memory_mb`. |
