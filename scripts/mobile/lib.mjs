@@ -112,7 +112,7 @@ export function versions(ser) {
 
 /** adb reverse for the host server (so the page is on http://localhost:<port>, a secure context) and the CDP forward for Chrome. */
 export function reverse(ser, port) { adb(ser, 'reverse', `tcp:${port}`, `tcp:${port}`); }
-export function forwardCdp(ser, port = 9222) { adb(ser, 'forward', `tcp:${port}`, 'localabstract:chrome_devtools_remote'); return `http://127.0.0.1:${port}`; }
+export function forwardCdp(ser, port = +(process.env.RIG_CDP_PORT ?? 9222)) { adb(ser, 'forward', `tcp:${port}`, 'localabstract:chrome_devtools_remote'); return `http://127.0.0.1:${port}`; }
 export function openInChrome(ser, url) {
   sh(ser, `am start -n com.android.chrome/com.google.android.apps.chrome.Main -a android.intent.action.VIEW -d '${url}'`);
 }

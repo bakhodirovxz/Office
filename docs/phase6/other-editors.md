@@ -31,12 +31,32 @@ PASS / FAIL / BLOCKED (cannot be run because the app does not start). Evidence i
 | Soft keyboard and typing (A0 rows: Latin, Uzbek apostrophes, autocorrect, glide, Cyrillic ё, Backspace, Enter) | BLOCKED | BLOCKED | PARTLY: the only text field is the "Find tools and commands" palette; the keyboard comes up and keys reach it (`pdf-type-focus.png`), the palette list is clipped at the left edge. The seven Docs rows do not apply (a viewer/annotator has no body text to type into); not run |
 | Save / hand the file to the host | BLOCKED | BLOCKED | PASS for the bridge: tapping Save posted `pdfcraft:save` with 31,263 B (the source size). Chrome then showed "1 download failed" (`pdf-save.png`), cause not isolated. `pdfcraft` has no `requestSave` command, so the shell cannot ask it to save (Slides has one: `upstream/deckcraft/apps/deckcraft-web/src/web/host.rs`; no `requestSave` found for Sheets either; the shell does not use it for any editor) |
 
+## Update 2026-11-03: re-survey with the texture clamp (`gridcraft/0156`, `deckcraft/0156`, branch `p6-texclamp`)
+The first pass above stands as the record of the failure. Both web apps now request the adapter's real `max_texture_dimension_2d` (`upstream/gridcraft/apps/gridcraft-web/src/web.rs`,
+`upstream/deckcraft/apps/deckcraft-web/src/web.rs`; patches `patches/gridcraft/0156-*`, `patches/deckcraft/0156-*`, same change as `wordcraft/0002`). Rig for this pass: emulator
+**`HRM_360`** (API 36, 360 dp via `wm size 540x1200` / `wm density 240`, software GL, Chrome from a fresh profile) because `HRM_Pixel_8` was already running for someone else and was not touched;
+`RIG_SCALE=0.5`, **no shim**, dist `E:/office-target/p6-texclamp/dist`. Screenshots `docs/phase6/evidence/other-editors/*-clamp.png`.
+- **Both start.** Sheets: `gridcraft:ready`, no `:failed`; Slides: `deckcraft:ready`, `:opened`. Desktop Chromium (1280x800, swiftshader): both start and draw (`sheets-desktop-clamp.png`, `slides-desktop-clamp.png`).
+- **The earlier black / corrupted frames were the shim.** Without it Sheets draws the workbook correctly (`sheets-open-clamp.png`) and Slides draws the slide and thumbnail (`slides-open-clamp.png`).
+- **Sheets at 360 dp:** the grid is readable, the formula bar and a ribbon row (font, size, B/I/U) show, the ribbon is cut off after one row, and the title bar overlaps (title, theme, comments, Share run into each other). One-finger swipe scrolls the grid (rows 1-26 to 85-110, then to 531-556 and column BY, `sheets-far-clamp.png`; text and grid stay sharp), a tap selects a cell (BY536, `sheets-tap-clamp.png`). Pinch, typing, long-press not run.
+- **Slides at 360 dp:** desktop layout squeezed: thumbnail pane about 60 % of the width, the slide at 7 % zoom in a strip on the right, the notes line and the status bar overlap and are clipped, the top bar is cut off. 8 taps on the zoom `+` gave 125 % and the slide redrew correctly (`slides-zoom-clamp.png`). Not run: touch editing, typing, Present, save.
+- **Large textures:** nothing broke at the sizes reached (a far-scrolled sheet; a slide at 125 %, about 1.6k px wide at DPR 1.5, under the 4096 limit). A picture or canvas wider than 4096 px on a 4096-limit GPU was **not** tried; wgpu would reject such a texture rather than the device being refused at start.
+
+| Row | Sheets | Slides |
+|---|---|---|
+| Starts on the emulator's GL, no shim | PASS | PASS |
+| Usable at 360 dp as it opens | **FAIL**: readable grid, but the ribbon is cut off after one row and the title bar overlaps | **FAIL**: the desktop layout; slide at 7 %, panes squeezed, bars clipped |
+| One-finger scroll | PASS (swipe scrolls rows and columns) | not run (one slide) |
+| Tap selection | PASS | not run |
+| Zoom | not run (pinch) | PASS via the `+` button (7 % to 125 %) |
+| Typing, long-press, save | not run | not run |
+
 ## Is each editor usable at 412 dp?
 - **Sheets:** unknown, does not start on this rig's GL. Even with a shim it drew only black.
 - **Slides:** unknown for the same reason; the shimmed picture suggests the desktop layout (a ribbon wider than the screen).
 - **PDF:** not as it opens (panes, 13 % zoom, a clipped top bar); readable and pinch-zoomable once the panes are closed. It needs a phone layout, but it is the closest.
 
-## Recommendation for O4
+## Recommendation for O4 (as written before the clamp; see the update above)
 Keep the Phase 6 gate on Docs only, and treat Sheets and Slides as blocked, not as "bad": the first step for both is a few lines that were already written once (the `wordcraft/0002` clamp,
 about 10 lines in each `*-web/src/web.rs`, no layout work), after which the matrix can be run for real; do that as a small WP10a2 beside the gate, since the same startup failure is a
 risk for any phone whose WebView reports a 4096 texture limit and is independent of the phone layouts. PDF is the one to prefer if the owner wants a second editor on phones: it runs
@@ -48,3 +68,11 @@ selection on long-press, a save hook the shell can call), which is the WP10d sco
 - Whether the black / corrupted frames under the shim are the shim or the apps.
 - One-finger scroll of a multi-page PDF, PDF with form fields, large PDFs; the browser download failure of the saved PDF; the WP8 APK for these editors (not run; Chrome only).
 - Dark theme, 360 dp (the second AVD was not started).
+
+## O4 after the clamp
+The picture changed in one way: Sheets and Slides are no longer blocked, they start and draw on a 4096-texture GPU. They are not phone-ready: both come up in the desktop layout (Sheets cut-off ribbon and
+overlapping title bar, Slides squeezed panes at 7 %), like PDF. Sheets already scrolls and selects by touch, which makes its remaining work layout plus the selection handles; Slides needs the layout first.
+So the O4 advice holds with one correction: keep the Phase 6 gate on Docs, and rank the second editor by layout cost: PDF (panes and top bar), then Sheets (ribbon and title bar; touch scroll and tap work),
+then Slides. The SIZING 6.4 estimate for Sheets touch selection should be re-checked against this survey before the owner decides.
+
+Sizes of the new builds (`CI_DIST_ROOT=E:/office-target/p6-texclamp/dist bash scripts/ci.sh sizes`, brotli of the wasm): Sheets 4,954,751 B (budget 4,966,771, headroom 12,020), Slides 9,512,548 B (budget 9,524,217, headroom 11,669). Budgets unchanged.

@@ -1691,3 +1691,10 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **WP10a** (`docs/phase6/other-editors.md`, evidence `docs/phase6/evidence/other-editors/`): **Sheets and Slides fail to start** on the emulator's GL (`max_texture_dimension_2d 8192 is better than allowed 4096`, the failure `wordcraft/0002` fixed for Docs; no clamp in `gridcraft-web` or `deckcraft-web`), so their matrix rows are BLOCKED. PDF runs with the desktop layout: unusable as opened at 412 dp (three panes, 13 %), pinch zoom and long-press selection pass, one-finger drag selects instead of scrolling. O4 recommendation: Docs only for the gate; a small clamp WP for Sheets and Slides, then a real survey; PDF is the best second candidate.
 - Recordings: `E:/office-target/p6/evidence/<run>/` (SHA-256 lines marked WP12 in `docs/phase6/evidence/SHA256SUMS`); the WP10a survey is screenshots only.
 
+
+### Phase 6 WP10a2: texture-limit clamp for Sheets and Slides (2026-11-03, branch `p6-texclamp`)
+- Carried patches `gridcraft/0156` and `deckcraft/0156` (REGISTER rows added; `verify-queue.sh gridcraft deckcraft` and `cargo xt register check` pass; the new lines are rustfmt-clean, no change to the 0950 patches): the web apps request the adapter's real `max_texture_dimension_2d` (same as `wordcraft/0002`), so they start where `MAX_TEXTURE_SIZE` is 4096.
+- Emulator (`HRM_360`, no shim): both start and draw; Sheets scrolls and selects by touch; Slides zooms. Neither is phone-ready (desktop layout). Desktop Chromium: both unchanged. Details and matrix: `docs/phase6/other-editors.md` (update section, O4 after the clamp).
+- Sizes (brotli wasm, budgets unchanged): Sheets 4,954,751 (headroom 12,020), Slides 9,512,548 (headroom 11,669). Dist: `E:/office-target/p6-texclamp/dist`.
+- Not tested: a texture wider than 4096 px on a 4096 GPU; a real phone; pinch, typing, long-press, save in Sheets and Slides.
+- Rig: `scripts/mobile/lib.mjs` `forwardCdp` reads `RIG_CDP_PORT` (default 9222) so two surveys on two emulators do not share a forward.
