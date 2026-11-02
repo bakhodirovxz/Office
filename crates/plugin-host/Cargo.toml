@@ -1,0 +1,18 @@
+# Phase 7 WP2: the native plugin host (wasmtime). Loads a plugin module, enforces the ABI of PLAN section 4.2 and the limits
+# of section 5.1 (imported memory with a cap, epoch deadline per round, 16-round cap, bounded messages). No WASI is linked.
+[package]
+name = "plugin-host"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Native plugin host: wasmtime with a locked-down ABI, memory cap, per-round deadline and the round loop"
+
+[dependencies]
+plugin-api = { path = "../plugin-api" }
+# Pinned exactly (a runtime bump is a reviewed change). Minimal features: Cranelift JIT, no WASI, no component model.
+# Wasmtime LTS: see docs/plugins.md / PLAN section 1.1 note (recorded in STATUS).
+wasmtime = { version = "=50.0.1", default-features = false, features = ["cranelift", "runtime", "std"] }
+
+[dev-dependencies]
+wat = "=1.263.0"

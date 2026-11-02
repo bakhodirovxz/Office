@@ -484,6 +484,12 @@ the Phase 7 go; **[owner]** = needs an owner decision.
 - **Done-check:** docs-translit tests and `preserve` tests identical before/after (log both); docs-plugins tests with a fake
   in-process guest (no wasm) for every action; preset test that plugin buttons appear and disappear; `verify-queue.sh wordcraft`.
 - **Estimate:** 6 (4/6/9). **Tier:** builder; architect review of the refactor and the executor.
+- **TODO from WP2 (fetch):** `plugin-host` does not perform `fetch` (it only runs the module). The adapter that executes actions owns it
+  (the desktop one: WP3's executor, with the HTTP client the app already has). It must, before connecting: require plain `https`, resolve the
+  host name, refuse loopback, private (10/8, 172.16/12, 192.168/16), link-local (169.254/16 incl. the cloud metadata address), CGNAT
+  (100.64/10), unspecified, multicast, IPv6 loopback/ULA (fc00::/7)/link-local (fe80::/10) and IPv4-mapped forms of all of these,
+  then connect to the **checked address** (not re-resolve), and re-check on every redirect hop (`docs/plugins.md` section 8).
+  Unless the admin allowed private targets for the provider. Needs a unit test table of these addresses.
 
 ### WP4. Web editor side (bridge)  [now]
 - **Goal:** §4.6 as patch wordcraft/01xx; pending invocation state with input lock and timeout; transferred buffers.
