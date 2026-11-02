@@ -159,8 +159,7 @@ static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new
 static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
 
 /// The phone layout's labels upstream has no catalog row for, as literals so `cargo xt i18n extract` sees them (docs-office looks every label up by key).
-#[allow(dead_code)]
-fn phone_labels() -> [&'static str; 3] {
+pub fn phone_labels() -> [&'static str; 3] {
     [tl!("Keyboard"), tl!("More"), tl!("Desktop layout")]
 }
 
