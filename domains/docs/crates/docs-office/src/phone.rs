@@ -6,7 +6,7 @@
 //! that opens a dialog or a file picker behaves as it does from the ribbon. Every control is a command id upstream already has.
 
 use std::sync::OnceLock;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use egui::{Align2, Color32, Context, FontId, Id, Painter, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
@@ -96,7 +96,87 @@ pub fn active(ctx: &Context) -> bool {
     if after != before {
         ctx.data_mut(|d| d.insert_temp(touched_id, after));
     }
-    decide(forced(), ctx.content_rect().width() / dp(ctx), after)
+    let on = decide(forced(), ctx.content_rect().width() / dp(ctx), after);
+    ON.store(on, Ordering::SeqCst);
+    on
+}
+
+static ON: AtomicBool = AtomicBool::new(false);
+static REPORTED: AtomicBool = AtomicBool::new(false);
+static SHELL: AtomicBool = AtomicBool::new(false);
+static BACK: AtomicBool = AtomicBool::new(false);
+
+/// The editor runs inside the shell (`?host=parent`): the top row then has the Back arrow, and the shell hides its own header in phone mode.
+pub fn set_shell(inside: bool) {
+    SHELL.store(inside, Ordering::SeqCst);
+}
+
+/// `Some(on)` once after the phone layout turned on or off, for the shell (`wordcraft:phone`): it hides its header while the editor's row is the only bar.
+pub fn take_phone_change() -> Option<bool> {
+    change(&REPORTED, ON.load(Ordering::SeqCst))
+}
+
+fn change(reported: &AtomicBool, on: bool) -> Option<bool> {
+    (reported.swap(on, Ordering::SeqCst) != on).then_some(on)
+}
+
+/// True once after the Back arrow was tapped, for the shell (`wordcraft:back`).
+pub fn take_back() -> bool {
+    BACK.swap(false, Ordering::SeqCst)
+}
+
+// ---------------------------------------------------------------------------------------------------------------- reading first
+
+/// A document opens for reading (no caret, no keyboard, no toolbar); the pencil switches to editing, "Done editing" back. The state belongs to one
+/// document: another one replacing it opens for reading again.
+fn editing_id() -> Id {
+    Id::new("docs-office-phone-editing")
+}
+
+fn reading_id() -> Id {
+    Id::new("docs-office-phone-reading")
+}
+
+/// Where the page must leave a finger to the chrome besides the bars (the pencil): read by the app (`office_overlay`), see wordcraft/0143.
+fn extra_id() -> Id {
+    Id::new("docs-office-phone-extra")
+}
+
+/// Sessions that cannot edit (a view session: read-only protection) get no pencil.
+pub fn can_edit(s: &Session) -> bool {
+    s.doc.settings.protection.as_deref() != Some("readOnly")
+}
+
+pub fn is_editing(ctx: &Context, s: &Session) -> bool {
+    can_edit(s) && ctx.data(|d| d.get_temp::<Option<u64>>(editing_id())).flatten() == Some(s.document_id())
+}
+
+pub fn set_editing(ctx: &Context, s: &Session, on: bool) {
+    ctx.data_mut(|d| d.insert_temp(editing_id(), on.then(|| s.document_id())));
+}
+
+/// The page is for reading this frame: the app lets no tap reach it and gives it no keyboard focus (wordcraft/0143). Set by `chrome`.
+pub fn reading(ctx: &Context) -> bool {
+    ctx.data(|d| d.get_temp::<bool>(reading_id())).unwrap_or(false)
+}
+
+/// The Format sheet's two tabs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Tab {
+    Text,
+    Paragraph,
+}
+
+fn tab_id() -> Id {
+    Id::new("docs-office-phone-tab")
+}
+
+pub fn tab(ctx: &Context) -> Tab {
+    ctx.data(|d| d.get_temp::<Tab>(tab_id())).unwrap_or(Tab::Text)
+}
+
+pub fn set_tab(ctx: &Context, t: Tab) {
+    ctx.data_mut(|d| d.insert_temp(tab_id(), t));
 }
 
 /// Seconds after a touch during which pointer events do not mean a mouse.
@@ -171,7 +251,7 @@ pub fn slots(set: Set) -> Vec<Slot> {
             slot("Format", "case", Act::Sheet(Sheet::Format)),
             slot("List", "bullets", Act::Sheet(Sheet::List)),
             slot("Insert", "plus", Act::Sheet(Sheet::Insert)),
-            slot("Keyboard", "dictate", Act::Keyboard),
+            slot("Keyboard", "keyboard", Act::Keyboard),
             slot("More", "more", Act::Sheet(Sheet::Menu)),
         ],
         Set::Selection => vec![
@@ -208,10 +288,12 @@ pub struct Item {
     pub flag: &'static str,
     pub keep: bool,
     pub rgb: u32,
+    /// A paragraph style row: its name is drawn in that style's size and weight (1 Normal, 2 Heading 1, 3 Heading 2).
+    pub preview: u8,
 }
 
 const fn item(label: &'static str, icon: &'static str, cmd: &'static str) -> Item {
-    Item { label, icon, cmd, params: "{}", flag: "", keep: false, rgb: 0 }
+    Item { label, icon, cmd, params: "{}", flag: "", keep: false, rgb: 0, preview: 0 }
 }
 const fn with(i: Item, params: &'static str) -> Item {
     Item { params, ..i }
@@ -222,8 +304,11 @@ const fn toggle(i: Item, flag: &'static str) -> Item {
 const fn kept(i: Item) -> Item {
     Item { keep: true, ..i }
 }
+const fn styled(label: &'static str, style: &'static str, level: u8) -> Item {
+    Item { params: style, keep: true, preview: level, ..item(label, "", "para.style") }
+}
 const fn swatch(label: &'static str, cmd: &'static str, params: &'static str, rgb: u32) -> Item {
-    Item { label, icon: "", cmd, params, flag: "", keep: true, rgb }
+    Item { label, icon: "", cmd, params, flag: "", keep: true, rgb, preview: 0 }
 }
 
 /// The font size between the two buttons, drawn from `format.state`.
@@ -232,23 +317,18 @@ pub(super) const SIZE_LABEL: &str = "$size";
 type Rows = Vec<Vec<Item>>;
 
 /// The rows of a sheet. A row with one item is a list row (icon and label side by side); more share the width.
-pub fn rows(sheet: Sheet, s: &Session) -> Rows {
+pub fn rows(sheet: Sheet, s: &Session, tab: Tab) -> Rows {
     let one = |i: Item| vec![i];
     match sheet {
         Sheet::Menu => {
-            // No Print: it opens the Backstage, whose 200 px rail leaves 160 px of page at 360 dp (docs/phase6/phone-layout.md, section 4).
+            // No Print: it opens the Backstage, whose 200 px rail leaves 160 px of page at 360 dp (docs/phase6/phone-layout.md, section 4). No Print/Web
+            // Layout switch either: the phone shows the Web Layout, the rest is "Desktop layout".
             let mut v = vec![one(item("Save", "save", "file.save")), one(item("Save As", "saveAs", "file.saveAs"))];
             v.push(one(item("Find", "find", "edit.findReplace")));
-            let (view, icon, cmd) = if s.view.mode == wordcraft_engine::layout::ViewMode::Web {
-                ("Print Layout", "printLayout", "view.printLayout")
-            } else {
-                ("Web Layout", "webLayout", "view.webLayout")
-            };
-            v.push(one(item(view, icon, cmd)));
             v.push(one(item("Desktop layout", "options", DESKTOP)));
             v
         }
-        Sheet::Format => vec![
+        Sheet::Format if tab == Tab::Text => vec![
             vec![
                 toggle(item("Bold", "bold", "format.bold"), "bold"),
                 toggle(item("Italic", "italic", "format.italic"), "italic"),
@@ -272,16 +352,22 @@ pub fn rows(sheet: Sheet, s: &Session) -> Rows {
                 swatch("Text Highlight Color", "format.highlight", r#"{"color":"turquoise"}"#, 0x00FFFF),
                 with(kept(item("No Color", "clear", "format.highlight")), r#"{"color":"none"}"#),
             ],
-            vec![
-                with(kept(item("Normal", "styles", "para.style")), r#"{"style":"Normal"}"#),
-                with(kept(item("Heading 1", "styles", "para.style")), r#"{"style":"Heading1"}"#),
-                with(kept(item("Heading 2", "styles", "para.style")), r#"{"style":"Heading2"}"#),
-            ],
+        ],
+        Sheet::Format => vec![
+            one(styled("Normal", r#"{"style":"Normal"}"#, 1)),
+            one(styled("Heading 1", r#"{"style":"Heading1"}"#, 2)),
+            one(styled("Heading 2", r#"{"style":"Heading2"}"#, 3)),
             vec![
                 with(kept(item("Align Left", "alignLeft", "para.align")), r#"{"value":"left"}"#),
                 with(kept(item("Center", "alignCenter", "para.align")), r#"{"value":"center"}"#),
                 with(kept(item("Align Right", "alignRight", "para.align")), r#"{"value":"right"}"#),
                 with(kept(item("Justify", "justify", "para.align")), r#"{"value":"justify"}"#),
+            ],
+            vec![
+                item("Bullets", "bullets", "para.bullets"),
+                item("Numbering", "numbering", "para.numbering"),
+                kept(item("Decrease Indent", "outdent", "para.outdent")),
+                kept(item("Increase Indent", "indent", "para.indent")),
             ],
         ],
         Sheet::List => vec![vec![
@@ -385,7 +471,11 @@ fn down_id() -> Id {
 fn target(ui: &mut Ui, rect: Rect, key: impl std::hash::Hash + std::fmt::Debug) -> Tap {
     let id = ui.id().with(key);
     let _ = ui.interact(rect, id, Sense::click());
-    let ctx = ui.ctx();
+    tap_in(ui.ctx(), rect, id)
+}
+
+/// The tap on a target that has no widget (the round Edit button is painted on a layer of its own).
+fn tap_in(ctx: &Context, rect: Rect, id: Id) -> Tap {
     let (press, release) = button_events(ctx);
     let mut down = ctx.data(|d| d.get_temp::<Option<Id>>(down_id())).flatten();
     if press.is_some_and(|p| rect.contains(p)) {
@@ -427,10 +517,17 @@ impl Look<'_> {
         }
     }
 
+    /// Our own glyphs first (`glyph`), then the app's icon set.
+    fn ic(&self, p: &Painter, r: Rect, name: &str, c: Color32) {
+        if !glyph::paint(p, r, name, c) {
+            (self.icon)(p, r, name, c);
+        }
+    }
+
     /// Icon over a label, centred in `r`.
     fn stacked(&self, ui: &Ui, r: Rect, icon: &str, label: &str, tint: Color32) {
         let p = ui.painter();
-        (self.icon)(p, Rect::from_center_size(pos2(r.center().x, r.min.y + 17.0 * self.dp), vec2(22.0, 22.0) * self.dp), icon, tint);
+        self.ic(p, Rect::from_center_size(pos2(r.center().x, r.min.y + 17.0 * self.dp), vec2(22.0, 22.0) * self.dp), icon, tint);
         let g = one_line(p, label, FontId::proportional(10.5 * self.dp), tint, r.width() - 4.0 * self.dp);
         p.galley(pos2(r.center().x - g.size().x / 2.0, r.max.y - 5.0 * self.dp - g.size().y), g, tint);
     }
@@ -438,9 +535,25 @@ impl Look<'_> {
     /// Icon, then label, left-aligned (a list row).
     fn wide(&self, ui: &Ui, r: Rect, icon: &str, label: &str, tint: Color32) {
         let p = ui.painter();
-        (self.icon)(p, Rect::from_center_size(pos2(r.min.x + 28.0 * self.dp, r.center().y), vec2(22.0, 22.0) * self.dp), icon, tint);
+        self.ic(p, Rect::from_center_size(pos2(r.min.x + 28.0 * self.dp, r.center().y), vec2(22.0, 22.0) * self.dp), icon, tint);
         let g = one_line(p, label, FontId::proportional(14.5 * self.dp), tint, r.width() - 64.0 * self.dp);
         p.galley(pos2(r.min.x + 52.0 * self.dp, r.center().y - g.size().y / 2.0), g, tint);
+    }
+
+    /// A paragraph style row: the name in that style's size and weight (bold is drawn twice, half a dp apart: the app has one font weight here).
+    fn preview(&self, ui: &Ui, r: Rect, level: u8, label: &str, tint: Color32) {
+        let (size, bold) = match level {
+            2 => (22.0, true),
+            3 => (18.0, true),
+            _ => (15.0, false),
+        };
+        let p = ui.painter();
+        let g = one_line(p, label, FontId::proportional(size * self.dp), tint, r.width() - 32.0 * self.dp);
+        let at = pos2(r.min.x + 16.0 * self.dp, r.center().y - g.size().y / 2.0);
+        if bold {
+            p.galley(at + vec2(0.6 * self.dp, 0.0), g.clone(), tint);
+        }
+        p.galley(at, g, tint);
     }
 
     fn name(&self, key: &str) -> String {
@@ -464,8 +577,49 @@ fn enabled(s: &Session, cmd: &str) -> bool {
     s.registry.get(cmd).is_some_and(|c| (c.enabled)(s).is_none())
 }
 
-/// Draw the top row, the sheet (when one is open) and the bottom toolbar, and return the commands the user asked for.
-/// `title` is the file name; `c` the theme colours (see [`color`]); `t` the catalog; `icon` the app's icon painter.
+/// The sheet header: the grab handle above, the title left and the close button right.
+pub const HEAD: f32 = 52.0;
+/// The round Edit button's size and its distance from the window's edges.
+pub const FAB: f32 = 56.0;
+pub const FAB_GAP: f32 = 16.0;
+/// The pseudo command of the menu's "Done editing" (the reading view again).
+pub const DONE: &str = "office.phoneDone";
+
+/// The title of a sheet (catalog key).
+fn sheet_title(sh: Sheet) -> &'static str {
+    match sh {
+        Sheet::Menu => "More",
+        Sheet::Format => "Format",
+        Sheet::List => "List",
+        Sheet::Insert => "Insert",
+        Sheet::Table => "Table",
+        Sheet::Delete => "Delete",
+        Sheet::Wrap => "Wrap Text",
+        Sheet::Picture => "Picture",
+    }
+}
+
+/// The rows of `sheet` as drawn: the Menu also leads with "Done editing" while editing.
+fn sheet_rows(sh: Sheet, s: &Session, tab: Tab, editing: bool) -> Rows {
+    let mut r = rows(sh, s, tab);
+    if sh == Sheet::Menu && editing {
+        r.insert(0, vec![item("Done editing", "done", DONE)]);
+    }
+    r
+}
+
+/// The Format sheet is as tall as its taller tab, so the sheet does not jump when the tab changes.
+fn format_rows(s: &Session) -> usize {
+    rows(Sheet::Format, s, Tab::Text).len().max(rows(Sheet::Format, s, Tab::Paragraph).len())
+}
+
+/// The sheet's height: header, the tabs of the Format sheet, one row each and a little air (the caller caps it).
+pub fn sheet_height(sh: Sheet, rows: usize, dp: f32) -> f32 {
+    (HEAD + if sh == Sheet::Format { ROW } else { 0.0 } + rows as f32 * ROW + 8.0) * dp
+}
+
+/// Draw the top row, the sheet (when one is open), the bottom toolbar (editing only) and the Edit button (reading, when the document can be edited),
+/// and return the commands the user asked for. `title` is the file name; `c` the theme colours (see [`color`]); `t` the catalog; `icon` the app's icon painter.
 pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::COUNT], t: &dyn Fn(&str) -> String, icon: IconFn) -> Vec<(String, Value)> {
     let ctx = ui.ctx().clone();
     let dp = dp(&ctx);
@@ -473,21 +627,31 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
     let look = Look { dp, c, icon, t };
     let st = state(s);
     let set = set_of(s);
+    let editing = is_editing(&ctx, s);
     let mut out: Vec<(String, Value)> = Vec::new();
     let mut open = open_sheet(&ctx);
+    // reading has the menu only; the sheets of the toolbar belong to editing
+    if !editing && open != Some(Sheet::Menu) {
+        open = None;
+    }
     let frame = |fill: Color32| egui::Frame::NONE.fill(fill).stroke(Stroke::new(1.0, c[color::BORDER]));
+    let (mut press, mut release) = button_events(&ctx);
 
-    // --- top row
+    // --- top row: Back, the file name, then (editing) Undo and Redo, and More
+    let shell = SHELL.load(Ordering::SeqCst);
     let top = egui::Panel::top("phone_top").exact_size(row).frame(frame(c[color::BAR])).show(ui, |ui| {
         let full = ui.max_rect();
         let mut x = full.max.x;
-        // right to left: More, Redo, Undo
-        for (label, ic, on) in [("More", "more", true), ("Redo", "redo", enabled(s, "edit.redo")), ("Undo", "undo", enabled(s, "edit.undo"))] {
+        let mut buttons = vec![("More", "more", true)];
+        if editing {
+            buttons.extend([("Redo", "redo", enabled(s, "edit.redo")), ("Undo", "undo", enabled(s, "edit.undo"))]);
+        }
+        for (label, ic, on) in buttons {
             x -= row;
             let r = Rect::from_min_size(pos2(x, full.min.y), vec2(row, row));
             let resp = target(ui, r, label);
             look.press(ui, r, &resp, open == Some(Sheet::Menu) && label == "More");
-            (look.icon)(ui.painter(), Rect::from_center_size(r.center(), vec2(22.0, 22.0) * dp), ic, if on { c[color::TEXT] } else { c[color::DIM].gamma_multiply(0.5) });
+            look.ic(ui.painter(), Rect::from_center_size(r.center(), vec2(22.0, 22.0) * dp), ic, if on { c[color::TEXT] } else { c[color::DIM].gamma_multiply(0.5) });
             if resp.clicked() && on {
                 match label {
                     "More" => open = if open == Some(Sheet::Menu) { None } else { Some(Sheet::Menu) },
@@ -496,49 +660,91 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
                 }
             }
         }
+        let mut left = full.min.x + 12.0 * dp;
+        if shell {
+            let r = Rect::from_min_size(full.min, vec2(row, row));
+            let resp = target(ui, r, "Back");
+            look.press(ui, r, &resp, false);
+            look.ic(ui.painter(), Rect::from_center_size(r.center(), vec2(22.0, 22.0) * dp), "phoneBack", c[color::TEXT]);
+            if resp.clicked() {
+                BACK.store(true, Ordering::SeqCst);
+            }
+            left = full.min.x + row;
+        }
         // the dirty dot, then the name in what is left
         if s.dirty {
             ui.painter().circle_filled(pos2(x - 12.0 * dp, full.center().y), 4.0 * dp, c[color::ACCENT]);
             x -= 24.0 * dp;
         }
-        let g = one_line(ui.painter(), title, FontId::proportional(15.0 * dp), c[color::TEXT], x - full.min.x - 24.0 * dp);
-        ui.painter().galley(pos2(full.min.x + 12.0 * dp, full.center().y - g.size().y / 2.0), g, c[color::TEXT]);
+        let g = one_line(ui.painter(), title, FontId::proportional(15.0 * dp), c[color::TEXT], x - left - 8.0 * dp);
+        ui.painter().galley(pos2(left, full.center().y - g.size().y / 2.0), g, c[color::TEXT]);
     });
 
     // --- bottom toolbar (declared before the sheet so the sheet sits above it)
     let slots = slots(set);
-    let bar = egui::Panel::bottom("phone_bar").exact_size(row).frame(frame(c[color::BAR])).show(ui, |ui| {
-        let full = ui.max_rect();
-        let w = full.width() / slots.len() as f32;
-        for (i, sl) in slots.iter().enumerate() {
-            let r = Rect::from_min_size(pos2(full.min.x + w * i as f32, full.min.y), vec2(w, row));
-            let resp = target(ui, r, ("slot", i));
-            let on = flag(&st, sl.flag) || matches!(sl.act, Act::Sheet(sh) if open == Some(sh));
-            look.press(ui, r, &resp, on);
-            let tint = if on { c[color::ACCENT] } else { c[color::TEXT] };
-            look.stacked(ui, r, sl.icon, &look.name(sl.label), tint);
-            if resp.clicked() {
-                match sl.act {
-                    Act::Sheet(sh) => open = if open == Some(sh) { None } else { Some(sh) },
-                    Act::Cmd(id, p) => out.push((id.into(), params(p))),
-                    Act::Keyboard => {
-                        if let Some(k) = KEYBOARD.get() {
-                            k();
+    let bar = editing.then(|| {
+        egui::Panel::bottom("phone_bar").exact_size(row).frame(frame(c[color::BAR])).show(ui, |ui| {
+            let full = ui.max_rect();
+            let w = full.width() / slots.len() as f32;
+            for (i, sl) in slots.iter().enumerate() {
+                let r = Rect::from_min_size(pos2(full.min.x + w * i as f32, full.min.y), vec2(w, row));
+                let resp = target(ui, r, ("slot", i));
+                let on = flag(&st, sl.flag) || matches!(sl.act, Act::Sheet(sh) if open == Some(sh));
+                look.press(ui, r, &resp, on);
+                let tint = if on { c[color::ACCENT] } else { c[color::TEXT] };
+                look.stacked(ui, r, sl.icon, &look.name(sl.label), tint);
+                if resp.clicked() {
+                    match sl.act {
+                        Act::Sheet(sh) => open = if open == Some(sh) { None } else { Some(sh) },
+                        Act::Cmd(id, p) => out.push((id.into(), params(p))),
+                        Act::Keyboard => {
+                            if let Some(k) = KEYBOARD.get() {
+                                k();
+                            }
                         }
                     }
                 }
             }
-        }
+        })
     });
 
-    let (press, release) = button_events(&ctx);
-    // --- the sheet
+    // --- the sheet: a grab handle, a header (title, close), the Format tabs and the rows
     let mut sheet_rect = None;
+    let mut done = false;
     if let Some(sh) = open {
-        let rws = rows(sh, s);
+        let tb = tab(&ctx);
+        let rws = sheet_rows(sh, s, tb, editing);
         let max_h = ctx.content_rect().height() * SHEET_SHARE;
-        let want = rws.len() as f32 * row + 8.0 * dp;
-        let r = egui::Panel::bottom("phone_sheet").exact_size(want.min(max_h)).frame(frame(c[color::SHEET])).show(ui, |ui| {
+        let r = egui::Panel::bottom("phone_sheet").exact_size(sheet_height(sh, if sh == Sheet::Format { format_rows(s) } else { rws.len() }, dp).min(max_h)).frame(frame(c[color::SHEET])).show(ui, |ui| {
+            ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+            let (head, _) = ui.allocate_exact_size(vec2(ui.available_width(), HEAD * dp), Sense::hover());
+            let p = ui.painter();
+            p.rect_filled(Rect::from_center_size(pos2(head.center().x, head.min.y + 6.0 * dp), vec2(32.0, 4.0) * dp), 2.0 * dp, c[color::BORDER]);
+            let g = one_line(p, &look.name(sheet_title(sh)), FontId::proportional(17.0 * dp), c[color::TEXT], head.width() - row - 32.0 * dp);
+            p.galley(pos2(head.min.x + 16.0 * dp, head.min.y + 4.0 * dp + (row - g.size().y) / 2.0), g, c[color::TEXT]);
+            let x = Rect::from_min_size(pos2(head.max.x - row, head.min.y + 4.0 * dp), vec2(row, row));
+            let resp = target(ui, x, "close");
+            look.press(ui, x, &resp, false);
+            look.ic(ui.painter(), Rect::from_center_size(x.center(), vec2(20.0, 20.0) * dp), "close", c[color::TEXT]);
+            if resp.clicked() {
+                open = None;
+            }
+            if sh == Sheet::Format {
+                let (tabs, _) = ui.allocate_exact_size(vec2(ui.available_width(), row), Sense::hover());
+                for (i, (t, name)) in [(Tab::Text, "Text"), (Tab::Paragraph, "Paragraph")].into_iter().enumerate() {
+                    let r = Rect::from_min_size(pos2(tabs.min.x + tabs.width() / 2.0 * i as f32, tabs.min.y), vec2(tabs.width() / 2.0, row));
+                    let resp = target(ui, r, ("tab", i));
+                    let tint = if t == tb { c[color::ACCENT] } else { c[color::DIM] };
+                    look.press(ui, r, &resp, false);
+                    let g = one_line(ui.painter(), &look.name(name), FontId::proportional(15.0 * dp), tint, r.width() - 8.0 * dp);
+                    ui.painter().galley(pos2(r.center().x - g.size().x / 2.0, r.center().y - g.size().y / 2.0), g, tint);
+                    let (y, w) = (r.max.y - 1.0 * dp, if t == tb { 3.0 } else { 1.0 } * dp);
+                    ui.painter().line_segment([pos2(r.min.x, y), pos2(r.max.x, y)], Stroke::new(w, if t == tb { c[color::ACCENT] } else { c[color::BORDER] }));
+                    if resp.clicked() {
+                        set_tab(&ctx, t);
+                    }
+                }
+            }
             egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
                 ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
                 for cells in &rws {
@@ -547,7 +753,7 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
                     for (i, it) in cells.iter().enumerate() {
                         let r = Rect::from_min_size(pos2(rect.min.x + w * i as f32, rect.min.y), vec2(w, row));
                         let size = it.label == SIZE_LABEL;
-                        let live = it.cmd.is_empty() || it.cmd.starts_with("ui.") || enabled(s, it.cmd) || it.cmd == DESKTOP;
+                        let live = it.cmd.is_empty() || it.cmd.starts_with("ui.") || enabled(s, it.cmd) || it.cmd == DESKTOP || it.cmd == DONE;
                         let resp = target(ui, r, (it.label, it.params, i));
                         let on = flag(&st, it.flag);
                         if !size {
@@ -564,6 +770,8 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
                             let col = Color32::from_rgb((it.rgb >> 16) as u8, (it.rgb >> 8) as u8, it.rgb as u8);
                             ui.painter().circle_filled(r.center(), 13.0 * dp, col);
                             ui.painter().circle_stroke(r.center(), 13.0 * dp, Stroke::new(1.0, c[color::BORDER]));
+                        } else if it.preview != 0 {
+                            look.preview(ui, r, it.preview, &look.name(it.label), tint);
                         } else if cells.len() == 1 {
                             look.wide(ui, r, it.icon, &look.name(it.label), tint);
                         } else {
@@ -572,6 +780,9 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
                         if resp.clicked() && live && !size {
                             if it.cmd == DESKTOP {
                                 set_force(Some(false));
+                                open = None;
+                            } else if it.cmd == DONE {
+                                done = true;
                                 open = None;
                             } else {
                                 out.push((it.cmd.into(), params(it.params)));
@@ -587,20 +798,46 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
         sheet_rect = Some(r.response.rect);
     }
 
-    // a press outside the three closes the sheet; one on the bar or the top row decides for itself above
+    // --- the Edit button: reading a document that can be edited, bottom right above the page
+    let mut fab = None;
+    if !editing && can_edit(s) {
+        let page = ui.available_rect_before_wrap();
+        let d = FAB * dp;
+        let r = Rect::from_min_size(pos2(page.max.x - FAB_GAP * dp - d, page.max.y - FAB_GAP * dp - d), vec2(d, d));
+        let resp = tap_in(&ctx, r, Id::new("docs-office-phone-fab"));
+        let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, Id::new("docs-office-phone-fab-layer")));
+        p.circle_filled(r.center() + vec2(0.0, 2.0 * dp), d / 2.0, Color32::from_black_alpha(60));
+        p.circle_filled(r.center(), d / 2.0 - if resp.is_pointer_button_down_on() { 1.5 * dp } else { 0.0 }, c[color::ACCENT]);
+        look.ic(&p, Rect::from_center_size(r.center(), vec2(24.0, 24.0) * dp), "phonePencil", c[color::ON_ACCENT]);
+        if resp.clicked() {
+            set_editing(&ctx, s, true);
+            open = None;
+        }
+        fab = Some(r);
+    }
+    ctx.data_mut(|d| d.insert_temp(extra_id(), fab));
+
+    // a press outside the bars and the sheet closes the sheet; one on a bar decides for itself above
     if open.is_some()
-        && let Some(p) = press
-        && ![Some(top.response.rect), Some(bar.response.rect), sheet_rect].into_iter().flatten().any(|r| r.contains(p))
+        && let Some(p) = press.take()
+        && ![Some(top.response.rect), bar.as_ref().map(|b| b.response.rect), sheet_rect].into_iter().flatten().any(|r| r.contains(p))
     {
         open = None;
     }
+    if done {
+        set_editing(&ctx, s, false);
+    }
     set_sheet(&ctx, open);
     // the finger is up: nothing is pressed any more (after the sheet, whose rows read it too)
-    if release.is_some() {
+    if release.take().is_some() {
         ctx.data_mut(|d| d.insert_temp(down_id(), None::<Id>));
     }
+    let editing = is_editing(&ctx, s);
+    ctx.data_mut(|d| d.insert_temp(reading_id(), !editing));
     out
 }
+
+mod glyph;
 
 #[cfg(test)]
 mod tests;

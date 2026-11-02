@@ -159,6 +159,16 @@ impl Bridge {
         if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
         }
+        // The phone layout's row is the only bar (wordcraft/0143): the shell hides its header while it is on, and Back is the shell's Home.
+        #[cfg(feature = "office-ext")]
+        {
+            if let Some(on) = docs_office::phone::take_phone_change() {
+                self.send(&[("type", "wordcraft:phone".into()), ("on", on.into())]);
+            }
+            if docs_office::phone::take_back() {
+                self.send(&[("type", "wordcraft:back".into())]);
+            }
+        }
         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
         // document replaced the one it was set on.
         if self.read_only.get() && app.session.doc.settings.protection.as_deref() != Some("readOnly") {

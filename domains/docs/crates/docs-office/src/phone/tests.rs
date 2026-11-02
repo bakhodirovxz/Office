@@ -64,9 +64,16 @@ fn every_control(s: &Session) -> Vec<(String, String, String)> {
         }
     }
     for sh in SHEETS {
-        for it in rows(sh, s).into_iter().flatten() {
-            v.push((it.label.into(), it.cmd.into(), it.params.into()));
+        for tab in [Tab::Text, Tab::Paragraph] {
+            for it in rows(sh, s, tab).into_iter().flatten() {
+                v.push((it.label.into(), it.cmd.into(), it.params.into()));
+            }
         }
+        v.push((sheet_title(sh).into(), String::new(), "{}".into()));
+    }
+    // what the chrome adds around the rows
+    for label in ["Done editing", "Text", "Paragraph"] {
+        v.push((label.into(), String::new(), "{}".into()));
     }
     v
 }
@@ -91,7 +98,7 @@ fn formatting_from_the_sheet_changes_the_selection() {
         s.run(cmd, &serde_json::from_str(params).unwrap()).unwrap();
         assert_eq!(state(&mut s)[key], json!(true), "{cmd}");
     }
-    assert!(rows(Sheet::Format, &s).iter().flatten().any(|i| i.flag == "bold" && i.keep), "the sheet shows bold pressed and stays open");
+    assert!(rows(Sheet::Format, &s, Tab::Text).iter().flatten().any(|i| i.flag == "bold" && i.keep), "the sheet shows bold pressed and stays open");
 }
 
 /// Every label has a row in the catalog with Uzbek (Latin, Cyrillic) and Russian, so the phone UI is never English-only.
@@ -122,6 +129,7 @@ fn colors() -> [Color32; color::COUNT] {
 /// Draw one frame at `w` x 640 and return the commands the chrome asked for.
 fn frame(s: &mut Session, ctx: &egui::Context, w: f32, sheet: Option<Sheet>, title: &str) -> Vec<(String, serde_json::Value)> {
     set_sheet(ctx, sheet);
+    set_editing(ctx, s, true);
     let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(w, 640.0))), ..Default::default() };
     let mut cmds = Vec::new();
     let icon = |_: &Painter, _: Rect, _: &str, _: Color32| {};
@@ -150,6 +158,12 @@ fn the_chrome_draws_at_360_and_412_without_overflow() {
 }
 
 fn run_frame(s: &mut Session, ctx: &egui::Context, events: Vec<egui::Event>, time: f64) -> Vec<(String, serde_json::Value)> {
+    set_editing(ctx, s, true);
+    run_frame_as(s, ctx, events, time)
+}
+
+/// One frame in whatever mode (reading or editing) the context is in.
+fn run_frame_as(s: &mut Session, ctx: &egui::Context, events: Vec<egui::Event>, time: f64) -> Vec<(String, serde_json::Value)> {
     let input = egui::RawInput {
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(360.0, 640.0))),
         events,
@@ -234,7 +248,7 @@ fn tap_at(s: &mut Session, ctx: &egui::Context, at: Pos2, time: &mut f64) -> Vec
     let mut cmds = Vec::new();
     for frame in [vec![touch(TouchPhase::Start), button(true)], vec![], vec![button(false), touch(TouchPhase::End)], vec![]] {
         *time += 0.05;
-        cmds.extend(run_frame(s, ctx, frame, *time));
+        cmds.extend(run_frame_as(s, ctx, frame, *time));
     }
     cmds
 }
@@ -248,8 +262,9 @@ fn a_tap_on_a_sheet_row_runs_its_command() {
     let _ = run_frame(&mut s, &ctx, vec![], time);
     set_sheet(&ctx, Some(Sheet::Menu));
     let _ = run_frame(&mut s, &ctx, vec![], 1.01);
-    // 640 high: the sheet (5 rows, 248) sits above the 48 bar, its first row at 346
-    let at = pos2(180.0, 346.0 + 48.0 + 24.0);
+    // 640 high: the sheet (header, 5 rows) sits above the 48 bar; its rows are Done editing, Save, Save As, ...
+    let top = 640.0 - ROW - sheet_height(Sheet::Menu, 5, 1.0);
+    let at = pos2(180.0, top + HEAD + 2.0 * ROW + 24.0);
     let cmds = tap_at(&mut s, &ctx, at, &mut time);
     assert_eq!(cmds.iter().map(|c| c.0.as_str()).collect::<Vec<_>>(), ["file.saveAs"], "{cmds:?}");
     assert_eq!(open_sheet(&ctx), None);
@@ -274,4 +289,91 @@ fn a_pointer_event_after_a_touch_keeps_the_phone_layout_until_the_grace_is_over(
     assert!(on(vec![touch], 10.0), "a touch in a narrow window");
     assert!(on(vec![button.clone()], 10.2), "its pointer event, a frame later");
     assert!(!on(vec![button], 12.0), "a mouse two seconds later");
+}
+
+/// A document opens for reading: no bottom toolbar, the Edit button bottom right (56 dp, 16 dp from the edges), no Undo and Redo; the pencil and
+/// "Done editing" switch the two.
+#[test]
+fn a_document_opens_for_reading_and_the_pencil_starts_editing() {
+    let (mut s, ctx) = (session(), egui::Context::default());
+    let mut time = 1.0;
+    let _ = run_frame_as(&mut s, &ctx, vec![], time);
+    assert!(reading(&ctx) && !is_editing(&ctx, &s), "a document opens for reading");
+    let fab = ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().expect("the pencil is offered");
+    assert_eq!(fab.size(), vec2(FAB, FAB));
+    assert_eq!((360.0 - fab.max.x, 640.0 - fab.max.y), (FAB_GAP, FAB_GAP));
+    let _ = tap_at(&mut s, &ctx, fab.center(), &mut time);
+    assert!(is_editing(&ctx, &s) && !reading(&ctx), "the pencil starts editing");
+    assert!(ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().is_none(), "no pencil while editing");
+    // More > Done editing is the first row of the menu
+    set_sheet(&ctx, Some(Sheet::Menu));
+    let _ = run_frame_as(&mut s, &ctx, vec![], time + 0.1);
+    let top = 640.0 - ROW - sheet_height(Sheet::Menu, 5, 1.0);
+    let _ = tap_at(&mut s, &ctx, pos2(180.0, top + HEAD + 24.0), &mut time);
+    assert!(reading(&ctx) && !is_editing(&ctx, &s), "Done editing goes back to reading");
+    assert_eq!(open_sheet(&ctx), None);
+    // another document replacing this one opens for reading again
+    set_editing(&ctx, &s, true);
+    s.set_document(wordcraft_doc::Document::new());
+    assert!(!is_editing(&ctx, &s));
+}
+
+/// A session that cannot edit (read-only protection, what a view session gets) has no pencil and stays in reading.
+#[test]
+fn a_session_that_cannot_edit_has_no_pencil() {
+    let (mut s, ctx) = (session(), egui::Context::default());
+    s.doc.settings.protection = Some("readOnly".into());
+    assert!(!can_edit(&s));
+    set_editing(&ctx, &s, true);
+    let _ = run_frame_as(&mut s, &ctx, vec![], 1.0);
+    assert!(ctx.data(|d| d.get_temp::<Option<Rect>>(extra_id())).flatten().is_none(), "no pencil");
+    assert!(reading(&ctx), "and it stays in reading however it was asked");
+}
+
+/// The Back arrow (only inside the shell) tells the shell; the shell hears the phone layout come on and go off once each.
+#[test]
+fn the_back_arrow_and_the_layout_switch_are_reported_to_the_shell() {
+    let (mut s, ctx) = (session(), egui::Context::default());
+    let mut time = 1.0;
+    set_shell(true);
+    let _ = run_frame_as(&mut s, &ctx, vec![], time);
+    assert!(!take_back());
+    let _ = tap_at(&mut s, &ctx, pos2(24.0, 24.0), &mut time);
+    assert!(take_back(), "a tap on the arrow");
+    assert!(!take_back(), "once");
+    set_shell(false);
+    let seen = AtomicBool::new(false);
+    assert_eq!(change(&seen, true), Some(true));
+    assert_eq!(change(&seen, true), None, "not again");
+    assert_eq!(change(&seen, false), Some(false));
+}
+
+/// The Format sheet's second tab shows the paragraph rows (styles, alignment, lists), the first the text rows.
+#[test]
+fn the_format_sheet_has_two_tabs() {
+    let (mut s, ctx) = (session(), egui::Context::default());
+    let mut time = 1.0;
+    let _ = frame(&mut s, &ctx, 360.0, Some(Sheet::Format), "x.docx");
+    assert_eq!(tab(&ctx), Tab::Text);
+    let label = |t| rows(Sheet::Format, &s, t).iter().flatten().map(|i| i.label).collect::<Vec<_>>();
+    assert!(label(Tab::Text).contains(&"Bold") && !label(Tab::Text).contains(&"Normal"));
+    let para = label(Tab::Paragraph);
+    assert!(para.contains(&"Heading 1") && para.contains(&"Bullets") && para.contains(&"Center") && !para.contains(&"Bold"));
+    // the tab row starts after the header; the second tab is the right half
+    let top = 640.0 - ROW - sheet_height(Sheet::Format, format_rows(&s), 1.0).min(640.0 * SHEET_SHARE);
+    let _ = tap_at(&mut s, &ctx, pos2(270.0, top + HEAD + 24.0), &mut time);
+    assert_eq!(tab(&ctx), Tab::Paragraph);
+    let _ = tap_at(&mut s, &ctx, pos2(90.0, top + HEAD + 24.0), &mut time);
+    assert_eq!(tab(&ctx), Tab::Text);
+}
+
+/// The sheet's close button (top right of its header) closes it.
+#[test]
+fn the_sheet_close_button_closes_it() {
+    let (mut s, ctx) = (session(), egui::Context::default());
+    let mut time = 1.0;
+    let _ = frame(&mut s, &ctx, 360.0, Some(Sheet::Insert), "x.docx");
+    let top = 640.0 - ROW - sheet_height(Sheet::Insert, rows(Sheet::Insert, &s, Tab::Text).len(), 1.0);
+    let _ = tap_at(&mut s, &ctx, pos2(360.0 - 24.0, top + 4.0 + 24.0), &mut time);
+    assert_eq!(open_sheet(&ctx), None);
 }

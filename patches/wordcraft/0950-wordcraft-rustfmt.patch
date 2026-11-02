@@ -1,14 +1,40 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: x <a@b>
-Date: Sun, 1 Nov 2026 12:00:00 +0500
-Subject: [PATCH] wordcraft: rustfmt the files patches added after the first
- rustfmt pass
+From: office <office@localhost>
+Date: Mon, 2 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft: rustfmt the files the patch queue touches
+ (mechanical formatting, regenerate on every sync)
 
-rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
-Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
+rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
+Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
+---
+ apps/wordcraft-web/src/web.rs        |  6 +++-
+ apps/wordcraft-web/src/web/host.rs   |  6 ++--
+ crates/layout/src/lib.rs             |  8 ++++-
+ crates/ui-egui/src/backstage.rs      | 53 ++++++++++++----------------
+ crates/ui-egui/src/canvas.rs         |  4 ++-
+ crates/ui-egui/src/office_overlay.rs |  4 ++-
+ crates/ui-egui/src/touch_select.rs   | 10 ++++--
+ 7 files changed, 53 insertions(+), 38 deletions(-)
 
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 2be8e47..265501d 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -86,7 +86,11 @@ pub fn start() {
+                     // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
+                     #[cfg(feature = "office-ext")]
+                     {
+-                        wordcraft_ui_egui::office_overlay::set_phone(docs_office::phone::active, docs_office::phone::chrome, docs_office::phone::reading);
++                        wordcraft_ui_egui::office_overlay::set_phone(
++                            docs_office::phone::active,
++                            docs_office::phone::chrome,
++                            docs_office::phone::reading,
++                        );
+                         docs_office::phone::set_shell(app_bridge.is_some());
+                         docs_office::phone::set_keyboard(toggle_keyboard);
+                         // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 97d87af..bcd3114 100644
+index 09bc860..9e1ffb0 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -122,8 +122,10 @@ impl Bridge {
@@ -116,7 +142,7 @@ index 6399175..ac03a3f 100644
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 112f41b..d634157 100644
+index 79d6394..8aec88b 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -127,9 +153,24 @@ index 112f41b..d634157 100644
 +    let focus_click = pointer_click
 +        || accesskit_click
 +        || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
+     let focus_click = focus_click && !crate::office_overlay::phone_reading(); // wordcraft/0143: reading takes no keyboard
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
-     }
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 3c047bd..2450946 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -230,7 +230,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+     // The Edit button floats over the page: the extension leaves its rectangle in the context.
+     let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
+     let (pressed_on_bar, active) = ui.input(|i| {
+-        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))));
++        let on_bar = i.events.iter().any(
++            |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
++        );
+         (on_bar, i.pointer.any_down() || i.pointer.any_released())
+     });
+     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
 diff --git a/crates/ui-egui/src/touch_select.rs b/crates/ui-egui/src/touch_select.rs
 index 44a463f..37396ee 100644
 --- a/crates/ui-egui/src/touch_select.rs

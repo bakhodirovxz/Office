@@ -1,0 +1,162 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 2 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: phone layout opens a document for reading, one bar,
+ paper fills the screen
+
+Phase 6 WP6 revision (docs/phase6/phone-layout.md, "Read first and one bar"). In the phone layout (0140) a document opens for reading: the extension (docs-office phone.rs) says so per frame (`reading`, a third function of `set_phone`), `phone_chrome` mirrors it in `phone_reading()` and keeps the page from the keyboard (no `want_focus`, no canvas focus), `canvas::mouse` ignores a tap and a tap takes no focus, so no caret and no soft keyboard. The round Edit button floats over the page: the extension leaves its rectangle in the egui context (`docs-office-phone-extra`) and a finger on it counts as on the chrome (`chrome_down`). The phone page's panel is filled with the paper colour, so a short document is not a strip on grey. The web host reports `wordcraft:phone { on }` when the layout turns on or off and `wordcraft:back` when the top row's Back arrow is tapped, so the shell can hide its own header (one bar) and go home; `set_shell` tells the layout it is inside the shell. Desktop apps and a build without the extension are unchanged (hook unset).
+---
+ apps/wordcraft-web/src/web.rs        |  3 ++-
+ apps/wordcraft-web/src/web/host.rs   | 10 +++++++++
+ crates/ui-egui/src/canvas.rs         |  5 +++--
+ crates/ui-egui/src/lib.rs            |  4 +++-
+ crates/ui-egui/src/office_overlay.rs | 32 +++++++++++++++++++++++-----
+ 5 files changed, 45 insertions(+), 9 deletions(-)
+
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 32dbee3..2be8e47 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -86,7 +86,8 @@ pub fn start() {
+                     // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
+                     #[cfg(feature = "office-ext")]
+                     {
+-                        wordcraft_ui_egui::office_overlay::set_phone(docs_office::phone::active, docs_office::phone::chrome);
++                        wordcraft_ui_egui::office_overlay::set_phone(docs_office::phone::active, docs_office::phone::chrome, docs_office::phone::reading);
++                        docs_office::phone::set_shell(app_bridge.is_some());
+                         docs_office::phone::set_keyboard(toggle_keyboard);
+                         // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
+                         docs_office::phone::set_css_width(|| {
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index 97d87af..09bc860 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -157,6 +157,16 @@ impl Bridge {
+         if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
+             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
+         }
++        // The phone layout's row is the only bar (wordcraft/0143): the shell hides its header while it is on, and Back is the shell's Home.
++        #[cfg(feature = "office-ext")]
++        {
++            if let Some(on) = docs_office::phone::take_phone_change() {
++                self.send(&[("type", "wordcraft:phone".into()), ("on", on.into())]);
++            }
++            if docs_office::phone::take_back() {
++                self.send(&[("type", "wordcraft:back".into())]);
++            }
++        }
+         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
+         // document replaced the one it was set on.
+         if self.read_only.get() && app.session.doc.settings.protection.as_deref() != Some("readOnly") {
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index e113b4d..79d6394 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -1635,6 +1635,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+     let accesskit_click = resp.clicked() && !pointer_click && !keyboard_click;
+     // A finger scrolling the page doesn't take the keyboard (that would raise the soft one).
+     let focus_click = pointer_click || accesskit_click || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
++    let focus_click = focus_click && !crate::office_overlay::phone_reading(); // wordcraft/0143: reading takes no keyboard
+     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
+         resp.request_focus();
+     }
+@@ -2326,8 +2327,8 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
+ }
+ 
+ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
+-    // A finger on the phone chrome's bars is not the page's (wordcraft/0140).
+-    if crate::office_overlay::chrome_down() {
++    // A finger on the phone chrome's bars is not the page's (wordcraft/0140); nor is a tap while the phone shows it for reading (0143).
++    if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() {
+         return;
+     }
+     // A pen or the eraser (Draw tab) owns the pointer.
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 5381da5..142778f 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -2273,7 +2273,9 @@ impl WordApp {
+             egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |_| {});
+         } else if office_overlay::phone_chrome(self, ui) {
+             // The phone layout (wordcraft/0140) drew its own top row and bottom toolbar: only the page is left.
+-            egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| {
++            // The paper fills it (wordcraft/0143): a short document is not a strip on grey.
++            let paper = if self.session.view.dark_mode { egui::Color32::from_gray(wordcraft_render::DARK_PAPER) } else { egui::Color32::WHITE };
++            egui::CentralPanel::default().frame(egui::Frame::NONE.fill(paper)).show(ui, |ui| {
+                 canvas::show(self, ui);
+             });
+         } else {
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index f99fd26..3c047bd 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -151,15 +151,23 @@ type PhoneChrome = fn(
+     &dyn Fn(&str) -> String,
+     PhoneIcon,
+ ) -> Vec<(String, serde_json::Value)>;
+-static PHONE: std::sync::OnceLock<(PhoneActive, PhoneChrome)> = std::sync::OnceLock::new();
++/// Whether the page is for reading this frame (wordcraft/0143): no tap reaches it, it takes no keyboard focus.
++type PhoneReading = fn(&egui::Context) -> bool;
++static PHONE: std::sync::OnceLock<(PhoneActive, PhoneChrome, PhoneReading)> = std::sync::OnceLock::new();
++static PHONE_READING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+ static PHONE_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+ static CHROME_DOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+ static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+ /// The view before phone mode took the Web Layout: restored when the window is a desktop window again.
+ static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
+ 
+-pub fn set_phone(active: PhoneActive, chrome: PhoneChrome) {
+-    let _ = PHONE.set((active, chrome));
++pub fn set_phone(active: PhoneActive, chrome: PhoneChrome, reading: PhoneReading) {
++    let _ = PHONE.set((active, chrome, reading));
++}
++
++/// The phone layout shows the document for reading (wordcraft/0143): a tap does not put a caret in it and the soft keyboard stays down.
++pub fn phone_reading() -> bool {
++    PHONE_READING.load(std::sync::atomic::Ordering::Relaxed)
+ }
+ 
+ /// Whether the phone layout was drawn this frame (the selection mini toolbar yields to the touch action bar there).
+@@ -170,7 +178,7 @@ pub fn phone_on() -> bool {
+ /// Draw the phone chrome instead of the title bar and the ribbon; false (nothing drawn) for a desktop window. Entering the phone layout
+ /// shows the document in Web Layout (it reflows to the width); leaving restores the view the user had.
+ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+-    let Some((active, chrome)) = PHONE.get() else { return false };
++    let Some((active, chrome, reading)) = PHONE.get() else { return false };
+     let on = active(ui.ctx());
+     if on != PHONE_ON.swap(on, std::sync::atomic::Ordering::Relaxed) {
+         use wordcraft_engine::layout::ViewMode;
+@@ -190,6 +198,7 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+         let _ = app.session.run(go, &serde_json::json!({}));
+     }
+     if !on {
++        PHONE_READING.store(false, std::sync::atomic::Ordering::Relaxed);
+         return false;
+     }
+     // The soft keyboard opening shrinks the window (`interactive-widget=resizes-content`): keep the caret's line in view (PLAN 5.3).
+@@ -204,11 +213,24 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+     for (id, params) in chrome(&mut app.session, ui, &title, &colors, &|k| crate::i18n::t(k).to_string(), &icon) {
+         let _ = app.run(&id, params);
+     }
++    // Reading: the page has no keyboard focus (a tap on a bar also claims it for the canvas, `lib.rs`) and no caret.
++    let ctx = ui.ctx().clone();
++    let read = reading(&ctx);
++    PHONE_READING.store(read, std::sync::atomic::Ordering::Relaxed);
++    if read {
++        app.canvas.want_focus = false;
++        app.canvas.focused = false;
++        if let Some((id, _)) = app.canvas.widget_id {
++            ctx.memory_mut(|m| m.surrender_focus(id));
++        }
++    }
+     // A finger that went down on a bar is the bar's until it lifts: egui hit-tests the page widget under it (the page would put the caret at the end of the
+     // document), so `canvas::mouse` stands aside while this is set.
+     let page = ui.available_rect_before_wrap();
++    // The Edit button floats over the page: the extension leaves its rectangle in the context.
++    let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
+     let (pressed_on_bar, active) = ui.input(|i| {
+-        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos)));
++        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))));
+         (on_bar, i.pointer.any_down() || i.pointer.any_released())
+     });
+     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
