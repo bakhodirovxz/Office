@@ -100,6 +100,9 @@
     f.pending = null; clearTimeout(f.timer);
     f.el.contentWindow.postMessage({ type: f.app.prefix + ':open', name: file.name, bytes: file.bytes }, location.origin, [file.bytes]);
   }
+  // Docs has a phone layout whose bottom toolbar must stay above the soft keyboard (PLAN phase 6 section 5.1/6, docs/phase6/phone-layout.md): the keyboard then
+  // shrinks the layout viewport. The other editors keep Chrome's default (their desktop chrome would be squeezed to a sliver).
+  const viewport = (on) => { const m = document.querySelector('meta[name=viewport]'); if (m) m.content = 'width=device-width, initial-scale=1' + (on ? ', interactive-widget=resizes-content' : ''); };
   function show(a, file) {
     fail('');
     let f = S.frames[a.id];
@@ -118,11 +121,13 @@
     $('ed-status').textContent = f.opening ? t('ed.opening', { name: f.opening }) : f.ready ? '' : t('ed.loading', { app: appName(a) });
     cover();
     $('home').hidden = true; $('editor').hidden = false; document.title = appName(a);
+    viewport(a.id === 'docs');
     $('back').focus(); // the focused card is hidden now: keep the keyboard user's place, one Tab from the editor
   }
   function home() {
     const prev = S.current;
     $('editor').hidden = true; $('home').hidden = false; S.current = null; render();
+    viewport(false);
     if (prev) $('cards').querySelectorAll('button')[Math.max(S.cfg.apps.findIndex((x) => x.id === prev.id), 0)]?.focus(); // back where the user left
   }
 

@@ -83,6 +83,24 @@ pub fn start() {
                     docs_office::install(&mut session);
                     #[cfg(feature = "office-ext")]
                     wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
+                    // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
+                    #[cfg(feature = "office-ext")]
+                    {
+                        wordcraft_ui_egui::office_overlay::set_phone(docs_office::phone::active, docs_office::phone::chrome);
+                        docs_office::phone::set_keyboard(toggle_keyboard);
+                        // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
+                        docs_office::phone::set_css_width(|| {
+                            web_sys::window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(0.0) as f32
+                        });
+                        docs_office::phone::set_coarse_pointer(
+                            web_sys::window().and_then(|w| w.match_media("(pointer: coarse)").ok().flatten()).is_some_and(|m| m.matches()),
+                        );
+                        docs_office::phone::set_force(match query_param("phone").as_deref() {
+                            Some("on") => Some(true),
+                            Some("off") => Some(false),
+                            _ => None,
+                        });
+                    }
                     session.system_region = region;
                     let messages = Rc::new(RefCell::new(Vec::new()));
                     let mut services = services(inbox.clone(), cc.egui_ctx.clone(), dirty, saves.clone(), messages.clone());
@@ -139,6 +157,15 @@ fn query() -> String {
 /// The value of the URL's `?key=` parameter.
 fn query_param(key: &str) -> Option<String> {
     web_sys::UrlSearchParams::new_with_str(&query()).ok()?.get(key)
+}
+
+/// The phone layout's Keyboard button: hide the soft keyboard (blur eframe's text input) or show it (focus it, within the tap's activation).
+#[cfg(feature = "office-ext")]
+fn toggle_keyboard() {
+    let Some(doc) = web_sys::window().and_then(|w| w.document()) else { return };
+    let Some(input) = doc.query_selector("input[type=text]").ok().flatten().and_then(|e| e.dyn_into::<web_sys::HtmlElement>().ok()) else { return };
+    let this: &wasm_bindgen::JsValue = input.as_ref();
+    let _ = if doc.active_element().is_some_and(|a| AsRef::<wasm_bindgen::JsValue>::as_ref(&a) == this) { input.blur() } else { input.focus() };
 }
 
 /// Wraps the app to read dropped files asynchronously (browsers can't read them synchronously)

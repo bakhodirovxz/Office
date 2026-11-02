@@ -73,7 +73,7 @@ async function run(listName) {
       ctx.notes = r.notes;
       try { await item.run(ctx); } catch (e) { r.status = 'fail'; r.error = String(e.message ?? e).slice(0, 500); try { ctx.shot(`${list.app}-${item.id}-fail`); } catch { /* keep going */ } }
       r.ms = Date.now() - t0;
-      r.recording = await L.stopRecord(ser, rec, path.join(L.EVIDENCE_BIG, `${list.app}-${item.id}-${dp}.mp4`));
+      r.recording = await L.stopRecord(ser, rec, path.join(L.EVIDENCE_BIG, runId, `${list.app}-${item.id}-${dp}.mp4`));
       result.items.push(r);
       console.log(`${r.status} ${item.id} ${r.ms} ms`);
     }
@@ -83,7 +83,7 @@ async function run(listName) {
     fs.writeFileSync(path.join(jsonDir, `${runId}-${listName}-${dp}.json`), JSON.stringify(result, null, 2));
     // SHA-256 list of the big files stays in the repo (docs/phase6/evidence/SHA256SUMS)
     const sums = path.join(ROOT, 'docs/phase6/evidence/SHA256SUMS');
-    fs.appendFileSync(sums, result.items.filter((i) => i.recording).map((i) => `${i.recording.sha256}  ${path.basename(i.recording.file)}  (${runId})\n`).join(''));
+    fs.appendFileSync(sums, result.items.filter((i) => i.recording).map((i) => `${i.recording.sha256}  ${runId}/${path.basename(i.recording.file)}\n`).join(''));
     await browser?.close().catch(() => {});
     serve.stop();
   }

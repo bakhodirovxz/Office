@@ -139,6 +139,94 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value) 
     }
 }
 
+/// The phone layout (wordcraft/0140): the extension decides per frame whether the window is a phone (`active`) and then draws the top row,
+/// the contextual bottom toolbar and its sheets (`chrome`), which return the commands to run. Only the web app sets it.
+type PhoneActive = fn(&egui::Context) -> bool;
+type PhoneIcon<'a> = &'a dyn Fn(&egui::Painter, egui::Rect, &str, egui::Color32);
+type PhoneChrome = fn(
+    &mut wordcraft_engine::Session,
+    &mut egui::Ui,
+    &str,
+    &[egui::Color32; 8],
+    &dyn Fn(&str) -> String,
+    PhoneIcon,
+) -> Vec<(String, serde_json::Value)>;
+static PHONE: std::sync::OnceLock<(PhoneActive, PhoneChrome)> = std::sync::OnceLock::new();
+static PHONE_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static CHROME_DOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+/// The view before phone mode took the Web Layout: restored when the window is a desktop window again.
+static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
+
+/// The phone layout's labels upstream has no catalog row for, as literals so `cargo xt i18n extract` sees them (docs-office looks every label up by key).
+#[allow(dead_code)]
+fn phone_labels() -> [&'static str; 3] {
+    [tl!("Keyboard"), tl!("More"), tl!("Desktop layout")]
+}
+
+pub fn set_phone(active: PhoneActive, chrome: PhoneChrome) {
+    let _ = PHONE.set((active, chrome));
+}
+
+/// Whether the phone layout was drawn this frame (the selection mini toolbar yields to the touch action bar there).
+pub fn phone_on() -> bool {
+    PHONE_ON.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Draw the phone chrome instead of the title bar and the ribbon; false (nothing drawn) for a desktop window. Entering the phone layout
+/// shows the document in Web Layout (it reflows to the width); leaving restores the view the user had.
+pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+    let Some((active, chrome)) = PHONE.get() else { return false };
+    let on = active(ui.ctx());
+    if on != PHONE_ON.swap(on, std::sync::atomic::Ordering::Relaxed) {
+        use wordcraft_engine::layout::ViewMode;
+        let before = (app.session.view.mode, app.session.view.read_mode);
+        let was = PHONE_VIEW.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let go = if on {
+            *PHONE_VIEW.lock().unwrap_or_else(|e| e.into_inner()) = Some(before);
+            "view.webLayout"
+        } else {
+            match was {
+                Some((_, true)) => "view.readMode",
+                Some((ViewMode::Web, _)) => "view.webLayout",
+                Some((ViewMode::Draft, _)) => "view.draft",
+                _ => "view.printLayout",
+            }
+        };
+        let _ = app.session.run(go, &serde_json::json!({}));
+    }
+    if !on {
+        return false;
+    }
+    // The soft keyboard opening shrinks the window (`interactive-widget=resizes-content`): keep the caret's line in view (PLAN 5.3).
+    let h = ui.ctx().content_rect().height();
+    if f32::from_bits(PHONE_H.swap(h.to_bits(), std::sync::atomic::Ordering::Relaxed)) > h + 2.0 {
+        app.canvas.scroll_to_caret = true;
+    }
+    let t = crate::theme::Tokens::get(ui.ctx());
+    let colors = [t.ribbon, t.border, t.text, t.text_dim, t.accent, t.on_accent, t.pressed, t.menu];
+    let icon = |p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32| crate::icons::paint(p, r, name, c, t.accent);
+    let title = app.title_stem();
+    for (id, params) in chrome(&mut app.session, ui, &title, &colors, &|k| crate::i18n::t(k).to_string(), &icon) {
+        let _ = app.run(&id, params);
+    }
+    // A finger that went down on a bar is the bar's until it lifts: egui hit-tests the page widget under it (the page would put the caret at the end of the
+    // document), so `canvas::mouse` stands aside while this is set.
+    let page = ui.available_rect_before_wrap();
+    let (pressed_on_bar, active) = ui.input(|i| {
+        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos)));
+        (on_bar, i.pointer.any_down() || i.pointer.any_released())
+    });
+    let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
+    CHROME_DOWN.store(pressed_on_bar || (before && active), std::sync::atomic::Ordering::Relaxed);
+    true
+}
+
+/// A finger is down on the phone chrome (see `phone_chrome`).
+pub fn chrome_down() -> bool {
+    CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Draw icon `name` if the extension has one; false lets upstream draw it.
 pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))

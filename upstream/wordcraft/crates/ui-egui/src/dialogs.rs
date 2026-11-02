@@ -1470,9 +1470,17 @@ pub fn show(app: &mut WordApp, ctx: &egui::Context) {
     };
     let id = egui::Id::new(("dialog", title));
     let window = crate::window_close::window(ctx, egui::Window::new(tl!(title)).id(id).collapsible(false).resizable(false));
+    // On a phone (wordcraft/0140) a dialog is at most the screen wide and scrolls inside, never off the edge.
+    let screen = ctx.content_rect().size();
+    let phone = crate::office_overlay::phone_on();
+    let window = if phone { window.max_width(screen.x - 16.0).max_height(screen.y - 24.0) } else { window };
     let shown = place_dialog(ctx, id, window).show(ctx, |ui| {
-        ui.set_min_width(340.0);
-        close = body(app, ui, &mut d);
+        ui.set_min_width(if phone { 340.0_f32.min(screen.x - 40.0) } else { 340.0 });
+        if phone {
+            egui::ScrollArea::both().max_height(screen.y - 96.0).show(ui, |ui| close = body(app, ui, &mut d));
+        } else {
+            close = body(app, ui, &mut d);
+        }
     });
     if let Some(shown) = &shown {
         if let Dialog::SaveChanges { name, message, .. } = &d {

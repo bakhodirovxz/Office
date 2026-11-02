@@ -2271,6 +2271,11 @@ impl WordApp {
             ribbon::show(self, ui);
             chrome::status_bar(self, ui);
             egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |_| {});
+        } else if office_overlay::phone_chrome(self, ui) {
+            // The phone layout (wordcraft/0140) drew its own top row and bottom toolbar: only the page is left.
+            egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| {
+                canvas::show(self, ui);
+            });
         } else {
             chrome::title_bar(self, ui);
             if !self.session.view.focus_mode {
