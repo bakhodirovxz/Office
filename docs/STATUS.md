@@ -1635,3 +1635,11 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   **the "108-page `opened` ≤ 1.5x the 1-page" target is not met** (12.0 s vs 9.9 s); no task > 200 ms in the 10 s after `opened` (5 of 6 runs; one 207 ms under host load).
   Emulator `HRM_Pixel_8`: opens, page 1 shows, a tap places the caret and a key types there (recorded). The rest of the `opened` frame is mostly UI work, not
   layout (status bar walks the whole body every frame via `Document::start_of`/`end_of`); next steps in `docs/phase6/m3.md` section 5.
+
+### Phase 6 WP2 step 3: `start_of`/`end_of` without the full walk (2026-11-02, branch `p6-docwalk`)
+- Carried patch `wordcraft/0144` (`Document::start_of`/`end_of` stop at the first/last paragraph via `edge_para`; identical results, test on tables, nested tables,
+  text box and footnote stories; `wordcraft-doc` 174/174; 0950 regenerated, byte-identical). Docs wasm brotli 9,855,009 B (-762 B).
+- Native: the two removed walks cost 0.6 ms per frame (uz108), not seconds. Desktop 6x CPU: 108-page `opened` 13.1 → 12.6 s median (noise-level), 1 page 6.1 → 6.0 s;
+  **the 1.5x target is still not met (2.1x)**; no task > 200 ms in the 10 s after `opened` (6 of 6, max 134 ms). The `opened` frame's remaining cost is elsewhere
+  (candidates: ribbon style gallery, first word count 5 ms native); details and next measurement in `docs/phase6/m3.md` section 6.
+- Shell Playwright spec run for the first time with the WP2 cover checks: 25 of 28 pass (both round trips); the 3 failures are stale copied sheets/slides/pdf dists without the `?lang=` shim, identical on the p6-m3fix dist.
