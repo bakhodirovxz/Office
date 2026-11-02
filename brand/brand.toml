@@ -84,6 +84,12 @@ icon_fg = "#FFFFFF"
 accent_margin = "#E9A23B"
 ink = "#101828"
 
+# The Android app (packaging/android). application_id is PROVISIONAL (PLAN phase 6 O5): the owner chooses the final reverse-DNS id before the
+# first release build, and it is permanent once published. Until then the id never leaves this PC. The label is [product].name.
+[android]
+application_id = "app.hoshiya.suite"
+version_code = 1
+
 # Upstream community chrome. All off in our builds.
 [chrome]
 community = false
