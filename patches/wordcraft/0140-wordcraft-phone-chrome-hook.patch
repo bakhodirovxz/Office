@@ -5,13 +5,13 @@ Subject: [PATCH] ui-egui: phone layout hook (top row, contextual bottom toolbar)
 
 Phase 6 WP6 (docs/phase6/PLAN.md section 5.1). A window at most 600 CSS px wide whose last pointer was a finger gets a phone layout instead of the title bar, the ribbon, the status bar and the panes: the extension (docs-office, domains/docs/crates/docs-office/src/phone.rs) draws a 48 dp top row and a contextual 48 dp bottom toolbar with sheets and returns the commands to run, which `phone_chrome` runs with `WordApp::run`. Entering it shows the document in Web Layout and leaving restores the view; the selection mini toolbar yields to the touch action bar (0139); a dialog is at most the screen wide and scrolls inside; a shrinking window (soft keyboard) scrolls the caret into view. The hook is set only by the web app (`set_phone`), so the desktop apps and a build without the extension are unchanged: `phone_chrome` returns false at once.
 ---
- apps/wordcraft-web/src/web.rs        | 27 ++++++++++++++++++++++++
+ apps/wordcraft-web/src/web.rs        | 27 +++++++++++++++++++++++++
  crates/ui-egui/src/canvas.rs         |  4 ++++
  crates/ui-egui/src/dialogs.rs        | 12 +++++++++--
  crates/ui-egui/src/lib.rs            |  5 +++++
  crates/ui-egui/src/mini_toolbar.rs   |  4 ++++
- crates/ui-egui/src/office_overlay.rs | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 137 insertions(+), 2 deletions(-)
+ crates/ui-egui/src/office_overlay.rs | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 132 insertions(+), 2 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
 index cf608d0..32dbee3 100644
@@ -129,10 +129,10 @@ index 40e76dd..5c79581 100644
      if app.dialog.is_some() || app.colors.is_some() || app.ui.backstage {
          return false;
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 9e76eb4..42014f9 100644
+index 9e76eb4..f99fd26 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -139,6 +139,93 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value)
+@@ -139,6 +139,88 @@ pub fn print_pdf(s: &mut wordcraft_engine::Session, params: &serde_json::Value)
      }
  }
  
@@ -154,11 +154,6 @@ index 9e76eb4..42014f9 100644
 +static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 +/// The view before phone mode took the Web Layout: restored when the window is a desktop window again.
 +static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
-+
-+/// The phone layout's labels upstream has no catalog row for, as literals so `cargo xt i18n extract` sees them (docs-office looks every label up by key).
-+pub fn phone_labels() -> [&'static str; 3] {
-+    [tl!("Keyboard"), tl!("More"), tl!("Desktop layout")]
-+}
 +
 +pub fn set_phone(active: PhoneActive, chrome: PhoneChrome) {
 +    let _ = PHONE.set((active, chrome));

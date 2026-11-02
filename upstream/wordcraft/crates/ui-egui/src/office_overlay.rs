@@ -158,11 +158,6 @@ static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new
 /// The view before phone mode took the Web Layout: restored when the window is a desktop window again.
 static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
 
-/// The phone layout's labels upstream has no catalog row for, as literals so `cargo xt i18n extract` sees them (docs-office looks every label up by key).
-pub fn phone_labels() -> [&'static str; 3] {
-    [tl!("Keyboard"), tl!("More"), tl!("Desktop layout")]
-}
-
 pub fn set_phone(active: PhoneActive, chrome: PhoneChrome) {
     let _ = PHONE.set((active, chrome));
 }

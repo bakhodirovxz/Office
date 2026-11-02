@@ -732,11 +732,15 @@ fn deck_universe(root: &Path) -> Universe {
 
 /// UI strings that our carried UI patches (`patches/*/0121`) add. Upstream's catalogs do not hold them, so without this list
 /// every extract would mark their rows obsolete.
-const OWN: [(&str, &[&str]); 16] = [
+const OWN: [(&str, &[&str]); 19] = [
     // Phase 4 WP2 (domains/docs/crates/docs-office): the ribbon preset's toggle labels and group name.
     ("Full ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
     ("Simple ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
     ("History", &["wordcraft"]),
+    // Phase 6 WP6 (domains/docs/crates/docs-office phone.rs): labels of the phone layout that upstream has no catalog row for.
+    ("Keyboard", &["wordcraft"]),
+    ("More", &["wordcraft"]),
+    ("Desktop layout", &["wordcraft"]),
     // Phase 4 WP10 (docs-office layer.rs, gridcraft 0143): the message of Version History on a document with no file yet.
     (
         "Save the file first, then open its version history.",
