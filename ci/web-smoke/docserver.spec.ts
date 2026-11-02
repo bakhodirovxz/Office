@@ -1,6 +1,7 @@
 import { test, expect, chromium, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import * as crypto from 'node:crypto';
+import { bolds, documentXml } from './docx-xml';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
@@ -684,3 +685,44 @@ ${out}`);
     });
   }
 }
+
+// ---- Phase 6 WP11: the command palette in the wrapper page (docs/phase6/a11y-palette.md) ----
+test('command palette in the wrapper: Tab reaches the button, F1 opens it, Bold runs on the selection, F6 leaves the editor', async () => {
+  const { ctx, page, problems } = await open();
+  await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);
+  await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+  const [sdir] = sessions();
+  const wrapper = wrapperOf(page);
+  const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+  await expect(editor.locator('canvas')).toBeVisible();
+  // the Commands button is the first stop of the wrapper; it shows while focused
+  const button = wrapper.getByRole('button', { name: 'Commands' });
+  await button.focus();
+  await expect(button).toBeFocused();
+  expect((await button.boundingBox())!.width).toBeGreaterThan(20);
+  await editor.locator('canvas').first().click({ position: { x: 300, y: 300 } });
+  await page.keyboard.press('Control+a');
+  await page.keyboard.press('F1');
+  const dlg = wrapper.getByRole('dialog', { name: 'Command palette' });
+  await expect(dlg).toBeVisible();
+  const box = dlg.getByRole('combobox', { name: 'Search commands' });
+  await expect(box).toBeFocused();
+  await expect(dlg.getByRole('option').first()).toBeVisible({ timeout: 30_000 });
+  await box.fill('bold');
+  const snap = await dlg.ariaSnapshot();
+  expect(snap).toMatch(/- option "Bold/);
+  await box.press('Enter');
+  await expect(dlg).toBeHidden();
+  await page.evaluate(() => (window as any).__editor.requestSave());
+  await expect.poll(() => record(sdir).versions.length, { timeout: 30_000 }).toBe(2);
+  expect(bolds(documentXml(fs.readFileSync(path.join(sdir, 'v2.bin'))))).toBeGreaterThan(bolds(documentXml(fs.readFileSync(DOCX))));
+  // Esc closes and F6 leaves the editor for the wrapper's Commands button
+  await page.keyboard.press('F1');
+  await expect(dlg).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dlg).toBeHidden();
+  await page.keyboard.press('F6');
+  await expect(button).toBeFocused();
+  expect(problems).toEqual([]);
+  await ctx.close();
+});

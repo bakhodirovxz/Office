@@ -40,3 +40,12 @@ input[type=search], select { font: inherit; padding: 6px 8px; border: 1px solid 
 /* over the editor until it has drawn the opened document (shell.js `cover`): never a grey or frozen page */
 #ed-cover { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; background: var(--bg); color: var(--muted); }
 #ed-cover[hidden] { display: none; }
+/* the command palette (palette.js): its button shows only while it has focus, a screen reader and Tab reach it anyway */
+.pal-btn[hidden] { display: none; }
+.pal-btn:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; border: 0; }
+dialog.pal { width: min(32rem, 92vw); }
+dialog.pal h2 { margin-top: 0; }
+.pal-list { list-style: none; padding: 0; margin: 0 0 8px; max-height: 50vh; overflow: auto; }
+.pal-list [role=option] { display: flex; justify-content: space-between; gap: 12px; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.pal-list [aria-selected=true] { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pal-list [aria-disabled=true] { color: var(--muted); cursor: default; }

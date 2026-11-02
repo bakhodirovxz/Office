@@ -24,6 +24,16 @@
 //!   has unsaved changes, so the parent holds the work if the browser then kills the page. It is
 //!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
 //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
+//! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
+//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no parameters,
+//!   `label` in the editor's language, `shortcut` as the platform writes it (empty: none). A host page
+//!   builds an accessible command palette from it (the canvas has no DOM for a screen reader).
+//! - `wordcraft:run` (from the parent): `{ id }`, run that command as a button would. The answer,
+//!   `wordcraft:ran` (to the parent), is `{ id, ok, error }`.
+//! - `wordcraft:focus` (from the parent): put keyboard focus back on the document.
+//! - `wordcraft:focusOut` (to the parent): `{ palette }`, the user pressed F6 (leave the editor, `palette`
+//!   false) or F1 (open the command palette, `palette` true); a canvas swallows Tab, so these are the
+//!   keyboard way out.
 //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
 //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
 //!
@@ -62,6 +72,10 @@ pub struct Bridge {
     /// `wordcraft:open { canDownload }` and `{ canPrint }`: false withholds Save As and the exports, or Print.
     can_download: Rc<Cell<bool>>,
     can_print: Rc<Cell<bool>>,
+    /// The parent asked for the command list since the last frame.
+    list_requested: Rc<Cell<bool>>,
+    /// Command ids the parent asked to run since the last frame.
+    runs: Rc<RefCell<Vec<String>>>,
     /// Files sent as `wordcraft:save` that the parent hasn't answered with `wordcraft:saved` yet.
     pending: Rc<Cell<u32>>,
     /// Answers (`ok`) received since the last frame.
@@ -97,6 +111,8 @@ impl Bridge {
             read_only: Rc::default(),
             can_download: Rc::new(Cell::new(true)),
             can_print: Rc::new(Cell::new(true)),
+            list_requested: Rc::default(),
+            runs: Rc::default(),
             pending: Rc::default(),
             acks: Rc::default(),
             last_autosave: Rc::default(),
@@ -110,6 +126,7 @@ impl Bridge {
     /// unsaved changes appear, and hear documents and save requests from it.
     pub fn connect(&self, services: &mut Services, inbox: Inbox, ctx: egui::Context) {
         self.listen_lifecycle(&ctx);
+        self.listen_keys();
         self.listen(inbox, ctx);
         let bridge = self.clone();
         services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
@@ -173,6 +190,27 @@ impl Bridge {
         // document replaced the one it was set on.
         if self.read_only.get() && app.session.doc.settings.protection.as_deref() != Some("readOnly") {
             app.session.doc.settings.protection = Some("readOnly".into());
+            ctx.request_repaint();
+        }
+        if self.list_requested.replace(false) {
+            let list = js_sys::Array::new();
+            for spec in app.session.registry.all().iter().filter(|s| s.params == "{}") {
+                if let Some(item) = message(&[
+                    ("id", spec.id.into()),
+                    ("label", wordcraft_ui_egui::i18n::t(spec.label).into()),
+                    ("enabled", wordcraft_ui_egui::widgets::enabled(app, spec.id).into()),
+                    ("shortcut", wordcraft_ui_egui::widgets::shortcut_text(app, spec.id).as_str().into()),
+                ]) {
+                    list.push(&item);
+                }
+            }
+            self.send(&[("type", "wordcraft:commands".into()), ("commands", list.into())]);
+        }
+        for id in self.runs.take() {
+            let result = app.run(&id, json!({}));
+            let error = result.as_ref().err().map(String::as_str).unwrap_or("");
+            self.send(&[("type", "wordcraft:ran".into()), ("id", id.as_str().into()), ("ok", result.is_ok().into()), ("error", error.into())]);
+            app.canvas.want_focus = true;
             ctx.request_repaint();
         }
         for ok in self.acks.take() {
@@ -265,6 +303,20 @@ impl Bridge {
         on_lost.forget();
     }
 
+    /// F6 leaves the editor and F1 opens the host's command palette (neither key is a command here).
+    fn listen_keys(&self) {
+        let bridge = self.clone();
+        let on_key = Closure::<dyn FnMut(web_sys::KeyboardEvent)>::new(move |event: web_sys::KeyboardEvent| {
+            let key = event.key();
+            if (key == "F6" || key == "F1") && !(event.ctrl_key() || event.alt_key() || event.shift_key() || event.meta_key()) {
+                event.prevent_default();
+                bridge.send(&[("type", "wordcraft:focusOut".into()), ("palette", (key == "F1").into())]);
+            }
+        });
+        let _ = self.window.add_event_listener_with_callback_and_bool("keydown", on_key.as_ref().unchecked_ref(), true);
+        on_key.forget();
+    }
+
     fn post_file(&self, kind: &str, path: &str, bytes: &[u8]) -> Result<(), String> {
         let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
         let buffer = js_sys::Uint8Array::from(bytes).buffer();
@@ -293,6 +345,18 @@ impl Bridge {
                     inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
                 }
                 Some("wordcraft:requestSave") => bridge.save_requested.set(true),
+                Some("wordcraft:commands") => bridge.list_requested.set(true),
+                Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
+                Some("wordcraft:focus") => {
+                    if let Some(canvas) = bridge
+                        .window
+                        .document()
+                        .and_then(|d| d.get_element_by_id("wordcraft_canvas"))
+                        .and_then(|c| c.dyn_into::<web_sys::HtmlElement>().ok())
+                    {
+                        let _ = canvas.focus();
+                    }
+                }
                 Some("wordcraft:saved") => bridge.acks.borrow_mut().push(bool_field(&data, "ok")),
                 _ => return,
             }

@@ -10,6 +10,7 @@
   const READY_MS = 60000;                 // an editor that has not said ready by then cannot take a file
   const EXT = { docs: 'docx doc odt rtf txt', sheets: 'xlsx xlsm xls csv ods', slides: 'pptx ppt odp', pdf: 'pdf' };
   const S = { cfg: null, i18n: {}, lang: 'en', theme: 'system', frames: {}, current: null, recent: [], db: null, templates: [], mode: 'web' };
+  const CMD_APPS = ['docs'];              // editors that answer <prefix>:commands (the palette, PLAN phase 6 WP11); others join with their bridge patch
   const NAMES_CAP = 50;                   // names mode: names kept in the tab
 
   const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (_) { return null; } };
@@ -85,6 +86,13 @@
   }
 
   // ---- editors ----
+  // The command palette (palette.js): a canvas editor has no DOM, so its commands are offered here; F1 in the editor or the shell opens it, F6 in the editor leaves it.
+  const cur = () => S.current && S.frames[S.current.id];
+  const post1 = (type, extra) => { const f = cur(); if (f) f.el.contentWindow.postMessage({ type: f.app.prefix + ':' + type, ...extra }, location.origin); };
+  const pal = Palette.make({
+    t, say: (m) => { $('ed-status').textContent = m; }, post: post1,
+    back: () => { const f = cur(); if (f) { f.el.contentWindow.focus(); post1('focus'); } },
+  });
   // Editors that post <prefix>:opened once the opened document is drawn: until then a cover names the file (phase 6 M3, a large
   // document on a phone takes seconds; the editor's frame is blank or frozen meanwhile). The others clear the status on ready.
   const SAYS_OPENED = ['docs', 'slides'];
@@ -123,6 +131,7 @@
     S.current = a; $('ed-title').textContent = file ? file.name : appName(a);
     $('ed-status').textContent = f.opening ? t('ed.opening', { name: f.opening }) : f.ready ? '' : t('ed.loading', { app: appName(a) });
     cover();
+    pal.button.hidden = !CMD_APPS.includes(a.id);
     $('home').hidden = true; $('editor').hidden = false; document.title = appName(a);
     viewport(a.id === 'docs'); bars();
     $('back').focus(); // the focused card is hidden now: keep the keyboard user's place, one Tab from the editor
@@ -143,6 +152,8 @@
       case 'ready': f.ready = true; if (!f.opening) $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
       case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } break;
       case 'dirty': f.dirty = !!d.dirty; break;
+      case 'commands': case 'ran': pal.onMessage(d.type.slice(f.app.prefix.length + 1), d); break;
+      case 'focusOut': if (d.palette) pal.open(); else $('back').focus(); break;
       case 'phone': f.phone = !!d.on; bars(); break;
       case 'back': home(); break;
       case 'failed': f.opening = ''; cover(); fail(t('err.failed', { error: String(d.error) })); break;
@@ -159,6 +170,7 @@
       }
     }
   });
+  addEventListener('keydown', (e) => { if (e.key === 'F1' && !e.ctrlKey && !e.altKey && !e.shiftKey && !pal.button.hidden && !$('editor').hidden) { e.preventDefault(); pal.open(); } });
   addEventListener('beforeunload', (e) => { if (Object.values(S.frames).some((f) => f.dirty)) { e.preventDefault(); e.returnValue = ''; } });
 
   async function openPicked(file, only) {
@@ -288,6 +300,7 @@
     $('file').onchange = (e) => e.target.files[0] && openPicked(e.target.files[0], only);
     $('open-file').onclick = () => pick('');
     $('back').onclick = home;
+    $('back').after(pal.button);
     render();
   }
   main().catch((e) => fail(String(e.message || e)));

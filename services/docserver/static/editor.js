@@ -90,6 +90,8 @@
         if (d.dirty && !S.dirtySent) { S.dirtySent = true; api('/dirty', { method: 'POST' }).catch(function () { S.dirtySent = false; }); }
         break;
       case 'failed': fail(-1, String(d.error)); break;
+      case 'commands': case 'ran': if (S.pal) S.pal.onMessage(d.type.slice(S.prefix.length + 1), d); break;
+      case 'focusOut': if (S.pal) { if (d.palette) S.pal.open(); else S.pal.button.focus(); } break;   // F1 opens the palette, F6 leaves the canvas
       case 'save':
         // every save is answered with exactly one `saved`, in order (the editor keeps the document dirty until then)
         var ok = false;
@@ -228,17 +230,30 @@
     h1.focus();
     hfail(hload);
   }
-  function addHistoryButton() {
+  // The bar above the editor holds the command palette button (Docs only, shell/palette.js) and the History button.
+  function addBar(docs) {
+    var bar = document.createElement('div');
+    bar.style.cssText = 'flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:2px 8px;background:var(--bg);border-bottom:1px solid var(--line)';
+    if (docs && window.Palette) {
+      S.pal = Palette.make({
+        t: t, say: function (m) { status.textContent = m; status.style.display = 'block'; },
+        post: function (type, extra) { toEditor(type, extra); },
+        back: function () { S.frame.contentWindow.focus(); toEditor('focus', {}); }
+      });
+      S.pal.button.style.cssText = 'padding:2px 10px;font-size:.85rem';
+      bar.appendChild(S.pal.button);
+    }
+    addHistoryButton(bar);
+    if (bar.children.length) document.body.insertBefore(bar, S.frame);
+  }
+  function addHistoryButton(bar) {
     if (!window.HistUI) return;   // the shell files are not served: no panel
     var b = H.opener = document.createElement('button');
     b.type = 'button'; b.className = 'btn ghost'; b.textContent = t('hist.nav');
     b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'hist-panel');
     b.style.cssText = 'padding:2px 10px;font-size:.85rem';
     b.onclick = hopen;
-    var bar = document.createElement('div');
-    bar.style.cssText = 'flex:0 0 auto;display:flex;justify-content:flex-end;padding:2px 8px;background:var(--bg);border-bottom:1px solid var(--line)';
     bar.appendChild(b);
-    document.body.insertBefore(bar, S.frame);
   }
 
   async function closeSession() {
@@ -289,7 +304,7 @@
     S.frame.allow = 'clipboard-read; clipboard-write; fullscreen';
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';
     document.body.appendChild(S.frame);
-    addHistoryButton();
+    addBar(app.id === 'docs');
   }
 
   window.addEventListener('message', function (ev) {

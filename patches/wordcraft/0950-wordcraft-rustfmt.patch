@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
-Date: Mon, 2 Nov 2026 12:00:00 +0500
+Date: Tue, 3 Nov 2026 12:00:00 +0500
 Subject: [PATCH] wordcraft: rustfmt the files the patch queue touches
  (mechanical formatting, regenerate on every sync)
 
@@ -8,13 +8,13 @@ rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --
 Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
 ---
  apps/wordcraft-web/src/web.rs        |  6 +++-
- apps/wordcraft-web/src/web/host.rs   |  6 ++--
+ apps/wordcraft-web/src/web/host.rs   | 13 +++++--
  crates/layout/src/lib.rs             |  8 ++++-
  crates/ui-egui/src/backstage.rs      | 53 ++++++++++++----------------
  crates/ui-egui/src/canvas.rs         |  4 ++-
  crates/ui-egui/src/office_overlay.rs |  4 ++-
  crates/ui-egui/src/touch_select.rs   | 10 ++++--
- 7 files changed, 53 insertions(+), 38 deletions(-)
+ 7 files changed, 59 insertions(+), 39 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
 index 2be8e47..265501d 100644
@@ -34,10 +34,10 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 09bc860..9e1ffb0 100644
+index b79da7f..08dca30 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -122,8 +122,10 @@ impl Bridge {
+@@ -139,8 +139,10 @@ impl Bridge {
          }));
          let bridge = self.clone();
          services.blocked = Some(Box::new(move |id: &str| {
@@ -50,6 +50,20 @@ index 09bc860..9e1ffb0 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
+@@ -346,7 +348,12 @@ impl Bridge {
+                 Some("wordcraft:commands") => bridge.list_requested.set(true),
+                 Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
+                 Some("wordcraft:focus") => {
+-                    if let Some(canvas) = bridge.window.document().and_then(|d| d.get_element_by_id("wordcraft_canvas")).and_then(|c| c.dyn_into::<web_sys::HtmlElement>().ok()) {
++                    if let Some(canvas) = bridge
++                        .window
++                        .document()
++                        .and_then(|d| d.get_element_by_id("wordcraft_canvas"))
++                        .and_then(|c| c.dyn_into::<web_sys::HtmlElement>().ok())
++                    {
+                         let _ = canvas.focus();
+                     }
+                 }
 diff --git a/crates/layout/src/lib.rs b/crates/layout/src/lib.rs
 index 1a880a3..7df43b1 100644
 --- a/crates/layout/src/lib.rs
