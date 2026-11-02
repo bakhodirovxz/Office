@@ -29,10 +29,10 @@ def p(text, style=None):
 LOREM = ('Salom dunyo. Bu hujjat telefon ekranida oʻqish va tahrirlash qulayligini tekshirish uchun yozilgan sinov matni. '
          'Документ для проверки телефонного макета: текст переносится по ширине экрана. '
          'The quick brown fox jumps over the lazy dog.')
-cell = lambda t: f'<w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/></w:tcPr>{p(t)}</w:tc>'
-table = '<w:tbl><w:tblPr><w:tblW w:w="7200" w:type="dxa"/><w:tblBorders>' + ''.join(
+cell = lambda t: f'<w:tc><w:tcPr><w:tcW w:w="1200" w:type="dxa"/></w:tcPr>{p(t)}</w:tc>'
+table = '<w:tbl><w:tblPr><w:tblW w:w="3600" w:type="dxa"/><w:tblBorders>' + ''.join(
     f'<w:{e} w:val="single" w:sz="4" w:space="0" w:color="808080"/>' for e in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV')
-) + '</w:tblBorders></w:tblPr><w:tblGrid>' + '<w:gridCol w:w="2400"/>' * 3 + '</w:tblGrid>' + ''.join(
+) + '</w:tblBorders></w:tblPr><w:tblGrid>' + '<w:gridCol w:w="1200"/>' * 3 + '</w:tblGrid>' + ''.join(
     '<w:tr>' + ''.join(cell(f'{r}{c}') for c in 'ABC') + '</w:tr>' for r in '123') + '</w:tbl>'
 cx, cy = 2160000, 1260000
 picture = (f'<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" cy="{cy}"/><wp:docPr id="1" name="Picture 1"/>'

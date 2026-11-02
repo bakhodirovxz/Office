@@ -317,7 +317,7 @@ pub(super) const SIZE_LABEL: &str = "$size";
 type Rows = Vec<Vec<Item>>;
 
 /// The rows of a sheet. A row with one item is a list row (icon and label side by side); more share the width.
-pub fn rows(sheet: Sheet, s: &Session, tab: Tab) -> Rows {
+pub fn rows(sheet: Sheet, tab: Tab) -> Rows {
     let one = |i: Item| vec![i];
     match sheet {
         Sheet::Menu => {
@@ -528,7 +528,11 @@ impl Look<'_> {
     fn stacked(&self, ui: &Ui, r: Rect, icon: &str, label: &str, tint: Color32) {
         let p = ui.painter();
         self.ic(p, Rect::from_center_size(pos2(r.center().x, r.min.y + 17.0 * self.dp), vec2(22.0, 22.0) * self.dp), icon, tint);
-        let g = one_line(p, label, FontId::proportional(10.5 * self.dp), tint, r.width() - 4.0 * self.dp);
+        // a long translated label is set smaller (9 dp at least) before it is cut with an ellipsis
+        let room = r.width() - 4.0 * self.dp;
+        let natural = p.layout_no_wrap(label.to_string(), FontId::proportional(10.5 * self.dp), tint).size().x;
+        let size = (10.5 * self.dp * (room / natural).min(1.0)).max(9.0 * self.dp);
+        let g = one_line(p, label, FontId::proportional(size), tint, room);
         p.galley(pos2(r.center().x - g.size().x / 2.0, r.max.y - 5.0 * self.dp - g.size().y), g, tint);
     }
 
@@ -577,6 +581,9 @@ fn enabled(s: &Session, cmd: &str) -> bool {
     s.registry.get(cmd).is_some_and(|c| (c.enabled)(s).is_none())
 }
 
+/// Rows whose long names ("Decrease Font Size") do not fit a quarter of 360 dp: their icon alone, bigger.
+const ICON_ONLY: [&str; 4] = ["Decrease Font Size", "Increase Font Size", "Decrease Indent", "Increase Indent"];
+
 /// The sheet header: the grab handle above, the title left and the close button right.
 pub const HEAD: f32 = 52.0;
 /// The round Edit button's size and its distance from the window's edges.
@@ -600,8 +607,8 @@ fn sheet_title(sh: Sheet) -> &'static str {
 }
 
 /// The rows of `sheet` as drawn: the Menu also leads with "Done editing" while editing.
-fn sheet_rows(sh: Sheet, s: &Session, tab: Tab, editing: bool) -> Rows {
-    let mut r = rows(sh, s, tab);
+fn sheet_rows(sh: Sheet, tab: Tab, editing: bool) -> Rows {
+    let mut r = rows(sh, tab);
     if sh == Sheet::Menu && editing {
         r.insert(0, vec![item("Done editing", "done", DONE)]);
     }
@@ -609,8 +616,8 @@ fn sheet_rows(sh: Sheet, s: &Session, tab: Tab, editing: bool) -> Rows {
 }
 
 /// The Format sheet is as tall as its taller tab, so the sheet does not jump when the tab changes.
-fn format_rows(s: &Session) -> usize {
-    rows(Sheet::Format, s, Tab::Text).len().max(rows(Sheet::Format, s, Tab::Paragraph).len())
+fn format_rows() -> usize {
+    rows(Sheet::Format, Tab::Text).len().max(rows(Sheet::Format, Tab::Paragraph).len())
 }
 
 /// The sheet's height: header, the tabs of the Format sheet, one row each and a little air (the caller caps it).
@@ -713,9 +720,9 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
     let mut done = false;
     if let Some(sh) = open {
         let tb = tab(&ctx);
-        let rws = sheet_rows(sh, s, tb, editing);
+        let rws = sheet_rows(sh, tb, editing);
         let max_h = ctx.content_rect().height() * SHEET_SHARE;
-        let r = egui::Panel::bottom("phone_sheet").exact_size(sheet_height(sh, if sh == Sheet::Format { format_rows(s) } else { rws.len() }, dp).min(max_h)).frame(frame(c[color::SHEET])).show(ui, |ui| {
+        let r = egui::Panel::bottom("phone_sheet").exact_size(sheet_height(sh, if sh == Sheet::Format { format_rows() } else { rws.len() }, dp).min(max_h)).frame(frame(c[color::SHEET])).show(ui, |ui| {
             ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
             let (head, _) = ui.allocate_exact_size(vec2(ui.available_width(), HEAD * dp), Sense::hover());
             let p = ui.painter();
@@ -770,6 +777,8 @@ pub fn chrome(s: &mut Session, ui: &mut Ui, title: &str, c: &[Color32; color::CO
                             let col = Color32::from_rgb((it.rgb >> 16) as u8, (it.rgb >> 8) as u8, it.rgb as u8);
                             ui.painter().circle_filled(r.center(), 13.0 * dp, col);
                             ui.painter().circle_stroke(r.center(), 13.0 * dp, Stroke::new(1.0, c[color::BORDER]));
+                        } else if ICON_ONLY.contains(&it.label) {
+                            look.ic(ui.painter(), Rect::from_center_size(r.center(), vec2(26.0, 26.0) * dp), it.icon, tint);
                         } else if it.preview != 0 {
                             look.preview(ui, r, it.preview, &look.name(it.label), tint);
                         } else if cells.len() == 1 {

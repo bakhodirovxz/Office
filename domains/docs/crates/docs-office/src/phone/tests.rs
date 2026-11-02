@@ -56,7 +56,7 @@ fn the_toolbar_has_at_most_five_slots_of_48_dp_at_320() {
 
 const SHEETS: [Sheet; 8] = [Sheet::Menu, Sheet::Format, Sheet::List, Sheet::Insert, Sheet::Table, Sheet::Delete, Sheet::Wrap, Sheet::Picture];
 
-fn every_control(s: &Session) -> Vec<(String, String, String)> {
+fn every_control() -> Vec<(String, String, String)> {
     let mut v: Vec<(String, String, String)> = Vec::new();
     for set in [Set::Caret, Set::Selection, Set::Table, Set::Picture] {
         for sl in slots(set) {
@@ -65,7 +65,7 @@ fn every_control(s: &Session) -> Vec<(String, String, String)> {
     }
     for sh in SHEETS {
         for tab in [Tab::Text, Tab::Paragraph] {
-            for it in rows(sh, s, tab).into_iter().flatten() {
+            for it in rows(sh, tab).into_iter().flatten() {
                 v.push((it.label.into(), it.cmd.into(), it.params.into()));
             }
         }
@@ -81,7 +81,7 @@ fn every_control(s: &Session) -> Vec<(String, String, String)> {
 #[test]
 fn every_control_runs_a_registered_command_with_valid_parameters() {
     let s = session();
-    for (label, cmd, params) in every_control(&s) {
+    for (label, cmd, params) in every_control() {
         assert!(serde_json::from_str::<serde_json::Value>(&params).is_ok(), "{label}: bad parameters {params}");
         if cmd.is_empty() || cmd == DESKTOP || cmd.starts_with("ui.") {
             continue;
@@ -98,7 +98,7 @@ fn formatting_from_the_sheet_changes_the_selection() {
         s.run(cmd, &serde_json::from_str(params).unwrap()).unwrap();
         assert_eq!(state(&mut s)[key], json!(true), "{cmd}");
     }
-    assert!(rows(Sheet::Format, &s, Tab::Text).iter().flatten().any(|i| i.flag == "bold" && i.keep), "the sheet shows bold pressed and stays open");
+    assert!(rows(Sheet::Format, Tab::Text).iter().flatten().any(|i| i.flag == "bold" && i.keep), "the sheet shows bold pressed and stays open");
 }
 
 /// Every label has a row in the catalog with Uzbek (Latin, Cyrillic) and Russian, so the phone UI is never English-only.
@@ -115,8 +115,7 @@ fn every_label_is_in_the_catalog_in_all_three_languages() {
             }
         }
     }
-    let s = session();
-    let mut missing: Vec<String> = every_control(&s).into_iter().map(|c| c.0).filter(|l| l != SIZE_LABEL && l.chars().any(char::is_alphabetic) && !have.contains(l)).collect();
+    let mut missing: Vec<String> = every_control().into_iter().map(|c| c.0).filter(|l| l != SIZE_LABEL && l.chars().any(char::is_alphabetic) && !have.contains(l)).collect();
     missing.sort();
     missing.dedup();
     assert!(missing.is_empty(), "no catalog row (en, uz-Latn, uz-Cyrl, ru, apps wordcraft): {missing:?}");
@@ -355,12 +354,12 @@ fn the_format_sheet_has_two_tabs() {
     let mut time = 1.0;
     let _ = frame(&mut s, &ctx, 360.0, Some(Sheet::Format), "x.docx");
     assert_eq!(tab(&ctx), Tab::Text);
-    let label = |t| rows(Sheet::Format, &s, t).iter().flatten().map(|i| i.label).collect::<Vec<_>>();
+    let label = |t| rows(Sheet::Format, t).iter().flatten().map(|i| i.label).collect::<Vec<_>>();
     assert!(label(Tab::Text).contains(&"Bold") && !label(Tab::Text).contains(&"Normal"));
     let para = label(Tab::Paragraph);
     assert!(para.contains(&"Heading 1") && para.contains(&"Bullets") && para.contains(&"Center") && !para.contains(&"Bold"));
     // the tab row starts after the header; the second tab is the right half
-    let top = 640.0 - ROW - sheet_height(Sheet::Format, format_rows(&s), 1.0).min(640.0 * SHEET_SHARE);
+    let top = 640.0 - ROW - sheet_height(Sheet::Format, format_rows(), 1.0).min(640.0 * SHEET_SHARE);
     let _ = tap_at(&mut s, &ctx, pos2(270.0, top + HEAD + 24.0), &mut time);
     assert_eq!(tab(&ctx), Tab::Paragraph);
     let _ = tap_at(&mut s, &ctx, pos2(90.0, top + HEAD + 24.0), &mut time);
@@ -373,7 +372,7 @@ fn the_sheet_close_button_closes_it() {
     let (mut s, ctx) = (session(), egui::Context::default());
     let mut time = 1.0;
     let _ = frame(&mut s, &ctx, 360.0, Some(Sheet::Insert), "x.docx");
-    let top = 640.0 - ROW - sheet_height(Sheet::Insert, rows(Sheet::Insert, &s, Tab::Text).len(), 1.0);
+    let top = 640.0 - ROW - sheet_height(Sheet::Insert, rows(Sheet::Insert, Tab::Text).len(), 1.0);
     let _ = tap_at(&mut s, &ctx, pos2(360.0 - 24.0, top + 4.0 + 24.0), &mut time);
     assert_eq!(open_sheet(&ctx), None);
 }
