@@ -437,7 +437,7 @@ npm_sizes() {
 shell_sizes() {
   local B=web/budgets.toml f raw=0 br=0 max
   max=$(toml_get "$B" shell br_max)
-  for f in web/shell/index.html web/shell/shell.js web/shell/shell.css web/shell/history.js web/shell/history-ui.js web/shell/history.css web/shell/i18n.json web/shell/templates.json assets/fonts/fallback/NotoSans-Regular-uz.ttf; do
+  for f in web/shell/index.html web/shell/shell.js web/shell/palette.js web/shell/shell.css web/shell/history.js web/shell/history-ui.js web/shell/history.css web/shell/i18n.json web/shell/templates.json assets/fonts/fallback/NotoSans-Regular-uz.ttf; do
     raw=$((raw+$(bytes "$f"))); br=$((br+$(br_bytes "$f")))
   done
   printf '%-7s %-9s %12s %12s %12s %12s %12s

@@ -1,0 +1,135 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 3 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: the host bridge lists and runs commands and
+ reports a focus-out key
+
+Phase 6 WP11 (docs/phase6/a11y-palette.md). A canvas editor has no DOM, so a screen reader sees none of its commands. In host mode the editor now answers `wordcraft:commands` with the commands that need no required parameter (id, label in the editor's language, enabled, shortcut), runs `wordcraft:run { id }` through `WordApp::run` (the path of a ribbon button) and answers `wordcraft:ran { id, ok, error }`, and focuses the canvas on `wordcraft:focus`. A capture-phase keydown listener posts `wordcraft:focusOut { palette }` for F6 (leave the editor: a canvas swallows Tab, WCAG 2.1.2) and F1 (open the host's command palette); neither key is bound in the editor. The host page (the shell, the docserver wrapper) builds the accessible palette from the list. Web-sys gains the `KeyboardEvent` feature (already enabled by eframe in the build). Desktop apps and the page without `?host=parent` are unchanged.
+---
+ apps/wordcraft-web/Cargo.toml      |  2 +-
+ apps/wordcraft-web/src/web/host.rs | 60 ++++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 1 deletion(-)
+
+diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
+index c857152..bddcf17 100644
+--- a/apps/wordcraft-web/Cargo.toml
++++ b/apps/wordcraft-web/Cargo.toml
+@@ -33,4 +33,4 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "UrlSearchParams"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index bddeb90..fa91a59 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -24,6 +24,16 @@
+ //!   has unsaved changes, so the parent holds the work if the browser then kills the page. It is
+ //!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
+ //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
++//! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
++//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no required parameter,
++//!   `label` in the editor's language, `shortcut` as the platform writes it (empty: none). A host page
++//!   builds an accessible command palette from it (the canvas has no DOM for a screen reader).
++//! - `wordcraft:run` (from the parent): `{ id }`, run that command as a button would. The answer,
++//!   `wordcraft:ran` (to the parent), is `{ id, ok, error }`.
++//! - `wordcraft:focus` (from the parent): put keyboard focus back on the document.
++//! - `wordcraft:focusOut` (to the parent): `{ palette }`, the user pressed F6 (leave the editor, `palette`
++//!   false) or F1 (open the command palette, `palette` true); a canvas swallows Tab, so these are the
++//!   keyboard way out.
+ //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
+ //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
+ //!
+@@ -62,6 +72,10 @@ pub struct Bridge {
+     /// `wordcraft:open { canDownload }` and `{ canPrint }`: false withholds Save As and the exports, or Print.
+     can_download: Rc<Cell<bool>>,
+     can_print: Rc<Cell<bool>>,
++    /// The parent asked for the command list since the last frame.
++    list_requested: Rc<Cell<bool>>,
++    /// Command ids the parent asked to run since the last frame.
++    runs: Rc<RefCell<Vec<String>>>,
+     /// Files sent as `wordcraft:save` that the parent hasn't answered with `wordcraft:saved` yet.
+     pending: Rc<Cell<u32>>,
+     /// Answers (`ok`) received since the last frame.
+@@ -97,6 +111,8 @@ impl Bridge {
+             read_only: Rc::default(),
+             can_download: Rc::new(Cell::new(true)),
+             can_print: Rc::new(Cell::new(true)),
++            list_requested: Rc::default(),
++            runs: Rc::default(),
+             pending: Rc::default(),
+             acks: Rc::default(),
+             last_autosave: Rc::default(),
+@@ -110,6 +126,7 @@ impl Bridge {
+     /// unsaved changes appear, and hear documents and save requests from it.
+     pub fn connect(&self, services: &mut Services, inbox: Inbox, ctx: egui::Context) {
+         self.listen_lifecycle(&ctx);
++        self.listen_keys();
+         self.listen(inbox, ctx);
+         let bridge = self.clone();
+         services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
+@@ -163,6 +180,28 @@ impl Bridge {
+             app.session.doc.settings.protection = Some("readOnly".into());
+             ctx.request_repaint();
+         }
++        if self.list_requested.replace(false) {
++            let list = js_sys::Array::new();
++            // A required parameter is written `"key":` in `params`, an optional one `"key"?:`: only the second kind runs from a bare id.
++            for spec in app.session.registry.all().iter().filter(|s| !s.params.contains("\":")) {
++                if let Some(item) = message(&[
++                    ("id", spec.id.into()),
++                    ("label", wordcraft_ui_egui::i18n::t(spec.label).into()),
++                    ("enabled", wordcraft_ui_egui::widgets::enabled(app, spec.id).into()),
++                    ("shortcut", wordcraft_ui_egui::widgets::shortcut_text(app, spec.id).as_str().into()),
++                ]) {
++                    list.push(&item);
++                }
++            }
++            self.send(&[("type", "wordcraft:commands".into()), ("commands", list.into())]);
++        }
++        for id in self.runs.take() {
++            let result = app.run(&id, json!({}));
++            let error = result.as_ref().err().map(String::as_str).unwrap_or("");
++            self.send(&[("type", "wordcraft:ran".into()), ("id", id.as_str().into()), ("ok", result.is_ok().into()), ("error", error.into())]);
++            app.canvas.want_focus = true;
++            ctx.request_repaint();
++        }
+         for ok in self.acks.take() {
+             if self.pending.get() == 0 {
+                 break;
+@@ -253,6 +292,20 @@ impl Bridge {
+         on_lost.forget();
+     }
+ 
++    /// F6 leaves the editor and F1 opens the host's command palette (neither key is a command here).
++    fn listen_keys(&self) {
++        let bridge = self.clone();
++        let on_key = Closure::<dyn FnMut(web_sys::KeyboardEvent)>::new(move |event: web_sys::KeyboardEvent| {
++            let key = event.key();
++            if (key == "F6" || key == "F1") && !(event.ctrl_key() || event.alt_key() || event.shift_key() || event.meta_key()) {
++                event.prevent_default();
++                bridge.send(&[("type", "wordcraft:focusOut".into()), ("palette", (key == "F1").into())]);
++            }
++        });
++        let _ = self.window.add_event_listener_with_callback_and_bool("keydown", on_key.as_ref().unchecked_ref(), true);
++        on_key.forget();
++    }
++
+     fn post_file(&self, kind: &str, path: &str, bytes: &[u8]) -> Result<(), String> {
+         let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
+         let buffer = js_sys::Uint8Array::from(bytes).buffer();
+@@ -281,6 +334,13 @@ impl Bridge {
+                     inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
+                 }
+                 Some("wordcraft:requestSave") => bridge.save_requested.set(true),
++                Some("wordcraft:commands") => bridge.list_requested.set(true),
++                Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
++                Some("wordcraft:focus") => {
++                    if let Some(canvas) = bridge.window.document().and_then(|d| d.get_element_by_id("wordcraft_canvas")).and_then(|c| c.dyn_into::<web_sys::HtmlElement>().ok()) {
++                        let _ = canvas.focus();
++                    }
++                }
+                 Some("wordcraft:saved") => bridge.acks.borrow_mut().push(bool_field(&data, "ok")),
+                 _ => return,
+             }
