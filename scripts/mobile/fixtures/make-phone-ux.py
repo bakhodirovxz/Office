@@ -33,13 +33,13 @@ cell = lambda t: f'<w:tc><w:tcPr><w:tcW w:w="1200" w:type="dxa"/></w:tcPr>{p(t)}
 table = '<w:tbl><w:tblPr><w:tblW w:w="3600" w:type="dxa"/><w:tblBorders>' + ''.join(
     f'<w:{e} w:val="single" w:sz="4" w:space="0" w:color="808080"/>' for e in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV')
 ) + '</w:tblBorders></w:tblPr><w:tblGrid>' + '<w:gridCol w:w="1200"/>' * 3 + '</w:tblGrid>' + ''.join(
-    '<w:tr>' + ''.join(cell(f'{r}{c}') for c in 'ABC') + '</w:tr>' for r in '123') + '</w:tbl>'
+    '<w:tr><w:trPr><w:trHeight w:val="600" w:hRule="atLeast"/></w:trPr>' + ''.join(cell(f'{r}{c}') for c in 'ABC') + '</w:tr>' for r in '123') + '</w:tbl>'
 cx, cy = 2160000, 1260000
 picture = (f'<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" cy="{cy}"/><wp:docPr id="1" name="Picture 1"/>'
            '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="p.png"/><pic:cNvPicPr/></pic:nvPicPr>'
            f'<pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>')
-body = ''.join([p('Phone reading test', 'Heading1'), p(LOREM), p('A second heading', 'Heading2'), p(LOREM), table, p(''), picture, p(LOREM), p(LOREM)])
+body = ''.join([p('Phone reading test', 'Heading1'), p(LOREM), p('A second heading', 'Heading2'), p(LOREM), table, p(''), p(''), p(''), picture, p(LOREM), p(LOREM)])
 document = f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document {NS}><w:body>{body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>'
 styles = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
           '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Noto Sans" w:hAnsi="Noto Sans"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults>'

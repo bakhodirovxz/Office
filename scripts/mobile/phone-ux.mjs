@@ -39,6 +39,7 @@ try {
   await page.waitForTimeout(3000);
   if (desktop) { await page.screenshot({ path: path.join(out, `desktop-${theme}-${lang}.png`) }); console.log('desktop done'); await ctx.close(); process.exitCode = 0; throw new Error('desktop-only'); }
   const cdp = await ctx.newCDPSession(page);
+  let steps = 0;
   const box = () => page.evaluate(() => { const r = document.querySelector('#frames iframe:not([hidden])').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
   // a finger: touch down, 60 ms, touch up (Playwright's own tap sends both at once and the page misses it)
   const tap = async (x, y, wait = 1000) => {
@@ -48,9 +49,18 @@ try {
     await page.waitForTimeout(60);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await page.waitForTimeout(wait);
+    if (args.includes('--trace')) await page.screenshot({ path: path.join(out, `trace-${tag}-${String(++steps).padStart(2, '0')}.png`) });
   };
   const shot = async (name) => { if (only.length && !only.includes(name)) return; await page.waitForTimeout(500); await page.screenshot({ path: path.join(out, `${tag}-${name}.png`) }); };
-  const wheel = async (dy) => { const b = await box(); await page.mouse.move(b.x + w / 2, b.y + b.h / 2); await page.mouse.wheel(0, dy); await page.waitForTimeout(2500); };   // the software-GL frames are slow: let the scroll settle before a tap
+  const swipe = async (x, y0, y1) => {
+    const bb = await box();
+    for (const [type, y] of [['touchStart', y0], ['touchMove', y0 - (y0 - y1) * 0.25], ['touchMove', y0 - (y0 - y1) * 0.5], ['touchMove', y0 - (y0 - y1) * 0.75], ['touchMove', y1], ['touchEnd', y1]]) {
+      await cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: bb.x + x, y: bb.y + y, id: 1 }] });
+      await page.waitForTimeout(80);
+    }
+    await page.waitForTimeout(2500);
+  };
+  const wheel = async (dy) => { if (!dy) return; const b = await box(); await page.mouse.move(b.x + w / 2, b.y + b.h / 2); await page.mouse.wheel(0, dy); await page.waitForTimeout(2500); };   // the software-GL frames are slow: let the scroll settle before a tap
 
   await tap(w / 2, h / 2);          // the first touch is the trigger (a tap on the page in reading does nothing else)
   const b = await box();
@@ -59,8 +69,8 @@ try {
   const bar = H - 24;
   const sheetTop = (rows, tabs) => H - 48 - Math.min((52 + (tabs ? 48 : 0) + rows * 48 + 8), H * 0.6);
   await shot('reading');
-  await tap(w - 16 - 28, H - 16 - 28);   // the pencil
-  await tap(Number(opt('--caret-x', 144)), Number(opt('--caret-y', 250)));               // the caret goes where the finger is
+  await tap(w - 16 - 28, H - 16 - 28, 2500);   // the pencil: the page scrolls the old caret into view, let it settle
+  await tap(Number(opt('--caret-x', 200)), Number(opt('--caret-y', 565)), 2500);   // the caret goes where the finger is (an empty paragraph); the page scrolls it into view
   await shot('edit');
   // Format sheet, both tabs
   await tap(slot(0), bar);
@@ -76,23 +86,14 @@ try {
   await shot('menu');
   await tap(w - 24, 24);
   // the fixture's table and picture: scroll them into view and put the caret / selection there
-  await wheel(Number(opt('--table-scroll', 330)));
-  await tap(150, Number(opt('--table-y', 221)));   // a blank part of a cell: a tap on a word would be read as a long press by the slow software-GL frames
+  await tap(150, Number(opt('--table-y', 407)));   // a blank part of a cell: a tap on a word would be read as a long press by the slow software-GL frames
   await shot('table');
-  await wheel(Number(opt('--pic-scroll', 250)));
-  await tap(100, Number(opt('--pic-y', 240)));
+  if (Number(opt('--pic-swipe', 0))) await swipe(w - 14, 500, 500 - Number(opt('--pic-swipe', 0)));   // a finger drag in the right margin scrolls the picture into view
+  await tap(100, Number(opt('--pic-y', 560)));
   await shot('picture');
   // Done editing (More, first row) goes back to reading; a finger drag scrolls the page there
   await tap(w - 24, 24);
   await tap(w / 2, sheetTop(5, false) + 52 + 24);
-  const swipe = async (x, y0, y1) => {
-    const bb = await box();
-    for (const [type, y] of [['touchStart', y0], ['touchMove', y0 - (y0 - y1) * 0.25], ['touchMove', y0 - (y0 - y1) * 0.5], ['touchMove', y0 - (y0 - y1) * 0.75], ['touchMove', y1], ['touchEnd', y1]]) {
-      await cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: bb.x + x, y: bb.y + y, id: 1 }] });
-      await page.waitForTimeout(80);
-    }
-    await page.waitForTimeout(2500);
-  };
   await swipe(w / 2, H * 0.7, H * 0.2);
   await shot('reading-scrolled');
   console.log(tag, 'done');

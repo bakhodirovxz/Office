@@ -1,4 +1,4 @@
-# Phase 6 WP6: Docs phone layout and the contextual bottom toolbar (2026-11-02, branch `p6-phone`)
+# Phase 6 WP6: Docs phone layout and the contextual bottom toolbar (2026-11-02, branch `p6-phone`; revised in section 9: read first, one bar)
 
 Plan section 5.1 (trigger and layout), D3-D5, patch **wordcraft/0140** plus `domains/docs/crates/docs-office/src/phone.rs`. Docs only; Sheets, Slides and PDF
 are untouched (plan 5.2, WP10). Evidence is in `docs/phase6/evidence/phone-layout/` (Chromium shots at 360 and 412 dp, emulator shots and JSON under `rig/` (HRM_Pixel_8) and
@@ -14,8 +14,8 @@ subfolder, `scripts/mobile/rig.mjs`, so another run cannot overwrite them). Synt
   (`office_overlay.rs:177`) draws nothing and returns false unless the extension says phone. In phone mode it shows the document in Web Layout (D4; leaving restores the
   view), skips the title bar, ribbon, status bar and panes, and runs the commands the chrome returns with `WordApp::run` (dialogs, file picker and paste behave as from the ribbon).
 - **Chrome:** `phone::chrome` (`phone.rs:469`) draws a 48 dp **top row** (file name cut with an ellipsis, a dirty dot, Undo, Redo, More), a contextual 48 dp **bottom
-  toolbar** (at most five slots) and **sheets** (at most 60 % of the window, scrolling inside) above it. Back/Home is the shell's own bar above the frame (`web/shell`),
-  not repeated. Every size is dp times `phone::dp` (egui points per CSS px, from `window.innerWidth`), every colour comes from the app's own theme tokens, every icon from the app's icon set.
+  toolbar** (at most five slots) and **sheets** (at most 60 % of the window, scrolling inside) above it. Back/Home was the shell's own bar above the frame (`web/shell`; replaced by the editor's own Back arrow, section 9),
+  not repeated then. Every size is dp times `phone::dp` (egui points per CSS px, from `window.innerWidth`), every colour comes from the app's own theme tokens, every icon from the app's icon set.
 
 ## 2. Toolbar sets (`slots`, `phone.rs:168`; `set_of`, `phone.rs:116`; precedence picture, table, selection, caret)
 | Selection | Slots |
@@ -83,3 +83,57 @@ tablet is out of scope. "Language" in the menu was dropped: `ui.language` only r
 - Android WebView; Gboard in Russian and Uzbek with the phone layout (only English typing was driven).
 - The owner's review of the Uzbek labels of three new rows (`Keyboard`, `More`, `Desktop layout`, `reviewed:agent-sonnet:2026-11-02`).
 - Picture and text selection flows beyond the screenshots: wrap sheet, delete, Page Break and the List sheet were rendered, the commands are the ribbon's and are unit-tested only as registered ids.
+
+## 9. Read first and one bar (revision, 2026-11-02, branch `p6-mobileux`)
+The owner reviewed the WP6 screenshots and asked for a phone layout "close to WPS Office or ONLYOFFICE mobile, or else very simple and easy to understand". Four
+problems in `evidence/phone-layout/360-*.png`: (1) the file name twice, in the shell's header and in the editor's row, about 110 px of 640; (2) the Keyboard button drew a
+microphone and the styles an "A with a check" (spell check); (3) a blank page was a short white strip on grey; (4) a document opened for editing at once. The target is the common pattern of
+the two reference apps (public UX only, nothing copied from them): one bar, a document opens for reading, a round Edit button, then the editing toolbar. Evidence:
+`docs/phase6/evidence/phone-ux/` (Chromium, DPR 1, `scripts/mobile/phone-ux.mjs`, fixture `scripts/mobile/fixtures/phone-ux.docx` made by `make-phone-ux.py`).
+
+### 9.1 What the phone shows now
+| State | Top row (the only bar) | Page | Bottom | Floating |
+|---|---|---|---|---|
+| reading (default) | Back arrow, file name (ellipsis, dirty dot), More | the whole screen below the row; no caret, no soft keyboard, a tap does nothing; a finger drag scrolls | none | round Edit (pencil) button, 56 dp, accent, 16 dp from the right and bottom edges |
+| editing | Back, name, Undo, Redo, More | as before, the caret goes where the finger taps | the contextual toolbar of section 2 (caret, text, table and picture sets unchanged) | none |
+- **Back** is the shell's Home (`wordcraft:back`); in the standalone page (no `?host=parent`) there is no arrow. **More** in editing leads with **Done editing** (back to reading), then Save, Save As, Find,
+  Desktop layout; the Print/Web Layout switch is gone (the phone is always Web Layout, the rest is "Desktop layout").
+- **No pencil** when the session cannot edit: the host's read-only open (view sessions, `FAKE_HRM_MOBILE_EDIT` off, PLAN O7) sets Restrict Editing's read-only protection and `phone::can_edit` reads that. Such a
+  document stays in reading however it is asked (unit test). Side effect: no text selection or copy in a view-only document on a phone.
+- **Opening another document** (shell New or Open: `Session::set_document` changes `document_id`) starts in reading again; the editing state belongs to one document.
+- **Sheets** have a grab handle, a header (title left, close right, 48 dp target) and close on a tap outside (as before). **Format** has two tabs, "Text" (B I U S, size, four colours, highlights) and "Paragraph" (Normal, Heading 1 and 2 drawn in that
+  style's size and weight, four alignments, bullets, numbering, indent minus and plus); its height is that of the taller tab, so it does not jump. Size and indent rows are icon only (their long
+  translated names were cut with an ellipsis at 360 dp); a long bottom-toolbar label is set down to 9 dp before it is cut.
+- **Icons**: the Keyboard is a drawn keyboard, Back an arrow, Edit a pencil, Done editing a check (`phone/glyph.rs`, strokes in the theme's text colour; the app's icon set has none of them, and a Fluent bitmap would
+  cost bytes in the Docs wasm). Close is upstream's. The styles have no icon any more.
+- **Paper**: the phone page's panel is filled with the paper colour (white, or the dark paper of View > Switch Modes), so a short document is not a strip on grey. The page's own shadow is still drawn at its bottom
+  and right edge (visible on a short document at 412 dp).
+
+### 9.2 Where it lives
+| What | Where |
+|---|---|
+| reading and editing state, tabs, the Back and layout reports, sheets, Edit button | `domains/docs/crates/docs-office/src/phone.rs`: `set_shell`, `take_phone_change`, `take_back` (:110-124), `can_edit` (:146), `is_editing` (:150), `reading` (:159), `Tab` and `tab` (:174), `sheet_rows`, `format_rows`, `chrome` (:630) |
+| glyphs | `phone/glyph.rs` |
+| the page takes no tap and no keyboard while reading | **patch wordcraft/0143**: `office_overlay.rs` `phone_reading` (:169) and the reset in `phone_chrome` (:180: `want_focus` and `focused` off, focus surrendered); `canvas.rs` `mouse` gate (:2333) and one line after `focus_click` (:1640) |
+| the Edit button counts as chrome (its press must not reach the page) | docs-office leaves its rectangle in the egui context (`docs-office-phone-extra`), `phone_chrome` reads it (`office_overlay.rs:231`) |
+| paper colour | `lib.rs:2276`, the phone branch of `WordApp::ui` |
+| `wordcraft:phone { on }`, `wordcraft:back` | `host.rs` `sync` (:165-170); `web.rs:94` `set_shell`; the shell: `web/shell/shell.js` `bars` (:27) and the cases `phone` and `back` (:146), `shell.css` `#editor.phone > .bar` |
+- Patch 0143: 5 files, +45/-9; hot files `canvas.rs` +3/-2 and `lib.rs` +3/-1. 0140 is unchanged (the third function pointer of `set_phone` is in 0143). `0950-wordcraft-rustfmt.patch` was regenerated (7 files, +53/-38; it now also formats `web.rs` and `office_overlay.rs`).
+- The shell hides its header only while the editor says phone mode (`.phone`); desktop and the other editors keep it. An error (`#error`) shows the header again, it is the only place the message is. The "Saved <name>" status line is in that header too, so on a phone there is no such line (the browser's download is the feedback).
+- Strings: one new catalog row, "Done editing" (`i18n/wordcraft.tsv`, `reviewed:agent-sonnet:2026-11-02`, in `OWN` of `xtask/src/i18n/extract.rs`); "Text", "Paragraph", "Close" and "Back" were in the catalog.
+
+### 9.3 Measured
+| Item | Result |
+|---|---|
+| docs-office tests | 39 pass (5 new: reading first and the pencil, no pencil when the session cannot edit, Back and the layout change reported once, the Format tabs, the sheet's close button; the old tap tests now run in editing) |
+| ui-egui tests (`cargo test -p wordcraft-ui-egui --lib`, upstream workspace) | 733 passed, the same 7 i18n failures as before this change (the cs, hu, hr, pl, tr, vi catalog tests and `untranslated_interface_text`) |
+| `verify-queue.sh wordcraft`, `cargo xt register check`, `cargo xt i18n check-stale` | all OK (34 patches; 136 rows; catalogs current) |
+| Docs wasm brotli (`ci.sh sizes`, `-q 11 --lgwin=24`) | 9,878,844 B, budget 9,904,416 B, **headroom 25,572 B** (WP6: 9,875,353 B, so +3,491 B); JS 20,836 of 24,576 B |
+| screenshots | `evidence/phone-ux/`: 360x640 and 412x915 at DPR 1, light and dark, uz-Latn and ru, each: reading, edit (caret set), format-text, format-para, insert, menu, table, picture, reading-scrolled; `desktop-*`: 1280x800 with a mouse (the desktop layout, unchanged) |
+
+### 9.4 Not verified, and what the Chromium proxy cannot say
+- A real phone or the emulator: touch feel, whether the pencil is reachable with one thumb, the soft keyboard coming up on the first tap in editing (Chromium has no soft keyboard; in reading no input rectangle is sent, so no keyboard is asked for), Android WebView. No emulator was started (the rule of this task).
+- The software-GL frames of headless Chromium take 0.5 s and more, so a 60 ms tap on a word is sometimes read as a long press (word selected, handles). The script therefore taps beside the text. A device is not expected to do this.
+- A new blank document (shell New) also opens in reading with the pencil: one more tap before typing. Not changed because New and Open look the same to the layout; a decision for the owner.
+- The page's shadow lines at the bottom and right edge of a short page stay.
+- Picture shots: the scripted taps are position based and the page scrolls when a caret is placed low on the screen, so in most `*-picture.png` the tap landed on a table row (row selected, table toolbar) and not on the picture. The picture selection with its toolbar (Wrap Text, Size, Delete, More) is in `412-light-uz-Latn-picture.png` (from a run with the same script, only `--table-y` differed). Table, edit, sheets, menu and reading shots were checked in all 8 sets.
