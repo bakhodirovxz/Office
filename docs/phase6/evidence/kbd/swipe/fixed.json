@@ -1,0 +1,14 @@
+{
+  "label": "fixed",
+  "avd": "HRM_360",
+  "dp": 360,
+  "steps": {
+    "1-tap-in-text": true,
+    "2-hide-with-chevron": false,
+    "3-swipe-scroll-1": false,
+    "4-swipe-scroll-2": false,
+    "5-tap-in-text-again": true
+  },
+  "recording": "kbd-swipe-fixed-360.mp4",
+  "sha256": "4e3ce01d7f484ef36c40fadd1d13bb54be59caa5db2a6b5fd32a8189bca040f9"
+}

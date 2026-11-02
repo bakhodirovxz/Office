@@ -1,0 +1,14 @@
+{
+  "label": "baseline",
+  "avd": "HRM_360",
+  "dp": 360,
+  "steps": {
+    "1-tap-in-text": true,
+    "2-hide-with-chevron": false,
+    "3-swipe-scroll-1": true,
+    "4-swipe-scroll-2": true,
+    "5-tap-in-text-again": true
+  },
+  "recording": "kbd-swipe-baseline-360.mp4",
+  "sha256": "417f438370d45e0222637624c7b1ed52c3b458964bf385117f2e556905f34c8e"
+}
