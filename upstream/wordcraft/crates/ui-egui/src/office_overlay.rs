@@ -217,7 +217,10 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
     let ctx = ui.ctx().clone();
     let read = reading(&ctx);
     PHONE_READING.store(read, std::sync::atomic::Ordering::Relaxed);
-    if read {
+    // A document that has just opened (or replaced the open one) waits for the user's tap before it takes the keyboard (wordcraft/0145).
+    static PHONE_DOC: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    let fresh = PHONE_DOC.swap(app.session.document_id(), std::sync::atomic::Ordering::Relaxed) != app.session.document_id();
+    if read || fresh {
         app.canvas.want_focus = false;
         app.canvas.focused = false;
         if let Some((id, _)) = app.canvas.widget_id {

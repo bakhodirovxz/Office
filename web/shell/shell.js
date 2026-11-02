@@ -27,6 +27,10 @@
   // An error shows the header again, it is the only place the message is.
   const bars = () => { const f = S.current && S.frames[S.current.id]; $('editor').classList.toggle('phone', !!(f && f.phone) && !$('error').textContent); };
 
+  // A short message at the bottom while the header (and its status line) is hidden on a phone; the live region stays in the page, its text changes.
+  let toastTimer;
+  const toast = (msg) => { const e = $('toast'); e.textContent = msg; e.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => { e.classList.remove('on'); toastTimer = setTimeout(() => { e.textContent = ''; }, 400); }, 2000); };
+
   // A request to the desktop host (WebView IPC); the answer arrives as the 'suite-host' event of that type. null on refusal or silence.
   const host = (msg, type) => new Promise((ok) => {
     const done = (e) => {
@@ -162,9 +166,12 @@
         const name = baseName(d.name), bytes = d.bytes;
         if (!(bytes instanceof ArrayBuffer)) return;
         if (!name || !EXT[f.app.id].split(' ').includes(name.split('.').pop().toLowerCase())) return fail(t('err.type'));
+        // Android host: the native side writes back to the opened content:// URI or asks for Save as; it answers with hostSaved() and the document stays dirty until it does
+        if (window.SuiteHost) { S.saving = { f, name, copy: bytes.slice(0) }; SuiteHost.save(name, b64(bytes)); break; }
         const a = el('a', { href: URL.createObjectURL(new Blob([bytes])), download: name });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
         $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false;
+        if ($('editor').classList.contains('phone')) toast(t('ed.saved', { name }));
         remember(f.app.id, name, bytes.slice(0));
         break;
       }
@@ -239,6 +246,7 @@
   }
   let only = '';   // the app the file picker is limited to ('' = any)
   function pick(app) {
+    if (window.SuiteHost) { SuiteHost.pick(app || ''); return; }   // Android host: the system document picker; the file comes back through hostOpen()
     // desktop host (WebView2): the native dialog and the native editor, over WebView IPC (services/suite-desktop); the answer arrives as 'suite-host'
     if (window.ipc) { window.ipc.postMessage(JSON.stringify(app ? { type: 'pick', app } : { type: 'pick' })); return; }
     const f = $('file'); only = app; f.value = ''; f.accept = '.' + (app ? EXT[app] : Object.values(EXT).join(' ')).split(' ').join(',.');
@@ -257,6 +265,29 @@
     b.hidden = !d.excel;
     b.onclick = () => host({ type: 'open_in_excel', path: d.path }, 'excel').then((r) => { if (r && !r.ok) fail(String(r.error)); });
   }
+
+  // ---- Android host (packaging/android): MainActivity calls these, the page calls window.SuiteHost ----
+  const b64 = (buf) => { const u = new Uint8Array(buf); let r = ''; for (let i = 0; i < u.length; i += 0x8000) r += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(r); };
+  // a document the host parked (VIEW, SEND or the picker): fetched once from /__open, 204 when there is none
+  window.hostOpen = async () => {
+    if (!S.cfg) return;   // main() has not finished: it calls this itself at its end
+    try {
+      const r = await fetch('/__open'); if (r.status !== 200) return;
+      const name = decodeURIComponent(r.headers.get('X-Name') || ''), a = appOf(name);
+      if (!a) return fail(t('err.type'));
+      show(a, { name, bytes: await r.arrayBuffer() });
+    } catch (e) { fail(String(e.message || e)); }
+  };
+  window.hostOpenFailed = (r) => fail(String(r.error));
+  window.hostSaved = (r) => {
+    const s = S.saving; S.saving = null;
+    if (!r.ok) return fail(String(r.error));   // the document stays dirty: nothing was written
+    if (s) { s.f.dirty = false; remember(s.f.app.id, r.name || s.name, s.copy); }
+    const msg = t('ed.saved', { name: r.name || (s && s.name) });
+    $('ed-status').textContent = msg;
+    if ($('editor').classList.contains('phone')) toast(msg);
+  };
+  window.hostBack = () => { if (!S.current) return false; home(); return true; };
 
   addEventListener('suite-host', (e) => {
     const d = e.detail || {};
@@ -302,6 +333,7 @@
     $('open-file').onclick = () => pick('');
     $('back').onclick = home;
     render();
+    if (window.SuiteHost) window.hostOpen();
   }
   main().catch((e) => fail(String(e.message || e)));
 })();
