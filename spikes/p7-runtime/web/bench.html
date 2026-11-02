@@ -1,0 +1,86 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>p7 runtime bench</title>
+<script type="module">
+// Spike: the uz-translit plugin in the browser's WebAssembly, on the main thread and in a dedicated Worker
+// (the web plugin host design). Results land in window.result for the Playwright driver (run.mjs).
+const med = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1];
+const ROUNDS = 7;
+const get = async (u) => new Uint8Array(await (await fetch(u)).arrayBuffer());
+const R = {};
+try {
+  const [wasm, wasmImp, input, want] = await Promise.all(['plugin.wasm', 'plugin-imp.wasm', 'input.bin', 'native.bin'].map(get));
+  R.inputBytes = input.length;
+  let t = performance.now();
+  const module = await WebAssembly.compile(wasm);
+  R.compileMs = performance.now() - t;
+  R.imports = WebAssembly.Module.imports(module).map((i) => i.module + '.' + i.name + ':' + i.kind);
+  t = performance.now();
+  const inst = await WebAssembly.instantiate(module, {});
+  R.instantiateMs = performance.now() - t;
+  const call = () => {
+    const x = inst.exports;
+    const p = x.p7_alloc(input.length);
+    new Uint8Array(x.memory.buffer, p, input.length).set(input);
+    const r = x.p7_bin(p, input.length);
+    const op = Number(r >> 32n), on = Number(r & 0xffffffffn);
+    const out = new Uint8Array(on);
+    out.set(new Uint8Array(x.memory.buffer, op, on));
+    x.p7_free(op, on);
+    return out;
+  };
+  const same = (a) => a.length === want.length && a.every((v, i) => v === want[i]);
+  const ts = [];
+  let out;
+  for (let i = 0; i < ROUNDS; i++) { t = performance.now(); out = call(); ts.push(performance.now() - t); }
+  R.mainThreadMs = med(ts);
+  R.mainIdentical = same(out);
+
+  // Worker path: module and input cross by postMessage (input copied per round, output transferred back).
+  const w = new Worker('worker.js');
+  const next = () => new Promise((res) => { w.onmessage = (e) => res(e.data); });
+  t = performance.now();
+  w.postMessage({ type: 'load', module });
+  const loaded = await next();
+  R.workerLoadMs = performance.now() - t;
+  R.workerNetwork = loaded.net;
+  const wts = [];
+  for (let i = 0; i < ROUNDS; i++) {
+    t = performance.now();
+    const buf = input.slice().buffer;
+    w.postMessage({ type: 'run', input: buf }, [buf]);
+    out = new Uint8Array((await next()).out);
+    wts.push(performance.now() - t);
+  }
+  R.workerRoundTripMs = med(wts);
+  R.workerIdentical = same(out);
+
+  // Runaway plugin: the page keeps running and terminates the worker after 300 ms.
+  w.postMessage({ type: 'spin' });
+  await next();
+  t = performance.now();
+  await new Promise((res) => setTimeout(res, 300));
+  R.mainResponsiveDuringSpinMs = performance.now() - t;
+  w.terminate();
+  R.spinTerminated = true;
+
+  // Memory hog: exported memory (no cap) vs host-made imported memory with a 64 MiB maximum.
+  const hog = async (mod, maxPages) => {
+    const h = new Worker('worker.js');
+    const n = () => new Promise((res) => { h.onmessage = (e) => res(e.data); h.onerror = (e) => res({ error: e.message }); });
+    h.postMessage({ type: 'load', module: mod, maxPages });
+    await n();
+    h.postMessage({ type: 'hog' });
+    const r = await n();
+    h.terminate();
+    return r;
+  };
+  const modImp = await WebAssembly.compile(wasmImp);
+  R.importsImp = WebAssembly.Module.imports(modImp).map((i) => i.module + '.' + i.name + ':' + i.kind);
+  R.hogImportedMemory64MiB = await hog(modImp, 1024);
+  R.hogExportedMemory = await hog(module, undefined);
+} catch (e) {
+  R.error = String(e && e.stack || e);
+}
+window.result = R;
+</script>
