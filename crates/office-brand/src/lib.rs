@@ -145,6 +145,7 @@ impl Brand {
                 "product",
                 "attribution",
                 "apps",
+                "android",
                 "colors",
                 "chrome",
                 "links",

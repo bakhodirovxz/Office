@@ -1668,3 +1668,8 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Carried patch **wordcraft/0143** (5 files, +45/-9; hot files `canvas.rs` +3/-2, `lib.rs` +3/-1), `0950-wordcraft-rustfmt.patch` regenerated (7 files, +53/-38); 0140 unchanged. One new catalog row ("Done editing", `reviewed:agent-sonnet:2026-11-02`).
 - Tests: docs-office 39 pass (5 new); ui-egui 733 pass with the same 7 i18n failures as before; `verify-queue.sh wordcraft`, `cargo xt register check`, `cargo xt i18n check-stale` OK. Docs wasm brotli 9,878,844 B (+3,491 B on WP6), headroom 25,572 B (`ci.sh sizes`).
 - Not verified: a real phone or emulator (touch feel, the soft keyboard on the first tap in editing, Android WebView). A new blank document also opens in reading (one more tap before typing): owner decision.
+
+### Phase 6 WP8: Android app, thin WebView (2026-11-03, branch `p6-android`)
+- `packaging/android/` (one Activity, no Gradle, no androidx, no INTERNET permission); the shell and the four dists from APK assets on a virtual https origin; VIEW/SEND/picker in, write-back to the `content://` URI or Save as out; `brand.toml [android]` (provisional id `app.hoshiya.suite`, O5 open). Docs: `docs/phase6/android-app.md`, `android-licences.md` (empty dependency list).
+- APK **53,200,442 bytes** (50.7 MiB; wasm 45.2 + 19.7 + 36.0 + 39.9 MB deflated), debug-signed with a local key (not committed).
+- AVD `HRM_Pixel_8`: Gboard EN + RU typing, save back, reopen, read-only to Save as, rotation all pass (`docs/phase6/evidence/android/`, recordings in SHA256SUMS). Not run: a real share sheet, process death (WP12), a phone.
