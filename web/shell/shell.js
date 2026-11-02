@@ -26,6 +26,10 @@
   // An error shows the header again, it is the only place the message is.
   const bars = () => { const f = S.current && S.frames[S.current.id]; $('editor').classList.toggle('phone', !!(f && f.phone) && !$('error').textContent); };
 
+  // A short message at the bottom while the header (and its status line) is hidden on a phone; the live region stays in the page, its text changes.
+  let toastTimer;
+  const toast = (msg) => { const e = $('toast'); e.textContent = msg; e.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => { e.classList.remove('on'); toastTimer = setTimeout(() => { e.textContent = ''; }, 400); }, 2000); };
+
   // A request to the desktop host (WebView IPC); the answer arrives as the 'suite-host' event of that type. null on refusal or silence.
   const host = (msg, type) => new Promise((ok) => {
     const done = (e) => {
@@ -156,6 +160,7 @@
         const a = el('a', { href: URL.createObjectURL(new Blob([bytes])), download: name });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
         $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false;
+        if ($('editor').classList.contains('phone')) toast(t('ed.saved', { name }));
         remember(f.app.id, name, bytes.slice(0));
         break;
       }
@@ -266,7 +271,9 @@
     const s = S.saving; S.saving = null;
     if (!r.ok) return fail(String(r.error));   // the document stays dirty: nothing was written
     if (s) { s.f.dirty = false; remember(s.f.app.id, r.name || s.name, s.copy); }
-    $('ed-status').textContent = t('ed.saved', { name: r.name || (s && s.name) });
+    const msg = t('ed.saved', { name: r.name || (s && s.name) });
+    $('ed-status').textContent = msg;
+    if ($('editor').classList.contains('phone')) toast(msg);
   };
   window.hostBack = () => { if (!S.current) return false; home(); return true; };
 
