@@ -20,7 +20,7 @@ listener in the editor page (wordcraft/0141), because a key pressed inside the i
 | Message | Direction | Fields |
 |---|---|---|
 | `<prefix>:commands` | page to editor | none: asks for the list |
-| `<prefix>:commands` | editor to page | `commands: [{ id, label, enabled, shortcut }]`: commands that take no parameters; `label` in the editor's language (`i18n::t`); `enabled` from `widgets::enabled`; `shortcut` as the platform writes it |
+| `<prefix>:commands` | editor to page | `commands: [{ id, label, enabled, shortcut }]`: commands without a required parameter; `label` in the editor's language (`i18n::t`); `enabled` from `widgets::enabled`; `shortcut` as the platform writes it |
 | `<prefix>:run` | page to editor | `id`: runs it through `WordApp::run`, the path a ribbon button takes (dialogs open, blocked commands are refused) |
 | `<prefix>:ran` | editor to page | `id, ok, error` |
 | `<prefix>:focus` | page to editor | focuses the canvas |

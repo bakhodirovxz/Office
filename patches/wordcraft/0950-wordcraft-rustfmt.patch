@@ -34,7 +34,7 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index b79da7f..08dca30 100644
+index ec64425..0872c65 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -139,8 +139,10 @@ impl Bridge {
@@ -50,7 +50,7 @@ index b79da7f..08dca30 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
-@@ -346,7 +348,12 @@ impl Bridge {
+@@ -347,7 +349,12 @@ impl Bridge {
                  Some("wordcraft:commands") => bridge.list_requested.set(true),
                  Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
                  Some("wordcraft:focus") => {

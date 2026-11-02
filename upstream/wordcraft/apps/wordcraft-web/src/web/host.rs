@@ -25,7 +25,7 @@
 //!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
 //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
-//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no parameters,
+//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no required parameter,
 //!   `label` in the editor's language, `shortcut` as the platform writes it (empty: none). A host page
 //!   builds an accessible command palette from it (the canvas has no DOM for a screen reader).
 //! - `wordcraft:run` (from the parent): `{ id }`, run that command as a button would. The answer,
@@ -194,7 +194,8 @@ impl Bridge {
         }
         if self.list_requested.replace(false) {
             let list = js_sys::Array::new();
-            for spec in app.session.registry.all().iter().filter(|s| s.params == "{}") {
+            // A required parameter is written `"key":` in `params`, an optional one `"key"?:`: only the second kind runs from a bare id.
+            for spec in app.session.registry.all().iter().filter(|s| !s.params.contains("\":")) {
                 if let Some(item) = message(&[
                     ("id", spec.id.into()),
                     ("label", wordcraft_ui_egui::i18n::t(spec.label).into()),

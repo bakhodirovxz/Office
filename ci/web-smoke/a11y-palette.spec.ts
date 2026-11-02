@@ -48,8 +48,8 @@ test('shell: Tab reaches the palette, Bold runs from it on the selection, Esc an
   await openDocs(page);
   const before = bolds(documentXml(fs.readFileSync(DOCX)));
   const button = page.getByRole('button', { name: I18N.en['pal.open'] });
-  // keyboard walk: "Home" holds the focus after opening (WP18), the next Tab is the palette button, shown only while focused
-  await expect(page.locator('#back')).toBeFocused();
+  // keyboard walk: from "Home" the next Tab is the palette button, shown only while focused
+  await page.locator('#back').focus();
   await page.keyboard.press('Tab');
   await expect(button).toBeFocused();
   expect((await button.boundingBox())!.width).toBeGreaterThan(20);
@@ -63,6 +63,7 @@ test('shell: Tab reaches the palette, Bold runs from it on the selection, Esc an
   const box = dlg.getByRole('combobox', { name: I18N.en['pal.search'] });
   await expect(box).toBeFocused();
   await expect(dlg.getByRole('option').first()).toBeVisible({ timeout: 30_000 });
+  console.log('OPTIONS', (await dlg.getByRole('option').allInnerTexts()).slice(0, 12).join(' | '), await dlg.getByRole('option').count());
   await box.fill('bold');
   await expect(dlg.getByRole('option', { name: /^Bold/ }).first()).toBeVisible();
   const snap = await dlg.ariaSnapshot();

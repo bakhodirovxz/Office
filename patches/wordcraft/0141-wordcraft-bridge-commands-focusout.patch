@@ -4,11 +4,11 @@ Date: Tue, 3 Nov 2026 12:00:00 +0500
 Subject: [PATCH] wordcraft-web: the host bridge lists and runs commands and
  reports a focus-out key
 
-Phase 6 WP11 (docs/phase6/a11y-palette.md). A canvas editor has no DOM, so a screen reader sees none of its commands. In host mode the editor now answers `wordcraft:commands` with the commands that take no parameters (id, label in the editor's language, enabled, shortcut), runs `wordcraft:run { id }` through `WordApp::run` (the path of a ribbon button) and answers `wordcraft:ran { id, ok, error }`, and focuses the canvas on `wordcraft:focus`. A capture-phase keydown listener posts `wordcraft:focusOut { palette }` for F6 (leave the editor: a canvas swallows Tab, WCAG 2.1.2) and F1 (open the host's command palette); neither key is bound in the editor. The host page (the shell, the docserver wrapper) builds the accessible palette from the list. Web-sys gains the `KeyboardEvent` feature (already enabled by eframe in the build). Desktop apps and the page without `?host=parent` are unchanged.
+Phase 6 WP11 (docs/phase6/a11y-palette.md). A canvas editor has no DOM, so a screen reader sees none of its commands. In host mode the editor now answers `wordcraft:commands` with the commands that need no required parameter (id, label in the editor's language, enabled, shortcut), runs `wordcraft:run { id }` through `WordApp::run` (the path of a ribbon button) and answers `wordcraft:ran { id, ok, error }`, and focuses the canvas on `wordcraft:focus`. A capture-phase keydown listener posts `wordcraft:focusOut { palette }` for F6 (leave the editor: a canvas swallows Tab, WCAG 2.1.2) and F1 (open the host's command palette); neither key is bound in the editor. The host page (the shell, the docserver wrapper) builds the accessible palette from the list. Web-sys gains the `KeyboardEvent` feature (already enabled by eframe in the build). Desktop apps and the page without `?host=parent` are unchanged.
 ---
  apps/wordcraft-web/Cargo.toml      |  2 +-
- apps/wordcraft-web/src/web/host.rs | 59 ++++++++++++++++++++++++++++++
- 2 files changed, 60 insertions(+), 1 deletion(-)
+ apps/wordcraft-web/src/web/host.rs | 60 ++++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 1 deletion(-)
 
 diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
 index c857152..bddcf17 100644
@@ -21,7 +21,7 @@ index c857152..bddcf17 100644
 -web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "UrlSearchParams"] }
 +web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index bddeb90..1c9cbc0 100644
+index bddeb90..fa91a59 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -24,6 +24,16 @@
@@ -29,7 +29,7 @@ index bddeb90..1c9cbc0 100644
  //!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
  //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 +//! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
-+//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no parameters,
++//!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no required parameter,
 +//!   `label` in the editor's language, `shortcut` as the platform writes it (empty: none). A host page
 +//!   builds an accessible command palette from it (the canvas has no DOM for a screen reader).
 +//! - `wordcraft:run` (from the parent): `{ id }`, run that command as a button would. The answer,
@@ -69,13 +69,14 @@ index bddeb90..1c9cbc0 100644
          self.listen(inbox, ctx);
          let bridge = self.clone();
          services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
-@@ -163,6 +180,27 @@ impl Bridge {
+@@ -163,6 +180,28 @@ impl Bridge {
              app.session.doc.settings.protection = Some("readOnly".into());
              ctx.request_repaint();
          }
 +        if self.list_requested.replace(false) {
 +            let list = js_sys::Array::new();
-+            for spec in app.session.registry.all().iter().filter(|s| s.params == "{}") {
++            // A required parameter is written `"key":` in `params`, an optional one `"key"?:`: only the second kind runs from a bare id.
++            for spec in app.session.registry.all().iter().filter(|s| !s.params.contains("\":")) {
 +                if let Some(item) = message(&[
 +                    ("id", spec.id.into()),
 +                    ("label", wordcraft_ui_egui::i18n::t(spec.label).into()),
@@ -97,7 +98,7 @@ index bddeb90..1c9cbc0 100644
          for ok in self.acks.take() {
              if self.pending.get() == 0 {
                  break;
-@@ -253,6 +291,20 @@ impl Bridge {
+@@ -253,6 +292,20 @@ impl Bridge {
          on_lost.forget();
      }
  
@@ -118,7 +119,7 @@ index bddeb90..1c9cbc0 100644
      fn post_file(&self, kind: &str, path: &str, bytes: &[u8]) -> Result<(), String> {
          let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
          let buffer = js_sys::Uint8Array::from(bytes).buffer();
-@@ -281,6 +333,13 @@ impl Bridge {
+@@ -281,6 +334,13 @@ impl Bridge {
                      inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
                  }
                  Some("wordcraft:requestSave") => bridge.save_requested.set(true),

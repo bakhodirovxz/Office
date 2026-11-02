@@ -240,6 +240,7 @@
         post: function (type, extra) { toEditor(type, extra); },
         back: function () { S.frame.contentWindow.focus(); toEditor('focus', {}); }
       });
+      S.pal.button.textContent = t('pal.open');
       S.pal.button.style.cssText = 'padding:2px 10px;font-size:.85rem';
       bar.appendChild(S.pal.button);
     }

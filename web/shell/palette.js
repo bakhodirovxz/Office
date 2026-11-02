@@ -1,14 +1,15 @@
 // The accessible command palette (PLAN phase 6 WP11, docs/phase6/a11y-palette.md). A web editor draws on a canvas, so a screen reader sees no
 // commands in it; the editor posts its command list over the host bridge (<prefix>:commands) and this dialog (ARIA 1.2 combobox + listbox) shows it.
 // Shared by the shell and the docserver wrapper page. make({ t, post, back, say }): t translates, post(type, extra) sends <prefix>:<type> to the
-// editor, back() puts focus on the editor again, say(msg) shows an error. Returns { button, open, onMessage(type, data) }.
+// editor, back() puts focus on the editor again, say(msg) shows an error. Returns { button, open, onMessage(type, data) };
+// the button's text is data-i18n="pal.open": the shell's render fills it, the wrapper sets it.
 (() => {
   'use strict';
   const MAX = 200;   // options drawn at once; the filter narrows the rest
   window.Palette = { make({ t, post, back, say }) {
     let dlg, input, list, count, cmds = [], shown = [], act = -1;
     const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
-    const button = el('button', { type: 'button', className: 'btn ghost pal-btn', textContent: t('pal.open'), onclick: () => open() });
+    const button = el('button', { type: 'button', className: 'btn ghost pal-btn', onclick: () => open() });
     button.dataset.i18n = 'pal.open'; button.setAttribute('aria-haspopup', 'dialog');
     function mark(i) {
       act = i; input.setAttribute('aria-activedescendant', i < 0 ? '' : 'pal-o' + i);

@@ -269,6 +269,7 @@
     const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };
     [S.cfg, S.i18n] = await Promise.all([get('/shell-config.json'), get('shell/i18n.json')]);
     S.templates = await get('shell/templates.json').catch(() => []);
+    $('back').after(pal.button);   // before the first render, which fills its text
     const nav = (navigator.language || 'en').toLowerCase();
     S.mode = window.ipc ? 'desktop' : session('cv.token') || S.cfg.local ? 'names' : 'web';
     // the desktop keeps the language in the host's settings, not in the WebView's storage
@@ -300,7 +301,6 @@
     $('file').onchange = (e) => e.target.files[0] && openPicked(e.target.files[0], only);
     $('open-file').onclick = () => pick('');
     $('back').onclick = home;
-    $('back').after(pal.button);
     render();
   }
   main().catch((e) => fail(String(e.message || e)));
