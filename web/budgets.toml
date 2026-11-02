@@ -31,7 +31,7 @@ base_raw = 44355755          # pristine wasm raw at BASE (re-measured 2026-10-22
 base_gzip = 16366483         # wasm gzip -9
 base_br = 9675040            # wasm brotli -q 11 --lgwin=24
 js_br = 20558                # JS glue brotli
-delta_br_max = 196608        # delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
+delta_br_max = 229376        # delta +200,313 B brotli at Phase 6 WP6 (ci.sh sizes on the p6-phone dist, 2026-11-02): the phone chrome (wordcraft/0140, +19,582 B) on top of the handles (0139) and the sliced warm-up (0142); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 

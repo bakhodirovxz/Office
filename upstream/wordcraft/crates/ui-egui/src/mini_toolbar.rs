@@ -108,6 +108,10 @@ pub fn visible(app: &WordApp) -> bool {
     if app.session.view.read_mode {
         return false;
     }
+    // On a phone the long-press action bar is the selection's menu (wordcraft/0139, 0140).
+    if crate::office_overlay::phone_on() {
+        return false;
+    }
     // Never over a modal dialog or the Backstage.
     if app.dialog.is_some() || app.colors.is_some() || app.ui.backstage {
         return false;

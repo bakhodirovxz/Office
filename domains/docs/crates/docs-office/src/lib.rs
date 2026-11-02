@@ -13,6 +13,7 @@ pub mod icons;
 pub mod layer;
 pub mod levels;
 pub mod mode;
+pub mod phone;
 pub mod preset;
 #[cfg(not(target_arch = "wasm32"))]
 mod settings;

@@ -1,0 +1,117 @@
+{
+  "run": "2026-11-02T06-06-35",
+  "avd": "HRM_360",
+  "dp": 360,
+  "dist": "E:\\office-target\\p6-phone\\dist-full",
+  "versions": {
+    "avd_api": "36",
+    "size": "Physical size: 1080x2400\nOverride size: 540x1200",
+    "density": "Physical density: 480\nOverride density: 240",
+    "chrome": "133.0.6943.137",
+    "webview_package": "133.0.6943.137",
+    "webview_active": "com.google.android.webview, 133.0.6943.137",
+    "gboard": "15.1.08.726012951-preload-x86_64"
+  },
+  "gboard": {
+    "installed": true,
+    "default_ime": "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME",
+    "enabled_subtypes": [
+      "English (United States)",
+      "Russian (Russia)",
+      "Uzbek"
+    ],
+    "want": {
+      "English": true,
+      "Russian": true,
+      "Uzbek (latin)": true
+    }
+  },
+  "items": [
+    {
+      "id": "open",
+      "app": "phone",
+      "status": "pass",
+      "notes": {
+        "viewport": {
+          "w": 360,
+          "h": 628,
+          "dpr": 1.5,
+          "vv": 628
+        },
+        "frame": {
+          "x": 0,
+          "y": 61.19791793823242,
+          "h": 566.8021240234375,
+          "w": 360
+        }
+      },
+      "ms": 9447,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\2026-11-02T06-06-35\\phone-open-360.mp4",
+        "bytes": 102916,
+        "sha256": "3f5da7df4b5f2517f27b5dc36e7a20ae466f49023df84e083309088b313c9d6b"
+      }
+    },
+    {
+      "id": "type-and-format",
+      "app": "phone",
+      "status": "pass",
+      "notes": {},
+      "ms": 13959,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\2026-11-02T06-06-35\\phone-type-and-format-360.mp4",
+        "bytes": 415582,
+        "sha256": "04ec62a558b97d2426f88bab5dc25bee8544177b98ffe5f6f5e2778e2f03ba98"
+      }
+    },
+    {
+      "id": "list-insert",
+      "app": "phone",
+      "status": "pass",
+      "notes": {},
+      "ms": 11077,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\2026-11-02T06-06-35\\phone-list-insert-360.mp4",
+        "bytes": 326788,
+        "sha256": "aec69ebd89cd024a53f43b943fc00251936fb97e1af1e4bf89ef1fdce33c54a4"
+      }
+    },
+    {
+      "id": "table-sheet",
+      "app": "phone",
+      "status": "pass",
+      "notes": {},
+      "ms": 10477,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\2026-11-02T06-06-35\\phone-table-sheet-360.mp4",
+        "bytes": 387084,
+        "sha256": "00886627b53464fe69e5c429461d7f8889f5f3f5ab1b04772f8510e26c239764"
+      }
+    },
+    {
+      "id": "menu",
+      "app": "phone",
+      "status": "pass",
+      "notes": {},
+      "ms": 4175,
+      "recording": {
+        "file": "E:\\office-target\\p6\\evidence\\2026-11-02T06-06-35\\phone-menu-360.mp4",
+        "bytes": 152000,
+        "sha256": "9db5a6c54bf643c49bfd2cbdf73b1a6e988b9d302ef9f6d7f46f1939a86ad0c7"
+      }
+    }
+  ],
+  "screenshots": [
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-chrome-start.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-typed.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-sheet-format.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-bold-on.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-sheet-list.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-sheet-insert.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-table-set.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-table-caret.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-sheet-table.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-sheet-delete.png",
+    "E:\\office-wt\\p6-phone\\docs\\phase6\\evidence\\phone-layout\\rig360\\2026-11-02T06-06-35-menu.png"
+  ]
+}
