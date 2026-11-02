@@ -1,0 +1,20 @@
+# Phase 7 WP3: the Docs adapter of the plugin system (docs/phase7/PLAN.md sections 4, 6 and 9). Our crate. Step 1: the text map walker,
+# moved out of docs-translit with no change in behaviour.
+[package]
+name = "docs-plugins"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Docs adapter of the plugin system: text map, slot commands, action executor and contributions"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
+wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
+plugin-api = { path = "../../../../crates/plugin-api" }
+serde_json = { version = "1", features = ["float_roundtrip"] }

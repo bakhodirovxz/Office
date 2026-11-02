@@ -15,7 +15,7 @@ workspace = true
 [dependencies]
 wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
 wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
-wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
+docs-plugins = { path = "../docs-plugins" }
 uz-translit = { path = "../../../../crates/uz-translit" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 
