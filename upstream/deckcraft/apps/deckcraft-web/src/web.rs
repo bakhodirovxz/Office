@@ -29,6 +29,17 @@ pub fn start() {
         {
             create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
         }
+        // egui-wgpu requires 8192 texels per side, which WebGL2 contexts that report 4096
+        // (Android emulators, some phones) refuse: ask for what the adapter offers, up to that.
+        if let eframe::egui_wgpu::WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
+            let egui_descriptor = create.device_descriptor.clone();
+            create.device_descriptor = std::sync::Arc::new(move |adapter| {
+                let mut descriptor = egui_descriptor(adapter);
+                let offered = adapter.limits().max_texture_dimension_2d;
+                descriptor.required_limits.max_texture_dimension_2d = descriptor.required_limits.max_texture_dimension_2d.min(offered);
+                descriptor
+            });
+        }
         // `?host=parent`: a page framing DeckCraft (the web shell) opens presentations in it and
         // stores what it saves (`host`).
         let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
