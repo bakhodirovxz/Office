@@ -2273,7 +2273,9 @@ impl WordApp {
             egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |_| {});
         } else if office_overlay::phone_chrome(self, ui) {
             // The phone layout (wordcraft/0140) drew its own top row and bottom toolbar: only the page is left.
-            egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| {
+            // The paper fills it (wordcraft/0143): a short document is not a strip on grey.
+            let paper = if self.session.view.dark_mode { egui::Color32::from_gray(wordcraft_render::DARK_PAPER) } else { egui::Color32::WHITE };
+            egui::CentralPanel::default().frame(egui::Frame::NONE.fill(paper)).show(ui, |ui| {
                 canvas::show(self, ui);
             });
         } else {

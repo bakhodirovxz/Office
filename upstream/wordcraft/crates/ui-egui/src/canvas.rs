@@ -1637,6 +1637,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let focus_click = pointer_click
         || accesskit_click
         || (resp.drag_started() && !app.canvas.touch.in_gesture() && !app.canvas.touch.scrolled() && !app.canvas.tsel.dragging());
+    let focus_click = focus_click && !crate::office_overlay::phone_reading(); // wordcraft/0143: reading takes no keyboard
     if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
         resp.request_focus();
     }
@@ -2328,8 +2329,8 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
 }
 
 fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
-    // A finger on the phone chrome's bars is not the page's (wordcraft/0140).
-    if crate::office_overlay::chrome_down() {
+    // A finger on the phone chrome's bars is not the page's (wordcraft/0140); nor is a tap while the phone shows it for reading (0143).
+    if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() {
         return;
     }
     // A pen or the eraser (Draw tab) owns the pointer.

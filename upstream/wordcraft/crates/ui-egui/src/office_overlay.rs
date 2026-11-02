@@ -151,15 +151,23 @@ type PhoneChrome = fn(
     &dyn Fn(&str) -> String,
     PhoneIcon,
 ) -> Vec<(String, serde_json::Value)>;
-static PHONE: std::sync::OnceLock<(PhoneActive, PhoneChrome)> = std::sync::OnceLock::new();
+/// Whether the page is for reading this frame (wordcraft/0143): no tap reaches it, it takes no keyboard focus.
+type PhoneReading = fn(&egui::Context) -> bool;
+static PHONE: std::sync::OnceLock<(PhoneActive, PhoneChrome, PhoneReading)> = std::sync::OnceLock::new();
+static PHONE_READING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static PHONE_ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static CHROME_DOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static PHONE_H: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 /// The view before phone mode took the Web Layout: restored when the window is a desktop window again.
 static PHONE_VIEW: Mutex<Option<(wordcraft_engine::layout::ViewMode, bool)>> = Mutex::new(None);
 
-pub fn set_phone(active: PhoneActive, chrome: PhoneChrome) {
-    let _ = PHONE.set((active, chrome));
+pub fn set_phone(active: PhoneActive, chrome: PhoneChrome, reading: PhoneReading) {
+    let _ = PHONE.set((active, chrome, reading));
+}
+
+/// The phone layout shows the document for reading (wordcraft/0143): a tap does not put a caret in it and the soft keyboard stays down.
+pub fn phone_reading() -> bool {
+    PHONE_READING.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 /// Whether the phone layout was drawn this frame (the selection mini toolbar yields to the touch action bar there).
@@ -170,7 +178,7 @@ pub fn phone_on() -> bool {
 /// Draw the phone chrome instead of the title bar and the ribbon; false (nothing drawn) for a desktop window. Entering the phone layout
 /// shows the document in Web Layout (it reflows to the width); leaving restores the view the user had.
 pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
-    let Some((active, chrome)) = PHONE.get() else { return false };
+    let Some((active, chrome, reading)) = PHONE.get() else { return false };
     let on = active(ui.ctx());
     if on != PHONE_ON.swap(on, std::sync::atomic::Ordering::Relaxed) {
         use wordcraft_engine::layout::ViewMode;
@@ -190,6 +198,7 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
         let _ = app.session.run(go, &serde_json::json!({}));
     }
     if !on {
+        PHONE_READING.store(false, std::sync::atomic::Ordering::Relaxed);
         return false;
     }
     // The soft keyboard opening shrinks the window (`interactive-widget=resizes-content`): keep the caret's line in view (PLAN 5.3).
@@ -204,11 +213,26 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
     for (id, params) in chrome(&mut app.session, ui, &title, &colors, &|k| crate::i18n::t(k).to_string(), &icon) {
         let _ = app.run(&id, params);
     }
+    // Reading: the page has no keyboard focus (a tap on a bar also claims it for the canvas, `lib.rs`) and no caret.
+    let ctx = ui.ctx().clone();
+    let read = reading(&ctx);
+    PHONE_READING.store(read, std::sync::atomic::Ordering::Relaxed);
+    if read {
+        app.canvas.want_focus = false;
+        app.canvas.focused = false;
+        if let Some((id, _)) = app.canvas.widget_id {
+            ctx.memory_mut(|m| m.surrender_focus(id));
+        }
+    }
     // A finger that went down on a bar is the bar's until it lifts: egui hit-tests the page widget under it (the page would put the caret at the end of the
     // document), so `canvas::mouse` stands aside while this is set.
     let page = ui.available_rect_before_wrap();
+    // The Edit button floats over the page: the extension leaves its rectangle in the context.
+    let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
     let (pressed_on_bar, active) = ui.input(|i| {
-        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos)));
+        let on_bar = i.events.iter().any(
+            |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
+        );
         (on_bar, i.pointer.any_down() || i.pointer.any_released())
     });
     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);

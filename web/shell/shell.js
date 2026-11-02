@@ -21,7 +21,10 @@
   // A repeated button text ("New", "Use") gets the card's name, so a screen reader list tells the buttons apart; the visible text stays first in it.
   const named = (btn, what) => { btn.setAttribute('aria-label', `${btn.textContent}: ${what}`); return btn; };
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
-  const fail = (msg) => { const e = $('error'); e.textContent = msg; e.hidden = !msg; if (msg) $('ed-status').textContent = msg; };
+  const fail = (msg) => { const e = $('error'); e.textContent = msg; e.hidden = !msg; if (msg) $('ed-status').textContent = msg; bars(); };
+  // Docs on a phone draws its own top row (Back, name, Undo, Redo, More): while it says so (<prefix>:phone) the shell's header is hidden, so there is one bar.
+  // An error shows the header again, it is the only place the message is.
+  const bars = () => { const f = S.current && S.frames[S.current.id]; $('editor').classList.toggle('phone', !!(f && f.phone) && !$('error').textContent); };
 
   // A request to the desktop host (WebView IPC); the answer arrives as the 'suite-host' event of that type. null on refusal or silence.
   const host = (msg, type) => new Promise((ok) => {
@@ -108,7 +111,7 @@
     let f = S.frames[a.id];
     // a file replaces the document in the editor; a second New starts from the editor's own blank page
     if (f && f.dirty && !confirm(t('ed.dirty'))) return;
-    if (f && !file && f.ready) { f.ready = false; f.dirty = false; f.el.contentWindow.location.reload(); }
+    if (f && !file && f.ready) { f.ready = false; f.dirty = false; f.phone = false; f.el.contentWindow.location.reload(); }
     f = frameOf(a);
     f.opening = file && SAYS_OPENED.includes(a.id) ? file.name : '';
     if (file) {
@@ -121,13 +124,13 @@
     $('ed-status').textContent = f.opening ? t('ed.opening', { name: f.opening }) : f.ready ? '' : t('ed.loading', { app: appName(a) });
     cover();
     $('home').hidden = true; $('editor').hidden = false; document.title = appName(a);
-    viewport(a.id === 'docs');
+    viewport(a.id === 'docs'); bars();
     $('back').focus(); // the focused card is hidden now: keep the keyboard user's place, one Tab from the editor
   }
   function home() {
     const prev = S.current;
     $('editor').hidden = true; $('home').hidden = false; S.current = null; render();
-    viewport(false);
+    viewport(false); bars();
     if (prev) $('cards').querySelectorAll('button')[Math.max(S.cfg.apps.findIndex((x) => x.id === prev.id), 0)]?.focus(); // back where the user left
   }
 
@@ -140,6 +143,8 @@
       case 'ready': f.ready = true; if (!f.opening) $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
       case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } break;
       case 'dirty': f.dirty = !!d.dirty; break;
+      case 'phone': f.phone = !!d.on; bars(); break;
+      case 'back': home(); break;
       case 'failed': f.opening = ''; cover(); fail(t('err.failed', { error: String(d.error) })); break;
       case 'save': {
         // only this app's own file types, and no path parts: an editor fed a hostile document cannot make the shell save x.lnk or x.hta

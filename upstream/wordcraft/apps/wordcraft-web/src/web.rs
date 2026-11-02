@@ -86,7 +86,12 @@ pub fn start() {
                     // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
                     #[cfg(feature = "office-ext")]
                     {
-                        wordcraft_ui_egui::office_overlay::set_phone(docs_office::phone::active, docs_office::phone::chrome);
+                        wordcraft_ui_egui::office_overlay::set_phone(
+                            docs_office::phone::active,
+                            docs_office::phone::chrome,
+                            docs_office::phone::reading,
+                        );
+                        docs_office::phone::set_shell(app_bridge.is_some());
                         docs_office::phone::set_keyboard(toggle_keyboard);
                         // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
                         docs_office::phone::set_css_width(|| {
