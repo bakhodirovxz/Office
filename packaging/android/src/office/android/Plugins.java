@@ -169,8 +169,17 @@ final class Plugins {
         put(tmp, "plugin.toml", toml); put(tmp, "plugin.wasm", wasm);
         if (tsv != null) put(tmp, "strings.tsv", tsv);
         put(tmp, "install.toml", record(it, toml).getBytes(StandardCharsets.UTF_8));
+        // a different manifest is a new thing to consent to (the desktop rule, suite-core plugins.rs install_zip); an unreadable record counts as different
+        boolean changed = false;
+        if (dir.isDirectory()) {
+            try {
+                String old = new String(readAll(new java.io.FileInputStream(new File(dir, "install.toml")), 4096), StandardCharsets.UTF_8);
+                changed = !old.contains("manifest_sha256 = \"" + sha(toml) + "\"\n");
+            } catch (IOException e) { changed = true; }
+        }
         deleteAll(dir);
         if (!tmp.renameTo(dir)) throw new IOException("cannot keep the plugin");
+        if (changed) setEnabled(it.id, false);
         return it.id;
     }
 

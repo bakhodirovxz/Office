@@ -1,4 +1,4 @@
-//! `cargo xt plugin build <name> | pack <name>` (Phase 7 WP6): build a first-party plugin from `plugins/<name>` for
+//! `cargo xt plugin build <name|folder> | pack <name|folder> | commands [--check]` (Phase 7 WP6, WP11): build a first-party plugin from `plugins/<name>` for
 //! `wasm32-unknown-unknown` and pack it. A package is `plugin.toml`, `plugin.wasm` and, when present, `strings.tsv`, stored (not
 //! compressed) in that order with a fixed timestamp and mode, so the same inputs always give the same bytes and the same SHA-256.
 //! The manifest and the entry list are checked with `plugin-api` before anything is written.
@@ -14,23 +14,49 @@ use zip::{CompressionMethod, DateTime};
 
 pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
     match args {
-        ["build", name] => build(root, name).map(|p| p.display().to_string()),
+        ["build", name] => build(root, &Plugin::new(root, name)).map(|p| p.display().to_string()),
         ["pack", name] => pack(root, name),
-        _ => Err("usage: cargo xt plugin build <name> | pack <name>".into()),
+        ["commands"] => commands(root, false),
+        ["commands", "--check"] => commands(root, true),
+        _ => Err(
+            "usage: cargo xt plugin build <name|folder> | pack <name|folder> | commands [--check]"
+                .into(),
+        ),
     }
 }
 
-fn target_dir(root: &Path) -> PathBuf {
-    std::env::var_os("CARGO_TARGET_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| root.join("target"))
+/// Where a plugin lives. `plugins/<name>` is a member of the root workspace (built with the `plugin` profile). A name with a path
+/// separator is a folder of its own, outside the workspace (`cargo xt plugin build ../hello`; the author's Cargo.toml has its own
+/// profile): it is built with `--release` by its own manifest.
+struct Plugin {
+    dir: PathBuf,
+    external: bool,
 }
 
-/// Build the cdylib with the `plugin` profile; returns the path of the `.wasm`.
-fn build(root: &Path, name: &str) -> Result<PathBuf, String> {
-    let dir = root.join("plugins").join(name);
-    let manifest = fs::read_to_string(dir.join("Cargo.toml"))
-        .map_err(|e| format!("plugins/{name}/Cargo.toml: {e}"))?;
+impl Plugin {
+    fn new(root: &Path, name: &str) -> Plugin {
+        let external = name.contains(['/', '\\']);
+        let dir = if external {
+            root.join(name)
+        } else {
+            root.join("plugins").join(name)
+        };
+        Plugin { dir, external }
+    }
+
+    fn target(&self, root: &Path) -> PathBuf {
+        match std::env::var_os("CARGO_TARGET_DIR").map(PathBuf::from) {
+            Some(t) => t,
+            None if self.external => self.dir.join("target"),
+            None => root.join("target"),
+        }
+    }
+}
+
+/// Build the cdylib; returns the path of the `.wasm`.
+fn build(root: &Path, p: &Plugin) -> Result<PathBuf, String> {
+    let manifest = fs::read_to_string(p.dir.join("Cargo.toml"))
+        .map_err(|e| format!("{}: {e}", p.dir.join("Cargo.toml").display()))?;
     let krate = manifest
         .parse::<toml_edit::DocumentMut>()
         .map_err(|e| e.to_string())?
@@ -39,33 +65,66 @@ fn build(root: &Path, name: &str) -> Result<PathBuf, String> {
         .and_then(|n| n.as_str())
         .map(str::to_string)
         .ok_or("no package name")?;
-    let status = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
-        .args([
-            "build",
-            "--locked",
-            "--profile",
-            "plugin",
-            "--target",
-            "wasm32-unknown-unknown",
-            "-p",
-            &krate,
-        ])
-        .current_dir(root)
+    let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
+    cmd.arg("build");
+    let profile = if p.external {
+        cmd.args(["--release", "--manifest-path"])
+            .arg(p.dir.join("Cargo.toml"))
+            .current_dir(&p.dir);
+        "release"
+    } else {
+        cmd.args(["--locked", "--profile", "plugin", "-p", &krate])
+            .current_dir(root);
+        "plugin"
+    };
+    let status = cmd
+        .args(["--target", "wasm32-unknown-unknown"])
         .status()
         .map_err(|e| e.to_string())?;
     if !status.success() {
-        return Err(format!("cargo build -p {krate} failed"));
+        return Err(format!("cargo build of {krate} failed"));
     }
-    Ok(target_dir(root)
-        .join("wasm32-unknown-unknown/plugin")
+    Ok(p.target(root)
+        .join("wasm32-unknown-unknown")
+        .join(profile)
         .join(format!("{}.wasm", krate.replace('-', "_"))))
 }
 
+/// `docs/plugins-commands.md`, written by a test of the Docs domain, the only place that can see the real command registry.
+/// `--check` runs the same test without the write switch: it fails when the file is stale.
+fn commands(root: &Path, check: bool) -> Result<String, String> {
+    let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
+    cmd.args([
+        "test",
+        "--locked",
+        "--manifest-path",
+        "domains/docs/Cargo.toml",
+        "-p",
+        "docs-office",
+        "--lib",
+        "the_generated_command_list_is_current",
+    ])
+    .current_dir(root);
+    if !check {
+        cmd.env("PLUGIN_COMMANDS_WRITE", "1");
+    }
+    let status = cmd.status().map_err(|e| e.to_string())?;
+    match (status.success(), check) {
+        (true, true) => Ok("docs/plugins-commands.md is current".into()),
+        (true, false) => Ok("wrote docs/plugins-commands.md".into()),
+        (false, true) => {
+            Err("docs/plugins-commands.md is stale: run `cargo xt plugin commands`".into())
+        }
+        (false, false) => Err("generating docs/plugins-commands.md failed".into()),
+    }
+}
+
 fn pack(root: &Path, name: &str) -> Result<String, String> {
-    let wasm = fs::read(build(root, name)?).map_err(|e| e.to_string())?;
-    let dir = root.join("plugins").join(name);
+    let p = Plugin::new(root, name);
+    let wasm = fs::read(build(root, &p)?).map_err(|e| e.to_string())?;
+    let dir = &p.dir;
     let toml = fs::read(dir.join("plugin.toml"))
-        .map_err(|e| format!("plugins/{name}/plugin.toml: {e}"))?;
+        .map_err(|e| format!("{}: {e}", dir.join("plugin.toml").display()))?;
     let m = plugin_api::manifest::parse(std::str::from_utf8(&toml).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
     let mut entries: Vec<(&str, Vec<u8>)> = vec![("plugin.toml", toml), ("plugin.wasm", wasm)];
@@ -84,7 +143,7 @@ fn pack(root: &Path, name: &str) -> Result<String, String> {
         zip.write_all(b).map_err(|e| e.to_string())?;
     }
     let bytes = zip.finish().map_err(|e| e.to_string())?.into_inner();
-    let out = target_dir(root).join("plugins");
+    let out = p.target(root).join("plugins");
     fs::create_dir_all(&out).map_err(|e| e.to_string())?;
     let file = out.join(format!("{}-{}.zip", m.id, m.version));
     fs::write(&file, &bytes).map_err(|e| e.to_string())?;

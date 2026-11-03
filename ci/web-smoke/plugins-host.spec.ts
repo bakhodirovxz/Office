@@ -262,7 +262,16 @@ test('M1/M2: a module that imports WASI or exports its own memory is refused at 
   await call(page, 'plg-imp', 'hello');
   await expect(status(page)).toContainText('imports not allowed: wasi_snapshot_preview1.fd_write');
   await call(page, 'plg-exp', 'hello');
-  await expect(status(page)).toContainText('exports a memory');
+  await expect(status(page)).toContainText(/exports a memory|defines its own memory/)   // the section screen in worker.js sees the memory section first;
+});
+
+test('M2b: a second memory the module defines itself, and wasm GC types, are refused before compile', async ({ page }) => {
+  await openShell(page, [plugin('plg-own', { file: 'own-memory.wasm' }), plugin('plg-gc', { file: 'gc-type.wasm' })]);
+  await registered(page);
+  await call(page, 'plg-own', 'hello');
+  await expect(status(page)).toContainText('the module defines its own memory');
+  await call(page, 'plg-gc', 'hello');
+  await expect(status(page)).toContainText('type form that is not allowed');
 });
 
 test('a wasm file that does not match its SHA-256 is refused', async ({ page }) => {

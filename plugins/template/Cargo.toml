@@ -1,0 +1,18 @@
+# Phase 7 WP11: the SDK template (docs/plugins.md section 11). Copy this folder to `plugins/<name>`, change the package name, the
+# `id` in plugin.toml and the code. `cargo xt plugin build template` makes the wasm module; the rlib is for native unit tests.
+[package]
+name = "template-plugin"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "SDK template: one command that opens one panel"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+plugin-sdk = { path = "../../crates/plugin-sdk" }
+
+[dev-dependencies]
+serde_json = "1"

@@ -9,7 +9,7 @@
 //!
 //! The guest is a trait ([`Guest`]): wasmtime natively (WP2), a bridge to a Worker on the web (WP4/5), a closure in tests.
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
 use plugin_api::action::Widget;
@@ -32,6 +32,8 @@ const PARAMS: &str = r#"{"scope"?: "auto"|"selection"|"document", ...the plugin'
 /// One invocation's conversation with the plugin. Natively this is `plugin_host::Session`; `round` is its method of that name.
 pub trait GuestSession {
     fn round(&mut self, call: &Message) -> Result<Message, String>;
+    /// Shorten the time every later round may take (an `event` invocation). A guest without a clock of its own ignores it.
+    fn limit_budget(&mut self, _d: std::time::Duration) {}
 }
 
 /// A loaded plugin module. `start` begins one invocation (a fresh instance, or a reset one).
@@ -64,16 +66,22 @@ pub struct Plugin {
     /// Network origins that were granted (the manifest's list minus what nobody granted).
     pub origins: Vec<String>,
     enabled: AtomicBool,
+    /// Invocations that ran out of time in this session; at `DISABLE_AFTER_TIMEOUTS` the plugin is switched off.
+    timeouts: AtomicU32,
     pub ui: Mutex<UiState>,
 }
 
 impl Plugin {
     pub fn new(manifest: Manifest, guest: Arc<dyn Guest>) -> Plugin {
         let settings = manifest.settings.clone();
-        Plugin { manifest, settings, guest, fetcher: None, origins: Vec::new(), enabled: AtomicBool::new(true), ui: Mutex::new(UiState::default()) }
+        Plugin { manifest, settings, guest, fetcher: None, origins: Vec::new(), enabled: AtomicBool::new(true), timeouts: AtomicU32::new(0), ui: Mutex::new(UiState::default()) }
     }
     pub fn enabled(&self) -> bool {
         self.enabled.load(Ordering::Relaxed)
+    }
+    /// Count one invocation that ran out of time; returns the count so far.
+    fn timed_out(&self) -> u32 {
+        self.timeouts.fetch_add(1, Ordering::Relaxed) + 1
     }
     /// A command mutates the document when the plugin may write it.
     fn mutates(&self) -> bool {
@@ -156,6 +164,9 @@ pub fn set_enabled(id: &str, on: bool) {
     let mut st = state_mut();
     if let Some(p) = st.plugins.iter().find(|p| p.manifest.id == id) {
         p.enabled.store(on, Ordering::Relaxed);
+        if on {
+            p.timeouts.store(0, Ordering::Relaxed);
+        }
     }
     assign(&mut st);
 }

@@ -7,7 +7,7 @@
 # Jobs (names as in PLAN 6.1):
 #   queue                    verify-queue all; cargo xt register check; quarantine format check
 #   lint                     fmt + clippy -D warnings (root), fmt/layers/assets (upstream trees), upstream clippy ratchet (fails on new warnings only)
-#   gen-check                cargo xt gen-domain --check all; lockdiff x4
+#   gen-check                cargo xt gen-domain --check all; cargo xt plugin commands --check; lockdiff x4
 #   deny                     cargo-deny x5 (root + 4 domains), one config each
 #   notices                  NOTICE/LICENSE-MIT current (gen-legal --check); THIRD-PARTY-NOTICES.txt current and every shipped crate has a licence (gen-notices --check, cargo-about, minutes)
 #   brand                    cargo xt brand-grep + logo-include check
@@ -233,6 +233,8 @@ job_gen_check() {
   local rc=0 d
   if xt_has gen-domain; then bstep gen-domain cargo xt gen-domain --check all || rc=1
   else note "stub: cargo xt gen-domain not implemented yet"; fi
+  # the generated plugin command list (docs/plugins-commands.md) against the allowlist and the Docs registry
+  bstep plugin-commands env CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo xt plugin commands --check || rc=1
   if xt_has lockdiff; then
     for d in $DOMAINS; do
       bstep "lockdiff-$d" cargo xt lockdiff "domains/$d/Cargo.lock" "upstream/$(app_of "$d")/Cargo.lock" || rc=1
@@ -537,7 +539,8 @@ job_plugins() {
   local rc=0
   bstep plugin-pack env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack uz-translit || return 1
   bstep plugin-pack-fields env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack template-fields || return 1
-  bstep plugin-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-sdk -p uz-translit-plugin -p template-fields-plugin || rc=1
+  bstep plugin-pack-template env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack template || return 1
+  bstep plugin-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-sdk -p uz-translit-plugin -p template-fields-plugin -p template-plugin || rc=1
   bstep plugin-matrix env UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test plugin_matrix -- --nocapture || rc=1
   # plugin #2 (WP7): insert, highlight, check and the docx round trip with the real module in the native host
   bstep plugin-fields env TEMPLATE_FIELDS_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_fields_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test fields || rc=1
@@ -555,6 +558,8 @@ job_plugins() {
     pw_step playwright-plugins-host playwright.plugins.config.ts SUITE_SERVE_BIN="$SVC_T/debug/hoshiya-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/debug/convert-api-fake-tool$EXE" SHELL_DIST_ROOT="$dist" || rc=1
     pw_step playwright-bridge-plugins playwright.bridge-plugins.config.ts DOCS_DIST="$dist/docs-web" || rc=1
   fi
+  # the SDK template (WP11): the real module loads in the native host, its command opens the panel, the button shows "Hello"
+  bstep plugin-template env TEMPLATE_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test template || rc=1
   return $rc
 }
 

@@ -28,6 +28,9 @@ impl GuestSession for Sess {
     fn round(&mut self, call: &Message) -> Result<Message, String> {
         self.0.round(call).map_err(|e| e.to_string())
     }
+    fn limit_budget(&mut self, d: Duration) {
+        self.0.limit_round_budget(d);
+    }
 }
 
 /// `fetch` for one plugin: the granted origins, the checked address, the answer as `{status, body}`.

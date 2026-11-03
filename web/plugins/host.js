@@ -15,12 +15,16 @@
   const MAX_MSG = 32 << 20, MAX_HEADER = 1 << 20, MAX_BLOBS = 16, MAX_ROUNDS = 16, SLOTS = 64;
   const TEXT = 1024, WIDGETS = 64, ITEMS = 256, STATUS = 256, FETCH_BODY = 1 << 20;
   const EDITOR_MS = 10000, LOAD_MS = 10000, FETCH_MS = 10000;
+  // the same four numbers as plugin-api's wire.rs: invocation deadline, fetches per invocation, event round, timeouts before a plugin is switched off
+  const INVOCATION_MS = 10000, MAX_FETCHES = 8, EVENT_MS = 100, DISABLE_AFTER = 3;
   const enc = new TextEncoder(), dec = new TextDecoder('utf-8', { fatal: true });
   const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
   const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (_) { return null; } };
   // control, invisible and bidi-override characters never reach the screen (the same set as plugin-api's `spoof`)
   const SPOOF = new RegExp('[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]', 'g');
   const SPOOF_NL = new RegExp('[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]', 'g');
+  // the editor's refusals (docs-plugins bridge.rs BUSY, PROTECTED) shown in the user's language
+  const REFUSED = { 'another plugin is still running': 'plg.busy', 'the document is protected': 'plg.protected' };
   const clean = (s, nl) => [...String(s ?? '').replace(nl ? SPOOF_NL : SPOOF, '')].slice(0, TEXT).join('');
   const loc = (m, lang) => clean((m && (m[lang] || m.en)) || '');
   const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -161,10 +165,10 @@
       return w;
     }
     // one round: the time budget runs from the post until the answer; when it is over the Worker is terminated and the next call starts a new one
-    async function round(P, header, blobs) {
+    async function round(P, header, blobs, ms) {
       const w = await ensure(P), msg = encode(header, blobs), id = ++seq;
       return new Promise((ok, bad) => {
-        const tm = setTimeout(() => stop(P, 'time budget'), budget());
+        const tm = setTimeout(() => stop(P, 'time budget'), ms);
         P.pending = { id, ok, bad, tm };
         w.postMessage({ type: 'call', id, msg }, [msg]);
       });
@@ -189,7 +193,7 @@
       if (granted(P, o)) return true;
       if (P.d.grant) return false;   // server mode: the admin's list is final
       await ready;
-      const dlg = el('dialog', { className: 'plg-dlg' });
+      const dlg = el('dialog', { className: 'plg-dlg' }), t0 = Date.now();
       const ok = await new Promise((done) => {
         dlg.setAttribute('aria-labelledby', 'plg-gt');
         dlg.append(el('h2', { id: 'plg-gt' }, t('plg.grant.title', { name: P.name, origin: o.slice(8) })), el('p', {}, t('plg.grant.body', { publisher: clean(P.m.publisher) })),
@@ -198,7 +202,7 @@
         dlg.onclose = () => done(dlg.returnValue === 'ok');
         document.body.append(dlg); dlg.showModal();
       });
-      dlg.remove();
+      dlg.remove(); P.slack = (P.slack || 0) + Date.now() - t0;   // the time a person took to decide is not the plugin's
       if (ok) { const g = grants(); (g[P.d.id] ||= []).push(o); store('plg.grants', JSON.stringify(g)); }
       return ok;
     }
@@ -249,7 +253,10 @@
     // ---- one invocation: rounds of (plugin call, actions) until no `next` or 16 rounds; all editor actions of it are one undo step on the editor side ----
     async function invokeNow(P, head, reads, call) {
       const fromEvent = head.kind === 'event';
-      let blobs = [], idx = {}, results = [], sent = false;
+      let blobs = [], idx = {}, results = [], sent = false, fetches = 0;
+      const dl = Date.now() + INVOCATION_MS, slack0 = P.slack || 0;
+      // one deadline for the whole invocation, checked before each round, action and fetch; an event round is short
+      const left = () => { const r = dl + (P.slack || 0) - slack0 - Date.now(); if (r <= 0) throw Object.assign(new Error('invocation time budget'), { stopped: true }); return r; };
       const add = (name, v) => { idx[name] = blobs.push(u8(v)) - 1; };
       for (const [k, v] of Object.entries(reads || {})) add(k, v);
       try {
@@ -257,14 +264,15 @@
           if (r >= MAX_ROUNDS) throw new Error('more than 16 rounds');
           const h = { kind: r ? 'resume' : head.kind, api: 1, api_minor: 0, app: P.app, lang: lang(), ...(head.command && { command: head.command }), ...(head.widget && { widget: head.widget }),
             ...(head.event && { event: head.event }), params: head.params || {}, settings: P.settings, ...(results.length && { results }), ...(Object.keys(idx).length && { reads: idx }) };
-          const ans = await round(P, h, blobs);
+          const ans = await round(P, h, blobs, Math.min(left(), fromEvent ? EVENT_MS : budget()));
           const a = checkAnswer(ans.header, P, fromEvent);
           results = [];
           const fwd = [];
           for (const x of a.actions) {
+            left();
             if (x.type === 'ui.status') { say(clean(x.text).slice(0, STATUS)); results.push({ ok: true }); }
             else if (x.type === 'ui.panel') { await ready; if (!fromEvent || shown === P.d.id + '/' + x.panel) render(P, x.panel, x.widgets); results.push({ ok: true }); }   // an event refreshes an open panel, never opens one
-            else if (x.type === 'fetch') results.push(await doFetch(P, x));
+            else if (x.type === 'fetch') { if (++fetches > MAX_FETCHES) throw new Error('more than ' + MAX_FETCHES + ' fetches'); results.push(await doFetch(P, x)); }
             else { fwd.push(results.length); results.push(null); }
           }
           const wantReads = a.next ? a.next.reads : [];
@@ -281,13 +289,16 @@
       } catch (e) {
         if (sent || call.fromEditor) { try { toEditor(P, 'pluginActions', { call: call.id, actions: [], more: false, abort: true }); } catch (_) { /* no editor */ } }
         await ready;
-        say(e.stopped ? t('plg.timeout', { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
+        if (e.stopped && (P.timeouts = (P.timeouts || 0) + 1) >= DISABLE_AFTER) P.off = true;
+        const known = REFUSED[String(e.message)];
+        say(P.off ? t('plg.disabled', { name: P.name }) : e.stopped ? t('plg.timeout', { name: P.name }) : known ? t(known, { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
         note(e.origin !== undefined ? { plugin: P.d.id, kind: 'network.refused', origin: e.origin } : { plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
       }
     }
     // invocations of one plugin never overlap
     function start(P, head, reads, editorCall) {
       if (!P) return Promise.resolve();
+      if (P.off) { if (head.kind !== 'event') ready.then(() => say(t('plg.disabled', { name: P.name }))); return Promise.resolve(); }   // switched off for this page load
       const call = { id: editorCall ?? 'h' + (++seq), fromEditor: editorCall !== undefined };
       return (P.q = P.q.then(() => invokeNow(P, head, reads, call)));
     }

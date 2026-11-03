@@ -8,14 +8,34 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use plugin_api::action::{Action, Answer, Call, CallKind, Denied, Grants, ReadReq, ReadWhat, Scope as ApiScope, Widget};
-use plugin_api::manifest::{Event, ReadKind};
+use plugin_api::manifest::{DocAccess, Event, ReadKind};
 use plugin_api::textmap::{Apply, TextMap};
-use plugin_api::wire::{MAX_BLOBS, MAX_ROUNDS, Message};
+use plugin_api::wire::{DISABLE_AFTER_TIMEOUTS, EVENT_ROUND_MS, INVOCATION_MS, MAX_BLOBS, MAX_FETCHES, MAX_ROUNDS, Message};
 use serde_json::{Map, Value, json};
 use wordcraft_engine::{CmdError, CmdResult, Session};
 
 use crate::textmap::{self, Opts, Scope, Stats};
 use crate::{GuestSession, Plugin};
+
+/// The marker of every time-limit failure (the wasm epoch stop and the invocation deadline): [`invoke`] counts these per plugin.
+const TIMED_OUT: &str = "time budget exceeded";
+
+#[cfg(test)]
+thread_local! {
+    /// Tests shorten the invocation deadline (ms).
+    pub(crate) static DEADLINE_MS: std::cell::Cell<f64> = const { std::cell::Cell::new(INVOCATION_MS as f64) };
+}
+
+fn invocation_ms() -> f64 {
+    #[cfg(test)]
+    {
+        DEADLINE_MS.with(|d| d.get())
+    }
+    #[cfg(not(test))]
+    {
+        INVOCATION_MS as f64
+    }
+}
 
 fn fail<T>(s: impl Into<String>) -> Result<T, CmdError> {
     Err(CmdError::Failed(s.into()))
@@ -160,15 +180,31 @@ struct Run {
     status: Option<String>,
     applied: Stats,
     rounds: usize,
+    /// `now_ms()` at which the invocation runs out of time (checked before each action, fetch and round), and the fetches done so far.
+    deadline_ms: f64,
+    fetches: usize,
 }
 
 impl Run {
+    fn new(inv: Invocation, rev: u64) -> Run {
+        let checkpointed = inv.in_command;
+        Run { inv, last_map: None, read_rev: rev, checkpointed, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0, deadline_ms: wordcraft_layout::now_ms() + invocation_ms(), fetches: 0 }
+    }
+
+    fn check_time(&self) -> Result<(), CmdError> {
+        if wordcraft_layout::now_ms() > self.deadline_ms { fail(format!("plugin stopped: invocation {TIMED_OUT} ({INVOCATION_MS} ms)")) } else { Ok(()) }
+    }
+
     fn field_results(&self) -> bool {
         self.inv.params.get("fieldResults").and_then(Value::as_bool).unwrap_or(true)
     }
 
     /// Perform one read: the blob goes into `blobs`, its index under the read's name in `reads`.
     fn read(&mut self, s: &mut Session, req: &ReadReq, blobs: &mut Vec<Vec<u8>>, reads: &mut BTreeMap<String, u32>) -> Result<u32, CmdError> {
+        // Every read goes through here (command `reads`, `next.reads`, the `read` action): none without `document = read` or `write`.
+        if self.inv.plugin.manifest.permissions.document < DocAccess::Read {
+            return fail("plugin action refused: reading the document needs the document permission");
+        }
         // A message carries 16 blobs at most (`Message::encode`); refuse the 17th read before it walks the document.
         if blobs.len() >= MAX_BLOBS {
             return fail("plugin asked for more than 16 reads in one round");
@@ -207,6 +243,7 @@ impl Run {
     }
 
     fn action(&mut self, s: &mut Session, a: &Action, answer_blobs: &[Vec<u8>], blobs: &mut Vec<Vec<u8>>, reads: &mut BTreeMap<String, u32>) -> CmdResult {
+        self.check_time()?;
         match a {
             Action::Run { id, params } => {
                 if s.registry.get(id).is_some_and(|c| c.mutates) {
@@ -229,10 +266,16 @@ impl Run {
                 Ok(json!({"paragraphs": st.paragraphs, "runs": st.runs}))
             }
             Action::Read(req) => Ok(json!({"blob": self.read(s, req, blobs, reads)?})),
-            Action::Fetch { url, method, headers, body } => match &self.inv.plugin.fetcher {
-                Some(f) => Ok(f.fetch(url, method, headers, body.as_deref()).unwrap_or_else(|e| json!({"error": e}))),
-                None => Ok(json!({"error": "network is not available in this host"})),
-            },
+            Action::Fetch { url, method, headers, body } => {
+                if self.fetches >= MAX_FETCHES {
+                    return fail(format!("plugin asked for more than {MAX_FETCHES} fetches in one invocation"));
+                }
+                self.fetches += 1;
+                match &self.inv.plugin.fetcher {
+                    Some(f) => Ok(f.fetch(url, method, headers, body.as_deref()).unwrap_or_else(|e| json!({"error": e}))),
+                    None => Ok(json!({"error": "network is not available in this host"})),
+                }
+            }
             Action::UiPanel { panel, widgets } => {
                 self.panels.push((panel.clone(), widgets.clone()));
                 Ok(Value::Null)
@@ -274,9 +317,11 @@ impl Machine {
             return fail("the document changed before the plugin was called (stale revision)");
         }
         let p = inv.plugin.clone();
-        let guest = p.guest.start().map_err(|e| CmdError::Failed(format!("plugin could not start: {e}")))?;
-        let mut run = Run { inv, last_map: None, read_rev: s.rev(), checkpointed: false, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 };
-        run.checkpointed = run.inv.in_command;
+        let mut guest = p.guest.start().map_err(|e| CmdError::Failed(format!("plugin could not start: {e}")))?;
+        if inv.kind == CallKind::Event {
+            guest.limit_budget(std::time::Duration::from_millis(EVENT_ROUND_MS)); // an event runs on its own, with no user waiting for it
+        }
+        let run = Run::new(inv, s.rev());
         let call = Call {
             kind: run.inv.kind,
             api: 1,
@@ -385,8 +430,7 @@ pub struct Remote {
 
 impl Remote {
     pub fn new(s: &Session, inv: Invocation) -> Remote {
-        let checkpointed = inv.in_command;
-        Remote { run: Run { inv, last_map: None, read_rev: s.rev(), checkpointed, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 } }
+        Remote { run: Run::new(inv, s.rev()) }
     }
 
     pub fn plugin(&self) -> &Arc<Plugin> {
@@ -447,6 +491,7 @@ impl Remote {
 fn rounds(s: &mut Session, inv: Invocation) -> CmdResult {
     let (mut m, mut msg) = Machine::begin(s, inv)?;
     loop {
+        m.run.check_time()?;
         let out = m.guest.round(&msg).map_err(|e| CmdError::Failed(format!("plugin stopped: {e}")))?;
         match m.resume(s, &out)? {
             Step::Call(next) => msg = next,
@@ -463,10 +508,15 @@ pub fn invoke(s: &mut Session, inv: Invocation) -> CmdResult {
     }
     let plugin = inv.plugin.clone();
     let snap = s.edit_snapshot();
-    let r = rounds(s, inv);
+    let mut r = rounds(s, inv);
     if let Err(e) = &r {
         s.restore(snap);
         plugin.ui.lock().unwrap_or_else(|e| e.into_inner()).last_error = Some(e.to_string());
+        if matches!(e, CmdError::Failed(m) if m.contains(TIMED_OUT)) && plugin.timed_out() >= DISABLE_AFTER_TIMEOUTS {
+            crate::set_enabled(&plugin.manifest.id, false);
+            // the caller reports the error as the status line, so the notice rides on it
+            r = fail(format!("{e}; plugin {} was switched off for this session: it ran out of time {DISABLE_AFTER_TIMEOUTS} times", plugin.manifest.id));
+        }
     }
     r
 }

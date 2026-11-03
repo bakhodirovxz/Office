@@ -23,7 +23,7 @@ fn main() -> ExitCode {
         ["quarantine", rest @ ..] => quarantine::run(&repo_root(), rest),
         ["i18n", rest @ ..] => i18n::run(&repo_root(), rest),
         ["overlay", ..] | ["brand", ..] | ["brand-grep"] | ["brand-scan-bin", ..] => brand::run(&repo_root(), &args.iter().map(String::as_str).collect::<Vec<_>>()),
-        _ => Err("usage: cargo xt quarantine <command> | plugin build|pack <name> | i18n <command> | overlay <app> | brand check|icons | brand-grep | brand-scan-bin | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
+        _ => Err("usage: cargo xt quarantine <command> | plugin build|pack <name>|commands [--check] | i18n <command> | overlay <app> | brand check|icons | brand-grep | brand-scan-bin | register check | gen-domain [--check] <d|all> | lockdiff <domain-lock> <upstream-lock> | domain-upstream <d>".to_string()),
     };
     match result {
         Ok(msg) => {
