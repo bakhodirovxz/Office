@@ -168,3 +168,29 @@ call can only answer with `ui.panel` and `ui.status`; it cannot read or change t
 - **Refused at run time**: a message that breaks section 3, an answer with an unknown action, an action without its permission,
   a text map apply that breaks section 5, a round over its time or memory budget, more than 16 rounds. The document is then
   restored and the status line says the plugin was stopped.
+
+## 9. The web bridge (editor iframe and page host)
+
+On the web the editor (the wasm in the iframe) is the plugin **executor** (`docs-plugins`), and the **page** that hosts the iframe
+owns the plugin's Worker. Rounds therefore cross `postMessage`. Every message is a `type` plus the fields below, to and from the
+same origin as the other `wordcraft:*` messages (the `?host=parent` protocol, `host.rs`). A text map and every other blob are
+transferred `ArrayBuffer`s, never base64 or JSON. Numbers `call` and `rev` are integers.
+
+| Message | Direction | Fields |
+|---|---|---|
+| `wordcraft:plugins` | page to editor | `{plugins: [{manifest, settings?, origins?, enabled?}], timeoutMs?}`. `manifest` is the text of `plugin.toml` (the editor parses and validates it; no TOML parser is needed in JS). `settings` overrides the manifest's `[settings]` defaults, `origins` are the network origins that were granted, `enabled` defaults to true. The list is the **whole** set the page hosts: plugins not listed are unregistered, an empty list unregisters all. `timeoutMs` (optional, default 7000) is how long the editor waits for one round. |
+| `wordcraft:pluginsSet` | editor to page | `{ids: [registered plugin ids], errors: [one text per refused entry]}`, the answer to every `wordcraft:plugins`. A refused entry is skipped, the others register. |
+| `wordcraft:pluginCall` | editor to page | `{call, plugin, rev, round, header, blobs}`. `header` is the call header of section 3 as an object (`kind` is `command`, `ui`, `event` or `resume`; for `resume` it carries `results` and `reads`); `blobs` is an array of `ArrayBuffer`s in the order the header's `reads` index (the text map is blob 0). `rev` is the document revision this call belongs to; `round` counts from 1. One `call` id covers a whole invocation, its rounds and its resumes. Events are calls with `kind: "event"`. |
+| `wordcraft:pluginActions` | page to editor | `{call, rev, header, blobs}`: the plugin's answer. `header` is the answer header of section 3 as an object (`{actions: [...], next?: {reads: [...]}}`), `blobs` the answer's blobs (for `textmap.apply`), `rev` the value from the call, echoed. Or `{call, error: "text"}` when the page has no answer (a trap, a refused message, the Worker's own time budget). The editor parses the header strictly (section 3) and checks every action (sections 4 and 8). |
+| `wordcraft:pluginDone` | editor to page | `{call, plugin, ok, error}`: the invocation is over. `ok` false means it failed and the document is as it was (`error` says why: `no answer in time`, `stale`, `the document was replaced`, a refused action, the page's own `error`); the page ends the invocation's Worker round. |
+
+A plugin command (the ribbon, a menu, the palette, `wordcraft:run`) returns at once with `{"pending": call}`. From then on the editor
+is **locked for input** (Restrict Editing's read-only protection, lifted while the answer's actions run and put back between rounds,
+never left on) until `wordcraft:pluginDone`. The editor ends an invocation itself, with the same restore, when a round gets no answer
+within `timeoutMs`, when the document revision moved while the plugin ran (`stale`), when `rev` of an answer is not the call's, and
+when another document is opened. An answer for a call that is not pending (finished, timed out) is ignored. Event calls neither lock
+nor snapshot (they can only answer with `ui.*` actions); one event of a kind is outstanding per plugin, later ones are dropped until
+the page answers it. All mutating actions of an invocation, over all its rounds, are one undo step.
+
+`fetch` actions are not served by the editor yet: the result of one is `{"error": "network is not available in this host"}`
+(WP5 decides whether the page runs them).

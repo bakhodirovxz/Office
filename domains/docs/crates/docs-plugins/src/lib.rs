@@ -18,6 +18,7 @@ use plugin_api::wire::Message;
 use serde_json::{Map, Value};
 use wordcraft_engine::{CmdResult, CommandSpec, Registry, Session};
 
+pub mod bridge;
 pub mod exec;
 pub mod panel;
 pub mod textmap;
@@ -36,6 +37,10 @@ pub trait GuestSession {
 /// A loaded plugin module. `start` begins one invocation (a fresh instance, or a reset one).
 pub trait Guest: Send + Sync {
     fn start(&self) -> Result<Box<dyn GuestSession>, String>;
+    /// The plugin runs elsewhere and answers later (the web page's Worker): the invocation goes through [`bridge`].
+    fn remote(&self) -> bool {
+        false
+    }
 }
 
 /// The host side of the `fetch` action, after the grant check passed. Returns the response as JSON.

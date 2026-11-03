@@ -34,6 +34,10 @@
 //! - `wordcraft:focusOut` (to the parent): `{ palette }`, the user pressed F6 (leave the editor, `palette`
 //!   false) or F1 (open the command palette, `palette` true); a canvas swallows Tab, so these are the
 //!   keyboard way out.
+//! - `wordcraft:plugins`, `wordcraft:pluginActions` (from the parent) and `wordcraft:pluginsSet`,
+//!   `wordcraft:pluginCall`, `wordcraft:pluginDone` (to the parent): the plugin bridge, handled by
+//!   `docs_office::plugin_web` (docs/plugins.md, "The web bridge"). The page runs the plugin in a
+//!   Worker; the editor is the executor, locks input while a call is pending and restores on failure.
 //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
 //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
 //!
@@ -214,6 +218,10 @@ impl Bridge {
             app.canvas.want_focus = true;
             ctx.request_repaint();
         }
+        #[cfg(feature = "office-ext")]
+        if docs_office::plugin_web::sync(&mut app.session, &|m, transfer| self.parent.post_message_with_transfer(m, &self.origin, transfer).is_ok()) {
+            ctx.request_repaint_after(std::time::Duration::from_millis(100));
+        }
         for ok in self.acks.take() {
             if self.pending.get() == 0 {
                 break;
@@ -359,6 +367,8 @@ impl Bridge {
                     }
                 }
                 Some("wordcraft:saved") => bridge.acks.borrow_mut().push(bool_field(&data, "ok")),
+                #[cfg(feature = "office-ext")]
+                Some(plugin) if plugin.starts_with("wordcraft:plugin") => docs_office::plugin_web::incoming(&data),
                 _ => return,
             }
             ctx.request_repaint();

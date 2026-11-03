@@ -256,15 +256,19 @@ invocation; on the web the editor refuses an apply whose `Session::rev()` moved 
 
 ### 4.6 Bridge messages (web; new carried patch next to 0141)
 
+Final shapes (WP4, 2026-11-03): the full field list is in `docs/plugins.md` section 9; the code is `docs-plugins::bridge` (state machine,
+no JS) and `docs-office::plugin_web` (the JS end), with the carried patch `wordcraft/0148` forwarding the messages.
+
 | Message | Direction | Fields |
 |---|---|---|
-| `<prefix>:plugins` | page → editor | `{commands: [{slot, id, label, mutates, reads, params}], toolbar, menu}`: registers the slot commands and the preset group |
-| `<prefix>:pluginCall` | editor → page | `{call, plugin, command, params, rev, reads}` with the text map as a transferred `ArrayBuffer` |
-| `<prefix>:pluginActions` | page → editor | `{call, actions, blobs, more}`; the editor runs them and answers `<prefix>:pluginResults {call, results, reads}` |
-| `<prefix>:pluginEvent` | editor → page | `{event, …}` only for events a loaded plugin subscribed to |
+| `wordcraft:plugins` | page -> editor | `{plugins: [{manifest, settings?, origins?, enabled?}], timeoutMs?}`: `manifest` is the `plugin.toml` text (the editor parses it); the list is the whole set, so it also unregisters. Replaces the earlier `{commands, toolbar, menu}`: the slots, ribbon group and menus derive from the manifest, as natively |
+| `wordcraft:pluginsSet` | editor -> page | `{ids, errors}` |
+| `wordcraft:pluginCall` | editor -> page | `{call, plugin, rev, round, header, blobs}`: `header` is the call header of 4.2/4.3 (also `kind: "event"` and `"resume"`), `blobs` transferred `ArrayBuffer`s (the text map is blob 0). Replaces `pluginCall` + `pluginResults` + `pluginEvent`: a resume and an event are calls with another `kind`, so the page has one handler |
+| `wordcraft:pluginActions` | page -> editor | `{call, rev, header, blobs}` (`header` = the answer header `{actions, next?}`; `rev` echoed), or `{call, error}` |
+| `wordcraft:pluginDone` | editor -> page | `{call, plugin, ok, error}`: the invocation is over (new; the page ends the Worker round on `ok: false`) |
 
 A plugin command on the web returns at once with `{"pending": call}`; the document is locked for input until the answer or the
-time budget runs out (then "plugin stopped" in the status line, nothing changed).
+time budget (default 7 s per round, `timeoutMs`) runs out (then "Plugin stopped: ..." in the status line, nothing changed).
 
 ### 4.7 Versioning
 
