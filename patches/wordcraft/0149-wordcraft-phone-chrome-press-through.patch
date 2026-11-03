@@ -1,28 +1,24 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
 Date: Tue, 3 Nov 2026 12:00:00 +0500
-Subject: [PATCH] ui-egui: a tap on the phone's Edit button does not reach the
- page and leaves no object drag behind
+Subject: [PATCH] ui-egui: the phone chrome's gate drops the object drag of the
+ finger it swallows
 
-Phase 6 WP12 (docs/phase6/lifecycle.md, picture-less autosave). Found on the emulator: the press of a tap on the round Edit button, which floats over the page, reached the page (`CHROME_DOWN` is only set by `phone_chrome` once it has seen the press, and the press of a finger arrives in a frame of its own), selected the picture under the button and began an object drag; the release then met the closed gate, so the drag stayed. The next tap, on a heading, was taken as that drag's pointer: the picture moved to the heading, and the first typed key replaced the still selected picture. `office_overlay::press_on_chrome_now` tells a press on the chrome from the events of its own frame (outside the page panel, or on the Edit button's rectangle: the same test `phone_chrome` uses, now one function), and the gate in `canvas::mouse` also drops any object drag it swallows a finger for. Desktop and a build without the extension are unchanged (`phone_on` is false).
+Phase 6 WP12 (docs/phase6/lifecycle.md, picture-less autosave). Found on the emulator: the press of a tap on the round Edit button reached the page in a frame where the phone layout had flickered off (docs-office `active`, fixed there), selected the picture under it and began an object drag; the release then met the closed gate in `canvas::mouse` (`chrome_down`, `phone_reading`), so the drag was left behind. The next tap, on a heading, was taken as that drag's pointer: the picture moved to the heading, and the first typed key replaced the still selected picture. The gate now also drops the object drag when it swallows a finger, so no path can leave one behind. Desktop and a build without the extension are unchanged (the gate is only closed by the phone chrome). Tests: a finger's tap on text with a picture selected moves nothing, places the caret and deselects the picture, for a press and release in one frame and in two.
 ---
- crates/ui-egui/src/canvas.rs               |  4 +++-
- crates/ui-egui/src/objects.rs              | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- crates/ui-egui/src/office_overlay.rs       | 23 +++++++++++++++++++----
- crates/ui-egui/src/office_overlay_tests.rs | 19 +++++++++++++++++++
- 4 files changed, 90 insertions(+), 5 deletions(-)
+ crates/ui-egui/src/canvas.rs  |  2 ++
+ crates/ui-egui/src/objects.rs | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 79d6394..bbc8704 100644
+index 79d6394..7679b34 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
-@@ -2328,7 +2328,9 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
- 
+@@ -2329,6 +2329,8 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
  fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
      // A finger on the phone chrome's bars is not the page's (wordcraft/0140); nor is a tap while the phone shows it for reading (0143).
--    if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() {
-+    // A press that came through before the gate closed must not leave an object drag behind: the next tap would move the picture (wordcraft/0149).
-+    if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() || crate::office_overlay::press_on_chrome_now(ui) {
+     if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() {
++        // A press of that finger that came through before the gate closed leaves no object drag behind: the next tap would move the picture (0149).
 +        app.canvas.obj_drag = None;
          return;
      }
@@ -85,71 +81,3 @@ index 554f10d..14aec7f 100644
 +        }
 +    }
  }
-diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index b0746f2..9fccff7 100644
---- a/crates/ui-egui/src/office_overlay.rs
-+++ b/crates/ui-egui/src/office_overlay.rs
-@@ -232,10 +232,7 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
-     let page = ui.available_rect_before_wrap();
-     // The Edit button floats over the page: the extension leaves its rectangle in the context.
-     let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
--    let (pressed_on_bar, active) = ui.input(|i| {
--        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))));
--        (on_bar, i.pointer.any_down() || i.pointer.any_released())
--    });
-+    let (pressed_on_bar, active) = ui.input(|i| (press_on_chrome(&i.events, page, extra), i.pointer.any_down() || i.pointer.any_released()));
-     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
-     CHROME_DOWN.store(pressed_on_bar || (before && active), std::sync::atomic::Ordering::Relaxed);
-     true
-@@ -246,6 +243,24 @@ pub fn chrome_down() -> bool {
-     CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed)
- }
- 
-+/// A press in `events` landed outside the page panel or on the floating Edit button's rectangle.
-+pub(crate) fn press_on_chrome(events: &[egui::Event], page: egui::Rect, extra: Option<egui::Rect>) -> bool {
-+    events.iter().any(
-+        |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
-+    )
-+}
-+
-+/// A finger went down on the phone chrome in this very frame (wordcraft/0149). `CHROME_DOWN` is only set once `phone_chrome` has seen the press, so
-+/// `canvas::mouse` would let the press of a tap on the Edit button (which floats over the page) through: it selected the picture under the button and
-+/// left an object drag behind. `ui` is the page panel's.
-+pub fn press_on_chrome_now(ui: &egui::Ui) -> bool {
-+    if !phone_on() {
-+        return false;
-+    }
-+    let extra = ui.ctx().data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
-+    ui.input(|i| press_on_chrome(&i.events, ui.max_rect(), extra))
-+}
-+
- /// Draw icon `name` if the extension has one; false lets upstream draw it.
- pub fn paint_icon(p: &egui::Painter, r: egui::Rect, name: &str, c: egui::Color32) -> bool {
-     EXT.get().is_some_and(|(_, icon)| icon(p, r, name, c))
-diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
-index 35c4ad5..91d18aa 100644
---- a/crates/ui-egui/src/office_overlay_tests.rs
-+++ b/crates/ui-egui/src/office_overlay_tests.rs
-@@ -267,3 +267,22 @@ fn autosave_and_save_keep_the_picture_of_an_opened_document() {
-     b.run("text.insert", json!({"text": "E"})).unwrap();
-     assert!(media_parts(&o::autosave_bytes(&b, "phone-ux.docx").unwrap()).is_empty(), "the picture was replaced");
- }
-+
-+/// wordcraft/0149: a press on the phone chrome is told from the events of its own frame: below the page panel (a bar) or on the Edit button's rectangle,
-+/// which floats over the page; a press on the page, a release and a mouse move are not.
-+#[test]
-+fn a_press_on_the_bars_or_the_edit_button_is_chrome() {
-+    use egui::{Event, PointerButton, Pos2, Rect, pos2};
-+    let page = Rect::from_min_max(pos2(0.0, 48.0), pos2(412.0, 736.0));
-+    let fab = Some(Rect::from_min_max(pos2(340.0, 664.0), pos2(396.0, 720.0)));
-+    let button = |pos: Pos2, pressed: bool| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() };
-+    assert!(o::press_on_chrome(&[button(pos2(367.0, 690.0), true)], page, fab), "on the Edit button");
-+    assert!(o::press_on_chrome(&[button(pos2(200.0, 760.0), true)], page, fab), "on the bottom toolbar");
-+    assert!(o::press_on_chrome(&[button(pos2(200.0, 20.0), true)], page, None), "on the top row");
-+    assert!(!o::press_on_chrome(&[button(pos2(367.0, 690.0), true)], page, None), "no button: the page's");
-+    assert!(!o::press_on_chrome(&[button(pos2(100.0, 300.0), true)], page, fab), "on the page");
-+    assert!(
-+        !o::press_on_chrome(&[button(pos2(367.0, 690.0), false), Event::PointerMoved(pos2(367.0, 690.0))], page, fab),
-+        "a release is not a press"
-+    );
-+}

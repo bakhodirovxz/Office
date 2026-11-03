@@ -89,7 +89,7 @@ pub fn active(ctx: &Context) -> bool {
     let before = ctx.data(|d| d.get_temp::<bool>(touched_id)).unwrap_or(COARSE.load(Ordering::SeqCst) == 1);
     let at = ctx.data(|d| d.get_temp::<f64>(at_id)).unwrap_or(f64::NEG_INFINITY);
     // The web runner also reports a finger as pointer events, in frames of their own: a mouse button only counts once the last touch is a second old.
-    let after = if touch { true } else if mouse && now - at > TOUCH_GRACE { false } else { before };
+    let after = touched_after(before, touch, mouse, now - at, COARSE.load(Ordering::SeqCst) == 1);
     if touch {
         ctx.data_mut(|d| d.insert_temp(at_id, now));
     }
@@ -99,6 +99,19 @@ pub fn active(ctx: &Context) -> bool {
     let on = decide(forced(), ctx.content_rect().width() / dp(ctx), after);
     ON.store(on, Ordering::SeqCst);
     on
+}
+
+/// A touch sets "touched"; a mouse button clears it once the last touch is `since_touch` > `TOUCH_GRACE` old, except on a device whose primary pointer is a finger
+/// (`coarse`): there a pointer press with no touch event in its frame is the finger's own (Android Chrome reports `pointerdown` before `touchstart`), and
+/// clearing it made the phone layout flicker off for the press frame, so a tap on the Edit button reached the page under it.
+fn touched_after(before: bool, touch: bool, mouse: bool, since_touch: f64, coarse: bool) -> bool {
+    if touch {
+        true
+    } else if mouse && since_touch > TOUCH_GRACE && !coarse {
+        false
+    } else {
+        before
+    }
 }
 
 static ON: AtomicBool = AtomicBool::new(false);

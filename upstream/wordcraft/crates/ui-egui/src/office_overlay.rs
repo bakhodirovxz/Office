@@ -232,7 +232,12 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
     let page = ui.available_rect_before_wrap();
     // The Edit button floats over the page: the extension leaves its rectangle in the context.
     let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
-    let (pressed_on_bar, active) = ui.input(|i| (press_on_chrome(&i.events, page, extra), i.pointer.any_down() || i.pointer.any_released()));
+    let (pressed_on_bar, active) = ui.input(|i| {
+        let on_bar = i.events.iter().any(
+            |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
+        );
+        (on_bar, i.pointer.any_down() || i.pointer.any_released())
+    });
     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
     CHROME_DOWN.store(pressed_on_bar || (before && active), std::sync::atomic::Ordering::Relaxed);
     true
@@ -241,24 +246,6 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
 /// A finger is down on the phone chrome (see `phone_chrome`).
 pub fn chrome_down() -> bool {
     CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed)
-}
-
-/// A press in `events` landed outside the page panel or on the floating Edit button's rectangle.
-pub(crate) fn press_on_chrome(events: &[egui::Event], page: egui::Rect, extra: Option<egui::Rect>) -> bool {
-    events.iter().any(
-        |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
-    )
-}
-
-/// A finger went down on the phone chrome in this very frame (wordcraft/0149). `CHROME_DOWN` is only set once `phone_chrome` has seen the press, so
-/// `canvas::mouse` would let the press of a tap on the Edit button (which floats over the page) through: it selected the picture under the button and
-/// left an object drag behind. `ui` is the page panel's.
-pub fn press_on_chrome_now(ui: &egui::Ui) -> bool {
-    if !phone_on() {
-        return false;
-    }
-    let extra = ui.ctx().data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
-    ui.input(|i| press_on_chrome(&i.events, ui.max_rect(), extra))
 }
 
 /// Draw icon `name` if the extension has one; false lets upstream draw it.

@@ -19,7 +19,7 @@ fs.mkdirSync(out, { recursive: true });
 const shot = (n) => fs.writeFileSync(path.join(out, `${tag}-${n}.png`), L.screencap(S));
 const log = (...a) => console.log(`[${tag}]`, ...a);
 // panel-space coordinates (1080x2400, Chrome has its toolbar)
-const P = { more: [1000, 400], done: [780, 560], pencil: [966, 2220], heading: [300, 556] };
+const P = { more: [972, 2280], done: [250, 808], pencil: [964, 2220], heading: [320, 556] };   // calibrated on screenshots (the More tap raises the keyboard, which moves the sheet)
 for (const k of ['more', 'done', 'pencil', 'heading']) if (process.env['P_' + k]) P[k] = process.env['P_' + k].split(',').map(Number);
 
 async function cdp(wsUrl) {
@@ -30,7 +30,7 @@ async function cdp(wsUrl) {
   return { ev: async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.value };
 }
 // Every autosave payload's media parts (the docx is a zip; the stored names are enough) and size, kept in the page.
-const RECORDER = `if(!window.__tf){window.__tf=[];addEventListener('message',e=>{const d=e.data;if(d&&d.type==='wordcraft:autosave'&&d.bytes){const u=new Uint8Array(d.bytes);let s='';for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);window.__tf.push({n:u.length,media:/word\/media\/image1\.png/.test(s),at:Date.now()});}});}`;
+const RECORDER = `if(!window.__tf){window.__tf=[];window.__tm=[];addEventListener('message',e=>{const d=e.data;if(d&&typeof d.type==='string')__tm.push(d.type);if(d&&d.type==='wordcraft:autosave'&&d.bytes){const u=new Uint8Array(d.bytes);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));__tf.push({n:u.length,media:s.indexOf('word/media/image1.png')>=0});}});}`;
 
 L.gboardEnable(S);
 L.sh(S, 'settings put system accelerometer_rotation 0; settings put system user_rotation 0; am force-stop com.android.chrome');
@@ -54,16 +54,16 @@ try {
   shot('01-opened');
   if (opt('--hold')) { log('holding', opt('--hold'), 's'); await L.sleep(Number(opt('--hold')) * 1000); }
   else {
-    L.tap(S, ...P.more); await L.sleep(1500); shot('02-more');
-    L.tap(S, ...P.done); await L.sleep(2500); shot('03-reading');
-    L.tap(S, ...P.pencil); await L.sleep(2500); shot('04-after-pencil');
-    L.tap(S, ...P.heading); await L.sleep(2500); shot('05-after-heading-tap');
+    L.tap(S, ...P.more); await L.sleep(10000); shot('02-more');
+    L.tap(S, ...P.done); await L.sleep(8000); shot('03-reading');
+    L.tap(S, ...P.pencil); await L.sleep(5000); shot('04-after-pencil');
+    L.tap(S, ...P.heading); await L.sleep(5000); shot('05-after-heading-tap');
     execFileSync('node', [path.join(ROOT, 'scripts/mobile/android-type.mjs'), S, 'tapfix', 'тест'], { stdio: 'inherit' });
     await L.sleep(1500); shot('06-typed');
     L.sh(S, 'am start -a android.intent.action.MAIN -c android.intent.category.HOME'); await L.sleep(6000);
     L.sh(S, 'am start -n com.android.chrome/com.google.android.apps.chrome.Main'); await L.sleep(4000);
     const got = JSON.parse((await page.ev('JSON.stringify(window.__tf)')) || '[]');
-    log('autosave payloads (size, has word/media/image1.png):', JSON.stringify(got.map((g) => [g.n, g.media])));
+    log('autosave payloads (size, has word/media/image1.png):', JSON.stringify(got), 'messages:', await page.ev('JSON.stringify(window.__tm)'));
     fs.writeFileSync(path.join(out, `${tag}-autosaves.json`), JSON.stringify(got));
   }
 } finally { serve.stop(); }
