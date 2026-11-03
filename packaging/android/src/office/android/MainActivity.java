@@ -66,6 +66,8 @@ public class MainActivity extends Activity {
     // a save waiting for the Save as dialog
     byte[] saveBytes; String saveName;
     ValueCallback<Uri[]> chooser;
+    /** The plugin Worker script (web/shell/plugins/*.js): same policy as suite-serve's WORKER_CSP. */
+    static final String WORKER_CSP = "default-src 'none'; script-src 'wasm-unsafe-eval'";
     final Map<String, String> csp = new HashMap<>();
 
     @Override protected void onCreate(Bundle b) {
@@ -280,7 +282,7 @@ public class MainActivity extends Activity {
             if (asset.contains("..")) return status(404, "Not Found");
             try {
                 InputStream in = getAssets().open("web/" + asset);
-                return respond(asset, in, asset.endsWith("/index.html") && !asset.startsWith("shell/") ? editorCsp(asset) : SHELL_CSP);
+                return respond(asset, in, asset.endsWith("/index.html") && !asset.startsWith("shell/") ? editorCsp(asset) : asset.startsWith("shell/plugins/") && asset.endsWith(".js") ? WORKER_CSP : SHELL_CSP);
             } catch (IOException e) { return status(404, "Not Found"); }
         }
     }

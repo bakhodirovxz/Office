@@ -1171,8 +1171,11 @@ pub fn merge_report(
         }
     }
     for (scope, rows) in cat.scopes.iter_mut() {
-        // the glossary and our own converter and shell catalogs have no upstream to disappear from
-        if matches!(scope.as_str(), "glossary" | "converter" | "shell") {
+        // the glossary and our own converter, shell and plugin-host catalogs have no upstream to disappear from
+        if matches!(
+            scope.as_str(),
+            "glossary" | "converter" | "shell" | "plugins"
+        ) {
             continue;
         }
         for r in rows.iter_mut() {

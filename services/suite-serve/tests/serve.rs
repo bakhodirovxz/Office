@@ -39,6 +39,11 @@ fn harness(name: &str) -> H {
 }
 
 fn harness_with(name: &str, local_key: Option<&str>) -> H {
+    harness_full(name, local_key, false)
+}
+
+/// `plugin_shell`: the shell dir is a temp copy that holds plugins/worker.js and plugins/host.js (the repo keeps them in web/plugins, shell-dist.sh copies them).
+fn harness_full(name: &str, local_key: Option<&str>, plugin_shell: bool) -> H {
     let dir = std::env::temp_dir().join(format!("suite-serve-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let docs = dir.join("dist/docs-web");
@@ -58,9 +63,26 @@ fn harness_with(name: &str, local_key: Option<&str>) -> H {
         b"fake-brotli",
     )
     .unwrap();
+    if plugin_shell {
+        std::fs::create_dir_all(dir.join("shell/plugins")).unwrap();
+        for f in ["index.html", "shell.js"] {
+            std::fs::copy(repo().join("web/shell").join(f), dir.join("shell").join(f)).unwrap();
+        }
+        for f in ["worker.js", "host.js"] {
+            std::fs::copy(
+                repo().join("web/plugins").join(f),
+                dir.join("shell/plugins").join(f),
+            )
+            .unwrap();
+        }
+    }
     // sheets, slides and pdf are not built: their routes are absent
     let layout = Layout {
-        shell: repo().join("web/shell"),
+        shell: if plugin_shell {
+            dir.join("shell")
+        } else {
+            repo().join("web/shell")
+        },
         dist: dir.join("dist"),
         brand: repo().join("brand/brand.toml"),
         local_key: local_key.map(str::to_string),
@@ -144,6 +166,28 @@ async fn shell_and_converter_keep_the_strict_csp() {
         (StatusCode::PERMANENT_REDIRECT, "/convert/")
     );
     let _ = hd;
+}
+
+/// The plugin Worker script has its own CSP (nothing may be fetched from it, wasm may be compiled); the rest of the shell keeps the strict one.
+#[tokio::test]
+async fn plugin_scripts_get_the_worker_csp() {
+    let h = harness_full("worker-csp", None, true);
+    for uri in ["/shell/plugins/worker.js", "/shell/plugins/host.js"] {
+        let (st, hd, _) = get(&h, uri, &[]).await;
+        assert_eq!(st, StatusCode::OK, "{uri}");
+        assert_eq!(
+            hv(&hd, "content-security-policy"),
+            suite_serve::WORKER_CSP,
+            "{uri}"
+        );
+        baseline(&hd);
+    }
+    assert_eq!(
+        suite_serve::WORKER_CSP,
+        "default-src 'none'; script-src 'wasm-unsafe-eval'"
+    );
+    let (_, hd, _) = get(&h, "/shell/shell.js", &[]).await;
+    assert_eq!(hv(&hd, "content-security-policy"), STRICT);
 }
 
 #[tokio::test]

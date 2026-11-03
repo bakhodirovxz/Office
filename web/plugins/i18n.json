@@ -1,0 +1,42 @@
+{
+  "en": {
+    "plg.close": "Close",
+    "plg.failed": "{name} could not finish: {error}",
+    "plg.grant.allow": "Allow",
+    "plg.grant.body": "Publisher: {publisher}. The plugin can send document text to this address.",
+    "plg.grant.deny": "Deny",
+    "plg.grant.title": "Allow {name} to send data to {origin}?",
+    "plg.refused": "{name} was not loaded: {error}",
+    "plg.timeout": "{name} took too long and was stopped."
+  },
+  "ru": {
+    "plg.close": "Закрыть",
+    "plg.failed": "«{name}» не смог завершить работу: {error}",
+    "plg.grant.allow": "Разрешить",
+    "plg.grant.body": "Издатель: {publisher}. Плагин сможет отправлять текст документа по этому адресу.",
+    "plg.grant.deny": "Запретить",
+    "plg.grant.title": "Разрешить «{name}» отправлять данные на {origin}?",
+    "plg.refused": "«{name}» не загружен: {error}",
+    "plg.timeout": "«{name}» работал слишком долго и был остановлен."
+  },
+  "uz-Latn": {
+    "plg.close": "Yopish",
+    "plg.failed": "{name} ishni tugata olmadi: {error}",
+    "plg.grant.allow": "Ruxsat berish",
+    "plg.grant.body": "Nashriyotchi: {publisher}. Plagin hujjat matnini shu manzilga yuborishi mumkin.",
+    "plg.grant.deny": "Rad etish",
+    "plg.grant.title": "{name} {origin} manziliga maʼlumot yuborishiga ruxsat berasizmi?",
+    "plg.refused": "{name} yuklanmadi: {error}",
+    "plg.timeout": "{name} juda uzoq ishladi va toʻxtatildi."
+  },
+  "uz-Cyrl": {
+    "plg.close": "Ёпиш",
+    "plg.failed": "{name} ишни тугата олмади: {error}",
+    "plg.grant.allow": "Рухсат бериш",
+    "plg.grant.body": "Нашриётчи: {publisher}. Плагин ҳужжат матнини шу манзилга юбориши мумкин.",
+    "plg.grant.deny": "Рад этиш",
+    "plg.grant.title": "{name} {origin} манзилига маълумот юборишига рухсат берасизми?",
+    "plg.refused": "{name} юкланмади: {error}",
+    "plg.timeout": "{name} жуда узоқ ишлади ва тўхтатилди."
+  }
+}

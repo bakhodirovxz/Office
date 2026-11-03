@@ -168,3 +168,42 @@ call can only answer with `ui.panel` and `ui.status`; it cannot read or change t
 - **Refused at run time**: a message that breaks section 3, an answer with an unknown action, an action without its permission,
   a text map apply that breaks section 5, a round over its time or memory budget, more than 16 rounds. The document is then
   restored and the status line says the plugin was stopped.
+
+## 9a. The web page host (Phase 7 WP5; the rest of section 9 comes with WP8)
+
+`web/plugins/host.js`, `worker.js`, `host.css`, `i18n.json` (ours, no patch). The shell (`web/shell/shell.js`) and the docserver wrapper
+(`services/docserver/static/editor.js`) fetch `host.js` **only when a plugin is enabled** (a non-empty `plugins` list in
+`/shell-config.json`, or in the docserver session answer); with none, no request for any of these files is made.
+
+- **Descriptor** (what the server lists per enabled plugin; WP8 produces it from `plugin.toml` with `plugin-api`, which has already validated it):
+  `{id, version, sha256, wasm: <same-origin URL of plugin.wasm>, manifest: <plugin.toml as JSON, same key names>, grant?: [origins], settings?}`.
+  The host refuses a wasm whose SHA-256 differs. `grant` present means server mode: only those origins are granted and nobody is asked;
+  absent means local mode: the user is asked once per origin and the answer is kept in this browser (`localStorage` `plg.grants`).
+- **One Worker per plugin**, made at the first call. `worker.js` compiles the module, refuses it unless its imports are exactly `env.memory`
+  and optionally `plugin_v1.log` and it exports no memory (error text `imports not allowed: ...`, `the module exports a memory`), creates the
+  memory itself with `maximum = memory_mb * 16` pages, and answers `call` messages. The page measures the time budget (5 s, an admin may
+  lower it with `pluginBudgetMs`) from posting a round until the answer; on expiry it calls `terminate()`, tells the editor to abort, and
+  starts a new Worker at the next call.
+- **CSP**: `/shell/plugins/*.js` is served with `default-src 'none'; script-src 'wasm-unsafe-eval'` (suite-serve `WORKER_CSP`; the Android
+  asset loader has the same constant). A Worker takes the policy of its own response, so the plugin code cannot fetch or import anything.
+  The page's own policy (`connect-src 'self'` through `default-src`) also stops the `fetch` action to a foreign origin: **a granted
+  network origin needs `connect-src` in the page's CSP (server mode: a per-provider header) or a proxy route; WP8 decides.** Until then a
+  granted fetch ends in `{error: "the request failed"}`.
+- **Page-side checks** (the same rules as `plugin-api`): the wire format (lengths before allocation, no trailing bytes, UTF-8), a strict
+  answer (unknown action, key or widget refuses it), document access per action, events may run `ui.*` only, panels must be declared,
+  `fetch` URL/method/header rules, widget text cut at 1,024 characters (64 widgets, 256 items), and every plugin string reaches the DOM
+  through `textContent` (control and bidi characters stripped). The command allowlist is checked by the editor (Rust), not here.
+- **Editor bridge** (`<prefix>` = the editor's prefix; PLAN 4.6, shapes the host assumes until WP4 lands): page to editor
+  `plugins {commands: [{slot, id, label, mutates, reads, params}], toolbar: [{slot, icon, group}], menu: [{slot, place, group}]}` on every
+  editor `ready` (slots are 0..63, assigned by the host in manifest order); editor to page `pluginCall {call, plugin, command, params, reads:
+  {textmap?: ArrayBuffer, selection?: ...}}`; page to editor `pluginActions {call, actions, blobs: [ArrayBuffer], reads: [{what}], more}`
+  with only the editor's actions (`run`, `textmap.apply`, `read`), answered by `pluginResults {call, results: [one per action], reads:
+  [one per requested read, an ArrayBuffer or JSON], error?}`; `more:false` closes the invocation, `abort:true` (failure or time
+  budget) asks for the snapshot to be restored. UI clicks and events start a host-made call id (`h<n>`). `pluginEvent {event, data?}`
+  from the editor is relayed to plugins that list the event.
+- **Panel**: opens when a plugin sends `ui.panel`; `role=region` named "<plugin name>: <panel title>", Close button, Escape closes; a
+  side panel (the editor frame narrows) or, up to 600 px wide, a bottom sheet with a grabber and 48 px targets. `ui.status` goes to the
+  shell status line (and the toast on a phone).
+- **Strings** are a catalog of their own (`i18n/plugins.tsv`, scope `plugins`, exported to `web/plugins/i18n.json` by `cargo xt i18n
+  export plugins --format json`) so the shell's size budget does not carry them.
+- **Tests**: `ci/web-smoke/plugins-host.spec.ts` (stub editor, fixture plugin in `ci/plugins/webhost-test`).
