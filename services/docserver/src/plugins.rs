@@ -2,7 +2,7 @@
 //! provider (`config`); this module is what the browser sees of that:
 //!
 //! - the session answer lists the plugins of the session's provider (`plugin_descriptors`), nothing else: the config token is not
-//!   read for plugins at all, so ONLYOFFICE's `editorConfig.plugins` / `pluginsData` cannot add one (M12, `onlyoffice-compat.md`);
+//!   read for plugins at all, so the embed API's `editorConfig.plugins` / `pluginsData` cannot add one (M12, the phase 5 compat table);
 //! - `GET /ds/plugins/<sha256>?s=<sid>` serves the `plugin.wasm` of a plugin of that session's provider, read again and compared
 //!   with the digest on every request (a changed package is refused). The session id is the credential, as in the file route. Any
 //!   other plugin, or a session that is not live, gets the same 404;
