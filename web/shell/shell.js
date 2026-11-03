@@ -113,8 +113,18 @@
   }
   function post(f, file) {
     f.pending = null; clearTimeout(f.timer);
-    f.el.contentWindow.postMessage({ type: f.app.prefix + ':open', name: file.name, bytes: file.bytes }, location.origin, [file.bytes]);
+    f.el.contentWindow.postMessage({ type: f.app.prefix + ':open', name: file.name, bytes: file.bytes, dirty: file.dirty }, location.origin, [file.bytes]);
   }
+  // Recovery (phase 6 WP12): the last <prefix>:autosave, per frame (f.auto) and in the Android host's file or (web mode) IndexedDB; dropped only when saved or discarded
+  const recPut = (id, a) => { if (window.SuiteHost) SuiteHost.autosave(id, a.name, b64(a.bytes)); else if (S.db) idb(['blob'], 'readwrite', (b) => b.put(a, 'rec:' + id)).catch(() => {}); };
+  const recDrop = (id) => { if (window.SuiteHost) SuiteHost.discard(id); else if (S.db) idb(['blob'], 'readwrite', (b) => b.delete('rec:' + id)).catch(() => {}); };
+  const recGet = async (id) => {
+    if (!window.SuiteHost) return S.db && idb(['blob'], 'readonly', (b) => req(b.get('rec:' + id)));
+    const r = await fetch('/__recover/' + id);
+    return r.status === 200 && { name: decodeURIComponent(r.headers.get('X-Name')), bytes: await r.arrayBuffer() };
+  };
+  const saved = (f, name) => { if (f.auto && name.split('.').pop() === f.auto.name.split('.').pop()) { f.auto = null; recDrop(f.app.id); } };
+  const revive = (f) => { f.lost = false; f.ready = false; f.phone = false; fail(''); f.pending = { ...f.auto, bytes: f.auto.bytes.slice(0), dirty: true }; f.rec = f.auto.name; f.el.contentWindow.location.reload(); };
   // Docs has a phone layout whose bottom toolbar must stay above the soft keyboard (PLAN phase 6 section 5.1/6, docs/phase6/phone-layout.md): the keyboard then
   // shrinks the layout viewport. The other editors keep Chrome's default (their desktop chrome would be squeezed to a sliver).
   const viewport = (on) => { const m = document.querySelector('meta[name=viewport]'); if (m) m.content = 'width=device-width, initial-scale=1' + (on ? ', interactive-widget=resizes-content' : ''); };
@@ -123,6 +133,7 @@
     let f = S.frames[a.id];
     // a file replaces the document in the editor; a second New starts from the editor's own blank page
     if (f && f.dirty && !confirm(t('ed.dirty'))) return;
+    if (f && f.auto) { f.auto = null; recDrop(a.id); }   // the unsaved work is discarded
     if (f && !file && f.ready) { f.ready = false; f.dirty = false; f.phone = false; f.el.contentWindow.location.reload(); }
     f = frameOf(a);
     f.opening = file && SAYS_OPENED.includes(a.id) ? file.name : '';
@@ -154,13 +165,18 @@
     if (!f || !d || typeof d.type !== 'string' || !d.type.startsWith(f.app.prefix + ':')) return;
     switch (d.type.slice(f.app.prefix.length + 1)) {
       case 'ready': f.ready = true; if (!f.opening) $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
-      case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } break;
+      case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } if (f.rec) { $('ed-status').textContent = t('rec.done', { name: f.rec }); if ($('editor').classList.contains('phone')) toast($('ed-status').textContent); f.rec = ''; } break;
       case 'dirty': f.dirty = !!d.dirty; break;
       case 'commands': case 'ran': pal.onMessage(d.type.slice(f.app.prefix.length + 1), d); break;
       case 'focusOut': if (d.palette) pal.open(); else $('back').focus(); break;
       case 'phone': f.phone = !!d.on; bars(); break;
       case 'back': home(); break;
-      case 'failed': f.opening = ''; cover(); fail(t('err.failed', { error: String(d.error) })); break;
+      case 'failed': f.opening = ''; cover(); fail(t('err.failed', { error: String(d.error) })); f.lost = d.error === 'webglcontextlost'; break;
+      case 'autosave':   // after a lost WebGL context too: the page is reloaded with it (revive)
+        if (!(d.bytes instanceof ArrayBuffer)) return;
+        f.auto = { name: baseName(d.name), bytes: d.bytes }; recPut(f.app.id, f.auto);
+        if (f.lost) revive(f);
+        break;
       case 'save': {
         // only this app's own file types, and no path parts: an editor fed a hostile document cannot make the shell save x.lnk or x.hta
         const name = baseName(d.name), bytes = d.bytes;
@@ -170,7 +186,7 @@
         if (window.SuiteHost) { S.saving = { f, name, copy: bytes.slice(0) }; SuiteHost.save(name, b64(bytes)); break; }
         const a = el('a', { href: URL.createObjectURL(new Blob([bytes])), download: name });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-        $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false;
+        $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false; saved(f, name);
         if ($('editor').classList.contains('phone')) toast(t('ed.saved', { name }));
         remember(f.app.id, name, bytes.slice(0));
         break;
@@ -282,7 +298,7 @@
   window.hostSaved = (r) => {
     const s = S.saving; S.saving = null;
     if (!r.ok) return fail(String(r.error));   // the document stays dirty: nothing was written
-    if (s) { s.f.dirty = false; remember(s.f.app.id, r.name || s.name, s.copy); }
+    if (s) { s.f.dirty = false; saved(s.f, s.name); remember(s.f.app.id, r.name || s.name, s.copy); }
     const msg = t('ed.saved', { name: r.name || (s && s.name) });
     $('ed-status').textContent = msg;
     if ($('editor').classList.contains('phone')) toast(msg);
@@ -333,6 +349,13 @@
     $('open-file').onclick = () => pick('');
     $('back').onclick = home;
     render();
+    // unsaved work of a page that died: reopen it unsaved, or delete it
+    for (const a of S.cfg.apps) {
+      const r = await recGet(a.id).catch(() => null);
+      if (!r || !r.bytes) continue;
+      if (!confirm(t('rec.ask', { name: r.name }))) { recDrop(a.id); continue; }
+      show(a, { ...r, dirty: true }); Object.assign(S.frames[a.id], { auto: r, rec: r.name }); break;
+    }
     if (window.SuiteHost) window.hostOpen();
   }
   main().catch((e) => fail(String(e.message || e)));
