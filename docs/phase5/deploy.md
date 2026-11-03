@@ -81,7 +81,14 @@ dir = "/app/plugins"                               # <id>/<version>/plugin.toml 
 ```
 
 `grant` lists the `https://host[:port]` origins the plugin may send data to (only ones its manifest declares); the wrapper page's `connect-src` is exactly those. A package that is
-missing or differs from its `sha256` is left out and audited as `plugin.refused`; `plugin.loaded` and `plugin.network` are the other audit lines.
+missing or differs from its `sha256` is left out and audited as `plugin.refused`; `plugin.loaded` and `plugin.network` are the other audit lines (`plugin.network` lines are reported by the
+page and marked `"source":"client"`).
+
+The wrapper page's `connect-src` lists the granted origins of every provider's plugins, and the page is served to a viewer before any session exists, so those origins are visible to an unauthenticated viewer. Do not grant sensitive internal origins to a plugin, or run one docserver per organisation.
+
+The local web host (`hoshiya-serve`) takes `[plugins] dir`, `enabled = [ids]`, `[plugins.grants] <id> = [origins]` and optionally `[plugins.sha256] <id> = "<sha256 of plugin.wasm>"`; a package whose wasm differs from its pin is left out. The list is worked out once at start.
+
+Windows desktop: the MSI creates `%PROGRAMDATA%\<product>` with a locked DACL (SYSTEM and Administrators full, Users read and execute). `%PROGRAMDATA%` is writable by standard users by default, so when IT does not deploy with the MSI it must create that folder (and `plugins\`, `policy.toml`) itself and lock it, for example `icacls "%PROGRAMDATA%\<product>" /setowner *S-1-5-32-544 /T /C` then `icacls "%PROGRAMDATA%\<product>" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-32-545:(OI)(CI)RX /T /C`. The desktop host ignores a machine folder that is not owned by Administrators or SYSTEM, or that anyone else may write to.
 
 Compose service (the parts that matter): `image`, `read_only: true`, `cap_drop: [ALL]`, `tmpfs: /tmp`, a volume on `/data`, the config and
 secrets mounted read-only, a fixed IPv4 address on `backend_net` (so `internal_listen`, `internal_allow` and `trusted_proxies` can name

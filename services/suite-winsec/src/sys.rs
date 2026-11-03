@@ -3,15 +3,17 @@
 use std::ffi::c_void;
 use std::io;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
+use std::path::Path;
 use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
 use windows_sys::Win32::Foundation::{HANDLE, LocalFree};
 use windows_sys::Win32::Security::Authorization::{
     ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW,
-    ConvertStringSidToSidW, SDDL_REVISION_1,
+    ConvertStringSidToSidW, GetNamedSecurityInfoW, SDDL_REVISION_1, SE_FILE_OBJECT,
 };
 use windows_sys::Win32::Security::{
-    GetLengthSid, GetTokenInformation, SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER,
-    TokenSessionId, TokenUser,
+    ACL, DACL_SECURITY_INFORMATION, GetAce, GetLengthSid, GetTokenInformation,
+    OWNER_SECURITY_INFORMATION, SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER, TokenSessionId,
+    TokenUser,
 };
 use windows_sys::Win32::System::LibraryLoader::{
     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS, SetDefaultDllDirectories,
@@ -185,4 +187,75 @@ pub fn set_default_dll_directories() -> io::Result<()> {
         return Err(last());
     }
     Ok(())
+}
+
+/// One allow entry of a DACL that applies to the folder itself: who, and the access mask.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Ace {
+    pub sid: String,
+    pub mask: u32,
+}
+
+/// The owner SID of `path` and its DACL (`None`: a NULL DACL, which gives everybody full access). Inherit-only entries (they apply to
+/// children, not to the folder) and entries that are not "allow" are left out.
+pub fn folder_security(path: &Path) -> io::Result<(String, Option<Vec<Ace>>)> {
+    let w = wide(&path.to_string_lossy());
+    let (mut owner, mut dacl, mut sd) = (
+        std::ptr::null_mut::<c_void>(),
+        std::ptr::null_mut::<ACL>(),
+        std::ptr::null_mut::<c_void>(),
+    );
+    // SAFETY: `w` is NUL-terminated and outlives the call; the out pointers are valid. `owner` and `dacl` point into `sd`.
+    let rc = unsafe {
+        GetNamedSecurityInfoW(
+            w.as_ptr(),
+            SE_FILE_OBJECT,
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &mut owner,
+            std::ptr::null_mut(),
+            &mut dacl,
+            std::ptr::null_mut(),
+            &mut sd,
+        )
+    };
+    if rc != 0 {
+        return Err(io::Error::from_raw_os_error(rc as i32));
+    }
+    let read = || -> io::Result<(String, Option<Vec<Ace>>)> {
+        if owner.is_null() {
+            return Err(io::Error::other("no owner"));
+        }
+        // SAFETY: `owner` is the valid owner SID inside `sd`, which is alive until the LocalFree below.
+        let owner = unsafe { Sid::copy(owner)? }.text;
+        if dacl.is_null() {
+            return Ok((owner, None));
+        }
+        let mut aces = vec![];
+        // SAFETY: `dacl` is a valid ACL inside `sd`.
+        for i in 0..unsafe { (*dacl).AceCount } as u32 {
+            let mut ace: *mut c_void = std::ptr::null_mut();
+            // SAFETY: `i` is below the ACL's entry count; `ace` is a valid out pointer.
+            if unsafe { GetAce(dacl, i, &mut ace) } == 0 {
+                return Err(last());
+            }
+            // SAFETY: an allow ACE is {type u8, flags u8, size u16, mask u32, SID...}; the header is read first and the SID
+            // only for the two allow types (0 and 9), whose layout this is. The SID lies inside the ACL, inside `sd`.
+            unsafe {
+                let h = ace as *const u8;
+                let (ty, flags) = (*h, *h.add(1));
+                if (ty == 0 || ty == 9) && flags & 0x08 == 0 {
+                    let mask = (h.add(4) as *const u32).read_unaligned();
+                    aces.push(Ace {
+                        sid: Sid::copy(h.add(8) as *mut c_void)?.text,
+                        mask,
+                    });
+                }
+            }
+        }
+        Ok((owner, Some(aces)))
+    };
+    let r = read();
+    // SAFETY: `sd` was allocated by GetNamedSecurityInfoW and nothing points into it any more.
+    unsafe { LocalFree(sd) };
+    r
 }

@@ -83,8 +83,9 @@ fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
 }
 
 /// The optional `[plugins]` section of the web host (PLAN phase 7, section 8): `dir` (the operator's folder of packages),
-/// `enabled = [ids]` and `[plugins.grants] <id> = [origins]`. The operator is the only one who enables or grants here; a package
-/// that changed since its record is refused, one without a record is accepted (the folder is the operator's).
+/// `enabled = [ids]`, `[plugins.grants] <id> = [origins]` and optionally `[plugins.sha256] <id> = "<hex of plugin.wasm>"` (a package
+/// whose wasm differs is left out). The operator is the only one who enables or grants here; a package that changed since its record
+/// is refused, one without a record is accepted (the folder is the operator's). The state is static, so it is worked out once here.
 fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     let Some(t) = Settings::load(path.as_ref())?.plugins else {
         return Ok(None);
@@ -98,7 +99,7 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     };
     if let Some(k) = t
         .keys()
-        .find(|k| !["dir", "enabled", "grants"].contains(&k.as_str()))
+        .find(|k| !["dir", "enabled", "grants", "sha256"].contains(&k.as_str()))
     {
         return Err(format!("plugins: unknown key {k}"));
     }
@@ -116,12 +117,119 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     {
         grants.insert(id.clone(), strs(Some(v), &format!("grants.{id}"))?);
     }
+    let mut pins = std::collections::BTreeMap::new();
+    for (id, v) in t
+        .get("sha256")
+        .and_then(|g| g.as_table())
+        .into_iter()
+        .flatten()
+    {
+        let h = v
+            .as_str()
+            .filter(|h| h.len() == 64 && h.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')))
+            .ok_or(format!(
+                "plugins: sha256.{id} must be 64 lower-case hex digits"
+            ))?;
+        pins.insert(id.clone(), h.to_string());
+    }
     let state = suite_core::plugins::State { enabled, grants };
+    let roots = vec![suite_core::plugins::Root {
+        dir: dir.into(),
+        machine: true,
+    }];
+    let pol = suite_core::plugins::Policy::default();
+    let mut fixed = suite_core::plugins::enabled(&roots, &state, &pol);
+    fixed.retain(|e| {
+        let ok = pins
+            .get(&e.package.manifest.id)
+            .is_none_or(|h| *h == e.package.sha256);
+        if !ok {
+            eprintln!(
+                "plugins: {} left out: its wasm differs from the pinned sha256",
+                e.package.manifest.id
+            );
+        }
+        ok
+    });
     Ok(Some(PluginSource {
-        roots: vec![suite_core::plugins::Root {
-            dir: dir.into(),
-            machine: true,
-        }],
-        now: Box::new(move || (state.clone(), suite_core::plugins::Policy::default())),
+        roots,
+        now: Box::new(move || (state.clone(), pol)),
+        fixed: Some(fixed),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MANIFEST: &str = "id = \"alpha\"\nversion = \"1.0.0\"\napi = 1\napps = [\"docs\"]\npublisher = \"Test\"\n[name]\nen = \"Alpha\"\n[permissions]\ndocument = \"read\"\n";
+
+    fn sha(b: &[u8]) -> String {
+        use sha2::{Digest, Sha256};
+        Sha256::digest(b)
+            .iter()
+            .map(|x| format!("{x:02x}"))
+            .collect()
+    }
+
+    fn config(name: &str, extra: &str) -> (std::path::PathBuf, String) {
+        let d = std::env::temp_dir().join(format!("serve-plg-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        let p = d.join("plugins/alpha/1.0.0");
+        std::fs::create_dir_all(&p).unwrap();
+        std::fs::write(p.join("plugin.toml"), MANIFEST).unwrap();
+        std::fs::write(p.join("plugin.wasm"), b"\0asm-alpha").unwrap();
+        let dir = d.join("plugins").to_string_lossy().replace('\\', "/");
+        let c = d.join("c.toml");
+        std::fs::write(
+            &c,
+            format!("[plugins]\ndir = \"{dir}\"\nenabled = [\"alpha\"]\n{extra}"),
+        )
+        .unwrap();
+        (d, c.to_string_lossy().into_owned())
+    }
+
+    #[test]
+    fn the_web_hosts_list_is_worked_out_once() {
+        let (d, c) = config("once", "");
+        let src = setup_plugins(&c).unwrap().unwrap();
+        assert_eq!(src.fixed.as_ref().unwrap().len(), 1);
+        std::fs::remove_dir_all(d.join("plugins/alpha")).unwrap();
+        assert_eq!(src.fixed.as_ref().unwrap().len(), 1, "no rescan");
+        assert!(
+            plugins_read(&src).is_err(),
+            "but the file is read again on serve"
+        );
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    fn plugins_read(src: &PluginSource) -> Result<Vec<u8>, String> {
+        suite_core::plugins::read_wasm(&src.fixed.as_ref().unwrap()[0].package)
+    }
+
+    #[test]
+    fn a_pinned_hash_must_match() {
+        let (d, c) = config(
+            "pin",
+            &format!("[plugins.sha256]\nalpha = \"{}\"\n", sha(b"\0asm-alpha")),
+        );
+        assert_eq!(setup_plugins(&c).unwrap().unwrap().fixed.unwrap().len(), 1);
+        let (d2, c2) = config(
+            "pin2",
+            &format!("[plugins.sha256]\nalpha = \"{}\"\n", sha(b"other")),
+        );
+        assert!(
+            setup_plugins(&c2)
+                .unwrap()
+                .unwrap()
+                .fixed
+                .unwrap()
+                .is_empty()
+        );
+        let (d3, c3) = config("pin3", "[plugins.sha256]\nalpha = \"ABC\"\n");
+        assert!(setup_plugins(&c3).is_err());
+        for d in [d, d2, d3] {
+            let _ = std::fs::remove_dir_all(d);
+        }
+    }
 }

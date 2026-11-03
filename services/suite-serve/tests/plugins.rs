@@ -98,6 +98,7 @@ fn env(
             machine: true,
         }],
         now: Box::new(move || (st.clone(), Policy::default())),
+        fixed: None,
     });
     let cfg = layout.shell_config().unwrap();
     let router = router_plugins(app.clone(), &layout, cfg, None, Some(src));

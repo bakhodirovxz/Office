@@ -423,8 +423,16 @@ async fn the_page_reports_network_use_for_the_audit_log() {
         .0,
         StatusCode::OK
     );
-    // another provider's plugin, an unknown kind, junk
-    for body in [ev("beta", "network"), ev("alpha", "failed"), "x".into()] {
+    // another provider's plugin, an unknown kind, junk, a `network` line for an origin the plugin was not granted
+    let other =
+        json!({"plugin": "alpha", "kind": "network", "origin": "https://other.example.org"})
+            .to_string();
+    for body in [
+        ev("beta", "network"),
+        ev("alpha", "failed"),
+        "x".into(),
+        other,
+    ] {
         assert_eq!(
             call(&r, "POST", &uri, Some(tok), body.as_bytes()).await.0,
             StatusCode::BAD_REQUEST,
@@ -437,6 +445,60 @@ async fn the_page_reports_network_use_for_the_audit_log() {
         "{}",
         e.audit()
     );
+    assert!(!e.audit().contains("other.example.org"));
+    assert_eq!(e.audit().matches(r#""source":"client""#).count(), 2);
+    // a flood from one session is cut off (20 failures a minute by default; the two accepted above count)
+    let mut last = StatusCode::OK;
+    for _ in 0..30 {
+        last = call(
+            &r,
+            "POST",
+            &uri,
+            Some(tok),
+            ev("alpha", "network").as_bytes(),
+        )
+        .await
+        .0;
+    }
+    assert_eq!(last, StatusCode::TOO_MANY_REQUESTS);
+    assert!(
+        e.audit().matches("plugin.network").count() <= 20,
+        "{}",
+        e.audit()
+    );
+}
+
+#[tokio::test]
+async fn the_plugin_file_route_takes_only_a_sha_and_audits_little() {
+    let (e, ds) = setup("shaflood", None, true);
+    let ds = ds.unwrap();
+    let r = ds.routes::<()>();
+    let one = session(&r, 1, json!({})).await;
+    let sid = one["sid"].as_str().unwrap();
+    let url = one["plugins"][0]["wasm"].as_str().unwrap().to_string();
+    for _ in 0..3 {
+        assert_eq!(call(&r, "GET", &url, None, b"").await.0, StatusCode::OK);
+    }
+    let junk = "a".repeat(5000);
+    for bad in [junk, e.alpha.to_uppercase(), "ab".into()] {
+        let u = format!("/ds/plugins/{bad}?s={sid}");
+        assert_eq!(
+            call(&r, "GET", &u, None, b"").await.0,
+            StatusCode::NOT_FOUND
+        );
+    }
+    // well-formed but unknown: 404, and many of them write one line
+    for i in 0..10 {
+        let u = format!("/ds/plugins/{i:064x}?s={sid}");
+        assert_eq!(
+            call(&r, "GET", &u, None, b"").await.0,
+            StatusCode::NOT_FOUND
+        );
+    }
+    let log = e.audit();
+    assert_eq!(log.matches("plugin.loaded").count(), 1, "{log}");
+    assert_eq!(log.matches("plugin.refused").count(), 1, "{log}");
+    assert!(!log.contains("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
 }
 
 #[tokio::test]

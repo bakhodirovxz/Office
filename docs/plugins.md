@@ -244,18 +244,22 @@ Owner decisions behind it (PLAN 13): **O3** (who may install), **O4** (SHA-256 p
 - **Package.** A zip (or, installed, a folder) with the flat entries of section 1. Installed copy: `<settings dir>/plugins/<id>/<version>/`
   with `install.toml` next to the files: `sha256` of `plugin.wasm`, `manifest_sha256` of `plugin.toml`, and a reserved `signature` field that
   nothing reads yet (O4: `shortcut:` in `plugins.rs`; the check comes with the project signing key). IT's copies go in
-  `%PROGRAMDATA%\<product>\plugins\<id>\<version>\` (a debug build honours `SUITE_MACHINE_DIR`).
+  `%PROGRAMDATA%\<product>\plugins\<id>\<version>\` (a debug build honours `SUITE_MACHINE_DIR`). A new install of an id whose manifest differs from the installed one
+  turns that id off and withdraws its grants (it needs fresh consent), and the other versions of the id are removed.
 - **Integrity.** A package whose files no longer match its record is refused: not listed for the page, not served, said on stderr and (docserver) audited.
-  A package without a record is refused in the user folder and accepted in a machine or operator folder (only an administrator can write there).
+  A package without a record is refused in the user folder and accepted in a machine or operator folder. `%PROGRAMDATA%` is writable by standard users by default, so the MSI creates `%PROGRAMDATA%\<product>` with a protected
+  DACL (SYSTEM and Administrators full, Users read and execute), and the desktop host ignores the machine folder and `policy.toml` (said once on stderr) unless that
+  folder is owned by Administrators or SYSTEM and no one else holds a write right (`suite-winsec::folder_is_admin_only`). The `icacls` custom actions are in
+  `scripts/build-msi.ps1`; they are not exercised until an MSI is built and installed.
 - **Desktop.** `settings.toml`: `[plugins] enabled = ["id", ...]` and `[plugins.grants] "id" = ["https://origin", ...]`. IPC (exact fields, 8 KiB, own origin only, like `open`):
-  `plugins_list{}`, `plugins_install{path?}` (no path: the host shows the file dialog; a path from the page follows the rules of `open`: absolute, a drive letter, no
-  share, no `..`, no stream or device name, an existing `.zip`), `plugins_enable{id, enabled}`, `plugins_grant{id, origin, granted}`. Every answer is the event
+  `plugins_list{}`, `plugins_install{}` (the host shows the file dialog; a page cannot name a path, and the dialog's path follows the rules of `open`: absolute,
+  a drive letter, no `..`, no stream or device name, an existing `.zip`), `plugins_enable{id, enabled}`, `plugins_grant{id, origin, granted}`. Every answer is the event
   `plugins` `{ok, error?, installed?, items: [{id, version, name, publisher, apps, document, network, grant, enabled, machine, sha256, problem}], policy}`.
-  A grant must be an origin the manifest declares. Installing does not enable. The shell reads the enabled list on every request: no restart.
+  A grant must be an origin the manifest declares. Installing does not enable. With `user_install = false` the user folder is not read at all (nothing in it is listed or enabled; effective from the next host start on the desktop). The shell reads the enabled list on every request: no restart.
 - **Machine policy (O3).** `%PROGRAMDATA%\<product>\policy.toml`: `[plugins] user_install = false` and/or `user_grants = false`. With `user_grants = false` no
   user grant counts (existing ones are ignored; withdrawing stays possible). A policy file that cannot be read or parsed switches both off. No file: both allowed.
-- **Web local (`hoshiya-serve`).** `[plugins] dir = "..."`, `enabled = [ids]` and `[plugins.grants] "id" = [origins]` in the config file; the operator is the only one
-  who enables or grants. `/shell-config.json` gets `plugins` (descriptors); `/plugins/<sha256>` serves an enabled package's wasm (read again and compared with the digest).
+- **Web local (`hoshiya-serve`).** `[plugins] dir = "..."`, `enabled = [ids]`, `[plugins.grants] "id" = [origins]` and optionally `[plugins.sha256] "id" = "<hex of plugin.wasm>"` (a package whose wasm differs is left out) in the
+  config file; the operator is the only one who enables or grants. The list is worked out once at start (restart to change it); the wasm is still read again and compared on each serve. `/shell-config.json` gets `plugins` (descriptors); `/plugins/<sha256>` serves an enabled package's wasm (read again and compared with the digest).
 - **Grants are not asked at run time in these two modes.** The descriptor always carries `grant` (possibly empty), so the page host's own prompt never appears; the
   user ticks the address on the Plugins page (desktop) or the operator lists it. The home page's CSP is `connect-src 'self' <granted origins>` (computed per request),
   so a granted `fetch` is not blocked by it and an ungranted one is, twice (host check, CSP).
@@ -265,7 +269,9 @@ Owner decisions behind it (PLAN 13): **O3** (who may install), **O4** (SHA-256 p
   and audited (`plugin.refused`). The session answer has `plugins: [descriptor]` of that provider only, `wasm` = `/ds/plugins/<sha256>?s=<session id>`, `grant` = the admin's
   list. `GET /ds/plugins/<sha256>?s=<sid>` serves the file for a live session whose provider lists that digest (404 otherwise, the same for every other case), reading the file again
   on each request (409 `plugin_changed` and `plugin.refused` when it changed). `POST /ds/session/{sid}/plugin-event {plugin, kind, origin}` (session token) lets the wrapper report
-  `network`, `network.refused`, `network.denied` from the page host (`S.onAudit`) for the audit line `plugin.network`. Audit lines: `plugin.loaded`, `plugin.refused`, `plugin.network`.
+  `network`, `network.refused`, `network.denied` from the page host (`S.onAudit`) for the audit line `plugin.network`. These lines are claims of the page, marked `"source":"client"`: a `network` event is accepted only for an origin in that plugin's `grant`
+  (else 400, not logged), and a session is limited like failed authentications. `/ds/plugins/<sha>` takes only 64 lower-case hex digits; `plugin.loaded` and `plugin.refused` are
+  written at most once a minute per session (and sha). Audit lines: `plugin.loaded`, `plugin.refused`, `plugin.network`.
   The config token is never read for plugins (`onlyoffice-compat.md`, M12). The wrapper page's CSP is `connect-src 'self' <the origins granted to any provider's plugins>`
   (`shortcut:` one list for all providers, because the page's policy is fixed before its session is known; the page host still lets a plugin reach only its own descriptor's `grant`).
 - **Disable.** Remove the id from `enabled` (local) or the entry from the provider (server); the editors drop the commands and the panel at the next document open (server)

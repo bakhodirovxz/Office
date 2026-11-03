@@ -258,11 +258,8 @@ pub enum Request {
     },
     /// the installed plugins with their state and the machine policy (PLAN phase 7, section 8)
     PluginsList {},
-    /// install a package (a zip) from a file; without `path` the host shows the file dialog
-    PluginsInstall {
-        #[serde(default)]
-        path: Option<String>,
-    },
+    /// install a package (a zip): the host shows the file dialog (a page cannot name a path)
+    PluginsInstall {},
     PluginsEnable {
         id: String,
         enabled: bool,
@@ -476,9 +473,26 @@ impl Store {
 pub fn plugin_store(settings_dir: &Path) -> suite_core::plugins::Store {
     suite_core::plugins::Store::new(
         settings_dir.join("plugins"),
-        suite_core::plugins::machine_dir().map(|m| m.join("plugins")),
+        trusted_machine_dir().map(|m| m.join("plugins")),
         settings_dir.to_path_buf(),
     )
+}
+
+/// The machine folder, unless it is one a standard user could have written to (then it counts as absent, and the reason is said
+/// once on stderr). On Windows `%PROGRAMDATA%` is writable by standard users by default; the MSI locks the product folder. Debug
+/// builds with `SUITE_MACHINE_DIR` skip the check.
+fn trusted_machine_dir() -> Option<PathBuf> {
+    let dir = suite_core::plugins::machine_dir()?;
+    #[cfg(windows)]
+    if !(cfg!(debug_assertions) && std::env::var_os("SUITE_MACHINE_DIR").is_some())
+        && dir.exists()
+        && let Err(e) = suite_winsec::folder_is_admin_only(&dir)
+    {
+        static SAID: std::sync::Once = std::sync::Once::new();
+        SAID.call_once(|| eprintln!("plugins: machine folder {} ignored: {e}", dir.display()));
+        return None;
+    }
+    Some(dir)
 }
 
 // ---- the actions ----
@@ -892,8 +906,7 @@ impl Ctx {
                 Err(error) => json!({"type": "rejected", "error": error}),
             },
             Request::PluginsList {} => self.plugins_reply(Ok(None)),
-            Request::PluginsInstall { path: None } => return Out::PickPackage,
-            Request::PluginsInstall { path: Some(p) } => self.plugins_install(&p, Source::Page),
+            Request::PluginsInstall {} => return Out::PickPackage,
             Request::PluginsEnable { id, enabled } => {
                 let r = self
                     .plugin_store()
@@ -1453,17 +1466,20 @@ bin = "tst-pdf"
             c.message(r#"{"type":"plugins_install"}"#),
             Out::PickPackage
         ));
-        // the page's path follows the rules of `open`: absolute, a drive letter, no `..`, no stream, no share, a zip that exists
+        // a page cannot name a path: the field is refused
         let z = d.join("p.zip");
         package_zip(&z);
         std::fs::write(d.join("p.txt"), b"x").unwrap();
+        let by_path = |path: &str| c.plugins_install(path, Source::User);
+        let body = json!({"type": "plugins_install", "path": z.display().to_string()});
+        assert_eq!(reply(c.message(&body.to_string()))["type"], "rejected");
+        // the file dialog's path follows the rules of `open`: absolute, a drive letter, no `..`, no stream, a zip that exists
         let bad = |path: String, want: &str| {
-            let r = send(json!({"type": "plugins_install", "path": path}));
+            let r = by_path(&path);
             assert_eq!(r["ok"], false, "{path}");
             assert!(r["error"].as_str().unwrap().contains(want), "{path}: {r}");
         };
         bad("p.zip".into(), "absolute");
-        bad(r"\\host\share\p.zip".into(), "absolute");
         bad(format!(r"{}\..\p.zip", d.display()), "absolute");
         bad(format!(r"{}:s.zip", z.display()), "not allowed");
         bad(format!(r"{}\NUL.zip", d.display()), "not allowed");
@@ -1478,7 +1494,7 @@ bin = "tst-pdf"
             "nothing was installed"
         );
         // a good path installs, and does not enable
-        let r = send(json!({"type": "plugins_install", "path": z.display().to_string()}));
+        let r = by_path(&z.display().to_string());
         assert_eq!(
             (r["ok"].clone(), r["installed"].clone()),
             (json!(true), json!("demo.plugin")),
@@ -1530,7 +1546,7 @@ bin = "tst-pdf"
             "[plugins]\nuser_install = false\nuser_grants = false\n",
         )
         .unwrap();
-        let r = send(json!({"type": "plugins_install", "path": z.display().to_string()}));
+        let r = by_path(&z.display().to_string());
         assert!(
             r["ok"] == false && r["error"].as_str().unwrap().contains("administrator"),
             "{r}"

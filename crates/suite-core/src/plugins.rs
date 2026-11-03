@@ -230,6 +230,14 @@ pub fn set_enabled(settings_dir: &Path, id: &str, on: bool) -> Result<(), SetErr
     })
 }
 
+/// Withdraws every grant of `id`.
+pub fn clear_grants(settings_dir: &Path, id: &str) -> Result<(), SetError> {
+    settings::edit(settings_dir, |doc| {
+        settings::table_at(doc, &["plugins", "grants"])?.remove(id);
+        Ok(())
+    })
+}
+
 pub fn set_grant(settings_dir: &Path, id: &str, origin: &str, on: bool) -> Result<(), SetError> {
     settings::edit(settings_dir, |doc| {
         set_list(settings::table_at(doc, &["plugins", "grants"])?, id, |v| {
@@ -443,6 +451,7 @@ impl Store {
     pub fn policy(&self) -> Policy {
         load_policy(self.machine.as_deref().and_then(Path::parent))
     }
+    /// The machine folder first, then the user folder unless the policy forbids user installs (what is in it stays unused).
     pub fn roots(&self) -> Vec<Root> {
         self.machine
             .iter()
@@ -450,10 +459,10 @@ impl Store {
                 dir: d.clone(),
                 machine: true,
             })
-            .chain([Root {
+            .chain(self.policy().user_install.then(|| Root {
                 dir: self.user.clone(),
                 machine: false,
-            }])
+            }))
             .collect()
     }
     pub fn state(&self) -> State {
@@ -561,6 +570,17 @@ impl Store {
         };
         let pkg = package_from(&self.user, get("plugin.toml"), get("plugin.wasm"))?;
         let (id, ver) = (&pkg.manifest.id, &pkg.manifest.version);
+        // installed copies of this id: a different manifest is a new thing to consent to
+        let old: Vec<PathBuf> = std::fs::read_dir(self.user.join(id))
+            .into_iter()
+            .flatten()
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.is_dir())
+            .collect();
+        let changed = old
+            .iter()
+            .any(|d| read_package(d).map_or(true, |p| p.manifest_sha256 != pkg.manifest_sha256));
         let tmp = self.user.join(format!(".install-{}", std::process::id()));
         let target = self.user.join(id).join(ver);
         let _ = std::fs::remove_dir_all(&tmp);
@@ -585,6 +605,13 @@ impl Store {
             let _ = std::fs::remove_dir_all(&tmp);
             format!("cannot store the package: {e}")
         })?;
+        for d in old.iter().filter(|d| **d != target) {
+            let _ = std::fs::remove_dir_all(d);
+        }
+        if changed {
+            set_enabled(&self.settings_dir, id, false).map_err(|e| e.to_string())?;
+            clear_grants(&self.settings_dir, id).map_err(|e| e.to_string())?;
+        }
         read_package(&target)
     }
 }
@@ -738,6 +765,63 @@ mod tests {
         );
         std::fs::remove_file(&pol).unwrap();
         assert_eq!(s.policy(), Policy::default());
+    }
+
+    #[test]
+    fn user_install_off_leaves_the_user_root_out() {
+        let (s, d) = store("plg-useroff");
+        let z = d.join("p.zip");
+        zip_of(
+            &z,
+            &[
+                ("plugin.toml", TOML.as_bytes()),
+                ("plugin.wasm", b" asm   "),
+            ],
+        );
+        s.install_zip(&z).unwrap();
+        s.set_enabled("demo.plugin", true).unwrap();
+        assert_eq!(s.enabled().len(), 1);
+        std::fs::create_dir_all(d.join("machine")).unwrap();
+        std::fs::write(
+            d.join("machine/policy.toml"),
+            "[plugins]
+user_install = false
+",
+        )
+        .unwrap();
+        assert!(s.enabled().is_empty());
+        assert!(s.list().is_empty());
+    }
+
+    #[test]
+    fn a_new_manifest_resets_consent_and_drops_old_versions() {
+        let (s, d) = store("plg-reinstall");
+        let z = d.join("p.zip");
+        let wasm: &[u8] = b" asm   ";
+        zip_of(
+            &z,
+            &[("plugin.toml", TOML.as_bytes()), ("plugin.wasm", wasm)],
+        );
+        s.install_zip(&z).unwrap();
+        s.set_enabled("demo.plugin", true).unwrap();
+        s.set_grant("demo.plugin", "https://api.example.org", true)
+            .unwrap();
+        // the same package again keeps the consent
+        s.install_zip(&z).unwrap();
+        assert_eq!(s.enabled()[0].grant, ["https://api.example.org"]);
+        // another version with another manifest: disabled, no grants, and the old folder is gone
+        let t2 = TOML.replace("1.0.0", "0.9.0").replace("Demo", "Demo2");
+        zip_of(&z, &[("plugin.toml", t2.as_bytes()), ("plugin.wasm", wasm)]);
+        s.install_zip(&z).unwrap();
+        assert!(s.enabled().is_empty());
+        assert_eq!(s.list().len(), 1);
+        assert!(
+            s.state()
+                .grants
+                .get("demo.plugin")
+                .is_none_or(|g| g.is_empty())
+        );
+        assert!(s.state().enabled.is_empty());
     }
 
     #[test]

@@ -52,6 +52,13 @@ impl Docserver {
         }
     }
 
+    /// An audit line that `key` may write once a minute (the rest are dropped): for lines a client can provoke at will.
+    pub fn audit_once(&self, key: &str, event: &str, fields: Value) {
+        if self.watch.once.hit(key).is_ok() {
+            self.audit(event, fields);
+        }
+    }
+
     /// A refused request, counted against the client. `Err(secs)` when the client is over its limit (the caller answers 429 instead
     /// of 401). Under the limit each refusal is an `auth.fail` line; over it only the first of a minute is written, as `limit.hit`, so a
     /// flood cannot fill the log or make every request wait for a disk sync.
