@@ -1825,3 +1825,8 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Fixed a hole found while checking the doc: `next.reads` (and a manifest `reads`) did not need the document permission, so a `document = "none"` plugin could read the text. `Run::read` now refuses without `read`/`write` (`docs-plugins` test `next_reads_need_the_document_permission`).
 - Doc test: a fresh haiku agent wrote a "hello" plugin from the doc alone; it built, packed and loaded in the native harness after the doc got the missing `build.rs` target gate, a minimal `Cargo.toml`/`lib.rs` and the notes on `Call`/`Reply` in tests.
 - Open: PLAN R4 said plugin commands are not recordable; the engine records them like any mutating command (doc says not to rely on replay). No security contact address exists yet.
+
+### Phase 7 hardening A: memory, stack, time (2026-11-03, branch `p7-harden-a`)
+- F1: a module-defined second memory bypassed the cap on the web (V8 has multi-memory). `worker.js` now walks the section headers before compile and refuses a memory section and wasm GC / typed-reference types; native `Host::new` turns multi-memory off. Tests: M2b in `host.rs` and `plugins-host.spec.ts`.
+- F4: wasm stack 256 KiB, and each native round runs on its own 1 MiB thread (a 256 KiB limit alone still aborted a 400 KiB thread in a debug build). Test: `deep_recursion_traps_cleanly_on_a_small_stack` (100 KiB caller).
+- F3: 10 s per-invocation deadline, 8 fetches, 100 ms event round, off after 3 timeouts (constants in `plugin-api/src/wire.rs`, repeated in `host.js`, new string `plg.disabled`). Native auto-disable is counted in the sync path only; the web bridge (`bridge.rs`) is not counted, `host.js` does its own.

@@ -73,7 +73,13 @@ impl Guest for Fake {
     }
 }
 
+/// The last budget an invocation asked its guest to be limited to (tests hold `turn()`).
+static LIMIT: Mutex<Option<std::time::Duration>> = Mutex::new(None);
+
 impl GuestSession for FakeSession {
+    fn limit_budget(&mut self, d: std::time::Duration) {
+        *LIMIT.lock().unwrap() = Some(d);
+    }
     fn round(&mut self, m: &Message) -> Result<Message, String> {
         let call: Call = m.header_as().map_err(|e| e.to_string())?;
         (self.0.lock().unwrap_or_else(|e| e.into_inner()))(&call, &m.blobs)
@@ -522,6 +528,89 @@ fn fetch_needs_a_granted_origin_and_the_host_does_it() {
     let mut s = setup(p, &["a"]);
     go(&mut s).unwrap();
     assert!(seen.lock().unwrap()["error"].is_string());
+}
+
+struct SlowNet(Arc<Mutex<usize>>);
+
+impl Fetch for SlowNet {
+    fn fetch(&self, _: &str, _: &str, _: &BTreeMap<String, String>, _: Option<&str>) -> Result<Value, String> {
+        *self.0.lock().unwrap() += 1;
+        std::thread::sleep(std::time::Duration::from_millis(60));
+        Ok(json!({"status": 200}))
+    }
+}
+
+fn fetch_action() -> Action {
+    Action::Fetch { url: "https://api.example.org/x".into(), method: "GET".into(), headers: Default::default(), body: None }
+}
+
+#[test]
+fn a_slow_invocation_hits_the_deadline_and_is_restored() {
+    let _t = turn();
+    exec::DEADLINE_MS.with(|d| d.set(150.0));
+    let n = Arc::new(Mutex::new(0));
+    let mut acts = vec![insert("X")];
+    acts.extend((0..6).map(|_| fetch_action()));
+    let mut p = once(acts);
+    p.fetcher = Some(Arc::new(SlowNet(n.clone())));
+    let mut s = setup(p, &["abc"]);
+    let before = s.doc.clone();
+    let e = go(&mut s).unwrap_err().to_string();
+    exec::DEADLINE_MS.with(|d| d.set(plugin_api::wire::INVOCATION_MS as f64));
+    assert!(e.contains("time budget exceeded"), "{e}");
+    assert!(*n.lock().unwrap() < 6, "the deadline is checked before each fetch");
+    assert_eq!(s.doc, before, "restored");
+}
+
+#[test]
+fn an_invocation_may_fetch_eight_times() {
+    let _t = turn();
+    let n = Arc::new(Mutex::new(0));
+    let mut p = once(vec![insert("X"); 1].into_iter().chain((0..9).map(|_| fetch_action())).collect());
+    p.fetcher = Some(Arc::new(SlowNet(n.clone())));
+    let mut s = setup(p, &["abc"]);
+    let before = s.doc.clone();
+    let e = go(&mut s).unwrap_err().to_string();
+    assert!(e.contains("more than 8 fetches"), "{e}");
+    assert_eq!(*n.lock().unwrap(), 8);
+    assert_eq!(s.doc, before, "restored");
+    // the count is per invocation, over all its rounds
+    crate::clear();
+    *n.lock().unwrap() = 0;
+    let mut p = plugin(|_, _| answer((0..5).map(|_| fetch_action()).collect(), Some(vec![]), vec![]));
+    p.fetcher = Some(Arc::new(SlowNet(n.clone())));
+    let mut s = setup(p, &["abc"]);
+    assert!(go(&mut s).is_err());
+    assert_eq!(*n.lock().unwrap(), 8);
+}
+
+#[test]
+fn an_event_round_gets_the_short_budget_and_a_command_does_not() {
+    let _t = turn();
+    *LIMIT.lock().unwrap() = None;
+    let mut s = setup(plugin(|_, _| answer(vec![], None, vec![])), &["abc"]);
+    go(&mut s).unwrap();
+    assert_eq!(*LIMIT.lock().unwrap(), None);
+    exec::emit(&mut s, Event::SelectionChanged, "en");
+    assert_eq!(*LIMIT.lock().unwrap(), Some(std::time::Duration::from_millis(plugin_api::wire::EVENT_ROUND_MS)));
+}
+
+#[test]
+fn a_plugin_that_times_out_three_times_is_switched_off() {
+    let _t = turn();
+    let mut s = setup(plugin(|_, _| Err("plugin stopped: time budget exceeded".into())), &["abc"]);
+    for i in 1..=3 {
+        let e = go(&mut s).unwrap_err().to_string();
+        assert_eq!(crate::plugins()[0].enabled(), i < 3, "after {i}");
+        assert_eq!(e.contains("switched off"), i == 3, "{e}");
+    }
+    // another kind of failure never counts
+    crate::clear();
+    let mut s = setup(plugin(|_, _| Err("boom".into())), &["abc"]);
+    for _ in 0..5 {
+        assert!(go(&mut s).is_err());
+    }
+    assert!(crate::plugins()[0].enabled());
 }
 
 fn panel_widgets() -> Vec<Widget> {

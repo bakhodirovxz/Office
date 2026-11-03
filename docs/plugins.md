@@ -230,6 +230,16 @@ is recorded on the plugin and never shown to the user.
 - **Refused at run time**: a message that breaks section 3, an answer with an unknown action, an action without its permission,
   a text map apply that breaks section 5, a round over its time or memory budget, more than 16 rounds, a document that changed
   while the plugin ran. The document is then restored and the status line says the plugin was stopped.
+- **Limits** (the numbers live in `plugin-api/src/wire.rs`; `web/plugins/host.js` repeats them):
+  - *Memory*: `memory_mb` (at most 64) for the one memory the host creates. A module that defines a memory of its own, or any wasm GC
+    type, is refused at load (natively multi-memory is off; on the web `worker.js` reads the section headers before compiling).
+  - *Stack*: the wasm call stack is 256 KiB; deeper recursion is a trap. Natively each round runs on its own 1 MiB thread, so the
+    editor's stack does not matter.
+  - *Time*: 5 s per round (50 ms tick natively); **10 s per invocation**, all rounds and all host-side work together, checked before
+    each round, action and fetch (a fetch that starts just before the end can still take its own 10 s); at most **8 fetches** per
+    invocation; an `event` gets **one round of 100 ms** and cannot fetch. Running out of time fails the invocation and restores the
+    document. A plugin that runs out of time 3 times in a session is switched off until it is enabled again (native) or the page is
+    reloaded (web).
 
 ## 9. Installing, enabling and administering
 

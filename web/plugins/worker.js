@@ -9,8 +9,29 @@ let inst = null, mem = null, logs = 0;
 // The memory is made here with a maximum, never exported by the module: an exported memory had no cap in the spike (4.28 GB reached).
 const memory = (initial, maximum) => new WebAssembly.Memory({ initial: Math.min(initial, maximum), maximum });
 
+// Section headers (id byte, LEB128 size) are walked before compile: V8 allows several memories, and a memory the module defines itself has no cap
+// here; wasm GC objects have none either. So: no memory section (5), no GC type form (0x4e 0x4f 0x50 0x5e 0x5f) in the type section (1).
+// A header that does not parse is refused.
+function screen(bytes) {
+  const u = new Uint8Array(bytes), leb = (i) => { let v = 0, s = 0, b; do { if (i >= u.length || s > 28) throw new Error('malformed module'); b = u[i++]; v += (b & 127) * 2 ** s; s += 7; } while (b & 128); return [v, i]; };
+  if (u.length < 8 || u[0] !== 0 || u[1] !== 0x61 || u[2] !== 0x73 || u[3] !== 0x6d) throw new Error('malformed module');
+  for (let i = 8; i < u.length;) {
+    const id = u[i++]; let n; [n, i] = leb(i);
+    if (n > u.length - i) throw new Error('malformed module');
+    if (id === 5) throw new Error('the module defines its own memory');
+    if (id === 1) {
+      let j = i, c; [c, j] = leb(j);
+      // only plain function types (0x60, value types of one byte) are walked; a GC form or a typed reference (0x63, 0x64) ends the walk with a refusal
+      const bad = () => { throw new Error('the module uses a type form that is not allowed'); }, vec = () => { let k; [k, j] = leb(j); for (; k > 0; k--) { if (j >= i + n || u[j] === 0x63 || u[j] === 0x64) bad(); j++; } };
+      for (; c > 0; c--) { if (u[j] !== 0x60) bad(); j++; vec(); vec(); }
+    }
+    i += n;
+  }
+}
+
 async function load({ bytes, maxPages }) {
   const max = Math.max(1, Math.min(maxPages | 0, 1024));   // 64 MiB is the host cap
+  screen(bytes);
   const mod = await WebAssembly.compile(bytes);
   const imports = WebAssembly.Module.imports(mod);
   const bad = imports.filter((i) => !((i.module === 'env' && i.name === 'memory' && i.kind === 'memory') || (i.module === 'plugin_v1' && i.name === 'log' && i.kind === 'function')));

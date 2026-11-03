@@ -12,6 +12,16 @@ pub const MAX_HEADER: usize = 1 << 20;
 pub const MAX_BLOBS: usize = 16;
 pub const MAX_ROUNDS: usize = 16;
 
+/// Wall-clock limit of one invocation (all rounds, all host-side work), checked before each action, fetch and round. The web page host
+/// (`web/plugins/host.js`) mirrors these four numbers.
+pub const INVOCATION_MS: u64 = 10_000;
+/// `fetch` actions allowed in one invocation.
+pub const MAX_FETCHES: usize = 8;
+/// An `event` invocation has one short wasm round and no `fetch`.
+pub const EVENT_ROUND_MS: u64 = 100;
+/// A plugin that hits a time limit this many times in a session is switched off for the rest of it.
+pub const DISABLE_AFTER_TIMEOUTS: u32 = 3;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WireError {
     Truncated,
