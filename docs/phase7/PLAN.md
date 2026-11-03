@@ -597,7 +597,7 @@ the Android run (WP9) and a 12-row × 4-container malicious suite (WP10). SIZING
 | **R2** | **"Identical" breaks in the refactor** of `docs-translit` | the built-in changes behaviour | WP3 step 1 alone, existing tests and preservation tests unchanged; byte-compare the 108-page outputs before/after |
 | R3 | Docs wasm over budget (24,678 B headroom) | `sizes` red | measure in WP4; re-baseline by rule with a STATUS line |
 | R4 | Async web calls vs sync command semantics (macro recording, Repeat, `wordcraft:ran`) | odd results in the palette or macros | `pending` result; plugin commands not recordable in v1 (stated in `plugins.md`) |
-| R5 | wasmtime churn (MSRV 1.97.0 = our 1.97.1 today; frequent majors) | upgrades forced by rustc or advisories | pin; LTS line if available; the bump is one WP-sized job per year |
+| R5 | wasmtime churn (MSRV 1.97.0 = our 1.97.1 today; frequent majors) | upgrades forced by rustc or advisories | pin to the LTS line (48.x until about 2028; every 12th major is LTS for 24 months); the bump is one WP-sized job per year |
 | R6 | Worker CSP and imported memory behave differently in WebView2 / Android WebView | a §5.4 row passes in Chrome only | WP9 and WP10 run every row in every container |
 | R7 | Third-party plugin strings bypass our Uzbek review | poor Uzbek in third-party UI | stated in `plugins.md`; our two plugins use the catalogs and the agent review rule |
 | R8 | Config-file-only admin control is not what the owner means by "admin control" | rework | O7 asked now |
