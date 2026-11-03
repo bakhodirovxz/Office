@@ -10,6 +10,8 @@
 //!   `canDownload: false` withholds Save As and the exports, `canPrint: false` Print (greyed out,
 //!   and their keyboard shortcuts refused); both default to true. The browser's own print command
 //!   can't be blocked from a page, so this only removes the editor's own entries.
+//!   `dirty: true` (office overlay, wordcraft/0146) opens it with unsaved changes: the parent hands back a
+//!   `wordcraft:autosave` it kept (the page died), so it stays marked unsaved and keeps being autosaved.
 //! - `wordcraft:opened` (to the parent): `{ name }`, a document has replaced the one shown.
 //! - `wordcraft:requestSave` (from the parent): save now, as File › Save does.
 //! - `wordcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
@@ -71,6 +73,8 @@ pub struct Bridge {
     save_requested: Rc<Cell<bool>>,
     /// The page was hidden or is going away since the last frame: hand over the unsaved document.
     autosave: Rc<Cell<bool>>,
+    /// The parent opened the next document with unsaved changes (`wordcraft:open { dirty }`, wordcraft/0146).
+    recovered: Rc<Cell<bool>>,
     /// The parent opened the document read only (`wordcraft:open { readOnly }`).
     read_only: Rc<Cell<bool>>,
     /// `wordcraft:open { canDownload }` and `{ canPrint }`: false withholds Save As and the exports, or Print.
@@ -112,6 +116,7 @@ impl Bridge {
             origin,
             save_requested: Rc::default(),
             autosave: Rc::default(),
+            recovered: Rc::default(),
             read_only: Rc::default(),
             can_download: Rc::new(Cell::new(true)),
             can_print: Rc::new(Cell::new(true)),
@@ -177,6 +182,12 @@ impl Bridge {
     /// shown (office overlay, wordcraft/0142: not while it is still being shaped, `warming`).
     pub fn sync(&self, ctx: &egui::Context, app: &mut WordApp, warming: bool) {
         let id = app.session.document_id();
+        // A recovered document is not the file on disk: it keeps its unsaved mark (wordcraft/0146). The open message is handled
+        // between frames and the inbox is drained by this frame's logic, so a document other than the one last reported is it.
+        if self.document.get() != Some(id) && self.recovered.replace(false) {
+            app.session.dirty = true;
+            ctx.request_repaint();
+        }
         if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
         }
@@ -258,11 +269,7 @@ impl Bridge {
         // Not through `file.save`: the document stays dirty and the browser downloads nothing.
         if self.autosave.replace(false) && app.session.dirty {
             let name = self.name.borrow().clone();
-            let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
-            let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));
-            match wordcraft_engine::io::save_bytes_with(&name, &app.session.doc, password, &options)
-                .and_then(|b| self.post_file("wordcraft:autosave", &name, &b))
-            {
+            match wordcraft_ui_egui::office_overlay::autosave_bytes(app, &name).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
                 Ok(()) => {}
                 Err(e) => log::error!("couldn't hand {name} to the page for safekeeping: {e}"),
             }
@@ -348,6 +355,7 @@ impl Bridge {
                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
                     let Some(bytes) = bytes(&data) else { return };
                     bridge.read_only.set(bool_field(&data, "readOnly"));
+                    bridge.recovered.set(bool_field(&data, "dirty"));
                     bridge.can_download.set(flag(&data, "canDownload"));
                     bridge.can_print.set(flag(&data, "canPrint"));
                     *bridge.name.borrow_mut() = name.clone();
