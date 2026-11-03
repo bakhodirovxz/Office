@@ -17,6 +17,8 @@ wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
 egui = "0.36"
 serde_json = { version = "1", features = ["float_roundtrip"] }
 wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+# Phase 7 WP3: the plugins' ribbon group and the per-frame registration
+docs-plugins = { path = "../docs-plugins" }
 
 # The shared per-user settings (WP5): desktop only, the web build has no toggle and no file.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

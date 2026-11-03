@@ -1,5 +1,6 @@
-# Phase 7 WP3: the Docs adapter of the plugin system (docs/phase7/PLAN.md sections 4, 6 and 9). Our crate. Step 1: the text map walker,
-# moved out of docs-translit with no change in behaviour.
+# Phase 7 WP3: the Docs adapter of the plugin system (docs/phase7/PLAN.md sections 4, 6 and 9). Our crate: the text map walker (moved
+# out of docs-translit, no behaviour change), the slot commands, the action executor, the contributions and the panel painter.
+# The guest (wasmtime natively, a Worker on the web) is a trait here; the apps install a real one.
 [package]
 name = "docs-plugins"
 version = { workspace = true }
@@ -18,3 +19,9 @@ wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
 wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
 plugin-api = { path = "../../../../crates/plugin-api" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
+egui = "0.36"
+
+[dev-dependencies]
+# the equivalence test runs the built-in command next to a plugin that holds the same converter
+docs-translit = { path = "../docs-translit" }
+uz-translit = { path = "../../../../crates/uz-translit" }

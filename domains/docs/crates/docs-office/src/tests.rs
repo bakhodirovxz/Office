@@ -258,3 +258,46 @@ fn export_pdf_button_is_guarded() {
     assert!(matches!(s.run("office.exportPdf", &json!({})), Err(CmdError::Disabled(_))));
     assert!(s.ui_requests.is_empty());
 }
+
+struct NoGuest;
+
+impl docs_plugins::Guest for NoGuest {
+    fn start(&self) -> Result<Box<dyn docs_plugins::GuestSession>, String> {
+        Err("no guest in this test".into())
+    }
+}
+
+fn plugin_group_commands(s: &Session) -> Vec<Vec<String>> {
+    let tab = s.ribbon.tabs().iter().find(|t| t.custom).cloned().unwrap();
+    tab.groups.iter().filter(|g| g.commands.iter().any(|c| c.starts_with("plugin."))).map(|g| g.commands.clone()).collect()
+}
+
+/// Phase 7 WP3: the plugins' buttons are one more group of the preset; they come and go with the enabled plugins, the preset stays "ours".
+#[test]
+fn plugin_buttons_appear_and_disappear_with_enable_and_disable() {
+    let _g = turn();
+    docs_plugins::clear();
+    let mut s = session();
+    crate::ribbon_frame(&mut s, "en", &|k| k.to_string());
+    assert!(plugin_group_commands(&s).is_empty(), "no plugin, no group");
+    let m = plugin_api::manifest::parse(
+        "id = \"demo-plugin\"\nversion = \"1.0.0\"\napi = 1\napps = [\"docs\"]\npublisher = \"T\"\nname.en = \"Demo\"\n\
+         [[command]]\nid = \"go\"\nlabel.en = \"Go\"\n[[toolbar]]\ncommand = \"go\"\n",
+    )
+    .unwrap();
+    docs_plugins::add(docs_plugins::Plugin::new(m, Arc::new(NoGuest))).unwrap();
+    crate::ribbon_frame(&mut s, "en", &|k| k.to_string());
+    assert_eq!(plugin_group_commands(&s), [["plugin.demo-plugin.go"]], "the button appears");
+    assert!(s.registry.get("plugin.demo-plugin.go").is_some(), "and its command is in the registry (the palette)");
+    assert!(preset::is_preset(&s.ribbon, &s.registry), "the plugin group does not make the layout the user's own");
+    docs_plugins::set_enabled("demo-plugin", false);
+    crate::ribbon_frame(&mut s, "en", &|k| k.to_string());
+    assert!(plugin_group_commands(&s).is_empty(), "the button disappears");
+    assert!(s.registry.get("plugin.demo-plugin.go").is_none());
+    docs_plugins::set_enabled("demo-plugin", true);
+    crate::ribbon_frame(&mut s, "en", &|k| k.to_string());
+    assert_eq!(plugin_group_commands(&s).len(), 1);
+    docs_plugins::clear();
+    crate::ribbon_frame(&mut s, "en", &|k| k.to_string());
+    assert!(plugin_group_commands(&s).is_empty());
+}
