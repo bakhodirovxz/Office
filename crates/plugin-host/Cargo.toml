@@ -11,8 +11,8 @@ description = "Native plugin host: wasmtime with a locked-down ABI, memory cap, 
 [dependencies]
 plugin-api = { path = "../plugin-api" }
 # Pinned exactly (a runtime bump is a reviewed change). Minimal features: Cranelift JIT, no WASI, no component model.
-# Wasmtime LTS: see docs/plugins.md / PLAN section 1.1 note (recorded in STATUS).
-wasmtime = { version = "=50.0.1", default-features = false, features = ["cranelift", "runtime", "std"] }
+# Wasmtime LTS line: majors that are multiples of 12 are supported 24 months, others 2 months (docs.wasmtime.dev/stability-release.html, checked 2026-11-03); 48 is the current LTS.
+wasmtime = { version = "=48.0.8", default-features = false, features = ["cranelift", "runtime", "std"] }
 
 [dev-dependencies]
 wat = "=1.263.0"
