@@ -1,0 +1,20 @@
+{
+  "item": "M6-time-budget",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:14:09.122Z",
+  "details": {
+    "ms": 5103,
+    "timer_ticks": 51,
+    "expected_ticks": 51,
+    "audit": [
+      {
+        "plugin": "test.host",
+        "kind": "stopped",
+        "error": "time budget"
+      }
+    ],
+    "status": "Test plugin took too long and was stopped."
+  },
+  "screenshots": []
+}

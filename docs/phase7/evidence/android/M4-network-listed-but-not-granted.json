@@ -1,0 +1,18 @@
+{
+  "item": "M4-network-listed-but-not-granted",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:14:03.982Z",
+  "details": {
+    "audit": [
+      {
+        "plugin": "test.host",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      }
+    ],
+    "status": "resumed",
+    "note": "no grant dialog appeared; the descriptor carries grant: []"
+  },
+  "screenshots": []
+}

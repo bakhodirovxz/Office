@@ -136,6 +136,8 @@ fn outgoing(o: Out, post: &dyn Fn(&JsValue, &Array) -> bool) {
 pub fn sync(s: &mut Session, post: &dyn Fn(&JsValue, &Array) -> bool) -> bool {
     let inbox = INBOX.with(|i| std::mem::take(&mut *i.borrow_mut()));
     let mut active = !inbox.is_empty();
+    // The phone layout never draws the ribbon, whose per-frame hook (preset::sync) registers the slot commands: do it here too (cheap when nothing changed).
+    docs_plugins::frame(s, &docs_plugins::lang());
     for data in inbox {
         match get(&data, "type").as_string().as_deref() {
             Some("wordcraft:plugins") => set(&data, post),

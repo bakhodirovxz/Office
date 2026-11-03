@@ -1,0 +1,62 @@
+# Plugins on Android (Phase 7 WP9)
+
+How the Android app carries plugins (PLAN section 8, Android row) and how it was checked. Code: `packaging/android/src/office/android/`
+(`Plugins.java` store, `Toml.java` manifest reader, `MainActivity.java` loader and bridge), `packaging/android/build.sh`,
+`web/plugins/page.js`. Evidence: `docs/phase7/evidence/android/` (JSON and screenshots per item), recordings in `E:/office-target/p7-evidence/evidence/p7-android/`
+with their SHA-256 in `docs/phase7/evidence/SHA256SUMS`. Runner: `scripts/mobile/android-plugins.mjs`; test packages: `scripts/mobile/fixtures/make-test-packages.py`.
+
+## What is in the app
+
+- **Bundled plugins.** `build.sh` runs `cargo xt plugin pack <name>` for every `plugins/*/plugin.toml` and unpacks the package to
+  `assets/web/plugin-pkg/<id>/` (plugin.toml, plugin.wasm, strings.tsv). A new first-party plugin needs no code change. Needs cargo on PATH.
+- **Loader.** `/shell-config.json` is served with the enabled plugins' descriptors added (`id`, `version`, `sha256`, `wasm: /plugins/<sha256>`, manifest as JSON,
+  `grant: []`). `/plugins/<sha256>` serves the wasm of an enabled plugin after hashing it again; anything else is 404. `/shell/plugins/*.js` (the Worker
+  script) keeps the Worker CSP header.
+- **Install from file (O3: allowed locally).** The Plugins page (shell nav button, shown when `window.SuiteHost` exists) calls `SuiteHost.plugins(json)`:
+  `plugins_install` opens the system picker (`ACTION_OPEN_DOCUMENT`), the zip is checked (entry names, sizes, wasm magic, id, `api`, `apps`) and kept in
+  `files/plugins/<id>/` with `install.toml` (`sha256`, `manifest_sha256`, the same record as `suite-core::plugins`). A package changed on disk later is listed
+  with a problem and never served. A bundled id cannot be replaced.
+- **Enable / disable.** `SharedPreferences("plugins")`, key `on.<id>`; bundled default on, installed default off (the user turns it on). A change applies when
+  the app restarts (the page says so: `plg.page.restart`).
+- **No network.** The manifest has no INTERNET permission, `shouldInterceptRequest` answers 404 for any other host, descriptors carry `grant: []`, the page
+  shows no network rows (`network: []`, `policy.user_grants: false`) and `plugins_grant` is refused.
+
+## Shortcuts (known limits)
+
+- `Toml.java` reads the TOML subset a manifest uses (no multi-line strings, no dates); `Plugins.parse` checks id, api, apps and sizes, not every rule of
+  `plugin-api`'s manifest parser. Bundled packages were validated by `xt plugin pack`; the page host re-checks the descriptor and enforces permissions at run time.
+  Upgrade path: a wasm build of `plugin-api::manifest` called from the page.
+- The signature (O4) is not checked, as on desktop.
+- A change of the enabled set needs an app restart (the shell reads `shell-config.json` once).
+
+## Found while running it
+
+The Docs phone layout never draws the ribbon, and the ribbon's per-frame hook (`preset::sync` -> `docs_plugins::frame`) is what registers the plugin
+commands in the editor's registry, so in the app `wordcraft:run plugin.<id>.<command>` answered "unknown command". Fixed in our layer:
+`docs-office::plugin_web::sync` (called every frame by the web host) now calls `docs_plugins::frame` itself (cheap when nothing changed).
+
+## Results (emulator `HRM_Pixel_8`, API 36 image, 540x1200 rig, 2026-11-03)
+
+JSON and screenshots: `docs/phase7/evidence/android/`; recordings and their SHA-256: `docs/phase7/evidence/SHA256SUMS`.
+
+| Item | Result | Evidence |
+|---|---|---|
+| uz-translit toCyrillic on `phone-ux.docx`, run from the editor, saved, pulled | pass (text saved with `Салом дунё`) | `translit-toCyrillic.json`, `translit-0..4*.png`, `translit.mp4` |
+| uz-translit toLatin on the result | pass (Latin again; the plugin's Latin spelling of the Cyrillic text is its own, not the original) | `translit-toLatin.json` |
+| Install from file through the picker (record, SHA-256, enable, restart) | pass | `install-from-file.json`, `install-*.png`, `install.mp4` |
+| Disable uz-translit, restart | pass (not in `shell-config.json`, host lists only the other plugin) | `disable.json`, `disable-*.png`, `disable.mp4` |
+| M1 import refused / M2 exported memory refused | pass (installed from file, load refused in the Worker) | `M1-load-refused.json`, `M2-load-refused.json` |
+| M3 no network in manifest / M4 listed but Android grants none | pass (`network.refused` / `network.denied`, no dialog) | `M3-*.json`, `M4-*.json` |
+| M6 infinite loop | pass (stopped at 5 s, a 100 ms page timer kept ticking) | `M6-time-budget.json`, `M6-stopped.png` |
+| M7 memory growth | pass (capped at 2 MiB) | `M7-memory-cap.json` |
+| M9 markup in a panel | pass (text only, cut at 1,024) | `M9-panel-is-text.json`, `M9-panel.png` |
+| M11 Worker CSP | pass (header as suite-serve; `fetch` from inside the Worker blocked, same-origin and other) | `M11-worker-csp.json` |
+| No network at all | pass (no INTERNET permission; page `fetch` to another host fails) | `no-network.json` |
+| Tap-through fix in the app (`tapfix-app.mjs`) | before: picture gone from the autosave (5,750 B, no media); after: picture kept | `tapfix-before-*`, `tapfix-after-*` |
+
+Not run: M5, M8, M10 (need the WP10 `evil` plugin: a `file.saveAs` answer, malformed answers, an edit from an event) and M12 (server only). The `rows` item
+used the WP5 test plugin (`ci/plugins/webhost-test`) packed by `scripts/mobile/fixtures/make-test-packages.py`, and calls `PluginHost.last.invoke` through
+the WebView's devtools; the translit item runs the command through the editor (`wordcraft:run`), not the palette or a toolbar button (the manifest has none).
+
+APK size (same four dists, same signing): 53,368,768 B before (`06b1999` sources) and 53,479,711 B after, +110,943 B (+0.21 %): the uz-translit package
+(plugin.wasm 250,138 B raw, about 83 KB compressed) plus the three new classes and `page.js`.

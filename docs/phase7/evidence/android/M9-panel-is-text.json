@@ -1,0 +1,15 @@
+{
+  "item": "M9-panel-is-text",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:14:17.673Z",
+  "details": {
+    "imgs": 0,
+    "h3": "<img src=x onerror=window.__xss=1>",
+    "textLen": 1024,
+    "xss": true
+  },
+  "screenshots": [
+    "M9-panel.png"
+  ]
+}

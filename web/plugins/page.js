@@ -10,7 +10,7 @@
   const lang = () => document.documentElement.lang;
   const t = (k, p = {}) => String(((S.i18n || {})[lang()] || {})[k] ?? ((S.i18n || {}).en || {})[k] ?? k).replace(/\{(\w+)\}/g, (m, n) => p[n] ?? m);
   const name = (n) => String((n && (n[lang()] || n.en)) || '');
-  const send = (m) => { clearTimeout(S.tm); S.tm = setTimeout(() => { S.bad = true; S.msg = t('plg.page.silent'); render(); }, 20000); window.ipc.postMessage(JSON.stringify(m)); };
+  const send = (m) => { clearTimeout(S.tm); S.tm = setTimeout(() => { S.bad = true; S.msg = t('plg.page.silent'); render(); }, 20000); (window.ipc || { postMessage: (j) => SuiteHost.plugins(j) }).postMessage(JSON.stringify(m)); };
 
   function row(it, i, pol) {
     const id = (k, n = '') => `plg-${k}-${i}${n}`;
@@ -62,7 +62,7 @@
       if (d.items) S.d = d;
       const made = d.installed && d.items && d.items.find((i) => i.id === d.installed);
       S.bad = d.ok === false;
-      S.msg = S.bad ? t('plg.page.error', { error: String(d.error) }) : made ? t('plg.page.installed', { name: name(made.name) }) : '';
+      S.msg = S.bad ? t('plg.page.error', { error: String(d.error) }) : d.restart && !made ? t('plg.page.restart') : made ? t('plg.page.installed', { name: name(made.name) }) : '';
       render();
     });
     // the page language is set by shell.js after this script ran, and again when the user changes it

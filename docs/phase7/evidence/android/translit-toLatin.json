@@ -1,0 +1,13 @@
+{
+  "item": "translit-toLatin",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T07:45:11.688Z",
+  "details": {
+    "text_after": "Phone reading test Salom dunyo. Bu hujjat telefon ekranida öqiş va tahrirlaş qulayligini tekşiriş uçun yozilgan sinov matni. Dokument dlya proverki telefonnogo maketa: tekst perenositsya po şirine ekrana. The quick brown fox jumps over the lazy dog. A second heading Salom dunyo. Bu hujjat telefon ekranida öqiş va tahrirlaş qulayligini tekşiriş uçun yozilgan sinov matni. Dokument dlya proverki tele"
+  },
+  "screenshots": [
+    "translit-3-latin.png",
+    "translit-4-saved.png"
+  ]
+}
