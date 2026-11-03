@@ -337,7 +337,7 @@ document unchanged**, on **desktop native (cargo test with the real host), web s
 |---|---|---|
 | M1 | module imports `wasi_snapshot_preview1.path_open`, `fd_write`, `sock_open` | load refused: "imports not allowed: …" |
 | M2 | module exports its own memory instead of importing it | load refused |
-| M3 | `fetch` to `https://example.org` with no `network` permission | refused, audit line, next round sees `{error: "network not permitted"}` |
+| M3 | `fetch` to `https://example.org` with no `network` permission | the invocation is aborted (like every permission violation), audit line, document restored; a fetch the user declines in the web grant dialog is not a violation: the next round sees `{error: "network not permitted"}` |
 | M4 | permission for origin A, `fetch` to origin B, and to A with a redirect to B | refused |
 | M5 | `run file.saveAs {path: "C:/Users/Public/x.docx"}`, `run insert.textFromFile {path: …}`, `run tools.macros` | refused by the allowlist; no file written or read (the test checks the paths) |
 | M6 | infinite loop in `call` | stopped at the time budget; editor responsive (web: a timer fires on schedule); "plugin stopped" |

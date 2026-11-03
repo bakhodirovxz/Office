@@ -110,6 +110,11 @@ the host ends in such URLs). Methods: GET, POST, PUT, PATCH, DELETE. Up to 16 he
 `Connection`, `Transfer-Encoding`, `Origin`, `Referer`, `Upgrade`, `TE`, `Expect`, `Proxy-*` and `Sec-*` are refused. The host
 sends no credentials of its own and applies the response size and time limits.
 
+A `fetch` to an origin the manifest does not list (or that nobody granted, natively) is a permission violation like a refused command: the
+whole invocation is aborted, the document is restored and the plugin gets no further round. The one recoverable case is the web grant
+dialog: when the user says no, the next round sees `{error: "network not permitted"}`. A `next.reads` list (or `read` actions) of more than 16
+reads in one round is refused the same way.
+
 ## 5. Text map
 
 The bulk read and write for text plugins. Read blob (host to plugin):

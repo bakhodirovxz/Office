@@ -2,6 +2,7 @@
 // `plugin.wat` is a plugin with API v1 shape (imports env.memory and plugin_v1.log; exports api_version, alloc, free, call). Its answer is picked
 // by the first letter of the host call's `"command":"<id>"` (the host writes `kind` first, so byte 13 of the message is r(esume) or u(i) for those):
 //   hello (h) panel + status   net (n) fetch to example.org   spin (s) infinite loop   grow (g) grows memory until refused
+//   deny (d) run file.saveAs   many (m) 17 reads in one `next`
 //   xss (x) panel text that is markup and 10,000 characters   edit (e) a `run` action for the editor, then resumes
 // A resume answers "resumed", a ui click "clicked". Every call is passed to plugin_v1.log, so a test reads the host call (results included).
 // Build the .wasm files: see README.md.
@@ -16,6 +17,8 @@ const ANSWERS = {
   edit: { actions: [{ type: 'run', id: 'text.insert', params: { text: 'x' } }], next: { reads: [] } },
   resume: { actions: [{ type: 'ui.status', text: 'resumed' }] },
   click: { actions: [{ type: 'ui.status', text: 'clicked' }] },
+  deny: { actions: [{ type: 'run', id: 'file.saveAs', params: { path: 'C:/Users/Public/x.docx' } }] },
+  many: { actions: [], next: { reads: Array.from({ length: 17 }, () => ({ what: 'textmap', scope: 'document' })) } },
   none: {},
 };
 let off = 4096;
@@ -56,7 +59,7 @@ ${data}  (func $ans (param $off i32) (param $len i32) (result i64)
         (then (local.set $sel (i32.load8_u (i32.add (i32.add (local.get $p) (local.get $i)) (i32.const 11)))) (br $done)))
       (local.set $i (i32.add (local.get $i) (i32.const 1)))
       (br $scan)))
-${sel('h', 'hello')}${sel('n', 'net')}${sel('x', 'xss')}${sel('e', 'edit')}    (if (i32.eq (local.get $sel) (i32.const ${'s'.charCodeAt(0)})) (then (loop $spin (br $spin))))
+${sel('h', 'hello')}${sel('n', 'net')}${sel('x', 'xss')}${sel('e', 'edit')}${sel('d', 'deny')}${sel('m', 'many')}    (if (i32.eq (local.get $sel) (i32.const ${'s'.charCodeAt(0)})) (then (loop $spin (br $spin))))
     (if (i32.eq (local.get $sel) (i32.const ${'g'.charCodeAt(0)})) (then
       (loop $grow (br_if $grow (i32.ne (memory.grow (i32.const 1)) (i32.const -1))))
       ${ans('grow')}))
