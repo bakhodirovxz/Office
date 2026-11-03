@@ -289,3 +289,28 @@ exported by `plugin_sdk::export!(handler)`; an `Err` becomes a `ui.status` line 
 checks `plugin.toml` and the entry list with `plugin-api` and writes `<target>/plugins/<id>-<version>.zip` (stored entries in a fixed order, fixed
 timestamp and mode, so equal inputs give equal bytes) and prints its SHA-256. `plugins/<name>/strings.tsv` (header row, then
 `key, en, ru, uz-Latn, uz-Cyrl, status` per line) is shipped in the package; the plugin reads its own copy at build time.
+
+## 11. The template-fields plugin (Phase 7 WP7; PLAN section 7)
+
+`plugins/template-fields` is the second first-party plugin and uses a different part of the API than transliteration: a panel, `ui` calls, catalog
+commands with parameters, an event with a read, and settings. The field list is configuration only: `settings.fields = [{name, label, kind}]`
+(`kind` is `text`, the default, or `bookmark`). The manifest carries a synthetic default list; an administrator replaces it per provider
+(`[[docserver.providers]] plugins = [{ ..., settings = { fields = [...] } }]`; the entry's `settings` replace the manifest's, they are not merged)
+and, in local mode, the user does with `[plugins.settings.<id>]` in `settings.toml` (desktop) or in the web host's config file (`suite-core::plugins::State`).
+No real field name is in the code, tests or docs.
+
+- **Panel `fields`:** heading, filter box, "Check fields" button, and a `list` whose items (`id` = `ins-<position>`) are the "Insert" buttons. Every call is
+  stateless, so every answer redraws the whole panel.
+- **Insert** (`ui` call): a `text` field runs `developer.plainText {title: label, tag: name}`, then `developer.properties {placeholder: label, lockDelete: true}`
+  (a content control, saved as `w:sdt` with `w:tag` = the name). A `bookmark` field runs `text.insert {text: label}`, one `caret.left {extend: true}` per
+  character and `insert.bookmark {name}` (so the bookmark covers exactly the label). All of these are on the allowlist (families `developer.`, `text.`,
+  `caret.`, `insert.`).
+- **Highlight:** `selectionChanged` answers with `next.reads = [selection]` and no action (an event may run `ui.*` only); the resume call carries the
+  selected text and the answer is `ui.panel` with the field whose label equals the text marked. The selection read is **text only** and empty for a collapsed
+  caret, so a field is recognised while the user has selected its placeholder (click the control, or Select All in a paragraph holding only the control);
+  a caret inside a filled control is not recognised. An event refreshes a panel that is open and never opens one (`host.js`; `docs-plugins::exec`).
+- **Check fields** (command or button): `run document.inspect {text: false}`, then the tags of the `controlStart` objects and the names of `bookmarkStart`
+  objects are compared with the list: missing fields, and control tags that are not in the list. The inspect read covers body paragraphs (the first 2,000
+  blocks), not objects inside tables, headers or footers.
+- **Limits:** at most 256 fields; names up to 64 characters (bookmark names follow `insert.bookmark`: a letter first, no spaces, up to 40); an invalid entry is
+  skipped and counted in the panel. Typing in the filter box redraws the list; the next selection event resets the filter (no state between calls).

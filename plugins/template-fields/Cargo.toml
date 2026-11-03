@@ -1,0 +1,16 @@
+# Phase 7 WP7: plugin #2, template fields (docs/phase7/PLAN.md section 7). Built for wasm32-unknown-unknown by
+# `cargo xt plugin build template-fields`; the rlib is for the native unit tests. The field list is configuration only.
+[package]
+name = "template-fields-plugin"
+version = "1.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Template fields plugin: a panel that inserts configured content controls and checks them"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+plugin-sdk = { path = "../../crates/plugin-sdk" }
+serde_json = "1"

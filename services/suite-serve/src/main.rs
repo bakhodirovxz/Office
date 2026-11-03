@@ -83,7 +83,7 @@ fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
 }
 
 /// The optional `[plugins]` section of the web host (PLAN phase 7, section 8): `dir` (the operator's folder of packages),
-/// `enabled = [ids]`, `[plugins.grants] <id> = [origins]` and optionally `[plugins.sha256] <id> = "<hex of plugin.wasm>"` (a package
+/// `enabled = [ids]`, `[plugins.grants] <id> = [origins]` and optionally `[plugins.sha256] <id> = "<hex of plugin.wasm>"`, `[plugins.settings.<id>]` (the plugin's values; they replace its manifest defaults) (a package
 /// whose wasm differs is left out). The operator is the only one who enables or grants here; a package that changed since its record
 /// is refused, one without a record is accepted (the folder is the operator's). The state is static, so it is worked out once here.
 fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
@@ -99,7 +99,7 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     };
     if let Some(k) = t
         .keys()
-        .find(|k| !["dir", "enabled", "grants", "sha256"].contains(&k.as_str()))
+        .find(|k| !["dir", "enabled", "grants", "sha256", "settings"].contains(&k.as_str()))
     {
         return Err(format!("plugins: unknown key {k}"));
     }
@@ -132,7 +132,26 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
             ))?;
         pins.insert(id.clone(), h.to_string());
     }
-    let state = suite_core::plugins::State { enabled, grants };
+    let mut settings = std::collections::BTreeMap::new();
+    for (id, v) in t
+        .get("settings")
+        .and_then(|g| g.as_table())
+        .into_iter()
+        .flatten()
+    {
+        if !v.is_table() {
+            return Err(format!("plugins: settings.{id} must be a table"));
+        }
+        settings.insert(
+            id.clone(),
+            serde_json::to_value(v).map_err(|e| e.to_string())?,
+        );
+    }
+    let state = suite_core::plugins::State {
+        enabled,
+        grants,
+        settings,
+    };
     let roots = vec![suite_core::plugins::Root {
         dir: dir.into(),
         machine: true,

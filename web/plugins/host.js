@@ -262,7 +262,7 @@
           const fwd = [];
           for (const x of a.actions) {
             if (x.type === 'ui.status') { say(clean(x.text).slice(0, STATUS)); results.push({ ok: true }); }
-            else if (x.type === 'ui.panel') { await ready; render(P, x.panel, x.widgets); results.push({ ok: true }); }
+            else if (x.type === 'ui.panel') { await ready; if (!fromEvent || shown === P.d.id + '/' + x.panel) render(P, x.panel, x.widgets); results.push({ ok: true }); }   // an event refreshes an open panel, never opens one
             else if (x.type === 'fetch') results.push(await doFetch(P, x));
             else { fwd.push(results.length); results.push(null); }
           }

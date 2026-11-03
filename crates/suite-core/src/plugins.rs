@@ -178,6 +178,47 @@ pub fn verify(p: &Package, machine: bool) -> Result<(), String> {
 pub struct State {
     pub enabled: Vec<String>,
     pub grants: BTreeMap<String, Vec<String>>,
+    /// `[plugins.settings.<id>]`: the user's values for a plugin's `[settings]` (they replace the manifest defaults, like an admin's).
+    pub settings: BTreeMap<String, Value>,
+}
+
+/// A TOML value as JSON (datetimes as text).
+fn json_of(v: &toml_edit::Value) -> Value {
+    use toml_edit::Value as T;
+    match v {
+        T::String(s) => Value::String(s.value().clone()),
+        T::Integer(i) => (*i.value()).into(),
+        T::Float(f) => serde_json::Number::from_f64(*f.value()).map_or(Value::Null, Value::Number),
+        T::Boolean(b) => Value::Bool(*b.value()),
+        T::Datetime(d) => Value::String(d.value().to_string()),
+        T::Array(a) => Value::Array(a.iter().map(json_of).collect()),
+        T::InlineTable(t) => {
+            Value::Object(t.iter().map(|(k, v)| (k.to_string(), json_of(v))).collect())
+        }
+    }
+}
+
+fn json_of_item(i: &toml_edit::Item) -> Value {
+    match i {
+        toml_edit::Item::Value(v) => json_of(v),
+        toml_edit::Item::Table(t) => Value::Object(
+            t.iter()
+                .map(|(k, v)| (k.to_string(), json_of_item(v)))
+                .collect(),
+        ),
+        toml_edit::Item::ArrayOfTables(a) => Value::Array(
+            a.iter()
+                .map(|t| {
+                    Value::Object(
+                        t.iter()
+                            .map(|(k, v)| (k.to_string(), json_of_item(v)))
+                            .collect(),
+                    )
+                })
+                .collect(),
+        ),
+        toml_edit::Item::None => Value::Null,
+    }
 }
 
 fn strings(item: Option<&toml_edit::Item>) -> Vec<String> {
@@ -203,6 +244,16 @@ pub fn load_state(settings_dir: &Path) -> State {
             .map(|g| {
                 g.iter()
                     .map(|(k, v)| (k.to_string(), strings(Some(v))))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        settings: p
+            .get("settings")
+            .and_then(|g| g.as_table())
+            .map(|g| {
+                g.iter()
+                    .map(|(k, v)| (k.to_string(), json_of_item(v)))
+                    .filter(|(_, v)| v.is_object())
                     .collect()
             })
             .unwrap_or_default(),
@@ -329,6 +380,8 @@ pub struct Root {
 pub struct Enabled {
     pub package: Package,
     pub grant: Vec<String>,
+    /// The user's or operator's `[settings]` values for this plugin (local mode); `None`: the manifest defaults.
+    pub settings: Option<Value>,
 }
 
 fn effective_grant(p: &Package, st: &State, pol: &Policy) -> Vec<String> {
@@ -363,7 +416,21 @@ pub fn enabled(roots: &[Root], st: &State, pol: &Policy) -> Vec<Enabled> {
                 && !out.iter().any(|e| e.package.manifest.id == p.manifest.id)
             {
                 let grant = effective_grant(&p, st, pol);
-                out.push(Enabled { package: p, grant });
+                let settings = st.settings.get(&p.manifest.id).cloned().filter(|v| {
+                    let ok = v.to_string().len() <= 4096;
+                    if !ok {
+                        eprintln!(
+                            "plugins: {}: settings over 4096 bytes ignored",
+                            p.manifest.id
+                        );
+                    }
+                    ok
+                });
+                out.push(Enabled {
+                    package: p,
+                    grant,
+                    settings,
+                });
             }
         }
     }
@@ -395,7 +462,7 @@ pub fn local_descriptors(list: &[Enabled]) -> Vec<Value> {
                 &e.package,
                 &format!("/plugins/{}", e.package.sha256),
                 Some(&e.grant),
-                None,
+                e.settings.as_ref(),
             )
         })
         .collect()
@@ -680,6 +747,23 @@ mod tests {
         assert_eq!(
             desc["manifest"]["permissions"]["network"][0],
             "https://api.example.org"
+        );
+        // the user's values for the plugin's [settings] replace its manifest defaults in the descriptor (local mode)
+        assert!(desc.get("settings").is_none());
+        let f = d.join("settings/settings.toml");
+        let mut t = std::fs::read_to_string(&f).unwrap_or_default();
+        t.push_str(
+            "
+[plugins.settings.\"demo.plugin\"]
+fields = [{ name = \"field_z\", label = \"Sample zeta\", kind = \"text\" }]
+n = 3
+",
+        );
+        std::fs::write(&f, t).unwrap();
+        let e = s.enabled();
+        assert_eq!(
+            local_descriptors(&e)[0]["settings"],
+            serde_json::json!({"fields": [{"name": "field_z", "label": "Sample zeta", "kind": "text"}], "n": 3})
         );
         s.set_enabled("demo.plugin", false).unwrap();
         assert!(s.enabled().is_empty());

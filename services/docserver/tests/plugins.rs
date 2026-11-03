@@ -515,3 +515,38 @@ async fn the_wrapper_page_may_connect_to_the_granted_origins_and_nowhere_else() 
     let csp = ds.unwrap().frame_csp();
     assert!(!csp.contains("connect-src"), "{csp}");
 }
+
+/// WP7 (PLAN phase 7, section 7): the template-fields plugin takes its field list from the provider entry. The package is the real
+/// manifest with a stand-in binary; the names are synthetic.
+#[tokio::test]
+async fn template_fields_settings_come_from_the_provider_entry() {
+    let e = prepare("fields");
+    let body = b"\0asm-fields";
+    let p = e.d.join("plugins/template-fields/1.0.0");
+    std::fs::create_dir_all(&p).unwrap();
+    std::fs::write(
+        p.join("plugin.toml"),
+        include_str!("../../../plugins/template-fields/plugin.toml"),
+    )
+    .unwrap();
+    std::fs::write(p.join("plugin.wasm"), body).unwrap();
+    let entry = format!(
+        "plugins = [{{ id = \"template-fields\", version = \"1.0.0\", sha256 = \"{}\", settings = {{ fields = [{{ name = \"field_z\", label = \"Sample zeta\", kind = \"text\" }}, {{ name = \"mark_z\", label = \"Sample mark\", kind = \"bookmark\" }}] }} }}]",
+        sha(body)
+    );
+    let ds = open(&e, Some(&entry), true).unwrap();
+    let r = ds.routes::<()>();
+    let one = session(&r, 1, json!({})).await;
+    assert_eq!(ids(&one), ["template-fields"]);
+    let d = &one["plugins"][0];
+    assert_eq!(
+        d["settings"]["fields"],
+        json!([
+            {"name": "field_z", "label": "Sample zeta", "kind": "text"},
+            {"name": "mark_z", "label": "Sample mark", "kind": "bookmark"}
+        ]),
+        "the admin's list replaces the manifest default"
+    );
+    assert_eq!(d["manifest"]["settings"]["fields"][0]["name"], "field_a");
+    assert_eq!(d["manifest"]["events"], json!(["selectionChanged"]));
+}

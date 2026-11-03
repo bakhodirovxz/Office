@@ -1,0 +1,15 @@
+key	en	ru	uz-Latn	uz-Cyrl	uz_status
+heading	Template fields	Поля шаблона	Shablon maydonlari	Шаблон майдонлари	reviewed:agent-sonnet:2026-11-03
+filter	Filter fields	Фильтр полей	Maydonlarni saralash	Майдонларни саралаш	reviewed:agent-sonnet:2026-11-03
+insert	Insert	Вставить	Qoʻyish	Қўйиш	reviewed:agent-sonnet:2026-11-03
+check	Check fields	Проверить поля	Maydonlarni tekshirish	Майдонларни текшириш	reviewed:agent-sonnet:2026-11-03
+here	Caret is in: {name}	Курсор в поле: {name}	Kursor maydonda: {name}	Курсор майдонда: {name}	reviewed:agent-sonnet:2026-11-03
+empty	No fields are configured. The administrator lists them in the plugin settings.	Поля не настроены. Администратор указывает их в настройках плагина.	Maydonlar sozlanmagan. Ularni administrator plagin sozlamalarida koʻrsatadi.	Майдонлар созланмаган. Уларни администратор плагин созламаларида кўрсатади.	reviewed:agent-sonnet:2026-11-03
+nomatch	No field matches the filter	Нет полей, подходящих под фильтр	Filtrga mos maydon yoʻq	Филтрга мос майдон йўқ	reviewed:agent-sonnet:2026-11-03
+ignored	{n} invalid entries in the field list were ignored	Пропущено неверных записей в списке полей: {n}	Maydonlar roʻyxatidagi {n} ta notoʻgʻri yozuv eʼtiborga olinmadi	Майдонлар рўйхатидаги {n} та нотўғри ёзув эътиборга олинмади	reviewed:agent-sonnet:2026-11-03
+inserted	Inserted: {name}	Вставлено: {name}	Qoʻyildi: {name}	Қўйилди: {name}	reviewed:agent-sonnet:2026-11-03
+unknownfield	Unknown field	Неизвестное поле	Nomaʼlum maydon	Номаълум майдон	reviewed:agent-sonnet:2026-11-03
+missing	Missing from the document: {names}	Нет в документе: {names}	Hujjatda yoʻq: {names}	Ҳужжатда йўқ: {names}	reviewed:agent-sonnet:2026-11-03
+unknown	Not in the field list: {names}	Нет в списке полей: {names}	Maydonlar roʻyxatida yoʻq: {names}	Майдонлар рўйхатида йўқ: {names}	reviewed:agent-sonnet:2026-11-03
+allok	All {n} fields are in the document	Все поля ({n}) есть в документе	Barcha {n} ta maydon hujjatda bor	Барча {n} та майдон ҳужжатда бор	reviewed:agent-sonnet:2026-11-03
+more	+{n} more	ещё {n}	yana {n} ta	яна {n} та	reviewed:agent-sonnet:2026-11-03

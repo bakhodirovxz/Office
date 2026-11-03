@@ -8,7 +8,7 @@ const value = (s) => {
   if (s.startsWith('"')) return JSON.parse(s);
   if (s === 'true' || s === 'false') return s === 'true';
   if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
-  if (s.startsWith('[')) return JSON.parse(s);
+  if (s.startsWith('[')) { try { return JSON.parse(s); } catch { return split(s.slice(1, -1)).map(value); } }   // an array of inline tables is not JSON
   if (s.startsWith('{')) return Object.fromEntries(split(s.slice(1, -1)).map((kv) => { const i = kv.indexOf('='); return [kv.slice(0, i).trim(), value(kv.slice(i + 1))]; }));
   throw new Error(`unsupported TOML value: ${s}`);
 };
@@ -27,9 +27,13 @@ const put = (o, key, v) => { const p = key.split('.'); const last = p.pop(); for
 
 export function manifestJson(text) {
   const root = {}; let cur = root;
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.replace(/^\s+|\s+$/g, '');
+  const lines = text.split(/\r?\n/);
+  for (let n = 0; n < lines.length; n++) {
+    let line = lines[n].replace(/^\s+|\s+$/g, '');
     if (!line || line.startsWith('#')) continue;
+    // a multi-line array: join the lines until the brackets balance (the strings of these manifests hold no brackets)
+    const depth = (t) => (t.match(/[[{]/g) || []).length - (t.match(/[\]}]/g) || []).length;
+    while (/^[\w.-]+\s*=/.test(line) && depth(line) > 0 && n + 1 < lines.length) line += ' ' + lines[++n].trim();
     let m;
     if ((m = line.match(/^\[\[([\w.-]+)\]\]$/))) { cur = {}; (root[m[1]] ??= []).push(cur); }
     else if ((m = line.match(/^\[([\w.-]+)\]$/))) cur = root[m[1]] ??= {};

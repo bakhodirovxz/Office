@@ -48,6 +48,8 @@ fn no_hrm_names_in_code() {
         (svc.join("docserver/src"), false),
         (root.join("web/shell"), false),
         (root.join("crates"), false),
+        (root.join("plugins"), false),
+        (root.join("web/plugins"), false),
     ] {
         assert!(d.is_dir(), "{} moved: fix this test", d.display());
         scan(&d, compat, &mut hits);
