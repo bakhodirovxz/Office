@@ -2,7 +2,7 @@
   "item": "M11-worker-csp",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:14:20.246Z",
+  "run": "2026-11-03T12:51:04.037Z",
   "details": {
     "header": "default-src 'none'; script-src 'wasm-unsafe-eval'",
     "worker_targets": 2,

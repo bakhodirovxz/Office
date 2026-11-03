@@ -2,11 +2,11 @@
   "item": "M6-time-budget",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:14:09.122Z",
+  "run": "2026-11-03T12:50:59.001Z",
   "details": {
-    "ms": 5103,
-    "timer_ticks": 51,
-    "expected_ticks": 51,
+    "ms": 5012,
+    "timer_ticks": 50,
+    "expected_ticks": 50,
     "audit": [
       {
         "plugin": "test.host",

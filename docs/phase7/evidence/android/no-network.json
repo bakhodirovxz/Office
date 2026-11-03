@@ -2,7 +2,7 @@
   "item": "no-network",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:14:21.995Z",
+  "run": "2026-11-03T12:51:04.104Z",
   "details": {
     "page_fetch_example_org": "blocked TypeError",
     "internet_permission_lines": "0",

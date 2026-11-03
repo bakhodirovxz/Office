@@ -1,0 +1,18 @@
+{
+  "item": "M2b-own-memory",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T12:50:49.214Z",
+  "details": {
+    "plugin": "test.own-memory",
+    "audit": [
+      {
+        "plugin": "test.own-memory",
+        "kind": "failed",
+        "error": "the module defines its own memory"
+      }
+    ],
+    "status": "Own memory could not finish: the module defines its own memory"
+  },
+  "screenshots": []
+}

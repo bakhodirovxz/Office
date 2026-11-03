@@ -1,0 +1,43 @@
+{
+  "item": "F6-reinstall-consent",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T12:44:20.114Z",
+  "details": {
+    "enabled_before": true,
+    "enabled_after_same_package": true,
+    "enabled_after_changed_manifest": false,
+    "message": "Test plugin changed is installed. Turn it on to use it.",
+    "rows": [
+      {
+        "name": "Template plugin Version 0.1.0",
+        "enabled": true,
+        "boxes": 1
+      },
+      {
+        "name": "Template fields Version 1.0.0",
+        "enabled": true,
+        "boxes": 1
+      },
+      {
+        "name": "Transliteration Version 1.0.0",
+        "enabled": true,
+        "boxes": 1
+      },
+      {
+        "name": "Test plugin changed Version 1.0.0",
+        "enabled": false,
+        "boxes": 1
+      },
+      {
+        "name": "No network Version 1.0.0",
+        "enabled": true,
+        "boxes": 1
+      }
+    ]
+  },
+  "screenshots": [
+    "F6-1-same-package.png",
+    "F6-2-changed-package.png"
+  ]
+}

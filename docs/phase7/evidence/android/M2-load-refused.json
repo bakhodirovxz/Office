@@ -2,17 +2,17 @@
   "item": "M2-load-refused",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:14:00.355Z",
+  "run": "2026-11-03T12:50:47.643Z",
   "details": {
     "plugin": "test.bad-export",
     "audit": [
       {
         "plugin": "test.bad-export",
         "kind": "failed",
-        "error": "the module exports a memory"
+        "error": "the module defines its own memory"
       }
     ],
-    "status": "Bad export could not finish: the module exports a memory"
+    "status": "Bad export could not finish: the module defines its own memory"
   },
   "screenshots": []
 }

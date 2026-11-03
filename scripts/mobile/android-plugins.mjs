@@ -2,8 +2,9 @@
 //   translit  uz-translit (bundled) toCyrillic then toLatin on scripts/mobile/fixtures/phone-ux.docx, run from the editor (`wordcraft:run`), saved and pulled
 //   install   Plugins page: Install from file (the system picker) of a test package, enable, restart; the SHA-256 record in the app's private files
 //   disable   Plugins page: turn uz-translit off, restart: the host is no longer loaded
+//   cols      (WP10) M3 as an abort, and M5 (deny) and R1 (many) from the editor, with the document compared before and after; needs the test packages built with the current make-test-packages.py
 //   rows      the section 5.4 rows that apply to this container (M1 M2 M3 M4 M6 M7 M9 M11 + no network at all) with the WP5 test plugin
-// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|all> [--pkgs <dir of make-test-packages.py output>]
+// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|cols|all> [--pkgs <dir of make-test-packages.py output>] [--ev <evidence subdir, default p7-android>]
 // Evidence: a JSON and screenshots per item in docs/phase7/evidence/android/, recordings in $P6_DIR/evidence/p7-android/ (SHA lines printed for SHA256SUMS).
 import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
@@ -16,7 +17,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2), what = args[0] ?? 'all';
 const opt = (n, d) => (args.includes(n) ? args[args.indexOf(n) + 1] : d);
 const S = L.serial('HRM_Pixel_8'), PKG = 'app.hoshiya.suite', ACT = `${PKG}/office.android.MainActivity`;
-const SMALL = path.join(ROOT, 'docs/phase7/evidence/android'), BIG = path.join(L.EVIDENCE_BIG, 'p7-android');
+const SMALL = path.join(ROOT, 'docs/phase7/evidence/android'), EV = args.includes('--ev') ? args[args.indexOf('--ev') + 1] : 'p7-android', BIG = path.join(L.EVIDENCE_BIG, EV);
 const PKGS = path.resolve(opt('--pkgs', 'E:/office-target/tmp/p7-android/pkgs'));
 fs.mkdirSync(SMALL, { recursive: true }); fs.mkdirSync(BIG, { recursive: true });
 const DOC = '/sdcard/Download/phone-ux.docx', MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -25,7 +26,7 @@ const log = (...a) => console.log(...a);
 const shot = (n) => { fs.writeFileSync(path.join(SMALL, `${n}.png`), L.screencap(S)); return `${n}.png`; };
 async function record(name, fn) {
   const rec = L.startRecord(S); await L.sleep(1500);
-  try { return await fn(); } finally { const r = await L.stopRecord(S, rec, path.join(BIG, `${name}.mp4`)); sums.push(`${r.sha256}  p7-android/${name}.mp4  (${new Date().toISOString().slice(0, 16)}, ${r.bytes} bytes)`); }
+  try { return await fn(); } finally { const r = await L.stopRecord(S, rec, path.join(BIG, `${name}.mp4`)); sums.push(`${r.sha256}  ${EV}/${name}.mp4  (${new Date().toISOString().slice(0, 16)}, ${r.bytes} bytes)`); }
 }
 const item = (name, pass, details, shots = []) => {
   fs.writeFileSync(path.join(SMALL, `${name}.json`), JSON.stringify({ item: name, pass, device: 'HRM_Pixel_8 (emulator), 540x1200 rig', run: new Date().toISOString(), details, screenshots: shots }, null, 2));
@@ -123,7 +124,7 @@ function tapNode(re) { return L.tapText(S, re); }
 async function pickPackage(p, file) {
   await p.ev("document.getElementById('plg-install').click()");   /* the page's button moves when a message line is shown, and WebView text is not in the uiautomator tree */ await L.sleep(4000);
   L.tap(S, 73, 194); await L.sleep(1500); tapNode(/^Downloads$/); await L.sleep(2500);
-  let hit = false; for (let i = 0; i < 6 && !hit; i++) { hit = tapNode(new RegExp(file.replace(/\./g, '\\.'))); if (!hit) await L.sleep(2000); }
+  let hit = false; for (let i = 0; i < 6 && !hit; i++) { hit = tapNode(new RegExp(file.replace(/\./g, '\\.'))); if (!hit) { L.swipe(S, 540, 1900, 540, 900); await L.sleep(2000); } }   // a longer list: scroll
   await L.sleep(4000);
   return hit;
 }
@@ -183,10 +184,10 @@ async function rows() {
   await record('rows', async () => {
     let p = await launch();
     const have0 = (await until(p, '!!(window.PluginHost && PluginHost.last)')) ? await p.ev('PluginHost.last.plugins.map((x) => x.d.id)') : [];
-    const need = [['test.host', 'Test plugin'], ['test.bad-import', 'Bad import'], ['test.bad-export', 'Bad export'], ['test.nonet', 'No network']].filter(([id]) => !have0.includes(id));
+    const need = [['test.host', 'Test plugin'], ['test.bad-import', 'Bad import'], ['test.bad-export', 'Bad export'], ['test.nonet', 'No network'], ['test.own-memory', 'Own memory'], ['test.gc-type', 'GC type']].filter(([id]) => !have0.includes(id));
     if (need.length) {   // setup through the same picker path as the install item
       await pluginsPage(p);
-      for (const [id, name] of need) { await pickPackage(p, `${id}-1.0.0.zip`); await enableRow(p, name); await L.sleep(1500); }
+      for (const [id, name] of need) { const hit = await pickPackage(p, `${id}-1.0.0.zip`); log('install', id, hit, await p.ev("document.getElementById('plg-msg').textContent")); await enableRow(p, name); await L.sleep(1500); }
       p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
     }
     const H = 'PluginHost.last';
@@ -196,10 +197,10 @@ async function rows() {
     const audit = async (n) => JSON.parse(await p.ev(`JSON.stringify(${H}.audit.slice(${n}))`));
     const have = await p.ev(`${H}.plugins.map((x) => x.d.id)`);
     // M1 / M2: the Android store accepts the file, the Worker refuses the load
-    for (const [row, id, re] of [['M1', 'test.bad-import', /imports not allowed: wasi_snapshot_preview1/], ['M2', 'test.bad-export', /exports a memory/]]) {
+    for (const [row, id, re] of [['M1', 'test.bad-import', /imports not allowed: wasi_snapshot_preview1/], ['M2', 'test.bad-export', /exports a memory|defines its own memory/], ['M2b-own-memory', 'test.own-memory', /the module defines its own memory/], ['M2b-gc-type', 'test.gc-type', /type form that is not allowed/]]) {
       const n = (await audit(0)).length; await inv(id, 'hello'); await L.sleep(1500);
       const a = await audit(n), s = await say();
-      item(`${row}-load-refused`, have.includes(id) && a.some((x) => x.kind === 'failed' && re.test(x.error)), { plugin: id, audit: a, status: s });
+      item(`${row}-load-refused`.replace('M2b-own-memory-load-refused', 'M2b-own-memory').replace('M2b-gc-type-load-refused', 'M2b-gc-type'), have.includes(id) && a.some((x) => x.kind === 'failed' && re.test(x.error)), { plugin: id, audit: a, status: s });
     }
     // M3: no network permission; M4: the manifest lists example.org but Android grants nothing
     let n = (await audit(0)).length; await inv('test.nonet', 'net'); await L.sleep(1500);
@@ -239,10 +240,72 @@ async function rows() {
   });
 }
 
+
+// ---- WP10: the rows that need the editor (M5, R1) and M3 as an abort ----
+async function cols() {
+  pushPackages(); await L.sleep(5000);
+  await record('columns', async () => {
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'pm clear ' + PKG);   // an older stored copy of the fixture has no deny or many
+    let p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    const have = await p.ev('PluginHost.last.plugins.map((x) => x.d.id)');
+    await pluginsPage(p);
+    // the packages are (re)installed from the picker: the fixture gained the deny and many commands, and a stored copy of an older one has neither
+    for (const [id, name] of [['test.host', 'Test plugin'], ['test.nonet', 'No network']]) { if (!have.includes(id)) { await pickPackage(p, `${id}-1.0.0.zip`); await enableRow(p, name); await L.sleep(1500); } }
+    p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    const H = 'PluginHost.last', say = () => p.ev("document.getElementById('ed-status').textContent");
+    const cmds = await p.ev(`${H}.plugins.find((x) => x.d.id === 'test.host').m.command.map((c) => c.id)`);
+    // M3: a fetch outside the manifest's list ends the invocation (the plugin is not resumed), audited
+    const n = (await p.ev(`${H}.audit.length`)), l0 = await p.ev(`${H}.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
+    await p.ev(`${H}.invoke('test.nonet', 'net')`); await L.sleep(1500);
+    const a3 = JSON.parse(await p.ev(`JSON.stringify(${H}.audit.slice(${n}))`)), l1 = await p.ev(`${H}.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
+    item('M3-abort', a3.length === 1 && a3[0].kind === 'network.refused' && /network not permitted/.test(await say()) && l1 === l0, { audit: a3, status: await say(), resume_calls_before_after: [l0, l1], note: 'no INTERNET permission either; nothing leaves the device' });
+    // M5 and R1 from the editor on the open document; the saved file must carry the text it had
+    const orig = execFileSync('python3', ['-X', 'utf8', '-I', '-c', 'import sys,zipfile,re;x=zipfile.ZipFile(sys.argv[1]).read("word/document.xml").decode("utf8");print(" ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>",x)))', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx')], { encoding: 'utf8' });
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'rm -f ' + DOC);
+    L.adb(S, 'push', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx'), DOC);
+    L.sh(S, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${DOC}`); await L.sleep(5000);
+    L.sh(S, `am start -a android.intent.action.VIEW -d ${await mediaUri()} -t ${MIME} --grant-read-uri-permission --grant-write-uri-permission -n ${ACT}`);
+    p = await webview();
+    if (!(await ready(p))) throw new Error('the editor did not become ready with the plugin');
+    await L.sleep(8000);
+    const shots = [shot('M5-0-opened')];
+    const seen = {};
+    for (const [row, cmd, why, shotName] of [['M5-saveAs-refused', 'deny', 'refused', 'M5-1-refused'], ['R1-reads-cap', 'many', 'bad next', 'R1-1-refused']]) {
+      let ok = false, s = '';
+      for (let i = 0; i < 20 && !ok; i++) { await runCmd(p, `plugin.test.host.${cmd}`); await L.sleep(1500); s = await say(); ok = /could not finish/.test(s) && s.includes(why); }
+      shots.push(shot(shotName));
+      seen[row] = { ok, status: s, audit_tail: JSON.parse(await p.ev('JSON.stringify(PluginHost.last.audit.slice(-3))')) };
+    }
+    // F5: a second plugin while one is pending: the busy refusal, then the first one's timeout leaves the document unlocked
+    const f5n = await p.ev('PluginHost.last.audit.length');
+    await runCmd(p, 'plugin.test.host.spin'); await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(1500);
+    const busy = await say(); shots.push(shot('F5-1-busy'));
+    let stopped = false; for (let i = 0; i < 30 && !stopped; i++) { await L.sleep(1000); stopped = await p.ev(`PluginHost.last.audit.slice(${f5n}).some((x) => x.kind === 'stopped')`); }
+    await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(2500);
+    const afterBusy = await say();
+    await save('cols'); const after = docText('cols-after.docx');
+    const same = after.trim() === orig.trim();
+    item('M5-saveAs-refused', seen['M5-saveAs-refused'].ok && same, { ...seen['M5-saveAs-refused'], commands_in_manifest: cmds, document_unchanged_after_save: same, text: after.slice(0, 200) }, shots.slice(0, 2));
+    item('F5-busy', /Another plugin is still running|document is protected \(read only\)/.test(busy) && stopped && same, { note: 'a command is refused by the editor registry while the first plugin holds the document lock (the busy string plg.busy is the panel-click route)', status_during: busy, first_plugin_stopped: stopped, status_after_next_command: afterBusy, document_unchanged_after_save: same }, [shots[shots.length - 1]]);
+    item('R1-reads-cap', seen['R1-reads-cap'].ok && same, { ...seen['R1-reads-cap'], document_unchanged_after_save: same }, [shots[2]]);
+    // F6: reinstalling a plugin whose manifest changed turns it off; the same package again keeps it on
+    p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)'); await pluginsPage(p);
+    const f6 = [], isOn = async (re) => p.ev(`[...document.querySelectorAll('#plg-main li')].find((l) => /${re}/.test(l.textContent))?.querySelector('input[type=checkbox]')?.checked`);
+    const on0 = await isOn('Test plugin');
+    await pickPackage(p, 'test.host-1.0.0.zip'); await L.sleep(2000); const onSame = await isOn('Test plugin'); f6.push(shot('F6-1-same-package'));
+    await pickPackage(p, 'test.host-changed-1.0.0.zip'); await L.sleep(2000); const onChanged = await isOn('Test plugin changed'); f6.push(shot('F6-2-changed-package'));
+    const msg6 = await p.ev("document.getElementById('plg-msg').textContent");
+    item('F6-reinstall-consent', on0 === true && onSame === true && onChanged === false, { enabled_before: on0, enabled_after_same_package: onSame, enabled_after_changed_manifest: onChanged, message: msg6, rows: await pageItems(p) }, f6);
+  });
+}
+
 if (what === 'translit' || what === 'all') await translit();
 if (what === 'install' || what === 'all') await install();
 if (what === 'rows' || what === 'all') await rows();
 if (what === 'disable' || what === 'all') await disable();
+if (what === 'cols') await cols();
 log('SHA lines:\n' + sums.join('\n'));
 fs.appendFileSync(path.join(BIG, 'SHA256SUMS.part'), sums.join('\n') + '\n');
 process.exit(0);   // the CDP sockets keep node alive

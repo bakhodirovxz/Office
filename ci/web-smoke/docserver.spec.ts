@@ -43,14 +43,14 @@ const sessions = () => {
 const record = (s: string) => JSON.parse(fs.readFileSync(path.join(s, 'session.json'), 'utf8'));
 
 // (Re)start the server on the same ports and data dir; `extra` lines go into [docserver] (e.g. diff_bin_dir) and are kept by later restarts.
-let extraDs: string[] = [], baseToml = '';
+let extraDs: string[] = [], baseToml = '', provLines: string[] = [], shellDir = '';
 async function startDs(extra: string[] = extraDs) {
   extraDs = extra;
   // [docserver] keys must come before the [[docserver.providers]] table
-  fs.writeFileSync(path.join(dir, 'api.toml'), baseToml.replace('[[docserver.providers]]', extra.join('\n') + '\n[[docserver.providers]]'));
+  fs.writeFileSync(path.join(dir, 'api.toml'), baseToml.replace('[[docserver.providers]]', extra.join('\n') + '\n[[docserver.providers]]') + '\n' + provLines.join('\n'));
   const env = { ...process.env } as Record<string, string>;
   for (const t of ['DOCS', 'SHEETS', 'SLIDES', 'PDF']) env[`CONVERT_${t}_CLI`] = 'unused';
-  ds = spawn(DS_BIN, ['--config', path.join(dir, 'api.toml'), '--dist', DIST, '--brand', path.join(ROOT, 'brand/brand.toml')], { env });
+  ds = spawn(DS_BIN, ['--config', path.join(dir, 'api.toml'), '--dist', DIST, '--shell', shellDir, '--brand', path.join(ROOT, 'brand/brand.toml')], { env });
   await new Promise<void>((ok, bad) => {
     let out = '';
     ds.stdout!.on('data', (d) => { out += d; if (/listening on https:/.test(out)) ok(); });
@@ -62,6 +62,10 @@ async function startDs(extra: string[] = extraDs) {
 
 test.beforeAll(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-spec-'));
+  // a copy of the shell plus the test-only Worker script of M11 (the dist itself is never touched)
+  shellDir = path.join(dir, 'shell');
+  fs.cpSync(path.join(DIST, 'shell'), shellDir, { recursive: true });
+  fs.copyFileSync(path.join(ROOT, 'ci/plugins/webhost-test/evil-fetch.js'), path.join(shellDir, 'plugins/evil-fetch.js'));
   const ssl = (...a: string[]) => execFileSync(OPENSSL, a, { cwd: dir, stdio: 'pipe' });
   ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', 'ca.key');
   ssl('req', '-x509', '-new', '-key', 'ca.key', '-sha256', '-days', '2', '-subj', '/CN=test-ca', '-out', 'ca.pem');
@@ -725,4 +729,115 @@ test('command palette in the wrapper: Tab reaches the button, F1 opens it, Bold 
   await expect(button).toBeFocused();
   expect(problems).toEqual([]);
   await ctx.close();
+});
+
+// Phase 7 WP10 wrapper column: the page-side rows of docs/phase7/malicious.md (M1 to M7, M9, M11, M5, R1) run inside the document server's wrapper page,
+// with the real Docs editor in the frame and the fixture plugin (ci/plugins/webhost-test) listed by the provider entry. The commands go through the
+// editor (`wordcraft:run`), as in bridge-plugins.spec.ts; the server's audit log must get the `plugin.network` lines for the network rows.
+test('plugins in the wrapper: M1-M7, M9, M11, R1 are blocked inside the wrapper; the audit log gets the network lines', async () => {
+  const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
+  const CMDS = ['hello', 'net', 'spin', 'grow', 'xss', 'edit', 'deny', 'many'];
+  const manifest = (id: string, net: string[]) => `id = "${id}"\nversion = "1.0.0"\napi = 1\napps = ["docs"]\npublisher = "Test publisher"\nname.en = "Plugin ${id}"\n\n[permissions]\ndocument = "write"\nnetwork = ${JSON.stringify(net)}\nmemory_mb = 2\n\n`
+    + CMDS.map((c) => `[[command]]\nid = "${c}"\nlabel.en = "Cmd ${c}"\nreads = ["none"]\nparams = {}\n\n`).join('') + '[[panel]]\nid = "p"\ntitle.en = "Panel"\n';
+  const ORG = 'https://example.org';
+  const plugs = [['wrp-test', 'plugin.wasm', [ORG], []], ['wrp-open', 'plugin.wasm', [ORG], [ORG]], ['wrp-nonet', 'plugin.wasm', [], []],
+    ['wrp-imp', 'bad-import.wasm', [], []], ['wrp-exp', 'bad-export.wasm', [], []]] as const;
+  const pdir = path.join(dir, 'plugins');
+  const entries = plugs.map(([id, wasm, net, grant]) => {
+    const d = path.join(pdir, id, '1.0.0'); fs.mkdirSync(d, { recursive: true });
+    const w = fs.readFileSync(path.join(FIX, wasm));
+    fs.writeFileSync(path.join(d, 'plugin.toml'), manifest(id, [...net])); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
+    return `{ id = "${id}", version = "1.0.0", sha256 = "${crypto.createHash('sha256').update(w).digest('hex')}", grant = ${JSON.stringify([...grant])} }`;
+  });
+  ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+  provLines = [`plugins = [${entries.join(', ')}]`];
+  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`]);
+  try {
+    const { ctx, page } = await open();
+    await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const w = wrapperOf(page);
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+    await expect(editor.locator('canvas')).toBeVisible();
+    const say = () => w.evaluate(() => document.querySelector('body > p')!.textContent ?? '');
+    const send = (id: string, cmd: string) => w.evaluate(([i, c]) => document.querySelector('iframe')!.contentWindow!.postMessage({ type: 'wordcraft:run', id: `plugin.${i}.${c}` }, location.origin), [id, cmd]);
+    // a command sent while the editor still holds the previous invocation's lock is refused ("protected (read only)") without effect: send it again
+    const run = async (id: string, cmd: string) => {
+      for (let i = 0; i < 25; i++) {
+        await w.evaluate(() => { document.querySelector('body > p')!.textContent = ''; });
+        await send(id, cmd); await page.waitForTimeout(1200);
+        if (!/read only/.test(await say())) return;
+      }
+    };
+    const aud = () => w.evaluate(() => (window as any).PluginHost.last.audit as { plugin: string; kind: string; origin?: string; error?: string }[]);
+    const serverAudit = () => (fs.existsSync(path.join(dir, 'data/audit.jsonl')) ? fs.readFileSync(path.join(dir, 'data/audit.jsonl'), 'utf8') : '').split('\n').filter((l) => l.includes('"plugin.network"')).map((l) => JSON.parse(l));
+    // the host lists the five plugins; the editor takes commands once the first one has run (the register message has crossed)
+    await expect.poll(() => w.evaluate(() => (window as any).PluginHost?.last?.plugins.map((p: any) => p.d.id).sort()), { timeout: 30_000 }).toEqual(plugs.map((p) => p[0]).sort());   // host.js is fetched when the session answer lists plugins
+    await expect.poll(async () => { await run('wrp-test', 'hello'); await page.waitForTimeout(700); return (await say()).includes('hello done'); }, { timeout: 90_000 }).toBe(true);
+    await expect(w.getByRole('region', { name: 'Plugin wrp-test: Panel' })).toBeVisible();
+    const from = async (id: string, cmd: string, until: () => Promise<boolean>) => {
+      const n = (await aud()).length; await run(id, cmd);
+      await expect.poll(until, { timeout: 30_000, message: `${id}.${cmd}` }).toBe(true).catch(async (e) => { throw new Error(`${e.message} status=${await say()} audit=${JSON.stringify((await aud()).slice(n))}`); });
+      return (await aud()).slice(n);
+    };
+    const saysAfter = (re: RegExp) => async () => re.test(await say());
+    // M1 / M2: the load is refused in the Worker
+    const m1 = await from('wrp-imp', 'hello', saysAfter(/imports not allowed: wasi_snapshot_preview1/));
+    expect(m1.map((a) => a.kind)).toEqual(['failed']);
+    const m2 = await from('wrp-exp', 'hello', saysAfter(/exports a memory|defines its own memory/));
+    expect(m2.map((a) => a.kind)).toEqual(['failed']);
+    // M3: no network in the manifest -> the invocation ends, nothing is fetched; M4: listed, but the admin granted nothing -> denied
+    const m3 = await from('wrp-nonet', 'net', saysAfter(/network not permitted/));
+    expect(m3).toEqual([{ plugin: 'wrp-nonet', kind: 'network.refused', origin: ORG }]);
+    const n4 = (await aud()).length;
+    await run('wrp-test', 'net');
+    await expect.poll(async () => (await aud()).length, { timeout: 30_000 }).toBeGreaterThan(n4);
+    expect((await aud()).slice(n4).map((a) => a.kind)).toEqual(['network.denied']);
+    // listed and granted: the host lets it through and the wrapper's CSP (connect-src) stops the request itself
+    const n5 = (await aud()).length;
+    await run('wrp-open', 'net');
+    await expect.poll(async () => (await aud()).length, { timeout: 30_000 }).toBeGreaterThan(n5);
+    expect((await aud()).slice(n5).map((a) => a.kind)).toEqual(['network']);
+    await expect.poll(() => w.evaluate(() => (window as any).PluginHost.last.logs.some((l: any) => l.text.includes('"results":[{"error":"the request failed"}]')))).toBe(true);
+    // M5 and R1: the editor-side commands end the invocation with the document as it was
+    for (const [cmd, why] of [['deny', 'refused'], ['many', 'bad next']] as const) {
+      await from('wrp-test', cmd, async () => { const s = await say(); return s.includes('could not finish') && s.includes(why); });
+    }
+    // M9: markup in the panel is text, the 10,000-character text is cut
+    await run('wrp-test', 'xss');
+    const panel = w.getByRole('region', { name: 'Plugin wrp-test: Panel' });
+    await expect(panel.locator('h3')).toHaveText('<img src=x onerror=window.__xss=1>');
+    expect(await panel.locator('img, script, b').count()).toBe(0);
+    expect((await panel.locator('.plg-text').textContent())!.length).toBe(1024);
+    expect(await w.evaluate(() => (window as any).__xss)).toBeUndefined();
+    // M7: memory growth stops at memory_mb
+    await run('wrp-test', 'grow');
+    await expect.poll(() => w.evaluate(() => (window as any).PluginHost.last.mem['wrp-test'])).toBe(2 * 1024 * 1024);
+    // M6: an infinite loop is stopped at the time budget and the wrapper keeps its timers
+    await w.evaluate(() => { (window as any).__tick = 0; setInterval(() => (window as any).__tick++, 100); });
+    await page.waitForTimeout(1000);   // the editor is still finishing the previous invocation (a spin sent into it is dropped)
+    const t0 = Date.now(); const k0 = (await aud()).length;
+    await run('wrp-test', 'spin');
+    await expect.poll(async () => (await aud()).slice(k0).some((a) => a.kind === 'stopped'), { timeout: 30_000, message: 'M6 spin' }).toBe(true).catch(async (e) => { throw new Error(`${e.message} status=${await say()} audit=${JSON.stringify((await aud()).slice(k0))}`); });
+    const took = Date.now() - t0, ticks = await w.evaluate(() => (window as any).__tick as number);
+    expect(ticks).toBeGreaterThan((took / 100) * 0.6);
+    // M11: the Worker CSP header, and a Worker script that calls fetch or importScripts itself is blocked
+    expect(await w.evaluate(async () => (await fetch('/shell/plugins/worker.js')).headers.get('content-security-policy'))).toBe("default-src 'none'; script-src 'wasm-unsafe-eval'");
+    const ev = await w.evaluate(() => new Promise<Record<string, string>>((ok) => { const x = new Worker('/shell/plugins/evil-fetch.js'); x.onmessage = (e) => ok(e.data); x.postMessage(1); }));
+    expect([ev.same, ev.other, ev.imp].every((v) => /^blocked/.test(v)), JSON.stringify(ev)).toBe(true);
+    // nothing above changed the document's text, and the server's audit log has the page's network lines (a claim of the client, marked as such)
+    // (the document went dirty on the host page during these runs: the editor marks any plugin run as a change, so compare the text itself, saved)
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => state(page), { timeout: 30_000 }).toBe('saved');
+    const [sdir] = sessions();
+    const text = (b: Buffer) => [...documentXml(b).matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map((m) => m[1]).join('');   // run boundaries differ after the editor's own save
+    expect(text(fs.readFileSync(path.join(sdir, 'v2.bin')))).toBe(text(fs.readFileSync(path.join(sdir, 'v1.bin'))));
+    await expect.poll(() => serverAudit().map((l) => `${l.plugin}/${l.outcome}`).sort(), { timeout: 15_000 }).toEqual(['wrp-nonet/network.refused', 'wrp-open/network', 'wrp-test/network.denied']);
+    expect(serverAudit().every((l) => l.source === 'client' && l.origin === ORG)).toBe(true);
+    await ctx.close();
+  } finally {
+    ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+    provLines = [];
+    await startDs([]);
+  }
 });
