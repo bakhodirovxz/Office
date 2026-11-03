@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 3 Nov 2026 16:00:00 +0500
+Subject: [PATCH] engine: io::set_save_filter, a hook every save and autosave passes
+
+Phase 7 WP4 follow-up. The plugin bridge locks input with Restrict Editing's read-only protection while a call is pending; a save or an autosave in that time would write the lock into the file. `io::save_bytes_opts` is the one function every save, Save As, autosave and recovery snapshot goes through, so it asks an optional `SaveFilter` for the document to write instead of the live one. `docs-plugins::bridge` installs a filter that drops its own lock. Without a filter nothing changes.
+---
+ crates/engine/src/io.rs | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index 5c10293..dfe3dc9 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -358,8 +358,21 @@ pub fn save_bytes(name: &str, doc: &Document) -> Result<Vec<u8>, String> {
+     save_bytes_opts(name, doc, &ExportOptions::default())
+ }
+ 
++/// A hook that may hand back the document to write instead of the live one (`None`: write it as it is). The office layer uses it to
++/// keep a temporary state of the live document (the plugin bridge's input lock) out of every saved file and autosave.
++pub type SaveFilter = fn(&Document) -> Option<Document>;
++
++static SAVE_FILTER: std::sync::RwLock<Option<SaveFilter>> = std::sync::RwLock::new(None);
++
++/// Install the [`SaveFilter`] (called once by the extension; a second call replaces it).
++pub fn set_save_filter(f: Option<SaveFilter>) {
++    *SAVE_FILTER.write().unwrap_or_else(|e| e.into_inner()) = f;
++}
++
+ /// [`save_bytes`] with export options (Print Markup).
+ pub fn save_bytes_opts(name: &str, doc: &Document, opts: &ExportOptions) -> Result<Vec<u8>, String> {
++    let filtered = (*SAVE_FILTER.read().unwrap_or_else(|e| e.into_inner())).and_then(|f| f(doc));
++    let doc = filtered.as_ref().unwrap_or(doc);
+     let ext = ext_of(name);
+     match ext.as_str() {
+         // List paragraphs get their label and a tab, as in Word's plain-text save.

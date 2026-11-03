@@ -708,6 +708,34 @@ mod web_bridge {
         assert_eq!(s.doc, before, "the whole invocation is one undo step");
     }
 
+    fn saved_protection(s: &Session) -> Option<String> {
+        let bytes = wordcraft_engine::io::save_bytes("x.docx", &s.doc).unwrap();
+        wordcraft_engine::io::open_bytes("x.docx", &bytes).unwrap().settings.protection
+    }
+
+    #[test]
+    fn a_save_while_a_call_is_pending_does_not_carry_the_input_lock() {
+        let _t = turn();
+        let mut s = page(None);
+        let (call, ..) = started(&mut s);
+        assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"), "the live document is locked");
+        assert_eq!(saved_protection(&s), None, "the saved file and the autosave have no bridge lock");
+        assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"), "saving leaves the live lock alone");
+        bridge::answer(&mut s, ans(&call, ins("Z"), false));
+        assert_eq!(saved_protection(&s), None);
+    }
+
+    #[test]
+    fn a_save_while_a_call_is_pending_keeps_the_protection_the_user_had() {
+        let _t = turn();
+        let mut s = page(None);
+        s.doc.settings.protection = Some("trackedChanges".into());
+        let _ = started(&mut s);
+        assert_eq!(saved_protection(&s).as_deref(), Some("trackedChanges"));
+        bridge::reset();
+        assert_eq!(saved_protection(&s).as_deref(), Some("trackedChanges"));
+    }
+
     #[test]
     fn a_second_round_keeps_the_lock_and_requested_reads_come_back_as_buffers() {
         let _t = turn();

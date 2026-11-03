@@ -98,7 +98,19 @@ fn lock(s: &mut Session) {
     if s.doc.settings.protection.is_none() {
         s.doc.settings.protection = Some("readOnly".into());
         with(|b| b.lock_ours = true);
+        wordcraft_engine::io::set_save_filter(Some(without_lock));
     }
+}
+
+/// Every save, autosave and recovery snapshot goes through `io::save_bytes_opts`, which calls this: our temporary protection is never
+/// written. The lock is only ever put on a document that had no protection, so the user's own protection is never touched.
+fn without_lock(d: &wordcraft_doc::Document) -> Option<wordcraft_doc::Document> {
+    if !with(|b| b.lock_ours) || d.settings.protection.as_deref() != Some("readOnly") {
+        return None;
+    }
+    let mut d = d.clone();
+    d.settings.protection = None;
+    Some(d)
 }
 
 fn unlock(s: &mut Session) {
