@@ -1,0 +1,21 @@
+/* The plugin panel (host.js): a side panel beside the editor frame; a bottom sheet on a phone (like the Docs phone sheets: rounded top, grabber, 48 px targets). Tokens come from shell.css. */
+.plg-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 320px; z-index: 3; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); border-left: 1px solid var(--line); overflow: hidden; }
+.plg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.plg-head h2 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.plg-head h2:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.plg-body { flex: 1 1 auto; overflow: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.plg-body h3 { margin: 0; font-size: 1rem; }
+.plg-body p, .plg-body ul { margin: 0; }
+.plg-body ul { padding-left: 20px; }
+.plg-body input, .plg-body select { width: 100%; min-height: 36px; }
+.plg-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* the editor frames make room for the side panel */
+.plg-on > iframe { width: calc(100% - 320px) !important; }
+dialog.plg-dlg { width: min(28rem, 92vw); }
+dialog.plg-dlg h2 { margin-top: 0; font-size: 1.1rem; }
+@media (max-width: 600px) {
+  .plg-on > iframe { width: 100% !important; }
+  .plg-panel { top: auto; left: 0; width: auto; max-height: 60%; border-left: 0; border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; box-shadow: 0 -4px 16px rgba(0, 0, 0, .25); }
+  .plg-panel::before { content: ""; align-self: center; width: 36px; height: 4px; margin-top: 8px; border-radius: 2px; background: var(--line); flex: 0 0 auto; }
+  .plg-body button, .plg-head button { min-height: 48px; }
+}

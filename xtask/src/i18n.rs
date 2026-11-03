@@ -65,17 +65,22 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
             };
             if let Some(f) = flag("--format") {
                 // The converter page's catalog: ui/i18n.json (and its icon, from brand.toml) next to --out.
-                if f == "json" && *app == "shell" {
+                if f == "json" && (*app == "shell" || *app == "plugins") {
+                    let (default, json) = if *app == "shell" {
+                        ("web/shell/i18n.json", export::shell_json(root, mode)?)
+                    } else {
+                        ("web/plugins/i18n.json", export::plugins_json(root, mode)?)
+                    };
                     let out = flag("--out")
                         .map(PathBuf::from)
-                        .unwrap_or_else(|| root.join("web/shell/i18n.json"));
-                    fs::write(&out, export::shell_json(root, mode)?)
-                        .map_err(|e| format!("{}: {e}", out.display()))?;
+                        .unwrap_or_else(|| root.join(default));
+                    fs::write(&out, json).map_err(|e| format!("{}: {e}", out.display()))?;
                     return Ok(format!("{} written", out.display()));
                 }
                 if f != "json" || *app != "converter" {
                     return Err(
-                        "--format json is only available for the converter and shell apps".into(),
+                        "--format json is only available for the converter, shell and plugins apps"
+                            .into(),
                     );
                 }
                 let out = flag("--out")

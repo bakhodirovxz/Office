@@ -21,6 +21,7 @@ for d in docs-web sheets-web slides-web pdf-web; do
   mkdir -p "$A/$d"; (cd "$DIST/$d" && find . -type f ! -name '*.br' -print0 | tar --null -T - -cf -) | (cd "$A/$d" && tar xf -)
 done
 cp -r "$ROOT/web/shell/." "$A/shell/"; cp "$ROOT/assets/fonts/fallback/NotoSans-Regular-uz.ttf" "$A/shell/"
+mkdir -p "$A/shell/plugins"; cp "$ROOT/web/plugins/host.js" "$ROOT/web/plugins/worker.js" "$ROOT/web/plugins/host.css" "$ROOT/web/plugins/i18n.json" "$A/shell/plugins/"   # Phase 7 WP5 (MainActivity gives plugins/*.js the Worker CSP)
 L="$ROOT/brand/logo"; cp "$L/web/favicon.ico" "$L/web/favicon.svg" "$L/web/apple-touch-icon.png" "$L/web/icon-192.png" "$L/web/icon-512.png" "$L/web/icon-maskable-512.png" "$A/shell/"
 cp "$L/svg/hoshiya-lockup-light.svg" "$A/shell/logo-light.svg"; cp "$L/svg/hoshiya-lockup-dark.svg" "$A/shell/logo-dark.svg"
 sed 's#"/icon#"icon#' "$L/web/site.webmanifest" > "$A/shell/site.webmanifest"
