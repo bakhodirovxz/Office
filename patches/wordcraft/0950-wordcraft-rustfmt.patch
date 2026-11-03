@@ -7,14 +7,13 @@ Subject: [PATCH] wordcraft: rustfmt the files the patch queue touches
 rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
 ---
- apps/wordcraft-web/src/web.rs        |  6 +++-
- apps/wordcraft-web/src/web/host.rs   | 13 +++++--
- crates/layout/src/lib.rs             |  8 ++++-
- crates/ui-egui/src/backstage.rs      | 53 ++++++++++++----------------
- crates/ui-egui/src/canvas.rs         |  4 ++-
- crates/ui-egui/src/office_overlay.rs |  4 ++-
- crates/ui-egui/src/touch_select.rs   | 10 ++++--
- 7 files changed, 59 insertions(+), 39 deletions(-)
+ apps/wordcraft-web/src/web.rs      |  6 +++++-
+ apps/wordcraft-web/src/web/host.rs | 13 ++++++++++---
+ crates/layout/src/lib.rs           |  8 +++++++-
+ crates/ui-egui/src/backstage.rs    | 53 +++++++++++++++++++++++------------------------------
+ crates/ui-egui/src/canvas.rs       |  4 +++-
+ crates/ui-egui/src/touch_select.rs | 10 ++++++++--
+ 6 files changed, 56 insertions(+), 38 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
 index 2be8e47..265501d 100644
@@ -34,10 +33,10 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index ec64425..0872c65 100644
+index c2fbad3..5322691 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -139,8 +139,10 @@ impl Bridge {
+@@ -144,8 +144,10 @@ impl Bridge {
          }));
          let bridge = self.clone();
          services.blocked = Some(Box::new(move |id: &str| {
@@ -50,7 +49,7 @@ index ec64425..0872c65 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
-@@ -347,7 +349,12 @@ impl Bridge {
+@@ -355,7 +357,12 @@ impl Bridge {
                  Some("wordcraft:commands") => bridge.list_requested.set(true),
                  Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
                  Some("wordcraft:focus") => {
@@ -156,7 +155,7 @@ index 6399175..ac03a3f 100644
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 79d6394..8aec88b 100644
+index bbc8704..a2eb74e 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -170,21 +169,6 @@ index 79d6394..8aec88b 100644
      let focus_click = focus_click && !crate::office_overlay::phone_reading(); // wordcraft/0143: reading takes no keyboard
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
-diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 3c047bd..2450946 100644
---- a/crates/ui-egui/src/office_overlay.rs
-+++ b/crates/ui-egui/src/office_overlay.rs
-@@ -230,7 +230,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
-     // The Edit button floats over the page: the extension leaves its rectangle in the context.
-     let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
-     let (pressed_on_bar, active) = ui.input(|i| {
--        let on_bar = i.events.iter().any(|e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))));
-+        let on_bar = i.events.iter().any(
-+            |e| matches!(e, egui::Event::PointerButton { pos, pressed: true, .. } if !page.contains(*pos) || extra.is_some_and(|r| r.contains(*pos))),
-+        );
-         (on_bar, i.pointer.any_down() || i.pointer.any_released())
-     });
-     let before = CHROME_DOWN.load(std::sync::atomic::Ordering::Relaxed);
 diff --git a/crates/ui-egui/src/touch_select.rs b/crates/ui-egui/src/touch_select.rs
 index 44a463f..37396ee 100644
 --- a/crates/ui-egui/src/touch_select.rs

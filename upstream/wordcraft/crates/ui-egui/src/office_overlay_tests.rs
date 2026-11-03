@@ -267,3 +267,22 @@ fn autosave_and_save_keep_the_picture_of_an_opened_document() {
     b.run("text.insert", json!({"text": "E"})).unwrap();
     assert!(media_parts(&o::autosave_bytes(&b, "phone-ux.docx").unwrap()).is_empty(), "the picture was replaced");
 }
+
+/// wordcraft/0149: a press on the phone chrome is told from the events of its own frame: below the page panel (a bar) or on the Edit button's rectangle,
+/// which floats over the page; a press on the page, a release and a mouse move are not.
+#[test]
+fn a_press_on_the_bars_or_the_edit_button_is_chrome() {
+    use egui::{Event, PointerButton, Pos2, Rect, pos2};
+    let page = Rect::from_min_max(pos2(0.0, 48.0), pos2(412.0, 736.0));
+    let fab = Some(Rect::from_min_max(pos2(340.0, 664.0), pos2(396.0, 720.0)));
+    let button = |pos: Pos2, pressed: bool| Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: Default::default() };
+    assert!(o::press_on_chrome(&[button(pos2(367.0, 690.0), true)], page, fab), "on the Edit button");
+    assert!(o::press_on_chrome(&[button(pos2(200.0, 760.0), true)], page, fab), "on the bottom toolbar");
+    assert!(o::press_on_chrome(&[button(pos2(200.0, 20.0), true)], page, None), "on the top row");
+    assert!(!o::press_on_chrome(&[button(pos2(367.0, 690.0), true)], page, None), "no button: the page's");
+    assert!(!o::press_on_chrome(&[button(pos2(100.0, 300.0), true)], page, fab), "on the page");
+    assert!(
+        !o::press_on_chrome(&[button(pos2(367.0, 690.0), false), Event::PointerMoved(pos2(367.0, 690.0))], page, fab),
+        "a release is not a press"
+    );
+}

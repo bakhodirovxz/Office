@@ -1096,4 +1096,53 @@ mod tests {
         assert_eq!(o.page, 1, "dropped on the page under the pointer, not thrown back");
         assert!((o.rect.x - 100.0).abs() < 0.5, "kept its place across: {:?}", o.rect);
     }
+
+    /// wordcraft/0149: a finger's tap on text while a picture is selected never moves the picture (taps of the phone rig moved it to the
+    /// start of the document, and the first typed key then replaced it). Quick taps put press and release in one frame, slow ones in two.
+    #[test]
+    fn a_touch_tap_on_text_does_not_move_the_selected_picture() {
+        use egui::{Event, PointerButton, TouchDeviceId, TouchId, TouchPhase};
+        for quick in [true, false] {
+            let mut a = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+            a.run("view.commentsPane", json!({"value": false})).unwrap();
+            a.run("text.insert", json!({"text": "Heading\nSome body text here.\n"})).unwrap();
+            let mut png = Vec::new();
+            let img = image::RgbaImage::from_pixel(40, 20, image::Rgba([200, 30, 30, 255]));
+            image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+            a.run("insert.picture", json!({"data": wordcraft_engine::cmd::insert::base64_encode(&png), "width": 160})).unwrap();
+            let before = a.session.doc.body.iter().map(|b| format!("{b:?}")).collect::<Vec<_>>();
+            let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).with_step_dt(1.0 / 60.0).build_ui_state(
+                |ui, app: &mut WordApp| {
+                    let ctx = ui.ctx().clone();
+                    app.logic(&ctx);
+                    app.ui(ui);
+                },
+                a,
+            );
+            for _ in 0..6 {
+                h.step();
+            }
+            assert!(selected(h.state()).is_some(), "the picture is selected");
+            let at = crate::canvas::page_to_screen(h.state_mut(), 0, 100.0, 85.0).unwrap();
+            let touch = |phase| Event::Touch { device_id: TouchDeviceId(0), id: TouchId(0), phase, pos: at, force: None };
+            let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
+            let mut frames = vec![vec![Event::PointerMoved(at), button(true), touch(TouchPhase::Start)]];
+            let up = [button(false), Event::PointerGone, touch(TouchPhase::End)];
+            if quick {
+                frames[0].extend(up);
+            } else {
+                frames.push(up.to_vec());
+            }
+            for f in frames {
+                h.input_mut().events.extend(f);
+                h.step();
+            }
+            for _ in 0..6 {
+                h.step();
+            }
+            let after = h.state().session.doc.body.iter().map(|b| format!("{b:?}")).collect::<Vec<_>>();
+            assert_eq!(before, after, "the picture stays where it is (quick: {quick})");
+            assert!(selected(h.state()).is_none(), "the tap placed the caret and deselected the picture (quick: {quick})");
+        }
+    }
 }
