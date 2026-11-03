@@ -27,6 +27,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 crate::dialogs_smart_art::text_pane(app, ui);
             });
     }
+    // office overlay (wordcraft/0147): the side panels of the plugins.
+    crate::office_overlay::plugin_panel(&mut app.session, ui);
     // office overlay (WP23): the Document Recovery pane, as Word shows it after a crash; the document stays in view.
     if app.recovery_pane {
         egui::Panel::left("recovery_pane")

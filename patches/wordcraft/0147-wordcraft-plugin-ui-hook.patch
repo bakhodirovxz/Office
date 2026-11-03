@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 3 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: plugin UI hook (side panels and text context menu
+ items drawn by the extension)
+
+Phase 7 WP3 (docs/phase7/PLAN.md sections 4.5 and 9). `office_overlay::set_plugin_ui(panel, context)` registers two functions of the extension crate. `panes::show` calls `plugin_panel` (the plugins' egui side panels), the text context menu calls `plugin_context` after the Transliterate submenu and runs the command it returns. Without the extension both are no-ops, so upstream behaviour is unchanged. The desktop app registers docs-office's re-exports of docs-plugins.
+---
+  apps/wordcraft/src/main.rs           |  2 ++
+  crates/ui-egui/src/canvas.rs         |  5 +++++
+  crates/ui-egui/src/office_overlay.rs | 20 ++++++++++++++++++++
+  crates/ui-egui/src/panes.rs          |  2 ++
+  4 files changed, 29 insertions(+)
+
+diff --git a/apps/wordcraft/src/main.rs b/apps/wordcraft/src/main.rs
+index 62d7f3c..63bf060 100644
+--- a/apps/wordcraft/src/main.rs
++++ b/apps/wordcraft/src/main.rs
+@@ -436,6 +436,8 @@ fn main() -> eframe::Result {
+             wordcraft_ui_egui::office_overlay::set_ext(docs_office::ribbon_frame, docs_office::paint_icon);
+             #[cfg(feature = "office-ext")]
+             wordcraft_ui_egui::office_overlay::set_print_hook(docs_office::print_wrap);
++            #[cfg(feature = "office-ext")]
++            wordcraft_ui_egui::office_overlay::set_plugin_ui(docs_office::plugin_panel, docs_office::plugin_context);
+             session.system_region = region;
+             let mut app = WordApp::new(session, services(file_dialog, &cc.egui_ctx));
+             load_prefs(&mut app);
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index 8aec88b..7687e8d 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -3204,6 +3204,11 @@ fn context_menu(app: &mut WordApp, ui: &mut Ui) {
+     if !app.session.sel.is_collapsed() {
+         ui.menu_button(tl!("Transliterate"), |ui| crate::ribbon::translit_menu(ui, app));
+     }
++    // office overlay (wordcraft/0147): the plugins' items.
++    if let Some((id, params)) = crate::office_overlay::plugin_context(&app.session, ui) {
++        let _ = app.run(&id, params);
++        ui.close();
++    }
+     if !wordcraft_engine::cmd::fields::selected(&app.session).is_empty() {
+         ui.separator();
+         item(ui, app, tl!("Update Field"), "references.updateFields", json!({}));
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 1c011f3..a4feb20 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -120,6 +120,26 @@ pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
+     }
+ }
+ 
++/// Plugin UI (wordcraft/0147): the extension draws the side panels the plugins asked for and the plugin items of the text context
++/// menu (it returns the command the user clicked, for the caller to run and close the menu). Both are no-ops without an extension.
++type PluginPanel = fn(&mut wordcraft_engine::Session, &mut egui::Ui);
++type PluginContext = fn(&wordcraft_engine::Session, &mut egui::Ui) -> Option<(String, serde_json::Value)>;
++static PLUGIN_UI: std::sync::OnceLock<(PluginPanel, PluginContext)> = std::sync::OnceLock::new();
++
++pub fn set_plugin_ui(panel: PluginPanel, context: PluginContext) {
++    let _ = PLUGIN_UI.set((panel, context));
++}
++
++pub fn plugin_panel(s: &mut wordcraft_engine::Session, ui: &mut egui::Ui) {
++    if let Some((panel, _)) = PLUGIN_UI.get() {
++        panel(s, ui);
++    }
++}
++
++pub fn plugin_context(s: &wordcraft_engine::Session, ui: &mut egui::Ui) -> Option<(String, serde_json::Value)> {
++    PLUGIN_UI.get().and_then(|(_, context)| context(s, ui))
++}
++
+ /// A print job's PDF: `(bytes, plan)` of `Session::print_pdf`.
+ pub type PrintJob = Result<(Vec<u8>, wordcraft_engine::print::PrintPlan), wordcraft_engine::CmdError>;
+ type PrintHook = fn(&mut wordcraft_engine::Session, &mut dyn FnMut(&mut wordcraft_engine::Session) -> PrintJob) -> PrintJob;
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 8d4ad23..838401a 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -27,6 +27,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
+                 crate::dialogs_smart_art::text_pane(app, ui);
+             });
+     }
++    // office overlay (wordcraft/0147): the side panels of the plugins.
++    crate::office_overlay::plugin_panel(&mut app.session, ui);
+     // office overlay (WP23): the Document Recovery pane, as Word shows it after a crash; the document stays in view.
+     if app.recovery_pane {
+         egui::Panel::left("recovery_pane")

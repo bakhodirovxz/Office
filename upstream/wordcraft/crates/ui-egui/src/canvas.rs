@@ -3204,6 +3204,11 @@ fn context_menu(app: &mut WordApp, ui: &mut Ui) {
     if !app.session.sel.is_collapsed() {
         ui.menu_button(tl!("Transliterate"), |ui| crate::ribbon::translit_menu(ui, app));
     }
+    // office overlay (wordcraft/0147): the plugins' items.
+    if let Some((id, params)) = crate::office_overlay::plugin_context(&app.session, ui) {
+        let _ = app.run(&id, params);
+        ui.close();
+    }
     if !wordcraft_engine::cmd::fields::selected(&app.session).is_empty() {
         ui.separator();
         item(ui, app, tl!("Update Field"), "references.updateFields", json!({}));
