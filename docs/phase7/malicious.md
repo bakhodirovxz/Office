@@ -8,7 +8,7 @@ the WAT modules inside `crates/plugin-host/tests/host.rs`. They test our own san
 Columns:
 
 - **Desktop native**: headless, the real wasmtime host, or the `docs-plugins` executor with an in-process guest.
-- **docs.exe**: the real app over the control channel, `scripts/plugins/evil-desktop.py` (needs a `docs.exe` built from this tree).
+- **docs.exe**: the real app over the control channel, `scripts/plugins/evil-desktop.py` (needs a `docs.exe` built from this tree). Run 2026-11-03 on a debug build of this tree: `deny` failed with "command is not on the plugin allowlist", `many` with "plugin asked for more than 16 reads in one round", the document text was unchanged after each, and the control command `hello` worked (PASS).
 - **Web shell**: Playwright against `suite-serve` (`ci/web-smoke/plugins-host.spec.ts`), or against the real editor with the real
   page host (`ci/web-smoke/bridge-plugins.spec.ts`).
 - **Docserver wrapper**: `services/docserver/tests/plugins.rs`. The wrapper loads the same `web/plugins/host.js` and `worker.js` as

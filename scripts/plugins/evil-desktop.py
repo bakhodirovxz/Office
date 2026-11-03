@@ -88,7 +88,7 @@ try:
     else:
         raise SystemExit("plugin.evil-test.deny never registered: the plugin did not load")
     time.sleep(2)
-    text = lambda: json.dumps(call("engine.execute", {"command": "document.text", "params": {}}), sort_keys=True)
+    text = lambda: json.dumps(call("engine.execute", {"command": "document.text", "params": {}}).get("result"), sort_keys=True)
     before = text()
     for cmd in ("deny", "many"):
         r = call("engine.execute", {"command": f"plugin.evil-test.{cmd}", "params": {}})
