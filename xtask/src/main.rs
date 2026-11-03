@@ -57,7 +57,8 @@ const COLUMNS: [&str; 11] = [
     "drop when",
 ];
 const CATEGORIES: [&str; 11] = [
-    "mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "translit", "fidelity", "parked", "plugins",
+    "mobile", "memory", "pdf", "brand", "i18n", "font", "ci-fix", "translit", "fidelity", "parked",
+    "plugins",
 ];
 
 /// Every `patches/<repo>/NNNN-*.patch` must have exactly one row in `patches/REGISTER.md` and the other way round.
