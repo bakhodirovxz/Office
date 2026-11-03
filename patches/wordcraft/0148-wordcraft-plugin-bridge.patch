@@ -4,13 +4,13 @@ Date: Tue, 3 Nov 2026 14:00:00 +0500
 Subject: [PATCH] wordcraft-web: the host bridge forwards the plugin messages
  to the extension
 
-Phase 7 WP4 (docs/phase7/PLAN.md section 4.6, docs/plugins.md "The web bridge"). In host mode every `wordcraft:plugin*` message from the parent page is handed to `docs_office::plugin_web::incoming`; after each frame `docs_office::plugin_web::sync` runs the queued ones against the session and returns the editor's messages (calls with transferred ArrayBuffers, done notices), which are posted to the parent with `post_message_with_transfer`. The protocol itself (pending invocations, input lock, timeout, restore) lives in our crates `docs-plugins::bridge` and `docs-office::plugin_web`; this patch is only the transport seam. Without the `office-ext` feature nothing changes.
+Phase 7 WP4 (docs/phase7/PLAN.md section 4.6, docs/plugins.md sections 9 and 9a). In host mode every `wordcraft:plugin*` message from the parent page is handed to `docs_office::plugin_web::incoming`; after each frame `docs_office::plugin_web::sync` runs the queued ones against the session and returns the editor's messages (calls with transferred ArrayBuffers, results, events), which are posted to the parent with `post_message_with_transfer`. The protocol itself (pending invocations, input lock, timeout, restore) lives in our crates `docs-plugins::bridge` and `docs-office::plugin_web`; this patch is only the transport seam. Without the `office-ext` feature nothing changes.
 ---
  apps/wordcraft-web/src/web/host.rs | 10 ++++++++++
  1 file changed, 10 insertions(+)
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index ec64425..c6f22e5 100644
+index ec64425..a9e2209 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -34,6 +34,10 @@
@@ -18,9 +18,9 @@ index ec64425..c6f22e5 100644
  //!   false) or F1 (open the command palette, `palette` true); a canvas swallows Tab, so these are the
  //!   keyboard way out.
 +//! - `wordcraft:plugins`, `wordcraft:pluginActions` (from the parent) and `wordcraft:pluginsSet`,
-+//!   `wordcraft:pluginCall`, `wordcraft:pluginDone` (to the parent): the plugin bridge, handled by
-+//!   `docs_office::plugin_web` (docs/plugins.md, "The web bridge"). The page runs the plugin in a
-+//!   Worker; the editor is the executor, locks input while a call is pending and restores on failure.
++//!   `wordcraft:pluginCall`, `wordcraft:pluginResults`, `wordcraft:pluginEvent` (to the parent): the plugin
++//!   bridge, handled by `docs_office::plugin_web` (docs/plugins.md, sections 9 and 9a). The page runs the
++//!   plugin in a Worker; the editor runs its actions, locks input while a call is pending and restores on failure.
  //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
  //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
  //!

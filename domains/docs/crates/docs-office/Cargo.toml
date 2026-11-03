@@ -22,7 +22,6 @@ docs-plugins = { path = "../docs-plugins" }
 
 # Phase 7 WP4: the browser end of the plugin bridge (plugin_web.rs)
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-plugin-api = { path = "../../../../crates/plugin-api" }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
 

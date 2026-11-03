@@ -169,6 +169,32 @@ call can only answer with `ui.panel` and `ui.status`; it cannot read or change t
   a text map apply that breaks section 5, a round over its time or memory budget, more than 16 rounds. The document is then
   restored and the status line says the plugin was stopped.
 
+## 9. The web bridge (editor iframe and page host; Phase 7 WP4)
+
+On the web the page that hosts the editor iframe owns the plugin's Worker and builds every call (section 9a); the editor (the Docs
+wasm, `docs-plugins::bridge` and `docs-office::plugin_web`, patch `wordcraft/0148` only forwards the messages) does what only it can:
+read the document, run the **editor actions** (`run`, `textmap.apply`) after the allowlist and grant check of sections 4 and 8, keep the
+undo step, the revision and the snapshot. The page keeps `ui.*` and `fetch` and never forwards them. Messages are the `?host=parent`
+protocol (prefix `wordcraft`), same origin. `call` is an integer for an invocation the editor starts and a text (`h<n>`) for one the
+page starts (a panel click). Buffers are transferred `ArrayBuffer`s, never base64.
+
+| Message | Direction | Fields |
+|---|---|---|
+| `wordcraft:plugins` | page to editor | `{commands, toolbar, menu, plugins: [{manifest, settings?, enabled?}], timeoutMs?}`, sent on every editor `ready`. The editor builds its slot commands, ribbon group and menus from `plugins[].manifest` (the descriptor's manifest as JSON; section 2 names, parsed and validated by `plugin-api`), so `commands`, `toolbar`, `menu` are informational. The list is the **whole** set: plugins not listed are unregistered, an empty list unregisters all. `timeoutMs` (optional, default 20,000) is how long the editor waits for the page between two messages of an invocation (the Worker's load 10 s plus one round 5 s). |
+| `wordcraft:pluginsSet` | editor to page | `{ids, errors}`: the plugins registered and one text per refused entry (the others register). |
+| `wordcraft:pluginCall` | editor to page | `{call, plugin, command, params, reads: {textmap?, selection?}}`: a plugin command ran (ribbon, menu, palette, `wordcraft:run`). `reads` are the command's `reads` as transferred `ArrayBuffer`s (the text map is the section 5 blob, the selection UTF-8 text); `params` are the manifest defaults merged with the caller's. |
+| `wordcraft:pluginActions` | page to editor | `{call, plugin, actions, blobs, reads, more, abort?}`: the editor actions of one answer (`blobs` are the answer's blobs, `textmap.apply` names one by index), `reads` the reads the next call needs (`next.reads`), `more` whether another round follows. `abort: true` (the page gave up: a trap, a refused answer, the time budget) restores the snapshot; nothing is sent back. `plugin` is the plugin id; the editor needs it for a `call` it did not start. |
+| `wordcraft:pluginResults` | editor to page | `{call, results, reads, error?}`: one result per action, one `ArrayBuffer` per requested read, in order. `error` means the invocation failed, the document is as it was and the page ends it (an unknown or ended `call` gets `error` too). |
+| `wordcraft:pluginEvent` | editor to page | `{event}` for `selectionChanged` (debounced 200 ms), `documentOpened`, `documentSaved`, sent when a plugin of the page lists the event; the page relays it. |
+
+A plugin command returns at once with `{"pending": call}`. From then on the document is **locked for input** (Restrict Editing's
+read-only protection, lifted while an answer's actions run, put back between rounds and never left on) until the answer with
+`more: false`. The editor ends an invocation itself, with the same restore and a "Plugin stopped: ..." status line, when no message
+arrived within `timeoutMs`, when the revision moved while the plugin ran (`stale revision`), and when another document is opened. An
+answer for an ended invocation gets a `pluginResults` with `error`. All mutating actions of an invocation, over all its rounds, are
+one undo step. A panel click's invocation begins at its first forwarded answer (snapshot and undo step from there). `read` actions are
+not served (the result says to use `next.reads`).
+
 ## 9a. The web page host (Phase 7 WP5; the rest of section 9 comes with WP8)
 
 `web/plugins/host.js`, `worker.js`, `host.css`, `i18n.json` (ours, no patch). The shell (`web/shell/shell.js`) and the docserver wrapper
@@ -193,7 +219,7 @@ call can only answer with `ui.panel` and `ui.status`; it cannot read or change t
   answer (unknown action, key or widget refuses it), document access per action, events may run `ui.*` only, panels must be declared,
   `fetch` URL/method/header rules, widget text cut at 1,024 characters (64 widgets, 256 items), and every plugin string reaches the DOM
   through `textContent` (control and bidi characters stripped). The command allowlist is checked by the editor (Rust), not here.
-- **Editor bridge** (`<prefix>` = the editor's prefix; PLAN 4.6, shapes the host assumes until WP4 lands): page to editor
+- **Editor bridge** (`<prefix>` = the editor's prefix; PLAN 4.6, section 9 is the contract; WP4 added `manifest`/`settings` to `plugins` and `plugin` to `pluginActions`): page to editor
   `plugins {commands: [{slot, id, label, mutates, reads, params}], toolbar: [{slot, icon, group}], menu: [{slot, place, group}]}` on every
   editor `ready` (slots are 0..63, assigned by the host in manifest order); editor to page `pluginCall {call, plugin, command, params, reads:
   {textmap?: ArrayBuffer, selection?: ...}}`; page to editor `pluginActions {call, actions, blobs: [ArrayBuffer], reads: [{what}], more}`

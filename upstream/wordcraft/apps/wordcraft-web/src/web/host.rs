@@ -35,9 +35,9 @@
 //!   false) or F1 (open the command palette, `palette` true); a canvas swallows Tab, so these are the
 //!   keyboard way out.
 //! - `wordcraft:plugins`, `wordcraft:pluginActions` (from the parent) and `wordcraft:pluginsSet`,
-//!   `wordcraft:pluginCall`, `wordcraft:pluginDone` (to the parent): the plugin bridge, handled by
-//!   `docs_office::plugin_web` (docs/plugins.md, "The web bridge"). The page runs the plugin in a
-//!   Worker; the editor is the executor, locks input while a call is pending and restores on failure.
+//!   `wordcraft:pluginCall`, `wordcraft:pluginResults`, `wordcraft:pluginEvent` (to the parent): the plugin
+//!   bridge, handled by `docs_office::plugin_web` (docs/plugins.md, sections 9 and 9a). The page runs the
+//!   plugin in a Worker; the editor runs its actions, locks input while a call is pending and restores on failure.
 //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
 //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
 //!

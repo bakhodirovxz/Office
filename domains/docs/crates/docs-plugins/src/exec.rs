@@ -369,6 +369,73 @@ impl Machine {
     }
 }
 
+/// The editor's half of an invocation whose rounds the page runs (the web bridge): the page builds the calls and reads the answers, the
+/// editor reads the document, runs the editor actions of each answer and keeps the undo step, the text map and the revision.
+pub struct Remote {
+    run: Run,
+}
+
+impl Remote {
+    pub fn new(s: &Session, inv: Invocation) -> Remote {
+        let checkpointed = inv.in_command;
+        Remote { run: Run { inv, last_map: None, read_rev: s.rev(), checkpointed, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 } }
+    }
+
+    pub fn plugin(&self) -> &Arc<Plugin> {
+        &self.run.inv.plugin
+    }
+
+    pub fn kind(&self) -> CallKind {
+        self.run.inv.kind
+    }
+
+    /// `Session::run` touches the document after the slot command returned: the text map was read at this revision, not the old one.
+    pub fn rebase(&mut self, rev: u64) {
+        self.run.read_rev = rev;
+    }
+
+    /// Perform reads; the bytes in the order asked (the page puts them in the next call's blobs under the read's name).
+    pub fn reads(&mut self, s: &mut Session, reqs: &[ReadReq]) -> Result<Vec<Vec<u8>>, CmdError> {
+        let (mut blobs, mut names) = (Vec::new(), BTreeMap::new());
+        for r in reqs {
+            self.run.read(s, r, &mut blobs, &mut names)?;
+        }
+        Ok(blobs)
+    }
+
+    /// The command's own reads (`reads` in the manifest), as (name, bytes).
+    pub fn first_reads(&mut self, s: &mut Session) -> Result<Vec<(&'static str, Vec<u8>)>, CmdError> {
+        let mut out = Vec::new();
+        for r in self.run.inv.reads.clone() {
+            let (name, what) = match r {
+                ReadKind::Textmap => ("textmap", ReadWhat::Textmap),
+                ReadKind::Selection => ("selection", ReadWhat::Selection),
+                ReadKind::None => continue,
+            };
+            let mut b = self.reads(s, &[ReadReq { what, scope: None, index: None }])?;
+            out.push((name, b.remove(0)));
+        }
+        Ok(out)
+    }
+
+    /// Check (against the plugin's grants and the allowlist) and run the actions of one answer; one result per action. `blobs` are the
+    /// answer's blobs (`textmap.apply` names one). `read` actions are not served: the page hands reads over as `next.reads`.
+    pub fn actions(&mut self, s: &mut Session, actions: &[Action], blobs: &[Vec<u8>]) -> Result<Vec<Value>, CmdError> {
+        let p = self.run.inv.plugin.clone();
+        let panels: Vec<String> = p.manifest.panels.iter().map(|x| x.id.clone()).collect();
+        let grants = Grants { document: p.manifest.permissions.document, origins: &p.origins, panels: &panels };
+        plugin_api::action::check_actions(actions, &grants, self.run.inv.kind == CallKind::Event).map_err(denied)?;
+        let (mut results, mut sink, mut names) = (Vec::with_capacity(actions.len()), Vec::new(), BTreeMap::new());
+        for a in actions {
+            results.push(match a {
+                Action::Read(_) => json!({"error": "ask for reads in `next.reads`"}),
+                a => self.run.action(s, a, blobs, &mut sink, &mut names)?,
+            });
+        }
+        Ok(results)
+    }
+}
+
 fn rounds(s: &mut Session, inv: Invocation) -> CmdResult {
     let (mut m, mut msg) = Machine::begin(s, inv)?;
     loop {
