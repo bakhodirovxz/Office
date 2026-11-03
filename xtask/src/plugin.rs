@@ -21,13 +21,16 @@ pub fn run(root: &Path, args: &[&str]) -> Result<String, String> {
 }
 
 fn target_dir(root: &Path) -> PathBuf {
-    std::env::var_os("CARGO_TARGET_DIR").map(PathBuf::from).unwrap_or_else(|| root.join("target"))
+    std::env::var_os("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| root.join("target"))
 }
 
 /// Build the cdylib with the `plugin` profile; returns the path of the `.wasm`.
 fn build(root: &Path, name: &str) -> Result<PathBuf, String> {
     let dir = root.join("plugins").join(name);
-    let manifest = fs::read_to_string(dir.join("Cargo.toml")).map_err(|e| format!("plugins/{name}/Cargo.toml: {e}"))?;
+    let manifest = fs::read_to_string(dir.join("Cargo.toml"))
+        .map_err(|e| format!("plugins/{name}/Cargo.toml: {e}"))?;
     let krate = manifest
         .parse::<toml_edit::DocumentMut>()
         .map_err(|e| e.to_string())?
@@ -37,28 +40,44 @@ fn build(root: &Path, name: &str) -> Result<PathBuf, String> {
         .map(str::to_string)
         .ok_or("no package name")?;
     let status = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
-        .args(["build", "--locked", "--profile", "plugin", "--target", "wasm32-unknown-unknown", "-p", &krate])
+        .args([
+            "build",
+            "--locked",
+            "--profile",
+            "plugin",
+            "--target",
+            "wasm32-unknown-unknown",
+            "-p",
+            &krate,
+        ])
         .current_dir(root)
         .status()
         .map_err(|e| e.to_string())?;
     if !status.success() {
         return Err(format!("cargo build -p {krate} failed"));
     }
-    Ok(target_dir(root).join("wasm32-unknown-unknown/plugin").join(format!("{}.wasm", krate.replace('-', "_"))))
+    Ok(target_dir(root)
+        .join("wasm32-unknown-unknown/plugin")
+        .join(format!("{}.wasm", krate.replace('-', "_"))))
 }
 
 fn pack(root: &Path, name: &str) -> Result<String, String> {
     let wasm = fs::read(build(root, name)?).map_err(|e| e.to_string())?;
     let dir = root.join("plugins").join(name);
-    let toml = fs::read(dir.join("plugin.toml")).map_err(|e| format!("plugins/{name}/plugin.toml: {e}"))?;
-    let m = plugin_api::manifest::parse(std::str::from_utf8(&toml).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    let toml = fs::read(dir.join("plugin.toml"))
+        .map_err(|e| format!("plugins/{name}/plugin.toml: {e}"))?;
+    let m = plugin_api::manifest::parse(std::str::from_utf8(&toml).map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())?;
     let mut entries: Vec<(&str, Vec<u8>)> = vec![("plugin.toml", toml), ("plugin.wasm", wasm)];
     if let Ok(s) = fs::read(dir.join("strings.tsv")) {
         entries.push(("strings.tsv", s));
     }
     let sizes: Vec<(&str, u64)> = entries.iter().map(|(n, b)| (*n, b.len() as u64)).collect();
     plugin_api::manifest::check_package(&sizes).map_err(|e| e.to_string())?;
-    let opts = SimpleFileOptions::default().compression_method(CompressionMethod::Stored).last_modified_time(DateTime::default()).unix_permissions(0o644);
+    let opts = SimpleFileOptions::default()
+        .compression_method(CompressionMethod::Stored)
+        .last_modified_time(DateTime::default())
+        .unix_permissions(0o644);
     let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
     for (n, b) in &entries {
         zip.start_file(*n, opts).map_err(|e| e.to_string())?;
@@ -69,6 +88,9 @@ fn pack(root: &Path, name: &str) -> Result<String, String> {
     fs::create_dir_all(&out).map_err(|e| e.to_string())?;
     let file = out.join(format!("{}-{}.zip", m.id, m.version));
     fs::write(&file, &bytes).map_err(|e| e.to_string())?;
-    let sha: String = Sha256::digest(&bytes).iter().map(|b| format!("{b:02x}")).collect();
+    let sha: String = Sha256::digest(&bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     Ok(format!("{sha}  {} ({} bytes)", file.display(), bytes.len()))
 }

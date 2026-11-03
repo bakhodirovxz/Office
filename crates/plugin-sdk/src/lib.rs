@@ -28,7 +28,10 @@ pub struct Reply {
 
 impl Reply {
     pub fn status(text: impl Into<String>) -> Reply {
-        Reply { actions: vec![Action::UiStatus { text: text.into() }], ..Default::default() }
+        Reply {
+            actions: vec![Action::UiStatus { text: text.into() }],
+            ..Default::default()
+        }
     }
 
     /// Add `textmap.apply` for `apply` (its blob is the next free index).
@@ -42,8 +45,14 @@ impl Reply {
 
 /// The blob a host call named under `name` in its `reads` (for example `"textmap"`).
 pub fn read<'a>(call: &Call, blobs: &'a [Vec<u8>], name: &str) -> Result<&'a [u8], String> {
-    let i = *call.reads.get(name).ok_or_else(|| format!("the call carries no `{name}` read"))?;
-    blobs.get(i as usize).map(Vec::as_slice).ok_or_else(|| format!("`{name}` points to blob {i}, which is missing"))
+    let i = *call
+        .reads
+        .get(name)
+        .ok_or_else(|| format!("the call carries no `{name}` read"))?;
+    blobs
+        .get(i as usize)
+        .map(Vec::as_slice)
+        .ok_or_else(|| format!("`{name}` points to blob {i}, which is missing"))
 }
 
 /// `alloc(len)` of the ABI: `len` bytes the host may write into; they stay valid until `free`.
@@ -65,22 +74,39 @@ pub unsafe fn free(ptr: *mut u8, len: usize) {
 ///
 /// # Safety
 /// `ptr..ptr + len` must be readable (the host wrote them after `alloc`).
-pub unsafe fn dispatch(ptr: *const u8, len: usize, handler: fn(Call, Vec<Vec<u8>>) -> Result<Reply, String>) -> u64 {
+pub unsafe fn dispatch(
+    ptr: *const u8,
+    len: usize,
+    handler: fn(Call, Vec<Vec<u8>>) -> Result<Reply, String>,
+) -> u64 {
     // SAFETY: the caller upholds the contract above.
     let input = unsafe { std::slice::from_raw_parts(ptr, len) };
-    let out = run(input, handler).or_else(|e| encode(Reply::status(e))).unwrap_or_default();
+    let out = run(input, handler)
+        .or_else(|e| encode(Reply::status(e)))
+        .unwrap_or_default();
     let n = out.len();
     ((alloc_with(out) as u64) << 32) | n as u64
 }
 
-fn run(input: &[u8], handler: fn(Call, Vec<Vec<u8>>) -> Result<Reply, String>) -> Result<Vec<u8>, String> {
+fn run(
+    input: &[u8],
+    handler: fn(Call, Vec<Vec<u8>>) -> Result<Reply, String>,
+) -> Result<Vec<u8>, String> {
     let m = Message::decode(input).map_err(|e| e.to_string())?;
     let call: Call = m.header_as().map_err(|e| e.to_string())?;
     encode(handler(call, m.blobs)?)
 }
 
 fn encode(r: Reply) -> Result<Vec<u8>, String> {
-    Message::new(&Answer { actions: r.actions, next: r.next }, r.blobs).and_then(|m| m.encode()).map_err(|e| e.to_string())
+    Message::new(
+        &Answer {
+            actions: r.actions,
+            next: r.next,
+        },
+        r.blobs,
+    )
+    .and_then(|m| m.encode())
+    .map_err(|e| e.to_string())
 }
 
 /// Leak `v` as an exact-size box; the host frees it with `free(ptr, len)`.
@@ -111,7 +137,13 @@ macro_rules! export {
             #[unsafe(no_mangle)]
             pub extern "C" fn call(ptr: i32, len: i32) -> i64 {
                 // SAFETY: the host wrote `len` bytes at `ptr` after `alloc`.
-                unsafe { $crate::dispatch(ptr as u32 as usize as *const u8, len as u32 as usize, super::$handler) as i64 }
+                unsafe {
+                    $crate::dispatch(
+                        ptr as u32 as usize as *const u8,
+                        len as u32 as usize,
+                        super::$handler,
+                    ) as i64
+                }
             }
         }
     };
