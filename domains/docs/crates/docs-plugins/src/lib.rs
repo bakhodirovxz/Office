@@ -209,6 +209,10 @@ fn slot(n: usize) -> Option<Slot> {
 }
 
 fn slot_enabled<const N: usize>(_: &Session) -> Option<&'static str> {
+    // Before the engine's protection gate (which would say "protected"): the bridge's own lock is why a pending call refuses another.
+    if bridge::locked() {
+        return Some(bridge::BUSY);
+    }
     match slot(N) {
         Some(s) if s.plugin.enabled() => None,
         _ => Some("This plugin is not enabled"),
