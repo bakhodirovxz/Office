@@ -48,6 +48,31 @@ pub struct ProviderConfig {
     /// with stable keys.
     #[serde(default = "session")]
     pub history: String,
+    /// the plugins this provider's users get (PLAN phase 7, section 8); the packages are in `[docserver.plugins] dir`
+    #[serde(default)]
+    pub plugins: Vec<PluginEntry>,
+}
+
+/// `plugins = [{ id, version, sha256, grant = [...], settings = {...} }]`: one plugin enabled for a provider. The admin names the
+/// package by the SHA-256 of its `plugin.wasm` (O4); `grant` lists the network origins the admin allows it (only ones its manifest
+/// declares); `settings` replaces the manifest's `[settings]` defaults.
+#[derive(Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct PluginEntry {
+    pub id: String,
+    pub version: String,
+    pub sha256: String,
+    #[serde(default)]
+    pub grant: Vec<String>,
+    pub settings: Option<toml::Table>,
+}
+
+/// The `[docserver.plugins]` table.
+#[derive(Deserialize, Clone, Debug, Default)]
+#[serde(deny_unknown_fields, default)]
+pub struct PluginsConfig {
+    /// the folder with the packages: `<dir>/<id>/<version>/plugin.toml` and `plugin.wasm` (or one level up). Read at start.
+    pub dir: Option<PathBuf>,
 }
 
 fn yes() -> bool {
@@ -99,6 +124,7 @@ pub struct Config {
     pub keep_closed_hours: u64,
     /// any other session folder (never closed, or its close not acknowledged) is deleted this long after its last activity (Q10)
     pub keep_abandoned_days: u64,
+    pub plugins: PluginsConfig,
     pub providers: Vec<ProviderConfig>,
 }
 
@@ -124,6 +150,7 @@ impl Default for Config {
             rate_auth_fail_per_min: 20,
             keep_closed_hours: 168, // 7 days, as abandoned sessions (owner, 2026-10-31)
             keep_abandoned_days: 7,
+            plugins: PluginsConfig::default(),
             providers: vec![],
         }
     }
@@ -148,6 +175,16 @@ pub struct Provider {
     pub require_exp: bool,
     /// `history = "keep"`: the retention sweep leaves this provider's histories alone
     pub keep_history: bool,
+    /// the plugins enabled for this provider, checked against the folder at start (PLAN phase 7, section 8)
+    pub plugins: Vec<ProviderPlugin>,
+}
+
+/// A plugin of a provider: the package as it was when the server started, and what the admin set for it.
+#[derive(Clone)]
+pub struct ProviderPlugin {
+    pub package: suite_core::plugins::Package,
+    pub grant: Vec<String>,
+    pub settings: Option<serde_json::Value>,
 }
 
 #[derive(Clone, Debug)]
@@ -436,6 +473,8 @@ impl Config {
             return Err("docserver: at least one [[docserver.providers]] entry is required".into());
         }
         let mut providers: Vec<Provider> = vec![];
+        let mut refused: Vec<(String, String, String)> = vec![];
+        let folder = self.plugins.dir.as_deref().map(suite_core::plugins::scan);
         for (i, p) in self.providers.iter().enumerate() {
             let at = |k: &str| format!("providers[{i}].{k}");
             if p.name.trim().is_empty() || p.issuer.trim().is_empty() {
@@ -524,6 +563,7 @@ impl Config {
                     frame_origins.push(o);
                 }
             }
+            let plugins = load_plugins(i, p, folder.as_deref(), &mut refused)?;
             providers.push(Provider {
                 name: p.name.clone(),
                 issuer: p.issuer.clone(),
@@ -533,6 +573,7 @@ impl Config {
                 frame_origins,
                 require_exp: p.require_exp,
                 keep_history,
+                plugins,
             });
         }
         for p in providers.iter().filter(|p| !p.require_exp) {
@@ -575,7 +616,7 @@ impl Config {
             self.rate_create_per_min,
             self.rate_auth_fail_per_min,
         ));
-        Ok(Docserver {
+        let ds = Docserver {
             server_secret,
             data_dir,
             max_document_mb: self.max_document_mb,
@@ -592,8 +633,124 @@ impl Config {
             providers,
             watch,
             lookup: crate::outbound::system_lookup(),
-        })
+        };
+        for (provider, plugin, reason) in refused {
+            eprintln!(
+                "docserver: plugin \"{plugin}\" of provider \"{provider}\" is refused: {reason}"
+            );
+            ds.audit(
+                "plugin.refused",
+                serde_json::json!({"provider": provider, "plugin": plugin, "reason": reason}),
+            );
+        }
+        for (dir, e) in folder
+            .iter()
+            .flatten()
+            .filter_map(|(d, p)| p.as_ref().err().map(|e| (d, e)))
+        {
+            eprintln!("docserver: plugins folder: {}: {e}", dir.display());
+        }
+        Ok(ds)
     }
+}
+
+type Folder = [(PathBuf, Result<suite_core::plugins::Package, String>)];
+
+/// The provider's `plugins` entries against the folder read at start. A malformed entry, or a grant the package does not declare,
+/// is a refusal to start. A package that is missing, or whose digest is not the entry's (a changed package), is left out and
+/// said (`refused`, written to the audit log once the server is up): one bad file must not take the server down.
+fn load_plugins(
+    i: usize,
+    p: &ProviderConfig,
+    folder: Option<&Folder>,
+    refused: &mut Vec<(String, String, String)>,
+) -> Result<Vec<ProviderPlugin>, String> {
+    let mut out: Vec<ProviderPlugin> = vec![];
+    for (j, e) in p.plugins.iter().enumerate() {
+        let at = |k: &str| format!("providers[{i}].plugins[{j}].{k}");
+        let Some(folder) = folder else {
+            return Err(format!(
+                "docserver: providers[{i}].plugins needs [docserver.plugins] dir"
+            ));
+        };
+        if e.id.is_empty() || e.version.is_empty() {
+            return Err(format!(
+                "docserver: {} and {} must not be empty",
+                at("id"),
+                at("version")
+            ));
+        }
+        if e.sha256.len() != 64
+            || !e
+                .sha256
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
+            return Err(format!(
+                "docserver: {} must be 64 lower-case hex digits",
+                at("sha256")
+            ));
+        }
+        if out.iter().any(|o| o.package.manifest.id == e.id) {
+            return Err(format!(
+                "docserver: {}: \"{}\" is listed twice",
+                at("id"),
+                e.id
+            ));
+        }
+        if let Some(o) = e
+            .grant
+            .iter()
+            .find(|o| !plugin_api::manifest::check_origin(o))
+        {
+            return Err(format!(
+                "docserver: {}: \"{o}\" is not an https://host[:port] origin",
+                at("grant")
+            ));
+        }
+        let settings = e
+            .settings
+            .as_ref()
+            .map(|t| {
+                serde_json::to_value(t).map_err(|e| format!("docserver: {}: {e}", at("settings")))
+            })
+            .transpose()?;
+        if settings
+            .as_ref()
+            .is_some_and(|s| s.to_string().len() > 4096)
+        {
+            return Err(format!("docserver: {} is over 4096 bytes", at("settings")));
+        }
+        let mut refuse = |why: &str| refused.push((p.name.clone(), e.id.clone(), why.to_string()));
+        let found = folder
+            .iter()
+            .filter_map(|(_, p)| p.as_ref().ok())
+            .find(|pk| pk.manifest.id == e.id && pk.manifest.version == e.version);
+        let Some(pk) = found else {
+            refuse("no valid package with this id and version in the plugins folder");
+            continue;
+        };
+        if pk.sha256 != e.sha256 {
+            refuse("the package is not the one the entry names (its SHA-256 differs)");
+            continue;
+        }
+        if let Some(o) = e
+            .grant
+            .iter()
+            .find(|o| !pk.manifest.permissions.network.contains(o))
+        {
+            return Err(format!(
+                "docserver: {}: the plugin's manifest does not declare \"{o}\"",
+                at("grant")
+            ));
+        }
+        out.push(ProviderPlugin {
+            package: pk.clone(),
+            grant: e.grant.clone(),
+            settings,
+        });
+    }
+    Ok(out)
 }
 
 #[cfg(test)]

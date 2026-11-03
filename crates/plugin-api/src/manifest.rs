@@ -251,6 +251,16 @@ pub fn parse(text: &str) -> Result<Manifest, Refusal> {
     Ok(m)
 }
 
+/// `parse`, and the manifest as JSON with the file's own key names (what a page host gets in the descriptor).
+pub fn parse_json(text: &str) -> Result<(Manifest, Value), Refusal> {
+    let m = parse(text)?;
+    let v = toml::from_str::<toml::Value>(text)
+        .ok()
+        .and_then(|t| serde_json::to_value(t).ok())
+        .ok_or_else(|| Refusal::Syntax("manifest to JSON".into()))?;
+    Ok((m, v))
+}
+
 fn ident_ok(s: &str, extra: &[char], max: usize) -> bool {
     !s.is_empty()
         && s.len() <= max

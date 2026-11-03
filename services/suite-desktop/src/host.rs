@@ -2,7 +2,7 @@
 //! browser fallback. Desktop actions reach the host only through the WebView IPC (`Ctx::message`), never through the HTTP port.
 use crate::{
     Args, Brand, Ctx, Out, Source, Store, check_file, download_target, history_fragment,
-    ipc_message, nav_ok, reply_script,
+    ipc_message, nav_ok, plugin_store, reply_script,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -288,6 +288,7 @@ fn serve(
     rt: &tokio::runtime::Runtime,
     layout: &suite_serve::Layout,
     data: &Path,
+    plugins: Option<Arc<suite_serve::PluginSource>>,
 ) -> Result<Served, String> {
     let cfg = layout.shell_config()?;
     rt.block_on(async {
@@ -310,7 +311,13 @@ fn serve(
             }; // the port was taken meanwhile
             let app =
                 convert_api::app::App::new(resolved, convert::exec::Config::from_env(), false)?;
-            let router = suite_serve::router(app.clone(), layout, cfg.clone());
+            let router = suite_serve::router_plugins(
+                app.clone(),
+                layout,
+                cfg.clone(),
+                None,
+                plugins.clone(),
+            );
             let sweeper = app.clone();
             let tick = Duration::from_secs((app.r.s.retention_s / 4).clamp(1, 60));
             tokio::spawn(async move {
@@ -394,6 +401,7 @@ fn start(args: Args) -> Result<(), String> {
         history: history_store(&data, &settings_dir),
         downloads: env_dir("USERPROFILE")
             .map_or_else(|| data.join("downloads"), |d| d.join("Downloads")),
+        plugins: Some(plugin_store(&settings_dir)),
         // the editor starts in the install folder, not in the folder of the document (review m7: a DLL it loads late must not be
         // found next to a downloaded file)
         spawn: Box::new(move |exe, file| {
@@ -433,7 +441,15 @@ fn start(args: Args) -> Result<(), String> {
         },
     };
 
-    let Served { port } = serve(&rt, &layout, &data)?;
+    // the enabled plugins are read from settings.toml on every request, so enabling one needs no restart
+    let plugin_src = {
+        let s = plugin_store(&settings_dir);
+        Arc::new(suite_serve::PluginSource {
+            roots: s.roots(),
+            now: Box::new(move || (s.state(), s.policy())),
+        })
+    };
+    let Served { port } = serve(&rt, &layout, &data, Some(plugin_src))?;
     let _ = std::fs::create_dir_all(&data);
     let host_json = data.join("host.json");
     let _ = std::fs::write(
@@ -554,6 +570,16 @@ fn start(args: Args) -> Result<(), String> {
                     let p = ipc_proxy.clone();
                     std::thread::spawn(move || {
                         let _ = p.send_event(Ev::Script(reply_script(&work())));
+                    });
+                }
+                Out::PickPackage => {
+                    let (ctx, p) = (ipc_ctx.clone(), ipc_proxy.clone());
+                    std::thread::spawn(move || {
+                        let v = match rfd::FileDialog::new().add_filter("zip", &["zip"]).pick_file() {
+                            Some(f) => ctx.plugins_install(&f.to_string_lossy(), Source::User),
+                            None => json!({"type": "plugins", "ok": false, "error": "cancelled", "cancelled": true}),
+                        };
+                        let _ = p.send_event(Ev::Script(reply_script(&v)));
                     });
                 }
                 Out::Pick(exts) => {

@@ -44,7 +44,7 @@ input[type=search], select { font: inherit; padding: 6px 8px; border: 1px solid 
 #ed-cover { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; background: var(--bg); color: var(--muted); }
 #ed-cover[hidden] { display: none; }
 /* the command palette (palette.js): its button shows only while it has focus, a screen reader and Tab reach it anyway */
-.pal-btn[hidden] { display: none; }
+.pal-btn[hidden], #nav-plugins[hidden] { display: none; }
 .pal-btn:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; border: 0; }
 dialog.pal { width: min(32rem, 92vw); }
 dialog.pal h2 { margin-top: 0; }

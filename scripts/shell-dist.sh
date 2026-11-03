@@ -16,7 +16,7 @@ if [ "$check" = 0 ]; then
   cp -r web/shell/. "$SHELL_OUT/"
   cp assets/fonts/fallback/NotoSans-Regular-uz.ttf "$SHELL_OUT/"
   # the plugin page host (Phase 7 WP5): fetched by the shell and the docserver wrapper only when a plugin is enabled; suite-serve gives the .js files the Worker CSP
-  mkdir -p "$SHELL_OUT/plugins"; cp web/plugins/host.js web/plugins/worker.js web/plugins/host.css web/plugins/i18n.json "$SHELL_OUT/plugins/"
+  mkdir -p "$SHELL_OUT/plugins"; cp web/plugins/host.js web/plugins/worker.js web/plugins/host.css web/plugins/i18n.json web/plugins/page.js "$SHELL_OUT/plugins/"
   # the logo pack is the only source of brand art (brand/logo): favicon, touch icon, PWA icons, header lockups
   L=brand/logo
   cp "$L/web/favicon.ico" "$L/web/favicon.svg" "$L/web/apple-touch-icon.png" "$L/web/icon-192.png" "$L/web/icon-512.png" "$L/web/icon-maskable-512.png" "$SHELL_OUT/"

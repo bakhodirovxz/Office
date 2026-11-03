@@ -69,7 +69,7 @@ relies on it), **—** (not used).
 | `coEditing.mode`, `coEditing.change` | — (`:267`) | N | One editor per session; no co-editing (Phase 9) | — | — |
 | `recent`, `templates`, `createUrl` | — (`:268`) | N | Ignored | — | — |
 | `actionLink` | — | N | Ignored | — | — |
-| `plugins` | — (the `uz-translit` plugin is mounted server-side in ONLYOFFICE, `hr-backend-prompt.md:833`) | N | Not supported; Latin ⇄ Cyrillic is built into our editor (PLAN F13) | WP9 | — (ignored field, no test) |
+| `plugins` (`autostart`, `pluginsData`, also `editorConfig.plugins.pluginsData` URLs) | — (the `uz-translit` plugin is mounted server-side in ONLYOFFICE, `hr-backend-prompt.md:833`) | N | **Ignored on purpose; the config token can never add a plugin** (Phase 7, PLAN 8 and M12). Plugin code comes only from the admin's folder (`[docserver.plugins] dir`) and is enabled per provider in `[[docserver.providers]] plugins = [...]`; the session answer lists those and nothing else, so a URL in a token is never fetched. Latin ⇄ Cyrillic is built into our editor (PLAN F13) and also ships as a plugin (Phase 7) | Phase 7 WP8 | services/docserver/tests/plugins.rs::a_token_cannot_add_a_plugin |
 | `embedded.*` | — | N | Ignored | — | — |
 
 ## 4. `editorConfig.customization`

@@ -89,5 +89,6 @@ br_max = 65536
 # The plugin page host (PLAN phase 7 WP5): web/plugins/host.js + worker.js + host.css + i18n.json, each brotli -q 11 --lgwin=24, summed
 # (`ci.sh sizes` measures web/plugins). A lazy chunk: the shell and the docserver wrapper fetch it only when a plugin is enabled, so it is
 # not part of [shell] (whose headroom is under 1 KB). Measured 2026-11-03: 9,820 B brotli. br_max = ceil(1.10 x measured / 16 KiB) x 16 KiB.
+# WP8 added page.js (the lazily loaded Plugins page, opened from the shell's nav button) and its strings: 12,847 B; br_max unchanged.
 [plugins]
 br_max = 16384

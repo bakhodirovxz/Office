@@ -158,6 +158,8 @@
     S.i18n = await (await fetch('shell/i18n.json')).json().catch(() => null);
     $('nav-history').hidden = !desktop;
     $('nav-history').onclick = () => { location.hash = '#history'; };
+    $('nav-plugins').hidden = !desktop;
+    $('nav-plugins').onclick = () => (window.PluginsPage ? PluginsPage.open() : document.head.append(el('script', { src: 'shell/plugins/page.js' })));
     $('hist-back').onclick = leave;
     $('hist-cmp-go').onclick = compare;
     $('hist-forget').onclick = forget;

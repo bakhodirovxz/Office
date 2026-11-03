@@ -5,6 +5,7 @@
 //! - [`recent`]: the recent files, read from the four apps' own lists (they stay the owners; nothing is written to them).
 //! - [`history`]: the local version history (snapshots on save, a hash-chained index, restore, retention).
 //! - [`fonts`]: where the shared Noto fallback fonts are.
+//! - [`plugins`]: the plugin store (install, enable, grants, machine policy, integrity) and the descriptors of the page host.
 //! - [`templates`]: the catalogue of the starter documents (`web/shell/templates.json`).
 //!
 //! Every name comes from `brand/brand.toml` at build time (`build.rs`); none is written here.
@@ -13,6 +14,7 @@
 pub mod fonts;
 pub mod history;
 pub mod lang;
+pub mod plugins;
 pub mod recent;
 pub mod settings;
 pub mod templates;

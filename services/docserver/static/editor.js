@@ -310,6 +310,12 @@
     if (s.plugins && s.plugins.length) loadPlugins(s.plugins, s.editor);
   }
 
+  // what the page host did with a plugin's network request goes to the server's audit log (`plugin.network`); the fetch itself runs here, so only this page can tell
+  function pluginAudit(x) {
+    if (!/^network/.test(x.kind)) return;
+    api('/plugin-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plugin: x.plugin, kind: x.kind, origin: x.origin || null }) }).catch(function () { /* best effort */ });
+  }
+
   // Plugins (PLAN phase 7): the session answer lists the provider's plugins; the page host is fetched only then (same files as the shell, /shell/plugins/).
   function loadPlugins(list, editor) {
     S.pf = { app: { id: editor, prefix: S.prefix }, el: S.frame };
@@ -317,7 +323,7 @@
     sc.src = '/shell/plugins/host.js';
     sc.onload = function () {
       document.body.style.position = 'relative';
-      S.plg = PluginHost.make({ cfg: { plugins: list }, get lang() { return S.lang; }, frames: {} }, function (m) { status.textContent = m; status.style.display = 'block'; }, document.body);
+      S.plg = PluginHost.make({ cfg: { plugins: list }, get lang() { return S.lang; }, frames: {}, onAudit: pluginAudit }, function (m) { status.textContent = m; status.style.display = 'block'; }, document.body);
       if (S.started) S.plg.onMessage(S.pf, { type: S.prefix + ':ready' });
     };
     document.head.appendChild(sc);

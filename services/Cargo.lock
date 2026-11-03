@@ -599,6 +599,7 @@ dependencies = [
  "fake-hrm",
  "getrandom",
  "hmac",
+ "plugin-api",
  "serde",
  "serde_json",
  "sha2",
@@ -2034,6 +2035,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
+name = "plugin-api"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "toml 0.8.2",
+]
+
+[[package]]
 name = "png"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2578,10 +2588,12 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 name = "suite-core"
 version = "0.1.0"
 dependencies = [
+ "plugin-api",
  "ron",
  "serde_json",
  "sha2",
  "toml_edit 0.22.27",
+ "zip",
 ]
 
 [[package]]
@@ -2616,6 +2628,7 @@ dependencies = [
  "docserver",
  "serde_json",
  "sha2",
+ "suite-core",
  "tokio",
  "toml 1.1.8+spec-1.1.0",
  "tower",

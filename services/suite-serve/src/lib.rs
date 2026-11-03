@@ -18,6 +18,7 @@ use docserver::Docserver;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use suite_core::plugins::{self, Enabled, Policy, Root};
 use tower_http::services::{ServeDir, ServeFile};
 
 /// (route, trunk dist dir under `--dist`, key in `brand.toml [apps.*]`).
@@ -73,6 +74,13 @@ fn brand_json(text: &str, local: bool) -> Result<String, String> {
         "convert": {"route": "/convert/", "names": need(&["apps", "convert", "names"])?},
     })
     .to_string())
+}
+
+/// `shell-config.json` with the enabled plugins' descriptors added.
+fn with_plugins(cfg: &str, list: &[Enabled]) -> String {
+    let mut v: serde_json::Value = serde_json::from_str(cfg).unwrap_or_default();
+    v["plugins"] = serde_json::Value::Array(plugins::local_descriptors(list));
+    v.to_string()
 }
 
 /// The contents of every inline `<tag>` (no `src=`) in `html`.
@@ -289,6 +297,76 @@ pub fn router_ds(
     shell_config: String,
     ds: Option<Arc<Docserver>>,
 ) -> Router {
+    router_plugins(app, layout, shell_config, ds, None)
+}
+
+/// Where the enabled plugins come from (PLAN phase 7, section 8): folders of packages and, asked on every request, what is enabled and
+/// granted (`settings.toml` on the desktop, the config file for the web host) and the machine policy.
+pub struct PluginSource {
+    pub roots: Vec<Root>,
+    pub now: Box<dyn Fn() -> (plugins::State, Policy) + Send + Sync>,
+}
+
+impl PluginSource {
+    fn enabled(&self) -> Vec<Enabled> {
+        let (st, pol) = (self.now)();
+        plugins::enabled(&self.roots, &st, &pol)
+    }
+}
+
+/// `GET /plugins/<sha256>`: the `plugin.wasm` of an enabled plugin, read again and compared with the digest. Anything else is 404.
+async fn plugin_wasm(
+    State(src): State<Arc<PluginSource>>,
+    axum::extract::Path(sha): axum::extract::Path<String>,
+) -> Response {
+    let bytes = tokio::task::spawn_blocking(move || {
+        let e = src
+            .enabled()
+            .into_iter()
+            .find(|e| e.package.sha256 == sha)?;
+        plugins::read_wasm(&e.package).ok()
+    })
+    .await
+    .ok()
+    .flatten();
+    match bytes {
+        Some(b) => ([(header::CONTENT_TYPE, "application/wasm")], b).into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+/// The home page's CSP with `connect-src` widened to the origins the user (or the operator) granted to an enabled plugin: a granted
+/// `fetch` runs in this page (PLAN phase 7, 5.3), and no other address is added.
+async fn shell_csp(State(src): State<Arc<PluginSource>>, req: Request, next: Next) -> Response {
+    let home = req.uri().path() == "/";
+    let mut res = next.run(req).await;
+    if home {
+        let src = src.clone();
+        let o = tokio::task::spawn_blocking(move || plugins::granted_origins(&src.enabled()))
+            .await
+            .unwrap_or_default();
+        if !o.is_empty()
+            && let Ok(v) = HeaderValue::from_str(&format!(
+                "{}; connect-src 'self' {}",
+                convert_api::routes::CSP,
+                o.join(" ")
+            ))
+        {
+            res.headers_mut().insert(header::CONTENT_SECURITY_POLICY, v);
+        }
+    }
+    res
+}
+
+/// `router_ds`, plus the local plugins: `/shell-config.json` lists the enabled ones (descriptors made by `suite_core::plugins`),
+/// `/plugins/<sha256>` serves their wasm and the home page's CSP allows exactly the granted origins.
+pub fn router_plugins(
+    app: Arc<App>,
+    layout: &Layout,
+    shell_config: String,
+    ds: Option<Arc<Docserver>>,
+    plugins: Option<Arc<PluginSource>>,
+) -> Router {
     let mut extra: Router<Arc<App>> = Router::new();
     for (route, dist, _) in EDITORS {
         let dir = layout.dist.join(dist);
@@ -308,9 +386,23 @@ pub fn router_ds(
         .nest_service("/shell", ServeDir::new(&layout.shell).precompressed_br())
         .route(
             "/shell-config.json",
-            get(move || {
-                let c = shell_config.clone();
-                async move { ([(header::CONTENT_TYPE, "application/json")], c) }
+            get({
+                let src = plugins.clone();
+                move || {
+                    let c = shell_config.clone();
+                    let src = src.clone();
+                    async move {
+                        let c = match src {
+                            Some(s) => {
+                                tokio::task::spawn_blocking(move || with_plugins(&c, &s.enabled()))
+                                    .await
+                                    .unwrap_or_default()
+                            }
+                            None => c,
+                        };
+                        ([(header::CONTENT_TYPE, "application/json")], c)
+                    }
+                }
             }),
         )
         .route(
@@ -325,6 +417,15 @@ pub fn router_ds(
         .layer(middleware::from_fn(worker_csp));
     if let Some(d) = &ds {
         extra = extra.merge(d.routes());
+    }
+    let mut shell = shell;
+    if let Some(src) = plugins {
+        extra = extra.merge(
+            Router::new()
+                .route("/plugins/{sha}", get(plugin_wasm))
+                .with_state(src.clone()),
+        );
+        shell = shell.layer(middleware::from_fn_with_state(src, shell_csp));
     }
     let router = convert_api::routes::router_with(app, extra.merge(shell));
     match &layout.local_key {
