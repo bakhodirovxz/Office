@@ -14,7 +14,7 @@
 //!
 //! This module has no JS in it; `docs-office::plugin_web` turns the browser's messages into these calls.
 use std::cell::RefCell;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, VecDeque};
 use std::sync::Arc;
 
 use plugin_api::action::{Action, CallKind, ReadReq};
@@ -29,6 +29,13 @@ use crate::{Guest, GuestSession, Plugin};
 /// How long the editor waits for the page between two messages of an invocation: the Worker's load (10 s) and one round (5 s) with
 /// room to spare. A page that sends `timeoutMs` overrides it.
 pub const WAIT_MS: f64 = 20000.0;
+
+/// Refusals the page shows in its own language (`plg.busy`, `plg.protected` in i18n/plugins.tsv; `web/plugins/host.js` maps the text).
+pub const BUSY: &str = "another plugin is still running";
+pub const PROTECTED: &str = "the document is protected";
+
+/// How many ended string-call ids are remembered, so a late round of one cannot start a fresh invocation.
+const ENDED_MAX: usize = 64;
 
 /// A plugin that lives in the page. Nothing runs here: `start` only hands out a session that refuses to be called.
 pub struct PageGuest;
@@ -84,6 +91,8 @@ struct Bridge {
     web: BTreeSet<String>,
     /// We set the read-only protection, so we lift it.
     lock_ours: bool,
+    /// Ids of the page's (string) calls that ended or were refused, oldest first.
+    ended: VecDeque<Value>,
 }
 
 thread_local! {
@@ -148,7 +157,12 @@ pub fn start(s: &mut Session, inv: Invocation) -> CmdResult {
         }
         CallKind::Command => {
             if with(|b| !b.pending.is_empty()) {
-                return fail("another plugin is still running");
+                return fail(BUSY);
+            }
+            // Our lock only goes on a document without protection; with the user's own (comments, forms, tracked changes) the user could
+            // edit during the call and a stale restore would lose it.
+            if s.doc.settings.protection.is_some() {
+                return fail(PROTECTED);
             }
             let snap = s.edit_snapshot();
             let (command, params, plugin) = (inv.command.clone().unwrap_or_default(), inv.params.clone(), inv.plugin.manifest.id.clone());
@@ -177,6 +191,7 @@ pub fn start(s: &mut Session, inv: Invocation) -> CmdResult {
 
 /// End `p` with a failure: lift the lock and put the document back. `status` is for the user (an abort comes from a page that said it).
 fn fail_pending(s: &mut Session, p: Pending, why: &str, replaced: bool) {
+    end(&p.call);
     if replaced {
         // The document the invocation was for is gone; the new one was never locked by us.
         with(|b| b.lock_ours = false);
@@ -188,6 +203,18 @@ fn fail_pending(s: &mut Session, p: Pending, why: &str, replaced: bool) {
     }
     p.remote.plugin().ui.lock().unwrap_or_else(|e| e.into_inner()).last_error = Some(why.to_string());
     s.status = format!("Plugin stopped: {why}");
+}
+
+/// Remember that a page call is over.
+fn end(call: &Value) {
+    if call.is_string() {
+        with(|b| {
+            if b.ended.len() >= ENDED_MAX {
+                b.ended.pop_front();
+            }
+            b.ended.push_back(call.clone());
+        });
+    }
 }
 
 fn take(call: &Value) -> Option<Pending> {
@@ -223,6 +250,20 @@ pub fn answer(s: &mut Session, a: Answer) {
     let mut p = match known {
         Some(p) => p,
         None if a.call.is_string() => {
+            let why = if with(|b| b.ended.contains(&a.call)) {
+                Some("the invocation has ended")
+            } else if with(|b| !b.pending.is_empty()) {
+                Some(BUSY)
+            } else if s.doc.settings.protection.is_some() {
+                Some(PROTECTED)
+            } else {
+                None
+            };
+            if let Some(why) = why {
+                end(&a.call);
+                s.status = format!("Plugin not started: {why}");
+                return answer_error(a.call, why.into());
+            }
             let plugin = a.plugin.as_deref().and_then(|id| crate::plugins().into_iter().find(|p| p.manifest.id == id && p.guest.remote()));
             let Some(plugin) = plugin else { return answer_error(a.call, "unknown plugin".into()) };
             let inv = Invocation {
@@ -257,6 +298,9 @@ pub fn answer(s: &mut Session, a: Answer) {
     })();
     match r {
         Ok((results, reads)) => {
+            if !a.more {
+                end(&a.call);
+            }
             if a.more {
                 lock(s);
                 p.rev = s.rev();

@@ -1082,6 +1082,12 @@ fn run_needs_allowlist_and_document_access() {
         "plugin.other.cmd",
         "review.acceptAll",
         "review.rejectAll",
+        "insert.field",
+        "fields.setCode",
+        "review.addToDictionary",
+        "review.accept",
+        "review.reject",
+        "review.restrict",
         "document.setText",
         "",
         "text",
@@ -1110,6 +1116,13 @@ fn run_refuses_path_like_params_at_any_depth() {
         json!({"path": [-1]}),
         json!({"path": {"0": 1}}),
         json!({"href": "file:///c:/x"}),
+        // hyperlink targets and tracked-change attribution in CharProps, also inside styles.*
+        json!({"props": {"link": "file://host/s/x"}}),
+        json!({"style": "S", "chr": {"Link": "#a"}}),
+        json!({"props": {"ins": 3}}),
+        json!({"props": {"del": 3}}),
+        json!({"props": {"fmtChange": {"rev": 1}}}),
+        json!({"props": {"numChange": {"rev": 1}}}),
     ] {
         assert!(
             matches!(
