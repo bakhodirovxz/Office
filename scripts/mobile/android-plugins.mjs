@@ -2,8 +2,9 @@
 //   translit  uz-translit (bundled) toCyrillic then toLatin on scripts/mobile/fixtures/phone-ux.docx, run from the editor (`wordcraft:run`), saved and pulled
 //   install   Plugins page: Install from file (the system picker) of a test package, enable, restart; the SHA-256 record in the app's private files
 //   disable   Plugins page: turn uz-translit off, restart: the host is no longer loaded
+//   cols      (WP10) M3 as an abort, and M5 (deny) and R1 (many) from the editor, with the document compared before and after; needs the test packages built with the current make-test-packages.py
 //   rows      the section 5.4 rows that apply to this container (M1 M2 M3 M4 M6 M7 M9 M11 + no network at all) with the WP5 test plugin
-// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|all> [--pkgs <dir of make-test-packages.py output>]
+// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|cols|all> [--pkgs <dir of make-test-packages.py output>] [--ev <evidence subdir, default p7-android>]
 // Evidence: a JSON and screenshots per item in docs/phase7/evidence/android/, recordings in $P6_DIR/evidence/p7-android/ (SHA lines printed for SHA256SUMS).
 import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
@@ -16,7 +17,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2), what = args[0] ?? 'all';
 const opt = (n, d) => (args.includes(n) ? args[args.indexOf(n) + 1] : d);
 const S = L.serial('HRM_Pixel_8'), PKG = 'app.hoshiya.suite', ACT = `${PKG}/office.android.MainActivity`;
-const SMALL = path.join(ROOT, 'docs/phase7/evidence/android'), BIG = path.join(L.EVIDENCE_BIG, 'p7-android');
+const SMALL = path.join(ROOT, 'docs/phase7/evidence/android'), EV = args.includes('--ev') ? args[args.indexOf('--ev') + 1] : 'p7-android', BIG = path.join(L.EVIDENCE_BIG, EV);
 const PKGS = path.resolve(opt('--pkgs', 'E:/office-target/tmp/p7-android/pkgs'));
 fs.mkdirSync(SMALL, { recursive: true }); fs.mkdirSync(BIG, { recursive: true });
 const DOC = '/sdcard/Download/phone-ux.docx', MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -25,7 +26,7 @@ const log = (...a) => console.log(...a);
 const shot = (n) => { fs.writeFileSync(path.join(SMALL, `${n}.png`), L.screencap(S)); return `${n}.png`; };
 async function record(name, fn) {
   const rec = L.startRecord(S); await L.sleep(1500);
-  try { return await fn(); } finally { const r = await L.stopRecord(S, rec, path.join(BIG, `${name}.mp4`)); sums.push(`${r.sha256}  p7-android/${name}.mp4  (${new Date().toISOString().slice(0, 16)}, ${r.bytes} bytes)`); }
+  try { return await fn(); } finally { const r = await L.stopRecord(S, rec, path.join(BIG, `${name}.mp4`)); sums.push(`${r.sha256}  ${EV}/${name}.mp4  (${new Date().toISOString().slice(0, 16)}, ${r.bytes} bytes)`); }
 }
 const item = (name, pass, details, shots = []) => {
   fs.writeFileSync(path.join(SMALL, `${name}.json`), JSON.stringify({ item: name, pass, device: 'HRM_Pixel_8 (emulator), 540x1200 rig', run: new Date().toISOString(), details, screenshots: shots }, null, 2));
@@ -239,10 +240,54 @@ async function rows() {
   });
 }
 
+
+// ---- WP10: the rows that need the editor (M5, R1) and M3 as an abort ----
+async function cols() {
+  pushPackages(); await L.sleep(5000);
+  await record('columns', async () => {
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'pm clear ' + PKG);   // an older stored copy of the fixture has no deny or many
+    let p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    const have = await p.ev('PluginHost.last.plugins.map((x) => x.d.id)');
+    await pluginsPage(p);
+    // the packages are (re)installed from the picker: the fixture gained the deny and many commands, and a stored copy of an older one has neither
+    for (const [id, name] of [['test.host', 'Test plugin'], ['test.nonet', 'No network']]) { if (!have.includes(id)) { await pickPackage(p, `${id}-1.0.0.zip`); await enableRow(p, name); await L.sleep(1500); } }
+    p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    const H = 'PluginHost.last', say = () => p.ev("document.getElementById('ed-status').textContent");
+    const cmds = await p.ev(`${H}.plugins.find((x) => x.d.id === 'test.host').m.command.map((c) => c.id)`);
+    // M3: a fetch outside the manifest's list ends the invocation (the plugin is not resumed), audited
+    const n = (await p.ev(`${H}.audit.length`)), l0 = await p.ev(`${H}.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
+    await p.ev(`${H}.invoke('test.nonet', 'net')`); await L.sleep(1500);
+    const a3 = JSON.parse(await p.ev(`JSON.stringify(${H}.audit.slice(${n}))`)), l1 = await p.ev(`${H}.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
+    item('M3-abort', a3.length === 1 && a3[0].kind === 'network.refused' && /network not permitted/.test(await say()) && l1 === l0, { audit: a3, status: await say(), resume_calls_before_after: [l0, l1], note: 'no INTERNET permission either; nothing leaves the device' });
+    // M5 and R1 from the editor on the open document; the saved file must carry the text it had
+    const orig = execFileSync('python3', ['-X', 'utf8', '-I', '-c', 'import sys,zipfile,re;x=zipfile.ZipFile(sys.argv[1]).read("word/document.xml").decode("utf8");print(" ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>",x)))', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx')], { encoding: 'utf8' });
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'rm -f ' + DOC);
+    L.adb(S, 'push', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx'), DOC);
+    L.sh(S, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${DOC}`); await L.sleep(5000);
+    L.sh(S, `am start -a android.intent.action.VIEW -d ${await mediaUri()} -t ${MIME} --grant-read-uri-permission --grant-write-uri-permission -n ${ACT}`);
+    p = await webview();
+    if (!(await ready(p))) throw new Error('the editor did not become ready with the plugin');
+    await L.sleep(8000);
+    const shots = [shot('M5-0-opened')];
+    const seen = {};
+    for (const [row, cmd, why, shotName] of [['M5-saveAs-refused', 'deny', 'refused', 'M5-1-refused'], ['R1-reads-cap', 'many', 'bad next', 'R1-1-refused']]) {
+      let ok = false, s = '';
+      for (let i = 0; i < 20 && !ok; i++) { await runCmd(p, `plugin.test.host.${cmd}`); await L.sleep(1500); s = await say(); ok = /could not finish/.test(s) && s.includes(why); }
+      shots.push(shot(shotName));
+      seen[row] = { ok, status: s, audit_tail: JSON.parse(await p.ev('JSON.stringify(PluginHost.last.audit.slice(-3))')) };
+    }
+    await save('cols'); const after = docText('cols-after.docx');
+    const same = after.trim() === orig.trim();
+    item('M5-saveAs-refused', seen['M5-saveAs-refused'].ok && same, { ...seen['M5-saveAs-refused'], commands_in_manifest: cmds, document_unchanged_after_save: same, text: after.slice(0, 200) }, shots.slice(0, 2));
+    item('R1-reads-cap', seen['R1-reads-cap'].ok && same, { ...seen['R1-reads-cap'], document_unchanged_after_save: same }, [shots[2]]);
+  });
+}
+
 if (what === 'translit' || what === 'all') await translit();
 if (what === 'install' || what === 'all') await install();
 if (what === 'rows' || what === 'all') await rows();
 if (what === 'disable' || what === 'all') await disable();
+if (what === 'cols') await cols();
 log('SHA lines:\n' + sums.join('\n'));
 fs.appendFileSync(path.join(BIG, 'SHA256SUMS.part'), sums.join('\n') + '\n');
 process.exit(0);   // the CDP sockets keep node alive

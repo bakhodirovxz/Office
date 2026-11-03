@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Packs the page-host test plugin of ci/plugins/webhost-test (WP5) into install-from-file packages for the Android run (WP9):
-test-host (all six commands, a network permission it can never use on Android), test-bad-import (M1), test-bad-export (M2) and test-nonet (M3: no network in the manifest).
+test-host (all eight commands, a network permission it can never use on Android), test-bad-import (M1), test-bad-export (M2) and test-nonet (M3: no network in the manifest).
 Usage: make-test-packages.py <out-dir>   (our code, MIT OR Apache-2.0)"""
 import sys, zipfile
 from pathlib import Path
 
 src = Path(__file__).resolve().parents[3] / "ci/plugins/webhost-test"
 out = Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
-CMDS = ["hello", "net", "spin", "grow", "xss", "edit"]
+CMDS = ["hello", "net", "spin", "grow", "xss", "edit", "deny", "many"]
 
 def toml(pid, name, net='["https://example.org"]'):
     t = f'id = "{pid}"\nversion = "1.0.0"\napi = 1\napps = ["docs"]\npublisher = "Test publisher"\nname.en = "{name}"\nname.ru = "{name}"\nname.uz-Latn = "{name}"\nname.uz-Cyrl = "{name}"\n\n'
