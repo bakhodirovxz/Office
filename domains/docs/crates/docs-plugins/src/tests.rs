@@ -431,6 +431,18 @@ fn read_actions_return_blobs_for_the_next_round() {
     assert_eq!(*n.lock().unwrap(), 3);
 }
 
+#[test]
+fn next_reads_need_the_document_permission() {
+    let _t = turn();
+    let toml = MANIFEST.replace("document = \"write\"", "document = \"none\"").replace("reads = [\"textmap\"]", "reads = [\"none\"]");
+    let p = plugin_with(&toml, |_, _| {
+        answer(vec![], Some(vec![ReadReq { what: ReadWhat::Selection, scope: None, index: None }]), vec![])
+    });
+    let mut s = setup(p, &["abc"]);
+    let e = go(&mut s).unwrap_err().to_string();
+    assert!(e.contains("document permission"), "{e}");
+}
+
 struct FakeNet;
 
 impl Fetch for FakeNet {

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use plugin_api::action::{Action, Answer, Call, CallKind, Denied, Grants, ReadReq, ReadWhat, Scope as ApiScope, Widget};
-use plugin_api::manifest::{Event, ReadKind};
+use plugin_api::manifest::{DocAccess, Event, ReadKind};
 use plugin_api::textmap::{Apply, TextMap};
 use plugin_api::wire::{MAX_ROUNDS, Message};
 use serde_json::{Map, Value, json};
@@ -169,6 +169,10 @@ impl Run {
 
     /// Perform one read: the blob goes into `blobs`, its index under the read's name in `reads`.
     fn read(&mut self, s: &mut Session, req: &ReadReq, blobs: &mut Vec<Vec<u8>>, reads: &mut BTreeMap<String, u32>) -> Result<u32, CmdError> {
+        // Every read goes through here (command `reads`, `next.reads`, the `read` action): none without `document = read` or `write`.
+        if self.inv.plugin.manifest.permissions.document < DocAccess::Read {
+            return fail("plugin action refused: reading the document needs the document permission");
+        }
         let (name, bytes) = match req.what {
             ReadWhat::Textmap => {
                 let scope = req.scope.map(scope_api).unwrap_or_else(|| scope_of(self.inv.params.get("scope").and_then(Value::as_str)));
