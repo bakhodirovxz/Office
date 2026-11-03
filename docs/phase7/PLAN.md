@@ -492,6 +492,7 @@ the Phase 7 go; **[owner]** = needs an owner decision.
 - **Done-check:** docs-translit tests and `preserve` tests identical before/after (log both); docs-plugins tests with a fake
   in-process guest (no wasm) for every action; preset test that plugin buttons appear and disappear; `verify-queue.sh wordcraft`.
 - **Estimate:** 6 (4/6/9). **Tier:** builder; architect review of the refactor and the executor.
+- **Done in `p7-native` (fetch):** `crates/plugin-host/src/net.rs`, table test `net::tests::address_table`; the "admin allowed private targets" exception is not built (always refused). Original TODO:
 - **TODO from WP2 (fetch):** `plugin-host` does not perform `fetch` (it only runs the module). The adapter that executes actions owns it
   (the desktop one: WP3's executor, with the HTTP client the app already has). It must, before connecting: require plain `https`, resolve the
   host name, refuse loopback, private (10/8, 172.16/12, 192.168/16), link-local (169.254/16 incl. the cloud metadata address), CGNAT

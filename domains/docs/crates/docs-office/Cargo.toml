@@ -29,6 +29,9 @@ wasm-bindgen = "0.2"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 suite-core = { path = "../../../../crates/suite-core" }
 xdfu-core = { path = "../../../../crates/xdfu-core" }
+# Phase 7: the native plugin host (wasmtime) behind docs_plugins::Guest. Not in the wasm32 build.
+plugin-host = { path = "../../../../crates/plugin-host" }
+plugin-api = { path = "../../../../crates/plugin-api" }
 
 [dev-dependencies]
 # reads the text of an exported PDF in the XDFU tests (the version wordcraft crates/pdf uses)

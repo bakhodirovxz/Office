@@ -6,9 +6,11 @@
 //! - [`Session`] is one invocation: a fresh store and instance (memory capped at `memory_mb`), one epoch deadline per round.
 //!   [`Session::run`] is the round loop (16 rounds at most).
 //!
-//! Not here (by design): the `fetch` action and its private-address filtering. The fetch runs in the adapter that applies
-//! actions; see the TODO in `docs/phase7/PLAN.md` WP3. No WASI is linked, so a plugin has no other way out of its memory.
+//! [`net`] is the host side of the `fetch` action (granted origins, address filter, TLS); the adapter that applies actions calls it.
+//! No WASI is linked, so a plugin has no other way out of its memory.
 #![forbid(unsafe_code)]
+
+pub mod net;
 
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};

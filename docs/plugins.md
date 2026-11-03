@@ -153,6 +153,13 @@ call can only answer with `ui.panel` and `ui.status`; it cannot read or change t
 - **Network**: per origin. In server mode only the admin grants; in local mode the user is asked once per origin; on the
   Android local app never. The manifest cannot ask for an IP address or `localhost`; the host also refuses to connect to a
   private address behind a public name unless the admin allowed it.
+- **Native fetch** (`crates/plugin-host/src/net.rs`, used by the desktop and CLI hosts through `docs-office::plugin_native`): only a granted
+  origin, plain https; the name is resolved in the host and one refused address among the answers refuses the name (loopback, 10/8,
+  172.16/12, 192.168/16, 169.254/16, CGNAT 100.64/10, unspecified, multicast, reserved v4; v6 loopback, ULA, link-local, multicast
+  and every v6 form that carries a v4 address, judged by that address); the connection goes to the checked address, TLS uses the
+  operating system's roots; redirects are followed inside the same origin only (3 hops, each resolved and checked again); 10 s
+  and 1 MiB per call; the answer is `{status, body}`. The admin switch for private targets named in the PLAN is not built: private
+  targets are always refused.
 - **Command allowlist** (deny by default; the data is `plugin_api::allow`). Allowed families: `caret.`, `select.`, `text.`,
   `format.`, `font.`, `para.`, `styles.`, `list.`, `table.`, `fields.`, `developer.`, `insert.`, `review.`, minus the named
   exceptions, plus the reads `document.text`, `document.paragraph`, `document.selection`, `document.inspect`. Never allowed:
