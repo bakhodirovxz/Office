@@ -336,6 +336,10 @@ impl Machine {
         {
             let mut ui = run.inv.plugin.ui.lock().unwrap_or_else(|e| e.into_inner());
             for (id, widgets) in std::mem::take(&mut run.panels) {
+                // An event refreshes a panel that is open; it never opens one (a caret move must not pop a panel up).
+                if run.inv.kind == CallKind::Event && !ui.panels.contains_key(&id) {
+                    continue;
+                }
                 if widgets.is_empty() {
                     ui.panels.remove(&id);
                 } else {

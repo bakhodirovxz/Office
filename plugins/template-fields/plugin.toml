@@ -1,0 +1,70 @@
+id = "template-fields"
+version = "1.0.0"
+api = 1
+apps = ["docs"]
+publisher = "First-party"
+events = ["selectionChanged"]
+name.en = "Template fields"
+name.ru = "Поля шаблона"
+name.uz-Latn = "Shablon maydonlari"
+name.uz-Cyrl = "Шаблон майдонлари"
+
+[permissions]
+document = "write"
+memory_mb = 16
+
+[[command]]
+id = "open"
+label.en = "Template fields"
+label.ru = "Поля шаблона"
+label.uz-Latn = "Shablon maydonlari"
+label.uz-Cyrl = "Шаблон майдонлари"
+reads = ["none"]
+
+[[command]]
+id = "check"
+label.en = "Check fields"
+label.ru = "Проверить поля"
+label.uz-Latn = "Maydonlarni tekshirish"
+label.uz-Cyrl = "Майдонларни текшириш"
+reads = ["none"]
+
+[[toolbar]]
+command = "open"
+icon = "fields"
+group.en = "Fields"
+group.ru = "Поля"
+group.uz-Latn = "Maydonlar"
+group.uz-Cyrl = "Майдонлар"
+
+[[menu]]
+command = "open"
+place = "tools"
+group.en = "Fields"
+group.ru = "Поля"
+group.uz-Latn = "Maydonlar"
+group.uz-Cyrl = "Майдонлар"
+
+[[menu]]
+command = "check"
+place = "tools"
+group.en = "Fields"
+group.ru = "Поля"
+group.uz-Latn = "Maydonlar"
+group.uz-Cyrl = "Майдонлар"
+
+[[panel]]
+id = "fields"
+title.en = "Fields"
+title.ru = "Поля"
+title.uz-Latn = "Maydonlar"
+title.uz-Cyrl = "Майдонлар"
+
+# The default list is synthetic. The administrator (per provider) or the user (local mode) replaces `fields` with the real
+# names; `kind` is "text" (a plain text content control tagged `name`) or "bookmark" (a bookmark `name` around the label).
+[settings]
+fields = [
+  { name = "field_a", label = "Sample text", kind = "text" },
+  { name = "field_b", label = "Sample date", kind = "text" },
+  { name = "mark_a", label = "Sample mark", kind = "bookmark" },
+]

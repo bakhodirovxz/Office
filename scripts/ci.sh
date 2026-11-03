@@ -536,8 +536,11 @@ job_translit_perf() {
 job_plugins() {
   local rc=0
   bstep plugin-pack env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack uz-translit || return 1
-  bstep plugin-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-sdk -p uz-translit-plugin || rc=1
+  bstep plugin-pack-fields env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack template-fields || return 1
+  bstep plugin-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-sdk -p uz-translit-plugin -p template-fields-plugin || rc=1
   bstep plugin-matrix env UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test plugin_matrix -- --nocapture || rc=1
+  # plugin #2 (WP7): insert, highlight, check and the docx round trip with the real module in the native host
+  bstep plugin-fields env TEMPLATE_FIELDS_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_fields_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test fields || rc=1
   return $rc
 }
 
