@@ -431,6 +431,31 @@ fn read_actions_return_blobs_for_the_next_round() {
     assert_eq!(*n.lock().unwrap(), 3);
 }
 
+#[test]
+fn more_than_16_reads_in_a_round_are_refused_before_any_is_done() {
+    let _t = turn();
+    let reads = |n: usize| vec![ReadReq { what: ReadWhat::Textmap, scope: Some(ApiScope::Document), index: None }; n];
+    for n in [17, 5000] {
+        crate::clear();
+        let p = plugin(move |call, _| match call.kind {
+            CallKind::Resume => answer(vec![], None, vec![]),
+            _ => answer(vec![insert("X")], Some(reads(n)), vec![]),
+        });
+        let mut s = setup(p, &["abc"]);
+        let before = s.doc.clone();
+        assert!(go(&mut s).is_err(), "{n} reads");
+        assert_eq!(s.doc, before, "the insert of the round is taken back");
+    }
+    // 16 are fine
+    crate::clear();
+    let p = plugin(move |call, _| match call.kind {
+        CallKind::Resume => answer(vec![], None, vec![]),
+        _ => answer(vec![], Some(reads(16)), vec![]),
+    });
+    let mut s = setup(p, &["abc"]);
+    go(&mut s).unwrap();
+}
+
 struct FakeNet;
 
 impl Fetch for FakeNet {
