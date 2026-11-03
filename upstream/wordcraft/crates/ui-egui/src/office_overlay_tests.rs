@@ -190,3 +190,80 @@ fn web_theme_param_keeps_own_on_garbage() {
         assert_eq!(o::theme_at_start(own, Some("dark")).code(), "dark");
     }
 }
+
+/// The media parts of a docx package: name -> bytes.
+fn media_parts(docx: &[u8]) -> std::collections::BTreeMap<String, Vec<u8>> {
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(docx)).expect("a zip package");
+    let mut out = std::collections::BTreeMap::new();
+    for i in 0..zip.len() {
+        let mut f = zip.by_index(i).unwrap();
+        if f.name().starts_with("word/media/") {
+            let mut b = Vec::new();
+            std::io::Read::read_to_end(&mut f, &mut b).unwrap();
+            out.insert(f.name().to_string(), b);
+        }
+    }
+    out
+}
+
+/// wordcraft/0146 (phase 6 WP12): the payload of `wordcraft:autosave` and an explicit Save of an opened, edited document both keep its
+/// picture, byte for byte, because both are the same writer over the same document. The WP12 runs' 5,752 B payloads without the picture
+/// were faithful: the picture was no longer in the document (taps on the emulator had moved it and the typing then replaced it, as a
+/// typed key replaces a selected picture); this test also pins that both outputs drop it alike then.
+#[test]
+fn autosave_and_save_keep_the_picture_of_an_opened_document() {
+    use serde_json::json;
+    // A docx like the WP12 fixture (scripts/mobile/fixtures/phone-ux.docx): a heading, text, a picture of about 50 kB, text.
+    let png = {
+        let img = image::RgbaImage::from_fn(160, 100, |x, y| image::Rgba([(x * 7 ^ y * 13) as u8, (x * y) as u8, (x + y * 3) as u8, 255]));
+        let mut b = Vec::new();
+        image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut b), image::ImageFormat::Png).unwrap();
+        b
+    };
+    let mut src = crate::WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+    src.run("text.insert", json!({"text": "Phone reading test\nSalom dunyo.\n"})).unwrap();
+    src.run("insert.picture", json!({"data": wordcraft_engine::cmd::insert::base64_encode(&png), "width": 160})).unwrap();
+    let file = wordcraft_engine::io::save_bytes("phone-ux.docx", &src.session.doc).unwrap();
+    assert_eq!(media_parts(&file).into_values().collect::<Vec<_>>(), vec![png.clone()], "the source file has the picture");
+
+    // Opened as the web host opens `wordcraft:open` (the inbox), edited at the start of the heading.
+    let mut a = crate::WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+    a.services.inbox = Some(std::sync::Arc::new(std::sync::Mutex::new(vec![("phone-ux.docx".to_string(), file)])));
+    a.drain_inbox();
+    a.session.sel = wordcraft_engine::Selection::caret(wordcraft_doc::Pos::body(0, 0));
+    a.run("text.insert", json!({"text": "Lifecycle тест "})).unwrap();
+    assert!(a.session.dirty);
+
+    let auto = o::autosave_bytes(&a, "phone-ux.docx").unwrap();
+    let saved = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let sink = saved.clone();
+    a.services.download = Some(Box::new(move |_: &str, b: &[u8]| {
+        *sink.lock().unwrap() = b.to_vec();
+        Ok(())
+    }));
+    a.execute("file.save", json!({})).unwrap();
+    let saved = saved.lock().unwrap().clone();
+    for (what, bytes) in [("autosave", &auto), ("save", &saved)] {
+        assert_eq!(media_parts(bytes).into_values().collect::<Vec<_>>(), vec![png.clone()], "{what} keeps the picture");
+        let back = wordcraft_engine::io::open_bytes("phone-ux.docx", bytes).unwrap();
+        assert!(back.plain_text(wordcraft_doc::StoryRef::Body).starts_with("Lifecycle тест Phone reading test"), "{what} has the edit");
+    }
+
+    // A typed key over the selected picture replaces it (Word does the same): then neither output has it, alike.
+    let mut b = crate::WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+    b.services.inbox = Some(std::sync::Arc::new(std::sync::Mutex::new(vec![("phone-ux.docx".to_string(), saved.clone())])));
+    b.drain_inbox();
+    let mut at = None;
+    for (i, block) in b.session.doc.body.iter().enumerate() {
+        if let wordcraft_doc::Block::Para(p) = block.as_ref()
+            && let Some(&off) = p.object_offsets().first()
+        {
+            at = Some(wordcraft_doc::Pos::body(i, off));
+        }
+    }
+    let pos = at.expect("the picture's paragraph");
+    let end = wordcraft_doc::Pos { off: pos.off + wordcraft_doc::para::OBJ.len_utf8(), ..pos.clone() };
+    b.run("select.range", json!({"anchor": pos, "focus": end})).unwrap();
+    b.run("text.insert", json!({"text": "E"})).unwrap();
+    assert!(media_parts(&o::autosave_bytes(&b, "phone-ux.docx").unwrap()).is_empty(), "the picture was replaced");
+}

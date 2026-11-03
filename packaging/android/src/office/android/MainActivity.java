@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -28,6 +29,8 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -78,6 +81,16 @@ public class MainActivity extends Activity {
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
         edgeToEdge();
+        setUp();
+        if (b == null) {
+            web.loadUrl(ORIGIN);
+            take(getIntent());
+        } else {
+            web.restoreState(b);   // a recreated activity (process death): the page restarts; the shell reopens the recovery file (WP12)
+        }
+    }
+
+    void setUp() {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -91,12 +104,6 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new Chrome());
         web.setFocusable(true);
         web.setFocusableInTouchMode(true);
-        if (b == null) {
-            web.loadUrl(ORIGIN);
-            take(getIntent());
-        } else {
-            web.restoreState(b);   // a recreated activity (process death): the page restarts, the document in the editor is not kept (WP12)
-        }
     }
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
@@ -214,6 +221,41 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { /* JSONObject.put only throws on NaN */ }
     }
 
+    // ---- recovery (WP12): the editor's autosave of an unsaved document, one file per editor, app-private; the shell deletes it once saved or discarded ----
+    /** files/recover/<app>: the document's name, a newline, its bytes. null for an unknown editor. */
+    File recoverFile(String app) { return DISTS.containsKey(app) ? new File(new File(getFilesDir(), "recover"), app) : null; }
+
+    /** Written beside and renamed over the old one, so a kill mid-write leaves the previous autosave whole. */
+    void autosave(String app, String name, byte[] bytes) throws IOException {
+        File f = recoverFile(app);
+        String n = name.substring(Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\')) + 1).replace('\n', ' ');
+        if (f == null || n.isEmpty()) throw new IOException("bad autosave " + app);
+        File tmp = new File(f.getParentFile(), app + ".tmp");
+        f.getParentFile().mkdirs();
+        try (FileOutputStream out = new FileOutputStream(tmp)) {
+            out.write((n + "\n").getBytes(StandardCharsets.UTF_8));
+            out.write(bytes);
+            out.getFD().sync();
+        }
+        if (!tmp.renameTo(f)) throw new IOException("cannot keep the autosave of " + n);
+    }
+
+    /** GET /__recover/<app>: 200 with the bytes and the name in X-Name, or 204. */
+    WebResourceResponse recovered(String app) {
+        File f = recoverFile(app);
+        if (f == null || !f.isFile()) return status(204, "No Content");
+        try (InputStream in = new java.io.FileInputStream(f)) {
+            ByteArrayOutputStream name = new ByteArrayOutputStream();
+            for (int c; (c = in.read()) >= 0 && c != '\n'; ) name.write(c);
+            ByteArrayOutputStream body = new ByteArrayOutputStream();
+            byte[] buf = new byte[1 << 16];
+            for (int n; (n = in.read(buf)) > 0; ) body.write(buf, 0, n);
+            Map<String, String> h = new HashMap<>();
+            h.put("X-Name", Uri.encode(name.toString("UTF-8"))); h.put("Cache-Control", "no-store"); h.put("Cross-Origin-Resource-Policy", "same-origin");
+            return new WebResourceResponse("application/octet-stream", null, 200, "OK", h, new ByteArrayInputStream(body.toByteArray()));
+        } catch (IOException e) { return status(204, "No Content"); }
+    }
+
     @Override protected void onActivityResult(int req, int res, Intent data) {
         Uri u = res == RESULT_OK && data != null ? data.getData() : null;
         if (req == REQ_OPEN) { if (u != null) load(u); }
@@ -252,6 +294,16 @@ public class MainActivity extends Activity {
                 startActivityForResult(i, REQ_OPEN);
             });
         }
+        /** The editor's autosave (base64), kept in an app-private file until discard(). A failure is only logged: the document stays open and dirty. */
+        @JavascriptInterface public void autosave(String app, String name, String base64) {
+            try { MainActivity.this.autosave(app, name, Base64.decode(base64, Base64.DEFAULT)); }
+            catch (Exception e) { android.util.Log.w("SuiteHost", "autosave: " + e.getMessage()); }
+        }
+        /** The document was saved or the user discarded its unsaved changes. */
+        @JavascriptInterface public void discard(String app) {
+            File f = recoverFile(app);
+            if (f != null) f.delete();
+        }
         /** bytes as base64 (the call crosses the JS bridge as a string). The answer is hostSaved({ok, name, error}) in the page. */
         @JavascriptInterface public void save(String name, String base64) {
             try { MainActivity.this.save(name, Base64.decode(base64, Base64.DEFAULT)); }
@@ -262,12 +314,24 @@ public class MainActivity extends Activity {
     // ---- the virtual origin: shell and dists from assets ----
     class Client extends WebViewClient {
         @Override public void onPageFinished(WebView v, String url) { v.requestFocus(); }
+        // A crashed or killed renderer would take the app down: a new WebView loads the shell, which reopens the recovery file.
+        @Override public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
+            if (v != web) return true;
+            root.removeView(web);
+            web.destroy();
+            web = new WebView(MainActivity.this);
+            root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+            setUp();
+            web.loadUrl(ORIGIN);
+            return true;
+        }
         @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) { return !HOST.equals(r.getUrl().getHost()); }   // no other page, ever
         @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
             Uri u = r.getUrl();
             if (!HOST.equals(u.getHost()) || !"GET".equals(r.getMethod())) return status(404, "Not Found");
             String p = u.getPath() == null ? "/" : u.getPath();
             if (p.equals("/__open")) return opened();
+            if (p.startsWith("/__recover/")) return recovered(p.substring(11));
             String asset;
             if (p.equals("/")) asset = "shell/index.html";
             else if (p.equals("/shell-config.json")) asset = "shell-config.json";
