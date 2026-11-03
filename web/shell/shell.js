@@ -152,6 +152,7 @@
     const f = Object.values(S.frames).find((x) => x.el.contentWindow === ev.source);
     const d = ev.data;
     if (!f || !d || typeof d.type !== 'string' || !d.type.startsWith(f.app.prefix + ':')) return;
+    if (S.plg) S.plg.onMessage(f, d);
     switch (d.type.slice(f.app.prefix.length + 1)) {
       case 'ready': f.ready = true; if (!f.opening) $('ed-status').textContent = ''; if (f.pending) post(f, f.pending); break;
       case 'opened': if (f.opening) { f.opening = ''; $('ed-status').textContent = ''; cover(); } break;
@@ -300,6 +301,8 @@
     const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };
     [S.cfg, S.i18n] = await Promise.all([get('/shell-config.json'), get('shell/i18n.json')]);
     S.templates = await get('shell/templates.json').catch(() => []);
+    // plugins (PLAN phase 7): the page host is fetched only when one is enabled (shell-config.json lists them)
+    if ((S.cfg.plugins || []).length) document.head.append(el('script', { src: 'shell/plugins/host.js', onload: () => { S.plg = PluginHost.make(S, (m) => { $('ed-status').textContent = m; if ($('editor').classList.contains('phone')) toast(m); }, $('frames')); } }));
     $('back').after(pal.button);   // before the first render, which fills its text
     const nav = (navigator.language || 'en').toLowerCase();
     S.mode = window.ipc ? 'desktop' : session('cv.token') || S.cfg.local ? 'names' : 'web';

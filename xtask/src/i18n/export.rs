@@ -402,10 +402,19 @@ const SHELL_LOCALES: [(&str, &str); 4] = [
 
 /// `web/shell/i18n.json` from `i18n/shell.tsv`, same shape and fallback rules as the converter page.
 pub fn shell_json(root: &Path, mode: Mode) -> Result<String, String> {
+    scope_page_json(root, mode, "shell")
+}
+
+/// `web/plugins/i18n.json` from `i18n/plugins.tsv`: the plugin page host's own catalog, loaded with it (Phase 7 WP5), so the shell's budget does not carry it.
+pub fn plugins_json(root: &Path, mode: Mode) -> Result<String, String> {
+    scope_page_json(root, mode, "plugins")
+}
+
+fn scope_page_json(root: &Path, mode: Mode, scope: &str) -> Result<String, String> {
     let dir = root.join("i18n");
     Ok(build_scope_json(
         &Catalog::load(&dir)?,
-        "shell",
+        scope,
         &SHELL_LOCALES,
         &Chains::load(&dir)?,
         mode,
@@ -1283,6 +1292,19 @@ mod tests {
             "icon.png is stale"
         );
         assert!(icon.starts_with(b"\x89PNG"));
+    }
+
+    #[test]
+    fn the_committed_plugins_catalog_is_current() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let json = plugins_json(root, Mode::Review).unwrap();
+        let have = fs::read_to_string(root.join("web/plugins/i18n.json"))
+            .unwrap()
+            .replace("\r\n", "\n");
+        assert!(
+            have == json,
+            "web/plugins/i18n.json is stale: run `cargo xt i18n export plugins --format json`"
+        );
     }
 
     #[test]

@@ -121,6 +121,24 @@ pub fn editor_csp_for(index_html: &str, ancestors: &str) -> String {
     )
 }
 
+/// The CSP of the plugin scripts under `/shell/plugins/` (PLAN phase 7 section 5.1). A Worker's script runs under the policy of its
+/// own response: nothing may be fetched or imported from it, and WebAssembly may be compiled (the plugin module). The page host
+/// script (`host.js`) gets it too; the header does nothing for a script that a page loads.
+pub const WORKER_CSP: &str = "default-src 'none'; script-src 'wasm-unsafe-eval'";
+
+async fn worker_csp(req: Request, next: Next) -> Response {
+    let plugin_js =
+        req.uri().path().starts_with("/shell/plugins/") && req.uri().path().ends_with(".js");
+    let mut res = next.run(req).await;
+    if plugin_js {
+        res.headers_mut().insert(
+            header::CONTENT_SECURITY_POLICY,
+            HeaderValue::from_static(WORKER_CSP),
+        );
+    }
+    res
+}
+
 struct Editor {
     bare: String,
     slash: String,
@@ -303,7 +321,8 @@ pub fn router_ds(
             "/convert/",
             get(|| async { convert_api::routes::converter_page() }),
         )
-        .layer(middleware::from_fn(no_cache));
+        .layer(middleware::from_fn(no_cache))
+        .layer(middleware::from_fn(worker_csp));
     if let Some(d) = &ds {
         extra = extra.merge(d.routes());
     }

@@ -76,6 +76,7 @@
   }
 
   async function onEditor(d) {
+    if (S.plg) S.plg.onMessage(S.pf, d);
     switch (d.type.slice(S.prefix.length + 1)) {
       case 'ready':
         if (S.started) return;
@@ -306,6 +307,20 @@
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';
     document.body.appendChild(S.frame);
     addBar(app.id === 'docs');
+    if (s.plugins && s.plugins.length) loadPlugins(s.plugins, s.editor);
+  }
+
+  // Plugins (PLAN phase 7): the session answer lists the provider's plugins; the page host is fetched only then (same files as the shell, /shell/plugins/).
+  function loadPlugins(list, editor) {
+    S.pf = { app: { id: editor, prefix: S.prefix }, el: S.frame };
+    var sc = document.createElement('script');
+    sc.src = '/shell/plugins/host.js';
+    sc.onload = function () {
+      document.body.style.position = 'relative';
+      S.plg = PluginHost.make({ cfg: { plugins: list }, get lang() { return S.lang; }, frames: {} }, function (m) { status.textContent = m; status.style.display = 'block'; }, document.body);
+      if (S.started) S.plg.onMessage(S.pf, { type: S.prefix + ':ready' });
+    };
+    document.head.appendChild(sc);
   }
 
   window.addEventListener('message', function (ev) {

@@ -445,6 +445,17 @@ shell_sizes() {
   [ "$br" -gt "$max" ] && { echo "FAIL shell: brotli $br exceeds $max" | tee -a "$JOB_LOG"; return 1; }
   return 0
 }
+# The plugin page host (Phase 7 WP5): host.js + worker.js + host.css + its catalog, brotli, against [plugins] br_max. Lazy: fetched only when a plugin is enabled.
+plugins_sizes() {
+  local B=web/budgets.toml f raw=0 br=0 max
+  max=$(toml_get "$B" plugins br_max)
+  for f in web/plugins/host.js web/plugins/worker.js web/plugins/host.css web/plugins/i18n.json; do
+    raw=$((raw+$(bytes "$f"))); br=$((br+$(br_bytes "$f")))
+  done
+  printf '%-7s %-9s %12s %12s %12s %12s %12s\n' plugins src "$raw" - "$br" "$max" "$((max - br))" | tee -a "$JOB_LOG"
+  [ "$br" -gt "$max" ] && { echo "FAIL plugins: brotli $br exceeds $max" | tee -a "$JOB_LOG"; return 1; }
+  return 0
+}
 job_sizes() {
   local B=web/budgets.toml baseline=0 measure=0 rc=0 a d dist f raw gz br jsbr base dmax js_max budget head jhead
   for a in "$@"; do case "$a" in --baseline) baseline=1;; --measure-base) measure=1;; esac; done
@@ -476,7 +487,7 @@ job_sizes() {
       [ "$measure" = 1 ] && echo "MEASURED-BASE $d: set base_raw=$raw base_gzip=$gz base_br=$br js_br=$jsbr in $B (pristine dist only)" | tee -a "$JOB_LOG"
     fi
   done
-  command -v brotli >/dev/null 2>&1 && { shell_sizes || { [ $rc -lt 1 ] && rc=1; }; }
+  command -v brotli >/dev/null 2>&1 && { shell_sizes || { [ $rc -lt 1 ] && rc=1; }; plugins_sizes || { [ $rc -lt 1 ] && rc=1; }; }
   [ "$baseline" = 1 ] && DETAIL="${DETAIL:+$DETAIL; }baseline table only"
   [ "$baseline" = 0 ] && { npm_sizes || { [ $rc -lt 1 ] && rc=1; }; }
   return $rc
@@ -782,7 +793,7 @@ profile_jobs() { # prints "job args" lines
            diff_has '^services/' && echo convert
            diff_has '^sidecars/' && echo sidecars
            diff_has '^(i18n/converter\.tsv|services/convert-api/ui/)' && echo convert-ui
-           diff_has '^(web/shell/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell
+           diff_has '^(web/shell/|web/plugins/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell
            diff_has '^(services/(docserver|fake-hrm|suite-serve)/|ci/web-smoke/(playwright\.(docserver|bridge-docs)|docserver\.spec|bridge-docs\.spec)|packaging/docserver/)' && echo docserver;;
     full|nightly)
       echo "test-ours"; echo notices
