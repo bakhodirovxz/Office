@@ -5,7 +5,7 @@ use docserver::Docserver;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
-use suite_serve::Layout;
+use suite_serve::{Layout, PluginSource};
 
 const USAGE: &str = "usage: suite-serve [--config FILE] [--dist DIR] [--shell DIR] [--brand FILE]\n  --dist   the trunk dists, <domain>-web/ each (default: dist)\n  --shell  the assembled shell (scripts/shell-dist.sh; default: <dist>/shell)\n  --brand  brand/brand.toml (default: brand/brand.toml)";
 
@@ -46,6 +46,10 @@ async fn main() -> ExitCode {
         Ok(d) => d.flatten(),
         Err(e) => return convert_api::runner::refuse(e),
     };
+    let plugins = match config.as_deref().map(setup_plugins).transpose() {
+        Ok(p) => p.flatten().map(Arc::new),
+        Err(e) => return convert_api::runner::refuse(e),
+    };
     convert_api::runner::run("hoshiya-serve", config.as_deref(), move |app| match ds {
         Some((ds, internal)) => {
             ds.spawn_retry_loop();
@@ -53,9 +57,9 @@ async fn main() -> ExitCode {
             if let Some(l) = internal {
                 suite_serve::spawn_internal(&app, &ds, l);
             }
-            suite_serve::router_ds(app, &layout, cfg, Some(ds))
+            suite_serve::router_plugins(app, &layout, cfg, Some(ds), plugins)
         }
-        None => suite_serve::router(app, &layout, cfg),
+        None => suite_serve::router_plugins(app, &layout, cfg, None, plugins),
     })
     .await
 }
@@ -76,4 +80,48 @@ fn setup_docserver(path: &str) -> Result<Option<Mounted>, String> {
         .transpose()
         .map_err(|e| format!("docserver: internal listener: {e}"))?;
     Ok(Some((ds, l)))
+}
+
+/// The optional `[plugins]` section of the web host (PLAN phase 7, section 8): `dir` (the operator's folder of packages),
+/// `enabled = [ids]` and `[plugins.grants] <id> = [origins]`. The operator is the only one who enables or grants here; a package
+/// that changed since its record is refused, one without a record is accepted (the folder is the operator's).
+fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
+    let Some(t) = Settings::load(path.as_ref())?.plugins else {
+        return Ok(None);
+    };
+    let strs = |v: Option<&toml::Value>, key: &str| -> Result<Vec<String>, String> {
+        v.map_or(Ok(vec![]), |v| {
+            v.as_array()
+                .and_then(|a| a.iter().map(|x| x.as_str().map(str::to_string)).collect())
+                .ok_or(format!("plugins: {key} must be a list of strings"))
+        })
+    };
+    if let Some(k) = t
+        .keys()
+        .find(|k| !["dir", "enabled", "grants"].contains(&k.as_str()))
+    {
+        return Err(format!("plugins: unknown key {k}"));
+    }
+    let dir = t
+        .get("dir")
+        .and_then(|d| d.as_str())
+        .ok_or("plugins: dir is required")?;
+    let enabled = strs(t.get("enabled"), "enabled")?;
+    let mut grants = std::collections::BTreeMap::new();
+    for (id, v) in t
+        .get("grants")
+        .and_then(|g| g.as_table())
+        .into_iter()
+        .flatten()
+    {
+        grants.insert(id.clone(), strs(Some(v), &format!("grants.{id}"))?);
+    }
+    let state = suite_core::plugins::State { enabled, grants };
+    Ok(Some(PluginSource {
+        roots: vec![suite_core::plugins::Root {
+            dir: dir.into(),
+            machine: true,
+        }],
+        now: Box::new(move || (state.clone(), suite_core::plugins::Policy::default())),
+    }))
 }

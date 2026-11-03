@@ -34,6 +34,8 @@ aes-gcm = "0.10"
 xdfu-core = { path = "../../crates/xdfu-core" }
 # the server version store: the id API and keyed chain of suite-core history
 suite-core = { path = "../../crates/suite-core" }
+# Phase 7 WP8: the origin rule of a provider's plugin grants (the package store itself is suite-core)
+plugin-api = { path = "../../crates/plugin-api" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time"] }

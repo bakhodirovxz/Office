@@ -19,6 +19,8 @@ path = "src/main.rs"
 [dependencies]
 convert-api = { path = "../convert-api" }
 docserver = { path = "../docserver" }
+# Phase 7 WP8: the local plugin store (descriptors, integrity, grants)
+suite-core = { path = "../../crates/suite-core" }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 # fs = ServeDir/ServeFile with precompressed_br (the build writes the .br files, scripts/shell-dist.sh)

@@ -11,6 +11,9 @@ build = "build.rs"
 toml_edit = "0.22"
 serde_json = "1"
 sha2 = "0.10"
+# Phase 7 WP8: the plugin store reads and validates packages with the plugin API and reads the "Install from file" zip
+plugin-api = { path = "../plugin-api" }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 # eframe keeps pdfcraft's state in app.ron, a RON map of strings
 ron = "0.8"
 
@@ -19,4 +22,3 @@ toml_edit = "0.22"
 
 [dev-dependencies]
 roxmltree = "0.20"
-zip = { version = "9", default-features = false, features = ["deflate"] }

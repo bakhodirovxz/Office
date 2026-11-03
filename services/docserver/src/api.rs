@@ -181,7 +181,8 @@ async fn create(State(ds): Ds, cl: Cl, body: Bytes) -> Res {
     );
     json_ok(
         json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
-                   "perms": rec.perms, "title": rec.title, "expires": rec.expires}),
+                   "perms": rec.perms, "title": rec.title, "expires": rec.expires,
+                   "plugins": ds.plugin_descriptors(&rec)}),
     )
 }
 

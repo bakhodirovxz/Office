@@ -71,6 +71,18 @@ frame_origins = ["https://hr.example.org"]         # the SPA origin that may fra
 history = "session"                                # default: a key's history goes with its last session (new key per open)
 ```
 
+Plugins (Phase 7; `docs/plugins.md` 9b) are optional. The admin puts packages in a folder and lists them per provider; nothing a config token says can add one:
+
+```toml
+[docserver.plugins]
+dir = "/app/plugins"                               # <id>/<version>/plugin.toml + plugin.wasm, read at start
+# inside [[docserver.providers]]:
+# plugins = [{ id = "uz-translit", version = "1.0.0", sha256 = "<sha256 of plugin.wasm>", grant = [], settings = {} }]
+```
+
+`grant` lists the `https://host[:port]` origins the plugin may send data to (only ones its manifest declares); the wrapper page's `connect-src` is exactly those. A package that is
+missing or differs from its `sha256` is left out and audited as `plugin.refused`; `plugin.loaded` and `plugin.network` are the other audit lines.
+
 Compose service (the parts that matter): `image`, `read_only: true`, `cap_drop: [ALL]`, `tmpfs: /tmp`, a volume on `/data`, the config and
 secrets mounted read-only, a fixed IPv4 address on `backend_net` (so `internal_listen`, `internal_allow` and `trusted_proxies` can name
 addresses), no `ports`. Traefik routes the public host name to `http://<service>:8787` with `tls`. The backend is told the internal URL

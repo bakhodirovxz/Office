@@ -41,6 +41,8 @@ pub struct Settings {
     pub providers: Vec<Provider>,
     /// The `[docserver]` section, opaque here: the `docserver` crate checks it, and `suite-serve` mounts it (PLAN phase 5, WP2).
     pub docserver: Option<toml::Table>,
+    /// The `[plugins]` section, opaque here too: `suite-serve` reads `dir`, `enabled` and `grants` (PLAN phase 7, section 8).
+    pub plugins: Option<toml::Table>,
     /// server mode: the longest remaining life a token may have when it arrives (it cannot be revoked), default 12 h
     pub max_token_lifetime_s: u64,
     /// Not used since the job keys stopped being written to disk (WP7 review M5). Accepted so that an older config still loads;
@@ -111,6 +113,7 @@ impl Default for Settings {
             aud: None,
             providers: vec![],
             docserver: None,
+            plugins: None,
             max_token_lifetime_s: 12 * 3600,
             key_file: None,
             tls_cert: None,

@@ -447,6 +447,43 @@ pub fn set_toolbar_mode(mode: ToolbarMode) -> io::Result<()> {
 /// else in the file as it is. A file that does not parse is set aside first and a new one is started.
 pub fn set_in(dir: &Path, key: &str, value: &str) -> Result<(), SetError> {
     validate(key, value)?;
+    edit(dir, |doc| {
+        let new = match ty(key) {
+            Some(Ty::Int(..)) => Value::from(value.parse::<i64>().unwrap_or_default()),
+            _ => Value::from(value),
+        };
+        let mut parts: Vec<&str> = key.split('.').collect();
+        let leaf = parts.pop().ok_or(SetError::UnknownKey)?;
+        let table = table_at(doc, &parts)?;
+        table.insert(leaf, Item::Value(new));
+        Ok(())
+    })
+}
+
+/// The table at `path` (made when missing; a value of another type in the way is replaced: it was never a valid setting).
+pub(crate) fn table_at<'a>(
+    doc: &'a mut DocumentMut,
+    path: &[&str],
+) -> Result<&'a mut toml_edit::Table, SetError> {
+    let mut table = doc.as_table_mut();
+    for p in path {
+        let entry = table
+            .entry(p)
+            .or_insert_with(|| Item::Table(toml_edit::Table::new()));
+        if !entry.is_table() {
+            *entry = Item::Table(toml_edit::Table::new());
+        }
+        table = entry.as_table_mut().ok_or(SetError::UnknownKey)?;
+    }
+    Ok(table)
+}
+
+/// Reads `<dir>/settings.toml` (a file that does not parse is set aside and a new one started), lets `f` change the document and
+/// writes it back atomically. Nothing is written when `f` fails.
+pub(crate) fn edit(
+    dir: &Path,
+    f: impl FnOnce(&mut DocumentMut) -> Result<(), SetError>,
+) -> Result<(), SetError> {
     let path = dir.join(FILE_NAME);
     let read = match std::fs::metadata(&path) {
         Ok(m) if m.is_file() && m.len() <= MAX_BYTES => std::fs::read_to_string(&path)
@@ -458,25 +495,20 @@ pub fn set_in(dir: &Path, key: &str, value: &str) -> Result<(), SetError> {
         set_aside(&path, "not valid TOML", &mut Vec::new());
     }
     let mut doc = read.unwrap_or_default();
-    let new = match ty(key) {
-        Some(Ty::Int(..)) => Value::from(value.parse::<i64>().unwrap_or_default()),
-        _ => Value::from(value),
-    };
-    let mut parts: Vec<&str> = key.split('.').collect();
-    let leaf = parts.pop().ok_or(SetError::UnknownKey)?;
-    let mut table = doc.as_table_mut();
-    for p in parts {
-        let entry = table
-            .entry(p)
-            .or_insert_with(|| Item::Table(toml_edit::Table::new()));
-        if !entry.is_table() {
-            // `recent = 5` where `[recent]` belongs: the user's value was never a valid setting
-            *entry = Item::Table(toml_edit::Table::new());
-        }
-        table = entry.as_table_mut().ok_or(SetError::UnknownKey)?;
-    }
-    table.insert(leaf, Item::Value(new));
+    f(&mut doc)?;
     write_atomic(&path, doc.to_string().as_bytes()).map_err(|e| SetError::Io(e.to_string()))
+}
+
+/// The text of `<dir>/settings.toml` as a document: empty when it is missing, too large or not TOML.
+pub(crate) fn read_doc(dir: &Path) -> DocumentMut {
+    let path = dir.join(FILE_NAME);
+    match std::fs::metadata(&path) {
+        Ok(m) if m.is_file() && m.len() <= MAX_BYTES => std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or_default(),
+        _ => DocumentMut::default(),
+    }
 }
 
 fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {

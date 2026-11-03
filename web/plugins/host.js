@@ -4,7 +4,7 @@
 // `pluginActions`, `pluginResults`, `pluginEvent`, PLAN 4.6). Plugin text only ever reaches the DOM through textContent.
 //
 //   PluginHost.make(S, say, root) -> { onMessage(f, d), invoke(id, command, params) }
-//     S    { cfg: {plugins: [descriptor], pluginBudgetMs?}, lang, app? } (the shell's state object; the wrapper passes the same shape)
+//     S    { cfg: {plugins: [descriptor], pluginBudgetMs?}, lang, app?, onAudit?(x) } (the shell's state object; the wrapper passes the same shape)
 //     say  (text) shows one status line;  root: the element the panel goes into (position: relative)
 //     descriptor { id, version, sha256, wasm: same-origin URL, manifest: plugin.toml as JSON, grant?: [origins] (server mode: admin grants, no prompt),
 //                  settings? }
@@ -99,6 +99,8 @@
   }
 
   function make(S, say, root) {
+    // what the host did about the network and failures: kept here, and handed to S.onAudit (the docserver wrapper reports it to the server's audit log)
+    const note = (x) => { H.audit.push(x); try { if (S.onAudit) S.onAudit(x); } catch (_) { /* a broken sink never stops a plugin */ } };
     const H = { logs: [], audit: [], mem: {}, plugins: [], onMessage, invoke: (id, cmd, params) => start(H.plugins.find((p) => p.m.id === id), { kind: 'command', command: cmd, params: params || {} }) };
     PluginHost.last = H;
     const budget = () => Math.min(5000, Number(S.cfg.pluginBudgetMs) || 5000);   // an admin may lower it, never raise it
@@ -201,11 +203,11 @@
     }
     async function doFetch(P, a) {
       const o = originOf(a.url);
-      if (!o || !(P.m.permissions?.network || []).includes(o)) { H.audit.push({ plugin: P.d.id, kind: 'network.refused', origin: o }); return { error: 'network not permitted' }; }
+      if (!o || !(P.m.permissions?.network || []).includes(o)) { note({ plugin: P.d.id, kind: 'network.refused', origin: o }); return { error: 'network not permitted' }; }
       let req;
       try { req = checkFetch(a); } catch (e) { return { error: e.message }; }
-      if (!(await grant(P, o))) { H.audit.push({ plugin: P.d.id, kind: 'network.denied', origin: o }); return { error: 'network not permitted' }; }
-      H.audit.push({ plugin: P.d.id, kind: 'network', origin: o });
+      if (!(await grant(P, o))) { note({ plugin: P.d.id, kind: 'network.denied', origin: o }); return { error: 'network not permitted' }; }
+      note({ plugin: P.d.id, kind: 'network', origin: o });
       try {
         const r = await fetch(a.url, { ...req, credentials: 'omit', redirect: 'manual', cache: 'no-store', referrerPolicy: 'no-referrer', signal: AbortSignal.timeout(FETCH_MS) });
         if (r.type === 'opaqueredirect') return { error: 'a redirect was refused' };
@@ -279,7 +281,7 @@
         if (sent || call.fromEditor) { try { toEditor(P, 'pluginActions', { call: call.id, actions: [], more: false, abort: true }); } catch (_) { /* no editor */ } }
         await ready;
         say(e.stopped ? t('plg.timeout', { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
-        H.audit.push({ plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
+        note({ plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
       }
     }
     // invocations of one plugin never overlap

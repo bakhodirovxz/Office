@@ -135,6 +135,30 @@ pub fn check_file<'a>(
     path: &str,
     src: Source,
 ) -> Result<(&'a AppDef, PathBuf), String> {
+    let p = check_path(path, src, |e| {
+        brand.apps.iter().any(|a| a.exts.contains(&e))
+    })?;
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
+    let app = brand
+        .apps
+        .iter()
+        .find(|a| a.exts.contains(&ext.as_str()))
+        .ok_or("this file type is not supported")?;
+    Ok((app, p))
+}
+
+/// The rules every path from outside follows (review m1, m12): absolute, a drive letter (a share only from the user), no `..`, no
+/// stream or DOS device name, an extension `ext_ok` accepts, an existing file, and from the page no link to a share. The plugin
+/// package of "Install from file" uses the same rules (PLAN phase 7, section 8).
+pub fn check_path(
+    path: &str,
+    src: Source,
+    ext_ok: impl Fn(&str) -> bool,
+) -> Result<PathBuf, String> {
     let p = Path::new(path);
     if path.is_empty() || path.len() > 32767 || path.contains('\0') {
         return Err("bad path".into());
@@ -165,11 +189,9 @@ pub fn check_file<'a>(
         .and_then(|e| e.to_str())
         .map(str::to_ascii_lowercase)
         .unwrap_or_default();
-    let app = brand
-        .apps
-        .iter()
-        .find(|a| a.exts.contains(&ext.as_str()))
-        .ok_or("this file type is not supported")?;
+    if !ext_ok(&ext) {
+        return Err("this file type is not supported".into());
+    }
     if !p.is_file() {
         return Err("the file does not exist".into());
     }
@@ -177,7 +199,7 @@ pub fn check_file<'a>(
     if src == Source::Page && std::fs::canonicalize(p).is_ok_and(|c| is_network_target(&c)) {
         return Err("the path must be absolute".into());
     }
-    Ok((app, p.to_path_buf()))
+    Ok(p.to_path_buf())
 }
 
 // ---- the IPC: the only way a desktop action starts (never the HTTP port) ----
@@ -233,6 +255,23 @@ pub enum Request {
         path: String,
         a: u64,
         b: u64,
+    },
+    /// the installed plugins with their state and the machine policy (PLAN phase 7, section 8)
+    PluginsList {},
+    /// install a package (a zip) from a file; without `path` the host shows the file dialog
+    PluginsInstall {
+        #[serde(default)]
+        path: Option<String>,
+    },
+    PluginsEnable {
+        id: String,
+        enabled: bool,
+    },
+    /// allow (or withdraw) one network address the plugin manifest declares
+    PluginsGrant {
+        id: String,
+        origin: String,
+        granted: bool,
     },
     SettingsGet {},
     SettingsSet {
@@ -432,6 +471,16 @@ impl Store {
     }
 }
 
+/// The plugin store of the user whose `settings.toml` is in `settings_dir`: packages under `<settings dir>/plugins`, IT's under the
+/// machine folder.
+pub fn plugin_store(settings_dir: &Path) -> suite_core::plugins::Store {
+    suite_core::plugins::Store::new(
+        settings_dir.join("plugins"),
+        suite_core::plugins::machine_dir().map(|m| m.join("plugins")),
+        settings_dir.to_path_buf(),
+    )
+}
+
 // ---- the actions ----
 
 /// What the host does for the platform: starts an editor. Replaced in tests.
@@ -447,6 +496,8 @@ pub struct Ctx {
     pub history: Option<HStore>,
     /// where "save a copy" of a version goes
     pub downloads: PathBuf,
+    /// the plugin store (`None`: no settings folder, the plugin messages then answer with an error)
+    pub plugins: Option<suite_core::plugins::Store>,
 }
 
 type HStore = suite_core::history::Store;
@@ -455,6 +506,8 @@ pub enum Out {
     Reply(Value),
     /// the host must show the file dialog for these extensions (it blocks, so not on the UI thread)
     Pick(Vec<&'static str>),
+    /// the host must show the file dialog for a plugin package (a zip) and install the chosen file (it blocks, so not on the UI thread)
+    PickPackage,
     /// slow work (a diff of two large versions): the host runs it off the UI thread and sends what it returns
     Work(Box<dyn FnOnce() -> Value + Send>),
 }
@@ -707,6 +760,50 @@ impl Ctx {
         }))
     }
 
+    fn plugin_store(&self) -> Result<&suite_core::plugins::Store, String> {
+        self.plugins
+            .as_ref()
+            .ok_or_else(|| "plugins are not available".to_string())
+    }
+
+    /// The `plugins` reply: every package with its state, and the policy. `Err` is a refused action (`ok: false`; the list still
+    /// comes); `Ok(Some(id))` names a package that was just installed.
+    fn plugins_reply(&self, r: Result<Option<String>, String>) -> Value {
+        let mut v = json!({"type": "plugins", "ok": true, "items": [], "policy": {"user_install": false, "user_grants": false}});
+        if let Ok(s) = self.plugin_store() {
+            let pol = s.policy();
+            v["policy"] = json!({"user_install": pol.user_install, "user_grants": pol.user_grants});
+            v["items"] = s
+                .list()
+                .into_iter()
+                .map(|i| match &i.package {
+                    Some(p) => json!({"id": p.manifest.id, "version": p.manifest.version, "name": p.json["name"], "publisher": p.manifest.publisher,
+                        "apps": p.manifest.apps, "document": p.json["permissions"]["document"], "network": p.manifest.permissions.network,
+                        "grant": i.grant, "enabled": i.enabled, "machine": i.machine, "sha256": p.sha256, "problem": i.problem}),
+                    None => json!({"id": null, "name": {"en": i.name}, "enabled": false, "machine": i.machine, "problem": i.problem}),
+                })
+                .collect();
+        }
+        match r {
+            Ok(Some(id)) => v["installed"] = json!(id),
+            Ok(None) => {}
+            Err(e) => {
+                v["ok"] = json!(false);
+                v["error"] = json!(e);
+            }
+        }
+        v
+    }
+
+    /// "Install from file": the path follows the rules of `open` (a zip; from the page not a share), the store checks the package,
+    /// the policy and the sizes. The package is installed, not enabled.
+    pub fn plugins_install(&self, path: &str, src: Source) -> Value {
+        let r = check_path(path, src, |e| e == "zip")
+            .and_then(|p| self.plugin_store()?.install_zip(&p))
+            .map(|p| Some(p.manifest.id));
+        self.plugins_reply(r)
+    }
+
     pub fn handle(&self, req: Request) -> Out {
         let items = |v: Vec<Entry>| {
             v.into_iter()
@@ -794,6 +891,25 @@ impl Ctx {
                 Ok(_) => json!({"type": "history_forget", "ok": true, "path": path}),
                 Err(error) => json!({"type": "rejected", "error": error}),
             },
+            Request::PluginsList {} => self.plugins_reply(Ok(None)),
+            Request::PluginsInstall { path: None } => return Out::PickPackage,
+            Request::PluginsInstall { path: Some(p) } => self.plugins_install(&p, Source::Page),
+            Request::PluginsEnable { id, enabled } => {
+                let r = self
+                    .plugin_store()
+                    .and_then(|s| s.set_enabled(&id, enabled));
+                self.plugins_reply(r.map(|()| None))
+            }
+            Request::PluginsGrant {
+                id,
+                origin,
+                granted,
+            } => {
+                let r = self
+                    .plugin_store()
+                    .and_then(|s| s.set_grant(&id, &origin, granted));
+                self.plugins_reply(r.map(|()| None))
+            }
             Request::SettingsGet {} => json!({"type": "settings", "values": self.store.settings()}),
             Request::SettingsSet { key, value } => match self.store.set_setting(&key, &value) {
                 Ok(()) => json!({"type": "settings", "values": self.store.settings()}),
@@ -915,6 +1031,11 @@ bin = "tst-pdf"
                 ),
             )),
             downloads: d.join("downloads"),
+            plugins: Some(suite_core::plugins::Store::new(
+                d.join("plugins"),
+                Some(d.join("machine/plugins")),
+                d.join("data"),
+            )),
         };
         (c, d, log)
     }
@@ -922,7 +1043,7 @@ bin = "tst-pdf"
     fn reply(o: Out) -> Value {
         match o {
             Out::Reply(v) => v,
-            Out::Pick(_) => panic!("pick"),
+            Out::Pick(_) | Out::PickPackage => panic!("pick"),
             Out::Work(w) => w(),
         }
     }
@@ -1293,6 +1414,132 @@ bin = "tst-pdf"
         if ran == 0 {
             eprintln!("skipped: no share reachable");
         }
+    }
+
+    const PLUGIN_TOML: &str = "id = \"demo.plugin\"\nversion = \"1.0.0\"\napi = 1\napps = [\"docs\"]\npublisher = \"Test\"\n[name]\nen = \"Demo\"\n[permissions]\ndocument = \"read\"\nnetwork = [\"https://api.example.org\"]\n";
+
+    fn package_zip(path: &Path) {
+        use std::io::Write;
+        let mut w = zip::ZipWriter::new(std::fs::File::create(path).unwrap());
+        for (n, b) in [
+            ("plugin.toml", PLUGIN_TOML.as_bytes()),
+            ("plugin.wasm", b"\0asm\x01\0\0\0"),
+        ] {
+            w.start_file(n, zip::write::SimpleFileOptions::default())
+                .unwrap();
+            w.write_all(b).unwrap();
+        }
+        w.finish().unwrap();
+    }
+
+    #[test]
+    fn the_plugin_messages_follow_the_path_rules_and_the_policy() {
+        let (c, d, _log) = ctx("plugins");
+        let send = |v: Value| match c.message(&v.to_string()) {
+            Out::Reply(r) => r,
+            _ => panic!("not a reply"),
+        };
+        let l = send(json!({"type": "plugins_list"}));
+        assert_eq!(
+            (l["type"].clone(), l["ok"].clone(), l["items"].clone()),
+            (json!("plugins"), json!(true), json!([]))
+        );
+        assert_eq!(
+            l["policy"],
+            json!({"user_install": true, "user_grants": true})
+        );
+        // no path: the host asks with its file dialog
+        assert!(matches!(
+            c.message(r#"{"type":"plugins_install"}"#),
+            Out::PickPackage
+        ));
+        // the page's path follows the rules of `open`: absolute, a drive letter, no `..`, no stream, no share, a zip that exists
+        let z = d.join("p.zip");
+        package_zip(&z);
+        std::fs::write(d.join("p.txt"), b"x").unwrap();
+        let bad = |path: String, want: &str| {
+            let r = send(json!({"type": "plugins_install", "path": path}));
+            assert_eq!(r["ok"], false, "{path}");
+            assert!(r["error"].as_str().unwrap().contains(want), "{path}: {r}");
+        };
+        bad("p.zip".into(), "absolute");
+        bad(r"\\host\share\p.zip".into(), "absolute");
+        bad(format!(r"{}\..\p.zip", d.display()), "absolute");
+        bad(format!(r"{}:s.zip", z.display()), "not allowed");
+        bad(format!(r"{}\NUL.zip", d.display()), "not allowed");
+        bad(d.join("p.txt").display().to_string(), "not supported");
+        bad(
+            d.join("missing.zip").display().to_string(),
+            "does not exist",
+        );
+        assert_eq!(
+            send(json!({"type": "plugins_list"}))["items"],
+            json!([]),
+            "nothing was installed"
+        );
+        // a good path installs, and does not enable
+        let r = send(json!({"type": "plugins_install", "path": z.display().to_string()}));
+        assert_eq!(
+            (r["ok"].clone(), r["installed"].clone()),
+            (json!(true), json!("demo.plugin")),
+            "{r}"
+        );
+        let it = &r["items"][0];
+        assert_eq!(
+            (
+                it["enabled"].clone(),
+                it["machine"].clone(),
+                it["name"]["en"].clone()
+            ),
+            (json!(false), json!(false), json!("Demo"))
+        );
+        let en = send(json!({"type": "plugins_enable", "id": "demo.plugin", "enabled": true}));
+        assert_eq!(en["items"][0]["enabled"], true);
+        assert_eq!(
+            send(json!({"type": "plugins_enable", "id": "nope.nope", "enabled": true}))["ok"],
+            false
+        );
+        // a grant is one address the manifest declares
+        let g = |origin: &str, on: bool| {
+            send(
+                json!({"type": "plugins_grant", "id": "demo.plugin", "origin": origin, "granted": on}),
+            )
+        };
+        assert_eq!(g("https://evil.example.org", true)["ok"], false);
+        assert_eq!(
+            g("https://api.example.org", true)["items"][0]["grant"],
+            json!(["https://api.example.org"])
+        );
+        assert_eq!(
+            g("https://api.example.org", false)["items"][0]["grant"],
+            json!([])
+        );
+        // exact fields only
+        for body in [
+            r#"{"type":"plugins_enable","id":"demo.plugin"}"#,
+            r#"{"type":"plugins_enable","id":"demo.plugin","enabled":true,"x":1}"#,
+            r#"{"type":"plugins_install","path":"C:\\a.zip","x":1}"#,
+            r#"{"type":"plugins_grant","id":"demo.plugin","origin":"https://api.example.org"}"#,
+        ] {
+            assert_eq!(reply(c.message(body))["type"], "rejected", "{body}");
+        }
+        // the machine policy switches install and grants off
+        std::fs::create_dir_all(d.join("machine")).unwrap();
+        std::fs::write(
+            d.join("machine/policy.toml"),
+            "[plugins]\nuser_install = false\nuser_grants = false\n",
+        )
+        .unwrap();
+        let r = send(json!({"type": "plugins_install", "path": z.display().to_string()}));
+        assert!(
+            r["ok"] == false && r["error"].as_str().unwrap().contains("administrator"),
+            "{r}"
+        );
+        assert_eq!(
+            r["policy"],
+            json!({"user_install": false, "user_grants": false})
+        );
+        assert_eq!(g("https://api.example.org", true)["ok"], false);
     }
 
     #[test]

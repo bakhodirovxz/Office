@@ -44,10 +44,15 @@ impl Docserver {
     /// The strict baseline CSP with `frame-ancestors` widened to `frame_ancestors()`: for the wrapper page. Editor pages build theirs
     /// the same way in `suite-serve`.
     pub fn frame_csp(&self) -> String {
-        CSP.replace(
+        let csp = CSP.replace(
             "frame-ancestors 'none'",
             &format!("frame-ancestors {}", self.frame_ancestors()),
-        )
+        );
+        // a granted plugin `fetch` runs in this page (PLAN phase 7, 5.3): its `connect-src` is 'self' plus the granted origins, nothing else
+        match self.plugin_origins().join(" ") {
+            o if o.is_empty() => csp,
+            o => format!("{csp}; connect-src 'self' {o}"),
+        }
     }
 
     /// The public `/ds/` routes. Only `api.js` is cross-origin readable (`Cross-Origin-Resource-Policy`); only the wrapper page may be
@@ -89,6 +94,7 @@ impl Docserver {
             .merge(frame)
             .route("/ds/editor.js", get(editor_js))
             .merge(self.session_routes())
+            .merge(self.plugin_routes())
             .merge(self.history_routes())
     }
 
@@ -163,6 +169,7 @@ mod tests {
                 frame_origins: vec!["https://app.test".into()],
                 require_exp: true,
                 keep_history: false,
+                plugins: vec![],
             }],
         })
     }

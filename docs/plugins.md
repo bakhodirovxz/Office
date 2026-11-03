@@ -212,9 +212,9 @@ not served (the result says to use `next.reads`).
   starts a new Worker at the next call.
 - **CSP**: `/shell/plugins/*.js` is served with `default-src 'none'; script-src 'wasm-unsafe-eval'` (suite-serve `WORKER_CSP`; the Android
   asset loader has the same constant). A Worker takes the policy of its own response, so the plugin code cannot fetch or import anything.
-  The page's own policy (`connect-src 'self'` through `default-src`) also stops the `fetch` action to a foreign origin: **a granted
-  network origin needs `connect-src` in the page's CSP (server mode: a per-provider header) or a proxy route; WP8 decides.** Until then a
-  granted fetch ends in `{error: "the request failed"}`.
+  The page's own policy (`connect-src 'self'` through `default-src`) also stops the `fetch` action to a foreign origin, so the servers
+  (WP8, section 9b) widen it to exactly the granted origins: `connect-src 'self' <origins>` on the home page (suite-serve) and on the
+  wrapper page (docserver), nothing more.
 - **Page-side checks** (the same rules as `plugin-api`): the wire format (lengths before allocation, no trailing bytes, UTF-8), a strict
   answer (unknown action, key or widget refuses it), document access per action, events may run `ui.*` only, panels must be declared,
   `fetch` URL/method/header rules, widget text cut at 1,024 characters (64 widgets, 256 items), and every plugin string reaches the DOM
@@ -233,3 +233,41 @@ not served (the result says to use `next.reads`).
 - **Strings** are a catalog of their own (`i18n/plugins.tsv`, scope `plugins`, exported to `web/plugins/i18n.json` by `cargo xt i18n
   export plugins --format json`) so the shell's size budget does not carry them.
 - **Tests**: `ci/web-smoke/plugins-host.spec.ts` (stub editor, fixture plugin in `ci/plugins/webhost-test`).
+
+
+## 9b. Installing, enabling and admin control (Phase 7 WP8)
+
+Code: `crates/suite-core/src/plugins.rs` (the store, shared by all three hosts), `services/suite-desktop` (IPC), `services/suite-serve`
+(`/plugins/<sha256>`, `PluginSource`), `services/docserver/src/{config,plugins}.rs`, `web/plugins/page.js` (the Plugins page).
+Owner decisions behind it (PLAN 13): **O3** (who may install), **O4** (SHA-256 pin, signatures optional and not checked yet), **O7** (config file, no admin UI).
+
+- **Package.** A zip (or, installed, a folder) with the flat entries of section 1. Installed copy: `<settings dir>/plugins/<id>/<version>/`
+  with `install.toml` next to the files: `sha256` of `plugin.wasm`, `manifest_sha256` of `plugin.toml`, and a reserved `signature` field that
+  nothing reads yet (O4: `shortcut:` in `plugins.rs`; the check comes with the project signing key). IT's copies go in
+  `%PROGRAMDATA%\<product>\plugins\<id>\<version>\` (a debug build honours `SUITE_MACHINE_DIR`).
+- **Integrity.** A package whose files no longer match its record is refused: not listed for the page, not served, said on stderr and (docserver) audited.
+  A package without a record is refused in the user folder and accepted in a machine or operator folder (only an administrator can write there).
+- **Desktop.** `settings.toml`: `[plugins] enabled = ["id", ...]` and `[plugins.grants] "id" = ["https://origin", ...]`. IPC (exact fields, 8 KiB, own origin only, like `open`):
+  `plugins_list{}`, `plugins_install{path?}` (no path: the host shows the file dialog; a path from the page follows the rules of `open`: absolute, a drive letter, no
+  share, no `..`, no stream or device name, an existing `.zip`), `plugins_enable{id, enabled}`, `plugins_grant{id, origin, granted}`. Every answer is the event
+  `plugins` `{ok, error?, installed?, items: [{id, version, name, publisher, apps, document, network, grant, enabled, machine, sha256, problem}], policy}`.
+  A grant must be an origin the manifest declares. Installing does not enable. The shell reads the enabled list on every request: no restart.
+- **Machine policy (O3).** `%PROGRAMDATA%\<product>\policy.toml`: `[plugins] user_install = false` and/or `user_grants = false`. With `user_grants = false` no
+  user grant counts (existing ones are ignored; withdrawing stays possible). A policy file that cannot be read or parsed switches both off. No file: both allowed.
+- **Web local (`hoshiya-serve`).** `[plugins] dir = "..."`, `enabled = [ids]` and `[plugins.grants] "id" = [origins]` in the config file; the operator is the only one
+  who enables or grants. `/shell-config.json` gets `plugins` (descriptors); `/plugins/<sha256>` serves an enabled package's wasm (read again and compared with the digest).
+- **Grants are not asked at run time in these two modes.** The descriptor always carries `grant` (possibly empty), so the page host's own prompt never appears; the
+  user ticks the address on the Plugins page (desktop) or the operator lists it. The home page's CSP is `connect-src 'self' <granted origins>` (computed per request),
+  so a granted `fetch` is not blocked by it and an ungranted one is, twice (host check, CSP).
+- **Docserver (per organisation = per provider).** `[docserver.plugins] dir` and, per `[[docserver.providers]]`,
+  `plugins = [{ id, version, sha256, grant = ["https://..."], settings = { ... } }]`. At start the folder is read; a malformed entry, a `grant` that is not an
+  `https://host[:port]` origin the manifest declares, or `plugins` without `dir` refuses the start. An entry whose package is missing or whose SHA-256 differs is left out
+  and audited (`plugin.refused`). The session answer has `plugins: [descriptor]` of that provider only, `wasm` = `/ds/plugins/<sha256>?s=<session id>`, `grant` = the admin's
+  list. `GET /ds/plugins/<sha256>?s=<sid>` serves the file for a live session whose provider lists that digest (404 otherwise, the same for every other case), reading the file again
+  on each request (409 `plugin_changed` and `plugin.refused` when it changed). `POST /ds/session/{sid}/plugin-event {plugin, kind, origin}` (session token) lets the wrapper report
+  `network`, `network.refused`, `network.denied` from the page host (`S.onAudit`) for the audit line `plugin.network`. Audit lines: `plugin.loaded`, `plugin.refused`, `plugin.network`.
+  The config token is never read for plugins (`onlyoffice-compat.md`, M12). The wrapper page's CSP is `connect-src 'self' <the origins granted to any provider's plugins>`
+  (`shortcut:` one list for all providers, because the page's policy is fixed before its session is known; the page host still lets a plugin reach only its own descriptor's `grant`).
+- **Disable.** Remove the id from `enabled` (local) or the entry from the provider (server); the editors drop the commands and the panel at the next document open (server)
+  or the next page load (local).
+- **Not done:** signature check (O4), an admin page (O7), uninstall, update-in-place prompts, Android install.

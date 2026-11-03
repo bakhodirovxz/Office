@@ -445,11 +445,11 @@ shell_sizes() {
   [ "$br" -gt "$max" ] && { echo "FAIL shell: brotli $br exceeds $max" | tee -a "$JOB_LOG"; return 1; }
   return 0
 }
-# The plugin page host (Phase 7 WP5): host.js + worker.js + host.css + its catalog, brotli, against [plugins] br_max. Lazy: fetched only when a plugin is enabled.
+# The plugin page host (Phase 7 WP5): host.js + worker.js + host.css + its catalog + page.js (the Plugins page, WP8), brotli, against [plugins] br_max. Lazy: fetched only when a plugin is enabled.
 plugins_sizes() {
   local B=web/budgets.toml f raw=0 br=0 max
   max=$(toml_get "$B" plugins br_max)
-  for f in web/plugins/host.js web/plugins/worker.js web/plugins/host.css web/plugins/i18n.json; do
+  for f in web/plugins/host.js web/plugins/worker.js web/plugins/host.css web/plugins/i18n.json web/plugins/page.js; do
     raw=$((raw+$(bytes "$f"))); br=$((br+$(br_bytes "$f")))
   done
   printf '%-7s %-9s %12s %12s %12s %12s %12s\n' plugins src "$raw" - "$br" "$max" "$((max - br))" | tee -a "$JOB_LOG"
