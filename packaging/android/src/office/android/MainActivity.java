@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
             web.loadUrl(ORIGIN);
             take(getIntent());
         } else {
-            web.restoreState(b);   // a recreated activity (process death): the page restarts; the shell offers the recovery file (WP12)
+            web.restoreState(b);   // a recreated activity (process death): the page restarts; the shell reopens the recovery file (WP12)
         }
     }
 
@@ -312,7 +312,7 @@ public class MainActivity extends Activity {
     // ---- the virtual origin: shell and dists from assets ----
     class Client extends WebViewClient {
         @Override public void onPageFinished(WebView v, String url) { v.requestFocus(); }
-        // A crashed or killed renderer would take the app down: a new WebView loads the shell, which offers the recovery file.
+        // A crashed or killed renderer would take the app down: a new WebView loads the shell, which reopens the recovery file.
         @Override public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
             if (v != web) return true;
             root.removeView(web);

@@ -45,3 +45,103 @@ Window after the proposal: app switch and glloss about 0 s, hard kill or crash a
 - Typing was Gboard (the Latin word came out as `Lifecycle`/`Ecycle` in some runs: Gboard drops a key now and then on the software-rendered emulator); the text, not the exact word, is the evidence.
 - Chrome's tab count grew during the runs (one new tab per run); no effect seen.
 - Recordings per case exist; the first `app home` run (a "System UI isn't responding" dialog at native size) was discarded.
+
+# WP12 recovery (2026-11-03, branch `p6-recover`)
+
+## The picture-less autosave: root cause
+**Not a serialisation bug; the picture had been removed from the document by taps of the rig before the first key.** Evidence:
+- The payload is faithful. `wordcraft:autosave` and File > Save serialise the same `session.doc` with the same writer
+  (`wordcraft_engine::io::save_bytes_with`, same password and export options); the docx writer writes only the media a drawing references
+  (`crates/docx/src/write/mod.rs:433-444`). In the 5,752 B payload the picture's paragraph is there but empty (`<w:p></w:p>`, the 4th empty
+  paragraph after the table): the inline picture itself was gone from the model, and with it the media part.
+- Reproduced on the emulator step by step (same dist, display, taps and Gboard keys as WP12; screenshot after every tap,
+  `E:/office-target/p6/evidence/2026-11-02T23-10-picture-rootcause/`): **(1)** the tap on the round Edit button (`input tap` at the button, read-first build)
+  leaves the picture selected (handles drawn, the bottom toolbar switches to the picture set; `02-pencil.png`): the tap reaches the page as well;
+  **(2)** the next tap, on the first heading, *moves* the selected picture to the start of the document, and the document is already marked unsaved
+  before any key (`03-caret.png`: picture above the heading, blue dirty dot, picture toolbar); **(3)** the first typed key replaces the selected
+  picture (typing over a selected object replaces it, as in Word), so the text lands at the start of the heading (` Lifecycle тестPhone reading test`, the
+  WP12 payloads exactly). The glloss payload of that run: 5,752 B, no media.
+- In desktop Chromium (touch emulation, DPR 1) step (1) reproduces (after the Edit tap a typed `QQ` lands right after the picture, the caret is
+  beside it, so `objects::selected` reports it), step (2) does not: the second tap places the caret and the picture stays.
+- The one 55,664 B payload (Chrome rotation) is not explained: its typed screenshot shows the text where the picture was, yet the payload had a media
+  part; the rig kept only the last payload of a run, so it cannot be checked.
+- The current build (phase-6 HEAD, documents open in edit mode, no Edit tap) does not show it: in every re-run below the kept copy has the picture.
+
+**Explicit Save cannot drop a picture the document holds**: test `office_overlay_tests::autosave_and_save_keep_the_picture_of_an_opened_document`
+(wordcraft/0146, `crates/ui-egui/src/office_overlay_tests.rs`): a docx with a ~50 kB picture, opened through the inbox as `wordcraft:open` does,
+edited at the start of the heading: the autosave payload (`office_overlay::autosave_bytes`, now the only code that builds it, `host.rs` uses it)
+and an explicit `file.save` both contain the same `word/media/` part, byte for byte, and the edit; and once a typed key replaces the selected picture,
+both lose it alike. Result: pass (1 test, 0.04 s). Desktop Chromium also: the docx saved after each recovery below holds `word/media/image1.png`
+(49,270 B) and the typed text.
+
+**Still a data-loss risk (not fixed here, reported):** a tap that passes through the Edit button to the page, and a tap that moves a selected
+picture, are unintended edits on a phone; with a typed key after them a picture is deleted without the user seeing it (it is off screen). Undo
+brings it back. Step (2) was seen only on the emulator (`input tap`, DPR 1.3125); the exact code path is not isolated (candidates:
+`canvas::mouse` after `chrome_down` ends, `objects::pointer` drag from a press that the keyboard's viewport change moved). Needs a WP of its own.
+
+## What was built
+- **Shell** (`web/shell/shell.js`, +27/-6 lines): `case 'autosave'` keeps the latest payload per editor frame (`f.auto`) and outside the page: the
+  Android host's file (`SuiteHost.autosave`) or, in the plain web host, the shell's IndexedDB (`blob` store, key `rec:<app>`). Names mode (connected to a
+  server, or the desktop host's browser fallback) keeps no copy outside the tab, as for Recent. After `failed: webglcontextlost` the next autosave
+  (sent with the loss) reloads the frame and reopens that copy (`revive`). On every start the shell **reopens a kept copy by itself, without a
+  question** (see "Why no Restore/Discard question" below). A reopened copy is posted with `dirty: true` and the editor keeps it unsaved
+  (wordcraft/0146), so its leave-page guard and its autosave go on; the status line (and the toast on a phone) says `rec.done`. The copy is deleted
+  only after a Save in its own format (the download path, or `hostSaved` ok) or when the user discards the changes: the existing "leave unsaved
+  changes?" confirm when another document or New replaces it (while a copy is still on its way in, `f.rec`, that confirm is asked too).
+- **Android host** (`MainActivity.java`, +70/-6): `SuiteHost.autosave/discard`, `GET /__recover/<app>`, write to a temp file + `fsync` + rename,
+  `onRenderProcessGone` (returns true, new WebView, shell reloads and reopens the copy). `docs/phase6/android-app.md` "Recovery of unsaved work".
+- **Editor** (wordcraft/0146, `host.rs` +13/-5): `wordcraft:open { dirty: true }`; the autosave bytes from `office_overlay::autosave_bytes`.
+- **Strings:** one, `rec.done` "Recovered unsaved changes: {name}", in `i18n/shell.tsv` and `web/shell/i18n.json` (en, ru, uz-Latn, uz-Cyrl; Uzbek
+  `reviewed:agent-opus:2026-11-03`).
+- **Shell size:** 65,274 B brotli of 65,536 (headroom 262 B; +665 B on phase-6). No budget change.
+
+### Why no Restore/Discard question
+The first version asked with `confirm()` (OK reopens, Cancel deletes). On the emulator, in Chrome relaunched after `am kill`, **`confirm()` returned false without
+being shown** (no dialog on the screen or in the recording; probably because the page loaded in a tab that was not in front, not isolated), so the
+shell deleted the kept copy (two runs, `2026-11-03T01-13-12` and
+`01-18-27`; the copy was in IndexedDB just before the kill, `55495` B, and gone after; strict IndexedDB durability did not change it). A browser may do
+that for background tabs or after "prevent this page from creating more dialogs", so a Cancel cannot mean "delete". Reopening without a question has
+no such path: the worst case is the same copy reopened again on the next start. With the change and default durability the copy came back (`01-23-52`).
+
+## Re-run of the lost cases (emulator `HRM_Pixel_8`, same AVD, display, fixture and Gboard keys as above)
+Build: phase-6 HEAD + this branch, `E:/office-target/p6-recover/dist` (Docs built here; Sheets, Slides, PDF copied from `p6-mobileux/dist`) and the APK
+built from it (`E:/office-target/p6-recover/apk/office.apk`, 53,208,707 B). HEAD opens documents for editing, so the rig runs `--edit-first`
+(no Edit tap; one tap at the end of the first heading, then the keys). "Kept copy" is what the next start gets (`<case>-recovery.docx`: Chrome's
+IndexedDB, the app's `files/recover/docs`), checked for the typed text and `word/media/image1.png` (49,270 B).
+
+| Case | Surface | Result | Kept copy (all: the typed text and `image1.png`, 49,270 B) | Evidence (`E:/office-target/p6/evidence/<run>/`) |
+|---|---|---|---|---|
+| WebGL context loss | Chrome | **recovered in place**: the frame reloads with the copy, unsaved (blue dot), "Recovered unsaved changes" | 55,495 B; autosave 0.1 s after the loss, page back 2.4 s later | `2026-11-03T00-03-35/chrome-glloss` |
+| WebGL context loss | app | **recovered in place** (same) | 55,495 B; autosave with the loss, page back 2.5 s later (1.8 s in `00-22-31`) | `2026-11-03T01-45-13/app-glloss` |
+| Background kill (`am kill`, 8 s after Home) | Chrome | **recovered**: Chrome relaunched, the page opened again, the shell reopens the document unsaved | 55,495 B; written 0.6 s after hide | `2026-11-03T01-23-52/chrome-kill` |
+| Background kill (`am kill`, 8 s after Home) | app | **recovered**: the relaunched app reopens it unsaved | 55,495 B; written 0.6 s after hide (1.0 s in `00-44-53`) | `2026-11-03T01-32-55/app-kill` |
+| Renderer crash right after typing (about 10 s after the first key) | Chrome | **lost**: no autosave yet (the first one is due 30 s after the first edit); "Aw, Snap!", the reloaded page has nothing to reopen | none | `2026-11-03T00-16-36/chrome-crash` |
+| Renderer crash right after typing | app | **app survives** (`onRenderProcessGone`: new WebView, shell home; WP12: the whole app died); the edit is **lost** as in Chrome | none | `2026-11-03T00-28-48/app-crash` |
+| Renderer crash 30 s after typing (`--before 30`) | Chrome | **recovered**: "Aw, Snap!", page opened again, document reopened unsaved | 55,495 B (periodic autosave at 29.6 s) | `2026-11-03T01-39-51/chrome-crash` |
+| Renderer crash 30 s after typing (`--before 30`) | app | **recovered**: app survives, the new WebView reopens it unsaved | 55,495 B (periodic autosave at 30.2 s) | `2026-11-03T01-38-06/app-crash` |
+
+App switch and rotation were kept before and were not re-run. Runs with the first (confirm) version, kept for the record: `00-34-11/app-crash`,
+`00-44-53/app-kill`, `00-57-11/chrome-crash` (recovered after OK; in two of them OK was tapped by hand, the rig's `tapText` scaled display
+coordinates by `RIG_SCALE` a second time, fixed in `lib.mjs`), `01-07-39`, `01-13-12`, `01-18-27` (Chrome kill: copy deleted by the unseen Cancel).
+Desktop Chromium (412x860, touch, final shell): WebGL loss, reload after the 30 s autosave and renderer crash after it each reopen the edit unsaved;
+the docx saved afterwards has the text and `image1.png`, and the Save deletes the kept copy.
+
+## Loss window now (Docs; Chrome with the plain web host, and the app)
+| Event | Before (WP12) | Now |
+|---|---|---|
+| App switch, rotation | none | none |
+| WebGL context loss | everything since the last Save | none: the autosave goes with the loss, the page is back in about 2.5 s |
+| Kill of a hidden page (Chrome, app) | everything since the last Save | none if the kill comes later than about 1 s after hide (copy written 0.6-1.0 s after hide); inside that second, up to 30 s |
+| Renderer crash in the foreground | everything (the app died too) | **up to 30 s** (`AUTOSAVE_MS`): edits since the last periodic autosave; the first comes 30 s after the first edit |
+| Server-connected shell (names mode), desktop host | everything since the last Save | reload or kill: unchanged (no copy outside the tab, by design, as for Recent); WebGL loss: none (memory) |
+
+## Not verified (recovery)
+- A real phone; Android's own low-memory kill and Chrome's tab discard (the rig uses `am kill`); other Chrome / WebView versions; power loss during the
+  app's temp + fsync + rename.
+- The picture move by a tap (step (2) of the root cause): seen only on the emulator, code path not isolated, not fixed.
+- Two shell tabs of the plain web host share one copy per editor (`rec:docs`): the last autosave wins, and a second tab started while the first one
+  edits reopens the first one's copy.
+- A private window or blocked storage: IndexedDB fails, the shell keeps the copy in memory only (WebGL loss still recovers; reload and kill do not).
+- The desktop host (WebView2) path: memory only, not run. Sheets, Slides and PDF send no autosave (none recovers; the shell code is app-neutral).
+- The app's recovered document has no write-back URI after process death (Save goes through Save as); after a renderer crash it keeps it.
+- Shell budget: 262 B left; the next shell change will need a budget decision.

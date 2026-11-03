@@ -132,7 +132,7 @@
     fail('');
     let f = S.frames[a.id];
     // a file replaces the document in the editor; a second New starts from the editor's own blank page
-    if (f && f.dirty && !confirm(t('ed.dirty'))) return;
+    if (f && (f.dirty || f.rec) && !confirm(t('ed.dirty'))) return;   // f.rec: a recovered copy is on its way in
     if (f && f.auto) { f.auto = null; recDrop(a.id); }   // the unsaved work is discarded
     if (f && !file && f.ready) { f.ready = false; f.dirty = false; f.phone = false; f.el.contentWindow.location.reload(); }
     f = frameOf(a);
@@ -349,12 +349,10 @@
     $('open-file').onclick = () => pick('');
     $('back').onclick = home;
     render();
-    // unsaved work of a page that died: reopen it unsaved, or delete it
+    // unsaved work of a page that died is reopened, still unsaved: no question (a browser may answer a confirm() itself, e.g. in a background tab)
     for (const a of S.cfg.apps) {
       const r = await recGet(a.id).catch(() => null);
-      if (!r || !r.bytes) continue;
-      if (!confirm(t('rec.ask', { name: r.name }))) { recDrop(a.id); continue; }
-      show(a, { ...r, dirty: true }); Object.assign(S.frames[a.id], { auto: r, rec: r.name }); break;
+      if (r && r.bytes) { show(a, { ...r, dirty: true }); Object.assign(S.frames[a.id], { auto: r, rec: r.name }); break; }
     }
     if (window.SuiteHost) window.hostOpen();
   }

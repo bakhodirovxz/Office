@@ -42,7 +42,8 @@ export function tapText(ser, re) {
   sh(ser, 'uiautomator dump /sdcard/ui.xml >/dev/null');
   const xml = sh(ser, 'cat /sdcard/ui.xml');
   for (const m of xml.matchAll(/<node [^>]*?(?:text|content-desc)="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/g)) {
-    if (re.test(m[1])) { tap(ser, (+m[2] + +m[4]) / 2, (+m[3] + +m[5]) / 2); return true; }
+    // the bounds are display pixels already: no RIG_SCALE here
+    if (re.test(m[1])) { sh(ser, `input tap ${Math.round((+m[2] + +m[4]) / 2)} ${Math.round((+m[3] + +m[5]) / 2)}`); return true; }
   }
   return false;
 }
