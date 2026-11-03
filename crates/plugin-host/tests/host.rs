@@ -161,6 +161,45 @@ fn m2_own_or_exported_memory_refuses_the_load() {
 }
 
 #[test]
+fn m2b_a_second_unexported_memory_refuses_the_load() {
+    // imports the host's capped memory and defines its own, never exported: multi-memory is off, so it does not compile
+    let wasm =
+        wat::parse_str(r#"(module (import "env" "memory" (memory 2)) (memory 1))"#).unwrap();
+    assert!(matches!(load_err(&wasm), LoadError::Compile(_)));
+    let wasm = module("", "(memory 1)", "(i64.const 0)", b"");
+    assert!(matches!(load_err(&wasm), LoadError::Compile(_)));
+}
+
+#[test]
+fn deep_recursion_traps_cleanly_on_a_small_stack() {
+    let wasm = module(
+        "",
+        "(func $r (param i32) (result i32) local.get 0 i32.const 1 i32.add call $r)",
+        "(drop (call $r (i32.const 0))) (i64.const 0)",
+        b"",
+    );
+    // the wasm stack was 512 KiB and the guest ran on the caller's thread: a 300 KiB thread lost the process. `round` now has its own thread.
+    let mut s = load(&wasm).unwrap().start().unwrap();
+    let e = std::thread::Builder::new()
+        .stack_size(100 << 10)
+        .spawn(move || s.round(&call()).unwrap_err())
+        .unwrap()
+        .join()
+        .unwrap();
+    assert!(matches!(e, RunError::Trap(_)), "{e:?}");
+}
+
+#[test]
+fn limit_round_budget_cuts_a_round_short() {
+    let wasm = module("", "", "(loop $l (br $l)) (i64.const 0)", b"");
+    let mut s = host().load(&wasm, 1, Duration::from_secs(30)).unwrap().start().unwrap();
+    s.limit_round_budget(Duration::from_millis(100));
+    let t = Instant::now();
+    assert!(matches!(s.round(&call()), Err(RunError::Timeout)));
+    assert!(t.elapsed() < Duration::from_secs(2), "{:?}", t.elapsed());
+}
+
+#[test]
 fn load_checks_memory_limit_exports_and_version() {
     let ok = canned(b"x");
     assert!(matches!(

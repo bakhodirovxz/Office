@@ -1,6 +1,7 @@
 {
   "en": {
     "plg.close": "Close",
+    "plg.disabled": "{name} was stopped too many times and is switched off until the page is reloaded.",
     "plg.failed": "{name} could not finish: {error}",
     "plg.grant.allow": "Allow",
     "plg.grant.body": "Publisher: {publisher}. The plugin can send document text to this address.",
@@ -30,6 +31,7 @@
   },
   "ru": {
     "plg.close": "Закрыть",
+    "plg.disabled": "{name} слишком много раз была остановлена и отключена до перезагрузки страницы.",
     "plg.failed": "«{name}» не смог завершить работу: {error}",
     "plg.grant.allow": "Разрешить",
     "plg.grant.body": "Издатель: {publisher}. Плагин сможет отправлять текст документа по этому адресу.",
@@ -59,6 +61,7 @@
   },
   "uz-Latn": {
     "plg.close": "Yopish",
+    "plg.disabled": "{name} juda koʻp marta toʻxtatildi va sahifa qayta yuklanguncha oʻchirib qoʻyildi.",
     "plg.failed": "{name} ishni tugata olmadi: {error}",
     "plg.grant.allow": "Ruxsat berish",
     "plg.grant.body": "Nashriyotchi: {publisher}. Plagin hujjat matnini shu manzilga yuborishi mumkin.",
@@ -88,6 +91,7 @@
   },
   "uz-Cyrl": {
     "plg.close": "Ёпиш",
+    "plg.disabled": "{name} жуда кўп марта тўхтатилди ва саҳифа қайта юкланмагунча ўчириб қўйилди.",
     "plg.failed": "{name} ишни тугата олмади: {error}",
     "plg.grant.allow": "Рухсат бериш",
     "plg.grant.body": "Нашриётчи: {publisher}. Плагин ҳужжат матнини шу манзилга юбориши мумкин.",

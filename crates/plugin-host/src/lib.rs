@@ -32,6 +32,10 @@ const TICK: Duration = Duration::from_millis(50);
 const LOG_LINES: usize = 64;
 const LOG_LINE: usize = 256;
 const PAGE: u64 = 65536;
+/// Wasm call stack of a guest. Recursion past it is a clean trap.
+pub const MAX_WASM_STACK: usize = 256 << 10;
+/// Stack of the thread a round runs on: the wasm stack plus the host frames of a debug build, with room to spare.
+const ROUND_THREAD_STACK: usize = 1 << 20;
 
 /// Why a module was refused (never run).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -131,6 +135,10 @@ impl Host {
     pub fn new() -> Result<Host, String> {
         let mut cfg = Config::new();
         cfg.epoch_interruption(true);
+        // One memory only: the imported, capped one. A module-defined second memory would escape the cap (F1).
+        cfg.wasm_multi_memory(false);
+        // The guest runs on the UI thread deep inside a frame; the default 512 KiB overflows small thread stacks and aborts the process (F4).
+        cfg.max_wasm_stack(MAX_WASM_STACK);
         let engine = Engine::new(&cfg).map_err(|e| e.to_string())?;
         let inner = Arc::new(Inner {
             engine: engine.clone(),
@@ -275,7 +283,7 @@ impl ResourceLimiter for State {
         2
     }
     fn memories(&self) -> usize {
-        2
+        1
     }
     fn tables(&self) -> usize {
         4
@@ -388,12 +396,26 @@ impl Session {
         self.memory.size(&self.store)
     }
 
+    /// Shorten the budget of every later round (events get a short one). Never lengthens it.
+    pub fn limit_round_budget(&mut self, d: Duration) {
+        self.ticks = self.ticks.min((d.as_millis() / TICK.as_millis()) as u64 + 1);
+    }
+
     /// One round: copy the call in, run `call` under the deadline, validate and copy the answer out.
     pub fn round(&mut self, input: &Message) -> Result<Message, RunError> {
         if self.dead {
             return Err(RunError::Dead);
         }
-        let r = self.round_inner(input);
+        // On a thread of its own with a known stack: the caller is the UI thread deep inside a frame, whose spare stack is unknown (F4).
+        let r = thread::scope(|sc| {
+            thread::Builder::new()
+                .name("plugin-round".into())
+                .stack_size(ROUND_THREAD_STACK)
+                .spawn_scoped(sc, || self.round_inner(input))
+                .map_err(|e| RunError::Trap(format!("round thread: {e}")))?
+                .join()
+                .unwrap_or_else(|_| Err(RunError::Trap("round thread panicked".into())))
+        });
         self.dead = r.is_err();
         r
     }
