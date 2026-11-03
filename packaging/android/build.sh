@@ -21,7 +21,19 @@ for d in docs-web sheets-web slides-web pdf-web; do
   mkdir -p "$A/$d"; (cd "$DIST/$d" && find . -type f ! -name '*.br' -print0 | tar --null -T - -cf -) | (cd "$A/$d" && tar xf -)
 done
 cp -r "$ROOT/web/shell/." "$A/shell/"; cp "$ROOT/assets/fonts/fallback/NotoSans-Regular-uz.ttf" "$A/shell/"
-mkdir -p "$A/shell/plugins"; cp "$ROOT/web/plugins/host.js" "$ROOT/web/plugins/worker.js" "$ROOT/web/plugins/host.css" "$ROOT/web/plugins/i18n.json" "$A/shell/plugins/"   # Phase 7 WP5 (MainActivity gives plugins/*.js the Worker CSP)
+# first-party plugins (Phase 7 WP9): every plugins/<name> with a plugin.toml is packed by `cargo xt plugin pack` (cargo on PATH; CARGO_TARGET_DIR / OFFICE_TARGET as for any
+# build) and unpacked to assets/web/plugin-pkg/<id>/; MainActivity's Plugins store lists, verifies and serves them. No code change when a plugin is added.
+for pk in "$ROOT"/plugins/*/plugin.toml; do
+  [ -f "$pk" ] || continue
+  line="$(cd "$ROOT" && cargo xt plugin pack "$(basename "$(dirname "$pk")")" | tail -n 1)"
+  python3 -I - "$line" "$A/plugin-pkg" <<'PY'
+import re, sys, zipfile, pathlib
+m = re.match(r"[0-9a-f]{64}  (.+) \(\d+ bytes\)$", sys.argv[1]); z = zipfile.ZipFile(m.group(1))
+d = pathlib.Path(sys.argv[2]) / re.sub(r"-[^-]+\.zip$", "", pathlib.Path(m.group(1)).name); d.mkdir(parents=True)
+for n in z.namelist(): (d / n).write_bytes(z.read(n))
+PY
+done
+mkdir -p "$A/shell/plugins"; cp "$ROOT/web/plugins/host.js" "$ROOT/web/plugins/worker.js" "$ROOT/web/plugins/host.css" "$ROOT/web/plugins/page.js" "$ROOT/web/plugins/i18n.json" "$A/shell/plugins/"   # Phase 7 WP5 (MainActivity gives plugins/*.js the Worker CSP; page.js is the Plugins page)
 L="$ROOT/brand/logo"; cp "$L/web/favicon.ico" "$L/web/favicon.svg" "$L/web/apple-touch-icon.png" "$L/web/icon-192.png" "$L/web/icon-512.png" "$L/web/icon-maskable-512.png" "$A/shell/"
 cp "$L/svg/hoshiya-lockup-light.svg" "$A/shell/logo-light.svg"; cp "$L/svg/hoshiya-lockup-dark.svg" "$A/shell/logo-dark.svg"
 sed 's#"/icon#"icon#' "$L/web/site.webmanifest" > "$A/shell/site.webmanifest"

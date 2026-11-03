@@ -1,0 +1,17 @@
+{
+  "item": "M3-network-not-in-manifest",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:14:02.194Z",
+  "details": {
+    "audit": [
+      {
+        "plugin": "test.nonet",
+        "kind": "network.refused",
+        "origin": "https://example.org"
+      }
+    ],
+    "status": "resumed"
+  },
+  "screenshots": []
+}

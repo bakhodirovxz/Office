@@ -1,0 +1,12 @@
+{
+  "item": "M7-memory-cap",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:14:12.823Z",
+  "details": {
+    "memory_bytes": 2097152,
+    "cap_bytes": 2097152,
+    "status": "hog capped"
+  },
+  "screenshots": []
+}

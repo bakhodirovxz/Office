@@ -1,0 +1,44 @@
+{
+  "item": "install-from-file",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T07:51:18.095Z",
+  "details": {
+    "picker_before": [
+      {
+        "name": "Transliteration Version 1.0.0",
+        "enabled": true,
+        "boxes": 1
+      }
+    ],
+    "picker_after": [
+      {
+        "name": "Transliteration Version 1.0.0",
+        "enabled": true,
+        "boxes": 1
+      },
+      {
+        "name": "Test plugin Version 1.0.0",
+        "enabled": false,
+        "boxes": 1
+      }
+    ],
+    "message": "Test plugin is installed. Turn it on to use it.",
+    "enabled_message": "Restart the app to apply the change.",
+    "files": "install.toml\nplugin.toml\nplugin.wasm",
+    "record": "sha256 = \"74fbc9e869a1e50b74b189fbfaeb04ff02f7164286fb35a22d1d23ff87a108c6\"\nmanifest_sha256 = \"cba082a8c1b329015477fb5a04cac74926d8269f899c3d41458c97cfe5a51180\"",
+    "wasm_sha256": "74fbc9e869a1e50b74b189fbfaeb04ff02f7164286fb35a22d1d23ff87a108c6",
+    "plugins_after_restart": [
+      "uz-translit",
+      "test.host"
+    ],
+    "note": "the package came through the system document picker (ACTION_OPEN_DOCUMENT); the record is the same install.toml as crates/suite-core/src/plugins.rs"
+  },
+  "screenshots": [
+    "install-0-page.png",
+    "install-1-picker.png",
+    "install-2-installed.png",
+    "install-3-enabled.png",
+    "install-4-restarted.png"
+  ]
+}

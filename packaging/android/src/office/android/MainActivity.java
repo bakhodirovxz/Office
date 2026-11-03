@@ -46,7 +46,7 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     static final String HOST = "appassets.androidplatform.net";
     static final String ORIGIN = "https://" + HOST + "/";
-    static final int REQ_OPEN = 1, REQ_SAVE_AS = 2, REQ_CHOOSER = 3;
+    static final int REQ_OPEN = 1, REQ_SAVE_AS = 2, REQ_CHOOSER = 3, REQ_PLUGIN = 4;
     static final long MAX_BYTES = 256L << 20;   // shortcut: the whole document is held in memory (the editors do too); a streamed bridge if a real phone says otherwise
     static final String[] MIMES = {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -72,9 +72,11 @@ public class MainActivity extends Activity {
     /** The plugin Worker script (web/shell/plugins/*.js): same policy as suite-serve's WORKER_CSP. */
     static final String WORKER_CSP = "default-src 'none'; script-src 'wasm-unsafe-eval'";
     final Map<String, String> csp = new HashMap<>();
+    Plugins plugins;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        plugins = new Plugins(this);
         root = new FrameLayout(this);
         root.setBackgroundColor(0xFFFFFFFF);
         web = new WebView(this);
@@ -259,6 +261,15 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int req, int res, Intent data) {
         Uri u = res == RESULT_OK && data != null ? data.getData() : null;
         if (req == REQ_OPEN) { if (u != null) load(u); }
+        else if (req == REQ_PLUGIN) {
+            if (u == null) { pluginsReply(new JSONObject()); return; }
+            new Thread(() -> {
+                try (InputStream in = getContentResolver().openInputStream(u)) {
+                    if (in == null) throw new IOException("cannot open " + u);
+                    pluginsReply(plugins.page(plugins.install(in), true));
+                } catch (Exception e) { pluginsFailed(e); }
+            }).start();
+        }
         else if (req == REQ_SAVE_AS) {
             byte[] bytes = saveBytes; String name = saveName; saveBytes = null;
             if (bytes == null) return;
@@ -283,8 +294,35 @@ public class MainActivity extends Activity {
         }
     }
 
+    // ---- plugins (WP9): the Plugins page (web/plugins/page.js) talks to the store here; the answer is the same 'suite-host' event the desktop sends ----
+    void pluginsReply(JSONObject j) {
+        if (!j.has("type")) { try { j.put("type", "plugins").put("cancelled", true); } catch (Exception ignored) { /* no NaN */ } }
+        runOnUiThread(() -> web.evaluateJavascript("dispatchEvent(new CustomEvent('suite-host',{detail:" + j + "}))", null));
+    }
+
+    void pluginsFailed(Exception e) {
+        try { pluginsReply(plugins.page(null, false).put("ok", false).put("error", String.valueOf(e.getMessage()))); } catch (Exception ignored) { /* nothing more to say */ }
+    }
+
+    void pluginMsg(String msg) {
+        try {
+            JSONObject m = new JSONObject(msg);
+            switch (m.optString("type")) {
+                case "plugins_list": pluginsReply(plugins.page(null, false)); break;
+                case "plugins_enable": plugins.setEnabled(m.getString("id"), m.getBoolean("enabled")); pluginsReply(plugins.page(null, true)); break;
+                case "plugins_install": runOnUiThread(() -> {
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+                    try { startActivityForResult(i, REQ_PLUGIN); } catch (Exception e) { pluginsFailed(e); }
+                }); break;
+                default: throw new IOException("not available on Android: " + m.optString("type"));   // plugins_grant too: no network grants here
+            }
+        } catch (Exception e) { pluginsFailed(e); }
+    }
+
     // ---- what the page may call ----
     class Bridge {
+        /** The Plugins page's messages (JSON): plugins_list, plugins_enable, plugins_install. */
+        @JavascriptInterface public void plugins(String json) { pluginMsg(json); }
         /** The shell's Open buttons. app: "" = any supported type, "pdf" = PDF only. The result comes back through /__open like a VIEW. */
         @JavascriptInterface public void pick(String app) {
             runOnUiThread(() -> {
@@ -332,6 +370,11 @@ public class MainActivity extends Activity {
             String p = u.getPath() == null ? "/" : u.getPath();
             if (p.equals("/__open")) return opened();
             if (p.startsWith("/__recover/")) return recovered(p.substring(11));
+            if (p.equals("/shell-config.json")) return shellConfig();
+            if (p.startsWith("/plugins/")) {
+                byte[] w = plugins.wasm(p.substring(9));
+                return w == null ? status(404, "Not Found") : respond("plugin.wasm", new ByteArrayInputStream(w), SHELL_CSP);
+            }
             String asset;
             if (p.equals("/")) asset = "shell/index.html";
             else if (p.equals("/shell-config.json")) asset = "shell-config.json";
@@ -349,6 +392,15 @@ public class MainActivity extends Activity {
                 return respond(asset, in, asset.endsWith("/index.html") && !asset.startsWith("shell/") ? editorCsp(asset) : asset.startsWith("shell/plugins/") && asset.endsWith(".js") ? WORKER_CSP : SHELL_CSP);
             } catch (IOException e) { return status(404, "Not Found"); }
         }
+    }
+
+    /** shell-config.json with the enabled plugins' descriptors added (as suite-serve's with_plugins does). */
+    WebResourceResponse shellConfig() {
+        try (InputStream in = getAssets().open("web/shell-config.json")) {
+            JSONObject c = new JSONObject(new String(Plugins.readAll(in, 1 << 20), StandardCharsets.UTF_8));
+            c.put("plugins", plugins.descriptors());
+            return respond("shell-config.json", new ByteArrayInputStream(c.toString().getBytes(StandardCharsets.UTF_8)), SHELL_CSP);
+        } catch (Exception e) { return status(404, "Not Found"); }
     }
 
     WebResourceResponse status(int code, String reason) {

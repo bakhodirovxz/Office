@@ -1,0 +1,18 @@
+{
+  "item": "M1-load-refused",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T08:13:58.587Z",
+  "details": {
+    "plugin": "test.bad-import",
+    "audit": [
+      {
+        "plugin": "test.bad-import",
+        "kind": "failed",
+        "error": "imports not allowed: wasi_snapshot_preview1.fd_write"
+      }
+    ],
+    "status": "Bad import could not finish: imports not allowed: wasi_snapshot_preview1.fd_write"
+  },
+  "screenshots": []
+}
