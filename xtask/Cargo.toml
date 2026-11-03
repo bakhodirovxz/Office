@@ -10,3 +10,7 @@ toml_edit = "0.22"
 office-brand = { path = "../crates/office-brand" }
 # the derived uz-Latn-2026 catalog (WP16)
 uz-translit = { path = "../crates/uz-translit" }
+# Phase 7 WP6: `cargo xt plugin pack` (same versions and features as suite-core: no new lock entries)
+plugin-api = { path = "../crates/plugin-api" }
+sha2 = "0.10"
+zip = { version = "9", default-features = false }

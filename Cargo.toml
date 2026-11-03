@@ -1,6 +1,6 @@
 # Root workspace "core": our own crates and xtask. Upstream trees and the build domains are separate workspaces.
 [workspace]
-members = ["xtask", "crates/*"]
+members = ["xtask", "crates/*", "plugins/*"]
 exclude = ["upstream", "domains", "spikes", "services"]
 resolver = "3"
 
@@ -16,3 +16,11 @@ opt-level = "s"
 lto = true
 panic = "abort"
 codegen-units = 1
+
+# First-party plugins (`cargo xt plugin build`): speed first (the plugin's job is a hot loop), no unwinding, no symbols.
+[profile.plugin]
+inherits = "release"
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true

@@ -5,11 +5,16 @@
 //   t0       the keydown of the final Enter (capture listener, performance.now())
 //   longtask PerformanceObserver 'longtask' entries after t0 (the frame that ran the command and its layout)
 //   frame    the first requestAnimationFrame callback after the last long task ends = the next presented frame
+// --plugin (Phase 7 WP6, N3): the real page host (web/plugins/host.js) and the uz-translit plugin are added to the host page; the built-in and the plugin
+// command are triggered the same way (a `wordcraft:run` message, t0 = its arrival in the editor frame), alternating, each round a fresh page. The plugin
+// gets a warm-up call (the direction that changes nothing in that file) so the Worker and the compiled module exist, as after first use.
+//   node scripts/translit/perf-web.mjs --plugin [--plugin-wasm <file>] [--rounds 6] [--dist <dir>] [--out result.json]
 // total = frame - t0. --cdp connects to an existing Chrome (Android emulator via adb forward) instead of launching one.
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { descriptor } from '../plugins/manifest-json.mjs';
 
 const require = createRequire(path.resolve('spikes/docserver/e2e/') + '/');
 const { chromium } = require('playwright');
@@ -21,17 +26,33 @@ const shots = opt('--shots', null);
 const fx = path.resolve('domains/docs/crates/docs-translit/tests/fixtures');
 // [file, command label, y of the palette row to click, or 0 for Enter: the search ranks "Latin to Cyrillic" first for both labels]
 const cases = [['uz108-latn.docx', 'Latin to Cyrillic', 0], ['uz108-cyrl.docx', 'Cyrillic to Latin', 379]];
+// --plugin: [file, built-in id, plugin id, warm-up plugin id]
+const pluginCases = [
+  ['uz108-latn.docx', 'tools.translitCyrl', 'plugin.uz-translit.toCyrillic', 'plugin.uz-translit.toLatin'],
+  ['uz108-cyrl.docx', 'tools.translitLatn', 'plugin.uz-translit.toLatin', 'plugin.uz-translit.toCyrillic'],
+];
+const withPlugin = args.includes('--plugin');
+const wasmFile = path.resolve(opt('--plugin-wasm', path.join(process.env.OFFICE_TARGET || 'E:/office-target/p1', 'wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm')));
+const desc = withPlugin ? JSON.stringify(descriptor('plugins/uz-translit', wasmFile, '/test-plugins/plugin.wasm')) : '';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.ico': 'image/x-icon', '.png': 'image/png', '.css': 'text/css' };
 const HOST = `<!doctype html><meta charset=utf-8><body style="margin:0"><iframe id=wc src="/wc/index.html?${process.argv.includes("--webgl") ? "webgl&" : ""}host=parent" style="border:0;width:100vw;height:100vh"></iframe>
 <script>
 window.log = [];
 window.addEventListener('message', (ev) => { if (ev.data && typeof ev.data.type === 'string') window.log.push(ev.data.type + (ev.data.error ? ':' + ev.data.error : '')); });
+${withPlugin ? `</script><script src="/plugins/host.js"></script><script>
+const ed = () => document.getElementById('wc').contentWindow;
+const H = PluginHost.make({ cfg: { plugins: [${desc}] }, lang: 'en', frames: {} }, () => {}, document.body);
+window.addEventListener('message', (e) => { if (e.source === ed() && String((e.data || {}).type).startsWith('wordcraft:')) H.onMessage({ app: { id: 'docs', prefix: 'wordcraft' }, el: { contentWindow: ed() } }, e.data); });
+window.runCmd = (id) => ed().postMessage({ type: 'wordcraft:run', id }, location.origin);
+` : ''}
 window.openDoc = (name, b64) => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   document.getElementById('wc').contentWindow.postMessage({ type: 'wordcraft:open', name, bytes: u.buffer }, location.origin, [u.buffer]); };
 </script>`;
 const server = http.createServer((req, res) => {
   const url = decodeURIComponent(req.url.split('?')[0]);
   if (url === '/host.html') return res.writeHead(200, { 'content-type': 'text/html' }).end(HOST);
+  if (withPlugin && url.startsWith('/plugins/')) { const f = path.join(path.resolve('web'), url); return fs.existsSync(f) ? res.writeHead(200, { 'content-type': MIME[path.extname(f)] || 'application/octet-stream' }).end(fs.readFileSync(f)) : res.writeHead(404).end(); }
+  if (withPlugin && url === '/test-plugins/plugin.wasm') return res.writeHead(200, { 'content-type': 'application/wasm' }).end(fs.readFileSync(wasmFile));
   const file = path.join(dist, url.replace(/^\/wc\//, '/'));
   if (!url.startsWith('/wc/') || !file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return res.writeHead(404).end();
   res.writeHead(200, { 'content-type': MIME[path.extname(file)] || 'application/octet-stream' });
@@ -43,7 +64,65 @@ const cdp = opt('--cdp', null);
 const browser = cdp ? await chromium.connectOverCDP(cdp) : await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
 if (shots) fs.mkdirSync(shots, { recursive: true });
 const results = [];
-for (const [name, label, rowY0] of cases) {
+if (withPlugin) {
+  for (const [name, builtin, plug, warm] of pluginCases) {
+    if (opt('--only', null) && !name.includes(opt('--only'))) continue;
+    const b64 = fs.readFileSync(path.join(fx, name)).toString('base64');
+    const rows = [];
+    for (let rnd = 0; rnd < rounds * 2; rnd++) {
+      const variant = (rnd + Math.floor(rnd / 2)) % 2 === 0 ? 'builtin' : 'plugin'; // b,p,p,b,b,p,p,b...: neither always first
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'en-US' });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.goto(`${base}/host.html`);
+      await page.waitForFunction(() => window.log.includes('wordcraft:ready'), null, { timeout: 240000 });
+      await page.evaluate(([n, d]) => window.openDoc(n, d), [name, b64]);
+      await page.waitForFunction(() => window.log.includes('wordcraft:opened'), null, { timeout: 240000 });
+      await page.waitForTimeout(12000);
+      const frame = page.frames().find((f) => f.url().includes('/wc/index.html'));
+      await frame.evaluate(() => {
+        window.__lt = []; window.__raf = []; window.__t0 = 0;
+        new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__lt.push([e.startTime, e.duration]); }).observe({ entryTypes: ['longtask'] });
+        const tick = () => { window.__raf.push(performance.now()); requestAnimationFrame(tick); }; requestAnimationFrame(tick);
+        window.addEventListener('message', (e) => { if (e.data && e.data.type === 'wordcraft:run') window.__t0 = performance.now(); }, true);
+      });
+      if (variant === 'plugin') {
+        // warm-up: starts the Worker and compiles the module (the command changes nothing in this file). The slot command registers a frame after
+        // `plugins`, so the run is repeated until the editor says it was accepted (`wordcraft:ran` with ok).
+        await page.evaluate(() => window.addEventListener('message', (e) => { if (e.data && e.data.type === 'wordcraft:ran') window.__ran = e.data.ok; }));
+        for (let i = 0; i < 20; i++) {
+          await page.evaluate((id) => { window.__ran = undefined; window.runCmd(id); }, warm);
+          await page.waitForFunction(() => window.__ran !== undefined, null, { timeout: 30000 });
+          if (await page.evaluate(() => window.__ran)) break;
+          await page.waitForTimeout(500);
+        }
+        await page.waitForTimeout(3000);
+      }
+      await frame.evaluate(() => { window.__lt.length = 0; });
+      await page.evaluate((id) => window.runCmd(id), variant === 'plugin' ? plug : builtin);
+      await page.waitForTimeout(15000);
+      const m = await frame.evaluate(() => {
+        const t0 = window.__t0; const lts = window.__lt.filter(([s]) => s >= t0 - 50);
+        const end = lts.length ? Math.max(...lts.map(([s, d]) => s + d)) : t0;
+        const next = window.__raf.find((t) => t >= end);
+        return { t0, longtasks: lts.length, longest_ms: lts.length ? Math.max(...lts.map(([, d]) => d)) : 0, task_end_ms: end - t0, frame_ms: next === undefined ? null : next - t0 };
+      });
+      const row = { round: rnd, variant, ...m, errors: errors.slice(0, 3) };
+      rows.push(row);
+      console.log(name, JSON.stringify(row));
+      await page.close();
+      await ctx.close();
+    }
+    const med = (v) => { const t = rows.filter((r) => r.variant === v).slice(1).map((r) => r.frame_ms).filter((x) => x != null).sort((a, b) => a - b); return { timed: t.length, median_frame_ms: t.length ? t[Math.floor(t.length / 2)] : null }; };
+    const summary = { file: name, builtin: med('builtin'), plugin: med('plugin') };
+    summary.delta_ms = summary.plugin.median_frame_ms - summary.builtin.median_frame_ms;
+    summary.delta_pct = (summary.delta_ms / summary.builtin.median_frame_ms) * 100;
+    console.log(JSON.stringify(summary));
+    results.push({ summary, rows });
+  }
+}
+for (const [name, label, rowY0] of withPlugin ? [] : cases) {
   if (opt('--only', null) && !name.includes(opt('--only'))) continue;
   const rowY = rowY0 && opt('--row', null) ? Number(opt('--row')) : rowY0;
   const b64 = fs.readFileSync(path.join(fx, name)).toString('base64');

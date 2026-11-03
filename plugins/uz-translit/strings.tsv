@@ -1,0 +1,4 @@
+key	en	ru	uz-Latn	uz-Cyrl	uz_status
+converted	{n} paragraphs converted	Преобразовано абзацев: {n}	{n} ta xatboshi aylantirildi	{n} та хатбоши айлантирилди	reviewed:agent-opus:2026-10-20
+skipped	{n} items skipped (other language, locked or field)	Пропущено элементов: {n} (другой язык, блокировка или поле)	{n} ta element oʻtkazib yuborildi (boshqa tilda, qulflangan yoki maydon)	{n} та элемент ўтказиб юборилди (бошқа тилда, қулфланган ёки майдон)	reviewed:agent-opus:2026-10-20
+nothing	Nothing to convert	Нечего преобразовывать	Aylantiriladigan matn yoʻq	Айлантириладиган матн йўқ	reviewed:agent-opus:2026-10-20

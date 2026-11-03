@@ -22,7 +22,8 @@
 #   translit-npm             uz-translit npm package: build, size budget, node tests, Chromium smoke (nothing is published)
 #   translit-preserve        xlsx/pptx formatting preservation of the transliteration (scripts/translit/preserve-check.sh, release sheets/slides CLIs)
 #   hrm-bookmarks            WP9: synthetic decree/letter/report `_hrm_*` bookmarks survive edit+save and translit (scripts/hrm-bookmarks, release docs-cli)
-#   translit-perf (nightly)  108-page docx: perf_108 in release, fails when command -> layout exceeds 2 s
+#   translit-perf (nightly)  108-page docx: perf_108 in release, fails when command -> layout exceeds 2 s; perf_108_plugin (N1, built-in vs the uz-translit plugin) prints PASS/FAIL per PLAN 6.3
+#   plugins                  first-party plugins (Phase 7 WP6): cargo xt plugin pack uz-translit (deterministic zip + SHA-256), plugin-sdk and plugin tests, the output matrix (plugin vs built-in, release)
 #   web-smoke                Playwright smoke over every dist
 #   actionlint               lint .github/workflows/ci.yml
 #   release-tests (nightly)  cargo test --release per app with the quarantine
@@ -60,7 +61,7 @@ cd "$OFFICE_ROOT" || exit 2
 
 DOMAINS="docs sheets slides pdf"
 APPS="wordcraft gridcraft deckcraft pdfcraft"
-JOBS="queue lint gen-check deny notices brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve hrm-bookmarks translit-perf web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell docserver sidecars fidelity-directions msvc"
+JOBS="queue lint gen-check deny notices brand i18n disk-guard desktop msi test test-ours check bind build sizes translit-npm translit-preserve hrm-bookmarks translit-perf plugins web-smoke actionlint release-tests fidelity xlsx-bench sync-dry-run convert convert-e2e convert-ui shell docserver sidecars fidelity-directions msvc"
 
 NO_BUILD="${CI_NO_BUILD:-0}"
 RUN_ID="${CI_RUN:-$(date +%Y%m%d-%H%M%S)}"
@@ -526,7 +527,18 @@ job_hrm_bookmarks() {
 # N1 budget (Phase 2 WP10): the 108-page docx, command -> finished layout, must stay under 2 s (the test asserts it).
 # Ignored in the normal test runs, so only the nightly profile runs it.
 job_translit_perf() {
-  bstep perf-108 env CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml     -p docs-translit --test perf perf_108 -- --ignored --nocapture --test-threads 1
+  bstep plugin-build env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin build uz-translit || return 1
+  bstep perf-108 env UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml     -p docs-translit --test perf perf_108 -- --ignored --nocapture --test-threads 1
+}
+
+# First-party plugins (Phase 7 WP6): the package (deterministic zip, SHA-256 in the log), the SDK and plugin unit tests, and the PLAN 6.3 output
+# matrix: the real wasm module in the native host against the built-in command, byte-identical saved docx.
+job_plugins() {
+  local rc=0
+  bstep plugin-pack env CARGO_TARGET_DIR="$OFFICE_TARGET/plugins" cargo xt plugin pack uz-translit || return 1
+  bstep plugin-tests env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-sdk -p uz-translit-plugin || rc=1
+  bstep plugin-matrix env UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test plugin_matrix -- --nocapture || rc=1
+  return $rc
 }
 
 job_web_smoke() {
@@ -794,12 +806,13 @@ profile_jobs() { # prints "job args" lines
            diff_has '^sidecars/' && echo sidecars
            diff_has '^(i18n/converter\.tsv|services/convert-api/ui/)' && echo convert-ui
            diff_has '^(web/shell/|web/plugins/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell
+           diff_has '^(crates/plugin-|plugins/|domains/docs/crates/docs-(plugins|translit)/|xtask/src/plugin\.rs)' && echo plugins
            diff_has '^(services/(docserver|fake-hrm|suite-serve)/|ci/web-smoke/(playwright\.(docserver|bridge-docs)|docserver\.spec|bridge-docs\.spec)|packaging/docserver/)' && echo docserver;;
     full|nightly)
       echo "test-ours"; echo notices
       for a in $APPS; do echo "test $a"; done
       for d in $DOMAINS; do echo "check $d"; done
-      echo bind; echo convert; echo convert-e2e; echo shell; echo docserver
+      echo bind; echo convert; echo convert-e2e; echo shell; echo docserver; echo plugins
       for d in $DOMAINS; do echo "build $d all"; done
       echo translit-npm; echo translit-preserve; echo sizes; echo brand; echo web-smoke; echo actionlint   # brand again: scan the binaries this run built
       if [ "$p" = nightly ]; then echo translit-perf; echo release-tests; echo sidecars; echo fidelity-directions; echo fidelity; echo xlsx-bench; fi;;
@@ -826,6 +839,7 @@ dispatch() { # <job> [args]
     translit-preserve) run_job translit-preserve job_translit_preserve;;
     hrm-bookmarks) run_job hrm-bookmarks job_hrm_bookmarks;;
     translit-perf) run_job translit-perf job_translit_perf;;
+    plugins) run_job plugins job_plugins;;
     web-smoke) run_job web-smoke job_web_smoke;;
     actionlint) run_job actionlint job_actionlint;;
     release-tests) run_job release-tests job_release_tests "$@";;
