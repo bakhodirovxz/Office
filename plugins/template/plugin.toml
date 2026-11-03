@@ -1,0 +1,26 @@
+id = "template"
+version = "0.1.0"
+api = 1
+apps = ["docs"]
+publisher = "Example Publisher"
+name.en = "Template plugin"
+
+[permissions]
+document = "none"
+memory_mb = 8
+
+[[command]]
+id = "hello"
+label.en = "Say hello"
+label.ru = "Поздороваться"
+label.uz-Latn = "Salomlashish"
+label.uz-Cyrl = "Саломлашиш"
+reads = ["none"]
+
+[[toolbar]]
+command = "hello"
+icon = "hello"
+
+[[panel]]
+id = "main"
+title.en = "Template"

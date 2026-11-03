@@ -456,6 +456,18 @@ fn more_than_16_reads_in_a_round_are_refused_before_any_is_done() {
     go(&mut s).unwrap();
 }
 
+#[test]
+fn next_reads_need_the_document_permission() {
+    let _t = turn();
+    let toml = MANIFEST.replace("document = \"write\"", "document = \"none\"").replace("reads = [\"textmap\"]", "reads = [\"none\"]");
+    let p = plugin_with(&toml, |_, _| {
+        answer(vec![], Some(vec![ReadReq { what: ReadWhat::Selection, scope: None, index: None }]), vec![])
+    });
+    let mut s = setup(p, &["abc"]);
+    let e = go(&mut s).unwrap_err().to_string();
+    assert!(e.contains("document permission"), "{e}");
+}
+
 struct FakeNet;
 
 impl Fetch for FakeNet {

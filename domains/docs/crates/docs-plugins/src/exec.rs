@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use plugin_api::action::{Action, Answer, Call, CallKind, Denied, Grants, ReadReq, ReadWhat, Scope as ApiScope, Widget};
-use plugin_api::manifest::{Event, ReadKind};
+use plugin_api::manifest::{DocAccess, Event, ReadKind};
 use plugin_api::textmap::{Apply, TextMap};
 use plugin_api::wire::{MAX_BLOBS, MAX_ROUNDS, Message};
 use serde_json::{Map, Value, json};
@@ -169,6 +169,10 @@ impl Run {
 
     /// Perform one read: the blob goes into `blobs`, its index under the read's name in `reads`.
     fn read(&mut self, s: &mut Session, req: &ReadReq, blobs: &mut Vec<Vec<u8>>, reads: &mut BTreeMap<String, u32>) -> Result<u32, CmdError> {
+        // Every read goes through here (command `reads`, `next.reads`, the `read` action): none without `document = read` or `write`.
+        if self.inv.plugin.manifest.permissions.document < DocAccess::Read {
+            return fail("plugin action refused: reading the document needs the document permission");
+        }
         // A message carries 16 blobs at most (`Message::encode`); refuse the 17th read before it walks the document.
         if blobs.len() >= MAX_BLOBS {
             return fail("plugin asked for more than 16 reads in one round");
