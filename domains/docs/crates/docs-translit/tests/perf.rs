@@ -1,6 +1,8 @@
 //! WP10a/WP10 N1: the 108-page document, engine-level timings (run with `--release -- --ignored --nocapture`).
 use std::time::Instant;
 
+mod common;
+
 use wordcraft_doc::StoryRef;
 use wordcraft_engine::{Session, io};
 
@@ -157,4 +159,60 @@ fn perf_108() {
             median(&mut redo)
         );
     }
+}
+
+/// WP6 N1 (PLAN section 6.3): the built-in and the plugin on the 108-page document, alternating in this process, release profile.
+/// Needs `UZ_TRANSLIT_PLUGIN_WASM`. Pass: plugin command part <= built-in + 50 ms, command -> relayout within +10 %, both under 2 s.
+#[test]
+#[ignore]
+fn perf_108_plugin() {
+    let Some(wasm) = common::wasm() else { return };
+    common::install(&wasm);
+    for (name, builtin, plugin) in [
+        ("uz108-latn.docx", "tools.translitCyrl", "plugin.uz-translit.toCyrillic"),
+        ("uz108-cyrl.docx", "tools.translitLatn", "plugin.uz-translit.toLatin"),
+    ] {
+        let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
+        let bytes = std::fs::read(&path).unwrap();
+        let (mut cmd, mut tot) = ([vec![], vec![]], [vec![], vec![]]);
+        let (mut inst, mut rnd_ms) = (vec![], vec![]);
+        for round in 0..6 {
+            // alternate; the order flips every round so neither side always runs second
+            for k in 0..2 {
+                let which = (k + round) % 2;
+                let id = [builtin, plugin][which];
+                let (doc, _) = io::open_bytes_with(name, &bytes, None).unwrap();
+                let mut s = Session::new(doc);
+                docs_translit::install(&mut s);
+                docs_plugins::register(&mut s, "en");
+                s.layout(); // the document is already shown
+                let t = Instant::now();
+                s.run(id, &serde_json::json!({})).unwrap();
+                let c = t.elapsed().as_secs_f64() * 1e3;
+                s.layout();
+                let all = t.elapsed().as_secs_f64() * 1e3;
+                let (gi, gr) = common::take_guest_ms();
+                if round > 0 {
+                    cmd[which].push(c);
+                    tot[which].push(all);
+                    if which == 1 {
+                        inst.push(gi);
+                        rnd_ms.push(gr);
+                    }
+                }
+            }
+        }
+        let [cb, cp] = [median(&mut cmd[0]), median(&mut cmd[1])];
+        let [tb, tp] = [median(&mut tot[0]), median(&mut tot[1])];
+        let pass = cp <= cb + 50.0 && tp <= tb * 1.10 && tp < BUDGET_MS;
+        println!(
+            "N1 {name}: command built-in {cb:.0} ms / plugin {cp:.0} ms (+{:.0}; guest: instantiate {:.1} ms, round {:.0} ms); command->relayout built-in {tb:.0} ms / plugin {tp:.0} ms ({:+.1} %) | {} (median of 5, alternating)",
+            cp - cb,
+            median(&mut inst),
+            median(&mut rnd_ms),
+            (tp / tb - 1.0) * 100.0,
+            if pass { "PASS" } else { "FAIL" }
+        );
+    }
+    docs_plugins::clear();
 }

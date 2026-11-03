@@ -23,3 +23,6 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 # Same versions as the upstream workspace already locks (no new lock entries): the preservation tests read the saved packages.
 quick-xml = "0.41"
 zip = { version = "3", default-features = false, features = ["deflate"] }
+# Phase 7 WP6 (PLAN section 6.3): the output matrix and the speed runs load the real plugin into the native host.
+plugin-host = { path = "../../../../crates/plugin-host" }
+plugin-api = { path = "../../../../crates/plugin-api" }

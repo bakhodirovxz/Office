@@ -1,0 +1,17 @@
+# Phase 7 WP6: plugin #1, Uzbek Latin <-> Cyrillic transliteration as a plugin (docs/phase7/PLAN.md section 6). Built for
+# wasm32-unknown-unknown by `cargo xt plugin build uz-translit`; the rlib is for the native unit tests.
+[package]
+name = "uz-translit-plugin"
+version = "1.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Transliteration plugin: the same uz-translit crate as the built-in command, behind the plugin API"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+plugin-sdk = { path = "../../crates/plugin-sdk" }
+uz-translit = { path = "../../crates/uz-translit" }
+serde_json = "1"

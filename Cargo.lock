@@ -673,6 +673,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "plugin-sdk"
+version = "0.1.0"
+dependencies = [
+ "plugin-api",
+]
+
+[[package]]
 name = "png"
 version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1084,6 +1091,15 @@ name = "uz-translit"
 version = "0.1.0"
 
 [[package]]
+name = "uz-translit-plugin"
+version = "1.0.0"
+dependencies = [
+ "plugin-sdk",
+ "serde_json",
+ "uz-translit",
+]
+
+[[package]]
 name = "uz-translit-wasm"
 version = "0.1.0"
 dependencies = [
@@ -1434,8 +1450,11 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "office-brand",
+ "plugin-api",
+ "sha2",
  "toml_edit",
  "uz-translit",
+ "zip",
 ]
 
 [[package]]

@@ -1,0 +1,40 @@
+id = "uz-translit"
+version = "1.0.0"
+api = 1
+apps = ["docs"]
+publisher = "First-party"
+name.en = "Transliteration"
+name.ru = "Транслитерация"
+name.uz-Latn = "Transliteratsiya"
+name.uz-Cyrl = "Транслитерация"
+
+[permissions]
+document = "write"
+memory_mb = 32
+
+[[command]]
+id = "toCyrillic"
+label.en = "Latin to Cyrillic"
+label.ru = "С латиницы на кириллицу"
+label.uz-Latn = "Lotinchadan kirillchaga"
+label.uz-Cyrl = "Лотинчадан кириллчага"
+reads = ["textmap"]
+params = { scope = "auto" }
+
+[[command]]
+id = "toLatin"
+label.en = "Cyrillic to Latin"
+label.ru = "С кириллицы на латиницу"
+label.uz-Latn = "Kirillchadan lotinchaga"
+label.uz-Cyrl = "Кириллчадан лотинчага"
+reads = ["textmap"]
+params = { scope = "auto" }
+
+[[command]]
+id = "auto"
+label.en = "Auto-detect"
+label.ru = "Автоопределение"
+label.uz-Latn = "Avtomatik aniqlash"
+label.uz-Cyrl = "Автоматик аниқлаш"
+reads = ["textmap"]
+params = { scope = "auto" }

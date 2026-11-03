@@ -271,3 +271,15 @@ Owner decisions behind it (PLAN 13): **O3** (who may install), **O4** (SHA-256 p
 - **Disable.** Remove the id from `enabled` (local) or the entry from the provider (server); the editors drop the commands and the panel at the next document open (server)
   or the next page load (local).
 - **Not done:** signature check (O4), an admin page (O7), uninstall, update-in-place prompts, Android install.
+
+## 10. The Rust SDK and packing (Phase 7 WP6; the full guide and the template come with WP11)
+
+`crates/plugin-sdk` is the glue for the ABI of section 3: `alloc`/`free`/`call` exports, the message codec, `Reply` and the typed
+actions of `plugin-api`. A plugin is a `cdylib` for `wasm32-unknown-unknown` with one handler, `fn(Call, Vec<Vec<u8>>) -> Result<Reply, String>`,
+exported by `plugin_sdk::export!(handler)`; an `Err` becomes a `ui.status` line and changes nothing. The crate's `build.rs` passes
+`--import-memory` to the linker (the host creates the memory). `plugins/uz-translit` is the first-party example (PLAN section 6).
+
+`cargo xt plugin build <name>` builds `plugins/<name>` with the `plugin` profile (speed, no unwinding, stripped). `cargo xt plugin pack <name>`
+checks `plugin.toml` and the entry list with `plugin-api` and writes `<target>/plugins/<id>-<version>.zip` (stored entries in a fixed order, fixed
+timestamp and mode, so equal inputs give equal bytes) and prints its SHA-256. `plugins/<name>/strings.tsv` (header row, then
+`key, en, ru, uz-Latn, uz-Cyrl, status` per line) is shipped in the package; the plugin reads its own copy at build time.
