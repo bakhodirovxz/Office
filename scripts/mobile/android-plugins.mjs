@@ -184,7 +184,7 @@ async function rows() {
   await record('rows', async () => {
     let p = await launch();
     const have0 = (await until(p, '!!(window.PluginHost && PluginHost.last)')) ? await p.ev('PluginHost.last.plugins.map((x) => x.d.id)') : [];
-    const need = [['test.host', 'Test plugin'], ['test.bad-import', 'Bad import'], ['test.bad-export', 'Bad export'], ['test.nonet', 'No network']].filter(([id]) => !have0.includes(id));
+    const need = [['test.host', 'Test plugin'], ['test.bad-import', 'Bad import'], ['test.bad-export', 'Bad export'], ['test.nonet', 'No network'], ['test.own-memory', 'Own memory'], ['test.gc-type', 'GC type']].filter(([id]) => !have0.includes(id));
     if (need.length) {   // setup through the same picker path as the install item
       await pluginsPage(p);
       for (const [id, name] of need) { await pickPackage(p, `${id}-1.0.0.zip`); await enableRow(p, name); await L.sleep(1500); }
@@ -197,10 +197,10 @@ async function rows() {
     const audit = async (n) => JSON.parse(await p.ev(`JSON.stringify(${H}.audit.slice(${n}))`));
     const have = await p.ev(`${H}.plugins.map((x) => x.d.id)`);
     // M1 / M2: the Android store accepts the file, the Worker refuses the load
-    for (const [row, id, re] of [['M1', 'test.bad-import', /imports not allowed: wasi_snapshot_preview1/], ['M2', 'test.bad-export', /exports a memory/]]) {
+    for (const [row, id, re] of [['M1', 'test.bad-import', /imports not allowed: wasi_snapshot_preview1/], ['M2', 'test.bad-export', /exports a memory|defines its own memory/], ['M2b-own-memory', 'test.own-memory', /the module defines its own memory/], ['M2b-gc-type', 'test.gc-type', /type form that is not allowed/]]) {
       const n = (await audit(0)).length; await inv(id, 'hello'); await L.sleep(1500);
       const a = await audit(n), s = await say();
-      item(`${row}-load-refused`, have.includes(id) && a.some((x) => x.kind === 'failed' && re.test(x.error)), { plugin: id, audit: a, status: s });
+      item(`${row}-load-refused`.replace('M2b-own-memory-load-refused', 'M2b-own-memory').replace('M2b-gc-type-load-refused', 'M2b-gc-type'), have.includes(id) && a.some((x) => x.kind === 'failed' && re.test(x.error)), { plugin: id, audit: a, status: s });
     }
     // M3: no network permission; M4: the manifest lists example.org but Android grants nothing
     let n = (await audit(0)).length; await inv('test.nonet', 'net'); await L.sleep(1500);
@@ -276,10 +276,28 @@ async function cols() {
       shots.push(shot(shotName));
       seen[row] = { ok, status: s, audit_tail: JSON.parse(await p.ev('JSON.stringify(PluginHost.last.audit.slice(-3))')) };
     }
+    // F5: a second plugin while one is pending: the busy refusal, then the first one's timeout leaves the document unlocked
+    const f5n = await p.ev('PluginHost.last.audit.length');
+    await runCmd(p, 'plugin.test.host.spin'); await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(1500);
+    const busy = await say(); shots.push(shot('F5-1-busy'));
+    let stopped = false; for (let i = 0; i < 30 && !stopped; i++) { await L.sleep(1000); stopped = await p.ev(`PluginHost.last.audit.slice(${f5n}).some((x) => x.kind === 'stopped')`); }
+    await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(2500);
+    const afterBusy = await say();
     await save('cols'); const after = docText('cols-after.docx');
     const same = after.trim() === orig.trim();
     item('M5-saveAs-refused', seen['M5-saveAs-refused'].ok && same, { ...seen['M5-saveAs-refused'], commands_in_manifest: cmds, document_unchanged_after_save: same, text: after.slice(0, 200) }, shots.slice(0, 2));
+    item('F5-busy', /Another plugin is still running/.test(busy) && stopped && same, { status_during: busy, first_plugin_stopped: stopped, status_after_next_command: afterBusy, document_unchanged_after_save: same }, [shots[shots.length - 1]]);
     item('R1-reads-cap', seen['R1-reads-cap'].ok && same, { ...seen['R1-reads-cap'], document_unchanged_after_save: same }, [shots[2]]);
+    // F6: reinstalling a plugin whose manifest changed turns it off; the same package again keeps it on
+    p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)'); await pluginsPage(p);
+    const f6 = [], isOn = async (re) => p.ev(`[...document.querySelectorAll('#plg-main li')].find((l) => /${re}/.test(l.textContent))?.querySelector('input[type=checkbox]')?.checked`);
+    const on0 = await isOn('Test plugin');
+    await pickPackage(p, 'test.host-1.0.0.zip'); await L.sleep(2000); const onSame = await isOn('Test plugin'); f6.push(shot('F6-1-same-package'));
+    await pickPackage(p, 'test.host-changed-1.0.0.zip'); await L.sleep(2000); const onChanged = await isOn('Test plugin changed'); f6.push(shot('F6-2-changed-package'));
+    const msg6 = await p.ev("document.getElementById('plg-msg').textContent");
+    item('F6-reinstall-consent', on0 === true && onSame === true && onChanged === false, { enabled_before: on0, enabled_after_same_package: onSame, enabled_after_changed_manifest: onChanged, message: msg6, rows: await pageItems(p) }, f6);
   });
 }
 
