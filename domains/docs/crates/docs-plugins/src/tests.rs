@@ -852,17 +852,6 @@ mod web_bridge {
     }
 
     #[test]
-    fn a_save_while_a_call_is_pending_keeps_the_protection_the_user_had() {
-        let _t = turn();
-        let mut s = page(None);
-        s.doc.settings.protection = Some("trackedChanges".into());
-        let _ = started(&mut s);
-        assert_eq!(saved_protection(&s).as_deref(), Some("trackedChanges"));
-        bridge::reset();
-        assert_eq!(saved_protection(&s).as_deref(), Some("trackedChanges"));
-    }
-
-    #[test]
     fn a_second_round_keeps_the_lock_and_requested_reads_come_back_as_buffers() {
         let _t = turn();
         let mut s = page(None);
@@ -976,6 +965,83 @@ mod web_bridge {
         a.plugin = Some("nope".into());
         bridge::answer(&mut s, a);
         assert!(error_of(bridge::take_out()).is_some());
+    }
+
+    fn click(s: &mut Session, call: &str, plugin: &str, actions: Value, more: bool) {
+        let mut a = ans(&json!(call), actions, more);
+        a.plugin = Some(plugin.into());
+        bridge::answer(s, a);
+    }
+
+    #[test]
+    fn two_plugins_at_once_the_second_panel_click_is_refused_and_the_document_ends_unlocked() {
+        let _t = turn();
+        let mut s = page(None);
+        let other = JSON.replace("test-plugin", "other-plugin");
+        bridge::set_plugins(
+            vec![
+                Registration { manifest: serde_json::from_str(JSON).unwrap(), settings: None, enabled: true },
+                Registration { manifest: serde_json::from_str(&other).unwrap(), settings: None, enabled: true },
+            ],
+            None,
+        );
+        let before = s.doc.clone();
+        let (call, ..) = started(&mut s);
+        bridge::answer(&mut s, ans(&call, ins("A"), true));
+        let _ = bridge::take_out();
+        assert!(bridge::locked());
+        // B's click arrives while A is pending: refused, A's partial change is not snapshotted as B's "before"
+        click(&mut s, "h1", "other-plugin", ins("B"), false);
+        assert_eq!(error_of(bridge::take_out()).as_deref(), Some(bridge::BUSY));
+        assert!(!text(&s, 0).contains('B'));
+        assert!(bridge::locked(), "A is still pending");
+        bridge::answer(&mut s, ans(&call, ins("C"), false));
+        let _ = bridge::take_out();
+        assert!(!bridge::locked());
+        assert_eq!(s.doc.settings.protection, None, "no lock is left in the document");
+        // B's later round must not start a fresh invocation now that A is gone
+        click(&mut s, "h1", "other-plugin", ins("B"), false);
+        assert_eq!(error_of(bridge::take_out()).as_deref(), Some("the invocation has ended"));
+        assert!(!text(&s, 0).contains('B'));
+        assert_eq!(saved_protection(&s), None);
+        s.run("edit.undo", &json!({})).unwrap();
+        assert_eq!(s.doc, before, "A's two rounds are one undo step");
+    }
+
+    #[test]
+    fn a_late_string_round_after_a_timeout_is_refused() {
+        let _t = turn();
+        let mut s = page(Some(10.0));
+        let before = s.doc.clone();
+        click(&mut s, "h1", "test-plugin", ins("U"), true);
+        let _ = bridge::take_out();
+        assert!(bridge::locked());
+        std::thread::sleep(std::time::Duration::from_millis(40));
+        assert!(!bridge::tick(&mut s));
+        assert_eq!(s.doc, before, "the timeout restored the document");
+        click(&mut s, "h1", "test-plugin", ins("late"), false);
+        assert_eq!(error_of(bridge::take_out()).as_deref(), Some("the invocation has ended"));
+        assert_eq!(s.doc, before);
+        assert!(!bridge::locked());
+        assert_eq!(s.doc.settings.protection, None);
+    }
+
+    #[test]
+    fn a_document_with_its_own_protection_is_not_started_on() {
+        let _t = turn();
+        // replaces the WP4 test a_save_while_a_call_is_pending_keeps_the_protection_the_user_had: no call starts here any more,
+        // and the saved file still carries the user's own protection unchanged
+        for mode in ["comments", "trackedChanges"] {
+            let mut s = page(None);
+            s.doc.settings.protection = Some(mode.into());
+            assert!(go(&mut s).is_err());
+            assert!(!bridge::locked());
+            click(&mut s, "h1", "test-plugin", ins("U"), false);
+            assert_eq!(error_of(bridge::take_out()).as_deref(), Some(bridge::PROTECTED));
+            assert_eq!(s.doc.settings.protection.as_deref(), Some(mode), "the user's protection is untouched");
+            assert!(!text(&s, 0).contains('U'));
+            assert_eq!(saved_protection(&s).as_deref(), Some(mode));
+        }
     }
 
     #[test]

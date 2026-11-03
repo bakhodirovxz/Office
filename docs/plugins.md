@@ -221,8 +221,13 @@ is recorded on the plugin and never shown to the user.
   `shape.`, `outline.`, `references.`, ...). Also refused inside the allowed families because they take a file, a path or
   bytes: `insert.textFromFile`, `insert.picture`, `insert.link`, `insert.object`, `font.add`, `font.loadSystem`, `font.remove`,
   `review.compare`, `review.combine`, `review.acceptAll`, `review.rejectAll`, `styles.organizer`, `styles.copyFrom`.
-  Of the 633 Docs commands, 306 are allowed (2026-11-03). A `run` whose `params` hold a key named `path`, `dir`, `file`, `url`,
-  `uri`, `href` or `src` (any depth, any case) is refused, except a value that is an array of non-negative integers (a document
+  Refused for their effect: `insert.field` and `fields.setCode` (an instruction can be `HYPERLINK`, `INCLUDEPICTURE`,
+  `INCLUDETEXT` or `DDEAUTO`, which reach a file or another program once the document is opened in Word),
+  `review.addToDictionary` (writes the user's dictionary file, outside the undo step), `review.accept` and `review.reject` (a loop
+  of them is accept all or reject all), `review.restrict` (a plugin must not lock the document or set a password).
+  Of the 633 Docs commands, 300 are allowed (2026-11-03). A `run` whose `params` hold a key named `path`, `dir`, `file`, `url`,
+  `uri`, `href`, `src`, `link`, `ins`, `del`, `fmtChange` or `numChange` (any depth, any case; so also inside `styles.*` and
+  `format.set`: `link` is a hyperlink target, the others forge tracked-change attribution) is refused, except a value that is an array of non-negative integers (a document
   node path, so `document.paragraph {path: [3]}` works). A test checks that every exception exists in the registry and that no
   allowed command's `params` description mentions a path or URL.
 - **Refused at install**: a manifest that breaks section 2, an `api` the host does not run, a binary that imports anything but

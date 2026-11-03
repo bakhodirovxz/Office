@@ -1,5 +1,6 @@
 {
   "en": {
+    "plg.busy": "Another plugin is still running. Try again when it has finished.",
     "plg.close": "Close",
     "plg.disabled": "{name} was stopped too many times and is switched off until the page is reloaded.",
     "plg.failed": "{name} could not finish: {error}",
@@ -26,10 +27,12 @@
     "plg.page.silent": "The app did not answer.",
     "plg.page.title": "Plugins",
     "plg.page.version": "Version {version}",
+    "plg.protected": "The document is protected, so {name} did not run.",
     "plg.refused": "{name} was not loaded: {error}",
     "plg.timeout": "{name} took too long and was stopped."
   },
   "ru": {
+    "plg.busy": "Другой плагин ещё работает. Повторите, когда он закончит.",
     "plg.close": "Закрыть",
     "plg.disabled": "{name} слишком много раз была остановлена и отключена до перезагрузки страницы.",
     "plg.failed": "«{name}» не смог завершить работу: {error}",
@@ -56,10 +59,12 @@
     "plg.page.silent": "Приложение не ответило.",
     "plg.page.title": "Плагины",
     "plg.page.version": "Версия {version}",
+    "plg.protected": "Документ защищён, поэтому «{name}» не запущен.",
     "plg.refused": "«{name}» не загружен: {error}",
     "plg.timeout": "«{name}» работал слишком долго и был остановлен."
   },
   "uz-Latn": {
+    "plg.busy": "Boshqa plagin hali ishlayapti. U tugagach qayta urinib koʻring.",
     "plg.close": "Yopish",
     "plg.disabled": "{name} juda koʻp marta toʻxtatildi va sahifa qayta yuklanguncha oʻchirib qoʻyildi.",
     "plg.failed": "{name} ishni tugata olmadi: {error}",
@@ -86,10 +91,12 @@
     "plg.page.silent": "Ilova javob bermadi.",
     "plg.page.title": "Plaginlar",
     "plg.page.version": "Versiya {version}",
+    "plg.protected": "Hujjat himoyalangan, shuning uchun {name} ishlamadi.",
     "plg.refused": "{name} yuklanmadi: {error}",
     "plg.timeout": "{name} juda uzoq ishladi va toʻxtatildi."
   },
   "uz-Cyrl": {
+    "plg.busy": "Бошқа плагин ҳали ишлаяпти. У тугагач қайта уриниб кўринг.",
     "plg.close": "Ёпиш",
     "plg.disabled": "{name} жуда кўп марта тўхтатилди ва саҳифа қайта юкланмагунча ўчириб қўйилди.",
     "plg.failed": "{name} ишни тугата олмади: {error}",
@@ -116,6 +123,7 @@
     "plg.page.silent": "Илова жавоб бермади.",
     "plg.page.title": "Плагинлар",
     "plg.page.version": "Версия {version}",
+    "plg.protected": "Ҳужжат ҳимояланган, шунинг учун {name} ишламади.",
     "plg.refused": "{name} юкланмади: {error}",
     "plg.timeout": "{name} жуда узоқ ишлади ва тўхтатилди."
   }

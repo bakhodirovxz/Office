@@ -23,6 +23,8 @@
   // control, invisible and bidi-override characters never reach the screen (the same set as plugin-api's `spoof`)
   const SPOOF = new RegExp('[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]', 'g');
   const SPOOF_NL = new RegExp('[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]', 'g');
+  // the editor's refusals (docs-plugins bridge.rs BUSY, PROTECTED) shown in the user's language
+  const REFUSED = { 'another plugin is still running': 'plg.busy', 'the document is protected': 'plg.protected' };
   const clean = (s, nl) => [...String(s ?? '').replace(nl ? SPOOF_NL : SPOOF, '')].slice(0, TEXT).join('');
   const loc = (m, lang) => clean((m && (m[lang] || m.en)) || '');
   const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -288,7 +290,8 @@
         if (sent || call.fromEditor) { try { toEditor(P, 'pluginActions', { call: call.id, actions: [], more: false, abort: true }); } catch (_) { /* no editor */ } }
         await ready;
         if (e.stopped && (P.timeouts = (P.timeouts || 0) + 1) >= DISABLE_AFTER) P.off = true;
-        say(P.off ? t('plg.disabled', { name: P.name }) : e.stopped ? t('plg.timeout', { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
+        const known = REFUSED[String(e.message)];
+        say(P.off ? t('plg.disabled', { name: P.name }) : e.stopped ? t('plg.timeout', { name: P.name }) : known ? t(known, { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
         note(e.origin !== undefined ? { plugin: P.d.id, kind: 'network.refused', origin: e.origin } : { plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
       }
     }
