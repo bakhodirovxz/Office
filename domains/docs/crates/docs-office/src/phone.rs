@@ -455,7 +455,7 @@ fn params(p: &str) -> Value {
 /// Truncate to one row with an ellipsis (a long file name never reaches the buttons beside it).
 fn one_line(p: &Painter, text: &str, font: FontId, color: Color32, width: f32) -> std::sync::Arc<egui::Galley> {
     let mut job = egui::text::LayoutJob::simple_singleline(text.to_string(), font, color);
-    job.wrap = egui::text::TextWrapping { max_width: width.max(1.0), max_rows: 1, break_anywhere: true, overflow_character: Some('…'), ..Default::default() };
+    job.wrap = egui::text::TextWrapping { max_width: width.max(1.0), max_rows: 1, break_anywhere: true, overflow_character: Some('…') };
     p.layout_job(job)
 }
 

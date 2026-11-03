@@ -234,7 +234,7 @@ fn a_refused_command_leaves_the_document_alone() {
         run_action("text.insert", json!({"text": "x", "file": "C:/x"})),
         run_action("plugin.test-plugin.other", json!({})),
     ] {
-        let _ = crate::clear();
+        crate::clear();
         let mut s = setup(once(vec![insert("first"), bad.clone()]), &["abc"]);
         let before = s.doc.clone();
         let depth = s.can_undo();
@@ -299,7 +299,7 @@ fn malformed_answers_are_refused_and_restore() {
         Box::new(|_, _| answer(vec![Action::TextmapApply { blob: 0 }], None, vec![vec![1, 2, 3]])),
     ];
     for f in cases {
-        let _ = crate::clear();
+        crate::clear();
         let mut s = setup(plugin(f), &["abc", "def"]);
         let before = s.doc.clone();
         assert!(go(&mut s).is_err());
@@ -377,7 +377,7 @@ fn a_stale_revision_is_refused() {
     assert_ne!(s.doc, before);
 
     // A text map applied after a mutation of the same invocation is stale as well.
-    let _ = crate::clear();
+    crate::clear();
     let p = plugin(|call, blobs| {
         if call.kind == CallKind::Resume {
             return answer(vec![], None, vec![]);
@@ -416,7 +416,7 @@ fn read_actions_return_blobs_for_the_next_round() {
     assert!(got.contains(&("paragraph".into(), "abc".into())), "{got:?}");
 
     // A text map read by a `next` request.
-    let _ = crate::clear();
+    crate::clear();
     let n = Arc::new(Mutex::new(0usize));
     let n2 = n.clone();
     let p = plugin(move |call, blobs| {
@@ -467,7 +467,7 @@ fn fetch_needs_a_granted_origin_and_the_host_does_it() {
 
     // Another origin, no grant at all, and a plain http URL are refused before anything is sent.
     for (url, granted) in [("https://evil.example.com/", true), ("https://api.example.org/", false), ("http://api.example.org/", true)] {
-        let _ = crate::clear();
+        crate::clear();
         *seen.lock().unwrap() = Value::Null;
         let mut p = plugin(make(url));
         p.fetcher = Some(Arc::new(FakeNet));
@@ -480,7 +480,7 @@ fn fetch_needs_a_granted_origin_and_the_host_does_it() {
     }
 
     // A granted origin with a host that has no network answers with an error value, it does not abort.
-    let _ = crate::clear();
+    crate::clear();
     let p = plugin(make("https://api.example.org/"));
     let mut s = setup(p, &["a"]);
     go(&mut s).unwrap();
@@ -512,7 +512,7 @@ fn ui_actions_set_the_panel_and_the_status_line_and_commit_only_on_success() {
         vec![Action::UiPanel { panel: "side".into(), widgets: vec![Widget::Text { text: "x".repeat(10_000) }] }],
         vec![Action::UiStatus { text: "late".into() }, run_action("no.such.command", json!({}))],
     ] {
-        let _ = crate::clear();
+        crate::clear();
         let _ = crate::add(once(acts));
         let mut s = session(&["abc"]);
         crate::register(&mut s, "en");
@@ -563,7 +563,7 @@ fn events_may_only_touch_the_plugins_own_ui() {
     assert!(p.ui.lock().unwrap().last_error.as_deref().is_some_and(|e| e.contains("EventOnlyUi")));
 
     // Only subscribed events are delivered.
-    let _ = crate::clear();
+    crate::clear();
     let n = Arc::new(Mutex::new(0));
     let n2 = n.clone();
     let mut s = setup(plugin(move |_, _| { *n2.lock().unwrap() += 1; answer(vec![], None, vec![]) }), &["abc"]);
