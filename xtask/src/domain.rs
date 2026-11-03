@@ -491,6 +491,13 @@ fn read_lock(path: &Path) -> Res<Pkgs> {
 /// Our shared crates whose private dependencies are ours, not upstream's drift.
 const OWN_ROOTS: [&str; 4] = ["suite-core", "xdfu-core", "plugin-api", "plugin-host"];
 
+/// Lock entries that only our native plugin host explains, and that no build compiles. The lock resolver follows wasmtime's optional
+/// `futures` dependency (feature `async`, which none of our crates enable), and that widens the lock entry of `futures-util`
+/// (+ `futures-channel`, `futures-sink`), which upstream's lock has with fewer. `cargo tree --target all -e all -i futures-sink` in
+/// `domains/docs` prints nothing, so no upstream build links them; the lock cannot show features, so own_private_deps sees them as
+/// shared with `futures-util`. Recorded here with the version, so a new or changed entry still fails the check. (name, version)
+const LOCK_ONLY_VIA_WASMTIME: [(&str, &str); 2] = [("futures-channel", "0.3.34"), ("futures-sink", "0.3.34")];
+
 /// "name", "name version" or "name version (source)": a dependency entry of a lock package, as (name, version).
 fn dep_key(entry: &str) -> (String, Option<String>) {
     let mut it = entry.split_whitespace();
@@ -613,7 +620,15 @@ pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
                 }
             }
             None if src.is_empty() => {} // a path package of ours
-            None => foreign.push(format!("{name} {vers:?} {src}")),
+            None => {
+                let vers: Vec<_> = vers
+                    .iter()
+                    .filter(|v| !LOCK_ONLY_VIA_WASMTIME.contains(&(name.as_str(), v.as_str())))
+                    .collect();
+                if !vers.is_empty() {
+                    foreign.push(format!("{name} {vers:?} {src}"));
+                }
+            }
         }
     }
     for (k, uv) in &u {
@@ -646,6 +661,36 @@ pub fn lockdiff(domain: &Path, upstream: &Path) -> Res<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lockdiff_allows_the_recorded_wasmtime_only_entries_at_their_version() {
+        let dir = std::env::temp_dir().join(format!("lockdiff-w-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let reg = "source = \"registry+https://github.com/rust-lang/crates.io-index\"";
+        let lock = |v: &str| {
+            format!("version = 4
+[[package]]
+name = \"app\"
+version = \"1.0.0\"
+[[package]]
+name = \"futures-sink\"
+version = \"{v}\"
+{reg}
+")
+        };
+        let up = dir.join("up.lock");
+        fs::write(&up, "version = 4
+[[package]]
+name = \"app\"
+version = \"1.0.0\"
+").unwrap();
+        let (ok, bad) = (dir.join("ok.lock"), dir.join("bad.lock"));
+        fs::write(&ok, lock("0.3.34")).unwrap();
+        fs::write(&bad, lock("0.3.99")).unwrap();
+        assert!(lockdiff(&ok, &up).is_ok());
+        assert!(lockdiff(&bad, &up).is_err());
+        fs::remove_dir_all(&dir).ok();
+    }
 
     #[test]
     fn lockdiff_counts_private_deps_of_our_roots_as_ours() {

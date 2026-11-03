@@ -14,5 +14,10 @@ plugin-api = { path = "../plugin-api" }
 # Wasmtime LTS line: majors that are multiples of 12 are supported 24 months, others 2 months (docs.wasmtime.dev/stability-release.html, checked 2026-11-03); 48 is the current LTS.
 wasmtime = { version = "=48.0.8", default-features = false, features = ["cranelift", "runtime", "std"] }
 
+# Native `fetch` (src/net.rs): rustls with the ring provider (the services use the same; aws-lc-sys carries the OpenSSL licence) and
+# the operating system's trust roots. Neither is linked into any wasm build: this crate is native only.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-native-certs = "0.8"
+
 [dev-dependencies]
 wat = "=1.263.0"

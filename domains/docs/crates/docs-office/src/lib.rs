@@ -14,6 +14,8 @@ pub mod layer;
 pub mod levels;
 pub mod mode;
 pub mod phone;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod plugin_native;
 #[cfg(target_arch = "wasm32")]
 pub mod plugin_web;
 pub mod preset;
@@ -111,6 +113,8 @@ pub fn install(s: &mut Session) {
     mode::default_store(settings::store());
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     layer::init();
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    plugin_native::init();
     if let Some(r) = extend(&s.registry) {
         s.registry = std::sync::Arc::new(r);
     }
@@ -124,3 +128,5 @@ mod tests;
 mod plugin_allowlist_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod layer_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod plugin_native_tests;
