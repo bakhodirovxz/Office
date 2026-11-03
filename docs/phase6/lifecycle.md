@@ -74,10 +74,7 @@ and an explicit `file.save` both contain the same `word/media/` part, byte for b
 both lose it alike. Result: pass (1 test, 0.04 s). Desktop Chromium also: the docx saved after each recovery below holds `word/media/image1.png`
 (49,270 B) and the typed text.
 
-**Still a data-loss risk (not fixed here, reported):** a tap that passes through the Edit button to the page, and a tap that moves a selected
-picture, are unintended edits on a phone; with a typed key after them a picture is deleted without the user seeing it (it is off screen). Undo
-brings it back. Step (2) was seen only on the emulator (`input tap`, DPR 1.3125); the exact code path is not isolated (candidates:
-`canvas::mouse` after `chrome_down` ends, `objects::pointer` drag from a press that the keyboard's viewport change moved). Needs a WP of its own.
+**Fixed afterwards** (branch `p6-tapfix`, section "Tap-through fix" below).
 
 ## What was built
 - **Shell** (`web/shell/shell.js`, +27/-6 lines): `case 'autosave'` keeps the latest payload per editor frame (`f.auto`) and outside the page: the
@@ -145,3 +142,41 @@ the docx saved afterwards has the text and `image1.png`, and the Save deletes th
 - The desktop host (WebView2) path: memory only, not run. Sheets, Slides and PDF send no autosave (none recovers; the shell code is app-neutral).
 - The app's recovered document has no write-back URI after process death (Save goes through Save as); after a renderer crash it keeps it.
 - Shell budget: 262 B left; the next shell change will need a budget decision.
+
+## Tap-through fix (p6-tapfix, 2026-11-03)
+The three steps above were one bug in two places, found with a debug build that logged every press at `canvas::mouse`, `phone_chrome` and
+`objects::pointer` (read over CDP `Runtime.consoleAPICalled`, temporary, not in the tree):
+- **Root cause (docs-office `phone::active`).** `active` clears "touched" when a pointer press arrives with no `Event::Touch` in its frame and the last
+  touch is over a second old (`TOUCH_GRACE`); with no touch ever seen the "last touch" is minus infinity. Android Chrome delivers `pointerdown` in a frame of its
+  own before `touchstart`, so a tap after a quiet second turned the phone layout **off for the press frame**: `phone_chrome` returned false (the desktop
+  ribbon layout was drawn for that frame, `PHONE_READING` reset, `CHROME_DOWN` not set), and `canvas::mouse` saw the press with `chrome_down=false
+  reading=false`. The press of a tap on the Edit button, which floats over the page, went to `objects::pointer` ("object press" in the log), selected the picture
+  (the page scrolled to it) and began an object drag. The `wordcraft:phone` messages of the run show it: 9 toggles in one 6-step run, 1 after the fix.
+- **Why the next tap moved it.** The release of that finger met the (now closed) gate in `canvas::mouse` and returned early, so the drag stayed in
+  `canvas.obj_drag`. The next press (a heading) was taken as that drag's pointer (`primary_down`, far from where the drag began): the picture was dropped there
+  (`arrange.bounds`), the document went dirty before any key, and the first typed key replaced the still selected picture. The log shows `obj_drag=true` at the
+  heading's press. Not a threshold problem: a real drag needs `Drag::update` to cross it, and a stale drag was never reset.
+- **Fix 1 (ours, `domains/docs/crates/docs-office/src/phone.rs`, `touched_after`).** On a device whose primary pointer is a finger (`(pointer: coarse)`, known
+  at start) a pointer press never clears "touched"; a device with a mouse still switches after the grace. Test `a_coarse_pointer_device_keeps_the_phone_layout_on_a_pointer_press_without_a_touch`
+  (the existing `a_pointer_event_after_a_touch_keeps_the_phone_layout_until_the_grace_is_over` still passes).
+- **Fix 2 (wordcraft/0149, `canvas.rs` `mouse()`, 2 lines).** The gate that swallows a finger for the chrome (`chrome_down`, `phone_reading`) also drops
+  `canvas.obj_drag`, so no path can leave a drag behind for the next tap. Test `objects::tests::a_touch_tap_on_text_does_not_move_the_selected_picture`
+  (a finger's tap on text with a picture selected, press and release in one frame and in two: nothing moves, the caret is placed and the picture deselected; it passes
+  without the patch as well, because the desktop-test harness never closes the gate, so it pins step 3 of the wish list, not the drag drop).
+- **Emulator, before and after** (`HRM_Pixel_8`, Chrome 133, 540x1200 at density 210, `scripts/mobile/tapfix.mjs`: open `phone-ux.docx`, More, Done editing,
+  tap the Edit button, tap the heading, type `tapfix` and `тест` with Gboard, Home; the editor's autosave payload is read in the shell). Screenshots
+  `docs/phase6/evidence/tapfix/` (SHA-256 in `evidence/SHA256SUMS`):
+
+  | | before (phase-6 `5925291`, `E:/office-target/p6-recover/dist`) | after (`E:/office-target/p6-tapfix/dist-final`) |
+  |---|---|---|
+  | 1. tap on the Edit button | picture selected, handles, page scrolled to it, picture toolbar (`before-04`) | editing starts, caret at the heading, no picture selected (`after-04`) |
+  | 2. tap on the heading area | picture moved to the start of the document, unsaved dot (`before-05`) | a word is selected by the 0139 touch select, nothing moved (`after-05`) |
+  | 3. typed text | ` Tapfix тестPhone reading test`, picture gone (`before-06`) | the selected word replaced by the typed text, picture still in the document (`after-06`) |
+  | autosave payload on Home | 5,750 B, no `word/media/image1.png` | 55,490 B, has `word/media/image1.png` |
+  | `wordcraft:phone` messages in the run | 9 | 1 |
+
+  In the "after" run the second tap selected a word (a double-tap-like read of two taps a few seconds apart by 0139's long-press path, not investigated), and the typed
+  text replaced that word as any selection is replaced: the picture is untouched, which is what was asked.
+- **Not verified:** a real phone and a physical finger (the rig's `input tap` is a 1 ms tap; a long finger press may order its events differently), WebView in the
+  Android app (same page code, not re-run), a phone with a mouse attached (it keeps the phone layout; the `?phone=off` setting still turns it off), the debug logs are
+  not in the tree. Size: see STATUS.
