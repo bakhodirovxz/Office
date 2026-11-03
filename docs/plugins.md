@@ -533,8 +533,8 @@ not checked yet. A flaw in wasmtime or in the browser's WebAssembly engine would
 pinned and covered by the project's advisory checks, and an out-of-process host is the hardening if third-party plugins at scale
 are wanted. Plugin strings are not reviewed by the project.
 
-**Reporting.** No security contact address is published yet (an open question for the owner). Until one is, report a suspected
-sandbox escape, allowlist hole or permission bypass to the project owner privately, not in a public issue.
+**Reporting.** Report a suspected sandbox escape, allowlist hole or permission bypass privately by e-mail to
+bohodirovasadbek1@gmail.com, not in a public issue.
 
 ## Appendix A. Host implementers: the web page host and the editor bridge
 
