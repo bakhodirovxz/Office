@@ -447,6 +447,7 @@ fn start(args: Args) -> Result<(), String> {
         Arc::new(suite_serve::PluginSource {
             roots: s.roots(),
             now: Box::new(move || (s.state(), s.policy())),
+            fixed: None,
         })
     };
     let Served { port } = serve(&rt, &layout, &data, Some(plugin_src))?;

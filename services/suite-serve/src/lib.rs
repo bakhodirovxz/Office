@@ -305,10 +305,16 @@ pub fn router_ds(
 pub struct PluginSource {
     pub roots: Vec<Root>,
     pub now: Box<dyn Fn() -> (plugins::State, Policy) + Send + Sync>,
+    /// `Some`: the list is final (the web host's state is static), so nothing is rescanned or hashed per request; `/plugins/<sha256>`
+    /// still reads the file again and compares it with the digest. `None`: worked out on every request (the desktop host).
+    pub fixed: Option<Vec<Enabled>>,
 }
 
 impl PluginSource {
     fn enabled(&self) -> Vec<Enabled> {
+        if let Some(f) = &self.fixed {
+            return f.clone();
+        }
         let (st, pol) = (self.now)();
         plugins::enabled(&self.roots, &st, &pol)
     }

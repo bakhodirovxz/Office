@@ -116,8 +116,19 @@ foreach ($a in @('shell') + ($apps | ForEach-Object { "$($_.k)-web" })) { L "   
 L '      </Directory>'
 L '    </Directory></StandardDirectory>'
 L "    <StandardDirectory Id=`"ProgramMenuFolder`"><Directory Id=`"AppMenuDir`" Name=`"$(X $name)`" /></StandardDirectory>"
+# The machine folder (IT's plugin packages and policy.toml, docs/plugins.md 9b). %PROGRAMDATA% is writable by standard users, so the
+# folder is created here and its DACL is locked: SYSTEM and Administrators full, Users read and execute, no inheritance. The hosts
+# ignore the folder when it is not (suite-winsec `folder_is_admin_only`). SIDs, not names, so it works on every Windows language.
+L "    <StandardDirectory Id=`"CommonAppDataFolder`"><Directory Id=`"D_machine`" Name=`"$(X $name)`"><Directory Id=`"D_machine_plugins`" Name=`"plugins`" /></Directory></StandardDirectory>"
+$icacls = '&quot;[System64Folder]icacls.exe&quot; &quot;[CommonAppDataFolder]' + (X $name) + '&quot; '
+L "    <CustomAction Id=`"LockMachineOwner`" Directory=`"System64Folder`" ExeCommand=`"$icacls/setowner *S-1-5-32-544 /T /C`" Execute=`"deferred`" Impersonate=`"no`" Return=`"check`" />"
+L "    <CustomAction Id=`"LockMachineDacl`" Directory=`"System64Folder`" ExeCommand=`"$icacls/inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F *S-1-5-32-545:(OI)(CI)RX /T /C`" Execute=`"deferred`" Impersonate=`"no`" Return=`"check`" />"
+L '    <InstallExecuteSequence>'
+L '      <Custom Action="LockMachineOwner" After="InstallFiles" Condition="NOT REMOVE~=&quot;ALL&quot;" />'
+L '      <Custom Action="LockMachineDacl" After="LockMachineOwner" Condition="NOT REMOVE~=&quot;ALL&quot;" />'
+L '    </InstallExecuteSequence>'
 L '    <Feature Id="Main" Title="Main" Level="1" AllowAbsent="no">'
-L '      <ComponentGroupRef Id="Core" /><ComponentGroupRef Id="Payload" /><ComponentGroupRef Id="OpenWith" />'
+L '      <ComponentGroupRef Id="Core" /><ComponentGroupRef Id="Payload" /><ComponentGroupRef Id="OpenWith" /><ComponentGroupRef Id="MachineData" />'
 L '    </Feature>'
 L '  </Package>'
 
@@ -139,6 +150,12 @@ foreach ($k in 'docs', 'sheets') { L "    <Component Id=`"C_$k`_diff`"><File Id=
 L '    <Component Id="C_brand"><File Id="F_brand" Source="$(var.Stage)\brand.toml" KeyPath="yes" /></Component>'
 foreach ($f in 'vcruntime140.dll', 'vcruntime140_1.dll') { L "    <Component Id=`"C_$($f -replace '\W','_')`"><File Id=`"F_$($f -replace '\W','_')`" Source=`"`$(var.Stage)\$f`" KeyPath=`"yes`" /></Component>" }
 foreach ($f in 'NOTICE', 'LICENSE-MIT', 'LICENSE-APACHE') { L "    <Component Id=`"C_$($f -replace '\W','_')`"><File Id=`"F_$($f -replace '\W','_')`" Source=`"`$(var.Stage)\$f`" KeyPath=`"yes`" /></Component>" }
+L '  </ComponentGroup></Fragment>'
+
+# The machine folders exist after install (empty); IT's packages added later are not removed on uninstall
+L '  <Fragment><ComponentGroup Id="MachineData">'
+L '    <Component Id="C_machine" Directory="D_machine" Guid="*"><CreateFolder /></Component>'
+L '    <Component Id="C_machine_plugins" Directory="D_machine_plugins" Guid="*"><CreateFolder /></Component>'
 L '  </ComponentGroup></Fragment>'
 
 # Payload: whole folders

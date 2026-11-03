@@ -68,8 +68,10 @@ impl Docserver {
         v
     }
 
+    /// One line per session a minute: the sha is the client's choice, so it is not a reason to write a line each time.
     fn refused(&self, rec: &SessionRecord, sha: &str, reason: &str) {
-        self.audit(
+        self.audit_once(
+            &format!("plugin.refused/{}", rec.sid),
             "plugin.refused",
             json!({"session": sid_ref(&rec.sid), "provider": rec.provider, "sha256": sha, "reason": reason}),
         );
@@ -91,6 +93,10 @@ async fn file(
     Path(sha): Path<String>,
     req: Request,
 ) -> Result<axum::response::Response, ApiError> {
+    // a sha256 in lower-case hex, nothing else: no unknown string reaches the log or the lookup
+    if sha.len() != 64 || !sha.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')) {
+        return Err(not_found());
+    }
     let sid = req
         .uri()
         .query()
@@ -106,7 +112,8 @@ async fn file(
         };
         match suite_core::plugins::read_wasm(&pl.package) {
             Ok(b) => {
-                ds.audit(
+                ds.audit_once(
+                    &format!("plugin.loaded/{sid}/{sha}"),
                     "plugin.loaded",
                     json!({"session": sid_ref(&sid), "provider": rec.provider, "plugin": pl.package.manifest.id,
                            "version": pl.package.manifest.version, "sha256": sha}),
@@ -157,9 +164,32 @@ async fn event(
         ));
     }
     let origin = origin.filter(|o| plugin_api::manifest::check_origin(o));
+    // a `network` line says the page host let a fetch through, so its origin must be one the admin granted this plugin; the other
+    // kinds name what was turned away
+    if kind == "network"
+        && !ds.plugins_of(&rec.provider).iter().any(|p| {
+            p.package.manifest.id == plugin
+                && origin.is_some_and(|o| p.grant.iter().any(|g| g == o))
+        })
+    {
+        return Err(ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "bad_request",
+            "unknown plugin or event",
+        ));
+    }
+    if let Err(secs) = ds.watch.auth_rl.hit(&format!("plugin-event/{sid}")) {
+        return Err(ApiError::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            "rate_limited",
+            "too many events for this session",
+        )
+        .retry(secs));
+    }
+    // the page reports it, so the line is a claim of the client, not an observation of the server
     ds.audit(
         "plugin.network",
-        json!({"session": sid_ref(&sid), "provider": rec.provider, "plugin": plugin, "outcome": kind, "origin": origin}),
+        json!({"session": sid_ref(&sid), "provider": rec.provider, "plugin": plugin, "outcome": kind, "origin": origin, "source": "client"}),
     );
     json_ok(json!({"ok": true}))
 }
