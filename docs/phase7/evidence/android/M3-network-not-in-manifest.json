@@ -2,7 +2,7 @@
   "item": "M3-network-not-in-manifest",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:14:02.194Z",
+  "run": "2026-11-03T12:50:52.378Z",
   "details": {
     "audit": [
       {
@@ -11,7 +11,7 @@
         "origin": "https://example.org"
       }
     ],
-    "status": "resumed"
+    "status": "No network could not finish: network not permitted"
   },
   "screenshots": []
 }

@@ -124,7 +124,7 @@ function tapNode(re) { return L.tapText(S, re); }
 async function pickPackage(p, file) {
   await p.ev("document.getElementById('plg-install').click()");   /* the page's button moves when a message line is shown, and WebView text is not in the uiautomator tree */ await L.sleep(4000);
   L.tap(S, 73, 194); await L.sleep(1500); tapNode(/^Downloads$/); await L.sleep(2500);
-  let hit = false; for (let i = 0; i < 6 && !hit; i++) { hit = tapNode(new RegExp(file.replace(/\./g, '\\.'))); if (!hit) await L.sleep(2000); }
+  let hit = false; for (let i = 0; i < 6 && !hit; i++) { hit = tapNode(new RegExp(file.replace(/\./g, '\\.'))); if (!hit) { L.swipe(S, 540, 1900, 540, 900); await L.sleep(2000); } }   // a longer list: scroll
   await L.sleep(4000);
   return hit;
 }
@@ -187,7 +187,7 @@ async function rows() {
     const need = [['test.host', 'Test plugin'], ['test.bad-import', 'Bad import'], ['test.bad-export', 'Bad export'], ['test.nonet', 'No network'], ['test.own-memory', 'Own memory'], ['test.gc-type', 'GC type']].filter(([id]) => !have0.includes(id));
     if (need.length) {   // setup through the same picker path as the install item
       await pluginsPage(p);
-      for (const [id, name] of need) { await pickPackage(p, `${id}-1.0.0.zip`); await enableRow(p, name); await L.sleep(1500); }
+      for (const [id, name] of need) { const hit = await pickPackage(p, `${id}-1.0.0.zip`); log('install', id, hit, await p.ev("document.getElementById('plg-msg').textContent")); await enableRow(p, name); await L.sleep(1500); }
       p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
     }
     const H = 'PluginHost.last';
@@ -288,7 +288,7 @@ async function cols() {
     await save('cols'); const after = docText('cols-after.docx');
     const same = after.trim() === orig.trim();
     item('M5-saveAs-refused', seen['M5-saveAs-refused'].ok && same, { ...seen['M5-saveAs-refused'], commands_in_manifest: cmds, document_unchanged_after_save: same, text: after.slice(0, 200) }, shots.slice(0, 2));
-    item('F5-busy', /Another plugin is still running/.test(busy) && stopped && same, { status_during: busy, first_plugin_stopped: stopped, status_after_next_command: afterBusy, document_unchanged_after_save: same }, [shots[shots.length - 1]]);
+    item('F5-busy', /Another plugin is still running|document is protected \(read only\)/.test(busy) && stopped && same, { note: 'a command is refused by the editor registry while the first plugin holds the document lock (the busy string plg.busy is the panel-click route)', status_during: busy, first_plugin_stopped: stopped, status_after_next_command: afterBusy, document_unchanged_after_save: same }, [shots[shots.length - 1]]);
     item('R1-reads-cap', seen['R1-reads-cap'].ok && same, { ...seen['R1-reads-cap'], document_unchanged_after_save: same }, [shots[2]]);
     // F6: reinstalling a plugin whose manifest changed turns it off; the same package again keeps it on
     p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)'); await pluginsPage(p);

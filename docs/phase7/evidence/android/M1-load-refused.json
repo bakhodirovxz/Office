@@ -2,7 +2,7 @@
   "item": "M1-load-refused",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T08:13:58.587Z",
+  "run": "2026-11-03T12:50:46.069Z",
   "details": {
     "plugin": "test.bad-import",
     "audit": [

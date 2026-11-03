@@ -1,0 +1,18 @@
+{
+  "item": "M2b-gc-type",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T12:50:50.773Z",
+  "details": {
+    "plugin": "test.gc-type",
+    "audit": [
+      {
+        "plugin": "test.gc-type",
+        "kind": "failed",
+        "error": "the module uses a type form that is not allowed"
+      }
+    ],
+    "status": "GC type could not finish: the module uses a type form that is not allowed"
+  },
+  "screenshots": []
+}

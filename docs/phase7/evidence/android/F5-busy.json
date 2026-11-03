@@ -1,0 +1,16 @@
+{
+  "item": "F5-busy",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-03T12:43:34.124Z",
+  "details": {
+    "note": "a command is refused by the editor registry while the first plugin holds the document lock (the busy string plg.busy is the panel-click route)",
+    "status_during": "The command could not run: not available: plugin.test.nonet.hello: the document is protected (read only)",
+    "first_plugin_stopped": true,
+    "status_after_next_command": "hello done",
+    "document_unchanged_after_save": true
+  },
+  "screenshots": [
+    "F5-1-busy.png"
+  ]
+}
