@@ -34,10 +34,10 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index ec64425..0872c65 100644
+index c6f22e5..c7f2d80 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -139,8 +139,10 @@ impl Bridge {
+@@ -143,8 +143,10 @@ impl Bridge {
          }));
          let bridge = self.clone();
          services.blocked = Some(Box::new(move |id: &str| {
@@ -50,7 +50,7 @@ index ec64425..0872c65 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
-@@ -347,7 +349,12 @@ impl Bridge {
+@@ -355,7 +357,12 @@ impl Bridge {
                  Some("wordcraft:commands") => bridge.list_requested.set(true),
                  Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
                  Some("wordcraft:focus") => {
@@ -156,7 +156,7 @@ index 6399175..ac03a3f 100644
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 79d6394..8aec88b 100644
+index 754c30b..7687e8d 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -171,10 +171,10 @@ index 79d6394..8aec88b 100644
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 3c047bd..2450946 100644
+index 59d87e6..a4feb20 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -230,7 +230,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+@@ -253,7 +253,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
      // The Edit button floats over the page: the extension leaves its rectangle in the context.
      let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
      let (pressed_on_bar, active) = ui.input(|i| {

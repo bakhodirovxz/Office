@@ -359,7 +359,7 @@ fn a_stale_revision_is_refused() {
     s.run("text.insert", &json!({"text": "!"})).unwrap();
     let after_edit = s.doc.clone();
     let inv = Invocation {
-        plugin: &p,
+        plugin: p.clone(),
         kind: CallKind::Command,
         command: Some("go".into()),
         widget: None,
@@ -371,7 +371,7 @@ fn a_stale_revision_is_refused() {
         in_command: false,
         label: "x".into(),
     };
-    let e = exec::invoke(&mut s, &inv).unwrap_err().to_string();
+    let e = exec::invoke(&mut s, inv).unwrap_err().to_string();
     assert!(e.contains("stale"), "{e}");
     assert_eq!(s.doc, after_edit, "nothing ran");
     assert_ne!(s.doc, before);
@@ -642,4 +642,209 @@ fn the_panel_and_the_context_items_draw() {
     assert!(clicked.is_none(), "nothing was clicked");
     // The id of the item the menu would run exists in the registry.
     assert!(s.registry.get(crate::context_commands("en")[0].0).is_some());
+}
+
+
+mod web_bridge {
+    //! The page-hosted plugin: pending state, input lock, transferred blobs, stale, timeout and abort (PLAN section 4.6).
+    use super::*;
+    use crate::bridge::{self, Answer as Page, Out, Registration};
+
+    const JSON: &str = r#"{"id":"test-plugin","version":"1.0.0","api":1,"apps":["docs"],"events":["selectionChanged"],"publisher":"Test",
+        "name":{"en":"Test plugin"},"permissions":{"document":"write"},"command":[{"id":"go","label":{"en":"Go"},"reads":["textmap"]}]}"#;
+
+    fn page(timeout: Option<f64>) -> Session {
+        bridge::reset();
+        bridge::set_plugins(vec![Registration { manifest: serde_json::from_str(JSON).unwrap(), settings: None, enabled: true }], timeout);
+        let mut s = session(&["abc"]);
+        crate::register(&mut s, "en");
+        s
+    }
+
+    fn ans(call: &Value, actions: Value, more: bool) -> Page {
+        Page { call: call.clone(), plugin: None, actions, blobs: vec![], reads: Value::Null, more, abort: false }
+    }
+
+    fn ins(t: &str) -> Value {
+        json!([{"type": "run", "id": "text.insert", "params": {"text": t}}])
+    }
+
+    /// Start `go`, tick, and return the call id, the command and the size of the text map blob.
+    fn started(s: &mut Session) -> (Value, String, usize) {
+        let id = go(s).unwrap()["pending"].clone();
+        assert!(bridge::tick(s));
+        match bridge::take_out().remove(0) {
+            Out::Call { call, command, reads, .. } => {
+                assert_eq!(call, id);
+                (call, command, reads.iter().find(|(n, _)| *n == "textmap").map(|(_, b)| b.len()).unwrap_or(0))
+            }
+            _ => panic!("a call first"),
+        }
+    }
+
+    fn error_of(out: Vec<Out>) -> Option<String> {
+        match out.as_slice() {
+            [Out::Results { error, .. }] => error.clone(),
+            _ => panic!("one result expected"),
+        }
+    }
+
+    #[test]
+    fn a_command_is_pending_locks_input_and_one_answer_finishes_it_as_one_undo_step() {
+        let _t = turn();
+        let mut s = page(None);
+        let before = s.doc.clone();
+        let (call, command, map) = started(&mut s);
+        assert_eq!(command, "go");
+        assert!(map > 8, "the text map is a blob, not JSON");
+        assert!(bridge::locked());
+        assert!(s.run("text.insert", &json!({"text": "x"})).is_err(), "input is locked while the page works");
+        bridge::answer(&mut s, ans(&call, ins("Z"), false));
+        assert!(!bridge::locked());
+        assert_eq!(s.doc.settings.protection, None);
+        assert!(text(&s, 0).contains('Z'));
+        assert_eq!(error_of(bridge::take_out()), None);
+        s.run("edit.undo", &json!({})).unwrap();
+        assert_eq!(s.doc, before, "the whole invocation is one undo step");
+    }
+
+    #[test]
+    fn a_second_round_keeps_the_lock_and_requested_reads_come_back_as_buffers() {
+        let _t = turn();
+        let mut s = page(None);
+        let (call, ..) = started(&mut s);
+        let mut a = ans(&call, ins("1"), true);
+        a.reads = json!([{"what": "textmap"}, {"what": "selection"}]);
+        bridge::answer(&mut s, a);
+        assert!(bridge::locked(), "locked again between rounds");
+        match bridge::take_out().remove(0) {
+            Out::Results { results, reads, error: None, .. } => {
+                assert_eq!(results.len(), 1);
+                assert_eq!(reads.len(), 2);
+                assert!(reads[0].len() > 8);
+            }
+            _ => panic!("results"),
+        }
+        bridge::answer(&mut s, ans(&call, ins("2"), false));
+        assert!(!bridge::locked());
+        assert!(text(&s, 0).contains('1') && text(&s, 0).contains('2'));
+    }
+
+    #[test]
+    fn a_document_that_moved_under_the_plugin_is_stale_and_restored() {
+        let _t = turn();
+        let mut s = page(None);
+        let before = s.doc.clone();
+        let (call, ..) = started(&mut s);
+        s.doc.settings.protection = None; // a lock that did not hold
+        s.run("text.insert", &json!({"text": "!"})).unwrap();
+        bridge::answer(&mut s, ans(&call, ins("Z"), false));
+        assert!(error_of(bridge::take_out()).is_some_and(|e| e.contains("stale")));
+        assert_eq!(s.doc, before, "the snapshot of the start is restored");
+        assert!(!bridge::locked());
+        assert!(s.status.contains("Plugin stopped"));
+    }
+
+    #[test]
+    fn no_answer_in_time_restores_and_releases_the_lock_and_a_late_answer_gets_an_error() {
+        let _t = turn();
+        let mut s = page(Some(10.0));
+        let before = s.doc.clone();
+        let (call, ..) = started(&mut s);
+        std::thread::sleep(std::time::Duration::from_millis(40));
+        assert!(!bridge::tick(&mut s));
+        assert!(!bridge::locked());
+        assert_eq!(s.doc.settings.protection, None);
+        assert_eq!(s.doc, before);
+        assert!(s.status.contains("no answer"));
+        assert!(s.run("text.insert", &json!({"text": "x"})).is_ok(), "typing works again");
+        bridge::answer(&mut s, ans(&call, ins("Z"), false));
+        assert!(error_of(bridge::take_out()).is_some_and(|e| e.contains("ended")));
+        assert!(!text(&s, 0).contains('Z'));
+    }
+
+    #[test]
+    fn an_abort_and_a_denied_action_restore() {
+        let _t = turn();
+        let mut s = page(None);
+        let before = s.doc.clone();
+        let (call, ..) = started(&mut s);
+        bridge::answer(&mut s, ans(&call, ins("A"), true));
+        let _ = bridge::take_out();
+        assert_ne!(s.doc, before);
+        let mut ab = ans(&call, json!([]), false);
+        ab.abort = true;
+        bridge::answer(&mut s, ab);
+        assert_eq!(s.doc, before);
+        assert!(!bridge::locked() && bridge::take_out().is_empty(), "an abort is not answered");
+        let (call, ..) = started(&mut s);
+        let two = json!([{"type": "run", "id": "text.insert", "params": {"text": "A"}}, {"type": "run", "id": "file.save", "params": {}}]);
+        bridge::answer(&mut s, ans(&call, two, false));
+        assert!(error_of(bridge::take_out()).is_some_and(|e| e.contains("refused")));
+        assert_eq!(s.doc, before);
+        assert!(!bridge::locked());
+    }
+
+    #[test]
+    fn events_are_queued_once_for_the_page_and_do_not_lock() {
+        let _t = turn();
+        let mut s = page(None);
+        exec::emit(&mut s, Event::SelectionChanged, "en");
+        exec::emit(&mut s, Event::SelectionChanged, "en");
+        assert!(!bridge::locked());
+        assert!(matches!(bridge::take_out().as_slice(), [Out::Event { event }] if event == "selectionChanged"));
+    }
+
+    #[test]
+    fn a_panel_click_round_starts_at_the_first_forwarded_answer() {
+        let _t = turn();
+        let mut s = page(None);
+        let before = s.doc.clone();
+        let mut a = ans(&json!("h1"), ins("U"), false);
+        a.plugin = Some("test-plugin".into());
+        bridge::answer(&mut s, a);
+        assert!(text(&s, 0).contains('U'));
+        assert_eq!(error_of(bridge::take_out()), None);
+        assert!(!bridge::locked());
+        s.run("edit.undo", &json!({})).unwrap();
+        assert_eq!(s.doc, before, "one undo step");
+        // a click whose later round fails puts the document back
+        let mut a = ans(&json!("h2"), ins("V"), true);
+        a.plugin = Some("test-plugin".into());
+        bridge::answer(&mut s, a);
+        let _ = bridge::take_out();
+        assert!(bridge::locked());
+        bridge::answer(&mut s, ans(&json!("h2"), json!([{"type": "run", "id": "file.save", "params": {}}]), false));
+        assert!(error_of(bridge::take_out()).is_some());
+        assert_eq!(s.doc, before);
+        // an unknown plugin is refused
+        let mut a = ans(&json!("h3"), ins("W"), false);
+        a.plugin = Some("nope".into());
+        bridge::answer(&mut s, a);
+        assert!(error_of(bridge::take_out()).is_some());
+    }
+
+    #[test]
+    fn replacing_the_document_drops_the_invocation_without_touching_the_new_one() {
+        let _t = turn();
+        let mut s = page(None);
+        started(&mut s);
+        s.set_document(session(&["new"]).doc);
+        assert!(!bridge::tick(&mut s));
+        assert_eq!(s.doc.settings.protection, None);
+        assert_eq!(text(&s, 0), "new");
+        assert!(!bridge::locked());
+    }
+
+    #[test]
+    fn registering_again_with_a_shorter_list_unregisters() {
+        let _t = turn();
+        let mut s = page(None);
+        assert!(crate::plugins().iter().any(|p| p.manifest.id == "test-plugin"));
+        let (ids, errors) = bridge::set_plugins(vec![Registration { manifest: json!({"id": "x"}), settings: None, enabled: true }], None);
+        assert!(ids.is_empty() && errors.len() == 1, "a bad manifest is refused: {errors:?}");
+        assert!(crate::plugins().is_empty(), "the plugin that is no longer listed is gone");
+        crate::frame(&mut s, "en");
+        assert!(s.registry.get("plugin.test-plugin.go").is_none());
+    }
 }

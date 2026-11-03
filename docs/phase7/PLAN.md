@@ -256,15 +256,23 @@ invocation; on the web the editor refuses an apply whose `Session::rev()` moved 
 
 ### 4.6 Bridge messages (web; new carried patch next to 0141)
 
+Final shapes (WP4 with WP5, 2026-11-03): the field list is `docs/plugins.md` section 9; code is `docs-plugins::bridge` (state, no JS) and
+`docs-office::plugin_web` (the JS end), patch `wordcraft/0148` only forwards. The page (WP5) builds every call and keeps `ui.*` and `fetch`; the
+editor runs the editor actions. Differences from the first draft of this table: `plugins` carries the manifests (the slots derive from them,
+as natively); `pluginResults` answers every `pluginActions` (it replaces the draft's separate results message) and ends with `error` on failure;
+`pluginActions` has `more`, `abort` and `plugin`; `pluginsSet` acknowledges registration.
+
 | Message | Direction | Fields |
 |---|---|---|
-| `<prefix>:plugins` | page → editor | `{commands: [{slot, id, label, mutates, reads, params}], toolbar, menu}`: registers the slot commands and the preset group |
-| `<prefix>:pluginCall` | editor → page | `{call, plugin, command, params, rev, reads}` with the text map as a transferred `ArrayBuffer` |
-| `<prefix>:pluginActions` | page → editor | `{call, actions, blobs, more}`; the editor runs them and answers `<prefix>:pluginResults {call, results, reads}` |
-| `<prefix>:pluginEvent` | editor → page | `{event, …}` only for events a loaded plugin subscribed to |
+| `<prefix>:plugins` | page -> editor | `{commands, toolbar, menu, plugins: [{manifest, settings?, enabled?}], timeoutMs?}`: registers the slot commands and the preset group (whole list) |
+| `<prefix>:pluginsSet` | editor -> page | `{ids, errors}` |
+| `<prefix>:pluginCall` | editor -> page | `{call, plugin, command, params, reads: {textmap?, selection?}}`, the reads as transferred `ArrayBuffer`s |
+| `<prefix>:pluginActions` | page -> editor | `{call, plugin, actions, blobs, reads, more, abort?}`; the editor runs the actions and answers `pluginResults` |
+| `<prefix>:pluginResults` | editor -> page | `{call, results, reads, error?}` |
+| `<prefix>:pluginEvent` | editor -> page | `{event}` only for events a loaded plugin subscribed to |
 
-A plugin command on the web returns at once with `{"pending": call}`; the document is locked for input until the answer or the
-time budget runs out (then "plugin stopped" in the status line, nothing changed).
+A plugin command on the web returns at once with `{"pending": call}`; the document is locked for input until the answer with `more: false`
+or the wait (default 20 s between two messages, `timeoutMs`) runs out (then "Plugin stopped: ..." in the status line, nothing changed).
 
 ### 4.7 Versioning
 

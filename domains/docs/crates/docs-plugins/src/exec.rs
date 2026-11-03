@@ -5,6 +5,7 @@
 //! first action (the document, the selection and the undo stacks are as they were); a text map is applied only when the document
 //! revision has not moved since it was read; an `event` invocation can only touch the plugin's own UI.
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use plugin_api::action::{Action, Answer, Call, CallKind, Denied, Grants, ReadReq, ReadWhat, Scope as ApiScope, Widget};
 use plugin_api::manifest::{Event, ReadKind};
@@ -14,7 +15,7 @@ use serde_json::{Map, Value, json};
 use wordcraft_engine::{CmdError, CmdResult, Session};
 
 use crate::textmap::{self, Opts, Scope, Stats};
-use crate::Plugin;
+use crate::{GuestSession, Plugin};
 
 fn fail<T>(s: impl Into<String>) -> Result<T, CmdError> {
     Err(CmdError::Failed(s.into()))
@@ -132,8 +133,8 @@ fn selection_text(s: &Session) -> String {
 }
 
 /// What one invocation is.
-pub struct Invocation<'a> {
-    pub plugin: &'a Plugin,
+pub struct Invocation {
+    pub plugin: Arc<Plugin>,
     pub kind: CallKind,
     pub command: Option<String>,
     pub widget: Option<String>,
@@ -149,8 +150,8 @@ pub struct Invocation<'a> {
     pub label: String,
 }
 
-struct Run<'a> {
-    inv: &'a Invocation<'a>,
+struct Run {
+    inv: Invocation,
     last_map: Option<(TextMap, Scope, bool)>,
     /// The revision the text map was read at.
     read_rev: u64,
@@ -161,7 +162,7 @@ struct Run<'a> {
     rounds: usize,
 }
 
-impl Run<'_> {
+impl Run {
     fn field_results(&self) -> bool {
         self.inv.params.get("fieldResults").and_then(Value::as_bool).unwrap_or(true)
     }
@@ -244,84 +245,220 @@ fn denied(d: Denied) -> CmdError {
     CmdError::Failed(format!("plugin action refused: {d:?}"))
 }
 
-fn rounds(s: &mut Session, inv: &Invocation) -> CmdResult {
-    let p = inv.plugin;
-    if let Some(r) = inv.expect_rev
-        && s.rev() != r
-    {
-        return fail("the document changed before the plugin was called (stale revision)");
-    }
-    let panels: Vec<String> = p.manifest.panels.iter().map(|x| x.id.clone()).collect();
-    let grants = Grants { document: p.manifest.permissions.document, origins: &p.origins, panels: &panels };
-    let mut guest = p.guest.start().map_err(|e| CmdError::Failed(format!("plugin could not start: {e}")))?;
-    let mut run = Run { inv, last_map: None, read_rev: s.rev(), checkpointed: inv.in_command, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 };
-    let mut call = Call {
-        kind: inv.kind,
-        api: 1,
-        api_minor: plugin_api::API_MINOR,
-        app: "docs".into(),
-        lang: inv.lang.clone(),
-        command: inv.command.clone(),
-        widget: inv.widget.clone(),
-        event: inv.event.map(|e| e.name().to_string()),
-        params: inv.params.clone(),
-        settings: p.settings.clone(),
-        results: Vec::new(),
-        reads: BTreeMap::new(),
-    };
-    let mut blobs: Vec<Vec<u8>> = Vec::new();
-    for r in &inv.reads {
-        let what = match r {
-            ReadKind::Textmap => ReadWhat::Textmap,
-            ReadKind::Selection => ReadWhat::Selection,
-            ReadKind::None => continue,
+/// One invocation between its rounds. The synchronous path ([`rounds`]) loops over it with a guest that answers at once; the web bridge
+/// ([`crate::bridge`]) keeps it while the page runs the plugin in a Worker and calls [`Machine::resume`] when the answer comes.
+pub struct Machine {
+    run: Run,
+    call: Call,
+    guest: Box<dyn GuestSession>,
+    blobs: Vec<Vec<u8>>,
+}
+
+pub enum Step {
+    /// The next call to the plugin.
+    Call(Message),
+    /// Every round succeeded: the result of the command.
+    Done(Value),
+}
+
+impl Machine {
+    /// Start the guest, do the command's reads and build the first call.
+    pub fn begin(s: &mut Session, inv: Invocation) -> Result<(Machine, Message), CmdError> {
+        if let Some(r) = inv.expect_rev
+            && s.rev() != r
+        {
+            return fail("the document changed before the plugin was called (stale revision)");
+        }
+        let p = inv.plugin.clone();
+        let guest = p.guest.start().map_err(|e| CmdError::Failed(format!("plugin could not start: {e}")))?;
+        let mut run = Run { inv, last_map: None, read_rev: s.rev(), checkpointed: false, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 };
+        run.checkpointed = run.inv.in_command;
+        let call = Call {
+            kind: run.inv.kind,
+            api: 1,
+            api_minor: plugin_api::API_MINOR,
+            app: "docs".into(),
+            lang: run.inv.lang.clone(),
+            command: run.inv.command.clone(),
+            widget: run.inv.widget.clone(),
+            event: run.inv.event.map(|e| e.name().to_string()),
+            params: run.inv.params.clone(),
+            settings: p.settings.clone(),
+            results: Vec::new(),
+            reads: BTreeMap::new(),
         };
-        run.read(s, &ReadReq { what, scope: None, index: None }, &mut blobs, &mut call.reads)?;
+        let mut m = Machine { run, call, guest, blobs: Vec::new() };
+        for r in m.run.inv.reads.clone() {
+            let what = match r {
+                ReadKind::Textmap => ReadWhat::Textmap,
+                ReadKind::Selection => ReadWhat::Selection,
+                ReadKind::None => continue,
+            };
+            m.run.read(s, &ReadReq { what, scope: None, index: None }, &mut m.blobs, &mut m.call.reads)?;
+        }
+        let msg = m.next_message()?;
+        Ok((m, msg))
     }
-    loop {
-        run.rounds += 1;
-        let msg = Message::new(&call, std::mem::take(&mut blobs)).map_err(|e| CmdError::Failed(format!("call refused: {e}")))?;
-        let out = guest.round(&msg).map_err(|e| CmdError::Failed(format!("plugin stopped: {e}")))?;
+
+    fn next_message(&mut self) -> Result<Message, CmdError> {
+        self.run.rounds += 1;
+        Message::new(&self.call, std::mem::take(&mut self.blobs)).map_err(|e| CmdError::Failed(format!("call refused: {e}")))
+    }
+
+    /// The plugin's answer to the last call: check it, run its actions, and either build the next call or finish.
+    pub fn resume(&mut self, s: &mut Session, out: &Message) -> Result<Step, CmdError> {
+        let p = self.run.inv.plugin.clone();
+        let panels: Vec<String> = p.manifest.panels.iter().map(|x| x.id.clone()).collect();
+        let grants = Grants { document: p.manifest.permissions.document, origins: &p.origins, panels: &panels };
         let ans: Answer = out.header_as().map_err(|e| CmdError::Failed(format!("plugin answer refused: {e}")))?;
-        plugin_api::action::check_actions(&ans.actions, &grants, inv.kind == CallKind::Event).map_err(denied)?;
+        plugin_api::action::check_actions(&ans.actions, &grants, self.run.inv.kind == CallKind::Event).map_err(denied)?;
         let (mut results, mut reads) = (Vec::with_capacity(ans.actions.len()), BTreeMap::new());
         for a in &ans.actions {
-            results.push(run.action(s, a, &out.blobs, &mut blobs, &mut reads)?);
+            results.push(self.run.action(s, a, &out.blobs, &mut self.blobs, &mut reads)?);
         }
-        let Some(next) = ans.next else { break };
-        if run.rounds >= MAX_ROUNDS {
+        let Some(next) = ans.next else { return Ok(Step::Done(self.finish(s))) };
+        if self.run.rounds >= MAX_ROUNDS {
             return fail("plugin asked for more than 16 rounds");
         }
         for r in &next.reads {
-            run.read(s, r, &mut blobs, &mut reads)?;
+            self.run.read(s, r, &mut self.blobs, &mut reads)?;
         }
-        call = Call { kind: CallKind::Resume, results, reads, params: Map::new(), ..call };
+        self.call.kind = CallKind::Resume;
+        self.call.results = results;
+        self.call.reads = reads;
+        self.call.params = Map::new();
+        Ok(Step::Call(self.next_message()?))
     }
-    // Committed only when every round succeeded.
-    {
-        let mut ui = p.ui.lock().unwrap_or_else(|e| e.into_inner());
-        for (id, widgets) in run.panels {
-            if widgets.is_empty() {
-                ui.panels.remove(&id);
-            } else {
-                ui.panels.insert(id, widgets);
+
+    /// Committed only when every round succeeded.
+    fn finish(&mut self, s: &mut Session) -> Value {
+        let run = &mut self.run;
+        {
+            let mut ui = run.inv.plugin.ui.lock().unwrap_or_else(|e| e.into_inner());
+            for (id, widgets) in std::mem::take(&mut run.panels) {
+                if widgets.is_empty() {
+                    ui.panels.remove(&id);
+                } else {
+                    ui.panels.insert(id, widgets);
+                }
             }
+            ui.last_error = None;
         }
-        ui.last_error = None;
+        if let Some(t) = &run.status {
+            s.status = t.clone();
+        }
+        json!({"plugin": run.inv.plugin.manifest.id, "rounds": run.rounds, "paragraphs": run.applied.paragraphs, "runs": run.applied.runs, "status": run.status})
     }
-    if let Some(t) = &run.status {
-        s.status = t.clone();
+
+    /// What the invocation is, for the web bridge.
+    pub fn kind(&self) -> CallKind {
+        self.run.inv.kind
     }
-    Ok(json!({"plugin": p.manifest.id, "rounds": run.rounds, "paragraphs": run.applied.paragraphs, "runs": run.applied.runs, "status": run.status}))
+
+    pub fn plugin(&self) -> &Arc<Plugin> {
+        &self.run.inv.plugin
+    }
+
+    pub fn event(&self) -> Option<Event> {
+        self.run.inv.event
+    }
+
+    /// `Session::run` touches the document after the slot command returned: the text map was read at this revision, not the old one.
+    pub fn rebase(&mut self, rev: u64) {
+        self.run.read_rev = rev;
+    }
 }
 
-/// Run one invocation. Any error puts the session back as it was before the first action.
-pub fn invoke(s: &mut Session, inv: &Invocation) -> CmdResult {
+/// The editor's half of an invocation whose rounds the page runs (the web bridge): the page builds the calls and reads the answers, the
+/// editor reads the document, runs the editor actions of each answer and keeps the undo step, the text map and the revision.
+pub struct Remote {
+    run: Run,
+}
+
+impl Remote {
+    pub fn new(s: &Session, inv: Invocation) -> Remote {
+        let checkpointed = inv.in_command;
+        Remote { run: Run { inv, last_map: None, read_rev: s.rev(), checkpointed, panels: Vec::new(), status: None, applied: Stats::default(), rounds: 0 } }
+    }
+
+    pub fn plugin(&self) -> &Arc<Plugin> {
+        &self.run.inv.plugin
+    }
+
+    pub fn kind(&self) -> CallKind {
+        self.run.inv.kind
+    }
+
+    /// `Session::run` touches the document after the slot command returned: the text map was read at this revision, not the old one.
+    pub fn rebase(&mut self, rev: u64) {
+        self.run.read_rev = rev;
+    }
+
+    /// Perform reads; the bytes in the order asked (the page puts them in the next call's blobs under the read's name).
+    pub fn reads(&mut self, s: &mut Session, reqs: &[ReadReq]) -> Result<Vec<Vec<u8>>, CmdError> {
+        let (mut blobs, mut names) = (Vec::new(), BTreeMap::new());
+        for r in reqs {
+            self.run.read(s, r, &mut blobs, &mut names)?;
+        }
+        Ok(blobs)
+    }
+
+    /// The command's own reads (`reads` in the manifest), as (name, bytes).
+    pub fn first_reads(&mut self, s: &mut Session) -> Result<Vec<(&'static str, Vec<u8>)>, CmdError> {
+        let mut out = Vec::new();
+        for r in self.run.inv.reads.clone() {
+            let (name, what) = match r {
+                ReadKind::Textmap => ("textmap", ReadWhat::Textmap),
+                ReadKind::Selection => ("selection", ReadWhat::Selection),
+                ReadKind::None => continue,
+            };
+            let mut b = self.reads(s, &[ReadReq { what, scope: None, index: None }])?;
+            out.push((name, b.remove(0)));
+        }
+        Ok(out)
+    }
+
+    /// Check (against the plugin's grants and the allowlist) and run the actions of one answer; one result per action. `blobs` are the
+    /// answer's blobs (`textmap.apply` names one). `read` actions are not served: the page hands reads over as `next.reads`.
+    pub fn actions(&mut self, s: &mut Session, actions: &[Action], blobs: &[Vec<u8>]) -> Result<Vec<Value>, CmdError> {
+        let p = self.run.inv.plugin.clone();
+        let panels: Vec<String> = p.manifest.panels.iter().map(|x| x.id.clone()).collect();
+        let grants = Grants { document: p.manifest.permissions.document, origins: &p.origins, panels: &panels };
+        plugin_api::action::check_actions(actions, &grants, self.run.inv.kind == CallKind::Event).map_err(denied)?;
+        let (mut results, mut sink, mut names) = (Vec::with_capacity(actions.len()), Vec::new(), BTreeMap::new());
+        for a in actions {
+            results.push(match a {
+                Action::Read(_) => json!({"error": "ask for reads in `next.reads`"}),
+                a => self.run.action(s, a, blobs, &mut sink, &mut names)?,
+            });
+        }
+        Ok(results)
+    }
+}
+
+fn rounds(s: &mut Session, inv: Invocation) -> CmdResult {
+    let (mut m, mut msg) = Machine::begin(s, inv)?;
+    loop {
+        let out = m.guest.round(&msg).map_err(|e| CmdError::Failed(format!("plugin stopped: {e}")))?;
+        match m.resume(s, &out)? {
+            Step::Call(next) => msg = next,
+            Step::Done(v) => return Ok(v),
+        }
+    }
+}
+
+/// Run one invocation. Any error puts the session back as it was before the first action. A plugin that lives in the page (the web
+/// bridge) returns `{"pending": call}` at once and finishes later ([`crate::bridge`]).
+pub fn invoke(s: &mut Session, inv: Invocation) -> CmdResult {
+    if inv.plugin.guest.remote() {
+        return crate::bridge::start(s, inv);
+    }
+    let plugin = inv.plugin.clone();
     let snap = s.edit_snapshot();
     let r = rounds(s, inv);
     if let Err(e) = &r {
         s.restore(snap);
-        inv.plugin.ui.lock().unwrap_or_else(|e| e.into_inner()).last_error = Some(e.to_string());
+        plugin.ui.lock().unwrap_or_else(|e| e.into_inner()).last_error = Some(e.to_string());
     }
     r
 }
@@ -334,7 +471,7 @@ pub fn run_command(s: &mut Session, p: &std::sync::Arc<Plugin>, command: usize, 
         params.extend(o.iter().map(|(k, v)| (k.clone(), v.clone())));
     }
     let inv = Invocation {
-        plugin: p,
+        plugin: p.clone(),
         kind: CallKind::Command,
         command: Some(c.id.clone()),
         widget: None,
@@ -346,17 +483,17 @@ pub fn run_command(s: &mut Session, p: &std::sync::Arc<Plugin>, command: usize, 
         in_command: true,
         label: crate::localized(&c.label, "en"),
     };
-    invoke(s, &inv)
+    invoke(s, inv)
 }
 
 /// A click or edit in a plugin's panel. `value` is the text of a field or the chosen option.
-pub fn ui_event(s: &mut Session, p: &Plugin, widget: &str, value: Option<&str>) -> CmdResult {
+pub fn ui_event(s: &mut Session, p: &Arc<Plugin>, widget: &str, value: Option<&str>) -> CmdResult {
     let mut params = Map::new();
     if let Some(v) = value {
         params.insert("value".into(), json!(v));
     }
     let inv = Invocation {
-        plugin: p,
+        plugin: p.clone(),
         kind: CallKind::Ui,
         command: None,
         widget: Some(widget.to_string()),
@@ -368,7 +505,7 @@ pub fn ui_event(s: &mut Session, p: &Plugin, widget: &str, value: Option<&str>) 
         in_command: false,
         label: crate::localized(&p.manifest.name, "en"),
     };
-    invoke(s, &inv)
+    invoke(s, inv)
 }
 
 /// Fire `event` at every enabled plugin that subscribed to it. Failures are recorded on the plugin and never reach the user.
@@ -378,7 +515,7 @@ pub fn emit(s: &mut Session, event: Event, lang: &str) {
             continue;
         }
         let inv = Invocation {
-            plugin: &p,
+            plugin: p.clone(),
             kind: CallKind::Event,
             command: None,
             widget: None,
@@ -390,7 +527,7 @@ pub fn emit(s: &mut Session, event: Event, lang: &str) {
             in_command: false,
             label: String::new(),
         };
-        let _ = invoke(s, &inv);
+        let _ = invoke(s, inv);
     }
 }
 

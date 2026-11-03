@@ -175,7 +175,7 @@
       return new Promise((ok, bad) => {
         const tm = setTimeout(() => { waits.delete(call); bad(new Error('the editor did not answer')); }, EDITOR_MS);
         waits.set(call, (d) => { clearTimeout(tm); waits.delete(call); d.error ? bad(new Error(String(d.error))) : ok(d); });
-        toEditor(P, 'pluginActions', { call, ...body }, body.blobs);
+        toEditor(P, 'pluginActions', { call, plugin: P.d.id, ...body }, body.blobs);
       });
     }
 
@@ -303,7 +303,7 @@
           for (const b of (p.m.menu || []).filter((x) => x.command === c.id)) menu.push({ slot, place: b.place, group: loc(b.group, L) });
         }
       }
-      toEditor(P[0], 'plugins', { commands, toolbar, menu });
+      toEditor(P[0], 'plugins', { commands, toolbar, menu, plugins: P.map((p) => ({ manifest: p.m, settings: p.settings })) });   // the editor builds its slot commands from the manifests
     }
     function onMessage(f, d) {
       const kind = d.type.slice(f.app.prefix.length + 1);

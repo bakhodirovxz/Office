@@ -14,6 +14,8 @@ pub mod layer;
 pub mod levels;
 pub mod mode;
 pub mod phone;
+#[cfg(target_arch = "wasm32")]
+pub mod plugin_web;
 pub mod preset;
 #[cfg(not(target_arch = "wasm32"))]
 mod settings;
