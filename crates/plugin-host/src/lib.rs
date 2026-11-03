@@ -398,7 +398,9 @@ impl Session {
 
     /// Shorten the budget of every later round (events get a short one). Never lengthens it.
     pub fn limit_round_budget(&mut self, d: Duration) {
-        self.ticks = self.ticks.min((d.as_millis() / TICK.as_millis()) as u64 + 1);
+        self.ticks = self
+            .ticks
+            .min((d.as_millis() / TICK.as_millis()) as u64 + 1);
     }
 
     /// One round: copy the call in, run `call` under the deadline, validate and copy the answer out.

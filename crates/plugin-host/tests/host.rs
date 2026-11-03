@@ -163,8 +163,7 @@ fn m2_own_or_exported_memory_refuses_the_load() {
 #[test]
 fn m2b_a_second_unexported_memory_refuses_the_load() {
     // imports the host's capped memory and defines its own, never exported: multi-memory is off, so it does not compile
-    let wasm =
-        wat::parse_str(r#"(module (import "env" "memory" (memory 2)) (memory 1))"#).unwrap();
+    let wasm = wat::parse_str(r#"(module (import "env" "memory" (memory 2)) (memory 1))"#).unwrap();
     assert!(matches!(load_err(&wasm), LoadError::Compile(_)));
     let wasm = module("", "(memory 1)", "(i64.const 0)", b"");
     assert!(matches!(load_err(&wasm), LoadError::Compile(_)));
@@ -192,7 +191,11 @@ fn deep_recursion_traps_cleanly_on_a_small_stack() {
 #[test]
 fn limit_round_budget_cuts_a_round_short() {
     let wasm = module("", "", "(loop $l (br $l)) (i64.const 0)", b"");
-    let mut s = host().load(&wasm, 1, Duration::from_secs(30)).unwrap().start().unwrap();
+    let mut s = host()
+        .load(&wasm, 1, Duration::from_secs(30))
+        .unwrap()
+        .start()
+        .unwrap();
     s.limit_round_budget(Duration::from_millis(100));
     let t = Instant::now();
     assert!(matches!(s.round(&call()), Err(RunError::Timeout)));
