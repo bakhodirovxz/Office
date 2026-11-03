@@ -358,8 +358,21 @@ pub fn save_bytes(name: &str, doc: &Document) -> Result<Vec<u8>, String> {
     save_bytes_opts(name, doc, &ExportOptions::default())
 }
 
+/// A hook that may hand back the document to write instead of the live one (`None`: write it as it is). The office layer uses it to
+/// keep a temporary state of the live document (the plugin bridge's input lock) out of every saved file and autosave.
+pub type SaveFilter = fn(&Document) -> Option<Document>;
+
+static SAVE_FILTER: std::sync::RwLock<Option<SaveFilter>> = std::sync::RwLock::new(None);
+
+/// Install the [`SaveFilter`] (called once by the extension; a second call replaces it).
+pub fn set_save_filter(f: Option<SaveFilter>) {
+    *SAVE_FILTER.write().unwrap_or_else(|e| e.into_inner()) = f;
+}
+
 /// [`save_bytes`] with export options (Print Markup).
 pub fn save_bytes_opts(name: &str, doc: &Document, opts: &ExportOptions) -> Result<Vec<u8>, String> {
+    let filtered = (*SAVE_FILTER.read().unwrap_or_else(|e| e.into_inner())).and_then(|f| f(doc));
+    let doc = filtered.as_ref().unwrap_or(doc);
     let ext = ext_of(name);
     match ext.as_str() {
         // List paragraphs get their label and a tab, as in Word's plain-text save.
