@@ -44,14 +44,14 @@ test.afterAll(() => { proc?.kill(); fs.rmSync(dir, { recursive: true, force: tru
 
 const wasmOf = (f: string) => fs.readFileSync(path.join(FIX, f));
 const sha = (b: Buffer) => crypto.createHash('sha256').update(b).digest('hex');
-const COMMANDS = ['hello', 'net', 'spin', 'grow', 'xss', 'edit'];
+const COMMANDS = ['hello', 'net', 'spin', 'grow', 'xss', 'edit', 'bad'];
 /** A descriptor as the server will list it (WP8): the manifest as JSON, the wasm by URL and SHA-256. */
 function plugin(id: string, o: { file?: string; network?: string[]; grant?: string[]; memory_mb?: number } = {}) {
   const wasm = wasmOf(o.file ?? 'plugin.wasm');
   return {
     id, version: '1.0.0', sha256: sha(wasm), wasm: `/test-plugins/${o.file ?? 'plugin.wasm'}`, ...(o.grant ? { grant: o.grant } : {}),
     manifest: {
-      id, version: '1.0.0', api: 1, apps: ['docs'], publisher: 'Test publisher', name: { en: 'Test plugin', ru: 'Тестовый плагин' },
+      id, version: '1.0.0', api: 1, apps: ['docs'], events: ['selectionChanged'], publisher: 'Test publisher', name: { en: 'Test plugin', ru: 'Тестовый плагин' },
       permissions: { document: 'write', network: o.network ?? [], memory_mb: o.memory_mb ?? 2 },
       command: COMMANDS.map((c) => ({ id: c, label: { en: `Cmd ${c}` }, reads: ['none'], params: {} })),
       toolbar: [{ command: 'hello', icon: 'x', group: { en: 'Plugins' } }], menu: [{ command: 'xss', place: 'tools' }],
@@ -67,6 +67,7 @@ addEventListener('message', (e) => {
   window.got.push(e.data);
   if (e.data.type === '__P__:pluginActions') parent.postMessage({ type: '__P__:pluginResults', call: e.data.call, results: (e.data.actions || []).map(() => ({ ok: true })), reads: [] }, location.origin);
 });
+window.fireEvent = (event) => parent.postMessage({ type: '__P__:pluginEvent', event, data: {} }, location.origin);
 window.callPlugin = (plugin, command) => parent.postMessage({ type: '__P__:pluginCall', call: 'c' + Math.random(), plugin, command, params: {}, rev: 1, reads: {} }, location.origin);
 parent.postMessage({ type: '__P__:ready' }, location.origin);
 </script>`;
@@ -176,6 +177,26 @@ test('M3: fetch to an origin the manifest does not list ends the invocation, aud
   expect(await audit(page)).toEqual([{ plugin: 'plg-test', kind: 'network.refused', origin: 'https://example.org' }]);
   expect(urls.some((u) => u.includes('example.org'))).toBe(false);
   expect(await page.locator('dialog.plg-dlg').count()).toBe(0);   // nothing to grant: the manifest never asked
+});
+
+test('M8: an answer that is not a message ends the invocation; only an abort reaches the editor', async ({ page }) => {
+  await openShell(page, [plugin('plg-test')]);
+  await registered(page);
+  await call(page, 'plg-test', 'bad');
+  await expect.poll(async () => (await audit(page)).length).toBe(1);
+  expect((await audit(page))[0]).toMatchObject({ plugin: 'plg-test', kind: 'failed' });
+  await expect(status(page)).toContainText(fill(I18N['plg.failed'], { name: 'Test plugin', error: '' }).trim());
+  const msgs = await got(page, 'pluginActions');
+  expect(msgs.map((m: any) => [m.actions.length, m.abort])).toEqual([[0, true]]);   // no action was forwarded, the editor restores
+});
+
+test('M10: an event answer that tries a document edit is refused before it reaches the editor', async ({ page }) => {
+  await openShell(page, [plugin('plg-test')]);
+  await registered(page);
+  await stub(page).evaluate(() => (window as any).fireEvent('selectionChanged'));
+  await expect(status(page)).toHaveText(fill(I18N['plg.failed'], { name: 'Test plugin', error: 'an event may only run ui actions' }));
+  expect((await audit(page)).map((a: any) => a.kind)).toEqual(['failed']);
+  expect(await got(page, 'pluginActions')).toEqual([]);   // nothing was sent to the editor: the document is untouched
 });
 
 test('grant prompt: asked once per origin in local mode', async ({ page }) => {

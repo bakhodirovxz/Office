@@ -22,16 +22,18 @@ const MIME: Record<string, string> = { '.html': 'text/html', '.js': 'text/javasc
 const wasm = fs.readFileSync(path.join(FIX, 'plugin.wasm'));
 const MANIFEST = {
   id: 'plg-test', version: '1.0.0', api: 1, apps: ['docs'], publisher: 'Test publisher', name: { en: 'Test plugin' },
-  permissions: { document: 'write', memory_mb: 2 },
+  permissions: { document: 'write', memory_mb: 2, network: ['https://example.org'] },
   command: [
     { id: 'hello', label: { en: 'Cmd hello' }, reads: ['none'], params: {} },
     { id: 'edit', label: { en: 'Cmd edit' }, reads: ['textmap'], params: {} },
     { id: 'deny', label: { en: 'Cmd deny' }, reads: ['none'], params: {} },
     { id: 'many', label: { en: 'Cmd many' }, reads: ['none'], params: {} },
+    { id: 'bad', label: { en: 'Cmd bad' }, reads: ['none'], params: {} },
+    { id: 'net', label: { en: 'Cmd net' }, reads: ['none'], params: {} },
   ],
   panel: [{ id: 'p', title: { en: 'Panel' } }],
 };
-const DESCRIPTOR = { id: 'plg-test', version: '1.0.0', sha256: crypto.createHash('sha256').update(wasm).digest('hex'), wasm: '/test-plugins/plugin.wasm', manifest: MANIFEST };
+const DESCRIPTOR = { id: 'plg-test', version: '1.0.0', sha256: crypto.createHash('sha256').update(wasm).digest('hex'), wasm: '/test-plugins/plugin.wasm', grant: ['https://example.org'], manifest: MANIFEST };
 
 // The host page. ?real=1 runs the real page host; otherwise a stub answers by `window.__mode`:
 //   insert (one round), rounds (a text map read, then an insert), more (an insert, then silence: the test aborts), silent, hold (until __release()).
@@ -172,10 +174,23 @@ test.describe('real page host (host.js, a Worker, the fixture plugin)', () => {
   test('9 M5 and the reads cap: a refused command and a 17-read round end the invocation and leave the document as it was', async ({ page }) => {
     await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(1);
     const before = textOf(await xml(page));
-    for (const [cmd, why] of [['deny', 'refused'], ['many', 'bad next']] as const) {
+    for (const [cmd, why] of [['deny', 'refused'], ['many', 'bad next'], ['bad', 'encoded data']] as const) {
       await expect.poll(async () => { await run(page, `plugin.plg-test.${cmd}`); await page.waitForTimeout(500); return (await page.evaluate(() => (window as any).__say) as string[]).some((m) => m.includes('could not finish') && m.includes(why)); }, { timeout: 60_000 }).toBe(true);
       expect(textOf(await xml(page))).toBe(before);
     }
+  });
+
+  test('M4 redirect: a granted origin that redirects to another origin is not followed, and the document is unchanged', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(1);
+    const before = textOf(await xml(page));
+    const hits: string[] = [];
+    await page.route('https://example.org/x', (r) => { hits.push('A'); return r.fulfill({ status: 302, headers: { location: 'https://other.example/y' } }); });
+    await page.route('https://other.example/**', (r) => { hits.push('B'); return r.fulfill({ status: 200, body: 'leak' }); });
+    await run(page, 'plugin.plg-test.net');
+    await expect.poll(async () => (await page.evaluate(() => (window as any).__host.logs.map((l: any) => l.text)) as string[]).some((l) => l.includes('"results":[{"error":"a redirect was refused"}]')), { timeout: 60_000 }).toBe(true);
+    expect(hits).toEqual(['A']);
+    expect(await page.evaluate(() => (window as any).__host.audit)).toEqual([{ plugin: 'plg-test', kind: 'network', origin: 'https://example.org' }]);   // the first hop is audited, B never appears
+    expect(textOf(await xml(page))).toBe(before);
   });
 });
 

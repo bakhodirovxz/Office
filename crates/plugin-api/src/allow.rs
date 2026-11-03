@@ -49,19 +49,50 @@ pub const EXCEPTIONS: &[(&str, &str)] = &[
     ("review.combine", "reads a second document by path"),
     ("styles.organizer", "reads styles from a file"),
     ("styles.copyFrom", "reads styles from a file"),
-    ("insert.field", "an instruction can be HYPERLINK, INCLUDEPICTURE, INCLUDETEXT or DDEAUTO"),
-    ("fields.setCode", "an instruction can be HYPERLINK, INCLUDEPICTURE, INCLUDETEXT or DDEAUTO"),
-    ("review.addToDictionary", "writes the user's dictionary file, outside the undo step"),
-    ("review.accept", "a loop of accepts is accept all, which is a user decision"),
-    ("review.reject", "a loop of rejects is reject all, which is a user decision"),
-    ("review.restrict", "a plugin must not lock the document or set a password"),
+    (
+        "insert.field",
+        "an instruction can be HYPERLINK, INCLUDEPICTURE, INCLUDETEXT or DDEAUTO",
+    ),
+    (
+        "fields.setCode",
+        "an instruction can be HYPERLINK, INCLUDEPICTURE, INCLUDETEXT or DDEAUTO",
+    ),
+    (
+        "review.addToDictionary",
+        "writes the user's dictionary file, outside the undo step",
+    ),
+    (
+        "review.accept",
+        "a loop of accepts is accept all, which is a user decision",
+    ),
+    (
+        "review.reject",
+        "a loop of rejects is reject all, which is a user decision",
+    ),
+    (
+        "review.restrict",
+        "a plugin must not lock the document or set a password",
+    ),
 ];
 
 /// A `params` key with one of these names (any depth, any case) refuses the `run` action, unless its value is an array of
 /// non-negative integers (a node path such as `document.paragraph {"path": [3]}`, which cannot name a file). `link` is a hyperlink
 /// target in `CharProps` (also inside `styles.*`); `ins`, `del`, `fmtChange` and `numChange` forge tracked-change attribution.
 pub const DENIED_KEYS: &[&str] = &[
-    "path", "dir", "file", "url", "uri", "href", "src", "link", "ins", "del", "fmtChange", "fmt_change", "numChange", "num_change",
+    "path",
+    "dir",
+    "file",
+    "url",
+    "uri",
+    "href",
+    "src",
+    "link",
+    "ins",
+    "del",
+    "fmtChange",
+    "fmt_change",
+    "numChange",
+    "num_change",
 ];
 
 const MAX_DEPTH: usize = 32;

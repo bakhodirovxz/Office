@@ -3,6 +3,7 @@
 // by the first letter of the host call's `"command":"<id>"` (the host writes `kind` first, so byte 13 of the message is r(esume) or u(i) for those):
 //   hello (h) panel + status   net (n) fetch to example.org   spin (s) infinite loop   grow (g) grows memory until refused
 //   deny (d) run file.saveAs   many (m) 17 reads in one `next`
+//   bad (b) an answer that is not a message (invalid UTF-8 header)   evedit (an event, kind `event`) answers with a document edit
 //   xss (x) panel text that is markup and 10,000 characters   edit (e) a `run` action for the editor, then resumes
 // A resume answers "resumed", a ui click "clicked". Every call is passed to plugin_v1.log, so a test reads the host call (results included).
 // Build the .wasm files: see README.md.
@@ -19,13 +20,16 @@ const ANSWERS = {
   click: { actions: [{ type: 'ui.status', text: 'clicked' }] },
   deny: { actions: [{ type: 'run', id: 'file.saveAs', params: { path: 'C:/Users/Public/x.docx' } }] },
   many: { actions: [], next: { reads: Array.from({ length: 17 }, () => ({ what: 'textmap', scope: 'document' })) } },
+  evedit: { actions: [{ type: 'run', id: 'text.insert', params: { text: 'x' } }] },
   none: {},
 };
+// raw bytes, not a message: header length 2, header ff fe (invalid UTF-8), no blobs
+const RAW = { bad: Buffer.from([2, 0, 0, 0, 0xff, 0xfe, 0, 0, 0, 0]) };
 let off = 4096;
 const where = {};
 let data = '';
-for (const [k, v] of Object.entries(ANSWERS)) {
-  const b = msg(v);
+for (const [k, v] of [...Object.entries(ANSWERS).map(([k, a]) => [k, msg(a)]), ...Object.entries(RAW)]) {
+  const b = v;
   where[k] = [off, b.length];
   data += `  (data (i32.const ${off}) "${[...b].map((x) => String.fromCharCode(92) + x.toString(16).padStart(2, '0')).join('')}")\n`;
   off += (b.length + 15) & ~15;
@@ -51,6 +55,7 @@ ${data}  (func $ans (param $off i32) (param $len i32) (result i64)
     (call $log (local.get $p) (local.get $n))
     (if (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 13))) (i32.const 114)) (then ${ans('resume')}))
     (if (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 13))) (i32.const 117)) (then ${ans('click')}))
+    (if (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 13))) (i32.const 101)) (then ${ans('evedit')}))
     ;; find "command":"X  (the 8 bytes \\"command, then \\":\\" and the letter)
     (local.set $i (i32.const 22))   ;; skip the "kind":"command" value at the start
     (block $done (loop $scan
@@ -59,7 +64,7 @@ ${data}  (func $ans (param $off i32) (param $len i32) (result i64)
         (then (local.set $sel (i32.load8_u (i32.add (i32.add (local.get $p) (local.get $i)) (i32.const 11)))) (br $done)))
       (local.set $i (i32.add (local.get $i) (i32.const 1)))
       (br $scan)))
-${sel('h', 'hello')}${sel('n', 'net')}${sel('x', 'xss')}${sel('e', 'edit')}${sel('d', 'deny')}${sel('m', 'many')}    (if (i32.eq (local.get $sel) (i32.const ${'s'.charCodeAt(0)})) (then (loop $spin (br $spin))))
+${sel('h', 'hello')}${sel('n', 'net')}${sel('x', 'xss')}${sel('e', 'edit')}${sel('d', 'deny')}${sel('m', 'many')}${sel('b', 'bad')}    (if (i32.eq (local.get $sel) (i32.const ${'s'.charCodeAt(0)})) (then (loop $spin (br $spin))))
     (if (i32.eq (local.get $sel) (i32.const ${'g'.charCodeAt(0)})) (then
       (loop $grow (br_if $grow (i32.ne (memory.grow (i32.const 1)) (i32.const -1))))
       ${ans('grow')}))

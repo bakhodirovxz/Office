@@ -1009,6 +1009,27 @@ mod web_bridge {
     }
 
     #[test]
+    fn a_palette_command_of_another_plugin_while_one_is_pending_says_busy() {
+        let _t = turn();
+        let mut s = page(None);
+        let other = JSON.replace("test-plugin", "other-plugin");
+        bridge::set_plugins(
+            vec![
+                Registration { manifest: serde_json::from_str(JSON).unwrap(), settings: None, enabled: true },
+                Registration { manifest: serde_json::from_str(&other).unwrap(), settings: None, enabled: true },
+            ],
+            None,
+        );
+        crate::register(&mut s, "en");
+        let (call, ..) = started(&mut s);
+        let e = s.run("plugin.other-plugin.go", &json!({})).unwrap_err().to_string();
+        assert!(e.contains(bridge::BUSY) && !e.contains("protected"), "{e}");
+        bridge::answer(&mut s, ans(&call, ins("Z"), false));
+        assert!(!bridge::locked());
+        assert!(s.run("plugin.other-plugin.go", &json!({})).is_ok(), "free again");
+    }
+
+    #[test]
     fn a_late_string_round_after_a_timeout_is_refused() {
         let _t = turn();
         let mut s = page(Some(10.0));

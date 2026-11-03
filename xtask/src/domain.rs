@@ -496,7 +496,8 @@ const OWN_ROOTS: [&str; 4] = ["suite-core", "xdfu-core", "plugin-api", "plugin-h
 /// (+ `futures-channel`, `futures-sink`), which upstream's lock has with fewer. `cargo tree --target all -e all -i futures-sink` in
 /// `domains/docs` prints nothing, so no upstream build links them; the lock cannot show features, so own_private_deps sees them as
 /// shared with `futures-util`. Recorded here with the version, so a new or changed entry still fails the check. (name, version)
-const LOCK_ONLY_VIA_WASMTIME: [(&str, &str); 2] = [("futures-channel", "0.3.34"), ("futures-sink", "0.3.34")];
+const LOCK_ONLY_VIA_WASMTIME: [(&str, &str); 2] =
+    [("futures-channel", "0.3.34"), ("futures-sink", "0.3.34")];
 
 /// "name", "name version" or "name version (source)": a dependency entry of a lock package, as (name, version).
 fn dep_key(entry: &str) -> (String, Option<String>) {
@@ -668,7 +669,8 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let reg = "source = \"registry+https://github.com/rust-lang/crates.io-index\"";
         let lock = |v: &str| {
-            format!("version = 4
+            format!(
+                "version = 4
 [[package]]
 name = \"app\"
 version = \"1.0.0\"
@@ -676,14 +678,19 @@ version = \"1.0.0\"
 name = \"futures-sink\"
 version = \"{v}\"
 {reg}
-")
+"
+            )
         };
         let up = dir.join("up.lock");
-        fs::write(&up, "version = 4
+        fs::write(
+            &up,
+            "version = 4
 [[package]]
 name = \"app\"
 version = \"1.0.0\"
-").unwrap();
+",
+        )
+        .unwrap();
         let (ok, bad) = (dir.join("ok.lock"), dir.join("bad.lock"));
         fs::write(&ok, lock("0.3.34")).unwrap();
         fs::write(&bad, lock("0.3.99")).unwrap();
