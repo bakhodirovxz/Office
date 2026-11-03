@@ -257,7 +257,7 @@ test.describe('stub page host', () => {
     await page.evaluate(() => (window as any).__release());
     await expect.poll(() => count(page, 'wordcraft:pluginResults'), { timeout: 30_000 }).toBeGreaterThanOrEqual(2);
     const r = await last(page, 'wordcraft:pluginResults');
-    test.info().annotations.push({ type: 'stale', description: String(r.error) });
+    if (r.error) expect(r.error).toContain('stale'); // undo got through the lock: the answer is refused (unit test: a_document_that_moved_under_the_plugin_is_stale_and_restored)
     expect(textOf(await xml(page))).not.toContain('PLG' + 'PLG');
   });
 });
