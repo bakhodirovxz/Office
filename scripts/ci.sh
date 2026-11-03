@@ -541,6 +541,20 @@ job_plugins() {
   bstep plugin-matrix env UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --release --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test plugin_matrix -- --nocapture || rc=1
   # plugin #2 (WP7): insert, highlight, check and the docx round trip with the real module in the native host
   bstep plugin-fields env TEMPLATE_FIELDS_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_fields_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test fields || rc=1
+  # the malicious-plugin suite (WP10, docs/phase7/malicious.md): host limits, the executor's refusals, the provider isolation, then the browser specs
+  bstep evil-host env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-api -p plugin-host || rc=1
+  bstep evil-executor env CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-plugins || rc=1
+  bstep evil-docserver env CARGO_TARGET_DIR="$SVC_T" cargo test --locked -j 4 --manifest-path services/Cargo.toml -p docserver --test plugins || rc=1
+  if [ -f "$OFFICE_TARGET/docs/release/docs.exe" ]; then step evil-desktop python -I scripts/plugins/evil-desktop.py "$OFFICE_TARGET/docs/release/docs.exe" || rc=1
+  else note "evil-desktop skipped: no release docs.exe in $OFFICE_TARGET/docs (run: scripts/ci.sh build docs desktop)"; fi
+  if ! skip_no_build "the plugin Playwright specs need the built binaries and dists"; then
+    local dist="${CI_DIST_ROOT:-$OFFICE_TARGET/dist}"
+    bstep evil-build-bins env CARGO_TARGET_DIR="$SVC_T" cargo build --locked -j 6 --manifest-path services/Cargo.toml -p suite-serve -p convert-api --bins || return 1
+    [ -d "$dist/shell" ] && [ -d "$dist/docs-web" ] || { note "no $dist/shell or docs-web (run: scripts/ci.sh build docs web, scripts/shell-dist.sh)"; return 2; }
+    [ -x ci/web-smoke/node_modules/.bin/playwright ] || [ -x ci/web-smoke/node_modules/.bin/playwright.cmd ] || step npm-ci npm ci --prefix ci/web-smoke || return 2
+    pw_step playwright-plugins-host playwright.plugins.config.ts SUITE_SERVE_BIN="$SVC_T/debug/hoshiya-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/debug/convert-api-fake-tool$EXE" SHELL_DIST_ROOT="$dist" || rc=1
+    pw_step playwright-bridge-plugins playwright.bridge-plugins.config.ts DOCS_DIST="$dist/docs-web" || rc=1
+  fi
   return $rc
 }
 
@@ -809,7 +823,7 @@ profile_jobs() { # prints "job args" lines
            diff_has '^sidecars/' && echo sidecars
            diff_has '^(i18n/converter\.tsv|services/convert-api/ui/)' && echo convert-ui
            diff_has '^(web/shell/|web/plugins/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell
-           diff_has '^(crates/plugin-|plugins/|domains/docs/crates/docs-(plugins|translit)/|xtask/src/plugin\.rs)' && echo plugins
+           diff_has '^(crates/plugin-|plugins/|ci/plugins/|scripts/plugins/|web/plugins/|domains/docs/crates/docs-(plugins|translit)/|xtask/src/plugin\.rs)' && echo plugins
            diff_has '^(services/(docserver|fake-hrm|suite-serve)/|ci/web-smoke/(playwright\.(docserver|bridge-docs)|docserver\.spec|bridge-docs\.spec)|packaging/docserver/)' && echo docserver;;
     full|nightly)
       echo "test-ours"; echo notices

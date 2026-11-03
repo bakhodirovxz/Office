@@ -167,12 +167,12 @@ test('M9: markup and a 10,000-character text are shown as text and cut', async (
   expect(await page.evaluate(() => (window as any).__xss)).toBeUndefined();
 });
 
-test('M3: fetch without a network permission is refused, audited, and the plugin sees the error', async ({ page }) => {
+test('M3: fetch to an origin the manifest does not list ends the invocation, audited, nothing is fetched', async ({ page }) => {
   const urls = await openShell(page, [plugin('plg-test')]);
   await registered(page);
   await call(page, 'plg-test', 'net');
-  await expect(status(page)).toHaveText('resumed');
-  expect((await logs(page)).some((l) => l.includes('"results":[{"error":"network not permitted"}]'))).toBe(true);
+  await expect(status(page)).toHaveText(fill(I18N['plg.failed'], { name: 'Test plugin', error: 'network not permitted' }));
+  expect((await logs(page)).some((l) => l.includes('"kind":"resume"'))).toBe(false);   // the plugin is never called again
   expect(await audit(page)).toEqual([{ plugin: 'plg-test', kind: 'network.refused', origin: 'https://example.org' }]);
   expect(urls.some((u) => u.includes('example.org'))).toBe(false);
   expect(await page.locator('dialog.plg-dlg').count()).toBe(0);   // nothing to grant: the manifest never asked

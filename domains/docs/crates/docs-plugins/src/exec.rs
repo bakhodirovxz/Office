@@ -10,7 +10,7 @@ use std::sync::Arc;
 use plugin_api::action::{Action, Answer, Call, CallKind, Denied, Grants, ReadReq, ReadWhat, Scope as ApiScope, Widget};
 use plugin_api::manifest::{Event, ReadKind};
 use plugin_api::textmap::{Apply, TextMap};
-use plugin_api::wire::{MAX_ROUNDS, Message};
+use plugin_api::wire::{MAX_BLOBS, MAX_ROUNDS, Message};
 use serde_json::{Map, Value, json};
 use wordcraft_engine::{CmdError, CmdResult, Session};
 
@@ -169,6 +169,10 @@ impl Run {
 
     /// Perform one read: the blob goes into `blobs`, its index under the read's name in `reads`.
     fn read(&mut self, s: &mut Session, req: &ReadReq, blobs: &mut Vec<Vec<u8>>, reads: &mut BTreeMap<String, u32>) -> Result<u32, CmdError> {
+        // A message carries 16 blobs at most (`Message::encode`); refuse the 17th read before it walks the document.
+        if blobs.len() >= MAX_BLOBS {
+            return fail("plugin asked for more than 16 reads in one round");
+        }
         let (name, bytes) = match req.what {
             ReadWhat::Textmap => {
                 let scope = req.scope.map(scope_api).unwrap_or_else(|| scope_of(self.inv.params.get("scope").and_then(Value::as_str)));

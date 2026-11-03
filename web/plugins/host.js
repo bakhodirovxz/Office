@@ -73,6 +73,7 @@
       if (fromEvent && !x.type.startsWith('ui.')) throw new Error('an event may only run ui actions');
       const needs = x.type === 'run' ? (/^document\./.test(x.id) ? 'read' : 'write') : x.type === 'textmap.apply' ? 'write' : x.type === 'read' ? 'read' : '';
       if (needs && (doc === 'none' || (needs === 'write' && doc !== 'write'))) throw new Error(`${x.type} needs document access`);
+      if (x.type === 'fetch' && !(P.m.permissions?.network || []).includes(originOf(x.url))) throw Object.assign(new Error('network not permitted'), { origin: originOf(x.url) });   // like the native host: an origin the manifest does not list ends the invocation
       if (x.type === 'ui.panel' && !(P.m.panel || []).some((p) => p.id === x.panel)) throw new Error('unknown panel');
       if (x.type === 'ui.panel') { if (!Array.isArray(x.widgets)) throw new Error('bad widgets'); x.widgets.forEach((w) => { if (!isObj(w) || !WKEYS[w.type]) throw new Error('unknown widget'); only(w, WKEYS[w.type], 'widget ' + w.type); }); }
     }
@@ -281,7 +282,7 @@
         if (sent || call.fromEditor) { try { toEditor(P, 'pluginActions', { call: call.id, actions: [], more: false, abort: true }); } catch (_) { /* no editor */ } }
         await ready;
         say(e.stopped ? t('plg.timeout', { name: P.name }) : t('plg.failed', { name: P.name, error: clean(e.message) }));
-        note({ plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
+        note(e.origin !== undefined ? { plugin: P.d.id, kind: 'network.refused', origin: e.origin } : { plugin: P.d.id, kind: e.stopped ? 'stopped' : 'failed', error: String(e.message) });
       }
     }
     // invocations of one plugin never overlap

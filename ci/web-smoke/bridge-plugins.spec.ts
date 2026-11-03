@@ -26,6 +26,8 @@ const MANIFEST = {
   command: [
     { id: 'hello', label: { en: 'Cmd hello' }, reads: ['none'], params: {} },
     { id: 'edit', label: { en: 'Cmd edit' }, reads: ['textmap'], params: {} },
+    { id: 'deny', label: { en: 'Cmd deny' }, reads: ['none'], params: {} },
+    { id: 'many', label: { en: 'Cmd many' }, reads: ['none'], params: {} },
   ],
   panel: [{ id: 'p', title: { en: 'Panel' } }],
 };
@@ -165,6 +167,15 @@ test.describe('real page host (host.js, a Worker, the fixture plugin)', () => {
     await expect(page.getByRole('region', { name: 'Test plugin: Panel' })).toBeVisible();
     await expect.poll(() => count(page, 'wordcraft:pluginResults')).toBe(1);
     expect(textOf(await xml(page))).toBe(textOf(before));
+  });
+
+  test('9 M5 and the reads cap: a refused command and a 17-read round end the invocation and leave the document as it was', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(1);
+    const before = textOf(await xml(page));
+    for (const [cmd, why] of [['deny', 'refused'], ['many', 'bad next']] as const) {
+      await expect.poll(async () => { await run(page, `plugin.plg-test.${cmd}`); await page.waitForTimeout(500); return (await page.evaluate(() => (window as any).__say) as string[]).some((m) => m.includes('could not finish') && m.includes(why)); }, { timeout: 60_000 }).toBe(true);
+      expect(textOf(await xml(page))).toBe(before);
+    }
   });
 });
 
