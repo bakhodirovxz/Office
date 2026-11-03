@@ -1698,3 +1698,31 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Sizes (brotli wasm, budgets unchanged): Sheets 4,954,751 (headroom 12,020), Slides 9,512,548 (headroom 11,669). Dist: `E:/office-target/p6-texclamp/dist`.
 - Not tested: a texture wider than 4096 px on a 4096 GPU; a real phone; pinch, typing, long-press, save in Sheets and Slides.
 - Rig: `scripts/mobile/lib.mjs` `forwardCdp` reads `RIG_CDP_PORT` (default 9222) so two surveys on two emulators do not share a forward.
+### Phase 6 WP12 recovery: the picture-less autosave and recovery of unsaved work (2026-11-03, branch `p6-recover`)
+- **Picture-less autosave, root cause** (`docs/phase6/lifecycle.md` "WP12 recovery"): not a writer bug. Autosave and Save serialise the same document
+  with the same writer (now one function, `office_overlay::autosave_bytes`); the picture had been deleted from the document by the rig's taps on the
+  emulator: the Edit-button tap left the picture selected, the next tap moved it to the start of the document, and the first key replaced it (reproduced
+  step by step, `E:/office-target/p6/evidence/2026-11-02T23-10-picture-rootcause/`). **Explicit Save keeps pictures**: test
+  `autosave_and_save_keep_the_picture_of_an_opened_document` (wordcraft/0146) passes; every saved docx after a recovery holds `image1.png` (49,270 B).
+  **Open risk, not fixed:** on a phone a tap can reach the page through the Edit button and a tap can move a selected picture (emulator only for the move);
+  with a key after them a picture is deleted out of sight (Undo brings it back). Needs its own WP.
+- **Recovery built:** shell keeps each `<prefix>:autosave` (Android: app-private file through `SuiteHost.autosave`; plain web host: IndexedDB; names
+  mode: memory only), reloads the editor with it after a WebGL loss, reopens it at every start, unsaved and **without a question** (a first version asked
+  with `confirm()`; relaunched Chrome answered it by itself with Cancel, unseen, and the copy was deleted: measured, `lifecycle.md`), and deletes it only
+  after a Save in its own format or when the user discards the changes. App: `onRenderProcessGone` (the app no longer dies with the renderer), atomic
+  temp + fsync + rename. wordcraft/0146 (`host.rs` +13/-5, `office_overlay.rs` +8, test +77): `wordcraft:open { dirty: true }`. One string (`rec.done`),
+  Uzbek `reviewed:agent-opus:2026-11-03`. Shell 65,274 B brotli of 65,536 (headroom 262, no budget change); Docs wasm 9,876,954 B (headroom 27,462).
+- **Desktop Chromium** (412x860 touch): WebGL loss, reload after the 30 s autosave, renderer crash after it: each reopens the edit unsaved with the picture
+  (the saved docx then has `image1.png`, 49,270 B, and the text); the Save drops the kept copy.
+- **Emulator re-run** (`HRM_Pixel_8`, Chrome 133 and the rebuilt APK, `lifecycle.mjs --edit-first`): WebGL loss recovered in place (Chrome, app; page back
+  in about 2.5 s); background `am kill` recovered (Chrome, app; copy written 0.6 s after hide); renderer crash 30 s after typing recovered (Chrome, app; the
+  **app now survives** the crash); renderer crash right after typing still **lost** (no autosave yet). Every kept copy: 55,495 B with the text and the
+  picture. New loss window: none for WebGL loss and for a kill later than about 1 s after hide; **up to 30 s** (`AUTOSAVE_MS`) for a foreground renderer
+  crash. Recordings `E:/office-target/p6/evidence/2026-11-03T0*/` (SHA-256 lines marked "WP12 recovery").
+- Checks: `verify-queue.sh wordcraft` (37 patches), `cargo xt register check` (139), `cargo xt i18n check-stale` and `check` OK; the new ui-egui test passes;
+  Playwright `bridge-docs` 8/8 (incl. autosave) on the new Docs dist; `shell` 25 pass, 3 fail (Sheets/Slides/PDF frame language: the same 3 fail with
+  phase-6's `shell.js`; those dists were copied from `p6-mobileux`, not built here).
+  Rig fixes: `lib.mjs tapText` no longer scales display coordinates by `RIG_SCALE` (it tapped half-way off at 540x1200); `lifecycle.mjs --edit-first`,
+  `--before`, kept-copy pull.
+- **Not verified:** a real phone, Android's own low-memory kill, Chrome tab discard, the picture-move code path, two shell tabs sharing one copy,
+  private windows (memory only), the desktop host. Shell headroom is 262 B.

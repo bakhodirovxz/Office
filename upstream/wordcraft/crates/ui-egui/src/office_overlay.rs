@@ -327,3 +327,11 @@ pub fn start_theme(own: crate::theme::Appearance) -> crate::theme::Appearance {
 pub fn theme_at_start(own: crate::theme::Appearance, shared: Option<&str>) -> crate::theme::Appearance {
     shared.and_then(crate::theme::Appearance::from_code).unwrap_or(own)
 }
+
+/// The bytes a web host's `wordcraft:autosave` hands over (wordcraft/0146): the document with its unsaved changes, written as File › Save
+/// writes it (same writer, the document's password, the same export options), so a recovery from it keeps what a Save would keep.
+pub fn autosave_bytes(app: &crate::WordApp, name: &str) -> Result<Vec<u8>, String> {
+    let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
+    let options = wordcraft_engine::cmd::file::export_options(&app.session, &serde_json::json!({}));
+    wordcraft_engine::io::save_bytes_with(name, &app.session.doc, password, &options)
+}
