@@ -377,3 +377,14 @@ fn the_sheet_close_button_closes_it() {
     let _ = tap_at(&mut s, &ctx, pos2(360.0 - 24.0, top + 4.0 + 24.0), &mut time);
     assert_eq!(open_sheet(&ctx), None);
 }
+
+/// A phone whose primary pointer is a finger never reads a pointer press as a mouse: Android Chrome sends `pointerdown` in a frame before `touchstart`, and the
+/// layout flickered to the desktop one for that frame, where the press went through the Edit button to the page (p6-tapfix). A device with a mouse still switches.
+#[test]
+fn a_coarse_pointer_device_keeps_the_phone_layout_on_a_pointer_press_without_a_touch() {
+    assert!(touched_after(true, false, true, f64::INFINITY, true), "a press, no touch seen yet, finger device");
+    assert!(touched_after(true, false, true, 5.0, true), "a press five seconds after the last touch, finger device");
+    assert!(!touched_after(true, false, true, 5.0, false), "the same on a device with a mouse");
+    assert!(touched_after(true, false, true, 0.2, false), "inside the grace");
+    assert!(touched_after(false, true, false, 0.0, false), "a touch");
+}

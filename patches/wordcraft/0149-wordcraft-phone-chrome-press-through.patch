@@ -1,0 +1,83 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 3 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: the phone chrome's gate drops the object drag of the
+ finger it swallows
+
+Phase 6 WP12 (docs/phase6/lifecycle.md, picture-less autosave). Found on the emulator: the press of a tap on the round Edit button reached the page in a frame where the phone layout had flickered off (docs-office `active`, fixed there), selected the picture under it and began an object drag; the release then met the closed gate in `canvas::mouse` (`chrome_down`, `phone_reading`), so the drag was left behind. The next tap, on a heading, was taken as that drag's pointer: the picture moved to the heading, and the first typed key replaced the still selected picture. The gate now also drops the object drag when it swallows a finger, so no path can leave one behind. Desktop and a build without the extension are unchanged (the gate is only closed by the phone chrome). Tests: a finger's tap on text with a picture selected moves nothing, places the caret and deselects the picture, for a press and release in one frame and in two.
+---
+ crates/ui-egui/src/canvas.rs  |  2 ++
+ crates/ui-egui/src/objects.rs | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
+
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index 79d6394..7679b34 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -2329,6 +2329,8 @@ fn clamped_scroll(before: egui::Vec2, delta: egui::Vec2, max: egui::Vec2) -> egu
+ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
+     // A finger on the phone chrome's bars is not the page's (wordcraft/0140); nor is a tap while the phone shows it for reading (0143).
+     if crate::office_overlay::chrome_down() || crate::office_overlay::phone_reading() {
++        // A press of that finger that came through before the gate closed leaves no object drag behind: the next tap would move the picture (0149).
++        app.canvas.obj_drag = None;
+         return;
+     }
+     // A pen or the eraser (Draw tab) owns the pointer.
+diff --git a/crates/ui-egui/src/objects.rs b/crates/ui-egui/src/objects.rs
+index 554f10d..14aec7f 100644
+--- a/crates/ui-egui/src/objects.rs
++++ b/crates/ui-egui/src/objects.rs
+@@ -1096,4 +1096,53 @@ mod tests {
+         assert_eq!(o.page, 1, "dropped on the page under the pointer, not thrown back");
+         assert!((o.rect.x - 100.0).abs() < 0.5, "kept its place across: {:?}", o.rect);
+     }
++
++    /// wordcraft/0149: a finger's tap on text while a picture is selected never moves the picture (taps of the phone rig moved it to the
++    /// start of the document, and the first typed key then replaced it). Quick taps put press and release in one frame, slow ones in two.
++    #[test]
++    fn a_touch_tap_on_text_does_not_move_the_selected_picture() {
++        use egui::{Event, PointerButton, TouchDeviceId, TouchId, TouchPhase};
++        for quick in [true, false] {
++            let mut a = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
++            a.run("view.commentsPane", json!({"value": false})).unwrap();
++            a.run("text.insert", json!({"text": "Heading\nSome body text here.\n"})).unwrap();
++            let mut png = Vec::new();
++            let img = image::RgbaImage::from_pixel(40, 20, image::Rgba([200, 30, 30, 255]));
++            image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
++            a.run("insert.picture", json!({"data": wordcraft_engine::cmd::insert::base64_encode(&png), "width": 160})).unwrap();
++            let before = a.session.doc.body.iter().map(|b| format!("{b:?}")).collect::<Vec<_>>();
++            let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).with_step_dt(1.0 / 60.0).build_ui_state(
++                |ui, app: &mut WordApp| {
++                    let ctx = ui.ctx().clone();
++                    app.logic(&ctx);
++                    app.ui(ui);
++                },
++                a,
++            );
++            for _ in 0..6 {
++                h.step();
++            }
++            assert!(selected(h.state()).is_some(), "the picture is selected");
++            let at = crate::canvas::page_to_screen(h.state_mut(), 0, 100.0, 85.0).unwrap();
++            let touch = |phase| Event::Touch { device_id: TouchDeviceId(0), id: TouchId(0), phase, pos: at, force: None };
++            let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
++            let mut frames = vec![vec![Event::PointerMoved(at), button(true), touch(TouchPhase::Start)]];
++            let up = [button(false), Event::PointerGone, touch(TouchPhase::End)];
++            if quick {
++                frames[0].extend(up);
++            } else {
++                frames.push(up.to_vec());
++            }
++            for f in frames {
++                h.input_mut().events.extend(f);
++                h.step();
++            }
++            for _ in 0..6 {
++                h.step();
++            }
++            let after = h.state().session.doc.body.iter().map(|b| format!("{b:?}")).collect::<Vec<_>>();
++            assert_eq!(before, after, "the picture stays where it is (quick: {quick})");
++            assert!(selected(h.state()).is_none(), "the tap placed the caret and deselected the picture (quick: {quick})");
++        }
++    }
+ }

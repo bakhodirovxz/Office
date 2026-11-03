@@ -1727,6 +1727,23 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Not verified:** a real phone, Android's own low-memory kill, Chrome tab discard, the picture-move code path, two shell tabs sharing one copy,
   private windows (memory only), the desktop host. Shell headroom is 262 B.
 
+### Phase 6 WP12: the tap-through that deleted a picture (2026-11-03, branch `p6-tapfix`)
+- **Root cause and fix** (`docs/phase6/lifecycle.md` "Tap-through fix"): on a touch phone the first pointer press after a quiet second arrives in a frame without a
+  touch event, `phone::active` read it as a mouse and switched the phone layout **off for that frame**, so the press of a tap on the floating Edit button
+  reached the page (selected the picture under it, began an object drag); the release met the closed gate and the drag stayed; the next tap on a heading was taken
+  as that drag's pointer (the picture moved, the document went dirty) and the first key replaced the selected picture. Fixed in our code
+  (`docs-office` `phone::touched_after`: a finger device never reads a pointer press as a mouse) and by wordcraft/0149 (`canvas::mouse`'s gate also drops
+  `canvas.obj_drag`, +2 lines; `objects.rs` +49 test lines). REGISTER row added (mobile); `verify-queue.sh wordcraft` (38 patches) OK, `cargo xt register check` (142) OK.
+- **Emulator before and after** (`HRM_Pixel_8`, Chrome 133, `scripts/mobile/tapfix.mjs`, screenshots in `docs/phase6/evidence/tapfix/`): before, the Edit tap selects the
+  picture, the heading tap moves it, typing replaces it, the autosave is 5,750 B **without** `word/media/image1.png` and the layout toggled 9 times; after,
+  the Edit tap only starts editing, nothing moves, the autosave is 55,490 B **with** `image1.png` and the layout toggled once.
+- **Tests:** ui-egui `--lib` 737 passed, the same 7 i18n failures as before (cs, hu, hr, pl, tr, vi catalogs, `untranslated_interface_text`); docs-office 40 passed (new:
+  `a_coarse_pointer_device_keeps_the_phone_layout_on_a_pointer_press_without_a_touch`); new ui-egui `a_touch_tap_on_text_does_not_move_the_selected_picture`
+  (passes without the fix too: the headless harness has no phone chrome, it pins the behaviour). Mouse and desktop paths unchanged (`phone_on` false).
+- **Size** (`CI_DIST_ROOT=E:/office-target/p6-tapfix/dist-final bash scripts/ci.sh sizes`): Docs wasm 9,875,600 B brotli of 9,904,416 (headroom 28,816; was 27,462); shell
+  not touched (65,235 B of 65,536 as measured from `web/shell`, headroom 301).
+- **Not verified:** a real finger (the rig's `input tap` is a 1 ms tap), the Android app's WebView (same page code, not re-run), the second tap of the "after" run
+  selects a word through 0139's touch select (not investigated; it is not a move).
 
 ## Phase 7 (started early, in parallel; branch `phase-7` from `phase-6` b89c6de, worktree `E:/office-wt/phase-7`)
 - Owner, 2026-11-03: "keep going; when Phase 6 is done, move to Phase 7". Plan only so far: `docs/phase7/PLAN.md`. Merge forward phase-6 -> phase-7 only; gates stay 4 -> 5 -> 6 -> 7.
