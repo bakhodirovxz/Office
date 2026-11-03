@@ -39,7 +39,11 @@ pub fn ids() -> Vec<&'static str> {
 
 /// `t` turns a catalog key (English) into the interface language's text.
 fn layout(reg: &Registry, t: &dyn Fn(&str) -> String) -> RibbonLayout {
-    let groups: Vec<Value> = GROUPS.iter().map(|(key, cmds)| json!({"name": t(key), "commands": cmds})).collect();
+    let mut groups: Vec<Value> = GROUPS.iter().map(|(key, cmds)| json!({"name": t(key), "commands": cmds})).collect();
+    // The plugins' buttons (Phase 7 WP3): one group of the enabled plugins' commands, none when no plugin contributes.
+    if let Some((name, ids)) = docs_plugins::ribbon_group(&docs_plugins::lang(), &t("Plugins")) {
+        groups.push(json!({"name": name, "commands": ids}));
+    }
     let mut tabs = vec![json!({"name": "Home"}), json!({"name": "Insert"}), json!({"name": t(TAB_KEY), "custom": true, "groups": groups})];
     tabs.extend(HIDDEN.iter().map(|n| json!({"name": n, "hidden": true})));
     let mut l = RibbonLayout::from_value(&json!({ "tabs": tabs }));
@@ -51,7 +55,11 @@ fn layout(reg: &Registry, t: &dyn Fn(&str) -> String) -> RibbonLayout {
 fn shape(l: &RibbonLayout) -> Vec<(String, bool, bool, Vec<Vec<String>>)> {
     l.tabs()
         .iter()
-        .map(|t| (if t.custom { String::new() } else { t.name.clone() }, t.custom, t.hidden, t.groups.iter().map(|g| g.commands.clone()).collect()))
+        .map(|t| {
+            // The plugin group comes and goes with the enabled plugins: it is not part of the shape that makes a layout "ours".
+            let own = t.groups.iter().filter(|g| !g.commands.iter().any(|c| c.starts_with("plugin."))).map(|g| g.commands.clone()).collect();
+            (if t.custom { String::new() } else { t.name.clone() }, t.custom, t.hidden, own)
+        })
         .collect()
 }
 
@@ -74,8 +82,8 @@ fn set_qat(s: &mut Session, mode: Mode) {
 
 #[derive(Default)]
 struct State {
-    /// The (language, mode) the layout was last brought in line with.
-    done: Option<(String, Mode)>,
+    /// The (language, mode, plugin generation) the layout was last brought in line with.
+    done: Option<(String, Mode, u64)>,
     force: bool,
 }
 
@@ -93,10 +101,11 @@ pub fn force_next_sync() {
 /// unless `force_next_sync` asked for the preset.
 pub fn sync(s: &mut Session, lang: &str, t: &dyn Fn(&str) -> String) {
     crate::levels::set_lang(&lang.to_ascii_lowercase());
-    let mode = mode::mode();
+    docs_plugins::frame(s, lang);
+    let (mode, plugins) = (mode::mode(), docs_plugins::generation());
     let force = STATE.with(|st| {
         let st = st.borrow();
-        if st.done.as_ref().is_some_and(|(l, m)| l == lang && *m == mode) {
+        if st.done.as_ref().is_some_and(|(l, m, g)| l == lang && *m == mode && *g == plugins) {
             return None;
         }
         Some(st.force)
@@ -112,7 +121,7 @@ pub fn sync(s: &mut Session, lang: &str, t: &dyn Fn(&str) -> String) {
         _ => {}
     }
     set_qat(s, mode);
-    STATE.with(|st| *st.borrow_mut() = State { done: Some((lang.to_string(), mode)), force: false });
+    STATE.with(|st| *st.borrow_mut() = State { done: Some((lang.to_string(), mode, plugins)), force: false });
 }
 
 /// `office.ribbonFull`: the full ribbon. The user's own ribbon customization is discarded (design 2.1); the QAT survives.

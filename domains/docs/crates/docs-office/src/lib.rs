@@ -25,6 +25,8 @@ pub use layer::print_wrap;
 #[cfg(not(target_arch = "wasm32"))]
 pub use layer::flush_snapshots;
 pub use preset::{FULL, SIMPLE, sync as ribbon_frame};
+// Phase 7 WP3: the plugin side panel and context menu items, handed to the carried hook `wordcraft/0147`.
+pub use docs_plugins::{context_items as plugin_context, show_panel as plugin_panel};
 
 pub const EXPORT_PDF: &str = "office.exportPdf";
 pub const HISTORY: &str = "office.history";
@@ -110,6 +112,7 @@ pub fn install(s: &mut Session) {
     if let Some(r) = extend(&s.registry) {
         s.registry = std::sync::Arc::new(r);
     }
+    docs_plugins::install(s);
 }
 
 

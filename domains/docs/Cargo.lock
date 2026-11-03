@@ -1094,6 +1094,7 @@ dependencies = [
 name = "docs-office"
 version = "0.1.0"
 dependencies = [
+ "docs-plugins",
  "docs-translit",
  "egui",
  "hayro-syntax",
@@ -1106,15 +1107,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "docs-translit"
+name = "docs-plugins"
 version = "0.1.0"
 dependencies = [
- "quick-xml",
+ "docs-translit",
+ "egui",
+ "plugin-api",
  "serde_json",
  "uz-translit",
  "wordcraft-doc",
  "wordcraft-engine",
  "wordcraft-layout",
+]
+
+[[package]]
+name = "docs-translit"
+version = "0.1.0"
+dependencies = [
+ "docs-plugins",
+ "quick-xml",
+ "serde_json",
+ "uz-translit",
+ "wordcraft-doc",
+ "wordcraft-engine",
  "zip",
 ]
 

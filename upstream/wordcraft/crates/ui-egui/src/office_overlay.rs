@@ -120,6 +120,26 @@ pub fn ribbon_frame(s: &mut wordcraft_engine::Session) {
     }
 }
 
+/// Plugin UI (wordcraft/0147): the extension draws the side panels the plugins asked for and the plugin items of the text context
+/// menu (it returns the command the user clicked, for the caller to run and close the menu). Both are no-ops without an extension.
+type PluginPanel = fn(&mut wordcraft_engine::Session, &mut egui::Ui);
+type PluginContext = fn(&wordcraft_engine::Session, &mut egui::Ui) -> Option<(String, serde_json::Value)>;
+static PLUGIN_UI: std::sync::OnceLock<(PluginPanel, PluginContext)> = std::sync::OnceLock::new();
+
+pub fn set_plugin_ui(panel: PluginPanel, context: PluginContext) {
+    let _ = PLUGIN_UI.set((panel, context));
+}
+
+pub fn plugin_panel(s: &mut wordcraft_engine::Session, ui: &mut egui::Ui) {
+    if let Some((panel, _)) = PLUGIN_UI.get() {
+        panel(s, ui);
+    }
+}
+
+pub fn plugin_context(s: &wordcraft_engine::Session, ui: &mut egui::Ui) -> Option<(String, serde_json::Value)> {
+    PLUGIN_UI.get().and_then(|(_, context)| context(s, ui))
+}
+
 /// A print job's PDF: `(bytes, plan)` of `Session::print_pdf`.
 pub type PrintJob = Result<(Vec<u8>, wordcraft_engine::print::PrintPlan), wordcraft_engine::CmdError>;
 type PrintHook = fn(&mut wordcraft_engine::Session, &mut dyn FnMut(&mut wordcraft_engine::Session) -> PrintJob) -> PrintJob;
