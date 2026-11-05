@@ -33,7 +33,7 @@ index 73d8a2e..4c6f099 100644
          }
 diff --git a/crates/ui-egui/tests/no_blank_frames.rs b/crates/ui-egui/tests/no_blank_frames.rs
 new file mode 100644
-index 0000000..2f50b3b
+index 0000000..b8acd90
 --- /dev/null
 +++ b/crates/ui-egui/tests/no_blank_frames.rs
 @@ -0,0 +1,29 @@
