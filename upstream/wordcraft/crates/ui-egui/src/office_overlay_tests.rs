@@ -215,7 +215,7 @@ fn autosave_and_save_keep_the_picture_of_an_opened_document() {
     use serde_json::json;
     // A docx like the WP12 fixture (scripts/mobile/fixtures/phone-ux.docx): a heading, text, a picture of about 50 kB, text.
     let png = {
-        let img = image::RgbaImage::from_fn(160, 100, |x, y| image::Rgba([(x * 7 ^ y * 13) as u8, (x * y) as u8, (x + y * 3) as u8, 255]));
+        let img = image::RgbaImage::from_fn(160, 100, |x, y| image::Rgba([((x * 7) ^ (y * 13)) as u8, (x * y) as u8, (x + y * 3) as u8, 255]));
         let mut b = Vec::new();
         image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut b), image::ImageFormat::Png).unwrap();
         b
