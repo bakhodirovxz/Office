@@ -281,7 +281,7 @@ pub struct SheetApp {
     /// The (doc uid, revision) `fonts_bound` was computed for, so the style table is walked only
     /// when the workbook changes.
     fonts_seen: (u64, u64),
-    /// Set while a font-set change is pending activation: skip this frame's paint, like the
+    /// Set while a font-set change is pending activation: redo this pass (`request_discard`), like the
     /// startup `fonts_ready` gate (egui applies new definitions at the next pass).
     fonts_rebind: bool,
     /// Han face order the installed fonts were built with; a language switch rebuilds the fonts
@@ -1169,6 +1169,9 @@ impl SheetApp {
         let ctx = ui.ctx().clone();
         self.poll_printing(&ctx);
         if !self.fonts_ready || self.fonts_rebind {
+            // office overlay (patches/gridcraft/0156): redo the pass with the new fonts active instead of presenting this empty
+            // one, which shows eframe's near-black clear colour for a frame (owner: the window goes dark for a moment).
+            ctx.request_discard("fonts pending");
             ctx.request_repaint();
             return;
         }

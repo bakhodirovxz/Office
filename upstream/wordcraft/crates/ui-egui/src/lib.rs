@@ -2229,9 +2229,13 @@ impl WordApp {
             let opts = ctx.options(|o| o.input_options);
             ctx.input_mut(|i| i.smooth_scroll_delta = scroll::unsmoothed_scroll(i, &opts));
         }
-        // Fonts installed by `logic` take effect on the next frame.
-        if self.fonts_frames < 2 {
+        // Fonts installed by `logic` take effect on the next pass.
+        // office overlay (patches/wordcraft/0140): one empty pass, redone at once with the fonts active, instead of two
+        // presented empty frames, which showed eframe's near-black clear colour while the first page laid out (the window
+        // opened dark).
+        if self.fonts_frames < 1 {
             self.fonts_frames += 1;
+            ctx.request_discard("fonts pending");
             ctx.request_repaint();
             return;
         }
