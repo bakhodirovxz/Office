@@ -18,6 +18,9 @@ apps = [{"id": k, "route": f"/{k}/", "prefix": b["apps"][k]["upstream"], "names"
 cfg = {"product": b["product"]["name"], "local": True, "accent": {"light": b["colors"]["accent_light"], "dark": b["colors"]["accent_dark"]},
        "apps": apps, "convert": {"route": "/convert/", "names": b["apps"]["convert"]["names"]}}
 (out / "assets/web/shell-config.json").write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+# publisher keys the app trusts (not under assets/web: the page never reads it); no [plugins] table or an empty list gives an empty file
+keys = b.get("plugins", {}).get("publisher_keys", [])
+(out / "assets/plugin-keys.txt").write_bytes("".join(k + "\n" for k in keys).encode("ascii"))
 data = "".join(f'<data android:mimeType="{m}" />' for m in MIMES)
 (out / "AndroidManifest.xml").write_text(tpl.read_text(encoding="utf-8").replace("@MIMES@", data), encoding="utf-8")
 a = b["android"]

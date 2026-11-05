@@ -150,10 +150,29 @@ impl Brand {
                 "chrome",
                 "links",
                 "fonts",
+                "plugins",
             ],
         )?;
         if root.get("schema").and_then(Item::as_integer) != Some(1) {
             return Err("brand.toml: schema must be 1".into());
+        }
+        // optional: the plugin publisher keys (read by suite-core's build.rs; checked here so `brand check` catches a typo)
+        if let Some(pl) = root.get("plugins") {
+            let pl = pl
+                .as_table()
+                .ok_or("brand.toml: [plugins] must be a table")?;
+            only_keys(pl, "[plugins]", &["publisher_keys"])?;
+            let keys = pl
+                .get("publisher_keys")
+                .and_then(Item::as_array)
+                .ok_or("[plugins]: publisher_keys must be a list")?;
+            if !keys.iter().all(|k| {
+                k.as_str().is_some_and(|k| {
+                    k.len() == 64 && k.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+                })
+            }) {
+                return Err("[plugins]: each publisher key is 64 lower-case hex digits".into());
+            }
         }
         let p = table(root, "product")?;
         only_keys(
@@ -557,6 +576,21 @@ mod tests {
             .unwrap()
             .replace("community = false", "comunity = false");
         assert!(Brand::parse(&text).is_err());
+    }
+
+    #[test]
+    fn a_plugin_publisher_key_must_be_hex() {
+        let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../brand/brand.toml");
+        let text = fs::read_to_string(p).unwrap();
+        let with = |k: &str| {
+            text.replace(
+                "publisher_keys = []",
+                &format!("publisher_keys = [\"{k}\"]"),
+            )
+        };
+        assert!(Brand::parse(&with(&"ab".repeat(32))).is_ok());
+        assert!(Brand::parse(&with(&"AB".repeat(32))).is_err());
+        assert!(Brand::parse(&with("abc")).is_err());
     }
 
     #[test]

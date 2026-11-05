@@ -743,15 +743,24 @@ test('plugins in the wrapper: M1-M7, M9, M11, R1 are blocked inside the wrapper;
   const plugs = [['wrp-test', 'plugin.wasm', [ORG], []], ['wrp-open', 'plugin.wasm', [ORG], [ORG]], ['wrp-nonet', 'plugin.wasm', [], []],
     ['wrp-imp', 'bad-import.wasm', [], []], ['wrp-exp', 'bad-export.wasm', [], []]] as const;
   const pdir = path.join(dir, 'plugins');
+  // a server takes signed packages only (O4): each fixture is signed here with the published TEST key (ci/plugins/signing), by Node's
+  // own Ed25519, so the server's verifier (ring) also checks a signature it did not make
+  const sha = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
+  const SIGN = path.join(ROOT, 'ci/plugins/signing');
+  const seed = Buffer.from(fs.readFileSync(path.join(SIGN, 'test-a.seed'), 'utf8').trim(), 'hex');
+  const pkcs8 = crypto.createPrivateKey({ key: Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]), format: 'der', type: 'pkcs8' });
+  const pub = fs.readFileSync(path.join(SIGN, 'test-a.pub'), 'utf8').trim();
   const entries = plugs.map(([id, wasm, net, grant]) => {
     const d = path.join(pdir, id, '1.0.0'); fs.mkdirSync(d, { recursive: true });
-    const w = fs.readFileSync(path.join(FIX, wasm));
-    fs.writeFileSync(path.join(d, 'plugin.toml'), manifest(id, [...net])); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
-    return `{ id = "${id}", version = "1.0.0", sha256 = "${crypto.createHash('sha256').update(w).digest('hex')}", grant = ${JSON.stringify([...grant])} }`;
+    const w = fs.readFileSync(path.join(FIX, wasm)), toml = manifest(id, [...net]);
+    fs.writeFileSync(path.join(d, 'plugin.toml'), toml); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
+    const msg = `plugin-package-signature-v1\nplugin.toml ${sha(toml)}\nplugin.wasm ${sha(w)}\n`;
+    fs.writeFileSync(path.join(d, 'SIGNATURE'), `ed25519 ${pub} ${crypto.sign(null, Buffer.from(msg), pkcs8).toString('hex')}\n`);
+    return `{ id = "${id}", version = "1.0.0", sha256 = "${sha(w)}", grant = ${JSON.stringify([...grant])} }`;
   });
   ds.kill(); await new Promise((ok) => ds.once('exit', ok));
   provLines = [`plugins = [${entries.join(', ')}]`];
-  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`]);
+  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`, `trusted_keys = ["${pub}"]`]);
   try {
     const { ctx, page } = await open();
     await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);

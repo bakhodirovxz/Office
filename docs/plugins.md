@@ -6,13 +6,12 @@ bug). Section 9 is for the person who installs plugins or runs a server. Section
 with a copy-and-edit template, the version rules and the security model. Appendix A is the editor/page bridge for people who
 write a host; a plugin author can skip it. Design background: `docs/phase7/PLAN.md`.
 
-Plugins run in Docs (`apps = ["docs"]`). Adapters for Sheets and Slides, signature checking and an administration page are not
-built (section 9.7).
+Plugins run in Docs (`apps = ["docs"]`). Adapters for Sheets and Slides and an administration page are not built (section 9.7).
 
 ## 1. Concepts
 
 - **Package.** A zip read in memory with exactly these flat entries: `plugin.toml` (required), `plugin.wasm` (required),
-  `strings.tsv` (optional: en, ru, uz-Latn, uz-Cyrl), `SIGNATURE` (optional, not checked yet). Any other name, a directory, a path or a
+  `strings.tsv` (optional: en, ru, uz-Latn, uz-Cyrl), `SIGNATURE` (optional: the publisher's Ed25519 signature, section 9.1). Any other name, a directory, a path or a
   duplicate refuses the package. Limits: 8 MiB in all, `plugin.wasm` 4 MiB, `plugin.toml` 64 KiB, 64 entries.
 - **Manifest.** `plugin.toml` declares who the plugin is, what it may touch (permissions) and what it adds to the UI
   (commands, toolbar buttons, menu items, panels, events). Everything it declares is checked before the binary is read.
@@ -251,14 +250,14 @@ is recorded on the plugin and never shown to the user.
 Code: `crates/suite-core/src/plugins.rs` (the store, shared by the desktop, the local web server and the docserver),
 `services/suite-desktop` (IPC), `services/suite-serve` (`/plugins/<sha256>`), `services/docserver/src/{config,plugins}.rs`,
 `web/plugins/*` (the page host and the Plugins page). The rules behind it: users may install unless a machine policy says
-otherwise; a package is pinned by the SHA-256 of its `plugin.wasm`; signatures are optional and not checked yet; administrators
-control plugins through configuration files.
+otherwise; a package is pinned by the SHA-256 of its `plugin.wasm`; a publisher signature is optional in local mode and required
+on a server; administrators control plugins through configuration files.
 
 ### 9.1 What an install is
 
 A zip (or, installed, a folder) with the flat entries of section 1. The installed copy is
 `<settings dir>/plugins/<id>/<version>/` with `install.toml` next to the files: `sha256` of `plugin.wasm`, `manifest_sha256` of
-`plugin.toml`, and a reserved `signature` field that nothing reads yet. IT's copies go in
+`plugin.toml` (not the signature: it is checked again on every read). IT's copies go in
 `%PROGRAMDATA%\<product>\plugins\<id>\<version>\` (a debug build honours `SUITE_MACHINE_DIR`). Installing never enables. A new
 install of an id whose manifest differs from the installed one turns that id off and withdraws its grants (it needs fresh
 consent), and the other versions of the id are removed.
@@ -270,6 +269,51 @@ and (docserver) audited. A package without a record is refused in the user folde
 (said once on stderr) unless that folder is owned by Administrators or SYSTEM and no one else holds a write right
 (`suite-winsec::folder_is_admin_only`). The `icacls` custom actions are in `scripts/build-msi.ps1`; they have not been exercised
 on an installed MSI yet.
+
+**Signatures (decision P7-O4: pin + optional signature).** A package may carry `SIGNATURE`, one line of UTF-8:
+
+```
+ed25519 <publisher public key: 64 lower-case hex> <signature: 128 lower-case hex>
+```
+
+with an optional `\n` or `\r\n` after it. What is signed (pure Ed25519, RFC 8032, no prehash) is this text, each line ending in `\n`:
+
+```
+plugin-package-signature-v1
+plugin.toml <sha256 hex of plugin.toml>
+plugin.wasm <sha256 hex of plugin.wasm>
+strings.tsv <sha256 hex of strings.tsv>      (only when the package has it)
+```
+
+So the signature covers every file a user sees or runs, the manifest's permissions among them; a file added, dropped or changed
+breaks it. The check runs wherever a package is read: `suite-core::plugins` (desktop shell, native Docs, `<product>-serve`, the
+docserver: one function, `ring`'s Ed25519) and `Plugins.java` on Android (`Signatures.java`, written from RFC 8032 because Android
+has Ed25519 only from API 33; `packaging/android/sigcheck.sh` checks it against the RFC vectors and a package signed by the Rust
+tool). The browser's page host does not check signatures: it runs only what its server listed, pinned by SHA-256.
+
+| The package | Local (desktop, `<product>-serve`, Android) | Server (docserver) |
+|---|---|---|
+| `SIGNATURE` malformed, or not valid for the key it names (a changed file, a forged key) | refused | refused, `plugin.refused` |
+| valid, by a trusted key | "verified" on the Plugins page | accepted |
+| valid, by a key nobody trusts | like unsigned | refused |
+| no `SIGNATURE` | installs and runs; the Plugins page warns (`plg.page.unsigned`); refused in the user folder when `policy.toml` says `user_unsigned = false` | refused |
+
+Trusted keys: `brand/brand.toml [plugins] publisher_keys` (built in: the project key, empty until the owner makes it, kept offline,
+decided with the Phase 10 signing identities; never a test key), `policy.toml [plugins] trusted_keys` (IT), `settings.toml
+[plugins] trusted_keys` (the user's own; ignored while the policy says `user_unsigned = false`), `<product>-serve`'s
+`[plugins] trusted_keys`, the docserver's `[docserver.plugins] trusted_keys`. IT's machine folder may hold unsigned packages (only an
+administrator can write there), as it may hold packages without a record.
+
+Signing: `cargo xt plugin keygen <seed file>` makes a key (the file is the private key: 32 bytes as hex, never overwritten) and
+prints the public key; `cargo xt plugin pubkey <seed file>` prints it again; `cargo xt plugin sign <package.zip|folder> <seed file>`
+adds `SIGNATURE` (a zip is rewritten in the `pack` layout). The keys in `ci/plugins/signing` are published test keys.
+
+**Uninstall.** Desktop: the Plugins page's Uninstall button (IPC `plugins_uninstall{id}`) removes `<settings dir>/plugins/<id>/`
+(every version, with its install record), turns the id off and withdraws its grants; its `[plugins.settings.<id>]` values stay. A
+package in the machine folder is IT's: no button, and the message is refused. Removing is allowed whatever the policy says. An
+editor that already loaded the plugin keeps running it from memory (nothing reads the folder during an invocation, and the bridge
+restores the document on any error) until it reloads; the shell stops listing and serving it at once. Android: the same button for
+installed packages (not for the ones that come with the app). Server and `<product>-serve`: configuration only (section 9.4).
 
 ### 9.2 Desktop
 
@@ -287,8 +331,9 @@ enabled = ["id"]
 ```
 
 IPC (exact fields, 8 KiB, own origin only, like `open`): `plugins_list{}`, `plugins_install{}`, `plugins_enable{id, enabled}`,
-`plugins_grant{id, origin, granted}`. Every answer is the event `plugins`
-`{ok, error?, installed?, items: [{id, version, name, publisher, apps, document, network, grant, enabled, machine, sha256, problem}], policy}`.
+`plugins_grant{id, origin, granted}`, `plugins_uninstall{id}`. Every answer is the event `plugins`
+`{ok, error?, installed?, items: [{id, version, name, publisher, apps, document, network, grant, enabled, machine, sha256, problem,
+verified, removable}], policy: {user_install, user_grants, user_unsigned}}`.
 A grant must be an origin the manifest declares. The shell reads the enabled list on every request: no restart. Native editor
 windows load the enabled, verified plugins at start (`docs-office::plugin_native`).
 
@@ -298,13 +343,16 @@ windows load the enabled, verified plugins at start (`docs-office::plugin_native
 [plugins]
 user_install = false   # the user folder is not read at all: nothing in it is listed or enabled
 user_grants = false    # no user grant counts (existing ones are ignored; withdrawing stays possible)
+user_unsigned = false  # a package in the user folder must be signed by a trusted key; the user's own trusted_keys do not count
+trusted_keys = ["<64 hex>"]   # publisher keys IT trusts
 ```
 
-A policy file that cannot be read or parsed switches both off. No file: both allowed.
+A policy file that cannot be read or parsed switches all three off. No file: all allowed.
 
 ### 9.3 Web, local (`<product>-serve`)
 
 In the server's config file: `[plugins] dir = "..."`, `enabled = [ids]`, `[plugins.grants] "id" = [origins]`, optionally
+`trusted_keys = [hex]` (an unsigned or untrusted package is used and said on stderr: local mode),
 `[plugins.settings.<id>]` and `[plugins.sha256] "id" = "<hex of plugin.wasm>"` (a package whose wasm differs is left out). The
 operator is the only one who enables or grants. The list is worked out once at start (restart to change it); the wasm is read
 again and compared on each serve. `/shell-config.json` gets `plugins` (descriptors); `/plugins/<sha256>` serves an enabled
@@ -312,7 +360,10 @@ package's wasm. The home page's CSP is `connect-src 'self' <granted origins>` (c
 
 ### 9.4 Docserver (per organisation = per provider)
 
-`[docserver.plugins] dir` names the folder of packages; per `[[docserver.providers]]`:
+`[docserver.plugins] dir` names the folder of packages and `trusted_keys = ["<64 hex>"]` the publisher keys the server accepts
+(besides the built-in ones); a package that is not signed by one of them is refused (`plugin.refused`), whatever its entry says.
+An administrator who runs an unsigned plugin of their own signs it with their own key (`cargo xt plugin keygen`, `sign`) and lists
+that key. Per `[[docserver.providers]]`:
 
 ```toml
 plugins = [{ id = "id", version = "1.0.0", sha256 = "<hex of plugin.wasm>", grant = ["https://host"], settings = { } }]
@@ -320,7 +371,13 @@ plugins = [{ id = "id", version = "1.0.0", sha256 = "<hex of plugin.wasm>", gran
 
 At start the folder is read; a malformed entry, a `grant` that is not an `https://host[:port]` origin the manifest declares, or
 `plugins` without `dir` refuses the start. An entry whose package is missing or whose SHA-256 differs is left out and audited
-(`plugin.refused`). The entry's `settings` replace the manifest's. The session answer has `plugins: [descriptor]` of that
+(`plugin.refused`, with the reason: a folder that did not load says why, a bad signature among them). The entry's `settings`
+replace the manifest's.
+
+**Uninstall on the server** is configuration: remove the entry from every provider (its grants and its pin go with it), restart,
+then delete `<dir>/<id>/<version>/`. A package deleted while the server runs is no longer served (`/ds/plugins/<sha256>` answers 409
+and audits `plugin.refused`); pages that already loaded it keep it until the next document open. The same for `<product>-serve`:
+take the id out of `enabled`, restart, delete the folder. The session answer has `plugins: [descriptor]` of that
 provider only, `wasm` = `/ds/plugins/<sha256>?s=<session id>`, `grant` = the admin's list.
 
 - `GET /ds/plugins/<sha256>?s=<sid>` serves the file for a live session whose provider lists that digest (404 otherwise, the same
@@ -344,14 +401,15 @@ without `grant` (someone embedding the host) asks the user once per origin and k
 ### 9.6 Android
 
 The Android app runs the same web page host inside its WebView, with the same Worker CSP. It has no INTERNET permission, so no
-network grant can work there. Installing a plugin on Android (a file picker) is not built, and no plugin is bundled in the app yet.
+network grant can work there. First-party plugins come in the APK; "Install from file" uses the system picker; Uninstall removes
+an installed one. Signatures: as on the desktop, with the built-in keys only (`assets/plugin-keys.txt`, written from `brand.toml`
+by `gen-brand.py`); Android has no machine policy, so an unsigned package installs with the warning.
 
 ### 9.7 Disabling, and what is not done
 
 Remove the id from `enabled` (local) or the entry from the provider (server); the editors drop the commands and the panel at
-the next page load (local) or the next document open (server). Not built: the signature check (the `SIGNATURE` entry is
-accepted and ignored), an admin page (configuration files only), uninstall, update-in-place prompts, Android install, Sheets and
-Slides adapters.
+the next page load (local) or the next document open (server). Not built: an admin page (configuration files only),
+update-in-place prompts, key revocation other than taking a key out of the configuration, Sheets and Slides adapters.
 
 ## 10. The command catalog
 
@@ -543,8 +601,8 @@ exist (section 9); the host decides what each one may do.
    as text only, with control and bidirectional characters removed.
 
 **What it does not protect against.** A plugin with `document = read` sees the text it reads; with a network grant too, it can
-send it to that origin. The SHA-256 pin proves the file is the one the administrator named, not that it is safe; signatures are
-not checked yet. A flaw in wasmtime or in the browser's WebAssembly engine would let a plugin out of the sandbox; both are
+send it to that origin. The SHA-256 pin proves the file is the one the administrator named, and a signature that its publisher
+made it; neither proves it is safe. A key in a configuration is trusted for every plugin it signs. A flaw in wasmtime or in the browser's WebAssembly engine would let a plugin out of the sandbox; both are
 pinned and covered by the project's advisory checks, and an out-of-process host is the hardening if third-party plugins at scale
 are wanted. Plugin strings are not reviewed by the project.
 
@@ -611,6 +669,9 @@ rounds, are one undo step. A panel click's invocation begins at its first forwar
 result says to use `next.reads`).
 
 ## Changes
+
+- 2026-11-06: publisher signatures (decision P7-O4: pin + optional signature; section 9.1), `trusted_keys` and `user_unsigned`,
+  `cargo xt plugin keygen|pubkey|sign`; uninstall on the desktop (`plugins_uninstall`) and Android, documented for the servers.
 
 - 2026-11-03: first complete version. Every read now needs the document permission (a plugin with `document = "none"` could read
   through `next.reads` before). The command catalog is generated (`docs/plugins-commands.md`). `plugins/template`, and

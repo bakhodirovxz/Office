@@ -2589,6 +2589,7 @@ name = "suite-core"
 version = "0.1.0"
 dependencies = [
  "plugin-api",
+ "ring",
  "ron",
  "serde_json",
  "sha2",

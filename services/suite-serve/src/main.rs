@@ -97,10 +97,17 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
                 .ok_or(format!("plugins: {key} must be a list of strings"))
         })
     };
-    if let Some(k) = t
-        .keys()
-        .find(|k| !["dir", "enabled", "grants", "sha256", "settings"].contains(&k.as_str()))
-    {
+    if let Some(k) = t.keys().find(|k| {
+        ![
+            "dir",
+            "enabled",
+            "grants",
+            "sha256",
+            "settings",
+            "trusted_keys",
+        ]
+        .contains(&k.as_str())
+    }) {
         return Err(format!("plugins: unknown key {k}"));
     }
     let dir = t
@@ -151,6 +158,7 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
         enabled,
         grants,
         settings,
+        keys: strs(t.get("trusted_keys"), "trusted_keys")?,
     };
     let roots = vec![suite_core::plugins::Root {
         dir: dir.into(),
@@ -159,6 +167,13 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     let pol = suite_core::plugins::Policy::default();
     let mut fixed = suite_core::plugins::enabled(&roots, &state, &pol);
     fixed.retain(|e| {
+        // local mode (O4): an unsigned package is used, and said; a bad signature never got this far (the scan refuses it)
+        if !suite_core::plugins::trusted_by(&e.package, &state.keys) {
+            eprintln!(
+                "plugins: {}: not signed by a trusted publisher (local mode: used anyway)",
+                e.package.manifest.id
+            );
+        }
         let ok = pins
             .get(&e.package.manifest.id)
             .is_none_or(|h| *h == e.package.sha256);
@@ -172,7 +187,7 @@ fn setup_plugins(path: &str) -> Result<Option<PluginSource>, String> {
     });
     Ok(Some(PluginSource {
         roots,
-        now: Box::new(move || (state.clone(), pol)),
+        now: Box::new(move || (state.clone(), pol.clone())),
         fixed: Some(fixed),
     }))
 }
@@ -248,6 +263,30 @@ mod tests {
         let (d3, c3) = config("pin3", "[plugins.sha256]\nalpha = \"ABC\"\n");
         assert!(setup_plugins(&c3).is_err());
         for d in [d, d2, d3] {
+            let _ = std::fs::remove_dir_all(d);
+        }
+    }
+
+    /// O4 in local web mode: `trusted_keys` is read; an unsigned package is used (with a warning on stderr), a bad signature never.
+    #[test]
+    fn a_bad_signature_is_refused_and_an_unsigned_package_is_used() {
+        let (d, c) = config(
+            "sig",
+            &format!("trusted_keys = [\"{}\"]\n", "ab".repeat(32)),
+        );
+        assert_eq!(setup_plugins(&c).unwrap().unwrap().fixed.unwrap().len(), 1);
+        std::fs::write(d.join("plugins/alpha/1.0.0/SIGNATURE"), "ed25519 x y\n").unwrap();
+        assert!(
+            setup_plugins(&c)
+                .unwrap()
+                .unwrap()
+                .fixed
+                .unwrap()
+                .is_empty()
+        );
+        let (d2, c2) = config("sig2", "trusted_keys = \"ab\"\n");
+        assert!(setup_plugins(&c2).is_err());
+        for d in [d, d2] {
             let _ = std::fs::remove_dir_all(d);
         }
     }

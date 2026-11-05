@@ -14,3 +14,6 @@ uz-translit = { path = "../crates/uz-translit" }
 plugin-api = { path = "../crates/plugin-api" }
 sha2 = "0.10"
 zip = { version = "9", default-features = false }
+# Phase 7 O4: `cargo xt plugin keygen | pubkey | sign` (the signed message and the SIGNATURE format live in suite-core)
+suite-core = { path = "../crates/suite-core" }
+ring = { version = "0.17", default-features = false }

@@ -36,6 +36,24 @@ fn main() {
             get(&["apps", app, "data_dir"])
         );
     }
+    // the trusted plugin publisher keys (Phase 7 O4): optional, a list of 64 lower-case hex digits each
+    let keys: Vec<String> = doc
+        .get("plugins")
+        .and_then(|p| p.get("publisher_keys"))
+        .and_then(|k| k.as_array())
+        .map(|a| {
+            a.iter()
+                .map(|v| v.as_str().unwrap_or("").to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    for k in &keys {
+        assert!(
+            k.len() == 64 && k.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')),
+            "brand.toml: plugins.publisher_keys: \"{k}\" is not 64 lower-case hex digits"
+        );
+    }
+    println!("cargo:rustc-env=SUITE_PLUGIN_KEYS={}", keys.join(","));
     println!(
         "cargo:rustc-env=SUITE_FONT_SANS={}",
         get(&["fonts", "fallback_sans"])

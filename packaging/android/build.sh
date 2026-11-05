@@ -16,6 +16,7 @@ cp -r "$ROOT/brand/logo/android/res/." "$W/res/"; cp -r "$W/gen/res/." "$W/res/"
 # assets: the four dists (without the precompressed .br: the APK compresses, and we cannot send a Content-Encoding) and the shell, assembled from the repo
 # exactly as scripts/shell-dist.sh does (web/shell + fallback font + the logo pack's web icons)
 A="$W/assets/web"; mkdir -p "$A/shell"; cp "$W/gen/assets/web/shell-config.json" "$A/"
+cp "$W/gen/assets/plugin-keys.txt" "$W/assets/"   # trusted publisher keys (Plugins.trustedKeys), not under web/
 for d in docs-web sheets-web slides-web pdf-web; do
   [ -d "$DIST/$d" ] || { echo "build.sh: $DIST/$d is missing" >&2; exit 2; }
   mkdir -p "$A/$d"; (cd "$DIST/$d" && find . -type f ! -name '*.br' -print0 | tar --null -T - -cf -) | (cd "$A/$d" && tar xf -)
