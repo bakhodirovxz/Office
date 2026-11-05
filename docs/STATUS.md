@@ -1845,3 +1845,12 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 
 ### Phase 7 upstream locks (2026-11-03, branch `p7-locks`)
 - The four upstream `Cargo.lock` files gain suite-core's Phase 7 dependencies (plugin-api, zip, typed-path, toml 0.8, serde_spanned, nix) as carried patches wordcraft/0901, gridcraft/0900, deckcraft/0900, pdfcraft/0901 (ci-fix, additions only); `cargo metadata --locked` now passes in all four upstream workspaces.
+
+### Phase 7 full CI (2026-11-03..05, phase-7 @ 3e33e99)
+- `ci.sh full` ran twice; E: filled up (0 B) during the second run (target dir 191 GB, p1 caches 491 GB), so lint and the early jobs of that run were lost. After clearing the caches (owner OK for p1, MSI kept) the lost and failed jobs were rerun: every job is ok.
+- Not covered: brand-scan-bin (no release binaries in this target), the docserver Docker rehearsal (not requested).
+- Fixed on the way, all stale tests rather than product bugs (made on phase-4 or phase-6, merged forward):
+  - the npm smoke and node test still expected the 1995 Latin default (owner decision 2026-10-29, d0a4be5); 1995 is now asked for explicitly where checked;
+  - convert-api `tests/e2e.rs` found the release CLIs only under `E:/office-target/p1`, now `$OFFICE_TARGET`;
+  - wordcraft/0146 test picture: clippy `precedence` (parenthesised).
+- Lesson: `npm ci` through a junctioned `node_modules` replaces the junction and empties its target (phase-5's was emptied and reinstalled). A full CI needs about 190 GB free on E:.
