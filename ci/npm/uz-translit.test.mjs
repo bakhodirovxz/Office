@@ -11,7 +11,8 @@ const m = await import(pathToFileURL(path.join(pkg, 'uz_translit.js')).href);
 m.initSync({ module: readFileSync(path.join(pkg, 'uz_translit_bg.wasm')) });
 const { toCyrillic, toLatin, convert, convertRuns, detect } = m;
 
-// Same reading of the tsv as crates/uz-translit/tests/golden.rs: reviewed rows only, default options.
+// Same reading of the tsv as crates/uz-translit/tests/golden.rs: reviewed rows only, 1995 options (the golden Latin column is 1995).
+const o95 = { latinAlphabet: '1995' };
 function table(name) {
   const lines = readFileSync(path.join(root, 'crates/uz-translit/data', name), 'utf8').split(/\r?\n/).filter((l) => l && !l.startsWith('#'));
   const head = lines.shift().split('\t');
@@ -22,8 +23,8 @@ test('golden.tsv parity with the Rust crate', () => {
   const fails = [];
   let fwd = 0, back = 0;
   for (const r of table('golden.tsv').filter((r) => r.status.startsWith('reviewed:'))) {
-    if (['both', 'l2c'].includes(r.dir)) { fwd++; const o = toCyrillic(r.latin); if (o !== r.cyrillic) fails.push(`${r.id} l2c ${o}`); }
-    if (['both', 'c2l'].includes(r.dir)) { back++; const o = toLatin(r.cyrillic); if (o !== r.latin) fails.push(`${r.id} c2l ${o}`); }
+    if (['both', 'l2c'].includes(r.dir)) { fwd++; const o = toCyrillic(r.latin, o95); if (o !== r.cyrillic) fails.push(`${r.id} l2c ${o}`); }
+    if (['both', 'c2l'].includes(r.dir)) { back++; const o = toLatin(r.cyrillic, o95); if (o !== r.latin) fails.push(`${r.id} c2l ${o}`); }
   }
   assert.deepEqual(fails, []);
   assert.ok(fwd >= 500 && back >= 500, `rows checked: ${fwd}/${back}`);
@@ -38,8 +39,9 @@ test('variants.tsv: apostrophe variants all give the same Cyrillic', () => {
 test('convert(), direction and apostrophe option', () => {
   assert.equal(convert('salom', 'cyrl'), 'салом');
   assert.equal(convert('салом', 'latn'), 'salom');
-  assert.equal(toLatin('Ўзбекистон'), 'Oʻzbekiston');
-  assert.equal(toLatin('Ўзбекистон', { apostrophe: 'ascii' }), "O'zbekiston");
+  assert.equal(toLatin('Ўзбекистон'), 'Özbekiston'); // default 2026 (owner, 2026-10-29)
+  assert.equal(toLatin('Ўзбекистон', o95), 'Oʻzbekiston');
+  assert.equal(toLatin('Ўзбекистон', { ...o95, apostrophe: 'ascii' }), "O'zbekiston");
   for (const v of ["O'zbek", 'O‘zbek', 'O’zbek', 'Oʻzbek', 'O`zbek']) assert.equal(toCyrillic(v), 'Ўзбек', v);
 });
 
@@ -50,10 +52,10 @@ test('2026 alphabet (cases from tests/alphabet2026.rs)', () => {
   assert.equal(toLatin('Шаҳар Ўзбекистон'), 'Şahar Özbekiston'); // default 2026 (O13)
   assert.equal(toCyrillic('özbek ğalaba şahar çoy'), 'ўзбек ғалаба шаҳар чой');
   assert.equal(toCyrillic('özbek ğalaba şahar çoy', o), 'ўзбек ғалаба шаҳар чой');
-  assert.equal(toCyrillic('Oʻzbek Özbek Shahar Şahar'), 'Ўзбек Ўзбек Шаҳар Шаҳар'); // 1995 reads both
+  assert.equal(toCyrillic('Oʻzbek Özbek Shahar Şahar', o95), 'Ўзбек Ўзбек Шаҳар Шаҳар'); // 1995 reads both
   assert.equal(toCyrillic('Oʻzbek shahar', { latinAlphabet: 'auto' }), 'Ўзбек шаҳар'); // no ö ğ ş ç: read as 1995
   assert.equal(toCyrillic('Oʻzbek Özbek', { latinAlphabet: '2026' }), 'Оъзбек Ўзбек'); // 2026 reads o + tutuq
-  assert.equal(toLatin('шаҳар', { latinAlphabet: 'auto' }), 'shahar');
+  assert.equal(toLatin('шаҳар', { latinAlphabet: 'auto' }), 'şahar'); // auto writes 2026 (d0a4be5)
 });
 
 test('convertRuns: split invariance and unchanged runs', () => {
