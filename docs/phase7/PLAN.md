@@ -638,3 +638,8 @@ the Android run (WP9) and a 12-row × 4-container malicious suite (WP10). SIZING
 | **P7-O6** | **Built-in uz-translit after the plugin ships** | keep / replace with the plugin | **Keep** the built-in as the default; the plugin is installed but its buttons hidden unless enabled. Revisit after a release. |
 | **P7-O7** | **Admin control surface** | config file per provider (v1) / an admin web page | **Config file in v1** (the docserver is configured by file today, F11); an admin page needs admin sign-in and is +3-5 d. |
 | **P7-O8** | **Real field list for plugin #2** | HRM team gives the field names for the operator config / a synthetic list only | **Synthetic list for the gate**; the HRM names go into the pilot provider's config when the HRM team sends them (never into code). |
+
+**Owner, 2026-11-06: all recommendations accepted**, with P7-O2 widened by the owner's "fix everything" to **Docs + Sheets + Slides** (WP13; PDF later).
+Also decided then: the `[shell]` budget is raised from 65,536 to 81,920 B brotli (`web/budgets.toml`); no proxy support for plugin
+fetches in v1; plugins stay refused on a document with its own protection (`plg.protected`, as built); the first-party signing key is
+made and kept offline by the owner (tests use test keys only).

@@ -1854,3 +1854,6 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   - convert-api `tests/e2e.rs` found the release CLIs only under `E:/office-target/p1`, now `$OFFICE_TARGET`;
   - wordcraft/0146 test picture: clippy `precedence` (parenthesised).
 - Lesson: `npm ci` through a junctioned `node_modules` replaces the junction and empties its target (phase-5's was emptied and reinstalled). A full CI needs about 190 GB free on E:.
+
+### Phase 7 owner decisions (2026-11-06)
+- The owner accepted every recommendation of PLAN 13.4 (O2-O8) and of the gate report; O2 is Docs + Sheets + Slides (WP13, PDF later). `[shell]` budget 65,536 -> 81,920 B brotli (measured about 65,467 B). No proxy for plugin fetches in v1. Plugins stay refused on protected documents. The first-party signing key is the owner's, kept offline.

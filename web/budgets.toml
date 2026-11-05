@@ -83,8 +83,9 @@ js_br_max = 16384
 # each brotli -q 11 --lgwin=24, summed (`ci.sh sizes` measures web/shell and assets/fonts/fallback directly). No editor wasm is in it.
 # Measured 2026-10-22: 45,417 B brotli (the font is 38,933 of it). br_max = ceil(1.10 x measured / 16 KiB) x 16 KiB. The plan's proposal
 # was 160 KiB; the measured rule gives 64 KiB, which is what stays enforced (raise it only with a STATUS line).
+# Raised to 80 KiB (owner, 2026-11-06, Phase 7 gate decision): measured about 65,467 B, headroom had fallen to about 69 B.
 [shell]
-br_max = 65536
+br_max = 81920
 
 # The plugin page host (PLAN phase 7 WP5): web/plugins/host.js + worker.js + host.css + i18n.json, each brotli -q 11 --lgwin=24, summed
 # (`ci.sh sizes` measures web/plugins). A lazy chunk: the shell and the docserver wrapper fetch it only when a plugin is enabled, so it is
