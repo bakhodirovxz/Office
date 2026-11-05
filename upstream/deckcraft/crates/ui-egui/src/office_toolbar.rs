@@ -442,6 +442,35 @@ fn output_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
     {
         f(app);
     }
+    plugins_menu(app, ui);
+}
+
+/// The plugin commands (Phase 7 WP13): a menu per plugin, hidden while none is loaded. It has no icon of its own, so its label
+/// always shows. A finished command's status (the plugin's `ui.status`) goes to the status bar; on the web a command answers
+/// `{pending}` at once and the page shows the outcome.
+fn plugins_menu(app: &mut SlideApp, ui: &mut Ui) {
+    let menu = office_overlay::plugin_menu();
+    if menu.is_empty() {
+        return;
+    }
+    let label = crate::i18n::t("Plugins");
+    let main = button(ui, Btn::new("", label).tip(label.to_string()).menu(), true).0;
+    egui::Popup::menu(&main).show(|ui| {
+        for (plugin, commands) in menu {
+            ui.menu_button(plugin, |ui| {
+                for (label, id) in commands {
+                    if ui.button(label).clicked() {
+                        if let Ok(v) = app.run(id, json!({}))
+                            && let Some(t) = v.get("status").and_then(Value::as_str)
+                        {
+                            app.set_status(t.to_string());
+                        }
+                        ui.close();
+                    }
+                }
+            });
+        }
+    });
 }
 
 /// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.

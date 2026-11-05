@@ -21,6 +21,7 @@ gridcraft-ui-egui = { path = "../../../../upstream/gridcraft/crates/ui-egui" }
 egui = "0.36"
 log = "0.4"
 serde_json = { version = "1", features = ["float_roundtrip"] }
+sheets-plugins = { path = "../../crates/sheets-plugins", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 eframe = { version = "0.36", default-features = false , features = ["default_fonts", "wgpu", "accesskit"] }
@@ -29,3 +30,8 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
 web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Clipboard", "ClipboardItem", "Navigator", "MessageEvent", "UrlSearchParams"] }
+
+# office overlay (patches/gridcraft/0158): the domain build turns this on and adds the sheets-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = ["dep:sheets-plugins"]
+default = ["office-ext"]

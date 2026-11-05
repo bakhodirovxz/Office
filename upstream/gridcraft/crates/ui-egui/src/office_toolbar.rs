@@ -35,6 +35,8 @@ enum Kind {
     Borders,
     Menu(&'static [Entry]),
     Button,
+    /// The plugin commands (Phase 7 WP13): a menu per plugin, from `office_overlay::plugin_menu`; hidden when there are none.
+    Plugins,
 }
 
 struct Item {
@@ -117,6 +119,8 @@ const ITEMS: &[Item] = &[
     item(Kind::Menu(TRANSLIT), "tools.translitAuto", "translate", "Transliterate", 6, true),
     // Ours (WP10): hidden until the command is registered.
     item(Kind::Button, "office.history", "history", "Version History", 6, true),
+    // Ours (Phase 7 WP13): hidden while no plugin is loaded; no icon of its own, so its label always shows.
+    item(Kind::Plugins, "office.plugins", "", "Plugins", 6, true),
 ];
 
 const H: f32 = 28.0;
@@ -390,12 +394,37 @@ fn is_on(app: &SheetApp, st: &Style, id: &str) -> bool {
 }
 
 fn shown(item: &Item) -> bool {
-    item.id != "office.history" || gridcraft_engine::find_command(item.id).is_some()
+    match item.kind {
+        Kind::Plugins => !office_overlay::plugin_menu().is_empty(),
+        _ => item.id != "office.history" || gridcraft_engine::find_command(item.id).is_some(),
+    }
 }
 
 /// The item's label as drawn (or `None` for an icon-only item).
 fn label_of(app: &SheetApp, item: &Item, labels: bool) -> Option<String> {
-    (labels && item.text).then(|| app.ui.language.tr(item.label).to_string())
+    ((labels || matches!(item.kind, Kind::Plugins)) && item.text).then(|| app.ui.language.tr(item.label).to_string())
+}
+
+/// The plugin menus: one submenu per plugin. A finished command's status (the plugin's `ui.status`) is the toast, an error the
+/// usual alert. On the web a command answers `{pending}` at once and the page shows the outcome.
+fn plugin_items(app: &mut SheetApp, ui: &mut Ui) {
+    for (plugin, commands) in office_overlay::plugin_menu() {
+        ui.menu_button(plugin, |ui| {
+            for (label, id) in commands {
+                if ui.button(label).clicked() {
+                    match app.run(id, json!({})) {
+                        Ok(v) => {
+                            if let Some(t) = v.get("status").and_then(Value::as_str) {
+                                app.toast = Some((t.to_string(), crate::now_ms()));
+                            }
+                        }
+                        Err(e) => app.alert(e),
+                    }
+                    ui.close();
+                }
+            }
+        });
+    }
 }
 
 fn item_w(ui: &Ui, app: &SheetApp, item: &Item, labels: bool) -> f32 {
@@ -403,7 +432,7 @@ fn item_w(ui: &Ui, app: &SheetApp, item: &Item, labels: bool) -> f32 {
         Kind::Font | Kind::Number => 150.0,
         Kind::Size => 52.0,
         Kind::Color | Kind::Borders => H + 14.0,
-        Kind::Menu(_) => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), true),
+        Kind::Menu(_) | Kind::Plugins => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), true),
         Kind::Toggle | Kind::Button => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), false),
     }
 }
@@ -430,6 +459,10 @@ fn draw_item(app: &mut SheetApp, ui: &mut Ui, item: &Item, st: &Style, labels: b
                 ribbon::keytip(app, ui, sequence, r.rect.center_bottom());
             }
             egui::Popup::menu(&r).show(|ui| ribbon::menu_items(app, ui, &entries(list)));
+        }
+        Kind::Plugins => {
+            let r = tool(ui, item.icon, label.as_deref(), true, None, &name, name.clone());
+            egui::Popup::menu(&r).show(|ui| plugin_items(app, ui));
         }
         Kind::Color => {
             let (last, bar_id) =
@@ -541,6 +574,10 @@ fn overflow(app: &mut SheetApp, ui: &mut Ui, items: &[&Item]) {
             Kind::Menu(list) => {
                 let label = app.ui.language.tr(it.label).to_string();
                 ui.menu_button(label, |ui| ribbon::menu_items(app, ui, &entries(list)));
+            }
+            Kind::Plugins => {
+                let label = app.ui.language.tr(it.label).to_string();
+                ui.menu_button(label, |ui| plugin_items(app, ui));
             }
             _ => ribbon::menu_items(app, ui, &[(it.label, it.id, json!({}))]),
         }

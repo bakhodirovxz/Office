@@ -76,6 +76,11 @@ pub fn start() {
                         app.start_show(0, false);
                     }
                     if let Some(bridge) = &app_bridge {
+                        // Phase 7 WP13 (patches/deckcraft/0158): plugins from the host page (slides-plugins), before `ready` asks for them
+                        #[cfg(feature = "office-ext")]
+                        if slides_plugins::init_web() {
+                            deckcraft_ui_egui::office_overlay::set_plugin_menu(slides_plugins::menu);
+                        }
                         bridge.post_ready();
                     }
                     Ok(Box::new(WebShell { app, inbox, bridge: app_bridge }))

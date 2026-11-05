@@ -1501,3 +1501,69 @@ fn spike_style_round_trip_through_a_message() {
     assert_eq!(got.header_as::<Call>().unwrap(), call);
     assert_eq!(TextMap::decode(&got.blobs[0]).unwrap(), m);
 }
+
+/// Phase 7 WP13: the Sheets and Slides allowlists are their own lists, and Sheets refuses formulas in params.
+#[test]
+fn per_app_allowlists_and_the_formula_rule() {
+    use plugin_api::allow::{SHEETS, SLIDES, check_run_in, list};
+    assert!(list("pdf").is_none());
+    assert_eq!(list("sheets").unwrap().prefixes, SHEETS.prefixes);
+    // a Docs family is not a Sheets one, and the other way round
+    assert!(check_run_in(&SHEETS, "text.insert", &json!({})).is_err());
+    assert!(allow::check_run("cell.set", &json!({})).is_err());
+    assert_eq!(
+        check_run_in(&SHEETS, "cell.get", &json!({})),
+        Ok(DocAccess::Read)
+    );
+    assert_eq!(
+        check_run_in(&SHEETS, "cell.set", &json!({"input": "salom"})),
+        Ok(DocAccess::Write)
+    );
+    for f in [
+        "=1+1",
+        "  =A1",
+        "+A1",
+        "-SUM(A1)",
+        "@x",
+        "+cmd|' /c calc'!A0",
+        "-$A$1",
+    ] {
+        assert!(
+            check_run_in(&SHEETS, "cell.set", &json!({"input": f})).is_err(),
+            "{f}"
+        );
+        assert!(
+            check_run_in(&SHEETS, "range.setValues", &json!({"values": [["a", f]]})).is_err(),
+            "{f}"
+        );
+    }
+    for ok in ["-5", "+7", "a = b", "1-2", "", "-"] {
+        assert!(
+            check_run_in(&SHEETS, "cell.set", &json!({"input": ok})).is_ok(),
+            "{ok}"
+        );
+    }
+    assert!(check_run_in(&SHEETS, "home.addIns", &json!({})).is_err());
+    assert!(check_run_in(&SLIDES, "text.insert", &json!({"text": "x"})).is_ok());
+    assert!(
+        check_run_in(
+            &SLIDES,
+            "text.insert",
+            &json!({"text": "x", "props": {"hover": {}}})
+        )
+        .is_err()
+    );
+    assert!(
+        check_run_in(
+            &SLIDES,
+            "text.insert",
+            &json!({"text": "x", "props": {"Link": {}}})
+        )
+        .is_err()
+    );
+    assert!(
+        check_run_in(&SLIDES, "text.insert", &json!({"text": "=1+1"})).is_ok(),
+        "no formula rule in Slides"
+    );
+    assert!(check_run_in(&SLIDES, "file.save", &json!({})).is_err());
+}

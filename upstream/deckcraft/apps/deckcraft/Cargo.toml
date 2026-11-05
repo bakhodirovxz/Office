@@ -31,3 +31,7 @@ cpal = "0.16"
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 winit = { version = "0.30", default-features = false, features = ["x11"] }
+
+# office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = []

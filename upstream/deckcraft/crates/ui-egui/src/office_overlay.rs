@@ -280,3 +280,19 @@ pub(crate) fn brightness_at_start(own: crate::theme::Brightness, shared: Option<
         _ => own,
     }
 }
+
+/// The plugin commands of the domain's extension crate (Phase 7 WP13, patch deckcraft/0158): per plugin its name and its commands as
+/// (label, registry id), in the interface language. Set once at start-up by the apps behind `office-ext` (slides-plugins); without it
+/// the toolbar has no Plugins menu.
+pub type PluginMenu = fn(&str) -> Vec<(String, Vec<(String, &'static str)>)>;
+
+static PLUGIN_MENU: std::sync::OnceLock<PluginMenu> = std::sync::OnceLock::new();
+
+pub fn set_plugin_menu(menu: PluginMenu) {
+    let _ = PLUGIN_MENU.set(menu);
+}
+
+/// The Plugins menu in the current interface language (empty without plugins).
+pub fn plugin_menu() -> Vec<(String, Vec<(String, &'static str)>)> {
+    PLUGIN_MENU.get().map(|f| f(crate::i18n::current().code())).unwrap_or_default()
+}

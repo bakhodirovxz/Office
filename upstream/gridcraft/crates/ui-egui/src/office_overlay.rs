@@ -167,3 +167,19 @@ pub fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
         _ => {}
     }
 }
+
+/// The plugin commands of the domain's extension crate (Phase 7 WP13, patch gridcraft/0158): per plugin its name and its commands as
+/// (label, registry id), in the interface language. Set once at start-up by the apps behind `office-ext` (sheets-plugins); without it
+/// the toolbar has no Plugins menu.
+pub type PluginMenu = fn(&str) -> Vec<(String, Vec<(String, &'static str)>)>;
+
+static PLUGIN_MENU: std::sync::OnceLock<PluginMenu> = std::sync::OnceLock::new();
+
+pub fn set_plugin_menu(menu: PluginMenu) {
+    let _ = PLUGIN_MENU.set(menu);
+}
+
+/// The Plugins menu in the current interface language (empty without plugins).
+pub fn plugin_menu() -> Vec<(String, Vec<(String, &'static str)>)> {
+    PLUGIN_MENU.get().map(|f| f(&LANG_CODE.get())).unwrap_or_default()
+}

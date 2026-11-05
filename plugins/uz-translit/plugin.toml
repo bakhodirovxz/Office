@@ -1,7 +1,7 @@
 id = "uz-translit"
 version = "1.0.0"
 api = 1
-apps = ["docs"]
+apps = ["docs", "sheets", "slides"]
 publisher = "First-party"
 name.en = "Transliteration"
 name.ru = "Транслитерация"

@@ -199,6 +199,12 @@ fn main() -> eframe::Result {
             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
         };
     deckcraft_ui_egui::office_history::init();
+    // Phase 7 WP13 (patches/deckcraft/0158): the user's plugins (slides-plugins) and the toolbar's Plugins menu
+    #[cfg(feature = "office-ext")]
+    {
+        slides_plugins::init();
+        deckcraft_ui_egui::office_overlay::set_plugin_menu(slides_plugins::menu);
+    }
     log::info!("DeckCraft {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
     // The log file lives under the settings directory; opened after the arguments, so `--help` and
     // `--version` leave no file behind. Records logged until now are written to it first.

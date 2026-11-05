@@ -77,6 +77,11 @@ pub fn start() {
                         if let Some(author) = query_param("author") {
                             crate::host::Bridge::set_author(&mut app, &author);
                         }
+                        // Phase 7 WP13 (patches/gridcraft/0158): plugins from the host page (sheets-plugins), before `ready` asks for them
+                        #[cfg(feature = "office-ext")]
+                        if sheets_plugins::init_web() {
+                            gridcraft_ui_egui::office_overlay::set_plugin_menu(sheets_plugins::menu);
+                        }
                         bridge.post_ready();
                     }
                     Ok(Box::new(WebShell { app, inbox, bridge: app_bridge }))
@@ -138,8 +143,11 @@ impl eframe::App for WebShell {
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.app.ui(ui);
-        if let Some(bridge) = &self.bridge {
-            bridge.sync(&mut self.app);
+        if let Some(bridge) = &self.bridge
+            && bridge.sync(&mut self.app)
+        {
+            // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
+            ui.ctx().request_repaint_after(std::time::Duration::from_millis(200));
         }
     }
 }

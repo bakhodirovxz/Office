@@ -25,6 +25,7 @@ eframe = { version = "0.36", default-features = false , features = ["default_fon
 egui = "0.36"
 serde_json = { version = "1", features = ["float_roundtrip"] }
 log = "0.4"
+slides-plugins = { path = "../../crates/slides-plugins", optional = true }
 
 [build-dependencies]
 winresource = "0.1"
@@ -37,3 +38,8 @@ cpal = "0.16"
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 winit = { version = "0.30", default-features = false, features = ["x11"] }
+
+# office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = ["dep:slides-plugins"]
+default = ["office-ext"]
