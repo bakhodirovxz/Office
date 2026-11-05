@@ -30,8 +30,9 @@ test('npm package converts text in Chromium', async ({ page }) => {
   const out = await page.locator('.out').allTextContents();
   expect([out[0], out[1], out[2], out[4]]).toEqual([
     'Ўзбекистон Республикаси, Тошкент шаҳри',
-    'Oʻzbekiston Respublikasi, Toshkent shahri',
-    'Özbekiston, Toşkent şahri',
+    // toLatin writes 2026 by default (owner, 2026-10-29); 1995 stays reachable through the option, for scripts
+    'Özbekiston Respublikasi, Toşkent şahri',
+    'Oʻzbekiston, Toshkent shahri',
     'cyrl',
   ]);
   expect(out[3].replace(/[ |]/g, '')).toBe('шаҳар');
