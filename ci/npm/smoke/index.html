@@ -11,7 +11,7 @@
   const rows = [
     ["toCyrillic", "O'zbekiston Respublikasi, Toshkent shahri", toCyrillic("O'zbekiston Respublikasi, Toshkent shahri")],
     ["toLatin", "Ўзбекистон Республикаси, Тошкент шаҳри", toLatin("Ўзбекистон Республикаси, Тошкент шаҳри")],
-    ["toLatin 2026", "Ўзбекистон, Тошкент шаҳри", toLatin("Ўзбекистон, Тошкент шаҳри", { latinAlphabet: "2026" })],
+    ["toLatin 1995", "Ўзбекистон, Тошкент шаҳри", toLatin("Ўзбекистон, Тошкент шаҳри", { latinAlphabet: "1995" })],
     ["convertRuns", "s | h | ahar", convertRuns(["s", "h", "ahar"], "cyrl").join(" | ")],
     ["detect", "салом", String(detect("салом"))],
   ];

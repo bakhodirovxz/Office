@@ -13,6 +13,12 @@ use std::time::{Duration, Instant};
 const INPUTS: &str = "E:/office-target/p3/census/in";
 const BIN: &str = env!("CARGO_BIN_EXE_convert-api");
 
+/// Where the release domain CLIs are built: `$OFFICE_TARGET`, default `E:/office-target/p1` (as in services/convert/tests).
+fn tool(dom: &str) -> String {
+    let target = std::env::var("OFFICE_TARGET").unwrap_or_else(|_| "E:/office-target/p1".into());
+    format!("{target}/{dom}/release/{dom}-cli.exe")
+}
+
 fn sandbox(name: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("capi-e2e-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
@@ -89,16 +95,13 @@ impl Server {
             .arg(&cfg)
             .stdout(Stdio::null())
             .stderr(Stdio::null());
-        for (var, dom, exe) in [
-            ("DOCS", "docs", "docs-cli"),
-            ("SHEETS", "sheets", "sheets-cli"),
-            ("SLIDES", "slides", "slides-cli"),
-            ("PDF", "pdf", "pdf-cli"),
+        for (var, dom) in [
+            ("DOCS", "docs"),
+            ("SHEETS", "sheets"),
+            ("SLIDES", "slides"),
+            ("PDF", "pdf"),
         ] {
-            cmd.env(
-                format!("CONVERT_{var}_CLI"),
-                format!("E:/office-target/p1/{dom}/release/{exe}.exe"),
-            );
+            cmd.env(format!("CONVERT_{var}_CLI"), tool(dom));
         }
         let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../upstream/craft-fonts");
         if fonts.is_dir() {
@@ -246,7 +249,7 @@ Vali	41
 fn every_direction_over_http_then_a_hard_kill_leaves_work_empty_after_restart() {
     let tools = ["docs", "sheets", "slides", "pdf"]
         .iter()
-        .all(|d| Path::new(&format!("E:/office-target/p1/{d}/release/{d}-cli.exe")).is_file());
+        .all(|d| Path::new(&tool(d)).is_file());
     if !tools || !Path::new(INPUTS).is_dir() {
         assert!(
             std::env::var("CONVERT_API_E2E_REQUIRED").is_err(),
