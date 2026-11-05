@@ -28,6 +28,12 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
 - **Mobile:** A-web for v1, conditionally. **Android deferred** (owner, 2026-10-20): the converter and the UI translations go first.
 - **Priority:** fidelity → mobile → co-editing.
 - **Accounts are optional** (owner, 2026-10-21): fully open source, most users have no HRM. Local mode needs no login; connecting to a server is optional; the HRM is one configured token issuer or SSO provider, never required or hard-coded.
+- **Phase 7 plugins** (owner, 2026-11-06, all recommendations accepted; docs/phase7/PLAN.md 13.4): Docs + Sheets + Slides (PDF later);
+  server install admin-only, local install by the user unless machine policy forbids; SHA-256 pin required, Ed25519 signature
+  optional (unsigned only in local mode); admin control by config file; synthetic template-field names; shell budget 81,920 B;
+  no proxy in v1; no plugins on protected documents; the first-party signing key is the owner's, kept offline.
+- **MS Office add-in** (owner, 2026-11-05/06): C#, Office 2010+, separate MSI, free signing via SignPath Foundation, its own
+  public repo (add-in only).
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
