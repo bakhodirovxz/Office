@@ -1,0 +1,24 @@
+# cargo-deny for the add-in workspace. Our code is MIT OR Apache-2.0; the two crates have no third-party dependencies,
+# and any future dependency must be permissively licensed and come from crates.io.
+[graph]
+all-features = true
+
+[licenses]
+confidence-threshold = 0.9
+allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0"]
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+
+[advisories]
+version = 2
+yanked = "deny"

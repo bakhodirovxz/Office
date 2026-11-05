@@ -1,0 +1,9 @@
+# Workspace of the Office add-in: the transliteration engine and its C ABI. The add-in host (C#), the installer and
+# the tests are in integrations/ms-office/ (built by integrations/ms-office/build.sh).
+[workspace]
+members = ["crates/uz-translit", "crates/uz-translit-ffi"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"

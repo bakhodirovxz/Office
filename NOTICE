@@ -1,0 +1,19 @@
+Hoshiya Office add-in — Uzbek Latin <-> Cyrillic transliteration for Microsoft Word, Excel and PowerPoint
+Copyright (c) the Hoshiya contributors.
+
+Licensed under either of
+  * Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
+at your option.
+
+Third-party components in the shipped binaries
+  * The Rust standard library (MIT OR Apache-2.0), linked into uz_translit_ffi.dll.
+  * The Microsoft C runtime of the MSVC toolchain, linked statically into uz_translit_ffi.dll (crt-static), as
+    redistributable toolchain runtime code; no separate Visual C++ redistributable is installed.
+  * The add-in host uses the Microsoft .NET Framework 4.x that is part of Windows; nothing of it is shipped.
+
+Build-time tools (not shipped): Rust/cargo, the MSVC linker and Roslyn C# compiler (Visual Studio or Build Tools),
+the Windows SDK resource compiler, WiX Toolset 5.0.2 (MS-RL).
+
+No code from Microsoft Office or from any GPL- or AGPL-licensed project is included; the Office object model is used
+late-bound from its public documentation, and the two Office COM interfaces are declared from their public IIDs.

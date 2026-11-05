@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Office add-in MSI (docs/ms-addin/install.md). Built by integrations/ms-office/build-msi.ps1, which passes every $(var.*) below
+     (names, version and Assembly come from brand/brand.toml, addin-ids.ps1 and the built DLL). WiX 5.0.2, `-arch x64`.
+     One package, two scopes: Scope is "perUserOrMachine" (default per-user) or "perMachine" (build-msi.ps1 -PerMachine, for GPO).
+     Registry is under HKMU, so it lands in HKCU per-user and HKLM per-machine; written in the 64-bit AND the 32-bit view. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="$(var.ProductName)" Manufacturer="$(var.Vendor)" Version="$(var.Version)" UpgradeCode="$(var.UpgradeCode)" ProductCode="*" Language="1033" Scope="$(var.Scope)" Compressed="yes">
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of the Office add-in is already installed." />
+    <!-- Never close and relaunch the user's Office apps: with the default, a silent uninstall made Restart Manager shut
+         down an Excel that had the add-in loaded and relaunch it (msi-smoke test, 2026-11-05). With Disable, a DLL
+         in use is replaced or removed at the next restart instead; the add-in is gone from Office at its next start. -->
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Launch Condition="Installed OR VersionNT64 &gt;= 603" Message="The Office add-in needs 64-bit Windows 8.1 or later." />
+
+    <!-- per-user: %LOCALAPPDATA%\Programs\<brand>\OfficeAddin (Windows Installer redirects ProgramFiles for per-user installs); per-machine: %ProgramFiles%\<brand>\OfficeAddin -->
+    <StandardDirectory Id="ProgramFiles64Folder"><Directory Id="BRANDDIR" Name="$(var.Brand)"><Directory Id="INSTALLFOLDER" Name="OfficeAddin">
+      <Directory Id="D_x86" Name="x86" />
+      <Directory Id="D_x64" Name="x64" />
+    </Directory></Directory></StandardDirectory>
+
+    <!-- the 32-bit registry component needs a 32-bit directory (ICE80); it holds no files -->
+    <StandardDirectory Id="ProgramFilesFolder" />
+
+    <Feature Id="Main" Title="Office add-in" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="Files" /><ComponentGroupRef Id="Registry" />
+    </Feature>
+  </Package>
+
+  <Fragment><ComponentGroup Id="Files">
+    <Component Id="C_addin" Directory="INSTALLFOLDER"><File Id="F_addin" Source="$(var.Stage)\UzTranslit.OfficeAddin.dll" KeyPath="yes" /></Component>
+    <Component Id="C_brandname" Directory="INSTALLFOLDER"><File Id="F_brandname" Source="$(var.Stage)\brand-name.txt" KeyPath="yes" /></Component>
+    <Component Id="C_notice" Directory="INSTALLFOLDER"><File Id="F_notice" Source="$(var.Stage)\NOTICE" KeyPath="yes" /></Component>
+    <Component Id="C_mit" Directory="INSTALLFOLDER"><File Id="F_mit" Source="$(var.Stage)\LICENSE-MIT" KeyPath="yes" /></Component>
+    <Component Id="C_apache" Directory="INSTALLFOLDER"><File Id="F_apache" Source="$(var.Stage)\LICENSE-APACHE" KeyPath="yes" /></Component>
+    <Component Id="C_ffi86" Directory="D_x86"><File Id="F_ffi86" Source="$(var.Stage)\x86\uz_translit_ffi.dll" KeyPath="yes" /></Component>
+    <Component Id="C_ffi64" Directory="D_x64"><File Id="F_ffi64" Source="$(var.Stage)\x64\uz_translit_ffi.dll" KeyPath="yes" /></Component>
+  </ComponentGroup></Fragment>
+
+  <!-- The same keys as register.ps1, once per registry view (Bitness always64 / always32), Word + Excel + PowerPoint. -->
+  <Fragment><ComponentGroup Id="Registry">
+    <?foreach Bits in 64;32?>
+    <?if $(Bits) = 64?><?define BitsDir = INSTALLFOLDER?><?else?><?define BitsDir = ProgramFilesFolder?><?endif?>
+    <Component Id="R$(Bits)" Directory="$(BitsDir)" Bitness="always$(Bits)" Guid="*">
+      <RegistryKey Root="HKMU" Key="Software\Classes\CLSID\$(var.Clsid)" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Value="$(var.ClassName)" KeyPath="yes" />
+        <RegistryValue Key="ProgId" Type="string" Value="$(var.ProgId)" />
+        <RegistryKey Key="Implemented Categories\{62C8FE65-4EBB-45E7-B440-6E39B2CDBF29}" />
+        <RegistryValue Key="InprocServer32" Type="string" Value="mscoree.dll" />
+        <RegistryValue Key="InprocServer32" Name="ThreadingModel" Type="string" Value="Both" />
+        <RegistryValue Key="InprocServer32" Name="Class" Type="string" Value="$(var.ClassName)" />
+        <RegistryValue Key="InprocServer32" Name="Assembly" Type="string" Value="$(var.Assembly)" />
+        <RegistryValue Key="InprocServer32" Name="RuntimeVersion" Type="string" Value="v4.0.30319" />
+        <RegistryValue Key="InprocServer32" Name="CodeBase" Type="string" Value="file:///[INSTALLFOLDER]UzTranslit.OfficeAddin.dll" />
+      </RegistryKey>
+      <RegistryKey Root="HKMU" Key="Software\Classes\$(var.ProgId)" ForceDeleteOnUninstall="yes">
+        <RegistryValue Key="CLSID" Type="string" Value="$(var.Clsid)" />
+      </RegistryKey>
+      <?foreach App in Word;Excel;PowerPoint?>
+      <RegistryKey Root="HKMU" Key="Software\Microsoft\Office\$(App)\Addins\$(var.ProgId)" ForceDeleteOnUninstall="yes">
+        <RegistryValue Name="FriendlyName" Type="string" Value="$(var.Brand) $(var.FriendlySuffix)" />
+        <RegistryValue Name="Description" Type="string" Value="$(var.AddinDescription)" />
+        <RegistryValue Name="LoadBehavior" Type="integer" Value="3" />
+      </RegistryKey>
+      <?endforeach?>
+    </Component>
+    <?undef BitsDir?>
+    <?endforeach?>
+  </ComponentGroup></Fragment>
+</Wix>

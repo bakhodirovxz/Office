@@ -1,0 +1,14 @@
+[package]
+name = "uz-translit-ffi"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "C ABI of uz-translit for the Microsoft Office COM add-in (docs/ms-addin/PLAN.md); UTF-16 in and out, types only, no logic"
+
+[lib]
+# cdylib for the add-in; rlib so the tests can call the exported functions directly.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+uz-translit = { path = "../uz-translit" }

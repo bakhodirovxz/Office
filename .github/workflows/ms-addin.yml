@@ -1,0 +1,125 @@
+# Microsoft Office add-in: built from source on a GitHub-hosted Windows runner, for SignPath Foundation signing
+# (docs/ms-addin/CODE-SIGNING-POLICY.md, docs/ms-addin/install.md).
+# `workflow_dispatch` only, and untested until the repository is public. This file is source: SignPath reviews it.
+#
+# One job, so the signed DLLs go into the MSI without another artifact round trip:
+#   build + test -> upload the 3 DLLs unsigned -> [SignPath: sign the DLLs] -> MSI from the (signed) DLLs ->
+#   upload the MSI unsigned -> [SignPath: sign the MSI] -> upload the signed MSI.
+# The two SignPath steps run only with input `signpath_submit` and are PLACEHOLDERS until the SignPath project exists:
+# fill in the organisation id (repository variable SIGNPATH_ORGANIZATION_ID), the project slug, the signing policy
+# slug and the artifact configuration slugs marked "TODO(SignPath)", and add the secret SIGNPATH_API_TOKEN.
+# Every `uses:` is pinned to a full commit SHA (the same pins as ci.yml; version in the trailing comment).
+name: ms-addin
+
+on:
+  workflow_dispatch:
+    inputs:
+      signpath_submit:
+        description: "submit the DLLs and the MSI to SignPath for signing (needs the SignPath project; see the header)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  addin:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read   # SignPath reads the uploaded artifacts back from this run
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+
+      - name: Toolchains (Rust MSVC x86 + x64, WiX 5.0.2)
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-msvc --profile minimal --target i686-pc-windows-msvc,x86_64-pc-windows-msvc
+          # WiX 5.0.2 pinned (WiX v6 and later carry the Open Source Maintenance Fee).
+          dotnet tool install --global wix --version 5.0.2
+          echo "OFFICE_TARGET=$(cygpath -m "$RUNNER_TEMP")/addin" >> "$GITHUB_ENV"
+          echo "ADDIN_OFFLINE=" >> "$GITHUB_ENV"   # the runner has no cargo cache: let cargo fetch (the FFI crate has no deps)
+
+      - name: Engine tests through the FFI (golden list)
+        run: cargo +stable-x86_64-pc-windows-msvc test --locked -p uz-translit-ffi
+
+      - name: Build the add-in (Rust x86 + x64, C# host; version and names from brand/brand.toml)
+        run: bash integrations/ms-office/build.sh
+
+      - name: Upload the DLLs (unsigned)
+        id: dlls
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: office-addin-dlls-unsigned
+          path: |
+            ${{ env.OFFICE_TARGET }}/ms-office/addin/UzTranslit.OfficeAddin.dll
+            ${{ env.OFFICE_TARGET }}/ms-office/addin/x86/uz_translit_ffi.dll
+            ${{ env.OFFICE_TARGET }}/ms-office/addin/x64/uz_translit_ffi.dll
+          if-no-files-found: error
+
+      # ---- PLACEHOLDER: SignPath signs our three DLLs (only our own binaries are signed) ----
+      - name: SignPath - sign the DLLs (placeholder)
+        if: ${{ inputs.signpath_submit }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627   # v2.3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}         # TODO(SignPath): organisation id
+          project-slug: TODO-signpath-project-slug                     # TODO(SignPath): project slug
+          signing-policy-slug: release-signing                         # TODO(SignPath): signing policy slug
+          artifact-configuration-slug: office-addin-dlls               # TODO(SignPath): artifact configuration
+          github-artifact-id: ${{ steps.dlls.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-dlls
+
+      - name: Put the signed DLLs in place
+        if: ${{ inputs.signpath_submit }}
+        run: |
+          a="$OFFICE_TARGET/ms-office/addin"
+          cp signed-dlls/UzTranslit.OfficeAddin.dll "$a/"
+          cp signed-dlls/x86/uz_translit_ffi.dll "$a/x86/"
+          cp signed-dlls/x64/uz_translit_ffi.dll "$a/x64/"
+
+      - name: Build the MSI (per-user default; and the per-machine variant for Group Policy)
+        shell: pwsh
+        run: |
+          $wix = Join-Path $env:USERPROFILE '.dotnet\tools\wix.exe'
+          $addin = "$env:OFFICE_TARGET/ms-office/addin"
+          powershell -NoProfile -File integrations/ms-office/build-msi.ps1 -AddinDir $addin -Out "$env:OFFICE_TARGET/ms-office/msi" -Wix $wix
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          powershell -NoProfile -File integrations/ms-office/build-msi.ps1 -AddinDir $addin -Out "$env:OFFICE_TARGET/ms-office/msi-machine" -Wix $wix -PerMachine
+          exit $LASTEXITCODE
+
+      - name: Upload the MSIs (unsigned)
+        id: msi
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: office-addin-msi-unsigned
+          path: |
+            ${{ env.OFFICE_TARGET }}/ms-office/msi/*.msi
+            ${{ env.OFFICE_TARGET }}/ms-office/msi-machine/*.msi
+          if-no-files-found: error
+
+      # ---- PLACEHOLDER: SignPath signs the MSIs ----
+      - name: SignPath - sign the MSIs (placeholder)
+        if: ${{ inputs.signpath_submit }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627   # v2.3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}         # TODO(SignPath): organisation id
+          project-slug: TODO-signpath-project-slug                     # TODO(SignPath): project slug
+          signing-policy-slug: release-signing                         # TODO(SignPath): signing policy slug
+          artifact-configuration-slug: office-addin-msi                # TODO(SignPath): artifact configuration
+          github-artifact-id: ${{ steps.msi.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-msi
+
+      - name: Upload the signed MSIs
+        if: ${{ inputs.signpath_submit }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: office-addin-msi-signed
+          path: signed-msi
+          if-no-files-found: error

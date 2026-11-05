@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- customUI 2009/07 (Office 2010+). A group on the built-in Review tab, next to the language tools. Labels and tips
+     come from i18n/msaddin.tsv through the callbacks; icons from getImage (src/Icons.cs). -->
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="OnRibbonLoad">
+  <ribbon>
+    <tabs>
+      <tab idMso="TabReview">
+        <group id="uztGroup" getLabel="GetLabel">
+          <button id="uztToCyrl" tag="cyrl" size="large" getImage="GetImage"
+                  getLabel="GetLabel" getScreentip="GetScreentip" getSupertip="GetSupertip" onAction="OnConvert"/>
+          <button id="uztToLatn" tag="latn" size="large" getImage="GetImage"
+                  getLabel="GetLabel" getScreentip="GetScreentip" getSupertip="GetSupertip" onAction="OnConvert"/>
+          <!-- Excel and PowerPoint only (GetVisible): their own Undo cannot reverse an add-in's changes. -->
+          <separator id="uztUndoSep" getVisible="GetVisible"/>
+          <button id="uztUndo" size="large" imageMso="Undo" getVisible="GetVisible"
+                  getLabel="GetLabel" getScreentip="GetScreentip" getSupertip="GetSupertip" onAction="OnUndo"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

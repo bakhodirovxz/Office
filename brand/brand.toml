@@ -1,0 +1,10 @@
+# The one place the product name lives. Read by integrations/ms-office/build.sh (name, vendor, version, copyright:
+# stamped into every binary) and build-msi.ps1 (id, name, vendor, version: the MSI). One version source.
+schema = 1
+
+[product]
+id = "hoshiya"
+name = "Hoshiya"
+version = "0.1.0"
+vendor = "Hoshiya contributors"
+copyright = "Copyright (c) the Hoshiya contributors. MIT OR Apache-2.0."
