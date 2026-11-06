@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 10:00:00 +0500
+Subject: [PATCH] pdfcraft: Cargo.lock gains ring, the Ed25519 verifier of suite-core
+
+suite-core checks plugin package signatures (Phase 7 O4) with ring 0.17; the lock was stale. Additions only, Cargo.lock only.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 37c0dfc..4952c41 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -6360,6 +6360,7 @@ name = "suite-core"
+ version = "0.1.0"
+ dependencies = [
+  "plugin-api",
++ "ring",
+  "ron 0.8.1",
+  "serde_json",
+  "sha2 0.10.9",

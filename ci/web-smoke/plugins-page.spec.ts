@@ -43,9 +43,9 @@ window.__msgs = [];
 window.__st = {
   policy: ${JSON.stringify(policy)},
   items: [
-    { id: 'demo.plugin', version: '1.0.0', name: { en: 'Demo plugin', ru: 'Демо-плагин' }, publisher: 'Test publisher', document: 'write', network: ['https://api.example.org'], grant: [], enabled: false, machine: false, sha256: 'a'.repeat(64), problem: null },
-    { id: 'it.plugin', version: '2.0.0', name: { en: 'IT plugin' }, publisher: 'IT', document: 'read', network: [], grant: [], enabled: false, machine: true, sha256: 'b'.repeat(64), problem: 'the package changed since it was installed' },
-    { id: null, name: { en: '<img src=x onerror=window.__xss=1>' }, enabled: false, machine: false, problem: 'plugin.wasm is over 4 MiB' },
+    { id: 'demo.plugin', version: '1.0.0', name: { en: 'Demo plugin', ru: 'Демо-плагин' }, publisher: 'Test publisher', document: 'write', network: ['https://api.example.org'], grant: [], enabled: false, machine: false, sha256: 'a'.repeat(64), problem: null, verified: true, removable: true },
+    { id: 'it.plugin', version: '2.0.0', name: { en: 'IT plugin' }, publisher: 'IT', document: 'read', network: [], grant: [], enabled: false, machine: true, sha256: 'b'.repeat(64), problem: 'the package changed since it was installed', verified: false, removable: false },
+    { id: null, name: { en: '<img src=x onerror=window.__xss=1>' }, enabled: false, machine: false, problem: 'plugin.wasm is over 4 MiB', verified: false, removable: false },
   ],
 };
 window.ipc = { postMessage(s) {
@@ -60,15 +60,16 @@ window.ipc = { postMessage(s) {
     case 'plugins_list': return list();
     case 'plugins_enable': it().enabled = m.enabled; return list();
     case 'plugins_grant': { const g = it().grant.filter((o) => o !== m.origin); if (m.granted) g.push(m.origin); it().grant = g; return list(); }
+    case 'plugins_uninstall': st.items = st.items.filter((i) => i.id !== m.id); return list();
     case 'plugins_install':
       if (window.__hold) { window.__answer = () => reply({ type: 'plugins', ok: false, error: 'cancelled', cancelled: true }); return; }   // the native dialog stays open
       if (!st.policy.user_install) return list({ ok: false, error: 'installing plugins is switched off by the administrator' });
-      st.items.push({ id: 'new.plugin', version: '1.0.0', name: { en: 'New plugin' }, publisher: 'P', document: 'none', network: [], grant: [], enabled: false, machine: false, sha256: 'c'.repeat(64), problem: null });
+      st.items.push({ id: 'new.plugin', version: '1.0.0', name: { en: 'New plugin' }, publisher: 'P', document: 'none', network: [], grant: [], enabled: false, machine: false, sha256: 'c'.repeat(64), problem: null, verified: false, removable: true });
       return list({ installed: 'new.plugin' });
   }
 } };`;
 
-async function open(page: Page, policy = { user_install: true, user_grants: true }) {
+async function open(page: Page, policy: Record<string, boolean> = { user_install: true, user_grants: true, user_unsigned: true }) {
   const urls: string[] = [];
   page.on('request', (r) => urls.push(new URL(r.url()).pathname));
   await page.addInitScript(FAKE_HOST(policy));
@@ -187,4 +188,32 @@ test('install from file: a dialog that stays open for more than 20 s does not tu
   await page.clock.runFor(100);
   await expect(page.locator('#plg-msg')).not.toContainText(en['plg.page.silent']);
   await expect(page.locator('#plg-msg')).toHaveText('');
+});
+
+test('signatures (O4): a verified package says so, an unsigned one warns; a policy for signed packages only is shown', async ({ page }) => {
+  await open(page);
+  await nav(page).click();
+  const list = page.locator('#plg-list');
+  await expect(list.locator('li').nth(0).getByText(en['plg.page.verified'])).toBeVisible();
+  // a refused package shows its problem, not a signature line
+  await expect(list.locator('li').nth(1).getByText(en['plg.page.unsigned'])).toHaveCount(0);
+  await page.getByRole('button', { name: en['plg.page.install'] }).click();
+  await expect(list.locator('li').nth(3).getByText(en['plg.page.unsigned'])).toBeVisible();
+  const p2 = await (await page.context().browser()!.newContext()).newPage();
+  await open(p2, { user_install: true, user_grants: true, user_unsigned: false });
+  await nav(p2).click();
+  await expect(p2.getByText(en['plg.page.signedOnly'])).toBeVisible();
+});
+
+test('uninstall: only packages of the user, an exact message, the row goes and the page says so', async ({ page }) => {
+  await open(page);
+  await nav(page).click();
+  const rm = page.getByRole('button', { name: `${en['plg.page.uninstall']}: Demo plugin` });
+  // IT's package and the folder that did not load have no button
+  await expect(page.getByRole('button', { name: new RegExp(`^${en['plg.page.uninstall']}`) })).toHaveCount(1);
+  await rm.click();
+  await expect(page.getByRole('status')).toHaveText(fill(en['plg.page.uninstalled'], { name: 'Demo plugin' }));
+  await expect(page.locator('#plg-list').getByRole('heading', { name: /Demo plugin/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: en['plg.page.install'] })).toBeFocused();
+  expect((await msgs(page)).pop()).toEqual({ type: 'plugins_uninstall', id: 'demo.plugin' });
 });

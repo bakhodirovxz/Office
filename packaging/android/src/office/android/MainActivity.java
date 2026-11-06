@@ -310,6 +310,7 @@ public class MainActivity extends Activity {
             switch (m.optString("type")) {
                 case "plugins_list": pluginsReply(plugins.page(null, false)); break;
                 case "plugins_enable": plugins.setEnabled(m.getString("id"), m.getBoolean("enabled")); pluginsReply(plugins.page(null, true)); break;
+                case "plugins_uninstall": plugins.uninstall(m.getString("id")); pluginsReply(plugins.page(null, true)); break;
                 case "plugins_install": runOnUiThread(() -> {
                     Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
                     try { startActivityForResult(i, REQ_PLUGIN); } catch (Exception e) { pluginsFailed(e); }
@@ -321,7 +322,7 @@ public class MainActivity extends Activity {
 
     // ---- what the page may call ----
     class Bridge {
-        /** The Plugins page's messages (JSON): plugins_list, plugins_enable, plugins_install. */
+        /** The Plugins page's messages (JSON): plugins_list, plugins_enable, plugins_install, plugins_uninstall. */
         @JavascriptInterface public void plugins(String json) { pluginMsg(json); }
         /** The shell's Open buttons. app: "" = any supported type, "pdf" = PDF only. The result comes back through /__open like a VIEW. */
         @JavascriptInterface public void pick(String app) {

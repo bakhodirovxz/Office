@@ -270,6 +270,10 @@ pub enum Request {
         origin: String,
         granted: bool,
     },
+    /// remove the user's copy of a plugin (not one IT installed in the machine folder)
+    PluginsUninstall {
+        id: String,
+    },
     SettingsGet {},
     SettingsSet {
         key: String,
@@ -783,18 +787,20 @@ impl Ctx {
     /// The `plugins` reply: every package with its state, and the policy. `Err` is a refused action (`ok: false`; the list still
     /// comes); `Ok(Some(id))` names a package that was just installed.
     fn plugins_reply(&self, r: Result<Option<String>, String>) -> Value {
-        let mut v = json!({"type": "plugins", "ok": true, "items": [], "policy": {"user_install": false, "user_grants": false}});
+        let mut v = json!({"type": "plugins", "ok": true, "items": [], "policy": {"user_install": false, "user_grants": false, "user_unsigned": false}});
         if let Ok(s) = self.plugin_store() {
             let pol = s.policy();
-            v["policy"] = json!({"user_install": pol.user_install, "user_grants": pol.user_grants});
+            v["policy"] = json!({"user_install": pol.user_install, "user_grants": pol.user_grants, "user_unsigned": pol.user_unsigned});
             v["items"] = s
                 .list()
                 .into_iter()
                 .map(|i| match &i.package {
                     Some(p) => json!({"id": p.manifest.id, "version": p.manifest.version, "name": p.json["name"], "publisher": p.manifest.publisher,
                         "apps": p.manifest.apps, "document": p.json["permissions"]["document"], "network": p.manifest.permissions.network,
-                        "grant": i.grant, "enabled": i.enabled, "machine": i.machine, "sha256": p.sha256, "problem": i.problem}),
-                    None => json!({"id": null, "name": {"en": i.name}, "enabled": false, "machine": i.machine, "problem": i.problem}),
+                        "grant": i.grant, "enabled": i.enabled, "machine": i.machine, "sha256": p.sha256, "problem": i.problem,
+                        "verified": i.verified, "removable": !i.machine}),
+                    None => json!({"id": null, "name": {"en": i.name}, "enabled": false, "machine": i.machine, "problem": i.problem,
+                        "verified": false, "removable": false}),
                 })
                 .collect();
         }
@@ -921,6 +927,10 @@ impl Ctx {
                 let r = self
                     .plugin_store()
                     .and_then(|s| s.set_grant(&id, &origin, granted));
+                self.plugins_reply(r.map(|()| None))
+            }
+            Request::PluginsUninstall { id } => {
+                let r = self.plugin_store().and_then(|s| s.uninstall(&id));
                 self.plugins_reply(r.map(|()| None))
             }
             Request::SettingsGet {} => json!({"type": "settings", "values": self.store.settings()}),
@@ -1430,6 +1440,7 @@ bin = "tst-pdf"
     }
 
     const PLUGIN_TOML: &str = "id = \"demo.plugin\"\nversion = \"1.0.0\"\napi = 1\napps = [\"docs\"]\npublisher = \"Test\"\n[name]\nen = \"Demo\"\n[permissions]\ndocument = \"read\"\nnetwork = [\"https://api.example.org\"]\n";
+    const PLUGIN_WASM: &[u8] = b"\0asm\x01\0\0\0";
 
     fn package_zip(path: &Path) {
         use std::io::Write;
@@ -1459,7 +1470,7 @@ bin = "tst-pdf"
         );
         assert_eq!(
             l["policy"],
-            json!({"user_install": true, "user_grants": true})
+            json!({"user_install": true, "user_grants": true, "user_unsigned": true})
         );
         // no path: the host asks with its file dialog
         assert!(matches!(
@@ -1509,6 +1520,11 @@ bin = "tst-pdf"
             ),
             (json!(false), json!(false), json!("Demo"))
         );
+        // unsigned: installed, not verified (the page warns), removable (it is the user's)
+        assert_eq!(
+            (it["verified"].clone(), it["removable"].clone()),
+            (json!(false), json!(true))
+        );
         let en = send(json!({"type": "plugins_enable", "id": "demo.plugin", "enabled": true}));
         assert_eq!(en["items"][0]["enabled"], true);
         assert_eq!(
@@ -1536,6 +1552,8 @@ bin = "tst-pdf"
             r#"{"type":"plugins_enable","id":"demo.plugin","enabled":true,"x":1}"#,
             r#"{"type":"plugins_install","path":"C:\\a.zip","x":1}"#,
             r#"{"type":"plugins_grant","id":"demo.plugin","origin":"https://api.example.org"}"#,
+            r#"{"type":"plugins_uninstall"}"#,
+            r#"{"type":"plugins_uninstall","id":"demo.plugin","path":"C:"}"#,
         ] {
             assert_eq!(reply(c.message(body))["type"], "rejected", "{body}");
         }
@@ -1553,9 +1571,48 @@ bin = "tst-pdf"
         );
         assert_eq!(
             r["policy"],
-            json!({"user_install": false, "user_grants": false})
+            json!({"user_install": false, "user_grants": false, "user_unsigned": true})
         );
         assert_eq!(g("https://api.example.org", true)["ok"], false);
+        // uninstall: allowed whatever the policy says; the package, its record and its grants go
+        std::fs::remove_file(d.join("machine/policy.toml")).unwrap();
+        g("https://api.example.org", true);
+        let u = |id: &str| send(json!({"type": "plugins_uninstall", "id": id}));
+        std::fs::write(
+            d.join("machine/policy.toml"),
+            "[plugins]\nuser_install = false\n",
+        )
+        .unwrap();
+        let r = u("demo.plugin");
+        assert_eq!(
+            (r["ok"].clone(), r["items"].clone()),
+            (json!(true), json!([])),
+            "{r}"
+        );
+        std::fs::remove_file(d.join("machine/policy.toml")).unwrap();
+        assert_eq!(send(json!({"type": "plugins_list"}))["items"], json!([]));
+        assert!(!d.join("plugins/demo.plugin").exists());
+        assert_eq!(u("demo.plugin")["ok"], false);
+        assert_eq!(u("..\\settings")["ok"], false);
+        // IT's copy in the machine folder is listed as not removable and stays
+        let m = d.join("machine/plugins/demo");
+        std::fs::create_dir_all(&m).unwrap();
+        std::fs::write(m.join("plugin.toml"), PLUGIN_TOML).unwrap();
+        std::fs::write(m.join("plugin.wasm"), PLUGIN_WASM).unwrap();
+        let l = send(json!({"type": "plugins_list"}));
+        assert_eq!(
+            (
+                l["items"][0]["machine"].clone(),
+                l["items"][0]["removable"].clone()
+            ),
+            (json!(true), json!(false))
+        );
+        let r = u("demo.plugin");
+        assert!(
+            r["ok"] == false && r["error"].as_str().unwrap().contains("administrator"),
+            "{r}"
+        );
+        assert!(m.join("plugin.wasm").exists());
     }
 
     #[test]

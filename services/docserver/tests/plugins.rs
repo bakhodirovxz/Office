@@ -37,6 +37,43 @@ fn sha(b: &[u8]) -> String {
         .collect()
 }
 
+/// The published test keys (ci/plugins/signing, TEST ONLY): a server takes signed packages only (O4).
+fn seed(name: &str) -> Vec<u8> {
+    let t = std::fs::read_to_string(format!(
+        "{}/../../ci/plugins/signing/{name}.seed",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    (0..32)
+        .map(|i| u8::from_str_radix(&t.trim()[2 * i..2 * i + 2], 16).unwrap())
+        .collect()
+}
+
+fn public(name: &str) -> String {
+    std::fs::read_to_string(format!(
+        "{}/../../ci/plugins/signing/{name}.pub",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap()
+    .trim()
+    .to_string()
+}
+
+/// Writes `SIGNATURE` into the package folder `p`, made with the test key `key`.
+fn sign_pkg(p: &std::path::Path, key: &str) {
+    let r = |n: &str| std::fs::read(p.join(n)).ok();
+    let msg = suite_core::plugins::signed_message(
+        &r("plugin.toml").unwrap(),
+        &r("plugin.wasm").unwrap(),
+        r("strings.tsv").as_deref(),
+    );
+    std::fs::write(
+        p.join("SIGNATURE"),
+        suite_core::plugins::signature_file(&seed(key), &msg).unwrap(),
+    )
+    .unwrap();
+}
+
 struct Env {
     d: PathBuf,
     alpha: String,
@@ -66,6 +103,7 @@ fn prepare(name: &str) -> Env {
         std::fs::create_dir_all(&p).unwrap();
         std::fs::write(p.join("plugin.toml"), manifest(id, net)).unwrap();
         std::fs::write(p.join("plugin.wasm"), body).unwrap();
+        sign_pkg(&p, "test-a");
         shas.push(sha(body));
     }
     for (f, s) in [
@@ -90,10 +128,9 @@ fn open(e: &Env, plugins_one: Option<&str>, dir: bool) -> Result<Arc<Docserver>,
     });
     let plugins_table = if dir {
         format!(
-            "[plugins]
-dir = \"{}\"
-",
-            p("plugins")
+            "[plugins]\ndir = \"{}\"\ntrusted_keys = [\"{}\"]\n",
+            p("plugins"),
+            public("test-a")
         )
     } else {
         String::new()
@@ -319,7 +356,113 @@ async fn a_changed_package_is_refused_and_audited() {
         session(&again.routes::<()>(), 1, json!({})).await["plugins"],
         json!([])
     );
-    assert!(e2.audit().contains("SHA-256 differs"), "{}", e2.audit());
+    // the folder scan refuses it first: the publisher's signature no longer matches the changed file
+    assert!(e2.audit().contains("does not match"), "{}", e2.audit());
+}
+
+/// O4: a server takes packages signed by a trusted key only; an unsigned one, one signed by another key and one whose signature does
+/// not match are left out and audited, whatever the entry's SHA-256 says.
+#[tokio::test]
+async fn a_server_takes_only_packages_signed_by_a_trusted_key() {
+    let e = prepare("unsigned");
+    let dir = e.d.join("plugins/alpha/1.0.0");
+    let entry = format!(
+        "plugins = [{{ id = \"alpha\", version = \"1.0.0\", sha256 = \"{}\" }}]",
+        e.alpha
+    );
+    let listed =
+        |ds: Arc<Docserver>| async move { ids(&session(&ds.routes::<()>(), 1, json!({})).await) };
+    assert_eq!(
+        listed(open(&e, Some(&entry), true).unwrap()).await,
+        ["alpha"]
+    );
+    // unsigned
+    std::fs::remove_file(dir.join("SIGNATURE")).unwrap();
+    assert!(
+        listed(open(&e, Some(&entry), true).unwrap())
+            .await
+            .is_empty()
+    );
+    assert!(
+        e.audit().contains("not signed by a trusted publisher key"),
+        "{}",
+        e.audit()
+    );
+    // signed, by a key this server does not trust
+    sign_pkg(&dir, "test-b");
+    assert!(
+        listed(open(&e, Some(&entry), true).unwrap())
+            .await
+            .is_empty()
+    );
+    // a signature that names the trusted key but was made by another one
+    let forged = std::fs::read_to_string(dir.join("SIGNATURE"))
+        .unwrap()
+        .replace(&public("test-b"), &public("test-a"));
+    std::fs::write(dir.join("SIGNATURE"), forged).unwrap();
+    assert!(
+        listed(open(&e, Some(&entry), true).unwrap())
+            .await
+            .is_empty()
+    );
+    assert!(e.audit().contains("does not match"), "{}", e.audit());
+    // the admin trusts test-b too: its signature counts
+    sign_pkg(&dir, "test-b");
+    let p = |f: &str| e.d.join(f).to_string_lossy().replace('\\', "/");
+    let both = format!(
+        r#"server_secret_file = "{}"
+data_dir = "{}"
+[plugins]
+dir = "{}"
+trusted_keys = ["{}", "{}"]
+[[providers]]
+name = "one"
+issuer = "https://one.test"
+secret_file = "{}"
+fetch_allow = [{{ url = "http://api:8000", internal = true }}]
+frame_origins = ["https://app.test"]
+{entry}
+"#,
+        p("server.key"),
+        p("data"),
+        p("plugins"),
+        public("test-a"),
+        public("test-b"),
+        p("one.key"),
+    );
+    let ds = Docserver::from_table(both.parse().unwrap(), None)
+        .map(Arc::new)
+        .unwrap();
+    assert_eq!(listed(ds).await, ["alpha"]);
+    // a malformed key stops the start
+    let bad = both.replace(&public("test-b"), "ABC");
+    assert!(
+        Docserver::from_table(bad.parse().unwrap(), None)
+            .err()
+            .unwrap()
+            .contains("trusted_keys")
+    );
+}
+
+/// Uninstall on a server is the admin's: drop the provider entry and the package folder, restart. A package removed while the server
+/// runs is not served again (an editor that loaded it keeps the running copy until it reloads).
+#[tokio::test]
+async fn a_removed_package_is_not_served_and_a_restart_forgets_it() {
+    let (e, ds) = setup("removed", None, true);
+    let ds = ds.unwrap();
+    let r = ds.routes::<()>();
+    let one = session(&r, 1, json!({})).await;
+    let url = one["plugins"][0]["wasm"].as_str().unwrap().to_string();
+    assert_eq!(call(&r, "GET", &url, None, b"").await.0, StatusCode::OK);
+    std::fs::remove_dir_all(e.d.join("plugins/alpha")).unwrap();
+    assert_ne!(call(&r, "GET", &url, None, b"").await.0, StatusCode::OK);
+    // restarted with the entry removed (the admin's uninstall): nothing of it is listed, its grant is gone with the entry
+    let again = open(&e, Some(""), true).unwrap();
+    assert!(again.plugin_origins().is_empty());
+    assert_eq!(
+        session(&again.routes::<()>(), 1, json!({})).await["plugins"],
+        json!([])
+    );
 }
 
 #[tokio::test]
@@ -530,6 +673,7 @@ async fn template_fields_settings_come_from_the_provider_entry() {
     )
     .unwrap();
     std::fs::write(p.join("plugin.wasm"), body).unwrap();
+    sign_pkg(&p, "test-a");
     let entry = format!(
         "plugins = [{{ id = \"template-fields\", version = \"1.0.0\", sha256 = \"{}\", settings = {{ fields = [{{ name = \"field_z\", label = \"Sample zeta\", kind = \"text\" }}, {{ name = \"mark_z\", label = \"Sample mark\", kind = \"bookmark\" }}] }} }}]",
         sha(body)

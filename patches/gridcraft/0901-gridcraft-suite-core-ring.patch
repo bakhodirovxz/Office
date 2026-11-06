@@ -1,0 +1,84 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 10:00:00 +0500
+Subject: [PATCH] gridcraft: Cargo.lock gains ring, the Ed25519 verifier of suite-core
+
+suite-core checks plugin package signatures (Phase 7 O4) with ring 0.17; the lock was stale. Additions only, Cargo.lock only.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 2905c67..8611be1 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1409,6 +1409,17 @@ dependencies = [
+  "unicode-width",
+ ]
+ 
++[[package]]
++name = "getrandom"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
++dependencies = [
++ "cfg-if",
++ "libc",
++ "wasi",
++]
++
+ [[package]]
+ name = "getrandom"
+ version = "0.3.4"
+@@ -3114,6 +3125,20 @@ dependencies = [
+  "windows-sys 0.61.2",
+ ]
+ 
++[[package]]
++name = "ring"
++version = "0.17.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
++dependencies = [
++ "cc",
++ "cfg-if",
++ "getrandom 0.2.17",
++ "libc",
++ "untrusted",
++ "windows-sys 0.52.0",
++]
++
+ [[package]]
+ name = "ron"
+ version = "0.8.1"
+@@ -3484,6 +3509,7 @@ name = "suite-core"
+ version = "0.1.0"
+ dependencies = [
+  "plugin-api",
++ "ring",
+  "ron",
+  "serde_json",
+  "sha2 0.10.9",
+@@ -3798,6 +3824,12 @@ version = "0.2.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+ 
++[[package]]
++name = "untrusted"
++version = "0.9.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
++
+ [[package]]
+ name = "uuid"
+ version = "1.27.0"
+@@ -3856,6 +3888,12 @@ dependencies = [
+  "winapi-util",
+ ]
+ 
++[[package]]
++name = "wasi"
++version = "0.11.1+wasi-snapshot-preview1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
++
+ [[package]]
+ name = "wasip2"
+ version = "1.0.4+wasi-0.2.12"

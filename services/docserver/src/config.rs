@@ -73,6 +73,9 @@ pub struct PluginEntry {
 pub struct PluginsConfig {
     /// the folder with the packages: `<dir>/<id>/<version>/plugin.toml` and `plugin.wasm` (or one level up). Read at start.
     pub dir: Option<PathBuf>,
+    /// publisher keys (Ed25519, 64 lower-case hex) whose signature this server accepts, besides the product's own (`brand.toml`).
+    /// A server takes signed packages only (O4): an unsigned one, or one signed by any other key, is refused like a changed one.
+    pub trusted_keys: Vec<String>,
 }
 
 fn yes() -> bool {
@@ -475,6 +478,15 @@ impl Config {
         let mut providers: Vec<Provider> = vec![];
         let mut refused: Vec<(String, String, String)> = vec![];
         let folder = self.plugins.dir.as_deref().map(suite_core::plugins::scan);
+        if let Some(k) =
+            self.plugins.trusted_keys.iter().find(|k| {
+                k.len() != 64 || !k.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+            })
+        {
+            return Err(format!(
+                "docserver: plugins.trusted_keys: \"{k}\" is not 64 lower-case hex digits"
+            ));
+        }
         for (i, p) in self.providers.iter().enumerate() {
             let at = |k: &str| format!("providers[{i}].{k}");
             if p.name.trim().is_empty() || p.issuer.trim().is_empty() {
@@ -563,7 +575,13 @@ impl Config {
                     frame_origins.push(o);
                 }
             }
-            let plugins = load_plugins(i, p, folder.as_deref(), &mut refused)?;
+            let plugins = load_plugins(
+                i,
+                p,
+                folder.as_deref(),
+                &self.plugins.trusted_keys,
+                &mut refused,
+            )?;
             providers.push(Provider {
                 name: p.name.clone(),
                 issuer: p.issuer.clone(),
@@ -663,6 +681,7 @@ fn load_plugins(
     i: usize,
     p: &ProviderConfig,
     folder: Option<&Folder>,
+    keys: &[String],
     refused: &mut Vec<(String, String, String)>,
 ) -> Result<Vec<ProviderPlugin>, String> {
     let mut out: Vec<ProviderPlugin> = vec![];
@@ -727,11 +746,23 @@ fn load_plugins(
             .filter_map(|(_, p)| p.as_ref().ok())
             .find(|pk| pk.manifest.id == e.id && pk.manifest.version == e.version);
         let Some(pk) = found else {
-            refuse("no valid package with this id and version in the plugins folder");
+            // a folder named <id>/<version> that did not load (a bad signature among the reasons) says why
+            let why = folder
+                .iter()
+                .find(|(d, _)| d.ends_with(Path::new(&e.id).join(&e.version)))
+                .and_then(|(_, p)| p.as_ref().err());
+            refuse(&why.map_or(
+                "no valid package with this id and version in the plugins folder".into(),
+                |w| format!("the package in the folder is refused: {w}"),
+            ));
             continue;
         };
         if pk.sha256 != e.sha256 {
             refuse("the package is not the one the entry names (its SHA-256 differs)");
+            continue;
+        }
+        if !suite_core::plugins::trusted_by(pk, keys) {
+            refuse("the package is not signed by a trusted publisher key");
             continue;
         }
         if let Some(o) = e

@@ -75,13 +75,14 @@ Plugins (Phase 7; `docs/plugins.md` 9b) are optional. The admin puts packages in
 
 ```toml
 [docserver.plugins]
-dir = "/app/plugins"                               # <id>/<version>/plugin.toml + plugin.wasm, read at start
+dir = "/app/plugins"                               # <id>/<version>/plugin.toml + plugin.wasm (+ SIGNATURE), read at start
+trusted_keys = ["<64 hex>"]                        # publisher keys (Ed25519) whose signature this server accepts
 # inside [[docserver.providers]]:
 # plugins = [{ id = "uz-translit", version = "1.0.0", sha256 = "<sha256 of plugin.wasm>", grant = [], settings = {} }]
 ```
 
 `grant` lists the `https://host[:port]` origins the plugin may send data to (only ones its manifest declares); the wrapper page's `connect-src` is exactly those. A package that is
-missing or differs from its `sha256` is left out and audited as `plugin.refused`; `plugin.loaded` and `plugin.network` are the other audit lines (`plugin.network` lines are reported by the
+missing or differs from its `sha256`, or is not signed by a trusted key (the built-in project key or `trusted_keys`; a server takes signed packages only, decision P7-O4), is left out and audited as `plugin.refused`. To run a plugin of your own, sign it with your own key (`cargo xt plugin keygen`, `cargo xt plugin sign`, `docs/plugins.md` 9.1) and list that key. To uninstall, remove the entry from every provider, restart, then delete the folder; `plugin.loaded` and `plugin.network` are the other audit lines (`plugin.network` lines are reported by the
 page and marked `"source":"client"`).
 
 The wrapper page's `connect-src` lists the granted origins of every provider's plugins, and the page is served to a viewer before any session exists, so those origins are visible to an unauthenticated viewer. Do not grant sensitive internal origins to a plugin, or run one docserver per organisation.

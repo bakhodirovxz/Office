@@ -14,6 +14,8 @@ sha2 = "0.10"
 # Phase 7 WP8: the plugin store reads and validates packages with the plugin API and reads the "Install from file" zip
 plugin-api = { path = "../plugin-api" }
 zip = { version = "9", default-features = false, features = ["deflate"] }
+# Phase 7 O4: Ed25519 package signatures. ring is already in the root and docs graphs (rustls in plugin-host and the services)
+ring = { version = "0.17", default-features = false }
 # eframe keeps pdfcraft's state in app.ron, a RON map of strings
 ron = "0.8"
 

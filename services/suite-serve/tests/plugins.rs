@@ -92,6 +92,7 @@ fn env(
             .map(|(k, v)| (k.to_string(), v.iter().map(|s| s.to_string()).collect()))
             .collect::<BTreeMap<_, _>>(),
         settings: BTreeMap::new(),
+        keys: vec![],
     };
     let src = Arc::new(PluginSource {
         roots: vec![Root {

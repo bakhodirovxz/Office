@@ -26,7 +26,11 @@ with their SHA-256 in `docs/phase7/evidence/SHA256SUMS`. Runner: `scripts/mobile
 - `Toml.java` reads the TOML subset a manifest uses (no multi-line strings, no dates); `Plugins.parse` checks id, api, apps and sizes, not every rule of
   `plugin-api`'s manifest parser. Bundled packages were validated by `xt plugin pack`; the page host re-checks the descriptor and enforces permissions at run time.
   Upgrade path: a wasm build of `plugin-api::manifest` called from the page.
-- The signature (O4) is not checked, as on desktop.
+- Signatures (O4, 2026-11-06): `Signatures.java` checks `SIGNATURE` with the desktop's rules (`docs/plugins.md` 9.1), written from RFC 8032 because
+  `java.security` has Ed25519 only from API 33 (minSdk 26). A bad one breaks the package; a valid one by a key in `assets/plugin-keys.txt` (from
+  `brand.toml`) shows "verified"; unsigned packages install with the warning (no machine policy on Android). Checked on a desktop JVM
+  (`packaging/android/sigcheck.sh`), not on the emulator. BigInteger arithmetic: about 8 ms per check on this PC's JVM, cached per package.
+- Uninstall (2026-11-06): `plugins_uninstall` removes an installed package's folder and its on/off flag; the bundled ones cannot be removed.
 - A change of the enabled set needs an app restart (the shell reads `shell-config.json` once).
 
 ## Found while running it

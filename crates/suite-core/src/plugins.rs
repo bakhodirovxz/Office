@@ -11,8 +11,13 @@
 //!   `[plugins] user_install = false` / `user_grants = false` switches user install and user network grants off; a policy file
 //!   that cannot be read switches both off.
 //! - **Grants.** Per origin, and only origins the manifest declares (`permissions.network`). Never on Android (that app has no store).
+//! - **Signatures (O4).** An optional `SIGNATURE` file: Ed25519 over [`signed_message`]. A malformed or non-matching one refuses the
+//!   package everywhere; a valid one by a trusted key makes it "verified". Trusted keys: `brand.toml [plugins] publisher_keys`, the
+//!   machine policy's `trusted_keys`, the user's `[plugins] trusted_keys` (not when the policy allows signed user packages only).
+//!   `policy.toml [plugins] user_unsigned = false` refuses a user package that is not verified. The docserver takes verified only.
 use crate::settings::{self, SetError};
 use plugin_api::manifest::{self, Manifest};
+use ring::signature::{ED25519, Ed25519KeyPair, KeyPair, UnparsedPublicKey};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -21,16 +26,92 @@ use std::path::{Path, PathBuf};
 
 /// The install record inside a package folder (not part of the package itself).
 pub const RECORD: &str = "install.toml";
+pub const SIGNATURE: &str = "SIGNATURE";
 const POLICY: &str = "policy.toml";
+/// The first line of what a publisher signs; a new format gets a new line, so an old signature never verifies under it.
+const SIGNED_V1: &[u8] = b"plugin-package-signature-v1\n";
 
-fn sha_hex(b: &[u8]) -> String {
+fn hex(b: &[u8]) -> String {
     use std::fmt::Write;
-    Sha256::digest(b)
-        .iter()
-        .fold(String::with_capacity(64), |mut s, x| {
+    b.iter()
+        .fold(String::with_capacity(b.len() * 2), |mut s, x| {
             let _ = write!(s, "{x:02x}");
             s
         })
+}
+
+fn sha_hex(b: &[u8]) -> String {
+    hex(&Sha256::digest(b))
+}
+
+/// `n` bytes from exactly `2n` lower-case hex digits.
+fn unhex(s: &str, n: usize) -> Option<Vec<u8>> {
+    if s.len() != 2 * n || !s.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')) {
+        return None;
+    }
+    (0..n)
+        .map(|i| u8::from_str_radix(&s[2 * i..2 * i + 2], 16).ok())
+        .collect()
+}
+
+/// What a publisher signs (`docs/plugins.md` 9.1): the line `plugin-package-signature-v1`, then one line `<name> <sha256 hex>` for
+/// `plugin.toml`, `plugin.wasm` and (when the package has it) `strings.tsv`, in that order, each ending in `\n`. The Android app
+/// (`Plugins.java`) builds the same bytes.
+pub fn signed_message(toml: &[u8], wasm: &[u8], strings: Option<&[u8]>) -> Vec<u8> {
+    let mut m = SIGNED_V1.to_vec();
+    for (n, b) in [
+        ("plugin.toml", Some(toml)),
+        ("plugin.wasm", Some(wasm)),
+        ("strings.tsv", strings),
+    ] {
+        if let Some(b) = b {
+            m.extend_from_slice(format!("{n} {}\n", sha_hex(b)).as_bytes());
+        }
+    }
+    m
+}
+
+/// The `SIGNATURE` file, `ed25519 <public key: 64 hex> <signature: 128 hex>` and an optional line end, checked against the key it
+/// names. `Ok(key)`: valid for that key (whether the key is trusted is decided by the caller).
+fn check_signature(file: &[u8], msg: &[u8]) -> Result<String, String> {
+    let bad = || "the SIGNATURE file is malformed".to_string();
+    let t = std::str::from_utf8(file).map_err(|_| bad())?;
+    let t = t
+        .strip_suffix('\n')
+        .map_or(t, |t| t.strip_suffix('\r').unwrap_or(t));
+    let [alg, key, sig] = t.split(' ').collect::<Vec<_>>()[..] else {
+        return Err(bad());
+    };
+    let (Some(k), Some(s)) = (unhex(key, 32), unhex(sig, 64)) else {
+        return Err(bad());
+    };
+    if alg != "ed25519" {
+        return Err(bad());
+    }
+    UnparsedPublicKey::new(&ED25519, &k)
+        .verify(msg, &s)
+        .map_err(|_| "the signature does not match the package".to_string())?;
+    Ok(key.to_string())
+}
+
+/// A `SIGNATURE` file for `msg` ([`signed_message`]) made with the Ed25519 key whose 32-byte seed is `seed` (`cargo xt plugin sign`,
+/// tests). The product never signs; this is here so that signing and checking share one definition.
+pub fn signature_file(seed: &[u8], msg: &[u8]) -> Result<String, String> {
+    let kp = Ed25519KeyPair::from_seed_unchecked(seed).map_err(|e| e.to_string())?;
+    Ok(format!(
+        "ed25519 {} {}\n",
+        hex(kp.public_key().as_ref()),
+        hex(kp.sign(msg).as_ref())
+    ))
+}
+
+/// The publisher keys built into this product (`brand.toml [plugins] publisher_keys`, checked by build.rs).
+pub fn builtin_keys() -> Vec<String> {
+    env!("SUITE_PLUGIN_KEYS")
+        .split(',')
+        .filter(|k| !k.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 /// A package read from a folder, validated by `plugin-api`. `sha256` is that of `plugin.wasm` (what the page host checks).
@@ -42,9 +123,24 @@ pub struct Package {
     pub json: Value,
     pub sha256: String,
     pub manifest_sha256: String,
+    /// the public key (hex) of a valid `SIGNATURE`; `None`: unsigned. Trusted or not is [`trusted_by`]'s question.
+    pub signer: Option<String>,
 }
 
-fn package_from(dir: &Path, toml: &[u8], wasm: &[u8]) -> Result<Package, String> {
+/// Is `p` signed by one of the built-in keys or one of `keys`?
+pub fn trusted_by(p: &Package, keys: &[String]) -> bool {
+    p.signer
+        .as_ref()
+        .is_some_and(|s| keys.contains(s) || builtin_keys().contains(s))
+}
+
+fn package_from(
+    dir: &Path,
+    toml: &[u8],
+    wasm: &[u8],
+    strings: Option<&[u8]>,
+    sig: Option<&[u8]>,
+) -> Result<Package, String> {
     if wasm.len() as u64 > manifest::MAX_WASM {
         return Err("plugin.wasm is over 4 MiB".into());
     }
@@ -53,12 +149,16 @@ fn package_from(dir: &Path, toml: &[u8], wasm: &[u8]) -> Result<Package, String>
     if !plugin_api::supports(manifest.api) {
         return Err(format!("API {} is not supported", manifest.api));
     }
+    let signer = sig
+        .map(|s| check_signature(s, &signed_message(toml, wasm, strings)))
+        .transpose()?;
     Ok(Package {
         dir: dir.to_path_buf(),
         manifest,
         json,
         sha256: sha_hex(wasm),
         manifest_sha256: sha_hex(toml),
+        signer,
     })
 }
 
@@ -82,7 +182,14 @@ pub fn read_package(dir: &Path) -> Result<Package, String> {
     manifest::check_package(&refs).map_err(|e| e.to_string())?;
     let toml = std::fs::read(dir.join("plugin.toml")).map_err(io)?;
     let wasm = std::fs::read(dir.join("plugin.wasm")).map_err(io)?;
-    package_from(dir, &toml, &wasm)
+    let opt = |n: &str| {
+        refs.iter()
+            .any(|(e, _)| *e == n)
+            .then(|| std::fs::read(dir.join(n)).map_err(io))
+            .transpose()
+    };
+    let (strings, sig) = (opt("strings.tsv")?, opt(SIGNATURE)?);
+    package_from(dir, &toml, &wasm, strings.as_deref(), sig.as_deref())
 }
 
 /// The packages under `root`: every folder `root/X` or `root/X/Y` that holds a `plugin.toml`, with the reason when one is refused.
@@ -129,9 +236,6 @@ pub fn read_wasm(p: &Package) -> Result<Vec<u8>, String> {
 pub struct Record {
     pub sha256: String,
     pub manifest_sha256: String,
-    /// Reserved for the publisher signature (O4). shortcut: never read or checked in v1, so a signed package installs like an
-    /// unsigned one; the check comes with the project signing key.
-    pub signature: Option<String>,
 }
 
 fn read_record(dir: &Path) -> Option<Record> {
@@ -143,22 +247,17 @@ fn read_record(dir: &Path) -> Option<Record> {
     Some(Record {
         sha256: s("sha256")?,
         manifest_sha256: s("manifest_sha256")?,
-        signature: s("signature"),
     })
 }
 
 fn write_record(dir: &Path, r: &Record) -> std::io::Result<()> {
-    let mut t = format!(
-        "sha256 = \"{}\"\nmanifest_sha256 = \"{}\"\n",
-        r.sha256, r.manifest_sha256
-    );
-    if let Some(s) = &r.signature {
-        t.push_str(&format!(
-            "signature = {}\n",
-            toml_edit::Value::from(s.as_str())
-        ));
-    }
-    std::fs::write(dir.join(RECORD), t)
+    std::fs::write(
+        dir.join(RECORD),
+        format!(
+            "sha256 = \"{}\"\nmanifest_sha256 = \"{}\"\n",
+            r.sha256, r.manifest_sha256
+        ),
+    )
 }
 
 /// Does the package still match its install record? `machine`: a package in a machine folder may have none.
@@ -180,6 +279,8 @@ pub struct State {
     pub grants: BTreeMap<String, Vec<String>>,
     /// `[plugins.settings.<id>]`: the user's values for a plugin's `[settings]` (they replace the manifest defaults, like an admin's).
     pub settings: BTreeMap<String, Value>,
+    /// `[plugins] trusted_keys`: publisher keys (hex) the user (or the web host's operator) trusts
+    pub keys: Vec<String>,
 }
 
 /// A TOML value as JSON (datetimes as text).
@@ -257,6 +358,7 @@ pub fn load_state(settings_dir: &Path) -> State {
                     .collect()
             })
             .unwrap_or_default(),
+        keys: strings(p.get("trusted_keys")),
     }
 }
 
@@ -301,11 +403,15 @@ pub fn set_grant(settings_dir: &Path, id: &str, origin: &str, on: bool) -> Resul
     })
 }
 
-/// What a machine policy forbids (O3). Both are allowed unless the file says otherwise.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// What a machine policy forbids (O3, O4). Everything is allowed unless the file says otherwise.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Policy {
     pub user_install: bool,
     pub user_grants: bool,
+    /// `false`: a package in the user folder must be signed by a trusted key (O4)
+    pub user_unsigned: bool,
+    /// `trusted_keys`: publisher keys IT trusts (hex)
+    pub keys: Vec<String>,
 }
 
 impl Default for Policy {
@@ -313,6 +419,8 @@ impl Default for Policy {
         Policy {
             user_install: true,
             user_grants: true,
+            user_unsigned: true,
+            keys: vec![],
         }
     }
 }
@@ -325,6 +433,8 @@ pub fn load_policy(machine_dir: Option<&Path>) -> Policy {
     let off = Policy {
         user_install: false,
         user_grants: false,
+        user_unsigned: false,
+        keys: vec![],
     };
     let text = match std::fs::read_to_string(&path) {
         Ok(t) => t,
@@ -343,6 +453,22 @@ pub fn load_policy(machine_dir: Option<&Path>) -> Policy {
     Policy {
         user_install: flag("user_install"),
         user_grants: flag("user_grants"),
+        user_unsigned: flag("user_unsigned"),
+        keys: strings(doc.get("plugins").and_then(|p| p.get("trusted_keys"))),
+    }
+}
+
+/// O4 for one package: `Ok(true)` verified (signed by a trusted key), `Ok(false)` usable but not verified, `Err` refused. A machine
+/// or operator folder may hold unverified packages (IT or the operator put them there); a user's must be verified when the policy
+/// says `user_unsigned = false`, and then the user's own keys do not count.
+pub fn admit(p: &Package, machine: bool, st: &State, pol: &Policy) -> Result<bool, String> {
+    let user_keys: &[String] = if pol.user_unsigned { &st.keys } else { &[] };
+    if trusted_by(p, &pol.keys) || trusted_by(p, user_keys) {
+        Ok(true)
+    } else if machine || pol.user_unsigned {
+        Ok(false)
+    } else {
+        Err("the administrator allows only plugins signed by a trusted publisher".into())
     }
 }
 
@@ -405,7 +531,11 @@ pub fn enabled(roots: &[Root], st: &State, pol: &Policy) -> Vec<Enabled> {
     let mut out: Vec<Enabled> = vec![];
     for r in roots {
         for (dir, p) in scan(&r.dir) {
-            let p = match p.and_then(|p| verify(&p, r.machine).map(|()| p)) {
+            let p = match p.and_then(|p| {
+                verify(&p, r.machine)?;
+                admit(&p, r.machine, st, pol)?;
+                Ok(p)
+            }) {
                 Ok(p) => p,
                 Err(e) => {
                     eprintln!("plugins: {}: {e}", dir.display());
@@ -486,9 +616,11 @@ pub struct Item {
     pub package: Option<Package>,
     pub machine: bool,
     pub enabled: bool,
-    /// why it is not usable (refused, changed, no record); `None` when it is
+    /// why it is not usable (refused, changed, no record, unsigned against the policy); `None` when it is
     pub problem: Option<String>,
     pub grant: Vec<String>,
+    /// signed by a trusted publisher key
+    pub verified: bool,
 }
 
 pub struct Store {
@@ -552,15 +684,20 @@ impl Store {
                         enabled: false,
                         problem: Some(e),
                         grant: vec![],
+                        verified: false,
                     },
-                    Ok(p) => Item {
-                        problem: verify(&p, r.machine).err(),
-                        enabled: st.enabled.contains(&p.manifest.id),
-                        grant: effective_grant(&p, &st, &pol),
-                        name,
-                        machine: r.machine,
-                        package: Some(p),
-                    },
+                    Ok(p) => {
+                        let ok = admit(&p, r.machine, &st, &pol);
+                        Item {
+                            problem: verify(&p, r.machine).err().or(ok.clone().err()),
+                            verified: ok == Ok(true),
+                            enabled: st.enabled.contains(&p.manifest.id),
+                            grant: effective_grant(&p, &st, &pol),
+                            name,
+                            machine: r.machine,
+                            package: Some(p),
+                        }
+                    }
                 });
             }
         }
@@ -633,9 +770,15 @@ impl Store {
                 .iter()
                 .find(|(f, _)| f == n)
                 .map(|(_, b)| b.as_slice())
-                .unwrap_or_default()
         };
-        let pkg = package_from(&self.user, get("plugin.toml"), get("plugin.wasm"))?;
+        let pkg = package_from(
+            &self.user,
+            get("plugin.toml").unwrap_or_default(),
+            get("plugin.wasm").unwrap_or_default(),
+            get("strings.tsv"),
+            get(SIGNATURE),
+        )?;
+        admit(&pkg, false, &self.state(), &self.policy())?;
         let (id, ver) = (&pkg.manifest.id, &pkg.manifest.version);
         // installed copies of this id: a different manifest is a new thing to consent to
         let old: Vec<PathBuf> = std::fs::read_dir(self.user.join(id))
@@ -661,7 +804,6 @@ impl Store {
                 &Record {
                     sha256: pkg.sha256.clone(),
                     manifest_sha256: pkg.manifest_sha256.clone(),
-                    signature: None,
                 },
             )?;
             std::fs::create_dir_all(target.parent().unwrap_or(&self.user))?;
@@ -680,6 +822,38 @@ impl Store {
             clear_grants(&self.settings_dir, id).map_err(|e| e.to_string())?;
         }
         read_package(&target)
+    }
+
+    /// Removes the user's copy of `id` (every version, with its install record), turns it off and withdraws its grants; its
+    /// `[plugins.settings.<id>]` values stay. A package in the machine folder is IT's and is not touched (`Err` when only it has the
+    /// id). Allowed whatever the policy says, like withdrawing a grant. A plugin already loaded keeps running from memory until its
+    /// editor reloads; nothing reads the folder during an invocation.
+    pub fn uninstall(&self, id: &str) -> Result<(), String> {
+        let folder = self.user.join(id);
+        // the id must be one an installed package's (validated) manifest has: never a path from the page
+        if !scan(&self.user).iter().any(|(d, p)| {
+            d.parent() == Some(&folder) && p.as_ref().is_ok_and(|p| p.manifest.id == id)
+        }) {
+            let it_has = self
+                .list()
+                .iter()
+                .any(|i| i.machine && i.package.as_ref().is_some_and(|p| p.manifest.id == id));
+            return Err(if it_has {
+                "this plugin was installed by your administrator".into()
+            } else {
+                "no such plugin".into()
+            });
+        }
+        set_enabled(&self.settings_dir, id, false).map_err(|e| e.to_string())?;
+        clear_grants(&self.settings_dir, id).map_err(|e| e.to_string())?;
+        // out of sight first (scan skips dot folders), so a removal cut short never leaves a half package in the list
+        let gone = self
+            .user
+            .join(format!(".uninstall-{}-{id}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&gone);
+        std::fs::rename(&folder, &gone).map_err(|e| format!("cannot remove the plugin: {e}"))?;
+        let _ = std::fs::remove_dir_all(&gone);
+        Ok(())
     }
 }
 
@@ -821,8 +995,8 @@ n = 3
         assert_eq!(
             s.policy(),
             Policy {
-                user_install: true,
-                user_grants: false
+                user_grants: false,
+                ..Policy::default()
             }
         );
         assert!(
@@ -844,7 +1018,9 @@ n = 3
             s.policy(),
             Policy {
                 user_install: false,
-                user_grants: false
+                user_grants: false,
+                user_unsigned: false,
+                keys: vec![]
             }
         );
         std::fs::remove_file(&pol).unwrap();
@@ -962,5 +1138,283 @@ user_install = false
         assert!(read_wasm(&e[0].package).is_ok());
         std::fs::write(m.join("plugin.wasm"), b"changed").unwrap();
         assert!(read_wasm(&e[0].package).is_err());
+    }
+
+    // ---- O4 signatures and uninstall ----
+
+    /// The published test keys (ci/plugins/signing, TEST ONLY).
+    fn seed(name: &str) -> Vec<u8> {
+        let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(format!("../../ci/plugins/signing/{name}.seed"));
+        unhex(std::fs::read_to_string(p).unwrap().trim(), 32).unwrap()
+    }
+
+    fn key(name: &str) -> String {
+        signature_file(&seed(name), b"")
+            .unwrap()
+            .split(' ')
+            .nth(1)
+            .unwrap()
+            .to_string()
+    }
+
+    /// A package zip; `sig`: the key that signs it, and the wasm the signature is made for (to fake a tampered package).
+    fn pkg(z: &Path, wasm: &[u8], sig: Option<(&str, &[u8])>) {
+        let s = sig.map(|(k, w)| {
+            signature_file(&seed(k), &signed_message(TOML.as_bytes(), w, None)).unwrap()
+        });
+        let mut e: Vec<(&str, &[u8])> =
+            vec![("plugin.toml", TOML.as_bytes()), ("plugin.wasm", wasm)];
+        if let Some(s) = &s {
+            e.push((SIGNATURE, s.as_bytes()));
+        }
+        zip_of(z, &e);
+    }
+
+    fn policy(d: &Path, text: &str) {
+        std::fs::create_dir_all(d.join("machine")).unwrap();
+        std::fs::write(d.join("machine/policy.toml"), text).unwrap();
+    }
+
+    const WASM: &[u8] = b"\x00asm\x01\x00\x00\x00";
+
+    #[test]
+    fn rfc_8032_vectors_verify_and_a_changed_byte_does_not() {
+        // RFC 8032 section 7.1, tests 1-3 (the Android verifier checks the same three)
+        for (pk, msg, sig) in [
+            (
+                "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+                "",
+                "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
+            ),
+            (
+                "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+                "72",
+                "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00",
+            ),
+            (
+                "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025",
+                "af82",
+                "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a",
+            ),
+        ] {
+            let m = unhex(msg, msg.len() / 2).unwrap();
+            let file = format!("ed25519 {pk} {sig}\n");
+            assert_eq!(check_signature(file.as_bytes(), &m).unwrap(), pk);
+            let mut m2 = m.clone();
+            m2.push(0);
+            assert!(check_signature(file.as_bytes(), &m2).is_err());
+        }
+        // the test seed signs and its signature checks
+        let msg = signed_message(b"t", b"w", Some(b"s"));
+        let file = signature_file(&seed("test-a"), &msg).unwrap();
+        assert_eq!(
+            check_signature(file.as_bytes(), &msg).unwrap(),
+            key("test-a")
+        );
+        assert_ne!(key("test-a"), key("test-b"));
+        // what is signed covers strings.tsv when present
+        assert_ne!(
+            signed_message(b"t", b"w", None),
+            signed_message(b"t", b"w", Some(b""))
+        );
+        let empty = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        assert_eq!(
+            String::from_utf8(signed_message(b"", b"", None)).unwrap(),
+            format!("plugin-package-signature-v1\nplugin.toml {empty}\nplugin.wasm {empty}\n")
+        );
+    }
+
+    #[test]
+    fn a_signed_package_is_verified_and_a_bad_signature_is_refused() {
+        let (s, d) = store("plg-sig");
+        let z = d.join("p.zip");
+        policy(
+            &d,
+            &format!("[plugins]\ntrusted_keys = [\"{}\"]\n", key("test-a")),
+        );
+        // good: signed by a key IT trusts
+        pkg(&z, WASM, Some(("test-a", WASM)));
+        let p = s.install_zip(&z).unwrap();
+        assert_eq!(p.signer.as_deref(), Some(key("test-a").as_str()));
+        let it = &s.list()[0];
+        assert!(it.verified && it.problem.is_none(), "{it:?}");
+        s.set_enabled("demo.plugin", true).unwrap();
+        assert_eq!(s.enabled().len(), 1);
+        // tampered: the signature was made for other wasm bytes
+        pkg(&z, b"\x00asm\x01\x00\x00\x00\x00", Some(("test-a", WASM)));
+        let e = s.install_zip(&z).unwrap_err();
+        assert!(e.contains("does not match"), "{e}");
+        // ... or changed on disk after the install, in a file the install record does not pin
+        std::fs::write(p.dir.join("strings.tsv"), "id\ten\n").unwrap();
+        assert!(s.enabled().is_empty());
+        assert!(
+            s.list()[0]
+                .problem
+                .as_deref()
+                .unwrap()
+                .contains("does not match")
+        );
+        std::fs::remove_file(p.dir.join("strings.tsv")).unwrap();
+        assert_eq!(s.enabled().len(), 1);
+        // wrong key, claimed: the file names the trusted key but test-b signed
+        let b = signature_file(
+            &seed("test-b"),
+            &signed_message(TOML.as_bytes(), WASM, None),
+        )
+        .unwrap();
+        let forged = b.replace(&key("test-b"), &key("test-a"));
+        let with_sig = |z: &Path, sig: &str| {
+            zip_of(
+                z,
+                &[
+                    ("plugin.toml", TOML.as_bytes()),
+                    ("plugin.wasm", WASM),
+                    (SIGNATURE, sig.as_bytes()),
+                ],
+            )
+        };
+        with_sig(&z, &forged);
+        assert!(s.install_zip(&z).unwrap_err().contains("does not match"));
+        // the line end is optional, and may be CRLF (the same grammar as Plugins.java)
+        for end in ["", "\r\n"] {
+            with_sig(&z, &format!("{}{end}", b.trim_end()));
+            assert!(s.install_zip(&z).is_ok(), "{end:?}");
+        }
+        // a malformed SIGNATURE
+        for bad in [
+            String::new(),
+            "ed25519".into(),
+            b.replace("ed25519", "rsa"),
+            b.to_uppercase(),
+            format!("{b}x"),
+            b.replace(' ', "  "),
+            format!("{b}\n"),
+            format!(" {b}"),
+            format!("{}\r", b.trim_end()),
+        ] {
+            with_sig(&z, &bad);
+            assert!(
+                s.install_zip(&z).unwrap_err().contains("malformed"),
+                "{bad:?}"
+            );
+        }
+        // wrong key, honest: a valid signature by a key nobody trusts is "not verified", like an unsigned package (local mode)
+        pkg(&z, WASM, Some(("test-b", WASM)));
+        s.install_zip(&z).unwrap();
+        let it = &s.list()[0];
+        assert!(!it.verified && it.problem.is_none(), "{it:?}");
+        // the user may trust a key of their own in settings.toml
+        std::fs::write(
+            d.join("settings/settings.toml"),
+            format!("[plugins]\ntrusted_keys = [\"{}\"]\n", key("test-b")),
+        )
+        .unwrap();
+        assert!(s.list()[0].verified);
+    }
+
+    #[test]
+    fn unsigned_installs_locally_unless_the_policy_forbids_it() {
+        let (s, d) = store("plg-unsigned");
+        let z = d.join("p.zip");
+        // unsigned, local mode, no policy: installs, not verified (the page shows the warning)
+        pkg(&z, WASM, None);
+        s.install_zip(&z).unwrap();
+        s.set_enabled("demo.plugin", true).unwrap();
+        let it = &s.list()[0];
+        assert!(!it.verified && it.problem.is_none());
+        assert_eq!(s.enabled().len(), 1);
+        // IT forbids unsigned user packages: the installed one stops working, a new install is refused
+        policy(
+            &d,
+            &format!(
+                "[plugins]\nuser_unsigned = false\ntrusted_keys = [\"{}\"]\n",
+                key("test-a")
+            ),
+        );
+        assert!(s.enabled().is_empty());
+        assert!(s.list()[0].problem.as_deref().unwrap().contains("signed"));
+        assert!(s.install_zip(&z).unwrap_err().contains("administrator"));
+        // ... and the user's own trusted key does not count then
+        std::fs::write(
+            d.join("settings/settings.toml"),
+            format!(
+                "[plugins]\nenabled = [\"demo.plugin\"]\ntrusted_keys = [\"{}\"]\n",
+                key("test-b")
+            ),
+        )
+        .unwrap();
+        pkg(&z, WASM, Some(("test-b", WASM)));
+        assert!(s.install_zip(&z).is_err());
+        // a package signed by IT's key installs and runs
+        pkg(&z, WASM, Some(("test-a", WASM)));
+        s.install_zip(&z).unwrap();
+        assert_eq!(s.enabled().len(), 1);
+        assert!(s.list()[0].verified);
+        // IT's own machine folder may hold unsigned packages
+        let m = s.machine.clone().unwrap().join("other");
+        std::fs::create_dir_all(&m).unwrap();
+        std::fs::write(
+            m.join("plugin.toml"),
+            TOML.replace("demo.plugin", "it.plugin"),
+        )
+        .unwrap();
+        std::fs::write(m.join("plugin.wasm"), WASM).unwrap();
+        let it = s.list().into_iter().find(|i| i.machine).unwrap();
+        assert!(it.problem.is_none() && !it.verified);
+        // a damaged policy fails closed for this too
+        policy(&d, "[plugins\n");
+        assert!(!s.policy().user_unsigned);
+    }
+
+    #[test]
+    fn uninstall_removes_the_package_its_record_and_grants() {
+        let (s, d) = store("plg-uninstall");
+        let z = d.join("p.zip");
+        pkg(&z, WASM, None);
+        s.install_zip(&z).unwrap();
+        s.set_enabled("demo.plugin", true).unwrap();
+        s.set_grant("demo.plugin", "https://api.example.org", true)
+            .unwrap();
+        let f = d.join("settings/settings.toml");
+        let mut t = std::fs::read_to_string(&f).unwrap();
+        t.push_str("\n[plugins.settings.\"demo.plugin\"]\nn = 3\n");
+        std::fs::write(&f, t).unwrap();
+        // what a running editor holds: the loaded package
+        let loaded = s.enabled();
+        let bytes = read_wasm(&loaded[0].package).unwrap();
+        s.uninstall("demo.plugin").unwrap();
+        assert!(s.list().is_empty() && s.enabled().is_empty());
+        assert!(
+            !s.user.join("demo.plugin").exists(),
+            "the folder and its install record are gone"
+        );
+        let st = s.state();
+        assert!(st.enabled.is_empty());
+        assert!(st.grants.get("demo.plugin").is_none_or(|g| g.is_empty()));
+        assert!(
+            st.settings.contains_key("demo.plugin"),
+            "the user's values stay"
+        );
+        // the running copy keeps its bytes; nothing can load it again
+        assert_eq!(bytes, WASM);
+        assert!(read_wasm(&loaded[0].package).is_err());
+        assert!(
+            std::fs::read_dir(&s.user).unwrap().next().is_none(),
+            "nothing is left behind"
+        );
+        // again, a path, an IT package
+        assert_eq!(s.uninstall("demo.plugin").unwrap_err(), "no such plugin");
+        assert_eq!(s.uninstall("../settings").unwrap_err(), "no such plugin");
+        let m = s.machine.clone().unwrap().join("demo");
+        std::fs::create_dir_all(&m).unwrap();
+        std::fs::write(m.join("plugin.toml"), TOML).unwrap();
+        std::fs::write(m.join("plugin.wasm"), WASM).unwrap();
+        assert!(
+            s.uninstall("demo.plugin")
+                .unwrap_err()
+                .contains("administrator")
+        );
+        assert!(m.join("plugin.wasm").exists());
     }
 }
