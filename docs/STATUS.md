@@ -1854,3 +1854,69 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   - convert-api `tests/e2e.rs` found the release CLIs only under `E:/office-target/p1`, now `$OFFICE_TARGET`;
   - wordcraft/0146 test picture: clippy `precedence` (parenthesised).
 - Lesson: `npm ci` through a junctioned `node_modules` replaces the junction and empties its target (phase-5's was emptied and reinstalled). A full CI needs about 190 GB free on E:.
+
+### Phase 7 WP13: Sheets and Slides plugin adapters (2026-11-06, branch `p7-wp13`)
+- Owner decision O2 = Docs + Sheets + Slides (2026-11-06, "fix everything"); PDF stays later.
+- Built:
+  - `crates/plugin-adapter` (new, root workspace): the app-neutral half of the two adapters, modelled on `docs-plugins` (which is
+    unchanged): the loaded plugins and 64 slots (`register_command` has no remove, so a registry id keeps its slot for the
+    process; the slot looks its plugin command up by id on every run), the executor over an `Editor` trait (one undo step,
+    restore on any error, stale check, protected-document refusal, 16 reads / 16 rounds / 8 fetches / 10 s, three timeouts switch
+    the plugin off), the web bridge (pending invocation, input lock flag, timeout, panel clicks, busy, ended ids) and its JS end
+    (`<prefix>:plugin*`), and `native` (wasmtime guest + suite-core store loader, filtered by app).
+  - `domains/sheets/crates/sheets-plugins` and `domains/slides/crates/slides-plugins` (domain extensions, `office-ext`): the
+    engine sides (text maps through the built-ins' own walkers, the undo step, the restore, the slot tables, the web input lock as
+    the engine's command hook, the toolbar menu).
+  - `plugin_api::allow::{SHEETS, SLIDES, list, check_run_in}` and `action::check_actions_in` (Docs keeps `check_run` /
+    `check_actions`, unchanged). Sheets refuses any params string it would read as a formula (external references, WEBSERVICE,
+    HYPERLINK, DDE); Slides refuses `hover` and `action` on top of `link`.
+  - Carried patches gridcraft/0157 (the translit cell walk and write as functions, no behaviour change), gridcraft/0158 (toolbar
+    Plugins menu, desktop loader, web forwarding), deckcraft/0157 (walk, pieces and write as functions, no behaviour change),
+    deckcraft/0158 (same seams). Domains: `[extensions]` in `domains/{sheets,slides}/domain.toml`, regenerated.
+  - `plugins/uz-translit`: `apps = ["docs", "sheets", "slides"]`; "N cells converted" in Sheets (the reviewed gridcraft row, copied
+    with its status); `auto` in Slides detects on what the built-in detects on. template-fields stays Docs only.
+  - Strings: "Plugins" in `i18n/gridcraft.tsv` and `i18n/deckcraft.tsv` (the wordcraft row's wording),
+    `reviewed:agent-opus:2026-11-06`.
+  - Docs: `docs/plugins.md` section 6a and the rest, `docs/phase7/malicious.md` "Sheets and Slides" table, `scripts/ci.sh plugins`
+    runs the two adapters' tests with the real module.
+- Safety (each with a test; table: `docs/phase7/malicious.md` "Sheets and Slides"): allowlist checked before the first action,
+  one undo step per invocation (natively Sheets folds its own snapshot, Slides uses the slot's `Session::execute`; on the web both
+  fold), restore of document, selection and undo/redo on any error (Sheets also rebuilds the calculation chain), stale check (Slides:
+  a content revision that ignores selection changes), protected workbook refused for writing plugins, limits (16 reads, 16 rounds,
+  8 fetches, 10 s, three timeouts switch off), web input lock (every changing command, `file.*`, `edit.*`, `plugin.*`, `office.*`
+  refused while a call waits; selection moves allowed), panel click busy/ended/protected refusals.
+- Tests: `plugin-adapter` 25 (fake editor under the Sheets allowlist: M3, M4, M5, M5a, M8, R1, S2, rounds, timeouts, protected,
+  panels, and 10 web-bridge cases); `sheets-plugins` 9 + equivalence; `slides-plugins` 8 + equivalence; `plugin-api` +1
+  (`per_app_allowlists_and_the_formula_rule`, 35 in `api.rs`); `uz-translit-plugin` +1 (4). The allowlists against the real
+  registries: Sheets 75 of 344 commands, Slides 87 of 324. Built-in tests unchanged and green after the walker refactors:
+  gridcraft-engine `tests/translit.rs` 13 passed, deckcraft-engine `tests/translit.rs` 11 passed.
+- **Output (PLAN 6.3) equals the built-in:** `sheets-plugins/tests/equiv.rs`: 2 xlsx fixtures + a generated workbook (2,000 x 5 and a
+  second sheet) x {to Cyrillic, back to Latin, auto} x {auto, selection, workbook} x {the plugin's code natively, its wasm module in
+  wasmtime} = **54 of 54 identical** (workbook in memory, saved xlsx bytes, selection, cells written; undo walks back to the opened
+  workbook). `slides-plugins/tests/equiv.rs`: 2 pptx fixtures + a generated 40-slide deck (fields, a break, a link, ru/de/uz tags,
+  notes, a digraph across runs) x 3 commands x {auto, slide, deck, selected shapes, a text range} x 2 guests = **90 of 90
+  identical** (presentation, selection, paragraphs; undo restores). Module: `uz-translit-1.0.0.zip` 253,170 B (was 252,303),
+  SHA-256 f5bcb498...c1c1.
+- **Web size (stop condition hit, budgets NOT raised):** `scripts/build.sh <d> web --release`, `brotli -q 11 --lgwin=24`, against the
+  phase-7 CI dist (`E:/office-target/phase-7/dist`, built at 3e33e99 = this branch's base code):
+  - Sheets: 4,953,717 -> **5,044,570 B (+90,853)**; budget 4,966,771 (base_br 4,737,395 + delta_br_max 229,376): base headroom
+    13,054 B, **over by 77,799 B**. Raw 19,758,560 -> 20,294,933 (+536,373). JS glue 20,055 -> 20,146 B (max 24,576, ok).
+  - Slides (with the craft fonts, as the budget row says): 9,510,848 -> **9,596,663 B (+85,815)**; budget 9,524,217 (9,327,609 +
+    196,608): base headroom 13,369 B, **over by 72,446 B**. Raw 36,104,738 -> 36,513,882 (+409,144). JS glue 19,987 B (ok).
+  - For scale: the same plugin system cost Docs +83,019 B brotli at WP4 (200,313 -> 283,332), where the budget was re-baselined by
+    the budgets.toml rule. Owner decision needed (below); `ci.sh sizes` would fail on this branch.
+- Not done / unverified: Playwright with the real page host inside a Sheets or Slides frame (the editor end of the bridge is
+  tested natively; the page host is unchanged), the docserver wrapper and the Android app with these editors, a desktop run of
+  sheets.exe / slides.exe with an installed plugin (the loader is the Docs one, tested through `wasm_guest`; no exe was started),
+  native panels and events (not in v1), a generated command list like `docs/plugins-commands.md` for Sheets and Slides (the
+  allowlist tests print the counts), N1/N2 speed numbers for Sheets and Slides.
+- Owner decisions: (1) the Sheets and Slides web budgets: raise `delta_br_max` by the budgets.toml rule (measured delta + 10 %,
+  16 KiB steps), or keep the plugin bridge out of the web builds (plugins on the desktop only for these two editors), or ask for a
+  slimmer web path first; (2) the formula refusal in Sheets (a plugin cannot write `=...`): keep for v1 (recommended) or allow
+  formulas without external references later.
+- CI on this branch (`scripts/ci.sh`, OFFICE_TARGET=E:/office-target/p7-wp13): `queue` ok (verify-queue all five trees, 153 rows),
+  `gen-check` ok (gen-domain, plugin-commands, lockdiff docs/sheets/slides/pdf: 0 foreign additions), `deny` ok (root, docs,
+  sheets, slides, pdf), `i18n` ok (lint, roundtrip, check-stale), `lint`: fmt root and upstream ok, clippy root ok, upstream
+  ratchet wordcraft/deckcraft/pdfcraft ok, gridcraft had 1 new warning (a needless borrow in 0158), fixed in the next commit and
+  re-checked with clippy on the touched crates. `plugins`: every cargo step ok (pack x3, plugin tests, Docs plugin-matrix and fields with the changed module, evil-host with plugin-adapter, plugins-sheets 54/54, plugins-slides 90/90, evil-executor, evil-docserver), then infra exit 2 at the Playwright specs (no shell or docs-web dist in this target), so the template step after them did not run; evil-desktop skipped (no release docs.exe). `sizes`: not run as a job (it needs all four dists);
+  the two editors were measured with the job's own commands (above). Not run: `test gridcraft`/`test deckcraft` whole suites (run instead: both translit test files, gridcraft-ui-egui `tests/office_toolbar.rs` 5 passed, deckcraft-ui-egui `office_toolbar` 7 of 8: `the_pill_does_not_cover_a_tab_at_1024` fails the same way with the base `office_toolbar.rs`, "pill starts at 889 but the tabs end at 922", with the craft fonts in the tree, so not from this WP); `web-smoke`, `shell`, `docserver`, Android.
