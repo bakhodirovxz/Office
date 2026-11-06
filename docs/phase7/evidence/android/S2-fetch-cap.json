@@ -1,0 +1,57 @@
+{
+  "item": "S2-fetch-cap",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.639Z",
+  "details": {
+    "audit": [
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "network.denied",
+        "origin": "https://example.org"
+      },
+      {
+        "plugin": "test.recheck",
+        "kind": "failed",
+        "error": "more than 8 fetches"
+      }
+    ],
+    "note": "Android grants no origin, so each of the 8 fetches is denied (and counted); the 9th ends the invocation"
+  },
+  "screenshots": []
+}

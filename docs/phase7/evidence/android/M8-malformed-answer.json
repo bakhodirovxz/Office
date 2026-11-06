@@ -1,0 +1,21 @@
+{
+  "item": "M8-malformed-answer",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.636Z",
+  "details": {
+    "ok": true,
+    "status": "Recheck commands could not finish: Failed to execute 'decode' on 'TextDecoder': The encoded data was not valid.",
+    "audit": [
+      {
+        "plugin": "test.recheck",
+        "kind": "failed",
+        "error": "Failed to execute 'decode' on 'TextDecoder': The encoded data was not valid."
+      }
+    ],
+    "document_unchanged_after_save": true
+  },
+  "screenshots": [
+    "recheck-M8.png"
+  ]
+}

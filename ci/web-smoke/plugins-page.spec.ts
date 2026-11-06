@@ -61,6 +61,7 @@ window.ipc = { postMessage(s) {
     case 'plugins_enable': it().enabled = m.enabled; return list();
     case 'plugins_grant': { const g = it().grant.filter((o) => o !== m.origin); if (m.granted) g.push(m.origin); it().grant = g; return list(); }
     case 'plugins_install':
+      if (window.__hold) { window.__answer = () => reply({ type: 'plugins', ok: false, error: 'cancelled', cancelled: true }); return; }   // the native dialog stays open
       if (!st.policy.user_install) return list({ ok: false, error: 'installing plugins is switched off by the administrator' });
       st.items.push({ id: 'new.plugin', version: '1.0.0', name: { en: 'New plugin' }, publisher: 'P', document: 'none', network: [], grant: [], enabled: false, machine: false, sha256: 'c'.repeat(64), problem: null });
       return list({ installed: 'new.plugin' });
@@ -169,4 +170,21 @@ test('back, Escape and the language', async ({ page }) => {
   await expect(page.locator('#plg-list').getByRole('heading', { name: /Демо-плагин/ })).toBeVisible();
   await page.getByRole('button', { name: I18N.ru['plg.page.back'] }).click();
   await expect(page.locator('#home')).toBeVisible();
+});
+
+// Phase 7 re-check (found with the real native dialog): the 20 s "the application did not respond" timer must not run while the user has the file dialog open,
+// or a Cancel after 20 s leaves that error on the page.
+test('install from file: a dialog that stays open for more than 20 s does not turn into "did not respond"', async ({ page }) => {
+  const urls = await open(page);
+  void urls;
+  await nav(page).click();
+  await expect(page.locator('#plg-list')).toBeVisible();
+  await page.evaluate(() => { (window as any).__hold = true; });
+  await page.clock.install();   // from here on the page's timers are ours
+  await page.getByRole('button', { name: en['plg.page.install'] }).click();
+  await page.clock.runFor(25_000);
+  await page.evaluate(() => (window as any).__answer());   // Cancel in the dialog
+  await page.clock.runFor(100);
+  await expect(page.locator('#plg-msg')).not.toContainText(en['plg.page.silent']);
+  await expect(page.locator('#plg-msg')).toHaveText('');
 });

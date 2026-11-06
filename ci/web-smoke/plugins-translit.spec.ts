@@ -83,7 +83,7 @@ function same(a: Buffer, b: Buffer): boolean {
 }
 
 /** Open `bytes`, optionally turn tracking on, run the command, and return the docx saved through the bridge. */
-async function convert(page: Page, name: string, bytes: Buffer, id: string, tracked: boolean): Promise<Buffer> {
+async function convert(page: Page, name: string, bytes: Buffer, id: string, tracked: boolean, prep?: () => Promise<void>): Promise<Buffer> {
   const opened = await count(page, 'wordcraft:opened');
   await page.evaluate(([n, b]) => {
     const buf = new Uint8Array(b as number[]).buffer;
@@ -95,6 +95,7 @@ async function convert(page: Page, name: string, bytes: Buffer, id: string, trac
     await send(page, { type: 'wordcraft:run', id: 'review.trackChanges' });
     await waitCount(page, 'wordcraft:ran', ran + 1);
   }
+  if (prep) await prep();
   const ran = await count(page, 'wordcraft:ran');
   const results = await count(page, 'wordcraft:pluginResults');
   // a plugin command registers on a frame after `plugins`; retry the run until it is accepted
@@ -147,4 +148,41 @@ test('the plugin saves the same docx as the built-in command (both directions, t
   console.log(`WEB OUTPUT MATRIX: identical ${ok}, differing ${diffs.length}`);
   for (const d of diffs) console.log(`DIFF ${d}`);
   expect(diffs).toEqual([]);
+});
+
+// Phase 7 re-check (web selection and caret scopes). `wordcraft:run` carries no params, so the scope is `auto`: a non-collapsed selection converts the
+// selection only, a collapsed caret (at the start, or clicked into the middle of the text) converts the whole document. The plugin must save the same
+// docx as the built-in command under the same selection, and a selection must really be narrower than the document (the result differs from the document's).
+// (scope = selection with a collapsed caret, a no-op, is covered natively by plugin_matrix.rs; the editor bridge cannot send a parameter.)
+test('selection and caret scopes: the plugin saves the same docx as the built-in command', async ({ page }) => {
+  test.setTimeout(30 * 60_000);
+  page.on('pageerror', (e) => { throw e; });
+  await page.goto(base + '/host.html');
+  await waitCount(page, 'wordcraft:ready', 1);
+  const canvas = page.frameLocator('#ed').locator('canvas');
+  const select = async () => { await canvas.click({ position: { x: 400, y: 160 } }); await page.keyboard.press('Control+Home'); for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+End'); };
+  const caret = async () => { await canvas.click({ position: { x: 400, y: 160 } }); };
+  const diffs: string[] = [];
+  let ok = 0, narrower = 0;
+  for (const name of NAMES) {
+    const input = fs.readFileSync(path.join(FIXTURES, name));
+    for (const tracked of [false, true]) {
+      for (const [scope, prep] of [['selection', select], ['caret', caret]] as const) {
+        const a = await convert(page, name, input, 'tools.translitCyrl', tracked, prep);
+        const b = await convert(page, name, input, 'plugin.uz-translit.toCyrillic', tracked, prep);
+        if (same(a, b)) ok++; else diffs.push(`${name} to Cyrillic tracked=${tracked} scope=${scope}: ${a.length} vs ${b.length} bytes`);
+        if (scope === 'selection' && !tracked) {
+          const whole = await convert(page, name, input, 'tools.translitCyrl', false);
+          if (!same(a, whole)) narrower++;
+          const back = await convert(page, 'cyr.docx', a, 'tools.translitLatn', false, select);
+          const backP = await convert(page, 'cyr.docx', a, 'plugin.uz-translit.toLatin', false, select);
+          if (same(back, backP)) ok++; else diffs.push(`${name} back to Latin scope=selection: ${back.length} vs ${backP.length} bytes`);
+        }
+      }
+    }
+  }
+  console.log(`WEB SELECTION/CARET MATRIX: identical ${ok}, differing ${diffs.length}, selections narrower than the document in ${narrower} of ${NAMES.length} fixtures`);
+  for (const d of diffs) console.log(`DIFF ${d}`);
+  expect(diffs).toEqual([]);
+  expect(narrower, 'a selection must convert less than the whole document in at least one fixture').toBeGreaterThan(0);
 });

@@ -2,32 +2,37 @@
   "item": "M5-saveAs-refused",
   "pass": true,
   "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
-  "run": "2026-11-03T12:43:34.123Z",
+  "run": "2026-11-05T23:38:33.635Z",
   "details": {
     "ok": true,
-    "status": "Test plugin could not finish: plugin action refused: Command { id: \"file.saveAs\", why: \"command is not on the plugin allowlist\" }",
-    "audit_tail": [
+    "status": "Recheck commands could not finish: plugin action refused: Command { id: \"file.saveAs\", why: \"command is not on the plugin allowlist\" }",
+    "audit": [
       {
-        "plugin": "test.host",
+        "plugin": "test.recheck",
         "kind": "failed",
         "error": "plugin action refused: Command { id: \"file.saveAs\", why: \"command is not on the plugin allowlist\" }"
       }
     ],
     "commands_in_manifest": [
       "hello",
-      "net",
       "spin",
-      "grow",
-      "xss",
-      "edit",
       "deny",
-      "many"
+      "bad",
+      "link",
+      "chr",
+      "incl",
+      "tracked",
+      "vocab",
+      "accept",
+      "wall",
+      "overflow",
+      "ping",
+      "pong",
+      "fetches"
     ],
-    "document_unchanged_after_save": true,
-    "text": "Phone reading test Salom dunyo. Bu hujjat telefon ekranida oʻqish va tahrirlash qulayligini tekshirish uchun yozilgan sinov matni. Документ для проверки телефонного макета: текст переносится по ширине"
+    "document_unchanged_after_save": true
   },
   "screenshots": [
-    "M5-0-opened.png",
-    "M5-1-refused.png"
+    "recheck-M5.png"
   ]
 }

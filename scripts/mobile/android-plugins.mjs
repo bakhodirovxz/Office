@@ -3,8 +3,9 @@
 //   install   Plugins page: Install from file (the system picker) of a test package, enable, restart; the SHA-256 record in the app's private files
 //   disable   Plugins page: turn uz-translit off, restart: the host is no longer loaded
 //   cols      (WP10) M3 as an abort, and M5 (deny) and R1 (many) from the editor, with the document compared before and after; needs the test packages built with the current make-test-packages.py
+//   recheck   (Phase 7 re-check) M5 M8 M10 S1 S2 (deadline, fetch cap) F2 F5 F7a F7b with the extended fixture plugin; needs make-test-packages.py and make-protected.py output
 //   rows      the section 5.4 rows that apply to this container (M1 M2 M3 M4 M6 M7 M9 M11 + no network at all) with the WP5 test plugin
-// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|cols|all> [--pkgs <dir of make-test-packages.py output>] [--ev <evidence subdir, default p7-android>]
+// Usage: node scripts/mobile/android-plugins.mjs <translit|install|disable|rows|cols|recheck|all> [--pkgs <dir of make-test-packages.py output>] [--ev <evidence subdir, default p7-android>]
 // Evidence: a JSON and screenshots per item in docs/phase7/evidence/android/, recordings in $P6_DIR/evidence/p7-android/ (SHA lines printed for SHA256SUMS).
 import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
@@ -40,7 +41,7 @@ async function ws(url) {
   await new Promise((r, j) => { w.onopen = r; w.onerror = j; });
   const events = [];
   w.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && wait.has(d.id)) { wait.get(d.id)(d); wait.delete(d.id); } else if (d.method) events.push(d); };
-  const send = (method, params = {}, sessionId) => new Promise((r, j) => { const i = ++id; wait.set(i, (d) => (d.error ? j(new Error(d.error.message)) : r(d.result))); w.send(JSON.stringify({ id: i, method, params, ...(sessionId && { sessionId }) })); });
+  const send = (method, params = {}, sessionId) => new Promise((r, j) => { const i = ++id; const tm = setTimeout(() => { wait.delete(i); j(new Error(`CDP ${method}: no answer in 30 s (the page is paused while another app is on top)`)); }, 30000); wait.set(i, (d) => { clearTimeout(tm); return d.error ? j(new Error(d.error.message)) : r(d.result); }); w.send(JSON.stringify({ id: i, method, params, ...(sessionId && { sessionId }) })); });
   return { send, events, close: () => w.close(), ev: async (expression, sessionId) => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, sessionId)).result?.value };
 }
 async function webview() {
@@ -63,13 +64,13 @@ async function until(page, expr, ms = 60000) {
 const launch = async (extra = '') => { L.sh(S, 'am force-stop ' + PKG); L.sh(S, `am start ${extra} -n ${ACT}`); const p = await webview(); await until(p, "!!document.getElementById('nav-plugins')", 60000); return p; };
 const ready = (p) => until(p, '!!(window.PluginHost && PluginHost.last && PluginHost.last.plugins.some((x) => x.win))', 90000);
 
-async function mediaUri() {
+async function mediaUri(name = 'phone-ux.docx') {
   for (let i = 0; i < 10; i++) {
-    const m = /_id=(\d+), _display_name=phone-ux\.docx/.exec(L.sh(S, 'content query --uri content://media/external/downloads --projection _id:_display_name'));
+    const m = new RegExp(`_id=(\\d+), _display_name=${name.replace('.', '\\.')}`).exec(L.sh(S, 'content query --uri content://media/external/downloads --projection _id:_display_name'));
     if (m) return `content://media/external/downloads/${m[1]}`;
     await L.sleep(1000);
   }
-  throw new Error('phone-ux.docx is not in the media store');
+  throw new Error(`${name} is not in the media store`);
 }
 async function openFixture() {
   L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'pm clear ' + PKG); L.sh(S, 'rm -f ' + DOC);   // pm clear: no recovery document to ask about leaving
@@ -82,8 +83,8 @@ async function openFixture() {
   await L.sleep(8000);
   return p;
 }
-function docText(file) {
-  const f = path.join(BIG, file); L.adb(S, 'pull', DOC, f);
+function docText(file, remote = DOC) {
+  const f = path.join(BIG, file); L.adb(S, 'pull', remote, f);
   return execFileSync('python3', ['-X', 'utf8', '-I', '-c', 'import sys,zipfile,re;x=zipfile.ZipFile(sys.argv[1]).read("word/document.xml").decode("utf8");print(" ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>",x)))', f], { encoding: 'utf8' });
 }
 const runCmd = (p, id) => p.ev(`document.querySelector('#frames iframe:not([hidden])').contentWindow.postMessage({ type: 'wordcraft:run', id: '${id}' }, location.origin)`);
@@ -123,8 +124,17 @@ function tapNode(re) { return L.tapText(S, re); }
 // The system picker (DocumentsUI): Downloads, then the file. The Plugins page must be open.
 async function pickPackage(p, file) {
   await p.ev("document.getElementById('plg-install').click()");   /* the page's button moves when a message line is shown, and WebView text is not in the uiautomator tree */ await L.sleep(4000);
-  L.tap(S, 73, 194); await L.sleep(1500); tapNode(/^Downloads$/); await L.sleep(2500);
-  let hit = false; for (let i = 0; i < 6 && !hit; i++) { hit = tapNode(new RegExp(file.replace(/\./g, '\\.'))); if (!hit) { L.swipe(S, 540, 1900, 540, 900); await L.sleep(2000); } }   // a longer list: scroll
+  const want = new RegExp(file.replace(/\./g, '\\.'));
+  let hit = tapNode(want);   // the picker opens where it was last (Downloads after the first install): the file may be on screen already, and the drawer would be toggled shut
+  if (!hit) {   // the drawer: a slow picker may not be up yet, and the closed drawer's items are in the tree off screen, so check that the Downloads folder really opened
+    for (let k = 0; k < 5; k++) {
+      L.tap(S, 73, 194); await L.sleep(2000); tapNode(/^Downloads$/); await L.sleep(2500);
+      L.sh(S, 'uiautomator dump /sdcard/ui.xml >/dev/null'); if (/Files in Downloads/.test(L.sh(S, 'cat /sdcard/ui.xml'))) break;
+    }
+  }
+  for (let i = 0; i < 4 && !hit; i++) { L.swipe(S, 540, 900, 540, 1900); await L.sleep(800); }   // back to the top: the list may have been left scrolled
+  hit = hit || tapNode(want);
+  for (let i = 0; i < 8 && !hit; i++) { hit = tapNode(want); if (!hit) { L.swipe(S, 540, 1900, 540, 900); await L.sleep(2000); } }   // a longer list: scroll
   await L.sleep(4000);
   return hit;
 }
@@ -301,11 +311,118 @@ async function cols() {
   });
 }
 
+// ---- Phase 7 re-check: the Android cells that were gaps (M5 again, M8, M10, S1, S2, F2, F5 wording, F7a, F7b) ----
+async function recheck() {
+  pushPackages(); await L.sleep(5000);
+  await record('recheck', async () => {
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'pm clear ' + PKG);
+    let p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    await pluginsPage(p);
+    for (const [id, name] of [['test.recheck', 'Recheck commands'], ['test.nonet', 'No network']]) {
+      let hit = false;
+      for (let t = 0; t < 3 && !hit; t++) { tapNode(/^Wait$/); hit = await pickPackage(p, `${id}-1.0.0.zip`); log('install', id, 'try', t, hit, await p.ev("document.getElementById('plg-msg').textContent").catch(() => 'n/a (picker still open)')); shot(`recheck-install-${id}-${t}`); }
+      await enableRow(p, name); await L.sleep(1500);
+    }
+    p = await launch(); await until(p, '!!(window.PluginHost && PluginHost.last)');
+    log('plugins loaded', await p.ev('PluginHost.last.plugins.map((x) => x.d.id)'));
+    const cmds = await p.ev("PluginHost.last.plugins.find((x) => x.d.id === 'test.recheck').m.command.map((c) => c.id)");
+    const orig = execFileSync('python3', ['-X', 'utf8', '-I', '-c', 'import sys,zipfile,re;x=zipfile.ZipFile(sys.argv[1]).read("word/document.xml").decode("utf8");print(" ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>",x)))', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx')], { encoding: 'utf8' });
+    L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'rm -f ' + DOC);
+    L.adb(S, 'push', path.join(ROOT, 'scripts/mobile/fixtures/phone-ux.docx'), DOC);
+    L.sh(S, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${DOC}`); await L.sleep(5000);
+    L.sh(S, `am start -a android.intent.action.VIEW -d ${await mediaUri()} -t ${MIME} --grant-read-uri-permission --grant-write-uri-permission -n ${ACT}`);
+    p = await webview();
+    if (!(await ready(p))) throw new Error('the editor did not become ready with the plugin');
+    await L.sleep(8000);
+    const say = () => p.ev("document.getElementById('ed-status').textContent");
+    const aud = async (n = 0) => JSON.parse(await p.ev(`JSON.stringify(PluginHost.last.audit.slice(${n}))`));
+    const shots = [shot('recheck-0-opened')];
+    // a command sent while the editor still holds the previous invocation's lock is refused ("protected (read only)"): send it again until the plugin's own answer shows
+    const tryCmd = async (cmd, re, plugin = 'test.recheck') => {
+      const n = (await aud()).length; let ok = false, s = '';
+      for (let i = 0; i < 20 && !ok; i++) { await runCmd(p, `plugin.${plugin}.${cmd}`); await L.sleep(1500); s = await say(); ok = re.test(s); }
+      return { ok, status: s, audit: await aud(n) };
+    };
+    const sameDoc = () => { const t = docText('recheck-now.docx'); return t.trim() === orig.trim(); };
+    const results = {};
+    // M5 (again), M8, F2, F7a, S1: each ends the invocation with "could not finish", the audit holds one `failed`
+    for (const [row, plugin, cmd, re] of [['M5', 'test.recheck', 'deny', /could not finish.*refused/], ['M8', 'test.recheck', 'bad', /could not finish.*encoded data/], ['S1', 'test.recheck', 'overflow', /could not finish/],
+      ['F2-link', 'test.recheck', 'link', /could not finish/], ['F2-chr', 'test.recheck', 'chr', /could not finish/], ['F2-incl', 'test.recheck', 'incl', /could not finish/], ['F2-tracked', 'test.recheck', 'tracked', /could not finish/],
+      ['F7a-vocab', 'test.recheck', 'vocab', /could not finish/], ['F7a-accept', 'test.recheck', 'accept', /could not finish/], ['F7a-wall', 'test.recheck', 'wall', /could not finish/]]) {
+      results[row] = await tryCmd(cmd, re, plugin); shots.push(shot(`recheck-${row}`));
+    }
+    // M10: a selection change reaches the plugin as an event, the answer is an edit; refused, nothing reaches the document
+    const n10 = (await aud()).length; let ev10 = [];
+    for (let i = 0; i < 12 && !ev10.some((a) => a.kind === 'failed' && /event may only run ui actions/.test(a.error || '')); i++) { L.tap(S, 300 + (i % 4) * 150, 700 + (i % 3) * 120); await L.sleep(1500); ev10 = await aud(n10); }
+    shots.push(shot('recheck-M10'));
+    // S2: the 8-fetch cap (Android grants no origin: each fetch is denied and counted), then the 10 s invocation deadline
+    const nF = (await aud()).length;
+    await runCmd(p, 'plugin.test.recheck.fetches');
+    for (let i = 0; i < 40 && !(await aud(nF)).some((a) => /more than 8 fetches/.test(a.error || '')); i++) await L.sleep(1500);
+    results['S2-fetches'] = { audit: await aud(nF) };
+    // the 10 s invocation deadline: a round must be under the 5 s budget and over 10 s / 16 rounds, whatever the machine: ping does a little work per round, pong more; the first that fits counts
+    const resumes = () => p.ev(`PluginHost.last.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
+    const tried = []; let fits = false, took = 0, rounds = 0;
+    for (const cmd of ['ping', 'pong']) {
+      const r0 = await resumes(), n2 = (await aud()).length, t0 = Date.now();
+      await runCmd(p, `plugin.test.recheck.${cmd}`);
+      let end; for (let i = 0; i < 90 && !end; i++) { await L.sleep(1000); end = (await aud(n2))[0]; }
+      took = Date.now() - t0; rounds = (await resumes()) - r0;
+      tried.push(`${cmd}: ${end ? end.kind + ' ' + (end.error || '') : 'nothing'} after ${took} ms, ${rounds} resume rounds`);
+      if (end && end.kind === 'stopped' && rounds >= 2 && took > 9000) { fits = true; break; }
+      await L.sleep(3000);
+    }
+    shots.push(shot('recheck-S2'));
+    await L.sleep(2000);
+    // F5: a command of another plugin while one is pending: the busy reason, then the first one's timeout leaves the document unlocked
+    const f5n = (await aud()).length;
+    await runCmd(p, 'plugin.test.recheck.spin'); await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(1500);
+    const busy = await say(); shots.push(shot('recheck-F5-busy'));
+    let f5stopped = false; for (let i = 0; i < 30 && !f5stopped; i++) { await L.sleep(1000); f5stopped = (await aud(f5n)).some((a) => a.kind === 'stopped'); }
+    await L.sleep(1500);
+    await runCmd(p, 'plugin.test.nonet.hello'); await L.sleep(2500);
+    const afterBusy = await say();
+    await save('recheck'); const same = sameDoc();
+    for (const row of ['M5', 'M8', 'S1', 'F2-link', 'F2-chr', 'F2-incl', 'F2-tracked', 'F7a-vocab', 'F7a-accept', 'F7a-wall']) {
+      const r = results[row];
+      const name = { M5: 'M5-saveAs-refused', M8: 'M8-malformed-answer', S1: 'S1-recursion' }[row] ?? row;
+      item(name, r.ok && r.audit.length === 1 && r.audit[0].kind === 'failed' && same && (row !== 'S1' || /stack|recursion/i.test(r.audit[0].error)), { ...r, commands_in_manifest: row === 'M5' ? cmds : undefined, document_unchanged_after_save: same }, [shots.find((x) => x.includes(row))].filter(Boolean));
+    }
+    item('M10-event-edit-refused', ev10.some((a) => a.kind === 'failed' && /event may only run ui actions/.test(a.error || '')) && same, { audit: ev10, document_unchanged_after_save: same, note: 'the event is selectionChanged from a tap in the document; the fixture answers it with text.insert' }, ['recheck-M10.png']);
+    const f = results['S2-fetches'];
+    item('S2-fetch-cap', f.audit.filter((a) => a.kind === 'network.denied').length === 8 && f.audit.some((a) => a.kind === 'failed' && /more than 8 fetches/.test(a.error || '')) && same, { audit: f.audit, note: 'Android grants no origin, so each of the 8 fetches is denied (and counted); the 9th ends the invocation' });
+    item('S2-deadline', fits && same, { tried, stopped_after_ms: took, resume_rounds: rounds, note: 'a round is under the 5 s budget and over 10 s / 16 rounds; only the 10 s invocation deadline can stop the chain' }, ['recheck-S2.png']);
+    item('F5-busy', /another plugin is still running/i.test(busy) && f5stopped && same, { status_during: busy, first_plugin_stopped: f5stopped, status_after_next_command: afterBusy, document_unchanged_after_save: same }, ['recheck-F5-busy.png']);
+
+    // F7b: a document with its own protection: the plugin is not started (comments: the engine's own gate says so; tracked changes: the bridge does)
+    for (const [file, mode, why] of [['protected.docx', 'comments', /only comments are allowed/], ['protected-tracked.docx', 'trackedChanges', /document is protected/i]]) {
+      const remote = '/sdcard/Download/' + file;
+      L.sh(S, 'am force-stop ' + PKG); L.sh(S, 'rm -f ' + remote);
+      L.adb(S, 'push', path.join(PKGS, file), remote);
+      L.sh(S, `am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${remote}`); await L.sleep(5000);
+      L.sh(S, `am start -a android.intent.action.VIEW -d ${await mediaUri(file)} -t ${MIME} --grant-read-uri-permission --grant-write-uri-permission -n ${ACT}`);
+      p = await webview();
+      if (!(await ready(p))) throw new Error('the editor did not become ready with the protected document');
+      await L.sleep(8000);
+      const l0 = await p.ev('PluginHost.last.logs.length'), a0 = (await aud()).length;
+      let st = '', refusedOk = false;
+      for (let i = 0; i < 8 && !refusedOk; i++) { await runCmd(p, 'plugin.test.recheck.hello'); await L.sleep(1500); st = await say(); refusedOk = why.test(st); }
+      const l1 = await p.ev('PluginHost.last.logs.length'), a1 = (await aud()).length;
+      const shotP = shot(`recheck-F7b-${mode}`);
+      const after = path.join(BIG, file); L.adb(S, 'pull', remote, after);
+      const unchanged = fs.readFileSync(after).equals(fs.readFileSync(path.join(PKGS, file)));
+      item(`F7b-${mode}`, refusedOk && l1 === l0 && a1 === a0 && unchanged, { status: st, plugin_log_entries_before_after: [l0, l1], audit_entries_before_after: [a0, a1], file_on_device_unchanged: unchanged, note: `the page was never asked to run the plugin; documentProtection edit="${mode}" (scripts/mobile/fixtures/make-protected.py)` }, [shotP]);
+    }
+  });
+}
+
 if (what === 'translit' || what === 'all') await translit();
 if (what === 'install' || what === 'all') await install();
 if (what === 'rows' || what === 'all') await rows();
 if (what === 'disable' || what === 'all') await disable();
 if (what === 'cols') await cols();
+if (what === 'recheck') await recheck();
 log('SHA lines:\n' + sums.join('\n'));
 fs.appendFileSync(path.join(BIG, 'SHA256SUMS.part'), sums.join('\n') + '\n');
 process.exit(0);   // the CDP sockets keep node alive

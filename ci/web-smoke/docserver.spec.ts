@@ -34,6 +34,7 @@ let DS: string, HOST: string;
 const BM_PY = path.join(ROOT, 'scripts/hrm-bookmarks/hrm_bookmarks.py');
 const PYTHON = process.env.PYTHON ?? 'python';
 const BM_DOCS = ['decree', 'letter', 'report'];
+const PROTECTED = [path.join(ROOT, 'scripts/mobile/fixtures/protected.docx'), path.join(ROOT, 'scripts/mobile/fixtures/protected-tracked.docx')];   // files/6 and 7: a document with its own protection (Phase 7 F7b)
 let bmDir: string;
 
 const sessions = () => {
@@ -82,7 +83,7 @@ test.beforeAll(async () => {
   // the fake backend first: it generates the secret the provider entry of the server must hold
   bmDir = path.join(dir, 'bm');
   execFileSync(PYTHON, ['-I', BM_PY, '--gen', bmDir]);
-  hrm = spawn(HRM_BIN, [DOCX, XLSX, ...BM_DOCS.map((n) => path.join(bmDir, n + '.docx'))], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
+  hrm = spawn(HRM_BIN, [DOCX, XLSX, ...BM_DOCS.map((n) => path.join(bmDir, n + '.docx')), ...PROTECTED], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
   const secret = await new Promise<string>((ok, bad) => {
     let err = '';
     hrm.stderr!.on('data', (d) => { err += d; const m = /\(secret ([0-9a-f]+),/.exec(err); if (m) ok(m[1]); });
@@ -835,6 +836,125 @@ test('plugins in the wrapper: M1-M7, M9, M11, R1 are blocked inside the wrapper;
     await expect.poll(() => serverAudit().map((l) => `${l.plugin}/${l.outcome}`).sort(), { timeout: 15_000 }).toEqual(['wrp-nonet/network.refused', 'wrp-open/network', 'wrp-test/network.denied']);
     expect(serverAudit().every((l) => l.source === 'client' && l.origin === ORG)).toBe(true);
     await ctx.close();
+  } finally {
+    ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+    provLines = [];
+    await startDs([]);
+  }
+});
+
+// Phase 7 re-check, wrapper column of docs/phase7/malicious.md: M2b, M8, M10, S1, S2, F2, F5, F7a, F7b inside the wrapper (the real editor in the wrapper's
+// frame, the fixture plugins from a provider entry). F6 is Android's install path: n/a here (a changed package in the server's directory is refused,
+// `services/docserver/tests/plugins.rs::a_changed_package_is_refused_and_audited`).
+test('plugins in the wrapper (re-check): M2b, M8, M10, S1, S2, F2, F5, F7 are blocked inside the wrapper', async () => {
+  const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
+  const CMDS = ['hello', 'net', 'spin', 'bad', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'fetches'];
+  const ORG = 'https://example.org';
+  const manifest = (id: string, net: string[]) => `id = "${id}"\nversion = "1.0.0"\napi = 1\napps = ["docs"]\nevents = ["selectionChanged"]\npublisher = "Test publisher"\nname.en = "Plugin ${id}"\n\n[permissions]\ndocument = "write"\nnetwork = ${JSON.stringify(net)}\nmemory_mb = 2\n\n`
+    + CMDS.map((c) => `[[command]]\nid = "${c}"\nlabel.en = "Cmd ${c}"\nreads = ["none"]\nparams = {}\n\n`).join('') + '[[panel]]\nid = "p"\ntitle.en = "Panel"\n';
+  const plugs = [['rc-a', 'plugin.wasm', [ORG], [ORG]], ['rc-b', 'plugin.wasm', [], []], ['rc-own', 'own-memory.wasm', [], []], ['rc-gc', 'gc-type.wasm', [], []]] as const;
+  const pdir = path.join(dir, 'plugins-rc');
+  const entries = plugs.map(([id, wasm, net, grant]) => {
+    const d = path.join(pdir, id, '1.0.0'); fs.mkdirSync(d, { recursive: true });
+    const w = fs.readFileSync(path.join(FIX, wasm));
+    fs.writeFileSync(path.join(d, 'plugin.toml'), manifest(id, [...net])); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
+    return `{ id = "${id}", version = "1.0.0", sha256 = "${crypto.createHash('sha256').update(w).digest('hex')}", grant = ${JSON.stringify([...grant])} }`;
+  });
+  ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+  provLines = [`plugins = [${entries.join(', ')}]`];
+  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`]);
+  try {
+    const { ctx, page } = await open();
+    await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const w = wrapperOf(page);
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+    await expect(editor.locator('canvas')).toBeVisible();
+    const say = () => w.evaluate(() => document.querySelector('body > p')!.textContent ?? '');
+    const aud = () => w.evaluate(() => (window as any).PluginHost.last.audit as { plugin: string; kind: string; origin?: string; error?: string }[]);
+    const send = (id: string, cmd: string) => w.evaluate(([i, c]) => document.querySelector('iframe')!.contentWindow!.postMessage({ type: 'wordcraft:run', id: `plugin.${i}.${c}` }, location.origin), [id, cmd]);
+    // a command sent while the editor still holds the previous invocation's lock is refused ("protected (read only)") without effect: send it again
+    const run = async (id: string, cmd: string) => {
+      for (let i = 0; i < 25; i++) {
+        await w.evaluate(() => { document.querySelector('body > p')!.textContent = ''; });
+        await send(id, cmd); await page.waitForTimeout(1200);
+        if (!/read only/.test(await say())) return;
+      }
+    };
+    await expect.poll(() => w.evaluate(() => (window as any).PluginHost?.last?.plugins.map((p: any) => p.d.id).sort()), { timeout: 30_000 }).toEqual(plugs.map((p) => p[0]).sort());
+    await expect.poll(async () => { await run('rc-a', 'hello'); await page.waitForTimeout(700); return (await say()).includes('hello done'); }, { timeout: 90_000 }).toBe(true);
+    const from = async (id: string, cmd: string, re: RegExp) => {
+      const n = (await aud()).length; await run(id, cmd);
+      await expect.poll(async () => re.test(await say()), { timeout: 30_000, message: `${id}.${cmd}` }).toBe(true).catch(async (e) => { throw new Error(`${e.message} status=${await say()} audit=${JSON.stringify((await aud()).slice(n))}`); });
+      return (await aud()).slice(n);
+    };
+    // M2b: a second memory the module defines itself, and a wasm GC type: the load is refused in the Worker
+    expect((await from('rc-own', 'hello', /defines its own memory/)).map((a) => a.kind)).toEqual(['failed']);
+    expect((await from('rc-gc', 'hello', /type form that is not allowed/)).map((a) => a.kind)).toEqual(['failed']);
+    // M8: an answer that is not a message; F2 and F7a: the allowlist refuses; S1: unbounded recursion traps
+    expect((await from('rc-a', 'bad', /encoded data/)).map((a) => a.kind)).toEqual(['failed']);
+    for (const c of ['link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall']) expect((await from('rc-a', c, /could not finish/)).map((a) => a.kind), c).toEqual(['failed']);
+    const s1 = await from('rc-a', 'overflow', /could not finish/);
+    expect(s1.map((a) => a.kind)).toEqual(['failed']);
+    expect(s1[0].error).toMatch(/stack|recursion/i);
+    // M10: a selection change reaches the plugin as an event; its edit answer is refused and nothing reaches the document
+    const n10 = (await aud()).length;
+    await expect.poll(async () => { await editor.locator('canvas').first().click({ position: { x: 250 + Math.random() * 300, y: 200 } }); await page.waitForTimeout(600); return (await aud()).slice(n10).some((a) => a.kind === 'failed' && /event may only run ui actions/.test(a.error ?? '')); }, { timeout: 60_000 }).toBe(true);
+    // S2: eight fetches are allowed, the ninth ends the invocation (the wrapper's CSP stops each request, the host counts them)
+    const n8 = (await aud()).length;
+    await run('rc-a', 'fetches');
+    await expect.poll(async () => (await aud()).slice(n8).some((a) => a.kind === 'failed' && /more than 8 fetches/.test(a.error ?? '')), { timeout: 30_000 }).toBe(true);
+    expect((await aud()).slice(n8).filter((a) => a.kind === 'network' && a.plugin === 'rc-a').length).toBe(8);
+    // S2: a chain of rounds is stopped at the 10 s invocation deadline. A round must be shorter than the 5 s budget and longer than 10 s / 16 rounds, whatever the PC:
+    // ping does a little work per round, pong more; the first that fits counts.
+    const resumes = () => w.evaluate(() => (window as any).PluginHost.last.logs.filter((l: any) => l.text.includes('"kind":"resume"')).length);
+    const tried: string[] = [];
+    let fits = false;
+    for (const cmd of ['ping', 'pong']) {
+      const n2 = (await aud()).length, r0 = await resumes(), t0 = Date.now();
+      await run('rc-a', cmd);
+      await expect.poll(async () => (await aud()).length, { timeout: 60_000 }).toBeGreaterThan(n2);
+      const end = (await aud()).at(-1)!, took = Date.now() - t0, rounds = (await resumes()) - r0;
+      tried.push(`${cmd}: ${end.kind} ${end.error ?? ''} after ${took} ms, ${rounds} resume rounds`);
+      if (end.kind === 'stopped' && rounds >= 2 && took > 9000) { fits = true; break; }
+      await page.waitForTimeout(2500);
+    }
+    console.log('S2 deadline: ' + tried.join(' | '));
+    expect(fits, tried.join(' | ')).toBe(true);
+    // F5: while rc-a spins (its call is pending) a command of rc-b is refused with the busy reason, and the lock is gone after rc-a's timeout
+    await page.waitForTimeout(1500);
+    const n5 = (await aud()).length;
+    await send('rc-a', 'spin');
+    await page.waitForTimeout(800);
+    await w.evaluate(() => { document.querySelector('body > p')!.textContent = ''; });
+    await send('rc-b', 'hello');
+    await expect.poll(say, { timeout: 15_000 }).toMatch(/another plugin is still running/);
+    await expect.poll(async () => (await aud()).slice(n5).some((a) => a.kind === 'stopped'), { timeout: 60_000 }).toBe(true);
+    await expect.poll(async () => { await run('rc-b', 'hello'); await page.waitForTimeout(600); return (await say()).includes('hello done'); }, { timeout: 60_000 }).toBe(true);
+    // nothing above changed the document's text
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => state(page), { timeout: 30_000 }).toBe('saved');
+    const [sdir] = sessions();
+    const text = (b: Buffer) => [...documentXml(b).matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map((m) => m[1]).join('');
+    expect(text(fs.readFileSync(path.join(sdir, 'v2.bin')))).toBe(text(fs.readFileSync(path.join(sdir, 'v1.bin'))));
+    await ctx.close();
+
+    // F7b: a document with its own protection (files/6 comments, files/7 tracked changes): the plugin is not started
+    for (const [id, why] of [[6, /only comments are allowed/], [7, /document is protected/]] as const) {
+      const b = await open();
+      await b.page.goto(`${HOST}/host?kind=files&id=${id}&lang=en`);
+      await expect.poll(() => state(b.page), { timeout: 90_000 }).toBe('ready');
+      const w2 = wrapperOf(b.page);
+      await expect.poll(() => w2.evaluate(() => (window as any).PluginHost?.last?.plugins.length), { timeout: 30_000 }).toBe(4);
+      const l0 = await w2.evaluate(() => (window as any).PluginHost.last.logs.length);
+      await expect.poll(async () => {
+        await w2.evaluate(() => { document.querySelector('body > p')!.textContent = ''; document.querySelector('iframe')!.contentWindow!.postMessage({ type: 'wordcraft:run', id: 'plugin.rc-b.hello' }, location.origin); });
+        await b.page.waitForTimeout(1000);
+        return why.test(await w2.evaluate(() => document.querySelector('body > p')!.textContent ?? ''));
+      }, { timeout: 60_000, message: `files/${id}` }).toBe(true);
+      expect(await w2.evaluate(() => (window as any).PluginHost.last.logs.length)).toBe(l0);   // the plugin was never called
+      await b.ctx.close();
+    }
   } finally {
     ds.kill(); await new Promise((ok) => ds.once('exit', ok));
     provLines = [];

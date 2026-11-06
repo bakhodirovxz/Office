@@ -10,7 +10,7 @@
   const lang = () => document.documentElement.lang;
   const t = (k, p = {}) => String(((S.i18n || {})[lang()] || {})[k] ?? ((S.i18n || {}).en || {})[k] ?? k).replace(/\{(\w+)\}/g, (m, n) => p[n] ?? m);
   const name = (n) => String((n && (n[lang()] || n.en)) || '');
-  const send = (m) => { clearTimeout(S.tm); S.tm = setTimeout(() => { S.bad = true; S.msg = t('plg.page.silent'); render(); }, 20000); (window.ipc || { postMessage: (j) => SuiteHost.plugins(j) }).postMessage(JSON.stringify(m)); };
+  const send = (m) => { clearTimeout(S.tm); S.tm = m.type === 'plugins_install' ? 0 : setTimeout(() => { S.bad = true; S.msg = t('plg.page.silent'); render(); }, 20000);  /* the install dialog is the user's pace: no timer */ (window.ipc || { postMessage: (j) => SuiteHost.plugins(j) }).postMessage(JSON.stringify(m)); };
 
   function row(it, i, pol) {
     const id = (k, n = '') => `plg-${k}-${i}${n}`;

@@ -4,3 +4,4 @@ bbdbbd1950f5aa96ec6557d57cdfbb205f2b55b6a1856457519d0721f5e0fcc0  android/instal
 59ab9ca7ffa3000df15e26f6e59998dfcbcdc995a409b8e2dfd31e67256ce01d  android/rows.mp4  (2026-11-03, 230966 bytes, E:/office-target/p7-evidence/evidence/p7-android/)
 7dd3435f9fc19ca52094060084c3e6bbddc79d1cd3d0cd8b2d2431a8d9c79dc7  android/columns.mp4  (2026-11-03, 6258736 bytes, E:/office-target/p7-evidence/evidence/p7-columns/; M3 abort, M5, F5, R1, F6)
 134b1bd5dca96327f59e5a5b45e049170f99624a878ca82d81e3ee1dc626264c  android/rows.mp4  (2026-11-03, 1814288 bytes, E:/office-target/p7-evidence/evidence/p7-columns/; final rows pass, M2b gc-type install; earlier partial runs not kept)
+eb16c18442cdb9459ee65ae6cee2cc2c874f78ca8e82dececd112cadce5f0b9c  android/recheck.mp4  (2026-11-05, 3768990 bytes, E:/office-target/p7-recheck/evidence/p7-recheck/; M5, M8, M10, S1, S2 deadline and fetch cap, F2, F5, F7a, F7b on the emulator, the APK of p7-recheck with the rebuilt docs web)
