@@ -1442,6 +1442,22 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   recommended-handlers filter, `AppActivate` check, tracked PDF fixture. Test MSI (not installed) `E:\office-target\p4-msi-test\`,
   SHA-256 `DEC278B6...A887`. Not run: install, upgrade, the msi-test changes.
 
+### Phase 4 fix: the Docs/Sheets window goes dark for a moment (owner MSI test, 2026-11-06; branch `p4-flicker`)
+- **Cause.** All four editors return from `ui()` without drawing while new fonts are pending (named font families would
+  panic), and eframe presents that pass in its default clear colour (12, 12, 12): Docs two frames at start, Sheets one at start
+  and one after every font rebind (font scan done; each new style that adds a font name, e.g. font, bold, fill), Slides and PDF
+  one at start. Not the renderer: DX12 on the UHD 630, no swapchain recreation, no window-mode change found. Fix: the gates call
+  `ctx.request_discard` (egui redoes the pass at once with the fonts active): wordcraft/0140, gridcraft/0156, deckcraft/0156,
+  pdfcraft/0121. Tests: wordcraft and gridcraft ui-egui `tests/no_blank_frames.rs` fail before (empty first frame; 1 shape after
+  a font change) and pass after; gridcraft-ui-egui suite 726 pass, 1 quarantined fail; wordcraft-ui-egui 731 pass, 14
+  quarantined fails plus `recovery_restore_uses_save_changes...` failing once under the parallel suite (passes alone 3 of 3).
+- **Measured** (PrintWindow capture of the window, about 25 grabs/s, the PC locked, CPU busy with other builds; fixtures only):
+  continuous near-black window after it is shown, before -> after: Docs 2.0-5.7 s (6 runs) -> 0 (6), Sheets 0.1-4.9 s (4) -> 0
+  (3), Slides 0.2-0.4 s (3) -> 0 (3), PDF 0-14.6 s (5) -> 0 (5). Not seen: a mid-session dark frame on screen, before or after
+  (30 s runs with 100-177 typed/clicked/font inputs); the test is the evidence there. Open: right after the window is shown
+  the capture sees one black grab and then stalls 1.7-2.4 s in 3 of 6 Docs runs, while the app answers frames every ~0.1 s
+  (control port): the screen in that gap is unmeasured; whole-screen effects and other GPUs not checked.
+
 ## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
 - Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
   font's maximum digit width plus 5 px padding, rounded up to 8 px. Digit width: Times New Roman 0.5 em (12 pt = 16 px gives 8 px);
