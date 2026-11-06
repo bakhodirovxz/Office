@@ -1,0 +1,101 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: no empty (dark) frame while new fonts activate (start, font rebind)
+
+SheetApp::ui draws nothing while new fonts are pending: at start (`fonts_ready`) and on the frame after `logic` rebinds
+the workbook's fonts (`fonts_rebind`), which happens when the background font scan finishes and whenever a new style
+adds a font name to the workbook's list (font, bold, fill, number format...). eframe presents such a frame with its
+default clear colour, near-black (12, 12, 12): the window went dark for a frame, and at start until the first full frame
+(owner, Phase 4 MSI test: "the screen goes dark and comes back"; 4.9 s at start on the Intel UHD 630 test PC under load).
+The gate now calls `request_discard`, so egui redoes the pass at once with the fonts active and no empty frame is
+presented. tests/no_blank_frames.rs: every frame paints the interface, at start and after font changes.
+---
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index bc7dc51..a662a56 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -281,7 +281,7 @@ pub struct SheetApp {
+     /// The (doc uid, revision) `fonts_bound` was computed for, so the style table is walked only
+     /// when the workbook changes.
+     fonts_seen: (u64, u64),
+-    /// Set while a font-set change is pending activation: skip this frame's paint, like the
++    /// Set while a font-set change is pending activation: redo this pass (`request_discard`), like the
+     /// startup `fonts_ready` gate (egui applies new definitions at the next pass).
+     fonts_rebind: bool,
+     /// Han face order the installed fonts were built with; a language switch rebuilds the fonts
+@@ -1169,6 +1169,9 @@ impl SheetApp {
+         let ctx = ui.ctx().clone();
+         self.poll_printing(&ctx);
+         if !self.fonts_ready || self.fonts_rebind {
++            // office overlay (patches/gridcraft/0156): redo the pass with the new fonts active instead of presenting this empty
++            // one, which shows eframe's near-black clear colour for a frame (owner: the window goes dark for a moment).
++            ctx.request_discard("fonts pending");
+             ctx.request_repaint();
+             return;
+         }
+diff --git a/crates/ui-egui/tests/no_blank_frames.rs b/crates/ui-egui/tests/no_blank_frames.rs
+new file mode 100644
+index 0000000..274c177
+--- /dev/null
++++ b/crates/ui-egui/tests/no_blank_frames.rs
+@@ -0,0 +1,58 @@
++//! office overlay (patches/gridcraft/0156): while new fonts activate, `SheetApp::ui` draws nothing and asks egui to redo
++//! the pass, so no frame reaches the screen empty. An empty frame shows eframe's near-black clear colour: the window went
++//! dark at start and for a frame after formatting that changed the workbook's fonts (owner, Phase 4 MSI test).
++
++use gridcraft_engine::Session;
++use gridcraft_ui_egui::SheetApp;
++use serde_json::json;
++
++/// An empty frame has at most the test harness's own background shape; the interface is hundreds.
++const EMPTY: usize = 10;
++
++fn new_app() -> SheetApp {
++    // The font catalogue is ready, so `logic` binds the workbook's fonts (the rebind path) from the first frame on.
++    gridcraft_ui_egui::fonts::catalog();
++    let mut session = Session::new();
++    session.new_workbook();
++    SheetApp::new(session, Default::default())
++}
++
++#[test]
++fn the_first_frames_paint_the_interface() {
++    // eframe's frames, from the very first one (a kittest harness runs frames before a test sees them).
++    let ctx = egui::Context::default();
++    let mut app = new_app();
++    for frame in 0..3 {
++        let input = egui::RawInput {
++            screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 800.0))),
++            time: Some(f64::from(frame) / 60.0),
++            ..Default::default()
++        };
++        let mut out = ctx.run_ui(input, |ui| {
++            app.logic(ui.ctx());
++            app.ui(ui);
++        });
++        out.textures_delta.clear(); // no renderer here
++        assert!(out.shapes.len() > EMPTY, "frame {frame}: {} shapes, the window would show the clear colour", out.shapes.len());
++    }
++}
++
++#[test]
++fn no_frame_is_presented_empty_while_fonts_change() {
++    let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_ui_state(
++        |ui, app: &mut SheetApp| {
++            app.logic(ui.ctx());
++            app.ui(ui);
++        },
++        new_app(),
++    );
++    let painted = |h: &egui_kittest::Harness<'static, SheetApp>| h.output().shapes.len();
++    // Each new style adds a font name to the workbook's list, which rebinds the font set.
++    for name in ["Georgia", "Courier New", "Probe Font", "Georgia"] {
++        h.state_mut().run("home.fontName", json!({ "name": name })).unwrap();
++        for step in 0..3 {
++            h.step();
++            assert!(painted(&h) > EMPTY, "after font {name}, frame {step}: {} shapes", painted(&h));
++        }
++    }
++}
