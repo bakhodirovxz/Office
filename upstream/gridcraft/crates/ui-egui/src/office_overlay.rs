@@ -181,5 +181,5 @@ pub fn set_plugin_menu(menu: PluginMenu) {
 
 /// The Plugins menu in the current interface language (empty without plugins).
 pub fn plugin_menu() -> Vec<(String, Vec<(String, &'static str)>)> {
-    PLUGIN_MENU.get().map(|f| f(&LANG_CODE.get())).unwrap_or_default()
+    PLUGIN_MENU.get().map(|f| f(LANG_CODE.get())).unwrap_or_default()
 }
