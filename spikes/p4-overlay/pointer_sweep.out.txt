@@ -1,0 +1,12 @@
+x=60 y=0: Default
+x=60 y=24: Text
+x=60 y=36: Default
+x=60 y=192: Text
+x=60 y=870: Default
+x=400 y=0: Default
+x=400 y=174: ResizeHorizontal
+x=400 y=192: Text
+x=400 y=306: Default
+x=720 y=0: Default
+x=720 y=192: Text
+x=720 y=876: Default

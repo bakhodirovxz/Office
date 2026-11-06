@@ -1,0 +1,13 @@
+[package]
+name = "dx12-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+# Throwaway spike (p4-overlay): times each step of the DX12 adapter probe the desktop apps run at start (graphics.rs).
+[dependencies]
+wgpu = { version = "=30.0.1", default-features = false, features = ["dx12", "wgsl"] }
+pollster = "0.4"
+
+[workspace]

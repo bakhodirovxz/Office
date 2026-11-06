@@ -1459,6 +1459,17 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (30 s runs with 100-177 typed/clicked/font inputs); the test is the evidence there. Open: right after the window is shown
   the capture sees one black grab and then stalls 1.7-2.4 s in 3 of 6 Docs runs, while the app answers frames every ~0.1 s
   (control port): the screen in that gap is unmeasured; whole-screen effects and other GPUs not checked.
+- **Follow-up (branch `p4-overlay`, 2026-11-06): the whole SCREEN goes dark, Docs/Sheets only; white I-beam everywhere, also over
+  the ribbon.** Not settled; it needs the owner at an unlocked desktop. Measured on the locked PC: MPO is on (dxdiag "MPO
+  MaxPlanes 3", RGB/BGRA8 formats; no `OverlayTestMode` value), `CheckHardwareCompositionSupport` = FULLSCREEN|WINDOWED on both
+  outputs, `SupportsOverlays` true on DISPLAY1 (HDMI, 59 Hz) and false on DISPLAY2 (Dell, DP, 60 Hz); per-window composition
+  mode not measurable (ETW needs admin, the app's swapchain is in-process). egui asks for the arrow over the title bar and
+  ribbon and the I-beam over the page canvas (`spikes/p4-overlay/pointer_sweep.out.txt`), so an I-beam over the ribbon is not
+  what the app requests. Backend switch exists without a rebuild (`WGPU_BACKEND`, `graphics.rs` `configure`): GL runs Docs
+  and Sheets here; Vulkan crashes in instance creation (segfault). The 5-12 s DX12 probe at start was CPU starvation from
+  parallel builds: 12-107 ms in-app and 60 ms in a spike when the PC is less loaded. Owner kit:
+  `E:\office-target\p4-overlay\owner-test\` (DX12/GL launchers for Docs and Sheets, fixtures, README). MPO off
+  (`OverlayTestMode`) is the owner's IT call, listed as an optional diagnostic only.
 
 ## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
 - Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
