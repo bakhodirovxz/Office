@@ -6,7 +6,7 @@
   (global $mode (mut i32) (i32.const 0))
   (func $rec (call $rec))
   ;; ping rounds are a fraction of a second to a few seconds of work, depending on the PC: a round must stay below the 5 s budget and above
-  ;; 10 s / 16 rounds, so that only the 10 s invocation deadline can end a chain of them. Two sizes (ping, pong); the tests use the first that does.
+  ;; 10 s / 16 rounds, so that only the 10 s invocation deadline can end a chain of them. Three sizes (ping, pong, pang); the tests use the first that does.
   (func $burn (param $n i64) (local $i i64) (loop $l (local.set $i (i64.add (local.get $i) (i64.const 1))) (br_if $l (i64.lt_u (local.get $i) (local.get $n)))))
   (data (i32.const 4096) "\d7\00\00\00\7b\22\61\63\74\69\6f\6e\73\22\3a\5b\7b\22\74\79\70\65\22\3a\22\75\69\2e\70\61\6e\65\6c\22\2c\22\70\61\6e\65\6c\22\3a\22\70\22\2c\22\77\69\64\67\65\74\73\22\3a\5b\7b\22\74\79\70\65\22\3a\22\68\65\61\64\69\6e\67\22\2c\22\74\65\78\74\22\3a\22\48\65\6c\6c\6f\20\70\61\6e\65\6c\22\7d\2c\7b\22\74\79\70\65\22\3a\22\74\65\78\74\22\2c\22\74\65\78\74\22\3a\22\50\6c\61\69\6e\20\74\65\78\74\22\7d\2c\7b\22\74\79\70\65\22\3a\22\62\75\74\74\6f\6e\22\2c\22\69\64\22\3a\22\67\6f\22\2c\22\6c\61\62\65\6c\22\3a\22\47\6f\22\7d\5d\7d\2c\7b\22\74\79\70\65\22\3a\22\75\69\2e\73\74\61\74\75\73\22\2c\22\74\65\78\74\22\3a\22\68\65\6c\6c\6f\20\64\6f\6e\65\22\7d\5d\7d\00\00\00\00")
   (data (i32.const 4320) "\50\00\00\00\7b\22\61\63\74\69\6f\6e\73\22\3a\5b\7b\22\74\79\70\65\22\3a\22\66\65\74\63\68\22\2c\22\75\72\6c\22\3a\22\68\74\74\70\73\3a\2f\2f\65\78\61\6d\70\6c\65\2e\6f\72\67\2f\78\22\7d\5d\2c\22\6e\65\78\74\22\3a\7b\22\72\65\61\64\73\22\3a\5b\5d\7d\7d\00\00\00\00")
@@ -36,11 +36,12 @@
     (global.set $heap (i32.add (global.get $heap) (local.get $n)))
     (local.get $p))
   (func (export "free") (param i32 i32))
-  (func (export "call") (param $p i32) (param $n i32) (result i64) (local $i i32) (local $sel i32)
+  (func (export "call") (param $p i32) (param $n i32) (result i64) (local $i i32) (local $sel i32) (local $sel2 i32)
     (call $log (local.get $p) (local.get $n))
     (if (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 13))) (i32.const 114)) (then
       (if (i32.eq (global.get $mode) (i32.const 1)) (then (call $burn (i64.const 600000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
       (if (i32.eq (global.get $mode) (i32.const 3)) (then (call $burn (i64.const 3000000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
+      (if (i32.eq (global.get $mode) (i32.const 4)) (then (call $burn (i64.const 15000000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
       (if (i32.eq (global.get $mode) (i32.const 2)) (then (return (call $ans (i32.const 4320) (i32.const 88)))))
       (return (call $ans (i32.const 14880) (i32.const 59)))))
     (if (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 13))) (i32.const 117)) (then (return (call $ans (i32.const 14944) (i32.const 59)))))
@@ -51,7 +52,7 @@
     (block $done (loop $scan
       (br_if $done (i32.ge_u (local.get $i) (i32.sub (local.get $n) (i32.const 12))))
       (if (i64.eq (i64.load (i32.add (local.get $p) (local.get $i))) (i64.const 7236828773846311714))
-        (then (local.set $sel (i32.load8_u (i32.add (i32.add (local.get $p) (local.get $i)) (i32.const 11)))) (br $done)))
+        (then (local.set $sel (i32.load8_u (i32.add (i32.add (local.get $p) (local.get $i)) (i32.const 11)))) (local.set $sel2 (i32.load8_u (i32.add (i32.add (local.get $p) (local.get $i)) (i32.const 12)))) (br $done)))
       (local.set $i (i32.add (local.get $i) (i32.const 1)))
       (br $scan)))
     (if (i32.eq (local.get $sel) (i32.const 104)) (then (return (call $ans (i32.const 4096) (i32.const 223)))))
@@ -68,8 +69,9 @@
     (if (i32.eq (local.get $sel) (i32.const 118)) (then (return (call $ans (i32.const 16320) (i32.const 91)))))
     (if (i32.eq (local.get $sel) (i32.const 97)) (then (return (call $ans (i32.const 16416) (i32.const 69)))))
     (if (i32.eq (local.get $sel) (i32.const 119)) (then (return (call $ans (i32.const 16496) (i32.const 85)))))
-    (if (i32.eq (local.get $sel) (i32.const 112)) (then (global.set $mode (i32.const 1)) (call $burn (i64.const 600000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
-    (if (i32.eq (local.get $sel) (i32.const 113)) (then (global.set $mode (i32.const 3)) (call $burn (i64.const 3000000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
+    (if (i32.and (i32.eq (local.get $sel) (i32.const 112)) (i32.eq (local.get $sel2) (i32.const 105))) (then (global.set $mode (i32.const 1)) (call $burn (i64.const 600000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
+    (if (i32.and (i32.eq (local.get $sel) (i32.const 112)) (i32.eq (local.get $sel2) (i32.const 111))) (then (global.set $mode (i32.const 3)) (call $burn (i64.const 3000000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
+    (if (i32.and (i32.eq (local.get $sel) (i32.const 112)) (i32.eq (local.get $sel2) (i32.const 97))) (then (global.set $mode (i32.const 4)) (call $burn (i64.const 15000000000)) (return (call $ans (i32.const 16592) (i32.const 42)))))
     (if (i32.eq (local.get $sel) (i32.const 102)) (then (global.set $mode (i32.const 2)) (return (call $ans (i32.const 4320) (i32.const 88)))))
     (if (i32.eq (local.get $sel) (i32.const 111)) (then (call $rec)))
     (if (i32.eq (local.get $sel) (i32.const 115)) (then (loop $spin (br $spin))))

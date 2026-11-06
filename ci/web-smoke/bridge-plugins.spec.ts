@@ -48,7 +48,7 @@ ${real ? '<script src="/plugins/host.js"></script>' : ''}
   const insert = (t) => ({ type: 'run', id: 'text.insert', params: { text: t } });
   const actions = (d, actions, extra) => toEditor({ type: 'wordcraft:pluginActions', call: d.call, plugin: d.plugin, actions, blobs: [], reads: [], more: false, ...extra });
   ${real
-    ? `const H = PluginHost.make({ cfg: { plugins: [${JSON.stringify(DESCRIPTOR)}${two ? ',' + JSON.stringify({ ...DESCRIPTOR, id: 'plg-two', manifest: { ...MANIFEST, id: 'plg-two', name: { en: 'Second plugin' }, command: ['hello', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'fetches'].map((id) => ({ id, label: { en: `Cmd ${id}` }, reads: ['none'], params: {} })) } }) : ''}] }, lang: 'en', frames: {} }, (m) => window.__say.push(m), document.getElementById('root'));
+    ? `const H = PluginHost.make({ cfg: { plugins: [${JSON.stringify(DESCRIPTOR)}${two ? ',' + JSON.stringify({ ...DESCRIPTOR, id: 'plg-two', manifest: { ...MANIFEST, id: 'plg-two', name: { en: 'Second plugin' }, command: ['hello', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'pang', 'fetches'].map((id) => ({ id, label: { en: `Cmd ${id}` }, reads: ['none'], params: {} })) } }) : ''}] }, lang: 'en', frames: {} }, (m) => window.__say.push(m), document.getElementById('root'));
        window.__host = H;
        addEventListener('message', (e) => { if (e.source === ed() && String((e.data || {}).type).startsWith('wordcraft:')) H.onMessage({ app: { id: 'docs', prefix: 'wordcraft' }, el: { contentWindow: ed() } }, e.data); });`
     : `window.__register = (manifests) => toEditor({ type: 'wordcraft:plugins', commands: [], toolbar: [], menu: [], plugins: manifests.map((m) => ({ manifest: m })), timeoutMs: window.__timeout });`}
@@ -240,10 +240,10 @@ test.describe('real page host, second plugin with the extra commands', () => {
     await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
     const before = textOf(await xml(page));
     const resumes = () => page.evaluate(() => (window as any).__host.logs.filter((l: any) => l.text.includes('"kind":"resume"')).length);
-    // a round has to be shorter than the 5 s budget and longer than 10 s / 16 rounds, whatever the PC: ping does a little work per round, pong more; the first that fits counts
+    // a round has to be shorter than the 5 s budget and longer than 10 s / 16 rounds, whatever the PC: ping, pong and pang do 0.6e9, 3e9 and 15e9 loop turns per round (smallest first); the first that fits counts
     const tried: string[] = [];
     let fits = false;
-    for (const cmd of ['ping', 'pong']) {
+    for (const cmd of ['ping', 'pong', 'pang']) {
       const n = (await auditOf(page)).length, r0 = await resumes(), t0 = Date.now();
       for (let i = 0; i < 25 && (await auditOf(page)).length === n; i++) { await run(page, `plugin.plg-two.${cmd}`); await page.waitForTimeout(1500); }
       await expect.poll(async () => (await auditOf(page)).length, { timeout: 60_000 }).toBeGreaterThan(n);

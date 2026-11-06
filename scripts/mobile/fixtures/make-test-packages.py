@@ -9,7 +9,7 @@ src = Path(__file__).resolve().parents[3] / "ci/plugins/webhost-test"
 out = Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
 CMDS = ["hello", "net", "spin", "grow", "xss", "edit", "deny", "many", "bad"]
 # a manifest has at most 16 commands: test.recheck carries the commands of the Phase 7 re-check rows (M5, M8, F2, F5, F7, S1, S2) and nothing else
-EXTRA = ["hello", "spin", "deny", "bad", "link", "chr", "incl", "tracked", "vocab", "accept", "wall", "overflow", "ping", "pong", "fetches"]
+EXTRA = ["hello", "spin", "deny", "bad", "link", "chr", "incl", "tracked", "vocab", "accept", "wall", "overflow", "ping", "pong", "pang", "fetches"]
 
 def toml(pid, name, net='["https://example.org"]', cmds=CMDS):
     t = f'id = "{pid}"\nversion = "1.0.0"\napi = 1\napps = ["docs"]\nevents = ["selectionChanged"]\npublisher = "Test publisher"\nname.en = "{name}"\nname.ru = "{name}"\nname.uz-Latn = "{name}"\nname.uz-Cyrl = "{name}"\n\n'

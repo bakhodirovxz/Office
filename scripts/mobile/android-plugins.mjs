@@ -360,10 +360,10 @@ async function recheck() {
     await runCmd(p, 'plugin.test.recheck.fetches');
     for (let i = 0; i < 40 && !(await aud(nF)).some((a) => /more than 8 fetches/.test(a.error || '')); i++) await L.sleep(1500);
     results['S2-fetches'] = { audit: await aud(nF) };
-    // the 10 s invocation deadline: a round must be under the 5 s budget and over 10 s / 16 rounds, whatever the machine: ping does a little work per round, pong more; the first that fits counts
+    // the 10 s invocation deadline: a round must be under the 5 s budget and over 10 s / 16 rounds, whatever the machine: ping, pong and pang do 0.6e9, 3e9 and 15e9 loop turns per round (smallest first); the first that fits counts
     const resumes = () => p.ev(`PluginHost.last.logs.filter((l) => l.text.includes('"kind":"resume"')).length`);
     const tried = []; let fits = false, took = 0, rounds = 0;
-    for (const cmd of ['ping', 'pong']) {
+    for (const cmd of ['ping', 'pong', 'pang']) {
       const r0 = await resumes(), n2 = (await aud()).length, t0 = Date.now();
       await runCmd(p, `plugin.test.recheck.${cmd}`);
       let end; for (let i = 0; i < 90 && !end; i++) { await L.sleep(1000); end = (await aud(n2))[0]; }

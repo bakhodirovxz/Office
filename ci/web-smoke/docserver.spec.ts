@@ -726,6 +726,8 @@ test('command palette in the wrapper: Tab reaches the button, F1 opens it, Bold 
   await expect(dlg).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dlg).toBeHidden();
+  // the dialog's `close` event (a later task) hands focus back to the editor frame; F6 sent before that lands in the wrapper and does nothing (a load-dependent race)
+  await expect.poll(() => editor.evaluate(() => document.hasFocus())).toBe(true);
   await page.keyboard.press('F6');
   await expect(button).toBeFocused();
   expect(problems).toEqual([]);
@@ -857,21 +859,29 @@ test('plugins in the wrapper: M1-M7, M9, M11, R1 are blocked inside the wrapper;
 // `services/docserver/tests/plugins.rs::a_changed_package_is_refused_and_audited`).
 test('plugins in the wrapper (re-check): M2b, M8, M10, S1, S2, F2, F5, F7 are blocked inside the wrapper', async () => {
   const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
-  const CMDS = ['hello', 'net', 'spin', 'bad', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'fetches'];
+  const CMDS = ['hello', 'net', 'spin', 'bad', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'pang', 'fetches'];
   const ORG = 'https://example.org';
   const manifest = (id: string, net: string[]) => `id = "${id}"\nversion = "1.0.0"\napi = 1\napps = ["docs"]\nevents = ["selectionChanged"]\npublisher = "Test publisher"\nname.en = "Plugin ${id}"\n\n[permissions]\ndocument = "write"\nnetwork = ${JSON.stringify(net)}\nmemory_mb = 2\n\n`
     + CMDS.map((c) => `[[command]]\nid = "${c}"\nlabel.en = "Cmd ${c}"\nreads = ["none"]\nparams = {}\n\n`).join('') + '[[panel]]\nid = "p"\ntitle.en = "Panel"\n';
   const plugs = [['rc-a', 'plugin.wasm', [ORG], [ORG]], ['rc-b', 'plugin.wasm', [], []], ['rc-own', 'own-memory.wasm', [], []], ['rc-gc', 'gc-type.wasm', [], []]] as const;
   const pdir = path.join(dir, 'plugins-rc');
+  // signed with the published TEST key like the wrapper test above (the server refuses unsigned packages)
+  const sha = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
+  const SIGN = path.join(ROOT, 'ci/plugins/signing');
+  const seed = Buffer.from(fs.readFileSync(path.join(SIGN, 'test-a.seed'), 'utf8').trim(), 'hex');
+  const pkcs8 = crypto.createPrivateKey({ key: Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]), format: 'der', type: 'pkcs8' });
+  const pub = fs.readFileSync(path.join(SIGN, 'test-a.pub'), 'utf8').trim();
   const entries = plugs.map(([id, wasm, net, grant]) => {
     const d = path.join(pdir, id, '1.0.0'); fs.mkdirSync(d, { recursive: true });
-    const w = fs.readFileSync(path.join(FIX, wasm));
-    fs.writeFileSync(path.join(d, 'plugin.toml'), manifest(id, [...net])); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
-    return `{ id = "${id}", version = "1.0.0", sha256 = "${crypto.createHash('sha256').update(w).digest('hex')}", grant = ${JSON.stringify([...grant])} }`;
+    const w = fs.readFileSync(path.join(FIX, wasm)), toml = manifest(id, [...net]);
+    fs.writeFileSync(path.join(d, 'plugin.toml'), toml); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
+    const msg = `plugin-package-signature-v1\nplugin.toml ${sha(toml)}\nplugin.wasm ${sha(w)}\n`;
+    fs.writeFileSync(path.join(d, 'SIGNATURE'), `ed25519 ${pub} ${crypto.sign(null, Buffer.from(msg), pkcs8).toString('hex')}\n`);
+    return `{ id = "${id}", version = "1.0.0", sha256 = "${sha(w)}", grant = ${JSON.stringify([...grant])} }`;
   });
   ds.kill(); await new Promise((ok) => ds.once('exit', ok));
   provLines = [`plugins = [${entries.join(', ')}]`];
-  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`]);
+  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`, `trusted_keys = ["${pub}"]`]);
   try {
     const { ctx, page } = await open();
     await page.goto(`${HOST}/host?kind=files&id=1&lang=en`);
@@ -915,11 +925,11 @@ test('plugins in the wrapper (re-check): M2b, M8, M10, S1, S2, F2, F5, F7 are bl
     await expect.poll(async () => (await aud()).slice(n8).some((a) => a.kind === 'failed' && /more than 8 fetches/.test(a.error ?? '')), { timeout: 30_000 }).toBe(true);
     expect((await aud()).slice(n8).filter((a) => a.kind === 'network' && a.plugin === 'rc-a').length).toBe(8);
     // S2: a chain of rounds is stopped at the 10 s invocation deadline. A round must be shorter than the 5 s budget and longer than 10 s / 16 rounds, whatever the PC:
-    // ping does a little work per round, pong more; the first that fits counts.
+    // ping, pong and pang do 0.6e9, 3e9 and 15e9 loop turns per round (smallest first); the first that fits counts.
     const resumes = () => w.evaluate(() => (window as any).PluginHost.last.logs.filter((l: any) => l.text.includes('"kind":"resume"')).length);
     const tried: string[] = [];
     let fits = false;
-    for (const cmd of ['ping', 'pong']) {
+    for (const cmd of ['ping', 'pong', 'pang']) {
       const n2 = (await aud()).length, r0 = await resumes(), t0 = Date.now();
       await run('rc-a', cmd);
       await expect.poll(async () => (await aud()).length, { timeout: 60_000 }).toBeGreaterThan(n2);
