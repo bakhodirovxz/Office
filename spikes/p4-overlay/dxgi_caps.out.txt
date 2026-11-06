@@ -1,0 +1,4 @@
+adapter 0: Intel(R) UHD Graphics 630
+  output 0 \\.\DISPLAY1 at (0,0)-(1920,1080): SupportsOverlays=True CheckHardwareCompositionSupport hr=0x0 flags=3 ['FULLSCREEN', 'WINDOWED']
+  output 1 \\.\DISPLAY2 at (1920,0)-(3840,1080): SupportsOverlays=False CheckHardwareCompositionSupport hr=0x0 flags=3 ['FULLSCREEN', 'WINDOWED']
+adapter 1: Microsoft Basic Render Driver
