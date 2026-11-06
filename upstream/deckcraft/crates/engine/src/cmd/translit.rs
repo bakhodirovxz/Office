@@ -105,8 +105,9 @@ fn walk(slide: &mut Slide, only: Option<&[ShapeId]>, notes: bool, f: &mut dyn Fn
     }
 }
 
-/// The paragraph's runs cut at the chars `from` and `to`, each piece flagged: converted (a plain text run inside the range) or kept.
-fn pieces(p: &Paragraph, from: usize, to: usize, st: &mut Stats) -> Vec<(Run, bool)> {
+/// The paragraph's runs cut at the chars `from` and `to`: (piece, inside the range, a plain text run). Field, break and equation runs
+/// stay whole.
+fn cut(p: &Paragraph, from: usize, to: usize) -> Vec<(Run, bool, bool)> {
     let mut out = Vec::with_capacity(p.runs.len() + 2);
     let mut off = 0;
     for r in &p.runs {
@@ -114,23 +115,36 @@ fn pieces(p: &Paragraph, from: usize, to: usize, st: &mut Stats) -> Vec<(Run, bo
         let (s, e) = (off, off + n);
         off = e;
         if r.kind != RunKind::Text {
-            st.field += matches!(r.kind, RunKind::Field { .. } | RunKind::Math { .. }) as usize;
-            out.push((r.clone(), false));
+            out.push((r.clone(), false, false));
             continue;
         }
         let (a, b) = (from.clamp(s, e) - s, to.clamp(s, e) - s);
-        // Owner decision D1: ru/en tags are converted, other non-Uzbek tags stay as typed.
-        let lc = lang_converts(r.props.lang.as_deref(), LangPolicy::ConvertRuEn);
-        st.lang += (!lc && a < b) as usize;
         let cut = |x: usize| r.text.char_indices().nth(x).map_or(r.text.len(), |(i, _)| i);
         let (ia, ib) = (cut(a), cut(b));
-        for (range, convert) in [(0..ia, false), (ia..ib, lc), (ib..r.text.len(), false)] {
+        for (range, inside) in [(0..ia, false), (ia..ib, true), (ib..r.text.len(), false)] {
             if !range.is_empty() {
-                out.push((Run { text: r.text[range].to_string(), props: r.props.clone(), kind: RunKind::Text }, convert));
+                out.push((Run { text: r.text[range].to_string(), props: r.props.clone(), kind: RunKind::Text }, inside, true));
             }
         }
     }
     out
+}
+
+/// The paragraph's runs cut at the chars `from` and `to`, each piece flagged: converted (a plain text run inside the range) or kept.
+fn pieces(p: &Paragraph, from: usize, to: usize, st: &mut Stats) -> Vec<(Run, bool)> {
+    cut(p, from, to)
+        .into_iter()
+        .map(|(r, inside, text)| {
+            if !text {
+                st.field += matches!(r.kind, RunKind::Field { .. } | RunKind::Math { .. }) as usize;
+                return (r, false);
+            }
+            // Owner decision D1: ru/en tags are converted, other non-Uzbek tags stay as typed.
+            let lc = lang_converts(r.props.lang.as_deref(), LangPolicy::ConvertRuEn);
+            st.lang += (!lc && inside) as usize;
+            (r, inside && lc)
+        })
+        .collect()
 }
 
 /// Convert one paragraph between the chars `from` and `to`. `None` direction = only report the convertible text (script detection).
@@ -197,6 +211,30 @@ fn now_ms() -> f64 {
     }
 }
 
+/// The scope `asked` (`auto`, `selection`, `slide`, `deck`) names with the current selection, and the slides it covers.
+fn resolve(s: &Session, asked: &str) -> Result<(Scope, Vec<usize>)> {
+    let st = s.doc()?;
+    let sel = &st.selection;
+    let range = sel.text.as_ref().filter(|t| t.is_range()).map(|t| {
+        let (a, b) = t.ordered();
+        Scope::Range(Loc { shape: (!t.notes).then(|| u64::from(t.shape.0)), cell: t.cell }, a, b)
+    });
+    let masters = sel.target != Target::Slides;
+    let scope = match asked {
+        "slide" => Scope::Slide,
+        "deck" => Scope::Deck,
+        "selection" => range.or_else(|| (!sel.shapes.is_empty()).then(|| Scope::Shapes(sel.shapes.clone()))).unwrap_or(Scope::Shapes(vec![])),
+        _ => range.or_else(|| (!sel.shapes.is_empty()).then(|| Scope::Shapes(sel.shapes.clone()))).unwrap_or(Scope::Deck),
+    };
+    // A selection inside a master or layout is not on a slide: nothing to do (shortcut: Slide Master view, add when asked).
+    let scope = if masters && matches!(scope, Scope::Range(..) | Scope::Shapes(_)) { Scope::Shapes(vec![]) } else { scope };
+    let slides: Vec<usize> = match scope {
+        Scope::Deck => (0..st.doc.slides.len()).collect(),
+        _ => vec![sel.slide].into_iter().filter(|i| *i < st.doc.slides.len()).collect(),
+    };
+    Ok((scope, slides))
+}
+
 fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
     let id = "tools.translit";
     let asked = str_param(p, "scope").unwrap_or("auto");
@@ -219,26 +257,8 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
     let opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
 
     let t0 = now_ms();
-    let st = s.doc()?;
-    let sel = &st.selection;
-    let range = sel.text.as_ref().filter(|t| t.is_range()).map(|t| {
-        let (a, b) = t.ordered();
-        Scope::Range(Loc { shape: (!t.notes).then(|| u64::from(t.shape.0)), cell: t.cell }, a, b)
-    });
-    let masters = sel.target != Target::Slides;
-    let scope = match asked {
-        "slide" => Scope::Slide,
-        "deck" => Scope::Deck,
-        "selection" => range.or_else(|| (!sel.shapes.is_empty()).then(|| Scope::Shapes(sel.shapes.clone()))).unwrap_or(Scope::Shapes(vec![])),
-        _ => range.or_else(|| (!sel.shapes.is_empty()).then(|| Scope::Shapes(sel.shapes.clone()))).unwrap_or(Scope::Deck),
-    };
-    // A selection inside a master or layout is not on a slide: nothing to do (shortcut: Slide Master view, add when asked).
-    let scope = if masters && matches!(scope, Scope::Range(..) | Scope::Shapes(_)) { Scope::Shapes(vec![]) } else { scope };
-    let doc = st.doc.clone();
-    let slides: Vec<usize> = match scope {
-        Scope::Deck => (0..doc.slides.len()).collect(),
-        _ => vec![sel.slide].into_iter().filter(|i| *i < doc.slides.len()).collect(),
-    };
+    let (scope, slides) = resolve(s, asked)?;
+    let doc = s.doc()?.doc.clone();
     let (only, notes, range): (Option<&[ShapeId]>, bool, Option<(Loc, Pos, Pos)>) = match &scope {
         Scope::Range(l, a, b) => (None, true, Some((*l, *a, *b))),
         Scope::Shapes(v) => (Some(v.as_slice()), false, None),
@@ -302,4 +322,155 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
         "ms": {"convert": t1 - t0, "apply": t2 - t1},
         "rulesVersion": uz_translit::RULES_VERSION,
     }))
+}
+
+// ---------------------------------------------------------------- the text of the commands, for the plugin text map
+
+/// What the commands walk, resolved once from `scope` and the selection (office overlay, patches/deckcraft/0157; Phase 7 WP13: the
+/// plugin text map of `slides-plugins` reads it, and writes back through [`write_pieces`] with the same value, so a selection moved
+/// in between does not move the write).
+#[derive(Clone, PartialEq)]
+pub struct TextScope {
+    scope: Scope,
+    slides: Vec<usize>,
+}
+
+/// One piece of a paragraph, as the commands cut it: a run, or the part of a run inside or outside the selected range.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Piece {
+    pub text: String,
+    pub lang: Option<String>,
+    /// A plain text run inside the scope (the only kind the commands convert, subject to its language tag).
+    pub inside: bool,
+    /// A field, break or equation run (never converted, a boundary).
+    pub object: bool,
+}
+
+/// The scope `asked` names (`auto`, `selection`, `slide`, `deck`) with the current selection.
+pub fn text_scope(s: &Session, asked: &str) -> Result<TextScope> {
+    if !["auto", "selection", "slide", "deck"].contains(&asked) {
+        return Err(bad("tools.translit", format!("`scope` must be auto, selection, slide or deck, not `{asked}`")));
+    }
+    let (scope, slides) = resolve(s, asked)?;
+    Ok(TextScope { scope, slides })
+}
+
+/// Visit the paragraphs of `t` on `sl` in the commands' order, with the char range of each that is in scope; `last` marks the
+/// last paragraph of a selected range.
+fn each(sl: &mut Slide, t: &TextScope, f: &mut dyn FnMut(&mut Paragraph, usize, usize, bool)) {
+    let (only, notes, range): (Option<&[ShapeId]>, bool, Option<(Loc, Pos, Pos)>) = match &t.scope {
+        Scope::Range(l, a, b) => (None, true, Some((*l, *a, *b))),
+        Scope::Shapes(v) => (Some(v.as_slice()), false, None),
+        _ => (None, true, None),
+    };
+    walk(sl, only, notes, &mut |loc, body| {
+        let r = match range {
+            Some((l, a, b)) if l == loc => Some((a, b)),
+            Some(_) => return,
+            None => None,
+        };
+        for (pi, p) in body.paragraphs.iter_mut().enumerate() {
+            let (from, to) = match r {
+                None => (0, usize::MAX),
+                Some((a, b)) if pi >= a.0 && pi <= b.0 => (if pi == a.0 { a.1 } else { 0 }, if pi == b.0 { b.1 } else { usize::MAX }),
+                Some(_) => continue,
+            };
+            f(p, from, to, r.is_some_and(|(_, b)| b.0 == pi));
+        }
+    });
+}
+
+/// Every paragraph of `t`, as its pieces, in the order [`write_pieces`] takes them.
+pub fn text_pieces(s: &Session, t: &TextScope) -> Result<Vec<Vec<Piece>>> {
+    let doc = &s.doc()?.doc;
+    let mut out = Vec::new();
+    for &i in &t.slides {
+        let Some(sl) = doc.slides.get(i) else { continue };
+        each(&mut (**sl).clone(), t, &mut |p, from, to, _| {
+            out.push(
+                cut(p, from, to)
+                    .into_iter()
+                    .map(|(r, inside, text)| Piece { text: r.text, lang: r.props.lang, inside: inside && text, object: !text })
+                    .collect(),
+            );
+        });
+    }
+    Ok(out)
+}
+
+/// Write new piece texts (`None`: unchanged) into the paragraphs of `t`, as the commands write theirs: each changed paragraph gets
+/// its pieces as runs and `normalize`, and a selected range keeps covering the same text. One `Session::edit`, not an undo step by
+/// itself. `out` has one entry per paragraph and piece of [`text_pieces`]; returns (paragraphs, runs) changed.
+pub fn write_pieces(s: &mut Session, t: &TextScope, out: &[Vec<Option<String>>]) -> Result<(usize, usize)> {
+    let doc = s.doc()?.doc.clone();
+    let mut k = 0;
+    let (mut paragraphs, mut runs, mut end_delta) = (0, 0, 0isize);
+    let mut changed: Vec<(usize, Slide)> = Vec::new();
+    let mut err = None;
+    for &i in &t.slides {
+        let Some(sl) = doc.slides.get(i) else { continue };
+        let mut sl = (**sl).clone();
+        let before = paragraphs;
+        each(&mut sl, t, &mut |p, from, to, last| {
+            let new = out.get(k);
+            k += 1;
+            let parts = cut(p, from, to);
+            let Some(new) = new.filter(|n| n.len() == parts.len()) else {
+                err.get_or_insert_with(|| "the text changed since it was read".to_string());
+                return;
+            };
+            if new.iter().all(Option::is_none) {
+                if last {
+                    end_delta = 0;
+                }
+                return;
+            }
+            let mut delta = 0isize;
+            p.runs = parts
+                .into_iter()
+                .zip(new)
+                .map(|((mut r, ..), o)| {
+                    if let Some(o) = o {
+                        delta += o.chars().count() as isize - r.text.chars().count() as isize;
+                        runs += 1;
+                        r.text = o.clone();
+                    }
+                    r
+                })
+                .collect();
+            p.normalize();
+            paragraphs += 1;
+            if last {
+                end_delta = delta;
+            }
+        });
+        if paragraphs > before {
+            changed.push((i, sl));
+        }
+    }
+    if let Some(e) = err.or_else(|| (k != out.len()).then(|| "the text changed since it was read".to_string())) {
+        return Err(EngineError::Other(e));
+    }
+    if !changed.is_empty() {
+        let end = match &t.scope {
+            Scope::Range(_, _, b) => Some(*b),
+            _ => None,
+        };
+        s.edit(|doc, sel| {
+            for (i, sl) in changed {
+                if let Some(slot) = doc.slides.get_mut(i) {
+                    *slot = Arc::new(sl);
+                }
+            }
+            if let (Some(t), Some(end)) = (sel.text.as_mut(), end) {
+                for pos in [&mut t.anchor, &mut t.caret] {
+                    if *pos == end {
+                        pos.1 = pos.1.saturating_add_signed(end_delta);
+                    }
+                }
+            }
+            Ok(())
+        })?;
+    }
+    Ok((paragraphs, runs))
 }

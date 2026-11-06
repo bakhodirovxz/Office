@@ -259,6 +259,12 @@ fn main() -> eframe::Result<()> {
     }
     gridcraft_ui_egui::office_toolbar::init();
     gridcraft_ui_egui::office_history::init();
+    // Phase 7 WP13 (patches/gridcraft/0158): the user's plugins (sheets-plugins) and the toolbar's Plugins menu
+    #[cfg(feature = "office-ext")]
+    {
+        sheets_plugins::init();
+        gridcraft_ui_egui::office_overlay::set_plugin_menu(sheets_plugins::menu);
+    }
     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
     let mut sample: Option<String> = None;
     let mut files: Vec<String> = Vec::new();

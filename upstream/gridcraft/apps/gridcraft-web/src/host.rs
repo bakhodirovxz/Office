@@ -9,6 +9,8 @@
 //!   as PDF. The parent stores it and reports failures itself.
 //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `gridcraft:failed` (to the parent): `{ error }` when the app couldn't start.
+//! - `gridcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9, handled
+//!   by sheets-plugins; this file only forwards the messages and posts the answers.
 //!
 //! Only the parent window on the page's own origin is heard or answered. In host mode the page
 //! starts with an empty workbook instead of a sample, and the parent guards leaving the page.
@@ -80,8 +82,9 @@ impl Bridge {
     }
 
     /// After each frame: a workbook handed to the parent this frame counts as saved under the
-    /// name it was saved as, and the parent hears when unsaved changes appear or go away.
-    pub fn sync(&self, app: &mut SheetApp) {
+    /// name it was saved as, and the parent hears when unsaved changes appear or go away. True
+    /// while a plugin call waits for the page (the caller keeps drawing frames).
+    pub fn sync(&self, app: &mut SheetApp) -> bool {
         let saved = std::mem::take(&mut *self.saved.borrow_mut());
         if let Some(name) = saved.iter().rev().find(|name| is_workbook(name))
             && let Some(doc) = app.session.active_mut()
@@ -95,6 +98,18 @@ impl Bridge {
         if self.reported.get() != Some(dirty) && self.send(&[("type", "gridcraft:dirty".into()), ("dirty", dirty.into())]) {
             self.reported.set(Some(dirty));
         }
+        #[cfg(not(feature = "office-ext"))]
+        let active = false;
+        #[cfg(feature = "office-ext")]
+        let active = {
+            let post = |m: &JsValue, t: &js_sys::Array| self.parent.post_message_with_transfer(m, &self.origin, t).is_ok();
+            let (active, status) = sheets_plugins::web::sync(&mut app.session, &post);
+            if let Some(s) = status.into_iter().last() {
+                app.toast = Some((s, gridcraft_ui_egui::now_ms()));
+            }
+            active
+        };
+        active
     }
 
     fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
@@ -117,6 +132,12 @@ impl Bridge {
                 return;
             }
             let data = event.data();
+            #[cfg(feature = "office-ext")]
+            if sheets_plugins::web::is_plugin_message(&data) {
+                sheets_plugins::web::incoming(&data);
+                ctx.request_repaint();
+                return;
+            }
             if string(&data, "type").as_deref() != Some("gridcraft:open") {
                 return;
             }

@@ -732,7 +732,7 @@ fn deck_universe(root: &Path) -> Universe {
 
 /// UI strings that our carried UI patches (`patches/*/0121`) add. Upstream's catalogs do not hold them, so without this list
 /// every extract would mark their rows obsolete.
-const OWN: [(&str, &[&str]); 21] = [
+const OWN: [(&str, &[&str]); 22] = [
     // Phase 4 WP2 (domains/docs/crates/docs-office): the ribbon preset's toggle labels and group name.
     ("Full ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
     ("Simple ribbon", &["wordcraft", "gridcraft", "deckcraft"]),
@@ -750,6 +750,8 @@ const OWN: [(&str, &[&str]); 21] = [
     ),
     // Phase 7 WP3 (domains/docs/crates/docs-plugins via docs-office preset.rs): the ribbon group of the plugins' buttons.
     ("Plugins", &["wordcraft"]),
+    // Phase 7 WP13 (patches gridcraft/0158, deckcraft/0158): the simplified toolbar's Plugins menu.
+    ("Plugins", &["gridcraft", "deckcraft"]),
     // Phase 4 WP3 (patch deckcraft/0140): the Slides toolbar's version history button.
     ("Version History", &["gridcraft", "deckcraft"]),
     // Phase 4 WP3 (patches/gridcraft/0140): the Sheets simple toolbar's pickers.

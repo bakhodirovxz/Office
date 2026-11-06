@@ -97,40 +97,133 @@ pub const DENIED_KEYS: &[&str] = &[
 
 const MAX_DEPTH: usize = 32;
 
-/// The document access a `run` of `id` with `params` needs, or why it is refused.
+/// One app's allowlist (Docs above; Sheets and Slides added in Phase 7 WP13). Deny by default, as for Docs.
+pub struct List {
+    pub prefixes: &'static [&'static str],
+    pub reads: &'static [&'static str],
+    pub exceptions: &'static [(&'static str, &'static str)],
+    /// Keys refused on top of [`DENIED_KEYS`] (any depth, any case).
+    pub denied_keys: &'static [&'static str],
+    /// Refuse a params string that the app would read as a formula (Sheets: `=...`, `+A1`, `-SUM(...)`, `@...`).
+    pub no_formulas: bool,
+}
+
+pub const DOCS: List = List {
+    prefixes: PREFIXES,
+    reads: READS,
+    exceptions: EXCEPTIONS,
+    denied_keys: &[],
+    no_formulas: false,
+};
+
+/// Sheets (gridcraft). Cell values, formatting and the selection; `cell.set`, `range.setValues` and `range.fill` may write text
+/// and numbers but no formula, because a formula can reach other files and programs (external references, `WEBSERVICE`,
+/// `HYPERLINK`, DDE). Everything else (`file.`, `edit.`, `data.`, `review.`, `view.`, `formulas.`, `insert.`, `sheet.`,
+/// `table.`, `pivot.`, `tools.`, `automate.`, `office.`, `plugin.`, ...) is refused because no prefix matches.
+pub const SHEETS: List = List {
+    prefixes: &["cell.", "range.", "home.", "selection."],
+    reads: &[
+        "document.inspect",
+        "sheet.read",
+        "cell.get",
+        "selection.stats",
+    ],
+    exceptions: &[
+        ("home.addIns", "add-ins load code"),
+        (
+            "home.lockCell",
+            "a plugin must not change what the sheet protection locks",
+        ),
+        ("home.insertCopiedCells", "reads the clipboard"),
+    ],
+    denied_keys: &[],
+    no_formulas: true,
+};
+
+/// Slides (deckcraft). Text, its formatting, tables and the selection. A run's `link` and `hover` are hyperlinks whose action
+/// can start a program or open a file, so both keys (and `action`) are refused.
+pub const SLIDES: List = List {
+    prefixes: &["text.", "format.", "table.", "selection."],
+    reads: &["document.inspect", "slide.inspect", "shape.inspect"],
+    exceptions: &[
+        ("format.fontDialog", "opens a dialog"),
+        ("format.paragraphDialog", "opens a dialog"),
+    ],
+    denied_keys: &["hover", "action"],
+    no_formulas: false,
+};
+
+/// The allowlist of `app` (`docs`, `sheets`, `slides`); `None` for an app with no plugin adapter (`pdf`).
+pub fn list(app: &str) -> Option<&'static List> {
+    match app {
+        "docs" => Some(&DOCS),
+        "sheets" => Some(&SHEETS),
+        "slides" => Some(&SLIDES),
+        _ => None,
+    }
+}
+
+/// The document access a `run` of `id` with `params` needs in Docs, or why it is refused.
 pub fn check_run(id: &str, params: &Value) -> Result<DocAccess, &'static str> {
-    let access = if READS.contains(&id) {
+    check_run_in(&DOCS, id, params)
+}
+
+/// The document access a `run` of `id` with `params` needs under `l`, or why it is refused.
+pub fn check_run_in(l: &List, id: &str, params: &Value) -> Result<DocAccess, &'static str> {
+    let access = if l.reads.contains(&id) {
         DocAccess::Read
-    } else if PREFIXES.iter().any(|p| id.starts_with(p))
-        && !EXCEPTIONS.iter().any(|(e, _)| *e == id)
+    } else if l.prefixes.iter().any(|p| id.starts_with(p))
+        && !l.exceptions.iter().any(|(e, _)| *e == id)
     {
         DocAccess::Write
     } else {
         return Err("command is not on the plugin allowlist");
     };
-    if let Some(why) = bad_params(params, 0) {
+    if let Some(why) = bad_params(params, 0, l) {
         return Err(why);
     }
     Ok(access)
+}
+
+/// What Sheets would read as a formula (gridcraft `input_to_cell`: `=` first, or `+`/`-` before a letter or `(`), plus `@`
+/// (Excel's implicit intersection); leading blanks are skipped, so the check is stricter than the app.
+fn formula_like(s: &str) -> bool {
+    let t = s.trim_start();
+    let mut c = t.chars();
+    match c.next() {
+        Some('=') | Some('@') => true,
+        Some('+') | Some('-') => c
+            .next()
+            .is_some_and(|n| n.is_alphabetic() || n == '(' || n == '$'),
+        _ => false,
+    }
 }
 
 fn node_path(v: &Value) -> bool {
     v.as_array().is_some_and(|a| a.iter().all(Value::is_u64))
 }
 
-fn bad_params(v: &Value, depth: usize) -> Option<&'static str> {
+fn bad_params(v: &Value, depth: usize, l: &List) -> Option<&'static str> {
     if depth > MAX_DEPTH {
         return Some("params nest too deeply");
     }
     match v {
         Value::Object(m) => m.iter().find_map(|(k, v)| {
-            if DENIED_KEYS.iter().any(|d| k.eq_ignore_ascii_case(d)) && !node_path(v) {
+            if DENIED_KEYS
+                .iter()
+                .chain(l.denied_keys)
+                .any(|d| k.eq_ignore_ascii_case(d))
+                && !node_path(v)
+            {
                 Some("params name a path, file or URL")
             } else {
-                bad_params(v, depth + 1)
+                bad_params(v, depth + 1, l)
             }
         }),
-        Value::Array(a) => a.iter().find_map(|v| bad_params(v, depth + 1)),
+        Value::Array(a) => a.iter().find_map(|v| bad_params(v, depth + 1, l)),
+        Value::String(s) if l.no_formulas && formula_like(s) => {
+            Some("params hold a formula, which can reach other files and programs")
+        }
         _ => None,
     }
 }

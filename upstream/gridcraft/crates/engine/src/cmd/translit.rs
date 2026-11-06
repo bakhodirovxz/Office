@@ -118,6 +118,44 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
     };
 
     let t0 = now_ms();
+    let (scope, found, st) = collect(s, p, scope)?;
+    let dir = dir.or_else(|| {
+        let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
+        uz_translit::detect(&all).map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin })
+    });
+    let mut changes = Vec::new();
+    if let Some(dir) = dir {
+        for (si, c, t) in &found {
+            let new = uz_translit::convert(t, dir, &opts);
+            if new != **t {
+                changes.push((*si, *c, new));
+            }
+        }
+    }
+    let t1 = now_ms();
+    let n = changes.len();
+    if n > 0 {
+        write_texts(s, changes)?;
+    }
+    let t2 = now_ms();
+    Ok(json!({
+        "direction": match dir { Some(Direction::ToCyrillic) => "cyrl", Some(Direction::ToLatin) => "latn", None => "none" },
+        "scope": match scope { Scope::Selection => "selection", Scope::Sheet => "sheet", _ => "workbook" },
+        "tracked": false,
+        "cells": n,
+        "runs": n,
+        "skipped": {"lang": 0, "formula": st.formula, "locked": st.locked, "header": st.header},
+        "formulasWithText": st.formulas_with_text,
+        "ms": {"convert": t1 - t0, "apply": t2 - t1},
+        "rulesVersion": uz_translit::RULES_VERSION,
+    }))
+}
+
+/// The constant text cells the commands convert (office overlay, patches/gridcraft/0157; Phase 7 WP13: also the plugin text map of
+/// `sheets-plugins`): the selection, the sheet or the workbook as `scope` and `p` (`range`, `cell`, `sheet`) name it, in sheet, row,
+/// column order. Formulas and their results, non-text values, table header cells, locked cells of a protected sheet, spill and
+/// in-cell picture cells are left out (counted in the stats).
+fn collect(s: &Session, p: &Json, scope: Scope) -> Result<(Scope, Vec<(usize, CellRef, std::sync::Arc<str>)>, Stats)> {
     let sel = target_ranges(s, p)?;
     let explicit = p.get("range").is_some() || p.get("cell").is_some();
     let scope = match scope {
@@ -159,44 +197,42 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
     }
     found.sort_by_key(|(si, c, _)| (*si, c.row, c.col));
     found.dedup_by_key(|(si, c, _)| (*si, c.row, c.col));
-    let dir = dir.or_else(|| {
-        let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
-        uz_translit::detect(&all).map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin })
-    });
-    let mut changes = Vec::new();
-    if let Some(dir) = dir {
-        for (si, c, t) in &found {
-            let new = uz_translit::convert(t, dir, &opts);
-            if new != **t {
-                changes.push((*si, *c, new));
+    Ok((scope, found, st))
+}
+
+/// [`collect`] for a caller outside the engine: the scope used (`selection`, `sheet`, `workbook`) and the cells. `scope` is `auto`,
+/// `selection`, `sheet` or `workbook` (`document` = `workbook`).
+pub fn text_cells(s: &Session, p: &Json, scope: &str) -> Result<(&'static str, Vec<(usize, CellRef, std::sync::Arc<str>)>)> {
+    let scope = match scope {
+        "auto" => Scope::Auto,
+        "selection" => Scope::Selection,
+        "sheet" => Scope::Sheet,
+        "workbook" | "document" => Scope::Workbook,
+        o => return Err(bad("tools.translit", format!("`scope` must be auto, selection, sheet or workbook, not `{o}`"))),
+    };
+    let (scope, found, _) = collect(s, p, scope)?;
+    Ok((
+        match scope {
+            Scope::Selection => "selection",
+            Scope::Sheet => "sheet",
+            _ => "workbook",
+        },
+        found,
+    ))
+}
+
+/// Write new texts into constant text cells as one edit (one recalculation of the formulas that read them; the cell keeps its
+/// style). Not an undo step by itself: `Session::execute` of the command (or the plugin adapter) makes that.
+pub fn write_texts(s: &mut Session, changes: Vec<(usize, CellRef, String)>) -> Result<()> {
+    edit(s, |cx| {
+        for (si, c, new) in changes {
+            let sh = cx.sheet_mut(si)?;
+            if let Some(mut cell) = sh.cell(c).cloned() {
+                cell.value = Value::text(new);
+                sh.set_cell(c, cell);
             }
+            cx.touch(si, c);
         }
-    }
-    let t1 = now_ms();
-    let n = changes.len();
-    if n > 0 {
-        edit(s, |cx| {
-            for (si, c, new) in changes {
-                let sh = cx.sheet_mut(si)?;
-                if let Some(mut cell) = sh.cell(c).cloned() {
-                    cell.value = Value::text(new);
-                    sh.set_cell(c, cell);
-                }
-                cx.touch(si, c);
-            }
-            Ok(())
-        })?;
-    }
-    let t2 = now_ms();
-    Ok(json!({
-        "direction": match dir { Some(Direction::ToCyrillic) => "cyrl", Some(Direction::ToLatin) => "latn", None => "none" },
-        "scope": match scope { Scope::Selection => "selection", Scope::Sheet => "sheet", _ => "workbook" },
-        "tracked": false,
-        "cells": n,
-        "runs": n,
-        "skipped": {"lang": 0, "formula": st.formula, "locked": st.locked, "header": st.header},
-        "formulasWithText": st.formulas_with_text,
-        "ms": {"convert": t1 - t0, "apply": t2 - t1},
-        "rulesVersion": uz_translit::RULES_VERSION,
-    }))
+        Ok(())
+    })
 }

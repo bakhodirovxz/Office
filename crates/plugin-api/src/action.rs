@@ -367,8 +367,19 @@ fn need(g: &Grants, need: DocAccess) -> Result<(), Denied> {
     }
 }
 
-/// Check every action of one answer before the host runs the first. `from_event`: the invocation is an event (only `ui.*`).
+/// Check every action of one answer before the host runs the first, against the Docs allowlist. `from_event`: the invocation is
+/// an event (only `ui.*`).
 pub fn check_actions(actions: &[Action], g: &Grants, from_event: bool) -> Result<(), Denied> {
+    check_actions_in(&allow::DOCS, actions, g, from_event)
+}
+
+/// [`check_actions`] against the allowlist `l` of another app (`allow::list`).
+pub fn check_actions_in(
+    l: &allow::List,
+    actions: &[Action],
+    g: &Grants,
+    from_event: bool,
+) -> Result<(), Denied> {
     if actions.len() > MAX_ACTIONS {
         return Err(Denied::TooManyActions);
     }
@@ -378,7 +389,7 @@ pub fn check_actions(actions: &[Action], g: &Grants, from_event: bool) -> Result
         }
         match a {
             Action::Run { id, params } => {
-                let access = allow::check_run(id, params).map_err(|why| Denied::Command {
+                let access = allow::check_run_in(l, id, params).map_err(|why| Denied::Command {
                     id: id.clone(),
                     why,
                 })?;

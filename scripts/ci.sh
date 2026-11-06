@@ -545,7 +545,13 @@ job_plugins() {
   # plugin #2 (WP7): insert, highlight, check and the docx round trip with the real module in the native host
   bstep plugin-fields env TEMPLATE_FIELDS_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_fields_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test fields || rc=1
   # the malicious-plugin suite (WP10, docs/phase7/malicious.md): host limits, the executor's refusals, the provider isolation, then the browser specs
-  bstep evil-host env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-api -p plugin-host || rc=1
+  bstep evil-host env CARGO_TARGET_DIR="$OFFICE_TARGET/root" cargo test --locked -p plugin-api -p plugin-host -p plugin-adapter || rc=1
+  # Phase 7 WP13: the Sheets and Slides adapters (executor rules with the real engines, the allowlists against the real registries,
+  # the malicious rows that reach the engine) and the output equivalence with the built-in, the real module included
+  local w="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" d
+  for d in sheets slides; do
+    bstep "plugins-$d" env UZ_TRANSLIT_PLUGIN_WASM="$w" CARGO_TARGET_DIR="$(target_dir_domain $d)" cargo test --locked -j 6 --manifest-path domains/$d/Cargo.toml -p $d-plugins -- --nocapture || rc=1
+  done
   bstep evil-executor env CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-plugins || rc=1
   bstep evil-docserver env CARGO_TARGET_DIR="$SVC_T" cargo test --locked -j 4 --manifest-path services/Cargo.toml -p docserver --test plugins || rc=1
   if [ -f "$OFFICE_TARGET/docs/release/docs.exe" ]; then step evil-desktop python -I scripts/plugins/evil-desktop.py "$OFFICE_TARGET/docs/release/docs.exe" || rc=1
@@ -828,7 +834,7 @@ profile_jobs() { # prints "job args" lines
            diff_has '^sidecars/' && echo sidecars
            diff_has '^(i18n/converter\.tsv|services/convert-api/ui/)' && echo convert-ui
            diff_has '^(web/shell/|web/plugins/|services/suite-serve/|scripts/shell-dist\.sh)' && echo shell
-           diff_has '^(crates/plugin-|plugins/|ci/plugins/|scripts/plugins/|web/plugins/|domains/docs/crates/docs-(plugins|translit)/|xtask/src/plugin\.rs)' && echo plugins
+           diff_has '^(crates/plugin-|plugins/|ci/plugins/|scripts/plugins/|web/plugins/|domains/docs/crates/docs-(plugins|translit)/|domains/(sheets|slides)/crates/[a-z]+-plugins/|xtask/src/plugin\.rs)' && echo plugins
            diff_has '^(services/(docserver|fake-hrm|suite-serve)/|ci/web-smoke/(playwright\.(docserver|bridge-docs)|docserver\.spec|bridge-docs\.spec)|packaging/docserver/)' && echo docserver;;
     full|nightly)
       echo "test-ours"; echo notices

@@ -25,6 +25,7 @@ egui = "0.36"
 serde_json = { version = "1", features = ["float_roundtrip"] }
 log = "0.4"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+sheets-plugins = { path = "../../crates/sheets-plugins", optional = true }
 
 [build-dependencies]
 winresource = "0.1"
@@ -47,3 +48,8 @@ fmv-macos-events = "=0.1.0"
 [target.'cfg(target_os = "macos")'.dev-dependencies]
 objc2 = "=0.6.5"
 objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["std", "NSApplication", "NSMenu", "NSMenuItem", "NSResponder"] }
+
+# office overlay (patches/gridcraft/0158): the domain build turns this on and adds the sheets-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = ["dep:sheets-plugins"]
+default = ["office-ext"]

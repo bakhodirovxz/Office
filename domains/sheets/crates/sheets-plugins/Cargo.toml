@@ -1,0 +1,32 @@
+# Phase 7 WP13: the Sheets adapter of the plugin system (docs/phase7/PLAN.md WP13, docs/plugins.md). Our crate: the gridcraft side of
+# `plugin-adapter` (the text map over the built-in's constant text cells, the undo step, the restore, the 64 slot commands through
+# `register_command`, the web input lock) and the entry points the carried patch gridcraft/0158 calls from the apps.
+[package]
+name = "sheets-plugins"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+description = "Sheets adapter of the plugin system: text map, undo step, slot commands"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+gridcraft-engine = { path = "../../../../upstream/gridcraft/crates/engine" }
+plugin-adapter = { path = "../../../../crates/plugin-adapter" }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+
+# the native plugin host (wasmtime) and the user's plugin store: desktop only
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+plugin-adapter = { path = "../../../../crates/plugin-adapter", features = ["native"] }
+
+[dev-dependencies]
+# the equivalence test runs the built-in command next to the real plugin: its code natively, and its wasm module in the host
+uz-translit-plugin = { path = "../../../../plugins/uz-translit" }
+suite-core = { path = "../../../../crates/suite-core" }

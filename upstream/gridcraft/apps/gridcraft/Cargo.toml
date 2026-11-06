@@ -52,3 +52,7 @@ objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["std
 [[test]]
 name = "mac_menu_appkit"
 harness = false
+
+# office overlay (patches/gridcraft/0158): the domain build turns this on and adds the sheets-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = []

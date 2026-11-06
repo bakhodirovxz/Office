@@ -67,12 +67,18 @@ fn text(lang: &str, key: &str) -> String {
         .unwrap_or_else(|| key.to_string())
 }
 
-/// The built-in's status line: "N paragraphs converted" or "Nothing to convert", then the skipped count when there is one.
-fn summary(lang: &str, done: usize, skipped: usize) -> String {
+/// The built-in's status line: "N paragraphs converted" (Sheets: "N cells converted") or "Nothing to convert", then the skipped
+/// count when there is one.
+fn summary(app: &str, lang: &str, done: usize, skipped: usize) -> String {
+    let key = if app == "sheets" {
+        "cells"
+    } else {
+        "converted"
+    };
     let mut m = if done == 0 {
         text(lang, "nothing")
     } else {
-        text(lang, "converted").replace("{n}", &done.to_string())
+        text(lang, key).replace("{n}", &done.to_string())
     };
     if skipped > 0 {
         m += &format!(
@@ -83,14 +89,21 @@ fn summary(lang: &str, done: usize, skipped: usize) -> String {
     m
 }
 
-/// The dominant script of the text that is in scope (Latin goes to Cyrillic and back); `None` for a tie or no letters.
-fn detect(map: &TextMap) -> Option<Direction> {
+/// The dominant script of the text that is in scope (Latin goes to Cyrillic and back); `None` for a tie or no letters. Each app's
+/// built-in reads its own text for this: Docs the whole text in scope, Slides only the runs it would convert (not fields, not
+/// other languages), Sheets the text cells (all editable).
+fn detect(app: &str, map: &TextMap, policy: LangPolicy) -> Option<Direction> {
     let mut all = String::new();
     for g in map
         .paragraphs
         .iter()
         .flat_map(|p| &p.segments)
         .filter(|g| g.flags & OUTSIDE_SELECTION == 0)
+        .filter(|g| {
+            app != "slides"
+                || (g.flags == EDITABLE
+                    && lang_converts(Some(map.langs[g.lang as usize].as_str()), policy))
+        })
     {
         all.push_str(&g.text);
         all.push('\n');
@@ -114,8 +127,8 @@ pub fn handle(call: Call, blobs: Vec<Vec<u8>>) -> Result<Reply, String> {
     let (opts, policy) = params(&call.params)?;
     let map =
         TextMap::decode(plugin_sdk::read(&call, &blobs, "textmap")?).map_err(|e| e.to_string())?;
-    let Some(dir) = dir.or_else(|| detect(&map)) else {
-        return Ok(Reply::status(summary(&call.lang, 0, 0)));
+    let Some(dir) = dir.or_else(|| detect(&call.app, &map, policy)) else {
+        return Ok(Reply::status(summary(&call.app, &call.lang, 0, 0)));
     };
     let (mut apply, mut done, mut skipped) = (Apply::default(), 0, 0);
     for p in &map.paragraphs {
@@ -153,7 +166,7 @@ pub fn handle(call: Call, blobs: Vec<Vec<u8>>) -> Result<Reply, String> {
         done += usize::from(changed);
         apply.paragraphs.push(out);
     }
-    let reply = Reply::status(summary(&call.lang, done, skipped));
+    let reply = Reply::status(summary(&call.app, &call.lang, done, skipped));
     if done == 0 {
         Ok(reply)
     } else {
@@ -237,6 +250,38 @@ mod tests {
             panic!()
         };
         assert_eq!(text, "Нечего преобразовывать");
+    }
+
+    #[test]
+    fn sheets_counts_cells_and_slides_detects_on_what_it_converts() {
+        let mut c = call("toCyrillic", "uz-Latn", serde_json::json!({}));
+        c.app = "sheets".into();
+        let r = handle(c, map(&[(EDITABLE, "", "salom")])).unwrap();
+        let Action::UiStatus { text } = &r.actions[1] else {
+            panic!()
+        };
+        assert_eq!(text, "1 ta katak aylantirildi");
+        // Slides: a field and a German run are not what the built-in detects on; the Cyrillic run decides
+        let segs = [
+            (4, "", "Hello World Again"),
+            (EDITABLE, "de-DE", "Guten Morgen allerseits"),
+            (EDITABLE, "uz-Cyrl", "Салом"),
+        ];
+        let mut c = call("auto", "en", serde_json::json!({}));
+        c.app = "slides".into();
+        let r = handle(c, map(&segs)).unwrap();
+        let Action::TextmapApply { blob } = r.actions[0] else {
+            panic!("slides detects Cyrillic: {:?}", r.actions)
+        };
+        let a = Apply::decode(&r.blobs[blob as usize]).unwrap();
+        assert_eq!(a.paragraphs[0][2].as_deref(), Some("Salom"));
+        // Docs reads the whole text: Latin wins, and to Cyrillic has nothing it may change
+        let r = handle(call("auto", "en", serde_json::json!({})), map(&segs)).unwrap();
+        assert!(
+            matches!(&r.actions[..], [Action::UiStatus { .. }]),
+            "{:?}",
+            r.actions
+        );
     }
 
     #[test]

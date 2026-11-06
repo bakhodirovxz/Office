@@ -1,0 +1,176 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft: plugin seams (toolbar Plugins menu, desktop loader, web bridge forwarding)
+
+Phase 7 WP13 (docs/plugins.md section 6a): the seams through which the domain's extension crate slides-plugins reaches the app.
+- ui-egui: `office_overlay::set_plugin_menu` (per plugin its name and commands, in the interface language) and a "Plugins" menu
+  at the end of the simplified toolbar, hidden while no plugin is loaded; a command's `ui.status` goes to the status bar.
+- desktop app, behind `office-ext`: `slides_plugins::init()` (the user's enabled plugins, loaded on a thread) and the menu.
+- web app, behind `office-ext`, host mode only: `slides_plugins::init_web()` (the input lock as the command hook) before `ready`;
+  `web/host.rs` forwards `deckcraft:plugin*` messages to slides-plugins and posts its answers after each frame, and the app keeps
+  drawing frames while a call waits for the page. The protocol is in our crates (plugin-adapter), not here.
+---
+
+diff --git a/apps/deckcraft-web/Cargo.toml b/apps/deckcraft-web/Cargo.toml
+index e462fb8..98988bb 100644
+--- a/apps/deckcraft-web/Cargo.toml
++++ b/apps/deckcraft-web/Cargo.toml
+@@ -28,3 +28,7 @@ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+ web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
++
++# office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
++[features]
++office-ext = []
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index 0feb2e0..cf4d5b1 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -76,6 +76,11 @@ pub fn start() {
+                         app.start_show(0, false);
+                     }
+                     if let Some(bridge) = &app_bridge {
++                        // Phase 7 WP13 (patches/deckcraft/0158): plugins from the host page (slides-plugins), before `ready` asks for them
++                        #[cfg(feature = "office-ext")]
++                        if slides_plugins::init_web() {
++                            deckcraft_ui_egui::office_overlay::set_plugin_menu(slides_plugins::menu);
++                        }
+                         bridge.post_ready();
+                     }
+                     Ok(Box::new(WebShell { app, inbox, bridge: app_bridge }))
+diff --git a/apps/deckcraft-web/src/web/host.rs b/apps/deckcraft-web/src/web/host.rs
+index 5cedb9a..0012c5c 100644
+--- a/apps/deckcraft-web/src/web/host.rs
++++ b/apps/deckcraft-web/src/web/host.rs
+@@ -11,6 +11,8 @@
+ //!   file DeckCraft would otherwise download. A Save of the presentation always sends a `.pptx`.
+ //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
+ //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
++//! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
++//!   handled by slides-plugins; this file only forwards the messages and posts the answers.
+ //!
+ //! Only the parent window is heard or answered, and only on its origin: the page's own unless
+ //! `&parent_origin=` names another. In host mode the page starts with a blank presentation.
+@@ -104,6 +106,18 @@ impl Bridge {
+         if self.reported.get() != Some(dirty) && self.send(&[("type", "deckcraft:dirty".into()), ("dirty", dirty.into())]) {
+             self.reported.set(Some(dirty));
+         }
++        #[cfg(feature = "office-ext")]
++        {
++            let post = |m: &JsValue, t: &js_sys::Array| self.parent.post_message_with_transfer(m, &self.origin, t).is_ok();
++            let (active, status) = slides_plugins::web::sync(&mut app.session, &post);
++            if let Some(s) = status.into_iter().last() {
++                app.set_status(s);
++            }
++            if active {
++                // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
++                ctx.request_repaint_after(std::time::Duration::from_millis(200));
++            }
++        }
+     }
+ 
+     /// The opened file replaces whatever was shown.
+@@ -161,6 +175,8 @@ impl Bridge {
+                     *bridge.to_open.borrow_mut() = Some((name, bytes));
+                 }
+                 Some("deckcraft:requestSave") => bridge.save_requested.set(true),
++                #[cfg(feature = "office-ext")]
++                Some(_) if slides_plugins::web::is_plugin_message(&data) => slides_plugins::web::incoming(&data),
+                 _ => return,
+             }
+             ctx.request_repaint();
+diff --git a/apps/deckcraft/Cargo.toml b/apps/deckcraft/Cargo.toml
+index 26ea308..7f0bff2 100644
+--- a/apps/deckcraft/Cargo.toml
++++ b/apps/deckcraft/Cargo.toml
+@@ -31,3 +31,7 @@ cpal = "0.16"
+ 
+ [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+ winit = { version = "0.30", default-features = false, features = ["x11"] }
++
++# office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
++[features]
++office-ext = []
+diff --git a/apps/deckcraft/src/main.rs b/apps/deckcraft/src/main.rs
+index 4d2a8e2..b83a1b8 100644
+--- a/apps/deckcraft/src/main.rs
++++ b/apps/deckcraft/src/main.rs
+@@ -199,6 +199,12 @@ fn main() -> eframe::Result {
+             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
+         };
+     deckcraft_ui_egui::office_history::init();
++    // Phase 7 WP13 (patches/deckcraft/0158): the user's plugins (slides-plugins) and the toolbar's Plugins menu
++    #[cfg(feature = "office-ext")]
++    {
++        slides_plugins::init();
++        deckcraft_ui_egui::office_overlay::set_plugin_menu(slides_plugins::menu);
++    }
+     log::info!("DeckCraft {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+     // The log file lives under the settings directory; opened after the arguments, so `--help` and
+     // `--version` leave no file behind. Records logged until now are written to it first.
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 1befaad..532f27c 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -280,3 +280,19 @@ pub(crate) fn brightness_at_start(own: crate::theme::Brightness, shared: Option<
+         _ => own,
+     }
+ }
++
++/// The plugin commands of the domain's extension crate (Phase 7 WP13, patch deckcraft/0158): per plugin its name and its commands as
++/// (label, registry id), in the interface language. Set once at start-up by the apps behind `office-ext` (slides-plugins); without it
++/// the toolbar has no Plugins menu.
++pub type PluginMenu = fn(&str) -> Vec<(String, Vec<(String, &'static str)>)>;
++
++static PLUGIN_MENU: std::sync::OnceLock<PluginMenu> = std::sync::OnceLock::new();
++
++pub fn set_plugin_menu(menu: PluginMenu) {
++    let _ = PLUGIN_MENU.set(menu);
++}
++
++/// The Plugins menu in the current interface language (empty without plugins).
++pub fn plugin_menu() -> Vec<(String, Vec<(String, &'static str)>)> {
++    PLUGIN_MENU.get().map(|f| f(crate::i18n::current().code())).unwrap_or_default()
++}
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+index 772f971..972b860 100644
+--- a/crates/ui-egui/src/office_toolbar.rs
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -442,6 +442,35 @@ fn output_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
+     {
+         f(app);
+     }
++    plugins_menu(app, ui);
++}
++
++/// The plugin commands (Phase 7 WP13): a menu per plugin, hidden while none is loaded. It has no icon of its own, so its label
++/// always shows. A finished command's status (the plugin's `ui.status`) goes to the status bar; on the web a command answers
++/// `{pending}` at once and the page shows the outcome.
++fn plugins_menu(app: &mut SlideApp, ui: &mut Ui) {
++    let menu = office_overlay::plugin_menu();
++    if menu.is_empty() {
++        return;
++    }
++    let label = crate::i18n::t("Plugins");
++    let main = button(ui, Btn::new("", label).tip(label.to_string()).menu(), true).0;
++    egui::Popup::menu(&main).show(|ui| {
++        for (plugin, commands) in menu {
++            ui.menu_button(plugin, |ui| {
++                for (label, id) in commands {
++                    if ui.button(label).clicked() {
++                        if let Ok(v) = app.run(id, json!({}))
++                            && let Some(t) = v.get("status").and_then(Value::as_str)
++                        {
++                            app.set_status(t.to_string());
++                        }
++                        ui.close();
++                    }
++                }
++            });
++        }
++    });
+ }
+ 
+ /// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.

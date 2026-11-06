@@ -19,6 +19,11 @@ path = "../../../../upstream/deckcraft/apps/deckcraft-cli/src/main.rs"
 deckcraft-engine = { path = "../../../../upstream/deckcraft/crates/engine" }
 deckcraft-mcp = { path = "../../../../upstream/deckcraft/crates/mcp" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
+slides-plugins = { path = "../../crates/slides-plugins", optional = true }
 
 [dev-dependencies]
 zip = { version = "3", default-features = false, features = ["deflate"] }
+
+[features]
+office-ext = ["dep:slides-plugins"]
+default = ["office-ext"]

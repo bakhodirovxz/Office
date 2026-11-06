@@ -28,3 +28,7 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
 web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
+
+# office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
+[features]
+office-ext = []

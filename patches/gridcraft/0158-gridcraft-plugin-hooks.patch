@@ -1,0 +1,259 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 12:00:00 +0500
+Subject: [PATCH] gridcraft: plugin seams (toolbar Plugins menu, desktop loader, web bridge forwarding)
+
+Phase 7 WP13 (docs/plugins.md section 6a): the seams through which the domain's extension crate sheets-plugins reaches the app.
+- ui-egui: `office_overlay::set_plugin_menu` (per plugin its name and commands, in the interface language) and a "Plugins" menu
+  item in the simplified toolbar and its overflow menu, hidden while no plugin is loaded; a command's `ui.status` is the toast.
+- desktop app, behind `office-ext`: `sheets_plugins::init()` (the user's enabled plugins, loaded on a thread) and the menu.
+- web app, behind `office-ext`, host mode only: `sheets_plugins::init_web()` (the input lock as the command hook) before `ready`;
+  `host.rs` forwards `gridcraft:plugin*` messages to sheets-plugins and posts its answers after each frame, and the app keeps
+  drawing frames while a call waits for the page. The protocol is in our crates (plugin-adapter), not here.
+---
+
+diff --git a/apps/gridcraft-web/Cargo.toml b/apps/gridcraft-web/Cargo.toml
+index eac6c13..b678157 100644
+--- a/apps/gridcraft-web/Cargo.toml
++++ b/apps/gridcraft-web/Cargo.toml
+@@ -27,3 +27,7 @@ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+ web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Clipboard", "ClipboardItem", "Navigator", "MessageEvent", "UrlSearchParams"] }
++
++# office overlay (patches/gridcraft/0158): the domain build turns this on and adds the sheets-plugins dependency (Phase 7 WP13)
++[features]
++office-ext = []
+diff --git a/apps/gridcraft-web/src/host.rs b/apps/gridcraft-web/src/host.rs
+index 2286023..30a4016 100644
+--- a/apps/gridcraft-web/src/host.rs
++++ b/apps/gridcraft-web/src/host.rs
+@@ -9,6 +9,8 @@
+ //!   as PDF. The parent stores it and reports failures itself.
+ //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
+ //! - `gridcraft:failed` (to the parent): `{ error }` when the app couldn't start.
++//! - `gridcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9, handled
++//!   by sheets-plugins; this file only forwards the messages and posts the answers.
+ //!
+ //! Only the parent window on the page's own origin is heard or answered. In host mode the page
+ //! starts with an empty workbook instead of a sample, and the parent guards leaving the page.
+@@ -80,8 +82,9 @@ impl Bridge {
+     }
+ 
+     /// After each frame: a workbook handed to the parent this frame counts as saved under the
+-    /// name it was saved as, and the parent hears when unsaved changes appear or go away.
+-    pub fn sync(&self, app: &mut SheetApp) {
++    /// name it was saved as, and the parent hears when unsaved changes appear or go away. True
++    /// while a plugin call waits for the page (the caller keeps drawing frames).
++    pub fn sync(&self, app: &mut SheetApp) -> bool {
+         let saved = std::mem::take(&mut *self.saved.borrow_mut());
+         if let Some(name) = saved.iter().rev().find(|name| is_workbook(name))
+             && let Some(doc) = app.session.active_mut()
+@@ -95,6 +98,18 @@ impl Bridge {
+         if self.reported.get() != Some(dirty) && self.send(&[("type", "gridcraft:dirty".into()), ("dirty", dirty.into())]) {
+             self.reported.set(Some(dirty));
+         }
++        #[cfg(not(feature = "office-ext"))]
++        let active = false;
++        #[cfg(feature = "office-ext")]
++        let active = {
++            let post = |m: &JsValue, t: &js_sys::Array| self.parent.post_message_with_transfer(m, &self.origin, t).is_ok();
++            let (active, status) = sheets_plugins::web::sync(&mut app.session, &post);
++            if let Some(s) = status.into_iter().last() {
++                app.toast = Some((s, gridcraft_ui_egui::now_ms()));
++            }
++            active
++        };
++        active
+     }
+ 
+     fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
+@@ -117,6 +132,12 @@ impl Bridge {
+                 return;
+             }
+             let data = event.data();
++            #[cfg(feature = "office-ext")]
++            if sheets_plugins::web::is_plugin_message(&data) {
++                sheets_plugins::web::incoming(&data);
++                ctx.request_repaint();
++                return;
++            }
+             if string(&data, "type").as_deref() != Some("gridcraft:open") {
+                 return;
+             }
+diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
+index 88ccfd8..9863fa2 100644
+--- a/apps/gridcraft-web/src/web.rs
++++ b/apps/gridcraft-web/src/web.rs
+@@ -77,6 +77,11 @@ pub fn start() {
+                         if let Some(author) = query_param("author") {
+                             crate::host::Bridge::set_author(&mut app, &author);
+                         }
++                        // Phase 7 WP13 (patches/gridcraft/0158): plugins from the host page (sheets-plugins), before `ready` asks for them
++                        #[cfg(feature = "office-ext")]
++                        if sheets_plugins::init_web() {
++                            gridcraft_ui_egui::office_overlay::set_plugin_menu(sheets_plugins::menu);
++                        }
+                         bridge.post_ready();
+                     }
+                     Ok(Box::new(WebShell { app, inbox, bridge: app_bridge }))
+@@ -138,8 +143,11 @@ impl eframe::App for WebShell {
+ 
+     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+         self.app.ui(ui);
+-        if let Some(bridge) = &self.bridge {
+-            bridge.sync(&mut self.app);
++        if let Some(bridge) = &self.bridge
++            && bridge.sync(&mut self.app)
++        {
++            // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
++            ui.ctx().request_repaint_after(std::time::Duration::from_millis(200));
+         }
+     }
+ }
+diff --git a/apps/gridcraft/Cargo.toml b/apps/gridcraft/Cargo.toml
+index cd8311b..fcf5e28 100644
+--- a/apps/gridcraft/Cargo.toml
++++ b/apps/gridcraft/Cargo.toml
+@@ -52,3 +52,7 @@ objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["std
+ [[test]]
+ name = "mac_menu_appkit"
+ harness = false
++
++# office overlay (patches/gridcraft/0158): the domain build turns this on and adds the sheets-plugins dependency (Phase 7 WP13)
++[features]
++office-ext = []
+diff --git a/apps/gridcraft/src/main.rs b/apps/gridcraft/src/main.rs
+index c184e83..30632e0 100644
+--- a/apps/gridcraft/src/main.rs
++++ b/apps/gridcraft/src/main.rs
+@@ -259,6 +259,12 @@ fn main() -> eframe::Result<()> {
+     }
+     gridcraft_ui_egui::office_toolbar::init();
+     gridcraft_ui_egui::office_history::init();
++    // Phase 7 WP13 (patches/gridcraft/0158): the user's plugins (sheets-plugins) and the toolbar's Plugins menu
++    #[cfg(feature = "office-ext")]
++    {
++        sheets_plugins::init();
++        gridcraft_ui_egui::office_overlay::set_plugin_menu(sheets_plugins::menu);
++    }
+     let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
+     let mut sample: Option<String> = None;
+     let mut files: Vec<String> = Vec::new();
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 82e1770..d78ae71 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -167,3 +167,19 @@ pub fn theme_at_start(ui: &mut crate::UiState, shared: Option<&str>) {
+         _ => {}
+     }
+ }
++
++/// The plugin commands of the domain's extension crate (Phase 7 WP13, patch gridcraft/0158): per plugin its name and its commands as
++/// (label, registry id), in the interface language. Set once at start-up by the apps behind `office-ext` (sheets-plugins); without it
++/// the toolbar has no Plugins menu.
++pub type PluginMenu = fn(&str) -> Vec<(String, Vec<(String, &'static str)>)>;
++
++static PLUGIN_MENU: std::sync::OnceLock<PluginMenu> = std::sync::OnceLock::new();
++
++pub fn set_plugin_menu(menu: PluginMenu) {
++    let _ = PLUGIN_MENU.set(menu);
++}
++
++/// The Plugins menu in the current interface language (empty without plugins).
++pub fn plugin_menu() -> Vec<(String, Vec<(String, &'static str)>)> {
++    PLUGIN_MENU.get().map(|f| f(LANG_CODE.get())).unwrap_or_default()
++}
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+index 07c4017..9bc336b 100644
+--- a/crates/ui-egui/src/office_toolbar.rs
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -35,6 +35,8 @@ enum Kind {
+     Borders,
+     Menu(&'static [Entry]),
+     Button,
++    /// The plugin commands (Phase 7 WP13): a menu per plugin, from `office_overlay::plugin_menu`; hidden when there are none.
++    Plugins,
+ }
+ 
+ struct Item {
+@@ -117,6 +119,8 @@ const ITEMS: &[Item] = &[
+     item(Kind::Menu(TRANSLIT), "tools.translitAuto", "translate", "Transliterate", 6, true),
+     // Ours (WP10): hidden until the command is registered.
+     item(Kind::Button, "office.history", "history", "Version History", 6, true),
++    // Ours (Phase 7 WP13): hidden while no plugin is loaded; no icon of its own, so its label always shows.
++    item(Kind::Plugins, "office.plugins", "", "Plugins", 6, true),
+ ];
+ 
+ const H: f32 = 28.0;
+@@ -390,12 +394,37 @@ fn is_on(app: &SheetApp, st: &Style, id: &str) -> bool {
+ }
+ 
+ fn shown(item: &Item) -> bool {
+-    item.id != "office.history" || gridcraft_engine::find_command(item.id).is_some()
++    match item.kind {
++        Kind::Plugins => !office_overlay::plugin_menu().is_empty(),
++        _ => item.id != "office.history" || gridcraft_engine::find_command(item.id).is_some(),
++    }
+ }
+ 
+ /// The item's label as drawn (or `None` for an icon-only item).
+ fn label_of(app: &SheetApp, item: &Item, labels: bool) -> Option<String> {
+-    (labels && item.text).then(|| app.ui.language.tr(item.label).to_string())
++    ((labels || matches!(item.kind, Kind::Plugins)) && item.text).then(|| app.ui.language.tr(item.label).to_string())
++}
++
++/// The plugin menus: one submenu per plugin. A finished command's status (the plugin's `ui.status`) is the toast, an error the
++/// usual alert. On the web a command answers `{pending}` at once and the page shows the outcome.
++fn plugin_items(app: &mut SheetApp, ui: &mut Ui) {
++    for (plugin, commands) in office_overlay::plugin_menu() {
++        ui.menu_button(plugin, |ui| {
++            for (label, id) in commands {
++                if ui.button(label).clicked() {
++                    match app.run(id, json!({})) {
++                        Ok(v) => {
++                            if let Some(t) = v.get("status").and_then(Value::as_str) {
++                                app.toast = Some((t.to_string(), crate::now_ms()));
++                            }
++                        }
++                        Err(e) => app.alert(e),
++                    }
++                    ui.close();
++                }
++            }
++        });
++    }
+ }
+ 
+ fn item_w(ui: &Ui, app: &SheetApp, item: &Item, labels: bool) -> f32 {
+@@ -403,7 +432,7 @@ fn item_w(ui: &Ui, app: &SheetApp, item: &Item, labels: bool) -> f32 {
+         Kind::Font | Kind::Number => 150.0,
+         Kind::Size => 52.0,
+         Kind::Color | Kind::Borders => H + 14.0,
+-        Kind::Menu(_) => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), true),
++        Kind::Menu(_) | Kind::Plugins => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), true),
+         Kind::Toggle | Kind::Button => tool_w(label_of(app, item, labels).map(|l| text_w(ui, &l)), false),
+     }
+ }
+@@ -431,6 +460,10 @@ fn draw_item(app: &mut SheetApp, ui: &mut Ui, item: &Item, st: &Style, labels: b
+             }
+             egui::Popup::menu(&r).show(|ui| ribbon::menu_items(app, ui, &entries(list)));
+         }
++        Kind::Plugins => {
++            let r = tool(ui, item.icon, label.as_deref(), true, None, &name, name.clone());
++            egui::Popup::menu(&r).show(|ui| plugin_items(app, ui));
++        }
+         Kind::Color => {
+             let (last, bar_id) =
+                 if item.id == "home.fillColor" { (app.grid.last_fill.clone(), "Fill") } else { (app.grid.last_font_color.clone(), "Font") };
+@@ -542,6 +575,10 @@ fn overflow(app: &mut SheetApp, ui: &mut Ui, items: &[&Item]) {
+                 let label = app.ui.language.tr(it.label).to_string();
+                 ui.menu_button(label, |ui| ribbon::menu_items(app, ui, &entries(list)));
+             }
++            Kind::Plugins => {
++                let label = app.ui.language.tr(it.label).to_string();
++                ui.menu_button(label, |ui| plugin_items(app, ui));
++            }
+             _ => ribbon::menu_items(app, ui, &[(it.label, it.id, json!({}))]),
+         }
+     }

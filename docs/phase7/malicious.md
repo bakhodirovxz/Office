@@ -46,6 +46,36 @@ Columns:
 | P2 | an unsigned package, or one signed by a key nobody trusts, where it is not allowed: a server, or a user folder under `policy.toml` `user_unsigned = false` (the user's own `trusted_keys` do not count then) | server: refused and audited; local under the policy: install refused, an installed one stops; local otherwise: runs with the Plugins page warning | `plugins.rs::unsigned_installs_locally_unless_the_policy_forbids_it` | same store; not run | `plugins-page.spec.ts` "signatures (O4)" (warning and policy line, fake host) | `a_server_takes_only_packages_signed_by_a_trusted_key`; `docserver.spec.ts` "plugins in the wrapper" now signs its fixtures (not re-run) | n/a (no machine policy on Android; the warning only) |
 | P3 | uninstall while the plugin is loaded, or an uninstall message for IT's package or a path | the user's folder, record and grants go; a loaded copy keeps running from memory and is never served again; IT's package and a path are refused | `plugins.rs::uninstall_removes_the_package_its_record_and_grants`; `suite-desktop` `the_plugin_messages_follow_the_path_rules_and_the_policy` | not run (the app keeps the module it loaded at start) | `plugins-page.spec.ts` "uninstall" (fake host) | `a_removed_package_is_not_served_and_a_restart_forgets_it` | `Plugins.uninstall` compiled only; not run on the emulator |
 
+## Sheets and Slides (Phase 7 WP13)
+
+The adapters are `crates/plugin-adapter` (executor, bridge; tests with a fake editor under the Sheets allowlist) and the engine sides
+`domains/sheets/crates/sheets-plugins`, `domains/slides/crates/slides-plugins` (tests with the real engines). The wasm host
+(`plugin-host`) and the page host and Worker (`web/plugins/host.js`, `worker.js`) are the ones Docs uses, unchanged, so the rows that
+only they decide are shared. `adapter` = `plugin-adapter/src/tests.rs`, `sheets` / `slides` = `<app>-plugins/src/tests.rs`.
+
+| # | Attack | Sheets and Slides, native | Sheets and Slides, web |
+|---|---|---|---|
+| M1, M2, M2b, S1, M6, M7 | imports, own memory, a second memory or GC types, deep recursion, a loop, memory growth | shared host: the `host.rs` tests of the Docs table (the same `plugin_host::Host::load` through `plugin_adapter::native`) | shared page host and Worker: `plugins-host.spec.ts` rows; not re-run inside the Sheets or Slides frame |
+| S2 | slow host-side work | `adapter::s2_a_slow_invocation_hits_the_deadline_and_the_fetch_cap_holds`, `a_plugin_that_times_out_three_times_is_switched_off` | the page's numbers (shared `host.js`) |
+| M3, M4 | `fetch` outside the manifest's origins, other origin, plain http, look-alike host | `adapter::m3_m4_fetch_needs_a_granted_origin_and_the_host_does_it` (native fetch is the shared `plugin-host::net`) | shared `host.js`; not re-run in these frames |
+| M5 | `file.saveAs`, `file.open`, `file.exportCsv`, `data.getData`/`fromTextCsv`, `insert.picture`, `shape.action`, `tools.*`, `edit.*`, `automate.*`, `office.*`, `plugin.*`, a `path`/`file` key | `adapter::m5_refused_commands_and_params_leave_the_document_alone`; `sheets::m5_a_save_as_is_refused_and_no_file_is_written`, `slides::m5_refused_commands_and_hyperlinks_leave_the_presentation_alone` (the path is checked: no file) | `adapter::web_bridge::an_abort_and_a_refused_action_restore` (the editor end of the bridge) |
+| M5a | (Sheets) a formula through `cell.set`, `range.setValues`, `range.fill`: `=WEBSERVICE(...)`, `=HYPERLINK("file:...")`, DDE `+cmd\|...`, `  =1+1` | `adapter::m5_...` (three forms), `sheets::m5_...` (`HYPERLINK`); `plugin-api` `allow::check_run_in` with `no_formulas` | same check in the editor |
+| M5b | (Slides) a hyperlink in run props: `link`, `hover`, an `action` | `slides::m5_...` | same check in the editor |
+| M8 | malformed answers; an apply with an extra paragraph or segment, a changed segment that is not editable (a locked cell, text outside the selected range), a control character, a bad blob, two applies on one read | `adapter::m8_malformed_answers_are_refused_and_restore`; `sheets::m8_an_apply_after_the_cell_changed_or_with_the_wrong_shape_is_refused`, `slides::m8_a_changed_object_segment_or_a_moved_text_is_refused` | the same executor (`Remote::actions`) |
+| M9 | markup and long panel text | n/a: panels are not drawn natively in v1 (kept, not shown) | shared page host: `plugins-host.spec.ts` "M9" |
+| M10 | edit from an event | n/a: Sheets and Slides send no events in v1 | n/a (no `pluginEvent` from these editors) |
+| M11 | Worker CSP | n/a | shared `worker.js` and its CSP header |
+| M12 | a plugin not enabled for the provider | n/a | shared docserver routes; the page host also loads only plugins whose `apps` list the frame's app |
+| R1 | more than 16 reads in a round | `adapter::r1_more_than_16_reads_in_a_round_are_refused_before_any_is_done`; 16 rounds: `more_than_16_rounds_are_refused` | the same `Run::read` |
+| F5 | a second command while one is pending | `adapter::web_bridge::a_command_is_pending_locks_input_...` (BUSY), `a_panel_click_starts_...` (busy, ended) | the input lock: `sheets::the_web_lock_refuses_changes_but_not_moves_while_a_call_waits`, `slides::the_web_lock_refuses_changes_and_the_answer_is_one_undo_step` |
+| F7b | a protected document | `sheets::a_protected_sheet_or_structure_is_refused_and_a_reading_plugin_still_runs`; Slides has no protection | `adapter::web_bridge::a_protected_document_is_not_started_on`, and a panel click on one (`a_panel_click_...`) |
+| stale | the document moved between the read and the apply, or between rounds | `adapter::a_stale_revision_is_refused`; Slides' content revision ignores a selection change: `slides::the_content_revision_ignores_a_selection_change_and_moves_with_an_edit` | `adapter::web_bridge::a_document_that_moved_is_stale_and_restored`, `no_answer_in_time_...`, `replacing_the_document_...` |
+| allowlist | an allowed command whose params speak of a path, file, URL, bytes or link; a refused family that became runnable | `sheets::the_allowlist_matches_the_registry`, `slides::the_allowlist_matches_the_registry` (the real registries) | same data |
+
+Not verified for Sheets and Slides: the browser rows inside a Sheets or Slides frame (Playwright with the real page host and these
+editors' wasm), the docserver wrapper and the Android app with these editors. They use the shared page host unchanged; the
+editor end is covered by the native tests of its bridge above.
+
 ## Findings
 
 1. **R1, not blocked natively (fixed).** `Machine::resume` and `Remote::reads` looped over `next.reads` without a count, and each text map

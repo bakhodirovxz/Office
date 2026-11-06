@@ -11,6 +11,8 @@
 //!   file DeckCraft would otherwise download. A Save of the presentation always sends a `.pptx`.
 //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
+//! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
+//!   handled by slides-plugins; this file only forwards the messages and posts the answers.
 //!
 //! Only the parent window is heard or answered, and only on its origin: the page's own unless
 //! `&parent_origin=` names another. In host mode the page starts with a blank presentation.
@@ -104,6 +106,18 @@ impl Bridge {
         if self.reported.get() != Some(dirty) && self.send(&[("type", "deckcraft:dirty".into()), ("dirty", dirty.into())]) {
             self.reported.set(Some(dirty));
         }
+        #[cfg(feature = "office-ext")]
+        {
+            let post = |m: &JsValue, t: &js_sys::Array| self.parent.post_message_with_transfer(m, &self.origin, t).is_ok();
+            let (active, status) = slides_plugins::web::sync(&mut app.session, &post);
+            if let Some(s) = status.into_iter().last() {
+                app.set_status(s);
+            }
+            if active {
+                // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
+                ctx.request_repaint_after(std::time::Duration::from_millis(200));
+            }
+        }
     }
 
     /// The opened file replaces whatever was shown.
@@ -161,6 +175,8 @@ impl Bridge {
                     *bridge.to_open.borrow_mut() = Some((name, bytes));
                 }
                 Some("deckcraft:requestSave") => bridge.save_requested.set(true),
+                #[cfg(feature = "office-ext")]
+                Some(_) if slides_plugins::web::is_plugin_message(&data) => slides_plugins::web::incoming(&data),
                 _ => return,
             }
             ctx.request_repaint();

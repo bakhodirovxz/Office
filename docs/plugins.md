@@ -1,12 +1,13 @@
 # Plugins (API v1)
 
-How to write, package, install and administer a plugin for the Docs editor. Sections 1-8 are the contract between a plugin and
+How to write, package, install and administer a plugin for the Docs, Sheets and Slides editors. Sections 1-8 are the contract between a plugin and
 a host (the rules `crates/plugin-api` enforces: when this text and the crate disagree, the crate is right and this text is a
 bug). Section 9 is for the person who installs plugins or runs a server. Sections 10-13 are the command catalog, the Rust SDK
 with a copy-and-edit template, the version rules and the security model. Appendix A is the editor/page bridge for people who
 write a host; a plugin author can skip it. Design background: `docs/phase7/PLAN.md`.
 
-Plugins run in Docs (`apps = ["docs"]`). Adapters for Sheets and Slides and an administration page are not built (section 9.7).
+Plugins run in Docs, Sheets and Slides (`apps = ["docs", "sheets", "slides"]`, any of them; Phase 7 WP13 added Sheets and
+Slides, section 6a). PDF has no plugin adapter. An administration page is not built (section 9.7).
 
 ## 1. Concepts
 
@@ -38,7 +39,7 @@ because TOML puts every key after a header into that table.
 | `id` | `[a-z0-9.-]`, 3-64 characters, starts and ends with a letter or digit, no `..`. Unique per install. Never the product name. |
 | `version` | `MAJOR.MINOR.PATCH` with an optional `-prerelease`; numbers without leading zeros; no `+build`. |
 | `api` | The API major the plugin was built for. The host lists the majors it runs (v1 hosts: 1); anything else is refused. |
-| `apps` | One to four of `docs`, `sheets`, `slides`, `pdf`; no repeats. Only `docs` hosts plugins today. |
+| `apps` | One to four of `docs`, `sheets`, `slides`, `pdf`; no repeats. `docs`, `sheets` and `slides` host plugins (`pdf` does not yet); an editor loads only the plugins that list it. |
 | `publisher` | Free text, 1-128 characters, shown in the install dialog. |
 | `name.<lang>` | `en` required; `ru`, `uz-Latn`, `uz-Cyrl` optional; a missing language falls back to `en`. Any other language key is refused. |
 | `events` | Any of `documentOpened`, `documentSaved`, `selectionChanged`; no repeats. |
@@ -189,9 +190,51 @@ digits, `_`, `-`, up to 48. A click on a `button` calls the plugin with `kind = 
 or choosing a `select` option does the same with the text or value in `params.value`. Panel content is declarative: no markup,
 no script, text is always shown as text.
 
+## 6a. Sheets and Slides
+
+The same API, package, permissions and limits as Docs; the adapter is `crates/plugin-adapter` with the engine sides
+`domains/sheets/crates/sheets-plugins` and `domains/slides/crates/slides-plugins`. The call's `app` is `sheets` or `slides`. What
+differs:
+
+- **Commands.** Every command of an enabled plugin is listed in a "Plugins" menu of the simplified toolbar, one submenu per plugin
+  (there is no command palette for plugin commands in these editors, so `[[toolbar]]` and `[[menu]]` entries add nothing). The
+  menu is not in the full ribbon. A finished command's `ui.status` is the toast (Sheets) or the status bar (Slides). At most 64
+  distinct plugin command ids per process (the engines' registries cannot remove a command, so an id keeps its slot until the
+  app restarts).
+- **Allowlist** (`plugin_api::allow::SHEETS` and `SLIDES`, deny by default, tested against the real registries in the two
+  crates). Sheets: `cell.`, `range.`, `home.`, `selection.` minus `home.addIns`, `home.lockCell`, `home.insertCopiedCells`; reads
+  `document.inspect`, `sheet.read`, `cell.get`, `selection.stats`. **No formula**: a params string that Sheets would read as a formula (`=...`, `+A1`, `-SUM(`,
+  `@...`, leading blanks skipped) refuses the `run`, because a formula can reach other files and programs (external references,
+  `WEBSERVICE`, `HYPERLINK`, DDE). Slides: `text.`, `format.`, `table.`, `selection.` minus the two dialog commands; reads
+  `document.inspect`, `slide.inspect`, `shape.inspect`; the keys `hover` and `action` (hyperlinks that can start a program) are
+  refused like `link`.
+- **Text map, Sheets.** One paragraph per constant text cell in scope (row by row, sheet by sheet), one editable segment each (a
+  cell holds one plain string; the engine keeps no rich text). Formulas and their results, numbers, booleans, table header cells,
+  locked cells of a protected sheet, spill and in-cell picture cells are not in the map. `scope`: `auto` (the selection when it is
+  more than one cell, else the sheet), `selection`, `sheet`, `workbook`, `document` (= `workbook`). The apply checks every cell
+  against the read, writes the changed ones as one edit and recalculates the formulas that read them.
+- **Text map, Slides.** The shapes, groups, table cells and speaker notes of the scope, one paragraph per text paragraph, one
+  segment per piece: a run, or the part of one inside or outside a selected text range (`outside the selection`). Field, break and
+  equation runs are `object` segments. The run's language tag is the segment's. `scope`: `auto` (the selected text range, else the
+  selected shapes, else the deck), `selection`, `slide`, `deck`, `document` (= `deck`). Masters and layouts are not in it. The
+  apply writes the pieces back as runs (properties and link targets kept), merges what `normalize` merges, and keeps a selected
+  range on the same text.
+- **Protected documents.** A workbook with a protected sheet or a protected structure is protected: a plugin that may write is
+  refused on it ("the document is protected"); a reading plugin runs. Slides has no protection.
+- **Undo, restore, stale.** As in Docs: one undo step per invocation (labelled with the command), any error restores the
+  document, the selection and the undo and redo stacks, and an apply after the content changed is refused. In Slides the
+  revision is the content's (a selection change does not make a read stale).
+- **Not in v1:** events are never sent; a panel is drawn on the web (by the page host) but not in the desktop apps (a
+  `ui.panel` action is accepted and kept).
+- **Web.** The bridge of Appendix A with the prefix `gridcraft` or `deckcraft` (no `pluginEvent`). While a call waits for the
+  page, the input lock is a command hook: every command that changes the document (and `file.*`, `edit.*`, `plugin.*`,
+  `office.*`) is refused with "another plugin is still running"; moving the selection and changing the sheet or slide stay
+  possible.
+
 ## 7. Events
 
-`documentOpened`, `documentSaved` and `selectionChanged` (debounced 200 ms) are sent only to plugins that list them. An event
+`documentOpened`, `documentSaved` and `selectionChanged` (debounced 200 ms) are sent only to plugins that list them, in Docs
+only (section 6a). An event
 call can only answer with `ui.panel` and `ui.status`; it cannot run commands or change the document. It may ask for reads in
 `next.reads` (needs `document = read` or `write`); the resume call carries them and may answer `ui.*` again. A failed event call
 is recorded on the plugin and never shown to the user.
@@ -409,7 +452,8 @@ by `gen-brand.py`); Android has no machine policy, so an unsigned package instal
 
 Remove the id from `enabled` (local) or the entry from the provider (server); the editors drop the commands and the panel at
 the next page load (local) or the next document open (server). Not built: an admin page (configuration files only),
-update-in-place prompts, key revocation other than taking a key out of the configuration, Sheets and Slides adapters.
+update-in-place prompts, key revocation other than taking a key out of the configuration, events and native panels in Sheets and
+Slides (section 6a), a PDF adapter.
 
 ## 10. The command catalog
 
@@ -546,10 +590,12 @@ text of the handler, or "plugin stopped" with the reason when the host refused t
 
 ### 11.2 The first-party plugins
 
-- `plugins/uz-translit` (`document = write`): the three transliteration commands as one text map round: the command `reads`
-  `textmap`, converts the editable segments with the same `uz-translit` crate as the built-in command, and answers
-  `textmap.apply` plus a status line with the counts. It is the model for any bulk text plugin.
-- `plugins/template-fields` (`document = write`, one event): a panel, `ui` calls, catalog commands with parameters, an event
+- `plugins/uz-translit` (`document = write`, `apps = ["docs", "sheets", "slides"]`): the three transliteration commands as one
+  text map round: the command `reads` `textmap`, converts the editable segments with the same `uz-translit` crate as the built-in
+  command, and answers `textmap.apply` plus a status line with the counts ("cells" in Sheets). `auto` finds the direction from the
+  text the app's built-in reads: in Slides only the segments it would convert (not fields, not other languages). It is the model
+  for any bulk text plugin.
+- `plugins/template-fields` (`document = write`, one event, `apps = ["docs"]`: content controls and bookmarks are Docs only): a panel, `ui` calls, catalog commands with parameters, an event
   with a read, and settings. The field list is configuration only: `settings.fields = [{name, label, kind}]` (`kind` is `text`,
   the default, or `bookmark`). The manifest carries a synthetic default list; an administrator replaces it per provider and, in
   local mode, the user does with `[plugins.settings.<id>]`. No real field name is in the code, tests or docs.
@@ -648,7 +694,8 @@ keep the undo step, the revision and the snapshot. The page keeps `ui.*` and `fe
 
 ### A.2 The editor bridge
 
-Messages are the `?host=parent` protocol (prefix `wordcraft`), same origin. `call` is an integer for an invocation the editor
+Messages are the `?host=parent` protocol (prefix `wordcraft`; `gridcraft` and `deckcraft` for Sheets and Slides, which send no
+`pluginEvent`, section 6a), same origin. `call` is an integer for an invocation the editor
 starts and a text (`h<n>`) for one the page starts (a panel click). Buffers are transferred `ArrayBuffer`s, never base64.
 
 | Message | Direction | Fields |
@@ -672,6 +719,8 @@ result says to use `next.reads`).
 
 - 2026-11-06: publisher signatures (decision P7-O4: pin + optional signature; section 9.1), `trusted_keys` and `user_unsigned`,
   `cargo xt plugin keygen|pubkey|sign`; uninstall on the desktop (`plugins_uninstall`) and Android, documented for the servers.
+- 2026-11-06 (Phase 7 WP13): Sheets and Slides host plugins (section 6a): per-app allowlists (`plugin_api::allow::list`), the text
+  maps of both editors, the `gridcraft:` and `deckcraft:` bridges, the toolbar's Plugins menu; uz-translit lists all three apps.
 
 - 2026-11-03: first complete version. Every read now needs the document permission (a plugin with `document = "none"` could read
   through `next.reads` before). The command catalog is generated (`docs/plugins-commands.md`). `plugins/template`, and
