@@ -1865,6 +1865,9 @@ impl SlideApp {
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         if !self.fonts_ready {
+            // office overlay (patches/deckcraft/0156): redo the pass with the new fonts active instead of presenting this empty
+            // one, which shows eframe's near-black clear colour (the window opened dark).
+            ctx.request_discard("fonts pending");
             ctx.request_repaint();
             return;
         }

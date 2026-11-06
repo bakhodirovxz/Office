@@ -3125,6 +3125,9 @@ impl eframe::App for PdfCraftApp {
         i18n::set_current(i18n::Lang::from_pref(&self.language));
         // Fonts registered via set_fonts only take effect next frame; named families would panic now.
         if !self.fonts_ready {
+            // office overlay (patches/pdfcraft/0121): redo the pass with the new fonts active instead of presenting this empty
+            // one, which shows eframe's near-black clear colour (the window opened dark).
+            ctx.request_discard("fonts pending");
             ctx.request_repaint();
             return;
         }

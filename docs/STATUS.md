@@ -2,6 +2,8 @@
 
 **Current phase:** 4 — Unified shell (branch `phase-4`, plan `docs/phase4/PLAN.md`). **Phase 3 closed on 2026-10-22** (owner "go"): `ci.sh full` 28/28, the silent-loss ratchet 0 new, gate review and close-out in `docs/phase3/gate-review.md` (§10 carry-forward list). O8 not answered: the code default stays the native PDF → DOCX engine with the D5 fallback.
 
+**Owner MSI test feedback (2026-11-06), Docs pointer "stays white, hard to find": NOT reproduced, no fix.** Code review: the page canvas requests `CursorIcon::Text` over text and `Default` only in the selection bar (`upstream/wordcraft/crates/ui-egui/src/canvas.rs:1743-1753`; headless kittest hover over text returns `Text`, so the I-beam is requested); no custom cursor images anywhere in our layer or wordcraft; egui-winit maps to the standard OS cursors. Owner scheme is "Windows Aero" with the default (inverting) I-beam (`HKCUControl PanelCursors`). Live capture was impossible (workstation was locked). Needs a real screenshot or the owner's cursor scheme/size to continue.
+
 **Phase 4 WP0 (upstream sync) done 2026-10-22** (`docs/phase4/sync-report.md`): wordcraft v0.9.0 `2e6db0b`, gridcraft v0.10.0 `2ebdf16`, deckcraft v0.9.0 `fe510bd`, pdfcraft v0.11.0 `3e30645`, craft-libs `1b9cf19` (craft-fonts unchanged). 73 patches: 53 clean, 5 3-way, 13 hand-merged, 1 amended (gridcraft 0130), wordcraft 0003 dropped (upstream does it), pdfcraft 0111 new (D7). NumLocale re-threaded through upstream value_text_as; tests and the WP14 matrix unchanged (byte-identical). 68 new i18n rows with uz drafts for review. Gates: verify-queue, register, ci quick, release builds x4, convert-e2e (43/0), translit-preserve, sizes (base_br re-measured, our delta inside every delta_br_max) green. Open: wordcraft/gridcraft origin/HEAD are 562/605 commits further (next sync); the sync gate cannot pass new P1 strings without drafts.
 
 **Previous:** 3 — Converter (branch `phase-3`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
@@ -1556,6 +1558,22 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 ### Phase 5 XDFU gate fixes F18, F19 (2026-10-31, branch `p5-xdfu`, `ca62fce`)
 - **Done.** Docs Save As onto the working path is no copy (case-insensitive on Windows); text stamping never refuses or deletes a copy (Docs, gridcraft 0143, deckcraft 0143 amended in place); Docs stamps the reported output path; deckcraft logs `<event>_unstamped` when no shape id is left; `mailings.finish` and the in-window editors added to the limits in `docs/phase4/hooks-docs.md`. XDFU stays off by default; F4, F5 and m13 still gate switching it on.
 - **Not checked:** Sheets and Slides still compare the working path exactly (case); a real Windows drive-case run of Save As.
+
+### Phase 4 fix: the Docs/Sheets window goes dark for a moment (owner MSI test, 2026-11-06; branch `p4-flicker`)
+- **Cause.** All four editors return from `ui()` without drawing while new fonts are pending (named font families would
+  panic), and eframe presents that pass in its default clear colour (12, 12, 12): Docs two frames at start, Sheets one at start
+  and one after every font rebind (font scan done; each new style that adds a font name, e.g. font, bold, fill), Slides and PDF
+  one at start. Not the renderer: DX12 on the UHD 630, no swapchain recreation, no window-mode change found. Fix: the gates call
+  `ctx.request_discard` (egui redoes the pass at once with the fonts active): wordcraft/0140, gridcraft/0156, deckcraft/0156,
+  pdfcraft/0121. Tests: wordcraft and gridcraft ui-egui `tests/no_blank_frames.rs` fail before (empty first frame; 1 shape after
+  a font change) and pass after; gridcraft-ui-egui suite 726 pass, 1 quarantined fail; wordcraft-ui-egui 731 pass, 14
+  quarantined fails plus `recovery_restore_uses_save_changes...` failing once under the parallel suite (passes alone 3 of 3).
+- **Measured** (PrintWindow capture of the window, about 25 grabs/s, the PC locked, CPU busy with other builds; fixtures only):
+  continuous near-black window after it is shown, before -> after: Docs 2.0-5.7 s (6 runs) -> 0 (6), Sheets 0.1-4.9 s (4) -> 0
+  (3), Slides 0.2-0.4 s (3) -> 0 (3), PDF 0-14.6 s (5) -> 0 (5). Not seen: a mid-session dark frame on screen, before or after
+  (30 s runs with 100-177 typed/clicked/font inputs); the test is the evidence there. Open: right after the window is shown
+  the capture sees one black grab and then stalls 1.7-2.4 s in 3 of 6 Docs runs, while the app answers frames every ~0.1 s
+  (control port): the screen in that gap is unmeasured; whole-screen effects and other GPUs not checked.
 
 ## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
 - Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
