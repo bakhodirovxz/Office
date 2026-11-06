@@ -574,7 +574,7 @@ const SKIP_CALLEES: [&str; 33] = [
     "split",
     "find",
 ];
-const SKIP_CALLEES2: [&str; 8] = [
+const SKIP_CALLEES2: [&str; 9] = [
     "trim_start_matches",
     "trim_end_matches",
     "trim_matches",
@@ -583,6 +583,7 @@ const SKIP_CALLEES2: [&str; 8] = [
     "insert",
     "entry",
     "var",
+    "request_discard", // egui debug reason (the p4-flicker patches), never shown
 ];
 
 /// Literals that look like text but are not UI: the arrow's accessibility name in patch deckcraft/0140 (no words to translate).
