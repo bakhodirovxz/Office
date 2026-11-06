@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Fri, 6 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: no empty (dark) frame while the first fonts activate
+
+The `fonts_ready` gate in DeckApp::ui drew nothing on the first frame. eframe presents it with its default clear colour,
+near-black (12, 12, 12), and shows the window after it: the window opened dark until the second frame (0.2 s on the
+Intel UHD 630 test PC under load; same cause as the Docs and Sheets report from the owner's Phase 4 MSI test). The gate
+now calls `request_discard`, so egui redoes the pass at once with the fonts active.
+---
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 3e09973..3c2a1cc 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1865,6 +1865,9 @@ impl SlideApp {
+     pub fn ui(&mut self, ui: &mut egui::Ui) {
+         let ctx = ui.ctx().clone();
+         if !self.fonts_ready {
++            // office overlay (patches/deckcraft/0156): redo the pass with the new fonts active instead of presenting this empty
++            // one, which shows eframe's near-black clear colour (the window opened dark).
++            ctx.request_discard("fonts pending");
+             ctx.request_repaint();
+             return;
+         }
