@@ -1,0 +1,17 @@
+{
+  "item": "S2-deadline",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.640Z",
+  "details": {
+    "tried": [
+      "ping: stopped time budget after 10656 ms, 14 resume rounds"
+    ],
+    "stopped_after_ms": 10656,
+    "resume_rounds": 14,
+    "note": "a round is under the 5 s budget and over 10 s / 16 rounds; only the 10 s invocation deadline can stop the chain"
+  },
+  "screenshots": [
+    "recheck-S2.png"
+  ]
+}

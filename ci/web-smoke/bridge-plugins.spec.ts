@@ -15,13 +15,12 @@ import { documentXml } from './docx-xml';
 const ROOT = path.resolve(__dirname, '../..');
 const DIST = path.resolve(process.env.DOCS_DIST ?? 'E:/office-target/p1/dist/docs-web');
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
-const NAME = path.basename(DOCX);
 const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
 const MIME: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.ico': 'image/x-icon', '.json': 'application/json', '.css': 'text/css' };
 
 const wasm = fs.readFileSync(path.join(FIX, 'plugin.wasm'));
 const MANIFEST = {
-  id: 'plg-test', version: '1.0.0', api: 1, apps: ['docs'], publisher: 'Test publisher', name: { en: 'Test plugin' },
+  id: 'plg-test', version: '1.0.0', api: 1, apps: ['docs'], events: ['selectionChanged'], publisher: 'Test publisher', name: { en: 'Test plugin' },
   permissions: { document: 'write', memory_mb: 2, network: ['https://example.org'] },
   command: [
     { id: 'hello', label: { en: 'Cmd hello' }, reads: ['none'], params: {} },
@@ -30,6 +29,7 @@ const MANIFEST = {
     { id: 'many', label: { en: 'Cmd many' }, reads: ['none'], params: {} },
     { id: 'bad', label: { en: 'Cmd bad' }, reads: ['none'], params: {} },
     { id: 'net', label: { en: 'Cmd net' }, reads: ['none'], params: {} },
+    { id: 'spin', label: { en: 'Cmd spin' }, reads: ['none'], params: {} },
   ],
   panel: [{ id: 'p', title: { en: 'Panel' } }],
 };
@@ -37,7 +37,7 @@ const DESCRIPTOR = { id: 'plg-test', version: '1.0.0', sha256: crypto.createHash
 
 // The host page. ?real=1 runs the real page host; otherwise a stub answers by `window.__mode`:
 //   insert (one round), rounds (a text map read, then an insert), more (an insert, then silence: the test aborts), silent, hold (until __release()).
-const HOST = (real: boolean) => `<!doctype html><meta charset="utf-8"><body>
+const HOST = (real: boolean, two = false) => `<!doctype html><meta charset="utf-8"><body>
 <div id="root" style="position:relative"><iframe id="ed" src="/index.html?host=parent" style="width:1100px;height:700px;border:0"></iframe></div>
 ${real ? '<script src="/plugins/host.js"></script>' : ''}
 <script>
@@ -48,7 +48,7 @@ ${real ? '<script src="/plugins/host.js"></script>' : ''}
   const insert = (t) => ({ type: 'run', id: 'text.insert', params: { text: t } });
   const actions = (d, actions, extra) => toEditor({ type: 'wordcraft:pluginActions', call: d.call, plugin: d.plugin, actions, blobs: [], reads: [], more: false, ...extra });
   ${real
-    ? `const H = PluginHost.make({ cfg: { plugins: [${JSON.stringify(DESCRIPTOR)}] }, lang: 'en', frames: {} }, (m) => window.__say.push(m), document.getElementById('root'));
+    ? `const H = PluginHost.make({ cfg: { plugins: [${JSON.stringify(DESCRIPTOR)}${two ? ',' + JSON.stringify({ ...DESCRIPTOR, id: 'plg-two', manifest: { ...MANIFEST, id: 'plg-two', name: { en: 'Second plugin' }, command: ['hello', 'link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall', 'overflow', 'ping', 'pong', 'fetches'].map((id) => ({ id, label: { en: `Cmd ${id}` }, reads: ['none'], params: {} })) } }) : ''}] }, lang: 'en', frames: {} }, (m) => window.__say.push(m), document.getElementById('root'));
        window.__host = H;
        addEventListener('message', (e) => { if (e.source === ed() && String((e.data || {}).type).startsWith('wordcraft:')) H.onMessage({ app: { id: 'docs', prefix: 'wordcraft' }, el: { contentWindow: ed() } }, e.data); });`
     : `window.__register = (manifests) => toEditor({ type: 'wordcraft:plugins', commands: [], toolbar: [], menu: [], plugins: manifests.map((m) => ({ manifest: m })), timeoutMs: window.__timeout });`}
@@ -76,7 +76,7 @@ let base: string;
 test.beforeAll(async () => {
   server = http.createServer((req, res) => {
     const url = new URL(req.url!, 'http://x');
-    if (url.pathname === '/host.html') return void res.writeHead(200, { 'content-type': 'text/html' }).end(HOST(url.searchParams.has('real')));
+    if (url.pathname === '/host.html') return void res.writeHead(200, { 'content-type': 'text/html' }).end(HOST(url.searchParams.has('real'), url.searchParams.has('two')));
     let file: string;
     if (url.pathname.startsWith('/plugins/')) file = path.join(ROOT, 'web', url.pathname);
     else if (url.pathname.startsWith('/test-plugins/')) file = path.join(FIX, path.basename(url.pathname));
@@ -111,12 +111,13 @@ async function xml(page: Page): Promise<string> {
   return documentXml(Buffer.from(bytes));
 }
 
-async function openDoc(page: Page) {
+async function openDoc(page: Page, file = DOCX) {
+  const opened = await count(page, 'wordcraft:opened');
   await page.evaluate(([n, b]) => {
     const buf = new Uint8Array(b as number[]).buffer;
     (window as any).__toEditor({ type: 'wordcraft:open', name: n, bytes: buf }, [buf]);
-  }, [NAME, Array.from(fs.readFileSync(DOCX))] as const);
-  await waitFor(page, 'wordcraft:opened');
+  }, [path.basename(file), Array.from(fs.readFileSync(file))] as const);
+  await waitFor(page, 'wordcraft:opened', opened + 1);
 }
 
 /** The stub registers the plugin itself (the real host does it when the editor says ready). */
@@ -127,9 +128,9 @@ async function stubReady(page: Page, timeout?: number) {
   await waitFor(page, 'wordcraft:pluginsSet');
 }
 
-async function start(page: Page, real: boolean) {
+async function start(page: Page, real: boolean, two = false) {
   page.on('pageerror', (e) => { throw e; });
-  await page.goto(base + '/host.html' + (real ? '?real=1' : ''));
+  await page.goto(base + '/host.html' + (real ? '?real=1' + (two ? '&two=1' : '') : ''));
   await waitFor(page, 'wordcraft:ready');
 }
 
@@ -191,6 +192,124 @@ test.describe('real page host (host.js, a Worker, the fixture plugin)', () => {
     expect(hits).toEqual(['A']);
     expect(await page.evaluate(() => (window as any).__host.audit)).toEqual([{ plugin: 'plg-test', kind: 'network', origin: 'https://example.org' }]);   // the first hop is audited, B never appears
     expect(textOf(await xml(page))).toBe(before);
+  });
+});
+
+// Phase 7 re-check: the rows that had no run in a browser with the real editor. The extra fixture commands live in a second plugin (a manifest has at most 16 commands).
+test.describe('real page host, second plugin with the extra commands', () => {
+  test.beforeEach(async ({ page }) => { await start(page, true, true); await openDoc(page); });
+
+  const said = (page: Page) => page.evaluate(() => (window as any).__say as string[]);
+  const auditOf = (page: Page) => page.evaluate(() => (window as any).__host.audit as { plugin: string; kind: string; error?: string }[]);
+  // after a refused command the editor still holds the previous invocation's lock for a moment: send it again until it was the plugin's own answer
+  const refused = (page: Page, cmd: string, why: RegExp) => expect.poll(async () => { await run(page, `plugin.plg-two.${cmd}`); await page.waitForTimeout(600); return (await said(page)).some((m) => why.test(m)); }, { timeout: 60_000, message: cmd }).toBe(true);
+
+  test('F2 and F7a: links, field codes, forged revisions, the dictionary, accept-all by loop and restrict are refused by the allowlist; the document is as it was', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    const before = textOf(await xml(page));
+    for (const cmd of ['link', 'chr', 'incl', 'tracked', 'vocab', 'accept', 'wall']) {
+      await refused(page, cmd, /could not finish/);
+      expect(textOf(await xml(page)), cmd).toBe(before);
+    }
+    const a = await auditOf(page);
+    expect(a.filter((x) => x.kind === 'failed').length).toBeGreaterThanOrEqual(7);
+    expect(a.some((x) => x.kind !== 'failed')).toBe(false);
+  });
+
+  test('M10 in the real editor: an event answer that tries a document edit is refused, nothing reaches the document', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    await expect.poll(async () => { await run(page, 'plugin.plg-two.hello'); await page.waitForTimeout(500); return (await said(page)).includes('hello done'); }, { timeout: 60_000 }).toBe(true);
+    const before = textOf(await xml(page));
+    await canvas(page).click({ position: { x: 400, y: 160 } });
+    await page.keyboard.press('Control+End');   // one input only: the event has to come from the idle page, after the 200 ms of stillness, without another input to draw a frame
+    await expect.poll(async () => (await auditOf(page)).some((x) => x.kind === 'failed' && /event may only run ui actions/.test(x.error ?? '')), { timeout: 10_000 }).toBe(true);
+    expect(textOf(await xml(page))).toBe(before);
+  });
+
+  test('S1: unbounded recursion in the plugin ends the invocation cleanly; the host and the editor go on', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    const before = textOf(await xml(page));
+    await refused(page, 'overflow', /could not finish/);
+    const a = await auditOf(page);
+    expect(a.some((x) => x.kind === 'failed' && /stack|recursion/i.test(x.error ?? '')), JSON.stringify(a)).toBe(true);
+    await expect.poll(async () => { await run(page, 'plugin.plg-two.hello'); await page.waitForTimeout(500); return (await said(page)).includes('hello done'); }, { timeout: 60_000 }).toBe(true);
+    expect(textOf(await xml(page))).toBe(before);
+  });
+
+  test('S2: a chain of rounds is stopped by the 10 s invocation deadline, not the 5 s round budget', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    const before = textOf(await xml(page));
+    const resumes = () => page.evaluate(() => (window as any).__host.logs.filter((l: any) => l.text.includes('"kind":"resume"')).length);
+    // a round has to be shorter than the 5 s budget and longer than 10 s / 16 rounds, whatever the PC: ping does a little work per round, pong more; the first that fits counts
+    const tried: string[] = [];
+    let fits = false;
+    for (const cmd of ['ping', 'pong']) {
+      const n = (await auditOf(page)).length, r0 = await resumes(), t0 = Date.now();
+      for (let i = 0; i < 25 && (await auditOf(page)).length === n; i++) { await run(page, `plugin.plg-two.${cmd}`); await page.waitForTimeout(1500); }
+      await expect.poll(async () => (await auditOf(page)).length, { timeout: 60_000 }).toBeGreaterThan(n);
+      const end = (await auditOf(page)).at(-1)!, took = Date.now() - t0, rounds = (await resumes()) - r0;
+      tried.push(`${cmd}: ${end.kind} ${end.error ?? ''} after ${took} ms, ${rounds} resume rounds`);
+      if (end.kind === 'stopped' && rounds >= 2 && took > 9000) { fits = true; break; }
+      await page.waitForTimeout(2500);
+    }
+    console.log('S2 deadline: ' + tried.join(' | '));
+    test.info().annotations.push({ type: 'S2', description: tried.join(' | ') });
+    expect(fits, tried.join(' | ')).toBe(true);
+    expect(textOf(await xml(page))).toBe(before);
+  });
+
+  test('S2: the 9th fetch of one invocation is refused (8 are allowed), each is audited', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    let hits = 0;
+    await page.route('https://example.org/x', (r) => { hits++; return r.fulfill({ status: 200, body: 'ok' }); });
+    // the editor may still hold the previous lock for a moment: send again only until the invocation has started (it audits its first fetch)
+    for (let i = 0; i < 25 && (await auditOf(page)).length === 0; i++) { await run(page, 'plugin.plg-two.fetches'); await page.waitForTimeout(1500); }
+    await expect.poll(async () => (await auditOf(page)).some((x) => x.kind === 'failed' && /more than 8 fetches/.test(x.error ?? '')), { timeout: 60_000 }).toBe(true);
+    expect(hits).toBe(8);
+    expect((await auditOf(page)).filter((x) => x.kind === 'network').length).toBe(8);
+  });
+
+  test('F7b: a document with its own protection is not started on (comments: the engine gate; tracked changes: the bridge)', async ({ page }) => {
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    for (const [file, mode, why] of [['protected.docx', 'comments', /only comments are allowed/], ['protected-tracked.docx', 'trackedChanges', /document is protected/]] as const) {
+      await openDoc(page, path.join(ROOT, 'scripts/mobile/fixtures', file));
+      const ran0 = (await msgs(page)).filter((m) => m.type === 'wordcraft:ran').length;
+      await expect.poll(async () => { await run(page, 'plugin.plg-two.hello'); await page.waitForTimeout(700); const r = await last(page, 'wordcraft:ran') as any; return r?.ok === false && why.test(r.error); }, { timeout: 60_000, message: file }).toBe(true);
+      expect((await msgs(page)).filter((m) => m.type === 'wordcraft:ran').length).toBeGreaterThan(ran0);
+      expect((await calls(page)).filter((c) => c.command === 'hello'), 'the page was never asked to run the plugin').toHaveLength(0);
+      const x = await xml(page);
+      expect(textOf(x)).toContain('Protected fixture text');
+      test.info().annotations.push({ type: 'F7b', description: `${mode}: ${(await last(page, 'wordcraft:ran') as any).error}` });
+    }
+  });
+});
+
+test.describe('two plugins in the real page host', () => {
+  test('F5: a command of another plugin while one is pending says "another plugin is still running"; the document ends unlocked', async ({ page }) => {
+    await start(page, true, true); await openDoc(page);
+    await expect.poll(() => page.evaluate(() => (window as any).__host.plugins.length)).toBe(2);
+    await expect.poll(async () => { await run(page, 'plugin.plg-test.hello'); await page.waitForTimeout(500); return (await page.evaluate(() => (window as any).__say) as string[]).includes('hello done'); }, { timeout: 60_000 }).toBe(true);
+    const before = textOf(await xml(page));
+    const n0 = await page.evaluate(() => (window as any).__host.audit.length);
+    await run(page, 'plugin.plg-test.spin');
+    await expect.poll(async () => (await calls(page)).some((c) => c.command === 'spin'), { timeout: 30_000 }).toBe(true);
+    await page.waitForTimeout(300);
+    const ran0 = (await msgs(page)).filter((m) => m.type === 'wordcraft:ran').length;
+    await run(page, 'plugin.plg-two.hello');
+    await expect.poll(async () => (await msgs(page)).filter((m) => m.type === 'wordcraft:ran').length, { timeout: 30_000 }).toBeGreaterThan(ran0);
+    const r = await last(page, 'wordcraft:ran') as any;
+    expect(r.ok).toBe(false);
+    expect(r.error).toContain('another plugin is still running');
+    expect(r.error).not.toContain('read only');
+    // the first plugin's budget ends it; afterwards the second one runs and the input lock is gone
+    await expect.poll(() => page.evaluate((n) => (window as any).__host.audit.slice(n).some((x: any) => x.kind === 'stopped'), n0), { timeout: 60_000 }).toBe(true);
+    await expect.poll(async () => { await run(page, 'plugin.plg-two.hello'); await page.waitForTimeout(600); return (await last(page, 'wordcraft:ran') as any)?.ok === true; }, { timeout: 60_000 }).toBe(true);
+    await canvas(page).click({ position: { x: 400, y: 160 } });
+    await page.keyboard.type('ZZ');
+    const text = textOf(await xml(page));
+    expect(text).toContain('ZZ');
+    expect(text.replace('ZZ', '')).toBe(before);
+    expect(await xml(page)).not.toContain('readOnly');
   });
 });
 

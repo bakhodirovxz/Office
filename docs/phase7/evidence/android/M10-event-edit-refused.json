@@ -1,0 +1,25 @@
+{
+  "item": "M10-event-edit-refused",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.639Z",
+  "details": {
+    "audit": [
+      {
+        "plugin": "test.recheck",
+        "kind": "failed",
+        "error": "an event may only run ui actions"
+      },
+      {
+        "plugin": "test.nonet",
+        "kind": "failed",
+        "error": "an event may only run ui actions"
+      }
+    ],
+    "document_unchanged_after_save": true,
+    "note": "the event is selectionChanged from a tap in the document; the fixture answers it with text.insert"
+  },
+  "screenshots": [
+    "recheck-M10.png"
+  ]
+}

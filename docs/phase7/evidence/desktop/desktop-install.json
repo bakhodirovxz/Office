@@ -1,0 +1,65 @@
+{
+  "run": "2026-11-05T23:02:09.312Z",
+  "exe": "E:/office-target/p7-recheck/services/debug/hoshiya.exe",
+  "steps": [
+    {
+      "name": "the host shows its WebView2 window (UI Automation)",
+      "ok": true,
+      "windows": "Window Class|Hoshiya|1116x799;Tao Thread Event Target||6x6"
+    },
+    {
+      "name": "the shell runs in the host (window.ipc present)",
+      "ok": true
+    },
+    {
+      "name": "the Plugins page is up and Install from file is enabled",
+      "ok": true,
+      "rows": []
+    },
+    {
+      "name": "Cancel in the native dialog: nothing installed, no error",
+      "ok": true,
+      "dialog": "{\"found\":true,\"dialogs_left\":0,\"title\":\"Открытие\",\"action\":\"cancel (WM_CLOSE)\"}",
+      "err": "",
+      "message": ""
+    },
+    {
+      "name": "Open in the native dialog: the package is installed",
+      "ok": true,
+      "dialog": "{\"found\":true,\"dialogs_left\":0,\"title\":\"Открытие\",\"action\":\"open (path set, Open clicked)\"}",
+      "err": "",
+      "rows_after": [
+        "Транслитерация Версия 1.0.0"
+      ],
+      "message": "«Транслитерация» установлен. Включите его, чтобы пользоваться.",
+      "record": "plugins\\uz-translit\\1.0.0\\install.toml",
+      "data_files": [
+        "plugins",
+        "plugins\\uz-translit",
+        "plugins\\uz-translit\\1.0.0",
+        "plugins\\uz-translit\\1.0.0\\install.toml",
+        "plugins\\uz-translit\\1.0.0\\plugin.toml",
+        "plugins\\uz-translit\\1.0.0\\plugin.wasm",
+        "plugins\\uz-translit\\1.0.0\\strings.tsv"
+      ],
+      "dialogs_left": "{\"found\":false}"
+    }
+  ],
+  "record": "sha256 = \"e7de9b24a50ed4990bfad74071075a5b3b5fd2b8d3145d1183c9f338886e0f89\"\nmanifest_sha256 = \"3f6e8dce03a67ec31a9cd7ead18340a86337226579dd580eba8db60d7427e426\"\n",
+  "replies": [
+    {
+      "t": 1793919753364,
+      "type": "plugins",
+      "ok": false,
+      "error": "cancelled",
+      "cancelled": true
+    },
+    {
+      "t": 1793919757452,
+      "type": "plugins",
+      "ok": true,
+      "installed": "uz-translit"
+    }
+  ],
+  "pass": true
+}

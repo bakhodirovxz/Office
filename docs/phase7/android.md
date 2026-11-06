@@ -54,9 +54,21 @@ JSON and screenshots: `docs/phase7/evidence/android/`; recordings and their SHA-
 | No network at all | pass (no INTERNET permission; page `fetch` to another host fails) | `no-network.json` |
 | Tap-through fix in the app (`tapfix-app.mjs`) | before: picture gone from the autosave (5,750 B, no media); after: picture kept | `tapfix-before-*`, `tapfix-after-*` |
 
-Not run: M5, M8, M10 (need the WP10 `evil` plugin: a `file.saveAs` answer, malformed answers, an edit from an event) and M12 (server only). The `rows` item
-used the WP5 test plugin (`ci/plugins/webhost-test`) packed by `scripts/mobile/fixtures/make-test-packages.py`, and calls `PluginHost.last.invoke` through
-the WebView's devtools; the translit item runs the command through the editor (`wordcraft:run`), not the palette or a toolbar button (the manifest has none).
+Run 2026-11-06 (re-check, `android-plugins.mjs recheck`, APK built from `p7-recheck` with the docs web rebuilt on phase-7 code, same emulator and rig; recording `recheck.mp4`, SHA-256 in `docs/phase7/evidence/SHA256SUMS`;
+the fixture package `test.recheck` has the 15 commands of the rows, `test.nonet` is the second plugin of F5): all pass, evidence JSON in `docs/phase7/evidence/android/`.
+
+| Item | Result | Evidence |
+|---|---|---|
+| M5 saveAs refused (again), M8 malformed answer, S1 recursion | pass (one audit `failed` each, document unchanged after save) | `M5-saveAs-refused.json`, `M8-malformed-answer.json`, `S1-recursion.json` |
+| M10 edit from a `selectionChanged` event (a tap in the document) | pass ("an event may only run ui actions", for both plugins; document unchanged) | `M10-event-edit-refused.json`, `recheck-M10.png` |
+| S2 8-fetch cap, 10 s invocation deadline | pass (no grant: 8 `network.denied` counted, the 9th ends it; a chain of rounds `stopped` at 10.7 s after 14 resume rounds) | `S2-fetch-cap.json`, `S2-deadline.json` |
+| F2 links, field codes, forged revisions; F7a dictionary, accept, restrict | pass (each refused by the allowlist or by the denied-keys rule; document unchanged) | `F2-link.json`, `F2-chr.json`, `F2-incl.json`, `F2-tracked.json`, `F7a-vocab.json`, `F7a-accept.json`, `F7a-wall.json` |
+| F5 busy wording | pass ("another plugin is still running"; the first plugin stopped; the next command ran) | `F5-busy.json`, `recheck-F5-busy.png` |
+| F7b a document with its own protection (fixtures `protected.docx`, `protected-tracked.docx`) | pass (comments: "only comments are allowed in this document" from the engine; tracked changes: "the document is protected" from the bridge; the plugin was never called) | `F7b-comments.json`, `F7b-trackedChanges.json` |
+
+Still not run: M12 (server only). The earlier `rows` item used the WP5 test plugin (`ci/plugins/webhost-test`) packed by `scripts/mobile/fixtures/make-test-packages.py`, and calls `PluginHost.last.invoke` through
+the WebView's devtools; the translit item and the re-check rows run the command through the editor (`wordcraft:run`), not the palette or a toolbar button (the manifest has none).
+Not a real phone: all of this is on the emulator. Found on the way (and fixed): the Plugins page showed "the app did not answer" when the file dialog stayed open for more than 20 s (`page.js`, `malicious.md` Finding 4; the fix is in this APK).
 
 APK size (same four dists, same signing): 53,368,768 B before (`06b1999` sources) and 53,479,711 B after, +110,943 B (+0.21 %): the uz-translit package
 (plugin.wasm 250,138 B raw, about 83 KB compressed) plus the three new classes and `page.js`.

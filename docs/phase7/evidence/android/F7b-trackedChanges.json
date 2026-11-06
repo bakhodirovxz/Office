@@ -1,0 +1,22 @@
+{
+  "item": "F7b-trackedChanges",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:39:30.290Z",
+  "details": {
+    "status": "The command could not run: the document is protected",
+    "plugin_log_entries_before_after": [
+      0,
+      0
+    ],
+    "audit_entries_before_after": [
+      0,
+      0
+    ],
+    "file_on_device_unchanged": true,
+    "note": "the page was never asked to run the plugin; documentProtection edit=\"trackedChanges\" (scripts/mobile/fixtures/make-protected.py)"
+  },
+  "screenshots": [
+    "recheck-F7b-trackedChanges.png"
+  ]
+}

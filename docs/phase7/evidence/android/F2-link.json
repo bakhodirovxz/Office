@@ -1,0 +1,21 @@
+{
+  "item": "F2-link",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.637Z",
+  "details": {
+    "ok": true,
+    "status": "Recheck commands could not finish: plugin action refused: Command { id: \"format.set\", why: \"params name a path, file or URL\" }",
+    "audit": [
+      {
+        "plugin": "test.recheck",
+        "kind": "failed",
+        "error": "plugin action refused: Command { id: \"format.set\", why: \"params name a path, file or URL\" }"
+      }
+    ],
+    "document_unchanged_after_save": true
+  },
+  "screenshots": [
+    "recheck-F2-link.png"
+  ]
+}

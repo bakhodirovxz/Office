@@ -1,0 +1,21 @@
+{
+  "item": "F7a-accept",
+  "pass": true,
+  "device": "HRM_Pixel_8 (emulator), 540x1200 rig",
+  "run": "2026-11-05T23:38:33.638Z",
+  "details": {
+    "ok": true,
+    "status": "Recheck commands could not finish: plugin action refused: Command { id: \"review.accept\", why: \"command is not on the plugin allowlist\" }",
+    "audit": [
+      {
+        "plugin": "test.recheck",
+        "kind": "failed",
+        "error": "plugin action refused: Command { id: \"review.accept\", why: \"command is not on the plugin allowlist\" }"
+      }
+    ],
+    "document_unchanged_after_save": true
+  },
+  "screenshots": [
+    "recheck-F7a-accept.png"
+  ]
+}
