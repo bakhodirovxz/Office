@@ -12,7 +12,7 @@
 set -euo pipefail
 export MSYS_NO_PATHCONV=1   # Git Bash (the rehearsal on Windows): keep container paths as written
 
-ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=docx
+ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=docx,xlsx,pptx,pdf   # the types whose edit configs edit (docs/phase5/r6.md); --edit-types docx keeps the others view-only
 FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=8787
 die() { echo "install.sh: refused: $*" >&2; exit 2; }
 say() { echo "install.sh: $*"; }

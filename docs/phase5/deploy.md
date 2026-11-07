@@ -12,7 +12,7 @@ needs the owner's OK (PLAN section 7, WP17).
 - Build offline-in-container (the dev PC's proxy breaks TLS inside containers): `packaging/docserver/build.sh` runs `cargo vendor --locked`
   on the host, compiles `suite-serve` and `fake-hrm` in `rust:1-slim-bookworm` with `--offline`, copies the dists, runs `docker build`.
   Since the drop-in (2026-11-07) the Sheets, Slides and PDF dists are in the image too (`DIST_ROOT`); a provider's `edit_types` decides
-  which types may edit (the installer: docx only, `dropin.md` D5). Size then: 403 MB on disk (`docker images`, was 193 MB).
+  which types may edit (the installer: all four since R6, `r6.md`; `--edit-types docx` for docx only). Size then: 403 MB on disk (`docker images`, was 193 MB).
 - **Size (2026-10-25):** 49.7 MB compressed content / 193 MB on disk (`docker images`); the test harness image `hoshiya-fakehrm:rehearsal`
   is 29.4 MB / 118 MB. Both are on this PC only; no registry push.
 - **`cargo deny`** (`ci/deny/services.toml`, `--target x86_64-unknown-linux-gnu`, the graph of this image): `advisories ok, bans ok,

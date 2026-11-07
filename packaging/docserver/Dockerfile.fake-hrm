@@ -2,7 +2,7 @@
 FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8
 RUN useradd --system --uid 10003 --no-create-home --shell /usr/sbin/nologin harness
 COPY --chmod=0755 fake-hrm /app/fake-hrm
-COPY sample.docx sample.xlsx /app/
+COPY sample.docx sample.xlsx sample.pptx /app/
 USER 10003
 EXPOSE 8790
-ENTRYPOINT ["/app/fake-hrm", "/app/sample.docx", "/app/sample.xlsx"]
+ENTRYPOINT ["/app/fake-hrm", "/app/sample.docx", "/app/sample.xlsx", "/app/sample.pptx"]

@@ -1312,6 +1312,34 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   install.sh from Git Bash, chown skipped); a real HRB save; a Traefik file-provider setup; HRM's compose recreating the old
   service. Owner decision open: non-docx editing, `dropin.md` D5 (b) view-only now vs (a) pass-through to the old ONLYOFFICE.
 
+### Phase 5 R6: xlsx, pptx and pdf edit through the document server (2026-11-08; branch `p5-r6`, owner decision of the same day)
+- Done: [docs/phase5/r6.md](phase5/r6.md). Round trip measured first (open, one edit, save, reopen; independent readers plus Office 16's
+  own counts), then the Sheets, Slides and PDF host bridges got what the Docs bridge has: read-only open honoured (an edit is taken
+  back at once, with a message), `opened`, `requestSave`, the `saved {ok}` acknowledgement (unsaved until the host stored it),
+  `canDownload`/`canPrint`; carried patches gridcraft/0160, deckcraft/0160, pdfcraft/0122 (numbers free on phase-5/6/7). Server
+  unchanged but for a comment; the wrapper no longer fakes `opened` for non-Docs editors. Installer and image entrypoint default
+  `edit_types` = docx,xlsx,pptx,pdf (`--edit-types docx` keeps the old view-only behaviour). `dropin.md` D5 superseded.
+- Measured: round trips with no lost content: xlsx 8 files / 1,917 cells (one auto-fit row height 15.75 -> 16.5 pt; calcChain and a
+  hidden `_xlnm._FilterDatabase` not rewritten; Excel opened 16/16, counts equal; `sheets-cli check` 0 of 8 differ), pptx 6 files /
+  20 slides / 40 shapes (thumbnail and one printerSettings part dropped; PowerPoint opened 12/12, counts equal), pdf 7 files (incremental
+  update: original bytes a prefix in 7/7; signatures "changes permitted"). `ci.sh docserver` exit 0: fmt, clippy `-D warnings`, 97
+  tests passed 0 failed (was 96; new `dropin.rs::xlsx_pptx_and_pdf_edit_and_save_when_edit_types_has_them`), Playwright docserver
+  24 passed 1 skipped (was 18+1; 6 new R6 cases: edit/save/close with status 6 then 2 and the stored hash, and a view session, per
+  type), bridge-docs 8, bridge-sheets 7 (new), bridge-slides 11 (was 9; 2 new, 1 changed for the acknowledgement), bridge-pdf 6
+  (new). Page load to onDocumentReady / requestSave to onSaved: xlsx 1,445 / 930 ms, pptx 1,543 / 908 ms, pdf 1,431 / 465 ms (docx
+  2,445 / 923 ms in the same run). `verify-queue.sh` gridcraft 59, deckcraft 32, pdfcraft 17 patches OK; `cargo xt register check`
+  138 rows OK; `cargo xt i18n check-stale` OK (3 new rows, uz-Latn/uz-Cyrl/ru `reviewed:agent-opus:2026-11-08`).
+  Web wasm brotli (`ci.sh sizes` exit 0, no budget raised): Sheets 4,959,688 (budget 4,966,771, headroom 7,083), Slides 9,515,833
+  (9,524,217; 8,384), PDF 9,569,050 (9,599,462; 30,412); Docs unchanged (its dist copied from E:/office-target/p5/dist).
+  Drop-in rehearsal (`rehearse-dropin.sh`, rebuilt images): **18 of 18 checks**; the installer printed `edit types
+  docx,xlsx,pptx,pdf`; browser flow 3 passed: docx as before, and an xlsx and a pptx edit config each edited, saved (status 6) and
+  closed (status 2) with the backend's stored object changed. Image 355 MB on disk.
+- Not checked: real HRM files (corpus missing, O9) and the HRM test server; pivot tables, SmartArt, animations, XFA forms in the round
+  trip; the browser save of the larger feature files (CI uses the repo fixtures); the Sheets and PDF export refusals (canDownload) in
+  a browser (Print is checked; the export paths are reached only through the File tab with the mouse); no autosave every 30 s for the
+  three new bridges (Docs has it; the task did not list it); size delta against a pristine phase-5 build not measured (absolute budgets
+  only).
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

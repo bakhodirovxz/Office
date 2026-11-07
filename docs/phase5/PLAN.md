@@ -126,8 +126,8 @@ HRM api (Docker network) ──GET http://<internal listener>/ds/files/{sid}/{ve
 | `GET /healthz` | both | none | unchanged |
 
 Editor routing by `documentType` / `fileType`: `word`/docx → `/docs/`, `cell` → `/sheets/`, `slide` → `/slides/`,
-`pdf` → `/pdf/`. Only docx is in the gate. The other three are **partial** until WP6's two bridge messages exist in
-their bridges (§13.2 R6).
+`pdf` → `/pdf/`. Only docx is in the gate. The other three were **partial** until WP6's two bridge messages existed in
+their bridges (§13.2 R6); done 2026-11-08 (`r6.md`).
 
 ### 3.2 Tokens (brief task 5: JWT on every call)
 
