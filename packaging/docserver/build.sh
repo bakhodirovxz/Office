@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Builds the two rehearsal images (hoshiya-docserver, hoshiya-fakehrm) with nothing fetched inside a container: the crates are vendored
 # on the host (cargo vendor --locked), the Linux binaries are compiled in an offline rust container, the dists come from the host builds.
-# Usage: packaging/docserver/build.sh        Env: OFFICE_TARGET (default E:/office-target/p5), DOCS_DIST, SHELL_DIST.
+# Usage: packaging/docserver/build.sh        Env: OFFICE_TARGET (default E:/office-target/p5), DIST_ROOT (default $OFFICE_TARGET/dist),
+# DOCS_DIST, SHELL_DIST; sheets-web, slides-web and pdf-web are taken from DIST_ROOT when present (dropin D5: served view-only by default).
 set -euo pipefail
 export PATH="$HOME/.cargo/bin:$PATH" CARGO_NET_GIT_FETCH_WITH_CLI=true CARGO_HTTP_CHECK_REVOKE=false MSYS_NO_PATHCONV=1
 HERE=$(cd "$(dirname "$0")" && pwd -W); REPO=$(cd "$HERE/../.." && pwd -W)
 T=${OFFICE_TARGET:-E:/office-target/p5}
-DOCS_DIST=${DOCS_DIST:-$T/dist/docs-web}      # patch 0127 (the bridge) is in this one
-SHELL_DIST=${SHELL_DIST:-$T/dist/shell}       # needs history-ui.js (web History panel)
+DIST_ROOT=${DIST_ROOT:-$T/dist}
+DOCS_DIST=${DOCS_DIST:-$DIST_ROOT/docs-web}   # patch 0127 (the bridge) is in this one
+SHELL_DIST=${SHELL_DIST:-$DIST_ROOT/shell}    # needs history-ui.js (web History panel)
 RUST_IMAGE=${RUST_IMAGE:-rust:1-slim-bookworm}
 CTX=$T/image-ctx
 mkdir -p "$T/linux" "$CTX/dist"
@@ -32,8 +34,11 @@ mkdir -p "$CTX/diff"; cp "$T/linux-docs/release/docs-diff" "$T/linux-sheets/rele
 
 cp "$T/linux/release/hoshiya-serve" "$T/linux/release/fake-hrm" "$CTX/"
 rm -rf "$CTX/dist" && mkdir -p "$CTX/dist" && cp -r "$DOCS_DIST" "$CTX/dist/docs-web" && cp -r "$SHELL_DIST" "$CTX/dist/shell"
+for x in sheets-web slides-web pdf-web; do [ -f "$DIST_ROOT/$x/index.html" ] && cp -r "$DIST_ROOT/$x" "$CTX/dist/$x" || echo "build.sh: no $x in $DIST_ROOT (not in the image)"; done
+cp "$HERE/entrypoint.sh" "$CTX/entrypoint.sh"
 cp "$REPO/brand/brand.toml" "$CTX/brand.toml"
 cp "$REPO/domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx" "$CTX/sample.docx"
+cp "$REPO/domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx" "$CTX/sample.xlsx"
 docker build -t hoshiya-docserver:rehearsal -f "$HERE/Dockerfile" "$CTX"
 docker build -t hoshiya-fakehrm:rehearsal -f "$HERE/Dockerfile.fake-hrm" "$CTX"
 docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep -E '^hoshiya-(docserver|fakehrm)'
