@@ -12,10 +12,10 @@ canDownload:false; Print is refused with canPrint:false. Two new UI strings (xta
 ---
 
 diff --git a/apps/gridcraft-web/src/host.rs b/apps/gridcraft-web/src/host.rs
-index 2286023..bec697c 100644
+index 30a4016..a3fa584 100644
 --- a/apps/gridcraft-web/src/host.rs
 +++ b/apps/gridcraft-web/src/host.rs
-@@ -1,22 +1,33 @@
+@@ -1,14 +1,23 @@
  //! The `postMessage` bridge to a same-origin parent page (`?host=parent`), for pages that embed
 -//! GridCraft in an `<iframe>` (such as a Nextcloud app). Messages are plain objects with a `type`:
 +//! GridCraft in an `<iframe>` (such as a Nextcloud app or a document server). Messages are plain
@@ -42,9 +42,10 @@ index 2286023..bec697c 100644
  //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 -//! - `gridcraft:failed` (to the parent): `{ error }` when the app couldn't start.
 +//! - `gridcraft:failed` (to the parent): `{ error }` when the app couldn't start or open the file.
+ //! - `gridcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9, handled
+ //!   by sheets-plugins; this file only forwards the messages and posts the answers.
  //!
- //! Only the parent window on the page's own origin is heard or answered. In host mode the page
- //! starts with an empty workbook instead of a sample, and the parent guards leaving the page.
+@@ -17,8 +26,10 @@
  
  use std::cell::{Cell, RefCell};
  use std::rc::Rc;
@@ -56,7 +57,7 @@ index 2286023..bec697c 100644
  use wasm_bindgen::JsCast as _;
  use wasm_bindgen::JsValue;
  use wasm_bindgen::closure::Closure;
-@@ -28,15 +39,34 @@ const WORKBOOK_EXTS: &[&str] = &["xlsx"];
+@@ -30,15 +41,34 @@ const WORKBOOK_EXTS: &[&str] = &["xlsx"];
  /// The longest user name taken from `?author=`.
  const MAX_AUTHOR_CHARS: usize = 200;
  
@@ -92,7 +93,7 @@ index 2286023..bec697c 100644
  }
  
  impl Bridge {
-@@ -48,17 +78,51 @@ impl Bridge {
+@@ -50,17 +80,51 @@ impl Bridge {
              return None;
          }
          let origin = window.location().origin().ok()?;
@@ -150,15 +151,16 @@ index 2286023..bec697c 100644
              }
          }));
      }
-@@ -79,11 +143,27 @@ impl Bridge {
+@@ -81,12 +145,28 @@ impl Bridge {
          self.send(&[("type", "gridcraft:failed".into()), ("error", error.into())]);
      }
  
 -    /// After each frame: a workbook handed to the parent this frame counts as saved under the
--    /// name it was saved as, and the parent hears when unsaved changes appear or go away.
+-    /// name it was saved as, and the parent hears when unsaved changes appear or go away. True
 +    /// After each frame: open a file the parent sent, apply the save answers, run a save it asked
-+    /// for, take back edits of a read-only workbook, and report the unsaved-changes state.
-     pub fn sync(&self, app: &mut SheetApp) {
++    /// for, take back edits of a read-only workbook, and report the unsaved-changes state. True
+     /// while a plugin call waits for the page (the caller keeps drawing frames).
+     pub fn sync(&self, app: &mut SheetApp) -> bool {
 +        if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
 +            self.open(app, name, &bytes);
 +        }
@@ -181,7 +183,7 @@ index 2286023..bec697c 100644
              && let Some(doc) = app.session.active_mut()
          {
              doc.saved = doc.wb.clone();
-@@ -91,12 +171,56 @@ impl Bridge {
+@@ -94,8 +174,37 @@ impl Bridge {
                  doc.title = name.clone();
              }
          }
@@ -219,6 +221,9 @@ index 2286023..bec697c 100644
 +        {
              self.reported.set(Some(dirty));
          }
+         #[cfg(not(feature = "office-ext"))]
+@@ -112,6 +221,21 @@ impl Bridge {
+         active
      }
  
 +    /// The opened file replaces every workbook shown.
@@ -239,7 +244,7 @@ index 2286023..bec697c 100644
      fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
          let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
          let buffer = js_sys::Uint8Array::from(bytes).buffer();
-@@ -106,23 +230,30 @@ impl Bridge {
+@@ -121,14 +245,14 @@ impl Bridge {
              .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))
              .map_err(|e| e.as_string().unwrap_or_else(|| format!("{e:?}")))?;
          self.saved.borrow_mut().push(name);
@@ -258,6 +263,10 @@ index 2286023..bec697c 100644
                  return;
              }
              let data = event.data();
+@@ -138,12 +262,19 @@ impl Bridge {
+                 ctx.request_repaint();
+                 return;
+             }
 -            if string(&data, "type").as_deref() != Some("gridcraft:open") {
 -                return;
 +            match string(&data, "type").as_deref() {
@@ -279,7 +288,7 @@ index 2286023..bec697c 100644
              ctx.request_repaint();
          });
          if self.window.add_event_listener_with_callback("message", on_message.as_ref().unchecked_ref()).is_ok() {
-@@ -141,6 +272,12 @@ fn is_workbook(name: &str) -> bool {
+@@ -162,6 +293,12 @@ fn is_workbook(name: &str) -> bool {
      name.rsplit_once('.').is_some_and(|(_, ext)| WORKBOOK_EXTS.iter().any(|e| ext.eq_ignore_ascii_case(e)))
  }
  
@@ -292,7 +301,7 @@ index 2286023..bec697c 100644
  fn message(fields: &[(&str, JsValue)]) -> Option<js_sys::Object> {
      let m = js_sys::Object::new();
      for (key, value) in fields {
-@@ -153,6 +290,11 @@ fn string(data: &JsValue, key: &str) -> Option<String> {
+@@ -174,6 +311,11 @@ fn string(data: &JsValue, key: &str) -> Option<String> {
      js_sys::Reflect::get(data, &JsValue::from_str(key)).ok()?.as_string()
  }
  
@@ -305,10 +314,10 @@ index 2286023..bec697c 100644
  fn bytes(data: &JsValue) -> Option<Vec<u8>> {
      let bytes = js_sys::Reflect::get(data, &JsValue::from_str("bytes")).ok()?;
 diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
-index d1f4f75..c8eef61 100644
+index 9863fa2..1f76792 100644
 --- a/apps/gridcraft-web/src/web.rs
 +++ b/apps/gridcraft-web/src/web.rs
-@@ -46,7 +46,7 @@ pub fn start() {
+@@ -57,7 +57,7 @@ pub fn start() {
                      }
                      let mut services = services(inbox.clone(), cc.egui_ctx.clone());
                      if let Some(bridge) = &app_bridge {
@@ -317,7 +326,7 @@ index d1f4f75..c8eef61 100644
                      }
                      let mut app = SheetApp::new(session, services);
                      app.ui.system_theme = true;
-@@ -280,8 +280,7 @@ fn mime_for(name: &str) -> &'static str {
+@@ -299,8 +299,7 @@ fn mime_for(name: &str) -> &'static str {
  }
  
  /// Trigger a browser save dialog or download of `bytes` named after `name`.
