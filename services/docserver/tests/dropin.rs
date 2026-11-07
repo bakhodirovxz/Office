@@ -48,6 +48,16 @@ async fn call(
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn the_backend_as_surveyed_saves_through_the_host_rewrite() {
+    surveyed(&["docx"]).await;
+}
+
+/// The installer's default since R6 (docs/phase5/r6.md): xlsx, pptx and pdf edit configs edit and save like docx.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn xlsx_pptx_and_pdf_edit_and_save_when_edit_types_has_them() {
+    surveyed(&["docx", "xlsx", "pptx", "pdf"]).await;
+}
+
+async fn surveyed(edit_types: &[&str]) {
     // our internal listener; the backend knows it only as `localhost` (the old container's alias, here a name that resolves)
     let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = l.local_addr().unwrap().port();
@@ -72,8 +82,19 @@ async fn the_backend_as_surveyed_saves_through_the_host_rewrite() {
         "sheet.xlsx",
         package("xl/workbook.xml", "s1"),
     );
+    hrm.add_file(
+        Kind::File,
+        9,
+        "deck.pptx",
+        package("ppt/presentation.xml", "p1"),
+    );
+    hrm.add_file(Kind::File, 10, "letter.pdf", b"%PDF-1.7 v1".to_vec());
 
-    let d = std::env::temp_dir().join(format!("docserver-dropin-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!(
+        "docserver-dropin-{}-{}",
+        std::process::id(),
+        edit_types.len()
+    ));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     std::fs::write(d.join("server.key"), [b's'; 40]).unwrap();
@@ -89,7 +110,7 @@ internal_url = "{rewrite}"
 name = "docsapi"
 issuer = "docsapi"
 compat = "docsapi"
-edit_types = ["docx"]
+edit_types = {edit_types:?}
 secret_file = "{}"
 fetch_allow = [{{ url = "{b}", internal = true }}]
 callback_allow = [{{ url = "{b}", internal = true }}]
@@ -216,28 +237,85 @@ frame_origins = ["https://app.test"]
     assert_eq!(hrm.object(Kind::File, 7), Some(v2));
     assert!(hrm.rejected().is_empty(), "{:?}", hrm.rejected());
 
-    // an xlsx edit config opens as a view (edit_types = ["docx"]): its document is shown, nothing reaches the backend
-    let (sid, tok, mode) = open(8).await;
-    assert_eq!(mode, "view");
-    let (s, _) = call(
-        &r,
-        "GET",
-        &format!("/ds/session/{sid}/document"),
-        Some(&tok),
-        vec![],
-    )
-    .await;
-    assert_eq!(s, StatusCode::OK);
-    let (s, _) = call(
-        &r,
-        "POST",
-        &format!("/ds/session/{sid}/save"),
-        Some(&tok),
-        package("xl/workbook.xml", "s2"),
-    )
-    .await;
-    assert_eq!(s, StatusCode::FORBIDDEN);
-    assert_eq!(hrm.received().len(), 2);
+    if edit_types.len() == 1 {
+        // an xlsx edit config opens as a view (edit_types = ["docx"]): its document is shown, nothing reaches the backend
+        let (sid, tok, mode) = open(8).await;
+        assert_eq!(mode, "view");
+        let (s, _) = call(
+            &r,
+            "GET",
+            &format!("/ds/session/{sid}/document"),
+            Some(&tok),
+            vec![],
+        )
+        .await;
+        assert_eq!(s, StatusCode::OK);
+        let (s, _) = call(
+            &r,
+            "POST",
+            &format!("/ds/session/{sid}/save"),
+            Some(&tok),
+            package("xl/workbook.xml", "s2"),
+        )
+        .await;
+        assert_eq!(s, StatusCode::FORBIDDEN);
+        assert_eq!(hrm.received().len(), 2);
+    } else {
+        // the other three types: open as edit, save (status 6), close (status 2), and the backend stores exactly the saved bytes
+        for (id, v2) in [
+            (8, package("xl/workbook.xml", "s2")),
+            (9, package("ppt/presentation.xml", "p2")),
+            (10, b"%PDF-1.7 v2".to_vec()),
+        ] {
+            let n = hrm.received().len();
+            let (sid, tok, mode) = open(id).await;
+            assert_eq!(mode, "edit", "file {id}");
+            let (s, _) = call(
+                &r,
+                "GET",
+                &format!("/ds/session/{sid}/document"),
+                Some(&tok),
+                vec![],
+            )
+            .await;
+            assert_eq!(s, StatusCode::OK);
+            let (s, v) = call(
+                &r,
+                "POST",
+                &format!("/ds/session/{sid}/save"),
+                Some(&tok),
+                v2.clone(),
+            )
+            .await;
+            assert_eq!(
+                (s, v["callback"].as_str()),
+                (StatusCode::OK, Some("ok")),
+                "{v}"
+            );
+            let (s, v) = call(
+                &r,
+                "POST",
+                &format!("/ds/session/{sid}/close"),
+                Some(&tok),
+                vec![],
+            )
+            .await;
+            assert_eq!((s, v["status"].as_u64()), (StatusCode::OK, Some(2)), "{v}");
+            let got = hrm.received();
+            assert_eq!(
+                got[n..].iter().map(|g| g.status).collect::<Vec<_>>(),
+                [6, 2],
+                "file {id}"
+            );
+            let want: String = Sha256::digest(&v2)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect();
+            assert_eq!(got[n + 1].sha256, want, "file {id}");
+            assert_eq!(hrm.object(Kind::File, id), Some(v2));
+        }
+        assert!(hrm.rejected().is_empty(), "{:?}", hrm.rejected());
+    }
 
     // the internal listener answers the backend's name only: from an address that is not `localhost` the gate refuses
     assert!(ds.internal_allows("127.0.0.1".parse().unwrap()));

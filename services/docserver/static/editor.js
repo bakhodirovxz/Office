@@ -83,9 +83,8 @@
         if (S.started) return;
         S.started = true;
         emit('onAppReady', {});
+        // every bridge answers the open with `opened` (or `failed`), docs/phase5/r6.md
         try { await openInEditor(); } catch (e) { fail(codeOf(e), 'the document could not be loaded'); return; }
-        // only the Docs bridge answers an open with `opened`; the others (PLAN 3.1, R6) count as open once it is handed over
-        if (document.documentElement.dataset.app !== 'docs') opened();
         break;
       case 'opened': opened(); break;
       case 'dirty':
