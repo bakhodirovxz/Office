@@ -22,7 +22,7 @@ test('open, edit, save, close, reopen, download', async () => {
       return { page, problems };
     };
     const s0 = await state();
-    const key = Object.keys(s0.objects)[0];
+    const key = Object.keys(s0.objects).find((k) => k.startsWith('files/1/'))!;
 
     const { page, problems } = await open();
     const editor = page.frames().find((f) => f.url().startsWith('https://127.0.0.1:18443/docs/'))!;
@@ -65,6 +65,29 @@ test('open, edit, save, close, reopen, download', async () => {
     await expect(w.locator('#hist-cmp ins, #hist-cmp del').first()).toBeVisible();
     expect(problems.concat(again.problems)).toEqual([]);
     console.log(`download ${bytes.length} bytes sha256 ${sha(bytes).slice(0, 12)} (was ${s0.objects[key].slice(0, 12)})`);
+  } finally {
+    await browser.close();
+  }
+});
+
+// Drop-in rehearsal (packaging/docserver/rehearse-dropin.sh, docs/phase5/dropin.md D5): the backend's edit config of an xlsx opens the
+// Sheets editor as a view (edit_types = docx); nothing reaches the backend.
+test('drop-in: an xlsx edit config opens view-only in the Sheets editor', async () => {
+  test.skip(!process.env.DROPIN, 'drop-in rehearsal only');
+  const browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+  try {
+    const s0 = await state();
+    const cfg = await (await fetch(`${HOST}/files/2/editor-config`)).json() as { editorConfig: { mode: string } };
+    expect(cfg.editorConfig.mode).toBe('edit');
+    const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
+    await page.goto(`${HOST}/host?kind=files&id=2&lang=en`);
+    await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
+    expect(await page.locator('body').getAttribute('data-state'), await page.locator('#detail').textContent() ?? '').toBe('ready');
+    expect(page.frames().some((f) => f.url().startsWith('https://127.0.0.1:18443/sheets/'))).toBe(true);
+    await page.evaluate(() => (window as any).__editor.close());
+    await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('closed');
+    const s1 = await state();
+    expect(s1.received.length).toBe(s0.received.length);
   } finally {
     await browser.close();
   }

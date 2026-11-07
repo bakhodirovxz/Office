@@ -325,6 +325,8 @@ impl Docserver {
         let pm = doc.get("permissions");
         // edit needs all three: the mode, the permission and a callback to save to (a config without one is a view)
         let edit = mode == "edit" && flag(pm, "edit", true)? && callback_url.is_some();
+        // a type the provider does not edit here (`edit_types`) opens as a view: its bridge lacks the read-only open and save acknowledgement
+        let edit = edit && p.edit_types.contains(&ft);
         let perms = Perms {
             edit,
             download: flag(pm, "download", true)?,

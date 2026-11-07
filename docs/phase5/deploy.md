@@ -11,7 +11,8 @@ needs the owner's OK (PLAN section 7, WP17).
   `HEALTHCHECK` = `GET /healthz` over the container's own loopback (the one request `tls = "upstream"` answers without the proxy).
 - Build offline-in-container (the dev PC's proxy breaks TLS inside containers): `packaging/docserver/build.sh` runs `cargo vendor --locked`
   on the host, compiles `suite-serve` and `fake-hrm` in `rust:1-slim-bookworm` with `--offline`, copies the dists, runs `docker build`.
-  Sheets, Slides and PDF dists are not in the image (the server logs that those routes are not served).
+  Since the drop-in (2026-11-07) the Sheets, Slides and PDF dists are in the image too (`DIST_ROOT`); a provider's `edit_types` decides
+  which types may edit (the installer: docx only, `dropin.md` D5). Size then: 403 MB on disk (`docker images`, was 193 MB).
 - **Size (2026-10-25):** 49.7 MB compressed content / 193 MB on disk (`docker images`); the test harness image `hoshiya-fakehrm:rehearsal`
   is 29.4 MB / 118 MB. Both are on this PC only; no registry push.
 - **`cargo deny`** (`ci/deny/services.toml`, `--target x86_64-unknown-linux-gnu`, the graph of this image): `advisories ok, bans ok,
@@ -36,6 +37,40 @@ docserver .10 --http--> fakehrm:8790                    (document fetch and call
   The browser flow is `ci/web-smoke/docserver-compose.spec.ts` (Playwright/Chromium on the host, certificate pinned by public key): open the
   document, type, save, close (callback status 2), reopen, download the stored document from the backend and compare its hash.
 
+## Install in place of an existing ONLYOFFICE container (the drop-in, `dropin.md`)
+
+The backend is not changed. On the Docker host, as root, with our image loaded (`docker load`) and no registry:
+
+```sh
+packaging/docserver/install.sh --dry-run --profile packaging/docserver/profiles/hrm.env --image <our image>     --frame-origin https://<the page that embeds the editor>      # read the plan; secrets show as <redacted, N bytes>
+packaging/docserver/install.sh --profile ... --image ... --frame-origin ...   # the same flags, without --dry-run
+packaging/docserver/install.sh rollback                                        # back to the old container, any time
+```
+
+- What it reads (`docker inspect`, nothing is changed before the plan is printed): the old container (the profile's `FROM_IMAGE`, or
+  `--from`), its name, aliases, networks, restart policy, published ports, `traefik.*` labels and `JWT_SECRET`; the backend (the
+  container answering the backend URL's host) and its env (backend URL, rewrite target, callback allowlist, secret, CORS list);
+  the Traefik container on a shared network.
+- What it writes: `/opt/docserver/secrets/` (`--etc`): `provider-secret` (the shared secret), `server-secret`, `converter-secret`,
+  `audit-key`, mode 0600 owned by uid 10002, directory 0500; `/opt/docserver/state.env` (the old container's facts, no secret).
+- What it runs: the old container is renamed `<name>-replaced`, set to `restart=no`, stopped and disconnected. Ours gets the old
+  name and aliases, the copied Traefik labels with the service port 8787, the old restart policy, `read_only`, `cap_drop ALL`,
+  `no-new-privileges`, `/tmp` tmpfs, the volume `<name>-docserver-data` on `/data`, the secrets read-only on `/run/secrets`, and
+  `--sysctl net.ipv4.ip_unprivileged_port_start=80` for the internal listener on port 80. The config is built by the entrypoint from
+  env (`dropin.md` D6); the secret goes by file (`JWT_SECRET_FILE`), never in env.
+- Checks: the container must become healthy, and a throwaway container on the network must get our 403 from
+  `http://<rewrite host>:80/` (the alias is ours, the peer gate holds). Otherwise it rolls back by itself.
+- A rerun (new image, new frame origin, a recreated Traefik) recreates ours only. `rollback` removes ours, keeps the data volume, and
+  puts the old container back with its name, aliases, fixed addresses, restart policy and running state.
+- **Afterwards**: do not run `docker compose up` for the backend's ONLYOFFICE service (bring its own services up by name), or add an
+  override that disables it; else the old container comes back and claims the names. The installer prints this.
+- Refusals (each names the flag or env value that settles it): more than one candidate container, Traefik or `Host()` rule; the
+  backend's rewrite target not a name of the old container, or missing from its allowlist; a secret mismatch between the two
+  sides or under 16 bytes; no frame origin; a router using a service its labels do not define; a published port other than 80; no
+  Traefik labels and no `--public-url` and `--trusted-proxy`.
+- Rehearsed on this PC by `packaging/docserver/rehearse-dropin.sh` (stand-in container, fake backend as surveyed, Traefik docker
+  provider): see `docs/STATUS.md`, "Phase 5: ONLYOFFICE drop-in".
+
 ## Example operator config
 
 Shape used by the rehearsal (`packaging/docserver/api.rehearsal.toml`). The HRM appears only here, as one example provider; the code
@@ -46,7 +81,7 @@ listen = "0.0.0.0:8787"
 auth = "jwt"
 secret_file = "/run/secrets/converter-secret"     # >= 32 bytes
 tls = "upstream"                                   # TLS ends at Traefik
-trusted_proxies = ["<traefik container IP>/32"]    # plus every entry of Traefik's trustedIPs (see below)
+trusted_proxies = ["<traefik container name>"]     # a name (re-resolved) or an IP /32; plus every entry of Traefik's trustedIPs (see below)
 public_url = "https://docs.example.org"            # the public host name (the Host check and redirect target)
 work_dir = "/tmp/work"
 store_dir = "/data/store"
@@ -57,7 +92,7 @@ audit_key_file = "/run/secrets/audit-key"          # kept outside the data volum
 data_dir = "/data/docserver"
 diff_bin_dir = "/app/diff"                         # docs-diff and sheets-diff (History > Compare); unset = 501
 internal_listen = "<this container's IP on backend_net>:8780"   # never publish with -p
-internal_allow = ["<the HR backend container IP>/32"]          # not a /16 that contains the bridge gateway
+internal_allow = ["api"]                       # the backend's container name or alias (re-resolved every 15 s), or its IP /32; never a /16 with the gateway
 keep_closed_hours = 168                            # retention: a session 7 days after a close the backend acknowledged (default)
 keep_abandoned_days = 7                            # any other session 7 days after its last activity (default)
 

@@ -1,6 +1,6 @@
 //! The `[docserver]` section of the server config and the checks that make a bad combination a refusal to start (PLAN phase 5, 3.2,
 //! 4 and S4). A message names the key and never prints a secret.
-use convert_api::config::Cidr;
+use convert_api::config::{Cidr, NameSet};
 use serde::Deserialize;
 use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
@@ -40,9 +40,13 @@ pub struct ProviderConfig {
     /// `scheme://host[:port]` of the pages that may frame the editor and load `api.js`
     #[serde(default)]
     pub frame_origins: Vec<String>,
-    /// refuse config tokens without `exp` (default true)
-    #[serde(default = "yes")]
-    pub require_exp: bool,
+    /// refuse config tokens without `exp` (default true; false with `compat = "docsapi"`)
+    pub require_exp: Option<bool>,
+    /// `"docsapi"`: a backend written for another DocsAPI document server, unchanged (docs/phase5/dropin.md D1, D4): config tokens
+    /// without `exp`, and a secret of 16 bytes or more (a warning under 32). Every other check stays.
+    pub compat: Option<String>,
+    /// the file types whose sessions may edit (default: every served type); an edit config of another type opens as a view
+    pub edit_types: Option<Vec<String>>,
     /// `"session"` (default): a document's history goes with the last session of its `document.key` (the retention sweep), right
     /// for a provider that sends a new key on every open. `"keep"`: the history stays under the store's own limits, for a provider
     /// with stable keys.
@@ -76,10 +80,6 @@ pub struct PluginsConfig {
     /// publisher keys (Ed25519, 64 lower-case hex) whose signature this server accepts, besides the product's own (`brand.toml`).
     /// A server takes signed packages only (O4): an unsigned one, or one signed by any other key, is refused like a changed one.
     pub trusted_keys: Vec<String>,
-}
-
-fn yes() -> bool {
-    true
 }
 
 fn session() -> String {
@@ -180,6 +180,8 @@ pub struct Provider {
     pub keep_history: bool,
     /// the plugins enabled for this provider, checked against the folder at start (PLAN phase 7, section 8)
     pub plugins: Vec<ProviderPlugin>,
+    /// the file types that may open in edit mode (lower case)
+    pub edit_types: Vec<String>,
 }
 
 /// A plugin of a provider: the package as it was when the server started, and what the admin set for it.
@@ -194,6 +196,8 @@ pub struct ProviderPlugin {
 pub struct Internal {
     pub listen: SocketAddr,
     pub allow: Vec<Cidr>,
+    /// the container names of `internal_allow`, resolved again every 15 s (a backend recreated with a new address)
+    pub names: NameSet,
 }
 
 /// The checked configuration. No `Debug`: it holds secrets.
@@ -226,11 +230,15 @@ pub struct Docserver {
 }
 
 fn read_secret(path: &Path, key: &str) -> Result<Vec<u8>, String> {
+    read_secret_min(path, key, 32)
+}
+
+fn read_secret_min(path: &Path, key: &str, min: usize) -> Result<Vec<u8>, String> {
     let s = std::fs::read(path)
         .map_err(|e| format!("docserver: {key}: cannot read {}: {e}", path.display()))?;
     let s = s.trim_ascii_end().to_vec();
-    if s.len() < 32 {
-        return Err(format!("docserver: {key} must hold at least 32 bytes"));
+    if s.len() < min {
+        return Err(format!("docserver: {key} must hold at least {min} bytes"));
     }
     Ok(s)
 }
@@ -339,7 +347,7 @@ impl Docserver {
     pub fn internal_allows(&self, ip: IpAddr) -> bool {
         self.internal
             .as_ref()
-            .is_some_and(|i| i.allow.iter().any(|c| c.contains(ip)))
+            .is_some_and(|i| i.allow.iter().any(|c| c.contains(ip)) || i.names.contains(ip))
     }
 }
 
@@ -440,17 +448,25 @@ impl Config {
                 if Some(listen) == main_listen {
                     return Err("docserver: internal_listen is the public listen address".into());
                 }
-                let allow = self
+                let (names, cidrs): (Vec<&String>, Vec<&String>) = self
                     .internal_allow
                     .iter()
+                    .partition(|c| NameSet::is_name(c));
+                let allow = cidrs
+                    .into_iter()
                     .map(|c| {
                         Cidr::parse(c)
                             .ok()
                             .filter(|c| c.prefix_len() > 0)
-                            .ok_or(format!("docserver: internal_allow: \"{c}\" is not an IP address or a CIDR range (a /0 range is not accepted)"))
+                            .ok_or(format!("docserver: internal_allow: \"{c}\" is not an IP address, a CIDR range or a container name (a /0 range is not accepted)"))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                Some(Internal { listen, allow })
+                let names = NameSet::start(names.into_iter().cloned().collect());
+                Some(Internal {
+                    listen,
+                    allow,
+                    names,
+                })
             }
         };
         let internal_url = match (&internal, &self.internal_url) {
@@ -498,7 +514,48 @@ impl Config {
                 .secret_file
                 .as_deref()
                 .ok_or(format!("docserver: {} is required", at("secret_file")))?;
-            let secret = read_secret(secret_path, &at("secret_file"))?;
+            let compat = match p.compat.as_deref() {
+                None => false,
+                Some("docsapi") => true,
+                Some(_) => {
+                    return Err(format!(
+                        "docserver: {} must be \"docsapi\" when set",
+                        at("compat")
+                    ));
+                }
+            };
+            if compat && p.require_exp == Some(true) {
+                return Err(format!(
+                    "docserver: {}: compat = \"docsapi\" accepts tokens without exp; remove require_exp = true",
+                    at("require_exp")
+                ));
+            }
+            let secret = read_secret_min(
+                secret_path,
+                &at("secret_file"),
+                if compat { 16 } else { 32 },
+            )?;
+            if secret.len() < 32 {
+                eprintln!(
+                    "docserver: WARNING: provider \"{}\": its secret is only {} bytes; a config token from any browser can be attacked offline. Rotate it to 32 random bytes or more",
+                    p.name,
+                    secret.len()
+                );
+            }
+            const TYPES: [&str; 4] = ["docx", "xlsx", "pptx", "pdf"];
+            let edit_types = match &p.edit_types {
+                None => TYPES.map(String::from).to_vec(),
+                Some(v) => {
+                    let v: Vec<String> = v.iter().map(|t| t.to_ascii_lowercase()).collect();
+                    if let Some(t) = v.iter().find(|t| !TYPES.contains(&t.as_str())) {
+                        return Err(format!(
+                            "docserver: {}: \"{t}\" is not docx, xlsx, pptx or pdf",
+                            at("edit_types")
+                        ));
+                    }
+                    v
+                }
+            };
             if secret == server_secret {
                 return Err(format!(
                     "docserver: {} holds the same secret as server_secret_file",
@@ -589,9 +646,10 @@ impl Config {
                 fetch_allow,
                 callback_allow,
                 frame_origins,
-                require_exp: p.require_exp,
+                require_exp: p.require_exp.unwrap_or(!compat),
                 keep_history,
                 plugins,
+                edit_types,
             });
         }
         for p in providers.iter().filter(|p| !p.require_exp) {
@@ -1216,8 +1274,14 @@ frame_origins = ["https://app.test"]
         );
         refused(
             &d,
-            &set(Some("10.0.0.5:9000"), &["nonsense"]),
+            &set(Some("10.0.0.5:9000"), &["no such thing"]),
             "internal_allow",
+        );
+        // a container name is resolved (`localhost` stands in for one)
+        let ds = d.toml(&set(Some("10.0.0.5:9000"), &["localhost"])).unwrap();
+        assert!(
+            ds.internal_allows("127.0.0.1".parse().unwrap())
+                && !ds.internal_allows("10.0.0.6".parse().unwrap())
         );
         refused(&d, &set(Some("10.0.0.5:9000"), &["0.0.0.0/0"]), "/0");
         let ds = d
@@ -1370,5 +1434,68 @@ frame_origins = ["https://app.test"]
             .unwrap();
         assert!(!ds.providers[0].require_exp && ds.max_document_mb == 500);
         assert!(ds.providers[0].keep_history);
+    }
+
+    #[test]
+    fn the_docsapi_compat_mode() {
+        let d = Dir::new("compat");
+        std::fs::write(d.path("p20"), [b'p'; 20]).unwrap();
+        std::fs::write(d.path("p10"), [b'q'; 10]).unwrap();
+        let compat = |secret: &'static str| {
+            let p = d.path(secret);
+            move |t: &mut toml::Table| {
+                prov(t).insert("compat".into(), "docsapi".into());
+                prov(t).insert("secret_file".into(), p.clone().into());
+            }
+        };
+        // no exp needed, a 20-byte secret passes (with a warning), every other check stays
+        let ds = d.toml(&compat("p20")).unwrap();
+        assert!(!ds.providers[0].require_exp && ds.providers[0].secret.len() == 20);
+        assert_eq!(ds.providers[0].edit_types, ["docx", "xlsx", "pptx", "pdf"]);
+        refused(&d, &compat("p10"), "at least 16 bytes");
+        // without compat the 32-byte rule holds
+        refused(
+            &d,
+            &|t| {
+                prov(t).insert("secret_file".into(), d.path("p20").into());
+            },
+            "at least 32 bytes",
+        );
+        refused(
+            &d,
+            &|t| {
+                compat("p20")(t);
+                prov(t).insert("require_exp".into(), true.into());
+            },
+            "remove require_exp",
+        );
+        refused(
+            &d,
+            &|t| {
+                prov(t).insert("compat".into(), "msoffice".into());
+            },
+            "providers[0].compat",
+        );
+        refused(
+            &d,
+            &|t| {
+                compat("p20")(t);
+                prov(t).remove("frame_origins");
+            },
+            "frame_origins must list",
+        );
+        let ds = d
+            .toml(&|t| {
+                prov(t).insert("edit_types".into(), strings(&["DOCX"]));
+            })
+            .unwrap();
+        assert!(ds.providers[0].require_exp && ds.providers[0].edit_types == ["docx"]);
+        refused(
+            &d,
+            &|t| {
+                prov(t).insert("edit_types".into(), strings(&["doc"]));
+            },
+            "providers[0].edit_types",
+        );
     }
 }

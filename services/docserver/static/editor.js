@@ -75,6 +75,8 @@
     toEditor('open', { name: S.title.toLowerCase().endsWith(ext) ? S.title : S.title + ext, bytes: bytes, readOnly: S.readOnly, canDownload: S.canDownload, canPrint: S.canPrint }, [bytes]);
   }
 
+  function opened() { if (S.ready) return; status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); }
+
   async function onEditor(d) {
     if (S.plg) S.plg.onMessage(S.pf, d);
     switch (d.type.slice(S.prefix.length + 1)) {
@@ -82,9 +84,11 @@
         if (S.started) return;
         S.started = true;
         emit('onAppReady', {});
-        try { await openInEditor(); } catch (e) { fail(codeOf(e), 'the document could not be loaded'); }
+        try { await openInEditor(); } catch (e) { fail(codeOf(e), 'the document could not be loaded'); return; }
+        // only the Docs bridge answers an open with `opened`; the others (PLAN 3.1, R6) count as open once it is handed over
+        if (document.documentElement.dataset.app !== 'docs') opened();
         break;
-      case 'opened': status.style.display = 'none'; S.ready = true; emit('onDocumentReady', {}); break;
+      case 'opened': opened(); break;
       case 'dirty':
         emit('onDocumentStateChange', !!d.dirty);
         // the first change of the session: the host learns of it once (callback status 1); best effort, the server sends it once
