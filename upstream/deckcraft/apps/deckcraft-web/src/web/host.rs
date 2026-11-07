@@ -4,11 +4,18 @@
 //!
 //! - `deckcraft:ready` (to the parent): `{ version }`, the app is listening; send a file now.
 //! - `deckcraft:open` (from the parent): `{ name, bytes }`, bytes an `ArrayBuffer` or
-//!   `Uint8Array`. The presentation replaces the one shown.
+//!   `Uint8Array`. The presentation replaces the one shown. `readOnly: true` opens it read only:
+//!   an edit is taken back at once (with a message) and nothing is ever sent as a save.
+//!   `canDownload: false` withholds the exports (PDF, pictures, outline), `canPrint: false` Print;
+//!   both default to true.
 //! - `deckcraft:opened` (to the parent): `{ name }`, it is shown.
 //! - `deckcraft:requestSave` (from the parent): save now.
-//! - `deckcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`) for every
-//!   file DeckCraft would otherwise download. A Save of the presentation always sends a `.pptx`.
+//! - `deckcraft:save` (to the parent): `{ name, bytes }` (a transferred `ArrayBuffer`): the
+//!   presentation, always as a `.pptx`. It stays marked as unsaved (no `dirty: false`) until the
+//!   parent has answered every save with `deckcraft:saved`. Exports and the PDF a print makes
+//!   are downloaded by the browser, not sent.
+//! - `deckcraft:saved` (from the parent): `{ ok }`, the answer to one `deckcraft:save`, in order.
+//!   `ok: false` marks the presentation unsaved again.
 //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
 //! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
@@ -19,6 +26,8 @@
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use deckcraft_ui_egui::{Services, SlideApp};
 use serde_json::json;
@@ -28,6 +37,28 @@ use wasm_bindgen::closure::Closure;
 
 /// The name a presentation gets when the parent opened none.
 const DEFAULT_NAME: &str = "presentation.pptx";
+
+/// Shown when an edit of a read-only presentation was taken back, and when the host withholds a command.
+const READ_ONLY: &str = "This presentation is open read-only: changes are not kept.";
+const WITHHELD: &str = "This is not available in this session.";
+
+/// `deckcraft:open { canDownload, canPrint }`, read by the command hook (the app asks it before an export or a print).
+static CAN_DOWNLOAD: AtomicBool = AtomicBool::new(true);
+static CAN_PRINT: AtomicBool = AtomicBool::new(true);
+
+/// Refuses Export and Print when the host withholds them; the app shows the reason and greys the commands out.
+struct HostPolicy;
+
+impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
+    fn before(&self, id: &str, _s: &deckcraft_engine::Session) -> Option<String> {
+        let withheld = match id {
+            "file.export" => !CAN_DOWNLOAD.load(Ordering::Relaxed),
+            "file.print" => !CAN_PRINT.load(Ordering::Relaxed),
+            _ => false,
+        };
+        withheld.then(|| deckcraft_ui_egui::i18n::t(WITHHELD).to_string())
+    }
+}
 
 #[derive(Clone)]
 pub struct Bridge {
@@ -42,6 +73,13 @@ pub struct Bridge {
     reported: Rc<Cell<Option<bool>>>,
     /// The name of the file the parent opened last.
     name: Rc<RefCell<String>>,
+    /// `deckcraft:open { readOnly }`.
+    read_only: Rc<Cell<bool>>,
+    /// Saves sent that the parent hasn't answered with `deckcraft:saved` yet, and the answers since the last frame.
+    pending: Rc<Cell<u32>>,
+    acks: Rc<RefCell<Vec<bool>>>,
+    /// A refusal to show at the next frame.
+    refused: Rc<Cell<Option<&'static str>>>,
 }
 
 impl Bridge {
@@ -64,22 +102,28 @@ impl Bridge {
             to_open: Rc::default(),
             reported: Rc::default(),
             name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
+            read_only: Rc::default(),
+            pending: Rc::default(),
+            acks: Rc::default(),
+            refused: Rc::default(),
         })
     }
 
-    /// Send saved and exported files to the parent instead of downloading them, and hear files
-    /// and save requests from it.
+    /// Send saved files to the parent instead of downloading them, and hear files, save requests
+    /// and save answers from it.
     pub fn connect(&self, services: &mut Services, ctx: egui::Context) {
         self.listen(ctx.clone());
+        deckcraft_engine::office_hook::set_hook(Some(Arc::new(HostPolicy)));
         let bridge = self.clone();
         services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
+            let lower = name.to_ascii_lowercase();
             // The web app's own Save of an unnamed presentation downloads the native format; the
             // parent wants a .pptx, so the next frame saves that instead.
-            if name.to_ascii_lowercase().ends_with(".deckcraft") {
+            if lower.ends_with(".deckcraft") || lower.ends_with(".pptx") {
                 bridge.save_requested.set(true);
                 ctx.request_repaint();
-            } else if let Err(e) = bridge.post_save(name, bytes) {
-                bridge.post_failed(&e);
+            } else if let Err(e) = super::download(name, bytes) {
+                log::error!("download of {name} failed: {e}");
             }
         }));
     }
@@ -92,18 +136,54 @@ impl Bridge {
         self.send(&[("type", "deckcraft:failed".into()), ("error", error.into())]);
     }
 
-    /// After each frame: open a file the parent sent, run a save it asked for, and report the
-    /// unsaved-changes state.
+    /// After each frame: open a file the parent sent, run a save it asked for, apply the save
+    /// answers, take back edits of a read-only presentation, and report the unsaved-changes state.
     pub fn sync(&self, ctx: &egui::Context, app: &mut SlideApp) {
         if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
             self.open(app, name, &bytes);
         }
         if self.save_requested.replace(false) {
-            self.save(app);
+            if self.read_only.get() {
+                self.refused.set(Some(READ_ONLY));
+            } else {
+                self.save(app);
+            }
             ctx.request_repaint();
         }
+        for ok in self.acks.take() {
+            if self.pending.get() == 0 {
+                break;
+            }
+            self.pending.set(self.pending.get() - 1);
+            // Not stored by the parent: unsaved again (a copy of the presentation is another `Arc`).
+            if !ok && let Some(d) = app.session.active_mut() {
+                d.saved_doc = Arc::new((*d.doc).clone());
+            }
+        }
+        // Read only: whatever changed the presentation (a command, typing, a drag) is taken back, as Undo would.
+        if self.read_only.get()
+            && let Some(d) = app.session.active_mut()
+            && d.is_dirty()
+        {
+            d.doc = d.saved_doc.clone();
+            d.history.undo.clear();
+            d.history.redo.clear();
+            let slide = d.selection.slide.min(d.doc.slides.len().saturating_sub(1));
+            d.selection = deckcraft_engine::Selection { slide, ..Default::default() };
+            d.interaction = None;
+            d.composition = None;
+            d.revision += 1;
+            self.refused.set(Some(READ_ONLY));
+        }
+        if let Some(why) = self.refused.take() {
+            app.notify(deckcraft_ui_egui::i18n::t(why).to_string());
+        }
         let dirty = app.session.documents().iter().any(|d| d.is_dirty());
-        if self.reported.get() != Some(dirty) && self.send(&[("type", "deckcraft:dirty".into()), ("dirty", dirty.into())]) {
+        // A saved presentation stays unsaved until the parent has stored it.
+        if (dirty || self.pending.get() == 0)
+            && self.reported.get() != Some(dirty)
+            && self.send(&[("type", "deckcraft:dirty".into()), ("dirty", dirty.into())])
+        {
             self.reported.set(Some(dirty));
         }
         #[cfg(feature = "office-ext")]
@@ -141,7 +221,8 @@ impl Bridge {
         let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx").map_err(|e| e.to_string()).and_then(|bytes| self.post_save(&name, &bytes));
         match sent {
             Ok(()) => {
-                // Clean now; the next frame tells the parent.
+                self.pending.set(self.pending.get() + 1);
+                // Clean now (the parent is told once it has stored it).
                 if let Some(d) = app.session.active_mut() {
                     d.saved_doc = d.doc.clone();
                     d.revision += 1;
@@ -172,11 +253,15 @@ impl Bridge {
                 Some("deckcraft:open") => {
                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
                     let Some(bytes) = bytes(&data) else { return };
+                    bridge.read_only.set(flag(&data, "readOnly", false));
+                    CAN_DOWNLOAD.store(flag(&data, "canDownload", true), Ordering::Relaxed);
+                    CAN_PRINT.store(flag(&data, "canPrint", true), Ordering::Relaxed);
                     *bridge.to_open.borrow_mut() = Some((name, bytes));
                 }
                 Some("deckcraft:requestSave") => bridge.save_requested.set(true),
                 #[cfg(feature = "office-ext")]
                 Some(_) if slides_plugins::web::is_plugin_message(&data) => slides_plugins::web::incoming(&data),
+                Some("deckcraft:saved") => bridge.acks.borrow_mut().push(flag(&data, "ok", false)),
                 _ => return,
             }
             ctx.request_repaint();
@@ -209,6 +294,11 @@ fn message(fields: &[(&str, JsValue)]) -> Option<js_sys::Object> {
 
 fn string(data: &JsValue, key: &str) -> Option<String> {
     js_sys::Reflect::get(data, &JsValue::from_str(key)).ok()?.as_string()
+}
+
+/// A boolean field, `default` when absent or not a boolean.
+fn flag(data: &JsValue, key: &str, default: bool) -> bool {
+    js_sys::Reflect::get(data, &JsValue::from_str(key)).ok().and_then(|v| v.as_bool()).unwrap_or(default)
 }
 
 /// `bytes` as an `ArrayBuffer` or `Uint8Array`.

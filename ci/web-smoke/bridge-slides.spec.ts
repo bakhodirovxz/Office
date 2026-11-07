@@ -53,11 +53,11 @@ const types = async (page: Page) => (await msgs(page)).map((m) => m.type);
 const count = async (page: Page, type: string) => (await types(page)).filter((t) => t === type).length;
 const waitFor = (page: Page, type: string, n = 1) => expect.poll(() => count(page, type), { timeout: 90_000 }).toBeGreaterThanOrEqual(n);
 
-async function open(page: Page, name = NAME, bytes = fs.readFileSync(PPTX)) {
-  await page.evaluate(([n, b]) => {
+async function open(page: Page, name = NAME, bytes = fs.readFileSync(PPTX), extra: object = {}) {
+  await page.evaluate(([n, b, x]) => {
     const buf = new Uint8Array(b as number[]).buffer;
-    (window as any).__toEditor({ type: 'deckcraft:open', name: n, bytes: buf }, [buf]);
-  }, [name, Array.from(bytes)] as const);
+    (window as any).__toEditor({ type: 'deckcraft:open', name: n, bytes: buf, ...(x as object) }, [buf]);
+  }, [name, Array.from(bytes), extra] as const);
 }
 const canvas = (page: Page) => page.frameLocator('#ed').locator('canvas');
 
@@ -94,15 +94,28 @@ test('3 requestSave: a .pptx comes back as a transferred ArrayBuffer, named afte
   expect(s.bytes).toMatch(/^80,75:\d{4,}/); // "PK", a zip
 });
 
-test('4 dirty: an edit reports true, a save reports false again', async ({ page }) => {
-  await open(page);
-  await waitFor(page, 'deckcraft:opened');
+const lastDirty = async (page: Page) => (await msgs(page)).filter((x) => x.type === 'deckcraft:dirty').map((x) => x.dirty).at(-1);
+const newSlide = async (page: Page) => {
   await canvas(page).click({ position: { x: 500, y: 350 } });
   await page.keyboard.press('Control+Shift+N'); // New Slide
-  await expect.poll(async () => (await msgs(page)).filter((x) => x.type === 'deckcraft:dirty').map((x) => x.dirty).at(-1)).toBe(true);
+};
+
+test('4 dirty: an edit reports true; a save reports false once the host acknowledged it (r6)', async ({ page }) => {
+  await open(page);
+  await waitFor(page, 'deckcraft:opened');
+  await newSlide(page);
+  await expect.poll(() => lastDirty(page)).toBe(true);
   await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:requestSave' }));
   await waitFor(page, 'deckcraft:save');
-  await expect.poll(async () => (await msgs(page)).filter((x) => x.type === 'deckcraft:dirty').map((x) => x.dirty).at(-1)).toBe(false);
+  await page.waitForTimeout(2000);
+  expect(await lastDirty(page)).toBe(true); // unanswered: still dirty
+  await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:saved', ok: false }));
+  await page.waitForTimeout(2000);
+  expect(await lastDirty(page)).toBe(true);
+  await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:requestSave' }));
+  await waitFor(page, 'deckcraft:save', 2);
+  await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:saved', ok: true }));
+  await expect.poll(() => lastDirty(page)).toBe(false);
 });
 
 test('5 Ctrl+S in the editor sends a .pptx, never a .deckcraft download', async ({ page }) => {
@@ -144,6 +157,45 @@ test('8 a file that is not a presentation: failed, and the editor keeps going', 
   expect(await count(page, 'deckcraft:opened')).toBe(0);
   await open(page);
   await waitFor(page, 'deckcraft:opened');
+});
+
+// docs/phase5/r6.md (patch deckcraft/0160): the read-only open and canPrint.
+test('9 readOnly: an edit is taken back, never dirty, and no save is sent (requestSave, Ctrl+S)', async ({ page }) => {
+  await open(page, NAME, fs.readFileSync(PPTX), { readOnly: true });
+  await waitFor(page, 'deckcraft:opened');
+  await newSlide(page);
+  await page.waitForTimeout(2000);
+  await page.keyboard.press('Control+s');
+  await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:requestSave' }));
+  await page.waitForTimeout(3000);
+  expect((await msgs(page)).filter((m) => m.type === 'deckcraft:dirty' && m.dirty)).toHaveLength(0);
+  expect(await count(page, 'deckcraft:save')).toBe(0);
+});
+
+// Print on the web is a PDF download of the editor page (SlideApp::print_pdf, the Print button of File › Print, which Ctrl+P opens);
+// canPrint:false refuses it.
+test('10 canPrint default true: Print downloads the PDF to print; canPrint:false refuses it and Save still works', async ({ page }) => {
+  const printed = async () => {
+    await canvas(page).click({ position: { x: 500, y: 350 } });
+    await page.keyboard.press('Control+p');
+    await page.waitForTimeout(1500);
+    const dl = page.waitForEvent('download', { timeout: 8000 }).then((d) => d.suggestedFilename()).catch(() => null);
+    await canvas(page).click({ position: { x: 251, y: 150 } }); // the Print button
+    return dl;
+  };
+  await open(page);
+  await waitFor(page, 'deckcraft:opened');
+  expect(await printed()).toMatch(/\.pdf$/);
+  expect(await count(page, 'deckcraft:save')).toBe(0); // a print is not a save
+  await page.goto(base + '/host.html');
+  await waitFor(page, 'deckcraft:ready');
+  await open(page, NAME, fs.readFileSync(PPTX), { canPrint: false, canDownload: false });
+  await waitFor(page, 'deckcraft:opened');
+  expect(await printed()).toBeNull();
+  await page.keyboard.press('Escape'); // back from File › Print
+  await newSlide(page);
+  await page.evaluate(() => (window as any).__toEditor({ type: 'deckcraft:requestSave' }));
+  await waitFor(page, 'deckcraft:save');
 });
 
 test('not framed: ?host=parent alone starts the normal app, with the sample deck and no bridge', async ({ page }) => {

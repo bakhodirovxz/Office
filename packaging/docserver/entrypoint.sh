@@ -94,7 +94,7 @@ secret_file = $(q "$PS")
 fetch_allow = $(list "$DOCSERVER_FETCH_ALLOW" table)
 callback_allow = $(list "${DOCSERVER_CALLBACK_ALLOW:-$DOCSERVER_FETCH_ALLOW}" table)
 frame_origins = $(list "$FRAMES")
-edit_types = $(list "${DOCSERVER_EDIT_TYPES:-docx}")
+edit_types = $(list "${DOCSERVER_EDIT_TYPES:-docx,xlsx,pptx,pdf}")
 history = "session"
 EOF
 exec "${BIN[@]}" --config "$R/api.toml"

@@ -152,7 +152,9 @@ mod office_overlay_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod open_worker_tests;
 
-use pdfcraft_engine::{DocId, Session};
+/// The id of an open document (public for the web host bridge, which keeps track of the one it opened).
+pub use pdfcraft_engine::DocId;
+use pdfcraft_engine::Session;
 
 pub use canvas::{DocView, RasterMemory};
 pub use editing::{CloseRequest, SaveTarget};
@@ -414,6 +416,10 @@ pub type HostSaveFn = Box<dyn Fn(&str, &[u8], bool) -> Result<(), String>>;
 
 /// Told every frame whether any tab has unsaved work, so a host page can warn before leaving.
 pub type HostDirtyFn = Box<dyn FnMut(bool)>;
+
+/// Web: the embedding page withholds downloads (exports, copies, a PDF to print): the browser
+/// download refuses them. Set by the web app's host bridge (office overlay, docs/phase5/r6.md).
+pub static HOST_WITHHOLDS_DOWNLOADS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub struct PasswordPrompt {
     pub name: String,

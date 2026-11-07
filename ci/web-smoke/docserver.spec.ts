@@ -25,6 +25,8 @@ const DIST = process.env.DIST ?? 'E:/office-target/p1/dist';
 const OPENSSL = process.env.OPENSSL ?? 'openssl';
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
 const XLSX = path.join(ROOT, 'domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx');   // files/2
+const PPTX = path.join(ROOT, 'domains/slides/tests/translit-fixtures/pptx/01-shapes-notes.pptx');   // files/6
+const PDF = path.join(ROOT, 'docs/phase4/wp23/fixtures/namuna-hisobot.pdf');   // files/7
 
 const free = () => new Promise<number>((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = (s.address() as net.AddressInfo).port; s.close(() => ok(p)); }); });
 let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server;
@@ -34,7 +36,7 @@ let DS: string, HOST: string;
 const BM_PY = path.join(ROOT, 'scripts/hrm-bookmarks/hrm_bookmarks.py');
 const PYTHON = process.env.PYTHON ?? 'python';
 const BM_DOCS = ['decree', 'letter', 'report'];
-const PROTECTED = [path.join(ROOT, 'scripts/mobile/fixtures/protected.docx'), path.join(ROOT, 'scripts/mobile/fixtures/protected-tracked.docx')];   // files/6 and 7: a document with its own protection (Phase 7 F7b)
+const PROTECTED = [path.join(ROOT, 'scripts/mobile/fixtures/protected.docx'), path.join(ROOT, 'scripts/mobile/fixtures/protected-tracked.docx')];   // files/8 and 9: a document with its own protection (Phase 7 F7b)
 let bmDir: string;
 
 const sessions = () => {
@@ -83,7 +85,7 @@ test.beforeAll(async () => {
   // the fake backend first: it generates the secret the provider entry of the server must hold
   bmDir = path.join(dir, 'bm');
   execFileSync(PYTHON, ['-I', BM_PY, '--gen', bmDir]);
-  hrm = spawn(HRM_BIN, [DOCX, XLSX, ...BM_DOCS.map((n) => path.join(bmDir, n + '.docx')), ...PROTECTED], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
+  hrm = spawn(HRM_BIN, [DOCX, XLSX, ...BM_DOCS.map((n) => path.join(bmDir, n + '.docx')), PPTX, PDF, ...PROTECTED], { env: { ...process.env, FAKE_HRM_ADDR: `127.0.0.1:${hrmPort}`, FAKE_HRM_DOCSERVER: DS, FAKE_HRM_INTERNAL_BASE: `http://127.0.0.1:${intPort}`, FAKE_HRM_EXP: '1', FAKE_HRM_TEST_API: '1' } });
   const secret = await new Promise<string>((ok, bad) => {
     let err = '';
     hrm.stderr!.on('data', (d) => { err += d; const m = /\(secret ([0-9a-f]+),/.exec(err); if (m) ok(m[1]); });
@@ -370,6 +372,89 @@ test('WP7 view session: read-only editor, typing refused, nothing is sent', asyn
   expect(problems).toEqual([]);
   await ctx.close();
 });
+
+// R6 (docs/phase5/r6.md): xlsx, pptx and pdf edit like docx. The editor reports `opened` itself (the page reaches "ready"), an edit
+// reaches the host, requestSave stores version 2 and the backend gets status 6 with exactly those bytes, close sends status 2;
+// a view session of the same file stays read-only (the bridge takes the edit back and nothing is sent).
+const R6: [string, number, string, string, (page: Page, editor: import('@playwright/test').Frame) => Promise<void>][] = [
+  ['xlsx', 2, 'sheets', 'PK', async (page, editor) => {
+    await editor.locator('canvas').first().click({ position: { x: 420, y: 420 } });
+    await page.keyboard.type('zz');
+    await page.keyboard.press('Enter');
+  }],
+  ['pptx', 6, 'slides', 'PK', async (page, editor) => {
+    await editor.locator('canvas').first().click({ position: { x: 500, y: 350 } });
+    await page.keyboard.press('Control+Shift+N'); // New Slide
+  }],
+  ['pdf', 7, 'pdf', '%PDF', async (page, editor) => {
+    await editor.locator('canvas').first().click({ position: { x: 550, y: 400 } });
+    await page.keyboard.press('Control+k'); // the command palette
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Rotate pages clockwise');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+  }],
+];
+for (const [ext, id, route, magic, edit] of R6) {
+  test(`R6 ${ext}: edit session, opened, edit, save (status 6, stored hash), close (status 2)`, async () => {
+    const { ctx, page, problems } = await open();
+    const t0 = Date.now();
+    await page.goto(`${HOST}/host?kind=files&id=${id}`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toMatch(/ready|error/);
+    expect(await state(page), await page.locator('#detail').textContent() ?? '').toBe('ready');
+    const readyMs = Date.now() - t0;
+    const [sdir] = sessions();
+    expect([record(sdir).mode, record(sdir).perms.edit]).toEqual(['edit', true]);
+    const hrm0 = await hrmState();
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/${route}/`))!;
+    expect(editor).toBeTruthy();
+    await edit(page, editor);
+    await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+    const tSave = Date.now();
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await expect.poll(() => state(page), { timeout: 30_000 }).toBe('saved');
+    const saveMs = Date.now() - tSave;
+    expect(record(sdir).versions.map((v: any) => v.n)).toEqual([1, 2]);
+    const v2 = path.join(sdir, 'v2.bin');
+    expect(fs.readFileSync(v2).subarray(0, magic.length).toString('latin1')).toBe(magic);
+    const object = Object.keys((await hrmState()).objects).find((k) => k.startsWith(`files/${id}/`))!;
+    const hrm1 = await hrmState();
+    expect(hrm1.received.slice(hrm0.received.length).map((r) => r.status)).toEqual([6]);
+    expect(hrm1.objects[object]).toBe(sha(v2));
+    expect(await page.evaluate(() => (window as any).__dirty)).toBe(false); // the save was acknowledged
+    await page.evaluate(() => (window as any).__editor.close());
+    await expect.poll(() => state(page)).toBe('closed');
+    expect(await page.locator('#detail').textContent()).toBe('closed status 2');
+    const hrm2 = await hrmState();
+    expect(hrm2.received.slice(hrm0.received.length).map((r) => r.status)).toEqual([6, 2]);
+    expect(hrm2.received.at(-1)!.sha256).toBe(sha(v2));
+    expect(hrm2.rejected).toEqual(hrm0.rejected);
+    console.log(`MEASURED ${ext}: page load -> onDocumentReady ${readyMs} ms; requestSave -> onSaved ${saveMs} ms; v2 ${fs.statSync(v2).size} B`);
+    expect(problems).toEqual([]);
+    await ctx.close();
+  });
+
+  test(`R6 ${ext}: view session, read-only editor, the edit is taken back, nothing is sent`, async () => {
+    const { ctx, page, problems } = await open();
+    const posts: string[] = [];
+    page.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/ds/session/')) posts.push(new URL(r.url()).pathname.split('/').pop()!); });
+    await page.goto(`${HOST}/host?kind=files&id=${id}&mode=view`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const hrm0 = await hrmState();
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/${route}/`))!;
+    await edit(page, editor);
+    await page.keyboard.press('Control+s');
+    await page.evaluate(() => (window as any).__editor.requestSave());
+    await page.waitForTimeout(3000);
+    expect(await page.evaluate(() => (window as any).__dirty)).not.toBe(true);
+    expect(posts.filter((p) => p !== 'close' && p !== 'renew')).toEqual([]);
+    const rec = record(sessions()[0]);
+    expect([rec.mode, rec.perms.edit, rec.versions.length]).toEqual(['view', false, 1]);
+    expect((await hrmState()).received.length).toBe(hrm0.received.length);
+    expect(problems).toEqual([]);
+    await ctx.close();
+  });
+}
 
 // permissions.download / permissions.print = false in an EDIT session: the wrapper tells the editor (patch 0128), which withholds Save As,
 // the exports and Print. Probed by key: F12 (Save As) is a download, which the wrapper would POST to /save; Ctrl+P opens the Print page.
@@ -958,8 +1043,8 @@ test('plugins in the wrapper (re-check): M2b, M8, M10, S1, S2, F2, F5, F7 are bl
     expect(text(fs.readFileSync(path.join(sdir, 'v2.bin')))).toBe(text(fs.readFileSync(path.join(sdir, 'v1.bin'))));
     await ctx.close();
 
-    // F7b: a document with its own protection (files/6 comments, files/7 tracked changes): the plugin is not started
-    for (const [id, why] of [[6, /only comments are allowed/], [7, /document is protected/]] as const) {
+    // F7b: a document with its own protection (files/8 comments, files/9 tracked changes): the plugin is not started
+    for (const [id, why] of [[8, /only comments are allowed/], [9, /document is protected/]] as const) {
       const b = await open();
       await b.page.goto(`${HOST}/host?kind=files&id=${id}&lang=en`);
       await expect.poll(() => state(b.page), { timeout: 90_000 }).toBe('ready');

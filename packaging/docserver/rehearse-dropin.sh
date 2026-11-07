@@ -86,7 +86,7 @@ r=$(docker run --rm --network "$NET" --read-only --cap-drop ALL --entrypoint bas
 check "a stranger on the network gets 403 ($r)" grep -q ' 403 ' <<< "$r"
 check "port 80 is not published" bash -c "[ -z \"\$(docker port dropin-onlyoffice 80 2> /dev/null)\" ]"
 
-echo "=== the browser flow (Chromium on the host): docx open, edit, save, close, reopen, compare; xlsx view-only"
+echo "=== the browser flow (Chromium on the host): docx open, edit, save, close, reopen, compare; xlsx and pptx edit, save, close"
 cd "$REPO/ci/web-smoke"
 if PIN=$PIN DROPIN=1 node_modules/.bin/playwright test --config playwright.docserver-compose.config.ts; then ok "browser flow"; else bad "browser flow"; fi
 cd "$D"
