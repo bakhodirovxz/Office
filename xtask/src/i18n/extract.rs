@@ -774,6 +774,31 @@ const OWN: [(&str, &[&str]); 16] = [
     ),
 ];
 
+/// R6 (docs/phase5/r6.md): the host bridges' messages in the web apps (`apps/*-web`, which the scans do not read).
+/// (English, app, where)
+const OWN_R6: [(&str, &str, &str); 4] = [
+    (
+        "This workbook is open read-only: changes are not kept.",
+        "gridcraft",
+        "patches/gridcraft/0160",
+    ),
+    (
+        "This is not available in this session.",
+        "gridcraft",
+        "patches/gridcraft/0160",
+    ),
+    (
+        "This presentation is open read-only: changes are not kept.",
+        "deckcraft",
+        "patches/deckcraft/0160",
+    ),
+    (
+        "This is not available in this session.",
+        "deckcraft",
+        "patches/deckcraft/0160",
+    ),
+];
+
 /// deckcraft engine messages (`cmd/file.rs`, patch 0124) that the UI translates by template; the engine tree is not scanned for UI text.
 const OWN_DECK_0124: [&str; 5] = [
     "{n} picture or media file in this presentation couldn't be read and is empty. It was opened as a repaired copy; save it under a new name to keep the original file.",
@@ -846,6 +871,17 @@ fn add_own(unis: &mut [Universe]) {
             let e = u.keys.entry((String::new(), en.to_string())).or_default();
             if e.where_.is_empty() {
                 e.where_ = "patches/deckcraft/0124".into();
+            }
+        }
+    }
+    for u in unis.iter_mut() {
+        for (en, app, at) in OWN_R6 {
+            if u.app == app {
+                let e = u.keys.entry((String::new(), en.to_string())).or_default();
+                e.p1 = true;
+                if e.where_.is_empty() {
+                    e.where_ = at.into();
+                }
             }
         }
     }
