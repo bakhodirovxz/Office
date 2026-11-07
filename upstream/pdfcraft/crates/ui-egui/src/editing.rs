@@ -1044,6 +1044,9 @@ fn short_name(path: &str) -> String {
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn download(name: &str, bytes: &[u8]) -> Result<(), String> {
     use wasm_bindgen::JsCast;
+    if crate::HOST_WITHHOLDS_DOWNLOADS.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err(tl!("Not allowed").to_string());
+    }
     let err = |e: wasm_bindgen::JsValue| format!("{e:?}");
     let array = js_sys::Uint8Array::from(bytes);
     let parts = js_sys::Array::of1(&array);
