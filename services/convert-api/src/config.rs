@@ -424,7 +424,7 @@ impl Settings {
                 if self.public_url.is_some() {
                     return Err("public_url belongs to server mode (auth = \"jwt\"); local mode serves the loopback names only".into());
                 }
-                if upstream_tls || !trusted.is_empty() {
+                if upstream_tls || !self.trusted_proxies.is_empty() {
                     return Err("tls = \"upstream\" and trusted_proxies belong to server mode (auth = \"jwt\")".into());
                 }
                 Auth::None
@@ -444,7 +444,7 @@ impl Settings {
                 )?;
                 check_public_url(url)?;
                 if upstream_tls {
-                    if trusted.is_empty() {
+                    if self.trusted_proxies.is_empty() {
                         return Err("tls = \"upstream\" needs trusted_proxies: only a listed proxy may speak for TLS".into());
                     }
                     if self.tls_cert.is_some()
@@ -710,6 +710,14 @@ kind = \"{kind}\"
         assert!(
             server(&|s| s.trusted_proxies = vec!["localhost".into(), "10.0.0.0/8".into()])
                 .is_none()
+        );
+        // a name alone is a proxy list too: upstream TLS accepts it
+        assert!(
+            server(&|s| {
+                up(s);
+                s.trusted_proxies = vec!["traefik".into()];
+            })
+            .is_none()
         );
         let n = NameSet::start(vec!["localhost".into()]);
         assert!(
