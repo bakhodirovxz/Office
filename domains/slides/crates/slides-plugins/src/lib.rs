@@ -174,7 +174,7 @@ pub fn register() {
 }
 
 /// The web input lock: while a plugin call waits for the page, every command that changes the presentation is refused.
-struct Lock;
+pub struct Lock;
 
 impl deckcraft_engine::office_hook::CommandHook for Lock {
     fn before(&self, id: &str, _: &Session) -> Option<String> {
@@ -190,10 +190,9 @@ pub fn init() {
     plugin_adapter::native::init("DECKCRAFT_NO_PREFS", register);
 }
 
-/// Start-up of the web app: the app id and the input lock (the web app attaches no other command hook).
+/// Start-up of the web app: the app id. The input lock is `Lock`, which the host's command hook (deckcraft-web, patch 0160) asks: the hook slot holds one policy.
 pub fn init_web() -> bool {
     plugin_adapter::set_app("slides");
-    deckcraft_engine::office_hook::set_hook(Some(Arc::new(Lock)));
     true
 }
 

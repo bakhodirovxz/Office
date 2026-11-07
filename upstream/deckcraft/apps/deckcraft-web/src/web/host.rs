@@ -50,13 +50,23 @@ static CAN_PRINT: AtomicBool = AtomicBool::new(true);
 struct HostPolicy;
 
 impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
-    fn before(&self, id: &str, _s: &deckcraft_engine::Session) -> Option<String> {
+    fn before(&self, id: &str, s: &deckcraft_engine::Session) -> Option<String> {
         let withheld = match id {
             "file.export" => !CAN_DOWNLOAD.load(Ordering::Relaxed),
             "file.print" => !CAN_PRINT.load(Ordering::Relaxed),
             _ => false,
         };
-        withheld.then(|| deckcraft_ui_egui::i18n::t(WITHHELD).to_string())
+        if withheld {
+            return Some(deckcraft_ui_egui::i18n::t(WITHHELD).to_string());
+        }
+        // the hook slot holds one policy: the plugin input lock (Phase 7 WP13) rides on this one
+        #[cfg(feature = "office-ext")]
+        return deckcraft_engine::office_hook::CommandHook::before(&slides_plugins::Lock, id, s);
+        #[cfg(not(feature = "office-ext"))]
+        {
+            let _ = s;
+            None
+        }
     }
 }
 
