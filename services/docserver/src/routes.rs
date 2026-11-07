@@ -147,6 +147,7 @@ mod tests {
             internal: Some(Internal {
                 listen: "127.0.0.1:9000".parse().unwrap(),
                 allow: vec![Cidr::parse("172.18.0.0/16").unwrap()],
+                names: Default::default(),
             }),
             at_rest: None,
             xdfu: None,
@@ -163,6 +164,7 @@ mod tests {
                 frame_origins: vec!["https://app.test".into()],
                 require_exp: true,
                 keep_history: false,
+                edit_types: vec!["docx".into()],
             }],
         })
     }

@@ -211,6 +211,22 @@ async fn document(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) 
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], b).into_response())
 }
 
+/// A change (save, autosave, dirty) needs the edit permission, and the provider's document fetched first: otherwise a replayed config
+/// token (one without `exp`, docs/phase5/dropin.md D1) could open a session and hand any bytes to the provider as the document.
+fn editable(rec: &SessionRecord) -> Result<(), ApiError> {
+    if !rec.perms.edit {
+        return Err(SessErr::Forbidden.into());
+    }
+    if rec.versions.is_empty() {
+        return Err(ApiError::new(
+            StatusCode::CONFLICT,
+            "no_document",
+            "the document has not been loaded yet",
+        ));
+    }
+    Ok(())
+}
+
 /// The body of a save: a document of the session's type within the size cap, a sound package of that type (S9).
 fn check_body(ds: &Docserver, rec: &SessionRecord, b: &[u8]) -> Result<(), ApiError> {
     crate::ooxml::check(b, &rec.file_type, ds.max_document_mb << 20)
@@ -219,9 +235,7 @@ fn check_body(ds: &Docserver, rec: &SessionRecord, b: &[u8]) -> Result<(), ApiEr
 
 async fn save(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "save", &client(cl))?;
-    if !rec.perms.edit {
-        return Err(SessErr::Forbidden.into());
-    }
+    editable(&rec)?;
     check_body(&ds, &rec, &body)?;
     // the answer comes after the provider's reply (the async-save ticket, 3.3): ok, failed or unknown; the version is kept either way
     let (v, cb, dirty) = blk(move || {
@@ -242,9 +256,7 @@ async fn save(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body
 /// `POST /ds/session/{sid}/dirty`: the editor's first change; the status 1 callback, once.
 async fn dirty(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "dirty", &client(cl))?;
-    if !rec.perms.edit {
-        return Err(SessErr::Forbidden.into());
-    }
+    editable(&rec)?;
     let cb = blk(move || ds.callback_dirty(&sid)).await?;
     json_ok(json!({"callback": cb.map(|c| c.as_str())}))
 }
@@ -257,9 +269,7 @@ async fn autosave(
     body: Bytes,
 ) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "autosave", &client(cl))?;
-    if !rec.perms.edit {
-        return Err(SessErr::Forbidden.into());
-    }
+    editable(&rec)?;
     check_body(&ds, &rec, &body)?;
     blk(move || ds.put_autosave(&sid, &body, now())).await??;
     json_ok(json!({"ok": true}))
