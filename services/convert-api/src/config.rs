@@ -51,7 +51,7 @@ pub struct Settings {
     /// `"builtin"` (default): this server speaks TLS itself. `"upstream"`: a trusted proxy terminates TLS and talks plain HTTP to
     /// this server; needs a non-empty `trusted_proxies`, and the server then answers only that proxy.
     pub tls: String,
-    /// IPs or CIDRs of reverse proxies. Only a peer in this list may set `X-Forwarded-For` and `X-Forwarded-Proto`; for every other
+    /// IPs, CIDRs or container names (`NameSet`) of reverse proxies. Only a peer in this list may set `X-Forwarded-For` and `X-Forwarded-Proto`; for every other
     /// peer the headers are ignored. Empty by default.
     pub trusted_proxies: Vec<String>,
     /// server mode with `tls = "builtin"`: a plain-HTTP listener that only redirects to `public_url`
@@ -211,6 +211,58 @@ impl Cidr {
     }
 }
 
+/// Container names among `trusted_proxies` (and the document server's `internal_allow`): resolved at start and every 15 s on a
+/// thread, so a peer recreated with a new address on a Docker network is still recognised. The request path only reads the last
+/// answer; a failed lookup empties it (a peer that is gone is trusted by nobody).
+#[derive(Clone, Default, Debug)]
+pub struct NameSet {
+    ips: std::sync::Arc<std::sync::RwLock<Vec<IpAddr>>>,
+}
+
+impl NameSet {
+    /// A plain host name (`api`, `traefik`, `proxy.internal`): letters first, then letters, digits, `-` and `.`; never an address.
+    pub fn is_name(s: &str) -> bool {
+        s.len() <= 253
+            && s.starts_with(|c: char| c.is_ascii_alphabetic())
+            && s.split('.')
+                .all(|l| !l.is_empty() && l.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-'))
+    }
+
+    pub fn start(names: Vec<String>) -> NameSet {
+        let set = NameSet::default();
+        if names.is_empty() {
+            return set;
+        }
+        let resolve = move || -> Vec<IpAddr> {
+            use std::net::ToSocketAddrs;
+            names
+                .iter()
+                .filter_map(|n| (n.as_str(), 0).to_socket_addrs().ok())
+                .flatten()
+                .map(|a| a.ip().to_canonical())
+                .collect()
+        };
+        *set.ips.write().unwrap_or_else(|e| e.into_inner()) = resolve();
+        let weak = std::sync::Arc::downgrade(&set.ips);
+        std::thread::spawn(move || {
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(15));
+                let ips = resolve();
+                let Some(cell) = weak.upgrade() else { return };
+                *cell.write().unwrap_or_else(|e| e.into_inner()) = ips;
+            }
+        });
+        set
+    }
+
+    pub fn contains(&self, ip: IpAddr) -> bool {
+        self.ips
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .contains(&ip.to_canonical())
+    }
+}
+
 /// `Settings` after the checks and the file reads.
 #[derive(Clone)]
 pub struct Resolved {
@@ -221,6 +273,8 @@ pub struct Resolved {
     pub store_dir: PathBuf,
     pub cpu_slots: usize,
     pub trusted: Vec<Cidr>,
+    /// the container names among `trusted_proxies`
+    pub trusted_names: NameSet,
     /// `tls = "upstream"`: TLS ends at a trusted proxy
     pub upstream_tls: bool,
     pub xdfu: convert::xdfu::Mode,
@@ -235,7 +289,7 @@ impl Resolved {
         self.server_mode()
     }
     pub fn is_trusted_proxy(&self, ip: IpAddr) -> bool {
-        self.trusted.iter().any(|c| c.contains(ip))
+        self.trusted.iter().any(|c| c.contains(ip)) || self.trusted_names.contains(ip)
     }
 }
 
@@ -337,11 +391,15 @@ impl Settings {
             .parse()
             .map_err(|_| format!("listen = \"{}\" is not an ip:port", self.listen))?;
         let xdfu = convert::xdfu::Mode::parse(&self.xdfu)?;
-        let trusted = self
+        let (names, cidrs): (Vec<&String>, Vec<&String>) = self
             .trusted_proxies
             .iter()
+            .partition(|s| NameSet::is_name(s));
+        let trusted = cidrs
+            .into_iter()
             .map(|s| Cidr::parse(s))
             .collect::<Result<Vec<_>, _>>()?;
+        let trusted_names = NameSet::start(names.into_iter().cloned().collect());
         if !matches!(self.tls.as_str(), "builtin" | "upstream") {
             return Err(format!(
                 "tls = \"{}\": expected \"builtin\" or \"upstream\"",
@@ -366,7 +424,7 @@ impl Settings {
                 if self.public_url.is_some() {
                     return Err("public_url belongs to server mode (auth = \"jwt\"); local mode serves the loopback names only".into());
                 }
-                if upstream_tls || !trusted.is_empty() {
+                if upstream_tls || !self.trusted_proxies.is_empty() {
                     return Err("tls = \"upstream\" and trusted_proxies belong to server mode (auth = \"jwt\")".into());
                 }
                 Auth::None
@@ -386,7 +444,7 @@ impl Settings {
                 )?;
                 check_public_url(url)?;
                 if upstream_tls {
-                    if trusted.is_empty() {
+                    if self.trusted_proxies.is_empty() {
                         return Err("tls = \"upstream\" needs trusted_proxies: only a listed proxy may speak for TLS".into());
                     }
                     if self.tls_cert.is_some()
@@ -465,6 +523,7 @@ impl Settings {
             store_dir,
             cpu_slots,
             trusted,
+            trusted_names,
             upstream_tls,
             xdfu,
             s: self,
@@ -643,10 +702,30 @@ kind = \"{kind}\"
             .contains("builtin")
         );
         assert!(
-            server(&|s| s.trusted_proxies = vec!["not-an-ip".into()])
+            server(&|s| s.trusted_proxies = vec!["not an ip".into()])
                 .unwrap()
                 .contains("trusted_proxies")
         );
+        // a container name is resolved (and re-resolved): `localhost` stands in for one here
+        assert!(
+            server(&|s| s.trusted_proxies = vec!["localhost".into(), "10.0.0.0/8".into()])
+                .is_none()
+        );
+        // a name alone is a proxy list too: upstream TLS accepts it
+        assert!(
+            server(&|s| {
+                up(s);
+                s.trusted_proxies = vec!["traefik".into()];
+            })
+            .is_none()
+        );
+        let n = NameSet::start(vec!["localhost".into()]);
+        assert!(
+            n.contains("127.0.0.1".parse().unwrap()) && !n.contains("10.0.0.1".parse().unwrap())
+        );
+        for bad in ["1api", "a..b", "-a", "a b", "10.0.0.256", ""] {
+            assert!(!NameSet::is_name(bad), "{bad}");
+        }
         assert!(
             server(&|s| s.tls = "plain".into())
                 .unwrap()
