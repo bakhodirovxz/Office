@@ -1,0 +1,15 @@
+# Static config of the drop-in rehearsal: the docker provider (the backend's Traefik routes containers by their labels), one TLS entry
+# point. The TLS default certificate comes from the file provider (dynamic.yml), made by rehearse-dropin.sh.
+entryPoints:
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      trustedIPs: ["127.0.0.1/32"]   # no front proxy in the rehearsal (deploy.md, "Client addresses behind proxies")
+providers:
+  docker:
+    exposedByDefault: false
+    network: backend_net_dropin
+  file:
+    filename: /etc/traefik/dynamic.yml
+log:
+  level: INFO

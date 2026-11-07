@@ -1289,6 +1289,29 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not checked: S19 behind Traefik (Docker, TLS-intercepting proxy); S22 (tools missing); the crash recovery in a real process kill
   (tested by a record written to disk, then a restart); F5 unchanged by design.
 
+### Phase 5: ONLYOFFICE drop-in, no HRB change (2026-11-07; branch `p5-dropin`, owner decision of the same day)
+- Plan and gap table: [docs/phase5/dropin.md](phase5/dropin.md); `hrb-handoff.md` marked superseded. Server: provider
+  `compat = "docsapi"` (no `exp`, secret floor 16 bytes with a warning under 32), `edit_types` (other types open as views),
+  `internal_allow` and `trusted_proxies` may name containers (re-resolved every 15 s), save/autosave/dirty refused (409) before the
+  provider's document was fetched (bounds a replayed no-`exp` token). Wrapper: Sheets/Slides/PDF count as open once handed over.
+  Packaging: env-driven entrypoint (ONLYOFFICE `JWT_*` names + `DOCSERVER_*`), all four dists in the image, `install.sh` (dry run,
+  rerun, rollback, self-rollback on a failed health check), `profiles/hrm.env`, `rehearse-dropin.sh`.
+- Measured: `ci.sh docserver` exit 0 (fmt, clippy `-D warnings`, 96 tests passed 0 failed for docserver + fake-hrm + suite-serve,
+  Playwright docserver 18 passed 1 skipped, bridge-docs 8 passed); `cargo test -p convert-api` 77 passed 0 failed; new tests
+  `dropin.rs` (HRB as surveyed: no exp, body token, host-name allowlist, host rewrite to the internal listener named by host; 409
+  before fetch; xlsx edit config gives a view) and `config.rs::the_docsapi_compat_mode`. Drop-in rehearsal on this PC (stand-in
+  container with the old aliases and labels, Traefik v3.6 docker provider, fake HRB as `api`): **18 of 18 checks** (dry run changes
+  nothing and prints no secret; install healthy under the old name; old container stopped, `restart=no`, disconnected; our api.js on
+  the old Traefik route; rerun idempotent; stranger gets 403 on `docs-server:80`, port 80 unpublished; browser docx open/edit/
+  save/close: statuses 6 and 2, stored hash = downloaded hash; xlsx opens view-only in Sheets, nothing sent; no secret/token in our
+  log; rollback restores name, aliases, restart policy and the stand-in's api.js; data volume kept). It found and we fixed: upstream
+  TLS refused a names-only `trusted_proxies`; the Sheets page never reported ready. Old compose rehearsal still green (1 run).
+  Image 403 MB on disk (was 193 MB).
+- Not checked (needs the HRM test server, owner OK): the real ONLYOFFICE container's env/labels/aliases and HRB's real env names
+  (CORS list, allowlist); public URL auto-derivation from a real `Host()` rule; uid 10002 file modes on Linux (the rehearsal ran
+  install.sh from Git Bash, chown skipped); a real HRB save; a Traefik file-provider setup; HRM's compose recreating the old
+  service. Owner decision open: non-docx editing, `dropin.md` D5 (b) view-only now vs (a) pass-through to the old ONLYOFFICE.
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

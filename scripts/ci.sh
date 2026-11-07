@@ -622,7 +622,7 @@ job_docserver() {
   fi
   if [ "$rehearsal" = 1 ]; then
     docker info >/dev/null 2>&1 || { note "docker rehearsal requested but Docker is not running"; return 2; }
-    step rehearsal-images env SHELL_DIST="$dist/shell" DOCS_DIST="$dist/docs-web" bash packaging/docserver/build.sh || return 2
+    step rehearsal-images env DIST_ROOT="$dist" SHELL_DIST="$dist/shell" DOCS_DIST="$dist/docs-web" bash packaging/docserver/build.sh || return 2
     step rehearsal-compose bash packaging/docserver/rehearse.sh "${CI_REHEARSAL_RUNS:-3}" || rc=1
   else
     note "skipped: docker rehearsal not requested (ci.sh docserver rehearsal, or CI_DOCKER_REHEARSAL=1)"

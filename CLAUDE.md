@@ -34,6 +34,8 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
   no proxy in v1; no plugins on protected documents; the first-party signing key is the owner's, kept offline.
 - **MS Office add-in** (owner, 2026-11-05/06): C#, Office 2010+, separate MSI, free signing via SignPath Foundation, its own
   public repo (add-in only).
+- **HRM integration = the ONLYOFFICE path** (owner, 2026-11-07): HRM code is not changed for us (HRB PR-0…PR-3 cancelled). The
+  document server is a drop-in for ONLYOFFICE Document Server; every setting is made server-side at install (Docker/installer).
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
