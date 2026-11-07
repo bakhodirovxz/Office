@@ -12,7 +12,7 @@ instead of going to the parent as a save. Two new UI strings (xtask i18n OWN_R6)
 ---
 
 diff --git a/apps/deckcraft-web/src/web/host.rs b/apps/deckcraft-web/src/web/host.rs
-index 0012c5c..769df18 100644
+index 0012c5c..540be6c 100644
 --- a/apps/deckcraft-web/src/web/host.rs
 +++ b/apps/deckcraft-web/src/web/host.rs
 @@ -4,11 +4,18 @@
@@ -46,7 +46,7 @@ index 0012c5c..769df18 100644
  
  use deckcraft_ui_egui::{Services, SlideApp};
  use serde_json::json;
-@@ -29,6 +38,28 @@ use wasm_bindgen::closure::Closure;
+@@ -29,6 +38,38 @@ use wasm_bindgen::closure::Closure;
  /// The name a presentation gets when the parent opened none.
  const DEFAULT_NAME: &str = "presentation.pptx";
  
@@ -62,20 +62,30 @@ index 0012c5c..769df18 100644
 +struct HostPolicy;
 +
 +impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
-+    fn before(&self, id: &str, _s: &deckcraft_engine::Session) -> Option<String> {
++    fn before(&self, id: &str, s: &deckcraft_engine::Session) -> Option<String> {
 +        let withheld = match id {
 +            "file.export" => !CAN_DOWNLOAD.load(Ordering::Relaxed),
 +            "file.print" => !CAN_PRINT.load(Ordering::Relaxed),
 +            _ => false,
 +        };
-+        withheld.then(|| deckcraft_ui_egui::i18n::t(WITHHELD).to_string())
++        if withheld {
++            return Some(deckcraft_ui_egui::i18n::t(WITHHELD).to_string());
++        }
++        // the hook slot holds one policy: the plugin input lock (Phase 7 WP13) rides on this one
++        #[cfg(feature = "office-ext")]
++        return deckcraft_engine::office_hook::CommandHook::before(&slides_plugins::Lock, id, s);
++        #[cfg(not(feature = "office-ext"))]
++        {
++            let _ = s;
++            None
++        }
 +    }
 +}
 +
  #[derive(Clone)]
  pub struct Bridge {
      window: web_sys::Window,
-@@ -42,6 +73,13 @@ pub struct Bridge {
+@@ -42,6 +83,13 @@ pub struct Bridge {
      reported: Rc<Cell<Option<bool>>>,
      /// The name of the file the parent opened last.
      name: Rc<RefCell<String>>,
@@ -89,7 +99,7 @@ index 0012c5c..769df18 100644
  }
  
  impl Bridge {
-@@ -64,22 +102,28 @@ impl Bridge {
+@@ -64,22 +112,28 @@ impl Bridge {
              to_open: Rc::default(),
              reported: Rc::default(),
              name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
@@ -123,7 +133,7 @@ index 0012c5c..769df18 100644
              }
          }));
      }
-@@ -92,18 +136,54 @@ impl Bridge {
+@@ -92,18 +146,54 @@ impl Bridge {
          self.send(&[("type", "deckcraft:failed".into()), ("error", error.into())]);
      }
  
@@ -182,7 +192,7 @@ index 0012c5c..769df18 100644
              self.reported.set(Some(dirty));
          }
          #[cfg(feature = "office-ext")]
-@@ -141,7 +221,8 @@ impl Bridge {
+@@ -141,7 +231,8 @@ impl Bridge {
          let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx").map_err(|e| e.to_string()).and_then(|bytes| self.post_save(&name, &bytes));
          match sent {
              Ok(()) => {
@@ -192,7 +202,7 @@ index 0012c5c..769df18 100644
                  if let Some(d) = app.session.active_mut() {
                      d.saved_doc = d.doc.clone();
                      d.revision += 1;
-@@ -172,11 +253,15 @@ impl Bridge {
+@@ -172,11 +263,15 @@ impl Bridge {
                  Some("deckcraft:open") => {
                      let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
                      let Some(bytes) = bytes(&data) else { return };
@@ -208,7 +218,7 @@ index 0012c5c..769df18 100644
                  _ => return,
              }
              ctx.request_repaint();
-@@ -211,6 +296,11 @@ fn string(data: &JsValue, key: &str) -> Option<String> {
+@@ -211,6 +306,11 @@ fn string(data: &JsValue, key: &str) -> Option<String> {
      js_sys::Reflect::get(data, &JsValue::from_str(key)).ok()?.as_string()
  }
  
