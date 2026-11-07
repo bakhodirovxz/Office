@@ -70,25 +70,38 @@ test('open, edit, save, close, reopen, download', async () => {
   }
 });
 
-// Drop-in rehearsal (packaging/docserver/rehearse-dropin.sh, docs/phase5/dropin.md D5): the backend's edit config of an xlsx opens the
-// Sheets editor as a view (edit_types = docx); nothing reaches the backend.
-test('drop-in: an xlsx edit config opens view-only in the Sheets editor', async () => {
-  test.skip(!process.env.DROPIN, 'drop-in rehearsal only');
-  const browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
-  try {
-    const s0 = await state();
-    const cfg = await (await fetch(`${HOST}/files/2/editor-config`)).json() as { editorConfig: { mode: string } };
-    expect(cfg.editorConfig.mode).toBe('edit');
-    const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
-    await page.goto(`${HOST}/host?kind=files&id=2&lang=en`);
-    await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
-    expect(await page.locator('body').getAttribute('data-state'), await page.locator('#detail').textContent() ?? '').toBe('ready');
-    expect(page.frames().some((f) => f.url().startsWith('https://127.0.0.1:18443/sheets/'))).toBe(true);
-    await page.evaluate(() => (window as any).__editor.close());
-    await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('closed');
-    const s1 = await state();
-    expect(s1.received.length).toBe(s0.received.length);
-  } finally {
-    await browser.close();
-  }
-});
+// Drop-in rehearsal (packaging/docserver/rehearse-dropin.sh, docs/phase5/r6.md): with the installer's default edit types the backend's
+// edit configs of an xlsx (files/2) and a pptx (files/3) edit: an edit, save (status 6), close (status 2), and the backend's object changes.
+for (const [ext, id, route, edit] of [
+  ['xlsx', 2, 'sheets', async (page: import('@playwright/test').Page) => { await page.keyboard.type('zz'); await page.keyboard.press('Enter'); }],
+  ['pptx', 3, 'slides', async (page: import('@playwright/test').Page) => { await page.keyboard.press('Control+Shift+N'); }],
+] as const) {
+  test(`drop-in: an ${ext} edit config edits and saves in the ${route} editor`, async () => {
+    test.skip(!process.env.DROPIN, 'drop-in rehearsal only');
+    const browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+    try {
+      const s0 = await state();
+      const key = Object.keys(s0.objects).find((k) => k.startsWith(`files/${id}/`))!;
+      const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
+      await page.goto(`${HOST}/host?kind=files&id=${id}&lang=en`);
+      await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
+      expect(await page.locator('body').getAttribute('data-state'), await page.locator('#detail').textContent() ?? '').toBe('ready');
+      const editor = page.frames().find((f) => f.url().startsWith(`https://127.0.0.1:18443/${route}/`))!;
+      await editor.locator('canvas').first().click({ position: { x: 420, y: 420 } });
+      await edit(page);
+      await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+      await page.evaluate(() => (window as any).__editor.requestSave());
+      await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('saved');
+      await page.evaluate(() => (window as any).__editor.close());
+      await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('closed');
+      expect(await page.locator('#detail').textContent()).toBe('closed status 2');
+      const s1 = await state();
+      expect(s1.received.slice(s0.received.length).map((r) => r.status)).toEqual([6, 2]);
+      expect(s1.rejected).toEqual(s0.rejected);
+      expect(s1.objects[key]).not.toBe(s0.objects[key]);
+      console.log(`drop-in ${ext}: stored ${s1.objects[key].slice(0, 12)} (was ${s0.objects[key].slice(0, 12)})`);
+    } finally {
+      await browser.close();
+    }
+  });
+}

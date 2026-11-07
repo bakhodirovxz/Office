@@ -2,7 +2,7 @@
 # Builds the two rehearsal images (hoshiya-docserver, hoshiya-fakehrm) with nothing fetched inside a container: the crates are vendored
 # on the host (cargo vendor --locked), the Linux binaries are compiled in an offline rust container, the dists come from the host builds.
 # Usage: packaging/docserver/build.sh        Env: OFFICE_TARGET (default E:/office-target/p5), DIST_ROOT (default $OFFICE_TARGET/dist),
-# DOCS_DIST, SHELL_DIST; sheets-web, slides-web and pdf-web are taken from DIST_ROOT when present (dropin D5: served view-only by default).
+# DOCS_DIST, SHELL_DIST; sheets-web, slides-web and pdf-web are taken from DIST_ROOT when present (they edit since R6, docs/phase5/r6.md).
 set -euo pipefail
 export PATH="$HOME/.cargo/bin:$PATH" CARGO_NET_GIT_FETCH_WITH_CLI=true CARGO_HTTP_CHECK_REVOKE=false MSYS_NO_PATHCONV=1
 HERE=$(cd "$(dirname "$0")" && pwd -W); REPO=$(cd "$HERE/../.." && pwd -W)
@@ -39,6 +39,7 @@ cp "$HERE/entrypoint.sh" "$CTX/entrypoint.sh"
 cp "$REPO/brand/brand.toml" "$CTX/brand.toml"
 cp "$REPO/domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx" "$CTX/sample.docx"
 cp "$REPO/domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx" "$CTX/sample.xlsx"
+cp "$REPO/domains/slides/tests/translit-fixtures/pptx/01-shapes-notes.pptx" "$CTX/sample.pptx"
 docker build -t hoshiya-docserver:rehearsal -f "$HERE/Dockerfile" "$CTX"
 docker build -t hoshiya-fakehrm:rehearsal -f "$HERE/Dockerfile.fake-hrm" "$CTX"
 docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep -E '^hoshiya-(docserver|fakehrm)'
