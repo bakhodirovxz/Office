@@ -23,6 +23,9 @@ pub(crate) fn editor_id() -> egui::Id {
 
 impl SheetApp {
     pub fn begin_text_box_edit(&mut self, id: u32) -> bool {
+        if self.refuse_read_only() {
+            return false;
+        }
         if !self.commit_edit(0, 0, false, false) {
             return false;
         }

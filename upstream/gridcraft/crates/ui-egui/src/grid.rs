@@ -1807,6 +1807,13 @@ pub(crate) fn paint_headers(
 /// How close (in points) a press must be to an object's bottom-right corner to resize it instead of moving it.
 const OBJECT_RESIZE_RADIUS: f32 = 10.0;
 
+/// Starts a drag that would change the workbook (fill, move, resize, freeze): none in a read-only session.
+fn begin_drag(app: &mut SheetApp, drag: Drag) {
+    if !app.refuse_read_only() {
+        app.grid.drag = drag;
+    }
+}
+
 fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &Geo, sh: &Sheet, wb: &Workbook) {
     // Text selection and editing must not also move the object or edit worksheet cells.
     if app.text_box_editor.is_some() || app.grid.hf_edit.is_some() {
@@ -1964,7 +1971,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
                 let a = object_anchor(sh, kind, id);
                 let resize = (p - rect.right_bottom()).length() < OBJECT_RESIZE_RADIUS;
                 if let Some(a) = a {
-                    app.grid.drag = Drag::Object { kind, id, start: p, orig: (a.cell, a.dx, a.dy, a.width, a.height), resize };
+                    begin_drag(app, Drag::Object { kind, id, start: p, orig: (a.cell, a.dx, a.dy, a.width, a.height), resize });
                 }
             }
             return;
@@ -2036,7 +2043,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
         }
         // Freeze handles sit on the header edges (and the corner's edges when nothing is frozen).
         if freeze_cols.contains(p) || freeze_rows.contains(p) {
-            app.grid.drag = Drag::Freeze { cols: freeze_cols.contains(p), to: None };
+            begin_drag(app, Drag::Freeze { cols: freeze_cols.contains(p), to: None });
             return;
         }
         if in_corner {
@@ -2045,7 +2052,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
         }
         if in_col_header {
             if let Some((c, x)) = col_edge(geo, sh, p.x) {
-                app.grid.drag = Drag::ResizeCol { col: c, start: p.x, orig: sh.col_width(c).max(0.0) * 0.0 + (x - geo.x(sh, c)) / geo.z };
+                begin_drag(app, Drag::ResizeCol { col: c, start: p.x, orig: sh.col_width(c).max(0.0) * 0.0 + (x - geo.x(sh, c)) / geo.z });
                 return;
             }
             let c = geo.col_at(sh, p.x);
@@ -2058,7 +2065,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
                 && sel.current().is_full_cols()
                 && sel.current().contains(CellRef::new(0, c))
             {
-                app.grid.drag = Drag::MoveCols { source: sel.current(), before: None };
+                begin_drag(app, Drag::MoveCols { source: sel.current(), before: None });
                 return;
             }
             let range = if mods.shift { RangeRef::cols(sel.anchor.col.min(c), sel.anchor.col.max(c)) } else { RangeRef::cols(c, c) };
@@ -2068,7 +2075,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
         }
         if in_row_header {
             if let Some((r, y)) = row_edge(geo, sh, p.y) {
-                app.grid.drag = Drag::ResizeRow { row: r, start: p.y, orig: (y - geo.y(sh, r)) / geo.z };
+                begin_drag(app, Drag::ResizeRow { row: r, start: p.y, orig: (y - geo.y(sh, r)) / geo.z });
                 return;
             }
             let r = geo.row_at(sh, p.y);
@@ -2121,11 +2128,11 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
             return;
         }
         if on_handle(p) {
-            app.grid.drag = Drag::Fill { target: None };
+            begin_drag(app, Drag::Fill { target: None });
             return;
         }
         if on_cur_border(p) && resp.drag_started() {
-            app.grid.drag = Drag::Move { grab: c, to: None };
+            begin_drag(app, Drag::Move { grab: c, to: None });
             return;
         }
         // Double-click edits.

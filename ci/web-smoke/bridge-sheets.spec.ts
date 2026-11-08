@@ -4,7 +4,7 @@ import * as http from 'node:http';
 import * as net from 'node:net';
 import * as path from 'node:path';
 
-// The Sheets (gridcraft) host bridge, docs/phase5/r6.md (patch gridcraft/0160): open/opened, read-only open, the save
+// The Sheets (gridcraft) host bridge, docs/phase5/r6.md (patches gridcraft/0160, 0161-0163): open/opened, read-only open, the save
 // acknowledgement and canPrint over the ?host=parent postMessage protocol, against the built sheets-web dist, from a tiny
 // same-origin host page. Run with:
 //   npm exec --prefix ci/web-smoke -- playwright test --config ci/web-smoke/playwright.bridge-sheets.config.ts
@@ -110,7 +110,6 @@ test('3 readOnly: an edit is taken back, never dirty, and no save is sent (reque
   await open(page, { readOnly: true });
   await type(page);
   await page.waitForTimeout(2000);
-  await page.keyboard.press('Enter'); // the read-only message box
   await page.keyboard.press('Control+s');
   await send(page, { type: 'gridcraft:requestSave' });
   await page.waitForTimeout(3000);
@@ -166,4 +165,161 @@ test('7 only the parent is heard: a message from a sibling frame is ignored', as
   await page.waitForTimeout(3000);
   expect(await count(page, 'gridcraft:opened')).toBe(0);
   expect(await count(page, 'gridcraft:save')).toBe(0);
+});
+
+// ---- autosave (patch gridcraft/0163): `gridcraft:autosave {name, bytes}` every 30 s while the workbook is dirty ----
+const AUTOSAVE_MS = 30_000;
+const lastOf = async (page: Page, type: string) => (await msgs(page)).filter((m) => m.type === type).at(-1);
+
+test('8 autosave: nothing while clean; handed over while dirty after the period; no save, still dirty', async ({ page }) => {
+  test.setTimeout(240_000);
+  await open(page);
+  await page.waitForTimeout(AUTOSAVE_MS + 5_000);
+  expect(await count(page, 'gridcraft:autosave')).toBe(0);
+  await type(page);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  await expect.poll(() => count(page, 'gridcraft:autosave'), { timeout: AUTOSAVE_MS + 20_000 }).toBeGreaterThanOrEqual(1);
+  const a = await lastOf(page, 'gridcraft:autosave');
+  expect(a.name).toBe(NAME);
+  expect(a.bytes).toMatch(/^80,75:\d{4,}/); // "PK", a zip
+  expect(await lastDirty(page)).toBe(true); // an autosave is not a save
+  expect(await count(page, 'gridcraft:save')).toBe(0);
+});
+
+test('9 autosave: none in a read-only session', async ({ page }) => {
+  test.setTimeout(240_000);
+  await open(page, { readOnly: true });
+  await type(page);
+  await page.waitForTimeout(AUTOSAVE_MS + 15_000);
+  expect(await count(page, 'gridcraft:autosave')).toBe(0);
+  expect(await count(page, 'gridcraft:save')).toBe(0);
+});
+
+test('10 autosave: none while a save is unanswered; it resumes after saved ok:false', async ({ page }) => {
+  test.setTimeout(300_000);
+  await open(page);
+  await type(page);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  await send(page, { type: 'gridcraft:requestSave' });
+  await waitFor(page, 'gridcraft:save');
+  await page.waitForTimeout(AUTOSAVE_MS + 10_000);
+  expect(await count(page, 'gridcraft:autosave')).toBe(0);
+  await send(page, { type: 'gridcraft:saved', ok: false });
+  await expect.poll(() => count(page, 'gridcraft:autosave'), { timeout: AUTOSAVE_MS + 20_000 }).toBeGreaterThanOrEqual(1);
+  expect(await lastDirty(page)).toBe(true);
+});
+
+// ---- read-only: nothing can change the workbook, not even for one frame (patches gridcraft/0161, 0162) ----
+// Canvas-relative points in the 1100x700 editor (01-styles.xlsx: C2 holds 1234,50).
+const C2 = { x: 155, y: 163 };
+const CLIP_ALL = { x: 0, y: 0, width: 1100, height: 560 }; // the toast sits below this
+const CLIP_GRID = { x: 0, y: 120, width: 1100, height: 440 };
+async function shot(page: Page, clip = CLIP_ALL) {
+  const box = (await canvas(page).boundingBox())!;
+  return page.screenshot({ clip: { x: box.x + clip.x, y: box.y + clip.y, width: clip.width, height: clip.height }, animations: 'disabled' });
+}
+async function mouse(page: Page, steps: Array<['down' | 'up' | 'move', number, number]>) {
+  const box = (await canvas(page).boundingBox())!;
+  for (const [k, x, y] of steps) {
+    if (k === 'move') await page.mouse.move(box.x + x, box.y + y, { steps: 6 });
+    else if (k === 'down') { await page.mouse.move(box.x + x, box.y + y); await page.mouse.down(); }
+    else await page.mouse.up();
+  }
+}
+const drag = (page: Page, x0: number, y0: number, x1: number, y1: number) =>
+  mouse(page, [['down', x0, y0], ['move', (x0 + x1) / 2, (y0 + y1) / 2], ['move', x1, y1], ['up', x1, y1]]);
+const clickC2 = (page: Page) => canvas(page).click({ position: C2 });
+
+// `ro`: the session is read only. Enter after typing is only for the editable control: in a read-only one it would just move the selection.
+type Path = { name: string; pixels?: boolean; act: (p: Page, ro: boolean) => Promise<void>; clip?: typeof CLIP_ALL; control?: boolean; prep?: (p: Page) => Promise<void> };
+const PATHS: Path[] = [
+  { name: 'typing into a cell', act: async (p, ro) => { await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'F2 and typing', act: async (p, ro) => { await p.keyboard.press('F2'); await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'double-click and typing', act: async (p, ro) => { await canvas(p).dblclick({ position: C2 }); await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'the formula bar', act: async (p, ro) => { await canvas(p).click({ position: { x: 500, y: 102 } }); await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'Delete', act: (p) => p.keyboard.press('Delete') },
+  { name: 'Backspace', act: async (p, ro) => { await p.keyboard.press('Backspace'); await p.keyboard.type('q'); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'Ctrl+V', act: (p) => p.keyboard.press('Control+v'), prep: (p) => p.evaluate(() => navigator.clipboard.writeText('pasted')) },
+  { name: 'Ctrl+X', act: async (p, ro) => { await p.keyboard.press('Control+x'); if (!ro) await p.keyboard.press('ArrowDown'); await p.keyboard.press('Control+v'); } },
+  { name: 'Ctrl+Z and Ctrl+Y', act: async (p) => { await p.keyboard.press('Control+z'); await p.keyboard.press('Control+y'); }, control: false },
+  { name: 'context menu: Clear Contents', act: async (p) => { await canvas(p).click({ position: C2, button: 'right' }); await canvas(p).click({ position: { x: 258, y: 347 } }); } },
+  // the menu opens at the click: Sort Z to A is 103 px right and 273 px below it
+  { name: 'context menu: Sort', act: async (p) => { await canvas(p).click({ position: C2, button: 'right' }); await canvas(p).click({ position: { x: 258, y: 436 } }); } },
+  { name: 'ribbon: Bold', act: async (p) => { await canvas(p).click({ position: { x: 240, y: 62 } }); await p.mouse.move(700, 400); } },
+  { name: 'ribbon: fill colour', act: async (p) => { await canvas(p).click({ position: { x: 375, y: 62 } }); await p.mouse.move(700, 400); }, clip: CLIP_GRID },
+  { name: 'dragging the fill handle', act: (p) => drag(p, 181, 171, 181, 230), clip: CLIP_GRID },
+  { name: 'dragging the selection by its border', act: (p) => drag(p, 130, 163, 330, 163), clip: CLIP_GRID },
+  { name: 'dragging a column border', act: (p) => drag(p, 233, 128, 330, 128), clip: CLIP_GRID },
+  { name: 'dragging a row border', act: (p) => drag(p, 14, 171, 14, 200), clip: CLIP_GRID },
+  { name: 'double-click on a column border (AutoFit)', act: (p) => canvas(p).dblclick({ position: { x: 233, y: 128 } }), clip: CLIP_GRID },
+  {
+    name: 'dropping a file on the canvas', // a picture is no workbook: the editor answers with its own "can't open" box, so no pixel check
+    pixels: false,
+    act: async (p) => {
+      await canvas(p).evaluate((c) => {
+        const dt = new DataTransfer();
+        dt.items.add(new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], 'dropped.png', { type: 'image/png' }));
+        c.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, clientX: 420, clientY: 420 }));
+      });
+    },
+    control: false,
+  },
+];
+
+async function session(page: Page, readOnly: boolean, prep?: Path['prep']) {
+  const logs: string[] = [];
+  page.on('console', (m) => logs.push(m.text()));
+  await open(page, readOnly ? { readOnly: true } : {});
+  if (prep) await prep(page);
+  await clickC2(page);
+  await page.waitForTimeout(1200);
+  return logs;
+}
+
+for (const [i, p] of PATHS.entries()) {
+  test(`${11 + i} read-only: ${p.name} changes nothing, not even for a frame`, async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const logs = await session(page, true, p.prep);
+    const clip = p.clip ?? CLIP_ALL;
+    const base = await shot(page, clip);
+    await p.act(page, true);
+    const right = await shot(page, clip); // the frame right after the input
+    await page.waitForTimeout(1200);
+    const later = await shot(page, clip);
+    if (p.pixels !== false) {
+      expect(right.equals(base), 'a frame right after the input differs').toBe(true);
+      expect(later.equals(base), 'the canvas differs a second after the input').toBe(true);
+    }
+    expect((await msgs(page)).filter((m) => m.type === 'gridcraft:dirty' && m.dirty)).toHaveLength(0);
+    expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
+    expect(await count(page, 'gridcraft:save')).toBe(0);
+    expect(await count(page, 'gridcraft:autosave')).toBe(0);
+  });
+}
+
+// The control: the same input in an editable session does change the workbook (so the checks above are not vacuous).
+for (const p of PATHS.filter((x) => x.control !== false)) {
+  test(`control: ${p.name} in an editable session makes it dirty and changes the canvas`, async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await session(page, false, p.prep);
+    const clip = p.clip ?? CLIP_ALL;
+    const base = await shot(page, clip);
+    await p.act(page, false);
+    await expect.poll(() => lastDirty(page), { timeout: 10_000 }).toBe(true);
+    await page.waitForTimeout(800);
+    expect((await shot(page, clip)).equals(base)).toBe(false);
+  });
+}
+
+test('read-only: view-only actions still work (selection, copy)', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const logs = await session(page, true);
+  const base = await shot(page, CLIP_GRID);
+  await page.keyboard.press('Control+c');
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(800);
+  expect((await shot(page, CLIP_GRID)).equals(base)).toBe(false); // the selection moved
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('1234');
+  expect((await msgs(page)).filter((m) => m.type === 'gridcraft:dirty' && m.dirty)).toHaveLength(0);
+  expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
 });
