@@ -8,7 +8,7 @@
 #           127.0.0.1:18444:443, has a 512 MB memory limit and compose labels: the test server as surveyed on 2026-11-08
 #           -> the shared layout: one listener :80 for Traefik's route and the backend's saved-file download
 # In both: dropin-onlyoffice is a stand-in for the old Document Server (nginx:alpine tagged locally like ONLYOFFICE's image, aliases
-# docs-server and docs-alias, JWT_SECRET in its env, a marker api.js), restart unless-stopped; dropin-api is the fake HR backend
+# docs-server and docs-alias, JWT_SECRET in its env, a marker api.js), restart unless-stopped; dropin_api is the fake HR backend
 # as `api`, as surveyed (no exp, body token, allowlist by host name, rewrite to http://docs-server, i.e. port 80, FRONTEND_URL).
 # Needs the images from build.sh. Never touches a network or container without the dropin prefix.
 # Usage: rehearse-dropin.sh   Env: OFFICE_TARGET, SCENARIO, KEEP=1 (leave the last one up), OPENSSL.
@@ -24,7 +24,7 @@ ok() { echo "PASS [$SC] $*"; PASS=$((PASS + 1)); }
 bad() { echo "FAIL [$SC] $*"; FAILN=$((FAILN + 1)); }
 check() { local what=$1; shift; if "$@"; then ok "$what"; else bad "$what"; fi; }
 down() {
-  docker rm -f dropin-onlyoffice dropin-onlyoffice-replaced dropin-api dropin-traefik > /dev/null 2>&1 || true
+  docker rm -f dropin-onlyoffice dropin-onlyoffice-replaced dropin_api dropin-traefik > /dev/null 2>&1 || true
   docker volume rm dropin-onlyoffice-docserver-data > /dev/null 2>&1 || true
   for n in $NETS; do docker network rm "$n" > /dev/null 2>&1 || true; done
 }
@@ -53,7 +53,7 @@ apijs() { curl -sk -m 5 https://127.0.0.1:18443/web-apps/apps/api/documents/api.
 code() { curl -sk -m 5 -o /dev/null -w '%{http_code}' "$1" || true; }
 STANDIN_CMD='d=/usr/share/nginx/html/web-apps/apps/api/documents; mkdir -p $d && echo "/* stand-in */ window.STANDIN = true;" > $d/api.js && exec nginx -g "daemon off;"'
 api() { # <network>: the HRB env as surveyed: BACKEND_DOCS_URL and BACKEND_SELF_URL unset (their defaults), its allowlist, its secret
-  docker run -d --name dropin-api --network "$1" --network-alias api -p 127.0.0.1:8790:8000 --read-only --cap-drop ALL \
+  docker run -d --name dropin_api --network "$1" --network-alias api -p 127.0.0.1:8790:8000 --read-only --cap-drop ALL \
     -e FAKE_HRM_ADDR=0.0.0.0:8000 -e FAKE_HRM_DOCSERVER=https://127.0.0.1:18443 -e FAKE_HRM_BACKEND_URL=http://api:8000 \
     -e FAKE_HRM_INTERNAL_BASE=http://docs-server -e FAKE_HRM_ALLOWED_HOSTS=docs-server,docs-alias,minio \
     -e "FAKE_HRM_DS_SECRET=$SECRET" -e FAKE_HRM_TEST_API=1 \
@@ -181,6 +181,8 @@ Y
       -l com.docker.compose.project=rehearsal -l com.docker.compose.service=docs-server \
       -l com.docker.compose.project.working_dir=<server-path> -l com.docker.compose.project.config_files=<server-path> \
       "$STANDIN" sh -c "$STANDIN_CMD" > /dev/null
+    # rejoin as compose does: Docker 29 then shows an empty IPAMConfig ("invalid IP"), which the first real rollback tripped on
+    docker network disconnect "$NET" dropin-onlyoffice && docker network connect --alias docs-server --alias docs-alias "$NET" dropin-onlyoffice
   }
   api "$NET"
   local DRY=(bash "$HERE/install.sh" --dry-run --profile "$HERE/profiles/hrm.env" --image "$IMAGE" --etc "$D/$SC/etc")
