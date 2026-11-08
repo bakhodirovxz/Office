@@ -1397,6 +1397,27 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (sha256 2eabb2b7...) predates this work: build a new one before a real install. Docs still
   autosaves while a save is pending (the three new bridges skip that period).
 
+### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
+- Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
+  SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every
+  `widgets::spinner` number box inert through a per-frame context flag; the reply box no longer widens its resizable pane on every repaint,
+  which had moved the slide under the tests) and gridcraft 0164 (Sheets: a form dialog whose command a read-only session refuses is not
+  opened, chart/table-name fields and the reply box inert, no sheet-tab rename, no header/footer hover frame or "Add header" hint). PDF needed
+  no change (bookmark rename and its menu are offered only when editable; Prepare a form refuses with its own message). `0950` of both
+  engines regenerated for the new lines. No new UI strings.
+- Measured (dists built from this branch; docs and pdf dists unchanged from p5-ro): bridge-sheets 53 passed (was 47), bridge-slides 36
+  (was 32), bridge-pdf 39 (was 35), bridge-docs 12 (was 10); every read-only case has an editable control. Against the p5-ro dists the new
+  Slides comment-reply and Format Shape cases and the Sheets note-dialog and header cases fail (so they test something); the Sheets text box
+  and the Slides outline and tool cases pass on both (0161/0162 already held them). Docker rehearsal rebuilt image (374 MB, these dists):
+  **54 of 54**, the browser flow now also opens a docx, an xlsx and a pptx with `mode=view` (labels and file scenarios, 6 of 6 each): no
+  dirty mark, no save callback, the backend's object unchanged. `verify-queue.sh` deckcraft 35, gridcraft 63 OK; `cargo xt register check`
+  148 rows OK. Web wasm brotli (`ci.sh sizes` exit 0, no budget raised): Sheets 4,954,975 (headroom 11,796), Slides 9,519,606 (headroom
+  4,611), Docs 9,858,596, PDF 9,576,628.
+- Not checked: the SmartArt Text pane in a browser (the web UI has no way to open it; inert by code only); the Slides Alt Text and Size and
+  Position dialogs, which still open in a read-only session (whether their fields show typing is unchecked; nothing reaches the presentation);
+  the Sheets name box; PDF page operations by menu, attachments, security, redaction, OCR, flatten, Combine (end in the refused `apply`);
+  real HRM files.
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
