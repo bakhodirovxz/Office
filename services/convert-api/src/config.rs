@@ -223,12 +223,13 @@ pub struct NameSet {
 }
 
 impl NameSet {
-    /// A plain host name (`api`, `traefik`, `proxy.internal`): letters first, then letters, digits, `-` and `.`; never an address.
+    /// A plain host name (`api`, `traefik`, `proxy.internal`) or a Docker container name (`hr_api`): letters first, then letters,
+    /// digits, `-`, `_` and `.`; never an address.
     pub fn is_name(s: &str) -> bool {
         s.len() <= 253
             && s.starts_with(|c: char| c.is_ascii_alphabetic())
             && s.split('.')
-                .all(|l| !l.is_empty() && l.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-'))
+                .all(|l| !l.is_empty() && l.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_'))
     }
 
     pub fn start(names: Vec<String>) -> NameSet {
@@ -728,6 +729,10 @@ kind = \"{kind}\"
         );
         for bad in ["1api", "a..b", "-a", "a b", "10.0.0.256", ""] {
             assert!(!NameSet::is_name(bad), "{bad}");
+        }
+        // Docker's embedded DNS resolves container names with underscores (the test server's backend is one)
+        for good in ["api", "hr_api", "proxy.internal", "a-b_c"] {
+            assert!(NameSet::is_name(good), "{good}");
         }
         assert!(
             server(&|s| s.tls = "plain".into())

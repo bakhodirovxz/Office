@@ -56,17 +56,21 @@ rollback() {
     docker rm -f "$OLD_NAME" > /dev/null
   fi
   docker rename "$OLD_NAME-replaced" "$OLD_NAME"
-  local line net aliases ip a args
+  local line net aliases ip a args lost=""
   while IFS='|' read -r net aliases ip; do
     [ -n "$net" ] || continue
     args=()
     for a in ${aliases//,/ }; do args+=(--alias "$a"); done
-    [ -n "$ip" ] && args+=(--ip "$ip")
-    docker network connect "${args[@]}" "$net" "$OLD_NAME" 2> /dev/null || say "note: $OLD_NAME already on $net"
+    on() { [ -n "$(insp "$OLD_NAME" "{{if index .NetworkSettings.Networks \"$net\"}}y{{end}}")" ]; }
+    # a state file of an older install.sh may hold "invalid IP"; a fixed address that is no longer free is given up, not the network
+    [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && ! on && docker network connect "${args[@]}" --ip "$ip" "$net" "$OLD_NAME" 2> /dev/null
+    on || docker network connect "${args[@]}" "$net" "$OLD_NAME" || true
+    on || lost="$lost $net"
   done <<< "$OLD_NETS"
   docker update --restart="$OLD_RESTART" "$OLD_NAME" > /dev/null
   [ "$OLD_RUNNING" = true ] && docker start "$OLD_NAME" > /dev/null
   mv "$STATE" "$STATE.rolled-back.$(date +%s)"
+  [ -z "$lost" ] || die "rollback INCOMPLETE: $OLD_NAME is not on$lost; join it by hand: docker network connect --alias <each alias> <network> $OLD_NAME, then docker restart $OLD_NAME"
   say "rolled back: $OLD_NAME is the original container again (restart=$OLD_RESTART); the data volume $OLD_NAME-docserver-data is kept"
 }
 [ "$CMD" = rollback ] && { rollback; exit 0; }
@@ -123,7 +127,8 @@ else
   OLD_RUNNING=$(insp "$OLD" '{{.State.Running}}')
   # net|aliases (no short ids)|fixed IPv4 (only when configured)
   OLD_NETS=$(insp "$OLD" '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}|{{join $v.Aliases ","}}|{{if $v.IPAMConfig}}{{$v.IPAMConfig.IPv4Address}}{{end}}{{println}}{{end}}' |
-    awk -F'|' 'NF { n=split($2, a, ","); s=""; for (i=1;i<=n;i++) if (a[i] !~ /^[0-9a-f]{12}$/) s = s (s?",":"") a[i]; print $1 "|" s "|" $3 }')
+    awk -F'|' 'NF { n=split($2, a, ","); s=""; for (i=1;i<=n;i++) if (a[i] !~ /^[0-9a-f]{12}$/) s = s (s?",":"") a[i]; ip = ($3 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) ? $3 : ""; print $1 "|" s "|" ip }')
+  # (Docker 29 prints an empty IPAMConfig, the one compose and `network connect` leave, as "invalid IP": no fixed address)
   OLD_PORTS=$(insp "$OLD" '{{range $p,$b := .HostConfig.PortBindings}}{{range $b}}{{$p}}|{{.HostIp}}|{{.HostPort}}{{println}}{{end}}{{end}}' | sed '/^$/d')
   OLD_LABELS=$(insp "$OLD" '{{range $k,$v := .Config.Labels}}{{$k}}={{$v}}{{println}}{{end}}' | grep '^traefik\.' || true)
   OLD_MEMORY=$(insp "$OLD" '{{.HostConfig.Memory}}')
