@@ -151,7 +151,7 @@ pub fn sheet_tabs(app: &mut SheetApp, ui: &mut Ui) {
                                 if resp.clicked() {
                                     activate_sheet(app, i);
                                 }
-                                if resp.double_clicked() {
+                                if resp.double_clicked() && !app.refuse_read_only() {
                                     app.grid.renaming_tab = Some(i);
                                     app.grid.rename_text = name.clone();
                                 }

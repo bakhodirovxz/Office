@@ -105,3 +105,40 @@ for (const [ext, id, route, edit] of [
     }
   });
 }
+
+// Read-only through the whole chain (docs/phase5/r6.md section 5): the backend's editor-config with `mode=view` (permissions.edit false) opens each
+// editor read only; typing is refused (the host's dirty flag never turns true) and nothing reaches the backend (no callback, the object is unchanged).
+// The pixel-level proof (not even for a frame) is in the bridge-* specs; this is the same flag crossing the real wrapper, JWT and Traefik.
+for (const [ext, id, route, edit] of [
+  ['docx', 1, 'docs', async (page: import('@playwright/test').Page) => { await page.keyboard.type('zz'); }],
+  ['xlsx', 2, 'sheets', async (page: import('@playwright/test').Page) => { await page.keyboard.type('zz'); await page.keyboard.press('Enter'); }],
+  ['pptx', 3, 'slides', async (page: import('@playwright/test').Page) => { await page.keyboard.press('Control+Shift+N'); }],
+] as const) {
+  test(`drop-in: an ${ext} opened with mode=view takes no edit and sends nothing`, async () => {
+    test.skip(!process.env.DROPIN, 'drop-in rehearsal only');
+    const browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+    try {
+      const s0 = await state();
+      const key = Object.keys(s0.objects).find((k) => k.startsWith(`files/${id}/`))!;
+      const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
+      await page.goto(`${HOST}/host?kind=files&id=${id}&lang=en&mode=view`);
+      await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
+      expect(await page.locator('body').getAttribute('data-state'), await page.locator('#detail').textContent() ?? '').toBe('ready');
+      const editor = page.frames().find((f) => f.url().startsWith(`https://127.0.0.1:18443/${route}/`))!;
+      await editor.locator('canvas').first().click({ position: { x: 420, y: 420 } });
+      await edit(page);
+      await page.waitForTimeout(3000);
+      expect(await page.evaluate(() => (window as any).__dirty)).not.toBe(true);
+      await page.evaluate(() => (window as any).__editor.requestSave());
+      await page.waitForTimeout(2000);
+      await page.evaluate(() => (window as any).__editor.close());
+      await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('closed');
+      const s1 = await state();
+      expect(s1.received.slice(s0.received.length).filter((r) => r.status === 6)).toEqual([]); // no save callback
+      expect(s1.objects[key]).toBe(s0.objects[key]);
+      console.log(`drop-in ${ext} view: object unchanged (${s1.objects[key].slice(0, 12)})`);
+    } finally {
+      await browser.close();
+    }
+  });
+}

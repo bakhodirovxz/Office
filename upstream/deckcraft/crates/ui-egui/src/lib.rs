@@ -1877,6 +1877,7 @@ impl SlideApp {
             return;
         }
         i18n::set_current(i18n::from_pref(&self.ui.language));
+        ctx.data_mut(|d| d.insert_temp(egui::Id::new("edits-barred"), self.locked()));
         let t0 = now_ms();
         let t = theme::Tokens::get(&ctx);
         self.tick_media(&ctx);

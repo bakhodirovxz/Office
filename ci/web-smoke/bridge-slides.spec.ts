@@ -244,9 +244,14 @@ const clip = async (page: Page, text: string) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.evaluate((t) => navigator.clipboard.writeText(t), text);
 };
+// The command search (the magnifier at the top right): type a command and run the first match.
+const palette = async (page: Page, q: string) => { await page.mouse.click(1085, 27); await page.waitForTimeout(500); await page.keyboard.type(q, { delay: 40 }); await page.waitForTimeout(600); await page.keyboard.press('Enter'); await page.waitForTimeout(1000); };
 const key = (k: string) => async (page: Page) => { await page.keyboard.press(k); };
 
-type Path = { name: string; fx?: string; setup?: (p: Page) => Promise<void>; input: (p: Page) => Promise<void> };
+// fx: a fixture of this directory's translit-fixtures, or one under ci/web-smoke/ (with a slash). dirtyOnly: the editable control changes the
+// presentation without a visible change on the slide (a number typed into a pane), so only its dirty mark is checked. limit: the most pixels
+// a read-only run may change (default 80; a small field needs less to be seen).
+type Path = { name: string; fx?: string; dirtyOnly?: boolean; park?: [number, number]; limit?: number; setup?: (p: Page) => Promise<void>; input: (p: Page, readOnly: boolean) => Promise<void> };
 const PATHS: Path[] = [
   { name: 'typing in a text', setup: editTitle, input: async (p) => { await p.keyboard.type('Zqx', { delay: 60 }); } },
   { name: 'Backspace in a text', setup: async (p) => { await editTitle(p); await p.keyboard.press('End'); }, input: async (p) => { for (let i = 0; i < 3; i++) await p.keyboard.press('Backspace'); } },
@@ -277,12 +282,19 @@ const PATHS: Path[] = [
     },
   },
   { name: 'dragging a slide thumbnail (reorder)', fx: '02-languages.pptx', input: (p) => drag(p, [136, 155], [136, 330]) },
+  // Text fields outside the slide: the outline view, the Comments pane and the Format Shape pane are inert in a read-only session (deckcraft/0163).
+  { name: 'typing in the outline view', setup: async (p) => { await palette(p, 'Outline View'); }, limit: 15, input: async (p, ro) => { await p.mouse.click(108, 149); await p.keyboard.type('Zqx', { delay: 60 }); if (!ro) await p.mouse.click(700, 640); } }, // read-only: stay in the field, so any typed text would still show
+  { name: 'a comment reply typed in the Comments pane', fx: 'fixtures/slides-smartart-comment.pptx', setup: async (p) => { await p.mouse.click(665, 694); await p.waitForTimeout(800); }, limit: 15, input: async (p, ro) => { await p.mouse.click(874, 268); await p.keyboard.type('Zqx', { delay: 60 }); if (!ro) await p.keyboard.press('Enter'); } },
+  { name: 'a number typed in the Format Shape pane', dirtyOnly: true, park: [450, 540], limit: 15, // a number in a 60 px box is only a few dozen pixels
+    fx: 'fixtures/slides-smartart-comment.pptx', setup: async (p) => { await p.mouse.click(440, 400); await p.mouse.click(440, 400, { button: 'right' }); await p.waitForTimeout(700); await p.mouse.click(490, 611); await p.mouse.move(450, 540); await p.waitForTimeout(1000); }, input: async (p, ro) => { await p.mouse.dblclick(890, 545); await p.keyboard.type('88888888', { delay: 40 }); if (!ro) await p.keyboard.press('Enter'); } }, // Enter would end the edit (and show the old value again) in a read-only run: the typed digits must not show while the field would still hold them
+  // the text box tool is armed from the toolbar, then dragged on the slide: the shape is drawn (and shows) as the pointer drags
+  { name: 'the text box tool dragged on the slide (drawing preview)', setup: async (p) => { await p.mouse.click(666, 65); await p.waitForTimeout(500); }, input: (p) => drag(p, [620, 470], [820, 540]) },
 ];
 
 for (const c of PATHS) {
   test(`11 read-only: ${c.name} is refused before it shows; the same input edits an editable session`, async ({ page }) => {
     test.setTimeout(240_000);
-    const bytes = fs.readFileSync(c.fx ? path.join(path.dirname(PPTX), c.fx) : PPTX);
+    const bytes = fs.readFileSync(c.fx ? (c.fx.includes('/') ? path.join(ROOT, 'ci/web-smoke', c.fx) : path.join(path.dirname(PPTX), c.fx)) : PPTX);
     const logs = consoleOf(page);
     const run = async (readOnly: boolean) => {
       await open(page, NAME, bytes, readOnly ? { readOnly: true } : {});
@@ -290,8 +302,8 @@ for (const c of PATHS) {
       await settle(page);
       await c.setup?.(page);
       const base = await settle(page);
-      await c.input(page);
-      await page.mouse.move(1095, 560); // off the thumbnails and buttons, so no hover highlight differs
+      await c.input(page, readOnly);
+      await page.mouse.move(...(c.park ?? [1095, 560])); // off the thumbnails and buttons, so no hover highlight differs (park: a case with a pane on the right)
       await page.waitForTimeout(150);
       const first = await frameShot(page);
       await page.waitForTimeout(1000);
@@ -303,14 +315,14 @@ for (const c of PATHS) {
     expect(await count(page, 'deckcraft:save')).toBe(0);
     expect(await count(page, 'deckcraft:autosave')).toBe(0);
     expect(logs.filter((l) => l.includes('read-only safety net')), 'the per-frame revert fired').toEqual([]);
-    expect(ro.first, 'pixels changed right after the input').toBeLessThanOrEqual(80);
-    expect(ro.later, 'pixels changed a second after the input').toBeLessThanOrEqual(80);
+    expect(ro.first, 'pixels changed right after the input').toBeLessThanOrEqual(c.limit ?? 80);
+    expect(ro.later, 'pixels changed a second after the input').toBeLessThanOrEqual(c.limit ?? 80);
     // The control: the same input in an editable session.
     await page.goto(base + '/host.html');
     await waitFor(page, 'deckcraft:ready');
     const rw = await run(false);
     await expect.poll(() => lastDirty(page)).toBe(true);
-    expect(Math.max(rw.first, rw.later), 'the control input changed nothing, the check would be vacuous').toBeGreaterThan(80);
+    if (!c.dirtyOnly) expect(Math.max(rw.first, rw.later), 'the control input changed nothing, the check would be vacuous').toBeGreaterThan(80);
   });
 }
 
