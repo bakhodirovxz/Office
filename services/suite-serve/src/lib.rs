@@ -308,6 +308,10 @@ pub fn router_ds(
         extra = extra.merge(d.routes());
     }
     let router = convert_api::routes::router_with(app, extra.merge(shell));
+    let router = match &ds {
+        Some(d) => d.share_port(router),
+        None => router,
+    };
     match &layout.local_key {
         Some(k) => {
             assert!(

@@ -254,3 +254,114 @@ async fn embed_files_are_served_with_the_right_types() {
     let api = include_str!("../../docserver/static/api.js");
     assert!(!api.to_lowercase().contains("hoshiya"));
 }
+
+/// The shared layout (docs/phase5/dropin.md D2b): Traefik's route and the backend's saved-file download reach one port. Only
+/// `internal_allow` gets past the file route's peer gate (Traefik and any other peer get 403, whatever headers they send); the
+/// public routes keep the public listener's rules for every peer (`tls = "upstream"`: the proxy only).
+#[tokio::test]
+async fn one_shared_port_keeps_the_file_route_to_internal_allow() {
+    let dir = std::env::temp_dir().join(format!("suite-serve-ds-shared-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("dist")).unwrap();
+    for (f, b) in [("server", b's'), ("p", b'p'), ("conv", b'c')] {
+        std::fs::write(dir.join(f), [b; 40]).unwrap();
+    }
+    let p = |f: &str| dir.join(f).to_string_lossy().replace('\\', "/");
+    let (proxy, backend) = ("10.0.0.9", "10.0.0.2");
+    let s = Settings {
+        listen: "0.0.0.0:80".into(),
+        auth: "jwt".into(),
+        secret_file: Some(dir.join("conv")),
+        tls: "upstream".into(),
+        trusted_proxies: vec![proxy.into()],
+        public_url: Some("https://docs.test".into()),
+        work_dir: Some(dir.join("work")),
+        store_dir: Some(dir.join("store")),
+        ..Settings::default()
+    };
+    let t: toml::Table = format!(
+        r#"server_secret_file = "{}"
+data_dir = "{}"
+internal_listen = "0.0.0.0:80"
+internal_allow = ["{backend}"]
+internal_url = "http://docs-server:80"
+[[providers]]
+name = "one"
+issuer = "one"
+compat = "docsapi"
+secret_file = "{}"
+fetch_allow = [{{ url = "http://api:8000", internal = true }}]
+frame_origins = ["https://app.test"]
+"#,
+        p("server"),
+        p("data"),
+        p("p")
+    )
+    .parse()
+    .unwrap();
+    let ds = Arc::new(Docserver::from_table(t, s.listen.parse().ok()).unwrap());
+    assert!(
+        ds.bind_internal().unwrap().is_none(),
+        "no second socket in the shared layout"
+    );
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let layout = Layout {
+        shell: repo.join("web/shell"),
+        dist: dir.join("dist"),
+        brand: repo.join("brand/brand.toml"),
+        local_key: None,
+    };
+    let app = App::new(s.resolve().unwrap(), ConvertConfig::from_env(), false).unwrap();
+    let router = router_ds(
+        app.clone(),
+        &layout,
+        layout.shell_config().unwrap(),
+        Some(ds),
+    );
+    let get = |peer: &str, uri: &str| {
+        let mut r = Request::builder()
+            .uri(uri)
+            .header("host", "docs.test")
+            .header("x-forwarded-proto", "https")
+            .header("x-forwarded-for", backend)
+            .body(Body::empty())
+            .unwrap();
+        r.extensions_mut().insert(ConnectInfo(
+            format!("{peer}:4000").parse::<SocketAddr>().unwrap(),
+        ));
+        let router = router.clone();
+        async move { router.oneshot(r).await.unwrap().status() }
+    };
+    const API: &str = "/web-apps/apps/api/documents/api.js";
+    // through Traefik: the public routes work, the saved-file route is 403 (an X-Forwarded-For naming the backend changes nothing)
+    assert_eq!(get(proxy, API).await, StatusCode::OK);
+    assert_eq!(get(proxy, "/ds/api.js").await, StatusCode::OK);
+    for uri in ["/ds/files/s/1", "/ds/files/s/1?t=x"] {
+        assert_eq!(get(proxy, uri).await, StatusCode::FORBIDDEN, "{uri}");
+    }
+    // another shape under /ds/files/ is the public router's: no such route
+    assert_eq!(get(proxy, "/ds/files/s").await, StatusCode::NOT_FOUND);
+    // the backend: on to the file token check (401 without a valid one)
+    assert_eq!(
+        get(backend, "/ds/files/s/1").await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        get(backend, "/ds/files/s/1?t=x").await,
+        StatusCode::UNAUTHORIZED
+    );
+    // ... and the public routes answer it as the public listener always did: the proxy only (no new way in for it)
+    assert_eq!(get(backend, API).await, StatusCode::FORBIDDEN);
+    assert_eq!(get(backend, "/ds/%66iles/s/1").await, StatusCode::FORBIDDEN);
+    // any other peer (the Docker gateway of a host publish, a neighbour, the loopback): 403 on both
+    for peer in ["172.18.0.1", "10.0.0.7", "127.0.0.1"] {
+        assert_eq!(
+            get(peer, "/ds/files/s/1").await,
+            StatusCode::FORBIDDEN,
+            "{peer}"
+        );
+        assert_eq!(get(peer, API).await, StatusCode::FORBIDDEN, "{peer}");
+    }
+    app.shutdown();
+    let _ = std::fs::remove_dir_all(&dir);
+}
