@@ -634,6 +634,11 @@ impl SlideApp {
         self
     }
 
+    /// A policy bars edits (a read-only session): text fields that show the presentation's text stay inert, so nothing typed appears.
+    pub fn locked(&self) -> bool {
+        deckcraft_engine::office_hook::refusal(deckcraft_engine::office_hook::EDIT, &self.session).is_some()
+    }
+
     pub fn set_status(&mut self, msg: impl Into<String>) {
         self.status = Some((msg.into(), now_ms()));
     }

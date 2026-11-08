@@ -155,6 +155,7 @@ pub fn notes_pane(app: &mut SlideApp, ui: &mut Ui) {
                 app.notes_buf = (uid, idx, crate::notes::Draft::new(&notes));
             }
             let mut draft = app.notes_buf.2.clone();
+            let locked = app.locked();
             let look = crate::notes::Look { size: 13.0, color: None };
             // Long notes scroll inside the pane instead of spilling over the slide (#221).
             let out = egui::ScrollArea::vertical()
@@ -162,7 +163,12 @@ pub fn notes_pane(app: &mut SlideApp, ui: &mut Ui) {
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     crate::notes::editor(ui, &mut draft, &look, |e| {
-                        e.id(id).hint_text(crate::i18n::t("Click to add notes")).frame(egui::Frame::NONE).desired_width(f32::INFINITY).desired_rows(2)
+                        e.interactive(!locked)
+                            .id(id)
+                            .hint_text(crate::i18n::t("Click to add notes"))
+                            .frame(egui::Frame::NONE)
+                            .desired_width(f32::INFINITY)
+                            .desired_rows(2)
                     })
                 })
                 .inner;
