@@ -115,7 +115,7 @@ opaque() {
     curl -sk -m 5 -D - -o /dev/null https://127.0.0.1:18443/ds/editor | tr -d '\r' | tr 'A-Z' 'a-z' > "$1" || true
   }
   echo "=== [$SC] install.sh --allow-opaque-origin"
-  "${I[@]}" --allow-opaque-origin > opq1.txt 2>&1 || { cat opq1.txt; bad "opaque: rerun with the flag"; }
+  "${I[@]}" --allow-opaque-origin --edit-types docx,xlsx > opq1.txt 2>&1 || { cat opq1.txt; bad "opaque: rerun with the flag"; }
   up h1.txt
   check "opaque: the plan says ALLOWED" grep -q '^  opaque origin    ALLOWED' opq1.txt
   check "opaque: the container has the switch on" [ "$(envv)" = 1 ]
@@ -127,6 +127,7 @@ opaque() {
   up h2.txt
   check "opaque: a plain rerun keeps it" bash -c "grep -q '^  opaque origin    ALLOWED.*(kept from the running container)' opq2.txt && ! grep -q frame-ancestors h2.txt"
   check "opaque: ... and the container still has it" [ "$(envv)" = 1 ]
+  check "a plain rerun keeps --edit-types too" bash -c "grep -q 'edit types docx,xlsx (kept from the running container)' opq2.txt && docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' dropin-onlyoffice | grep -qx DOCSERVER_EDIT_TYPES=docx,xlsx"
   echo "=== [$SC] install.sh --no-allow-opaque-origin"
   "${I[@]}" --no-allow-opaque-origin > opq3.txt 2>&1 || { cat opq3.txt; bad "opaque: rerun with --no-allow-opaque-origin"; }
   up h3.txt
