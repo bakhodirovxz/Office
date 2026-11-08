@@ -377,6 +377,8 @@ pub struct Document {
     snapshot_generation: u64,
     /// Why the document cannot be edited (e.g. encryption), if so.
     pub read_only_reason: Option<String>,
+    /// `read_only_reason` was set by [`Session::set_view_only`] (the editor is kept for viewing).
+    view_only: bool,
     /// Interactive form fields of the current state (empty without a form).
     pub form: Arc<Vec<pdfcraft_forms::Field>>,
     marker_scan: OnceLock<pdfcraft_edit::MarkerScan>,
@@ -661,7 +663,7 @@ impl Document {
     }
 
     pub fn editable(&self) -> bool {
-        self.editor.is_some()
+        self.editor.is_some() && !self.view_only
     }
 
     /// What the opening password allows; `None` when the document is not encrypted.
@@ -3614,6 +3616,7 @@ impl Session {
             generation: 0,
             snapshot_generation: 0,
             read_only_reason,
+            view_only: false,
             form: Arc::new(form),
             marker_scan: OnceLock::new(),
             links: OnceLock::new(),
@@ -3653,6 +3656,9 @@ impl Session {
         cx.today = today;
         let reason = doc.read_only_reason.clone().unwrap_or_default();
         let signed = doc.is_signed();
+        if doc.view_only {
+            return Err(EditError::ReadOnly(reason));
+        }
         let editor = doc.editor.as_mut().ok_or(EditError::ReadOnly(reason))?;
         if let Some(p) = editor.cos.permissions() {
             check_permission(&edit, &p)?;
@@ -3832,6 +3838,9 @@ impl Session {
     pub fn undo(&mut self, id: DocId) -> Result<Label, EditError> {
         let doc = self.doc_mut(id)?;
         doc.edit_notices.clear();
+        if doc.view_only {
+            return Err(EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()));
+        }
         let editor = doc.editor.as_mut().ok_or(EditError::NothingToUndo)?;
         let (label, prev, keys, scope) = editor.undo.pop().ok_or(EditError::NothingToUndo)?;
         let current = std::mem::replace(&mut editor.cos, prev);
@@ -3847,6 +3856,9 @@ impl Session {
     pub fn redo(&mut self, id: DocId) -> Result<Label, EditError> {
         let doc = self.doc_mut(id)?;
         doc.edit_notices.clear();
+        if doc.view_only {
+            return Err(EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()));
+        }
         let editor = doc.editor.as_mut().ok_or(EditError::NothingToRedo)?;
         let (label, next, keys, scope) = editor.redo.pop().ok_or(EditError::NothingToRedo)?;
         let current = std::mem::replace(&mut editor.cos, next);
@@ -4172,6 +4184,9 @@ impl Session {
     /// opened by the owner need nothing.
     pub fn unlock(&mut self, id: DocId, password: &str) -> Result<(), EditError> {
         let doc = self.doc_mut(id)?;
+        if doc.view_only {
+            return Err(EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()));
+        }
         let editor = doc.editor.as_mut().ok_or_else(|| EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()))?;
         if editor.cos.permissions().is_none_or(|p| p.owner) {
             return Ok(());
@@ -4202,6 +4217,9 @@ impl Session {
     /// cleared, as in Acrobat.
     pub fn revert(&mut self, id: DocId) -> Result<(), EditError> {
         let doc = self.doc_mut(id)?;
+        if doc.view_only {
+            return Err(EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()));
+        }
         let editor = doc.editor.as_mut().ok_or_else(|| EditError::ReadOnly(doc.read_only_reason.clone().unwrap_or_default()))?;
         let base = editor.saved.clone();
         // The saved file opens with the passwords it was saved with. The current snapshot may
@@ -4232,6 +4250,7 @@ impl Session {
         let old = self.docs.iter().position(|d| d.id == id).ok_or_else(|| OpenError::Invalid("the document is not open".into()))?;
         let doc = &self.docs[old];
         let (name, path, generation) = (doc.name.clone(), doc.path.clone(), doc.generation);
+        let view_only = doc.view_only.then(|| doc.read_only_reason.clone());
         let password = doc.editor.as_ref().and_then(|e| e.keys.reopen.clone()).or_else(|| doc.password.clone());
         let new_id = self.open(name, path, bytes, password.as_deref())?;
         let at = self.docs.iter().position(|d| d.id == new_id).ok_or_else(|| OpenError::Invalid("the new version was not kept".into()))?;
@@ -4241,6 +4260,10 @@ impl Session {
         // one; there is nothing new to autosave.
         doc.generation = generation + 1;
         doc.snapshot_generation = doc.generation;
+        if let Some(reason) = view_only {
+            doc.view_only = true;
+            doc.read_only_reason = reason;
+        }
         // `open` pushed the new version last, so the old one is still at `old`.
         *self.docs.get_mut(old).ok_or_else(|| OpenError::Invalid("the document is not open".into()))? = doc;
         Ok(())
@@ -4758,6 +4781,26 @@ impl Session {
             }
             d.generation += 1;
             d.snapshot_generation = d.generation; // its bytes are already in the recovery store
+        }
+    }
+
+    /// Open `id` for viewing only (`Some(reason)`), or editable again (`None`). The editor is kept, so
+    /// rendering, text, forms and signatures keep working; every change (edit, undo, redo, revert,
+    /// unlock) is refused with [`EditError::ReadOnly`] before it touches the document, and the
+    /// `allows_*` checks the interface uses report false. A document that was never editable
+    /// (no editor) keeps its own reason.
+    pub fn set_view_only(&mut self, id: DocId, reason: Option<String>) {
+        let Some(doc) = self.docs.iter_mut().find(|d| d.id == id) else { return };
+        match reason {
+            Some(reason) if doc.editor.is_some() => {
+                doc.view_only = true;
+                doc.read_only_reason = Some(reason);
+            }
+            None if doc.view_only => {
+                doc.view_only = false;
+                doc.read_only_reason = None;
+            }
+            _ => {}
         }
     }
 
