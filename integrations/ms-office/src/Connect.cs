@@ -54,6 +54,8 @@ namespace UzTranslit.Office
         string CatalogGet(string context, int lcid);
         /// "loaded=<onLoad called>;labels=<getLabel calls>" (the smoke test checks the ribbon XML really loads).
         string RibbonState();
+        /// Shows the Review tab (IRibbonUI.ActivateTabMso), so the ribbon asks for the group's labels if the group is there.
+        string ShowReviewTab();
         /// Per button: the icon getImage returns, as "tag:WxH px" (IPictureDisp size), for the smoke test.
         string IconProbe();
     }
@@ -106,7 +108,12 @@ namespace UzTranslit.Office
             if (ribbonId != "Microsoft.Word.Document" && ribbonId != "Microsoft.Excel.Workbook" && ribbonId != "Microsoft.PowerPoint.Presentation")
                 return null;
             using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("customUI.xml"))
-            using (var r = new StreamReader(s)) return r.ReadToEnd();
+            using (var r = new StreamReader(s))
+            {
+                string xml = r.ReadToEnd();
+                // Word's Review tab is TabReviewWord; TabReview there fails ("Failed to find Office control by ID") and the group is not shown.
+                return host == Host.Word ? xml.Replace("idMso=\"TabReview\"", "idMso=\"TabReviewWord\"") : xml;
+            }
         }
 
         /// "Undo transliteration" only where the host's own Undo cannot reverse the command (Excel, PowerPoint).
@@ -114,7 +121,9 @@ namespace UzTranslit.Office
 
         bool ribbonLoaded;
         int labelCalls;
-        public void OnRibbonLoad(object ribbon) { ribbonLoaded = true; }
+        object ribbonUi;
+        public void OnRibbonLoad(object ribbon) { ribbonLoaded = true; ribbonUi = ribbon; }
+        public string ShowReviewTab() { ((dynamic)ribbonUi).ActivateTabMso(host == Host.Word ? "TabReviewWord" : "TabReview"); return RibbonState(); }
         public string RibbonState() { return "loaded=" + ribbonLoaded + ";labels=" + labelCalls; }
 
         static string Id(object control) { return ((dynamic)control).Id; }

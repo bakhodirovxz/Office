@@ -360,6 +360,11 @@ static class Smoke
             System.Threading.Thread.Sleep(2000);
             Console.WriteLine("ribbon: " + addin.RibbonState());
             Check(((string)addin.RibbonState()).StartsWith("loaded=True"), "ribbon XML loaded (onLoad called)");
+            // onLoad fires even when the tab id is wrong; labels are asked only for a group the ribbon really shows (Word's Review
+            // tab is TabReviewWord, not TabReview). The window stays minimized: a shown one repaginates the test documents.
+            addin.ShowReviewTab(); System.Threading.Thread.Sleep(1500);
+            Console.WriteLine("ribbon on the Review tab: " + addin.RibbonState());
+            Check(!((string)addin.RibbonState()).EndsWith("labels=0"), "the group is on Word's Review tab (getLabel called)");
             string icons = addin.IconProbe();
             Console.WriteLine("icons (getImage): " + icons);
             Check(!icons.Contains("null") && icons.Split(';').Length == 2, "getImage returns a picture for each button");
