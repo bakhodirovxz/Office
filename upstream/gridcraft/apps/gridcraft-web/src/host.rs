@@ -14,6 +14,9 @@
 //!   workbook as .xlsx, from Save, Save As or `requestSave`. The workbook stays marked as unsaved
 //!   (no `dirty: false`) until the parent has answered every save with `gridcraft:saved`. Other
 //!   files (Export as PDF, CSV) are downloaded by the browser, not sent.
+//! - `gridcraft:autosave` (to the parent): `{ name, bytes }`, the same .xlsx, every `AUTOSAVE_MS` while the
+//!   workbook has unsaved changes, none when it is clean, read only, or a save is unanswered. It is no save:
+//!   the workbook stays unsaved and nothing is downloaded; the parent keeps it as a recovery copy.
 //! - `gridcraft:saved` (from the parent): `{ ok }`, the answer to one `gridcraft:save`, in order.
 //!   `ok: false` marks the workbook unsaved again.
 //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
@@ -45,6 +48,9 @@ const MAX_AUTHOR_CHARS: usize = 200;
 const READ_ONLY: &str = "This workbook is open read-only: changes are not kept.";
 const WITHHELD: &str = "This is not available in this session.";
 
+/// The period of the autosave to the parent while the workbook has unsaved changes.
+const AUTOSAVE_MS: f64 = 30_000.0;
+
 #[derive(Clone)]
 pub struct Bridge {
     window: web_sys::Window,
@@ -69,6 +75,8 @@ pub struct Bridge {
     acks: Rc<RefCell<Vec<bool>>>,
     /// A refusal to show at the next frame.
     refused: Rc<Cell<Option<&'static str>>>,
+    /// When the unsaved workbook was last handed over by the autosave (`None`: clean, or not counting).
+    last_autosave: Rc<Cell<Option<f64>>>,
 }
 
 impl Bridge {
@@ -95,6 +103,7 @@ impl Bridge {
             pending: Rc::default(),
             acks: Rc::default(),
             refused: Rc::default(),
+            last_autosave: Rc::default(),
         })
     }
 
@@ -148,8 +157,11 @@ impl Bridge {
     /// After each frame: open a file the parent sent, apply the save answers, run a save it asked
     /// for, take back edits of a read-only workbook, and report the unsaved-changes state. True
     /// while a plugin call waits for the page (the caller keeps drawing frames).
-    pub fn sync(&self, app: &mut SheetApp) -> bool {
+    pub fn sync(&self, app: &mut SheetApp, ctx: &egui::Context) -> bool {
+        // Read only is the engine's own state: it refuses every command that changes the workbook, and the editors do not open.
+        app.session.read_only = self.read_only.get();
         if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
+            app.read_only_notice = app.ui.language.tr(READ_ONLY).to_string();
             self.open(app, name, &bytes);
         }
         if self.save_requested.replace(false) && !self.read_only.get() {
@@ -164,6 +176,7 @@ impl Bridge {
                 self.post_failed(&e);
             }
         }
+        self.autosave(app, ctx);
         // A workbook handed to the parent counts as saved under the name it was saved as.
         let saved = std::mem::take(&mut *self.saved.borrow_mut());
         if let Some(name) = saved.last()
@@ -184,11 +197,12 @@ impl Bridge {
                 doc.saved = Arc::new((*doc.wb).clone());
             }
         }
-        // Read only: whatever changed the workbook (a command, typing, a drag) is taken back, as Undo would.
+        // Read only: the engine and the editors refuse edits before they happen; this takes back whatever got through anyway.
         if self.read_only.get()
             && let Some(doc) = app.session.active_mut()
             && doc.is_dirty()
         {
+            log::warn!("read-only safety net: the workbook changed and was taken back");
             doc.wb = doc.saved.clone();
             doc.calc.rebuild(&doc.wb);
             doc.undo.clear();
@@ -221,6 +235,30 @@ impl Bridge {
         active
     }
 
+    /// The periodic recovery copy: only while unsaved, editable and no save is unanswered. Not `file.save`: the workbook stays unsaved.
+    fn autosave(&self, app: &mut SheetApp, ctx: &egui::Context) {
+        if self.read_only.get() || self.pending.get() > 0 || !app.session.documents().iter().any(|d| d.is_dirty()) {
+            return self.last_autosave.set(None);
+        }
+        let now = js_sys::Date::now();
+        let last = self.last_autosave.get().unwrap_or(now);
+        if now - last < AUTOSAVE_MS {
+            self.last_autosave.set(Some(last));
+            // An idle page draws no frames: wake up when the period is over.
+            return ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+        }
+        self.last_autosave.set(Some(now));
+        let sent = app
+            .run("file.saveBytes", json!({"format": "xlsx"}))
+            .and_then(|r| {
+                r.get("base64").and_then(|b| b.as_str()).and_then(gridcraft_engine::io::base64_decode).ok_or_else(|| "no bytes".to_string())
+            })
+            .and_then(|bytes| self.post("gridcraft:autosave", &xlsx_name(&self.name.borrow()), &bytes));
+        if let Err(e) = sent {
+            log::error!("autosave failed: {e}");
+        }
+    }
+
     /// The opened file replaces every workbook shown.
     fn open(&self, app: &mut SheetApp, name: String, bytes: &[u8]) {
         let before = app.session.documents().len();
@@ -238,15 +276,20 @@ impl Bridge {
 
     fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
         let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
-        let buffer = js_sys::Uint8Array::from(bytes).buffer();
-        let message = message(&[("type", "gridcraft:save".into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
-            .ok_or_else(|| "couldn't build the message".to_string())?;
-        self.parent
-            .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))
-            .map_err(|e| e.as_string().unwrap_or_else(|| format!("{e:?}")))?;
+        self.post("gridcraft:save", &name, bytes)?;
         self.saved.borrow_mut().push(name);
         self.pending.set(self.pending.get() + 1);
         Ok(())
+    }
+
+    /// `{ type, name, bytes }` to the parent, the bytes transferred.
+    fn post(&self, kind: &str, name: &str, bytes: &[u8]) -> Result<(), String> {
+        let buffer = js_sys::Uint8Array::from(bytes).buffer();
+        let message = message(&[("type", kind.into()), ("name", name.into()), ("bytes", buffer.clone().into())])
+            .ok_or_else(|| "couldn't build the message".to_string())?;
+        self.parent
+            .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))
+            .map_err(|e| e.as_string().unwrap_or_else(|| format!("{e:?}")))
     }
 
     fn listen(&self, ctx: egui::Context) {

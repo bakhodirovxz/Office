@@ -5,7 +5,8 @@
 //! - `deckcraft:ready` (to the parent): `{ version }`, the app is listening; send a file now.
 //! - `deckcraft:open` (from the parent): `{ name, bytes }`, bytes an `ArrayBuffer` or
 //!   `Uint8Array`. The presentation replaces the one shown. `readOnly: true` opens it read only:
-//!   an edit is taken back at once (with a message) and nothing is ever sent as a save.
+//!   every change is refused before it reaches the presentation (typing, paste, drags, commands; a message in the status bar;
+//!   the per-frame revert stays as a last resort) and nothing is ever sent as a save.
 //!   `canDownload: false` withholds the exports (PDF, pictures, outline), `canPrint: false` Print;
 //!   both default to true.
 //! - `deckcraft:opened` (to the parent): `{ name }`, it is shown.
@@ -16,6 +17,9 @@
 //!   are downloaded by the browser, not sent.
 //! - `deckcraft:saved` (from the parent): `{ ok }`, the answer to one `deckcraft:save`, in order.
 //!   `ok: false` marks the presentation unsaved again.
+//! - `deckcraft:autosave` (to the parent): `{ name, bytes }`, the same `.pptx` a save sends, every `AUTOSAVE_MS` while the
+//!   presentation has unsaved changes, so the parent holds the work if the page is lost. It is not a save: the presentation
+//!   stays unsaved, and nothing is sent when it is clean, read only, or has a save the parent hasn't answered.
 //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
 //! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
@@ -35,6 +39,9 @@ use wasm_bindgen::JsCast as _;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 
+/// How often the unsaved presentation is handed to the parent as a recovery copy (the same period as WordCraft's).
+const AUTOSAVE_MS: f64 = 30_000.0;
+
 /// The name a presentation gets when the parent opened none.
 const DEFAULT_NAME: &str = "presentation.pptx";
 
@@ -45,12 +52,18 @@ const WITHHELD: &str = "This is not available in this session.";
 /// `deckcraft:open { canDownload, canPrint }`, read by the command hook (the app asks it before an export or a print).
 static CAN_DOWNLOAD: AtomicBool = AtomicBool::new(true);
 static CAN_PRINT: AtomicBool = AtomicBool::new(true);
+/// Set once a read-only presentation is open: the hook then refuses every change before it reaches the presentation.
+static LOCKED: AtomicBool = AtomicBool::new(false);
 
-/// Refuses Export and Print when the host withholds them; the app shows the reason and greys the commands out.
+/// Refuses Export and Print when the host withholds them, and every change while the presentation is read-only; the app shows
+/// the reason and greys the commands out.
 struct HostPolicy;
 
 impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
     fn before(&self, id: &str, s: &deckcraft_engine::Session) -> Option<String> {
+        if LOCKED.load(Ordering::Relaxed) && changes_or_replaces(id) {
+            return Some(deckcraft_ui_egui::i18n::t(READ_ONLY).to_string());
+        }
         let withheld = match id {
             "file.export" => !CAN_DOWNLOAD.load(Ordering::Relaxed),
             "file.print" => !CAN_PRINT.load(Ordering::Relaxed),
@@ -68,6 +81,26 @@ impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
             None
         }
     }
+}
+
+/// A command that changes the presentation (every undoable one, a text composition, Undo/Redo), a gesture that edits it without a
+/// command, or one that swaps it for another file. Selecting, scrolling, zooming, Copy and the like stay allowed.
+fn changes_or_replaces(id: &str) -> bool {
+    use deckcraft_engine::office_hook::EDIT;
+    matches!(
+        id,
+        EDIT | "edit.undo"
+            | "edit.redo"
+            | "text.compose"
+            | "text.commit"
+            | "text.autocorrect"
+            | "file.new"
+            | "file.open"
+            | "file.openBytes"
+            | "file.adopt"
+            | "file.revert"
+            | "file.recovery.open"
+    ) || deckcraft_engine::cmd::find_command(id).is_some_and(|c| c.undoable)
 }
 
 #[derive(Clone)]
@@ -88,6 +121,8 @@ pub struct Bridge {
     /// Saves sent that the parent hasn't answered with `deckcraft:saved` yet, and the answers since the last frame.
     pending: Rc<Cell<u32>>,
     acks: Rc<RefCell<Vec<bool>>>,
+    /// When the unsaved presentation was last handed over by the periodic autosave (`None`: clean, or no period running).
+    last_autosave: Rc<Cell<Option<f64>>>,
     /// A refusal to show at the next frame.
     refused: Rc<Cell<Option<&'static str>>>,
 }
@@ -115,6 +150,7 @@ impl Bridge {
             read_only: Rc::default(),
             pending: Rc::default(),
             acks: Rc::default(),
+            last_autosave: Rc::default(),
             refused: Rc::default(),
         })
     }
@@ -170,11 +206,12 @@ impl Bridge {
                 d.saved_doc = Arc::new((*d.doc).clone());
             }
         }
-        // Read only: whatever changed the presentation (a command, typing, a drag) is taken back, as Undo would.
+        // Read only, last resort: the command hook refuses changes before they happen; whatever still got through is taken back.
         if self.read_only.get()
             && let Some(d) = app.session.active_mut()
             && d.is_dirty()
         {
+            log::warn!("read-only safety net: an edit reached the presentation and was taken back");
             d.doc = d.saved_doc.clone();
             d.history.undo.clear();
             d.history.redo.clear();
@@ -184,6 +221,22 @@ impl Bridge {
             d.composition = None;
             d.revision += 1;
             self.refused.set(Some(READ_ONLY));
+        }
+        // The periodic autosave: only while there are unsaved changes, never read only, never with a save unanswered.
+        let unsaved = app.session.active().is_some_and(|d| d.is_dirty());
+        if unsaved && !self.read_only.get() && self.pending.get() == 0 {
+            let now = js_sys::Date::now();
+            let last = self.last_autosave.get().unwrap_or(now);
+            if now - last >= AUTOSAVE_MS {
+                self.autosave(app);
+                self.last_autosave.set(Some(now));
+            } else {
+                self.last_autosave.set(Some(last));
+                // An idle page draws no frames: wake up when the period is over.
+                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+            }
+        } else {
+            self.last_autosave.set(None);
         }
         if let Some(why) = self.refused.take() {
             app.notify(deckcraft_ui_egui::i18n::t(why).to_string());
@@ -214,9 +267,11 @@ impl Bridge {
     fn open(&self, app: &mut SlideApp, name: String, bytes: &[u8]) {
         let before = app.session.documents().len();
         let data = deckcraft_engine::cmd::base64_encode(bytes);
+        LOCKED.store(false, Ordering::Relaxed);
         if let Err(e) = app.run("file.openBytes", json!({"name": name, "data": data})) {
             return self.post_failed(&e);
         }
+        LOCKED.store(self.read_only.get(), Ordering::Relaxed);
         for _ in 0..before {
             app.session.close_document(0);
         }
@@ -242,10 +297,26 @@ impl Bridge {
         }
     }
 
+    /// Hand the shown presentation to the parent as a recovery copy: it stays unsaved and counts as no pending save.
+    fn autosave(&self, app: &SlideApp) {
+        let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
+        let name = pptx_name(&self.name.borrow());
+        let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx")
+            .map_err(|e| e.to_string())
+            .and_then(|bytes| self.post_file("deckcraft:autosave", &name, &bytes));
+        if let Err(e) = sent {
+            log::error!("couldn't hand {name} to the page for safekeeping: {e}");
+        }
+    }
+
     fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
+        self.post_file("deckcraft:save", path, bytes)
+    }
+
+    fn post_file(&self, kind: &str, path: &str, bytes: &[u8]) -> Result<(), String> {
         let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
         let buffer = js_sys::Uint8Array::from(bytes).buffer();
-        let message = message(&[("type", "deckcraft:save".into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
+        let message = message(&[("type", kind.into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
             .ok_or_else(|| "couldn't build the message".to_string())?;
         self.parent
             .post_message_with_transfer(&message, &self.origin, &js_sys::Array::of1(&buffer))

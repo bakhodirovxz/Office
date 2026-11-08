@@ -264,6 +264,8 @@ pub struct SheetApp {
     pub backstage: Option<backstage::Backstage>,
     pub message: Option<(String, String)>,
     pub toast: Option<(String, f64)>,
+    /// The toast shown when a read-only session ([`gridcraft_engine::Session::read_only`]) refuses an edit; set by the host.
+    pub read_only_notice: String,
     /// Dismissible info bar under the ribbon (open-time notices).
     pub notice: Option<Notice>,
     pub services: Services,
@@ -322,6 +324,7 @@ impl SheetApp {
             backstage: None,
             message: None,
             toast: None,
+            read_only_notice: String::new(),
             notice: None,
             services,
             printing: Default::default(),
@@ -587,7 +590,9 @@ impl SheetApp {
 
     /// Shows a command error: a toast for an unavailable command, else a message box.
     fn alert(&mut self, e: String) {
-        if e.contains("is not available right now") {
+        if self.session.read_only && e.ends_with("is not available right now: read-only") {
+            self.refuse_read_only();
+        } else if e.contains("is not available right now") {
             self.toast = Some((e, now_ms()));
         } else {
             self.message = Some(("GridCraft".into(), clean_error(&e)));
@@ -916,8 +921,19 @@ impl SheetApp {
         d.store_view(&tops);
     }
 
+    /// In a read-only session: shows the notice as a toast and returns true. Callers stop before anything is drawn changed.
+    pub(crate) fn refuse_read_only(&mut self) -> bool {
+        if self.session.read_only {
+            self.toast = Some((self.read_only_notice.clone(), now_ms()));
+        }
+        self.session.read_only
+    }
+
     /// Starts editing the active cell. `text` replaces the content (typing) or pre-fills it.
     pub fn begin_edit(&mut self, text: Option<String>, from_formula_bar: bool) {
+        if self.refuse_read_only() {
+            return;
+        }
         if let Err(e) = self.commit_text_box_edit() {
             self.message = Some(("Text Box".into(), clean_error(&e)));
             return;

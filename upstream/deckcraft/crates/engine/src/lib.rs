@@ -656,6 +656,10 @@ impl Session {
 
     /// Mutate the active presentation (copy-on-write) and bump the revision.
     pub fn edit<T>(&mut self, f: impl FnOnce(&mut Presentation, &mut Selection) -> Result<T>) -> Result<T> {
+        // The pointer tools change the presentation here without a command; a policy that bars edits refuses them too.
+        if let Some(why) = office_hook::refusal(office_hook::EDIT, self) {
+            return Err(EngineError::Disabled(office_hook::EDIT.into(), why));
+        }
         let st = self.doc_mut()?;
         let mut doc = (*st.doc).clone();
         let mut sel = st.selection.clone();

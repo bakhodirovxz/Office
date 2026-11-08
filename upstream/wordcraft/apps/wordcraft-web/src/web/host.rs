@@ -356,6 +356,8 @@ impl Bridge {
                     let Some(bytes) = bytes(&data) else { return };
                     bridge.read_only.set(bool_field(&data, "readOnly"));
                     bridge.recovered.set(bool_field(&data, "dirty"));
+                    // wordcraft/0152: also the exceptions, Stop Protection and Undo are refused before they run
+                    wordcraft_engine::cmd::protect::set_host_read_only(bridge.read_only.get());
                     bridge.can_download.set(flag(&data, "canDownload"));
                     bridge.can_print.set(flag(&data, "canPrint"));
                     *bridge.name.borrow_mut() = name.clone();

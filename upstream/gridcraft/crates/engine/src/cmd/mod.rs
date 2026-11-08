@@ -61,7 +61,7 @@ pub struct CommandInfo {
 
 impl CommandSpec {
     pub fn info(&self, s: &Session) -> CommandInfo {
-        let e = (self.enabled)(s);
+        let e = (self.enabled)(s).and_then(|()| if s.read_only && refuses_when_read_only(self) { Err("read-only".into()) } else { Ok(()) });
         CommandInfo {
             id: self.id,
             label: self.label,
@@ -71,6 +71,16 @@ impl CommandSpec {
             enabled: e.is_ok(),
             disabled_reason: e.err(),
         }
+    }
+}
+
+/// Whether a read-only session ([`Session::read_only`]) refuses the command: every undoable one (they change the workbook; the
+/// zoom commands only change the view, which is saved with the file but is no edit) and the others that edit it or open an editor.
+pub fn refuses_when_read_only(c: &CommandSpec) -> bool {
+    match c.id {
+        "view.zoom" | "view.zoom100" | "view.zoomToSelection" => false,
+        "edit.undo" | "edit.redo" | "edit.cut" | "edit.beginEdit" | "draw.pen" | "draw.eraser" => true,
+        _ => c.undoable,
     }
 }
 

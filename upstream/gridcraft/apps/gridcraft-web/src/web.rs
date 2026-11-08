@@ -144,7 +144,7 @@ impl eframe::App for WebShell {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.app.ui(ui);
         if let Some(bridge) = &self.bridge
-            && bridge.sync(&mut self.app)
+            && bridge.sync(&mut self.app, ui.ctx())
         {
             // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
             ui.ctx().request_repaint_after(std::time::Duration::from_millis(200));
