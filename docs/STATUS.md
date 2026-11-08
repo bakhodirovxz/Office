@@ -1715,3 +1715,19 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   database. Security rehearsal now: 23 green, 1 partial (S19, Docker), 1 HRM team (S25).
 - **Q3:** a Claude Code session on the HRM server does HRB PR-0 … PR-3 with `docs/phase0/hr-backend-prompt.md`.
 - **Q8:** SSO and desktop sign-in after the pilot gate. **R6** (Sheets/Slides/PDF bridges) after the gate: confirmed.
+
+### Phase 5: real install on the HRM test server (2026-11-08, owner OK)
+- Image `hoshiya-docserver:p5-53da47d5` (services of phase-5 53da47d5, dists of the p5-ro build), tarball 117 MB, SHA-256 `4a6a00a3…`.
+  `install.sh --profile profiles/hrm.env` as root: the old ONLYOFFICE 9.3.1 container is kept as `docs-server-replaced`
+  (stopped); ours runs as `docs-server` on `backend_net` with both names, shared :80, memory 4096 MB, healthy. Through Traefik
+  `doc-editor`'s `api.js` answers 200 (ours); `/ds/files/` 404 from outside; a stranger on the network gets 403. The backend calls no
+  ONLYOFFICE service endpoint (healthcheck, CommandService, ConvertService: none in its code), only the callback and the saved file.
+- First attempt failed and showed two bugs, both fixed and rehearsed (54 of 54): (1) a backend container name with an underscore
+  was refused by the config (`NameSet::is_name`, a5cc8a49 rewritten as 24173606); (2) the rollback then left the old container on
+  no network, so the editor was down about 15 minutes until it was rejoined by hand (same IP, both aliases, healthcheck true from
+  the backend, 200 through Traefik): Docker 29 prints the empty IPAMConfig that compose leaves as "invalid IP", which the state kept
+  as a fixed address (53da47d5). The rehearsal now mirrors both (underscore backend, compose-like rejoin); the old install.sh fails
+  3 of its rollback checks.
+- Not done: a real HRM open/edit/save by a person (docx, xlsx, pptx, pdf, view-only), Android and iOS app. The backend's compose
+  project still defines `docs-server`: a `docker compose up` there brings the old one back (install.sh prints the override; we do
+  not edit HRM files). Rollback: `sudo ./install.sh rollback --etc /opt/docserver` in `~/hoshiya-install`.
