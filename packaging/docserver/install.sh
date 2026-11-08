@@ -14,7 +14,7 @@
 set -euo pipefail
 export MSYS_NO_PATHCONV=1   # Git Bash (the rehearsal on Windows): keep container paths as written
 
-ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=docx,xlsx,pptx,pdf   # the types whose edit configs edit (docs/phase5/r6.md); --edit-types docx keeps the others view-only
+ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=""   # the types whose edit configs edit (docs/phase5/r6.md; default docx,xlsx,pptx,pdf, kept on a rerun); --edit-types docx keeps the others view-only
 FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=""
 OPAQUE=""   # dropin.md D3b: 1 = no frame check (a host page with an opaque origin, the iOS WebView case), 0 = the check; "" = 0, or kept on a rerun
 MIN_FREE_MB=${MIN_FREE_MB:-2048}   # left free on Docker's disk after the image load: the data volume (sessions, 7 days) and the logs grow
@@ -309,6 +309,11 @@ if [ "${#FRAMES[@]}" = 0 ]; then
 fi
 for o in "${FRAMES[@]}"; do ok_origin "$o" || die "frame origin $o is not https://host[:port] (http only for localhost)"; done
 FRAMES_CSV=$(printf '%s\n' "${FRAMES[@]}" | sort -u | paste -sd, -)
+EDIT_NOTE=""
+if [ -z "$EDIT_TYPES" ]; then
+  EDIT_TYPES=docx,xlsx,pptx,pdf
+  if [ "$RERUN" = 1 ]; then k=$(envof "$OLD_NAME" DOCSERVER_EDIT_TYPES); [ -n "$k" ] && EDIT_TYPES=$k && EDIT_NOTE=" (kept from the running container)"; fi
+fi
 # a rerun (an upgrade) keeps the running container's switch unless a flag says otherwise: it is never turned on or off silently
 OPAQUE_NOTE=""
 if [ -z "$OPAQUE" ]; then
@@ -335,7 +340,7 @@ install.sh: plan ($( [ "$RERUN" = 1 ] && echo "rerun: recreate ours" || echo "fi
   image            $IMAGE_SIZE; $DISK
   frame origins    $FRAMES_CSV + $PUBLIC_URL
   opaque origin    $( [ "$OPAQUE" = 1 ] && echo "ALLOWED: any page may frame the editor, the config token's signature is the only gate (--no-allow-opaque-origin turns it off)" || echo "refused (--allow-opaque-origin lets a null page origin in: an iOS WebView)")$OPAQUE_NOTE
-  provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES  secret <redacted, $SECRET_LEN bytes>
+  provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES$EDIT_NOTE  secret <redacted, $SECRET_LEN bytes>
   traefik labels   $(grep -c . <<< "$LABELS" || true)$( [ -z "$LABELS" ] || echo " (service port -> $PUBLIC_PORT)")
   files            $ETC/secrets/{provider-secret,server-secret,converter-secret,audit-key} (0600, uid 10002), $STATE
   defaults         max_document_mb 100, keep_closed_hours 168, keep_abandoned_days 7, history session
