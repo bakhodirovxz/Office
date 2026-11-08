@@ -512,6 +512,12 @@ impl Session {
     }
 
     fn down(&mut self, p: Point, mods: Mods, tol: f64) -> Result<Value> {
+        // A drawing tool shows its shape while the pointer drags; a policy that bars edits refuses it from the press.
+        if !matches!(self.tool.kind, ToolKind::Select)
+            && let Some(why) = crate::office_hook::refusal(crate::office_hook::EDIT, self)
+        {
+            return Err(crate::EngineError::Disabled(crate::office_hook::EDIT.into(), why));
+        }
         if let Some(Drag::Freeform { mode, mut points, .. }) = self.tool.drag.clone() {
             // Next click of a freeform: close on the start point, else add a vertex.
             if points.len() > 2 && points.first().is_some_and(|s| (*s - p).hypot() <= tol * 2.0) {

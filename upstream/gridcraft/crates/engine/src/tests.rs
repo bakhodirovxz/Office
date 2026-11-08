@@ -3371,3 +3371,25 @@ fn new_workbooks_are_times_new_roman_12_on_the_interface_paper() {
     s.prefs.num_locale = gridcraft_core::NumLocale::Ru;
     assert_eq!(s.new_sheet_paper(), "A4");
 }
+
+#[test]
+fn a_read_only_session_refuses_edits_but_allows_view_commands() {
+    let mut s = s();
+    s.execute("cell.set", json!({"cell": "A1", "input": "x"})).unwrap();
+    s.active_mut().unwrap().saved = s.active().unwrap().wb.clone();
+    s.read_only = true;
+    for (id, params) in
+        [("cell.set", json!({"cell": "A1", "input": "y"})), ("edit.undo", json!({})), ("edit.cut", json!({})), ("edit.beginEdit", json!({}))]
+    {
+        assert!(matches!(s.execute(id, params), Err(crate::EngineError::Disabled(..))), "{id}");
+    }
+    assert!(!s.commands().iter().find(|c| c.id == "cell.set").unwrap().enabled);
+    assert_eq!(v(&s, "A1"), gridcraft_core::Value::text("x"));
+    assert!(!s.active().unwrap().is_dirty());
+    s.execute("view.zoom", json!({"percent": 150})).unwrap();
+    s.execute("edit.copy", json!({})).unwrap();
+    s.execute("selection.set", json!({"range": "B2"})).unwrap();
+    assert!(!s.active().unwrap().is_dirty());
+    s.read_only = false;
+    s.execute("cell.set", json!({"cell": "A1", "input": "y"})).unwrap();
+}

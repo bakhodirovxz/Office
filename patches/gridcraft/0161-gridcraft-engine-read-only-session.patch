@@ -1,0 +1,117 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 8 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: a read-only session refuses every command that changes the workbook
+
+docs/phase5/r6.md, owner 2026-11-08: a read-only session must not be changeable at all, not even for one frame. The engine gets
+its own read-only state: `Session::read_only`. While it is set, `execute` refuses every command that changes the workbook before
+it runs (`EngineError::Disabled`): every undoable command except the zoom commands (view only), and Undo, Redo, Cut, Edit Cell
+(F2) and the Pen and Eraser tools. `commands()` reports them disabled. As a last resort inside the same call, a command that
+nevertheless left a clean workbook dirty is put back (workbook, selection, calculation) with a `read-only safety net` warning
+and an error, so no frame ever shows it. A host sets the flag; nothing changes while it is false. Unit test included.
+---
+
+diff --git a/crates/engine/src/cmd/mod.rs b/crates/engine/src/cmd/mod.rs
+index 9404050..c81756e 100644
+--- a/crates/engine/src/cmd/mod.rs
++++ b/crates/engine/src/cmd/mod.rs
+@@ -61,7 +61,7 @@ pub struct CommandInfo {
+ 
+ impl CommandSpec {
+     pub fn info(&self, s: &Session) -> CommandInfo {
+-        let e = (self.enabled)(s);
++        let e = (self.enabled)(s).and_then(|()| if s.read_only && refuses_when_read_only(self) { Err("read-only".into()) } else { Ok(()) });
+         CommandInfo {
+             id: self.id,
+             label: self.label,
+@@ -74,6 +74,16 @@ impl CommandSpec {
+     }
+ }
+ 
++/// Whether a read-only session ([`Session::read_only`]) refuses the command: every undoable one (they change the workbook; the
++/// zoom commands only change the view, which is saved with the file but is no edit) and the others that edit it or open an editor.
++pub fn refuses_when_read_only(c: &CommandSpec) -> bool {
++    match c.id {
++        "view.zoom" | "view.zoom100" | "view.zoomToSelection" => false,
++        "edit.undo" | "edit.redo" | "edit.cut" | "edit.beginEdit" | "draw.pen" | "draw.eraser" => true,
++        _ => c.undoable,
++    }
++}
++
+ /// Params that hold a secret: `password`, or a name ending in `Password`.
+ pub fn is_secret_param(key: &str) -> bool {
+     key == "password" || key.ends_with("Password")
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 80098ed..102fcc4 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -278,6 +278,8 @@ pub struct Session {
+     /// Review › Notes › Show All Notes: every note is displayed. An application display setting
+     /// (like Excel's comment indicator option), so it's not saved in the file.
+     pub show_all_notes: bool,
++    /// The workbook is open read-only (a host session): [`Session::execute`] refuses every command that changes it ([`cmd::refuses_when_read_only`]).
++    pub read_only: bool,
+ }
+ 
+ impl Session {
+@@ -369,7 +371,12 @@ impl Session {
+         if let Err(why) = (spec.enabled)(self) {
+             return Err(EngineError::Disabled(id.to_string(), why));
+         }
++        if self.read_only && cmd::refuses_when_read_only(spec) {
++            return Err(EngineError::Disabled(id.to_string(), "read-only".into()));
++        }
+         let before = self.active().map(|d| (d.uid, d.wb.clone(), d.selection.clone()));
++        // A clean workbook that a command nevertheless changed (one `refuses_when_read_only` missed) is put back below.
++        let clean_before = self.read_only && self.active().is_some_and(|d| !d.is_dirty());
+         let params = if params.is_null() { Json::Object(Default::default()) } else { params };
+         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (spec.run)(self, &params)));
+         let result = match result {
+@@ -388,6 +395,17 @@ impl Session {
+                 return Err(EngineError::Internal(id.to_string(), msg));
+             }
+         };
++        if clean_before
++            && let Some((uid, wb, sel)) = &before
++            && let Some(d) = self.docs.iter_mut().find(|d| d.uid == *uid)
++            && d.is_dirty()
++        {
++            log::warn!("read-only safety net: {id} changed the workbook");
++            d.wb = wb.clone();
++            d.selection = sel.clone();
++            d.calc.rebuild(&d.wb);
++            return Err(EngineError::Disabled(id.to_string(), "read-only".into()));
++        }
+         if spec.journal && result.is_ok() {
+             self.journal.push((id.to_string(), cmd::journal_params(&params)));
+             if self.journal.len() > 10_000 {
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 94bfe25..5ada490 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -3371,3 +3371,25 @@ fn new_workbooks_are_times_new_roman_12_on_the_interface_paper() {
+     s.prefs.num_locale = gridcraft_core::NumLocale::Ru;
+     assert_eq!(s.new_sheet_paper(), "A4");
+ }
++
++#[test]
++fn a_read_only_session_refuses_edits_but_allows_view_commands() {
++    let mut s = s();
++    s.execute("cell.set", json!({"cell": "A1", "input": "x"})).unwrap();
++    s.active_mut().unwrap().saved = s.active().unwrap().wb.clone();
++    s.read_only = true;
++    for (id, params) in
++        [("cell.set", json!({"cell": "A1", "input": "y"})), ("edit.undo", json!({})), ("edit.cut", json!({})), ("edit.beginEdit", json!({}))]
++    {
++        assert!(matches!(s.execute(id, params), Err(crate::EngineError::Disabled(..))), "{id}");
++    }
++    assert!(!s.commands().iter().find(|c| c.id == "cell.set").unwrap().enabled);
++    assert_eq!(v(&s, "A1"), gridcraft_core::Value::text("x"));
++    assert!(!s.active().unwrap().is_dirty());
++    s.execute("view.zoom", json!({"percent": 150})).unwrap();
++    s.execute("edit.copy", json!({})).unwrap();
++    s.execute("selection.set", json!({"range": "B2"})).unwrap();
++    assert!(!s.active().unwrap().is_dirty());
++    s.read_only = false;
++    s.execute("cell.set", json!({"cell": "A1", "input": "y"})).unwrap();
++}

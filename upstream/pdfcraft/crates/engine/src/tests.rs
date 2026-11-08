@@ -6144,3 +6144,25 @@ fn undo_never_makes_an_unsaved_document_clean() {
     s.undo(new).unwrap();
     assert!(!s.get(new).unwrap().dirty, "once saved, undo back to the saved state is clean");
 }
+
+#[test]
+fn view_only_refuses_every_change_and_keeps_viewing() {
+    let (mut s, id) = session_with(3);
+    s.apply(id, Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap();
+    s.set_view_only(id, Some("read-only".into()));
+    let d = s.get(id).unwrap();
+    assert!(!d.editable() && !d.allows_modification() && !d.allows_annotation() && !d.allows_form_filling());
+    let before = d.can_undo().map(str::to_owned);
+    assert!(before.is_some());
+    assert!(matches!(s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }), Err(EditError::ReadOnly(_))));
+    assert!(matches!(s.undo(id), Err(EditError::ReadOnly(_))));
+    assert!(matches!(s.redo(id), Err(EditError::ReadOnly(_))));
+    assert!(matches!(s.revert(id), Err(EditError::ReadOnly(_))));
+    let d = s.get(id).unwrap();
+    assert_eq!(d.can_undo().map(str::to_owned), before, "nothing was undone");
+    assert!(d.can_redo().is_none());
+    assert_eq!(d.info.pages.len(), 3, "still readable");
+    s.set_view_only(id, None);
+    assert!(s.get(id).unwrap().editable());
+    s.undo(id).unwrap();
+}

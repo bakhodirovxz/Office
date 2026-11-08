@@ -133,8 +133,8 @@ async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
 /// - `pdfcraft:ready` (to the parent): the app is listening; send files now.
 /// - `pdfcraft:open` (from the parent): `{ name, bytes }`, where `bytes` is an `ArrayBuffer` or
 ///   `Uint8Array` holding a PDF. It replaces the document the parent opened before (other tabs
-///   stay). `readOnly: true` opens it read only: an edit is reverted at once (with a message) and
-///   nothing is sent as a save. `canDownload: false` withholds Save As and the browser downloads
+///   stay). `readOnly: true` opens it view only: the engine refuses every change, so nothing
+///   is edited and nothing is sent as a save. `canDownload: false` withholds Save As and the browser downloads
 ///   (exports, copies), `canPrint: false` Print; both default to true.
 /// - `pdfcraft:opened` (to the parent): `{ name }`, the document is shown.
 /// - `pdfcraft:requestSave` (from the parent): save that document now, as File › Save does.
@@ -143,6 +143,9 @@ async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
 ///   the parent has answered every save with `pdfcraft:saved`.
 /// - `pdfcraft:saved` (from the parent): `{ ok }`, the answer to one `pdfcraft:save`, in order.
 ///   `ok: false` marks the document unsaved again.
+/// - `pdfcraft:autosave` (to the parent): `{ name, bytes }` every 30 s while the document has unsaved changes
+///   (none when clean, read only, or while a save waits for its answer). A recovery copy, not a save: the
+///   document stays unsaved and `bytes` is a transferred `ArrayBuffer`.
 /// - `pdfcraft:dirty` (to the parent): `{ dirty }` whenever unsaved work appears or goes away.
 /// - `pdfcraft:failed` (to the parent): `{ error }` when the app couldn't start or open the file.
 ///
@@ -178,7 +181,12 @@ mod host {
         /// Saves sent that the parent hasn't answered with `pdfcraft:saved` yet, and the answers since the last frame.
         pending: Rc<Cell<u32>>,
         acks: Rc<RefCell<Vec<bool>>>,
+        /// When the unsaved document was last handed over by the periodic autosave (`None`: clean, read only or a save pending).
+        last_autosave: Rc<Cell<Option<f64>>>,
     }
+
+    /// Period of `pdfcraft:autosave` while the document has unsaved changes.
+    const AUTOSAVE_MS: f64 = 30_000.0;
 
     impl Bridge {
         /// `None` when the page isn't framed (there is no parent to talk to), or when the parent
@@ -209,6 +217,7 @@ mod host {
                 save_requested: Rc::default(),
                 pending: Rc::default(),
                 acks: Rc::default(),
+                last_autosave: Rc::default(),
             })
         }
 
@@ -323,6 +332,9 @@ mod host {
                 {
                     app.close_tab(i);
                 }
+                // View only, from the first frame this document is shown: the engine refuses every change, so
+                // nothing the user does can alter it (the revert below is only a safety net).
+                app.session.set_view_only(id, self.read_only.get().then(|| "opened read-only by the host".to_string()));
                 let name = self.name.borrow().clone();
                 self.send(&[("type", "pdfcraft:opened".into()), ("name", name.as_str().into())]);
             }
@@ -345,19 +357,60 @@ mod host {
             {
                 app.save_view(i, SaveTarget::InPlace);
             }
-            // Read only: an edit of the parent's document is taken back (File › Revert).
+            // Read only: the engine refuses every change (`set_view_only`), so this should never fire.
+            // Last-resort safety net: an edit of the parent's document is taken back (File › Revert).
             if self.read_only.get()
                 && let Some(i) = index
                 && app.active == Some(i)
                 && let Some(id) = self.doc.get()
                 && app.session.get(id).is_some_and(|d| d.dirty)
             {
+                eframe::web_sys::console::warn_1(
+                    &format!("read-only safety net: the read-only document {:?} became dirty and was reverted", self.name.borrow()).into(),
+                );
                 app.revert_active();
                 app.notify_fmt("{name} is read-only", &[("name", &self.name.borrow())]);
             }
+            self.autosave(ctx, app);
             if !self.can_print.get() && app.dialog == Some(Dialog::Print) {
                 app.dialog = None;
                 app.notify_tr("Not allowed");
+            }
+        }
+    }
+
+    impl Bridge {
+        /// Every `AUTOSAVE_MS` while the document is dirty (not read only, no save waiting for its answer): hand the
+        /// parent a recovery copy. Not a save: the document stays unsaved, nothing downloads, nothing counts as pending.
+        fn autosave(&self, ctx: &egui::Context, app: &PdfCraftApp) {
+            let id = self.doc.get().filter(|id| app.session.get(*id).is_some_and(|d| d.dirty));
+            let Some(id) = id.filter(|_| !self.read_only.get() && self.pending.get() == 0) else {
+                self.last_autosave.set(None);
+                return;
+            };
+            let now = js_sys::Date::now();
+            let last = self.last_autosave.get().unwrap_or(now);
+            if now - last < AUTOSAVE_MS {
+                self.last_autosave.set(Some(last));
+                // An idle page draws no frames: wake up when the period is over.
+                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+                return;
+            }
+            // A failed attempt is tried again next period.
+            self.last_autosave.set(Some(now));
+            ctx.request_repaint_after(std::time::Duration::from_millis(AUTOSAVE_MS as u64 + 1));
+            match app.session.save_bytes(id) {
+                Ok(bytes) => {
+                    let buffer = js_sys::Uint8Array::from(bytes.as_slice()).buffer();
+                    let name = self.name.borrow().clone();
+                    let sent = message(&[("type", "pdfcraft:autosave".into()), ("name", name.as_str().into()), ("bytes", buffer.clone().into())])
+                        .ok_or_else(|| "couldn't build the message".to_string())
+                        .and_then(|m| self.post(&m, Some(&buffer)));
+                    if let Err(e) = sent {
+                        eframe::web_sys::console::warn_1(&format!("PdfCraft: autosave not sent: {e}").into());
+                    }
+                }
+                Err(e) => eframe::web_sys::console::warn_1(&format!("PdfCraft: autosave failed: {e}").into()),
             }
         }
     }
