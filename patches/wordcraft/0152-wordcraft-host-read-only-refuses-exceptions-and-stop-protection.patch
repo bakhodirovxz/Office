@@ -1,0 +1,85 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 8 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft: a document the web host opened read only refuses every change before it runs, the exceptions too
+
+Owner 2026-11-08: a read-only session must not be changeable at all. The Docs bridge (0127) holds a read-only host document
+under Restrict Editing's read-only protection, which refuses edits before they run, but two paths stayed open: ranges everyone
+may edit (w:permStart edGrp="everyone", the exceptions) took typing in a view session, and Stop Protection, Undo and Redo are
+always allowed by protection (the bridge put protection back only after the frame, and the settings change marked the
+document dirty). protect::set_host_read_only (per thread), set by wordcraft:open {readOnly}, refuses every command but the
+file commands before it runs.
+---
+
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index 8159ae9..d1e1d21 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -277,6 +277,8 @@ impl Bridge {
+                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
+                     let Some(bytes) = bytes(&data) else { return };
+                     bridge.read_only.set(bool_field(&data, "readOnly"));
++                    // wordcraft/0152: also the exceptions, Stop Protection and Undo are refused before they run
++                    wordcraft_engine::cmd::protect::set_host_read_only(bridge.read_only.get());
+                     bridge.can_download.set(flag(&data, "canDownload"));
+                     bridge.can_print.set(flag(&data, "canPrint"));
+                     *bridge.name.borrow_mut() = name.clone();
+diff --git a/crates/engine/src/cmd/protect.rs b/crates/engine/src/cmd/protect.rs
+index b77a6f9..082b617 100644
+--- a/crates/engine/src/cmd/protect.rs
++++ b/crates/engine/src/cmd/protect.rs
+@@ -202,6 +202,17 @@ const CONTROL_INSERTS: [&str; 9] = [
+     "developer.repeatingSection",
+ ];
+ 
++/// office overlay (wordcraft/0152): the web host opened the document read only (`wordcraft:open {readOnly}`). Then every change is
++/// refused before it runs, even in the exceptions (ranges everyone may edit), and Stop Protection, Undo and Redo too; only the
++/// file commands stay (the host bridge refuses the saves itself). Per thread: the web app runs its session on one.
++pub fn set_host_read_only(on: bool) {
++    HOST_READ_ONLY.set(on);
++}
++
++thread_local! {
++    static HOST_READ_ONLY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
++}
++
+ /// Commands always allowed in a protected document: protection itself, file commands, undo.
+ fn always_allowed(id: &str) -> bool {
+     id == "review.restrict" || id.starts_with("file.") || id == "edit.undo" || id == "edit.redo"
+@@ -211,6 +222,9 @@ fn always_allowed(id: &str) -> bool {
+ /// lets it run as long as it only changes the exceptions (checked afterwards with
+ /// [`outside_unchanged`]).
+ pub(crate) fn check_before(s: &Session, id: &str, params: &Value) -> Result<bool, CmdError> {
++    if HOST_READ_ONLY.get() && !id.starts_with("file.") {
++        return Err(CmdError::Disabled(format!("{id}: the document is protected (read only)")));
++    }
+     let Some(mode) = s.doc.settings.protection.as_deref() else { return Ok(false) };
+     if always_allowed(id) {
+         return Ok(false);
+@@ -550,6 +564,26 @@ mod tests {
+         assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"));
+     }
+ 
++    /// wordcraft/0152: a document the web host opened read only refuses edits in the exceptions too, and Stop Protection.
++    #[test]
++    fn host_read_only_refuses_the_exceptions_and_stop_protection() {
++        let mut s = Session::new(Document::from_text("Locked intro.\nFill in here.\nLocked end."));
++        select(&mut s, "Fill in here.");
++        s.run("review.restrict", &json!({"exception": "add"})).unwrap();
++        s.run("review.restrict", &json!({"mode": "readOnly"})).unwrap();
++        set_host_read_only(true);
++        let before = s.doc.plain_text(StoryRef::Body);
++        select(&mut s, "here");
++        assert!(s.run("text.insert", &json!({"text": "there"})).is_err());
++        assert!(s.run("review.restrict", &json!({"mode": "none"})).is_err());
++        assert!(s.run("edit.undo", &json!({})).is_err());
++        assert_eq!(s.doc.plain_text(StoryRef::Body), before);
++        assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"));
++        set_host_read_only(false);
++        s.run("text.insert", &json!({"text": "there"})).unwrap();
++        assert!(s.doc.plain_text(StoryRef::Body).contains("Fill in there."));
++    }
++
+     /// Table, row and cell formatting reaches protected text, so an exception inside one cell
+     /// doesn't let table commands run there change the table, the row or the cell (#1327).
+     #[test]

@@ -202,6 +202,17 @@ const CONTROL_INSERTS: [&str; 9] = [
     "developer.repeatingSection",
 ];
 
+/// office overlay (wordcraft/0152): the web host opened the document read only (`wordcraft:open {readOnly}`). Then every change is
+/// refused before it runs, even in the exceptions (ranges everyone may edit), and Stop Protection, Undo and Redo too; only the
+/// file commands stay (the host bridge refuses the saves itself). Per thread: the web app runs its session on one.
+pub fn set_host_read_only(on: bool) {
+    HOST_READ_ONLY.set(on);
+}
+
+thread_local! {
+    static HOST_READ_ONLY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
 /// Commands always allowed in a protected document: protection itself, file commands, undo.
 fn always_allowed(id: &str) -> bool {
     id == "review.restrict" || id.starts_with("file.") || id == "edit.undo" || id == "edit.redo"
@@ -211,6 +222,9 @@ fn always_allowed(id: &str) -> bool {
 /// lets it run as long as it only changes the exceptions (checked afterwards with
 /// [`outside_unchanged`]).
 pub(crate) fn check_before(s: &Session, id: &str, params: &Value) -> Result<bool, CmdError> {
+    if HOST_READ_ONLY.get() && !id.starts_with("file.") {
+        return Err(CmdError::Disabled(format!("{id}: the document is protected (read only)")));
+    }
     let Some(mode) = s.doc.settings.protection.as_deref() else { return Ok(false) };
     if always_allowed(id) {
         return Ok(false);
@@ -548,6 +562,26 @@ mod tests {
             let _ = s.run("edit.undo", &json!({}));
         }
         assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"));
+    }
+
+    /// wordcraft/0152: a document the web host opened read only refuses edits in the exceptions too, and Stop Protection.
+    #[test]
+    fn host_read_only_refuses_the_exceptions_and_stop_protection() {
+        let mut s = Session::new(Document::from_text("Locked intro.\nFill in here.\nLocked end."));
+        select(&mut s, "Fill in here.");
+        s.run("review.restrict", &json!({"exception": "add"})).unwrap();
+        s.run("review.restrict", &json!({"mode": "readOnly"})).unwrap();
+        set_host_read_only(true);
+        let before = s.doc.plain_text(StoryRef::Body);
+        select(&mut s, "here");
+        assert!(s.run("text.insert", &json!({"text": "there"})).is_err());
+        assert!(s.run("review.restrict", &json!({"mode": "none"})).is_err());
+        assert!(s.run("edit.undo", &json!({})).is_err());
+        assert_eq!(s.doc.plain_text(StoryRef::Body), before);
+        assert_eq!(s.doc.settings.protection.as_deref(), Some("readOnly"));
+        set_host_read_only(false);
+        s.run("text.insert", &json!({"text": "there"})).unwrap();
+        assert!(s.doc.plain_text(StoryRef::Body).contains("Fill in there."));
     }
 
     /// Table, row and cell formatting reaches protected text, so an exception inside one cell

@@ -1366,6 +1366,31 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   data root and a tarball load there (the branch ran in Git Bash: Docker's VM, not measurable), uid 10002 file modes, compose's
   reaction to the printed override, a real HRB save, the iOS opaque-origin case (no macOS/iOS).
 
+### Phase 5 R6 follow-up: read-only blocked before it shows, 30 s autosave for Sheets, Slides and PDF (2026-11-08; branch `p5-ro`, owner request)
+- Done: [docs/phase5/r6.md](phase5/r6.md) section 5. A read-only session can no longer change the document even for one frame: Sheets
+  (gridcraft 0161 engine `Session::read_only` refuses before running and reports the commands disabled, 0162 no cell editor, no drag,
+  no header/footer or text box editor), Slides (deckcraft 0161 `Session::edit` and the drawing tools ask the command hook, notes/outline
+  fields inert; 0162 the host policy refuses every change), PDF (pdfcraft 0123 engine view-only document: `editable()` false, `apply`/undo/
+  redo/revert/unlock refuse; 0124 set before the first draw), Docs (wordcraft 0152: the read-only protection of 0127 let ranges everyone
+  may edit take typing and always allowed Stop Protection and Undo; now refused before they run). The R6 per-frame take-back stays only
+  as a safety net that logs `read-only safety net`; no test saw it fire. Autosave: gridcraft 0163, deckcraft 0162, pdfcraft 0124 post
+  `<prefix>:autosave` every 30 s while dirty, not read-only and no save pending (Docs' logic; the wrapper and server unchanged).
+- Measured: `ci.sh docserver`: fmt, clippy, 97 cargo tests passed (unchanged), Playwright docserver 24 passed 1 skipped, bridge-sheets
+  47 passed (was 7), bridge-slides 32 passed (was 11), bridge-pdf 35 passed (was 6), bridge-docs 10 passed (was 8; case 10 failed in the
+  CI run on the status bar's refusal text being counted as a pixel change, the spec now compares the frame above the status bar and the
+  whole spec passed on rerun). Every read-only input path has an editable control case that does change pixels and dirty. Engine tests:
+  gridcraft `a_read_only_session_refuses_edits_but_allows_view_commands`, deckcraft `office_hook` 4/4 (1 new), pdfcraft
+  `view_only_refuses_every_change_and_keeps_viewing`, wordcraft `protect::tests` 23/23 (1 new). `verify-queue.sh` all OK (wordcraft 31,
+  gridcraft 62, deckcraft 34, pdfcraft 19); `cargo xt register check` 146 rows OK; `cargo xt i18n check-stale` OK (no new UI strings).
+  Web wasm brotli (`ci.sh sizes` exit 0, no budget raised): Sheets 4,961,381 (+1,693 since R6; headroom 5,390), Slides 9,519,321
+  (+3,488; headroom 4,896), PDF 9,576,628 (+7,578; headroom 22,834), Docs 9,858,596 (headroom 13,052). Sheets and Slides are now within
+  6 KB of their budgets: the next code added to either will need a budget raise under the web/budgets.toml rule.
+- Not checked: browser cases for the Sheets comment, header/footer and text box editors, the Slides outline view, drawing-tool preview and
+  side-pane drafts (alt text, SmartArt lines, comment replies still take typed text into the field; nothing reaches the presentation), PDF
+  page operations by menu, bookmarks, attachments, properties, security, redaction, OCR, flatten, Combine and links (all end in the refused
+  `apply` or a false `allows_*`), Docs Stop Protection in a browser (engine test only); the docker rehearsal; real HRM files. Docs still
+  autosaves while a save is pending (the three new bridges skip that period).
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
