@@ -12,6 +12,9 @@ use serde_json::Value;
 
 use crate::{Result, Session};
 
+/// The UI-level name offered to the hook before a change that runs no command (a pointer gesture drawing or dragging a shape).
+pub const EDIT: &str = "doc.edit";
+
 /// What a policy can do.
 pub trait CommandHook: Send + Sync {
     /// A reason to refuse `id`, or `None` to allow it. Asked before the command runs, and by the UI to grey a control out.
