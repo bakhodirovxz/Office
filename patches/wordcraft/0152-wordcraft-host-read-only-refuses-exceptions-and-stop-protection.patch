@@ -12,20 +12,20 @@ file commands before it runs.
 ---
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 8159ae9..d1e1d21 100644
+index c2fbad36..6692f4a3 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -277,6 +277,8 @@ impl Bridge {
-                     let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| DEFAULT_NAME.to_string());
+@@ -346,6 +346,8 @@ impl Bridge {
                      let Some(bytes) = bytes(&data) else { return };
                      bridge.read_only.set(bool_field(&data, "readOnly"));
+                     bridge.recovered.set(bool_field(&data, "dirty"));
 +                    // wordcraft/0152: also the exceptions, Stop Protection and Undo are refused before they run
 +                    wordcraft_engine::cmd::protect::set_host_read_only(bridge.read_only.get());
                      bridge.can_download.set(flag(&data, "canDownload"));
                      bridge.can_print.set(flag(&data, "canPrint"));
                      *bridge.name.borrow_mut() = name.clone();
 diff --git a/crates/engine/src/cmd/protect.rs b/crates/engine/src/cmd/protect.rs
-index b77a6f9..082b617 100644
+index b77a6f9d..082b617a 100644
 --- a/crates/engine/src/cmd/protect.rs
 +++ b/crates/engine/src/cmd/protect.rs
 @@ -202,6 +202,17 @@ const CONTROL_INSERTS: [&str; 9] = [
