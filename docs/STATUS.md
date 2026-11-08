@@ -1425,7 +1425,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   our pages is the WP17 device check. The installer path (`rehearse-dropin.sh` file scenario, new `opaque` step: plan line, container
   env, headers through Traefik, a rerun keeps it, `--no-allow-opaque-origin` undoes it) is written but not run: another agent's
   rehearsal held the shared `dropin-*` names and the `hoshiya-docserver:rehearsal` tag. Found on the way: `--edit-types` is not kept
-  by a rerun (it goes back to the default); the switch is.
+  by a rerun (it goes back to the default); the switch is. Fixed after the merge: a rerun keeps it too (rehearsal check).
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every
