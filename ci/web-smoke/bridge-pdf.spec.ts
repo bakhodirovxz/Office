@@ -236,6 +236,9 @@ const CASES: Case[] = [
   { name: 'Delete pages / Rotate pages in the Edit list', setup: (p) => toolsList(p, 'edit'), input: async (p) => { await click(p, 59, 271); await p.waitForTimeout(500); await click(p, 59, 351); } },
   { name: 'form fields: type in a text field, tick the check box, pick a radio button', transient: true, /* the refusal toast sits over the page */ file: FORM, clip: { x: 476, y: 172, width: 394, height: 528 }, setup: async (p) => { await click(p, 959, 115); for (let i = 0; i < 3; i++) { await click(p, 1085, 683); await p.waitForTimeout(400); } await p.waitForTimeout(800); }, input: async (p) => { await click(p, 673, 222); await type(p, 'abc'); await p.keyboard.press('Enter'); await click(p, 510, 280); await click(p, 563, 333); await click(p, 673, 450); await type(p, 'q'); await p.keyboard.press('Enter'); } },
   { name: 'file dropped on the canvas', input: (p) => dropFile(p, 500, 400) },
+  // side panels (patch 0123 holds `editable()` false: the panel offers no editor, or refuses with its own message)
+  { name: 'Bookmarks panel: double-click a bookmark and type a new name', transient: true, clip: { x: 746, y: 203, width: 310, height: 40 }, input: async (p) => { await p.mouse.dblclick(830, 215); await p.waitForTimeout(400); await type(p, 'ZZZ'); await p.keyboard.press('Enter'); } },
+  { name: 'Prepare a form: Text field tool, click the page and type', transient: true, setup: async (p) => { await click(p, 120, 631); await p.waitForTimeout(1200); }, input: async (p) => { await click(p, 120, 654); await p.waitForTimeout(500); await click(p, 500, 400); await p.waitForTimeout(500); await type(p, 'ZZ'); await p.keyboard.press('Escape'); } },
 ];
 
 async function readOnlyAttempt(page: Page, c: Case) {
@@ -272,7 +275,7 @@ for (const [i, c] of CASES.entries()) {
 }
 
 // the same inputs in an editable session DO change the document (so the read-only checks above are not vacuous)
-const CONTROL = [1, 2, 3, 4, 7, 8, 12, 17];
+const CONTROL = [1, 2, 3, 4, 7, 8, 12, 17, 19, 20];
 for (const n of CONTROL) {
   const c = CASES[n - 1];
   test(`8.${n} control, editable: ${c.name} makes the document dirty`, async ({ page }) => {

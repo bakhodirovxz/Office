@@ -59,6 +59,11 @@ for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
 for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_TRUSTED_PROXIES DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
+case "${DOCSERVER_ALLOW_OPAQUE_ORIGIN:-0}" in   # dropin.md D3b: off unless the installer's --allow-opaque-origin set it
+  1 | true | yes) OPAQUE=true ;;
+  0 | false | no | "") OPAQUE=false ;;
+  *) die "DOCSERVER_ALLOW_OPAQUE_ORIGIN must be 1 or 0" ;;
+esac
 PUB=${DOCSERVER_PUBLIC_URL%/}
 # the public origin frames itself: a mobile WebView with baseUrl = this server has it as its page origin
 FRAMES="${DOCSERVER_FRAME_ORIGINS:+$DOCSERVER_FRAME_ORIGINS,}$PUB"
@@ -87,6 +92,7 @@ internal_url = $(q "$DOCSERVER_INTERNAL_URL")
 max_document_mb = ${DOCSERVER_MAX_DOCUMENT_MB:-100}
 keep_closed_hours = ${DOCSERVER_KEEP_CLOSED_HOURS:-168}
 keep_abandoned_days = ${DOCSERVER_KEEP_ABANDONED_DAYS:-7}
+allow_opaque_origin = $OPAQUE
 
 [[docserver.providers]]
 name = $(q "$P")

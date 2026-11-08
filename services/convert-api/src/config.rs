@@ -228,8 +228,11 @@ impl NameSet {
     pub fn is_name(s: &str) -> bool {
         s.len() <= 253
             && s.starts_with(|c: char| c.is_ascii_alphabetic())
-            && s.split('.')
-                .all(|l| !l.is_empty() && l.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_'))
+            && s.split('.').all(|l| {
+                !l.is_empty()
+                    && l.bytes()
+                        .all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_')
+            })
     }
 
     pub fn start(names: Vec<String>) -> NameSet {

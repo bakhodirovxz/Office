@@ -29,7 +29,7 @@ const PPTX = path.join(ROOT, 'domains/slides/tests/translit-fixtures/pptx/01-sha
 const PDF = path.join(ROOT, 'docs/phase4/wp23/fixtures/namuna-hisobot.pdf');   // files/7
 
 const free = () => new Promise<number>((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = (s.address() as net.AddressInfo).port; s.close(() => ok(p)); }); });
-let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server;
+let dir: string, ds: ChildProcess, hrm: ChildProcess, browser: Browser, dsLog = '', stray: http.Server, launchArgs: string[] = [];
 let dsPort: number, hrmPort: number, strayPort: number, intPort: number;
 let DS: string, HOST: string;
 // WP9: synthetic `_hrm_*` documents (scripts/hrm-bookmarks), files/3.. on the fake backend
@@ -111,7 +111,8 @@ test.beforeAll(async () => {
   stray = http.createServer((_, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<!doctype html><iframe id="w" src="${DS}/ds/editor#o=${encodeURIComponent(`http://127.0.0.1:${strayPort}`)}"></iframe>`));
   await new Promise<void>((ok) => stray.listen(strayPort, '127.0.0.1', ok));
 
-  browser = await chromium.launch({ args: [`--ignore-certificate-errors-spki-list=${pin}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+  launchArgs = [`--ignore-certificate-errors-spki-list=${pin}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'];
+  browser = await chromium.launch({ args: launchArgs });
 });
 test.afterAll(async () => {
   await browser?.close();
@@ -122,8 +123,8 @@ test.afterAll(async () => {
 
 test.beforeEach(() => { fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true }); });
 
-async function open(): Promise<{ ctx: BrowserContext; page: Page; problems: string[] }> {
-  const ctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+async function open(b: Browser = browser): Promise<{ ctx: BrowserContext; page: Page; problems: string[] }> {
+  const ctx = await b.newContext({ viewport: { width: 1200, height: 800 } });
   const page = await ctx.newPage();
   const problems: string[] = [];
   page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
@@ -1063,5 +1064,96 @@ test('plugins in the wrapper (re-check): M2b, M8, M10, S1, S2, F2, F5, F7 are bl
     ds.kill(); await new Promise((ok) => ds.once('exit', ok));
     provLines = [];
     await startDs([]);
+  }
+});
+
+// docs/phase5/dropin.md D3b: a host page with an opaque (`null`) origin, Chromium standing in for the iOS WKWebView case (inline HTML
+// whose origin is opaque). The host page is a `data:` document (opaque, no sandbox flags: closest to a WebView page) and the same page
+// in a sandboxed frame (`allow-scripts allow-same-origin`: a data: document stays opaque, and the nested wrapper keeps its own origin).
+// Off (the default): the browser refuses to frame the wrapper (frame-ancestors), nothing reaches the server, the editor stays empty.
+// On (`allow_opaque_origin = true`): the editor opens, saves and closes; the config message's origin is "null".
+test('D3b opaque host origin: refused by default, opens and saves with allow_opaque_origin', async () => {
+  const cfg = await (await fetch(`http://127.0.0.1:${hrmPort}/files/1/editor-config`)).json();
+  const hostHtml = '<!doctype html><meta charset="utf-8"><body data-state="loading" style="margin:0;height:100vh"><div id="ph"></div><script>' +
+    `var cfg = ${JSON.stringify(cfg)};` +
+    'var set = function (s) { document.body.dataset.state = s; };' +
+    'cfg.events = { onDocumentReady: function () { set("ready"); }, onDocumentStateChange: function (e) { window.__dirty = e.data; },' +
+    ' onSaved: function () { set("saved"); }, onClosed: function (e) { window.__closed = e.data; set("closed"); }, onError: function (e) { window.__error = e.data; set("error"); } };' +
+    `var s = document.createElement("script"); s.src = ${JSON.stringify(DS + '/web-apps/apps/api/documents/api.js')};` +
+    's.onload = function () { window.__origin = location.origin; window.__editor = new DocsAPI.DocEditor("ph", cfg); }; document.head.appendChild(s);' +
+    '</' + 'script>';
+  const dataUrl = 'data:text/html;base64,' + Buffer.from(hostHtml).toString('base64');
+  const variants: [string, string][] = [
+    ['data: frame', `<iframe id="h" allow="clipboard-read; clipboard-write; fullscreen" src="${dataUrl}" style="border:0;width:1150px;height:760px"></iframe>`],
+    ['sandboxed frame', `<iframe id="h" sandbox="allow-scripts allow-same-origin" allow="clipboard-read; clipboard-write; fullscreen" src="${dataUrl}" style="border:0;width:1150px;height:760px"></iframe>`],
+  ];
+  const restart = async (extra: string[]) => {
+    ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+    await startDs(extra);
+  };
+  const before = extraDs;
+  // the outer page is the stray site's (loopback, so Chromium's private-network rule does not refuse api.js); only the frame in it is opaque
+  const OUTER = `http://127.0.0.1:${strayPort}/opaque-host`;
+  // A data: document is no secure context, so Chromium's private-network rule refuses its loads from our loopback server; a real
+  // server is not on loopback, so this browser turns that rule off (and nothing else)
+  const pna = await chromium.launch({ args: [...launchArgs, '--disable-features=BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,LocalNetworkAccessChecks'] });
+  const run = async (html: string) => {
+    const { ctx, page, problems } = await open(pna);
+    await page.route(OUTER, (r) => r.fulfill({ contentType: 'text/html', body: `<!doctype html><body style="margin:0">${html}</body>` }));
+    const refusals: string[] = [], created: string[] = [];
+    page.on('console', (m) => { if (/frame-ancestors|Refused to (frame|display)/i.test(m.text())) refusals.push(m.text()); });
+    page.on('request', (r) => { if (r.url() === `${DS}/ds/session`) created.push(r.postData() ?? ''); });
+    await page.goto(OUTER);
+    const host = () => page.frames().find((f) => f.url().startsWith('data:'))!;
+    await expect.poll(() => host()?.evaluate(() => (window as any).__origin ?? null), { timeout: 15_000 }).toBe('null');
+    return { ctx, page, problems, refusals, created, host };
+  };
+  try {
+    for (const [name, html] of variants) {
+      // off: as today. The wrapper is refused by the browser, so no session is asked for and no error reaches the host page
+      fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });
+      const off = await run(html);
+      await expect.poll(() => off.refusals.length, { timeout: 15_000 }).toBeGreaterThan(0);
+      await off.page.waitForTimeout(2000);
+      expect(off.created, name).toEqual([]);
+      expect(sessions(), name).toEqual([]);
+      expect(await off.host().evaluate(() => document.body.dataset.state), name).toBe('loading');
+      expect(off.page.frames().some((f) => f.url().includes('/docs/')), name).toBe(false);
+      console.log(`D3b off, ${name}: ${off.refusals[0]}`);
+      await off.ctx.close();
+    }
+    await restart([...before, 'allow_opaque_origin = true']);
+    for (const [name, html] of variants) {
+      fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });
+      const on = await run(html);
+      const st = () => on.host().evaluate(() => document.body.dataset.state);
+      await expect.poll(st, { timeout: 90_000 }).toMatch(/ready|error/);
+      expect(await st(), JSON.stringify(await on.host().evaluate(() => (window as any).__error ?? null))).toBe('ready');
+      expect(on.refusals, name).toEqual([]);
+      expect(on.created.map((c) => JSON.parse(c).origin), name).toEqual(['null']);
+      const editor = on.page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+      await expect(editor.locator('canvas').first()).toBeVisible();
+      const [sdir] = sessions();
+      const hrm0 = await hrmState();
+      await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+      await on.page.keyboard.type('x');
+      await expect.poll(() => on.host().evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+      await on.host().evaluate(() => (window as any).__editor.requestSave());
+      await expect.poll(st, { timeout: 30_000 }).toBe('saved');
+      expect(record(sdir).versions.map((v: any) => v.n), name).toEqual([1, 2]);
+      const got = (await hrmState()).received.slice(hrm0.received.length);
+      expect(got.map((r) => r.status), name).toContain(6);
+      expect(got.at(-1)!.sha256, name).toBe(sha(path.join(sdir, 'v2.bin')));
+      const tClose = Date.now();
+      await on.host().evaluate(() => (window as any).__editor.close());
+      await expect.poll(st, { timeout: 30_000 }).toBe('closed');
+      console.log(`D3b on, ${name}: close -> onClosed ${Date.now() - tClose} ms`);
+      expect(await on.host().evaluate(() => (window as any).__closed.status), name).toBe(2);
+      expect(on.problems, name).toEqual([]);
+      await on.ctx.close();
+    }
+  } finally {
+    await pna.close();
+    await restart(before);
   }
 });

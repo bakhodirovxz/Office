@@ -99,10 +99,10 @@ index 636c2a5..ee2da1b 100644
              let q = query.to_lowercase();
              let items = palette_items(&app.session, &q);
 diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
-index 9dd4df8..c7d7128 100644
+index 1096c6d..6dc7392 100644
 --- a/crates/ui-egui/src/panes.rs
 +++ b/crates/ui-egui/src/panes.rs
-@@ -1024,7 +1024,9 @@ fn animation(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1028,7 +1028,9 @@ fn animation(app: &mut SlideApp, ui: &mut Ui) {
      });
      ui.separator();
      if anims.is_empty() {
@@ -113,7 +113,7 @@ index 9dd4df8..c7d7128 100644
          return;
      }
      let bars = animtimeline::bars(anims.len(), &effects);
-@@ -1174,7 +1176,9 @@ fn revisions(app: &mut SlideApp, ui: &mut Ui) {
+@@ -1178,7 +1180,9 @@ fn revisions(app: &mut SlideApp, ui: &mut Ui) {
      let changes = v["changes"].as_array().cloned().unwrap_or_default();
      ui.label(egui::RichText::new(format!("Compared with {}", v["name"].as_str().unwrap_or("?"))).color(t.text_dim));
      if v["byPosition"].as_bool() == Some(true) {
@@ -124,6 +124,20 @@ index 9dd4df8..c7d7128 100644
      }
      ui.add_space(4.0);
      if changes.is_empty() {
+@@ -1291,7 +1295,12 @@ fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c:
+             ui.horizontal(|ui| {
+                 let id = ui.id().with(("reply", slide, index));
+                 let mut txt: String = ui.data_mut(|d| d.get_temp(id).unwrap_or_default());
+-                let r = ui.add(egui::TextEdit::singleline(&mut txt).interactive(!app.locked()).hint_text(crate::i18n::t("Reply…")).desired_width((ui.available_width() - 120.0).max(60.0)));
++                let r = ui.add(
++                    egui::TextEdit::singleline(&mut txt)
++                        .interactive(!app.locked())
++                        .hint_text(crate::i18n::t("Reply…"))
++                        .desired_width((ui.available_width() - 120.0).max(60.0)),
++                );
+                 if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && !txt.trim().is_empty() {
+                     focus_comment(app, slide, index);
+                     run(app, "comment.reply", json!({"index": index, "text": txt}));
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
 index d06c8d2..2efb2c9 100644
 --- a/crates/ui-egui/src/ribbon.rs
@@ -174,3 +188,35 @@ index d06c8d2..2efb2c9 100644
              run(app, "view.pane", json!({"pane": "smartart", "toggle": true}));
          }
          rows(ui, |ui| {
+diff --git a/crates/ui-egui/src/selpane.rs b/crates/ui-egui/src/selpane.rs
+index 97e0a11..d3f79e6 100644
+--- a/crates/ui-egui/src/selpane.rs
++++ b/crates/ui-egui/src/selpane.rs
+@@ -189,7 +189,10 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+         let renaming = app.selpane.renaming.as_ref().filter(|(id, _)| *id == row.id).map(|(_, s)| s.clone());
+         if let Some(mut buf) = renaming {
+             let edit_id = ui.id().with(("rename", row.id));
+-            let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::font(12.5)).margin(vec2(2.0, 1.0)));
++            let out = ui.put(
++                name_rect,
++                egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::font(12.5)).margin(vec2(2.0, 1.0)),
++            );
+             if !app.selpane.rename_started {
+                 out.request_focus();
+                 if let Some(mut s) = egui::TextEdit::load_state(ui.ctx(), edit_id) {
+diff --git a/crates/ui-egui/src/sorter.rs b/crates/ui-egui/src/sorter.rs
+index 6ad40d8..f30538f 100644
+--- a/crates/ui-egui/src/sorter.rs
++++ b/crates/ui-egui/src/sorter.rs
+@@ -96,7 +96,10 @@ fn section_header(app: &mut SlideApp, ui: &mut Ui, h: &Header<'_>) -> Rect {
+     let name_rect = Rect::from_min_max(pos2(r.min.x + 40.0, r.min.y + 4.0), pos2(r.max.x - 56.0, r.max.y - 4.0));
+     if let Some(mut buf) = renaming {
+         let edit_id = ui.id().with(("sorter-rename", h.uid, h.index));
+-        let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)));
++        let out = ui.put(
++            name_rect,
++            egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)),
++        );
+         let already = app.sorter.rename_started;
+         if !already {
+             out.request_focus();

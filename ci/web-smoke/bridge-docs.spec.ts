@@ -219,7 +219,7 @@ test('9 control: an editable document with an exception changes when typed in', 
   await expect.poll(() => lastDirty(page)).toBe(true);
 });
 
-test('10 readOnly with an exception everyone may edit: typing, paste and undo are refused before they show (Stop Protection: engine test)', async ({ page }) => {
+test('10 readOnly with an exception everyone may edit: typing, paste and undo are refused before they show (Stop Protection: tests 11 and 12)', async ({ page }) => {
   const logs: string[] = [];
   page.on('console', (m) => logs.push(m.text()));
   await open(page, { readOnly: true }, EXCEPTION);
@@ -230,6 +230,54 @@ test('10 readOnly with an exception everyone may edit: typing, paste and undo ar
   await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+y');
   await page.waitForTimeout(2000);
+  expect((await msgs(page)).filter((m) => m.type === 'wordcraft:dirty' && m.dirty)).toHaveLength(0);
+  expect(await count(page, 'wordcraft:save')).toBe(0);
+  expect(await count(page, 'wordcraft:autosave')).toBe(0);
+  expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
+});
+
+// Stop Protection from the Restrict Editing pane (patch 0152; the engine test is `host_read_only_refuses_the_exceptions_and_stop_protection`).
+// The fixture is 01-split-runs with `w:documentProtection w:edit="readOnly" w:enforcement="1"` and no password, so an editable session may
+// lift the protection. The pane opens from the command search (it shows "Stop Protection" while the protection is on).
+const PROTECTED = path.join(ROOT, 'ci/web-smoke/fixtures/docs-protected-no-password.docx');
+// The frame's page area (left of the pane) and the pane above its buttons: a refusal prints its reason lower in the pane and in the status bar.
+const DOC_CLIP = { x: 48, y: 216, width: 780, height: 440 };
+const PANE_TOP_CLIP = { x: 840, y: 180, width: 260, height: 100 };
+const shotClip = async (page: Page, clip: typeof DOC_CLIP) => (await page.screenshot({ clip })).toString('base64');
+async function stopProtection(page: Page) {
+  await page.waitForTimeout(3000); // the first frames: fonts and the opened document
+  await canvas(page).click({ position: { x: 912, y: 9 } }); // the command search
+  await page.keyboard.type('Restrict', { delay: 40 });
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1500);
+  const [before, docBefore, paneBefore] = [await shot(page), await shotClip(page, DOC_CLIP), await shotClip(page, PANE_TOP_CLIP)];
+  await canvas(page).click({ position: { x: 896, y: 309 } }); // Stop Protection (English UI: the Russian one wraps the button text)
+  await page.waitForTimeout(2300);
+  return {
+    frame: await pixelsChanged(page, before, await shot(page)),
+    doc: await pixelsChanged(page, docBefore, await shotClip(page, DOC_CLIP)),
+    pane: await pixelsChanged(page, paneBefore, await shotClip(page, PANE_TOP_CLIP)),
+  };
+}
+
+test('11 control: Stop Protection in an editable session lifts the protection (the pane changes, the document is dirty)', async ({ page }) => {
+  await open(page, {}, PROTECTED);
+  const r = await stopProtection(page);
+  expect(r.frame).toBeGreaterThan(300);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+});
+
+test('12 readOnly: Stop Protection is refused before it shows (the pane stays, never dirty)', async ({ page }) => {
+  const logs: string[] = [];
+  page.on('console', (m) => logs.push(m.text()));
+  await open(page, { readOnly: true }, PROTECTED);
+  const r = await stopProtection(page);
+  expect(r.doc).toBeLessThan(150);
+  expect(r.pane).toBeLessThan(50); // the pane still offers Stop Protection (a refusal only prints its reason below)
+  // still protected: typing in the document is refused too
+  await type(page);
+  await page.waitForTimeout(1500);
   expect((await msgs(page)).filter((m) => m.type === 'wordcraft:dirty' && m.dirty)).toHaveLength(0);
   expect(await count(page, 'wordcraft:save')).toBe(0);
   expect(await count(page, 'wordcraft:autosave')).toBe(0);

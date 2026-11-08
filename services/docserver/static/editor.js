@@ -6,6 +6,8 @@
  *
  * postMessage rules (S14): the host's messages count only when they come from window.parent at the origin api.js named in the
  * URL hash; the editor's only from its own iframe at this origin. The server checks the host's origin again at /ds/session.
+ * With the server's allow_opaque_origin (docs/phase5/dropin.md D3b) the hash may name an opaque origin, `null`: messages then still
+ * count only from window.parent with event.origin "null", and go to window.parent with "*" (an opaque origin cannot be named).
  */
 (function () {
   'use strict';
@@ -14,12 +16,15 @@
   function applyTheme() { document.documentElement.dataset.theme = th === 'dark' || (th !== 'light' && mq.matches) ? 'dark' : 'light'; }
   applyTheme();
   mq.addEventListener('change', applyTheme);
+  var OPAQUE = false;   // served as true by the document server when allow_opaque_origin is on (routes.rs)
   var HOST = null;
   try {
     var m = /^#o=(.+)$/.exec(location.hash);
-    if (m) { var u = new URL(decodeURIComponent(m[1])); if (/^https?:$/.test(u.protocol)) HOST = u.origin; }
+    if (m && OPAQUE && m[1] === 'null') HOST = 'null';
+    else if (m) { var u = new URL(decodeURIComponent(m[1])); if (/^https?:$/.test(u.protocol)) HOST = u.origin; }
   } catch (e) { /* no host origin: nothing will be accepted */ }
   if (!HOST || window.parent === window) return;
+  var TARGET = HOST === 'null' ? '*' : HOST;   // postMessage cannot target an opaque origin by name
 
   var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, readOnly: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
@@ -28,7 +33,7 @@
   document.body.appendChild(status);
   var t = function (k, p) { return String((S.i18n[S.lang] || {})[k] || (S.i18n.en || {})[k] || k).replace(/\{(\w+)\}/g, function (a, n) { return (p || {})[n] == null ? a : p[n]; }); };
 
-  function emit(event, data) { window.parent.postMessage({ type: 'docs:event', event: event, data: data }, HOST); }
+  function emit(event, data) { window.parent.postMessage({ type: 'docs:event', event: event, data: data }, TARGET); }
   function fail(code, description) {
     status.textContent = t('err.failed', { error: description });
     status.style.display = 'block';
@@ -344,5 +349,5 @@
       onEditor(d);
     }
   });
-  window.parent.postMessage({ type: 'docs:ready' }, HOST);
+  window.parent.postMessage({ type: 'docs:ready' }, TARGET);
 })();
