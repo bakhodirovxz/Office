@@ -1,0 +1,201 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 8 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui, gridcraft-web: a read-only workbook is refused before anything is drawn changed
+
+docs/phase5/r6.md, owner 2026-11-08: the R6 bridge let an edit of a read-only workbook happen and took it back in the next frame,
+so typed text showed for a frame. Now the editor and the bridge stop it before anything is drawn changed: the bridge sets
+`Session::read_only` (gridcraft/0161) at every frame and on open; `begin_edit` (typing, F2, double-click, the formula bar,
+Backspace), the text box editor, the header and footer editor, and the drags that change the workbook (fill handle, move by the
+border, column and row resize, column move, freeze handles, chart/picture/shape move and resize) refuse to start and show the
+existing read-only message as a toast (no modal per key press); a command the engine refuses shows the same toast. The per-frame
+revert stays as the last resort and logs `read-only safety net` when it fires. New `SheetApp::read_only_notice` carries the
+translated message (the host sets it); no new UI string.
+---
+
+diff --git a/apps/gridcraft-web/src/host.rs b/apps/gridcraft-web/src/host.rs
+index bec697c..c962a90 100644
+--- a/apps/gridcraft-web/src/host.rs
++++ b/apps/gridcraft-web/src/host.rs
+@@ -146,7 +146,10 @@ impl Bridge {
+     /// After each frame: open a file the parent sent, apply the save answers, run a save it asked
+     /// for, take back edits of a read-only workbook, and report the unsaved-changes state.
+     pub fn sync(&self, app: &mut SheetApp) {
++        // Read only is the engine's own state: it refuses every command that changes the workbook, and the editors do not open.
++        app.session.read_only = self.read_only.get();
+         if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
++            app.read_only_notice = app.ui.language.tr(READ_ONLY).to_string();
+             self.open(app, name, &bytes);
+         }
+         if self.save_requested.replace(false) && !self.read_only.get() {
+@@ -181,11 +184,12 @@ impl Bridge {
+                 doc.saved = Arc::new((*doc.wb).clone());
+             }
+         }
+-        // Read only: whatever changed the workbook (a command, typing, a drag) is taken back, as Undo would.
++        // Read only: the engine and the editors refuse edits before they happen; this takes back whatever got through anyway.
+         if self.read_only.get()
+             && let Some(doc) = app.session.active_mut()
+             && doc.is_dirty()
+         {
++            log::warn!("read-only safety net: the workbook changed and was taken back");
+             doc.wb = doc.saved.clone();
+             doc.calc.rebuild(&doc.wb);
+             doc.undo.clear();
+diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
+index d9dcb9b..4d11e56 100644
+--- a/crates/ui-egui/src/grid.rs
++++ b/crates/ui-egui/src/grid.rs
+@@ -1807,6 +1807,13 @@ pub(crate) fn paint_headers(
+ /// How close (in points) a press must be to an object's bottom-right corner to resize it instead of moving it.
+ const OBJECT_RESIZE_RADIUS: f32 = 10.0;
+ 
++/// Starts a drag that would change the workbook (fill, move, resize, freeze): none in a read-only session.
++fn begin_drag(app: &mut SheetApp, drag: Drag) {
++    if !app.refuse_read_only() {
++        app.grid.drag = drag;
++    }
++}
++
+ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &Geo, sh: &Sheet, wb: &Workbook) {
+     // Text selection and editing must not also move the object or edit worksheet cells.
+     if app.text_box_editor.is_some() || app.grid.hf_edit.is_some() {
+@@ -1964,7 +1971,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+                 let a = object_anchor(sh, kind, id);
+                 let resize = (p - rect.right_bottom()).length() < OBJECT_RESIZE_RADIUS;
+                 if let Some(a) = a {
+-                    app.grid.drag = Drag::Object { kind, id, start: p, orig: (a.cell, a.dx, a.dy, a.width, a.height), resize };
++                    begin_drag(app, Drag::Object { kind, id, start: p, orig: (a.cell, a.dx, a.dy, a.width, a.height), resize });
+                 }
+             }
+             return;
+@@ -2036,7 +2043,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+         }
+         // Freeze handles sit on the header edges (and the corner's edges when nothing is frozen).
+         if freeze_cols.contains(p) || freeze_rows.contains(p) {
+-            app.grid.drag = Drag::Freeze { cols: freeze_cols.contains(p), to: None };
++            begin_drag(app, Drag::Freeze { cols: freeze_cols.contains(p), to: None });
+             return;
+         }
+         if in_corner {
+@@ -2045,7 +2052,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+         }
+         if in_col_header {
+             if let Some((c, x)) = col_edge(geo, sh, p.x) {
+-                app.grid.drag = Drag::ResizeCol { col: c, start: p.x, orig: sh.col_width(c).max(0.0) * 0.0 + (x - geo.x(sh, c)) / geo.z };
++                begin_drag(app, Drag::ResizeCol { col: c, start: p.x, orig: sh.col_width(c).max(0.0) * 0.0 + (x - geo.x(sh, c)) / geo.z });
+                 return;
+             }
+             let c = geo.col_at(sh, p.x);
+@@ -2058,7 +2065,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+                 && sel.current().is_full_cols()
+                 && sel.current().contains(CellRef::new(0, c))
+             {
+-                app.grid.drag = Drag::MoveCols { source: sel.current(), before: None };
++                begin_drag(app, Drag::MoveCols { source: sel.current(), before: None });
+                 return;
+             }
+             let range = if mods.shift { RangeRef::cols(sel.anchor.col.min(c), sel.anchor.col.max(c)) } else { RangeRef::cols(c, c) };
+@@ -2068,7 +2075,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+         }
+         if in_row_header {
+             if let Some((r, y)) = row_edge(geo, sh, p.y) {
+-                app.grid.drag = Drag::ResizeRow { row: r, start: p.y, orig: (y - geo.y(sh, r)) / geo.z };
++                begin_drag(app, Drag::ResizeRow { row: r, start: p.y, orig: (y - geo.y(sh, r)) / geo.z });
+                 return;
+             }
+             let r = geo.row_at(sh, p.y);
+@@ -2121,11 +2128,11 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
+             return;
+         }
+         if on_handle(p) {
+-            app.grid.drag = Drag::Fill { target: None };
++            begin_drag(app, Drag::Fill { target: None });
+             return;
+         }
+         if on_cur_border(p) && resp.drag_started() {
+-            app.grid.drag = Drag::Move { grab: c, to: None };
++            begin_drag(app, Drag::Move { grab: c, to: None });
+             return;
+         }
+         // Double-click edits.
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index a662a56..7660ef7 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -264,6 +264,8 @@ pub struct SheetApp {
+     pub backstage: Option<backstage::Backstage>,
+     pub message: Option<(String, String)>,
+     pub toast: Option<(String, f64)>,
++    /// The toast shown when a read-only session ([`gridcraft_engine::Session::read_only`]) refuses an edit; set by the host.
++    pub read_only_notice: String,
+     /// Dismissible info bar under the ribbon (open-time notices).
+     pub notice: Option<Notice>,
+     pub services: Services,
+@@ -322,6 +324,7 @@ impl SheetApp {
+             backstage: None,
+             message: None,
+             toast: None,
++            read_only_notice: String::new(),
+             notice: None,
+             services,
+             printing: Default::default(),
+@@ -587,7 +590,9 @@ impl SheetApp {
+ 
+     /// Shows a command error: a toast for an unavailable command, else a message box.
+     fn alert(&mut self, e: String) {
+-        if e.contains("is not available right now") {
++        if self.session.read_only && e.ends_with("is not available right now: read-only") {
++            self.refuse_read_only();
++        } else if e.contains("is not available right now") {
+             self.toast = Some((e, now_ms()));
+         } else {
+             self.message = Some(("GridCraft".into(), clean_error(&e)));
+@@ -916,8 +921,19 @@ impl SheetApp {
+         d.store_view(&tops);
+     }
+ 
++    /// In a read-only session: shows the notice as a toast and returns true. Callers stop before anything is drawn changed.
++    pub(crate) fn refuse_read_only(&mut self) -> bool {
++        if self.session.read_only {
++            self.toast = Some((self.read_only_notice.clone(), now_ms()));
++        }
++        self.session.read_only
++    }
++
+     /// Starts editing the active cell. `text` replaces the content (typing) or pre-fills it.
+     pub fn begin_edit(&mut self, text: Option<String>, from_formula_bar: bool) {
++        if self.refuse_read_only() {
++            return;
++        }
+         if let Err(e) = self.commit_text_box_edit() {
+             self.message = Some(("Text Box".into(), clean_error(&e)));
+             return;
+diff --git a/crates/ui-egui/src/paper_view.rs b/crates/ui-egui/src/paper_view.rs
+index 621a979..61ba723 100644
+--- a/crates/ui-egui/src/paper_view.rs
++++ b/crates/ui-egui/src/paper_view.rs
+@@ -345,6 +345,9 @@ fn page_kind(sh: &Sheet, pg: &PageGrid, page: (usize, usize)) -> HfPage {
+ 
+ /// Starts (or moves) editing a header or footer section.
+ pub fn begin(app: &mut SheetApp, sheet: usize, sh: &Sheet, page: (usize, usize), zone: HfZone) {
++    if app.refuse_read_only() {
++        return;
++    }
+     if let Some(e) = app.grid.hf_edit.as_mut()
+         && e.sheet == sheet
+         && e.page == page
+diff --git a/crates/ui-egui/src/text_box.rs b/crates/ui-egui/src/text_box.rs
+index a0b30c0..a0d0572 100644
+--- a/crates/ui-egui/src/text_box.rs
++++ b/crates/ui-egui/src/text_box.rs
+@@ -23,6 +23,9 @@ pub(crate) fn editor_id() -> egui::Id {
+ 
+ impl SheetApp {
+     pub fn begin_text_box_edit(&mut self, id: u32) -> bool {
++        if self.refuse_read_only() {
++            return false;
++        }
+         if !self.commit_edit(0, 0, false, false) {
+             return false;
+         }

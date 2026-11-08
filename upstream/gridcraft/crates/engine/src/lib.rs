@@ -278,6 +278,8 @@ pub struct Session {
     /// Review › Notes › Show All Notes: every note is displayed. An application display setting
     /// (like Excel's comment indicator option), so it's not saved in the file.
     pub show_all_notes: bool,
+    /// The workbook is open read-only (a host session): [`Session::execute`] refuses every command that changes it ([`cmd::refuses_when_read_only`]).
+    pub read_only: bool,
 }
 
 impl Session {
@@ -370,7 +372,12 @@ impl Session {
         if let Err(why) = (spec.enabled)(self) {
             return Err(EngineError::Disabled(id.to_string(), why));
         }
+        if self.read_only && cmd::refuses_when_read_only(spec) {
+            return Err(EngineError::Disabled(id.to_string(), "read-only".into()));
+        }
         let before = self.active().map(|d| (d.uid, d.wb.clone(), d.selection.clone()));
+        // A clean workbook that a command nevertheless changed (one `refuses_when_read_only` missed) is put back below.
+        let clean_before = self.read_only && self.active().is_some_and(|d| !d.is_dirty());
         let params = if params.is_null() { Json::Object(Default::default()) } else { params };
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (spec.run)(self, &params)));
         let result = match result {
@@ -389,6 +396,17 @@ impl Session {
                 return Err(EngineError::Internal(id.to_string(), msg));
             }
         };
+        if clean_before
+            && let Some((uid, wb, sel)) = &before
+            && let Some(d) = self.docs.iter_mut().find(|d| d.uid == *uid)
+            && d.is_dirty()
+        {
+            log::warn!("read-only safety net: {id} changed the workbook");
+            d.wb = wb.clone();
+            d.selection = sel.clone();
+            d.calc.rebuild(&d.wb);
+            return Err(EngineError::Disabled(id.to_string(), "read-only".into()));
+        }
         if spec.journal && result.is_ok() {
             self.journal.push((id.to_string(), cmd::journal_params(&params)));
             if self.journal.len() > 10_000 {
