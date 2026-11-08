@@ -1388,7 +1388,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not checked: browser cases for the Sheets comment, header/footer and text box editors, the Slides outline view, drawing-tool preview and
   side-pane drafts (alt text, SmartArt lines, comment replies still take typed text into the field; nothing reaches the presentation), PDF
   page operations by menu, bookmarks, attachments, properties, security, redaction, OCR, flatten, Combine and links (all end in the refused
-  `apply` or a false `allows_*`), Docs Stop Protection in a browser (engine test only); the docker rehearsal; real HRM files. Docs still
+  `apply` or a false `allows_*`), Docs Stop Protection in a browser (engine test only); real HRM files; read only inside the docker
+  image (the rehearsal's browser flow edits).
+- Merged 2026-11-08: phase-5 0dff431, phase-6 741a88f (wordcraft/0152 regenerated on the bridge's `recovered` line), phase-7 12a0ef4 +
+  c43a384 (gridcraft 0162/0163 and deckcraft 0162 regenerated: the plugin bridge's `sync` returns its wait flag and takes `ctx`; the
+  Slides host policy refuses read-only first, then falls through to the plugin lock). Docker rehearsal on phase-5 with a rebuilt image
+  (dists of `E:/office-target/p5-ro/dist`): **54 of 54** (labels and file scenarios). The test server's earlier dry-run tarball
+  (sha256 2eabb2b7...) predates this work: build a new one before a real install. Docs still
   autosaves while a save is pending (the three new bridges skip that period).
 
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
