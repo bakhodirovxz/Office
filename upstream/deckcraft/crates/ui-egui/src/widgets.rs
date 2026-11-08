@@ -432,9 +432,10 @@ pub fn spinner(ui: &mut Ui, id: &str, value: f64, step: f64, suffix: &str, width
     let key = ui.id().with(id);
     let mut text: String = ui.data_mut(|d| d.get_temp::<String>(key)).unwrap_or_else(|| fmt_num(value, suffix));
     let mut out = None;
+    let barred = ui.data(|d| d.get_temp::<bool>(egui::Id::new("edits-barred"))).unwrap_or(false);
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
-        let r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(width).font(theme::font(12.0)));
+        let r = ui.add(egui::TextEdit::singleline(&mut text).interactive(!barred).desired_width(width).font(theme::font(12.0)));
         if r.has_focus() {
             ui.data_mut(|d| d.insert_temp(key, text.clone()));
         } else {

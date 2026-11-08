@@ -802,7 +802,20 @@ impl SheetApp {
                 let page = params.get("page").and_then(Json::as_str).and_then(backstage::Page::parse).unwrap_or(backstage::Page::Home);
                 self.open_backstage(page);
             }
-            other => self.dialog = dialogs::Dialog::open(self, other, params),
+            other => {
+                let d = dialogs::Dialog::open(self, other, params);
+                // A form whose command a read-only session refuses (comment, note, ...) is not opened: nothing can be typed into it.
+                let edits = d
+                    .as_ref()
+                    .and_then(|d| d.command)
+                    .and_then(gridcraft_engine::find_command)
+                    .is_some_and(gridcraft_engine::cmd::refuses_when_read_only);
+                if !(self.session.read_only && edits) {
+                    self.dialog = d;
+                } else {
+                    self.refuse_read_only();
+                }
+            }
         }
     }
 
@@ -1192,6 +1205,7 @@ impl SheetApp {
             return;
         }
         let t0 = now_ms();
+        ctx.data_mut(|d| d.insert_temp(egui::Id::new("edits-barred"), self.session.read_only));
         text_box::before_ui(self, &ctx);
         // The language the widgets translate with this frame (see `i18n::current`).
         i18n::set_current(&ctx, self.ui.language);
