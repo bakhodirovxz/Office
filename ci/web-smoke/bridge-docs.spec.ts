@@ -52,12 +52,13 @@ const lastDirty = async (page: Page) => (await msgs(page)).filter((m) => m.type 
 const send = (page: Page, msg: object) => page.evaluate((m) => (window as any).__toEditor(m), msg);
 const canvas = (page: Page) => page.frameLocator('#ed').locator('canvas');
 
-async function open(page: Page, extra: object = {}) {
-  await page.evaluate(([n, b, x]) => {
+async function open(page: Page, extra: object = {}, file = DOCX) {
+  const n = await count(page, 'wordcraft:opened');
+  await page.evaluate(([nm, b, x]) => {
     const buf = new Uint8Array(b as number[]).buffer;
-    (window as any).__toEditor({ type: 'wordcraft:open', name: n, bytes: buf, ...(x as object) }, [buf]);
-  }, [NAME, Array.from(fs.readFileSync(DOCX)), extra] as const);
-  await waitFor(page, 'wordcraft:opened');
+    (window as any).__toEditor({ type: 'wordcraft:open', name: nm, bytes: buf, ...(x as object) }, [buf]);
+  }, [path.basename(file), Array.from(fs.readFileSync(file)), extra] as const);
+  await waitFor(page, 'wordcraft:opened', n + 1);
 }
 async function type(page: Page) {
   await canvas(page).click({ position: { x: 400, y: 160 } });
@@ -178,4 +179,56 @@ test('8 the flags are per open: a later open without them restores both', async 
   const r = await probe(page);
   expect(r.printShift).toBeGreaterThan(5);
   expect(r.saves).toBeGreaterThan(0);
+});
+
+// Patch 0152: a read-only document whose whole body is an exception everyone may edit (w:permStart edGrp="everyone", made from
+// the 01-split-runs fixture). Restrict Editing alone lets such ranges be typed in; a host read-only open refuses them before they
+// run, and Stop Protection and Undo too. Checked by the dirty messages and by the pixels of the page (caret blink is a few dozen).
+const EXCEPTION = path.join(ROOT, 'ci/web-smoke/fixtures/docs-exception-everyone.docx');
+const shot = async (page: Page) => (await page.locator('#ed').screenshot({ clip: { x: 0, y: 120, width: 1100, height: 400 } })).toString('base64');
+const pixelsChanged = (page: Page, a: string, b: string) => page.evaluate(async ([x, y]) => {
+  const px = async (b64: string) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d')!; g.drawImage(img, 0, 0); return g.getImageData(0, 0, c.width, c.height).data;
+  };
+  const [p, q] = [await px(x), await px(y)]; let n = 0;
+  for (let i = 0; i < p.length; i += 4) if (Math.abs(p[i] - q[i]) + Math.abs(p[i + 1] - q[i + 1]) + Math.abs(p[i + 2] - q[i + 2]) > 48) n++;
+  return n;
+}, [a, b] as const);
+async function editException(page: Page) {
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  await page.waitForTimeout(800);
+  const before = await shot(page);
+  await page.keyboard.type('zzzzzz');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('zzzzzz');
+  await page.waitForTimeout(300);
+  const soon = await pixelsChanged(page, before, await shot(page));
+  await page.waitForTimeout(1000);
+  return { soon, later: await pixelsChanged(page, before, await shot(page)) };
+}
+
+test('9 control: an editable document with an exception changes when typed in', async ({ page }) => {
+  await open(page, {}, EXCEPTION);
+  const r = await editException(page);
+  expect(r.later).toBeGreaterThan(300);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+});
+
+test('10 readOnly with an exception everyone may edit: typing, paste, undo and Stop Protection are refused before they show', async ({ page }) => {
+  const logs: string[] = [];
+  page.on('console', (m) => logs.push(m.text()));
+  await open(page, { readOnly: true }, EXCEPTION);
+  const r = await editException(page);
+  expect(r.soon).toBeLessThan(150);
+  expect(r.later).toBeLessThan(150);
+  await page.keyboard.press('Control+v');
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+y');
+  await page.waitForTimeout(2000);
+  expect((await msgs(page)).filter((m) => m.type === 'wordcraft:dirty' && m.dirty)).toHaveLength(0);
+  expect(await count(page, 'wordcraft:save')).toBe(0);
+  expect(await count(page, 'wordcraft:autosave')).toBe(0);
+  expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
 });
