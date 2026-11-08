@@ -74,7 +74,7 @@ docker image inspect "$IMAGE" > /dev/null 2>&1 || die "image $IMAGE is not on th
 prof() { sed -n "s/^$1=//p" "$PROFILE" | tail -n1; }
 FROM_IMAGE=$(prof FROM_IMAGE) PROVIDER=$(prof PROVIDER)
 [ -n "$FROM_IMAGE" ] && [ -n "$PROVIDER" ] || die "the profile needs FROM_IMAGE and PROVIDER"
-if [ "$LINUX" = 1 ] && [ "$(id -u)" != 0 ]; then die "run as root: the secret files are given to uid 10002"; fi
+if [ "$LINUX" = 1 ] && [ "$DRY" = 0 ] && [ "$(id -u)" != 0 ]; then die "run as root: the secret files are given to uid 10002 (a --dry-run writes nothing and needs only docker)"; fi
 
 # ---- 1. the old container: from the state of an earlier run, or found by its image
 RERUN=0
