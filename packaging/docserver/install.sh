@@ -74,7 +74,7 @@ rollback() {
 [ -n "$PROFILE" ] && [ -f "$PROFILE" ] || die "--profile FILE is required (see packaging/docserver/profiles/)"
 [ -n "$IMAGE" ] || die "--image REF is required"
 case "$PUBLIC_PORT" in "" | [1-9] | [1-9][0-9] | [1-9][0-9][0-9] | [1-9][0-9][0-9][0-9] | [1-6][0-9][0-9][0-9][0-9]) ;; *) die "--public-port $PUBLIC_PORT is not a port" ;; esac
-# ---- 0. disk: Docker's data root must keep MIN_FREE_MB free after loading the image (a tarball is loaded here, after this check)
+# ---- 0. disk: Docker's data root must keep MIN_FREE_MB free after loading the image (a tarball is loaded below, after every check)
 TAR=""; [ -f "$IMAGE" ] && TAR=$IMAGE
 NEED_MB=0
 if [ -n "$TAR" ]; then
@@ -82,8 +82,10 @@ if [ -n "$TAR" ]; then
     *.gz) RAW=$(gzip -l "$TAR" | awk 'NR==2 {print $2}') ;;   # shortcut: gzip -l is modulo 4 GiB; the image is far smaller
     *) RAW=$(wc -c < "$TAR" | tr -d ' ') ;;
   esac
-  NEED_MB=$(( RAW * 2 / 1048576 + 1 ))   # the unpacked layers, plus the content store's copy of them
-  IMAGE_SIZE="tarball $(( $(wc -c < "$TAR" | tr -d ' ') / 1048576 )) MB, $(( RAW / 1048576 )) MB unpacked; the load needs about $NEED_MB MB"
+  # the layers in a tarball may be compressed (a containerd store saves them so: 99 MB of tar was 355 MB loaded), and the content store
+  # keeps them besides the unpacked copy: 4 times the tar is the estimate
+  NEED_MB=$(( RAW * 4 / 1048576 + 1 ))
+  IMAGE_SIZE="tarball $(( $(wc -c < "$TAR" | tr -d ' ') / 1048576 )) MB ($(( RAW / 1048576 )) MB of tar); the load needs about $NEED_MB MB"
 else
   docker image inspect "$IMAGE" > /dev/null 2>&1 || die "image $IMAGE is not on this host (give a docker save tarball with --image FILE.tar)"
   IMAGE_SIZE="$(docker image ls --format '{{.Size}}' "$IMAGE" | head -n1) on disk (loaded)"
