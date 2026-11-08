@@ -73,6 +73,7 @@ common() {
   check "dry run: changed nothing" bash -c "[ \"\$(docker inspect -f '{{.State.Running}}' dropin-onlyoffice)\" = true ] && [ ! -e '$E/state.env' ]"
   check "dry run: the frame origin comes from the backend's FRONTEND_URL" grep -q 'frame origins    http://localhost:8790 + ' dry.txt
   check "dry run: reports the image size and the free space" grep -qE '^  image  .*B on disk \(loaded\); ' dry.txt
+  check "dry run: the opaque origin is refused by default" grep -q '^  opaque origin    refused' dry.txt
   echo "=== [$SC] install.sh"
   "${INSTALL[@]}" 2>&1 | tee install.txt
   check "install: no secret in its output" bash -c "! grep -q '$SECRET' install.txt"
@@ -102,6 +103,35 @@ common() {
   n=$(docker logs dropin-onlyoffice 2>&1 | grep -c -E "$SECRET|eyJ[A-Za-z0-9_-]{10,}|Bearer|\?t=" || true)
   check "our log holds no secret, token or file URL ($n hits)" [ "$n" = 0 ]
   docker logs dropin-onlyoffice 2>&1 | grep -E "warning|WARNING|shared" | sed 's/^/  log: /' || true
+}
+# dropin.md D3b: --allow-opaque-origin through the installer, kept by a plain rerun (an upgrade), undone by --no-allow-opaque-origin.
+# The browser side of the switch is docserver.spec.ts "D3b"; here: the plan line, the container env and the headers through Traefik.
+opaque() {
+  local E=$D/$SC/etc
+  local I=(bash "$HERE/install.sh" --profile "$HERE/profiles/hrm.env" --image "$IMAGE" --etc "$E" --public-url https://127.0.0.1:18443)
+  envv() { docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' dropin-onlyoffice | sed -n 's/^DOCSERVER_ALLOW_OPAQUE_ORIGIN=//p'; }
+  up() { # wait for ours, then save the wrapper page's headers through Traefik (lower case) to $1
+    for _ in $(seq 20); do apijs | grep -q DocsAPI && break; sleep 1; done
+    curl -sk -m 5 -D - -o /dev/null https://127.0.0.1:18443/ds/editor | tr -d '\r' | tr 'A-Z' 'a-z' > "$1" || true
+  }
+  echo "=== [$SC] install.sh --allow-opaque-origin"
+  "${I[@]}" --allow-opaque-origin > opq1.txt 2>&1 || { cat opq1.txt; bad "opaque: rerun with the flag"; }
+  up h1.txt
+  check "opaque: the plan says ALLOWED" grep -q '^  opaque origin    ALLOWED' opq1.txt
+  check "opaque: the container has the switch on" [ "$(envv)" = 1 ]
+  check "opaque: /ds/editor through Traefik has a CSP without frame-ancestors and no X-Frame-Options" \
+    bash -c "grep -q '^content-security-policy: ' h1.txt && ! grep -q 'frame-ancestors' h1.txt && ! grep -q '^x-frame-options' h1.txt"
+  check "opaque: the server warns at start" bash -c "docker logs dropin-onlyoffice 2>&1 | grep -q 'allow_opaque_origin = true'"
+  echo "=== [$SC] install.sh (a plain rerun keeps the switch)"
+  "${I[@]}" > opq2.txt 2>&1 || { cat opq2.txt; bad "opaque: plain rerun"; }
+  up h2.txt
+  check "opaque: a plain rerun keeps it" bash -c "grep -q '^  opaque origin    ALLOWED.*(kept from the running container)' opq2.txt && ! grep -q frame-ancestors h2.txt"
+  check "opaque: ... and the container still has it" [ "$(envv)" = 1 ]
+  echo "=== [$SC] install.sh --no-allow-opaque-origin"
+  "${I[@]}" --no-allow-opaque-origin > opq3.txt 2>&1 || { cat opq3.txt; bad "opaque: rerun with --no-allow-opaque-origin"; }
+  up h3.txt
+  check "opaque: --no-allow-opaque-origin puts the frame check back" \
+    bash -c "grep -q '^  opaque origin    refused' opq3.txt && grep -q 'frame-ancestors .*http://localhost:8790' h3.txt && [ \"\$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' dropin-onlyoffice | sed -n 's/^DOCSERVER_ALLOW_OPAQUE_ORIGIN=//p')\" = 0 ]"
 }
 rollback() {
   echo "=== [$SC] install.sh rollback"
@@ -207,6 +237,7 @@ Y
   check "the loopback publish: the public routes answer the proxy only ($c2)" [ "$c2" = 403 ]
   check "install: prints the compose override and writes nothing of it" bash -c "grep -q '^  docs-server:' install.txt && grep -q 'profiles: \[\"disabled\"\]' install.txt && grep -q '<server-path>' install.txt"
   check "Traefik's files are unchanged" [ "$(cat dynamic/* | sha256sum)" = "$before" ]
+  opaque
   rollback
   check "rollback: the loopback publishes are the stand-in's again" bash -c "docker port dropin-onlyoffice | tr -d '\r' | grep -q '127.0.0.1:18444' && docker port dropin-onlyoffice | tr -d '\r' | grep -q '127.0.0.1:18082'"
 }

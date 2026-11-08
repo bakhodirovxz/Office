@@ -1397,6 +1397,36 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   (sha256 2eabb2b7...) predates this work: build a new one before a real install. Docs still
   autosaves while a save is pending (the three new bridges skip that period).
 
+### Phase 5 D3b: opaque (`null`) host origin switch, off by default (2026-11-08; branch `p5-opaque`, owner decision of the same day)
+- Why: the HRM mobile app ships on iOS too and its code is not changed for us; its WKWebView may give the host page an opaque origin,
+  which shows an empty editor today. So a server-side switch, set at install (`dropin.md` D3b).
+- Done: `[docserver] allow_opaque_origin` (default false; `config.rs`, start warning when on); entrypoint `DOCSERVER_ALLOW_OPAQUE_ORIGIN`
+  (1|0, anything else refused); `install.sh --allow-opaque-origin` / `--no-allow-opaque-origin`, an `opaque origin` line in the plan,
+  a plain rerun keeps the running container's value. When on, exactly three changes: no `frame-ancestors`/`X-Frame-Options` on
+  `/ds/editor` and the four editor pages (`routes.rs` `frame_csp`, `suite-serve` `editor_csp_for`; convert-api's baseline now honours
+  the empty `X-Frame-Options` beside a route CSP without `frame-ancestors`); `editor.js` served with `OPAQUE = true` (accepts `#o=null`,
+  hears only `window.parent` at `"null"`, posts with `*`); `null` a frame origin of every provider at session create, after the
+  signature. What the mode weakens is listed in D3b (frame check off for every page, leaked config tokens usable from any page,
+  standalone editors frameable, `*` messages to the parent; the token signature stays the gate, no cookie or ambient authority).
+- Measured: cargo (docserver + fake-hrm + suite-serve) 102 passed 0 failed (was 98): `auth.rs::an_opaque_origin_needs_the_switch_and_still_a_signed_config`
+  (off 403; on 200 with a good token, 401 with a wrong signature, expired or unsigned config, 403 for other origins and `NULL`/`null `,
+  no `Set-Cookie`, session routes 401 without the bearer), `suite-serve/tests/docserver.rs::allow_opaque_origin_off_changes_nothing`
+  (every route's headers and body identical to a config without the key), `..._on_drops_the_frame_rule_of_the_framed_pages_only`,
+  `routes.rs` CSP and editor.js unit tests, `config.rs` default; convert-api header test. Playwright `docserver.spec.ts` "D3b"
+  (Chromium as the WKWebView stand-in; host as a `data:` frame and as a sandboxed `allow-scripts allow-same-origin` frame): off,
+  "Refused to frame ... frame-ancestors", no `/ds/session`, no session, host stays `loading`; on, open, edit, save (status 6, stored hash),
+  close (status 2), config origin `"null"`. Measured once: a `sandbox="allow-scripts"` srcdoc host fails in both modes (the wrapper
+  inherits the sandbox, CORP refuses its own files). Entrypoint mapping checked in a throwaway container (unset/0 -> false, 1 -> true,
+  `maybe` refused). `ci.sh docserver` (one run): clippy `-D warnings` clean, cargo 102 passed, bridges docs 10, sheets 47, slides 32, pdf 35 passed; the
+  docserver spec 24 passed 1 failed: fmt was not yet applied, and the D3b close was polled for 5 s under the parallel load. Both fixed (close
+  poll 30 s); then fmt clean, clippy (docserver, fake-hrm, suite-serve, convert-api) clean, the docserver spec alone **25 passed 1 skipped**
+  (was 24 + 1), D3b close -> onClosed 405 / 390 ms. convert-api 77 passed (the baseline header test has the new case).
+- Not checked: WebKit/WKWebView itself (no macOS, no iOS device): whether the HRM app's page is opaque and whether WKWebView then frames
+  our pages is the WP17 device check. The installer path (`rehearse-dropin.sh` file scenario, new `opaque` step: plan line, container
+  env, headers through Traefik, a rerun keeps it, `--no-allow-opaque-origin` undoes it) is written but not run: another agent's
+  rehearsal held the shared `dropin-*` names and the `hoshiya-docserver:rehearsal` tag. Found on the way: `--edit-types` is not kept
+  by a rerun (it goes back to the default); the switch is.
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).

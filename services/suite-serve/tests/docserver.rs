@@ -31,6 +31,11 @@ impl Drop for H {
 }
 
 fn harness(name: &str, with_ds: bool) -> H {
+    harness_with(name, with_ds, "")
+}
+
+/// `extra`: lines of the `[docserver]` table (before the provider).
+fn harness_with(name: &str, with_ds: bool, extra: &str) -> H {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let dir = std::env::temp_dir().join(format!("suite-serve-ds-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -55,6 +60,7 @@ fn harness(name: &str, with_ds: bool) -> H {
         let t: toml::Table = format!(
             r#"server_secret_file = "{}"
 data_dir = "{}"
+{extra}
 [[providers]]
 name = "one"
 issuer = "https://issuer.test"
@@ -215,6 +221,110 @@ async fn framing_and_corp_rules_with_the_docserver_on() {
             "same-origin",
             "{uri}"
         );
+    }
+}
+
+/// Every route's answer, headers and body, in one mode.
+async fn snapshot(h: &H) -> Vec<(String, StatusCode, Vec<(String, String)>, Vec<u8>)> {
+    let mut out = vec![];
+    for (m, uri) in DS_ROUTES.iter().chain(&[
+        ("GET", "/ds/editor.js"),
+        ("GET", "/docs/"),
+        ("GET", "/"),
+        ("GET", "/healthz"),
+    ]) {
+        let mut r = Request::builder()
+            .method(*m)
+            .uri(*uri)
+            .header("host", "127.0.0.1:8787")
+            .body(Body::empty())
+            .unwrap();
+        r.extensions_mut()
+            .insert(ConnectInfo("127.0.0.1:5555".parse::<SocketAddr>().unwrap()));
+        let res = h.router.clone().oneshot(r).await.unwrap();
+        let mut hd: Vec<(String, String)> = res
+            .headers()
+            .iter()
+            // the only values that change between two runs
+            .filter(|(k, _)| {
+                !["date", "last-modified", "etag", "x-request-id"].contains(&k.as_str())
+            })
+            .map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string()))
+            .collect();
+        hd.sort();
+        let st = res.status();
+        let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap()
+            .to_vec();
+        out.push((uri.to_string(), st, hd, body));
+    }
+    out
+}
+
+/// docs/phase5/dropin.md D3b. Off (the default, or written out): every answer is the same, byte for byte, as without the key.
+#[tokio::test]
+async fn allow_opaque_origin_off_changes_nothing() {
+    let a = snapshot(&harness("opq-default", true)).await;
+    let b = snapshot(&harness_with(
+        "opq-false",
+        true,
+        "allow_opaque_origin = false",
+    ))
+    .await;
+    assert_eq!(a, b);
+}
+
+/// On: the wrapper page and the editors send no `frame-ancestors` and no `X-Frame-Options`, `editor.js` is served with `OPAQUE` on,
+/// and every other header and route keeps today's value.
+#[tokio::test]
+async fn allow_opaque_origin_on_drops_the_frame_rule_of_the_framed_pages_only() {
+    let off = snapshot(&harness("opq-off", true)).await;
+    let on = snapshot(&harness_with("opq-on", true, "allow_opaque_origin = true")).await;
+    for ((uri, s0, h0, b0), (_, s1, h1, b1)) in off.iter().zip(&on) {
+        assert_eq!(s0, s1, "{uri}");
+        let framed = uri == "/ds/editor" || uri == "/docs/";
+        let csp = |h: &[(String, String)]| {
+            h.iter()
+                .find(|(k, _)| k == "content-security-policy")
+                .map(|(_, v)| v.clone())
+                .unwrap()
+        };
+        if framed {
+            let (c0, c1) = (csp(h0), csp(h1));
+            assert!(!c1.contains("frame-ancestors"), "{uri}: {c1}");
+            assert_eq!(
+                c0.replace(&format!("frame-ancestors {FRAMERS}; "), ""),
+                c1,
+                "{uri}: only the directive goes"
+            );
+            assert!(h1.iter().all(|(k, _)| k != "x-frame-options"), "{uri}");
+            let rest = |h: &[(String, String)]| {
+                h.iter()
+                    .filter(|(k, _)| k != "content-security-policy")
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            assert_eq!(rest(h0), rest(h1), "{uri}");
+        } else if uri == "/ds/editor.js" {
+            // `true` is one byte shorter than `false`
+            let len = |h: &[(String, String)]| {
+                h.iter()
+                    .filter(|(k, _)| k != "content-length")
+                    .cloned()
+                    .collect::<Vec<_>>()
+            };
+            assert_eq!(len(h0), len(h1), "{uri}");
+        } else {
+            assert_eq!(h0, h1, "{uri}");
+        }
+        if uri == "/ds/editor.js" {
+            let (t0, t1) = (String::from_utf8_lossy(b0), String::from_utf8_lossy(b1));
+            assert!(t0.contains("var OPAQUE = false;") && t1.contains("var OPAQUE = true;"));
+            assert_eq!(t1.replace("var OPAQUE = true;", "var OPAQUE = false;"), t0);
+        } else {
+            assert_eq!(b0, b1, "{uri}");
+        }
     }
 }
 

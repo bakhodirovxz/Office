@@ -266,11 +266,14 @@ impl Docserver {
         now: u64,
     ) -> Result<SessionRecord, SessErr> {
         let (p, c) = self.open_config(token, now)?;
-        // cross-provider isolation: the page that handed us the config must be one of THIS provider's frame origins
-        if !p
-            .frame_origins
-            .iter()
-            .any(|o| o.eq_ignore_ascii_case(origin))
+        // cross-provider isolation: the page that handed us the config must be one of THIS provider's frame origins, or opaque with
+        // `allow_opaque_origin` (checked after the signature: `null` never opens a session without a valid config token)
+        let opaque = self.allow_opaque_origin && origin == "null";
+        if !opaque
+            && !p
+                .frame_origins
+                .iter()
+                .any(|o| o.eq_ignore_ascii_case(origin))
         {
             eprintln!(
                 "docserver: auth.fail: config message origin is not a frame origin of provider \"{}\"",

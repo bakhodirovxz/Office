@@ -100,6 +100,10 @@ pub struct Config {
     pub keep_closed_hours: u64,
     /// any other session folder (never closed, or its close not acknowledged) is deleted this long after its last activity (Q10)
     pub keep_abandoned_days: u64,
+    /// accept a host page with an opaque (`null`) origin (docs/phase5/dropin.md D3b): no `frame-ancestors` and no `X-Frame-Options` on
+    /// the wrapper page and the editors, and `null` counts as a frame origin of every provider. Any page can make its origin opaque,
+    /// so this turns the frame check off for everyone; the config token's signature stays the gate. Default false.
+    pub allow_opaque_origin: bool,
     pub providers: Vec<ProviderConfig>,
 }
 
@@ -125,6 +129,7 @@ impl Default for Config {
             rate_auth_fail_per_min: 20,
             keep_closed_hours: 168, // 7 days, as abandoned sessions (owner, 2026-10-31)
             keep_abandoned_days: 7,
+            allow_opaque_origin: false,
             providers: vec![],
         }
     }
@@ -185,6 +190,8 @@ pub struct Docserver {
     /// the retention sweep's two periods, in seconds (`keep_closed_hours`, `keep_abandoned_days`)
     pub keep_closed_s: u64,
     pub keep_abandoned_s: u64,
+    /// `allow_opaque_origin`: no frame rule on our pages, `null` accepted as a frame origin
+    pub allow_opaque_origin: bool,
     pub providers: Vec<Provider>,
     /// the audit log and the rate limits (WP8)
     pub watch: std::sync::Arc<crate::audit::Watch>,
@@ -286,14 +293,18 @@ impl Docserver {
     }
 
     /// The `frame-ancestors` source list of the wrapper page and the editor frames: ourselves and every provider's frame origins.
-    pub fn frame_ancestors(&self) -> String {
+    /// None with `allow_opaque_origin`: no directive at all, since no source expression (`*` included) matches an opaque ancestor.
+    pub fn frame_ancestors(&self) -> Option<String> {
+        if self.allow_opaque_origin {
+            return None;
+        }
         let mut v = vec!["'self'".to_string()];
         for o in self.providers.iter().flat_map(|p| &p.frame_origins) {
             if !v.contains(o) {
                 v.push(o.clone());
             }
         }
-        v.join(" ")
+        Some(v.join(" "))
     }
 
     /// Binds the internal listener (a refusal to start when the address is taken). `None` when none is configured.
@@ -613,6 +624,11 @@ impl Config {
                 p.name
             );
         }
+        if self.allow_opaque_origin {
+            eprintln!(
+                "docserver: warning: allow_opaque_origin = true: any page may frame the editor (no frame-ancestors); the config token's signature is the only gate"
+            );
+        }
         let audit_path = self
             .audit_file
             .clone()
@@ -661,6 +677,7 @@ impl Config {
             diff_timeout_s: 120,
             keep_closed_s: self.keep_closed_hours * 3600,
             keep_abandoned_s: self.keep_abandoned_days * 86_400,
+            allow_opaque_origin: self.allow_opaque_origin,
             providers,
             watch,
             lookup: crate::outbound::system_lookup(),
@@ -792,8 +809,20 @@ frame_origins = ["https://app.test"]
         );
         assert!(ds.providers[0].callback_allow[0].internal && ds.providers[0].require_exp);
         assert_eq!((ds.max_document_mb, ds.callback_timeout_s), (50, 60));
-        assert_eq!(ds.frame_ancestors(), "'self' https://app.test");
+        assert_eq!(
+            ds.frame_ancestors().as_deref(),
+            Some("'self' https://app.test")
+        );
         assert!(ds.internal.is_none());
+        assert!(!ds.allow_opaque_origin, "off by default");
+        // D3b: the switch removes the directive, whatever the frame origins are
+        let on = d
+            .toml(&|t| {
+                t.insert("allow_opaque_origin".into(), true.into());
+            })
+            .unwrap();
+        assert!(on.allow_opaque_origin);
+        assert_eq!(on.frame_ancestors(), None);
     }
 
     #[test]
@@ -1034,8 +1063,10 @@ frame_origins = ["https://app.test"]
             })
             .unwrap();
         assert_eq!(
-            ds.frame_ancestors(),
-            "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173 http://localhost"
+            ds.frame_ancestors().as_deref(),
+            Some(
+                "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173 http://localhost"
+            )
         );
     }
 

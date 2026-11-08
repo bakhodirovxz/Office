@@ -534,6 +534,99 @@ frame_origins = ["https://b.test", "https://ds.test"]
     );
 }
 
+/// docs/phase5/dropin.md D3b: `allow_opaque_origin` lets a `null` page origin through for every provider, and nothing else: the
+/// config token must still verify, and no answer of the session routes carries a cookie (no ambient authority for a framer).
+#[tokio::test]
+async fn an_opaque_origin_needs_the_switch_and_still_a_signed_config() {
+    let d = dir("opaque");
+    let r_off = std_ds(&d).routes::<()>();
+    let on = {
+        let mut ds = (*std_ds(&d)).clone();
+        ds.allow_opaque_origin = true;
+        Arc::new(ds)
+    };
+    let r_on = on.routes::<()>();
+    let go = |r: &Router, secret: &str, origin: &str, payload: Value| {
+        let body =
+            json!({"origin": origin, "config": {"token": sign(secret.as_bytes(), &payload)}});
+        let r = r.clone();
+        async move {
+            let mut req = Request::builder()
+                .method("POST")
+                .uri("/ds/session")
+                .body(Body::from(body.to_string()))
+                .unwrap();
+            req.extensions_mut()
+                .insert(ConnectInfo("127.0.0.1:4000".parse::<SocketAddr>().unwrap()));
+            let res = r.oneshot(req).await.unwrap();
+            assert!(res.headers().get("set-cookie").is_none());
+            res.status()
+        }
+    };
+    let other = "oooooooooooooooooooooooooooooooooooooooo";
+    // off (today): null is no frame origin, even with a good token
+    assert_eq!(
+        go(&r_off, PROV_SECRET, "null", config()).await,
+        StatusCode::FORBIDDEN
+    );
+    // on: a good token from an opaque page opens a session ...
+    assert_eq!(
+        go(&r_on, PROV_SECRET, "null", config()).await,
+        StatusCode::OK
+    );
+    // ... but only a good token: a wrong signature, an expired or unsigned config is still 401
+    assert_eq!(
+        go(&r_on, other, "null", config()).await,
+        StatusCode::UNAUTHORIZED
+    );
+    let mut expired = config();
+    expired["exp"] = json!(now() - 300);
+    assert_eq!(
+        go(&r_on, PROV_SECRET, "null", expired).await,
+        StatusCode::UNAUTHORIZED
+    );
+    let unsigned = json!({"origin": "null", "config": config()});
+    let (s, _) = call(
+        &r_on,
+        "POST",
+        "/ds/session",
+        None,
+        unsigned.to_string().as_bytes(),
+    )
+    .await;
+    assert_eq!(s, StatusCode::UNAUTHORIZED);
+    // the switch opens `null` only: other unlisted origins stay refused, and spellings of null are not null
+    for o in ["https://evil.test", "NULL", "null ", ""] {
+        assert_eq!(
+            go(&r_on, PROV_SECRET, o, config()).await,
+            StatusCode::FORBIDDEN,
+            "{o:?}"
+        );
+    }
+    // the session it opened works by its bearer token only: no cookie came with it, and without the token every route is 401
+    let body =
+        json!({"origin": "null", "config": {"token": sign(PROV_SECRET.as_bytes(), &config())}});
+    let (s, b) = call(
+        &r_on,
+        "POST",
+        "/ds/session",
+        None,
+        body.to_string().as_bytes(),
+    )
+    .await;
+    assert_eq!(s, StatusCode::OK);
+    let sid = js(&b)["sid"].as_str().unwrap().to_string();
+    for (m, path) in [
+        ("POST", "renew"),
+        ("GET", "document"),
+        ("POST", "save"),
+        ("POST", "close"),
+    ] {
+        let (s, _) = call(&r_on, m, &format!("/ds/session/{sid}/{path}"), None, b"").await;
+        assert_eq!(s, StatusCode::UNAUTHORIZED, "{path}");
+    }
+}
+
 #[tokio::test]
 async fn outer_fields_are_ignored() {
     let d = dir("outer");
