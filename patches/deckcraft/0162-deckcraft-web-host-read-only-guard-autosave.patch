@@ -11,7 +11,7 @@ clean, read only or with a save unanswered; it is not a save (stays dirty, no pe
 ---
 
 diff --git a/apps/deckcraft-web/src/web/host.rs b/apps/deckcraft-web/src/web/host.rs
-index 2bb2592..2bca91c 100644
+index 540be6cf..a2ddc5b2 100644
 --- a/apps/deckcraft-web/src/web/host.rs
 +++ b/apps/deckcraft-web/src/web/host.rs
 @@ -5,7 +5,8 @@
@@ -33,8 +33,8 @@ index 2bb2592..2bca91c 100644
 +//!   stays unsaved, and nothing is sent when it is clean, read only, or has a save the parent hasn't answered.
  //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
  //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
- //!
-@@ -33,6 +37,9 @@ use wasm_bindgen::JsCast as _;
+ //! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
+@@ -35,6 +39,9 @@ use wasm_bindgen::JsCast as _;
  use wasm_bindgen::JsValue;
  use wasm_bindgen::closure::Closure;
  
@@ -44,7 +44,7 @@ index 2bb2592..2bca91c 100644
  /// The name a presentation gets when the parent opened none.
  const DEFAULT_NAME: &str = "presentation.pptx";
  
-@@ -43,12 +50,18 @@ const WITHHELD: &str = "This is not available in this session.";
+@@ -45,12 +52,18 @@ const WITHHELD: &str = "This is not available in this session.";
  /// `deckcraft:open { canDownload, canPrint }`, read by the command hook (the app asks it before an export or a print).
  static CAN_DOWNLOAD: AtomicBool = AtomicBool::new(true);
  static CAN_PRINT: AtomicBool = AtomicBool::new(true);
@@ -57,14 +57,14 @@ index 2bb2592..2bca91c 100644
  struct HostPolicy;
  
  impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
-     fn before(&self, id: &str, _s: &deckcraft_engine::Session) -> Option<String> {
+     fn before(&self, id: &str, s: &deckcraft_engine::Session) -> Option<String> {
 +        if LOCKED.load(Ordering::Relaxed) && changes_or_replaces(id) {
 +            return Some(deckcraft_ui_egui::i18n::t(READ_ONLY).to_string());
 +        }
          let withheld = match id {
              "file.export" => !CAN_DOWNLOAD.load(Ordering::Relaxed),
              "file.print" => !CAN_PRINT.load(Ordering::Relaxed),
-@@ -58,6 +71,26 @@ impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
+@@ -70,6 +83,26 @@ impl deckcraft_engine::office_hook::CommandHook for HostPolicy {
      }
  }
  
@@ -91,7 +91,7 @@ index 2bb2592..2bca91c 100644
  #[derive(Clone)]
  pub struct Bridge {
      window: web_sys::Window,
-@@ -76,6 +109,8 @@ pub struct Bridge {
+@@ -88,6 +121,8 @@ pub struct Bridge {
      /// Saves sent that the parent hasn't answered with `deckcraft:saved` yet, and the answers since the last frame.
      pending: Rc<Cell<u32>>,
      acks: Rc<RefCell<Vec<bool>>>,
@@ -100,7 +100,7 @@ index 2bb2592..2bca91c 100644
      /// A refusal to show at the next frame.
      refused: Rc<Cell<Option<&'static str>>>,
  }
-@@ -103,6 +138,7 @@ impl Bridge {
+@@ -115,6 +150,7 @@ impl Bridge {
              read_only: Rc::default(),
              pending: Rc::default(),
              acks: Rc::default(),
@@ -108,7 +108,7 @@ index 2bb2592..2bca91c 100644
              refused: Rc::default(),
          })
      }
-@@ -158,11 +194,12 @@ impl Bridge {
+@@ -170,11 +206,12 @@ impl Bridge {
                  d.saved_doc = Arc::new((*d.doc).clone());
              }
          }
@@ -122,7 +122,7 @@ index 2bb2592..2bca91c 100644
              d.doc = d.saved_doc.clone();
              d.history.undo.clear();
              d.history.redo.clear();
-@@ -173,6 +210,22 @@ impl Bridge {
+@@ -185,6 +222,22 @@ impl Bridge {
              d.revision += 1;
              self.refused.set(Some(READ_ONLY));
          }
@@ -145,7 +145,7 @@ index 2bb2592..2bca91c 100644
          if let Some(why) = self.refused.take() {
              app.notify(deckcraft_ui_egui::i18n::t(why).to_string());
          }
-@@ -190,9 +243,11 @@ impl Bridge {
+@@ -214,9 +267,11 @@ impl Bridge {
      fn open(&self, app: &mut SlideApp, name: String, bytes: &[u8]) {
          let before = app.session.documents().len();
          let data = deckcraft_engine::cmd::base64_encode(bytes);
@@ -157,7 +157,7 @@ index 2bb2592..2bca91c 100644
          for _ in 0..before {
              app.session.close_document(0);
          }
-@@ -218,10 +273,26 @@ impl Bridge {
+@@ -242,10 +297,26 @@ impl Bridge {
          }
      }
  

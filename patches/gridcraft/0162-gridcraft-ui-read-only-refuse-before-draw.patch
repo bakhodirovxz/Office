@@ -14,13 +14,13 @@ translated message (the host sets it); no new UI string.
 ---
 
 diff --git a/apps/gridcraft-web/src/host.rs b/apps/gridcraft-web/src/host.rs
-index bec697c..c962a90 100644
+index a3fa584a..992ebb59 100644
 --- a/apps/gridcraft-web/src/host.rs
 +++ b/apps/gridcraft-web/src/host.rs
-@@ -146,7 +146,10 @@ impl Bridge {
-     /// After each frame: open a file the parent sent, apply the save answers, run a save it asked
-     /// for, take back edits of a read-only workbook, and report the unsaved-changes state.
-     pub fn sync(&self, app: &mut SheetApp) {
+@@ -149,7 +149,10 @@ impl Bridge {
+     /// for, take back edits of a read-only workbook, and report the unsaved-changes state. True
+     /// while a plugin call waits for the page (the caller keeps drawing frames).
+     pub fn sync(&self, app: &mut SheetApp) -> bool {
 +        // Read only is the engine's own state: it refuses every command that changes the workbook, and the editors do not open.
 +        app.session.read_only = self.read_only.get();
          if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
@@ -28,7 +28,7 @@ index bec697c..c962a90 100644
              self.open(app, name, &bytes);
          }
          if self.save_requested.replace(false) && !self.read_only.get() {
-@@ -181,11 +184,12 @@ impl Bridge {
+@@ -184,11 +187,12 @@ impl Bridge {
                  doc.saved = Arc::new((*doc.wb).clone());
              }
          }
@@ -43,7 +43,7 @@ index bec697c..c962a90 100644
              doc.calc.rebuild(&doc.wb);
              doc.undo.clear();
 diff --git a/crates/ui-egui/src/grid.rs b/crates/ui-egui/src/grid.rs
-index d9dcb9b..4d11e56 100644
+index d9dcb9bd..4d11e561 100644
 --- a/crates/ui-egui/src/grid.rs
 +++ b/crates/ui-egui/src/grid.rs
 @@ -1807,6 +1807,13 @@ pub(crate) fn paint_headers(
@@ -120,7 +120,7 @@ index d9dcb9b..4d11e56 100644
          }
          // Double-click edits.
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
-index a662a56..7660ef7 100644
+index a662a56f..7660ef7a 100644
 --- a/crates/ui-egui/src/lib.rs
 +++ b/crates/ui-egui/src/lib.rs
 @@ -264,6 +264,8 @@ pub struct SheetApp {
@@ -172,7 +172,7 @@ index a662a56..7660ef7 100644
              self.message = Some(("Text Box".into(), clean_error(&e)));
              return;
 diff --git a/crates/ui-egui/src/paper_view.rs b/crates/ui-egui/src/paper_view.rs
-index 621a979..61ba723 100644
+index 621a9790..61ba723d 100644
 --- a/crates/ui-egui/src/paper_view.rs
 +++ b/crates/ui-egui/src/paper_view.rs
 @@ -345,6 +345,9 @@ fn page_kind(sh: &Sheet, pg: &PageGrid, page: (usize, usize)) -> HfPage {
@@ -186,7 +186,7 @@ index 621a979..61ba723 100644
          && e.sheet == sheet
          && e.page == page
 diff --git a/crates/ui-egui/src/text_box.rs b/crates/ui-egui/src/text_box.rs
-index a0b30c0..a0d0572 100644
+index a0b30c02..a0d0572b 100644
 --- a/crates/ui-egui/src/text_box.rs
 +++ b/crates/ui-egui/src/text_box.rs
 @@ -23,6 +23,9 @@ pub(crate) fn editor_id() -> egui::Id {

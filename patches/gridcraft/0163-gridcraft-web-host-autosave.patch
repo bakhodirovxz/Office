@@ -12,7 +12,7 @@ unanswered; a failed build is logged and tried again next period. An idle page w
 ---
 
 diff --git a/apps/gridcraft-web/src/host.rs b/apps/gridcraft-web/src/host.rs
-index c962a90..133928d 100644
+index 992ebb59..9641a3ee 100644
 --- a/apps/gridcraft-web/src/host.rs
 +++ b/apps/gridcraft-web/src/host.rs
 @@ -14,6 +14,9 @@
@@ -25,7 +25,7 @@ index c962a90..133928d 100644
  //! - `gridcraft:saved` (from the parent): `{ ok }`, the answer to one `gridcraft:save`, in order.
  //!   `ok: false` marks the workbook unsaved again.
  //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
-@@ -43,6 +46,9 @@ const MAX_AUTHOR_CHARS: usize = 200;
+@@ -45,6 +48,9 @@ const MAX_AUTHOR_CHARS: usize = 200;
  const READ_ONLY: &str = "This workbook is open read-only: changes are not kept.";
  const WITHHELD: &str = "This is not available in this session.";
  
@@ -35,7 +35,7 @@ index c962a90..133928d 100644
  #[derive(Clone)]
  pub struct Bridge {
      window: web_sys::Window,
-@@ -67,6 +73,8 @@ pub struct Bridge {
+@@ -69,6 +75,8 @@ pub struct Bridge {
      acks: Rc<RefCell<Vec<bool>>>,
      /// A refusal to show at the next frame.
      refused: Rc<Cell<Option<&'static str>>>,
@@ -44,7 +44,7 @@ index c962a90..133928d 100644
  }
  
  impl Bridge {
-@@ -93,6 +101,7 @@ impl Bridge {
+@@ -95,6 +103,7 @@ impl Bridge {
              pending: Rc::default(),
              acks: Rc::default(),
              refused: Rc::default(),
@@ -52,16 +52,16 @@ index c962a90..133928d 100644
          })
      }
  
-@@ -145,7 +154,7 @@ impl Bridge {
- 
+@@ -148,7 +157,7 @@ impl Bridge {
      /// After each frame: open a file the parent sent, apply the save answers, run a save it asked
-     /// for, take back edits of a read-only workbook, and report the unsaved-changes state.
--    pub fn sync(&self, app: &mut SheetApp) {
-+    pub fn sync(&self, app: &mut SheetApp, ctx: &egui::Context) {
+     /// for, take back edits of a read-only workbook, and report the unsaved-changes state. True
+     /// while a plugin call waits for the page (the caller keeps drawing frames).
+-    pub fn sync(&self, app: &mut SheetApp) -> bool {
++    pub fn sync(&self, app: &mut SheetApp, ctx: &egui::Context) -> bool {
          // Read only is the engine's own state: it refuses every command that changes the workbook, and the editors do not open.
          app.session.read_only = self.read_only.get();
          if let Some((name, bytes)) = self.to_open.borrow_mut().take() {
-@@ -164,6 +173,7 @@ impl Bridge {
+@@ -167,6 +176,7 @@ impl Bridge {
                  self.post_failed(&e);
              }
          }
@@ -69,8 +69,8 @@ index c962a90..133928d 100644
          // A workbook handed to the parent counts as saved under the name it was saved as.
          let saved = std::mem::take(&mut *self.saved.borrow_mut());
          if let Some(name) = saved.last()
-@@ -210,6 +220,30 @@ impl Bridge {
-         }
+@@ -225,6 +235,30 @@ impl Bridge {
+         active
      }
  
 +    /// The periodic recovery copy: only while unsaved, editable and no save is unanswered. Not `file.save`: the workbook stays unsaved.
@@ -100,7 +100,7 @@ index c962a90..133928d 100644
      /// The opened file replaces every workbook shown.
      fn open(&self, app: &mut SheetApp, name: String, bytes: &[u8]) {
          let before = app.session.documents().len();
-@@ -227,15 +261,20 @@ impl Bridge {
+@@ -242,15 +276,20 @@ impl Bridge {
  
      fn post_save(&self, path: &str, bytes: &[u8]) -> Result<(), String> {
          let name = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
@@ -127,15 +127,15 @@ index c962a90..133928d 100644
  
      fn listen(&self, ctx: egui::Context) {
 diff --git a/apps/gridcraft-web/src/web.rs b/apps/gridcraft-web/src/web.rs
-index c8eef61..00a19b2 100644
+index 1f767924..978b3544 100644
 --- a/apps/gridcraft-web/src/web.rs
 +++ b/apps/gridcraft-web/src/web.rs
-@@ -128,7 +128,7 @@ impl eframe::App for WebShell {
+@@ -144,7 +144,7 @@ impl eframe::App for WebShell {
      fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
          self.app.ui(ui);
-         if let Some(bridge) = &self.bridge {
--            bridge.sync(&mut self.app);
-+            bridge.sync(&mut self.app, ui.ctx());
-         }
-     }
- }
+         if let Some(bridge) = &self.bridge
+-            && bridge.sync(&mut self.app)
++            && bridge.sync(&mut self.app, ui.ctx())
+         {
+             // a plugin call is waiting for the page: keep drawing, so its timeout fires without input
+             ui.ctx().request_repaint_after(std::time::Duration::from_millis(200));
