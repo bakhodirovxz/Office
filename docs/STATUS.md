@@ -1340,6 +1340,32 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   three new bridges (Docs has it; the task did not list it); size delta against a pristine phase-5 build not measured (absolute budgets
   only).
 
+### Phase 5: drop-in fixes for the HRM test server's shape (2026-11-08; branch `p5-srvfix` from phase-5 80488c6)
+- Why: the owner's `install.sh --dry-run` on the test server refused twice: no Traefik labels (a file-provider route to
+  `http://docs-alias:80`), then a published 443 (loopback only). The backend downloads saved files from port 80 too.
+- Done (`dropin.md` D2b, D3b, D7): **shared layout** (`internal_listen` = `listen`: the file route behind the internal peer gate merged
+  into the public port, outside the proxy guard); entrypoint `DOCSERVER_PUBLIC_PORT`, health check on it. Installer: picks the
+  shared layout when the route's port equals the rewrite target's; finds the file route itself (Traefik's file-provider files via
+  `docker cp`, read only, hits printed, ambiguity refused); maps published 80 on any address, drops a loopback-only 443 with a note,
+  still refuses 443 elsewhere; carries the memory limit over; takes a `docker save` tarball and checks the free space of Docker's
+  data root first (4 x tar + 2048 MB); prints a `docker-compose.override.yml` (`profiles: ["disabled"]`) at the end of a real install.
+  `profiles/hrm.env`: `ORIGIN_ENVS=FRONTEND_URL`. Opaque (`null`) iOS origin: rejected, D3b says what breaks and what it would take.
+- Measured: `ci.sh docserver` exit 0 (fmt, clippy `-D warnings`, 98 tests passed 0 failed for docserver + fake-hrm + suite-serve, was
+  97; new `suite-serve/tests/docserver.rs::one_shared_port_keeps_the_file_route_to_internal_allow`: through the proxy api.js 200 and
+  `/ds/files/` 403 even with an `X-Forwarded-For` naming the backend, the backend 401 on the file route and 403 on the public routes,
+  three other peers 403 on both; `config.rs` shared/colliding cases); Playwright docserver 24 passed 1 skipped, bridges docs 8, sheets
+  7, slides 11, pdf 6. `cargo test -p convert-api` 77 passed 0 failed; clippy convert-api clean. (`outbound.rs::callback_round_trip_on_loopback`
+  failed once under a parallel Docker compile: its median 889 ms against the 1000 ms bound; green in the CI run.)
+  Drop-in rehearsal, two scenarios, rebuilt image (355 MB, R6 dists from `E:/office-target/p5-r6/dist`): **54 of 54** (labels 23,
+  file 31; each browser run 3 of 3: docx save round trip with the stored hash, xlsx and pptx edit/save/close). The file scenario
+  found the route and the public URL with no flags, chose the shared layout, gave 403 on `/ds/files/` through Traefik, from a
+  stranger and on the loopback publish, saved through port 80, kept 512 MB, published only `127.0.0.1:18082 -> 80`, left Traefik's
+  files byte-identical. A first run used the Oct 25 dists of `E:/office-target/p5/dist` and the xlsx case hung at "loading" in both
+  scenarios (pre-R6 Sheets bridge, not the layout).
+- Not checked: the real `/dynamic` (one `Host()` per route file or not decides whether `--public-url` is needed), `df` on a real Linux
+  data root and a tarball load there (the branch ran in Git Bash: Docker's VM, not measurable), uid 10002 file modes, compose's
+  reaction to the printed override, a real HRB save, the iOS opaque-origin case (no macOS/iOS).
+
 ## Phase 4 fix (2026-10-29): O13 taken, the default Latin alphabet is 2026
 - Owner decision: the Cyrillic to Latin default is the new (2026) alphabet. The 2026 law is **not yet in force**; the earlier
   plan was to switch on its entry-into-force date, and the owner chose now (rules.md 15.4).
