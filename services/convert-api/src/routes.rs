@@ -128,11 +128,12 @@ pub fn baseline_headers(h: &mut axum::http::HeaderMap, hsts: bool) {
         }
     }
     // A route that lists other origins in `frame-ancestors` sends an empty X-Frame-Options (`NO_FRAME_OPTIONS`) to have none: DENY or
-    // SAMEORIGIN would block those origins in engines that still read it. Honoured only beside such a CSP; otherwise it is DENY.
+    // SAMEORIGIN would block those origins in engines that still read it. Honoured only beside such a CSP, or a route's own CSP with
+    // no `frame-ancestors` at all (the docserver's `allow_opaque_origin`); otherwise it is DENY.
     let framed = h
         .get("content-security-policy")
         .and_then(|v| v.to_str().ok())
-        .is_some_and(|c| c.contains("frame-ancestors") && !c.contains("frame-ancestors 'none'"));
+        .is_some_and(|c| !c.contains("frame-ancestors 'none'"));
     if h.get("x-frame-options").is_some_and(|v| v.is_empty()) {
         if framed {
             h.remove("x-frame-options");
@@ -1519,6 +1520,11 @@ mod header_tests {
             ("x-frame-options", ""),
         ]);
         assert!(framed.get("x-frame-options").is_none());
+        let unframed = run(&[
+            ("content-security-policy", "default-src 'self'"),
+            ("x-frame-options", ""),
+        ]);
+        assert!(unframed.get("x-frame-options").is_none());
         // an empty value beside the strict CSP (or none) is not "no protection": it becomes DENY
         assert_eq!(run(&[("x-frame-options", "")])["x-frame-options"], "DENY");
         assert_eq!(
