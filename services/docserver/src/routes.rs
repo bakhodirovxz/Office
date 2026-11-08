@@ -100,13 +100,26 @@ impl Docserver {
 
     /// The router of the internal listener (F4): the token-bound file route and nothing else, for the configured addresses only.
     pub fn internal_router(self: &Arc<Self>) -> Router {
-        self.file_route()
-            .fallback(not_found)
-            .layer(middleware::from_fn_with_state(self.clone(), internal_gate))
+        self.gated(self.file_route().fallback(not_found))
+    }
+
+    fn gated(self: &Arc<Self>, r: Router) -> Router {
+        r.layer(middleware::from_fn_with_state(self.clone(), internal_gate))
             .layer(middleware::map_response(|mut r: Response| async move {
                 baseline_headers(r.headers_mut(), false);
                 r
             }))
+    }
+
+    /// The shared layout (`internal_listen` = the public `listen`, docs/phase5/dropin.md D2b): the file route, behind the internal
+    /// peer gate, is merged into the finished public router, so the public guard (proxy only) does not wrap it and the gate wraps
+    /// nothing else. Every other path, `/ds/files/<other shapes>` included, is the public router's, unchanged. Without the shared
+    /// layout `public` is returned as it is.
+    pub fn share_port(self: &Arc<Self>, public: Router) -> Router {
+        if !self.internal.as_ref().is_some_and(|i| i.shared) {
+            return public;
+        }
+        public.merge(self.gated(self.file_route()))
     }
 }
 
@@ -154,6 +167,7 @@ mod tests {
                 listen: "127.0.0.1:9000".parse().unwrap(),
                 allow: vec![Cidr::parse("172.18.0.0/16").unwrap()],
                 names: Default::default(),
+                shared: false,
             }),
             at_rest: None,
             xdfu: None,

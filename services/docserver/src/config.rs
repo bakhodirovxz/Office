@@ -97,7 +97,8 @@ pub struct Config {
     pub callback_timeout_s: u64,
     /// total time allowed for fetching a document (seconds)
     pub fetch_timeout_s: u64,
-    /// `ip:port` of the internal listener that serves the saved-file route only (F4); needs `internal_allow`
+    /// `ip:port` of the internal listener that serves the saved-file route only (F4); needs `internal_allow`. The public `listen`
+    /// address itself: the shared layout (docs/phase5/dropin.md D2b), one port whose saved-file route only `internal_allow` reaches
     pub internal_listen: Option<String>,
     /// IPs or CIDRs that may use the internal listener
     pub internal_allow: Vec<String>,
@@ -198,6 +199,8 @@ pub struct Internal {
     pub allow: Vec<Cidr>,
     /// the container names of `internal_allow`, resolved again every 15 s (a backend recreated with a new address)
     pub names: NameSet,
+    /// `listen` is the public listener's own address: no socket of its own, the file route is split off the public port
+    pub shared: bool,
 }
 
 /// The checked configuration. No `Debug`: it holds secrets.
@@ -335,7 +338,7 @@ impl Docserver {
 
     /// Binds the internal listener (a refusal to start when the address is taken). `None` when none is configured.
     pub fn bind_internal(&self) -> Result<Option<std::net::TcpListener>, String> {
-        let Some(i) = &self.internal else {
+        let Some(i) = self.internal.as_ref().filter(|i| !i.shared) else {
             return Ok(None);
         };
         let l = std::net::TcpListener::bind(i.listen)
@@ -440,13 +443,23 @@ impl Config {
                 if listen.port() == 0 {
                     return Err("docserver: internal_listen needs a fixed port (not 0)".into());
                 }
-                if listen.ip().is_unspecified() {
+                let shared = Some(listen) == main_listen;
+                if shared {
+                    eprintln!(
+                        "docserver: internal_listen {listen} is the public listener: its saved-file route answers internal_allow only"
+                    );
+                } else if main_listen.is_some_and(|m| {
+                    m.port() == listen.port()
+                        && (m.ip().is_unspecified() || listen.ip().is_unspecified())
+                }) {
+                    // the two binds would collide
+                    return Err(format!(
+                        "docserver: internal_listen {listen} has the public listener's port; for the shared layout write the same address as listen"
+                    ));
+                } else if listen.ip().is_unspecified() {
                     eprintln!(
                         "docserver: warning: internal_listen {listen} listens on every interface; bind it to the Docker network address and never publish it with -p"
                     );
-                }
-                if Some(listen) == main_listen {
-                    return Err("docserver: internal_listen is the public listen address".into());
                 }
                 let (names, cidrs): (Vec<&String>, Vec<&String>) = self
                     .internal_allow
@@ -466,6 +479,7 @@ impl Config {
                     listen,
                     allow,
                     names,
+                    shared,
                 })
             }
         };
@@ -1267,10 +1281,22 @@ frame_origins = ["https://app.test"]
             &set(Some("api:9000"), &["10.0.0.0/8"]),
             "not an ip:port",
         );
+        // the public address itself is the shared layout: nothing of its own to bind; the same port elsewhere is a refusal
+        let ds = d
+            .toml(&set(Some("127.0.0.1:8787"), &["10.0.0.0/8"]))
+            .unwrap();
+        assert!(ds.internal.as_ref().unwrap().shared && ds.bind_internal().unwrap().is_none());
         refused(
             &d,
-            &set(Some("127.0.0.1:8787"), &["10.0.0.0/8"]),
-            "public listen address",
+            &set(Some("0.0.0.0:8787"), &["10.0.0.0/8"]),
+            "the public listener's port",
+        );
+        assert!(
+            !d.toml(&set(Some("127.0.0.1:9000"), &["10.0.0.0/8"]))
+                .unwrap()
+                .internal
+                .unwrap()
+                .shared
         );
         refused(
             &d,

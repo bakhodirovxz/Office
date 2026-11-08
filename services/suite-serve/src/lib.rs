@@ -434,6 +434,10 @@ pub fn router_plugins(
         shell = shell.layer(middleware::from_fn_with_state(src, shell_csp));
     }
     let router = convert_api::routes::router_with(app, extra.merge(shell));
+    let router = match &ds {
+        Some(d) => d.share_port(router),
+        None => router,
+    };
     match &layout.local_key {
         Some(k) => {
             assert!(

@@ -55,7 +55,7 @@ list() { # <comma list> [table]: ["a", "b"], or [{ url = "a", internal = true },
 need() { [ -n "${!1:-}" ] || die "$1 is required (docs/phase5/dropin.md D6)"; }
 # checked here, in this shell: a die inside the $(...) of the heredoc below would only end that subshell
 for v in "${!DOCSERVER_@}"; do q "${!v}" > /dev/null; done
-for v in DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB DOCSERVER_KEEP_CLOSED_HOURS DOCSERVER_KEEP_ABANDONED_DAYS; do
+for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB DOCSERVER_KEEP_CLOSED_HOURS DOCSERVER_KEEP_ABANDONED_DAYS; do
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
 for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_TRUSTED_PROXIES DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
@@ -63,9 +63,11 @@ PUB=${DOCSERVER_PUBLIC_URL%/}
 # the public origin frames itself: a mobile WebView with baseUrl = this server has it as its page origin
 FRAMES="${DOCSERVER_FRAME_ORIGINS:+$DOCSERVER_FRAME_ORIGINS,}$PUB"
 P=${DOCSERVER_PROVIDER:-docsapi}
+# PUBLIC_PORT = INTERNAL_PORT is the shared layout (dropin.md D2b): one listener, its saved-file route for INTERNAL_ALLOW only
+[ "${DOCSERVER_PUBLIC_PORT:-8787}" != "${DOCSERVER_INTERNAL_PORT:-80}" ] || echo "entrypoint: shared layout: port ${DOCSERVER_PUBLIC_PORT:-8787} serves both sides" >&2
 
 cat > "$R/api.toml" <<EOF
-listen = "0.0.0.0:8787"
+listen = "0.0.0.0:${DOCSERVER_PUBLIC_PORT:-8787}"
 auth = "jwt"
 secret_file = $(q "$(secret converter-secret)")
 tls = "upstream"

@@ -39,37 +39,54 @@ docserver .10 --http--> fakehrm:8790                    (document fetch and call
 
 ## Install in place of an existing ONLYOFFICE container (the drop-in, `dropin.md`)
 
-The backend is not changed. On the Docker host, as root, with our image loaded (`docker load`) and no registry:
+The backend is not changed. On the Docker host, as root (a `--dry-run` needs only the docker group), with no registry:
 
 ```sh
-packaging/docserver/install.sh --dry-run --profile packaging/docserver/profiles/hrm.env --image <our image>     --frame-origin https://<the page that embeds the editor>      # read the plan; secrets show as <redacted, N bytes>
-packaging/docserver/install.sh --profile ... --image ... --frame-origin ...   # the same flags, without --dry-run
+docker save hoshiya-docserver:<tag> | gzip > docserver.tar.gz                  # on the build PC; copy it over
+packaging/docserver/install.sh --dry-run --profile packaging/docserver/profiles/hrm.env --image docserver.tar.gz   # read the plan; secrets show as <redacted, N bytes>
+packaging/docserver/install.sh --profile ... --image docserver.tar.gz          # the same flags, without --dry-run (loads the image first)
 packaging/docserver/install.sh rollback                                        # back to the old container, any time
 ```
 
-- What it reads (`docker inspect`, nothing is changed before the plan is printed): the old container (the profile's `FROM_IMAGE`, or
-  `--from`), its name, aliases, networks, restart policy, published ports, `traefik.*` labels and `JWT_SECRET`; the backend (the
-  container answering the backend URL's host) and its env (backend URL, rewrite target, callback allowlist, secret, CORS list);
-  the Traefik container on a shared network.
+`--image` also takes an image already loaded (`docker load`). Add `--frame-origin https://<the page that embeds the editor>` when the
+profile's `ORIGIN_ENVS` finds none, and `--public-url https://<editor host>` plus `--trusted-proxy <traefik container>` when the
+installer cannot find the Traefik route by itself (it says so).
+
+- What it reads (`docker inspect`, `docker info`, `df`; nothing is changed before the plan is printed): the old container (the
+  profile's `FROM_IMAGE`, or `--from`), its name, aliases, networks, restart policy, memory limit, published ports, compose labels,
+  `traefik.*` labels and `JWT_SECRET`; the backend (the container answering the backend URL's host) and its env (backend URL,
+  rewrite target, callback allowlist, secret, `FRONTEND_URL` or a CORS list); the Traefik container on a shared network and, when
+  the old container has no labels, its file-provider files (copied out with `docker cp`, scanned for a server URL naming the old
+  container, never edited); the free space of Docker's data root.
 - What it writes: `/opt/docserver/secrets/` (`--etc`): `provider-secret` (the shared secret), `server-secret`, `converter-secret`,
   `audit-key`, mode 0600 owned by uid 10002, directory 0500; `/opt/docserver/state.env` (the old container's facts, no secret).
-- What it runs: the old container is renamed `<name>-replaced`, set to `restart=no`, stopped and disconnected. Ours gets the old
-  name and aliases, the copied Traefik labels with the service port 8787, the old restart policy, `read_only`, `cap_drop ALL`,
-  `no-new-privileges`, `/tmp` tmpfs, the volume `<name>-docserver-data` on `/data`, the secrets read-only on `/run/secrets`, and
-  `--sysctl net.ipv4.ip_unprivileged_port_start=80` for the internal listener on port 80. The config is built by the entrypoint from
-  env (`dropin.md` D6); the secret goes by file (`JWT_SECRET_FILE`), never in env.
+- What it runs: `docker load` of a tarball (after the disk check: four times the tar plus 2048 MB must be free, `MIN_FREE_MB`);
+  the old container is renamed `<name>-replaced`, set to `restart=no`, stopped and disconnected. Ours gets the old name and aliases,
+  the old restart policy and memory limit, `read_only`, `cap_drop ALL`, `no-new-privileges`, `/tmp` tmpfs, the volume
+  `<name>-docserver-data` on `/data`, the secrets read-only on `/run/secrets`, and
+  `--sysctl net.ipv4.ip_unprivileged_port_start=80` for port 80. The config is built by the entrypoint from env (`dropin.md` D6); the
+  secret goes by file (`JWT_SECRET_FILE`), never in env. The public side, one of two layouts (the plan's `layout` line):
+  - **Labels** on the old container: they are copied with the service port 8787; the saved-file listener is port 80.
+  - **A file route** (or a route the installer cannot see) to port 80, the backend's rewrite target also on port 80: the **shared
+    layout**, one listener on port 80 (`dropin.md` D2b). Traefik's route keeps working unchanged; `/ds/files/...` there answers only
+    the backend (by name), everyone else, Traefik included, gets 403.
+  - Published ports: `<ip>:<port>:80` is mapped to our public listener; a loopback-only `127.0.0.1:<port>:443` is dropped with a
+    note (we have no TLS listener).
 - Checks: the container must become healthy, and a throwaway container on the network must get our 403 from
-  `http://<rewrite host>:80/` (the alias is ours, the peer gate holds). Otherwise it rolls back by itself.
+  `http://<rewrite host>:80/ds/files/...` (the alias is ours, the peer gate holds). Otherwise it rolls back by itself.
 - A rerun (new image, new frame origin, a recreated Traefik) recreates ours only. `rollback` removes ours, keeps the data volume, and
   puts the old container back with its name, aliases, fixed addresses, restart policy and running state.
-- **Afterwards**: do not run `docker compose up` for the backend's ONLYOFFICE service (bring its own services up by name), or add an
-  override that disables it; else the old container comes back and claims the names. The installer prints this.
+- **Afterwards**: the installer prints a `docker-compose.override.yml` for the backend's compose project (from the old container's
+  compose labels) that sets `profiles: ["disabled"]` on the ONLYOFFICE service; add it (the installer writes nothing there), or run
+  that project's compose for its own services only. Otherwise `docker compose up` brings the old container back and it claims the
+  names. Delete those lines before a rollback.
 - Refusals (each names the flag or env value that settles it): more than one candidate container, Traefik or `Host()` rule; the
   backend's rewrite target not a name of the old container, or missing from its allowlist; a secret mismatch between the two
-  sides or under 16 bytes; no frame origin; a router using a service its labels do not define; a published port other than 80; no
-  Traefik labels and no `--public-url` and `--trusted-proxy`.
-- Rehearsed on this PC by `packaging/docserver/rehearse-dropin.sh` (stand-in container, fake backend as surveyed, Traefik docker
-  provider): see `docs/STATUS.md`, "Phase 5: ONLYOFFICE drop-in".
+  sides or under 16 bytes; no frame origin; a router using a service its labels do not define; a published port other than 80 and a
+  loopback 443; file routes to two ports, over https, or naming the old container by address; a trusted proxy that is the backend;
+  no labels and no route found and no `--public-url` and `--trusted-proxy`; too little disk.
+- Rehearsed on this PC by `packaging/docserver/rehearse-dropin.sh`, two scenarios (Traefik docker provider with labels; Traefik file
+  provider as on the test server): see `docs/STATUS.md`, "Phase 5: ONLYOFFICE drop-in".
 
 ## Example operator config
 
