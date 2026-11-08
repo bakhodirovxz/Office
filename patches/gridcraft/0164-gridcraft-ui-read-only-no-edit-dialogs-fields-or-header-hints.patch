@@ -1,0 +1,99 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 8 Nov 2026 12:00:00 +0500
+Subject: [PATCH] gridcraft: a read-only workbook opens no edit dialog, takes no typing in the chart-title, table-name and reply fields, and its empty header and footer zones neither frame nor invite
+
+0162 refused the cell, header/footer and text box editors. Three more places still took typed text: a form dialog whose command a read-only
+session refuses (New Comment, New Note, Format Cells, ...) opened and showed what was typed into it; widgets::committed_text (chart title and
+axis titles, the table name) and the Comments pane's reply box showed typed text; and a sheet tab's double-click began a rename. SheetApp::
+open_dialog now refuses a form whose command Session reports as refused in a read-only session (the same toast), those two fields are not
+interactive (committed_text reads a context flag SheetApp::ui sets each frame), the tab rename does not start, and in Page Layout view the
+empty header/footer zones draw no hover frame and no "Add header" invitation. With the session editable nothing changes.
+Test: ci/web-smoke/bridge-sheets.spec.ts (note dialog, header editor, text box editor), each against an editable control.
+---
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 7660ef7..08ef909 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -802,7 +802,16 @@ impl SheetApp {
+                 let page = params.get("page").and_then(Json::as_str).and_then(backstage::Page::parse).unwrap_or(backstage::Page::Home);
+                 self.open_backstage(page);
+             }
+-            other => self.dialog = dialogs::Dialog::open(self, other, params),
++            other => {
++                let d = dialogs::Dialog::open(self, other, params);
++                // A form whose command a read-only session refuses (comment, note, ...) is not opened: nothing can be typed into it.
++                let edits = d.as_ref().and_then(|d| d.command).and_then(gridcraft_engine::find_command).is_some_and(gridcraft_engine::cmd::refuses_when_read_only);
++                if !(self.session.read_only && edits) {
++                    self.dialog = d;
++                } else {
++                    self.refuse_read_only();
++                }
++            }
+         }
+     }
+ 
+@@ -1192,6 +1201,7 @@ impl SheetApp {
+             return;
+         }
+         let t0 = now_ms();
++        ctx.data_mut(|d| d.insert_temp(egui::Id::new("edits-barred"), self.session.read_only));
+         text_box::before_ui(self, &ctx);
+         // The language the widgets translate with this frame (see `i18n::current`).
+         i18n::set_current(&ctx, self.ui.language);
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index aaa9bec..98ff28a 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -92,7 +92,7 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
+                             app.run_or_alert("review.resolveComment", json!({"cell": cell, "resolved": !c.resolved}));
+                         }
+                         let send = ui.small_button("Send").clicked();
+-                        let r = ui.add(egui::TextEdit::singleline(&mut draft).hint_text("Reply…").desired_width(ui.available_width()));
++                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text("Reply…").desired_width(ui.available_width()));
+                         if (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || send) && !draft.is_empty() {
+                             app.run_or_alert("review.replyComment", json!({"cell": cell, "text": draft}));
+                             draft.clear();
+diff --git a/crates/ui-egui/src/paper_view.rs b/crates/ui-egui/src/paper_view.rs
+index 61ba723..f96fcbb 100644
+--- a/crates/ui-egui/src/paper_view.rs
++++ b/crates/ui-egui/src/paper_view.rs
+@@ -207,7 +207,8 @@ pub(crate) fn paint_headers_footers(app: &SheetApp, ui: &egui::Ui, p: &Painter,
+     let Some(d) = app.session.active() else { return };
+     let p = p.with_clip_rect(geo.cells);
+     let editing = app.grid.hf_edit.as_ref().map(|e| (e.page, e.footer));
+-    let hover = ui.input(|i| i.pointer.hover_pos()).filter(|q| geo.cells.contains(*q)).and_then(|q| {
++    // A read-only workbook takes no header or footer, so the empty zones neither frame nor invite on hover.
++    let hover = ui.input(|i| i.pointer.hover_pos()).filter(|q| !app.session.read_only && geo.cells.contains(*q)).and_then(|q| {
+         let (x, y) =
+             (geo.scroll.x as f64 + ((q.x - geo.cells.left()) / geo.z) as f64, geo.scroll.y as f64 + ((q.y - geo.cells.top()) / geo.z) as f64);
+         pg.hf_zone_at(x, y)
+diff --git a/crates/ui-egui/src/tabs.rs b/crates/ui-egui/src/tabs.rs
+index b77524b..ce01fb3 100644
+--- a/crates/ui-egui/src/tabs.rs
++++ b/crates/ui-egui/src/tabs.rs
+@@ -151,7 +151,7 @@ pub fn sheet_tabs(app: &mut SheetApp, ui: &mut Ui) {
+                                 if resp.clicked() {
+                                     activate_sheet(app, i);
+                                 }
+-                                if resp.double_clicked() {
++                                if resp.double_clicked() && !app.refuse_read_only() {
+                                     app.grid.renaming_tab = Some(i);
+                                     app.grid.rename_text = name.clone();
+                                 }
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index 6a8d442..260e8cc 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -131,7 +131,9 @@ pub fn committed_text(ui: &mut Ui, id: egui::Id, current: &str, width: Option<f3
+     let width = width.unwrap_or(ui.spacing().text_edit_width);
+     let draft = id.with("draft");
+     let mut text = ui.data_mut(|d| d.get_temp::<String>(draft)).unwrap_or_else(|| current.to_string());
+-    let r = ui.add(egui::TextEdit::singleline(&mut text).id(id).desired_width(width));
++    // A read-only session (set by SheetApp::ui each frame): the field is shown but takes no typing.
++    let barred = ui.data(|d| d.get_temp::<bool>(egui::Id::new("edits-barred"))).unwrap_or(false);
++    let r = ui.add(egui::TextEdit::singleline(&mut text).interactive(!barred).id(id).desired_width(width));
+     if r.lost_focus() {
+         ui.data_mut(|d| d.remove::<String>(draft));
+         return (!ui.input(|i| i.key_pressed(egui::Key::Escape))).then_some(text);

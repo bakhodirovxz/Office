@@ -207,7 +207,8 @@ pub(crate) fn paint_headers_footers(app: &SheetApp, ui: &egui::Ui, p: &Painter, 
     let Some(d) = app.session.active() else { return };
     let p = p.with_clip_rect(geo.cells);
     let editing = app.grid.hf_edit.as_ref().map(|e| (e.page, e.footer));
-    let hover = ui.input(|i| i.pointer.hover_pos()).filter(|q| geo.cells.contains(*q)).and_then(|q| {
+    // A read-only workbook takes no header or footer, so the empty zones neither frame nor invite on hover.
+    let hover = ui.input(|i| i.pointer.hover_pos()).filter(|q| !app.session.read_only && geo.cells.contains(*q)).and_then(|q| {
         let (x, y) =
             (geo.scroll.x as f64 + ((q.x - geo.cells.left()) / geo.z) as f64, geo.scroll.y as f64 + ((q.y - geo.cells.top()) / geo.z) as f64);
         pg.hf_zone_at(x, y)

@@ -6,6 +6,7 @@
 #
 #   install.sh [--dry-run] --profile FILE --image REF|FILE.tar[.gz] [--etc DIR] [--from NAME] [--backend NAME] [--public-url URL]
 #              [--public-port N] [--frame-origin URL]... [--trusted-proxy NAME|IP]... [--secret-file FILE] [--edit-types LIST]
+#              [--allow-opaque-origin | --no-allow-opaque-origin]
 #   install.sh rollback [--etc DIR]
 #
 # The profile (KEY=value lines, e.g. profiles/hrm.env) names the backend's env variables; the code knows no backend. Anything
@@ -15,6 +16,7 @@ export MSYS_NO_PATHCONV=1   # Git Bash (the rehearsal on Windows): keep containe
 
 ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=docx,xlsx,pptx,pdf   # the types whose edit configs edit (docs/phase5/r6.md); --edit-types docx keeps the others view-only
 FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=""
+OPAQUE=""   # dropin.md D3b: 1 = no frame check (a host page with an opaque origin, the iOS WebView case), 0 = the check; "" = 0, or kept on a rerun
 MIN_FREE_MB=${MIN_FREE_MB:-2048}   # left free on Docker's disk after the image load: the data volume (sessions, 7 days) and the logs grow
 die() { echo "install.sh: refused: $*" >&2; exit 2; }
 say() { echo "install.sh: $*"; }
@@ -33,6 +35,8 @@ while [ $# -gt 0 ]; do
     --trusted-proxy) PROXIES+=("$2"); shift ;;
     --secret-file) SECRET_FILE=$2; shift ;;
     --edit-types) EDIT_TYPES=$2; shift ;;
+    --allow-opaque-origin) OPAQUE=1 ;;
+    --no-allow-opaque-origin) OPAQUE=0 ;;
     *) die "unknown argument $1 (see the head of this file)" ;;
   esac
   shift
@@ -305,6 +309,12 @@ if [ "${#FRAMES[@]}" = 0 ]; then
 fi
 for o in "${FRAMES[@]}"; do ok_origin "$o" || die "frame origin $o is not https://host[:port] (http only for localhost)"; done
 FRAMES_CSV=$(printf '%s\n' "${FRAMES[@]}" | sort -u | paste -sd, -)
+# a rerun (an upgrade) keeps the running container's switch unless a flag says otherwise: it is never turned on or off silently
+OPAQUE_NOTE=""
+if [ -z "$OPAQUE" ]; then
+  OPAQUE=0
+  if [ "$RERUN" = 1 ]; then OPAQUE=$(envof "$OLD_NAME" DOCSERVER_ALLOW_OPAQUE_ORIGIN); OPAQUE=${OPAQUE:-0}; OPAQUE_NOTE=" (kept from the running container)"; fi
+fi
 PROXIES_CSV=$(printf '%s\n' "${PROXIES[@]}" | sort -u | paste -sd, -)
 # the backend by its alias and its container name: a recreated backend gets a new address, never a new name
 ALLOW_CSV=$(printf '%s\n' "$BHOST" "$BACKEND" | sort -u | paste -sd, -)
@@ -324,6 +334,7 @@ install.sh: plan ($( [ "$RERUN" = 1 ] && echo "rerun: recreate ours" || echo "fi
   memory           $( [ "$OLD_MEMORY" -gt 0 ] && echo "$(( OLD_MEMORY / 1048576 )) MB (the old container's limit)" || echo "no limit (the old container had none)")
   image            $IMAGE_SIZE; $DISK
   frame origins    $FRAMES_CSV + $PUBLIC_URL
+  opaque origin    $( [ "$OPAQUE" = 1 ] && echo "ALLOWED: any page may frame the editor, the config token's signature is the only gate (--no-allow-opaque-origin turns it off)" || echo "refused (--allow-opaque-origin lets a null page origin in: an iOS WebView)")$OPAQUE_NOTE
   provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES  secret <redacted, $SECRET_LEN bytes>
   traefik labels   $(grep -c . <<< "$LABELS" || true)$( [ -z "$LABELS" ] || echo " (service port -> $PUBLIC_PORT)")
   files            $ETC/secrets/{provider-secret,server-secret,converter-secret,audit-key} (0600, uid 10002), $STATE
@@ -372,7 +383,7 @@ docker run -d --name "$OLD_NAME" --restart "$OLD_RESTART" \
   -e "DOCSERVER_PUBLIC_URL=$PUBLIC_URL" -e "DOCSERVER_PUBLIC_PORT=$PUBLIC_PORT" -e "DOCSERVER_FETCH_ALLOW=$FETCH" -e "DOCSERVER_TRUSTED_PROXIES=$PROXIES_CSV" \
   -e "DOCSERVER_INTERNAL_URL=http://$RWHOST:$INTERNAL_PORT" -e "DOCSERVER_INTERNAL_PORT=$INTERNAL_PORT" \
   -e "DOCSERVER_INTERNAL_ALLOW=$ALLOW_CSV" -e "DOCSERVER_FRAME_ORIGINS=$FRAMES_CSV" -e "DOCSERVER_PROVIDER=$PROVIDER" \
-  -e "DOCSERVER_EDIT_TYPES=$EDIT_TYPES" "$IMAGE" > /dev/null || fail "docker run failed"
+  -e "DOCSERVER_EDIT_TYPES=$EDIT_TYPES" -e "DOCSERVER_ALLOW_OPAQUE_ORIGIN=$OPAQUE" "$IMAGE" > /dev/null || fail "docker run failed"
 for net in $(tail -n +2 <<< "$NETS"); do
   # shellcheck disable=SC2046
   docker network connect $(alias_args "$net" | sed 's/--network-alias/--alias/') "$net" "$OLD_NAME" || fail "cannot join $net"

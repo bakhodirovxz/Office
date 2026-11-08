@@ -47,17 +47,21 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
                 });
             });
             ui.add_space(6.0);
-            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match pane.as_str() {
-                "format" => format_shape(app, ui),
-                "background" => background(app, ui),
-                "animation" => animation(app, ui),
-                "selection" => crate::selpane::show(app, ui),
-                "comments" => comments(app, ui),
-                "designer" => designer(app, ui),
-                "smartart" => smartart(app, ui),
-                "thesaurus" => thesaurus(app, ui),
-                "revisions" => revisions(app, ui),
-                _ => {}
+            // A policy that bars edits: the panes that only edit (alt text, SmartArt lines, sizes) are shown but inert, so nothing typed appears.
+            let inert = app.locked() && matches!(pane.as_str(), "format" | "background" | "animation" | "smartart");
+            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
+                ui.add_enabled_ui(!inert, |ui| match pane.as_str() {
+                    "format" => format_shape(app, ui),
+                    "background" => background(app, ui),
+                    "animation" => animation(app, ui),
+                    "selection" => crate::selpane::show(app, ui),
+                    "comments" => comments(app, ui),
+                    "designer" => designer(app, ui),
+                    "smartart" => smartart(app, ui),
+                    "thesaurus" => thesaurus(app, ui),
+                    "revisions" => revisions(app, ui),
+                    _ => {}
+                });
             });
         });
 }
@@ -1291,7 +1295,12 @@ fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c: 
             ui.horizontal(|ui| {
                 let id = ui.id().with(("reply", slide, index));
                 let mut txt: String = ui.data_mut(|d| d.get_temp(id).unwrap_or_default());
-                let r = ui.add(egui::TextEdit::singleline(&mut txt).hint_text(crate::i18n::t("Reply…")).desired_width(ui.available_width() - 70.0));
+                let r = ui.add(
+                    egui::TextEdit::singleline(&mut txt)
+                        .interactive(!app.locked())
+                        .hint_text(crate::i18n::t("Reply…"))
+                        .desired_width((ui.available_width() - 120.0).max(60.0)),
+                );
                 if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && !txt.trim().is_empty() {
                     focus_comment(app, slide, index);
                     run(app, "comment.reply", json!({"index": index, "text": txt}));

@@ -97,11 +97,15 @@ fn inline_blocks<'a>(html: &'a str, tag: &str) -> Vec<&'a str> {
 
 /// The CSP of an editor page (F8).
 pub fn editor_csp(index_html: &str) -> String {
-    editor_csp_for(index_html, "'self'")
+    editor_csp_for(index_html, Some("'self'"))
 }
 
-/// The same with a given `frame-ancestors` source list: the docserver adds its providers' origins (PLAN phase 5, F5).
-pub fn editor_csp_for(index_html: &str, ancestors: &str) -> String {
+/// The same with a given `frame-ancestors` source list: the docserver adds its providers' origins (PLAN phase 5, F5). None: no
+/// `frame-ancestors` at all (the docserver's `allow_opaque_origin`, docs/phase5/dropin.md D3b).
+pub fn editor_csp_for(index_html: &str, ancestors: Option<&str>) -> String {
+    let frame = ancestors
+        .map(|a| format!("frame-ancestors {a}; "))
+        .unwrap_or_default();
     let hashes = |tag| {
         inline_blocks(index_html, tag)
             .iter()
@@ -115,7 +119,7 @@ pub fn editor_csp_for(index_html: &str, ancestors: &str) -> String {
     };
     format!(
         "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'{}; style-src 'self'{}; img-src 'self' data: blob:; \
-         object-src 'none'; frame-ancestors {ancestors}; base-uri 'none'; form-action 'self'",
+         object-src 'none'; {frame}base-uri 'none'; form-action 'self'",
         hashes("script"),
         hashes("style")
     )
@@ -137,7 +141,7 @@ fn editor(route: &str, dir: &Path, ds: Option<&Docserver>) -> Option<Router<Arc<
         bare: format!("/{route}"),
         slash: format!("/{route}/"),
         csp: HeaderValue::from_str(&match ds {
-            Some(d) => editor_csp_for(&html, &d.frame_ancestors()),
+            Some(d) => editor_csp_for(&html, d.frame_ancestors().as_deref()),
             None => editor_csp(&html),
         })
         .ok()?,

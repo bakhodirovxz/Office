@@ -14,6 +14,8 @@ use std::sync::Arc;
 const API_JS: &str = include_str!("../static/api.js");
 const EDITOR_HTML: &str = include_str!("../static/editor.html");
 const EDITOR_JS: &str = include_str!("../static/editor.js");
+/// The one line of `editor.js` that `allow_opaque_origin` changes (D3b): the wrapper then accepts a `null` host origin.
+const OPAQUE_OFF: &str = "var OPAQUE = false;";
 
 async fn api_js() -> impl IntoResponse {
     (
@@ -29,11 +31,13 @@ async fn editor_html() -> impl IntoResponse {
     )
 }
 
-async fn editor_js() -> impl IntoResponse {
-    (
-        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
-        EDITOR_JS,
-    )
+/// `editor.js` as served: the file itself, or with `OPAQUE` set when `allow_opaque_origin` is on.
+fn editor_js_text(opaque: bool) -> String {
+    if opaque {
+        EDITOR_JS.replacen(OPAQUE_OFF, "var OPAQUE = true;", 1)
+    } else {
+        EDITOR_JS.to_string()
+    }
 }
 
 async fn not_found() -> ApiError {
@@ -41,13 +45,13 @@ async fn not_found() -> ApiError {
 }
 
 impl Docserver {
-    /// The strict baseline CSP with `frame-ancestors` widened to `frame_ancestors()`: for the wrapper page. Editor pages build theirs
-    /// the same way in `suite-serve`.
+    /// The strict baseline CSP with `frame-ancestors` widened to `frame_ancestors()`, or without it (`allow_opaque_origin`): for the
+    /// wrapper page. Editor pages build theirs the same way in `suite-serve`.
     pub fn frame_csp(&self) -> String {
-        CSP.replace(
-            "frame-ancestors 'none'",
-            &format!("frame-ancestors {}", self.frame_ancestors()),
-        )
+        match self.frame_ancestors() {
+            Some(a) => CSP.replace("frame-ancestors 'none'", &format!("frame-ancestors {a}")),
+            None => CSP.replace("frame-ancestors 'none'; ", ""),
+        }
     }
 
     /// The public `/ds/` routes. Only `api.js` is cross-origin readable (`Cross-Origin-Resource-Policy`); only the wrapper page may be
@@ -87,7 +91,15 @@ impl Docserver {
         Router::new()
             .merge(embed)
             .merge(frame)
-            .route("/ds/editor.js", get(editor_js))
+            .route("/ds/editor.js", {
+                let js: Arc<str> = editor_js_text(self.allow_opaque_origin).into();
+                get(move || async move {
+                    (
+                        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                        js.to_string(),
+                    )
+                })
+            })
             .merge(self.session_routes())
             .merge(self.history_routes())
     }
@@ -169,6 +181,7 @@ mod tests {
             diff_timeout_s: 120,
             keep_closed_s: 24 * 3600,
             keep_abandoned_s: 7 * 86_400,
+            allow_opaque_origin: false,
             providers: vec![Provider {
                 name: "p".into(),
                 issuer: "i".into(),
@@ -278,5 +291,26 @@ mod tests {
             "{framed}"
         );
         assert_eq!(framed.replace("'self' https://app.test", "'none'"), CSP);
+        // D3b: the switch drops the directive and changes nothing else
+        let mut on = (*ds()).clone();
+        on.allow_opaque_origin = true;
+        let open = on.frame_csp();
+        assert!(!open.contains("frame-ancestors"), "{open}");
+        assert_eq!(
+            open.replace(
+                "object-src 'none'; ",
+                "object-src 'none'; frame-ancestors 'none'; "
+            ),
+            CSP
+        );
+    }
+
+    #[test]
+    fn editor_js_changes_one_line_and_only_with_the_switch() {
+        assert_eq!(EDITOR_JS.matches(OPAQUE_OFF).count(), 1);
+        assert_eq!(editor_js_text(false), EDITOR_JS, "off: the file as it is");
+        let on = editor_js_text(true);
+        assert_eq!(on.replacen("var OPAQUE = true;", OPAQUE_OFF, 1), EDITOR_JS);
+        assert!(!on.contains(OPAQUE_OFF));
     }
 }

@@ -1,0 +1,115 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 8 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft: a policy that bars edits also keeps the side panes' fields and the number boxes inert, and the reply box stops widening the Comments pane
+
+A read-only session refused every command, but the fields of the side panes still took typed text, so the text showed for as long as the
+field kept focus. While SlideApp::locked() (the command hook refuses office_hook::EDIT) the Format Shape, Format Background, Animation and
+SmartArt Text panes are drawn disabled as a whole (alt text, sizes, line width, SmartArt lines), the Comments reply box, the Selection
+pane's shape rename and the sorter's section rename are not interactive, and widgets::spinner (every number box of the ribbon and the panes)
+reads the same state from a context flag SlideApp::ui sets each frame. With no hook nothing changes.
+The reply box was sized as available_width - 70, but the Resolve and Delete buttons that follow it need about 100, so the row overflowed and the
+resizable pane grew a little on every repaint until it reached its maximum, which moved the slide under a test or a reader; it now leaves 120.
+Test: ci/web-smoke/bridge-slides.spec.ts case 11 (outline view, comment reply, Format Shape pane, text box tool), each against an editable control.
+---
+
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 2e80576..0e716c1 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -1877,6 +1877,7 @@ impl SlideApp {
+             return;
+         }
+         i18n::set_current(i18n::from_pref(&self.ui.language));
++        ctx.data_mut(|d| d.insert_temp(egui::Id::new("edits-barred"), self.locked()));
+         let t0 = now_ms();
+         let t = theme::Tokens::get(&ctx);
+         self.tick_media(&ctx);
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 9dd4df8..1096c6d 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -47,17 +47,21 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+                 });
+             });
+             ui.add_space(6.0);
+-            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match pane.as_str() {
+-                "format" => format_shape(app, ui),
+-                "background" => background(app, ui),
+-                "animation" => animation(app, ui),
+-                "selection" => crate::selpane::show(app, ui),
+-                "comments" => comments(app, ui),
+-                "designer" => designer(app, ui),
+-                "smartart" => smartart(app, ui),
+-                "thesaurus" => thesaurus(app, ui),
+-                "revisions" => revisions(app, ui),
+-                _ => {}
++            // A policy that bars edits: the panes that only edit (alt text, SmartArt lines, sizes) are shown but inert, so nothing typed appears.
++            let inert = app.locked() && matches!(pane.as_str(), "format" | "background" | "animation" | "smartart");
++            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
++                ui.add_enabled_ui(!inert, |ui| match pane.as_str() {
++                    "format" => format_shape(app, ui),
++                    "background" => background(app, ui),
++                    "animation" => animation(app, ui),
++                    "selection" => crate::selpane::show(app, ui),
++                    "comments" => comments(app, ui),
++                    "designer" => designer(app, ui),
++                    "smartart" => smartart(app, ui),
++                    "thesaurus" => thesaurus(app, ui),
++                    "revisions" => revisions(app, ui),
++                    _ => {}
++                });
+             });
+         });
+ }
+@@ -1287,7 +1291,7 @@ fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c:
+             ui.horizontal(|ui| {
+                 let id = ui.id().with(("reply", slide, index));
+                 let mut txt: String = ui.data_mut(|d| d.get_temp(id).unwrap_or_default());
+-                let r = ui.add(egui::TextEdit::singleline(&mut txt).hint_text(crate::i18n::t("Reply…")).desired_width(ui.available_width() - 70.0));
++                let r = ui.add(egui::TextEdit::singleline(&mut txt).interactive(!app.locked()).hint_text(crate::i18n::t("Reply…")).desired_width((ui.available_width() - 120.0).max(60.0)));
+                 if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) && !txt.trim().is_empty() {
+                     focus_comment(app, slide, index);
+                     run(app, "comment.reply", json!({"index": index, "text": txt}));
+diff --git a/crates/ui-egui/src/selpane.rs b/crates/ui-egui/src/selpane.rs
+index 713e625..97e0a11 100644
+--- a/crates/ui-egui/src/selpane.rs
++++ b/crates/ui-egui/src/selpane.rs
+@@ -189,7 +189,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
+         let renaming = app.selpane.renaming.as_ref().filter(|(id, _)| *id == row.id).map(|(_, s)| s.clone());
+         if let Some(mut buf) = renaming {
+             let edit_id = ui.id().with(("rename", row.id));
+-            let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).id(edit_id).font(theme::font(12.5)).margin(vec2(2.0, 1.0)));
++            let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::font(12.5)).margin(vec2(2.0, 1.0)));
+             if !app.selpane.rename_started {
+                 out.request_focus();
+                 if let Some(mut s) = egui::TextEdit::load_state(ui.ctx(), edit_id) {
+diff --git a/crates/ui-egui/src/sorter.rs b/crates/ui-egui/src/sorter.rs
+index 21f3e24..6ad40d8 100644
+--- a/crates/ui-egui/src/sorter.rs
++++ b/crates/ui-egui/src/sorter.rs
+@@ -96,7 +96,7 @@ fn section_header(app: &mut SlideApp, ui: &mut Ui, h: &Header<'_>) -> Rect {
+     let name_rect = Rect::from_min_max(pos2(r.min.x + 40.0, r.min.y + 4.0), pos2(r.max.x - 56.0, r.max.y - 4.0));
+     if let Some(mut buf) = renaming {
+         let edit_id = ui.id().with(("sorter-rename", h.uid, h.index));
+-        let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)));
++        let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)));
+         let already = app.sorter.rename_started;
+         if !already {
+             out.request_focus();
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index e059547..896cc73 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -432,9 +432,10 @@ pub fn spinner(ui: &mut Ui, id: &str, value: f64, step: f64, suffix: &str, width
+     let key = ui.id().with(id);
+     let mut text: String = ui.data_mut(|d| d.get_temp::<String>(key)).unwrap_or_else(|| fmt_num(value, suffix));
+     let mut out = None;
++    let barred = ui.data(|d| d.get_temp::<bool>(egui::Id::new("edits-barred"))).unwrap_or(false);
+     ui.horizontal(|ui| {
+         ui.spacing_mut().item_spacing.x = 0.0;
+-        let r = ui.add(egui::TextEdit::singleline(&mut text).desired_width(width).font(theme::font(12.0)));
++        let r = ui.add(egui::TextEdit::singleline(&mut text).interactive(!barred).desired_width(width).font(theme::font(12.0)));
+         if r.has_focus() {
+             ui.data_mut(|d| d.insert_temp(key, text.clone()));
+         } else {

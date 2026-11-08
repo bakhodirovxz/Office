@@ -52,6 +52,12 @@ packaging/docserver/install.sh rollback                                        #
 profile's `ORIGIN_ENVS` finds none, and `--public-url https://<editor host>` plus `--trusted-proxy <traefik container>` when the
 installer cannot find the Traefik route by itself (it says so).
 
+`--allow-opaque-origin`: only when a host page with an opaque (`null`) origin must embed the editor, the iOS WebView case of
+`dropin.md` D3b (symptom: an empty editor frame and no `session.create` in our log). It turns the frame check off for every page (no
+`frame-ancestors`, no `X-Frame-Options`, `null` accepted at session create); the config token's signature stays the gate. Off by
+default; the plan prints an `opaque origin` line; a later rerun keeps the running container's value; `--no-allow-opaque-origin`
+turns it off. Env `DOCSERVER_ALLOW_OPAQUE_ORIGIN=1|0`, config `allow_opaque_origin` in `[docserver]`.
+
 - What it reads (`docker inspect`, `docker info`, `df`; nothing is changed before the plan is printed): the old container (the
   profile's `FROM_IMAGE`, or `--from`), its name, aliases, networks, restart policy, memory limit, published ports, compose labels,
   `traefik.*` labels and `JWT_SECRET`; the backend (the container answering the backend URL's host) and its env (backend URL,

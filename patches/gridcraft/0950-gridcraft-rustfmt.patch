@@ -8,10 +8,10 @@ Last patch of the queue: regenerate it on every sync and after a new patch leave
 ---
 
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index 80098ed..4bf8dbe 100644
+index 102fcc4..2c94b03 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
-@@ -338,7 +338,8 @@ impl Session {
+@@ -340,7 +340,8 @@ impl Session {
          for sh in wb.sheets.iter_mut() {
              let sh = Arc::make_mut(sh);
              sh.default_row_height = gridcraft_model::NEW_WORKBOOK_ROW_HEIGHT;
@@ -42,6 +42,41 @@ index 3ec1bfa..9fa2685 100644
      let Some(range) = page.get("range").and_then(Json::as_str).and_then(gridcraft_engine::core::RangeRef::parse) else { return };
      let Some(sh) = page.get("sheet").and_then(Json::as_str).and_then(|n| wb.sheet_index(n)).and_then(|i| wb.sheets.get(i)) else { return };
      // Preview pixels per point, and per sheet pixel (sheet geometry is 96 dpi: 0.75 pt per pixel).
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 08ef909..e0a00e2 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -805,7 +805,11 @@ impl SheetApp {
+             other => {
+                 let d = dialogs::Dialog::open(self, other, params);
+                 // A form whose command a read-only session refuses (comment, note, ...) is not opened: nothing can be typed into it.
+-                let edits = d.as_ref().and_then(|d| d.command).and_then(gridcraft_engine::find_command).is_some_and(gridcraft_engine::cmd::refuses_when_read_only);
++                let edits = d
++                    .as_ref()
++                    .and_then(|d| d.command)
++                    .and_then(gridcraft_engine::find_command)
++                    .is_some_and(gridcraft_engine::cmd::refuses_when_read_only);
+                 if !(self.session.read_only && edits) {
+                     self.dialog = d;
+                 } else {
+diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
+index 98ff28a..725b526 100644
+--- a/crates/ui-egui/src/panes.rs
++++ b/crates/ui-egui/src/panes.rs
+@@ -92,7 +92,12 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
+                             app.run_or_alert("review.resolveComment", json!({"cell": cell, "resolved": !c.resolved}));
+                         }
+                         let send = ui.small_button("Send").clicked();
+-                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text("Reply…").desired_width(ui.available_width()));
++                        let r = ui.add(
++                            egui::TextEdit::singleline(&mut draft)
++                                .interactive(!app.session.read_only)
++                                .hint_text("Reply…")
++                                .desired_width(ui.available_width()),
++                        );
+                         if (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || send) && !draft.is_empty() {
+                             app.run_or_alert("review.replyComment", json!({"cell": cell, "text": draft}));
+                             draft.clear();
 diff --git a/crates/xlsx/src/sheet_write.rs b/crates/xlsx/src/sheet_write.rs
 index aa1537c..1886d35 100644
 --- a/crates/xlsx/src/sheet_write.rs

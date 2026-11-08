@@ -231,7 +231,8 @@ const drag = (page: Page, x0: number, y0: number, x1: number, y1: number) =>
 const clickC2 = (page: Page) => canvas(page).click({ position: C2 });
 
 // `ro`: the session is read only. Enter after typing is only for the editable control: in a read-only one it would just move the selection.
-type Path = { name: string; pixels?: boolean; act: (p: Page, ro: boolean) => Promise<void>; clip?: typeof CLIP_ALL; control?: boolean; prep?: (p: Page) => Promise<void> };
+// fx: a fixture under ci/web-smoke/ to open instead of 01-styles.xlsx.
+type Path = { name: string; fx?: string; pixels?: boolean; act: (p: Page, ro: boolean) => Promise<void>; clip?: typeof CLIP_ALL; control?: boolean; prep?: (p: Page) => Promise<void> };
 const PATHS: Path[] = [
   { name: 'typing into a cell', act: async (p, ro) => { await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
   { name: 'F2 and typing', act: async (p, ro) => { await p.keyboard.press('F2'); await p.keyboard.type('zz'); if (!ro) await p.keyboard.press('Enter'); } },
@@ -252,6 +253,25 @@ const PATHS: Path[] = [
   { name: 'dragging a column border', act: (p) => drag(p, 233, 128, 330, 128), clip: CLIP_GRID },
   { name: 'dragging a row border', act: (p) => drag(p, 14, 171, 14, 200), clip: CLIP_GRID },
   { name: 'double-click on a column border (AutoFit)', act: (p) => canvas(p).dblclick({ position: { x: 233, y: 128 } }), clip: CLIP_GRID },
+  // Editors that are not the cell editor (gridcraft/0162 and 0164): the note/comment dialog, the header/footer editor, the text box editor.
+  { name: 'the note dialog (Shift+F2) and typing in it', act: async (p, ro) => {
+      await p.keyboard.press('Shift+F2');
+      await p.waitForTimeout(700);
+      if (ro) await p.keyboard.type('zz'); // no dialog opens: nothing to click, and a click on the grid would move the selection
+      else { await canvas(p).click({ position: { x: 527, y: 192 } }); await p.keyboard.type('zz'); await canvas(p).click({ position: { x: 708, y: 374 } }); }
+    } },
+  { name: 'the header editor in Page Layout view', prep: async (p) => { await canvas(p).click({ position: { x: 839, y: 688 } }); await p.waitForTimeout(1500); },
+    act: async (p, ro) => {
+      await canvas(p).click({ position: { x: 380, y: 195 } });
+      await p.keyboard.type('zz');
+      if (!ro) await canvas(p).click({ position: { x: 600, y: 500 } }); // leaves the editor: the header is stored
+    } },
+  { name: 'the text box editor (double-click, typing)', fx: 'fixtures/sheets-text-box.xlsx', prep: async (p) => { await canvas(p).click({ position: { x: 80, y: 180 } }); await p.waitForTimeout(500); },
+    act: async (p, ro) => {
+      await canvas(p).dblclick({ position: { x: 80, y: 180 } });
+      await p.keyboard.type('zz');
+      if (!ro) await canvas(p).click({ position: { x: 600, y: 500 } });
+    } },
   {
     name: 'dropping a file on the canvas', // a picture is no workbook: the editor answers with its own "can't open" box, so no pixel check
     pixels: false,
@@ -266,20 +286,20 @@ const PATHS: Path[] = [
   },
 ];
 
-async function session(page: Page, readOnly: boolean, prep?: Path['prep']) {
+async function session(page: Page, readOnly: boolean, p: Path) {
   const logs: string[] = [];
   page.on('console', (m) => logs.push(m.text()));
-  await open(page, readOnly ? { readOnly: true } : {});
-  if (prep) await prep(page);
+  await open(page, readOnly ? { readOnly: true } : {}, NAME, p.fx ? fs.readFileSync(path.join(ROOT, 'ci/web-smoke', p.fx)) : fs.readFileSync(XLSX));
   await clickC2(page);
   await page.waitForTimeout(1200);
+  if (p.prep) { await p.prep(page); await page.waitForTimeout(800); }
   return logs;
 }
 
 for (const [i, p] of PATHS.entries()) {
   test(`${11 + i} read-only: ${p.name} changes nothing, not even for a frame`, async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    const logs = await session(page, true, p.prep);
+    const logs = await session(page, true, p);
     const clip = p.clip ?? CLIP_ALL;
     const base = await shot(page, clip);
     await p.act(page, true);
@@ -301,7 +321,7 @@ for (const [i, p] of PATHS.entries()) {
 for (const p of PATHS.filter((x) => x.control !== false)) {
   test(`control: ${p.name} in an editable session makes it dirty and changes the canvas`, async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await session(page, false, p.prep);
+    await session(page, false, p);
     const clip = p.clip ?? CLIP_ALL;
     const base = await shot(page, clip);
     await p.act(page, false);
@@ -313,7 +333,7 @@ for (const p of PATHS.filter((x) => x.control !== false)) {
 
 test('read-only: view-only actions still work (selection, copy)', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const logs = await session(page, true);
+  const logs = await session(page, true, { name: 'view', act: async () => {} });
   const base = await shot(page, CLIP_GRID);
   await page.keyboard.press('Control+c');
   await page.keyboard.press('ArrowDown');

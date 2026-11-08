@@ -96,7 +96,10 @@ fn section_header(app: &mut SlideApp, ui: &mut Ui, h: &Header<'_>) -> Rect {
     let name_rect = Rect::from_min_max(pos2(r.min.x + 40.0, r.min.y + 4.0), pos2(r.max.x - 56.0, r.max.y - 4.0));
     if let Some(mut buf) = renaming {
         let edit_id = ui.id().with(("sorter-rename", h.uid, h.index));
-        let out = ui.put(name_rect, egui::TextEdit::singleline(&mut buf).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)));
+        let out = ui.put(
+            name_rect,
+            egui::TextEdit::singleline(&mut buf).interactive(!app.locked()).id(edit_id).font(theme::bold(13.0)).margin(vec2(4.0, 2.0)),
+        );
         let already = app.sorter.rename_started;
         if !already {
             out.request_focus();
