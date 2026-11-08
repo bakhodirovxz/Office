@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Drop-in install of the document server in place of a running ONLYOFFICE-style Document Server container (docs/phase5/dropin.md D7).
 # Run by the operator on the Docker host. Nothing in the backend changes: our container takes the old one's name, network aliases,
-# Traefik labels, restart policy and published ports; the old one is kept, stopped and disconnected, for `install.sh rollback`.
+# Traefik labels, restart policy, memory limit and published ports; the old one is kept, stopped and disconnected, for
+# `install.sh rollback`. Traefik's own files are only read (a file-provider route is found in them, never edited).
 #
-#   install.sh [--dry-run] --profile FILE --image REF [--etc DIR] [--from NAME] [--backend NAME] [--public-url URL]
-#              [--frame-origin URL]... [--trusted-proxy NAME|IP]... [--secret-file FILE] [--edit-types LIST]
+#   install.sh [--dry-run] --profile FILE --image REF|FILE.tar[.gz] [--etc DIR] [--from NAME] [--backend NAME] [--public-url URL]
+#              [--public-port N] [--frame-origin URL]... [--trusted-proxy NAME|IP]... [--secret-file FILE] [--edit-types LIST]
 #   install.sh rollback [--etc DIR]
 #
 # The profile (KEY=value lines, e.g. profiles/hrm.env) names the backend's env variables; the code knows no backend. Anything
@@ -13,7 +14,8 @@ set -euo pipefail
 export MSYS_NO_PATHCONV=1   # Git Bash (the rehearsal on Windows): keep container paths as written
 
 ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=docx,xlsx,pptx,pdf   # the types whose edit configs edit (docs/phase5/r6.md); --edit-types docx keeps the others view-only
-FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=8787
+FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=""
+MIN_FREE_MB=${MIN_FREE_MB:-2048}   # left free on Docker's disk after the image load: the data volume (sessions, 7 days) and the logs grow
 die() { echo "install.sh: refused: $*" >&2; exit 2; }
 say() { echo "install.sh: $*"; }
 [ "${1:-}" = rollback ] && { CMD=rollback; shift; }
@@ -26,6 +28,7 @@ while [ $# -gt 0 ]; do
     --from) FROM=$2; shift ;;
     --backend) BACKEND=$2; shift ;;
     --public-url) PUBLIC_URL=${2%/}; shift ;;
+    --public-port) PUBLIC_PORT=$2; shift ;;
     --frame-origin) FRAMES+=("${2%/}"); shift ;;
     --trusted-proxy) PROXIES+=("$2"); shift ;;
     --secret-file) SECRET_FILE=$2; shift ;;
@@ -70,7 +73,28 @@ rollback() {
 
 [ -n "$PROFILE" ] && [ -f "$PROFILE" ] || die "--profile FILE is required (see packaging/docserver/profiles/)"
 [ -n "$IMAGE" ] || die "--image REF is required"
-docker image inspect "$IMAGE" > /dev/null 2>&1 || die "image $IMAGE is not on this host"
+case "$PUBLIC_PORT" in "" | [1-9] | [1-9][0-9] | [1-9][0-9][0-9] | [1-9][0-9][0-9][0-9] | [1-6][0-9][0-9][0-9][0-9]) ;; *) die "--public-port $PUBLIC_PORT is not a port" ;; esac
+# ---- 0. disk: Docker's data root must keep MIN_FREE_MB free after loading the image (a tarball is loaded here, after this check)
+TAR=""; [ -f "$IMAGE" ] && TAR=$IMAGE
+NEED_MB=0
+if [ -n "$TAR" ]; then
+  case "$TAR" in
+    *.gz) RAW=$(gzip -l "$TAR" | awk 'NR==2 {print $2}') ;;   # shortcut: gzip -l is modulo 4 GiB; the image is far smaller
+    *) RAW=$(wc -c < "$TAR" | tr -d ' ') ;;
+  esac
+  NEED_MB=$(( RAW * 2 / 1048576 + 1 ))   # the unpacked layers, plus the content store's copy of them
+  IMAGE_SIZE="tarball $(( $(wc -c < "$TAR" | tr -d ' ') / 1048576 )) MB, $(( RAW / 1048576 )) MB unpacked; the load needs about $NEED_MB MB"
+else
+  docker image inspect "$IMAGE" > /dev/null 2>&1 || die "image $IMAGE is not on this host (give a docker save tarball with --image FILE.tar)"
+  IMAGE_SIZE="$(docker image ls --format '{{.Size}}' "$IMAGE" | head -n1) on disk (loaded)"
+fi
+DROOT=$(docker info -f '{{.DockerRootDir}}')
+if FREE_MB=$(df -Pm "$DROOT" 2> /dev/null | awk 'NR==2 {print $4}') && [ -n "$FREE_MB" ]; then
+  DISK="$FREE_MB MB free on $DROOT"
+  [ "$FREE_MB" -ge $(( NEED_MB + MIN_FREE_MB )) ] ||
+    die "$DISK; the image load needs $NEED_MB MB and $MIN_FREE_MB MB must stay free (the data volume, the logs): free space first (docker image prune, old logs)"
+elif [ "$LINUX" = 1 ]; then die "cannot measure the free space of Docker's data root $DROOT"
+else DISK="free space not measurable here ($DROOT is in Docker's VM)"; fi
 prof() { sed -n "s/^$1=//p" "$PROFILE" | tail -n1; }
 FROM_IMAGE=$(prof FROM_IMAGE) PROVIDER=$(prof PROVIDER)
 [ -n "$FROM_IMAGE" ] && [ -n "$PROVIDER" ] || die "the profile needs FROM_IMAGE and PROVIDER"
@@ -100,7 +124,10 @@ else
     awk -F'|' 'NF { n=split($2, a, ","); s=""; for (i=1;i<=n;i++) if (a[i] !~ /^[0-9a-f]{12}$/) s = s (s?",":"") a[i]; print $1 "|" s "|" $3 }')
   OLD_PORTS=$(insp "$OLD" '{{range $p,$b := .HostConfig.PortBindings}}{{range $b}}{{$p}}|{{.HostIp}}|{{.HostPort}}{{println}}{{end}}{{end}}' | sed '/^$/d')
   OLD_LABELS=$(insp "$OLD" '{{range $k,$v := .Config.Labels}}{{$k}}={{$v}}{{println}}{{end}}' | grep '^traefik\.' || true)
+  OLD_MEMORY=$(insp "$OLD" '{{.HostConfig.Memory}}')
+  OLD_COMPOSE=$(insp "$OLD" '{{index .Config.Labels "com.docker.compose.project.working_dir"}}|{{index .Config.Labels "com.docker.compose.service"}}|{{index .Config.Labels "com.docker.compose.project.config_files"}}')
 fi
+OLD_MEMORY=${OLD_MEMORY:-0} OLD_COMPOSE=${OLD_COMPOSE:-||}   # absent from a state.env of an older install.sh
 [ -n "$OLD_NETS" ] || die "$OLD_NAME is on no network"
 NETS=$(cut -d'|' -f1 <<< "$OLD_NETS")
 NAMES=$( (echo "$OLD_NAME"; cut -d'|' -f2 <<< "$OLD_NETS" | tr ',' '\n') | sed '/^$/d' | sort -u)
@@ -139,7 +166,6 @@ RW=$(envof "$BACKEND" "$(prof REWRITE_ENV)"); RW=${RW:-$(prof REWRITE_DEFAULT)};
 case "$RW" in http://*) ;; *) die "$(prof REWRITE_ENV)=$RW: the internal listener is plain http" ;; esac
 RWHOST=$(hostof "$RW") INTERNAL_PORT=$(portof "$RW")
 grep -qx "$RWHOST" <<< "$NAMES" || die "$(prof REWRITE_ENV) points at $RWHOST, which is not a name of $OLD_NAME ($(echo $NAMES)); fix that env value first"
-[ "$INTERNAL_PORT" != "$PUBLIC_PORT" ] || die "the rewrite target's port $INTERNAL_PORT is our public port"
 AH=$(envof "$BACKEND" "$(prof ALLOWED_HOSTS_ENV)"); AH=${AH:-$(prof ALLOWED_HOSTS_DEFAULT)}
 tr ',' '\n' <<< "$AH" | tr -d ' ' | tr 'A-Z' 'a-z' | grep -qx -e "$RWHOST" -e "$RWHOST:$INTERNAL_PORT" ||
   die "$RWHOST is not in the backend's $(prof ALLOWED_HOSTS_ENV): add it to that env value"
@@ -159,14 +185,18 @@ SECRET_LEN=$(wc -c < "$SECRET_TMP" | tr -d ' ')
 [ "$SECRET_LEN" -ge 16 ] || die "the shared secret has $SECRET_LEN bytes; rotate it to 32 random bytes or more on both sides first"
 [ "$SECRET_LEN" -ge 32 ] || say "WARNING: the shared secret has only $SECRET_LEN bytes; rotate it to 32 random bytes or more"
 
-# ---- 5. Traefik, the public URL, the trusted proxies
+# ---- 5. Traefik, the public URL and port, the trusted proxies
+mapfile -t TRAEFIKS < <(for net in $NETS; do docker network inspect -f '{{range .Containers}}{{.Name}} {{end}}' "$net" | tr ' ' '\n'; done | sed '/^$/d' | sort -u |
+  while read -r n; do insp "$n" '{{.Config.Image}}' | grep -q traefik && echo "$n"; done)
 TRAEFIK=""
+if [ "${#PROXIES[@]}" = 0 ]; then [ "${#TRAEFIKS[@]}" = 1 ] && TRAEFIK=${TRAEFIKS[0]}
+else for p in "${PROXIES[@]}"; do printf '%s\n' "${TRAEFIKS[@]}" | grep -qx -- "$p" && TRAEFIK=$p; done; fi
+ROUTE="no labels, no file route found"
 if [ -n "$OLD_LABELS" ]; then
-  mapfile -t c < <(for net in $NETS; do docker network inspect -f '{{range .Containers}}{{.Name}} {{end}}' "$net" | tr ' ' '\n'; done | sed '/^$/d' | sort -u |
-    while read -r n; do insp "$n" '{{.Config.Image}}' | grep -q traefik && echo "$n"; done)
+  ROUTE="labels of $OLD_NAME (service port -> ours)"
   if [ "${#PROXIES[@]}" = 0 ]; then
-    [ "${#c[@]}" = 1 ] || die "${#c[@]} Traefik containers share a network with $OLD_NAME; name the proxy with --trusted-proxy"
-    TRAEFIK=${c[0]}; PROXIES=("$TRAEFIK")
+    [ "${#TRAEFIKS[@]}" = 1 ] || die "${#TRAEFIKS[@]} Traefik containers share a network with $OLD_NAME; name the proxy with --trusted-proxy"
+    PROXIES=("$TRAEFIK")
   fi
   if [ -z "$PUBLIC_URL" ]; then
     mapfile -t h < <(grep -E '^traefik\.http\.routers\.[^.]+\.rule=' <<< "$OLD_LABELS" | grep -oE 'Host\([`"][^`"]+[`"]\)' | sed -E 's/Host\([`"]([^`"]+)[`"]\)/\1/' | sort -u)
@@ -179,20 +209,76 @@ if [ -n "$OLD_LABELS" ]; then
   for s in $(sed -n -E 's/^traefik\.http\.routers\.[^.]+\.service=//p' <<< "$OLD_LABELS"); do
     grep -qx "$s" <<< "$SVCS" || die "a router of $OLD_NAME uses service $s, which its labels do not define; move it to labels first"
   done
+  PUBLIC_PORT=${PUBLIC_PORT:-8787}
   LABELS=$(grep -v -E '^traefik\.http\.services\.[^.]+\.loadbalancer\.server\.(port|scheme)=' <<< "$OLD_LABELS")
   if [ -n "$SVCS" ]; then for s in $SVCS; do LABELS+=$'\n'"traefik.http.services.$s.loadbalancer.server.port=$PUBLIC_PORT"; done
   else LABELS+=$'\n'"traefik.http.services.$OLD_NAME-docserver.loadbalancer.server.port=$PUBLIC_PORT"; fi
 else
   LABELS=""
+  # a file-provider route, read only: Traefik's file-provider files are copied out (docker cp) and scanned for server URLs that
+  # name the old container
+  FOUND=""
+  if [ -n "$TRAEFIK" ]; then
+    targs=$(insp "$TRAEFIK" '{{range .Args}}{{println .}}{{end}}')
+    FPATH=$(sed -n -E 's/^--providers\.file\.(directory|filename)=//p' <<< "$targs" | head -n1)
+    if [ -z "$FPATH" ]; then   # shortcut: the static file is grepped for directory/filename, not parsed; give --public-url when it is unusual
+      SCONF=$(sed -n 's/^--configfile=//Ip' <<< "$targs" | head -n1)
+      for f in ${SCONF:-/etc/traefik/traefik.yml /etc/traefik/traefik.yaml /etc/traefik/traefik.toml}; do
+        FPATH=$(docker cp "$TRAEFIK:$f" - 2> /dev/null | tar -xO 2> /dev/null | sed -n -E "s/^[[:space:]]*(directory|filename)[[:space:]]*[:=][[:space:]]*[\"']?([^\"' ]+).*/\2/p" | head -n1 || true)
+        [ -n "$FPATH" ] && break
+      done
+    fi
+    if [ -n "$FPATH" ]; then
+      SCAN=$(mktemp -d)
+      if docker cp "$TRAEFIK:$FPATH" - 2> /dev/null | tar -x -C "$SCAN" 2> /dev/null; then
+        # its names and, to catch a route by address, its current addresses
+        MATCH=$(printf '%s\n' $NAMES $(insp "$OLD" '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}'))
+        FOUND=$(cd "$SCAN" && grep -rnoE 'https?://[A-Za-z0-9._-]+(:[0-9]+)?' . | sed 's|^\./||' |
+          while IFS= read -r m; do u=${m#*:*:}; grep -qxF -e "$(hostof "$u")" <<< "$MATCH" && echo "$m"; done || true)
+        say "Traefik $TRAEFIK file provider $FPATH: $(grep -c . <<< "$FOUND" || true) server URL(s) naming $OLD_NAME"
+        [ -z "$FOUND" ] || sed 's/^/install.sh:   /' <<< "$FOUND"
+      else say "note: cannot read $FPATH of $TRAEFIK (no file route discovery)"; fi
+    fi
+  fi
+  if [ -n "$FOUND" ]; then
+    URLS=$(sed 's/^[^:]*:[^:]*://' <<< "$FOUND")
+    mapfile -t ups < <(while read -r u; do echo "${u%%://*}:$(portof "$u")"; done <<< "$URLS" | sort -u)
+    [ "${#ups[@]}" = 1 ] || die "the file routes reach $OLD_NAME on ${#ups[@]} different scheme:port pairs (${ups[*]}); give --public-port"
+    case "${ups[0]}" in http:*) ;; *) die "a file route reaches $OLD_NAME over https; ours is plain http behind Traefik: change that route's scheme to http first" ;; esac
+    while read -r u; do
+      grep -qxF "$(hostof "$u")" <<< "$NAMES" || die "a file route names $OLD_NAME by its address ($u); ours gets another one: change the route to a name of it ($(echo $NAMES))"
+    done <<< "$URLS"
+    ROUTE="file route of $TRAEFIK to port ${ups[0]#http:}"
+    PUBLIC_PORT=${PUBLIC_PORT:-${ups[0]#http:}}
+    [ "${#PROXIES[@]}" -gt 0 ] || PROXIES=("$TRAEFIK")
+    if [ -z "$PUBLIC_URL" ]; then
+      mapfile -t h < <(cut -d: -f1 <<< "$FOUND" | sort -u | while read -r f; do grep -ohE 'Host\(`[^`]+`\)' "$SCAN/$f" || true; done | sed -E 's/Host\(`([^`]+)`\)/\1/' | sort -u)
+      [ "${#h[@]}" = 1 ] || die "${#h[@]} Host() rules in the file(s) of that route (${h[*]}); give --public-url"
+      PUBLIC_URL="https://${h[0]}"
+    fi
+  fi
+  [ -z "${SCAN:-}" ] || rm -rf "$SCAN"
   [ -n "$PUBLIC_URL" ] && [ "${#PROXIES[@]}" -gt 0 ] ||
-    die "$OLD_NAME has no Traefik labels (a file route or a published port): give --public-url and --trusted-proxy (dropin.md section 2, last row)"
+    die "$OLD_NAME has no Traefik labels and no readable file route names it: give --public-url and --trusted-proxy (dropin.md section 2)"
+  # no labels to rewrite: whatever reaches the old container today reaches its plain http port, 80
+  PUBLIC_PORT=${PUBLIC_PORT:-80}
 fi
 case "$PUBLIC_URL" in https://*) ;; *) die "--public-url must be https://host[:port]" ;; esac
-PORTS=()
+# the shared layout (dropin.md D2b): the route and the backend's saved-file download reach one port; the peer gate splits them
+SHARED=0; [ "$PUBLIC_PORT" = "$INTERNAL_PORT" ] && SHARED=1
+for p in "${PROXIES[@]}"; do
+  if [ "$p" = "$BACKEND" ] || [ "$p" = "$BHOST" ]; then die "the trusted proxy $p is the backend: the proxy must never pass the saved-file gate"; fi
+done
+PORTS=() PORTNOTE=""
+loopback() { case "$1" in 127.* | ::1 | "[::1]") return 0 ;; *) return 1 ;; esac; }
 while IFS='|' read -r cport hip hport; do
   [ -n "$cport" ] || continue
-  [ "$cport" = 80/tcp ] || die "$OLD_NAME publishes $cport; only 80/tcp maps to our public listener"
-  PORTS+=(-p "${hip:+$hip:}$hport:$PUBLIC_PORT")
+  case "$cport" in
+    80/tcp) PORTS+=(-p "${hip:+$hip:}$hport:$PUBLIC_PORT") ;;
+    443/tcp) loopback "$hip" || die "$OLD_NAME publishes 443/tcp on ${hip:-every address}; ours has no TLS listener: remove that publish first"
+      PORTNOTE="$PORTNOTE $hip:$hport->443 dropped (loopback only, ours has no TLS listener)" ;;
+    *) die "$OLD_NAME publishes $cport; only 80/tcp maps to our public listener" ;;
+  esac
 done <<< "$OLD_PORTS"
 
 # ---- 6. frame origins (dropin.md D3)
@@ -225,16 +311,25 @@ install.sh: plan ($( [ "$RERUN" = 1 ] && echo "rerun: recreate ours" || echo "fi
   networks         $(echo $NETS)   names taken over: $(echo $NAMES)
   backend          $BACKEND  fetch/callback allow $FETCH  internal_allow $ALLOW_CSV
   saved-file URL   http://$RWHOST:$INTERNAL_PORT/ds/files/...  (the backend rewrites to $RW; $RWHOST is in its allowlist)
-  public           $PUBLIC_URL  listener :$PUBLIC_PORT  trusted proxies $PROXIES_CSV  ports ${PORTS[*]:-none}
+  public           $PUBLIC_URL  listener :$PUBLIC_PORT  trusted proxies $PROXIES_CSV  ports ${PORTS[*]:-none}${PORTNOTE:+;}$PORTNOTE
+  route            $ROUTE
+  layout           $( [ "$SHARED" = 1 ] && echo "shared: one listener :$PUBLIC_PORT, its /ds/files/ for $ALLOW_CSV only (Traefik gets 403)" || echo "two listeners: public :$PUBLIC_PORT, saved-file :$INTERNAL_PORT")
+  memory           $( [ "$OLD_MEMORY" -gt 0 ] && echo "$(( OLD_MEMORY / 1048576 )) MB (the old container's limit)" || echo "no limit (the old container had none)")
+  image            $IMAGE_SIZE; $DISK
   frame origins    $FRAMES_CSV + $PUBLIC_URL
   provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES  secret <redacted, $SECRET_LEN bytes>
-  traefik labels   $(grep -c . <<< "$LABELS" || true) (service port -> $PUBLIC_PORT)
+  traefik labels   $(grep -c . <<< "$LABELS" || true)$( [ -z "$LABELS" ] || echo " (service port -> $PUBLIC_PORT)")
   files            $ETC/secrets/{provider-secret,server-secret,converter-secret,audit-key} (0600, uid 10002), $STATE
   defaults         max_document_mb 100, keep_closed_hours 168, keep_abandoned_days 7, history session
 EOF
 [ "$DRY" = 1 ] && { say "dry run: nothing changed"; exit 0; }
 
 # ---- apply
+if [ -n "$TAR" ]; then
+  IMAGE=$(docker load -i "$TAR" | sed -n 's/^Loaded image: //p' | tail -n1)
+  [ -n "$IMAGE" ] || die "docker load of $TAR named no image (a tarball from docker save of a tagged image is needed)"
+  say "loaded $IMAGE: $(docker image ls --format '{{.Size}}' "$IMAGE" | head -n1) on disk"
+fi
 mkdir -p "$ETC/secrets"
 chmod 700 "$ETC" "$ETC/secrets" 2> /dev/null || true
 newkey() { [ -s "$ETC/secrets/$1" ] || head -c "$2" /dev/urandom | od -An -tx1 | tr -d ' \n' > "$ETC/secrets/$1"; }
@@ -244,8 +339,8 @@ chmod 600 "$ETC"/secrets/*
 if [ "$LINUX" = 1 ]; then chown 10002:10002 "$ETC/secrets" "$ETC"/secrets/*; chmod 500 "$ETC/secrets"; fi
 if [ "$RERUN" = 0 ]; then
   # the state first: a failure from here on can be rolled back
-  { printf 'OLD_NAME=%q\nOLD_RESTART=%q\nOLD_RUNNING=%q\nOLD_NETS=%q\nOLD_PORTS=%q\nOLD_LABELS=%q\n' \
-      "$OLD_NAME" "$OLD_RESTART" "$OLD_RUNNING" "$OLD_NETS" "$OLD_PORTS" "$OLD_LABELS"; } > "$STATE"
+  { printf 'OLD_NAME=%q\nOLD_RESTART=%q\nOLD_RUNNING=%q\nOLD_NETS=%q\nOLD_PORTS=%q\nOLD_LABELS=%q\nOLD_MEMORY=%q\nOLD_COMPOSE=%q\n' \
+      "$OLD_NAME" "$OLD_RESTART" "$OLD_RUNNING" "$OLD_NETS" "$OLD_PORTS" "$OLD_LABELS" "$OLD_MEMORY" "$OLD_COMPOSE"; } > "$STATE"
   docker update --restart=no "$OLD_NAME" > /dev/null
   docker stop "$OLD_NAME" > /dev/null
   docker rename "$OLD_NAME" "$OLD_NAME-replaced"
@@ -258,14 +353,16 @@ fail() { echo "install.sh: $*; rolling back" >&2; docker logs --tail 20 "$OLD_NA
 alias_args() { local a; for a in $(grep "^$1|" <<< "$OLD_NETS" | cut -d'|' -f2 | tr ',' ' '); do [ "$a" = "$OLD_NAME" ] || echo --network-alias "$a"; done; }
 LABEL_ARGS=(--label "docserver.dropin.replaces=$OLD_NAME")
 while IFS= read -r l; do [ -n "$l" ] && LABEL_ARGS+=(--label "$l"); done <<< "$LABELS"
-SYSCTL=(); [ "$INTERNAL_PORT" -lt 1024 ] && SYSCTL=(--sysctl "net.ipv4.ip_unprivileged_port_start=$INTERNAL_PORT")
+LOW=$(( INTERNAL_PORT < PUBLIC_PORT ? INTERNAL_PORT : PUBLIC_PORT ))
+SYSCTL=(); [ "$LOW" -lt 1024 ] && SYSCTL=(--sysctl "net.ipv4.ip_unprivileged_port_start=$LOW")
+MEM=(); [ "$OLD_MEMORY" -gt 0 ] && MEM=(--memory "$OLD_MEMORY")
 # shellcheck disable=SC2046
 docker run -d --name "$OLD_NAME" --restart "$OLD_RESTART" \
-  --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=256m,uid=10002 "${SYSCTL[@]}" \
+  --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=256m,uid=10002 "${SYSCTL[@]}" "${MEM[@]}" \
   -v "$OLD_NAME-docserver-data:/data" -v "$ETC/secrets:/run/secrets:ro" \
   --network "$FIRSTNET" $(alias_args "$FIRSTNET") "${PORTS[@]}" "${LABEL_ARGS[@]}" \
   -e JWT_SECRET_FILE=/run/secrets/provider-secret -e DOCSERVER_SECRETS_DIR=/run/secrets \
-  -e "DOCSERVER_PUBLIC_URL=$PUBLIC_URL" -e "DOCSERVER_FETCH_ALLOW=$FETCH" -e "DOCSERVER_TRUSTED_PROXIES=$PROXIES_CSV" \
+  -e "DOCSERVER_PUBLIC_URL=$PUBLIC_URL" -e "DOCSERVER_PUBLIC_PORT=$PUBLIC_PORT" -e "DOCSERVER_FETCH_ALLOW=$FETCH" -e "DOCSERVER_TRUSTED_PROXIES=$PROXIES_CSV" \
   -e "DOCSERVER_INTERNAL_URL=http://$RWHOST:$INTERNAL_PORT" -e "DOCSERVER_INTERNAL_PORT=$INTERNAL_PORT" \
   -e "DOCSERVER_INTERNAL_ALLOW=$ALLOW_CSV" -e "DOCSERVER_FRAME_ORIGINS=$FRAMES_CSV" -e "DOCSERVER_PROVIDER=$PROVIDER" \
   -e "DOCSERVER_EDIT_TYPES=$EDIT_TYPES" "$IMAGE" > /dev/null || fail "docker run failed"
@@ -274,15 +371,34 @@ for net in $(tail -n +2 <<< "$NETS"); do
   docker network connect $(alias_args "$net" | sed 's/--network-alias/--alias/') "$net" "$OLD_NAME" || fail "cannot join $net"
 done
 
-# ---- health: healthy, then our 403 on the rewrite target from a throwaway container (it is us, and the peer gate holds)
+# ---- health: healthy, then our 403 on the rewrite target's saved-file route from a throwaway container (it is us, and the peer
+# gate holds; that route is the gated one in both layouts)
 st=""
 for _ in $(seq 45); do st=$(insp "$OLD_NAME" '{{.State.Health.Status}}' 2> /dev/null || true); [ "$st" = healthy ] && break; sleep 2; done
 [ "$st" = healthy ] || fail "the container is not healthy ($st)"
 PROBENET=$(awk -F'|' -v h="$RWHOST" '{n=split($2,a,","); for(i=1;i<=n;i++) if (a[i]==h) {print $1; exit}}' <<< "$OLD_NETS")
 probe=$(docker run --rm --network "${PROBENET:-$FIRSTNET}" --read-only --cap-drop ALL --entrypoint bash "$IMAGE" -c \
-  "exec 3<>/dev/tcp/$RWHOST/$INTERNAL_PORT && printf 'GET / HTTP/1.0\r\nHost: $RWHOST\r\n\r\n' >&3 && head -n1 <&3" 2>&1 || true)
-case "$probe" in *" 403 "*) ;; *) fail "the probe of http://$RWHOST:$INTERNAL_PORT/ got '$probe', not our 403" ;; esac
+  "exec 3<>/dev/tcp/$RWHOST/$INTERNAL_PORT && printf 'GET /ds/files/probe/1 HTTP/1.0\r\nHost: $RWHOST\r\n\r\n' >&3 && head -n1 <&3" 2>&1 || true)
+case "$probe" in *" 403 "*) ;; *) fail "the probe of http://$RWHOST:$INTERNAL_PORT/ds/files/ got '$probe', not our 403" ;; esac
+[ "$SHARED" = 0 ] || say "shared layout: :$PUBLIC_PORT serves Traefik's route and the saved-file route (the latter for $ALLOW_CSV only)"
 say "installed: $OLD_NAME is the document server now (healthy; $RWHOST:$INTERNAL_PORT answers 403 to a stranger)"
 say "rollback: $0 rollback --etc $ETC"
-say "NOTE: the backend's compose file still defines the old service. Do not run 'docker compose up' for it (bring up the backend's own"
-say "      services by name), or add an override that disables it; otherwise it comes back and claims $OLD_NAME's names."
+IFS='|' read -r CDIR CSVC CFILES <<< "$OLD_COMPOSE"
+if [ -n "$CSVC" ]; then
+  # printed only: the HRM's files are the operator's
+  cat << EOF
+install.sh: NOTE: $CDIR still defines the service $CSVC; a 'docker compose up' there brings it back and it claims $OLD_NAME's names.
+  Add this to $CDIR/docker-compose.override.yml (merge it into an existing one):
+
+services:
+  $CSVC:
+    profiles: ["disabled"]
+
+  Compose reads that file by itself only when started without -f; this project was started with: ${CFILES:-?}
+  (with -f, add the override as one more -f). 'docker compose up' then skips $CSVC. Before a rollback, delete those lines.
+EOF
+  BDEP=$(insp "$BACKEND" '{{index .Config.Labels "com.docker.compose.depends_on"}}' 2> /dev/null || true)
+  case ",$BDEP" in *",$CSVC:"*) say "WARNING: $BACKEND depends_on $CSVC, and compose refuses a disabled dependency: in the override also mark that depends_on entry 'required: false' (compose 2.20+)" ;; esac
+else
+  say "NOTE: $OLD_NAME was not made by docker compose: nothing else brings it back"
+fi
