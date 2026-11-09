@@ -45,6 +45,7 @@
     }
     // events are the one key outside the token (hrm-current-state.md:312)
     cfg.events = {
+      onAppReady: function () { window.__appReady = performance.now(); log.push({ t: Math.round(window.__appReady), app: 'ready' }); },
       onDocumentReady: function () { setState('ready', 'ready in ' + Math.round(performance.now() - window.__t0) + ' ms'); },
       onDocumentStateChange: function (e) { window.__dirty = e.data; log.push({ t: Math.round(performance.now()), dirty: e.data }); },
       onWarning: function (e) { window.__warning = e.data; setState('warning', e.data.warningDescription || ''); },
