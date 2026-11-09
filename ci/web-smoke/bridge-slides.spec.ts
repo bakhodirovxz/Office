@@ -345,6 +345,41 @@ test('12 autosave: none when clean; after an edit one arrives within a period, a
   expect(await count(page, 'deckcraft:save')).toBe(0);
 });
 
+
+const slideEdit = async (page: Page, _i: number) => newSlide(page);
+const slidesAutosaves = async (page: Page) => (await autosaves(page)).length;
+// hengines (patch deckcraft/0170): the recovery copy goes 3 s after the last edit, and at the latest 30 s after the first unsent edit
+// while editing goes on; never more often than every 3 s; none for an unchanged document.
+test('8b autosave: 3 s after the last edit, once per quiet period; continuous editing is saved within 30 s', async ({ page }) => {
+  test.setTimeout(180_000);
+  await open(page);
+  await waitFor(page, 'deckcraft:opened');
+  const n = async () => (await slidesAutosaves(page));
+  expect(await n()).toBe(0);
+  await slideEdit(page, 0);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  const t0 = Date.now();
+  await expect.poll(n, { timeout: 12_000 }).toBe(1);
+  expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
+  await page.waitForTimeout(8_000);
+  expect(await n(), 'an unchanged document is not sent again').toBe(1);
+  // continuous editing (an edit about every 1.5 s): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  const start = Date.now();
+  let i = 1;
+  while (Date.now() - start < 20_000) { await slideEdit(page, i++); await page.waitForTimeout(1_000); }
+  expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
+  while (Date.now() - start < 38_000) { await slideEdit(page, i++); await page.waitForTimeout(1_000); }
+  const during = await n();
+  expect(during, 'one more copy by the 30 s ceiling, not more (never more often than every 3 s)').toBe(2);
+  // the edits stop: the last state goes 3 s later
+  await expect.poll(n, { timeout: 12_000 }).toBeGreaterThan(during);
+  await page.waitForTimeout(8_000);
+  const after = await n();
+  await page.waitForTimeout(5_000);
+  expect(await n(), 'quiet again: nothing more').toBe(after);
+  expect(await lastDirty(page)).toBe(true);
+});
+
 test('13 autosave: none in a read-only session', async ({ page }) => {
   test.setTimeout(240_000);
   await open(page, NAME, fs.readFileSync(PPTX), { readOnly: true });

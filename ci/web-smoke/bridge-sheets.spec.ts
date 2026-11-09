@@ -209,6 +209,45 @@ test('10 autosave: none while a save is unanswered; it resumes after saved ok:fa
   expect(await lastDirty(page)).toBe(true);
 });
 
+
+async function editCell(page: Page, i: number) {
+  await canvas(page).click({ position: { x: 420, y: 300 + (i % 6) * 18 } });
+  await page.keyboard.type(`v${i}`);
+  await page.keyboard.press('Enter');
+}
+const sheetsAutosaves = (page: Page) => count(page, 'gridcraft:autosave');
+// hengines (patch gridcraft/0170): the recovery copy goes 3 s after the last edit, and at the latest 30 s after the first unsent edit
+// while editing goes on; never more often than every 3 s; none for an unchanged document.
+test('8b autosave: 3 s after the last edit, once per quiet period; continuous editing is saved within 30 s', async ({ page }) => {
+  test.setTimeout(180_000);
+  await open(page);
+  await waitFor(page, 'gridcraft:opened');
+  const n = async () => (await sheetsAutosaves(page));
+  expect(await n()).toBe(0);
+  await editCell(page, 0);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  const t0 = Date.now();
+  await expect.poll(n, { timeout: 12_000 }).toBe(1);
+  expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
+  await page.waitForTimeout(8_000);
+  expect(await n(), 'an unchanged document is not sent again').toBe(1);
+  // continuous editing (an edit about every 1.5 s): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  const start = Date.now();
+  let i = 1;
+  while (Date.now() - start < 20_000) { await editCell(page, i++); await page.waitForTimeout(1_000); }
+  expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
+  while (Date.now() - start < 38_000) { await editCell(page, i++); await page.waitForTimeout(1_000); }
+  const during = await n();
+  expect(during, 'one more copy by the 30 s ceiling, not more (never more often than every 3 s)').toBe(2);
+  // the edits stop: the last state goes 3 s later
+  await expect.poll(n, { timeout: 12_000 }).toBeGreaterThan(during);
+  await page.waitForTimeout(8_000);
+  const after = await n();
+  await page.waitForTimeout(5_000);
+  expect(await n(), 'quiet again: nothing more').toBe(after);
+  expect(await lastDirty(page)).toBe(true);
+});
+
 // ---- read-only: nothing can change the workbook, not even for one frame (patches gridcraft/0161, 0162) ----
 // Canvas-relative points in the 1100x700 editor (01-styles.xlsx: C2 holds 1234,50).
 const C2 = { x: 155, y: 163 };
