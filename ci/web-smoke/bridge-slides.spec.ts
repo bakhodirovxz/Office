@@ -370,9 +370,9 @@ test('8b autosave: 3 s after the last edit, once per quiet period; continuous ed
   // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
   const start = Date.now();
   let i = 1;
-  while (Date.now() - start < 20_000) { await slideEdit(page, i++); }
+  while (Date.now() - start < 20_000) { await slideEdit(page, i++); await page.waitForTimeout(300); }
   expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
-  while (Date.now() - start < 38_000) { await slideEdit(page, i++); }
+  while (Date.now() - start < 38_000) { await slideEdit(page, i++); await page.waitForTimeout(300); }
   const during = await n();
   expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
   const times = (await msgs(page)).filter((m) => m.type === 'deckcraft:autosave').map((m) => m.t as number);
