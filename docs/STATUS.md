@@ -1812,7 +1812,6 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   changed state (deckcraft 0170, gridcraft 0170, pdfcraft 0130); Sheets and Slides read the toolbar mode through suite-core on the web
   (`?toolbar=full` gives upstream's ribbon; gridcraft 0172/0173, deckcraft 0174/0175; PDF has no full mode); the Slides Font box shows the theme
   font when nothing is selected (deckcraft 0173, 0176).
-- Measured (dists built from the merged branch): bridge-sheets 54 passed, bridge-slides and bridge-pdf see the table in docs/phase5/hengines.md
-  section 6. Sizes (brotli, headroom to budget): sheets 4,958,840 (7,931 B), slides 9,522,246 (34,739 B; delta +194,637 with the fonts embedded),
+- Measured (dists built from the merged branch): bridge-sheets 54 passed, bridge-slides 37 passed, bridge-pdf 40 passed. Sizes (brotli, headroom to budget): sheets 4,958,840 (7,931 B), slides 9,522,246 (34,739 B; delta +194,637 with the fonts embedded),
   pdf 9,572,670 (26,792 B). No budget changed.
 - Not done: Sheets Watch Window and the Slides Backstage were not walked for English; Docs unchanged (p5-hdocs).
