@@ -415,10 +415,20 @@ impl Docserver {
     ) -> Result<VersionRec, SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        let stamped = self.stamped(&rec, bytes, saved);
+        let bytes = stamped.as_deref().unwrap_or(bytes);
         let v = self.add_version(&mut rec, bytes, by, saved, now)?;
         self.store(&rec)?;
         crate::history::record(self, &rec, bytes, by);
         Ok(v)
+    }
+
+    /// The bytes with the editing person as creator (and, for a save, as last modifier), for an edit session only; `None` = unchanged.
+    fn stamped(&self, rec: &SessionRecord, bytes: &[u8], saved: bool) -> Option<Vec<u8>> {
+        if !rec.perms.edit {
+            return None;
+        }
+        crate::ooxml::stamp_author(bytes, &rec.file_type, &rec.user_name, saved)
     }
 
     /// `put_version` without the store: the version file and its entry in `rec`. Call under the lock.
@@ -550,7 +560,13 @@ impl Docserver {
         let b = self
             .read_stored(&self.session_dir(&rec.sid)?.join("autosave.bin"))
             .ok()?;
-        let sound = ct_eq(sha256_hex(&b).as_bytes(), a.sha256.as_bytes())
+        let raw_ok = ct_eq(sha256_hex(&b).as_bytes(), a.sha256.as_bytes());
+        // the versions are stamped, so the same document is compared in its stamped form
+        let b = self.stamped(rec, &b, true).unwrap_or(b);
+        if raw_ok && sha256_hex(&b) == last.sha256 {
+            return None;
+        }
+        let sound = raw_ok
             && crate::ooxml::check(&b, &rec.file_type, self.max_document_mb << 20).is_ok();
         if !sound {
             eprintln!("docserver: the recovery copy of a session is damaged and was not used");

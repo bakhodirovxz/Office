@@ -66,6 +66,75 @@ pub fn check(bytes: &[u8], file_type: &str, max_bytes: u64) -> Result<(), DocErr
     Ok(())
 }
 
+/// Generator names that stand for "nobody": what the host's server-side blank-file makers write as `dc:creator`.
+const GENERATORS: [&str; 3] = ["python-docx", "openpyxl", "python-pptx"];
+
+fn esc(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+/// Sets `<tag>` to `name` in core.xml text when `replace(current)` says so, or adds it when absent. `None` = nothing to change.
+/// shortcut: standard `dc:`/`cp:` prefixes and plain-text elements only (what every writer we meet emits), an exotic prefix is left alone.
+fn set_prop(xml: &str, tag: &str, name: &str, replace: impl Fn(&str) -> bool) -> Option<String> {
+    let new = format!("<{tag}>{}</{tag}>", esc(name));
+    let open = format!("<{tag}");
+    if let Some(a) = xml.find(&open) {
+        let rest = &xml[a + open.len()..];
+        // `<tag>text</tag>`, `<tag/>` or `<tag />`; a longer tag name sharing the prefix is not ours
+        let (cur, end) = if let Some(r) = rest.strip_prefix('>') {
+            let e = r.find(&format!("</{tag}>"))?;
+            (&r[..e], a + open.len() + 1 + e + tag.len() + 3)
+        } else if let Some(i) = rest.find("/>").filter(|i| rest[..*i].trim().is_empty()) {
+            ("", a + open.len() + i + 2)
+        } else {
+            return None;
+        };
+        if !replace(cur.trim()) || cur == esc(name) {
+            return None;
+        }
+        return Some(format!("{}{new}{}", &xml[..a], &xml[end..]));
+    }
+    let close = xml.rfind("</cp:coreProperties>")?;
+    Some(format!("{}{new}{}", &xml[..close], &xml[close..]))
+}
+
+/// The person at the keyboard becomes the document's creator when `dc:creator` is empty or a generator name (python-docx and its
+/// kin); a real name is kept. With `saved`, `cp:lastModifiedBy` is the person as well. Only `docProps/core.xml` changes: every other
+/// entry is copied raw. `None` when nothing changes (so a second pass over the result is a no-op and its digest stays) or the part is
+/// missing or odd. `name` is the host's text: trimmed, capped, escaped.
+pub fn stamp_author(bytes: &[u8], file_type: &str, name: &str, saved: bool) -> Option<Vec<u8>> {
+    let name: String = name.trim().chars().take(255).collect();
+    if name.is_empty() || main_part(file_type).is_none() {
+        return None;
+    }
+    let mut z = zip::ZipArchive::new(Cursor::new(bytes)).ok()?;
+    let idx = z.index_for_name("docProps/core.xml")?;
+    let mut xml = String::new();
+    std::io::Read::read_to_string(&mut std::io::Read::take(z.by_index(idx).ok()?, 1 << 20), &mut xml).ok()?;
+    let mut out = xml.clone();
+    let creator = |c: &str| c.is_empty() || GENERATORS.iter().any(|g| g.eq_ignore_ascii_case(c));
+    if let Some(x) = set_prop(&out, "dc:creator", &name, creator) {
+        out = x;
+    }
+    if saved && let Some(x) = set_prop(&out, "cp:lastModifiedBy", &name, |_| true) {
+        out = x;
+    }
+    if out == xml {
+        return None;
+    }
+    let mut w = zip::ZipWriter::new(Cursor::new(Vec::with_capacity(bytes.len() + 256)));
+    for i in 0..z.len() {
+        if i == idx {
+            let o = zip::write::SimpleFileOptions::default();
+            w.start_file("docProps/core.xml", o).ok()?;
+            std::io::Write::write_all(&mut w, out.as_bytes()).ok()?;
+        } else {
+            w.raw_copy_file(z.by_index_raw(i).ok()?).ok()?;
+        }
+    }
+    Some(w.finish().ok()?.into_inner())
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
