@@ -20,9 +20,10 @@
 //!   `ok: true` lets the unsaved mark go (if nothing was edited since); `ok: false` keeps it, and
 //!   marks a document that was clean after the save as unsaved again.
 //! - `wordcraft:autosave` (to the parent): `{ name, bytes }`, the document with its unsaved changes,
-//!   sent when the tab is hidden or the page goes away, and every `AUTOSAVE_MS` while the document
-//!   has unsaved changes, so the parent holds the work if the browser then kills the page. It is
-//!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
+//!   sent when the tab is hidden or the page goes away, 3 s after the last edit while the document
+//!   has unsaved changes (at least every 30 s of continuous editing, never twice within 3 s), so
+//!   the parent holds the work if the browser then kills the page. It is not a save: the document
+//!   stays dirty, and nothing is sent for a clean or read-only document.
 //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
 //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
@@ -40,13 +41,11 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 use wordcraft_ui_egui::{Inbox, Services, WordApp};
 
+/// Room kept beside a page (screen points) before a page at 100 % counts as wider than the view.
+const FIT_MARGIN: f32 = 48.0;
+
 /// The name a document gets when the parent opened none.
 const DEFAULT_NAME: &str = "document.docx";
-
-/// How often the unsaved document is handed to the parent while it has unsaved changes
-/// (ARCHITECTURE-DECISION 2.4 names no period; 30 s loses at most half a minute of typing and
-/// costs one docx build per period, only while editing).
-const AUTOSAVE_MS: f64 = 30_000.0;
 
 #[derive(Clone)]
 pub struct Bridge {
@@ -66,14 +65,16 @@ pub struct Bridge {
     pending: Rc<Cell<u32>>,
     /// Answers (`ok`) received since the last frame.
     acks: Rc<RefCell<Vec<bool>>>,
-    /// When the unsaved document was last handed over by the periodic autosave (`None`: clean).
-    last_autosave: Rc<Cell<Option<f64>>>,
+    /// When the unsaved document is next handed over by the periodic autosave (see `autosave`).
+    debounce: Rc<RefCell<crate::autosave::Debounce>>,
     /// The unsaved-changes state last reported to the parent.
     reported: Rc<Cell<Option<bool>>>,
     /// The document shown when the parent was last told (`wordcraft:opened`).
     document: Rc<Cell<Option<u64>>>,
     /// The name of the document the parent opened last.
     name: Rc<RefCell<String>>,
+    /// Frames left before the zoom of a document just opened is judged (see `sync`).
+    zoom_check: Rc<Cell<u8>>,
 }
 
 impl Bridge {
@@ -99,10 +100,11 @@ impl Bridge {
             can_print: Rc::new(Cell::new(true)),
             pending: Rc::default(),
             acks: Rc::default(),
-            last_autosave: Rc::default(),
+            debounce: Rc::default(),
             reported: Rc::default(),
             document: Rc::default(),
             name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
+            zoom_check: Rc::default(),
         })
     }
 
@@ -158,6 +160,26 @@ impl Bridge {
         let id = app.session.document_id();
         if self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
+            // A host-opened document starts at 100 %, whatever zoom or fit mode the file was saved with.
+            let dirty = app.session.dirty;
+            let _ = app.run("view.zoom", json!({"value": 100}));
+            app.session.dirty = dirty;
+            self.zoom_check.set(3);
+        }
+        // Once the page is laid out (a frame or two later): fit the width only when the page at
+        // 100 % is wider than the view.
+        if self.zoom_check.get() > 0 {
+            self.zoom_check.set(self.zoom_check.get() - 1);
+            if self.zoom_check.get() == 0
+                && let (Some(view), Some(page)) = (app.canvas.canvas_rect, app.canvas.page_rects.first())
+                && app.canvas.scale > 0.0
+                && page.width() / app.canvas.scale * wordcraft_ui_egui::canvas::PX_PER_PT > view.width() - FIT_MARGIN
+            {
+                let dirty = app.session.dirty;
+                let _ = app.run("view.pageWidth", json!({}));
+                app.session.dirty = dirty;
+            }
+            ctx.request_repaint();
         }
         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
         // document replaced the one it was set on.
@@ -183,23 +205,21 @@ impl Bridge {
             // The saved document is clean now: a frame reports it (`Services::on_dirty`).
             ctx.request_repaint();
         }
-        // The periodic autosave, only while there are unsaved changes.
+        // The periodic autosave, only while there are unsaved changes: shortly after the last edit,
+        // and at the latest every `autosave::MAX_MS` of continuous editing.
         if app.session.dirty && !self.read_only.get() {
-            let now = js_sys::Date::now();
-            let last = self.last_autosave.get().unwrap_or(now);
-            if now - last >= AUTOSAVE_MS {
-                self.autosave.set(true);
-                self.last_autosave.set(Some(now));
-            } else {
-                self.last_autosave.set(Some(last));
-                // An idle page draws no frames: wake up when the period is over.
-                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+            match self.debounce.borrow_mut().tick(app.session.rev(), js_sys::Date::now()) {
+                crate::autosave::Tick::Send => self.autosave.set(true),
+                // An idle page draws no frames: wake up when the time is up.
+                crate::autosave::Tick::Wait(ms) => ctx.request_repaint_after(std::time::Duration::from_millis(ms as u64 + 1)),
+                crate::autosave::Tick::Idle => {}
             }
         } else {
-            self.last_autosave.set(None);
+            self.debounce.borrow_mut().reset();
         }
         // Not through `file.save`: the document stays dirty and the browser downloads nothing.
         if self.autosave.replace(false) && app.session.dirty {
+            self.debounce.borrow_mut().mark_sent(app.session.rev(), js_sys::Date::now());
             let name = self.name.borrow().clone();
             let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
             let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));

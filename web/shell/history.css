@@ -52,3 +52,16 @@ dialog input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2
 :root[data-app=pdf] { --r-widget: 6px; --r-window: 10px; }
 :root[data-app=pdf][data-theme=light] { --accent: #1B63E0; --bg: #FFFFFF; --fg: #222226; --muted: #5E5E66; --card: #F1F1F3; --line: #DADADE; }
 :root[data-app=pdf][data-theme=dark] { --accent: #4B8BF5; --on-accent: #0E1A33; --bg: #26262A; --fg: #ECECEF; --muted: #AEAEB6; --card: #2E2E33; --line: #3C3C43; }
+/* The wrapper's History button (docserver editor.js): a small icon over the app frame, no row of its own. Placed per app where the app
+   draws no control (checked by docserver.spec.ts "History button" at 1366x768 and 1600x900). */
+#hist-open { position: fixed; z-index: 5; top: 4px; right: 8px; width: 26px; height: 26px; padding: 0; display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: var(--r-widget, 4px); background: transparent; color: var(--muted); cursor: pointer; }
+#hist-open:hover { background: var(--card); border-color: var(--line); color: var(--fg); }
+#hist-open[aria-expanded=true] { background: var(--card); border-color: var(--accent); color: var(--accent); }
+#hist-open:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+/* Docs: the title row, left of the search box (fixed width, anchored right); Sheets and Slides: the right end of the toolbar row, which
+   their tools leave free at 1366 px and wider; PDF: the tab strip, left of its two right-hand icons. */
+:root[data-app=docs] #hist-open { top: 5px; right: 314px; }
+:root[data-app=sheets] #hist-open { top: 48px; right: 22px; }
+:root[data-app=slides] #hist-open { top: 44px; right: 14px; }
+:root[data-app=pdf] #hist-open { top: 5px; right: 74px; }

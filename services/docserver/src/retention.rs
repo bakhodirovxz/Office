@@ -2,8 +2,9 @@
 //!
 //! A session folder `sessions/<sid>/` goes
 //! - `keep_closed_hours` (168, 7 days) after a good close: closed, and the provider answered `{"error":0}` to the close's callback (`Closed::acked`);
-//! - `keep_abandoned_days` (7) after its last activity otherwise: never closed, or its close never acknowledged (a status 2 the retry
+//! - `keep_abandoned_days` (7) after its last activity otherwise: a view session never closed, or a close never acknowledged (a status 2 the retry
 //!   queue gave up on falls here, so the operator has the rest of the 7 days to recover it from the folder);
+//! - never while an edit session is open: the idle close (`callback::close_idle`) closes it first and sends its callback;
 //! - never while a status 2 is still in the retry queue (`queue/<sid>.json` without `gave_up`; an unreadable entry counts as queued).
 //!
 //! With it goes the session's history document (`history::doc_id`, one per provider and `document.key`) and the bytes no other
@@ -27,6 +28,10 @@ impl Docserver {
     fn expired(&self, rec: &SessionRecord, now: u64) -> bool {
         // a status 2 not sent yet (a crash before its callback): `recover_unnotified` sends it at start, so never sweep it first
         if crate::callback::owes_status_2(rec) {
+            return false;
+        }
+        // an open edit session ends by the idle close (`close_idle`), which sends its callback: never sweep it before that ran
+        if rec.perms.edit && rec.closed.is_none() {
             return false;
         }
         if self.queue_path(&rec.sid).is_some_and(|p| p.exists())
@@ -257,10 +262,13 @@ history = "{history}"
         // closed and acknowledged 23 h ago: kept; it holds the same bytes as the one above
         let closed_young = open(&ds, "k-young", T0 + 2 * H, b"shared");
         close(&ds, &closed_young, T0 + 2 * H, true);
-        // never closed, no activity for 7 days: gone
+        // closed by the idle close, its status 4 never acknowledged, no activity for 7 days: gone
         let abandoned = open(&ds, "k-aband", now - 7 * D - 1, b"aband");
+        close(&ds, &abandoned, now - 7 * D - 1, false);
         // never closed, active 6 days ago: kept
         let idle = open(&ds, "k-idle", now - 6 * D, b"idle");
+        // an edit session never closed, 30 days idle: kept until the idle close has run (it sends the callback)
+        let open_edit = open(&ds, "k-open", now - 30 * D, b"open");
         // closed long ago, its close never acknowledged, but a status 2 still queued: kept however old
         let queued = open(&ds, "k-queued", T0 - 60 * D, b"queued");
         close(&ds, &queued, T0 - 60 * D, false);
@@ -283,6 +291,7 @@ history = "{history}"
             (&queued, true),
             (&gave_up, false),
             (&unacked, true),
+            (&open_edit, true),
         ] {
             assert_eq!(there(&ds, sid), kept, "session kept: {kept}");
         }
@@ -296,7 +305,12 @@ history = "{history}"
                 .is_empty()
         );
         assert!(!object(&ds, b"only-old") && !object(&ds, b"aband") && !object(&ds, b"gaveup"));
-        assert!(object(&ds, b"shared") && object(&ds, b"idle") && object(&ds, b"queued"));
+        assert!(
+            object(&ds, b"shared")
+                && object(&ds, b"idle")
+                && object(&ds, b"queued")
+                && object(&ds, b"open")
+        );
         assert_eq!(history_of(&ds, &closed_young).len(), 1);
         // one audit line with counts only, no session reference
         let lines = audit_lines(&dir.0);

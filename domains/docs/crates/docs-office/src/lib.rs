@@ -14,7 +14,6 @@ pub mod layer;
 pub mod levels;
 pub mod mode;
 pub mod preset;
-#[cfg(not(target_arch = "wasm32"))]
 mod settings;
 
 pub use icons::paint_icon;
@@ -102,7 +101,6 @@ pub fn extend(reg: &Registry) -> Option<Registry> {
 
 /// Add the commands to `s.registry`. Safe to call twice.
 pub fn install(s: &mut Session) {
-    #[cfg(not(target_arch = "wasm32"))]
     mode::default_store(settings::store());
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     layer::init();

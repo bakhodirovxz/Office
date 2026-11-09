@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: a document the host opens starts at 100 % (fit width only when the page is wider than the view)
+
+A document opened through the bridge showed at the zoom or fit mode it was saved with (Page Width filled the whole window at
+156-185 %), where Word opens at 100 %. In host mode the bridge now sets 100 % when the parent opens a document and, once the page is
+laid out, switches to Page Width only when the page at 100 % is wider than the work area. The desktop keeps the saved zoom.
+---
+
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index c0b47089..34c9f0b7 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -41,6 +41,9 @@ use wasm_bindgen::JsValue;
+ use wasm_bindgen::closure::Closure;
+ use wordcraft_ui_egui::{Inbox, Services, WordApp};
+ 
++/// Room kept beside a page (screen points) before a page at 100 % counts as wider than the view.
++const FIT_MARGIN: f32 = 48.0;
++
+ /// The name a document gets when the parent opened none.
+ const DEFAULT_NAME: &str = "document.docx";
+ 
+@@ -70,6 +73,8 @@ pub struct Bridge {
+     document: Rc<Cell<Option<u64>>>,
+     /// The name of the document the parent opened last.
+     name: Rc<RefCell<String>>,
++    /// Frames left before the zoom of a document just opened is judged (see `sync`).
++    zoom_check: Rc<Cell<u8>>,
+ }
+ 
+ impl Bridge {
+@@ -99,6 +104,7 @@ impl Bridge {
+             reported: Rc::default(),
+             document: Rc::default(),
+             name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
++            zoom_check: Rc::default(),
+         })
+     }
+ 
+@@ -152,6 +158,26 @@ impl Bridge {
+         let id = app.session.document_id();
+         if self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
+             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
++            // A host-opened document starts at 100 %, whatever zoom or fit mode the file was saved with.
++            let dirty = app.session.dirty;
++            let _ = app.run("view.zoom", json!({"value": 100}));
++            app.session.dirty = dirty;
++            self.zoom_check.set(3);
++        }
++        // Once the page is laid out (a frame or two later): fit the width only when the page at
++        // 100 % is wider than the view.
++        if self.zoom_check.get() > 0 {
++            self.zoom_check.set(self.zoom_check.get() - 1);
++            if self.zoom_check.get() == 0
++                && let (Some(view), Some(page)) = (app.canvas.canvas_rect, app.canvas.page_rects.first())
++                && app.canvas.scale > 0.0
++                && page.width() / app.canvas.scale * wordcraft_ui_egui::canvas::PX_PER_PT > view.width() - FIT_MARGIN
++            {
++                let dirty = app.session.dirty;
++                let _ = app.run("view.pageWidth", json!({}));
++                app.session.dirty = dirty;
++            }
++            ctx.request_repaint();
+         }
+         // Read only is Restrict Editing's read-only protection, put back if the user lifts it or a
+         // document replaced the one it was set on.

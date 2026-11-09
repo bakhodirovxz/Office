@@ -179,9 +179,11 @@ async fn create(State(ds): Ds, cl: Cl, body: Bytes) -> Res {
                "key_ref": &sha256_hex(rec.key.as_bytes())[..16], "mode": rec.mode, "perms": rec.perms,
                "client": cl.ip, "file": rec.title}),
     );
+    // the provider's `ui_lang`, when set, is the editors' language whatever `editorConfig.lang` says
+    let lang = ds.provider(&rec.provider).and_then(|p| p.ui_lang.clone());
     json_ok(
         json!({"sid": rec.sid, "token": token, "editor": rec.editor, "mode": rec.mode,
-                   "perms": rec.perms, "title": rec.title, "expires": rec.expires}),
+                   "perms": rec.perms, "title": rec.title, "expires": rec.expires, "lang": lang}),
     )
 }
 
@@ -275,6 +277,13 @@ async fn autosave(
     json_ok(json!({"ok": true}))
 }
 
+/// `POST /ds/session/{sid}/ping`: the editor page is still open (every minute); without it an edit session is closed when idle.
+async fn ping(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+    authorize(&ds, &h, &sid, false, "ping", &client(cl))?;
+    blk(move || ds.touch(&sid, now())).await??;
+    json_ok(json!({"ok": true}))
+}
+
 async fn close(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
     let rec = authorize(&ds, &h, &sid, true, "close", &client(cl))?;
     let (c, cb, dirty) = blk(move || {
@@ -335,6 +344,7 @@ impl Docserver {
             .route("/ds/session/{sid}/save", post(save).layer(cap))
             .route("/ds/session/{sid}/autosave", post(autosave).layer(cap))
             .route("/ds/session/{sid}/dirty", post(dirty))
+            .route("/ds/session/{sid}/ping", post(ping))
             .route("/ds/session/{sid}/close", post(close))
             .with_state(self.clone())
     }

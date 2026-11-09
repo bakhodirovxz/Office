@@ -4,6 +4,8 @@
 
 **Owner MSI test feedback (2026-11-06), Docs pointer "stays white, hard to find": NOT reproduced, no fix.** Code review: the page canvas requests `CursorIcon::Text` over text and `Default` only in the selection bar (`upstream/wordcraft/crates/ui-egui/src/canvas.rs:1743-1753`; headless kittest hover over text returns `Text`, so the I-beam is requested); no custom cursor images anywhere in our layer or wordcraft; egui-winit maps to the standard OS cursors. Owner scheme is "Windows Aero" with the default (inverting) I-beam (`HKCUControl PanelCursors`). Live capture was impossible (workstation was locked). Needs a real screenshot or the owner's cursor scheme/size to continue.
 
+**Docs in the document-server iframe, 2026-11-09 (branch p5-hdocs, HRM test server screenshots).** (1) Full ribbon on the web: `suite_core::settings::toolbar_mode()` on wasm32 = the saved choice (`localStorage` `suite.toolbar`) > URL `?toolbar=full|simple` > simple (`resolve_toolbar`, unit tested); docs-office installs the store and offers the toggle on the web too. (2) `?lang=` already won over `navigator.language` through the docs `index.html` shim; verified in Chromium with ru, uz-Cyrl, uz-Latn against a browser locale of uz-UZ, en-US, ru-RU. (3) Autosave (wordcraft/0160): 3 s after the last edit, at least every 30 s of continuous editing, never twice within 3 s; `bridge-docs.spec.ts` 13/13 (cases 5 and 5b). (4) wordcraft/0161: a host-opened document starts at 100 % (Page Width only when the page is wider than the view). (5) wordcraft/0162: Uzbek (Latin, Cyrillic) and Russian text under an en-US tag is not flagged as English (proof::uz, the Vietnamese rule extended); wordcraft/0163: the status bar names the interface language for a document with no language in an Uzbek interface. Docs wasm brotli 9,860,812 B, budget 9,871,648 B, headroom 10,836 B (suite-core on the web cost +1.4 KB); js 20,768/24,576.
+
 **Phase 4 WP0 (upstream sync) done 2026-10-22** (`docs/phase4/sync-report.md`): wordcraft v0.9.0 `2e6db0b`, gridcraft v0.10.0 `2ebdf16`, deckcraft v0.9.0 `fe510bd`, pdfcraft v0.11.0 `3e30645`, craft-libs `1b9cf19` (craft-fonts unchanged). 73 patches: 53 clean, 5 3-way, 13 hand-merged, 1 amended (gridcraft 0130), wordcraft 0003 dropped (upstream does it), pdfcraft 0111 new (D7). NumLocale re-threaded through upstream value_text_as; tests and the WP14 matrix unchanged (byte-identical). 68 new i18n rows with uz drafts for review. Gates: verify-queue, register, ci quick, release builds x4, convert-e2e (43/0), translit-preserve, sizes (base_br re-measured, our delta inside every delta_br_max) green. Open: wordcraft/gridcraft origin/HEAD are 562/605 commits further (next sync); the sync gate cannot pass new P1 strings without drafts.
 
 **Previous:** 3 — Converter (branch `phase-3`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
@@ -1426,6 +1428,28 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   env, headers through Traefik, a rerun keeps it, `--no-allow-opaque-origin` undoes it) is written but not run: another agent's
   rehearsal held the shared `dropin-*` names and the `hoshiya-docserver:rehearsal` tag. Found on the way: `--edit-types` is not kept
   by a rerun (it goes back to the default); the switch is. Fixed after the merge: a rerun keeps it too (rehearsal check).
+### Phase 5: no edit lost when the host page goes away (2026-11-09; branch `p5-save`, from phase-5 4a8969df)
+- Why (measured on the HRM test server): the editor wasm took 14-70 s over the owner's link, the host's 15 s not-ready timer offered
+  Retry and restarted the download; later a Save followed 1.4 s by Back was aborted (Traefik 499), no callback went out, the edit was lost.
+  The server kept a recovery copy (`autosave.bin`) but never used it, and a session whose frame vanished never ended.
+- Done: a close promotes a recovery copy that is newer than the last version and differs from it (sha256, the save-body checks, sealed
+  at rest) to a version, then sends status 2 with it (same bytes: 4). An edit session pings every 60 s; one idle for `close_idle_minutes`
+  (5) is closed by the server the same way (the 15 s retry loop); the sweep never deletes an open edit session first; a crash between
+  promotion and callback is the owed status 2 at start. The wrapper closes on `pagehide` with a keepalive request, sends saves <= 60 KiB
+  as keepalive (and then leaves the close to the idle close), emits `onAppReady` when the session and app frame exist, passes
+  `&lang=` and `&toolbar=full` to the app. Provider `ui_lang` (installer `--ui-lang`, kept on a rerun; the host profile: `uz-Latn`)
+  overrides `editorConfig.lang`. History is a 26 px icon button over the app (no row). No new UI strings (the button uses `hist.nav`).
+- Measured: `ci.sh docserver` Rust tests all green (outbound 23, incl. promotion, idle close, restart, sweep ordering, ui_lang), clippy
+  clean; docserver.spec 31 passed + 1 fixed afterwards (the History opener had no text any more; the History cases rerun 3/3); bridge
+  docs 12, sheets 53, slides 36, pdf 39. Host removes the frame without a save: status 2 with the bridge's autosave (first autosave
+  29,971 ms after dirty), the typed text in v2. Save then remove at 4 KB/s upload: status 6 arrives; with keepalive off the same case
+  loses the save (checked). onAppReady 8.3 s before a held-back (8 s) editor download ends. History button: the pixels under it are flat
+  (spread 0) in docs, sheets, slides and pdf, uz-Latn and ru, 1366x768 and 1600x900. Docker drop-in rehearsal (rebuilt image 404 MB):
+  **67 of 67**, incl. the profile's uz-Latn on install, `--ui-lang ru` kept by a plain rerun, the drop-in wrapper speaking uz-Latn.
+- Not checked: the apps honouring `&lang=`/`&toolbar=full` (their teams' branches; the dists used here are p5-ro's); a host calling
+  `destroyEditor()` or `close()` while a save is still on its way can still close before the save is stored (the save then fails);
+  a save over 60 KiB is not keepalive (only the last recovery copy survives a leave); the real HRM page.
+
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every

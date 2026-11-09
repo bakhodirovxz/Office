@@ -55,7 +55,7 @@ list() { # <comma list> [table]: ["a", "b"], or [{ url = "a", internal = true },
 need() { [ -n "${!1:-}" ] || die "$1 is required (docs/phase5/dropin.md D6)"; }
 # checked here, in this shell: a die inside the $(...) of the heredoc below would only end that subshell
 for v in "${!DOCSERVER_@}"; do q "${!v}" > /dev/null; done
-for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB DOCSERVER_KEEP_CLOSED_HOURS DOCSERVER_KEEP_ABANDONED_DAYS; do
+for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB DOCSERVER_KEEP_CLOSED_HOURS DOCSERVER_KEEP_ABANDONED_DAYS DOCSERVER_CLOSE_IDLE_MINUTES; do
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
 for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_TRUSTED_PROXIES DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
@@ -92,6 +92,7 @@ internal_url = $(q "$DOCSERVER_INTERNAL_URL")
 max_document_mb = ${DOCSERVER_MAX_DOCUMENT_MB:-100}
 keep_closed_hours = ${DOCSERVER_KEEP_CLOSED_HOURS:-168}
 keep_abandoned_days = ${DOCSERVER_KEEP_ABANDONED_DAYS:-7}
+close_idle_minutes = ${DOCSERVER_CLOSE_IDLE_MINUTES:-5}
 allow_opaque_origin = $OPAQUE
 
 [[docserver.providers]]
@@ -103,6 +104,7 @@ fetch_allow = $(list "$DOCSERVER_FETCH_ALLOW" table)
 callback_allow = $(list "${DOCSERVER_CALLBACK_ALLOW:-$DOCSERVER_FETCH_ALLOW}" table)
 frame_origins = $(list "$FRAMES")
 edit_types = $(list "${DOCSERVER_EDIT_TYPES:-docx,xlsx,pptx,pdf}")
+$([ -z "${DOCSERVER_UI_LANG:-}" ] || echo "ui_lang = $(q "$DOCSERVER_UI_LANG")")
 history = "session"
 EOF
 exec "${BIN[@]}" --config "$R/api.toml"

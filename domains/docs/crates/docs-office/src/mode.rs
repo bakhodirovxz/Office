@@ -2,7 +2,7 @@
 //!
 //! The store is two function pointers so this crate does not depend on where the setting lives: the apps' start-up wires the
 //! shared-settings reader and writer in (`set_store`); until then, and in tests, the mode is kept in memory and defaults to simple.
-//! The web build has no toggle and no key: it is always simple.
+//! The web keeps the choice in `localStorage` (suite-core), seeded by the URL's `?toolbar=` (the document server passes it).
 
 use std::sync::RwLock;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -29,9 +29,9 @@ fn code(m: Mode) -> u8 {
     if m == Mode::Full { 2 } else { 1 }
 }
 
-/// Whether the build offers the toggle at all (desktop only).
+/// Whether the build offers the toggle at all (desktop and web).
 pub const fn toggle_available() -> bool {
-    !cfg!(target_arch = "wasm32")
+    true
 }
 
 /// Use `store` from now on and forget the mode read so far.
