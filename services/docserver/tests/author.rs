@@ -197,3 +197,29 @@ async fn a_viewer_changes_nothing_and_the_autosave_of_a_saved_document_is_not_a_
     assert_eq!(ds.load_session(&sid).unwrap().versions.len(), 2);
     let _ = std::fs::remove_dir_all(d);
 }
+
+/// The close's final copy (the wrapper sends the editor's unsaved edits in the close request) is promoted like any recovery copy:
+/// the version it becomes carries the editing person as last modifier.
+#[tokio::test]
+async fn a_close_with_the_final_copy_stamps_the_last_modifier() {
+    let (ds, sid, d) = open("docx", true, "Aziz").await;
+    ds.put_version(
+        &sid,
+        &pkg("docx", &core(Some("python-docx"), None)),
+        "one",
+        false,
+        now(),
+    )
+    .unwrap();
+    let last = pkg("docx", &core(Some("Jane Roe"), Some("python-docx")));
+    assert_eq!(ds.close_with(&sid, Some(&last), now()).unwrap().status, 2);
+    let rec = ds.load_session(&sid).unwrap();
+    assert_eq!(rec.versions.len(), 2);
+    let c = entry(&ds.read_version(&sid, 2).unwrap(), "docProps/core.xml");
+    assert!(
+        c.contains("<cp:lastModifiedBy>Aziz</cp:lastModifiedBy>")
+            && c.contains("<dc:creator>Jane Roe</dc:creator>"),
+        "{c}"
+    );
+    let _ = std::fs::remove_dir_all(d);
+}
