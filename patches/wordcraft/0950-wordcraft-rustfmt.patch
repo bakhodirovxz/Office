@@ -8,7 +8,7 @@ Last patch of the queue: regenerate it on every sync and after a new patch leave
 ---
 
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index 34c9f0b7..5a03dee3 100644
+index 34c9f0b..5a03dee 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
 @@ -124,8 +124,10 @@ impl Bridge {
@@ -25,7 +25,7 @@ index 34c9f0b7..5a03dee3 100644
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
 diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
-index 63991756..ac03a3fb 100644
+index 6399175..ac03a3f 100644
 --- a/crates/ui-egui/src/backstage.rs
 +++ b/crates/ui-egui/src/backstage.rs
 @@ -41,12 +41,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {

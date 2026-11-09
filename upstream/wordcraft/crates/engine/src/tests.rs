@@ -8524,3 +8524,25 @@ fn rtf_list_round_trip_keeps_text() {
         assert_eq!(d.plain_text(StoryRef::Body), "first\nsecond", "{cmd}");
     }
 }
+
+#[test]
+fn an_empty_document_opens_in_times_new_roman_without_being_dirty() {
+    // A python-docx-like blank: Cambria body theme font, no content. Synthetic bytes.
+    let mut d = wordcraft_doc::Document::new();
+    d.styles.default_chr.font = Some("Cambria".into());
+    d.settings.minor_font = "Cambria".into();
+    let bytes = wordcraft_docx::write(&d).unwrap();
+    let opened = crate::io::open_bytes("blank.docx", &bytes).unwrap();
+    assert_eq!(opened.styles.default_chr.font.as_deref(), Some("Times New Roman"));
+    let s = Session::new(opened);
+    assert!(!s.dirty);
+
+    // A document with text keeps its own fonts.
+    let mut d = d;
+    d.body = wordcraft_doc::Document::new().body;
+    let mut s2 = Session::new(d);
+    run(&mut s2, "text.insert", json!({"text": "Hello"}));
+    let bytes = wordcraft_docx::write(&s2.doc).unwrap();
+    let kept = crate::io::open_bytes("full.docx", &bytes).unwrap();
+    assert_eq!(kept.styles.default_chr.font.as_deref(), Some("Cambria"));
+}

@@ -383,6 +383,13 @@ impl StyleTable {
         index.insert(normal.clone(), StyleId::DEFAULT);
         StyleTable { styles: vec![normal], index }
     }
+    /// office overlay (gridcraft/0185): the Normal style's font name, the other styles untouched.
+    pub fn set_default_font_name(&mut self, name: &str) {
+        if let Some(s) = self.styles.first_mut() {
+            s.font.name = name.into();
+            self.rebuild_index();
+        }
+    }
     pub fn get(&self, id: StyleId) -> &Style {
         self.styles.get(id.0 as usize).or_else(|| self.styles.first()).unwrap_or(&DEFAULT_STYLE)
     }

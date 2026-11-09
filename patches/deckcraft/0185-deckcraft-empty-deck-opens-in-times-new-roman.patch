@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: a PPTX of empty placeholders opens with Times New Roman theme fonts (HRM's python-pptx blank)
+
+Owner request 2026-11-10: the default font is always Times New Roman. HRM creates its blank decks with python-pptx (Calibri theme fonts, one slide). A PPTX whose slides hold nothing but empty placeholders (and empty notes) now has Times New Roman as the heading and body Latin font of every master's theme when it is opened (cmd::file::default_font_when_empty). Only the in-memory model changes, so it is not dirty; a deck with any text, picture or other shape keeps its fonts and the text sizes are untouched. New decks were already Times New Roman (0152).
+Test: engine lib an_empty_deck_opens_in_times_new_roman_and_one_with_text_keeps_its_font.
+---
+ crates/engine/src/cmd/file.rs | 18 ++++++++++++++++++
+ crates/engine/src/tests.rs    | 19 +++++++++++++++++++
+ 2 files changed, 37 insertions(+)
+
+diff --git a/crates/engine/src/cmd/file.rs b/crates/engine/src/cmd/file.rs
+index a4c9c80..8dc2148 100644
+--- a/crates/engine/src/cmd/file.rs
++++ b/crates/engine/src/cmd/file.rs
+@@ -165,10 +165,28 @@ pub fn open_checked(name: &str, bytes: &[u8]) -> Result<(Presentation, Damage)>
+     open_other(name, bytes).map(|(p, slides)| (p, Damage { media: vec![], slides }))
+ }
+ 
++/// office overlay (deckcraft/0185): a deck whose slides hold nothing but empty placeholders (python-pptx's blank one-slide
++/// file from HRM) opens with Times New Roman as every master's heading and body Latin font (owner decision 2026-11-10). Only
++/// the in-memory model changes, so it is not dirty; a deck with content keeps its fonts. Only PPTX files; the size is kept.
++fn default_font_when_empty(p: &mut Presentation) {
++    let empty = p.slides.iter().all(|sl| {
++        sl.notes.is_empty()
++            && sl.shapes.iter().all(|sh| sh.ph.is_some() && matches!(sh.kind, deckcraft_model::ShapeKind::Shape) && sh.text.as_ref().is_none_or(|t| t.is_empty()))
++    });
++    if empty {
++        for m in &mut p.masters {
++            let t = &mut std::sync::Arc::make_mut(m).theme.fonts;
++            t.major.latin = NEW_DECK_FONT.into();
++            t.minor.latin = NEW_DECK_FONT.into();
++        }
++    }
++}
++
+ fn open_other(name: &str, bytes: &[u8]) -> Result<(Presentation, Vec<String>)> {
+     if deckcraft_pptx::sniff(bytes) {
+         let (mut p, lost_slides) = deckcraft_pptx::import_checked(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
+         deckcraft_format::repair(&mut p);
++        default_font_when_empty(&mut p);
+         return Ok((p, lost_slides));
+     }
+     if deckcraft_pptx::is_encrypted(bytes) {
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index dd64b08..d903967 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -4072,3 +4072,22 @@ fn a_shape_in_front_of_edited_text_takes_the_click() {
+     let st = s.doc().unwrap();
+     assert!(st.selection.text.as_ref().is_none_or(|t| t.shape.0 as u64 != tb), "the click on the member in front left the text: {:?}", st.selection);
+ }
++
++#[test]
++fn an_empty_deck_opens_in_times_new_roman_and_one_with_text_keeps_its_font() {
++    // A python-pptx-like blank: Calibri theme fonts, one slide of empty placeholders. Synthetic bytes.
++    let mut p = deckcraft_model::defaults::new_presentation(None);
++    for m in &mut p.masters {
++        let f = &mut std::sync::Arc::make_mut(m).theme.fonts;
++        f.major.latin = "Calibri".into();
++        f.minor.latin = "Calibri".into();
++    }
++    let fonts = |p: &deckcraft_model::Presentation| p.masters.iter().map(|m| (m.theme.fonts.major.latin.clone(), m.theme.fonts.minor.latin.clone())).collect::<Vec<_>>();
++    let opened = crate::cmd::file::open_presentation("blank.pptx", &deckcraft_pptx::export(&p).unwrap()).unwrap();
++    assert!(fonts(&opened).iter().all(|f| f.0 == "Times New Roman" && f.1 == "Times New Roman"), "{:?}", fonts(&opened));
++
++    let sh = std::sync::Arc::make_mut(&mut p.slides[0]).shapes.iter_mut().find(|s| s.ph.is_some()).unwrap();
++    sh.text = Some(deckcraft_model::text::TextBody::from_text("Hello"));
++    let kept = crate::cmd::file::open_presentation("full.pptx", &deckcraft_pptx::export(&p).unwrap()).unwrap();
++    assert!(fonts(&kept).iter().all(|f| f.0 == "Calibri"), "{:?}", fonts(&kept));
++}

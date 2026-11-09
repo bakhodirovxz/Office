@@ -83,6 +83,7 @@ pub fn open_bytes_calculated_in(
 ) -> Result<(Workbook, Vec<String>, bool)> {
     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
         let (mut wb, warnings, calculated) = open_plain(name, bytes, csv_as_text, loc)?;
+        default_font_when_empty(&mut wb);
         fit_imported_rows(&mut wb);
         return Ok((wb, warnings, calculated));
     }
@@ -97,9 +98,20 @@ pub fn open_bytes_calculated_in(
         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
     }
     let (mut wb, mut warnings, calculated) = open_plain(name, &plain, csv_as_text, loc)?;
+    default_font_when_empty(&mut wb);
     fit_imported_rows(&mut wb);
     warnings.insert(0, DECRYPTED_NOTICE.into());
     Ok((wb, warnings, calculated))
+}
+
+/// office overlay (gridcraft/0185): a workbook with no cells, charts, pictures or shapes opens with Times New Roman as its
+/// Normal and theme body font (owner decision 2026-11-10), whatever its template says: HRM's blank files come from openpyxl
+/// (Calibri). Only the in-memory model changes, so it is not dirty; a workbook with content keeps its fonts. The size stays.
+fn default_font_when_empty(wb: &mut Workbook) {
+    if wb.sheets.iter().all(|s| s.cells.is_empty() && s.charts.is_empty() && s.images.is_empty() && s.shapes.is_empty()) {
+        wb.styles.set_default_font_name(gridcraft_model::NEW_WORKBOOK_FONT);
+        wb.theme.minor_font = gridcraft_model::NEW_WORKBOOK_FONT.into();
+    }
 }
 
 /// Excel auto-fits rows to their tallest font when opening a file: rows without a user-set
