@@ -352,7 +352,7 @@ install.sh: plan ($( [ "$RERUN" = 1 ] && echo "rerun: recreate ours" || echo "fi
   frame origins    $FRAMES_CSV + $PUBLIC_URL
   opaque origin    $( [ "$OPAQUE" = 1 ] && echo "ALLOWED: any page may frame the editor, the config token's signature is the only gate (--no-allow-opaque-origin turns it off)" || echo "refused (--allow-opaque-origin lets a null page origin in: an iOS WebView)")$OPAQUE_NOTE
   provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES$EDIT_NOTE  secret <redacted, $SECRET_LEN bytes>
-  ui language      ${UI_LANG:-the host's editorConfig.lang}$UI_NOTE
+  ui language      ${UI_LANG:-editorConfig.lang of the host}$UI_NOTE
   traefik labels   $(grep -c . <<< "$LABELS" || true)$( [ -z "$LABELS" ] || echo " (service port -> $PUBLIC_PORT)")
   files            $ETC/secrets/{provider-secret,server-secret,converter-secret,audit-key} (0600, uid 10002), $STATE
   defaults         max_document_mb 100, keep_closed_hours 168, keep_abandoned_days 7, close_idle_minutes 5, history session
