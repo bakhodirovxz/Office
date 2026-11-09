@@ -26,7 +26,7 @@
   if (!HOST || window.parent === window) return;
   var TARGET = HOST === 'null' ? '*' : HOST;   // postMessage cannot target an opaque origin by name
 
-  var S = { sid: null, token: null, timer: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, readOnly: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
+  var S = { sid: null, token: null, timer: 0, ping: 0, saving: 0, prefix: null, frame: null, ready: false, started: false, begun: false, closed: false, closing: null, dirtySent: false, readOnly: false, i18n: {}, lang: 'en', title: 'document', fileType: '' };
   var status = document.createElement('p');
   status.style.cssText = 'margin:0;padding:1em;font:14px system-ui,sans-serif;color:var(--muted)';
   document.body.style.cssText = 'margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column';
@@ -87,7 +87,6 @@
       case 'ready':
         if (S.started) return;
         S.started = true;
-        emit('onAppReady', {});
         // every bridge answers the open with `opened` (or `failed`), docs/phase5/r6.md
         try { await openInEditor(); } catch (e) { fail(codeOf(e), 'the document could not be loaded'); return; }
         break;
@@ -101,9 +100,12 @@
       case 'save':
         // every save is answered with exactly one `saved`, in order (the editor keeps the document dirty until then)
         var ok = false;
+        // a small save outlives this page (keepalive, within the browser's 64 KiB budget): Save, then the host leaves at once
+        var ka = d.bytes instanceof ArrayBuffer && d.bytes.byteLength <= 60 * 1024;
+        if (ka) S.saving++;
         try {
           if (!(d.bytes instanceof ArrayBuffer)) throw new Error('no bytes');
-          var r = await (await api('/save', { method: 'POST', body: d.bytes })).json();
+          var r = await (await api('/save', { method: 'POST', body: d.bytes, keepalive: ka })).json();
           // saved means the host acknowledged it: "failed" and "unknown" (no answer in time) are not, and the document stays dirty
           ok = r.callback === 'ok' && !r.dirty;
           if (ok) emit('onSaved', r);
@@ -112,6 +114,7 @@
             emit('onDocumentStateChange', true);
           }
         } catch (e) { fail(codeOf(e), 'the document could not be saved'); }
+        if (ka) S.saving--;
         toEditor('saved', { ok: ok });
         break;
       case 'autosave':
@@ -236,26 +239,26 @@
     h1.focus();
     hfail(hload);
   }
+  // A small icon button over the editor, no row of its own (history.css #hist-open: placed where none of the four apps draws a control).
   function addHistoryButton() {
     if (!window.HistUI) return;   // the shell files are not served: no panel
     var b = H.opener = document.createElement('button');
-    b.type = 'button'; b.className = 'btn ghost'; b.textContent = t('hist.nav');
+    b.type = 'button'; b.id = 'hist-open'; b.title = t('hist.nav');
+    b.setAttribute('aria-label', t('hist.nav'));
     b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'hist-panel');
-    b.style.cssText = 'padding:2px 10px;font-size:.85rem';
+    // a clock with a turning-back arrow
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5M12 7v5l3 2"/></svg>';
     b.onclick = hopen;
-    var bar = document.createElement('div');
-    bar.style.cssText = 'flex:0 0 auto;display:flex;justify-content:flex-end;padding:2px 8px;background:var(--bg);border-bottom:1px solid var(--line)';
-    bar.appendChild(b);
-    document.body.insertBefore(bar, S.frame);
+    document.body.appendChild(b);
   }
 
   async function closeSession() {
     // asked twice (close(), then destroyEditor()): the second asker gets the first answer
     if (S.closed) return S.closing.then(emit.bind(null, 'onClosed'));
     S.closed = true;
-    clearTimeout(S.timer);
-    // before the session exists there is nothing to end
-    S.closing = (S.sid ? api('/close', { method: 'POST' }).then(function (r) { return r.json(); }) : Promise.resolve({ status: 4 })).catch(function () { return { status: 0 }; });
+    clearTimeout(S.timer); clearInterval(S.ping);
+    // before the session exists there is nothing to end; keepalive: the host may remove this page right after asking
+    S.closing = (S.sid ? api('/close', { method: 'POST', keepalive: true }).then(function (r) { return r.json(); }) : Promise.resolve({ status: 4 })).catch(function () { return { status: 0 }; });
     var c = await S.closing;
     // a close the host did not acknowledge is queued by the server and retried; the host page is told it is not saved yet
     if (c.callback === 'failed' || c.callback === 'unknown' || c.dirty) emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
@@ -285,20 +288,33 @@
     S.readOnly = !S.perms.edit;
     // permissions.download / print hide the editor's own Save As, export and Print entries (as ONLYOFFICE hides its buttons); the browser's own print cannot be blocked.
     S.canDownload = !(s.perms && s.perms.download === false); S.canPrint = !(s.perms && s.perms.print === false); S.sid = s.sid; S.token = s.token; S.title = s.title; S.fileType = String((cfg.document && cfg.document.fileType) || '').toLowerCase();
+    // the provider's ui_lang (server-side) wins over editorConfig.lang
+    if (s.lang) document.documentElement.lang = S.lang = s.lang;
     renewSoon(s.expires);
+    // an edit session the server hears nothing from for a few minutes is closed there (the page went away without a close)
+    if (S.perms.edit) S.ping = setInterval(function () { if (!S.closed) api('/ping', { method: 'POST' }).catch(function () {}); }, 60000);
     var app = apps.find(function (a) { return a.route === '/' + s.editor + '/'; });
     if (!app) return fail(-1, 'no editor for this document type');
     S.prefix = app.prefix;
     document.documentElement.dataset.app = s.editor;   // history.css: the host app's look
     status.textContent = t('ed.loading', { app: app.names[S.lang] || app.names.en });
     S.frame = document.createElement('iframe');
-    S.frame.src = app.route + '?host=parent&theme=' + (th === 'dark' || th === 'light' ? th : 'system');   // read once by the editor at start
+    // read once by the editor at start; the full ribbon is the default here (a user's own saved choice in the app wins)
+    S.frame.src = app.route + '?host=parent&theme=' + (th === 'dark' || th === 'light' ? th : 'system') + '&lang=' + S.lang + '&toolbar=full';
     S.frame.title = s.title;
     S.frame.allow = 'clipboard-read; clipboard-write; fullscreen';
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';
     document.body.appendChild(S.frame);
     addHistoryButton();
+    // the app is there: the host's not-ready timer stops now, not after the editor's download (which a host retry would restart)
+    emit('onAppReady', {});
   }
+
+  // The host removed this page (its editor container, a page change) or the tab closes: end the session as close() would, with a
+  // keepalive request that outlives the page. A small save still in flight goes first; the server's idle close then ends the session.
+  window.addEventListener('pagehide', function () { if (S.sid && !S.closed && !S.saving) closeSession(); });
+  // back from the back-forward cache after that close: the session is over
+  window.addEventListener('pageshow', function (e) { if (e.persisted && S.closed && S.sid) fail(-1, 'the session has ended'); });
 
   window.addEventListener('message', function (ev) {
     var d = ev.data;

@@ -1426,6 +1426,28 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   env, headers through Traefik, a rerun keeps it, `--no-allow-opaque-origin` undoes it) is written but not run: another agent's
   rehearsal held the shared `dropin-*` names and the `hoshiya-docserver:rehearsal` tag. Found on the way: `--edit-types` is not kept
   by a rerun (it goes back to the default); the switch is. Fixed after the merge: a rerun keeps it too (rehearsal check).
+### Phase 5: no edit lost when the host page goes away (2026-11-09; branch `p5-save`, from phase-5 4a8969df)
+- Why (measured on the HRM test server): the editor wasm took 14-70 s over the owner's link, the host's 15 s not-ready timer offered
+  Retry and restarted the download; later a Save followed 1.4 s by Back was aborted (Traefik 499), no callback went out, the edit was lost.
+  The server kept a recovery copy (`autosave.bin`) but never used it, and a session whose frame vanished never ended.
+- Done: a close promotes a recovery copy that is newer than the last version and differs from it (sha256, the save-body checks, sealed
+  at rest) to a version, then sends status 2 with it (same bytes: 4). An edit session pings every 60 s; one idle for `close_idle_minutes`
+  (5) is closed by the server the same way (the 15 s retry loop); the sweep never deletes an open edit session first; a crash between
+  promotion and callback is the owed status 2 at start. The wrapper closes on `pagehide` with a keepalive request, sends saves <= 60 KiB
+  as keepalive (and then leaves the close to the idle close), emits `onAppReady` when the session and app frame exist, passes
+  `&lang=` and `&toolbar=full` to the app. Provider `ui_lang` (installer `--ui-lang`, kept on a rerun; the host profile: `uz-Latn`)
+  overrides `editorConfig.lang`. History is a 26 px icon button over the app (no row). No new UI strings (the button uses `hist.nav`).
+- Measured: `ci.sh docserver` Rust tests all green (outbound 23, incl. promotion, idle close, restart, sweep ordering, ui_lang), clippy
+  clean; docserver.spec 31 passed + 1 fixed afterwards (the History opener had no text any more; the History cases rerun 3/3); bridge
+  docs 12, sheets 53, slides 36, pdf 39. Host removes the frame without a save: status 2 with the bridge's autosave (first autosave
+  29,971 ms after dirty), the typed text in v2. Save then remove at 4 KB/s upload: status 6 arrives; with keepalive off the same case
+  loses the save (checked). onAppReady 8.3 s before a held-back (8 s) editor download ends. History button: the pixels under it are flat
+  (spread 0) in docs, sheets, slides and pdf, uz-Latn and ru, 1366x768 and 1600x900. Docker drop-in rehearsal (rebuilt image 404 MB):
+  **67 of 67**, incl. the profile's uz-Latn on install, `--ui-lang ru` kept by a plain rerun, the drop-in wrapper speaking uz-Latn.
+- Not checked: the apps honouring `&lang=`/`&toolbar=full` (their teams' branches; the dists used here are p5-ro's); a host calling
+  `destroyEditor()` or `close()` while a save is still on its way can still close before the save is stored (the save then fails);
+  a save over 60 KiB is not keepalive (only the last recovery copy survives a leave); the real HRM page.
+
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every

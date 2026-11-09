@@ -279,13 +279,37 @@ impl Docserver {
         n
     }
 
-    /// A thread that recovers owed status 2 once, then calls `retry_due` every 15 s for the life of the process.
+    /// Closes every edit session idle for `close_idle_s` (`close_if_idle`: its recovery copy becomes the last version) and sends its
+    /// callback, as a close from the page would. Returns how many it closed.
+    pub fn close_idle(&self, at: u64) -> usize {
+        let Ok(dir) = std::fs::read_dir(self.data_dir.join("sessions")) else {
+            return 0;
+        };
+        let mut n = 0;
+        for e in dir.flatten() {
+            let sid = e.file_name().to_string_lossy().into_owned();
+            let Some(c) = self.close_if_idle(&sid, at) else {
+                continue;
+            };
+            n += 1;
+            self.audit(
+                "close",
+                json!({"session": sid_ref(&sid), "status": c.status, "reason": "idle"}),
+            );
+            self.callback_closed(&sid);
+        }
+        n
+    }
+
+    /// A thread that recovers owed status 2 once, then every 15 s closes idle edit sessions and calls `retry_due`, for the life of the
+    /// process.
     pub fn spawn_retry_loop(self: &Arc<Self>) {
         let ds = self.clone();
         std::thread::spawn(move || {
             ds.recover_unnotified();
             loop {
                 std::thread::sleep(std::time::Duration::from_secs(15));
+                ds.close_idle(now());
                 ds.retry_due(now());
             }
         });
