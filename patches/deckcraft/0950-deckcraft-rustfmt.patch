@@ -99,7 +99,7 @@ index 636c2a5..ee2da1b 100644
              let q = query.to_lowercase();
              let items = palette_items(&app.session, &q);
 diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
-index 1096c6d..6dc7392 100644
+index 772668e..a0dbc70 100644
 --- a/crates/ui-egui/src/panes.rs
 +++ b/crates/ui-egui/src/panes.rs
 @@ -1028,7 +1028,9 @@ fn animation(app: &mut SlideApp, ui: &mut Ui) {
