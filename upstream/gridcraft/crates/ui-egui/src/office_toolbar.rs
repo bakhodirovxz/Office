@@ -174,7 +174,9 @@ fn toggle_mode(on: bool) {
     }
     // The web keeps the choice in localStorage (suite-core).
     #[cfg(target_arch = "wasm32")]
-    if let Err(e) = suite_core::settings::set_toolbar_mode(if on { suite_core::settings::ToolbarMode::Simple } else { suite_core::settings::ToolbarMode::Full }) {
+    if let Err(e) =
+        suite_core::settings::set_toolbar_mode(if on { suite_core::settings::ToolbarMode::Simple } else { suite_core::settings::ToolbarMode::Full })
+    {
         log::warn!("could not write the toolbar mode: {e}");
     }
 }
