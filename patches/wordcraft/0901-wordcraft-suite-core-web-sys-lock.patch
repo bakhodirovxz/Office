@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 11:00:00 +0500
+Subject: [PATCH] wordcraft: Cargo.lock lists web-sys under suite-core
+
+suite-core (crates/suite-core) reads the web toolbar choice from localStorage and the URL on wasm32, so it depends on web-sys there;
+Cargo.lock only (web-sys, js-sys and wasm-bindgen are already in this lock).
+---
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 9166b627..8980d51f 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3949,6 +3949,7 @@ dependencies = [
+  "serde_json",
+  "sha2 0.10.9",
+  "toml_edit 0.22.27",
++ "web-sys",
+ ]
+ 
+ [[package]]
