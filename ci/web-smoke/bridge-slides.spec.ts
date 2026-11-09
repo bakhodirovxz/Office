@@ -346,7 +346,11 @@ test('12 autosave: none when clean; after an edit one arrives within a period, a
 });
 
 
-const slideEdit = async (page: Page, _i: number) => newSlide(page);
+// the first call selects the canvas, the rest are key presses only: edits must come well under 3 s apart even on a loaded machine
+const slideEdit = async (page: Page, i: number) => {
+  if (i === 0) await canvas(page).click({ position: { x: 500, y: 350 } });
+  await page.keyboard.press('Control+Shift+N');
+};
 const slidesAutosaves = async (page: Page) => (await autosaves(page)).length;
 // hengines (patch deckcraft/0170): the recovery copy goes 3 s after the last edit, and at the latest 30 s after the first unsent edit
 // while editing goes on; never more often than every 3 s; none for an unchanged document.
@@ -363,12 +367,12 @@ test('8b autosave: 3 s after the last edit, once per quiet period; continuous ed
   expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
   await page.waitForTimeout(8_000);
   expect(await n(), 'an unchanged document is not sent again').toBe(1);
-  // continuous editing (an edit about every 1.5 s): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
   const start = Date.now();
   let i = 1;
-  while (Date.now() - start < 20_000) { await slideEdit(page, i++); await page.waitForTimeout(1_000); }
+  while (Date.now() - start < 20_000) { await slideEdit(page, i++); }
   expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
-  while (Date.now() - start < 38_000) { await slideEdit(page, i++); await page.waitForTimeout(1_000); }
+  while (Date.now() - start < 38_000) { await slideEdit(page, i++); }
   const during = await n();
   expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
   const times = (await msgs(page)).filter((m) => m.type === 'deckcraft:autosave').map((m) => m.t as number);

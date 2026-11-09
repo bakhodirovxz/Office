@@ -363,7 +363,7 @@ test('8b autosave: 3 s after the last edit, once per quiet period; continuous ed
   expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
   await page.waitForTimeout(8_000);
   expect(await n(), 'an unchanged document is not sent again').toBe(1);
-  // continuous editing (an edit about every 1.5 s): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
   const start = Date.now();
   let i = 1;
   while (Date.now() - start < 20_000) { await pdfEdit(page, i++); }

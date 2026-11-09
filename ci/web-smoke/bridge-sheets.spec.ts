@@ -231,12 +231,12 @@ test('8b autosave: 3 s after the last edit, once per quiet period; continuous ed
   expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
   await page.waitForTimeout(8_000);
   expect(await n(), 'an unchanged document is not sent again').toBe(1);
-  // continuous editing (an edit about every 1.5 s): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
   const start = Date.now();
   let i = 1;
-  while (Date.now() - start < 20_000) { await editCell(page, i++); await page.waitForTimeout(1_000); }
+  while (Date.now() - start < 20_000) { await editCell(page, i++); await page.waitForTimeout(500); }
   expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
-  while (Date.now() - start < 38_000) { await editCell(page, i++); await page.waitForTimeout(1_000); }
+  while (Date.now() - start < 38_000) { await editCell(page, i++); await page.waitForTimeout(500); }
   const during = await n();
   expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
   const times = (await msgs(page)).filter((m) => m.type === 'gridcraft:autosave').map((m) => m.t as number);
