@@ -306,3 +306,18 @@ test('12 readOnly: Stop Protection is refused before it shows (the pane stays, n
   expect(await count(page, 'wordcraft:autosave')).toBe(0);
   expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
 });
+
+// A python-docx-style blank (Cambria body theme font, no text, as HRM creates new files) opens in Times New Roman (wordcraft/0185)
+// without becoming dirty or sending an autosave; FONT_SHOT=<dir> keeps the two screenshots (empty, then typed in).
+test('13 an empty python-docx-style blank opens in Times New Roman and stays clean until typed in', async ({ page }) => {
+  await open(page, {}, path.join(__dirname, 'fixtures/docs-python-docx-blank.docx'));
+  await page.waitForTimeout(4000);
+  const shot = process.env.FONT_SHOT;
+  if (shot) await page.screenshot({ path: path.join(shot, 'docs-empty-blank.png') });
+  expect((await msgs(page)).filter((m) => m.type === 'wordcraft:dirty' && m.dirty)).toHaveLength(0);
+  expect(await count(page, 'wordcraft:autosave')).toBe(0);
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  await page.keyboard.type('Times New Roman');
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  if (shot) await page.screenshot({ path: path.join(shot, 'docs-empty-blank-typed.png') });
+});
