@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: a document with no content opens in Times New Roman (HRM's python-docx blank)
+
+Owner request 2026-11-10: the default font is always Times New Roman. HRM creates its blank Word files with python-docx, whose template sets Cambria as the body theme font, so a blank file from HRM opened in Cambria. A document with no text, table or picture (empty paragraphs only) now has Times New Roman as its docDefaults run font, body theme font and Normal font (a Normal style with its own font) when it is opened (engine io::opened). Only the in-memory model changes: the session is not dirty and the file changes when the user saves. A document with content keeps its fonts, and the size is left as the file has it (python-docx: 11 pt). New blank documents were already Times New Roman 12 pt (0135).
+Test: engine lib an_empty_document_opens_in_times_new_roman_without_being_dirty.
+---
+ crates/engine/src/io.rs    | 19 +++++++++++++++++++
+ crates/engine/src/tests.rs | 22 ++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
+
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index 5c10293..fd732ba 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -121,9 +121,28 @@ pub fn can_encrypt(name: &str) -> bool {
+ /// [`crate::cmd::references::refresh_date_fields`]).
+ fn opened(doc: &mut Document) {
+     doc.ensure_nonempty();
++    default_font_when_empty(doc);
+     crate::cmd::references::refresh_date_fields(doc);
+ }
+ 
++/// office overlay (wordcraft/0185): a document with no text, table or picture opens in Times New Roman (owner decision
++/// 2026-11-10), whatever its template says: HRM's blank files come from python-docx (Cambria body theme font). Only the
++/// in-memory model changes, so the document is not dirty and the file changes when the user saves; a document with content
++/// keeps its fonts. The size is left as the file has it.
++fn default_font_when_empty(doc: &mut Document) {
++    let empty = doc.body.iter().all(|b| matches!(&**b, wordcraft_doc::Block::Para(p) if p.objects.is_empty()))
++        && doc.plain_text(wordcraft_doc::StoryRef::Body).trim().is_empty();
++    if !empty {
++        return;
++    }
++    let tnr = Some(crate::session::NEW_DOCUMENT_FONT.to_string());
++    doc.styles.default_chr.font = tnr.clone();
++    doc.settings.minor_font = crate::session::NEW_DOCUMENT_FONT.into();
++    if let Some(n) = doc.styles.styles.iter_mut().find(|s| s.id == "Normal" && s.chr.font.is_some()) {
++        n.chr.font = tnr;
++    }
++}
++
+ /// Parse a document from bytes; `name` gives the format by extension.
+ pub fn open_bytes(name: &str, bytes: &[u8]) -> Result<Document, String> {
+     open_bytes_with(name, bytes, None).map(|(doc, _)| doc)
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 1d2b4ab..4603376 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -8524,3 +8524,24 @@ fn rtf_list_round_trip_keeps_text() {
+         assert_eq!(d.plain_text(StoryRef::Body), "first\nsecond", "{cmd}");
+     }
+ }
++
++#[test]
++fn an_empty_document_opens_in_times_new_roman_without_being_dirty() {
++    // A python-docx-like blank: Cambria body theme font, no content. Synthetic bytes.
++    let mut d = wordcraft_doc::Document::new();
++    d.styles.default_chr.font = Some("Cambria".into());
++    d.settings.minor_font = "Cambria".into();
++    let bytes = wordcraft_docx::write(&d).unwrap();
++    let opened = crate::io::open_bytes("blank.docx", &bytes).unwrap();
++    assert_eq!(opened.styles.default_chr.font.as_deref(), Some("Times New Roman"));
++    let s = Session::new(opened);
++    assert!(!s.dirty);
++
++    // A document with text keeps its own fonts.
++    d.body = wordcraft_doc::Document::new().body;
++    let mut s2 = Session::new(d);
++    run(&mut s2, "text.insert", json!({"text": "Hello"}));
++    let bytes = wordcraft_docx::write(&s2.doc).unwrap();
++    let kept = crate::io::open_bytes("full.docx", &bytes).unwrap();
++    assert_eq!(kept.styles.default_chr.font.as_deref(), Some("Cambria"));
++}
