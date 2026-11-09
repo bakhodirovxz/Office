@@ -41,6 +41,8 @@ xdfu-core = { path = "../../../../crates/xdfu-core" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # Read the browser's preferred language for the first-run web interface language.
 web-sys = { version = "0.3", features = ["Window", "Navigator"] }
+# patches/gridcraft/0172: the web reads and saves the toolbar mode through suite-core (localStorage)
+suite-core = { path = "../../../../crates/suite-core" }
 
 [build-dependencies]
 serde_json = { workspace = true }
