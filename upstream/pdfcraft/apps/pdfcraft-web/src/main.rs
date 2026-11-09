@@ -84,11 +84,10 @@ fn main() {
                 }),
             )
             .await;
+        let bridge = runner.app_mut::<host::Shell>().and_then(|shell| shell.bridge.clone());
         if started.is_ok()
-            && let Some(shell) = runner.app_mut::<host::Shell>()
-            && let Some(bridge) = shell.bridge.clone()
+            && let Some(bridge) = bridge
         {
-            drop(shell);
             let pull = bridge.clone();
             bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<host::Shell>()?.app));
         }
