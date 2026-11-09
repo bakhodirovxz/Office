@@ -7,7 +7,7 @@ use crate::sessions::{SessErr, SessionRecord, sha256_hex, valid_sid};
 use crate::tokens::ct_eq;
 use axum::Extension;
 use axum::Router;
-use axum::body::Bytes;
+use axum::body::{Body, Bytes};
 use axum::extract::{DefaultBodyLimit, Path, Request, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
@@ -284,13 +284,28 @@ async fn ping(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> R
     json_ok(json!({"ok": true}))
 }
 
-async fn close(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
+/// `POST /ds/session/{sid}/close`, with an optional body: the editor's final copy, the edits no autosave holds yet (the wrapper
+/// sends it in the one keepalive request that closes, so it cannot arrive after the close). It is checked as an autosave body;
+/// one the session cannot take (view session, too large, not a sound document of its type) is left out and the close goes on.
+async fn close(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Body) -> Res {
     let rec = authorize(&ds, &h, &sid, true, "close", &client(cl))?;
+    // one byte past the cap, so that `check_body` names it too large; a longer body stops there and is refused the same way
+    let cap = (ds.max_document_mb << 20) as usize + 1;
+    let sound = |b: &Bytes| {
+        editable(&rec)
+            .and_then(|()| check_body(&ds, &rec, b))
+            .is_ok()
+    };
+    let (last, copy) = match axum::body::to_bytes(body, cap).await {
+        Ok(b) if b.is_empty() => (None, "none"),
+        Ok(b) if sound(&b) => (Some(b), "kept"),
+        _ => (None, "refused"),
+    };
     let (c, cb, dirty) = blk(move || {
-        let c = ds.close_session(&sid, now())?;
+        let c = ds.close_with(&sid, last.as_deref(), now())?;
         ds.audit(
             "close",
-            json!({"session": sid_ref(&sid), "status": c.status, "user": rec.user_id}),
+            json!({"session": sid_ref(&sid), "status": c.status, "user": rec.user_id, "final_copy": copy}),
         );
         // status 2 is queued and retried until the provider acknowledges it; 4 is one try
         let cb = ds.callback_closed(&sid);

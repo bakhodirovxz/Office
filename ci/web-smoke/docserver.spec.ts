@@ -967,6 +967,71 @@ test('Save, then the host removes the editor at once: the save still reaches the
   await ctx.close();
 });
 
+// ---- the host leaves within 300 ms of the last keystroke (HRM's Back: destroyEditor(), then its container emptied; measured on the
+// test server 2026-11-10: status 4, the edit lost). No autosave holds the edit yet (it comes 3 s after the last one): the wrapper's
+// pagehide takes the editor's final copy synchronously (window.__hostFinalCopy) and sends it in the keepalive close; the server makes
+// it the last version and sends status 2 with it.
+const hrmBack = (page: Page) => page.evaluate(() => {
+  const c = document.getElementById('ph')!.parentElement!;
+  (window as any).__editor.destroyEditor();
+  c.innerHTML = '';
+});
+const zipText = (f: string) => execFileSync(PYTHON, ['-I', '-c', 'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);sys.stdout.buffer.write(b"".join(z.read(n) for n in z.namelist() if n.endswith(".xml")))', f], { encoding: 'utf8' });
+for (const leave of ['HRM Back', 'tab close'] as const) {
+  test(`${leave} 300 ms after typing, no autosave yet: status 2 with the typed text (the close carries the final copy)`, async () => {
+    const { ctx, page, problems } = await open();
+    const posts: string[] = [];
+    page.on('request', (r) => { if (r.method() === 'POST' && r.url().includes('/ds/session/')) posts.push(new URL(r.url()).pathname.split('/').pop()!); });
+    await page.goto(`${HOST}/host?kind=files&id=1`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const [sdir] = sessions();
+    const hrm0 = await hrmState();
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/docs/`))!;
+    await editor.locator('canvas').first().click({ position: { x: 300, y: 200 } });
+    await page.keyboard.type('Zq7');
+    await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+    await page.keyboard.type('gonein300ms');
+    await page.waitForTimeout(300);
+    if (leave === 'HRM Back') await hrmBack(page);
+    // Playwright's page.close() in headless Chromium runs no pagehide (measured): CDP Page.close closes the tab as a user does
+    else await (await ctx.newCDPSession(page)).send('Page.close');
+    await expect.poll(async () => (await hrmState()).received.length, { timeout: 15_000 }).toBe(hrm0.received.length + 1);
+    const got = (await hrmState()).received.at(-1)!;
+    const rec = record(sdir);
+    expect([got.status, rec.closed?.status, rec.versions.length]).toEqual([2, 2, 2]);
+    expect(got.sha256).toBe(sha(path.join(sdir, 'v2.bin')));
+    expect(docXml(path.join(sdir, 'v2.bin'))).toContain('Zq7gonein300ms');
+    expect(posts).not.toContain('autosave'); // the close carried the edit
+    expect(problems).toEqual([]);
+    await ctx.close();
+  });
+}
+// Sheets, Slides and PDF: the same Back right after their R6 edit (xlsx: the typed cell is in the kept version).
+for (const [ext, id, route, magic, edit] of R6) {
+  test(`HRM Back 300 ms after an edit, ${ext}: status 2 with the edit`, async () => {
+    const { ctx, page, problems } = await open();
+    await page.goto(`${HOST}/host?kind=files&id=${id}`);
+    await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+    const [sdir] = sessions();
+    const hrm0 = await hrmState();
+    const editor = page.frames().find((f) => f.url().startsWith(`${DS}/${route}/`))!;
+    await edit(page, editor);
+    await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+    await page.waitForTimeout(300);
+    await hrmBack(page);
+    await expect.poll(async () => (await hrmState()).received.length, { timeout: 15_000 }).toBe(hrm0.received.length + 1);
+    const got = (await hrmState()).received.at(-1)!;
+    const rec = record(sdir);
+    expect([got.status, rec.closed?.status, rec.versions.length]).toEqual([2, 2, 2]);
+    const v2 = path.join(sdir, 'v2.bin');
+    expect([got.sha256, fs.readFileSync(v2).subarray(0, magic.length).toString('latin1')]).toEqual([sha(v2), magic]);
+    expect(rec.versions[1].sha256).not.toBe(rec.versions[0].sha256);
+    if (ext === 'xlsx') expect(zipText(v2)).toContain('zz');
+    expect(problems).toEqual([]);
+    await ctx.close();
+  });
+}
+
 // The host's not-ready timer (15 s in one provider's page) restarts the editor when no ready event came: onAppReady goes out as soon as
 // the session exists and the app frame is made, long before the editor's download ends (here held back 8 s).
 test('onAppReady arrives before the editor download finished', async () => {

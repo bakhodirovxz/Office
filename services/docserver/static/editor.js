@@ -119,7 +119,9 @@
         break;
       case 'autosave':
         if (!(d.bytes instanceof ArrayBuffer)) return;
-        try { await api('/autosave', { method: 'POST', body: d.bytes }); }
+        // until stored, the copy is also the close's final copy: this request dies with the page, and the editor counts it as handed over
+        S.unsent = d.bytes;
+        try { await api('/autosave', { method: 'POST', body: d.bytes }); if (S.unsent === d.bytes) S.unsent = null; }
         catch (e) { emit('onWarning', { warningCode: 2, warningDescription: 'the recovery copy could not be stored' }); }
         break;
     }
@@ -252,13 +254,36 @@
     document.body.appendChild(b);
   }
 
-  async function closeSession() {
+  // The edits no autosave holds yet, taken from the editor synchronously (window.__hostFinalCopy, the four bridges): the editor page goes
+  // away with this one, so a message from it would come too late. Null when there are none or the editor is not (or no longer) there.
+  function finalCopy() {
+    var b = null;
+    try { var w = S.frame && S.frame.contentWindow; b = w && typeof w.__hostFinalCopy === 'function' ? w.__hostFinalCopy() : null; } catch (e) { b = null; }
+    return b || S.unsent || null;
+  }
+
+  // unloading: called from pagehide, where nothing after the first await runs
+  async function closeSession(unloading) {
     // asked twice (close(), then destroyEditor()): the second asker gets the first answer
     if (S.closed) return S.closing.then(emit.bind(null, 'onClosed'));
     S.closed = true;
     clearTimeout(S.timer); clearInterval(S.ping);
     // before the session exists there is nothing to end; keepalive: the host may remove this page right after asking
-    S.closing = (S.sid ? api('/close', { method: 'POST', keepalive: true }).then(function (r) { return r.json(); }) : Promise.resolve({ status: 4 })).catch(function () { return { status: 0 }; });
+    S.closing = (async function () {
+      if (!S.sid) return { status: 4 };
+      // the final copy goes in the close request itself (one request: it cannot arrive after the close), within the keepalive budget
+      var body = S.perms.edit ? finalCopy() : null;
+      if (body && body.byteLength > 60 * 1024) {
+        // shortcut: the browser's keepalive budget (64 KiB per page) cannot carry a larger copy out of a page that is going away, so
+        // pagehide closes without it (the last autosave, at most 30 s old, is kept); upgrade when fetchLater() can carry it.
+        if (!unloading) {
+          try { await api('/autosave', { method: 'POST', body: body }); }
+          catch (e) { emit('onWarning', { warningCode: 2, warningDescription: 'the recovery copy could not be stored' }); }
+        }
+        body = null;
+      }
+      return (await api('/close', { method: 'POST', keepalive: true, body: body || undefined })).json();
+    })().catch(function () { return { status: 0 }; });
     var c = await S.closing;
     // a close the host did not acknowledge is queued by the server and retried; the host page is told it is not saved yet
     if (c.callback === 'failed' || c.callback === 'unknown' || c.dirty) emit('onWarning', { warningCode: 1, warningDescription: 'the host did not accept the saved document' });
@@ -311,8 +336,9 @@
   }
 
   // The host removed this page (its editor container, a page change) or the tab closes: end the session as close() would, with a
-  // keepalive request that outlives the page. A small save still in flight goes first; the server's idle close then ends the session.
-  window.addEventListener('pagehide', function () { if (S.sid && !S.closed && !S.saving) closeSession(); });
+  // keepalive request that outlives the page, carrying the editor's final copy. A small save still in flight goes first; the server's
+  // idle close then ends the session.
+  window.addEventListener('pagehide', function () { if (S.sid && !S.closed && !S.saving) closeSession(true); });
   // back from the back-forward cache after that close: the session is over
   window.addEventListener('pageshow', function (e) { if (e.persisted && S.closed && S.sid) fail(-1, 'the session has ended'); });
 
