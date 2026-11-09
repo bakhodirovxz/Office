@@ -487,9 +487,11 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
         rows(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.spacing_mut().item_spacing.x = 3.0;
-                let font = st.get("font").and_then(Value::as_str).unwrap_or("").to_string();
                 let size = st.get("size").and_then(Value::as_f64);
                 let fams = font_families(app);
+                // No font of its own (or nothing selected): the deck's body (theme) font, as PowerPoint shows, not an empty box.
+                let body = app.session.active().and_then(|d| d.doc.masters.first()).map(|m| m.theme.fonts.minor.latin.clone());
+                let font = st.get("font").and_then(Value::as_str).filter(|f| !f.is_empty()).map(str::to_string).or(body).unwrap_or_default();
                 let theme_fonts: Vec<String> = fams.iter().take(2).cloned().collect();
                 dropdown(ui, "font", &font, 150.0, en, |ui| {
                     for (k, f) in fams.iter().enumerate() {
