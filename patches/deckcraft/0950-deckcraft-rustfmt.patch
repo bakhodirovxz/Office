@@ -139,7 +139,7 @@ index 772668e..a0dbc70 100644
                      focus_comment(app, slide, index);
                      run(app, "comment.reply", json!({"index": index, "text": txt}));
 diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
-index 39ec58b..904ba86 100644
+index 44a4dd0..d0d9430 100644
 --- a/crates/ui-egui/src/ribbon.rs
 +++ b/crates/ui-egui/src/ribbon.rs
 @@ -364,7 +364,8 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
@@ -152,7 +152,7 @@ index 39ec58b..904ba86 100644
              if r.double_clicked() {
                  run(app, "format.painter", json!({"sticky": true}));
              } else if r.clicked() {
-@@ -580,7 +581,11 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+@@ -585,7 +586,11 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                          run(app, "format.color", json!({"color": cref_param(&c)}));
                      }
                  });
@@ -165,7 +165,7 @@ index 39ec58b..904ba86 100644
                      run(app, "format.fontDialog", json!({}));
                  }
              });
-@@ -809,7 +814,11 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+@@ -814,7 +819,11 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                  });
                  let r = icon_toggle(ui, Icon::SmartArt, "Convert to SmartArt", enabled(app, "smartArt.fromText"), false);
                  egui::Popup::menu(&r).show(|ui| smartart_gallery(app, ui, "smartArt.fromText", json!({}), "", "", "", None));
@@ -178,7 +178,7 @@ index 39ec58b..904ba86 100644
                      run(app, "format.paragraphDialog", json!({}));
                  }
              });
-@@ -3112,7 +3121,8 @@ fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
+@@ -3117,7 +3126,8 @@ fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
      };
      let at = row.min(n.saturating_sub(1));
      group(ui, |ui| {

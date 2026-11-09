@@ -1,7 +1,7 @@
 // Added by the office toolbar patch queue. MIT OR Apache-2.0.
 //! The simplified Slides toolbar (PLAN phase 4 WP3, docs/phase4/toolbar-design.md section 5): one row of the controls people
-//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (desktop); the web build always shows
-//! this row. Icons are Fluent UI System Icons (MIT, `assets/icons/fluent`), rasterised at build time into alpha masks.
+//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (on the web too: the saved choice, then `?toolbar=`).
+//! Icons are Fluent UI System Icons (MIT, `assets/icons/fluent`), rasterised at build time into alpha masks.
 //!
 //! `show` returns whether it drew the row; the call site draws the upstream ribbon otherwise. In the full ribbon mode it
 //! only floats the "Simple ribbon" pill over the right end of the tab row.
@@ -361,7 +361,7 @@ fn slides_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
 
 fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value, flag: &dyn Fn(&str) -> bool) {
     let en = ribbon::enabled(app, "format.bold");
-    let font = st.get("font").and_then(Value::as_str).unwrap_or("").to_string();
+    let font = ribbon::font_shown(app, st);
     let families = ribbon::font_families(app);
     widgets::dropdown(ui, "font", &font, 150.0, en, |ui| {
         for family in &families {
