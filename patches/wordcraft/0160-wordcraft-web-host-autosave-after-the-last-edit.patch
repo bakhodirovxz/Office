@@ -1,0 +1,231 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: the host autosave goes 3 s after the last edit (at least every 30 s of continuous editing)
+
+The bridge handed the unsaved document to the host only every 30 s while dirty, so up to half a minute of typing was lost when
+the user left. The document server turns the last wordcraft:autosave into the saved version when the page goes away, so the window
+must be short. New autosave::Debounce (pure timing, unit tested natively): a send 3 s after the last edit, at the latest 30 s after
+the first unsent edit while the user keeps typing, never twice within 3 s, nothing for a clean or read-only document or when the
+document is unchanged since the last handover. host.rs drives it with the document revision; the hidden-tab and pagehide handovers
+stay and count as a send.
+---
+
+diff --git a/apps/wordcraft-web/src/autosave.rs b/apps/wordcraft-web/src/autosave.rs
+new file mode 100644
+index 00000000..55b21969
+--- /dev/null
++++ b/apps/wordcraft-web/src/autosave.rs
+@@ -0,0 +1,116 @@
++//! When the web host's unsaved document is handed over (`wordcraft:autosave`): a short quiet
++//! time after the last edit, and at least every [`MAX_MS`] while edits keep coming, never twice
++//! within [`QUIET_MS`]. Pure timing, so it is tested natively; `web/host.rs` drives it per frame.
++
++/// Quiet time after the last edit before the document is handed over (also the minimum gap).
++pub const QUIET_MS: f64 = 3_000.0;
++/// The longest the first unsent edit waits while the user keeps editing.
++pub const MAX_MS: f64 = 30_000.0;
++
++/// What a frame should do about the autosave.
++#[derive(Debug, PartialEq)]
++pub enum Tick {
++    /// Nothing unsent.
++    Idle,
++    /// Wake up again after this many milliseconds.
++    Wait(f64),
++    /// Hand the document over now.
++    Send,
++}
++
++#[derive(Default)]
++pub struct Debounce {
++    /// The document revision last seen, and the one last handed over.
++    seen: Option<u64>,
++    sent: Option<u64>,
++    /// When the oldest unsent edit was first seen, and the newest one.
++    first: Option<f64>,
++    last_edit: f64,
++    last_sent: Option<f64>,
++}
++
++impl Debounce {
++    /// The document is clean or read only: forget what was seen.
++    pub fn reset(&mut self) {
++        self.seen = None;
++        self.sent = None;
++        self.first = None;
++    }
++
++    /// Something else (the tab was hidden) handed the document over at `rev`.
++    pub fn mark_sent(&mut self, rev: u64, now: f64) {
++        self.sent = Some(rev);
++        self.first = None;
++        self.last_sent = Some(now);
++    }
++
++    /// One frame of an unsaved, editable document at revision `rev`, `now` in milliseconds.
++    pub fn tick(&mut self, rev: u64, now: f64) -> Tick {
++        if self.sent == Some(rev) {
++            self.first = None;
++            return Tick::Idle;
++        }
++        if self.seen != Some(rev) {
++            self.seen = Some(rev);
++            self.last_edit = now;
++        }
++        let first = *self.first.get_or_insert(now);
++        let earliest = self.last_sent.map_or(f64::NEG_INFINITY, |t| t + QUIET_MS);
++        let due = earliest.max((self.last_edit + QUIET_MS).min(first + MAX_MS));
++        if now >= due {
++            self.mark_sent(rev, now);
++            Tick::Send
++        } else {
++            Tick::Wait(due - now)
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn one_edit_is_sent_after_the_quiet_time() {
++        let mut d = Debounce::default();
++        assert_eq!(d.tick(1, 1_000.0), Tick::Wait(3_000.0));
++        assert_eq!(d.tick(1, 3_999.0), Tick::Wait(1.0));
++        assert_eq!(d.tick(1, 4_000.0), Tick::Send);
++        // Nothing new since: nothing more, however long the page stays dirty.
++        assert_eq!(d.tick(1, 100_000.0), Tick::Idle);
++    }
++
++    #[test]
++    fn typing_keeps_pushing_the_send_back_until_the_longest_wait() {
++        let mut d = Debounce::default();
++        let mut sent = Vec::new();
++        for s in 0..70u64 {
++            let now = s as f64 * 1_000.0;
++            if d.tick(s + 1, now) == Tick::Send {
++                sent.push(now);
++            }
++        }
++        // The first edit (0 s) waits for the 30 s ceiling; the next unsent one (31 s) for its own.
++        assert_eq!(sent, vec![30_000.0, 61_000.0]);
++    }
++
++    #[test]
++    fn a_second_edit_right_after_a_send_waits_the_minimum_gap() {
++        let mut d = Debounce::default();
++        assert_eq!(d.tick(1, 0.0), Tick::Wait(3_000.0));
++        assert_eq!(d.tick(1, 3_000.0), Tick::Send);
++        assert_eq!(d.tick(2, 3_100.0), Tick::Wait(3_000.0));
++        assert_eq!(d.tick(2, 6_100.0), Tick::Send);
++        assert!(d.last_sent.is_some_and(|t| t - 3_000.0 >= QUIET_MS));
++    }
++
++    #[test]
++    fn clean_or_read_only_forgets_and_a_handover_by_the_tab_counts() {
++        let mut d = Debounce::default();
++        d.tick(5, 0.0);
++        d.reset();
++        assert_eq!(d.tick(5, 10_000.0), Tick::Wait(3_000.0), "an unsaved document at the same revision is new again");
++        d.mark_sent(5, 10_500.0);
++        assert_eq!(d.tick(5, 20_000.0), Tick::Idle);
++    }
++}
+diff --git a/apps/wordcraft-web/src/main.rs b/apps/wordcraft-web/src/main.rs
+index 9dac6906..605d3287 100644
+--- a/apps/wordcraft-web/src/main.rs
++++ b/apps/wordcraft-web/src/main.rs
+@@ -11,6 +11,8 @@
+ //! `?host=parent` (inside an `<iframe>`) talks to the embedding page by `postMessage` (`web/host.rs`).
+ #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+ 
++#[cfg(any(target_arch = "wasm32", test))]
++mod autosave;
+ #[cfg(any(target_arch = "wasm32", test))]
+ mod prefs;
+ #[cfg(any(target_arch = "wasm32", test))]
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index 63a35b65..c0b47089 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -20,9 +20,10 @@
+ //!   `ok: true` lets the unsaved mark go (if nothing was edited since); `ok: false` keeps it, and
+ //!   marks a document that was clean after the save as unsaved again.
+ //! - `wordcraft:autosave` (to the parent): `{ name, bytes }`, the document with its unsaved changes,
+-//!   sent when the tab is hidden or the page goes away, and every `AUTOSAVE_MS` while the document
+-//!   has unsaved changes, so the parent holds the work if the browser then kills the page. It is
+-//!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
++//!   sent when the tab is hidden or the page goes away, 3 s after the last edit while the document
++//!   has unsaved changes (at least every 30 s of continuous editing, never twice within 3 s), so
++//!   the parent holds the work if the browser then kills the page. It is not a save: the document
++//!   stays dirty, and nothing is sent for a clean or read-only document.
+ //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
+ //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
+ //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
+@@ -43,11 +44,6 @@ use wordcraft_ui_egui::{Inbox, Services, WordApp};
+ /// The name a document gets when the parent opened none.
+ const DEFAULT_NAME: &str = "document.docx";
+ 
+-/// How often the unsaved document is handed to the parent while it has unsaved changes
+-/// (ARCHITECTURE-DECISION 2.4 names no period; 30 s loses at most half a minute of typing and
+-/// costs one docx build per period, only while editing).
+-const AUTOSAVE_MS: f64 = 30_000.0;
+-
+ #[derive(Clone)]
+ pub struct Bridge {
+     window: web_sys::Window,
+@@ -66,8 +62,8 @@ pub struct Bridge {
+     pending: Rc<Cell<u32>>,
+     /// Answers (`ok`) received since the last frame.
+     acks: Rc<RefCell<Vec<bool>>>,
+-    /// When the unsaved document was last handed over by the periodic autosave (`None`: clean).
+-    last_autosave: Rc<Cell<Option<f64>>>,
++    /// When the unsaved document is next handed over by the periodic autosave (see `autosave`).
++    debounce: Rc<RefCell<crate::autosave::Debounce>>,
+     /// The unsaved-changes state last reported to the parent.
+     reported: Rc<Cell<Option<bool>>>,
+     /// The document shown when the parent was last told (`wordcraft:opened`).
+@@ -99,7 +95,7 @@ impl Bridge {
+             can_print: Rc::new(Cell::new(true)),
+             pending: Rc::default(),
+             acks: Rc::default(),
+-            last_autosave: Rc::default(),
++            debounce: Rc::default(),
+             reported: Rc::default(),
+             document: Rc::default(),
+             name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
+@@ -181,23 +177,21 @@ impl Bridge {
+             // The saved document is clean now: a frame reports it (`Services::on_dirty`).
+             ctx.request_repaint();
+         }
+-        // The periodic autosave, only while there are unsaved changes.
++        // The periodic autosave, only while there are unsaved changes: shortly after the last edit,
++        // and at the latest every `autosave::MAX_MS` of continuous editing.
+         if app.session.dirty && !self.read_only.get() {
+-            let now = js_sys::Date::now();
+-            let last = self.last_autosave.get().unwrap_or(now);
+-            if now - last >= AUTOSAVE_MS {
+-                self.autosave.set(true);
+-                self.last_autosave.set(Some(now));
+-            } else {
+-                self.last_autosave.set(Some(last));
+-                // An idle page draws no frames: wake up when the period is over.
+-                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
++            match self.debounce.borrow_mut().tick(app.session.rev(), js_sys::Date::now()) {
++                crate::autosave::Tick::Send => self.autosave.set(true),
++                // An idle page draws no frames: wake up when the time is up.
++                crate::autosave::Tick::Wait(ms) => ctx.request_repaint_after(std::time::Duration::from_millis(ms as u64 + 1)),
++                crate::autosave::Tick::Idle => {}
+             }
+         } else {
+-            self.last_autosave.set(None);
++            self.debounce.borrow_mut().reset();
+         }
+         // Not through `file.save`: the document stays dirty and the browser downloads nothing.
+         if self.autosave.replace(false) && app.session.dirty {
++            self.debounce.borrow_mut().mark_sent(app.session.rev(), js_sys::Date::now());
+             let name = self.name.borrow().clone();
+             let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
+             let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));

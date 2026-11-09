@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: the status bar does not say English for a document with no language in an Uzbek interface
+
+With no w:lang anywhere in the document the status bar named English (United States) whatever the interface language. In an
+Uzbek interface it now names the interface language (its own name, no new string).
+---
+
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 2621eabc..8c1c42fc 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -810,7 +810,13 @@ fn region_name(code: &str) -> String {
+ 
+ /// The language at the caret (resolved through the styles), translated, for the status bar.
+ pub(crate) fn caret_language(app: &WordApp) -> String {
+-    tl!(&language_name(caret_lang_tag(app).as_deref())).to_string()
++    let tag = caret_lang_tag(app);
++    // A document with no language at all, in an Uzbek interface: its people write Uzbek, so the
++    // status bar names the interface language (its own name) instead of claiming English.
++    if tag.is_none() && crate::i18n::current().code().starts_with("uz") {
++        return crate::i18n::current().name().to_string();
++    }
++    tl!(&language_name(tag.as_deref())).to_string()
+ }
+ 
+ /// The language tag at the caret, resolved through the styles and the document default.
+@@ -3337,6 +3343,18 @@ mod tests {
+         assert_eq!(language_name(Some("de-DE")), "German (Germany)");
+     }
+ 
++    /// A document with no language at all, in an Uzbek interface, is not announced as English.
++    #[cfg(office_uz)]
++    #[test]
++    fn status_bar_language_of_an_untagged_document_follows_an_uzbek_interface() {
++        let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Salom")), crate::Services::default());
++        assert!(caret_lang_tag(&app).is_none());
++        crate::i18n::set_current(crate::i18n::Lang::from_code("uz-latn").expect("the overlay adds uz-latn"));
++        assert_eq!(caret_language(&app), crate::i18n::current().name());
++        crate::i18n::set_current(crate::i18n::Lang::EN);
++        assert_eq!(caret_language(&app), "English (United States)");
++    }
++
+     #[test]
+     fn resolve_tab_falls_back_when_contextual_tab_expires() {
+         let all = ["Home", "Table Design", "Picture Format"];
