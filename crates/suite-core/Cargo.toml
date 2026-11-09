@@ -14,6 +14,9 @@ sha2 = "0.10"
 # eframe keeps pdfcraft's state in app.ron, a RON map of strings
 ron = "0.8"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Window", "Location", "Storage", "UrlSearchParams"] }
+
 [build-dependencies]
 toml_edit = "0.22"
 
