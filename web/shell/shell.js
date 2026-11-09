@@ -134,6 +134,8 @@
         const a = el('a', { href: URL.createObjectURL(new Blob([bytes])), download: name });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
         $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false;
+        // the bridges keep a document unsaved until the host says it stored it (R6): the download is the shell's storing
+        f.el.contentWindow.postMessage({ type: f.app.prefix + ':saved', ok: true }, location.origin);
         remember(f.app.id, name, bytes.slice(0));
         break;
       }
