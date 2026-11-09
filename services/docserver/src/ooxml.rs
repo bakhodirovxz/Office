@@ -70,7 +70,9 @@ pub fn check(bytes: &[u8], file_type: &str, max_bytes: u64) -> Result<(), DocErr
 const GENERATORS: [&str; 3] = ["python-docx", "openpyxl", "python-pptx"];
 
 fn esc(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Sets `<tag>` to `name` in core.xml text when `replace(current)` says so, or adds it when absent. `None` = nothing to change.
@@ -84,10 +86,9 @@ fn set_prop(xml: &str, tag: &str, name: &str, replace: impl Fn(&str) -> bool) ->
         let (cur, end) = if let Some(r) = rest.strip_prefix('>') {
             let e = r.find(&format!("</{tag}>"))?;
             (&r[..e], a + open.len() + 1 + e + tag.len() + 3)
-        } else if let Some(i) = rest.find("/>").filter(|i| rest[..*i].trim().is_empty()) {
-            ("", a + open.len() + i + 2)
         } else {
-            return None;
+            let i = rest.find("/>").filter(|i| rest[..*i].trim().is_empty())?;
+            ("", a + open.len() + i + 2)
         };
         if !replace(cur.trim()) || cur == esc(name) {
             return None;
@@ -110,7 +111,11 @@ pub fn stamp_author(bytes: &[u8], file_type: &str, name: &str, saved: bool) -> O
     let mut z = zip::ZipArchive::new(Cursor::new(bytes)).ok()?;
     let idx = z.index_for_name("docProps/core.xml")?;
     let mut xml = String::new();
-    std::io::Read::read_to_string(&mut std::io::Read::take(z.by_index(idx).ok()?, 1 << 20), &mut xml).ok()?;
+    std::io::Read::read_to_string(
+        &mut std::io::Read::take(z.by_index(idx).ok()?, 1 << 20),
+        &mut xml,
+    )
+    .ok()?;
     let mut out = xml.clone();
     let creator = |c: &str| c.is_empty() || GENERATORS.iter().any(|g| g.eq_ignore_ascii_case(c));
     if let Some(x) = set_prop(&out, "dc:creator", &name, creator) {

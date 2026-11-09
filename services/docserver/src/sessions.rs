@@ -566,8 +566,8 @@ impl Docserver {
         if raw_ok && sha256_hex(&b) == last.sha256 {
             return None;
         }
-        let sound = raw_ok
-            && crate::ooxml::check(&b, &rec.file_type, self.max_document_mb << 20).is_ok();
+        let sound =
+            raw_ok && crate::ooxml::check(&b, &rec.file_type, self.max_document_mb << 20).is_ok();
         if !sound {
             eprintln!("docserver: the recovery copy of a session is damaged and was not used");
             return None;

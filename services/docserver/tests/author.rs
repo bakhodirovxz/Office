@@ -33,7 +33,8 @@ fn pkg(ft: &str, core: &str) -> Vec<u8> {
         _ => "ppt/presentation.xml",
     };
     let mut w = zip::ZipWriter::new(std::io::Cursor::new(vec![]));
-    let o = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+    let o =
+        zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
     for (n, b) in [
         ("[Content_Types].xml", "ct"),
         (main, "<main>body</main>"),
@@ -103,7 +104,9 @@ require_exp = true
         .insert(ConnectInfo("127.0.0.1:4000".parse::<SocketAddr>().unwrap()));
     let res = ds.routes::<()>().oneshot(req).await.unwrap();
     assert_eq!(res.status(), 200);
-    let b = axum::body::to_bytes(res.into_body(), usize::MAX).await.unwrap();
+    let b = axum::body::to_bytes(res.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let v: Value = serde_json::from_slice(&b).unwrap();
     let sid = v["sid"].as_str().unwrap().to_string();
     let ds = std::sync::Arc::try_unwrap(ds).ok().unwrap();
@@ -112,23 +115,40 @@ require_exp = true
 
 #[tokio::test]
 async fn generator_creator_becomes_the_user_on_open_and_save_for_each_type() {
-    for (ft, gen_) in [("docx", "python-docx"), ("xlsx", "OpenPyXL "), ("pptx", "python-pptx")] {
+    for (ft, gen_) in [
+        ("docx", "python-docx"),
+        ("xlsx", "OpenPyXL "),
+        ("pptx", "python-pptx"),
+    ] {
         let (ds, sid, d) = open(ft, true, "Aziz <Karimov> & Co").await;
         let blank = pkg(ft, &core(Some(gen_), Some("python-docx")));
         ds.put_version(&sid, &blank, "one", false, now()).unwrap();
         let v1 = ds.read_version(&sid, 1).unwrap();
         let c = entry(&v1, "docProps/core.xml");
-        assert!(c.contains("<dc:creator>Aziz &lt;Karimov&gt; &amp; Co</dc:creator>"), "{c}");
+        assert!(
+            c.contains("<dc:creator>Aziz &lt;Karimov&gt; &amp; Co</dc:creator>"),
+            "{c}"
+        );
         // opening changes the creator only
-        assert!(c.contains("<cp:lastModifiedBy>python-docx</cp:lastModifiedBy>"), "{c}");
+        assert!(
+            c.contains("<cp:lastModifiedBy>python-docx</cp:lastModifiedBy>"),
+            "{c}"
+        );
         for n in ["[Content_Types].xml", "media/a.bin"] {
             assert_eq!(entry(&v1, n), entry(&blank, n));
         }
         // a save sets lastModifiedBy and leaves the creator and the other parts
         ds.put_version(&sid, &blank, "emp-1", true, now()).unwrap();
         let c = entry(&ds.read_version(&sid, 2).unwrap(), "docProps/core.xml");
-        assert!(c.contains("<cp:lastModifiedBy>Aziz &lt;Karimov&gt; &amp; Co</cp:lastModifiedBy>"), "{c}");
-        assert!(c.contains("<dc:creator>Aziz &lt;Karimov&gt; &amp; Co</dc:creator>") && c.contains("<dc:title>T</dc:title>"), "{c}");
+        assert!(
+            c.contains("<cp:lastModifiedBy>Aziz &lt;Karimov&gt; &amp; Co</cp:lastModifiedBy>"),
+            "{c}"
+        );
+        assert!(
+            c.contains("<dc:creator>Aziz &lt;Karimov&gt; &amp; Co</dc:creator>")
+                && c.contains("<dc:title>T</dc:title>"),
+            "{c}"
+        );
         let _ = std::fs::remove_dir_all(d);
     }
 }
@@ -136,12 +156,27 @@ async fn generator_creator_becomes_the_user_on_open_and_save_for_each_type() {
 #[tokio::test]
 async fn a_real_creator_is_kept_and_a_missing_one_is_added() {
     let (ds, sid, d) = open("docx", true, "Aziz").await;
-    ds.put_version(&sid, &pkg("docx", &core(Some("Jane Roe"), None)), "one", true, now()).unwrap();
+    ds.put_version(
+        &sid,
+        &pkg("docx", &core(Some("Jane Roe"), None)),
+        "one",
+        true,
+        now(),
+    )
+    .unwrap();
     let c = entry(&ds.read_version(&sid, 1).unwrap(), "docProps/core.xml");
-    assert!(c.contains("<dc:creator>Jane Roe</dc:creator>") && c.contains("<cp:lastModifiedBy>Aziz</cp:lastModifiedBy>"), "{c}");
-    ds.put_version(&sid, &pkg("docx", &core(None, None)), "one", false, now()).unwrap();
+    assert!(
+        c.contains("<dc:creator>Jane Roe</dc:creator>")
+            && c.contains("<cp:lastModifiedBy>Aziz</cp:lastModifiedBy>"),
+        "{c}"
+    );
+    ds.put_version(&sid, &pkg("docx", &core(None, None)), "one", false, now())
+        .unwrap();
     let c = entry(&ds.read_version(&sid, 2).unwrap(), "docProps/core.xml");
-    assert!(c.contains("<dc:creator>Aziz</dc:creator>") && !c.contains("lastModifiedBy"), "{c}");
+    assert!(
+        c.contains("<dc:creator>Aziz</dc:creator>") && !c.contains("lastModifiedBy"),
+        "{c}"
+    );
     let _ = std::fs::remove_dir_all(d);
 }
 
