@@ -21,6 +21,9 @@
 //!   presentation has unsaved changes, and at least every `AUTOSAVE_MS` (30 s) during continuous editing, so the parent holds the
 //!   work if the page is lost. It is not a save: the presentation
 //!   stays unsaved, and nothing is sent when it is clean, read only, or has a save the parent hasn't answered.
+//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the `.pptx` `deckcraft:autosave` would send, a
+//!   `Uint8Array`, when the presentation has changes not handed over yet; `null` otherwise. The parent calls it as it ends the
+//!   session (its `pagehide` runs before this page's). It counts as a handover.
 //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
 //!
@@ -251,13 +254,7 @@ impl Bridge {
             d.revision += 1;
             self.refused.set(Some(READ_ONLY));
         }
-        // The recovery copy: only while there are unsaved changes, never read only, never with a save unanswered.
-        let sig = app
-            .session
-            .active()
-            .filter(|d| d.is_dirty() && !self.read_only.get() && self.pending.get() == 0)
-            .map(|d| Arc::as_ptr(&d.doc) as usize as u64);
-        if let Some(wait) = self.autosave_clock.tick(sig, js_sys::Date::now()) {
+        if let Some(wait) = self.autosave_clock.tick(self.autosave_sig(app), js_sys::Date::now()) {
             if wait <= 0.0 {
                 self.autosave(app);
             } else {
@@ -312,15 +309,38 @@ impl Bridge {
         }
     }
 
+    /// The recovery copy: only while there are unsaved changes, never read only, never with a save unanswered.
+    fn autosave_sig(&self, app: &SlideApp) -> Option<u64> {
+        app.session.active().filter(|d| d.is_dirty() && !self.read_only.get() && self.pending.get() == 0).map(|d| Arc::as_ptr(&d.doc) as usize as u64)
+    }
+
     /// Hand the shown presentation to the parent as a recovery copy: it stays unsaved and counts as no pending save.
     fn autosave(&self, app: &SlideApp) {
-        let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
         let name = pptx_name(&self.name.borrow());
-        let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx")
-            .map_err(|e| e.to_string())
-            .and_then(|bytes| self.post_file("deckcraft:autosave", &name, &bytes));
-        if let Err(e) = sent {
+        if let Err(e) = pptx_bytes(app).and_then(|bytes| self.post_file("deckcraft:autosave", &name, &bytes)) {
             log::error!("couldn't hand {name} to the page for safekeeping: {e}");
+        }
+    }
+
+    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the presentation
+    /// as `deckcraft:autosave` sends it when it has changes not handed over yet, else `None` (clean, read only, a save
+    /// unanswered, or the last autosave holds them). It counts as a handover, so the autosave doesn't send the same state again.
+    pub fn final_copy(&self, app: &SlideApp) -> Option<Vec<u8>> {
+        let sig = self.autosave_sig(app)?;
+        if self.autosave_clock.sent.replace(Some(sig)) == Some(sig) {
+            return None;
+        }
+        self.autosave_clock.first_unsent.set(None);
+        pptx_bytes(app).map_err(|e| log::error!("couldn't hand the presentation to the page as it closed: {e}")).ok()
+    }
+
+    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+            // It lives as long as the page.
+            f.forget();
         }
     }
 
@@ -370,6 +390,12 @@ impl Bridge {
     fn send(&self, fields: &[(&str, JsValue)]) -> bool {
         message(fields).is_some_and(|m| self.parent.post_message(&m, &self.origin).is_ok())
     }
+}
+
+/// The shown presentation as the `.pptx` a save sends.
+fn pptx_bytes(app: &SlideApp) -> Result<Vec<u8>, String> {
+    let doc = app.session.active().map(|d| d.doc.clone()).ok_or("no presentation")?;
+    deckcraft_engine::cmd::file::save_bytes(&doc, "pptx").map_err(|e| e.to_string())
 }
 
 /// `report.ppt` and `report.odp` are saved as `report.pptx`.

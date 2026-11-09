@@ -44,6 +44,11 @@ impl Debounce {
         self.last_sent = Some(now);
     }
 
+    /// Revision `rev` was handed over already.
+    pub fn was_sent(&self, rev: u64) -> bool {
+        self.sent == Some(rev)
+    }
+
     /// One frame of an unsaved, editable document at revision `rev`, `now` in milliseconds.
     pub fn tick(&mut self, rev: u64, now: f64) -> Tick {
         if self.sent == Some(rev) {
@@ -111,6 +116,7 @@ mod tests {
         d.reset();
         assert_eq!(d.tick(5, 10_000.0), Tick::Wait(3_000.0), "an unsaved document at the same revision is new again");
         d.mark_sent(5, 10_500.0);
+        assert!(d.was_sent(5) && !d.was_sent(6));
         assert_eq!(d.tick(5, 20_000.0), Tick::Idle);
     }
 }

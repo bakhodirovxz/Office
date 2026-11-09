@@ -1,7 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 // The Docs (wordcraft) host bridge, PLAN phase 5 WP6: read-only open, the save acknowledgement and the periodic autosave over the
@@ -305,4 +307,85 @@ test('12 readOnly: Stop Protection is refused before it shows (the pane stays, n
   expect(await count(page, 'wordcraft:save')).toBe(0);
   expect(await count(page, 'wordcraft:autosave')).toBe(0);
   expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
+});
+
+// window.__hostFinalCopy (patches/wordcraft/0164): the parent's synchronous pull as it closes the session (the document server's
+// wrapper, in its pagehide). Null while clean or read only; the unsaved document once per change, which counts as a handover (the
+// autosave does not send it again). It runs inside the parent's pagehide, so its cost is measured: a ~40 KB and two larger documents
+// made from the uz108 fixture (whole top-level body elements, kept or repeated).
+const UZ108 = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/uz108-latn.docx');
+const PYTHON = process.env.PYTHON ?? 'python';
+const SYNTH = `import re,sys,zipfile
+src,dst,keep,rep=sys.argv[1],sys.argv[2],int(sys.argv[3]),int(sys.argv[4])
+zi=zipfile.ZipFile(src);zo=zipfile.ZipFile(dst,'w',zipfile.ZIP_DEFLATED)
+for i in zi.infolist():
+  b=zi.read(i.filename)
+  if i.filename=='word/document.xml':
+    s=b.decode('utf8');a=s.index('<w:body>')+8;e=s.rindex('<w:sectPr');d=0;start=a;kids=[]
+    for m in re.finditer(r'<(/?)[A-Za-z][^>]*?(/?)>',s[a:e]):
+      if m.group(1): d-=1
+      elif not m.group(2): d+=1
+      if d==0: kids.append(s[start:a+m.end()]);start=a+m.end()
+    out=[];n=0
+    for k in kids:
+      if n>=keep: break
+      out.append(k);n+=len(k)
+    b=(s[:a]+''.join(out)*rep+s[e:]).encode('utf8')
+  zo.writestr(i.filename,b)
+zo.close()`;
+const finalCopy = (page: Page) => page.frame({ url: /index\.html/ })!.evaluate(() => {
+  const t = performance.now();
+  const b = (window as any).__hostFinalCopy() as Uint8Array | null;
+  return { ms: performance.now() - t, n: b ? b.length : null, pk: b ? b[0] === 0x50 && b[1] === 0x4b : null };
+});
+
+test('13 __hostFinalCopy: null while clean, the unsaved document once per change (the autosave does not resend it); its cost', async ({ page }) => {
+  test.setTimeout(600_000);
+  // read only: never
+  await open(page, { readOnly: true });
+  await type(page);
+  await page.waitForTimeout(1500);
+  expect((await finalCopy(page)).n).toBeNull();
+  await open(page);
+  expect((await finalCopy(page)).n).toBeNull(); // clean
+  await type(page);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  let r = await finalCopy(page);
+  expect([r.pk, r.n! > 1000]).toEqual([true, true]);
+  expect((await finalCopy(page)).n).toBeNull(); // handed over: not twice
+  await page.waitForTimeout(QUIET_MS + 2000);
+  expect(await count(page, 'wordcraft:autosave')).toBe(0); // the pull was the handover of that state
+  await page.keyboard.type('q');
+  await expect.poll(async () => (r = await finalCopy(page)).n).not.toBeNull(); // a new change: once more
+  // saved (acknowledged) before each next open, which a dirty document would hold back
+  const save = async () => {
+    const n = await count(page, 'wordcraft:save');
+    await send(page, { type: 'wordcraft:requestSave' });
+    await waitFor(page, 'wordcraft:save', n + 1);
+    await send(page, { type: 'wordcraft:saved', ok: true });
+    await expect.poll(() => lastDirty(page)).toBe(false);
+  };
+  await save();
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'final-copy-'));
+  const files: [string, string][] = [['01-split-runs', DOCX]];
+  for (const [label, keep, rep] of [['uz108 part', 185_000, 1], ['uz108', 1 << 30, 1], ['uz108 x4', 1 << 30, 4]] as const) {
+    const f = path.join(dir, label.replace(/ /g, '-') + '.docx');
+    execFileSync(PYTHON, ['-I', '-c', SYNTH, UZ108, f, String(keep), String(rep)]);
+    files.push([label, f]);
+  }
+  for (const [label, f] of files) {
+    await open(page, {}, f);
+    const ms: number[] = [];
+    let n = 0;
+    for (let i = 0; i < 3; i++) {
+      await type(page);
+      await expect.poll(async () => (r = await finalCopy(page)).n, { timeout: 60_000 }).not.toBeNull();
+      ms.push(r.ms); n = r.n!;
+    }
+    await save();
+    ms.sort((a, b) => a - b);
+    console.log(`MEASURED __hostFinalCopy ${label}: file ${fs.statSync(f).size} B, copy ${n} B, ${ms.map((m) => m.toFixed(1)).join(' / ')} ms (median ${ms[1].toFixed(1)})`);
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
 });

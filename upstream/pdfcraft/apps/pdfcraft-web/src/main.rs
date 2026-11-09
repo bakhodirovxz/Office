@@ -17,7 +17,8 @@ fn main() {
         else {
             return;
         };
-        let started = eframe::WebRunner::new()
+        let runner = eframe::WebRunner::new();
+        let started = runner
             .start(
                 canvas,
                 options,
@@ -83,6 +84,14 @@ fn main() {
                 }),
             )
             .await;
+        if started.is_ok()
+            && let Some(shell) = runner.app_mut::<host::Shell>()
+            && let Some(bridge) = shell.bridge.clone()
+        {
+            drop(shell);
+            let pull = bridge.clone();
+            bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<host::Shell>()?.app));
+        }
         if let Err(e) = started {
             eframe::web_sys::console::error_1(&e);
             if query_param("host").as_deref() == Some("parent")
@@ -146,6 +155,9 @@ async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
 /// - `pdfcraft:autosave` (to the parent): `{ name, bytes }` 3 s after the last edit while the document has unsaved changes
 ///   and at least every 30 s during continuous editing (none when clean, read only, or while a save waits for its answer). A recovery copy, not a save: the
 ///   document stays unsaved and `bytes` is a transferred `ArrayBuffer`.
+/// - `window.__hostFinalCopy()` (called by the parent, synchronously): the PDF `pdfcraft:autosave` would send, a `Uint8Array`,
+///   when the document has changes not handed over yet; `null` otherwise. The parent calls it as it ends the session (its
+///   `pagehide` runs before this page's). It counts as a handover.
 /// - `pdfcraft:dirty` (to the parent): `{ dirty }` whenever unsaved work appears or goes away.
 /// - `pdfcraft:failed` (to the parent): `{ error }` when the app couldn't start or open the file.
 ///
@@ -423,9 +435,7 @@ mod host {
         /// `AUTOSAVE_IDLE_MS` after the last edit of a dirty document (at least every `AUTOSAVE_MS`; not read only, no save waiting for its answer): hand the
         /// parent a recovery copy. Not a save: the document stays unsaved, nothing downloads, nothing counts as pending.
         fn autosave(&self, ctx: &egui::Context, app: &PdfCraftApp) {
-            let doc = self.doc.get().and_then(|id| app.session.get(id).map(|d| (id, d)));
-            let sig = doc.filter(|(_, d)| d.dirty && !self.read_only.get() && self.pending.get() == 0).map(|(id, d)| (id, d.edit_generation()));
-            let Some((id, generation)) = sig else {
+            let Some((id, generation)) = self.autosave_sig(app) else {
                 self.autosave_clock.tick(None, 0.0);
                 return;
             };
@@ -449,6 +459,40 @@ mod host {
                 Err(e) => eframe::web_sys::console::warn_1(&format!("PdfCraft: autosave failed: {e}").into()),
             }
         }
+
+        /// The parent's document when a recovery copy is due for it (unsaved, not read only, no save waiting), with its edit generation.
+        fn autosave_sig(&self, app: &PdfCraftApp) -> Option<(pdfcraft_ui_egui::DocId, u64)> {
+            let id = self.doc.get()?;
+            app.session.get(id).filter(|d| d.dirty && !self.read_only.get() && self.pending.get() == 0).map(|d| (id, d.edit_generation()))
+        }
+
+        /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the PDF as
+        /// `pdfcraft:autosave` sends it when it has changes not handed over yet, else `None` (clean, read only, a save waiting,
+        /// or the last autosave holds them). It counts as a handover, so the autosave doesn't send the same state again.
+        pub fn final_copy(&self, app: &PdfCraftApp) -> Option<Vec<u8>> {
+            let (id, generation) = self.autosave_sig(app)?;
+            if self.autosave_clock.sent.replace(Some(generation)) == Some(generation) {
+                return None;
+            }
+            self.autosave_clock.first_unsent.set(None);
+            match app.session.save_bytes(id) {
+                Ok(bytes) => Some(bytes.to_vec()),
+                Err(e) => {
+                    eframe::web_sys::console::warn_1(&format!("PdfCraft: the copy for the closing page failed: {e}").into());
+                    None
+                }
+            }
+        }
+
+        /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+        /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+        pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+            let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+            if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+                // It lives as long as the page.
+                f.forget();
+            }
+        }
     }
 
     /// The app with the bridge's per-frame work after its own.
@@ -458,6 +502,11 @@ mod host {
     }
 
     impl eframe::App for Shell {
+        // `WebRunner::app_mut` (the host's final copy, `Bridge::expose_final_copy`).
+        fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+            Some(self)
+        }
+
         fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
             self.app.raw_input_hook(ctx, raw);
         }
