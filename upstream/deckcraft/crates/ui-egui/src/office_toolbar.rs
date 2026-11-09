@@ -327,12 +327,10 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) -> bool {
                 insert_group(app, ui, labels);
                 separator(ui);
                 output_group(app, ui, labels);
-                if !cfg!(target_arch = "wasm32") {
-                    ui.add_space(6.0);
-                    let label = crate::i18n::t("Full ribbon");
-                    if button(ui, Btn::new("window_header_horizontal", label).tip(label.to_string()), true).0.clicked() {
-                        switch(&ctx, false);
-                    }
+                ui.add_space(6.0);
+                let label = crate::i18n::t("Full ribbon");
+                if button(ui, Btn::new("window_header_horizontal", label).tip(label.to_string()), true).0.clicked() {
+                    switch(&ctx, false);
                 }
             });
         });
@@ -446,9 +444,6 @@ fn output_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
 
 /// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.
 fn full_mode_pill(app: &SlideApp, ctx: &Context) {
-    if cfg!(target_arch = "wasm32") {
-        return;
-    }
     let title_h = if app.integrated_titlebar { ribbon::MAC_TITLE_BAR } else { ribbon::TITLE_H };
     egui::Area::new(egui::Id::new("office_toolbar_pill")).order(egui::Order::Foreground).anchor(Align2::RIGHT_TOP, vec2(-10.0, title_h + 1.0)).show(
         ctx,
