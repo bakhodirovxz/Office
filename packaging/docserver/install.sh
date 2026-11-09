@@ -6,7 +6,7 @@
 #
 #   install.sh [--dry-run] --profile FILE --image REF|FILE.tar[.gz] [--etc DIR] [--from NAME] [--backend NAME] [--public-url URL]
 #              [--public-port N] [--frame-origin URL]... [--trusted-proxy NAME|IP]... [--secret-file FILE] [--edit-types LIST]
-#              [--allow-opaque-origin | --no-allow-opaque-origin]
+#              [--allow-opaque-origin | --no-allow-opaque-origin] [--ui-lang uz-Latn|uz-Cyrl|ru|en|""]
 #   install.sh rollback [--etc DIR]
 #
 # The profile (KEY=value lines, e.g. profiles/hrm.env) names the backend's env variables; the code knows no backend. Anything
@@ -16,6 +16,7 @@ export MSYS_NO_PATHCONV=1   # Git Bash (the rehearsal on Windows): keep containe
 
 ETC=/opt/docserver DRY=0 PROFILE="" IMAGE="" FROM="" BACKEND="" PUBLIC_URL="" SECRET_FILE="" EDIT_TYPES=""   # the types whose edit configs edit (docs/phase5/r6.md; default docx,xlsx,pptx,pdf, kept on a rerun); --edit-types docx keeps the others view-only
 FRAMES=() PROXIES=() CMD=install PUBLIC_PORT=""
+UI_LANG="" UI_LANG_SET=0   # the editors' language over the host's editorConfig.lang; "" = the host's; unset: kept on a rerun, else the profile's UI_LANG
 OPAQUE=""   # dropin.md D3b: 1 = no frame check (a host page with an opaque origin, the iOS WebView case), 0 = the check; "" = 0, or kept on a rerun
 MIN_FREE_MB=${MIN_FREE_MB:-2048}   # left free on Docker's disk after the image load: the data volume (sessions, 7 days) and the logs grow
 die() { echo "install.sh: refused: $*" >&2; exit 2; }
@@ -37,6 +38,7 @@ while [ $# -gt 0 ]; do
     --edit-types) EDIT_TYPES=$2; shift ;;
     --allow-opaque-origin) OPAQUE=1 ;;
     --no-allow-opaque-origin) OPAQUE=0 ;;
+    --ui-lang) UI_LANG=$2; UI_LANG_SET=1; shift ;;
     *) die "unknown argument $1 (see the head of this file)" ;;
   esac
   shift
@@ -314,6 +316,15 @@ if [ -z "$EDIT_TYPES" ]; then
   EDIT_TYPES=docx,xlsx,pptx,pdf
   if [ "$RERUN" = 1 ]; then k=$(envof "$OLD_NAME" DOCSERVER_EDIT_TYPES); [ -n "$k" ] && EDIT_TYPES=$k && EDIT_NOTE=" (kept from the running container)"; fi
 fi
+UI_NOTE=""
+if [ "$UI_LANG_SET" = 0 ]; then
+  UI_LANG=$(prof UI_LANG)
+  # kept when the running container has the variable at all (an empty value too); a container from an older install.sh gets the profile's
+  if [ "$RERUN" = 1 ] && insp "$OLD_NAME" '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^DOCSERVER_UI_LANG='; then
+    UI_LANG=$(envof "$OLD_NAME" DOCSERVER_UI_LANG); UI_NOTE=" (kept from the running container)"
+  fi
+fi
+case "$UI_LANG" in "" | uz-Latn | uz-Cyrl | ru | en) ;; *) die "--ui-lang $UI_LANG: give uz-Latn, uz-Cyrl, ru or en (\"\" leaves it to the host's editorConfig.lang)" ;; esac
 # a rerun (an upgrade) keeps the running container's switch unless a flag says otherwise: it is never turned on or off silently
 OPAQUE_NOTE=""
 if [ -z "$OPAQUE" ]; then
@@ -341,9 +352,10 @@ install.sh: plan ($( [ "$RERUN" = 1 ] && echo "rerun: recreate ours" || echo "fi
   frame origins    $FRAMES_CSV + $PUBLIC_URL
   opaque origin    $( [ "$OPAQUE" = 1 ] && echo "ALLOWED: any page may frame the editor, the config token's signature is the only gate (--no-allow-opaque-origin turns it off)" || echo "refused (--allow-opaque-origin lets a null page origin in: an iOS WebView)")$OPAQUE_NOTE
   provider         $PROVIDER  compat docsapi  edit types $EDIT_TYPES$EDIT_NOTE  secret <redacted, $SECRET_LEN bytes>
+  ui language      ${UI_LANG:-the host's editorConfig.lang}$UI_NOTE
   traefik labels   $(grep -c . <<< "$LABELS" || true)$( [ -z "$LABELS" ] || echo " (service port -> $PUBLIC_PORT)")
   files            $ETC/secrets/{provider-secret,server-secret,converter-secret,audit-key} (0600, uid 10002), $STATE
-  defaults         max_document_mb 100, keep_closed_hours 168, keep_abandoned_days 7, history session
+  defaults         max_document_mb 100, keep_closed_hours 168, keep_abandoned_days 7, close_idle_minutes 5, history session
 EOF
 [ "$DRY" = 1 ] && { say "dry run: nothing changed"; exit 0; }
 
@@ -388,7 +400,7 @@ docker run -d --name "$OLD_NAME" --restart "$OLD_RESTART" \
   -e "DOCSERVER_PUBLIC_URL=$PUBLIC_URL" -e "DOCSERVER_PUBLIC_PORT=$PUBLIC_PORT" -e "DOCSERVER_FETCH_ALLOW=$FETCH" -e "DOCSERVER_TRUSTED_PROXIES=$PROXIES_CSV" \
   -e "DOCSERVER_INTERNAL_URL=http://$RWHOST:$INTERNAL_PORT" -e "DOCSERVER_INTERNAL_PORT=$INTERNAL_PORT" \
   -e "DOCSERVER_INTERNAL_ALLOW=$ALLOW_CSV" -e "DOCSERVER_FRAME_ORIGINS=$FRAMES_CSV" -e "DOCSERVER_PROVIDER=$PROVIDER" \
-  -e "DOCSERVER_EDIT_TYPES=$EDIT_TYPES" -e "DOCSERVER_ALLOW_OPAQUE_ORIGIN=$OPAQUE" "$IMAGE" > /dev/null || fail "docker run failed"
+  -e "DOCSERVER_EDIT_TYPES=$EDIT_TYPES" -e "DOCSERVER_ALLOW_OPAQUE_ORIGIN=$OPAQUE" -e "DOCSERVER_UI_LANG=$UI_LANG" "$IMAGE" > /dev/null || fail "docker run failed"
 for net in $(tail -n +2 <<< "$NETS"); do
   # shellcheck disable=SC2046
   docker network connect $(alias_args "$net" | sed 's/--network-alias/--alias/') "$net" "$OLD_NAME" || fail "cannot join $net"
