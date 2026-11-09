@@ -47,7 +47,7 @@ diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
 index 1d2b4ab..4603376 100644
 --- a/crates/engine/src/tests.rs
 +++ b/crates/engine/src/tests.rs
-@@ -8524,3 +8524,25 @@ fn rtf_list_round_trip_keeps_text() {
+@@ -8524,3 +8524,24 @@ fn rtf_list_round_trip_keeps_text() {
          assert_eq!(d.plain_text(StoryRef::Body), "first\nsecond", "{cmd}");
      }
  }
@@ -65,7 +65,6 @@ index 1d2b4ab..4603376 100644
 +    assert!(!s.dirty);
 +
 +    // A document with text keeps its own fonts.
-+    let mut d = d;
 +    d.body = wordcraft_doc::Document::new().body;
 +    let mut s2 = Session::new(d);
 +    run(&mut s2, "text.insert", json!({"text": "Hello"}));

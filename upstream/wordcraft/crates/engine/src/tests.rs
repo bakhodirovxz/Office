@@ -8538,7 +8538,6 @@ fn an_empty_document_opens_in_times_new_roman_without_being_dirty() {
     assert!(!s.dirty);
 
     // A document with text keeps its own fonts.
-    let mut d = d;
     d.body = wordcraft_doc::Document::new().body;
     let mut s2 = Session::new(d);
     run(&mut s2, "text.insert", json!({"text": "Hello"}));
