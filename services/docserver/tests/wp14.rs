@@ -310,6 +310,11 @@ async fn encrypted_files_round_trip_hold_no_plaintext_and_survive_a_restart() {
     let again = on(&d, false);
     assert_eq!(again.read_version(&sid, 1).unwrap(), bytes);
     assert_eq!(again.load_session(&sid).unwrap().title, "a.docx");
+    // the close makes the sealed recovery copy version 3, sealed too
+    assert_eq!(again.close_session(&sid, now()).unwrap().status, 2);
+    assert_eq!(again.read_version(&sid, 3).unwrap(), docx("autosaved"));
+    let v3 = std::fs::read(d.join(format!("data/sessions/{sid}/v3.bin"))).unwrap();
+    assert!(!contains(&v3, "autosaved") && !contains(&v3, MARK));
     let _ = std::fs::remove_dir_all(d);
 }
 

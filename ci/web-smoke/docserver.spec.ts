@@ -572,7 +572,7 @@ test('History panel: list after two saves, name, restore, download, Esc; compare
   await page.keyboard.press('Escape');
   await expect(panel).toHaveCount(0);
   await expect(opener).toHaveAttribute('aria-expanded', 'false');
-  expect(await w.evaluate(() => document.activeElement?.textContent)).toBe('History');
+  expect(await w.evaluate(() => [document.activeElement?.id, document.activeElement?.getAttribute('aria-label')])).toEqual(['hist-open', 'History']);
   await ctx.close();
 
   // the tools configured: a fresh session on a restarted server draws the diff
