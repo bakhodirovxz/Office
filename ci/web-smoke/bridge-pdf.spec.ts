@@ -25,7 +25,7 @@ const HOST = `<!doctype html><meta charset="utf-8"><body>
     if (e.source !== document.getElementById('ed').contentWindow) return;
     const d = e.data || {};
     if (d.type === 'pdfcraft:save' && d.bytes instanceof ArrayBuffer) window.__lastSave = Array.from(new Uint8Array(d.bytes));
-    window.__msgs.push({ type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
+    window.__msgs.push({ t: Date.now(), type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
       bytes: d.bytes instanceof ArrayBuffer ? new Uint8Array(d.bytes).slice(0, 2).join(',') + ':' + d.bytes.byteLength : undefined });
   });
   window.__toEditor = (msg, transfer) => document.getElementById('ed').contentWindow.postMessage(msg, location.origin, transfer);
@@ -370,7 +370,9 @@ test('8b autosave: 3 s after the last edit, once per quiet period; continuous ed
   expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBe(1);
   while (Date.now() - start < 38_000) { await pdfEdit(page, i++); }
   const during = await n();
-  expect(during, 'one more copy by the 30 s ceiling, not more (never more often than every 3 s)').toBe(2);
+  expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
+  const times = (await msgs(page)).filter((m) => m.type === 'pdfcraft:autosave').map((m) => m.t as number);
+  for (let k = 1; k < times.length; k++) expect(times[k] - times[k - 1], 'never more often than every 3 s').toBeGreaterThanOrEqual(2_800);
   // the edits stop: the last state goes 3 s later
   await expect.poll(n, { timeout: 12_000 }).toBeGreaterThan(during);
   await page.waitForTimeout(8_000);
