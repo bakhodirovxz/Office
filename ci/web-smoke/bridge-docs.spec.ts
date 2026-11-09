@@ -12,7 +12,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const DIST = path.resolve(process.env.DOCS_DIST ?? 'E:/office-target/p1/dist/docs-web');
 const DOCX = path.join(ROOT, 'domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx');
 const NAME = path.basename(DOCX);
-const AUTOSAVE_MS = 30_000; // host.rs AUTOSAVE_MS
+const QUIET_MS = 3_000; // autosave.rs QUIET_MS: the quiet time after the last edit, and the least gap between two autosaves
+const MAX_MS = 30_000; // autosave.rs MAX_MS: the longest the first unsent edit waits during continuous editing
 const MIME: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.ico': 'image/x-icon' };
 
 const HOST = `<!doctype html><meta charset="utf-8"><body>
@@ -114,18 +115,40 @@ test('4 a failed save keeps the dirty mark; ok:true clears it', async ({ page })
   await expect.poll(() => lastDirty(page)).toBe(false);
 });
 
-test('5 autosave: handed over while dirty after the period, nothing while clean', async ({ page }) => {
-  test.setTimeout(180_000);
+test('5 autosave: handed over 3 s after the last edit while dirty, once per change, nothing while clean', async ({ page }) => {
+  test.setTimeout(120_000);
   await open(page);
-  await page.waitForTimeout(AUTOSAVE_MS + 5000);
+  await page.waitForTimeout(QUIET_MS + 3000);
   expect(await count(page, 'wordcraft:autosave')).toBe(0);
+  const t0 = Date.now();
   await type(page);
   await expect.poll(() => lastDirty(page)).toBe(true);
-  await waitFor(page, 'wordcraft:autosave', 1, AUTOSAVE_MS + 20_000);
+  expect(await count(page, 'wordcraft:autosave')).toBe(0); // not at once: the quiet time comes first
+  await waitFor(page, 'wordcraft:autosave', 1, QUIET_MS + 8000);
   const a = (await msgs(page)).find((m) => m.type === 'wordcraft:autosave');
+  expect(a.t - t0).toBeGreaterThanOrEqual(QUIET_MS - 500);
   expect(a.name).toBe(NAME);
   expect(a.bytes).toMatch(/^80,75:\d{4,}/);
   expect(await lastDirty(page)).toBe(true); // an autosave is not a save
+  // Unchanged since: no second copy, however long the page stays dirty.
+  await page.waitForTimeout(QUIET_MS * 2 + 2000);
+  expect(await count(page, 'wordcraft:autosave')).toBe(1);
+});
+
+test('5b autosave: continuous editing hands over at least every 30 s, never twice within 3 s', async ({ page }) => {
+  test.setTimeout(150_000);
+  await open(page);
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  const t0 = Date.now();
+  while (Date.now() - t0 < MAX_MS + 6000) {
+    await page.keyboard.type('z');
+    await page.waitForTimeout(1000);
+  }
+  const sent = (await msgs(page)).filter((m) => m.type === 'wordcraft:autosave');
+  expect(sent.length).toBeGreaterThanOrEqual(1);
+  expect(sent[0].t - t0).toBeGreaterThanOrEqual(MAX_MS - 3000);
+  expect(sent[0].t - t0).toBeLessThanOrEqual(MAX_MS + 4000);
+  for (let k = 1; k < sent.length; k++) expect(sent[k].t - sent[k - 1].t).toBeGreaterThanOrEqual(QUIET_MS - 200);
 });
 
 // Patch 0128: canDownload / canPrint withhold the editor's own Save As, exports and Print (default true). Probed with the
