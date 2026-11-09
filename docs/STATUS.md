@@ -1805,3 +1805,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not done: a real HRM open/edit/save by a person (docx, xlsx, pptx, pdf, view-only), Android and iOS app. The backend's compose
   project still defines `docs-server`: a `docker compose up` there brings the old one back (install.sh prints the override; we do
   not edit HRM files). Rollback: `sudo ./install.sh rollback --etc /opt/docserver` in `~/hoshiya-install`.
+
+### Phase 5: host-mode engines (2026-11-09, branch `p5-hengines`; details in docs/phase5/hengines.md)
+- Done: Slides follows the browser language without `?lang=` (deckcraft 0171); English left on the host-mode screens translated (deckcraft 0172,
+  gridcraft 0171 with 13 new `reviewed:agent-sonnet:2026-11-09` rows); autosave to the host 3 s after the last edit, 30 s ceiling, one copy per
+  changed state (deckcraft 0170, gridcraft 0170, pdfcraft 0130); Sheets and Slides read the toolbar mode through suite-core on the web
+  (`?toolbar=full` gives upstream's ribbon; gridcraft 0172/0173, deckcraft 0174/0175; PDF has no full mode); the Slides Font box shows the theme
+  font when nothing is selected (deckcraft 0173, 0176).
+- Measured (dists built from the merged branch): bridge-sheets 54 passed, bridge-slides 37 passed, bridge-pdf 40 passed. Sizes (brotli, headroom to budget): sheets 4,958,840 (7,931 B), slides 9,522,246 (34,739 B; delta +194,637 with the fonts embedded),
+  pdf 9,572,670 (26,792 B). No budget changed.
+- Not done: Sheets Watch Window and the Slides Backstage were not walked for English; Docs unchanged (p5-hdocs).

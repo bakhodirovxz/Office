@@ -29,7 +29,7 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
                 "formatChart" => "Format Chart Area",
                 _ => "",
             };
-            ui.label(egui::RichText::new(title).font(theme::ui_bold(15.0)));
+            ui.label(egui::RichText::new(app.ui.language.tr(title)).font(theme::ui_bold(15.0)));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if crate::widgets::icon_button(ui, crate::icons::Icon::Close, t.text_dim, "Close", vec2(22.0, 22.0)).clicked() {
                     if pane == "comments" {
@@ -51,11 +51,12 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
 }
 
 fn comments(app: &mut SheetApp, ui: &mut Ui) {
+    let lang = app.ui.language;
     let Some(d) = app.session.active() else { return };
     let Some(sh) = d.wb.active() else { return };
     let list: Vec<(String, gridcraft_engine::model::Comment)> = sh.comments.iter().map(|(c, m)| (c.a1(), m.clone())).collect();
     if list.is_empty() {
-        ui.label(egui::RichText::new("No comments on this sheet yet. Select a cell and choose New Comment.").italics());
+        ui.label(egui::RichText::new(lang.tr("No comments on this sheet yet. Select a cell and choose New Comment.")).italics());
     }
     for (cell, c) in list {
         egui::Frame::NONE
@@ -72,7 +73,7 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
                     }
                     ui.label(egui::RichText::new(&c.author).color(Color32::from_gray(90)));
                     if c.resolved {
-                        ui.label(egui::RichText::new("Resolved").small().color(Color32::from_rgb(0x10, 0x7C, 0x41)));
+                        ui.label(egui::RichText::new(lang.tr("Resolved")).small().color(Color32::from_rgb(0x10, 0x7C, 0x41)));
                     }
                 });
                 ui.label(&c.text);
@@ -85,17 +86,17 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
                 // a field sized by a guess wider than the row pushes the resizable pane wider every frame.
                 ui.horizontal(|ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.small_button("Delete").clicked() {
+                        if ui.small_button(lang.tr("Delete")).clicked() {
                             app.run_or_alert("review.deleteComment", json!({"cell": cell}));
                         }
-                        if ui.small_button(if c.resolved { "Reopen" } else { "Resolve" }).clicked() {
+                        if ui.small_button(lang.tr(if c.resolved { "Reopen" } else { "Resolve" })).clicked() {
                             app.run_or_alert("review.resolveComment", json!({"cell": cell, "resolved": !c.resolved}));
                         }
-                        let send = ui.small_button("Send").clicked();
+                        let send = ui.small_button(lang.tr("Send")).clicked();
                         let r = ui.add(
                             egui::TextEdit::singleline(&mut draft)
                                 .interactive(!app.session.read_only)
-                                .hint_text("Reply…")
+                                .hint_text(lang.tr("Reply…"))
                                 .desired_width(ui.available_width()),
                         );
                         if (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || send) && !draft.is_empty() {

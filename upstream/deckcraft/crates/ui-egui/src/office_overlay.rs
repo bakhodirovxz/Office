@@ -138,14 +138,12 @@ pub fn register_document_fonts() {
 
 static TOOLBAR_SIMPLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
-/// Should a window start with the simplified toolbar (`office_toolbar`)? The web build always does. Elsewhere it is the shared
-/// `toolbar` setting (`simple` unless `settings.toml` says `full`), read once at the first call. This crate's own tests start
+/// Should a window start with the simplified toolbar (`office_toolbar`)? It is the shared `toolbar` setting, read once at the first
+/// call: on the desktop `simple` unless `settings.toml` says `full`; on the web the saved choice in localStorage, then the URL's
+/// `?toolbar=`, then simple (suite_core::settings::toolbar_mode). This crate's own tests start
 /// with the upstream ribbon, which is what upstream's UI tests drive; the toolbar tests choose the mode per window.
 pub fn toolbar_default() -> bool {
-    if cfg!(target_arch = "wasm32") {
-        return true;
-    }
-    #[cfg(not(any(target_arch = "wasm32", test)))]
+    #[cfg(not(test))]
     {
         static LOAD: std::sync::Once = std::sync::Once::new();
         LOAD.call_once(|| set_toolbar_default(suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple));
@@ -160,7 +158,7 @@ fn set_toolbar_default(simple: bool) {
 /// The user switched: remember it for this process and store it in the shared settings, where the other apps read it at their next start.
 pub(crate) fn toolbar_changed(simple: bool) {
     set_toolbar_default(simple);
-    #[cfg(not(any(target_arch = "wasm32", test)))]
+    #[cfg(not(test))]
     {
         use suite_core::settings::{ToolbarMode, set_toolbar_mode};
         if let Err(e) = set_toolbar_mode(if simple { ToolbarMode::Simple } else { ToolbarMode::Full }) {

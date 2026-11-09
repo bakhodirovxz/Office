@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft: on the web the toolbar mode is suite-core's (saved choice, then ?toolbar=, then simple) and the switch is offered
+
+Hengines task 4. Same as gridcraft 0172: the web build used to start simple always and offered no switch. toolbar_default() now reads suite_core::settings::toolbar_mode() on the web too (the saved choice in localStorage, then the URL's ?toolbar=full|simple, then simple), the Full ribbon / Simple ribbon buttons are offered on the web and toolbar_changed saves through set_toolbar_mode (localStorage). Full mode is upstream's ribbon.
+
+---
+
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 1befaad..38af190 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -138,14 +138,12 @@ pub fn register_document_fonts() {
+ 
+ static TOOLBAR_SIMPLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+ 
+-/// Should a window start with the simplified toolbar (`office_toolbar`)? The web build always does. Elsewhere it is the shared
+-/// `toolbar` setting (`simple` unless `settings.toml` says `full`), read once at the first call. This crate's own tests start
++/// Should a window start with the simplified toolbar (`office_toolbar`)? It is the shared `toolbar` setting, read once at the first
++/// call: on the desktop `simple` unless `settings.toml` says `full`; on the web the saved choice in localStorage, then the URL's
++/// `?toolbar=`, then simple (suite_core::settings::toolbar_mode). This crate's own tests start
+ /// with the upstream ribbon, which is what upstream's UI tests drive; the toolbar tests choose the mode per window.
+ pub fn toolbar_default() -> bool {
+-    if cfg!(target_arch = "wasm32") {
+-        return true;
+-    }
+-    #[cfg(not(any(target_arch = "wasm32", test)))]
++    #[cfg(not(test))]
+     {
+         static LOAD: std::sync::Once = std::sync::Once::new();
+         LOAD.call_once(|| set_toolbar_default(suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple));
+@@ -160,7 +158,7 @@ fn set_toolbar_default(simple: bool) {
+ /// The user switched: remember it for this process and store it in the shared settings, where the other apps read it at their next start.
+ pub(crate) fn toolbar_changed(simple: bool) {
+     set_toolbar_default(simple);
+-    #[cfg(not(any(target_arch = "wasm32", test)))]
++    #[cfg(not(test))]
+     {
+         use suite_core::settings::{ToolbarMode, set_toolbar_mode};
+         if let Err(e) = set_toolbar_mode(if simple { ToolbarMode::Simple } else { ToolbarMode::Full }) {
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+index 772f971..d289343 100644
+--- a/crates/ui-egui/src/office_toolbar.rs
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -327,12 +327,10 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) -> bool {
+                 insert_group(app, ui, labels);
+                 separator(ui);
+                 output_group(app, ui, labels);
+-                if !cfg!(target_arch = "wasm32") {
+-                    ui.add_space(6.0);
+-                    let label = crate::i18n::t("Full ribbon");
+-                    if button(ui, Btn::new("window_header_horizontal", label).tip(label.to_string()), true).0.clicked() {
+-                        switch(&ctx, false);
+-                    }
++                ui.add_space(6.0);
++                let label = crate::i18n::t("Full ribbon");
++                if button(ui, Btn::new("window_header_horizontal", label).tip(label.to_string()), true).0.clicked() {
++                    switch(&ctx, false);
+                 }
+             });
+         });
+@@ -446,9 +444,6 @@ fn output_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
+ 
+ /// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.
+ fn full_mode_pill(app: &SlideApp, ctx: &Context) {
+-    if cfg!(target_arch = "wasm32") {
+-        return;
+-    }
+     let title_h = if app.integrated_titlebar { ribbon::MAC_TITLE_BAR } else { ribbon::TITLE_H };
+     egui::Area::new(egui::Id::new("office_toolbar_pill")).order(egui::Order::Foreground).anchor(Align2::RIGHT_TOP, vec2(-10.0, title_h + 1.0)).show(
+         ctx,

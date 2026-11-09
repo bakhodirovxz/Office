@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft ui-egui: suite-core is a wasm dependency too (web toolbar mode)
+
+Needed by deckcraft/0174: suite-core was a native-only dependency of ui-egui; the web build now calls suite_core::settings::toolbar_mode and set_toolbar_mode (localStorage), so it is a wasm dependency as well.
+
+---
+
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index 0345dba..ccaeed0 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -25,6 +25,8 @@ log = { workspace = true }
+ 
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ js-sys = "0.3"
++# patches/deckcraft/0174: the web reads and saves the toolbar mode through suite-core (localStorage)
++suite-core = { path = "../../../../crates/suite-core" }
+ 
+ # the shared per-user settings (the toolbar mode); the web has no settings file
+ [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

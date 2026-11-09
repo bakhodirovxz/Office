@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: the simple toolbar's Font box shows the theme font too (ribbon::font_shown)
+
+Hengines task 5, follow-up to 0173: the web (and desktop simple mode) draws office_toolbar.rs, not ribbon::font_group, so its Font box stayed empty on a blank deck. The rule moves into ribbon::font_shown (the selection's font, else the deck's body theme font) and both boxes use it.
+
+---
+
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 904ba86..d0d9430 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -481,6 +481,13 @@ pub fn font_families(app: &SlideApp) -> Vec<String> {
+     v
+ }
+ 
++/// The name the Font box shows: the selection's font, else (no font of its own, or nothing selected) the deck's body (theme) font,
++/// as PowerPoint shows, not an empty box.
++pub(crate) fn font_shown(app: &SlideApp, st: &Value) -> String {
++    let body = app.session.active().and_then(|d| d.doc.masters.first()).map(|m| m.theme.fonts.minor.latin.clone());
++    st.get("font").and_then(Value::as_str).filter(|f| !f.is_empty()).map(str::to_string).or(body).unwrap_or_default()
++}
++
+ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+     let en = enabled(app, "format.bold");
+     group(ui, |ui| {
+@@ -489,9 +496,7 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
+                 ui.spacing_mut().item_spacing.x = 3.0;
+                 let size = st.get("size").and_then(Value::as_f64);
+                 let fams = font_families(app);
+-                // No font of its own (or nothing selected): the deck's body (theme) font, as PowerPoint shows, not an empty box.
+-                let body = app.session.active().and_then(|d| d.doc.masters.first()).map(|m| m.theme.fonts.minor.latin.clone());
+-                let font = st.get("font").and_then(Value::as_str).filter(|f| !f.is_empty()).map(str::to_string).or(body).unwrap_or_default();
++                let font = font_shown(app, st);
+                 let theme_fonts: Vec<String> = fams.iter().take(2).cloned().collect();
+                 dropdown(ui, "font", &font, 150.0, en, |ui| {
+                     for (k, f) in fams.iter().enumerate() {
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+index d289343..0b40d58 100644
+--- a/crates/ui-egui/src/office_toolbar.rs
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -1,7 +1,7 @@
+ // Added by the office toolbar patch queue. MIT OR Apache-2.0.
+ //! The simplified Slides toolbar (PLAN phase 4 WP3, docs/phase4/toolbar-design.md section 5): one row of the controls people
+-//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (desktop); the web build always shows
+-//! this row. Icons are Fluent UI System Icons (MIT, `assets/icons/fluent`), rasterised at build time into alpha masks.
++//! use most, drawn instead of `ribbon::show`. The full ribbon stays one click away (on the web too: the saved choice, then `?toolbar=`).
++//! Icons are Fluent UI System Icons (MIT, `assets/icons/fluent`), rasterised at build time into alpha masks.
+ //!
+ //! `show` returns whether it drew the row; the call site draws the upstream ribbon otherwise. In the full ribbon mode it
+ //! only floats the "Simple ribbon" pill over the right end of the tab row.
+@@ -361,7 +361,7 @@ fn slides_group(app: &mut SlideApp, ui: &mut Ui, labels: bool) {
+ 
+ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value, flag: &dyn Fn(&str) -> bool) {
+     let en = ribbon::enabled(app, "format.bold");
+-    let font = st.get("font").and_then(Value::as_str).unwrap_or("").to_string();
++    let font = ribbon::font_shown(app, st);
+     let families = ribbon::font_families(app);
+     widgets::dropdown(ui, "font", &font, 150.0, en, |ui| {
+         for family in &families {

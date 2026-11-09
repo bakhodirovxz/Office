@@ -60,18 +60,18 @@ index 08ef909..e0a00e2 100644
                      self.dialog = d;
                  } else {
 diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
-index 98ff28a..725b526 100644
+index e87e8b0..c40bddf 100644
 --- a/crates/ui-egui/src/panes.rs
 +++ b/crates/ui-egui/src/panes.rs
-@@ -92,7 +92,12 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
+@@ -93,7 +93,12 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
                              app.run_or_alert("review.resolveComment", json!({"cell": cell, "resolved": !c.resolved}));
                          }
-                         let send = ui.small_button("Send").clicked();
--                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text("Reply…").desired_width(ui.available_width()));
+                         let send = ui.small_button(lang.tr("Send")).clicked();
+-                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text(lang.tr("Reply…")).desired_width(ui.available_width()));
 +                        let r = ui.add(
 +                            egui::TextEdit::singleline(&mut draft)
 +                                .interactive(!app.session.read_only)
-+                                .hint_text("Reply…")
++                                .hint_text(lang.tr("Reply…"))
 +                                .desired_width(ui.available_width()),
 +                        );
                          if (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || send) && !draft.is_empty() {

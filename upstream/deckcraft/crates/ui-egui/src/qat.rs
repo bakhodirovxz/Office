@@ -136,7 +136,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         ui.label(egui::RichText::new(crate::i18n::t("Customize Quick Access Toolbar")).strong());
         for c in common() {
             let mut on = app.ui.qat.iter().any(|q| q.same(&c.id, &Value::Null));
-            if ui.checkbox(&mut on, &c.label).changed() {
+            if ui.checkbox(&mut on, crate::i18n::t(&c.label)).changed() {
                 let key = if on { "add" } else { "remove" };
                 let _ = command(app, &json!({key: c.id}));
             }
@@ -146,7 +146,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             ui.separator();
             for q in extra {
                 let mut on = true;
-                if ui.checkbox(&mut on, &q.label).changed() {
+                if ui.checkbox(&mut on, crate::i18n::t(&q.label)).changed() {
                     let _ = command(app, &json!({"remove": q.id, "params": q.params}));
                 }
             }

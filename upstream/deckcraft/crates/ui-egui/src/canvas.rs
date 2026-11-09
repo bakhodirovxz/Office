@@ -1175,7 +1175,7 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
         }
         let has_sel = app.session.active().is_some_and(|d| !d.selection.shapes.is_empty());
         for (l, id) in [("Cut", "edit.cut"), ("Copy", "edit.copy"), ("Paste", "edit.paste")] {
-            if ui.add_enabled(crate::ribbon::enabled(app, id), egui::Button::new(l)).clicked() {
+            if ui.add_enabled(crate::ribbon::enabled(app, id), egui::Button::new(crate::i18n::t(l))).clicked() {
                 let _ = app.run(id, json!({}));
                 ui.close();
             }
@@ -1193,7 +1193,7 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
                 ui.close();
             }
             for (l, id) in [("Bullets", "format.bullets"), ("Numbering", "format.numbering")] {
-                if ui.add_enabled(crate::ribbon::enabled(app, id), egui::Button::new(l)).clicked() {
+                if ui.add_enabled(crate::ribbon::enabled(app, id), egui::Button::new(crate::i18n::t(l))).clicked() {
                     let _ = app.run(id, json!({}));
                     ui.close();
                 }
@@ -1227,20 +1227,20 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
                 let _ = app.run("format.paragraphDialog", json!({}));
                 ui.close();
             }
-            ui.menu_button("Bring to Front", |ui| {
+            ui.menu_button(crate::i18n::t("Bring to Front"), |ui| {
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::BringToFront, "Bring to Front", "arrange.bringToFront", json!({}));
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::BringForward, "Bring Forward", "arrange.bringForward", json!({}));
             });
-            ui.menu_button("Send to Back", |ui| {
+            ui.menu_button(crate::i18n::t("Send to Back"), |ui| {
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::SendToBack, "Send to Back", "arrange.sendToBack", json!({}));
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::SendBackward, "Send Backward", "arrange.sendBackward", json!({}));
             });
-            ui.menu_button("Group", |ui| {
+            ui.menu_button(crate::i18n::t("Group"), |ui| {
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::Group, "Group", "arrange.group", json!({}));
                 crate::ribbon::menu_item(app, ui, crate::icons::Icon::Ungroup, "Ungroup", "arrange.ungroup", json!({}));
             });
             let locked = app.session.active().is_some_and(|d| d.selected_shapes().iter().all(|s| s.locked));
-            if ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
+            if ui.button(crate::i18n::t(if locked { "Unlock" } else { "Lock" })).clicked() {
                 let _ = app.run("shape.lock", json!({"locked": !locked}));
                 ui.close();
             }
@@ -1273,7 +1273,7 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
                 ui.close();
             }
         } else {
-            ui.menu_button("Layout", |ui| {
+            ui.menu_button(crate::i18n::t("Layout"), |ui| {
                 let layouts: Vec<(String, u32)> = app
                     .session
                     .active()
@@ -1286,13 +1286,13 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response) {
                     }
                 }
             });
-            ui.menu_button("Grid and Guides", |ui| {
+            ui.menu_button(crate::i18n::t("Grid and Guides"), |ui| {
                 let mut on = app.ui.guides;
                 if ui.checkbox(&mut on, crate::i18n::t("Guides")).clicked() {
                     let _ = app.run("view.guides", json!({"on": on}));
                 }
                 for (label, vertical) in [("Add Vertical Guide", true), ("Add Horizontal Guide", false)] {
-                    if ui.button(label).clicked() {
+                    if ui.button(crate::i18n::t(label)).clicked() {
                         let _ = app.run("guide.add", json!({"vertical": vertical}));
                         let _ = app.run("view.guides", json!({"on": true}));
                         ui.close();

@@ -49,8 +49,12 @@ pub fn start() {
                     // `?theme=` (patches/deckcraft/0154): the web shell's theme, applied at the first frame.
                     deckcraft_ui_egui::office_overlay::set_start_theme(query_param("theme").as_deref());
                     let mut app = SlideApp::new(Session::new(), services);
-                    // `?lang=`: the web shell's language (Slides has no browser detection of its own).
-                    if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
+                    // `?lang=`: the web shell's language; without it the browser's (preferences are not persisted here, and `auto`
+                    // would mean English). A regional tag (`ru-RU`) falls back to its language.
+                    let tag = query_param("lang").or_else(|| web_sys::window().and_then(|w| w.navigator().language())).unwrap_or_default();
+                    let lang = deckcraft_ui_egui::i18n::Lang::from_tag(&tag)
+                        .or_else(|| tag.split(['-', '_']).next().and_then(deckcraft_ui_egui::i18n::Lang::from_tag));
+                    if let Some(lang) = lang {
                         app.ui.language = lang.code().to_string();
                     }
                     let q = query();
