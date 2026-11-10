@@ -98,7 +98,11 @@ fn generate(dir: &Path) -> String {
     let fonts: Vec<String> = get("FONTS").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
     let mut list = String::new();
     for (i, f) in fonts.iter().enumerate() {
-        let key = if i == 0 { "office-fallback-sans" } else { "office-fallback-mono" };
+        let key = match i {
+            0 => "office-fallback-sans",
+            2 => "office-fallback-serif",
+            _ => "office-fallback-mono",
+        };
         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
     }
     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
