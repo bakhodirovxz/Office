@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: a workbook with no content opens with Times New Roman as its Normal font (HRM's openpyxl blank)
+
+Owner request 2026-11-10: the default font is always Times New Roman. HRM creates its blank workbooks with openpyxl (Normal font Calibri 11). A workbook with no cells, charts, pictures or shapes in any sheet now has Times New Roman as its Normal style font and theme body font when it is opened (engine io::default_font_when_empty, StyleTable::set_default_font_name). Only the in-memory model changes, so it is not dirty; a workbook with content keeps its fonts and the size stays as the file has it. New workbooks were already Times New Roman 12 pt (0151).
+Test: engine lib an_empty_workbook_opens_in_times_new_roman_and_one_with_content_keeps_its_font.
+---
+ crates/engine/src/io.rs    | 12 ++++++++++++
+ crates/engine/src/tests.rs | 14 ++++++++++++++
+ crates/model/src/style.rs  |  7 +++++++
+ 3 files changed, 33 insertions(+)
+
+diff --git a/crates/engine/src/io.rs b/crates/engine/src/io.rs
+index 0afc8d3..8cf17ed 100644
+--- a/crates/engine/src/io.rs
++++ b/crates/engine/src/io.rs
+@@ -83,6 +83,7 @@ pub fn open_bytes_calculated_in(
+ ) -> Result<(Workbook, Vec<String>, bool)> {
+     if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
+         let (mut wb, warnings, calculated) = open_plain(name, bytes, csv_as_text, loc)?;
++        default_font_when_empty(&mut wb);
+         fit_imported_rows(&mut wb);
+         return Ok((wb, warnings, calculated));
+     }
+@@ -97,11 +98,22 @@ pub fn open_bytes_calculated_in(
+         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
+     }
+     let (mut wb, mut warnings, calculated) = open_plain(name, &plain, csv_as_text, loc)?;
++    default_font_when_empty(&mut wb);
+     fit_imported_rows(&mut wb);
+     warnings.insert(0, DECRYPTED_NOTICE.into());
+     Ok((wb, warnings, calculated))
+ }
+ 
++/// office overlay (gridcraft/0185): a workbook with no cells, charts, pictures or shapes opens with Times New Roman as its
++/// Normal and theme body font (owner decision 2026-11-10), whatever its template says: HRM's blank files come from openpyxl
++/// (Calibri). Only the in-memory model changes, so it is not dirty; a workbook with content keeps its fonts. The size stays.
++fn default_font_when_empty(wb: &mut Workbook) {
++    if wb.sheets.iter().all(|s| s.cells.is_empty() && s.charts.is_empty() && s.images.is_empty() && s.shapes.is_empty()) {
++        wb.styles.set_default_font_name(gridcraft_model::NEW_WORKBOOK_FONT);
++        wb.theme.minor_font = gridcraft_model::NEW_WORKBOOK_FONT.into();
++    }
++}
++
+ /// Excel auto-fits rows to their tallest font when opening a file: rows without a user-set
+ /// height grow to fit their content. Rows the file made taller keep their height — our
+ /// line-height estimate can differ from Excel's, and shrinking files that already look
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 5ada490..55ee177 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -3393,3 +3393,17 @@ fn a_read_only_session_refuses_edits_but_allows_view_commands() {
+     s.read_only = false;
+     s.execute("cell.set", json!({"cell": "A1", "input": "y"})).unwrap();
+ }
++
++#[test]
++fn an_empty_workbook_opens_in_times_new_roman_and_one_with_content_keeps_its_font() {
++    // An openpyxl-like blank (Calibri 11 Normal, no cells). Synthetic bytes.
++    let mut wb = gridcraft_model::Workbook::new();
++    assert_eq!(wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, "Calibri");
++    let (opened, _) = crate::io::open_bytes("blank.xlsx", &gridcraft_xlsx::write_xlsx(&wb).unwrap()).unwrap();
++    let f = &opened.styles.get(gridcraft_model::StyleId::DEFAULT).font;
++    assert_eq!((f.name.as_str(), f.size), ("Times New Roman", 11.0), "the size stays as the file has it");
++
++    wb.sheet_mut(0).unwrap().set_value(CellRef::new(0, 0), Value::Number(1.0));
++    let (kept, _) = crate::io::open_bytes("full.xlsx", &gridcraft_xlsx::write_xlsx(&wb).unwrap()).unwrap();
++    assert_eq!(kept.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, "Calibri");
++}
+diff --git a/crates/model/src/style.rs b/crates/model/src/style.rs
+index d397687..bbffec0 100644
+--- a/crates/model/src/style.rs
++++ b/crates/model/src/style.rs
+@@ -383,6 +383,13 @@ impl StyleTable {
+         index.insert(normal.clone(), StyleId::DEFAULT);
+         StyleTable { styles: vec![normal], index }
+     }
++    /// office overlay (gridcraft/0185): the Normal style's font name, the other styles untouched.
++    pub fn set_default_font_name(&mut self, name: &str) {
++        if let Some(s) = self.styles.first_mut() {
++            s.font.name = name.into();
++            self.rebuild_index();
++        }
++    }
+     pub fn get(&self, id: StyleId) -> &Style {
+         self.styles.get(id.0 as usize).or_else(|| self.styles.first()).unwrap_or(&DEFAULT_STYLE)
+     }

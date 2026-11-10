@@ -1817,3 +1817,29 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Measured (dists built from the merged branch): bridge-sheets 54 passed, bridge-slides 37 passed, bridge-pdf 40 passed. Sizes (brotli, headroom to budget): sheets 4,958,840 (7,931 B), slides 9,522,246 (34,739 B; delta +194,637 with the fonts embedded),
   pdf 9,572,670 (26,792 B). No budget changed.
 - Not done: Sheets Watch Window and the Slides Backstage were not walked for English; Docs unchanged (p5-hdocs).
+
+### Phase 5: Times New Roman as the default for HRM's blank files (2026-11-10; branch `p5-font`, from phase-5 a54fcd10)
+- Owner request: the default font is always Times New Roman. HRM creates blank files server-side (python-docx `Document()`, openpyxl
+  `Workbook()`, python-pptx `Presentation()`), which opened in Cambria / Calibri. New documents made by the editors were already Times
+  New Roman (wordcraft 0135, gridcraft 0151, deckcraft 0152); the gap was a file that is empty when opened.
+- Done: **wordcraft/gridcraft/deckcraft 0185** (one patch each, engine only, no UI strings, no host-bridge file touched). Rule: content
+  at open means no change; an empty file gets Times New Roman in memory only, so the session is not dirty, no autosave is sent, and the
+  file changes when the user edits and saves. Docs: no text, table or picture: docDefaults run font, body theme font and a Normal that
+  has its own font (`io::default_font_when_empty`, wordcraft). Sheets: no cells, charts, pictures or shapes in any sheet: the Normal
+  style font and the theme body font (`StyleTable::set_default_font_name`). Slides: a PPTX whose slides hold only empty placeholders
+  and empty notes: heading and body Latin font of every master's theme. Sizes are not touched: a python-docx blank is 11 pt (Normal,
+  not 14 pt), openpyxl 11 pt, python-pptx's template text sizes; no engine setting pairs font and size, so 12 pt/14 pt stays a
+  separate owner decision. Headings in a python-docx blank keep their own theme heading font (Calibri), as the rule is body text.
+- Measured: engine unit tests (synthetic bytes, an empty file changes, a file with text does not): wordcraft
+  `an_empty_document_opens_in_times_new_roman_without_being_dirty`, gridcraft `an_empty_workbook_opens_in_times_new_roman_and_one_with_content_keeps_its_font`,
+  deckcraft `an_empty_deck_opens_in_times_new_roman_and_one_with_text_keeps_its_font`: 1/1 each. bridge-docs 14 passed (new case 13: a
+  python-docx-style blank, Cambria theme font, opens with the Font box on Times New Roman, no dirty message, no autosave, then dirty when
+  typed in; screenshot `docs/phase5/evidence/docs-default-font-times-new-roman.png`), bridge-sheets 54 passed, bridge-slides see the
+  summary below. Sizes (brotli, headroom): docs 9,853,908 (17,740 B), sheets 4,958,424 (8,347 B), slides 9,512,363 (44,622 B); no budget
+  changed. `verify-queue.sh all` and `cargo xt register check` (171 rows) green; 0950 of wordcraft and deckcraft regenerated.
+- Rendering: Times New Roman is not bundled. Docs web draws it with the bundled Source Serif 4 (serif, not metric-compatible, as the
+  tables entry above); Docs desktop uses the system Times New Roman, else Liberation Serif or Tinos. Sheets web and Slides web have no
+  serif face embedded, so the name falls back to the bundled UI sans there (a visible gap; embedding a metric-compatible serif such as Tinos is a size-budget decision, not measured); Sheets desktop and Slides desktop use the system font.
+- Not checked: a real python-docx/openpyxl/python-pptx file (the tools are not installed here; fixtures are synthetic and hand-built);
+  desktop MSI; a Sheets or Slides screenshot (the unit tests cover the model, not the web render); an empty `.docx` that has a table
+  or a picture is treated as content by design.
