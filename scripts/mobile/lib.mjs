@@ -233,7 +233,7 @@ export async function hold(name, [x, y], { holdMs = 1200, during = async () => {
 }
 
 /** hoshiya-serve on a free port from a built dist (same invocation as ci/web-smoke/shell.spec.ts). */
-export async function startServe({ root, dist, svc = 'E:/office-target/p1/services/release' }) {
+export async function startServe({ root, dist, svc = process.env.RIG_SVC ?? 'E:/office-target/p1/services/release' }) {
   const dir = fs.mkdtempSync(path.join(process.env.TEMP ?? os.tmpdir(), 'rig-serve-'));
   const port = await new Promise((ok) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => ok(p)); }); });
   fs.writeFileSync(path.join(dir, 'api.toml'), `listen = "127.0.0.1:${port}"\nwork_dir = "${path.join(dir, 'work').replace(/\\/g, '/')}"\nmax_file_mb = 1\n`);
