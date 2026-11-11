@@ -1006,7 +1006,7 @@ for (const leave of ['HRM Back', 'tab close'] as const) {
     await ctx.close();
   });
 }
-// Sheets, Slides and PDF: the same Back right after their R6 edit (xlsx: the typed cell is in the kept version). A loaded machine can
+// Sheets, Slides and PDF: the same Back right after an edit (R6's; xlsx types its own value, kept in v2). A loaded machine can
 // take seconds for the status 2 callback (the version, the file token, the backend's download): 30 s.
 for (const [ext, id, route, magic, edit] of R6) {
   test(`HRM Back 300 ms after an edit, ${ext}: status 2 with the edit`, async () => {
@@ -1016,7 +1016,13 @@ for (const [ext, id, route, magic, edit] of R6) {
     const [sdir] = sessions();
     const hrm0 = await hrmState();
     const editor = page.frames().find((f) => f.url().startsWith(`${DS}/${route}/`))!;
-    await edit(page, editor);
+    // xlsx: a value of its own, not R6's `zz` (the R6 case before stored that very cell: the same bytes again are rightly status 4)
+    const mark = String(Date.now() % 1e6).padStart(6, '7');
+    if (ext === 'xlsx') {
+      await editor.locator('canvas').first().click({ position: { x: 420, y: 420 } });
+      await page.keyboard.type('z' + mark);
+      await page.keyboard.press('Enter');
+    } else await edit(page, editor);
     await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
     await page.waitForTimeout(300);
     await hrmBack(page);
@@ -1027,8 +1033,8 @@ for (const [ext, id, route, magic, edit] of R6) {
     const v2 = path.join(sdir, 'v2.bin');
     expect([got.sha256, fs.readFileSync(v2).subarray(0, magic.length).toString('latin1')]).toEqual([sha(v2), magic]);
     expect(rec.versions[1].sha256).not.toBe(rec.versions[0].sha256);
-    // the cell holds what reached the workbook (under load the editor may take one z: an engine matter, not the close's)
-    if (ext === 'xlsx') expect(zipText(v2)).toMatch(/>zz?</);
+    // the typed value is in the kept version (the first key of a cell edit can be lost under load: an engine matter, not the close's)
+    if (ext === 'xlsx') expect(zipText(v2)).toContain(mark.slice(1));
     expect(problems).toEqual([]);
     await ctx.close();
   });
