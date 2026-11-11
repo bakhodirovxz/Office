@@ -1931,6 +1931,20 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   not touched (65,235 B of 65,536 as measured from `web/shell`, headroom 301).
 - **Not verified:** a real finger (the rig's `input tap` is a 1 ms tap), the Android app's WebView (same page code, not re-run), the second tap of the "after" run
   selects a word through 0139's touch select (not investigated; it is not a move).
+### Phase 6 WP5 done-check and WP13 checklist (2026-11-11, branch `p6-check`)
+- Full write-up and the table: `docs/phase6/checklist.md`; evidence `docs/phase6/evidence/checklist/` (13 MB: 12 short mp4, 31 png). AVD `HRM_Pixel_8` (412 dp = density 210, 360 dp = density 240, both at `wm size 540x1200`),
+  Chrome 133 and the WP8 app (rebuilt over the `p6-tapfix` dist, 53,208,707 B). Docs only. The host was saturated (Chrome ran at about 12 Hz), so timing-dependent gestures are weaker evidence than on a phone.
+- **Done:** 40 checklist rows: PASS 20 (6 are older WP6/WP7/WP8 evidence), FAIL 11, INCONCLUSIVE 1 (autocorrect), BLOCKED 4, not run 4. PASS: long press selects the word and opens the bar (412/360, Chrome and app),
+  Gboard glide, Cyrillic typed over a selection, momentum scroll, rotation keeps the document, the contextual bottom toolbar.
+- **WP5 is NOT done: selection handles and the action bar cannot be used by a finger on the emulator** (Chrome and app, 4 surfaces, DPR 1.0 and 1.31/1.5, two injectors): a press on a knob or a bar button clears the selection and does nothing
+  (Cut left the text in place). The 5 kittest tests of wordcraft/0139 pass (re-run below), so the headless harness does not see it. Not root-caused; suspects and file:line in checklist.md F1 (the bar's plain `egui::Button::clicked()` is the one WP6 already found broken on the web).
+- Other findings: a pinch drag-selects and raises the keyboard (F2); a table wider than the phone is clipped at 360 and 412 dp (F3); the first long press after opening often does nothing (F4); landscape with the keyboard up shows no document (F5).
+- **Measured:** `ui-egui --lib` 734 passed, 8 failed, 2 ignored (`E:/office-target/p6-check/wc-test`, 47 min under load): the 7 known i18n failures (cs, hu, hr, pl, tr, vi, `untranslated_interface_text`) plus `backstage::...recovery_restore_uses_save_changes_and_resets_autosave_permission`, which passes alone (load flake). Mouse regression: the 0139 tests
+  `long_press_opens_the_bar_not_the_menu_and_the_mouse_is_unchanged` (right-click menu, a mouse draws no handles) pass and no other ui-egui mouse test changed result; no browser mouse run today.
+- **Sizes, 0139 alone** (two `docs web --release` builds of `4362fb03^` and `4362fb03`, `brotli -q 11 --lgwin=24`): Docs wasm 9,862,495 -> 9,850,956 B (**-11,539 B**, raw 45,162,887 -> 45,027,097); JS 20,773 B and html 868 -> 869 B unchanged.
+  A patch that adds a 444-line module cannot shrink the wasm: this is codegen/`wasm-opt` variance, so the true delta is below the noise (about 10 KB); no budget change needed. Current tapfix build: 9,875,600 B of 9,904,416.
+- **Not checked:** a real phone; Sheets, Slides, PDF; page-break handle drag (Web Layout has no pages; the drag fails first); autocorrect after a handle move; Cyrillic over a handle-made selection; the bar on C412, C360, A360; a desktop-browser mouse run; WP16.
+
 ### Phase 5: real install on the HRM test server (2026-11-08, owner OK)
 - Image `hoshiya-docserver:p5-53da47d5` (services of phase-5 53da47d5, dists of the p5-ro build), tarball 117 MB, SHA-256 `4a6a00a3…`.
   `install.sh --profile profiles/hrm.env` as root: the old ONLYOFFICE 9.3.1 container is kept as `docs-server-replaced`
