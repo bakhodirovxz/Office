@@ -2,8 +2,9 @@
 //! does not answer `{"error":0}`. A save is acknowledged only by that answer; until then the version is dirty (`SessionRecord::acked`).
 //!
 //! Statuses: 1 on the first dirty event, 6 on every explicit save (`forcesavetype` 1), 2 on a close after a save, 4 on a close with
-//! nothing saved. 2 is retried from a queue on disk (`<data_dir>/queue/<sid>.json`, written BEFORE the first try, so a crash during
-//! it loses nothing); 6, 4 and 1 are not (the user still has the dirty document; the next save or the next dirty event tries again).
+//! nothing saved. The idle close sends 2 only with a version the provider has not acknowledged, else 4 (`sessions::close_locked`).
+//! 2 is retried from a queue on disk (`<data_dir>/queue/<sid>.json`, written BEFORE the first try, so a crash during it loses
+//! nothing); 6, 4 and 1 are not (the user still has the dirty document; the next save or the next dirty event tries again).
 //!
 //! The body is the DocsAPI callback body, signed the way the HR backend verifies it: `token` in the body is a JWT of the body, and
 //! `Authorization: Bearer` is a JWT of `{"payload": body}`, both with the provider's secret. Logs carry host and path only.
