@@ -1,7 +1,7 @@
 import { test, expect, chromium, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import * as crypto from 'node:crypto';
-import { bolds, documentXml } from './docx-xml';
+import { bolds, documentXml, zipEntry } from './docx-xml';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
@@ -1155,5 +1155,98 @@ test('D3b opaque host origin: refused by default, opens and saves with allow_opa
   } finally {
     await pna.close();
     await restart(before);
+  }
+});
+
+// Phase 7 WP13: the Sheets and Slides editors in the wrapper (files/2 is the xlsx, files/6 the pptx on the fake backend). The wrapper's page host
+// (`editor.js` -> `PluginHost`, a Worker) with the real editors in its frame; the editors have no `run` message, so a command is started through the
+// toolbar's Plugins menu (clicks on the canvas, positions measured on screenshots; the menu layout depends on the frame width, so the browser window is 1100 px wide, as the frame of bridge-plugins-apps.spec.ts). Checks M1-style
+// load of a signed fixture, M5, R1, M9, M7, M6 and that the saved text equals the opened one.
+test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked inside the wrapper, the document text is as it was', async () => {
+  const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
+  const CMDS = ['hello', 'deny', 'many', 'spin', 'grow', 'xss'];
+  const manifest = (id: string, app: string) => `id = "${id}"\nversion = "1.0.0"\napi = 1\napps = ["${app}"]\npublisher = "Test publisher"\nname.en = "Plugin ${id}"\n\n[permissions]\ndocument = "write"\nmemory_mb = 2\n\n`
+    + CMDS.map((c) => `[[command]]\nid = "${c}"\nlabel.en = "Cmd ${c}"\nreads = ["none"]\nparams = {}\n\n`).join('') + '[[panel]]\nid = "p"\ntitle.en = "Panel"\n';
+  const plugs = [['wa-sheets', 'sheets'], ['wa-slides', 'slides']] as const;
+  const pdir = path.join(dir, 'plugins-wa');
+  const sha = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
+  const SIGN = path.join(ROOT, 'ci/plugins/signing');
+  const seed = Buffer.from(fs.readFileSync(path.join(SIGN, 'test-a.seed'), 'utf8').trim(), 'hex');
+  const pkcs8 = crypto.createPrivateKey({ key: Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed]), format: 'der', type: 'pkcs8' });
+  const pub = fs.readFileSync(path.join(SIGN, 'test-a.pub'), 'utf8').trim();
+  const entries = plugs.map(([id, app]) => {
+    const d = path.join(pdir, id, '1.0.0'); fs.mkdirSync(d, { recursive: true });
+    const w = fs.readFileSync(path.join(FIX, 'plugin.wasm')), toml = manifest(id, app);
+    fs.writeFileSync(path.join(d, 'plugin.toml'), toml); fs.writeFileSync(path.join(d, 'plugin.wasm'), w);
+    const msg = `plugin-package-signature-v1\nplugin.toml ${sha(toml)}\nplugin.wasm ${sha(w)}\n`;
+    fs.writeFileSync(path.join(d, 'SIGNATURE'), `ed25519 ${pub} ${crypto.sign(null, Buffer.from(msg), pkcs8).toString('hex')}\n`);
+    return `{ id = "${id}", version = "1.0.0", sha256 = "${sha(w)}", grant = [] }`;
+  });
+  ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+  provLines = [`plugins = [${entries.join(', ')}]`];
+  await startDs(['[docserver.plugins]', `dir = "${pdir.replace(/\\/g, '/')}"`, `trusted_keys = ["${pub}"]`]);
+  try {
+    for (const [fileId, app, id, entry] of [[2, 'sheets', 'wa-sheets', 'xl/sharedStrings.xml'], [6, 'slides', 'wa-slides', 'ppt/slides/slide1.xml']] as const) {
+      const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 } });
+      const page = await ctx.newPage();
+      await page.goto(`${HOST}/host?kind=files&id=${fileId}&lang=en`);
+      await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
+      const w = wrapperOf(page);
+      const editor = page.frames().find((f) => f.url().startsWith(`${DS}/${app}/`))!;
+      const canvas = editor.locator('canvas').first();
+      await expect(canvas).toBeVisible();
+      const say = () => w.evaluate(() => document.querySelector('body > p')!.textContent ?? '');
+      const aud = () => w.evaluate(() => (window as any).PluginHost.last.audit as { plugin: string; kind: string; error?: string }[]);
+      const logs = () => w.evaluate(() => (window as any).PluginHost.last.logs.length as number);
+      await expect.poll(() => w.evaluate(() => (window as any).PluginHost?.last?.plugins.map((p: any) => p.d.id).sort()), { timeout: 30_000 }).toEqual(['wa-sheets', 'wa-slides']);   // the host lists both; each frame's menu shows the one whose apps match
+      // the Plugins menu: Sheets in the toolbar's overflow (anchored right), Slides a button in the toolbar (fixed)
+      const box = (await canvas.boundingBox())!;
+      const W = Math.round(box.width);
+      const m = app === 'sheets' ? { more: [W - 92, 62], plugins: [W - 283, 198], plugin: [W - 396, 198], command: W - 270 } : { more: null, plugins: [934, 58], plugin: [940, 90], command: 1053 }   // one plugin in the menu here, so the commands open to the right of it;
+      const at = (x: number, y: number) => canvas.click({ position: { x, y } });
+      const menu = async (index: number) => {
+        if (m.more) await at(m.more[0], m.more[1]);
+        await at(m.plugins[0], m.plugins[1]); await at(m.plugin[0], m.plugin[1]); await at(m.command, m.plugin[1] + 26 * index);
+      };
+      // started = the page host got the call; a click can miss while the frame is busy
+      const run = async (cmd: string) => {
+        const n = await logs();
+        await expect.poll(async () => { if ((await logs()) > n) return true; await w.evaluate(() => { document.querySelector('body > p')!.textContent = ''; }); await page.keyboard.press('Escape'); await menu(CMDS.indexOf(cmd)); await page.waitForTimeout(900); return (await logs()) > n; }, { timeout: 90_000, message: `${app} ${cmd}` }).toBe(true);
+      };
+      const from = async (cmd: string, re: RegExp) => {
+        const n = (await aud()).length; await run(cmd);
+        await expect.poll(async () => re.test(await say()), { timeout: 30_000, message: `${app} ${cmd}` }).toBe(true).catch(async (e) => { throw new Error(`${e.message} status=${await say()} audit=${JSON.stringify((await aud()).slice(n))}`); });
+      };
+      await page.waitForTimeout(3000);   // the editor builds its Plugins menu a few frames after the page host registered the plugins
+      await from('hello', /^hello done$/);
+      await from('deny', /could not finish.*refused/);
+      await from('many', /could not finish.*bad next/);
+      await from('grow', /^hog capped$/);
+      await w.evaluate(() => { (window as any).__tick = 0; setInterval(() => (window as any).__tick++, 100); });
+      const t0 = Date.now(), k0 = (await aud()).length;
+      await run('spin');
+      await expect.poll(async () => (await aud()).slice(k0).some((a) => a.kind === 'stopped'), { timeout: 30_000, message: `${app} M6 spin` }).toBe(true);
+      expect(await w.evaluate(() => (window as any).__tick as number)).toBeGreaterThan(((Date.now() - t0) / 100) * 0.6);   // the wrapper keeps its timers
+      await expect.poll(() => w.evaluate((i) => (window as any).PluginHost.last.mem[i], id), { timeout: 5_000 }).toBe(2 * 1024 * 1024);
+      await page.waitForTimeout(6000);   // the editor's lock after the timeout
+      await run('xss');   // last: the panel it opens covers the toolbar
+      const panel = w.getByRole('region', { name: `Plugin ${id}: Panel` });
+      await expect(panel.locator('h3')).toHaveText('<img src=x onerror=window.__xss=1>', { timeout: 30_000 });
+      expect(await panel.locator('img, script, b').count()).toBe(0);
+      expect((await panel.locator('.plg-text').textContent())!.length).toBe(1024);
+      expect(await w.evaluate(() => (window as any).__xss)).toBeUndefined();
+      await page.evaluate(() => (window as any).__editor.requestSave());
+      await expect.poll(() => state(page), { timeout: 30_000 }).toBe('saved');
+      const [sdir] = sessions();
+      const text = (b: Buffer) => [...zipEntry(b, entry).matchAll(/<(?:a:)?t(?: [^>]*)?>([^<]*)<\/(?:a:)?t>/g)].map((x) => x[1]).sort().join('|');   // sorted: the editor's own save orders the shared strings differently
+      expect(text(fs.readFileSync(path.join(sdir, 'v2.bin')))).toBe(text(fs.readFileSync(path.join(sdir, 'v1.bin'))));
+      test.info().annotations.push({ type: app, description: `M5 R1 M7 M6 M9 blocked, text unchanged (${text(fs.readFileSync(path.join(sdir, 'v1.bin'))).length} chars)` });
+      await ctx.close();
+      fs.rmSync(path.join(dir, 'data/sessions'), { recursive: true, force: true });
+    }
+  } finally {
+    ds.kill(); await new Promise((ok) => ds.once('exit', ok));
+    provLines = [];
+    await startDs([]);
   }
 });
