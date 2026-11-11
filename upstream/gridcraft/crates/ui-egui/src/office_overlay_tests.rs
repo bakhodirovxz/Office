@@ -89,6 +89,26 @@ fn fallback_font_covers_uzbek() {
     }
 }
 
+/// "Times New Roman" and the other serif names draw with a serif face: the bundled one leads the serif chain, ahead of the sans UI
+/// faces egui carries (on the web there is no installed Times New Roman to lead it).
+#[test]
+fn times_new_roman_cells_resolve_to_the_bundled_serif() {
+    if !o::ACTIVE || !o::FALLBACK_FONTS.iter().any(|(k, _)| *k == "office-fallback-serif") {
+        return;
+    }
+    let defs = crate::theme::font_definitions_for_language(Language::En);
+    for name in ["Times New Roman", "Times", "Liberation Serif", "Cambria"] {
+        let egui::FontFamily::Name(role) = crate::theme::cell_family(name, false, false) else { panic!("{name}: not a named family") };
+        let chain = &defs.families[&egui::FontFamily::Name(role)];
+        let first = chain.iter().find(|k| !k.starts_with("sys-")).map(String::as_str);
+        assert_eq!(first, Some("office-fallback-serif"), "{name}: {chain:?}");
+    }
+    let serif = o::FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif").map(|(_, b)| *b).unwrap_or_default();
+    for ch in "Times oʻzbek ҳқғў".chars().filter(|c| !c.is_whitespace()) {
+        assert_eq!(cmap_has(serif, ch), Some(true), "no glyph for {ch:?}");
+    }
+}
+
 /// A sheet's text reaches the PDF export with a face that covers it (U+02BB included), also with no installed fonts.
 #[test]
 fn pdf_default_face_covers_uzbek() {

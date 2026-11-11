@@ -1,0 +1,104 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 14:00:00 +0500
+Subject: [PATCH] overlay: Times New Roman slides get a bundled serif face (Tinos) on the web
+
+Owner request 2026-11-10: Times New Roman everywhere. On the web the slide font database had no serif, so Times New Roman, Times, Liberation Serif and Cambria drew in the sans fallback. The overlay's FONTS list may now carry a third face (office-fallback-serif, Tinos subset, Times New Roman's metric twin); it is registered in the font database and named in the substitutes of those families. egui's interface stacks do not use it.
+Test: ui-egui overlay test times_new_roman_slides_get_the_bundled_serif.
+---
+ crates/fonts/src/fontdb.rs                 |  4 ++--
+ crates/ui-egui/build_office.rs             |  6 +++++-
+ crates/ui-egui/src/office_overlay.rs       |  9 +++++++--
+ crates/ui-egui/src/office_overlay_tests.rs | 12 ++++++++++++
+ 4 files changed, 26 insertions(+), 5 deletions(-)
+
+diff --git a/crates/fonts/src/fontdb.rs b/crates/fonts/src/fontdb.rs
+index 03267384..15844149 100644
+--- a/crates/fonts/src/fontdb.rs
++++ b/crates/fonts/src/fontdb.rs
+@@ -32,9 +32,9 @@ pub fn bundled() -> Vec<&'static [u8]> {
+ pub fn substitutes(family: &str) -> &'static [&'static str] {
+     match family.to_ascii_lowercase().as_str() {
+         "calibri" | "calibri light" => &["Carlito", "Liberation Sans", "Arial", "Inter"],
+-        "cambria" | "cambria math" => &["Caladea", "Liberation Serif", "Times New Roman", "Merriweather"],
++        "cambria" | "cambria math" => &["Caladea", "Liberation Serif", "Times New Roman", "Tinos", "Merriweather"],
+         "arial" | "helvetica" | "helvetica neue" | "arial nova" => &["Liberation Sans", "Arial", "Helvetica Neue", "Helvetica", "Inter"],
+-        "times new roman" | "times" => &["Liberation Serif", "Times New Roman", "Times", "Merriweather"],
++        "times new roman" | "times" | "liberation serif" => &["Liberation Serif", "Times New Roman", "Times", "Tinos", "Merriweather"],
+         "courier new" | "courier" | "consolas" | "menlo" => &["Liberation Mono", "Courier New", "Menlo", "Courier"],
+         "aptos" | "aptos display" | "aptos narrow" | "segoe ui" | "segoe ui light" | "segoe ui semibold" | "tahoma" | "verdana" => {
+             &["Inter", "Helvetica Neue", "Arial", "Liberation Sans"]
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+index d0ba66bd..ad609a03 100644
+--- a/crates/ui-egui/build_office.rs
++++ b/crates/ui-egui/build_office.rs
+@@ -98,7 +98,11 @@ fn generate(dir: &Path) -> String {
+     let fonts: Vec<String> = get("FONTS").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
+     let mut list = String::new();
+     for (i, f) in fonts.iter().enumerate() {
+-        let key = if i == 0 { "office-fallback-sans" } else { "office-fallback-mono" };
++        let key = match i {
++            0 => "office-fallback-sans",
++            2 => "office-fallback-serif",
++            _ => "office-fallback-mono",
++        };
+         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
+     }
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 38af190f..a1c15e43 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -95,7 +95,8 @@ pub fn icon_png() -> Option<&'static [u8]> {
+ /// embedded), because that face draws Latin and Cyrillic with CJK full-width advances (absurd letter spacing in uz-Cyrl).
+ /// CJK text still reaches the CJK face: the subset has no CJK glyphs.
+ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
+-    for (key, bytes) in FALLBACK_FONTS {
++    // The serif face is for the slide font database (`register_document_fonts`); egui's interface stacks never use it.
++    for (key, bytes) in FALLBACK_FONTS.iter().filter(|(k, _)| *k != "office-fallback-serif") {
+         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
+     }
+     for (family, list) in defs.families.iter_mut() {
+@@ -124,7 +125,7 @@ pub fn paint_logo(p: &egui::Painter, r: egui::Rect) -> bool {
+     true
+ }
+ 
+-/// Register the sans fallback in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
++/// Register the sans and serif fallbacks in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
+ /// Cyrillic: the database asks every loaded face before it gives up on a character.
+ pub fn register_document_fonts() {
+     static ONCE: std::sync::Once = std::sync::Once::new();
+@@ -132,6 +133,10 @@ pub fn register_document_fonts() {
+         if let Some((_, bytes)) = FALLBACK_FONTS.first() {
+             deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
+         }
++        // Tinos: Times New Roman's metric twin, found through `substitutes`, so a deck in Times New Roman has serifs on the web too.
++        if let Some((_, bytes)) = FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif") {
++            deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
++        }
+         use_shared_dictionaries();
+     });
+ }
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 571323f0..dd0210cc 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -104,6 +104,18 @@ fn slide_fonts_cover_okina() {
+     }
+ }
+ 
++/// A deck in Times New Roman (or Times, Liberation Serif, Cambria) is drawn with a serif face when no system font is there (the web).
++#[test]
++fn times_new_roman_slides_get_the_bundled_serif() {
++    let Some((_, serif)) = o::FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif") else { return };
++    let db = deckcraft_fonts::FontDb::with_font_dirs(Vec::new());
++    assert!(db.add_font(serif.to_vec()) > 0);
++    for name in ["Times New Roman", "Times", "Liberation Serif", "Cambria"] {
++        let face = db.document_face(name, "Regular");
++        assert!(["Tinos", "Liberation Serif", "Caladea"].contains(&face.family.as_str()), "{name} drew with {}", face.family);
++    }
++}
++
+ #[test]
+ fn uzbek_is_offered_only_with_the_overlay_catalogs() {
+     use crate::i18n::{Lang, from_pref, has, normalize_pref, tr};

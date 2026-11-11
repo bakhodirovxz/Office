@@ -422,3 +422,13 @@ test('not framed: ?host=parent alone starts the normal app, with the sample deck
   await page.waitForFunction(() => !!(window as any).wasmBindings && !document.querySelector('[id$="_loading"]'), undefined, { timeout: 90_000 });
   expect(errors).toEqual([]);
 });
+
+// Times New Roman and the other serif names draw with a serif face on the web (deckcraft/0186: bundled Tinos); FONT_SHOT=<dir> keeps the screenshot.
+test('15 text in Times New Roman, Times, Liberation Serif and Cambria is drawn with serifs', async ({ page }) => {
+  await open(page, 'slides-serif-names.pptx', fs.readFileSync(path.join(__dirname, 'fixtures/slides-serif-names.pptx')));
+  await waitFor(page, 'deckcraft:opened');
+  await page.waitForTimeout(6000);
+  expect(await count(page, 'deckcraft:failed')).toBe(0);
+  const shot = process.env.FONT_SHOT;
+  if (shot) await page.screenshot({ path: path.join(shot, 'slides-serif-names.png') });
+});

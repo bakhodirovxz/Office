@@ -43,7 +43,7 @@ base_raw = 18981462          # pristine wasm raw at BASE (re-measured 2026-10-22
 base_gzip = 7036310         # wasm gzip -9
 base_br = 4737395            # wasm brotli -q 11 --lgwin=24
 js_br = 20048                # JS glue brotli
-delta_br_max = 229376        # delta +206,048 B brotli at Phase 4 WP3 (patches 0140/0141, scripts/build.sh sheets web --release, 2026-10-23): the simple toolbar (new office_toolbar.rs, 70 KB of icon masks = 5 KB brotli, the new catalog rows), ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +168,712 B at Phase 2 WP12). The SVG loader was not used: docs/phase4/icons-wasm.md
+delta_br_max = 294912        # delta +257,655 B brotli at Phase 5 p5-serif (2026-11-10: gridcraft/0186, the Tinos serif subset for Times New Roman, 37,3 KB brotli); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 229376: delta +206,048 B brotli at Phase 4 WP3 (patches 0140/0141, scripts/build.sh sheets web --release, 2026-10-23): the simple toolbar (new office_toolbar.rs, 70 KB of icon masks = 5 KB brotli, the new catalog rows), ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +168,712 B at Phase 2 WP12). The SVG loader was not used: docs/phase4/icons-wasm.md
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
