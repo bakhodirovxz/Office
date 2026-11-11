@@ -323,7 +323,11 @@ pub(crate) fn convert_segment(
             dflt
         };
     }
-    seg.upgrade = !to_cyr && opts.latin_upgrade && seg.opts.latin_alphabet == LatinAlphabet::Y2026;
+    // a segment that already has a 2026 letter is read as 2026 (like Auto): nothing to upgrade, a plain "sh" is s + h
+    seg.upgrade = !to_cyr
+        && opts.latin_upgrade
+        && seg.opts.latin_alphabet == LatinAlphabet::Y2026
+        && !seg.items.iter().any(|t| is_new_letter(t.c));
     scan::mark(&mut seg.items, to_cyr && opts.roman_numerals, para_start);
     if to_cyr || seg.upgrade {
         l2c::mark_closers(&mut seg.items);

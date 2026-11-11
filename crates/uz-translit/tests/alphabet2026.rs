@@ -221,7 +221,9 @@ fn latin_upgrade_rewrites_1995_words() {
     for a in ["'", "‘", "’", "`", "ʼ", "ʻ"] {
         assert_eq!(up(&format!("bo{a}lsa to{a}g{a}ri")), "bölsa töğri");
     }
-    assert_eq!(up("oʻzbekçha"), "özbekçha"); // mixed 1995 + 2026 word
+    // a segment with any 2026 letter is read as 2026 (like Auto): left alone
+    assert_eq!(up("oʻzbekçha"), "oʻzbekçha");
+    assert_eq!(up("Ishoq şahar"), "Ishoq şahar");
 }
 
 #[test]
