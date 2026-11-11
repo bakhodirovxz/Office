@@ -2139,6 +2139,39 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Budgets after WP13 (merged 2026-11-06): `[sheets] delta_br_max` 229,376 -> 344,064 and `[slides]` 196,608 -> 311,296, by the
   measured + 10 % rule (as Docs at WP4), because O2 now includes Sheets and Slides. Measured on the p7-wp13 dist before the p7-sign
   merge; `ci.sh sizes` in the next full CI is the check.
+### Phase 7 leftovers: Sheets/Slides in the real frames, N1/N2, desktop malicious column (2026-11-11, branch `p7-left`, not merged)
+- **Done.**
+  - `ci/web-smoke/bridge-plugins-apps.spec.ts` (+ config): the real page host, a Worker, the fixture plugin and the real uz-translit module inside the **Sheets and
+    Slides frames** (built sheets-web, slides-web of this tree). The editors have no `run` message, so commands start through the toolbar's Plugins menu (clicks
+    on the canvas). **12 of 12** (6 per app): registration, `hello`, M5/R1/M8, M6/M7/S1/M9 (and the lock released afterwards), M4 redirect, real translit through the
+    text map with one-step undo. `ci.sh plugins` runs it when the two dists exist.
+  - `docserver.spec.ts` "plugins in the wrapper (Sheets and Slides)": a docserver of this tree, a signed fixture plugin per app, files/2 (xlsx) and files/6 (pptx):
+    `hello`, M5, R1, M7, M6 (timers kept), M9, saved text equals the opened one. 1 of 1 (both apps). The other docserver specs were not run.
+  - Generated command lists `docs/plugins-commands-sheets.md` (75 of 344) and `docs/plugins-commands-slides.md` (87 of 324): a test in each `*-plugins` crate writes and checks
+    them, `cargo xt plugin commands [--check]` now runs the three tests (Docs, Sheets, Slides).
+  - Desktop malicious column on a **release `docs.exe`** built from this tree (`scripts/plugins/evil-desktop.py`, extended; PASS in 19 s): M5 `deny`, R1 `many`, M6 `spin`
+    (stopped after 6.3 s), M7 `grow` (capped, "hog capped"), M9 `xss` (panel refused: "widget text too long ..."), M1/M2/M2b (four refused packages: no command registered,
+    each named on stderr), S1 `overflow` (trap, the process lives, `hello` works after); the document text unchanged after each. `docs/phase7/malicious.md` filled; the CI
+    step `evil-desktop` is the same script and no longer skips with this exe.
+- **Tests.** `sheets-plugins` 10 lib + equivalence **54 of 54** (native + wasm); `slides-plugins` 9 lib + equivalence **90 of 90**; the two generated lists current.
+- **Measured (release, PC shared with other builds in the first runs, quiet in the final N1; median of 5, alternating, uz-translit wasm in wasmtime vs the built-in command).**
+  - N1 native, headless (`sheets-plugins/tests/perf.rs`, `slides-plugins/tests/perf.rs`, `--ignored`; the command only: these editors have no separate relayout step):
+    Sheets 2000 x 5 (8,000 text cells): to Cyrillic 38 -> 62 ms (+24), to Latin 45 -> 59 (+14) = pass (<= +50 ms); **20,000 x 5 (80,000 text cells): 405 -> 675 ms (+270, +67 %) and
+    334 -> 568 (+234, +70 %) = FAIL**. Slides 40 slides: 6 -> 31 ms (+26) and 2 -> 7 (+4) = pass; 400 slides x 8 paragraphs (3,200): 31 -> 72 (+41) and 24 -> 65 (+41) = pass.
+    The first (loaded) run: Sheets 10k cells +110/+117 ms, 100k +694/+2055 ms; Slides 400 +62/+54 ms. Reading: a steady cost of about 3 us per text cell (wasm convert
+    1.6-1.8x native, text map, the apply's check per cell), so the +50 ms line is crossed at about 15,000 text cells.
+  - N2 desktop, release `sheets.exe` / `slides.exe`, control channel (`scripts/plugins/perf-desktop-apps.py`, fresh process per mode, document built through the channel, 4 timed
+    rounds after a warm-up): **Sheets 20,000 x 5: command 385 -> 717 ms (+333), next frame +85 %, painted (`ui.screenshot`) 946 -> 1,266 ms (+34 %) = FAIL** (same cause as N1).
+    **Slides 400 slides: command 31 -> 68 ms (+37), next frame 52 -> 90 ms, painted 592 -> 634 ms (+42 ms, +7.1 %) = pass.** Raw: `E:/office-target/p7-left/n2-*.json` (not committed).
+  - `ci.sh sizes` on the dists of this tree (docs, sheets, slides built here, pdf copied from the phase-7 dist, which this branch does not change): **green** (exit 0), measured brotli against budget: docs 9,960,384 / 10,002,720 (headroom 42,336), sheets 5,054,684 / 5,081,459 (26,775), slides **with the craft fonts** 9,599,928 / 9,638,905 (38,977), pdf 9,570,303 / 9,599,462 (29,159, old dist), shell 65,468 / 81,920, plugins host 15,038 / 16,384; JS glue under 24,576 for all four. Slides was first built without `upstream/craft-fonts` (not in the worktree; 7,112,228 B, not comparable) and rebuilt with the fonts copied from the main checkout.
+- **Findings.**
+  1. Sheets plugin speed misses the PLAN 6.3 line on big sheets (above). No defect found in the adapter loop (`sheets-plugins/src/lib.rs` `read_map`, `apply_map`): the cost is linear; a decision
+     for the owner is whether v1 accepts +50 ms to +0.3 s on 100k-cell sheets, or a bulk text-map path is built. Not changed.
+  2. The wrapper's Sheets menu layout depends on the frame width (the overflow list changes at 1200 px), so the specs fix the window at 1100 px and the menu positions are pixels from screenshots.
+     The editors still have no `run` message (Docs has `wordcraft:run`), which is why the commands are started by clicks; a `gridcraft:run`/`deckcraft:run` message would make these specs robust (a carried patch; not made here).
+  3. The Slides control channel and the Sheets one list no plugin commands in `engine.commands` (they live in a separate registry); the N2 script probes with `engine.execute` and an invalid scope instead.
+- **Not checked.** Android with Sheets/Slides; M1, M2, M2b, M3, M10-M12, S2, F5, F7b and a formula/`link` answer (M5a, M5b) in a browser frame (fixture has no such answers; native tests only);
+  `sheets.exe`/`slides.exe` against the evil fixtures; the other docserver specs; panels on the desktop (not in v1); signing-key items; the Sheets formula decision (owner).
 ### Phase 5: real install on the HRM test server (2026-11-08, owner OK)
 - Image `hoshiya-docserver:p5-53da47d5` (services of phase-5 53da47d5, dists of the p5-ro build), tarball 117 MB, SHA-256 `4a6a00a3…`.
   `install.sh --profile profiles/hrm.env` as root: the old ONLYOFFICE 9.3.1 container is kept as `docs-server-replaced`

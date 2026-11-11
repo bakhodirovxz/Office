@@ -99,16 +99,23 @@ fn build(root: &Path, p: &Plugin) -> Result<PathBuf, String> {
 /// `docs/plugins-commands.md` (Docs) and `-sheets.md`, `-slides.md` (WP13), each written by a test of its domain, the only place that can see
 /// the real command registry. `--check` runs the same tests without the write switch: they fail when a file is stale.
 fn commands(root: &Path, check: bool) -> Result<String, String> {
-    for (domain, krate, args) in [
-        ("docs", "docs-office", vec!["--lib"]),
-        ("sheets", "sheets-plugins", vec!["--lib"]),
-        ("slides", "slides-plugins", vec!["--lib"]),
+    for (domain, krate) in [
+        ("docs", "docs-office"),
+        ("sheets", "sheets-plugins"),
+        ("slides", "slides-plugins"),
     ] {
         let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
-        cmd.args(["test", "--locked", "--manifest-path", &format!("domains/{domain}/Cargo.toml"), "-p", krate])
-            .args(&args)
-            .arg("the_generated_command_list_is_current")
-            .current_dir(root);
+        cmd.args([
+            "test",
+            "--locked",
+            "--manifest-path",
+            &format!("domains/{domain}/Cargo.toml"),
+            "-p",
+            krate,
+        ])
+        .arg("--lib")
+        .arg("the_generated_command_list_is_current")
+        .current_dir(root);
         if !check {
             cmd.env("PLUGIN_COMMANDS_WRITE", "1");
         }
@@ -121,7 +128,12 @@ fn commands(root: &Path, check: bool) -> Result<String, String> {
             });
         }
     }
-    Ok(if check { "the command lists are current" } else { "wrote the command lists" }.into())
+    Ok(if check {
+        "the command lists are current"
+    } else {
+        "wrote the command lists"
+    }
+    .into())
 }
 
 fn pack(root: &Path, name: &str) -> Result<String, String> {

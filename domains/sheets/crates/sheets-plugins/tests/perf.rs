@@ -5,9 +5,9 @@
 use std::time::Instant;
 
 use gridcraft_engine::Session;
-use plugin_adapter::plugin_api::manifest;
 use plugin_adapter::Plugin;
-use serde_json::{json, Value};
+use plugin_adapter::plugin_api::manifest;
+use serde_json::{Value, json};
 
 const MANIFEST: &str = include_str!("../../../../../plugins/uz-translit/plugin.toml");
 const WORDS: [&str; 6] = ["Toshkent shahri", "O'zbekiston Respublikasi", "yangi ish o'rni", "Xodimlar bo'limi", "mehnat shartnomasi", "ish haqi"];
@@ -37,7 +37,9 @@ fn perf_plugin() {
     sheets_plugins::register();
     for rows in [2000usize, 20_000] {
         let base = workbook(rows);
-        for (builtin, plugin, label) in [("tools.translitCyrl", "plugin.uz-translit.toCyrillic", "to Cyrillic"), ("tools.translitLatn", "plugin.uz-translit.toLatin", "to Latin")] {
+        for (builtin, plugin, label) in
+            [("tools.translitCyrl", "plugin.uz-translit.toCyrillic", "to Cyrillic"), ("tools.translitLatn", "plugin.uz-translit.toLatin", "to Latin")]
+        {
             // to Latin runs on Cyrillic text: convert the base once with the built-in
             let mut start = Session::new();
             start.add_document(base.doc().unwrap().clone());
@@ -59,7 +61,12 @@ fn perf_plugin() {
                 }
             }
             let [b, p] = [median(&mut t[0]), median(&mut t[1])];
-            println!("N1 sheets {rows}x5 {label}: command built-in {b:.0} ms / plugin {p:.0} ms (+{:.0}, {:+.1} %) | {} (median of 5, alternating)", p - b, (p / b - 1.0) * 100.0, if p <= b + 50.0 { "PASS" } else { "FAIL" });
+            println!(
+                "N1 sheets {rows}x5 {label}: command built-in {b:.0} ms / plugin {p:.0} ms (+{:.0}, {:+.1} %) | {} (median of 5, alternating)",
+                p - b,
+                (p / b - 1.0) * 100.0,
+                if p <= b + 50.0 { "PASS" } else { "FAIL" }
+            );
         }
     }
     plugin_adapter::clear();

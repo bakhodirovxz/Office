@@ -207,7 +207,8 @@ differs:
   `@...`, leading blanks skipped) refuses the `run`, because a formula can reach other files and programs (external references,
   `WEBSERVICE`, `HYPERLINK`, DDE). Slides: `text.`, `format.`, `table.`, `selection.` minus the two dialog commands; reads
   `document.inspect`, `slide.inspect`, `shape.inspect`; the keys `hover` and `action` (hyperlinks that can start a program) are
-  refused like `link`.
+  refused like `link`. The generated lists are `docs/plugins-commands-sheets.md` (75 of 344 Sheets commands) and
+  `docs/plugins-commands-slides.md` (87 of 324), made and checked by `cargo xt plugin commands [--check]` like the Docs list.
 - **Text map, Sheets.** One paragraph per constant text cell in scope (row by row, sheet by sheet), one editable segment each (a
   cell holds one plain string; the engine keeps no rich text). Formulas and their results, numbers, booleans, table header cells,
   locked cells of a protected sheet, spill and in-cell picture cells are not in the map. `scope`: `auto` (the selection when it is
