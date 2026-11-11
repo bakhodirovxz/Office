@@ -14,6 +14,8 @@
 pub mod fonts;
 pub mod history;
 pub mod lang;
+// the plugin store (install, verify, policy): native only, like ring for its signatures
+#[cfg(not(target_arch = "wasm32"))]
 pub mod plugins;
 pub mod recent;
 pub mod settings;

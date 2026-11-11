@@ -538,6 +538,7 @@ pub(crate) fn edit(
 }
 
 /// The text of `<dir>/settings.toml` as a document: empty when it is missing, too large or not TOML.
+#[cfg(not(target_arch = "wasm32"))] // its one caller, the plugin store, is native only
 pub(crate) fn read_doc(dir: &Path) -> DocumentMut {
     let path = dir.join(FILE_NAME);
     match std::fs::metadata(&path) {
