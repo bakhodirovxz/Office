@@ -17,9 +17,13 @@
 //!   are downloaded by the browser, not sent.
 //! - `deckcraft:saved` (from the parent): `{ ok }`, the answer to one `deckcraft:save`, in order.
 //!   `ok: false` marks the presentation unsaved again.
-//! - `deckcraft:autosave` (to the parent): `{ name, bytes }`, the same `.pptx` a save sends, every `AUTOSAVE_MS` while the
-//!   presentation has unsaved changes, so the parent holds the work if the page is lost. It is not a save: the presentation
+//! - `deckcraft:autosave` (to the parent): `{ name, bytes }`, the same `.pptx` a save sends, `AUTOSAVE_IDLE_MS` (3 s) after the last edit while the
+//!   presentation has unsaved changes, and at least every `AUTOSAVE_MS` (30 s) during continuous editing, so the parent holds the
+//!   work if the page is lost. It is not a save: the presentation
 //!   stays unsaved, and nothing is sent when it is clean, read only, or has a save the parent hasn't answered.
+//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the `.pptx` `deckcraft:autosave` would send, a
+//!   `Uint8Array`, when the presentation has changes not handed over yet; `null` otherwise. The parent calls it as it ends the
+//!   session (its `pagehide` runs before this page's). It counts as a handover.
 //! - `deckcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `deckcraft:failed` (to the parent): `{ error }` when the app couldn't start, open or save.
 //! - `deckcraft:plugin*` (both ways, office overlay patch 0158, Phase 7 WP13): the plugin bridge of docs/plugins.md section 9,
@@ -39,8 +43,48 @@ use wasm_bindgen::JsCast as _;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 
-/// How often the unsaved presentation is handed to the parent as a recovery copy (the same period as WordCraft's).
+/// The longest the unsaved presentation goes without a recovery copy for the parent while it is being edited.
 const AUTOSAVE_MS: f64 = 30_000.0;
+/// The quiet time after the last edit that brings the recovery copy (also the least time between two copies).
+const AUTOSAVE_IDLE_MS: f64 = 3_000.0;
+
+/// When the unsaved document is handed to the parent as a recovery copy: `AUTOSAVE_IDLE_MS` after the last edit, and at the
+/// latest `AUTOSAVE_MS` after the first edit not yet handed over (continuous editing). The idle time is also the least time
+/// between two copies. Nothing is sent for a document that has not changed since the last copy.
+#[derive(Default)]
+struct AutosaveClock {
+    /// The edit signature seen at the last tick and the one last handed over (`None`: clean, or not counting).
+    seen: Cell<Option<u64>>,
+    sent: Cell<Option<u64>>,
+    last_edit: Cell<f64>,
+    first_unsent: Cell<Option<f64>>,
+}
+
+impl AutosaveClock {
+    /// `sig` changes with every edit and is `None` while there is nothing to hand over (clean, read only, a save unanswered).
+    /// Returns the milliseconds until a copy is due (`<= 0`: due now, and counted as handed over), `None` when nothing is pending.
+    fn tick(&self, sig: Option<u64>, now: f64) -> Option<f64> {
+        let Some(sig) = sig else {
+            self.seen.set(None);
+            self.sent.set(None);
+            self.first_unsent.set(None);
+            return None;
+        };
+        if self.seen.replace(Some(sig)) != Some(sig) {
+            self.last_edit.set(now);
+            self.first_unsent.set(Some(self.first_unsent.get().unwrap_or(now)));
+        }
+        if self.sent.get() == Some(sig) {
+            return None;
+        }
+        let due = (self.last_edit.get() + AUTOSAVE_IDLE_MS).min(self.first_unsent.get().unwrap_or(now) + AUTOSAVE_MS);
+        if now >= due {
+            self.sent.set(Some(sig));
+            self.first_unsent.set(None);
+        }
+        Some(due - now)
+    }
+}
 
 /// The name a presentation gets when the parent opened none.
 const DEFAULT_NAME: &str = "presentation.pptx";
@@ -121,8 +165,8 @@ pub struct Bridge {
     /// Saves sent that the parent hasn't answered with `deckcraft:saved` yet, and the answers since the last frame.
     pending: Rc<Cell<u32>>,
     acks: Rc<RefCell<Vec<bool>>>,
-    /// When the unsaved presentation was last handed over by the periodic autosave (`None`: clean, or no period running).
-    last_autosave: Rc<Cell<Option<f64>>>,
+    /// When the next recovery copy is due.
+    autosave_clock: Rc<AutosaveClock>,
     /// A refusal to show at the next frame.
     refused: Rc<Cell<Option<&'static str>>>,
 }
@@ -150,7 +194,7 @@ impl Bridge {
             read_only: Rc::default(),
             pending: Rc::default(),
             acks: Rc::default(),
-            last_autosave: Rc::default(),
+            autosave_clock: Rc::default(),
             refused: Rc::default(),
         })
     }
@@ -222,21 +266,13 @@ impl Bridge {
             d.revision += 1;
             self.refused.set(Some(READ_ONLY));
         }
-        // The periodic autosave: only while there are unsaved changes, never read only, never with a save unanswered.
-        let unsaved = app.session.active().is_some_and(|d| d.is_dirty());
-        if unsaved && !self.read_only.get() && self.pending.get() == 0 {
-            let now = js_sys::Date::now();
-            let last = self.last_autosave.get().unwrap_or(now);
-            if now - last >= AUTOSAVE_MS {
+        if let Some(wait) = self.autosave_clock.tick(self.autosave_sig(app), js_sys::Date::now()) {
+            if wait <= 0.0 {
                 self.autosave(app);
-                self.last_autosave.set(Some(now));
             } else {
-                self.last_autosave.set(Some(last));
-                // An idle page draws no frames: wake up when the period is over.
-                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+                // An idle page draws no frames: wake up when the copy is due.
+                ctx.request_repaint_after(std::time::Duration::from_millis(wait as u64 + 1));
             }
-        } else {
-            self.last_autosave.set(None);
         }
         if let Some(why) = self.refused.take() {
             app.notify(deckcraft_ui_egui::i18n::t(why).to_string());
@@ -297,15 +333,38 @@ impl Bridge {
         }
     }
 
+    /// The recovery copy: only while there are unsaved changes, never read only, never with a save unanswered.
+    fn autosave_sig(&self, app: &SlideApp) -> Option<u64> {
+        app.session.active().filter(|d| d.is_dirty() && !self.read_only.get() && self.pending.get() == 0).map(|d| Arc::as_ptr(&d.doc) as usize as u64)
+    }
+
     /// Hand the shown presentation to the parent as a recovery copy: it stays unsaved and counts as no pending save.
     fn autosave(&self, app: &SlideApp) {
-        let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
         let name = pptx_name(&self.name.borrow());
-        let sent = deckcraft_engine::cmd::file::save_bytes(&doc, "pptx")
-            .map_err(|e| e.to_string())
-            .and_then(|bytes| self.post_file("deckcraft:autosave", &name, &bytes));
-        if let Err(e) = sent {
+        if let Err(e) = pptx_bytes(app).and_then(|bytes| self.post_file("deckcraft:autosave", &name, &bytes)) {
             log::error!("couldn't hand {name} to the page for safekeeping: {e}");
+        }
+    }
+
+    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the presentation
+    /// as `deckcraft:autosave` sends it when it has changes not handed over yet, else `None` (clean, read only, a save
+    /// unanswered, or the last autosave holds them). It counts as a handover, so the autosave doesn't send the same state again.
+    pub fn final_copy(&self, app: &SlideApp) -> Option<Vec<u8>> {
+        let sig = self.autosave_sig(app)?;
+        if self.autosave_clock.sent.replace(Some(sig)) == Some(sig) {
+            return None;
+        }
+        self.autosave_clock.first_unsent.set(None);
+        pptx_bytes(app).map_err(|e| log::error!("couldn't hand the presentation to the page as it closed: {e}")).ok()
+    }
+
+    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+            // It lives as long as the page.
+            f.forget();
         }
     }
 
@@ -357,6 +416,12 @@ impl Bridge {
     fn send(&self, fields: &[(&str, JsValue)]) -> bool {
         message(fields).is_some_and(|m| self.parent.post_message(&m, &self.origin).is_ok())
     }
+}
+
+/// The shown presentation as the `.pptx` a save sends.
+fn pptx_bytes(app: &SlideApp) -> Result<Vec<u8>, String> {
+    let doc = app.session.active().map(|d| d.doc.clone()).ok_or("no presentation")?;
+    deckcraft_engine::cmd::file::save_bytes(&doc, "pptx").map_err(|e| e.to_string())
 }
 
 /// `report.ppt` and `report.odp` are saved as `report.pptx`.

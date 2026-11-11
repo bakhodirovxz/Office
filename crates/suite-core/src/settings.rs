@@ -14,7 +14,7 @@
 //! ```toml
 //! lang = "auto"              # auto | en | ru | uz-Latn | uz-Latn-2026 | uz-Cyrl
 //! latin_alphabet = "2026"    # 2026 | 1995 | auto: the Latin alphabet the transliteration writes
-//! toolbar = "simple"         # simple | full: Docs, Sheets and Slides (PDF ignores it; the web is always simple)
+//! toolbar = "simple"         # simple | full: Docs, Sheets and Slides (PDF ignores it; on the web: saved choice in localStorage, then the URL's ?toolbar=, then simple)
 //! theme = "system"           # system | light | dark: the shell and every app, each in its own palette (read at start)
 //! spell_dictionaries = ""    # a folder with the dictionaries; empty = the install folder's
 //! xdfu = "off"               # off | on
@@ -427,20 +427,58 @@ pub fn load() -> Settings {
     dir().map(|d| load_in(&d).settings).unwrap_or_default()
 }
 
-/// The toolbar mode of this user (`simple` unless the file says `full`). Read it once at start-up.
+/// Which toolbar mode wins on the web: the user's saved choice, then the URL's `?toolbar=full|simple` (the document server
+/// passes it), then simple. Any other value counts as absent.
+pub fn resolve_toolbar(saved: Option<&str>, query: Option<&str>) -> ToolbarMode {
+    let pick = |v: Option<&str>| match v {
+        Some("full") => Some(ToolbarMode::Full),
+        Some("simple") => Some(ToolbarMode::Simple),
+        _ => None,
+    };
+    pick(saved).or(pick(query)).unwrap_or_default()
+}
+
+#[cfg(target_arch = "wasm32")]
+const WEB_TOOLBAR_KEY: &str = "suite.toolbar";
+
+#[cfg(target_arch = "wasm32")]
+fn web_storage() -> Option<web_sys::Storage> {
+    web_sys::window()?.local_storage().ok()?
+}
+
+/// The toolbar mode of this user (`simple` unless the file says `full`; on the web see [`resolve_toolbar`]). Read it once at
+/// start-up.
 pub fn toolbar_mode() -> ToolbarMode {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let saved = web_storage().and_then(|s| s.get_item(WEB_TOOLBAR_KEY).ok().flatten());
+        let query = web_sys::window()
+            .and_then(|w| w.location().search().ok())
+            .and_then(|q| web_sys::UrlSearchParams::new_with_str(&q).ok())
+            .and_then(|p| p.get("toolbar"));
+        return resolve_toolbar(saved.as_deref(), query.as_deref());
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     load().toolbar
 }
 
-/// Saves the toolbar mode for all apps. The other apps see it the next time they start.
+/// Saves the toolbar mode for all apps. The other apps see it the next time they start. On the web it goes to `localStorage`.
 pub fn set_toolbar_mode(mode: ToolbarMode) -> io::Result<()> {
-    let dir = dir().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::NotFound,
-            "no settings folder on this platform",
-        )
-    })?;
-    set_in(&dir, "toolbar", mode.tag()).map_err(|e| io::Error::other(e.to_string()))
+    #[cfg(target_arch = "wasm32")]
+    return web_storage()
+        .ok_or_else(|| io::Error::other("no localStorage"))?
+        .set_item(WEB_TOOLBAR_KEY, mode.tag())
+        .map_err(|_| io::Error::other("localStorage refused the write"));
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let dir = dir().ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::NotFound,
+                "no settings folder on this platform",
+            )
+        })?;
+        set_in(&dir, "toolbar", mode.tag()).map_err(|e| io::Error::other(e.to_string()))
+    }
 }
 
 /// Sets one key (`value` in the text form, checked by [`validate`]) in `<dir>/settings.toml`, atomically, leaving everything
@@ -524,6 +562,17 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    #[test]
+    fn web_toolbar_precedence_saved_then_query_then_simple() {
+        use ToolbarMode::{Full, Simple};
+        assert_eq!(resolve_toolbar(None, None), Simple);
+        assert_eq!(resolve_toolbar(None, Some("full")), Full);
+        assert_eq!(resolve_toolbar(Some("simple"), Some("full")), Simple);
+        assert_eq!(resolve_toolbar(Some("full"), Some("simple")), Full);
+        assert_eq!(resolve_toolbar(Some("junk"), Some("full")), Full);
+        assert_eq!(resolve_toolbar(Some("junk"), Some("junk")), Simple);
+    }
+
     use super::*;
     use crate::lang::Lang;
 

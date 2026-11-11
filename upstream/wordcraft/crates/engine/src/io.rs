@@ -121,7 +121,26 @@ pub fn can_encrypt(name: &str) -> bool {
 /// [`crate::cmd::references::refresh_date_fields`]).
 fn opened(doc: &mut Document) {
     doc.ensure_nonempty();
+    default_font_when_empty(doc);
     crate::cmd::references::refresh_date_fields(doc);
+}
+
+/// office overlay (wordcraft/0185): a document with no text, table or picture opens in Times New Roman (owner decision
+/// 2026-11-10), whatever its template says: HRM's blank files come from python-docx (Cambria body theme font). Only the
+/// in-memory model changes, so the document is not dirty and the file changes when the user saves; a document with content
+/// keeps its fonts. The size is left as the file has it.
+fn default_font_when_empty(doc: &mut Document) {
+    let empty = doc.body.iter().all(|b| matches!(&**b, wordcraft_doc::Block::Para(p) if p.objects.is_empty()))
+        && doc.plain_text(wordcraft_doc::StoryRef::Body).trim().is_empty();
+    if !empty {
+        return;
+    }
+    let tnr = Some(crate::session::NEW_DOCUMENT_FONT.to_string());
+    doc.styles.default_chr.font = tnr.clone();
+    doc.settings.minor_font = crate::session::NEW_DOCUMENT_FONT.into();
+    if let Some(n) = doc.styles.styles.iter_mut().find(|s| s.id == "Normal" && s.chr.font.is_some()) {
+        n.chr.font = tnr;
+    }
 }
 
 /// Parse a document from bytes; `name` gives the format by extension.

@@ -7,20 +7,20 @@ Subject: [PATCH] wordcraft: rustfmt the files the patch queue touches
 rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
 ---
- apps/wordcraft-web/src/web.rs        |  6 +++-
- apps/wordcraft-web/src/web/host.rs   | 13 +++++--
- crates/layout/src/lib.rs             |  8 ++++-
- crates/ui-egui/src/backstage.rs      | 53 ++++++++++++----------------
- crates/ui-egui/src/canvas.rs         |  4 ++-
- crates/ui-egui/src/office_overlay.rs |  4 ++-
- crates/ui-egui/src/touch_select.rs   | 10 ++++--
+ apps/wordcraft-web/src/web.rs        |  6 +++++-
+ apps/wordcraft-web/src/web/host.rs   | 13 ++++++++++---
+ crates/layout/src/lib.rs             |  8 +++++++-
+ crates/ui-egui/src/backstage.rs      | 53 +++++++++++++++++++++++------------------------------
+ crates/ui-egui/src/canvas.rs         |  4 +++-
+ crates/ui-egui/src/office_overlay.rs |  4 +++-
+ crates/ui-egui/src/touch_select.rs   | 10 ++++++++--
  7 files changed, 59 insertions(+), 39 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 2be8e47..265501d 100644
+index 77f1f69..99ef5ff 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
-@@ -86,7 +86,11 @@ pub fn start() {
+@@ -87,7 +87,11 @@ pub fn start() {
                      // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
                      #[cfg(feature = "office-ext")]
                      {
@@ -34,10 +34,10 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index c6f22e5..c7f2d80 100644
+index 88627b4..1f78c3d 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -143,8 +143,10 @@ impl Bridge {
+@@ -153,8 +153,10 @@ impl Bridge {
          }));
          let bridge = self.clone();
          services.blocked = Some(Box::new(move |id: &str| {
@@ -50,7 +50,7 @@ index c6f22e5..c7f2d80 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
-@@ -355,7 +357,12 @@ impl Bridge {
+@@ -414,7 +416,12 @@ impl Bridge {
                  Some("wordcraft:commands") => bridge.list_requested.set(true),
                  Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
                  Some("wordcraft:focus") => {
@@ -156,7 +156,7 @@ index 6399175..ac03a3f 100644
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 754c30b..7687e8d 100644
+index 599888c..f55fcaa 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -171,7 +171,7 @@ index 754c30b..7687e8d 100644
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 59d87e6..a4feb20 100644
+index 058851c..5bf53ae 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
 @@ -253,7 +253,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {

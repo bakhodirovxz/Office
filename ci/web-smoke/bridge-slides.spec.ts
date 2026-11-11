@@ -23,7 +23,7 @@ const HOST = `<!doctype html><meta charset="utf-8"><body>
   addEventListener('message', (e) => {
     if (e.source !== document.getElementById('ed').contentWindow) return;
     const d = e.data || {};
-    window.__msgs.push({ type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
+    window.__msgs.push({ t: Date.now(), type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
       bytes: d.bytes instanceof ArrayBuffer ? new Uint8Array(d.bytes).slice(0, 2).join(',') + ':' + d.bytes.byteLength : undefined });
   });
   window.__toEditor = (msg, transfer) => document.getElementById('ed').contentWindow.postMessage(msg, location.origin, transfer);
@@ -345,6 +345,52 @@ test('12 autosave: none when clean; after an edit one arrives within a period, a
   expect(await count(page, 'deckcraft:save')).toBe(0);
 });
 
+
+// the first call selects the canvas, the rest are key presses only: edits must come well under 3 s apart even on a loaded machine
+const slideEdit = async (page: Page, i: number) => {
+  if (i === 0) await canvas(page).click({ position: { x: 500, y: 350 } });
+  await page.keyboard.press('Control+Shift+N');
+};
+const slidesAutosaves = async (page: Page) => (await autosaves(page)).length;
+// hengines (patch deckcraft/0170): the recovery copy goes 3 s after the last edit, and at the latest 30 s after the first unsent edit
+// while editing goes on; never more often than every 3 s; none for an unchanged document.
+test('8b autosave: 3 s after the last edit, once per quiet period; continuous editing is saved within 30 s', async ({ page }) => {
+  test.setTimeout(180_000);
+  await open(page);
+  await waitFor(page, 'deckcraft:opened');
+  const n = async () => (await slidesAutosaves(page));
+  expect(await n()).toBe(0);
+  await slideEdit(page, 0);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  const t0 = Date.now();
+  await expect.poll(n, { timeout: 12_000 }).toBe(1);
+  expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
+  await page.waitForTimeout(8_000);
+  expect(await n(), 'an unchanged document is not sent again').toBe(1);
+  // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  // The copy of a quiet period is allowed wherever two edits ended more than 3 s apart (a loaded machine stalls an edit now and then).
+  const start = Date.now();
+  const ends: number[] = [];
+  let i = 1;
+  const edits = async (until: number) => { while (Date.now() - start < until) { await slideEdit(page, i++); ends.push(Date.now()); await page.waitForTimeout(300); } };
+  const stalls = () => ends.filter((e, k) => k > 0 && e - ends[k - 1] > 2_900).length;
+  await edits(20_000);
+  expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBeLessThanOrEqual(1 + stalls());
+  await edits(38_000);
+  const during = await n();
+  expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
+  if (stalls() === 0) expect(during, 'exactly the ceiling copy').toBe(2);
+  const times = (await msgs(page)).filter((m) => m.type === 'deckcraft:autosave').map((m) => m.t as number);
+  for (let k = 1; k < times.length; k++) expect(times[k] - times[k - 1], 'never more often than every 3 s').toBeGreaterThanOrEqual(2_800);
+  // the edits stop: the last state goes 3 s later
+  await expect.poll(n, { timeout: 12_000 }).toBeGreaterThan(during);
+  await page.waitForTimeout(8_000);
+  const after = await n();
+  await page.waitForTimeout(5_000);
+  expect(await n(), 'quiet again: nothing more').toBe(after);
+  expect(await lastDirty(page)).toBe(true);
+});
+
 test('13 autosave: none in a read-only session', async ({ page }) => {
   test.setTimeout(240_000);
   await open(page, NAME, fs.readFileSync(PPTX), { readOnly: true });
@@ -375,4 +421,14 @@ test('not framed: ?host=parent alone starts the normal app, with the sample deck
   await page.goto(base + '/index.html?host=parent');
   await page.waitForFunction(() => !!(window as any).wasmBindings && !document.querySelector('[id$="_loading"]'), undefined, { timeout: 90_000 });
   expect(errors).toEqual([]);
+});
+
+// Times New Roman and the other serif names draw with a serif face on the web (deckcraft/0186: bundled Tinos); FONT_SHOT=<dir> keeps the screenshot.
+test('15 text in Times New Roman, Times, Liberation Serif and Cambria is drawn with serifs', async ({ page }) => {
+  await open(page, 'slides-serif-names.pptx', fs.readFileSync(path.join(__dirname, 'fixtures/slides-serif-names.pptx')));
+  await waitFor(page, 'deckcraft:opened');
+  await page.waitForTimeout(6000);
+  expect(await count(page, 'deckcraft:failed')).toBe(0);
+  const shot = process.env.FONT_SHOT;
+  if (shot) await page.screenshot({ path: path.join(shot, 'slides-serif-names.png') });
 });

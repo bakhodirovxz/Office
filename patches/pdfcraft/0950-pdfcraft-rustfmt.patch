@@ -6,6 +6,9 @@ Subject: [PATCH] pdfcraft: rustfmt the files patches added after the first rustf
 rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
 ---
+ crates/ui-egui/src/panels.rs | 3 ++-
+ crates/ui-egui/tests/ui.rs   | 5 ++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/crates/ui-egui/src/panels.rs b/crates/ui-egui/src/panels.rs
 index c4d0bd5..c8ac80e 100644

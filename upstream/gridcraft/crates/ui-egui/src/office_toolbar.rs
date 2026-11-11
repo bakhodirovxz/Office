@@ -155,7 +155,7 @@ pub fn set_simple(on: bool) {
 }
 
 fn offered() -> bool {
-    !cfg!(target_arch = "wasm32") && (office_overlay::ACTIVE || OFFERED.load(Ordering::Relaxed) == 1)
+    office_overlay::ACTIVE || OFFERED.load(Ordering::Relaxed) == 1
 }
 
 /// The toggle button: switches at once and remembers the choice for the next start.
@@ -176,6 +176,13 @@ fn toggle_mode(on: bool) {
             log::warn!("could not write the toolbar mode: {e}");
         }
     }
+    // The web keeps the choice in localStorage (suite-core).
+    #[cfg(target_arch = "wasm32")]
+    if let Err(e) =
+        suite_core::settings::set_toolbar_mode(if on { suite_core::settings::ToolbarMode::Simple } else { suite_core::settings::ToolbarMode::Full })
+    {
+        log::warn!("could not write the toolbar mode: {e}");
+    }
 }
 
 /// Reads and writes `settings.toml` in `dir` instead of the user's folder (tests, and a host that keeps its own).
@@ -192,7 +199,7 @@ fn settings_dir() -> Option<std::path::PathBuf> {
     SETTINGS_DIR.lock().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
-/// The shared setting (`toolbar` in settings.toml, suite-core). The web has no file and is always simple.
+/// The shared setting (`toolbar` in settings.toml, suite-core). The web: the saved choice in localStorage, then `?toolbar=`, then simple.
 fn read_mode() -> bool {
     #[cfg(not(target_arch = "wasm32"))]
     return match settings_dir() {
@@ -200,7 +207,7 @@ fn read_mode() -> bool {
         None => suite_core::settings::toolbar_mode(),
     } == suite_core::settings::ToolbarMode::Simple;
     #[cfg(target_arch = "wasm32")]
-    true
+    return suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple;
 }
 
 // -------------------------------------------------------------------------------------------------------------- icons

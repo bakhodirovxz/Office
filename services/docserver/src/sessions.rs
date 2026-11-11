@@ -3,7 +3,7 @@
 //! Layout, under `<data_dir>/sessions/<sid>/` (the `sid` is 32 lower-case hex characters, 128 random bits):
 //!   `session.json`  the `SessionRecord`: validated config fields, permissions, the version list, the close state; no token
 //!   `v<N>.bin`      version N of the document, N from 1 (1 is the document as opened, then one per save)
-//!   `autosave.bin`  the last recovery copy (not a version)
+//!   `autosave.bin`  the last recovery copy (not a version); a close promotes it to a version when it is newer and differs
 //! Every write goes to a `.tmp` file, is synced, then renamed over the target. All changes run under one process-wide lock; there
 //! is no state in memory, so a restart loses nothing.
 use crate::Docserver;
@@ -70,7 +70,8 @@ pub struct VersionRec {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Closed {
     pub at: u64,
-    /// the callback status the close stands for: 2 (saved since open) or 4 (nothing saved)
+    /// the callback status the close stands for: 2 (saved since open; for the idle close only with a version the provider has not
+    /// acknowledged), or 4 (nothing saved, or nothing the provider does not have)
     pub status: u8,
     /// the callback for this close has been sent, or queued (status 2) or tried (status 4): a second close sends nothing
     #[serde(default)]
@@ -113,6 +114,17 @@ pub struct SessionRecord {
     /// the status 1 callback went out
     #[serde(default)]
     pub dirty_sent: bool,
+    /// the stored `autosave.bin`, when there is one
+    #[serde(default)]
+    pub autosave: Option<AutosaveRec>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AutosaveRec {
+    /// the number of versions when it was stored: it is newer than the last version while that number has not changed
+    pub after: u64,
+    pub sha256: String,
+    pub at: u64,
 }
 
 impl SessionRecord {
@@ -364,6 +376,7 @@ impl Docserver {
             closed: None,
             acked: 0,
             dirty_sent: false,
+            autosave: None,
         };
         let _g = lock();
         let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
@@ -403,8 +416,33 @@ impl Docserver {
     ) -> Result<VersionRec, SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        let stamped = self.stamped(&rec, bytes, saved);
+        let bytes = stamped.as_deref().unwrap_or(bytes);
+        let v = self.add_version(&mut rec, bytes, by, saved, now)?;
+        self.store(&rec)?;
+        crate::history::record(self, &rec, bytes, by);
+        Ok(v)
+    }
+
+    /// The bytes with the editing person as creator (and, for a save, as last modifier), for an edit session only; `None` = unchanged.
+    fn stamped(&self, rec: &SessionRecord, bytes: &[u8], saved: bool) -> Option<Vec<u8>> {
+        if !rec.perms.edit {
+            return None;
+        }
+        crate::ooxml::stamp_author(bytes, &rec.file_type, &rec.user_name, saved)
+    }
+
+    /// `put_version` without the store: the version file and its entry in `rec`. Call under the lock.
+    fn add_version(
+        &self,
+        rec: &mut SessionRecord,
+        bytes: &[u8],
+        by: &str,
+        saved: bool,
+        now: u64,
+    ) -> Result<VersionRec, SessErr> {
         let n = rec.versions.len() as u64 + 1;
-        let dir = self.session_dir(sid).ok_or(SessErr::NotFound)?;
+        let dir = self.session_dir(&rec.sid).ok_or(SessErr::NotFound)?;
         self.write_stored(&dir.join(format!("v{n}.bin")), bytes)?;
         if n == 1 {
             rec.acked = 1; // the document as the provider gave it is, by definition, what the provider has
@@ -419,8 +457,6 @@ impl Docserver {
         rec.versions.push(v.clone());
         rec.saved_since_open |= saved;
         rec.last_activity = now;
-        self.store(&rec)?;
-        crate::history::record(self, &rec, bytes, by);
         Ok(v)
     }
 
@@ -437,34 +473,142 @@ impl Docserver {
     pub fn put_autosave(&self, sid: &str, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        self.set_autosave(&mut rec, bytes, now)?;
+        self.store(&rec)
+    }
+
+    /// `put_autosave` without the store: `autosave.bin` and its entry in `rec`. Call under the lock.
+    fn set_autosave(&self, rec: &mut SessionRecord, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         self.write_stored(
             &self
-                .session_dir(sid)
+                .session_dir(&rec.sid)
                 .ok_or(SessErr::NotFound)?
                 .join("autosave.bin"),
             bytes,
         )?;
+        rec.autosave = Some(AutosaveRec {
+            after: rec.versions.len() as u64,
+            sha256: sha256_hex(bytes),
+            at: now,
+        });
+        rec.last_activity = now;
+        Ok(())
+    }
+
+    /// `POST .../ping`: the editor page is still there (the idle close counts from the last activity).
+    pub fn touch(&self, sid: &str, now: u64) -> Result<(), SessErr> {
+        let _g = lock();
+        let mut rec = self.open_session(sid)?;
         rec.last_activity = now;
         self.store(&rec)
     }
 
     /// Closes a session: status 2 when something was saved since open, else 4. Closing twice answers the first status.
     pub fn close_session(&self, sid: &str, now: u64) -> Result<Closed, SessErr> {
+        self.close_with(sid, None, now)
+    }
+
+    /// `close_session` with the editor's final copy (the body of `POST .../close`, checked by the caller as an autosave body):
+    /// in the same locked step it becomes the recovery copy, which the close then makes a version (status 2) unless it equals
+    /// the last one. A session already closed ignores it and answers its first status.
+    pub fn close_with(&self, sid: &str, last: Option<&[u8]>, now: u64) -> Result<Closed, SessErr> {
         let _g = lock();
         let mut rec = self.load_session(sid).ok_or(SessErr::NotFound)?;
+        let from = match last {
+            Some(b) if rec.closed.is_none() && rec.perms.edit => {
+                self.set_autosave(&mut rec, b, now)?;
+                "close"
+            }
+            _ => "autosave",
+        };
+        self.close_locked(rec, now, from, false)
+    }
+
+    /// The idle close: an open edit session with no activity for `close_idle_s` (its page went away without a close) is closed like
+    /// `close_session`. None when the session is not that (checked under the lock, so a ping in between keeps it open).
+    pub fn close_if_idle(&self, sid: &str, now: u64) -> Option<Closed> {
+        let _g = lock();
+        let rec = self.load_session(sid).filter(|r| {
+            r.perms.edit
+                && r.closed.is_none()
+                && now >= r.last_activity.saturating_add(self.close_idle_s)
+        })?;
+        self.close_locked(rec, now, "autosave", true)
+            .map_err(|e| eprintln!("docserver: idle close failed: {e:?}"))
+            .ok()
+    }
+
+    /// Call under the lock. A recovery copy newer than the last version and different from it becomes a version first (the page went
+    /// away before its save, ONLYOFFICE's close-time assembly): the version file, the record with its close, then the history.
+    /// `from` names where the copy came from in the audit line (`autosave`, or `close`: the close request's own body). `idle`: the
+    /// server's idle close, which sends status 2 only with data the provider has not acknowledged (else 4).
+    fn close_locked(
+        &self,
+        mut rec: SessionRecord,
+        now: u64,
+        from: &str,
+        idle: bool,
+    ) -> Result<Closed, SessErr> {
         if let Some(c) = &rec.closed {
             return Ok(c.clone());
         }
+        let promoted = self.autosave_to_promote(&rec);
+        let by = rec.user_id.clone();
+        let v = match &promoted {
+            Some(b) => Some(self.add_version(&mut rec, b, &by, true, now)?),
+            None => None,
+        };
         let c = Closed {
             at: now,
-            status: if rec.saved_since_open { 2 } else { 4 },
+            // The idle close comes minutes after the page went (ONLYOFFICE's 2 comes ~10 s after the last editor leaves). By then a
+            // newer session on the same file (a new key per open) may have saved: a 2 with a copy the provider already acknowledged
+            // would overwrite that. A promoted copy, or a save whose 6 was not answered `{"error":0}`, is dirty and still goes as 2.
+            status: if rec.saved_since_open && (!idle || rec.dirty()) {
+                2
+            } else {
+                4
+            },
             notified: false,
             acked: false,
         };
         rec.closed = Some(c.clone());
         rec.last_activity = now;
         self.store(&rec)?;
+        if let (Some(b), Some(v)) = (&promoted, &v) {
+            crate::history::record(self, &rec, b, &rec.user_id);
+            self.audit(
+                "save",
+                serde_json::json!({"session": crate::audit::sid_ref(&rec.sid), "version": v.n, "sha256": v.sha256, "size": v.size,
+                                   "user": rec.user_id, "from": from}),
+            );
+        }
         Ok(c)
+    }
+
+    /// The bytes of `autosave.bin` when they should become a version at close: an edit session, stored after the last version,
+    /// different from it, intact (its digest) and a sound document of the session's type (the checks of a save body).
+    fn autosave_to_promote(&self, rec: &SessionRecord) -> Option<Vec<u8>> {
+        let a = rec.autosave.as_ref()?;
+        let last = rec.versions.last()?;
+        if !rec.perms.edit || a.after != rec.versions.len() as u64 || a.sha256 == last.sha256 {
+            return None;
+        }
+        let b = self
+            .read_stored(&self.session_dir(&rec.sid)?.join("autosave.bin"))
+            .ok()?;
+        let raw_ok = ct_eq(sha256_hex(&b).as_bytes(), a.sha256.as_bytes());
+        // the versions are stamped, so the same document is compared in its stamped form
+        let b = self.stamped(rec, &b, true).unwrap_or(b);
+        if raw_ok && sha256_hex(&b) == last.sha256 {
+            return None;
+        }
+        let sound =
+            raw_ok && crate::ooxml::check(&b, &rec.file_type, self.max_document_mb << 20).is_ok();
+        if !sound {
+            eprintln!("docserver: the recovery copy of a session is damaged and was not used");
+            return None;
+        }
+        Some(b)
     }
 }
 

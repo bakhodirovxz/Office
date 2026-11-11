@@ -58,6 +58,14 @@ Third-party material added by this layer
 
 $(sed 's/^/  /' assets/fonts/fallback/OFL.txt)
 
+- Tinos Regular, subset (assets/fonts/fallback/Tinos-Regular-uz.ttf; the face office-fallback-serif in the Sheets and
+  Slides builds, the stand-in for Times New Roman where no system font exists): Copyright 2026 The Tinos Project Authors
+  (https://github.com/googlefonts/tinos), SIL Open Font License 1.1, no Reserved Font Name. The file is modified: it is a
+  subset (hinting dropped) made by scripts/subset-fallback-font.sh. Provenance and checksums: assets/fonts/fallback/SOURCE.md.
+  The licence text follows.
+
+$(sed 's/^/  /' assets/fonts/fallback/OFL-Tinos.txt)
+
 - Fluent UI System Icons, a subset of 84 SVG icons (assets/icons/fluent/svg/, version 1.1.344 of
   @fluentui/svg-icons), unmodified: Copyright (c) 2020 Microsoft Corporation, MIT License. Used for the toolbar
   icons of our layer. Only the glyphs are used, no Microsoft Office logo or artwork. Provenance and checksums:

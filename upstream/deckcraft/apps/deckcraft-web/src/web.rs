@@ -44,7 +44,8 @@ pub fn start() {
         // stores what it saves (`host`).
         let bridge = if query_param("host").as_deref() == Some("parent") { host::Bridge::new(query_param("parent_origin")) } else { None };
         let app_bridge = bridge.clone();
-        let result = eframe::WebRunner::new()
+        let runner = eframe::WebRunner::new();
+        let result = runner
             .start(
                 canvas,
                 options,
@@ -60,8 +61,12 @@ pub fn start() {
                     // `?theme=` (patches/deckcraft/0154): the web shell's theme, applied at the first frame.
                     deckcraft_ui_egui::office_overlay::set_start_theme(query_param("theme").as_deref());
                     let mut app = SlideApp::new(Session::new(), services);
-                    // `?lang=`: the web shell's language (Slides has no browser detection of its own).
-                    if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
+                    // `?lang=`: the web shell's language; without it the browser's (preferences are not persisted here, and `auto`
+                    // would mean English). A regional tag (`ru-RU`) falls back to its language.
+                    let tag = query_param("lang").or_else(|| web_sys::window().and_then(|w| w.navigator().language())).unwrap_or_default();
+                    let lang = deckcraft_ui_egui::i18n::Lang::from_tag(&tag)
+                        .or_else(|| tag.split(['-', '_']).next().and_then(deckcraft_ui_egui::i18n::Lang::from_tag));
+                    if let Some(lang) = lang {
                         app.ui.language = lang.code().to_string();
                     }
                     let q = query();
@@ -87,8 +92,13 @@ pub fn start() {
                 }),
             )
             .await;
-        if let (Err(e), Some(bridge)) = (&result, &bridge) {
-            bridge.post_failed(&format!("{e:?}"));
+        match (&result, &bridge) {
+            (Err(e), Some(bridge)) => bridge.post_failed(&format!("{e:?}")),
+            (Ok(()), Some(bridge)) => {
+                let pull = bridge.clone();
+                bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<WebShell>()?.app));
+            }
+            _ => {}
         }
         if let Some(el) = document.get_element_by_id(LOADING_ID) {
             match result {
@@ -120,6 +130,11 @@ struct WebShell {
 }
 
 impl eframe::App for WebShell {
+    // `WebRunner::app_mut` (the host's final copy, `host::Bridge::expose_final_copy`).
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+        Some(self)
+    }
+
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let dropped = ctx.input_mut(|i| std::mem::take(&mut i.raw.dropped_files));
         for f in dropped {

@@ -1,0 +1,78 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 14:00:00 +0500
+Subject: [PATCH] overlay: Times New Roman cells get a bundled serif face (Tinos) on the web
+
+Owner request 2026-11-10: Times New Roman everywhere. On the web there are no system fonts, so the serif role of the grid fell back to the sans UI face. The overlay's FONTS list may now carry a third face (office-fallback-serif, Tinos subset, Times New Roman's metric twin); it leads the serif font family behind an installed serif. Only sheets and slides pass the third face.
+Test: ui-egui overlay test times_new_roman_cells_resolve_to_the_bundled_serif.
+---
+ crates/ui-egui/build_office.rs             |  6 +++++-
+ crates/ui-egui/src/office_overlay.rs       |  6 ++++++
+ crates/ui-egui/src/office_overlay_tests.rs | 20 ++++++++++++++++++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/crates/ui-egui/build_office.rs b/crates/ui-egui/build_office.rs
+index 23ffd383..4dc49a1d 100644
+--- a/crates/ui-egui/build_office.rs
++++ b/crates/ui-egui/build_office.rs
+@@ -91,7 +91,11 @@ fn generate(dir: &Path) -> String {
+     let fonts: Vec<String> = get("FONTS").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect();
+     let mut list = String::new();
+     for (i, f) in fonts.iter().enumerate() {
+-        let key = if i == 0 { "office-fallback-sans" } else { "office-fallback-mono" };
++        let key = match i {
++            0 => "office-fallback-sans",
++            2 => "office-fallback-serif",
++            _ => "office-fallback-mono",
++        };
+         let _ = write!(list, "({key:?}, include_bytes!({:?}) as &[u8]), ", include_path(dir, f));
+     }
+     let _ = writeln!(o, "pub static FALLBACK_FONTS: &[(&str, &[u8])] = &[{list}];");
+diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
+index 82e17709..7943d379 100644
+--- a/crates/ui-egui/src/office_overlay.rs
++++ b/crates/ui-egui/src/office_overlay.rs
+@@ -96,6 +96,12 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
+         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
+     }
+     for (family, list) in defs.families.iter_mut() {
++        // Times New Roman and other serif names: the bundled serif leads the web chain (no system faces there), behind an installed one.
++        let serif = matches!(family, egui::FontFamily::Name(n) if **n == *crate::theme::SERIF);
++        if serif && FALLBACK_FONTS.iter().any(|(k, _)| *k == "office-fallback-serif") && !list.iter().any(|n| n == "office-fallback-serif") {
++            let at = list.iter().position(|n| !n.starts_with("sys-serif")).unwrap_or(list.len());
++            list.insert(at, "office-fallback-serif".into());
++        }
+         let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
+         let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
+         if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index f4ca85f2..e99ed059 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -89,6 +89,26 @@ fn fallback_font_covers_uzbek() {
+     }
+ }
+ 
++/// "Times New Roman" and the other serif names draw with a serif face: the bundled one leads the serif chain, ahead of the sans UI
++/// faces egui carries (on the web there is no installed Times New Roman to lead it).
++#[test]
++fn times_new_roman_cells_resolve_to_the_bundled_serif() {
++    if !o::ACTIVE || !o::FALLBACK_FONTS.iter().any(|(k, _)| *k == "office-fallback-serif") {
++        return;
++    }
++    let defs = crate::theme::font_definitions_for_language(Language::En);
++    for name in ["Times New Roman", "Times", "Liberation Serif", "Cambria"] {
++        let egui::FontFamily::Name(role) = crate::theme::cell_family(name, false, false) else { panic!("{name}: not a named family") };
++        let chain = &defs.families[&egui::FontFamily::Name(role)];
++        let first = chain.iter().find(|k| !k.starts_with("sys-")).map(String::as_str);
++        assert_eq!(first, Some("office-fallback-serif"), "{name}: {chain:?}");
++    }
++    let serif = o::FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif").map(|(_, b)| *b).unwrap_or_default();
++    for ch in "Times oʻzbek ҳқғў".chars().filter(|c| !c.is_whitespace()) {
++        assert_eq!(cmap_has(serif, ch), Some(true), "no glyph for {ch:?}");
++    }
++}
++
+ /// A sheet's text reaches the PDF export with a face that covers it (U+02BB included), also with no installed fonts.
+ #[test]
+ fn pdf_default_face_covers_uzbek() {

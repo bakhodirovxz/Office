@@ -6,6 +6,12 @@ Subject: [PATCH] gridcraft: rustfmt the files patches added after the first rust
 rustfmt --edition 2024 over the .rs files the queue touches, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Last patch of the queue: regenerate it on every sync and after a new patch leaves a file unformatted.
 ---
+ crates/engine/src/lib.rs        |  3 ++-
+ crates/ui-egui/src/backstage.rs | 10 +++++++++-
+ crates/ui-egui/src/lib.rs       |  6 +++++-
+ crates/ui-egui/src/panes.rs     |  7 ++++++-
+ crates/xlsx/src/sheet_write.rs  |  5 ++++-
+ 5 files changed, 26 insertions(+), 5 deletions(-)
 
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
 index 102fcc4..2c94b03 100644
@@ -60,18 +66,18 @@ index 08ef909..e0a00e2 100644
                      self.dialog = d;
                  } else {
 diff --git a/crates/ui-egui/src/panes.rs b/crates/ui-egui/src/panes.rs
-index 98ff28a..725b526 100644
+index e87e8b0..c40bddf 100644
 --- a/crates/ui-egui/src/panes.rs
 +++ b/crates/ui-egui/src/panes.rs
-@@ -92,7 +92,12 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
+@@ -93,7 +93,12 @@ fn comments(app: &mut SheetApp, ui: &mut Ui) {
                              app.run_or_alert("review.resolveComment", json!({"cell": cell, "resolved": !c.resolved}));
                          }
-                         let send = ui.small_button("Send").clicked();
--                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text("Reply…").desired_width(ui.available_width()));
+                         let send = ui.small_button(lang.tr("Send")).clicked();
+-                        let r = ui.add(egui::TextEdit::singleline(&mut draft).interactive(!app.session.read_only).hint_text(lang.tr("Reply…")).desired_width(ui.available_width()));
 +                        let r = ui.add(
 +                            egui::TextEdit::singleline(&mut draft)
 +                                .interactive(!app.session.read_only)
-+                                .hint_text("Reply…")
++                                .hint_text(lang.tr("Reply…"))
 +                                .desired_width(ui.available_width()),
 +                        );
                          if (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || send) && !draft.is_empty() {

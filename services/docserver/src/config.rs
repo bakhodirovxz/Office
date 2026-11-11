@@ -52,6 +52,9 @@ pub struct ProviderConfig {
     /// with stable keys.
     #[serde(default = "session")]
     pub history: String,
+    /// `uz-Latn`, `uz-Cyrl`, `ru` or `en`: the editors' language for this provider's sessions, over `editorConfig.lang` (a provider
+    /// whose own UI speaks a language ONLYOFFICE has not, and so always sends another). Unset: `editorConfig.lang` decides
+    pub ui_lang: Option<String>,
     /// the plugins this provider's users get (PLAN phase 7, section 8); the packages are in `[docserver.plugins] dir`
     #[serde(default)]
     pub plugins: Vec<PluginEntry>,
@@ -128,6 +131,9 @@ pub struct Config {
     pub keep_closed_hours: u64,
     /// any other session folder (never closed, or its close not acknowledged) is deleted this long after its last activity (Q10)
     pub keep_abandoned_days: u64,
+    /// an open edit session with no activity for this long (no ping, save or autosave: its page went away without a close) is closed
+    /// by the server, with its recovery copy as the last version (default 5)
+    pub close_idle_minutes: u64,
     pub plugins: PluginsConfig,
     /// accept a host page with an opaque (`null`) origin (docs/phase5/dropin.md D3b): no `frame-ancestors` and no `X-Frame-Options` on
     /// the wrapper page and the editors, and `null` counts as a frame origin of every provider. Any page can make its origin opaque,
@@ -159,6 +165,7 @@ impl Default for Config {
             keep_closed_hours: 168, // 7 days, as abandoned sessions (owner, 2026-10-31)
             keep_abandoned_days: 7,
             plugins: PluginsConfig::default(),
+            close_idle_minutes: 5,
             allow_opaque_origin: false,
             providers: vec![],
         }
@@ -188,6 +195,8 @@ pub struct Provider {
     pub plugins: Vec<ProviderPlugin>,
     /// the file types that may open in edit mode (lower case)
     pub edit_types: Vec<String>,
+    /// `ui_lang`: the editors' language, over `editorConfig.lang`
+    pub ui_lang: Option<String>,
 }
 
 /// A plugin of a provider: the package as it was when the server started, and what the admin set for it.
@@ -230,6 +239,8 @@ pub struct Docserver {
     /// the retention sweep's two periods, in seconds (`keep_closed_hours`, `keep_abandoned_days`)
     pub keep_closed_s: u64,
     pub keep_abandoned_s: u64,
+    /// `close_idle_minutes`, in seconds
+    pub close_idle_s: u64,
     /// `allow_opaque_origin`: no frame rule on our pages, `null` accepted as a frame origin
     pub allow_opaque_origin: bool,
     pub providers: Vec<Provider>,
@@ -399,6 +410,9 @@ impl Config {
         }
         if !(1..=365).contains(&self.keep_abandoned_days) {
             return Err("docserver: keep_abandoned_days must be 1 to 365".into());
+        }
+        if !(1..=1440).contains(&self.close_idle_minutes) {
+            return Err("docserver: close_idle_minutes must be 1 to 1440".into());
         }
         let xdfu_mode =
             xdfu_core::Mode::parse(&self.xdfu).map_err(|e| format!("docserver: {e}"))?;
@@ -581,6 +595,14 @@ impl Config {
                     v
                 }
             };
+            if let Some(l) = &p.ui_lang
+                && !["uz-Latn", "uz-Cyrl", "ru", "en"].contains(&l.as_str())
+            {
+                return Err(format!(
+                    "docserver: {} must be uz-Latn, uz-Cyrl, ru or en",
+                    at("ui_lang")
+                ));
+            }
             if secret == server_secret {
                 return Err(format!(
                     "docserver: {} holds the same secret as server_secret_file",
@@ -675,6 +697,7 @@ impl Config {
                 keep_history,
                 plugins,
                 edit_types,
+                ui_lang: p.ui_lang.clone(),
             });
         }
         for p in providers.iter().filter(|p| !p.require_exp) {
@@ -736,6 +759,7 @@ impl Config {
             diff_timeout_s: 120,
             keep_closed_s: self.keep_closed_hours * 3600,
             keep_abandoned_s: self.keep_abandoned_days * 86_400,
+            close_idle_s: self.close_idle_minutes * 60,
             allow_opaque_origin: self.allow_opaque_origin,
             providers,
             watch,
@@ -1450,6 +1474,8 @@ frame_origins = ["https://app.test"]
             ("keep_closed_hours", 8761),
             ("keep_abandoned_days", 0),
             ("keep_abandoned_days", 366),
+            ("close_idle_minutes", 0),
+            ("close_idle_minutes", 1441),
         ] {
             refused(
                 &d,
@@ -1491,6 +1517,25 @@ frame_origins = ["https://app.test"]
             .unwrap();
         assert!(!ds.providers[0].require_exp && ds.max_document_mb == 500);
         assert!(ds.providers[0].keep_history);
+        // the idle close: 5 minutes unless set; ui_lang: none unless set, and one of the four
+        assert!(ds.close_idle_s == 300 && ds.providers[0].ui_lang.is_none());
+        let ds = d
+            .toml(&|t| {
+                t.insert("close_idle_minutes".into(), 2.into());
+                prov(t).insert("ui_lang".into(), "uz-Latn".into());
+            })
+            .unwrap();
+        assert_eq!(
+            (ds.close_idle_s, ds.providers[0].ui_lang.as_deref()),
+            (120, Some("uz-Latn"))
+        );
+        refused(
+            &d,
+            &|t| {
+                prov(t).insert("ui_lang".into(), "uz".into());
+            },
+            "providers[0].ui_lang must be",
+        );
     }
 
     #[test]

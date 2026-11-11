@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] gridcraft ui-egui: suite-core is a wasm dependency too (web toolbar mode)
+
+Needed by gridcraft/0172: suite-core was a native-only dependency of ui-egui; the web build now calls suite_core::settings::toolbar_mode and set_toolbar_mode (localStorage), so it is a wasm dependency as well (deckcraft's ui-egui already has it for every target).
+
+---
+
+diff --git a/crates/ui-egui/Cargo.toml b/crates/ui-egui/Cargo.toml
+index fc187f9..92e97a8 100644
+--- a/crates/ui-egui/Cargo.toml
++++ b/crates/ui-egui/Cargo.toml
+@@ -41,6 +41,8 @@ xdfu-core = { path = "../../../../crates/xdfu-core" }
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ # Read the browser's preferred language for the first-run web interface language.
+ web-sys = { version = "0.3", features = ["Window", "Navigator"] }
++# patches/gridcraft/0172: the web reads and saves the toolbar mode through suite-core (localStorage)
++suite-core = { path = "../../../../crates/suite-core" }
+ 
+ [build-dependencies]
+ serde_json = { workspace = true }

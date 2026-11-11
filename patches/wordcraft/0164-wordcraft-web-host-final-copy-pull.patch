@@ -1,0 +1,132 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 10 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: window.__hostFinalCopy(), the parent's synchronous pull of the unsaved document as it closes
+
+The document server's wrapper page closes the session in its own pagehide (the host removed it: HRM's Back runs destroyEditor() and empties the container at once). That pagehide runs before this page's, so a postMessage handover from here reaches a parent already gone, and an edit made in the last 3 s (before the debounced autosave) was lost (status 4). Now the bridge sets window.__hostFinalCopy(): the wrapper calls it synchronously and sends the bytes in its keepalive close. It returns the document as the autosave would send it when it has unsaved changes not handed over yet, else null (clean, read only, already handed over), and counts as a handover so the autosave does not send the same state again. The web shell implements App::as_any_mut so the closure reaches the app through WebRunner::app_mut.
+
+---
+
+diff --git a/apps/wordcraft-web/src/autosave.rs b/apps/wordcraft-web/src/autosave.rs
+index 55b21969..24060d81 100644
+--- a/apps/wordcraft-web/src/autosave.rs
++++ b/apps/wordcraft-web/src/autosave.rs
+@@ -44,6 +44,11 @@ impl Debounce {
+         self.last_sent = Some(now);
+     }
+ 
++    /// Revision `rev` was handed over already.
++    pub fn was_sent(&self, rev: u64) -> bool {
++        self.sent == Some(rev)
++    }
++
+     /// One frame of an unsaved, editable document at revision `rev`, `now` in milliseconds.
+     pub fn tick(&mut self, rev: u64, now: f64) -> Tick {
+         if self.sent == Some(rev) {
+@@ -111,6 +116,7 @@ mod tests {
+         d.reset();
+         assert_eq!(d.tick(5, 10_000.0), Tick::Wait(3_000.0), "an unsaved document at the same revision is new again");
+         d.mark_sent(5, 10_500.0);
++        assert!(d.was_sent(5) && !d.was_sent(6));
+         assert_eq!(d.tick(5, 20_000.0), Tick::Idle);
+     }
+ }
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 2be8e477..77f1f694 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -56,7 +56,8 @@ pub fn start() {
+             log::error!("no unsaved-changes guard: {e}");
+         }
+         let app_bridge = bridge.clone();
+-        let result = eframe::WebRunner::new()
++        let runner = eframe::WebRunner::new();
++        let result = runner
+             .start(
+                 canvas,
+                 options,
+@@ -136,8 +137,13 @@ pub fn start() {
+                 }),
+             )
+             .await;
+-        if let (Err(e), Some(bridge)) = (&result, &bridge) {
+-            bridge.post_failed(&format!("{e:?}"));
++        match (&result, &bridge) {
++            (Err(e), Some(bridge)) => bridge.post_failed(&format!("{e:?}")),
++            (Ok(()), Some(bridge)) => {
++                let pull = bridge.clone();
++                bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<WebShell>()?.app));
++            }
++            _ => {}
+         }
+         if let Some(el) = document.get_element_by_id(LOADING_ID) {
+             match result {
+@@ -195,6 +201,11 @@ fn stored_prefs() -> Option<String> {
+ }
+ 
+ impl eframe::App for WebShell {
++    // `WebRunner::app_mut` (the host's final copy, `host::Bridge::expose_final_copy`).
++    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
++        Some(self)
++    }
++
+     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+         let dropped = ctx.input_mut(|i| std::mem::take(&mut i.raw.dropped_files));
+         for f in dropped {
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+index 8ea965ff..37cd8671 100644
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -26,6 +26,9 @@
+ //!   has unsaved changes (at least every 30 s of continuous editing, never twice within 3 s), so
+ //!   the parent holds the work if the browser then kills the page. It is not a save: the document
+ //!   stays dirty, and nothing is sent for a clean or read-only document.
++//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the document as `wordcraft:autosave` would send it, a
++//!   `Uint8Array`, when it has unsaved changes not handed over yet; `null` otherwise (clean, read only, already handed over).
++//!   The parent calls it as it ends the session (its `pagehide` runs before this page's). It counts as a handover.
+ //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
+ //! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
+ //!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no required parameter,
+@@ -279,13 +282,39 @@ impl Bridge {
+         if self.autosave.replace(false) && app.session.dirty {
+             self.debounce.borrow_mut().mark_sent(app.session.rev(), js_sys::Date::now());
+             let name = self.name.borrow().clone();
+-            match wordcraft_ui_egui::office_overlay::autosave_bytes(app, &name).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
+-                Ok(()) => {}
+-                Err(e) => log::error!("couldn't hand {name} to the page for safekeeping: {e}"),
++            if let Err(e) = self.unsaved_bytes(app).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
++                log::error!("couldn't hand {name} to the page for safekeeping: {e}");
+             }
+         }
+     }
+ 
++    /// The document with its unsaved changes, as `wordcraft:autosave` hands it over.
++    fn unsaved_bytes(&self, app: &WordApp) -> Result<Vec<u8>, String> {
++        wordcraft_ui_egui::office_overlay::autosave_bytes(app, &self.name.borrow())
++    }
++
++    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the document
++    /// when it has unsaved changes not handed over yet, else `None` (clean, read only, or the last autosave holds them). It
++    /// counts as a handover, so the autosave doesn't send the same state again.
++    pub fn final_copy(&self, app: &WordApp) -> Option<Vec<u8>> {
++        let rev = app.session.rev();
++        if !app.session.dirty || self.read_only.get() || self.debounce.borrow().was_sent(rev) {
++            return None;
++        }
++        self.debounce.borrow_mut().mark_sent(rev, js_sys::Date::now());
++        self.unsaved_bytes(app).map_err(|e| log::error!("couldn't hand the document to the page as it closed: {e}")).ok()
++    }
++
++    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
++    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
++    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
++        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
++        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
++            // It lives as long as the page.
++            f.forget();
++        }
++    }
++
+     /// Hidden tabs and vanishing pages (`visibilitychange`, `pagehide`) may be the last chance to
+     /// get the work out, and a lost WebGL context leaves a page that can't be drawn again. eframe
+     /// keeps running the app's logic in a hidden tab (on a timer), so the flag set here is seen.

@@ -28,8 +28,9 @@ Rules for lanes:
   reads the file every call. Do not call it per frame.
 - **Never fails.** A missing file, an unknown key, a bad value or a corrupt file all give defaults (see below). There is
   nothing to unwrap. `set_toolbar_mode` returns an error only when the folder cannot be written; show nothing for it, log it.
-- **Web (`wasm32`).** There is no file. `load()` returns the defaults (`Simple`), so the web is always simple. A lane may
-  also guard with `cfg(target_arch = "wasm32")` and skip the call.
+- **Web (`wasm32`).** There is no file. `toolbar_mode()` is the user's saved choice (`localStorage` key `suite.toolbar`, written by
+  `set_toolbar_mode`), else the URL's `?toolbar=full|simple` (the document server passes it), else `Simple`
+  (`settings::resolve_toolbar`). The other keys read as the defaults.
 - **PDF ignores `toolbar`.**
 - Tests of an app must not touch the real user file: debug builds honour `SUITE_SETTINGS_DIR=<folder>` (a release build
   ignores it), or call `settings::load_in` / `settings::set_in` on a temp folder.

@@ -187,6 +187,7 @@ mod tests {
             diff_timeout_s: 120,
             keep_closed_s: 24 * 3600,
             keep_abandoned_s: 7 * 86_400,
+            close_idle_s: 300,
             allow_opaque_origin: false,
             providers: vec![Provider {
                 name: "p".into(),
@@ -199,6 +200,7 @@ mod tests {
                 keep_history: false,
                 plugins: vec![],
                 edit_types: vec!["docx".into()],
+                ui_lang: None,
             }],
         })
     }

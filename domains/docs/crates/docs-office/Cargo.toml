@@ -25,9 +25,10 @@ docs-plugins = { path = "../docs-plugins" }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
 
-# The shared per-user settings (WP5): desktop only, the web build has no toggle and no file.
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# The shared per-user settings (WP5): a file on the desktop, localStorage and ?toolbar= on the web.
 suite-core = { path = "../../../../crates/suite-core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 xdfu-core = { path = "../../../../crates/xdfu-core" }
 # Phase 7: the native plugin host (wasmtime) behind docs_plugins::Guest. Not in the wasm32 build.
 plugin-host = { path = "../../../../crates/plugin-host" }

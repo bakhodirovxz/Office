@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 9 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft-web: without ?lang= the interface follows the browser language
+
+Hengines task 1. The document server opens Slides with ?lang=<tag> (0147 already applied it) but older shells and a bare URL passed nothing, and the interface came up in English because the `auto` language means English in deckcraft. Without ?lang= the web build now follows navigator.language, as the other three editors do; a regional tag (ru-RU, uz-UZ) falls back to its language. Web preferences are not persisted in Slides, so there is no saved user choice to protect. Needs web-sys "Navigator".
+
+---
+
+diff --git a/apps/deckcraft-web/Cargo.toml b/apps/deckcraft-web/Cargo.toml
+index 98988bb3..264d5a5c 100644
+--- a/apps/deckcraft-web/Cargo.toml
++++ b/apps/deckcraft-web/Cargo.toml
+@@ -27,7 +27,7 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "Navigator", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
+ 
+ # office overlay (patches/deckcraft/0158): the domain build turns this on and adds the slides-plugins dependency (Phase 7 WP13)
+ [features]
+diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
+index cf4d5b18..608d553a 100644
+--- a/apps/deckcraft-web/src/web.rs
++++ b/apps/deckcraft-web/src/web.rs
+@@ -60,8 +60,12 @@ pub fn start() {
+                     // `?theme=` (patches/deckcraft/0154): the web shell's theme, applied at the first frame.
+                     deckcraft_ui_egui::office_overlay::set_start_theme(query_param("theme").as_deref());
+                     let mut app = SlideApp::new(Session::new(), services);
+-                    // `?lang=`: the web shell's language (Slides has no browser detection of its own).
+-                    if let Some(lang) = query_param("lang").and_then(|l| deckcraft_ui_egui::i18n::Lang::from_tag(&l)) {
++                    // `?lang=`: the web shell's language; without it the browser's (preferences are not persisted here, and `auto`
++                    // would mean English). A regional tag (`ru-RU`) falls back to its language.
++                    let tag = query_param("lang").or_else(|| web_sys::window().and_then(|w| w.navigator().language())).unwrap_or_default();
++                    let lang = deckcraft_ui_egui::i18n::Lang::from_tag(&tag)
++                        .or_else(|| tag.split(['-', '_']).next().and_then(deckcraft_ui_egui::i18n::Lang::from_tag));
++                    if let Some(lang) = lang {
+                         app.ui.language = lang.code().to_string();
+                     }
+                     let q = query();

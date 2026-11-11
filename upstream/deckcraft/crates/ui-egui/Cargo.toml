@@ -25,6 +25,8 @@ log = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3"
+# patches/deckcraft/0174: the web reads and saves the toolbar mode through suite-core (localStorage)
+suite-core = { path = "../../../../crates/suite-core" }
 
 # the shared per-user settings (the toolbar mode); the web has no settings file
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
