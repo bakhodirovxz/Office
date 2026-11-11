@@ -22,9 +22,13 @@
 //!   `ok: true` lets the unsaved mark go (if nothing was edited since); `ok: false` keeps it, and
 //!   marks a document that was clean after the save as unsaved again.
 //! - `wordcraft:autosave` (to the parent): `{ name, bytes }`, the document with its unsaved changes,
-//!   sent when the tab is hidden or the page goes away, and every `AUTOSAVE_MS` while the document
-//!   has unsaved changes, so the parent holds the work if the browser then kills the page. It is
-//!   not a save: the document stays dirty, and nothing is sent for a clean or read-only document.
+//!   sent when the tab is hidden or the page goes away, 3 s after the last edit while the document
+//!   has unsaved changes (at least every 30 s of continuous editing, never twice within 3 s), so
+//!   the parent holds the work if the browser then kills the page. It is not a save: the document
+//!   stays dirty, and nothing is sent for a clean or read-only document.
+//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the document as `wordcraft:autosave` would send it, a
+//!   `Uint8Array`, when it has unsaved changes not handed over yet; `null` otherwise (clean, read only, already handed over).
+//!   The parent calls it as it ends the session (its `pagehide` runs before this page's). It counts as a handover.
 //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `wordcraft:commands` (from the parent): list the commands. The answer, `wordcraft:commands` (to the
 //!   parent), is `{ commands: [{ id, label, enabled, shortcut }] }`: the commands that need no required parameter,
@@ -52,13 +56,11 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::closure::Closure;
 use wordcraft_ui_egui::{Inbox, Services, WordApp};
 
+/// Room kept beside a page (screen points) before a page at 100 % counts as wider than the view.
+const FIT_MARGIN: f32 = 48.0;
+
 /// The name a document gets when the parent opened none.
 const DEFAULT_NAME: &str = "document.docx";
-
-/// How often the unsaved document is handed to the parent while it has unsaved changes
-/// (ARCHITECTURE-DECISION 2.4 names no period; 30 s loses at most half a minute of typing and
-/// costs one docx build per period, only while editing).
-const AUTOSAVE_MS: f64 = 30_000.0;
 
 #[derive(Clone)]
 pub struct Bridge {
@@ -84,14 +86,16 @@ pub struct Bridge {
     pending: Rc<Cell<u32>>,
     /// Answers (`ok`) received since the last frame.
     acks: Rc<RefCell<Vec<bool>>>,
-    /// When the unsaved document was last handed over by the periodic autosave (`None`: clean).
-    last_autosave: Rc<Cell<Option<f64>>>,
+    /// When the unsaved document is next handed over by the periodic autosave (see `autosave`).
+    debounce: Rc<RefCell<crate::autosave::Debounce>>,
     /// The unsaved-changes state last reported to the parent.
     reported: Rc<Cell<Option<bool>>>,
     /// The document shown when the parent was last told (`wordcraft:opened`).
     document: Rc<Cell<Option<u64>>>,
     /// The name of the document the parent opened last.
     name: Rc<RefCell<String>>,
+    /// Frames left before the zoom of a document just opened is judged (see `sync`).
+    zoom_check: Rc<Cell<u8>>,
 }
 
 impl Bridge {
@@ -120,10 +124,11 @@ impl Bridge {
             runs: Rc::default(),
             pending: Rc::default(),
             acks: Rc::default(),
-            last_autosave: Rc::default(),
+            debounce: Rc::default(),
             reported: Rc::default(),
             document: Rc::default(),
             name: Rc::new(RefCell::new(DEFAULT_NAME.to_string())),
+            zoom_check: Rc::default(),
         })
     }
 
@@ -186,6 +191,26 @@ impl Bridge {
         }
         if !warming && self.document.replace(Some(id)).is_some_and(|shown| shown != id) {
             self.send(&[("type", "wordcraft:opened".into()), ("name", self.name.borrow().as_str().into())]);
+            // A host-opened document starts at 100 %, whatever zoom or fit mode the file was saved with.
+            let dirty = app.session.dirty;
+            let _ = app.run("view.zoom", json!({"value": 100}));
+            app.session.dirty = dirty;
+            self.zoom_check.set(3);
+        }
+        // Once the page is laid out (a frame or two later): fit the width only when the page at
+        // 100 % is wider than the view.
+        if self.zoom_check.get() > 0 {
+            self.zoom_check.set(self.zoom_check.get() - 1);
+            if self.zoom_check.get() == 0
+                && let (Some(view), Some(page)) = (app.canvas.canvas_rect, app.canvas.page_rects.first())
+                && app.canvas.scale > 0.0
+                && page.width() / app.canvas.scale * wordcraft_ui_egui::canvas::PX_PER_PT > view.width() - FIT_MARGIN
+            {
+                let dirty = app.session.dirty;
+                let _ = app.run("view.pageWidth", json!({}));
+                app.session.dirty = dirty;
+            }
+            ctx.request_repaint();
         }
         // The phone layout's row is the only bar (wordcraft/0143): the shell hides its header while it is on, and Back is the shell's Home.
         #[cfg(feature = "office-ext")]
@@ -243,28 +268,52 @@ impl Bridge {
             // The saved document is clean now: a frame reports it (`Services::on_dirty`).
             ctx.request_repaint();
         }
-        // The periodic autosave, only while there are unsaved changes.
+        // The periodic autosave, only while there are unsaved changes: shortly after the last edit,
+        // and at the latest every `autosave::MAX_MS` of continuous editing.
         if app.session.dirty && !self.read_only.get() {
-            let now = js_sys::Date::now();
-            let last = self.last_autosave.get().unwrap_or(now);
-            if now - last >= AUTOSAVE_MS {
-                self.autosave.set(true);
-                self.last_autosave.set(Some(now));
-            } else {
-                self.last_autosave.set(Some(last));
-                // An idle page draws no frames: wake up when the period is over.
-                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
+            match self.debounce.borrow_mut().tick(app.session.rev(), js_sys::Date::now()) {
+                crate::autosave::Tick::Send => self.autosave.set(true),
+                // An idle page draws no frames: wake up when the time is up.
+                crate::autosave::Tick::Wait(ms) => ctx.request_repaint_after(std::time::Duration::from_millis(ms as u64 + 1)),
+                crate::autosave::Tick::Idle => {}
             }
         } else {
-            self.last_autosave.set(None);
+            self.debounce.borrow_mut().reset();
         }
         // Not through `file.save`: the document stays dirty and the browser downloads nothing.
         if self.autosave.replace(false) && app.session.dirty {
+            self.debounce.borrow_mut().mark_sent(app.session.rev(), js_sys::Date::now());
             let name = self.name.borrow().clone();
-            match wordcraft_ui_egui::office_overlay::autosave_bytes(app, &name).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
-                Ok(()) => {}
-                Err(e) => log::error!("couldn't hand {name} to the page for safekeeping: {e}"),
+            if let Err(e) = self.unsaved_bytes(app).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
+                log::error!("couldn't hand {name} to the page for safekeeping: {e}");
             }
+        }
+    }
+
+    /// The document with its unsaved changes, as `wordcraft:autosave` hands it over.
+    fn unsaved_bytes(&self, app: &WordApp) -> Result<Vec<u8>, String> {
+        wordcraft_ui_egui::office_overlay::autosave_bytes(app, &self.name.borrow())
+    }
+
+    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the document
+    /// when it has unsaved changes not handed over yet, else `None` (clean, read only, or the last autosave holds them). It
+    /// counts as a handover, so the autosave doesn't send the same state again.
+    pub fn final_copy(&self, app: &WordApp) -> Option<Vec<u8>> {
+        let rev = app.session.rev();
+        if !app.session.dirty || self.read_only.get() || self.debounce.borrow().was_sent(rev) {
+            return None;
+        }
+        self.debounce.borrow_mut().mark_sent(rev, js_sys::Date::now());
+        self.unsaved_bytes(app).map_err(|e| log::error!("couldn't hand the document to the page as it closed: {e}")).ok()
+    }
+
+    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+            // It lives as long as the page.
+            f.forget();
         }
     }
 

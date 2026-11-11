@@ -810,7 +810,13 @@ fn region_name(code: &str) -> String {
 
 /// The language at the caret (resolved through the styles), translated, for the status bar.
 pub(crate) fn caret_language(app: &WordApp) -> String {
-    tl!(&language_name(caret_lang_tag(app).as_deref())).to_string()
+    let tag = caret_lang_tag(app);
+    // A document with no language at all, in an Uzbek interface: its people write Uzbek, so the
+    // status bar names the interface language (its own name) instead of claiming English.
+    if tag.is_none() && crate::i18n::current().code().starts_with("uz") {
+        return crate::i18n::current().name().to_string();
+    }
+    tl!(&language_name(tag.as_deref())).to_string()
 }
 
 /// The language tag at the caret, resolved through the styles and the document default.
@@ -3335,6 +3341,18 @@ mod tests {
         assert!(h.state().ui.backstage, "File › Options opened");
         assert_eq!(h.state().ui.options_pane, "language");
         assert_eq!(language_name(Some("de-DE")), "German (Germany)");
+    }
+
+    /// A document with no language at all, in an Uzbek interface, is not announced as English.
+    #[cfg(office_uz)]
+    #[test]
+    fn status_bar_language_of_an_untagged_document_follows_an_uzbek_interface() {
+        let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Salom")), crate::Services::default());
+        assert!(caret_lang_tag(&app).is_none());
+        crate::i18n::set_current(crate::i18n::Lang::from_code("uz-latn").expect("the overlay adds uz-latn"));
+        assert_eq!(caret_language(&app), crate::i18n::current().name());
+        crate::i18n::set_current(crate::i18n::Lang::EN);
+        assert_eq!(caret_language(&app), "English (United States)");
     }
 
     #[test]

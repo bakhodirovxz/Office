@@ -857,7 +857,43 @@ const OWN_DECK_0146: [&str; 11] = [
     "A3 (297 × 420 mm)",
 ];
 
+/// Sheets strings the host-mode screens (Sheets web, docs/phase5/hengines.md) draw that no upstream language table holds:
+/// the Share menu, the Comments pane and the title bar's overflow menu, now translated at their call sites
+/// (patches/gridcraft/0171). (context, English)
+const OWN_GRID_HE: [(&str, &str); 16] = [
+    (
+        "",
+        "AutoSave: save after every change (workbooks saved to a file)",
+    ),
+    ("", "Export as PDF…"),
+    ("", "Save a Copy as Excel Workbook (.xlsx)…"),
+    ("", "Export as CSV…"),
+    ("", "Export as Web Page (.html)…"),
+    (
+        "",
+        "No comments on this sheet yet. Select a cell and choose New Comment.",
+    ),
+    ("", "Resolved"),
+    ("", "Resolve"),
+    ("", "Reopen"),
+    ("", "Send"),
+    ("", "Reply…"),
+    ("", "Save As…"),
+    ("", "Print…"),
+    ("", "New Workbook"),
+    ("", "Page Break Preview"),
+    ("", "Format Chart Area"),
+];
+
 fn add_own(unis: &mut [Universe]) {
+    for u in unis.iter_mut().filter(|u| u.app == "gridcraft") {
+        for (ctx, en) in OWN_GRID_HE.into_iter().chain([("", "Selection")]) {
+            let e = u.keys.entry((ctx.to_string(), en.to_string())).or_default();
+            if e.where_.is_empty() {
+                e.where_ = "patches/gridcraft/0171".into();
+            }
+        }
+    }
     for u in unis.iter_mut().filter(|u| u.app == "gridcraft") {
         for (ctx, en) in OWN_GRID_0146 {
             let e = u.keys.entry((ctx.to_string(), en.to_string())).or_default();

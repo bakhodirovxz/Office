@@ -188,6 +188,8 @@
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
         $('ed-status').textContent = t('ed.saved', { name }); f.dirty = false; saved(f, name);
         if ($('editor').classList.contains('phone')) toast(t('ed.saved', { name }));
+        // the bridges keep a document unsaved until the host says it stored it (R6): the download is the shell's storing
+        f.el.contentWindow.postMessage({ type: f.app.prefix + ':saved', ok: true }, location.origin);
         remember(f.app.id, name, bytes.slice(0));
         break;
       }
@@ -297,6 +299,8 @@
   window.hostOpenFailed = (r) => fail(String(r.error));
   window.hostSaved = (r) => {
     const s = S.saving; S.saving = null;
+    // R6: the editor keeps its unsaved mark until the host says it stored the document (ok: false keeps it)
+    if (s) s.f.el.contentWindow?.postMessage({ type: s.f.app.prefix + ':saved', ok: !!r.ok }, location.origin);
     if (!r.ok) return fail(String(r.error));   // the document stays dirty: nothing was written
     if (s) { s.f.dirty = false; saved(s.f, s.name); remember(s.f.app.id, r.name || s.name, s.copy); }
     const msg = t('ed.saved', { name: r.name || (s && s.name) });

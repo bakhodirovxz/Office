@@ -4072,3 +4072,24 @@ fn a_shape_in_front_of_edited_text_takes_the_click() {
     let st = s.doc().unwrap();
     assert!(st.selection.text.as_ref().is_none_or(|t| t.shape.0 as u64 != tb), "the click on the member in front left the text: {:?}", st.selection);
 }
+
+#[test]
+fn an_empty_deck_opens_in_times_new_roman_and_one_with_text_keeps_its_font() {
+    // A python-pptx-like blank: Calibri theme fonts, one slide of empty placeholders. Synthetic bytes.
+    let mut p = deckcraft_model::defaults::new_presentation(None);
+    for m in &mut p.masters {
+        let f = &mut std::sync::Arc::make_mut(m).theme.fonts;
+        f.major.latin = "Calibri".into();
+        f.minor.latin = "Calibri".into();
+    }
+    let fonts = |p: &deckcraft_model::Presentation| {
+        p.masters.iter().map(|m| (m.theme.fonts.major.latin.clone(), m.theme.fonts.minor.latin.clone())).collect::<Vec<_>>()
+    };
+    let opened = crate::cmd::file::open_presentation("blank.pptx", &deckcraft_pptx::export(&p).unwrap()).unwrap();
+    assert!(fonts(&opened).iter().all(|f| f.0 == "Times New Roman" && f.1 == "Times New Roman"), "{:?}", fonts(&opened));
+
+    let sh = std::sync::Arc::make_mut(&mut p.slides[0]).shapes.iter_mut().find(|s| s.ph.is_some()).unwrap();
+    sh.text = Some(deckcraft_model::text::TextBody::from_text("Hello"));
+    let kept = crate::cmd::file::open_presentation("full.pptx", &deckcraft_pptx::export(&p).unwrap()).unwrap();
+    assert!(fonts(&kept).iter().all(|f| f.0 == "Calibri"), "{:?}", fonts(&kept));
+}

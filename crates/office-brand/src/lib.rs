@@ -50,6 +50,7 @@ pub struct Brand {
     pub links: [String; 3],
     pub fallback_sans: String,
     pub fallback_mono: String,
+    pub fallback_serif: String,
 }
 
 fn table<'a>(t: &'a Table, key: &str) -> Result<&'a Table, String> {
@@ -197,7 +198,11 @@ impl Brand {
         let l = table(root, "links")?;
         only_keys(l, "[links]", &["website", "help", "source"])?;
         let f = table(root, "fonts")?;
-        only_keys(f, "[fonts]", &["fallback_sans", "fallback_mono"])?;
+        only_keys(
+            f,
+            "[fonts]",
+            &["fallback_sans", "fallback_mono", "fallback_serif"],
+        )?;
         let mut apps = Vec::new();
         for (key, item) in table(root, "apps")?.iter() {
             let t = item
@@ -295,6 +300,7 @@ impl Brand {
             ],
             fallback_sans: string(f, "[fonts]", "fallback_sans")?,
             fallback_mono: string(f, "[fonts]", "fallback_mono")?,
+            fallback_serif: string(f, "[fonts]", "fallback_serif")?,
         };
         b.validate()?;
         Ok(b)
@@ -449,7 +455,17 @@ impl Brand {
         kv("LINK_SOURCE", &self.links[2]);
         kv("ICON_PNG", "icon-256.png");
         kv("LOGO_RGBA", "logo-128.rgba");
-        kv("FONTS", "fallback-sans.ttf,fallback-mono.ttf");
+        // Sheets and Slides run on the web with no system fonts: a third face (key office-fallback-serif) gives
+        // "Times New Roman" a serif. Docs and PDF bundle their own, and their build scripts name every entry after the first as mono.
+        let serif = if matches!(app.key.as_str(), "sheets" | "slides") {
+            ",fallback-serif.ttf"
+        } else {
+            ""
+        };
+        kv(
+            "FONTS",
+            &format!("fallback-sans.ttf,fallback-mono.ttf{serif}"),
+        );
         o
     }
 
@@ -509,6 +525,7 @@ impl Brand {
         for (dst, src) in [
             ("fallback-sans.ttf", &self.fallback_sans),
             ("fallback-mono.ttf", &self.fallback_mono),
+            ("fallback-serif.ttf", &self.fallback_serif),
         ] {
             let bytes = fs::read(assets_fonts.join(src)).map_err(|e| format!("{src}: {e}"))?;
             w(dst, &bytes)?;
@@ -547,6 +564,27 @@ mod tests {
             "UPSTREAM_NAMES=PdfCraft",
         ] {
             assert!(env.contains(k), "missing {k}");
+        }
+    }
+
+    #[test]
+    fn only_sheets_and_slides_carry_the_serif_face() {
+        let b = repo_brand();
+        let fonts = |app: &str| {
+            let env = b.overlay_env(b.app(app).unwrap());
+            env.lines()
+                .find_map(|l| l.strip_prefix("FONTS="))
+                .unwrap()
+                .to_string()
+        };
+        for app in ["sheets", "slides"] {
+            assert_eq!(
+                fonts(app),
+                "fallback-sans.ttf,fallback-mono.ttf,fallback-serif.ttf"
+            );
+        }
+        for app in ["docs", "pdf"] {
+            assert_eq!(fonts(app), "fallback-sans.ttf,fallback-mono.ttf");
         }
     }
 

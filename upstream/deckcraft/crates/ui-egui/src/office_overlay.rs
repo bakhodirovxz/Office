@@ -95,7 +95,8 @@ pub fn icon_png() -> Option<&'static [u8]> {
 /// embedded), because that face draws Latin and Cyrillic with CJK full-width advances (absurd letter spacing in uz-Cyrl).
 /// CJK text still reaches the CJK face: the subset has no CJK glyphs.
 pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
-    for (key, bytes) in FALLBACK_FONTS {
+    // The serif face is for the slide font database (`register_document_fonts`); egui's interface stacks never use it.
+    for (key, bytes) in FALLBACK_FONTS.iter().filter(|(k, _)| *k != "office-fallback-serif") {
         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
     }
     for (family, list) in defs.families.iter_mut() {
@@ -124,12 +125,16 @@ pub fn paint_logo(p: &egui::Painter, r: egui::Rect) -> bool {
     true
 }
 
-/// Register the sans fallback in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
+/// Register the sans and serif fallbacks in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
 /// Cyrillic: the database asks every loaded face before it gives up on a character.
 pub fn register_document_fonts() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         if let Some((_, bytes)) = FALLBACK_FONTS.first() {
+            deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
+        }
+        // Tinos: Times New Roman's metric twin, found through `substitutes`, so a deck in Times New Roman has serifs on the web too.
+        if let Some((_, bytes)) = FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif") {
             deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
         }
         use_shared_dictionaries();
@@ -138,14 +143,12 @@ pub fn register_document_fonts() {
 
 static TOOLBAR_SIMPLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
-/// Should a window start with the simplified toolbar (`office_toolbar`)? The web build always does. Elsewhere it is the shared
-/// `toolbar` setting (`simple` unless `settings.toml` says `full`), read once at the first call. This crate's own tests start
+/// Should a window start with the simplified toolbar (`office_toolbar`)? It is the shared `toolbar` setting, read once at the first
+/// call: on the desktop `simple` unless `settings.toml` says `full`; on the web the saved choice in localStorage, then the URL's
+/// `?toolbar=`, then simple (suite_core::settings::toolbar_mode). This crate's own tests start
 /// with the upstream ribbon, which is what upstream's UI tests drive; the toolbar tests choose the mode per window.
 pub fn toolbar_default() -> bool {
-    if cfg!(target_arch = "wasm32") {
-        return true;
-    }
-    #[cfg(not(any(target_arch = "wasm32", test)))]
+    #[cfg(not(test))]
     {
         static LOAD: std::sync::Once = std::sync::Once::new();
         LOAD.call_once(|| set_toolbar_default(suite_core::settings::toolbar_mode() == suite_core::settings::ToolbarMode::Simple));
@@ -160,7 +163,7 @@ fn set_toolbar_default(simple: bool) {
 /// The user switched: remember it for this process and store it in the shared settings, where the other apps read it at their next start.
 pub(crate) fn toolbar_changed(simple: bool) {
     set_toolbar_default(simple);
-    #[cfg(not(any(target_arch = "wasm32", test)))]
+    #[cfg(not(test))]
     {
         use suite_core::settings::{ToolbarMode, set_toolbar_mode};
         if let Err(e) = set_toolbar_mode(if simple { ToolbarMode::Simple } else { ToolbarMode::Full }) {

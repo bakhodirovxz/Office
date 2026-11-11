@@ -165,10 +165,31 @@ pub fn open_checked(name: &str, bytes: &[u8]) -> Result<(Presentation, Damage)> 
     open_other(name, bytes).map(|(p, slides)| (p, Damage { media: vec![], slides }))
 }
 
+/// office overlay (deckcraft/0185): a deck whose slides hold nothing but empty placeholders (python-pptx's blank one-slide
+/// file from HRM) opens with Times New Roman as every master's heading and body Latin font (owner decision 2026-11-10). Only
+/// the in-memory model changes, so it is not dirty; a deck with content keeps its fonts. Only PPTX files; the size is kept.
+fn default_font_when_empty(p: &mut Presentation) {
+    let empty = p.slides.iter().all(|sl| {
+        sl.notes.is_empty()
+            && sl
+                .shapes
+                .iter()
+                .all(|sh| sh.ph.is_some() && matches!(sh.kind, deckcraft_model::ShapeKind::Shape) && sh.text.as_ref().is_none_or(|t| t.is_empty()))
+    });
+    if empty {
+        for m in &mut p.masters {
+            let t = &mut std::sync::Arc::make_mut(m).theme.fonts;
+            t.major.latin = NEW_DECK_FONT.into();
+            t.minor.latin = NEW_DECK_FONT.into();
+        }
+    }
+}
+
 fn open_other(name: &str, bytes: &[u8]) -> Result<(Presentation, Vec<String>)> {
     if deckcraft_pptx::sniff(bytes) {
         let (mut p, lost_slides) = deckcraft_pptx::import_checked(bytes).map_err(|e| EngineError::Other(e.to_string()))?;
         deckcraft_format::repair(&mut p);
+        default_font_when_empty(&mut p);
         return Ok((p, lost_slides));
     }
     if deckcraft_pptx::is_encrypted(bytes) {

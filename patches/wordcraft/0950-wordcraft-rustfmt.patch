@@ -7,20 +7,20 @@ Subject: [PATCH] wordcraft: rustfmt the files the patch queue touches
 rustfmt --edition 2024 over every .rs file touched by the queue, so cargo fmt --all --check is clean in CI lint. No behaviour change.
 Always the last patch of the queue: scripts/sync-upstream.sh regenerates it (--fmt, or implied when the queue has one), never rebases it.
 ---
- apps/wordcraft-web/src/web.rs        |  6 +++-
- apps/wordcraft-web/src/web/host.rs   | 13 +++++--
- crates/layout/src/lib.rs             |  8 ++++-
- crates/ui-egui/src/backstage.rs      | 53 ++++++++++++----------------
- crates/ui-egui/src/canvas.rs         |  4 ++-
- crates/ui-egui/src/office_overlay.rs |  4 ++-
- crates/ui-egui/src/touch_select.rs   | 10 ++++--
+ apps/wordcraft-web/src/web.rs        |  6 +++++-
+ apps/wordcraft-web/src/web/host.rs   | 13 ++++++++++---
+ crates/layout/src/lib.rs             |  8 +++++++-
+ crates/ui-egui/src/backstage.rs      | 53 +++++++++++++++++++++++------------------------------
+ crates/ui-egui/src/canvas.rs         |  4 +++-
+ crates/ui-egui/src/office_overlay.rs |  4 +++-
+ crates/ui-egui/src/touch_select.rs   | 10 ++++++++--
  7 files changed, 59 insertions(+), 39 deletions(-)
 
 diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
-index 2be8e47..265501d 100644
+index 77f1f69..99ef5ff 100644
 --- a/apps/wordcraft-web/src/web.rs
 +++ b/apps/wordcraft-web/src/web.rs
-@@ -86,7 +86,11 @@ pub fn start() {
+@@ -87,7 +87,11 @@ pub fn start() {
                      // The phone layout (patches/wordcraft/0140): `?phone=on` or `=off` forces it, else a narrow window with a finger gets it.
                      #[cfg(feature = "office-ext")]
                      {
@@ -34,10 +34,10 @@ index 2be8e47..265501d 100644
                          docs_office::phone::set_keyboard(toggle_keyboard);
                          // egui's point need not be a CSS px (device pixel ratio, zoom factor), so the layout sizes itself in dp from this.
 diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
-index ec64425..0872c65 100644
+index 37cd867..ba7746c 100644
 --- a/apps/wordcraft-web/src/web/host.rs
 +++ b/apps/wordcraft-web/src/web/host.rs
-@@ -139,8 +139,10 @@ impl Bridge {
+@@ -149,8 +149,10 @@ impl Bridge {
          }));
          let bridge = self.clone();
          services.blocked = Some(Box::new(move |id: &str| {
@@ -50,7 +50,7 @@ index ec64425..0872c65 100644
          }));
          // Keep the hook the web shell installed (the leave-page guard reads it).
          let bridge = self.clone();
-@@ -347,7 +349,12 @@ impl Bridge {
+@@ -406,7 +408,12 @@ impl Bridge {
                  Some("wordcraft:commands") => bridge.list_requested.set(true),
                  Some("wordcraft:run") => bridge.runs.borrow_mut().extend(string(&data, "id")),
                  Some("wordcraft:focus") => {
@@ -156,7 +156,7 @@ index 6399175..ac03a3f 100644
  
  /// Recovery is a separate copy. Leaving this page never discards it. Same cards as the Document Recovery pane.
 diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
-index 79d6394..8aec88b 100644
+index 7679b34..526af05 100644
 --- a/crates/ui-egui/src/canvas.rs
 +++ b/crates/ui-egui/src/canvas.rs
 @@ -1634,7 +1634,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
@@ -171,10 +171,10 @@ index 79d6394..8aec88b 100644
      if focus_click || (app.canvas.want_focus && !resp.has_focus()) {
          resp.request_focus();
 diff --git a/crates/ui-egui/src/office_overlay.rs b/crates/ui-egui/src/office_overlay.rs
-index 3c047bd..2450946 100644
+index b0746f2..bfaa34a 100644
 --- a/crates/ui-egui/src/office_overlay.rs
 +++ b/crates/ui-egui/src/office_overlay.rs
-@@ -230,7 +230,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
+@@ -233,7 +233,9 @@ pub fn phone_chrome(app: &mut crate::WordApp, ui: &mut egui::Ui) -> bool {
      // The Edit button floats over the page: the extension leaves its rectangle in the context.
      let extra = ctx.data(|d| d.get_temp::<Option<egui::Rect>>(egui::Id::new("docs-office-phone-extra"))).flatten();
      let (pressed_on_bar, active) = ui.input(|i| {

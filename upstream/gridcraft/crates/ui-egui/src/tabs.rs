@@ -298,12 +298,13 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
                             ui.painter().rect_filled(r, 3.0, t.hover);
                         }
                         icons::paint(ui.painter(), Rect::from_center_size(r.center(), vec2(14.0, 14.0)), icon, t.text_dim);
-                        if resp.on_hover_text(tip).clicked() {
+                        if resp.on_hover_text(app.ui.language.tr(tip)).clicked() {
                             app.run_or_alert(cmd, json!({}));
                         }
                     }
                     ui.add_space(16.0);
                     // Average / Count / Sum.
+                    let lang = app.ui.language;
                     if let Some(d) = app.session.active()
                         && let Some(sh) = d.wb.active()
                         && !d.selection.is_single_cell()
@@ -319,13 +320,13 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
                         };
                         let mut parts = Vec::new();
                         if st.numeric > 0 {
-                            parts.push(format!("Sum: {}", fmt(st.sum)));
+                            parts.push(format!("{}: {}", lang.tr("Sum"), fmt(st.sum)));
                         }
                         if st.count > 0 {
-                            parts.push(format!("Count: {}", st.count));
+                            parts.push(format!("{}: {}", lang.tr("Count"), st.count));
                         }
                         if let Some(a) = st.average {
-                            parts.push(format!("Average: {}", fmt(a)));
+                            parts.push(format!("{}: {}", lang.tr("Average"), fmt(a)));
                         }
                         for p in parts {
                             ui.label(egui::RichText::new(p).font(theme::ui_font(12.5)).color(t.text_dim));

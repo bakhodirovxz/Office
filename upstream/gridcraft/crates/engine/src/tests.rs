@@ -3393,3 +3393,17 @@ fn a_read_only_session_refuses_edits_but_allows_view_commands() {
     s.read_only = false;
     s.execute("cell.set", json!({"cell": "A1", "input": "y"})).unwrap();
 }
+
+#[test]
+fn an_empty_workbook_opens_in_times_new_roman_and_one_with_content_keeps_its_font() {
+    // An openpyxl-like blank (Calibri 11 Normal, no cells). Synthetic bytes.
+    let mut wb = gridcraft_model::Workbook::new();
+    assert_eq!(wb.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, "Calibri");
+    let (opened, _) = crate::io::open_bytes("blank.xlsx", &gridcraft_xlsx::write_xlsx(&wb).unwrap()).unwrap();
+    let f = &opened.styles.get(gridcraft_model::StyleId::DEFAULT).font;
+    assert_eq!((f.name.as_str(), f.size), ("Times New Roman", 11.0), "the size stays as the file has it");
+
+    wb.sheet_mut(0).unwrap().set_value(CellRef::new(0, 0), Value::Number(1.0));
+    let (kept, _) = crate::io::open_bytes("full.xlsx", &gridcraft_xlsx::write_xlsx(&wb).unwrap()).unwrap();
+    assert_eq!(kept.styles.get(gridcraft_model::StyleId::DEFAULT).font.name, "Calibri");
+}

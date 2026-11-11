@@ -11,11 +11,13 @@ PIN=5c3913063bb189df4edc94b766584dfb4c04a187
 BASE_URL="https://raw.githubusercontent.com/notofonts/notofonts.github.io/$PIN/fonts"
 SANS_SHA=f3961a9cde016d41a4879aecda1474d3a36d6bf54fa0e4643de029cc2248b0e8
 MONO_SHA=87f8ce0522a6c99b743ee5fc75b4073cfdd575639119672828b7b9944b65b4f4
+TINOS_URL=https://raw.githubusercontent.com/google/fonts/5bb28733cec313b63fbd415b574b5ae35c8aa8b8/ofl/tinos/Tinos-Regular.ttf
+TINOS_SHA=60a0e8ef0c04dd5dd69ffe91025fa2ae5836cbd35600a82ba031977557e2cb61
 RANGES='U+0020-007E,U+00A0-024F,U+02B9-02BC,U+02C6-02C7,U+02D8-02DD,U+0300-0304,U+0306-0308,U+030C,U+0400-04FF,U+2010-2027,U+2030-203A,U+20AC,U+20B8,U+20BD,U+2116,U+2122,U+2212,U+FFFD'
 PY="${PYTHON:-python}"
 
 check() {
-  "$PY" -I - "$OUT/NotoSans-Regular-uz.ttf" "$OUT/NotoSansMono-Regular-uz.ttf" <<'PYEOF'
+  "$PY" -I - "$OUT/NotoSans-Regular-uz.ttf" "$OUT/NotoSansMono-Regular-uz.ttf" "$OUT/Tinos-Regular-uz.ttf" <<'PYEOF'
 import sys
 from fontTools.ttLib import TTFont
 TEXT = "O\u02bbzbekiston g\u02bboya ma\u02bcno \u040e\u0437\u0431\u0435\u043a\u0438\u0441\u0442\u043e\u043d \u049b\u045e\u0493\u0438\u0440\u0447\u043e\u049b \u0493\u043e\u044f \u04b3\u0430 \u20bd \u2116"
@@ -47,5 +49,8 @@ for pair in "sans:NotoSans-Regular-uz.ttf" "mono:NotoSansMono-Regular-uz.ttf"; d
   "$PY" -I -m fontTools.subset "$tmp/${pair%%:*}.ttf" --unicodes="$RANGES" --layout-features='kern,liga,calt,ccmp,locl,mark,mkmk' \
     --name-IDs='*' --notdef-outline --output-file="$OUT/${pair#*:}"
 done
+curl -fsS --ssl-no-revoke -o "$tmp/tinos.ttf" "$TINOS_URL"
+[ "$(sha256sum "$tmp/tinos.ttf" | cut -d' ' -f1)" = "$TINOS_SHA" ] || { echo "Tinos-Regular.ttf SHA-256 mismatch" >&2; exit 1; }
+"$PY" -I -m fontTools.subset "$tmp/tinos.ttf" --unicodes="$RANGES" --layout-features='kern,liga,ccmp,locl,mark,mkmk'   --name-IDs='*' --notdef-outline --no-hinting --desubroutinize --output-file="$OUT/Tinos-Regular-uz.ttf"
 rm -rf "$tmp"
 check

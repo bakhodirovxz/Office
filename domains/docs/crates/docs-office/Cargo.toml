@@ -18,9 +18,10 @@ egui = "0.36"
 serde_json = { version = "1", features = ["float_roundtrip"] }
 wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
 
-# The shared per-user settings (WP5): desktop only, the web build has no toggle and no file.
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# The shared per-user settings (WP5): a file on the desktop, localStorage and ?toolbar= on the web.
 suite-core = { path = "../../../../crates/suite-core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 xdfu-core = { path = "../../../../crates/xdfu-core" }
 
 [dev-dependencies]

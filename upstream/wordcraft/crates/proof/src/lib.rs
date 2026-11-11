@@ -57,6 +57,7 @@ pub mod pl;
 pub mod pt;
 pub mod ru;
 pub mod tr;
+pub mod uz;
 pub mod vi;
 
 use std::collections::HashSet;
@@ -710,6 +711,37 @@ fn grammar_in(text: &str, lang: ProofLang, capital_first: bool) -> Vec<Issue> {
     }
 }
 
+/// What text tagged English (or untagged) really is: Russian or Uzbek Cyrillic by script
+/// ([`uz::cyrillic_lang`]), Vietnamese or Uzbek Latin by their letters and frequent words, or
+/// other Uzbek Latin: a paragraph with an Uzbek word that English mostly doesn't know
+/// ([`mostly_unknown_english`]). English when none of that fits.
+fn english_stand_in(text: &str, opts: &Options) -> ProofLang {
+    if let Some(l) = uz::cyrillic_lang(text) {
+        l
+    } else if vi::looks_vietnamese(text) || uz::looks_uzbek_latin(text) || (uz::has_uzbek_word(text) && mostly_unknown_english(text, opts)) {
+        ProofLang::Other
+    } else {
+        ProofLang::En
+    }
+}
+
+/// Is the English dictionary unaware of at least three quarters of the Latin words of a paragraph
+/// of four or more? A typo or two does not do that. Words the options skip count as known.
+fn mostly_unknown_english(text: &str, opts: &Options) -> bool {
+    let (mut total, mut unknown) = (0usize, 0usize);
+    for (a, b) in words(text) {
+        let Some(w) = text.get(a..b) else { continue };
+        if !w.chars().next().is_some_and(|c| c.is_alphabetic() && c.is_ascii()) || w.chars().count() < 2 {
+            continue;
+        }
+        total += 1;
+        if !is_correct_with(w, opts) {
+            unknown += 1;
+        }
+    }
+    total >= 4 && unknown * 4 >= total * 3
+}
+
 /// Spelling and grammar issues in a paragraph whose text is in several languages, in order.
 /// `spans` gives the language of byte ranges of `text` (in order, not overlapping); text outside
 /// them is English. Each word is spelled in the language of its first letter. Each language's
@@ -736,16 +768,15 @@ pub fn check_text_with(text: &str, spans: &[(Range<usize>, ProofLang)], opts: &O
             _ => merged.push((r.clone(), *l)),
         }
     }
-    // A paragraph typed in Vietnamese under the default English language is Vietnamese, which
-    // has no proofing tools: no marks (Word detects the language the same way).
-    let default = if vi::looks_vietnamese(text) {
+    // A paragraph typed in Vietnamese, Uzbek or Russian under the default English language is not
+    // English: Vietnamese and Uzbek have no proofing tools here (no marks), Russian has its own
+    // (Word detects the language the same way).
+    let default = english_stand_in(text, opts);
+    if default != ProofLang::En {
         for (_, l) in merged.iter_mut().filter(|(_, l)| *l == ProofLang::En) {
-            *l = ProofLang::Other;
+            *l = default;
         }
-        ProofLang::Other
-    } else {
-        ProofLang::En
-    };
+    }
     let lang_at = |i: usize| -> ProofLang {
         let k = merged.partition_point(|(r, _)| r.end <= i);
         merged.get(k).filter(|(r, _)| r.start <= i).map_or(default, |s| s.1)
@@ -1372,6 +1403,26 @@ mod tests {
         // Italian grammar speaks Italian and has no English a/an rule.
         let g = check_grammar_in("questo questo è un test", ProofLang::It);
         assert!(g.iter().any(|i| i.message.contains("ripetuta")), "{g:?}");
+    }
+
+    #[test]
+    fn uzbek_and_russian_text_tagged_english_is_not_flagged_as_english() {
+        let issues = |t: &str| check_text_with(t, &[(0..t.len(), ProofLang::En)], &Options::default(), true, false);
+        let spelling = |t: &str| issues(t).into_iter().filter(|i| i.kind == IssueKind::Spelling).count();
+        // Uzbek Latin, with and without oʻ/gʻ; Uzbek Cyrillic: no marks at all.
+        for t in [
+            "Bugun biz yangi hujjat tayyorladik va uni tekshirdik",
+            "Mehnat taʼtili toʻgʻrisidagi buyruq imzolandi",
+            "Бугун биз янги ҳужжат тайёрладик ва уни текширдик",
+        ] {
+            assert_eq!(spelling(t), 0, "{t}");
+        }
+        // Russian is proofed as Russian (whatever dictionary is installed), never as English.
+        let ru = "Сегодня мы подготовили новый документ и проверили его";
+        assert!(issues(ru).iter().all(|i| i.lang == ProofLang::Ru), "{:?}", issues(ru));
+        // Real English typos stay flagged, also when most of a short paragraph is wrong.
+        assert_eq!(spelling("The quik brown fox jumps over the lazzy dog"), 2);
+        assert!(spelling("Teh quik brwn fox") > 0);
     }
 
     #[test]

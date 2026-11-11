@@ -109,3 +109,5 @@ source = ""
 [fonts]
 fallback_sans = "fallback/NotoSans-Regular-uz.ttf"
 fallback_mono = "fallback/NotoSansMono-Regular-uz.ttf"
+# Times New Roman stand-in for Sheets and Slides on the web (metric-compatible Tinos, subset).
+fallback_serif = "fallback/Tinos-Regular-uz.ttf"

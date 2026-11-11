@@ -104,6 +104,18 @@ fn slide_fonts_cover_okina() {
     }
 }
 
+/// A deck in Times New Roman (or Times, Liberation Serif, Cambria) is drawn with a serif face when no system font is there (the web).
+#[test]
+fn times_new_roman_slides_get_the_bundled_serif() {
+    let Some((_, serif)) = o::FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif") else { return };
+    let db = deckcraft_fonts::FontDb::with_font_dirs(Vec::new());
+    assert!(db.add_font(serif.to_vec()) > 0);
+    for name in ["Times New Roman", "Times", "Liberation Serif", "Cambria"] {
+        let face = db.document_face(name, "Regular");
+        assert!(["Tinos", "Liberation Serif", "Caladea"].contains(&face.family.as_str()), "{name} drew with {}", face.family);
+    }
+}
+
 #[test]
 fn uzbek_is_offered_only_with_the_overlay_catalogs() {
     use crate::i18n::{Lang, from_pref, has, normalize_pref, tr};

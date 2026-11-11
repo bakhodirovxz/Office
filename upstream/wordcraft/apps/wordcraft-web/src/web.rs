@@ -56,7 +56,8 @@ pub fn start() {
             log::error!("no unsaved-changes guard: {e}");
         }
         let app_bridge = bridge.clone();
-        let result = eframe::WebRunner::new()
+        let runner = eframe::WebRunner::new();
+        let result = runner
             .start(
                 canvas,
                 options,
@@ -140,8 +141,13 @@ pub fn start() {
                 }),
             )
             .await;
-        if let (Err(e), Some(bridge)) = (&result, &bridge) {
-            bridge.post_failed(&format!("{e:?}"));
+        match (&result, &bridge) {
+            (Err(e), Some(bridge)) => bridge.post_failed(&format!("{e:?}")),
+            (Ok(()), Some(bridge)) => {
+                let pull = bridge.clone();
+                bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<WebShell>()?.app));
+            }
+            _ => {}
         }
         if let Some(el) = document.get_element_by_id(LOADING_ID) {
             match result {
@@ -199,6 +205,11 @@ fn stored_prefs() -> Option<String> {
 }
 
 impl eframe::App for WebShell {
+    // `WebRunner::app_mut` (the host's final copy, `host::Bridge::expose_final_copy`).
+    fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+        Some(self)
+    }
+
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let dropped = ctx.input_mut(|i| std::mem::take(&mut i.raw.dropped_files));
         for f in dropped {

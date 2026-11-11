@@ -25,7 +25,7 @@ const HOST = `<!doctype html><meta charset="utf-8"><body>
     if (e.source !== document.getElementById('ed').contentWindow) return;
     const d = e.data || {};
     if (d.type === 'pdfcraft:save' && d.bytes instanceof ArrayBuffer) window.__lastSave = Array.from(new Uint8Array(d.bytes));
-    window.__msgs.push({ type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
+    window.__msgs.push({ t: Date.now(), type: d.type, name: d.name, dirty: d.dirty, error: d.error, version: d.version,
       bytes: d.bytes instanceof ArrayBuffer ? new Uint8Array(d.bytes).slice(0, 2).join(',') + ':' + d.bytes.byteLength : undefined });
   });
   window.__toEditor = (msg, transfer) => document.getElementById('ed').contentWindow.postMessage(msg, location.origin, transfer);
@@ -342,6 +342,48 @@ test('10 autosave: none when clean; after an edit pdfcraft:autosave within 30 s;
   expect(await count(page, 'pdfcraft:autosave'), 'none while the save is pending').toBe(n);
   await send(page, { type: 'pdfcraft:saved', ok: false });
   await waitFor(page, 'pdfcraft:autosave', n + 1); // it resumes
+  expect(await lastDirty(page)).toBe(true);
+});
+
+
+const pdfEdit = async (page: Page, _i: number) => edit(page);
+const pdfAutosaves = (page: Page) => count(page, 'pdfcraft:autosave');
+// hengines (patch pdfcraft/0170): the recovery copy goes 3 s after the last edit, and at the latest 30 s after the first unsent edit
+// while editing goes on; never more often than every 3 s; none for an unchanged document.
+test('8b autosave: 3 s after the last edit, once per quiet period; continuous editing is saved within 30 s', async ({ page }) => {
+  test.setTimeout(180_000);
+  await open(page);
+  await waitFor(page, 'pdfcraft:opened');
+  const n = async () => (await pdfAutosaves(page));
+  expect(await n()).toBe(0);
+  await pdfEdit(page, 0);
+  await expect.poll(() => lastDirty(page)).toBe(true);
+  const t0 = Date.now();
+  await expect.poll(n, { timeout: 12_000 }).toBe(1);
+  expect(Date.now() - t0, 'a copy about 3 s after the edit, not 30 s').toBeLessThan(12_000);
+  await page.waitForTimeout(8_000);
+  expect(await n(), 'an unchanged document is not sent again').toBe(1);
+  // continuous editing (edits back to back, well under 3 s apart): nothing while the edits keep coming for 20 s, a copy by the 30 s ceiling
+  // The copy of a quiet period is allowed wherever two edits ended more than 3 s apart (a loaded machine stalls an edit now and then).
+  const start = Date.now();
+  const ends: number[] = [];
+  let i = 1;
+  const edits = async (until: number) => { while (Date.now() - start < until) { await pdfEdit(page, i++); ends.push(Date.now()); } };
+  const stalls = () => ends.filter((e, k) => k > 0 && e - ends[k - 1] > 2_900).length;
+  await edits(20_000);
+  expect(await n(), 'no copy while the edits are less than 3 s apart (before the 30 s ceiling)').toBeLessThanOrEqual(1 + stalls());
+  await edits(38_000);
+  const during = await n();
+  expect(during, 'a copy by the 30 s ceiling although the edits never paused for 3 s').toBeGreaterThanOrEqual(2);
+  if (stalls() === 0) expect(during, 'exactly the ceiling copy').toBe(2);
+  const times = (await msgs(page)).filter((m) => m.type === 'pdfcraft:autosave').map((m) => m.t as number);
+  for (let k = 1; k < times.length; k++) expect(times[k] - times[k - 1], 'never more often than every 3 s').toBeGreaterThanOrEqual(2_800);
+  // the edits stop: the last state goes 3 s later
+  await expect.poll(n, { timeout: 12_000 }).toBeGreaterThan(during);
+  await page.waitForTimeout(8_000);
+  const after = await n();
+  await page.waitForTimeout(5_000);
+  expect(await n(), 'quiet again: nothing more').toBe(after);
   expect(await lastDirty(page)).toBe(true);
 });
 

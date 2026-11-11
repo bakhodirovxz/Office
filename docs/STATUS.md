@@ -4,6 +4,10 @@
 
 **Owner MSI test feedback (2026-11-06), Docs pointer "stays white, hard to find": NOT reproduced, no fix.** Code review: the page canvas requests `CursorIcon::Text` over text and `Default` only in the selection bar (`upstream/wordcraft/crates/ui-egui/src/canvas.rs:1743-1753`; headless kittest hover over text returns `Text`, so the I-beam is requested); no custom cursor images anywhere in our layer or wordcraft; egui-winit maps to the standard OS cursors. Owner scheme is "Windows Aero" with the default (inverting) I-beam (`HKCUControl PanelCursors`). Live capture was impossible (workstation was locked). Needs a real screenshot or the owner's cursor scheme/size to continue.
 
+**Author of HRM blank files, 2026-11-10 (branch p5-author).** HRM makes blanks with python-docx/openpyxl/python-pptx, so File > Info showed the generator as author. The docserver now rewrites only `docProps/core.xml` of a stored version (every other zip entry raw-copied) in edit sessions: `dc:creator` becomes the session user (`editorConfig.user.name`, capped 255, escaped) when empty or a generator name (real names kept), and a save or promoted autosave also sets `cp:lastModifiedBy`. One point: `put_version` and the autosave promotion in sessions.rs, before hashing; the promotion compares the stamped form, so no spurious version. Engines round-trip creator (wordcraft, gridcraft, deckcraft read and write it); gridcraft does not write `lastModifiedBy`, the server re-adds it at save. Tests: services/docserver/tests/author.rs. Limit: the first editor, not the HRM creator, becomes the author of an untouched blank.
+
+**Docs in the document-server iframe, 2026-11-09 (branch p5-hdocs, HRM test server screenshots).** (1) Full ribbon on the web: `suite_core::settings::toolbar_mode()` on wasm32 = the saved choice (`localStorage` `suite.toolbar`) > URL `?toolbar=full|simple` > simple (`resolve_toolbar`, unit tested); docs-office installs the store and offers the toggle on the web too. (2) `?lang=` already won over `navigator.language` through the docs `index.html` shim; verified in Chromium with ru, uz-Cyrl, uz-Latn against a browser locale of uz-UZ, en-US, ru-RU. (3) Autosave (wordcraft/0160): 3 s after the last edit, at least every 30 s of continuous editing, never twice within 3 s; `bridge-docs.spec.ts` 13/13 (cases 5 and 5b). (4) wordcraft/0161: a host-opened document starts at 100 % (Page Width only when the page is wider than the view). (5) wordcraft/0162: Uzbek (Latin, Cyrillic) and Russian text under an en-US tag is not flagged as English (proof::uz, the Vietnamese rule extended); wordcraft/0163: the status bar names the interface language for a document with no language in an Uzbek interface. Docs wasm brotli 9,860,812 B, budget 9,871,648 B, headroom 10,836 B (suite-core on the web cost +1.4 KB); js 20,768/24,576.
+
 **Phase 4 WP0 (upstream sync) done 2026-10-22** (`docs/phase4/sync-report.md`): wordcraft v0.9.0 `2e6db0b`, gridcraft v0.10.0 `2ebdf16`, deckcraft v0.9.0 `fe510bd`, pdfcraft v0.11.0 `3e30645`, craft-libs `1b9cf19` (craft-fonts unchanged). 73 patches: 53 clean, 5 3-way, 13 hand-merged, 1 amended (gridcraft 0130), wordcraft 0003 dropped (upstream does it), pdfcraft 0111 new (D7). NumLocale re-threaded through upstream value_text_as; tests and the WP14 matrix unchanged (byte-identical). 68 new i18n rows with uz drafts for review. Gates: verify-queue, register, ci quick, release builds x4, convert-e2e (43/0), translit-preserve, sizes (base_br re-measured, our delta inside every delta_br_max) green. Open: wordcraft/gridcraft origin/HEAD are 562/605 commits further (next sync); the sync gate cannot pass new P1 strings without drafts.
 
 **Previous:** 3 — Converter (branch `phase-3`). **Gate close-out 2026-10-22: ready for the owner's "go"** (`docs/phase3/gate-review.md` section 10). **Phase 2 closed on 2026-10-21** (owner "go"): clean-checkout `ci.sh full` 24/24 green (`docs/phase2/clean-checkout.md`), follow-ups D3/D2/m4 done, M3 carried to Phase 4 (`docs/phase2/gate-review.md`).
@@ -1426,6 +1430,85 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   env, headers through Traefik, a rerun keeps it, `--no-allow-opaque-origin` undoes it) is written but not run: another agent's
   rehearsal held the shared `dropin-*` names and the `hoshiya-docserver:rehearsal` tag. Found on the way: `--edit-types` is not kept
   by a rerun (it goes back to the default); the switch is. Fixed after the merge: a rerun keeps it too (rehearsal check).
+### Phase 5: no edit lost when the host page goes away (2026-11-09; branch `p5-save`, from phase-5 4a8969df)
+- Why (measured on the HRM test server): the editor wasm took 14-70 s over the owner's link, the host's 15 s not-ready timer offered
+  Retry and restarted the download; later a Save followed 1.4 s by Back was aborted (Traefik 499), no callback went out, the edit was lost.
+  The server kept a recovery copy (`autosave.bin`) but never used it, and a session whose frame vanished never ended.
+- Done: a close promotes a recovery copy that is newer than the last version and differs from it (sha256, the save-body checks, sealed
+  at rest) to a version, then sends status 2 with it (same bytes: 4). An edit session pings every 60 s; one idle for `close_idle_minutes`
+  (5) is closed by the server the same way (the 15 s retry loop); the sweep never deletes an open edit session first; a crash between
+  promotion and callback is the owed status 2 at start. The wrapper closes on `pagehide` with a keepalive request, sends saves <= 60 KiB
+  as keepalive (and then leaves the close to the idle close), emits `onAppReady` when the session and app frame exist, passes
+  `&lang=` and `&toolbar=full` to the app. Provider `ui_lang` (installer `--ui-lang`, kept on a rerun; the host profile: `uz-Latn`)
+  overrides `editorConfig.lang`. History is a 26 px icon button over the app (no row). No new UI strings (the button uses `hist.nav`).
+- Measured: `ci.sh docserver` Rust tests all green (outbound 23, incl. promotion, idle close, restart, sweep ordering, ui_lang), clippy
+  clean; docserver.spec 31 passed + 1 fixed afterwards (the History opener had no text any more; the History cases rerun 3/3); bridge
+  docs 12, sheets 53, slides 36, pdf 39. Host removes the frame without a save: status 2 with the bridge's autosave (first autosave
+  29,971 ms after dirty), the typed text in v2. Save then remove at 4 KB/s upload: status 6 arrives; with keepalive off the same case
+  loses the save (checked). onAppReady 8.3 s before a held-back (8 s) editor download ends. History button: the pixels under it are flat
+  (spread 0) in docs, sheets, slides and pdf, uz-Latn and ru, 1366x768 and 1600x900. Docker drop-in rehearsal (rebuilt image 404 MB):
+  **67 of 67**, incl. the profile's uz-Latn on install, `--ui-lang ru` kept by a plain rerun, the drop-in wrapper speaking uz-Latn.
+- Not checked: the apps honouring `&lang=`/`&toolbar=full` (their teams' branches; the dists used here are p5-ro's); a host calling
+  `destroyEditor()` or `close()` while a save is still on its way can still close before the save is stored (the save then fails);
+  a save over 60 KiB is not keepalive (only the last recovery copy survives a leave); the real HRM page.
+
+### Phase 5: an edit made just before the host's Back is kept (2026-11-10; branch `p5-flush`, from phase-5 a54fcd10)
+- Why (measured on the HRM test server with Playwright): HRM's Back runs `destroyEditor()` and empties the container at once. Type, Back
+  after 300 ms: callback status 4, the edit lost (the debounced autosave comes 3 s after the last edit, at most 30 s apart while typing).
+  The wrapper's `pagehide` closed the session; the app's own handover (a postMessage) went to a parent already being torn down.
+- Done: each web bridge sets `window.__hostFinalCopy()` (wordcraft 0164, gridcraft 0174, deckcraft 0177, pdfcraft 0131): the bytes the
+  autosave would send when there are changes not handed over yet, else null (clean, read only, already handed over); a pull counts as a
+  handover. The wrapper (`editor.js` `closeSession`) pulls it synchronously in `pagehide`, `docs:close` and `close()` (or takes an
+  autosave whose request is still on its way) and sends it in the keepalive `/close` itself. Over 60 KiB: a live close sends an awaited
+  `/autosave` first; `pagehide` closes without it (code comment `shortcut:`, the 64 KiB keepalive budget). The server stores a close body
+  as the recovery copy and closes in one locked step (`close_with`): status 2 with it, the same bytes as the last version give 4; the
+  autosave checks apply (edit permission, size cap, package/PDF check); a refused body is left out and the close goes on. Audit: `close
+  {final_copy: none|kept|refused}`, the version `save {from: "close"}`.
+- Measured: docserver.spec (local, two sites, real TLS): "HRM Back 300 ms after typing" and "tab close 300 ms after typing" (Docs:
+  callback status 2, v2 holds the text typed 300 ms before, no `/autosave` request), "HRM Back 300 ms after an edit" for xlsx (the typed
+  cell kept), pptx, pdf: status 2 each. Control with the pull disabled in editor.js: both Docs cases fail (no status 2 callback, the edit
+  lost), as on the test server. Playwright `page.close()` in headless Chromium runs no `pagehide` at all (probed): the tab-close case uses
+  CDP `Page.close`. Pull time in the app (headless Chromium, swiftshader, median of 3, two runs; bridge-docs.spec `13`): 10 KB copy 2.7
+  ms, 42 KB docx 15.4 ms, 140 KB 59.5-70.3 ms, 518 KB 144-153 ms. Rust: outbound.rs
+  `a_close_with_the_final_copy_keeps_it_and_leaves_out_a_bad_one` (status 2 with the bytes, same bytes 4, damaged and over-cap bodies
+  refused with the close kept, view session ignored, no content in the audit), author.rs
+  `a_close_with_the_final_copy_stamps_the_last_modifier` (after the p5-author merge). Final CI after merging phase-5 f6428f02: `ci.sh
+  queue lint i18n` ok; `shell sizes` ok (brotli/budget: docs 9,858,891/9,871,648, sheets 4,997,623/5,032,307, slides 9,552,352/9,556,985,
+  pdf 9,573,509/9,599,462; no budget changed); docserver job: Rust all green (docserver lib 25, auth 12, author 4, dropin 2, history 8,
+  outbound 24), clippy clean, bridges docs 15, sheets 55, slides 38, pdf 40; docserver.spec in the job 36 passed 1 failed: the xlsx Back
+  case typed R6's `zz` into the cell R6 had just stored, so its bytes equalled the last version and the close was rightly status 4; the
+  case now types its own value, then docserver.spec 37 passed 1 skipped. Docker was not running for the job (infra); started, rehearsal
+  images rebuilt and `rehearse.sh 3`: 3 of 3 runs green (an earlier run on the pre-merge tree failed once with "api.js failed to load"
+  before any edit; not reproduced). `outbound.rs::callback_round_trip_on_loopback` (median < 1000 ms) failed twice under load on the way
+  (1,277 and 1,576 ms; 785 ms alone).
+- Not checked: the real HRM page and the test server (the fix is measured on the local two-site harness only); a copy over 60 KiB on
+  `pagehide` (docx above ~60 KB: only the last autosave, at most 30 s old, is kept; `fetchLater()` would lift it); the over-60-KiB path of
+  a live `close()`/`docs:close` (awaited `/autosave`, then close) has no test; Sheets: text still in the cell editor (not committed with
+  Enter) is not in the workbook, so neither the autosave nor the pull has it; Slides: the pull serializes `d.doc` as the autosave does (an
+  uncommitted text composition is not in it); pull times for xlsx/pptx/pdf were not measured; the pull blocks the closing page for its
+  time (144 ms at 518 KB here, more on slow phones).
+
+### Phase 5: the idle close no longer overwrites a newer save (2026-11-11; branch `p5-idle`, from phase-5 7487c56b)
+- Why: `rehearse.sh 5` failed on run 4 (the CI rehearsal on run 3): the compose spec's reopened session saved (status 6) and was never
+  closed; the server's idle close, 5 min later, sent status 2 with that same copy into the next run, after the next session had saved
+  (docserver log `6, 2, 2`). Real case: save in one tab, leave it, edit the file in a new session (HRM: a new `key` per open); the old
+  session's idle close overwrote the newer file. Data loss.
+- Done: the idle close (`sessions.rs` `close_locked`, `idle`) sends 2 only with data the provider has not acknowledged (a promoted
+  recovery copy, or a save whose 6 was not answered `{"error":0}`), else 4. The explicit close keeps 2 after a save: the public callback
+  page does not say what follows a forcesave with no change, and its "Saving file" page keeps forcesave versions out of the history, so
+  the close's 2 is the version of record (compat doc, status 2 row). The compose spec closes its reopened session (6, 2 asserted).
+  `callback_round_trip_on_loopback` bounds the callback alone (status 6 + harness download + answer), the whole save is reported only:
+  timed inside the handler under load, the store (synced version, session, history, audit writes) took 0.35-2.8 s per save.
+- Measured: outbound.rs `the_idle_close_never_resends_a_copy_the_provider_already_has` (fails without the fix: status 2, not 4);
+  docserver Rust tests all green (lib 25, auth 12, author 4, dropin 2, history 8, outbound 25, wp14 6; fake-hrm 14; suite-serve 16),
+  clippy -D warnings and fmt clean; docserver.spec 37 passed 1 skipped; round trip: callback median 52-62 ms, whole save 360-500 ms
+  (3 runs). Images rebuilt, `rehearse.sh 5` 5 of 5, and again with KEEP=1: 30 callbacks (1, 6, 2 for each of 10 sessions), none more
+  after 400 s idle.
+- Not checked: the real ONLYOFFICE server's status after a forcesave with no change (no instance here; clean-room); the idle close's 4
+  in the rehearsal (only the Rust test drives it); an old session with unacknowledged data still sends 2 when idle, and an explicit
+  close of an old tab after a newer session saved still sends its 2 (both as ONLYOFFICE with a key per open; we cannot tell two
+  sessions are on one file).
+
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every
@@ -1960,3 +2043,59 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not done: a real HRM open/edit/save by a person (docx, xlsx, pptx, pdf, view-only), Android and iOS app. The backend's compose
   project still defines `docs-server`: a `docker compose up` there brings the old one back (install.sh prints the override; we do
   not edit HRM files). Rollback: `sudo ./install.sh rollback --etc /opt/docserver` in `~/hoshiya-install`.
+
+### Phase 5: host-mode engines (2026-11-09, branch `p5-hengines`; details in docs/phase5/hengines.md)
+- Done: Slides follows the browser language without `?lang=` (deckcraft 0171); English left on the host-mode screens translated (deckcraft 0172,
+  gridcraft 0171 with 13 new `reviewed:agent-sonnet:2026-11-09` rows); autosave to the host 3 s after the last edit, 30 s ceiling, one copy per
+  changed state (deckcraft 0170, gridcraft 0170, pdfcraft 0130); Sheets and Slides read the toolbar mode through suite-core on the web
+  (`?toolbar=full` gives upstream's ribbon; gridcraft 0172/0173, deckcraft 0174/0175; PDF has no full mode); the Slides Font box shows the theme
+  font when nothing is selected (deckcraft 0173, 0176).
+- Measured (dists built from the merged branch): bridge-sheets 54 passed, bridge-slides 37 passed, bridge-pdf 40 passed. Sizes (brotli, headroom to budget): sheets 4,958,840 (7,931 B), slides 9,522,246 (34,739 B; delta +194,637 with the fonts embedded),
+  pdf 9,572,670 (26,792 B). No budget changed.
+- Not done: Sheets Watch Window and the Slides Backstage were not walked for English; Docs unchanged (p5-hdocs).
+
+### Phase 5: Times New Roman as the default for HRM's blank files (2026-11-10; branch `p5-font`, from phase-5 a54fcd10)
+- Owner request: the default font is always Times New Roman. HRM creates blank files server-side (python-docx `Document()`, openpyxl
+  `Workbook()`, python-pptx `Presentation()`), which opened in Cambria / Calibri. New documents made by the editors were already Times
+  New Roman (wordcraft 0135, gridcraft 0151, deckcraft 0152); the gap was a file that is empty when opened.
+- Done: **wordcraft/gridcraft/deckcraft 0185** (one patch each, engine only, no UI strings, no host-bridge file touched). Rule: content
+  at open means no change; an empty file gets Times New Roman in memory only, so the session is not dirty, no autosave is sent, and the
+  file changes when the user edits and saves. Docs: no text, table or picture: docDefaults run font, body theme font and a Normal that
+  has its own font (`io::default_font_when_empty`, wordcraft). Sheets: no cells, charts, pictures or shapes in any sheet: the Normal
+  style font and the theme body font (`StyleTable::set_default_font_name`). Slides: a PPTX whose slides hold only empty placeholders
+  and empty notes: heading and body Latin font of every master's theme. Sizes are not touched: a python-docx blank is 11 pt (Normal,
+  not 14 pt), openpyxl 11 pt, python-pptx's template text sizes; no engine setting pairs font and size, so 12 pt/14 pt stays a
+  separate owner decision. Headings in a python-docx blank keep their own theme heading font (Calibri), as the rule is body text.
+- Measured: engine unit tests (synthetic bytes, an empty file changes, a file with text does not): wordcraft
+  `an_empty_document_opens_in_times_new_roman_without_being_dirty`, gridcraft `an_empty_workbook_opens_in_times_new_roman_and_one_with_content_keeps_its_font`,
+  deckcraft `an_empty_deck_opens_in_times_new_roman_and_one_with_text_keeps_its_font`: 1/1 each. bridge-docs 14 passed (new case 13: a
+  python-docx-style blank, Cambria theme font, opens with the Font box on Times New Roman, no dirty message, no autosave, then dirty when
+  typed in; screenshot `docs/phase5/evidence/docs-default-font-times-new-roman.png`), bridge-sheets 54 passed, bridge-slides see the
+  summary below. Sizes (brotli, headroom): docs 9,853,908 (17,740 B), sheets 4,958,424 (8,347 B), slides 9,512,363 (44,622 B); no budget
+  changed. `verify-queue.sh all` and `cargo xt register check` (171 rows) green; 0950 of wordcraft and deckcraft regenerated.
+- Rendering: Times New Roman is not bundled. Docs web draws it with the bundled Source Serif 4 (serif, not metric-compatible, as the
+  tables entry above); Docs desktop uses the system Times New Roman, else Liberation Serif or Tinos. Sheets web and Slides web have no
+  serif face embedded, so the name falls back to the bundled UI sans there (a visible gap; embedding a metric-compatible serif such as Tinos is a size-budget decision, not measured); Sheets desktop and Slides desktop use the system font.
+- Not checked: a real python-docx/openpyxl/python-pptx file (the tools are not installed here; fixtures are synthetic and hand-built);
+  desktop MSI; a Sheets or Slides screenshot (the unit tests cover the model, not the web render); an empty `.docx` that has a table
+  or a picture is treated as content by design.
+
+### Phase 5: a serif face for Times New Roman in Sheets web and Slides web (2026-11-10; branch `p5-serif`, from phase-5 b130b25e)
+- Owner request: Times New Roman is the default font everywhere. Sheets web and Slides web embedded no serif, so the name drew in the
+  bundled UI sans (see the p5-font entry above). Docs web already draws it with Source Serif 4; desktop builds use system fonts and are not changed.
+- Chosen: **Tinos Regular** (Steve Matteson; metric twin of Times New Roman; v1.340, google/fonts `5bb28733cec313b63fbd415b574b5ae35c8aa8b8`
+  `ofl/tinos/Tinos-Regular.ttf`, SHA-256 `60a0e8ef0c04dd5dd69ffe91025fa2ae5836cbd35600a82ba031977557e2cb61`), SIL OFL-1.1 (the current Tinos
+  is OFL, not Apache-2.0; `deny.toml` already allows OFL-1.1; text `assets/fonts/fallback/OFL-Tinos.txt`, NOTICE entry via `scripts/gen-legal.sh`). Metric-compatible, so lines
+  break as in Word. Regular only (the engines fake bold/italic); subset with the existing `scripts/subset-fallback-font.sh` (Latin, Latin-1, Ext-A/B,
+  U+02BB/U+02BC, Cyrillic block, punctuation; hinting dropped): 74,024 B raw, 37,251 B brotli. The check covers oʻ gʻ and ҳ қ ғ ў.
+- Done: **gridcraft/0186** (the third overlay face `office-fallback-serif` leads the grid's serif family behind an installed serif; "Times",
+  "Times New Roman", "Cambria", "*serif*" already map to that family) and **deckcraft/0186** (face registered in the slide font database; `substitutes`
+  for Times New Roman, Times, Liberation Serif and Cambria name Tinos; egui interface stacks never use it). Brand: `brand.toml` `fonts.fallback_serif`; `FONTS` carries
+  the third file only for sheets and slides (docs and pdf build scripts name every later entry mono). Unit tests: gridcraft `times_new_roman_cells_resolve_to_the_bundled_serif`,
+  deckcraft `times_new_roman_slides_get_the_bundled_serif`, office-brand `only_sheets_and_slides_carry_the_serif_face`.
+- Measured (release web builds, brotli -q 11 --lgwin=24): sheets 4,958,424 -> 4,995,050 (+36,626); slides 9,512,363 -> 9,552,378 (+40,015). **Sheets budget raised**: `delta_br_max`
+  229,376 -> 294,912 (delta now +257,655; ceil(1.10 x delta / 16 KiB) x 16 KiB); slides stays 229,376 and fits with **4,607 B headroom** (the next slides change needs a raise). bridge-sheets 55 passed (new case 15),
+  bridge-slides 38 passed (new case 15). Screenshots: `docs/phase5/evidence/sheets-serif-names.png`, `slides-serif-names.png` (Times New Roman, Times, Liberation Serif,
+  Cambria in serif; Arial in sans for contrast; fixtures `ci/web-smoke/fixtures/sheets-serif-names.xlsx`, `slides-serif-names.pptx`).
+- Not checked: desktop builds (unchanged by design: an installed serif still leads); the PDF export of Sheets (it keeps its own default face); Docs; Georgia, Garamond and the like
+  still use the sans in Slides and the generic serif role in Sheets, which is now Tinos; Liberation Serif/Tinos bold and italic are synthesised, not drawn from real faces.

@@ -2,8 +2,9 @@
 //! does not answer `{"error":0}`. A save is acknowledged only by that answer; until then the version is dirty (`SessionRecord::acked`).
 //!
 //! Statuses: 1 on the first dirty event, 6 on every explicit save (`forcesavetype` 1), 2 on a close after a save, 4 on a close with
-//! nothing saved. 2 is retried from a queue on disk (`<data_dir>/queue/<sid>.json`, written BEFORE the first try, so a crash during
-//! it loses nothing); 6, 4 and 1 are not (the user still has the dirty document; the next save or the next dirty event tries again).
+//! nothing saved. The idle close sends 2 only with a version the provider has not acknowledged, else 4 (`sessions::close_locked`).
+//! 2 is retried from a queue on disk (`<data_dir>/queue/<sid>.json`, written BEFORE the first try, so a crash during it loses
+//! nothing); 6, 4 and 1 are not (the user still has the dirty document; the next save or the next dirty event tries again).
 //!
 //! The body is the DocsAPI callback body, signed the way the HR backend verifies it: `token` in the body is a JWT of the body, and
 //! `Authorization: Bearer` is a JWT of `{"payload": body}`, both with the provider's secret. Logs carry host and path only.
@@ -279,13 +280,37 @@ impl Docserver {
         n
     }
 
-    /// A thread that recovers owed status 2 once, then calls `retry_due` every 15 s for the life of the process.
+    /// Closes every edit session idle for `close_idle_s` (`close_if_idle`: its recovery copy becomes the last version) and sends its
+    /// callback, as a close from the page would. Returns how many it closed.
+    pub fn close_idle(&self, at: u64) -> usize {
+        let Ok(dir) = std::fs::read_dir(self.data_dir.join("sessions")) else {
+            return 0;
+        };
+        let mut n = 0;
+        for e in dir.flatten() {
+            let sid = e.file_name().to_string_lossy().into_owned();
+            let Some(c) = self.close_if_idle(&sid, at) else {
+                continue;
+            };
+            n += 1;
+            self.audit(
+                "close",
+                json!({"session": sid_ref(&sid), "status": c.status, "reason": "idle"}),
+            );
+            self.callback_closed(&sid);
+        }
+        n
+    }
+
+    /// A thread that recovers owed status 2 once, then every 15 s closes idle edit sessions and calls `retry_due`, for the life of the
+    /// process.
     pub fn spawn_retry_loop(self: &Arc<Self>) {
         let ds = self.clone();
         std::thread::spawn(move || {
             ds.recover_unnotified();
             loop {
                 std::thread::sleep(std::time::Duration::from_secs(15));
+                ds.close_idle(now());
                 ds.retry_due(now());
             }
         });

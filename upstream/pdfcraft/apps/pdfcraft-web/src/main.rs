@@ -17,7 +17,8 @@ fn main() {
         else {
             return;
         };
-        let started = eframe::WebRunner::new()
+        let runner = eframe::WebRunner::new();
+        let started = runner
             .start(
                 canvas,
                 options,
@@ -83,6 +84,13 @@ fn main() {
                 }),
             )
             .await;
+        let bridge = runner.app_mut::<host::Shell>().and_then(|shell| shell.bridge.clone());
+        if started.is_ok()
+            && let Some(bridge) = bridge
+        {
+            let pull = bridge.clone();
+            bridge.expose_final_copy(move || pull.final_copy(&runner.app_mut::<host::Shell>()?.app));
+        }
         if let Err(e) = started {
             eframe::web_sys::console::error_1(&e);
             if query_param("host").as_deref() == Some("parent")
@@ -143,9 +151,12 @@ async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
 ///   the parent has answered every save with `pdfcraft:saved`.
 /// - `pdfcraft:saved` (from the parent): `{ ok }`, the answer to one `pdfcraft:save`, in order.
 ///   `ok: false` marks the document unsaved again.
-/// - `pdfcraft:autosave` (to the parent): `{ name, bytes }` every 30 s while the document has unsaved changes
-///   (none when clean, read only, or while a save waits for its answer). A recovery copy, not a save: the
+/// - `pdfcraft:autosave` (to the parent): `{ name, bytes }` 3 s after the last edit while the document has unsaved changes
+///   and at least every 30 s during continuous editing (none when clean, read only, or while a save waits for its answer). A recovery copy, not a save: the
 ///   document stays unsaved and `bytes` is a transferred `ArrayBuffer`.
+/// - `window.__hostFinalCopy()` (called by the parent, synchronously): the PDF `pdfcraft:autosave` would send, a `Uint8Array`,
+///   when the document has changes not handed over yet; `null` otherwise. The parent calls it as it ends the session (its
+///   `pagehide` runs before this page's). It counts as a handover.
 /// - `pdfcraft:dirty` (to the parent): `{ dirty }` whenever unsaved work appears or goes away.
 /// - `pdfcraft:failed` (to the parent): `{ error }` when the app couldn't start or open the file.
 ///
@@ -181,12 +192,52 @@ mod host {
         /// Saves sent that the parent hasn't answered with `pdfcraft:saved` yet, and the answers since the last frame.
         pending: Rc<Cell<u32>>,
         acks: Rc<RefCell<Vec<bool>>>,
-        /// When the unsaved document was last handed over by the periodic autosave (`None`: clean, read only or a save pending).
-        last_autosave: Rc<Cell<Option<f64>>>,
+        /// When the next autosave is due.
+        autosave_clock: Rc<AutosaveClock>,
     }
 
-    /// Period of `pdfcraft:autosave` while the document has unsaved changes.
+    /// The longest an unsaved document goes without `pdfcraft:autosave` while it is being edited.
     const AUTOSAVE_MS: f64 = 30_000.0;
+    /// The quiet time after the last edit that brings `pdfcraft:autosave` (also the least time between two).
+    const AUTOSAVE_IDLE_MS: f64 = 3_000.0;
+
+    /// When the unsaved document is handed to the parent as a recovery copy: `AUTOSAVE_IDLE_MS` after the last edit, and at the
+    /// latest `AUTOSAVE_MS` after the first edit not yet handed over (continuous editing). The idle time is also the least time
+    /// between two copies. Nothing is sent for a document that has not changed since the last copy.
+    #[derive(Default)]
+    struct AutosaveClock {
+        /// The edit signature seen at the last tick and the one last handed over (`None`: clean, or not counting).
+        seen: Cell<Option<u64>>,
+        sent: Cell<Option<u64>>,
+        last_edit: Cell<f64>,
+        first_unsent: Cell<Option<f64>>,
+    }
+
+    impl AutosaveClock {
+        /// `sig` changes with every edit and is `None` while there is nothing to hand over (clean, read only, a save unanswered).
+        /// Returns the milliseconds until a copy is due (`<= 0`: due now, and counted as handed over), `None` when nothing is pending.
+        fn tick(&self, sig: Option<u64>, now: f64) -> Option<f64> {
+            let Some(sig) = sig else {
+                self.seen.set(None);
+                self.sent.set(None);
+                self.first_unsent.set(None);
+                return None;
+            };
+            if self.seen.replace(Some(sig)) != Some(sig) {
+                self.last_edit.set(now);
+                self.first_unsent.set(Some(self.first_unsent.get().unwrap_or(now)));
+            }
+            if self.sent.get() == Some(sig) {
+                return None;
+            }
+            let due = (self.last_edit.get() + AUTOSAVE_IDLE_MS).min(self.first_unsent.get().unwrap_or(now) + AUTOSAVE_MS);
+            if now >= due {
+                self.sent.set(Some(sig));
+                self.first_unsent.set(None);
+            }
+            Some(due - now)
+        }
+    }
 
     impl Bridge {
         /// `None` when the page isn't framed (there is no parent to talk to), or when the parent
@@ -217,7 +268,7 @@ mod host {
                 save_requested: Rc::default(),
                 pending: Rc::default(),
                 acks: Rc::default(),
-                last_autosave: Rc::default(),
+                autosave_clock: Rc::default(),
             })
         }
 
@@ -380,25 +431,19 @@ mod host {
     }
 
     impl Bridge {
-        /// Every `AUTOSAVE_MS` while the document is dirty (not read only, no save waiting for its answer): hand the
+        /// `AUTOSAVE_IDLE_MS` after the last edit of a dirty document (at least every `AUTOSAVE_MS`; not read only, no save waiting for its answer): hand the
         /// parent a recovery copy. Not a save: the document stays unsaved, nothing downloads, nothing counts as pending.
         fn autosave(&self, ctx: &egui::Context, app: &PdfCraftApp) {
-            let id = self.doc.get().filter(|id| app.session.get(*id).is_some_and(|d| d.dirty));
-            let Some(id) = id.filter(|_| !self.read_only.get() && self.pending.get() == 0) else {
-                self.last_autosave.set(None);
+            let Some((id, generation)) = self.autosave_sig(app) else {
+                self.autosave_clock.tick(None, 0.0);
                 return;
             };
-            let now = js_sys::Date::now();
-            let last = self.last_autosave.get().unwrap_or(now);
-            if now - last < AUTOSAVE_MS {
-                self.last_autosave.set(Some(last));
-                // An idle page draws no frames: wake up when the period is over.
-                ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
-                return;
+            match self.autosave_clock.tick(Some(generation), js_sys::Date::now()) {
+                None => return,
+                // An idle page draws no frames: wake up when the copy is due.
+                Some(wait) if wait > 0.0 => return ctx.request_repaint_after(std::time::Duration::from_millis(wait as u64 + 1)),
+                Some(_) => {}
             }
-            // A failed attempt is tried again next period.
-            self.last_autosave.set(Some(now));
-            ctx.request_repaint_after(std::time::Duration::from_millis(AUTOSAVE_MS as u64 + 1));
             match app.session.save_bytes(id) {
                 Ok(bytes) => {
                     let buffer = js_sys::Uint8Array::from(bytes.as_slice()).buffer();
@@ -413,6 +458,40 @@ mod host {
                 Err(e) => eframe::web_sys::console::warn_1(&format!("PdfCraft: autosave failed: {e}").into()),
             }
         }
+
+        /// The parent's document when a recovery copy is due for it (unsaved, not read only, no save waiting), with its edit generation.
+        fn autosave_sig(&self, app: &PdfCraftApp) -> Option<(pdfcraft_ui_egui::DocId, u64)> {
+            let id = self.doc.get()?;
+            app.session.get(id).filter(|d| d.dirty && !self.read_only.get() && self.pending.get() == 0).map(|d| (id, d.edit_generation()))
+        }
+
+        /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the PDF as
+        /// `pdfcraft:autosave` sends it when it has changes not handed over yet, else `None` (clean, read only, a save waiting,
+        /// or the last autosave holds them). It counts as a handover, so the autosave doesn't send the same state again.
+        pub fn final_copy(&self, app: &PdfCraftApp) -> Option<Vec<u8>> {
+            let (id, generation) = self.autosave_sig(app)?;
+            if self.autosave_clock.sent.replace(Some(generation)) == Some(generation) {
+                return None;
+            }
+            self.autosave_clock.first_unsent.set(None);
+            match app.session.save_bytes(id) {
+                Ok(bytes) => Some(bytes.to_vec()),
+                Err(e) => {
+                    eframe::web_sys::console::warn_1(&format!("PdfCraft: the copy for the closing page failed: {e}").into());
+                    None
+                }
+            }
+        }
+
+        /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+        /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+        pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+            let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+            if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+                // It lives as long as the page.
+                f.forget();
+            }
+        }
     }
 
     /// The app with the bridge's per-frame work after its own.
@@ -422,6 +501,11 @@ mod host {
     }
 
     impl eframe::App for Shell {
+        // `WebRunner::app_mut` (the host's final copy, `Bridge::expose_final_copy`).
+        fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
+            Some(self)
+        }
+
         fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
             self.app.raw_input_hook(ctx, raw);
         }

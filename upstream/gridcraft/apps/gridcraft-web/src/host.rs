@@ -14,9 +14,12 @@
 //!   workbook as .xlsx, from Save, Save As or `requestSave`. The workbook stays marked as unsaved
 //!   (no `dirty: false`) until the parent has answered every save with `gridcraft:saved`. Other
 //!   files (Export as PDF, CSV) are downloaded by the browser, not sent.
-//! - `gridcraft:autosave` (to the parent): `{ name, bytes }`, the same .xlsx, every `AUTOSAVE_MS` while the
-//!   workbook has unsaved changes, none when it is clean, read only, or a save is unanswered. It is no save:
+//! - `gridcraft:autosave` (to the parent): `{ name, bytes }`, the same .xlsx, `AUTOSAVE_IDLE_MS` (3 s) after the last edit while the
+//!   workbook has unsaved changes and at least every `AUTOSAVE_MS` (30 s) during continuous editing, none when it is clean, read only, or a save is unanswered. It is no save:
 //!   the workbook stays unsaved and nothing is downloaded; the parent keeps it as a recovery copy.
+//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the .xlsx `gridcraft:autosave` would send, a `Uint8Array`,
+//!   when the workbook has changes not handed over yet; `null` otherwise. The parent calls it as it ends the session (its
+//!   `pagehide` runs before this page's). It counts as a handover.
 //! - `gridcraft:saved` (from the parent): `{ ok }`, the answer to one `gridcraft:save`, in order.
 //!   `ok: false` marks the workbook unsaved again.
 //! - `gridcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
@@ -46,8 +49,48 @@ const MAX_AUTHOR_CHARS: usize = 200;
 const READ_ONLY: &str = "This workbook is open read-only: changes are not kept.";
 const WITHHELD: &str = "This is not available in this session.";
 
-/// The period of the autosave to the parent while the workbook has unsaved changes.
+/// The longest the unsaved workbook goes without an autosave to the parent while it is being edited.
 const AUTOSAVE_MS: f64 = 30_000.0;
+/// The quiet time after the last edit that brings the autosave (also the least time between two).
+const AUTOSAVE_IDLE_MS: f64 = 3_000.0;
+
+/// When the unsaved document is handed to the parent as a recovery copy: `AUTOSAVE_IDLE_MS` after the last edit, and at the
+/// latest `AUTOSAVE_MS` after the first edit not yet handed over (continuous editing). The idle time is also the least time
+/// between two copies. Nothing is sent for a document that has not changed since the last copy.
+#[derive(Default)]
+struct AutosaveClock {
+    /// The edit signature seen at the last tick and the one last handed over (`None`: clean, or not counting).
+    seen: Cell<Option<u64>>,
+    sent: Cell<Option<u64>>,
+    last_edit: Cell<f64>,
+    first_unsent: Cell<Option<f64>>,
+}
+
+impl AutosaveClock {
+    /// `sig` changes with every edit and is `None` while there is nothing to hand over (clean, read only, a save unanswered).
+    /// Returns the milliseconds until a copy is due (`<= 0`: due now, and counted as handed over), `None` when nothing is pending.
+    fn tick(&self, sig: Option<u64>, now: f64) -> Option<f64> {
+        let Some(sig) = sig else {
+            self.seen.set(None);
+            self.sent.set(None);
+            self.first_unsent.set(None);
+            return None;
+        };
+        if self.seen.replace(Some(sig)) != Some(sig) {
+            self.last_edit.set(now);
+            self.first_unsent.set(Some(self.first_unsent.get().unwrap_or(now)));
+        }
+        if self.sent.get() == Some(sig) {
+            return None;
+        }
+        let due = (self.last_edit.get() + AUTOSAVE_IDLE_MS).min(self.first_unsent.get().unwrap_or(now) + AUTOSAVE_MS);
+        if now >= due {
+            self.sent.set(Some(sig));
+            self.first_unsent.set(None);
+        }
+        Some(due - now)
+    }
+}
 
 #[derive(Clone)]
 pub struct Bridge {
@@ -73,8 +116,8 @@ pub struct Bridge {
     acks: Rc<RefCell<Vec<bool>>>,
     /// A refusal to show at the next frame.
     refused: Rc<Cell<Option<&'static str>>>,
-    /// When the unsaved workbook was last handed over by the autosave (`None`: clean, or not counting).
-    last_autosave: Rc<Cell<Option<f64>>>,
+    /// When the next autosave is due.
+    autosave_clock: Rc<AutosaveClock>,
 }
 
 impl Bridge {
@@ -101,7 +144,7 @@ impl Bridge {
             pending: Rc::default(),
             acks: Rc::default(),
             refused: Rc::default(),
-            last_autosave: Rc::default(),
+            autosave_clock: Rc::default(),
         })
     }
 
@@ -220,27 +263,47 @@ impl Bridge {
         }
     }
 
-    /// The periodic recovery copy: only while unsaved, editable and no save is unanswered. Not `file.save`: the workbook stays unsaved.
+    /// The recovery copy: only while unsaved, editable and no save is unanswered. Not `file.save`: the workbook stays unsaved.
     fn autosave(&self, app: &mut SheetApp, ctx: &egui::Context) {
-        if self.read_only.get() || self.pending.get() > 0 || !app.session.documents().iter().any(|d| d.is_dirty()) {
-            return self.last_autosave.set(None);
+        match self.autosave_clock.tick(self.autosave_sig(app), js_sys::Date::now()) {
+            None => return,
+            // An idle page draws no frames: wake up when the autosave is due.
+            Some(wait) if wait > 0.0 => return ctx.request_repaint_after(std::time::Duration::from_millis(wait as u64 + 1)),
+            Some(_) => {}
         }
-        let now = js_sys::Date::now();
-        let last = self.last_autosave.get().unwrap_or(now);
-        if now - last < AUTOSAVE_MS {
-            self.last_autosave.set(Some(last));
-            // An idle page draws no frames: wake up when the period is over.
-            return ctx.request_repaint_after(std::time::Duration::from_millis((AUTOSAVE_MS - (now - last)) as u64 + 1));
-        }
-        self.last_autosave.set(Some(now));
-        let sent = app
-            .run("file.saveBytes", json!({"format": "xlsx"}))
-            .and_then(|r| {
-                r.get("base64").and_then(|b| b.as_str()).and_then(gridcraft_engine::io::base64_decode).ok_or_else(|| "no bytes".to_string())
-            })
-            .and_then(|bytes| self.post("gridcraft:autosave", &xlsx_name(&self.name.borrow()), &bytes));
+        let sent = xlsx_bytes(app).and_then(|bytes| self.post("gridcraft:autosave", &xlsx_name(&self.name.borrow()), &bytes));
         if let Err(e) = sent {
             log::error!("autosave failed: {e}");
+        }
+    }
+
+    /// The edit signature of a workbook a recovery copy is due for (unsaved, editable, no save unanswered), else `None`.
+    fn autosave_sig(&self, app: &SheetApp) -> Option<u64> {
+        app.session
+            .active()
+            .filter(|d| d.is_dirty() && !self.read_only.get() && self.pending.get() == 0)
+            .map(|d| (Arc::as_ptr(&d.wb) as usize as u64).wrapping_add(d.revision))
+    }
+
+    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the workbook
+    /// as `gridcraft:autosave` sends it when it has changes not handed over yet, else `None` (clean, read only, a save
+    /// unanswered, or the last autosave holds them). It counts as a handover, so the autosave doesn't send the same state again.
+    pub fn final_copy(&self, app: &mut SheetApp) -> Option<Vec<u8>> {
+        let sig = self.autosave_sig(app)?;
+        if self.autosave_clock.sent.replace(Some(sig)) == Some(sig) {
+            return None;
+        }
+        self.autosave_clock.first_unsent.set(None);
+        xlsx_bytes(app).map_err(|e| log::error!("couldn't hand the workbook to the page as it closed: {e}")).ok()
+    }
+
+    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+            // It lives as long as the page.
+            f.forget();
         }
     }
 
@@ -313,6 +376,12 @@ impl Bridge {
 
 fn is_workbook(name: &str) -> bool {
     name.rsplit_once('.').is_some_and(|(_, ext)| WORKBOOK_EXTS.iter().any(|e| ext.eq_ignore_ascii_case(e)))
+}
+
+/// The workbook as .xlsx, as Save and the autosave send it (`file.saveBytes`: the workbook stays unsaved).
+fn xlsx_bytes(app: &mut SheetApp) -> Result<Vec<u8>, String> {
+    app.run("file.saveBytes", json!({"format": "xlsx"}))
+        .and_then(|r| r.get("base64").and_then(|b| b.as_str()).and_then(gridcraft_engine::io::base64_decode).ok_or_else(|| "no bytes".to_string()))
 }
 
 /// `report.xls` and `report.csv` are saved as `report.xlsx`.
