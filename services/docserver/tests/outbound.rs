@@ -1354,6 +1354,98 @@ async fn a_close_promotes_a_newer_different_autosave_and_sends_status_2_with_it(
     assert!(e.hrm.rejected().is_empty(), "{:?}", e.hrm.rejected());
 }
 
+/// The editor's final copy rides in the close (the wrapper's pagehide: one keepalive request, so it cannot come after the close): a
+/// new document becomes the last version and the close is status 2 with it; the bytes of the last version change nothing; a body
+/// that is not a sound document of the session's type, one over the size cap, or one sent in a view session is left out and the
+/// session still closes.
+#[tokio::test]
+async fn a_close_with_the_final_copy_keeps_it_and_leaves_out_a_bad_one() {
+    let e = env("final-copy", |ds| ds.max_document_mb = 1).await;
+    let statuses = |e: &Env| {
+        e.hrm
+            .received()
+            .iter()
+            .map(|r| r.status)
+            .collect::<Vec<_>>()
+    };
+    let copies = |e: &Env| {
+        audit_lines(&e.d)
+            .iter()
+            .filter(|l| l["event"] == "close")
+            .map(|l| l["final_copy"].as_str().unwrap_or("").to_string())
+            .collect::<Vec<_>>()
+    };
+
+    // typed, no autosave yet, the page goes: status 2 with the close's bytes
+    let (sid, tok) = e.open().await;
+    e.get_doc(&sid, &tok).await;
+    let typed = docx("typed just before the close");
+    let (s, v) = e.post(&sid, &tok, "close", typed.clone()).await;
+    assert_eq!(
+        (s, v["status"].as_u64(), v["callback"].as_str()),
+        (StatusCode::OK, Some(2), Some("ok")),
+        "{v}"
+    );
+    assert_eq!(statuses(&e), [2]);
+    assert_eq!(
+        e.hrm.received()[0].sha256,
+        docserver::sessions::sha256_hex(&typed)
+    );
+    assert_eq!(e.hrm.object(Kind::File, 7), Some(typed.clone()));
+    assert_eq!(e.ds.load_session(&sid).unwrap().versions.len(), 2);
+    assert!(
+        audit_lines(&e.d)
+            .iter()
+            .any(|l| l["event"] == "save" && l["from"] == "close"),
+        "{:?}",
+        audit_lines(&e.d)
+    );
+    // asked again (destroyEditor after the pagehide): the first answer, the body is not used
+    let (_, v) = e.post(&sid, &tok, "close", docx("later")).await;
+    assert_eq!(v["status"].as_u64(), Some(2), "{v}");
+    assert_eq!(e.ds.load_session(&sid).unwrap().versions.len(), 2);
+
+    // the bytes of the last version: nothing changed, status 4
+    let (sid, tok) = e.open().await;
+    assert_eq!(e.get_doc(&sid, &tok).await.1, typed);
+    let (_, v) = e.post(&sid, &tok, "close", typed.clone()).await;
+    assert_eq!(v["status"].as_u64(), Some(4), "{v}");
+    assert_eq!(e.ds.load_session(&sid).unwrap().versions.len(), 1);
+
+    // damaged, then over the cap (1 MB here): left out, the session closes all the same (status 4)
+    for bad in [b"PK not a package".to_vec(), vec![b'P'; (1 << 20) + 10]] {
+        let (sid, tok) = e.open().await;
+        e.get_doc(&sid, &tok).await;
+        let (s, v) = e.post(&sid, &tok, "close", bad).await;
+        assert_eq!((s, v["status"].as_u64()), (StatusCode::OK, Some(4)), "{v}");
+        let rec = e.ds.load_session(&sid).unwrap();
+        assert!(rec.closed.is_some() && rec.versions.len() == 1);
+    }
+
+    // a view session cannot write: the body is left out
+    let (sid, tok, _) = e.open_q("mode=view").await;
+    e.get_doc(&sid, &tok).await;
+    let (s, v) = e
+        .post(&sid, &tok, "close", docx("from a view session"))
+        .await;
+    assert_eq!((s, v["status"].as_u64()), (StatusCode::OK, Some(4)), "{v}");
+    let rec = e.ds.load_session(&sid).unwrap();
+    assert!(rec.closed.is_some() && rec.versions.len() == 1);
+
+    assert_eq!(statuses(&e), [2]);
+    assert_eq!(
+        copies(&e),
+        ["kept", "kept", "kept", "refused", "refused", "refused"]
+    );
+    // no document content in the log
+    assert!(
+        !std::fs::read_to_string(e.d.join("data/audit.jsonl"))
+            .unwrap_or_default()
+            .contains("typed just before")
+    );
+    assert!(e.hrm.rejected().is_empty(), "{:?}", e.hrm.rejected());
+}
+
 /// An edit session whose page vanished without a close (the host removed the frame) ends `close_idle_s` after its last activity, like
 /// a close from the page. A ping keeps it open; a view session is never touched.
 #[tokio::test]

@@ -24,6 +24,9 @@
 //!   has unsaved changes (at least every 30 s of continuous editing, never twice within 3 s), so
 //!   the parent holds the work if the browser then kills the page. It is not a save: the document
 //!   stays dirty, and nothing is sent for a clean or read-only document.
+//! - `window.__hostFinalCopy()` (called by the parent, synchronously): the document as `wordcraft:autosave` would send it, a
+//!   `Uint8Array`, when it has unsaved changes not handed over yet; `null` otherwise (clean, read only, already handed over).
+//!   The parent calls it as it ends the session (its `pagehide` runs before this page's). It counts as a handover.
 //! - `wordcraft:dirty` (to the parent): `{ dirty }` whenever unsaved changes appear or go away.
 //! - `wordcraft:failed` (to the parent): `{ error }` when the app couldn't start or save, or lost
 //!   its WebGL context (`webglcontextlost`: the page can't be drawn again, reload it).
@@ -221,14 +224,38 @@ impl Bridge {
         if self.autosave.replace(false) && app.session.dirty {
             self.debounce.borrow_mut().mark_sent(app.session.rev(), js_sys::Date::now());
             let name = self.name.borrow().clone();
-            let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
-            let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));
-            match wordcraft_engine::io::save_bytes_with(&name, &app.session.doc, password, &options)
-                .and_then(|b| self.post_file("wordcraft:autosave", &name, &b))
-            {
-                Ok(()) => {}
-                Err(e) => log::error!("couldn't hand {name} to the page for safekeeping: {e}"),
+            if let Err(e) = self.unsaved_bytes(app).and_then(|b| self.post_file("wordcraft:autosave", &name, &b)) {
+                log::error!("couldn't hand {name} to the page for safekeeping: {e}");
             }
+        }
+    }
+
+    /// The document with its unsaved changes, as `wordcraft:autosave` hands it over.
+    fn unsaved_bytes(&self, app: &WordApp) -> Result<Vec<u8>, String> {
+        let password = app.session.password.as_ref().map(wordcraft_engine::Password::as_str);
+        let options = wordcraft_engine::cmd::file::export_options(&app.session, &json!({}));
+        wordcraft_engine::io::save_bytes_with(&self.name.borrow(), &app.session.doc, password, &options)
+    }
+
+    /// The parent's synchronous pull as it ends the session (`window.__hostFinalCopy`, see `expose_final_copy`): the document
+    /// when it has unsaved changes not handed over yet, else `None` (clean, read only, or the last autosave holds them). It
+    /// counts as a handover, so the autosave doesn't send the same state again.
+    pub fn final_copy(&self, app: &WordApp) -> Option<Vec<u8>> {
+        let rev = app.session.rev();
+        if !app.session.dirty || self.read_only.get() || self.debounce.borrow().was_sent(rev) {
+            return None;
+        }
+        self.debounce.borrow_mut().mark_sent(rev, js_sys::Date::now());
+        self.unsaved_bytes(app).map_err(|e| log::error!("couldn't hand the document to the page as it closed: {e}")).ok()
+    }
+
+    /// `window.__hostFinalCopy()` for the parent: `pull`'s bytes as a `Uint8Array`, or `null`. The parent calls it in its own
+    /// `pagehide` or close, which runs before this page's: a `postMessage` from here would reach a parent already gone.
+    pub fn expose_final_copy(&self, pull: impl Fn() -> Option<Vec<u8>> + 'static) {
+        let f = Closure::<dyn Fn() -> JsValue>::new(move || pull().map_or(JsValue::NULL, |b| js_sys::Uint8Array::from(b.as_slice()).into()));
+        if js_sys::Reflect::set(&self.window, &JsValue::from_str("__hostFinalCopy"), f.as_ref()).is_ok() {
+            // It lives as long as the page.
+            f.forget();
         }
     }
 

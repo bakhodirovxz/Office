@@ -472,9 +472,15 @@ impl Docserver {
     pub fn put_autosave(&self, sid: &str, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         let _g = lock();
         let mut rec = self.open_session(sid)?;
+        self.set_autosave(&mut rec, bytes, now)?;
+        self.store(&rec)
+    }
+
+    /// `put_autosave` without the store: `autosave.bin` and its entry in `rec`. Call under the lock.
+    fn set_autosave(&self, rec: &mut SessionRecord, bytes: &[u8], now: u64) -> Result<(), SessErr> {
         self.write_stored(
             &self
-                .session_dir(sid)
+                .session_dir(&rec.sid)
                 .ok_or(SessErr::NotFound)?
                 .join("autosave.bin"),
             bytes,
@@ -485,7 +491,7 @@ impl Docserver {
             at: now,
         });
         rec.last_activity = now;
-        self.store(&rec)
+        Ok(())
     }
 
     /// `POST .../ping`: the editor page is still there (the idle close counts from the last activity).
@@ -498,9 +504,23 @@ impl Docserver {
 
     /// Closes a session: status 2 when something was saved since open, else 4. Closing twice answers the first status.
     pub fn close_session(&self, sid: &str, now: u64) -> Result<Closed, SessErr> {
+        self.close_with(sid, None, now)
+    }
+
+    /// `close_session` with the editor's final copy (the body of `POST .../close`, checked by the caller as an autosave body):
+    /// in the same locked step it becomes the recovery copy, which the close then makes a version (status 2) unless it equals
+    /// the last one. A session already closed ignores it and answers its first status.
+    pub fn close_with(&self, sid: &str, last: Option<&[u8]>, now: u64) -> Result<Closed, SessErr> {
         let _g = lock();
-        let rec = self.load_session(sid).ok_or(SessErr::NotFound)?;
-        self.close_locked(rec, now)
+        let mut rec = self.load_session(sid).ok_or(SessErr::NotFound)?;
+        let from = match last {
+            Some(b) if rec.closed.is_none() && rec.perms.edit => {
+                self.set_autosave(&mut rec, b, now)?;
+                "close"
+            }
+            _ => "autosave",
+        };
+        self.close_locked(rec, now, from)
     }
 
     /// The idle close: an open edit session with no activity for `close_idle_s` (its page went away without a close) is closed like
@@ -512,14 +532,20 @@ impl Docserver {
                 && r.closed.is_none()
                 && now >= r.last_activity.saturating_add(self.close_idle_s)
         })?;
-        self.close_locked(rec, now)
+        self.close_locked(rec, now, "autosave")
             .map_err(|e| eprintln!("docserver: idle close failed: {e:?}"))
             .ok()
     }
 
     /// Call under the lock. A recovery copy newer than the last version and different from it becomes a version first (the page went
     /// away before its save, ONLYOFFICE's close-time assembly): the version file, the record with its close, then the history.
-    fn close_locked(&self, mut rec: SessionRecord, now: u64) -> Result<Closed, SessErr> {
+    /// `from` names where the copy came from in the audit line (`autosave`, or `close`: the close request's own body).
+    fn close_locked(
+        &self,
+        mut rec: SessionRecord,
+        now: u64,
+        from: &str,
+    ) -> Result<Closed, SessErr> {
         if let Some(c) = &rec.closed {
             return Ok(c.clone());
         }
@@ -543,7 +569,7 @@ impl Docserver {
             self.audit(
                 "save",
                 serde_json::json!({"session": crate::audit::sid_ref(&rec.sid), "version": v.n, "sha256": v.sha256, "size": v.size,
-                                   "user": rec.user_id, "from": "autosave"}),
+                                   "user": rec.user_id, "from": from}),
             );
         }
         Ok(c)

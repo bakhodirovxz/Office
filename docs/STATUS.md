@@ -1452,6 +1452,42 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   `destroyEditor()` or `close()` while a save is still on its way can still close before the save is stored (the save then fails);
   a save over 60 KiB is not keepalive (only the last recovery copy survives a leave); the real HRM page.
 
+### Phase 5: an edit made just before the host's Back is kept (2026-11-10; branch `p5-flush`, from phase-5 a54fcd10)
+- Why (measured on the HRM test server with Playwright): HRM's Back runs `destroyEditor()` and empties the container at once. Type, Back
+  after 300 ms: callback status 4, the edit lost (the debounced autosave comes 3 s after the last edit, at most 30 s apart while typing).
+  The wrapper's `pagehide` closed the session; the app's own handover (a postMessage) went to a parent already being torn down.
+- Done: each web bridge sets `window.__hostFinalCopy()` (wordcraft 0164, gridcraft 0174, deckcraft 0177, pdfcraft 0131): the bytes the
+  autosave would send when there are changes not handed over yet, else null (clean, read only, already handed over); a pull counts as a
+  handover. The wrapper (`editor.js` `closeSession`) pulls it synchronously in `pagehide`, `docs:close` and `close()` (or takes an
+  autosave whose request is still on its way) and sends it in the keepalive `/close` itself. Over 60 KiB: a live close sends an awaited
+  `/autosave` first; `pagehide` closes without it (code comment `shortcut:`, the 64 KiB keepalive budget). The server stores a close body
+  as the recovery copy and closes in one locked step (`close_with`): status 2 with it, the same bytes as the last version give 4; the
+  autosave checks apply (edit permission, size cap, package/PDF check); a refused body is left out and the close goes on. Audit: `close
+  {final_copy: none|kept|refused}`, the version `save {from: "close"}`.
+- Measured: docserver.spec (local, two sites, real TLS): "HRM Back 300 ms after typing" and "tab close 300 ms after typing" (Docs:
+  callback status 2, v2 holds the text typed 300 ms before, no `/autosave` request), "HRM Back 300 ms after an edit" for xlsx (the typed
+  cell kept), pptx, pdf: status 2 each. Control with the pull disabled in editor.js: both Docs cases fail (no status 2 callback, the edit
+  lost), as on the test server. Playwright `page.close()` in headless Chromium runs no `pagehide` at all (probed): the tab-close case uses
+  CDP `Page.close`. Pull time in the app (headless Chromium, swiftshader, median of 3, two runs; bridge-docs.spec `13`): 10 KB copy 2.7
+  ms, 42 KB docx 15.4 ms, 140 KB 59.5-70.3 ms, 518 KB 144-153 ms. Rust: outbound.rs
+  `a_close_with_the_final_copy_keeps_it_and_leaves_out_a_bad_one` (status 2 with the bytes, same bytes 4, damaged and over-cap bodies
+  refused with the close kept, view session ignored, no content in the audit), author.rs
+  `a_close_with_the_final_copy_stamps_the_last_modifier` (after the p5-author merge). Final CI after merging phase-5 f6428f02: `ci.sh
+  queue lint i18n` ok; `shell sizes` ok (brotli/budget: docs 9,858,891/9,871,648, sheets 4,997,623/5,032,307, slides 9,552,352/9,556,985,
+  pdf 9,573,509/9,599,462; no budget changed); docserver job: Rust all green (docserver lib 25, auth 12, author 4, dropin 2, history 8,
+  outbound 24), clippy clean, bridges docs 15, sheets 55, slides 38, pdf 40; docserver.spec in the job 36 passed 1 failed: the xlsx Back
+  case typed R6's `zz` into the cell R6 had just stored, so its bytes equalled the last version and the close was rightly status 4; the
+  case now types its own value, then docserver.spec 37 passed 1 skipped. Docker was not running for the job (infra); started, rehearsal
+  images rebuilt and `rehearse.sh 3`: 3 of 3 runs green (an earlier run on the pre-merge tree failed once with "api.js failed to load"
+  before any edit; not reproduced). `outbound.rs::callback_round_trip_on_loopback` (median < 1000 ms) failed twice under load on the way
+  (1,277 and 1,576 ms; 785 ms alone).
+- Not checked: the real HRM page and the test server (the fix is measured on the local two-site harness only); a copy over 60 KiB on
+  `pagehide` (docx above ~60 KB: only the last autosave, at most 30 s old, is kept; `fetchLater()` would lift it); the over-60-KiB path of
+  a live `close()`/`docs:close` (awaited `/autosave`, then close) has no test; Sheets: text still in the cell editor (not committed with
+  Enter) is not in the workbook, so neither the autosave nor the pull has it; Slides: the pull serializes `d.doc` as the autosave does (an
+  uncommitted text composition is not in it); pull times for xlsx/pptx/pdf were not measured; the pull blocks the closing page for its
+  time (144 ms at 518 KB here, more on slow phones).
+
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every
