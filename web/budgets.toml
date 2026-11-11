@@ -83,5 +83,7 @@ js_br_max = 16384
 # each brotli -q 11 --lgwin=24, summed (`ci.sh sizes` measures web/shell and assets/fonts/fallback directly). No editor wasm is in it.
 # Measured 2026-10-22: 45,417 B brotli (the font is 38,933 of it). br_max = ceil(1.10 x measured / 16 KiB) x 16 KiB. The plan's proposal
 # was 160 KiB; the measured rule gives 64 KiB, which is what stays enforced (raise it only with a STATUS line).
+# Raised 2026-11-12 (phase-6, the phase-5 merge: History icon button CSS, the saved acks): measured 65,707 B, 171 B over 65,536;
+# ceil(1.10 x 65,707 / 16 KiB) x 16 KiB = 81,920 (the value phase-7 already carries).
 [shell]
-br_max = 65536
+br_max = 81920
