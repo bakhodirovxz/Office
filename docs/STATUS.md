@@ -1932,7 +1932,7 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - **Not verified:** a real finger (the rig's `input tap` is a 1 ms tap), the Android app's WebView (same page code, not re-run), the second tap of the "after" run
   selects a word through 0139's touch select (not investigated; it is not a move).
 ### Phase 6 WP5 done-check and WP13 checklist (2026-11-11, branch `p6-check`)
-- Full write-up and the table: `docs/phase6/checklist.md`; evidence `docs/phase6/evidence/checklist/` (13 MB: 14 short mp4, 30 png). AVD `HRM_Pixel_8` (412 dp = density 210, 360 dp = density 240, both at `wm size 540x1200`),
+- Full write-up and the table: `docs/phase6/checklist.md`; evidence `docs/phase6/evidence/checklist/` (13 MB: 12 short mp4, 31 png). AVD `HRM_Pixel_8` (412 dp = density 210, 360 dp = density 240, both at `wm size 540x1200`),
   Chrome 133 and the WP8 app (rebuilt over the `p6-tapfix` dist, 53,208,707 B). Docs only. The host was saturated (Chrome ran at about 12 Hz), so timing-dependent gestures are weaker evidence than on a phone.
 - **Done:** 40 checklist rows: PASS 20 (6 are older WP6/WP7/WP8 evidence), FAIL 11, INCONCLUSIVE 1 (autocorrect), BLOCKED 4, not run 4. PASS: long press selects the word and opens the bar (412/360, Chrome and app),
   Gboard glide, Cyrillic typed over a selection, momentum scroll, rotation keeps the document, the contextual bottom toolbar.
