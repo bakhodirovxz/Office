@@ -70,7 +70,8 @@ pub struct VersionRec {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Closed {
     pub at: u64,
-    /// the callback status the close stands for: 2 (saved since open) or 4 (nothing saved)
+    /// the callback status the close stands for: 2 (saved since open; for the idle close only with a version the provider has not
+    /// acknowledged), or 4 (nothing saved, or nothing the provider does not have)
     pub status: u8,
     /// the callback for this close has been sent, or queued (status 2) or tried (status 4): a second close sends nothing
     #[serde(default)]
@@ -520,7 +521,7 @@ impl Docserver {
             }
             _ => "autosave",
         };
-        self.close_locked(rec, now, from)
+        self.close_locked(rec, now, from, false)
     }
 
     /// The idle close: an open edit session with no activity for `close_idle_s` (its page went away without a close) is closed like
@@ -532,19 +533,21 @@ impl Docserver {
                 && r.closed.is_none()
                 && now >= r.last_activity.saturating_add(self.close_idle_s)
         })?;
-        self.close_locked(rec, now, "autosave")
+        self.close_locked(rec, now, "autosave", true)
             .map_err(|e| eprintln!("docserver: idle close failed: {e:?}"))
             .ok()
     }
 
     /// Call under the lock. A recovery copy newer than the last version and different from it becomes a version first (the page went
     /// away before its save, ONLYOFFICE's close-time assembly): the version file, the record with its close, then the history.
-    /// `from` names where the copy came from in the audit line (`autosave`, or `close`: the close request's own body).
+    /// `from` names where the copy came from in the audit line (`autosave`, or `close`: the close request's own body). `idle`: the
+    /// server's idle close, which sends status 2 only with data the provider has not acknowledged (else 4).
     fn close_locked(
         &self,
         mut rec: SessionRecord,
         now: u64,
         from: &str,
+        idle: bool,
     ) -> Result<Closed, SessErr> {
         if let Some(c) = &rec.closed {
             return Ok(c.clone());
@@ -557,7 +560,14 @@ impl Docserver {
         };
         let c = Closed {
             at: now,
-            status: if rec.saved_since_open { 2 } else { 4 },
+            // The idle close comes minutes after the page went (ONLYOFFICE's 2 comes ~10 s after the last editor leaves). By then a
+            // newer session on the same file (a new key per open) may have saved: a 2 with a copy the provider already acknowledged
+            // would overwrite that. A promoted copy, or a save whose 6 was not answered `{"error":0}`, is dirty and still goes as 2.
+            status: if rec.saved_since_open && (!idle || rec.dirty()) {
+                2
+            } else {
+                4
+            },
             notified: false,
             acked: false,
         };

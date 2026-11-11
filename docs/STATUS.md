@@ -1488,6 +1488,27 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   uncommitted text composition is not in it); pull times for xlsx/pptx/pdf were not measured; the pull blocks the closing page for its
   time (144 ms at 518 KB here, more on slow phones).
 
+### Phase 5: the idle close no longer overwrites a newer save (2026-11-11; branch `p5-idle`, from phase-5 7487c56b)
+- Why: `rehearse.sh 5` failed on run 4 (the CI rehearsal on run 3): the compose spec's reopened session saved (status 6) and was never
+  closed; the server's idle close, 5 min later, sent status 2 with that same copy into the next run, after the next session had saved
+  (docserver log `6, 2, 2`). Real case: save in one tab, leave it, edit the file in a new session (HRM: a new `key` per open); the old
+  session's idle close overwrote the newer file. Data loss.
+- Done: the idle close (`sessions.rs` `close_locked`, `idle`) sends 2 only with data the provider has not acknowledged (a promoted
+  recovery copy, or a save whose 6 was not answered `{"error":0}`), else 4. The explicit close keeps 2 after a save: the public callback
+  page does not say what follows a forcesave with no change, and its "Saving file" page keeps forcesave versions out of the history, so
+  the close's 2 is the version of record (compat doc, status 2 row). The compose spec closes its reopened session (6, 2 asserted).
+  `callback_round_trip_on_loopback` bounds the callback alone (status 6 + harness download + answer), the whole save is reported only:
+  timed inside the handler under load, the store (synced version, session, history, audit writes) took 0.35-2.8 s per save.
+- Measured: outbound.rs `the_idle_close_never_resends_a_copy_the_provider_already_has` (fails without the fix: status 2, not 4);
+  docserver Rust tests all green (lib 25, auth 12, author 4, dropin 2, history 8, outbound 25, wp14 6; fake-hrm 14; suite-serve 16),
+  clippy -D warnings and fmt clean; docserver.spec 37 passed 1 skipped; round trip: callback median 52-62 ms, whole save 360-500 ms
+  (3 runs). Images rebuilt, `rehearse.sh 5` 5 of 5, and again with KEEP=1: 30 callbacks (1, 6, 2 for each of 10 sessions), none more
+  after 400 s idle.
+- Not checked: the real ONLYOFFICE server's status after a forcesave with no change (no instance here; clean-room); the idle close's 4
+  in the rehearsal (only the Rust test drives it); an old session with unacknowledged data still sends 2 when idle, and an explicit
+  close of an old tab after a newer session saved still sends its 2 (both as ONLYOFFICE with a key per open; we cannot tell two
+  sessions are on one file).
+
 ### Phase 5 R6 follow-up 2: the "Not checked" list of read-only closed (2026-11-09; branch `p5-ro2`, from phase-5 5e34f7d7)
 - Done ([docs/phase5/r6.md](phase5/r6.md) section 5, follow-up paragraph): deckcraft 0163 (Slides: the Format Shape, Background, Animation and
   SmartArt Text panes drawn disabled while the hook bars edits; the comment reply box, selection-pane and section renames inert; every

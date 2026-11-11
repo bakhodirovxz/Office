@@ -65,6 +65,13 @@ test('open, edit, save, close, reopen, download', async () => {
     expect(await w.locator('#hist-msg').textContent()).not.toContain('not installed');
     await expect(w.locator('#hist-cmp > li').first()).toBeVisible();
     await expect(w.locator('#hist-cmp ins, #hist-cmp del').first()).toBeVisible();
+    // close the reopened session too: one left open is closed by the server minutes later (idle close), inside a later run's flow
+    await again.page.evaluate(() => (window as any).__editor.close());
+    await expect.poll(() => again.page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('closed');
+    expect(await again.page.locator('#detail').textContent()).toBe('closed status 2');
+    const s2 = await state();
+    expect(s2.received.slice(s1.received.length).map((r) => r.status)).toEqual([6, 2]);
+    expect(s2.rejected).toEqual(s0.rejected);
     expect(problems.concat(again.problems)).toEqual([]);
     console.log(`download ${bytes.length} bytes sha256 ${sha(bytes).slice(0, 12)} (was ${s0.objects[key].slice(0, 12)})`);
   } finally {

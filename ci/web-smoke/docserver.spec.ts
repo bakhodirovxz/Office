@@ -961,7 +961,7 @@ test('Save, then the host removes the editor at once: the save still reaches the
   expect(got.status).toBe(6);
   expect(got.sha256).toBe(sha(path.join(sdir, 'v2.bin')));
   expect(docXml(path.join(sdir, 'v2.bin'))).toContain('Zq7savedthenleft');
-  // a save in flight holds the close back: the session stays open for the server's idle close (status 2 later)
+  // a save in flight holds the close back: the session stays open for the server's idle close (later; status 4, as the host has the save)
   expect(record(sdir).closed).toBeNull();
   expect(problems).toEqual([]);
   await ctx.close();
