@@ -563,6 +563,10 @@ job_plugins() {
     [ -x ci/web-smoke/node_modules/.bin/playwright ] || [ -x ci/web-smoke/node_modules/.bin/playwright.cmd ] || step npm-ci npm ci --prefix ci/web-smoke || return 2
     pw_step playwright-plugins-host playwright.plugins.config.ts SUITE_SERVE_BIN="$SVC_T/debug/hoshiya-serve$EXE" CONVERT_API_FAKE_TOOL="$SVC_T/debug/convert-api-fake-tool$EXE" SHELL_DIST_ROOT="$dist" || rc=1
     pw_step playwright-bridge-plugins playwright.bridge-plugins.config.ts DOCS_DIST="$dist/docs-web" || rc=1
+    # WP13: the same bridge inside the Sheets and Slides frames (the real page host, the fixture plugin and the real uz-translit module)
+    if [ -d "$dist/sheets-web" ] && [ -d "$dist/slides-web" ]; then
+      pw_step playwright-bridge-plugins-apps playwright.bridge-plugins-apps.config.ts SHEETS_DIST="$dist/sheets-web" SLIDES_DIST="$dist/slides-web" UZ_TRANSLIT_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/uz_translit_plugin.wasm" || rc=1
+    else note "playwright-bridge-plugins-apps skipped: no sheets-web or slides-web in $dist"; fi
   fi
   # the SDK template (WP11): the real module loads in the native host, its command opens the panel, the button shows "Hello"
   bstep plugin-template env TEMPLATE_PLUGIN_WASM="$OFFICE_TARGET/plugins/wasm32-unknown-unknown/plugin/template_plugin.wasm" CARGO_TARGET_DIR="$(target_dir_domain docs)" cargo test --locked -j 6 --manifest-path domains/docs/Cargo.toml -p docs-translit --test template || rc=1
