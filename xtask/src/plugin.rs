@@ -96,33 +96,32 @@ fn build(root: &Path, p: &Plugin) -> Result<PathBuf, String> {
         .join(format!("{}.wasm", krate.replace('-', "_"))))
 }
 
-/// `docs/plugins-commands.md`, written by a test of the Docs domain, the only place that can see the real command registry.
-/// `--check` runs the same test without the write switch: it fails when the file is stale.
+/// `docs/plugins-commands.md` (Docs) and `-sheets.md`, `-slides.md` (WP13), each written by a test of its domain, the only place that can see
+/// the real command registry. `--check` runs the same tests without the write switch: they fail when a file is stale.
 fn commands(root: &Path, check: bool) -> Result<String, String> {
-    let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
-    cmd.args([
-        "test",
-        "--locked",
-        "--manifest-path",
-        "domains/docs/Cargo.toml",
-        "-p",
-        "docs-office",
-        "--lib",
-        "the_generated_command_list_is_current",
-    ])
-    .current_dir(root);
-    if !check {
-        cmd.env("PLUGIN_COMMANDS_WRITE", "1");
-    }
-    let status = cmd.status().map_err(|e| e.to_string())?;
-    match (status.success(), check) {
-        (true, true) => Ok("docs/plugins-commands.md is current".into()),
-        (true, false) => Ok("wrote docs/plugins-commands.md".into()),
-        (false, true) => {
-            Err("docs/plugins-commands.md is stale: run `cargo xt plugin commands`".into())
+    for (domain, krate, args) in [
+        ("docs", "docs-office", vec!["--lib"]),
+        ("sheets", "sheets-plugins", vec!["--lib"]),
+        ("slides", "slides-plugins", vec!["--lib"]),
+    ] {
+        let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
+        cmd.args(["test", "--locked", "--manifest-path", &format!("domains/{domain}/Cargo.toml"), "-p", krate])
+            .args(&args)
+            .arg("the_generated_command_list_is_current")
+            .current_dir(root);
+        if !check {
+            cmd.env("PLUGIN_COMMANDS_WRITE", "1");
         }
-        (false, false) => Err("generating docs/plugins-commands.md failed".into()),
+        let status = cmd.status().map_err(|e| e.to_string())?;
+        if !status.success() {
+            return Err(if check {
+                format!("the {domain} command list is stale: run `cargo xt plugin commands`")
+            } else {
+                format!("generating the {domain} command list failed")
+            });
+        }
     }
+    Ok(if check { "the command lists are current" } else { "wrote the command lists" }.into())
 }
 
 fn pack(root: &Path, name: &str) -> Result<String, String> {
