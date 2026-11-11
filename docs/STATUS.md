@@ -2341,3 +2341,16 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   Cambria in serif; Arial in sans for contrast; fixtures `ci/web-smoke/fixtures/sheets-serif-names.xlsx`, `slides-serif-names.pptx`).
 - Not checked: desktop builds (unchanged by design: an installed serif still leads); the PDF export of Sheets (it keeps its own default face); Docs; Georgia, Garamond and the like
   still use the sans in Slides and the generic serif role in Sheets, which is now Tinos; Liberation Serif/Tinos bold and italic are synthesised, not drawn from real faces.
+
+### Merge forward: phase-5 5b752c69 into phase-6 (2026-11-12; p5-save, p5-hdocs, p5-hengines, p5-author, p5-font, p5-serif, p5-flush, p5-idle)
+- Merge 898193ec (+ 78b4cbb0 REGISTER). Conflicts: wordcraft-web host.rs (phase-5's `unsaved_bytes`, used by `__hostFinalCopy`, now calls
+  phase-6's `office_overlay::autosave_bytes` of 0146); docserver editor.js (the Docs palette bar stays, History is phase-5's floating
+  icon); shell.js (download path keeps the phone toast and adds the `saved ok:true` ack; the Android `hostSaved()` also acks, ok true or
+  false, so the R6 bridges clear or keep their mark there too); REGISTER. No patch number collided. wordcraft 0160, 0161, 0164
+  regenerated over the phase-6 queue (context), wordcraft 0950 regenerated with rustfmt.
+- Measured: `verify-queue.sh all` OK (wordcraft 47, gridcraft 72, deckcraft 47, pdfcraft 22); register 188 rows OK; `ci.sh queue lint i18n`
+  ok (upstream clippy: only baselined warnings); services fmt, clippy -D warnings, `cargo test` docserver/fake-hrm/suite-serve 113 passed;
+  Playwright bridge-docs 15, a11y-palette 4, shell 21 passed (7 skipped). Sizes: Docs wasm 9,866,631 B brotli (headroom 37,785).
+  **Shell 65,707 B brotli, 171 B over 65,536**: br_max raised to 81,920 by the rule (phase-7's value).
+- Not checked on phase-6: Sheets/Slides/PDF web builds, their bridge specs and docserver.spec (run on phase-7, which carries all of this);
+  the Android `hostSaved` ack on a device or emulator.
