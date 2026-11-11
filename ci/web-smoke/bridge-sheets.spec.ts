@@ -389,3 +389,13 @@ test('read-only: view-only actions still work (selection, copy)', async ({ page,
   expect((await msgs(page)).filter((m) => m.type === 'gridcraft:dirty' && m.dirty)).toHaveLength(0);
   expect(logs.filter((l) => l.includes('read-only safety net'))).toHaveLength(0);
 });
+
+// Times New Roman and the other serif names draw with a serif face on the web (gridcraft/0186: bundled Tinos); FONT_SHOT=<dir> keeps the screenshot.
+test('15 cells in Times New Roman, Times, Liberation Serif and Cambria are drawn with serifs', async ({ page }) => {
+  await open(page, {}, 'sheets-serif-names.xlsx', fs.readFileSync(path.join(__dirname, 'fixtures/sheets-serif-names.xlsx')));
+  await waitFor(page, 'gridcraft:opened');
+  await page.waitForTimeout(4000);
+  expect((await msgs(page)).filter((m) => m.type === 'gridcraft:failed')).toHaveLength(0);
+  const shot = process.env.FONT_SHOT;
+  if (shot) await page.screenshot({ path: path.join(shot, 'sheets-serif-names.png') });
+});

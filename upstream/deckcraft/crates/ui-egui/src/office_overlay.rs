@@ -95,7 +95,8 @@ pub fn icon_png() -> Option<&'static [u8]> {
 /// embedded), because that face draws Latin and Cyrillic with CJK full-width advances (absurd letter spacing in uz-Cyrl).
 /// CJK text still reaches the CJK face: the subset has no CJK glyphs.
 pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
-    for (key, bytes) in FALLBACK_FONTS {
+    // The serif face is for the slide font database (`register_document_fonts`); egui's interface stacks never use it.
+    for (key, bytes) in FALLBACK_FONTS.iter().filter(|(k, _)| *k != "office-fallback-serif") {
         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
     }
     for (family, list) in defs.families.iter_mut() {
@@ -124,12 +125,16 @@ pub fn paint_logo(p: &egui::Painter, r: egui::Rect) -> bool {
     true
 }
 
-/// Register the sans fallback in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
+/// Register the sans and serif fallbacks in the slide font database too (once), so slides drawn from it show U+02BB and Uzbek
 /// Cyrillic: the database asks every loaded face before it gives up on a character.
 pub fn register_document_fonts() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         if let Some((_, bytes)) = FALLBACK_FONTS.first() {
+            deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
+        }
+        // Tinos: Times New Roman's metric twin, found through `substitutes`, so a deck in Times New Roman has serifs on the web too.
+        if let Some((_, bytes)) = FALLBACK_FONTS.iter().find(|(k, _)| *k == "office-fallback-serif") {
             deckcraft_fonts::FontDb::global().add_font(bytes.to_vec());
         }
         use_shared_dictionaries();

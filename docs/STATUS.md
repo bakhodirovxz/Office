@@ -1843,3 +1843,23 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
 - Not checked: a real python-docx/openpyxl/python-pptx file (the tools are not installed here; fixtures are synthetic and hand-built);
   desktop MSI; a Sheets or Slides screenshot (the unit tests cover the model, not the web render); an empty `.docx` that has a table
   or a picture is treated as content by design.
+
+### Phase 5: a serif face for Times New Roman in Sheets web and Slides web (2026-11-10; branch `p5-serif`, from phase-5 b130b25e)
+- Owner request: Times New Roman is the default font everywhere. Sheets web and Slides web embedded no serif, so the name drew in the
+  bundled UI sans (see the p5-font entry above). Docs web already draws it with Source Serif 4; desktop builds use system fonts and are not changed.
+- Chosen: **Tinos Regular** (Steve Matteson; metric twin of Times New Roman; v1.340, google/fonts `5bb28733cec313b63fbd415b574b5ae35c8aa8b8`
+  `ofl/tinos/Tinos-Regular.ttf`, SHA-256 `60a0e8ef0c04dd5dd69ffe91025fa2ae5836cbd35600a82ba031977557e2cb61`), SIL OFL-1.1 (the current Tinos
+  is OFL, not Apache-2.0; `deny.toml` already allows OFL-1.1; text `assets/fonts/fallback/OFL-Tinos.txt`, NOTICE entry via `scripts/gen-legal.sh`). Metric-compatible, so lines
+  break as in Word. Regular only (the engines fake bold/italic); subset with the existing `scripts/subset-fallback-font.sh` (Latin, Latin-1, Ext-A/B,
+  U+02BB/U+02BC, Cyrillic block, punctuation; hinting dropped): 74,024 B raw, 37,251 B brotli. The check covers oʻ gʻ and ҳ қ ғ ў.
+- Done: **gridcraft/0186** (the third overlay face `office-fallback-serif` leads the grid's serif family behind an installed serif; "Times",
+  "Times New Roman", "Cambria", "*serif*" already map to that family) and **deckcraft/0186** (face registered in the slide font database; `substitutes`
+  for Times New Roman, Times, Liberation Serif and Cambria name Tinos; egui interface stacks never use it). Brand: `brand.toml` `fonts.fallback_serif`; `FONTS` carries
+  the third file only for sheets and slides (docs and pdf build scripts name every later entry mono). Unit tests: gridcraft `times_new_roman_cells_resolve_to_the_bundled_serif`,
+  deckcraft `times_new_roman_slides_get_the_bundled_serif`, office-brand `only_sheets_and_slides_carry_the_serif_face`.
+- Measured (release web builds, brotli -q 11 --lgwin=24): sheets 4,958,424 -> 4,995,050 (+36,626); slides 9,512,363 -> 9,552,378 (+40,015). **Sheets budget raised**: `delta_br_max`
+  229,376 -> 294,912 (delta now +257,655; ceil(1.10 x delta / 16 KiB) x 16 KiB); slides stays 229,376 and fits with **4,607 B headroom** (the next slides change needs a raise). bridge-sheets 55 passed (new case 15),
+  bridge-slides 38 passed (new case 15). Screenshots: `docs/phase5/evidence/sheets-serif-names.png`, `slides-serif-names.png` (Times New Roman, Times, Liberation Serif,
+  Cambria in serif; Arial in sans for contrast; fixtures `ci/web-smoke/fixtures/sheets-serif-names.xlsx`, `slides-serif-names.pptx`).
+- Not checked: desktop builds (unchanged by design: an installed serif still leads); the PDF export of Sheets (it keeps its own default face); Docs; Georgia, Garamond and the like
+  still use the sans in Slides and the generic serif role in Sheets, which is now Tinos; Liberation Serif/Tinos bold and italic are synthesised, not drawn from real faces.

@@ -96,6 +96,12 @@ pub fn append_fallback_fonts(defs: &mut egui::FontDefinitions) {
         defs.font_data.insert((*key).into(), std::sync::Arc::new(egui::FontData::from_static(bytes)));
     }
     for (family, list) in defs.families.iter_mut() {
+        // Times New Roman and other serif names: the bundled serif leads the web chain (no system faces there), behind an installed one.
+        let serif = matches!(family, egui::FontFamily::Name(n) if **n == *crate::theme::SERIF);
+        if serif && FALLBACK_FONTS.iter().any(|(k, _)| *k == "office-fallback-serif") && !list.iter().any(|n| n == "office-fallback-serif") {
+            let at = list.iter().position(|n| !n.starts_with("sys-serif")).unwrap_or(list.len());
+            list.insert(at, "office-fallback-serif".into());
+        }
         let mono = *family == egui::FontFamily::Monospace || matches!(family, egui::FontFamily::Name(n) if n.to_lowercase().contains("mono"));
         let key = if mono { "office-fallback-mono" } else { "office-fallback-sans" };
         if FALLBACK_FONTS.iter().any(|(k, _)| *k == key) && !list.iter().any(|n| n == key) {
