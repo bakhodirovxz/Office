@@ -28,6 +28,9 @@ pub fn start() {
             log::error!("missing <canvas id=\"{CANVAS_ID}\">");
             return;
         };
+        if let Err(e) = finger_presses_once(&document) {
+            log::error!("a finger press reaches the page twice: {e}");
+        }
         let dirty = Rc::new(Cell::new(false));
         let saves = AsyncSaves::default();
         let mut options = eframe::WebOptions::default();
@@ -270,6 +273,24 @@ impl eframe::App for WebShell {
         }
         self.app.ui(ui);
     }
+}
+
+/// A finger's press reaches eframe twice: its `pointerdown` handler presses at once, in a frame with no touch event, then
+/// `touchstart` presses again with the touch. The page took that first press for a mouse's (the selection handles and the touch
+/// bar went away and the caret moved under the finger; a pinch drag-selected; a tap counted twice): a finger's `pointerdown` on
+/// the canvas stops here, before eframe's own listener, so only `touchstart` carries the press (phase 6 checklist F1, F2, F6).
+fn finger_presses_once(document: &web_sys::Document) -> Result<(), String> {
+    let on_down = wasm_bindgen::closure::Closure::<dyn FnMut(web_sys::PointerEvent)>::new(|e: web_sys::PointerEvent| {
+        let on_canvas = e.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).is_some_and(|t| t.id() == CANVAS_ID);
+        if on_canvas && e.pointer_type() == "touch" {
+            e.stop_propagation();
+        }
+    });
+    // Capture phase: the document sees the event before the canvas (eframe's listener) does.
+    document.add_event_listener_with_callback_and_bool("pointerdown", on_down.as_ref().unchecked_ref(), true).map_err(|e| format!("{e:?}"))?;
+    // The listener lives as long as the page.
+    on_down.forget();
+    Ok(())
 }
 
 /// Largest picture pasted from the browser's clipboard (as `insert.picture` allows).

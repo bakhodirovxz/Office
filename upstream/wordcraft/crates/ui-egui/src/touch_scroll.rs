@@ -39,7 +39,7 @@ pub struct TouchScroll {
     momentum: Momentum,
     /// A held-back press to carry out this frame, and whether it is a long press.
     press: Option<(Pos2, bool)>,
-    /// The last finger scrolled the page (until the next one lands).
+    /// The last finger scrolled or pinched the page (until the next one lands).
     scrolled: bool,
 }
 
@@ -82,6 +82,8 @@ impl TouchScroll {
         // The finger is gone when egui says so; a cancelled touch never releases the pointer.
         let lifted = input.pointer.primary_released() || !input.any_touches();
         let pinching = input.multi_touch().is_some();
+        // A pinch moves the page as a scroll does: its drag takes no keyboard either.
+        self.scrolled |= pinching;
         match self.phase {
             Phase::Idle => {
                 if input.pointer.primary_pressed() {
