@@ -2356,3 +2356,26 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   the Android `hostSaved` ack on a device or emulator.
 - Follow-up bfe1aba1 (found by docserver.spec on phase-7): the History icon floated over Docs' title row, which the palette bar moves
   down (colour spread 25 under it); it now sits in the Docs palette bar after Commands (bar padding 4 px); spread 0 in the rerun.
+
+### Merge forward: phase-6 (with phase-5 5b752c69) and p7-left into phase-7 (2026-11-12)
+- Merges c633cd8f (phase-6), a7d906f6 (p7-left), fde6e097, 12425773, 51180060 (phase-6 follow-ups). Patches: phase-5's suite-core web-sys
+  lock patches renumbered after phase-7's own lock patches (wordcraft 0901 -> 0903, gridcraft 0901 -> 0902, deckcraft 0901 -> 0902, pdfcraft
+  0901 -> 0903) and regenerated; gridcraft 0170, deckcraft 0171 and 0177 regenerated over the plugin patches; the four 0950 rustfmt patches
+  regenerated. docserver: the session answer carries `lang` and `plugins`; config has `ui_lang`, `close_idle_minutes` and the plugin tables.
+- **Found by the merge and fixed (522055c1):** phase-5 makes suite-core a wasm dependency of the web editors (toolbar mode), phase-7 gave
+  suite-core `ring` (signatures): docs/sheets/slides web did not build (ring's C code needs clang for wasm32). ring and the plugin store
+  (`suite_core::plugins`, its only user) are now native only; suite-core 62 tests pass, wasm32 check clean.
+- **Found, not fixed (owner decision):** the docserver wrapper opens Sheets and Slides with the full ribbon (p5-hengines), and their Plugins
+  menu exists only in the simple toolbar (gridcraft/deckcraft 0158). A user reaches the plugins there only after switching to the simple
+  toolbar. The wrapper's Sheets/Slides plugin test now saves the simple-toolbar choice first. Options: a Plugins entry in the full ribbon,
+  or the simple toolbar in the wrapper when the provider has plugins.
+- Measured: `verify-queue.sh all` OK (wordcraft 52, gridcraft 76, deckcraft 51, pdfcraft 24); register 203 rows OK; `ci.sh queue lint i18n`
+  ok (only baselined upstream clippy warnings); docserver fmt, clippy, cargo test ok; Playwright bridge-docs 15, bridge-sheets 55,
+  bridge-slides 38, bridge-pdf 40 passed; docserver.spec 37 passed + 4 that failed under load (History close poll 5 s x3, xlsx HRM Back's
+  first key) and passed on rerun, 1 skipped, the Sheets/Slides wrapper plugin test passed; `ci.sh plugins` ok except bridge-plugins-apps,
+  whose Sheets menu positions moved (the simple toolbar now ends with the Full ribbon switch): remeasured, 12 of 12 passed.
+- Sizes (`ci.sh sizes` exit 0): Docs 9,949,350 (headroom 53,370), Sheets 5,095,308 (delta +357,913, over 344,064: `delta_br_max` raised to
+  409,600 by the rule; headroom 51,687), Slides 7,156,490 (built without craft fonts, fonts=unset), PDF 9,573,286 (headroom 26,176), shell
+  65,944 of 81,920, plugins 15,038 of 16,384.
+- Not checked: the docker rehearsal; evil-desktop with a fresh release docs.exe (the job used the one in the target); a real device for the
+  mobile patches merged here.
