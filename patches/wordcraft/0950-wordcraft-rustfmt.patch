@@ -17,7 +17,7 @@ diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/hos
 -                || (!bridge.can_download.get() && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
 -                || (!bridge.can_print.get() && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
 +                || (!bridge.can_download.get()
-+                && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
++                    && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
 +                || (!bridge.can_print.get()
 +                    && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
          }));
