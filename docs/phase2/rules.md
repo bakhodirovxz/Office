@@ -1288,3 +1288,13 @@ Every surface follows it:
 - Products must be rebuilt to carry the new default.
 
 The page's browser-language guess maps `uz` to "Oʻzbekcha (1995)". That is a UI-language choice, separate from O13, and stays until the owner decides otherwise.
+
+### 15.5 Latin to Latin: upgrading 1995 text (`Options.latin_upgrade`, rules/4)
+
+`reviewed:agent-sonnet:2026-11-12`. Default off. With `latin_upgrade` and a 2026 write alphabet, ->Latin also rewrites Latin
+words: oʻ->ö, gʻ->ğ, sh->ş, ch->ç, sʼh (s, tutuq, h)->sh; capitals follow the first letter (Sh, SH->Ş). Any apostrophe of set A
+is accepted as the okina after o/g, and the R15 quote guard still applies. Not rewritten: words the ->C foreign guard keeps
+(`c` not in `ch`, `w`, foreign Latin letters, combining marks), `keep` list words, and words that mix in Cyrillic (today's
+behaviour). A segment (paragraph) that already contains any of ö ğ ş ç is read as 2026, as Auto does for ->C, and is left unchanged, so
+a plain `sh` (s + h) of a 2026 text is never turned into ş. Docs sets the
+option only for a non-collapsed selection whose dominant script is Latin; a whole-document run never does.
