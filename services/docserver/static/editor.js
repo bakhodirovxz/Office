@@ -243,11 +243,12 @@
     h1.focus();
     hfail(hload);
   }
-  // The bar above the editor holds the command palette button (Docs only, shell/palette.js); the History button floats over the editor.
+  // The bar above the editor holds the command palette button (Docs only, shell/palette.js) and then the History button; without a bar
+  // the History button floats over the editor. Returns the bar or null.
   function addBar(docs) {
-    if (!docs || !window.Palette) return;
+    if (!docs || !window.Palette) return null;
     var bar = document.createElement('div');
-    bar.style.cssText = 'flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:2px 8px;background:var(--bg);border-bottom:1px solid var(--line)';
+    bar.style.cssText = 'flex:0 0 auto;display:flex;justify-content:flex-end;gap:8px;padding:4px 8px;background:var(--bg);border-bottom:1px solid var(--line)';
     S.pal = Palette.make({
       t: t, say: function (m) { status.textContent = m; status.style.display = 'block'; },
       post: function (type, extra) { toEditor(type, extra); },
@@ -257,9 +258,11 @@
     S.pal.button.style.cssText = 'padding:2px 10px;font-size:.85rem';
     bar.appendChild(S.pal.button);
     document.body.insertBefore(bar, S.frame);
+    return bar;
   }
-  // A small icon button over the editor, no row of its own (history.css #hist-open: placed where none of the four apps draws a control).
-  function addHistoryButton() {
+  // A small icon button: in the bar when there is one, else over the editor with no row of its own (history.css #hist-open: placed
+  // where none of the four apps draws a control; the bar moves the app down, so over it the button would cover the app's title row).
+  function addHistoryButton(bar) {
     if (!window.HistUI) return;   // the shell files are not served: no panel
     var b = H.opener = document.createElement('button');
     b.type = 'button'; b.id = 'hist-open'; b.title = t('hist.nav');
@@ -268,7 +271,7 @@
     // a clock with a turning-back arrow
     b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5M12 7v5l3 2"/></svg>';
     b.onclick = hopen;
-    document.body.appendChild(b);
+    if (bar) { b.style.position = 'static'; bar.appendChild(b); } else document.body.appendChild(b);
   }
 
   // The edits no autosave holds yet, taken from the editor synchronously (window.__hostFinalCopy, the four bridges): the editor page goes
@@ -347,8 +350,7 @@
     S.frame.allow = 'clipboard-read; clipboard-write; fullscreen';
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';
     document.body.appendChild(S.frame);
-    addBar(app.id === 'docs');
-    addHistoryButton();
+    addHistoryButton(addBar(app.id === 'docs'));
     // the app is there: the host's not-ready timer stops now, not after the editor's download (which a host retry would restart)
     emit('onAppReady', {});
   }
