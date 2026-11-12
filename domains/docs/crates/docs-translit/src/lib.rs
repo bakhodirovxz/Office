@@ -129,10 +129,12 @@ fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
     let Some(targets) = targets else {
         return Ok(summary(&Stats::default(), dir, true, &ctx));
     };
-    let dir = match dir {
-        Some(d) => Some(d),
-        None => detect(&textmap::text_of(s, &targets)),
-    };
+    let detected = detect(&textmap::text_of(s, &targets));
+    // Latin selection + "Cyrillic to Latin": rewrite the 1995 letters in the 2026 ones. Never for a whole document
+    // (English words in a Cyrillic text would be mangled, "fish" -> "fiş").
+    ctx.opts.latin_upgrade =
+        use_selection && dir == Some(Direction::ToLatin) && detected == Some(Direction::ToCyrillic);
+    let dir = dir.or(detected);
     let mut st = Stats::default();
     if let Some(dir) = dir {
         let lang_ok = |l: Option<&str>| lang_converts(l, ctx.policy);
@@ -141,7 +143,9 @@ fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
             tracked: ctx.tracked,
             lang_ok: &lang_ok,
         };
-        textmap::walk(s, &targets, &o, &mut st, &mut |_, p, segs| convert(p, segs, dir, &ctx))?;
+        textmap::walk(s, &targets, &o, &mut st, &mut |_, p, segs| {
+            convert(p, segs, dir, &ctx)
+        })?;
     }
     Ok(summary(&st, dir, use_selection, &ctx))
 }
