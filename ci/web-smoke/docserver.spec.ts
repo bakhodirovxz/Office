@@ -1358,7 +1358,7 @@ test('onAppReady arrives before the editor download finished', async () => {
 
 // Phase 7 WP13: the Sheets and Slides editors in the wrapper (files/2 is the xlsx, files/6 the pptx on the fake backend). The wrapper's page host
 // (`editor.js` -> `PluginHost`, a Worker) with the real editors in its frame; the editors have no `run` message, so a command is started through the
-// toolbar's Plugins menu (clicks on the canvas, positions measured on screenshots; the menu layout depends on the frame width, so the browser window is 1100 px wide, as the frame of bridge-plugins-apps.spec.ts). Checks M1-style
+// full ribbon's Plugins tab (clicks on the canvas, positions measured on screenshots; the menu layout depends on the frame width, so the browser window is 1100 px wide, as the frame of bridge-plugins-apps.spec.ts). Checks M1-style
 // load of a signed fixture, M5, R1, M9, M7, M6 and that the saved text equals the opened one.
 test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked inside the wrapper, the document text is as it was', async () => {
   const FIX = path.join(ROOT, 'ci/plugins/webhost-test');
@@ -1386,9 +1386,6 @@ test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked
   try {
     for (const [fileId, app, id, entry] of [[2, 'sheets', 'wa-sheets', 'xl/sharedStrings.xml'], [6, 'slides', 'wa-slides', 'ppt/slides/slide1.xml']] as const) {
       const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 } });
-      // the wrapper asks for the full ribbon (p5-hengines), which has no Plugins menu in Sheets and Slides: this user chose the
-      // simple toolbar (the saved choice wins over ?toolbar=), where the menu positions below were measured
-      await ctx.addInitScript(() => { try { localStorage.setItem('suite.toolbar', 'simple'); } catch { /* opaque origin */ } });
       const page = await ctx.newPage();
       await page.goto(`${HOST}/host?kind=files&id=${fileId}&lang=en`);
       await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
@@ -1400,14 +1397,13 @@ test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked
       const aud = () => w.evaluate(() => (window as any).PluginHost.last.audit as { plugin: string; kind: string; error?: string }[]);
       const logs = () => w.evaluate(() => (window as any).PluginHost.last.logs.length as number);
       await expect.poll(() => w.evaluate(() => (window as any).PluginHost?.last?.plugins.map((p: any) => p.d.id).sort()), { timeout: 30_000 }).toEqual(['wa-sheets', 'wa-slides']);   // the host lists both; each frame's menu shows the one whose apps match
-      // the Plugins menu: Sheets in the toolbar's overflow (anchored right), Slides a button in the toolbar (fixed)
-      const box = (await canvas.boundingBox())!;
-      const W = Math.round(box.width);
-      const m = app === 'sheets' ? { more: [W - 167, 62], plugins: [W - 358, 250], plugin: [W - 110, 250], command: W - 210 } : { more: null, plugins: [934, 58], plugin: [940, 90], command: 1053 }   // one plugin in the menu here, so the commands open to the right of it;
+      // the Plugins menu in the full ribbon the wrapper asks for (p7-ribbon, gridcraft/deckcraft 0187): the Plugins tab, the plugin's
+      // button, then its commands: Sheets lists them below the button, Slides opens the plugin's submenu first (one plugin here, so
+      // its row is the first) and the commands open to the right of it (canvas pixels, measured on screenshots at this window size)
+      const m = app === 'sheets' ? { tab: [707, 53], plugin: [54, 98], sub: null, command: [57, 168] } : { tab: [723, 53], plugin: [40, 92], sub: [57, 155], command: [182, 155] };
       const at = (x: number, y: number) => canvas.click({ position: { x, y } });
       const menu = async (index: number) => {
-        if (m.more) await at(m.more[0], m.more[1]);
-        await at(m.plugins[0], m.plugins[1]); await at(m.plugin[0], m.plugin[1]); await at(m.command, m.plugin[1] + 26 * index);
+        await at(m.tab[0], m.tab[1]); await at(m.plugin[0], m.plugin[1]); if (m.sub) await at(m.sub[0], m.sub[1]); await at(m.command[0], m.command[1] + 26 * index);
       };
       // started = the page host got the call; a click can miss while the frame is busy
       const run = async (cmd: string) => {
