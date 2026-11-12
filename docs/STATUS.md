@@ -2028,6 +2028,19 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   A patch that adds a 444-line module cannot shrink the wasm: this is codegen/`wasm-opt` variance, so the true delta is below the noise (about 10 KB); no budget change needed. Current tapfix build: 9,875,600 B of 9,904,416.
 - **Not checked:** a real phone; Sheets, Slides, PDF; page-break handle drag (Web Layout has no pages; the drag fails first); autocorrect after a handle move; Cyrillic over a handle-made selection; the bar on C412, C360, A360; a desktop-browser mouse run; WP16.
 
+### Phase 6 WP5 fix: handles and the action bar by finger (2026-11-12, branch `p6-handles`, wordcraft/0186)
+- **Root cause of checklist F1 (also F6, half of F2):** Chromium fires `pointerdown` before `touchstart`; eframe 0.36 presses the primary pointer for both and runs a
+  frame at once from `pointerdown` with no `Touch` event, so the page took every finger press first as a mouse press (handles off, caret placed under the finger) and
+  then counted the `touchstart` press as a second click. Isolated on the old wasm by injecting only a capture-phase `pointerdown` stop: the handle drag and Cut worked.
+  The other half of F2: eframe presses the primary pointer again for a second finger's `touchstart`.
+- **Fix (wordcraft/0186, 5 files +108/-3):** `web.rs` `finger_presses_once` (a finger's `pointerdown` on the canvas never reaches eframe); `canvas::mouse` stands aside
+  during a multi-touch gesture; `touch_select` takes no handle press from a pinch; `TouchScroll` counts a pinch as a scroll (no keyboard from its drag). Two ui-egui tests.
+- **Emulator re-run** (`docs/phase6/checklist.md`, section "Re-run 2026-11-12"): handle drag, Cut / Copy / Paste / Select All, pinch without selection or keyboard,
+  first long press after load and 6/6 taps placing a caret: PASS on C412, C360, A412, A360 (rows as listed there). Still open: rows 4b/6b (Gboard after a handle move),
+  F3 (wide table), F4 on a real phone, F5; the bar can cover the end knob of a multi-line selection when it sits below (low, new).
+- **Measured:** Docs wasm 9,872,684 B brotli of 9,904,416 (headroom 31,732; `ci.sh sizes` ok, no budget change); APK 53,188,227 B. ui-egui touch tests 12 passed;
+  `a_pinch_neither_selects_nor_takes_the_keyboard` fails without the canvas/touch_scroll part. `ui-egui --lib` 737 passed, 7 failed (the 7 known i18n failures), 2 ignored.
+
 ### Phase 5: real install on the HRM test server (2026-11-08, owner OK)
 - Image `hoshiya-docserver:p5-53da47d5` (services of phase-5 53da47d5, dists of the p5-ro build), tarball 117 MB, SHA-256 `4a6a00a3…`.
   `install.sh --profile profiles/hrm.env` as root: the old ONLYOFFICE 9.3.1 container is kept as `docs-server-replaced`

@@ -64,6 +64,38 @@ Surfaces: **C412 / C360** Chrome at 412 / 360 dp; **A412 / A360** the Android ap
 
 Counts (40 table rows, one per item x surface or group): **PASS 20** (14 of them from today's runs, 6 `ref` rows from WP6/WP7/WP8), **FAIL 11**, INCONCLUSIVE 1, BLOCKED 4, not run 4.
 
+## Re-run 2026-11-12 after the F1/F2/F6 fix (wordcraft/0186, branch `p6-handles`)
+
+Rig as above (`HRM_Pixel_8`, Chrome 133, `wm size 540x1200`, density 210 = 412 dp and 240 = 360 dp, `touch.mjs` console touch, `RIG_SCALE=0.5`). Page: `p6-handles`
+(phase-6 `f7743895` + wordcraft/0186) Docs built by `scripts/build.sh docs web --release` (wasm 9,872,684 B brotli of 9,904,416, `ci.sh sizes` ok), the other
+editors copied from `p6-tapfix/dist-final`, served by `hoshiya-serve` through `session.mjs`. App: `packaging/android/build.sh` over that dist (53,188,227 B),
+VIEW intent with a write grant. Same fixture. Screenshots `docs/phase6/evidence/checklist/fix-*.png`; recordings `E:/office-target/p6h/rec/` (SHA-256 in `evidence/SHA256SUMS`).
+
+**Cause isolated before the rebuild** (`fix-old-wasm-cause-6up.png`, the checklist's old wasm): the first long press after load did nothing (F4), the second selected the
+word, a handle drag cleared the selection (F1 as before). Then, with no wasm change, a capture-phase `pointerdown` listener that stops a finger's event on the canvas was
+injected into the editor frame (`cdp-eval.mjs`; it logged the order `pointerdown:touch touchstart: pointerup:touch touchend:`): the same handle drag extended the selection
+and Cut on the bar cut the text. A pinch still drag-selected and raised the keyboard with only that listener: the second finger's press needs the canvas fix too.
+
+| # | Item | Surface | Result | Evidence | Date |
+|---|---|---|---|---|---|
+| 1 | Long press selects the word, handles and the bar show (first long press after load) | C412, C360, A412, A360 | PASS on the first try on all four (F4 not seen) | `fix-c412-handles-4up.png` (1st), `fix-c360-4up.png` (1st), `fix-a412-5up.png` (1st), `fix-a360-3up.png` (1st) | 2026-11-12 |
+| 2 | Drag a handle across a line | C412 | PASS: end handle down two lines, start handle up into the heading (across a paragraph) | `fix-c412-handles-4up.png` (2nd, 3rd), `rec/c412-after.mp4` | 2026-11-12 |
+| 2 | same | C360 | PASS (end handle from the heading into the next paragraph) | `fix-c360-4up.png` (2nd) | 2026-11-12 |
+| 2 | same | A412 | PASS (end handle two lines down) | `fix-a412-5up.png` (2nd), `rec/a412-after.mp4` | 2026-11-12 |
+| 2 | same | A360 | PASS | `fix-a360-3up.png` (2nd) | 2026-11-12 |
+| 2b | ... across a page break | all | BLOCKED as before (Web Layout has no pages in phone mode); covered by the ui-egui test `dragging_a_handle_across_a_page_break` only | | |
+| 3 | Cut / Copy / Paste / Select All from the bar | C412 | PASS: Cut removed the selection (Android clipboard chip shows it), Copy then Paste over another long-pressed word replaced it with the copied word, Select All selected the document | `fix-c412-handles-4up.png` (4th), `fix-c412-bar-4up.png` | 2026-11-12 |
+| 3 | Cut | C360 | PASS | `fix-c360-4up.png` (3rd) | 2026-11-12 |
+| 3 | Cut | A412 | PASS | `fix-a412-5up.png` (3rd) | 2026-11-12 |
+| 3 | Select All | A360 | PASS | `fix-a360-3up.png` (3rd) | 2026-11-12 |
+| 4b, 6b | Autocorrect / Cyrillic typing after a handle move | all | not run (unblocked now; needs the Gboard rig of WP7) | | |
+| 7 | Pinch zoom: no selection, no keyboard | C412 | PASS: out about 3x and back, horizontal and vertical, fingers landing together and 80 ms apart; no selection, keyboard stays down | `fix-c412-pinch-5up.png`, `rec/c412-pinch.mp4` | 2026-11-12 |
+| 7 | same | C360, A412 | PASS (out and back) | `fix-c360-4up.png` (4th), `fix-a412-5up.png` (4th, 5th) | 2026-11-12 |
+| F6 | A tap places a caret | C412 | PASS: 6 of 6 taps on text gave a caret, none selected a word (the stray text in the shots is from my first taps landing on the raised keyboard and its clipboard chip, not from the app) | `fix-c412-taps-3up.png` | 2026-11-12 |
+
+New observation (low): when the bar has no room above the selection it is placed below and can cover the end knob (`fix-c360-4up.png` 2nd, `fix-c412-handles-4up.png` 3rd).
+`touch_select::show` puts it at `anchor.max.y + DROP + R + GAP`, i.e. below the knob of the *first* line; with a multi-line selection the end knob is lower and can sit under it.
+
 ## Findings
 
 **F1 (high): selection handles and the action bar cannot be used by a finger in Chrome or in the app.** Reproduced on all four surfaces and on a DPR 1.0 run,
@@ -78,10 +110,21 @@ the pointer events itself. The bar needs the same;
 `layer_id_at(at)` is the background: on the web the press may be taken by the held-press path first (`touch_scroll.rs` `hold_press`) or `at` may differ from the painted knob;
 add a log of `start`, `grabbed` and the knob rectangle in a debug build and replay `touch.mjs drag`.
 Fix is not small (needs a wasm rebuild, about 40 min on this host, and a new hand-rolled hit path) and was not attempted. WP5 stays open on this.
+**Fixed 2026-11-12 (wordcraft/0186).** Root cause: neither suspect. Chromium fires `pointerdown` before `touchstart`; eframe 0.36 turns both into a primary press, and
+its `pointerdown` handler runs a frame at once (`runner.logic()`) holding only `PointerButton { pressed }`, with no `Touch` event. In that frame `touch_select::pointer`
+saw a mouse press (`touch_select.rs:110-111` set `tsel.touch = false`: no handles, the bar not drawn) and `touch_scroll::hold_press` (no `Touch Start`) let it through, so
+`canvas::mouse` placed the caret under the finger; the `touchstart` frame then found a caret and nothing to grab. The bar's `Button::clicked` failed only because the bar
+was gone in that frame. Fix: wordcraft-web stops a finger's `pointerdown` on the canvas in the capture phase (`web.rs` `finger_presses_once`), so a finger's press arrives once,
+with its touch, as the kittest harness already fed it. Emulator re-run above: PASS on C412, C360, A412, A360.
 
 **F2 (medium): a pinch also drag-selects text and raises the soft keyboard** (C412, A360; staged two-finger landing, 80 ms apart, did not avoid it on this slow host).
 After `TouchScroll` leaves `Waiting` on a second finger (`touch_scroll.rs:96-99`, `phase = Idle`) the first finger is still the primary pointer and `canvas::mouse` takes it
 as a drag-select (`canvas.rs:2343-2360`). A real phone may land the fingers differently; recheck on a device. Candidate fix: stay out of `mouse()` until the primary pointer lifts after a pinch.
+**Fixed 2026-11-12 (wordcraft/0186).** Two presses caused it: the first finger's `pointerdown` frame (above, a mouse drag-select that the first finger's moves then
+grew) and, independently, eframe's `touchstart` for the second finger, which presses the primary pointer again at the first finger (`multi_touch()` is already on in that
+frame, so `hold_press` declines and `mouse()` took it as a click and drag; the drag's `drag_started` then focused the page: keyboard). Fix: `canvas::mouse` returns
+during a multi-touch gesture, `touch_select` takes no handle press from a pinch, and `TouchScroll` counts a pinch as a scroll so the focus rule (`canvas.rs` `focus_click`)
+ignores its drag. Test `touch_select::tests::a_pinch_neither_selects_nor_takes_the_keyboard` (fails without the change). Emulator: PASS on C412 (also staged 80 ms), C360, A412.
 
 **F3 (medium): content wider than the phone is clipped, not reflowed or scrollable.** Web Layout reflows text but not a fixed-width table (`layout/src/lib.rs:2296`
 branch, not traced further); 1D and 1E of a 6.25 in table are unreachable at 360 and 412 dp, and a horizontal swipe selects cells. Needs a decision: shrink to the web width
@@ -89,11 +132,15 @@ or allow a horizontal pan (SIZING 6.x, O4-style scope).
 
 **F4 (low): the first long press after a document opens often does nothing** (it only focuses; seen on the first try in the app twice and in Chrome twice, the second try works).
 Also a long press on a word that already holds the caret just kept the caret (once). Timing under the slow host may be the cause; recheck on a device.
+**2026-11-12:** reproduced once on the old wasm (first long press after load ignored), not seen after wordcraft/0186 in 4 of 4 first long presses (C412, C360, A412,
+A360). Likely the same `pointerdown` frame (a mouse press before the first `touchstart` turned the phone's touch handling on), but not proven: keep it open for a real phone.
 
 **F5 (low): landscape on a phone** shows the desktop ribbon: with Chrome's own bar about one line of document; in the app with the keyboard up none (`a360-landscape.png`).
 Known (WP8 saw landscape); a landscape phone layout is not planned.
 
 **F6 (info): a tap on text selected a word with handles** twice (C412 after a rest, A360) where a caret was expected. Not investigated.
+**Fixed 2026-11-12 (wordcraft/0186).** Cause: one tap made two presses (`pointerdown` frame, then `touchstart`), so `canvas::press_count` saw the second as a
+double-click within `max_double_click_delay` and selected the word (the tapfix run's "second tap selected a word" too). With one press per finger, 6 of 6 taps placed a caret.
 
 ## Tooling added
 `scripts/mobile/touch.mjs` (drag, press, pinch through the console), `cdp-eval.mjs` (one expression in the emulator's tab), `fixtures/make-wp13.py` + `wp13.docx`,
@@ -104,5 +151,5 @@ BLOCKED on a phone, would differ: frame timing (long press, two fingers landing 
 physical rotation sensor, thermal and memory (WP14).
 
 ## WP16 needs
-The F1 fix and a re-run of rows 2, 3, 4b, 6b on four surfaces; F2 decision; F3 decision; the same checklist for Sheets, Slides, PDF if O4 puts them in scope;
+Rows 4b, 6b (Gboard after a handle move; F1 fixed, rows 2 and 3 re-run 2026-11-12); a real-phone check of F4; F3 decision; the same checklist for Sheets, Slides, PDF if O4 puts them in scope;
 a real-phone pass of the timing rows; WP14 numbers.
