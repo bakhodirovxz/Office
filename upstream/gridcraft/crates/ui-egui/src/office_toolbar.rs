@@ -416,21 +416,31 @@ fn label_of(app: &SheetApp, item: &Item, labels: bool) -> Option<String> {
 /// usual alert. On the web a command answers `{pending}` at once and the page shows the outcome.
 fn plugin_items(app: &mut SheetApp, ui: &mut Ui) {
     for (plugin, commands) in office_overlay::plugin_menu() {
-        ui.menu_button(plugin, |ui| {
-            for (label, id) in commands {
-                if ui.button(label).clicked() {
-                    match app.run(id, json!({})) {
-                        Ok(v) => {
-                            if let Some(t) = v.get("status").and_then(Value::as_str) {
-                                app.toast = Some((t.to_string(), crate::now_ms()));
-                            }
-                        }
-                        Err(e) => app.alert(e),
+        ui.menu_button(plugin, |ui| plugin_commands(app, ui, commands));
+    }
+}
+
+fn plugin_commands(app: &mut SheetApp, ui: &mut Ui, commands: Vec<(String, &'static str)>) {
+    for (label, id) in commands {
+        if ui.button(label).clicked() {
+            match app.run(id, json!({})) {
+                Ok(v) => {
+                    if let Some(t) = v.get("status").and_then(Value::as_str) {
+                        app.toast = Some((t.to_string(), crate::now_ms()));
                     }
-                    ui.close();
                 }
+                Err(e) => app.alert(e),
             }
-        });
+            ui.close();
+        }
+    }
+}
+
+/// The full ribbon's Plugins tab (gridcraft/0187): the same menus as the simple toolbar's, one ribbon button per plugin.
+pub(crate) fn plugins_tab(app: &mut SheetApp, ui: &mut Ui) {
+    for (plugin, commands) in office_overlay::plugin_menu() {
+        let r = crate::widgets::big_button(ui, crate::icons::Icon::Script, &plugin, &plugin, true);
+        egui::Popup::menu(&r).show(|ui| plugin_commands(app, ui, commands));
     }
 }
 
