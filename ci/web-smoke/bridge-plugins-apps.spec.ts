@@ -26,7 +26,7 @@ const APPS: readonly {
   id: string; prefix: string; dist: string; file: string; menu: Menu; clickAt: { x: number; y: number }; entries: string[]; converted: RegExp;
 }[] = [
   { id: 'sheets', prefix: 'gridcraft', dist: path.resolve(process.env.SHEETS_DIST ?? 'E:/office-target/p7-left/dist/sheets-web'), file: path.join(ROOT, 'domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx'),
-    menu: { more: [1008, 62], plugins: [817, 198], plugin: [704, 198], command: 830 }, clickAt: { x: 400, y: 420 }, entries: ['xl/sharedStrings.xml'], converted: /Тошкент/ },
+    menu: { more: [933, 62], plugins: [742, 250], plugin: [990, 250], command: 890 }, clickAt: { x: 400, y: 420 }, entries: ['xl/sharedStrings.xml'], converted: /Тошкент/ },
   { id: 'slides', prefix: 'deckcraft', dist: path.resolve(process.env.SLIDES_DIST ?? 'E:/office-target/p7-left/dist/slides-web'), file: path.join(ROOT, 'domains/slides/tests/translit-fixtures/pptx/01-shapes-notes.pptx'),
     menu: { plugins: [934, 58], plugin: [922, 90], command: 830 }, clickAt: { x: 900, y: 400 }, entries: ['ppt/slides/slide1.xml'], converted: /[\u0400-\u04FF]/ },
 ];

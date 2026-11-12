@@ -1403,7 +1403,7 @@ test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked
       // the Plugins menu: Sheets in the toolbar's overflow (anchored right), Slides a button in the toolbar (fixed)
       const box = (await canvas.boundingBox())!;
       const W = Math.round(box.width);
-      const m = app === 'sheets' ? { more: [W - 92, 62], plugins: [W - 283, 198], plugin: [W - 396, 198], command: W - 270 } : { more: null, plugins: [934, 58], plugin: [940, 90], command: 1053 }   // one plugin in the menu here, so the commands open to the right of it;
+      const m = app === 'sheets' ? { more: [W - 167, 62], plugins: [W - 358, 250], plugin: [W - 110, 250], command: W - 210 } : { more: null, plugins: [934, 58], plugin: [940, 90], command: 1053 }   // one plugin in the menu here, so the commands open to the right of it;
       const at = (x: number, y: number) => canvas.click({ position: { x, y } });
       const menu = async (index: number) => {
         if (m.more) await at(m.more[0], m.more[1]);
