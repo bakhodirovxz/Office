@@ -545,3 +545,33 @@ fn a_tracked_deletion_inside_a_digraph_is_not_a_boundary() {
         .collect();
     assert_eq!((live.as_str(), gone.as_str()), ("ш", "x"));
 }
+
+#[test]
+fn latn_on_a_selected_latin_text_upgrades_1995_to_2026_and_one_undo_restores_it() {
+    let mk = || {
+        session(vec![para(&[
+            ("Oʻzbek ", Default::default()),
+            ("shahar", bold()),
+            (" choy", Default::default()),
+        ])])
+    };
+    let mut s = mk();
+    let before = s.doc.clone();
+    let len = text(&s, 0).len();
+    s.sel = Selection {
+        anchor: Pos::body(0, 0),
+        focus: Pos::body(0, len),
+    };
+    s.run(LATN, &json!({})).unwrap();
+    assert_eq!(text(&s, 0), "Özbek şahar çoy");
+    let r = runs(p(&s, 0));
+    assert_eq!(r.len(), 3);
+    assert_eq!((r[1].0.bold, r[1].1.as_str()), (Some(true), "şahar"));
+    s.run("edit.undo", &json!({})).unwrap();
+    assert_eq!(s.doc, before, "one undo restores it");
+    // No selection: the whole document is left alone (English words in Cyrillic documents).
+    let mut s = mk();
+    s.sel = Selection::caret(Pos::body(0, 0));
+    s.run(LATN, &json!({})).unwrap();
+    assert_eq!(s.doc, before);
+}

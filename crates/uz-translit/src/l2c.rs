@@ -84,13 +84,11 @@ fn cluster(seg: &mut Seg, a: usize, b: usize, ch: char, up: bool) {
     seg.attachments(a, b);
 }
 
-fn foreign(seg: &Seg, w: &Word) -> bool {
+fn foreign(seg: &Seg, w: &Word, y26: bool) -> bool {
     (w.ws..w.we).any(|i| {
         let it = seg.items[i];
         match it.c {
-            'c' | 'C' => {
-                seg.opts.latin_alphabet == LatinAlphabet::Y2026 || at(seg, i + 1, w.we) != Some('h')
-            }
+            'c' | 'C' => y26 || at(seg, i + 1, w.we) != Some('h'),
             'w' | 'W' => true,
             c if is_foreign_latin(c) => true,
             c => {
@@ -100,6 +98,61 @@ fn foreign(seg: &Seg, w: &Word) -> bool {
             }
         }
     })
+}
+
+/// ->Latin with `latin_upgrade`: rewrite a 1995 Latin word in the 2026 letters. `false` = not a Latin word, nothing emitted.
+pub(crate) fn upgrade(seg: &mut Seg, wi: usize) -> bool {
+    let w = seg.words[wi];
+    if !seg.items[w.ws..w.we]
+        .iter()
+        .all(|t| !is_letter(t.c) || is_latin_ext(t.c))
+    {
+        return false;
+    }
+    let mut buf = core::mem::take(&mut seg.buf);
+    buf.clear();
+    seg.items[w.ws..w.we]
+        .iter()
+        .for_each(|t| push_exact(&mut buf, t.c));
+    let verbatim = w.attach
+        || (w.class != Class::Lower && dict::keep(&buf))
+        || (seg.opts.foreign_latin_guard && foreign(seg, &w, false));
+    seg.buf = buf;
+    if verbatim {
+        seg.verbatim_range(w.ws, w.we);
+        return true;
+    }
+    let cs: Vec<char> = seg.items[w.ws..w.we].iter().map(|t| t.c).collect();
+    let ch = |k: usize| cs.get(k - w.ws).copied();
+    let mut i = w.ws;
+    while i < w.we {
+        let c = seg.items[i].c;
+        let (n1, n2) = (ch(i + 1), ch(i + 2));
+        // (letter, consumed items) for oʻ gʻ sh ch; sʼh keeps both letters plain
+        let hit = match (lower(c), n1) {
+            ('o' | 'g', Some(a)) if is_apos(a) => {
+                Some((if lower(c) == 'o' { 'ö' } else { 'ğ' }, 2))
+            }
+            ('s', Some(h)) if lower(h) == 'h' => Some(('ş', 2)),
+            ('c', Some(h)) if lower(h) == 'h' => Some(('ç', 2)),
+            _ => None,
+        };
+        if let Some((l, k)) = hit {
+            seg.open(i);
+            seg.out.s.push(if is_up(c) { upper(l) } else { l });
+            seg.open(i + 1);
+            i += k;
+        } else if lower(c) == 's' && n1.is_some_and(is_apos) && n2.is_some_and(|h| lower(h) == 'h')
+        {
+            seg.verbatim(i);
+            seg.open(i + 1); // drop the tutuq
+            i += 2;
+        } else {
+            seg.verbatim(i);
+            i += 1;
+        }
+    }
+    true
 }
 
 pub(crate) fn word(seg: &mut Seg, wi: usize) {
@@ -126,7 +179,9 @@ fn word_with(seg: &mut Seg, wi: usize, buf: &mut String) {
             return;
         }
     }
-    if seg.opts.foreign_latin_guard && foreign(seg, &w) {
+    if seg.opts.foreign_latin_guard
+        && foreign(seg, &w, seg.opts.latin_alphabet == LatinAlphabet::Y2026)
+    {
         seg.verbatim_range(w.ws, w.we);
         return;
     }

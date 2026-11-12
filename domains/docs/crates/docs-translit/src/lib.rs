@@ -190,10 +190,12 @@ fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
         targets.push((StoryRef::Body, None));
         targets.extend(s.doc.parts.keys().map(|k| (StoryRef::Part(*k), None)));
     }
-    let dir = match dir {
-        Some(d) => Some(d),
-        None => detect(s, &targets),
-    };
+    let detected = detect(s, &targets);
+    // Latin selection + "Cyrillic to Latin": rewrite the 1995 letters in the 2026 ones. Never for a whole document
+    // (English words in a Cyrillic text would be mangled, "fish" -> "fiş").
+    ctx.opts.latin_upgrade =
+        use_selection && dir == Some(Direction::ToLatin) && detected == Some(Direction::ToCyrillic);
+    let dir = dir.or(detected);
     let mut st = Stats::default();
     if let Some(dir) = dir {
         for (story, bounds) in &targets {
