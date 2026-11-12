@@ -1386,6 +1386,9 @@ test('plugins in the wrapper (Sheets and Slides): M5, R1, M6, M7, M9 are blocked
   try {
     for (const [fileId, app, id, entry] of [[2, 'sheets', 'wa-sheets', 'xl/sharedStrings.xml'], [6, 'slides', 'wa-slides', 'ppt/slides/slide1.xml']] as const) {
       const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 } });
+      // the wrapper asks for the full ribbon (p5-hengines), which has no Plugins menu in Sheets and Slides: this user chose the
+      // simple toolbar (the saved choice wins over ?toolbar=), where the menu positions below were measured
+      await ctx.addInitScript(() => { try { localStorage.setItem('suite.toolbar', 'simple'); } catch { /* opaque origin */ } });
       const page = await ctx.newPage();
       await page.goto(`${HOST}/host?kind=files&id=${fileId}&lang=en`);
       await expect.poll(() => state(page), { timeout: 90_000 }).toBe('ready');
