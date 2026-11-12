@@ -404,3 +404,15 @@ test('14 an empty python-docx-style blank opens in Times New Roman and stays cle
   await expect.poll(() => lastDirty(page)).toBe(true);
   if (shot) await page.screenshot({ path: path.join(shot, 'docs-empty-blank-typed.png') });
 });
+
+test('15 readOnly: Ctrl+S saves nothing, posts no save or failure to the host and starts no download (the notice is drawn on the canvas)', async ({ page }) => {
+  await open(page, { readOnly: true });
+  let downloaded = false;
+  page.on('download', () => { downloaded = true; });
+  await canvas(page).click({ position: { x: 400, y: 160 } });
+  await page.keyboard.press('Control+s');
+  await page.waitForTimeout(2000);
+  expect(await count(page, 'wordcraft:save')).toBe(0);
+  expect(await count(page, 'wordcraft:failed')).toBe(0);
+  expect(downloaded).toBe(false);
+});

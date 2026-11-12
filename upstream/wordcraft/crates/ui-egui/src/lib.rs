@@ -996,6 +996,13 @@ impl WordApp {
         }
         // Web: saving and exporting become downloads.
         if self.services.download.is_some() && matches!(id, "file.save" | "file.saveAs" | "file.exportPdf" | "file.exportPng") {
+            // The host holds the document read only: say so, in the interface language, instead of
+            // a failed download.
+            if self.blocked("document.readOnly") {
+                let msg = tl!("This document is open read-only.").to_string();
+                self.status(msg.clone());
+                return Err(msg);
+            }
             let name = params.get("path").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| self.default_save_name());
             let name = if id == "file.exportPdf" && !name.ends_with(".pdf") { format!("{name}.pdf") } else { name };
             // A save with a password encrypts this and later saves (`file.save`'s `password`).
@@ -6067,6 +6074,17 @@ mod tests {
         assert!(a.session.dirty);
         let msg = a.status_msg.as_ref().map(|(m, _)| m.clone()).unwrap_or_default();
         assert!(msg.contains("blocked by the browser"), "the status bar says why: {msg:?}");
+    }
+
+    /// The host's read-only flag turns a save into a localized notice, not a failed download.
+    #[test]
+    fn a_save_of_a_read_only_document_says_so() {
+        let mut a = typed();
+        a.services.download = Some(Box::new(|_, _| panic!("nothing is downloaded")));
+        a.services.blocked = Some(Box::new(|id| id == "document.readOnly"));
+        let err = a.run("file.save", json!({})).unwrap_err();
+        assert_eq!(err, "This document is open read-only.");
+        assert_eq!(a.status_msg.as_ref().map(|(m, _)| m.as_str()), Some(err.as_str()));
     }
 
     /// #1315: a web app whose `download` hands the save to the browser's picker, which finishes

@@ -776,7 +776,7 @@ const OWN: [(&str, &[&str]); 16] = [
 
 /// R6 (docs/phase5/r6.md): the host bridges' messages in the web apps (`apps/*-web`, which the scans do not read).
 /// (English, app, where)
-const OWN_R6: [(&str, &str, &str); 4] = [
+const OWN_R6: [(&str, &str, &str); 5] = [
     (
         "This workbook is open read-only: changes are not kept.",
         "gridcraft",
@@ -786,6 +786,11 @@ const OWN_R6: [(&str, &str, &str); 4] = [
         "This is not available in this session.",
         "gridcraft",
         "patches/gridcraft/0160",
+    ),
+    (
+        "This document is open read-only.",
+        "wordcraft",
+        "patches/wordcraft/0165",
     ),
     (
         "This presentation is open read-only: changes are not kept.",
