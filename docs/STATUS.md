@@ -2112,3 +2112,5 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   **Shell 65,707 B brotli, 171 B over 65,536**: br_max raised to 81,920 by the rule (phase-7's value).
 - Not checked on phase-6: Sheets/Slides/PDF web builds, their bridge specs and docserver.spec (run on phase-7, which carries all of this);
   the Android `hostSaved` ack on a device or emulator.
+- Follow-up bfe1aba1 (found by docserver.spec on phase-7): the History icon floated over Docs' title row, which the palette bar moves
+  down (colour spread 25 under it); it now sits in the Docs palette bar after Commands (bar padding 4 px); spread 0 in the rerun.
