@@ -42,6 +42,9 @@ fn to_2026(t: &[char]) -> Vec<char> {
 }
 
 pub(crate) fn word(seg: &mut Seg, wi: usize) {
+    if seg.upgrade && crate::l2c::upgrade(seg, wi) {
+        return;
+    }
     let w = seg.words[wi];
     let y26 = seg.opts.latin_alphabet == LatinAlphabet::Y2026;
     if !w.attach {
