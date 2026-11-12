@@ -180,6 +180,10 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
                         file_menu(app, ui);
                     }
                     let mut tabs: Vec<&str> = TABS.to_vec();
+                    // office overlay (gridcraft/0187): the plugins' tab, only while a plugin is loaded
+                    if !crate::office_overlay::plugin_menu().is_empty() {
+                        tabs.push("Plugins");
+                    }
                     let ctx_tabs = contextual_tabs(app);
                     tabs.extend(ctx_tabs.iter());
                     for tab in tabs {
@@ -245,6 +249,7 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
                             "Review" => review(app, ui),
                             "View" => view(app, ui),
                             "Automate" => automate(app, ui),
+                            "Plugins" => crate::office_toolbar::plugins_tab(app, ui),
                             "Table Design" => table_design(app, ui),
                             "Chart Design" => chart_design(app, ui),
                             crate::paper_view::TAB => crate::paper_view::ribbon_tab(app, ui),

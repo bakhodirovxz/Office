@@ -2402,3 +2402,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   parts translated and the verb is right, unchanged (the reason is generic, shared with the withheld-download case).
 - Tests: ui-egui `a_save_of_a_read_only_document_says_so`; `bridge-docs.spec.ts` case 15 (read-only open, Ctrl+S: no `wordcraft:save`, no `wordcraft:failed`, no download; the notice itself is drawn on the canvas, so
   the Playwright case cannot read its text).
+
+### Sheets and Slides: Plugins tab in the full ribbon (2026-11-12; branch `p7-ribbon`)
+- Closes the owner-decision finding of the phase-7 merge (the docserver wrapper opens Sheets and Slides with the full ribbon, p5-hengines, and
+  their Plugins menu existed only in the simple toolbar). Carried patches `gridcraft/0187` and `deckcraft/0187` (REGISTER rows; the 0950
+  patches unchanged, the new lines are rustfmt-clean): a "Plugins" tab after the built-in tabs of the full ribbon, shown exactly while
+  `office_overlay::plugin_menu()` is non-empty (the condition that shows the simple toolbar's menu). Sheets: one ribbon button per plugin with
+  its commands in a list; Slides: one Plugins button with the same per-plugin submenus as the simple toolbar. The command loop (run, status
+  toast or alert) is shared with the simple toolbar's code, not copied. The tab label reuses the catalog row `Plugins` (no new strings).
+- The wrapper test (`docserver.spec.ts`, "plugins in the wrapper (Sheets and Slides)") no longer forces `suite.toolbar=simple`: it clicks the
+  Plugins tab, the plugin and the command in the full ribbon the wrapper asks for (positions measured on screenshots at the 1100 px window).

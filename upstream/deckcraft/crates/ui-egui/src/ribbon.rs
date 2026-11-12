@@ -160,7 +160,9 @@ const TABS: [&str; 10] = ["Home", "Insert", "Draw", "Design", "Transitions", "An
 pub fn show(app: &mut SlideApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let ctx_tabs = contextual(app);
-    if !TABS.contains(&app.ui.tab.as_str()) && !ctx_tabs.contains(&app.ui.tab.as_str()) {
+    // office overlay (deckcraft/0187): the plugins' tab, only while a plugin is loaded
+    let plugins_tab = (!crate::office_overlay::plugin_menu().is_empty()).then_some("Plugins");
+    if !TABS.contains(&app.ui.tab.as_str()) && !ctx_tabs.contains(&app.ui.tab.as_str()) && plugins_tab != Some(app.ui.tab.as_str()) {
         app.ui.tab = "Home".into();
     }
     let h = 28.0 + if app.ui.ribbon_collapsed { 4.0 } else { RIBBON_H + 20.0 };
@@ -185,7 +187,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             }
             x += w + 2.0;
         }
-        let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
+        let all: Vec<(&str, bool)> = TABS.iter().chain(plugins_tab.iter()).map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
         for (name, contextual) in all {
             let font = theme::font(13.0);
             let shown = crate::i18n::t(name);
@@ -240,6 +242,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             "Record" => record(app, ui),
             "Review" => review(app, ui),
             "View" => view(app, ui),
+            "Plugins" => crate::office_toolbar::plugins_tab(app, ui),
             "Shape Format" => shape_format(app, ui),
             "Picture Format" => picture_format(app, ui),
             "Table Design" => table_design(app, ui),

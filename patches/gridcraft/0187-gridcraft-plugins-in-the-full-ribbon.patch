@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 12 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui: Plugins tab in the full ribbon
+
+Phase 7 (p7-ribbon): the docserver wrapper opens Sheets with the full ribbon, where the Plugins menu of patch 0158 did not exist. A Plugins tab (shown only while a plugin is loaded) holds one ribbon button per plugin with the same command menu as the simple toolbar; the command loop is shared (plugin_commands).
+---
+ crates/ui-egui/src/office_toolbar.rs | 34 ++++++++++++++++++++++------------
+ crates/ui-egui/src/ribbon.rs         |  5 +++++
+ 2 files changed, 27 insertions(+), 12 deletions(-)
+
+diff --git a/crates/ui-egui/src/office_toolbar.rs b/crates/ui-egui/src/office_toolbar.rs
+index f613254f..3a4094a9 100644
+--- a/crates/ui-egui/src/office_toolbar.rs
++++ b/crates/ui-egui/src/office_toolbar.rs
+@@ -416,21 +416,31 @@ fn label_of(app: &SheetApp, item: &Item, labels: bool) -> Option<String> {
+ /// usual alert. On the web a command answers `{pending}` at once and the page shows the outcome.
+ fn plugin_items(app: &mut SheetApp, ui: &mut Ui) {
+     for (plugin, commands) in office_overlay::plugin_menu() {
+-        ui.menu_button(plugin, |ui| {
+-            for (label, id) in commands {
+-                if ui.button(label).clicked() {
+-                    match app.run(id, json!({})) {
+-                        Ok(v) => {
+-                            if let Some(t) = v.get("status").and_then(Value::as_str) {
+-                                app.toast = Some((t.to_string(), crate::now_ms()));
+-                            }
+-                        }
+-                        Err(e) => app.alert(e),
++        ui.menu_button(plugin, |ui| plugin_commands(app, ui, commands));
++    }
++}
++
++fn plugin_commands(app: &mut SheetApp, ui: &mut Ui, commands: Vec<(String, &'static str)>) {
++    for (label, id) in commands {
++        if ui.button(label).clicked() {
++            match app.run(id, json!({})) {
++                Ok(v) => {
++                    if let Some(t) = v.get("status").and_then(Value::as_str) {
++                        app.toast = Some((t.to_string(), crate::now_ms()));
+                     }
+-                    ui.close();
+                 }
++                Err(e) => app.alert(e),
+             }
+-        });
++            ui.close();
++        }
++    }
++}
++
++/// The full ribbon's Plugins tab (gridcraft/0187): the same menus as the simple toolbar's, one ribbon button per plugin.
++pub(crate) fn plugins_tab(app: &mut SheetApp, ui: &mut Ui) {
++    for (plugin, commands) in office_overlay::plugin_menu() {
++        let r = crate::widgets::big_button(ui, crate::icons::Icon::Script, &plugin, &plugin, true);
++        egui::Popup::menu(&r).show(|ui| plugin_commands(app, ui, commands));
+     }
+ }
+ 
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index d38d46ef..facf05fc 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -180,6 +180,10 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
+                         file_menu(app, ui);
+                     }
+                     let mut tabs: Vec<&str> = TABS.to_vec();
++                    // office overlay (gridcraft/0187): the plugins' tab, only while a plugin is loaded
++                    if !crate::office_overlay::plugin_menu().is_empty() {
++                        tabs.push("Plugins");
++                    }
+                     let ctx_tabs = contextual_tabs(app);
+                     tabs.extend(ctx_tabs.iter());
+                     for tab in tabs {
+@@ -245,6 +249,7 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
+                             "Review" => review(app, ui),
+                             "View" => view(app, ui),
+                             "Automate" => automate(app, ui),
++                            "Plugins" => crate::office_toolbar::plugins_tab(app, ui),
+                             "Table Design" => table_design(app, ui),
+                             "Chart Design" => chart_design(app, ui),
+                             crate::paper_view::TAB => crate::paper_view::ribbon_tab(app, ui),

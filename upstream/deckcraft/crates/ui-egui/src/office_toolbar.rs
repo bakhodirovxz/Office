@@ -453,22 +453,33 @@ fn plugins_menu(app: &mut SlideApp, ui: &mut Ui) {
     }
     let label = crate::i18n::t("Plugins");
     let main = button(ui, Btn::new("", label).tip(label.to_string()).menu(), true).0;
-    egui::Popup::menu(&main).show(|ui| {
-        for (plugin, commands) in menu {
-            ui.menu_button(plugin, |ui| {
-                for (label, id) in commands {
-                    if ui.button(label).clicked() {
-                        if let Ok(v) = app.run(id, json!({}))
-                            && let Some(t) = v.get("status").and_then(Value::as_str)
-                        {
-                            app.set_status(t.to_string());
-                        }
-                        ui.close();
-                    }
-                }
-            });
-        }
+    egui::Popup::menu(&main).show(|ui| plugin_popup(app, ui, menu));
+}
+
+/// The full ribbon's Plugins tab (deckcraft/0187): the same menu, as a ribbon button.
+pub(crate) fn plugins_tab(app: &mut SlideApp, ui: &mut Ui) {
+    let menu = office_overlay::plugin_menu();
+    crate::widgets::group(ui, |ui| {
+        let r = crate::widgets::big_button(ui, crate::icons::Icon::Macros, "Plugins", true);
+        egui::Popup::menu(&r).show(|ui| plugin_popup(app, ui, menu));
     });
+}
+
+fn plugin_popup(app: &mut SlideApp, ui: &mut Ui, menu: Vec<(String, Vec<(String, &'static str)>)>) {
+    for (plugin, commands) in menu {
+        ui.menu_button(plugin, |ui| {
+            for (label, id) in commands {
+                if ui.button(label).clicked() {
+                    if let Ok(v) = app.run(id, json!({}))
+                        && let Some(t) = v.get("status").and_then(Value::as_str)
+                    {
+                        app.set_status(t.to_string());
+                    }
+                    ui.close();
+                }
+            }
+        });
+    }
 }
 
 /// The "Simple ribbon" pill, floated at the right end of the tab row while the upstream ribbon shows.
