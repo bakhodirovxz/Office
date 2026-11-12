@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 12 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft: Save on a read-only document says so in the interface language
+
+The host (HRM docserver wrapper) opens a document read only. Ctrl+S then ran the web download hook, which refused with an English reason, and the status bar read "{name} yuklab olinmadi: the document is open read only" (a wrong verb and an untranslated reason). Now run() asks the host (blocked("document.readOnly"), answered by the web bridge from its read-only flag) before a save or export download and shows the catalog string "This document is open read-only." instead. Nothing is downloaded or posted to the parent.
+
+---
+
+diff --git a/apps/wordcraft-web/src/web/host.rs b/apps/wordcraft-web/src/web/host.rs
+--- a/apps/wordcraft-web/src/web/host.rs
++++ b/apps/wordcraft-web/src/web/host.rs
+@@ -127,7 +127,8 @@ impl Bridge {
+         }));
+         let bridge = self.clone();
+         services.blocked = Some(Box::new(move |id: &str| {
+-            (!bridge.can_download.get() && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
++            (id == "document.readOnly" && bridge.read_only.get())
++                || (!bridge.can_download.get() && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
+                 || (!bridge.can_print.get() && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
+         }));
+         // Keep the hook the web shell installed (the leave-page guard reads it).
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -996,6 +996,13 @@ impl WordApp {
+         }
+         // Web: saving and exporting become downloads.
+         if self.services.download.is_some() && matches!(id, "file.save" | "file.saveAs" | "file.exportPdf" | "file.exportPng") {
++            // The host holds the document read only: say so, in the interface language, instead of
++            // a failed download.
++            if self.blocked("document.readOnly") {
++                let msg = tl!("This document is open read-only.").to_string();
++                self.status(msg.clone());
++                return Err(msg);
++            }
+             let name = params.get("path").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| self.default_save_name());
+             let name = if id == "file.exportPdf" && !name.ends_with(".pdf") { format!("{name}.pdf") } else { name };
+             // A save with a password encrypts this and later saves (`file.save`'s `password`).
+@@ -6069,6 +6076,17 @@ mod tests {
+         assert!(msg.contains("blocked by the browser"), "the status bar says why: {msg:?}");
+     }
+ 
++    /// The host's read-only flag turns a save into a localized notice, not a failed download.
++    #[test]
++    fn a_save_of_a_read_only_document_says_so() {
++        let mut a = typed();
++        a.services.download = Some(Box::new(|_, _| panic!("nothing is downloaded")));
++        a.services.blocked = Some(Box::new(|id| id == "document.readOnly"));
++        let err = a.run("file.save", json!({})).unwrap_err();
++        assert_eq!(err, "This document is open read-only.");
++        assert_eq!(a.status_msg.as_ref().map(|(m, _)| m.as_str()), Some(err.as_str()));
++    }
++
+     /// #1315: a web app whose `download` hands the save to the browser's picker, which finishes
+     /// later. Returns the app (with unsaved typing) and the saves its download starts, plus the
+     /// last ticket started.
