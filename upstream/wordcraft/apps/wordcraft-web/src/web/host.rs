@@ -149,8 +149,9 @@ impl Bridge {
         }));
         let bridge = self.clone();
         services.blocked = Some(Box::new(move |id: &str| {
-            (!bridge.can_download.get()
-                && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
+            (id == "document.readOnly" && bridge.read_only.get())
+                || (!bridge.can_download.get()
+                    && matches!(id, "file.saveAs" | "file.exportPdf" | "file.exportPng" | "backstage.saveAs" | "backstage.export"))
                 || (!bridge.can_print.get()
                     && matches!(id, "file.print" | "file.printPdf" | "file.printMarkup" | "ui.print" | "ui.printSubmit" | "backstage.print"))
         }));

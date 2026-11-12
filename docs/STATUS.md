@@ -2114,3 +2114,13 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   the Android `hostSaved` ack on a device or emulator.
 - Follow-up bfe1aba1 (found by docserver.spec on phase-7): the History icon floated over Docs' title row, which the palette bar moves
   down (colour spread 25 under it); it now sits in the Docs palette bar after Commands (bar padding 4 px); spread 0 in the rerun.
+
+### Docs: Ctrl+S on a read-only document (2026-11-12; branch `p5-rosave`, HRM test finding)
+- **Bug.** Docs opened read only by the host (`readOnly: true`), Ctrl+S: the status bar read `{name} yuklab olinmadi: the document is open read only` (uz-Latn): the "Couldn't download" wrapper (wrong
+  verb, nothing was downloaded) around an English reason from the bridge's download hook (`apps/wordcraft-web/src/web/host.rs`, not in any catalog).
+- **Fix (wordcraft/0165).** `WordApp::run` (`crates/ui-egui/src/lib.rs`, the web save/export branch) asks the host `blocked("document.readOnly")` first; the bridge answers from its read-only flag. The
+  status bar and the error are now the catalog row `This document is open read-only.` (uz-Latn `Hujjat faqat oʻqish uchun ochilgan.`, uz-Cyrl, ru; `reviewed:agent-sonnet:2026-11-11`; xtask `OWN_R6` keeps the row
+  extracted). Nothing is downloaded or posted to the parent. Sheets, Slides: already a translated read-only notice (gridcraft/0160, deckcraft/0160), unchanged. PDF: `Couldn't save {name}: Not allowed`, both
+  parts translated and the verb is right, unchanged (the reason is generic, shared with the withheld-download case).
+- Tests: ui-egui `a_save_of_a_read_only_document_says_so`; `bridge-docs.spec.ts` case 15 (read-only open, Ctrl+S: no `wordcraft:save`, no `wordcraft:failed`, no download; the notice itself is drawn on the canvas, so
+  the Playwright case cannot read its text).
