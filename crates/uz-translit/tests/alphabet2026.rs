@@ -200,3 +200,76 @@ fn the_default_reads_1995_and_2026_latin_and_writes_2026() {
         "Toşkent şahri, Özbekiston, çoy"
     );
 }
+
+// --- latin_upgrade (rules.md 15.5; reviewed:agent-sonnet:2026-11-12) ---
+
+fn up(t: &str) -> String {
+    let o = Options {
+        latin_upgrade: true,
+        ..Options::default()
+    };
+    convert(t, Direction::ToLatin, &o)
+}
+
+#[test]
+fn latin_upgrade_rewrites_1995_words() {
+    assert_eq!(up("Oʻzbek oʻzbek OʻZBEK"), "Özbek özbek ÖZBEK");
+    assert_eq!(up("gʻoya Gʻoya"), "ğoya Ğoya");
+    assert_eq!(up("shahar Shahar SHAHAR Sh"), "şahar Şahar ŞAHAR Ş");
+    assert_eq!(up("choy Choy CHOY"), "çoy Çoy ÇOY");
+    assert_eq!(up("Isʼhoq"), "Ishoq");
+    for a in ["'", "‘", "’", "`", "ʼ", "ʻ"] {
+        assert_eq!(up(&format!("bo{a}lsa to{a}g{a}ri")), "bölsa töğri");
+    }
+    // a segment with any 2026 letter is read as 2026 (like Auto): left alone
+    assert_eq!(up("oʻzbekçha"), "oʻzbekçha");
+    assert_eq!(up("Ishoq şahar"), "Ishoq şahar");
+}
+
+#[test]
+fn latin_upgrade_guards_idempotence_and_default() {
+    for w in ["Mike", "show", "check", "Wolf", "café"] {
+        assert_eq!(up(w), w);
+    }
+    // a quoted 'so' keeps its closer
+    assert_eq!(up("'so' deb"), "'so' deb");
+    assert_eq!(up("'sho' deb"), "'şo' deb");
+    let t = "Özbek şahar ğoya çoy, ma'no";
+    assert_eq!(up(t), t);
+    // Cyrillic is still converted
+    assert_eq!(up("шаҳар shahar"), "şahar şahar");
+    // off by default: Latin is untouched
+    assert_eq!(
+        convert("Oʻzbek shahar", Direction::ToLatin, &Options::default()),
+        "Oʻzbek shahar"
+    );
+}
+
+#[test]
+fn latin_upgrade_splits_across_runs() {
+    use uz_translit::{Run, convert_runs};
+    let o = Options {
+        latin_upgrade: true,
+        ..Options::default()
+    };
+    let runs = [
+        Run {
+            text: "Sh",
+            convert: true,
+        },
+        Run {
+            text: "ahar o",
+            convert: true,
+        },
+        Run {
+            text: "ʻz",
+            convert: true,
+        },
+    ];
+    let out: Vec<String> = convert_runs(&runs, Direction::ToLatin, &o)
+        .into_iter()
+        .map(|c| c.into_owned())
+        .collect();
+    assert_eq!(out.concat(), "Şahar öz");
+    assert_eq!(out[0], "Ş");
+}
