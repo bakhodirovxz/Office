@@ -2343,6 +2343,10 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
     if crate::touch_select::pointer(app, ui, layout, rects, scale) {
         return;
     }
+    // A pinch is the zoom's: the second finger's `touchstart` presses the pointer again (eframe), which would drag-select.
+    if ui.input(|i| i.multi_touch().is_some()) {
+        return;
+    }
     // A finger's press waits to see whether it is a tap, a scroll or a long press (touch_scroll).
     let held = app.canvas.touch.take_press();
     let (held_press, held_long) = (held.map(|(at, _)| at), held.is_some_and(|(_, long)| long));

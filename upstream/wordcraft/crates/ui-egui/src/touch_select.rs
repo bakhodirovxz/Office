@@ -132,7 +132,8 @@ pub fn pointer(app: &mut WordApp, ui: &egui::Ui, layout: &DocLayout, rects: &[Re
         }
         return true;
     }
-    let Some(at) = start else { return false };
+    // A second finger is the pinch's, not a press on a handle or the bar.
+    let Some(at) = start.filter(|_| !pinch) else { return false };
     // Something above the page (the bar, a menu): its own press, not the document's.
     if ui.ctx().layer_id_at(at).is_some_and(|l| l.order != Order::Background) {
         return true;
@@ -404,6 +405,83 @@ mod tests {
         let app = h.state_mut();
         let (layout, rects, scale) = (app.session.layout(), app.canvas.page_rects.clone(), app.canvas.scale);
         assert!(handles(app, &layout, &rects, scale).is_none(), "a mouse draws no handles");
+    }
+
+    fn finger(id: u64, phase: TouchPhase, pos: Pos2) -> Event {
+        Event::Touch { device_id: TouchDeviceId(0), id: TouchId(id), phase, pos, force: None }
+    }
+
+    /// A finger as eframe's web runner reports it once wordcraft-web keeps a finger's `pointerdown` from it (checklist F1): the
+    /// press only in `touchstart`'s frame (no pointer move before it), the release twice (`pointerup`, then `touchend`).
+    fn web_down(h: &mut Harness<'static, WordApp>, at: Pos2) {
+        frame(h, vec![button(true, at), finger(0, TouchPhase::Start, at)]);
+    }
+
+    fn web_up(h: &mut Harness<'static, WordApp>, at: Pos2) {
+        frame(h, vec![button(false, at)]);
+        up(h, at);
+    }
+
+    /// The web runner's event shape: a long press opens the bar, a handle drags, a bar button works (checklist F1).
+    #[test]
+    fn the_web_runners_finger_events_drag_a_handle_and_press_the_bar() {
+        let mut h = app("alpha beta gamma delta", vec2(1440.0, 900.0));
+        let p = h.state().session.sel.focus.clone();
+        let (bottom, hh) = end(&mut h, &at_off(&p, 7));
+        let at = pos2(bottom.x, bottom.y - hh / 2.0);
+        web_down(&mut h, at);
+        h.run_steps(5);
+        web_up(&mut h, at);
+        h.run_steps(2);
+        let sel = h.state().session.sel.clone();
+        assert_eq!((sel.ordered().0.off, sel.ordered().1.off), (6, 11), "the long press selects the word");
+        assert!(h.state().canvas.tsel.bar_open(&sel));
+
+        let (a, b) = sel.ordered();
+        let (knob_at, _) = end(&mut h, &b);
+        web_down(&mut h, knob(knob_at));
+        assert!(h.state().canvas.tsel.dragging(), "the press grabs the end handle");
+        assert_eq!(h.state().session.sel, sel, "and keeps the selection");
+        let to = at_off(&b, 16);
+        let (to_at, _) = end(&mut h, &to);
+        drag(&mut h, knob(to_at));
+        web_up(&mut h, knob(to_at));
+        h.run_steps(2);
+        assert_eq!((h.state().session.sel.anchor.clone(), h.state().session.sel.focus.clone()), (a, to));
+        assert!(h.state().canvas.tsel.bar_open(&h.state().session.sel), "the bar is back after the drag");
+
+        let bar = h.ctx.memory(|m| m.area_rect(egui::Id::new("wc_touch_bar"))).expect("the bar is shown");
+        let all = h.query_all_by_label("Select All").map(|n| n.rect()).find(|r| bar.contains_rect(*r)).expect("Select All is on the bar");
+        web_down(&mut h, all.center());
+        web_up(&mut h, all.center());
+        h.run_steps(2);
+        let (s, e) = h.state().session.sel.ordered();
+        assert_eq!((s.off, e.off), (0, 22), "Select All from the bar");
+    }
+
+    /// A pinch (a second finger lands while the first is down, then both move apart) zooms only: no selection, no caret move,
+    /// no keyboard focus (checklist F2: eframe presses the pointer again, at the first finger, for the second finger's `touchstart`).
+    #[test]
+    fn a_pinch_neither_selects_nor_takes_the_keyboard() {
+        let mut h = app("alpha beta gamma delta epsilon zeta eta theta", vec2(1440.0, 900.0));
+        let canvas = h.state().canvas.widget_id.expect("the canvas is drawn").0;
+        h.ctx.memory_mut(|m| m.surrender_focus(canvas));
+        h.run_steps(2);
+        let before = h.state().session.sel.clone();
+        let (bottom, hh) = end(&mut h, &at_off(&before.focus, 20));
+        let (mut f0, mut f1) = (pos2(bottom.x - 40.0, bottom.y - hh / 2.0), pos2(bottom.x + 40.0, bottom.y - hh / 2.0));
+        web_down(&mut h, f0);
+        frame(&mut h, vec![button(true, f0), finger(1, TouchPhase::Start, f1)]);
+        for _ in 0..6 {
+            f0.x -= 30.0;
+            f1.x += 30.0;
+            frame(&mut h, vec![Event::PointerMoved(f0), finger(0, TouchPhase::Move, f0), finger(1, TouchPhase::Move, f1)]);
+        }
+        frame(&mut h, vec![button(false, f0), Event::PointerGone, finger(1, TouchPhase::End, f1)]);
+        frame(&mut h, vec![finger(0, TouchPhase::End, f0)]);
+        h.run_steps(2);
+        assert_eq!(h.state().session.sel, before, "a pinch neither selects nor moves the caret");
+        assert!(!h.ctx.memory(|m| m.has_focus(canvas)), "nor takes the keyboard");
     }
 
     /// Cyrillic typed over a selection made with the handles replaces it.

@@ -1,0 +1,199 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Thu, 12 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web, ui-egui: a finger presses the page once; a
+ pinch neither selects nor takes the keyboard
+
+Phase 6 checklist F1, F2, F6 (docs/phase6/checklist.md). On Android Chrome and WebView a finger fires `pointerdown` before `touchstart`. eframe's web runner turns both into a primary press, and its `pointerdown` handler runs a frame at once, with no touch event in it. That frame was a mouse press to the page: `touch_select` marked the last pointer a mouse (no handles, no action bar), and `canvas::mouse` placed the caret under the finger, so a press on a selection handle or on a bar button cleared the selection; the press after it (from `touchstart`) then counted as a second click (a tap selected a word). wordcraft-web now stops a finger's `pointerdown` on the canvas in the capture phase, before eframe's listener, so only `touchstart` carries a finger's press (the shape the touch code and its tests expect). A pinch: eframe presses the primary pointer again for the second finger's `touchstart`; `canvas::mouse` now leaves a press and drag during a multi-touch gesture alone, `touch_select` takes no handle press from it, and `TouchScroll` counts a pinch as a scroll so its drag does not focus the page (no soft keyboard). A mouse and a pen are unchanged.
+---
+ apps/wordcraft-web/Cargo.toml      |  2 +-
+ apps/wordcraft-web/src/web.rs      | 21 +++++++++++++++
+ crates/ui-egui/src/canvas.rs       |  4 +++
+ crates/ui-egui/src/touch_scroll.rs |  4 ++-
+ crates/ui-egui/src/touch_select.rs | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 5 files changed, 108 insertions(+), 3 deletions(-)
+
+diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
+index bddcf178..5238a2ae 100644
+--- a/apps/wordcraft-web/Cargo.toml
++++ b/apps/wordcraft-web/Cargo.toml
+@@ -33,4 +33,4 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "MouseEvent", "PointerEvent", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 99ef5ff2..3c3eba72 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -28,6 +28,9 @@ pub fn start() {
+             log::error!("missing <canvas id=\"{CANVAS_ID}\">");
+             return;
+         };
++        if let Err(e) = finger_presses_once(&document) {
++            log::error!("a finger press reaches the page twice: {e}");
++        }
+         let dirty = Rc::new(Cell::new(false));
+         let saves = AsyncSaves::default();
+         let mut options = eframe::WebOptions::default();
+@@ -272,6 +275,24 @@ impl eframe::App for WebShell {
+     }
+ }
+ 
++/// A finger's press reaches eframe twice: its `pointerdown` handler presses at once, in a frame with no touch event, then
++/// `touchstart` presses again with the touch. The page took that first press for a mouse's (the selection handles and the touch
++/// bar went away and the caret moved under the finger; a pinch drag-selected; a tap counted twice): a finger's `pointerdown` on
++/// the canvas stops here, before eframe's own listener, so only `touchstart` carries the press (phase 6 checklist F1, F2, F6).
++fn finger_presses_once(document: &web_sys::Document) -> Result<(), String> {
++    let on_down = wasm_bindgen::closure::Closure::<dyn FnMut(web_sys::PointerEvent)>::new(|e: web_sys::PointerEvent| {
++        let on_canvas = e.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).is_some_and(|t| t.id() == CANVAS_ID);
++        if on_canvas && e.pointer_type() == "touch" {
++            e.stop_propagation();
++        }
++    });
++    // Capture phase: the document sees the event before the canvas (eframe's listener) does.
++    document.add_event_listener_with_callback_and_bool("pointerdown", on_down.as_ref().unchecked_ref(), true).map_err(|e| format!("{e:?}"))?;
++    // The listener lives as long as the page.
++    on_down.forget();
++    Ok(())
++}
++
+ /// Largest picture pasted from the browser's clipboard (as `insert.picture` allows).
+ const MAX_PASTED_BYTES: f64 = (200u32 << 20) as f64;
+ /// Most pictures one paste inserts.
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index 526af058..01be76cf 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -2343,6 +2343,10 @@ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layo
+     if crate::touch_select::pointer(app, ui, layout, rects, scale) {
+         return;
+     }
++    // A pinch is the zoom's: the second finger's `touchstart` presses the pointer again (eframe), which would drag-select.
++    if ui.input(|i| i.multi_touch().is_some()) {
++        return;
++    }
+     // A finger's press waits to see whether it is a tap, a scroll or a long press (touch_scroll).
+     let held = app.canvas.touch.take_press();
+     let (held_press, held_long) = (held.map(|(at, _)| at), held.is_some_and(|(_, long)| long));
+diff --git a/crates/ui-egui/src/touch_scroll.rs b/crates/ui-egui/src/touch_scroll.rs
+index b1348e91..a50d0574 100644
+--- a/crates/ui-egui/src/touch_scroll.rs
++++ b/crates/ui-egui/src/touch_scroll.rs
+@@ -39,7 +39,7 @@ pub struct TouchScroll {
+     momentum: Momentum,
+     /// A held-back press to carry out this frame, and whether it is a long press.
+     press: Option<(Pos2, bool)>,
+-    /// The last finger scrolled the page (until the next one lands).
++    /// The last finger scrolled or pinched the page (until the next one lands).
+     scrolled: bool,
+ }
+ 
+@@ -82,6 +82,8 @@ impl TouchScroll {
+         // The finger is gone when egui says so; a cancelled touch never releases the pointer.
+         let lifted = input.pointer.primary_released() || !input.any_touches();
+         let pinching = input.multi_touch().is_some();
++        // A pinch moves the page as a scroll does: its drag takes no keyboard either.
++        self.scrolled |= pinching;
+         match self.phase {
+             Phase::Idle => {
+                 if input.pointer.primary_pressed() {
+diff --git a/crates/ui-egui/src/touch_select.rs b/crates/ui-egui/src/touch_select.rs
+index 37396ee0..3aa2dd11 100644
+--- a/crates/ui-egui/src/touch_select.rs
++++ b/crates/ui-egui/src/touch_select.rs
+@@ -132,7 +132,8 @@ pub fn pointer(app: &mut WordApp, ui: &egui::Ui, layout: &DocLayout, rects: &[Re
+         }
+         return true;
+     }
+-    let Some(at) = start else { return false };
++    // A second finger is the pinch's, not a press on a handle or the bar.
++    let Some(at) = start.filter(|_| !pinch) else { return false };
+     // Something above the page (the bar, a menu): its own press, not the document's.
+     if ui.ctx().layer_id_at(at).is_some_and(|l| l.order != Order::Background) {
+         return true;
+@@ -406,6 +407,83 @@ mod tests {
+         assert!(handles(app, &layout, &rects, scale).is_none(), "a mouse draws no handles");
+     }
+ 
++    fn finger(id: u64, phase: TouchPhase, pos: Pos2) -> Event {
++        Event::Touch { device_id: TouchDeviceId(0), id: TouchId(id), phase, pos, force: None }
++    }
++
++    /// A finger as eframe's web runner reports it once wordcraft-web keeps a finger's `pointerdown` from it (checklist F1): the
++    /// press only in `touchstart`'s frame (no pointer move before it), the release twice (`pointerup`, then `touchend`).
++    fn web_down(h: &mut Harness<'static, WordApp>, at: Pos2) {
++        frame(h, vec![button(true, at), finger(0, TouchPhase::Start, at)]);
++    }
++
++    fn web_up(h: &mut Harness<'static, WordApp>, at: Pos2) {
++        frame(h, vec![button(false, at)]);
++        up(h, at);
++    }
++
++    /// The web runner's event shape: a long press opens the bar, a handle drags, a bar button works (checklist F1).
++    #[test]
++    fn the_web_runners_finger_events_drag_a_handle_and_press_the_bar() {
++        let mut h = app("alpha beta gamma delta", vec2(1440.0, 900.0));
++        let p = h.state().session.sel.focus.clone();
++        let (bottom, hh) = end(&mut h, &at_off(&p, 7));
++        let at = pos2(bottom.x, bottom.y - hh / 2.0);
++        web_down(&mut h, at);
++        h.run_steps(5);
++        web_up(&mut h, at);
++        h.run_steps(2);
++        let sel = h.state().session.sel.clone();
++        assert_eq!((sel.ordered().0.off, sel.ordered().1.off), (6, 11), "the long press selects the word");
++        assert!(h.state().canvas.tsel.bar_open(&sel));
++
++        let (a, b) = sel.ordered();
++        let (knob_at, _) = end(&mut h, &b);
++        web_down(&mut h, knob(knob_at));
++        assert!(h.state().canvas.tsel.dragging(), "the press grabs the end handle");
++        assert_eq!(h.state().session.sel, sel, "and keeps the selection");
++        let to = at_off(&b, 16);
++        let (to_at, _) = end(&mut h, &to);
++        drag(&mut h, knob(to_at));
++        web_up(&mut h, knob(to_at));
++        h.run_steps(2);
++        assert_eq!((h.state().session.sel.anchor.clone(), h.state().session.sel.focus.clone()), (a, to));
++        assert!(h.state().canvas.tsel.bar_open(&h.state().session.sel), "the bar is back after the drag");
++
++        let bar = h.ctx.memory(|m| m.area_rect(egui::Id::new("wc_touch_bar"))).expect("the bar is shown");
++        let all = h.query_all_by_label("Select All").map(|n| n.rect()).find(|r| bar.contains_rect(*r)).expect("Select All is on the bar");
++        web_down(&mut h, all.center());
++        web_up(&mut h, all.center());
++        h.run_steps(2);
++        let (s, e) = h.state().session.sel.ordered();
++        assert_eq!((s.off, e.off), (0, 22), "Select All from the bar");
++    }
++
++    /// A pinch (a second finger lands while the first is down, then both move apart) zooms only: no selection, no caret move,
++    /// no keyboard focus (checklist F2: eframe presses the pointer again, at the first finger, for the second finger's `touchstart`).
++    #[test]
++    fn a_pinch_neither_selects_nor_takes_the_keyboard() {
++        let mut h = app("alpha beta gamma delta epsilon zeta eta theta", vec2(1440.0, 900.0));
++        let canvas = h.state().canvas.widget_id.expect("the canvas is drawn").0;
++        h.ctx.memory_mut(|m| m.surrender_focus(canvas));
++        h.run_steps(2);
++        let before = h.state().session.sel.clone();
++        let (bottom, hh) = end(&mut h, &at_off(&before.focus, 20));
++        let (mut f0, mut f1) = (pos2(bottom.x - 40.0, bottom.y - hh / 2.0), pos2(bottom.x + 40.0, bottom.y - hh / 2.0));
++        web_down(&mut h, f0);
++        frame(&mut h, vec![button(true, f0), finger(1, TouchPhase::Start, f1)]);
++        for _ in 0..6 {
++            f0.x -= 30.0;
++            f1.x += 30.0;
++            frame(&mut h, vec![Event::PointerMoved(f0), finger(0, TouchPhase::Move, f0), finger(1, TouchPhase::Move, f1)]);
++        }
++        frame(&mut h, vec![button(false, f0), Event::PointerGone, finger(1, TouchPhase::End, f1)]);
++        frame(&mut h, vec![finger(0, TouchPhase::End, f0)]);
++        h.run_steps(2);
++        assert_eq!(h.state().session.sel, before, "a pinch neither selects nor moves the caret");
++        assert!(!h.ctx.memory(|m| m.has_focus(canvas)), "nor takes the keyboard");
++    }
++
+     /// Cyrillic typed over a selection made with the handles replaces it.
+     #[test]
+     fn cyrillic_typed_over_the_selection_replaces_it() {
