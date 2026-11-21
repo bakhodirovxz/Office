@@ -17,6 +17,9 @@ wordcraft-engine = { path = "../../../../upstream/wordcraft/crates/engine" }
 egui = "0.36"
 serde_json = { version = "1", features = ["float_roundtrip"] }
 wordcraft-doc = { path = "../../../../upstream/wordcraft/crates/doc" }
+# The shared per-user settings (WP5): a file on the desktop, localStorage and ?toolbar= on the web.
+suite-core = { path = "../../../../crates/suite-core" }
+
 # Phase 7 WP3: the plugins' ribbon group and the per-frame registration
 docs-plugins = { path = "../docs-plugins" }
 
@@ -24,9 +27,6 @@ docs-plugins = { path = "../docs-plugins" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3"
 wasm-bindgen = "0.2"
-
-# The shared per-user settings (WP5): a file on the desktop, localStorage and ?toolbar= on the web.
-suite-core = { path = "../../../../crates/suite-core" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 xdfu-core = { path = "../../../../crates/xdfu-core" }
