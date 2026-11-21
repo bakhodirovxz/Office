@@ -88,7 +88,26 @@ and Cut on the bar cut the text. A pinch still drag-selected and raised the keyb
 | 3 | Cut | C360 | PASS | `fix-c360-4up.png` (3rd) | 2026-11-12 |
 | 3 | Cut | A412 | PASS | `fix-a412-5up.png` (3rd) | 2026-11-12 |
 | 3 | Select All | A360 | PASS | `fix-a360-3up.png` (3rd) | 2026-11-12 |
-| 4b, 6b | Autocorrect / Cyrillic typing after a handle move | all | not run (unblocked now; needs the Gboard rig of WP7) | | |
+| 4b | Autocorrect right after a handle move (keyboard up, long press a word, drag a handle across words or a line, type `teh `) | C412 | PASS: the selection (several words, 1-2 lines) is replaced and Gboard turns `teh ` into `the ` (`wolrd ` was not corrected in the same flow, see below) | `hh-c412-4b-2-handle-moved.png`, `hh-c412-4b-3-teh-corrected.png` | 2026-11-21 |
+| 4b | Autocorrect right after a handle move (keyboard up, long press a word, drag a handle across words or a line, type `teh `) | C360 | PASS: the selection (several words, 1-2 lines) is replaced and Gboard turns `teh ` into `the ` | `hh-c360-4b-1-handle-selected.png`, `hh-c360-4b-2-teh-corrected.png` | 2026-11-21 |
+| 4b | Autocorrect right after a handle move (keyboard up, long press a word, drag a handle across words or a line, type `teh `) | A412 | PASS: the selection (several words, 1-2 lines) is replaced and Gboard turns `teh ` into `the ` | `hh-a412-4b-1-handle-selected.png`, `hh-a412-4b-2-teh-corrected.png` | 2026-11-21 |
+| 4b | Autocorrect right after a handle move (keyboard up, long press a word, drag a handle across words or a line, type `teh `) | A360 | PASS: the selection (several words, 1-2 lines) is replaced and Gboard turns `teh ` into `the ` | `hh-a360-4b-1-handle-selected.png`, `hh-a360-4b-2-teh-corrected.png` | 2026-11-21 |
+| 6b | Cyrillic over a selection made with a **handle** (RU layout, long press a word, drag a handle, type `привет`) | C412 | PASS: the whole handle selection is replaced by `привет`, text around it intact | `hh-c412-6b-1-handle-selected.png`, `hh-c412-6b-2-privet.png` | 2026-11-21 |
+| 6b | Cyrillic over a selection made with a **handle** (RU layout, long press a word, drag a handle, type `привет`) | C360 | PASS: the whole handle selection is replaced by `привет`, text around it intact | `hh-c360-6b-1-handle-selected.png`, `hh-c360-6b-2-privet.png` | 2026-11-21 |
+| 6b | Cyrillic over a selection made with a **handle** (RU layout, long press a word, drag a handle, type `привет`) | A412 | PASS: the whole handle selection is replaced by `привет`, text around it intact | `hh-a412-6b-1-handle-selected.png`, `hh-a412-6b-2-privet.png` | 2026-11-21 |
+| 6b | Cyrillic over a selection made with a **handle** (RU layout, long press a word, drag a handle, type `привет`) | A360 | PASS: the whole handle selection is replaced by `привет`, text around it intact | `hh-a360-6b-1-handle-selected.png`, `hh-a360-6b-2-privet.png` | 2026-11-21 |
+
+Rows 4b and 6b, 2026-11-21 (branch `p6-land`, run on the page and app of the 2026-11-12 re-run: `p6h` dist with wordcraft/0186; rig as above, `RIG_SCALE=0.5`, Gboard EN and RU
+layouts through `lib.mjs` key maps (`typ`: one tap per key, 450 ms apart), the console `touch.mjs press 1200` then `drag` for the handle; the keyboard was raised by a tap in the
+text before the long press and stayed up). The page was the 3-page `wp13.docx` (Chrome) and `phone-ux.docx` (the app; no wp13 media-store row on this AVD, same kind of text).
+Text read from screenshots; nothing was saved. Screenshots `docs/phase6/evidence/checklist/hh-*.png` (22; no recordings).
+- **Gboard autocorrect cannot be proved with `wolrd `** here: in the first C412 run `wolrd ` typed over a handle selection stayed `wolrd` (`hh-c412-4b-wolrd-not-corrected.png`), but
+  `teh ` right after it, over a plain caret and over a handle selection, was corrected on C412 and on the other three surfaces. So the handle path delivers Gboard's
+  `DeleteSurrounding` + commit as at a plain caret; whether Gboard corrects a given misspelling depends on its own dictionary state (same as row 4's earlier INCONCLUSIVE),
+  not on the page. The WP7 `wolrd` PASS (clean document) stands.
+- Gboard capitalises a sentence start: on A412 the result is `The inov matni.`, not `the` (Gboard, not the editor).
+- Not run: a handle drag across a page break (2b, no pages in phone mode), a real phone, Gboard glide after a handle move.
+- Side note, not a finding: `adb shell input keyevent 3` (Home) was sent once at the end to leave the app; the rig's own rule is never to send keyevents while Gboard is in use (it did not matter, the run was over).
 | 7 | Pinch zoom: no selection, no keyboard | C412 | PASS: out about 3x and back, horizontal and vertical, fingers landing together and 80 ms apart; no selection, keyboard stays down | `fix-c412-pinch-5up.png`, `rec/c412-pinch.mp4` | 2026-11-12 |
 | 7 | same | C360, A412 | PASS (out and back) | `fix-c360-4up.png` (4th), `fix-a412-5up.png` (4th, 5th) | 2026-11-12 |
 | F6 | A tap places a caret | C412 | PASS: 6 of 6 taps on text gave a caret, none selected a word (the stray text in the shots is from my first taps landing on the raised keyboard and its clipboard chip, not from the app) | `fix-c412-taps-3up.png` | 2026-11-12 |
@@ -136,7 +155,20 @@ Also a long press on a word that already holds the caret just kept the caret (on
 A360). Likely the same `pointerdown` frame (a mouse press before the first `touchstart` turned the phone's touch handling on), but not proven: keep it open for a real phone.
 
 **F5 (low): landscape on a phone** shows the desktop ribbon: with Chrome's own bar about one line of document; in the app with the keyboard up none (`a360-landscape.png`).
-Known (WP8 saw landscape); a landscape phone layout is not planned.
+Known (WP8 saw landscape); a landscape phone layout was not planned.
+**Fixed 2026-11-21 (wordcraft/0187, branch `p6-land`).** The phone layout test was `innerWidth <= 600 && finger` (`docs_office::phone::decide`), so 915 CSS px wide in landscape
+was the desktop. New rule: `finger && (innerWidth <= 600 || min(screen.width, screen.height) <= 600)`. The short side of the *screen* (reported by the web host through
+`phone::set_screen_short_side`, 4 lines in `web.rs`) is the same in both orientations and does not shrink when the soft keyboard opens (the window height does, so a
+window-height test would have flipped a tablet to the phone layout while typing). Unchanged: tablets with a short side of 768 and up (landscape and portrait, keyboard up or
+not), desktop and touch laptops (short side 768 and up), a mouse as last pointer, a screen that cannot say (native, tests: width test alone), `?phone=on|off`. Changed
+on purpose: a landscape phone, and any touch device whose screen is 600 CSS px or less on its short side (a 7 inch tablet in landscape; in portrait it was the phone layout already).
+Tests: `docs-office` `the_mode_switch_needs_a_narrow_window_and_a_finger` (old table, now with the short side unknown) and
+`a_phone_in_landscape_keeps_the_phone_layout_a_tablet_or_laptop_does_not` (915x412 phone = same as 412x915, 1280x800 and 800x800 tablets, 1366x768 laptop, mouse, unknown short side);
+`cargo test -p docs-office phone` 19 passed. Emulator (HRM_Pixel_8, Chrome 133, density 210, rotation 90, wasm built with the change, wasm 9,877,537 B brotli of the 9,904,416
+budget, `ci.sh sizes` ok): `f5-c412-landscape-phone-layout.png` shows the top row, the document (about 12 lines) and the bottom toolbar. **Still true:** with the soft keyboard up
+in landscape (`f5-c412-landscape-keyboard-up.png`) Gboard fills the lower 340 of 540 px and with Chrome's own bar only the top row and a sliver of page remain, the bottom toolbar is
+under the keyboard (Android's landscape keyboard, not the layout; the app has no Chrome bar and was not re-run, its APK was not rebuilt). A landscape-specific keyboard
+arrangement (hide the top row while typing) was not attempted.
 
 **F6 (info): a tap on text selected a word with handles** twice (C412 after a rest, A360) where a caret was expected. Not investigated.
 **Fixed 2026-11-12 (wordcraft/0186).** Cause: one tap made two presses (`pointerdown` frame, then `touchstart`), so `canvas::press_count` saw the second as a
@@ -151,5 +183,5 @@ BLOCKED on a phone, would differ: frame timing (long press, two fingers landing 
 physical rotation sensor, thermal and memory (WP14).
 
 ## WP16 needs
-Rows 4b, 6b (Gboard after a handle move; F1 fixed, rows 2 and 3 re-run 2026-11-12); a real-phone check of F4; F3 decision; the same checklist for Sheets, Slides, PDF if O4 puts them in scope;
+a real-phone check of F4 (rows 4b and 6b passed on the emulator 2026-11-21); F3 decision; the same checklist for Sheets, Slides, PDF if O4 puts them in scope;
 a real-phone pass of the timing rows; WP14 numbers.
