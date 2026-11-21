@@ -47,9 +47,10 @@ pub fn set_coarse_pointer(coarse: bool) {
     COARSE.store(u8::from(coarse), Ordering::SeqCst);
 }
 
-/// The rule (D5), pure: forced on or off, else a narrow window and a finger as the last pointer.
-pub fn decide(force: Option<bool>, width: f32, touched: bool) -> bool {
-    force.unwrap_or(width <= MAX_WIDTH && touched)
+/// The rule (D5), pure: forced on or off, else a finger as the last pointer and a narrow window or a small screen (its short side, so a phone
+/// turned to landscape keeps the phone layout; `short_side` is `f32::INFINITY` where the page cannot say, which leaves the window width alone).
+pub fn decide(force: Option<bool>, width: f32, short_side: f32, touched: bool) -> bool {
+    force.unwrap_or(touched && (width <= MAX_WIDTH || short_side <= MAX_WIDTH))
 }
 
 fn forced() -> Option<bool> {
@@ -66,6 +67,12 @@ pub fn dp(ctx: &Context) -> f32 {
 }
 
 static CSS_WIDTH: OnceLock<fn() -> f32> = OnceLock::new();
+static SCREEN_SHORT: OnceLock<fn() -> f32> = OnceLock::new();
+
+/// The web app tells the layout the short side of the device screen in CSS px (`min(screen.width, screen.height)`): it does not change with the keyboard.
+pub fn set_screen_short_side(f: fn() -> f32) {
+    let _ = SCREEN_SHORT.set(f);
+}
 
 /// The web app tells the layout how wide the window is in CSS px (`window.innerWidth`).
 pub fn set_css_width(f: fn() -> f32) {
@@ -96,7 +103,8 @@ pub fn active(ctx: &Context) -> bool {
     if after != before {
         ctx.data_mut(|d| d.insert_temp(touched_id, after));
     }
-    let on = decide(forced(), ctx.content_rect().width() / dp(ctx), after);
+    let short = SCREEN_SHORT.get().map(|f| f()).filter(|d| *d > 0.0).unwrap_or(f32::INFINITY);
+    let on = decide(forced(), ctx.content_rect().width() / dp(ctx), short, after);
     ON.store(on, Ordering::SeqCst);
     on
 }

@@ -16,12 +16,24 @@ fn session() -> Session {
 
 #[test]
 fn the_mode_switch_needs_a_narrow_window_and_a_finger() {
-    assert!(decide(None, 360.0, true));
-    assert!(decide(None, MAX_WIDTH, true));
-    assert!(!decide(None, MAX_WIDTH + 1.0, true), "a wide window keeps the desktop layout");
-    assert!(!decide(None, 360.0, false), "a narrow desktop window with a mouse keeps it too");
-    assert!(decide(Some(true), 1280.0, false), "forced on");
-    assert!(!decide(Some(false), 360.0, true), "forced off");
+    let big = f32::INFINITY;
+    assert!(decide(None, 360.0, big, true));
+    assert!(decide(None, MAX_WIDTH, big, true));
+    assert!(!decide(None, MAX_WIDTH + 1.0, big, true), "a wide window keeps the desktop layout");
+    assert!(!decide(None, 360.0, big, false), "a narrow desktop window with a mouse keeps it too");
+    assert!(decide(Some(true), 1280.0, big, false), "forced on");
+    assert!(!decide(Some(false), 360.0, big, true), "forced off");
+}
+
+#[test]
+fn a_phone_in_landscape_keeps_the_phone_layout_a_tablet_or_laptop_does_not() {
+    assert!(decide(None, 915.0, 412.0, true), "412x915 phone turned: the screen's short side is 412");
+    assert!(decide(None, 915.0, 412.0, true) == decide(None, 412.0, 412.0, true), "same layout in both orientations");
+    assert!(!decide(None, 1280.0, 800.0, true), "10 inch tablet in landscape (also with its keyboard up: the screen does not shrink)");
+    assert!(!decide(None, 800.0, 800.0, true), "tablet portrait");
+    assert!(!decide(None, 1366.0, 768.0, true), "touch laptop");
+    assert!(!decide(None, 915.0, 412.0, false), "a mouse on a small screen: desktop");
+    assert!(!decide(None, 915.0, f32::INFINITY, true), "short side unknown: the width test alone");
 }
 
 #[test]

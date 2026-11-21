@@ -7,7 +7,7 @@ run's files are the same checklist, a rerun on a quiet machine is open); recordi
 subfolder, `scripts/mobile/rig.mjs`, so another run cannot overwrite them). Synthetic documents only (`scripts/mobile/fixtures/blank.docx`).
 
 ## 1. Trigger and layout (three lines)
-- **Trigger (D5):** the window is at most 600 CSS px wide and the last pointer was a finger. `docs_office::phone::decide` (`phone.rs:51`) and `active` (`phone.rs:76`): a touch
+- **Trigger (D5):** the window is at most 600 CSS px wide (or, since 2026-11-21, the device screen's short side is, so a landscape phone keeps it; wordcraft/0187) and the last pointer was a finger. `docs_office::phone::decide` (`phone.rs:51`) and `active` (`phone.rs:76`): a touch
   sets it, a mouse button clears it after a one-second grace (the web runner also reports a finger as pointer events in frames of their own); it starts from
   `(pointer: coarse)`; `?phone=on` or `?phone=off` forces it. The web app is the only caller of `set_phone` (`web.rs:89`), so the desktop apps never see it.
 - **Hook:** one `else if office_overlay::phone_chrome(self, ui)` branch in `WordApp::ui` (`lib.rs:2274`, 5 lines) before the title bar and ribbon; `phone_chrome`
