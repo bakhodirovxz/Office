@@ -33,11 +33,41 @@ namespace UzTranslit.Office
         }
     }
 
+    /// A long command runs on Word's UI thread, so Word paints nothing and Windows marks its window "Not Responding"
+    /// after 5 s without a look at the message queue. Every 250 ms (after the first second) this peeks at the queue
+    /// without removing anything (no click or key is handled mid-command) and shows in the status bar how many
+    /// paragraphs are done (a count, not a percent: the stories are walked one by one, their number is not known).
+    sealed class Progress
+    {
+        readonly dynamic app;
+        readonly string text;
+        readonly Stopwatch clock = Stopwatch.StartNew();
+        long next = 1000;
+        bool shown;
+        /// Paragraphs read so far.
+        public long Done;
+
+        public Progress(dynamic app, string text) { this.app = app; this.text = text; }
+
+        public void Tick(long part)
+        {
+            if (clock.ElapsedMilliseconds < next) return;
+            next = clock.ElapsedMilliseconds + 250;
+            Ui.Peek();
+            if (text == null) return;
+            try { app.StatusBar = text.Replace("{n}", (Done + part).ToString()); shown = true; } catch { }
+        }
+
+        public void Clear() { if (shown) try { app.StatusBar = ""; } catch { } }
+    }
+
     static class WordAdapter
     {
         const int wdCharacterFormatting = 13, wdNoProtection = -1, wdMainTextStory = 1;
         /// Paragraphs per WordOpenXML read on the fast path.
         const int XmlGroup = 50;
+        /// The running command's progress (Word calls the add-in on its one UI thread).
+        static Progress progress;
 
         struct Piece
         {
@@ -55,7 +85,8 @@ namespace UzTranslit.Office
         /// fast: plain paragraphs of the main text through WordXml (about 50x faster on long documents) - but
         /// Range.WordOpenXML and Range.InsertXML split the custom undo record (measured, Word 2019), so the command is
         /// then several Undo steps. Off by default; decision D8 (docs/ms-addin/PLAN.md).
-        public static Stats Convert(dynamic app, Mode mode, bool wholeDocument, string undoLabel, bool fast)
+        /// progressText: the status bar text of a long command, "{n}" = paragraphs done (null: no status bar text).
+        public static Stats Convert(dynamic app, Mode mode, bool wholeDocument, string undoLabel, bool fast, string progressText)
         {
             if (app.Documents.Count == 0) throw new UserMessage("msg.no_document");
             dynamic doc = app.ActiveDocument;
@@ -69,6 +100,7 @@ namespace UzTranslit.Office
 
             var st = new Stats();
             var clock = Stopwatch.StartNew();
+            progress = new Progress((object)app, progressText);
 
             bool record = false, screen = true;
             dynamic undo = null;
@@ -116,6 +148,8 @@ namespace UzTranslit.Office
                 try { opts.Pagination = pag; opts.CheckSpellingAsYouType = spell; opts.CheckGrammarAsYouType = gram; } catch { }
                 if (xml) try { opts.SmartCutPaste = smart; } catch { }
                 try { app.ScreenUpdating = screen; } catch { }
+                progress.Clear();
+                progress = null;
             }
             st.Ms = clock.ElapsedMilliseconds;
             return st;
@@ -182,6 +216,7 @@ namespace UzTranslit.Office
         /// content control) is bisected, a single such paragraph goes per run.
         static void XmlParagraphs(dynamic story, List<int[]> ps, int i, int j, Mode mode, Stats st)
         {
+            progress.Tick(0);
             dynamic r = story.Duplicate;
             // Every XML range ends just before the last paragraph mark (WordXml.Convert says why).
             r.SetRange(ps[i][0], ps[j - 1][1] - 1);
@@ -310,7 +345,7 @@ namespace UzTranslit.Office
             string all = r.Text ?? "";
             // No letter, nothing to convert (the engine rewrites only letters and the apostrophes between them): e.g. a
             // main text made only of text-box anchors and section breaks, which was walked position by position.
-            if (!HasLetter(all)) { Done((object)r, own); return; }
+            if (!HasLetter(all)) { progress.Done += MarkCount(all); progress.Tick(0); Done((object)r, own); return; }
             string flat = all.Length == to - from && all.IndexOfAny(Marks) < 0 ? all : null;
             Boundaries((object)r, cuts, locked, flat != null, st);
             if (flat != null)
@@ -325,13 +360,15 @@ namespace UzTranslit.Office
                 if (Edits(whole, mode, probe).Count == 0)
                 {
                     st.Paragraphs += probe.Paragraphs; st.Skipped += probe.Skipped; st.Pieces += whole.Count;
+                    progress.Done += MarkCount(all);
+                    progress.Tick(0);
                     Done((object)r, own);
                     return;
                 }
             }
 
             var pieces = new List<Piece>();
-            int pos = from;
+            int pos = from, marks = MarkCount(all);
             while (pos < to)
             {
                 int end = pos + 1;
@@ -348,7 +385,9 @@ namespace UzTranslit.Office
                     foreach (int c in cuts.GetViewBetween(pos + 1, end - 1)) { Read((object)r, a, c, locked, pieces, st, flat, from); a = c; }
                 Read((object)r, a, end, locked, pieces, st, flat, from);
                 pos = end;
+                progress.Tick((long)marks * (pos - from) / (to - from));
             }
+            progress.Done += marks;
 
             var edits = Edits(pieces, mode, st);
             st.Pieces += pieces.Count;
@@ -376,12 +415,21 @@ namespace UzTranslit.Office
                     w.Text = e.Text;
                 }
                 st.Edits++;
+                progress.Tick(0);
             }
             Done((object)r, own);
         }
 
         /// The working range of PerRun: released unless it is the caller's story range (Stories releases that).
         static void Done(object r, bool own) { if (!own) Free(r); }
+
+        /// Paragraph, cell and page marks in a text (for the progress count).
+        static int MarkCount(string s)
+        {
+            int n = 0;
+            foreach (char c in s) if (c == '\r' || c == '\a' || c == '\f') n++;
+            return n;
+        }
 
         static bool HasLetter(string s)
         {

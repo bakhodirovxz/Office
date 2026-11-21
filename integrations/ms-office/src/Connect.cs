@@ -166,7 +166,7 @@ namespace UzTranslit.Office
                         if (a == Ui.Cancel) return;
                         fast = a == Ui.Yes;
                     }
-                    st = WordAdapter.Convert(app, Mode.Parse(mode), false, Caption, fast);
+                    st = WordAdapter.Convert(app, Mode.Parse(mode), false, Caption, fast, cat.Get("msg.progress"));
                 }
                 else
                 {
@@ -237,8 +237,8 @@ namespace UzTranslit.Office
             return Restore(snap);
         }
 
-        public string Convert(string mode, bool wholeDocument) { return Api(() => WordAdapter.Convert(app, Mode.Parse(mode), wholeDocument, Caption, false)); }
-        public string ConvertFast(string mode, bool wholeDocument) { return Api(() => WordAdapter.Convert(app, Mode.Parse(mode), wholeDocument, Caption, true)); }
+        public string Convert(string mode, bool wholeDocument) { return Api(() => WordAdapter.Convert(app, Mode.Parse(mode), wholeDocument, Caption, false, cat.Get("msg.progress"))); }
+        public string ConvertFast(string mode, bool wholeDocument) { return Api(() => WordAdapter.Convert(app, Mode.Parse(mode), wholeDocument, Caption, true, cat.Get("msg.progress"))); }
         public string ConvertIn(string mode, string scope) { return Api(() => Other(mode, scope)); }
 
         public string UndoLast()
@@ -297,6 +297,11 @@ namespace UzTranslit.Office
     {
         [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int MessageBoxW(IntPtr hwnd, string text, string caption, uint type);
         [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+        [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr hwnd; public uint message; public UIntPtr wParam; public IntPtr lParam; public uint time; public int x, y; }
+        [DllImport("user32.dll")] static extern bool PeekMessageW(out MSG msg, IntPtr hwnd, uint min, uint max, uint remove);
+        /// Looks at the thread's message queue without removing a message (PM_NOREMOVE | PM_NOYIELD): Windows sees the
+        /// thread alive during a long command, and no click or key is handled mid-command.
+        public static void Peek() { MSG m; PeekMessageW(out m, IntPtr.Zero, 0, 0, 2); }
         public const int Yes = 6, No = 7, Cancel = 2;
         /// The standard Windows message box (MB_ICONWARNING), owned by the Office window in front.
         public static void Warn(string caption, string text) { MessageBoxW(GetForegroundWindow(), text, caption, 0x30); }
