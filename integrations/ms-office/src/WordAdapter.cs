@@ -9,9 +9,13 @@
 // writing its new text through Range.Text keeps that formatting. Pieces are grouped into paragraphs and converted with
 // uz_translit convert_runs (its output does not depend on where a paragraph is cut). Writes go from the end of the
 // story to the start, so earlier positions stay valid.
+// Cost is Word calls (0.1-5 ms each), so a story's text is read once: a story with no letter, or one that converts to
+// itself, is never walked run by run. Stories are walked one at a time and every Range is released after use: Word
+// updates every live Range on each edit (a document of 4,125 text boxes took 170 s in 0.2.0, 6 s now).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace UzTranslit.Office
 {
@@ -20,6 +24,8 @@ namespace UzTranslit.Office
         public int Paragraphs, Pieces, Edits, Skipped, Stories, XmlParagraphs, XmlInserts, XmlRefused, XmlMismatch, Formulas, Rich, Prefixed;
         public string Refused = "", Error = "";
         public long Ms;
+        /// Word: whether the document has any bookmark or comment at all (asked once; per story they cost ~2 ms each).
+        public bool AnyBookmarks = true, AnyComments = true;
         public override string ToString()
         {
             return "paragraphs=" + Paragraphs + ";pieces=" + Pieces + ";edits=" + Edits + ";skipped=" + Skipped
@@ -63,21 +69,6 @@ namespace UzTranslit.Office
 
             var st = new Stats();
             var clock = Stopwatch.StartNew();
-            var stories = new List<dynamic>();
-            if (whole)
-            {
-                foreach (dynamic s in doc.StoryRanges)
-                    for (dynamic r = s; r != null; r = r.NextStoryRange) stories.Add(r);
-                // Text boxes in headers and footers are not on the NextStoryRange chain. Converting a story twice is
-                // harmless: the conversion is idempotent.
-                try
-                {
-                    foreach (dynamic shp in doc.Sections[1].Headers[1].Shapes)
-                        try { if (shp.TextFrame.HasText != 0) stories.Add(shp.TextFrame.TextRange); } catch { }
-                }
-                catch { }
-            }
-            else stories.Add(sel.Range);
 
             bool record = false, screen = true;
             dynamic undo = null;
@@ -96,14 +87,19 @@ namespace UzTranslit.Office
             dynamic bookmarks = doc.Bookmarks;
             bool hidden = bookmarks.ShowHidden;
             bookmarks.ShowHidden = true;
+            // Document-wide: Bookmarks covers every story (text boxes included, measured), Comments every comment.
+            try { st.AnyBookmarks = (int)bookmarks.Count > 0; st.AnyComments = (int)doc.Comments.Count > 0; } catch { }
             try
             {
-                foreach (dynamic s in stories)
+                // Our own methods get a Range as object: a call with a dynamic argument is bound at run time, which costs
+                // ~0.1-1 ms per call for a COM object (measured), more than most Word calls.
+                foreach (object s in whole ? Stories((object)doc) : new object[] { sel.Range })
                 {
                     st.Stories++;
-                    int from = s.Start, to = s.End;
-                    if (xml && (int)s.StoryType == wdMainTextStory) Main(s, from, to, (int)doc.Content.End, mode, st);
-                    else PerRun(s, from, to, mode, st);
+                    dynamic d = s;
+                    int from = d.Start, to = d.End;
+                    if (xml && (int)d.StoryType == wdMainTextStory) Main(s, from, to, (int)doc.Content.End, mode, st);
+                    else PerRun(s, from, to, mode, st, true);
                 }
             }
             catch
@@ -125,6 +121,37 @@ namespace UzTranslit.Office
             return st;
         }
 
+        /// Every story, one at a time, each Range released once it is done. Word keeps every live Range object up to
+        /// date on each edit: holding one per story (4,000+ text boxes in a real document) made every write slower
+        /// than the one before (1.6 ms at the start, 8.7 ms after 4,000; flat at 1-2 ms with the ranges released).
+        static IEnumerable<object> Stories(dynamic doc)
+        {
+            foreach (object first in doc.StoryRanges)
+                for (object r = first; r != null; )
+                {
+                    yield return r;
+                    object next = ((dynamic)r).NextStoryRange;
+                    Free(r);
+                    r = next;
+                }
+            // Text boxes in headers and footers are not on the NextStoryRange chain. Converting a story twice is
+            // harmless: the conversion is idempotent.
+            var boxes = new List<object>();
+            try
+            {
+                foreach (dynamic shp in doc.Sections[1].Headers[1].Shapes)
+                    try { if (shp.TextFrame.HasText != 0) boxes.Add((object)shp.TextFrame.TextRange); } catch { }
+            }
+            catch { }
+            foreach (object b in boxes) { yield return b; Free(b); }
+        }
+
+        /// Releases a COM object now instead of at some later garbage collection (see Stories).
+        static void Free(object o)
+        {
+            if (o != null && Marshal.IsComObject(o)) Marshal.ReleaseComObject(o);
+        }
+
         /// The main text: whole paragraphs inside [from, to) except the story's last one go through WordXml in groups;
         /// the rest (partial paragraphs at the selection edges, the last paragraph, non-plain paragraphs) per run.
         static void Main(dynamic story, int from, int to, int storyEnd, Mode mode, Stats st)
@@ -133,7 +160,7 @@ namespace UzTranslit.Office
             rng.SetRange(from, to);
             var ps = new List<int[]>();
             // [start, end, in a table]: a cell's paragraph mark is the cell mark, never written through InsertXML.
-            foreach (dynamic p in rng.Paragraphs) { dynamic pr = p.Range; ps.Add(new[] { (int)pr.Start, (int)pr.End, (bool)pr.Information[12] ? 1 : 0 }); }
+            foreach (dynamic p in rng.Paragraphs) { dynamic pr = p.Range; ps.Add(new[] { (int)pr.Start, (int)pr.End, (bool)pr.Information[12] ? 1 : 0 }); Free((object)pr); Free((object)p); }
             // Segments, last to first: [i, j) of whole candidate paragraphs (chunked), or a per-run span.
             int k = ps.Count;
             while (k > 0)
@@ -141,8 +168,8 @@ namespace UzTranslit.Office
                 int j = k;
                 bool cand = Candidate(ps[j - 1], from, to, storyEnd);
                 while (k > 0 && Candidate(ps[k - 1], from, to, storyEnd) == cand && (!cand || j - k < XmlGroup)) k--;
-                if (cand) XmlParagraphs(story, ps, k, j, mode, st);
-                else PerRun(story, Math.Max(ps[k][0], from), Math.Min(ps[j - 1][1], to), mode, st);
+                if (cand) XmlParagraphs((object)story, ps, k, j, mode, st);
+                else PerRun((object)story, Math.Max(ps[k][0], from), Math.Min(ps[j - 1][1], to), mode, st);
             }
         }
 
@@ -162,10 +189,10 @@ namespace UzTranslit.Office
             bool[] plain = WordXml.Classify(x, j - i);
             if (plain == null)
             {
-                if (j - i == 1) { PerRun(story, ps[i][0], ps[i][1], mode, st); return; }
+                if (j - i == 1) { PerRun((object)story, ps[i][0], ps[i][1], mode, st); return; }
                 int m = (i + j) / 2;
-                XmlParagraphs(story, ps, m, j, mode, st);
-                XmlParagraphs(story, ps, i, m, mode, st);
+                XmlParagraphs((object)story, ps, m, j, mode, st);
+                XmlParagraphs((object)story, ps, i, m, mode, st);
                 return;
             }
             int k = j;
@@ -174,7 +201,7 @@ namespace UzTranslit.Office
                 int e = k;
                 bool c = plain[k - 1 - i];
                 while (k > i && plain[k - 1 - i] == c) k--;
-                if (!c) { PerRun(story, ps[k][0], ps[e - 1][1], mode, st); continue; }
+                if (!c) { PerRun((object)story, ps[k][0], ps[e - 1][1], mode, st); continue; }
                 int s = ps[k][0], end = ps[e - 1][1] - 1;
                 r.SetRange(s, end);
                 string old = r.Text;
@@ -183,7 +210,7 @@ namespace UzTranslit.Office
                 string want, source;
                 string pkg = WordXml.Convert(sub, e - k, mode, out want, out source);
                 // The package must hold exactly the text Word shows, or what it lost would be lost for good.
-                if (pkg == null || source != old) { st.XmlMismatch++; PerRun(story, ps[k][0], ps[e - 1][1], mode, st); continue; }
+                if (pkg == null || source != old) { st.XmlMismatch++; PerRun((object)story, ps[k][0], ps[e - 1][1], mode, st); continue; }
                 if (old == want) { st.Paragraphs += e - k; continue; }   // nothing changes
                 try { r.InsertXML(pkg); }
                 catch (System.Runtime.InteropServices.COMException ex)
@@ -193,7 +220,7 @@ namespace UzTranslit.Office
                     if ((string)r.Text != old) throw;
                     st.XmlRefused++;
                     st.Refused = "0x" + ex.ErrorCode.ToString("X8") + "@" + ps[k][0];
-                    PerRun(story, ps[k][0], ps[e - 1][1], mode, st);
+                    PerRun((object)story, ps[k][0], ps[e - 1][1], mode, st);
                     continue;
                 }
                 st.XmlInserts++;
@@ -222,31 +249,44 @@ namespace UzTranslit.Office
         }
 
         /// Positions the pieces must be cut at, and the spans that are never edited (field codes and field marks).
-        static void Boundaries(dynamic range, SortedSet<int> cuts, List<int[]> locked)
+        /// flat: every position of the range reads as one character and none is a field or cell mark, so it holds no
+        /// field and no content control (both have marks that Range.Text leaves out, measured): those are not asked.
+        static void Boundaries(dynamic range, SortedSet<int> cuts, List<int[]> locked, bool flat, Stats st)
         {
-            foreach (dynamic f in range.Fields)
-            {
-                int cs = f.Code.Start, ce = f.Code.End;
-                dynamic res = f.Result;
-                int rs = res.Start, re = res.End;
-                if (rs >= ce) { locked.Add(new[] { cs - 1, rs }); locked.Add(new[] { re, re + 1 }); }
-                else locked.Add(new[] { cs - 1, ce + 1 });
-            }
-            foreach (dynamic b in range.Bookmarks) { cuts.Add((int)b.Start); cuts.Add((int)b.End); }
-            try { foreach (dynamic c in range.Comments) { dynamic sc = c.Scope; cuts.Add((int)sc.Start); cuts.Add((int)sc.End); } } catch { }
+            if (!flat)
+                foreach (dynamic f in range.Fields)
+                {
+                    dynamic code = f.Code, res = f.Result;
+                    int cs = code.Start, ce = code.End, rs = res.Start, re = res.End;
+                    Free((object)code); Free((object)res); Free((object)f);
+                    if (rs >= ce) { locked.Add(new[] { cs - 1, rs }); locked.Add(new[] { re, re + 1 }); }
+                    else locked.Add(new[] { cs - 1, ce + 1 });
+                }
+            if (st.AnyBookmarks) foreach (dynamic b in range.Bookmarks) { cuts.Add((int)b.Start); cuts.Add((int)b.End); Free((object)b); }
+            if (st.AnyComments) try { foreach (dynamic c in range.Comments) { dynamic sc = c.Scope; cuts.Add((int)sc.Start); cuts.Add((int)sc.End); Free((object)sc); } } catch { }
+            if (!flat)
+                try
+                {
+                    foreach (dynamic cc in range.ContentControls)
+                    {
+                        dynamic r = cc.Range;
+                        int a = r.Start, b = r.End;
+                        locked.Add(new[] { a - 1, a });
+                        locked.Add(new[] { b, b + 1 });
+                        Free((object)r);
+                    }
+                }
+                catch { }
+            // Equations: variable names and operators are not Uzbek text. Asked in every story (an equation in a text box
+            // is in neither Document.OMaths nor missing from Range.Text, measured); Count first is one call fewer.
             try
             {
-                foreach (dynamic cc in range.ContentControls)
-                {
-                    dynamic r = cc.Range;
-                    int a = r.Start, b = r.End;
-                    locked.Add(new[] { a - 1, a });
-                    locked.Add(new[] { b, b + 1 });
-                }
+                dynamic oms = range.OMaths;
+                if ((int)oms.Count > 0)
+                    foreach (dynamic m in oms) { dynamic r = m.Range; locked.Add(new[] { (int)r.Start, (int)r.End }); Free((object)r); Free((object)m); }
+                Free((object)oms);
             }
             catch { }
-            // Equations: variable names and operators are not Uzbek text.
-            try { foreach (dynamic m in range.OMaths) { dynamic r = m.Range; locked.Add(new[] { (int)r.Start, (int)r.End }); } } catch { }
             foreach (var l in locked) { cuts.Add(l[0]); cuts.Add(l[1]); }
         }
 
@@ -256,43 +296,64 @@ namespace UzTranslit.Office
             return false;
         }
 
-        static void PerRun(dynamic story, int from, int to, Mode mode, Stats st)
+        /// own: `story` is exactly [from, to) and not needed afterwards, so it is used as the working range (saves a
+        /// Duplicate and a SetRange per story: ~1 ms per text box).
+        static void PerRun(dynamic story, int from, int to, Mode mode, Stats st, bool own = false)
         {
             if (to <= from) return;
-            dynamic r = story.Duplicate;
-            r.SetRange(from, to);
+            dynamic r = story;
+            if (!own) { r = story.Duplicate; r.SetRange(from, to); }
             var cuts = new SortedSet<int>();
             var locked = new List<int[]>();
-            Boundaries(r, cuts, locked);
+            // One read of the whole span: when it is flat (see Boundaries) the pieces are cut out of this text instead
+            // of one Range.Text read each, and a span that converts to itself is not walked run by run at all.
+            string all = r.Text ?? "";
+            // No letter, nothing to convert (the engine rewrites only letters and the apostrophes between them): e.g. a
+            // main text made only of text-box anchors and section breaks, which was walked position by position.
+            if (!HasLetter(all)) { Done((object)r, own); return; }
+            string flat = all.Length == to - from && all.IndexOfAny(Marks) < 0 ? all : null;
+            Boundaries((object)r, cuts, locked, flat != null, st);
+            if (flat != null)
+            {
+                // Cutting at runs does not change the conversion (uzt_convert_runs is split-invariant), so the whole
+                // span cut only at the boundaries gives the same edits as the run walk would: none = nothing to do.
+                var whole = new List<Piece>();
+                int a0 = from;
+                foreach (int c in cuts) if (c > from && c < to) { Read((object)r, a0, c, locked, whole, st, flat, from); a0 = c; }
+                Read((object)r, a0, to, locked, whole, st, flat, from);
+                var probe = new Stats();
+                if (Edits(whole, mode, probe).Count == 0)
+                {
+                    st.Paragraphs += probe.Paragraphs; st.Skipped += probe.Skipped; st.Pieces += whole.Count;
+                    Done((object)r, own);
+                    return;
+                }
+            }
 
             var pieces = new List<Piece>();
             int pos = from;
             while (pos < to)
             {
-                r.SetRange(pos, pos);
-                r.MoveEnd(wdCharacterFormatting, 1);
-                int end = Math.Min(Math.Max((int)r.End, pos + 1), to);
+                int end = pos + 1;
+                // A control character (paragraph mark...) is never edited: its formatting run is not needed.
+                if (flat == null || flat[pos - from] >= ' ' || flat[pos - from] == '\t')
+                {
+                    r.SetRange(pos, pos);
+                    r.MoveEnd(wdCharacterFormatting, 1);
+                    end = Math.Min(Math.Max((int)r.End, pos + 1), to);
+                }
                 // Cut [pos, end) at the boundaries inside it.
                 int a = pos;
                 if (end - pos > 1)
-                    foreach (int c in cuts.GetViewBetween(pos + 1, end - 1)) { Read(r, a, c, locked, pieces, st); a = c; }
-                Read(r, a, end, locked, pieces, st);
+                    foreach (int c in cuts.GetViewBetween(pos + 1, end - 1)) { Read((object)r, a, c, locked, pieces, st, flat, from); a = c; }
+                Read((object)r, a, end, locked, pieces, st, flat, from);
                 pos = end;
             }
 
-            // Group into paragraphs, convert, collect edits.
-            var edits = new List<Edit>();
-            int p0 = 0;
-            for (int i = 0; i <= pieces.Count; i++)
-            {
-                if (i < pieces.Count && !pieces[i].ParagraphEnd) continue;
-                int p1 = i < pieces.Count ? i + 1 : i;
-                ConvertParagraph(pieces, p0, p1, mode, edits, st);
-                p0 = p1;
-            }
+            var edits = Edits(pieces, mode, st);
             st.Pieces += pieces.Count;
 
-            dynamic w = story.Duplicate;
+            dynamic w = r;
             for (int i = edits.Count - 1; i >= 0; i--)
             {
                 Edit e = edits[i];
@@ -316,15 +377,44 @@ namespace UzTranslit.Office
                 }
                 st.Edits++;
             }
+            Done((object)r, own);
         }
 
-        /// One formatting-uniform span [a, b) -> pieces. Locked or unreadable spans become verbatim pieces.
-        static void Read(dynamic r, int a, int b, List<int[]> locked, List<Piece> pieces, Stats st)
+        /// The working range of PerRun: released unless it is the caller's story range (Stories releases that).
+        static void Done(object r, bool own) { if (!own) Free(r); }
+
+        static bool HasLetter(string s)
+        {
+            foreach (char c in s) if (char.IsLetter(c)) return true;
+            return false;
+        }
+
+        static readonly char[] Marks = { '\a', '\x13', '\x14', '\x15' };
+
+        /// Groups the pieces into paragraphs, converts them, returns the edits.
+        static List<Edit> Edits(List<Piece> pieces, Mode mode, Stats st)
+        {
+            var edits = new List<Edit>();
+            int p0 = 0;
+            for (int i = 0; i <= pieces.Count; i++)
+            {
+                if (i < pieces.Count && !pieces[i].ParagraphEnd) continue;
+                int p1 = i < pieces.Count ? i + 1 : i;
+                ConvertParagraph(pieces, p0, p1, mode, edits, st);
+                p0 = p1;
+            }
+            return edits;
+        }
+
+        /// One formatting-uniform span [a, b) -> pieces. Locked or unreadable spans become verbatim pieces. `flat`: the
+        /// text of the whole span from `origin`, cut here instead of read (null: read through Range.Text).
+        static void Read(dynamic r, int a, int b, List<int[]> locked, List<Piece> pieces, Stats st, string flat, int origin)
         {
             if (b <= a) return;
             if (IsLocked(locked, a, b)) { pieces.Add(new Piece { Start = a, End = b, Text = "" }); return; }
-            r.SetRange(a, b);
-            string t = r.Text ?? "";
+            string t;
+            if (flat != null) t = flat.Substring(a - origin, b - a);
+            else { r.SetRange(a, b); t = r.Text ?? ""; }
             // An end-of-cell or end-of-row mark is one position that reads as "\r\a".
             t = t.Replace("\r\a", "\a");
             if (t.Length != b - a)
