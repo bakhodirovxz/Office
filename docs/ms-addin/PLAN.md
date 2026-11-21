@@ -125,7 +125,13 @@ Measured (section 9, probes in the smoke test and `probe7`):
 Algorithm (`integrations/ms-office/src/WordAdapter.cs`):
 1. **Scope:** the selection range, or every story: `StoryRanges` + `NextStoryRange` chains (main text, footnotes,
    endnotes, comments, headers/footers of every section, text frames) plus text boxes in headers (not on the chain).
-2. **Read pass:** walk formatting runs with `Range.MoveEnd(wdCharacterFormatting)`; cut them at bookmark, comment-scope
+   Walked one story at a time, each `Range` released right after use (`Marshal.ReleaseComObject`): Word updates every
+   live `Range` on each edit, so holding one per story made each write slower than the last (section 9).
+2. **Read pass:** the span's text is read once. No letter in it: nothing to do (a main text of only text-box anchors
+   and section breaks). **Flat** (every position reads as one character, no field or cell mark): fields and content
+   controls cannot be in it, so `Fields`/`ContentControls` are not asked, the pieces are cut from that text instead of
+   one `Range.Text` read each, and if the whole span converts to itself (with the same locks) it is not walked at all.
+   `Bookmarks` and `Comments` are asked only when the document has any. Then walk formatting runs with `Range.MoveEnd(wdCharacterFormatting)`; cut them at bookmark, comment-scope
    and content-control edges; lock field codes (from `Range.Fields`: begin mark .. separator, and the end mark) and
    equations (`OMaths`). Every remaining piece is read with `Range.Text` and kept only if its length equals its
    position span (end-of-cell `\r\a` counts as one position); anything else (objects, field marks) is copied verbatim.
@@ -141,6 +147,13 @@ Algorithm (`integrations/ms-office/src/WordAdapter.cs`):
 6. **Speed settings during the command:** `ScreenUpdating`, `Options.Pagination`, `CheckSpellingAsYouType` and
    `CheckGrammarAsYouType` off, restored in `finally` (240 s -> 184 s on the benchmark). Draft view was tried and
    dropped: it recomputed the footer's PAGE field (caught by the smoke test).
+7. **Progress:** after the first second, every 250 ms: the status bar shows "Converting… N paragraphs checked"
+   (`msg.progress`; a count, the number of stories is not known up front) and `PeekMessage(PM_NOREMOVE)` lets Windows
+   see the thread alive; no click or key is handled mid-command.
+- **C# `dynamic`:** a call to one of our own methods with a `dynamic` COM argument is bound at run time on every call
+  (0.1-1.2 ms each, measured, more than most Word calls). In `WordAdapter` and `ExcelAdapter` every such call passes
+  the object as `(object)x`. Not in `Text2`/`PowerPointAdapter`: with the same casts there, the smoke test's own
+  PowerPoint process stayed alive after Quit (2 of 2 runs; Excel exited normally); cause not found.
 - **Fields:** codes never change; results (hyperlink text, cross-reference text) are converted; Word may rewrite a
   result on the next field update (expected Word behaviour, documented to users).
 - **Hyperlinks:** address untouched (it is in the field code), display text converted.
@@ -280,7 +293,9 @@ C2R 2016+ reads HKCU and HKLM Addins keys natively; C2R 2013 needs per-machine k
   modes and the selection mode through the loaded add-in (`COMAddIn.Object`), and checks: every story's text against
   the engine, formatting runs before/after (COM walk and the `w:rPr` sequence of `WordOpenXML`), field codes,
   hyperlink address, bookmark/comment/content-control anchors, footnotes, one-step Undo and Redo, the tracked-changes
-  refusal, the catalog languages. `-Big N` adds the timing document. It unregisters in `finally` and verifies no key is
+  refusal, the catalog languages, and a **time budget**: a generated document shaped like the 0.2.0 freeze (1,000
+  one-paragraph text boxes, 25 sections, 25 pictures) must convert whole in 15 s (0.2.0: 38 s). `-Big N` adds the
+  timing document. It unregisters in `finally` and verifies no key is
   left, and quits only its own Word. `-Apps Excel,PowerPoint` (default: all three) runs `test/SmokeOffice.cs` on its own
   Excel / PowerPoint (PowerPoint is single-instance: skipped if one is already running). An instance holding a file the
   test did not open is never quit (made visible instead), and each test's own Office process must exit afterwards.
@@ -293,7 +308,7 @@ C2R 2016+ reads HKCU and HKLM Addins keys natively; C2R 2013 needs per-machine k
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Untested Office versions (section 5) | add-in fails to load on some PCs | VM matrix before pilot; the add-in only uses 2010 APIs, feature-detects UndoRecord |
-| Large, densely formatted documents are slow on the one-Undo path (3.5 ms per changed run) | minutes on 100+ page documents with a format change every few words | measured in section 9; fast mode (WordXml) is ~50x faster but is many Undo steps (D8); WP7: progress in the status bar, Esc to cancel |
+| Large, densely formatted documents are slow on the one-Undo path (3.5 ms per changed run) | minutes on 100+ page documents with a format change every few words | measured in section 9; fast mode (WordXml) is ~50x faster but is many Undo steps (D8); the 0.2.0 freeze (thousands of text boxes) fixed and progress in the status bar (2026-11-22, section 9); Esc to cancel still open |
 | Office disables a slow-loading add-in (resiliency) | buttons disappear | load is tiny (CLR start + catalog); managed add-ins list via GPO |
 | Excel and PowerPoint undo | no one-step native undo | own snapshot undo (D5) |
 | Field results re-generated by Word on update | converted hyperlink/ref text reverts | documented; WP2 option to convert the bookmarked source text instead |
@@ -359,6 +374,29 @@ All three apps in one run (`run-smoke.ps1`, default apps): **163 checks pass**; 
   and passes the Excel smoke test**; uninstall leaves 0 keys and 0 files; with `MSIRESTARTMANAGERCONTROL=Disable` no
   application is shut down or relaunched (the first run, before that property, did so — see section 6.2).
 
+### Large-document freeze in 0.2.0 (2026-11-22, Word 2019 C2R x86 16.0.19127)
+
+Report: "Cyrillic to Latin" with nothing selected froze Word on a real 2.6 MB document (a PDF conversion): 4,125
+one-paragraph text boxes (VML, one run each, 167,830 characters), a main text of 205 paragraphs that holds only the
+4,233 anchors and 102 section breaks, 108 pictures, 103 sections. Below the 300,000-character fast-mode threshold
+(that counts the main text only: 4,438 positions). Machine busy with other builds (100 % CPU): each timing repeated.
+- **Not a hang**: no loop, no dialog. 0.2.0 takes **170 s** through the test API and **176 / 214 / 180 s** from the
+  ribbon (until Word is idle); cuts of the same document: 10 % 16 s, 25 % 34 s, 50 % 62 s. Meanwhile the window
+  ignored 58-71 of ~100 `WM_NULL` probes for over 2 s and paints nothing.
+- **Causes** (in-process stopwatches): (1) per story `Fields`, `Bookmarks`, `Comments`, `ContentControls`, `OMaths`
+  were enumerated (11-13 ms per text box) and the anchor-only main text was walked position by position; (2) every
+  call of our own helpers with a `dynamic` Range argument was bound at run time (0.7-1.2 ms each, 4-5 per text box);
+  (3) all 4,126 story ranges were held in a list while writing: Word updates every live `Range` on each edit, so a write
+  cost 1.6 ms at the start and 8.7 ms after 4,000 writes (flat 1-2 ms with the ranges released). Draft view, the undo
+  record, `ScreenUpdating`, pagination and `ShowHidden` made no difference (measured).
+- **After**: from the ribbon **4.9 / 6.2 / 7.3 s** for the command (Word then re-lays out the text boxes for 20-30 s on
+  its own; the window answers every probe but at most one); through the test API 19-29 s (calls from another process
+  cost more). Status bar during the command: "Converting… 1812 … 2851 paragraphs checked", then "3307 paragraphs
+  converted." Every text box equals the engine; one Undo restores every box (9-11 s; 0.2.0: 20 s).
+- **Smoke check** (generated, 1,000 text boxes, 25 sections, 25 pictures): 0.2.0 31.6-39.3 s (fails the 15 s budget),
+  now 5.8-9.5 s; one Undo 2.0-3.1 s (0.2.0: 3.0-3.8 s). **Excel** 2,000 x 20 cells (same `dynamic` cause, casts in
+  `ExcelAdapter`): 112 s -> 47-57 s on this busy machine, Undo 22.5 s -> 17-21 s. Smoke: 185 checks pass (all apps).
+
 ## 10. Work packages
 
 | WP | What | Size | Status |
@@ -370,7 +408,7 @@ All three apps in one run (`run-smoke.ps1`, default apps): **163 checks pass**; 
 | WP4 | Excel adapter (Value2 arrays, never formulas, rich text, shapes, notes, own undo) | 2-3 d | **done**; WP4b: headers/footers, sheet names, charts; faster rich-cell detection |
 | WP5 | PowerPoint adapter (Runs, tables, groups, notes, masters on request, own undo) | 1.5-2 d | **done**; SmartArt and native Undo to check on a visible PC |
 | WP6 | Outlook compose via WordEditor (+ inline response) | 0.5 d + pilot test | open |
-| WP7 | Large documents: fast mode exists (WordXml, measured); still open: how to offer it (D8), progress and cancel | 1 d | partly done |
+| WP7 | Large documents: fast mode exists (WordXml, measured), offered by D8; text-box documents fixed and status bar progress (2026-11-22); still open: cancel | 1 d | partly done |
 | WP8 | Installers: per-user and per-machine MSI (WiX 5.0.2), signing, GPO notes, optional COM shim | 2 d | **done** except per-machine/GPO install tests (need admin) and the COM shim |
 | WP10 | SignPath readiness: CI workflow, code signing policy, one version source | 1 d | **done** (prepared); enabling needs the maintainer (section 12) |
 | WP9 | Version matrix on IT's VMs (section 5) | 1-2 d | needs VMs |

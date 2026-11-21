@@ -357,6 +357,82 @@ static class Smoke
         d.Close(false);
     }
 
+    /// A document shaped like a PDF conversion (the 0.2.0 freeze): every line a one-paragraph text box anchored in a
+    /// main text that holds only the anchors and section breaks, plus floating pictures. Flat OPC XML, which Word
+    /// opens directly; saved as .docx.
+    static string BoxesXml(string golden, int boxes, int sections)
+    {
+        var words = File.ReadAllLines(golden).Skip(1).Select(l => l.Split('\t')).Where(f => f.Length > 5 && f[5].StartsWith("reviewed:"))
+            .Select(f => f[2]).Where(x => x.Length > 2 && !x.Contains('<') && !x.Contains('&') && x.Any(c => c >= '\u0400' && c <= '\u04ff')).ToArray();
+        var rnd = new Random(7);
+        const string png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+        var b = new StringBuilder();
+        int per = boxes / sections, n = 0;
+        for (int sct = 0; sct < sections; sct++)
+        {
+            b.Append("<w:p>");
+            for (int k = 0; k < per; k++, n++)
+            {
+                var t = string.Join(" ", Enumerable.Range(0, 4 + rnd.Next(3)).Select(i => words[rnd.Next(words.Length)]));
+                string runs = n % 10 == 0 && t.Contains(' ')
+                    ? "<w:r><w:rPr><w:b/></w:rPr><w:t>" + t.Substring(0, t.IndexOf(' ')) + "</w:t></w:r><w:r><w:t xml:space=\"preserve\">" + t.Substring(t.IndexOf(' ')) + "</w:t></w:r>"
+                    : "<w:r><w:t>" + t + "</w:t></w:r>";
+                b.Append("<w:r><w:pict><v:shape id=\"tb" + n + "\" type=\"#_x0000_t202\" style=\"position:absolute;margin-left:40pt;margin-top:" + (20 + 18 * k) + "pt;width:420pt;height:16pt;z-index:" + (n + 1)
+                    + "\" stroked=\"f\"><v:textbox inset=\"0,0,0,0\"><w:txbxContent><w:p>" + runs + "</w:p></w:txbxContent></v:textbox></v:shape></w:pict></w:r>");
+            }
+            b.Append("<w:r><w:pict><v:shape id=\"im" + sct + "\" style=\"position:absolute;margin-left:470pt;margin-top:20pt;width:40pt;height:40pt;z-index:" + (boxes + sct + 1) + "\"><v:imagedata r:id=\"rIdImg\"/></v:shape></w:pict></w:r>");
+            b.Append("</w:p>");
+            if (sct < sections - 1) b.Append("<w:p><w:pPr><w:sectPr><w:pgSz w:w=\"11906\" w:h=\"16838\"/><w:pgMar w:top=\"567\" w:right=\"567\" w:bottom=\"567\" w:left=\"567\" w:header=\"0\" w:footer=\"0\" w:gutter=\"0\"/></w:sectPr></w:pPr></w:p>");
+        }
+        const string rels = "http://schemas.openxmlformats.org/package/2006/relationships", rt = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        return "<?xml version=\"1.0\" standalone=\"yes\"?><?mso-application progid=\"Word.Document\"?><pkg:package xmlns:pkg=\"http://schemas.microsoft.com/office/2006/xmlPackage\">"
+            + "<pkg:part pkg:name=\"/_rels/.rels\" pkg:contentType=\"application/vnd.openxmlformats-package.relationships+xml\"><pkg:xmlData><Relationships xmlns=\"" + rels + "\"><Relationship Id=\"rId1\" Type=\"" + rt + "/officeDocument\" Target=\"word/document.xml\"/></Relationships></pkg:xmlData></pkg:part>"
+            + "<pkg:part pkg:name=\"/word/_rels/document.xml.rels\" pkg:contentType=\"application/vnd.openxmlformats-package.relationships+xml\"><pkg:xmlData><Relationships xmlns=\"" + rels + "\"><Relationship Id=\"rIdImg\" Type=\"" + rt + "/image\" Target=\"media/image1.png\"/></Relationships></pkg:xmlData></pkg:part>"
+            + "<pkg:part pkg:name=\"/word/document.xml\" pkg:contentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"><pkg:xmlData>"
+            + "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:r=\"" + rt + "\"><w:body>"
+            + b + "<w:sectPr><w:pgSz w:w=\"11906\" w:h=\"16838\"/><w:pgMar w:top=\"567\" w:right=\"567\" w:bottom=\"567\" w:left=\"567\" w:header=\"0\" w:footer=\"0\" w:gutter=\"0\"/></w:sectPr></w:body></w:document></pkg:xmlData></pkg:part>"
+            + "<pkg:part pkg:name=\"/word/media/image1.png\" pkg:contentType=\"image/png\" pkg:compression=\"store\"><pkg:binaryData>" + png + "</pkg:binaryData></pkg:part></pkg:package>";
+    }
+
+    /// The text of every text-box story, joined.
+    static string BoxText(dynamic d)
+    {
+        var sb = new StringBuilder();
+        for (dynamic r = d.StoryRanges[5]; r != null; r = r.NextStoryRange) sb.Append((string)r.Text).Append('\f');
+        return sb.ToString();
+    }
+
+    /// Time budget for the whole-document conversion of the text-box document (0.2.0: 170 s for the real 4,125-box
+    /// document; ~33 s for 1,000 boxes; fixed: ~5-8 s here through the test API, ~4x faster from the ribbon).
+    const int Boxes = 1000, BoxSections = 25, BoxBudgetMs = 15000;
+
+    static void BoxesTest(dynamic w, string dir, string golden)
+    {
+        string xml = Path.Combine(dir, "boxes.xml"), docx = Path.Combine(dir, "boxes.docx");
+        File.WriteAllText(xml, BoxesXml(golden, Boxes, BoxSections), new UTF8Encoding(false));
+        dynamic d = w.Documents.Open(FileName: xml, ConfirmConversions: false, AddToRecentFiles: false);
+        d.SaveAs2(FileName: docx, FileFormat: 12, AddToRecentFiles: false);
+        int stories = 0;
+        for (dynamic r = d.StoryRanges[5]; r != null; r = r.NextStoryRange) stories++;
+        Console.WriteLine("boxes doc: " + stories + " text boxes, " + d.Sections.Count + " sections, " + d.Shapes.Count + " shapes");
+        Check(stories == Boxes, "boxes doc has " + Boxes + " text-box stories");
+        string text0 = BoxText(d), main0 = d.Content.Text;
+        var xml0 = XmlRunProps(d.Content.WordOpenXML);
+        d.Range(0, 0).Select();
+        var sw = Stopwatch.StartNew();
+        string s1 = addin.Convert("latn", false);
+        long t1 = sw.ElapsedMilliseconds;
+        Console.WriteLine("boxes latn: " + s1 + " (wall " + t1 + " ms, budget " + BoxBudgetMs + " ms)");
+        Check(t1 <= BoxBudgetMs, "boxes: whole-document conversion within " + BoxBudgetMs + " ms (" + t1 + " ms)");
+        Check(Diff(BoxText(d), Expected(text0, "latn")), "boxes: every text box equals the engine's conversion");
+        Check((string)d.Content.Text == main0, "boxes: main text (anchors, section breaks) unchanged");
+        Check(Same(XmlRunProps(d.Content.WordOpenXML), xml0), "boxes: run properties unchanged (" + xml0.Count + " runs)");
+        sw.Restart();
+        d.Undo(1);
+        Check(BoxText(d) == text0, "boxes: one Undo restores every text box (" + sw.ElapsedMilliseconds + " ms)");
+        d.Close(false);
+    }
+
     static int Main(string[] args)
     {
         string dir = args[0], golden = args[1];
@@ -390,6 +466,7 @@ static class Smoke
             w.Visible = false;
             FeatureTests(w, dir);
             UpgradeTest(w);
+            BoxesTest(w, dir, golden);
             if (big > 0) BigTest(w, dir, golden, big, args.Contains("--fast-only"));
         }
         catch (Exception e)
