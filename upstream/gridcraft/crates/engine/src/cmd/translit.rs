@@ -110,7 +110,7 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
         Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
     };
     let defaults = Options::default();
-    let opts = Options {
+    let mut opts = Options {
         apostrophe,
         latin_alphabet,
         foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard),
@@ -159,10 +159,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
     }
     found.sort_by_key(|(si, c, _)| (*si, c.row, c.col));
     found.dedup_by_key(|(si, c, _)| (*si, c.row, c.col));
-    let dir = dir.or_else(|| {
-        let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
-        uz_translit::detect(&all).map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin })
-    });
+    let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
+    let detected = uz_translit::detect(&all);
+    // Cyrillic to Latin on a Latin-dominant selection (never a whole sheet or workbook) rewrites 1995 Latin in the 2026 letters.
+    opts.latin_upgrade = scope == Scope::Selection && dir == Some(Direction::ToLatin) && detected == Some(Script::Latin);
+    let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
     let mut changes = Vec::new();
     if let Some(dir) = dir {
         for (si, c, t) in &found {

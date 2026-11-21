@@ -249,3 +249,15 @@ fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
     s.execute(LATN, json!({"scope": "selection", "range": "A1"})).unwrap();
     assert_eq!(text(&s, "A1"), "Şahar öğil");
 }
+
+#[test]
+fn cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there() {
+    let mut s = session();
+    s.execute("range.setValues", json!({"range": "A1", "values": [["Shahar", "Ishoq şahar", "Шаҳар"]]})).unwrap();
+    // the whole sheet is never upgraded
+    s.execute(LATN, json!({"scope": "sheet"})).unwrap();
+    assert_eq!((text(&s, "A1"), text(&s, "C1")), ("Shahar".to_string(), "Şahar".to_string()));
+    // a Latin-dominant selection is: 1995 words become 2026, a segment that already has a 2026 letter stays
+    s.execute(LATN, json!({"scope": "selection", "range": "A1:C1"})).unwrap();
+    assert_eq!((text(&s, "A1"), text(&s, "B1")), ("Şahar".to_string(), "Ishoq şahar".to_string()));
+}
