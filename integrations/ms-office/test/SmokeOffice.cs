@@ -76,6 +76,22 @@ static class SmokeOffice
         return d;
     }
 
+    /// The ribbon loads with a window: the application is shown minimized for the probe and hidden again.
+    static void TabProbe(dynamic o, string app)
+    {
+        try
+        {
+            // the ribbon loads with a window: show the application minimized for the probe
+            try { o.Visible = true; o.WindowState = -4140; } catch { }
+            System.Threading.Thread.Sleep(2500);
+            addin.ShowTab(); System.Threading.Thread.Sleep(1500);
+            Console.WriteLine("ribbon on the add-in tab: " + addin.RibbonState());
+            Check(!((string)addin.RibbonState()).EndsWith("labels=0"), app + ": the group is on the add-in's own tab (getLabel called)");
+            try { o.Visible = false; } catch { }   // as before: the adapters are tested on a hidden instance
+        }
+        catch (Exception e) { Check(false, app + ": ShowTab failed: " + e.Message.Split((char)10)[0]); }
+    }
+
     static void Excel(dynamic x, string dir, int bigRows, List<string> mine)
     {
         dynamic wb = x.Workbooks.Add();
@@ -166,6 +182,25 @@ static class SmokeOffice
             "excel selection A1:A2 only: " + st3);
         addin.UndoLast();
 
+        // One cell selected = nothing really selected: the whole workbook (no question). To Latin, 1995 Latin Uzbek is upgraded
+        // to the 2026 letters, an English-looking cell keeps its Latin.
+        ws2.Cells[3, 1].Value2 = "Men oʻqituvchiman, shahar markazida";
+        ws2.Cells[4, 1].Value2 = "The shop is open and the church is closed";
+        ws.Range["B1"].Select();
+        string st4 = addin.ConvertIn("latn", "selection");
+        Console.WriteLine("excel latn, one cell selected: " + st4);
+        Check((string)ws2.Cells[3, 1].Value2 == "Men öqituvchiman, şahar markazida".Replace("qituvchi", "qituvçi"), "excel one cell = whole workbook, 1995 Latin upgraded on the other sheet: " + Vis(ws2.Cells[3, 1].Value2));
+        Check((string)ws2.Cells[4, 1].Value2 == "The shop is open and the church is closed", "excel whole-file run: the English cell keeps its Latin: " + Vis(ws2.Cells[4, 1].Value2));
+        addin.UndoLast();
+        // A real multi-cell selection converts only itself, and upgrades everything in it (English too).
+        ws.Cells[9, 1].Value2 = "shahar"; ws.Cells[9, 2].Value2 = "shahar"; ws.Cells[10, 1].Value2 = "The shop is open and the church is closed";
+        ws.Range["A9:A10"].Select();
+        addin.ConvertIn("latn", "selection");
+        Check((string)ws.Cells[9, 1].Value2 == "şahar" && (string)ws.Cells[9, 2].Value2 == "shahar", "excel A9:A10 selection: only the selection upgraded: " + Vis(ws.Cells[9, 1].Value2) + " / " + Vis(ws.Cells[9, 2].Value2));
+        Check(((string)ws.Cells[10, 1].Value2).StartsWith("The şop"), "excel real selection upgrades English too (owner decision): " + Vis(ws.Cells[10, 1].Value2));
+        addin.UndoLast();
+        Check((string)ws2.Cells[3, 1].Value2 == "Men oʻqituvchiman, shahar markazida", "excel Undo restores the upgraded cells");
+
         if (bigRows > 0)
         {
             // Timing: bigRows x 20 text cells, a formula column, every 10th row with a bold first word.
@@ -194,6 +229,7 @@ static class SmokeOffice
             for (int r = 1; r <= bigRows && ok; r++) for (int c = 1; c <= 20 && ok; c++) ok = Equals(v2[r, c], v0[r, c]);
             Check(ok, "excel big: Undo transliteration restores every cell");
         }
+        TabProbe(x, "excel");
         wb.Close(false);
     }
 
@@ -304,6 +340,15 @@ static class SmokeOffice
         string bad = s0.Keys.FirstOrDefault(k => s2[k][0] != s0[k][0] || s2[k][1] != s0[k][1]);
         Check(bad == null || native.StartsWith("one step restores"), "powerpoint Undo transliteration restores every text and run" + (bad == null ? "" : ": " + bad + " " + Vis(s2[bad][0])));
 
+        // Nothing selected = the whole presentation; to Latin: upgraded, an English-looking shape keeps its Latin.
+        dynamic tbE = slide.Shapes.AddTextbox(1, 50, 500, 300, 30); tbE.TextFrame2.TextRange.Text = "The shop is open and the church is closed";
+        dynamic tbU = slide.Shapes.AddTextbox(1, 400, 500, 300, 30); tbU.TextFrame2.TextRange.Text = "Men oʻqituvchiman, shahar";
+        string stN = addin.ConvertIn("latn", "selection");
+        Console.WriteLine("powerpoint latn, nothing selected: " + stN);
+        Check((string)tbU.TextFrame2.TextRange.Text == "Men öqituvçiman, şahar", "powerpoint nothing selected = whole presentation, 1995 Latin upgraded: " + Vis(tbU.TextFrame2.TextRange.Text));
+        Check((string)tbE.TextFrame2.TextRange.Text == "The shop is open and the church is closed", "powerpoint whole-file run: the English shape keeps its Latin: " + Vis(tbE.TextFrame2.TextRange.Text));
+        addin.UndoLast();
+
         // Masters only when asked.
         string st2 = addin.ConvertIn("latn", "presentation+masters");
         addin.ConvertIn("cyrl", "presentation+masters");
@@ -311,6 +356,7 @@ static class SmokeOffice
         string mk = s0.Keys.First(k => k.StartsWith("master/"));
         Check(s3[mk][0] == Expected(s0[mk][0], "cyrl"), "powerpoint masters converted when asked: " + Vis(s3[mk][0]));
         addin.UndoLast();
+        TabProbe(p, "powerpoint");
         pres.Close();
     }
 
@@ -338,6 +384,8 @@ static class SmokeOffice
         {
             if (app == "excel") { o.DisplayAlerts = false; }
             addin = Connect(o);
+            string tabEn = addin.CatalogGet("ribbon.uztTab.label", 1033), tabCy = addin.CatalogGet("ribbon.uztTab.label", 0x0843);
+            Check(tabEn.Length > 0 && tabEn != "ribbon.uztTab.label" && tabCy.Length > 0 && tabCy[0] >= 0x400, "the tab label is the product name from brand.toml (uz-Cyrl form in the uz-Cyrl UI): " + tabEn + " / " + tabCy);
             if (app == "excel") Excel(o, dir, big, mine); else PowerPoint(o, dir, mine);
         }
         catch (Exception e) { Console.WriteLine("FAIL exception: " + e); fails++; }

@@ -171,6 +171,24 @@ static class Smoke
         return d;
     }
 
+    /// Nothing selected = the whole file; to Latin 1995 Latin Uzbek is upgraded to the 2026 letters, an English-looking paragraph
+    /// keeps its Latin, Cyrillic is converted. A real selection upgrades everything in it.
+    static void UpgradeTest(dynamic w)
+    {
+        dynamic d = w.Documents.Add();
+        d.Content.Text = "Men oʻqituvchiman, shahar markazida.\rThe shop is open and the church is closed.\rМен мактабдаман.\rshahar";
+        d.Range(0, 0).Select();
+        addin.Convert("latn", false);
+        string[] ps = ((string)d.Content.Text).Split('\r');
+        Check(ps[0] == "Men öqituvçiman, şahar markazida.", "word whole file: 1995 Latin upgraded: " + Vis(ps[0]));
+        Check(ps[1] == "The shop is open and the church is closed.", "word whole file: the English paragraph keeps its Latin: " + Vis(ps[1]));
+        Check(ps[2] == "Men maktabdaman.", "word whole file: Cyrillic converted: " + Vis(ps[2]));
+        d.Paragraphs[2].Range.Select();
+        addin.Convert("latn", false);
+        Check(((string)d.Paragraphs[2].Range.Text).StartsWith("The şop"), "word real selection: upgrades English too: " + Vis(d.Paragraphs[2].Range.Text));
+        d.Close(false);
+    }
+
     static void FeatureTests(dynamic w, string dir)
     {
         dynamic d = BuildFeatureDoc(w, Path.Combine(dir, "features.docx"));
@@ -362,15 +380,16 @@ static class Smoke
             Check(((string)addin.RibbonState()).StartsWith("loaded=True"), "ribbon XML loaded (onLoad called)");
             // onLoad fires even when the tab id is wrong; labels are asked only for a group the ribbon really shows (Word's Review
             // tab is TabReviewWord, not TabReview). The window stays minimized: a shown one repaginates the test documents.
-            addin.ShowReviewTab(); System.Threading.Thread.Sleep(1500);
-            Console.WriteLine("ribbon on the Review tab: " + addin.RibbonState());
-            Check(!((string)addin.RibbonState()).EndsWith("labels=0"), "the group is on Word's Review tab (getLabel called)");
+            addin.ShowTab(); System.Threading.Thread.Sleep(1500);
+            Console.WriteLine("ribbon on the add-in tab: " + addin.RibbonState());
+            Check(!((string)addin.RibbonState()).EndsWith("labels=0"), "the group is on the add-in's own tab (getLabel called)");
             string icons = addin.IconProbe();
             Console.WriteLine("icons (getImage): " + icons);
             Check(!icons.Contains("null") && icons.Split(';').Length == 2, "getImage returns a picture for each button");
             Console.WriteLine("imageMso present: " + addin.ProbeImageMso("ChangeCase,ChangeCaseGallery,Translate,TranslateMenu,TranslationPane,SetLanguage,LanguageSetting,TextDirection,TextDirectionMenu,FontDialog,Font,Bold,WordArtInsertGallery,ReviewTranslate,ProofingMenu,SpellingAndGrammar,ResearchPane,ThesaurusPane,TranslateDocument,TranslateSelection,ShowClipboard,ReplaceDialog,EncodingMenu,ChineseTranslationDialog,KoreanHanjaConvert,HangulHanjaConversion,TransliterationPane,ConvertText,TextBoxInsert"));
             w.Visible = false;
             FeatureTests(w, dir);
+            UpgradeTest(w);
             if (big > 0) BigTest(w, dir, golden, big, args.Contains("--fast-only"));
         }
         catch (Exception e)
