@@ -8,12 +8,15 @@ certificate by SignPath Foundation (in preparation).
 
 ## What it does
 
-A group on the **Review** tab with two commands. Each converts the selection, or the whole document when nothing is
-selected:
+A tab of its own, named after the product, with two commands. Each converts the selection, or the whole file when nothing is
+selected (in Excel one selected cell counts as nothing, and converts the whole workbook without asking):
 
 - **Latin to Cyrillic.** Reads each paragraph as 1995 Latin (oʻ gʻ sh ch) or 2026 Latin (ö ğ ş ç), whichever it is
   written in.
-- **Cyrillic to Latin.** Always writes the **2026 alphabet** (ö ğ ş ç).
+- **Cyrillic to Latin.** Always writes the **2026 alphabet** (ö ğ ş ç). Text already in the 1995 Latin alphabet is
+  rewritten in the 2026 letters too. When nothing is selected, a paragraph with at least two English function words (the,
+  and, is, ...) keeps its Latin; an English sentence inside an Uzbek paragraph may still be changed. A real selection
+  upgrades everything in it.
 
 - **Word:** every story (main text, tables, headers and footers, footnotes, comments, text boxes). Field codes,
   hyperlink addresses, bookmarks, comments and content controls are kept. One Undo reverts the whole command.

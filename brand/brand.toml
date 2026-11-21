@@ -5,6 +5,8 @@ schema = 1
 [product]
 id = "hoshiya"
 name = "Hoshiya"
-version = "0.1.0"
+version = "0.2.0"
+# uz-Cyrl form of the name, used for the ribbon tab in the uz-Cyrl UI.
+name_uz_cyrl = "Ҳошия"
 vendor = "Hoshiya contributors"
 copyright = "Copyright (c) the Hoshiya contributors. MIT OR Apache-2.0."

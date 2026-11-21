@@ -16,8 +16,8 @@ smoke test), `i18n/msaddin.tsv` (UI strings).
 - **Every Office from 2010 on**: 2010, 2013, 2016, 2019, 2021, 2024, Microsoft 365; 32-bit and 64-bit; MSI and
   Click-to-Run; Windows 10 and 11.
 - Formatting is kept, one Undo reverts (where the host allows it), formulas and field codes are never touched.
-- UI follows the **Office UI language**: uz-Latn, uz-Cyrl, ru, else en. Native look: a group on the built-in Review
-  tab, Office icons, the standard Windows message box, the status bar.
+- UI follows the **Office UI language**: uz-Latn, uz-Cyrl, ru, else en. Native look: a tab of its own (named after
+  the product), Office icons, the standard Windows message box, the status bar.
 - **One installer, one COM registration, all apps**; uninstall removes it from all; Group Policy deployment for IT.
 
 ## 2. Feasibility: which add-in technology
@@ -55,8 +55,8 @@ compiles against the runtime assemblies directly, so **nothing had to be install
 - Every export catches panics (`UZT_PANIC`); invalid UTF-16 is rejected (`UZT_BAD_UTF16`), never replaced, so the host
   leaves that text untouched.
 - `uzt_convert`, `uzt_convert_runs` (the paragraph-as-runs API of `uz_translit::convert_runs`), `uzt_abi_version`,
-  `uzt_rules_version`, `uzt_free`. A `flags` word (ASCII apostrophe, foreign-word guard, Roman numerals) is in the ABI
-  from v1 so options do not break it later.
+  `uzt_rules_version`, `uzt_free`. A `flags` word (1 ASCII apostrophe, 2 no foreign-word guard, 4 no Roman numerals, 8 Latin
+  upgrade, 16 upgrade skips English-looking paragraphs) is in the ABI from v1 so options do not break it later.
 - Tests (`tests/ffi.rs`): the golden list through the FFI (2106 conversions, both directions, 1995 alphabet), all three
   alphabet modes equal to the library on every golden row (6480), split invariance of `uzt_convert_runs` (3856 splits),
   the error contract.
@@ -80,8 +80,8 @@ compiles against the runtime assemblies directly, so **nothing had to be install
   the ribbon for the ribbon IDs the adapters support (`Microsoft.Word.Document` today; `Microsoft.Excel.Workbook`,
   `Microsoft.PowerPoint.Presentation`, `Microsoft.Outlook.Mail.Compose` later) and nothing elsewhere, so a registration
   in Excel/PowerPoint before their adapter exists is harmless (verified: registered into all three during the tests).
-- **Ribbon.** customUI **2009/07** schema (Office 2010+), a group on the built-in **Review** tab (`idMso="TabReview"`,
-  exists in all three apps), two large buttons (to Cyrillic, to Latin) plus "Undo transliteration" in Excel and PowerPoint. Labels, screentips and supertips come only from `getLabel`,
+- **Ribbon.** customUI **2009/07** schema (Office 2010+), a tab of its own (`id="uztTab"`, labelled with the product name from `brand/brand.toml`, uz-Cyrl form
+  in the uz-Cyrl UI; 0.2.0, was the Review tab), two large buttons (to Cyrillic, to Latin) plus "Undo transliteration" in Excel and PowerPoint. Labels, screentips and supertips come only from `getLabel`,
   `getScreentip`, `getSupertip` callbacks (2007+ callbacks; nothing 2013-only).
 - **Icons.** `getImage` (2007+ callback) returns an IPictureDisp drawn at run time (`src/Icons.cs`): the word
   "Uzbek" in the alphabet the button writes — "Ўз", "Öz" — in dark grey with a Word-blue bar, at 32 px x the
@@ -154,8 +154,8 @@ Algorithm (`integrations/ms-office/src/WordAdapter.cs`):
 
 ### 4.2 Excel (implemented 2026-11-05: `src/ExcelAdapter.cs`, `src/Text2.cs`)
 
-- **Scope:** the selection (cell areas, or the selected shapes); with a single cell selected (Excel always has one) a
-  standard Yes/No/Cancel box offers the whole workbook (Yes) or this sheet (No) — D6. A sheet = its `UsedRange`,
+- **Scope:** the selection (cell areas, or the selected shapes); a single selected cell (Excel always has one) counts as
+  nothing selected and converts the whole workbook, no question (0.2.0; was a Yes/No/Cancel box — D6). A sheet = its `UsedRange`,
   shapes, notes and threaded comments; protected sheets are skipped.
 - **Cells:** per area one `Value2` and one `Formula` array read; only string constants are converted. **Formulas are
   never written**: a cell whose `Formula` starts with `=` is skipped if `HasFormula` confirms it (text typed as
@@ -196,7 +196,7 @@ Algorithm (`integrations/ms-office/src/WordAdapter.cs`):
 
 - A message being composed is a Word document: `Inspector.WordEditor` (Outlook 2007+; the Word editor is the only
   editor since 2013). The Word adapter works on it unchanged; only the ribbon ID `Microsoft.Outlook.Mail.Compose`
-  (Review tab exists there) and the routing `ActiveInspector().WordEditor` are new. Inline replies in the reading pane
+  (the add-in's own tab works there unchanged) and the routing `ActiveInspector().WordEditor` are new. Inline replies in the reading pane
   (2013+) use `Explorer.ActiveInlineResponseWordEditor`.
 - **Cost: about 0.5 day of code + a test on a test PC.** It is cheap, but **not built**: testing needs Outlook with a
   mail profile, which the test PC did not offer. Planned as WP6.
@@ -393,7 +393,12 @@ Taken on 2026-11-05.
   from `brand/brand.toml`. (2026-11-05)
 - **D5 Excel and PowerPoint undo: the add-in's own "Undo transliteration"** button, restoring a snapshot of what the
   add-in changed. (2026-11-05)
-- **D6 Scope: "selection, else the whole document"** stays. (2026-11-05)
+- **D6 Scope: "selection, else the whole document"** stays. (2026-11-05) 0.2.0 (owner, 2026-11-21): in Excel one cell
+  = nothing selected = the whole workbook, no question.
+- **D9 Old Latin to new Latin** (0.2.0, owner 2026-11-21): Cyrillic to Latin also rewrites 1995 Latin in the 2026 letters
+  (`Options::latin_upgrade`, FFI flag 8). On a whole-file run (nothing selected) a paragraph with at least 2 distinct
+  English function words is left alone (`upgrade_skip_english`, flag 16); a real selection upgrades everything.
+- **D10 Own ribbon tab** (0.2.0, owner 2026-11-21): the buttons moved from the Review tab to a tab named after the product.
 - **D7 Office.js: later**, no code now. (2026-11-05)
 - **D8 Large documents: the normal mode (one Undo step) is the default; the fast mode is opt-in behind a standard
   Yes/No warning that Undo will take several steps.** (2026-11-05)
