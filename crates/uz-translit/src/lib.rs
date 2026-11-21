@@ -18,7 +18,7 @@ mod scan;
 use alloc::{borrow::Cow, string::String, vec::Vec};
 
 /// Bumped with any output-changing rule or data change.
-pub const RULES_VERSION: &str = "uz-translit-rules/3";
+pub const RULES_VERSION: &str = "uz-translit-rules/4";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
@@ -89,6 +89,8 @@ pub struct Options {
     pub foreign_latin_guard: bool,
     /// ->Cyrillic: protect Roman numerals (R12 ROMAN).
     pub roman_numerals: bool,
+    /// ->Latin (2026 output): also rewrite 1995 Latin words in the 2026 letters (oʻ->ö, sh->ş, ...). Default false.
+    pub latin_upgrade: bool,
 }
 
 impl Default for Options {
@@ -98,6 +100,7 @@ impl Default for Options {
             latin_alphabet: DEFAULT_LATIN_ALPHABET,
             foreign_latin_guard: true,
             roman_numerals: true,
+            latin_upgrade: false,
         }
     }
 }

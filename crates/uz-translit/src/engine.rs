@@ -62,6 +62,8 @@ pub(crate) struct Seg<'a> {
     pub out: Out,
     pub opts: Options,
     pub buf: String, // scratch for dictionary keys
+    /// ->Latin rewrites 1995 Latin words in the 2026 letters (`Options::latin_upgrade`, Y2026 output only).
+    pub upgrade: bool,
 }
 
 fn build_items(orig: &[char]) -> Vec<Item> {
@@ -254,12 +256,12 @@ impl<'a> Seg<'a> {
         if is_letter(it.c) {
             return true;
         }
-        if !(to_cyr && is_apos(it.c) && it.flags & CLOSER == 0) {
+        if !((to_cyr || self.upgrade) && is_apos(it.c) && it.flags & CLOSER == 0) {
             return false;
         }
         let prev = self.items[i - 1].c;
         is_latin_ext(prev)
-            && ((is_og(prev) && self.opts.latin_alphabet != LatinAlphabet::Y2026)
+            && ((is_og(prev) && (self.upgrade || self.opts.latin_alphabet != LatinAlphabet::Y2026))
                 || self
                     .items
                     .get(i + 1)
@@ -304,6 +306,7 @@ pub(crate) fn convert_segment(
         },
         opts: *opts,
         buf: String::new(),
+        upgrade: false,
     };
     let to_cyr = dir == Direction::ToCyrillic;
     if opts.latin_alphabet == LatinAlphabet::Auto {
@@ -320,8 +323,13 @@ pub(crate) fn convert_segment(
             dflt
         };
     }
+    // a segment that already has a 2026 letter is read as 2026 (like Auto): nothing to upgrade, a plain "sh" is s + h
+    seg.upgrade = !to_cyr
+        && opts.latin_upgrade
+        && seg.opts.latin_alphabet == LatinAlphabet::Y2026
+        && !seg.items.iter().any(|t| is_new_letter(t.c));
     scan::mark(&mut seg.items, to_cyr && opts.roman_numerals, para_start);
-    if to_cyr {
+    if to_cyr || seg.upgrade {
         l2c::mark_closers(&mut seg.items);
     }
     seg.find_words(to_cyr);
