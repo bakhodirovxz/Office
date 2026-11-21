@@ -236,7 +236,7 @@ fn error_contract() {
     assert_eq!(ffi("", UZT_TO_LATIN, 0, 0), Ok(String::new()));
     assert_eq!(ffi("a", 7, 0, 0), Err(UZT_BAD_ARG));
     assert_eq!(ffi("a", UZT_TO_LATIN, 9, 0), Err(UZT_BAD_ARG));
-    assert_eq!(ffi("a", UZT_TO_LATIN, 0, 8), Err(UZT_BAD_ARG));
+    assert_eq!(ffi("a", UZT_TO_LATIN, 0, 32), Err(UZT_BAD_ARG));
 
     let lone = [0x0441u16, 0xD800, 0x0430]; // с, unpaired high surrogate, а
     let (mut out, mut n) = (ptr::null_mut(), 0u32);
@@ -273,4 +273,49 @@ fn error_contract() {
     };
     assert_eq!(rc, UZT_BAD_ARG);
     unsafe { uzt_free(ptr::null_mut(), 0) };
+}
+
+/// UZT_FLAG_LATIN_UPGRADE equals the library option, and a mixed paragraph (Cyrillic Uzbek, 1995 Latin Uzbek, English,
+/// a URL, an e-mail, code) shows what the add-in does to foreign Latin text.
+#[test]
+fn latin_upgrade_flag() {
+    let opts = Options {
+        latin_upgrade: true,
+        ..Options::default()
+    };
+    let mixed = "Мен мактабга бораман. Men oʻqituvchiman, shahar markazida yashayman.         The shop is open; she wishes to check the church. Visit https://shop.example.com/about?q=shell or write         to john.chang@example.org. Run git push --force, then std::cout << \"show\";";
+    for text in [
+        mixed,
+        "Men oʻqituvchiman, shahar",
+        "Ishoq keldi",
+        "Toshkent shahri",
+    ] {
+        let got = ffi(text, UZT_TO_LATIN, 0, UZT_FLAG_LATIN_UPGRADE).unwrap();
+        assert_eq!(got, convert(text, Direction::ToLatin, &opts), "{text}");
+        println!("IN : {text}
+OUT: {got}
+");
+    }
+    // flag off = the old behaviour
+    let t = "Men oʻqituvchiman, shahar";
+    assert_eq!(
+        ffi(t, UZT_TO_LATIN, 0, 0).unwrap(),
+        convert(t, Direction::ToLatin, &Options::default())
+    );
+    assert_eq!(
+        ffi("Мактаб", UZT_TO_LATIN, 0, UZT_FLAG_LATIN_UPGRADE).unwrap(),
+        convert("Мактаб", Direction::ToLatin, &opts)
+    );
+}
+
+#[test]
+fn upgrade_skip_english_flag() {
+    let both = UZT_FLAG_LATIN_UPGRADE | UZT_FLAG_UPGRADE_SKIP_ENGLISH;
+    let en = "The shop is open; she wishes to check the church.";
+    let uz = "Men oʻqituvchiman, shahar markazida.";
+    assert_eq!(ffi(en, UZT_TO_LATIN, 0, both).unwrap(), en);
+    assert_ne!(ffi(en, UZT_TO_LATIN, 0, UZT_FLAG_LATIN_UPGRADE).unwrap(), en);
+    assert_eq!(ffi(uz, UZT_TO_LATIN, 0, both).unwrap(), "Men öqituvçiman, şahar markazida.");
+    // the skip bit alone does nothing (no upgrade requested)
+    assert_eq!(ffi(uz, UZT_TO_LATIN, 0, UZT_FLAG_UPGRADE_SKIP_ENGLISH).unwrap(), ffi(uz, UZT_TO_LATIN, 0, 0).unwrap());
 }

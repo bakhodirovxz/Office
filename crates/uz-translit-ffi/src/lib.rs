@@ -29,6 +29,10 @@ pub const UZT_ALPHABET_2026: u32 = 2;
 pub const UZT_FLAG_ASCII_APOSTROPHE: u32 = 1;
 pub const UZT_FLAG_NO_FOREIGN_GUARD: u32 = 2;
 pub const UZT_FLAG_NO_ROMAN_NUMERALS: u32 = 4;
+/// ->Latin: also rewrite 1995 Latin words in the 2026 letters (uz_translit::Options::latin_upgrade).
+pub const UZT_FLAG_LATIN_UPGRADE: u32 = 8;
+/// With UZT_FLAG_LATIN_UPGRADE: a paragraph with >= 2 distinct English function words is not upgraded (Options::upgrade_skip_english).
+pub const UZT_FLAG_UPGRADE_SKIP_ENGLISH: u32 = 16;
 
 /// Bumped when a signature or a constant above changes.
 pub const UZT_ABI_VERSION: u32 = 1;
@@ -45,7 +49,7 @@ fn params(to: u32, alphabet: u32, flags: u32) -> Option<(Direction, Options)> {
         UZT_ALPHABET_2026 => LatinAlphabet::Y2026,
         _ => return None,
     };
-    if flags & !7 != 0 {
+    if flags & !31 != 0 {
         return None;
     }
     let opts = Options {
@@ -57,6 +61,8 @@ fn params(to: u32, alphabet: u32, flags: u32) -> Option<(Direction, Options)> {
         latin_alphabet,
         foreign_latin_guard: flags & UZT_FLAG_NO_FOREIGN_GUARD == 0,
         roman_numerals: flags & UZT_FLAG_NO_ROMAN_NUMERALS == 0,
+        latin_upgrade: flags & UZT_FLAG_LATIN_UPGRADE != 0,
+        upgrade_skip_english: flags & UZT_FLAG_UPGRADE_SKIP_ENGLISH != 0,
     };
     Some((dir, opts))
 }
