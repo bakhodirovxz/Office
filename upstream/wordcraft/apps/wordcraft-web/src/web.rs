@@ -101,6 +101,10 @@ pub fn start() {
                         docs_office::phone::set_css_width(|| {
                             web_sys::window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(0.0) as f32
                         });
+                        docs_office::phone::set_screen_short_side(|| {
+                            let s = web_sys::window().and_then(|w| w.screen().ok());
+                            s.map_or(0.0, |s| f64::from(s.width().unwrap_or(0).min(s.height().unwrap_or(0))) as f32)
+                        });
                         docs_office::phone::set_coarse_pointer(
                             web_sys::window().and_then(|w| w.match_media("(pointer: coarse)").ok().flatten()).is_some_and(|m| m.matches()),
                         );
