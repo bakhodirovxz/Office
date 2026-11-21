@@ -68,13 +68,13 @@ namespace UzTranslit.Office
                     try { isRange = sel.Areas != null; } catch { }
                     if (isRange)
                     {
-                        Cells(app, sel, mode, st, snap);
+                        Cells((object)app, (object)sel, mode, st, snap);
                     }
                     else
                     {
                         // Shapes selected: their text.
                         var ranges = new List<Func<dynamic>>();
-                        foreach (dynamic s in sel.ShapeRange) Text2.Shapes(s, ranges);
+                        foreach (dynamic s in sel.ShapeRange) Text2.Shapes((object)s, ranges);
                         foreach (var r in ranges) Keep(snap, Text2.Convert(r, mode, st));
                     }
                 }
@@ -84,7 +84,7 @@ namespace UzTranslit.Office
                     var sheets = new List<dynamic>();
                     if (scope == "workbook") foreach (dynamic ws in wb.Worksheets) sheets.Add(ws);
                     else sheets.Add(app.ActiveSheet);
-                    foreach (dynamic ws in sheets) Sheet(app, ws, mode, st, snap);
+                    foreach (dynamic ws in sheets) Sheet((object)app, (object)ws, mode, st, snap);
                 }
             }
             finally
@@ -102,9 +102,9 @@ namespace UzTranslit.Office
         {
             if ((bool)ws.ProtectContents) { st.Skipped++; return; }
             st.Stories++;
-            Cells(app, ws.UsedRange, mode, st, snap);
+            Cells((object)app, (object)ws.UsedRange, mode, st, snap);
             var ranges = new List<Func<dynamic>>();
-            foreach (dynamic s in ws.Shapes) Text2.Shapes(s, ranges);
+            foreach (dynamic s in ws.Shapes) Text2.Shapes((object)s, ranges);
             // Notes (legacy comments): TextFrame2 paragraph/run access is "not implemented" on note shapes (measured),
             // so through the legacy TextFrame.Characters, run by run like a rich-text cell.
             foreach (dynamic c in ws.Comments)
@@ -121,7 +121,7 @@ namespace UzTranslit.Office
             }
             foreach (var r in ranges)
                 try { Keep(snap, Text2.Convert(r, mode, st)); } catch (Exception e) { st.Skipped++; st.Error = e.Message; }
-            Threaded(ws, mode, st, snap);
+            Threaded((object)ws, mode, st, snap);
         }
 
         /// Threaded comments (Microsoft 365 builds only; plain text, no formatting to keep).
@@ -164,11 +164,11 @@ namespace UzTranslit.Office
                 Func<object, int, int, object> at = (o, r, c) => o is object[,] ? ((object[,])o)[r, c] : o;
                 // Uniform font over the area, or over a row: no cell in it can be rich text (Font properties are null
                 // when mixed). Per-cell checks only in mixed rows: per-cell COM calls cost ~1 ms each (measured).
-                bool uniform = Uniform(area.Font);
+                bool uniform = Uniform((object)area.Font);
                 int r0 = area.Row, c0 = area.Column;
                 for (int r = 1; r <= rows; r++)
                 {
-                    bool rowUniform = uniform || Uniform(ws.Range[ws.Cells[r0 + r - 1, c0], ws.Cells[r0 + r - 1, c0 + cols - 1]].Font);
+                    bool rowUniform = uniform || Uniform((object)ws.Range[ws.Cells[r0 + r - 1, c0], ws.Cells[r0 + r - 1, c0 + cols - 1]].Font);
                     // Spans of consecutive plain changed cells in this row: one Value2 write each.
                     int spanStart = 0;
                     var spanVals = new List<string>();
@@ -190,7 +190,7 @@ namespace UzTranslit.Office
                                 if (neu != s)
                                 {
                                     dynamic cell = rowUniform ? null : ws.Cells[r0 + r - 1, c0 + c - 1];
-                                    if (!rowUniform && !Uniform(cell.Font)) { dynamic cl = cell; Rich((object)cell, () => cl.Value2 as string, s, mode, st, snap); }
+                                    if (!rowUniform && !Uniform((object)cell.Font)) { dynamic cl = cell; Rich((object)cell, () => cl.Value2 as string, s, mode, st, snap); }
                                     else plainChange = true;
                                 }
                             }
@@ -204,7 +204,7 @@ namespace UzTranslit.Office
                         }
                         if (spanVals.Count > 0)
                         {
-                            WriteSpan(ws, r0 + r - 1, c0 + spanStart - 1, spanOld, spanVals, st, snap);
+                            WriteSpan((object)ws, r0 + r - 1, c0 + spanStart - 1, spanOld, spanVals, st, snap);
                             spanVals = new List<string>();
                             spanOld = new List<string>();
                         }
@@ -218,8 +218,8 @@ namespace UzTranslit.Office
             // A property that differs inside the range comes back as VT_NULL, which dynamic turns into DBNull.
             try
             {
-                return Set(font.Name) && Set(font.Size) && Set(font.Bold) && Set(font.Italic) && Set(font.Underline)
-                    && Set(font.Color) && Set(font.Strikethrough) && Set(font.Superscript) && Set(font.Subscript);
+                return Set((object)font.Name) && Set((object)font.Size) && Set((object)font.Bold) && Set((object)font.Italic) && Set((object)font.Underline)
+                    && Set((object)font.Color) && Set((object)font.Strikethrough) && Set((object)font.Superscript) && Set((object)font.Subscript);
             }
             catch { return false; }
         }
@@ -236,7 +236,7 @@ namespace UzTranslit.Office
             var arr = new object[1, n];
             for (int i = 0; i < n; i++) arr[0, i] = vals[i];
             span.Value2 = n == 1 ? (object)vals[0] : arr;
-            st.Prefixed += FixParsed(ws, row, col, span.Value2, vals);
+            st.Prefixed += FixParsed((object)ws, row, col, (object)span.Value2, vals);
             snap.Spans.Add(new SpanEdit { Sheet = ws, Row = row, Col = col, Old = old.ToArray(), New = vals.ToArray() });
             st.Edits += n;
         }
@@ -280,7 +280,7 @@ namespace UzTranslit.Office
                 dynamic span = ws.Range[ws.Cells[e.Row, e.Col + i], ws.Cells[e.Row, e.Col + j - 1]];
                 if (j - i == 1) span.Value2 = vals[0];
                 else { var arr = new object[1, j - i]; for (int k = 0; k < vals.Length; k++) arr[0, k] = vals[k]; span.Value2 = arr; }
-                FixParsed(ws, e.Row, e.Col + i, span.Value2, vals);
+                FixParsed((object)ws, e.Row, e.Col + i, (object)span.Value2, vals);
                 ok += j - i;
                 i = j;
             }
@@ -292,7 +292,7 @@ namespace UzTranslit.Office
         static void Rich(dynamic cell, Func<string> read, string text, Mode mode, Stats st, Snapshot snap)
         {
             var runs = new List<int[]>();   // [start (1-based), length]
-            Split(cell, 1, text.Length, runs);
+            Split((object)cell, 1, text.Length, runs);
             var texts = new string[runs.Count];
             var conv = new bool[runs.Count];
             for (int i = 0; i < runs.Count; i++) { texts[i] = text.Substring(runs[i][0] - 1, runs[i][1]); conv[i] = true; }
@@ -302,7 +302,7 @@ namespace UzTranslit.Office
             for (int i = runs.Count - 1; i >= 0; i--)
             {
                 if (res[i] == texts[i]) continue;
-                RewriteChars(cell, runs[i][0], texts[i], res[i]);
+                RewriteChars((object)cell, runs[i][0], texts[i], res[i]);
                 rec.Runs.Add(new object[] { runs[i][0], texts[i], res[i] });
             }
             if (read() != rec.New) throw new InvalidOperationException("rich text did not take the new text");
@@ -314,16 +314,16 @@ namespace UzTranslit.Office
         static void Split(dynamic cell, int start, int len, List<int[]> runs)
         {
             if (len <= 0) return;
-            if (len == 1 || Uniform(cell.Characters[start, len].Font))
+            if (len == 1 || Uniform((object)cell.Characters[start, len].Font))
             {
                 // Merge with the previous run when the formats match (bisection cuts runs at arbitrary points).
-                if (runs.Count > 0 && Sig(cell, runs[runs.Count - 1][0]) == Sig(cell, start)) runs[runs.Count - 1][1] += len;
+                if (runs.Count > 0 && Sig((object)cell, runs[runs.Count - 1][0]) == Sig((object)cell, start)) runs[runs.Count - 1][1] += len;
                 else runs.Add(new[] { start, len });
                 return;
             }
             int h = len / 2;
-            Split(cell, start, h, runs);
-            Split(cell, start + h, len - h, runs);
+            Split((object)cell, start, h, runs);
+            Split((object)cell, start + h, len - h, runs);
         }
 
         static string Sig(dynamic cell, int pos)
@@ -369,7 +369,7 @@ namespace UzTranslit.Office
                             {
                                 int delta = 0;
                                 for (int m = k + 1; m < e.Runs.Count; m++) delta += ((string)e.Runs[m][2]).Length - ((string)e.Runs[m][1]).Length;
-                                RewriteChars(e.Cell, (int)e.Runs[k][0] + delta, (string)e.Runs[k][2], (string)e.Runs[k][1]);
+                                RewriteChars((object)e.Cell, (int)e.Runs[k][0] + delta, (string)e.Runs[k][2], (string)e.Runs[k][1]);
                             }
                         }
                         ok++;
