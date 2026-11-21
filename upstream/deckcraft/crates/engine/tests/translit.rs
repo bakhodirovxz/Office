@@ -311,3 +311,22 @@ fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
     s.execute(LATN, &json!({})).unwrap();
     assert_eq!(text_of(&s, 0, a), "Şahar öğil");
 }
+
+#[test]
+fn cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there() {
+    let mut s = session();
+    let a = add(&mut s, "Shahar");
+    let b = add(&mut s, "Ishoq şahar");
+    let c = add(&mut s, "Shahar");
+    s.select(|_, sel| {
+        sel.shapes = vec![a, b];
+        sel.text = None;
+    })
+    .unwrap();
+    s.execute(LATN, &json!({})).unwrap();
+    // a segment that already has a 2026 letter stays; the unselected shape is untouched
+    assert_eq!((text_of(&s, 0, a), text_of(&s, 0, b), text_of(&s, 0, c)), ("Şahar".into(), "Ishoq şahar".into(), "Shahar".into()));
+    // the slide scope is never upgraded
+    s.execute(LATN, &json!({"scope": "slide"})).unwrap();
+    assert_eq!(text_of(&s, 0, c), "Shahar");
+}

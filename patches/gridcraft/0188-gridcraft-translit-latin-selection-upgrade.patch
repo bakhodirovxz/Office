@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 21 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: Cyrillic to Latin on a Latin selection rewrites 1995 Latin in the 2026 letters
+
+tools.translitLatn (scope selection, Latin-dominant text in the selected cells) sets uz-translit Options.latin_upgrade, so
+1995 Latin words become 2026 Latin (Shahar -> Sahar with cedilla); a segment that already has a 2026 letter stays (Ishoq).
+The sheet and workbook scopes never upgrade. Test: cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there.
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 80f72b91..ba0a0b1e 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -110,7 +110,7 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
+         Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
+     };
+     let defaults = Options::default();
+-    let opts = Options {
++    let mut opts = Options {
+         apostrophe,
+         latin_alphabet,
+         foreign_latin_guard: bool_param(p, "foreignGuard").unwrap_or(defaults.foreign_latin_guard),
+@@ -119,10 +119,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
+ 
+     let t0 = now_ms();
+     let (scope, found, st) = collect(s, p, scope)?;
+-    let dir = dir.or_else(|| {
+-        let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
+-        uz_translit::detect(&all).map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin })
+-    });
++    let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
++    let detected = uz_translit::detect(&all);
++    // Cyrillic to Latin on a Latin-dominant selection (never a whole sheet or workbook) rewrites 1995 Latin in the 2026 letters.
++    opts.latin_upgrade = scope == Scope::Selection && dir == Some(Direction::ToLatin) && detected == Some(Script::Latin);
++    let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
+     let mut changes = Vec::new();
+     if let Some(dir) = dir {
+         for (si, c, t) in &found {
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index 3c3f5fc6..32b1bdd7 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -249,3 +249,15 @@ fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
+     s.execute(LATN, json!({"scope": "selection", "range": "A1"})).unwrap();
+     assert_eq!(text(&s, "A1"), "Şahar öğil");
+ }
++
++#[test]
++fn cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there() {
++    let mut s = session();
++    s.execute("range.setValues", json!({"range": "A1", "values": [["Shahar", "Ishoq şahar", "Шаҳар"]]})).unwrap();
++    // the whole sheet is never upgraded
++    s.execute(LATN, json!({"scope": "sheet"})).unwrap();
++    assert_eq!((text(&s, "A1"), text(&s, "C1")), ("Shahar".to_string(), "Şahar".to_string()));
++    // a Latin-dominant selection is: 1995 words become 2026, a segment that already has a 2026 letter stays
++    s.execute(LATN, json!({"scope": "selection", "range": "A1:C1"})).unwrap();
++    assert_eq!((text(&s, "A1"), text(&s, "B1")), ("Şahar".to_string(), "Ishoq şahar".to_string()));
++}

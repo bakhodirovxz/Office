@@ -254,7 +254,7 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
         Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
     };
     let defaults = Options::default();
-    let opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
+    let mut opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
 
     let t0 = now_ms();
     let (scope, slides) = resolve(s, asked)?;
@@ -264,27 +264,34 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
         Scope::Shapes(v) => (Some(v.as_slice()), false, None),
         _ => (None, true, None),
     };
-    let visit = |sl: &mut Slide, dir: Option<Direction>, stats: &mut Stats, sink: &mut String| {
+    let visit = |sl: &mut Slide, dir: Option<Direction>, opts: &Options, stats: &mut Stats, sink: &mut String| {
         walk(sl, only, notes, &mut |loc, t| match range {
-            Some((l, a, b)) if l == loc => body(t, Some((a, b)), dir, &opts, stats, sink),
+            Some((l, a, b)) if l == loc => body(t, Some((a, b)), dir, opts, stats, sink),
             Some(_) => {}
-            None => body(t, None, dir, &opts, stats, sink),
+            None => body(t, None, dir, opts, stats, sink),
         });
     };
     let mut stats = Stats::default();
-    let dir = dir.or_else(|| {
+    let selection = matches!(scope, Scope::Range(..) | Scope::Shapes(_));
+    let upgradable = selection && dir == Some(Direction::ToLatin);
+    let detected = if dir.is_none() || upgradable {
         let mut text = String::new();
         for &i in &slides {
-            visit(&mut (*doc.slides[i]).clone(), None, &mut Stats::default(), &mut text);
+            visit(&mut (*doc.slides[i]).clone(), None, &opts, &mut Stats::default(), &mut text);
         }
-        uz_translit::detect(&text).map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin })
-    });
+        uz_translit::detect(&text)
+    } else {
+        None
+    };
+    // Cyrillic to Latin on a Latin-dominant selection (never the slide or deck) rewrites 1995 Latin in the 2026 letters.
+    opts.latin_upgrade = upgradable && detected == Some(Script::Latin);
+    let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
     let mut changed: Vec<(usize, Slide)> = Vec::new();
     if dir.is_some() {
         for &i in &slides {
             let mut sl = (*doc.slides[i]).clone();
             let before = stats.paragraphs;
-            visit(&mut sl, dir, &mut stats, &mut String::new());
+            visit(&mut sl, dir, &opts, &mut stats, &mut String::new());
             if stats.paragraphs > before {
                 changed.push((i, sl));
             }
