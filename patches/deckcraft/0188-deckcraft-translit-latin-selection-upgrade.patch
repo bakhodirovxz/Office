@@ -8,10 +8,10 @@ words become 2026 Latin; a segment that already has a 2026 letter stays. The sli
 now takes the options as a parameter. Test: cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there.
 ---
 diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
-index 497de54a..232633e3 100644
+index 1e6d6a1c..2e3d387b 100644
 --- a/crates/engine/src/cmd/translit.rs
 +++ b/crates/engine/src/cmd/translit.rs
-@@ -216,7 +216,7 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
+@@ -254,7 +254,7 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
          Some(o) => return Err(bad(id, format!("`latinAlphabet` must be 1995, 2026 or auto, not `{o}`"))),
      };
      let defaults = Options::default();
@@ -19,8 +19,8 @@ index 497de54a..232633e3 100644
 +    let mut opts = Options { apostrophe, latin_alphabet, foreign_latin_guard: bool_or(p, "foreignGuard", defaults.foreign_latin_guard), ..defaults };
  
      let t0 = now_ms();
-     let st = s.doc()?;
-@@ -244,27 +244,34 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
+     let (scope, slides) = resolve(s, asked)?;
+@@ -264,27 +264,34 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
          Scope::Shapes(v) => (Some(v.as_slice()), false, None),
          _ => (None, true, None),
      };
