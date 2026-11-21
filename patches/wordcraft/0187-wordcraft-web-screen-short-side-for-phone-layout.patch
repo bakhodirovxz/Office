@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sat, 21 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft-web: report the device screen's short side so a
+ landscape phone keeps the phone layout
+
+Phase 6 checklist F5 (docs/phase6/checklist.md). The phone layout (0140, docs-office phone.rs) was chosen on `window.innerWidth <= 600` and a finger, so a phone turned to landscape (915x412 CSS px) got the desktop ribbon and about one line of document. The web host now also tells the extension `min(screen.width, screen.height)` (CSS px; it does not change with the soft keyboard or the orientation) through `docs_office::phone::set_screen_short_side`; the extension turns the phone layout on when a finger was the last pointer and the window is at most 600 px wide or that short side is at most 600. Tablets (short side 768 and up) and desktop windows keep their layout. web-sys gets the `Screen` feature.
+---
+diff --git a/apps/wordcraft-web/Cargo.toml b/apps/wordcraft-web/Cargo.toml
+index 5238a2ae..39b0615f 100644
+--- a/apps/wordcraft-web/Cargo.toml
++++ b/apps/wordcraft-web/Cargo.toml
+@@ -33,4 +33,4 @@ rfd = { workspace = true }
+ wasm-bindgen = "0.2"
+ wasm-bindgen-futures = "0.4"
+ js-sys = "0.3"
+-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "MouseEvent", "PointerEvent", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
++web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlIFrameElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "MouseEvent", "PointerEvent", "BeforeUnloadEvent", "ClipboardEvent", "DataTransfer", "FileList", "File", "DomStringList", "IdbFactory", "IdbOpenDbRequest", "IdbRequest", "IdbDatabase", "IdbObjectStore", "IdbTransaction", "IdbTransactionMode", "MediaQueryList", "Screen", "Storage", "MessageEvent", "KeyboardEvent", "UrlSearchParams"] }
+diff --git a/apps/wordcraft-web/src/web.rs b/apps/wordcraft-web/src/web.rs
+index 3c3eba72..d1cf9e91 100644
+--- a/apps/wordcraft-web/src/web.rs
++++ b/apps/wordcraft-web/src/web.rs
+@@ -101,6 +101,10 @@ pub fn start() {
+                         docs_office::phone::set_css_width(|| {
+                             web_sys::window().and_then(|w| w.inner_width().ok()).and_then(|v| v.as_f64()).unwrap_or(0.0) as f32
+                         });
++                        docs_office::phone::set_screen_short_side(|| {
++                            let s = web_sys::window().and_then(|w| w.screen().ok());
++                            s.map_or(0.0, |s| f64::from(s.width().unwrap_or(0).min(s.height().unwrap_or(0))) as f32)
++                        });
+                         docs_office::phone::set_coarse_pointer(
+                             web_sys::window().and_then(|w| w.match_media("(pointer: coarse)").ok().flatten()).is_some_and(|m| m.matches()),
+                         );
