@@ -23,7 +23,9 @@ name="$(brand name)"; vendor="$(brand vendor)"; version="$(brand version)"; copy
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "brand/brand.toml [product] version must be X.Y.Z, got '$version'" >&2; exit 1; }
 product="$name Office add-in"
 v4="$version.0"; vc="${v4//./,}"
+name_cyrl="$(brand name_uz_cyrl)"
 printf '%s\n' "$name" > "$out/brand-name.txt"
+printf '%s\n%s\n' "$name" "$name_cyrl" > "$gen/brand.txt"   # embedded: the ribbon tab label
 
 # --- tools
 win() { cygpath -w "$1"; }
@@ -94,6 +96,7 @@ EOF
   -r:Microsoft.CSharp.dll -r:System.Core.dll -r:System.Xml.dll -r:System.Drawing.dll -r:System.Windows.Forms.dll \
   -resource:"$(win "$here/src/customUI.xml")",customUI.xml \
   -resource:"$(win "$root/i18n/msaddin.tsv")",msaddin.tsv \
+  -resource:"$(win "$gen/brand.txt")",brand.txt \
   "$(win "$gen/AssemblyInfo.cs")" $(for f in "$here"/src/*.cs; do win "$f"; done)
 
 # --- every binary carries the same product name and version

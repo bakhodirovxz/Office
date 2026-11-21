@@ -39,6 +39,13 @@ namespace UzTranslit.Office
                     c.strings[f[ctx]] = f[col].Length > 0 ? f[col] : f[en];
                 }
             }
+            // the ribbon tab carries the product name (brand/brand.toml, via build.sh): line 1 = name, line 2 = its uz-Cyrl form (may be empty)
+            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("brand.txt"))
+            using (var r = new StreamReader(s))
+            {
+                string name = r.ReadLine() ?? "", cyr = r.ReadLine() ?? "";
+                c.strings["ribbon.uztTab.label"] = c.Lang == "uz_cyrl" && cyr.Length > 0 ? cyr : name;
+            }
             return c;
         }
 

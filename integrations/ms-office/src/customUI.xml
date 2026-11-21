@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- customUI 2009/07 (Office 2010+). A group on the built-in Review tab, next to the language tools. Labels and tips
+<!-- customUI 2009/07 (Office 2010+). The add-in's own tab (labelled with the product name from brand/brand.toml, see Catalog.cs). Labels and tips
      come from i18n/msaddin.tsv through the callbacks; icons from getImage (src/Icons.cs). -->
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="OnRibbonLoad">
   <ribbon>
     <tabs>
-      <tab idMso="TabReview">
+      <tab id="uztTab" getLabel="GetLabel">
         <group id="uztGroup" getLabel="GetLabel">
           <button id="uztToCyrl" tag="cyrl" size="large" getImage="GetImage"
                   getLabel="GetLabel" getScreentip="GetScreentip" getSupertip="GetSupertip" onAction="OnConvert"/>
