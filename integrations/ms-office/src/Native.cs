@@ -9,6 +9,7 @@ namespace UzTranslit.Office
     static class Native
     {
         public const uint ToCyrillic = 0, ToLatin = 1;
+        public const uint FlagLatinUpgrade = 8, FlagUpgradeSkipEnglish = 16;   // ->Latin: also rewrite 1995 Latin; skip English-looking paragraphs
         public const uint AlphabetAuto = 0, Alphabet2026 = 2;   // the FFI also takes 1 = 1995 (CLI/API); the add-in never passes it
         const uint AbiVersion = 1;
         const string Dll = "uz_translit_ffi";
@@ -54,16 +55,16 @@ namespace UzTranslit.Office
             if (rc != 0) throw new InvalidOperationException("uz_translit_ffi error " + rc);
         }
 
-        public static string Convert(string text, uint to, uint alphabet)
+        public static string Convert(string text, uint to, uint alphabet, uint flags)
         {
             Load();
             IntPtr p; uint n;
-            Check(uzt_convert(text, (uint)text.Length, to, alphabet, 0, out p, out n));
+            Check(uzt_convert(text, (uint)text.Length, to, alphabet, flags, out p, out n));
             return Take(p, n);
         }
 
         /// The runs of one paragraph -> each run's new text (null = the engine refused this paragraph, e.g. bad UTF-16).
-        public static string[] ConvertRuns(string[] runs, bool[] convert, uint to, uint alphabet)
+        public static string[] ConvertRuns(string[] runs, bool[] convert, uint to, uint alphabet, uint flags)
         {
             Load();
             var lens = new uint[runs.Length];
@@ -71,7 +72,7 @@ namespace UzTranslit.Office
             for (int i = 0; i < runs.Length; i++) { lens[i] = (uint)runs[i].Length; conv[i] = convert[i] ? (byte)1 : (byte)0; }
             var outLens = new uint[runs.Length];
             IntPtr p; uint n;
-            int rc = uzt_convert_runs(string.Concat(runs), lens, conv, (uint)runs.Length, to, alphabet, 0, out p, out n, outLens);
+            int rc = uzt_convert_runs(string.Concat(runs), lens, conv, (uint)runs.Length, to, alphabet, flags, out p, out n, outLens);
             if (rc == 2) return null;
             Check(rc);
             string all = Take(p, n);

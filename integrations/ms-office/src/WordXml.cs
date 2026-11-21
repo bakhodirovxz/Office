@@ -76,7 +76,7 @@ namespace UzTranslit.Office
                 if (!Collect(ps[i], texts, conv, nodes)) return null;
                 if (texts.Count > 0)
                 {
-                    string[] res = Native.ConvertRuns(texts.ToArray(), conv.ToArray(), mode.To, mode.Alphabet);
+                    string[] res = Native.ConvertRuns(texts.ToArray(), conv.ToArray(), mode.To, mode.Alphabet, mode.Flags);
                     if (res == null) return null;
                     for (int k = 0; k < res.Length; k++)
                     {

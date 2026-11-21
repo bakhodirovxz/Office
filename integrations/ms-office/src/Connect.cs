@@ -54,8 +54,8 @@ namespace UzTranslit.Office
         string CatalogGet(string context, int lcid);
         /// "loaded=<onLoad called>;labels=<getLabel calls>" (the smoke test checks the ribbon XML really loads).
         string RibbonState();
-        /// Shows the Review tab (IRibbonUI.ActivateTabMso), so the ribbon asks for the group's labels if the group is there.
-        string ShowReviewTab();
+        /// Shows the add-in's own tab (IRibbonUI.ActivateTab), so the ribbon asks for the group's labels if the tab is there.
+        string ShowTab();
         /// Per button: the icon getImage returns, as "tag:WxH px" (IPictureDisp size), for the smoke test.
         string IconProbe();
     }
@@ -110,9 +110,7 @@ namespace UzTranslit.Office
             using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("customUI.xml"))
             using (var r = new StreamReader(s))
             {
-                string xml = r.ReadToEnd();
-                // Word's Review tab is TabReviewWord; TabReview there fails ("Failed to find Office control by ID") and the group is not shown.
-                return host == Host.Word ? xml.Replace("idMso=\"TabReview\"", "idMso=\"TabReviewWord\"") : xml;
+                return r.ReadToEnd();
             }
         }
 
@@ -123,7 +121,7 @@ namespace UzTranslit.Office
         int labelCalls;
         object ribbonUi;
         public void OnRibbonLoad(object ribbon) { ribbonLoaded = true; ribbonUi = ribbon; }
-        public string ShowReviewTab() { ((dynamic)ribbonUi).ActivateTabMso(host == Host.Word ? "TabReviewWord" : "TabReview"); return RibbonState(); }
+        public string ShowTab() { ((dynamic)ribbonUi).ActivateTab("uztTab"); return RibbonState(); }
         public string RibbonState() { return "loaded=" + ribbonLoaded + ";labels=" + labelCalls; }
 
         static string Id(object control) { return ((dynamic)control).Id; }
@@ -172,19 +170,7 @@ namespace UzTranslit.Office
                 }
                 else
                 {
-                    string scope = "selection";
-                    if (host == Host.Excel)
-                    {
-                        bool oneCell = false;
-                        try { oneCell = (long)app.Selection.CountLarge == 1; } catch { }
-                        if (oneCell)
-                        {
-                            int a = Ui.Ask(Caption, cat.Get("msg.excel_scope"));
-                            if (a == Ui.Cancel) return;
-                            scope = a == Ui.Yes ? "workbook" : "sheet";
-                        }
-                    }
-                    st = Other(mode, scope);
+                    st = Other(mode, "selection");   // Excel: one cell = the whole workbook (ExcelAdapter); PowerPoint: nothing selected = all
                 }
                 string msg = st.Edits == 0 ? cat.Get("msg.nothing")
                     : host == Host.Word ? cat.Get("msg.done").Replace("{n}", st.Paragraphs.ToString())
@@ -267,7 +253,7 @@ namespace UzTranslit.Office
             catch (UserMessage e) { throw new InvalidOperationException(e.Key); }
         }
 
-        public string ConvertText(string text, string mode) { var m = Mode.Parse(mode); return Native.Convert(text, m.To, m.Alphabet); }
+        public string ConvertText(string text, string mode) { var m = Mode.Parse(mode); return Native.Convert(text, m.To, m.Alphabet, m.Flags); }
         public string UiLanguage() { return cat.Lang; }
         public string CatalogGet(string context, int lcid) { return Catalog.Load(lcid).Get(context); }
 
@@ -292,14 +278,16 @@ namespace UzTranslit.Office
 
     struct Mode
     {
-        public uint To, Alphabet;
+        public uint To, Alphabet, Flags;
+        /// The run covers the whole file (nothing selected): English-looking paragraphs keep their Latin (->Latin only).
+        public Mode Whole() { var m = this; if (To == Native.ToLatin) m.Flags |= Native.FlagUpgradeSkipEnglish; return m; }
         public static Mode Parse(string s)
         {
             switch (s)
             {
                 case "cyrl": return new Mode { To = Native.ToCyrillic, Alphabet = Native.AlphabetAuto };
                 // Decision 2026-10-29: Latin is always written in the 2026 alphabet; 1995 Latin is read, never written.
-                case "latn": return new Mode { To = Native.ToLatin, Alphabet = Native.Alphabet2026 };
+                case "latn": return new Mode { To = Native.ToLatin, Alphabet = Native.Alphabet2026, Flags = Native.FlagLatinUpgrade };
                 default: throw new ArgumentException("mode: " + s);
             }
         }

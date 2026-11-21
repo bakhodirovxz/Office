@@ -48,7 +48,7 @@ namespace UzTranslit.Office
                     starts[r - 1] = at;
                     at += texts[r - 1].Length;
                 }
-                string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet);
+                string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet, mode.Flags);
                 st.Paragraphs++;
                 if (res == null) { st.Skipped++; continue; }
                 bool any = false;

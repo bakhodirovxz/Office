@@ -56,6 +56,7 @@ namespace UzTranslit.Office
             if (doc.ProtectionType != wdNoProtection) throw new UserMessage("msg.protected");
             dynamic sel = app.Selection;
             bool whole = wholeDocument || sel.Start == sel.End;
+            if (whole) mode = mode.Whole();
             if ((whole ? doc.Revisions.Count : sel.Range.Revisions.Count) > 0) throw new UserMessage("msg.tracked");
             // With Track Changes on, InsertXML would record whole paragraphs as replaced: per run only.
             bool xml = fast && !(bool)doc.TrackRevisions;
@@ -359,7 +360,7 @@ namespace UzTranslit.Office
             for (int i = 0; i < n; i++) { texts[i] = pieces[p0 + i].Text; conv[i] = pieces[p0 + i].Convert; any |= conv[i]; }
             if (!any) return;
             st.Paragraphs++;
-            string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet);
+            string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet, mode.Flags);
             if (res == null) { st.Skipped++; return; }
             for (int i = 0; i < n; i++)
             {

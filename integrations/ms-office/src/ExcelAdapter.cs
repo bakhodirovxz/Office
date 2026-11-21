@@ -56,6 +56,16 @@ namespace UzTranslit.Office
                     dynamic sel = app.Selection;
                     bool isRange = false;
                     try { isRange = sel.Areas != null; } catch { }
+                    // One cell = nothing really selected: the whole workbook.
+                    bool oneCell = false;
+                    try { oneCell = isRange && (long)sel.CountLarge == 1; } catch { }
+                    if (oneCell) { scope = "workbook"; }
+                }
+                if (scope == "selection")
+                {
+                    dynamic sel = app.Selection;
+                    bool isRange = false;
+                    try { isRange = sel.Areas != null; } catch { }
                     if (isRange)
                     {
                         Cells(app, sel, mode, st, snap);
@@ -70,6 +80,7 @@ namespace UzTranslit.Office
                 }
                 else
                 {
+                    mode = mode.Whole();
                     var sheets = new List<dynamic>();
                     if (scope == "workbook") foreach (dynamic ws in wb.Worksheets) sheets.Add(ws);
                     else sheets.Add(app.ActiveSheet);
@@ -102,7 +113,7 @@ namespace UzTranslit.Office
                 try
                 {
                     string t = cm.Text();
-                    string neu = Native.Convert(t, mode.To, mode.Alphabet);
+                    string neu = Native.Convert(t, mode.To, mode.Alphabet, mode.Flags);
                     st.Paragraphs++;
                     if (neu != t) Rich((object)cm.Shape.TextFrame, () => (string)cm.Text(), t, mode, st, snap);
                 }
@@ -127,7 +138,7 @@ namespace UzTranslit.Office
                     try
                     {
                         string old = it.Text();
-                        string neu = Native.Convert(old, mode.To, mode.Alphabet);
+                        string neu = Native.Convert(old, mode.To, mode.Alphabet, mode.Flags);
                         if (neu == old) continue;
                         it.Text(neu);
                         dynamic keep = it;
@@ -175,7 +186,7 @@ namespace UzTranslit.Office
                             if (s != null)
                             {
                                 st.Paragraphs++;
-                                neu = Native.Convert(s, mode.To, mode.Alphabet);
+                                neu = Native.Convert(s, mode.To, mode.Alphabet, mode.Flags);
                                 if (neu != s)
                                 {
                                     dynamic cell = rowUniform ? null : ws.Cells[r0 + r - 1, c0 + c - 1];
@@ -285,7 +296,7 @@ namespace UzTranslit.Office
             var texts = new string[runs.Count];
             var conv = new bool[runs.Count];
             for (int i = 0; i < runs.Count; i++) { texts[i] = text.Substring(runs[i][0] - 1, runs[i][1]); conv[i] = true; }
-            string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet);
+            string[] res = Native.ConvertRuns(texts, conv, mode.To, mode.Alphabet, mode.Flags);
             if (res == null) { st.Skipped++; return; }
             var rec = new CellEdit { Cell = cell, Read = read, Old = text, New = string.Concat(res), Runs = new List<object[]>() };
             for (int i = runs.Count - 1; i >= 0; i--)

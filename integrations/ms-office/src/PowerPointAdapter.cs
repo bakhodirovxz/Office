@@ -30,8 +30,8 @@ namespace UzTranslit.Office
                 if (type == ppSelectionText)
                 {
                     dynamic tr = sel.TextRange2;
-                    ranges.Add(() => tr);
-                    done = true;
+                    // a caret without selected text = nothing selected: the whole presentation
+                    if ((int)tr.Length > 0) { ranges.Add(() => tr); done = true; }
                 }
                 else if (type == ppSelectionShapes)
                 {
@@ -46,6 +46,7 @@ namespace UzTranslit.Office
             }
             if (!done)
             {
+                mode = mode.Whole();
                 foreach (dynamic sl in pres.Slides) Slide(sl, ranges);
                 if (scope == "presentation+masters")
                 {
