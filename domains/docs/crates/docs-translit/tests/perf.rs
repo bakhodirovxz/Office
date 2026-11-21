@@ -169,8 +169,16 @@ fn perf_108_plugin() {
     let Some(wasm) = common::wasm() else { return };
     common::install(&wasm);
     for (name, builtin, plugin) in [
-        ("uz108-latn.docx", "tools.translitCyrl", "plugin.uz-translit.toCyrillic"),
-        ("uz108-cyrl.docx", "tools.translitLatn", "plugin.uz-translit.toLatin"),
+        (
+            "uz108-latn.docx",
+            "tools.translitCyrl",
+            "plugin.uz-translit.toCyrillic",
+        ),
+        (
+            "uz108-cyrl.docx",
+            "tools.translitLatn",
+            "plugin.uz-translit.toLatin",
+        ),
     ] {
         let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));
         let bytes = std::fs::read(&path).unwrap();

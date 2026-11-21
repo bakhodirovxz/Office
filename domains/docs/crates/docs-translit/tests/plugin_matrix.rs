@@ -37,8 +37,16 @@ fn selection(s: &Session) -> Option<Selection> {
     let off = a.text.char_indices().nth(2).map_or(0, |(i, _)| i);
     let end = s.doc.para(StoryRef::Body, mid)?.len();
     Some(Selection {
-        anchor: Pos { story: StoryRef::Body, path: first.clone(), off },
-        focus: Pos { story: StoryRef::Body, path: mid.clone(), off: end },
+        anchor: Pos {
+            story: StoryRef::Body,
+            path: first.clone(),
+            off,
+        },
+        focus: Pos {
+            story: StoryRef::Body,
+            path: mid.clone(),
+            off: end,
+        },
     })
 }
 
@@ -61,7 +69,10 @@ struct Case<'a> {
 
 /// One comparison: (the open noise flag, what differs).
 fn once(c: &Case) -> (bool, Vec<String>) {
-    let (mut a, mut b) = (open(c.name, c.bytes, c.tracked), open(c.name, c.bytes, c.tracked));
+    let (mut a, mut b) = (
+        open(c.name, c.bytes, c.tracked),
+        open(c.name, c.bytes, c.tracked),
+    );
     if c.scope == "selection"
         && let Some(sel) = selection(&a)
     {
@@ -74,7 +85,11 @@ fn once(c: &Case) -> (bool, Vec<String>) {
     let (ra, rb) = (a.run(c.builtin, &params), b.run(c.plugin, &params));
     let mut why = Vec::new();
     if ra.is_err() != rb.is_err() {
-        why.push(format!("results differ: builtin ok={} plugin ok={}", ra.is_ok(), rb.is_ok()));
+        why.push(format!(
+            "results differ: builtin ok={} plugin ok={}",
+            ra.is_ok(),
+            rb.is_ok()
+        ));
     }
     // Opening the same bytes twice must give equal documents; some fixtures carry a random id (the glossary part) that it does not.
     // Such a case still has to save identical bytes, but the in-memory comparison is not meaningful and is counted apart.
@@ -84,9 +99,16 @@ fn once(c: &Case) -> (bool, Vec<String>) {
     if a.sel != b.sel {
         why.push("selection differs".to_string());
     }
-    let (sa, sb) = (io::save_bytes("out.docx", &a.doc).unwrap(), io::save_bytes("out.docx", &b.doc).unwrap());
+    let (sa, sb) = (
+        io::save_bytes("out.docx", &a.doc).unwrap(),
+        io::save_bytes("out.docx", &b.doc).unwrap(),
+    );
     if sa != sb {
-        why.push(format!("saved docx differs ({} vs {} bytes)", sa.len(), sb.len()));
+        why.push(format!(
+            "saved docx differs ({} vs {} bytes)",
+            sa.len(),
+            sb.len()
+        ));
         if let Some(dir) = std::env::var_os("UZ_DUMP_DIFFS") {
             let d = std::path::Path::new(&dir);
             std::fs::write(d.join("builtin.docx"), &sa).unwrap();
@@ -103,7 +125,10 @@ fn once(c: &Case) -> (bool, Vec<String>) {
 }
 
 fn secs() -> u64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }
 
 /// A tracked run stamps its revisions with the wall clock to the second, so two runs that straddle a second boundary legitimately differ:
@@ -121,18 +146,51 @@ fn case(t: &mut Tally, c: &Case) {
     if why.is_empty() {
         t.same += 1;
     } else {
-        t.diff.push(format!("{} {} tracked={} scope={}: {}", c.label, c.builtin, c.tracked, c.scope, why.join("; ")));
+        t.diff.push(format!(
+            "{} {} tracked={} scope={}: {}",
+            c.label,
+            c.builtin,
+            c.tracked,
+            c.scope,
+            why.join("; ")
+        ));
     }
 }
 
 fn all(t: &mut Tally, label: &str, name: &str, bytes: &[u8], to_cyrl: bool) {
-    let (builtin, plugin) = if to_cyrl { ("tools.translitCyrl", "plugin.uz-translit.toCyrillic") } else { ("tools.translitLatn", "plugin.uz-translit.toLatin") };
+    let (builtin, plugin) = if to_cyrl {
+        ("tools.translitCyrl", "plugin.uz-translit.toCyrillic")
+    } else {
+        ("tools.translitLatn", "plugin.uz-translit.toLatin")
+    };
     for tracked in [false, true] {
         for scope in ["document", "selection", "caret"] {
-            case(t, &Case { label, name, bytes, builtin, plugin, tracked, scope });
+            case(
+                t,
+                &Case {
+                    label,
+                    name,
+                    bytes,
+                    builtin,
+                    plugin,
+                    tracked,
+                    scope,
+                },
+            );
         }
     }
-    case(t, &Case { label, name, bytes, builtin: "tools.translitAuto", plugin: "plugin.uz-translit.auto", tracked: false, scope: "document" });
+    case(
+        t,
+        &Case {
+            label,
+            name,
+            bytes,
+            builtin: "tools.translitAuto",
+            plugin: "plugin.uz-translit.auto",
+            tracked: false,
+            scope: "document",
+        },
+    );
 }
 
 #[test]
@@ -147,7 +205,8 @@ fn plugin_output_is_identical_to_the_builtin() {
         all(&mut t, &name, &name, &bytes, true);
         // the way back, on the built-in's Cyrillic result
         let mut s = open(&name, &bytes, false);
-        s.run("tools.translitCyrl", &json!({"scope": "document"})).unwrap();
+        s.run("tools.translitCyrl", &json!({"scope": "document"}))
+            .unwrap();
         let cyr = io::save_bytes("cyr.docx", &s.doc).unwrap();
         all(&mut t, &format!("{name} (cyrl)"), "cyr.docx", &cyr, false);
     }
@@ -155,10 +214,20 @@ fn plugin_output_is_identical_to_the_builtin() {
         let bytes = std::fs::read(format!("{dir}/{n}")).unwrap();
         all(&mut t, n, n, &bytes, n.contains("latn"));
     }
-    println!("OUTPUT MATRIX: identical {}, differing {} (in-memory comparison skipped by open noise: {})", t.same, t.diff.len(), t.noise);
+    println!(
+        "OUTPUT MATRIX: identical {}, differing {} (in-memory comparison skipped by open noise: {})",
+        t.same,
+        t.diff.len(),
+        t.noise
+    );
     for d in &t.diff {
         println!("DIFF {d}");
     }
     docs_plugins::clear();
-    assert!(t.diff.is_empty(), "{} of {} cases differ", t.diff.len(), t.same + t.diff.len());
+    assert!(
+        t.diff.is_empty(),
+        "{} of {} cases differ",
+        t.diff.len(),
+        t.same + t.diff.len()
+    );
 }
