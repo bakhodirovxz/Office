@@ -216,9 +216,6 @@ name = "arbitrary"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bc62ac97cc33321f50863d514c3bc38a453947a8f9e781137e47c7401020aed"
-dependencies = [
- "derive_arbitrary",
-]
 
 [[package]]
 name = "arboard"
@@ -734,6 +731,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "constant_time_eq"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eb6feb175df65d0a3ccd3e73484e940d0ac664e8034f0519fd49a93db3071d9"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1155,7 +1161,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.21",
- "zip 3.0.0",
+ "zip",
 ]
 
 [[package]]
@@ -1279,7 +1285,7 @@ dependencies = [
  "log",
  "quick-xml",
  "thiserror 2.0.21",
- "zip 3.0.0",
+ "zip",
 ]
 
 [[package]]
@@ -1345,17 +1351,6 @@ dependencies = [
  "deckcraft-bitstream",
  "rayon",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "derive_arbitrary"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b034bd7d5f032402a2479444dcc6f74e36a03f31854d41680fb240ef682a1ac"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 3.0.6",
 ]
 
 [[package]]
@@ -4246,7 +4241,7 @@ dependencies = [
  "deckcraft-mcp",
  "serde_json",
  "slides-plugins",
- "zip 3.0.0",
+ "zip",
 ]
 
 [[package]]
@@ -4446,7 +4441,7 @@ dependencies = [
  "sha2",
  "toml_edit 0.22.27",
  "web-sys",
- "zip 9.3.0",
+ "zip",
 ]
 
 [[package]]
@@ -6516,6 +6511,20 @@ name = "zeroize"
 version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13084392c5e4bc371903e2935a5eaeed24905a7511356b883835e18a78f6879"
+dependencies = [
+ "zeroize_derive",
+]
+
+[[package]]
+name = "zeroize_derive"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "zerotrie"
@@ -6552,24 +6561,11 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "3.0.0"
+version = "9.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12598812502ed0105f607f941c386f43d441e00148fce9dec3ca5ffb0bde9308"
+checksum = "a9534624d547e3f516ecde0ed9a70d37788f01d340efcfdd03bf3ea8e163c1d0"
 dependencies = [
- "arbitrary",
- "crc32fast",
- "flate2",
- "indexmap",
- "memchr",
- "zopfli",
-]
-
-[[package]]
-name = "zip"
-version = "9.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaeb7f16d2605b49aef586996ded29e65642fab7259a3077e537351df6d80426"
-dependencies = [
+ "constant_time_eq",
  "crc32fast",
  "flate2",
  "getrandom 0.4.3",
@@ -6578,7 +6574,8 @@ dependencies = [
  "memchr",
  "nix",
  "typed-path",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
+ "zeroize",
  "zopfli",
 ]
 

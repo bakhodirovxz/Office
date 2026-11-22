@@ -30,7 +30,7 @@ js-sys = "0.3"
 [dev-dependencies]
 wordcraft-layout = { path = "../../../../upstream/wordcraft/crates/layout" }
 wordcraft-fonts = { path = "../../../../upstream/wordcraft/crates/fonts" }
-zip = { version = "3", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 
 # Phase 6 WP2 (M3): native layout split, code in spikes/p6-m3
 [[example]]

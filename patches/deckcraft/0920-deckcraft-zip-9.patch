@@ -1,0 +1,549 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] deckcraft: zip 9 (RUSTSEC-2026-0545, -0548)
+
+zip 3.0.0 to 9 (owner decision 2026-11-22): the workspace requirement and the call sites of the API changes we
+meet: ZipFile::name and ZipArchive::file_names now return ZipResult<Cow<str>>, ZipFile::data_start returns
+Option<u64>. Production: opc.rs maps a name error to PptxError::NotPptx. Tests: .unwrap() / .flatten().
+Cargo.lock is patch 0921.
+---
+diff --git a/Cargo.toml b/Cargo.toml
+index 7c7c93c1..80ac4213 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -60,7 +60,7 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
+ craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8", version = "=0.1.0", default-features = false, features = ["write"] }
+ i_overlay = "9"
+ quick-xml = "0.41"
+-zip = { version = "3", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate"] }
+ 
+ # ui
+ egui = "0.36"
+diff --git a/apps/deckcraft-cli/tests/damaged.rs b/apps/deckcraft-cli/tests/damaged.rs
+index de85a66b..6bfb8935 100644
+--- a/apps/deckcraft-cli/tests/damaged.rs
++++ b/apps/deckcraft-cli/tests/damaged.rs
+@@ -24,10 +24,10 @@ fn without_slide2(deck: &[u8]) -> Vec<u8> {
+         let mut f = zin.by_index(i).unwrap();
+         let mut data = vec![];
+         f.read_to_end(&mut data).unwrap();
+-        if f.name() == "ppt/slides/slide2.xml" {
++        if f.name().unwrap() == "ppt/slides/slide2.xml" {
+             data = b"<p:sld".to_vec();
+         }
+-        out.start_file(f.name(), options).unwrap();
++        out.start_file(f.name().unwrap(), options).unwrap();
+         out.write_all(&data).unwrap();
+     }
+     out.finish().unwrap().into_inner()
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index dd64b08c..ba6f48a9 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -2515,7 +2515,7 @@ fn smartart_round_trips_through_pptx_as_a_diagram() {
+     let bytes = deckcraft_pptx::export(&doc).unwrap();
+     let names: Vec<String> = {
+         let z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+-        z.file_names().map(String::from).collect()
++        z.file_names().map(|n| n.unwrap().into_owned()).collect()
+     };
+     for part in ["data1", "layout1", "quickStyle1", "colors1", "drawing1"] {
+         assert!(names.iter().any(|n| n == &format!("ppt/diagrams/{part}.xml")), "{part} in {names:?}");
+@@ -3715,10 +3715,10 @@ fn opening_a_pptx_with_an_unreadable_slide_says_so() {
+         let mut f = zin.by_index(i).unwrap();
+         let mut d = vec![];
+         f.read_to_end(&mut d).unwrap();
+-        if f.name() == "ppt/slides/slide2.xml" {
++        if f.name().unwrap() == "ppt/slides/slide2.xml" {
+             d = b"<p:sld".to_vec();
+         }
+-        out.start_file(f.name(), o).unwrap();
++        out.start_file(f.name().unwrap(), o).unwrap();
+         out.write_all(&d).unwrap();
+     }
+     let broken = out.finish().unwrap().into_inner();
+diff --git a/crates/engine/tests/chart_native.rs b/crates/engine/tests/chart_native.rs
+index 957be0ad..a60ad8c5 100644
+--- a/crates/engine/tests/chart_native.rs
++++ b/crates/engine/tests/chart_native.rs
+@@ -102,7 +102,7 @@ fn pptx_native_edit_save_reopen_keeps_chart_parts() {
+         let mut f = z.by_index(i).expect("entry");
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+-        payloads.push((f.name().to_string(), data));
++        payloads.push((f.name().unwrap().to_string(), data));
+     }
+     assert!(payloads.iter().any(|(n, d)| n.starts_with("ppt/embeddings/") && d == WORKBOOK));
+     assert!(payloads.iter().any(|(n, d)| n.starts_with("ppt/drawings/") && d == DRAWING));
+diff --git a/crates/format/src/chart_parts_tests.rs b/crates/format/src/chart_parts_tests.rs
+index 61a00dc9..25ebbf19 100644
+--- a/crates/format/src/chart_parts_tests.rs
++++ b/crates/format/src/chart_parts_tests.rs
+@@ -50,7 +50,7 @@ fn rewrite_manifest(bytes: &[u8], edit: impl FnOnce(&mut Value)) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let f = z.by_index(i).unwrap();
+-        if f.name() == "presentation.json" {
++        if f.name().unwrap() == "presentation.json" {
+             out.start_file("presentation.json", zip::write::SimpleFileOptions::default()).unwrap();
+             out.write_all(&serde_json::to_vec(&json).unwrap()).unwrap();
+         } else {
+@@ -117,7 +117,7 @@ fn chart_payloads_in_every_shape_owner_get_distinct_entries() {
+     p.handout_master = Some(Arc::new(Master { shapes, ..Default::default() }));
+     let bytes = save(&p).unwrap();
+     let z = zip::ZipArchive::new(Cursor::new(bytes.as_slice())).unwrap();
+-    assert_eq!(z.file_names().filter(|name| name.starts_with("chart-parts/")).count(), 5);
++    assert_eq!(z.file_names().flatten().filter(|name| name.starts_with("chart-parts/")).count(), 5);
+     assert_eq!(load(&bytes).unwrap(), p);
+ }
+ 
+@@ -128,11 +128,11 @@ fn missing_or_corrupt_chart_payload_is_reported() {
+     let mut z = zip::ZipArchive::new(Cursor::new(bytes.as_slice())).unwrap();
+     let mut json: Value = serde_json::from_slice(&read_entry(&mut z, "presentation.json").unwrap()).unwrap();
+     let name = part_json(&mut json).unwrap()["nativeEntry"].as_str().unwrap().to_owned();
+-    let start = z.by_name(&name).unwrap().data_start() as usize;
++    let start = z.by_name(&name).unwrap().data_start().unwrap() as usize;
+     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let f = z.by_index(i).unwrap();
+-        if f.name() != name {
++        if f.name().unwrap() != name {
+             out.raw_copy_file(f).unwrap();
+         }
+     }
+@@ -197,7 +197,7 @@ fn corrupt_chart_members_stop_before_reusing_the_inflation_budget() {
+     let mut bytes = save(&with_two_parts()).unwrap();
+     let offsets: Vec<_> = {
+         let mut z = zip::ZipArchive::new(Cursor::new(bytes.as_slice())).unwrap();
+-        (0..2).map(|i| z.by_name(&format!("chart-parts/{i}")).unwrap().data_start() as usize).collect()
++        (0..2).map(|i| z.by_name(&format!("chart-parts/{i}")).unwrap().data_start().unwrap() as usize).collect()
+     };
+     for offset in offsets {
+         bytes[offset] ^= 0xff;
+@@ -224,7 +224,7 @@ fn duplicate_physical_zip_names_are_indexed_and_inflated_once() {
+     }
+     assert_eq!(replaced, 2);
+     let z = zip::ZipArchive::new(Cursor::new(bytes.as_slice())).unwrap();
+-    assert_eq!(z.file_names().filter(|n| n.starts_with("chart-parts/")).count(), 1);
++    assert_eq!(z.file_names().flatten().filter(|n| n.starts_with("chart-parts/")).count(), 1);
+     let (q, damaged) = load_within(&bytes, Budget { total: 10, items: 2 }).unwrap();
+     assert_eq!(damaged.len(), 1, "the second reference is missing, not inflated again");
+     let ShapeKind::Group { children, .. } = &q.slides[0].shapes[0].kind else { panic!("group") };
+diff --git a/crates/format/src/lib.rs b/crates/format/src/lib.rs
+index 390bba38..8dd7a07c 100644
+--- a/crates/format/src/lib.rs
++++ b/crates/format/src/lib.rs
+@@ -731,7 +731,7 @@ mod tests {
+         let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+         for i in 0..z.len() {
+             let f = z.by_index(i).unwrap();
+-            if f.name() != drop {
++            if f.name().unwrap() != drop {
+                 out.raw_copy_file(f).unwrap();
+             }
+         }
+@@ -786,7 +786,7 @@ mod tests {
+         let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+         for i in 0..z.len() {
+             let mut f = z.by_index(i).unwrap();
+-            if f.name() == "presentation.json" {
++            if f.name().unwrap() == "presentation.json" {
+                 let mut json = vec![];
+                 f.read_to_end(&mut json).unwrap();
+                 let mut v: serde_json::Value = serde_json::from_slice(&json).unwrap();
+diff --git a/crates/pptx/src/opc.rs b/crates/pptx/src/opc.rs
+index 0e7f86fe..70929128 100644
+--- a/crates/pptx/src/opc.rs
++++ b/crates/pptx/src/opc.rs
+@@ -69,7 +69,7 @@ impl Package {
+             if f.is_dir() {
+                 continue;
+             }
+-            let name = f.name().trim_start_matches('/').to_string();
++            let name = f.name().map_err(|e| PptxError::NotPptx(format!("{e}")))?.trim_start_matches('/').to_string();
+             let declared = f.size();
+             if declared > max_part {
+                 log::warn!("pptx: skipping oversized part {name} ({declared} bytes)");
+diff --git a/crates/pptx/tests/anchor.rs b/crates/pptx/tests/anchor.rs
+index 72af2436..97f5af23 100644
+--- a/crates/pptx/tests/anchor.rs
++++ b/crates/pptx/tests/anchor.rs
+@@ -19,7 +19,7 @@ fn rewrite(bytes: &[u8], edit: impl Fn(&str, String) -> String) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+     for i in 0..src.len() {
+         let mut f = src.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = Vec::new();
+         f.read_to_end(&mut data).expect("read");
+         if name.ends_with(".xml") {
+diff --git a/crates/pptx/tests/chart_embed.rs b/crates/pptx/tests/chart_embed.rs
+index 2549cdb6..3751682b 100644
+--- a/crates/pptx/tests/chart_embed.rs
++++ b/crates/pptx/tests/chart_embed.rs
+@@ -31,7 +31,7 @@ fn with_workbook(bytes: &[u8]) -> Vec<u8> {
+     let mut chart_part = None;
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+         if name.starts_with("ppt/charts/chart") && name.ends_with(".xml") && !name.contains("_rels") {
+@@ -70,7 +70,7 @@ fn parts(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+     let mut out = vec![];
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+         out.push((name, data));
+@@ -156,7 +156,7 @@ fn rewrite(src: &[u8], edit: impl Fn(&str, Vec<u8>) -> Vec<u8>, extra: &[(&str,
+     let opts = zip::write::SimpleFileOptions::default();
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+         let data = edit(&name, data);
+diff --git a/crates/pptx/tests/comments.rs b/crates/pptx/tests/comments.rs
+index c3befe09..43c85590 100644
+--- a/crates/pptx/tests/comments.rs
++++ b/crates/pptx/tests/comments.rs
+@@ -58,10 +58,10 @@ fn rewrite(bytes: &[u8], drop: &[&str]) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        if drop.iter().any(|d| f.name() == *d) {
++        if drop.iter().any(|d| f.name().unwrap() == *d) {
+             continue;
+         }
+-        out.start_file(f.name(), zip::write::SimpleFileOptions::default()).expect("start");
++        out.start_file(f.name().unwrap(), zip::write::SimpleFileOptions::default()).expect("start");
+         std::io::copy(&mut f, &mut out).expect("copy");
+     }
+     out.finish().expect("finish").into_inner()
+@@ -166,8 +166,8 @@ fn legacy_only_package_imports() {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        out.start_file(f.name(), zip::write::SimpleFileOptions::default()).expect("start");
+-        if f.name() == "ppt/slides/slide1.xml" {
++        out.start_file(f.name().unwrap(), zip::write::SimpleFileOptions::default()).expect("start");
++        if f.name().unwrap() == "ppt/slides/slide1.xml" {
+             let mut xml = String::new();
+             f.read_to_string(&mut xml).expect("utf8");
+             if let Some(start) = xml.find("<p:extLst>") {
+diff --git a/crates/pptx/tests/corpus.rs b/crates/pptx/tests/corpus.rs
+index 4f8a2b00..bcc62186 100644
+--- a/crates/pptx/tests/corpus.rs
++++ b/crates/pptx/tests/corpus.rs
+@@ -127,7 +127,7 @@ impl Pkg {
+             if f.is_dir() {
+                 continue;
+             }
+-            let name = f.name().trim_start_matches('/').to_string();
++            let name = f.name().unwrap().trim_start_matches('/').to_string();
+             let mut data = vec![];
+             f.read_to_end(&mut data).expect("read");
+             parts.insert(name, data);
+diff --git a/crates/pptx/tests/corpus_kinds.rs b/crates/pptx/tests/corpus_kinds.rs
+index 56fc5adf..d2dbd05c 100644
+--- a/crates/pptx/tests/corpus_kinds.rs
++++ b/crates/pptx/tests/corpus_kinds.rs
+@@ -228,7 +228,7 @@ impl Pkg {
+             if f.is_dir() {
+                 continue;
+             }
+-            let name = f.name().trim_start_matches('/').to_string();
++            let name = f.name().unwrap().trim_start_matches('/').to_string();
+             let mut data = vec![];
+             f.read_to_end(&mut data).expect("read");
+             parts.insert(name, data);
+diff --git a/crates/pptx/tests/corpus_media.rs b/crates/pptx/tests/corpus_media.rs
+index 6ffd14aa..e5fa4fd2 100644
+--- a/crates/pptx/tests/corpus_media.rs
++++ b/crates/pptx/tests/corpus_media.rs
+@@ -276,7 +276,7 @@ fn with_parts(parts: &[(&str, Vec<u8>)], edit: impl Fn(&str, String) -> String)
+     let o = zip::write::SimpleFileOptions::default();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if parts.iter().any(|(n, _)| *n == name) {
+             continue;
+         }
+diff --git a/crates/pptx/tests/corpus_themes.rs b/crates/pptx/tests/corpus_themes.rs
+index 15f76ae0..93b1f1ef 100644
+--- a/crates/pptx/tests/corpus_themes.rs
++++ b/crates/pptx/tests/corpus_themes.rs
+@@ -19,7 +19,7 @@ fn repack(bytes: &[u8], parts: &[(&str, String)]) -> Vec<u8> {
+     let opts = zip::write::SimpleFileOptions::default();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if parts.iter().any(|(n, _)| *n == name) {
+             continue;
+         }
+@@ -231,8 +231,12 @@ fn themes_masters_and_layouts_survive_a_round_trip() {
+     // A second save keeps the same theme and master parts.
+     let names = |bytes: &[u8]| {
+         let z = zip::ZipArchive::new(Cursor::new(bytes)).expect("zip");
+-        let mut v: Vec<String> =
+-            z.file_names().filter(|n| n.contains("theme") || n.contains("slideMaster") || n.contains("slideLayout")).map(str::to_string).collect();
++        let mut v: Vec<String> = z
++            .file_names()
++            .flatten()
++            .filter(|n| n.contains("theme") || n.contains("slideMaster") || n.contains("slideLayout"))
++            .map(|n| n.into_owned())
++            .collect();
+         v.sort();
+         v
+     };
+diff --git a/crates/pptx/tests/fills.rs b/crates/pptx/tests/fills.rs
+index 98069d11..c893b8f6 100644
+--- a/crates/pptx/tests/fills.rs
++++ b/crates/pptx/tests/fills.rs
+@@ -15,7 +15,7 @@ fn edit_slides(bytes: &[u8], edit: impl Fn(String) -> String) -> Vec<u8> {
+         let mut f = z.by_index(i).expect("entry");
+         let mut d = vec![];
+         f.read_to_end(&mut d).expect("read");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if name.starts_with("ppt/slides/slide") && name.ends_with(".xml") {
+             d = edit(String::from_utf8(d).expect("utf8")).into_bytes();
+         }
+diff --git a/crates/pptx/tests/kept_parts.rs b/crates/pptx/tests/kept_parts.rs
+index 1f4ecbc3..22b28c58 100644
+--- a/crates/pptx/tests/kept_parts.rs
++++ b/crates/pptx/tests/kept_parts.rs
+@@ -21,7 +21,7 @@ fn deck() -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+     for i in 0..src.len() {
+         let mut f = src.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = Vec::new();
+         f.read_to_end(&mut data).expect("read");
+         let edit = |d: Vec<u8>, at: &str, add: &str| String::from_utf8(d).expect("utf8").replacen(at, &format!("{add}{at}"), 1).into_bytes();
+diff --git a/crates/pptx/tests/locks.rs b/crates/pptx/tests/locks.rs
+index 60e0d874..50ca009a 100644
+--- a/crates/pptx/tests/locks.rs
++++ b/crates/pptx/tests/locks.rs
+@@ -85,7 +85,7 @@ fn entries(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+             let mut f = z.by_index(i).expect("entry");
+             let mut d = vec![];
+             f.read_to_end(&mut d).expect("read");
+-            (f.name().to_string(), d)
++            (f.name().unwrap().to_string(), d)
+         })
+         .collect()
+ }
+diff --git a/crates/pptx/tests/malformed.rs b/crates/pptx/tests/malformed.rs
+index 774a5ee9..379db186 100644
+--- a/crates/pptx/tests/malformed.rs
++++ b/crates/pptx/tests/malformed.rs
+@@ -26,7 +26,7 @@ fn entries(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+             let mut f = z.by_index(i).expect("entry");
+             let mut d = vec![];
+             std::io::Read::read_to_end(&mut f, &mut d).expect("read");
+-            (f.name().to_string(), d)
++            (f.name().unwrap().to_string(), d)
+         })
+         .collect()
+ }
+diff --git a/crates/pptx/tests/math_ns.rs b/crates/pptx/tests/math_ns.rs
+index 89b0ac2b..aee4fdd6 100644
+--- a/crates/pptx/tests/math_ns.rs
++++ b/crates/pptx/tests/math_ns.rs
+@@ -15,7 +15,7 @@ fn entries(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+             let mut f = z.by_index(i).expect("entry");
+             let mut d = vec![];
+             f.read_to_end(&mut d).expect("read");
+-            (f.name().to_string(), d)
++            (f.name().unwrap().to_string(), d)
+         })
+         .collect()
+ }
+diff --git a/crates/pptx/tests/notes.rs b/crates/pptx/tests/notes.rs
+index b5863d51..4d2ebc5e 100644
+--- a/crates/pptx/tests/notes.rs
++++ b/crates/pptx/tests/notes.rs
+@@ -25,7 +25,7 @@ fn deck() -> Vec<u8> {
+     let mut found = false;
+     for i in 0..src.len() {
+         let mut f = src.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+         if name == NOTES {
+diff --git a/crates/pptx/tests/ole.rs b/crates/pptx/tests/ole.rs
+index 5c0bc1db..5267286c 100644
+--- a/crates/pptx/tests/ole.rs
++++ b/crates/pptx/tests/ole.rs
+@@ -20,7 +20,7 @@ fn with_parts(parts: &[(&str, Vec<u8>)], edit: impl Fn(&str, String) -> String)
+     let o = zip::write::SimpleFileOptions::default();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if parts.iter().any(|(n, _)| *n == name) {
+             continue;
+         }
+diff --git a/crates/pptx/tests/ole_vml.rs b/crates/pptx/tests/ole_vml.rs
+index ccdc803a..f5543aa0 100644
+--- a/crates/pptx/tests/ole_vml.rs
++++ b/crates/pptx/tests/ole_vml.rs
+@@ -40,7 +40,7 @@ fn deck_with(frames: &str) -> Vec<u8> {
+         let mut f = z.by_index(i).expect("entry");
+         let mut d = vec![];
+         f.read_to_end(&mut d).expect("read");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if name == "ppt/slides/slide1.xml" {
+             let s = String::from_utf8(d).expect("utf8");
+             let at = s.rfind("</p:spTree>").expect("spTree");
+diff --git a/crates/pptx/tests/placeholders.rs b/crates/pptx/tests/placeholders.rs
+index b2b46100..4e891250 100644
+--- a/crates/pptx/tests/placeholders.rs
++++ b/crates/pptx/tests/placeholders.rs
+@@ -13,7 +13,7 @@ fn edit_slides(bytes: &[u8], edit: impl Fn(String) -> String) -> Vec<u8> {
+         let mut f = z.by_index(i).expect("entry");
+         let mut d = vec![];
+         f.read_to_end(&mut d).expect("read");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if name.starts_with("ppt/slides/slide") && name.ends_with(".xml") {
+             d = edit(String::from_utf8(d).expect("utf8")).into_bytes();
+         }
+diff --git a/crates/pptx/tests/roundtrip.rs b/crates/pptx/tests/roundtrip.rs
+index 697dad20..a112571c 100644
+--- a/crates/pptx/tests/roundtrip.rs
++++ b/crates/pptx/tests/roundtrip.rs
+@@ -908,7 +908,7 @@ fn wordart_warps_and_their_adjusts_round_trip() {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         std::io::Read::read_to_end(&mut f, &mut data).expect("read");
+         if name == "ppt/slides/slide1.xml" {
+@@ -1042,7 +1042,7 @@ fn transition_defaults_read_like_powerpoint() {
+         let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+         for i in 0..zip.len() {
+             let mut f = zip.by_index(i).expect("entry");
+-            let name = f.name().to_string();
++            let name = f.name().unwrap().to_string();
+             let mut data = vec![];
+             std::io::Read::read_to_end(&mut f, &mut data).expect("read");
+             if name == "ppt/slides/slide1.xml" {
+@@ -1207,7 +1207,7 @@ fn an_embedded_font_list_already_in_the_package_is_read() {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         std::io::Read::read_to_end(&mut f, &mut data).expect("read");
+         if name == "ppt/presentation.xml" {
+@@ -1351,7 +1351,7 @@ fn patch_slides(bytes: Vec<u8>, from: &str, to: &str) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).expect("entry");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).expect("read");
+         if name.starts_with("ppt/slides/slide") && name.ends_with(".xml") {
+@@ -1474,7 +1474,7 @@ fn repack(pkg: &[u8], edit: impl Fn(&str, String) -> String, extra: &[(&str, &[u
+     let opts = zip::write::SimpleFileOptions::default();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).unwrap();
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = vec![];
+         f.read_to_end(&mut data).unwrap();
+         if name.ends_with(".xml") || name.ends_with(".rels") {
+diff --git a/crates/pptx/tests/smartart.rs b/crates/pptx/tests/smartart.rs
+index 3d3dd996..d81d828c 100644
+--- a/crates/pptx/tests/smartart.rs
++++ b/crates/pptx/tests/smartart.rs
+@@ -41,7 +41,7 @@ fn entries(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+             let mut f = z.by_index(i).expect("entry");
+             let mut d = vec![];
+             f.read_to_end(&mut d).expect("read");
+-            (f.name().to_string(), d)
++            (f.name().unwrap().to_string(), d)
+         })
+         .collect()
+ }
+diff --git a/crates/pptx/tests/sniff.rs b/crates/pptx/tests/sniff.rs
+index 69d9c961..cb2fbe76 100644
+--- a/crates/pptx/tests/sniff.rs
++++ b/crates/pptx/tests/sniff.rs
+@@ -21,7 +21,7 @@ fn content_types_last(bytes: &[u8]) -> Vec<u8> {
+     let stored = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+     out.start_file("ppt/media/padding.bin", stored).expect("start");
+     out.write_all(&vec![0u8; 64 * 1024]).expect("padding");
+-    let names: Vec<String> = (0..src.len()).map(|i| src.by_index(i).expect("entry").name().to_string()).collect();
++    let names: Vec<String> = (0..src.len()).map(|i| src.by_index(i).expect("entry").name().unwrap().to_string()).collect();
+     for name in names.iter().filter(|n| *n != "[Content_Types].xml").chain(std::iter::once(&"[Content_Types].xml".to_string())) {
+         let mut data = Vec::new();
+         src.by_name(name).expect("by_name").read_to_end(&mut data).expect("read");
+diff --git a/crates/pptx/tests/table_styles.rs b/crates/pptx/tests/table_styles.rs
+index 311992df..3e82f551 100644
+--- a/crates/pptx/tests/table_styles.rs
++++ b/crates/pptx/tests/table_styles.rs
+@@ -40,7 +40,7 @@ fn table_deck() -> Vec<u8> {
+         let mut f = z.by_index(i).expect("entry");
+         let mut d = vec![];
+         f.read_to_end(&mut d).expect("read");
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if name == "ppt/tableStyles.xml" {
+             d = style_xml().into_bytes();
+         } else if name.starts_with("ppt/slides/slide") && name.ends_with(".xml") {
+diff --git a/crates/pptx/tests/tags.rs b/crates/pptx/tests/tags.rs
+index e8903b44..76b84fc5 100644
+--- a/crates/pptx/tests/tags.rs
++++ b/crates/pptx/tests/tags.rs
+@@ -26,7 +26,7 @@ fn tags_survive_round_trip() {
+     let mut ct = String::new();
+     zip.by_name("[Content_Types].xml").expect("ct").read_to_string(&mut ct).expect("read");
+     assert!(ct.contains("presentationml.tags+xml"));
+-    assert_eq!((0..zip.len()).filter(|i| zip.by_index(*i).is_ok_and(|f| f.name().starts_with("ppt/tags/"))).count(), 3);
++    assert_eq!((0..zip.len()).filter(|i| zip.by_index(*i).is_ok_and(|f| f.name().unwrap().starts_with("ppt/tags/"))).count(), 3);
+ 
+     let back = deckcraft_pptx::import(&bytes).expect("import");
+     assert_eq!(back.tags, p.tags);
+diff --git a/crates/pptx/tests/transition_xml.rs b/crates/pptx/tests/transition_xml.rs
+index ffa5bcf4..5b60ff3c 100644
+--- a/crates/pptx/tests/transition_xml.rs
++++ b/crates/pptx/tests/transition_xml.rs
+@@ -21,7 +21,7 @@ fn import_with(xml: &str) -> Transition {
+         let mut f = z.by_index(i).expect("entry");
+         let mut d = vec![];
+         f.read_to_end(&mut d).expect("read");
+-        if f.name() == "ppt/slides/slide1.xml" {
++        if f.name().unwrap() == "ppt/slides/slide1.xml" {
+             let s = String::from_utf8(d).expect("utf8");
+             let t = s.find("<p:transition").expect("transition");
+             let a = s[..t].rfind("<mc:AlternateContent").expect("mc start");
+@@ -29,7 +29,7 @@ fn import_with(xml: &str) -> Transition {
+             let b = t + s[t..].find(end).expect("mc end") + end.len();
+             d = format!("{}{xml}{}", &s[..a], &s[b..]).into_bytes();
+         }
+-        out.start_file(f.name(), o).expect("start");
++        out.start_file(f.name().unwrap(), o).expect("start");
+         out.write_all(&d).expect("write");
+     }
+     let bytes = out.finish().expect("finish").into_inner();
+-- 
+2.0

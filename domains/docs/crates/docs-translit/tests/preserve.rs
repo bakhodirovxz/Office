@@ -49,7 +49,7 @@ fn read_zip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
         }
         let mut v = Vec::new();
         f.read_to_end(&mut v).unwrap();
-        m.insert(f.name().to_string(), v);
+        m.insert(f.name().unwrap().to_string(), v);
     }
     m
 }

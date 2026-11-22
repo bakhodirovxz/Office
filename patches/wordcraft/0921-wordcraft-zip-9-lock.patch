@@ -1,0 +1,225 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] wordcraft: Cargo.lock for zip 9.8.1
+
+zip 3.0.0 and 9.3.0 (suite-core, 0901-0903) to one zip 9.8.1 in Cargo.lock (with 0920); regenerated on phase-7.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index f5444d9a..372bf6ac 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -215,15 +215,6 @@ version = "1.0.104"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+ 
+-[[package]]
+-name = "arbitrary"
+-version = "1.4.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+-dependencies = [
+- "derive_arbitrary",
+-]
+-
+ [[package]]
+ name = "arboard"
+ version = "3.6.1"
+@@ -808,6 +799,15 @@ version = "0.10.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+ 
++[[package]]
++name = "constant_time_eq"
++version = "0.6.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9eb6feb175df65d0a3ccd3e73484e940d0ac664e8034f0519fd49a93db3071d9"
++dependencies = [
++ "rustversion",
++]
++
+ [[package]]
+ name = "core-foundation"
+ version = "0.9.4"
+@@ -995,17 +995,6 @@ version = "1.2.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
+ 
+-[[package]]
+-name = "derive_arbitrary"
+-version = "1.4.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+-dependencies = [
+- "proc-macro2",
+- "quote",
+- "syn 2.0.119",
+-]
+-
+ [[package]]
+ name = "dify"
+ version = "0.8.0"
+@@ -1342,7 +1331,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
+ dependencies = [
+  "libc",
+- "windows-sys 0.61.2",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -2969,7 +2958,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
+ dependencies = [
+  "libc",
+- "windows-sys 0.61.2",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -3606,7 +3595,7 @@ dependencies = [
+  "errno",
+  "libc",
+  "linux-raw-sys 0.12.1",
+- "windows-sys 0.61.2",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -4009,7 +3998,7 @@ dependencies = [
+  "sha2 0.10.9",
+  "toml_edit 0.22.27",
+  "web-sys",
+- "zip 9.3.0",
++ "zip",
+ ]
+ 
+ [[package]]
+@@ -4064,10 +4053,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+ dependencies = [
+  "fastrand",
+- "getrandom 0.4.3",
++ "getrandom 0.3.4",
+  "once_cell",
+  "rustix 1.1.5",
+- "windows-sys 0.61.2",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -4345,7 +4334,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
+ dependencies = [
+  "memoffset",
+  "tempfile",
+- "windows-sys 0.61.2",
++ "windows-sys 0.60.2",
+ ]
+ 
+ [[package]]
+@@ -4971,7 +4960,7 @@ version = "0.1.11"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
+ dependencies = [
+- "windows-sys 0.61.2",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -5450,7 +5439,7 @@ dependencies = [
+  "wordcraft-doc",
+  "wordcraft-geom",
+  "zeroize",
+- "zip 3.0.0",
++ "zip",
+ ]
+ 
+ [[package]]
+@@ -5479,7 +5468,7 @@ dependencies = [
+  "wordcraft-proof",
+  "wordcraft-render",
+  "zeroize",
+- "zip 3.0.0",
++ "zip",
+ ]
+ 
+ [[package]]
+@@ -5509,7 +5498,7 @@ dependencies = [
+  "quick-xml",
+  "wordcraft-doc",
+  "wordcraft-geom",
+- "zip 3.0.0",
++ "zip",
+ ]
+ 
+ [[package]]
+@@ -5627,7 +5616,7 @@ dependencies = [
+  "wordcraft-render",
+  "wordcraft-zotero",
+  "zbus",
+- "zip 3.0.0",
++ "zip",
+ ]
+ 
+ [[package]]
+@@ -5944,6 +5933,20 @@ name = "zeroize"
+ version = "1.9.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e13084392c5e4bc371903e2935a5eaeed24905a7511356b883835e18a78f6879"
++dependencies = [
++ "zeroize_derive",
++]
++
++[[package]]
++name = "zeroize_derive"
++version = "1.5.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
++dependencies = [
++ "proc-macro2",
++ "quote",
++ "syn 2.0.119",
++]
+ 
+ [[package]]
+ name = "zerotrie"
+@@ -5980,24 +5983,11 @@ dependencies = [
+ 
+ [[package]]
+ name = "zip"
+-version = "3.0.0"
++version = "9.8.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "12598812502ed0105f607f941c386f43d441e00148fce9dec3ca5ffb0bde9308"
+-dependencies = [
+- "arbitrary",
+- "crc32fast",
+- "flate2",
+- "indexmap",
+- "memchr",
+- "zopfli",
+-]
+-
+-[[package]]
+-name = "zip"
+-version = "9.3.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "eaeb7f16d2605b49aef586996ded29e65642fab7259a3077e537351df6d80426"
++checksum = "a9534624d547e3f516ecde0ed9a70d37788f01d340efcfdd03bf3ea8e163c1d0"
+ dependencies = [
++ "constant_time_eq",
+  "crc32fast",
+  "flate2",
+  "getrandom 0.4.3",
+@@ -6006,7 +5996,8 @@ dependencies = [
+  "memchr",
+  "nix",
+  "typed-path",
+- "windows-sys 0.61.2",
++ "windows-sys 0.60.2",
++ "zeroize",
+  "zopfli",
+ ]
+ 
+-- 
+2.0
