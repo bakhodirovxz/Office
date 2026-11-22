@@ -467,6 +467,25 @@ Sixth run (2026-11-23 02:06; TIP log with every key let through):
 - `InstallLayoutOrTipUserReg` returned FALSE (last error 0) for all three path forms, install and uninstall: **O6 now
   uses Active Setup** (below, and README "MSI").
 
+Seventh run (2026-11-23 02:33; harness without `AttachThreadInput` while the TIP is on):
+- **The product TIP passes 23/23 in Notepad (CUAS), WordPad and Edge**, Caps Lock correct (switched off before the TIP
+  run). Plain runs 23/23 except one Edge harness miss (`tosh\n`: Enter not seen within 1 s, plain layout, not the TIP).
+- **Latency.** TIP side over 237 handled keys: median 158 µs, p95 5.4 ms, max 14.0 ms. SendInput to visible text
+  change: Notepad median 4.65 ms (p95 9.6), WordPad 8.16 ms (p95 18.9), Edge 207.8 ms (the harness reads Edge through
+  the window title; the plain run is the same 207.4 ms, so it is the read-back path, not the TIP).
+- **Notepad (CUAS) shows no text change for a pending letter** (`s` of `sh`, `o` of `oʻ`): WM_GETTEXT does not include
+  the composition. The end text is right; whether the pending letter is visible inline or in a floating composition
+  window has to be checked by eye (owner, by hand).
+- **Attach check:** one `AttachThreadInput` did NOT switch the TIP off (lang 0x0443, TIP active before and 500 ms
+  after) in any of the three apps, and the ru layout stayed too. So run 6's deactivation is not explained by a single
+  attach; the per-case `caps_in` (attach, `GetKeyState`, detach, repeated) and `toggle_caps` remain the suspects, and
+  the product effect on users who run attach-heavy tools stays unmeasured. Not pursued further: the harness no longer
+  does it.
+- **O6 by Active Setup:** the StubPath (`rundll32 ...,KbdActiveSetup`) run as the user added `0443:{clsid}{profile}` to
+  the list; the entry was written and removed.
+- **Cleanup byte-identical:** HKCU (CTF, Keyboard Layout, International, Input, settings), the language list, HKLM CTF
+  both views; the run folder was removed and no process held the DLL.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |
