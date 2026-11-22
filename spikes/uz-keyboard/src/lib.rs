@@ -89,6 +89,36 @@ fn is_modifier(vk: u16) -> bool {
         VK_SHIFT | VK_LSHIFT | VK_RSHIFT | VK_CONTROL | VK_LCONTROL | VK_RCONTROL | VK_MENU | VK_LMENU | VK_RMENU | VK_CAPITAL
     )
 }
+/// The single printable character this key types in the current layout and modifier state, if any.
+fn printable(vk: u16, lparam: LPARAM) -> Option<char> {
+    if ctrl_or_alt() {
+        return None;
+    }
+    unsafe {
+        let mut ks = [0u8; 256];
+        GetKeyboardState(&mut ks).ok()?;
+        let mut buf = [0u16; 4];
+        // flag 4: do not change the kernel's dead-key state
+        let n = ToUnicodeEx(vk as u32, ((lparam.0 >> 16) & 0xff) as u32, &ks, &mut buf, 4, Some(GetKeyboardLayout(0)));
+        let s = String::from_utf16(&buf[..n.max(0) as usize]).ok()?;
+        let mut it = s.chars();
+        match (it.next(), it.next()) {
+            (Some(c), None) if c >= ' ' && c != '\u{7f}' => Some(c),
+            _ => None,
+        }
+    }
+}
+
+/// Sends the key down again (the physical key-up follows by itself).
+fn resend_key(vk: u16, lparam: LPARAM) {
+    let ext = if (lparam.0 >> 24) & 1 != 0 { KEYEVENTF_EXTENDEDKEY } else { KEYBD_EVENT_FLAGS(0) };
+    let i = INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: VIRTUAL_KEY(vk), wScan: ((lparam.0 >> 16) & 0xff) as u16, dwFlags: ext, ..Default::default() } },
+    };
+    unsafe { SendInput(&[i], std::mem::size_of::<INPUT>() as i32) };
+}
+
 /// shortcut: assumes a US-style layout under the TIP (true for Uzbek Latin); the product uses ToUnicodeEx.
 fn letter(base: char) -> char {
     if shift_down() ^ caps_on() { base.to_ascii_uppercase() } else { base }
@@ -358,39 +388,41 @@ impl ITfKeyEventSink_Impl for Tip_Impl {
         Ok(())
     }
     fn OnTestKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
-        let plan = self.plan(wparam.0 as u16);
-        let eat = matches!(plan, Some(Act::Start(_) | Act::Update(_) | Act::Finish(_)));
-        // A key that only commits must not be claimed: under CUAS (Notepad) a claimed key becomes VK_PROCESSKEY before
-        // OnKeyDown, so returning FALSE there loses it (machine test 2026-11-22: Notepad 19 of 23 failed, WordPad 0).
-        // Commit here, synchronously, and let the key reach the application after the composition has ended.
-        if plan == Some(Act::Commit) {
-            let r = match pic.ok() {
-                Ok(ctx) => self.run(ctx, Act::Commit),
-                Err(e) => Err(e),
-            };
-            log(&format!("test vk={:#04x} commit-before-pass {:?}", wparam.0, r.map_err(|e| e.code())));
-        }
+        let eat = self.plan(wparam.0 as u16).is_some();
         if std::env::var_os("UZKBD_TRACE").is_some() {
             log(&format!("test vk={:#04x} eat={eat} ctx={}", wparam.0, pic.is_some()));
         }
         Ok(eat.into())
     }
-    fn OnKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
+    fn OnKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {
         let t0 = Instant::now();
         let vk = wparam.0 as u16;
-        let Some(act) = self.plan(vk) else { return Ok(false.into()) };
-        let eaten = !matches!(act, Act::Commit);
+        let Some(mut act) = self.plan(vk) else { return Ok(false.into()) };
+        // A commit-only key is never passed through: under CUAS (Notepad) a claimed key is already VK_PROCESSKEY (lost),
+        // and a key let through arrives before the committed text (machine tests 2026-11-22: "shahar" -> "şhar", then
+        // "aşhar"). A printable key is committed together with the composition, in one edit session; any other key
+        // (Enter, Tab, arrows, shortcuts) is re-sent after the composition has ended, so it keeps its meaning.
+        let mut resend = false;
+        if act == Act::Commit {
+            match printable(vk, lparam) {
+                Some(c) => act = Act::Finish(format!("{}{c}", shown(&self.st.typed.borrow()))),
+                None => resend = true,
+            }
+        }
+        let what = format!("{act:?}");
         let res = match pic.ok() {
             Ok(ctx) => self.run(ctx, act),
             Err(e) => Err(e),
         };
+        if resend && res.is_ok() {
+            resend_key(vk, lparam);
+        }
         let us = t0.elapsed().as_micros();
         match &res {
-            Ok(()) => log(&format!("key vk={vk:#04x} eaten={eaten} us={us} typed={:?}", self.st.typed.borrow())),
+            Ok(()) => log(&format!("key vk={vk:#04x} {what} resend={resend} us={us} typed={:?}", self.st.typed.borrow())),
             Err(e) => log(&format!("key vk={vk:#04x} error {e} us={us}")),
         }
-        // On failure, let the key through rather than lose it.
-        Ok((eaten && res.is_ok()).into())
+        Ok(true.into())
     }
     fn OnTestKeyUp(&self, _pic: Ref<ITfContext>, _w: WPARAM, _l: LPARAM) -> Result<BOOL> {
         Ok(false.into())

@@ -383,6 +383,25 @@ Second run (Windows 10 22H2, x64):
     `C:\Program Files\uzkbd-spike` could not be deleted until restart. The product MSI must expect this, for
     example with a restart-pending delete. The machine test now uses its own run folder each time.
 
+Third run (with the "commit in OnTestKeyDown and pass the key" fix):
+- **Caps Lock was on for the whole run**, so every case came out with its case inverted, the plain baseline too
+  (0/23). The harness now switches Caps Lock off for the run and restores it afterwards.
+- Read with the case inverted back, **WordPad 23/23 and Edge 23/23** (Edge measured for the first time). Edge
+  latency is about 215 ms both plain and with the TIP. That is the harness reading the window title, not the TIP.
+- **Notepad still fails.** The key is no longer lost, but it lands before the committed text: `shahar` → `aşhar`,
+  `tosh⏎` → `to⏎ş`. Under CUAS, a key that is let through overtakes the composition result.
+- **Fix: the section 12 fallback (not yet machine-tested).**
+  - A commit-only key is always claimed.
+  - A printable key is committed with the composition in one edit session, as `Finish(shown + char)`, using
+    ToUnicodeEx with the thread's key state.
+  - Any other key (Enter, Tab, arrows, shortcuts) commits the composition and is then sent again with SendInput,
+    so Enter still sends in a chat.
+- TIP-side time per key (217 keys): median 0.15 ms, p95 5.6 ms.
+- Cleanup bugs, both fixed:
+  - `$P` was overwritten by the loop variable `$p`, because PowerShell names are case-insensitive. It is now
+    `$Root`.
+  - The two HKCU keys came back. `lang-restore.ps1` now removes them.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |

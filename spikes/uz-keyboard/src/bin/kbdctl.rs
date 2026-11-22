@@ -675,6 +675,18 @@ fn suite(apps: &[&str]) -> Result<()> {
         let mut saved = TF_INPUTPROCESSORPROFILE::default();
         pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut saved)?;
         println!("session input before: type={} lang={:#06x} clsid={:?} hkl={:?}", saved.dwProfileType, saved.langid, saved.clsid, saved.hkl);
+        // Caps Lock on inverts every case (second machine run): switch it off for the run, put it back after.
+        let caps = |press: bool| {
+            if press {
+                SendInput(&[key(VK_CAPITAL, false), key(VK_CAPITAL, true)], std::mem::size_of::<INPUT>() as i32);
+                std::thread::sleep(Duration::from_millis(200));
+            }
+            GetKeyState(VK_CAPITAL.0 as i32) & 1 != 0
+        };
+        let caps_was_on = caps(false);
+        if caps_was_on {
+            println!("caps lock was on: off for the run -> now on={}", caps(true));
+        }
         for app in apps {
             println!("=== {app}");
             let (pid, target) = match start_app(app) {
@@ -716,6 +728,9 @@ fn suite(apps: &[&str]) -> Result<()> {
         }
         let r = pm.ActivateProfile(saved.dwProfileType, saved.langid, &saved.clsid, &saved.guidProfile, saved.hkl, TF_IPPMF_FORSESSION);
         println!("session input restored -> {:?}", r.map_err(|e| e.code()));
+        if caps_was_on {
+            println!("caps lock restored -> on={}", caps(true));
+        }
         Ok(())
     }
 }
