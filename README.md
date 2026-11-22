@@ -1,4 +1,25 @@
-# Office suite on the Craft engines
+# Hoshiya: an office suite on the Craft engines
+
+Documents, Spreadsheets, Presentations and a PDF viewer for Windows 10/11, with Uzbek Latin <-> Cyrillic transliteration
+(including the 2026 Latin alphabet), plus an add-in that brings the same transliteration to Microsoft Word, Excel and PowerPoint.
+Open source under MIT OR Apache-2.0. **Preview builds:** expect rough edges.
+
+## Download
+
+| What | Version | Download | Size |
+|---|---|---|---|
+| Desktop suite (Windows 10/11, x64) | 0.7.0 | [hoshiya-0.7.0-x64.msi](https://github.com/bakhodirovxz/Office/releases/download/v0.7.0/hoshiya-0.7.0-x64.msi) | 231 MB |
+| Office add-in (Word, Excel, PowerPoint 2010+) | 0.2.1 | [hoshiya-office-addin-0.2.1-x64.msi](https://github.com/bakhodirovxz/Office/releases/download/addin-v0.2.1/hoshiya-office-addin-0.2.1-x64.msi) | 328 KB |
+
+Release notes and checksums: [suite 0.7.0](https://github.com/bakhodirovxz/Office/releases/tag/v0.7.0),
+[add-in 0.2.1](https://github.com/bakhodirovxz/Office/releases/tag/addin-v0.2.1) (each has a `SHA256SUMS` file).
+
+- The installers are not signed yet, so Windows SmartScreen warns: "More info" > "Run anyway". Check the download against `SHA256SUMS`.
+- The add-in installs per user without admin rights and adds its own ribbon tab. With nothing selected, "Cyrillic to Latin"
+  converts the whole file and rewrites 1995 Latin in the 2026 letters (English paragraphs keep their Latin).
+- If Word disabled the add-in after a freeze in 0.2.0: File > Options > Add-ins > Manage: Disabled Items > Go > Enable.
+
+## For developers
 
 Working notes for agents: `CLAUDE.md`. Plan and status: `docs/phase1/PLAN.md`, `docs/STATUS.md`. Upstream handling: `docs/UPSTREAM.md`.
 
