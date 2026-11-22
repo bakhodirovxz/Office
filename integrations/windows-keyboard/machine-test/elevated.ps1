@@ -25,9 +25,13 @@ function DefUser($tag) {
     & reg.exe load 'HKU\kbdtest-snap' $hive *> $null
     if ($LASTEXITCODE -ne 0) { L "defuser ${tag}: reg load failed ($hive)"; Set-Content "$M\hklm\defuser-$tag.reg" 'load failed'; return }
     & reg.exe export 'HKU\kbdtest-snap\Software\Microsoft\CTF' "$M\hklm\defuser-ctf-$tag.reg" /y *> $null
+    # The language list too: Windows 8+ keeps it under Control Panel\International\User Profile.
+    & reg.exe export 'HKU\kbdtest-snap\Control Panel\International\User Profile' "$M\hklm\defuser-up-$tag.reg" /y *> $null
     & reg.exe export 'HKU\kbdtest-snap\Keyboard Layout' "$M\hklm\defuser-$tag.reg" /y *> $null
-    Get-Content "$M\hklm\defuser-ctf-$tag.reg" -ErrorAction SilentlyContinue | Add-Content "$M\hklm\defuser-$tag.reg"
-    Remove-Item "$M\hklm\defuser-ctf-$tag.reg" -ErrorAction SilentlyContinue
+    foreach ($part in 'ctf', 'up') {
+        Get-Content "$M\hklm\defuser-$part-$tag.reg" -ErrorAction SilentlyContinue | Add-Content "$M\hklm\defuser-$tag.reg"
+        Remove-Item "$M\hklm\defuser-$part-$tag.reg" -ErrorAction SilentlyContinue
+    }
     [gc]::Collect(); Start-Sleep 1
     & reg.exe unload 'HKU\kbdtest-snap' *> $null; L "defuser ${tag}: exported, unload -> $LASTEXITCODE"
 }

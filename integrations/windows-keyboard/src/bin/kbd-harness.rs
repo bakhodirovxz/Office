@@ -94,7 +94,23 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Calls the export with the DLL's debug log on for this process (KBD_DEBUG), then prints what the export logged, so the
+/// failing step shows on the console and in elevated.log.
 fn call_export(dll: &str, export: &str) -> Result<u32> {
+    // Single-threaded here: nothing else reads the environment.
+    unsafe { std::env::set_var("KBD_DEBUG", "1") };
+    let log = kbd::log_path();
+    let start = std::fs::metadata(&log).map(|m| m.len()).unwrap_or(0) as usize;
+    let rc = call_raw(dll, export);
+    if let Ok(b) = std::fs::read(&log) {
+        for l in String::from_utf8_lossy(b.get(start..).unwrap_or_default()).lines() {
+            eprintln!("  log: {l}");
+        }
+    }
+    rc
+}
+
+fn call_raw(dll: &str, export: &str) -> Result<u32> {
     unsafe {
         let m = LoadLibraryW(&HSTRING::from(dll))?;
         let name = std::ffi::CString::new(export).unwrap();
@@ -401,6 +417,7 @@ fn title_text(top: HWND) -> Option<String> {
 /// Types every case into the target, checks the text, returns per-key latencies (ms). Stops (Err) the moment the
 /// target is not the foreground window or the desktop is locked, so no key ever reaches another window.
 fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), String> {
+    warm_up(t)?;
     let mut lat = Lat(vec![]);
     let (mut pass, mut fail) = (0, 0);
     for (typed, want_tip) in CASES {
@@ -455,6 +472,32 @@ fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), 
         }
     }
     Ok((pass, fail, lat))
+}
+
+/// The first key after start-up can be lost (machine run 5: Edge's first case gave "hahar "). Types a space until the
+/// target shows a change (at most 10 tries, 1 s each), then clears it.
+fn warm_up(t: Target) -> std::result::Result<(), String> {
+    t.clear();
+    for i in 0..10 {
+        if unsafe { GetForegroundWindow() } != t.top() {
+            return Err(format!("warm-up: lost the foreground (now {})", fg_exe()));
+        }
+        let before = t.read().unwrap_or_default();
+        let inp = inputs_for(' ');
+        unsafe { SendInput(&inp, std::mem::size_of::<INPUT>() as i32) };
+        let t0 = Instant::now();
+        while t0.elapsed() < Duration::from_secs(1) {
+            if t.read().unwrap_or_default() != before {
+                println!("  warm-up: ready after {} key(s)", i + 1);
+                t.clear();
+                return Ok(());
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
+    println!("  warm-up: no change after 10 keys (continuing)");
+    t.clear();
+    Ok(())
 }
 
 /// Caps Lock as the window's input thread sees it (a console thread's own GetKeyState can be stale).
@@ -658,7 +701,6 @@ fn suite(apps: &[&str]) -> Result<()> {
             eprintln!("ABORT: the desktop is locked; no keys sent");
             std::process::exit(4);
         }
-        let _ = std::fs::remove_file(kbd::log_path());
         let pm = profiles()?;
         let mut saved = TF_INPUTPROCESSORPROFILE::default();
         pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut saved)?;

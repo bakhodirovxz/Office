@@ -37,6 +37,12 @@ snap before
 cp "$M/hkcu/langlist-before.txt" "$M/langlist-saved.txt"
 echo "=== language list before"; cat "$M/hkcu/langlist-before.txt"
 
+# The TIP log is on for the whole run, the elevated calls included (kbd-harness `call` also turns it on for itself);
+# a copy is kept in $M/tip.log.
+LOG="$("$K" log-path)"
+rm -f "$LOG"
+"$K" debug on
+
 echo "=== $(date +%T) UAC prompt (elevated.ps1)"
 timeout 900 powershell -NoProfile -Command "Start-Process powershell -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','$MW\\elevated.ps1'" \
   || { echo "UAC refused, timed out or failed: nothing registered"; exit 5; }
@@ -50,20 +56,24 @@ echo "=== $(date +%T) registered"; cat "$M/elevated.log"
 DLL="$(cat "$M/dll-x64.txt")"
 
 echo "=== $(date +%T) KbdInstallForUser (adds 0443:{clsid}{profile} to this user's list)"
-"$K" debug on
 "$K" call "$DLL" KbdInstallForUser
 powershell -NoProfile -Command "Get-WinUserLanguageList | ForEach-Object { \$_.LanguageTag + ' ' + (\$_.InputMethodTips -join ',') }"
 "$K" enum
 sleep 2
 
-LOG="$("$K" log-path)"
 echo "=== $(date +%T) suite"
 timeout 900 "$K" suite notepad wordpad edge
 echo "suite exit=$?"
 echo "=== TIP log (activations, toggles, errors, panics)"
 grep -E "activate|error|terminated|PANIC|failed|open=" "$LOG" | sed -E 's/^[0-9]+ [0-9]+ //' | sort | uniq -c | head -40
 echo "=== TIP-side per-key time (us), all keys"
-grep -oE "us=[0-9]+" "$LOG" | cut -d= -f2 | sort -n | awk '{a[NR]=$1} END {if (NR) printf "n=%d median=%d p95=%d max=%d\n", NR, a[int((NR+1)/2)], a[int(NR*0.95+0.5)], a[NR]}'
+grep -oE " us=[0-9]+" "$LOG" | cut -d= -f2 | sort -n | awk '{a[NR]=$1} END {if (NR) printf "n=%d median=%d p95=%d max=%d\n", NR, a[int((NR+1)/2)], a[int(NR*0.95+0.5)], a[NR]}'
+
+echo "=== keys the TIP handled: $(grep -c 'key vk=' "$LOG") 'key vk=' lines; let through: $(grep -c ' rejected ' "$LOG")"
+echo "=== layout (HKL) at activation, per process"
+grep -oE "activate tid=.*" "$LOG" | sed -E 's/^activate tid=[0-9]+ //; s/settings=Settings \{[^}]*\} //' | sort | uniq -c | head
+echo "=== keys let through (first 12; ch= is what the TIP read, via= which source answered)"
+grep " rejected " "$LOG" | sed -E 's/^[0-9]+ [0-9]+ //' | head -12
 
 echo "=== $(date +%T) KbdUninstallForUser, then restore the language list"
 "$K" call "$DLL" KbdUninstallForUser
@@ -88,6 +98,7 @@ if cmp -s "$M/hklm/defuser-before.reg" "$M/hklm/defuser-during.reg"; then echo "
   diff <(iconv -f UTF-16LE -t UTF-8 "$M/hklm/defuser-before.reg") <(iconv -f UTF-16LE -t UTF-8 "$M/hklm/defuser-during.reg") | head -30
 fi
 ls -R "C:/Program Files/kbd-machine-test" 2>&1 | head -6
+cp "$LOG" "$M/tip.log" 2>/dev/null && echo "TIP log kept: $M/tip.log ($(wc -l < "$M/tip.log") lines)"
 rm -f "$LOG"
 rm -rf "$M/edge-ud" "$M/stage"
 echo "=== $(date +%T) end"

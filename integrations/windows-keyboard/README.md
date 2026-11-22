@@ -41,17 +41,20 @@ Frozen identities (never change them): CLSID `{E384AABE-7F88-4BB2-BFB5-3AA607601
 | Step | Who | Call |
 |---|---|---|
 | Per machine, per architecture (x64, x86) | elevated deferred custom action, or `regsvr32 /s` | `DllRegisterServer`: COM keys under HKLM, `RegisterProfile`, `SetLanguageProfileDisplayName`, categories TIP_KEYBOARD, IMMERSIVESUPPORT, SYSTRAYSUPPORT, DISPLAYATTRIBUTEPROVIDER (no SECUREMODE: O5) |
-| Every new user profile (O6) | elevated, once | `KbdInstallForDefaultUser`: `InstallLayoutOrTipUserReg` on the default-user hive, mounted for the call |
+| Every new user profile (O6) | elevated, once | `KbdInstallForDefaultUser`: `InstallLayoutOrTipUserReg` on the default-user hive, mounted for the call. Not yet working (machine run 5: 1603); the documentation does not give the format of `pszUserReg`, so three forms are tried and logged until the machine test shows which one Windows takes |
 | The installing user | impersonated, not elevated | `KbdInstallForUser`: `InstallLayoutOrTip("0443:{clsid}{profile}", 0)` |
 | Uninstall | the reverse | `KbdUninstallForUser`, `KbdUninstallForDefaultUser`, `DllUnregisterServer` |
 
-The `Kbd*` exports have the MSI DLL custom action signature (`UINT __stdcall f(MSIHANDLE)`) and return 0 or 1603.
+The `Kbd*` exports have the MSI DLL custom action signature (`UINT __stdcall f(MSIHANDLE)`) and return 0 or 1603. With
+the `Debug` setting (or the `KBD_DEBUG` environment variable, which `kbd-harness call` sets) they log every step and the
+Win32 error of the one that failed.
 
 Clean uninstall (PLAN 11.4: Windows leaves `HKCU\Software\Microsoft\CTF\TIP\{clsid}` and
 `HKCU\Software\Microsoft\CTF\SortOrder\AssemblyItem\0x00000443`):
 - `KbdUninstallForUser` removes both from the calling user (the SortOrder entries that name our CLSID only, then the
   keys left empty).
-- `DllUnregisterServer` does the same in every user hive that is loaded (logged-on users).
+- `DllUnregisterServer` does the same in every user hive that is loaded (logged-on users), and deletes
+  `HKLM\SOFTWARE\Microsoft\CTF\TIP\{clsid}` in its own registry view, which `UnregisterProfile` leaves (run 5).
 - **Not possible:** profiles that are not loaded at uninstall keep those per-user keys. They are inert once the
   profile is unregistered. Cleaning them would mean loading every NTUSER.DAT.
 - A DLL still loaded in a running process cannot be deleted until it exits or the PC restarts (11.4); the MSI needs a
@@ -70,7 +73,9 @@ add-in (`E:/office-tools/wix-5.0.2`, or `WIX`). The UpgradeCode is frozen in `in
 
 `HKCU\Software\<product name>\Keyboard` (the product name comes from `brand/brand.toml` at build time):
 - `Letters` (DWORD): 0 or missing = all four letters (O2); 1 = sh and ch only.
-- `Debug` (DWORD): 1 = append a log to `%TEMP%\<product name>-keyboard.log`. Otherwise nothing is written to disk.
+- `Debug` (DWORD): 1 = append a log to `%TEMP%\<product name>-keyboard.log`: activations with the thread's keyboard
+  layout (HKL), each handled key with its time, each key let through with the character the TIP read and which source
+  answered (`via=`). Otherwise nothing is written to disk.
 
 The TIP reads them at each activation and never writes them.
 
@@ -83,7 +88,7 @@ both architectures first (above), then:
 
     bash integrations/windows-keyboard/machine-test/run.sh
 
-The result is in `E:/office-target/kbd-tip/run-last.log`.
+The result is in `E:/office-target/kbd-tip/run-last.log`, the TIP's own log in `E:/office-target/kbd-tip/m/tip.log`.
 
 ## Clean room
 

@@ -416,6 +416,33 @@ Fourth run (claim commit keys; commit printable keys with the composition, re-se
   stale), switches it off before each case and logs when it does, and restores the user's state at the end. A
   confirmation run with no case inversion is still open.
 
+Fifth run (the product TIP, 2026-11-22 23:39; Windows 10, ru UI):
+- Registration Ok (regsvr32 x64 and x86, `KbdInstallForUser`). The display name shows in the ru UI language.
+- **The TIP activated in Notepad, WordPad and Edge but converted nothing: 3/23.** The 3 passing cases are the ones with
+  no digraph. The log has no handled key at all.
+- **Cause (most likely, measured in part):** the product read every character with
+  `ToUnicodeEx(..., GetKeyboardLayout(0))`. ToUnicodeEx gives 0 characters for an HKL that is not loaded in the session
+  (measured on this PC: 0x04430443 and 0x04090443 give nothing; the loaded 0x04090409 gives `s`). The profile has no
+  substitute layout, so the thread's HKL under the TIP is a uz-Latn one that is not loaded. Every letter then became
+  "no character" and started nothing. The spike read letters from the key code, so it never hit this. The thread's HKL
+  under the TIP could not be read here: uz-Latn is not in this PC's list, so a process-local 0x0443 profile does not
+  activate.
+- **Fix:** the character comes from the thread's HKL, then the thread's active layout, then US, then the key code itself
+  (A–Z with Shift xor Caps Lock, the `'` and `` ` `` keys, Space). The debug log now shows the HKL at activation and
+  every key let through, with the character and its source.
+- `hklSubstitute` stays empty for now. Setting the US layout (0x04090409) would change the input language that apps see
+  to en-US (Word may switch its proofing language; not measured), and it is a registration change. Decide after the
+  next run logs the real HKL.
+- `KbdInstallForDefaultUser` → 1603 and nothing changed in the default-user hive; the failing step was not logged. Now
+  every step logs its Win32 error. The documentation does not give the format of `pszUserReg`, so three forms are tried
+  (`HKEY_USERS\<mount>`, `HKU\<mount>`, `\Registry\User\<mount>`) and each result is logged with what the hive shows.
+  If none works, the documented alternative for O6 is Active Setup (`HKLM\SOFTWARE\Microsoft\Active Setup\Installed
+  Components\{id}`, `StubPath` = a per-user call of `InstallLayoutOrTip` at each user's next logon).
+- After `regsvr32 /u`, `HKLM\SOFTWARE\Microsoft\CTF\TIP\{clsid}` was left in the 64-bit view. `DllUnregisterServer`
+  now deletes it.
+- Edge lost the first key of the first case (`hahar `). The harness now types a warm-up key until the page reacts.
+- Cleanup: every snapshot byte-identical.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |
