@@ -652,7 +652,11 @@ impl Ctx {
             Request::Recent {} => json!({"type": "recent", "items": items(self.store.recent(20))}),
             // the open log stays internal (it is the whitelist of `open`); the page sees the documents that have versions
             Request::History {} => {
-                let docs = self.history.as_ref().map(HStore::documents).unwrap_or_default();
+                let docs = self
+                    .history
+                    .as_ref()
+                    .map(HStore::documents)
+                    .unwrap_or_default();
                 let items: Vec<Value> = docs
                     .iter()
                     .map(|d| {
@@ -686,10 +690,12 @@ impl Ctx {
                     Ok(json!({"version": made.to_json()}))
                 })
             }
-            Request::HistoryCopy { path, v } => self.history_op("history_copy", &path, |h, _, p| {
-                let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
-                Ok(json!({"v": v, "path": to}))
-            }),
+            Request::HistoryCopy { path, v } => {
+                self.history_op("history_copy", &path, |h, _, p| {
+                    let to = self.write_version_copy(h, p, v, &self.downloads, "")?;
+                    Ok(json!({"v": v, "path": to}))
+                })
+            }
             Request::HistoryName { path, v, name } => {
                 self.history_op("history_name", &path, |h, _, p| {
                     h.name(p, v, &name).map_err(|e| e.to_string())?;
