@@ -154,8 +154,8 @@ L '  </ComponentGroup></Fragment>'
 
 # The machine folders exist after install (empty); IT's packages added later are not removed on uninstall
 L '  <Fragment><ComponentGroup Id="MachineData">'
-L '    <Component Id="C_machine" Directory="D_machine" Guid="*"><CreateFolder /></Component>'
-L '    <Component Id="C_machine_plugins" Directory="D_machine_plugins" Guid="*"><CreateFolder /></Component>'
+L '    <Component Id="C_machine" Directory="D_machine" Guid="{6B0C1F5E-3D52-4B7A-9E81-5A2D7C4F1B30}"><CreateFolder /></Component>'
+L '    <Component Id="C_machine_plugins" Directory="D_machine_plugins" Guid="{C3A94E27-8F16-4D05-B6A2-0E7F5D9B2C41}"><CreateFolder /></Component>'
 L '  </ComponentGroup></Fragment>'
 
 # Payload: whole folders
