@@ -566,7 +566,7 @@ mod tests {
     fn brand_toml_is_valid_and_has_five_apps() {
         let b = repo_brand();
         assert_eq!(b.apps.len(), 5);
-        assert_eq!(b.version, "0.6.0");
+        assert_eq!(b.version, "0.7.0");
     }
 
     #[test]
@@ -576,7 +576,7 @@ mod tests {
         for k in [
             "PRODUCT_NAME=",
             "APP_NAME=",
-            "VERSION=0.6.0",
+            "VERSION=0.7.0",
             "COMMUNITY=0",
             "UPDATE_CHECK=0",
             "ATTRIBUTION_uz-latn=",
