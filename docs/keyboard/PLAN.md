@@ -1,6 +1,7 @@
 # Uzbek 2026 keyboard for Windows: Phase 0 plan
 
-Status: Phase 0 (plan plus a throwaway spike, no product code). Branch `kbd-spike`, spike in `spikes/uz-keyboard/`.
+Status: Phase 0 done 2026-11-22 (owner accepted all recommendations, section 13); product work on branch `keyboard`.
+Phase 0 history: plan plus a throwaway spike. Branch `kbd-spike`, spike in `spikes/uz-keyboard/`.
 Written 2026-11-22. Machine: Windows 10 Pro 19045, x64, standard user at Medium integrity (S-1-16-8192). The
 product name is not written here; like every other surface, it comes from `brand/brand.toml`.
 
@@ -436,13 +437,14 @@ Fourth run (claim commit keys; commit printable keys with the composition, re-se
   - (B) a per-user hook tray app, no admin: alifly-like; no elevated apps; approximate Backspace undo; AV risk.
   - (C) both: about +6 days, and two behaviours to support.
 - **O2. Letters in v1.** DECIDED 2026-11-22: all four (ş ç ö ğ).
-- **O3. Foreign `ch`.** Accept conversion plus Backspace undo, or add a user exception list?
-- **O4. Display name and on/off hotkey.** For example "Oʻzbek 2026 (ş ç ö ğ)" and Ctrl+Shift+`.
-- **O5. Lock screen and UAC desktop support.** Not in v1, proposed.
-- **O6. Enable for every user of a PC at install,** through the default-user hive (`InstallLayoutOrTipUserReg`), or
-  only for the installing user?
-- **O7. Word-level s + h fixing for "Ishoq" without a separator (WP7).** Do it or skip it?
-- **O8. Signing:** same SignPath project as the add-in, or a separate one?
+- **O3. Foreign `ch`.** DECIDED 2026-11-22: accept the conversion; Backspace undo restores `ch`. No exception list in v1.
+- **O4. Display name and on/off hotkey.** DECIDED 2026-11-22: "Oʻzbek 2026 (ş ç ö ğ)" (uz-Latn; other locales from the
+  i18n catalogs) and Ctrl+Shift+`.
+- **O5. Lock screen and UAC desktop support.** DECIDED 2026-11-22: not in v1.
+- **O6. Enable for every user of a PC at install.** DECIDED 2026-11-22: every user (IT installs), through the
+  default-user hive (`InstallLayoutOrTipUserReg`) plus the installing user.
+- **O7. Word-level s + h fixing for "Ishoq" without a separator (WP7).** DECIDED 2026-11-22: skip in v1 (later).
+- **O8. Signing.** DECIDED 2026-11-22: the same SignPath project as the add-in.
 
 ## 14. Work packages and effort (agent-days, excluding the owner's test time)
 
