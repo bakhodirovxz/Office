@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keyboard MSI (docs/keyboard/PLAN.md sections 8, 9). Built by installer/build.sh, which passes every $(var.*) below
+     (name, vendor and version come from brand/brand.toml). WiX 5.0.2, `-arch x64`. PER MACHINE ONLY: Program Files + HKLM.
+     One x64 package carries both DLLs under Program Files\<brand>\Keyboard\{x64,x86} (the add-in's layout). The x86 DLL
+     stays in the 64-bit Program Files tree on purpose: 32-bit hosts load it by absolute path (no redirection applies),
+     and one tree means one install folder, one ACL and one uninstall path.
+     No SelfReg table and no registry components: registration is done by the DLL's own exports (src/reg.rs):
+       DllRegisterServer / DllUnregisterServer   regsvr32 /s, elevated deferred (no impersonation), once per architecture
+       KbdInstallForDefaultUser / ...Uninstall   DLL custom action, elevated deferred (mounts the default-user hive)
+       KbdInstallForUser / ...Uninstall          DLL custom action, deferred IMPERSONATED: runs as the installing user
+     Sequencing: install = InstallFiles, then regsvr32 x64, regsvr32 x86, default user, current user; uninstall = the
+     reverse (user, default user, unregister x86, x64) before RemoveFiles. A major upgrade removes the old product AFTER
+     the new one is installed (afterInstallExecute); the old product's unregistration is skipped
+     (NOT UPGRADINGPRODUCTCODE), so it cannot undo the new registration. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="$(var.ProductName)" Manufacturer="$(var.Vendor)" Version="$(var.Version)" UpgradeCode="$(var.UpgradeCode)" ProductCode="*" Language="1033" Scope="perMachine" Compressed="yes">
+    <!-- afterInstallExecute: the component GUIDs are stable (Guid="*" from the path), so the old product's removal leaves the
+         files the new one just installed, and a DLL loaded in a running app is swapped at the next restart, not deleted. -->
+    <MajorUpgrade Schedule="afterInstallExecute" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of the keyboard is already installed." />
+    <!-- Never close and relaunch the user's apps (every app that takes text input loads this DLL): a DLL in use is replaced
+         or removed at the next restart instead (as in the Office add-in MSI). -->
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Launch Condition="Installed OR VersionNT64 &gt;= 1000" Message="The keyboard needs 64-bit Windows 10 or later." />
+
+    <StandardDirectory Id="ProgramFiles64Folder"><Directory Id="BRANDDIR" Name="$(var.Brand)"><Directory Id="INSTALLFOLDER" Name="Keyboard">
+      <Directory Id="D_x64" Name="x64" />
+      <Directory Id="D_x86" Name="x86" />
+    </Directory></Directory></StandardDirectory>
+    <StandardDirectory Id="WindowsFolder" />
+
+    <Feature Id="Main" Title="Keyboard" Level="1" AllowAbsent="no"><ComponentGroupRef Id="Files" /></Feature>
+
+    <!-- regsvr32 by full path (WindowsFolder\System32 is the 64-bit one, \SysWOW64 the 32-bit one; the x64 package's service is
+         64-bit, so there is no redirection). Register on a fresh install, an upgrade's new product and a repair; unregister
+         only when the whole product is removed and NOT as part of an upgrade. -->
+    <?define Inst = "NOT Installed OR REINSTALL" ?>
+    <?define Uninst = 'Installed AND REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE' ?>
+    <?foreach A in x64;x86?>
+      <?if $(A) = x64?><?define Sys = System32?><?else?><?define Sys = SysWOW64?><?endif?>
+      <CustomAction Id="Reg_$(A)" Directory="WindowsFolder" ExeCommand="&quot;[WindowsFolder]$(Sys)\regsvr32.exe&quot; /s &quot;[D_$(A)]kbd.dll&quot;" Execute="deferred" Impersonate="no" Return="check" />
+      <CustomAction Id="Reg_$(A)_rb" Directory="WindowsFolder" ExeCommand="&quot;[WindowsFolder]$(Sys)\regsvr32.exe&quot; /s /u &quot;[D_$(A)]kbd.dll&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <CustomAction Id="Unreg_$(A)" Directory="WindowsFolder" ExeCommand="&quot;[WindowsFolder]$(Sys)\regsvr32.exe&quot; /s /u &quot;[D_$(A)]kbd.dll&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
+      <CustomAction Id="Unreg_$(A)_rb" Directory="WindowsFolder" ExeCommand="&quot;[WindowsFolder]$(Sys)\regsvr32.exe&quot; /s &quot;[D_$(A)]kbd.dll&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <?undef Sys?>
+    <?endforeach?>
+
+    <!-- Enabling the keyboard is a convenience: if it fails (installing as SYSTEM through a deployment tool has no user, or the
+         default-user hive is locked) the install must not roll back, so Return="ignore"; the user can add it in Settings.
+         The DLL logs when Debug=1 (README). -->
+    <CustomAction Id="InstDefault" FileRef="F_kbd64" DllEntry="KbdInstallForDefaultUser" Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="InstDefault_rb" FileRef="F_kbd64" DllEntry="KbdUninstallForDefaultUser" Execute="rollback" Impersonate="no" Return="ignore" />
+    <CustomAction Id="UninstDefault" FileRef="F_kbd64" DllEntry="KbdUninstallForDefaultUser" Execute="deferred" Impersonate="no" Return="ignore" />
+    <!-- Impersonated: the call must run as the installing user, with that user's HKCU and input list. A deferred action keeps
+         it inside the transaction (rollback works), and the DLL is the installed file, so it is the version being installed. -->
+    <CustomAction Id="InstUser" FileRef="F_kbd64" DllEntry="KbdInstallForUser" Execute="deferred" Impersonate="yes" Return="ignore" />
+    <CustomAction Id="InstUser_rb" FileRef="F_kbd64" DllEntry="KbdUninstallForUser" Execute="rollback" Impersonate="yes" Return="ignore" />
+    <CustomAction Id="UninstUser" FileRef="F_kbd64" DllEntry="KbdUninstallForUser" Execute="deferred" Impersonate="yes" Return="ignore" />
+
+    <InstallExecuteSequence>
+      <!-- install: after the files exist; each rollback action precedes the action it undoes -->
+      <Custom Action="Reg_x64_rb" After="InstallFiles" Condition="$(Inst)" />
+      <Custom Action="Reg_x64" After="Reg_x64_rb" Condition="$(Inst)" />
+      <Custom Action="Reg_x86_rb" After="Reg_x64" Condition="$(Inst)" />
+      <Custom Action="Reg_x86" After="Reg_x86_rb" Condition="$(Inst)" />
+      <!-- enabling only on a first install of this product (a repair must not re-add a keyboard the user removed) -->
+      <Custom Action="InstDefault_rb" After="Reg_x86" Condition="NOT Installed" />
+      <Custom Action="InstDefault" After="InstDefault_rb" Condition="NOT Installed" />
+      <Custom Action="InstUser_rb" After="InstDefault" Condition="NOT Installed" />
+      <Custom Action="InstUser" After="InstUser_rb" Condition="NOT Installed" />
+      <!-- uninstall: user, default user, unregister x86, x64; all before RemoveFiles (the DLL must still exist) -->
+      <Custom Action="UninstUser" After="InstallInitialize" Condition="$(Uninst)" />
+      <Custom Action="UninstDefault" After="UninstUser" Condition="$(Uninst)" />
+      <Custom Action="Unreg_x86_rb" After="UninstDefault" Condition="$(Uninst)" />
+      <Custom Action="Unreg_x86" After="Unreg_x86_rb" Condition="$(Uninst)" />
+      <Custom Action="Unreg_x64_rb" After="Unreg_x86" Condition="$(Uninst)" />
+      <Custom Action="Unreg_x64" After="Unreg_x64_rb" Condition="$(Uninst)" />
+    </InstallExecuteSequence>
+  </Package>
+
+  <Fragment><ComponentGroup Id="Files">
+    <Component Id="C_kbd64" Directory="D_x64"><File Id="F_kbd64" Source="$(var.Stage)\x64\kbd.dll" KeyPath="yes" /></Component>
+    <Component Id="C_kbd86" Directory="D_x86"><File Id="F_kbd86" Source="$(var.Stage)\x86\kbd.dll" KeyPath="yes" /></Component>
+    <Component Id="C_notice" Directory="INSTALLFOLDER"><File Id="F_notice" Source="$(var.Stage)\NOTICE" KeyPath="yes" /></Component>
+    <Component Id="C_mit" Directory="INSTALLFOLDER"><File Id="F_mit" Source="$(var.Stage)\LICENSE-MIT" KeyPath="yes" /></Component>
+    <Component Id="C_apache" Directory="INSTALLFOLDER"><File Id="F_apache" Source="$(var.Stage)\LICENSE-APACHE" KeyPath="yes" /></Component>
+  </ComponentGroup></Fragment>
+</Wix>

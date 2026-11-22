@@ -57,6 +57,15 @@ Clean uninstall (PLAN 11.4: Windows leaves `HKCU\Software\Microsoft\CTF\TIP\{cls
 - A DLL still loaded in a running process cannot be deleted until it exits or the PC restarts (11.4); the MSI needs a
   restart-pending delete.
 
+## MSI (WP4)
+
+    bash integrations/windows-keyboard/installer/build.sh     # -> E:/office-target/kbd-msi/<brand id>-keyboard-<version>-x64.msi
+
+Per machine only, one x64 package with both DLLs under `Program Files\<brand>\Keyboard\{x64,x86}`. Name, vendor and
+version come from `brand/brand.toml` (the DLL's version resource too). Registration is the table above, run by custom
+actions (`installer/keyboard.wxs`, sequence and conditions in its header); there is no SelfReg. WiX 5.0.2 as for the Office
+add-in (`E:/office-tools/wix-5.0.2`, or `WIX`). The UpgradeCode is frozen in `installer/build.sh`. Unsigned (PLAN 9).
+
 ## Settings (HKCU only; no settings UI yet)
 
 `HKCU\Software\<product name>\Keyboard` (the product name comes from `brand/brand.toml` at build time):
