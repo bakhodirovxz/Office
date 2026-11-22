@@ -143,13 +143,17 @@ pub(crate) fn set_debug(on: bool) {
     DEBUG.store(on, Ordering::Relaxed);
 }
 
+pub(crate) fn debug_on() -> bool {
+    DEBUG.load(Ordering::Relaxed)
+}
+
 /// The debug log (machine tests read the per-key times from it).
 pub fn log_path() -> std::path::PathBuf {
     std::env::temp_dir().join(format!("{BRAND}-keyboard.log"))
 }
 
 pub(crate) fn log(line: &str) {
-    if !DEBUG.load(Ordering::Relaxed) {
+    if !debug_on() {
         return;
     }
     if let Ok(mut f) = std::fs::OpenOptions::new()

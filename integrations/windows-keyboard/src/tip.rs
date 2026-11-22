@@ -21,7 +21,9 @@ use windows::core::*;
 
 use crate::attr::{AttrEnum, AttrInfo};
 use crate::langbar::ModeButton;
-use crate::{GUID_DISPLAY_ATTR, GUID_PRESERVED_TOGGLE, Live, guard, log, res, set_debug, settings};
+use crate::{
+    GUID_DISPLAY_ATTR, GUID_PRESERVED_TOGGLE, Live, debug_on, guard, log, res, set_debug, settings,
+};
 
 /// The on/off key: Ctrl+Shift+` (owner decision O4).
 pub const TOGGLE_KEY: TF_PRESERVEDKEY = TF_PRESERVEDKEY {
@@ -151,31 +153,78 @@ fn ctrl_or_alt() -> bool {
     unsafe { GetKeyState(VK_CONTROL.0 as i32) < 0 || GetKeyState(VK_MENU.0 as i32) < 0 }
 }
 
-/// The single printable character this key types in the current layout and modifier state (Shift, Caps Lock), if any.
-/// Ctrl and Alt chords are never characters here: shortcuts must keep their meaning.
-fn printable(vk: VIRTUAL_KEY, lparam: LPARAM) -> Option<char> {
+/// The single printable character this key types in the current layout and modifier state (Shift, Caps Lock), if any,
+/// and which source answered (debug log). Ctrl and Alt chords are never characters here: shortcuts must keep their
+/// meaning.
+fn printable(vk: VIRTUAL_KEY, lparam: LPARAM) -> (Option<char>, &'static str) {
     if ctrl_or_alt() {
-        return None;
+        return (None, "ctrl/alt");
     }
     let mut ks = [0u8; 256];
-    unsafe { GetKeyboardState(&mut ks).ok()? };
-    let mut buf = [0u16; 4];
-    // wFlags bit 2: do not change the kernel's keyboard state (dead keys stay pending). VK_PACKET (touch keyboard,
-    // SendInput Unicode) maps to its character the same way (IME requirements page).
-    let n = unsafe {
-        ToUnicodeEx(
-            vk.0 as u32,
-            ((lparam.0 >> 16) & 0xff) as u32,
-            &ks,
-            &mut buf,
-            4,
-            Some(GetKeyboardLayout(0)),
-        )
-    };
-    let s = String::from_utf16(&buf[..n.max(0) as usize]).ok()?;
-    let mut it = s.chars();
-    match (it.next(), it.next()) {
-        (Some(c), None) if c >= ' ' && c != '\u{7f}' => Some(c),
+    if unsafe { GetKeyboardState(&mut ks) }.is_err() {
+        return (None, "no key state");
+    }
+    char_for(vk, ((lparam.0 >> 16) & 0xff) as u32, &ks, unsafe {
+        GetKeyboardLayout(0)
+    })
+}
+
+/// US English, the layout Windows types for uz-Latn (PLAN 4).
+const HKL_US: HKL = HKL(0x0409_0409 as _);
+
+/// The character for `vk` under the thread's layout `thread`. ToUnicodeEx gives nothing for an HKL that is not loaded in
+/// the session (measured: 0x04430443 and 0x04090443 -> 0 chars; machine run 5 lost every digraph this way while our
+/// profile, registered without a substitute layout, was active). So: the thread's HKL, then the thread's active layout
+/// (NULL HKL), then US, then the key itself. A letter is never lost.
+fn char_for(
+    vk: VIRTUAL_KEY,
+    scan: u32,
+    ks: &[u8; 256],
+    thread: HKL,
+) -> (Option<char>, &'static str) {
+    for (hkl, src) in [
+        (Some(thread), "thread hkl"),
+        (None, "active layout"),
+        (Some(HKL_US), "us"),
+    ] {
+        let mut buf = [0u16; 4];
+        // wFlags bit 2: do not change the kernel's keyboard state (dead keys stay pending). VK_PACKET (touch keyboard,
+        // SendInput Unicode) maps to its character the same way (IME requirements page).
+        let n = unsafe { ToUnicodeEx(vk.0 as u32, scan, ks, &mut buf, 4, hkl) };
+        if n != 0 {
+            // A dead key (n < 0) types nothing yet.
+            let s = String::from_utf16(&buf[..n.max(0) as usize]).unwrap_or_default();
+            let mut it = s.chars();
+            let c = match (it.next(), it.next()) {
+                (Some(c), None) if c >= ' ' && c != '\u{7f}' => Some(c),
+                _ => None,
+            };
+            return (c, src);
+        }
+    }
+    let down = |k: VIRTUAL_KEY| ks[k.0 as usize] & 0x80 != 0;
+    (
+        vk_char(vk, down(VK_SHIFT), ks[VK_CAPITAL.0 as usize] & 1 != 0),
+        "vk",
+    )
+}
+
+/// The last resort when no layout answers: the US meaning of the keys the conversion needs, plus Space.
+/// shortcut: assumes a US-style layout under the TIP (true for uz-Latn); only reached when ToUnicodeEx fails three times.
+fn vk_char(vk: VIRTUAL_KEY, shift: bool, caps: bool) -> Option<char> {
+    match vk.0 {
+        0x41..=0x5A => {
+            let c = vk.0 as u8 as char;
+            Some(if shift ^ caps {
+                c
+            } else {
+                c.to_ascii_lowercase()
+            })
+        }
+        _ if shift => None,
+        _ if vk == VK_OEM_7 => Some('\''),
+        _ if vk == VK_OEM_3 => Some('`'),
+        _ if vk == VK_SPACE => Some(' '),
         _ => None,
     }
 }
@@ -336,10 +385,24 @@ impl Tip_Impl {
         if !self.st.open.get() || ctrl_or_alt() {
             return composing.then_some((Act::Commit, None));
         }
-        let ch = printable(vk, lparam);
+        let ch = printable(vk, lparam).0;
         let key = key_of(vk, ch, self.st.all_letters.get())?;
         let typed = self.st.typed.borrow().clone();
         decide(&typed, composing, key).map(|a| (a, ch))
+    }
+
+    /// Debug log of a key the TIP lets through (machine run 5 showed no key reaching key_down).
+    fn rejected(&self, who: &str, vk: VIRTUAL_KEY, lparam: LPARAM) {
+        if debug_on() && !is_modifier(vk) {
+            let (ch, src) = printable(vk, lparam);
+            log(&format!(
+                "{who} rejected vk={:#04x} ch={ch:?} via={src} hkl={:?} conv={} composing={}",
+                vk.0,
+                unsafe { GetKeyboardLayout(0) },
+                self.st.open.get(),
+                self.st.composing()
+            ));
+        }
     }
 
     fn run(&self, ctx: &ITfContext, act: Act, flags: TF_CONTEXT_EDIT_CONTEXT_FLAGS) -> Result<()> {
@@ -376,6 +439,7 @@ impl Tip_Impl {
             return Ok(false.into());
         };
         let Some((mut act, ch)) = self.plan(vk, lparam) else {
+            self.rejected("down", vk, lparam);
             return Ok(false.into());
         };
         let mut resend = false;
@@ -465,8 +529,9 @@ impl Tip_Impl {
             }
         }
         log(&format!(
-            "activate tid={tid} exe={:?} settings={s:?}",
-            std::env::current_exe().ok()
+            "activate tid={tid} exe={:?} settings={s:?} hkl={:?}",
+            std::env::current_exe().ok(),
+            unsafe { GetKeyboardLayout(0) }
         ));
         Ok(())
     }
@@ -524,7 +589,12 @@ impl ITfKeyEventSink_Impl for Tip_Impl {
     }
     fn OnTestKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {
         let r = guard("OnTestKeyDown", || {
-            Ok((pic.is_some() && self.plan(VIRTUAL_KEY(wparam.0 as u16), lparam).is_some()).into())
+            let vk = VIRTUAL_KEY(wparam.0 as u16);
+            let eat = pic.is_some() && self.plan(vk, lparam).is_some();
+            if !eat {
+                self.rejected("test", vk, lparam);
+            }
+            Ok(eat.into())
         });
         Ok(r.unwrap_or_else(|_| {
             self.st.reset();
@@ -626,6 +696,56 @@ mod tests {
             );
         }
         assert!(matches!(key_of(VK_RETURN, None, true), Some(Key::Other)));
+    }
+
+    /// Machine run 5: with our profile active, the thread's HKL was one ToUnicodeEx does not know, every key mapped to
+    /// no character and nothing converted. The key must still give its letter.
+    #[test]
+    fn a_layout_that_gives_nothing_does_not_lose_the_letter() {
+        let mut ks = [0u8; 256];
+        let scan = |vk: VIRTUAL_KEY| unsafe { MapVirtualKeyW(vk.0 as u32, MAPVK_VK_TO_VSC) };
+        for unloaded in [0x0443_0443usize, 0x0409_0443] {
+            let hkl = HKL(unloaded as _);
+            let mut buf = [0u16; 4];
+            let n =
+                unsafe { ToUnicodeEx(0x53, scan(VIRTUAL_KEY(0x53)), &ks, &mut buf, 4, Some(hkl)) };
+            assert_eq!(
+                n, 0,
+                "{unloaded:#x} is not loaded on a test machine, so it gives no character"
+            );
+            assert_eq!(
+                char_for(VIRTUAL_KEY(0x53), scan(VIRTUAL_KEY(0x53)), &ks, hkl).0,
+                Some('s')
+            );
+            assert_eq!(char_for(VK_OEM_7, scan(VK_OEM_7), &ks, hkl).0, Some('\''));
+            ks[VK_SHIFT.0 as usize] = 0x80;
+            assert_eq!(
+                char_for(VIRTUAL_KEY(0x48), scan(VIRTUAL_KEY(0x48)), &ks, hkl).0,
+                Some('H')
+            );
+            ks[VK_SHIFT.0 as usize] = 0;
+            assert_eq!(char_for(VK_LEFT, scan(VK_LEFT), &ks, hkl).0, None);
+        }
+    }
+
+    #[test]
+    fn the_key_itself_is_the_last_resort() {
+        let s = VIRTUAL_KEY(0x53);
+        assert_eq!(vk_char(s, false, false), Some('s'));
+        assert_eq!(vk_char(s, true, false), Some('S'));
+        assert_eq!(vk_char(s, false, true), Some('S'));
+        assert_eq!(vk_char(s, true, true), Some('s'));
+        assert_eq!(vk_char(VK_OEM_7, false, false), Some('\''));
+        assert_eq!(vk_char(VK_OEM_3, false, true), Some('`'));
+        assert_eq!(
+            vk_char(VK_OEM_7, true, false),
+            None,
+            "Shift+' is layout punctuation: re-sent"
+        );
+        assert_eq!(vk_char(VK_SPACE, false, false), Some(' '));
+        for vk in [VK_RETURN, VK_TAB, VK_LEFT, VK_F1, VIRTUAL_KEY(0x31)] {
+            assert_eq!(vk_char(vk, false, false), None, "{vk:?}");
+        }
     }
 
     #[test]
