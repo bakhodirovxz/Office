@@ -1,0 +1,22 @@
+name: Transliteration error
+description: A wrong Latin <-> Cyrillic result (including the 2026 Latin alphabet)
+labels: [transliteration]
+body:
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Direction
+      options: [Cyrillic to Latin, Latin to Cyrillic, 1995 Latin to 2026 Latin]
+    validations: { required: true }
+  - type: textarea
+    id: input
+    attributes: { label: Input text }
+    validations: { required: true }
+  - type: textarea
+    id: got
+    attributes: { label: Result you got }
+    validations: { required: true }
+  - type: textarea
+    id: want
+    attributes: { label: Expected result, description: If you know the rule or a source (dictionary, official spelling), add it. }
+    validations: { required: true }

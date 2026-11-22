@@ -19,6 +19,12 @@ Release notes and checksums: [suite 0.7.0](https://github.com/bakhodirovxz/Offic
   converts the whole file and rewrites 1995 Latin in the 2026 letters (English paragraphs keep their Latin).
 - If Word disabled the add-in after a freeze in 0.2.0: File > Options > Add-ins > Manage: Disabled Items > Go > Enable.
 
+## Contributing
+
+Contributions are welcome: bug reports, testing on real documents, transliteration fixes, translations (uz-Latn, uz-Cyrl, ru, en)
+and code. Start with [CONTRIBUTING.md](CONTRIBUTING.md), then [open an issue](https://github.com/bakhodirovxz/Office/issues/new/choose)
+or look for issues labelled `good first issue`. Issues can be written in Uzbek, Russian or English.
+
 ## For developers
 
 Working notes for agents: `CLAUDE.md`. Plan and status: `docs/phase1/PLAN.md`, `docs/STATUS.md`. Upstream handling: `docs/UPSTREAM.md`.

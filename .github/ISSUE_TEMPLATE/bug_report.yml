@@ -1,0 +1,30 @@
+name: Bug report
+description: Something does not work or looks wrong
+labels: [bug]
+body:
+  - type: dropdown
+    id: product
+    attributes:
+      label: Product
+      options: [Desktop suite, Office add-in (Word/Excel/PowerPoint), Converter, Other]
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: Version, placeholder: "e.g. 0.7.0 or add-in 0.2.1" }
+    validations: { required: true }
+  - type: input
+    id: windows
+    attributes: { label: Windows and Office version, placeholder: "e.g. Windows 11 23H2, Office 2019 32-bit" }
+  - type: textarea
+    id: steps
+    attributes: { label: What did you do?, description: Steps to reproduce }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What did you expect, and what happened instead? }
+    validations: { required: true }
+  - type: textarea
+    id: files
+    attributes:
+      label: Files or screenshots
+      description: Only files without personal or confidential data. A small synthetic file that shows the problem is best.
