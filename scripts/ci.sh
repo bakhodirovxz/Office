@@ -8,7 +8,7 @@
 #   queue                    verify-queue all; cargo xt register check; quarantine format check
 #   lint                     fmt + clippy -D warnings (root), fmt/layers/assets (upstream trees), upstream clippy ratchet (fails on new warnings only)
 #   gen-check                cargo xt gen-domain --check all; lockdiff x4
-#   deny                     cargo-deny x5 (root + 4 domains), one config each
+#   deny                     cargo-deny x6 (root + keyboard + 4 domains), one config each
 #   notices                  NOTICE/LICENSE-MIT current (gen-legal --check); THIRD-PARTY-NOTICES.txt current and every shipped crate has a licence (gen-notices --check, cargo-about, minutes)
 #   brand                    cargo xt brand-grep + logo-include check
 #   i18n                     cargo xt i18n lint + roundtrip + check-stale
@@ -256,6 +256,7 @@ job_deny() {
   command -v cargo-deny >/dev/null 2>&1 || { note "cargo-deny not found on PATH"; return 2; }
   mkdir -p "$OFFICE_CACHE/advisory-db"
   line=$(deny_one root Cargo.toml deny.toml); r=$?; echo "$line" | tee -a "$JOB_LOG"; [ $r -gt $rc ] && rc=$r
+  line=$(deny_one keyboard integrations/windows-keyboard/Cargo.toml ci/deny/keyboard.toml); r=$?; echo "$line" | tee -a "$JOB_LOG"; [ $r -gt $rc ] && rc=$r
   for d in $DOMAINS; do
     domain_standin "$d" && echo "(domain $d: stand-in upstream/$(app_of "$d") until WP3 generates domains/$d)" | tee -a "$JOB_LOG"
     line=$(deny_one "$d" "$(domain_manifest "$d")" "ci/deny/$d.toml"); r=$?; echo "$line" | tee -a "$JOB_LOG"

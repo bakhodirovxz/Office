@@ -1,0 +1,48 @@
+# cargo-deny policy for the Windows keyboard workspace (integrations/windows-keyboard: the TSF TIP kbd.dll, docs/keyboard/PLAN.md
+# WP2/WP3). Copy of the root policy; the workspace is its own (MSVC + the `windows` crate) like services/.
+# Run: cargo deny --manifest-path integrations/windows-keyboard/Cargo.toml --config ci/deny/keyboard.toml check   (scripts/ci.sh deny)
+# Keep the [licenses] allow list and [sources] in step with deny.toml.
+# Our layer is MIT OR Apache-2.0 and links permissive code only. GPL/AGPL/LGPL/MPL is never allowed.
+
+[graph]
+all-features = true
+# The DLL ships for these three (PLAN 8, 10).
+targets = ["x86_64-pc-windows-msvc", "i686-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+
+[licenses]
+confidence-threshold = 0.9
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "BSL-1.0",
+    "CC0-1.0",
+]
+
+[licenses.private]
+ignore = true
+
+[bans]
+# 32 duplicate crate names are known across the upstream graphs; report, do not fail.
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = []
+
+[advisories]
+version = 2
+yanked = "warn"
+git-fetch-with-cli = true
+db-path = "E:/office-cache/advisory-db"
+# Each ignore needs: RUSTSEC id, reason, review date. None for the keyboard workspace.
+ignore = []
