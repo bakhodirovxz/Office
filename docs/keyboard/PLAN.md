@@ -402,6 +402,19 @@ Third run (with the "commit in OnTestKeyDown and pass the key" fix):
     `$Root`.
   - The two HKCU keys came back. `lang-restore.ps1` now removes them.
 
+Fourth run (claim commit keys; commit printable keys with the composition, re-send the others):
+- Notepad plain: 23/23 with Caps Lock off. Caps Lock was on again from the Notepad TIP run onwards. The cause is
+  not known: the TIP never sends VK_CAPITAL, and AnyDesk was running.
+- Read with the case inverted back, **all three hosts are 23/23 with the TIP: Notepad (CUAS), WordPad and
+  Edge**. Notepad is now in the right order: `toş⏎`, `Işoq`, `sş `, `qusx `. Latency from SendInput to the text
+  change, TIP on: Notepad median 4.47 ms (p95 7.66 ms), WordPad 6.12 ms (9.88 ms). TIP-side time per key: median
+  0.15 ms, p95 5.1 ms (237 keys).
+- **Cleanup was complete for the first time.** Every HKCU, HKLM and language-list snapshot is byte-identical, no
+  process held the DLL, and the run folder was deleted. Only the folders from runs 2 and 3 remain, held until restart.
+- The harness now reads Caps Lock through the target window's input thread (the console's own GetKeyState was
+  stale), switches it off before each case and logs when it does, and restores the user's state at the end. A
+  confirmation run with no case inversion is still open.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |

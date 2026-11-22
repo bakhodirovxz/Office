@@ -317,6 +317,11 @@ fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), 
     for (typed, want_tip) in CASES {
         let want = norm(&if with_tip { want_tip.to_string() } else { plain(typed) });
         t.clear();
+        // Caps Lock turned on mid-run twice (machine runs 3 and 4, cause unknown); it inverts every case.
+        if caps_in(t.top()) {
+            toggle_caps();
+            println!("  caps lock found on before {typed:?}: switched off -> on={}", caps_in(t.top()));
+        }
         for c in typed.chars() {
             if unsafe { GetForegroundWindow() } != t.top() || fg_exe().to_ascii_lowercase().ends_with("lockapp.exe") {
                 return Err(format!("lost the foreground (now {}); no keys sent elsewhere", fg_exe()));
@@ -349,6 +354,25 @@ fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), 
         }
     }
     Ok((pass, fail, lat))
+}
+
+/// Caps Lock as the window's input thread sees it (a console thread's own GetKeyState can be stale).
+fn caps_in(hwnd: HWND) -> bool {
+    unsafe {
+        let th = GetWindowThreadProcessId(hwnd, None);
+        let me = GetCurrentThreadId();
+        let attached = th != 0 && th != me && AttachThreadInput(me, th, true).as_bool();
+        let on = GetKeyState(VK_CAPITAL.0 as i32) & 1 != 0;
+        if attached {
+            let _ = AttachThreadInput(me, th, false);
+        }
+        on
+    }
+}
+
+fn toggle_caps() {
+    unsafe { SendInput(&[key(VK_CAPITAL, false), key(VK_CAPITAL, true)], std::mem::size_of::<INPUT>() as i32) };
+    std::thread::sleep(Duration::from_millis(200));
 }
 
 fn force_foreground(hwnd: HWND) -> bool {
@@ -675,18 +699,9 @@ fn suite(apps: &[&str]) -> Result<()> {
         let mut saved = TF_INPUTPROCESSORPROFILE::default();
         pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut saved)?;
         println!("session input before: type={} lang={:#06x} clsid={:?} hkl={:?}", saved.dwProfileType, saved.langid, saved.clsid, saved.hkl);
-        // Caps Lock on inverts every case (second machine run): switch it off for the run, put it back after.
-        let caps = |press: bool| {
-            if press {
-                SendInput(&[key(VK_CAPITAL, false), key(VK_CAPITAL, true)], std::mem::size_of::<INPUT>() as i32);
-                std::thread::sleep(Duration::from_millis(200));
-            }
-            GetKeyState(VK_CAPITAL.0 as i32) & 1 != 0
-        };
-        let caps_was_on = caps(false);
-        if caps_was_on {
-            println!("caps lock was on: off for the run -> now on={}", caps(true));
-        }
+        // drive() switches Caps Lock off before each case; put the user's state back at the end.
+        let caps_was_on = caps_in(GetForegroundWindow());
+        println!("caps lock at start: on={caps_was_on}");
         for app in apps {
             println!("=== {app}");
             let (pid, target) = match start_app(app) {
@@ -728,9 +743,11 @@ fn suite(apps: &[&str]) -> Result<()> {
         }
         let r = pm.ActivateProfile(saved.dwProfileType, saved.langid, &saved.clsid, &saved.guidProfile, saved.hkl, TF_IPPMF_FORSESSION);
         println!("session input restored -> {:?}", r.map_err(|e| e.code()));
-        if caps_was_on {
-            println!("caps lock restored -> on={}", caps(true));
+        let fg = GetForegroundWindow();
+        if caps_in(fg) != caps_was_on {
+            toggle_caps();
         }
+        println!("caps lock at end: on={} (start: {caps_was_on})", caps_in(fg));
         Ok(())
     }
 }
