@@ -443,6 +443,30 @@ Fifth run (the product TIP, 2026-11-22 23:39; Windows 10, ru UI):
 - Edge lost the first key of the first case (`hahar `). The harness now types a warm-up key until the page reacts.
 - Cleanup: every snapshot byte-identical.
 
+Sixth run (2026-11-23 02:06; TIP log with every key let through):
+- **3/23 again, and the TIP saw almost no keys.** The HKL at activation was 0x04090409 in all three apps, so the run 5
+  ToUnicodeEx explanation was wrong (its fallback stays; it is harmless). Each app logged only the first key or few keys
+  after activation, then `deactivate`.
+- **Cause (most likely; timing evidence, not reproduced here):** the TIP was not losing keys, it was **deactivated** by
+  the harness. `deactivate` came 8 ms (Notepad), 37 ms (WordPad) and 151 ms (Edge) after the warm-up's last key, which
+  is the moment `drive()` first calls `caps_in()`; in Edge it is exactly the clear loop's 150 ms sleep plus 1 ms.
+  `caps_in()` attaches the harness thread to the target's input thread (`AttachThreadInput`). It was added after the
+  spike's last passing run (spike run 4), so the spike never ran with it; product run 5 had it too (and saw no handled
+  key at all, before any warm-up). After the deactivation every key went to the app as plain text.
+- Not reproduced on the coordinator's PC: no admin (no HKLM registration), uz-Latn is not in its list, and a
+  process-local TIP (`TF_RP_LOCALPROCESS`, en-US) stayed active through `AttachThreadInput` from another thread with or
+  without its own TSF thread manager. The session-wide case needs the owner's machine.
+- **Fix (harness):** no `AttachThreadInput` while the TIP is on. Caps Lock is checked (and switched off) before the TIP
+  is activated; the plain run keeps the per-case check; a FAIL line says when its text is the wanted text with the case
+  inverted.
+- **Open question for the product:** other software attaches to the foreground thread too (focus helpers, remote
+  tools). The harness now measures it after each TIP run: `attach check (TIP)` prints the session's input before and
+  500 ms after one `AttachThreadInput`, and `attach check (layout)` does the same with another of the user's layouts
+  (ru), so a general Windows effect can be told from one of this TIP. The TIP log now also has `key sink foreground=`
+  (OnSetFocus) and the HKL at `deactivate`.
+- `InstallLayoutOrTipUserReg` returned FALSE (last error 0) for all three path forms, install and uninstall: **O6 now
+  uses Active Setup** (below, and README "MSI").
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |
@@ -469,7 +493,9 @@ Fifth run (the product TIP, 2026-11-22 23:39; Windows 10, ru UI):
   i18n catalogs) and Ctrl+Shift+`.
 - **O5. Lock screen and UAC desktop support.** DECIDED 2026-11-22: not in v1.
 - **O6. Enable for every user of a PC at install.** DECIDED 2026-11-22: every user (IT installs), through the
-  default-user hive (`InstallLayoutOrTipUserReg`) plus the installing user.
+  default-user hive (`InstallLayoutOrTipUserReg`) plus the installing user. Changed 2026-11-23 (machine run 6:
+  `InstallLayoutOrTipUserReg` never succeeded): an Active Setup entry runs `KbdActiveSetup` (the same
+  `InstallLayoutOrTip` call) once per user at their next logon; the installing user still gets it at install.
 - **O7. Word-level s + h fixing for "Ishoq" without a separator (WP7).** DECIDED 2026-11-22: skip in v1 (later).
 - **O8. Signing.** DECIDED 2026-11-22: the same SignPath project as the add-in.
 
