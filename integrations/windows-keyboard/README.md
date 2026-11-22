@@ -28,7 +28,7 @@ must not depend on the VC++ redistributable.
 | Key handling, composition, Backspace undo, on/off toggle (Ctrl+Shift+\`, `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE`) | `src/tip.rs` |
 | Display attribute with no underline (`TF_LS_NONE`) | `src/attr.rs` |
 | Input Indicator mode button (`GUID_LBI_INPUTMODE`: "ş" on, "s" off) | `src/langbar.rs` |
-| Registration: `DllRegisterServer`, `DllUnregisterServer`, `KbdInstallForUser`, `KbdUninstallForUser`, `KbdInstallForDefaultUser`, `KbdUninstallForDefaultUser` | `src/reg.rs` |
+| Registration: `DllRegisterServer`, `DllUnregisterServer`, `KbdInstallForUser`, `KbdUninstallForUser`, `KbdActiveSetup` | `src/reg.rs` |
 | Icons (black and white, 16 to 48 px) | `res/*.ico`, made by `res/make-icons.ps1` |
 | Display name and mode strings (uz-Latn, uz-Cyrl, ru, en) | `i18n/keyboard.tsv`, compiled into string tables by `build.rs` |
 
@@ -41,11 +41,11 @@ Frozen identities (never change them): CLSID `{E384AABE-7F88-4BB2-BFB5-3AA607601
 | Step | Who | Call |
 |---|---|---|
 | Per machine, per architecture (x64, x86) | elevated deferred custom action, or `regsvr32 /s` | `DllRegisterServer`: COM keys under HKLM, `RegisterProfile`, `SetLanguageProfileDisplayName`, categories TIP_KEYBOARD, IMMERSIVESUPPORT, SYSTRAYSUPPORT, DISPLAYATTRIBUTEPROVIDER (no SECUREMODE: O5) |
-| Every new user profile (O6) | elevated, once | `KbdInstallForDefaultUser`: `InstallLayoutOrTipUserReg` on the default-user hive, mounted for the call. Not yet working (machine run 5: 1603); the documentation does not give the format of `pszUserReg`, so three forms are tried and logged until the machine test shows which one Windows takes |
+| Every other user, existing or new (O6) | the MSI writes `HKLM\SOFTWARE\Microsoft\Active Setup\Installed Components\{clsid}` (64-bit view); Windows runs its `StubPath` once per user at their next logon, as that user | `rundll32.exe "<dir>d\kbd.dll",KbdActiveSetup` = `InstallLayoutOrTip("0443:{clsid}{profile}", 0)`. (`InstallLayoutOrTipUserReg` on the default-user hive returned FALSE for every path form in machine run 6; dropped) |
 | The installing user | impersonated, not elevated | `KbdInstallForUser`: `InstallLayoutOrTip("0443:{clsid}{profile}", 0)` |
-| Uninstall | the reverse | `KbdUninstallForUser`, `KbdUninstallForDefaultUser`, `DllUnregisterServer` |
+| Uninstall | the reverse | `KbdUninstallForUser`, `DllUnregisterServer`; the Active Setup entry is removed with the MSI's registry component |
 
-The `Kbd*` exports have the MSI DLL custom action signature (`UINT __stdcall f(MSIHANDLE)`) and return 0 or 1603. With
+`KbdInstallForUser` and `KbdUninstallForUser` have the MSI DLL custom action signature (`UINT __stdcall f(MSIHANDLE)`) and return 0 or 1603; `KbdActiveSetup` has the rundll32 entry-point signature. With
 the `Debug` setting (or the `KBD_DEBUG` environment variable, which `kbd-harness call` sets) they log every step and the
 Win32 error of the one that failed.
 
@@ -55,6 +55,11 @@ Clean uninstall (PLAN 11.4: Windows leaves `HKCU\Software\Microsoft\CTF\TIP\{cls
   keys left empty).
 - `DllUnregisterServer` does the same in every user hive that is loaded (logged-on users), and deletes
   `HKLM\SOFTWARE\Microsoft\CTF\TIP\{clsid}` in its own registry view, which `UnregisterProfile` leaves (run 5).
+- **Not possible:** other users who ran the Active Setup entry keep `0443:{clsid}{profile}` in their input list (and
+  uz-Latn, if it was added for it), plus their Active Setup stamp under HKCU. Removing it would need a second Active
+  Setup entry whose command still exists after uninstall; not done. Once the profile is unregistered TSF has no TIP to
+  load for that entry (Microsoft does not document what Settings shows for it; not measured yet). The user can remove
+  the language in Settings.
 - **Not possible:** profiles that are not loaded at uninstall keep those per-user keys. They are inert once the
   profile is unregistered. Cleaning them would mean loading every NTUSER.DAT.
 - A DLL still loaded in a running process cannot be deleted until it exits or the PC restarts (11.4); the MSI needs a
@@ -81,9 +86,11 @@ The TIP reads them at each activation and never writes them.
 
 ## Machine test (owner only: needs one UAC prompt)
 
-`machine-test/run.sh` registers the DLLs per machine exactly as above, adds the keyboard to the owner's list with the
-DLL's own helper, types the 23 cases into Notepad, WordPad and Edge, then removes everything in the same elevated
-process and compares HKCU, HKLM (both views), the default-user hive and the language list before and after. Build
+`machine-test/run.sh` registers the DLLs per machine exactly as above (with the Active Setup entry), runs the entry's
+`StubPath` as the owner (Active Setup itself only runs at another user's logon, which the test cannot do), then
+`KbdInstallForUser`, types the 23 cases into Notepad, WordPad and Edge, runs the attach check (machine run 6), then
+removes everything in the same elevated process and compares HKCU, HKLM (both views) and the language list before and
+after. While the TIP is on, the harness never attaches to the target's input thread: that deactivated the TIP in run 6. Build
 both architectures first (above), then:
 
     bash integrations/windows-keyboard/machine-test/run.sh

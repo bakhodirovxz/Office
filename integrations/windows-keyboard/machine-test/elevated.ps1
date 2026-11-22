@@ -1,13 +1,13 @@
 # Product TIP machine test, elevated part (run.sh starts it through one UAC prompt). Registers the DLLs the way the MSI
-# will (regsvr32 = DllRegisterServer, x64 and x86; KbdInstallForDefaultUser), waits for the non-elevated runner (file
-# "done", at most 40 min), then removes everything in the same process: no second prompt.
+# will (regsvr32 = DllRegisterServer, x64 and x86; the Active Setup entry in the 64-bit view), waits for the non-elevated
+# runner (file "done", at most 40 min), then removes everything in the same process: no second prompt. Active Setup runs
+# StubPath only at a logon, which this test cannot do: run.sh runs the entry's StubPath as this user instead.
 $ErrorActionPreference = 'Continue'
 $M = 'E:\office-target\kbd-tip\m'
 $Root = 'C:\Program Files\kbd-machine-test'
 # A run folder of its own: a DLL still loaded from an earlier run (Explorer keeps it until restart) must not block this one.
 $D = "$Root\run-$(Get-Date -Format yyyyMMddHHmmss)"
 $C = '{E384AABE-7F88-4BB2-BFB5-3AA607601E3E}'
-$K = "$M\stage\x64\kbd-harness.exe"
 $log = "$M\elevated.log"
 function L($s) { Add-Content -Path $log -Value ("{0:HH:mm:ss} {1}" -f (Get-Date), $s) -Encoding UTF8 }
 function Exists($k, $v) { & reg.exe query $k "/reg:$v" *> $null; return ($LASTEXITCODE -eq 0) }
@@ -17,31 +17,17 @@ function RegSvr($exe, $dll, [switch]$u) {
     $p = Start-Process -FilePath $exe -ArgumentList $a -Wait -PassThru -WindowStyle Hidden
     L "$exe $($a -join ' ') -> $($p.ExitCode)"; return $p.ExitCode
 }
-function Call($export) { $o = & $K call "$D\x64\kbd.dll" $export 2>&1; L "$export -> $LASTEXITCODE | $($o -join ' | ')"; return $LASTEXITCODE }
-# The default-user hive as a .reg export (load, export, unload under a name of our own).
-function DefUser($tag) {
-    $hive = Join-Path (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList').Default 'NTUSER.DAT'
-    $hive = [Environment]::ExpandEnvironmentVariables($hive)
-    & reg.exe load 'HKU\kbdtest-snap' $hive *> $null
-    if ($LASTEXITCODE -ne 0) { L "defuser ${tag}: reg load failed ($hive)"; Set-Content "$M\hklm\defuser-$tag.reg" 'load failed'; return }
-    & reg.exe export 'HKU\kbdtest-snap\Software\Microsoft\CTF' "$M\hklm\defuser-ctf-$tag.reg" /y *> $null
-    # The language list too: Windows 8+ keeps it under Control Panel\International\User Profile.
-    & reg.exe export 'HKU\kbdtest-snap\Control Panel\International\User Profile' "$M\hklm\defuser-up-$tag.reg" /y *> $null
-    & reg.exe export 'HKU\kbdtest-snap\Keyboard Layout' "$M\hklm\defuser-$tag.reg" /y *> $null
-    foreach ($part in 'ctf', 'up') {
-        Get-Content "$M\hklm\defuser-$part-$tag.reg" -ErrorAction SilentlyContinue | Add-Content "$M\hklm\defuser-$tag.reg"
-        Remove-Item "$M\hklm\defuser-$part-$tag.reg" -ErrorAction SilentlyContinue
-    }
-    [gc]::Collect(); Start-Sleep 1
-    & reg.exe unload 'HKU\kbdtest-snap' *> $null; L "defuser ${tag}: exported, unload -> $LASTEXITCODE"
-}
+# The MSI's Active Setup entry (installer/keyboard.wxs C_activesetup), 64-bit view; written through .NET so the quotes
+# in StubPath reach the registry exactly.
+$AS = "SOFTWARE\Microsoft\Active Setup\Installed Components\$C"
+function HKLM64 { [Microsoft.Win32.RegistryKey]::OpenBaseKey('LocalMachine', 'Registry64') }
 function Snap($tag) {
     & reg.exe export 'HKLM\SOFTWARE\Microsoft\CTF' "$M\hklm\ctf64-$tag.reg" /y /reg:64 | Out-Null
     & reg.exe export 'HKLM\SOFTWARE\WOW6432Node\Microsoft\CTF' "$M\hklm\ctf32-$tag.reg" /y /reg:64 | Out-Null
     foreach ($v in '64', '32') {
         L "$tag /reg:$v CLSID exists=$(Exists "HKLM\SOFTWARE\Classes\CLSID\$C" $v) CTF\TIP exists=$(Exists "HKLM\SOFTWARE\Microsoft\CTF\TIP\$C" $v)"
     }
-    DefUser $tag
+    L "$tag Active Setup entry exists=$(Exists "HKLM\$AS" '64')"
 }
 
 L "elevated start, user $env:USERNAME"
@@ -59,8 +45,12 @@ try {
         $ip = (& reg.exe query "HKLM\SOFTWARE\Classes\CLSID\$C\InprocServer32" /ve "/reg:$v" 2>&1) -join ' '
         L "registered /reg:$v InprocServer32: $ip"
     }
-    if ((Call 'KbdInstallForDefaultUser') -ne 0) { L "KbdInstallForDefaultUser FAILED (continuing: the user test does not need it)" }
-    DefUser 'during'
+    $k = (HKLM64).CreateSubKey($AS)
+    $k.SetValue('', 'kbd machine test'); $k.SetValue('Version', '1'); $k.SetValue('IsInstalled', 1, 'DWord')
+    $k.SetValue('StubPath', "`"$env:WINDIR\System32\rundll32.exe`" `"$D\x64\kbd.dll`",KbdActiveSetup"); $k.Close()
+    L "Active Setup entry written: $((& reg.exe query "HKLM\$AS" /reg:64 2>&1) -join ' | ')"
+    # run.sh runs the command as Windows would at this user's next logon (as the user, not elevated).
+    $k = (HKLM64).OpenSubKey($AS); Set-Content "$M\stubpath.cmd" "@$($k.GetValue('StubPath'))" -Encoding ASCII; $k.Close()
     Set-Content "$M\registered.ok" 'ok'
     L "registered; waiting for done"
     $t0 = Get-Date
@@ -70,7 +60,7 @@ try {
 catch { L "ERROR $_"; Set-Content "$M\failed" "$_" }
 
 # Cleanup, always: the product's own reverse steps first, then a check that nothing is left.
-if (Test-Path "$D\x64\kbd.dll") { Call 'KbdUninstallForDefaultUser' | Out-Null }
+(HKLM64).DeleteSubKeyTree($AS, $false); L "Active Setup entry removed: exists=$(Exists "HKLM\$AS" '64')"
 if (Test-Path "$D\x64\kbd.dll") { RegSvr "$env:WINDIR\System32\regsvr32.exe" "$D\x64\kbd.dll" -u | Out-Null }
 if (Test-Path "$D\x86\kbd.dll") { RegSvr "$env:WINDIR\SysWOW64\regsvr32.exe" "$D\x86\kbd.dll" -u | Out-Null }
 foreach ($v in '64', '32') {
