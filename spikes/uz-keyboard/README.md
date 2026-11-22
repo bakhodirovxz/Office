@@ -29,3 +29,15 @@ After `kbdctl unreg`, `reg export` of HKCU\Software\Microsoft\CTF, HKCU\Keyboard
 HKCU\Control Panel\International\User Profile was byte-identical to the snapshots taken before the spike.
 `Get-WinUserLanguageList` still shows en-US (0409:00000409) and ru (0419:00000419). The spike's run copy
 (`E:\office-target\kbd-spike\run`) was deleted.
+
+## Per-machine test (prepared, not run)
+
+`machine-test/run.sh` is the per-machine registration and app test (PLAN.md 11.3). It needs one UAC prompt, and the
+same elevated process cleans up. Build both architectures first:
+
+    CARGO_TARGET_DIR=E:/office-target/kbd-spike cargo +stable-x86_64-pc-windows-msvc build --release --offline
+    CARGO_TARGET_DIR=E:/office-target/kbd-spike cargo +stable-x86_64-pc-windows-msvc build --release --offline --target i686-pc-windows-msvc
+    bash spikes/uz-keyboard/machine-test/run.sh
+
+As of 2026-11-22 it has not been executed. Nothing was registered per machine, and nothing was added to the
+language list.

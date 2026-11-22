@@ -308,6 +308,52 @@ The first job of WP5 is therefore this run on an unlocked desktop:
 the ten cases in `CASES`, Backspace undo, and per-key latency against the `plain` baseline. It needs about one
 minute with nobody typing, and no admin.
 
+### 11.3 Per-machine test on this PC: prepared, not run (2026-11-22)
+
+The owner decided O1 = A and O2 = all four letters. The coordinator relayed an approval to register the spike per
+machine on this PC.
+
+What changed:
+- The spike TIP now handles all four letters, as a pure state machine (`decide()` and `shown()` in
+  `spikes/uz-keyboard/src/lib.rs`).
+- That covers sh, ch, oʻ (typed `o'`), gʻ, the R10 case rules, Backspace undo, the `s'h` → `sh` rule, and Ishoq
+  (→ Işoq without a separator; `Ish⌫oq` → Ishoq).
+- A unit test plays all 23 shared `CASES` through the state machine against a model document: **23/23 pass**.
+- Builds: x64 DLL 163,840 B and x86 DLL 145,920 B.
+
+The machine test is in `spikes/uz-keyboard/machine-test/`:
+- `run.sh` (not elevated) does the following, in order:
+  1. waits up to 20 min for an unlocked desktop, and sends no keys while LockApp is in the foreground;
+  2. snapshots HKCU CTF, Keyboard Layout, Control Panel\International, Software\Microsoft\Input and the language list;
+  3. starts `elevated.ps1` through **one UAC prompt**;
+  4. adds `0443:{clsid}{profile}` to the list (`lang-add.ps1`);
+  5. runs `kbdctl suite notepad wordpad edge`. Each app gets a plain run and then a TIP run, with a session-wide
+     profile switch that is restored afterwards. Edge uses a temporary `--user-data-dir` on E: and mirrors its
+     textarea into the window title;
+  6. restores the list exactly (`lang-restore.ps1`: en-US 0409:00000409, ru 0419:00000419), signals cleanup, and
+     compares every snapshot.
+- `elevated.ps1` does the following:
+  1. snapshots HKLM\SOFTWARE\Microsoft\CTF in both registry views;
+  2. copies the x64 and x86 DLLs to `C:\Program Files\uzkbd-spike`;
+  3. writes the HKLM COM keys in both views;
+  4. runs `kbdctl machine-register` (x64 and x86): RegisterProfile 0x0443, plus the categories TIP_KEYBOARD,
+     IMMERSIVESUPPORT and SYSTRAYSUPPORT;
+  5. waits for the runner;
+  6. unregisters, deletes the keys and the folder, and lists any process that still holds the DLL;
+  7. snapshots again.
+
+  Cleanup needs no second UAC prompt, because the same elevated process does it.
+
+**Not executed.** The agent's permission system denied starting the run, because the approval reached the agent
+only as a relayed message. Nothing was registered: `C:\Program Files\uzkbd-spike`, the HKLM keys and the HKCU
+CLSID are all absent, and the language list is unchanged.
+
+To run it, the owner either runs `bash spikes/uz-keyboard/machine-test/run.sh` himself (after building, see the
+README), or grants the agent this permission explicitly. The output answers the open points of 11.1:
+- conversion in Notepad (CUAS), WordPad (TSF-aware RichEdit) and Edge (Chromium TSF);
+- per-key latency (median and p95, against the plain baseline), and the TIP-side time per key;
+- whether the HKLM, HKCU and language-list snapshots are byte-identical after cleanup.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |
@@ -324,11 +370,11 @@ minute with nobody typing, and no admin.
 
 ## 13. Open decisions for the owner
 
-- **O1. Admin requirement.**
+- **O1. Admin requirement.** DECIDED 2026-11-22: A (per-machine TIP).
   - (A) TIP with a per-machine MSI that IT installs: recommended; full fidelity, works in elevated apps.
   - (B) a per-user hook tray app, no admin: alifly-like; no elevated apps; approximate Backspace undo; AV risk.
   - (C) both: about +6 days, and two behaviours to support.
-- **O2. Letters in v1.** All four (ş ç ö ğ), or `sh`/`ch` only first?
+- **O2. Letters in v1.** DECIDED 2026-11-22: all four (ş ç ö ğ).
 - **O3. Foreign `ch`.** Accept conversion plus Backspace undo, or add a user exception list?
 - **O4. Display name and on/off hotkey.** For example "Oʻzbek 2026 (ş ç ö ğ)" and Ctrl+Shift+`.
 - **O5. Lock screen and UAC desktop support.** Not in v1, proposed.
