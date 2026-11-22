@@ -633,3 +633,11 @@ Compact ICC Profiles by Clinton Ingram (CC0-1.0), and dependency CMaps (BSD-3-Cl
 Their licences and per-file hashes are retained in vendor/hayro-interpret/assets,
 licenses/pdf-backend and ATTRIBUTION.md. These are existing reader dependency assets;
 applications retain their own document-font selection and licensing policy.
+
+Windows keyboard (integrations/windows-keyboard, the TSF text input processor kbd.dll and its MSI)
+
+- The Rust bindings for the Windows API from the windows-rs project: windows, windows-core, windows-link,
+  windows-result, windows-strings, windows-collections, windows-future, windows-numerics, windows-threading
+  (all linked into kbd.dll) and the build-time macro crates windows-implement and windows-interface (not linked).
+  Copyright (c) Microsoft Corporation. MIT OR Apache-2.0. Used unmodified from crates.io; the versions are pinned in
+  integrations/windows-keyboard/Cargo.lock and checked by cargo-deny (ci/deny/keyboard.toml).

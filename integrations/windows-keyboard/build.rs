@@ -35,7 +35,8 @@ fn main() {
         );
     }
 
-    let brand = product_name(&std::fs::read_to_string(&brand_toml).expect("brand/brand.toml"));
+    let toml = std::fs::read_to_string(&brand_toml).expect("brand/brand.toml");
+    let brand = product_key(&toml, "name");
     println!("cargo:rustc-env=KBD_BRAND={brand}");
 
     let table = strings(&std::fs::read_to_string(&tsv).expect("i18n/keyboard.tsv"));
@@ -51,6 +52,26 @@ fn main() {
             &std::fs::read(dir.join("res").join(file)).expect("icon"),
         );
     }
+    let version = product_key(&toml, "version");
+    entry(
+        &mut res,
+        16, // RT_VERSION
+        1,
+        0x0409,
+        &version_info(
+            &version,
+            &[
+                ("CompanyName", product_key(&toml, "vendor")),
+                ("FileDescription", format!("{brand} keyboard (Uzbek 2026)")),
+                ("FileVersion", version.clone()),
+                ("InternalName", "kbd".into()),
+                ("LegalCopyright", product_key(&toml, "copyright")),
+                ("OriginalFilename", "kbd.dll".into()),
+                ("ProductName", format!("{brand} keyboard")),
+                ("ProductVersion", version.clone()),
+            ],
+        ),
+    );
     for (lang, values) in &table {
         let mut block = Vec::new(); // ids 96..111 = block 7; ours are 100..103
         for slot in 96..112u16 {
@@ -72,18 +93,97 @@ fn main() {
     }
 }
 
-/// `[product] name = "..."`. shortcut: a line scan, not a TOML parser; brand.toml keeps one key per line.
-fn product_name(toml: &str) -> String {
+/// `[product] <key> = "..."`. shortcut: a line scan, not a TOML parser; brand.toml keeps one key per line.
+fn product_key(toml: &str, key: &str) -> String {
     let mut in_product = false;
     for line in toml.lines().map(str::trim) {
         if line.starts_with('[') {
             in_product = line == "[product]";
-        } else if in_product && let Some(v) = line.strip_prefix("name") {
-            let v = v.trim_start().strip_prefix('=').expect("name =").trim();
-            return v.trim_matches('"').to_string();
+        } else if in_product
+            && let Some(v) = line.strip_prefix(key)
+            && let Some(v) = v.trim_start().strip_prefix('=')
+        {
+            return v.trim().trim_matches('"').to_string();
         }
     }
-    panic!("brand.toml: no [product] name");
+    panic!("brand.toml: no [product] {key}");
+}
+
+/// A VS_VERSIONINFO structure: fixed info from `version` (X.Y.Z) plus one string table (en-US, Unicode).
+fn version_info(version: &str, strings: &[(&str, String)]) -> Vec<u8> {
+    let v: Vec<u32> = version
+        .split('.')
+        .map(|p| p.parse().expect("version X.Y.Z"))
+        .collect();
+    assert_eq!(v.len(), 3, "brand.toml version must be X.Y.Z");
+    let (ms, ls) = ((v[0] << 16) | v[1], v[2] << 16);
+    let mut fixed = Vec::new();
+    for d in [
+        0xFEEF04BDu32,
+        0x10000,
+        ms,
+        ls,
+        ms,
+        ls,
+        0x3f,
+        0,
+        0x40004,
+        2,
+        0,
+        0,
+        0,
+    ] {
+        fixed.extend(d.to_le_bytes()); // signature, struct version, file/product version, mask, flags, NT32, DLL
+    }
+    let mut table = Vec::new();
+    for (k, val) in strings {
+        let mut w: Vec<u8> = val
+            .encode_utf16()
+            .chain([0])
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        let n = (w.len() / 2) as u16;
+        table.extend(ver_node(k, 1, n, &std::mem::take(&mut w), &[]));
+        pad4(&mut table);
+    }
+    let mut kids = ver_node(
+        "StringFileInfo",
+        1,
+        0,
+        &[],
+        &ver_node("040904B0", 1, 0, &[], &table),
+    );
+    pad4(&mut kids);
+    let translation = [0x09, 0x04, 0xB0, 0x04]; // 0x0409, 1200
+    kids.extend(ver_node(
+        "VarFileInfo",
+        1,
+        0,
+        &[],
+        &ver_node("Translation", 0, 4, &translation, &[]),
+    ));
+    ver_node("VS_VERSION_INFO", 0, 52, &fixed, &kids)
+}
+
+/// One version-resource node: length, value length, type, key, padding, value, padding, children.
+fn ver_node(key: &str, ty: u16, vlen: u16, value: &[u8], kids: &[u8]) -> Vec<u8> {
+    let mut n = vec![0, 0];
+    n.extend(vlen.to_le_bytes());
+    n.extend(ty.to_le_bytes());
+    n.extend(key.encode_utf16().chain([0]).flat_map(u16::to_le_bytes));
+    pad4(&mut n);
+    n.extend(value);
+    pad4(&mut n);
+    n.extend(kids);
+    let len = (n.len() as u16).to_le_bytes();
+    n[..2].copy_from_slice(&len);
+    n
+}
+
+fn pad4(v: &mut Vec<u8>) {
+    while !v.len().is_multiple_of(4) {
+        v.push(0);
+    }
 }
 
 /// Per string-table language, the values of STRINGS in order. An Uzbek or Russian value is used only when its status is
