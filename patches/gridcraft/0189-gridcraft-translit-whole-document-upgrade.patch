@@ -7,12 +7,13 @@ tools.translitLatn on the whole sheet, workbook, slide or deck sets uz-translit 
 upgrade_skip_english (as the MS Office add-in does): 1995 Latin becomes 2026 Latin, a cell or paragraph with 2+ English
 function words keeps its Latin, Cyrillic in it is still converted. A real selection is unchanged (Latin-dominant only).
 ---
+
 diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
-index 6a6fe0c8..aa177d44 100644
+index ba0a0b1e..636a0a18 100644
 --- a/crates/engine/src/cmd/translit.rs
 +++ b/crates/engine/src/cmd/translit.rs
-@@ -161,8 +161,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
-     found.dedup_by_key(|(si, c, _)| (*si, c.row, c.col));
+@@ -121,8 +121,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
+     let (scope, found, st) = collect(s, p, scope)?;
      let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
      let detected = uz_translit::detect(&all);
 -    // Cyrillic to Latin on a Latin-dominant selection (never a whole sheet or workbook) rewrites 1995 Latin in the 2026 letters.
