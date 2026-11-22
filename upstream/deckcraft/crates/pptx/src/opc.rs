@@ -69,7 +69,7 @@ impl Package {
             if f.is_dir() {
                 continue;
             }
-            let name = f.name().trim_start_matches('/').to_string();
+            let name = f.name().map_err(|e| PptxError::NotPptx(format!("{e}")))?.trim_start_matches('/').to_string();
             let declared = f.size();
             if declared > max_part {
                 log::warn!("pptx: skipping oversized part {name} ({declared} bytes)");

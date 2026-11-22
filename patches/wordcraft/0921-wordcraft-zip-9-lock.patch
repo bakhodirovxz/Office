@@ -1,0 +1,153 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] wordcraft: Cargo.lock for zip 9.8.1
+
+zip 3.0.0 to 9.8.1 in Cargo.lock (with 0920): adds constant_time_eq, nix, typed-path 0.13, zeroize_derive;
+drops arbitrary and derive_arbitrary.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index 9166b627..8d6270da 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -215,15 +215,6 @@ version = "1.0.104"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+ 
+-[[package]]
+-name = "arbitrary"
+-version = "1.4.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+-dependencies = [
+- "derive_arbitrary",
+-]
+-
+ [[package]]
+ name = "arboard"
+ version = "3.6.1"
+@@ -808,6 +799,15 @@ version = "0.10.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+ 
++[[package]]
++name = "constant_time_eq"
++version = "0.6.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9eb6feb175df65d0a3ccd3e73484e940d0ac664e8034f0519fd49a93db3071d9"
++dependencies = [
++ "rustversion",
++]
++
+ [[package]]
+ name = "core-foundation"
+ version = "0.9.4"
+@@ -995,17 +995,6 @@ version = "1.2.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
+ 
+-[[package]]
+-name = "derive_arbitrary"
+-version = "1.4.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+-dependencies = [
+- "proc-macro2",
+- "quote",
+- "syn 2.0.119",
+-]
+-
+ [[package]]
+ name = "dify"
+ version = "0.8.0"
+@@ -1633,8 +1622,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
+ dependencies = [
+  "cfg-if",
++ "js-sys",
+  "libc",
+  "r-efi 6.0.0",
++ "wasm-bindgen",
+ ]
+ 
+ [[package]]
+@@ -2525,6 +2516,18 @@ dependencies = [
+  "jni-sys 0.3.1",
+ ]
+ 
++[[package]]
++name = "nix"
++version = "0.32.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "77730ed34f01f4990cb2ea67fec715ecebc6fab9a6396cf83c5529b13f581bdc"
++dependencies = [
++ "bitflags 2.13.2",
++ "cfg-if",
++ "cfg_aliases",
++ "libc",
++]
++
+ [[package]]
+ name = "nohash-hasher"
+ version = "0.2.0"
+@@ -4247,6 +4250,12 @@ dependencies = [
+  "rustc-hash 2.1.3",
+ ]
+ 
++[[package]]
++name = "typed-path"
++version = "0.13.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ce898823d8cd0f028662d2f349694b1af0a5cc9be83f1d213a00d3147445e1e"
++
+ [[package]]
+ name = "typenum"
+ version = "1.20.1"
+@@ -5848,6 +5857,20 @@ name = "zeroize"
+ version = "1.9.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e13084392c5e4bc371903e2935a5eaeed24905a7511356b883835e18a78f6879"
++dependencies = [
++ "zeroize_derive",
++]
++
++[[package]]
++name = "zeroize_derive"
++version = "1.5.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
++dependencies = [
++ "proc-macro2",
++ "quote",
++ "syn 2.0.119",
++]
+ 
+ [[package]]
+ name = "zerotrie"
+@@ -5884,15 +5907,21 @@ dependencies = [
+ 
+ [[package]]
+ name = "zip"
+-version = "3.0.0"
++version = "9.8.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "12598812502ed0105f607f941c386f43d441e00148fce9dec3ca5ffb0bde9308"
++checksum = "a9534624d547e3f516ecde0ed9a70d37788f01d340efcfdd03bf3ea8e163c1d0"
+ dependencies = [
+- "arbitrary",
++ "constant_time_eq",
+  "crc32fast",
+  "flate2",
++ "getrandom 0.4.3",
+  "indexmap",
++ "libc",
+  "memchr",
++ "nix",
++ "typed-path",
++ "windows-sys 0.61.2",
++ "zeroize",
+  "zopfli",
+ ]
+ 
+-- 
+2.0
