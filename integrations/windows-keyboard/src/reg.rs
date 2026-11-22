@@ -44,6 +44,11 @@ fn com_key() -> String {
     format!(r"SOFTWARE\Classes\CLSID\{}", braced(&CLSID_TIP))
 }
 
+/// The TIP's key below HKLM, in this process's registry view (WOW64 redirects it for the x86 DLL).
+fn tip_key() -> String {
+    format!(r"SOFTWARE\Microsoft\CTF\TIP\{}", braced(&CLSID_TIP))
+}
+
 fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().collect()
 }
@@ -312,6 +317,9 @@ fn unregister() -> Result<()> {
             Err(e) => keep(Err(e)),
         }
     }
+    // UnregisterProfile and UnregisterCategory leave the TIP key itself (machine run 5, 64-bit view); the MSI uninstall
+    // relies on this function to remove it.
+    keep(delete_tree(HKEY_LOCAL_MACHINE, &tip_key()));
     keep(delete_tree(HKEY_LOCAL_MACHINE, &com_key()));
     clean_loaded_user_hives();
     first
@@ -371,28 +379,87 @@ fn install_layout_or_tip(flags: u32) -> Result<()> {
     }
 }
 
-fn install_layout_or_tip_user_reg(user_reg: &str, flags: u32) -> Result<()> {
-    let psz = HSTRING::from(tip_string());
-    let user = HSTRING::from(user_reg);
-    let ok = system_proc(
-        w!("input.dll"),
-        s!("InstallLayoutOrTipUserReg"),
-        |f| unsafe {
-            let f: InstallLayoutOrTipUserReg = std::mem::transmute(f);
-            f(
-                PCWSTR(user.as_ptr()),
-                PCWSTR::null(),
-                PCWSTR::null(),
-                PCWSTR(psz.as_ptr()),
-                flags,
-            )
-        },
-    )?;
-    if ok.as_bool() {
-        Ok(())
-    } else {
-        Err(E_FAIL.into())
+/// Logs the failing step of an install-time export, with its Win32 error, and passes the result on.
+fn step<T>(what: &str, r: Result<T>) -> Result<T> {
+    if let Err(e) = &r {
+        crate::log(&format!(
+            "  step {what} failed: {:#010x} {}",
+            e.code().0,
+            e.message()
+        ));
     }
+    r
+}
+
+/// Whether the hive mounted at `HKEY_USERS\<m>` lists the keyboard (debug log only): the language list
+/// (`Control Panel\International\User Profile\uz-Latn-UZ`, a value named after the profile) or a SortOrder entry.
+fn hive_lists_tip(m: &str) -> bool {
+    let lang = format!(r"{m}\Control Panel\International\User Profile\uz-Latn-UZ");
+    let in_list = unsafe {
+        RegGetValueW(
+            HKEY_USERS,
+            &HSTRING::from(lang),
+            &HSTRING::from(tip_string()),
+            RRF_RT_ANY,
+            None,
+            None,
+            None,
+        )
+    } == ERROR_SUCCESS;
+    let sort = format!(
+        r"{m}\Software\Microsoft\CTF\SortOrder\AssemblyItem\0x{:08x}",
+        LANGID_UZ_LATN
+    );
+    in_list || names_tip(HKEY_USERS, &sort)
+}
+
+/// Whether a key at or below `path` has a `CLSID` value naming this TIP.
+fn names_tip(root: HKEY, path: &str) -> bool {
+    read_sz(root, path, "CLSID").is_some_and(|v| v.eq_ignore_ascii_case(&braced(&CLSID_TIP)))
+        || subkeys(root, path)
+            .iter()
+            .any(|s| names_tip(root, &format!(r"{path}\{s}")))
+}
+
+/// InstallLayoutOrTipUserReg for the hive mounted at `HKEY_USERS\<m>`. The documentation calls pszUserReg "the registry
+/// path of the user" (NULL = HKEY_CURRENT_USER) and does not give its format; machine run 5 got 1603 with the first form
+/// below and no log. So each form is tried in turn until one returns TRUE, and every result is logged with what the
+/// hive shows afterwards.
+/// shortcut: three guessed path forms; keep only the one the machine test shows working.
+fn install_layout_or_tip_user_reg(m: &str, flags: u32) -> Result<()> {
+    let psz = HSTRING::from(tip_string());
+    for user_reg in [
+        format!(r"HKEY_USERS\{m}"),
+        format!(r"HKU\{m}"),
+        format!(r"\Registry\User\{m}"),
+    ] {
+        let user = HSTRING::from(user_reg.as_str());
+        let (ok, err) = system_proc(
+            w!("input.dll"),
+            s!("InstallLayoutOrTipUserReg"),
+            |f| unsafe {
+                let f: InstallLayoutOrTipUserReg = std::mem::transmute(f);
+                let ok = f(
+                    PCWSTR(user.as_ptr()),
+                    PCWSTR::null(),
+                    PCWSTR::null(),
+                    PCWSTR(psz.as_ptr()),
+                    flags,
+                );
+                (ok, GetLastError())
+            },
+        )?;
+        crate::log(&format!(
+            "  InstallLayoutOrTipUserReg({user_reg:?}, flags={flags:#x}) -> {} (last error {}); hive lists the keyboard: {}",
+            ok.as_bool(),
+            err.0,
+            hive_lists_tip(m)
+        ));
+        if ok.as_bool() {
+            return Ok(());
+        }
+    }
+    Err(E_FAIL.into())
 }
 
 fn enable_privilege(name: PCWSTR) -> Result<()> {
@@ -425,26 +492,39 @@ fn enable_privilege(name: PCWSTR) -> Result<()> {
 }
 
 /// Mounts C:\Users\Default\NTUSER.DAT under HKEY_USERS\<DEFAULT_HIVE_MOUNT> for `f`, then unloads it. Needs an
-/// elevated caller (SeBackupPrivilege and SeRestorePrivilege).
+/// elevated caller (SeBackupPrivilege and SeRestorePrivilege). Every step logs its own failure (machine run 5: 1603
+/// with no clue which step).
 fn with_default_hive(f: impl FnOnce(&str) -> Result<()>) -> Result<()> {
-    enable_privilege(SE_BACKUP_NAME)?;
-    enable_privilege(SE_RESTORE_NAME)?;
+    step("enable SeBackupPrivilege", enable_privilege(SE_BACKUP_NAME))?;
+    step(
+        "enable SeRestorePrivilege",
+        enable_privilege(SE_RESTORE_NAME),
+    )?;
     let mut buf = vec![0u16; 1024];
     let mut n = buf.len() as u32;
     type GetDefaultUserProfileDirectoryW = unsafe extern "system" fn(PWSTR, *mut u32) -> BOOL;
-    let ok = system_proc(
-        w!("userenv.dll"),
-        s!("GetDefaultUserProfileDirectoryW"),
-        |f| unsafe {
-            let f: GetDefaultUserProfileDirectoryW = std::mem::transmute(f);
-            f(PWSTR(buf.as_mut_ptr()), &mut n)
-        },
+    let ok = step(
+        "load userenv.dll",
+        system_proc(
+            w!("userenv.dll"),
+            s!("GetDefaultUserProfileDirectoryW"),
+            |f| unsafe {
+                let f: GetDefaultUserProfileDirectoryW = std::mem::transmute(f);
+                f(PWSTR(buf.as_mut_ptr()), &mut n).ok()
+            },
+        ),
     )?;
-    ok.ok()?;
+    step("GetDefaultUserProfileDirectoryW", ok)?;
     let dir = String::from_utf16_lossy(&buf[..(n as usize).saturating_sub(1)]);
-    let hive = HSTRING::from(format!(r"{dir}\NTUSER.DAT"));
+    let hive = format!(r"{dir}\NTUSER.DAT");
     let mount = HSTRING::from(DEFAULT_HIVE_MOUNT);
-    unsafe { RegLoadKeyW(HKEY_USERS, &mount, &hive).ok()? };
+    step(
+        &format!(r"RegLoadKey(HKEY_USERS\{DEFAULT_HIVE_MOUNT}, {hive})"),
+        unsafe { RegLoadKeyW(HKEY_USERS, &mount, &HSTRING::from(&hive)) }.ok(),
+    )?;
+    crate::log(&format!(
+        r"  default-user hive {hive} loaded at HKEY_USERS\{DEFAULT_HIVE_MOUNT}"
+    ));
     let r = f(DEFAULT_HIVE_MOUNT);
     // input.dll may still hold a handle for a moment; the hive cannot be unloaded while a key is open.
     let mut u = unsafe { RegUnLoadKeyW(HKEY_USERS, &mount) };
@@ -455,15 +535,25 @@ fn with_default_hive(f: impl FnOnce(&str) -> Result<()>) -> Result<()> {
         std::thread::sleep(std::time::Duration::from_millis(250));
         u = unsafe { RegUnLoadKeyW(HKEY_USERS, &mount) };
     }
-    r.and(u.ok())
+    r.and(step("RegUnLoadKey", u.ok()))
 }
 
-fn msi_result(what: &str, r: Result<()>) -> u32 {
-    crate::set_debug(crate::settings().debug);
-    match r {
-        Ok(()) => 0,
+/// Runs an MSI-style export: debug logging is set up first (HKCU `Debug`, or the `KBD_DEBUG` environment variable that
+/// kbd-harness `call` sets), so every step of `f` can log; then 0 or 1603.
+fn msi_result(what: &str, f: impl FnOnce() -> Result<()>) -> u32 {
+    crate::set_debug(crate::settings().debug || std::env::var_os("KBD_DEBUG").is_some());
+    crate::log(&format!("{what} start"));
+    match guard(what, f) {
+        Ok(()) => {
+            crate::log(&format!("{what} ok"));
+            0
+        }
         Err(e) => {
-            crate::log(&format!("{what} failed {e}"));
+            crate::log(&format!(
+                "{what} failed {:#010x} {}",
+                e.code().0,
+                e.message()
+            ));
             ERROR_INSTALL_FAILURE
         }
     }
@@ -472,49 +562,37 @@ fn msi_result(what: &str, r: Result<()>) -> u32 {
 /// Adds the keyboard to the calling user's input list (impersonated, not elevated). Adds uz-Latn if missing.
 #[unsafe(no_mangle)]
 pub extern "system" fn KbdInstallForUser(_msi: u32) -> u32 {
-    msi_result(
-        "KbdInstallForUser",
-        guard("KbdInstallForUser", || install_layout_or_tip(0)),
-    )
+    msi_result("KbdInstallForUser", || install_layout_or_tip(0))
 }
 
 /// Removes it from the calling user's list and deletes the per-user keys Windows leaves behind.
 #[unsafe(no_mangle)]
 pub extern "system" fn KbdUninstallForUser(_msi: u32) -> u32 {
-    msi_result(
-        "KbdUninstallForUser",
-        guard("KbdUninstallForUser", || {
-            let r = install_layout_or_tip(ILOT_UNINSTALL);
-            clean_user_keys(HKEY_CURRENT_USER, "");
-            r
-        }),
-    )
+    msi_result("KbdUninstallForUser", || {
+        let r = install_layout_or_tip(ILOT_UNINSTALL);
+        clean_user_keys(HKEY_CURRENT_USER, "");
+        r
+    })
 }
 
 /// Enables the keyboard in the default-user hive, so every profile created later starts with it (elevated).
 #[unsafe(no_mangle)]
 pub extern "system" fn KbdInstallForDefaultUser(_msi: u32) -> u32 {
-    msi_result(
-        "KbdInstallForDefaultUser",
-        guard("KbdInstallForDefaultUser", || {
-            with_default_hive(|m| install_layout_or_tip_user_reg(&format!(r"HKEY_USERS\{m}"), 0))
-        }),
-    )
+    msi_result("KbdInstallForDefaultUser", || {
+        with_default_hive(|m| install_layout_or_tip_user_reg(m, 0))
+    })
 }
 
 /// The reverse, plus the leftover keys in that hive (elevated).
 #[unsafe(no_mangle)]
 pub extern "system" fn KbdUninstallForDefaultUser(_msi: u32) -> u32 {
-    msi_result(
-        "KbdUninstallForDefaultUser",
-        guard("KbdUninstallForDefaultUser", || {
-            with_default_hive(|m| {
-                let r = install_layout_or_tip_user_reg(&format!(r"HKEY_USERS\{m}"), ILOT_UNINSTALL);
-                clean_user_keys(HKEY_USERS, &format!(r"{m}\"));
-                r
-            })
-        }),
-    )
+    msi_result("KbdUninstallForDefaultUser", || {
+        with_default_hive(|m| {
+            let r = install_layout_or_tip_user_reg(m, ILOT_UNINSTALL);
+            clean_user_keys(HKEY_USERS, &format!(r"{m}\"));
+            r
+        })
+    })
 }
 
 #[cfg(test)]
