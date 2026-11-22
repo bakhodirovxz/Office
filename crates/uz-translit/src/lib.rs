@@ -178,6 +178,17 @@ pub fn convert_runs<'a>(runs: &[Run<'a>], dir: Direction, opts: &Options) -> Vec
     res
 }
 
+/// Data API for the keyboard (`kbd-core`): the apostrophe set `A` (rules.md 2.1).
+pub fn is_apostrophe(c: char) -> bool {
+    chars::is_apos(c)
+}
+
+/// Data API for the keyboard: a base letter plus a combining mark composed (R16); the 2026 letters are
+/// s/c + U+0327, o + U+0308, g + U+0306, either case.
+pub fn compose_letter(base: char, mark: char) -> Option<char> {
+    chars::compose(base, mark)
+}
+
 /// The script with more letters (Latin a-z vs Cyrillic); `None` if there are no letters or the counts tie.
 pub fn detect(text: &str) -> Option<Script> {
     let (mut lat, mut cyr) = (0usize, 0usize);
