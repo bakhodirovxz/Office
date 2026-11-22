@@ -1,0 +1,235 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] wordcraft: zip 9 (RUSTSEC-2026-0545, -0548)
+
+zip 3.0.0 to 9 (owner decision 2026-11-22): the workspace requirement, and the call sites of the one API change
+we meet (ZipFile::name and ZipArchive::file_names now return ZipResult<Cow<str>>). Production: package.rs maps a
+name error to DocxError::Zip. Tests: .unwrap(). zip 9 fails a read once an entry passes the size its central
+directory declares: odt pictures_over_the_budget_are_not_inflated now expects such an entry to cost nothing, and
+package part_inflating_past_its_declared_size_is_skipped pins the docx side. Cargo.lock is patch 0921.
+---
+diff --git a/Cargo.toml b/Cargo.toml
+index 3cba5301..b70edafd 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -54,7 +54,7 @@ vello_cpu = "0.2"
+ image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
+ craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8", version = "=0.1.0", default-features = false, features = ["write"] }
+ quick-xml = "0.41"
+-zip = { version = "3", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate"] }
+ # zlib streams (compressed metafile pictures in `.doc` drawings); already in the lock as a dependency of other crates.
+ miniz_oxide = "0.8"
+ cfb = "0.15"
+diff --git a/crates/docx/src/package.rs b/crates/docx/src/package.rs
+index debef3cb..ca4e8bd8 100644
+--- a/crates/docx/src/package.rs
++++ b/crates/docx/src/package.rs
+@@ -216,7 +216,7 @@ impl Package {
+             if f.is_dir() {
+                 continue;
+             }
+-            let name = f.name().trim_start_matches('/').to_string();
++            let name = f.name().map_err(|e| DocxError::Zip(e.to_string()))?.trim_start_matches('/').to_string();
+             if f.size() > max_part {
+                 return Err(DocxError::Limit(format!("part {name} declares {} bytes", f.size())));
+             }
+@@ -421,6 +421,16 @@ mod tests {
+         assert!(Package::open_limited(&z, 10_000_000, 10_000_000).is_ok());
+     }
+ 
++    #[test]
++    fn part_inflating_past_its_declared_size_is_skipped() {
++        // zip 9 fails the read once an entry passes the size its central directory declares, so the
++        // part is skipped (unreadable) instead of being inflated up to the limits.
++        let mut z = zip_of(&[("word/document.xml", vec![b' '; 100_000])]);
++        let at = z.windows(4).position(|w| w == [0x50, 0x4B, 0x01, 0x02]).unwrap();
++        z[at + 24..at + 28].copy_from_slice(&10u32.to_le_bytes());
++        assert!(Package::open(&z).unwrap().get("word/document.xml").is_none());
++    }
++
+     #[test]
+     fn lying_declared_size_is_rejected_or_bounded() {
+         let mut z = zip_of(&[("a.xml", b"<a/>".to_vec())]);
+diff --git a/crates/docx/tests/custom_xml.rs b/crates/docx/tests/custom_xml.rs
+index 53c1f0c6..27f11c6d 100644
+--- a/crates/docx/tests/custom_xml.rs
++++ b/crates/docx/tests/custom_xml.rs
+@@ -49,7 +49,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+     let mut parts = BTreeMap::new();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).unwrap();
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut bytes = Vec::new();
+         f.read_to_end(&mut bytes).unwrap();
+         assert!(parts.insert(name, bytes).is_none(), "duplicate ZIP entry");
+diff --git a/crates/docx/tests/fixtures.rs b/crates/docx/tests/fixtures.rs
+index 64e04389..87d58d06 100644
+--- a/crates/docx/tests/fixtures.rs
++++ b/crates/docx/tests/fixtures.rs
+@@ -1373,7 +1373,7 @@ fn unzip(bytes: &[u8]) -> std::collections::BTreeMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).unwrap();
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).unwrap();
+-        out.insert(f.name().to_string(), b);
++        out.insert(f.name().unwrap().to_string(), b);
+     }
+     out
+ }
+@@ -2074,7 +2074,7 @@ fn includepicture_keeps_its_embedded_picture() {
+                 let mut f = z.by_index(i).unwrap();
+                 let mut v = Vec::new();
+                 std::io::Read::read_to_end(&mut f, &mut v).unwrap();
+-                entries.push((f.name().to_string(), v));
++                entries.push((f.name().unwrap().to_string(), v));
+             }
+             entries.push(("word/media/picture.png".into(), png.to_vec()));
+             zip(&entries.iter().map(|(n, v)| (n.as_str(), v.as_slice())).collect::<Vec<_>>())
+@@ -3345,14 +3345,14 @@ fn hyperlink_with_empty_target_is_no_link() {
+             let mut f = zr.by_index(i).unwrap();
+             let mut buf = Vec::new();
+             std::io::Read::read_to_end(&mut f, &mut buf).unwrap();
+-            if f.name() == "word/_rels/document.xml.rels" {
++            if f.name().unwrap() == "word/_rels/document.xml.rels" {
+                 buf = String::from_utf8(buf)
+                     .unwrap()
+                     .replace("Target=\"https://x\"", "Target=\"\"")
+                     .replace("a@example.com\"", "a@example.com\" TargetMode=\"External\"")
+                     .into_bytes();
+             }
+-            entries.push((f.name().to_string(), buf));
++            entries.push((f.name().unwrap().to_string(), buf));
+         }
+         let refs: Vec<(&str, &[u8])> = entries.iter().map(|(n, b)| (n.as_str(), b.as_slice())).collect();
+         zip(&refs)
+diff --git a/crates/docx/tests/glossary.rs b/crates/docx/tests/glossary.rs
+index 36906ce4..b850e257 100644
+--- a/crates/docx/tests/glossary.rs
++++ b/crates/docx/tests/glossary.rs
+@@ -29,7 +29,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).unwrap();
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).unwrap();
+-        assert!(out.insert(f.name().to_string(), b).is_none(), "duplicate part {}", f.name());
++        assert!(out.insert(f.name().unwrap().to_string(), b).is_none(), "duplicate part {}", f.name().unwrap());
+     }
+     out
+ }
+diff --git a/crates/docx/tests/passthrough.rs b/crates/docx/tests/passthrough.rs
+index b9ed5003..6de414b8 100644
+--- a/crates/docx/tests/passthrough.rs
++++ b/crates/docx/tests/passthrough.rs
+@@ -26,7 +26,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).unwrap();
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).unwrap();
+-        assert!(out.insert(f.name().to_string(), b).is_none(), "duplicate part {}", f.name());
++        assert!(out.insert(f.name().unwrap().to_string(), b).is_none(), "duplicate part {}", f.name().unwrap());
+     }
+     out
+ }
+diff --git a/crates/docx/tests/privacy.rs b/crates/docx/tests/privacy.rs
+index cb345ef0..7565863b 100644
+--- a/crates/docx/tests/privacy.rs
++++ b/crates/docx/tests/privacy.rs
+@@ -23,7 +23,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, String> {
+         let mut f = z.by_index(i).unwrap();
+         let mut s = String::new();
+         if f.read_to_string(&mut s).is_ok() {
+-            parts.insert(f.name().to_string(), s);
++            parts.insert(f.name().unwrap().to_string(), s);
+         }
+     }
+     parts
+diff --git a/crates/docx/tests/roundtrip.rs b/crates/docx/tests/roundtrip.rs
+index 430713bb..7424ffd5 100644
+--- a/crates/docx/tests/roundtrip.rs
++++ b/crates/docx/tests/roundtrip.rs
+@@ -2614,7 +2614,7 @@ fn replace_part(zip_bytes: &[u8], name: &str, data: &[u8]) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..src.len() {
+         let mut f = src.by_index(i).unwrap();
+-        let n = f.name().to_string();
++        let n = f.name().unwrap().to_string();
+         out.start_file(n.as_str(), zip::write::SimpleFileOptions::default()).unwrap();
+         if n == name {
+             std::io::Write::write_all(&mut out, data).unwrap();
+diff --git a/crates/docx/tests/settings_merge.rs b/crates/docx/tests/settings_merge.rs
+index c725b5c2..a98dc827 100644
+--- a/crates/docx/tests/settings_merge.rs
++++ b/crates/docx/tests/settings_merge.rs
+@@ -26,7 +26,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).unwrap();
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).unwrap();
+-        assert!(out.insert(f.name().to_string(), b).is_none(), "duplicate part {}", f.name());
++        assert!(out.insert(f.name().unwrap().to_string(), b).is_none(), "duplicate part {}", f.name().unwrap());
+     }
+     out
+ }
+diff --git a/crates/engine/src/cmd/objects.rs b/crates/engine/src/cmd/objects.rs
+index a750f67d..3ee7b03c 100644
+--- a/crates/engine/src/cmd/objects.rs
++++ b/crates/engine/src/cmd/objects.rs
+@@ -2612,7 +2612,7 @@ mod tests {
+         assert_eq!(xml.matches("<w14:contentPart").count(), 1, "{xml}");
+         assert!(xml.contains("<mc:Fallback>"), "{xml}");
+         assert_eq!(bytes, before, "the refused ungroup leaves the document unchanged");
+-        let names: Vec<String> = z.file_names().map(String::from).collect();
++        let names: Vec<String> = z.file_names().map(|n| n.unwrap().into_owned()).collect();
+         assert_eq!(names.iter().filter(|n| n.starts_with("word/ink/")).count(), 1, "{names:?}");
+         let mut rels = String::new();
+         z.by_name("word/_rels/document.xml.rels").unwrap().read_to_string(&mut rels).unwrap();
+diff --git a/crates/engine/src/tests.rs b/crates/engine/src/tests.rs
+index 1d2b4ab9..37666d58 100644
+--- a/crates/engine/src/tests.rs
++++ b/crates/engine/src/tests.rs
+@@ -6798,7 +6798,7 @@ fn smart_art_round_trips_through_docx() {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).unwrap();
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut buf = Vec::new();
+         f.read_to_end(&mut buf).unwrap();
+         if name.ends_with("data1.xml") {
+diff --git a/crates/engine/tests/macro_packages.rs b/crates/engine/tests/macro_packages.rs
+index 5932f985..5df37d9f 100644
+--- a/crates/engine/tests/macro_packages.rs
++++ b/crates/engine/tests/macro_packages.rs
+@@ -24,7 +24,7 @@ fn unzip(bytes: &[u8]) -> BTreeMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).expect("entry");
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).expect("read entry");
+-        out.insert(f.name().to_string(), b);
++        out.insert(f.name().unwrap().to_string(), b);
+     }
+     out
+ }
+diff --git a/crates/formats/src/odt.rs b/crates/formats/src/odt.rs
+index 6d045775..d9c8594a 100644
+--- a/crates/formats/src/odt.rs
++++ b/crates/formats/src/odt.rs
+@@ -2639,14 +2639,14 @@ mod tests {
+         assert_eq!(pics.get(&mut z, "big.png"), None);
+         assert_eq!(pics.room, 1000);
+         assert_eq!(pics.get(&mut z, "ok.png").map(|d| d.len()), Some(300));
+-        // One inflating to more than it declares stops a byte past the budget and uses it up:
+-        // nothing is inflated after it.
++        // One inflating to more than it declares: zip 9 fails the read past the declared size, so it
++        // is refused before it reaches the budget and charges nothing.
+         let liar = declare_size(zip_of(&[("liar.png", &[0u8; 5000]), ("ok.png", &[5u8; 10])]), "liar.png", 10);
+         let mut z = archive(&liar);
+         let mut pics = Pictures::new(1000);
+         assert_eq!(pics.get(&mut z, "liar.png"), None);
+-        assert_eq!(pics.room, 0);
+-        assert_eq!(pics.get(&mut z, "ok.png"), None);
++        assert_eq!(pics.room, 1000);
++        assert_eq!(pics.get(&mut z, "ok.png").map(|d| d.len()), Some(10));
+     }
+ 
+     #[test]
+-- 
+2.0

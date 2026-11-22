@@ -31,7 +31,7 @@ fn file(cached: f64, full_calc_on_load: bool) -> Vec<u8> {
     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
     for i in 0..z.len() {
         let mut f = z.by_index(i).unwrap();
-        let name = f.name().to_string();
+        let name = f.name().unwrap().to_string();
         let mut data = Vec::new();
         std::io::Read::read_to_end(&mut f, &mut data).unwrap();
         if name == "xl/workbook.xml" {
