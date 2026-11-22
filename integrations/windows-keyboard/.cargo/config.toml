@@ -1,0 +1,11 @@
+# The TIP loads into every process that takes text input, so it must not depend on the VC++ redistributable
+# (VCRUNTIME140.dll is not part of Windows 10): link the C runtime statically. Cargo merges these flags with the root
+# .cargo/config.toml ones (/DEPENDENTLOADFLAG for x86_64-msvc).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEPENDENTLOADFLAG:0xA00"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEPENDENTLOADFLAG:0xA00"]

@@ -1,0 +1,46 @@
+[package]
+name = "windows-keyboard"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+description = "Uzbek 2026 keyboard for Windows: the TSF text input processor DLL (kbd.dll) and its registration (docs/keyboard/PLAN.md WP2, WP3)"
+build = "build.rs"
+
+# Own workspace, like the spike: it needs the MSVC toolchain and the `windows` crate, which the root workspace does not
+# carry. CI: cargo deny --manifest-path integrations/windows-keyboard/Cargo.toml --config ci/deny/keyboard.toml check
+[workspace]
+
+[lib]
+name = "kbd"
+crate-type = ["cdylib", "rlib"]
+
+# Test driver for the machine test (machine-test/run.sh); never shipped.
+[[bin]]
+name = "kbd-harness"
+path = "src/bin/kbd-harness.rs"
+
+[dependencies]
+kbd-core = { path = "../../crates/kbd-core" }
+windows = { version = "=0.62.2", features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Security",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Ole",
+    "Win32_System_Performance",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_System_Variant",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_TextServices",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+] }
+windows-core = "=0.62.2"
+
+# panic = "unwind" (the default) on purpose: every COM entry point runs inside catch_unwind (src/lib.rs `guard`), so a
+# bug ends in an error HRESULT and the key passes through, never in an abort of the host (Word, Telegram, ...).
+[profile.release]
+panic = "unwind"
