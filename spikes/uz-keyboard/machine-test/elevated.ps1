@@ -6,7 +6,7 @@ $D = 'C:\Program Files\uzkbd-spike'
 $C = '{71A6784F-8ECA-4FC0-92C0-0B1756DE11CB}'
 $log = "$M\elevated.log"
 function L($s) { Add-Content -Path $log -Value ("{0:HH:mm:ss} {1}" -f (Get-Date), $s) -Encoding UTF8 }
-function R([string[]]$a) { $o = & reg.exe @a 2>&1; L ("reg " + ($a -join ' ') + " -> $LASTEXITCODE " + ($o -join ' ')); return $LASTEXITCODE }
+function RegRun([string[]]$a) { $o = & reg.exe @a 2>&1; L ("reg " + ($a -join ' ') + " -> $LASTEXITCODE " + ($o -join ' ')); return $LASTEXITCODE }
 function Exists($k, $v) { & reg.exe query $k "/reg:$v" *> $null; return ($LASTEXITCODE -eq 0) }
 
 L "elevated start, user $env:USERNAME"
@@ -24,9 +24,9 @@ try {
     Copy-Item "$M\stage\x86\*" "$D\x86\"
     foreach ($p in @(@('64', 'x64'), @('32', 'x86'))) {
         $k = "HKLM\SOFTWARE\Classes\CLSID\$C"
-        if ((R @('add', $k, '/ve', '/d', 'Uzbek 2026 letters (spike)', '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
-        if ((R @('add', "$k\InprocServer32", '/ve', '/d', "$D\$($p[1])\uzkbd_spike.dll", '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
-        if ((R @('add', "$k\InprocServer32", '/v', 'ThreadingModel', '/d', 'Apartment', '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
+        if ((RegRun @('add', $k, '/ve', '/d', 'Uzbek 2026 letters (spike)', '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
+        if ((RegRun @('add', "$k\InprocServer32", '/ve', '/d', "$D\$($p[1])\uzkbd_spike.dll", '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
+        if ((RegRun @('add', "$k\InprocServer32", '/v', 'ThreadingModel', '/d', 'Apartment', '/f', "/reg:$($p[0])")) -ne 0) { throw "reg add" }
     }
     foreach ($a in 'x64', 'x86') {
         $o = & "$D\$a\kbdctl.exe" machine-register 2>&1
@@ -47,7 +47,7 @@ foreach ($a in 'x64', 'x86') {
 }
 foreach ($v in '64', '32') {
     foreach ($k in "HKLM\SOFTWARE\Classes\CLSID\$C", "HKLM\SOFTWARE\Microsoft\CTF\TIP\$C") {
-        if (Exists $k $v) { R @('delete', $k, '/f', "/reg:$v") | Out-Null }
+        if (Exists $k $v) { RegRun @('delete', $k, '/f', "/reg:$v") | Out-Null }
     }
 }
 $holders = Get-Process | Where-Object { try { $_.Modules | Where-Object { $_.FileName -like "$D*" } } catch { $null } } | ForEach-Object { "$($_.Name):$($_.Id)" }
