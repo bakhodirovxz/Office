@@ -6,6 +6,7 @@ SRC="$(cd "$(dirname "$0")" && pwd)"
 B=E:/office-target/kbd-spike
 M=$B/m
 MW='E:\office-target\kbd-spike\m'
+exec > >(tee "$B/run-last.log") 2>&1  # the coordinator reads the result from here
 rm -rf "$M"; mkdir -p "$M/stage/x64" "$M/stage/x86" "$M/hkcu"
 cp $B/release/uzkbd_spike.dll $B/release/kbdctl.exe "$M/stage/x64/"
 cp $B/i686-pc-windows-msvc/release/uzkbd_spike.dll $B/i686-pc-windows-msvc/release/kbdctl.exe "$M/stage/x86/"
@@ -65,7 +66,7 @@ for f in "$M"/hkcu/*-before.reg "$M"/hkcu/langlist-before.txt "$M"/hklm/*-before
     diff <(iconv -f UTF-16LE -t UTF-8 "$f" 2>/dev/null || cat "$f") <(iconv -f UTF-16LE -t UTF-8 "$a" 2>/dev/null || cat "$a") | head -30
   fi
 done
-ls "C:/Program Files/uzkbd-spike" 2>&1 | head -2
+ls -R "C:/Program Files/uzkbd-spike" 2>&1 | head -6
 rm -f "$LOCALAPPDATA/Temp/uzkbd-spike.log"
 rm -rf "$M/edge-ud" "$M/stage"
 echo "=== $(date +%T) end"

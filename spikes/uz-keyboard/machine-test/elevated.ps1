@@ -2,7 +2,9 @@
 # non-elevated test runner to finish (file "done", at most 40 min), then removes everything it created. One UAC prompt.
 $ErrorActionPreference = 'Continue'
 $M = 'E:\office-target\kbd-spike\m'
-$D = 'C:\Program Files\uzkbd-spike'
+$P = 'C:\Program Files\uzkbd-spike'
+# A run folder of its own: a DLL left loaded by an earlier run (Explorer keeps it until restart) must not block this one.
+$D = "$P\run-$(Get-Date -Format yyyyMMddHHmmss)"
 $C = '{71A6784F-8ECA-4FC0-92C0-0B1756DE11CB}'
 $log = "$M\elevated.log"
 function L($s) { Add-Content -Path $log -Value ("{0:HH:mm:ss} {1}" -f (Get-Date), $s) -Encoding UTF8 }
@@ -55,7 +57,8 @@ L "DLL still loaded in (64-bit view): $($holders -join ', ')"
 for ($i = 0; $i -lt 10 -and (Test-Path $D); $i++) {
     try { Remove-Item -Recurse -Force $D -ErrorAction Stop } catch { L "folder remove try $i failed: $_"; Start-Sleep 3 }
 }
-L "after folder exists=$(Test-Path $D)"
+if ((Test-Path $P) -and -not (Get-ChildItem $P)) { Remove-Item $P }
+L "after folder exists=$(Test-Path $D) (left in $P from earlier runs: $((Get-ChildItem $P -ErrorAction SilentlyContinue).Name -join ', '))"
 foreach ($v in '64', '32') {
     L "after /reg:$v CLSID exists=$(Exists "HKLM\SOFTWARE\Classes\CLSID\$C" $v) CTF\TIP exists=$(Exists "HKLM\SOFTWARE\Microsoft\CTF\TIP\$C" $v)"
 }

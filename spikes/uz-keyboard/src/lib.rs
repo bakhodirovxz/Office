@@ -358,7 +358,18 @@ impl ITfKeyEventSink_Impl for Tip_Impl {
         Ok(())
     }
     fn OnTestKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
-        let eat = self.plan(wparam.0 as u16).is_some();
+        let plan = self.plan(wparam.0 as u16);
+        let eat = matches!(plan, Some(Act::Start(_) | Act::Update(_) | Act::Finish(_)));
+        // A key that only commits must not be claimed: under CUAS (Notepad) a claimed key becomes VK_PROCESSKEY before
+        // OnKeyDown, so returning FALSE there loses it (machine test 2026-11-22: Notepad 19 of 23 failed, WordPad 0).
+        // Commit here, synchronously, and let the key reach the application after the composition has ended.
+        if plan == Some(Act::Commit) {
+            let r = match pic.ok() {
+                Ok(ctx) => self.run(ctx, Act::Commit),
+                Err(e) => Err(e),
+            };
+            log(&format!("test vk={:#04x} commit-before-pass {:?}", wparam.0, r.map_err(|e| e.code())));
+        }
         if std::env::var_os("UZKBD_TRACE").is_some() {
             log(&format!("test vk={:#04x} eat={eat} ctx={}", wparam.0, pic.is_some()));
         }

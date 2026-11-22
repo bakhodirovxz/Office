@@ -354,6 +354,35 @@ README), or grants the agent this permission explicitly. The output answers the 
 - per-key latency (median and p95, against the plain baseline), and the TIP-side time per key;
 - whether the HKLM, HKCU and language-list snapshots are byte-identical after cleanup.
 
+### 11.4 Per-machine test: results (owner ran it, 2026-11-22)
+
+First run: `elevated.ps1` stopped before registering anything. Its helper `R` was shadowed by the built-in alias
+`r` (Invoke-History); it is renamed `RegRun`. The snapshots were unchanged.
+
+Second run (Windows 10 22H2, x64):
+- Registration: RegisterProfile 0x0443 and the three categories returned Ok in x64 and x86. The profile was
+  visible (flags 0x2) and was added to the user's list as uz-Latn.
+- **WordPad (TSF-aware RichEdit): TIP 23/23**, plain 23/23. Latency from SendInput to the text change: median
+  8.83 ms, p95 14.91 ms (plain: 6.16 / 13.02 ms).
+- **Notepad (CUAS): TIP 4/23**, plain 23/23. Every failure lost the key that only commits, for example the `a` in
+  `shahar` → `şhar`, the space or Enter after a word, or the `y` in `choy` → `ço`. Cause: `OnTestKeyDown` claimed
+  the key and `OnKeyDown` then returned FALSE. Under CUAS a claimed key has already become VK_PROCESSKEY, so it is
+  lost. This is the risk "CUAS ordering" in section 12. **Fix (not yet machine-tested):** a commit-only key is no
+  longer claimed. `OnTestKeyDown` commits synchronously and lets the key through. Latency (TIP): median 5.30 ms,
+  p95 8.83 ms.
+- **Edge: not measured.** The plain run passed 12 cases, then AnyDesk took the foreground and the harness stopped
+  sending keys, as designed.
+- TIP-side time per key (158 keys): median 2.9 ms, p95 7.4 ms, max 8.5 ms. All keys are below one 16 ms frame.
+- Cleanup:
+  - HKLM CTF snapshots in both views: byte-identical. The language list: identical.
+  - HKCU: Windows left `CTF\SortOrder\AssemblyItem\0x443` and `CTF\TIP\{clsid}` (Enable=0). The coordinator deleted
+    both by hand. Windows also dropped its `CTF\Assemblies\0x419` cache entry, and `Control Panel\International`
+    lists the same values in a new order.
+  - The installer must remove the two HKCU keys on uninstall, for every profile that has them.
+  - The DLL stayed loaded in Explorer, VS Code, Docker Desktop, Element, mintty and msrdc, so
+    `C:\Program Files\uzkbd-spike` could not be deleted until restart. The product MSI must expect this, for
+    example with a restart-pending delete. The machine test now uses its own run folder each time.
+
 ## 12. Risks
 
 | Risk | Impact | Mitigation |
