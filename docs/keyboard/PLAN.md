@@ -302,7 +302,11 @@ In-process harness:
 
 ### 11.2 Unlock-triggered run
 
-(Filled in only if the desktop was unlocked during the session.)
+The desktop stayed locked: `kbdctl wait-unlock 45` ended with "still locked after 45 min", and no keys were sent.
+The first job of WP5 is therefore this run on an unlocked desktop:
+`UZKBD_LANG=0409 kbdctl host edit tip` and `kbdctl host rich tip`. It covers the CUAS path and the TSF-aware path,
+the ten cases in `CASES`, Backspace undo, and per-key latency against the `plain` baseline. It needs about one
+minute with nobody typing, and no admin.
 
 ## 12. Risks
 
