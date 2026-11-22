@@ -6,12 +6,14 @@
 //!   kbdctl hkcu-tip           write the TIP profile keys under HKCU\Software\Microsoft\CTF\TIP (does TSF read them?)
 //!   kbdctl enum               what TSF sees for LANGID 0x0443
 //!   kbdctl host [edit|rich] [tip|plain] [feed]   own window, profile registered TF_RP_LOCALPROCESS, typed by SendInput
-//!   kbdctl notepad [tip|plain]            type into a Notepad started here (needs a profile TSF can activate)
+//!   kbdctl suite notepad wordpad edge     per app: plain run, then TIP run (session-wide profile switch, restored after)
+//!   kbdctl machine-register   (elevated) RegisterProfile 0x0443 + categories, system-wide, this process's registry view
+//!   kbdctl machine-unregister (elevated) the reverse
 //!   kbdctl unreg              remove every HKCU key the spike creates
 
 use std::time::{Duration, Instant};
 
-use uzkbd_spike::{CLSID_SPIKE, LANGID_UZ_LATN, PROFILE_SPIKE};
+use uzkbd_spike::{CASES, CLSID_SPIKE, LANGID_UZ_LATN, PROFILE_SPIKE, plain};
 use windows::Win32::Foundation::*;
 use windows::Win32::System::Com::*;
 use windows::Win32::System::LibraryLoader::*;
@@ -22,6 +24,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::*;
 
 const DESC: &str = "Uzbek 2026 letters (spike)";
+const CATS: [GUID; 3] = [GUID_TFCAT_TIP_KEYBOARD, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT];
 
 fn g(x: &GUID) -> String {
     format!("{{{x:?}}}")
@@ -109,7 +112,27 @@ fn main() -> Result<()> {
             }
         }
         "host" => host(a(1) == "rich", a(2) != "plain", a(3) == "feed")?,
-        "notepad" => notepad(a(1) != "plain")?,
+        "suite" => suite(&args[1..].iter().map(String::as_str).collect::<Vec<_>>())?,
+        "machine-register" => unsafe {
+            let pm = profiles()?;
+            let r = pm.RegisterProfile(&CLSID_SPIKE, LANGID_UZ_LATN, &PROFILE_SPIKE, &w(DESC), &[], 0, HKL::default(), 0, true, 0);
+            println!("RegisterProfile(0x0443, system) -> {:?}", r.as_ref().map_err(|e| e.code()));
+            r?;
+            let cm: ITfCategoryMgr = CoCreateInstance(&CLSID_TF_CategoryMgr, None, CLSCTX_INPROC_SERVER)?;
+            for cat in CATS {
+                let r = cm.RegisterCategory(&CLSID_SPIKE, &cat, &CLSID_SPIKE);
+                println!("RegisterCategory {cat:?} -> {:?}", r.as_ref().map_err(|e| e.code()));
+                r?;
+            }
+        },
+        "machine-unregister" => unsafe {
+            let cm: ITfCategoryMgr = CoCreateInstance(&CLSID_TF_CategoryMgr, None, CLSCTX_INPROC_SERVER)?;
+            for cat in CATS {
+                println!("UnregisterCategory {cat:?} -> {:?}", cm.UnregisterCategory(&CLSID_SPIKE, &cat, &CLSID_SPIKE).map_err(|e| e.code()));
+            }
+            let pm = profiles()?;
+            println!("UnregisterProfile -> {:?}", pm.UnregisterProfile(&CLSID_SPIKE, LANGID_UZ_LATN, &PROFILE_SPIKE, 0).map_err(|e| e.code()));
+        },
         _ => eprintln!("usage: see the file header"),
     }
     Ok(())
@@ -161,6 +184,7 @@ fn inputs_for(c: char) -> Vec<INPUT> {
         '\u{8}' => (VK_BACK, false),
         '\n' => (VK_RETURN, false),
         ' ' => (VK_SPACE, false),
+        '\'' => (VK_OEM_7, false),
         'a'..='z' => (VIRTUAL_KEY(c.to_ascii_uppercase() as u16), false),
         'A'..='Z' => (VIRTUAL_KEY(c as u16), true),
         _ => panic!("script char {c:?}"),
@@ -186,20 +210,6 @@ fn get_text(hwnd: HWND) -> Option<String> {
     (ok.0 != 0).then(|| String::from_utf16_lossy(&buf[..res]))
 }
 
-/// Cases: (typed, expected with the TIP, expected without it).
-const CASES: &[(&str, &str, &str)] = &[
-    ("shahar ", "şahar ", "shahar "),
-    ("Shahar ", "Şahar ", "Shahar "),
-    ("SHAHAR ", "ŞAHAR ", "SHAHAR "),
-    ("maktab ", "maktab ", "maktab "),
-    ("mashq ", "maşq ", "mashq "),
-    ("Ish\u{8}oq ", "Ishoq ", "Isoq "),
-    ("as\u{8}b ", "ab ", "ab "),
-    ("ssh ", "sş ", "ssh "),
-    ("tosh\n", "toş\r\n", "tosh\r\n"),
-    ("qush\u{8}\u{8}x ", "qusx ", "qux "),
-];
-
 struct Lat(Vec<f64>);
 impl Lat {
     fn report(&mut self, name: &str) {
@@ -213,41 +223,123 @@ impl Lat {
     }
 }
 
-/// Types every case into `edit` (inside top-level `top`), checks the text, returns per-key latencies (ms).
-fn drive(top: HWND, edit: HWND, with_tip: bool) -> (usize, usize, Lat) {
+fn norm(s: &str) -> String {
+    s.replace("\r\n", "\n").replace('\r', "\n")
+}
+
+/// Where the typed text is read back: an edit control (WM_GETTEXT) or a browser page that mirrors its textarea into
+/// the window title as `uzkbd[<encodeURIComponent(value)>]`.
+#[derive(Clone, Copy)]
+enum Target {
+    Wm { top: isize, edit: isize },
+    Title { top: isize },
+}
+
+impl Target {
+    fn top(&self) -> HWND {
+        match *self {
+            Target::Wm { top, .. } | Target::Title { top } => HWND(top as _),
+        }
+    }
+    fn read(&self) -> Option<String> {
+        match *self {
+            Target::Wm { edit, .. } => get_text(HWND(edit as _)),
+            Target::Title { top } => title_text(HWND(top as _)),
+        }
+    }
+    fn clear(&self) {
+        match *self {
+            Target::Wm { edit, .. } => unsafe {
+                SendMessageTimeoutW(HWND(edit as _), WM_SETTEXT, WPARAM(0), LPARAM(w("\0").as_ptr() as isize), SMTO_ABORTIFHUNG, 2000, None);
+            },
+            Target::Title { .. } => {
+                let t0 = Instant::now();
+                while self.read().as_deref() != Some("") && t0.elapsed() < Duration::from_secs(3) {
+                    if unsafe { GetForegroundWindow() } != self.top() {
+                        return;
+                    }
+                    let a = VIRTUAL_KEY(b'A' as u16);
+                    let v = [key(VK_CONTROL, false), key(a, false), key(a, true), key(VK_CONTROL, true), key(VK_BACK, false), key(VK_BACK, true)];
+                    unsafe { SendInput(&v, std::mem::size_of::<INPUT>() as i32) };
+                    std::thread::sleep(Duration::from_millis(150));
+                }
+            }
+        }
+    }
+}
+
+fn key(vk: VIRTUAL_KEY, up: bool) -> INPUT {
+    INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: vk,
+                wScan: unsafe { MapVirtualKeyW(vk.0 as u32, MAPVK_VK_TO_VSC) } as u16,
+                dwFlags: if up { KEYEVENTF_KEYUP } else { KEYBD_EVENT_FLAGS(0) },
+                time: 0,
+                dwExtraInfo: 0,
+            },
+        },
+    }
+}
+
+fn window_title(h: HWND) -> String {
+    let mut buf = [0u16; 1024];
+    let n = unsafe { GetWindowTextW(h, &mut buf) } as usize;
+    String::from_utf16_lossy(&buf[..n])
+}
+
+/// Decodes `uzkbd[%..]` from a window title.
+fn title_text(top: HWND) -> Option<String> {
+    let t = window_title(top);
+    let a = t.find("uzkbd[")? + 6;
+    let b = a + t[a..].find(']')?;
+    let enc = t[a..b].as_bytes();
+    let mut out = vec![];
+    let mut i = 0;
+    while i < enc.len() {
+        if enc[i] == b'%' && i + 2 < enc.len() {
+            out.push(u8::from_str_radix(std::str::from_utf8(&enc[i + 1..i + 3]).ok()?, 16).ok()?);
+            i += 3;
+        } else {
+            out.push(enc[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).ok()
+}
+
+/// Types every case into the target, checks the text, returns per-key latencies (ms). Stops (Err) the moment the
+/// target is not the foreground window or the desktop is locked, so no key ever reaches another window.
+fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), String> {
     let mut lat = Lat(vec![]);
     let (mut pass, mut fail) = (0, 0);
-    for (typed, want_tip, want_plain) in CASES {
-        let want = if with_tip { *want_tip } else { *want_plain };
-        unsafe {
-            SendMessageTimeoutW(edit, WM_SETTEXT, WPARAM(0), LPARAM(w("\0").as_ptr() as isize), SMTO_ABORTIFHUNG, 2000, None);
-        }
+    for (typed, want_tip) in CASES {
+        let want = norm(&if with_tip { want_tip.to_string() } else { plain(typed) });
+        t.clear();
         for c in typed.chars() {
-            if unsafe { GetForegroundWindow() } != top {
-                eprintln!("ABORT: our window lost the foreground; no keys sent elsewhere");
-                std::process::exit(3);
+            if unsafe { GetForegroundWindow() } != t.top() || fg_exe().to_ascii_lowercase().ends_with("lockapp.exe") {
+                return Err(format!("lost the foreground (now {}); no keys sent elsewhere", fg_exe()));
             }
-            let before = get_text(edit).unwrap_or_default();
+            let before = t.read().unwrap_or_default();
             let inp = inputs_for(c);
             let t0 = Instant::now();
             unsafe { SendInput(&inp, std::mem::size_of::<INPUT>() as i32) };
-            // Latency: until the visible text changes (Shift-only steps do not exist in the script).
+            // Latency: until the visible text changes.
             loop {
-                let now = get_text(edit).unwrap_or_default();
-                if now != before {
+                if t.read().unwrap_or_default() != before {
                     lat.0.push(t0.elapsed().as_secs_f64() * 1000.0);
                     break;
                 }
                 if t0.elapsed() > Duration::from_millis(1000) {
-                    eprintln!("  no text change after {c:?}");
+                    println!("  no text change after {c:?}");
                     break;
                 }
                 std::thread::yield_now();
             }
         }
-        // Commit any pending composition the way a user would: the TIP commits on the next key; read after a pause.
         std::thread::sleep(Duration::from_millis(50));
-        let got = get_text(edit).unwrap_or_default();
+        let got = norm(&t.read().unwrap_or_default());
         if got == want {
             pass += 1;
             println!("  ok   {typed:?} -> {got:?}");
@@ -256,7 +348,7 @@ fn drive(top: HWND, edit: HWND, with_tip: bool) -> (usize, usize, Lat) {
             println!("  FAIL {typed:?} -> {got:?} (want {want:?})");
         }
     }
-    (pass, fail, lat)
+    Ok((pass, fail, lat))
 }
 
 fn force_foreground(hwnd: HWND) -> bool {
@@ -305,14 +397,15 @@ fn feed_drive(edit: HWND, with_tip: bool) -> Result<(usize, usize, Lat)> {
         println!("  thread manager focus document: {}", if focus.is_ok() { "yes" } else { "none" });
         let mut lat = Lat(vec![]);
         let (mut pass, mut fail) = (0, 0);
-        for (typed, want_tip, want_plain) in CASES {
-            let want = if with_tip { *want_tip } else { *want_plain };
+        for (typed, want_tip) in CASES {
+            let want = norm(&if with_tip { want_tip.to_string() } else { plain(typed) });
             SendMessageW(edit, WM_SETTEXT, None, Some(LPARAM(w("\0").as_ptr() as isize)));
             for c in typed.chars() {
                 let (vk, shift, ch) = match c {
                     '\u{8}' => (VK_BACK.0, false, 8u16),
                     '\n' => (VK_RETURN.0, false, 13),
                     ' ' => (VK_SPACE.0, false, 32),
+                    '\'' => (VK_OEM_7.0, false, 39),
                     'a'..='z' => (c.to_ascii_uppercase() as u16, false, c as u16),
                     _ => (c as u16, true, c as u16),
                 };
@@ -347,7 +440,7 @@ fn feed_drive(edit: HWND, with_tip: bool) -> Result<(usize, usize, Lat)> {
                     pump(Duration::from_millis(1));
                 }
             }
-            let got = get_text(edit).unwrap_or_default();
+            let got = norm(&get_text(edit).unwrap_or_default());
             if got == want {
                 pass += 1;
                 println!("  ok   {typed:?} -> {got:?}");
@@ -433,15 +526,21 @@ fn host(rich: bool, with_tip: bool, feed: bool) -> Result<()> {
         }
         let _ = SetFocus(Some(edit));
         let (tx, rx) = std::sync::mpsc::channel();
-        let (top_i, edit_i) = (top.0 as isize, edit.0 as isize);
+        let target = Target::Wm { top: top.0 as isize, edit: edit.0 as isize };
         std::thread::spawn(move || {
-            let r = drive(HWND(top_i as _), HWND(edit_i as _), with_tip);
-            let _ = tx.send(r);
+            let _ = tx.send(drive(target, with_tip));
         });
-        let (pass, fail, mut lat) = loop {
+        let r = loop {
             pump(Duration::from_millis(5));
             if let Ok(r) = rx.try_recv() {
                 break r;
+            }
+        };
+        let (pass, fail, mut lat) = match r {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("ABORT: {e}");
+                std::process::exit(3);
             }
         };
         println!("host {} {}: pass={pass} fail={fail}", if rich { "richedit" } else { "edit" }, if with_tip { "TIP" } else { "plain" });
@@ -465,40 +564,158 @@ fn pump(d: Duration) {
     }
 }
 
-// ---------- Notepad ----------
+// ---------- real applications ----------
 
-fn notepad(with_tip: bool) -> Result<()> {
-    unsafe {
-        let _ = std::fs::remove_file(uzkbd_spike::log_path());
-        let mut child = std::process::Command::new(r"C:\Windows\System32\notepad.exe").spawn().expect("notepad");
-        let pid = child.id();
-        let mut top = HWND::default();
-        for _ in 0..50 {
-            std::thread::sleep(Duration::from_millis(100));
-            top = find_top(pid);
-            if !top.is_invalid() {
-                break;
+const EDGE: &str = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
+/// Spike scratch on E: (the Edge profile and the page live here; the runner deletes them).
+const SCRATCH: &str = r"E:\office-target\kbd-spike\m";
+
+fn wait_window(f: impl Fn() -> HWND, secs: u64) -> HWND {
+    let t0 = Instant::now();
+    loop {
+        let h = f();
+        if !h.is_invalid() || t0.elapsed() > Duration::from_secs(secs) {
+            return h;
+        }
+        std::thread::sleep(Duration::from_millis(200));
+    }
+}
+
+fn find_title_prefix(prefix: &str) -> HWND {
+    unsafe extern "system" fn cb(h: HWND, l: LPARAM) -> BOOL {
+        unsafe {
+            let st = &mut *(l.0 as *mut (String, HWND));
+            if IsWindowVisible(h).as_bool() && window_title(h).starts_with(&st.0) {
+                st.1 = h;
+                return false.into();
             }
+            true.into()
         }
-        let edit = FindWindowExW(Some(top), None, w!("Edit"), None)?;
-        // US layout in Notepad (the user's list holds en-US); the TIP profile, if any, is switched to below.
-        let _ = PostMessageW(Some(top), WM_INPUTLANGCHANGEREQUEST, WPARAM(0), LPARAM(us_layout().0 as isize));
-        if with_tip {
-            let pm = profiles()?;
-            let r = pm.ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR, LANGID_UZ_LATN, &CLSID_SPIKE, &PROFILE_SPIKE, HKL::default(), TF_IPPMF_FORSESSION | TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE);
-            println!("ActivateProfile(FORSESSION) -> {:?}", r.map_err(|e| e.code()));
+    }
+    let mut st = (prefix.to_string(), HWND::default());
+    unsafe {
+        let _ = EnumWindows(Some(cb), LPARAM(&mut st as *mut _ as isize));
+    }
+    st.1
+}
+
+fn kill_tree(pid: u32) {
+    let _ = std::process::Command::new("taskkill.exe").args(["/F", "/T", "/PID", &pid.to_string()]).output();
+}
+
+/// Starts the app; returns (pid to kill, target).
+fn start_app(app: &str) -> std::result::Result<(u32, Target), String> {
+    unsafe {
+        match app {
+            "notepad" | "wordpad" => {
+                let (exe, class) = if app == "notepad" {
+                    (r"C:\Windows\System32\notepad.exe", w!("Edit"))
+                } else {
+                    (r"C:\Program Files\Windows NT\Accessories\wordpad.exe", w!("RICHEDIT50W"))
+                };
+                let child = std::process::Command::new(exe).spawn().map_err(|e| e.to_string())?;
+                let pid = child.id();
+                let top = wait_window(|| find_top(pid), 10);
+                std::thread::sleep(Duration::from_millis(500));
+                let edit = FindWindowExW(Some(top), None, class, None).map_err(|e| format!("{app}: no edit child: {e}"))?;
+                Ok((pid, Target::Wm { top: top.0 as isize, edit: edit.0 as isize }))
+            }
+            "edge" => {
+                std::fs::create_dir_all(SCRATCH).map_err(|e| e.to_string())?;
+                let page = format!(r"{SCRATCH}\page.html");
+                std::fs::write(
+                    &page,
+                    "<!doctype html><meta charset=utf-8><title>uzkbd[]</title><textarea id=t autofocus style='width:90%;height:300px' \
+                     oninput=\"document.title='uzkbd['+encodeURIComponent(this.value)+']'\"></textarea><script>t.focus()</script>",
+                )
+                .map_err(|e| e.to_string())?;
+                let child = std::process::Command::new(EDGE)
+                    .args([
+                        &format!(r"--user-data-dir={SCRATCH}\edge-ud"),
+                        "--no-first-run",
+                        "--no-default-browser-check",
+                        "--disable-sync",
+                        "--new-window",
+                        &format!("file:///{}", page.replace('\\', "/")),
+                    ])
+                    .spawn()
+                    .map_err(|e| e.to_string())?;
+                let top = wait_window(|| find_title_prefix("uzkbd["), 30);
+                if top.is_invalid() {
+                    kill_tree(child.id());
+                    return Err("edge: page window not found".into());
+                }
+                let mut pid = 0u32;
+                GetWindowThreadProcessId(top, Some(&mut pid));
+                Ok((pid, Target::Title { top: top.0 as isize }))
+            }
+            _ => Err(format!("unknown app {app}")),
         }
-        let ok = force_foreground(top);
-        if !ok {
-            eprintln!("ABORT: cannot take the foreground");
-            let _ = child.kill();
-            std::process::exit(3);
+    }
+}
+
+fn activate(pm: &ITfInputProcessorProfileMgr, tip: bool) -> Result<()> {
+    unsafe {
+        if tip {
+            pm.ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR, LANGID_UZ_LATN, &CLSID_SPIKE, &PROFILE_SPIKE, HKL::default(), TF_IPPMF_FORSESSION)
+        } else {
+            pm.ActivateProfile(TF_PROFILETYPE_KEYBOARDLAYOUT, 0x0409, &GUID::zeroed(), &GUID::zeroed(), HKL(0x0409_0409 as _), TF_IPPMF_FORSESSION)
         }
-        let (pass, fail, mut lat) = drive(top, edit, with_tip);
-        println!("notepad {}: pass={pass} fail={fail}", if with_tip { "TIP" } else { "plain" });
-        lat.report("  latency SendInput->text change");
-        let _ = SendMessageTimeoutW(edit, WM_SETTEXT, WPARAM(0), LPARAM(w("\0").as_ptr() as isize), SMTO_ABORTIFHUNG, 2000, None);
-        let _ = child.kill();
+    }
+}
+
+fn suite(apps: &[&str]) -> Result<()> {
+    unsafe {
+        if fg_exe().to_ascii_lowercase().ends_with("lockapp.exe") {
+            eprintln!("ABORT: the desktop is locked; no keys sent");
+            std::process::exit(4);
+        }
+        let _ = std::fs::remove_file(uzkbd_spike::log_path());
+        let pm = profiles()?;
+        let mut saved = TF_INPUTPROCESSORPROFILE::default();
+        pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut saved)?;
+        println!("session input before: type={} lang={:#06x} clsid={:?} hkl={:?}", saved.dwProfileType, saved.langid, saved.clsid, saved.hkl);
+        for app in apps {
+            println!("=== {app}");
+            let (pid, target) = match start_app(app) {
+                Ok(x) => x,
+                Err(e) => {
+                    println!("  SKIP: {e}");
+                    continue;
+                }
+            };
+            for tip in [false, true] {
+                if !force_foreground(target.top()) {
+                    println!("  ABORT: cannot take the foreground (now {})", fg_exe());
+                    break;
+                }
+                let r = activate(&pm, tip);
+                std::thread::sleep(Duration::from_millis(500));
+                let mut ap = TF_INPUTPROCESSORPROFILE::default();
+                let _ = pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut ap);
+                println!(
+                    "  {}: activate -> {:?}; active lang={:#06x} clsid={:?}",
+                    if tip { "TIP" } else { "plain" },
+                    r.map_err(|e| e.code()),
+                    ap.langid,
+                    ap.clsid
+                );
+                match drive(target, tip) {
+                    Ok((pass, fail, mut lat)) => {
+                        println!("  {app} {}: pass={pass} fail={fail}", if tip { "TIP" } else { "plain" });
+                        lat.report("  latency SendInput->text change");
+                    }
+                    Err(e) => {
+                        println!("  ABORT: {e}");
+                        break;
+                    }
+                }
+            }
+            kill_tree(pid);
+            std::thread::sleep(Duration::from_millis(500));
+        }
+        let r = pm.ActivateProfile(saved.dwProfileType, saved.langid, &saved.clsid, &saved.guidProfile, saved.hkl, TF_IPPMF_FORSESSION);
+        println!("session input restored -> {:?}", r.map_err(|e| e.code()));
         Ok(())
     }
 }

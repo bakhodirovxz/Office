@@ -94,13 +94,114 @@ fn letter(base: char) -> char {
     if shift_down() ^ caps_on() { base.to_ascii_uppercase() } else { base }
 }
 
-/// What the composition shows for the keys typed into it.
-fn shown(typed: &str) -> String {
-    let mut c = typed.chars();
-    match (c.next(), c.next()) {
-        (Some(s), Some(_)) => (if s == 'S' { "Ş" } else { "ş" }).into(), // R10: the first letter decides the case
-        _ => typed.into(),
+/// What the composition shows for the keys typed into it. R10: the first letter decides the case.
+pub fn shown(typed: &str) -> String {
+    let t: Vec<char> = typed.chars().collect();
+    if t.len() != 2 {
+        return typed.into();
     }
+    let up = t[0].is_ascii_uppercase();
+    let l = match (t[0].to_ascii_lowercase(), t[1].to_ascii_lowercase()) {
+        ('s', 'h') => ('ş', 'Ş'),
+        ('c', 'h') => ('ç', 'Ç'),
+        ('o', '\'') => ('ö', 'Ö'),
+        ('g', '\'') => ('ğ', 'Ğ'),
+        _ => return typed.into(),
+    };
+    (if up { l.1 } else { l.0 }).to_string()
+}
+
+/// A key as the conversion sees it.
+#[derive(Clone, Copy, Debug)]
+pub enum Key {
+    /// s c o g h (either case) or the apostrophe `'`.
+    Ch(char),
+    Back,
+    Other,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Act {
+    /// Commit any open composition, then start a new one with this text.
+    Start(String),
+    /// Replace the composition's text.
+    Update(String),
+    /// Replace the composition's text (may be empty), then commit it.
+    Finish(String),
+    /// Commit the composition; the key goes on to the application.
+    Commit,
+}
+
+/// The conversion state machine (docs/keyboard/PLAN.md 2.1). `typed`: keys in the composition; `None`: the key is
+/// not ours and nothing is pending.
+pub fn decide(typed: &str, composing: bool, key: Key) -> Option<Act> {
+    let t: Vec<char> = typed.chars().collect();
+    let first = t.first().map(|c| c.to_ascii_lowercase());
+    match key {
+        Key::Ch(c) => {
+            let lc = c.to_ascii_lowercase();
+            if composing {
+                match (first, t.len(), lc) {
+                    (Some('s' | 'c'), 1, 'h') | (Some('o' | 'g' | 's'), 1, '\'') => return Some(Act::Update(format!("{typed}{c}"))),
+                    // s'h: the 1995 separator; 2026 writes plain sh (rules.md 15.2)
+                    (Some('s'), 2, 'h') if t[1] == '\'' => return Some(Act::Finish(format!("{}{c}", t[0]))),
+                    _ => {}
+                }
+            }
+            if matches!(lc, 's' | 'c' | 'o' | 'g') {
+                Some(Act::Start(c.to_string()))
+            } else {
+                composing.then_some(Act::Commit)
+            }
+        }
+        Key::Back if composing => match t.len() {
+            1 => Some(Act::Finish(String::new())),
+            _ if first == Some('s') && t[1] == '\'' => Some(Act::Update(t[0].to_string())),
+            _ => Some(Act::Finish(typed.into())),
+        },
+        Key::Back => None,
+        Key::Other => composing.then_some(Act::Commit),
+    }
+}
+
+/// Test cases shared by the unit test and kbdctl: (typed, expected with the TIP). '\u{8}' = Backspace, '\n' = Enter.
+pub const CASES: &[(&str, &str)] = &[
+    ("shahar ", "şahar "),
+    ("Shahar ", "Şahar "),
+    ("SHAHAR ", "ŞAHAR "),
+    ("sHa ", "şa "),
+    ("choy ", "çoy "),
+    ("Choy ", "Çoy "),
+    ("CHOY ", "ÇOY "),
+    ("o'zbek ", "özbek "),
+    ("O'zbek ", "Özbek "),
+    ("O'ZBEK ", "ÖZBEK "),
+    ("g'isht ", "ğişt "),
+    ("G'ani ", "Ğani "),
+    ("to'g'ri ", "töğri "),
+    ("Is'hoq ", "Ishoq "),
+    ("Ishoq ", "Işoq "),
+    ("Ish\u{8}oq ", "Ishoq "),
+    ("o'\u{8}zbek ", "o'zbek "),
+    ("a'lo ", "a'lo "),
+    ("maktab ", "maktab "),
+    ("as\u{8}b ", "ab "),
+    ("ssh ", "sş "),
+    ("tosh\n", "toş\n"),
+    ("qush\u{8}\u{8}x ", "qusx "),
+];
+
+/// What the text is without the TIP: Backspace deletes, everything else is typed.
+pub fn plain(typed: &str) -> String {
+    let mut s = String::new();
+    for c in typed.chars() {
+        if c == '\u{8}' {
+            s.pop();
+        } else {
+            s.push(c);
+        }
+    }
+    s
 }
 
 /// Moves the selection to the end of `range` (so the caret follows the composition).
@@ -136,43 +237,30 @@ unsafe fn text_before_caret(ec: u32, ctx: &ITfContext, n: i32) -> Result<String>
     }
 }
 
-enum Act {
-    /// Commit any open composition, then start a new one with this text.
-    Start(String),
-    /// Replace the composition's text.
-    Update(String),
-    /// Replace the composition's text (may be empty), then commit it.
-    Finish(String),
-    /// Commit the composition; the key goes on to the application.
-    Commit,
-}
-
 impl Tip_Impl {
     fn composing(&self) -> bool {
         self.st.comp.borrow().is_some()
     }
 
-    /// Decides what a key does. `None`: not ours, and nothing is pending.
+    /// Maps the key and asks the state machine.
     fn plan(&self, vk: u16) -> Option<Act> {
         if is_modifier(vk) {
             return None; // Shift for "sH" must not commit the pending "s"
         }
-        let typed = self.st.typed.borrow().clone();
         let composing = self.composing();
         if ctrl_or_alt() {
             return composing.then_some(Act::Commit);
         }
-        match (vk, typed.len()) {
-            (0x53, _) => Some(Act::Start(letter('s').into())),
-            (0x48, 1) if composing => {
-                let t = format!("{typed}{}", letter('h'));
-                Some(Act::Update(t))
-            }
-            (v, 2) if v == VK_BACK.0 && composing => Some(Act::Finish(typed)),
-            (v, 1) if v == VK_BACK.0 && composing => Some(Act::Finish(String::new())),
-            _ if composing => Some(Act::Commit),
-            _ => None,
-        }
+        let key = match VIRTUAL_KEY(vk) {
+            VK_BACK => Key::Back,
+            // shortcut: apostrophe = the US-layout ' or ` key unshifted; the product uses ToUnicodeEx
+            VK_OEM_7 | VK_OEM_3 if !shift_down() => Key::Ch('\''),
+            _ => match (vk as u8 as char).to_ascii_lowercase() {
+                c @ ('s' | 'c' | 'o' | 'g' | 'h') if vk < 0x80 => Key::Ch(letter(c)),
+                _ => Key::Other,
+            },
+        };
+        decide(&self.st.typed.borrow(), composing, key)
     }
 
     fn run(&self, ctx: &ITfContext, act: Act) -> Result<()> {
@@ -360,12 +448,48 @@ extern "system" fn DllCanUnloadNow() -> HRESULT {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    /// Plays keys through `decide` against a fake document (what an app would hold).
+    fn simulate(keys: &str) -> String {
+        let (mut doc, mut comp): (String, Option<String>) = (String::new(), None);
+        for k in keys.chars() {
+            let key = match k {
+                '\u{8}' => Key::Back,
+                's' | 'c' | 'o' | 'g' | 'h' | 'S' | 'C' | 'O' | 'G' | 'H' | '\'' => Key::Ch(k),
+                _ => Key::Other,
+            };
+            match decide(comp.as_deref().unwrap_or(""), comp.is_some(), key) {
+                Some(Act::Start(t)) => {
+                    if let Some(c) = comp.take() { doc += &shown(&c); }
+                    comp = Some(t);
+                }
+                Some(Act::Update(t)) => comp = Some(t),
+                Some(Act::Finish(t)) => { doc += &t; comp = None; }
+                Some(Act::Commit) | None => {
+                    if let Some(c) = comp.take() { doc += &shown(&c); }
+                    if k == '\u{8}' { doc.pop(); } else { doc.push(k); }
+                }
+            }
+        }
+        doc + &comp.map(|c| shown(&c)).unwrap_or_default()
+    }
+
+    #[test]
+    fn cases_hold() {
+        for (typed, want) in CASES {
+            assert_eq!(simulate(typed), *want, "typed {typed:?}");
+        }
+    }
+
     #[test]
     fn shown_follows_r10() {
-        assert_eq!(super::shown("s"), "s");
-        assert_eq!(super::shown("sh"), "ş");
-        assert_eq!(super::shown("Sh"), "Ş");
-        assert_eq!(super::shown("SH"), "Ş");
-        assert_eq!(super::shown("sH"), "ş");
+        assert_eq!(shown("s"), "s");
+        assert_eq!(shown("sh"), "ş");
+        assert_eq!(shown("Sh"), "Ş");
+        assert_eq!(shown("SH"), "Ş");
+        assert_eq!(shown("sH"), "ş");
+        assert_eq!(shown("O'"), "Ö");
+        assert_eq!(shown("s'"), "s'");
     }
 }
