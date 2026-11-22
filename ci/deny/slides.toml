@@ -57,6 +57,7 @@ ignore = [
     { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained (no vulnerability); Linux-only AT-SPI accessibility chain eframe -> egui-winit -> accesskit_winit -> accesskit_unix; not built for Windows/web; replace when upstream egui moves (review at each sync)" },
     { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
     { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained (no vulnerability); same Linux-only accesskit_unix D-Bus chain as RUSTSEC-2026-0370" },
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained (no vulnerability, no fixed version); upstream deckcraft-text uses it for date fields (default-features = false, clock); replace when upstream moves (found 2026-11-21)" },
 ]
 
 # egui's default UI fonts (Ubuntu-Light, Hack, emoji-icon-font): font licences, attributed upstream as dependency-bundled assets.

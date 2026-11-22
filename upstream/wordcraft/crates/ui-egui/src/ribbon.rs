@@ -3347,7 +3347,10 @@ mod tests {
     #[cfg(office_uz)]
     #[test]
     fn status_bar_language_of_an_untagged_document_follows_an_uzbek_interface() {
-        let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Salom")), crate::Services::default());
+        // A new document's built-in styles say en-US; a .docx with no w:lang reads into an empty style sheet (no language).
+        let mut doc = wordcraft_doc::Document::from_text("Salom");
+        doc.styles.default_chr.lang = None;
+        let app = WordApp::new(Session::new(doc), crate::Services::default());
         assert!(caret_lang_tag(&app).is_none());
         crate::i18n::set_current(crate::i18n::Lang::from_code("uz-latn").expect("the overlay adds uz-latn"));
         assert_eq!(caret_language(&app), crate::i18n::current().name());
