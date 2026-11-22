@@ -197,10 +197,10 @@ fn media_parts(docx: &[u8]) -> std::collections::BTreeMap<String, Vec<u8>> {
     let mut out = std::collections::BTreeMap::new();
     for i in 0..zip.len() {
         let mut f = zip.by_index(i).unwrap();
-        if f.name().starts_with("word/media/") {
+        if f.name().unwrap().starts_with("word/media/") {
             let mut b = Vec::new();
             std::io::Read::read_to_end(&mut f, &mut b).unwrap();
-            out.insert(f.name().to_string(), b);
+            out.insert(f.name().unwrap().to_string(), b);
         }
     }
     out
