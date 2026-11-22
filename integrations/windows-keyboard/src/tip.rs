@@ -563,7 +563,9 @@ impl Tip_Impl {
         }
         self.st.button_sink.borrow_mut().take(); // after RemoveItem, which unadvises it
         self.st.reset();
-        log("deactivate");
+        log(&format!("deactivate hkl={:?}", unsafe {
+            GetKeyboardLayout(0)
+        }));
         Ok(())
     }
 }
@@ -584,7 +586,9 @@ impl ITfTextInputProcessorEx_Impl for Tip_Impl {
 }
 
 impl ITfKeyEventSink_Impl for Tip_Impl {
-    fn OnSetFocus(&self, _fg: BOOL) -> Result<()> {
+    fn OnSetFocus(&self, fg: BOOL) -> Result<()> {
+        // Debug log: losing the keystroke foreground without a Deactivate would explain keys that never arrive.
+        log(&format!("key sink foreground={}", fg.as_bool()));
         Ok(())
     }
     fn OnTestKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {

@@ -427,8 +427,10 @@ fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), 
             plain(typed)
         });
         t.clear();
-        // Caps Lock turned on mid-run twice (machine runs 3 and 4, cause unknown); it inverts every case.
-        if caps_in(t.top()) {
+        // Caps Lock turned on mid-run twice (machine runs 3 and 4, cause unknown); it inverts every case. Never while
+        // the TIP is on: caps_in attaches to the target's input thread, and that ended the TIP within milliseconds in
+        // every app of machine run 6 (suite() checks once before the TIP is activated; a FAIL line flags an inversion).
+        if !with_tip && caps_in(t.top()) {
             toggle_caps();
             println!(
                 "  caps lock found on before {typed:?}: switched off -> on={}",
@@ -468,10 +470,64 @@ fn drive(t: Target, with_tip: bool) -> std::result::Result<(usize, usize, Lat), 
             println!("  ok   {typed:?} -> {got:?}");
         } else {
             fail += 1;
-            println!("  FAIL {typed:?} -> {got:?} (want {want:?})");
+            let inverted = got == swap_case(&want);
+            println!(
+                "  FAIL {typed:?} -> {got:?} (want {want:?}){}",
+                if inverted {
+                    " CASE INVERTED: Caps Lock was on"
+                } else {
+                    ""
+                }
+            );
         }
     }
     Ok((pass, fail, lat))
+}
+
+fn swap_case(s: &str) -> String {
+    s.chars()
+        .flat_map(|c| {
+            if c.is_uppercase() {
+                c.to_lowercase().collect::<Vec<_>>()
+            } else {
+                c.to_uppercase().collect()
+            }
+        })
+        .collect()
+}
+
+/// The session's keyboard input right now.
+fn active_input(pm: &ITfInputProcessorProfileMgr) -> String {
+    let mut ap = TF_INPUTPROCESSORPROFILE::default();
+    let _ = unsafe { pm.GetActiveProfile(&GUID_TFCAT_TIP_KEYBOARD, &mut ap) };
+    format!(
+        "lang={:#06x} tip={} hkl={:?}",
+        ap.langid,
+        ap.clsid == CLSID_TIP,
+        ap.hkl
+    )
+}
+
+/// Machine run 6: the TIP was deactivated in all three apps right after the harness attached to the target's input
+/// thread (caps_in). Shows whether attaching alone changes the session's input, without sending a key.
+fn attach_check(pm: &ITfInputProcessorProfileMgr, top: HWND, label: &str) {
+    let before = active_input(pm);
+    let _ = caps_in(top);
+    std::thread::sleep(Duration::from_millis(500));
+    println!(
+        "  attach check ({label}): before {before}; after AttachThreadInput {}",
+        active_input(pm)
+    );
+}
+
+/// A loaded keyboard layout of the user's that is not US English (ru on the owner's PC), if any.
+fn other_layout() -> Option<HKL> {
+    let mut list = [HKL::default(); 32];
+    let n = unsafe { GetKeyboardLayoutList(Some(&mut list)) } as usize;
+    list[..n.min(32)]
+        .iter()
+        .copied()
+        .find(|h| !matches!((h.0 as usize & 0xffff) as u16, 0x0409 | LANGID_UZ_LATN))
 }
 
 /// The first key after start-up can be lost (machine run 5: Edge's first case gave "hahar "). Types a space until the
@@ -725,6 +781,13 @@ fn suite(apps: &[&str]) -> Result<()> {
                     println!("  ABORT: cannot take the foreground (now {})", fg_exe());
                     break;
                 }
+                if tip && caps_in(target.top()) {
+                    toggle_caps();
+                    println!(
+                        "  caps lock found on before the TIP run: switched off -> on={}",
+                        caps_in(target.top())
+                    );
+                }
                 let r = activate(&pm, tip);
                 std::thread::sleep(Duration::from_millis(500));
                 let mut ap = TF_INPUTPROCESSORPROFILE::default();
@@ -747,6 +810,27 @@ fn suite(apps: &[&str]) -> Result<()> {
                     Err(e) => {
                         println!("  ABORT: {e}");
                         break;
+                    }
+                }
+                if tip && GetForegroundWindow() == target.top() {
+                    attach_check(&pm, target.top(), "TIP");
+                    // The same with another of the user's layouts: tells a general Windows effect from one of our TIP.
+                    if let Some(hkl) = other_layout() {
+                        let lang = (hkl.0 as usize & 0xffff) as u16;
+                        let r = pm.ActivateProfile(
+                            TF_PROFILETYPE_KEYBOARDLAYOUT,
+                            lang,
+                            &GUID::zeroed(),
+                            &GUID::zeroed(),
+                            hkl,
+                            TF_IPPMF_FORSESSION,
+                        );
+                        std::thread::sleep(Duration::from_millis(500));
+                        println!(
+                            "  layout {hkl:?}: activate -> {:?}",
+                            r.map_err(|e| e.code())
+                        );
+                        attach_check(&pm, target.top(), "layout");
                     }
                 }
             }
