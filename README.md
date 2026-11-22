@@ -81,9 +81,9 @@ encrypts files at rest. Commands are under [Converter commands](#converter-comma
 ### Web version
 
 The editors run in a browser as WebAssembly, loaded one at a time: opening Docs downloads only Docs. A small shell page starts the
-apps. Size budgets for every editor are enforced in CI ([web/budgets.toml](web/budgets.toml)); the whole web distribution measured
-9.6 MB compressed with brotli on 2026-11-22 (see [docs/STATUS.md](docs/STATUS.md)). The Windows installer also hosts this web shell
-locally inside a desktop window.
+apps. Each editor is one WebAssembly bundle of roughly 5 to 9.5 MB compressed with brotli (measured, see
+[docs/STATUS.md](docs/STATUS.md)), and its size budget is enforced in CI ([web/budgets.toml](web/budgets.toml)). The Windows
+installer also hosts this web shell locally inside a desktop window.
 
 ### Document server
 
@@ -200,16 +200,21 @@ developer setup below is for Windows 10 with Git Bash.
 
 ### Clean checkout (Windows 10, Git Bash)
 
-Prerequisites on the machine (`scripts/bootstrap.sh` only checks them, it installs nothing): rustup with the `stable-x86_64-pc-windows-gnu` toolchain (MSYS2 ucrt64 gcc),
-the `wasm32-unknown-unknown` target, rustfmt and clippy; `cargo-deny`, `cargo-nextest`, `sccache`, `actionlint`, `trunk`, `brotli` on PATH (exact versions in
-`scripts/tools.lock`; `~/.cargo/bin` and `E:/office-tools/bin` are added by `scripts/env.sh`); Node with Playwright for `web-smoke`; network access for the `craft-fonts`
-fetch (or a cache clone in `E:/office-upstream/craft-fonts`).
+Prerequisites (`scripts/bootstrap.sh` only checks them, it installs nothing):
+- rustup with the `stable-x86_64-pc-windows-gnu` toolchain (MSYS2 ucrt64 gcc), the `wasm32-unknown-unknown` target, rustfmt and clippy;
+- `cargo-deny`, `cargo-nextest`, `sccache`, `actionlint`, `trunk` and `brotli` on PATH (exact versions in `scripts/tools.lock`);
+- Node with Playwright for the `web-smoke` job;
+- network access for the `craft-fonts` fetch.
+
+The scripts keep build output, caches and tools on a second drive: by default `E:/office-target`, `E:/office-cache`,
+`E:/office-upstream` and `E:/office-tools/bin` ([scripts/env.sh](scripts/env.sh)). Set `OFFICE_TARGET` to put the build output
+elsewhere; the other paths are set in `scripts/env.sh`.
 
 ```bash
-git clone <repo> <dir> && cd <dir>                      # branch phase-1
-export OFFICE_TARGET=E:/office-target/p1/clean/target   # optional: own target dir (default E:/office-target/p1); set it BEFORE sourcing env.sh
-scripts/bootstrap.sh                                    # checks tools, creates E: dirs, fetches craft-fonts (upstream/craft-fonts is not in git), starts sccache
-scripts/ci.sh full                                      # the whole gate, hours when cold. One job: scripts/ci.sh <job> [args] (see the header of scripts/ci.sh)
+git clone https://github.com/bakhodirovxz/Office.git hoshiya && cd hoshiya
+export OFFICE_TARGET=E:/office-target/hoshiya   # optional; set it before the scripts source env.sh
+scripts/bootstrap.sh                            # checks tools, creates the dirs, fetches craft-fonts (not in git), starts sccache
+scripts/ci.sh full                              # the whole gate, hours when cold; one job: scripts/ci.sh <job> [args]
 ```
 Notes:
 - Run `scripts/ci.sh` with exclusive use of the machine: one rustc-heavy job at a time, a 3 GB free-RAM gate, and a build lock at `$OFFICE_TARGET/BUILD.lock`
@@ -263,7 +268,8 @@ Working notes for coding agents are in `CLAUDE.md`; plans and status are in `doc
 
 ## Licence, brand and acknowledgements
 
-- **Our code** (`crates/`, `xtask/`, `domains/`, `scripts/`, `i18n/` and the patches): MIT OR Apache-2.0, at your option
+- **Our code** (everything outside `upstream/`, except the third-party material and brand assets listed in [NOTICE](NOTICE),
+  including the patches): MIT OR Apache-2.0, at your option
   ([LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE)).
 - **Upstream engines** keep their own licences and notices (MIT OR Apache-2.0); every change to them is a recorded patch.
 - **One exception:** the `symphonia` audio crates are MPL-2.0. They are used unmodified and listed in [NOTICE](NOTICE) with a source
