@@ -326,7 +326,20 @@ fn cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there() {
     s.execute(LATN, &json!({})).unwrap();
     // a segment that already has a 2026 letter stays; the unselected shape is untouched
     assert_eq!((text_of(&s, 0, a), text_of(&s, 0, b), text_of(&s, 0, c)), ("Şahar".into(), "Ishoq şahar".into(), "Shahar".into()));
-    // the slide scope is never upgraded
+}
+
+#[test]
+fn cyrillic_to_latin_on_the_whole_slide_upgrades_1995_latin_but_not_an_english_paragraph() {
+    let mut s = session();
+    let a = add(&mut s, "Shahar");
+    let b = add(&mut s, "This is the best fish");
+    let c = add(&mut s, "Шаҳар");
+    let d = add(&mut s, "This is the Шаҳар");
+    deselect(&mut s);
     s.execute(LATN, &json!({"scope": "slide"})).unwrap();
-    assert_eq!(text_of(&s, 0, c), "Shahar");
+    // Uzbek 1995 Latin is upgraded, the English paragraph is untouched, Cyrillic is converted, also inside the English one
+    assert_eq!(
+        [text_of(&s, 0, a), text_of(&s, 0, b), text_of(&s, 0, c), text_of(&s, 0, d)],
+        ["Şahar", "This is the best fish", "Şahar", "This is the Şahar"]
+    );
 }

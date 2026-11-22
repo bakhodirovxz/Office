@@ -161,8 +161,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
     found.dedup_by_key(|(si, c, _)| (*si, c.row, c.col));
     let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
     let detected = uz_translit::detect(&all);
-    // Cyrillic to Latin on a Latin-dominant selection (never a whole sheet or workbook) rewrites 1995 Latin in the 2026 letters.
-    opts.latin_upgrade = scope == Scope::Selection && dir == Some(Direction::ToLatin) && detected == Some(Script::Latin);
+    // Cyrillic to Latin rewrites 1995 Latin in the 2026 letters: on a Latin-dominant selection, and on a whole sheet or workbook
+    // too, where a cell that looks English keeps its Latin.
+    let to_latin = dir == Some(Direction::ToLatin);
+    opts.latin_upgrade = to_latin && (scope != Scope::Selection || detected == Some(Script::Latin));
+    opts.upgrade_skip_english = scope != Scope::Selection;
     let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
     let mut changes = Vec::new();
     if let Some(dir) = dir {
