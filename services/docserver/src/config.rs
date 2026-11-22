@@ -53,7 +53,7 @@ pub struct ProviderConfig {
     #[serde(default = "session")]
     pub history: String,
     /// `uz-Latn`, `uz-Cyrl`, `ru` or `en`: the editors' language for this provider's sessions, over `editorConfig.lang` (a provider
-    /// whose own UI speaks a language ONLYOFFICE has not, and so always sends another). Unset: `editorConfig.lang` decides
+    /// whose own UI speaks a language the reference document server has not, and so always sends another). Unset: `editorConfig.lang` decides
     pub ui_lang: Option<String>,
     /// the plugins this provider's users get (PLAN phase 7, section 8); the packages are in `[docserver.plugins] dir`
     #[serde(default)]

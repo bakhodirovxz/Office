@@ -167,7 +167,11 @@ fn tail_ok(before: &str, t: &str, after: &str) -> bool {
             continue;
         }
         let p = prev.map(low);
-        let next = chars[k + 1..].iter().copied().find(|c| !JOINERS.contains(c)).map(low);
+        let next = chars[k + 1..]
+            .iter()
+            .copied()
+            .find(|c| !JOINERS.contains(c))
+            .map(low);
         let ok = match low(c) {
             'h' => matches!(p, Some('s' | 'c')),
             'e' | 'o' | 'u' | 'a' => p == Some('y'),
@@ -294,7 +298,8 @@ fn pass(name: &str, bytes: &[u8], cmd: Option<&str>) -> (Vec<u8>, serde_json::Va
 }
 
 fn model_check(b: &Session, r: &Session, what: &str, errs: &mut Vec<String>) {
-    let stories = std::iter::once(StoryRef::Body).chain(b.doc.parts.keys().map(|k| StoryRef::Part(*k)));
+    let stories =
+        std::iter::once(StoryRef::Body).chain(b.doc.parts.keys().map(|k| StoryRef::Part(*k)));
     for story in stories {
         story_check(b, r, story, &format!("{what} {story:?}"), errs);
     }
@@ -312,10 +317,7 @@ fn story_check(b: &Session, r: &Session, story: StoryRef, what: &str, errs: &mut
         return;
     }
     for (k, (x, y)) in pb.iter().zip(&pr).enumerate() {
-        let (a, c) = (
-            b.doc.para(story, x).unwrap(),
-            r.doc.para(story, y).unwrap(),
-        );
+        let (a, c) = (b.doc.para(story, x).unwrap(), r.doc.para(story, y).unwrap());
         // runs with text, in order; equal neighbours merge in R when a tail run vanished
         // A run that holds only invisible joiners (Word puts its own symbol font on U+2060) is absorbed by the
         // letter before it when the letters are rewritten: reported in docs/phase2/perf.md and docs/STATUS.md (WP9), not asserted.
@@ -571,10 +573,20 @@ fn comparer_detects_a_formatting_change() {
 /// A vanished run is accepted only as the tail of a digraph or cluster.
 #[test]
 fn only_cluster_tails_may_vanish() {
-    assert!(tail_ok("s", "h", "") && tail_ok("C", "H", "") && tail_ok("o", "\u{2BB}", "") && tail_ok("g", "'", ""));
+    assert!(
+        tail_ok("s", "h", "")
+            && tail_ok("C", "H", "")
+            && tail_ok("o", "\u{2BB}", "")
+            && tail_ok("g", "'", "")
+    );
     assert!(tail_ok("s", "'", "h") && tail_ok("y", "o", "") && tail_ok("\u{43A}", "ь", ""));
     assert!(tail_ok("a", "\u{2060}", "") && tail_ok("s\u{AD}", "h", ""));
-    assert!(!tail_ok("a", "h", "") && !tail_ok("s", "'", "a") && !tail_ok("a", "'", "") && !tail_ok("s", "x", ""));
+    assert!(
+        !tail_ok("a", "h", "")
+            && !tail_ok("s", "'", "a")
+            && !tail_ok("a", "'", "")
+            && !tail_ok("s", "x", "")
+    );
     assert!(!tail_ok("s", "hx", "") && !tail_ok("", "h", ""));
 }
 
