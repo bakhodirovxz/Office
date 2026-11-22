@@ -130,10 +130,11 @@ fn run(s: &mut Session, v: &Value, dir: Option<Direction>) -> CmdResult {
         return Ok(summary(&Stats::default(), dir, true, &ctx));
     };
     let detected = detect(&textmap::text_of(s, &targets));
-    // Latin selection + "Cyrillic to Latin": rewrite the 1995 letters in the 2026 ones. Never for a whole document
-    // (English words in a Cyrillic text would be mangled, "fish" -> "fiş").
-    ctx.opts.latin_upgrade =
-        use_selection && dir == Some(Direction::ToLatin) && detected == Some(Direction::ToCyrillic);
+    // "Cyrillic to Latin" rewrites the 1995 letters in the 2026 ones: on a Latin-dominant selection, and on a whole document
+    // too, where a paragraph that looks English keeps its Latin ("fish" stays "fish").
+    ctx.opts.latin_upgrade = dir == Some(Direction::ToLatin)
+        && (!use_selection || detected == Some(Direction::ToCyrillic));
+    ctx.opts.upgrade_skip_english = !use_selection;
     let dir = dir.or(detected);
     let mut st = Stats::default();
     if let Some(dir) = dir {

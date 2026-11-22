@@ -287,6 +287,24 @@ impl<'a> Seg<'a> {
     }
 }
 
+/// English function words; none is a common Uzbek Latin word (on, in, u, men, bu ... are left out on purpose).
+const ENGLISH: [&str; 28] = [
+    "the", "and", "is", "are", "was", "were", "of", "to", "for", "with", "that", "this", "you", "it", "be", "have",
+    "has", "not", "from", "by", "will", "would", "can", "an", "or", "what", "which", "but",
+];
+
+/// True when the segment has at least 2 distinct English function words (whole words, any case).
+pub(crate) fn looks_english(orig: &[char]) -> bool {
+    let mut seen = [false; ENGLISH.len()];
+    for w in orig.split(|c| !c.is_alphabetic()) {
+        let w: String = w.iter().map(|c| c.to_ascii_lowercase()).collect();
+        if let Some(i) = ENGLISH.iter().position(|e| *e == w) {
+            seen[i] = true;
+        }
+    }
+    seen.iter().filter(|&&b| b).count() >= 2
+}
+
 /// Convert one segment. Returns the output text and (when `track`) the piece marks.
 pub(crate) fn convert_segment(
     orig: &[char],
@@ -327,7 +345,8 @@ pub(crate) fn convert_segment(
     seg.upgrade = !to_cyr
         && opts.latin_upgrade
         && seg.opts.latin_alphabet == LatinAlphabet::Y2026
-        && !seg.items.iter().any(|t| is_new_letter(t.c));
+        && !seg.items.iter().any(|t| is_new_letter(t.c))
+        && !(opts.upgrade_skip_english && looks_english(orig));
     scan::mark(&mut seg.items, to_cyr && opts.roman_numerals, para_start);
     if to_cyr || seg.upgrade {
         l2c::mark_closers(&mut seg.items);
