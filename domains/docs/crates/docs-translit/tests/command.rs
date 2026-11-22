@@ -569,9 +569,19 @@ fn latn_on_a_selected_latin_text_upgrades_1995_to_2026_and_one_undo_restores_it(
     assert_eq!((r[1].0.bold, r[1].1.as_str()), (Some(true), "şahar"));
     s.run("edit.undo", &json!({})).unwrap();
     assert_eq!(s.doc, before, "one undo restores it");
-    // No selection: the whole document is left alone (English words in Cyrillic documents).
-    let mut s = mk();
+}
+
+#[test]
+fn latn_on_the_whole_document_upgrades_1995_latin_but_not_an_english_paragraph() {
+    let mut s = session(vec![
+        para(&[("Shahar", Default::default())]),
+        para(&[("This is the best fish", Default::default())]),
+        para(&[("Шаҳар", Default::default())]),
+        para(&[("This is the Шаҳар", Default::default())]),
+    ]);
     s.sel = Selection::caret(Pos::body(0, 0));
     s.run(LATN, &json!({})).unwrap();
-    assert_eq!(s.doc, before);
+    // Uzbek 1995 Latin is upgraded, the English paragraph is untouched, Cyrillic is converted, also inside the English one
+    let got: Vec<String> = (0..4).map(|i| text(&s, i)).collect();
+    assert_eq!(got, ["Şahar", "This is the best fish", "Şahar", "This is the Şahar"]);
 }

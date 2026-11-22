@@ -91,6 +91,9 @@ pub struct Options {
     pub roman_numerals: bool,
     /// ->Latin (2026 output): also rewrite 1995 Latin words in the 2026 letters (oʻ->ö, sh->ş, ...). Default false.
     pub latin_upgrade: bool,
+    /// With `latin_upgrade`: a segment (one paragraph) with at least 2 distinct English function words gets no upgrade.
+    /// Default false.
+    pub upgrade_skip_english: bool,
 }
 
 impl Default for Options {
@@ -101,6 +104,7 @@ impl Default for Options {
             foreign_latin_guard: true,
             roman_numerals: true,
             latin_upgrade: false,
+            upgrade_skip_english: false,
         }
     }
 }
@@ -193,4 +197,10 @@ pub fn detect(text: &str) -> Option<Script> {
         core::cmp::Ordering::Less => Some(Script::Cyrillic),
         core::cmp::Ordering::Equal => None,
     }
+}
+
+/// True when `text` (one paragraph) has at least 2 distinct English function words: what `Options::upgrade_skip_english` tests.
+pub fn looks_english(text: &str) -> bool {
+    let chars: Vec<char> = text.chars().collect();
+    engine::looks_english(&chars)
 }

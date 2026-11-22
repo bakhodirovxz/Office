@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 12:00:00 +0500
+Subject: [PATCH] engine: Cyrillic to Latin with nothing selected upgrades 1995 Latin, an English-looking text keeps it
+
+tools.translitLatn on the whole sheet, workbook, slide or deck sets uz-translit Options.latin_upgrade and
+upgrade_skip_english (as the MS Office add-in does): 1995 Latin becomes 2026 Latin, a cell or paragraph with 2+ English
+function words keeps its Latin, Cyrillic in it is still converted. A real selection is unchanged (Latin-dominant only).
+---
+diff --git a/crates/engine/src/cmd/translit.rs b/crates/engine/src/cmd/translit.rs
+index 6a6fe0c8..aa177d44 100644
+--- a/crates/engine/src/cmd/translit.rs
++++ b/crates/engine/src/cmd/translit.rs
+@@ -161,8 +161,11 @@ fn run(s: &mut Session, p: &Json, dir: Option<Direction>) -> Result<Json> {
+     found.dedup_by_key(|(si, c, _)| (*si, c.row, c.col));
+     let all: String = found.iter().flat_map(|(_, _, t)| [t.as_ref(), "\n"]).collect();
+     let detected = uz_translit::detect(&all);
+-    // Cyrillic to Latin on a Latin-dominant selection (never a whole sheet or workbook) rewrites 1995 Latin in the 2026 letters.
+-    opts.latin_upgrade = scope == Scope::Selection && dir == Some(Direction::ToLatin) && detected == Some(Script::Latin);
++    // Cyrillic to Latin rewrites 1995 Latin in the 2026 letters: on a Latin-dominant selection, and on a whole sheet or workbook
++    // too, where a cell that looks English keeps its Latin.
++    let to_latin = dir == Some(Direction::ToLatin);
++    opts.latin_upgrade = to_latin && (scope != Scope::Selection || detected == Some(Script::Latin));
++    opts.upgrade_skip_english = scope != Scope::Selection;
+     let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
+     let mut changes = Vec::new();
+     if let Some(dir) = dir {
+diff --git a/crates/engine/tests/translit.rs b/crates/engine/tests/translit.rs
+index 32b1bdd7..a98f85fe 100644
+--- a/crates/engine/tests/translit.rs
++++ b/crates/engine/tests/translit.rs
+@@ -254,10 +254,19 @@ fn without_the_param_the_latin_alphabet_is_the_suite_default_2026() {
+ fn cyrillic_to_latin_on_a_latin_selection_upgrades_1995_latin_only_there() {
+     let mut s = session();
+     s.execute("range.setValues", json!({"range": "A1", "values": [["Shahar", "Ishoq şahar", "Шаҳар"]]})).unwrap();
+-    // the whole sheet is never upgraded
+-    s.execute(LATN, json!({"scope": "sheet"})).unwrap();
+-    assert_eq!((text(&s, "A1"), text(&s, "C1")), ("Shahar".to_string(), "Şahar".to_string()));
+-    // a Latin-dominant selection is: 1995 words become 2026, a segment that already has a 2026 letter stays
++    // a Latin-dominant selection is upgraded: 1995 words become 2026, a segment that already has a 2026 letter stays
+     s.execute(LATN, json!({"scope": "selection", "range": "A1:C1"})).unwrap();
+-    assert_eq!((text(&s, "A1"), text(&s, "B1")), ("Şahar".to_string(), "Ishoq şahar".to_string()));
++    assert_eq!((text(&s, "A1"), text(&s, "B1"), text(&s, "C1")), ("Şahar".to_string(), "Ishoq şahar".to_string(), "Şahar".to_string()));
++}
++
++#[test]
++fn cyrillic_to_latin_on_the_whole_sheet_upgrades_1995_latin_but_not_an_english_cell() {
++    let mut s = session();
++    s.execute("range.setValues", json!({"range": "A1", "values": [["Shahar", "This is the best fish", "Шаҳар", "This is the Шаҳар"]]})).unwrap();
++    s.execute(LATN, json!({"scope": "sheet"})).unwrap();
++    // Uzbek 1995 Latin is upgraded, the English cell is untouched, Cyrillic is converted, also inside the English cell
++    assert_eq!(
++        [text(&s, "A1"), text(&s, "B1"), text(&s, "C1"), text(&s, "D1")],
++        ["Şahar", "This is the best fish", "Şahar", "This is the Şahar"]
++    );
+ }

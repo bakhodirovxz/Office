@@ -263,8 +263,10 @@ fn run(s: &mut Session, p: &Value, dir: Option<Direction>) -> Result<Value> {
     } else {
         None
     };
-    // Cyrillic to Latin on a Latin-dominant selection (never the slide or deck) rewrites 1995 Latin in the 2026 letters.
-    opts.latin_upgrade = upgradable && detected == Some(Script::Latin);
+    // Cyrillic to Latin rewrites 1995 Latin in the 2026 letters: on a Latin-dominant selection, and on a whole slide or deck
+    // too, where a paragraph that looks English keeps its Latin.
+    opts.latin_upgrade = dir == Some(Direction::ToLatin) && (!selection || detected == Some(Script::Latin));
+    opts.upgrade_skip_english = !selection;
     let dir = dir.or_else(|| detected.map(|sc| if sc == Script::Latin { Direction::ToCyrillic } else { Direction::ToLatin }));
     let mut changed: Vec<(usize, Slide)> = Vec::new();
     if dir.is_some() {

@@ -5,6 +5,7 @@
 
 ## Unreleased (rules/4)
 - `Options.latin_upgrade` (default false): ->Latin rewrites 1995 Latin words in the 2026 letters (rules.md 15.5).
+- `Options.upgrade_skip_english` (default false, with `latin_upgrade`): a segment with >= 2 distinct English function words gets no upgrade; `looks_english()` is the detector.
 
 ## rules/3
 - WP16 (2026-10-21, no output change): `DEFAULT_LATIN_ALPHABET` is the one default switch (owner decision O13, still
