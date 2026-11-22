@@ -22,9 +22,15 @@ fn english_paragraph_keeps_its_latin_uzbek_ones_are_upgraded() {
     assert_eq!(l(cy, true), "Men maktabga boraman.");
     assert_eq!(l(en, true), en);
     // without the option the English words are mangled (the reason for it)
-    assert_eq!(l(en, false), "The şop is open; şe wishes to check the çurç. Run git puş --force.");
+    assert_eq!(
+        l(en, false),
+        "The şop is open; şe wishes to check the çurç. Run git puş --force."
+    );
     // Cyrillic inside an English paragraph is still converted
-    assert_eq!(l("This is the shop: мактаб", true), "This is the shop: maktab");
+    assert_eq!(
+        l("This is the shop: мактаб", true),
+        "This is the shop: maktab"
+    );
 }
 
 #[test]
@@ -45,16 +51,25 @@ fn no_golden_uzbek_latin_is_taken_for_english() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("data");
     let mut n = 0;
     let mut bad = Vec::new();
-    for (file, col) in [("golden.tsv", 1), ("variants.tsv", 2), ("exceptions.tsv", 0)] {
+    for (file, col) in [
+        ("golden.tsv", 1),
+        ("variants.tsv", 2),
+        ("exceptions.tsv", 0),
+    ] {
         let txt = fs::read_to_string(dir.join(file)).unwrap();
         for row in txt.lines().skip(1).filter(|r| !r.starts_with('#')) {
-            let Some(latin) = row.split('\t').nth(col) else { continue };
+            let Some(latin) = row.split('\t').nth(col) else {
+                continue;
+            };
             n += 1;
             if looks_english(latin) {
                 bad.push(latin.to_string());
             }
         }
     }
-    println!("{n} Uzbek Latin entries checked, {} wrongly skipped: {bad:?}", bad.len());
+    println!(
+        "{n} Uzbek Latin entries checked, {} wrongly skipped: {bad:?}",
+        bad.len()
+    );
     assert!(bad.is_empty(), "{bad:?}");
 }

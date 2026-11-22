@@ -216,7 +216,7 @@ impl Package {
             if f.is_dir() {
                 continue;
             }
-            let name = f.name().trim_start_matches('/').to_string();
+            let name = f.name().map_err(|e| DocxError::Zip(e.to_string()))?.trim_start_matches('/').to_string();
             if f.size() > max_part {
                 return Err(DocxError::Limit(format!("part {name} declares {} bytes", f.size())));
             }
@@ -419,6 +419,16 @@ mod tests {
         assert!(matches!(Package::open_limited(&z, 1_000_000, 10_000_000), Err(DocxError::Limit(_))));
         assert!(matches!(Package::open_limited(&z, 10_000_000, 1_000_000), Err(DocxError::Limit(_))));
         assert!(Package::open_limited(&z, 10_000_000, 10_000_000).is_ok());
+    }
+
+    #[test]
+    fn part_inflating_past_its_declared_size_is_skipped() {
+        // zip 9 fails the read once an entry passes the size its central directory declares, so the
+        // part is skipped (unreadable) instead of being inflated up to the limits.
+        let mut z = zip_of(&[("word/document.xml", vec![b' '; 100_000])]);
+        let at = z.windows(4).position(|w| w == [0x50, 0x4B, 0x01, 0x02]).unwrap();
+        z[at + 24..at + 28].copy_from_slice(&10u32.to_le_bytes());
+        assert!(Package::open(&z).unwrap().get("word/document.xml").is_none());
     }
 
     #[test]

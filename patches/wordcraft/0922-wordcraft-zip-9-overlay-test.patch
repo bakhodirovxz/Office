@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] wordcraft: zip 9 in the overlay media test (0146)
+
+The media_parts helper that 0146 (phase 6) adds to office_overlay_tests.rs reads ZipFile::name, which zip 9 returns as
+ZipResult<Cow<str>>: unwrap it, as 0920 does for the other tests. Belongs with 0920 on every branch that carries 0146.
+---
+diff --git a/crates/ui-egui/src/office_overlay_tests.rs b/crates/ui-egui/src/office_overlay_tests.rs
+index 9d154f5a..23386243 100644
+--- a/crates/ui-egui/src/office_overlay_tests.rs
++++ b/crates/ui-egui/src/office_overlay_tests.rs
+@@ -197,10 +197,10 @@ fn media_parts(docx: &[u8]) -> std::collections::BTreeMap<String, Vec<u8>> {
+     let mut out = std::collections::BTreeMap::new();
+     for i in 0..zip.len() {
+         let mut f = zip.by_index(i).unwrap();
+-        if f.name().starts_with("word/media/") {
++        if f.name().unwrap().starts_with("word/media/") {
+             let mut b = Vec::new();
+             std::io::Read::read_to_end(&mut f, &mut b).unwrap();
+-            out.insert(f.name().to_string(), b);
++            out.insert(f.name().unwrap().to_string(), b);
+         }
+     }
+     out
+-- 
+2.0

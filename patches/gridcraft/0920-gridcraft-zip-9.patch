@@ -1,0 +1,191 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] gridcraft: zip 9 (RUSTSEC-2026-0545, -0548)
+
+zip 3.0.0 to 9 (owner decision 2026-11-22): the workspace requirement and the call sites of the one API change
+we meet (ZipFile::name and ZipArchive::name_for_index now return ZipResult<Cow<str>>). Production: package.rs
+skips an entry whose name does not decode (zip 9 never fails on UTF-8 or CP437 names), the CLI check lists only
+decodable names. ods.rs matches the entity name on the dereferenced bytes: zip 9 brings typed-path, whose AsRef
+impls make the old r.as_ref() ambiguous. Tests: .unwrap(). Cargo.lock is patch 0921.
+---
+diff --git a/Cargo.toml b/Cargo.toml
+index e8a6dc67..8ab4abee 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,7 +33,7 @@ log = "0.4"
+ rayon = "1"
+ regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
+ quick-xml = "0.41"
+-zip = { version = "3", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate"] }
+ sha2 = { version = "0.11", default-features = false }
+ # Decrypting password-protected workbooks ([MS-OFFCRYPTO]): AES and SHA-1, pure Rust (wasm-safe).
+ aes = { version = "0.9", default-features = false }
+diff --git a/apps/gridcraft-cli/src/check.rs b/apps/gridcraft-cli/src/check.rs
+index 2b852987..614b2b47 100644
+--- a/apps/gridcraft-cli/src/check.rs
++++ b/apps/gridcraft-cli/src/check.rs
+@@ -807,7 +807,9 @@ fn resolve_target(source_dir: &str, target: &str) -> String {
+ type Zip<'a> = zip::ZipArchive<Cursor<&'a [u8]>>;
+ 
+ fn zip_names(zip: &mut Zip<'_>) -> Vec<String> {
+-    (0..zip.len().min(MAX_ENTRIES)).filter_map(|i| zip.by_index_raw(i).ok().filter(|f| !f.is_dir()).map(|f| f.name().to_string())).collect()
++    (0..zip.len().min(MAX_ENTRIES))
++        .filter_map(|i| zip.by_index_raw(i).ok().filter(|f| !f.is_dir()).and_then(|f| f.name().ok().map(|n| n.into_owned())))
++        .collect()
+ }
+ 
+ fn read_zip_part(zip: &mut Zip<'_>, name: &str) -> Result<Vec<u8>, String> {
+@@ -1521,7 +1523,7 @@ mod tests {
+         let mut pending: Vec<(&str, &str)> = rels.to_vec();
+         for i in 0..src.len() {
+             let mut f = src.by_index(i).unwrap();
+-            let name = f.name().to_string();
++            let name = f.name().unwrap().to_string();
+             let mut body = String::new();
+             f.read_to_string(&mut body).unwrap();
+             if let Some(at) = pending.iter().position(|(r, _)| *r == name) {
+diff --git a/crates/engine/tests/numlocale.rs b/crates/engine/tests/numlocale.rs
+index cc12b003..5768d4b3 100644
+--- a/crates/engine/tests/numlocale.rs
++++ b/crates/engine/tests/numlocale.rs
+@@ -144,7 +144,7 @@ fn parts(xlsx: &[u8]) -> Vec<(String, Vec<u8>)> {
+     let mut out = Vec::new();
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).unwrap();
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         if name.starts_with("docProps/") {
+             continue;
+         }
+diff --git a/crates/engine/tests/open_calculated.rs b/crates/engine/tests/open_calculated.rs
+index 5d752953..a34c81f5 100644
+--- a/crates/engine/tests/open_calculated.rs
++++ b/crates/engine/tests/open_calculated.rs
+@@ -31,7 +31,7 @@ fn file(cached: f64, full_calc_on_load: bool) -> Vec<u8> {
+     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+     for i in 0..z.len() {
+         let mut f = z.by_index(i).unwrap();
+-        let name = f.name().to_string();
++        let name = f.name().unwrap().to_string();
+         let mut data = Vec::new();
+         std::io::Read::read_to_end(&mut f, &mut data).unwrap();
+         if name == "xl/workbook.xml" {
+diff --git a/crates/xlsx/src/ods.rs b/crates/xlsx/src/ods.rs
+index 8415ce39..3fb9add7 100644
+--- a/crates/xlsx/src/ods.rs
++++ b/crates/xlsx/src/ods.rs
+@@ -280,7 +280,7 @@ impl Import {
+                 Event::GeneralRef(r) => {
+                     let ch = match r.resolve_char_ref().map_err(xml_error)? {
+                         Some(c) => c,
+-                        None => match r.as_ref() {
++                        None => match &*r {
+                             b"amp" => '&',
+                             b"lt" => '<',
+                             b"gt" => '>',
+diff --git a/crates/xlsx/src/package.rs b/crates/xlsx/src/package.rs
+index 3e184eac..b02eddfe 100644
+--- a/crates/xlsx/src/package.rs
++++ b/crates/xlsx/src/package.rs
+@@ -55,8 +55,8 @@ impl<'a> Package<'a> {
+         }
+         let mut names = HashMap::new();
+         for i in 0..zip.len() {
+-            if let Some(n) = zip.name_for_index(i) {
+-                names.entry(normalize(n)).or_insert(i);
++            if let Some(Ok(n)) = zip.name_for_index(i) {
++                names.entry(normalize(&n)).or_insert(i);
+             }
+         }
+         Ok(Package { zip, names, total: 0 })
+diff --git a/crates/xlsx/src/tests/fixtures.rs b/crates/xlsx/src/tests/fixtures.rs
+index 54bff43e..8cbe51c5 100644
+--- a/crates/xlsx/src/tests/fixtures.rs
++++ b/crates/xlsx/src/tests/fixtures.rs
+@@ -372,7 +372,7 @@ fn drawing_with_picture_and_chart() {
+             let mut f = z.by_index(i).unwrap();
+             let mut d = vec![];
+             std::io::Read::read_to_end(&mut f, &mut d).unwrap();
+-            parts.push((f.name().to_string(), d));
++            parts.push((f.name().unwrap().to_string(), d));
+         }
+         parts.push(("xl/media/image1.png".into(), png.to_vec()));
+         let refs: Vec<(&str, &[u8])> = parts.iter().map(|(n, d)| (n.as_str(), d.as_slice())).collect();
+diff --git a/crates/xlsx/src/tests/malformed.rs b/crates/xlsx/src/tests/malformed.rs
+index 04c2a1c8..5f58c931 100644
+--- a/crates/xlsx/src/tests/malformed.rs
++++ b/crates/xlsx/src/tests/malformed.rs
+@@ -140,7 +140,7 @@ fn hostile_threaded_comments_persons_and_note_vml() {
+         let mut f = z.by_index(i).unwrap();
+         let mut d = vec![];
+         std::io::Read::read_to_end(&mut f, &mut d).unwrap();
+-        parts.push((f.name().to_string(), d));
++        parts.push((f.name().unwrap().to_string(), d));
+     }
+     let ns = r#"xmlns="http://schemas.microsoft.com/office/spreadsheetml/2018/threadedcomments""#;
+     let deep = "<v:group>".repeat(300) + &"</v:group>".repeat(300);
+diff --git a/crates/xlsx/src/tests/passthrough_tests.rs b/crates/xlsx/src/tests/passthrough_tests.rs
+index eff83703..e1b68f5c 100644
+--- a/crates/xlsx/src/tests/passthrough_tests.rs
++++ b/crates/xlsx/src/tests/passthrough_tests.rs
+@@ -129,7 +129,7 @@ impl Unpacked {
+             let mut f = z.by_index(i).unwrap();
+             let mut v = vec![];
+             f.read_to_end(&mut v).unwrap();
+-            parts.insert(f.name().to_string(), v);
++            parts.insert(f.name().unwrap().to_string(), v);
+         }
+         Unpacked { parts }
+     }
+diff --git a/crates/xlsx/src/tests/pivot_tests.rs b/crates/xlsx/src/tests/pivot_tests.rs
+index 9ec1f687..fba21af6 100644
+--- a/crates/xlsx/src/tests/pivot_tests.rs
++++ b/crates/xlsx/src/tests/pivot_tests.rs
+@@ -205,7 +205,7 @@ fn unzip(bytes: &[u8]) -> HashMap<String, Vec<u8>> {
+         let mut f = z.by_index(i).unwrap();
+         let mut b = Vec::new();
+         f.read_to_end(&mut b).unwrap();
+-        m.insert(f.name().to_string(), b);
++        m.insert(f.name().unwrap().to_string(), b);
+     }
+     m
+ }
+diff --git a/crates/xlsx/src/tests/roundtrip.rs b/crates/xlsx/src/tests/roundtrip.rs
+index 22bb6a37..8f693ef7 100644
+--- a/crates/xlsx/src/tests/roundtrip.rs
++++ b/crates/xlsx/src/tests/roundtrip.rs
+@@ -564,7 +564,7 @@ fn full_roundtrip() {
+ fn package_structure() {
+     let bytes = write_xlsx(&sample()).unwrap();
+     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
+-    let names: Vec<String> = (0..z.len()).map(|i| z.name_for_index(i).unwrap().to_string()).collect();
++    let names: Vec<String> = (0..z.len()).map(|i| z.name_for_index(i).unwrap().unwrap().to_string()).collect();
+     assert_eq!(names[0], "[Content_Types].xml");
+     for n in [
+         "_rels/.rels",
+@@ -744,7 +744,7 @@ fn vba_project_roundtrip() {
+     assert_eq!(write_xlsx(&wb).unwrap(), bytes, "output is deterministic");
+ 
+     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes.clone())).unwrap();
+-    let names: Vec<String> = (0..z.len()).map(|i| z.name_for_index(i).unwrap().to_string()).collect();
++    let names: Vec<String> = (0..z.len()).map(|i| z.name_for_index(i).unwrap().unwrap().to_string()).collect();
+     assert!(names.iter().any(|x| x == "xl/vbaProject.bin"), "missing vbaProject.bin");
+     let mut bin = vec![];
+     z.by_name("xl/vbaProject.bin").unwrap().read_to_end(&mut bin).unwrap();
+diff --git a/crates/xlsx/src/tests/trendline_roundtrip.rs b/crates/xlsx/src/tests/trendline_roundtrip.rs
+index d954c9bc..b3259fdc 100644
+--- a/crates/xlsx/src/tests/trendline_roundtrip.rs
++++ b/crates/xlsx/src/tests/trendline_roundtrip.rs
+@@ -104,7 +104,7 @@ fn every_trendline_kind_round_trips_in_every_chart_group() {
+ fn chart_parts(bytes: &[u8]) -> Vec<String> {
+     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes.to_vec())).unwrap();
+     let mut names: Vec<String> =
+-        (0..z.len()).map(|i| z.name_for_index(i).unwrap().to_string()).filter(|n| n.starts_with("xl/charts/chart")).collect();
++        (0..z.len()).map(|i| z.name_for_index(i).unwrap().unwrap().to_string()).filter(|n| n.starts_with("xl/charts/chart")).collect();
+     names.sort();
+     names
+         .iter()
+-- 
+2.0

@@ -1,0 +1,159 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Sun, 22 Nov 2026 18:00:00 +0500
+Subject: [PATCH] deckcraft: Cargo.lock for zip 9.8.1
+
+zip 3.0.0 to 9.8.1 in Cargo.lock (with 0920): adds constant_time_eq, nix, typed-path 0.13, zeroize, zeroize_derive;
+drops arbitrary and derive_arbitrary.
+---
+diff --git a/Cargo.lock b/Cargo.lock
+index a9a74b63..4e251b5a 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -202,15 +202,6 @@ version = "1.0.104"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+ 
+-[[package]]
+-name = "arbitrary"
+-version = "1.5.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3bc62ac97cc33321f50863d514c3bc38a453947a8f9e781137e47c7401020aed"
+-dependencies = [
+- "derive_arbitrary",
+-]
+-
+ [[package]]
+ name = "arboard"
+ version = "3.6.1"
+@@ -743,6 +734,15 @@ dependencies = [
+  "crossbeam-utils",
+ ]
+ 
++[[package]]
++name = "constant_time_eq"
++version = "0.6.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9eb6feb175df65d0a3ccd3e73484e940d0ac664e8034f0519fd49a93db3071d9"
++dependencies = [
++ "rustversion",
++]
++
+ [[package]]
+ name = "core-foundation"
+ version = "0.9.4"
+@@ -1250,17 +1250,6 @@ dependencies = [
+  "web-sys",
+ ]
+ 
+-[[package]]
+-name = "derive_arbitrary"
+-version = "1.5.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1b034bd7d5f032402a2479444dcc6f74e36a03f31854d41680fb240ef682a1ac"
+-dependencies = [
+- "proc-macro2",
+- "quote",
+- "syn 3.0.6",
+-]
+-
+ [[package]]
+ name = "dify"
+ version = "0.8.0"
+@@ -1851,8 +1840,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
+ dependencies = [
+  "cfg-if",
++ "js-sys",
+  "libc",
+  "r-efi 6.0.0",
++ "wasm-bindgen",
+ ]
+ 
+ [[package]]
+@@ -2757,6 +2748,18 @@ dependencies = [
+  "jni-sys 0.3.1",
+ ]
+ 
++[[package]]
++name = "nix"
++version = "0.32.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "77730ed34f01f4990cb2ea67fec715ecebc6fab9a6396cf83c5529b13f581bdc"
++dependencies = [
++ "bitflags 2.13.2",
++ "cfg-if",
++ "cfg_aliases",
++ "libc",
++]
++
+ [[package]]
+ name = "nohash-hasher"
+ version = "0.2.0"
+@@ -4639,6 +4642,12 @@ dependencies = [
+  "rustc-hash 2.1.3",
+ ]
+ 
++[[package]]
++name = "typed-path"
++version = "0.13.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ce898823d8cd0f028662d2f349694b1af0a5cc9be83f1d213a00d3147445e1e"
++
+ [[package]]
+ name = "typenum"
+ version = "1.20.1"
+@@ -6041,6 +6050,26 @@ dependencies = [
+  "synstructure",
+ ]
+ 
++[[package]]
++name = "zeroize"
++version = "1.9.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85ccff8a4805aba1eaa4cd4afcd49f7557dd2cf5fd79ffc37f8959466effc5aa"
++dependencies = [
++ "zeroize_derive",
++]
++
++[[package]]
++name = "zeroize_derive"
++version = "1.5.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
++dependencies = [
++ "proc-macro2",
++ "quote",
++ "syn 2.0.119",
++]
++
+ [[package]]
+ name = "zerotrie"
+ version = "0.2.5"
+@@ -6076,15 +6105,21 @@ dependencies = [
+ 
+ [[package]]
+ name = "zip"
+-version = "3.0.0"
++version = "9.8.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "12598812502ed0105f607f941c386f43d441e00148fce9dec3ca5ffb0bde9308"
++checksum = "a9534624d547e3f516ecde0ed9a70d37788f01d340efcfdd03bf3ea8e163c1d0"
+ dependencies = [
+- "arbitrary",
++ "constant_time_eq",
+  "crc32fast",
+  "flate2",
++ "getrandom 0.4.3",
+  "indexmap",
++ "libc",
+  "memchr",
++ "nix",
++ "typed-path",
++ "windows-sys 0.61.2",
++ "zeroize",
+  "zopfli",
+ ]
+ 
+-- 
+2.0
