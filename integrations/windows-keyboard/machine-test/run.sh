@@ -97,6 +97,8 @@ echo "=== default-user hive: install visible? (before vs during; a difference me
 if cmp -s "$M/hklm/defuser-before.reg" "$M/hklm/defuser-during.reg"; then echo "NO CHANGE during install"; else
   diff <(iconv -f UTF-16LE -t UTF-8 "$M/hklm/defuser-before.reg") <(iconv -f UTF-16LE -t UTF-8 "$M/hklm/defuser-during.reg") | head -30
 fi
+# A pszUserReg form read relative to HKCU would leave keys at the HKCU root, outside the compared subtrees.
+for k in HKU HKEY_USERS Registry; do MSYS_NO_PATHCONV=1 reg query "HKCU\\$k" >/dev/null 2>&1 && echo "STRAY KEY: HKCU\\$k (from a pszUserReg form; delete it)"; done
 ls -R "C:/Program Files/kbd-machine-test" 2>&1 | head -6
 cp "$LOG" "$M/tip.log" 2>/dev/null && echo "TIP log kept: $M/tip.log ($(wc -l < "$M/tip.log") lines)"
 rm -f "$LOG"
