@@ -289,8 +289,9 @@ impl<'a> Seg<'a> {
 
 /// English function words; none is a common Uzbek Latin word (on, in, u, men, bu ... are left out on purpose).
 const ENGLISH: [&str; 28] = [
-    "the", "and", "is", "are", "was", "were", "of", "to", "for", "with", "that", "this", "you", "it", "be", "have",
-    "has", "not", "from", "by", "will", "would", "can", "an", "or", "what", "which", "but",
+    "the", "and", "is", "are", "was", "were", "of", "to", "for", "with", "that", "this", "you",
+    "it", "be", "have", "has", "not", "from", "by", "will", "would", "can", "an", "or", "what",
+    "which", "but",
 ];
 
 /// True when the segment has at least 2 distinct English function words (whole words, any case).
