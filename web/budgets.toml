@@ -55,7 +55,7 @@ base_raw = 35282601          # pristine wasm raw at BASE (re-measured 2026-10-22
 base_gzip = 13953628         # wasm gzip -9
 base_br = 9327609            # wasm brotli -q 11 --lgwin=24
 js_br = 19649                # JS glue brotli
-delta_br_max = 229376        # delta +195,838 B brotli at Phase 5 p5-ro2 (2026-11-09: read-only side panes, 0163, on top of the P5 bridge); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +164,856 B brotli at Phase 4 WP3 (2026-10-23): the Slides toolbar (office_toolbar.rs and 19 icon masks, 4,286 B), the host bridge, the command hook and the shared-dictionaries folder on top of the P2 catalogs; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840, delta +139,894 B at Phase 2 WP12))
+delta_br_max = 262144        # delta +231,320 B brotli at phase-5 36fa69aa (2026-11-22, 9,558,929 B with craft fonts; over the old budget by 1,944 B): the Tinos serif face (deckcraft/0186, +40,015 B, 2026-11-10, then 4,607 B headroom) and the merged-forward fixes since (0188 Latin selection and the rest); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 229376: delta +195,838 B brotli at Phase 5 p5-ro2 (2026-11-09: read-only side panes, 0163, on top of the P5 bridge); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +164,856 B brotli at Phase 4 WP3 (2026-10-23): the Slides toolbar (office_toolbar.rs and 19 icon masks, 4,286 B), the host bridge, the command hook and the shared-dictionaries folder on top of the P2 catalogs; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840, delta +139,894 B at Phase 2 WP12)))
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
