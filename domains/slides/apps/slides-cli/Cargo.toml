@@ -22,7 +22,7 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 slides-plugins = { path = "../../crates/slides-plugins", optional = true }
 
 [dev-dependencies]
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [features]
 office-ext = ["dep:slides-plugins"]

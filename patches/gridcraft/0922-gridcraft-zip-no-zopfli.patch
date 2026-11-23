@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 23 Nov 2026 12:00:00 +0500
+Subject: [PATCH] gridcraft: zip feature deflate-flate2-zlib-rs (drops the zopfli encoder)
+
+zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets a compression level above flate2's, so the zopfli encoder is dead weight (-77 KB brotli in the Slides wasm). deflate-flate2-zlib-rs keeps reading and writing deflate with the same zlib-rs backend.
+---
+ Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 8ab4abee..660f21ef 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,7 +33,7 @@ log = "0.4"
+ rayon = "1"
+ regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
+ quick-xml = "0.41"
+-zip = { version = "9", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+ sha2 = { version = "0.11", default-features = false }
+ # Decrypting password-protected workbooks ([MS-OFFCRYPTO]): AES and SHA-1, pure Rust (wasm-safe).
+ aes = { version = "0.9", default-features = false }

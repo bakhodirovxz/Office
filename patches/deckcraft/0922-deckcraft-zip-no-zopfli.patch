@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 23 Nov 2026 12:00:00 +0500
+Subject: [PATCH] deckcraft: zip feature deflate-flate2-zlib-rs (drops the zopfli encoder)
+
+zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets a compression level above flate2's, so the zopfli encoder is dead weight (-77 KB brotli in the Slides wasm). deflate-flate2-zlib-rs keeps reading and writing deflate with the same zlib-rs backend.
+---
+ Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 80ac4213..42306c49 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -60,7 +60,7 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
+ craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8", version = "=0.1.0", default-features = false, features = ["write"] }
+ i_overlay = "9"
+ quick-xml = "0.41"
+-zip = { version = "9", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+ 
+ # ui
+ egui = "0.36"
