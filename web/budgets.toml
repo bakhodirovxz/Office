@@ -31,7 +31,7 @@ base_raw = 44355755          # pristine wasm raw at BASE (re-measured 2026-10-22
 base_gzip = 16366483         # wasm gzip -9
 base_br = 9675040            # wasm brotli -q 11 --lgwin=24
 js_br = 20558                # JS glue brotli
-delta_br_max = 196608        # delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
+delta_br_max = 229376        # delta +197,980 B brotli on phase-4 after zip 9.8.1 (RUSTSEC-2026-0545/-0548) with the zopfli encoder removed (p4-zipfeat 83b8081d, 2026-11-24; was 9,935,076 B before the zopfli removal); ceil(1.10 x delta / 16 KiB) x 16 KiB (was 196608: delta +177,150 B brotli at Phase 2 WP12 (clean checkout 2026-10-21): the P2 Uzbek catalog import (5,253 agent-reviewed rows in the embedded uz-latn/uz-cyrl catalogs) plus the ru rows; ceil(1.10 x delta / 16 KiB) x 16 KiB (was 163840: delta +146,051 B brotli (+1.56 %) at Phase 2 WP11: queue 000)
 js_br_max = 24576
 upstream_growth_warn = 0.05
 
