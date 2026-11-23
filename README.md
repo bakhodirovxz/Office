@@ -124,14 +124,18 @@ Authoring and administration guide: [docs/plugins.md](docs/plugins.md).
 |---|---|---|---|
 | Desktop suite (Windows 10/11, x64) | 0.7.0 | [hoshiya-0.7.0-x64.msi](https://github.com/bakhodirovxz/Office/releases/download/v0.7.0/hoshiya-0.7.0-x64.msi) | 231 MB |
 | Office add-in (Word, Excel, PowerPoint 2010+) | 0.2.1 | [hoshiya-office-addin-0.2.1-x64.msi](https://github.com/bakhodirovxz/Office/releases/download/addin-v0.2.1/hoshiya-office-addin-0.2.1-x64.msi) | 328 KB |
+| Windows keyboard for the 2026 Uzbek Latin alphabet (sh → ş, ch → ç, o' → ö, g' → ğ as you type) | 0.4.0 | [hoshiya-keyboard-0.4.0-x64.msi](https://github.com/bakhodirovxz/Office/releases/download/keyboard-v0.4.0/hoshiya-keyboard-0.4.0-x64.msi) | 332 KB |
 
 Release notes and checksums: [suite 0.7.0](https://github.com/bakhodirovxz/Office/releases/tag/v0.7.0),
-[add-in 0.2.1](https://github.com/bakhodirovxz/Office/releases/tag/addin-v0.2.1) (each has a `SHA256SUMS` file).
+[add-in 0.2.1](https://github.com/bakhodirovxz/Office/releases/tag/addin-v0.2.1),
+[keyboard 0.4.0](https://github.com/bakhodirovxz/Office/releases/tag/keyboard-v0.4.0) (each has a `SHA256SUMS` file).
 
 - The installers are not signed yet, so Windows SmartScreen warns: "More info" > "Run anyway". Check the download against `SHA256SUMS`.
   Signing will be done by SignPath Foundation, see the [code signing policy](CODE-SIGNING-POLICY.md).
 - The add-in installs per user without admin rights and adds its own ribbon tab. With nothing selected, "Cyrillic to Latin"
   converts the whole file and rewrites 1995 Latin in the 2026 letters (English paragraphs keep their Latin).
+- The keyboard installs per machine (administrator rights) and appears as "Oʻzbek 2026 (ş ç ö ğ)" under Uzbek (Latin): switch
+  with Win+Space; Ctrl+Shift+` turns it off and on; Backspace right after ş gives back sh. Source: branch `keyboard-release`.
 - If Word disabled the add-in after a freeze in 0.2.0: File > Options > Add-ins > Manage: Disabled Items > Go > Enable.
 
 **System requirements.** Desktop suite: Windows 10 or 11, 64-bit (the installer is large because it includes the offline converter).
