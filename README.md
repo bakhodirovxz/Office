@@ -8,6 +8,9 @@ Microsoft Word, Excel and PowerPoint.
 
 Open source under MIT OR Apache-2.0. **Status: preview / pre-release. Expect rough edges** (see [Project status](#project-status-and-roadmap)).
 
+**[Code signing policy](https://github.com/bakhodirovxz/Office/blob/office-addin/docs/ms-addin/CODE-SIGNING-POLICY.md)**: free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
+[SignPath Foundation](https://signpath.org/) (applied for; releases are unsigned until it is granted).
+
 ## Contents
 
 1. [Why Hoshiya exists](#why-hoshiya-exists)
@@ -126,6 +129,7 @@ Release notes and checksums: [suite 0.7.0](https://github.com/bakhodirovxz/Offic
 [add-in 0.2.1](https://github.com/bakhodirovxz/Office/releases/tag/addin-v0.2.1) (each has a `SHA256SUMS` file).
 
 - The installers are not signed yet, so Windows SmartScreen warns: "More info" > "Run anyway". Check the download against `SHA256SUMS`.
+  Signing will be done by SignPath Foundation, see the [code signing policy](https://github.com/bakhodirovxz/Office/blob/office-addin/docs/ms-addin/CODE-SIGNING-POLICY.md).
 - The add-in installs per user without admin rights and adds its own ribbon tab. With nothing selected, "Cyrillic to Latin"
   converts the whole file and rewrites 1995 Latin in the 2026 letters (English paragraphs keep their Latin).
 - If Word disabled the add-in after a freeze in 0.2.0: File > Options > Add-ins > Manage: Disabled Items > Go > Enable.
