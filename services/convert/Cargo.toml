@@ -32,7 +32,7 @@ sha2 = "0.10"
 png = "0.18"
 # cp1251, cp1252 and UTF-16 text to UTF-8 (text.rs): (Apache-2.0 OR MIT) AND BSD-3-Clause
 encoding_rs = "0.8"
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 toml = { version = "1", default-features = false, features = ["parse", "serde"] }
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 # Blocking HTTP client for the sidecars, no TLS (they sit on an internal network): MIT OR Apache-2.0. PLAN 2.1.

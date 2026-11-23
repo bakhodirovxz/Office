@@ -22,4 +22,4 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 [dev-dependencies]
 # Same versions as the upstream workspace already locks (no new lock entries): the preservation tests read the saved packages.
 quick-xml = "0.41"
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }

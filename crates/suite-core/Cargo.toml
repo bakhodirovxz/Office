@@ -19,4 +19,4 @@ toml_edit = "0.22"
 
 [dev-dependencies]
 roxmltree = "0.20"
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
