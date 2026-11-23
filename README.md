@@ -4,7 +4,7 @@ A COM add-in for **Microsoft Word, Excel and PowerPoint** (Office 2010 and later
 text between the Latin and Cyrillic scripts in place, keeping the formatting.
 
 **[Code signing policy](docs/ms-addin/CODE-SIGNING-POLICY.md)** — Free code signing provided by SignPath.io,
-certificate by SignPath Foundation (in preparation).
+certificate by SignPath Foundation (applied for; releases are unsigned until it is granted).
 
 ## What it does
 

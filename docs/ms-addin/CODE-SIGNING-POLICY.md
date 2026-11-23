@@ -3,9 +3,10 @@
 Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
 This page is the code signing policy for the Microsoft Office add-in (Uzbek Latin ↔ Cyrillic transliteration for
-Word, Excel and PowerPoint). It must be linked from the project home page and from every download/release page.
-Status: **prepared, not yet in force** — the SignPath Foundation application, the public repository and the first
-release are the maintainer's steps (`docs/ms-addin/PLAN.md` section 12).
+Word, Excel and PowerPoint). The project-wide policy, which also covers the Windows keyboard, is
+[CODE-SIGNING-POLICY.md on the main branch](https://github.com/bakhodirovxz/Office/blob/main/CODE-SIGNING-POLICY.md).
+Status: **applied for, not yet in force.** Until the SignPath Foundation grants the certificate, releases are unsigned;
+verify downloads against the `SHA256SUMS` file of each release.
 
 ## What is signed
 
@@ -32,9 +33,9 @@ All components are licensed MIT OR Apache-2.0 (OSI-approved); there is no propri
 
 | Role | Members |
 |---|---|
-| Authors (commit to the repository) | `bakhodirovxz` (maintainer) — placeholder, confirm |
-| Reviewers (review every change from a non-committer before it is merged) | `bakhodirovxz` (maintainer) — placeholder, confirm |
-| Approvers (approve every signing request by hand in SignPath) | `bakhodirovxz` (maintainer) — placeholder, confirm |
+| Authors (commit to the repository) | `bakhodirovxz` (maintainer) |
+| Reviewers (review every change from a non-committer before it is merged) | `bakhodirovxz` (maintainer) |
+| Approvers (approve every signing request by hand in SignPath) | `bakhodirovxz` (maintainer) |
 
 Every member uses multi-factor authentication on GitHub and on SignPath.
 
