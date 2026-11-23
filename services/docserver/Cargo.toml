@@ -16,7 +16,7 @@ name = "docserver"
 convert-api = { path = "../convert-api" }
 # the zip central-directory scan against zip bombs (`scan::scan_entries`), the same rules as the converter
 convert = { path = "../convert" }
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 # the outbound client of the fetch and the callbacks (same crate and features as convert-api; no TLS yet, see outbound.rs)
 ureq = { version = "3", default-features = false }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
