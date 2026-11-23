@@ -506,3 +506,18 @@ section 4 into `ci/` (the desktop one needs a desktop session, like the `desktop
 3. F3: OK to add `cargo about` (dev tool, permissive) for the third-party notices before the MSI goes to IT.
 4. WP23 staff sessions.
 5. The handle design for the B-3 pack: write it now (architect, ~0.5 d) or with the B-3 decision at Phase 6.
+
+## 11. Close-out (2026-11-23): owner "go"
+
+The owner closed the Phase 4 gate on 2026-11-23 ("Yopaver, men ruxsat beraman"). Head at close: `201fb04e`
+(zip 9.8.1 and url 2.5.9 everywhere; phase-5, phase-6 and phase-7 hold every phase-4 commit).
+
+Closed without being run (the owner's call, recorded so nobody reads them as passed):
+- WP23 IT staff sessions (`usability.md` §7 results table empty). Only the owner's own use produced findings
+  (1-2, fixed on `p4-recovery`, and the recovery pane, `p4-recover-pane`).
+- The desktop keyboard/Narrator walk, "Always" by hand, Windows 11 and domain-PC rows (§9).
+- The Docs pointer report (owner MSI feedback 2026-11-06): the owner sees the same pointer trouble in other apps on
+  that laptop, so it is the laptop's cursor settings, not a product defect. Closed, no fix.
+
+Carried to Phase 5: the §9 list above, WP23 sessions with 2-3 non-IT staff before any wider rollout (usability.md §1),
+and the §10 item 5 handle design (B-3, Phase 6).
