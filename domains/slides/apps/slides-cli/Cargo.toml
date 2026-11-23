@@ -21,4 +21,4 @@ deckcraft-mcp = { path = "../../../../upstream/deckcraft/crates/mcp" }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 
 [dev-dependencies]
-zip = { version = "9", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }

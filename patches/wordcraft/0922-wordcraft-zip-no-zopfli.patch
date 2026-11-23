@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Mon, 23 Nov 2026 12:00:00 +0500
+Subject: [PATCH] wordcraft: zip feature deflate-flate2-zlib-rs (drops the zopfli encoder)
+
+zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets a compression level above flate2's, so the zopfli encoder is dead weight (-77 KB brotli in the Slides wasm). deflate-flate2-zlib-rs keeps reading and writing deflate with the same zlib-rs backend.
+---
+ Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index b70edafd..5af42f31 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -54,7 +54,7 @@ vello_cpu = "0.2"
+ image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
+ craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8", version = "=0.1.0", default-features = false, features = ["write"] }
+ quick-xml = "0.41"
+-zip = { version = "9", default-features = false, features = ["deflate"] }
++zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+ # zlib streams (compressed metafile pictures in `.doc` drawings); already in the lock as a dependency of other crates.
+ miniz_oxide = "0.8"
+ cfb = "0.15"
