@@ -1,9 +1,8 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 4 — Unified shell (web + desktop)** (branch `phase-4`, from `phase-3`; Phase 3 gate passed 2026-10-22, owner "go"; plan: docs/phase4/PLAN.md).
-**Phase 5 started early, in parallel** (owner, 2026-10-25): branch `phase-5` (worktree `E:/office-wt/phase-5`), plan
-docs/phase5/PLAN.md. The Phase 4 gate stays open until WP23 and its report: Phase 4 fixes go on `phase-4` and are
-merged forward into `phase-5`, never the other way. The Phase 5 gate still comes after the Phase 4 "go".
+**Current phase: Phase 5** (branch `phase-5`, worktree `E:/office-wt/phase-5`, plan docs/phase5/PLAN.md; started early 2026-10-25).
+**Phase 4 gate passed 2026-11-23** (owner "go"; close-out docs/phase4/gate-review.md §11). Phase 4 fixes, if any, still go on
+`phase-4` and are merged forward, never the other way.
 **Phase 6 (Mobile) started early, in parallel** (owner "Go", 2026-11-01): branch `phase-6` (worktree `E:/office-wt/phase-6`),
 plan docs/phase6/PLAN.md. Merge forward phase-4 → phase-5 → phase-6 only. Gates stay in order 4 → 5 → 6.
 **Phase 7 (Plugins) started early, in parallel** (owner, 2026-11-03: "Phase 6 tugasa phase 7ga ot"): branch `phase-7`
