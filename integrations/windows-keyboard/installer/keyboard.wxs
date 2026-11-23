@@ -23,7 +23,8 @@
          or removed at the next restart instead (as in the Office add-in MSI). -->
     <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    <Launch Condition="Installed OR VersionNT64 &gt;= 1000" Message="The keyboard needs 64-bit Windows 10 or later." />
+    <!-- VersionNT(64) is 603 on Windows 8.1, 10 and 11 (msiexec has no compatibility manifest), never 1000. -->
+    <Launch Condition="Installed OR VersionNT64 &gt;= 603" Message="The keyboard needs 64-bit Windows 10 or later." />
 
     <StandardDirectory Id="ProgramFiles64Folder"><Directory Id="BRANDDIR" Name="$(var.Brand)"><Directory Id="INSTALLFOLDER" Name="Keyboard">
       <Directory Id="D_x64" Name="x64" />
