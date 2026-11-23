@@ -1,0 +1,132 @@
+# Windows keyboard (Hoshiya TIP): built from source on a GitHub-hosted Windows runner, for SignPath Foundation signing.
+# Modelled on ms-addin.yml. Runs on a `keyboard-v*` tag, on a push to branch `keyboard-release`, and by hand
+# (`workflow_dispatch` only works once this file is on the default branch). This file is source: SignPath reviews it.
+#
+# One job, so the signed DLLs go into the MSI without another artifact round trip:
+#   tests -> build the DLLs and the MSI -> upload all unsigned -> [SignPath: sign the DLLs] -> MSI from the signed DLLs ->
+#   upload that MSI unsigned -> [SignPath: sign the MSI] -> upload the signed MSI.
+# The two SignPath steps run only with input `signpath_submit` (manual runs) and are PLACEHOLDERS until the SignPath
+# project exists: fill in the organisation id (repository variable SIGNPATH_ORGANIZATION_ID), the project slug, the signing
+# policy slug and the artifact configuration slugs marked "TODO(SignPath)", and add the secret SIGNPATH_API_TOKEN.
+# Every `uses:` is pinned to a full commit SHA (the same pins as ci.yml and ms-addin.yml; version in the trailing comment).
+name: keyboard
+
+on:
+  push:
+    tags: ["keyboard-v*"]
+    branches: [keyboard-release]
+  workflow_dispatch:
+    inputs:
+      signpath_submit:
+        description: "submit the DLLs and the MSI to SignPath for signing (needs the SignPath project; see the header)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  keyboard:
+    runs-on: windows-latest   # the same image as ms-addin.yml (currently Windows Server 2025, MSVC x64 + x86 tools)
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read   # SignPath reads the uploaded artifacts back from this run
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+
+      - name: Toolchains (Rust MSVC x86 + x64, WiX 5.0.2) and build paths
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-msvc --profile minimal --target i686-pc-windows-msvc,x86_64-pc-windows-msvc
+          # WiX 5.0.2 pinned (WiX v6 and later carry the Open Source Maintenance Fee).
+          dotnet tool install --global wix --version 5.0.2
+          w="$(cygpath -m "$GITHUB_WORKSPACE")"
+          {
+            echo "CARGO_TARGET_DIR=$w/.ci-target/kbd"
+            echo "KBD_MSI_OUT=$w/.ci-target/kbd-msi"
+            echo "WIX=$(cygpath -m "$USERPROFILE")/.dotnet/tools/wix.exe"
+            echo "KBD_OFFLINE=--locked"   # replaces the local default --offline: cargo may fetch, Cargo.lock must be current
+          } >> "$GITHUB_ENV"
+
+      - name: Tests (kbd-core, exhaustive and differential included; the TIP library tests)
+        run: |
+          cargo +stable-x86_64-pc-windows-msvc test --release --locked -p kbd-core
+          cd integrations/windows-keyboard
+          cargo +stable-x86_64-pc-windows-msvc test --release --locked --lib
+
+      - name: Build the DLLs (x64 + x86, static CRT) and the MSI
+        run: bash integrations/windows-keyboard/installer/build.sh
+
+      - name: Collect the unsigned files and checksums
+        run: |
+          mkdir -p dist/x64 dist/x86
+          cp "$CARGO_TARGET_DIR/release/kbd.dll" dist/x64/
+          cp "$CARGO_TARGET_DIR/i686-pc-windows-msvc/release/kbd.dll" dist/x86/
+          cp "$KBD_MSI_OUT"/*.msi dist/
+          cd dist
+          sha256sum x64/kbd.dll x86/kbd.dll *.msi | tee SHA256SUMS
+
+      - name: Upload the DLLs and the MSI (unsigned)
+        id: unsigned
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: keyboard-unsigned
+          path: dist
+          if-no-files-found: error
+
+      # ---- PLACEHOLDER: SignPath signs our two DLLs (only our own binaries are signed) ----
+      - name: SignPath - sign the DLLs (placeholder)
+        if: ${{ inputs.signpath_submit }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627   # v2.3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}         # TODO(SignPath): organisation id
+          project-slug: TODO-signpath-project-slug                     # TODO(SignPath): project slug
+          signing-policy-slug: release-signing                         # TODO(SignPath): signing policy slug
+          artifact-configuration-slug: keyboard-dlls                   # TODO(SignPath): artifact configuration
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-dlls
+
+      - name: Rebuild the MSI from the signed DLLs
+        if: ${{ inputs.signpath_submit }}
+        run: |
+          cp signed-dlls/x64/kbd.dll "$CARGO_TARGET_DIR/release/"
+          cp signed-dlls/x86/kbd.dll "$CARGO_TARGET_DIR/i686-pc-windows-msvc/release/"
+          rm -f "$KBD_MSI_OUT"/*.msi
+          KBD_SKIP_BUILD=1 bash integrations/windows-keyboard/installer/build.sh
+          mkdir -p msi-in && cp "$KBD_MSI_OUT"/*.msi msi-in/
+
+      - name: Upload the rebuilt MSI (unsigned)
+        id: msi
+        if: ${{ inputs.signpath_submit }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: keyboard-msi-unsigned
+          path: msi-in
+          if-no-files-found: error
+
+      # ---- PLACEHOLDER: SignPath signs the MSI ----
+      - name: SignPath - sign the MSI (placeholder)
+        if: ${{ inputs.signpath_submit }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627   # v2.3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}         # TODO(SignPath): organisation id
+          project-slug: TODO-signpath-project-slug                     # TODO(SignPath): project slug
+          signing-policy-slug: release-signing                         # TODO(SignPath): signing policy slug
+          artifact-configuration-slug: keyboard-msi                    # TODO(SignPath): artifact configuration
+          github-artifact-id: ${{ steps.msi.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-msi
+
+      - name: Upload the signed MSI
+        if: ${{ inputs.signpath_submit }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4
+        with:
+          name: keyboard-msi-signed
+          path: signed-msi
+          if-no-files-found: error

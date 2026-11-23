@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Builds the keyboard MSI (docs/keyboard/PLAN.md section 8): both DLLs (MSVC, static CRT), stage, WiX 5.0.2. Installs nothing.
 # Output: $KBD_MSI_OUT (default E:/office-target/kbd-msi)/<brand id>-keyboard-<version>-x64.msi
-# Env: CARGO_TARGET_DIR (DLL build output; default E:/office-target/kbd-tip), WIX (wix.exe), KBD_OFFLINE (cargo flag, default --offline).
+# Env: CARGO_TARGET_DIR (DLL build output; default E:/office-target/kbd-tip), WIX (wix.exe), KBD_OFFLINE (cargo flag, default --offline),
+#      KBD_SKIP_BUILD (non-empty: reuse the DLLs already in CARGO_TARGET_DIR, e.g. after signing).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"
@@ -19,8 +20,10 @@ name="$(brand name)"; id="$(brand id)"; vendor="$(brand vendor)"; version="$(bra
 [ -x "$wix" ] || { echo "wix.exe not found: $wix (set WIX; scripts/fetch-wix.ps1 on branch ms-addin)" >&2; exit 1; }
 
 cd "$here/.."
-cargo +stable-x86_64-pc-windows-msvc build --release ${KBD_OFFLINE---offline}
-cargo +stable-x86_64-pc-windows-msvc build --release ${KBD_OFFLINE---offline} --target i686-pc-windows-msvc
+if [ -z "${KBD_SKIP_BUILD:-}" ]; then
+  cargo +stable-x86_64-pc-windows-msvc build --release ${KBD_OFFLINE---offline}
+  cargo +stable-x86_64-pc-windows-msvc build --release ${KBD_OFFLINE---offline} --target i686-pc-windows-msvc
+fi
 stage="$out/stage"
 rm -rf "$stage"; mkdir -p "$stage/x64" "$stage/x86"
 cp "$CARGO_TARGET_DIR/release/kbd.dll" "$stage/x64/"
