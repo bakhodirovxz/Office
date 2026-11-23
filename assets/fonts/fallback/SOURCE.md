@@ -19,5 +19,5 @@
   SIL OFL 1.1, text in `OFL-Tinos.txt` (from `googlefonts/tinos` commit `4106aab86ddefe26d58a69745e04ae9479d22993`). The font declares no Reserved
   Font Name, so the subset keeps the family name "Tinos". Source URL:
   `https://raw.githubusercontent.com/google/fonts/5bb28733cec313b63fbd415b574b5ae35c8aa8b8/ofl/tinos/Tinos-Regular.ttf`.
-  The subset also drops hinting (`--no-hinting --desubroutinize`) to save size. It is bundled in the Sheets and Slides builds only
+  The subset also drops hinting (`--no-hinting --desubroutinize`) to save size. Since 2026-11-23 its ranges (`TINOS_RANGES` in the script) are narrower than the Noto ones: Latin Extended-B and the Cyrillic extensions outside uz/kk/ky/tg/uk are dropped (40,576 B raw, 21,839 B brotli; was 74,024 / 37,251); those letters draw in the sans fallback. It is bundled in the Sheets and Slides builds only
   (`office-fallback-serif`: the serif face of the grid, and the slide font database's stand-in for Times New Roman); Docs bundles Source Serif 4.
