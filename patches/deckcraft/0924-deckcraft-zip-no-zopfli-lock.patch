@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: office <office@localhost>
-Date: Mon, 23 Nov 2026 12:00:00 +0500
+Date: Tue, 24 Nov 2026 12:00:00 +0500
 Subject: [PATCH] deckcraft: Cargo.lock without zopfli (with 0922)
 
 zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets a compression level above flate2's, so the zopfli encoder is dead weight (-77 KB brotli in the Slides wasm). deflate-flate2-zlib-rs keeps reading and writing deflate with the same zlib-rs backend.
@@ -9,18 +9,18 @@ zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets 
  1 file changed, 13 deletions(-)
 
 diff --git a/Cargo.lock b/Cargo.lock
-index 189f0f27..2a72d4d2 100644
+index 2ec37675..50a9e707 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -6120,7 +6120,6 @@ dependencies = [
+@@ -6196,7 +6196,6 @@ dependencies = [
   "typed-path",
-  "windows-sys 0.61.2",
+  "windows-sys 0.60.2",
   "zeroize",
 - "zopfli",
  ]
  
  [[package]]
-@@ -6135,18 +6134,6 @@ version = "1.0.23"
+@@ -6211,18 +6210,6 @@ version = "1.0.23"
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
  

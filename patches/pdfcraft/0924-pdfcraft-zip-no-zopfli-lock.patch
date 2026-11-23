@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 24 Nov 2026 12:00:00 +0500
+Subject: [PATCH] pdfcraft: Cargo.lock without zopfli (suite-core's zip feature)
+
+zip 9's deflate feature = deflate-zopfli + deflate-flate2-zlib-rs. Nothing sets a compression level above flate2's, so the zopfli encoder is dead weight (-77 KB brotli in the Slides wasm). deflate-flate2-zlib-rs keeps reading and writing deflate with the same zlib-rs backend.
+---
+ Cargo.lock | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 01705b52..e7e6ead4 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -8412,7 +8412,6 @@ dependencies = [
+  "typed-path",
+  "windows-sys 0.60.2",
+  "zeroize",
+- "zopfli",
+ ]
+ 
+ [[package]]
+@@ -8427,18 +8426,6 @@ version = "1.0.23"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+ 
+-[[package]]
+-name = "zopfli"
+-version = "0.8.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "aaf7fc5d30c28483d93805c4a5e12b05bbb52407fa67c5f8bd552374cd01fb11"
+-dependencies = [
+- "bumpalo",
+- "crc32fast",
+- "log",
+- "simd-adler32",
+-]
+-
+ [[package]]
+ name = "zune-core"
+ version = "0.5.3"
