@@ -249,7 +249,8 @@ fn odt_round_trip() {
 fn latex_round_trip() {
     check_round_trip("tex", true);
     let tex = String::from_utf8(export("tex", &sample()).unwrap().unwrap()).unwrap();
-    assert!(tex.starts_with("% Written by WordCraft") && tex.contains("\\documentclass{article}"), "{tex}");
+    let product = option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft"); // the office overlay writes its own name
+    assert!(tex.starts_with(&format!("% Written by {product}")) && tex.contains("\\documentclass{article}"), "{tex}");
     assert!(tex.contains("\\section*{Main Heading}") && tex.contains("\\subsection*{Second Level}"), "{tex}");
     assert!(tex.contains("\\textbf{bold}") && tex.contains("\\textit{italic}"), "{tex}");
     assert!(tex.contains("\\href{https://example.com/x}{a link}"), "{tex}");

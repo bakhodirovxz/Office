@@ -337,7 +337,9 @@ fn extended_properties_are_kept_without_words_counts_and_personal_ones_follow_th
     for gone in ["Pages", "Characters", "Lines", "TotalTime", "AppVersion", "Microsoft Office Word", "40000"] {
         assert!(!a.contains(gone), "{gone}: {a}");
     }
-    assert!(a.contains("<Application>WordCraft</Application>"));
+    // The office overlay writes its product name (patch 0100 hook) where upstream writes WordCraft.
+    let product = option_env!("OFFICE_PRODUCT_NAME").unwrap_or("WordCraft");
+    assert!(a.contains(&format!("<Application>{product}</Application>")));
     let private = make(SETTINGS);
     assert!(!private.contains("Company") && !private.contains("Manager"), "{private}");
     assert!(private.contains("<Template>Normal.dotm</Template>"));

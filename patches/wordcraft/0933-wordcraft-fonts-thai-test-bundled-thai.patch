@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Wed, 25 Nov 2026 12:00:00 +0500
+Subject: [PATCH] fonts test: the no-Thai-face premise only holds without CRAFT_FONTS_DIR
+
+a_thai_run_with_latin_falls_back_to_one_face asserts that without system fonts no bundled face covers a Thai run. Builds that
+set CRAFT_FONTS_DIR (the office builds do, scripts/env.sh) bundle noto-sans-thai, so a face is found. The last assertion now
+runs only when the bundled set has no Thai face.
+---
+
+diff --git a/crates/fonts/src/fontdb.rs b/crates/fonts/src/fontdb.rs
+index 798ec6ac..0274eb06 100644
+--- a/crates/fonts/src/fontdb.rs
++++ b/crates/fonts/src/fontdb.rs
+@@ -1886,11 +1886,14 @@ mod tests {
+         }
+         // A Thai font with OpenType tables, as the per-character fallback prefers.
+         assert!(f.has_layout_tables(), "{} shapes Thai", f.family);
+-        // Without system fonts no bundled face covers Thai: the caller keeps the per-character path.
++        // Without system fonts no bundled face covers Thai: the caller keeps the per-character path. Builds that set
++        // CRAFT_FONTS_DIR (the office builds do) bundle noto-sans-thai, so there the premise does not hold.
+         let bundled = FontDb::with_font_dirs(Vec::new());
+         bundled.set_system_fallback(false);
+         let latin = bundled.face(FALLBACK_FAMILY, "Regular");
+-        assert!(bundled.fallback_for_run(&chars, latin.id(), false, false).is_none());
++        if bundled.fallback_for('น', 0).is_none() {
++            assert!(bundled.fallback_for_run(&chars, latin.id(), false, false).is_none());
++        }
+     }
+ 
+     #[test]

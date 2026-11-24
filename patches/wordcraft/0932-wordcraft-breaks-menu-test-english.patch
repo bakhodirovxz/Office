@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Wed, 25 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui test breaks_menu: run the ribbon in English
+
+The test looks up the ribbon button 'Breaks' by its English label, but the interface follows the system language (ru, uz), so
+it failed on every non-English machine. It sets ui.language to en first.
+---
+
+diff --git a/crates/ui-egui/tests/breaks_menu.rs b/crates/ui-egui/tests/breaks_menu.rs
+index db855027..fcc7c3a2 100644
+--- a/crates/ui-egui/tests/breaks_menu.rs
++++ b/crates/ui-egui/tests/breaks_menu.rs
+@@ -6,7 +6,9 @@ use wordcraft_ui_egui::{Services, WordApp};
+ 
+ /// A WordCraft window on the Layout tab, ready for ribbon clicks.
+ fn layout_tab() -> egui_kittest::Harness<'static, WordApp> {
+-    let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("one\ntwo")), Services::default());
++    let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("one\ntwo")), Services::default());
++    // The labels below are English; a ribbon in the system language (ru, uz) has no "Breaks".
++    app.run("ui.language", json!({"value": "en"})).unwrap();
+     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
+         |ui, app: &mut WordApp| {
+             let ctx = ui.ctx().clone();

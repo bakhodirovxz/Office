@@ -2695,3 +2695,25 @@
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Írj be egy méretet bármilyen mértékegységben, például 5 cm vagy 300 px. A másik oldal követi, így a kép megtartja az arányait.
 
 	Import…	Importálás…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Automatikus tájolás
+	Scale to paper size	Igazítás a papírmérethez
+	No Scaling	Nincs méretezés
+	Odd or even pages	Páratlan vagy páros oldalak
+	Printing goes through a PDF: save it, then print it from any viewer.	A nyomtatás PDF-en keresztül történik: mentse el, majd nyomtassa ki bármelyik megjelenítőből.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	A nyomtatót, a kétoldalas nyomtatást és az egy lapra eső oldalak számát a rendszer nyomtatási párbeszédablakában lehet kiválasztani.
+	Recover documents	Dokumentumok helyreállítása
+	Restore opens an unsaved copy. Your original file stays unchanged.	A helyreállítás egy nem mentett másolatot nyit meg. Az eredeti fájl változatlan marad.
+	Recovery is disabled while this document has a password.	A helyreállítás le van tiltva, amíg a dokumentum jelszóval védett.
+	Local recovery is unavailable or still loading.	A helyi helyreállítás nem érhető el, vagy még töltődik.
+	No recovery copies.	Nincs helyreállítási másolat.
+	Recovery copy	Helyreállítási másolat
+	Restore	Helyreállítás
+	Discard…	Elvetés…
+	Continue without restoring	Folytatás helyreállítás nélkül
+	{name} — set your name in File › Options	{name} — adja meg a nevét a Fájl › Beállítások menüben
+	Document Recovery	Dokumentumok helyreállítása
+	{app} recovered the following documents. Save the ones you want to keep.	A(z) {app} helyreállította a következő dokumentumokat. Mentse el azokat, amelyeket meg szeretne tartani.
+	Version created from the last AutoSave	Az utolsó automatikus mentésből létrehozott verzió
