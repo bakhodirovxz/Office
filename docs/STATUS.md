@@ -2042,6 +2042,16 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   A patch that adds a 444-line module cannot shrink the wasm: this is codegen/`wasm-opt` variance, so the true delta is below the noise (about 10 KB); no budget change needed. Current tapfix build: 9,875,600 B of 9,904,416.
 - **Not checked:** a real phone; Sheets, Slides, PDF; page-break handle drag (Web Layout has no pages; the drag fails first); autocorrect after a handle move; Cyrillic over a handle-made selection; the bar on C412, C360, A360; a desktop-browser mouse run; WP16.
 
+### Phase 6 F3: a table wider than the phone pans by finger (2026-11-24, branch `p6-widepan`, wordcraft/0188)
+- **Owner decision 2026-11-24:** horizontal pan, not shrink. **Cause:** Web Layout's sheet (`page.w`) equals the window width; a fixed-width table keeps its width and was clipped, and the
+  canvas had no horizontal range. **Fix (wordcraft/0188, 2 files +52/-1):** `layout_pass` widens each Web page to its table cells' right edge + 8 pt (`ViewMode::Web` only); the canvas
+  (`ScrollArea::both`) and `TouchScroll` already pan horizontally, so a swipe now pans (clamped) and selects nothing. Text keeps wrapping at the window width; reflowing documents are unchanged.
+- **Tests:** `a_horizontal_swipe_pans_a_wide_table_and_selects_nothing` (wide table pans, selection unchanged; reflowed text does not pan; fails without the layout part); `ui-egui --lib` 739 passed,
+  7 failed (the 7 known i18n), `wordcraft-layout` 447 passed. `verify-queue.sh wordcraft` tree OK (58 patches), `cargo xt register check` 214 rows OK.
+- **Size:** Docs wasm brotli 9,883,344 B of 9,904,416 (headroom 21,072; `ci.sh sizes` docs row ok; the phase-6 figure before was about 9,881,053, so about +2.3 KB, inside build noise). No budget change.
+- **Emulator:** C412 and C360, synthetic 6.25 in table: PASS (`docs/phase6/evidence/widepan/`, checklist F3). **Not verified:** Android app, a real phone, caret into an off-screen column by typing.
+- **Desktop note:** Web Layout with a mouse also gets the wider sheet (a wide table is scrollable instead of clipped); the change is not gated on phone mode.
+
 ### Phase 6 WP5 fix: handles and the action bar by finger (2026-11-12, branch `p6-handles`, wordcraft/0186)
 - **Root cause of checklist F1 (also F6, half of F2):** Chromium fires `pointerdown` before `touchstart`; eframe 0.36 presses the primary pointer for both and runs a
   frame at once from `pointerdown` with no `Touch` event, so the page took every finger press first as a mouse press (handles off, caret placed under the finger) and

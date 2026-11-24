@@ -148,6 +148,15 @@ ignores its drag. Test `touch_select::tests::a_pinch_neither_selects_nor_takes_t
 **F3 (medium): content wider than the phone is clipped, not reflowed or scrollable.** Web Layout reflows text but not a fixed-width table (`layout/src/lib.rs:2296`
 branch, not traced further); 1D and 1E of a 6.25 in table are unreachable at 360 and 412 dp, and a horizontal swipe selects cells. Needs a decision: shrink to the web width
 or allow a horizontal pan (SIZING 6.x, O4-style scope).
+**Fixed 2026-11-24 (wordcraft/0188, branch `p6-widepan`; owner chose "horizontal pan").** Root cause: the Web Layout sheet was only as wide as the window, so a fixed-width table
+(`tblW` set, as in the 6.25 in fixture) was clipped by the page raster and the canvas had nothing to scroll to; `TouchScroll` already turns horizontal travel into scroll. Fix: in
+`ViewMode::Web` the layout widens each page to its table cells' right edge (+8 pt); text still wraps at the window width, so reflowing documents keep a sheet exactly as wide as before.
+Test `touch_select::tests::a_horizontal_swipe_pans_a_wide_table_and_selects_nothing` (fails without the layout part). Emulator (`HRM_Pixel_8`, Chrome 133, 540x1200, density 210 = 412 dp
+and 240 = 360 dp, synthetic `scripts/mobile/fixtures/widepan.docx`, swipes by `adb shell input swipe`): before (`widepan/before-c412-0.png`, `before-c412-1-swipe-left.png`) 1D is cut and
+1E unreachable, the swipe moves nothing; after, C412 (`after-c412-1-swipe-left.png`) and C360 (`after-c360-1-swipe-left.png`) the swipe pans to 1C-1D-1E, stops at the table's right edge,
+and selects no cells. The "before" page is the `p6-handles` dist (phase-6 without 0187), not a rebuild of phase-6 HEAD. Not run: the Android app (A412/A360; same wasm), a real phone,
+caret scrolled into view by typing or arrow keys into an off-screen column (not tested: it goes through the canvas's existing scroll-to-caret, which scrolls both axes), tap and long press
+on the panned table (unchanged code, ui-egui touch tests pass). Side effect: the page panned right shows blank sheet beside the text; desktop Web Layout also gains the scroll for a wide table.
 
 **F4 (low): the first long press after a document opens often does nothing** (it only focuses; seen on the first try in the app twice and in Chrome twice, the second try works).
 Also a long press on a word that already holds the caret just kept the caret (once). Timing under the slow host may be the cause; recheck on a device.
