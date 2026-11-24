@@ -2704,3 +2704,25 @@ preview	Title	Tytuł
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Wpisz rozmiar w dowolnej jednostce, np. 5 cm lub 300 px. Druga strona dopasuje się, więc obraz zachowa proporcje.
 
 	Import…	Importuj…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Automatyczna orientacja
+	Scale to paper size	Dopasuj do rozmiaru papieru
+	No Scaling	Bez skalowania
+	Odd or even pages	Strony nieparzyste lub parzyste
+	Printing goes through a PDF: save it, then print it from any viewer.	Drukowanie odbywa się przez PDF: zapisz go, a następnie wydrukuj z dowolnej przeglądarki.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Drukarkę, druk dwustronny i liczbę stron na arkuszu wybiera się w systemowym oknie drukowania.
+	Recover documents	Odzyskiwanie dokumentów
+	Restore opens an unsaved copy. Your original file stays unchanged.	Przywrócenie otwiera niezapisaną kopię. Oryginalny plik pozostaje bez zmian.
+	Recovery is disabled while this document has a password.	Odzyskiwanie jest wyłączone, dopóki dokument jest chroniony hasłem.
+	Local recovery is unavailable or still loading.	Odzyskiwanie lokalne jest niedostępne lub wciąż się wczytuje.
+	No recovery copies.	Brak kopii do odzyskania.
+	Recovery copy	Kopia do odzyskania
+	Restore	Przywróć
+	Discard…	Odrzuć…
+	Continue without restoring	Kontynuuj bez przywracania
+	{name} — set your name in File › Options	{name} — ustaw swoje imię i nazwisko w Plik › Opcje
+	Document Recovery	Odzyskiwanie dokumentów
+	{app} recovered the following documents. Save the ones you want to keep.	{app} odzyskał następujące dokumenty. Zapisz te, które chcesz zachować.
+	Version created from the last AutoSave	Wersja utworzona podczas ostatniego autozapisu

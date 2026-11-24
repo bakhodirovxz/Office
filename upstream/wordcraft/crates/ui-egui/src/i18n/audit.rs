@@ -173,6 +173,13 @@ impl Exempt {
             || plain.starts_with("Style") || plain.starts_with("Table Style ") // a new style's default name
             || plain.contains('┬') || plain.contains('\u{2061}') // equation input (UnicodeMath), drawn as math
             || matches!(plain, "WordCraft" | "WordCraft User" | "Discord" | "https://" | "auto" | "I. II. III." | "i. ii. iii.")
+            // The office overlay's own brand text (product name, "based on" line, copyright): brand config, not catalog strings.
+            // File › Info also shows the product name as the sample document's author (engine/sample.rs).
+            || (crate::office_overlay::ACTIVE
+                && (plain == crate::office_overlay::app_name()
+                    || plain == crate::office_overlay::attribution()
+                    || plain == crate::office_overlay::COPYRIGHT
+                    || Some(plain) == option_env!("OFFICE_PRODUCT_NAME")))
             || plain == "CONFIDENTIAL" // the watermark dialog's text: document content, kept as typed
             || plain == "Figure 1" // the caption dialog's sample: the label goes into the document as is
     }
@@ -378,11 +385,16 @@ fn complete_catalogs_have_every_string_the_interface_looked_up(mut keys: std::co
     // A pattern of placeholders and figures only (`{paper}   {width} × {height}`) has nothing to
     // translate: its placeholder names aren't words the interface shows.
     let words = |s: &str| english_words(&s.split('{').map(|p| p.split_once('}').map_or(p, |(_, rest)| rest)).collect::<String>());
+    // The office overlay's own strings (the Transliterate menu) live in its ru and uz catalogs only; upstream's languages do not ship them.
+    let upstream_ru: std::collections::HashSet<String> =
+        super::catalog::parse_entries(include_str!("ru.tsv")).0.into_iter().map(|e| e.source).collect();
+    let overlay_only =
+        |s: &str| !upstream_ru.contains(s) && super::catalog::parse_entries(crate::office_overlay::CATALOG_RU).0.iter().any(|e| e.source == s);
     let mut report = String::new();
     for code in ["ru", "hu", "tr", "bg", "it", "sv", "hr", "pl"] {
         let lang = super::Lang::from_code(code).unwrap_or(super::Lang::EN);
         let missing: Vec<&String> =
-            keys.iter().filter(|s| words(s) && !super::has(lang, s) && !numbered(s) && !same(s) && !script_error(s)).collect();
+            keys.iter().filter(|s| words(s) && !super::has(lang, s) && !numbered(s) && !same(s) && !script_error(s) && !overlay_only(s)).collect();
         if !missing.is_empty() {
             report.push_str(&format!("{} strings have no {code} entry:\n{missing:#?}\n", missing.len()));
         }

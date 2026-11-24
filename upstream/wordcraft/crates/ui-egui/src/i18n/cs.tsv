@@ -2691,3 +2691,25 @@ preview	Title	Ukázka
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Zadejte velikost v libovolné jednotce, například 5 cm nebo 300 px. Druhá strana se přizpůsobí, takže obrázek zachová své proporce.
 
 	Import…	Importovat…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Automatická orientace
+	Scale to paper size	Přizpůsobit velikosti papíru
+	No Scaling	Bez měřítka
+	Odd or even pages	Liché nebo sudé stránky
+	Printing goes through a PDF: save it, then print it from any viewer.	Tisk probíhá přes PDF: uložte jej a vytiskněte z libovolné čtečky.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Tiskárna, oboustranný tisk a počet stránek na list se vybírají v systémovém dialogu tisku.
+	Recover documents	Obnovení dokumentů
+	Restore opens an unsaved copy. Your original file stays unchanged.	Obnovení otevře neuloženou kopii. Původní soubor zůstane beze změny.
+	Recovery is disabled while this document has a password.	Obnovení je vypnuto, dokud je dokument chráněn heslem.
+	Local recovery is unavailable or still loading.	Místní obnovení není dostupné nebo se stále načítá.
+	No recovery copies.	Žádné kopie k obnovení.
+	Recovery copy	Kopie k obnovení
+	Restore	Obnovit
+	Discard…	Zahodit…
+	Continue without restoring	Pokračovat bez obnovení
+	{name} — set your name in File › Options	{name} — nastavte své jméno v části Soubor › Možnosti
+	Document Recovery	Obnovení dokumentů
+	{app} recovered the following documents. Save the ones you want to keep.	Aplikace {app} obnovila následující dokumenty. Uložte ty, které chcete zachovat.
+	Version created from the last AutoSave	Verze vytvořená při posledním automatickém ukládání

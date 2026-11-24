@@ -1,0 +1,247 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Wed, 25 Nov 2026 12:00:00 +0500
+Subject: [PATCH] ui-egui i18n: Czech, Hungarian, Polish, Turkish, Vietnamese, Croatian, Italian, Bulgarian and Swedish rows for the strings of patches 0136 and 0137
+
+Patches 0136 (File > Print wording) and 0137 (Document Recovery pane) added 19 strings to ru.tsv. Upstream's own catalog tests
+(czech/hungarian/polish/turkish/vietnamese/croatian_covers_*) require these catalogs to hold every key of ru, so they failed
+('cs lacks ru's [...]'); the Italian test requires it to hold every key of tr, and the untranslated-text audit requires the
+complete catalogs (ru hu tr bg it sv hr pl) to hold every string the interface looks up. The 19 rows go to cs, hu, pl, tr, vi,
+hr and it; the one account-tip row also to bg and sv. Under an office overlay comment; machine-translation drafts of short
+interface strings by the agent, not reviewed by a native speaker. No other catalog is compared with ru by a test.
+---
+
+diff --git a/crates/ui-egui/src/i18n/bg.tsv b/crates/ui-egui/src/i18n/bg.tsv
+index 1994f2a1..4df750ec 100644
+--- a/crates/ui-egui/src/i18n/bg.tsv
++++ b/crates/ui-egui/src/i18n/bg.tsv
+@@ -2688,3 +2688,7 @@
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Въведете размер в произволна единица, например 5 cm или 300 px. Другата страна се променя съответно, така че картината запазва пропорциите си.
+ 
+ 	Import…	Импортиране…
++
++# office overlay (wordcraft/0141): string of our patch 0137 (account tip). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	{name} — set your name in File › Options	{name} — задайте името си във Файл › Опции
+diff --git a/crates/ui-egui/src/i18n/cs.tsv b/crates/ui-egui/src/i18n/cs.tsv
+index a7c50607..42cb7b3b 100644
+--- a/crates/ui-egui/src/i18n/cs.tsv
++++ b/crates/ui-egui/src/i18n/cs.tsv
+@@ -2691,3 +2691,25 @@ preview	Title	Ukázka
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Zadejte velikost v libovolné jednotce, například 5 cm nebo 300 px. Druhá strana se přizpůsobí, takže obrázek zachová své proporce.
+ 
+ 	Import…	Importovat…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Automatická orientace
++	Scale to paper size	Přizpůsobit velikosti papíru
++	No Scaling	Bez měřítka
++	Odd or even pages	Liché nebo sudé stránky
++	Printing goes through a PDF: save it, then print it from any viewer.	Tisk probíhá přes PDF: uložte jej a vytiskněte z libovolné čtečky.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Tiskárna, oboustranný tisk a počet stránek na list se vybírají v systémovém dialogu tisku.
++	Recover documents	Obnovení dokumentů
++	Restore opens an unsaved copy. Your original file stays unchanged.	Obnovení otevře neuloženou kopii. Původní soubor zůstane beze změny.
++	Recovery is disabled while this document has a password.	Obnovení je vypnuto, dokud je dokument chráněn heslem.
++	Local recovery is unavailable or still loading.	Místní obnovení není dostupné nebo se stále načítá.
++	No recovery copies.	Žádné kopie k obnovení.
++	Recovery copy	Kopie k obnovení
++	Restore	Obnovit
++	Discard…	Zahodit…
++	Continue without restoring	Pokračovat bez obnovení
++	{name} — set your name in File › Options	{name} — nastavte své jméno v části Soubor › Možnosti
++	Document Recovery	Obnovení dokumentů
++	{app} recovered the following documents. Save the ones you want to keep.	Aplikace {app} obnovila následující dokumenty. Uložte ty, které chcete zachovat.
++	Version created from the last AutoSave	Verze vytvořená při posledním automatickém ukládání
+diff --git a/crates/ui-egui/src/i18n/hr.tsv b/crates/ui-egui/src/i18n/hr.tsv
+index 15bbbb54..1158fc3d 100644
+--- a/crates/ui-egui/src/i18n/hr.tsv
++++ b/crates/ui-egui/src/i18n/hr.tsv
+@@ -2699,3 +2699,25 @@ preview	Title	Naslov
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Upišite veličinu u bilo kojoj jedinici, npr. 5 cm ili 300 px. Druga se strana prilagođava pa slika zadržava svoje proporcije.
+ 
+ 	Import…	Uvezi…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Automatska orijentacija
++	Scale to paper size	Prilagodi veličini papira
++	No Scaling	Bez skaliranja
++	Odd or even pages	Neparne ili parne stranice
++	Printing goes through a PDF: save it, then print it from any viewer.	Ispis ide preko PDF-a: spremite ga, a zatim ispišite iz bilo kojeg preglednika.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Pisač, obostrani ispis i broj stranica po listu biraju se u sistemskom dijalogu za ispis.
++	Recover documents	Oporavak dokumenata
++	Restore opens an unsaved copy. Your original file stays unchanged.	Vraćanje otvara nespremljenu kopiju. Izvorna datoteka ostaje nepromijenjena.
++	Recovery is disabled while this document has a password.	Oporavak je isključen dok je dokument zaštićen zaporkom.
++	Local recovery is unavailable or still loading.	Lokalni oporavak nije dostupan ili se još učitava.
++	No recovery copies.	Nema kopija za oporavak.
++	Recovery copy	Kopija za oporavak
++	Restore	Vrati
++	Discard…	Odbaci…
++	Continue without restoring	Nastavi bez vraćanja
++	{name} — set your name in File › Options	{name} — postavite svoje ime u Datoteka › Mogućnosti
++	Document Recovery	Oporavak dokumenata
++	{app} recovered the following documents. Save the ones you want to keep.	{app} je oporavio sljedeće dokumente. Spremite one koje želite zadržati.
++	Version created from the last AutoSave	Verzija stvorena pri posljednjem automatskom spremanju
+diff --git a/crates/ui-egui/src/i18n/hu.tsv b/crates/ui-egui/src/i18n/hu.tsv
+index 33951fee..57372d9f 100644
+--- a/crates/ui-egui/src/i18n/hu.tsv
++++ b/crates/ui-egui/src/i18n/hu.tsv
+@@ -2695,3 +2695,25 @@
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Írj be egy méretet bármilyen mértékegységben, például 5 cm vagy 300 px. A másik oldal követi, így a kép megtartja az arányait.
+ 
+ 	Import…	Importálás…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Automatikus tájolás
++	Scale to paper size	Igazítás a papírmérethez
++	No Scaling	Nincs méretezés
++	Odd or even pages	Páratlan vagy páros oldalak
++	Printing goes through a PDF: save it, then print it from any viewer.	A nyomtatás PDF-en keresztül történik: mentse el, majd nyomtassa ki bármelyik megjelenítőből.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	A nyomtatót, a kétoldalas nyomtatást és az egy lapra eső oldalak számát a rendszer nyomtatási párbeszédablakában lehet kiválasztani.
++	Recover documents	Dokumentumok helyreállítása
++	Restore opens an unsaved copy. Your original file stays unchanged.	A helyreállítás egy nem mentett másolatot nyit meg. Az eredeti fájl változatlan marad.
++	Recovery is disabled while this document has a password.	A helyreállítás le van tiltva, amíg a dokumentum jelszóval védett.
++	Local recovery is unavailable or still loading.	A helyi helyreállítás nem érhető el, vagy még töltődik.
++	No recovery copies.	Nincs helyreállítási másolat.
++	Recovery copy	Helyreállítási másolat
++	Restore	Helyreállítás
++	Discard…	Elvetés…
++	Continue without restoring	Folytatás helyreállítás nélkül
++	{name} — set your name in File › Options	{name} — adja meg a nevét a Fájl › Beállítások menüben
++	Document Recovery	Dokumentumok helyreállítása
++	{app} recovered the following documents. Save the ones you want to keep.	A(z) {app} helyreállította a következő dokumentumokat. Mentse el azokat, amelyeket meg szeretne tartani.
++	Version created from the last AutoSave	Az utolsó automatikus mentésből létrehozott verzió
+diff --git a/crates/ui-egui/src/i18n/it.tsv b/crates/ui-egui/src/i18n/it.tsv
+index 3dd2b6d6..189b185b 100644
+--- a/crates/ui-egui/src/i18n/it.tsv
++++ b/crates/ui-egui/src/i18n/it.tsv
+@@ -2708,3 +2708,25 @@ preview	Title	Esempio
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Scrivi una dimensione in qualsiasi unità, ad esempio 5 cm o 300 px. L'altro lato si adegua, così l'immagine mantiene le proporzioni.
+ 
+ 	Import…	Importa…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Orientamento automatico
++	Scale to paper size	Adatta alle dimensioni della carta
++	No Scaling	Nessun ridimensionamento
++	Odd or even pages	Pagine dispari o pari
++	Printing goes through a PDF: save it, then print it from any viewer.	La stampa passa da un PDF: salvalo, poi stampalo da qualsiasi visualizzatore.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	La stampante, la stampa fronte/retro e il numero di pagine per foglio si scelgono nella finestra di stampa del sistema.
++	Recover documents	Recupero documenti
++	Restore opens an unsaved copy. Your original file stays unchanged.	Il ripristino apre una copia non salvata. Il file originale rimane invariato.
++	Recovery is disabled while this document has a password.	Il recupero è disattivato finché il documento ha una password.
++	Local recovery is unavailable or still loading.	Il recupero locale non è disponibile o è ancora in caricamento.
++	No recovery copies.	Nessuna copia di recupero.
++	Recovery copy	Copia di recupero
++	Restore	Ripristina
++	Discard…	Elimina…
++	Continue without restoring	Continua senza ripristinare
++	{name} — set your name in File › Options	{name} — imposta il tuo nome in File › Opzioni
++	Document Recovery	Recupero documenti
++	{app} recovered the following documents. Save the ones you want to keep.	{app} ha recuperato i seguenti documenti. Salva quelli che vuoi conservare.
++	Version created from the last AutoSave	Versione creata dall'ultimo salvataggio automatico
+diff --git a/crates/ui-egui/src/i18n/pl.tsv b/crates/ui-egui/src/i18n/pl.tsv
+index ccbeb471..dcc8ff3c 100644
+--- a/crates/ui-egui/src/i18n/pl.tsv
++++ b/crates/ui-egui/src/i18n/pl.tsv
+@@ -2704,3 +2704,25 @@ preview	Title	Tytuł
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Wpisz rozmiar w dowolnej jednostce, np. 5 cm lub 300 px. Druga strona dopasuje się, więc obraz zachowa proporcje.
+ 
+ 	Import…	Importuj…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Automatyczna orientacja
++	Scale to paper size	Dopasuj do rozmiaru papieru
++	No Scaling	Bez skalowania
++	Odd or even pages	Strony nieparzyste lub parzyste
++	Printing goes through a PDF: save it, then print it from any viewer.	Drukowanie odbywa się przez PDF: zapisz go, a następnie wydrukuj z dowolnej przeglądarki.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Drukarkę, druk dwustronny i liczbę stron na arkuszu wybiera się w systemowym oknie drukowania.
++	Recover documents	Odzyskiwanie dokumentów
++	Restore opens an unsaved copy. Your original file stays unchanged.	Przywrócenie otwiera niezapisaną kopię. Oryginalny plik pozostaje bez zmian.
++	Recovery is disabled while this document has a password.	Odzyskiwanie jest wyłączone, dopóki dokument jest chroniony hasłem.
++	Local recovery is unavailable or still loading.	Odzyskiwanie lokalne jest niedostępne lub wciąż się wczytuje.
++	No recovery copies.	Brak kopii do odzyskania.
++	Recovery copy	Kopia do odzyskania
++	Restore	Przywróć
++	Discard…	Odrzuć…
++	Continue without restoring	Kontynuuj bez przywracania
++	{name} — set your name in File › Options	{name} — ustaw swoje imię i nazwisko w Plik › Opcje
++	Document Recovery	Odzyskiwanie dokumentów
++	{app} recovered the following documents. Save the ones you want to keep.	{app} odzyskał następujące dokumenty. Zapisz te, które chcesz zachować.
++	Version created from the last AutoSave	Wersja utworzona podczas ostatniego autozapisu
+diff --git a/crates/ui-egui/src/i18n/sv.tsv b/crates/ui-egui/src/i18n/sv.tsv
+index 2098fc27..694f3030 100644
+--- a/crates/ui-egui/src/i18n/sv.tsv
++++ b/crates/ui-egui/src/i18n/sv.tsv
+@@ -2714,3 +2714,7 @@ preview	Title	Titel
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Skriv en storlek i valfri enhet, till exempel 5 cm eller 300 px. Den andra sidan följer med, så att bilden behåller sina proportioner.
+ 
+ 	Import…	Importera…
++
++# office overlay (wordcraft/0141): string of our patch 0137 (account tip). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	{name} — set your name in File › Options	{name} — ange ditt namn i Arkiv › Alternativ
+diff --git a/crates/ui-egui/src/i18n/tr.tsv b/crates/ui-egui/src/i18n/tr.tsv
+index 50799c62..283ca78f 100644
+--- a/crates/ui-egui/src/i18n/tr.tsv
++++ b/crates/ui-egui/src/i18n/tr.tsv
+@@ -2696,3 +2696,25 @@ preview	Title	Örnek
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Herhangi bir birimde bir boyut yazın, örneğin 5 cm veya 300 px. Diğer kenar da buna uyar, böylece resim oranlarını korur.
+ 
+ 	Import…	İçe aktar…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Otomatik yönlendirme
++	Scale to paper size	Kağıt boyutuna ölçekle
++	No Scaling	Ölçeklendirme yok
++	Odd or even pages	Tek veya çift sayfalar
++	Printing goes through a PDF: save it, then print it from any viewer.	Yazdırma bir PDF üzerinden yapılır: kaydedin, sonra herhangi bir görüntüleyiciden yazdırın.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Yazıcı, çift taraflı yazdırma ve yaprak başına sayfa sayısı sistemin yazdırma penceresinde seçilir.
++	Recover documents	Belgeleri kurtar
++	Restore opens an unsaved copy. Your original file stays unchanged.	Geri yükleme kaydedilmemiş bir kopyayı açar. Özgün dosyanız değişmeden kalır.
++	Recovery is disabled while this document has a password.	Bu belgede parola varken kurtarma devre dışıdır.
++	Local recovery is unavailable or still loading.	Yerel kurtarma kullanılamıyor veya hâlâ yükleniyor.
++	No recovery copies.	Kurtarma kopyası yok.
++	Recovery copy	Kurtarma kopyası
++	Restore	Geri yükle
++	Discard…	At…
++	Continue without restoring	Geri yüklemeden devam et
++	{name} — set your name in File › Options	{name} — adınızı Dosya › Seçenekler bölümünden ayarlayın
++	Document Recovery	Belge Kurtarma
++	{app} recovered the following documents. Save the ones you want to keep.	{app} aşağıdaki belgeleri kurtardı. Saklamak istediklerinizi kaydedin.
++	Version created from the last AutoSave	Son otomatik kayıttan oluşturulan sürüm
+diff --git a/crates/ui-egui/src/i18n/vi.tsv b/crates/ui-egui/src/i18n/vi.tsv
+index e2bfe75e..e522cda9 100644
+--- a/crates/ui-egui/src/i18n/vi.tsv
++++ b/crates/ui-egui/src/i18n/vi.tsv
+@@ -2739,3 +2739,25 @@ template	Letter	Thư
+ 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Nhập kích thước theo đơn vị bất kỳ, ví dụ 5 cm hoặc 300 px. Cạnh còn lại thay đổi theo, nên ảnh giữ nguyên tỷ lệ.
+ 
+ 	Import…	Nhập…
++
++# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
++# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
++	Auto orientation	Tự động xoay hướng
++	Scale to paper size	Co giãn theo khổ giấy
++	No Scaling	Không co giãn
++	Odd or even pages	Trang lẻ hoặc chẵn
++	Printing goes through a PDF: save it, then print it from any viewer.	In ấn thực hiện qua PDF: hãy lưu tệp rồi in từ bất kỳ trình xem nào.
++	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Máy in, in hai mặt và số trang trên mỗi tờ được chọn trong hộp thoại in của hệ thống.
++	Recover documents	Khôi phục tài liệu
++	Restore opens an unsaved copy. Your original file stays unchanged.	Khôi phục sẽ mở một bản sao chưa lưu. Tệp gốc của bạn không bị thay đổi.
++	Recovery is disabled while this document has a password.	Tính năng khôi phục bị tắt khi tài liệu này có mật khẩu.
++	Local recovery is unavailable or still loading.	Khôi phục cục bộ không khả dụng hoặc vẫn đang tải.
++	No recovery copies.	Không có bản sao khôi phục.
++	Recovery copy	Bản sao khôi phục
++	Restore	Khôi phục
++	Discard…	Loại bỏ…
++	Continue without restoring	Tiếp tục mà không khôi phục
++	{name} — set your name in File › Options	{name} — đặt tên của bạn trong Tệp › Tùy chọn
++	Document Recovery	Khôi phục tài liệu
++	{app} recovered the following documents. Save the ones you want to keep.	{app} đã khôi phục các tài liệu sau. Hãy lưu những tài liệu bạn muốn giữ lại.
++	Version created from the last AutoSave	Phiên bản được tạo từ lần tự động lưu gần nhất
