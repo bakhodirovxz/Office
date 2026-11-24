@@ -8,8 +8,7 @@ Microsoft Word, Excel and PowerPoint.
 
 Open source under MIT OR Apache-2.0. **Status: preview / pre-release. Expect rough edges** (see [Project status](#project-status-and-roadmap)).
 
-**[Code signing policy](CODE-SIGNING-POLICY.md)**: free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
-[SignPath Foundation](https://signpath.org/) (applied for; releases are unsigned until it is granted).
+**[Code signing policy](CODE-SIGNING-POLICY.md)**: releases are not code-signed yet; verify downloads against `SHA256SUMS`.
 
 ## Contents
 
@@ -131,7 +130,7 @@ Release notes and checksums: [suite 0.7.0](https://github.com/bakhodirovxz/Offic
 [keyboard 0.4.0](https://github.com/bakhodirovxz/Office/releases/tag/keyboard-v0.4.0) (each has a `SHA256SUMS` file).
 
 - The installers are not signed yet, so Windows SmartScreen warns: "More info" > "Run anyway". Check the download against `SHA256SUMS`.
-  Signing will be done by SignPath Foundation, see the [code signing policy](CODE-SIGNING-POLICY.md).
+  See the [code signing policy](CODE-SIGNING-POLICY.md).
 - The add-in installs per user without admin rights and adds its own ribbon tab. With nothing selected, "Cyrillic to Latin"
   converts the whole file and rewrites 1995 Latin in the 2026 letters (English paragraphs keep their Latin).
 - The keyboard installs per machine (administrator rights) and appears as "Oʻzbek 2026 (ş ç ö ğ)" under Uzbek (Latin): switch

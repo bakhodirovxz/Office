@@ -1,11 +1,12 @@
 # Code signing policy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
-
 This is the code signing policy of the Hoshiya project. It is linked from the project home page (the repository README)
-and from every release page. Status: **applied for, not yet in force.** Until the SignPath Foundation grants the
-certificate, releases are unsigned and Windows SmartScreen warns; verify downloads against the `SHA256SUMS` file of each
-release.
+and from every release page.
+
+**Status: no code signing certificate yet.** Releases are unsigned, so Windows SmartScreen warns; verify every download
+against the `SHA256SUMS` file of its release. The project applied to the SignPath Foundation; on 2026-11-24 the Foundation
+declined for now because the project is new and not yet widely known, and invited a new application later. This policy
+describes how signing will work once a certificate is in place, whichever certificate that is.
 
 ## What is signed
 
@@ -20,8 +21,7 @@ file is signed for release, and no third-party binary is signed.
 The DLLs are signed first; the MSIs are then built from the signed DLLs and signed. The Rust DLLs link the Rust standard
 library and, statically, the Microsoft C runtime of the MSVC toolchain (redistributable, as in any MSVC-built program);
 licences are in `NOTICE`. The add-in host uses only the .NET Framework that ships with Windows. Product name and version
-in every file come from one place, `brand/brand.toml` (`[product]`), and match the SignPath artifact configuration.
-Windows shows the publisher as **SignPath Foundation** (the certificate subject).
+in every file come from one place, `brand/brand.toml` (`[product]`), and match the signing configuration. Windows shows the publisher named in the certificate.
 
 All our code is licensed MIT OR Apache-2.0 (OSI-approved). There is no proprietary code.
 
@@ -33,9 +33,9 @@ The project has one maintainer, who owns the repository.
 |---|---|
 | Authors (commit to the repository) | [bakhodirovxz](https://github.com/bakhodirovxz) |
 | Reviewers (review every change from a non-committer before it is merged) | [bakhodirovxz](https://github.com/bakhodirovxz) |
-| Approvers (approve every signing request by hand in SignPath) | [bakhodirovxz](https://github.com/bakhodirovxz) |
+| Approvers (approve every signing request by hand) | [bakhodirovxz](https://github.com/bakhodirovxz) |
 
-Every member uses multi-factor authentication on GitHub and on SignPath.
+Every member uses multi-factor authentication on GitHub and on the signing service.
 
 ## Privacy statement
 
