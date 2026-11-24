@@ -35,6 +35,10 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
   public repo (add-in only).
 - **HRM integration = the ONLYOFFICE path** (owner, 2026-11-07): HRM code is not changed for us (HRB PR-0…PR-3 cancelled). The
   document server is a drop-in for ONLYOFFICE Document Server; every setting is made server-side at install (Docker/installer).
+- **Phase 5 gate is not tied to the HRM** (owner, 2026-11-24): the web/server connection must work for any integrator the way
+  ONLYOFFICE does: install the Docker image, configure it by env/config, use it. Gate criterion (1) = a generic ONLYOFFICE-API host
+  runs open → edit → save → reopen → download against a fresh Docker install configured only that way. The HRM is one example
+  profile; the HRM pilot (WP17) is optional, not a gate condition.
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
