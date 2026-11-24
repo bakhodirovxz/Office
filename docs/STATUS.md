@@ -1479,6 +1479,32 @@ Full report: `docs/phase3/gate-review.md` section 10. Architect tier, at HEAD `d
   `E:\office-target\p4-overlay\owner-test\` (DX12/GL launchers for Docs and Sheets, fixtures, README). MPO off
   (`OverlayTestMode`) is the owner's IT call, listed as an optional diagnostic only.
 
+### Phase 4: wordcraft quarantine 20 to 3 (branch `p4-quarantine`, 2026-11-25)
+- **Result** (`scripts/ci.sh test wordcraft`, overlay on, ru-locale PC): before 3472 pass + 20 quarantined fails; after 3489 pass, 0 fail,
+  3 quarantined (the colour-emoji font tests, `env`: this Windows box has no colour emoji font), doctests ok; `verify-queue wordcraft`,
+  `cargo xt register check`, `cargo fmt --check` ok. The quarantine pass "fails exactly its entries" (3 of 3).
+- **Causes and fixes** (carried patches 0141, 0901-0905; the entries are gone from `ci/quarantine.toml`):
+  - i18n `czech/hungarian/polish/turkish/vietnamese/croatian/italian` catalog tests and `untranslated_interface_text`: our patches 0136
+    (File > Print wording) and 0137 (Document Recovery) put 19 strings into `ru.tsv`; upstream's tests need cs/hu/pl/tr/vi/hr to hold
+    every ru key (italian: every tr key; the audit: all eight complete catalogs). 0141 adds the rows (cs hu pl tr vi hr it; the account
+    tip also bg sv): **machine-translation drafts by the agent, not reviewed by a native speaker** (marked in a comment above each block,
+    133 rows). 0901 makes the tests overlay-aware: compare with upstream's `ru.tsv` (the overlay's ru has more rows), skip the uz
+    catalogs, expect `rebrand("WordCraft")` (also the bulgarian/swedish/hungarian/croatian/turkish checks), and the audit exempts the
+    overlay's product name/attribution/copyright and the Transliterate strings (only in the overlay's ru/uz catalogs by design).
+  - brand-overlay tests `extended_properties_...` (docx), `latex_round_trip`, `start_screen_shows_file_home...`,
+    `general_start_up_turns_the_start_screen_off_and_on`, `the_default_app_button_shows_only_with_the_hosts_hook`: expected the literal
+    "WordCraft"; 0902 reads `OFFICE_PRODUCT_NAME` / `app_name()` / `rebrand()`.
+  - `breaks_menu` (2 tests): found the ribbon button by its English label under the ru system language; 0903 sets `ui.language` to en.
+  - `a_thai_run_with_latin_falls_back_to_one_face` (fonts): premise "no bundled Thai face" is false with `CRAFT_FONTS_DIR` (noto-sans-thai);
+    0904 guards the last assertion.
+  - Flaky `recovery_restore_uses_save_changes_and_resets_autosave_permission` (not in the quarantine list, failed once in the parallel
+    suite, backstage.rs:665): the recovery cards are disabled while the worker is busy (panes.rs `recovery_card`), and a dirty document
+    queues its own autosave job 10 s after the worker starts (`recovery/desktop.rs` `INTERVAL`), which a loaded test thread reaches; the
+    click then did nothing. 0905 settles the worker and retries the click. Not reproduced on demand: the cause is read from the code and
+    the earlier failure log; the test passed in all three full runs here.
+- **Not done / open:** the 3 emoji entries stay (need a colour emoji font on the runner; GitHub runners are not checked). Native review
+  of the 133 non-Uzbek rows. Before/after counts are one run each.
+
 ## Sheets default column width follows the Normal font (gridcraft/0154, p4-colwidth)
 - Answers the "stays 64 px" open item. Rule (ECMA-376 18.3.1.81): default width = `baseColWidth` (8) characters of the Normal
   font's maximum digit width plus 5 px padding, rounded up to 8 px. Digit width: Times New Roman 0.5 em (12 pt = 16 px gives 8 px);
