@@ -548,6 +548,7 @@ fn limits() -> tls::ConnLimits {
         total: 1000,
         per_ip: 2,
         exempt: vec![],
+        exempt_names: Default::default(),
         max_age: Duration::from_secs(60),
         max_requests: 100,
         head_timeout: Duration::from_secs(1),
@@ -597,6 +598,44 @@ async fn the_listener_caps_connections_per_address_and_drops_slow_and_old_ones()
     });
     r.await.unwrap();
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Gate review G2 (docs/phase5/gate-security.md): a trusted proxy listed by name (the document server's drop-in lists the Traefik
+/// container's name) carries every client, so it is exempt from the per-address cap like one listed by address. Before, only addresses
+/// were exempt: 32 open connections through the proxy (a few slow uploads) refused every other user.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_trusted_proxy_named_by_host_is_not_capped_per_address() {
+    let h = H::server("m3-name", |s| {
+        s.tls = "upstream".into();
+        s.trusted_proxies = vec!["localhost".into()];
+    });
+    let lim = tls::ConnLimits {
+        per_ip: 2,
+        ..tls::ConnLimits::from_settings(&h.app.r)
+    };
+    let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = l.local_addr().unwrap().port();
+    tokio::spawn(tls::serve(
+        l,
+        None,
+        h.router.clone(),
+        lim,
+        std::future::pending(),
+    ));
+    tokio::task::spawn_blocking(move || {
+        let conns: Vec<std::net::TcpStream> = (0..3)
+            .map(|_| {
+                let s = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+                s.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+                s
+            })
+            .collect();
+        for (i, mut c) in conns.into_iter().enumerate() {
+            assert!(get(port, &mut c).starts_with("HTTP/1.1 "), "connection {i}");
+        }
+    })
+    .await
+    .unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread")]
