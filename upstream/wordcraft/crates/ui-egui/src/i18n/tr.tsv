@@ -2696,3 +2696,25 @@ preview	Title	Örnek
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Herhangi bir birimde bir boyut yazın, örneğin 5 cm veya 300 px. Diğer kenar da buna uyar, böylece resim oranlarını korur.
 
 	Import…	İçe aktar…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Otomatik yönlendirme
+	Scale to paper size	Kağıt boyutuna ölçekle
+	No Scaling	Ölçeklendirme yok
+	Odd or even pages	Tek veya çift sayfalar
+	Printing goes through a PDF: save it, then print it from any viewer.	Yazdırma bir PDF üzerinden yapılır: kaydedin, sonra herhangi bir görüntüleyiciden yazdırın.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Yazıcı, çift taraflı yazdırma ve yaprak başına sayfa sayısı sistemin yazdırma penceresinde seçilir.
+	Recover documents	Belgeleri kurtar
+	Restore opens an unsaved copy. Your original file stays unchanged.	Geri yükleme kaydedilmemiş bir kopyayı açar. Özgün dosyanız değişmeden kalır.
+	Recovery is disabled while this document has a password.	Bu belgede parola varken kurtarma devre dışıdır.
+	Local recovery is unavailable or still loading.	Yerel kurtarma kullanılamıyor veya hâlâ yükleniyor.
+	No recovery copies.	Kurtarma kopyası yok.
+	Recovery copy	Kurtarma kopyası
+	Restore	Geri yükle
+	Discard…	At…
+	Continue without restoring	Geri yüklemeden devam et
+	{name} — set your name in File › Options	{name} — adınızı Dosya › Seçenekler bölümünden ayarlayın
+	Document Recovery	Belge Kurtarma
+	{app} recovered the following documents. Save the ones you want to keep.	{app} aşağıdaki belgeleri kurtardı. Saklamak istediklerinizi kaydedin.
+	Version created from the last AutoSave	Son otomatik kayıttan oluşturulan sürüm

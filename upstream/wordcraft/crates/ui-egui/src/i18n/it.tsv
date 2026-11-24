@@ -2708,3 +2708,25 @@ preview	Title	Esempio
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Scrivi una dimensione in qualsiasi unità, ad esempio 5 cm o 300 px. L'altro lato si adegua, così l'immagine mantiene le proporzioni.
 
 	Import…	Importa…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Orientamento automatico
+	Scale to paper size	Adatta alle dimensioni della carta
+	No Scaling	Nessun ridimensionamento
+	Odd or even pages	Pagine dispari o pari
+	Printing goes through a PDF: save it, then print it from any viewer.	La stampa passa da un PDF: salvalo, poi stampalo da qualsiasi visualizzatore.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	La stampante, la stampa fronte/retro e il numero di pagine per foglio si scelgono nella finestra di stampa del sistema.
+	Recover documents	Recupero documenti
+	Restore opens an unsaved copy. Your original file stays unchanged.	Il ripristino apre una copia non salvata. Il file originale rimane invariato.
+	Recovery is disabled while this document has a password.	Il recupero è disattivato finché il documento ha una password.
+	Local recovery is unavailable or still loading.	Il recupero locale non è disponibile o è ancora in caricamento.
+	No recovery copies.	Nessuna copia di recupero.
+	Recovery copy	Copia di recupero
+	Restore	Ripristina
+	Discard…	Elimina…
+	Continue without restoring	Continua senza ripristinare
+	{name} — set your name in File › Options	{name} — imposta il tuo nome in File › Opzioni
+	Document Recovery	Recupero documenti
+	{app} recovered the following documents. Save the ones you want to keep.	{app} ha recuperato i seguenti documenti. Salva quelli che vuoi conservare.
+	Version created from the last AutoSave	Versione creata dall'ultimo salvataggio automatico

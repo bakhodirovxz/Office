@@ -7,6 +7,16 @@ fn lang(code: &str) -> Lang {
     Lang::from_code(code).unwrap_or_else(|| panic!("{code} registered"))
 }
 
+/// A catalog as upstream ships it: the office overlay adds our rows to ru, which upstream's other catalogs do not have.
+fn src(l: Lang) -> &'static str {
+    if l.code() == "ru" { include_str!("ru.tsv") } else { l.0.source }
+}
+
+/// Every language upstream ships: the overlay's uz catalogs hold our strings only and are not compared with upstream's.
+fn upstream_langs() -> impl Iterator<Item = Lang> {
+    Lang::all().filter(|l| !l.code().starts_with("uz"))
+}
+
 #[test]
 fn system_locales_map_to_languages() {
     assert_eq!(lang_from_tag("zh_CN.UTF-8"), Some(lang("zh-hans")));
@@ -416,7 +426,7 @@ fn czech_covers_the_entire_existing_interface_catalog() {
     // Keep the original Chinese coverage and include the complete styles, equation gallery,
     // paper sizes and watermarks from the Russian and Spanish catalogs.
     assert!(keys(lang("cs").0.source).is_superset(&keys(lang("zh-hans").0.source)));
-    assert!(keys(lang("cs").0.source).is_superset(&keys(lang("ru").0.source)));
+    assert!(keys(lang("cs").0.source).is_superset(&keys(src(lang("ru")))));
     assert!(keys(lang("cs").0.source).is_superset(&keys(lang("es").0.source)));
     let cs = lang("cs");
     assert_eq!(tr(cs, "Home"), "Domů");
@@ -768,7 +778,7 @@ fn turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates(
     use std::collections::HashSet;
     let keys = |source| parse_entries(source).0.into_iter().map(|e| e.source).collect::<HashSet<_>>();
     // Full parity with the Russian catalog: covers all UI strings, styles, math gallery, and presets.
-    assert_eq!(keys(lang("tr").0.source), keys(lang("ru").0.source));
+    assert_eq!(keys(lang("tr").0.source), keys(src(lang("ru"))));
     assert!(keys(lang("es").0.source).is_subset(&keys(lang("tr").0.source)));
     assert!(keys(lang("zh-hans").0.source).is_subset(&keys(lang("tr").0.source)));
     let tr = lang("tr");
@@ -786,7 +796,7 @@ fn turkish_covers_the_entire_existing_interface_catalog_and_preserves_templates(
         ("Euler's identity", "Euler Özdeşliği"),
         ("Default Paragraph Font", "Varsayılan Paragraf Yazı Tipi"),
         ("CONFIDENTIAL", "GİZLİ"),
-        ("WordCraft", "WordCraft"),
+        ("WordCraft", crate::office_overlay::rebrand("WordCraft")),
         ("unknown future label", "unknown future label"),
     ] {
         assert_eq!(super::tr(tr, source), expected);
@@ -853,7 +863,7 @@ fn hungarian_covers_the_entire_existing_interface_catalog() {
     let keys = |source| parse_entries(source).0.into_iter().map(|e| e.source).collect::<HashSet<_>>();
     // Every key of the most complete catalog: built-in style names, equation gallery labels, paper
     // sizes and watermarks included.
-    assert!(keys(lang("hu").0.source).is_superset(&keys(lang("ru").0.source)));
+    assert!(keys(lang("hu").0.source).is_superset(&keys(src(lang("ru")))));
     assert!(keys(lang("hu").0.source).is_superset(&keys(lang("es").0.source)));
     let hu = lang("hu");
     for (source, expected) in [
@@ -865,7 +875,7 @@ fn hungarian_covers_the_entire_existing_interface_catalog() {
         ("Save", "Mentés"),
         ("Redo", "Újra"),
         ("UPPERCASE", "NAGYBETŰS"),
-        ("WordCraft", "WordCraft"),
+        ("WordCraft", crate::office_overlay::rebrand("WordCraft")),
         ("unknown future label", "unknown future label"),
     ] {
         assert_eq!(super::tr(hu, source), expected);
@@ -992,8 +1002,8 @@ fn polish_covers_every_key_of_every_other_catalog() {
     // pieces of gallery labels. Polish matches every other catalog, including the built-in style
     // names, citation styles and equation gallery. French carries newer strings (paper sizes,
     // bookmarks, printing) the Polish catalog hasn't caught up with yet.
-    for other in Lang::all().filter(|l| *l != Lang::EN && !matches!(l.code(), "pl" | "it" | "hu" | "bg" | "vi" | "sv" | "hr" | "fr")) {
-        let mut missing: Vec<String> = keys(other.0.source).difference(&polish).cloned().collect();
+    for other in upstream_langs().filter(|l| *l != Lang::EN && !matches!(l.code(), "pl" | "it" | "hu" | "bg" | "vi" | "sv" | "hr" | "fr")) {
+        let mut missing: Vec<String> = keys(src(other)).difference(&polish).cloned().collect();
         missing.sort();
         assert!(missing.is_empty(), "pl lacks {}'s {missing:?}", other.code());
     }
@@ -1272,7 +1282,7 @@ fn bulgarian_covers_the_entire_existing_interface_catalog() {
         ("Heading 1", "Заглавие 1"),
         ("Hyphenation", "Сричкопренасяне"),
         ("Track Changes", "Проследяване на промените"),
-        ("WordCraft", "WordCraft"),
+        ("WordCraft", crate::office_overlay::rebrand("WordCraft")),
         ("unknown future label", "unknown future label"),
     ] {
         assert_eq!(tr(bg, source), expected, "{source}");
@@ -1337,8 +1347,8 @@ fn croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_
     let keys = |source| parse_entries(source).0.into_iter().map(|e| e.source).collect::<HashSet<_>>();
     let hr = lang("hr");
     // Every key of every other catalog, and no catalog errors.
-    for other in Lang::all().filter(|l| *l != Lang::EN && l.code() != "hr") {
-        let mut missing: Vec<String> = keys(other.0.source).difference(&keys(hr.0.source)).cloned().collect();
+    for other in upstream_langs().filter(|l| *l != Lang::EN && l.code() != "hr") {
+        let mut missing: Vec<String> = keys(src(other)).difference(&keys(hr.0.source)).cloned().collect();
         missing.sort();
         // Italian and Hungarian still carry "Style: APA", which the interface no longer shows.
         missing.retain(|k| k != "Style: APA" || !matches!(other.code(), "it" | "hu"));
@@ -1354,7 +1364,7 @@ fn croatian_covers_the_entire_existing_interface_catalog_and_keeps_count_labels_
         ("Heading 1", "Naslov 1"),
         ("Spelling & Grammar", "Pravopis i gramatika"),
         ("Hyphenation", "Rastavljanje riječi"),
-        ("WordCraft", "WordCraft"),
+        ("WordCraft", crate::office_overlay::rebrand("WordCraft")),
         ("unknown future label", "unknown future label"),
     ] {
         assert_eq!(tr(hr, source), expected, "{source}");
@@ -1435,7 +1445,7 @@ fn swedish_covers_the_entire_existing_interface_catalog() {
         ("Heading 1", "Rubrik 1"),
         ("Hyphenation", "Avstavning"),
         ("Track Changes", "Spåra ändringar"),
-        ("WordCraft", "WordCraft"),
+        ("WordCraft", crate::office_overlay::rebrand("WordCraft")),
         ("unknown future label", "unknown future label"),
     ] {
         assert_eq!(tr(sv, source), expected, "{source}");
@@ -1509,8 +1519,8 @@ fn vietnamese_covers_existing_catalog_keys_with_an_explicit_preview_fallback() {
     assert_eq!(trc(vi, "preview", "Title"), tr(vi, "Title"));
     // Compare complete (context, source) keys so a contextual entry cannot hide a missing plain
     // translation, or silently satisfy another context's key.
-    for other in Lang::all().filter(|l| *l != Lang::EN && l.code() != "vi") {
-        let (entries, errors) = parse_entries(other.0.source);
+    for other in upstream_langs().filter(|l| *l != Lang::EN && l.code() != "vi") {
+        let (entries, errors) = parse_entries(src(other));
         assert!(errors.is_empty(), "{}: {errors:?}", other.code());
         let keys: HashSet<_> = entries.into_iter().map(|e| (e.context, e.source)).collect();
         let mut missing: Vec<_> = keys.difference(&vi_keys).filter(|key| **key != preview_title).cloned().collect();

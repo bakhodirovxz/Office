@@ -2699,3 +2699,25 @@ preview	Title	Naslov
 	Type a size in any unit, such as 5 cm or 300 px. The other side follows, so the picture keeps its proportions.	Upišite veličinu u bilo kojoj jedinici, npr. 5 cm ili 300 px. Druga se strana prilagođava pa slika zadržava svoje proporcije.
 
 	Import…	Uvezi…
+
+# office overlay (wordcraft/0141): strings of our patches 0136 (File › Print) and 0137 (Document Recovery). Machine translation
+# draft by the agent, not reviewed by a native speaker (reviewed:none); the English source was written first.
+	Auto orientation	Automatska orijentacija
+	Scale to paper size	Prilagodi veličini papira
+	No Scaling	Bez skaliranja
+	Odd or even pages	Neparne ili parne stranice
+	Printing goes through a PDF: save it, then print it from any viewer.	Ispis ide preko PDF-a: spremite ga, a zatim ispišite iz bilo kojeg preglednika.
+	The printer, two-sided printing and pages per sheet are chosen in the system print dialog.	Pisač, obostrani ispis i broj stranica po listu biraju se u sistemskom dijalogu za ispis.
+	Recover documents	Oporavak dokumenata
+	Restore opens an unsaved copy. Your original file stays unchanged.	Vraćanje otvara nespremljenu kopiju. Izvorna datoteka ostaje nepromijenjena.
+	Recovery is disabled while this document has a password.	Oporavak je isključen dok je dokument zaštićen zaporkom.
+	Local recovery is unavailable or still loading.	Lokalni oporavak nije dostupan ili se još učitava.
+	No recovery copies.	Nema kopija za oporavak.
+	Recovery copy	Kopija za oporavak
+	Restore	Vrati
+	Discard…	Odbaci…
+	Continue without restoring	Nastavi bez vraćanja
+	{name} — set your name in File › Options	{name} — postavite svoje ime u Datoteka › Mogućnosti
+	Document Recovery	Oporavak dokumenata
+	{app} recovered the following documents. Save the ones you want to keep.	{app} je oporavio sljedeće dokumente. Spremite one koje želite zadržati.
+	Version created from the last AutoSave	Verzija stvorena pri posljednjem automatskom spremanju
