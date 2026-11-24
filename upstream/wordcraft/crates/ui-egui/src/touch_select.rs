@@ -232,7 +232,11 @@ mod tests {
     use egui_kittest::kittest::Queryable;
 
     fn app(text: &str, size: Vec2) -> Harness<'static, WordApp> {
-        let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::from_text(text)), Default::default());
+        app_of(wordcraft_doc::Document::from_text(text), size)
+    }
+
+    fn app_of(doc: wordcraft_doc::Document, size: Vec2) -> Harness<'static, WordApp> {
+        let a = WordApp::new(wordcraft_engine::Session::new(doc), Default::default());
         let mut h = Harness::builder().with_size(size).build_ui_state(
             |ui, app: &mut WordApp| {
                 let ctx = ui.ctx().clone();
@@ -358,6 +362,43 @@ mod tests {
         let layout = h.state_mut().session.layout();
         assert_eq!(layout.caret_on(&six, 1).map(|c| c.page), Some(1), "the focus is on the second page");
         up(&mut h, knob(to));
+    }
+
+    /// Web Layout on a phone: a table wider than the view pans sideways under a finger and the swipe
+    /// selects no cells; text that reflows has nothing to pan (wordcraft/0188).
+    #[test]
+    fn a_horizontal_swipe_pans_a_wide_table_and_selects_nothing() {
+        let mut doc = wordcraft_doc::Document::from_text("");
+        let mut table = wordcraft_doc::table::Table::new(2, 3, 468.0);
+        table.props.fixed = true;
+        doc.body.insert(0, std::sync::Arc::new(wordcraft_doc::Block::Table(table)));
+        let mut h = app_of(doc, vec2(360.0, 700.0));
+        h.state_mut().run("view.webLayout", json!({})).unwrap();
+        h.run_steps(8);
+        let (sheet, text) = (h.state_mut().session.layout().pages[0].w, h.state().session.view.web_width);
+        assert!(sheet > text + 50.0, "the table is wider than the view: {sheet} vs {text}");
+        let sel = h.state().session.sel.clone();
+        let from = pos2(300.0, 300.0);
+        down(&mut h, from);
+        for i in 1..=8 {
+            drag(&mut h, pos2(300.0 - 20.0 * i as f32, 300.0));
+        }
+        up(&mut h, pos2(140.0, 300.0));
+        h.run_steps(30);
+        let x = h.state().canvas.scroll_offset.x;
+        assert!(x > 100.0, "the finger moved the page sideways: {x}");
+        assert_eq!(h.state().session.sel, sel, "no cells are selected by the swipe");
+
+        let mut t = app("alpha beta gamma delta epsilon zeta eta theta", vec2(360.0, 700.0));
+        t.state_mut().run("view.webLayout", json!({})).unwrap();
+        t.run_steps(8);
+        down(&mut t, from);
+        for i in 1..=8 {
+            drag(&mut t, pos2(300.0 - 20.0 * i as f32, 300.0));
+        }
+        up(&mut t, pos2(140.0, 300.0));
+        t.run_steps(30);
+        assert_eq!(t.state().canvas.scroll_offset.x, 0.0);
     }
 
     /// A long press selects the word and opens the bar when the finger lifts, but not the desktop
