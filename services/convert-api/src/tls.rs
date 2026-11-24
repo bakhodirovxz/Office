@@ -59,6 +59,8 @@ pub struct ConnLimits {
     pub total: usize,
     pub per_ip: usize,
     pub exempt: Vec<crate::config::Cidr>,
+    /// the trusted proxies listed by name (a container name), exempt as well (gate review G2)
+    pub exempt_names: crate::config::NameSet,
     /// a connection is closed after this long, however busy; an upload (`upload_timeout_s`) must fit
     pub max_age: std::time::Duration,
     /// a connection is closed (`Connection: close`) after this many requests
@@ -73,6 +75,7 @@ impl ConnLimits {
             total: r.s.max_connections,
             per_ip: r.s.max_conn_per_ip,
             exempt: r.trusted.clone(),
+            exempt_names: r.trusted_names.clone(),
             max_age: std::time::Duration::from_secs(r.s.upload_timeout_s.max(3600) + 600),
             max_requests: 100,
             head_timeout: std::time::Duration::from_secs(10),
@@ -163,7 +166,9 @@ pub async fn serve(
         let Ok(permit) = slots.clone().try_acquire_owned() else {
             continue;
         };
-        let ip_guard = if lim.exempt.iter().any(|c| c.contains(addr.ip())) {
+        let ip_guard = if lim.exempt.iter().any(|c| c.contains(addr.ip()))
+            || lim.exempt_names.contains(addr.ip())
+        {
             PerIp(per_ip.clone(), None)
         } else {
             let key = crate::app::ip_key(addr.ip());

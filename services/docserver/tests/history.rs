@@ -200,6 +200,61 @@ async fn saves_list_restore_and_name_over_the_routes() {
     let _ = std::fs::remove_dir_all(d);
 }
 
+/// Gate review G3 (docs/phase5/gate-security.md): a restore changes the document, so like save, autosave and dirty it waits for the
+/// provider's copy (docs/phase5/dropin.md D1). Before, a replayed config token (no `exp` in `compat = "docsapi"`) whose document URL had
+/// run out could restore an old version as version 1 of a new session and then save any bytes to the provider (status 6).
+#[tokio::test]
+async fn restore_waits_for_the_providers_document_like_a_save() {
+    let (ds, d) = build("restore-first");
+    let r = ds.routes::<()>();
+    let (sid, tok) = session(&ds, &r, "k1", true).await;
+    let save = |sid: String, tok: String, b: Vec<u8>| {
+        let r = r.clone();
+        async move {
+            call(
+                &r,
+                "POST",
+                &format!("/ds/session/{sid}/save"),
+                Some(&tok),
+                &b,
+            )
+            .await
+            .0
+        }
+    };
+    assert_eq!(
+        save(sid.clone(), tok.clone(), docx("history v2")).await,
+        StatusCode::OK
+    );
+    // the same key opened again, its document never fetched
+    let body = json!({"origin": "https://app.test", "config": {"token": sign(PROV_SECRET.as_bytes(), &config("k1", true))}});
+    let (s, b) = call(&r, "POST", "/ds/session", None, body.to_string().as_bytes()).await;
+    assert_eq!(s, StatusCode::OK);
+    let v = js(&b);
+    let (sid2, tok2) = (
+        v["sid"].as_str().unwrap().to_string(),
+        v["token"].as_str().unwrap().to_string(),
+    );
+    let (s, b) = call(
+        &r,
+        "POST",
+        &format!("/ds/session/{sid2}/history/1/restore"),
+        Some(&tok2),
+        b"",
+    )
+    .await;
+    assert_eq!(
+        (s, js(&b)["error"]["code"].as_str()),
+        (StatusCode::CONFLICT, Some("no_document"))
+    );
+    assert_eq!(
+        save(sid2.clone(), tok2, docx("forged")).await,
+        StatusCode::CONFLICT
+    );
+    assert!(ds.load_session(&sid2).unwrap().versions.is_empty());
+    let _ = std::fs::remove_dir_all(d);
+}
+
 #[tokio::test]
 async fn history_routes_check_the_session_token_and_permissions() {
     let (ds, d) = build("auth");
