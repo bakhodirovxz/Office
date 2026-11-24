@@ -167,6 +167,31 @@ Probed with `docker run` of `hoshiya-docserver:p5-5b752c69` (commands in the rep
 | Through Traefik (`gsec-traefik` by name) | https answer carries HSTS; plain http → 308 to `https://<public_url>/...`; a direct request to 8787 → 403; a stranger on the internal port → 403 | ok; G2 fixed the connection cap |
 | Process | uid 10002, `CapEff` 0, `/app` not writable | ok |
 
+### Merged image (phase-5 9af9a861)
+
+Verified 2026-11-25 on branch `p5-verify` (= phase-5 9af9a861: G1-G3, S21/S22 and the quick-start entrypoint/README/rehearsal merged), image
+`hoshiya-docserver:p5-verify` built by `packaging/docserver/build.sh` (new `TAG` env; default stays `rehearsal`). Local Docker only.
+
+- Criterion (1): `rehearse-generic.sh` (fresh `docker run`, documented env only, generic ONLYOFFICE-API host, Chromium): **8 of 8** on the first
+  run (docx, xlsx, pptx, pdf: open -> edit -> save -> reopen -> download, plus view-only; callbacks 1,6,2 each; no xlsx flake); log hygiene 0 tokens.
+- Fail-closed probes (same image, `docker run --rm`; the secret value is never printed):
+
+| Probe | Exit | Message |
+|---|---|---|
+| no env, no config | 64 | `JWT_SECRET or JWT_SECRET_FILE is required ... or mount a config file and pass --config` (was 2 on the gate image) |
+| `JWT_ENABLED=false` | 64 | `this server never runs without a token` |
+| `DOCSERVER_PUBLIC_URL` missing | 64 | `DOCSERVER_PUBLIC_URL is required` |
+| `JWT_SECRET=secret` | 2 | `providers[0].secret_file must hold at least 16 bytes` (no value) |
+| no TLS cert, no `DOCSERVER_TRUSTED_PROXIES` | 64 | `TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY ..., or DOCSERVER_TRUSTED_PROXIES` |
+| unreadable TLS cert path | 64 | `cannot read the files (they must be readable by uid 10002)` |
+| `--read-only`, no volume | 2 | `mkdir: cannot create directory '/data/secrets': Read-only file system`, then `server_secret_file: cannot read /data/secrets/server-secret` |
+
+- Tests (`services/`): `convert-api` 78 passed, 0 failed; `docserver` 85 passed, 0 failed (`--no-fail-fast`). The first `docserver` run under load had
+  two timing failures in `tests/outbound.rs` (`a_failed_callback_keeps_the_document_dirty_and_the_retry_survives_a_restart`,
+  `session_creation_and_failed_auth_are_limited_per_client_address`); both pass alone and in the full rerun.
+- Not run: the "TLS certificate and no proxy keeps the per-address cap" check (section 5), Traefik rows, compose/drop-in rehearsals.
+  The `--read-only` refusal prints shell errors before the server's own message; it still fails closed (exit 2).
+
 ## 5. Not run, and why
 
 - The compose rehearsal (`packaging/docserver/rehearse.sh`, `docserver-compose.spec.ts`) and `rehearse-dropin.sh`: not run; the real
