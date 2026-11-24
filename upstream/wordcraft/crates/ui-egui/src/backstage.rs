@@ -587,6 +587,21 @@ mod tests {
         h.run_steps(4);
     }
 
+    /// Click the "Synthetic draft" card until the Save changes? question shows. The cards are disabled while the recovery worker
+    /// is busy, and a dirty document queues its own autosave job 10 s after the worker starts: on a loaded machine that lands
+    /// between the settle and the click, which then does nothing.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn click_synthetic_draft(h: &mut egui_kittest::Harness<'_, WordApp>) {
+        for _ in 0..20 {
+            settle_recovery(h);
+            h.get_by_label("Synthetic draft").click();
+            h.run_steps(4);
+            if h.state().dialog.is_some() {
+                return;
+            }
+        }
+    }
+
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
     fn recovery_page_keeps_dismissed_copies_and_confirms_discard() {
@@ -659,15 +674,14 @@ mod tests {
         h.state_mut().autosave_path = Some(root.join("must-not-write.docx"));
         h.state_mut().run("file.recover", json!({})).unwrap();
         h.run_steps(4);
-        assert_eq!(h.state().session.recovery_documents().len(), 1);
-        h.get_by_label("Synthetic draft").click();
-        h.run_steps(4);
+        // The dirty document's own autosave may add a second copy once the worker's 10 s timer has run out (a loaded machine).
+        assert_eq!(h.state().session.recovery_documents().iter().filter(|d| d.name == "Synthetic draft").count(), 1);
+        click_synthetic_draft(&mut h);
         assert!(matches!(h.state().dialog, Some(crate::dialogs::Dialog::SaveChanges { .. })));
         h.get_by_label("Cancel").click();
         h.run_steps(4);
         assert_eq!(h.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Current unsaved work");
-        h.get_by_label("Synthetic draft").click();
-        h.run_steps(4);
+        click_synthetic_draft(&mut h);
         h.get_by_label("Don't Save").click();
         settle_recovery(&mut h);
         assert_eq!(h.state().session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Recovered synthetic work");
