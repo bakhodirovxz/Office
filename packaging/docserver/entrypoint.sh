@@ -5,9 +5,14 @@
 # Secrets are never printed. The config goes to /tmp (the tmpfs of a read-only container).
 set -euo pipefail
 BIN=(/app/hoshiya-serve --dist /app/dist --brand /app/brand/brand.toml)
-if [ -z "${JWT_SECRET:-}${JWT_SECRET_FILE:-}" ]; then exec "${BIN[@]}" "$@"; fi
-
 die() { echo "entrypoint: $*" >&2; exit 64; }
+if [ -z "${JWT_SECRET:-}${JWT_SECRET_FILE:-}" ]; then
+  # fail closed: no secret in the environment and no operator config file mounted means there is nothing safe to run
+  cfg=""; prev=""
+  for a in "$@"; do [ "$prev" = --config ] && cfg=$a; prev=$a; done
+  [ -r "$cfg" ] || die "JWT_SECRET or JWT_SECRET_FILE is required (the secret the host application signs its editor config with), or mount a config file and pass --config; see packaging/docserver/README.md"
+  exec "${BIN[@]}" "$@"
+fi
 warn() { echo "entrypoint: warning: $*" >&2; }
 case "${JWT_ENABLED:-true}" in true | 1 | yes) ;; *) die "JWT_ENABLED=$JWT_ENABLED: this server never runs without a token" ;; esac
 [ "${JWT_HEADER:-Authorization}" = Authorization ] ||
@@ -52,13 +57,27 @@ list() { # <comma list> [table]: ["a", "b"], or [{ url = "a", internal = true },
   done
   printf '[%s]' "$out"
 }
-need() { [ -n "${!1:-}" ] || die "$1 is required (docs/phase5/dropin.md D6)"; }
+need() { [ -n "${!1:-}" ] || die "$1 is required (packaging/docserver/README.md, docs/phase5/dropin.md D6)"; }
 # checked here, in this shell: a die inside the $(...) of the heredoc below would only end that subshell
 for v in "${!DOCSERVER_@}"; do q "${!v}" > /dev/null; done
 for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB DOCSERVER_KEEP_CLOSED_HOURS DOCSERVER_KEEP_ABANDONED_DAYS DOCSERVER_CLOSE_IDLE_MINUTES; do
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
-for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_TRUSTED_PROXIES DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
+for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
+# TLS: the server's own (a certificate and key given as files) or a trusted proxy's (the drop-in); one of the two is required
+if [ -n "${DOCSERVER_TLS_CERT:-}" ]; then
+  need DOCSERVER_TLS_KEY
+  [ -r "$DOCSERVER_TLS_CERT" ] && [ -r "$DOCSERVER_TLS_KEY" ] || die "DOCSERVER_TLS_CERT / DOCSERVER_TLS_KEY: cannot read the files (they must be readable by uid 10002)"
+  TLS="tls = \"builtin\"
+tls_cert = $(q "$DOCSERVER_TLS_CERT")
+tls_key = $(q "$DOCSERVER_TLS_KEY")"
+else
+  [ -n "${DOCSERVER_TRUSTED_PROXIES:-}" ] || die "TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY (the server's own), or DOCSERVER_TRUSTED_PROXIES (TLS ends at a proxy)"
+  # without a certificate of its own, TLS must end at a proxy that is listed here
+  TLS="tls = \"upstream\"
+trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")"
+fi
+[ -n "${DOCSERVER_FRAME_ORIGINS:-}" ] || warn "DOCSERVER_FRAME_ORIGINS is empty: only $DOCSERVER_PUBLIC_URL may embed the editor; list the origin of the host application's pages"
 case "${DOCSERVER_ALLOW_OPAQUE_ORIGIN:-0}" in   # dropin.md D3b: off unless the installer's --allow-opaque-origin set it
   1 | true | yes) OPAQUE=true ;;
   0 | false | no | "") OPAQUE=false ;;
@@ -75,8 +94,7 @@ cat > "$R/api.toml" <<EOF
 listen = "0.0.0.0:${DOCSERVER_PUBLIC_PORT:-8787}"
 auth = "jwt"
 secret_file = $(q "$(secret converter-secret)")
-tls = "upstream"
-trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")
+$TLS
 public_url = $(q "$PUB")
 work_dir = "/tmp/work"
 store_dir = "/data/store"
