@@ -215,7 +215,7 @@ async fn document(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) 
 
 /// A change (save, autosave, dirty) needs the edit permission, and the provider's document fetched first: otherwise a replayed config
 /// token (one without `exp`, docs/phase5/dropin.md D1) could open a session and hand any bytes to the provider as the document.
-fn editable(rec: &SessionRecord) -> Result<(), ApiError> {
+pub(crate) fn editable(rec: &SessionRecord) -> Result<(), ApiError> {
     if !rec.perms.edit {
         return Err(SessErr::Forbidden.into());
     }
@@ -235,9 +235,18 @@ fn check_body(ds: &Docserver, rec: &SessionRecord, b: &[u8]) -> Result<(), ApiEr
         .map_err(|e| Docserver::doc_err(e).into())
 }
 
-async fn save(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Bytes) -> Res {
+/// The request body, read only once the token and the session passed (gate review G1: buffered first, anonymous uploads filled the
+/// memory), up to one byte past the cap so that `check_body` names it too large; a longer or broken body is refused the same way.
+async fn read_body(ds: &Docserver, body: Body) -> Result<Bytes, ApiError> {
+    axum::body::to_bytes(body, (ds.max_document_mb << 20) as usize + 1)
+        .await
+        .map_err(|_| SessErr::TooLarge.into())
+}
+
+async fn save(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Body) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "save", &client(cl))?;
     editable(&rec)?;
+    let body = read_body(&ds, body).await?;
     check_body(&ds, &rec, &body)?;
     // the answer comes after the provider's reply (the async-save ticket, 3.3): ok, failed or unknown; the version is kept either way
     let (v, cb, dirty) = blk(move || {
@@ -263,15 +272,10 @@ async fn dirty(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> 
     json_ok(json!({"callback": cb.map(|c| c.as_str())}))
 }
 
-async fn autosave(
-    State(ds): Ds,
-    cl: Cl,
-    Path(sid): Path<String>,
-    h: HeaderMap,
-    body: Bytes,
-) -> Res {
+async fn autosave(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap, body: Body) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "autosave", &client(cl))?;
     editable(&rec)?;
+    let body = read_body(&ds, body).await?;
     check_body(&ds, &rec, &body)?;
     blk(move || ds.put_autosave(&sid, &body, now())).await??;
     json_ok(json!({"ok": true}))
@@ -348,7 +352,6 @@ async fn file(State(ds): Ds, cl: Cl, Path((sid, ver)): Path<(String, u64)>, req:
 impl Docserver {
     /// The session routes: they take their state from `self`, so they merge into any router.
     pub(crate) fn session_routes<S: Clone + Send + Sync + 'static>(self: &Arc<Self>) -> Router<S> {
-        let cap = DefaultBodyLimit::max((self.max_document_mb << 20) as usize + 1);
         Router::new()
             .route(
                 "/ds/session",
@@ -356,8 +359,8 @@ impl Docserver {
             )
             .route("/ds/session/{sid}/renew", post(renew))
             .route("/ds/session/{sid}/document", get(document))
-            .route("/ds/session/{sid}/save", post(save).layer(cap))
-            .route("/ds/session/{sid}/autosave", post(autosave).layer(cap))
+            .route("/ds/session/{sid}/save", post(save))
+            .route("/ds/session/{sid}/autosave", post(autosave))
             .route("/ds/session/{sid}/dirty", post(dirty))
             .route("/ds/session/{sid}/ping", post(ping))
             .route("/ds/session/{sid}/close", post(close))

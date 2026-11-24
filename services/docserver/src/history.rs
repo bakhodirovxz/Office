@@ -10,7 +10,7 @@
 //!   `POST /ds/session/{sid}/history/{v}/restore`     v becomes a new version, and a new version of the session (needs `edit`)
 //!   `POST /ds/session/{sid}/history/{v}/name`        body `{"name": "..."}`, an empty name clears it (needs `edit`)
 use crate::Docserver;
-use crate::api::{Cl, authorize, blk, client, json_ok};
+use crate::api::{Cl, authorize, blk, client, editable, json_ok};
 use crate::sessions::{SessErr, SessionRecord, sha256_hex};
 use axum::Router;
 use axum::body::Bytes;
@@ -234,6 +234,8 @@ async fn view(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: Hea
 async fn restore(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: HeaderMap) -> Res {
     let rec = authorize(&ds, &h, &sid, false, "history.restore", &client(cl))?;
     need(&ds, &rec, "history.restore", "edit", rec.perms.edit)?;
+    // a change like a save: only after the provider's document was fetched (dropin.md D1, gate review G3)
+    editable(&rec)?;
     let out = blk(move || {
         let b = ds.version_backend();
         let id = doc_id(&rec);

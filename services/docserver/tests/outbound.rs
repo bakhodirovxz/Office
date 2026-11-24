@@ -996,6 +996,31 @@ async fn save_bodies_are_capped_and_checked() {
     );
 }
 
+/// Gate review G1 (docs/phase5/gate-security.md): a body is read only after its session token passed. Before, a save or autosave body
+/// was buffered up to `max_document_mb` before the token was looked at, so anonymous uploads through the proxy filled the memory (eight
+/// 100 MB bodies killed a 512 MB container). An over-cap body without a valid token is now a 401, not a 413.
+#[tokio::test]
+async fn a_body_is_read_only_after_its_token() {
+    let d = dir("bodyauth");
+    let (_ds, r) = plain(&d, &int("http://127.0.0.1:9"), |_| {});
+    let mut big = docx("x");
+    big.resize((51 << 20) + 1, 0);
+    let sid = "0123456789abcdef0123456789abcdef";
+    for route in ["save", "autosave"] {
+        for tok in [None, Some("junk")] {
+            let (s, _) = call(
+                &r,
+                "POST",
+                &format!("/ds/session/{sid}/{route}"),
+                tok,
+                big.clone(),
+            )
+            .await;
+            assert_eq!(s, StatusCode::UNAUTHORIZED, "{route} {tok:?}");
+        }
+    }
+}
+
 /// The bound is on the callback round trip (status 6 out, the harness downloads the file and answers): `callback_saved` alone. The
 /// whole save is reported too, but not bounded: its version, session, history and audit writes are synced to disk, and on a loaded
 /// machine those dominated it (2026-11-11, debug build, other builds running: one run's store 0.35 to 2.8 s per save; a whole-save

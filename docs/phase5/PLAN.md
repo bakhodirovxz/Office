@@ -33,7 +33,7 @@
 |---|---|
 | **Status** | Plan only, written 2026-10-25 on branch `phase-5`. No product code. |
 | **Inputs** | `docs/BRIEF.md` Phase 5 (:389-413) and App. B (:571); `docs/phase0/hrm-current-state.md`, `hrm-integration-design.md`, `hr-backend-prompt.md`, `docserver-results.md`, `spike-plans.md` §4; `spikes/docserver/`; `docs/ARCHITECTURE-DECISION.md` §2.4 (:430-468), :777; `docs/STATUS.md:9-30`, `:524-533`; `docs/phase1/SIZING.md` §2.4 (:211-282); `docs/phase3/PLAN.md` §5.5 (:430-450), §9.4 O10-O11 (:922-923), §10 (:928-963); `docs/phase4/PLAN.md` F2/F3/F7/F8 (:79-85), §4 (:247-262), §5.5-5.6 (:299-329), :523; `docs/phase4/gate-review.md` §8 (:461-478); `services/convert-api`, `services/suite-serve`, `crates/suite-core`, `crates/xdfu-core`. |
-| **Exit gate (brief)** | (1) One real HRM document flow works end to end on the test environment: open → edit → save → reopen → download. (2) The security checklist passes (§10). |
+| **Exit gate (brief)** | (1) A generic ONLYOFFICE-API host runs open → edit → save → reopen → download (docx, xlsx, pptx, pdf, and a view-only open) against a fresh Docker install configured only by env/config, the way an integrator sets up ONLYOFFICE; not tied to the HRM (owner decision 2026-11-24, which replaces "one real HRM document flow on the test environment"; the HRM pilot WP17 is optional). (2) The security checklist passes (§10). |
 | **Estimate** | **About 42.5 stream-days likely (range 30.5–64.5)**: 24.5 on the gate path, 18 beside it (§13.1). The HRM side is a separate stream: the pilot subset PR-0 … PR-3 plus `editor=auto` is 4.75 / 6.25 / 9 d (`SIZING.md:262`). |
 
 How to use this plan. §0 holds the facts found while planning. §1–§8 are the designs. §9 lists the open HRM

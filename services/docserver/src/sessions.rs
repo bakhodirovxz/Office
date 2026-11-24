@@ -539,7 +539,7 @@ impl Docserver {
     }
 
     /// Call under the lock. A recovery copy newer than the last version and different from it becomes a version first (the page went
-    /// away before its save, ONLYOFFICE's close-time assembly): the version file, the record with its close, then the history.
+    /// away before its save, the DocsAPI close-time assembly): the version file, the record with its close, then the history.
     /// `from` names where the copy came from in the audit line (`autosave`, or `close`: the close request's own body). `idle`: the
     /// server's idle close, which sends status 2 only with data the provider has not acknowledged (else 4).
     fn close_locked(
@@ -560,7 +560,7 @@ impl Docserver {
         };
         let c = Closed {
             at: now,
-            // The idle close comes minutes after the page went (ONLYOFFICE's 2 comes ~10 s after the last editor leaves). By then a
+            // The idle close comes minutes after the page went (the DocsAPI server's 2 comes ~10 s after the last editor leaves). By then a
             // newer session on the same file (a new key per open) may have saved: a 2 with a copy the provider already acknowledged
             // would overwrite that. A promoted copy, or a save whose 6 was not answered `{"error":0}`, is dirty and still goes as 2.
             status: if rec.saved_since_open && (!idle || rec.dirty()) {
