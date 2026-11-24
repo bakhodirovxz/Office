@@ -3,8 +3,8 @@
 A COM add-in for **Microsoft Word, Excel and PowerPoint** (Office 2010 and later, 32- and 64-bit) that converts Uzbek
 text between the Latin and Cyrillic scripts in place, keeping the formatting.
 
-**[Code signing policy](docs/ms-addin/CODE-SIGNING-POLICY.md)** — Free code signing provided by SignPath.io,
-certificate by SignPath Foundation (applied for; releases are unsigned until it is granted).
+**[Code signing policy](docs/ms-addin/CODE-SIGNING-POLICY.md)** — releases are not code-signed yet; verify downloads
+against `SHA256SUMS`.
 
 ## What it does
 

@@ -1,12 +1,11 @@
 # Code signing policy — Office add-in
 
-Free code signing provided by SignPath.io, certificate by SignPath Foundation.
-
 This page is the code signing policy for the Microsoft Office add-in (Uzbek Latin ↔ Cyrillic transliteration for
 Word, Excel and PowerPoint). The project-wide policy, which also covers the Windows keyboard, is
 [CODE-SIGNING-POLICY.md on the main branch](https://github.com/bakhodirovxz/Office/blob/main/CODE-SIGNING-POLICY.md).
-Status: **applied for, not yet in force.** Until the SignPath Foundation grants the certificate, releases are unsigned;
-verify downloads against the `SHA256SUMS` file of each release.
+Status: **no code signing certificate yet.** Releases are unsigned; verify downloads against the `SHA256SUMS` file of
+each release. The SignPath Foundation declined the project's application for now on 2026-11-24 (the project is new and
+not yet widely known); this policy describes how signing will work once a certificate is in place.
 
 ## What is signed
 
@@ -24,8 +23,8 @@ third-party binary is shipped. The engine links the Rust standard library and, s
 the MSVC toolchain (redistributable, as in any MSVC-built program; it avoids a VC++ redistributable on the client);
 licences in `NOTICE`. The add-in host uses only the .NET Framework that is part of Windows.
 Product name and version in every file come from one place, `brand/brand.toml` (`[product]`), stamped by
-`integrations/ms-office/build.sh` (DLL version resources) and `build-msi.ps1` (MSI), and must match the SignPath
-artifact configuration. Windows shows the publisher as **SignPath Foundation** (the certificate subject).
+`integrations/ms-office/build.sh` (DLL version resources) and `build-msi.ps1` (MSI), and must match the signing
+configuration. Windows shows the publisher named in the certificate.
 
 All components are licensed MIT OR Apache-2.0 (OSI-approved); there is no proprietary code.
 
@@ -35,9 +34,9 @@ All components are licensed MIT OR Apache-2.0 (OSI-approved); there is no propri
 |---|---|
 | Authors (commit to the repository) | `bakhodirovxz` (maintainer) |
 | Reviewers (review every change from a non-committer before it is merged) | `bakhodirovxz` (maintainer) |
-| Approvers (approve every signing request by hand in SignPath) | `bakhodirovxz` (maintainer) |
+| Approvers (approve every signing request by hand) | `bakhodirovxz` (maintainer) |
 
-Every member uses multi-factor authentication on GitHub and on SignPath.
+Every member uses multi-factor authentication on GitHub and on the signing service.
 
 ## Privacy statement
 
