@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: office <office@localhost>
+Date: Tue, 24 Nov 2026 12:00:00 +0500
+Subject: [PATCH] layout, ui-egui: Web Layout's sheet grows to hold a fixed-width
+ table, so a finger can pan across it
+
+Phase 6 checklist F3 (docs/phase6/checklist.md; owner chose "horizontal pan", 2026-11-24). Web Layout reflows text to the window but a fixed-width table (`tblLayout fixed` or an explicit width) keeps its width, and the page sheet was only as wide as the window, so the columns past the right edge were clipped and could not be reached. In `ViewMode::Web` the layout now widens each page to the right edge of its table cells (plus 8 pt); text keeps wrapping at `web_width`, so a document that reflows has a sheet exactly as wide as before. The canvas already scrolls both ways and `TouchScroll` already turns a finger's horizontal travel into scroll, so the sheet being wider is the whole change: a swipe pans (clamped to the sheet) and no longer selects cells. Test `touch_select::tests::a_horizontal_swipe_pans_a_wide_table_and_selects_nothing`.
+---
+diff --git a/crates/layout/src/lib.rs b/crates/layout/src/lib.rs
+index 7df43b1a..4d3c4989 100644
+--- a/crates/layout/src/lib.rs
++++ b/crates/layout/src/lib.rs
+@@ -2560,6 +2560,16 @@ fn layout_pass(
+             .fold(0.0f32, f32::max);
+         p.h = bottom + 36.0;
+     }
++    // A fixed-width table doesn't reflow: Web Layout's sheet grows to hold it, so the view can pan across (wordcraft/0188).
++    if opts.view == ViewMode::Web {
++        for p in &mut pages {
++            let right =
++                p.items.iter().filter_map(|it| if let Placed::Cell { rect, .. } = it { Some(rect.x + rect.w) } else { None }).fold(0.0f32, f32::max);
++            if right.is_finite() {
++                p.w = p.w.max(right + 8.0);
++            }
++        }
++    }
+     ctx.grid = para::Grid::default();
+     if !reflow {
+         let found = Totals::of(&pages, &sections);
+diff --git a/crates/ui-egui/src/touch_select.rs b/crates/ui-egui/src/touch_select.rs
+index 3aa2dd11..a7a2829b 100644
+--- a/crates/ui-egui/src/touch_select.rs
++++ b/crates/ui-egui/src/touch_select.rs
+@@ -232,7 +232,11 @@ mod tests {
+     use egui_kittest::kittest::Queryable;
+ 
+     fn app(text: &str, size: Vec2) -> Harness<'static, WordApp> {
+-        let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::from_text(text)), Default::default());
++        app_of(wordcraft_doc::Document::from_text(text), size)
++    }
++
++    fn app_of(doc: wordcraft_doc::Document, size: Vec2) -> Harness<'static, WordApp> {
++        let a = WordApp::new(wordcraft_engine::Session::new(doc), Default::default());
+         let mut h = Harness::builder().with_size(size).build_ui_state(
+             |ui, app: &mut WordApp| {
+                 let ctx = ui.ctx().clone();
+@@ -360,6 +364,43 @@ mod tests {
+         up(&mut h, knob(to));
+     }
+ 
++    /// Web Layout on a phone: a table wider than the view pans sideways under a finger and the swipe
++    /// selects no cells; text that reflows has nothing to pan (wordcraft/0188).
++    #[test]
++    fn a_horizontal_swipe_pans_a_wide_table_and_selects_nothing() {
++        let mut doc = wordcraft_doc::Document::from_text("");
++        let mut table = wordcraft_doc::table::Table::new(2, 3, 468.0);
++        table.props.fixed = true;
++        doc.body.insert(0, std::sync::Arc::new(wordcraft_doc::Block::Table(table)));
++        let mut h = app_of(doc, vec2(360.0, 700.0));
++        h.state_mut().run("view.webLayout", json!({})).unwrap();
++        h.run_steps(8);
++        let (sheet, text) = (h.state_mut().session.layout().pages[0].w, h.state().session.view.web_width);
++        assert!(sheet > text + 50.0, "the table is wider than the view: {sheet} vs {text}");
++        let sel = h.state().session.sel.clone();
++        let from = pos2(300.0, 300.0);
++        down(&mut h, from);
++        for i in 1..=8 {
++            drag(&mut h, pos2(300.0 - 20.0 * i as f32, 300.0));
++        }
++        up(&mut h, pos2(140.0, 300.0));
++        h.run_steps(30);
++        let x = h.state().canvas.scroll_offset.x;
++        assert!(x > 100.0, "the finger moved the page sideways: {x}");
++        assert_eq!(h.state().session.sel, sel, "no cells are selected by the swipe");
++
++        let mut t = app("alpha beta gamma delta epsilon zeta eta theta", vec2(360.0, 700.0));
++        t.state_mut().run("view.webLayout", json!({})).unwrap();
++        t.run_steps(8);
++        down(&mut t, from);
++        for i in 1..=8 {
++            drag(&mut t, pos2(300.0 - 20.0 * i as f32, 300.0));
++        }
++        up(&mut t, pos2(140.0, 300.0));
++        t.run_steps(30);
++        assert_eq!(t.state().canvas.scroll_offset.x, 0.0);
++    }
++
+     /// A long press selects the word and opens the bar when the finger lifts, but not the desktop
+     /// menu; a button of the bar works; a right-click still opens the menu and a mouse draws no handles.
+     #[test]

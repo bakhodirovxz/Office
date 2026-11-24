@@ -2560,6 +2560,16 @@ fn layout_pass(
             .fold(0.0f32, f32::max);
         p.h = bottom + 36.0;
     }
+    // A fixed-width table doesn't reflow: Web Layout's sheet grows to hold it, so the view can pan across (wordcraft/0188).
+    if opts.view == ViewMode::Web {
+        for p in &mut pages {
+            let right =
+                p.items.iter().filter_map(|it| if let Placed::Cell { rect, .. } = it { Some(rect.x + rect.w) } else { None }).fold(0.0f32, f32::max);
+            if right.is_finite() {
+                p.w = p.w.max(right + 8.0);
+            }
+        }
+    }
     ctx.grid = para::Grid::default();
     if !reflow {
         let found = Totals::of(&pages, &sections);
