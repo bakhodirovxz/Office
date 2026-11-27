@@ -209,11 +209,25 @@ fn need(
     ok.then_some(()).ok_or_else(|| SessErr::Forbidden.into())
 }
 
+/// Whether a session may see the document's history (gate review L4): an edit session, or any session of a provider with
+/// `view_history = true`. A DocsAPI document server hands out no history of its own (the host supplies it, onRequestHistory), so a view session of a
+/// shared `document.key` must not reach versions saved by others unless the operator says so.
+pub(crate) fn history_allowed(ds: &Docserver, rec: &SessionRecord) -> bool {
+    rec.perms.edit || ds.provider(&rec.provider).is_some_and(|p| p.view_history)
+}
+
 type Res = Result<Response, ApiError>;
 type Ds = State<Arc<Docserver>>;
 
 async fn list(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> Res {
     let rec = authorize(&ds, &h, &sid, true, "history.list", &client(cl))?;
+    need(
+        &ds,
+        &rec,
+        "history.list",
+        "history",
+        history_allowed(&ds, &rec),
+    )?;
     let vs = blk(move || ds.version_backend().list(&doc_id(&rec))).await??;
     json_ok(json!({"versions": vs.iter().map(Version::to_json).collect::<Vec<_>>()}))
 }
@@ -221,6 +235,13 @@ async fn list(State(ds): Ds, cl: Cl, Path(sid): Path<String>, h: HeaderMap) -> R
 async fn view(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: HeaderMap) -> Res {
     let cl = client(cl);
     let rec = authorize(&ds, &h, &sid, true, "history.view", &cl)?;
+    need(
+        &ds,
+        &rec,
+        "history.view",
+        "history",
+        history_allowed(&ds, &rec),
+    )?;
     need(&ds, &rec, "history.view", "download", rec.perms.download)?;
     let b = blk(move || {
         let b = ds.version_backend().read(&doc_id(&rec), v)?;
@@ -240,15 +261,18 @@ async fn restore(State(ds): Ds, cl: Cl, Path((sid, v)): Path<(String, u64)>, h: 
         let b = ds.version_backend();
         let id = doc_id(&rec);
         let bytes = b.read(&id, v)?;
+        // the session's room first (gate review L1), so that a refusal leaves the history without the restored version too
+        ds.room(&rec, bytes.len(), true)?;
         let made = b.restore(&id, v, &rec.user_id)?;
         // the open session gets the restored bytes as its newest version (the snapshot hook sees identical bytes and adds nothing)
         let sv = ds
             .put_version(&rec.sid, &bytes, &rec.user_id, true, now())
             .map_err(|e| match e {
-                SessErr::NotFound => HistErr::NotFound,
-                e => HistErr::Io(format!("{e:?}")),
+                SessErr::NotFound => HistErr::NotFound.into(),
+                e @ SessErr::NoRoom(..) => ApiError::from(e),
+                e => HistErr::Io(format!("{e:?}")).into(),
             })?;
-        Ok::<_, HistErr>((made, sv.n))
+        Ok::<_, ApiError>((made, sv.n))
     })
     .await??;
     json_ok(json!({"version": out.0.to_json(), "session_version": out.1}))
@@ -393,6 +417,13 @@ async fn compare(
     h: HeaderMap,
 ) -> Res {
     let rec = authorize(&ds, &h, &sid, true, "history.compare", &client(cl))?;
+    need(
+        &ds,
+        &rec,
+        "history.compare",
+        "history",
+        history_allowed(&ds, &rec),
+    )?;
     // a comparison shows the text of both versions, so it is a download as far as the permission goes
     need(&ds, &rec, "history.compare", "download", rec.perms.download)?;
     let app = match rec.editor.as_str() {

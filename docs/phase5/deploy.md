@@ -118,6 +118,8 @@ internal_listen = "<this container's IP on backend_net>:8780"   # never publish 
 internal_allow = ["api"]                       # the backend's container name or alias (re-resolved every 15 s), or its IP /32; never a /16 with the gateway
 keep_closed_hours = 168                            # retention: a session 7 days after a close the backend acknowledged (default)
 keep_abandoned_days = 7                            # any other session 7 days after its last activity (default)
+min_free_mb = 1024                                 # saves are refused (507) while data_dir's volume would keep less free (default; 0 = off)
+max_versions_per_session = 500                     # saves past it are refused (507); the close still stores the last edits (default)
 
 [[docserver.providers]]
 name = "hrm"                                        # example: any backend that signs the config token (HS256)
@@ -127,6 +129,7 @@ fetch_allow = [{ url = "http://api:8000", internal = true }]
 callback_allow = [{ url = "http://api:8000", internal = true }]
 frame_origins = ["https://hr.example.org"]         # the SPA origin that may frame the editor
 history = "session"                                # default: a key's history goes with its last session (new key per open)
+view_history = false                               # default: only edit sessions list and download the history (gate-security.md L4)
 ```
 
 Compose service (the parts that matter): `image`, `read_only: true`, `cap_drop: [ALL]`, `tmpfs: /tmp`, a volume on `/data`, the config and
