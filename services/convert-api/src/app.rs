@@ -469,7 +469,13 @@ impl App {
                 .map_or(u.as_str(), |x| x.1)
                 .trim_end_matches('/');
             allowed.push(host(auth));
-            if let Some(h) = auth.strip_suffix(":443") {
+            // browsers leave the scheme's default port out of Host
+            let default = if u.starts_with("http://") {
+                ":80"
+            } else {
+                ":443"
+            };
+            if let Some(h) = auth.strip_suffix(default) {
                 allowed.push(host(h));
             }
         } else if !r.server_mode() {
