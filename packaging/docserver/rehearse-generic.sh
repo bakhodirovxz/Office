@@ -13,7 +13,7 @@ NET=qs_net DS=qs-docserver APP=qs-app DSPORT=18543 APPPORT=13000
 cleanup() { [ "${KEEP:-0}" = 1 ] && return; docker rm -f $DS $APP > /dev/null 2>&1 || true; docker volume rm qs-data > /dev/null 2>&1 || true; docker network rm $NET > /dev/null 2>&1 || true; }
 trap cleanup EXIT
 cleanup
-rm -rf "$D"; mkdir -p "$D/certs" "$D/docs"
+rm -rf "$D"; mkdir -p "$D/certs" "$D/docs" "$D/secrets"
 cd "$D/certs"
 $SSL ecparam -name prime256v1 -genkey -noout -out ca.key
 $SSL req -x509 -new -key ca.key -sha256 -days 2 -subj /CN=rehearsal-ca -out ca.pem
@@ -24,6 +24,7 @@ printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n
 $SSL x509 -req -in leaf.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 -sha256 -extfile ext.cnf -out server.pem 2> /dev/null
 PIN=$($SSL x509 -in server.pem -pubkey -noout | $SSL pkey -pubin -outform der | $SSL dgst -sha256 -binary | base64)
 chmod 644 ./*.key ./*.pem
+for k in server-secret audit-key; do $SSL rand -hex 32 > "$D/secrets/$k"; done   # README quick start: the keys off the data volume
 cd "$D/docs"   # synthetic fixtures only
 cp "$REPO/domains/docs/crates/docs-translit/tests/fixtures/word/01-split-runs.docx" sample.docx
 cp "$REPO/domains/sheets/tests/translit-fixtures/xlsx/01-styles.xlsx" sample.xlsx
@@ -33,7 +34,7 @@ SECRET=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')   # 48 hex charact
 
 docker network create $NET > /dev/null
 # THE QUICK START: the settings an integrator types, nothing else (the volume and the certificate mount are not settings)
-docker run -d --name $DS --network $NET --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=256m,uid=10002 -p 127.0.0.1:$DSPORT:8787 -v qs-data:/data -v "$D/certs:/certs:ro" \
+docker run -d --name $DS --network $NET --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=256m,uid=10002 -p 127.0.0.1:$DSPORT:8787 -v qs-data:/data -v "$D/certs:/certs:ro" -v "$D/secrets:/run/secrets:ro" \
   -e JWT_ENABLED=true -e "JWT_SECRET=$SECRET" \
   -e DOCSERVER_PUBLIC_URL=https://localhost:$DSPORT -e DOCSERVER_TLS_CERT=/certs/server.pem -e DOCSERVER_TLS_KEY=/certs/server.key \
   -e DOCSERVER_FETCH_ALLOW=http://$APP:3000 -e DOCSERVER_FRAME_ORIGINS=http://localhost:$APPPORT \

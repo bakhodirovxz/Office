@@ -14,8 +14,9 @@ The server speaks TLS (your editors are embedded in an https or localhost page; 
 certificate and key as files, as below, or put a TLS proxy in front (see `DOCSERVER_TRUSTED_PROXIES`).
 
 ```sh
+mkdir -p secrets && openssl rand -hex 32 > secrets/server-secret && openssl rand -hex 32 > secrets/audit-key
 docker run -d --name docserver --network appnet -p 8443:8787 \
-  -v docserver-data:/data -v ./certs:/certs:ro \
+  -v docserver-data:/data -v ./certs:/certs:ro -v ./secrets:/run/secrets:ro \
   -e JWT_ENABLED=true \
   -e JWT_SECRET="$(openssl rand -hex 24)" \
   -e DOCSERVER_PUBLIC_URL=https://docs.example.com:8443 \
@@ -29,6 +30,11 @@ docker run -d --name docserver --network appnet -p 8443:8787 \
 Use the same `JWT_SECRET` in your app (keep it somewhere better than a shell line; `JWT_SECRET_FILE=/run/secrets/ds` works too).
 At least 16 bytes are required, 32 or more recommended. Without `JWT_SECRET` or `JWT_SECRET_FILE` the container refuses to start;
 there is no built-in secret.
+
+`./secrets` keeps the server's own keys off the data volume, so a copy or backup of the volume holds none: `server-secret` signs
+the session and file tokens and keys the version history, `audit-key` keys the audit log in `/data`. Keep both (readable by uid
+10002) for every later run. Without them the server secret is generated once into `/data/secrets` and the audit log is not keyed
+(a warning at start each).
 
 The same as compose:
 
@@ -53,11 +59,14 @@ services:
       DOCSERVER_INTERNAL_PORT: "8780"
       DOCSERVER_INTERNAL_URL: http://docserver:8780
       DOCSERVER_INTERNAL_ALLOW: app
-    secrets: [ds_jwt]
+    secrets: [ds_jwt, server-secret, audit-key]   # in /run/secrets, off the data volume
   app:                         # your application, on the same compose network
     ...
 volumes: { docserver-data: {} }
-secrets: { ds_jwt: { file: ./ds_jwt.txt } }
+secrets:
+  ds_jwt: { file: ./ds_jwt.txt }
+  server-secret: { file: ./secrets/server-secret }
+  audit-key: { file: ./secrets/audit-key }
 ```
 
 A missing required setting stops the container with a one-line message naming it (`docker logs docserver`).
@@ -89,7 +98,7 @@ ONLYOFFICE's names first (same meaning), then ours (`DOCSERVER_*`). The containe
 | `DOCSERVER_KEEP_CLOSED_HOURS`, `DOCSERVER_KEEP_ABANDONED_DAYS` | `168`, `7` | Retention of closed and abandoned sessions in `/data`. |
 | `DOCSERVER_CLOSE_IDLE_MINUTES` | `5` | A page that went away is closed (and saved) after this many idle minutes. |
 | `DOCSERVER_ALLOW_OPAQUE_ORIGIN` | `0` | Only for a mobile WebView with an opaque (`null`) page origin; see dropin.md D3b. |
-| `DOCSERVER_SECRETS_DIR` | `/run/secrets` | Mount `server-secret`, `converter-secret` and `audit-key` here for stable internal keys; absent ones are generated once into `/data/secrets` (fine for a trial; the audit key belongs outside the data volume). |
+| `DOCSERVER_SECRETS_DIR` | `/run/secrets` | Where `server-secret` and `audit-key` (and optionally `converter-secret`) are read from. Without them `server-secret` is generated once into `/data/secrets` (a warning), the audit log is not keyed, and the converter's secret is new on every start (nothing outside uses it). |
 
 The container is built to run with a read-only root: the `/data` volume (sessions, version history, audit log) and a `/tmp`
 tmpfs are the only writable places. Back up `/data`.
