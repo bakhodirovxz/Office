@@ -350,7 +350,9 @@
     S.frame.allow = 'clipboard-read; clipboard-write; fullscreen';
     S.frame.style.cssText = 'border:0;display:block;width:100%;flex:1 1 auto;min-height:0';
     document.body.appendChild(S.frame);
-    addHistoryButton(addBar(app.id === 'docs'));
+    var bar = addBar(app.id === 'docs');
+    // the server says whether this session may see the history (edit sessions; view sessions only when the provider allows it)
+    if (s.history) addHistoryButton(bar);
     // the app is there: the host's not-ready timer stops now, not after the editor's download (which a host retry would restart)
     emit('onAppReady', {});
   }

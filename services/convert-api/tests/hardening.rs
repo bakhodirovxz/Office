@@ -78,12 +78,12 @@ impl H {
             ..Settings::default()
         };
         f(&mut s);
-        let upstream = s.tls == "upstream";
-        if upstream {
+        let builtin = s.tls == "builtin";
+        if !builtin {
             s.tls_cert = None;
             s.tls_key = None;
         }
-        H::build(dir, s, "convert.test", !upstream, fake_cfg())
+        H::build(dir, s, "convert.test", builtin, fake_cfg())
     }
 
     fn build(dir: PathBuf, s: Settings, host: &'static str, tls: bool, cfg: ConvertConfig) -> H {
@@ -751,6 +751,71 @@ async fn x_forwarded_for_counts_only_from_a_trusted_proxy_and_ipv6_counts_by_64(
         StatusCode::ACCEPTED,
         "another /64 has its own bucket"
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn tls_none_serves_plain_http_to_everyone_without_hsts_or_redirect_and_trusts_no_forwarded_headers()
+ {
+    let h = H::server("plain-http", |s| {
+        s.tls = "none".into();
+        s.public_url = Some("http://convert.test:80".into());
+        s.rate_ip_per_min = 2;
+        s.per_user_active = 100;
+        s.rate_user_per_min = 1000;
+    });
+    let t = h.token("alice");
+    let get = |peer: &str, hs: &[(&'static str, &str)]| {
+        from(
+            h.req("GET", "/api/v1/formats", Some(&t), None, vec![]),
+            peer,
+            hs,
+        )
+    };
+    // any client is answered directly: no proxy-only rule, no redirect, never HSTS (a claimed https changes nothing)
+    let (st, hd, _) = h
+        .send(get("203.0.113.9:1", &[("x-forwarded-proto", "https")]))
+        .await;
+    assert_eq!(st, StatusCode::OK);
+    assert!(!hd.contains_key("strict-transport-security"));
+    assert!(!hd.contains_key("location"));
+    // the Host rule stays: the public URL's host, with its default port written out or (as browsers send it) left out; nothing else
+    assert_eq!(
+        h.send(get("203.0.113.9:1", &[("host", "convert.test:80")]))
+            .await
+            .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        h.send(get("203.0.113.9:1", &[("host", "evil.test")]))
+            .await
+            .0,
+        StatusCode::MISDIRECTED_REQUEST
+    );
+    // the container's health probe on loopback is answered whatever its Host header says, and learns only that it is up
+    let (st, _, b) = h
+        .send(from(
+            h.req("GET", "/healthz", None, None, vec![]),
+            "127.0.0.1:1",
+            &[("host", "localhost")],
+        ))
+        .await;
+    assert_eq!(
+        (st, serde_json::from_slice::<Value>(&b).unwrap()),
+        (StatusCode::OK, json!({"ok": true}))
+    );
+    // no trusted proxy is configured: X-Forwarded-For cannot choose the rate-limit bucket
+    let hr = &h;
+    let post = |xff: &'static str| {
+        let r = from(
+            hr.post_req(&[("a.txt", TXT)], json!({"to": "pdf"}), Some(&t)),
+            "203.0.113.7:1",
+            &[("x-forwarded-for", xff)],
+        );
+        async move { hr.send(r).await.0 }
+    };
+    assert_eq!(post("1.1.1.1").await, StatusCode::ACCEPTED);
+    assert_eq!(post("2.2.2.2").await, StatusCode::ACCEPTED);
+    assert_eq!(post("3.3.3.3").await, StatusCode::TOO_MANY_REQUESTS);
 }
 
 #[tokio::test(flavor = "multi_thread")]

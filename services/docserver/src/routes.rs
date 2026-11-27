@@ -182,6 +182,8 @@ mod tests {
             keep_closed_s: 24 * 3600,
             keep_abandoned_s: 7 * 86_400,
             close_idle_s: 300,
+            min_free_mb: 0,
+            max_versions: 500,
             allow_opaque_origin: false,
             providers: vec![Provider {
                 name: "p".into(),
@@ -192,6 +194,7 @@ mod tests {
                 frame_origins: vec!["https://app.test".into()],
                 require_exp: true,
                 keep_history: false,
+                view_history: false,
                 edit_types: vec!["docx".into()],
                 ui_lang: None,
             }],

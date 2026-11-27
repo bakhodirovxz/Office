@@ -222,13 +222,17 @@ async fn guard(State(app): State<Arc<App>>, mut req: Request, next: Next) -> Res
         key: o.client.map_or_else(|| "unknown".to_string(), ip_key),
         ip,
     };
+    // a health probe on the loopback address of the container is exempt from the proxy and Host rules; it learns only `{"ok":true}`
+    if (app.r.upstream_tls || app.r.plain_http)
+        && !o.via_proxy
+        && o.peer.is_some_and(|p| p.is_loopback())
+        && req.uri().path() == "/healthz"
+    {
+        req.extensions_mut().insert(client);
+        return next.run(req).await;
+    }
     if app.r.upstream_tls {
         if !o.via_proxy {
-            // a health probe on the loopback address of the container is the one exception; it learns only `{"ok":true}`
-            if o.peer.is_some_and(|p| p.is_loopback()) && req.uri().path() == "/healthz" {
-                req.extensions_mut().insert(client);
-                return next.run(req).await;
-            }
             return ApiError::new(
                 StatusCode::FORBIDDEN,
                 "not_via_proxy",

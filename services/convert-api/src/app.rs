@@ -374,7 +374,7 @@ fn warn_about_disks(r: &Resolved) {
 }
 
 /// The free space of the volume that holds `dir`, from the mount whose path is the longest prefix of it.
-fn free_space(dir: &Path) -> Option<u64> {
+pub fn free_space(dir: &Path) -> Option<u64> {
     let canon = std::fs::canonicalize(dir).ok()?;
     let mut s = canon.to_string_lossy().replace('\\', "/");
     if let Some(x) = s.strip_prefix("//?/") {
@@ -469,7 +469,13 @@ impl App {
                 .map_or(u.as_str(), |x| x.1)
                 .trim_end_matches('/');
             allowed.push(host(auth));
-            if let Some(h) = auth.strip_suffix(":443") {
+            // browsers leave the scheme's default port out of Host
+            let default = if u.starts_with("http://") {
+                ":80"
+            } else {
+                ":443"
+            };
+            if let Some(h) = auth.strip_suffix(default) {
                 allowed.push(host(h));
             }
         } else if !r.server_mode() {
