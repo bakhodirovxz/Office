@@ -111,6 +111,9 @@ pub struct Config {
     /// so this turns the frame check off for everyone; the config token's signature stays the gate. Default false.
     pub allow_opaque_origin: bool,
     pub providers: Vec<ProviderConfig>,
+    /// not a setting: the server's public side is plain http (`tls = "none"`), set by `Docserver::from_server_table`
+    #[serde(skip)]
+    pub plain_http: bool,
 }
 
 impl Default for Config {
@@ -138,6 +141,7 @@ impl Default for Config {
             close_idle_minutes: 5,
             allow_opaque_origin: false,
             providers: vec![],
+            plain_http: false,
         }
     }
 }
@@ -298,9 +302,21 @@ impl Docserver {
         t: toml::Table,
         main_listen: Option<SocketAddr>,
     ) -> Result<Docserver, String> {
-        t.try_into::<Config>()
-            .map_err(|e| format!("docserver: {e}"))?
-            .resolve(main_listen)
+        Self::from_server_table(t, main_listen, false)
+    }
+
+    /// `from_table` for a server whose public side is plain http (`tls = "none"`): host pages on plain http may then frame the
+    /// editor, since the editor itself travels in cleartext anyway.
+    pub fn from_server_table(
+        t: toml::Table,
+        main_listen: Option<SocketAddr>,
+        plain_http: bool,
+    ) -> Result<Docserver, String> {
+        let mut c = t
+            .try_into::<Config>()
+            .map_err(|e| format!("docserver: {e}"))?;
+        c.plain_http = plain_http;
+        c.resolve(main_listen)
     }
 
     /// The `frame-ancestors` source list of the wrapper page and the editor frames: ourselves and every provider's frame origins.
@@ -611,15 +627,16 @@ impl Config {
                     (_, Some(b)) if b.starts_with("http://") => b.to_string(),
                     _ => o,
                 };
-                // a page served over plain http could be rewritten in transit and then frame the editor with a live session
-                if let Some(h) = o.strip_prefix("http://") {
+                // a page served over plain http could be rewritten in transit and then frame the editor with a live session; on a
+                // plain-http server (tls = "none") the editor's own page and token are as exposed, so http pages are accepted there
+                if let Some(h) = o.strip_prefix("http://").filter(|_| !self.plain_http) {
                     let host = h
                         .rsplit_once(':')
                         .filter(|(_, p)| p.parse::<u16>().is_ok())
                         .map_or(h, |(h, _)| h);
                     if !["localhost", "127.0.0.1", "[::1]"].contains(&host) {
                         return Err(format!(
-                            "docserver: {}: \"{o}\" is plain http; use https (http is accepted for localhost only)",
+                            "docserver: {}: \"{o}\" is plain http; use https (http is accepted for localhost only, or on a plain-http server: tls = \"none\")",
                             at("frame_origins")
                         ));
                     }
@@ -728,6 +745,9 @@ mod tests {
             self.0.join(f).to_string_lossy().replace('\\', "/")
         }
         fn toml(&self, edit: &dyn Fn(&mut toml::Table)) -> Result<Docserver, String> {
+            Docserver::from_table(self.table(edit), Some("127.0.0.1:8787".parse().unwrap()))
+        }
+        fn table(&self, edit: &dyn Fn(&mut toml::Table)) -> toml::Table {
             let mut t: toml::Table = format!(
                 r#"server_secret_file = "{}"
 data_dir = "{}"
@@ -746,7 +766,7 @@ frame_origins = ["https://app.test"]
             .parse()
             .unwrap();
             edit(&mut t);
-            Docserver::from_table(t, Some("127.0.0.1:8787".parse().unwrap()))
+            t
         }
     }
     impl Drop for Dir {
@@ -1092,6 +1112,30 @@ frame_origins = ["https://app.test"]
                 "'self' https://app.test http://localhost:3000 http://127.0.0.1 http://[::1]:5173 http://localhost"
             )
         );
+        // a plain-http server (tls = "none") takes plain-http host pages; the origin syntax rules stay
+        let plain = |o: &str| {
+            let t = d.table(&|t| {
+                prov(t).insert("frame_origins".into(), strings(&[o]));
+            });
+            Docserver::from_server_table(t, Some("127.0.0.1:8787".parse().unwrap()), true)
+        };
+        assert_eq!(
+            plain("http://app.test:8080")
+                .unwrap()
+                .frame_ancestors()
+                .as_deref(),
+            Some("'self' http://app.test:8080")
+        );
+        assert_eq!(
+            plain("HTTP://App.Test:80")
+                .unwrap()
+                .frame_ancestors()
+                .as_deref(),
+            Some("'self' http://app.test")
+        );
+        for bad in ["*", "http://*.test", "http://app.test/x", "ws://app.test"] {
+            assert!(plain(bad).is_err(), "{bad}");
+        }
     }
 
     #[test]
