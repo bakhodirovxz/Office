@@ -265,8 +265,5 @@ fn cyrillic_to_latin_on_the_whole_sheet_upgrades_1995_latin_but_not_an_english_c
     s.execute("range.setValues", json!({"range": "A1", "values": [["Shahar", "This is the best fish", "Шаҳар", "This is the Шаҳар"]]})).unwrap();
     s.execute(LATN, json!({"scope": "sheet"})).unwrap();
     // Uzbek 1995 Latin is upgraded, the English cell is untouched, Cyrillic is converted, also inside the English cell
-    assert_eq!(
-        [text(&s, "A1"), text(&s, "B1"), text(&s, "C1"), text(&s, "D1")],
-        ["Şahar", "This is the best fish", "Şahar", "This is the Şahar"]
-    );
+    assert_eq!([text(&s, "A1"), text(&s, "B1"), text(&s, "C1"), text(&s, "D1")], ["Şahar", "This is the best fish", "Şahar", "This is the Şahar"]);
 }
