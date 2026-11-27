@@ -178,3 +178,21 @@ Not run because they need the owner or hardware this PC lacks: ARM64, real phone
 | 4 | Put the `cookie` 0.18.3 bump on `phase-4` (then merge forward) | **Yes**, as the first merge-forward fix |
 | 5 | Fix the `ci.sh full` ordering (R6) and make the xlsx "Back 300 ms" case less load-sensitive | **Yes, small**, Phase 6 |
 | 6 | Whether WP13 (SSO, desktop sign-in) is Phase 5 remainder or its own later work | **Later** (Q8 already says after the pilot gate); keep `kind = "oidc"` refused until then |
+
+## 10. Close-out (2026-11-27): owner "Go"
+
+The owner closed the Phase 5 gate on 2026-11-27 ("Go"), on criteria (1) and (2) as measured above, with sections 7 and 8
+recorded as open. Head at close: `phase-5` 42cadb0e (the gate review plus the L2 fix). Answers to section 9:
+
+| # | Owner answer | What follows |
+|---|---|---|
+| 1 | Go | Current phase is 6 (CLAUDE.md, STATUS) |
+| 2 | **Overruled: plain http allowed, as ONLYOFFICE does** ("Onlyoffice kabi http bilan ham ishlayversin") | Plain-http mode on `phase-5` (branch `p5-http`): an `http://` public URL with no TLS settings starts on http; https stays the production recommendation; the http-mode differences go into `gate-security.md` |
+| 3 | Fix L1-L5 now ("Hozir tuzataver") | L2 done in 42cadb0e (`trusted_proxies` refuses a /0); L1, L3, L4, L5 on `p5-lows` |
+| 4 | Done before the close (phase-4 412faf90) | - |
+| 5 | Not answered; stays the recommendation | `ci.sh full` ordering (R6) and the xlsx "Back 300 ms" case, Phase 6 |
+| 6 | Yes, later | WP13 after the gate; `kind = "oidc"` stays refused |
+
+Not run at the close, carried to Phase 6 (so nobody reads them as passed): every row of section 8, the Phase 4 carry-over of
+section 7 (staff sessions, the Narrator walk, Windows 11 and domain PCs), and the WP17 HRM pilot (optional). The two follow-up
+branches are Phase 5 fixes: they land on `phase-5` and merge forward to 6 and 7.
