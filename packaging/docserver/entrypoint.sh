@@ -37,7 +37,12 @@ V=/data/secrets
 # as `X=$(secret ...)` in this shell: its die then stops the script (gate review L5: a failed write said "generated" and went on).
 secret() {
   local f
-  for f in "$S/$1" "$V/$1"; do if [ -s "$f" ]; then printf %s "$f"; return; fi; done
+  for f in "$S/$1" "$V/$1"; do
+    if [ -s "$f" ]; then
+      [ "$f" = "$S/$1" ] || warn "$1 is on the data volume ($V); mount $S with it instead (a copy of the volume holds it)"
+      printf %s "$f"; return
+    fi
+  done
   [ -n "${2:-}" ] || return 0
   mkdir -p "$2" || die "cannot store a generated $1 in $2; mount $S/$1 (DOCSERVER_SECRETS_DIR) or a volume writable by uid 10002 on /data"
   head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$2/$1" || die "cannot write $2/$1"
