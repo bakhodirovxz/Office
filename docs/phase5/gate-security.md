@@ -254,6 +254,68 @@ Verified 2026-11-25 on branch `p5-verify` (= phase-5 9af9a861: G1-G3, S21/S22 an
 - Not run: the "TLS certificate and no proxy keeps the per-address cap" check (section 5), Traefik rows, compose/drop-in rehearsals.
   The `--read-only` refusal prints shell errors before the server's own message; it still fails closed (exit 2).
 
+### Plain http mode (owner decision 2026-11-27)
+
+The owner overruled the "https mandatory" recommendation (gate-review §9 row 2, §10): the server also runs on plain http, the way
+ONLYOFFICE Document Server listens by default. Branch `p5-http` (from phase-5 42cadb0e, phase-5 e9cfa95d merged in), image
+`hoshiya-docserver:p5-http`. Local Docker and this PC only.
+
+**What changes.** An `http://` `DOCSERVER_PUBLIC_URL` with no certificate makes the entrypoint write `tls = "none"`
+(`packaging/docserver/entrypoint.sh`); `convert-api` accepts `tls = "none"` only in server mode, with an `http://` `public_url`,
+and without `tls_cert`, `tls_key` or `redirect_listen` (`services/convert-api/src/config.rs` `resolve`). In that mode: no HSTS, no
+redirect, no "answer the proxy only" rule; `X-Forwarded-For`/`-Proto` count only from `trusted_proxies`, which is optional here (a
+plain-http proxy), as in the other modes; the container's loopback `/healthz` probe is answered whatever its `Host` (as with
+`tls = "upstream"`); `frame_origins` may list `http://` origins (`services/docserver/src/config.rs`, `from_server_table`). A warning
+at every start names the cleartext exposure. Every https path is unchanged: an `https://` URL still needs a certificate or a proxy,
+and an `http://` frame origin on an https server is still refused unless it is localhost.
+
+**Accept / refuse**, probed on the image (`docker run`, `--read-only`, tmpfs `/data`):
+
+| Settings | Result |
+|---|---|
+| `http://` URL, nothing else | starts, `tls = "none"`, "listening on http://", the cleartext warning |
+| `http://` URL + `DOCSERVER_TRUSTED_PROXIES=nginx,10.0.0.0/8` | starts, `tls = "none"` with `trusted_proxies` |
+| `https://` URL + `DOCSERVER_TRUSTED_PROXIES` | starts, `tls = "upstream"` (unchanged) |
+| `http://` URL + `DOCSERVER_TLS_CERT`/`_KEY` (either one) | exit 64, "DOCSERVER_PUBLIC_URL is http:// but DOCSERVER_TLS_CERT/DOCSERVER_TLS_KEY are set" |
+| `https://` (or `ftp://`) URL, no certificate, no proxy | exit 64, "DOCSERVER_PUBLIC_URL is not http://, so TLS is required ... for plain http use an http:// DOCSERVER_PUBLIC_URL" |
+| `http://` URL with a path | exit 2, refused as not an origin |
+| `https://` server, `http://app.example` frame origin | exit 2, "is plain http; use https (http is accepted for localhost only, or on a plain-http server: tls = \"none\")" |
+
+Unit tests: `convert-api/src/config.rs` `local_mode_takes_no_public_url_and_server_mode_needs_a_good_one` (the combinations above
+plus `tls = "none"` in local mode and an `http://` URL under `tls = "builtin"`/`"upstream"`), `convert-api/tests/hardening.rs`
+`tls_none_serves_plain_http_to_everyone_without_hsts_or_redirect_and_trusts_no_forwarded_headers`, `docserver/src/config.rs`
+`frame_origins_are_origins_only`.
+
+**Criterion (1) over plain http.** `SCHEME=http rehearse-generic.sh` on the merged image: **8 of 8** (docx, xlsx, pptx, pdf: open ->
+edit -> save -> reopen -> download, callbacks 1,6,2 each, plus view-only), log hygiene 0 tokens. The browser reaches both sides by
+names that are not localhost (`ds.hoshiya.test`, `app.hoshiya.test`, mapped inside Chromium), and the test asserts
+`isSecureContext === false` in the editor frame, so this is the real cross-site, insecure-context case. The editor needs no cookie
+(the session token lives in `editor.js` memory, `credentials: 'omit'`), so `SameSite`/`Secure` never comes into it. The https run
+(`SCHEME=https`, same image) stays **8 of 8**, with `strict-transport-security: max-age=31536000` on its answers; the http run's
+answers carry none.
+
+**Measured limit.** Copy from an editor to the system clipboard fails over plain http: eframe logs "Clipboard is not available
+because we are not in a secure context" (eframe 0.36.2 `src/web/mod.rs:201-209`; seen in the http run, not in the https run). Paste
+uses the browser's paste event (`src/web/events.rs:339`, no secure context needed; read, not measured). WebGPU is dropped outside a
+secure context and the editors use WebGL (`egui-wgpu` `setup.rs:109`).
+
+**S-items that behave differently over plain http** (the rest are unchanged: their checks do not depend on the transport):
+
+| # | Over plain http |
+|---|---|
+| S19 | Does not apply: no TLS, no HSTS, no redirect, no proxy-only rule. `X-Forwarded-*` still trusted only from `trusted_proxies` |
+| S1, S11, S24 | The checks are the same, but config, session and file tokens are readable on the wire: a passive listener can use a session token for the session's life (12 h cap) and a file token for its 10 min |
+| S3 | A sniffed config token without `exp` (`compat = "docsapi"`) can be replayed; G3's fetch-before-change still needs its `document.url` to work |
+| S13 | `frame-ancestors` may list `http://` origins; an active attacker on the path can rewrite those host pages |
+| S14 | The origin and window checks hold, but `api.js`, `editor.js` and the editors arrive without integrity: an active attacker on the path can replace them |
+| S17 | Unchanged in our logs; tokens can still land in the logs of any plain-http proxy in front |
+
+**Residual risk.** Plain http is safe only on a network where nobody untrusted can read or change traffic between the browsers, the
+host application and this server. On any other network a passive listener reads documents and tokens, and an active one takes over
+sessions or serves its own editor code. That is ONLYOFFICE's position with its http default; the README says it right after the
+quick start, and https (own certificate or a TLS proxy) stays the production recommendation. Not measured: a real plain-http proxy in
+front (nginx with `DOCSERVER_TRUSTED_PROXIES`), Firefox and Safari (Chromium only), a real paste over http.
+
 ## 5. Not run, and why
 
 - The compose rehearsal (`packaging/docserver/rehearse.sh`, `docserver-compose.spec.ts`) and `rehearse-dropin.sh`: not run; the real
