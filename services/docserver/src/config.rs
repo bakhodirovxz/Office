@@ -52,6 +52,9 @@ pub struct ProviderConfig {
     /// with stable keys.
     #[serde(default = "session")]
     pub history: String,
+    /// view sessions may list, download and compare the document's history too (default false: edit sessions only; gate review L4)
+    #[serde(default)]
+    pub view_history: bool,
     /// `uz-Latn`, `uz-Cyrl`, `ru` or `en`: the editors' language for this provider's sessions, over `editorConfig.lang` (a provider
     /// whose own UI speaks a language the DocsAPI does not name, and so always sends another). Unset: `editorConfig.lang` decides
     pub ui_lang: Option<String>,
@@ -106,6 +109,12 @@ pub struct Config {
     /// an open edit session with no activity for this long (no ping, save or autosave: its page went away without a close) is closed
     /// by the server, with its recovery copy as the last version (default 5)
     pub close_idle_minutes: u64,
+    /// a save, restore, autosave or fetch is refused (507) while the volume of `data_dir` would keep less than this free after it
+    /// (gate review L1); 0 turns the floor off. Default 1024
+    pub min_free_mb: u64,
+    /// the most versions one session stores; a save or restore past it is refused (507) and the close still keeps the last edits
+    /// (gate review L1). Default 500
+    pub max_versions_per_session: u64,
     /// accept a host page with an opaque (`null`) origin (docs/phase5/dropin.md D3b): no `frame-ancestors` and no `X-Frame-Options` on
     /// the wrapper page and the editors, and `null` counts as a frame origin of every provider. Any page can make its origin opaque,
     /// so this turns the frame check off for everyone; the config token's signature stays the gate. Default false.
@@ -136,6 +145,8 @@ impl Default for Config {
             keep_closed_hours: 168, // 7 days, as abandoned sessions (owner, 2026-10-31)
             keep_abandoned_days: 7,
             close_idle_minutes: 5,
+            min_free_mb: 1024,
+            max_versions_per_session: 500,
             allow_opaque_origin: false,
             providers: vec![],
         }
@@ -161,6 +172,8 @@ pub struct Provider {
     pub require_exp: bool,
     /// `history = "keep"`: the retention sweep leaves this provider's histories alone
     pub keep_history: bool,
+    /// `view_history`: view sessions see the history too
+    pub view_history: bool,
     /// the file types that may open in edit mode (lower case)
     pub edit_types: Vec<String>,
     /// `ui_lang`: the editors' language, over `editorConfig.lang`
@@ -201,6 +214,9 @@ pub struct Docserver {
     pub keep_abandoned_s: u64,
     /// `close_idle_minutes`, in seconds
     pub close_idle_s: u64,
+    /// `min_free_mb` and `max_versions_per_session` (gate review L1)
+    pub min_free_mb: u64,
+    pub max_versions: u64,
     /// `allow_opaque_origin`: no frame rule on our pages, `null` accepted as a frame origin
     pub allow_opaque_origin: bool,
     pub providers: Vec<Provider>,
@@ -373,6 +389,12 @@ impl Config {
         }
         if !(1..=1440).contains(&self.close_idle_minutes) {
             return Err("docserver: close_idle_minutes must be 1 to 1440".into());
+        }
+        if self.min_free_mb > 1 << 20 {
+            return Err("docserver: min_free_mb must be 0 to 1048576".into());
+        }
+        if !(2..=100_000).contains(&self.max_versions_per_session) {
+            return Err("docserver: max_versions_per_session must be 2 to 100000".into());
         }
         let xdfu_mode =
             xdfu_core::Mode::parse(&self.xdfu).map_err(|e| format!("docserver: {e}"))?;
@@ -637,6 +659,7 @@ impl Config {
                 frame_origins,
                 require_exp: p.require_exp.unwrap_or(!compat),
                 keep_history,
+                view_history: p.view_history,
                 edit_types,
                 ui_lang: p.ui_lang.clone(),
             });
@@ -701,6 +724,8 @@ impl Config {
             keep_closed_s: self.keep_closed_hours * 3600,
             keep_abandoned_s: self.keep_abandoned_days * 86_400,
             close_idle_s: self.close_idle_minutes * 60,
+            min_free_mb: self.min_free_mb,
+            max_versions: self.max_versions_per_session,
             allow_opaque_origin: self.allow_opaque_origin,
             providers,
             watch,
@@ -1288,6 +1313,9 @@ frame_origins = ["https://app.test"]
             ("keep_abandoned_days", 366),
             ("close_idle_minutes", 0),
             ("close_idle_minutes", 1441),
+            ("min_free_mb", (1 << 20) + 1),
+            ("max_versions_per_session", 1),
+            ("max_versions_per_session", 100_001),
         ] {
             refused(
                 &d,
@@ -1312,6 +1340,7 @@ frame_origins = ["https://app.test"]
             "providers[0].history must be",
         );
         let ds = d.toml(&|_| {}).unwrap();
+        assert_eq!((ds.min_free_mb, ds.max_versions), (1024, 500));
         assert_eq!(
             (ds.keep_closed_s, ds.keep_abandoned_s),
             (7 * 86_400, 7 * 86_400)

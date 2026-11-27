@@ -44,6 +44,11 @@ fn build_with(name: &str, extra: &str, diff_timeout_s: u64) -> (Arc<Docserver>, 
 
 /// The server over the folder `d` as it is (a restart: nothing is removed first).
 fn open_at(d: &std::path::Path, extra: &str) -> Docserver {
+    open_with(d, extra, "")
+}
+
+/// `open_at` with `prov`: TOML lines of the provider entry.
+fn open_with(d: &std::path::Path, extra: &str, prov: &str) -> Docserver {
     let p = |f: &str| d.join(f).to_string_lossy().replace('\\', "/");
     let extra = extra.replace("{d}", &d.to_string_lossy().replace(char::from(92), "/"));
     let t: toml::Table = format!(
@@ -60,6 +65,7 @@ fetch_allow = [{{ url = "http://api:8000", internal = true }}]
 callback_allow = [{{ url = "http://api:8000", internal = true }}]
 frame_origins = ["https://app.test"]
 require_exp = true
+{prov}
 "#,
         p("server.key"),
         p("data"),
@@ -285,11 +291,11 @@ async fn history_routes_check_the_session_token_and_permissions() {
         (StatusCode::NOT_FOUND, StatusCode::NOT_FOUND)
     );
     assert_eq!(other.1, none.1);
-    // a view session reads but cannot restore or name
+    // a view session neither reads (gate review L4: `view_history` is off) nor restores or names
     let h2 = format!("/ds/session/{sid2}/history");
     assert_eq!(
         call(&r, "GET", &h2, Some(&tok2), b"").await.0,
-        StatusCode::OK
+        StatusCode::FORBIDDEN
     );
     assert_eq!(
         call(&r, "POST", &format!("{h2}/1/restore"), Some(&tok2), b"")
@@ -597,5 +603,205 @@ async fn compare_copies_a_crash_left_behind_are_removed_at_start() {
     );
     // the session itself is untouched
     assert!(d.join("data/sessions").join(&sid).join("v1.bin").is_file());
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Gate review L4 (docs/phase5/gate-security.md, rehearsal F5): the history of a `document.key` is shared by its sessions, so a view
+/// session of a stable key would see versions others saved. View sessions get none unless the provider has `view_history = true`;
+/// edit sessions keep it. The session answer tells the wrapper whether to offer the panel.
+#[tokio::test]
+async fn a_view_session_sees_no_history_unless_the_provider_allows_it() {
+    let (ds, d) = build("view-hist");
+    let r = ds.routes::<()>();
+    let opened = |r: Router, cfg: Value| async move {
+        let body = json!({"origin": "https://app.test", "config": {"token": sign(PROV_SECRET.as_bytes(), &cfg)}});
+        js(
+            &call(&r, "POST", "/ds/session", None, body.to_string().as_bytes())
+                .await
+                .1,
+        )
+    };
+    assert_eq!(
+        opened(r.clone(), config("k1", true)).await["history"],
+        json!(true)
+    );
+    assert_eq!(
+        opened(r.clone(), config("k1", false)).await["history"],
+        json!(false)
+    );
+    let (sid, tok) = session(&ds, &r, "k1", true).await;
+    let (sid2, tok2) = session(&ds, &r, "k1", false).await;
+    let routes = |sid: &str| {
+        let h = format!("/ds/session/{sid}/history");
+        [h.clone(), format!("{h}/1"), format!("{h}/1/compare/1")]
+    };
+    for u in routes(&sid2) {
+        let (s, b) = call(&r, "GET", &u, Some(&tok2), b"").await;
+        assert_eq!(
+            (s, js(&b)["error"]["code"].as_str()),
+            (StatusCode::FORBIDDEN, Some("forbidden")),
+            "{u}"
+        );
+    }
+    // the edit session of the same key: list and download (compare is 501 here: no tool installed, past the permission checks)
+    let [list, one, cmp] = routes(&sid);
+    assert_eq!(
+        call(&r, "GET", &list, Some(&tok), b"").await.0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        call(&r, "GET", &one, Some(&tok), b"").await.0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        call(&r, "GET", &cmp, Some(&tok), b"").await.0,
+        StatusCode::NOT_IMPLEMENTED
+    );
+    // the refusals are audited as permission refusals
+    let audit = std::fs::read_to_string(d.join("data/audit.jsonl")).unwrap();
+    assert_eq!(
+        audit
+            .lines()
+            .filter(|l| l.contains("perm.refused") && l.contains(r#""perm":"history""#))
+            .count(),
+        3
+    );
+
+    // the operator allows it for the provider: the same view session reads (a restart over the same folder)
+    let ds = Arc::new(open_with(&d, "", "view_history = true"));
+    let r = ds.routes::<()>();
+    let [list2, one2, _] = routes(&sid2);
+    assert_eq!(
+        call(&r, "GET", &list2, Some(&tok2), b"").await.0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        call(&r, "GET", &one2, Some(&tok2), b"").await.0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        opened(r.clone(), config("k1", false)).await["history"],
+        json!(true)
+    );
+    // restore and name still need edit
+    assert_eq!(
+        call(&r, "POST", &format!("{list2}/1/restore"), Some(&tok2), b"")
+            .await
+            .0,
+        StatusCode::FORBIDDEN
+    );
+    let _ = std::fs::remove_dir_all(d);
+}
+
+async fn post_doc(r: &Router, sid: &str, tok: &str, route: &str, b: &[u8]) -> (StatusCode, Value) {
+    let (s, b) = call(
+        r,
+        "POST",
+        &format!("/ds/session/{sid}/{route}"),
+        Some(tok),
+        b,
+    )
+    .await;
+    (s, js(&b))
+}
+
+/// Gate review L1: a session stores at most `max_versions_per_session` versions. Past it a save and a restore are refused (507,
+/// `version_limit`) and nothing changes: the stored versions and the history stay as they were. The close still turns the editor's
+/// last copy into a version, so the edits reach the provider (status 2).
+#[tokio::test]
+async fn a_session_past_its_version_cap_refuses_saves_and_keeps_what_it_has() {
+    let (ds, d) = build_with("cap", "max_versions_per_session = 3\nmin_free_mb = 0", 120);
+    let r = ds.routes::<()>();
+    let (sid, tok) = session(&ds, &r, "k1", true).await;
+    for n in 2..=3 {
+        let (s, v) = post_doc(&r, &sid, &tok, "save", &docx(&format!("history v{n}"))).await;
+        assert_eq!((s, v["version"].as_u64()), (StatusCode::OK, Some(n)), "{v}");
+    }
+    let (s, v) = post_doc(&r, &sid, &tok, "save", &docx("history v4")).await;
+    assert_eq!(
+        (s, v["error"]["code"].as_str()),
+        (StatusCode::INSUFFICIENT_STORAGE, Some("version_limit")),
+        "{v}"
+    );
+    let (s, v) = post_doc(&r, &sid, &tok, "history/1/restore", b"").await;
+    assert_eq!(
+        (s, v["error"]["code"].as_str()),
+        (StatusCode::INSUFFICIENT_STORAGE, Some("version_limit")),
+        "{v}"
+    );
+    let rec = ds.load_session(&sid).unwrap();
+    assert_eq!(rec.versions.len(), 3);
+    assert_eq!(ds.read_version(&sid, 3).unwrap(), docx("history v3"));
+    let h = format!("/ds/session/{sid}/history");
+    assert_eq!(
+        js(&call(&r, "GET", &h, Some(&tok), b"").await.1)["versions"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3,
+        "the refused restore added no history version"
+    );
+    // the recovery copy is still stored and the close makes it the last version
+    let (s, _) = post_doc(&r, &sid, &tok, "autosave", &docx("history v4")).await;
+    assert_eq!(s, StatusCode::OK);
+    let (s, v) = post_doc(&r, &sid, &tok, "close", b"").await;
+    assert_eq!((s, v["status"].as_u64()), (StatusCode::OK, Some(2)), "{v}");
+    assert_eq!(ds.read_version(&sid, 4).unwrap(), docx("history v4"));
+    let _ = std::fs::remove_dir_all(d);
+}
+
+/// Gate review L1: under the free-space floor of `data_dir` (`min_free_mb`, here more than any disk has) a save, an autosave, a
+/// restore and the first fetch are refused (507, `disk_low`); the versions already stored stay readable and unchanged.
+#[tokio::test]
+async fn under_the_disk_floor_saves_are_refused_and_stored_versions_stay() {
+    let (ds, d) = build("floor");
+    let r = ds.routes::<()>();
+    let (sid, tok) = session(&ds, &r, "k1", true).await;
+    let (s, _) = post_doc(&r, &sid, &tok, "save", &docx("history v2")).await;
+    assert_eq!(s, StatusCode::OK);
+    // a restart with a floor no disk meets
+    let ds = Arc::new(open_at(&d, "min_free_mb = 1048576"));
+    let r = ds.routes::<()>();
+    for (route, body) in [
+        ("save", docx("history v3")),
+        ("autosave", docx("history v3")),
+        ("history/1/restore", vec![]),
+    ] {
+        let (s, v) = post_doc(&r, &sid, &tok, route, &body).await;
+        assert_eq!(
+            (s, v["error"]["code"].as_str()),
+            (StatusCode::INSUFFICIENT_STORAGE, Some("disk_low")),
+            "{route}: {v}"
+        );
+    }
+    let rec = ds.load_session(&sid).unwrap();
+    assert!(rec.versions.len() == 2 && rec.autosave.is_none());
+    assert_eq!(ds.read_version(&sid, 2).unwrap(), docx("history v2"));
+    assert_eq!(
+        call(
+            &r,
+            "GET",
+            &format!("/ds/session/{sid}/history/2"),
+            Some(&tok),
+            b""
+        )
+        .await
+        .1,
+        docx("history v2")
+    );
+    // a new session's first version (the fetch stores it with put_version) is refused the same way
+    let body = json!({"origin": "https://app.test", "config": {"token": sign(PROV_SECRET.as_bytes(), &config("k2", true))}});
+    let sid2 = js(
+        &call(&r, "POST", "/ds/session", None, body.to_string().as_bytes())
+            .await
+            .1,
+    )["sid"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(matches!(
+        ds.put_version(&sid2, &docx("x"), "provider", false, now()),
+        Err(docserver::sessions::SessErr::NoRoom("disk_low", _))
+    ));
     let _ = std::fs::remove_dir_all(d);
 }

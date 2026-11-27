@@ -374,7 +374,7 @@ fn warn_about_disks(r: &Resolved) {
 }
 
 /// The free space of the volume that holds `dir`, from the mount whose path is the longest prefix of it.
-fn free_space(dir: &Path) -> Option<u64> {
+pub fn free_space(dir: &Path) -> Option<u64> {
     let canon = std::fs::canonicalize(dir).ok()?;
     let mut s = canon.to_string_lossy().replace('\\', "/");
     if let Some(x) = s.strip_prefix("//?/") {
