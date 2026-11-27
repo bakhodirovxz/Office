@@ -8,8 +8,12 @@ import * as zlib from 'node:zlib';
 // against a document server container started with the quick-start settings only. Per format: open, edit, save (callbacks 1, 6, 2,
 // new bytes), reopen (the host serves the saved bytes, the editor opens them), download from the host. Plus a view-only open per format.
 const HOST = process.env.HOST_URL ?? 'http://localhost:3000';
+// the host page as the browser opens it: the plain-http run (SCHEME=http in rehearse-generic.sh) uses names that are not localhost, so
+// that neither the host page nor the editor is a secure context, as on a real plain-http install
+const PAGE_HOST = process.env.PAGE_HOST_URL ?? HOST;
 const DS = process.env.DS_URL!;
-const PIN = process.env.PIN!;
+const PIN = process.env.PIN ?? '';
+const PLAIN = DS.startsWith('http://');
 const SHOTS = process.env.SHOTS ?? path.resolve(__dirname, '../../docs/phase5/evidence/generic');
 const MARK = 'QSTART7';
 const sha = (b: Buffer) => crypto.createHash('sha256').update(b).digest('hex');
@@ -41,15 +45,16 @@ const FORMATS: { name: string; route: string; magic: string; edit: (page: Page, 
   { name: 'sample.pdf', route: 'pdf', magic: '%PDF', edit: async (page, ed) => { await ed.locator('canvas').first().click({ position: { x: 550, y: 400 } }); await page.keyboard.press('Control+k'); await page.waitForTimeout(500); await page.keyboard.type('Rotate pages clockwise'); await page.waitForTimeout(300); await page.keyboard.press('Enter'); }, changed: (b, a) => !a.equals(b) },
 ];
 
-const ARGS = [`--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'];
+const ARGS = [PLAIN ? '--host-resolver-rules=MAP *.hoshiya.test 127.0.0.1' : `--ignore-certificate-errors-spki-list=${PIN}`, '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'];
 const open = async (browser: Browser, doc: string, mode = 'edit') => {
   const page = await (await browser.newContext({ viewport: { width: 1200, height: 800 } })).newPage();
-  const problems: string[] = [];
+  const problems: string[] = [], clipboard: string[] = [];
   page.on('pageerror', (e) => problems.push(e.message));
-  await page.goto(`${HOST}/host?doc=${doc}&mode=${mode}`);
+  page.on('console', (m) => { if (/clipboard|copy\/cut/i.test(m.text())) clipboard.push(m.text()); });
+  await page.goto(`${PAGE_HOST}/host?doc=${doc}&mode=${mode}`);
   await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 90_000 }).toMatch(/ready|error/);
   expect(`${await page.locator('body').getAttribute('data-state')}|${await page.locator('#detail').textContent()}`).toBe('ready|');
-  return { page, problems };
+  return { page, problems, clipboard };
 };
 const closeIt = async (page: Page) => {
   await page.evaluate(() => (window as any).__editor.close());
@@ -64,12 +69,18 @@ for (const f of FORMATS) {
     try {
       const s0 = await state();
       const v0 = Buffer.from(await (await fetch(`${HOST}/download?doc=${f.name}`)).arrayBuffer());
-      const { page, problems } = await open(browser, f.name);
+      const { page, problems, clipboard } = await open(browser, f.name);
       await page.screenshot({ path: path.join(SHOTS, `${ext}-1-open.png`) });
       const ed = page.frames().find((fr) => fr.url().startsWith(`${DS}/${f.route}/`))!;
       expect(ed, 'the editor frame').toBeTruthy();
+      // the plain-http run must really be outside a secure context (localhost would be one), the https run inside
+      expect(await ed.evaluate(() => window.isSecureContext), 'isSecureContext of the editor').toBe(!PLAIN);
       await f.edit(page, ed);
       await expect.poll(() => page.evaluate(() => (window as any).__dirty), { timeout: 15_000 }).toBe(true);
+      if (ext === 'docx') { // copy to the system clipboard: what the editor logs about it (eframe needs a secure context for it)
+        await page.keyboard.press('Control+a'); await page.keyboard.press('Control+c'); await page.waitForTimeout(1000);
+        console.log(`docx copy (${PLAIN ? 'http' : 'https'}): clipboard log ${JSON.stringify(clipboard)}`);
+      }
       await page.screenshot({ path: path.join(SHOTS, `${ext}-2-edited.png`) });
       await page.evaluate(() => (window as any).__editor.requestSave());
       await expect.poll(() => page.locator('body').getAttribute('data-state'), { timeout: 30_000 }).toBe('saved');

@@ -64,15 +64,21 @@ for v in DOCSERVER_PUBLIC_PORT DOCSERVER_INTERNAL_PORT DOCSERVER_MAX_DOCUMENT_MB
   case "${!v:-1}" in *[!0-9]*) die "$v must be a number" ;; esac
 done
 for v in DOCSERVER_PUBLIC_URL DOCSERVER_FETCH_ALLOW DOCSERVER_INTERNAL_URL DOCSERVER_INTERNAL_ALLOW; do need "$v"; done
-# TLS: the server's own (a certificate and key given as files) or a trusted proxy's (the drop-in); one of the two is required
-if [ -n "${DOCSERVER_TLS_CERT:-}" ]; then
+# Plain http, as ONLYOFFICE Document Server by default (owner decision 2026-11-27): an http:// public URL and no certificate. The server
+# prints the cleartext warning. DOCSERVER_TRUSTED_PROXIES is optional here: only a listed (plain-http) proxy may set X-Forwarded-For.
+# With an https:// public URL, TLS is the server's own (a certificate and key given as files) or a trusted proxy's (the drop-in).
+if [ "${DOCSERVER_PUBLIC_URL#http://}" != "$DOCSERVER_PUBLIC_URL" ]; then
+  [ -z "${DOCSERVER_TLS_CERT:-}${DOCSERVER_TLS_KEY:-}" ] || die "DOCSERVER_PUBLIC_URL is http:// but DOCSERVER_TLS_CERT/DOCSERVER_TLS_KEY are set: use an https:// public URL with the certificate, or leave the certificate out for plain http"
+  TLS="tls = \"none\"${DOCSERVER_TRUSTED_PROXIES:+
+trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")}"
+elif [ -n "${DOCSERVER_TLS_CERT:-}" ]; then
   need DOCSERVER_TLS_KEY
   [ -r "$DOCSERVER_TLS_CERT" ] && [ -r "$DOCSERVER_TLS_KEY" ] || die "DOCSERVER_TLS_CERT / DOCSERVER_TLS_KEY: cannot read the files (they must be readable by uid 10002)"
   TLS="tls = \"builtin\"
 tls_cert = $(q "$DOCSERVER_TLS_CERT")
 tls_key = $(q "$DOCSERVER_TLS_KEY")"
 else
-  [ -n "${DOCSERVER_TRUSTED_PROXIES:-}" ] || die "TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY (the server's own), or DOCSERVER_TRUSTED_PROXIES (TLS ends at a proxy)"
+  [ -n "${DOCSERVER_TRUSTED_PROXIES:-}" ] || die "DOCSERVER_PUBLIC_URL is not http://, so TLS is required: set DOCSERVER_TLS_CERT and DOCSERVER_TLS_KEY (the server's own), or DOCSERVER_TRUSTED_PROXIES (TLS ends at a proxy); for plain http use an http:// DOCSERVER_PUBLIC_URL"
   # without a certificate of its own, TLS must end at a proxy that is listed here
   TLS="tls = \"upstream\"
 trusted_proxies = $(list "$DOCSERVER_TRUSTED_PROXIES")"
