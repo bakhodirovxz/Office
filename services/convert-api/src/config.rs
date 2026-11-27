@@ -404,7 +404,13 @@ impl Settings {
             .partition(|s| NameSet::is_name(s));
         let trusted = cidrs
             .into_iter()
-            .map(|s| Cidr::parse(s))
+            .map(|s| match Cidr::parse(s)? {
+                // a /0 would let any client pick its rate-limit bucket by X-Forwarded-For
+                c if c.prefix_len() == 0 => Err(format!(
+                    "trusted_proxies: '{s}' is a /0 range, which is not accepted"
+                )),
+                c => Ok(c),
+            })
             .collect::<Result<Vec<_>, _>>()?;
         let trusted_names = NameSet::start(names.into_iter().cloned().collect());
         if !matches!(self.tls.as_str(), "builtin" | "upstream") {
@@ -713,6 +719,14 @@ kind = \"{kind}\"
                 .unwrap()
                 .contains("trusted_proxies")
         );
+        for all in ["0.0.0.0/0", "::/0"] {
+            assert!(
+                server(&|s| s.trusted_proxies = vec![all.into()])
+                    .unwrap()
+                    .contains("/0"),
+                "{all}"
+            );
+        }
         // a container name is resolved (and re-resolved): `localhost` stands in for one here
         assert!(
             server(&|s| s.trusted_proxies = vec!["localhost".into(), "10.0.0.0/8".into()])
