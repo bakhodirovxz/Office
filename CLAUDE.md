@@ -1,6 +1,8 @@
 # Office suite on the Craft engines — agent working rules
 
-**Current phase: Phase 5** (branch `phase-5`, worktree `E:/office-wt/phase-5`, plan docs/phase5/PLAN.md; started early 2026-10-25).
+**Current phase: Phase 6 (Mobile)** (branch `phase-6`, worktree `E:/office-wt/phase-6`, plan docs/phase6/PLAN.md; started early 2026-11-01).
+**Phase 5 gate passed 2026-11-27** (owner "Go"; close-out docs/phase5/gate-review.md §10). Phase 5 fixes, if any, still go on
+`phase-5` and are merged forward, never the other way.
 **Phase 4 gate passed 2026-11-23** (owner "go"; close-out docs/phase4/gate-review.md §11). Phase 4 fixes, if any, still go on
 `phase-4` and are merged forward, never the other way.
 **Phase 6 (Mobile) started early, in parallel** (owner "Go", 2026-11-01): branch `phase-6` (worktree `E:/office-wt/phase-6`),
@@ -39,6 +41,9 @@ Progress, measurements and risks live in [docs/STATUS.md](docs/STATUS.md) — ke
   ONLYOFFICE does: install the Docker image, configure it by env/config, use it. Gate criterion (1) = a generic ONLYOFFICE-API host
   runs open → edit → save → reopen → download against a fresh Docker install configured only that way. The HRM is one example
   profile; the HRM pilot (WP17) is optional, not a gate condition.
+- **Plain http allowed, as ONLYOFFICE does** (owner, 2026-11-27, overruling the https-only recommendation): the document server
+  also runs on plain http; https (own certificate or a TLS proxy) stays the production recommendation.
+- **SSO / desktop sign-in (WP13) comes after the Phase 5 gate** (owner, 2026-11-27); `kind = "oidc"` stays refused until then.
 
 ## Phase discipline
 - Work through phases in order. Each phase ends with an exit gate: stop, report to the owner,
