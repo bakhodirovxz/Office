@@ -8,10 +8,30 @@ decides who may open what and signs the config).
 This page is for a **new install**. Replacing an ONLYOFFICE container that already runs is the installer path
 (`install.sh`, [docs/phase5/dropin.md](../../docs/phase5/dropin.md)).
 
-## Quick start
+## Quick start (plain http, as ONLYOFFICE)
 
-The server speaks TLS (your editors are embedded in an https or localhost page; browsers refuse the rest): either give it a
-certificate and key as files, as below, or put a TLS proxy in front (see `DOCSERVER_TRUSTED_PROXIES`).
+Like ONLYOFFICE Document Server, the server runs on plain http when its public URL is `http://` and no certificate is given:
+
+```sh
+docker run -d --name docserver --network appnet -p 80:8787   -v docserver-data:/data   -e JWT_ENABLED=true   -e JWT_SECRET="$(openssl rand -hex 24)"   -e DOCSERVER_PUBLIC_URL=http://docs.example.lan   -e DOCSERVER_FETCH_ALLOW=http://app:3000   -e DOCSERVER_FRAME_ORIGINS=http://app.example.lan   -e DOCSERVER_INTERNAL_PORT=8780 -e DOCSERVER_INTERNAL_URL=http://docserver:8780 -e DOCSERVER_INTERNAL_ALLOW=app   <image>
+```
+
+It prints a warning at every start: **over plain http the editor config token, the session token and the documents cross the
+network in cleartext**, so anyone on the path can read them or take over an open session. Use it on a trusted network or for a
+trial; for production use https (next section), as ONLYOFFICE also recommends. What else differs over plain http, measured in
+Chromium on a page that is not `localhost`:
+
+- Copying from an editor to the system clipboard does not work: the browser gives its clipboard API to secure pages only, and the
+  editor logs "Clipboard is not available because we are not in a secure context". Paste comes from the browser's paste event,
+  which needs no secure context (read in the code, not measured). WebGPU is not offered either; the editors draw with WebGL.
+- No HSTS header, and nothing redirects to https.
+- Pages on plain http may embed the editor (`DOCSERVER_FRAME_ORIGINS` may list `http://` origins; over https only `localhost` may be http).
+- `X-Forwarded-For` is ignored unless the peer is listed in `DOCSERVER_TRUSTED_PROXIES` (optional here: a plain-http proxy).
+
+## Production: https
+
+Give the server a certificate and key as files, as below, or put a TLS proxy in front (see `DOCSERVER_TRUSTED_PROXIES`); the public
+URL is then `https://`.
 
 ```sh
 docker run -d --name docserver --network appnet -p 8443:8787 \
@@ -72,9 +92,9 @@ ONLYOFFICE's names first (same meaning), then ours (`DOCSERVER_*`). The containe
 | `JWT_ENABLED` | `true` | `false` is refused: the server never runs without a token. |
 | `JWT_SECRET` / `JWT_SECRET_FILE` | none, **required** | The HS256 secret your app signs the editor config with and the server signs callbacks with. |
 | `JWT_HEADER`, `JWT_IN_BODY` | `Authorization`, `true` | Accepted for compatibility, ignored (a warning at start): the callback token is always in the body and in `Authorization`. |
-| `DOCSERVER_PUBLIC_URL` | **required** | `https://host[:port]` your users' browsers use to reach this server (no path). |
-| `DOCSERVER_TLS_CERT`, `DOCSERVER_TLS_KEY` | none | Certificate chain and key (PEM files) for the server's own TLS. One of these two or `DOCSERVER_TRUSTED_PROXIES` is required. |
-| `DOCSERVER_TRUSTED_PROXIES` | none | Comma list of the proxy addresses, CIDR ranges or container names that terminate TLS in front of the server (then no certificate is given). |
+| `DOCSERVER_PUBLIC_URL` | **required** | `http://host[:port]` or `https://host[:port]` your users' browsers use to reach this server (no path). `http://` is the plain-http mode: no certificate may be set then. |
+| `DOCSERVER_TLS_CERT`, `DOCSERVER_TLS_KEY` | none | Certificate chain and key (PEM files) for the server's own TLS. With an `https://` public URL one of these two or `DOCSERVER_TRUSTED_PROXIES` is required; with `http://` they are refused. |
+| `DOCSERVER_TRUSTED_PROXIES` | none | Comma list of the proxy addresses, CIDR ranges or container names in front of the server. With `https://` they terminate TLS (no certificate is given) and are the only clients answered; with `http://` they are optional and only they may set `X-Forwarded-For`. |
 | `DOCSERVER_FETCH_ALLOW` | **required** | Comma list of `scheme://host[:port]` origins the server may download documents from (your `document.url` hosts). Private addresses are allowed for these entries only. |
 | `DOCSERVER_CALLBACK_ALLOW` | = `DOCSERVER_FETCH_ALLOW` | Origins it may POST save callbacks to (your `callbackUrl` hosts). |
 | `DOCSERVER_FRAME_ORIGINS` | the public URL only | Comma list of origins of **your pages** that embed the editor. A page not listed gets "the session was refused". |
@@ -98,7 +118,7 @@ tmpfs are the only writable places. Back up `/data`.
 
 An existing ONLYOFFICE connector needs three changes: the server URL, the secret, and the network rules below.
 
-1. **api.js.** Load it from `https://<public url>/web-apps/apps/api/documents/api.js`, then `new DocsAPI.DocEditor(id, config)` as you do now.
+1. **api.js.** Load it from `<public url>/web-apps/apps/api/documents/api.js`, then `new DocsAPI.DocEditor(id, config)` as you do now.
 2. **JWT.** Sign the whole config (everything but `events`) with HS256 and the shared secret, put the result in `config.token`.
    A token without `exp` is accepted (as ONLYOFFICE does); one session lasts at most 12 h. The save callback body carries `token`
    (a JWT of the body) and an `Authorization: Bearer` header (a JWT of `{"payload": body}`); verify either with the same secret.
@@ -141,5 +161,6 @@ logged. The image's `HEALTHCHECK` asks `/healthz` on the public port. The audit 
 ## Proof
 
 `rehearse-generic.sh` starts this image fresh with the settings above only, drives the generic host through open, edit, save,
-reopen and download for docx, xlsx, pptx and pdf and a view-only open for each, in Chromium. Results: `docs/STATUS.md`
+reopen and download for docx, xlsx, pptx and pdf and a view-only open for each, in Chromium; `SCHEME=http rehearse-generic.sh` does
+the same over plain http, with host names that are not `localhost` (so no page is a secure context). Results: `docs/STATUS.md`
 (Phase 5, quick start) and screenshots in `docs/phase5/evidence/generic/`.
